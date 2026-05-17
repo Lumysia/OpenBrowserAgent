@@ -128,13 +128,19 @@ export type AiStreamRequest =
       type: "generateTitle";
       message: string;
       metadata?: Record<string, unknown>;
+    }
+  | {
+      type: "generateQuickAction";
+      modelId?: string;
+      messages: ChatMessage[];
     };
 
 export type AiStreamResponse =
   | { type: "chunk"; chunk: unknown }
   | { type: "end" }
   | { type: "error"; error: string }
-  | { type: "title"; title: string };
+  | { type: "title"; title: string }
+  | { type: "quickAction"; quickAction: QuickAction };
 
 export const providerLabels: Record<ProviderId, string> = {
   gemini: "Gemini",

@@ -9,6 +9,8 @@ import {
   MARKDOWN_FILENAME_MAX_LENGTH,
   MAX_IMAGES_PER_DOWNLOAD,
   MODEL_TEMPERATURE,
+  QUICK_ACTION_SOURCE_MAX_CHARS,
+  QUICK_ACTION_TITLE_MAX_LENGTH,
   STREAM_CHUNK_DELAY_MS,
 } from "../src/shared/config";
 import {
@@ -18,6 +20,7 @@ import {
   type ChatMessage,
   type ChatMode,
   type ProviderId,
+  type QuickAction,
 } from "../src/shared/types";
 
 const PORT_AI_STREAM = "ai-stream";
@@ -69,6 +72,19 @@ export default defineBackground(() => {
         generateTitle(request.message).then((title) =>
           post(port, { type: "title", title }),
         );
+      }
+
+      if (request.type === "generateQuickAction") {
+        generateQuickAction(request)
+          .then((quickAction) =>
+            post(port, { type: "quickAction", quickAction }),
+          )
+          .catch((error) =>
+            post(port, {
+              type: "error",
+              error: error?.message || String(error),
+            }),
+          );
       }
     });
 
@@ -751,6 +767,141 @@ async function generateTitle(message: string) {
     .trim()
     .slice(0, GENERATED_TITLE_MAX_LENGTH);
   return title || "New Chat";
+}
+
+async function generateQuickAction(
+  request: Extract<AiStreamRequest, { type: "generateQuickAction" }>,
+): Promise<QuickAction> {
+  const model = await resolveModel(request.modelId);
+  const source = renderQuickActionSource(request.messages).slice(
+    0,
+    QUICK_ACTION_SOURCE_MAX_CHARS,
+  );
+  const prompt = `Create a reusable quick action from this browser-agent chat.
+
+Return JSON only with this shape:
+{"title":"short name","instruction":"reusable instruction"}
+
+Rules:
+- Generalize the workflow so it can be reused later.
+- Do not copy one-off facts, personal names, URLs, or results unless they are essential to the reusable workflow.
+- The instruction should tell the browser agent what to do, not describe what already happened.
+- Preserve useful variables such as {{ date }} if appropriate.
+- Title must be concise.
+
+<chat>
+${source}
+</chat>`;
+  const raw = await requestPlainText(model, [
+    {
+      role: "system",
+      content:
+        "You create concise reusable browser-agent quick actions. Return valid JSON only.",
+    },
+    { role: "user", content: prompt },
+  ]);
+  const parsed = parseJsonObject(raw) as Partial<QuickAction>;
+  const title = String(parsed.title || "Quick Action")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, QUICK_ACTION_TITLE_MAX_LENGTH);
+  const instruction = String(parsed.instruction || "").trim();
+  if (!instruction) throw new Error("The model did not create an instruction.");
+  return {
+    id: crypto.randomUUID(),
+    title: title || "Quick Action",
+    instruction,
+  };
+}
+
+async function requestPlainText(
+  model: {
+    provider: ProviderId;
+    apiKey: string;
+    baseUrl: string;
+    modelName: string;
+  },
+  messages: Array<{ role: "system" | "user"; content: string }>,
+) {
+  if (model.provider === "gemini") {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model.modelName)}:generateContent?key=${encodeURIComponent(model.apiKey)}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: messages[0]?.content || "" }] },
+        contents: messages.slice(1).map((message) => ({
+          role: "user",
+          parts: [{ text: message.content }],
+        })),
+      }),
+    });
+    if (!response.ok) throw new Error(await response.text());
+    const data = await response.json();
+    return (
+      data.candidates?.[0]?.content?.parts
+        ?.map((part: { text?: string }) => part.text || "")
+        .join("") || ""
+    );
+  }
+
+  const baseUrl = model.baseUrl.replace(/\/$/, "");
+  const chatUrl =
+    model.provider === "ollama"
+      ? `${baseUrl}/v1/chat/completions`
+      : `${baseUrl}/chat/completions`;
+  const response = await fetch(chatUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
+    },
+    body: JSON.stringify({
+      model: model.modelName,
+      temperature: MODEL_TEMPERATURE,
+      messages,
+    }),
+  });
+  if (!response.ok) throw new Error(await response.text());
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
+function renderQuickActionSource(messages: ChatMessage[]) {
+  return messages
+    .map((message) => {
+      const parts = (message.parts || [])
+        .filter((part) => part.type.startsWith("tool-"))
+        .map((part) =>
+          [
+            `tool=${part.toolName || part.type.replace(/^tool-/, "")}`,
+            `state=${part.state || "unknown"}`,
+            part.input ? `input=${safeStringify(part.input)}` : undefined,
+            part.output ? `output=${safeStringify(part.output)}` : undefined,
+          ]
+            .filter(Boolean)
+            .join("\n"),
+        )
+        .join("\n");
+      return [`role=${message.role}`, message.content, parts]
+        .filter(Boolean)
+        .join("\n");
+    })
+    .join("\n\n---\n\n");
+}
+
+function parseJsonObject(value: string) {
+  const match = value.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("The model did not return JSON.");
+  return JSON.parse(match[0]);
+}
+
+function safeStringify(value: unknown) {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
 }
 
 function chunkText(text: string) {

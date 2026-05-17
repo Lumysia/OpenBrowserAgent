@@ -856,6 +856,14 @@ a {
 .settings-sidebar nav {
   padding: 12px;
 }
+.settings-sidebar-version {
+  margin-top: auto;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 650;
+}
 .language-select {
   margin-top: auto;
   padding: 12px;
@@ -1884,6 +1892,14 @@ a {
 }
 .composer-menu-item {
   padding: 10px;
+}
+.composer-menu-section-title {
+  padding: 8px 10px 4px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .model-menu-item {
   position: relative;

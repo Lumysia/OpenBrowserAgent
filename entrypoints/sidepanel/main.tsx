@@ -10,7 +10,6 @@ import {
   ExternalLink,
   FileText,
   History,
-  Info,
   Layers,
   MessageCirclePlus,
   MousePointerClick,
@@ -35,12 +34,13 @@ import {
   DEFAULT_MAX_TOOL_STEPS,
   LOCAL_CHAT_TITLE_MAX_LENGTH,
   MAX_AUTO_RETRIES,
+  QUICK_FEEDBACK_MS,
   SELECTED_ELEMENT_HTML_MAX_CHARS,
   TAB_CONTENT_MAX_CHARS,
 } from "../../src/shared/config";
 import { getMessages, type Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
-import { languageLabels, providerLabels } from "../../src/shared/types";
+import { providerLabels } from "../../src/shared/types";
 import type {
   AiStreamRequest,
   AiStreamResponse,
@@ -81,8 +81,8 @@ type ActiveStream = {
 function SidepanelApp() {
   const [providers] = useStoredState(storage.provider);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
-  const [language, setLanguage] = useStoredState(storage.language);
-  const [quickActions] = useStoredState(storage.quickAction);
+  const [language] = useStoredState(storage.language);
+  const [quickActions, setQuickActions] = useStoredState(storage.quickAction);
   const [chats, setChats] = useStoredState(storage.chats);
   const [activeChatId, setActiveChatId] = useState<string>();
   const [input, setInput] = useState("");
@@ -92,9 +92,11 @@ function SidepanelApp() {
   const [selectedElement, setSelectedElement] =
     useState<SelectedElement | null>(null);
   const [streaming, setStreaming] = useState(false);
-  const [openMenu, setOpenMenu] = useState<
-    "settings" | "add" | "model" | "mode" | null
-  >(null);
+  const [creatingQuickAction, setCreatingQuickAction] = useState(false);
+  const [quickActionCreated, setQuickActionCreated] = useState(false);
+  const [openMenu, setOpenMenu] = useState<"add" | "model" | "mode" | null>(
+    null,
+  );
   const [addMenuView, setAddMenuView] = useState<"menu" | "tabs">("menu");
   const [showHistory, setShowHistory] = useState(false);
   const portRef = useRef<chrome.runtime.Port | undefined>(undefined);
@@ -284,6 +286,53 @@ function SidepanelApp() {
       if (activeChatId === chatId) setActiveChatId(next[0]?.id);
       return next;
     });
+  }
+
+  async function createQuickActionFromCurrentChat() {
+    if (creatingQuickAction) return;
+    if (!currentChat?.messages.length) {
+      chrome.tabs.create({
+        url: chrome.runtime.getURL("/options.html#/quick-actions"),
+      });
+      return;
+    }
+    setCreatingQuickAction(true);
+    setQuickActionCreated(false);
+    const port = chrome.runtime.connect({ name: "ai-stream" });
+    const cleanup = () => {
+      try {
+        port.disconnect();
+      } catch {
+        // Best-effort cleanup for stale ports.
+      }
+    };
+    port.onMessage.addListener((message: AiStreamResponse) => {
+      if (message.type === "quickAction") {
+        setQuickActions((items) => [...items, message.quickAction]);
+        setCreatingQuickAction(false);
+        setQuickActionCreated(true);
+        window.setTimeout(
+          () => setQuickActionCreated(false),
+          QUICK_FEEDBACK_MS,
+        );
+        cleanup();
+      }
+      if (message.type === "error") {
+        console.warn("Failed to create quick action", message.error);
+        setCreatingQuickAction(false);
+        cleanup();
+      }
+    });
+    try {
+      port.postMessage({
+        type: "generateQuickAction",
+        modelId: preferences?.selectedModelId,
+        messages: currentChat.messages,
+      } satisfies AiStreamRequest);
+    } catch {
+      setCreatingQuickAction(false);
+      cleanup();
+    }
   }
 
   async function send(content = input, quickAction?: QuickAction) {
@@ -717,25 +766,15 @@ function SidepanelApp() {
               <History size={18} />
             </Button>
             <Button
-              data-popover-root="true"
               className="tooltip tooltip-right-edge"
               data-tooltip={t.common.settings}
               variant="ghost"
               size="icon"
-              onClick={() =>
-                setOpenMenu(openMenu === "settings" ? null : "settings")
-              }
+              onClick={() => chrome.runtime.openOptionsPage()}
             >
               <Settings size={18} />
             </Button>
           </div>
-          {openMenu === "settings" && (
-            <SettingsPanel
-              t={t}
-              language={language || "en-US"}
-              onLanguageChange={setLanguage}
-            />
-          )}
           {showHistory && (
             <HistoryPanel
               t={t}
@@ -769,13 +808,15 @@ function SidepanelApp() {
             className="quick-action-create"
             variant="secondary"
             size="sm"
-            onClick={() =>
-              chrome.tabs.create({
-                url: chrome.runtime.getURL("/options.html#/quick-actions"),
-              })
-            }
+            disabled={creatingQuickAction}
+            onClick={createQuickActionFromCurrentChat}
           >
-            <Plus size={16} /> {t.sidepanel.createQuickAction}
+            <Plus size={16} />{" "}
+            {creatingQuickAction
+              ? t.sidepanel.generatingQuickAction
+              : quickActionCreated
+                ? t.sidepanel.quickActionCreated
+                : t.sidepanel.createQuickAction}
           </Button>
         </div>
         {openMenu === "add" && addMenuView === "tabs" && (
@@ -783,8 +824,13 @@ function SidepanelApp() {
             t={t}
             view={addMenuView}
             tabs={availableTabs}
+            quickActions={quickActions || []}
             selectedTabIds={attachedTabs.map((tab) => tab.id)}
             onShowTabs={showAllTabsPicker}
+            onQuickAction={(action) => {
+              send(action.instruction, action);
+              setOpenMenu(null);
+            }}
             onToggleTab={toggleAttachedTab}
             onAttachTab={async () => {
               await attachActiveTab();
@@ -859,8 +905,13 @@ function SidepanelApp() {
                   t={t}
                   view={addMenuView}
                   tabs={availableTabs}
+                  quickActions={quickActions || []}
                   selectedTabIds={attachedTabs.map((tab) => tab.id)}
                   onShowTabs={showAllTabsPicker}
+                  onQuickAction={(action) => {
+                    send(action.instruction, action);
+                    setOpenMenu(null);
+                  }}
                   onToggleTab={toggleAttachedTab}
                   onAttachTab={async () => {
                     await attachActiveTab();
@@ -872,18 +923,6 @@ function SidepanelApp() {
                   }}
                 />
               )}
-            </div>
-            <div className="row quick-action-row" style={{ overflowX: "auto" }}>
-              {(quickActions || []).map((action) => (
-                <Button
-                  key={action.id}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => send(action.title, action)}
-                >
-                  {action.title}
-                </Button>
-              ))}
             </div>
             <div className="composer-selectors">
               <div className="selector-anchor model-anchor">
@@ -964,50 +1003,6 @@ function SidepanelApp() {
   );
 }
 
-function SettingsPanel({
-  t,
-  language,
-  onLanguageChange,
-}: {
-  t: Messages;
-  language: string;
-  onLanguageChange: (language: string) => void;
-}) {
-  const version = chrome.runtime.getManifest().version;
-  return (
-    <div className="settings-popover" data-popover-root="true">
-      <div className="settings-popover-section-title">General</div>
-      <div className="settings-language-row">
-        <span>
-          {t.common.language}
-          <span className="settings-help">?</span>
-        </span>
-        <Select value={language} onValueChange={onLanguageChange}>
-          <SelectTrigger className="settings-language-trigger">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(languageLabels).map(([id, label]) => (
-              <SelectItem key={id} value={id}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="settings-popover-divider" />
-      <div className="settings-popover-footer">
-        <button onClick={() => chrome.runtime.openOptionsPage()}>
-          {t.common.settings}
-        </button>
-        <span>
-          <Info size={13} /> {version}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function HistoryPanel({
   t,
   chats,
@@ -1035,8 +1030,8 @@ function HistoryPanel({
           <button onClick={() => onSelect(chat.id)}>
             <strong>{chat.title || t.words.newChat}</strong>
             <small>
-              {chat.messages.length} messages ·{" "}
-              {formatRelativeTime(chat.updatedAt)}
+              {formatMessageCount(t, chat.messages.length)} ·{" "}
+              {formatRelativeTime(t, chat.updatedAt)}
             </small>
           </button>
           <button
@@ -1052,21 +1047,33 @@ function HistoryPanel({
   );
 }
 
-function formatRelativeTime(value: number) {
+function formatMessageCount(t: Messages, count: number) {
+  return formatToolMessage(t.sidepanel.messageCount, { count });
+}
+
+function formatRelativeTime(t: Messages, value: number) {
   const diff = Date.now() - value;
   const minutes = Math.max(1, Math.round(diff / 60000));
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60)
+    return formatToolMessage(t.sidepanel.relativeMinutesAgo, {
+      count: minutes,
+    });
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.round(hours / 24)}d ago`;
+  if (hours < 24)
+    return formatToolMessage(t.sidepanel.relativeHoursAgo, { count: hours });
+  return formatToolMessage(t.sidepanel.relativeDaysAgo, {
+    count: Math.round(hours / 24),
+  });
 }
 
 function AddContextMenu({
   t,
   view,
   tabs,
+  quickActions,
   selectedTabIds,
   onShowTabs,
+  onQuickAction,
   onToggleTab,
   onAttachTab,
   onSelectElement,
@@ -1074,8 +1081,10 @@ function AddContextMenu({
   t: Messages;
   view: "menu" | "tabs";
   tabs: AttachmentTab[];
+  quickActions: QuickAction[];
   selectedTabIds: number[];
   onShowTabs: () => void;
+  onQuickAction: (action: QuickAction) => void;
   onToggleTab: (tab: AttachmentTab) => void;
   onAttachTab: () => void;
   onSelectElement: () => void;
@@ -1092,6 +1101,25 @@ function AddContextMenu({
             <strong>{t.sidepanel.addNewTab}</strong>
           </span>
         </button>
+        {!!quickActions.length && (
+          <>
+            <div className="composer-menu-section-title">
+              {t.options.quickActions}
+            </div>
+            {quickActions.map((action) => (
+              <button
+                key={action.id}
+                className="composer-menu-item"
+                onClick={() => onQuickAction(action)}
+              >
+                <FileText size={17} />
+                <span>
+                  <strong>{action.title || t.options.untitledAction}</strong>
+                </span>
+              </button>
+            ))}
+          </>
+        )}
         <button className="composer-menu-item" onClick={onSelectElement}>
           <MousePointerClick size={17} />
           <span>

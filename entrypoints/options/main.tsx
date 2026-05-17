@@ -59,6 +59,7 @@ function OptionsApp() {
   const route = useHashRoute();
   const [language] = useStoredState(storage.language);
   const [preferences] = useStoredState(storage.preferences);
+  const version = chrome.runtime.getManifest().version;
   const t = getMessages(language);
 
   React.useEffect(() => {
@@ -106,6 +107,7 @@ function OptionsApp() {
             {t.common.help}
           </a>
         </nav>
+        <div className="settings-sidebar-version">v{version}</div>
       </aside>
       <main className="settings-main">
         <div className="settings-content">
