@@ -3,6 +3,7 @@
   window.__obaElementSelectorActive = true;
 
   const STORAGE_KEY_PREFERENCES = "preferences";
+  const STORAGE_KEY_LANGUAGE = "language";
   const MESSAGE_CANCEL = "cancelElementSelector";
   const MESSAGE_CANCELLED = "elementSelectorCancelled";
   const Z_INDEX = "2147483647";
@@ -17,6 +18,19 @@
   const DEFAULT_PREFERENCES = {
     colorScheme: "system",
     accentColor: "amber",
+  };
+  const SELECTOR_PROMPTS = {
+    "en-US": "Select element - Esc to cancel",
+    "zh-CN": "选择元素 - 按 Esc 取消",
+    "zh-SG": "选择元素 - 按 Esc 取消",
+    "zh-TW": "選擇元素 - 按 Esc 取消",
+    "zh-HK": "選擇元素 - 按 Esc 取消",
+    "ja-JP": "要素を選択 - Escでキャンセル",
+    ko: "요소 선택 - Esc로 취소",
+    "fr-FR": "Sélectionner un élément - Échap pour annuler",
+    "de-DE": "Element auswählen - Esc zum Abbrechen",
+    "es-ES": "Seleccionar elemento - Esc para cancelar",
+    "pt-BR": "Selecionar elemento - Esc para cancelar",
   };
 
   let hovered = null;
@@ -49,8 +63,7 @@
 
   const label = document.createElement("div");
   label.textContent =
-    chrome.i18n?.getMessage("selectorPrompt") ||
-    "Select element - Esc to cancel";
+    chrome.i18n?.getMessage("selectorPrompt") || SELECTOR_PROMPTS["en-US"];
   Object.assign(label.style, {
     position: "fixed",
     top: "16px",
@@ -72,6 +85,7 @@
   document.documentElement.appendChild(root);
   document.body.style.cursor = "crosshair";
   loadPreferences().then(applyTheme).catch(() => undefined);
+  loadLanguage().then(applyLanguage).catch(() => undefined);
   updateOverlay(null);
 
   function applyTheme(preferences) {
@@ -112,6 +126,28 @@
       ...(localData[STORAGE_KEY_PREFERENCES] || {}),
       ...(syncData[STORAGE_KEY_PREFERENCES] || {}),
     };
+  }
+
+  async function loadLanguage() {
+    const [syncData, localData] = await Promise.all([
+      chrome.storage.sync.get(STORAGE_KEY_LANGUAGE).catch(() => ({})),
+      chrome.storage.local.get(STORAGE_KEY_LANGUAGE).catch(() => ({})),
+    ]);
+    return (
+      syncData[STORAGE_KEY_LANGUAGE] ||
+      localData[STORAGE_KEY_LANGUAGE] ||
+      chrome.i18n?.getUILanguage?.() ||
+      "en-US"
+    );
+  }
+
+  function applyLanguage(language) {
+    const normalized = String(language || "").replace("_", "-");
+    label.textContent =
+      SELECTOR_PROMPTS[language] ||
+      SELECTOR_PROMPTS[normalized] ||
+      chrome.i18n?.getMessage("selectorPrompt") ||
+      SELECTOR_PROMPTS["en-US"];
   }
 
   function cleanup() {
