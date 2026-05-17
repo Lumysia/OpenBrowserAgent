@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "OpenBrowserAgent - ブラウザー内のAIエージェント"
+  },
+  "extDescription": {
+    "message": "OpenBrowserAgentはAIエージェントをブラウザーに組み込み、タスクのスマートな自動化を支援します。"
+  }
+}
