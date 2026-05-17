@@ -44,7 +44,7 @@ export type Skill = {
   name: string;
   description: string;
   files: SkillFile[];
-  readSkillFiles?: boolean;
+  enabled?: boolean;
   builtin?: boolean;
   createdAt?: number;
   updatedAt?: number;

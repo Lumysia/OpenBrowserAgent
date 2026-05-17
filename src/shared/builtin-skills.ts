@@ -9,7 +9,7 @@ export const BUILTIN_SKILLS: Skill[] = [
     description:
       "Create, improve, review, package, and troubleshoot OpenBrowserAgent skills. Use whenever the user asks to make a new skill, turn a workflow into a reusable skill, import or edit a SKILL.md package, optimize skill triggering, design references/assets/scripts, or debug why a skill was not selected.",
     builtin: true,
-    readSkillFiles: true,
+    enabled: true,
     createdAt: 0,
     updatedAt: 0,
     files: [

@@ -134,14 +134,6 @@ export function GeneralPage() {
           setPreferences({ ...preferences, autoRetry: checked })
         }
       />
-      <PreferenceSwitch
-        title={t.options.autoSelectSkills}
-        description={t.options.autoSelectSkillsDescription}
-        checked={preferences.autoSelectSkills === true}
-        onChange={(checked) =>
-          setPreferences({ ...preferences, autoSelectSkills: checked })
-        }
-      />
       <Card>
         <CardHeader>
           <CardTitle>{t.options.maxToolSteps}</CardTitle>

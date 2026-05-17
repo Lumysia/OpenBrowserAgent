@@ -590,6 +590,7 @@ a {
   border-radius: calc(var(--radius) - 2px);
   background: var(--card);
   color: var(--foreground);
+  font-weight: 400;
   outline: none;
   box-shadow: 0 1px 0 rgba(22, 21, 18, 0.03);
   transition:
@@ -923,11 +924,6 @@ a {
   font-size: 12px;
   font-weight: 650;
 }
-.language-select {
-  margin-top: auto;
-  padding: 12px;
-  border-top: 1px solid var(--border);
-}
 .settings-main {
   flex: 1;
   min-width: 0;
@@ -1024,10 +1020,21 @@ a {
 .muted {
   color: var(--muted-foreground);
 }
+.skill-detail .ui-label,
+.skill-detail .skill-identity-panel,
+.skill-detail .skill-file-list,
+.skill-detail .skill-add-file-row,
+.skill-detail .skill-file-editor,
+.skill-detail .skill-status-panel {
+  width: 100%;
+}
 .skill-file-list {
   display: grid;
   gap: 6px;
-  max-width: 640px;
+}
+.skill-file-block {
+  display: grid;
+  gap: 6px;
 }
 .skill-file-item {
   display: grid;
@@ -1039,6 +1046,14 @@ a {
   border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
   border-radius: 10px;
   background: color-mix(in srgb, var(--card) 72%, var(--background));
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease,
+    transform 0.16s ease;
+}
+.skill-file-item:hover {
+  border-color: color-mix(in srgb, var(--accent-strong) 18%, var(--border));
+  background: color-mix(in srgb, var(--card) 88%, var(--accent-softer));
 }
 .skill-file-item svg {
   color: var(--muted-foreground);
@@ -1072,26 +1087,34 @@ a {
   grid-template-columns: minmax(220px, 1fr) auto auto;
   align-items: center;
   gap: 8px;
-  max-width: 760px;
 }
-.skill-file-preview {
-  max-width: 760px;
-  max-height: 280px;
-  margin: 0;
+.skill-file-editor {
   padding: 12px;
-  overflow: auto;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: color-mix(in srgb, var(--muted) 72%, var(--background));
-  color: var(--foreground);
+  animation: skill-editor-in 0.18s ease both;
+}
+.skill-file-editor-textarea {
+  max-height: 280px;
+  min-height: 220px;
+  font-family:
+    ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
   font-size: 12px;
-  line-height: 1.5;
-  white-space: pre-wrap;
+}
+@keyframes skill-editor-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .skill-status-panel {
   display: grid;
   gap: 10px;
-  max-width: 760px;
   padding: 12px;
   border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
   border-radius: 12px;
@@ -1106,32 +1129,13 @@ a {
   font-size: 12px;
 }
 .skill-warning,
-.skill-checks .warn,
-.skill-trigger-test .warn {
+.skill-checks .warn {
   color: var(--destructive);
 }
-.skill-checks .ok,
-.skill-trigger-test .ok {
+.skill-checks .ok {
   color: var(--accent-strong);
 }
 .skill-validation {
-  display: grid;
-  gap: 6px;
-}
-.skill-switch-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.skill-switch-row span {
-  display: grid;
-  gap: 2px;
-}
-.skill-switch-row small {
-  color: var(--muted-foreground);
-}
-.skill-trigger-test {
   display: grid;
   gap: 6px;
 }
@@ -1261,10 +1265,6 @@ a {
 .accordion summary::-webkit-details-marker {
   display: none;
 }
-.accordion-body {
-  border-top: 1px solid var(--border);
-  padding: 16px;
-}
 .chip {
   display: inline-flex;
   align-items: center;
@@ -1275,26 +1275,6 @@ a {
   color: var(--muted-foreground);
   font-size: 12px;
   border: 1px solid transparent;
-}
-.chip-close {
-  display: inline-flex;
-  width: 16px;
-  height: 16px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: transparent;
-  color: inherit;
-  opacity: 0.7;
-  transition:
-    background-color 0.14s ease,
-    opacity 0.14s ease,
-    transform 0.14s ease;
-}
-.chip-close:hover {
-  background: rgba(22, 21, 18, 0.1);
-  opacity: 1;
-  transform: scale(1.06);
 }
 .model-table {
   display: grid;
@@ -1362,40 +1342,6 @@ a {
   align-items: center;
   gap: 6px;
 }
-.top-chat-tabs {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 0;
-}
-.top-chat-tabs::-webkit-scrollbar {
-  display: none;
-}
-.top-chat-tabs-scroll {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.top-chat-tabs-scroll::-webkit-scrollbar {
-  display: none;
-}
-.new-chat-add {
-  width: 30px;
-  height: 30px;
-  flex: 0 0 auto;
-  border-radius: 10px;
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-  box-shadow: inset 0 0 0 1px var(--accent-shadow);
-}
-.new-chat-add:hover {
-  background: var(--accent-active);
-  transform: translateY(-1px);
-}
 .topbar-actions {
   min-width: max-content;
   display: flex;
@@ -1407,82 +1353,6 @@ a {
 .topbar-actions .ui-button-icon {
   width: 32px;
   height: 32px;
-}
-.tab-scroll-controls {
-  display: inline-flex;
-  gap: 0;
-  color: var(--accent-strong);
-}
-.tab-scroll-controls .ui-button-icon {
-  width: 24px;
-  height: 30px;
-  border-radius: 8px;
-}
-.top-chat-tab {
-  white-space: nowrap;
-  max-width: 116px;
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  overflow: hidden;
-  min-height: 30px;
-  padding: 0 7px 0 11px;
-  border-radius: 9px;
-  background: var(--accent-softer);
-  color: var(--accent-strong);
-  transition:
-    background-color 0.16s ease,
-    color 0.16s ease,
-    transform 0.16s ease,
-    box-shadow 0.16s ease;
-}
-.top-chat-tab > button:first-child {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  background: transparent;
-  color: inherit;
-  font-size: 14px;
-  font-weight: 700;
-}
-.top-chat-tab:hover {
-  background: var(--accent-hover);
-  transform: translateY(-1px);
-}
-.top-chat-tab.active {
-  background: var(--accent-active);
-  color: var(--accent-strong);
-  box-shadow:
-    inset 0 0 0 1px var(--accent-shadow),
-    0 0 0 2px var(--accent-shadow);
-}
-.chat-tab-close {
-  width: 17px;
-  height: 17px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: inherit;
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    background-color 0.14s ease,
-    color 0.14s ease,
-    opacity 0.14s ease;
-}
-.top-chat-tab:hover .chat-tab-close {
-  opacity: 0.7;
-  pointer-events: auto;
-}
-.chat-tab-close:hover {
-  background: rgba(179, 38, 30, 0.12);
-  color: #b3261e;
-  opacity: 1;
 }
 .history-panel {
   width: min(260px, calc(100vw - 24px));
@@ -2057,9 +1927,6 @@ a {
 .composer-icon-button:active:not(:disabled) {
   transform: scale(0.96) rotate(0deg);
 }
-.skill-row {
-  max-width: 100%;
-}
 .composer-selectors {
   justify-self: end;
   display: inline-flex;
@@ -2145,61 +2012,6 @@ a {
   max-width: min(240px, calc(100vw - 24px));
   max-height: none;
 }
-.add-tabs-panel {
-  width: 100%;
-  max-height: 264px;
-}
-.tab-picker-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 3px 8px 9px;
-  color: var(--muted-foreground);
-  font-size: 17px;
-  font-weight: 400;
-}
-.tab-picker-list {
-  display: grid;
-  gap: 5px;
-}
-.tab-picker-item {
-  width: 100%;
-  min-height: 38px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 7px;
-  border-radius: 5px;
-  background: transparent;
-  color: var(--muted-foreground);
-  text-align: left;
-  font-size: 16px;
-  transition: background-color 0.14s ease;
-}
-.tab-picker-item.active,
-.tab-picker-item:hover {
-  background: var(--accent-list);
-}
-.tab-picker-item img {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  object-fit: cover;
-}
-.tab-picker-item span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.tab-picker-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
-}
 .model-menu {
   width: max-content;
   min-width: 190px;
@@ -2231,14 +2043,6 @@ a {
 }
 .composer-menu-item {
   padding: 10px;
-}
-.composer-menu-section-title {
-  padding: 8px 10px 4px;
-  color: var(--muted-foreground);
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 .model-menu-item {
   position: relative;
@@ -2275,6 +2079,12 @@ a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.composer-menu-item img {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  object-fit: cover;
 }
 .model-menu-item strong {
   overflow: hidden;
@@ -2880,9 +2690,6 @@ a {
     gap: 8px;
     padding-left: 12px;
     padding-right: 10px;
-  }
-  .skill-row {
-    display: none;
   }
   .composer-selectors {
     gap: 8px;

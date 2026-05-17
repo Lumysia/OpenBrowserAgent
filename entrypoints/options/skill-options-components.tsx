@@ -2,17 +2,13 @@ import { useRef, useState } from "react";
 import {
   Check,
   Download,
-  Eye,
   FileArchive,
+  Pencil,
   Plus,
   Trash2,
   Upload,
 } from "lucide-react";
-import {
-  COPY_FEEDBACK_MS,
-  ISO_DATE_LENGTH,
-  SYNC_MAX_BYTES_PER_ITEM,
-} from "../../src/shared/config";
+import { COPY_FEEDBACK_MS, ISO_DATE_LENGTH } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import {
   normalizeSkill,
@@ -23,7 +19,7 @@ import {
 } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
 import type { Skill, SkillFile } from "../../src/shared/types";
-import { Button, Input, Switch } from "../../src/ui/components";
+import { Button, Input, Textarea } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import {
   createEmptySkillFile,
@@ -57,25 +53,13 @@ export function SkillVariables() {
   );
 }
 
-export function SkillStatusPanel({
-  skill,
-  allSkills,
-  onPatch,
-}: {
-  skill: Skill;
-  allSkills: Skill[];
-  onPatch: (patch: Partial<Skill>) => void;
-}) {
+export function SkillStatusPanel({ skill }: { skill: Skill }) {
   const [language] = useStoredState(storage.language);
-  const [preferences] = useStoredState(storage.preferences);
-  const [triggerPrompt, setTriggerPrompt] = useState("");
   const t = getMessages(language);
   const normalized = normalizeSkill(skill);
   const checks = validateSkill(normalized);
   const failed = checks.filter((check) => !check.ok);
   const skillBytes = skillPackageBytes(normalized);
-  const totalBytes = new TextEncoder().encode(JSON.stringify(allSkills)).length;
-  const trigger = triggerScore(triggerPrompt, normalized);
   return (
     <div className="skill-status-panel">
       <div className="skill-meta-row">
@@ -85,13 +69,7 @@ export function SkillStatusPanel({
         <span>
           {t.options.skillSize}: {formatBytes(skillBytes)}
         </span>
-        <span>
-          {t.options.totalSkillsSize}: {formatBytes(totalBytes)}
-        </span>
       </div>
-      {preferences?.syncSkills && totalBytes > SYNC_MAX_BYTES_PER_ITEM && (
-        <div className="skill-warning">{t.options.syncQuotaWarning}</div>
-      )}
       <div className="skill-validation">
         <strong>
           {failed.length
@@ -106,31 +84,6 @@ export function SkillStatusPanel({
           ))}
         </div>
       </div>
-      <label className="skill-switch-row">
-        <span>
-          <strong>{t.options.readSkillFilesVisible}</strong>
-          <small>{t.options.readSkillFilesVisibleHint}</small>
-        </span>
-        <Switch
-          checked={normalized.readSkillFiles !== false}
-          onCheckedChange={(readSkillFiles) => onPatch({ readSkillFiles })}
-        />
-      </label>
-      <div className="skill-trigger-test">
-        <Input
-          value={triggerPrompt}
-          placeholder={t.options.triggerTestPlaceholder}
-          onChange={(event) => setTriggerPrompt(event.target.value)}
-        />
-        {triggerPrompt && (
-          <span className={trigger.score > 0 ? "ok" : "warn"}>
-            {trigger.score > 0
-              ? t.options.triggerTestLikely
-              : t.options.triggerTestWeak}
-            {trigger.matches.length ? `: ${trigger.matches.join(", ")}` : ""}
-          </span>
-        )}
-      </div>
     </div>
   );
 }
@@ -143,18 +96,20 @@ export function SkillFileList({
 }: {
   skill: Skill;
   onAddFile: (file: SkillFile) => void;
-  onReplaceFile: (file: SkillFile) => void;
+  onReplaceFile: (file: SkillFile, previousPath?: string) => void;
   onDeleteFile: (path: string) => void;
 }) {
   const [language] = useStoredState(storage.language);
   const [replacePath, setReplacePath] = useState("");
   const [addPath, setAddPath] = useState("references/new-file.md");
-  const [previewPath, setPreviewPath] = useState("");
+  const [editPath, setEditPath] = useState("");
+  const [editFilePath, setEditFilePath] = useState("");
+  const [editContent, setEditContent] = useState("");
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
   const t = getMessages(language);
   const files = normalizeSkill(skill).files;
-  const preview = files.find((file) => file.path === previewPath);
+  const editingFile = files.find((file) => file.path === editPath);
 
   async function replaceFile(files: FileList | null) {
     const file = files?.[0];
@@ -169,6 +124,36 @@ export function SkillFileList({
     if (!file || !addPath) return;
     onAddFile(await readReplacementSkillFile(file, addPath));
     if (addInputRef.current) addInputRef.current.value = "";
+  }
+
+  function startEdit(file: SkillFile) {
+    if (file.encoding === "base64") return;
+    setEditPath(editPath === file.path ? "" : file.path);
+    setEditFilePath(file.path);
+    setEditContent(file.content);
+  }
+
+  function saveEditedFile() {
+    if (!editingFile) return;
+    const nextPath =
+      editingFile.path === SKILL_ENTRY_PATH
+        ? SKILL_ENTRY_PATH
+        : editFilePath.trim();
+    if (
+      !nextPath ||
+      (nextPath === SKILL_ENTRY_PATH && editingFile.path !== SKILL_ENTRY_PATH)
+    )
+      return;
+    onReplaceFile(
+      {
+        ...editingFile,
+        path: nextPath,
+        content: editContent,
+        updatedAt: Date.now(),
+      },
+      editingFile.path,
+    );
+    setEditPath("");
   }
 
   return (
@@ -209,77 +194,86 @@ export function SkillFileList({
         onChange={(event) => replaceFile(event.target.files)}
       />
       <div className="skill-file-list">
-        {files.map((file) => (
-          <div className="skill-file-item" key={file.path}>
-            <FileArchive size={18} />
-            <span>
-              <strong>{file.path}</strong>
-              <small>
-                {file.kind} · {file.encoding || "utf-8"} · {file.content.length}{" "}
-                bytes · {formatDate(file.updatedAt)}
-              </small>
-            </span>
-            <div className="skill-file-actions">
-              <Button
-                variant="ghost"
-                size="icon"
-                title={t.options.previewFile}
-                onClick={() =>
-                  setPreviewPath(previewPath === file.path ? "" : file.path)
-                }
-              >
-                <Eye size={14} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                title={t.options.replaceFile}
-                onClick={() => {
-                  setReplacePath(file.path);
-                  window.setTimeout(() => replaceInputRef.current?.click());
-                }}
-              >
-                <Upload size={14} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                title={t.options.downloadFile}
-                onClick={() => downloadSkillFile(file)}
-              >
-                <Download size={14} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                title={t.options.deleteFile}
-                disabled={file.path === SKILL_ENTRY_PATH}
-                onClick={() => onDeleteFile(file.path)}
-              >
-                <Trash2 size={14} />
-              </Button>
+        {files.map((file) => {
+          const isEditing = editingFile?.path === file.path;
+          return (
+            <div className="skill-file-block" key={file.path}>
+              <div className="skill-file-item">
+                <FileArchive size={18} />
+                <span>
+                  <strong>{file.path}</strong>
+                  <small>
+                    {file.kind} · {file.encoding || "utf-8"} ·{" "}
+                    {file.content.length} bytes · {formatDate(file.updatedAt)}
+                  </small>
+                </span>
+                <div className="skill-file-actions">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title={t.options.editFile}
+                    disabled={file.encoding === "base64"}
+                    onClick={() => startEdit(file)}
+                  >
+                    <Pencil size={14} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title={t.options.replaceFile}
+                    onClick={() => {
+                      setReplacePath(file.path);
+                      window.setTimeout(() => replaceInputRef.current?.click());
+                    }}
+                  >
+                    <Upload size={14} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title={t.options.downloadFile}
+                    onClick={() => downloadSkillFile(file)}
+                  >
+                    <Download size={14} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title={t.options.deleteFile}
+                    disabled={file.path === SKILL_ENTRY_PATH}
+                    onClick={() => onDeleteFile(file.path)}
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </div>
+              </div>
+              {isEditing && editingFile.encoding !== "base64" && (
+                <div className="skill-file-editor stack">
+                  <Input
+                    value={editFilePath}
+                    disabled={editingFile.path === SKILL_ENTRY_PATH}
+                    placeholder={t.options.filePath}
+                    aria-label={t.options.filePath}
+                    onChange={(event) => setEditFilePath(event.target.value)}
+                  />
+                  <Textarea
+                    className="skill-file-editor-textarea"
+                    value={editContent}
+                    onChange={(event) => setEditContent(event.target.value)}
+                  />
+                  <div className="row">
+                    <Button size="sm" onClick={saveEditedFile}>
+                      <Check size={14} /> {t.options.saveFile}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-      {preview && (
-        <pre className="skill-file-preview">
-          {preview.encoding === "base64"
-            ? t.options.binaryPreviewUnavailable
-            : preview.content.slice(0, 8_000)}
-        </pre>
-      )}
     </div>
   );
-}
-
-function triggerScore(prompt: string, skill: Skill) {
-  const source = `${skill.name} ${skill.description}`.toLowerCase();
-  const tokens = prompt.toLowerCase().match(/[a-z0-9\u4e00-\u9fff]{2,}/g) || [];
-  const matches = [
-    ...new Set(tokens.filter((token) => source.includes(token))),
-  ];
-  return { score: matches.length, matches: matches.slice(0, 8) };
 }
 
 function skillCheckLabel(t: ReturnType<typeof getMessages>, id: string) {
@@ -287,8 +281,6 @@ function skillCheckLabel(t: ReturnType<typeof getMessages>, id: string) {
     entry: t.options.skillCheckEntry,
     name: t.options.skillCheckName,
     description: t.options.skillCheckDescription,
-    "read-files": t.options.skillCheckReadFiles,
-    references: t.options.skillCheckReferences,
   };
   return labels[id] || id;
 }
@@ -301,4 +293,8 @@ function formatDate(value?: number) {
 function formatBytes(value: number) {
   if (value < 1024) return `${value} B`;
   return `${(value / 1024).toFixed(1)} KB`;
+}
+
+export function formatSkillBytes(value: number) {
+  return formatBytes(value);
 }

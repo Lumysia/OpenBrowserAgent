@@ -6,6 +6,7 @@ import {
   MAX_AUTO_RETRIES,
 } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
+import { isSkillEnabled } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
 import {
   AI_STREAM_PORT_NAME,
@@ -234,10 +235,12 @@ export function SidepanelApp() {
   ) {
     const text = interpolateSkillVariables(content.trim());
     if ((!text && !uploadedAttachments.length) || streaming) return;
-    const availableSkills = preferences?.autoSelectSkills ? skills || [] : [];
-    const sentSkill = selectedSkill
-      ? interpolateSkillPackage(selectedSkill, interpolateSkillVariables)
-      : undefined;
+    const enabledSkills = (skills || []).filter(isSkillEnabled);
+    const availableSkills = preferences?.autoSelectSkills ? enabledSkills : [];
+    const sentSkill =
+      selectedSkill && isSkillEnabled(selectedSkill)
+        ? interpolateSkillPackage(selectedSkill, interpolateSkillVariables)
+        : undefined;
     const context = await buildSidepanelContext({
       mode,
       attachedTabs,
@@ -439,7 +442,7 @@ export function SidepanelApp() {
       streaming={streaming}
       creatingSkill={creatingSkill}
       skillCreated={skillCreated}
-      skills={skills || []}
+      skills={(skills || []).filter(isSkillEnabled)}
       selectedSkill={selectedSkill}
       openMenu={openMenu}
       addMenuView={addMenuView}

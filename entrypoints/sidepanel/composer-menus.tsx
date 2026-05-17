@@ -18,6 +18,7 @@ import type {
 } from "../../src/shared/types";
 import { CHAT_MODE } from "../../src/shared/types";
 import { getSkillDisplayName } from "../../src/shared/skills";
+import { Button } from "../../src/ui/components";
 
 export function AddContextMenu({
   t,
@@ -26,6 +27,7 @@ export function AddContextMenu({
   skills,
   selectedTabIds,
   onShowTabs,
+  onShowSkills,
   onSkill,
   onUploadFiles,
   onToggleTab,
@@ -33,11 +35,12 @@ export function AddContextMenu({
   onSelectElement,
 }: {
   t: Messages;
-  view: "menu" | "tabs";
+  view: "menu" | "tabs" | "skills";
   tabs: AttachmentTab[];
   skills: Skill[];
   selectedTabIds: number[];
   onShowTabs: () => void;
+  onShowSkills: () => void;
   onSkill: (skill: Skill) => void;
   onUploadFiles: () => void;
   onToggleTab: (tab: AttachmentTab) => void;
@@ -47,59 +50,86 @@ export function AddContextMenu({
   if (view === "menu") {
     return (
       <div className="add-context-menu add-context-menu-compact">
-        <button className="composer-menu-item" onClick={onShowTabs}>
+        <Button
+          variant="ghost"
+          className="composer-menu-item"
+          onClick={onShowTabs}
+        >
           <Layers size={17} />
           <span>
             <strong>{t.sidepanel.addNewTab}</strong>
           </span>
-        </button>
-        <button className="composer-menu-item" onClick={onUploadFiles}>
+        </Button>
+        <Button
+          variant="ghost"
+          className="composer-menu-item"
+          onClick={onUploadFiles}
+        >
           <Paperclip size={17} />
           <span>
             <strong>{t.sidepanel.attachFiles}</strong>
             <small>{t.sidepanel.attachFilesHint}</small>
           </span>
-        </button>
+        </Button>
         {!!skills.length && (
-          <>
-            <div className="composer-menu-section-title">
-              {t.options.skills}
-            </div>
-            {skills.map((skill) => (
-              <button
-                key={skill.id}
-                className="composer-menu-item"
-                onClick={() => onSkill(skill)}
-              >
-                <FileText size={17} />
-                <span>
-                  <strong>
-                    {getSkillDisplayName(skill, t.options.untitledSkill)}
-                  </strong>
-                  {skill.description && <small>{skill.description}</small>}
-                </span>
-              </button>
-            ))}
-          </>
+          <Button
+            variant="ghost"
+            className="composer-menu-item"
+            onClick={onShowSkills}
+          >
+            <FileText size={17} />
+            <span>
+              <strong>{t.options.skills}</strong>
+              <small>{skills.length}</small>
+            </span>
+          </Button>
         )}
-        <button className="composer-menu-item" onClick={onSelectElement}>
+        <Button
+          variant="ghost"
+          className="composer-menu-item"
+          onClick={onSelectElement}
+        >
           <MousePointerClick size={17} />
           <span>
             <strong>{t.sidepanel.selectElement}</strong>
           </span>
-        </button>
+        </Button>
+      </div>
+    );
+  }
+
+  if (view === "skills") {
+    return (
+      <div className="add-context-menu">
+        <div className="composer-menu-item muted">
+          <FileText size={17} /> {t.options.skills} ({skills.length})
+        </div>
+        <div>
+          {skills.map((skill) => (
+            <Button
+              key={skill.id}
+              variant="ghost"
+              className="composer-menu-item"
+              onClick={() => onSkill(skill)}
+            >
+              <FileText size={20} />
+              <span>{getSkillDisplayName(skill, t.options.untitledSkill)}</span>
+            </Button>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="add-context-menu add-tabs-panel">
-      <div className="tab-picker-title">
+    <div className="add-context-menu">
+      <div className="composer-menu-item muted">
         <Layers size={17} /> {t.sidepanel.allOpenTabs} ({tabs.length})
       </div>
-      <div className="tab-picker-list">
-        <button
-          className={`tab-picker-item ${selectedTabIds.length === tabs.length ? "active" : ""}`}
+      <div>
+        <Button
+          variant="ghost"
+          className={`composer-menu-item ${selectedTabIds.length === tabs.length ? "active" : ""}`}
           onClick={() =>
             tabs.forEach((tab) => {
               if (
@@ -114,11 +144,12 @@ export function AddContextMenu({
           <span>
             {t.sidepanel.allOpenTabs} ({tabs.length})
           </span>
-        </button>
+        </Button>
         {tabs.map((tab) => (
-          <button
+          <Button
             key={tab.id}
-            className={`tab-picker-item ${selectedTabIds.includes(tab.id) ? "active" : ""}`}
+            variant="ghost"
+            className={`composer-menu-item ${selectedTabIds.includes(tab.id) ? "active" : ""}`}
             onClick={() => onToggleTab(tab)}
           >
             {tab.favIconUrl ? (
@@ -127,22 +158,30 @@ export function AddContextMenu({
               <ExternalLink size={20} />
             )}
             <span>{tab.title || tab.url || `Tab ${tab.id}`}</span>
-          </button>
+          </Button>
         ))}
       </div>
-      <div className="tab-picker-actions">
-        <button className="composer-menu-item" onClick={onAttachTab}>
+      <div>
+        <Button
+          variant="ghost"
+          className="composer-menu-item"
+          onClick={onAttachTab}
+        >
           <Plus size={17} />
           <span>
             <strong>{t.sidepanel.addCurrentTab}</strong>
           </span>
-        </button>
-        <button className="composer-menu-item" onClick={onSelectElement}>
+        </Button>
+        <Button
+          variant="ghost"
+          className="composer-menu-item"
+          onClick={onSelectElement}
+        >
           <MousePointerClick size={17} />
           <span>
             <strong>{t.sidepanel.selectElement}</strong>
           </span>
-        </button>
+        </Button>
       </div>
     </div>
   );

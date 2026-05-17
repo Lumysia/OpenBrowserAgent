@@ -133,14 +133,11 @@ export function readSkill(skills: Skill[], input: Record<string, unknown>) {
     description: skill.description || "",
     entry: entry?.path || "SKILL.md",
     content: entry?.content || "",
-    files:
-      skill.readSkillFiles === false
-        ? []
-        : skill.files?.map((file) => ({
-            path: file.path,
-            kind: file.kind,
-            size: file.content.length,
-          })),
+    files: skill.files?.map((file) => ({
+      path: file.path,
+      kind: file.kind,
+      size: file.content.length,
+    })),
   };
 }
 
@@ -149,8 +146,6 @@ export function readSkillFile(skills: Skill[], input: Record<string, unknown>) {
   const path = String(input.path || "");
   const skill = skills.find((item) => item.id === skillId);
   if (!skill) return { error: "Skill not found", skillId };
-  if (skill.readSkillFiles === false)
-    return { error: "Skill supporting files are not visible", skillId, path };
   const file = skill.files?.find((item) => item.path === path);
   if (!file) return { error: "Skill file not found", skillId, path };
   return {

@@ -115,7 +115,7 @@ export function renderSkillCatalog(skills: Skill[]) {
 ${skills
   .map(
     (skill) =>
-      `- id: ${skill.id}\n  name: ${getSkillDisplayName(skill)}\n  description: ${skill.description || ""}\n  entry: SKILL.md\n  supportingFiles: ${skill.readSkillFiles === false ? "hidden" : "readable"}\n  note: Use readSkill with this id to read SKILL.md if this skill is relevant.${skill.readSkillFiles === false ? " Supporting files are hidden." : " If SKILL.md lists supporting files, use readSkillFile with the path to read them."}`,
+      `- id: ${skill.id}\n  name: ${getSkillDisplayName(skill)}\n  description: ${skill.description || ""}\n  entry: SKILL.md\n  note: Use readSkill with this id to read SKILL.md if this skill is relevant. If SKILL.md lists supporting files, use readSkillFile with the path to read them.`,
   )
   .join("\n\n")}
 </available_skills>`;

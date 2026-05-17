@@ -29,7 +29,7 @@ export function createSkillPackage({
     name: skillName,
     description: description.trim(),
     files: [createSkillFile(skillName, description, instruction, updatedAt)],
-    readSkillFiles: true,
+    enabled: true,
     createdAt,
     updatedAt,
   };
@@ -50,7 +50,7 @@ export function createSkillPackageFromFiles({
     name: normalizeSkillName(name) || "skill",
     description: description.trim(),
     files,
-    readSkillFiles: true,
+    enabled: true,
     createdAt: now,
     updatedAt: now,
   };
@@ -112,7 +112,7 @@ export function getSkillBody(skill: Skill) {
 export function normalizeSkill(skill: Skill): Skill {
   const legacy = skill as LegacySkill;
   if (skill.name && skill.files?.length)
-    return { ...skill, readSkillFiles: skill.readSkillFiles ?? true };
+    return { ...skill, enabled: skill.enabled !== false };
   return createSkillPackage({
     id: skill.id,
     name: legacy.name || legacy.title || "skill",
@@ -123,6 +123,10 @@ export function normalizeSkill(skill: Skill): Skill {
   });
 }
 
+export function isSkillEnabled(skill: Skill) {
+  return normalizeSkill(skill).enabled !== false;
+}
+
 export function duplicateSkill(skill: Skill, existingNames: string[]) {
   const normalized = normalizeSkill(skill);
   const name = uniqueSkillName(`${normalized.name}-copy`, existingNames);
@@ -130,6 +134,7 @@ export function duplicateSkill(skill: Skill, existingNames: string[]) {
     ...normalized,
     id: crypto.randomUUID(),
     name,
+    enabled: true,
     builtin: false,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -146,12 +151,6 @@ export function validateSkill(skill: Skill) {
   const normalized = normalizeSkill(skill);
   const entry = getSkillEntryFile(normalized);
   const metadata = entry ? parseSkillFrontmatter(entry.content) : undefined;
-  const referencedFiles = new Set(
-    Array.from(
-      (entry?.content || "").matchAll(/`([^`]+)`/g),
-      (match) => match[1],
-    ),
-  );
   return [
     { id: "entry", ok: !!entry, message: "SKILL.md exists" },
     {
@@ -164,20 +163,6 @@ export function validateSkill(skill: Skill) {
       id: "description",
       ok: !!metadata?.description || !!normalized.description,
       message: "description is present",
-    },
-    {
-      id: "read-files",
-      ok:
-        !normalized.files.some((file) => file.path !== SKILL_ENTRY_PATH) ||
-        normalized.readSkillFiles !== false,
-      message: "supporting files are readable when present",
-    },
-    {
-      id: "references",
-      ok: normalized.files
-        .filter((file) => file.path !== SKILL_ENTRY_PATH)
-        .every((file) => referencedFiles.has(file.path)),
-      message: "supporting files are referenced from SKILL.md",
     },
   ];
 }

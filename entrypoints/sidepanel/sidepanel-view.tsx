@@ -367,7 +367,11 @@ export function SidepanelView({
                       <Plus size={20} />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="add-context-popover-content">
+                  <PopoverContent
+                    side="top"
+                    align="start"
+                    className="add-context-popover-content"
+                  >
                     <AddContextMenu
                       t={t}
                       view={addMenuView}
@@ -375,6 +379,9 @@ export function SidepanelView({
                       skills={skills}
                       selectedTabIds={attachedTabs.map((tab) => tab.id)}
                       onShowTabs={onShowAllTabsPicker}
+                      onShowSkills={() =>
+                        onSetAddMenuView(ADD_MENU_VIEW.skills)
+                      }
                       onSkill={(skill) => {
                         onSelectSkill(skill);
                         onSetOpenMenu(null);

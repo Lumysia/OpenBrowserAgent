@@ -22,6 +22,7 @@ OpenBrowserAgent is a WXT/Vite/React/TypeScript browser extension for AI-assiste
 
 - Use the local shadcn-style components from `src/ui/components` for buttons, inputs, textarea, select, cards, badges, labels, and accordions.
 - Prefer local shadcn/Radix primitives for interactive UI instead of custom interaction code. Tooltips, popovers, dropdowns, scroll containers, accordions, selects, switches, buttons, inputs, textareas, cards, badges, labels, and similar reusable UI behavior should be implemented through `src/ui/components` first. If a primitive is missing, add a local shadcn-style wrapper around the Radix primitive instead of building one-off CSS/DOM behavior.
+- Do not add custom CSS classes or one-off styles for UI layout/state unless existing shadcn/Radix components, existing shared utility classes, and component props cannot reasonably express the design. If custom CSS is unavoidable, keep it generic and reusable rather than feature-specific.
 - Do not keep old custom UI implementations as compatibility layers during development. When migrating a UI surface to local shadcn/Radix primitives, remove the replaced state, selectors, CSS, and event handling in the same change.
 - Do not add raw ad-hoc buttons/inputs/selects in app code unless a native element is required by browser-extension constraints or a rendered Markdown/HTML boundary makes React components impossible.
 - Keep animations subtle: short fades, accordion transitions, hover/press feedback, and streaming typing indicators.
