@@ -79,16 +79,14 @@ ${message.content}
     typeof message.metadata?.context === "string"
       ? message.metadata.context
       : "";
-  const quickAction = message.metadata?.quickAction as
-    | { instruction?: string }
-    | undefined;
+  const skill = message.metadata?.skill as { instruction?: string } | undefined;
   const attachments = requestAttachments.length
     ? requestAttachments
     : getUploadedAttachments(message);
   return `${
-    quickAction?.instruction
+    skill?.instruction
       ? `<instruction>
-${quickAction.instruction}
+${skill.instruction}
 </instruction>
 
 `
@@ -99,15 +97,11 @@ ${context}
 
 ${renderAttachmentContext(attachments)}
 
-</message_context>${
-    quickAction?.instruction
-      ? ""
-      : `
+</message_context>
 
 <message>
 ${message.content}
-</message>`
-  }`;
+</message>`;
 }
 
 export function getUploadedAttachments(message: ChatMessage) {

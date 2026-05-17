@@ -30,9 +30,9 @@ export function SyncPage() {
       title: t.options.syncProviders,
       description: t.options.syncProvidersDescription,
     },
-    syncQuickActions: {
-      title: t.options.syncQuickActions,
-      description: t.options.syncQuickActionsDescription,
+    syncSkills: {
+      title: t.options.syncSkills,
+      description: t.options.syncSkillsDescription,
     },
     syncChats: {
       title: t.options.syncChats,

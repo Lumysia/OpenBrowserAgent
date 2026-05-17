@@ -1,5 +1,4 @@
 import {
-  Bot,
   ChevronDown,
   History,
   MessageCirclePlus,
@@ -19,17 +18,12 @@ import type {
   ChatMode,
   ModelConfig,
   Preferences,
-  QuickAction,
   SelectedElement,
+  Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
 import {
   Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -47,6 +41,7 @@ import { ComposerAttachments } from "./composer-attachments";
 import { HistoryPanel } from "./history-panel";
 import { IconTooltip } from "./icon-tooltip";
 import { MessageBubble } from "./message-bubble";
+import { ProvidersEmptyState } from "./providers-empty-state";
 import {
   ADD_MENU_VIEW,
   COMPOSER_MENU,
@@ -72,15 +67,16 @@ export function SidepanelView({
   mode,
   attachedTabs,
   pendingAttachments,
+  selectedSkill,
   uploadedAttachments,
   sentAttachmentPreviews,
   attachmentNotice,
   availableTabs,
   selectedElement,
   streaming,
-  creatingQuickAction,
-  quickActionCreated,
-  quickActions,
+  creatingSkill,
+  skillCreated,
+  skills,
   openMenu,
   addMenuView,
   showHistory,
@@ -94,13 +90,15 @@ export function SidepanelView({
   onSetAddMenuView,
   onSetShowHistory,
   onSetSelectedElement,
+  onSetSelectedSkill,
   onSetChats,
   onSetPreferences,
   onCreateChat,
   onCloseChat,
-  onCreateQuickAction,
+  onCreateSkill,
   onSend,
   onStop,
+  onSelectSkill,
   onCancelEditMessage,
   onShowAllTabsPicker,
   onToggleAttachedTab,
@@ -125,15 +123,16 @@ export function SidepanelView({
   mode: ChatMode;
   attachedTabs: AttachmentTab[];
   pendingAttachments: UploadedAttachment[];
+  selectedSkill?: Skill | null;
   uploadedAttachments: UploadedAttachment[];
   sentAttachmentPreviews: Record<string, UploadedAttachment[]>;
   attachmentNotice: string;
   availableTabs: AttachmentTab[];
   selectedElement: SelectedElement | null;
   streaming: boolean;
-  creatingQuickAction: boolean;
-  quickActionCreated: boolean;
-  quickActions: QuickAction[];
+  creatingSkill: boolean;
+  skillCreated: boolean;
+  skills: Skill[];
   openMenu: ComposerMenu | null;
   addMenuView: AddMenuView;
   showHistory: boolean;
@@ -147,13 +146,15 @@ export function SidepanelView({
   onSetAddMenuView: (value: AddMenuView) => void;
   onSetShowHistory: (value: boolean) => void;
   onSetSelectedElement: (value: SelectedElement | null) => void;
+  onSetSelectedSkill: (value: Skill | null) => void;
   onSetChats: (value: Chat[]) => void;
   onSetPreferences: (value: Preferences) => void;
   onCreateChat: () => void;
   onCloseChat: (chatId: string) => void;
-  onCreateQuickAction: () => void;
-  onSend: (content?: string, quickAction?: QuickAction) => void;
+  onCreateSkill: () => void;
+  onSend: () => void;
   onStop: () => void;
+  onSelectSkill: (skill: Skill) => void;
   onCancelEditMessage: () => void;
   onShowAllTabsPicker: () => void;
   onToggleAttachedTab: (tab: AttachmentTab) => void;
@@ -183,26 +184,7 @@ export function SidepanelView({
   }
 
   if (providersReady && modelCount === 0) {
-    return (
-      <div className="sidepanel">
-        <div className="empty">
-          <Card className="stack" style={{ maxWidth: 320 }}>
-            <CardHeader>
-              <Bot size={34} />
-              <CardTitle>{t.sidepanel.connectProviderTitle}</CardTitle>
-              <CardDescription>
-                {t.sidepanel.connectProviderDescription}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={() => chrome.runtime.openOptionsPage()}>
-                {t.sidepanel.addProvider}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    return <ProvidersEmptyState t={t} />;
   }
 
   return (
@@ -286,30 +268,32 @@ export function SidepanelView({
             inputRef={fileInputRef}
             onAttachFiles={onAttachFiles}
           />
-          <div className="quick-action-create-row">
+          <div className="skill-create-row">
             <Button
-              className="quick-action-create"
+              className="skill-create"
               variant="secondary"
               size="sm"
-              disabled={creatingQuickAction}
-              onClick={onCreateQuickAction}
+              disabled={creatingSkill}
+              onClick={onCreateSkill}
             >
               <Plus size={16} />{" "}
-              {creatingQuickAction
-                ? t.sidepanel.generatingQuickAction
-                : quickActionCreated
-                  ? t.sidepanel.quickActionCreated
-                  : t.sidepanel.createQuickAction}
+              {creatingSkill
+                ? t.sidepanel.generatingSkill
+                : skillCreated
+                  ? t.sidepanel.skillCreated
+                  : t.sidepanel.createSkill}
             </Button>
           </div>
           <ComposerAttachments
             t={t}
             attachedTabs={attachedTabs}
             pendingAttachments={pendingAttachments}
+            selectedSkill={selectedSkill}
             selectedElement={selectedElement}
             attachmentNotice={attachmentNotice}
             onRemoveAttachedTab={onRemoveAttachedTab}
             onRemoveUploadedAttachment={onRemoveUploadedAttachment}
+            onClearSkill={() => onSetSelectedSkill(null)}
             onSetSelectedElement={onSetSelectedElement}
           />
           <div className="composer-box">
@@ -318,8 +302,8 @@ export function SidepanelView({
                 <span className="ai-working-orb" />
                 <span>
                   <strong>
-                    {creatingQuickAction
-                      ? t.sidepanel.generatingQuickAction
+                    {creatingSkill
+                      ? t.sidepanel.generatingSkill
                       : t.sidepanel.aiWorking}
                   </strong>
                   <small>{t.sidepanel.aiWorkingDescription}</small>
@@ -386,11 +370,11 @@ export function SidepanelView({
                       t={t}
                       view={addMenuView}
                       tabs={availableTabs}
-                      quickActions={quickActions}
+                      skills={skills}
                       selectedTabIds={attachedTabs.map((tab) => tab.id)}
                       onShowTabs={onShowAllTabsPicker}
-                      onQuickAction={(action) => {
-                        onSend(action.instruction, action);
+                      onSkill={(skill) => {
+                        onSelectSkill(skill);
                         onSetOpenMenu(null);
                       }}
                       onUploadFiles={() => {
@@ -487,7 +471,7 @@ export function SidepanelView({
                 <IconTooltip label={t.sidepanel.send}>
                   <Button
                     className="send-button"
-                    disabled={creatingQuickAction}
+                    disabled={creatingSkill}
                     onClick={() => onSend()}
                   >
                     <Send size={20} />

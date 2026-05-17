@@ -15,8 +15,8 @@ export const STREAM_RENDER_THROTTLE_MS = 80;
 
 export const LOCAL_CHAT_TITLE_MAX_LENGTH = 42;
 export const GENERATED_TITLE_MAX_LENGTH = 48;
-export const QUICK_ACTION_TITLE_MAX_LENGTH = 48;
-export const QUICK_ACTION_SOURCE_MAX_CHARS = 12_000;
+export const SKILL_TITLE_MAX_LENGTH = 48;
+export const SKILL_SOURCE_MAX_CHARS = 12_000;
 export const GENERATED_TITLE_MAX_CJK_CHARS = 10;
 export const GENERATED_TITLE_MAX_WORDS = 10;
 export const MARKDOWN_FILENAME_MAX_LENGTH = 30;
@@ -42,14 +42,14 @@ export const OPTIONS_ROUTE = {
   general: "/",
   sync: "/sync",
   providers: "/providers",
-  quickActions: "/quick-actions",
+  skills: "/skills",
 } as const;
 
 export const OPTIONS_HASH = {
   general: "#/",
   sync: "#/sync",
   providers: "#/providers",
-  quickActions: "#/quick-actions",
+  skills: "#/skills",
 } as const;
 
 export function clampMaxToolSteps(value: number | undefined) {

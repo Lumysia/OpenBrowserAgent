@@ -4,8 +4,6 @@ import {
   AUTO_RETRY_POLL_MS,
   DEFAULT_MAX_TOOL_STEPS,
   MAX_AUTO_RETRIES,
-  OPTIONS_HASH,
-  QUICK_FEEDBACK_MS,
 } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
@@ -20,12 +18,12 @@ import type {
   Chat,
   ChatMessage,
   ChatMode,
-  QuickAction,
   SendMessagesRequest,
+  Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { requestGeneratedTitle, requestQuickAction } from "./ai-requests";
+import { requestGeneratedTitle, requestSkillSelection } from "./ai-requests";
 import { appendAssistantContent, appendAssistantPart } from "./chat-updates";
 import { pruneSentAttachmentPreviews } from "./edit-message";
 import { sortChatsNewestFirst } from "./format";
@@ -33,7 +31,7 @@ import { assistantModelLabel } from "./model-label";
 import { retryStalledStream } from "./retry-stalled-stream";
 import {
   buildSidepanelContext,
-  interpolateQuickAction,
+  interpolateSkillVariables,
 } from "./sidepanel-context";
 import { createSendMessagePlan } from "./send-message-plan";
 import {
@@ -47,20 +45,22 @@ import { streamPartFromChunk } from "./stream-parts";
 import { useComposerContext } from "./use-composer-context";
 import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
+import { createSkillFromChat } from "./use-skill-creator";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
 
 export function SidepanelApp() {
   const [providers] = useStoredState(storage.provider);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const [language] = useStoredState(storage.language);
-  const [quickActions, setQuickActions] = useStoredState(storage.quickAction);
+  const [skills, setSkills] = useStoredState(storage.skills);
+  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [chats, setChats] = useStoredState(storage.chats);
   const [activeChatId, setActiveChatId] = useState<string>();
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<ChatMode>(CHAT_MODE.agent);
   const [streaming, setStreaming] = useState(false);
-  const [creatingQuickAction, setCreatingQuickAction] = useState(false);
-  const [quickActionCreated, setQuickActionCreated] = useState(false);
+  const [creatingSkill, setCreatingSkill] = useState(false);
+  const [skillCreated, setSkillCreated] = useState(false);
   const [openMenu, setOpenMenu] = useState<ComposerMenu | null>(null);
   const [addMenuView, setAddMenuView] = useState<
     (typeof ADD_MENU_VIEW)[keyof typeof ADD_MENU_VIEW]
@@ -93,7 +93,7 @@ export function SidepanelApp() {
   );
   const currentChat = chats?.find((chat) => chat.id === activeChatId);
   const t = getMessages(language);
-  const aiWorking = streaming || creatingQuickAction;
+  const aiWorking = streaming || creatingSkill;
   const { selectElement } = useElementSelector();
   const {
     uploadedAttachments,
@@ -233,44 +233,33 @@ export function SidepanelApp() {
     });
   }
 
-  async function createQuickActionFromCurrentChat() {
-    if (creatingQuickAction) return;
-    if (!currentChat?.messages.length) {
-      chrome.tabs.create({
-        url: chrome.runtime.getURL(`/options.html${OPTIONS_HASH.quickActions}`),
-      });
-      return;
-    }
-    setCreatingQuickAction(true);
-    setQuickActionCreated(false);
-    requestQuickAction({
-      modelId: preferences?.selectedModelId,
-      messages: currentChat.messages,
-      onSuccess: (quickAction) => {
-        setQuickActions((items) => [...items, quickAction]);
-        setCreatingQuickAction(false);
-        setQuickActionCreated(true);
-        window.setTimeout(
-          () => setQuickActionCreated(false),
-          QUICK_FEEDBACK_MS,
-        );
-      },
-      onError: (error) => {
-        if (error) console.warn("Failed to create quick action", error);
-        setCreatingQuickAction(false);
-      },
-    });
-  }
-
   async function send(
     content = input,
-    quickAction?: QuickAction,
     resendAttachments?: UploadedAttachment[],
   ) {
-    const text = interpolateQuickAction(content.trim());
+    const text = interpolateSkillVariables(content.trim());
     if ((!text && !uploadedAttachments.length) || streaming) return;
+    const availableSkills = skills || [];
+    const autoSkillId =
+      !selectedSkill && preferences?.autoSelectSkills
+        ? await requestSkillSelection({
+            modelId: preferences?.selectedModelId,
+            message: text,
+            skills: availableSkills,
+          })
+        : undefined;
+    const appliedSkill =
+      selectedSkill ||
+      availableSkills.find((skill) => skill.id === autoSkillId);
+    const sentSkill = appliedSkill
+      ? {
+          ...appliedSkill,
+          instruction: interpolateSkillVariables(appliedSkill.instruction),
+        }
+      : undefined;
+    const effectiveMode = sentSkill?.mode || mode;
     const context = await buildSidepanelContext({
-      mode,
+      mode: effectiveMode,
       attachedTabs,
       selectedElement,
     });
@@ -303,7 +292,8 @@ export function SidepanelApp() {
       sentTabs,
       sentElement,
       sentAttachments,
-      quickAction,
+      skill: sentSkill,
+      autoSelectedSkill: !!autoSkillId,
     });
     if (sentAttachments.length)
       setSentAttachmentPreviews((items) => ({
@@ -322,6 +312,7 @@ export function SidepanelApp() {
     setAttachedTabs([]);
     clearPendingAttachments();
     setSelectedElement(null);
+    setSelectedSkill(null);
     setEditingMessage(null);
     setStreaming(true);
 
@@ -332,7 +323,7 @@ export function SidepanelApp() {
       messages: [...baseChat.messages, userMessage],
       body: {
         modelId: preferences?.selectedModelId,
-        chatMode: mode,
+        chatMode: effectiveMode,
         language,
         maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
         context: {
@@ -340,6 +331,8 @@ export function SidepanelApp() {
           selectedElement: sentElement,
           text: context,
           uploadedAttachments: activeAttachments,
+          availableSkills,
+          autoSelectSkills: preferences?.autoSelectSkills,
         },
       },
     };
@@ -464,9 +457,10 @@ export function SidepanelApp() {
       availableTabs={availableTabs}
       selectedElement={selectedElement}
       streaming={streaming}
-      creatingQuickAction={creatingQuickAction}
-      quickActionCreated={quickActionCreated}
-      quickActions={quickActions || []}
+      creatingSkill={creatingSkill}
+      skillCreated={skillCreated}
+      skills={skills || []}
+      selectedSkill={selectedSkill}
       openMenu={openMenu}
       addMenuView={addMenuView}
       showHistory={showHistory}
@@ -480,13 +474,27 @@ export function SidepanelApp() {
       onSetAddMenuView={setAddMenuView}
       onSetShowHistory={setShowHistory}
       onSetSelectedElement={setSelectedElement}
+      onSetSelectedSkill={setSelectedSkill}
       onSetChats={setChats}
       onSetPreferences={setPreferences}
       onCreateChat={createChat}
       onCloseChat={closeChat}
-      onCreateQuickAction={createQuickActionFromCurrentChat}
+      onCreateSkill={() =>
+        createSkillFromChat({
+          currentChat,
+          creatingSkill,
+          modelId: preferences?.selectedModelId,
+          setCreatingSkill,
+          setSkillCreated,
+          setSkills,
+        })
+      }
       onSend={send}
       onStop={stop}
+      onSelectSkill={(skill) => {
+        setSelectedSkill(skill);
+        if (skill.mode) setMode(skill.mode);
+      }}
       onCancelEditMessage={cancelEditMessage}
       onShowAllTabsPicker={async () => {
         await showAllTabsPicker();
@@ -500,7 +508,7 @@ export function SidepanelApp() {
       onReplaceUploadedAttachment={replaceUploadedAttachment}
       onEditMessage={editMessage}
       onResendMessage={(message, attachments) =>
-        send(message.content, undefined, attachments)
+        send(message.content, attachments)
       }
       onSelectElement={selectElement}
       onSelectChat={setActiveChatId}

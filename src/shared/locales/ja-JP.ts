@@ -36,9 +36,9 @@ export const jaJP: LocaleMessages = {
     relativeDaysAgo: "{count}日前",
     whatDoYouWant: "何をしますか？",
     emptyDescription: "タスクの自動化、検索、ブラウザー操作。",
-    createQuickAction: "クイックアクションを作成",
-    generatingQuickAction: "クイックアクションを作成中",
-    quickActionCreated: "クイックアクションを作成しました",
+    createSkill: "Skillを作成",
+    generatingSkill: "Skillを作成中",
+    skillCreated: "Skillを作成しました",
     aiWorking: "AIが作業中です",
     aiWorkingDescription: "読み取り、操作し、回答を準備しています。",
     willBeSentToAi: "AIに送信されます",
@@ -148,7 +148,7 @@ export const jaJP: LocaleMessages = {
     general: "一般",
     sync: "同期",
     providers: "プロバイダー",
-    quickActions: "クイックアクション",
+    skills: "Skill",
     modelProviders: "モデルプロバイダー",
     providerDescription:
       "自分のキーでOpenBrowserAgentをお気に入りのAIプロバイダーに接続します。",
@@ -167,17 +167,17 @@ export const jaJP: LocaleMessages = {
     addCustomModelName: "カスタムモデル名を追加",
     addCustom: "カスタムを追加",
     noModelsAddedYet: "モデルはまだ追加されていません。",
-    quickActionsDescription:
-      "クイックアクションでAIにすばやく指示を送信します。",
-    newQuickAction: "新しいクイックアクション",
-    noQuickActionsTitle: "クイックアクションはまだありません",
-    noQuickActionsDescription:
-      "最初のクイックアクションを作成して繰り返し作業を自動化します。",
-    untitledAction: "無題のアクション",
+    skillsDescription: "SkillでAIにすばやく指示を送信します。",
+    newSkill: "新しいSkill",
+    noSkillsTitle: "Skillはまだありません",
+    noSkillsDescription: "最初のSkillを作成して繰り返し作業を自動化します。",
+    untitledSkill: "無題のアクション",
     title: "タイトル",
+    description: "Description",
+    mode: "Mode",
     instruction: "指示",
-    deleteQuickAction: "クイックアクションを削除",
-    deleteQuickActionConfirm: "このクイックアクションを削除しますか？",
+    deleteSkill: "Skillを削除",
+    deleteSkillConfirm: "このSkillを削除しますか？",
     availableVariables: "利用可能な変数（クリックでコピー）：",
     example: "例",
     languageDescription: "拡張機能UIで使用する言語を選択します。",
@@ -200,9 +200,9 @@ export const jaJP: LocaleMessages = {
     syncProviders: "プロバイダーを同期",
     syncProvidersDescription:
       "APIキーを含むプロバイダー設定をブラウザーアカウントで同期します。",
-    syncQuickActions: "クイックアクションを同期",
-    syncQuickActionsDescription:
-      "クイックアクションのテンプレートをブラウザーアカウントで同期します。",
+    syncSkills: "Skillを同期",
+    syncSkillsDescription:
+      "Skillのテンプレートをブラウザーアカウントで同期します。",
     syncChats: "チャットを同期",
     syncChatsDescription:
       "チャット履歴をブラウザーアカウントで同期します。ローカルのみの会話にする場合はオフにします。",
@@ -215,6 +215,9 @@ export const jaJP: LocaleMessages = {
     autoRetry: "自動再試行",
     autoRetryDescription:
       "アシスタントが30秒間新しい出力を生成しない場合、一度だけ自動的に続行します。",
+    autoSelectSkills: "Auto-select Skills",
+    autoSelectSkillsDescription:
+      "Let the AI choose one matching skill when you have not selected one.",
     maxToolSteps: "最大ツールステップ数",
     maxToolStepsDescription:
       "アシスタントが実行できるブラウザーツールのステップ数を設定します。0にするとツール呼び出しを無効にします。",

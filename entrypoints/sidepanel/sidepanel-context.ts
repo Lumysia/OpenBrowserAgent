@@ -15,7 +15,7 @@ import type {
 import { isAskMode } from "../../src/shared/types";
 import { escapeXml } from "./format";
 
-export function interpolateQuickAction(value: string) {
+export function interpolateSkillVariables(value: string) {
   const date = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
   return value.replaceAll("{{ date }}", date);
 }

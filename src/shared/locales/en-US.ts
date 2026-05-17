@@ -40,9 +40,9 @@ export const enUS = {
     relativeDaysAgo: "{count}d ago",
     whatDoYouWant: "What do you want to do?",
     emptyDescription: "Automation tasks, search, and control your browser.",
-    createQuickAction: "Create Quick Action",
-    generatingQuickAction: "Creating Quick Action",
-    quickActionCreated: "Quick Action Created",
+    createSkill: "Create Skill",
+    generatingSkill: "Creating Skill",
+    skillCreated: "Skill Created",
     aiWorking: "AI is working",
     aiWorkingDescription: "Reading, acting, and preparing the response.",
     willBeSentToAi: "Will be sent to the AI",
@@ -143,7 +143,7 @@ export const enUS = {
     general: "General",
     sync: "Sync",
     providers: "Providers",
-    quickActions: "Quick Actions",
+    skills: "Skills",
     modelProviders: "Model Providers",
     providerDescription:
       "Bring your own key and connect OpenBrowserAgent to your favorite AI providers.",
@@ -162,17 +162,19 @@ export const enUS = {
     addCustomModelName: "Add custom model name",
     addCustom: "Add custom",
     noModelsAddedYet: "No models added yet.",
-    quickActionsDescription:
-      "Use quick actions to instantly send messages to the AI.",
-    newQuickAction: "New Quick Action",
-    noQuickActionsTitle: "No quick actions yet",
-    noQuickActionsDescription:
-      "Create your first quick action to automate repetitive tasks with a single click.",
-    untitledAction: "Untitled Action",
+    skillsDescription:
+      "Create reusable browser skills the user or AI can choose for a message.",
+    newSkill: "New Skill",
+    noSkillsTitle: "No skills yet",
+    noSkillsDescription:
+      "Create your first skill to reuse a browser workflow with one click.",
+    untitledSkill: "Untitled Skill",
     title: "Title",
+    description: "Description",
+    mode: "Mode",
     instruction: "Instruction",
-    deleteQuickAction: "Delete Quick Action",
-    deleteQuickActionConfirm: "Delete this quick action?",
+    deleteSkill: "Delete Skill",
+    deleteSkillConfirm: "Delete this skill?",
     availableVariables: "Available variables (click to copy):",
     example: "Example",
     languageDescription: "Choose the language used by the extension UI.",
@@ -195,9 +197,8 @@ export const enUS = {
     syncProviders: "Sync Providers",
     syncProvidersDescription:
       "Sync provider configuration, including API keys, through your browser account.",
-    syncQuickActions: "Sync Quick Actions",
-    syncQuickActionsDescription:
-      "Sync quick action templates through your browser account.",
+    syncSkills: "Sync Skills",
+    syncSkillsDescription: "Sync skill templates through your browser account.",
     syncChats: "Sync Chats",
     syncChatsDescription:
       "Sync chat history through your browser account. Keep this off for local-only conversations.",
@@ -210,6 +211,9 @@ export const enUS = {
     autoRetry: "Auto Retry",
     autoRetryDescription:
       "Automatically continue once if the assistant produces no new output for 30 seconds.",
+    autoSelectSkills: "Auto-select Skills",
+    autoSelectSkillsDescription:
+      "Let the AI choose one matching skill for a message when you have not selected one.",
     maxToolSteps: "Max Tool Steps",
     maxToolStepsDescription:
       "Set how many browser tool steps the assistant may run. Use 0 to disable tool calls.",

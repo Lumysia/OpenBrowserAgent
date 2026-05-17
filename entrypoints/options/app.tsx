@@ -7,7 +7,7 @@ import { ScrollArea } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { GeneralPage } from "./general-page";
 import { ProvidersPage } from "./providers-page";
-import { QuickActionsPage } from "./quick-actions-page";
+import { SkillsPage } from "./skills-page";
 import { useHashRoute } from "./route";
 import { SyncPage } from "./sync-page";
 
@@ -56,10 +56,10 @@ export function OptionsApp() {
           </OptionsLink>
           <OptionsLink
             route={route}
-            target={OPTIONS_ROUTE.quickActions}
-            href={OPTIONS_HASH.quickActions}
+            target={OPTIONS_ROUTE.skills}
+            href={OPTIONS_HASH.skills}
           >
-            {t.options.quickActions}
+            {t.options.skills}
           </OptionsLink>
           <a
             className="nav-link"
@@ -78,8 +78,8 @@ export function OptionsApp() {
             <ProvidersPage />
           ) : route === OPTIONS_ROUTE.sync ? (
             <SyncPage />
-          ) : route === OPTIONS_ROUTE.quickActions ? (
-            <QuickActionsPage />
+          ) : route === OPTIONS_ROUTE.skills ? (
+            <SkillsPage />
           ) : (
             <GeneralPage />
           )}

@@ -25,8 +25,8 @@ import type {
   AttachmentTab,
   ChatMessage,
   ChatPart,
-  QuickAction,
   SelectedElement,
+  Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
 import { isToolPartType } from "../../src/shared/types";
@@ -63,7 +63,7 @@ export function MessageBubble({
 }) {
   const [language] = useStoredState(storage.language);
   const t = getMessages(language);
-  const quickAction = message.metadata?.quickAction as QuickAction | undefined;
+  const skill = message.metadata?.skill as Skill | undefined;
   const sentTabs = Array.isArray(message.metadata?.attachedTabs)
     ? (message.metadata.attachedTabs as AttachmentTab[])
     : [];
@@ -100,7 +100,7 @@ export function MessageBubble({
     <div
       className={`message ${message.role === "user" ? "user" : ""} ${editing ? "editing" : ""}`}
     >
-      {quickAction && <div className="message-label">{quickAction.title}</div>}
+      {skill && <div className="message-label">{skill.title}</div>}
       {message.role === "user" ? (
         <div className="user-bubble">{message.content}</div>
       ) : hasParts ? (

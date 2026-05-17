@@ -1,12 +1,6 @@
 import { nanoid } from "nanoid";
 import { SYNC_MAX_BYTES_PER_ITEM, SYNC_WRITE_DEBOUNCE_MS } from "./config";
-import type {
-  Chat,
-  ChatTab,
-  Preferences,
-  ProviderState,
-  QuickAction,
-} from "./types";
+import type { Chat, ChatTab, Preferences, ProviderState, Skill } from "./types";
 
 const STORAGE_AREAS = {
   local: "local",
@@ -20,7 +14,7 @@ const STORAGE_KEYS = {
   language: "language",
   preferences: "preferences",
   provider: "provider",
-  quickAction: "quick-action",
+  skills: "skills",
   shouldShowUpdateToast: "should-show-update-toast",
   chats: "chats",
   chatTabs: "chat-tabs",
@@ -29,7 +23,7 @@ const STORAGE_KEYS = {
 
 export const SYNCABLE_DATA_ITEMS = [
   { preferenceKey: "syncProviders", dataKey: STORAGE_KEYS.provider },
-  { preferenceKey: "syncQuickActions", dataKey: STORAGE_KEYS.quickAction },
+  { preferenceKey: "syncSkills", dataKey: STORAGE_KEYS.skills },
   { preferenceKey: "syncChats", dataKey: STORAGE_KEYS.chats },
 ] as const;
 
@@ -78,8 +72,9 @@ const DEFAULT_PREFERENCES: Preferences = {
   accentColor: "amber",
   syncSettings: true,
   syncProviders: false,
-  syncQuickActions: false,
+  syncSkills: false,
   syncChats: false,
+  autoSelectSkills: false,
   autoScroll: true,
   autoRetry: true,
   maxToolSteps: 30,
@@ -402,10 +397,10 @@ export const storage = {
     () => ({}),
     "syncProviders",
   ),
-  quickAction: createSwitchableItem<QuickAction[]>(
-    STORAGE_KEYS.quickAction,
+  skills: createSwitchableItem<Skill[]>(
+    STORAGE_KEYS.skills,
     () => [],
-    "syncQuickActions",
+    "syncSkills",
   ),
   shouldShowUpdateToast: createItem<boolean>(
     STORAGE_AREAS.local,

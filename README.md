@@ -11,7 +11,7 @@ It turns the browser into a working surface for AI: attach the current page, sel
 - Attach tabs as context, including current page metadata and page content when needed.
 - Select page elements and let the assistant use them as structured context.
 - Configure your own AI providers, models, and base URLs.
-- Create quick actions for repeated prompts and workflows.
+- Create skills for repeated prompts and workflows.
 - Stream assistant responses and tool activity in the UI.
 - Customize light/dark/system appearance, accent colors, language, and auto-scroll behavior.
 
@@ -20,7 +20,7 @@ It turns the browser into a working surface for AI: attach the current page, sel
 - **Browser-native workflow:** Runs as a Chrome MV3 extension with a dedicated side panel.
 - **Bring your own model:** Supports configurable providers instead of locking the user into one backend.
 - **Tool-aware assistant:** Browser tools can inspect tabs, read page content, search, click, type, group tabs, download content, and more.
-- **Context first:** Tabs, selected elements, quick actions, and current page context are treated as first-class inputs.
+- **Context first:** Tabs, selected elements, skills, and current page context are treated as first-class inputs.
 - **Polished local UI:** Compact side panel, themed settings, streaming states, copy feedback, and multilingual interface support.
 
 ## Tech Stack
@@ -50,8 +50,8 @@ The generated extension is written to `.output/` and can be loaded from Chrome's
 ## Project Structure
 
 - `entrypoints/background.ts` - MV3 service worker, provider calls, browser tools, and AI streaming protocol.
-- `entrypoints/sidepanel/` - React side panel chat UI with Agent/Ask modes, quick actions, tab attachment, and element selection.
-- `entrypoints/options/` - React settings UI for providers, models, language, appearance, preferences, and quick actions.
+- `entrypoints/sidepanel/` - React side panel chat UI with Agent/Ask modes, skills, tab attachment, and element selection.
+- `entrypoints/options/` - React settings UI for providers, models, language, appearance, preferences, and skills.
 - `src/shared/` - storage schema, provider contracts, browser helpers, locale registry, and message types.
 - `src/ui/` - local UI components, shared styles, theme variables, and hooks.
 - `public/` - icons, manifest locale messages, and injected selector script.

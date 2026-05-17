@@ -4,8 +4,8 @@ import type {
   AttachmentTab,
   Chat,
   ChatMessage,
-  QuickAction,
   SelectedElement,
+  Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
 import { generateLocalTitle } from "./sidepanel-context";
@@ -19,7 +19,8 @@ export function createSendMessagePlan({
   sentAttachments,
   context,
   assistantModel,
-  quickAction,
+  skill,
+  autoSelectedSkill,
 }: {
   chat: Chat;
   text: string;
@@ -29,7 +30,8 @@ export function createSendMessagePlan({
   sentAttachments: UploadedAttachment[];
   context: string;
   assistantModel?: { provider: string; name: string };
-  quickAction?: QuickAction;
+  skill?: Skill;
+  autoSelectedSkill?: boolean;
 }) {
   const userMessage: ChatMessage = {
     id: crypto.randomUUID(),
@@ -43,7 +45,7 @@ export function createSendMessagePlan({
       ...(sentAttachments.length
         ? { uploadedAttachments: sentAttachments.map(toAttachmentMetadata) }
         : {}),
-      ...(quickAction ? { quickAction } : {}),
+      ...(skill ? { skill, autoSelectedSkill } : {}),
     },
   };
   const assistantMessage: ChatMessage = {

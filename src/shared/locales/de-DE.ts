@@ -37,9 +37,9 @@ export const deDE: LocaleMessages = {
     whatDoYouWant: "Was möchten Sie tun?",
     emptyDescription:
       "Aufgaben automatisieren, suchen und den Browser steuern.",
-    createQuickAction: "Schnellaktion erstellen",
-    generatingQuickAction: "Schnellaktion wird erstellt",
-    quickActionCreated: "Schnellaktion erstellt",
+    createSkill: "Skill erstellen",
+    generatingSkill: "Skill wird erstellt",
+    skillCreated: "Skill erstellt",
     aiWorking: "KI arbeitet",
     aiWorkingDescription: "Liest, handelt und bereitet die Antwort vor.",
     willBeSentToAi: "Wird an die KI gesendet",
@@ -147,7 +147,7 @@ export const deDE: LocaleMessages = {
     general: "Allgemein",
     sync: "Synchronisierung",
     providers: "Anbieter",
-    quickActions: "Schnellaktionen",
+    skills: "Skillen",
     modelProviders: "Modellanbieter",
     providerDescription:
       "Verbinden Sie OpenBrowserAgent mit Ihren bevorzugten KI-Anbietern über Ihren eigenen Schlüssel.",
@@ -167,17 +167,18 @@ export const deDE: LocaleMessages = {
     addCustomModelName: "Benutzerdefinierten Modellnamen hinzufügen",
     addCustom: "Benutzerdefiniert hinzufügen",
     noModelsAddedYet: "Noch keine Modelle hinzugefügt.",
-    quickActionsDescription:
-      "Senden Sie mit Schnellaktionen sofort Nachrichten an die KI.",
-    newQuickAction: "Neue Schnellaktion",
-    noQuickActionsTitle: "Noch keine Schnellaktionen",
-    noQuickActionsDescription:
-      "Erstellen Sie Ihre erste Schnellaktion, um wiederkehrende Aufgaben zu automatisieren.",
-    untitledAction: "Unbenannte Aktion",
+    skillsDescription: "Senden Sie mit Skillen sofort Nachrichten an die KI.",
+    newSkill: "Neue Skill",
+    noSkillsTitle: "Noch keine Skillen",
+    noSkillsDescription:
+      "Erstellen Sie Ihre erste Skill, um wiederkehrende Aufgaben zu automatisieren.",
+    untitledSkill: "Unbenannte Aktion",
     title: "Titel",
+    description: "Description",
+    mode: "Mode",
     instruction: "Anweisung",
-    deleteQuickAction: "Schnellaktion löschen",
-    deleteQuickActionConfirm: "Diese Schnellaktion löschen?",
+    deleteSkill: "Skill löschen",
+    deleteSkillConfirm: "Diese Skill löschen?",
     availableVariables: "Verfügbare Variablen (zum Kopieren klicken):",
     example: "Beispiel",
     languageDescription: "Wählen Sie die Sprache der Erweiterungsoberfläche.",
@@ -200,9 +201,9 @@ export const deDE: LocaleMessages = {
     syncProviders: "Anbieter synchronisieren",
     syncProvidersDescription:
       "Anbieterkonfiguration einschließlich API-Schlüssel über Ihr Browserkonto synchronisieren.",
-    syncQuickActions: "Schnellaktionen synchronisieren",
-    syncQuickActionsDescription:
-      "Schnellaktionsvorlagen über Ihr Browserkonto synchronisieren.",
+    syncSkills: "Skillen synchronisieren",
+    syncSkillsDescription:
+      "Skillsvorlagen über Ihr Browserkonto synchronisieren.",
     syncChats: "Chats synchronisieren",
     syncChatsDescription:
       "Chatverlauf über Ihr Browserkonto synchronisieren. Deaktivieren für nur lokale Unterhaltungen.",
@@ -216,6 +217,9 @@ export const deDE: LocaleMessages = {
     autoRetry: "Automatisch erneut versuchen",
     autoRetryDescription:
       "Einmal automatisch fortsetzen, wenn der Assistent 30 Sekunden lang keine neue Ausgabe erzeugt.",
+    autoSelectSkills: "Auto-select Skills",
+    autoSelectSkillsDescription:
+      "Let the AI choose one matching skill when you have not selected one.",
     maxToolSteps: "Maximale Tool-Schritte",
     maxToolStepsDescription:
       "Legt fest, wie viele Browser-Tool-Schritte der Assistent ausführen darf. 0 deaktiviert Tool-Aufrufe.",

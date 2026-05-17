@@ -36,9 +36,9 @@ export const ko: LocaleMessages = {
     relativeDaysAgo: "{count}일 전",
     whatDoYouWant: "무엇을 할까요?",
     emptyDescription: "작업 자동화, 검색, 브라우저 제어.",
-    createQuickAction: "빠른 작업 만들기",
-    generatingQuickAction: "빠른 작업 생성 중",
-    quickActionCreated: "빠른 작업 생성됨",
+    createSkill: "Skill 만들기",
+    generatingSkill: "Skill 생성 중",
+    skillCreated: "Skill 생성됨",
     aiWorking: "AI 작업 중",
     aiWorkingDescription: "읽고, 실행하고, 응답을 준비하는 중입니다.",
     willBeSentToAi: "AI로 전송됩니다",
@@ -136,7 +136,7 @@ export const ko: LocaleMessages = {
     general: "일반",
     sync: "동기화",
     providers: "제공업체",
-    quickActions: "빠른 작업",
+    skills: "Skill",
     modelProviders: "모델 제공업체",
     providerDescription:
       "개인 키로 OpenBrowserAgent를 선호하는 AI 제공업체에 연결하세요.",
@@ -155,16 +155,18 @@ export const ko: LocaleMessages = {
     addCustomModelName: "사용자 모델 이름 추가",
     addCustom: "사용자 정의 추가",
     noModelsAddedYet: "아직 추가된 모델이 없습니다.",
-    quickActionsDescription: "빠른 작업으로 AI에 즉시 메시지를 보냅니다.",
-    newQuickAction: "새 빠른 작업",
-    noQuickActionsTitle: "아직 빠른 작업이 없습니다",
-    noQuickActionsDescription:
-      "첫 빠른 작업을 만들어 반복 작업을 한 번의 클릭으로 자동화하세요.",
-    untitledAction: "제목 없는 작업",
+    skillsDescription: "Skill으로 AI에 즉시 메시지를 보냅니다.",
+    newSkill: "새 Skill",
+    noSkillsTitle: "아직 Skill이 없습니다",
+    noSkillsDescription:
+      "첫 Skill을 만들어 반복 작업을 한 번의 클릭으로 자동화하세요.",
+    untitledSkill: "제목 없는 작업",
     title: "제목",
+    description: "Description",
+    mode: "Mode",
     instruction: "지시",
-    deleteQuickAction: "빠른 작업 삭제",
-    deleteQuickActionConfirm: "이 빠른 작업을 삭제할까요?",
+    deleteSkill: "Skill 삭제",
+    deleteSkillConfirm: "이 Skill을 삭제할까요?",
     availableVariables: "사용 가능한 변수(클릭하여 복사):",
     example: "예시",
     languageDescription: "확장 UI에 사용할 언어를 선택하세요.",
@@ -187,9 +189,8 @@ export const ko: LocaleMessages = {
     syncProviders: "제공업체 동기화",
     syncProvidersDescription:
       "API 키를 포함한 제공업체 구성을 브라우저 계정으로 동기화합니다.",
-    syncQuickActions: "빠른 작업 동기화",
-    syncQuickActionsDescription:
-      "빠른 작업 템플릿을 브라우저 계정으로 동기화합니다.",
+    syncSkills: "Skill 동기화",
+    syncSkillsDescription: "Skill 템플릿을 브라우저 계정으로 동기화합니다.",
     syncChats: "채팅 동기화",
     syncChatsDescription:
       "채팅 기록을 브라우저 계정으로 동기화합니다. 로컬 전용 대화는 끄세요.",
@@ -202,6 +203,9 @@ export const ko: LocaleMessages = {
     autoRetry: "자동 재시도",
     autoRetryDescription:
       "어시스턴트가 30초 동안 새 출력을 만들지 않으면 한 번 자동으로 계속합니다.",
+    autoSelectSkills: "Auto-select Skills",
+    autoSelectSkillsDescription:
+      "Let the AI choose one matching skill when you have not selected one.",
     maxToolSteps: "최대 도구 단계",
     maxToolStepsDescription:
       "어시스턴트가 실행할 수 있는 브라우저 도구 단계 수를 설정합니다. 0은 도구 호출을 비활성화합니다.",

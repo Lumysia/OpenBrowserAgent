@@ -6,10 +6,10 @@ import type {
   AiStreamRequest,
   AiStreamResponse,
   ChatMessage,
-  QuickAction,
+  Skill,
 } from "../../src/shared/types";
 
-export function requestQuickAction({
+export function requestSkill({
   modelId,
   messages,
   onSuccess,
@@ -17,14 +17,14 @@ export function requestQuickAction({
 }: {
   modelId?: string;
   messages: ChatMessage[];
-  onSuccess: (quickAction: QuickAction) => void;
+  onSuccess: (skill: Skill) => void;
   onError: (error?: string) => void;
 }) {
   const port = chrome.runtime.connect({ name: AI_STREAM_PORT_NAME });
   const cleanup = createPortCleanup(port);
   port.onMessage.addListener((message: AiStreamResponse) => {
-    if (message.type === "quickAction") {
-      onSuccess(message.quickAction);
+    if (message.type === "skill") {
+      onSuccess(message.skill);
       cleanup();
     }
     if (message.type === "error") {
@@ -34,7 +34,7 @@ export function requestQuickAction({
   });
   try {
     port.postMessage({
-      type: AI_STREAM_REQUEST_TYPE.generateQuickAction,
+      type: AI_STREAM_REQUEST_TYPE.generateSkill,
       modelId,
       messages,
     } satisfies AiStreamRequest);
@@ -42,6 +42,42 @@ export function requestQuickAction({
     onError();
     cleanup();
   }
+}
+
+export function requestSkillSelection({
+  modelId,
+  message,
+  skills,
+}: {
+  modelId?: string;
+  message: string;
+  skills: Skill[];
+}) {
+  return new Promise<string | undefined>((resolve) => {
+    const port = chrome.runtime.connect({ name: AI_STREAM_PORT_NAME });
+    const cleanup = createPortCleanup(port);
+    port.onMessage.addListener((response: AiStreamResponse) => {
+      if (response.type === "skillSelection") {
+        resolve(response.skillId);
+        cleanup();
+      }
+      if (response.type === "error") {
+        resolve(undefined);
+        cleanup();
+      }
+    });
+    try {
+      port.postMessage({
+        type: AI_STREAM_REQUEST_TYPE.selectSkill,
+        modelId,
+        message,
+        skills,
+      } satisfies AiStreamRequest);
+    } catch {
+      resolve(undefined);
+      cleanup();
+    }
+  });
 }
 
 export function requestGeneratedTitle({

@@ -14,7 +14,7 @@ import type {
   AttachmentTab,
   ChatMode,
   ModelConfig,
-  QuickAction,
+  Skill,
 } from "../../src/shared/types";
 import { CHAT_MODE } from "../../src/shared/types";
 
@@ -22,10 +22,10 @@ export function AddContextMenu({
   t,
   view,
   tabs,
-  quickActions,
+  skills,
   selectedTabIds,
   onShowTabs,
-  onQuickAction,
+  onSkill,
   onUploadFiles,
   onToggleTab,
   onAttachTab,
@@ -34,10 +34,10 @@ export function AddContextMenu({
   t: Messages;
   view: "menu" | "tabs";
   tabs: AttachmentTab[];
-  quickActions: QuickAction[];
+  skills: Skill[];
   selectedTabIds: number[];
   onShowTabs: () => void;
-  onQuickAction: (action: QuickAction) => void;
+  onSkill: (skill: Skill) => void;
   onUploadFiles: () => void;
   onToggleTab: (tab: AttachmentTab) => void;
   onAttachTab: () => void;
@@ -59,20 +59,21 @@ export function AddContextMenu({
             <small>{t.sidepanel.attachFilesHint}</small>
           </span>
         </button>
-        {!!quickActions.length && (
+        {!!skills.length && (
           <>
             <div className="composer-menu-section-title">
-              {t.options.quickActions}
+              {t.options.skills}
             </div>
-            {quickActions.map((action) => (
+            {skills.map((skill) => (
               <button
-                key={action.id}
+                key={skill.id}
                 className="composer-menu-item"
-                onClick={() => onQuickAction(action)}
+                onClick={() => onSkill(skill)}
               >
                 <FileText size={17} />
                 <span>
-                  <strong>{action.title || t.options.untitledAction}</strong>
+                  <strong>{skill.title || t.options.untitledSkill}</strong>
+                  {skill.description && <small>{skill.description}</small>}
                 </span>
               </button>
             ))}

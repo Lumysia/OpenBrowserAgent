@@ -31,17 +31,23 @@ export type Preferences = {
   accentColor?: "green" | "blue" | "pink" | "purple" | "amber";
   syncSettings?: boolean;
   syncProviders?: boolean;
-  syncQuickActions?: boolean;
+  syncSkills?: boolean;
   syncChats?: boolean;
+  autoSelectSkills?: boolean;
   autoScroll?: boolean;
   autoRetry?: boolean;
   maxToolSteps?: number;
 };
 
-export type QuickAction = {
+export type Skill = {
   id: string;
   title: string;
+  description?: string;
   instruction: string;
+  mode?: ChatMode;
+  builtin?: boolean;
+  createdAt?: number;
+  updatedAt?: number;
 };
 
 export const CHAT_MODE = {
@@ -154,7 +160,8 @@ export const AI_STREAM_REQUEST_TYPE = {
   abort: "abort",
   sendMessages: "sendMessages",
   generateTitle: "generateTitle",
-  generateQuickAction: "generateQuickAction",
+  generateSkill: "generateSkill",
+  selectSkill: "selectSkill",
 } as const;
 
 export const AI_TEXT_CHUNK_TYPE = {
@@ -176,6 +183,8 @@ export type SendMessagesBody = {
     selectedElement?: SelectedElement | null;
     text?: string;
     uploadedAttachments?: UploadedAttachment[];
+    availableSkills?: Skill[];
+    autoSelectSkills?: boolean;
   };
 };
 
@@ -196,9 +205,15 @@ export type AiStreamRequest =
       metadata?: Record<string, unknown>;
     }
   | {
-      type: "generateQuickAction";
+      type: "generateSkill";
       modelId?: string;
       messages: ChatMessage[];
+    }
+  | {
+      type: "selectSkill";
+      modelId?: string;
+      message: string;
+      skills: Skill[];
     };
 
 export type SendMessagesRequest = Extract<
@@ -211,9 +226,14 @@ export type GenerateTitleRequest = Extract<
   { type: (typeof AI_STREAM_REQUEST_TYPE)["generateTitle"] }
 >;
 
-export type GenerateQuickActionRequest = Extract<
+export type GenerateSkillRequest = Extract<
   AiStreamRequest,
-  { type: (typeof AI_STREAM_REQUEST_TYPE)["generateQuickAction"] }
+  { type: (typeof AI_STREAM_REQUEST_TYPE)["generateSkill"] }
+>;
+
+export type SelectSkillRequest = Extract<
+  AiStreamRequest,
+  { type: (typeof AI_STREAM_REQUEST_TYPE)["selectSkill"] }
 >;
 
 export type AiStreamResponse =
@@ -221,7 +241,8 @@ export type AiStreamResponse =
   | { type: "end" }
   | { type: "error"; error: string }
   | { type: "title"; title: string }
-  | { type: "quickAction"; quickAction: QuickAction };
+  | { type: "skill"; skill: Skill }
+  | { type: "skillSelection"; skillId?: string };
 
 export const providerLabels: Record<ProviderId, string> = {
   gemini: "Gemini",

@@ -36,9 +36,9 @@ export const esES: LocaleMessages = {
     relativeDaysAgo: "hace {count} d",
     whatDoYouWant: "¿Qué quieres hacer?",
     emptyDescription: "Automatiza tareas, busca y controla tu navegador.",
-    createQuickAction: "Crear acción rápida",
-    generatingQuickAction: "Creando acción rápida",
-    quickActionCreated: "Acción rápida creada",
+    createSkill: "Crear Skill",
+    generatingSkill: "Creando Skill",
+    skillCreated: "Skill creada",
     aiWorking: "La IA está trabajando",
     aiWorkingDescription: "Leyendo, actuando y preparando la respuesta.",
     willBeSentToAi: "Se enviará a la IA",
@@ -145,7 +145,7 @@ export const esES: LocaleMessages = {
     general: "General",
     sync: "Sincronización",
     providers: "Proveedores",
-    quickActions: "Acciones rápidas",
+    skills: "Skills",
     modelProviders: "Proveedores de modelos",
     providerDescription:
       "Usa tu propia clave y conecta OpenBrowserAgent con tus proveedores de IA favoritos.",
@@ -164,17 +164,18 @@ export const esES: LocaleMessages = {
     addCustomModelName: "Añadir nombre de modelo personalizado",
     addCustom: "Añadir personalizado",
     noModelsAddedYet: "Aún no hay modelos añadidos.",
-    quickActionsDescription:
-      "Usa acciones rápidas para enviar mensajes a la IA al instante.",
-    newQuickAction: "Nueva acción rápida",
-    noQuickActionsTitle: "Aún no hay acciones rápidas",
-    noQuickActionsDescription:
-      "Crea tu primera acción rápida para automatizar tareas repetitivas.",
-    untitledAction: "Acción sin título",
+    skillsDescription: "Usa Skills para enviar mensajes a la IA al instante.",
+    newSkill: "Nueva Skill",
+    noSkillsTitle: "Aún no hay Skills",
+    noSkillsDescription:
+      "Crea tu primera Skill para automatizar tareas repetitivas.",
+    untitledSkill: "Acción sin título",
     title: "Título",
+    description: "Description",
+    mode: "Mode",
     instruction: "Instrucción",
-    deleteQuickAction: "Eliminar acción rápida",
-    deleteQuickActionConfirm: "¿Eliminar esta acción rápida?",
+    deleteSkill: "Eliminar Skill",
+    deleteSkillConfirm: "¿Eliminar esta Skill?",
     availableVariables: "Variables disponibles (clic para copiar):",
     example: "Ejemplo",
     languageDescription: "Elige el idioma de la interfaz de la extensión.",
@@ -197,9 +198,9 @@ export const esES: LocaleMessages = {
     syncProviders: "Sincronizar proveedores",
     syncProvidersDescription:
       "Sincroniza la configuración de proveedores, incluidas las claves API, con tu cuenta del navegador.",
-    syncQuickActions: "Sincronizar acciones rápidas",
-    syncQuickActionsDescription:
-      "Sincroniza plantillas de acciones rápidas con tu cuenta del navegador.",
+    syncSkills: "Sincronizar Skills",
+    syncSkillsDescription:
+      "Sincroniza plantillas de Skills con tu cuenta del navegador.",
     syncChats: "Sincronizar chats",
     syncChatsDescription:
       "Sincroniza el historial de chats con tu cuenta del navegador. Desactívalo para conversaciones solo locales.",
@@ -212,6 +213,9 @@ export const esES: LocaleMessages = {
     autoRetry: "Reintento automático",
     autoRetryDescription:
       "Continúa automáticamente una vez si el asistente no produce salida nueva durante 30 segundos.",
+    autoSelectSkills: "Auto-select Skills",
+    autoSelectSkillsDescription:
+      "Let the AI choose one matching skill when you have not selected one.",
     maxToolSteps: "Máximo de pasos de herramientas",
     maxToolStepsDescription:
       "Define cuántos pasos de herramientas del navegador puede ejecutar el asistente. Usa 0 para desactivar herramientas.",

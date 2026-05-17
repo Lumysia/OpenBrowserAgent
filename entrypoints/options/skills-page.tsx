@@ -7,7 +7,7 @@ import {
 } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
-import type { QuickAction } from "../../src/shared/types";
+import { CHAT_MODE, type Skill } from "../../src/shared/types";
 import {
   Accordion,
   AccordionContent,
@@ -20,88 +20,94 @@ import {
   CardTitle,
   Input,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Textarea,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 
-export function QuickActionsPage() {
+export function SkillsPage() {
   const [language] = useStoredState(storage.language);
-  const [actions, setActions] = useStoredState(storage.quickAction);
+  const [skills, setSkills] = useStoredState(storage.skills);
   const [selectedId, setSelectedId] = useState("");
-  const [drafts, setDrafts] = useState<Record<string, QuickAction>>({});
+  const [drafts, setDrafts] = useState<Record<string, Skill>>({});
   const [savedId, setSavedId] = useState<string>();
   const [deleteConfirmId, setDeleteConfirmId] = useState<string>();
-  if (!actions) return null;
-  const actionList = actions ?? [];
+  if (!skills) return null;
+  const skillList = skills ?? [];
   const t = getMessages(language);
 
-  function createAction() {
-    const next: QuickAction = {
+  function createSkill() {
+    const now = Date.now();
+    const next: Skill = {
       id: crypto.randomUUID(),
-      title: t.options.untitledAction,
+      title: t.options.untitledSkill,
+      description: "",
       instruction: "",
+      mode: CHAT_MODE.ask,
+      createdAt: now,
+      updatedAt: now,
     };
-    setActions([...actionList, next]);
+    setSkills([...skillList, next]);
     setDrafts((items) => ({ ...items, [next.id]: next }));
     setSelectedId(next.id);
   }
 
-  function draftFor(action: QuickAction) {
-    return drafts[action.id] || action;
+  function draftFor(skill: Skill) {
+    return drafts[skill.id] || skill;
   }
 
-  function updateDraft(action: QuickAction, patch: Partial<QuickAction>) {
+  function updateDraft(skill: Skill, patch: Partial<Skill>) {
     setDrafts((items) => ({
       ...items,
-      [action.id]: { ...draftFor(action), ...patch },
+      [skill.id]: { ...draftFor(skill), ...patch, updatedAt: Date.now() },
     }));
   }
 
-  function saveAction(action: QuickAction) {
-    const draft = draftFor(action);
-    setActions(
-      actionList.map((item) => (item.id === action.id ? draft : item)),
-    );
-    setSavedId(action.id);
+  function saveSkill(skill: Skill) {
+    const draft = draftFor(skill);
+    setSkills(skillList.map((item) => (item.id === skill.id ? draft : item)));
+    setSavedId(skill.id);
     setTimeout(
-      () => setSavedId((id) => (id === action.id ? undefined : id)),
+      () => setSavedId((id) => (id === skill.id ? undefined : id)),
       QUICK_FEEDBACK_MS,
     );
   }
 
-  function deleteAction(action: QuickAction) {
-    if (deleteConfirmId !== action.id) {
-      setDeleteConfirmId(action.id);
+  function deleteSkill(skill: Skill) {
+    if (deleteConfirmId !== skill.id) {
+      setDeleteConfirmId(skill.id);
       return;
     }
-    setActions(actionList.filter((item) => item.id !== action.id));
+    setSkills(skillList.filter((item) => item.id !== skill.id));
     setDrafts((items) => {
       const next = { ...items };
-      delete next[action.id];
+      delete next[skill.id];
       return next;
     });
     setDeleteConfirmId(undefined);
-    if (selectedId === action.id) setSelectedId("");
+    if (selectedId === skill.id) setSelectedId("");
   }
 
   return (
     <div className="stack">
       <div className="split">
         <div>
-          <h1>{t.options.quickActions}</h1>
-          <p className="muted">{t.options.quickActionsDescription}</p>
+          <h1>{t.options.skills}</h1>
+          <p className="muted">{t.options.skillsDescription}</p>
         </div>
-        <Button onClick={createAction}>
-          <Plus size={16} /> {t.options.newQuickAction}
+        <Button onClick={createSkill}>
+          <Plus size={16} /> {t.options.newSkill}
         </Button>
       </div>
-      {!actionList.length && (
+      {!skillList.length && (
         <Card className="empty">
           <CardHeader>
-            <CardTitle>{t.options.noQuickActionsTitle}</CardTitle>
-            <CardDescription>
-              {t.options.noQuickActionsDescription}
-            </CardDescription>
+            <CardTitle>{t.options.noSkillsTitle}</CardTitle>
+            <CardDescription>{t.options.noSkillsDescription}</CardDescription>
           </CardHeader>
         </Card>
       )}
@@ -112,53 +118,82 @@ export function QuickActionsPage() {
         onValueChange={setSelectedId}
         className="stack"
       >
-        {actionList.map((action) => (
-          <AccordionItem value={action.id} key={action.id}>
+        {skillList.map((skill) => (
+          <AccordionItem value={skill.id} key={skill.id}>
             <AccordionTrigger>
-              {action.title || t.options.untitledAction}
+              {skill.title || t.options.untitledSkill}
             </AccordionTrigger>
             <AccordionContent className="stack">
               <Label>
                 {t.options.title}
                 <Input
                   style={{ maxWidth: 400 }}
-                  value={draftFor(action).title}
+                  value={draftFor(skill).title}
                   onChange={(event) =>
-                    updateDraft(action, { title: event.target.value })
+                    updateDraft(skill, { title: event.target.value })
                   }
                 />
+              </Label>
+              <Label>
+                {t.options.description}
+                <Input
+                  style={{ maxWidth: 600 }}
+                  value={draftFor(skill).description || ""}
+                  onChange={(event) =>
+                    updateDraft(skill, { description: event.target.value })
+                  }
+                />
+              </Label>
+              <Label>
+                {t.options.mode}
+                <Select
+                  value={draftFor(skill).mode || CHAT_MODE.ask}
+                  onValueChange={(mode) =>
+                    updateDraft(skill, { mode: mode as Skill["mode"] })
+                  }
+                >
+                  <SelectTrigger style={{ maxWidth: 240 }}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={CHAT_MODE.ask}>{t.words.ask}</SelectItem>
+                    <SelectItem value={CHAT_MODE.agent}>
+                      {t.words.agent}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </Label>
               <Label>
                 {t.options.instruction}
                 <Textarea
                   style={{ maxWidth: 600, minHeight: 150 }}
-                  value={draftFor(action).instruction}
+                  value={draftFor(skill).instruction}
                   onChange={(event) =>
-                    updateDraft(action, { instruction: event.target.value })
+                    updateDraft(skill, { instruction: event.target.value })
                   }
                 />
               </Label>
-              <QuickActionVariables />
+              <SkillVariables />
               <div className="row">
                 <Button
-                  onClick={() => saveAction(action)}
+                  onClick={() => saveSkill(skill)}
                   disabled={
-                    JSON.stringify(draftFor(action)) === JSON.stringify(action)
+                    JSON.stringify(draftFor(skill)) === JSON.stringify(skill)
                   }
                 >
-                  {savedId === action.id ? <Check size={16} /> : null}
-                  {savedId === action.id ? t.common.saved : t.common.save}
+                  {savedId === skill.id ? <Check size={16} /> : null}
+                  {savedId === skill.id ? t.common.saved : t.common.save}
                 </Button>
                 <Button
                   variant="destructive"
-                  onClick={() => deleteAction(action)}
+                  onClick={() => deleteSkill(skill)}
                 >
                   <Trash2 size={16} />{" "}
-                  {deleteConfirmId === action.id
+                  {deleteConfirmId === skill.id
                     ? t.common.confirm
-                    : t.options.deleteQuickAction}
+                    : t.options.deleteSkill}
                 </Button>
-                {deleteConfirmId === action.id && (
+                {deleteConfirmId === skill.id && (
                   <Button
                     variant="secondary"
                     onClick={() => setDeleteConfirmId(undefined)}
@@ -175,7 +210,7 @@ export function QuickActionsPage() {
   );
 }
 
-function QuickActionVariables() {
+function SkillVariables() {
   const [language] = useStoredState(storage.language);
   const [copied, setCopied] = useState(false);
   const t = getMessages(language);

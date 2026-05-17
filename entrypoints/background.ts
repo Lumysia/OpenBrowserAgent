@@ -8,8 +8,8 @@ import {
   GENERATED_TITLE_MAX_WORDS,
   ISO_DATE_LENGTH,
   MODEL_TEMPERATURE,
-  QUICK_ACTION_SOURCE_MAX_CHARS,
-  QUICK_ACTION_TITLE_MAX_LENGTH,
+  SKILL_SOURCE_MAX_CHARS,
+  SKILL_TITLE_MAX_LENGTH,
   STREAM_CHUNK_DELAY_MS,
 } from "../src/shared/config";
 import {
@@ -24,10 +24,11 @@ import {
   type AiStreamResponse,
   type ChatMessage,
   type ChatMode,
-  type GenerateQuickActionRequest,
+  type GenerateSkillRequest,
   type GenerateTitleRequest,
   type ProviderId,
-  type QuickAction,
+  type SelectSkillRequest,
+  type Skill,
   type SendMessagesRequest,
 } from "../src/shared/types";
 import { requestOpenAICompatible } from "../src/background/providers";
@@ -81,11 +82,20 @@ export default defineBackground(() => {
           .catch(() => post(port, { type: "title", title: "New Chat" }));
       }
 
-      if (request.type === AI_STREAM_REQUEST_TYPE.generateQuickAction) {
-        generateQuickAction(request)
-          .then((quickAction) =>
-            post(port, { type: "quickAction", quickAction }),
-          )
+      if (request.type === AI_STREAM_REQUEST_TYPE.generateSkill) {
+        generateSkill(request)
+          .then((skill) => post(port, { type: "skill", skill }))
+          .catch((error) =>
+            post(port, {
+              type: "error",
+              error: error?.message || String(error),
+            }),
+          );
+      }
+
+      if (request.type === AI_STREAM_REQUEST_TYPE.selectSkill) {
+        selectSkill(request)
+          .then((skillId) => post(port, { type: "skillSelection", skillId }))
           .catch((error) =>
             post(port, {
               type: "error",
@@ -271,18 +281,16 @@ function compactTitle(value: string) {
     .slice(0, GENERATED_TITLE_MAX_LENGTH);
 }
 
-async function generateQuickAction(
-  request: GenerateQuickActionRequest,
-): Promise<QuickAction> {
+async function generateSkill(request: GenerateSkillRequest): Promise<Skill> {
   const model = await resolveModel(request.modelId);
-  const source = renderQuickActionSource(request.messages).slice(
+  const source = renderSkillSource(request.messages).slice(
     0,
-    QUICK_ACTION_SOURCE_MAX_CHARS,
+    SKILL_SOURCE_MAX_CHARS,
   );
-  const prompt = `Create a reusable quick action from this browser-agent chat.
+  const prompt = `Create a reusable skill from this browser-agent chat.
 
 Return JSON only with this shape:
-{"title":"short name","instruction":"reusable instruction"}
+{"title":"short name","description":"one sentence","instruction":"reusable instruction","mode":"Ask or Agent"}
 
 Rules:
 - Generalize the workflow so it can be reused later.
@@ -298,22 +306,52 @@ ${source}
     {
       role: "system",
       content:
-        "You create concise reusable browser-agent quick actions. Return valid JSON only.",
+        "You create concise reusable browser-agent skills. Return valid JSON only.",
     },
     { role: "user", content: prompt },
   ]);
-  const parsed = parseJsonObject(raw) as Partial<QuickAction>;
-  const title = String(parsed.title || "Quick Action")
+  const parsed = parseJsonObject(raw) as Partial<Skill>;
+  const title = String(parsed.title || "Skill")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, QUICK_ACTION_TITLE_MAX_LENGTH);
+    .slice(0, SKILL_TITLE_MAX_LENGTH);
   const instruction = String(parsed.instruction || "").trim();
   if (!instruction) throw new Error("The model did not create an instruction.");
   return {
     id: crypto.randomUUID(),
-    title: title || "Quick Action",
+    title: title || "Skill",
+    description: String(parsed.description || "").trim(),
     instruction,
+    mode: String(parsed.mode || "").toLowerCase() === "agent" ? "Agent" : "Ask",
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
   };
+}
+
+async function selectSkill(request: SelectSkillRequest) {
+  if (!request.skills.length) return undefined;
+  const model = await resolveModel(request.modelId);
+  const skillList = request.skills
+    .map(
+      (skill) =>
+        `- id=${skill.id}\n  title=${skill.title}\n  description=${skill.description || ""}\n  instruction=${skill.instruction.slice(0, 500)}`,
+    )
+    .join("\n");
+  const raw = await requestPlainText(model, [
+    {
+      role: "system",
+      content:
+        "Select at most one skill for a browser-agent user message. Return JSON only.",
+    },
+    {
+      role: "user",
+      content: `Available skills:\n${skillList}\n\nUser message:\n${request.message}\n\nReturn {"skillId":"..."} if a skill clearly applies, otherwise {"skillId":""}.`,
+    },
+  ]);
+  const parsed = parseJsonObject(raw) as { skillId?: string };
+  return request.skills.some((skill) => skill.id === parsed.skillId)
+    ? parsed.skillId
+    : undefined;
 }
 
 async function requestPlainText(
@@ -369,7 +407,7 @@ async function requestPlainText(
   return data.choices?.[0]?.message?.content || "";
 }
 
-function renderQuickActionSource(messages: ChatMessage[]) {
+function renderSkillSource(messages: ChatMessage[]) {
   return messages
     .map((message) => {
       const parts = (message.parts || [])
