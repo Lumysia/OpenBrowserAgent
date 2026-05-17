@@ -105,6 +105,7 @@ function SidepanelApp() {
   const sidepanelRef = useRef<HTMLDivElement | null>(null);
   const messagesRef = useRef<HTMLElement | null>(null);
   const chatsRef = useRef<Chat[]>([]);
+  const initializedChatSelectionRef = useRef(false);
   const lastStreamActivityRef = useRef(Date.now());
   const activeStreamRef = useRef<ActiveStream | null>(null);
 
@@ -122,8 +123,7 @@ function SidepanelApp() {
       ),
     [providers],
   );
-  const currentChat =
-    chats?.find((chat) => chat.id === activeChatId) || chats?.[0];
+  const currentChat = chats?.find((chat) => chat.id === activeChatId);
   const t = getMessages(language);
   const aiWorking = streaming || creatingQuickAction;
 
@@ -148,8 +148,17 @@ function SidepanelApp() {
       createChat();
       return;
     }
+    if (!initializedChatSelectionRef.current) {
+      initializedChatSelectionRef.current = true;
+      const emptyChat = [...chats]
+        .reverse()
+        .find((chat) => !chat.messages.length);
+      if (emptyChat) setActiveChatId(emptyChat.id);
+      else createChat();
+      return;
+    }
     if (!activeChatId || !chats.some((chat) => chat.id === activeChatId))
-      setActiveChatId(chats[0].id);
+      setActiveChatId(sortChatsNewestFirst(chats)[0]?.id);
   }, [activeChatId, chats]);
 
   useEffect(() => {
@@ -289,7 +298,8 @@ function SidepanelApp() {
   function closeChat(chatId: string) {
     setChats((items) => {
       const next = items.filter((chat) => chat.id !== chatId);
-      if (activeChatId === chatId) setActiveChatId(next[0]?.id);
+      if (activeChatId === chatId)
+        setActiveChatId(sortChatsNewestFirst(next)[0]?.id);
       return next;
     });
   }
@@ -1045,13 +1055,14 @@ function HistoryPanel({
   onSelect: (chatId: string) => void;
   onClose: (chatId: string) => void;
 }) {
+  const sortedChats = sortChatsNewestFirst(chats);
   return (
     <div className="history-panel" data-popover-root="true">
       <div className="history-panel-header">{t.sidepanel.chatHistory}</div>
       {!chats.length && (
         <div className="history-empty">{t.sidepanel.noChatsYet}</div>
       )}
-      {chats.map((chat) => (
+      {sortedChats.map((chat) => (
         <div
           className={`history-item ${chat.id === activeChatId ? "active" : ""}`}
           key={chat.id}
@@ -1073,6 +1084,12 @@ function HistoryPanel({
         </div>
       ))}
     </div>
+  );
+}
+
+function sortChatsNewestFirst(chats: Chat[]) {
+  return [...chats].sort(
+    (a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt),
   );
 }
 
