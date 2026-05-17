@@ -31,6 +31,7 @@ import type {
 import { isToolPartType } from "../../src/shared/types";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { IconTooltip } from "./icon-tooltip";
+import { formatAttachmentSize } from "./file-attachments";
 import { renderMarkdown } from "./markdown";
 import { ToolPart } from "./tool-part";
 import { useThrottledText } from "./use-throttled-text";
@@ -398,11 +399,14 @@ function UserMessageActions({
           <small>{t.sidepanel.replaceUnavailableAttachmentsDescription}</small>
           {missingAttachments.map((attachment) => (
             <div key={attachment.id} className="attachment-replace-row">
-              <span title={attachment.name}>{attachment.name}</span>
+              <FileIcon attachment={attachment} size={18} />
+              <span title={attachment.name}>
+                <strong>{attachment.name}</strong>
+                <small>{formatAttachmentSize(attachment.size)}</small>
+              </span>
               <label
                 className={buttonVariants({ variant: "secondary", size: "sm" })}
               >
-                <File size={14} />
                 {t.sidepanel.attachFiles}
                 <input
                   type="file"
@@ -432,6 +436,24 @@ function UserMessageActions({
       </Popover>
     </div>
   );
+}
+
+function FileIcon({
+  attachment,
+  size,
+}: {
+  attachment: UploadedAttachment;
+  size: number;
+}) {
+  if (attachment.kind === ATTACHMENT_KIND.image) return <Image size={size} />;
+  if (attachment.kind === ATTACHMENT_KIND.audio)
+    return <FileAudio size={size} />;
+  if (attachment.kind === ATTACHMENT_KIND.video)
+    return <FileVideo size={size} />;
+  if (attachment.kind === ATTACHMENT_KIND.text) return <FileText size={size} />;
+  if (attachment.kind === ATTACHMENT_KIND.document)
+    return <FileText size={size} />;
+  return <File size={size} />;
 }
 
 function formatMessageTime(value: number) {

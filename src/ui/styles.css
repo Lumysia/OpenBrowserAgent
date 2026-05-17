@@ -1594,35 +1594,78 @@ a {
 }
 .attachment-replace-popover {
   display: grid;
-  gap: 8px;
-  width: min(310px, calc(100vw - 24px));
+  gap: 10px;
+  width: min(340px, calc(100vw - 24px));
+  padding: 12px;
 }
 .attachment-replace-popover > strong {
-  font-size: 13px;
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1.15;
 }
 .attachment-replace-popover > small {
   color: var(--muted-foreground);
   font-size: 12px;
+  line-height: 1.4;
+  margin-top: -5px;
 }
 .attachment-replace-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--card) 84%, var(--accent-softer));
+  gap: 9px;
+  padding: 8px 8px 8px 9px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 45%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card) 82%, var(--accent-softer));
   color: var(--foreground);
   font-size: 12px;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 48%, transparent);
+}
+.attachment-replace-row > svg {
+  width: 30px;
+  height: 30px;
+  padding: 6px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent-soft) 58%, var(--card));
+  color: var(--accent-strong);
 }
 .attachment-replace-row span {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+.attachment-replace-row span strong,
+.attachment-replace-row span small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.attachment-replace-row span strong {
+  font-size: 12px;
+  font-weight: 700;
+}
+.attachment-replace-row span small {
+  color: var(--muted-foreground);
+  font-size: 10px;
+  font-weight: 550;
+  opacity: 0.8;
+}
 .attachment-replace-row label {
+  height: 28px;
+  padding: 0 9px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 16%, var(--border));
+  background: color-mix(in srgb, var(--accent-soft) 42%, var(--card));
+  color: var(--accent-strong);
   cursor: pointer;
+}
+.attachment-replace-popover > .ui-button {
+  height: 34px;
+  margin-top: 1px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 48%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--secondary) 72%, var(--card));
+  color: var(--muted-foreground);
 }
 .attachment-replace-row input {
   display: none;
