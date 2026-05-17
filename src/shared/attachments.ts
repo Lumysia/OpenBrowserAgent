@@ -108,3 +108,10 @@ export function isMetadataOnlyAttachment(kind: UploadedAttachmentKind) {
     kind === ATTACHMENT_KIND.video
   );
 }
+
+export function toAttachmentMetadata<
+  T extends { dataUrl?: string; text?: string },
+>(attachment: T) {
+  const { dataUrl, text, ...metadata } = attachment;
+  return metadata;
+}

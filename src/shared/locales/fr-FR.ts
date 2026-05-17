@@ -55,6 +55,11 @@ export const frFR: LocaleMessages = {
       "Le modèle sélectionné a rejeté la charge image/fichier, j'ai donc réessayé avec le texte et les détails des fichiers seulement.",
     attachmentOnlyMessage: "Veuillez examiner les fichiers joints.",
     fileMetadataOnly: "Détails du fichier uniquement",
+    replaceUnavailableAttachments: "Remplacer les fichiers indisponibles",
+    replaceUnavailableAttachmentsDescription:
+      "Choisissez des remplacements ou renvoyez sans eux.",
+    resendWithoutMissingFiles: "Renvoyer sans fichiers manquants",
+    unavailableAttachments: "{count} indisponibles",
     allOpenTabs: "Tous les onglets ouverts",
     selectElement: "Sélectionner un élément",
     selectModel: "Sélectionner un modèle",

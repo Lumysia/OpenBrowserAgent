@@ -54,6 +54,11 @@ export const esES: LocaleMessages = {
       "El modelo seleccionado rechazó la carga de imagen/archivo, así que reintenté solo con texto y detalles del archivo.",
     attachmentOnlyMessage: "Revisa los archivos adjuntos.",
     fileMetadataOnly: "Solo detalles del archivo",
+    replaceUnavailableAttachments: "Reemplazar archivos no disponibles",
+    replaceUnavailableAttachmentsDescription:
+      "Elige reemplazos o reenvía sin ellos.",
+    resendWithoutMissingFiles: "Reenviar sin archivos faltantes",
+    unavailableAttachments: "{count} no disponibles",
     allOpenTabs: "Todas las pestañas abiertas",
     selectElement: "Seleccionar elemento",
     selectModel: "Seleccionar modelo",

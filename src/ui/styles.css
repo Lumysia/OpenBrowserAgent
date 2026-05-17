@@ -1565,6 +1565,59 @@ a {
   font-weight: 500;
   opacity: 0.76;
 }
+.user-message-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 5px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  opacity: 0.66;
+}
+.user-message-actions button {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  color: inherit;
+}
+.user-message-actions button:hover {
+  background: rgba(22, 21, 18, 0.06);
+  color: var(--accent-strong);
+}
+.attachment-replace-popover {
+  display: grid;
+  gap: 8px;
+  width: min(310px, calc(100vw - 24px));
+}
+.attachment-replace-popover > strong {
+  font-size: 13px;
+}
+.attachment-replace-popover > small {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.attachment-replace-row {
+  display: grid;
+  gap: 5px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--foreground);
+  font-size: 12px;
+}
+.attachment-replace-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.attachment-replace-row input {
+  max-width: 100%;
+  font-size: 11px;
+}
 .composer {
   position: sticky;
   bottom: 0;

@@ -54,6 +54,11 @@ export const jaJP: LocaleMessages = {
       "選択したモデルが画像/ファイルのペイロードを拒否したため、テキストとファイル情報のみで再試行しました。",
     attachmentOnlyMessage: "添付ファイルを確認してください。",
     fileMetadataOnly: "ファイル情報のみ",
+    replaceUnavailableAttachments: "利用できないファイルを置き換え",
+    replaceUnavailableAttachmentsDescription:
+      "置き換えるファイルを選ぶか、それらを除いて再送信します。",
+    resendWithoutMissingFiles: "不足ファイルなしで再送信",
+    unavailableAttachments: "{count}件利用不可",
     allOpenTabs: "開いているすべてのタブ",
     selectElement: "要素を選択",
     selectModel: "モデルを選択",

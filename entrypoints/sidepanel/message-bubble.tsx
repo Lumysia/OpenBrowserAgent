@@ -8,6 +8,7 @@ import {
   FileVideo,
   Image,
   MousePointerClick,
+  RotateCcw,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { ATTACHMENT_KIND } from "../../src/shared/attachments";
@@ -33,13 +34,25 @@ import { IconTooltip } from "./icon-tooltip";
 import { renderMarkdown } from "./markdown";
 import { ToolPart } from "./tool-part";
 import { useThrottledText } from "./use-throttled-text";
+import {
+  Button,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../src/ui/components";
 
 export function MessageBubble({
   message,
   sentAttachments = [],
+  activeAttachments = [],
+  onReplaceAttachment,
+  onResend,
 }: {
   message: ChatMessage;
   sentAttachments?: UploadedAttachment[];
+  activeAttachments?: UploadedAttachment[];
+  onReplaceAttachment?: (id: string, files: FileList | File[]) => Promise<void>;
+  onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
 }) {
   const [language] = useStoredState(storage.language);
   const t = getMessages(language);
@@ -54,6 +67,25 @@ export function MessageBubble({
     | { provider?: string; name?: string }
     | undefined;
   const hasParts = !!message.parts?.length;
+  const metadataAttachments = Array.isArray(
+    message.metadata?.uploadedAttachments,
+  )
+    ? (message.metadata.uploadedAttachments as UploadedAttachment[])
+    : [];
+  const displayAttachments = sentAttachments.length
+    ? sentAttachments
+    : metadataAttachments;
+  const availableAttachments = displayAttachments
+    .map(
+      (attachment) =>
+        activeAttachments.find((item) => item.id === attachment.id) ||
+        sentAttachments.find((item) => item.id === attachment.id),
+    )
+    .filter((attachment): attachment is UploadedAttachment => !!attachment);
+  const missingAttachments = displayAttachments.filter(
+    (attachment) =>
+      !availableAttachments.some((item) => item.id === attachment.id),
+  );
   const modelLabel = assistantModel
     ? [assistantModel.provider, assistantModel.name].filter(Boolean).join(" · ")
     : undefined;
@@ -73,19 +105,33 @@ export function MessageBubble({
           <span />
         </span>
       ) : (
-        <AssistantText text={message.content} modelLabel={modelLabel} />
+        <AssistantText
+          text={message.content}
+          modelLabel={modelLabel}
+          createdAt={message.createdAt}
+        />
       )}
-      {message.role === "assistant" && hasParts && modelLabel && (
-        <div className="assistant-model-meta">{modelLabel}</div>
+      {message.role === "assistant" && hasParts && (
+        <div className="assistant-actions">
+          <span className="assistant-model-meta">
+            {[modelLabel, formatMessageTime(message.createdAt)]
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
+        </div>
       )}
       {message.role === "user" && !!sentTabs.length && (
         <div className="sent-context-row">
           <SentTabsChip tabs={sentTabs} />
         </div>
       )}
-      {message.role === "user" && !!sentAttachments.length && (
+      {message.role === "user" && !!displayAttachments.length && (
         <div className="sent-context-row">
-          <SentAttachmentsChip attachments={sentAttachments} t={t} />
+          <SentAttachmentsChip
+            attachments={displayAttachments}
+            unavailableCount={missingAttachments.length}
+            t={t}
+          />
         </div>
       )}
       {message.role === "user" && sentElement && (
@@ -99,6 +145,16 @@ export function MessageBubble({
             </span>
           </div>
         </div>
+      )}
+      {message.role === "user" && (
+        <UserMessageActions
+          t={t}
+          message={message}
+          availableAttachments={availableAttachments}
+          missingAttachments={missingAttachments}
+          onReplaceAttachment={onReplaceAttachment}
+          onResend={onResend}
+        />
       )}
     </div>
   );
@@ -114,9 +170,11 @@ function AssistantPart({ t, part }: { t: Messages; part: ChatPart }) {
 function AssistantText({
   text,
   modelLabel,
+  createdAt,
 }: {
   text: string;
   modelLabel?: string;
+  createdAt?: number;
 }) {
   const [language] = useStoredState(storage.language);
   const [copied, setCopied] = useState(false);
@@ -176,8 +234,12 @@ function AssistantText({
             {copied ? <Check size={15} /> : <Copy size={15} />}
           </button>
         </IconTooltip>
-        {modelLabel && (
-          <span className="assistant-model-meta">{modelLabel}</span>
+        {(modelLabel || createdAt) && (
+          <span className="assistant-model-meta">
+            {[modelLabel, createdAt ? formatMessageTime(createdAt) : ""]
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
         )}
       </div>
     </div>
@@ -220,9 +282,11 @@ function SentTabsChip({ tabs }: { tabs: AttachmentTab[] }) {
 
 function SentAttachmentsChip({
   attachments,
+  unavailableCount = 0,
   t,
 }: {
   attachments: UploadedAttachment[];
+  unavailableCount?: number;
   t: Messages;
 }) {
   const visibleAttachments = attachments.slice(
@@ -257,8 +321,115 @@ function SentAttachmentsChip({
           {title}
           {extraCount > 0 ? <em>+ {extraCount}</em> : null}
         </strong>
-        <small>{t.sidepanel.willBeSentToAi}</small>
+        <small>
+          {unavailableCount
+            ? t.sidepanel.unavailableAttachments.replace(
+                "{count}",
+                String(unavailableCount),
+              )
+            : t.sidepanel.willBeSentToAi}
+        </small>
       </span>
     </div>
   );
+}
+
+function UserMessageActions({
+  t,
+  message,
+  availableAttachments,
+  missingAttachments,
+  onReplaceAttachment,
+  onResend,
+}: {
+  t: Messages;
+  message: ChatMessage;
+  availableAttachments: UploadedAttachment[];
+  missingAttachments: UploadedAttachment[];
+  onReplaceAttachment?: (id: string, files: FileList | File[]) => Promise<void>;
+  onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return undefined;
+    const timeout = window.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
+    return () => window.clearTimeout(timeout);
+  }, [copied]);
+
+  function copyText() {
+    navigator.clipboard
+      .writeText(message.content)
+      .then(() => setCopied(true))
+      .catch(() => undefined);
+  }
+
+  function resend() {
+    if (missingAttachments.length) {
+      setOpen(true);
+      return;
+    }
+    onResend?.(message, availableAttachments);
+  }
+
+  return (
+    <div className="user-message-actions">
+      <span>{formatMessageTime(message.createdAt)}</span>
+      <IconTooltip label={copied ? t.common.copied : t.common.copy}>
+        <button onClick={copyText}>
+          {copied ? <Check size={13} /> : <Copy size={13} />}
+        </button>
+      </IconTooltip>
+      <Popover
+        open={open}
+        onOpenChange={(nextOpen) =>
+          setOpen(missingAttachments.length ? nextOpen : false)
+        }
+      >
+        <PopoverTrigger asChild>
+          <button onClick={resend}>
+            <RotateCcw size={13} />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="attachment-replace-popover">
+          <strong>{t.sidepanel.replaceUnavailableAttachments}</strong>
+          <small>{t.sidepanel.replaceUnavailableAttachmentsDescription}</small>
+          {missingAttachments.map((attachment) => (
+            <label key={attachment.id} className="attachment-replace-row">
+              <span>{attachment.name}</span>
+              <input
+                type="file"
+                onChange={(event) => {
+                  if (event.target.files)
+                    void onReplaceAttachment?.(
+                      attachment.id,
+                      event.target.files,
+                    );
+                  event.target.value = "";
+                }}
+              />
+            </label>
+          ))}
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => {
+              setOpen(false);
+              onResend?.(message, availableAttachments);
+            }}
+          >
+            {t.sidepanel.resendWithoutMissingFiles}
+          </Button>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+function formatMessageTime(value: number) {
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(value);
 }

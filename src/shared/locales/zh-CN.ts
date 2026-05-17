@@ -54,6 +54,11 @@ export const zhCN: LocaleMessages = {
       "当前模型拒绝了图片/文件负载，已自动改用文字和文件信息重试。",
     attachmentOnlyMessage: "请查看附件内容。",
     fileMetadataOnly: "仅发送文件信息",
+    replaceUnavailableAttachments: "替换不可用文件",
+    replaceUnavailableAttachmentsDescription:
+      "选择替换文件，或不带这些文件重发。",
+    resendWithoutMissingFiles: "不带缺失文件重发",
+    unavailableAttachments: "{count} 个不可用",
     allOpenTabs: "所有打开的标签页",
     selectElement: "选择元素",
     selectModel: "选择模型",

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getActiveTab } from "../../src/shared/browser";
 import {
   AUTO_RETRY_IDLE_MS,
   AUTO_RETRY_POLL_MS,
@@ -18,13 +17,11 @@ import {
 import type {
   AiStreamRequest,
   AiStreamResponse,
-  AttachmentTab,
   Chat,
   ChatMessage,
   ChatMode,
   QuickAction,
   SendMessagesRequest,
-  SelectedElement,
   UploadedAttachment,
 } from "../../src/shared/types";
 import { useStoredState } from "../../src/ui/useStoredState";
@@ -35,7 +32,6 @@ import { assistantModelLabel } from "./model-label";
 import {
   buildSidepanelContext,
   interpolateQuickAction,
-  toAttachmentTab,
 } from "./sidepanel-context";
 import { createSendMessagePlan } from "./send-message-plan";
 import {
@@ -46,7 +42,7 @@ import {
 } from "./sidepanel-menu-state";
 import { SidepanelView } from "./sidepanel-view";
 import { streamPartFromChunk } from "./stream-parts";
-import { useActiveTabContext } from "./use-active-tab-context";
+import { useComposerContext } from "./use-composer-context";
 import { useElementSelector } from "./use-element-selector";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
 
@@ -59,10 +55,6 @@ export function SidepanelApp() {
   const [activeChatId, setActiveChatId] = useState<string>();
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<ChatMode>(CHAT_MODE.agent);
-  const [attachedTabs, setAttachedTabs] = useState<AttachmentTab[]>([]);
-  const [availableTabs, setAvailableTabs] = useState<AttachmentTab[]>([]);
-  const [selectedElement, setSelectedElement] =
-    useState<SelectedElement | null>(null);
   const [streaming, setStreaming] = useState(false);
   const [creatingQuickAction, setCreatingQuickAction] = useState(false);
   const [quickActionCreated, setQuickActionCreated] = useState(false);
@@ -106,9 +98,21 @@ export function SidepanelApp() {
     attachmentNotice,
     attachFiles,
     removeUploadedAttachment,
+    replaceUploadedAttachment,
     clearPendingAttachments,
     clearUploadedAttachments,
   } = useUploadedAttachments(t);
+  const {
+    attachedTabs,
+    availableTabs,
+    selectedElement,
+    setAttachedTabs,
+    setSelectedElement,
+    attachActiveTab,
+    showAllTabsPicker,
+    toggleAttachedTab,
+    removeAttachedTab,
+  } = useComposerContext(chats || []);
 
   useEffect(() => void (aiWorking && setOpenMenu(null)), [aiWorking]);
 
@@ -146,14 +150,6 @@ export function SidepanelApp() {
     clearUploadedAttachments();
     setSentAttachmentPreviews({});
   }, [activeChatId]);
-
-  useActiveTabContext({
-    chats: chats || [],
-    attachedTabs,
-    selectedElement,
-    setAttachedTabs,
-    setSelectedElement,
-  });
 
   useEffect(() => {
     if (preferences?.autoScroll === false) return;
@@ -238,7 +234,11 @@ export function SidepanelApp() {
     });
   }
 
-  async function send(content = input, quickAction?: QuickAction) {
+  async function send(
+    content = input,
+    quickAction?: QuickAction,
+    resendAttachments?: UploadedAttachment[],
+  ) {
     const text = interpolateQuickAction(content.trim());
     if ((!text && !uploadedAttachments.length) || streaming) return;
     const context = await buildSidepanelContext({
@@ -249,7 +249,7 @@ export function SidepanelApp() {
     const chat = currentChat || createChat();
     const sentTabs = attachedTabs;
     const sentElement = selectedElement;
-    const sentAttachments = pendingAttachments;
+    const sentAttachments = resendAttachments || pendingAttachments;
     const activeAttachments = uploadedAttachments;
     const assistantModel = assistantModelLabel({
       modelId: preferences?.selectedModelId,
@@ -446,38 +446,6 @@ export function SidepanelApp() {
     });
   }
 
-  async function attachActiveTab() {
-    const tab = await getActiveTab();
-    const attachment = tab ? toAttachmentTab(tab) : null;
-    if (!attachment) return;
-    setAttachedTabs((tabs) => [
-      ...tabs.filter((item) => item.id !== attachment.id),
-      attachment,
-    ]);
-  }
-
-  async function showAllTabsPicker() {
-    const tabs = await chrome.tabs.query({ currentWindow: true });
-    setAvailableTabs(
-      tabs
-        .map((tab) => toAttachmentTab(tab))
-        .filter((tab): tab is AttachmentTab => !!tab),
-    );
-    setAddMenuView(ADD_MENU_VIEW.tabs);
-  }
-
-  function toggleAttachedTab(tab: AttachmentTab) {
-    setAttachedTabs((tabs) =>
-      tabs.some((item) => item.id === tab.id)
-        ? tabs.filter((item) => item.id !== tab.id)
-        : [...tabs, tab],
-    );
-  }
-
-  function removeAttachedTab(tabId: number) {
-    setAttachedTabs((tabs) => tabs.filter((item) => item.id !== tabId));
-  }
-
   return (
     <SidepanelView
       t={t}
@@ -491,6 +459,7 @@ export function SidepanelApp() {
       mode={mode}
       attachedTabs={attachedTabs}
       pendingAttachments={pendingAttachments}
+      uploadedAttachments={uploadedAttachments}
       sentAttachmentPreviews={sentAttachmentPreviews}
       attachmentNotice={attachmentNotice}
       availableTabs={availableTabs}
@@ -518,12 +487,19 @@ export function SidepanelApp() {
       onCreateQuickAction={createQuickActionFromCurrentChat}
       onSend={send}
       onStop={stop}
-      onShowAllTabsPicker={showAllTabsPicker}
+      onShowAllTabsPicker={async () => {
+        await showAllTabsPicker();
+        setAddMenuView(ADD_MENU_VIEW.tabs);
+      }}
       onToggleAttachedTab={toggleAttachedTab}
       onAttachActiveTab={attachActiveTab}
       onRemoveAttachedTab={removeAttachedTab}
       onAttachFiles={attachFiles}
       onRemoveUploadedAttachment={removeUploadedAttachment}
+      onReplaceUploadedAttachment={replaceUploadedAttachment}
+      onResendMessage={(message, attachments) =>
+        send(message.content, undefined, attachments)
+      }
       onSelectElement={selectElement}
       onSelectChat={setActiveChatId}
     />

@@ -55,6 +55,11 @@ export const deDE: LocaleMessages = {
       "Das ausgewählte Modell hat die Bild-/Dateinutzlast abgelehnt, daher wurde mit Text und Dateidetails erneut versucht.",
     attachmentOnlyMessage: "Bitte prüfen Sie die angehängten Dateien.",
     fileMetadataOnly: "Nur Dateidetails",
+    replaceUnavailableAttachments: "Nicht verfügbare Dateien ersetzen",
+    replaceUnavailableAttachmentsDescription:
+      "Ersatzdateien auswählen oder ohne sie erneut senden.",
+    resendWithoutMissingFiles: "Ohne fehlende Dateien erneut senden",
+    unavailableAttachments: "{count} nicht verfügbar",
     allOpenTabs: "Alle geöffneten Tabs",
     selectElement: "Element auswählen",
     selectModel: "Modell auswählen",

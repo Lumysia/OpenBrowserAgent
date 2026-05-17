@@ -58,6 +58,11 @@ export const enUS = {
       "The selected model rejected the image/file payload, so I retried with text and file details only.",
     attachmentOnlyMessage: "Please review the attached files.",
     fileMetadataOnly: "File details only",
+    replaceUnavailableAttachments: "Replace unavailable files",
+    replaceUnavailableAttachmentsDescription:
+      "Choose replacements, or resend without them.",
+    resendWithoutMissingFiles: "Resend without missing files",
+    unavailableAttachments: "{count} unavailable",
     allOpenTabs: "All open tabs",
     selectElement: "Select element",
     selectModel: "Select model",

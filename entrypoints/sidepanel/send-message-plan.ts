@@ -1,3 +1,4 @@
+import { toAttachmentMetadata } from "../../src/shared/attachments";
 import type { Messages } from "../../src/shared/i18n";
 import type {
   AttachmentTab,
@@ -39,6 +40,9 @@ export function createSendMessagePlan({
       ...(context ? { context } : {}),
       ...(sentTabs.length ? { attachedTabs: sentTabs } : {}),
       ...(sentElement ? { selectedElement: sentElement } : {}),
+      ...(sentAttachments.length
+        ? { uploadedAttachments: sentAttachments.map(toAttachmentMetadata) }
+        : {}),
       ...(quickAction ? { quickAction } : {}),
     },
   };

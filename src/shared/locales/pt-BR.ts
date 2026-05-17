@@ -54,6 +54,11 @@ export const ptBR: LocaleMessages = {
       "O modelo selecionado rejeitou o payload de imagem/arquivo, então tentei novamente apenas com texto e detalhes do arquivo.",
     attachmentOnlyMessage: "Revise os arquivos anexados.",
     fileMetadataOnly: "Somente detalhes do arquivo",
+    replaceUnavailableAttachments: "Substituir arquivos indisponíveis",
+    replaceUnavailableAttachmentsDescription:
+      "Escolha substitutos ou reenvie sem eles.",
+    resendWithoutMissingFiles: "Reenviar sem arquivos ausentes",
+    unavailableAttachments: "{count} indisponíveis",
     allOpenTabs: "Todas as abas abertas",
     selectElement: "Selecionar elemento",
     selectModel: "Selecionar modelo",

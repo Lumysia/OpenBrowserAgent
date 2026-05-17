@@ -54,6 +54,11 @@ export const zhTW: LocaleMessages = {
       "目前模型拒絕了圖片/檔案負載，已自動改用文字和檔案資訊重試。",
     attachmentOnlyMessage: "請查看附件內容。",
     fileMetadataOnly: "僅傳送檔案資訊",
+    replaceUnavailableAttachments: "替換不可用檔案",
+    replaceUnavailableAttachmentsDescription:
+      "選擇替換檔案，或不帶這些檔案重發。",
+    resendWithoutMissingFiles: "不帶缺失檔案重發",
+    unavailableAttachments: "{count} 個不可用",
     allOpenTabs: "所有開啟的分頁",
     selectElement: "選擇元素",
     selectModel: "選擇模型",

@@ -15,6 +15,7 @@ import { CHAT_MODE } from "../../src/shared/types";
 import type {
   AttachmentTab,
   Chat,
+  ChatMessage,
   ChatMode,
   ModelConfig,
   Preferences,
@@ -66,6 +67,7 @@ export function SidepanelView({
   mode,
   attachedTabs,
   pendingAttachments,
+  uploadedAttachments,
   sentAttachmentPreviews,
   attachmentNotice,
   availableTabs,
@@ -99,6 +101,8 @@ export function SidepanelView({
   onRemoveAttachedTab,
   onAttachFiles,
   onRemoveUploadedAttachment,
+  onReplaceUploadedAttachment,
+  onResendMessage,
   onSelectElement,
   onSelectChat,
 }: {
@@ -113,6 +117,7 @@ export function SidepanelView({
   mode: ChatMode;
   attachedTabs: AttachmentTab[];
   pendingAttachments: UploadedAttachment[];
+  uploadedAttachments: UploadedAttachment[];
   sentAttachmentPreviews: Record<string, UploadedAttachment[]>;
   attachmentNotice: string;
   availableTabs: AttachmentTab[];
@@ -146,6 +151,14 @@ export function SidepanelView({
   onRemoveAttachedTab: (tabId: number) => void;
   onAttachFiles: (files: FileList | File[]) => Promise<void>;
   onRemoveUploadedAttachment: (id: string) => void;
+  onReplaceUploadedAttachment: (
+    id: string,
+    files: FileList | File[],
+  ) => Promise<void>;
+  onResendMessage: (
+    message: ChatMessage,
+    attachments: UploadedAttachment[],
+  ) => void;
   onSelectElement: () => Promise<void>;
   onSelectChat: (chatId: string) => void;
 }) {
@@ -255,6 +268,9 @@ export function SidepanelView({
               key={message.id}
               message={message}
               sentAttachments={sentAttachmentPreviews[message.id] || []}
+              activeAttachments={uploadedAttachments}
+              onReplaceAttachment={onReplaceUploadedAttachment}
+              onResend={onResendMessage}
             />
           ))}
         </ScrollArea>
