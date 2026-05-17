@@ -4,5 +4,8 @@
   },
   "extDescription": {
     "message": "OpenBrowserAgent bringt KI-Agenten in Ihren Browser und hilft Ihnen, Aufgaben intelligent zu automatisieren."
+  },
+  "selectorPrompt": {
+    "message": "Element auswählen - Esc zum Abbrechen"
   }
 }

@@ -4,5 +4,8 @@
   },
   "extDescription": {
     "message": "OpenBrowserAgent lleva agentes de IA a tu navegador para ayudarte a automatizar tareas de forma inteligente."
+  },
+  "selectorPrompt": {
+    "message": "Seleccionar elemento - Esc para cancelar"
   }
 }

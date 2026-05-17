@@ -48,18 +48,23 @@
   root.appendChild(highlight);
 
   const label = document.createElement("div");
-  label.textContent = "Select element - Esc to cancel";
+  label.textContent =
+    chrome.i18n?.getMessage("selectorPrompt") ||
+    "Select element - Esc to cancel";
   Object.assign(label.style, {
     position: "fixed",
-    top: "12px",
+    top: "18px",
     left: "50%",
     transform: "translateX(-50%)",
-    padding: "8px 12px",
+    padding: "16px 24px",
     border: "1px solid var(--oba-selector-border)",
     borderRadius: "999px",
     background: "var(--oba-selector-surface)",
     color: "var(--oba-selector-foreground)",
-    boxShadow: "0 10px 34px rgba(0,0,0,.24)",
+    font: "26px system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+    fontWeight: "650",
+    letterSpacing: "-0.02em",
+    boxShadow: "0 16px 44px rgba(0,0,0,.28)",
   });
   root.appendChild(label);
 

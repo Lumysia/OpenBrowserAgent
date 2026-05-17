@@ -4,5 +4,8 @@
   },
   "extDescription": {
     "message": "OpenBrowserAgent intègre des agents IA dans votre navigateur pour vous aider à automatiser intelligemment vos tâches."
+  },
+  "selectorPrompt": {
+    "message": "Sélectionner un élément - Échap pour annuler"
   }
 }

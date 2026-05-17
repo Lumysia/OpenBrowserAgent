@@ -4,5 +4,8 @@
   },
   "extDescription": {
     "message": "OpenBrowserAgent 將 AI Agent 帶入你的瀏覽器，協助你智慧地自動化任務。"
+  },
+  "selectorPrompt": {
+    "message": "選擇元素 - 按 Esc 取消"
   }
 }
