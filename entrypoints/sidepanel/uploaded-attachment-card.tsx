@@ -1,5 +1,9 @@
 import { File, FileAudio, FileText, FileVideo, Image, X } from "lucide-react";
 import type { RefObject } from "react";
+import {
+  ATTACHMENT_KIND,
+  isMetadataOnlyAttachment,
+} from "../../src/shared/attachments";
 import type { Messages } from "../../src/shared/i18n";
 import type { UploadedAttachment } from "../../src/shared/types";
 import { formatAttachmentSize } from "./file-attachments";
@@ -34,13 +38,9 @@ export function UploadedAttachmentCard({
   t: Messages;
   onRemove: () => void;
 }) {
-  const status =
-    attachment.kind === "audio" ||
-    attachment.kind === "document" ||
-    attachment.kind === "file" ||
-    attachment.kind === "video"
-      ? t.sidepanel.fileMetadataOnly
-      : t.sidepanel.willBeSentToAi;
+  const status = isMetadataOnlyAttachment(attachment.kind)
+    ? t.sidepanel.fileMetadataOnly
+    : t.sidepanel.willBeSentToAi;
 
   return (
     <div className="context-card attachment-card">
@@ -63,12 +63,13 @@ export function UploadedAttachmentCard({
 }
 
 function AttachmentPreview({ attachment }: { attachment: UploadedAttachment }) {
-  if (attachment.kind === "image" && attachment.dataUrl)
+  if (attachment.kind === ATTACHMENT_KIND.image && attachment.dataUrl)
     return <img src={attachment.dataUrl} alt="" />;
-  if (attachment.kind === "text") return <FileText size={18} />;
-  if (attachment.kind === "audio") return <FileAudio size={18} />;
-  if (attachment.kind === "video") return <FileVideo size={18} />;
-  if (attachment.kind === "document") return <FileText size={18} />;
-  if (attachment.kind === "image") return <Image size={18} />;
+  if (attachment.kind === ATTACHMENT_KIND.text) return <FileText size={18} />;
+  if (attachment.kind === ATTACHMENT_KIND.audio) return <FileAudio size={18} />;
+  if (attachment.kind === ATTACHMENT_KIND.video) return <FileVideo size={18} />;
+  if (attachment.kind === ATTACHMENT_KIND.document)
+    return <FileText size={18} />;
+  if (attachment.kind === ATTACHMENT_KIND.image) return <Image size={18} />;
   return <File size={18} />;
 }

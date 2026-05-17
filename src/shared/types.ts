@@ -1,3 +1,5 @@
+import type { UploadedAttachmentKind } from "./attachments";
+
 export type ProviderId =
   | "gemini"
   | "ollama"
@@ -59,14 +61,6 @@ export type AttachmentTab = {
   url?: string;
   favIconUrl?: string;
 };
-
-export type UploadedAttachmentKind =
-  | "audio"
-  | "document"
-  | "file"
-  | "image"
-  | "text"
-  | "video";
 
 export type UploadedAttachment = {
   id: string;

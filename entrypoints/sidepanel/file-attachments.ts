@@ -2,24 +2,11 @@ import {
   MAX_UPLOAD_FILE_BYTES,
   MAX_UPLOAD_TOTAL_BYTES,
 } from "../../src/shared/config";
+import {
+  ATTACHMENT_KIND,
+  classifyAttachment,
+} from "../../src/shared/attachments";
 import type { UploadedAttachment } from "../../src/shared/types";
-
-const TEXT_FILE_TYPES = new Set([
-  "application/json",
-  "application/xml",
-  "application/yaml",
-  "text/css",
-  "text/csv",
-  "text/html",
-  "text/javascript",
-  "text/markdown",
-  "text/plain",
-  "text/xml",
-]);
-
-const TEXT_FILE_EXTENSIONS =
-  /\.(csv|css|html?|json|jsonl|log|md|markdown|tsv|txt|xml|ya?ml)$/i;
-const DOCUMENT_FILE_EXTENSIONS = /\.(docx?|pdf|pptx?|rtf|xlsx?)$/i;
 
 export type AttachmentReadResult = {
   attachments: UploadedAttachment[];
@@ -61,38 +48,31 @@ export function formatAttachmentSize(bytes: number) {
 }
 
 function readUploadAttachment(file: File): Promise<UploadedAttachment> {
-  if (file.type.startsWith("image/")) {
+  const kind = classifyAttachment(file.name, file.type);
+
+  if (kind === ATTACHMENT_KIND.image) {
     return readAsDataUrl(file).then((dataUrl) => ({
       id: crypto.randomUUID(),
       name: file.name,
       type: file.type,
       size: file.size,
-      kind: "image",
+      kind,
       dataUrl,
     }));
   }
 
-  if (isTextFile(file)) {
+  if (kind === ATTACHMENT_KIND.text) {
     return readAsText(file).then((text) => ({
       id: crypto.randomUUID(),
       name: file.name,
       type: file.type || "text/plain",
       size: file.size,
-      kind: "text",
+      kind,
       text,
     }));
   }
 
-  if (file.type.startsWith("audio/"))
-    return Promise.resolve(createMetadataAttachment(file, "audio"));
-
-  if (file.type.startsWith("video/"))
-    return Promise.resolve(createMetadataAttachment(file, "video"));
-
-  if (isDocumentFile(file))
-    return Promise.resolve(createMetadataAttachment(file, "document"));
-
-  return Promise.resolve(createMetadataAttachment(file, "file"));
+  return Promise.resolve(createMetadataAttachment(file, kind));
 }
 
 function createMetadataAttachment(
@@ -106,21 +86,6 @@ function createMetadataAttachment(
     size: file.size,
     kind,
   };
-}
-
-function isTextFile(file: File) {
-  return TEXT_FILE_TYPES.has(file.type) || TEXT_FILE_EXTENSIONS.test(file.name);
-}
-
-function isDocumentFile(file: File) {
-  return (
-    DOCUMENT_FILE_EXTENSIONS.test(file.name) ||
-    file.type.includes("pdf") ||
-    file.type.includes("officedocument") ||
-    file.type.includes("msword") ||
-    file.type.includes("ms-excel") ||
-    file.type.includes("ms-powerpoint")
-  );
 }
 
 function readAsDataUrl(file: File) {

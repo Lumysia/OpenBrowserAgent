@@ -10,6 +10,7 @@ import {
   MousePointerClick,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { ATTACHMENT_KIND } from "../../src/shared/attachments";
 import {
   COPY_FEEDBACK_MS,
   SENT_ATTACHMENTS_PREVIEW_COUNT,
@@ -211,17 +212,17 @@ function SentAttachmentsChip({
     <div className="sent-tabs-chip">
       <div className="sent-tabs-icons">
         {visibleAttachments.map((attachment) =>
-          attachment.kind === "image" && attachment.dataUrl ? (
+          attachment.kind === ATTACHMENT_KIND.image && attachment.dataUrl ? (
             <img key={attachment.id} src={attachment.dataUrl} alt="" />
-          ) : attachment.kind === "text" ? (
+          ) : attachment.kind === ATTACHMENT_KIND.text ? (
             <FileText key={attachment.id} size={24} />
-          ) : attachment.kind === "audio" ? (
+          ) : attachment.kind === ATTACHMENT_KIND.audio ? (
             <FileAudio key={attachment.id} size={24} />
-          ) : attachment.kind === "video" ? (
+          ) : attachment.kind === ATTACHMENT_KIND.video ? (
             <FileVideo key={attachment.id} size={24} />
-          ) : attachment.kind === "document" ? (
+          ) : attachment.kind === ATTACHMENT_KIND.document ? (
             <FileText key={attachment.id} size={24} />
-          ) : attachment.kind === "image" ? (
+          ) : attachment.kind === ATTACHMENT_KIND.image ? (
             <Image key={attachment.id} size={24} />
           ) : (
             <File key={attachment.id} size={24} />

@@ -1,4 +1,5 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
+import { ATTACHMENT_TOOL_DESCRIPTION } from "../shared/attachments";
 
 export const browserTools = [
   tool(
@@ -146,12 +147,11 @@ export const browserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.readUploadedAttachment,
-    "Read a user-uploaded attachment that is available in the current active chat memory. Use this when the USER asks about an uploaded local file or image.",
+    ATTACHMENT_TOOL_DESCRIPTION.readUploadedAttachment,
     {
       attachmentId: {
         type: "string",
-        description:
-          "The attachment ID from the available_attachments list in the user context",
+        description: ATTACHMENT_TOOL_DESCRIPTION.attachmentId,
       },
     },
   ),

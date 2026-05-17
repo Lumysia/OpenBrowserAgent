@@ -1,5 +1,10 @@
 import { POST_TEXT_CHUNK_SIZE } from "../shared/config";
 import {
+  ATTACHMENT_CONTEXT_TAG,
+  ATTACHMENT_KIND,
+  ATTACHMENT_READ_NOTE,
+} from "../shared/attachments";
+import {
   AI_TEXT_CHUNK_TYPE,
   type AiStreamResponse,
   type ChatMessage,
@@ -113,20 +118,23 @@ export function getUploadedAttachments(message: ChatMessage) {
 
 export function renderAttachmentContext(attachments: UploadedAttachment[]) {
   if (!attachments.length) return "";
-  return `<available_attachments>
+  return `<${ATTACHMENT_CONTEXT_TAG}>
 ${attachments
   .map((attachment) => {
     const header = `- id: ${attachment.id}\n  name: ${attachment.name}\n  type: ${attachment.type || "unknown"}\n  size: ${attachment.size} bytes\n  kind: ${attachment.kind}`;
-    if (attachment.kind === "text" && attachment.text)
-      return `${header}\n  note: Use readUploadedAttachment with this id to read the file text.`;
-    if (attachment.kind === "image")
-      return `${header}\n  note: Use readUploadedAttachment with this id to inspect the image data if needed.`;
-    if (attachment.kind === "audio" || attachment.kind === "video")
-      return `${header}\n  note: Audio and video content is metadata-only here; ask for a transcript or text export if needed.`;
-    if (attachment.kind === "document")
-      return `${header}\n  note: Document binary content is metadata-only here unless the file was uploaded as plain text.`;
-    return `${header}\n  note: Binary content is not readable as text; use readUploadedAttachment for file metadata.`;
+    if (attachment.kind === ATTACHMENT_KIND.text && attachment.text)
+      return `${header}\n  note: ${ATTACHMENT_READ_NOTE.text}`;
+    if (attachment.kind === ATTACHMENT_KIND.image)
+      return `${header}\n  note: ${ATTACHMENT_READ_NOTE.image}`;
+    if (
+      attachment.kind === ATTACHMENT_KIND.audio ||
+      attachment.kind === ATTACHMENT_KIND.video
+    )
+      return `${header}\n  note: ${ATTACHMENT_READ_NOTE.media}`;
+    if (attachment.kind === ATTACHMENT_KIND.document)
+      return `${header}\n  note: ${ATTACHMENT_READ_NOTE.document}`;
+    return `${header}\n  note: ${ATTACHMENT_READ_NOTE.binary}`;
   })
   .join("\n\n")}
-</available_attachments>`;
+</${ATTACHMENT_CONTEXT_TAG}>`;
 }

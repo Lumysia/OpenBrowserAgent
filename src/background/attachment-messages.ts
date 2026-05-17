@@ -1,3 +1,8 @@
+import {
+  ATTACHMENT_KIND,
+  ATTACHMENT_OUTPUT_NOTE,
+  ATTACHMENT_TOOL_ERROR,
+} from "../shared/attachments";
 import type { ChatMessage, UploadedAttachment } from "../shared/types";
 import {
   getUploadedAttachments,
@@ -42,7 +47,9 @@ export function createOpenAIRequestMessages(
 }
 
 export function hasImageAttachments(attachments: UploadedAttachment[]) {
-  return attachments.some((attachment) => attachment.kind === "image");
+  return attachments.some(
+    (attachment) => attachment.kind === ATTACHMENT_KIND.image,
+  );
 }
 
 export function readUploadedAttachment(
@@ -52,8 +59,8 @@ export function readUploadedAttachment(
   const attachmentId = String(input.attachmentId || input.id || "");
   const attachment = attachments.find((item) => item.id === attachmentId);
   if (!attachment)
-    return { error: "Uploaded attachment not found", attachmentId };
-  if (attachment.kind === "text")
+    return { error: ATTACHMENT_TOOL_ERROR.notFound, attachmentId };
+  if (attachment.kind === ATTACHMENT_KIND.text)
     return {
       id: attachment.id,
       name: attachment.name,
@@ -62,7 +69,7 @@ export function readUploadedAttachment(
       kind: attachment.kind,
       text: attachment.text || "",
     };
-  if (attachment.kind === "image")
+  if (attachment.kind === ATTACHMENT_KIND.image)
     return {
       id: attachment.id,
       name: attachment.name,
@@ -71,23 +78,26 @@ export function readUploadedAttachment(
       kind: attachment.kind,
       dataUrl: attachment.dataUrl || "",
     };
-  if (attachment.kind === "audio" || attachment.kind === "video")
+  if (
+    attachment.kind === ATTACHMENT_KIND.audio ||
+    attachment.kind === ATTACHMENT_KIND.video
+  )
     return {
       id: attachment.id,
       name: attachment.name,
       type: attachment.type,
       size: attachment.size,
       kind: attachment.kind,
-      note: `${attachment.kind} files are available as metadata only in this browser extension path; ask the user for a transcript or a smaller text export if content analysis is needed.`,
+      note: ATTACHMENT_OUTPUT_NOTE.media,
     };
-  if (attachment.kind === "document")
+  if (attachment.kind === ATTACHMENT_KIND.document)
     return {
       id: attachment.id,
       name: attachment.name,
       type: attachment.type,
       size: attachment.size,
       kind: attachment.kind,
-      note: "Document binaries such as PDF, Word, Excel, and PowerPoint are available as metadata only here unless pasted/exported as text.",
+      note: ATTACHMENT_OUTPUT_NOTE.document,
     };
   return {
     id: attachment.id,
@@ -95,7 +105,7 @@ export function readUploadedAttachment(
     type: attachment.type,
     size: attachment.size,
     kind: attachment.kind,
-    note: "Binary file content is not available as text.",
+    note: ATTACHMENT_OUTPUT_NOTE.binary,
   };
 }
 
@@ -113,7 +123,8 @@ function createGeminiParts(
   ];
   if (!multimodal) return parts;
   for (const attachment of attachments) {
-    if (attachment.kind !== "image" || !attachment.dataUrl) continue;
+    if (attachment.kind !== ATTACHMENT_KIND.image || !attachment.dataUrl)
+      continue;
     const [mimeHeader, data] = attachment.dataUrl.split(",", 2);
     const mimeType = mimeHeader.match(/^data:([^;]+)/)?.[1] || attachment.type;
     if (data) parts.push({ inlineData: { mimeType, data } });
@@ -131,13 +142,17 @@ function createOpenAIMessageContent(
   const attachments = requestAttachments.length
     ? requestAttachments
     : getUploadedAttachments(message);
-  if (!multimodal || !attachments.some((item) => item.kind === "image"))
+  if (
+    !multimodal ||
+    !attachments.some((item) => item.kind === ATTACHMENT_KIND.image)
+  )
     return text;
   return [
     { type: "text", text },
     ...attachments
       .filter(
-        (attachment) => attachment.kind === "image" && !!attachment.dataUrl,
+        (attachment) =>
+          attachment.kind === ATTACHMENT_KIND.image && !!attachment.dataUrl,
       )
       .map((attachment) => ({
         type: "image_url",
