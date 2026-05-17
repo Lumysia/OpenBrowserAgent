@@ -19,6 +19,7 @@ export const BROWSER_TOOL_NAME = {
   downloadAllImagesInTab: "downloadAllImagesInTab",
   readUploadedAttachment: "readUploadedAttachment",
   readSkill: "readSkill",
+  readSkillFile: "readSkillFile",
 } as const;
 
 export type BrowserToolName =

@@ -1,4 +1,5 @@
 import { nanoid } from "nanoid";
+import { BUILTIN_SKILLS } from "./builtin-skills";
 import { SYNC_MAX_BYTES_PER_ITEM, SYNC_WRITE_DEBOUNCE_MS } from "./config";
 import type { Chat, ChatTab, Preferences, ProviderState, Skill } from "./types";
 
@@ -399,7 +400,7 @@ export const storage = {
   ),
   skills: createSwitchableItem<Skill[]>(
     STORAGE_KEYS.skills,
-    () => [],
+    () => BUILTIN_SKILLS,
     "syncSkills",
   ),
   shouldShowUpdateToast: createItem<boolean>(

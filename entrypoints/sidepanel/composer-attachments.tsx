@@ -6,6 +6,7 @@ import type {
   Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
+import { getSkillDisplayName } from "../../src/shared/skills";
 import { AttachedTabCard } from "./composer-menus";
 import { UploadedAttachmentCard } from "./uploaded-attachment-card";
 
@@ -39,7 +40,7 @@ export function ComposerAttachments({
           <div className="context-card">
             <FileText size={18} />
             <span>
-              <strong>{selectedSkill.title}</strong>
+              <strong>{getSkillDisplayName(selectedSkill)}</strong>
               <small>{selectedSkill.description || t.options.skills}</small>
             </span>
             <button

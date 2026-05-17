@@ -41,11 +41,22 @@ export type Preferences = {
 
 export type Skill = {
   id: string;
-  title: string;
-  description?: string;
-  instruction: string;
+  name: string;
+  description: string;
+  files: SkillFile[];
+  readSkillFiles?: boolean;
   builtin?: boolean;
   createdAt?: number;
+  updatedAt?: number;
+};
+
+export type SkillFileKind = "markdown" | "text" | "asset" | "script";
+
+export type SkillFile = {
+  path: string;
+  content: string;
+  kind: SkillFileKind;
+  encoding?: "utf-8" | "base64";
   updatedAt?: number;
 };
 

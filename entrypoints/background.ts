@@ -1,6 +1,7 @@
 import { storage } from "../src/shared/storage";
 import { UNKNOWN_TOOL_NAME } from "../src/shared/browser-tools";
 import { getMessages } from "../src/shared/i18n";
+import { createSkillPackage, normalizeSkillName } from "../src/shared/skills";
 import {
   clampMaxToolSteps,
   GENERATED_TITLE_MAX_CJK_CHARS,
@@ -9,7 +10,7 @@ import {
   ISO_DATE_LENGTH,
   MODEL_TEMPERATURE,
   SKILL_SOURCE_MAX_CHARS,
-  SKILL_TITLE_MAX_LENGTH,
+  SKILL_NAME_MAX_LENGTH,
   STREAM_CHUNK_DELAY_MS,
 } from "../src/shared/config";
 import {
@@ -281,14 +282,14 @@ async function generateSkill(request: GenerateSkillRequest): Promise<Skill> {
   const prompt = `Create a reusable skill from this browser-agent chat.
 
 Return JSON only with this shape:
-{"title":"short name","description":"one sentence","instruction":"reusable instruction"}
+{"name":"kebab-case-name","description":"one sentence","instruction":"reusable instruction"}
 
 Rules:
 - Generalize the workflow so it can be reused later.
 - Do not copy one-off facts, personal names, URLs, or results unless they are essential to the reusable workflow.
 - The instruction should tell the browser agent what to do, not describe what already happened.
 - Preserve useful variables such as {{ date }} if appropriate.
-- Title must be concise.
+- Name must be lowercase kebab-case and concise.
 
 <chat>
 ${source}
@@ -302,20 +303,21 @@ ${source}
     { role: "user", content: prompt },
   ]);
   const parsed = parseJsonObject(raw) as Partial<Skill>;
-  const title = String(parsed.title || "Skill")
+  const name = normalizeSkillName(String(parsed.name || "skill"))
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, SKILL_TITLE_MAX_LENGTH);
-  const instruction = String(parsed.instruction || "").trim();
+    .slice(0, SKILL_NAME_MAX_LENGTH);
+  const instruction = String(
+    (parsed.files?.find((file) => file.path === "SKILL.md")?.content ||
+      (parsed as { instruction?: string }).instruction) ??
+      "",
+  ).trim();
   if (!instruction) throw new Error("The model did not create an instruction.");
-  return {
-    id: crypto.randomUUID(),
-    title: title || "Skill",
+  return createSkillPackage({
+    name: name || "skill",
     description: String(parsed.description || "").trim(),
     instruction,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
+  });
 }
 
 async function requestPlainText(

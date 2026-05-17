@@ -17,6 +17,7 @@ import type {
   Skill,
 } from "../../src/shared/types";
 import { CHAT_MODE } from "../../src/shared/types";
+import { getSkillDisplayName } from "../../src/shared/skills";
 
 export function AddContextMenu({
   t,
@@ -72,7 +73,9 @@ export function AddContextMenu({
               >
                 <FileText size={17} />
                 <span>
-                  <strong>{skill.title || t.options.untitledSkill}</strong>
+                  <strong>
+                    {getSkillDisplayName(skill, t.options.untitledSkill)}
+                  </strong>
                   {skill.description && <small>{skill.description}</small>}
                 </span>
               </button>

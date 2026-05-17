@@ -54,6 +54,7 @@ import type {
   ReplaceAttachmentHandler,
 } from "./sidepanel-view-types";
 import { UploadFileInput } from "./uploaded-attachment-card";
+import { aiWorkingStatus } from "./working-status";
 
 export function SidepanelView({
   t,
@@ -169,6 +170,11 @@ export function SidepanelView({
   onSelectChat: (chatId: string) => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const workingStatus = aiWorkingStatus({
+    chat: currentChat,
+    creatingSkill,
+    t,
+  });
 
   function attachFromPicker() {
     fileInputRef.current?.click();
@@ -301,12 +307,8 @@ export function SidepanelView({
               <div className="ai-working-overlay" aria-live="polite">
                 <span className="ai-working-orb" />
                 <span>
-                  <strong>
-                    {creatingSkill
-                      ? t.sidepanel.generatingSkill
-                      : t.sidepanel.aiWorking}
-                  </strong>
-                  <small>{t.sidepanel.aiWorkingDescription}</small>
+                  <strong>{workingStatus.title}</strong>
+                  <small>{workingStatus.description}</small>
                 </span>
                 <span className="ai-working-bars" aria-hidden="true">
                   <i />

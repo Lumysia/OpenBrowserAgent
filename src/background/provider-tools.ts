@@ -5,7 +5,11 @@ import {
   type Skill,
   type UploadedAttachment,
 } from "../shared/types";
-import { readSkill, readUploadedAttachment } from "./attachment-messages";
+import {
+  readSkill,
+  readSkillFile,
+  readUploadedAttachment,
+} from "./attachment-messages";
 import { browserTools, safeExecuteBrowserTool } from "./tools";
 
 export function toolsForMode(
@@ -18,6 +22,7 @@ export function toolsForMode(
     if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
       return hasUploadedAttachments;
     if (name === BROWSER_TOOL_NAME.readSkill) return hasSkills;
+    if (name === BROWSER_TOOL_NAME.readSkillFile) return hasSkills;
     return !isAskMode(mode);
   });
 }
@@ -37,5 +42,7 @@ export function executeContextAwareTool({
     return readUploadedAttachment(uploadedAttachments, input);
   if (toolName === BROWSER_TOOL_NAME.readSkill)
     return readSkill(availableSkills, input);
+  if (toolName === BROWSER_TOOL_NAME.readSkillFile)
+    return readSkillFile(availableSkills, input);
   return safeExecuteBrowserTool(toolName, input);
 }

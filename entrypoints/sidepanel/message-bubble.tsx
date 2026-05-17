@@ -20,6 +20,7 @@ import {
   STREAM_RENDER_THROTTLE_MS,
 } from "../../src/shared/config";
 import { getMessages, type Messages } from "../../src/shared/i18n";
+import { getSkillDisplayName } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
 import type {
   AttachmentTab,
@@ -100,7 +101,9 @@ export function MessageBubble({
     <div
       className={`message ${message.role === "user" ? "user" : ""} ${editing ? "editing" : ""}`}
     >
-      {skill && <div className="message-label">{skill.title}</div>}
+      {skill && (
+        <div className="message-label">{getSkillDisplayName(skill)}</div>
+      )}
       {message.role === "user" ? (
         <div className="user-bubble">{message.content}</div>
       ) : hasParts ? (

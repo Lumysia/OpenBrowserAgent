@@ -11,6 +11,7 @@ import {
   type Skill,
   type UploadedAttachment,
 } from "../shared/types";
+import { getSkillDisplayName, getSkillInstruction } from "../shared/skills";
 
 export function postText(
   port: chrome.runtime.Port,
@@ -81,14 +82,14 @@ ${message.content}
     typeof message.metadata?.context === "string"
       ? message.metadata.context
       : "";
-  const skill = message.metadata?.skill as { instruction?: string } | undefined;
+  const skill = message.metadata?.skill as Skill | undefined;
   const attachments = requestAttachments.length
     ? requestAttachments
     : getUploadedAttachments(message);
   return `${
-    skill?.instruction
+    skill
       ? `<instruction>
-${skill.instruction}
+${getSkillInstruction(skill)}
 </instruction>
 
 `
@@ -114,7 +115,7 @@ export function renderSkillCatalog(skills: Skill[]) {
 ${skills
   .map(
     (skill) =>
-      `- id: ${skill.id}\n  title: ${skill.title}\n  description: ${skill.description || ""}\n  note: Use readSkill with this id to read the full instruction if this skill is relevant.`,
+      `- id: ${skill.id}\n  name: ${getSkillDisplayName(skill)}\n  description: ${skill.description || ""}\n  entry: SKILL.md\n  supportingFiles: ${skill.readSkillFiles === false ? "hidden" : "readable"}\n  note: Use readSkill with this id to read SKILL.md if this skill is relevant.${skill.readSkillFiles === false ? " Supporting files are hidden." : " If SKILL.md lists supporting files, use readSkillFile with the path to read them."}`,
   )
   .join("\n\n")}
 </available_skills>`;

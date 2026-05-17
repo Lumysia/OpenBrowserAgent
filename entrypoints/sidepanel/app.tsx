@@ -11,17 +11,16 @@ import {
   AI_STREAM_PORT_NAME,
   AI_STREAM_REQUEST_TYPE,
   CHAT_MODE,
+  type AiStreamRequest,
+  type AiStreamResponse,
+  type Chat,
+  type ChatMessage,
+  type ChatMode,
+  type SendMessagesRequest,
+  type Skill,
+  type UploadedAttachment,
 } from "../../src/shared/types";
-import type {
-  AiStreamRequest,
-  AiStreamResponse,
-  Chat,
-  ChatMessage,
-  ChatMode,
-  SendMessagesRequest,
-  Skill,
-  UploadedAttachment,
-} from "../../src/shared/types";
+import { useBuiltinSkills } from "../../src/ui/useBuiltinSkills";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { requestGeneratedTitle } from "./ai-requests";
 import { appendAssistantContent, appendAssistantPart } from "./chat-updates";
@@ -34,9 +33,11 @@ import {
   interpolateSkillVariables,
 } from "./sidepanel-context";
 import { createSendMessagePlan } from "./send-message-plan";
+import { interpolateSkillPackage } from "./skill-context";
 import {
   ADD_MENU_VIEW,
   COMPOSER_MENU,
+  type AddMenuView,
   type ActiveStream,
   type ComposerMenu,
 } from "./sidepanel-menu-state";
@@ -62,9 +63,7 @@ export function SidepanelApp() {
   const [creatingSkill, setCreatingSkill] = useState(false);
   const [skillCreated, setSkillCreated] = useState(false);
   const [openMenu, setOpenMenu] = useState<ComposerMenu | null>(null);
-  const [addMenuView, setAddMenuView] = useState<
-    (typeof ADD_MENU_VIEW)[keyof typeof ADD_MENU_VIEW]
-  >(ADD_MENU_VIEW.menu);
+  const [addMenuView, setAddMenuView] = useState<AddMenuView>("menu");
   const [showHistory, setShowHistory] = useState(false);
   const [sentAttachmentPreviews, setSentAttachmentPreviews] = useState<
     Record<string, UploadedAttachment[]>
@@ -77,13 +76,6 @@ export function SidepanelApp() {
   const lastStreamActivityRef = useRef(Date.now());
   const activeStreamRef = useRef<ActiveStream | null>(null);
 
-  const modelCount = useMemo(
-    () =>
-      Object.values(providers || {}).flatMap(
-        (provider) => provider?.models || [],
-      ).length,
-    [providers],
-  );
   const configuredModels = useMemo(
     () =>
       Object.values(providers || {}).flatMap(
@@ -91,6 +83,7 @@ export function SidepanelApp() {
       ),
     [providers],
   );
+  const modelCount = configuredModels.length;
   const currentChat = chats?.find((chat) => chat.id === activeChatId);
   const t = getMessages(language);
   const aiWorking = streaming || creatingSkill;
@@ -132,6 +125,8 @@ export function SidepanelApp() {
     });
 
   useEffect(() => void (aiWorking && setOpenMenu(null)), [aiWorking]);
+
+  useBuiltinSkills(skills, setSkills);
 
   useEffect(() => {
     chatsRef.current = chats || [];
@@ -240,16 +235,11 @@ export function SidepanelApp() {
     const text = interpolateSkillVariables(content.trim());
     if ((!text && !uploadedAttachments.length) || streaming) return;
     const availableSkills = preferences?.autoSelectSkills ? skills || [] : [];
-    const appliedSkill = selectedSkill;
-    const sentSkill = appliedSkill
-      ? {
-          ...appliedSkill,
-          instruction: interpolateSkillVariables(appliedSkill.instruction),
-        }
+    const sentSkill = selectedSkill
+      ? interpolateSkillPackage(selectedSkill, interpolateSkillVariables)
       : undefined;
-    const effectiveMode = mode;
     const context = await buildSidepanelContext({
-      mode: effectiveMode,
+      mode,
       attachedTabs,
       selectedElement,
     });
@@ -313,7 +303,7 @@ export function SidepanelApp() {
       messages: [...baseChat.messages, userMessage],
       body: {
         modelId: preferences?.selectedModelId,
-        chatMode: effectiveMode,
+        chatMode: mode,
         language,
         maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
         context: {

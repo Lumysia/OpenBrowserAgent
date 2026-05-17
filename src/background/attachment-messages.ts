@@ -8,6 +8,7 @@ import {
   READ_ATTACHMENT_MAX_LIMIT,
 } from "../shared/config";
 import type { ChatMessage, Skill, UploadedAttachment } from "../shared/types";
+import { getSkillDisplayName, getSkillEntryFile } from "../shared/skills";
 import {
   getUploadedAttachments,
   renderAttachmentContext,
@@ -125,11 +126,39 @@ export function readSkill(skills: Skill[], input: Record<string, unknown>) {
   const skillId = String(input.skillId || input.id || "");
   const skill = skills.find((item) => item.id === skillId);
   if (!skill) return { error: "Skill not found", skillId };
+  const entry = getSkillEntryFile(skill);
   return {
     id: skill.id,
-    title: skill.title,
+    name: getSkillDisplayName(skill),
     description: skill.description || "",
-    instruction: skill.instruction,
+    entry: entry?.path || "SKILL.md",
+    content: entry?.content || "",
+    files:
+      skill.readSkillFiles === false
+        ? []
+        : skill.files?.map((file) => ({
+            path: file.path,
+            kind: file.kind,
+            size: file.content.length,
+          })),
+  };
+}
+
+export function readSkillFile(skills: Skill[], input: Record<string, unknown>) {
+  const skillId = String(input.skillId || input.id || "");
+  const path = String(input.path || "");
+  const skill = skills.find((item) => item.id === skillId);
+  if (!skill) return { error: "Skill not found", skillId };
+  if (skill.readSkillFiles === false)
+    return { error: "Skill supporting files are not visible", skillId, path };
+  const file = skill.files?.find((item) => item.path === path);
+  if (!file) return { error: "Skill file not found", skillId, path };
+  return {
+    id: skill.id,
+    name: getSkillDisplayName(skill),
+    path: file.path,
+    kind: file.kind,
+    content: file.content,
   };
 }
 

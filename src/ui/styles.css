@@ -1024,6 +1024,117 @@ a {
 .muted {
   color: var(--muted-foreground);
 }
+.skill-file-list {
+  display: grid;
+  gap: 6px;
+  max-width: 640px;
+}
+.skill-file-item {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--card) 72%, var(--background));
+}
+.skill-file-item svg {
+  color: var(--muted-foreground);
+}
+.skill-file-item span {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+.skill-file-item strong,
+.skill-file-item small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.skill-file-item strong {
+  font-size: 13px;
+  font-weight: 650;
+}
+.skill-file-item small {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.skill-file-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.skill-add-file-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  max-width: 760px;
+}
+.skill-file-preview {
+  max-width: 760px;
+  max-height: 280px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--muted) 72%, var(--background));
+  color: var(--foreground);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.skill-status-panel {
+  display: grid;
+  gap: 10px;
+  max-width: 760px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card) 72%, var(--background));
+}
+.skill-meta-row,
+.skill-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.skill-warning,
+.skill-checks .warn,
+.skill-trigger-test .warn {
+  color: var(--destructive);
+}
+.skill-checks .ok,
+.skill-trigger-test .ok {
+  color: var(--accent-strong);
+}
+.skill-validation {
+  display: grid;
+  gap: 6px;
+}
+.skill-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.skill-switch-row span {
+  display: grid;
+  gap: 2px;
+}
+.skill-switch-row small {
+  color: var(--muted-foreground);
+}
+.skill-trigger-test {
+  display: grid;
+  gap: 6px;
+}
 .accent-picker {
   display: flex;
   align-items: center;

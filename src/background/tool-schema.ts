@@ -168,7 +168,7 @@ export const browserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.readSkill,
-    "Read the full instruction for one available skill by id. Use this only when a listed skill clearly helps the user request.",
+    "Read SKILL.md for one available skill package by id. Use this only when a listed skill clearly helps the user request.",
     {
       skillId: {
         type: "string",
@@ -176,6 +176,21 @@ export const browserTools = [
       },
     },
     ["skillId"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.readSkillFile,
+    "Read a supporting file from an available skill package by id and path after reading SKILL.md.",
+    {
+      skillId: {
+        type: "string",
+        description: "The id of the available skill package",
+      },
+      path: {
+        type: "string",
+        description: "The skill file path, such as references/example.md",
+      },
+    },
+    ["skillId", "path"],
   ),
 ];
 

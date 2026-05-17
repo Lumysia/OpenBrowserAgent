@@ -100,7 +100,12 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
         rangeLabel(output),
       ]);
     if (name === BROWSER_TOOL_NAME.readSkill)
-      return stringValue(output.title) || stringValue(input.skillId);
+      return stringValue(output.name) || stringValue(input.skillId);
+    if (name === BROWSER_TOOL_NAME.readSkillFile)
+      return compactJoin([
+        stringValue(output.name) || stringValue(input.skillId),
+        stringValue(output.path) || stringValue(input.path),
+      ]);
     if (
       name === BROWSER_TOOL_NAME.findAccessableElementsFromTab &&
       Array.isArray(output.elements)
