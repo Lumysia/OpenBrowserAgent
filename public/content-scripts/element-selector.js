@@ -33,25 +33,17 @@
     font: "13px system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
   });
 
-  const masks = ["top", "right", "bottom", "left"].map((name) => {
-    const layer = document.createElement("div");
-    layer.setAttribute("data-oba-selector-mask", name);
-    Object.assign(layer.style, {
-      position: "fixed",
-      background: `rgba(15, 23, 42, ${DIM_OPACITY})`,
-      transition: "background 120ms ease",
-    });
-    root.appendChild(layer);
-    return layer;
-  });
-
   const highlight = document.createElement("div");
   Object.assign(highlight.style, {
     position: "fixed",
+    left: "0",
+    top: "0",
     border: "2px solid var(--oba-selector-accent)",
     borderRadius: "10px",
     boxShadow:
-      "0 0 0 1px color-mix(in srgb, var(--oba-selector-accent), transparent 40%), 0 12px 32px rgba(0,0,0,.24)",
+      "0 0 0 1px color-mix(in srgb, var(--oba-selector-accent), transparent 40%), 0 0 0 9999px var(--oba-selector-mask), 0 12px 32px rgba(0,0,0,.24)",
+    transition:
+      "transform 80ms ease, width 80ms ease, height 80ms ease, border-color 120ms ease, box-shadow 120ms ease",
   });
   root.appendChild(highlight);
 
@@ -97,11 +89,12 @@
       "--oba-selector-border",
       dark ? "rgba(255,255,255,.18)" : "rgba(15,23,42,.14)",
     );
-    masks.forEach((mask) => {
-      mask.style.background = dark
+    root.style.setProperty(
+      "--oba-selector-mask",
+      dark
         ? `rgba(2, 6, 23, ${DIM_OPACITY})`
-        : `rgba(15, 23, 42, ${DIM_OPACITY * 0.82})`;
-    });
+        : `rgba(15, 23, 42, ${DIM_OPACITY * 0.82})`,
+    );
   }
 
   async function loadPreferences() {
@@ -202,19 +195,13 @@
   function updateOverlay(rect) {
     currentRect = rect ? clampRect(rect) : null;
     if (!currentRect) {
-      positionMask(masks[0], 0, 0, innerWidth, innerHeight);
-      masks.slice(1).forEach((mask) => positionMask(mask, 0, 0, 0, 0));
-      positionMask(highlight, 0, 0, 0, 0);
+      positionHighlight(0, 0, 0, 0);
       highlight.style.opacity = "0";
       return;
     }
 
-    const { top, left, right, bottom, width, height } = currentRect;
-    positionMask(masks[0], 0, 0, innerWidth, top);
-    positionMask(masks[1], right, top, innerWidth - right, height);
-    positionMask(masks[2], 0, bottom, innerWidth, innerHeight - bottom);
-    positionMask(masks[3], 0, top, left, height);
-    positionMask(highlight, left, top, width, height);
+    const { top, left, width, height } = currentRect;
+    positionHighlight(left, top, width, height);
     highlight.style.opacity = "1";
   }
 
@@ -233,10 +220,9 @@
     };
   }
 
-  function positionMask(element, left, top, width, height) {
-    Object.assign(element.style, {
-      left: `${left}px`,
-      top: `${top}px`,
+  function positionHighlight(left, top, width, height) {
+    Object.assign(highlight.style, {
+      transform: `translate(${left}px, ${top}px)`,
       width: `${Math.max(0, width)}px`,
       height: `${Math.max(0, height)}px`,
     });
