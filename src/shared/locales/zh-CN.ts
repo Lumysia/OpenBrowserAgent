@@ -136,5 +136,8 @@ export const zhCN: LocaleMessages = {
     autoScrollDescription: "AI 输出时自动保持最新内容可见。",
     autoRetry: "自动重试",
     autoRetryDescription: "如果 AI 30 秒没有新输出，自动继续一次。",
+    maxToolSteps: "最大工具步数",
+    maxToolStepsDescription:
+      "设置 AI 最多执行多少次浏览器工具；填 0 表示不允许调用工具。",
   },
 };

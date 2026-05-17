@@ -29,6 +29,15 @@ import {
   getActiveTab,
   injectElementSelector,
 } from "../../src/shared/browser";
+import {
+  AUTO_RETRY_IDLE_MS,
+  COPY_FEEDBACK_MS,
+  DEFAULT_MAX_TOOL_STEPS,
+  LOCAL_CHAT_TITLE_MAX_LENGTH,
+  MAX_AUTO_RETRIES,
+  SELECTED_ELEMENT_HTML_MAX_CHARS,
+  TAB_CONTENT_MAX_CHARS,
+} from "../../src/shared/config";
 import { getMessages, type Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { languageLabels, providerLabels } from "../../src/shared/types";
@@ -62,13 +71,11 @@ import {
 import { useStoredState } from "../../src/ui/useStoredState";
 import "../../src/ui/styles.css";
 
-const AUTO_RETRY_IDLE_MS = 30_000;
-const MAX_AUTO_RETRIES = 1;
-
 type ActiveStream = {
   chatId: string;
   assistantMessageId: string;
   retryCount: number;
+  hasProgress: boolean;
 };
 
 function SidepanelApp() {
@@ -244,6 +251,7 @@ function SidepanelApp() {
     const interval = window.setInterval(() => {
       const active = activeStreamRef.current;
       if (!active || active.retryCount >= MAX_AUTO_RETRIES) return;
+      if (active.hasProgress) return;
       if (Date.now() - lastStreamActivityRef.current < AUTO_RETRY_IDLE_MS)
         return;
       retryStalledStream(active);
@@ -325,6 +333,7 @@ function SidepanelApp() {
         modelId: preferences?.selectedModelId,
         chatMode: mode,
         language,
+        maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
         context: {
           tabs: sentTabs,
           selectedElement: sentElement,
@@ -336,29 +345,32 @@ function SidepanelApp() {
       chatId: nextChat.id,
       assistantMessageId: assistantMessage.id,
       retryCount: 0,
+      hasProgress: false,
     };
     lastStreamActivityRef.current = Date.now();
-    startStream(request);
+    startStream(request, assistantMessage.id);
   }
 
   function startStream(
     request: Extract<AiStreamRequest, { type: "sendMessages" }>,
+    targetMessageId: string,
   ) {
-    const responseMessageId = request.messageId || crypto.randomUUID();
     closeStreamPort(false);
     const port = chrome.runtime.connect({ name: "ai-stream" });
     portRef.current = port;
     port.onMessage.addListener((message: AiStreamResponse) => {
       lastStreamActivityRef.current = Date.now();
       if (message.type === "chunk") {
-        appendStreamChunk(request.chatId, responseMessageId, message.chunk);
+        if (activeStreamRef.current?.assistantMessageId === targetMessageId)
+          activeStreamRef.current.hasProgress = true;
+        appendStreamChunk(request.chatId, targetMessageId, message.chunk);
       }
       if (message.type === "error") {
         activeStreamRef.current = null;
         setStreaming(false);
         appendToAssistant(
           request.chatId,
-          responseMessageId,
+          targetMessageId,
           `\n\n${message.error}`,
         );
       }
@@ -407,25 +419,30 @@ function SidepanelApp() {
       id: crypto.randomUUID(),
       role: "user",
       content:
-        "Continue from the last completed step. Do not repeat completed work. If the browser state changed, inspect it before acting.",
+        "<internal_instruction>The previous response stream stalled. Continue from the last completed step, start a new paragraph, do not repeat completed work, and respond in the same language as the user's latest non-internal message.</internal_instruction>",
       createdAt: Date.now(),
+      metadata: { internalRetry: true },
     };
 
-    startStream({
-      type: "sendMessages",
-      chatId: active.chatId,
-      messageId: active.assistantMessageId,
-      messages: [
-        ...chat.messages.slice(0, assistantIndex + 1),
-        retryInstruction,
-      ],
-      body: {
-        modelId: preferences?.selectedModelId,
-        chatMode: mode,
-        language,
-        context: {},
+    if (chat.messages[assistantIndex]?.content.trim())
+      appendToAssistant(active.chatId, active.assistantMessageId, "\n\n");
+
+    startStream(
+      {
+        type: "sendMessages",
+        chatId: active.chatId,
+        messageId: crypto.randomUUID(),
+        messages: [...chat.messages.slice(0, assistantIndex), retryInstruction],
+        body: {
+          modelId: preferences?.selectedModelId,
+          chatMode: mode,
+          language,
+          maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
+          context: {},
+        },
       },
-    });
+      active.assistantMessageId,
+    );
   }
 
   function createAndReturnChat() {
@@ -508,8 +525,8 @@ function SidepanelApp() {
 
   function generateLocalTitle(value: string) {
     const title = value.replace(/\s+/g, " ").trim();
-    return title.length > 42
-      ? `${title.slice(0, 42)}...`
+    return title.length > LOCAL_CHAT_TITLE_MAX_LENGTH
+      ? `${title.slice(0, LOCAL_CHAT_TITLE_MAX_LENGTH)}...`
       : title || t.words.newChat;
   }
 
@@ -595,7 +612,7 @@ function SidepanelApp() {
             : undefined,
           `<value>${escapeXml(selectedElement.value || "")}</value>`,
           selectedElement.outerHTML
-            ? `<outer_html>${escapeXml(selectedElement.outerHTML.slice(0, 4000))}</outer_html>`
+            ? `<outer_html>${escapeXml(selectedElement.outerHTML.slice(0, SELECTED_ELEMENT_HTML_MAX_CHARS))}</outer_html>`
             : undefined,
           "</selected_element>",
         ]
@@ -615,7 +632,7 @@ function SidepanelApp() {
               "</tab>",
               `<title>${escapeXml(tab.title || "")}</title>`,
               `<url>${escapeXml(tab.url || "")}</url>`,
-              `<content>${escapeXml(text ? text.slice(0, 12000) : "")}</content>`,
+              `<content>${escapeXml(text ? text.slice(0, TAB_CONTENT_MAX_CHARS) : "")}</content>`,
             ].join("\n"),
           );
         } catch {
@@ -1339,7 +1356,7 @@ function AssistantText({ text }: { text: string }) {
 
   useEffect(() => {
     if (!copied) return undefined;
-    const timeout = window.setTimeout(() => setCopied(false), 1800);
+    const timeout = window.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
     return () => window.clearTimeout(timeout);
   }, [copied]);
 
@@ -1432,14 +1449,14 @@ function streamPartFromChunk(chunk: unknown): {
     output?: unknown;
     error?: string;
   };
-  if (maybe.type === "text-start")
+  if (maybe.type === "text-start" || maybe.type === "text-note-start")
     return {
       part: { id: maybe.id || crypto.randomUUID(), type: "text", text: "" },
     };
-  if (maybe.type === "text-end") return {};
-  if (maybe.type === "text-delta")
+  if (maybe.type === "text-end" || maybe.type === "text-note-end") return {};
+  if (maybe.type === "text-delta" || maybe.type === "text-note-delta")
     return {
-      delta: maybe.delta || "",
+      delta: maybe.type === "text-delta" ? maybe.delta || "" : undefined,
       part: {
         id: maybe.id || crypto.randomUUID(),
         type: "text",
@@ -1495,7 +1512,7 @@ function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
                 }
               >
                 {reference.icon}
-                {reference.title}
+                <span>{reference.title}</span>
               </button>
             ))}
           </div>

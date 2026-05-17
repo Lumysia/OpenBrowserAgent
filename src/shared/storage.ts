@@ -82,6 +82,7 @@ export const storage = {
     accentColor: "amber",
     autoScroll: true,
     autoRetry: true,
+    maxToolSteps: 30,
   })),
   quickAction: createItem<QuickAction[]>("local", "quick-action", () => []),
   shouldShowUpdateToast: createItem<boolean>(

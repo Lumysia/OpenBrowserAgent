@@ -30,6 +30,7 @@ export type Preferences = {
   syncSettings?: boolean;
   autoScroll?: boolean;
   autoRetry?: boolean;
+  maxToolSteps?: number;
 };
 
 export type QuickAction = {
@@ -102,6 +103,7 @@ export type SendMessagesBody = {
   modelId?: string;
   chatMode: ChatMode;
   language?: string;
+  maxToolSteps?: number;
   context?: {
     tabs?: AttachmentTab[];
     selectedElement?: SelectedElement | null;

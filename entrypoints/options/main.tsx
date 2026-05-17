@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Check, Loader2, Plus, Trash2 } from "lucide-react";
+import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import {
@@ -280,8 +281,34 @@ function GeneralPage() {
           </Select>
         </CardContent>
       </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t.options.maxToolSteps}</CardTitle>
+          <CardDescription>{t.options.maxToolStepsDescription}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Input
+            type="number"
+            min={0}
+            step={1}
+            value={String(preferences.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS)}
+            onChange={(event) =>
+              setPreferences({
+                ...preferences,
+                maxToolSteps: parseMaxToolSteps(event.currentTarget.value),
+              })
+            }
+          />
+        </CardContent>
+      </Card>
     </div>
   );
+}
+
+function parseMaxToolSteps(value: string) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return DEFAULT_MAX_TOOL_STEPS;
+  return Math.min(Number.MAX_SAFE_INTEGER, Math.max(0, Math.trunc(parsed)));
 }
 
 function useHashRoute() {

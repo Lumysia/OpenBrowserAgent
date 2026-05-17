@@ -170,6 +170,9 @@ export const enUS = {
     autoRetry: "Auto Retry",
     autoRetryDescription:
       "Automatically continue once if the assistant produces no new output for 30 seconds.",
+    maxToolSteps: "Max Tool Steps",
+    maxToolStepsDescription:
+      "Set how many browser tool steps the assistant may run. Use 0 to disable tool calls.",
   },
 };
 

@@ -1,6 +1,17 @@
 import { storage } from "../src/shared/storage";
 import JSZip from "jszip";
 import {
+  BROWSER_TOOL_TIMEOUT_MS,
+  clampMaxToolSteps,
+  GENERATED_TITLE_MAX_LENGTH,
+  IMAGE_ALT_MAX_LENGTH,
+  IMAGE_FILENAME_MAX_LABEL_LENGTH,
+  MARKDOWN_FILENAME_MAX_LENGTH,
+  MAX_IMAGES_PER_DOWNLOAD,
+  MODEL_TEMPERATURE,
+  STREAM_CHUNK_DELAY_MS,
+} from "../src/shared/config";
+import {
   providerDefaultBaseUrls,
   type AiStreamRequest,
   type AiStreamResponse,
@@ -11,6 +22,8 @@ import {
 
 const PORT_AI_STREAM = "ai-stream";
 const SIDE_PANEL_OPENED = "side_panel_opened";
+const FINAL_AFTER_GROUP_TABS_INSTRUCTION =
+  "<internal_instruction>The browser tabs have been grouped successfully. The browser work is complete. Do not call more tools. Provide the final task report now, using the gathered information and responding in the same language as the user's latest non-internal message.</internal_instruction>";
 
 export default defineBackground(() => {
   chrome.sidePanel
@@ -89,6 +102,7 @@ async function streamAssistantResponse(
     system,
     request.messages,
     request.body.chatMode,
+    clampMaxToolSteps(request.body.maxToolSteps),
     signal,
     port,
     request.messageId,
@@ -108,7 +122,9 @@ async function streamAssistantResponse(
         type: "chunk",
         chunk: { type: "text-delta", id: request.messageId, delta },
       });
-      await new Promise((resolve) => setTimeout(resolve, 8));
+      await new Promise((resolve) =>
+        setTimeout(resolve, STREAM_CHUNK_DELAY_MS),
+      );
     }
     post(port, {
       type: "chunk",
@@ -169,12 +185,21 @@ async function requestOpenAICompatible(
   system: string,
   messages: ChatMessage[],
   mode: ChatMode,
+  maxToolSteps: number,
   signal: AbortSignal,
   port: chrome.runtime.Port,
   messageId?: string,
 ) {
   if (model.provider === "gemini") {
-    return requestGemini(model, system, messages, mode, signal, port);
+    return requestGemini(
+      model,
+      system,
+      messages,
+      mode,
+      maxToolSteps,
+      signal,
+      port,
+    );
   }
 
   const baseUrl = model.baseUrl.replace(/\/$/, "");
@@ -193,8 +218,7 @@ async function requestOpenAICompatible(
     })),
   ];
 
-  for (let step = 0; step < 15; step++) {
-    const useTools = mode !== "Ask";
+  if (mode === "Ask" || maxToolSteps <= 0) {
     const response = await fetch(chatUrl, {
       method: "POST",
       signal,
@@ -204,10 +228,32 @@ async function requestOpenAICompatible(
       },
       body: JSON.stringify({
         model: model.modelName,
-        temperature: 0.3,
+        temperature: MODEL_TEMPERATURE,
         messages: requestMessages,
         stream: true,
-        ...(useTools ? { tools: browserTools, tool_choice: "auto" } : {}),
+      }),
+    });
+
+    if (!response.ok) throw new Error(await response.text());
+    await readOpenAIStream(response, port, signal, messageId);
+    return "";
+  }
+
+  for (let step = 0; step < maxToolSteps; step++) {
+    const response = await fetch(chatUrl, {
+      method: "POST",
+      signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
+      },
+      body: JSON.stringify({
+        model: model.modelName,
+        temperature: MODEL_TEMPERATURE,
+        messages: requestMessages,
+        stream: true,
+        tools: browserTools,
+        tool_choice: "auto",
       }),
     });
 
@@ -217,8 +263,9 @@ async function requestOpenAICompatible(
       port,
       signal,
       step === 0 ? messageId : undefined,
+      true,
     );
-    const toolCalls = useTools ? streamResult.toolCalls : [];
+    const toolCalls = streamResult.toolCalls;
     if (!toolCalls.length) return "";
 
     requestMessages.push({
@@ -226,6 +273,7 @@ async function requestOpenAICompatible(
       content: streamResult.content || null,
       tool_calls: toolCalls,
     });
+    let groupedTabsSuccessfully = false;
     for (const toolCall of toolCalls) {
       const toolName = String(toolCall.function?.name || "unknown");
       const toolCallId = String(toolCall.id || crypto.randomUUID());
@@ -242,6 +290,8 @@ async function requestOpenAICompatible(
       });
       const output = await safeExecuteBrowserTool(toolName, input);
       const hasError = isToolError(output);
+      if (toolName === "groupTabs" && isToolSuccess(output))
+        groupedTabsSuccessfully = true;
       post(port, {
         type: "chunk",
         chunk: {
@@ -259,7 +309,36 @@ async function requestOpenAICompatible(
         content: JSON.stringify(output),
       });
     }
+    if (groupedTabsSuccessfully) {
+      requestMessages.push({
+        role: "user",
+        content: FINAL_AFTER_GROUP_TABS_INSTRUCTION,
+      });
+      const finalResponse = await fetch(chatUrl, {
+        method: "POST",
+        signal,
+        headers: {
+          "Content-Type": "application/json",
+          ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
+        },
+        body: JSON.stringify({
+          model: model.modelName,
+          temperature: MODEL_TEMPERATURE,
+          messages: requestMessages,
+          stream: true,
+        }),
+      });
+      if (!finalResponse.ok) throw new Error(await finalResponse.text());
+      await readOpenAIStream(finalResponse, port, signal);
+      return "";
+    }
   }
+
+  requestMessages.push({
+    role: "user",
+    content:
+      "<internal_instruction>Maximum browser tool steps reached. Do not call more tools. Summarize the findings and clearly state what is known, what remains uncertain, and the best next step for the user. Respond in the same language as the user's latest non-internal message.</internal_instruction>",
+  });
 
   const fallbackResponse = await fetch(chatUrl, {
     method: "POST",
@@ -270,14 +349,15 @@ async function requestOpenAICompatible(
     },
     body: JSON.stringify({
       model: model.modelName,
-      temperature: 0.3,
+      temperature: MODEL_TEMPERATURE,
       messages: requestMessages,
+      stream: true,
     }),
   });
 
   if (!fallbackResponse.ok) throw new Error(await fallbackResponse.text());
-  const data = await fallbackResponse.json();
-  return data.choices?.[0]?.message?.content || "";
+  await readOpenAIStream(fallbackResponse, port, signal);
+  return "";
 }
 
 async function readOpenAIStream(
@@ -285,6 +365,7 @@ async function readOpenAIStream(
   port: chrome.runtime.Port,
   signal: AbortSignal,
   preferredTextId?: string,
+  deferTextUntilNoTools = false,
 ) {
   if (!response.body) throw new Error("Streaming response body is empty");
 
@@ -300,9 +381,14 @@ async function readOpenAIStream(
   let buffer = "";
   let content = "";
   let textStarted = false;
+  let deferredTextPosted = false;
 
   function emitText(delta: string) {
     if (!delta) return;
+    if (deferTextUntilNoTools) {
+      content += delta;
+      return;
+    }
     if (!textStarted) {
       textStarted = true;
       post(port, { type: "chunk", chunk: { type: "text-start", id: textId } });
@@ -312,6 +398,12 @@ async function readOpenAIStream(
       type: "chunk",
       chunk: { type: "text-delta", id: textId, delta },
     });
+  }
+
+  function postDeferredTextNote() {
+    if (!deferTextUntilNoTools || deferredTextPosted || !content) return;
+    deferredTextPosted = true;
+    postText(port, content, textId, signal, false);
   }
 
   function consumeEvent(rawEvent: string) {
@@ -354,6 +446,7 @@ async function readOpenAIStream(
       const next = toolCalls[index];
       if (!announcedToolIndexes.has(index) && next.id && next.function.name) {
         announcedToolIndexes.add(index);
+        postDeferredTextNote();
         post(port, {
           type: "chunk",
           chunk: {
@@ -383,9 +476,18 @@ async function readOpenAIStream(
   if (textStarted)
     post(port, { type: "chunk", chunk: { type: "text-end", id: textId } });
 
+  const completeToolCalls = toolCalls.filter(
+    (toolCall) => toolCall.function.name,
+  );
+  if (deferTextUntilNoTools && content) {
+    if (completeToolCalls.length && !deferredTextPosted)
+      postText(port, content, textId, signal, false);
+    if (!completeToolCalls.length) postText(port, content, textId, signal);
+  }
+
   return {
     content,
-    toolCalls: toolCalls.filter((toolCall) => toolCall.function.name),
+    toolCalls: completeToolCalls,
   };
 }
 
@@ -394,6 +496,7 @@ async function requestGemini(
   system: string,
   messages: ChatMessage[],
   mode: ChatMode,
+  maxToolSteps: number,
   signal: AbortSignal,
   port: chrome.runtime.Port,
 ) {
@@ -411,9 +514,28 @@ async function requestGemini(
       ],
     }),
   );
-  const useTools = mode !== "Ask";
+  const useTools = mode !== "Ask" && maxToolSteps > 0;
 
-  for (let step = 0; step < 15; step++) {
+  if (!useTools) {
+    const response = await fetch(url, {
+      method: "POST",
+      signal,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents,
+      }),
+    });
+    if (!response.ok) throw new Error(await response.text());
+    const data = await response.json();
+    return (
+      data.candidates?.[0]?.content?.parts
+        ?.map((part: { text?: string }) => part.text || "")
+        .join("") || ""
+    );
+  }
+
+  for (let step = 0; step < maxToolSteps; step++) {
     const response = await fetch(url, {
       method: "POST",
       signal,
@@ -444,7 +566,7 @@ async function requestGemini(
         }) => part.functionCall,
       )
       .filter(Boolean);
-    if (!useTools || !functionCalls.length)
+    if (!functionCalls.length)
       return (
         parts.map((part: { text?: string }) => part.text || "").join("") || ""
       );
@@ -453,10 +575,11 @@ async function requestGemini(
       .map((part: { text?: string }) => part.text || "")
       .join("");
     if (textBeforeTools)
-      postText(port, textBeforeTools, crypto.randomUUID(), signal);
+      postText(port, textBeforeTools, crypto.randomUUID(), signal, false);
 
     contents.push({ role: "model", parts });
     const responseParts = [];
+    let groupedTabsSuccessfully = false;
     for (const functionCall of functionCalls) {
       const toolName = String(functionCall.name || "unknown");
       const toolCallId = crypto.randomUUID();
@@ -473,6 +596,8 @@ async function requestGemini(
       });
       const output = await safeExecuteBrowserTool(toolName, input);
       const hasError = isToolError(output);
+      if (toolName === "groupTabs" && isToolSuccess(output))
+        groupedTabsSuccessfully = true;
       post(port, {
         type: "chunk",
         chunk: {
@@ -489,9 +614,54 @@ async function requestGemini(
       });
     }
     contents.push({ role: "user", parts: responseParts });
+    if (groupedTabsSuccessfully) {
+      contents.push({
+        role: "user",
+        parts: [{ text: FINAL_AFTER_GROUP_TABS_INSTRUCTION }],
+      });
+      const finalResponse = await fetch(url, {
+        method: "POST",
+        signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: system }] },
+          contents,
+        }),
+      });
+      if (!finalResponse.ok) throw new Error(await finalResponse.text());
+      const finalData = await finalResponse.json();
+      return (
+        finalData.candidates?.[0]?.content?.parts
+          ?.map((part: { text?: string }) => part.text || "")
+          .join("") || ""
+      );
+    }
   }
 
-  return "";
+  contents.push({
+    role: "user",
+    parts: [
+      {
+        text: "<internal_instruction>Maximum browser tool steps reached. Do not call more tools. Summarize the findings and clearly state what is known, what remains uncertain, and the best next step for the user. Respond in the same language as the user's latest non-internal message.</internal_instruction>",
+      },
+    ],
+  });
+  const response = await fetch(url, {
+    method: "POST",
+    signal,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents,
+    }),
+  });
+  if (!response.ok) throw new Error(await response.text());
+  const data = await response.json();
+  return (
+    data.candidates?.[0]?.content?.parts
+      ?.map((part: { text?: string }) => part.text || "")
+      .join("") || ""
+  );
 }
 
 function postText(
@@ -499,13 +669,18 @@ function postText(
   text: string,
   id: string,
   signal: AbortSignal,
+  appendToMessageContent = true,
 ) {
-  post(port, { type: "chunk", chunk: { type: "text-start", id } });
+  const prefix = appendToMessageContent ? "text" : "text-note";
+  post(port, { type: "chunk", chunk: { type: `${prefix}-start`, id } });
   for (const delta of chunkText(text)) {
     if (signal.aborted) throw new DOMException("Aborted", "AbortError");
-    post(port, { type: "chunk", chunk: { type: "text-delta", id, delta } });
+    post(port, {
+      type: "chunk",
+      chunk: { type: `${prefix}-delta`, id, delta },
+    });
   }
-  post(port, { type: "chunk", chunk: { type: "text-end", id } });
+  post(port, { type: "chunk", chunk: { type: `${prefix}-end`, id } });
 }
 
 function createSystemPrompt(mode: ChatMode) {
@@ -514,7 +689,7 @@ function createSystemPrompt(mode: ChatMode) {
 
 Your job is to answer the USER's question based on the content USER might provide.
 
-You MUST respond in the same language as the USER's latest message. If the latest message mixes languages, follow the user's dominant language and preserve any quoted text as written.`;
+You MUST respond in the same language as the USER's latest non-internal message. If the latest non-internal message mixes languages, follow the user's dominant language and preserve any quoted text as written.`;
   }
   return `You are OpenBrowserAgent, an AI created by OpenBrowserAgent.
 You act like a human that co-work with USER in browser. Finishing USER's task that USER want to finish in browser. You have many tools to interact with the browser.
@@ -525,7 +700,7 @@ You MUST follow the core_workflow to do the task.
 
 You MUST follow the tool call schema exactly as specified and make sure to provide all necessary parameters. And follow the output description to decide the next step.
 
-You MUST respond in the same language as the USER's latest message. If the latest message mixes languages, follow the user's dominant language and preserve any quoted text as written.
+You MUST respond in the same language as the USER's latest non-internal message. If the latest non-internal message mixes languages, follow the user's dominant language and preserve any quoted text as written.
 
 <rules_must_follow>
 - NEVER use your internal knowledge to imagine an URL to open directly.
@@ -538,6 +713,7 @@ You MUST respond in the same language as the USER's latest message. If the lates
     2.  **Evaluate task completion:** Ask yourself, "Have I gathered all the information needed to fulfill the USER's original request?"
     3.  **Decide the next action:**
         -   **If the task is NOT yet complete:** You MUST determine the next logical tool to use. Briefly inform the user of your immediate next step (e.g., "Next, I will click the login button.", "Okay, now reading the main content."), and then immediately call the next tool.
+        -   **If the task IS complete:** Stop calling tools and provide the final task report.
 </continuous_execution_protocol>
 
 <communication_guide>
@@ -565,12 +741,15 @@ You MUST respond in the same language as the USER's latest message. If the lates
 - DO NOT directly read the content of search page content, try to use clickElementByAiID tool to click the search result and get the content of the search result page.
 - Deconstruct the Topic: When given a research task, first break it down. Identify the primary keywords and potential search queries. Sometimes USER's query is not clear, you need to try to understand the USER's intent and break it down into multiple keywords. Then you can do multiple searchs.
 - NO need to response the summary of the search results while doing the research. In this phase, the main goal is to gather information and consume the information for the final task report.
-- When you complete the a search task, you MUST use groupTabs tool to group the tabs you opened. Do NOT close the tabs you opened.
+- When you complete the a search task, you MUST use groupTabs tool to group the tabs you opened. Do NOT close the tabs you opened. After groupTabs succeeds, do not call more tools; provide the final task report.
 </web_search_strategy>`;
 }
 
 async function generateTitle(message: string) {
-  const title = message.replace(/\s+/g, " ").trim().slice(0, 48);
+  const title = message
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, GENERATED_TITLE_MAX_LENGTH);
   return title || "New Chat";
 }
 
@@ -591,6 +770,12 @@ function parseToolArgs(value: string | undefined) {
 }
 
 function renderUserMessageWithContext(message: ChatMessage) {
+  if (message.metadata?.internalRetry) {
+    return `<internal_instruction>
+${message.content}
+</internal_instruction>`;
+  }
+
   const context =
     typeof message.metadata?.context === "string"
       ? message.metadata.context
@@ -901,7 +1086,7 @@ async function executeBrowserTool(
       const tabId = await resolveTabId(args.tabId);
       const tab = await chrome.tabs.get(tabId);
       const markdown = await extractMarkdown(tabId);
-      const filename = `${safeFileName(tab.title || tab.url || "tab").slice(0, 30)}.md`;
+      const filename = `${safeFileName(tab.title || tab.url || "tab").slice(0, MARKDOWN_FILENAME_MAX_LENGTH)}.md`;
       await downloadTextFile(filename, markdown, "text/markdown;charset=utf-8");
       return { success: true, filename };
     }
@@ -918,14 +1103,41 @@ async function safeExecuteBrowserTool(
   args: Record<string, unknown>,
 ) {
   try {
-    return await executeBrowserTool(name, args);
+    return await withTimeout(
+      executeBrowserTool(name, args),
+      BROWSER_TOOL_TIMEOUT_MS,
+      `Tool timed out: ${name || "unknown"}`,
+    );
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error) };
   }
 }
 
+function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  message: string,
+) {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timeoutId) clearTimeout(timeoutId);
+  });
+}
+
 function isToolError(output: unknown) {
   return typeof output === "object" && output !== null && "error" in output;
+}
+
+function isToolSuccess(output: unknown) {
+  return (
+    typeof output === "object" &&
+    output !== null &&
+    (output as { success?: unknown }).success === true &&
+    !("error" in output)
+  );
 }
 
 function pickTab(tab: chrome.tabs.Tab) {
@@ -1258,7 +1470,7 @@ async function findImages(tabId: number) {
           element.tagName.toLowerCase();
         images.push({
           src,
-          alt: `bg-${label}-${index}`.slice(0, 50),
+          alt: `bg-${label}-${index}`.slice(0, IMAGE_ALT_MAX_LENGTH),
           index: index++,
           type: "background",
         });
@@ -1270,7 +1482,7 @@ async function findImages(tabId: number) {
   const filename = `${safeFileName(tab.title || tab.url || "tab")}_images.zip`;
   const zip = new JSZip();
   let downloadedCount = 0;
-  for (const image of images.slice(0, 80)) {
+  for (const image of images.slice(0, MAX_IMAGES_PER_DOWNLOAD)) {
     try {
       const response = await fetch(image.src);
       if (!response.ok) continue;
@@ -1280,7 +1492,7 @@ async function findImages(tabId: number) {
         image.src,
       );
       zip.file(
-        `${String(image.index + 1).padStart(3, "0")}_${safeFileName(image.alt || image.type || "image").slice(0, 40)}.${extension}`,
+        `${String(image.index + 1).padStart(3, "0")}_${safeFileName(image.alt || image.type || "image").slice(0, IMAGE_FILENAME_MAX_LABEL_LENGTH)}.${extension}`,
         blob,
       );
       downloadedCount += 1;

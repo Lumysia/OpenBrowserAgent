@@ -1991,6 +1991,15 @@ a {
   font-size: 12px;
   font-weight: 650;
   overflow: hidden;
+  white-space: nowrap;
+}
+.tool-references button svg {
+  flex: 0 0 auto;
+}
+.tool-references button span {
+  min-width: 0;
+  overflow: hidden;
+  padding-right: 2px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
