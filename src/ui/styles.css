@@ -1962,6 +1962,7 @@ a {
   min-height: 16px;
   margin-left: 6px;
   padding-left: 12px;
+  padding-right: 10px;
   border-left: 1px solid var(--border);
   color: var(--muted-foreground);
 }
@@ -1977,11 +1978,12 @@ a {
   margin-top: 12px;
 }
 .tool-references button {
-  max-width: 280px;
+  max-width: min(280px, calc(100% - 10px));
+  min-width: 0;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 8px;
+  padding: 5px 12px 5px 8px;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--accent-strong) 24%, transparent);
   background: color-mix(in srgb, var(--accent-soft) 72%, var(--card));

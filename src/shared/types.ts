@@ -29,6 +29,7 @@ export type Preferences = {
   accentColor?: "green" | "blue" | "pink" | "purple" | "amber";
   syncSettings?: boolean;
   autoScroll?: boolean;
+  autoRetry?: boolean;
 };
 
 export type QuickAction = {

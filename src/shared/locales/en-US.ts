@@ -167,6 +167,9 @@ export const enUS = {
     autoScroll: "Auto Scroll",
     autoScrollDescription:
       "Automatically keep the latest AI output visible while messages stream.",
+    autoRetry: "Auto Retry",
+    autoRetryDescription:
+      "Automatically continue once if the assistant produces no new output for 30 seconds.",
   },
 };
 

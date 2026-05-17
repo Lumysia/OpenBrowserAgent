@@ -62,6 +62,15 @@ import {
 import { useStoredState } from "../../src/ui/useStoredState";
 import "../../src/ui/styles.css";
 
+const AUTO_RETRY_IDLE_MS = 30_000;
+const MAX_AUTO_RETRIES = 1;
+
+type ActiveStream = {
+  chatId: string;
+  assistantMessageId: string;
+  retryCount: number;
+};
+
 function SidepanelApp() {
   const [providers] = useStoredState(storage.provider);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
@@ -85,6 +94,9 @@ function SidepanelApp() {
   const autoAttachedRef = useRef(false);
   const sidepanelRef = useRef<HTMLDivElement | null>(null);
   const messagesRef = useRef<HTMLElement | null>(null);
+  const chatsRef = useRef<Chat[]>([]);
+  const lastStreamActivityRef = useRef(Date.now());
+  const activeStreamRef = useRef<ActiveStream | null>(null);
 
   const modelCount = useMemo(
     () =>
@@ -103,6 +115,10 @@ function SidepanelApp() {
   const currentChat =
     chats?.find((chat) => chat.id === activeChatId) || chats?.[0];
   const t = getMessages(language);
+
+  useEffect(() => {
+    chatsRef.current = chats || [];
+  }, [chats]);
 
   useEffect(() => {
     document.documentElement.dataset.accent =
@@ -223,6 +239,18 @@ function SidepanelApp() {
     });
   }, [currentChat?.messages, preferences?.autoScroll, streaming]);
 
+  useEffect(() => {
+    if (!streaming || preferences?.autoRetry === false) return;
+    const interval = window.setInterval(() => {
+      const active = activeStreamRef.current;
+      if (!active || active.retryCount >= MAX_AUTO_RETRIES) return;
+      if (Date.now() - lastStreamActivityRef.current < AUTO_RETRY_IDLE_MS)
+        return;
+      retryStalledStream(active);
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [preferences?.autoRetry, streaming]);
+
   function createChat() {
     const now = Date.now();
     const chat: Chat = {
@@ -288,23 +316,6 @@ function SidepanelApp() {
     setSelectedElement(null);
     setStreaming(true);
 
-    const port = chrome.runtime.connect({ name: "ai-stream" });
-    portRef.current = port;
-    port.onMessage.addListener((message: AiStreamResponse) => {
-      if (message.type === "chunk") {
-        appendStreamChunk(nextChat.id, assistantMessage.id, message.chunk);
-      }
-      if (message.type === "error") {
-        setStreaming(false);
-        appendToAssistant(
-          nextChat.id,
-          assistantMessage.id,
-          `\n\n${message.error}`,
-        );
-      }
-      if (message.type === "end") setStreaming(false);
-    });
-
     const request: AiStreamRequest = {
       type: "sendMessages",
       chatId: nextChat.id,
@@ -321,7 +332,100 @@ function SidepanelApp() {
         },
       },
     };
-    port.postMessage(request);
+    activeStreamRef.current = {
+      chatId: nextChat.id,
+      assistantMessageId: assistantMessage.id,
+      retryCount: 0,
+    };
+    lastStreamActivityRef.current = Date.now();
+    startStream(request);
+  }
+
+  function startStream(
+    request: Extract<AiStreamRequest, { type: "sendMessages" }>,
+  ) {
+    const responseMessageId = request.messageId || crypto.randomUUID();
+    closeStreamPort(false);
+    const port = chrome.runtime.connect({ name: "ai-stream" });
+    portRef.current = port;
+    port.onMessage.addListener((message: AiStreamResponse) => {
+      lastStreamActivityRef.current = Date.now();
+      if (message.type === "chunk") {
+        appendStreamChunk(request.chatId, responseMessageId, message.chunk);
+      }
+      if (message.type === "error") {
+        activeStreamRef.current = null;
+        setStreaming(false);
+        appendToAssistant(
+          request.chatId,
+          responseMessageId,
+          `\n\n${message.error}`,
+        );
+      }
+      if (message.type === "end") {
+        activeStreamRef.current = null;
+        setStreaming(false);
+      }
+    });
+    try {
+      port.postMessage(request);
+    } catch {
+      if (portRef.current === port) portRef.current = undefined;
+      activeStreamRef.current = null;
+      setStreaming(false);
+    }
+  }
+
+  function closeStreamPort(abort: boolean) {
+    const port = portRef.current;
+    portRef.current = undefined;
+    if (!port) return;
+    try {
+      if (abort) port.postMessage({ type: "abort" } satisfies AiStreamRequest);
+    } catch {
+      // Chrome throws if the service worker already disconnected the port.
+    }
+    try {
+      port.disconnect();
+    } catch {
+      // Disconnect is best-effort for stale ports.
+    }
+  }
+
+  function retryStalledStream(active: ActiveStream) {
+    const chat = chatsRef.current.find(
+      (candidate) => candidate.id === active.chatId,
+    );
+    const assistantIndex = chat?.messages.findIndex(
+      (message) => message.id === active.assistantMessageId,
+    );
+    if (!chat || assistantIndex === undefined || assistantIndex < 0) return;
+
+    active.retryCount += 1;
+    lastStreamActivityRef.current = Date.now();
+    const retryInstruction: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content:
+        "Continue from the last completed step. Do not repeat completed work. If the browser state changed, inspect it before acting.",
+      createdAt: Date.now(),
+    };
+
+    startStream({
+      type: "sendMessages",
+      chatId: active.chatId,
+      messageId: active.assistantMessageId,
+      messages: [
+        ...chat.messages.slice(0, assistantIndex + 1),
+        retryInstruction,
+      ],
+      body: {
+        modelId: preferences?.selectedModelId,
+        chatMode: mode,
+        language,
+        context: {},
+      },
+    });
   }
 
   function createAndReturnChat() {
@@ -392,8 +496,8 @@ function SidepanelApp() {
   }
 
   function stop() {
-    portRef.current?.postMessage({ type: "abort" } satisfies AiStreamRequest);
-    portRef.current?.disconnect();
+    activeStreamRef.current = null;
+    closeStreamPort(true);
     setStreaming(false);
   }
 

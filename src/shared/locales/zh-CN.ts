@@ -134,5 +134,7 @@ export const zhCN: LocaleMessages = {
     syncSettingsDescription: "通过浏览器账号同步语言和轻量偏好设置。",
     autoScroll: "自动滚动",
     autoScrollDescription: "AI 输出时自动保持最新内容可见。",
+    autoRetry: "自动重试",
+    autoRetryDescription: "如果 AI 30 秒没有新输出，自动继续一次。",
   },
 };

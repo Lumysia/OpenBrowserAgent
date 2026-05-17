@@ -258,6 +258,28 @@ function GeneralPage() {
           </Select>
         </CardContent>
       </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t.options.autoRetry}</CardTitle>
+          <CardDescription>{t.options.autoRetryDescription}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={preferences.autoRetry === false ? "off" : "on"}
+            onValueChange={(value) =>
+              setPreferences({ ...preferences, autoRetry: value === "on" })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="on">{t.common.enabled}</SelectItem>
+              <SelectItem value="off">{t.common.disabled}</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
     </div>
   );
 }
