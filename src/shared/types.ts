@@ -126,6 +126,7 @@ export type AiStreamRequest =
     }
   | {
       type: "generateTitle";
+      modelId?: string;
       message: string;
       metadata?: Record<string, unknown>;
     }

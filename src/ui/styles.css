@@ -889,12 +889,17 @@ a {
 }
 
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
   display: flex;
+  overflow: hidden;
   background: var(--settings-tint);
 }
 .settings-sidebar {
   width: 256px;
+  height: 100vh;
+  flex: 0 0 auto;
+  overflow-y: auto;
   border-right: 1px solid var(--border);
   background: var(--settings-sidebar-tint);
   display: flex;
@@ -922,7 +927,9 @@ a {
 }
 .settings-main {
   flex: 1;
-  min-height: 100vh;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
   background:
     radial-gradient(
       ellipse 48rem 28rem at 18% -8%,
@@ -946,6 +953,7 @@ a {
 .settings-content {
   max-width: 960px;
   margin: 0 auto;
+  padding-bottom: 28px;
 }
 .brand {
   font-family: Georgia, "Times New Roman", serif;
@@ -2149,12 +2157,219 @@ a {
 .markdown p {
   margin: 0 0 16px;
 }
+.markdown :not(pre) > code {
+  padding: 2px 5px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 68%, var(--border));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent-softer) 56%, var(--card));
+  color: var(--accent-strong);
+  font-size: 0.92em;
+}
+.markdown-code-block {
+  position: relative;
+  margin: 14px 0 18px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 54%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card) 90%, var(--accent-softer));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow) 76%, transparent);
+}
+.markdown-code-header {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 8px 7px 13px;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--accent-soft) 54%, var(--border));
+  background: color-mix(in srgb, var(--accent-softer) 42%, var(--card));
+}
+.markdown-code-header span {
+  min-width: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
 .markdown pre {
   overflow: auto;
-  padding: 10px;
-  background: #17161b;
-  color: #fbfaf7;
-  border-radius: 10px;
+  margin: 0;
+  padding: 14px 15px 16px;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1.62;
+}
+.markdown pre code {
+  color: inherit;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.markdown .hljs-keyword,
+.markdown .hljs-selector-tag,
+.markdown .hljs-built_in,
+.markdown .hljs-name,
+.markdown .hljs-tag {
+  color: #8b5fbf;
+}
+.markdown .hljs-string,
+.markdown .hljs-title,
+.markdown .hljs-section,
+.markdown .hljs-attribute,
+.markdown .hljs-literal,
+.markdown .hljs-template-tag,
+.markdown .hljs-template-variable,
+.markdown .hljs-type,
+.markdown .hljs-addition {
+  color: #8a681f;
+}
+.markdown .hljs-number,
+.markdown .hljs-symbol,
+.markdown .hljs-bullet,
+.markdown .hljs-variable,
+.markdown .hljs-params {
+  color: #9a5a36;
+}
+.markdown .hljs-comment,
+.markdown .hljs-quote,
+.markdown .hljs-deletion,
+.markdown .hljs-meta {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+.markdown .hljs-emphasis {
+  font-style: italic;
+}
+.markdown .hljs-strong {
+  font-weight: 750;
+}
+.code-copy {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 62%, var(--border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+  color: var(--muted-foreground);
+  transition:
+    background-color 0.14s ease,
+    border-color 0.14s ease,
+    color 0.14s ease,
+    transform 0.14s ease;
+}
+.markdown-code-header .tooltip::after {
+  top: calc(100% + 7px);
+}
+.code-copy:hover {
+  border-color: color-mix(in srgb, var(--accent-strong) 28%, var(--border));
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  transform: translateY(-1px);
+}
+.code-copy:active {
+  transform: scale(0.96);
+}
+.code-copy-icon {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+.code-copy-check {
+  display: none;
+}
+.markdown-code-block.copied .code-copy {
+  color: var(--accent-strong);
+}
+.markdown-code-block.copied .code-copy-copy {
+  display: none;
+}
+.markdown-code-block.copied .code-copy-check {
+  display: block;
+}
+
+:root[data-theme="dark"] .markdown-code-block {
+  background: color-mix(in srgb, var(--card) 82%, #0f1115);
+}
+
+:root[data-theme="dark"] .markdown-code-header {
+  background: color-mix(in srgb, var(--accent-softer) 44%, var(--card));
+}
+
+:root[data-theme="dark"] .markdown .hljs-keyword,
+:root[data-theme="dark"] .markdown .hljs-selector-tag,
+:root[data-theme="dark"] .markdown .hljs-built_in,
+:root[data-theme="dark"] .markdown .hljs-name,
+:root[data-theme="dark"] .markdown .hljs-tag {
+  color: #c7a8ff;
+}
+
+:root[data-theme="dark"] .markdown .hljs-string,
+:root[data-theme="dark"] .markdown .hljs-title,
+:root[data-theme="dark"] .markdown .hljs-section,
+:root[data-theme="dark"] .markdown .hljs-attribute,
+:root[data-theme="dark"] .markdown .hljs-literal,
+:root[data-theme="dark"] .markdown .hljs-template-tag,
+:root[data-theme="dark"] .markdown .hljs-template-variable,
+:root[data-theme="dark"] .markdown .hljs-type,
+:root[data-theme="dark"] .markdown .hljs-addition {
+  color: #e5c07b;
+}
+
+:root[data-theme="dark"] .markdown .hljs-number,
+:root[data-theme="dark"] .markdown .hljs-symbol,
+:root[data-theme="dark"] .markdown .hljs-bullet,
+:root[data-theme="dark"] .markdown .hljs-variable,
+:root[data-theme="dark"] .markdown .hljs-params {
+  color: #ef9f76;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] .markdown-code-block {
+    background: color-mix(in srgb, var(--card) 82%, #0f1115);
+  }
+
+  :root[data-theme="system"] .markdown-code-header {
+    background: color-mix(in srgb, var(--accent-softer) 44%, var(--card));
+  }
+
+  :root[data-theme="system"] .markdown .hljs-keyword,
+  :root[data-theme="system"] .markdown .hljs-selector-tag,
+  :root[data-theme="system"] .markdown .hljs-built_in,
+  :root[data-theme="system"] .markdown .hljs-name,
+  :root[data-theme="system"] .markdown .hljs-tag {
+    color: #c7a8ff;
+  }
+
+  :root[data-theme="system"] .markdown .hljs-string,
+  :root[data-theme="system"] .markdown .hljs-title,
+  :root[data-theme="system"] .markdown .hljs-section,
+  :root[data-theme="system"] .markdown .hljs-attribute,
+  :root[data-theme="system"] .markdown .hljs-literal,
+  :root[data-theme="system"] .markdown .hljs-template-tag,
+  :root[data-theme="system"] .markdown .hljs-template-variable,
+  :root[data-theme="system"] .markdown .hljs-type,
+  :root[data-theme="system"] .markdown .hljs-addition {
+    color: #e5c07b;
+  }
+
+  :root[data-theme="system"] .markdown .hljs-number,
+  :root[data-theme="system"] .markdown .hljs-symbol,
+  :root[data-theme="system"] .markdown .hljs-bullet,
+  :root[data-theme="system"] .markdown .hljs-variable,
+  :root[data-theme="system"] .markdown .hljs-params {
+    color: #ef9f76;
+  }
 }
 .message-label {
   margin-bottom: 6px;
@@ -2447,12 +2662,17 @@ a {
 @media (max-width: 720px) {
   .app-shell {
     flex-direction: column;
+    overflow-y: auto;
   }
   .settings-sidebar {
     width: 100%;
+    height: auto;
     min-height: auto;
+    overflow: visible;
   }
   .settings-main {
+    flex: 0 0 auto;
+    overflow: visible;
     padding: 18px;
   }
   .split {

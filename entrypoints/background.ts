@@ -66,9 +66,9 @@ export default defineBackground(() => {
       }
 
       if (request.type === "generateTitle") {
-        generateTitle(request.message).then((title) =>
-          post(port, { type: "title", title }),
-        );
+        generateTitle(request)
+          .then((title) => post(port, { type: "title", title }))
+          .catch(() => post(port, { type: "title", title: "New Chat" }));
       }
 
       if (request.type === "generateQuickAction") {
@@ -707,12 +707,51 @@ You MUST respond in the same language as the USER's latest non-internal message.
 </web_search_strategy>`;
 }
 
-async function generateTitle(message: string) {
-  const title = message
+async function generateTitle(
+  request: Extract<AiStreamRequest, { type: "generateTitle" }>,
+) {
+  const fallback = compactTitle(request.message) || "New Chat";
+  try {
+    const model = await resolveModel(request.modelId);
+    const raw = await requestPlainText(model, [
+      {
+        role: "system",
+        content:
+          "Create concise chat titles. Return only the title, no quotes, no punctuation wrapper, no explanation.",
+      },
+      {
+        role: "user",
+        content: `Summarize this chat starter into a title in the same language as the message.
+
+Rules:
+- Maximum 10 English words, or maximum 10 CJK characters for Chinese/Japanese/Korean.
+- No trailing period.
+- Return the title only.
+
+Message:
+${request.message}`,
+      },
+    ]);
+    return compactTitle(raw) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function compactTitle(value: string) {
+  const title = value
+    .replace(/[\r\n]+/g, " ")
+    .replace(/^[[({"'“‘`\s]+|[\])}"'”’`\s.。!！?？:：]+$/g, "")
     .replace(/\s+/g, " ")
-    .trim()
+    .trim();
+  if (!title) return "";
+  if (/[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uac00-\ud7af]/.test(title))
+    return title.replace(/\s+/g, "").slice(0, 10);
+  return title
+    .split(/\s+/)
+    .slice(0, 10)
+    .join(" ")
     .slice(0, GENERATED_TITLE_MAX_LENGTH);
-  return title || "New Chat";
 }
 
 async function generateQuickAction(

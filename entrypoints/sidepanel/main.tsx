@@ -1,5 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import hljs from "highlight.js/lib/core";
+import bash from "highlight.js/lib/languages/bash";
+import css from "highlight.js/lib/languages/css";
+import javascript from "highlight.js/lib/languages/javascript";
+import json from "highlight.js/lib/languages/json";
+import markdown from "highlight.js/lib/languages/markdown";
+import python from "highlight.js/lib/languages/python";
+import typescript from "highlight.js/lib/languages/typescript";
+import xml from "highlight.js/lib/languages/xml";
 import { marked } from "marked";
 import {
   Bot,
@@ -71,6 +80,23 @@ import {
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import "../../src/ui/styles.css";
+
+hljs.registerLanguage("bash", bash);
+hljs.registerLanguage("sh", bash);
+hljs.registerLanguage("shell", bash);
+hljs.registerLanguage("css", css);
+hljs.registerLanguage("javascript", javascript);
+hljs.registerLanguage("js", javascript);
+hljs.registerLanguage("json", json);
+hljs.registerLanguage("markdown", markdown);
+hljs.registerLanguage("md", markdown);
+hljs.registerLanguage("python", python);
+hljs.registerLanguage("py", python);
+hljs.registerLanguage("typescript", typescript);
+hljs.registerLanguage("ts", typescript);
+hljs.registerLanguage("tsx", typescript);
+hljs.registerLanguage("html", xml);
+hljs.registerLanguage("xml", xml);
 
 type ActiveStream = {
   chatId: string;
@@ -377,13 +403,15 @@ function SidepanelApp() {
       parts: [],
       createdAt: Date.now(),
     };
+    const shouldGenerateTitle = chat.messages.length === 0;
     const nextChat = {
       ...chat,
-      title: chat.messages.length === 0 ? generateLocalTitle(text) : chat.title,
+      title: shouldGenerateTitle ? generateLocalTitle(text) : chat.title,
       messages: [...chat.messages, userMessage, assistantMessage],
       updatedAt: Date.now(),
     };
     updateChat(nextChat);
+    if (shouldGenerateTitle) requestChatTitle(nextChat.id, text);
     setInput("");
     setAttachedTabs([]);
     setSelectedElement(null);
@@ -593,6 +621,39 @@ function SidepanelApp() {
     return title.length > LOCAL_CHAT_TITLE_MAX_LENGTH
       ? `${title.slice(0, LOCAL_CHAT_TITLE_MAX_LENGTH)}...`
       : title || t.words.newChat;
+  }
+
+  function requestChatTitle(chatId: string, message: string) {
+    const port = chrome.runtime.connect({ name: "ai-stream" });
+    const cleanup = () => {
+      try {
+        port.disconnect();
+      } catch {
+        // Best-effort cleanup for stale ports.
+      }
+    };
+    port.onMessage.addListener((response: AiStreamResponse) => {
+      if (response.type === "title") {
+        const title = response.title.trim();
+        if (title)
+          setChats((items) =>
+            items.map((chat) =>
+              chat.id === chatId ? { ...chat, title } : chat,
+            ),
+          );
+        cleanup();
+      }
+      if (response.type === "error") cleanup();
+    });
+    try {
+      port.postMessage({
+        type: "generateTitle",
+        modelId: preferences?.selectedModelId,
+        message,
+      } satisfies AiStreamRequest);
+    } catch {
+      cleanup();
+    }
   }
 
   async function attachActiveTab() {
@@ -1425,9 +1486,10 @@ function AssistantPart({ t, part }: { t: Messages; part: ChatPart }) {
 function AssistantText({ text }: { text: string }) {
   const [language] = useStoredState(storage.language);
   const [copied, setCopied] = useState(false);
+  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const t = getMessages(language);
   const displayText = useThrottledText(text, STREAM_RENDER_THROTTLE_MS);
-  const html = marked.parse(displayText);
+  const { html, codeBlocks } = renderMarkdown(displayText, t, copiedCodeId);
   const streaming = displayText.length < text.length;
 
   useEffect(() => {
@@ -1435,6 +1497,27 @@ function AssistantText({ text }: { text: string }) {
     const timeout = window.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
     return () => window.clearTimeout(timeout);
   }, [copied]);
+
+  useEffect(() => {
+    if (!copiedCodeId) return undefined;
+    const timeout = window.setTimeout(
+      () => setCopiedCodeId(null),
+      COPY_FEEDBACK_MS,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [copiedCodeId]);
+
+  async function copyCode(event: React.MouseEvent<HTMLDivElement>) {
+    const button = (event.target as HTMLElement | null)?.closest(
+      "button[data-code-index]",
+    ) as HTMLButtonElement | null;
+    if (!button) return;
+    const codeIndex = Number(button.dataset.codeIndex);
+    const code = codeBlocks[codeIndex];
+    if (!code) return;
+    await navigator.clipboard.writeText(code);
+    setCopiedCodeId(button.dataset.codeId || null);
+  }
 
   function copyText() {
     navigator.clipboard
@@ -1445,7 +1528,11 @@ function AssistantText({ text }: { text: string }) {
 
   return (
     <div className={`assistant-text${streaming ? " streaming" : ""}`}>
-      <div className="markdown" dangerouslySetInnerHTML={{ __html: html }} />
+      <div
+        className="markdown"
+        dangerouslySetInnerHTML={{ __html: html }}
+        onClick={copyCode}
+      />
       <button
         className={`copy-message tooltip${copied ? " copied" : ""}`}
         data-tooltip={copied ? t.common.copied : t.common.copy}
@@ -1455,6 +1542,50 @@ function AssistantText({ text }: { text: string }) {
       </button>
     </div>
   );
+}
+
+function renderMarkdown(
+  text: string,
+  t: Messages,
+  copiedCodeId: string | null,
+) {
+  const codeBlocks: string[] = [];
+  const renderer = new marked.Renderer();
+  renderer.code = ({ text: code, lang }) => {
+    const codeIndex = codeBlocks.push(code) - 1;
+    const codeId = `code-${codeIndex}`;
+    const copied = copiedCodeId === codeId;
+    const language = lang?.split(/\s+/)[0] || "";
+    const highlighted = highlightCode(code, language);
+    const displayLanguage = escapeHtml(
+      language || highlighted.language || "text",
+    );
+    return `<div class="markdown-code-block${copied ? " copied" : ""}"><div class="markdown-code-header"><span>${displayLanguage}</span><button type="button" class="code-copy tooltip tooltip-right-edge" data-tooltip="${copied ? escapeHtml(t.common.copied) : escapeHtml(t.common.copy)}" data-code-index="${codeIndex}" data-code-id="${codeId}" aria-label="${escapeHtml(t.common.copy)}"><svg class="code-copy-icon code-copy-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="code-copy-icon code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></button></div><pre><code class="hljs${language ? ` language-${escapeHtml(language)}` : ""}">${highlighted.html}</code></pre></div>`;
+  };
+  return { html: marked.parse(text, { renderer }), codeBlocks };
+}
+
+function highlightCode(code: string, language: string) {
+  try {
+    if (language && hljs.getLanguage(language)) {
+      return {
+        html: hljs.highlight(code, { language, ignoreIllegals: true }).value,
+        language,
+      };
+    }
+    const result = hljs.highlightAuto(code);
+    return { html: result.value, language: result.language || "" };
+  } catch {
+    return { html: escapeHtml(code), language: "" };
+  }
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 
 function useThrottledText(value: string, delayMs: number) {
