@@ -11,6 +11,7 @@ export const enUS = {
     settings: "Settings",
     copy: "Copy",
     copied: "Copied",
+    edit: "Edit",
     help: "Help",
     language: "Language",
     enabled: "Enabled",

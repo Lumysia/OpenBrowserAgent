@@ -102,6 +102,7 @@ export function SidepanelView({
   onAttachFiles,
   onRemoveUploadedAttachment,
   onReplaceUploadedAttachment,
+  onEditMessage,
   onResendMessage,
   onSelectElement,
   onSelectChat,
@@ -155,6 +156,10 @@ export function SidepanelView({
     id: string,
     files: FileList | File[],
   ) => Promise<void>;
+  onEditMessage: (
+    message: ChatMessage,
+    attachments: UploadedAttachment[],
+  ) => void;
   onResendMessage: (
     message: ChatMessage,
     attachments: UploadedAttachment[],
@@ -270,6 +275,7 @@ export function SidepanelView({
               sentAttachments={sentAttachmentPreviews[message.id] || []}
               activeAttachments={uploadedAttachments}
               onReplaceAttachment={onReplaceUploadedAttachment}
+              onEdit={onEditMessage}
               onResend={onResendMessage}
             />
           ))}

@@ -11,6 +11,7 @@ export const ko: LocaleMessages = {
     settings: "설정",
     copy: "복사",
     copied: "복사됨",
+    edit: "편집",
     help: "도움말",
     language: "언어",
     enabled: "활성화됨",

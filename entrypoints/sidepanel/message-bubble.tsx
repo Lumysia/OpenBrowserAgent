@@ -7,6 +7,7 @@ import {
   FileText,
   FileVideo,
   Image,
+  Pencil,
   MousePointerClick,
   RotateCcw,
 } from "lucide-react";
@@ -48,12 +49,14 @@ export function MessageBubble({
   sentAttachments = [],
   activeAttachments = [],
   onReplaceAttachment,
+  onEdit,
   onResend,
 }: {
   message: ChatMessage;
   sentAttachments?: UploadedAttachment[];
   activeAttachments?: UploadedAttachment[];
   onReplaceAttachment?: (id: string, files: FileList | File[]) => Promise<void>;
+  onEdit?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
   onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
 }) {
   const [language] = useStoredState(storage.language);
@@ -155,6 +158,7 @@ export function MessageBubble({
           availableAttachments={availableAttachments}
           missingAttachments={missingAttachments}
           onReplaceAttachment={onReplaceAttachment}
+          onEdit={onEdit}
           onResend={onResend}
         />
       )}
@@ -342,6 +346,7 @@ function UserMessageActions({
   availableAttachments,
   missingAttachments,
   onReplaceAttachment,
+  onEdit,
   onResend,
 }: {
   t: Messages;
@@ -349,6 +354,7 @@ function UserMessageActions({
   availableAttachments: UploadedAttachment[];
   missingAttachments: UploadedAttachment[];
   onReplaceAttachment?: (id: string, files: FileList | File[]) => Promise<void>;
+  onEdit?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
   onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
 }) {
   const [copied, setCopied] = useState(false);
@@ -382,6 +388,11 @@ function UserMessageActions({
       <IconTooltip label={copied ? t.common.copied : t.common.copy}>
         <button onClick={copyText}>
           {copied ? <Check size={13} /> : <Copy size={13} />}
+        </button>
+      </IconTooltip>
+      <IconTooltip label={t.common.edit}>
+        <button onClick={() => onEdit?.(message, availableAttachments)}>
+          <Pencil size={13} />
         </button>
       </IconTooltip>
       <Popover

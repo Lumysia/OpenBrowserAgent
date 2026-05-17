@@ -27,8 +27,13 @@ import type {
 import { useStoredState } from "../../src/ui/useStoredState";
 import { requestGeneratedTitle, requestQuickAction } from "./ai-requests";
 import { appendAssistantContent, appendAssistantPart } from "./chat-updates";
+import {
+  createEditMessageDraft,
+  pruneSentAttachmentPreviews,
+} from "./edit-message";
 import { sortChatsNewestFirst } from "./format";
 import { assistantModelLabel } from "./model-label";
+import { retryStalledStream } from "./retry-stalled-stream";
 import {
   buildSidepanelContext,
   interpolateQuickAction,
@@ -99,6 +104,7 @@ export function SidepanelApp() {
     attachFiles,
     removeUploadedAttachment,
     replaceUploadedAttachment,
+    stageUploadedAttachments,
     clearPendingAttachments,
     clearUploadedAttachments,
   } = useUploadedAttachments(t);
@@ -171,7 +177,17 @@ export function SidepanelApp() {
       if (active.hasProgress) return;
       if (Date.now() - lastStreamActivityRef.current < AUTO_RETRY_IDLE_MS)
         return;
-      retryStalledStream(active);
+      lastStreamActivityRef.current = Date.now();
+      retryStalledStream({
+        active,
+        chats: chatsRef.current,
+        preferences,
+        mode,
+        language: language || "en-US",
+        uploadedAttachments,
+        appendToAssistant,
+        startStream,
+      });
     }, AUTO_RETRY_POLL_MS);
     return () => window.clearInterval(interval);
   }, [preferences?.autoRetry, streaming]);
@@ -366,47 +382,6 @@ export function SidepanelApp() {
     }
   }
 
-  function retryStalledStream(active: ActiveStream) {
-    const chat = chatsRef.current.find(
-      (candidate) => candidate.id === active.chatId,
-    );
-    const assistantIndex = chat?.messages.findIndex(
-      (message) => message.id === active.assistantMessageId,
-    );
-    if (!chat || assistantIndex === undefined || assistantIndex < 0) return;
-
-    active.retryCount += 1;
-    lastStreamActivityRef.current = Date.now();
-    const retryInstruction: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content:
-        "<internal_instruction>The previous response stream stalled. Continue from the last completed step, start a new paragraph, do not repeat completed work, and respond in the same language as the user's latest non-internal message.</internal_instruction>",
-      createdAt: Date.now(),
-      metadata: { internalRetry: true },
-    };
-
-    if (chat.messages[assistantIndex]?.content.trim())
-      appendToAssistant(active.chatId, active.assistantMessageId, "\n\n");
-
-    startStream(
-      {
-        type: AI_STREAM_REQUEST_TYPE.sendMessages,
-        chatId: active.chatId,
-        messageId: crypto.randomUUID(),
-        messages: [...chat.messages.slice(0, assistantIndex), retryInstruction],
-        body: {
-          modelId: preferences?.selectedModelId,
-          chatMode: mode,
-          language,
-          maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
-          context: { uploadedAttachments },
-        },
-      },
-      active.assistantMessageId,
-    );
-  }
-
   function appendToAssistant(
     chatId: string,
     messageId: string,
@@ -444,6 +419,27 @@ export function SidepanelApp() {
           items.map((chat) => (chat.id === chatId ? { ...chat, title } : chat)),
         ),
     });
+  }
+
+  function editMessage(
+    message: ChatMessage,
+    attachments: UploadedAttachment[],
+  ) {
+    if (!currentChat || streaming) return;
+    const draft = createEditMessageDraft({
+      chat: currentChat,
+      message,
+      attachments,
+    });
+    if (!draft) return;
+    setInput(draft.content);
+    setAttachedTabs(draft.attachedTabs);
+    setSelectedElement(draft.selectedElement);
+    stageUploadedAttachments(draft.attachments);
+    updateChat(draft.nextChat);
+    setSentAttachmentPreviews((items) =>
+      pruneSentAttachmentPreviews(items, draft.keptMessageIds),
+    );
   }
 
   return (
@@ -497,6 +493,7 @@ export function SidepanelApp() {
       onAttachFiles={attachFiles}
       onRemoveUploadedAttachment={removeUploadedAttachment}
       onReplaceUploadedAttachment={replaceUploadedAttachment}
+      onEditMessage={editMessage}
       onResendMessage={(message, attachments) =>
         send(message.content, undefined, attachments)
       }

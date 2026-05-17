@@ -11,6 +11,7 @@ export const zhCN: LocaleMessages = {
     settings: "设置",
     copy: "复制",
     copied: "已复制",
+    edit: "编辑",
     help: "帮助",
     language: "语言",
     enabled: "已启用",

@@ -11,6 +11,7 @@ export const ptBR: LocaleMessages = {
     settings: "Configurações",
     copy: "Copiar",
     copied: "Copiado",
+    edit: "Editar",
     help: "Ajuda",
     language: "Idioma",
     enabled: "Ativado",

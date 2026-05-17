@@ -11,6 +11,7 @@ export const zhTW: LocaleMessages = {
     settings: "設定",
     copy: "複製",
     copied: "已複製",
+    edit: "編輯",
     help: "說明",
     language: "語言",
     enabled: "已啟用",

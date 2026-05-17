@@ -11,6 +11,7 @@ export const deDE: LocaleMessages = {
     settings: "Einstellungen",
     copy: "Kopieren",
     copied: "Kopiert",
+    edit: "Bearbeiten",
     help: "Hilfe",
     language: "Sprache",
     enabled: "Aktiviert",

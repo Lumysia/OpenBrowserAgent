@@ -80,6 +80,17 @@ export function useUploadedAttachments(t: Messages) {
     setAttachmentNotice("");
   }
 
+  function stageUploadedAttachments(attachments: UploadedAttachment[]) {
+    setUploadedAttachments((items) => [
+      ...items.filter(
+        (item) => !attachments.some((attachment) => attachment.id === item.id),
+      ),
+      ...attachments,
+    ]);
+    setPendingAttachmentIds(attachments.map((attachment) => attachment.id));
+    setAttachmentNotice("");
+  }
+
   function clearUploadedAttachments() {
     setUploadedAttachments([]);
     setPendingAttachmentIds([]);
@@ -93,6 +104,7 @@ export function useUploadedAttachments(t: Messages) {
     attachFiles,
     removeUploadedAttachment,
     replaceUploadedAttachment,
+    stageUploadedAttachments,
     clearPendingAttachments,
     clearUploadedAttachments,
   };

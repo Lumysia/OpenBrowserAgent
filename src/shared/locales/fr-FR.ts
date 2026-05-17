@@ -11,6 +11,7 @@ export const frFR: LocaleMessages = {
     settings: "Paramètres",
     copy: "Copier",
     copied: "Copié",
+    edit: "Modifier",
     help: "Aide",
     language: "Langue",
     enabled: "Activé",

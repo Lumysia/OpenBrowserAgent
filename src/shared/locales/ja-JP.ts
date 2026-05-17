@@ -11,6 +11,7 @@ export const jaJP: LocaleMessages = {
     settings: "設定",
     copy: "コピー",
     copied: "コピーしました",
+    edit: "編集",
     help: "ヘルプ",
     language: "言語",
     enabled: "有効",
