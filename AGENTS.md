@@ -35,6 +35,7 @@ OpenBrowserAgent is a WXT/Vite/React/TypeScript browser extension for AI-assiste
 
 - Do not add hardcoded language detection. Assistant response language belongs in the model prompt: respond in the user's latest message language.
 - Keep UI language selection only for extension chrome/localized UI, not for forcing assistant replies.
+- Extension UI text must prefer the app's stored UI language (`storage.language` with `getMessages`/local UI registries). Use `chrome.i18n` only as a fallback for manifest/default locale or non-React content-script boundaries where the stored language is unavailable.
 - Avoid hardcoded theme colors in components and stateful UI; use shared CSS variables and `src/shared/i18n.ts` for user-facing text.
 - Do not add placeholder hacks, debug logs, or narrow special-case branches without an explicit product requirement.
 - Keep localization maintainable: UI message definitions live in per-locale files under `src/shared/locales`, and manifest messages live under `public/_locales`. Do not expose a language option unless its UI locale is implemented.

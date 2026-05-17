@@ -62,8 +62,7 @@
   root.appendChild(highlight);
 
   const label = document.createElement("div");
-  label.textContent =
-    chrome.i18n?.getMessage("selectorPrompt") || SELECTOR_PROMPTS["en-US"];
+  label.textContent = SELECTOR_PROMPTS["en-US"];
   Object.assign(label.style, {
     position: "fixed",
     top: "16px",
