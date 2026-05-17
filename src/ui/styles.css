@@ -1606,10 +1606,13 @@ a {
 }
 .attachment-replace-row {
   display: grid;
-  gap: 5px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
   padding: 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
+  background: color-mix(in srgb, var(--card) 84%, var(--accent-softer));
   color: var(--foreground);
   font-size: 12px;
 }
@@ -1618,9 +1621,11 @@ a {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.attachment-replace-row label {
+  cursor: pointer;
+}
 .attachment-replace-row input {
-  max-width: 100%;
-  font-size: 11px;
+  display: none;
 }
 .composer {
   position: sticky;

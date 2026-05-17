@@ -39,6 +39,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  buttonVariants,
 } from "../../src/ui/components";
 
 export function MessageBubble({
@@ -396,20 +397,26 @@ function UserMessageActions({
           <strong>{t.sidepanel.replaceUnavailableAttachments}</strong>
           <small>{t.sidepanel.replaceUnavailableAttachmentsDescription}</small>
           {missingAttachments.map((attachment) => (
-            <label key={attachment.id} className="attachment-replace-row">
-              <span>{attachment.name}</span>
-              <input
-                type="file"
-                onChange={(event) => {
-                  if (event.target.files)
-                    void onReplaceAttachment?.(
-                      attachment.id,
-                      event.target.files,
-                    );
-                  event.target.value = "";
-                }}
-              />
-            </label>
+            <div key={attachment.id} className="attachment-replace-row">
+              <span title={attachment.name}>{attachment.name}</span>
+              <label
+                className={buttonVariants({ variant: "secondary", size: "sm" })}
+              >
+                <File size={14} />
+                {t.sidepanel.attachFiles}
+                <input
+                  type="file"
+                  onChange={(event) => {
+                    if (event.target.files)
+                      void onReplaceAttachment?.(
+                        attachment.id,
+                        event.target.files,
+                      );
+                    event.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
           ))}
           <Button
             size="sm"
