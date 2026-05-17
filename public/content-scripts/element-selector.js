@@ -53,18 +53,18 @@
     "Select element - Esc to cancel";
   Object.assign(label.style, {
     position: "fixed",
-    top: "18px",
+    top: "16px",
     left: "50%",
     transform: "translateX(-50%)",
-    padding: "16px 24px",
+    padding: "12px 18px",
     border: "1px solid var(--oba-selector-border)",
     borderRadius: "999px",
     background: "var(--oba-selector-surface)",
     color: "var(--oba-selector-foreground)",
-    font: "26px system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-    fontWeight: "650",
-    letterSpacing: "-0.02em",
-    boxShadow: "0 16px 44px rgba(0,0,0,.28)",
+    font: "20px system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+    fontWeight: "620",
+    letterSpacing: "-0.015em",
+    boxShadow: "0 14px 38px rgba(0,0,0,.26)",
   });
   root.appendChild(label);
 
