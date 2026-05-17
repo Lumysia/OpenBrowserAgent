@@ -69,6 +69,15 @@ export type ChatMessage = {
   metadata?: Record<string, unknown>;
 };
 
+export const CHAT_PART_STATE = {
+  streaming: "streaming",
+  done: "done",
+  inputStreaming: "input-streaming",
+  inputAvailable: "input-available",
+  outputAvailable: "output-available",
+  outputError: "output-error",
+} as const;
+
 export type ChatPart = {
   id: string;
   type: "text" | "reasoning" | `tool-${string}`;
@@ -76,12 +85,12 @@ export type ChatPart = {
   append?: boolean;
   toolName?: string;
   state?:
-    | "streaming"
-    | "done"
-    | "input-streaming"
-    | "input-available"
-    | "output-available"
-    | "output-error";
+    | (typeof CHAT_PART_STATE)["streaming"]
+    | (typeof CHAT_PART_STATE)["done"]
+    | (typeof CHAT_PART_STATE)["inputStreaming"]
+    | (typeof CHAT_PART_STATE)["inputAvailable"]
+    | (typeof CHAT_PART_STATE)["outputAvailable"]
+    | (typeof CHAT_PART_STATE)["outputError"];
   input?: unknown;
   output?: unknown;
   error?: string;
@@ -101,6 +110,24 @@ export type ChatTab = {
   title: string;
   active?: boolean;
 };
+
+export const AI_STREAM_PORT_NAME = "ai-stream";
+
+export const AI_STREAM_REQUEST_TYPE = {
+  abort: "abort",
+  sendMessages: "sendMessages",
+  generateTitle: "generateTitle",
+  generateQuickAction: "generateQuickAction",
+} as const;
+
+export const AI_TEXT_CHUNK_TYPE = {
+  textStart: "text-start",
+  textDelta: "text-delta",
+  textEnd: "text-end",
+  textNoteStart: "text-note-start",
+  textNoteDelta: "text-note-delta",
+  textNoteEnd: "text-note-end",
+} as const;
 
 export type SendMessagesBody = {
   modelId?: string;

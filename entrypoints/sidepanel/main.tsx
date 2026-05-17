@@ -39,18 +39,29 @@ import {
 } from "../../src/shared/browser";
 import {
   AUTO_RETRY_IDLE_MS,
+  AUTO_RETRY_POLL_MS,
   COPY_FEEDBACK_MS,
   DEFAULT_MAX_TOOL_STEPS,
   LOCAL_CHAT_TITLE_MAX_LENGTH,
   MAX_AUTO_RETRIES,
+  OPTIONS_HASH,
   QUICK_FEEDBACK_MS,
+  RELATIVE_TIME_MINUTE_MS,
   SELECTED_ELEMENT_HTML_MAX_CHARS,
+  SENT_TABS_PREVIEW_COUNT,
   STREAM_RENDER_THROTTLE_MS,
   TAB_CONTENT_MAX_CHARS,
+  ISO_DATE_LENGTH,
 } from "../../src/shared/config";
 import { getMessages, type Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
-import { providerLabels } from "../../src/shared/types";
+import {
+  AI_STREAM_PORT_NAME,
+  AI_STREAM_REQUEST_TYPE,
+  AI_TEXT_CHUNK_TYPE,
+  CHAT_PART_STATE,
+  providerLabels,
+} from "../../src/shared/types";
 import type {
   AiStreamRequest,
   AiStreamResponse,
@@ -105,6 +116,22 @@ type ActiveStream = {
   hasProgress: boolean;
 };
 
+const COMPOSER_MENU = {
+  add: "add",
+  model: "model",
+  mode: "mode",
+} as const;
+
+type ComposerMenu = (typeof COMPOSER_MENU)[keyof typeof COMPOSER_MENU];
+
+const ADD_MENU_VIEW = {
+  menu: "menu",
+  tabs: "tabs",
+} as const;
+
+const POPOVER_ROOT_SELECTOR =
+  '[data-popover-root="true"], [data-radix-select-content], [role="listbox"]';
+
 function SidepanelApp() {
   const [providers] = useStoredState(storage.provider);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
@@ -121,10 +148,10 @@ function SidepanelApp() {
   const [streaming, setStreaming] = useState(false);
   const [creatingQuickAction, setCreatingQuickAction] = useState(false);
   const [quickActionCreated, setQuickActionCreated] = useState(false);
-  const [openMenu, setOpenMenu] = useState<"add" | "model" | "mode" | null>(
-    null,
-  );
-  const [addMenuView, setAddMenuView] = useState<"menu" | "tabs">("menu");
+  const [openMenu, setOpenMenu] = useState<ComposerMenu | null>(null);
+  const [addMenuView, setAddMenuView] = useState<
+    (typeof ADD_MENU_VIEW)[keyof typeof ADD_MENU_VIEW]
+  >(ADD_MENU_VIEW.menu);
   const [showHistory, setShowHistory] = useState(false);
   const portRef = useRef<chrome.runtime.Port | undefined>(undefined);
   const autoAttachedRef = useRef(false);
@@ -255,12 +282,7 @@ function SidepanelApp() {
     if (!openMenu && !showHistory) return;
     const closeOnOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
-      if (
-        target?.closest(
-          '[data-popover-root="true"], [data-radix-select-content], [role="listbox"]',
-        )
-      )
-        return;
+      if (target?.closest(POPOVER_ROOT_SELECTOR)) return;
       setOpenMenu(null);
       setShowHistory(false);
     };
@@ -298,7 +320,7 @@ function SidepanelApp() {
       if (Date.now() - lastStreamActivityRef.current < AUTO_RETRY_IDLE_MS)
         return;
       retryStalledStream(active);
-    }, 1000);
+    }, AUTO_RETRY_POLL_MS);
     return () => window.clearInterval(interval);
   }, [preferences?.autoRetry, streaming]);
 
@@ -334,13 +356,13 @@ function SidepanelApp() {
     if (creatingQuickAction) return;
     if (!currentChat?.messages.length) {
       chrome.tabs.create({
-        url: chrome.runtime.getURL("/options.html#/quick-actions"),
+        url: chrome.runtime.getURL(`/options.html${OPTIONS_HASH.quickActions}`),
       });
       return;
     }
     setCreatingQuickAction(true);
     setQuickActionCreated(false);
-    const port = chrome.runtime.connect({ name: "ai-stream" });
+    const port = chrome.runtime.connect({ name: AI_STREAM_PORT_NAME });
     const cleanup = () => {
       try {
         port.disconnect();
@@ -367,7 +389,7 @@ function SidepanelApp() {
     });
     try {
       port.postMessage({
-        type: "generateQuickAction",
+        type: AI_STREAM_REQUEST_TYPE.generateQuickAction,
         modelId: preferences?.selectedModelId,
         messages: currentChat.messages,
       } satisfies AiStreamRequest);
@@ -418,7 +440,7 @@ function SidepanelApp() {
     setStreaming(true);
 
     const request: AiStreamRequest = {
-      type: "sendMessages",
+      type: AI_STREAM_REQUEST_TYPE.sendMessages,
       chatId: nextChat.id,
       messageId: assistantMessage.id,
       messages: [...chat.messages, userMessage],
@@ -449,7 +471,7 @@ function SidepanelApp() {
     targetMessageId: string,
   ) {
     closeStreamPort(false);
-    const port = chrome.runtime.connect({ name: "ai-stream" });
+    const port = chrome.runtime.connect({ name: AI_STREAM_PORT_NAME });
     portRef.current = port;
     port.onMessage.addListener((message: AiStreamResponse) => {
       lastStreamActivityRef.current = Date.now();
@@ -486,7 +508,10 @@ function SidepanelApp() {
     portRef.current = undefined;
     if (!port) return;
     try {
-      if (abort) port.postMessage({ type: "abort" } satisfies AiStreamRequest);
+      if (abort)
+        port.postMessage({
+          type: AI_STREAM_REQUEST_TYPE.abort,
+        } satisfies AiStreamRequest);
     } catch {
       // Chrome throws if the service worker already disconnected the port.
     }
@@ -522,7 +547,7 @@ function SidepanelApp() {
 
     startStream(
       {
-        type: "sendMessages",
+        type: AI_STREAM_REQUEST_TYPE.sendMessages,
         chatId: active.chatId,
         messageId: crypto.randomUUID(),
         messages: [...chat.messages.slice(0, assistantIndex), retryInstruction],
@@ -612,7 +637,7 @@ function SidepanelApp() {
   }
 
   function interpolateQuickAction(value: string) {
-    const date = new Date().toISOString().slice(0, 10);
+    const date = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
     return value.replaceAll("{{ date }}", date);
   }
 
@@ -624,7 +649,7 @@ function SidepanelApp() {
   }
 
   function requestChatTitle(chatId: string, message: string) {
-    const port = chrome.runtime.connect({ name: "ai-stream" });
+    const port = chrome.runtime.connect({ name: AI_STREAM_PORT_NAME });
     const cleanup = () => {
       try {
         port.disconnect();
@@ -647,7 +672,7 @@ function SidepanelApp() {
     });
     try {
       port.postMessage({
-        type: "generateTitle",
+        type: AI_STREAM_REQUEST_TYPE.generateTitle,
         modelId: preferences?.selectedModelId,
         message,
       } satisfies AiStreamRequest);
@@ -671,8 +696,8 @@ function SidepanelApp() {
   }
 
   async function openAddContextMenu() {
-    setAddMenuView("menu");
-    setOpenMenu(openMenu === "add" ? null : "add");
+    setAddMenuView(ADD_MENU_VIEW.menu);
+    setOpenMenu(openMenu === COMPOSER_MENU.add ? null : COMPOSER_MENU.add);
   }
 
   async function showAllTabsPicker() {
@@ -687,7 +712,7 @@ function SidepanelApp() {
           favIconUrl: tab.favIconUrl,
         })),
     );
-    setAddMenuView("tabs");
+    setAddMenuView(ADD_MENU_VIEW.tabs);
   }
 
   function toggleAttachedTab(tab: AttachmentTab) {
@@ -896,29 +921,30 @@ function SidepanelApp() {
                 : t.sidepanel.createQuickAction}
           </Button>
         </div>
-        {openMenu === "add" && addMenuView === "tabs" && (
-          <AddContextMenu
-            t={t}
-            view={addMenuView}
-            tabs={availableTabs}
-            quickActions={quickActions || []}
-            selectedTabIds={attachedTabs.map((tab) => tab.id)}
-            onShowTabs={showAllTabsPicker}
-            onQuickAction={(action) => {
-              send(action.instruction, action);
-              setOpenMenu(null);
-            }}
-            onToggleTab={toggleAttachedTab}
-            onAttachTab={async () => {
-              await attachActiveTab();
-              setOpenMenu(null);
-            }}
-            onSelectElement={async () => {
-              await selectElement();
-              setOpenMenu(null);
-            }}
-          />
-        )}
+        {openMenu === COMPOSER_MENU.add &&
+          addMenuView === ADD_MENU_VIEW.tabs && (
+            <AddContextMenu
+              t={t}
+              view={addMenuView}
+              tabs={availableTabs}
+              quickActions={quickActions || []}
+              selectedTabIds={attachedTabs.map((tab) => tab.id)}
+              onShowTabs={showAllTabsPicker}
+              onQuickAction={(action) => {
+                send(action.instruction, action);
+                setOpenMenu(null);
+              }}
+              onToggleTab={toggleAttachedTab}
+              onAttachTab={async () => {
+                await attachActiveTab();
+                setOpenMenu(null);
+              }}
+              onSelectElement={async () => {
+                await selectElement();
+                setOpenMenu(null);
+              }}
+            />
+          )}
         <div className="context-strip">
           <div className="context-chip-row">
             {attachedTabs.map((tab) => (
@@ -997,29 +1023,30 @@ function SidepanelApp() {
               >
                 <Plus size={20} />
               </Button>
-              {openMenu === "add" && addMenuView === "menu" && (
-                <AddContextMenu
-                  t={t}
-                  view={addMenuView}
-                  tabs={availableTabs}
-                  quickActions={quickActions || []}
-                  selectedTabIds={attachedTabs.map((tab) => tab.id)}
-                  onShowTabs={showAllTabsPicker}
-                  onQuickAction={(action) => {
-                    send(action.instruction, action);
-                    setOpenMenu(null);
-                  }}
-                  onToggleTab={toggleAttachedTab}
-                  onAttachTab={async () => {
-                    await attachActiveTab();
-                    setOpenMenu(null);
-                  }}
-                  onSelectElement={async () => {
-                    await selectElement();
-                    setOpenMenu(null);
-                  }}
-                />
-              )}
+              {openMenu === COMPOSER_MENU.add &&
+                addMenuView === ADD_MENU_VIEW.menu && (
+                  <AddContextMenu
+                    t={t}
+                    view={addMenuView}
+                    tabs={availableTabs}
+                    quickActions={quickActions || []}
+                    selectedTabIds={attachedTabs.map((tab) => tab.id)}
+                    onShowTabs={showAllTabsPicker}
+                    onQuickAction={(action) => {
+                      send(action.instruction, action);
+                      setOpenMenu(null);
+                    }}
+                    onToggleTab={toggleAttachedTab}
+                    onAttachTab={async () => {
+                      await attachActiveTab();
+                      setOpenMenu(null);
+                    }}
+                    onSelectElement={async () => {
+                      await selectElement();
+                      setOpenMenu(null);
+                    }}
+                  />
+                )}
             </div>
             <div className="composer-selectors">
               <div className="selector-anchor model-anchor">
@@ -1028,7 +1055,11 @@ function SidepanelApp() {
                   className="composer-trigger"
                   disabled={aiWorking}
                   onClick={() =>
-                    setOpenMenu(openMenu === "model" ? null : "model")
+                    setOpenMenu(
+                      openMenu === COMPOSER_MENU.model
+                        ? null
+                        : COMPOSER_MENU.model,
+                    )
                   }
                 >
                   {selectedModelLabel(
@@ -1038,7 +1069,7 @@ function SidepanelApp() {
                   )}{" "}
                   <ChevronDown size={15} />
                 </button>
-                {openMenu === "model" && (
+                {openMenu === COMPOSER_MENU.model && (
                   <ModelMenu
                     t={t}
                     models={configuredModels}
@@ -1060,13 +1091,17 @@ function SidepanelApp() {
                   className="composer-trigger"
                   disabled={aiWorking}
                   onClick={() =>
-                    setOpenMenu(openMenu === "mode" ? null : "mode")
+                    setOpenMenu(
+                      openMenu === COMPOSER_MENU.mode
+                        ? null
+                        : COMPOSER_MENU.mode,
+                    )
                   }
                 >
                   {mode === "Agent" ? t.words.agent : t.words.ask}{" "}
                   <ChevronDown size={15} />
                 </button>
-                {openMenu === "mode" && (
+                {openMenu === COMPOSER_MENU.mode && (
                   <ModeMenu
                     t={t}
                     mode={mode}
@@ -1160,7 +1195,7 @@ function formatMessageCount(t: Messages, count: number) {
 
 function formatRelativeTime(t: Messages, value: number) {
   const diff = Date.now() - value;
-  const minutes = Math.max(1, Math.round(diff / 60000));
+  const minutes = Math.max(1, Math.round(diff / RELATIVE_TIME_MINUTE_MS));
   if (minutes < 60)
     return formatToolMessage(t.sidepanel.relativeMinutesAgo, {
       count: minutes,
@@ -1606,13 +1641,13 @@ function useThrottledText(value: string, delayMs: number) {
 }
 
 function SentTabsChip({ tabs }: { tabs: AttachmentTab[] }) {
-  const visibleTabs = tabs.slice(0, 2);
+  const visibleTabs = tabs.slice(0, SENT_TABS_PREVIEW_COUNT);
   const title = tabs
-    .slice(0, 2)
+    .slice(0, SENT_TABS_PREVIEW_COUNT)
     .map((tab) => tab.title || "Current page")
     .join(", ");
   const urls = tabs
-    .slice(0, 2)
+    .slice(0, SENT_TABS_PREVIEW_COUNT)
     .map((tab) => tab.url?.replace(/^https?:\/\//, "").replace(/^www\./, ""))
     .filter(Boolean)
     .join(", ");
@@ -1665,22 +1700,35 @@ function streamPartFromChunk(chunk: unknown): {
     toolCallId?: string;
     toolName?: string;
     state?:
-      | "input-streaming"
-      | "input-available"
-      | "output-available"
-      | "output-error";
+      | (typeof CHAT_PART_STATE)["inputStreaming"]
+      | (typeof CHAT_PART_STATE)["inputAvailable"]
+      | (typeof CHAT_PART_STATE)["outputAvailable"]
+      | (typeof CHAT_PART_STATE)["outputError"];
     input?: unknown;
     output?: unknown;
     error?: string;
   };
-  if (maybe.type === "text-start" || maybe.type === "text-note-start")
+  if (
+    maybe.type === AI_TEXT_CHUNK_TYPE.textStart ||
+    maybe.type === AI_TEXT_CHUNK_TYPE.textNoteStart
+  )
     return {
       part: { id: maybe.id || crypto.randomUUID(), type: "text", text: "" },
     };
-  if (maybe.type === "text-end" || maybe.type === "text-note-end") return {};
-  if (maybe.type === "text-delta" || maybe.type === "text-note-delta")
+  if (
+    maybe.type === AI_TEXT_CHUNK_TYPE.textEnd ||
+    maybe.type === AI_TEXT_CHUNK_TYPE.textNoteEnd
+  )
+    return {};
+  if (
+    maybe.type === AI_TEXT_CHUNK_TYPE.textDelta ||
+    maybe.type === AI_TEXT_CHUNK_TYPE.textNoteDelta
+  )
     return {
-      delta: maybe.type === "text-delta" ? maybe.delta || "" : undefined,
+      delta:
+        maybe.type === AI_TEXT_CHUNK_TYPE.textDelta
+          ? maybe.delta || ""
+          : undefined,
       part: {
         id: maybe.id || crypto.randomUUID(),
         type: "text",
@@ -1695,7 +1743,7 @@ function streamPartFromChunk(chunk: unknown): {
         id: maybe.toolCallId || maybe.id || crypto.randomUUID(),
         type: `tool-${toolName}`,
         toolName,
-        state: maybe.state || "input-available",
+        state: maybe.state || CHAT_PART_STATE.inputAvailable,
         input: maybe.input,
         output: maybe.output,
         error: maybe.error,
@@ -1710,8 +1758,9 @@ function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
   const name = part.toolName || part.type.replace(/^tool-/, "");
   const { title, description, references } = toolDisplay(name, part, t);
   const loading =
-    part.state === "input-streaming" || part.state === "input-available";
-  const isError = part.state === "output-error";
+    part.state === CHAT_PART_STATE.inputStreaming ||
+    part.state === CHAT_PART_STATE.inputAvailable;
+  const isError = part.state === CHAT_PART_STATE.outputError;
   return (
     <div
       className={`tool-card ${loading ? "loading" : ""} ${isError ? "error" : ""}`}
@@ -1755,10 +1804,12 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
   const toolFound = (toolText as { found?: string } | undefined)?.found;
   const title = (() => {
     const base =
-      state === "output-available" ? toolText?.done : toolText?.running;
+      state === CHAT_PART_STATE.outputAvailable
+        ? toolText?.done
+        : toolText?.running;
     if (
       name === "groupTabs" &&
-      state === "output-available" &&
+      state === CHAT_PART_STATE.outputAvailable &&
       typeof input.title === "string"
     )
       return `${base || toolLabel(name, t)}: ${input.title}`;
@@ -1777,7 +1828,7 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
     if (name === "inputTextByAiID" && typeof input.text === "string")
       return input.text;
     if (typeof output.filename === "string") return output.filename;
-    if (part.state === "output-error") return t.sidepanel.error;
+    if (part.state === CHAT_PART_STATE.outputError) return t.sidepanel.error;
     return "";
   })();
   const references = toolReferences(name, output, input);

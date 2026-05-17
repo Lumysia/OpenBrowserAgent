@@ -1,9 +1,21 @@
 import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Check, Loader2, Plus, Trash2 } from "lucide-react";
-import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
+import {
+  COPY_FEEDBACK_MS,
+  DEFAULT_MAX_TOOL_STEPS,
+  ISO_DATE_LENGTH,
+  OPTIONS_HASH,
+  OPTIONS_ROUTE,
+  QUICK_FEEDBACK_MS,
+} from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
-import { setDataSync, storage } from "../../src/shared/storage";
+import {
+  setDataSync,
+  storage,
+  SYNCABLE_DATA_ITEMS,
+  type SyncPreferenceKey,
+} from "../../src/shared/storage";
 import {
   languageLabels,
   providerDefaultBaseUrls,
@@ -77,24 +89,27 @@ function OptionsApp() {
           <p className="muted">OpenBrowserAgent - {t.app.tagline}</p>
         </div>
         <nav className="stack">
-          <a className={`nav-link ${route === "/" ? "active" : ""}`} href="#/">
+          <a
+            className={`nav-link ${route === OPTIONS_ROUTE.general ? "active" : ""}`}
+            href={OPTIONS_HASH.general}
+          >
             {t.options.general}
           </a>
           <a
-            className={`nav-link ${route === "/sync" ? "active" : ""}`}
-            href="#/sync"
+            className={`nav-link ${route === OPTIONS_ROUTE.sync ? "active" : ""}`}
+            href={OPTIONS_HASH.sync}
           >
             {t.options.sync}
           </a>
           <a
-            className={`nav-link ${route === "/providers" ? "active" : ""}`}
-            href="#/providers"
+            className={`nav-link ${route === OPTIONS_ROUTE.providers ? "active" : ""}`}
+            href={OPTIONS_HASH.providers}
           >
             {t.options.providers}
           </a>
           <a
-            className={`nav-link ${route === "/quick-actions" ? "active" : ""}`}
-            href="#/quick-actions"
+            className={`nav-link ${route === OPTIONS_ROUTE.quickActions ? "active" : ""}`}
+            href={OPTIONS_HASH.quickActions}
           >
             {t.options.quickActions}
           </a>
@@ -111,11 +126,11 @@ function OptionsApp() {
       </aside>
       <main className="settings-main">
         <div className="settings-content">
-          {route === "/providers" ? (
+          {route === OPTIONS_ROUTE.providers ? (
             <ProvidersPage />
-          ) : route === "/sync" ? (
+          ) : route === OPTIONS_ROUTE.sync ? (
             <SyncPage />
-          ) : route === "/quick-actions" ? (
+          ) : route === OPTIONS_ROUTE.quickActions ? (
             <QuickActionsPage />
           ) : (
             <GeneralPage />
@@ -227,47 +242,39 @@ function GeneralPage() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader>
-          <CardTitle>{t.options.autoScroll}</CardTitle>
-          <CardDescription>{t.options.autoScrollDescription}</CardDescription>
-        </CardHeader>
         <CardContent>
-          <Select
-            value={preferences.autoScroll === false ? "off" : "on"}
-            onValueChange={(value) =>
-              setPreferences({ ...preferences, autoScroll: value === "on" })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="on">{t.common.enabled}</SelectItem>
-              <SelectItem value="off">{t.common.disabled}</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="setting-switch-row">
+            <div>
+              <CardTitle>{t.options.autoScroll}</CardTitle>
+              <CardDescription>
+                {t.options.autoScrollDescription}
+              </CardDescription>
+            </div>
+            <Switch
+              checked={preferences.autoScroll !== false}
+              onCheckedChange={(checked) =>
+                setPreferences({ ...preferences, autoScroll: checked })
+              }
+            />
+          </div>
         </CardContent>
       </Card>
       <Card>
-        <CardHeader>
-          <CardTitle>{t.options.autoRetry}</CardTitle>
-          <CardDescription>{t.options.autoRetryDescription}</CardDescription>
-        </CardHeader>
         <CardContent>
-          <Select
-            value={preferences.autoRetry === false ? "off" : "on"}
-            onValueChange={(value) =>
-              setPreferences({ ...preferences, autoRetry: value === "on" })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="on">{t.common.enabled}</SelectItem>
-              <SelectItem value="off">{t.common.disabled}</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="setting-switch-row">
+            <div>
+              <CardTitle>{t.options.autoRetry}</CardTitle>
+              <CardDescription>
+                {t.options.autoRetryDescription}
+              </CardDescription>
+            </div>
+            <Switch
+              checked={preferences.autoRetry !== false}
+              onCheckedChange={(checked) =>
+                setPreferences({ ...preferences, autoRetry: checked })
+              }
+            />
+          </div>
         </CardContent>
       </Card>
       <Card>
@@ -302,10 +309,25 @@ function SyncPage() {
 
   if (!preferences) return null;
 
-  function updateSyncPreference(
-    key: "syncProviders" | "syncQuickActions" | "syncChats",
-    value: boolean,
-  ) {
+  const syncToggleContent: Record<
+    SyncPreferenceKey,
+    { title: string; description: string }
+  > = {
+    syncProviders: {
+      title: t.options.syncProviders,
+      description: t.options.syncProvidersDescription,
+    },
+    syncQuickActions: {
+      title: t.options.syncQuickActions,
+      description: t.options.syncQuickActionsDescription,
+    },
+    syncChats: {
+      title: t.options.syncChats,
+      description: t.options.syncChatsDescription,
+    },
+  };
+
+  function updateSyncPreference(key: SyncPreferenceKey, value: boolean) {
     setPreferences({ ...preferences, [key]: value });
     setDataSync(key, value).catch((error) => {
       console.warn("Failed to update sync preference", error);
@@ -325,24 +347,15 @@ function SyncPage() {
         value
         disabled
       />
-      <SyncToggleCard
-        title={t.options.syncProviders}
-        description={t.options.syncProvidersDescription}
-        value={preferences.syncProviders === true}
-        onChange={(value) => updateSyncPreference("syncProviders", value)}
-      />
-      <SyncToggleCard
-        title={t.options.syncQuickActions}
-        description={t.options.syncQuickActionsDescription}
-        value={preferences.syncQuickActions === true}
-        onChange={(value) => updateSyncPreference("syncQuickActions", value)}
-      />
-      <SyncToggleCard
-        title={t.options.syncChats}
-        description={t.options.syncChatsDescription}
-        value={preferences.syncChats === true}
-        onChange={(value) => updateSyncPreference("syncChats", value)}
-      />
+      {SYNCABLE_DATA_ITEMS.map(({ preferenceKey }) => (
+        <SyncToggleCard
+          key={preferenceKey}
+          title={syncToggleContent[preferenceKey].title}
+          description={syncToggleContent[preferenceKey].description}
+          value={preferences[preferenceKey] === true}
+          onChange={(value) => updateSyncPreference(preferenceKey, value)}
+        />
+      ))}
       <SyncWriteStatusCard status={syncWriteStatus} />
     </div>
   );
@@ -427,10 +440,11 @@ function parseMaxToolSteps(value: string) {
 
 function useHashRoute() {
   const [route, setRoute] = useState(
-    () => location.hash.replace(/^#/, "") || "/",
+    () => location.hash.replace(/^#/, "") || OPTIONS_ROUTE.general,
   );
   React.useEffect(() => {
-    const onHashChange = () => setRoute(location.hash.replace(/^#/, "") || "/");
+    const onHashChange = () =>
+      setRoute(location.hash.replace(/^#/, "") || OPTIONS_ROUTE.general);
     addEventListener("hashchange", onHashChange);
     return () => removeEventListener("hashchange", onHashChange);
   }, []);
@@ -865,7 +879,7 @@ function QuickActionsPage() {
     setSavedId(action.id);
     setTimeout(
       () => setSavedId((id) => (id === action.id ? undefined : id)),
-      1200,
+      QUICK_FEEDBACK_MS,
     );
   }
 
@@ -982,7 +996,7 @@ function QuickActionVariables() {
   async function copyDateToken() {
     await navigator.clipboard.writeText("{{ date }}").catch(() => undefined);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
+    setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
   }
   return (
     <div className="stack">
@@ -993,7 +1007,8 @@ function QuickActionVariables() {
           {"{{ date }}"}
         </Button>
         <span className="muted">
-          {t.options.example}: {new Date().toISOString().slice(0, 10)}
+          {t.options.example}:{" "}
+          {new Date().toISOString().slice(0, ISO_DATE_LENGTH)}
         </span>
       </div>
     </div>

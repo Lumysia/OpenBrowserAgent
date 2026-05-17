@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { SYNC_WRITE_DEBOUNCE_MS } from "./config";
+import { SYNC_MAX_BYTES_PER_ITEM, SYNC_WRITE_DEBOUNCE_MS } from "./config";
 import type {
   Chat,
   ChatTab,
@@ -8,7 +8,35 @@ import type {
   QuickAction,
 } from "./types";
 
-type AreaName = "local" | "sync";
+const STORAGE_AREAS = {
+  local: "local",
+  sync: "sync",
+} as const;
+
+type AreaName = (typeof STORAGE_AREAS)[keyof typeof STORAGE_AREAS];
+
+const STORAGE_KEYS = {
+  userId: "userId",
+  language: "language",
+  preferences: "preferences",
+  provider: "provider",
+  quickAction: "quick-action",
+  shouldShowUpdateToast: "should-show-update-toast",
+  chats: "chats",
+  chatTabs: "chat-tabs",
+  syncWriteStatus: "sync-write-status",
+} as const;
+
+export const SYNCABLE_DATA_ITEMS = [
+  { preferenceKey: "syncProviders", dataKey: STORAGE_KEYS.provider },
+  { preferenceKey: "syncQuickActions", dataKey: STORAGE_KEYS.quickAction },
+  { preferenceKey: "syncChats", dataKey: STORAGE_KEYS.chats },
+] as const;
+
+export type SyncPreferenceKey =
+  (typeof SYNCABLE_DATA_ITEMS)[number]["preferenceKey"];
+
+type SyncableDataKey = (typeof SYNCABLE_DATA_ITEMS)[number]["dataKey"];
 
 type StorageItem<T> = {
   key: string;
@@ -19,7 +47,7 @@ type StorageItem<T> = {
   watch(callback: (newValue: T, oldValue: T) => void): () => void;
 };
 
-type SyncableDataKey = "provider" | "quick-action" | "chats";
+const SYNC_QUOTA_ERROR_PREFIX = "Sync item exceeds the safe per-item limit";
 
 export type SyncWriteStatus = {
   pendingCount: number;
@@ -59,11 +87,25 @@ function getBrowserApi() {
   return apiGlobal.browser ?? apiGlobal.chrome ?? chrome;
 }
 
+function areaForSyncEnabled(enabled: boolean): AreaName {
+  return enabled ? STORAGE_AREAS.sync : STORAGE_AREAS.local;
+}
+
+function otherStorageArea(area: AreaName): AreaName {
+  return area === STORAGE_AREAS.sync ? STORAGE_AREAS.local : STORAGE_AREAS.sync;
+}
+
+function syncableItemForPreference(key: SyncPreferenceKey) {
+  return SYNCABLE_DATA_ITEMS.find((item) => item.preferenceKey === key)!;
+}
+
 async function setStoredValue<T>(area: AreaName, key: string, value: T) {
-  if (area === "local") {
+  if (area === STORAGE_AREAS.local) {
     await getBrowserApi().storage.local.set({ [key]: value });
     return;
   }
+
+  assertSyncItemFits(key, value);
 
   await new Promise<void>((resolve, reject) => {
     const pending = pendingSyncWrites.get(key);
@@ -90,6 +132,21 @@ async function setStoredValue<T>(area: AreaName, key: string, value: T) {
   });
 }
 
+async function setStoredValueNow<T>(area: AreaName, key: string, value: T) {
+  if (area === STORAGE_AREAS.sync) assertSyncItemFits(key, value);
+  await getBrowserApi().storage[area].set({ [key]: value });
+}
+
+function assertSyncItemFits(key: string, value: unknown) {
+  const size = new TextEncoder().encode(
+    JSON.stringify({ [key]: value }),
+  ).length;
+  if (size <= SYNC_MAX_BYTES_PER_ITEM) return;
+  throw new Error(
+    `${SYNC_QUOTA_ERROR_PREFIX}: "${key}" is ${size} bytes; limit is ${SYNC_MAX_BYTES_PER_ITEM} bytes. Keep this data local or remove old entries before enabling sync.`,
+  );
+}
+
 async function flushSyncWrite(key: string) {
   const pending = pendingSyncWrites.get(key);
   if (!pending) return;
@@ -108,7 +165,7 @@ async function flushSyncWrite(key: string) {
 
 async function updateSyncWriteStatus(patch: Partial<SyncWriteStatus> = {}) {
   await getBrowserApi().storage.local.set({
-    "sync-write-status": {
+    [STORAGE_KEYS.syncWriteStatus]: {
       pendingCount: pendingSyncWrites.size,
       lastUpdatedAt: Date.now(),
       ...patch,
@@ -131,7 +188,7 @@ function createItem<T>(
       const result = await storageArea().get(storageKey);
       if (result[storageKey] === undefined) {
         const initialValue = init();
-        await storageArea().set({ [storageKey]: initialValue });
+        await setStoredValueNow(area, storageKey, initialValue);
         return initialValue;
       }
       return result[storageKey] as T;
@@ -180,7 +237,7 @@ function createMigratedItem<T>(
       const initialValue =
         fallback[key] === undefined ? init() : (fallback[key] as T);
       const value = merge ? merge(initialValue) : initialValue;
-      await api.storage[area].set({ [key]: value });
+      await setStoredValueNow(area, key, value);
       return value;
     },
   };
@@ -193,12 +250,10 @@ function mergePreferences(value: Preferences): Preferences {
 function createSwitchableItem<T>(
   key: string,
   init: () => T,
-  shouldSync: (preferences: Preferences) => boolean,
+  syncPreferenceKey: SyncPreferenceKey,
 ): StorageItem<T> {
   const areaFor = (preferences: Preferences): AreaName =>
-    shouldSync(preferences) ? "sync" : "local";
-  const otherArea = (area: AreaName): AreaName =>
-    area === "sync" ? "local" : "sync";
+    areaForSyncEnabled(preferences[syncPreferenceKey] === true);
 
   async function activeArea() {
     return areaFor(await storage.preferences.get());
@@ -209,9 +264,9 @@ function createSwitchableItem<T>(
     const activeValue = await readFrom(area);
     if (activeValue !== undefined) return activeValue;
 
-    const inactiveValue = await readFrom(otherArea(area));
+    const inactiveValue = await readFrom(otherStorageArea(area));
     const value = inactiveValue === undefined ? init() : inactiveValue;
-    await getBrowserApi().storage[area].set({ [key]: value });
+    await setStoredValueNow(area, key, value);
     return value;
   }
 
@@ -222,12 +277,12 @@ function createSwitchableItem<T>(
 
   return {
     key,
-    area: "local",
+    area: STORAGE_AREAS.local,
     get: getValue,
     async set(value) {
       const area = await activeArea();
       await setStoredValue(area, key, value);
-      await getBrowserApi().storage[otherArea(area)].remove(key);
+      await getBrowserApi().storage[otherStorageArea(area)].remove(key);
     },
     async remove() {
       await Promise.all([
@@ -256,60 +311,60 @@ function createSwitchableItem<T>(
 }
 
 export const storage = {
-  userId: createItem<string>("local", "userId", () => nanoid()),
+  userId: createItem<string>(STORAGE_AREAS.local, STORAGE_KEYS.userId, () =>
+    nanoid(),
+  ),
   language: createItem<string>(
-    "sync",
-    "language",
+    STORAGE_AREAS.sync,
+    STORAGE_KEYS.language,
     () => getBrowserApi().i18n?.getUILanguage?.() || "en-US",
   ),
   preferences: createMigratedItem<Preferences>(
-    "sync",
-    "local",
-    "preferences",
+    STORAGE_AREAS.sync,
+    STORAGE_AREAS.local,
+    STORAGE_KEYS.preferences,
     () => DEFAULT_PREFERENCES,
     mergePreferences,
   ),
   provider: createSwitchableItem<ProviderState>(
-    "provider",
+    STORAGE_KEYS.provider,
     () => ({}),
-    (preferences) => preferences.syncProviders === true,
+    "syncProviders",
   ),
   quickAction: createSwitchableItem<QuickAction[]>(
-    "quick-action",
+    STORAGE_KEYS.quickAction,
     () => [],
-    (preferences) => preferences.syncQuickActions === true,
+    "syncQuickActions",
   ),
   shouldShowUpdateToast: createItem<boolean>(
-    "local",
-    "should-show-update-toast",
+    STORAGE_AREAS.local,
+    STORAGE_KEYS.shouldShowUpdateToast,
     () => false,
   ),
   chats: createSwitchableItem<Chat[]>(
-    "chats",
+    STORAGE_KEYS.chats,
     () => [],
-    (preferences) => preferences.syncChats === true,
+    "syncChats",
   ),
-  chatTabs: createItem<ChatTab[]>("local", "chat-tabs", () => []),
+  chatTabs: createItem<ChatTab[]>(
+    STORAGE_AREAS.local,
+    STORAGE_KEYS.chatTabs,
+    () => [],
+  ),
   syncWriteStatus: createItem<SyncWriteStatus>(
-    "local",
-    "sync-write-status",
+    STORAGE_AREAS.local,
+    STORAGE_KEYS.syncWriteStatus,
     () => DEFAULT_SYNC_WRITE_STATUS,
   ),
 };
 
-export async function setDataSync(
-  key: "syncProviders" | "syncQuickActions" | "syncChats",
-  enabled: boolean,
-) {
-  const dataKeyByPreference: Record<typeof key, SyncableDataKey> = {
-    syncProviders: "provider",
-    syncQuickActions: "quick-action",
-    syncChats: "chats",
-  };
-  const dataKey = dataKeyByPreference[key];
+export async function setDataSync(key: SyncPreferenceKey, enabled: boolean) {
+  const dataKey: SyncableDataKey = syncableItemForPreference(key).dataKey;
   const api = getBrowserApi();
-  const fromArea = enabled ? api.storage.local : api.storage.sync;
-  const toArea = enabled ? api.storage.sync : api.storage.local;
+  const toAreaName = areaForSyncEnabled(enabled);
+  const fromAreaName = otherStorageArea(toAreaName);
+  const fromArea = api.storage[fromAreaName];
+  const toArea = api.storage[toAreaName];
   const existingTarget = await toArea.get(dataKey);
   const existingSource = await fromArea.get(dataKey);
 
@@ -317,7 +372,7 @@ export async function setDataSync(
     existingTarget[dataKey] === undefined &&
     existingSource[dataKey] !== undefined
   )
-    await toArea.set({ [dataKey]: existingSource[dataKey] });
+    await setStoredValueNow(toAreaName, dataKey, existingSource[dataKey]);
 
   await fromArea.remove(dataKey);
   const preferences = await storage.preferences.get();

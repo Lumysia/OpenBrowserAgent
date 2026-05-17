@@ -39,6 +39,7 @@ OpenBrowserAgent is a WXT/Vite/React/TypeScript browser extension for AI-assiste
 - Keep user-facing text out of component logic unless it is a short technical fallback. Add or update locale keys instead.
 - Prefer real streaming over simulated streaming. Do not wait for a full model response and then fake token chunks when the provider supports streaming.
 - Keep preferences explicit and defaulted in storage. New preferences should have a type, a storage default, and a settings control when user-facing.
+- Centralize reusable policy/protocol values in a registry, config, or typed constants instead of repeating literals at call sites. This applies broadly to storage areas and keys, routes and hash paths, port names, request/chunk types, DOM data selectors, state IDs, quotas, timeouts, limits, and user-visible operational messages. Local one-off copy is fine; cross-file or cross-feature behavior is not.
 - Format changed source files with Prettier before verification.
 
 ## Browser Tool Rules

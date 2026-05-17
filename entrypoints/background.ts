@@ -3,17 +3,26 @@ import JSZip from "jszip";
 import {
   BROWSER_TOOL_TIMEOUT_MS,
   clampMaxToolSteps,
+  GENERATED_TITLE_MAX_CJK_CHARS,
   GENERATED_TITLE_MAX_LENGTH,
+  GENERATED_TITLE_MAX_WORDS,
   IMAGE_ALT_MAX_LENGTH,
   IMAGE_FILENAME_MAX_LABEL_LENGTH,
+  ISO_DATE_LENGTH,
   MARKDOWN_FILENAME_MAX_LENGTH,
   MAX_IMAGES_PER_DOWNLOAD,
   MODEL_TEMPERATURE,
+  POST_TEXT_CHUNK_SIZE,
   QUICK_ACTION_SOURCE_MAX_CHARS,
   QUICK_ACTION_TITLE_MAX_LENGTH,
   STREAM_CHUNK_DELAY_MS,
+  TAB_LOAD_WAIT_TIMEOUT_MS,
 } from "../src/shared/config";
 import {
+  AI_STREAM_PORT_NAME,
+  AI_STREAM_REQUEST_TYPE,
+  AI_TEXT_CHUNK_TYPE,
+  CHAT_PART_STATE,
   providerDefaultBaseUrls,
   type AiStreamRequest,
   type AiStreamResponse,
@@ -23,7 +32,6 @@ import {
   type QuickAction,
 } from "../src/shared/types";
 
-const PORT_AI_STREAM = "ai-stream";
 const SIDE_PANEL_OPENED = "side_panel_opened";
 export default defineBackground(() => {
   chrome.sidePanel
@@ -40,17 +48,17 @@ export default defineBackground(() => {
   });
 
   chrome.runtime.onConnect.addListener((port) => {
-    if (port.name !== PORT_AI_STREAM) return;
+    if (port.name !== AI_STREAM_PORT_NAME) return;
 
     let abortController: AbortController | undefined;
 
     port.onMessage.addListener((request: AiStreamRequest) => {
-      if (request.type === "abort") {
+      if (request.type === AI_STREAM_REQUEST_TYPE.abort) {
         abortController?.abort();
         return;
       }
 
-      if (request.type === "sendMessages") {
+      if (request.type === AI_STREAM_REQUEST_TYPE.sendMessages) {
         abortController?.abort();
         abortController = new AbortController();
         streamAssistantResponse(port, request, abortController.signal).catch(
@@ -65,13 +73,13 @@ export default defineBackground(() => {
         return;
       }
 
-      if (request.type === "generateTitle") {
+      if (request.type === AI_STREAM_REQUEST_TYPE.generateTitle) {
         generateTitle(request)
           .then((title) => post(port, { type: "title", title }))
           .catch(() => post(port, { type: "title", title: "New Chat" }));
       }
 
-      if (request.type === "generateQuickAction") {
+      if (request.type === AI_STREAM_REQUEST_TYPE.generateQuickAction) {
         generateQuickAction(request)
           .then((quickAction) =>
             post(port, { type: "quickAction", quickAction }),
@@ -125,7 +133,7 @@ async function streamAssistantResponse(
     post(port, {
       type: "chunk",
       chunk: {
-        type: "text-start",
+        type: AI_TEXT_CHUNK_TYPE.textStart,
         id: request.messageId || crypto.randomUUID(),
       },
     });
@@ -133,7 +141,11 @@ async function streamAssistantResponse(
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
       post(port, {
         type: "chunk",
-        chunk: { type: "text-delta", id: request.messageId, delta },
+        chunk: {
+          type: AI_TEXT_CHUNK_TYPE.textDelta,
+          id: request.messageId,
+          delta,
+        },
       });
       await new Promise((resolve) =>
         setTimeout(resolve, STREAM_CHUNK_DELAY_MS),
@@ -141,7 +153,7 @@ async function streamAssistantResponse(
     }
     post(port, {
       type: "chunk",
-      chunk: { type: "text-end", id: request.messageId },
+      chunk: { type: AI_TEXT_CHUNK_TYPE.textEnd, id: request.messageId },
     });
   }
   post(port, { type: "end" });
@@ -296,7 +308,7 @@ async function requestOpenAICompatible(
           type: `tool-${toolName}`,
           toolCallId,
           toolName,
-          state: "input-available",
+          state: CHAT_PART_STATE.inputAvailable,
           input,
         },
       });
@@ -308,7 +320,9 @@ async function requestOpenAICompatible(
           type: `tool-${toolName}`,
           toolCallId,
           toolName,
-          state: hasError ? "output-error" : "output-available",
+          state: hasError
+            ? CHAT_PART_STATE.outputError
+            : CHAT_PART_STATE.outputAvailable,
           input,
           output,
         },
@@ -378,12 +392,15 @@ async function readOpenAIStream(
     }
     if (!textStarted) {
       textStarted = true;
-      post(port, { type: "chunk", chunk: { type: "text-start", id: textId } });
+      post(port, {
+        type: "chunk",
+        chunk: { type: AI_TEXT_CHUNK_TYPE.textStart, id: textId },
+      });
     }
     content += delta;
     post(port, {
       type: "chunk",
-      chunk: { type: "text-delta", id: textId, delta },
+      chunk: { type: AI_TEXT_CHUNK_TYPE.textDelta, id: textId, delta },
     });
   }
 
@@ -440,7 +457,7 @@ async function readOpenAIStream(
             type: `tool-${next.function.name}`,
             toolCallId: next.id,
             toolName: next.function.name,
-            state: "input-streaming",
+            state: CHAT_PART_STATE.inputStreaming,
             input: {},
           },
         });
@@ -461,7 +478,10 @@ async function readOpenAIStream(
   buffer += decoder.decode();
   if (buffer.trim()) consumeEvent(buffer);
   if (textStarted)
-    post(port, { type: "chunk", chunk: { type: "text-end", id: textId } });
+    post(port, {
+      type: "chunk",
+      chunk: { type: AI_TEXT_CHUNK_TYPE.textEnd, id: textId },
+    });
 
   const completeToolCalls = toolCalls.filter(
     (toolCall) => toolCall.function.name,
@@ -576,7 +596,7 @@ async function requestGemini(
           type: `tool-${toolName}`,
           toolCallId,
           toolName,
-          state: "input-available",
+          state: CHAT_PART_STATE.inputAvailable,
           input,
         },
       });
@@ -588,7 +608,9 @@ async function requestGemini(
           type: `tool-${toolName}`,
           toolCallId,
           toolName,
-          state: hasError ? "output-error" : "output-available",
+          state: hasError
+            ? CHAT_PART_STATE.outputError
+            : CHAT_PART_STATE.outputAvailable,
           input,
           output,
         },
@@ -633,16 +655,26 @@ function postText(
   signal: AbortSignal,
   appendToMessageContent = true,
 ) {
-  const prefix = appendToMessageContent ? "text" : "text-note";
-  post(port, { type: "chunk", chunk: { type: `${prefix}-start`, id } });
+  const chunkType = appendToMessageContent
+    ? {
+        start: AI_TEXT_CHUNK_TYPE.textStart,
+        delta: AI_TEXT_CHUNK_TYPE.textDelta,
+        end: AI_TEXT_CHUNK_TYPE.textEnd,
+      }
+    : {
+        start: AI_TEXT_CHUNK_TYPE.textNoteStart,
+        delta: AI_TEXT_CHUNK_TYPE.textNoteDelta,
+        end: AI_TEXT_CHUNK_TYPE.textNoteEnd,
+      };
+  post(port, { type: "chunk", chunk: { type: chunkType.start, id } });
   for (const delta of chunkText(text)) {
     if (signal.aborted) throw new DOMException("Aborted", "AbortError");
     post(port, {
       type: "chunk",
-      chunk: { type: `${prefix}-delta`, id, delta },
+      chunk: { type: chunkType.delta, id, delta },
     });
   }
-  post(port, { type: "chunk", chunk: { type: `${prefix}-end`, id } });
+  post(port, { type: "chunk", chunk: { type: chunkType.end, id } });
 }
 
 function createSystemPrompt(mode: ChatMode) {
@@ -746,10 +778,10 @@ function compactTitle(value: string) {
     .trim();
   if (!title) return "";
   if (/[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uac00-\ud7af]/.test(title))
-    return title.replace(/\s+/g, "").slice(0, 10);
+    return title.replace(/\s+/g, "").slice(0, GENERATED_TITLE_MAX_CJK_CHARS);
   return title
     .split(/\s+/)
-    .slice(0, 10)
+    .slice(0, GENERATED_TITLE_MAX_WORDS)
     .join(" ")
     .slice(0, GENERATED_TITLE_MAX_LENGTH);
 }
@@ -891,8 +923,8 @@ function safeStringify(value: unknown) {
 
 function chunkText(text: string) {
   const chunks: string[] = [];
-  for (let index = 0; index < text.length; index += 24)
-    chunks.push(text.slice(index, index + 24));
+  for (let index = 0; index < text.length; index += POST_TEXT_CHUNK_SIZE)
+    chunks.push(text.slice(index, index + POST_TEXT_CHUNK_SIZE));
   return chunks;
 }
 
@@ -1719,6 +1751,6 @@ async function waitTabComplete(tabId: number) {
     setTimeout(() => {
       chrome.tabs.onUpdated.removeListener(listener);
       resolve();
-    }, 15000);
+    }, TAB_LOAD_WAIT_TIMEOUT_MS);
   });
 }
