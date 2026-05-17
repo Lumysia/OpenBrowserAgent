@@ -60,7 +60,10 @@ export function parseToolArgs(value: string | undefined) {
   }
 }
 
-export function renderUserMessageWithContext(message: ChatMessage) {
+export function renderUserMessageWithContext(
+  message: ChatMessage,
+  requestAttachments: UploadedAttachment[] = [],
+) {
   if (message.metadata?.internalRetry) {
     return `<internal_instruction>
 ${message.content}
@@ -74,7 +77,9 @@ ${message.content}
   const quickAction = message.metadata?.quickAction as
     | { instruction?: string }
     | undefined;
-  const attachments = getUploadedAttachments(message);
+  const attachments = requestAttachments.length
+    ? requestAttachments
+    : getUploadedAttachments(message);
   return `${
     quickAction?.instruction
       ? `<instruction>
@@ -108,20 +113,20 @@ export function getUploadedAttachments(message: ChatMessage) {
 
 export function renderAttachmentContext(attachments: UploadedAttachment[]) {
   if (!attachments.length) return "";
-  return `<attachments>
+  return `<available_attachments>
 ${attachments
   .map((attachment) => {
-    const header = `- ${attachment.name} (${attachment.type || "unknown"}, ${attachment.size} bytes, ${attachment.kind})`;
+    const header = `- id: ${attachment.id}\n  name: ${attachment.name}\n  type: ${attachment.type || "unknown"}\n  size: ${attachment.size} bytes\n  kind: ${attachment.kind}`;
     if (attachment.kind === "text" && attachment.text)
-      return `${header}\n<file_text name="${escapeAttribute(attachment.name)}">\n${attachment.text}\n</file_text>`;
+      return `${header}\n  note: Use readUploadedAttachment with this id to read the file text.`;
     if (attachment.kind === "image")
-      return `${header}\nImage content is attached for multimodal-capable models. If unavailable, use the filename and user message only.`;
-    return `${header}\nBinary file content is not directly readable here; use the file metadata only.`;
+      return `${header}\n  note: Use readUploadedAttachment with this id to inspect the image data if needed.`;
+    if (attachment.kind === "audio" || attachment.kind === "video")
+      return `${header}\n  note: Audio and video content is metadata-only here; ask for a transcript or text export if needed.`;
+    if (attachment.kind === "document")
+      return `${header}\n  note: Document binary content is metadata-only here unless the file was uploaded as plain text.`;
+    return `${header}\n  note: Binary content is not readable as text; use readUploadedAttachment for file metadata.`;
   })
   .join("\n\n")}
-</attachments>`;
-}
-
-function escapeAttribute(value: string) {
-  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+</available_attachments>`;
 }

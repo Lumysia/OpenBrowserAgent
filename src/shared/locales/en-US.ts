@@ -126,6 +126,10 @@ export const enUS = {
         running: "Inspecting element",
         done: "Inspected element",
       },
+      readUploadedAttachment: {
+        running: "Reading attachment",
+        done: "Read attachment",
+      },
     },
   },
   options: {

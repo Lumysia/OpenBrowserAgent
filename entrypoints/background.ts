@@ -30,10 +30,8 @@ import {
   type QuickAction,
   type SendMessagesRequest,
 } from "../src/shared/types";
-import {
-  requestOpenAICompatible,
-  resolveModel,
-} from "../src/background/providers";
+import { requestOpenAICompatible } from "../src/background/providers";
+import { resolveModel } from "../src/background/model-resolver";
 import { chunkText } from "../src/background/message-helpers";
 
 const SIDE_PANEL_OPENED = "side_panel_opened";
@@ -133,6 +131,7 @@ async function streamAssistantResponse(
     port,
     request.messageId,
     t.sidepanel.attachmentsUnsupportedRetry,
+    request.body.context?.uploadedAttachments || [],
   );
 
   if (text) {

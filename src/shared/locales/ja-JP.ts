@@ -131,6 +131,10 @@ export const jaJP: LocaleMessages = {
         running: "要素を調査中",
         done: "要素を調査しました",
       },
+      readUploadedAttachment: {
+        running: "添付を読み取り中",
+        done: "添付を読み取りました",
+      },
     },
   },
   options: {

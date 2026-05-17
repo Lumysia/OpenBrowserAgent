@@ -1,4 +1,4 @@
-import type { ChatMessage } from "../shared/types";
+import type { ChatMessage, UploadedAttachment } from "../shared/types";
 import {
   getUploadedAttachments,
   renderAttachmentContext,
@@ -8,6 +8,7 @@ import {
 export function createGeminiContents(
   messages: ChatMessage[],
   multimodal: boolean,
+  requestAttachments: UploadedAttachment[] = [],
 ) {
   return messages.map((message, index) => ({
     role: message.role === "assistant" ? "model" : "user",
@@ -15,6 +16,7 @@ export function createGeminiContents(
       message,
       index === messages.length - 1,
       multimodal,
+      index === messages.length - 1 ? requestAttachments : [],
     ),
   }));
 }
@@ -23,6 +25,7 @@ export function createOpenAIRequestMessages(
   system: string,
   messages: ChatMessage[],
   multimodal: boolean,
+  requestAttachments: UploadedAttachment[] = [],
 ) {
   return [
     { role: "system", content: system },
@@ -32,27 +35,81 @@ export function createOpenAIRequestMessages(
         message,
         index === messages.length - 1,
         multimodal,
+        index === messages.length - 1 ? requestAttachments : [],
       ),
     })),
   ];
 }
 
-export function hasImageAttachments(messages: ChatMessage[]) {
-  return messages.some((message) =>
-    getUploadedAttachments(message).some(
-      (attachment) => attachment.kind === "image",
-    ),
-  );
+export function hasImageAttachments(attachments: UploadedAttachment[]) {
+  return attachments.some((attachment) => attachment.kind === "image");
+}
+
+export function readUploadedAttachment(
+  attachments: UploadedAttachment[],
+  input: Record<string, unknown>,
+) {
+  const attachmentId = String(input.attachmentId || input.id || "");
+  const attachment = attachments.find((item) => item.id === attachmentId);
+  if (!attachment)
+    return { error: "Uploaded attachment not found", attachmentId };
+  if (attachment.kind === "text")
+    return {
+      id: attachment.id,
+      name: attachment.name,
+      type: attachment.type,
+      size: attachment.size,
+      kind: attachment.kind,
+      text: attachment.text || "",
+    };
+  if (attachment.kind === "image")
+    return {
+      id: attachment.id,
+      name: attachment.name,
+      type: attachment.type,
+      size: attachment.size,
+      kind: attachment.kind,
+      dataUrl: attachment.dataUrl || "",
+    };
+  if (attachment.kind === "audio" || attachment.kind === "video")
+    return {
+      id: attachment.id,
+      name: attachment.name,
+      type: attachment.type,
+      size: attachment.size,
+      kind: attachment.kind,
+      note: `${attachment.kind} files are available as metadata only in this browser extension path; ask the user for a transcript or a smaller text export if content analysis is needed.`,
+    };
+  if (attachment.kind === "document")
+    return {
+      id: attachment.id,
+      name: attachment.name,
+      type: attachment.type,
+      size: attachment.size,
+      kind: attachment.kind,
+      note: "Document binaries such as PDF, Word, Excel, and PowerPoint are available as metadata only here unless pasted/exported as text.",
+    };
+  return {
+    id: attachment.id,
+    name: attachment.name,
+    type: attachment.type,
+    size: attachment.size,
+    kind: attachment.kind,
+    note: "Binary file content is not available as text.",
+  };
 }
 
 function createGeminiParts(
   message: ChatMessage,
   isLatest: boolean,
   multimodal: boolean,
+  requestAttachments: UploadedAttachment[],
 ) {
-  const attachments = getUploadedAttachments(message);
+  const attachments = requestAttachments.length
+    ? requestAttachments
+    : getUploadedAttachments(message);
   const parts: Array<Record<string, unknown>> = [
-    { text: renderMessageText(message, isLatest) },
+    { text: renderMessageText(message, isLatest, requestAttachments) },
   ];
   if (!multimodal) return parts;
   for (const attachment of attachments) {
@@ -68,9 +125,12 @@ function createOpenAIMessageContent(
   message: ChatMessage,
   isLatest: boolean,
   multimodal: boolean,
+  requestAttachments: UploadedAttachment[],
 ) {
-  const text = renderMessageText(message, isLatest);
-  const attachments = getUploadedAttachments(message);
+  const text = renderMessageText(message, isLatest, requestAttachments);
+  const attachments = requestAttachments.length
+    ? requestAttachments
+    : getUploadedAttachments(message);
   if (!multimodal || !attachments.some((item) => item.kind === "image"))
     return text;
   return [
@@ -86,9 +146,13 @@ function createOpenAIMessageContent(
   ];
 }
 
-function renderMessageText(message: ChatMessage, isLatest: boolean) {
+function renderMessageText(
+  message: ChatMessage,
+  isLatest: boolean,
+  requestAttachments: UploadedAttachment[],
+) {
   if (isLatest && message.role === "user")
-    return renderUserMessageWithContext(message);
+    return renderUserMessageWithContext(message, requestAttachments);
   const attachmentContext = renderAttachmentContext(
     getUploadedAttachments(message),
   );

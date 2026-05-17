@@ -60,7 +60,13 @@ export type AttachmentTab = {
   favIconUrl?: string;
 };
 
-export type UploadedAttachmentKind = "image" | "text" | "file";
+export type UploadedAttachmentKind =
+  | "audio"
+  | "document"
+  | "file"
+  | "image"
+  | "text"
+  | "video";
 
 export type UploadedAttachment = {
   id: string;
@@ -175,6 +181,7 @@ export type SendMessagesBody = {
     tabs?: AttachmentTab[];
     selectedElement?: SelectedElement | null;
     text?: string;
+    uploadedAttachments?: UploadedAttachment[];
   };
 };
 

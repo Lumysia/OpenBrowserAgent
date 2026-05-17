@@ -144,6 +144,17 @@ export const browserTools = [
       },
     },
   ),
+  tool(
+    BROWSER_TOOL_NAME.readUploadedAttachment,
+    "Read a user-uploaded attachment that is available in the current active chat memory. Use this when the USER asks about an uploaded local file or image.",
+    {
+      attachmentId: {
+        type: "string",
+        description:
+          "The attachment ID from the available_attachments list in the user context",
+      },
+    },
+  ),
 ];
 
 function tool(

@@ -3,7 +3,9 @@ import {
   Copy,
   ExternalLink,
   File,
+  FileAudio,
   FileText,
+  FileVideo,
   Image,
   MousePointerClick,
 } from "lucide-react";
@@ -212,6 +214,12 @@ function SentAttachmentsChip({
           attachment.kind === "image" && attachment.dataUrl ? (
             <img key={attachment.id} src={attachment.dataUrl} alt="" />
           ) : attachment.kind === "text" ? (
+            <FileText key={attachment.id} size={24} />
+          ) : attachment.kind === "audio" ? (
+            <FileAudio key={attachment.id} size={24} />
+          ) : attachment.kind === "video" ? (
+            <FileVideo key={attachment.id} size={24} />
+          ) : attachment.kind === "document" ? (
             <FileText key={attachment.id} size={24} />
           ) : attachment.kind === "image" ? (
             <Image key={attachment.id} size={24} />

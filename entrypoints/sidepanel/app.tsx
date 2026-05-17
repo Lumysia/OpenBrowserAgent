@@ -137,6 +137,10 @@ export function SidepanelApp() {
       setActiveChatId(sortChatsNewestFirst(chats)[0]?.id);
   }, [activeChatId, chats]);
 
+  useEffect(() => {
+    clearUploadedAttachments();
+  }, [activeChatId]);
+
   useActiveTabContext({
     chats: chats || [],
     attachedTabs,
@@ -245,17 +249,8 @@ export function SidepanelApp() {
         ...(context ? { context } : {}),
         ...(sentTabs.length ? { attachedTabs: sentTabs } : {}),
         ...(sentElement ? { selectedElement: sentElement } : {}),
-        ...(sentAttachments.length
-          ? { uploadedAttachments: sentAttachments }
-          : {}),
         ...(quickAction ? { quickAction } : {}),
       },
-    };
-    const { uploadedAttachments: _uploadedAttachments, ...storedMetadata } =
-      userMessage.metadata || {};
-    const storedUserMessage: ChatMessage = {
-      ...userMessage,
-      metadata: storedMetadata,
     };
     const assistantMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -270,7 +265,7 @@ export function SidepanelApp() {
       title: shouldGenerateTitle
         ? generateLocalTitle(text || sentAttachments[0]?.name || "", t)
         : chat.title,
-      messages: [...chat.messages, storedUserMessage, assistantMessage],
+      messages: [...chat.messages, userMessage, assistantMessage],
       updatedAt: Date.now(),
     };
     updateChat(nextChat);
@@ -278,7 +273,6 @@ export function SidepanelApp() {
       requestChatTitle(nextChat.id, text || sentAttachments[0]?.name || "");
     setInput("");
     setAttachedTabs([]);
-    clearUploadedAttachments();
     setSelectedElement(null);
     setStreaming(true);
 
@@ -296,6 +290,7 @@ export function SidepanelApp() {
           tabs: sentTabs,
           selectedElement: sentElement,
           text: context,
+          uploadedAttachments: sentAttachments,
         },
       },
     };
@@ -396,7 +391,7 @@ export function SidepanelApp() {
           chatMode: mode,
           language,
           maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
-          context: {},
+          context: { uploadedAttachments },
         },
       },
       active.assistantMessageId,

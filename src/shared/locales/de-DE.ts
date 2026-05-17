@@ -130,6 +130,10 @@ export const deDE: LocaleMessages = {
         running: "Element wird geprüft",
         done: "Element geprüft",
       },
+      readUploadedAttachment: {
+        running: "Anhang wird gelesen",
+        done: "Anhang gelesen",
+      },
     },
   },
   options: {

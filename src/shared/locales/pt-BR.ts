@@ -113,6 +113,10 @@ export const ptBR: LocaleMessages = {
         running: "Inspecionando elemento",
         done: "Elemento inspecionado",
       },
+      readUploadedAttachment: {
+        running: "Lendo anexo",
+        done: "Anexo lido",
+      },
     },
   },
   options: {

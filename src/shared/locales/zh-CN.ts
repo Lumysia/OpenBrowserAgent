@@ -98,6 +98,7 @@ export const zhCN: LocaleMessages = {
       closeTab: { running: "关闭标签页", done: "已关闭标签页" },
       scrollToBottom: { running: "滚动页面", done: "已滚动页面" },
       getElementPropertiesByAiID: { running: "检查元素", done: "已检查元素" },
+      readUploadedAttachment: { running: "读取附件", done: "已读取附件" },
     },
   },
   options: {

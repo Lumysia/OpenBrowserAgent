@@ -1,16 +1,15 @@
-import { storage } from "../shared/storage";
-import { UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
+import { BROWSER_TOOL_NAME, UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
 import { MODEL_TEMPERATURE, STREAM_CHUNK_DELAY_MS } from "../shared/config";
 import {
   AI_TEXT_CHUNK_TYPE,
   CHAT_PART_STATE,
   isAskMode,
-  providerDefaultBaseUrls,
   toolPartType,
   type AiStreamResponse,
   type ChatMessage,
   type ChatMode,
   type ProviderId,
+  type UploadedAttachment,
 } from "../shared/types";
 import {
   browserTools,
@@ -22,6 +21,7 @@ import {
   createGeminiContents,
   createOpenAIRequestMessages,
   hasImageAttachments,
+  readUploadedAttachment,
 } from "./attachment-messages";
 import { chunkText, parseToolArgs, postText } from "./message-helpers";
 
@@ -33,45 +33,12 @@ function post(port: chrome.runtime.Port, message: AiStreamResponse) {
   }
 }
 
-export async function resolveModel(modelId?: string) {
-  const providers = await storage.provider.get();
-  const preferences = await storage.preferences.get();
-  const selectedModelId = modelId || preferences.selectedModelId;
-
-  for (const [provider, config] of Object.entries(providers) as Array<
-    [ProviderId, NonNullable<(typeof providers)[ProviderId]>]
-  >) {
-    const model = config.models?.find(
-      (candidate) =>
-        candidate.id === selectedModelId || candidate.name === selectedModelId,
-    );
-    if (model) {
-      return {
-        provider,
-        apiKey: config.apiKey || "",
-        baseUrl: config.baseUrl || providerDefaultBaseUrls[provider] || "",
-        modelName: model.name || model.id,
-      };
-    }
-  }
-
-  const fallbackProvider = Object.entries(providers)[0] as
-    | [ProviderId, NonNullable<(typeof providers)[ProviderId]>]
-    | undefined;
-  const fallbackModel = fallbackProvider?.[1].models?.[0];
-  if (fallbackProvider && fallbackModel) {
-    return {
-      provider: fallbackProvider[0],
-      apiKey: fallbackProvider[1].apiKey || "",
-      baseUrl:
-        fallbackProvider[1].baseUrl ||
-        providerDefaultBaseUrls[fallbackProvider[0]] ||
-        "",
-      modelName: fallbackModel.name || fallbackModel.id,
-    };
-  }
-
-  throw new Error("No model configured. Add an AI provider in Settings.");
+function toolsForMode(mode: ChatMode, hasUploadedAttachments: boolean) {
+  if (!isAskMode(mode)) return browserTools;
+  if (!hasUploadedAttachments) return [];
+  return browserTools.filter(
+    (item) => item.function.name === BROWSER_TOOL_NAME.readUploadedAttachment,
+  );
 }
 
 export async function requestOpenAICompatible(
@@ -89,6 +56,7 @@ export async function requestOpenAICompatible(
   port: chrome.runtime.Port,
   messageId?: string,
   attachmentRetryNotice?: string,
+  uploadedAttachments: UploadedAttachment[] = [],
 ) {
   if (model.provider === "gemini") {
     return requestGemini(
@@ -100,6 +68,7 @@ export async function requestOpenAICompatible(
       signal,
       port,
       attachmentRetryNotice,
+      uploadedAttachments,
     );
   }
 
@@ -108,9 +77,16 @@ export async function requestOpenAICompatible(
     model.provider === "ollama"
       ? `${baseUrl}/v1/chat/completions`
       : `${baseUrl}/chat/completions`;
-  let usesAttachmentPayload = hasImageAttachments(messages);
+  let usesAttachmentPayload = hasImageAttachments(uploadedAttachments);
   let requestMessages: Array<Record<string, unknown>> =
-    createOpenAIRequestMessages(system, messages, usesAttachmentPayload);
+    createOpenAIRequestMessages(
+      system,
+      messages,
+      usesAttachmentPayload,
+      uploadedAttachments,
+    );
+  const availableTools = toolsForMode(mode, uploadedAttachments.length > 0);
+  const useTools = maxToolSteps > 0 && availableTools.length > 0;
 
   async function fetchChatCompletion(body: Record<string, unknown>) {
     const response = await fetch(chatUrl, {
@@ -124,7 +100,12 @@ export async function requestOpenAICompatible(
     });
     if (response.ok || !usesAttachmentPayload) return response;
 
-    requestMessages = createOpenAIRequestMessages(system, messages, false);
+    requestMessages = createOpenAIRequestMessages(
+      system,
+      messages,
+      false,
+      uploadedAttachments,
+    );
     usesAttachmentPayload = false;
     if (attachmentRetryNotice)
       postText(port, attachmentRetryNotice, crypto.randomUUID(), signal, false);
@@ -139,7 +120,7 @@ export async function requestOpenAICompatible(
     });
   }
 
-  if (isAskMode(mode) || maxToolSteps <= 0) {
+  if (!useTools) {
     const response = await fetchChatCompletion({
       model: model.modelName,
       temperature: MODEL_TEMPERATURE,
@@ -158,7 +139,7 @@ export async function requestOpenAICompatible(
       temperature: MODEL_TEMPERATURE,
       messages: requestMessages,
       stream: true,
-      tools: browserTools,
+      tools: availableTools,
       tool_choice: "auto",
     });
 
@@ -192,7 +173,10 @@ export async function requestOpenAICompatible(
           input,
         },
       });
-      const output = await safeExecuteBrowserTool(toolName, input);
+      const output =
+        toolName === BROWSER_TOOL_NAME.readUploadedAttachment
+          ? readUploadedAttachment(uploadedAttachments, input)
+          : await safeExecuteBrowserTool(toolName, input);
       const hasError = isToolError(output);
       post(port, {
         type: "chunk",
@@ -387,13 +371,15 @@ async function requestGemini(
   signal: AbortSignal,
   port: chrome.runtime.Port,
   attachmentRetryNotice?: string,
+  uploadedAttachments: UploadedAttachment[] = [],
 ) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model.modelName)}:generateContent?key=${encodeURIComponent(model.apiKey)}`;
   let contents: Array<Record<string, unknown>> = createGeminiContents(
     messages,
     true,
+    uploadedAttachments,
   );
-  let usesAttachmentPayload = hasImageAttachments(messages);
+  let usesAttachmentPayload = hasImageAttachments(uploadedAttachments);
 
   async function fetchGemini(body: Record<string, unknown>) {
     const response = await fetch(url, {
@@ -404,7 +390,7 @@ async function requestGemini(
     });
     if (response.ok || !usesAttachmentPayload) return response;
 
-    contents = createGeminiContents(messages, false);
+    contents = createGeminiContents(messages, false, uploadedAttachments);
     usesAttachmentPayload = false;
     if (attachmentRetryNotice)
       postText(port, attachmentRetryNotice, crypto.randomUUID(), signal, false);
@@ -416,7 +402,8 @@ async function requestGemini(
     });
   }
 
-  const useTools = !isAskMode(mode) && maxToolSteps > 0;
+  const availableTools = toolsForMode(mode, uploadedAttachments.length > 0);
+  const useTools = maxToolSteps > 0 && availableTools.length > 0;
 
   if (!useTools) {
     const response = await fetchGemini({
@@ -440,7 +427,9 @@ async function requestGemini(
         ? {
             tools: [
               {
-                functionDeclarations: browserTools.map((item) => item.function),
+                functionDeclarations: availableTools.map(
+                  (item) => item.function,
+                ),
               },
             ],
           }
@@ -483,7 +472,10 @@ async function requestGemini(
           input,
         },
       });
-      const output = await safeExecuteBrowserTool(toolName, input);
+      const output =
+        toolName === BROWSER_TOOL_NAME.readUploadedAttachment
+          ? readUploadedAttachment(uploadedAttachments, input)
+          : await safeExecuteBrowserTool(toolName, input);
       const hasError = isToolError(output);
       post(port, {
         type: "chunk",

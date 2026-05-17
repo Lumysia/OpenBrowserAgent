@@ -128,6 +128,10 @@ export const esES: LocaleMessages = {
         running: "Inspeccionando elemento",
         done: "Elemento inspeccionado",
       },
+      readUploadedAttachment: {
+        running: "Leyendo adjunto",
+        done: "Adjunto leído",
+      },
     },
   },
   options: {

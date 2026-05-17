@@ -19,6 +19,7 @@ const TEXT_FILE_TYPES = new Set([
 
 const TEXT_FILE_EXTENSIONS =
   /\.(csv|css|html?|json|jsonl|log|md|markdown|tsv|txt|xml|ya?ml)$/i;
+const DOCUMENT_FILE_EXTENSIONS = /\.(docx?|pdf|pptx?|rtf|xlsx?)$/i;
 
 export type AttachmentReadResult = {
   attachments: UploadedAttachment[];
@@ -82,17 +83,44 @@ function readUploadAttachment(file: File): Promise<UploadedAttachment> {
     }));
   }
 
-  return Promise.resolve({
+  if (file.type.startsWith("audio/"))
+    return Promise.resolve(createMetadataAttachment(file, "audio"));
+
+  if (file.type.startsWith("video/"))
+    return Promise.resolve(createMetadataAttachment(file, "video"));
+
+  if (isDocumentFile(file))
+    return Promise.resolve(createMetadataAttachment(file, "document"));
+
+  return Promise.resolve(createMetadataAttachment(file, "file"));
+}
+
+function createMetadataAttachment(
+  file: File,
+  kind: UploadedAttachment["kind"],
+): UploadedAttachment {
+  return {
     id: crypto.randomUUID(),
     name: file.name,
     type: file.type || "application/octet-stream",
     size: file.size,
-    kind: "file",
-  });
+    kind,
+  };
 }
 
 function isTextFile(file: File) {
   return TEXT_FILE_TYPES.has(file.type) || TEXT_FILE_EXTENSIONS.test(file.name);
+}
+
+function isDocumentFile(file: File) {
+  return (
+    DOCUMENT_FILE_EXTENSIONS.test(file.name) ||
+    file.type.includes("pdf") ||
+    file.type.includes("officedocument") ||
+    file.type.includes("msword") ||
+    file.type.includes("ms-excel") ||
+    file.type.includes("ms-powerpoint")
+  );
 }
 
 function readAsDataUrl(file: File) {

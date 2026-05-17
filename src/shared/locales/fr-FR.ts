@@ -132,6 +132,10 @@ export const frFR: LocaleMessages = {
         running: "Inspection de l'élément",
         done: "Élément inspecté",
       },
+      readUploadedAttachment: {
+        running: "Lecture de la pièce jointe",
+        done: "Pièce jointe lue",
+      },
     },
   },
   options: {
