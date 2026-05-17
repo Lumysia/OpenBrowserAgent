@@ -37,7 +37,9 @@ export function useStoredState<T>(item: StorageItem<T>) {
         : next;
     valueRef.current = resolved;
     setValue(resolved);
-    await item.set(resolved);
+    await item.set(resolved).catch((error) => {
+      console.warn("Failed to persist stored state", error);
+    });
   }
 
   return [value, update, loading] as const;

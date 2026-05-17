@@ -957,7 +957,10 @@ async function executeBrowserTool(
         : { error: "Not a web page" };
     }
     case "openNewTabWithURL": {
-      const tab = await chrome.tabs.create({ url: String(args.url || "") });
+      const tab = await chrome.tabs.create({
+        url: String(args.url || ""),
+        active: false,
+      });
       if (tab.id) {
         await waitTabComplete(tab.id);
         const loadedTab = await chrome.tabs.get(tab.id);
@@ -1005,13 +1008,8 @@ async function executeBrowserTool(
     }
     case "openSearchTab": {
       const query = String(args.query || "");
-      const tab = await chrome.tabs.create({ active: true });
-      if (tab.id && chrome.search?.query)
-        await chrome.search.query({ tabId: tab.id, text: query });
-      else if (tab.id)
-        await chrome.tabs.update(tab.id, {
-          url: `https://www.google.com/search?q=${encodeURIComponent(query)}`,
-        });
+      const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+      const tab = await chrome.tabs.create({ url: searchUrl, active: false });
       return { success: true, tabId: tab.id };
     }
     case "waitTabLoadFinished": {
@@ -1309,7 +1307,7 @@ async function clickElement(tabId: number, id: string) {
     | { isNewTab?: boolean; notFound?: boolean; url?: string }
     | undefined;
   if (output?.isNewTab && output.url) {
-    const tab = await chrome.tabs.create({ url: output.url });
+    const tab = await chrome.tabs.create({ url: output.url, active: false });
     return { success: true, tabId: tab.id, shouldWaitTabLoadFinished: true };
   }
   return { success: !output?.notFound, tabId };

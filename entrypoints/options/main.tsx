@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Check, Loader2, Plus, Trash2 } from "lucide-react";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
-import { storage } from "../../src/shared/storage";
+import { setDataSync, storage } from "../../src/shared/storage";
 import {
   languageLabels,
   providerDefaultBaseUrls,
@@ -32,6 +32,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Switch,
   Textarea,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
@@ -79,6 +80,12 @@ function OptionsApp() {
             {t.options.general}
           </a>
           <a
+            className={`nav-link ${route === "/sync" ? "active" : ""}`}
+            href="#/sync"
+          >
+            {t.options.sync}
+          </a>
+          <a
             className={`nav-link ${route === "/providers" ? "active" : ""}`}
             href="#/providers"
           >
@@ -104,6 +111,8 @@ function OptionsApp() {
         <div className="settings-content">
           {route === "/providers" ? (
             <ProvidersPage />
+          ) : route === "/sync" ? (
+            <SyncPage />
           ) : route === "/quick-actions" ? (
             <QuickActionsPage />
           ) : (
@@ -217,28 +226,6 @@ function GeneralPage() {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>{t.options.syncSettings}</CardTitle>
-          <CardDescription>{t.options.syncSettingsDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Select
-            value={preferences.syncSettings === false ? "off" : "on"}
-            onValueChange={(value) =>
-              setPreferences({ ...preferences, syncSettings: value === "on" })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="on">{t.common.enabled}</SelectItem>
-              <SelectItem value="off">{t.common.disabled}</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
           <CardTitle>{t.options.autoScroll}</CardTitle>
           <CardDescription>{t.options.autoScrollDescription}</CardDescription>
         </CardHeader>
@@ -302,6 +289,131 @@ function GeneralPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function SyncPage() {
+  const [language] = useStoredState(storage.language);
+  const [preferences, setPreferences] = useStoredState(storage.preferences);
+  const [syncWriteStatus] = useStoredState(storage.syncWriteStatus);
+  const t = getMessages(language);
+
+  if (!preferences) return null;
+
+  function updateSyncPreference(
+    key: "syncProviders" | "syncQuickActions" | "syncChats",
+    value: boolean,
+  ) {
+    setPreferences({ ...preferences, [key]: value });
+    setDataSync(key, value).catch((error) => {
+      console.warn("Failed to update sync preference", error);
+      setPreferences({ ...preferences, [key]: !value });
+    });
+  }
+
+  return (
+    <div className="stack">
+      <div>
+        <h1>{t.options.sync}</h1>
+        <p className="muted">{t.options.syncSettingsDescription}</p>
+      </div>
+      <SyncToggleCard
+        title={t.options.syncSettings}
+        description={t.options.syncSettingsDescription}
+        value
+        disabled
+      />
+      <SyncToggleCard
+        title={t.options.syncProviders}
+        description={t.options.syncProvidersDescription}
+        value={preferences.syncProviders === true}
+        onChange={(value) => updateSyncPreference("syncProviders", value)}
+      />
+      <SyncToggleCard
+        title={t.options.syncQuickActions}
+        description={t.options.syncQuickActionsDescription}
+        value={preferences.syncQuickActions === true}
+        onChange={(value) => updateSyncPreference("syncQuickActions", value)}
+      />
+      <SyncToggleCard
+        title={t.options.syncChats}
+        description={t.options.syncChatsDescription}
+        value={preferences.syncChats === true}
+        onChange={(value) => updateSyncPreference("syncChats", value)}
+      />
+      <SyncWriteStatusCard status={syncWriteStatus} />
+    </div>
+  );
+}
+
+function SyncWriteStatusCard({
+  status,
+}: {
+  status: Awaited<ReturnType<typeof storage.syncWriteStatus.get>> | undefined;
+}) {
+  const [language] = useStoredState(storage.language);
+  const t = getMessages(language);
+  const pendingCount = status?.pendingCount || 0;
+  const hasError = !!status?.lastError;
+  const title = hasError
+    ? t.options.syncWriteError
+    : pendingCount > 0
+      ? t.options.syncWritePending
+      : t.options.syncWriteIdle;
+  const detail = hasError
+    ? status?.lastError
+    : pendingCount > 0
+      ? `${pendingCount} pending write${pendingCount === 1 ? "" : "s"}`
+      : status?.lastFlushedAt
+        ? new Date(status.lastFlushedAt).toLocaleTimeString()
+        : "";
+
+  return (
+    <Card>
+      <CardContent>
+        <div className="sync-status-row">
+          <span
+            className={`sync-status-dot ${hasError ? "error" : pendingCount > 0 ? "pending" : ""}`}
+          />
+          <div>
+            <CardTitle>{title}</CardTitle>
+            {detail && <CardDescription>{detail}</CardDescription>}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SyncToggleCard({
+  title,
+  description,
+  value,
+  onChange,
+  disabled,
+}: {
+  title: string;
+  description: string;
+  value: boolean;
+  onChange?: (value: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Card>
+      <CardContent>
+        <div className="setting-switch-row">
+          <div>
+            <CardTitle>{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
+          </div>
+          <Switch
+            checked={value}
+            disabled={disabled}
+            onCheckedChange={onChange}
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

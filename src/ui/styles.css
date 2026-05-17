@@ -584,6 +584,48 @@ a {
 .ui-textarea::placeholder {
   color: var(--muted-foreground);
 }
+.ui-switch {
+  position: relative;
+  display: inline-flex;
+  width: 46px;
+  height: 26px;
+  flex: 0 0 auto;
+  align-items: center;
+  border: 1px solid var(--input);
+  border-radius: 999px;
+  background: var(--secondary);
+  padding: 2px;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.ui-switch span {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 0 2px 6px rgba(22, 21, 18, 0.18);
+  transform: translateX(0);
+  transition: transform 0.16s ease;
+}
+.ui-switch.checked {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+.ui-switch.checked span {
+  transform: translateX(20px);
+}
+.ui-switch:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.ui-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
 .ui-label {
   display: grid;
   gap: 7px;
@@ -615,6 +657,33 @@ a {
 }
 .ui-card-content {
   padding: 17px;
+}
+.setting-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.sync-status-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sync-status-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #62c584;
+  box-shadow: 0 0 0 4px rgba(98, 197, 132, 0.12);
+}
+.sync-status-dot.pending {
+  background: #e5a94f;
+  box-shadow: 0 0 0 4px rgba(229, 169, 79, 0.14);
+}
+.sync-status-dot.error {
+  background: #e46b6b;
+  box-shadow: 0 0 0 4px rgba(228, 107, 107, 0.14);
 }
 .ui-badge {
   display: inline-flex;

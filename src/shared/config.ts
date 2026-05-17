@@ -3,6 +3,7 @@ export const DEFAULT_MAX_TOOL_STEPS = 30;
 export const AUTO_RETRY_IDLE_MS = 30_000;
 export const MAX_AUTO_RETRIES = 1;
 export const BROWSER_TOOL_TIMEOUT_MS = 25_000;
+export const SYNC_WRITE_DEBOUNCE_MS = 2_000;
 
 export const MODEL_TEMPERATURE = 0.3;
 export const STREAM_CHUNK_DELAY_MS = 8;

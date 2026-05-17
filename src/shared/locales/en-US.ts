@@ -114,6 +114,7 @@ export const enUS = {
   },
   options: {
     general: "General",
+    sync: "Sync",
     providers: "Providers",
     quickActions: "Quick Actions",
     modelProviders: "Model Providers",
@@ -163,7 +164,19 @@ export const enUS = {
     darkTheme: "Dark",
     syncSettings: "Sync Settings",
     syncSettingsDescription:
-      "Keep language and lightweight preferences synced with your browser account.",
+      "Language and lightweight preferences are synced with your browser account by default.",
+    syncProviders: "Sync Providers",
+    syncProvidersDescription:
+      "Sync provider configuration, including API keys, through your browser account.",
+    syncQuickActions: "Sync Quick Actions",
+    syncQuickActionsDescription:
+      "Sync quick action templates through your browser account.",
+    syncChats: "Sync Chats",
+    syncChatsDescription:
+      "Sync chat history through your browser account. Keep this off for local-only conversations.",
+    syncWritePending: "Sync writes are queued",
+    syncWriteIdle: "Sync writes are up to date",
+    syncWriteError: "Last sync write failed",
     autoScroll: "Auto Scroll",
     autoScrollDescription:
       "Automatically keep the latest AI output visible while messages stream.",

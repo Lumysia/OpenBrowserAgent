@@ -28,6 +28,9 @@ export type Preferences = {
   colorScheme?: "system" | "light" | "dark";
   accentColor?: "green" | "blue" | "pink" | "purple" | "amber";
   syncSettings?: boolean;
+  syncProviders?: boolean;
+  syncQuickActions?: boolean;
+  syncChats?: boolean;
   autoScroll?: boolean;
   autoRetry?: boolean;
   maxToolSteps?: number;
