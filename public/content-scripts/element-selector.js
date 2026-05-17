@@ -3,6 +3,8 @@
   window.__obaElementSelectorActive = true;
 
   const STORAGE_KEY_PREFERENCES = "preferences";
+  const MESSAGE_CANCEL = "cancelElementSelector";
+  const MESSAGE_CANCELLED = "elementSelectorCancelled";
   const Z_INDEX = "2147483647";
   const DIM_OPACITY = 0.42;
   const ACCENT_COLORS = {
@@ -37,7 +39,6 @@
     Object.assign(layer.style, {
       position: "fixed",
       background: `rgba(15, 23, 42, ${DIM_OPACITY})`,
-      backdropFilter: "saturate(110%) blur(1px)",
       transition: "all 80ms ease, background 120ms ease",
     });
     root.appendChild(layer);
@@ -126,7 +127,16 @@
     removeEventListener("keyup", onKeyCancel, true);
     removeEventListener("scroll", onViewportChange, true);
     removeEventListener("resize", onViewportChange, true);
+    chrome.runtime.onMessage.removeListener(onRuntimeMessage);
     window.__obaElementSelectorActive = false;
+  }
+
+  function cancel() {
+    chrome.runtime.sendMessage({
+      type: MESSAGE_CANCELLED,
+      success: false,
+    });
+    cleanup();
   }
 
   function onMouseOver(event) {
@@ -172,6 +182,10 @@
       value: "value" in target ? target.value : undefined,
     });
     cleanup();
+  }
+
+  function onRuntimeMessage(message) {
+    if (message?.type === MESSAGE_CANCEL) cancel();
   }
 
   function onKeyCancel(event) {
@@ -236,4 +250,5 @@
   addEventListener("keyup", onKeyCancel, true);
   addEventListener("scroll", onViewportChange, true);
   addEventListener("resize", onViewportChange, true);
+  chrome.runtime.onMessage.addListener(onRuntimeMessage);
 })();

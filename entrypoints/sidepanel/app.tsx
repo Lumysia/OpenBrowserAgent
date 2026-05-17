@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getActiveTab, injectElementSelector } from "../../src/shared/browser";
+import { getActiveTab } from "../../src/shared/browser";
 import {
   AUTO_RETRY_IDLE_MS,
   AUTO_RETRY_POLL_MS,
@@ -44,6 +44,7 @@ import {
 } from "./sidepanel-view";
 import { streamPartFromChunk } from "./stream-parts";
 import { useActiveTabContext } from "./use-active-tab-context";
+import { useElementSelector } from "./use-element-selector";
 
 type ActiveStream = {
   chatId: string;
@@ -98,6 +99,7 @@ export function SidepanelApp() {
   const currentChat = chats?.find((chat) => chat.id === activeChatId);
   const t = getMessages(language);
   const aiWorking = streaming || creatingQuickAction;
+  const { selectElement } = useElementSelector();
 
   useEffect(() => {
     if (aiWorking) setOpenMenu(null);
@@ -467,11 +469,6 @@ export function SidepanelApp() {
 
   function removeAttachedTab(tabId: number) {
     setAttachedTabs((tabs) => tabs.filter((item) => item.id !== tabId));
-  }
-
-  async function selectElement() {
-    const tab = await getActiveTab();
-    if (tab?.id) await injectElementSelector(tab.id);
   }
 
   async function buildContext() {
