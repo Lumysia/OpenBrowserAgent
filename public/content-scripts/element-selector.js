@@ -39,7 +39,7 @@
     Object.assign(layer.style, {
       position: "fixed",
       background: `rgba(15, 23, 42, ${DIM_OPACITY})`,
-      transition: "all 80ms ease, background 120ms ease",
+      transition: "background 120ms ease",
     });
     root.appendChild(layer);
     return layer;
@@ -52,7 +52,6 @@
     borderRadius: "10px",
     boxShadow:
       "0 0 0 1px color-mix(in srgb, var(--oba-selector-accent), transparent 40%), 0 12px 32px rgba(0,0,0,.24)",
-    transition: "all 80ms ease",
   });
   root.appendChild(highlight);
 
