@@ -4,6 +4,7 @@ import {
   FileText,
   Layers,
   MousePointerClick,
+  Paperclip,
   Plus,
   X,
 } from "lucide-react";
@@ -25,6 +26,7 @@ export function AddContextMenu({
   selectedTabIds,
   onShowTabs,
   onQuickAction,
+  onUploadFiles,
   onToggleTab,
   onAttachTab,
   onSelectElement,
@@ -36,6 +38,7 @@ export function AddContextMenu({
   selectedTabIds: number[];
   onShowTabs: () => void;
   onQuickAction: (action: QuickAction) => void;
+  onUploadFiles: () => void;
   onToggleTab: (tab: AttachmentTab) => void;
   onAttachTab: () => void;
   onSelectElement: () => void;
@@ -47,6 +50,13 @@ export function AddContextMenu({
           <Layers size={17} />
           <span>
             <strong>{t.sidepanel.addNewTab}</strong>
+          </span>
+        </button>
+        <button className="composer-menu-item" onClick={onUploadFiles}>
+          <Paperclip size={17} />
+          <span>
+            <strong>{t.sidepanel.attachFiles}</strong>
+            <small>{t.sidepanel.attachFilesHint}</small>
           </span>
         </button>
         {!!quickActions.length && (

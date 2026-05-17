@@ -23,6 +23,8 @@ export const MARKDOWN_FILENAME_MAX_LENGTH = 30;
 export const IMAGE_FILENAME_MAX_LABEL_LENGTH = 40;
 export const IMAGE_ALT_MAX_LENGTH = 50;
 export const MAX_IMAGES_PER_DOWNLOAD = 80;
+export const MAX_UPLOAD_FILE_BYTES = 50_000_000;
+export const MAX_UPLOAD_TOTAL_BYTES = 200_000_000;
 
 export const SELECTED_ELEMENT_HTML_MAX_CHARS = 4_000;
 export const TAB_CONTENT_MAX_CHARS = 12_000;
@@ -32,6 +34,7 @@ export const QUICK_FEEDBACK_MS = 1_200;
 export const ISO_DATE_LENGTH = 10;
 export const RELATIVE_TIME_MINUTE_MS = 60_000;
 export const SENT_TABS_PREVIEW_COUNT = 2;
+export const SENT_ATTACHMENTS_PREVIEW_COUNT = 3;
 
 export const OPTIONS_ROUTE = {
   general: "/",

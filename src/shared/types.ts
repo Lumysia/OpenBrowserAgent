@@ -60,6 +60,18 @@ export type AttachmentTab = {
   favIconUrl?: string;
 };
 
+export type UploadedAttachmentKind = "image" | "text" | "file";
+
+export type UploadedAttachment = {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  kind: UploadedAttachmentKind;
+  dataUrl?: string;
+  text?: string;
+};
+
 export type SelectedElement = {
   success: boolean;
   aiId?: string;

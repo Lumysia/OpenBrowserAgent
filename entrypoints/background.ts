@@ -1,5 +1,6 @@
 import { storage } from "../src/shared/storage";
 import { UNKNOWN_TOOL_NAME } from "../src/shared/browser-tools";
+import { getMessages } from "../src/shared/i18n";
 import {
   clampMaxToolSteps,
   GENERATED_TITLE_MAX_CJK_CHARS,
@@ -120,6 +121,7 @@ async function streamAssistantResponse(
   signal: AbortSignal,
 ) {
   const providerModel = await resolveModel(request.body.modelId);
+  const t = getMessages(request.body.language);
   const system = createSystemPrompt(request.body.chatMode);
   const text = await requestOpenAICompatible(
     providerModel,
@@ -130,6 +132,7 @@ async function streamAssistantResponse(
     signal,
     port,
     request.messageId,
+    t.sidepanel.attachmentsUnsupportedRetry,
   );
 
   if (text) {

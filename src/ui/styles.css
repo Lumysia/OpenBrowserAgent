@@ -1572,6 +1572,17 @@ a {
   display: grid;
   gap: 10px;
 }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 .quick-action-create-row {
   display: flex;
   justify-content: flex-end;
@@ -1616,6 +1627,12 @@ a {
   background: var(--border);
   border-radius: 999px;
 }
+.attachment-notice {
+  padding: 2px 4px 0;
+  color: var(--destructive);
+  font-size: 12px;
+  line-height: 1.35;
+}
 .context-card {
   position: relative;
   flex: 0 0 min(334px, 82vw);
@@ -1637,6 +1654,14 @@ a {
   border-radius: 6px;
   object-fit: cover;
   background: white;
+}
+.attachment-card > svg {
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  border-radius: 8px;
+  background: var(--accent-softer);
+  color: var(--accent-strong);
 }
 .context-card span {
   min-width: 0;

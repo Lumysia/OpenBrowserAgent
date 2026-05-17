@@ -3,6 +3,7 @@ import {
   AI_TEXT_CHUNK_TYPE,
   type AiStreamResponse,
   type ChatMessage,
+  type UploadedAttachment,
 } from "../shared/types";
 
 export function postText(
@@ -73,6 +74,7 @@ ${message.content}
   const quickAction = message.metadata?.quickAction as
     | { instruction?: string }
     | undefined;
+  const attachments = getUploadedAttachments(message);
   return `${
     quickAction?.instruction
       ? `<instruction>
@@ -85,6 +87,8 @@ ${quickAction.instruction}
 
 ${context}
 
+${renderAttachmentContext(attachments)}
+
 </message_context>${
     quickAction?.instruction
       ? ""
@@ -94,4 +98,30 @@ ${context}
 ${message.content}
 </message>`
   }`;
+}
+
+export function getUploadedAttachments(message: ChatMessage) {
+  return Array.isArray(message.metadata?.uploadedAttachments)
+    ? (message.metadata.uploadedAttachments as UploadedAttachment[])
+    : [];
+}
+
+export function renderAttachmentContext(attachments: UploadedAttachment[]) {
+  if (!attachments.length) return "";
+  return `<attachments>
+${attachments
+  .map((attachment) => {
+    const header = `- ${attachment.name} (${attachment.type || "unknown"}, ${attachment.size} bytes, ${attachment.kind})`;
+    if (attachment.kind === "text" && attachment.text)
+      return `${header}\n<file_text name="${escapeAttribute(attachment.name)}">\n${attachment.text}\n</file_text>`;
+    if (attachment.kind === "image")
+      return `${header}\nImage content is attached for multimodal-capable models. If unavailable, use the filename and user message only.`;
+    return `${header}\nBinary file content is not directly readable here; use the file metadata only.`;
+  })
+  .join("\n\n")}
+</attachments>`;
+}
+
+function escapeAttribute(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 }

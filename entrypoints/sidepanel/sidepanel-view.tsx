@@ -11,7 +11,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import type { RefObject } from "react";
+import { useRef, type ClipboardEvent, type RefObject } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import { CHAT_MODE } from "../../src/shared/types";
 import type {
@@ -22,6 +22,7 @@ import type {
   Preferences,
   QuickAction,
   SelectedElement,
+  UploadedAttachment,
 } from "../../src/shared/types";
 import {
   Button,
@@ -47,21 +48,16 @@ import {
 import { HistoryPanel } from "./history-panel";
 import { IconTooltip } from "./icon-tooltip";
 import { MessageBubble } from "./message-bubble";
-
-export const COMPOSER_MENU = {
-  add: "add",
-  model: "model",
-  mode: "mode",
-} as const;
-
-export type ComposerMenu = (typeof COMPOSER_MENU)[keyof typeof COMPOSER_MENU];
-
-export const ADD_MENU_VIEW = {
-  menu: "menu",
-  tabs: "tabs",
-} as const;
-
-type AddMenuView = (typeof ADD_MENU_VIEW)[keyof typeof ADD_MENU_VIEW];
+import {
+  ADD_MENU_VIEW,
+  COMPOSER_MENU,
+  type AddMenuView,
+  type ComposerMenu,
+} from "./sidepanel-menu-state";
+import {
+  UploadedAttachmentCard,
+  UploadFileInput,
+} from "./uploaded-attachment-card";
 
 export function SidepanelView({
   t,
@@ -74,6 +70,8 @@ export function SidepanelView({
   input,
   mode,
   attachedTabs,
+  uploadedAttachments,
+  attachmentNotice,
   availableTabs,
   selectedElement,
   streaming,
@@ -103,6 +101,8 @@ export function SidepanelView({
   onToggleAttachedTab,
   onAttachActiveTab,
   onRemoveAttachedTab,
+  onAttachFiles,
+  onRemoveUploadedAttachment,
   onSelectElement,
   onSelectChat,
 }: {
@@ -116,6 +116,8 @@ export function SidepanelView({
   input: string;
   mode: ChatMode;
   attachedTabs: AttachmentTab[];
+  uploadedAttachments: UploadedAttachment[];
+  attachmentNotice: string;
   availableTabs: AttachmentTab[];
   selectedElement: SelectedElement | null;
   streaming: boolean;
@@ -145,9 +147,26 @@ export function SidepanelView({
   onToggleAttachedTab: (tab: AttachmentTab) => void;
   onAttachActiveTab: () => Promise<void>;
   onRemoveAttachedTab: (tabId: number) => void;
+  onAttachFiles: (files: FileList | File[]) => Promise<void>;
+  onRemoveUploadedAttachment: (id: string) => void;
   onSelectElement: () => Promise<void>;
   onSelectChat: (chatId: string) => void;
 }) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  function attachFromPicker() {
+    fileInputRef.current?.click();
+  }
+
+  function attachFromClipboard(event: ClipboardEvent<HTMLTextAreaElement>) {
+    const files = Array.from(event.clipboardData.files).filter(
+      (file) => file.size > 0,
+    );
+    if (!files.length) return;
+    event.preventDefault();
+    onAttachFiles(files).catch(() => undefined);
+  }
+
   if (providersReady && modelCount === 0) {
     return (
       <div className="sidepanel">
@@ -239,6 +258,10 @@ export function SidepanelView({
           ))}
         </ScrollArea>
         <footer className="composer">
+          <UploadFileInput
+            inputRef={fileInputRef}
+            onAttachFiles={onAttachFiles}
+          />
           <div className="quick-action-create-row">
             <Button
               className="quick-action-create"
@@ -265,7 +288,18 @@ export function SidepanelView({
                   onRemove={() => onRemoveAttachedTab(tab.id)}
                 />
               ))}
+              {uploadedAttachments.map((attachment) => (
+                <UploadedAttachmentCard
+                  key={attachment.id}
+                  t={t}
+                  attachment={attachment}
+                  onRemove={() => onRemoveUploadedAttachment(attachment.id)}
+                />
+              ))}
             </div>
+            {attachmentNotice && (
+              <div className="attachment-notice">{attachmentNotice}</div>
+            )}
             {selectedElement && (
               <div className="context-card">
                 <MousePointerClick size={18} />
@@ -309,6 +343,7 @@ export function SidepanelView({
               placeholder={t.sidepanel.whatDoYouWant}
               disabled={aiWorking}
               onChange={(event) => onSetInput(event.target.value)}
+              onPaste={attachFromClipboard}
               onKeyDown={(event) => {
                 if (
                   event.key === "Enter" &&
@@ -354,6 +389,10 @@ export function SidepanelView({
                       onShowTabs={onShowAllTabsPicker}
                       onQuickAction={(action) => {
                         onSend(action.instruction, action);
+                        onSetOpenMenu(null);
+                      }}
+                      onUploadFiles={() => {
+                        attachFromPicker();
                         onSetOpenMenu(null);
                       }}
                       onToggleTab={onToggleAttachedTab}

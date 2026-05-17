@@ -1,7 +1,16 @@
-import { Check, Copy, ExternalLink, MousePointerClick } from "lucide-react";
+import {
+  Check,
+  Copy,
+  ExternalLink,
+  File,
+  FileText,
+  Image,
+  MousePointerClick,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
 import {
   COPY_FEEDBACK_MS,
+  SENT_ATTACHMENTS_PREVIEW_COUNT,
   SENT_TABS_PREVIEW_COUNT,
   STREAM_RENDER_THROTTLE_MS,
 } from "../../src/shared/config";
@@ -13,6 +22,7 @@ import type {
   ChatPart,
   QuickAction,
   SelectedElement,
+  UploadedAttachment,
 } from "../../src/shared/types";
 import { isToolPartType } from "../../src/shared/types";
 import { useStoredState } from "../../src/ui/useStoredState";
@@ -27,6 +37,9 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
   const quickAction = message.metadata?.quickAction as QuickAction | undefined;
   const sentTabs = Array.isArray(message.metadata?.attachedTabs)
     ? (message.metadata.attachedTabs as AttachmentTab[])
+    : [];
+  const sentAttachments = Array.isArray(message.metadata?.uploadedAttachments)
+    ? (message.metadata.uploadedAttachments as UploadedAttachment[])
     : [];
   const sentElement = message.metadata?.selectedElement as
     | SelectedElement
@@ -53,6 +66,11 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
       {message.role === "user" && !!sentTabs.length && (
         <div className="sent-context-row">
           <SentTabsChip tabs={sentTabs} />
+        </div>
+      )}
+      {message.role === "user" && !!sentAttachments.length && (
+        <div className="sent-context-row">
+          <SentAttachmentsChip attachments={sentAttachments} t={t} />
         </div>
       )}
       {message.role === "user" && sentElement && (
@@ -169,6 +187,45 @@ function SentTabsChip({ tabs }: { tabs: AttachmentTab[] }) {
           {extraCount > 0 ? <em>+ {extraCount}</em> : null}
         </strong>
         <small>{urls}</small>
+      </span>
+    </div>
+  );
+}
+
+function SentAttachmentsChip({
+  attachments,
+  t,
+}: {
+  attachments: UploadedAttachment[];
+  t: Messages;
+}) {
+  const visibleAttachments = attachments.slice(
+    0,
+    SENT_ATTACHMENTS_PREVIEW_COUNT,
+  );
+  const extraCount = attachments.length - visibleAttachments.length;
+  const title = visibleAttachments.map((item) => item.name).join(", ");
+  return (
+    <div className="sent-tabs-chip">
+      <div className="sent-tabs-icons">
+        {visibleAttachments.map((attachment) =>
+          attachment.kind === "image" && attachment.dataUrl ? (
+            <img key={attachment.id} src={attachment.dataUrl} alt="" />
+          ) : attachment.kind === "text" ? (
+            <FileText key={attachment.id} size={24} />
+          ) : attachment.kind === "image" ? (
+            <Image key={attachment.id} size={24} />
+          ) : (
+            <File key={attachment.id} size={24} />
+          ),
+        )}
+      </div>
+      <span>
+        <strong>
+          {title}
+          {extraCount > 0 ? <em>+ {extraCount}</em> : null}
+        </strong>
+        <small>{t.sidepanel.willBeSentToAi}</small>
       </span>
     </div>
   );

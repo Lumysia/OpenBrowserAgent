@@ -39,19 +39,14 @@ import {
 import {
   ADD_MENU_VIEW,
   COMPOSER_MENU,
-  SidepanelView,
+  type ActiveStream,
   type ComposerMenu,
-} from "./sidepanel-view";
+} from "./sidepanel-menu-state";
+import { SidepanelView } from "./sidepanel-view";
 import { streamPartFromChunk } from "./stream-parts";
 import { useActiveTabContext } from "./use-active-tab-context";
 import { useElementSelector } from "./use-element-selector";
-
-type ActiveStream = {
-  chatId: string;
-  assistantMessageId: string;
-  retryCount: number;
-  hasProgress: boolean;
-};
+import { useUploadedAttachments } from "./use-uploaded-attachments";
 
 export function SidepanelApp() {
   const [providers] = useStoredState(storage.provider);
@@ -100,6 +95,13 @@ export function SidepanelApp() {
   const t = getMessages(language);
   const aiWorking = streaming || creatingQuickAction;
   const { selectElement } = useElementSelector();
+  const {
+    uploadedAttachments,
+    attachmentNotice,
+    attachFiles,
+    removeUploadedAttachment,
+    clearUploadedAttachments,
+  } = useUploadedAttachments(t);
 
   useEffect(() => {
     if (aiWorking) setOpenMenu(null);
@@ -179,6 +181,7 @@ export function SidepanelApp() {
     };
     setChats((items) => [...items, chat]);
     setActiveChatId(chat.id);
+    return chat;
   }
 
   function updateChat(chat: Chat) {
@@ -227,22 +230,32 @@ export function SidepanelApp() {
 
   async function send(content = input, quickAction?: QuickAction) {
     const text = interpolateQuickAction(content.trim());
-    if (!text || streaming) return;
+    if ((!text && !uploadedAttachments.length) || streaming) return;
     const context = await buildContext();
-    const chat = currentChat || createAndReturnChat();
+    const chat = currentChat || createChat();
     const sentTabs = attachedTabs;
     const sentElement = selectedElement;
+    const sentAttachments = uploadedAttachments;
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
-      content: text,
+      content: text || t.sidepanel.attachmentOnlyMessage,
       createdAt: Date.now(),
       metadata: {
         ...(context ? { context } : {}),
         ...(sentTabs.length ? { attachedTabs: sentTabs } : {}),
         ...(sentElement ? { selectedElement: sentElement } : {}),
+        ...(sentAttachments.length
+          ? { uploadedAttachments: sentAttachments }
+          : {}),
         ...(quickAction ? { quickAction } : {}),
       },
+    };
+    const { uploadedAttachments: _uploadedAttachments, ...storedMetadata } =
+      userMessage.metadata || {};
+    const storedUserMessage: ChatMessage = {
+      ...userMessage,
+      metadata: storedMetadata,
     };
     const assistantMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -254,14 +267,18 @@ export function SidepanelApp() {
     const shouldGenerateTitle = chat.messages.length === 0;
     const nextChat = {
       ...chat,
-      title: shouldGenerateTitle ? generateLocalTitle(text, t) : chat.title,
-      messages: [...chat.messages, userMessage, assistantMessage],
+      title: shouldGenerateTitle
+        ? generateLocalTitle(text || sentAttachments[0]?.name || "", t)
+        : chat.title,
+      messages: [...chat.messages, storedUserMessage, assistantMessage],
       updatedAt: Date.now(),
     };
     updateChat(nextChat);
-    if (shouldGenerateTitle) requestChatTitle(nextChat.id, text);
+    if (shouldGenerateTitle)
+      requestChatTitle(nextChat.id, text || sentAttachments[0]?.name || "");
     setInput("");
     setAttachedTabs([]);
+    clearUploadedAttachments();
     setSelectedElement(null);
     setStreaming(true);
 
@@ -386,20 +403,6 @@ export function SidepanelApp() {
     );
   }
 
-  function createAndReturnChat() {
-    const now = Date.now();
-    const chat: Chat = {
-      id: crypto.randomUUID(),
-      title: t.words.newChat,
-      messages: [],
-      createdAt: now,
-      updatedAt: now,
-    };
-    setChats((items) => [...items, chat]);
-    setActiveChatId(chat.id);
-    return chat;
-  }
-
   function appendToAssistant(
     chatId: string,
     messageId: string,
@@ -487,6 +490,8 @@ export function SidepanelApp() {
       input={input}
       mode={mode}
       attachedTabs={attachedTabs}
+      uploadedAttachments={uploadedAttachments}
+      attachmentNotice={attachmentNotice}
       availableTabs={availableTabs}
       selectedElement={selectedElement}
       streaming={streaming}
@@ -516,6 +521,8 @@ export function SidepanelApp() {
       onToggleAttachedTab={toggleAttachedTab}
       onAttachActiveTab={attachActiveTab}
       onRemoveAttachedTab={removeAttachedTab}
+      onAttachFiles={attachFiles}
+      onRemoveUploadedAttachment={removeUploadedAttachment}
       onSelectElement={selectElement}
       onSelectChat={setActiveChatId}
     />

@@ -19,11 +19,11 @@ import {
   safeExecuteBrowserTool,
 } from "./tools";
 import {
-  chunkText,
-  parseToolArgs,
-  postText,
-  renderUserMessageWithContext,
-} from "./message-helpers";
+  createGeminiContents,
+  createOpenAIRequestMessages,
+  hasImageAttachments,
+} from "./attachment-messages";
+import { chunkText, parseToolArgs, postText } from "./message-helpers";
 
 function post(port: chrome.runtime.Port, message: AiStreamResponse) {
   try {
@@ -88,6 +88,7 @@ export async function requestOpenAICompatible(
   signal: AbortSignal,
   port: chrome.runtime.Port,
   messageId?: string,
+  attachmentRetryNotice?: string,
 ) {
   if (model.provider === "gemini") {
     return requestGemini(
@@ -98,6 +99,7 @@ export async function requestOpenAICompatible(
       maxToolSteps,
       signal,
       port,
+      attachmentRetryNotice,
     );
   }
 
@@ -106,18 +108,11 @@ export async function requestOpenAICompatible(
     model.provider === "ollama"
       ? `${baseUrl}/v1/chat/completions`
       : `${baseUrl}/chat/completions`;
-  const requestMessages: Array<Record<string, unknown>> = [
-    { role: "system", content: system },
-    ...messages.map((message, index) => ({
-      role: message.role === "assistant" ? "assistant" : "user",
-      content:
-        index === messages.length - 1 && message.role === "user"
-          ? renderUserMessageWithContext(message)
-          : message.content,
-    })),
-  ];
+  let usesAttachmentPayload = hasImageAttachments(messages);
+  let requestMessages: Array<Record<string, unknown>> =
+    createOpenAIRequestMessages(system, messages, usesAttachmentPayload);
 
-  if (isAskMode(mode) || maxToolSteps <= 0) {
+  async function fetchChatCompletion(body: Record<string, unknown>) {
     const response = await fetch(chatUrl, {
       method: "POST",
       signal,
@@ -125,12 +120,31 @@ export async function requestOpenAICompatible(
         "Content-Type": "application/json",
         ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
       },
-      body: JSON.stringify({
-        model: model.modelName,
-        temperature: MODEL_TEMPERATURE,
-        messages: requestMessages,
-        stream: true,
-      }),
+      body: JSON.stringify(body),
+    });
+    if (response.ok || !usesAttachmentPayload) return response;
+
+    requestMessages = createOpenAIRequestMessages(system, messages, false);
+    usesAttachmentPayload = false;
+    if (attachmentRetryNotice)
+      postText(port, attachmentRetryNotice, crypto.randomUUID(), signal, false);
+    return fetch(chatUrl, {
+      method: "POST",
+      signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
+      },
+      body: JSON.stringify({ ...body, messages: requestMessages }),
+    });
+  }
+
+  if (isAskMode(mode) || maxToolSteps <= 0) {
+    const response = await fetchChatCompletion({
+      model: model.modelName,
+      temperature: MODEL_TEMPERATURE,
+      messages: requestMessages,
+      stream: true,
     });
 
     if (!response.ok) throw new Error(await response.text());
@@ -139,21 +153,13 @@ export async function requestOpenAICompatible(
   }
 
   for (let step = 0; step < maxToolSteps; step++) {
-    const response = await fetch(chatUrl, {
-      method: "POST",
-      signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
-      },
-      body: JSON.stringify({
-        model: model.modelName,
-        temperature: MODEL_TEMPERATURE,
-        messages: requestMessages,
-        stream: true,
-        tools: browserTools,
-        tool_choice: "auto",
-      }),
+    const response = await fetchChatCompletion({
+      model: model.modelName,
+      temperature: MODEL_TEMPERATURE,
+      messages: requestMessages,
+      stream: true,
+      tools: browserTools,
+      tool_choice: "auto",
     });
 
     if (!response.ok) throw new Error(await response.text());
@@ -380,32 +386,42 @@ async function requestGemini(
   maxToolSteps: number,
   signal: AbortSignal,
   port: chrome.runtime.Port,
+  attachmentRetryNotice?: string,
 ) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model.modelName)}:generateContent?key=${encodeURIComponent(model.apiKey)}`;
-  const contents: Array<Record<string, unknown>> = messages.map(
-    (message, index) => ({
-      role: message.role === "assistant" ? "model" : "user",
-      parts: [
-        {
-          text:
-            index === messages.length - 1 && message.role === "user"
-              ? renderUserMessageWithContext(message)
-              : message.content,
-        },
-      ],
-    }),
+  let contents: Array<Record<string, unknown>> = createGeminiContents(
+    messages,
+    true,
   );
-  const useTools = !isAskMode(mode) && maxToolSteps > 0;
+  let usesAttachmentPayload = hasImageAttachments(messages);
 
-  if (!useTools) {
+  async function fetchGemini(body: Record<string, unknown>) {
     const response = await fetch(url, {
       method: "POST",
       signal,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: system }] },
-        contents,
-      }),
+      body: JSON.stringify(body),
+    });
+    if (response.ok || !usesAttachmentPayload) return response;
+
+    contents = createGeminiContents(messages, false);
+    usesAttachmentPayload = false;
+    if (attachmentRetryNotice)
+      postText(port, attachmentRetryNotice, crypto.randomUUID(), signal, false);
+    return fetch(url, {
+      method: "POST",
+      signal,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...body, contents }),
+    });
+  }
+
+  const useTools = !isAskMode(mode) && maxToolSteps > 0;
+
+  if (!useTools) {
+    const response = await fetchGemini({
+      systemInstruction: { parts: [{ text: system }] },
+      contents,
     });
     if (!response.ok) throw new Error(await response.text());
     const data = await response.json();
@@ -417,25 +433,18 @@ async function requestGemini(
   }
 
   for (let step = 0; step < maxToolSteps; step++) {
-    const response = await fetch(url, {
-      method: "POST",
-      signal,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: system }] },
-        contents,
-        ...(useTools
-          ? {
-              tools: [
-                {
-                  functionDeclarations: browserTools.map(
-                    (item) => item.function,
-                  ),
-                },
-              ],
-            }
-          : {}),
-      }),
+    const response = await fetchGemini({
+      systemInstruction: { parts: [{ text: system }] },
+      contents,
+      ...(useTools
+        ? {
+            tools: [
+              {
+                functionDeclarations: browserTools.map((item) => item.function),
+              },
+            ],
+          }
+        : {}),
     });
     if (!response.ok) throw new Error(await response.text());
     const data = await response.json();
@@ -504,14 +513,9 @@ async function requestGemini(
       },
     ],
   });
-  const response = await fetch(url, {
-    method: "POST",
-    signal,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents,
-    }),
+  const response = await fetchGemini({
+    systemInstruction: { parts: [{ text: system }] },
+    contents,
   });
   if (!response.ok) throw new Error(await response.text());
   const data = await response.json();
