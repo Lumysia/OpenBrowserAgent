@@ -1,4 +1,10 @@
-import { AI_TEXT_CHUNK_TYPE, CHAT_PART_STATE } from "../../src/shared/types";
+import {
+  AI_TEXT_CHUNK_TYPE,
+  CHAT_PART_STATE,
+  isToolPartType,
+  toolNameFromPartType,
+  toolPartType,
+} from "../../src/shared/types";
 import type { ChatPart } from "../../src/shared/types";
 
 export function applyPart(parts: ChatPart[] = [], part: ChatPart) {
@@ -63,12 +69,12 @@ export function streamPartFromChunk(chunk: unknown): {
         append: true,
       },
     };
-  if (maybe.type?.startsWith("tool-")) {
-    const toolName = maybe.toolName || maybe.type.replace(/^tool-/, "");
+  if (maybe.type && isToolPartType(maybe.type)) {
+    const toolName = maybe.toolName || toolNameFromPartType(maybe.type);
     return {
       part: {
         id: maybe.toolCallId || maybe.id || crypto.randomUUID(),
-        type: `tool-${toolName}`,
+        type: toolPartType(toolName),
         toolName,
         state: maybe.state || CHAT_PART_STATE.inputAvailable,
         input: maybe.input,

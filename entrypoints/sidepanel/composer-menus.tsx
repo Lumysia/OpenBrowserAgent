@@ -15,6 +15,7 @@ import type {
   ModelConfig,
   QuickAction,
 } from "../../src/shared/types";
+import { CHAT_MODE } from "../../src/shared/types";
 
 export function AddContextMenu({
   t,
@@ -213,11 +214,15 @@ export function ModeMenu({
 }) {
   const modes: Array<{ id: ChatMode; title: string; description: string }> = [
     {
-      id: "Agent",
+      id: CHAT_MODE.agent,
       title: t.words.agent,
       description: t.sidepanel.agentDescription,
     },
-    { id: "Ask", title: t.words.ask, description: t.sidepanel.askDescription },
+    {
+      id: CHAT_MODE.ask,
+      title: t.words.ask,
+      description: t.sidepanel.askDescription,
+    },
   ];
   return (
     <div className="mode-menu">

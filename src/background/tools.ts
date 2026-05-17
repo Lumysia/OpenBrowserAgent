@@ -3,6 +3,7 @@ import {
   MARKDOWN_FILENAME_MAX_LENGTH,
   TAB_LOAD_WAIT_TIMEOUT_MS,
 } from "../shared/config";
+import { BROWSER_TOOL_NAME, UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
 import { downloadTextFile, findImages, safeFileName } from "./downloads";
 import { browserTools } from "./tool-schema";
 
@@ -12,7 +13,7 @@ async function executeBrowserTool(
   args: Record<string, unknown>,
 ) {
   switch (name) {
-    case "getCurrentTab": {
+    case BROWSER_TOOL_NAME.getCurrentTab: {
       const [tab] = await chrome.tabs.query({
         active: true,
         currentWindow: true,
@@ -22,7 +23,7 @@ async function executeBrowserTool(
         ? { tabId: tab.id, title: tab.title, url: tab.url }
         : { error: "Not a web page" };
     }
-    case "openNewTabWithURL": {
+    case BROWSER_TOOL_NAME.openNewTabWithURL: {
       const tab = await chrome.tabs.create({
         url: String(args.url || ""),
         active: false,
@@ -36,11 +37,11 @@ async function executeBrowserTool(
       }
       return { tab: { id: tab.id } };
     }
-    case "getAllTabs": {
+    case BROWSER_TOOL_NAME.getAllTabs: {
       const tabs = await chrome.tabs.query({});
       return tabs.map((tab) => ({ id: tab.id, title: tab.title }));
     }
-    case "closeTab": {
+    case BROWSER_TOOL_NAME.closeTab: {
       const tabIds = Array.isArray(args.tabIds)
         ? args.tabIds.map(Number).filter(Number.isFinite)
         : [Number(args.tabId)].filter(Number.isFinite);
@@ -49,7 +50,7 @@ async function executeBrowserTool(
       await chrome.tabs.remove(tabIds);
       return { success: true, tabIds };
     }
-    case "goToTab": {
+    case BROWSER_TOOL_NAME.goToTab: {
       const tab = await chrome.tabs.update(await resolveTabId(args.tabId), {
         active: true,
       });
@@ -58,32 +59,32 @@ async function executeBrowserTool(
         await chrome.windows.update(tab.windowId, { focused: true });
       return { success: true };
     }
-    case "insertCSSToTab": {
+    case BROWSER_TOOL_NAME.insertCSSToTab: {
       await chrome.scripting.insertCSS({
         target: { tabId: await resolveTabId(args.tabId) },
         css: String(args.css || ""),
       });
       return { success: true };
     }
-    case "removeCSSToTab": {
+    case BROWSER_TOOL_NAME.removeCSSToTab: {
       await chrome.scripting.removeCSS({
         target: { tabId: await resolveTabId(args.tabId) },
         css: String(args.css || ""),
       });
       return { success: true };
     }
-    case "openSearchTab": {
+    case BROWSER_TOOL_NAME.openSearchTab: {
       const query = String(args.query || "");
       const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
       const tab = await chrome.tabs.create({ url: searchUrl, active: false });
       return { success: true, tabId: tab.id };
     }
-    case "waitTabLoadFinished": {
+    case BROWSER_TOOL_NAME.waitTabLoadFinished: {
       const tabId = await resolveTabId(args.tabId);
       await waitTabComplete(tabId);
       return { success: true, tabId };
     }
-    case "getTabContent": {
+    case BROWSER_TOOL_NAME.getTabContent: {
       const tabIds = Array.isArray(args.tabIds)
         ? args.tabIds
             .map(Number)
@@ -102,31 +103,31 @@ async function executeBrowserTool(
       }
       return { contents };
     }
-    case "findAccessableElementsFromTab": {
+    case BROWSER_TOOL_NAME.findAccessableElementsFromTab: {
       return {
         elements: await findAccessibleElements(await resolveTabId(args.tabId)),
       };
     }
-    case "getElementPropertiesByAiID": {
+    case BROWSER_TOOL_NAME.getElementPropertiesByAiID: {
       const ids = Array.isArray(args.ids)
         ? args.ids.map(String)
         : [String(args.id || "")].filter(Boolean);
       return getElementProperties(await resolveTabId(args.tabId), ids);
     }
-    case "clickElementByAiID": {
+    case BROWSER_TOOL_NAME.clickElementByAiID: {
       return clickElement(
         await resolveTabId(args.tabId),
         String(args.id || ""),
       );
     }
-    case "inputTextByAiID": {
+    case BROWSER_TOOL_NAME.inputTextByAiID: {
       return inputElement(
         await resolveTabId(args.tabId),
         String(args.id || ""),
         String(args.text || ""),
       );
     }
-    case "groupTabs": {
+    case BROWSER_TOOL_NAME.groupTabs: {
       const tabIds = Array.isArray(args.tabIds)
         ? args.tabIds.map(Number).filter(Number.isFinite)
         : [];
@@ -176,11 +177,11 @@ async function executeBrowserTool(
 
       return { success: true, groupIds, skippedTabIds };
     }
-    case "scrollToBottom": {
+    case BROWSER_TOOL_NAME.scrollToBottom: {
       await scrollToBottom(await resolveTabId(args.tabId));
       return { success: true };
     }
-    case "downloadTabToMarkdown": {
+    case BROWSER_TOOL_NAME.downloadTabToMarkdown: {
       const tabId = await resolveTabId(args.tabId);
       const tab = await chrome.tabs.get(tabId);
       const markdown = await extractMarkdown(tabId);
@@ -188,7 +189,7 @@ async function executeBrowserTool(
       await downloadTextFile(filename, markdown, "text/markdown;charset=utf-8");
       return { success: true, filename };
     }
-    case "downloadAllImagesInTab": {
+    case BROWSER_TOOL_NAME.downloadAllImagesInTab: {
       return findImages(await resolveTabId(args.tabId));
     }
     default:
@@ -204,7 +205,7 @@ export async function safeExecuteBrowserTool(
     return await withTimeout(
       executeBrowserTool(name, args),
       BROWSER_TOOL_TIMEOUT_MS,
-      `Tool timed out: ${name || "unknown"}`,
+      `Tool timed out: ${name || UNKNOWN_TOOL_NAME}`,
     );
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error) };

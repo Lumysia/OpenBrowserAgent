@@ -9,14 +9,19 @@ import {
   Type,
 } from "lucide-react";
 import React from "react";
+import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
 import type { Messages } from "../../src/shared/i18n";
-import { CHAT_PART_STATE } from "../../src/shared/types";
+import {
+  CHAT_PART_STATE,
+  isToolPartType,
+  toolNameFromPartType,
+} from "../../src/shared/types";
 import type { ChatPart } from "../../src/shared/types";
 import { formatToolMessage } from "./format";
 
 export function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
-  if (!part.type.startsWith("tool-")) return null;
-  const name = part.toolName || part.type.replace(/^tool-/, "");
+  if (!isToolPartType(part.type)) return null;
+  const name = part.toolName || toolNameFromPartType(part.type);
   const { title, description, references } = toolDisplay(name, part, t);
   const loading =
     part.state === CHAT_PART_STATE.inputStreaming ||
@@ -69,7 +74,7 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
         ? toolText?.done
         : toolText?.running;
     if (
-      name === "groupTabs" &&
+      name === BROWSER_TOOL_NAME.groupTabs &&
       state === CHAT_PART_STATE.outputAvailable &&
       typeof input.title === "string"
     )
@@ -80,13 +85,16 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
     if (typeof output.error === "string") return output.error;
     if (typeof input.reason === "string") return input.reason;
     if (
-      name === "findAccessableElementsFromTab" &&
+      name === BROWSER_TOOL_NAME.findAccessableElementsFromTab &&
       Array.isArray(output.elements)
     )
       return formatToolMessage(toolFound, { count: output.elements.length });
-    if (name === "getAllTabs" && Array.isArray(outputValue))
+    if (name === BROWSER_TOOL_NAME.getAllTabs && Array.isArray(outputValue))
       return formatToolMessage(toolFound, { count: outputValue.length });
-    if (name === "inputTextByAiID" && typeof input.text === "string")
+    if (
+      name === BROWSER_TOOL_NAME.inputTextByAiID &&
+      typeof input.text === "string"
+    )
       return input.text;
     if (typeof output.filename === "string") return output.filename;
     if (part.state === CHAT_PART_STATE.outputError) return t.sidepanel.error;
@@ -107,7 +115,7 @@ function toolReferences(
     icon: React.ReactNode;
   }> = [];
   if (
-    name === "openNewTabWithURL" &&
+    name === BROWSER_TOOL_NAME.openNewTabWithURL &&
     output.tab &&
     typeof output.tab === "object"
   ) {
@@ -120,7 +128,10 @@ function toolReferences(
       });
     return references;
   }
-  if (name === "getTabContent" && Array.isArray(output.contents)) {
+  if (
+    name === BROWSER_TOOL_NAME.getTabContent &&
+    Array.isArray(output.contents)
+  ) {
     return output.contents
       .map((item) => item as { title?: string; url?: string })
       .filter((item) => item.title)
@@ -130,7 +141,10 @@ function toolReferences(
         icon: <ExternalLink size={14} />,
       }));
   }
-  if (name === "openSearchTab" && typeof input.query === "string")
+  if (
+    name === BROWSER_TOOL_NAME.openSearchTab &&
+    typeof input.query === "string"
+  )
     references.push({ title: input.query, icon: <Search size={14} /> });
   return references;
 }

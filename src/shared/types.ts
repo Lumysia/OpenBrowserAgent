@@ -42,7 +42,16 @@ export type QuickAction = {
   instruction: string;
 };
 
-export type ChatMode = "Agent" | "Ask";
+export const CHAT_MODE = {
+  agent: "Agent",
+  ask: "Ask",
+} as const;
+
+export type ChatMode = (typeof CHAT_MODE)[keyof typeof CHAT_MODE];
+
+export function isAskMode(mode: ChatMode) {
+  return mode === CHAT_MODE.ask;
+}
 
 export type AttachmentTab = {
   id: number;
@@ -69,6 +78,22 @@ export type ChatMessage = {
   metadata?: Record<string, unknown>;
 };
 
+export const TOOL_PART_PREFIX = "tool-";
+
+export type ToolPartType = `${typeof TOOL_PART_PREFIX}${string}`;
+
+export function toolPartType(toolName: string): ToolPartType {
+  return `${TOOL_PART_PREFIX}${toolName}`;
+}
+
+export function isToolPartType(type: string): type is ToolPartType {
+  return type.startsWith(TOOL_PART_PREFIX);
+}
+
+export function toolNameFromPartType(type: ToolPartType) {
+  return type.slice(TOOL_PART_PREFIX.length);
+}
+
 export const CHAT_PART_STATE = {
   streaming: "streaming",
   done: "done",
@@ -80,7 +105,7 @@ export const CHAT_PART_STATE = {
 
 export type ChatPart = {
   id: string;
-  type: "text" | "reasoning" | `tool-${string}`;
+  type: "text" | "reasoning" | ToolPartType;
   text?: string;
   append?: boolean;
   toolName?: string;
@@ -162,6 +187,21 @@ export type AiStreamRequest =
       modelId?: string;
       messages: ChatMessage[];
     };
+
+export type SendMessagesRequest = Extract<
+  AiStreamRequest,
+  { type: (typeof AI_STREAM_REQUEST_TYPE)["sendMessages"] }
+>;
+
+export type GenerateTitleRequest = Extract<
+  AiStreamRequest,
+  { type: (typeof AI_STREAM_REQUEST_TYPE)["generateTitle"] }
+>;
+
+export type GenerateQuickActionRequest = Extract<
+  AiStreamRequest,
+  { type: (typeof AI_STREAM_REQUEST_TYPE)["generateQuickAction"] }
+>;
 
 export type AiStreamResponse =
   | { type: "chunk"; chunk: unknown }

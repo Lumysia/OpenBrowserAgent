@@ -12,6 +12,7 @@ import type {
   ChatMode,
   SelectedElement,
 } from "../../src/shared/types";
+import { isAskMode } from "../../src/shared/types";
 import { escapeXml } from "./format";
 
 export function interpolateQuickAction(value: string) {
@@ -106,7 +107,7 @@ function renderSelectedElement(
 
 async function renderAttachedTab(tab: AttachmentTab, mode: ChatMode) {
   try {
-    const text = mode === "Ask" ? await extractTabText(tab.id) : "";
+    const text = isAskMode(mode) ? await extractTabText(tab.id) : "";
     return renderTabBlock(tab, text);
   } catch {
     return renderTabBlock(tab, "");

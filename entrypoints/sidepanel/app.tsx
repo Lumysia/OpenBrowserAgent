@@ -13,6 +13,7 @@ import { storage } from "../../src/shared/storage";
 import {
   AI_STREAM_PORT_NAME,
   AI_STREAM_REQUEST_TYPE,
+  CHAT_MODE,
 } from "../../src/shared/types";
 import type {
   AiStreamRequest,
@@ -22,6 +23,7 @@ import type {
   ChatMessage,
   ChatMode,
   QuickAction,
+  SendMessagesRequest,
   SelectedElement,
 } from "../../src/shared/types";
 import { useStoredState } from "../../src/ui/useStoredState";
@@ -58,7 +60,7 @@ export function SidepanelApp() {
   const [chats, setChats] = useStoredState(storage.chats);
   const [activeChatId, setActiveChatId] = useState<string>();
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState<ChatMode>("Agent");
+  const [mode, setMode] = useState<ChatMode>(CHAT_MODE.agent);
   const [attachedTabs, setAttachedTabs] = useState<AttachmentTab[]>([]);
   const [availableTabs, setAvailableTabs] = useState<AttachmentTab[]>([]);
   const [selectedElement, setSelectedElement] =
@@ -288,10 +290,7 @@ export function SidepanelApp() {
     startStream(request, assistantMessage.id);
   }
 
-  function startStream(
-    request: Extract<AiStreamRequest, { type: "sendMessages" }>,
-    targetMessageId: string,
-  ) {
+  function startStream(request: SendMessagesRequest, targetMessageId: string) {
     closeStreamPort(false);
     const port = chrome.runtime.connect({ name: AI_STREAM_PORT_NAME });
     portRef.current = port;

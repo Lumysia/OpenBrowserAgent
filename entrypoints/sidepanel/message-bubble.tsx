@@ -14,6 +14,7 @@ import type {
   QuickAction,
   SelectedElement,
 } from "../../src/shared/types";
+import { isToolPartType } from "../../src/shared/types";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { IconTooltip } from "./icon-tooltip";
 import { renderMarkdown } from "./markdown";
@@ -71,7 +72,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
 }
 
 function AssistantPart({ t, part }: { t: Messages; part: ChatPart }) {
-  if (part.type.startsWith("tool-")) return <ToolPart t={t} part={part} />;
+  if (isToolPartType(part.type)) return <ToolPart t={t} part={part} />;
   if (part.type === "text" && part.text?.trim())
     return <AssistantText text={part.text} />;
   return null;

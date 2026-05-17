@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { RefObject } from "react";
 import type { Messages } from "../../src/shared/i18n";
+import { CHAT_MODE } from "../../src/shared/types";
 import type {
   AttachmentTab,
   Chat,
@@ -415,7 +416,7 @@ export function SidepanelView({
                   >
                     <PopoverTrigger asChild>
                       <button className="composer-trigger" disabled={aiWorking}>
-                        {mode === "Agent" ? t.words.agent : t.words.ask}{" "}
+                        {mode === CHAT_MODE.agent ? t.words.agent : t.words.ask}{" "}
                         <ChevronDown size={15} />
                       </button>
                     </PopoverTrigger>

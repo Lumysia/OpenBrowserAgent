@@ -1,4 +1,5 @@
 import { storage } from "../src/shared/storage";
+import { UNKNOWN_TOOL_NAME } from "../src/shared/browser-tools";
 import {
   clampMaxToolSteps,
   GENERATED_TITLE_MAX_CJK_CHARS,
@@ -6,7 +7,6 @@ import {
   GENERATED_TITLE_MAX_WORDS,
   ISO_DATE_LENGTH,
   MODEL_TEMPERATURE,
-  POST_TEXT_CHUNK_SIZE,
   QUICK_ACTION_SOURCE_MAX_CHARS,
   QUICK_ACTION_TITLE_MAX_LENGTH,
   STREAM_CHUNK_DELAY_MS,
@@ -16,17 +16,24 @@ import {
   AI_STREAM_REQUEST_TYPE,
   AI_TEXT_CHUNK_TYPE,
   CHAT_PART_STATE,
+  isToolPartType,
+  isAskMode,
+  toolNameFromPartType,
   type AiStreamRequest,
   type AiStreamResponse,
   type ChatMessage,
   type ChatMode,
+  type GenerateQuickActionRequest,
+  type GenerateTitleRequest,
   type ProviderId,
   type QuickAction,
+  type SendMessagesRequest,
 } from "../src/shared/types";
 import {
   requestOpenAICompatible,
   resolveModel,
 } from "../src/background/providers";
+import { chunkText } from "../src/background/message-helpers";
 
 const SIDE_PANEL_OPENED = "side_panel_opened";
 export default defineBackground(() => {
@@ -109,7 +116,7 @@ function post(port: chrome.runtime.Port, message: AiStreamResponse) {
 
 async function streamAssistantResponse(
   port: chrome.runtime.Port,
-  request: Extract<AiStreamRequest, { type: "sendMessages" }>,
+  request: SendMessagesRequest,
   signal: AbortSignal,
 ) {
   const providerModel = await resolveModel(request.body.modelId);
@@ -156,7 +163,7 @@ async function streamAssistantResponse(
 }
 
 function createSystemPrompt(mode: ChatMode) {
-  if (mode === "Ask") {
+  if (isAskMode(mode)) {
     return `You are OpenBrowserAgent, an AI created by OpenBrowserAgent.
 
 Your job is to answer the USER's question based on the content USER might provide.
@@ -217,9 +224,7 @@ You MUST respond in the same language as the USER's latest non-internal message.
 </web_search_strategy>`;
 }
 
-async function generateTitle(
-  request: Extract<AiStreamRequest, { type: "generateTitle" }>,
-) {
+async function generateTitle(request: GenerateTitleRequest) {
   const fallback = compactTitle(request.message) || "New Chat";
   try {
     const model = await resolveModel(request.modelId);
@@ -265,7 +270,7 @@ function compactTitle(value: string) {
 }
 
 async function generateQuickAction(
-  request: Extract<AiStreamRequest, { type: "generateQuickAction" }>,
+  request: GenerateQuickActionRequest,
 ): Promise<QuickAction> {
   const model = await resolveModel(request.modelId);
   const source = renderQuickActionSource(request.messages).slice(
@@ -366,17 +371,20 @@ function renderQuickActionSource(messages: ChatMessage[]) {
   return messages
     .map((message) => {
       const parts = (message.parts || [])
-        .filter((part) => part.type.startsWith("tool-"))
-        .map((part) =>
-          [
-            `tool=${part.toolName || part.type.replace(/^tool-/, "")}`,
-            `state=${part.state || "unknown"}`,
+        .filter((part) => isToolPartType(part.type))
+        .map((part) => {
+          const toolName = isToolPartType(part.type)
+            ? part.toolName || toolNameFromPartType(part.type)
+            : part.toolName;
+          return [
+            `tool=${toolName}`,
+            `state=${part.state || UNKNOWN_TOOL_NAME}`,
             part.input ? `input=${safeStringify(part.input)}` : undefined,
             part.output ? `output=${safeStringify(part.output)}` : undefined,
           ]
             .filter(Boolean)
-            .join("\n"),
-        )
+            .join("\n");
+        })
         .join("\n");
       return [`role=${message.role}`, message.content, parts]
         .filter(Boolean)
@@ -397,57 +405,4 @@ function safeStringify(value: unknown) {
   } catch {
     return String(value);
   }
-}
-
-function chunkText(text: string) {
-  const chunks: string[] = [];
-  for (let index = 0; index < text.length; index += POST_TEXT_CHUNK_SIZE)
-    chunks.push(text.slice(index, index + POST_TEXT_CHUNK_SIZE));
-  return chunks;
-}
-
-function parseToolArgs(value: string | undefined) {
-  if (!value) return {};
-  try {
-    return JSON.parse(value);
-  } catch {
-    return {};
-  }
-}
-
-function renderUserMessageWithContext(message: ChatMessage) {
-  if (message.metadata?.internalRetry) {
-    return `<internal_instruction>
-${message.content}
-</internal_instruction>`;
-  }
-
-  const context =
-    typeof message.metadata?.context === "string"
-      ? message.metadata.context
-      : "";
-  const quickAction = message.metadata?.quickAction as
-    | { instruction?: string }
-    | undefined;
-  return `${
-    quickAction?.instruction
-      ? `<instruction>
-${quickAction.instruction}
-</instruction>
-
-`
-      : ""
-  }<message_context>
-
-${context}
-
-</message_context>${
-    quickAction?.instruction
-      ? ""
-      : `
-
-<message>
-${message.content}
-</message>`
-  }`;
 }

@@ -1,9 +1,12 @@
 import { storage } from "../shared/storage";
+import { UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
 import { MODEL_TEMPERATURE, STREAM_CHUNK_DELAY_MS } from "../shared/config";
 import {
   AI_TEXT_CHUNK_TYPE,
   CHAT_PART_STATE,
+  isAskMode,
   providerDefaultBaseUrls,
+  toolPartType,
   type AiStreamResponse,
   type ChatMessage,
   type ChatMode,
@@ -114,7 +117,7 @@ export async function requestOpenAICompatible(
     })),
   ];
 
-  if (mode === "Ask" || maxToolSteps <= 0) {
+  if (isAskMode(mode) || maxToolSteps <= 0) {
     const response = await fetch(chatUrl, {
       method: "POST",
       signal,
@@ -170,13 +173,13 @@ export async function requestOpenAICompatible(
       tool_calls: toolCalls,
     });
     for (const toolCall of toolCalls) {
-      const toolName = String(toolCall.function?.name || "unknown");
+      const toolName = String(toolCall.function?.name || UNKNOWN_TOOL_NAME);
       const toolCallId = String(toolCall.id || crypto.randomUUID());
       const input = parseToolArgs(toolCall.function?.arguments);
       post(port, {
         type: "chunk",
         chunk: {
-          type: `tool-${toolName}`,
+          type: toolPartType(toolName),
           toolCallId,
           toolName,
           state: CHAT_PART_STATE.inputAvailable,
@@ -188,7 +191,7 @@ export async function requestOpenAICompatible(
       post(port, {
         type: "chunk",
         chunk: {
-          type: `tool-${toolName}`,
+          type: toolPartType(toolName),
           toolCallId,
           toolName,
           state: hasError
@@ -325,7 +328,7 @@ async function readOpenAIStream(
         post(port, {
           type: "chunk",
           chunk: {
-            type: `tool-${next.function.name}`,
+            type: toolPartType(next.function.name),
             toolCallId: next.id,
             toolName: next.function.name,
             state: CHAT_PART_STATE.inputStreaming,
@@ -392,7 +395,7 @@ async function requestGemini(
       ],
     }),
   );
-  const useTools = mode !== "Ask" && maxToolSteps > 0;
+  const useTools = !isAskMode(mode) && maxToolSteps > 0;
 
   if (!useTools) {
     const response = await fetch(url, {
@@ -458,13 +461,13 @@ async function requestGemini(
     contents.push({ role: "model", parts });
     const responseParts = [];
     for (const functionCall of functionCalls) {
-      const toolName = String(functionCall.name || "unknown");
+      const toolName = String(functionCall.name || UNKNOWN_TOOL_NAME);
       const toolCallId = crypto.randomUUID();
       const input = functionCall.args || {};
       post(port, {
         type: "chunk",
         chunk: {
-          type: `tool-${toolName}`,
+          type: toolPartType(toolName),
           toolCallId,
           toolName,
           state: CHAT_PART_STATE.inputAvailable,
@@ -476,7 +479,7 @@ async function requestGemini(
       post(port, {
         type: "chunk",
         chunk: {
-          type: `tool-${toolName}`,
+          type: toolPartType(toolName),
           toolCallId,
           toolName,
           state: hasError

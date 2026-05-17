@@ -44,8 +44,9 @@ function post(port: chrome.runtime.Port, message: AiStreamResponse) {
 
 export function chunkText(text: string) {
   const chunks: string[] = [];
-  for (let index = 0; index < text.length; index += POST_TEXT_CHUNK_SIZE)
-    chunks.push(text.slice(index, index + POST_TEXT_CHUNK_SIZE));
+  const codePoints = Array.from(text);
+  for (let index = 0; index < codePoints.length; index += POST_TEXT_CHUNK_SIZE)
+    chunks.push(codePoints.slice(index, index + POST_TEXT_CHUNK_SIZE).join(""));
   return chunks;
 }
 
