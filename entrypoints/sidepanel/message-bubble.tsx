@@ -46,6 +46,7 @@ import {
 
 export function MessageBubble({
   message,
+  editing = false,
   sentAttachments = [],
   activeAttachments = [],
   onReplaceAttachment,
@@ -53,6 +54,7 @@ export function MessageBubble({
   onResend,
 }: {
   message: ChatMessage;
+  editing?: boolean;
   sentAttachments?: UploadedAttachment[];
   activeAttachments?: UploadedAttachment[];
   onReplaceAttachment?: (id: string, files: FileList | File[]) => Promise<void>;
@@ -95,7 +97,9 @@ export function MessageBubble({
     ? [assistantModel.provider, assistantModel.name].filter(Boolean).join(" · ")
     : undefined;
   return (
-    <div className={`message ${message.role === "user" ? "user" : ""}`}>
+    <div
+      className={`message ${message.role === "user" ? "user" : ""} ${editing ? "editing" : ""}`}
+    >
       {quickAction && <div className="message-label">{quickAction.title}</div>}
       {message.role === "user" ? (
         <div className="user-bubble">{message.content}</div>

@@ -27,10 +27,7 @@ import type {
 import { useStoredState } from "../../src/ui/useStoredState";
 import { requestGeneratedTitle, requestQuickAction } from "./ai-requests";
 import { appendAssistantContent, appendAssistantPart } from "./chat-updates";
-import {
-  createEditMessageDraft,
-  pruneSentAttachmentPreviews,
-} from "./edit-message";
+import { pruneSentAttachmentPreviews } from "./edit-message";
 import { sortChatsNewestFirst } from "./format";
 import { assistantModelLabel } from "./model-label";
 import { retryStalledStream } from "./retry-stalled-stream";
@@ -49,6 +46,7 @@ import { SidepanelView } from "./sidepanel-view";
 import { streamPartFromChunk } from "./stream-parts";
 import { useComposerContext } from "./use-composer-context";
 import { useElementSelector } from "./use-element-selector";
+import { useMessageEdit } from "./use-message-edit";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
 
 export function SidepanelApp() {
@@ -119,6 +117,19 @@ export function SidepanelApp() {
     toggleAttachedTab,
     removeAttachedTab,
   } = useComposerContext(chats || []);
+  const { editingMessage, setEditingMessage, editMessage, cancelEditMessage } =
+    useMessageEdit({
+      currentChat,
+      streaming,
+      input,
+      pendingAttachments,
+      attachedTabs,
+      selectedElement,
+      setInput,
+      setAttachedTabs,
+      setSelectedElement,
+      stageUploadedAttachments,
+    });
 
   useEffect(() => void (aiWorking && setOpenMenu(null)), [aiWorking]);
 
@@ -154,6 +165,7 @@ export function SidepanelApp() {
 
   useEffect(() => {
     clearUploadedAttachments();
+    setEditingMessage(null);
     setSentAttachmentPreviews({});
   }, [activeChatId]);
 
@@ -263,6 +275,11 @@ export function SidepanelApp() {
       selectedElement,
     });
     const chat = currentChat || createChat();
+    const activeEdit =
+      editingMessage?.chatId === chat.id ? editingMessage : null;
+    const baseChat = activeEdit
+      ? { ...chat, messages: activeEdit.messagesBefore, updatedAt: Date.now() }
+      : chat;
     const sentTabs = attachedTabs;
     const sentElement = selectedElement;
     const sentAttachments = resendAttachments || pendingAttachments;
@@ -278,7 +295,7 @@ export function SidepanelApp() {
       titleSource,
       nextChat,
     } = createSendMessagePlan({
-      chat,
+      chat: baseChat,
       text,
       t,
       context,
@@ -290,22 +307,29 @@ export function SidepanelApp() {
     });
     if (sentAttachments.length)
       setSentAttachmentPreviews((items) => ({
-        ...items,
+        ...(activeEdit
+          ? pruneSentAttachmentPreviews(items, activeEdit.keptMessageIds)
+          : items),
         [userMessage.id]: sentAttachments,
       }));
+    else if (activeEdit)
+      setSentAttachmentPreviews((items) =>
+        pruneSentAttachmentPreviews(items, activeEdit.keptMessageIds),
+      );
     updateChat(nextChat);
     if (shouldGenerateTitle) requestChatTitle(nextChat.id, titleSource);
     setInput("");
     setAttachedTabs([]);
     clearPendingAttachments();
     setSelectedElement(null);
+    setEditingMessage(null);
     setStreaming(true);
 
     const request: AiStreamRequest = {
       type: AI_STREAM_REQUEST_TYPE.sendMessages,
       chatId: nextChat.id,
       messageId: assistantMessage.id,
-      messages: [...chat.messages, userMessage],
+      messages: [...baseChat.messages, userMessage],
       body: {
         modelId: preferences?.selectedModelId,
         chatMode: mode,
@@ -421,27 +445,6 @@ export function SidepanelApp() {
     });
   }
 
-  function editMessage(
-    message: ChatMessage,
-    attachments: UploadedAttachment[],
-  ) {
-    if (!currentChat || streaming) return;
-    const draft = createEditMessageDraft({
-      chat: currentChat,
-      message,
-      attachments,
-    });
-    if (!draft) return;
-    setInput(draft.content);
-    setAttachedTabs(draft.attachedTabs);
-    setSelectedElement(draft.selectedElement);
-    stageUploadedAttachments(draft.attachments);
-    updateChat(draft.nextChat);
-    setSentAttachmentPreviews((items) =>
-      pruneSentAttachmentPreviews(items, draft.keptMessageIds),
-    );
-  }
-
   return (
     <SidepanelView
       t={t}
@@ -468,6 +471,7 @@ export function SidepanelApp() {
       addMenuView={addMenuView}
       showHistory={showHistory}
       aiWorking={aiWorking}
+      editingMessageId={editingMessage?.messageId}
       sidepanelRef={sidepanelRef}
       messagesRef={messagesRef}
       onSetInput={setInput}
@@ -483,6 +487,7 @@ export function SidepanelApp() {
       onCreateQuickAction={createQuickActionFromCurrentChat}
       onSend={send}
       onStop={stop}
+      onCancelEditMessage={cancelEditMessage}
       onShowAllTabsPicker={async () => {
         await showAllTabsPicker();
         setAddMenuView(ADD_MENU_VIEW.tabs);

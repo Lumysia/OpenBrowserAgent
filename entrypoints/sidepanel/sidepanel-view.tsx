@@ -53,6 +53,11 @@ import {
   type AddMenuView,
   type ComposerMenu,
 } from "./sidepanel-menu-state";
+import type {
+  FileHandler,
+  MessageAttachmentHandler,
+  ReplaceAttachmentHandler,
+} from "./sidepanel-view-types";
 import { UploadFileInput } from "./uploaded-attachment-card";
 
 export function SidepanelView({
@@ -80,6 +85,7 @@ export function SidepanelView({
   addMenuView,
   showHistory,
   aiWorking,
+  editingMessageId,
   sidepanelRef,
   messagesRef,
   onSetInput,
@@ -95,6 +101,7 @@ export function SidepanelView({
   onCreateQuickAction,
   onSend,
   onStop,
+  onCancelEditMessage,
   onShowAllTabsPicker,
   onToggleAttachedTab,
   onAttachActiveTab,
@@ -131,6 +138,7 @@ export function SidepanelView({
   addMenuView: AddMenuView;
   showHistory: boolean;
   aiWorking: boolean;
+  editingMessageId?: string;
   sidepanelRef: RefObject<HTMLDivElement | null>;
   messagesRef: RefObject<HTMLDivElement | null>;
   onSetInput: (value: string) => void;
@@ -146,24 +154,16 @@ export function SidepanelView({
   onCreateQuickAction: () => void;
   onSend: (content?: string, quickAction?: QuickAction) => void;
   onStop: () => void;
+  onCancelEditMessage: () => void;
   onShowAllTabsPicker: () => void;
   onToggleAttachedTab: (tab: AttachmentTab) => void;
   onAttachActiveTab: () => Promise<void>;
   onRemoveAttachedTab: (tabId: number) => void;
-  onAttachFiles: (files: FileList | File[]) => Promise<void>;
+  onAttachFiles: FileHandler;
   onRemoveUploadedAttachment: (id: string) => void;
-  onReplaceUploadedAttachment: (
-    id: string,
-    files: FileList | File[],
-  ) => Promise<void>;
-  onEditMessage: (
-    message: ChatMessage,
-    attachments: UploadedAttachment[],
-  ) => void;
-  onResendMessage: (
-    message: ChatMessage,
-    attachments: UploadedAttachment[],
-  ) => void;
+  onReplaceUploadedAttachment: ReplaceAttachmentHandler;
+  onEditMessage: MessageAttachmentHandler;
+  onResendMessage: MessageAttachmentHandler;
   onSelectElement: () => Promise<void>;
   onSelectChat: (chatId: string) => void;
 }) {
@@ -272,6 +272,7 @@ export function SidepanelView({
             <MessageBubble
               key={message.id}
               message={message}
+              editing={editingMessageId === message.id}
               sentAttachments={sentAttachmentPreviews[message.id] || []}
               activeAttachments={uploadedAttachments}
               onReplaceAttachment={onReplaceUploadedAttachment}
@@ -337,6 +338,15 @@ export function SidepanelView({
               onChange={(event) => onSetInput(event.target.value)}
               onPaste={attachFromClipboard}
               onKeyDown={(event) => {
+                if (
+                  event.key === "Escape" &&
+                  editingMessageId &&
+                  !event.nativeEvent.isComposing
+                ) {
+                  event.preventDefault();
+                  onCancelEditMessage();
+                  return;
+                }
                 if (
                   event.key === "Enter" &&
                   !event.shiftKey &&

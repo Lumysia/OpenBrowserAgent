@@ -1471,6 +1471,14 @@ a {
   display: grid;
   justify-items: end;
 }
+.message.user.editing {
+  opacity: 0.58;
+}
+.message.user.editing .user-bubble {
+  background: color-mix(in srgb, var(--muted-foreground) 42%, var(--secondary));
+  color: var(--foreground);
+  box-shadow: none;
+}
 .user-bubble {
   max-width: 100%;
   padding: 10px 14px;
