@@ -374,6 +374,7 @@ function UserMessageActions({
     }
     onResend?.(message, availableAttachments);
   }
+  const hasMissingAttachments = missingAttachments.length > 0;
 
   return (
     <div className="user-message-actions">
@@ -395,8 +396,16 @@ function UserMessageActions({
           </button>
         </PopoverTrigger>
         <PopoverContent align="end" className="attachment-replace-popover">
-          <strong>{t.sidepanel.replaceUnavailableAttachments}</strong>
-          <small>{t.sidepanel.replaceUnavailableAttachmentsDescription}</small>
+          <strong>
+            {hasMissingAttachments
+              ? t.sidepanel.replaceUnavailableAttachments
+              : t.sidepanel.resendMessage}
+          </strong>
+          {hasMissingAttachments && (
+            <small>
+              {t.sidepanel.replaceUnavailableAttachmentsDescription}
+            </small>
+          )}
           {missingAttachments.map((attachment) => (
             <div key={attachment.id} className="attachment-replace-row">
               <FileIcon attachment={attachment} size={18} />
@@ -424,13 +433,15 @@ function UserMessageActions({
           ))}
           <Button
             size="sm"
-            variant="secondary"
+            variant={hasMissingAttachments ? "secondary" : "default"}
             onClick={() => {
               setOpen(false);
               onResend?.(message, availableAttachments);
             }}
           >
-            {t.sidepanel.resendWithoutMissingFiles}
+            {hasMissingAttachments
+              ? t.sidepanel.resendWithoutMissingFiles
+              : t.sidepanel.resendMessage}
           </Button>
         </PopoverContent>
       </Popover>

@@ -59,6 +59,7 @@ export const frFR: LocaleMessages = {
     replaceUnavailableAttachmentsDescription:
       "Choisissez des remplacements ou renvoyez sans eux.",
     resendWithoutMissingFiles: "Renvoyer sans fichiers manquants",
+    resendMessage: "Renvoyer",
     unavailableAttachments: "{count} indisponibles",
     allOpenTabs: "Tous les onglets ouverts",
     selectElement: "Sélectionner un élément",

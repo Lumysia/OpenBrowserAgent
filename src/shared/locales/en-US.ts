@@ -62,6 +62,7 @@ export const enUS = {
     replaceUnavailableAttachmentsDescription:
       "Choose replacements, or resend without them.",
     resendWithoutMissingFiles: "Resend without missing files",
+    resendMessage: "Resend",
     unavailableAttachments: "{count} unavailable",
     allOpenTabs: "All open tabs",
     selectElement: "Select element",

@@ -59,6 +59,7 @@ export const deDE: LocaleMessages = {
     replaceUnavailableAttachmentsDescription:
       "Ersatzdateien auswählen oder ohne sie erneut senden.",
     resendWithoutMissingFiles: "Ohne fehlende Dateien erneut senden",
+    resendMessage: "Erneut senden",
     unavailableAttachments: "{count} nicht verfügbar",
     allOpenTabs: "Alle geöffneten Tabs",
     selectElement: "Element auswählen",

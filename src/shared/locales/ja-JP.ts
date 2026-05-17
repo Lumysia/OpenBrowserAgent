@@ -58,6 +58,7 @@ export const jaJP: LocaleMessages = {
     replaceUnavailableAttachmentsDescription:
       "置き換えるファイルを選ぶか、それらを除いて再送信します。",
     resendWithoutMissingFiles: "不足ファイルなしで再送信",
+    resendMessage: "再送信",
     unavailableAttachments: "{count}件利用不可",
     allOpenTabs: "開いているすべてのタブ",
     selectElement: "要素を選択",

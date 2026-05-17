@@ -58,6 +58,7 @@ export const ptBR: LocaleMessages = {
     replaceUnavailableAttachmentsDescription:
       "Escolha substitutos ou reenvie sem eles.",
     resendWithoutMissingFiles: "Reenviar sem arquivos ausentes",
+    resendMessage: "Reenviar",
     unavailableAttachments: "{count} indisponíveis",
     allOpenTabs: "Todas as abas abertas",
     selectElement: "Selecionar elemento",

@@ -58,6 +58,7 @@ export const ko: LocaleMessages = {
     replaceUnavailableAttachmentsDescription:
       "대체 파일을 선택하거나 제외하고 다시 보냅니다.",
     resendWithoutMissingFiles: "누락 파일 없이 다시 보내기",
+    resendMessage: "다시 보내기",
     unavailableAttachments: "{count}개 사용 불가",
     allOpenTabs: "열린 모든 탭",
     selectElement: "요소 선택",

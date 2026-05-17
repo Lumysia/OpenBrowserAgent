@@ -58,6 +58,7 @@ export const zhCN: LocaleMessages = {
     replaceUnavailableAttachmentsDescription:
       "选择替换文件，或不带这些文件重发。",
     resendWithoutMissingFiles: "不带缺失文件重发",
+    resendMessage: "重发",
     unavailableAttachments: "{count} 个不可用",
     allOpenTabs: "所有打开的标签页",
     selectElement: "选择元素",

@@ -58,6 +58,7 @@ export const zhTW: LocaleMessages = {
     replaceUnavailableAttachmentsDescription:
       "選擇替換檔案，或不帶這些檔案重發。",
     resendWithoutMissingFiles: "不帶缺失檔案重發",
+    resendMessage: "重發",
     unavailableAttachments: "{count} 個不可用",
     allOpenTabs: "所有開啟的分頁",
     selectElement: "選擇元素",
