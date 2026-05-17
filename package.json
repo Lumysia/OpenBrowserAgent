@@ -32,6 +32,7 @@
     "@types/chrome": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "rollup": "latest",
     "typescript": "latest"
   }
 }
