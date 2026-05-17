@@ -17,6 +17,7 @@ export function createSendMessagePlan({
   sentElement,
   sentAttachments,
   context,
+  assistantModel,
   quickAction,
 }: {
   chat: Chat;
@@ -26,6 +27,7 @@ export function createSendMessagePlan({
   sentElement: SelectedElement | null;
   sentAttachments: UploadedAttachment[];
   context: string;
+  assistantModel?: { provider: string; name: string };
   quickAction?: QuickAction;
 }) {
   const userMessage: ChatMessage = {
@@ -46,6 +48,7 @@ export function createSendMessagePlan({
     content: "",
     parts: [],
     createdAt: Date.now(),
+    metadata: assistantModel ? { assistantModel } : undefined,
   };
   const shouldGenerateTitle = chat.messages.length === 0;
   const titleSource = text || sentAttachments[0]?.name || "";

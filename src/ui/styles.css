@@ -1485,21 +1485,22 @@ a {
 .sent-context-row {
   display: flex;
   justify-content: flex-end;
-  max-width: min(360px, 84vw);
-  margin-top: 12px;
+  max-width: min(220px, 72vw);
+  margin-top: 6px;
   overflow-x: hidden;
 }
 .sent-context-row::-webkit-scrollbar {
   display: none;
 }
-.sent-tabs-chip {
-  width: min(318px, 78vw);
+.sent-tabs-chip,
+.sent-tab-chip {
+  width: min(168px, 68vw);
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
+  grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
-  gap: 9px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  gap: 6px;
+  padding: 5px 7px;
+  border-radius: 8px;
   background: var(--secondary);
   color: var(--muted-foreground);
   box-shadow: inset 0 0 0 1px var(--border);
@@ -1507,16 +1508,17 @@ a {
 }
 .sent-tabs-icons {
   position: relative;
-  width: 58px;
-  height: 34px;
+  width: 28px;
+  height: 22px;
   display: flex;
   align-items: center;
 }
 .sent-tabs-icons img,
-.sent-tabs-icons svg {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
+.sent-tabs-icons svg,
+.sent-tab-chip > svg {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
   object-fit: cover;
   background: white;
   box-shadow: 0 0 0 1px rgba(22, 21, 18, 0.06);
@@ -1525,25 +1527,29 @@ a {
 .sent-tabs-icons svg + img,
 .sent-tabs-icons img + svg,
 .sent-tabs-icons svg + svg {
-  margin-left: -18px;
+  margin-left: -11px;
 }
-.sent-tabs-chip span {
+.sent-tabs-chip span,
+.sent-tab-chip span {
   min-width: 0;
   display: grid;
   gap: 2px;
 }
 .sent-tabs-chip strong,
-.sent-tabs-chip small {
+.sent-tabs-chip small,
+.sent-tab-chip strong,
+.sent-tab-chip small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.sent-tabs-chip strong {
+.sent-tabs-chip strong,
+.sent-tab-chip strong {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   color: var(--muted-foreground);
-  font-size: 16px;
+  font-size: 11px;
   font-weight: 750;
 }
 .sent-tabs-chip strong em {
@@ -1555,7 +1561,7 @@ a {
 }
 .sent-tabs-chip small {
   color: var(--muted-foreground);
-  font-size: 16px;
+  font-size: 10px;
   font-weight: 500;
   opacity: 0.76;
 }
@@ -2346,6 +2352,17 @@ a {
 }
 .copy-message.copied {
   color: var(--accent-strong);
+}
+.assistant-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.assistant-model-meta {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0.62;
 }
 @keyframes assistant-text-enter {
   from {

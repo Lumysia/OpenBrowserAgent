@@ -50,7 +50,13 @@ export function MessageBubble({
   const sentElement = message.metadata?.selectedElement as
     | SelectedElement
     | undefined;
+  const assistantModel = message.metadata?.assistantModel as
+    | { provider?: string; name?: string }
+    | undefined;
   const hasParts = !!message.parts?.length;
+  const modelLabel = assistantModel
+    ? [assistantModel.provider, assistantModel.name].filter(Boolean).join(" · ")
+    : undefined;
   return (
     <div className={`message ${message.role === "user" ? "user" : ""}`}>
       {quickAction && <div className="message-label">{quickAction.title}</div>}
@@ -67,7 +73,10 @@ export function MessageBubble({
           <span />
         </span>
       ) : (
-        <AssistantText text={message.content} />
+        <AssistantText text={message.content} modelLabel={modelLabel} />
+      )}
+      {message.role === "assistant" && hasParts && modelLabel && (
+        <div className="assistant-model-meta">{modelLabel}</div>
       )}
       {message.role === "user" && !!sentTabs.length && (
         <div className="sent-context-row">
@@ -102,7 +111,13 @@ function AssistantPart({ t, part }: { t: Messages; part: ChatPart }) {
   return null;
 }
 
-function AssistantText({ text }: { text: string }) {
+function AssistantText({
+  text,
+  modelLabel,
+}: {
+  text: string;
+  modelLabel?: string;
+}) {
   const [language] = useStoredState(storage.language);
   const [copied, setCopied] = useState(false);
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
@@ -152,14 +167,19 @@ function AssistantText({ text }: { text: string }) {
         dangerouslySetInnerHTML={{ __html: html }}
         onClick={copyCode}
       />
-      <IconTooltip label={copied ? t.common.copied : t.common.copy}>
-        <button
-          className={`copy-message${copied ? " copied" : ""}`}
-          onClick={copyText}
-        >
-          {copied ? <Check size={15} /> : <Copy size={15} />}
-        </button>
-      </IconTooltip>
+      <div className="assistant-actions">
+        <IconTooltip label={copied ? t.common.copied : t.common.copy}>
+          <button
+            className={`copy-message${copied ? " copied" : ""}`}
+            onClick={copyText}
+          >
+            {copied ? <Check size={15} /> : <Copy size={15} />}
+          </button>
+        </IconTooltip>
+        {modelLabel && (
+          <span className="assistant-model-meta">{modelLabel}</span>
+        )}
+      </div>
     </div>
   );
 }

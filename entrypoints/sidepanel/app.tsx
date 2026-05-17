@@ -31,6 +31,7 @@ import { useStoredState } from "../../src/ui/useStoredState";
 import { requestGeneratedTitle, requestQuickAction } from "./ai-requests";
 import { appendAssistantContent, appendAssistantPart } from "./chat-updates";
 import { sortChatsNewestFirst } from "./format";
+import { assistantModelLabel } from "./model-label";
 import {
   buildSidepanelContext,
   interpolateQuickAction,
@@ -109,9 +110,7 @@ export function SidepanelApp() {
     clearUploadedAttachments,
   } = useUploadedAttachments(t);
 
-  useEffect(() => {
-    if (aiWorking) setOpenMenu(null);
-  }, [aiWorking]);
+  useEffect(() => void (aiWorking && setOpenMenu(null)), [aiWorking]);
 
   useEffect(() => {
     chatsRef.current = chats || [];
@@ -242,12 +241,20 @@ export function SidepanelApp() {
   async function send(content = input, quickAction?: QuickAction) {
     const text = interpolateQuickAction(content.trim());
     if ((!text && !uploadedAttachments.length) || streaming) return;
-    const context = await buildContext();
+    const context = await buildSidepanelContext({
+      mode,
+      attachedTabs,
+      selectedElement,
+    });
     const chat = currentChat || createChat();
     const sentTabs = attachedTabs;
     const sentElement = selectedElement;
     const sentAttachments = pendingAttachments;
     const activeAttachments = uploadedAttachments;
+    const assistantModel = assistantModelLabel({
+      modelId: preferences?.selectedModelId,
+      models: configuredModels,
+    });
     const {
       userMessage,
       assistantMessage,
@@ -259,6 +266,7 @@ export function SidepanelApp() {
       text,
       t,
       context,
+      assistantModel,
       sentTabs,
       sentElement,
       sentAttachments,
@@ -468,10 +476,6 @@ export function SidepanelApp() {
 
   function removeAttachedTab(tabId: number) {
     setAttachedTabs((tabs) => tabs.filter((item) => item.id !== tabId));
-  }
-
-  async function buildContext() {
-    return buildSidepanelContext({ mode, attachedTabs, selectedElement });
   }
 
   return (
