@@ -32,7 +32,7 @@ export default defineConfig({
       128: "icons/128.png",
     },
     action: {
-      default_title: "Open OpenBrowserAgent",
+      default_title: "OpenBrowserAgent",
     },
     commands: {
       _execute_action: {
@@ -40,7 +40,7 @@ export default defineConfig({
           default: "Ctrl+J",
           mac: "Command+J",
         },
-        description: "Open OpenBrowserAgent",
+        description: "OpenBrowserAgent",
       },
     },
     options_ui: {

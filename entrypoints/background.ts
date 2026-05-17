@@ -25,9 +25,6 @@ import {
 
 const PORT_AI_STREAM = "ai-stream";
 const SIDE_PANEL_OPENED = "side_panel_opened";
-const FINAL_AFTER_GROUP_TABS_INSTRUCTION =
-  "<internal_instruction>The browser tabs have been grouped successfully. The browser work is complete. Do not call more tools. Provide the final task report now, using the gathered information and responding in the same language as the user's latest non-internal message.</internal_instruction>";
-
 export default defineBackground(() => {
   chrome.sidePanel
     ?.setPanelBehavior?.({ openPanelOnActionClick: true })
@@ -289,7 +286,6 @@ async function requestOpenAICompatible(
       content: streamResult.content || null,
       tool_calls: toolCalls,
     });
-    let groupedTabsSuccessfully = false;
     for (const toolCall of toolCalls) {
       const toolName = String(toolCall.function?.name || "unknown");
       const toolCallId = String(toolCall.id || crypto.randomUUID());
@@ -306,8 +302,6 @@ async function requestOpenAICompatible(
       });
       const output = await safeExecuteBrowserTool(toolName, input);
       const hasError = isToolError(output);
-      if (toolName === "groupTabs" && isToolSuccess(output))
-        groupedTabsSuccessfully = true;
       post(port, {
         type: "chunk",
         chunk: {
@@ -324,29 +318,6 @@ async function requestOpenAICompatible(
         tool_call_id: toolCallId,
         content: JSON.stringify(output),
       });
-    }
-    if (groupedTabsSuccessfully) {
-      requestMessages.push({
-        role: "user",
-        content: FINAL_AFTER_GROUP_TABS_INSTRUCTION,
-      });
-      const finalResponse = await fetch(chatUrl, {
-        method: "POST",
-        signal,
-        headers: {
-          "Content-Type": "application/json",
-          ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
-        },
-        body: JSON.stringify({
-          model: model.modelName,
-          temperature: MODEL_TEMPERATURE,
-          messages: requestMessages,
-          stream: true,
-        }),
-      });
-      if (!finalResponse.ok) throw new Error(await finalResponse.text());
-      await readOpenAIStream(finalResponse, port, signal);
-      return "";
     }
   }
 
@@ -595,7 +566,6 @@ async function requestGemini(
 
     contents.push({ role: "model", parts });
     const responseParts = [];
-    let groupedTabsSuccessfully = false;
     for (const functionCall of functionCalls) {
       const toolName = String(functionCall.name || "unknown");
       const toolCallId = crypto.randomUUID();
@@ -612,8 +582,6 @@ async function requestGemini(
       });
       const output = await safeExecuteBrowserTool(toolName, input);
       const hasError = isToolError(output);
-      if (toolName === "groupTabs" && isToolSuccess(output))
-        groupedTabsSuccessfully = true;
       post(port, {
         type: "chunk",
         chunk: {
@@ -630,28 +598,6 @@ async function requestGemini(
       });
     }
     contents.push({ role: "user", parts: responseParts });
-    if (groupedTabsSuccessfully) {
-      contents.push({
-        role: "user",
-        parts: [{ text: FINAL_AFTER_GROUP_TABS_INSTRUCTION }],
-      });
-      const finalResponse = await fetch(url, {
-        method: "POST",
-        signal,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: system }] },
-          contents,
-        }),
-      });
-      if (!finalResponse.ok) throw new Error(await finalResponse.text());
-      const finalData = await finalResponse.json();
-      return (
-        finalData.candidates?.[0]?.content?.parts
-          ?.map((part: { text?: string }) => part.text || "")
-          .join("") || ""
-      );
-    }
   }
 
   contents.push({
@@ -1217,15 +1163,49 @@ async function executeBrowserTool(
         : [];
       if (!tabIds.length)
         return { success: false, error: "No tab IDs provided" };
-      const groupId = await chrome.tabs.group({
-        tabIds: tabIds as [number, ...number[]],
-      });
       const color = String(
         args.color || "cyan",
       ) as chrome.tabGroups.UpdateProperties["color"];
       const title = String(args.title || "");
-      await chrome.tabGroups.update(groupId, { title, color });
-      return { success: true, groupId };
+      const tabs = await Promise.all(
+        tabIds.map((tabId) => chrome.tabs.get(tabId).catch(() => undefined)),
+      );
+      const normalTabs = [];
+      const skippedTabIds = [];
+
+      for (const tab of tabs) {
+        if (!tab?.id || tab.windowId === undefined) continue;
+        const window = await chrome.windows
+          .get(tab.windowId)
+          .catch(() => undefined);
+        if (window?.type === "normal") normalTabs.push(tab);
+        else skippedTabIds.push(tab.id);
+      }
+
+      if (!normalTabs.length)
+        return {
+          success: false,
+          error: "No tabs in normal browser windows can be grouped",
+          skippedTabIds,
+        };
+
+      const tabsByWindow = new Map<number, number[]>();
+      for (const tab of normalTabs) {
+        const windowTabs = tabsByWindow.get(tab.windowId!) || [];
+        windowTabs.push(tab.id!);
+        tabsByWindow.set(tab.windowId!, windowTabs);
+      }
+
+      const groupIds = [];
+      for (const windowTabIds of tabsByWindow.values()) {
+        const groupId = await chrome.tabs.group({
+          tabIds: windowTabIds as [number, ...number[]],
+        });
+        await chrome.tabGroups.update(groupId, { title, color });
+        groupIds.push(groupId);
+      }
+
+      return { success: true, groupIds, skippedTabIds };
     }
     case "scrollToBottom": {
       await scrollToBottom(await resolveTabId(args.tabId));
@@ -1278,15 +1258,6 @@ function withTimeout<T>(
 
 function isToolError(output: unknown) {
   return typeof output === "object" && output !== null && "error" in output;
-}
-
-function isToolSuccess(output: unknown) {
-  return (
-    typeof output === "object" &&
-    output !== null &&
-    (output as { success?: unknown }).success === true &&
-    !("error" in output)
-  );
 }
 
 function pickTab(tab: chrome.tabs.Tab) {
