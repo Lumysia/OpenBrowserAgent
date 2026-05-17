@@ -83,21 +83,44 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
     return base || toolLabel(name, t);
   })();
   const description = (() => {
+    if (
+      typeof output.error === "string" &&
+      name === BROWSER_TOOL_NAME.readUploadedAttachment
+    )
+      return compactJoin([
+        output.error,
+        stringValue(output.attachmentId) || stringValue(input.attachmentId),
+      ]);
     if (typeof output.error === "string") return output.error;
     if (typeof input.reason === "string") return input.reason;
+    if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
+      return compactJoin([
+        stringValue(output.name) || stringValue(input.attachmentId),
+        stringValue(output.encoding),
+        rangeLabel(output),
+      ]);
     if (
       name === BROWSER_TOOL_NAME.findAccessableElementsFromTab &&
       Array.isArray(output.elements)
     )
-      return formatToolMessage(toolFound, { count: output.elements.length });
+      return compactJoin([
+        idLabel("Tab", input.tabId),
+        formatToolMessage(toolFound, { count: output.elements.length }),
+      ]);
     if (name === BROWSER_TOOL_NAME.getAllTabs && Array.isArray(outputValue))
       return formatToolMessage(toolFound, { count: outputValue.length });
     if (
       name === BROWSER_TOOL_NAME.inputTextByAiID &&
       typeof input.text === "string"
     )
-      return input.text;
+      return compactJoin([
+        idLabel("Tab", input.tabId),
+        stringValue(input.id),
+        input.text,
+      ]);
     if (typeof output.filename === "string") return output.filename;
+    const fallback = fallbackToolDetail(name, input, output);
+    if (fallback) return fallback;
     if (part.state === CHAT_PART_STATE.outputError) return t.sidepanel.error;
     return "";
   })();
@@ -163,6 +186,78 @@ function toolIcon(name: string) {
   if (name.includes("group")) return <Layers size={19} strokeWidth={2.1} />;
   if (name.includes("Tab")) return <ExternalLink size={19} strokeWidth={2.1} />;
   return <Square size={15} strokeWidth={2.1} />;
+}
+
+function fallbackToolDetail(
+  name: string,
+  input: Record<string, unknown>,
+  output: Record<string, unknown>,
+) {
+  if (name === BROWSER_TOOL_NAME.openNewTabWithURL)
+    return stringValue(
+      output.tab && typeof output.tab === "object"
+        ? (output.tab as Record<string, unknown>).url
+        : input.url,
+    );
+  if (name === BROWSER_TOOL_NAME.openSearchTab) return stringValue(input.query);
+  if (name === BROWSER_TOOL_NAME.goToTab) return idLabel("Tab", input.tabId);
+  if (name === BROWSER_TOOL_NAME.waitTabLoadFinished)
+    return idLabel("Tab", input.tabId);
+  if (name === BROWSER_TOOL_NAME.scrollToBottom)
+    return idLabel("Tab", input.tabId);
+  if (name === BROWSER_TOOL_NAME.closeTab)
+    return arrayLabel("Tabs", input.tabIds || input.tabId);
+  if (name === BROWSER_TOOL_NAME.getTabContent)
+    return arrayLabel("Tabs", input.tabIds || input.tabId);
+  if (name === BROWSER_TOOL_NAME.downloadAllImagesInTab)
+    return idLabel("Tab", input.tabId);
+  if (name === BROWSER_TOOL_NAME.downloadTabToMarkdown)
+    return idLabel("Tab", input.tabId);
+  if (name === BROWSER_TOOL_NAME.insertCSSToTab)
+    return idLabel("Tab", input.tabId);
+  if (name === BROWSER_TOOL_NAME.removeCSSToTab)
+    return idLabel("Tab", input.tabId);
+  if (name === BROWSER_TOOL_NAME.clickElementByAiID)
+    return compactJoin([idLabel("Tab", input.tabId), stringValue(input.id)]);
+  if (name === BROWSER_TOOL_NAME.getElementPropertiesByAiID)
+    return compactJoin([
+      idLabel("Tab", input.tabId),
+      arrayLabel("Elements", input.ids || input.id),
+    ]);
+  if (name === BROWSER_TOOL_NAME.groupTabs)
+    return arrayLabel("Tabs", input.tabIds);
+  return "";
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : "";
+}
+
+function idLabel(label: string, value: unknown) {
+  const text =
+    stringValue(value) || (Number.isFinite(Number(value)) ? String(value) : "");
+  return text ? `${label} ${text}` : "";
+}
+
+function arrayLabel(label: string, value: unknown) {
+  const items = Array.isArray(value) ? value : value ? [value] : [];
+  const text = items.map(String).filter(Boolean).join(", ");
+  return text ? `${label} ${text}` : "";
+}
+
+function compactJoin(values: Array<string | undefined>) {
+  return values.filter(Boolean).join(" · ");
+}
+
+function rangeLabel(output: Record<string, unknown>) {
+  const offset = Number(output.offset);
+  const limit = Number(output.limit);
+  const total = Number(output.totalLength);
+  if (!Number.isFinite(offset) || !Number.isFinite(limit)) return "";
+  const end = offset + limit;
+  return Number.isFinite(total)
+    ? `${offset}-${Math.min(end, total)} / ${total}`
+    : `${offset}-${end}`;
 }
 
 function toolLabel(name: string, t: Messages) {
