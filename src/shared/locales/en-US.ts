@@ -133,6 +133,7 @@ export const enUS = {
         running: "Inspecting element",
         done: "Inspected element",
       },
+      readSkill: { running: "Reading Skill", done: "Read Skill" },
       readUploadedAttachment: {
         running: "Reading attachment",
         done: "Read attachment",

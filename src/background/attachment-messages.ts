@@ -7,7 +7,7 @@ import {
   READ_ATTACHMENT_DEFAULT_LIMIT,
   READ_ATTACHMENT_MAX_LIMIT,
 } from "../shared/config";
-import type { ChatMessage, UploadedAttachment } from "../shared/types";
+import type { ChatMessage, Skill, UploadedAttachment } from "../shared/types";
 import {
   getUploadedAttachments,
   renderAttachmentContext,
@@ -18,6 +18,7 @@ export function createGeminiContents(
   messages: ChatMessage[],
   multimodal: boolean,
   requestAttachments: UploadedAttachment[] = [],
+  availableSkills: Skill[] = [],
 ) {
   return messages.map((message, index) => ({
     role: message.role === "assistant" ? "model" : "user",
@@ -26,6 +27,7 @@ export function createGeminiContents(
       index === messages.length - 1,
       multimodal,
       index === messages.length - 1 ? requestAttachments : [],
+      index === messages.length - 1 ? availableSkills : [],
     ),
   }));
 }
@@ -35,6 +37,7 @@ export function createOpenAIRequestMessages(
   messages: ChatMessage[],
   multimodal: boolean,
   requestAttachments: UploadedAttachment[] = [],
+  availableSkills: Skill[] = [],
 ) {
   return [
     { role: "system", content: system },
@@ -45,6 +48,7 @@ export function createOpenAIRequestMessages(
         index === messages.length - 1,
         multimodal,
         index === messages.length - 1 ? requestAttachments : [],
+        index === messages.length - 1 ? availableSkills : [],
       ),
     })),
   ];
@@ -117,17 +121,38 @@ export function readUploadedAttachment(
   );
 }
 
+export function readSkill(skills: Skill[], input: Record<string, unknown>) {
+  const skillId = String(input.skillId || input.id || "");
+  const skill = skills.find((item) => item.id === skillId);
+  if (!skill) return { error: "Skill not found", skillId };
+  return {
+    id: skill.id,
+    title: skill.title,
+    description: skill.description || "",
+    mode: skill.mode || "",
+    instruction: skill.instruction,
+  };
+}
+
 function createGeminiParts(
   message: ChatMessage,
   isLatest: boolean,
   multimodal: boolean,
   requestAttachments: UploadedAttachment[],
+  availableSkills: Skill[],
 ) {
   const attachments = requestAttachments.length
     ? requestAttachments
     : getUploadedAttachments(message);
   const parts: Array<Record<string, unknown>> = [
-    { text: renderMessageText(message, isLatest, requestAttachments) },
+    {
+      text: renderMessageText(
+        message,
+        isLatest,
+        requestAttachments,
+        availableSkills,
+      ),
+    },
   ];
   return parts;
 }
@@ -137,8 +162,14 @@ function createOpenAIMessageContent(
   isLatest: boolean,
   multimodal: boolean,
   requestAttachments: UploadedAttachment[],
+  availableSkills: Skill[],
 ) {
-  const text = renderMessageText(message, isLatest, requestAttachments);
+  const text = renderMessageText(
+    message,
+    isLatest,
+    requestAttachments,
+    availableSkills,
+  );
   const attachments = requestAttachments.length
     ? requestAttachments
     : getUploadedAttachments(message);
@@ -149,9 +180,14 @@ function renderMessageText(
   message: ChatMessage,
   isLatest: boolean,
   requestAttachments: UploadedAttachment[],
+  availableSkills: Skill[] = [],
 ) {
   if (isLatest && message.role === "user")
-    return renderUserMessageWithContext(message, requestAttachments);
+    return renderUserMessageWithContext(
+      message,
+      requestAttachments,
+      availableSkills,
+    );
   const attachmentContext = renderAttachmentContext(
     getUploadedAttachments(message),
   );

@@ -23,7 +23,7 @@ import type {
   UploadedAttachment,
 } from "../../src/shared/types";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { requestGeneratedTitle, requestSkillSelection } from "./ai-requests";
+import { requestGeneratedTitle } from "./ai-requests";
 import { appendAssistantContent, appendAssistantPart } from "./chat-updates";
 import { pruneSentAttachmentPreviews } from "./edit-message";
 import { sortChatsNewestFirst } from "./format";
@@ -239,18 +239,8 @@ export function SidepanelApp() {
   ) {
     const text = interpolateSkillVariables(content.trim());
     if ((!text && !uploadedAttachments.length) || streaming) return;
-    const availableSkills = skills || [];
-    const autoSkillId =
-      !selectedSkill && preferences?.autoSelectSkills
-        ? await requestSkillSelection({
-            modelId: preferences?.selectedModelId,
-            message: text,
-            skills: availableSkills,
-          })
-        : undefined;
-    const appliedSkill =
-      selectedSkill ||
-      availableSkills.find((skill) => skill.id === autoSkillId);
+    const availableSkills = preferences?.autoSelectSkills ? skills || [] : [];
+    const appliedSkill = selectedSkill;
     const sentSkill = appliedSkill
       ? {
           ...appliedSkill,
@@ -293,7 +283,7 @@ export function SidepanelApp() {
       sentElement,
       sentAttachments,
       skill: sentSkill,
-      autoSelectedSkill: !!autoSkillId,
+      autoSelectedSkill: false,
     });
     if (sentAttachments.length)
       setSentAttachmentPreviews((items) => ({

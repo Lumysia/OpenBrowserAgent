@@ -8,6 +8,7 @@ import {
   AI_TEXT_CHUNK_TYPE,
   type AiStreamResponse,
   type ChatMessage,
+  type Skill,
   type UploadedAttachment,
 } from "../shared/types";
 
@@ -68,6 +69,7 @@ export function parseToolArgs(value: string | undefined) {
 export function renderUserMessageWithContext(
   message: ChatMessage,
   requestAttachments: UploadedAttachment[] = [],
+  availableSkills: Skill[] = [],
 ) {
   if (message.metadata?.internalRetry) {
     return `<internal_instruction>
@@ -97,11 +99,25 @@ ${context}
 
 ${renderAttachmentContext(attachments)}
 
+${renderSkillCatalog(availableSkills)}
+
 </message_context>
 
 <message>
 ${message.content}
 </message>`;
+}
+
+export function renderSkillCatalog(skills: Skill[]) {
+  if (!skills.length) return "";
+  return `<available_skills>
+${skills
+  .map(
+    (skill) =>
+      `- id: ${skill.id}\n  title: ${skill.title}\n  description: ${skill.description || ""}\n  mode: ${skill.mode || ""}\n  note: Use readSkill with this id to read the full instruction if this skill is relevant.`,
+  )
+  .join("\n\n")}
+</available_skills>`;
 }
 
 export function getUploadedAttachments(message: ChatMessage) {

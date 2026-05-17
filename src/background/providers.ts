@@ -3,27 +3,22 @@ import { MODEL_TEMPERATURE, STREAM_CHUNK_DELAY_MS } from "../shared/config";
 import {
   AI_TEXT_CHUNK_TYPE,
   CHAT_PART_STATE,
-  isAskMode,
   toolPartType,
   type AiStreamResponse,
   type ChatMessage,
   type ChatMode,
   type ProviderId,
+  type Skill,
   type UploadedAttachment,
 } from "../shared/types";
-import {
-  browserTools,
-  isToolError,
-  pickTab,
-  safeExecuteBrowserTool,
-} from "./tools";
+import { isToolError, pickTab } from "./tools";
 import {
   createGeminiContents,
   createOpenAIRequestMessages,
   hasImageAttachments,
-  readUploadedAttachment,
 } from "./attachment-messages";
 import { chunkText, parseToolArgs, postText } from "./message-helpers";
+import { executeContextAwareTool, toolsForMode } from "./provider-tools";
 
 function post(port: chrome.runtime.Port, message: AiStreamResponse) {
   try {
@@ -31,14 +26,6 @@ function post(port: chrome.runtime.Port, message: AiStreamResponse) {
   } catch (error) {
     console.warn("Failed to post ai-stream message", error);
   }
-}
-
-function toolsForMode(mode: ChatMode, hasUploadedAttachments: boolean) {
-  if (!isAskMode(mode)) return browserTools;
-  if (!hasUploadedAttachments) return [];
-  return browserTools.filter(
-    (item) => item.function.name === BROWSER_TOOL_NAME.readUploadedAttachment,
-  );
 }
 
 export async function requestOpenAICompatible(
@@ -57,6 +44,7 @@ export async function requestOpenAICompatible(
   messageId?: string,
   attachmentRetryNotice?: string,
   uploadedAttachments: UploadedAttachment[] = [],
+  availableSkills: Skill[] = [],
 ) {
   if (model.provider === "gemini") {
     return requestGemini(
@@ -69,6 +57,7 @@ export async function requestOpenAICompatible(
       port,
       attachmentRetryNotice,
       uploadedAttachments,
+      availableSkills,
     );
   }
 
@@ -84,8 +73,13 @@ export async function requestOpenAICompatible(
       messages,
       usesAttachmentPayload,
       uploadedAttachments,
+      availableSkills,
     );
-  const availableTools = toolsForMode(mode, uploadedAttachments.length > 0);
+  const availableTools = toolsForMode(
+    mode,
+    uploadedAttachments.length > 0,
+    availableSkills.length > 0,
+  );
   const useTools = maxToolSteps > 0 && availableTools.length > 0;
 
   async function fetchChatCompletion(body: Record<string, unknown>) {
@@ -105,6 +99,7 @@ export async function requestOpenAICompatible(
       messages,
       false,
       uploadedAttachments,
+      availableSkills,
     );
     usesAttachmentPayload = false;
     if (attachmentRetryNotice)
@@ -173,10 +168,12 @@ export async function requestOpenAICompatible(
           input,
         },
       });
-      const output =
-        toolName === BROWSER_TOOL_NAME.readUploadedAttachment
-          ? readUploadedAttachment(uploadedAttachments, input)
-          : await safeExecuteBrowserTool(toolName, input);
+      const output = await executeContextAwareTool({
+        toolName,
+        input,
+        uploadedAttachments,
+        availableSkills,
+      });
       const hasError = isToolError(output);
       post(port, {
         type: "chunk",
@@ -372,12 +369,14 @@ async function requestGemini(
   port: chrome.runtime.Port,
   attachmentRetryNotice?: string,
   uploadedAttachments: UploadedAttachment[] = [],
+  availableSkills: Skill[] = [],
 ) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model.modelName)}:generateContent?key=${encodeURIComponent(model.apiKey)}`;
   let contents: Array<Record<string, unknown>> = createGeminiContents(
     messages,
     true,
     uploadedAttachments,
+    availableSkills,
   );
   let usesAttachmentPayload = hasImageAttachments(uploadedAttachments);
 
@@ -390,7 +389,12 @@ async function requestGemini(
     });
     if (response.ok || !usesAttachmentPayload) return response;
 
-    contents = createGeminiContents(messages, false, uploadedAttachments);
+    contents = createGeminiContents(
+      messages,
+      false,
+      uploadedAttachments,
+      availableSkills,
+    );
     usesAttachmentPayload = false;
     if (attachmentRetryNotice)
       postText(port, attachmentRetryNotice, crypto.randomUUID(), signal, false);
@@ -402,7 +406,11 @@ async function requestGemini(
     });
   }
 
-  const availableTools = toolsForMode(mode, uploadedAttachments.length > 0);
+  const availableTools = toolsForMode(
+    mode,
+    uploadedAttachments.length > 0,
+    availableSkills.length > 0,
+  );
   const useTools = maxToolSteps > 0 && availableTools.length > 0;
 
   if (!useTools) {
@@ -472,10 +480,12 @@ async function requestGemini(
           input,
         },
       });
-      const output =
-        toolName === BROWSER_TOOL_NAME.readUploadedAttachment
-          ? readUploadedAttachment(uploadedAttachments, input)
-          : await safeExecuteBrowserTool(toolName, input);
+      const output = await executeContextAwareTool({
+        toolName,
+        input,
+        uploadedAttachments,
+        availableSkills,
+      });
       const hasError = isToolError(output);
       post(port, {
         type: "chunk",

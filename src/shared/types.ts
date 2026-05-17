@@ -161,7 +161,6 @@ export const AI_STREAM_REQUEST_TYPE = {
   sendMessages: "sendMessages",
   generateTitle: "generateTitle",
   generateSkill: "generateSkill",
-  selectSkill: "selectSkill",
 } as const;
 
 export const AI_TEXT_CHUNK_TYPE = {
@@ -208,12 +207,6 @@ export type AiStreamRequest =
       type: "generateSkill";
       modelId?: string;
       messages: ChatMessage[];
-    }
-  | {
-      type: "selectSkill";
-      modelId?: string;
-      message: string;
-      skills: Skill[];
     };
 
 export type SendMessagesRequest = Extract<
@@ -231,18 +224,12 @@ export type GenerateSkillRequest = Extract<
   { type: (typeof AI_STREAM_REQUEST_TYPE)["generateSkill"] }
 >;
 
-export type SelectSkillRequest = Extract<
-  AiStreamRequest,
-  { type: (typeof AI_STREAM_REQUEST_TYPE)["selectSkill"] }
->;
-
 export type AiStreamResponse =
   | { type: "chunk"; chunk: unknown }
   | { type: "end" }
   | { type: "error"; error: string }
   | { type: "title"; title: string }
-  | { type: "skill"; skill: Skill }
-  | { type: "skillSelection"; skillId?: string };
+  | { type: "skill"; skill: Skill };
 
 export const providerLabels: Record<ProviderId, string> = {
   gemini: "Gemini",

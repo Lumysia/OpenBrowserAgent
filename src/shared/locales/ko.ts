@@ -126,6 +126,7 @@ export const ko: LocaleMessages = {
         running: "요소 검사 중",
         done: "요소 검사됨",
       },
+      readSkill: { running: "Reading Skill", done: "Read Skill" },
       readUploadedAttachment: {
         running: "첨부 읽는 중",
         done: "첨부 읽음",

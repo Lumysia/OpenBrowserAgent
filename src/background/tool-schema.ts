@@ -166,6 +166,17 @@ export const browserTools = [
     },
     ["attachmentId"],
   ),
+  tool(
+    BROWSER_TOOL_NAME.readSkill,
+    "Read the full instruction for one available skill by id. Use this only when a listed skill clearly helps the user request.",
+    {
+      skillId: {
+        type: "string",
+        description: "The id of the available skill to read",
+      },
+    },
+    ["skillId"],
+  ),
 ];
 
 function tool(

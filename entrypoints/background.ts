@@ -27,7 +27,6 @@ import {
   type GenerateSkillRequest,
   type GenerateTitleRequest,
   type ProviderId,
-  type SelectSkillRequest,
   type Skill,
   type SendMessagesRequest,
 } from "../src/shared/types";
@@ -92,17 +91,6 @@ export default defineBackground(() => {
             }),
           );
       }
-
-      if (request.type === AI_STREAM_REQUEST_TYPE.selectSkill) {
-        selectSkill(request)
-          .then((skillId) => post(port, { type: "skillSelection", skillId }))
-          .catch((error) =>
-            post(port, {
-              type: "error",
-              error: error?.message || String(error),
-            }),
-          );
-      }
     });
 
     port.onDisconnect.addListener(() => abortController?.abort());
@@ -142,6 +130,9 @@ async function streamAssistantResponse(
     request.messageId,
     t.sidepanel.attachmentsUnsupportedRetry,
     request.body.context?.uploadedAttachments || [],
+    request.body.context?.autoSelectSkills
+      ? request.body.context.availableSkills || []
+      : [],
   );
 
   if (text) {
@@ -326,32 +317,6 @@ ${source}
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
-}
-
-async function selectSkill(request: SelectSkillRequest) {
-  if (!request.skills.length) return undefined;
-  const model = await resolveModel(request.modelId);
-  const skillList = request.skills
-    .map(
-      (skill) =>
-        `- id=${skill.id}\n  title=${skill.title}\n  description=${skill.description || ""}\n  instruction=${skill.instruction.slice(0, 500)}`,
-    )
-    .join("\n");
-  const raw = await requestPlainText(model, [
-    {
-      role: "system",
-      content:
-        "Select at most one skill for a browser-agent user message. Return JSON only.",
-    },
-    {
-      role: "user",
-      content: `Available skills:\n${skillList}\n\nUser message:\n${request.message}\n\nReturn {"skillId":"..."} if a skill clearly applies, otherwise {"skillId":""}.`,
-    },
-  ]);
-  const parsed = parseJsonObject(raw) as { skillId?: string };
-  return request.skills.some((skill) => skill.id === parsed.skillId)
-    ? parsed.skillId
-    : undefined;
 }
 
 async function requestPlainText(
