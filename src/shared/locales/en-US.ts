@@ -42,6 +42,8 @@ export const enUS = {
     createQuickAction: "Create Quick Action",
     generatingQuickAction: "Creating Quick Action",
     quickActionCreated: "Quick Action Created",
+    aiWorking: "AI is working",
+    aiWorkingDescription: "Reading, acting, and preparing the response.",
     willBeSentToAi: "Will be sent to the AI",
     willBeSentAsPageContext: "Will be sent as page context",
     currentPage: "Current page",

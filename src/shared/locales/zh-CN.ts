@@ -38,6 +38,8 @@ export const zhCN: LocaleMessages = {
     createQuickAction: "创建快捷操作",
     generatingQuickAction: "正在创建快捷操作",
     quickActionCreated: "快捷操作已创建",
+    aiWorking: "AI 正在工作",
+    aiWorkingDescription: "正在阅读、操作并准备回复。",
     willBeSentToAi: "将发送给 AI",
     willBeSentAsPageContext: "将作为页面上下文发送",
     currentPage: "当前页面",

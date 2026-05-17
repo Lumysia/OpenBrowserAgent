@@ -7,6 +7,7 @@ export const SYNC_WRITE_DEBOUNCE_MS = 2_000;
 
 export const MODEL_TEMPERATURE = 0.3;
 export const STREAM_CHUNK_DELAY_MS = 8;
+export const STREAM_RENDER_THROTTLE_MS = 80;
 
 export const LOCAL_CHAT_TITLE_MAX_LENGTH = 42;
 export const GENERATED_TITLE_MAX_LENGTH = 48;

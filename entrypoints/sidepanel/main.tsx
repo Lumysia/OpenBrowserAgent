@@ -36,6 +36,7 @@ import {
   MAX_AUTO_RETRIES,
   QUICK_FEEDBACK_MS,
   SELECTED_ELEMENT_HTML_MAX_CHARS,
+  STREAM_RENDER_THROTTLE_MS,
   TAB_CONTENT_MAX_CHARS,
 } from "../../src/shared/config";
 import { getMessages, type Messages } from "../../src/shared/i18n";
@@ -124,6 +125,11 @@ function SidepanelApp() {
   const currentChat =
     chats?.find((chat) => chat.id === activeChatId) || chats?.[0];
   const t = getMessages(language);
+  const aiWorking = streaming || creatingQuickAction;
+
+  useEffect(() => {
+    if (aiWorking) setOpenMenu(null);
+  }, [aiWorking]);
 
   useEffect(() => {
     chatsRef.current = chats || [];
@@ -873,9 +879,28 @@ function SidepanelApp() {
           )}
         </div>
         <div className="composer-box">
+          {aiWorking && (
+            <div className="ai-working-overlay" aria-live="polite">
+              <span className="ai-working-orb" />
+              <span>
+                <strong>
+                  {creatingQuickAction
+                    ? t.sidepanel.generatingQuickAction
+                    : t.sidepanel.aiWorking}
+                </strong>
+                <small>{t.sidepanel.aiWorkingDescription}</small>
+              </span>
+              <span className="ai-working-bars" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+            </div>
+          )}
           <Textarea
             value={input}
             placeholder={t.sidepanel.whatDoYouWant}
+            disabled={aiWorking}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={(event) => {
               if (
@@ -896,6 +921,7 @@ function SidepanelApp() {
                 className="composer-icon-button"
                 variant="outline"
                 size="icon"
+                disabled={aiWorking}
                 onClick={openAddContextMenu}
               >
                 <Plus size={20} />
@@ -929,6 +955,7 @@ function SidepanelApp() {
                 <button
                   data-popover-root="true"
                   className="composer-trigger"
+                  disabled={aiWorking}
                   onClick={() =>
                     setOpenMenu(openMenu === "model" ? null : "model")
                   }
@@ -960,6 +987,7 @@ function SidepanelApp() {
                 <button
                   data-popover-root="true"
                   className="composer-trigger"
+                  disabled={aiWorking}
                   onClick={() =>
                     setOpenMenu(openMenu === "mode" ? null : "mode")
                   }
@@ -991,6 +1019,7 @@ function SidepanelApp() {
               <Button
                 className="send-button tooltip"
                 data-tooltip={t.sidepanel.send}
+                disabled={creatingQuickAction}
                 onClick={() => send()}
               >
                 <Send size={20} />
@@ -1380,7 +1409,9 @@ function AssistantText({ text }: { text: string }) {
   const [language] = useStoredState(storage.language);
   const [copied, setCopied] = useState(false);
   const t = getMessages(language);
-  const html = marked.parse(text);
+  const displayText = useThrottledText(text, STREAM_RENDER_THROTTLE_MS);
+  const html = marked.parse(displayText);
+  const streaming = displayText.length < text.length;
 
   useEffect(() => {
     if (!copied) return undefined;
@@ -1396,7 +1427,7 @@ function AssistantText({ text }: { text: string }) {
   }
 
   return (
-    <div className="assistant-text">
+    <div className={`assistant-text${streaming ? " streaming" : ""}`}>
       <div className="markdown" dangerouslySetInnerHTML={{ __html: html }} />
       <button
         className={`copy-message tooltip${copied ? " copied" : ""}`}
@@ -1407,6 +1438,23 @@ function AssistantText({ text }: { text: string }) {
       </button>
     </div>
   );
+}
+
+function useThrottledText(value: string, delayMs: number) {
+  const [displayValue, setDisplayValue] = useState(value);
+  const lastUpdateRef = useRef(0);
+
+  useEffect(() => {
+    const now = Date.now();
+    const waitMs = Math.max(0, delayMs - (now - lastUpdateRef.current));
+    const timeout = window.setTimeout(() => {
+      lastUpdateRef.current = Date.now();
+      setDisplayValue(value);
+    }, waitMs);
+    return () => window.clearTimeout(timeout);
+  }, [delayMs, value]);
+
+  return displayValue;
 }
 
 function SentTabsChip({ tabs }: { tabs: AttachmentTab[] }) {
