@@ -175,7 +175,6 @@ export const jaJP: LocaleMessages = {
     untitledSkill: "無題のアクション",
     title: "タイトル",
     description: "Description",
-    mode: "Mode",
     instruction: "指示",
     deleteSkill: "Skillを削除",
     deleteSkillConfirm: "このSkillを削除しますか？",

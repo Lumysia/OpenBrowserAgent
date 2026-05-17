@@ -159,7 +159,6 @@ export const ptBR: LocaleMessages = {
     untitledSkill: "Ação sem título",
     title: "Título",
     description: "Description",
-    mode: "Mode",
     instruction: "Instrução",
     deleteSkill: "Excluir Skill",
     deleteSkillConfirm: "Excluir esta Skill?",

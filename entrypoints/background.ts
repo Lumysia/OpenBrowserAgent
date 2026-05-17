@@ -281,7 +281,7 @@ async function generateSkill(request: GenerateSkillRequest): Promise<Skill> {
   const prompt = `Create a reusable skill from this browser-agent chat.
 
 Return JSON only with this shape:
-{"title":"short name","description":"one sentence","instruction":"reusable instruction","mode":"Ask or Agent"}
+{"title":"short name","description":"one sentence","instruction":"reusable instruction"}
 
 Rules:
 - Generalize the workflow so it can be reused later.
@@ -313,7 +313,6 @@ ${source}
     title: title || "Skill",
     description: String(parsed.description || "").trim(),
     instruction,
-    mode: String(parsed.mode || "").toLowerCase() === "agent" ? "Agent" : "Ask",
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };

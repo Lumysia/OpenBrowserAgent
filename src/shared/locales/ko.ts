@@ -164,7 +164,6 @@ export const ko: LocaleMessages = {
     untitledSkill: "제목 없는 작업",
     title: "제목",
     description: "Description",
-    mode: "Mode",
     instruction: "지시",
     deleteSkill: "Skill 삭제",
     deleteSkillConfirm: "이 Skill을 삭제할까요?",

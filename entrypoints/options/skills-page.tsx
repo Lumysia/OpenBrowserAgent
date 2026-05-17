@@ -7,7 +7,7 @@ import {
 } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
-import { CHAT_MODE, type Skill } from "../../src/shared/types";
+import type { Skill } from "../../src/shared/types";
 import {
   Accordion,
   AccordionContent,
@@ -20,11 +20,6 @@ import {
   CardTitle,
   Input,
   Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Textarea,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
@@ -47,7 +42,6 @@ export function SkillsPage() {
       title: t.options.untitledSkill,
       description: "",
       instruction: "",
-      mode: CHAT_MODE.ask,
       createdAt: now,
       updatedAt: now,
     };
@@ -143,25 +137,6 @@ export function SkillsPage() {
                     updateDraft(skill, { description: event.target.value })
                   }
                 />
-              </Label>
-              <Label>
-                {t.options.mode}
-                <Select
-                  value={draftFor(skill).mode || CHAT_MODE.ask}
-                  onValueChange={(mode) =>
-                    updateDraft(skill, { mode: mode as Skill["mode"] })
-                  }
-                >
-                  <SelectTrigger style={{ maxWidth: 240 }}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={CHAT_MODE.ask}>{t.words.ask}</SelectItem>
-                    <SelectItem value={CHAT_MODE.agent}>
-                      {t.words.agent}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
               </Label>
               <Label>
                 {t.options.instruction}

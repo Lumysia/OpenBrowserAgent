@@ -178,7 +178,6 @@ export const frFR: LocaleMessages = {
     untitledSkill: "Action sans titre",
     title: "Titre",
     description: "Description",
-    mode: "Mode",
     instruction: "Instruction",
     deleteSkill: "Supprimer l'Skill",
     deleteSkillConfirm: "Supprimer cette Skill ?",

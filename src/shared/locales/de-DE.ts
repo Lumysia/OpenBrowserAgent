@@ -176,7 +176,6 @@ export const deDE: LocaleMessages = {
     untitledSkill: "Unbenannte Aktion",
     title: "Titel",
     description: "Description",
-    mode: "Mode",
     instruction: "Anweisung",
     deleteSkill: "Skill löschen",
     deleteSkillConfirm: "Diese Skill löschen?",

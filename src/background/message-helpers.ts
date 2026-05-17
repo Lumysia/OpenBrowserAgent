@@ -114,7 +114,7 @@ export function renderSkillCatalog(skills: Skill[]) {
 ${skills
   .map(
     (skill) =>
-      `- id: ${skill.id}\n  title: ${skill.title}\n  description: ${skill.description || ""}\n  mode: ${skill.mode || ""}\n  note: Use readSkill with this id to read the full instruction if this skill is relevant.`,
+      `- id: ${skill.id}\n  title: ${skill.title}\n  description: ${skill.description || ""}\n  note: Use readSkill with this id to read the full instruction if this skill is relevant.`,
   )
   .join("\n\n")}
 </available_skills>`;

@@ -247,7 +247,7 @@ export function SidepanelApp() {
           instruction: interpolateSkillVariables(appliedSkill.instruction),
         }
       : undefined;
-    const effectiveMode = sentSkill?.mode || mode;
+    const effectiveMode = mode;
     const context = await buildSidepanelContext({
       mode: effectiveMode,
       attachedTabs,
@@ -483,7 +483,6 @@ export function SidepanelApp() {
       onStop={stop}
       onSelectSkill={(skill) => {
         setSelectedSkill(skill);
-        if (skill.mode) setMode(skill.mode);
       }}
       onCancelEditMessage={cancelEditMessage}
       onShowAllTabsPicker={async () => {

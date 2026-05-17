@@ -142,7 +142,6 @@ export const zhTW: LocaleMessages = {
     untitledSkill: "未命名操作",
     title: "標題",
     description: "Description",
-    mode: "Mode",
     instruction: "指令",
     deleteSkill: "刪除Skill",
     deleteSkillConfirm: "刪除此Skill？",

@@ -129,7 +129,6 @@ export function readSkill(skills: Skill[], input: Record<string, unknown>) {
     id: skill.id,
     title: skill.title,
     description: skill.description || "",
-    mode: skill.mode || "",
     instruction: skill.instruction,
   };
 }

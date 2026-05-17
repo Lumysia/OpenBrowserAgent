@@ -44,7 +44,6 @@ export type Skill = {
   title: string;
   description?: string;
   instruction: string;
-  mode?: ChatMode;
   builtin?: boolean;
   createdAt?: number;
   updatedAt?: number;

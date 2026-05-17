@@ -139,7 +139,6 @@ export const zhCN: LocaleMessages = {
     untitledSkill: "未命名 Skill",
     title: "标题",
     description: "描述",
-    mode: "模式",
     instruction: "指令",
     deleteSkill: "删除 Skill",
     deleteSkillConfirm: "删除这个 Skill？",

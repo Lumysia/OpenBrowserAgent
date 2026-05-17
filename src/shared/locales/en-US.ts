@@ -172,7 +172,6 @@ export const enUS = {
     untitledSkill: "Untitled Skill",
     title: "Title",
     description: "Description",
-    mode: "Mode",
     instruction: "Instruction",
     deleteSkill: "Delete Skill",
     deleteSkillConfirm: "Delete this skill?",
