@@ -44,6 +44,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  ScrollArea,
   Switch,
   Textarea,
 } from "../../src/ui/components";
@@ -124,7 +125,7 @@ function OptionsApp() {
         </nav>
         <div className="settings-sidebar-version">v{version}</div>
       </aside>
-      <main className="settings-main">
+      <ScrollArea className="settings-main">
         <div className="settings-content">
           {route === OPTIONS_ROUTE.providers ? (
             <ProvidersPage />
@@ -136,7 +137,7 @@ function OptionsApp() {
             <GeneralPage />
           )}
         </div>
-      </main>
+      </ScrollArea>
     </div>
   );
 }

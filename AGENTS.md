@@ -21,7 +21,9 @@ OpenBrowserAgent is a WXT/Vite/React/TypeScript browser extension for AI-assiste
 ## UI Rules
 
 - Use the local shadcn-style components from `src/ui/components` for buttons, inputs, textarea, select, cards, badges, labels, and accordions.
-- Do not add raw ad-hoc buttons/inputs/selects in app code unless a native element is required by browser-extension constraints.
+- Prefer local shadcn/Radix primitives for interactive UI instead of custom interaction code. Tooltips, popovers, dropdowns, scroll containers, accordions, selects, switches, buttons, inputs, textareas, cards, badges, labels, and similar reusable UI behavior should be implemented through `src/ui/components` first. If a primitive is missing, add a local shadcn-style wrapper around the Radix primitive instead of building one-off CSS/DOM behavior.
+- Do not keep old custom UI implementations as compatibility layers during development. When migrating a UI surface to local shadcn/Radix primitives, remove the replaced state, selectors, CSS, and event handling in the same change.
+- Do not add raw ad-hoc buttons/inputs/selects in app code unless a native element is required by browser-extension constraints or a rendered Markdown/HTML boundary makes React components impossible.
 - Keep animations subtle: short fades, accordion transitions, hover/press feedback, and streaming typing indicators.
 - Preserve a compact sidepanel density while keeping UI colors and branding consistent with OpenBrowserAgent.
 - Theme-aware UI should use shared CSS variables. Light, dark, and system modes should all be checked when changing colors, shadows, gradients, menus, popovers, or tool states.
@@ -40,6 +42,7 @@ OpenBrowserAgent is a WXT/Vite/React/TypeScript browser extension for AI-assiste
 - Prefer real streaming over simulated streaming. Do not wait for a full model response and then fake token chunks when the provider supports streaming.
 - Keep preferences explicit and defaulted in storage. New preferences should have a type, a storage default, and a settings control when user-facing.
 - Centralize reusable policy/protocol values in a registry, config, or typed constants instead of repeating literals at call sites. This applies broadly to storage areas and keys, routes and hash paths, port names, request/chunk types, DOM data selectors, state IDs, quotas, timeouts, limits, and user-visible operational messages. Local one-off copy is fine; cross-file or cross-feature behavior is not.
+- Keep source files under 500 lines by default. If a file approaches the limit, split by responsibility into components, hooks, helpers, registries, or feature modules before adding more behavior. Exceptions require a clear reason such as generated code, static data, or compact protocol/schema declarations.
 - Format changed source files with Prettier before verification.
 
 ## Browser Tool Rules

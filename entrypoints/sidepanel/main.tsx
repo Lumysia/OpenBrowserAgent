@@ -82,12 +82,20 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  ScrollArea,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
   Textarea,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import "../../src/ui/styles.css";
@@ -129,9 +137,6 @@ const ADD_MENU_VIEW = {
   tabs: "tabs",
 } as const;
 
-const POPOVER_ROOT_SELECTOR =
-  '[data-popover-root="true"], [data-radix-select-content], [role="listbox"]';
-
 function SidepanelApp() {
   const [providers] = useStoredState(storage.provider);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
@@ -156,7 +161,7 @@ function SidepanelApp() {
   const portRef = useRef<chrome.runtime.Port | undefined>(undefined);
   const autoAttachedRef = useRef(false);
   const sidepanelRef = useRef<HTMLDivElement | null>(null);
-  const messagesRef = useRef<HTMLElement | null>(null);
+  const messagesRef = useRef<HTMLDivElement | null>(null);
   const chatsRef = useRef<Chat[]>([]);
   const initializedChatSelectionRef = useRef(false);
   const lastStreamActivityRef = useRef(Date.now());
@@ -277,27 +282,6 @@ function SidepanelApp() {
       }),
     );
   }
-
-  useEffect(() => {
-    if (!openMenu && !showHistory) return;
-    const closeOnOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest(POPOVER_ROOT_SELECTOR)) return;
-      setOpenMenu(null);
-      setShowHistory(false);
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setOpenMenu(null);
-      setShowHistory(false);
-    };
-    document.addEventListener("mousedown", closeOnOutside);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.removeEventListener("mousedown", closeOnOutside);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [openMenu, showHistory]);
 
   useEffect(() => {
     if (preferences?.autoScroll === false) return;
@@ -695,11 +679,6 @@ function SidepanelApp() {
     ]);
   }
 
-  async function openAddContextMenu() {
-    setAddMenuView(ADD_MENU_VIEW.menu);
-    setOpenMenu(openMenu === COMPOSER_MENU.add ? null : COMPOSER_MENU.add);
-  }
-
   async function showAllTabsPicker() {
     const tabs = await chrome.tabs.query({ currentWindow: true });
     setAvailableTabs(
@@ -834,307 +813,288 @@ function SidepanelApp() {
   }
 
   return (
-    <div className="sidepanel" ref={sidepanelRef}>
-      <header className="sidepanel-header">
-        <div className="sidepanel-topbar">
-          <Button
-            className="tooltip tooltip-left-edge"
-            data-tooltip={t.sidepanel.clearAllChats}
-            variant="ghost"
-            size="icon"
-            onClick={() => setChats([])}
-          >
-            <Trash2 size={18} />
-          </Button>
-          <div />
-          <div className="topbar-actions">
-            <Button
-              className="tooltip"
-              data-tooltip={t.words.newChat}
-              variant="ghost"
-              size="icon"
-              onClick={createChat}
-            >
-              <MessageCirclePlus size={18} />
-            </Button>
-            <Button
-              data-popover-root="true"
-              className="tooltip"
-              data-tooltip={t.sidepanel.chatHistory}
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowHistory((value) => !value)}
-            >
-              <History size={18} />
-            </Button>
-            <Button
-              className="tooltip tooltip-right-edge"
-              data-tooltip={t.common.settings}
-              variant="ghost"
-              size="icon"
-              onClick={() => chrome.runtime.openOptionsPage()}
-            >
-              <Settings size={18} />
-            </Button>
-          </div>
-          {showHistory && (
-            <HistoryPanel
-              t={t}
-              chats={chats || []}
-              activeChatId={currentChat?.id}
-              onSelect={(chatId) => {
-                setActiveChatId(chatId);
-                setShowHistory(false);
-              }}
-              onClose={closeChat}
-            />
-          )}
-        </div>
-      </header>
-      <main className="messages" ref={messagesRef}>
-        {!currentChat?.messages.length && (
-          <div className="empty">
-            <div>
-              <h2>{t.sidepanel.whatDoYouWant}</h2>
-              <p className="muted">{t.sidepanel.emptyDescription}</p>
-            </div>
-          </div>
-        )}
-        {currentChat?.messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
-        ))}
-      </main>
-      <footer className="composer">
-        <div className="quick-action-create-row">
-          <Button
-            className="quick-action-create"
-            variant="secondary"
-            size="sm"
-            disabled={creatingQuickAction}
-            onClick={createQuickActionFromCurrentChat}
-          >
-            <Plus size={16} />{" "}
-            {creatingQuickAction
-              ? t.sidepanel.generatingQuickAction
-              : quickActionCreated
-                ? t.sidepanel.quickActionCreated
-                : t.sidepanel.createQuickAction}
-          </Button>
-        </div>
-        {openMenu === COMPOSER_MENU.add &&
-          addMenuView === ADD_MENU_VIEW.tabs && (
-            <AddContextMenu
-              t={t}
-              view={addMenuView}
-              tabs={availableTabs}
-              quickActions={quickActions || []}
-              selectedTabIds={attachedTabs.map((tab) => tab.id)}
-              onShowTabs={showAllTabsPicker}
-              onQuickAction={(action) => {
-                send(action.instruction, action);
-                setOpenMenu(null);
-              }}
-              onToggleTab={toggleAttachedTab}
-              onAttachTab={async () => {
-                await attachActiveTab();
-                setOpenMenu(null);
-              }}
-              onSelectElement={async () => {
-                await selectElement();
-                setOpenMenu(null);
-              }}
-            />
-          )}
-        <div className="context-strip">
-          <div className="context-chip-row">
-            {attachedTabs.map((tab) => (
-              <AttachedTabCard
-                key={tab.id}
-                t={t}
-                tab={tab}
-                onRemove={() => removeAttachedTab(tab.id)}
-              />
-            ))}
-          </div>
-          {selectedElement && (
-            <div className="context-card">
-              <MousePointerClick size={18} />
-              <span>
-                <strong>
-                  {selectedElement.tagName || t.sidepanel.elementSelected}
-                </strong>
-                <small>{t.sidepanel.willBeSentAsPageContext}</small>
-              </span>
-              <button
-                className="context-close"
-                title={t.sidepanel.selectElement}
-                onClick={() => setSelectedElement(null)}
-              >
-                <X size={14} />
-              </button>
-            </div>
-          )}
-        </div>
-        <div className="composer-box">
-          {aiWorking && (
-            <div className="ai-working-overlay" aria-live="polite">
-              <span className="ai-working-orb" />
-              <span>
-                <strong>
-                  {creatingQuickAction
-                    ? t.sidepanel.generatingQuickAction
-                    : t.sidepanel.aiWorking}
-                </strong>
-                <small>{t.sidepanel.aiWorkingDescription}</small>
-              </span>
-              <span className="ai-working-bars" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </span>
-            </div>
-          )}
-          <Textarea
-            value={input}
-            placeholder={t.sidepanel.whatDoYouWant}
-            disabled={aiWorking}
-            onChange={(event) => setInput(event.target.value)}
-            onKeyDown={(event) => {
-              if (
-                event.key === "Enter" &&
-                !event.shiftKey &&
-                !event.metaKey &&
-                !event.ctrlKey
-              ) {
-                event.preventDefault();
-                send();
-              }
-            }}
-          />
-          <div className="composer-controls">
-            <div className="composer-left">
-              <Button
-                data-popover-root="true"
-                className="composer-icon-button"
-                variant="outline"
-                size="icon"
-                disabled={aiWorking}
-                onClick={openAddContextMenu}
-              >
-                <Plus size={20} />
+    <TooltipProvider delayDuration={250}>
+      <div className="sidepanel" ref={sidepanelRef}>
+        <header className="sidepanel-header">
+          <div className="sidepanel-topbar">
+            <IconTooltip label={t.sidepanel.clearAllChats}>
+              <Button variant="ghost" size="icon" onClick={() => setChats([])}>
+                <Trash2 size={18} />
               </Button>
-              {openMenu === COMPOSER_MENU.add &&
-                addMenuView === ADD_MENU_VIEW.menu && (
-                  <AddContextMenu
+            </IconTooltip>
+            <div />
+            <div className="topbar-actions">
+              <IconTooltip label={t.words.newChat}>
+                <Button variant="ghost" size="icon" onClick={createChat}>
+                  <MessageCirclePlus size={18} />
+                </Button>
+              </IconTooltip>
+              <Popover open={showHistory} onOpenChange={setShowHistory}>
+                <IconTooltip label={t.sidepanel.chatHistory}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <History size={18} />
+                    </Button>
+                  </PopoverTrigger>
+                </IconTooltip>
+                <PopoverContent align="end" className="history-popover-content">
+                  <HistoryPanel
                     t={t}
-                    view={addMenuView}
-                    tabs={availableTabs}
-                    quickActions={quickActions || []}
-                    selectedTabIds={attachedTabs.map((tab) => tab.id)}
-                    onShowTabs={showAllTabsPicker}
-                    onQuickAction={(action) => {
-                      send(action.instruction, action);
-                      setOpenMenu(null);
+                    chats={chats || []}
+                    activeChatId={currentChat?.id}
+                    onSelect={(chatId) => {
+                      setActiveChatId(chatId);
+                      setShowHistory(false);
                     }}
-                    onToggleTab={toggleAttachedTab}
-                    onAttachTab={async () => {
-                      await attachActiveTab();
-                      setOpenMenu(null);
-                    }}
-                    onSelectElement={async () => {
-                      await selectElement();
-                      setOpenMenu(null);
-                    }}
+                    onClose={closeChat}
                   />
-                )}
+                </PopoverContent>
+              </Popover>
+              <IconTooltip label={t.common.settings}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => chrome.runtime.openOptionsPage()}
+                >
+                  <Settings size={18} />
+                </Button>
+              </IconTooltip>
             </div>
-            <div className="composer-selectors">
-              <div className="selector-anchor model-anchor">
-                <button
-                  data-popover-root="true"
-                  className="composer-trigger"
-                  disabled={aiWorking}
-                  onClick={() =>
-                    setOpenMenu(
-                      openMenu === COMPOSER_MENU.model
-                        ? null
-                        : COMPOSER_MENU.model,
-                    )
-                  }
-                >
-                  {selectedModelLabel(
-                    preferences?.selectedModelId,
-                    configuredModels,
-                    t,
-                  )}{" "}
-                  <ChevronDown size={15} />
-                </button>
-                {openMenu === COMPOSER_MENU.model && (
-                  <ModelMenu
-                    t={t}
-                    models={configuredModels}
-                    selectedModelId={preferences?.selectedModelId}
-                    onSelect={(modelId) => {
-                      if (preferences)
-                        setPreferences({
-                          ...preferences,
-                          selectedModelId: modelId,
-                        });
-                      setOpenMenu(null);
-                    }}
-                  />
-                )}
-              </div>
-              <div className="selector-anchor mode-anchor">
-                <button
-                  data-popover-root="true"
-                  className="composer-trigger"
-                  disabled={aiWorking}
-                  onClick={() =>
-                    setOpenMenu(
-                      openMenu === COMPOSER_MENU.mode
-                        ? null
-                        : COMPOSER_MENU.mode,
-                    )
-                  }
-                >
-                  {mode === "Agent" ? t.words.agent : t.words.ask}{" "}
-                  <ChevronDown size={15} />
-                </button>
-                {openMenu === COMPOSER_MENU.mode && (
-                  <ModeMenu
-                    t={t}
-                    mode={mode}
-                    onSelect={(nextMode) => {
-                      setMode(nextMode);
-                      setOpenMenu(null);
-                    }}
-                  />
-                )}
+          </div>
+        </header>
+        <ScrollArea className="messages" viewportRef={messagesRef}>
+          {!currentChat?.messages.length && (
+            <div className="empty">
+              <div>
+                <h2>{t.sidepanel.whatDoYouWant}</h2>
+                <p className="muted">{t.sidepanel.emptyDescription}</p>
               </div>
             </div>
-            {streaming ? (
-              <Button
-                className="send-button tooltip"
-                data-tooltip={t.sidepanel.stop}
-                onClick={stop}
-              >
-                <Square size={18} />
-              </Button>
-            ) : (
-              <Button
-                className="send-button tooltip"
-                data-tooltip={t.sidepanel.send}
-                disabled={creatingQuickAction}
-                onClick={() => send()}
-              >
-                <Send size={20} />
-              </Button>
+          )}
+          {currentChat?.messages.map((message) => (
+            <MessageBubble key={message.id} message={message} />
+          ))}
+        </ScrollArea>
+        <footer className="composer">
+          <div className="quick-action-create-row">
+            <Button
+              className="quick-action-create"
+              variant="secondary"
+              size="sm"
+              disabled={creatingQuickAction}
+              onClick={createQuickActionFromCurrentChat}
+            >
+              <Plus size={16} />{" "}
+              {creatingQuickAction
+                ? t.sidepanel.generatingQuickAction
+                : quickActionCreated
+                  ? t.sidepanel.quickActionCreated
+                  : t.sidepanel.createQuickAction}
+            </Button>
+          </div>
+          <div className="context-strip">
+            <div className="context-chip-row">
+              {attachedTabs.map((tab) => (
+                <AttachedTabCard
+                  key={tab.id}
+                  t={t}
+                  tab={tab}
+                  onRemove={() => removeAttachedTab(tab.id)}
+                />
+              ))}
+            </div>
+            {selectedElement && (
+              <div className="context-card">
+                <MousePointerClick size={18} />
+                <span>
+                  <strong>
+                    {selectedElement.tagName || t.sidepanel.elementSelected}
+                  </strong>
+                  <small>{t.sidepanel.willBeSentAsPageContext}</small>
+                </span>
+                <button
+                  className="context-close"
+                  title={t.sidepanel.selectElement}
+                  onClick={() => setSelectedElement(null)}
+                >
+                  <X size={14} />
+                </button>
+              </div>
             )}
           </div>
-        </div>
-      </footer>
-    </div>
+          <div className="composer-box">
+            {aiWorking && (
+              <div className="ai-working-overlay" aria-live="polite">
+                <span className="ai-working-orb" />
+                <span>
+                  <strong>
+                    {creatingQuickAction
+                      ? t.sidepanel.generatingQuickAction
+                      : t.sidepanel.aiWorking}
+                  </strong>
+                  <small>{t.sidepanel.aiWorkingDescription}</small>
+                </span>
+                <span className="ai-working-bars" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+              </div>
+            )}
+            <Textarea
+              value={input}
+              placeholder={t.sidepanel.whatDoYouWant}
+              disabled={aiWorking}
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (
+                  event.key === "Enter" &&
+                  !event.shiftKey &&
+                  !event.metaKey &&
+                  !event.ctrlKey
+                ) {
+                  event.preventDefault();
+                  send();
+                }
+              }}
+            />
+            <div className="composer-controls">
+              <div className="composer-left">
+                <Popover
+                  open={openMenu === COMPOSER_MENU.add}
+                  onOpenChange={(open) => {
+                    if (open) {
+                      setAddMenuView(ADD_MENU_VIEW.menu);
+                      setOpenMenu(COMPOSER_MENU.add);
+                    } else {
+                      setOpenMenu(null);
+                    }
+                  }}
+                >
+                  <PopoverTrigger asChild>
+                    <Button
+                      className="composer-icon-button"
+                      variant="outline"
+                      size="icon"
+                      disabled={aiWorking}
+                    >
+                      <Plus size={20} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="add-context-popover-content">
+                    <AddContextMenu
+                      t={t}
+                      view={addMenuView}
+                      tabs={availableTabs}
+                      quickActions={quickActions || []}
+                      selectedTabIds={attachedTabs.map((tab) => tab.id)}
+                      onShowTabs={showAllTabsPicker}
+                      onQuickAction={(action) => {
+                        send(action.instruction, action);
+                        setOpenMenu(null);
+                      }}
+                      onToggleTab={toggleAttachedTab}
+                      onAttachTab={async () => {
+                        await attachActiveTab();
+                        setOpenMenu(null);
+                      }}
+                      onSelectElement={async () => {
+                        await selectElement();
+                        setOpenMenu(null);
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="composer-selectors">
+                <div className="selector-anchor model-anchor">
+                  <Popover
+                    open={openMenu === COMPOSER_MENU.model}
+                    onOpenChange={(open) =>
+                      setOpenMenu(open ? COMPOSER_MENU.model : null)
+                    }
+                  >
+                    <PopoverTrigger asChild>
+                      <button className="composer-trigger" disabled={aiWorking}>
+                        {selectedModelLabel(
+                          preferences?.selectedModelId,
+                          configuredModels,
+                          t,
+                        )}{" "}
+                        <ChevronDown size={15} />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="model-popover-content"
+                      align="end"
+                    >
+                      <ModelMenu
+                        t={t}
+                        models={configuredModels}
+                        selectedModelId={preferences?.selectedModelId}
+                        onSelect={(modelId) => {
+                          if (preferences)
+                            setPreferences({
+                              ...preferences,
+                              selectedModelId: modelId,
+                            });
+                          setOpenMenu(null);
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="selector-anchor mode-anchor">
+                  <Popover
+                    open={openMenu === COMPOSER_MENU.mode}
+                    onOpenChange={(open) =>
+                      setOpenMenu(open ? COMPOSER_MENU.mode : null)
+                    }
+                  >
+                    <PopoverTrigger asChild>
+                      <button className="composer-trigger" disabled={aiWorking}>
+                        {mode === "Agent" ? t.words.agent : t.words.ask}{" "}
+                        <ChevronDown size={15} />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="mode-popover-content"
+                      align="end"
+                    >
+                      <ModeMenu
+                        t={t}
+                        mode={mode}
+                        onSelect={(nextMode) => {
+                          setMode(nextMode);
+                          setOpenMenu(null);
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+              {streaming ? (
+                <IconTooltip label={t.sidepanel.stop}>
+                  <Button className="send-button" onClick={stop}>
+                    <Square size={18} />
+                  </Button>
+                </IconTooltip>
+              ) : (
+                <IconTooltip label={t.sidepanel.send}>
+                  <Button
+                    className="send-button"
+                    disabled={creatingQuickAction}
+                    onClick={() => send()}
+                  >
+                    <Send size={20} />
+                  </Button>
+                </IconTooltip>
+              )}
+            </div>
+          </div>
+        </footer>
+      </div>
+    </TooltipProvider>
   );
 }
 
@@ -1153,7 +1113,7 @@ function HistoryPanel({
 }) {
   const sortedChats = sortChatsNewestFirst(chats);
   return (
-    <div className="history-panel" data-popover-root="true">
+    <div className="history-panel">
       <div className="history-panel-header">{t.sidepanel.chatHistory}</div>
       {!chats.length && (
         <div className="history-empty">{t.sidepanel.noChatsYet}</div>
@@ -1180,6 +1140,23 @@ function HistoryPanel({
         </div>
       ))}
     </div>
+  );
+}
+
+function IconTooltip({
+  label,
+  side = "bottom",
+  children,
+}: {
+  label: string;
+  side?: "top" | "right" | "bottom" | "left";
+  children: React.ReactNode;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side={side}>{label}</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -1233,10 +1210,7 @@ function AddContextMenu({
 }) {
   if (view === "menu") {
     return (
-      <div
-        className="composer-menu add-context-menu add-context-menu-compact"
-        data-popover-root="true"
-      >
+      <div className="add-context-menu add-context-menu-compact">
         <button className="composer-menu-item" onClick={onShowTabs}>
           <Layers size={17} />
           <span>
@@ -1273,10 +1247,7 @@ function AddContextMenu({
   }
 
   return (
-    <div
-      className="composer-menu add-context-menu add-tabs-panel"
-      data-popover-root="true"
-    >
+    <div className="add-context-menu add-tabs-panel">
       <div className="tab-picker-title">
         <Layers size={17} /> {t.sidepanel.allOpenTabs} ({tabs.length})
       </div>
@@ -1372,7 +1343,7 @@ function ModelMenu({
   onSelect: (modelId: string) => void;
 }) {
   return (
-    <div className="composer-menu model-menu" data-popover-root="true">
+    <div className="model-menu">
       {!models.length && (
         <div className="composer-menu-empty">
           {t.sidepanel.noModelsConfigured}
@@ -1418,7 +1389,7 @@ function ModeMenu({
     { id: "Ask", title: t.words.ask, description: t.sidepanel.askDescription },
   ];
   return (
-    <div className="composer-menu mode-menu" data-popover-root="true">
+    <div className="mode-menu">
       {modes.map((item) => (
         <button
           className={`mode-menu-item ${mode === item.id ? "active" : ""}`}
@@ -1568,13 +1539,14 @@ function AssistantText({ text }: { text: string }) {
         dangerouslySetInnerHTML={{ __html: html }}
         onClick={copyCode}
       />
-      <button
-        className={`copy-message tooltip${copied ? " copied" : ""}`}
-        data-tooltip={copied ? t.common.copied : t.common.copy}
-        onClick={copyText}
-      >
-        {copied ? <Check size={15} /> : <Copy size={15} />}
-      </button>
+      <IconTooltip label={copied ? t.common.copied : t.common.copy}>
+        <button
+          className={`copy-message${copied ? " copied" : ""}`}
+          onClick={copyText}
+        >
+          {copied ? <Check size={15} /> : <Copy size={15} />}
+        </button>
+      </IconTooltip>
     </div>
   );
 }
@@ -1595,7 +1567,7 @@ function renderMarkdown(
     const displayLanguage = escapeHtml(
       language || highlighted.language || "text",
     );
-    return `<div class="markdown-code-block${copied ? " copied" : ""}"><div class="markdown-code-header"><span>${displayLanguage}</span><button type="button" class="code-copy tooltip tooltip-right-edge" data-tooltip="${copied ? escapeHtml(t.common.copied) : escapeHtml(t.common.copy)}" data-code-index="${codeIndex}" data-code-id="${codeId}" aria-label="${escapeHtml(t.common.copy)}"><svg class="code-copy-icon code-copy-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="code-copy-icon code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></button></div><pre><code class="hljs${language ? ` language-${escapeHtml(language)}` : ""}">${highlighted.html}</code></pre></div>`;
+    return `<div class="markdown-code-block${copied ? " copied" : ""}"><div class="markdown-code-header"><span>${displayLanguage}</span><button type="button" class="code-copy" title="${copied ? escapeHtml(t.common.copied) : escapeHtml(t.common.copy)}" data-code-index="${codeIndex}" data-code-id="${codeId}" aria-label="${escapeHtml(t.common.copy)}"><svg class="code-copy-icon code-copy-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="code-copy-icon code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></button></div><pre><code class="hljs${language ? ` language-${escapeHtml(language)}` : ""}">${highlighted.html}</code></pre></div>`;
   };
   return { html: marked.parse(text, { renderer }), codeBlocks };
 }
