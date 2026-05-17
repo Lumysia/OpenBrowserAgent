@@ -6,13 +6,14 @@ import { jaJP } from "./locales/ja-JP";
 import { ko } from "./locales/ko";
 import { ptBR } from "./locales/pt-BR";
 import { zhCN } from "./locales/zh-CN";
+import { zhTW } from "./locales/zh-TW";
 
 export const i18nRegistry: Record<string, LocaleMessages> = {
   "en-US": enUS,
   "zh-CN": zhCN,
   "zh-SG": zhCN,
-  "zh-TW": zhCN,
-  "zh-HK": zhCN,
+  "zh-TW": zhTW,
+  "zh-HK": zhTW,
   "ja-JP": jaJP,
   ko,
   "fr-FR": frFR,

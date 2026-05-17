@@ -1,6 +1,6 @@
-import { createLocale } from "./factory";
+import type { LocaleMessages } from "./en-US";
 
-export const jaJP = createLocale({
+export const jaJP: LocaleMessages = {
   app: { tagline: "ブラウザー内のAIエージェント" },
   common: {
     add: "追加",
@@ -10,6 +10,7 @@ export const jaJP = createLocale({
     saved: "保存済み",
     settings: "設定",
     copy: "コピー",
+    copied: "コピーしました",
     help: "ヘルプ",
     language: "言語",
     enabled: "有効",
@@ -28,9 +29,17 @@ export const jaJP = createLocale({
     clearAllChats: "すべてのチャットを消去",
     noChatsYet: "チャットはまだありません",
     closeChat: "チャットを閉じる",
+    messageCount: "{count}件のメッセージ",
+    relativeMinutesAgo: "{count}分前",
+    relativeHoursAgo: "{count}時間前",
+    relativeDaysAgo: "{count}日前",
     whatDoYouWant: "何をしますか？",
     emptyDescription: "タスクの自動化、検索、ブラウザー操作。",
     createQuickAction: "クイックアクションを作成",
+    generatingQuickAction: "クイックアクションを作成中",
+    quickActionCreated: "クイックアクションを作成しました",
+    aiWorking: "AIが作業中です",
+    aiWorkingDescription: "読み取り、操作し、回答を準備しています。",
     willBeSentToAi: "AIに送信されます",
     willBeSentAsPageContext: "ページコンテキストとして送信されます",
     currentPage: "現在のページ",
@@ -118,6 +127,7 @@ export const jaJP = createLocale({
   },
   options: {
     general: "一般",
+    sync: "同期",
     providers: "プロバイダー",
     quickActions: "クイックアクション",
     modelProviders: "モデルプロバイダー",
@@ -168,5 +178,26 @@ export const jaJP = createLocale({
     syncSettings: "設定を同期",
     syncSettingsDescription:
       "言語と軽量設定をブラウザーアカウントで同期します。",
+    syncProviders: "プロバイダーを同期",
+    syncProvidersDescription:
+      "APIキーを含むプロバイダー設定をブラウザーアカウントで同期します。",
+    syncQuickActions: "クイックアクションを同期",
+    syncQuickActionsDescription:
+      "クイックアクションのテンプレートをブラウザーアカウントで同期します。",
+    syncChats: "チャットを同期",
+    syncChatsDescription:
+      "チャット履歴をブラウザーアカウントで同期します。ローカルのみの会話にする場合はオフにします。",
+    syncWritePending: "同期書き込みがキューに入っています",
+    syncWriteIdle: "同期書き込みは最新です",
+    syncWriteError: "最後の同期書き込みに失敗しました",
+    autoScroll: "自動スクロール",
+    autoScrollDescription:
+      "メッセージのストリーミング中、最新のAI出力を自動的に表示し続けます。",
+    autoRetry: "自動再試行",
+    autoRetryDescription:
+      "アシスタントが30秒間新しい出力を生成しない場合、一度だけ自動的に続行します。",
+    maxToolSteps: "最大ツールステップ数",
+    maxToolStepsDescription:
+      "アシスタントが実行できるブラウザーツールのステップ数を設定します。0にするとツール呼び出しを無効にします。",
   },
-});
+};

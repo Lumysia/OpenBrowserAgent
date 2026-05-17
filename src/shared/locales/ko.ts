@@ -1,6 +1,6 @@
-import { createLocale } from "./factory";
+import type { LocaleMessages } from "./en-US";
 
-export const ko = createLocale({
+export const ko: LocaleMessages = {
   app: { tagline: "브라우저 안의 AI Agent" },
   common: {
     add: "추가",
@@ -10,6 +10,7 @@ export const ko = createLocale({
     saved: "저장됨",
     settings: "설정",
     copy: "복사",
+    copied: "복사됨",
     help: "도움말",
     language: "언어",
     enabled: "활성화됨",
@@ -28,9 +29,17 @@ export const ko = createLocale({
     clearAllChats: "모든 채팅 지우기",
     noChatsYet: "아직 채팅이 없습니다",
     closeChat: "채팅 닫기",
+    messageCount: "{count}개 메시지",
+    relativeMinutesAgo: "{count}분 전",
+    relativeHoursAgo: "{count}시간 전",
+    relativeDaysAgo: "{count}일 전",
     whatDoYouWant: "무엇을 할까요?",
     emptyDescription: "작업 자동화, 검색, 브라우저 제어.",
     createQuickAction: "빠른 작업 만들기",
+    generatingQuickAction: "빠른 작업 생성 중",
+    quickActionCreated: "빠른 작업 생성됨",
+    aiWorking: "AI 작업 중",
+    aiWorkingDescription: "읽고, 실행하고, 응답을 준비하는 중입니다.",
     willBeSentToAi: "AI로 전송됩니다",
     willBeSentAsPageContext: "페이지 컨텍스트로 전송됩니다",
     currentPage: "현재 페이지",
@@ -48,9 +57,65 @@ export const ko = createLocale({
     running: "실행 중",
     done: "완료",
     error: "오류",
+    tool: {
+      openNewTabWithURL: {
+        running: "새 페이지 여는 중",
+        done: "새 페이지 열림",
+      },
+      findAccessableElementsFromTab: {
+        running: "접근 가능한 요소 찾는 중",
+        done: "요소 찾음",
+        found: "접근 가능한 요소 {count}개 찾음",
+      },
+      waitTabLoadFinished: {
+        running: "페이지 로드 대기 중",
+        done: "페이지 로드됨",
+      },
+      inputTextByAiID: { running: "텍스트 입력 중", done: "텍스트 입력됨" },
+      clickElementByAiID: { running: "요소 클릭 중", done: "요소 클릭됨" },
+      getTabContent: {
+        running: "페이지 내용 가져오는 중",
+        done: "페이지 내용 가져옴",
+      },
+      groupTabs: { running: "탭 그룹화 중", done: "탭 그룹화됨" },
+      getCurrentTab: {
+        running: "현재 페이지 가져오는 중",
+        done: "현재 페이지 가져옴",
+      },
+      getAllTabs: {
+        running: "열린 탭 확인 중",
+        done: "열린 탭 확인됨",
+        found: "열린 탭 {count}개 찾음",
+      },
+      goToTab: { running: "탭 전환 중", done: "탭 전환됨" },
+      openSearchTab: { running: "검색 중", done: "검색 탭 열림" },
+      downloadAllImagesInTab: {
+        running: "이미지 다운로드 중",
+        done: "이미지 다운로드됨",
+      },
+      downloadTabToMarkdown: {
+        running: "Markdown 다운로드 중",
+        done: "Markdown 다운로드됨",
+      },
+      insertCSSToTab: {
+        running: "페이지 스타일 적용 중",
+        done: "페이지 스타일 적용됨",
+      },
+      removeCSSToTab: {
+        running: "페이지 스타일 제거 중",
+        done: "페이지 스타일 제거됨",
+      },
+      closeTab: { running: "탭 닫는 중", done: "탭 닫힘" },
+      scrollToBottom: { running: "페이지 스크롤 중", done: "페이지 스크롤됨" },
+      getElementPropertiesByAiID: {
+        running: "요소 검사 중",
+        done: "요소 검사됨",
+      },
+    },
   },
   options: {
     general: "일반",
+    sync: "동기화",
     providers: "제공업체",
     quickActions: "빠른 작업",
     modelProviders: "모델 제공업체",
@@ -100,5 +165,26 @@ export const ko = createLocale({
     syncSettings: "설정 동기화",
     syncSettingsDescription:
       "언어와 가벼운 설정을 브라우저 계정과 동기화합니다.",
+    syncProviders: "제공업체 동기화",
+    syncProvidersDescription:
+      "API 키를 포함한 제공업체 구성을 브라우저 계정으로 동기화합니다.",
+    syncQuickActions: "빠른 작업 동기화",
+    syncQuickActionsDescription:
+      "빠른 작업 템플릿을 브라우저 계정으로 동기화합니다.",
+    syncChats: "채팅 동기화",
+    syncChatsDescription:
+      "채팅 기록을 브라우저 계정으로 동기화합니다. 로컬 전용 대화는 끄세요.",
+    syncWritePending: "동기화 쓰기가 대기 중입니다",
+    syncWriteIdle: "동기화 쓰기가 최신 상태입니다",
+    syncWriteError: "마지막 동기화 쓰기 실패",
+    autoScroll: "자동 스크롤",
+    autoScrollDescription:
+      "메시지가 스트리밍되는 동안 최신 AI 출력을 자동으로 보이게 유지합니다.",
+    autoRetry: "자동 재시도",
+    autoRetryDescription:
+      "어시스턴트가 30초 동안 새 출력을 만들지 않으면 한 번 자동으로 계속합니다.",
+    maxToolSteps: "최대 도구 단계",
+    maxToolStepsDescription:
+      "어시스턴트가 실행할 수 있는 브라우저 도구 단계 수를 설정합니다. 0은 도구 호출을 비활성화합니다.",
   },
-});
+};

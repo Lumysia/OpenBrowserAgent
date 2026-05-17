@@ -39,6 +39,7 @@ OpenBrowserAgent is a WXT/Vite/React/TypeScript browser extension for AI-assiste
 - Avoid hardcoded theme colors in components and stateful UI; use shared CSS variables and `src/shared/i18n.ts` for user-facing text.
 - Do not add placeholder hacks, debug logs, or narrow special-case branches without an explicit product requirement.
 - Keep localization maintainable: UI message definitions live in per-locale files under `src/shared/locales`, and manifest messages live under `public/_locales`. Do not expose a language option unless its UI locale is implemented.
+- When adding or changing any user-facing UI string, update every supported locale at the same time. Do not rely on English fallback for implemented UI languages. Keep Simplified Chinese and Traditional Chinese as separate locale files with appropriate wording.
 - Keep user-facing text out of component logic unless it is a short technical fallback. Add or update locale keys instead.
 - Prefer real streaming over simulated streaming. Do not wait for a full model response and then fake token chunks when the provider supports streaming.
 - Keep preferences explicit and defaulted in storage. New preferences should have a type, a storage default, and a settings control when user-facing.

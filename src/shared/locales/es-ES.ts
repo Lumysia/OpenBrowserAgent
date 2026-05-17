@@ -1,6 +1,6 @@
-import { createLocale } from "./factory";
+import type { LocaleMessages } from "./en-US";
 
-export const esES = createLocale({
+export const esES: LocaleMessages = {
   app: { tagline: "Tu agente de IA en el navegador" },
   common: {
     add: "Añadir",
@@ -10,6 +10,7 @@ export const esES = createLocale({
     saved: "Guardado",
     settings: "Configuración",
     copy: "Copiar",
+    copied: "Copiado",
     help: "Ayuda",
     language: "Idioma",
     enabled: "Activado",
@@ -28,9 +29,17 @@ export const esES = createLocale({
     clearAllChats: "Borrar todos los chats",
     noChatsYet: "Aún no hay chats",
     closeChat: "Cerrar chat",
+    messageCount: "{count} mensajes",
+    relativeMinutesAgo: "hace {count} min",
+    relativeHoursAgo: "hace {count} h",
+    relativeDaysAgo: "hace {count} d",
     whatDoYouWant: "¿Qué quieres hacer?",
     emptyDescription: "Automatiza tareas, busca y controla tu navegador.",
     createQuickAction: "Crear acción rápida",
+    generatingQuickAction: "Creando acción rápida",
+    quickActionCreated: "Acción rápida creada",
+    aiWorking: "La IA está trabajando",
+    aiWorkingDescription: "Leyendo, actuando y preparando la respuesta.",
     willBeSentToAi: "Se enviará a la IA",
     willBeSentAsPageContext: "Se enviará como contexto de página",
     currentPage: "Página actual",
@@ -48,9 +57,74 @@ export const esES = createLocale({
     running: "Ejecutando",
     done: "Listo",
     error: "Error",
+    tool: {
+      openNewTabWithURL: {
+        running: "Abriendo nueva página",
+        done: "Nueva página abierta",
+      },
+      findAccessableElementsFromTab: {
+        running: "Buscando elementos accesibles",
+        done: "Elementos encontrados",
+        found: "Se encontraron {count} elementos accesibles",
+      },
+      waitTabLoadFinished: {
+        running: "Esperando carga de página",
+        done: "Página cargada",
+      },
+      inputTextByAiID: {
+        running: "Introduciendo texto",
+        done: "Texto introducido",
+      },
+      clickElementByAiID: {
+        running: "Haciendo clic en elemento",
+        done: "Elemento pulsado",
+      },
+      getTabContent: {
+        running: "Obteniendo contenido",
+        done: "Contenido obtenido",
+      },
+      groupTabs: { running: "Agrupando pestañas", done: "Pestañas agrupadas" },
+      getCurrentTab: {
+        running: "Obteniendo página actual",
+        done: "Página actual obtenida",
+      },
+      getAllTabs: {
+        running: "Revisando pestañas abiertas",
+        done: "Pestañas abiertas revisadas",
+        found: "Se encontraron {count} pestañas abiertas",
+      },
+      goToTab: { running: "Cambiando pestaña", done: "Pestaña cambiada" },
+      openSearchTab: {
+        running: "Buscando",
+        done: "Pestaña de búsqueda abierta",
+      },
+      downloadAllImagesInTab: {
+        running: "Descargando imágenes",
+        done: "Imágenes descargadas",
+      },
+      downloadTabToMarkdown: {
+        running: "Descargando Markdown",
+        done: "Markdown descargado",
+      },
+      insertCSSToTab: { running: "Aplicando estilo", done: "Estilo aplicado" },
+      removeCSSToTab: {
+        running: "Eliminando estilo",
+        done: "Estilo eliminado",
+      },
+      closeTab: { running: "Cerrando pestaña", done: "Pestaña cerrada" },
+      scrollToBottom: {
+        running: "Desplazando página",
+        done: "Página desplazada",
+      },
+      getElementPropertiesByAiID: {
+        running: "Inspeccionando elemento",
+        done: "Elemento inspeccionado",
+      },
+    },
   },
   options: {
     general: "General",
+    sync: "Sincronización",
     providers: "Proveedores",
     quickActions: "Acciones rápidas",
     modelProviders: "Proveedores de modelos",
@@ -101,5 +175,26 @@ export const esES = createLocale({
     syncSettings: "Sincronizar ajustes",
     syncSettingsDescription:
       "Sincroniza el idioma y preferencias ligeras con tu cuenta del navegador.",
+    syncProviders: "Sincronizar proveedores",
+    syncProvidersDescription:
+      "Sincroniza la configuración de proveedores, incluidas las claves API, con tu cuenta del navegador.",
+    syncQuickActions: "Sincronizar acciones rápidas",
+    syncQuickActionsDescription:
+      "Sincroniza plantillas de acciones rápidas con tu cuenta del navegador.",
+    syncChats: "Sincronizar chats",
+    syncChatsDescription:
+      "Sincroniza el historial de chats con tu cuenta del navegador. Desactívalo para conversaciones solo locales.",
+    syncWritePending: "Escrituras de sincronización en cola",
+    syncWriteIdle: "Escrituras de sincronización actualizadas",
+    syncWriteError: "Falló la última escritura de sincronización",
+    autoScroll: "Desplazamiento automático",
+    autoScrollDescription:
+      "Mantiene visible automáticamente la última salida de la IA durante el streaming.",
+    autoRetry: "Reintento automático",
+    autoRetryDescription:
+      "Continúa automáticamente una vez si el asistente no produce salida nueva durante 30 segundos.",
+    maxToolSteps: "Máximo de pasos de herramientas",
+    maxToolStepsDescription:
+      "Define cuántos pasos de herramientas del navegador puede ejecutar el asistente. Usa 0 para desactivar herramientas.",
   },
-});
+};

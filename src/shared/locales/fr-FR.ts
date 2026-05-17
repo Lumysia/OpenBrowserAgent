@@ -1,6 +1,6 @@
-import { createLocale } from "./factory";
+import type { LocaleMessages } from "./en-US";
 
-export const frFR = createLocale({
+export const frFR: LocaleMessages = {
   app: { tagline: "Votre agent IA dans le navigateur" },
   common: {
     add: "Ajouter",
@@ -10,6 +10,7 @@ export const frFR = createLocale({
     saved: "Enregistré",
     settings: "Paramètres",
     copy: "Copier",
+    copied: "Copié",
     help: "Aide",
     language: "Langue",
     enabled: "Activé",
@@ -28,10 +29,18 @@ export const frFR = createLocale({
     clearAllChats: "Effacer toutes les discussions",
     noChatsYet: "Aucune discussion",
     closeChat: "Fermer la discussion",
+    messageCount: "{count} messages",
+    relativeMinutesAgo: "il y a {count} min",
+    relativeHoursAgo: "il y a {count} h",
+    relativeDaysAgo: "il y a {count} j",
     whatDoYouWant: "Que voulez-vous faire ?",
     emptyDescription:
       "Automatiser des tâches, rechercher et contrôler votre navigateur.",
     createQuickAction: "Créer une action rapide",
+    generatingQuickAction: "Création de l'action rapide",
+    quickActionCreated: "Action rapide créée",
+    aiWorking: "L'IA travaille",
+    aiWorkingDescription: "Lecture, action et préparation de la réponse.",
     willBeSentToAi: "Sera envoyé à l'IA",
     willBeSentAsPageContext: "Sera envoyé comme contexte de page",
     currentPage: "Page actuelle",
@@ -49,9 +58,77 @@ export const frFR = createLocale({
     running: "En cours",
     done: "Terminé",
     error: "Erreur",
+    tool: {
+      openNewTabWithURL: {
+        running: "Ouverture d'une nouvelle page",
+        done: "Nouvelle page ouverte",
+      },
+      findAccessableElementsFromTab: {
+        running: "Recherche des éléments accessibles",
+        done: "Éléments trouvés",
+        found: "{count} éléments accessibles trouvés",
+      },
+      waitTabLoadFinished: {
+        running: "Attente du chargement",
+        done: "Page chargée",
+      },
+      inputTextByAiID: { running: "Saisie du texte", done: "Texte saisi" },
+      clickElementByAiID: {
+        running: "Clic sur l'élément",
+        done: "Élément cliqué",
+      },
+      getTabContent: {
+        running: "Récupération du contenu",
+        done: "Contenu récupéré",
+      },
+      groupTabs: {
+        running: "Regroupement des onglets",
+        done: "Onglets regroupés",
+      },
+      getCurrentTab: {
+        running: "Récupération de la page actuelle",
+        done: "Page actuelle récupérée",
+      },
+      getAllTabs: {
+        running: "Vérification des onglets ouverts",
+        done: "Onglets ouverts vérifiés",
+        found: "{count} onglets ouverts trouvés",
+      },
+      goToTab: { running: "Changement d'onglet", done: "Onglet changé" },
+      openSearchTab: {
+        running: "Recherche",
+        done: "Onglet de recherche ouvert",
+      },
+      downloadAllImagesInTab: {
+        running: "Téléchargement des images",
+        done: "Images téléchargées",
+      },
+      downloadTabToMarkdown: {
+        running: "Téléchargement du Markdown",
+        done: "Markdown téléchargé",
+      },
+      insertCSSToTab: {
+        running: "Application du style",
+        done: "Style appliqué",
+      },
+      removeCSSToTab: {
+        running: "Suppression du style",
+        done: "Style supprimé",
+      },
+      closeTab: { running: "Fermeture de l'onglet", done: "Onglet fermé" },
+      scrollToBottom: {
+        running: "Défilement de la page",
+        done: "Page défilée",
+      },
+      getElementPropertiesByAiID: {
+        running: "Inspection de l'élément",
+        done: "Élément inspecté",
+      },
+    },
   },
   options: {
     general: "Général",
+    sync: "Synchronisation",
     providers: "Fournisseurs",
     quickActions: "Actions rapides",
     modelProviders: "Fournisseurs de modèles",
@@ -102,5 +179,26 @@ export const frFR = createLocale({
     syncSettings: "Synchroniser les paramètres",
     syncSettingsDescription:
       "Synchronisez la langue et les préférences légères avec votre compte navigateur.",
+    syncProviders: "Synchroniser les fournisseurs",
+    syncProvidersDescription:
+      "Synchronisez la configuration des fournisseurs, y compris les clés API, via votre compte navigateur.",
+    syncQuickActions: "Synchroniser les actions rapides",
+    syncQuickActionsDescription:
+      "Synchronisez les modèles d'actions rapides via votre compte navigateur.",
+    syncChats: "Synchroniser les discussions",
+    syncChatsDescription:
+      "Synchronisez l'historique des discussions via votre compte navigateur. Désactivez pour des conversations locales uniquement.",
+    syncWritePending: "Écritures de synchronisation en attente",
+    syncWriteIdle: "Écritures de synchronisation à jour",
+    syncWriteError: "Dernière écriture de synchronisation échouée",
+    autoScroll: "Défilement automatique",
+    autoScrollDescription:
+      "Garder automatiquement la dernière sortie de l'IA visible pendant le streaming.",
+    autoRetry: "Nouvelle tentative automatique",
+    autoRetryDescription:
+      "Continuer automatiquement une fois si l'assistant ne produit rien pendant 30 secondes.",
+    maxToolSteps: "Nombre maximal d'étapes d'outils",
+    maxToolStepsDescription:
+      "Définit combien d'étapes d'outils navigateur l'assistant peut exécuter. Utilisez 0 pour désactiver les outils.",
   },
-});
+};

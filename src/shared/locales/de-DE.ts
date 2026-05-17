@@ -1,6 +1,6 @@
-import { createLocale } from "./factory";
+import type { LocaleMessages } from "./en-US";
 
-export const deDE = createLocale({
+export const deDE: LocaleMessages = {
   app: { tagline: "Ihr KI-Agent im Browser" },
   common: {
     add: "Hinzufügen",
@@ -10,6 +10,7 @@ export const deDE = createLocale({
     saved: "Gespeichert",
     settings: "Einstellungen",
     copy: "Kopieren",
+    copied: "Kopiert",
     help: "Hilfe",
     language: "Sprache",
     enabled: "Aktiviert",
@@ -28,10 +29,18 @@ export const deDE = createLocale({
     clearAllChats: "Alle Chats löschen",
     noChatsYet: "Noch keine Chats",
     closeChat: "Chat schließen",
+    messageCount: "{count} Nachrichten",
+    relativeMinutesAgo: "vor {count} Min.",
+    relativeHoursAgo: "vor {count} Std.",
+    relativeDaysAgo: "vor {count} Tg.",
     whatDoYouWant: "Was möchten Sie tun?",
     emptyDescription:
       "Aufgaben automatisieren, suchen und den Browser steuern.",
     createQuickAction: "Schnellaktion erstellen",
+    generatingQuickAction: "Schnellaktion wird erstellt",
+    quickActionCreated: "Schnellaktion erstellt",
+    aiWorking: "KI arbeitet",
+    aiWorkingDescription: "Liest, handelt und bereitet die Antwort vor.",
     willBeSentToAi: "Wird an die KI gesendet",
     willBeSentAsPageContext: "Wird als Seitenkontext gesendet",
     currentPage: "Aktuelle Seite",
@@ -50,9 +59,74 @@ export const deDE = createLocale({
     running: "Läuft",
     done: "Fertig",
     error: "Fehler",
+    tool: {
+      openNewTabWithURL: {
+        running: "Neue Seite wird geöffnet",
+        done: "Neue Seite geöffnet",
+      },
+      findAccessableElementsFromTab: {
+        running: "Zugängliche Elemente werden gesucht",
+        done: "Elemente gefunden",
+        found: "{count} zugängliche Elemente gefunden",
+      },
+      waitTabLoadFinished: {
+        running: "Warten auf Seitenladen",
+        done: "Seite geladen",
+      },
+      inputTextByAiID: {
+        running: "Text wird eingegeben",
+        done: "Text eingegeben",
+      },
+      clickElementByAiID: {
+        running: "Element wird angeklickt",
+        done: "Element angeklickt",
+      },
+      getTabContent: {
+        running: "Seiteninhalt wird abgerufen",
+        done: "Seiteninhalt abgerufen",
+      },
+      groupTabs: { running: "Tabs werden gruppiert", done: "Tabs gruppiert" },
+      getCurrentTab: {
+        running: "Aktuelle Seite wird abgerufen",
+        done: "Aktuelle Seite abgerufen",
+      },
+      getAllTabs: {
+        running: "Geöffnete Tabs werden geprüft",
+        done: "Geöffnete Tabs geprüft",
+        found: "{count} geöffnete Tabs gefunden",
+      },
+      goToTab: { running: "Tab wird gewechselt", done: "Tab gewechselt" },
+      openSearchTab: { running: "Suche läuft", done: "Suchtab geöffnet" },
+      downloadAllImagesInTab: {
+        running: "Bilder werden heruntergeladen",
+        done: "Bilder heruntergeladen",
+      },
+      downloadTabToMarkdown: {
+        running: "Markdown wird heruntergeladen",
+        done: "Markdown heruntergeladen",
+      },
+      insertCSSToTab: {
+        running: "Seitenstil wird angewendet",
+        done: "Seitenstil angewendet",
+      },
+      removeCSSToTab: {
+        running: "Seitenstil wird entfernt",
+        done: "Seitenstil entfernt",
+      },
+      closeTab: { running: "Tab wird geschlossen", done: "Tab geschlossen" },
+      scrollToBottom: {
+        running: "Seite wird gescrollt",
+        done: "Seite gescrollt",
+      },
+      getElementPropertiesByAiID: {
+        running: "Element wird geprüft",
+        done: "Element geprüft",
+      },
+    },
   },
   options: {
     general: "Allgemein",
+    sync: "Synchronisierung",
     providers: "Anbieter",
     quickActions: "Schnellaktionen",
     modelProviders: "Modellanbieter",
@@ -104,5 +178,27 @@ export const deDE = createLocale({
     syncSettings: "Einstellungen synchronisieren",
     syncSettingsDescription:
       "Sprache und leichte Einstellungen mit Ihrem Browserkonto synchronisieren.",
+    syncProviders: "Anbieter synchronisieren",
+    syncProvidersDescription:
+      "Anbieterkonfiguration einschließlich API-Schlüssel über Ihr Browserkonto synchronisieren.",
+    syncQuickActions: "Schnellaktionen synchronisieren",
+    syncQuickActionsDescription:
+      "Schnellaktionsvorlagen über Ihr Browserkonto synchronisieren.",
+    syncChats: "Chats synchronisieren",
+    syncChatsDescription:
+      "Chatverlauf über Ihr Browserkonto synchronisieren. Deaktivieren für nur lokale Unterhaltungen.",
+    syncWritePending:
+      "Synchronisierungsschreibvorgänge sind in der Warteschlange",
+    syncWriteIdle: "Synchronisierungsschreibvorgänge sind aktuell",
+    syncWriteError: "Letzter Synchronisierungsschreibvorgang fehlgeschlagen",
+    autoScroll: "Automatisch scrollen",
+    autoScrollDescription:
+      "Die neueste KI-Ausgabe während des Streamings automatisch sichtbar halten.",
+    autoRetry: "Automatisch erneut versuchen",
+    autoRetryDescription:
+      "Einmal automatisch fortsetzen, wenn der Assistent 30 Sekunden lang keine neue Ausgabe erzeugt.",
+    maxToolSteps: "Maximale Tool-Schritte",
+    maxToolStepsDescription:
+      "Legt fest, wie viele Browser-Tool-Schritte der Assistent ausführen darf. 0 deaktiviert Tool-Aufrufe.",
   },
-});
+};
