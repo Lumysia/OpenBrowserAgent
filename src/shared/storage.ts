@@ -63,6 +63,12 @@ type PendingSyncWrite = {
   reject: Array<(error: unknown) => void>;
 };
 
+type SyncLocalCache<T> = {
+  value: T;
+  updatedAt: number;
+  flushedAt?: number;
+};
+
 const pendingSyncWrites = new Map<string, PendingSyncWrite>();
 
 const DEFAULT_SYNC_WRITE_STATUS: SyncWriteStatus = { pendingCount: 0 };
@@ -106,6 +112,7 @@ async function setStoredValue<T>(area: AreaName, key: string, value: T) {
   }
 
   assertSyncItemFits(key, value);
+  await writeSyncLocalCache(key, value);
 
   await new Promise<void>((resolve, reject) => {
     const pending = pendingSyncWrites.get(key);
@@ -153,6 +160,7 @@ async function flushSyncWrite(key: string) {
   pendingSyncWrites.delete(key);
   try {
     await getBrowserApi().storage.sync.set({ [key]: pending.value });
+    await markSyncLocalCacheFlushed(key, pending.value);
     await updateSyncWriteStatus({ lastFlushedAt: Date.now(), lastError: "" });
     pending.resolve.forEach((resolve) => resolve());
   } catch (error) {
@@ -161,6 +169,37 @@ async function flushSyncWrite(key: string) {
     });
     pending.reject.forEach((reject) => reject(error));
   }
+}
+
+function syncLocalCacheKey(key: string) {
+  return `${key}:sync-local-cache`;
+}
+
+async function writeSyncLocalCache<T>(key: string, value: T) {
+  await getBrowserApi().storage.local.set({
+    [syncLocalCacheKey(key)]: {
+      value,
+      updatedAt: Date.now(),
+    } satisfies SyncLocalCache<T>,
+  });
+}
+
+async function markSyncLocalCacheFlushed<T>(key: string, value: T) {
+  const now = Date.now();
+  await getBrowserApi().storage.local.set({
+    [syncLocalCacheKey(key)]: {
+      value,
+      updatedAt: now,
+      flushedAt: now,
+    } satisfies SyncLocalCache<T>,
+  });
+}
+
+async function readSyncLocalCache<T>(key: string) {
+  const result = await getBrowserApi().storage.local.get(
+    syncLocalCacheKey(key),
+  );
+  return result[syncLocalCacheKey(key)] as SyncLocalCache<T> | undefined;
 }
 
 async function updateSyncWriteStatus(patch: Partial<SyncWriteStatus> = {}) {
@@ -185,12 +224,20 @@ function createItem<T>(
     key: storageKey,
     area,
     async get() {
+      if (area === STORAGE_AREAS.sync) {
+        const cache = await readSyncLocalCache<T>(storageKey);
+        if (cache && cache.flushedAt === undefined) return cache.value;
+      }
       const result = await storageArea().get(storageKey);
       if (result[storageKey] === undefined) {
         const initialValue = init();
         await setStoredValueNow(area, storageKey, initialValue);
+        if (area === STORAGE_AREAS.sync)
+          await markSyncLocalCacheFlushed(storageKey, initialValue);
         return initialValue;
       }
+      if (area === STORAGE_AREAS.sync)
+        await markSyncLocalCacheFlushed(storageKey, result[storageKey] as T);
       return result[storageKey] as T;
     },
     async set(value) {
@@ -204,6 +251,19 @@ function createItem<T>(
         changes: Record<string, chrome.storage.StorageChange>,
         changedArea: string,
       ) => {
+        if (
+          area === STORAGE_AREAS.sync &&
+          changedArea === STORAGE_AREAS.local &&
+          changes[syncLocalCacheKey(storageKey)]
+        ) {
+          const next = changes[syncLocalCacheKey(storageKey)]
+            .newValue as SyncLocalCache<T>;
+          const previous = changes[syncLocalCacheKey(storageKey)].oldValue as
+            | SyncLocalCache<T>
+            | undefined;
+          callback(next.value, previous?.value as T);
+          return;
+        }
         if (changedArea !== area || !changes[storageKey]) return;
         callback(
           changes[storageKey].newValue as T,
@@ -229,15 +289,26 @@ function createMigratedItem<T>(
     ...item,
     async get() {
       const api = getBrowserApi();
+      if (area === STORAGE_AREAS.sync) {
+        const cache = await readSyncLocalCache<T>(key);
+        if (cache && cache.flushedAt === undefined)
+          return merge ? merge(cache.value) : cache.value;
+      }
       const result = await api.storage[area].get(key);
-      if (result[key] !== undefined)
-        return merge ? merge(result[key] as T) : (result[key] as T);
+      if (result[key] !== undefined) {
+        const value = merge ? merge(result[key] as T) : (result[key] as T);
+        if (area === STORAGE_AREAS.sync)
+          await markSyncLocalCacheFlushed(key, value);
+        return value;
+      }
 
       const fallback = await api.storage[fallbackArea].get(key);
       const initialValue =
         fallback[key] === undefined ? init() : (fallback[key] as T);
       const value = merge ? merge(initialValue) : initialValue;
       await setStoredValueNow(area, key, value);
+      if (area === STORAGE_AREAS.sync)
+        await markSyncLocalCacheFlushed(key, value);
       return value;
     },
   };
