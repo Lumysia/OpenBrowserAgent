@@ -3,13 +3,11 @@ import {
   ChevronDown,
   History,
   MessageCirclePlus,
-  MousePointerClick,
   Plus,
   Send,
   Settings,
   Square,
   Trash2,
-  X,
 } from "lucide-react";
 import { useRef, type ClipboardEvent, type RefObject } from "react";
 import type { Messages } from "../../src/shared/i18n";
@@ -40,11 +38,11 @@ import {
 } from "../../src/ui/components";
 import {
   AddContextMenu,
-  AttachedTabCard,
   ModelMenu,
   ModeMenu,
   selectedModelLabel,
 } from "./composer-menus";
+import { ComposerAttachments } from "./composer-attachments";
 import { HistoryPanel } from "./history-panel";
 import { IconTooltip } from "./icon-tooltip";
 import { MessageBubble } from "./message-bubble";
@@ -54,10 +52,7 @@ import {
   type AddMenuView,
   type ComposerMenu,
 } from "./sidepanel-menu-state";
-import {
-  UploadedAttachmentCard,
-  UploadFileInput,
-} from "./uploaded-attachment-card";
+import { UploadFileInput } from "./uploaded-attachment-card";
 
 export function SidepanelView({
   t,
@@ -70,7 +65,8 @@ export function SidepanelView({
   input,
   mode,
   attachedTabs,
-  uploadedAttachments,
+  pendingAttachments,
+  sentAttachmentPreviews,
   attachmentNotice,
   availableTabs,
   selectedElement,
@@ -116,7 +112,8 @@ export function SidepanelView({
   input: string;
   mode: ChatMode;
   attachedTabs: AttachmentTab[];
-  uploadedAttachments: UploadedAttachment[];
+  pendingAttachments: UploadedAttachment[];
+  sentAttachmentPreviews: Record<string, UploadedAttachment[]>;
   attachmentNotice: string;
   availableTabs: AttachmentTab[];
   selectedElement: SelectedElement | null;
@@ -254,7 +251,11 @@ export function SidepanelView({
             </div>
           )}
           {currentChat?.messages.map((message) => (
-            <MessageBubble key={message.id} message={message} />
+            <MessageBubble
+              key={message.id}
+              message={message}
+              sentAttachments={sentAttachmentPreviews[message.id] || []}
+            />
           ))}
         </ScrollArea>
         <footer className="composer">
@@ -278,47 +279,16 @@ export function SidepanelView({
                   : t.sidepanel.createQuickAction}
             </Button>
           </div>
-          <div className="context-strip">
-            <div className="context-chip-row">
-              {attachedTabs.map((tab) => (
-                <AttachedTabCard
-                  key={tab.id}
-                  t={t}
-                  tab={tab}
-                  onRemove={() => onRemoveAttachedTab(tab.id)}
-                />
-              ))}
-              {uploadedAttachments.map((attachment) => (
-                <UploadedAttachmentCard
-                  key={attachment.id}
-                  t={t}
-                  attachment={attachment}
-                  onRemove={() => onRemoveUploadedAttachment(attachment.id)}
-                />
-              ))}
-            </div>
-            {attachmentNotice && (
-              <div className="attachment-notice">{attachmentNotice}</div>
-            )}
-            {selectedElement && (
-              <div className="context-card">
-                <MousePointerClick size={18} />
-                <span>
-                  <strong>
-                    {selectedElement.tagName || t.sidepanel.elementSelected}
-                  </strong>
-                  <small>{t.sidepanel.willBeSentAsPageContext}</small>
-                </span>
-                <button
-                  className="context-close"
-                  title={t.sidepanel.selectElement}
-                  onClick={() => onSetSelectedElement(null)}
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            )}
-          </div>
+          <ComposerAttachments
+            t={t}
+            attachedTabs={attachedTabs}
+            pendingAttachments={pendingAttachments}
+            selectedElement={selectedElement}
+            attachmentNotice={attachmentNotice}
+            onRemoveAttachedTab={onRemoveAttachedTab}
+            onRemoveUploadedAttachment={onRemoveUploadedAttachment}
+            onSetSelectedElement={onSetSelectedElement}
+          />
           <div className="composer-box">
             {aiWorking && (
               <div className="ai-working-overlay" aria-live="polite">

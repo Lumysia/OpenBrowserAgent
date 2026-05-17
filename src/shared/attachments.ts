@@ -21,26 +21,29 @@ export const ATTACHMENT_READ_NOTE = {
   image:
     "Use readUploadedAttachment with this id to inspect the image data if needed.",
   media:
-    "Audio and video content is metadata-only here; ask for a transcript or text export if needed.",
+    "Audio and video can be read as base64 or hex slices only; ask for a transcript if semantic analysis is needed.",
   document:
-    "Document binary content is metadata-only here unless the file was uploaded as plain text.",
-  binary:
-    "Binary content is not readable as text; use readUploadedAttachment for file metadata.",
+    "Document binaries can be read as base64 or hex slices only unless the file was uploaded as plain text.",
+  binary: "Binary content can be read as base64 or hex slices, not plain text.",
 } as const;
 
 export const ATTACHMENT_OUTPUT_NOTE = {
   media:
-    "Audio and video files are available as metadata only in this browser extension path; ask the user for a transcript or a smaller text export if content analysis is needed.",
+    "Audio and video files are available as base64 or hex slices only; ask the user for a transcript or text export if content analysis is needed.",
   document:
-    "Document binaries such as PDF, Word, Excel, and PowerPoint are available as metadata only here unless pasted/exported as text.",
-  binary: "Binary file content is not available as text.",
+    "Document binaries such as PDF, Word, Excel, and PowerPoint are available as base64 or hex slices only unless pasted/exported as text.",
+  binary: "Binary file content is available as base64 or hex slices only.",
 } as const;
 
 export const ATTACHMENT_TOOL_DESCRIPTION = {
   readUploadedAttachment:
-    "Read a user-uploaded attachment that is available in the current active chat memory. Use this when the USER asks about an uploaded local file or image.",
+    "Read a user-uploaded attachment that is available in the current active chat memory. Use offset and limit to read only the needed slice and avoid oversized outputs.",
   attachmentId:
     "The attachment ID from the available_attachments list in the user context",
+  offset: "Zero-based character offset for text, base64, or hex output",
+  limit: "Maximum characters to return for this read",
+  format:
+    "Read format. Use text for text files, base64 for binary data, or hex for binary data previews.",
 } as const;
 
 export const ATTACHMENT_MIME_PREFIX = {
@@ -53,6 +56,7 @@ export const TEXT_ATTACHMENT_MIME_TYPES = new Set([
   "application/json",
   "application/xml",
   "application/yaml",
+  "image/svg+xml",
   "text/css",
   "text/csv",
   "text/html",
@@ -63,7 +67,7 @@ export const TEXT_ATTACHMENT_MIME_TYPES = new Set([
 ]);
 
 export const TEXT_ATTACHMENT_EXTENSION_PATTERN =
-  /\.(csv|css|html?|json|jsonl|log|md|markdown|tsv|txt|xml|ya?ml)$/i;
+  /\.(csv|css|html?|json|jsonl|log|md|markdown|svg|tsv|txt|xml|ya?ml)$/i;
 
 export const DOCUMENT_ATTACHMENT_EXTENSION_PATTERN =
   /\.(docx?|pdf|pptx?|rtf|xlsx?)$/i;

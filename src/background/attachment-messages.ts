@@ -3,6 +3,10 @@ import {
   ATTACHMENT_OUTPUT_NOTE,
   ATTACHMENT_TOOL_ERROR,
 } from "../shared/attachments";
+import {
+  READ_ATTACHMENT_DEFAULT_LIMIT,
+  READ_ATTACHMENT_MAX_LIMIT,
+} from "../shared/config";
 import type { ChatMessage, UploadedAttachment } from "../shared/types";
 import {
   getUploadedAttachments,
@@ -47,9 +51,7 @@ export function createOpenAIRequestMessages(
 }
 
 export function hasImageAttachments(attachments: UploadedAttachment[]) {
-  return attachments.some(
-    (attachment) => attachment.kind === ATTACHMENT_KIND.image,
-  );
+  return false;
 }
 
 export function readUploadedAttachment(
@@ -57,56 +59,62 @@ export function readUploadedAttachment(
   input: Record<string, unknown>,
 ) {
   const attachmentId = String(input.attachmentId || input.id || "");
+  const offset = clampReadOffset(input.offset);
+  const limit = clampReadLimit(input.limit);
+  const format = String(input.format || "");
   const attachment = attachments.find((item) => item.id === attachmentId);
   if (!attachment)
     return { error: ATTACHMENT_TOOL_ERROR.notFound, attachmentId };
   if (attachment.kind === ATTACHMENT_KIND.text)
-    return {
+    return withSlice(
+      {
+        id: attachment.id,
+        name: attachment.name,
+        type: attachment.type,
+        size: attachment.size,
+        kind: attachment.kind,
+        encoding: "text",
+      },
+      attachment.text || "",
+      offset,
+      limit,
+      "text",
+    );
+
+  const base64 = base64FromDataUrl(attachment.dataUrl || "");
+  const encoding = format === "hex" ? "hex" : "base64";
+  if (encoding === "hex")
+    return withSlice(
+      {
+        id: attachment.id,
+        name: attachment.name,
+        type: attachment.type,
+        size: attachment.size,
+        kind: attachment.kind,
+        encoding,
+        note: noteForAttachment(attachment),
+      },
+      readBase64AsHex(base64, offset, limit),
+      0,
+      limit,
+      encoding,
+      Math.ceil((base64.length * 3) / 4) * 2,
+    );
+  return withSlice(
+    {
       id: attachment.id,
       name: attachment.name,
       type: attachment.type,
       size: attachment.size,
       kind: attachment.kind,
-      text: attachment.text || "",
-    };
-  if (attachment.kind === ATTACHMENT_KIND.image)
-    return {
-      id: attachment.id,
-      name: attachment.name,
-      type: attachment.type,
-      size: attachment.size,
-      kind: attachment.kind,
-      dataUrl: attachment.dataUrl || "",
-    };
-  if (
-    attachment.kind === ATTACHMENT_KIND.audio ||
-    attachment.kind === ATTACHMENT_KIND.video
-  )
-    return {
-      id: attachment.id,
-      name: attachment.name,
-      type: attachment.type,
-      size: attachment.size,
-      kind: attachment.kind,
-      note: ATTACHMENT_OUTPUT_NOTE.media,
-    };
-  if (attachment.kind === ATTACHMENT_KIND.document)
-    return {
-      id: attachment.id,
-      name: attachment.name,
-      type: attachment.type,
-      size: attachment.size,
-      kind: attachment.kind,
-      note: ATTACHMENT_OUTPUT_NOTE.document,
-    };
-  return {
-    id: attachment.id,
-    name: attachment.name,
-    type: attachment.type,
-    size: attachment.size,
-    kind: attachment.kind,
-    note: ATTACHMENT_OUTPUT_NOTE.binary,
-  };
+      encoding,
+      note: noteForAttachment(attachment),
+    },
+    base64,
+    offset,
+    limit,
+    encoding,
+  );
 }
 
 function createGeminiParts(
@@ -121,14 +129,6 @@ function createGeminiParts(
   const parts: Array<Record<string, unknown>> = [
     { text: renderMessageText(message, isLatest, requestAttachments) },
   ];
-  if (!multimodal) return parts;
-  for (const attachment of attachments) {
-    if (attachment.kind !== ATTACHMENT_KIND.image || !attachment.dataUrl)
-      continue;
-    const [mimeHeader, data] = attachment.dataUrl.split(",", 2);
-    const mimeType = mimeHeader.match(/^data:([^;]+)/)?.[1] || attachment.type;
-    if (data) parts.push({ inlineData: { mimeType, data } });
-  }
   return parts;
 }
 
@@ -142,23 +142,7 @@ function createOpenAIMessageContent(
   const attachments = requestAttachments.length
     ? requestAttachments
     : getUploadedAttachments(message);
-  if (
-    !multimodal ||
-    !attachments.some((item) => item.kind === ATTACHMENT_KIND.image)
-  )
-    return text;
-  return [
-    { type: "text", text },
-    ...attachments
-      .filter(
-        (attachment) =>
-          attachment.kind === ATTACHMENT_KIND.image && !!attachment.dataUrl,
-      )
-      .map((attachment) => ({
-        type: "image_url",
-        image_url: { url: attachment.dataUrl || "" },
-      })),
-  ];
+  return text;
 }
 
 function renderMessageText(
@@ -174,4 +158,64 @@ function renderMessageText(
   return attachmentContext
     ? `${message.content}\n\n${attachmentContext}`
     : message.content;
+}
+
+function withSlice(
+  metadata: Record<string, unknown>,
+  content: string,
+  offset: number,
+  limit: number,
+  field: string,
+  totalLength = content.length,
+) {
+  return {
+    ...metadata,
+    offset,
+    limit,
+    totalLength,
+    truncated: offset + limit < totalLength,
+    [field]: content.slice(offset, offset + limit),
+  };
+}
+
+function clampReadOffset(value: unknown) {
+  const offset = Number(value);
+  return Number.isFinite(offset) ? Math.max(0, Math.trunc(offset)) : 0;
+}
+
+function clampReadLimit(value: unknown) {
+  const limit = Number(value);
+  if (!Number.isFinite(limit)) return READ_ATTACHMENT_DEFAULT_LIMIT;
+  return Math.min(READ_ATTACHMENT_MAX_LIMIT, Math.max(1, Math.trunc(limit)));
+}
+
+function base64FromDataUrl(dataUrl: string) {
+  return dataUrl.includes(",") ? dataUrl.split(",", 2)[1] || "" : dataUrl;
+}
+
+function readBase64AsHex(base64: string, hexOffset: number, hexLimit: number) {
+  const byteStart = Math.floor(hexOffset / 2);
+  const byteEnd = Math.ceil((hexOffset + hexLimit) / 2);
+  const base64Start = Math.floor(byteStart / 3) * 4;
+  const base64End = Math.ceil(byteEnd / 3) * 4;
+  const binary = atob(base64.slice(base64Start, base64End));
+  const skippedBytes = byteStart - Math.floor(base64Start / 4) * 3;
+  const neededBytes = byteEnd - byteStart;
+  const window = binary.slice(skippedBytes, skippedBytes + neededBytes);
+  return Array.from(window, (char) =>
+    char.charCodeAt(0).toString(16).padStart(2, "0"),
+  )
+    .join("")
+    .slice(hexOffset % 2, (hexOffset % 2) + hexLimit);
+}
+
+function noteForAttachment(attachment: UploadedAttachment) {
+  if (
+    attachment.kind === ATTACHMENT_KIND.audio ||
+    attachment.kind === ATTACHMENT_KIND.video
+  )
+    return ATTACHMENT_OUTPUT_NOTE.media;
+  if (attachment.kind === ATTACHMENT_KIND.document)
+    return ATTACHMENT_OUTPUT_NOTE.document;
+  return ATTACHMENT_OUTPUT_NOTE.binary;
 }

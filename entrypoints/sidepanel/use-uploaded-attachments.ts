@@ -7,15 +7,24 @@ export function useUploadedAttachments(t: Messages) {
   const [uploadedAttachments, setUploadedAttachments] = useState<
     UploadedAttachment[]
   >([]);
+  const [pendingAttachmentIds, setPendingAttachmentIds] = useState<string[]>([]);
   const [attachmentNotice, setAttachmentNotice] = useState("");
+  const pendingAttachments = uploadedAttachments.filter((attachment) =>
+    pendingAttachmentIds.includes(attachment.id),
+  );
 
   async function attachFiles(files: FileList | File[]) {
     const { attachments, rejectedNames } = await readUploadAttachments(
       files,
       attachmentBytes(uploadedAttachments),
     );
-    if (attachments.length)
+    if (attachments.length) {
       setUploadedAttachments((items) => [...items, ...attachments]);
+      setPendingAttachmentIds((ids) => [
+        ...ids,
+        ...attachments.map((attachment) => attachment.id),
+      ]);
+    }
     setAttachmentNotice(
       rejectedNames.length
         ? t.sidepanel.attachmentTooLarge.replace(
@@ -28,19 +37,28 @@ export function useUploadedAttachments(t: Messages) {
 
   function removeUploadedAttachment(id: string) {
     setUploadedAttachments((items) => items.filter((item) => item.id !== id));
+    setPendingAttachmentIds((ids) => ids.filter((item) => item !== id));
+    setAttachmentNotice("");
+  }
+
+  function clearPendingAttachments() {
+    setPendingAttachmentIds([]);
     setAttachmentNotice("");
   }
 
   function clearUploadedAttachments() {
     setUploadedAttachments([]);
+    setPendingAttachmentIds([]);
     setAttachmentNotice("");
   }
 
   return {
     uploadedAttachments,
+    pendingAttachments,
     attachmentNotice,
     attachFiles,
     removeUploadedAttachment,
+    clearPendingAttachments,
     clearUploadedAttachments,
   };
 }

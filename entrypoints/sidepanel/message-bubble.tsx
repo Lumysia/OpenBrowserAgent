@@ -34,15 +34,18 @@ import { renderMarkdown } from "./markdown";
 import { ToolPart } from "./tool-part";
 import { useThrottledText } from "./use-throttled-text";
 
-export function MessageBubble({ message }: { message: ChatMessage }) {
+export function MessageBubble({
+  message,
+  sentAttachments = [],
+}: {
+  message: ChatMessage;
+  sentAttachments?: UploadedAttachment[];
+}) {
   const [language] = useStoredState(storage.language);
   const t = getMessages(language);
   const quickAction = message.metadata?.quickAction as QuickAction | undefined;
   const sentTabs = Array.isArray(message.metadata?.attachedTabs)
     ? (message.metadata.attachedTabs as AttachmentTab[])
-    : [];
-  const sentAttachments = Array.isArray(message.metadata?.uploadedAttachments)
-    ? (message.metadata.uploadedAttachments as UploadedAttachment[])
     : [];
   const sentElement = message.metadata?.selectedElement as
     | SelectedElement

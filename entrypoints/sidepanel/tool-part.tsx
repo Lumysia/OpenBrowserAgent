@@ -1,6 +1,7 @@
 import {
   Download,
   ExternalLink,
+  FileSearch,
   FileText,
   Layers,
   MousePointerClick,
@@ -156,6 +157,8 @@ function toolIcon(name: string) {
   if (name.includes("find")) return <Search size={19} strokeWidth={2.1} />;
   if (name.includes("download"))
     return <Download size={19} strokeWidth={2.1} />;
+  if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
+    return <FileSearch size={19} strokeWidth={2.1} />;
   if (name.includes("Content")) return <FileText size={19} strokeWidth={2.1} />;
   if (name.includes("group")) return <Layers size={19} strokeWidth={2.1} />;
   if (name.includes("Tab")) return <ExternalLink size={19} strokeWidth={2.1} />;

@@ -50,17 +50,6 @@ export function formatAttachmentSize(bytes: number) {
 function readUploadAttachment(file: File): Promise<UploadedAttachment> {
   const kind = classifyAttachment(file.name, file.type);
 
-  if (kind === ATTACHMENT_KIND.image) {
-    return readAsDataUrl(file).then((dataUrl) => ({
-      id: crypto.randomUUID(),
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      kind,
-      dataUrl,
-    }));
-  }
-
   if (kind === ATTACHMENT_KIND.text) {
     return readAsText(file).then((text) => ({
       id: crypto.randomUUID(),
@@ -72,20 +61,14 @@ function readUploadAttachment(file: File): Promise<UploadedAttachment> {
     }));
   }
 
-  return Promise.resolve(createMetadataAttachment(file, kind));
-}
-
-function createMetadataAttachment(
-  file: File,
-  kind: UploadedAttachment["kind"],
-): UploadedAttachment {
-  return {
+  return readAsDataUrl(file).then((dataUrl) => ({
     id: crypto.randomUUID(),
     name: file.name,
     type: file.type || "application/octet-stream",
     size: file.size,
     kind,
-  };
+    dataUrl,
+  }));
 }
 
 function readAsDataUrl(file: File) {

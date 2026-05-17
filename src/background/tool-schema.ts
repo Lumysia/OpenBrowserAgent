@@ -153,7 +153,18 @@ export const browserTools = [
         type: "string",
         description: ATTACHMENT_TOOL_DESCRIPTION.attachmentId,
       },
+      offset: {
+        type: "number",
+        description: ATTACHMENT_TOOL_DESCRIPTION.offset,
+      },
+      limit: { type: "number", description: ATTACHMENT_TOOL_DESCRIPTION.limit },
+      format: {
+        type: "string",
+        enum: ["text", "base64", "hex"],
+        description: ATTACHMENT_TOOL_DESCRIPTION.format,
+      },
     },
+    ["attachmentId"],
   ),
 ];
 

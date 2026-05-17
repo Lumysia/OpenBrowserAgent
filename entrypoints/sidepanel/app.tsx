@@ -25,6 +25,7 @@ import type {
   QuickAction,
   SendMessagesRequest,
   SelectedElement,
+  UploadedAttachment,
 } from "../../src/shared/types";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { requestGeneratedTitle, requestQuickAction } from "./ai-requests";
@@ -32,10 +33,10 @@ import { appendAssistantContent, appendAssistantPart } from "./chat-updates";
 import { sortChatsNewestFirst } from "./format";
 import {
   buildSidepanelContext,
-  generateLocalTitle,
   interpolateQuickAction,
   toAttachmentTab,
 } from "./sidepanel-context";
+import { createSendMessagePlan } from "./send-message-plan";
 import {
   ADD_MENU_VIEW,
   COMPOSER_MENU,
@@ -69,6 +70,9 @@ export function SidepanelApp() {
     (typeof ADD_MENU_VIEW)[keyof typeof ADD_MENU_VIEW]
   >(ADD_MENU_VIEW.menu);
   const [showHistory, setShowHistory] = useState(false);
+  const [sentAttachmentPreviews, setSentAttachmentPreviews] = useState<
+    Record<string, UploadedAttachment[]>
+  >({});
   const portRef = useRef<chrome.runtime.Port | undefined>(undefined);
   const sidepanelRef = useRef<HTMLDivElement | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
@@ -97,9 +101,11 @@ export function SidepanelApp() {
   const { selectElement } = useElementSelector();
   const {
     uploadedAttachments,
+    pendingAttachments,
     attachmentNotice,
     attachFiles,
     removeUploadedAttachment,
+    clearPendingAttachments,
     clearUploadedAttachments,
   } = useUploadedAttachments(t);
 
@@ -139,6 +145,7 @@ export function SidepanelApp() {
 
   useEffect(() => {
     clearUploadedAttachments();
+    setSentAttachmentPreviews({});
   }, [activeChatId]);
 
   useActiveTabContext({
@@ -239,40 +246,34 @@ export function SidepanelApp() {
     const chat = currentChat || createChat();
     const sentTabs = attachedTabs;
     const sentElement = selectedElement;
-    const sentAttachments = uploadedAttachments;
-    const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: text || t.sidepanel.attachmentOnlyMessage,
-      createdAt: Date.now(),
-      metadata: {
-        ...(context ? { context } : {}),
-        ...(sentTabs.length ? { attachedTabs: sentTabs } : {}),
-        ...(sentElement ? { selectedElement: sentElement } : {}),
-        ...(quickAction ? { quickAction } : {}),
-      },
-    };
-    const assistantMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "assistant",
-      content: "",
-      parts: [],
-      createdAt: Date.now(),
-    };
-    const shouldGenerateTitle = chat.messages.length === 0;
-    const nextChat = {
-      ...chat,
-      title: shouldGenerateTitle
-        ? generateLocalTitle(text || sentAttachments[0]?.name || "", t)
-        : chat.title,
-      messages: [...chat.messages, userMessage, assistantMessage],
-      updatedAt: Date.now(),
-    };
+    const sentAttachments = pendingAttachments;
+    const activeAttachments = uploadedAttachments;
+    const {
+      userMessage,
+      assistantMessage,
+      shouldGenerateTitle,
+      titleSource,
+      nextChat,
+    } = createSendMessagePlan({
+      chat,
+      text,
+      t,
+      context,
+      sentTabs,
+      sentElement,
+      sentAttachments,
+      quickAction,
+    });
+    if (sentAttachments.length)
+      setSentAttachmentPreviews((items) => ({
+        ...items,
+        [userMessage.id]: sentAttachments,
+      }));
     updateChat(nextChat);
-    if (shouldGenerateTitle)
-      requestChatTitle(nextChat.id, text || sentAttachments[0]?.name || "");
+    if (shouldGenerateTitle) requestChatTitle(nextChat.id, titleSource);
     setInput("");
     setAttachedTabs([]);
+    clearPendingAttachments();
     setSelectedElement(null);
     setStreaming(true);
 
@@ -290,7 +291,7 @@ export function SidepanelApp() {
           tabs: sentTabs,
           selectedElement: sentElement,
           text: context,
-          uploadedAttachments: sentAttachments,
+          uploadedAttachments: activeAttachments,
         },
       },
     };
@@ -485,7 +486,8 @@ export function SidepanelApp() {
       input={input}
       mode={mode}
       attachedTabs={attachedTabs}
-      uploadedAttachments={uploadedAttachments}
+      pendingAttachments={pendingAttachments}
+      sentAttachmentPreviews={sentAttachmentPreviews}
       attachmentNotice={attachmentNotice}
       availableTabs={availableTabs}
       selectedElement={selectedElement}
