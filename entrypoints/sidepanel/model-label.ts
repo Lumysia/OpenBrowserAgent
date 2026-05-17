@@ -12,8 +12,20 @@ export function assistantModelLabel({
   const providerId = String(model?.id || modelId || "").split(
     ":",
   )[0] as keyof typeof providerLabels;
+  const provider = providerLabels[providerId] || providerId;
+  const name = stripProviderPrefix(
+    model?.displayName || model?.name || String(modelId || ""),
+    provider,
+  );
   return {
-    provider: providerLabels[providerId] || providerId,
-    name: model?.displayName || model?.name || String(modelId || ""),
+    provider,
+    name,
   };
+}
+
+function stripProviderPrefix(name: string, provider: string) {
+  const escapedProvider = provider.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return name
+    .replace(new RegExp(`^${escapedProvider}\\s*[/·:-]\\s*`, "i"), "")
+    .trim();
 }
