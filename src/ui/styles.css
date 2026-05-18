@@ -2456,17 +2456,21 @@ a {
 }
 .prompt-usage-trigger {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 14px;
+  right: 14px;
   z-index: 2;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 999px;
-  color: var(--accent-strong);
-  background: color-mix(in srgb, var(--accent-softer) 58%, transparent);
+  color: var(--muted-foreground);
+  background: transparent;
+  opacity: 0.52;
 }
-.prompt-usage-trigger:hover {
-  background: var(--accent-soft);
+.prompt-usage-trigger:hover,
+.prompt-usage-trigger:focus-visible {
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent-softer) 38%, transparent);
+  opacity: 0.9;
 }
 .prompt-usage-popover-content {
   box-sizing: border-box;
