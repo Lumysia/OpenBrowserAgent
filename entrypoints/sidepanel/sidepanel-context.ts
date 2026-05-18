@@ -1,4 +1,8 @@
-import { extractTabText, getActiveTab } from "../../src/shared/browser";
+import {
+  extractTabText,
+  getActiveTab,
+  isScriptableUrl,
+} from "../../src/shared/browser";
 import {
   ISO_DATE_LENGTH,
   LOCAL_CHAT_TITLE_MAX_LENGTH,
@@ -28,7 +32,7 @@ export function generateLocalTitle(value: string, t: Messages) {
 }
 
 export function toAttachmentTab(tab: chrome.tabs.Tab): AttachmentTab | null {
-  if (!tab.id) return null;
+  if (!tab.id || !isScriptableUrl(tab.url)) return null;
   return {
     id: tab.id,
     title: tab.title,
@@ -73,7 +77,7 @@ export async function buildSidepanelContext({
     parts.push(`<selected_tabs>\n${tabBlocks.join("\n")}\n</selected_tabs>`);
   } else {
     const tab = await getActiveTab();
-    if (tab?.id)
+    if (tab?.id && isScriptableUrl(tab.url))
       parts.push(
         `<current_tab>\n<id>${tab.id}</id>\n<title>${escapeXml(tab.title || "")}</title>\n<url>${escapeXml(tab.url || "")}</url>\n</current_tab>`,
       );

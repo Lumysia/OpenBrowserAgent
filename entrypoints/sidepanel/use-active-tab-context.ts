@@ -1,5 +1,5 @@
 import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
-import { getActiveTab } from "../../src/shared/browser";
+import { getActiveTab, isScriptableUrl } from "../../src/shared/browser";
 import type { AttachmentTab, SelectedElement } from "../../src/shared/types";
 import { toAttachmentTab } from "./sidepanel-context";
 
@@ -15,6 +15,10 @@ export function useActiveTabContext({
   setSelectedElement: Dispatch<SetStateAction<SelectedElement | null>>;
 }) {
   const autoAttachedRef = useRef(false);
+
+  useEffect(() => {
+    setAttachedTabs((tabs) => tabs.filter((tab) => isScriptableUrl(tab.url)));
+  }, [setAttachedTabs]);
 
   useEffect(() => {
     const listener = (message: SelectedElement & { type?: string }) => {
@@ -68,6 +72,10 @@ async function syncActiveTabContext({
 }) {
   const tab = await getActiveTab();
   const attachment = tab ? toAttachmentTab(tab) : null;
+  if (!attachment && attachedTabs.length === 1) {
+    const activeTabId = tab?.id;
+    if (activeTabId && attachedTabs[0]?.id === activeTabId) setAttachedTabs([]);
+  }
   if (
     !attachment ||
     selectedElement ||

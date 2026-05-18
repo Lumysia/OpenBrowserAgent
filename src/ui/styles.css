@@ -3330,7 +3330,7 @@ a {
   .skill-file-item {
     grid-template-columns: minmax(0, 1fr) auto;
   }
-  .skill-file-item svg {
+  .skill-file-item > svg {
     display: none;
   }
   .composer-controls {

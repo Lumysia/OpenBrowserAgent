@@ -68,6 +68,7 @@ export function SidepanelView({
   sentAttachmentPreviews,
   attachmentNotice,
   availableTabs,
+  activeTabAttachable,
   selectedElement,
   streaming,
   creatingSkill,
@@ -128,6 +129,7 @@ export function SidepanelView({
   sentAttachmentPreviews: Record<string, UploadedAttachment[]>;
   attachmentNotice: string;
   availableTabs: AttachmentTab[];
+  activeTabAttachable: boolean;
   selectedElement: SelectedElement | null;
   streaming: boolean;
   creatingSkill: boolean;
@@ -353,6 +355,7 @@ export function SidepanelView({
                       tabs={availableTabs}
                       skills={skills}
                       selectedTabIds={attachedTabs.map((tab) => tab.id)}
+                      activeTabAttachable={activeTabAttachable}
                       onShowTabs={onShowAllTabsPicker}
                       onShowSkills={() =>
                         onSetAddMenuView(ADD_MENU_VIEW.skills)

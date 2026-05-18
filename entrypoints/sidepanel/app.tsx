@@ -119,6 +119,7 @@ export function SidepanelApp() {
   const {
     attachedTabs,
     availableTabs,
+    activeTabAttachable,
     selectedElement,
     setAttachedTabs,
     setSelectedElement,
@@ -433,6 +434,7 @@ export function SidepanelApp() {
       sentAttachmentPreviews={sentAttachmentPreviews}
       attachmentNotice={attachmentNotice}
       availableTabs={availableTabs}
+      activeTabAttachable={activeTabAttachable}
       selectedElement={selectedElement}
       streaming={streaming}
       creatingSkill={creatingSkill}

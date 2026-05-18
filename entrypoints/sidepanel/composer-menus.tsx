@@ -28,6 +28,7 @@ export function AddContextMenu({
   tabs,
   skills,
   selectedTabIds,
+  activeTabAttachable,
   onShowTabs,
   onShowSkills,
   onSkill,
@@ -41,6 +42,7 @@ export function AddContextMenu({
   tabs: AttachmentTab[];
   skills: Skill[];
   selectedTabIds: number[];
+  activeTabAttachable: boolean;
   onShowTabs: () => void;
   onShowSkills: () => void;
   onSkill: (skill: Skill) => void;
@@ -66,6 +68,7 @@ export function AddContextMenu({
           variant="ghost"
           className="action-list-item"
           onClick={onAttachTab}
+          disabled={!activeTabAttachable}
         >
           <Plus size={17} />
           <span>
@@ -100,6 +103,7 @@ export function AddContextMenu({
           variant="ghost"
           className="action-list-item"
           onClick={onSelectElement}
+          disabled={!activeTabAttachable}
         >
           <MousePointerClick size={17} />
           <span>

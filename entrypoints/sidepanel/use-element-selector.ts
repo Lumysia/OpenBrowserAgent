@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { getActiveTab, injectElementSelector } from "../../src/shared/browser";
+import {
+  getActiveTab,
+  injectElementSelector,
+  isScriptableUrl,
+} from "../../src/shared/browser";
 import type { Messages } from "../../src/shared/i18n";
 
 const ELEMENT_SELECTOR_MESSAGE = {
@@ -36,7 +40,7 @@ export function useElementSelector(t: Messages) {
 
   async function selectElement() {
     const tab = await getActiveTab();
-    if (!tab?.id) return;
+    if (!tab?.id || !isScriptableUrl(tab.url)) return;
     setSelectingElement(true);
     const injected = await injectElementSelector(
       tab.id,

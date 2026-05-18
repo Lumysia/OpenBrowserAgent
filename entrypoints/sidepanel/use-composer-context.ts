@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { getActiveTab } from "../../src/shared/browser";
+import { useEffect, useState } from "react";
+import { getActiveTab, isScriptableUrl } from "../../src/shared/browser";
 import type {
   AttachmentTab,
   Chat,
@@ -11,6 +11,7 @@ import { useActiveTabContext } from "./use-active-tab-context";
 export function useComposerContext(chats: Chat[]) {
   const [attachedTabs, setAttachedTabs] = useState<AttachmentTab[]>([]);
   const [availableTabs, setAvailableTabs] = useState<AttachmentTab[]>([]);
+  const [activeTabAttachable, setActiveTabAttachable] = useState(false);
   const [selectedElement, setSelectedElement] =
     useState<SelectedElement | null>(null);
 
@@ -20,6 +21,21 @@ export function useComposerContext(chats: Chat[]) {
     setAttachedTabs,
     setSelectedElement,
   });
+
+  useEffect(() => {
+    const updateActiveTabAttachable = () => {
+      void getActiveTab().then((tab) =>
+        setActiveTabAttachable(isScriptableUrl(tab?.url)),
+      );
+    };
+    updateActiveTabAttachable();
+    chrome.tabs.onActivated.addListener(updateActiveTabAttachable);
+    chrome.tabs.onUpdated.addListener(updateActiveTabAttachable);
+    return () => {
+      chrome.tabs.onActivated.removeListener(updateActiveTabAttachable);
+      chrome.tabs.onUpdated.removeListener(updateActiveTabAttachable);
+    };
+  }, []);
 
   async function attachActiveTab() {
     const tab = await getActiveTab();
@@ -41,6 +57,7 @@ export function useComposerContext(chats: Chat[]) {
   }
 
   function toggleAttachedTab(tab: AttachmentTab) {
+    if (!isScriptableUrl(tab.url)) return;
     setAttachedTabs((tabs) =>
       tabs.some((item) => item.id === tab.id)
         ? tabs.filter((item) => item.id !== tab.id)
@@ -55,6 +72,7 @@ export function useComposerContext(chats: Chat[]) {
   return {
     attachedTabs,
     availableTabs,
+    activeTabAttachable,
     selectedElement,
     setAttachedTabs,
     setAvailableTabs,
