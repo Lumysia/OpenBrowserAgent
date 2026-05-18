@@ -1,4 +1,5 @@
-import { Trash2 } from "lucide-react";
+import { Check, ChevronDown, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import type { ModelConfig, ProviderConfig } from "../../src/shared/types";
@@ -6,6 +7,9 @@ import {
   Button,
   Input,
   Label,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Select,
   SelectContent,
   SelectItem,
@@ -31,35 +35,52 @@ export function FetchedModelPicker({
   onSelect: (value: string) => void;
   onAdd: () => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const selectedModel = models.find((model) => model.id === selectedId);
+  const emptyText = models.length
+    ? t.options.selectFetchedModel
+    : search
+      ? t.options.noFetchedModelsMatch
+      : t.options.allFetchedModelsAdded;
+
   return (
     <>
-      <Input
-        value={search}
-        placeholder={t.options.searchFetchedModels}
-        onChange={(event) => onSearch(event.target.value)}
-      />
-      <Select
-        value={selectedId || "none"}
-        onValueChange={(value) => onSelect(value === "none" ? "" : value)}
-      >
-        <SelectTrigger>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="none">
-            {models.length
-              ? t.options.selectFetchedModel
-              : search
-                ? t.options.noFetchedModelsMatch
-                : t.options.allFetchedModelsAdded}
-          </SelectItem>
-          {models.map((model) => (
-            <SelectItem key={model.id} value={model.id}>
-              {model.displayName || model.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="fetched-model-trigger"
+            type="button"
+          >
+            <span>{selectedModel?.displayName || emptyText}</span>
+            <ChevronDown size={16} />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="fetched-model-popover" align="start">
+          <Input
+            value={search}
+            placeholder={t.options.searchFetchedModels}
+            onChange={(event) => onSearch(event.target.value)}
+          />
+          <div className="fetched-model-list">
+            {models.map((model) => (
+              <button
+                key={model.id}
+                type="button"
+                className="fetched-model-option"
+                onClick={() => {
+                  onSelect(model.id);
+                  setOpen(false);
+                }}
+              >
+                <span>{model.displayName || model.name}</span>
+                {selectedId === model.id && <Check size={14} />}
+              </button>
+            ))}
+            {!models.length && <p className="muted">{emptyText}</p>}
+          </div>
+        </PopoverContent>
+      </Popover>
       <Button
         onClick={onAdd}
         disabled={

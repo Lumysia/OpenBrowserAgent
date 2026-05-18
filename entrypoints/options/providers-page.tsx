@@ -374,7 +374,7 @@ function ProviderAccordion({
               )}
             </div>
             {canAddManualModel && (
-              <div className="provider-model-actions">
+              <div className="provider-model-actions provider-manual-model-actions">
                 <Input
                   value={modelName}
                   placeholder={t.options.addCustomModelName}
