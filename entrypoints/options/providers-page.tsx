@@ -85,11 +85,11 @@ export function ProvidersPage() {
           model.id === currentPreferences.selectedImageModelId,
       )
     )
-      setPreferences({
-        ...currentPreferences,
+      setPreferences((previous) => ({
+        ...previous,
         selectedModelId: undefined,
         selectedImageModelId: undefined,
-      });
+      }));
   }
 
   return (
@@ -107,7 +107,7 @@ export function ProvidersPage() {
           models={configuredModels}
           emptyLabel={t.options.selectModel}
           onChange={(selectedModelId) =>
-            setPreferences({ ...preferences, selectedModelId })
+            setPreferences((previous) => ({ ...previous, selectedModelId }))
           }
         />
         <ModelSelect
@@ -117,7 +117,10 @@ export function ProvidersPage() {
           emptyLabel={t.options.selectImageModel}
           disabled={!preferences.imageGenerationEnabled}
           onChange={(selectedImageModelId) =>
-            setPreferences({ ...preferences, selectedImageModelId })
+            setPreferences((previous) => ({
+              ...previous,
+              selectedImageModelId,
+            }))
           }
         />
       </div>
@@ -129,7 +132,10 @@ export function ProvidersPage() {
         <Switch
           checked={!!preferences.imageGenerationEnabled}
           onCheckedChange={(imageGenerationEnabled) =>
-            setPreferences({ ...preferences, imageGenerationEnabled })
+            setPreferences((previous) => ({
+              ...previous,
+              imageGenerationEnabled,
+            }))
           }
         />
       </div>
@@ -140,10 +146,10 @@ export function ProvidersPage() {
           placeholder="1024x1024"
           disabled={!preferences.imageGenerationEnabled}
           onChange={(event) =>
-            setPreferences({
-              ...preferences,
+            setPreferences((previous) => ({
+              ...previous,
               imageGenerationSize: event.target.value,
-            })
+            }))
           }
         />
       </Label>
@@ -180,12 +186,11 @@ export function ProvidersPage() {
             onChange={(next) => updateProvider(providerId, next)}
             onDelete={() => deleteProvider(providerId)}
             onModelAdded={(model) => {
-              setPreferences({
-                ...preferences,
-                selectedModelId: preferences.selectedModelId || model.id,
-                selectedImageModelId:
-                  preferences.selectedImageModelId || model.id,
-              });
+              setPreferences((previous) => ({
+                ...previous,
+                selectedModelId: previous.selectedModelId || model.id,
+                selectedImageModelId: previous.selectedImageModelId || model.id,
+              }));
             }}
           />
         ))}

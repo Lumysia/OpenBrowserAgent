@@ -140,7 +140,9 @@ export function SidepanelView({
   onSetSelectedElement: (value: SelectedElement | null) => void;
   onSetSelectedSkill: (value: Skill | null) => void;
   onSetChats: (value: Chat[]) => void;
-  onSetPreferences: (value: Preferences) => void;
+  onSetPreferences: (
+    value: Preferences | ((previous: Preferences) => Preferences),
+  ) => void;
   onCreateChat: () => void;
   onCloseChat: (chatId: string) => void;
   onCreateSkill: () => void;
@@ -385,10 +387,10 @@ export function SidepanelView({
                         selectedModelId={preferences?.selectedModelId}
                         onSelect={(modelId) => {
                           if (preferences)
-                            onSetPreferences({
-                              ...preferences,
+                            onSetPreferences((previous) => ({
+                              ...previous,
                               selectedModelId: modelId,
-                            });
+                            }));
                           onSetOpenMenu(null);
                         }}
                       />
