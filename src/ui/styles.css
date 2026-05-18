@@ -1092,7 +1092,8 @@ a {
   color: white;
   font-size: 13px;
   font-weight: 700;
-  line-height: 1;
+  line-height: 1.25;
+  white-space: pre-line;
   box-shadow: 0 10px 24px rgba(22, 21, 18, 0.16);
   animation: pop-in 0.14s ease both;
 }

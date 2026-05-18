@@ -1,10 +1,12 @@
 import * as React from "react";
 import { cn } from "../utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
 export type ProgressSegment = {
   key: string;
   value: number;
   className?: string;
+  tooltip?: string;
 };
 
 export function Progress({
@@ -20,13 +22,22 @@ export function Progress({
   return (
     <div className={cn("ui-progress", className)} role="progressbar" {...props}>
       {segments?.length && total ? (
-        segments.map((segment) => (
-          <div
-            key={segment.key}
-            className={cn("ui-progress-segment", segment.className)}
-            style={{ width: `${(segment.value / total) * 100}%` }}
-          />
-        ))
+        segments.map((segment) => {
+          const segmentElement = (
+            <div
+              className={cn("ui-progress-segment", segment.className)}
+              style={{ width: `${(segment.value / total) * 100}%` }}
+            />
+          );
+          return segment.tooltip ? (
+            <Tooltip key={segment.key}>
+              <TooltipTrigger asChild>{segmentElement}</TooltipTrigger>
+              <TooltipContent>{segment.tooltip}</TooltipContent>
+            </Tooltip>
+          ) : (
+            <React.Fragment key={segment.key}>{segmentElement}</React.Fragment>
+          );
+        })
       ) : (
         <div
           className="ui-progress-indicator"

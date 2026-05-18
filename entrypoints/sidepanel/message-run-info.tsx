@@ -146,6 +146,7 @@ function PromptBreakdownBar({
           key: segment.key,
           value: segment.value,
           className: `run-info-prompt-${segment.key}`,
+          tooltip: `${segment.label}\n${segment.value.toLocaleString()} ${t.sidepanel.runInfo.characters}`,
         }))}
       />
       <div className="run-info-prompt-legend">
