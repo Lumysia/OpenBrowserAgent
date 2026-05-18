@@ -146,7 +146,7 @@ ${message.content}
 export function renderSkillToolHint(skills: Skill[]) {
   if (!skills.length) return "";
   return `<skill_tools>
-Skills may be available. Be proactive: for complex tasks, unclear context, uncertain user intent, reusable workflows, or requests that may need domain/project-specific guidance, call listSkills first to inspect available skill packages. Then call readSkill for relevant SKILL.md content, and readSkillFile for supporting files if needed. If you used a skill and discover a broadly reusable improvement from the current context, proactively call updateSkillFile to update that skill. Do not update skills with narrow one-off details, user-specific secrets, or task-only hacks.
+Skills may help complex, unclear, reusable, or project-specific work. Call listSkills, then readSkill/readSkillFile for relevant packages. Use updateSkillFile only for broadly reusable improvements; never store secrets or one-off task details.
 </skill_tools>`;
 }
 

@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid";
 import { BUILTIN_SKILLS } from "./builtin-skills";
 import * as config from "./config";
+import { DEFAULT_PREFERENCES } from "./default-preferences";
 import type { Chat, ChatTab, Preferences, ProviderState, Skill } from "./types";
 
 const STORAGE_AREAS = {
@@ -68,23 +69,6 @@ type SyncLocalCache<T> = {
 const pendingSyncWrites = new Map<string, PendingSyncWrite>();
 
 const DEFAULT_SYNC_WRITE_STATUS: SyncWriteStatus = { pendingCount: 0 };
-
-const DEFAULT_PREFERENCES: Preferences = {
-  colorScheme: "system",
-  accentColor: "pink",
-  syncSettings: true,
-  syncProviders: true,
-  syncSkills: false,
-  syncChats: false,
-  autoSelectSkills: false,
-  autoScroll: true,
-  autoRetry: true,
-  cdpToolsEnabled: false,
-  imageGenerationEnabled: false,
-  imageGenerationSize: "1024x1024",
-  maxToolSteps: config.DEFAULT_MAX_TOOL_STEPS,
-  ...config.DEFAULT_CONTEXT_BUDGET_PREFERENCES,
-};
 
 export function getBrowserApi() {
   const apiGlobal = globalThis as typeof globalThis & {
@@ -386,7 +370,20 @@ function createSwitchableItem<T>(
         changedArea: string,
       ) => {
         const area = await activeArea();
-        if (changes.preferences) {
+        const cacheChange = changes[syncLocalCacheKey(key)];
+        const localCacheChanged = changedArea === STORAGE_AREAS.local;
+        if (area === STORAGE_AREAS.sync && localCacheChanged && cacheChange) {
+          const next = cacheChange.newValue as SyncLocalCache<T> | undefined;
+          const previous = cacheChange.oldValue as
+            | SyncLocalCache<T>
+            | undefined;
+          if (next) callback(next.value, previous?.value as T);
+          return;
+        }
+        if (
+          localCacheChanged &&
+          changes[syncLocalCacheKey(STORAGE_KEYS.preferences)]
+        ) {
           const next = await getValue();
           callback(next, next);
           return;

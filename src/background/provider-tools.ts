@@ -21,7 +21,8 @@ import {
   readUploadedAttachment,
 } from "./attachment-messages";
 import { generateImage } from "./image-generation";
-import { allBrowserTools, browserTools, safeExecuteBrowserTool } from "./tools";
+import { allBrowserTools, safeExecuteBrowserTool } from "./tools";
+import { browserToolsForPrompt } from "./tool-schema";
 
 export function toolsForMode(
   mode: ChatMode,
@@ -29,23 +30,15 @@ export function toolsForMode(
   hasSkills: boolean,
   imageGenerationEnabled: boolean,
   cdpToolsEnabled: boolean,
+  latestUserText = "",
 ) {
-  return browserTools.filter((item) => {
-    const name = item.function.name;
-    if (name === BROWSER_TOOL_NAME.listBrowserTools) return !isAskMode(mode);
-    if (name === BROWSER_TOOL_NAME.readBrowserTool) return !isAskMode(mode);
-    if (name === BROWSER_TOOL_NAME.runBrowserTool) return !isAskMode(mode);
-    if (name.startsWith("cdp") && !cdpToolsEnabled) return false;
-    if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
-      return hasUploadedAttachments;
-    if (name === BROWSER_TOOL_NAME.listSkills) return hasSkills;
-    if (name === BROWSER_TOOL_NAME.readSkill) return hasSkills;
-    if (name === BROWSER_TOOL_NAME.readSkillFile) return hasSkills;
-    if (name === BROWSER_TOOL_NAME.updateSkillFile) return hasSkills;
-    if (name === BROWSER_TOOL_NAME.generateImage) return imageGenerationEnabled;
-    if (name === BROWSER_TOOL_NAME.getCurrentTime) return true;
-    if (name === BROWSER_TOOL_NAME.readFileFromUrl) return true;
-    return !isAskMode(mode);
+  return browserToolsForPrompt({
+    mode,
+    hasUploadedAttachments,
+    hasSkills,
+    imageGenerationEnabled,
+    cdpToolsEnabled,
+    latestUserText,
   });
 }
 

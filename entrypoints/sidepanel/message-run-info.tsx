@@ -103,27 +103,27 @@ function RunInfoSection({
       <div className="run-info-token-grid">
         <MetricRow
           label={t.sidepanel.runInfo.input}
-          value={formatNumber(metrics.usage?.inputTokens, t)}
+          value={formatTokenCount(metrics.usage?.inputTokens, t)}
         />
         <MetricRow
           label={t.sidepanel.runInfo.outputTokens}
-          value={formatNumber(metrics.usage?.outputTokens, t)}
+          value={formatTokenCount(metrics.usage?.outputTokens, t)}
         />
         <MetricRow
           label={t.sidepanel.runInfo.cached}
-          value={formatNumber(metrics.usage?.cachedInputTokens, t)}
+          value={formatTokenCount(metrics.usage?.cachedInputTokens, t)}
         />
         <MetricRow
           label={t.sidepanel.runInfo.cacheWrite}
-          value={formatNumber(metrics.usage?.cacheWriteTokens, t)}
+          value={formatTokenCount(metrics.usage?.cacheWriteTokens, t)}
         />
         <MetricRow
           label={t.sidepanel.runInfo.total}
-          value={formatNumber(metrics.usage?.totalTokens, t)}
+          value={formatTokenCount(metrics.usage?.totalTokens, t)}
         />
         <MetricRow
           label={t.sidepanel.runInfo.reasoning}
-          value={formatNumber(metrics.usage?.reasoningTokens, t)}
+          value={formatTokenCount(metrics.usage?.reasoningTokens, t)}
         />
       </div>
     </div>
@@ -179,18 +179,9 @@ function PromptBreakdownBar({
           key: segment.key,
           value: segment.value,
           className: `run-info-prompt-${segment.key}`,
-          tooltip: `${segment.label}\n${segment.value.toLocaleString()} ${t.sidepanel.runInfo.characters}`,
+          tooltip: `${segment.label}\n${formatEstimatedTokens(segment.value, t)}`,
         }))}
       />
-      <div className="run-info-prompt-legend">
-        {segments.map((segment) => (
-          <MetricRow
-            key={segment.key}
-            label={segment.label}
-            value={`${segment.value.toLocaleString()} ${t.sidepanel.runInfo.characters}`}
-          />
-        ))}
-      </div>
     </div>
   );
 }
@@ -429,6 +420,29 @@ function formatMs(value: number | undefined, t: Messages) {
   return value < 1000
     ? `${Math.round(value)} ms`
     : `${(value / 1000).toFixed(2)} s`;
+}
+
+function formatEstimatedTokens(chars: number, t: Messages) {
+  return `${formatCompactNumber(Math.ceil(chars / ESTIMATED_CHARS_PER_TOKEN))} ${t.sidepanel.runInfo.estimated} Token`;
+}
+
+function formatTokenCount(value: number | undefined, t: Messages) {
+  if (value === undefined) return t.sidepanel.runInfo.unavailable;
+  return `${formatCompactNumber(value)} Token`;
+}
+
+function formatCompactNumber(value: number) {
+  if (Math.abs(value) >= 1_000_000_000)
+    return `${trimCompact(value / 1_000_000_000)}B`;
+  if (Math.abs(value) >= 1_000_000) return `${trimCompact(value / 1_000_000)}M`;
+  if (Math.abs(value) >= 10_000) return `${trimCompact(value / 1_000)}K`;
+  return value.toLocaleString();
+}
+
+function trimCompact(value: number) {
+  return value
+    .toFixed(value >= 100 ? 0 : value >= 10 ? 1 : 2)
+    .replace(/\.0+$/, "");
 }
 
 function formatNumber(value: number | undefined, t: Messages) {

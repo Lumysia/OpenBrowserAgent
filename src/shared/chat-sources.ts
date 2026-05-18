@@ -158,7 +158,7 @@ export function extractSourcesFromTool(
 
 export function renderSourcesForPrompt(sources: ChatSource[] = []) {
   if (!sources.length) return "";
-  return `<sources>\n${sources.map(renderSourceLine).join("\n")}\n</sources>\n\nWhen citing sources from <sources>, use [[cite:source_id]] immediately after the sentence or clause that uses that source. For factual summaries based on these sources, cite each bullet or sentence where practical.`;
+  return `<sources>\n${sources.map(renderSourceLine).join("\n")}\n</sources>`;
 }
 
 function renderSourceLine(source: ChatSource) {

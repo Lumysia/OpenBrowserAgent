@@ -7,6 +7,18 @@ import type { ChatMessage, ChatSource } from "../shared/types";
 import type { TokenUsage } from "../shared/types";
 
 export type VisionImage = { dataUrl: string; type?: string };
+export type ProviderTextResult = {
+  text: string;
+  outputMode: "streaming" | "buffered";
+  usage?: TokenUsage;
+};
+
+export function latestUserMessageText(messages: ChatMessage[]) {
+  return (
+    [...messages].reverse().find((message) => message.role === "user")
+      ?.content || ""
+  );
+}
 
 export function attachToolSources(
   toolName: string,

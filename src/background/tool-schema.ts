@@ -1,5 +1,6 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 import { ATTACHMENT_TOOL_DESCRIPTION } from "../shared/attachments";
+import { isAskMode, type ChatMode } from "../shared/types";
 import { cdpTools } from "./cdp-tool-schema";
 
 export const catalogBrowserTools = [
@@ -41,7 +42,7 @@ export const catalogBrowserTools = [
 export const commonBrowserTools = [
   tool(
     BROWSER_TOOL_NAME.wait,
-    "Wait for a specified amount of time before continuing. Use this when the user or page needs a short pause, an animation needs time, or an asynchronous page action needs time to settle.",
+    "Pause before continuing when the user/page, animation, or async action needs time to settle.",
     {
       milliseconds: {
         type: "number",
@@ -58,7 +59,7 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.getCurrentTime,
-    "Get the current date and time from the user's device. Use this when the user asks what time it is, asks for today's exact local date/time, or needs time zone conversion.",
+    "Get current date/time from the user's device for exact local time/date or time zone conversion.",
     {
       timeZone: {
         type: "string",
@@ -75,7 +76,7 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.generateImage,
-    "Use this for user requests to create, generate, draw, or edit an image with the configured image generation model. Can use uploaded image attachments as visual references and uploaded text attachments as prompt references.",
+    "Create, generate, draw, or edit an image. Uploaded images/text can be references.",
     {
       prompt: {
         type: "string",
@@ -256,7 +257,7 @@ export const commonBrowserTools = [
   }),
   tool(
     BROWSER_TOOL_NAME.downloadAllImagesInTab,
-    "Download all images in a tab as a zip for the user. Do not use this to visually inspect or describe image content; use readFileFromUrl when you have an image/file URL that the model needs to read.",
+    "Download tab images as a zip for the user. Not for visual inspection; use readFileFromUrl for that.",
     {
       tabId: {
         type: "number",
@@ -266,7 +267,7 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.readFileFromUrl,
-    "Fetch a file URL and read it according to its type. Use this before making visual claims when the user asks to see, inspect, judge, choose, or describe an image from a URL. Images are attached to the next model call as vision input; text is returned as text; other binary files can be returned as base64 or hex slices for model/tool inspection.",
+    "Fetch/read a file URL. Use before visual claims about image URLs. Images become vision input; text returns as text; binary can return base64/hex slices.",
     {
       url: {
         type: "string",
@@ -349,7 +350,7 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.updateSkillFile,
-    "Update or add a text file in an available skill package after using it. Only make generalized, reusable improvements based on the current context; do not add narrow one-off details, user-specific secrets, or task-only hacks.",
+    "Update/add a skill text file only for generalized reusable improvements. Never add secrets or one-off task details.",
     {
       skillId: {
         type: "string",
@@ -376,6 +377,46 @@ export const commonBrowserTools = [
 
 export const allBrowserTools = [...commonBrowserTools, ...cdpTools];
 export const browserTools = [...commonBrowserTools, ...catalogBrowserTools];
+
+export function browserToolsForPrompt({
+  mode,
+  hasUploadedAttachments,
+  hasSkills,
+  imageGenerationEnabled,
+  cdpToolsEnabled,
+  latestUserText,
+}: {
+  mode: ChatMode;
+  hasUploadedAttachments: boolean;
+  hasSkills: boolean;
+  imageGenerationEnabled: boolean;
+  cdpToolsEnabled: boolean;
+  latestUserText?: string;
+}) {
+  const askMode = isAskMode(mode);
+  return browserTools.filter((item) => {
+    const name = item.function.name;
+    if (name === BROWSER_TOOL_NAME.listBrowserTools) return !askMode;
+    if (name === BROWSER_TOOL_NAME.readBrowserTool) return !askMode;
+    if (name === BROWSER_TOOL_NAME.runBrowserTool) return !askMode;
+    if (name.startsWith("cdp") && !cdpToolsEnabled) return false;
+    if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
+      return hasUploadedAttachments;
+    if (name === BROWSER_TOOL_NAME.listSkills) return hasSkills;
+    if (name === BROWSER_TOOL_NAME.readSkill) return hasSkills;
+    if (name === BROWSER_TOOL_NAME.readSkillFile) return hasSkills;
+    if (name === BROWSER_TOOL_NAME.updateSkillFile) return hasSkills;
+    if (name === BROWSER_TOOL_NAME.generateImage) return imageGenerationEnabled;
+    if (name === BROWSER_TOOL_NAME.getCurrentTime) return !askMode;
+    if (name === BROWSER_TOOL_NAME.readFileFromUrl)
+      return !askMode || containsFileUrl(latestUserText || "");
+    return !askMode;
+  });
+}
+
+function containsFileUrl(text: string) {
+  return /https?:\/\/\S+|data:image\//i.test(text);
+}
 
 function tool(
   name: string,

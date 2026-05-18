@@ -67,6 +67,8 @@ npm run compile
 npm run build
 ```
 
+- Always run `npm run build` after UI changes before telling the user to review or reload the extension; the user cannot reliably inspect sidepanel/options UI changes until the extension bundle is rebuilt.
+
 Also search for unintended third-party branding before final release work:
 
 ```bash

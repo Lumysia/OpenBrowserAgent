@@ -55,6 +55,7 @@ import { closeStreamPort, startStreamAction } from "./stream-port";
 import { useComposerContext } from "./use-composer-context";
 import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
+import { usePromptUsageEstimate } from "./prompt-usage-preview";
 import { useQueuedMessages } from "./use-queued-messages";
 import { createSkillFromChat } from "./use-skill-creator";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
@@ -127,6 +128,18 @@ export function SidepanelApp() {
     toggleAttachedTab,
     removeAttachedTab,
   } = useComposerContext(chats || []);
+  const promptUsage = usePromptUsageEstimate({
+    input,
+    mode,
+    currentChat,
+    preferences,
+    attachedTabs,
+    selectedElement,
+    pendingAttachments,
+    uploadedAttachments,
+    selectedSkill,
+    skills: skills || [],
+  });
   const { editingMessage, setEditingMessage, editMessage, cancelEditMessage } =
     useMessageEdit({
       currentChat,
@@ -400,6 +413,7 @@ export function SidepanelApp() {
       preferences={preferences}
       configuredModels={configuredModels}
       input={input}
+      promptUsage={promptUsage}
       mode={mode}
       attachedTabs={attachedTabs}
       pendingAttachments={pendingAttachments}

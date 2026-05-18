@@ -9,6 +9,7 @@ import type {
   ChatMode,
   ModelConfig,
   Preferences,
+  PromptBreakdown,
   SelectedElement,
   Skill,
   UploadedAttachment,
@@ -34,6 +35,7 @@ import { EditModeOverlay } from "./edit-mode-overlay";
 import { IconTooltip } from "./icon-tooltip";
 import { MessageBubble } from "./message-bubble";
 import { ProvidersEmptyState } from "./providers-empty-state";
+import { PromptUsagePreview } from "./prompt-usage-preview";
 import { QueuedMessages } from "./queued-messages";
 import { SidepanelHeader } from "./sidepanel-header";
 import { TypingIndicator } from "./typing-indicator";
@@ -60,6 +62,7 @@ export function SidepanelView({
   preferences,
   configuredModels,
   input,
+  promptUsage,
   mode,
   attachedTabs,
   pendingAttachments,
@@ -122,6 +125,7 @@ export function SidepanelView({
   preferences?: Preferences;
   configuredModels: ModelConfig[];
   input: string;
+  promptUsage: PromptBreakdown;
   mode: ChatMode;
   attachedTabs: AttachmentTab[];
   pendingAttachments: UploadedAttachment[];
@@ -295,6 +299,7 @@ export function SidepanelView({
             onEdit={onEditQueuedMessage}
           />
           <div className="composer-box">
+            <PromptUsagePreview estimate={promptUsage} t={t} />
             <Textarea
               value={input}
               placeholder={t.sidepanel.whatDoYouWant}

@@ -27,8 +27,10 @@ import {
   extractVisionImage,
   geminiText,
   getMessageSources,
+  latestUserMessageText,
   mergeOutputSources,
   normalizeGeminiUsage,
+  type ProviderTextResult,
   sanitizeToolOutput,
 } from "./provider-output";
 import { executeContextAwareTool, toolsForMode } from "./provider-tools";
@@ -94,12 +96,14 @@ export async function requestOpenAICompatible(
       availableSkills,
     );
   const preferences = await storage.preferences.get();
+  const latestUserText = latestUserMessageText(messages);
   const availableTools = toolsForMode(
     mode,
     uploadedAttachments.length > 0,
     availableSkills.length > 0,
     !!preferences.imageGenerationEnabled,
     !!preferences.cdpToolsEnabled,
+    latestUserText,
   );
   const useTools = maxToolSteps > 0 && availableTools.length > 0;
   let responseSources = getMessageSources(messages);
@@ -282,12 +286,6 @@ export async function requestOpenAICompatible(
   };
 }
 
-type ProviderTextResult = {
-  text: string;
-  outputMode: "streaming" | "buffered";
-  usage?: TokenUsage;
-};
-
 async function requestGemini(
   model: { apiKey: string; modelName: string },
   system: string,
@@ -346,12 +344,14 @@ async function requestGemini(
   }
 
   const preferences = await storage.preferences.get();
+  const latestUserText = latestUserMessageText(messages);
   const availableTools = toolsForMode(
     mode,
     uploadedAttachments.length > 0,
     availableSkills.length > 0,
     !!preferences.imageGenerationEnabled,
     !!preferences.cdpToolsEnabled,
+    latestUserText,
   );
   const useTools = maxToolSteps > 0 && availableTools.length > 0;
   let responseSources = getMessageSources(messages);

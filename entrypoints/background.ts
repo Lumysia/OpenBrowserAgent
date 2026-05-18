@@ -42,6 +42,7 @@ import {
 import { requestOpenAICompatible } from "../src/background/providers";
 import { resolveModel } from "../src/background/model-resolver";
 import { postTextStream } from "../src/background/message-helpers";
+import { browserToolsForPrompt } from "../src/background/tool-schema";
 
 const SIDE_PANEL_OPENED = "side_panel_opened";
 export default defineBackground(() => {
@@ -130,9 +131,16 @@ async function streamAssistantResponse(
   const system = createSystemPrompt(request.body.chatMode, {
     imageGenerationEnabled: !!request.body.context?.imageGenerationEnabled,
   });
+  const preferences = await storage.preferences.get();
   post(port, {
     type: "metrics",
-    metrics: { promptBreakdown: promptBreakdown(system, request) },
+    metrics: {
+      promptBreakdown: promptBreakdown(
+        system,
+        request,
+        !!preferences.cdpToolsEnabled,
+      ),
+    },
   });
   const result = await requestOpenAICompatible(
     providerModel,
@@ -167,6 +175,7 @@ async function streamAssistantResponse(
 function promptBreakdown(
   system: string,
   request: SendMessagesRequest,
+  cdpToolsEnabled: boolean,
 ): PromptBreakdown {
   const latestUser = [...request.messages]
     .reverse()
@@ -178,7 +187,19 @@ function promptBreakdown(
   const skill = latestUser?.metadata?.skill as Skill | undefined;
   const availableSkills = request.body.context?.availableSkills || [];
   return {
-    systemPromptChars: system.length,
+    systemPromptChars:
+      system.length +
+      jsonLength(
+        browserToolsForPrompt({
+          mode: request.body.chatMode,
+          hasUploadedAttachments: attachments.length > 0,
+          hasSkills: availableSkills.length > 0,
+          imageGenerationEnabled:
+            !!request.body.context?.imageGenerationEnabled,
+          cdpToolsEnabled,
+          latestUserText: latestUser?.content || "",
+        }),
+      ),
     userPromptChars: latestUser?.content.length || 0,
     conversationPromptChars: request.messages.reduce(
       (total, message) => total + message.content.length,
