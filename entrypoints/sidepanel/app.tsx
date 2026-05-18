@@ -28,6 +28,7 @@ import { pruneSentAttachmentPreviews } from "./edit-message";
 import { sortChatsNewestFirst } from "./format";
 import { assistantModelLabel } from "./model-label";
 import { retryStalledStream } from "./retry-stalled-stream";
+import { selectedElementImageAttachment } from "./selected-element-attachment";
 import {
   buildSidepanelContext,
   interpolateSkillVariables,
@@ -88,7 +89,7 @@ export function SidepanelApp() {
   const currentChat = chats?.find((chat) => chat.id === activeChatId);
   const t = getMessages(language);
   const aiWorking = streaming || creatingSkill;
-  const { selectElement } = useElementSelector();
+  const { selectElement } = useElementSelector(t);
   const {
     uploadedAttachments,
     pendingAttachments,
@@ -252,8 +253,15 @@ export function SidepanelApp() {
       : chat;
     const sentTabs = attachedTabs;
     const sentElement = selectedElement;
-    const sentAttachments = resendAttachments || pendingAttachments;
-    const activeAttachments = uploadedAttachments;
+    const selectedImageAttachment = selectedElementImageAttachment(sentElement);
+    const sentAttachments = [
+      ...(resendAttachments || pendingAttachments),
+      ...(selectedImageAttachment ? [selectedImageAttachment] : []),
+    ];
+    const activeAttachments = [
+      ...uploadedAttachments,
+      ...(selectedImageAttachment ? [selectedImageAttachment] : []),
+    ];
     const assistantModel = assistantModelLabel({
       modelId: preferences?.selectedModelId,
       models: configuredModels,

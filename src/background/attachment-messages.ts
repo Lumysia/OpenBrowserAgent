@@ -56,7 +56,10 @@ export function createOpenAIRequestMessages(
 }
 
 export function hasImageAttachments(attachments: UploadedAttachment[]) {
-  return false;
+  return attachments.some(
+    (attachment) =>
+      attachment.kind === ATTACHMENT_KIND.image && attachment.dataUrl,
+  );
 }
 
 export function readUploadedAttachment(
@@ -193,6 +196,20 @@ function createGeminiParts(
       ),
     },
   ];
+  if (multimodal)
+    parts.push(
+      ...attachments
+        .filter(
+          (attachment) =>
+            attachment.kind === ATTACHMENT_KIND.image && attachment.dataUrl,
+        )
+        .map((attachment) => ({
+          inline_data: {
+            mime_type: attachment.type || "image/png",
+            data: base64FromDataUrl(attachment.dataUrl || ""),
+          },
+        })),
+    );
   return parts;
 }
 
@@ -212,7 +229,17 @@ function createOpenAIMessageContent(
   const attachments = requestAttachments.length
     ? requestAttachments
     : getUploadedAttachments(message);
-  return text;
+  if (!multimodal) return text;
+  const imageParts = attachments
+    .filter(
+      (attachment) =>
+        attachment.kind === ATTACHMENT_KIND.image && attachment.dataUrl,
+    )
+    .map((attachment) => ({
+      type: "image_url",
+      image_url: { url: attachment.dataUrl },
+    }));
+  return imageParts.length ? [{ type: "text", text }, ...imageParts] : text;
 }
 
 function renderMessageText(

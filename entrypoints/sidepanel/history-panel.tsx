@@ -33,7 +33,11 @@ export function HistoryPanel({
           className={`history-item ${chat.id === activeChatId ? "active" : ""}`}
           key={chat.id}
         >
-          <Button variant="ghost" onClick={() => onSelect(chat.id)}>
+          <Button
+            variant="ghost"
+            className="history-select"
+            onClick={() => onSelect(chat.id)}
+          >
             <strong>{chat.title || t.words.newChat}</strong>
             <small>
               {formatMessageCount(t, chat.messages.length)} ·{" "}

@@ -45,7 +45,9 @@ export function createSendMessagePlan({
       ...(context ? { context } : {}),
       ...(sources?.length ? { sources } : {}),
       ...(sentTabs.length ? { attachedTabs: sentTabs } : {}),
-      ...(sentElement ? { selectedElement: sentElement } : {}),
+      ...(sentElement
+        ? { selectedElement: toSelectedElementMetadata(sentElement) }
+        : {}),
       ...(sentAttachments.length
         ? { uploadedAttachments: sentAttachments.map(toAttachmentMetadata) }
         : {}),
@@ -77,4 +79,9 @@ export function createSendMessagePlan({
     titleSource,
     nextChat,
   };
+}
+
+function toSelectedElementMetadata(element: SelectedElement) {
+  const { imageDataUrl, ...metadata } = element;
+  return metadata;
 }

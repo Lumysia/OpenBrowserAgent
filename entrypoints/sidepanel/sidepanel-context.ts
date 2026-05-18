@@ -96,6 +96,18 @@ function renderSelectedElement(
       ? `<inner_text>${escapeXml(selectedElement.innerText)}</inner_text>`
       : undefined,
     `<value>${escapeXml(selectedElement.value || "")}</value>`,
+    selectedElement.imageSrc
+      ? `<image_src>${escapeXml(selectedElement.imageSrc)}</image_src>`
+      : undefined,
+    selectedElement.imageAlt
+      ? `<image_alt>${escapeXml(selectedElement.imageAlt)}</image_alt>`
+      : undefined,
+    selectedElement.imageWidth || selectedElement.imageHeight
+      ? `<image_size>${selectedElement.imageWidth || ""}x${selectedElement.imageHeight || ""}</image_size>`
+      : undefined,
+    selectedElement.imageDataUrl
+      ? `<image_attachment>Selected image pixels are available as an image attachment in available_attachments.</image_attachment>`
+      : undefined,
     selectedElement.outerHTML
       ? `<outer_html>${escapeXml(selectedElement.outerHTML.slice(0, SELECTED_ELEMENT_HTML_MAX_CHARS))}</outer_html>`
       : undefined,

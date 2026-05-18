@@ -39,9 +39,18 @@ export async function extractTabText(tabId: number): Promise<string> {
   return String(result.result || "");
 }
 
-export async function injectElementSelector(tabId: number) {
+export async function injectElementSelector(tabId: number, prompt: string) {
   const tab = await chrome.tabs.get(tabId);
   if (!isScriptableUrl(tab.url)) return false;
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    args: [prompt],
+    func: (selectorPrompt) => {
+      (
+        window as Window & { __obaElementSelectorPrompt?: string }
+      ).__obaElementSelectorPrompt = selectorPrompt;
+    },
+  });
   await chrome.scripting.executeScript({
     target: { tabId },
     files: ["content-scripts/element-selector.js"],
@@ -57,17 +66,25 @@ export async function getSelectedElementFromPage(
   const [result] = await chrome.scripting.executeScript({
     target: { tabId },
     func: () => {
-      const element = document.querySelector(
-        '[data-oba-selected="true"]',
-      ) as HTMLInputElement | null;
+      const element = document.querySelector('[data-oba-selected="true"]') as
+        | (HTMLInputElement & HTMLElement)
+        | null;
       if (!element) return null;
+      const image =
+        element instanceof HTMLImageElement
+          ? element
+          : element.querySelector("img");
       return {
         success: true,
         aiId: element.getAttribute("data-ai-id") || undefined,
         innerText: element.innerText,
         outerHTML: element.outerHTML,
         tagName: element.tagName,
-        value: element.value,
+        value: "value" in element ? element.value : "",
+        imageSrc: image?.currentSrc || image?.src || undefined,
+        imageAlt: image?.alt || undefined,
+        imageWidth: image?.naturalWidth || image?.width || undefined,
+        imageHeight: image?.naturalHeight || image?.height || undefined,
       };
     },
   });

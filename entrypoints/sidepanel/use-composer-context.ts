@@ -15,7 +15,6 @@ export function useComposerContext(chats: Chat[]) {
     useState<SelectedElement | null>(null);
 
   useActiveTabContext({
-    chats,
     attachedTabs,
     selectedElement,
     setAttachedTabs,

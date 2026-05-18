@@ -3,7 +3,6 @@
   window.__obaElementSelectorActive = true;
 
   const STORAGE_KEY_PREFERENCES = "preferences";
-  const STORAGE_KEY_LANGUAGE = "language";
   const MESSAGE_CANCEL = "cancelElementSelector";
   const MESSAGE_CANCELLED = "elementSelectorCancelled";
   const Z_INDEX = "2147483647";
@@ -19,19 +18,7 @@
     colorScheme: "system",
     accentColor: "amber",
   };
-  const SELECTOR_PROMPTS = {
-    "en-US": "Select element - Esc to cancel",
-    "zh-CN": "选择元素 - 按 Esc 取消",
-    "zh-SG": "选择元素 - 按 Esc 取消",
-    "zh-TW": "選擇元素 - 按 Esc 取消",
-    "zh-HK": "選擇元素 - 按 Esc 取消",
-    "ja-JP": "要素を選択 - Escでキャンセル",
-    ko: "요소 선택 - Esc로 취소",
-    "fr-FR": "Sélectionner un élément - Échap pour annuler",
-    "de-DE": "Element auswählen - Esc zum Abbrechen",
-    "es-ES": "Seleccionar elemento - Esc para cancelar",
-    "pt-BR": "Selecionar elemento - Esc para cancelar",
-  };
+  const DEFAULT_SELECTOR_PROMPT = "Select element - Esc to cancel";
 
   let hovered = null;
   let currentRect = null;
@@ -62,7 +49,8 @@
   root.appendChild(highlight);
 
   const label = document.createElement("div");
-  label.textContent = SELECTOR_PROMPTS["en-US"];
+  label.textContent =
+    window.__obaElementSelectorPrompt || DEFAULT_SELECTOR_PROMPT;
   Object.assign(label.style, {
     position: "fixed",
     top: "16px",
@@ -83,8 +71,9 @@
   applyTheme(DEFAULT_PREFERENCES);
   document.documentElement.appendChild(root);
   document.body.style.cursor = "crosshair";
-  loadPreferences().then(applyTheme).catch(() => undefined);
-  loadLanguage().then(applyLanguage).catch(() => undefined);
+  loadPreferences()
+    .then(applyTheme)
+    .catch(() => undefined);
   updateOverlay(null);
 
   function applyTheme(preferences) {
@@ -127,28 +116,6 @@
     };
   }
 
-  async function loadLanguage() {
-    const [syncData, localData] = await Promise.all([
-      chrome.storage.sync.get(STORAGE_KEY_LANGUAGE).catch(() => ({})),
-      chrome.storage.local.get(STORAGE_KEY_LANGUAGE).catch(() => ({})),
-    ]);
-    return (
-      syncData[STORAGE_KEY_LANGUAGE] ||
-      localData[STORAGE_KEY_LANGUAGE] ||
-      chrome.i18n?.getUILanguage?.() ||
-      "en-US"
-    );
-  }
-
-  function applyLanguage(language) {
-    const normalized = String(language || "").replace("_", "-");
-    label.textContent =
-      SELECTOR_PROMPTS[language] ||
-      SELECTOR_PROMPTS[normalized] ||
-      chrome.i18n?.getMessage("selectorPrompt") ||
-      SELECTOR_PROMPTS["en-US"];
-  }
-
   function cleanup() {
     root.remove();
     document.body.style.cursor = previousCursor;
@@ -188,7 +155,7 @@
     updateOverlay(hovered.getBoundingClientRect());
   }
 
-  function onClick(event) {
+  async function onClick(event) {
     const target = event.target;
     if (!isSelectableTarget(target)) return;
     event.preventDefault();
@@ -204,6 +171,7 @@
       .querySelectorAll('[data-oba-selected="true"]')
       .forEach((node) => node.removeAttribute("data-oba-selected"));
     target.setAttribute("data-oba-selected", "true");
+    const image = imageFromTarget(target);
     chrome.runtime.sendMessage({
       type: "getSelectedElement",
       success: true,
@@ -212,6 +180,11 @@
       outerHTML: target.outerHTML,
       tagName: target.tagName.toLowerCase(),
       value: "value" in target ? target.value : undefined,
+      imageSrc: image?.currentSrc || image?.src || undefined,
+      imageAlt: image?.alt || undefined,
+      imageWidth: image?.naturalWidth || image?.width || undefined,
+      imageHeight: image?.naturalHeight || image?.height || undefined,
+      imageDataUrl: image ? await imageToDataUrl(image) : undefined,
     });
     cleanup();
   }
@@ -230,6 +203,43 @@
 
   function isSelectableTarget(target) {
     return target instanceof HTMLElement && !root.contains(target);
+  }
+
+  function imageFromTarget(target) {
+    if (target instanceof HTMLImageElement) return target;
+    if (target instanceof HTMLElement) return target.querySelector("img");
+    return null;
+  }
+
+  async function imageToDataUrl(image) {
+    if (image.currentSrc?.startsWith("data:")) return image.currentSrc;
+    if (image.src?.startsWith("data:")) return image.src;
+    const src = image.currentSrc || image.src;
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth || image.width;
+      canvas.height = image.naturalHeight || image.height;
+      const context = canvas.getContext("2d");
+      if (canvas.width && canvas.height && context) {
+        context.drawImage(image, 0, 0);
+        return canvas.toDataURL("image/png");
+      }
+    } catch {
+      // Cross-origin images may taint canvas; fall back to fetch below.
+    }
+    try {
+      const response = await fetch(src);
+      const blob = await response.blob();
+      if (!blob.type.startsWith("image/")) return undefined;
+      return await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => resolve(undefined);
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return undefined;
+    }
   }
 
   function updateOverlay(rect) {

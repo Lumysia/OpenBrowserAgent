@@ -1661,10 +1661,11 @@ a {
   height: 32px;
 }
 .history-panel {
-  width: min(260px, calc(100vw - 24px));
+  width: min(220px, calc(100vw - 24px));
   max-height: 340px;
+  overflow-x: hidden;
   overflow-y: auto;
-  padding: 7px;
+  padding: 7px 6px;
 }
 .history-panel-header {
   padding: 8px 9px 10px;
@@ -1680,46 +1681,81 @@ a {
   text-align: center;
 }
 .history-item {
+  position: relative;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) 24px;
   align-items: center;
-  gap: 6px;
-  border-radius: 10px;
-  transition: background-color 0.14s ease;
+  gap: 2px;
+  min-width: 0;
+  border-radius: 9px;
+  transition:
+    background-color 0.14s ease,
+    color 0.14s ease;
 }
-.history-item:hover,
+.history-item:hover {
+  background: color-mix(in srgb, var(--secondary) 72%, transparent);
+}
 .history-item.active {
-  background: var(--accent-soft);
+  background: color-mix(in srgb, var(--accent-soft) 42%, transparent);
 }
-.history-item > button:first-child {
+.history-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 9px;
+  bottom: 9px;
+  width: 2px;
+  border-radius: 99px;
+  background: var(--accent-strong);
+}
+.history-select {
+  width: 100%;
   min-width: 0;
   display: grid;
+  justify-content: stretch;
+  justify-items: start;
   gap: 2px;
-  padding: 9px 8px;
+  min-height: 46px;
+  padding: 7px 8px 7px 11px;
   background: transparent;
   color: var(--foreground);
   text-align: left;
+  line-height: 1.25;
+  font-weight: 500;
+  white-space: normal;
+}
+.history-select:hover,
+.history-select:focus-visible {
+  transform: none;
+  box-shadow: none;
 }
 .history-item strong {
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
 }
 .history-item small {
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--muted-foreground);
   font-size: 11px;
+  line-height: 1.25;
 }
 .history-close {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-right: 5px;
+  margin-right: 2px;
   border-radius: 999px;
   background: transparent;
   color: var(--muted-foreground);
@@ -2079,6 +2115,14 @@ a {
   background: white;
 }
 .attachment-card > svg {
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  border-radius: 8px;
+  background: var(--accent-softer);
+  color: var(--accent-strong);
+}
+.context-card > svg {
   width: 34px;
   height: 34px;
   padding: 7px;

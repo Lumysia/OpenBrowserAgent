@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getActiveTab, injectElementSelector } from "../../src/shared/browser";
+import type { Messages } from "../../src/shared/i18n";
 
 const ELEMENT_SELECTOR_MESSAGE = {
   selected: "getSelectedElement",
@@ -7,7 +8,7 @@ const ELEMENT_SELECTOR_MESSAGE = {
   cancel: "cancelElementSelector",
 } as const;
 
-export function useElementSelector() {
+export function useElementSelector(t: Messages) {
   const [selectingElement, setSelectingElement] = useState(false);
 
   useEffect(() => {
@@ -37,7 +38,10 @@ export function useElementSelector() {
     const tab = await getActiveTab();
     if (!tab?.id) return;
     setSelectingElement(true);
-    const injected = await injectElementSelector(tab.id).catch(() => false);
+    const injected = await injectElementSelector(
+      tab.id,
+      `${t.sidepanel.selectElement} - Esc ${t.common.cancel}`,
+    ).catch(() => false);
     if (!injected) setSelectingElement(false);
   }
 

@@ -1,23 +1,14 @@
 import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import { getActiveTab } from "../../src/shared/browser";
-import type {
-  AttachmentTab,
-  Chat,
-  SelectedElement,
-} from "../../src/shared/types";
-import {
-  isTabAlreadySentAsSelected,
-  toAttachmentTab,
-} from "./sidepanel-context";
+import type { AttachmentTab, SelectedElement } from "../../src/shared/types";
+import { toAttachmentTab } from "./sidepanel-context";
 
 export function useActiveTabContext({
-  chats,
   attachedTabs,
   selectedElement,
   setAttachedTabs,
   setSelectedElement,
 }: {
-  chats: Chat[];
   attachedTabs: AttachmentTab[];
   selectedElement: SelectedElement | null;
   setAttachedTabs: Dispatch<SetStateAction<AttachmentTab[]>>;
@@ -44,7 +35,6 @@ export function useActiveTabContext({
   useEffect(() => {
     const syncActiveTab = () => {
       void syncActiveTabContext({
-        chats,
         attachedTabs,
         selectedElement,
         setAttachedTabs,
@@ -56,7 +46,7 @@ export function useActiveTabContext({
       chrome.tabs.onActivated.removeListener(syncActiveTab);
       chrome.tabs.onUpdated.removeListener(syncActiveTab);
     };
-  }, [attachedTabs, chats, selectedElement, setAttachedTabs]);
+  }, [attachedTabs, selectedElement, setAttachedTabs]);
 }
 
 async function autoAttachActiveTab(
@@ -68,12 +58,10 @@ async function autoAttachActiveTab(
 }
 
 async function syncActiveTabContext({
-  chats,
   attachedTabs,
   selectedElement,
   setAttachedTabs,
 }: {
-  chats: Chat[];
   attachedTabs: AttachmentTab[];
   selectedElement: SelectedElement | null;
   setAttachedTabs: Dispatch<SetStateAction<AttachmentTab[]>>;
@@ -84,7 +72,7 @@ async function syncActiveTabContext({
     !attachment ||
     selectedElement ||
     attachedTabs.length >= 2 ||
-    isTabAlreadySentAsSelected(chats, attachment.id)
+    attachedTabs[0]?.id === attachment.id
   )
     return;
   setAttachedTabs([attachment]);

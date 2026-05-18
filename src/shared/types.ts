@@ -102,6 +102,11 @@ export type SelectedElement = {
   outerHTML?: string;
   tagName?: string;
   value?: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  imageWidth?: number;
+  imageHeight?: number;
+  imageDataUrl?: string;
 };
 
 export type ChatMessage = {
