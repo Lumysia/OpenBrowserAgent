@@ -124,6 +124,10 @@ export const ko: LocaleMessages = {
       },
       inputTextByAiID: { running: "텍스트 입력 중", done: "텍스트 입력됨" },
       clickElementByAiID: { running: "요소 클릭 중", done: "요소 클릭됨" },
+      cdpMouseActionByAiID: {
+        running: "CDP 마우스 동작 실행 중",
+        done: "CDP 마우스 동작 실행됨",
+      },
       getTabContent: {
         running: "페이지 내용 가져오는 중",
         done: "페이지 내용 가져옴",
@@ -294,6 +298,9 @@ export const ko: LocaleMessages = {
     autoRetry: "자동 재시도",
     autoRetryDescription:
       "어시스턴트가 30초 동안 새 출력을 만들지 않으면 한 번 자동으로 계속합니다.",
+    cdpTools: "CDP 도구",
+    cdpToolsDescription:
+      "고급 Chrome DevTools Protocol 브라우저 자동화 및 디버깅 도구를 노출합니다. Chrome에서 디버거 접근 권한을 요청하므로 기본값은 꺼짐입니다.",
     autoSelectSkills: "스킬 자동 선택",
     autoSelectSkillsDescription:
       "수동으로 스킬을 선택하지 않았을 때 AI가 필요에 따라 관련 스킬을 확인하고 사용할 수 있습니다.",

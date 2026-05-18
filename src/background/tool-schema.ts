@@ -1,7 +1,44 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 import { ATTACHMENT_TOOL_DESCRIPTION } from "../shared/attachments";
+import { cdpTools } from "./cdp-tool-schema";
 
-export const browserTools = [
+export const catalogBrowserTools = [
+  tool(
+    BROWSER_TOOL_NAME.listBrowserTools,
+    "List available browser automation tools by category. Use this to discover less common tools without loading every schema into the prompt.",
+    {
+      category: {
+        type: "string",
+        description:
+          "Optional category filter, such as common, cdp, input, navigation, debug, network, performance, memory, files, skills, image",
+      },
+    },
+    [],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.readBrowserTool,
+    "Read details and JSON schema for a browser automation tool from the tool catalog.",
+    {
+      name: {
+        type: "string",
+        description: "Tool name returned by listBrowserTools",
+      },
+    },
+  ),
+  tool(
+    BROWSER_TOOL_NAME.runBrowserTool,
+    "Run a browser automation tool by name after checking its details with readBrowserTool. Use this for less common tools that are not directly exposed.",
+    {
+      name: { type: "string", description: "Tool name to run" },
+      arguments: {
+        type: "object",
+        description: "Arguments matching readBrowserTool schema",
+      },
+    },
+  ),
+];
+
+export const commonBrowserTools = [
   tool(
     BROWSER_TOOL_NAME.generateImage,
     "Use this for user requests to create, generate, draw, or edit an image with the configured image generation model. Can use uploaded image attachments as visual references and uploaded text attachments as prompt references.",
@@ -100,6 +137,26 @@ export const browserTools = [
       description: "The ID of the tab to click the element in",
     },
   }),
+  tool(
+    BROWSER_TOOL_NAME.cdpMouseActionByAiID,
+    "Dispatch a CDP mouse action on an element by its AI ID when DOM click tools do not trigger the page",
+    {
+      id: {
+        type: "string",
+        description: "The ID of the element to target",
+      },
+      tabId: {
+        type: "number",
+        description: "The ID of the tab containing the element",
+      },
+      action: {
+        type: "string",
+        enum: ["hover", "click", "doubleClick"],
+        description: "The CDP mouse action to perform",
+      },
+    },
+    ["id", "tabId"],
+  ),
   tool(
     BROWSER_TOOL_NAME.inputTextByAiID,
     "Input text into an element by its AI ID",
@@ -282,6 +339,9 @@ export const browserTools = [
     ["skillId", "path", "content", "reason"],
   ),
 ];
+
+export const allBrowserTools = [...commonBrowserTools, ...cdpTools];
+export const browserTools = [...commonBrowserTools, ...catalogBrowserTools];
 
 function tool(
   name: string,

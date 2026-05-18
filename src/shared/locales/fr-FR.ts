@@ -129,6 +129,10 @@ export const frFR: LocaleMessages = {
         running: "Clic sur l'élément",
         done: "Élément cliqué",
       },
+      cdpMouseActionByAiID: {
+        running: "Action souris CDP en cours",
+        done: "Action souris CDP effectuée",
+      },
       getTabContent: {
         running: "Récupération du contenu",
         done: "Contenu récupéré",
@@ -317,6 +321,9 @@ export const frFR: LocaleMessages = {
     autoRetry: "Nouvelle tentative automatique",
     autoRetryDescription:
       "Continuer automatiquement une fois si l'assistant ne produit rien pendant 30 secondes.",
+    cdpTools: "Outils CDP",
+    cdpToolsDescription:
+      "Expose les outils avancés Chrome DevTools Protocol pour l'automatisation et le débogage du navigateur. Désactivé par défaut, car Chrome demandera l'accès au débogueur.",
     autoSelectSkills: "Sélection automatique des compétences",
     autoSelectSkillsDescription:
       "Lorsqu'aucune compétence n'est sélectionnée manuellement, autorise l'IA à consulter et utiliser les compétences pertinentes au besoin.",

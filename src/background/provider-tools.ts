@@ -21,16 +21,21 @@ import {
   readUploadedAttachment,
 } from "./attachment-messages";
 import { generateImage } from "./image-generation";
-import { browserTools, safeExecuteBrowserTool } from "./tools";
+import { allBrowserTools, browserTools, safeExecuteBrowserTool } from "./tools";
 
 export function toolsForMode(
   mode: ChatMode,
   hasUploadedAttachments: boolean,
   hasSkills: boolean,
   imageGenerationEnabled: boolean,
+  cdpToolsEnabled: boolean,
 ) {
   return browserTools.filter((item) => {
     const name = item.function.name;
+    if (name === BROWSER_TOOL_NAME.listBrowserTools) return !isAskMode(mode);
+    if (name === BROWSER_TOOL_NAME.readBrowserTool) return !isAskMode(mode);
+    if (name === BROWSER_TOOL_NAME.runBrowserTool) return !isAskMode(mode);
+    if (name.startsWith("cdp") && !cdpToolsEnabled) return false;
     if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
       return hasUploadedAttachments;
     if (name === BROWSER_TOOL_NAME.listSkills) return hasSkills;
@@ -48,12 +53,20 @@ export function executeContextAwareTool({
   input,
   uploadedAttachments,
   availableSkills,
+  cdpToolsEnabled,
 }: {
   toolName: string;
   input: Record<string, unknown>;
   uploadedAttachments: UploadedAttachment[];
   availableSkills: Skill[];
+  cdpToolsEnabled: boolean;
 }) {
+  if (toolName === BROWSER_TOOL_NAME.listBrowserTools)
+    return listBrowserTools(input, cdpToolsEnabled);
+  if (toolName === BROWSER_TOOL_NAME.readBrowserTool)
+    return readBrowserTool(input, cdpToolsEnabled);
+  if (toolName === BROWSER_TOOL_NAME.runBrowserTool)
+    return runBrowserTool(input, cdpToolsEnabled);
   if (toolName === BROWSER_TOOL_NAME.readUploadedAttachment)
     return readUploadedAttachment(uploadedAttachments, input);
   if (toolName === BROWSER_TOOL_NAME.listSkills)
@@ -69,6 +82,82 @@ export function executeContextAwareTool({
   if (toolName === BROWSER_TOOL_NAME.readFileFromUrl)
     return readFileFromUrl(input);
   return safeExecuteBrowserTool(toolName, input);
+}
+
+function listBrowserTools(
+  input: Record<string, unknown>,
+  cdpToolsEnabled: boolean,
+) {
+  const category = String(input.category || "")
+    .trim()
+    .toLowerCase();
+  return {
+    cdpToolsEnabled,
+    tools: allBrowserTools
+      .map((item) => toolCatalogItem(item, cdpToolsEnabled))
+      .filter((item) => !category || item.category === category),
+  };
+}
+
+function readBrowserTool(
+  input: Record<string, unknown>,
+  cdpToolsEnabled: boolean,
+) {
+  const name = String(input.name || "").trim();
+  const tool = allBrowserTools.find((item) => item.function.name === name);
+  if (!tool) return { error: `Unknown browser tool: ${name}` };
+  return { ...toolCatalogItem(tool, cdpToolsEnabled), schema: tool.function };
+}
+
+function runBrowserTool(
+  input: Record<string, unknown>,
+  cdpToolsEnabled: boolean,
+) {
+  const name = String(input.name || "").trim();
+  const args =
+    input.arguments && typeof input.arguments === "object"
+      ? (input.arguments as Record<string, unknown>)
+      : {};
+  const tool = allBrowserTools.find((item) => item.function.name === name);
+  if (!tool) return { error: `Unknown browser tool: ${name}` };
+  if (name.startsWith("cdp") && !cdpToolsEnabled)
+    return { error: "CDP tools are disabled in General settings", name };
+  if (
+    name === BROWSER_TOOL_NAME.listBrowserTools ||
+    name === BROWSER_TOOL_NAME.readBrowserTool ||
+    name === BROWSER_TOOL_NAME.runBrowserTool
+  )
+    return {
+      error: "Catalog tools cannot be nested through runBrowserTool",
+      name,
+    };
+  return safeExecuteBrowserTool(name, args);
+}
+
+function toolCatalogItem(
+  item: (typeof allBrowserTools)[number],
+  cdpToolsEnabled: boolean,
+) {
+  const name = item.function.name;
+  return {
+    name,
+    description: item.function.description,
+    category: toolCategory(name),
+    available: !name.startsWith("cdp") || cdpToolsEnabled,
+    unavailableReason:
+      name.startsWith("cdp") && !cdpToolsEnabled
+        ? "CDP tools are disabled in General settings"
+        : undefined,
+  };
+}
+
+function toolCategory(name: string) {
+  const lower = name.toLowerCase();
+  if (lower.startsWith("cdp")) return "cdp";
+  if (lower.includes("skill")) return "skills";
+  if (lower.includes("image")) return "image";
+  if (lower.includes("file") || lower.includes("attachment")) return "files";
+  return "common";
 }
 
 async function readFileFromUrl(input: Record<string, unknown>) {

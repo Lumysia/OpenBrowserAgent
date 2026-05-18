@@ -48,7 +48,6 @@ import type {
   ReplaceAttachmentHandler,
 } from "./sidepanel-view-types";
 import { UploadFileInput } from "./uploaded-attachment-card";
-import { aiWorkingStatus } from "./working-status";
 import type { QueuedMessage } from "./use-queued-messages";
 
 export function SidepanelView({
@@ -179,11 +178,6 @@ export function SidepanelView({
   onSelectChat: (chatId: string) => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const workingStatus = aiWorkingStatus({
-    chat: currentChat,
-    creatingSkill,
-    t,
-  });
 
   function attachFromPicker() {
     fileInputRef.current?.click();
@@ -202,6 +196,13 @@ export function SidepanelView({
 
   if (modelCount === 0) return <ProvidersEmptyState t={t} />;
   const sidepanelClass = `sidepanel ${editingMessageId ? "editing-mode" : ""}`;
+  const hasInlineTypingMessage = !!currentChat?.messages.some(
+    (message, index, messages) =>
+      index === messages.length - 1 &&
+      message.role === "assistant" &&
+      !message.content &&
+      !message.parts?.length,
+  );
 
   return (
     <TooltipProvider delayDuration={250}>
@@ -246,6 +247,15 @@ export function SidepanelView({
               onFork={onForkMessage}
             />
           ))}
+          {aiWorking && !hasInlineTypingMessage && (
+            <div className="message" aria-live="polite">
+              <span className="typing-dots" aria-label="Thinking">
+                <span />
+                <span />
+                <span />
+              </span>
+            </div>
+          )}
         </ScrollArea>
         <footer className="composer">
           <UploadFileInput
@@ -286,20 +296,6 @@ export function SidepanelView({
             onDelete={onDeleteQueuedMessage}
             onEdit={onEditQueuedMessage}
           />
-          {aiWorking && (
-            <div className="ai-working-overlay" aria-live="polite">
-              <span className="ai-working-orb" />
-              <span>
-                <strong>{workingStatus.title}</strong>
-                <small>{workingStatus.description}</small>
-              </span>
-              <span className="ai-working-bars" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </span>
-            </div>
-          )}
           <div className="composer-box">
             <Textarea
               value={input}

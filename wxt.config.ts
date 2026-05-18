@@ -23,6 +23,7 @@ export default defineConfig({
       "search",
       "sidePanel",
       "downloads",
+      "debugger",
     ],
     host_permissions: ["<all_urls>"],
     icons: {

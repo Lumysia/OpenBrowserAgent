@@ -131,6 +131,10 @@ export const jaJP: LocaleMessages = {
         running: "要素をクリック中",
         done: "要素をクリックしました",
       },
+      cdpMouseActionByAiID: {
+        running: "CDPマウス操作を実行中",
+        done: "CDPマウス操作を実行しました",
+      },
       getTabContent: {
         running: "ページ内容を取得中",
         done: "ページ内容を取得しました",
@@ -313,6 +317,9 @@ export const jaJP: LocaleMessages = {
     autoRetry: "自動再試行",
     autoRetryDescription:
       "アシスタントが30秒間新しい出力を生成しない場合、一度だけ自動的に続行します。",
+    cdpTools: "CDPツール",
+    cdpToolsDescription:
+      "高度なChrome DevTools Protocolのブラウザー自動化・デバッグツールを公開します。Chromeがデバッガーアクセスを要求するため、既定では無効です。",
     autoSelectSkills: "スキルを自動選択",
     autoSelectSkillsDescription:
       "手動でスキルを選択していない場合、AIが必要に応じて関連するスキルを確認して使用できます。",

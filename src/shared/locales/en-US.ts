@@ -129,6 +129,10 @@ export const enUS = {
         running: "Clicking element",
         done: "Clicked element",
       },
+      cdpMouseActionByAiID: {
+        running: "Running CDP mouse action",
+        done: "Ran CDP mouse action",
+      },
       getTabContent: {
         running: "Getting page content",
         done: "Retrieved page content",
@@ -300,6 +304,9 @@ export const enUS = {
     autoRetry: "Auto Retry",
     autoRetryDescription:
       "Automatically continue once if the assistant produces no new output for 30 seconds.",
+    cdpTools: "CDP tools",
+    cdpToolsDescription:
+      "Expose advanced Chrome DevTools Protocol tools for browser automation and debugging. Disabled by default because Chrome will request debugger access.",
     autoSelectSkills: "Auto-select Skills",
     autoSelectSkillsDescription:
       "When no skill is selected manually, let the AI inspect and use any relevant Skills as needed.",

@@ -1,5 +1,6 @@
 import {
   Copy,
+  Gauge,
   Download,
   ExternalLink,
   FileSearch,
@@ -7,7 +8,10 @@ import {
   Image as ImageIcon,
   Layers,
   MousePointerClick,
+  Network,
+  PanelTop,
   Search,
+  TerminalSquare,
   Square,
   Type,
 } from "lucide-react";
@@ -210,12 +214,23 @@ function toolReferences(
 }
 
 function toolIcon(name: string) {
-  if (name.includes("input")) return <Type size={19} strokeWidth={2.1} />;
-  if (name.includes("click"))
+  const lowerName = name.toLowerCase();
+  if (lowerName.includes("input") || lowerName.includes("fill"))
+    return <Type size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("click") || lowerName.includes("mouse"))
     return <MousePointerClick size={19} strokeWidth={2.1} />;
-  if (name.includes("find")) return <Search size={19} strokeWidth={2.1} />;
-  if (name.includes("download"))
+  if (lowerName.includes("find") || lowerName.includes("search"))
+    return <Search size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("download"))
     return <Download size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("network"))
+    return <Network size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("performance") || lowerName.includes("trace"))
+    return <Gauge size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("screenshot") || lowerName.includes("snapshot"))
+    return <PanelTop size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("script") || lowerName.includes("console"))
+    return <TerminalSquare size={19} strokeWidth={2.1} />;
   if (name === BROWSER_TOOL_NAME.generateImage)
     return <ImageIcon size={19} strokeWidth={2.1} />;
   if (
@@ -229,9 +244,12 @@ function toolIcon(name: string) {
     name === BROWSER_TOOL_NAME.updateSkillFile
   )
     return <FileText size={19} strokeWidth={2.1} />;
-  if (name.includes("Content")) return <FileText size={19} strokeWidth={2.1} />;
-  if (name.includes("group")) return <Layers size={19} strokeWidth={2.1} />;
-  if (name.includes("Tab")) return <ExternalLink size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("content"))
+    return <FileText size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("group"))
+    return <Layers size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("tab") || lowerName.includes("page"))
+    return <ExternalLink size={19} strokeWidth={2.1} />;
   return <Square size={15} strokeWidth={2.1} />;
 }
 
@@ -356,5 +374,13 @@ function rangeLabel(output: Record<string, unknown>) {
 
 function toolLabel(name: string, t: Messages) {
   const toolText = t.sidepanel.tool[name as keyof typeof t.sidepanel.tool];
-  return toolText?.done || toolText?.running || name;
+  return toolText?.done || toolText?.running || humanizeToolName(name);
+}
+
+function humanizeToolName(name: string) {
+  if (!name.startsWith("cdp")) return name;
+  return `CDP ${name
+    .slice(3)
+    .replace(/ByAiID$/, "")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")}`;
 }

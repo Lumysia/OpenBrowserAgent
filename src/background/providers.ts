@@ -81,11 +81,13 @@ export async function requestOpenAICompatible(
       uploadedAttachments,
       availableSkills,
     );
+  const preferences = await storage.preferences.get();
   const availableTools = toolsForMode(
     mode,
     uploadedAttachments.length > 0,
     availableSkills.length > 0,
-    !!(await storage.preferences.get()).imageGenerationEnabled,
+    !!preferences.imageGenerationEnabled,
+    !!preferences.cdpToolsEnabled,
   );
   const useTools = maxToolSteps > 0 && availableTools.length > 0;
   let responseSources = getMessageSources(messages);
@@ -181,6 +183,7 @@ export async function requestOpenAICompatible(
         input,
         uploadedAttachments,
         availableSkills,
+        cdpToolsEnabled: !!preferences.cdpToolsEnabled,
       });
       const visionImage = extractVisionImage(rawOutput);
       const output = attachToolSources(
@@ -296,11 +299,13 @@ async function requestGemini(
     });
   }
 
+  const preferences = await storage.preferences.get();
   const availableTools = toolsForMode(
     mode,
     uploadedAttachments.length > 0,
     availableSkills.length > 0,
-    !!(await storage.preferences.get()).imageGenerationEnabled,
+    !!preferences.imageGenerationEnabled,
+    !!preferences.cdpToolsEnabled,
   );
   const useTools = maxToolSteps > 0 && availableTools.length > 0;
   let responseSources = getMessageSources(messages);
@@ -377,6 +382,7 @@ async function requestGemini(
         input,
         uploadedAttachments,
         availableSkills,
+        cdpToolsEnabled: !!preferences.cdpToolsEnabled,
       });
       const visionImage = extractVisionImage(rawOutput);
       const output = attachToolSources(

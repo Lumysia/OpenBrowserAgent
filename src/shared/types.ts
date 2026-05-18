@@ -43,6 +43,7 @@ export type Preferences = {
   autoSelectSkills?: boolean;
   autoScroll?: boolean;
   autoRetry?: boolean;
+  cdpToolsEnabled?: boolean;
   maxToolSteps?: number;
 };
 

@@ -31,6 +31,7 @@ OpenBrowserAgent is a WXT/Vite/React/TypeScript browser extension for AI-assiste
 - Accent colors should propagate consistently across settings, sidepanel, buttons, selects, tool cards, and message controls. Prefer soft derived tints over hardcoded one-off colors.
 - Settings controls should use compact, purposeful UI. Prefer direct controls such as segmented choices or color swatches when they communicate better than a dropdown.
 - Interactive feedback should be explicit and temporary when appropriate, such as copy buttons changing to a success icon and tooltip before resetting.
+- UI quality is product quality. Tool cards, menus, settings surfaces, empty states, and debug panels should have complete visual affordances such as appropriate icons, labels, spacing, and state feedback. Do not treat icons, hierarchy, or polished microcopy as narrow one-off fixes; keep them consistent and reusable across the product.
 
 ## Code Quality Rules
 

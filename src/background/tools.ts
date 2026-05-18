@@ -7,14 +7,18 @@ import { BROWSER_TOOL_NAME, UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
 import { isScriptableUrl } from "../shared/browser";
 import { downloadTextFile, findImages, safeFileName } from "./downloads";
 import { findAccessibleElements } from "./accessible-elements";
-import { browserTools } from "./tool-schema";
+import { cdpMouseActionElement, clickElement } from "./browser-input";
+import { executeCdpTool, isCdpTool } from "./cdp-tools";
+import { allBrowserTools, browserTools } from "./tool-schema";
 import { withTimeout } from "./tool-utils";
 
-export { browserTools };
+export { allBrowserTools, browserTools };
 async function executeBrowserTool(
   name: string | undefined,
   args: Record<string, unknown>,
 ) {
+  if (isCdpTool(name) && name !== BROWSER_TOOL_NAME.cdpMouseActionByAiID)
+    return executeCdpTool(name, args);
   switch (name) {
     case BROWSER_TOOL_NAME.getCurrentTab: {
       const [tab] = await chrome.tabs.query({
@@ -123,6 +127,13 @@ async function executeBrowserTool(
       return clickElement(
         await resolveTabId(args.tabId),
         String(args.id || ""),
+      );
+    }
+    case BROWSER_TOOL_NAME.cdpMouseActionByAiID: {
+      return cdpMouseActionElement(
+        await resolveTabId(args.tabId),
+        String(args.id || ""),
+        String(args.action || "click"),
       );
     }
     case BROWSER_TOOL_NAME.inputTextByAiID: {
@@ -269,42 +280,6 @@ async function getElementProperties(tabId: number, ids: string[]) {
     },
   });
   return result.result ?? [];
-}
-
-async function clickElement(tabId: number, id: string) {
-  const [result] = await chrome.scripting.executeScript({
-    target: { tabId },
-    args: [id],
-    func: (aiId) => {
-      const element = document.querySelector(`[data-ai-id="${aiId}"]`) as
-        | HTMLAnchorElement
-        | HTMLElement
-        | null;
-      if (!element) return { isNewTab: false, notFound: true };
-      if (
-        element.tagName === "A" &&
-        (element as HTMLAnchorElement).getAttribute("href")
-      ) {
-        const href = (element as HTMLAnchorElement).getAttribute("href");
-        return {
-          isNewTab: true,
-          url: href
-            ? new URL(href, window.location.origin).href
-            : (element as HTMLAnchorElement).href,
-        };
-      }
-      element.click();
-      return { isNewTab: false };
-    },
-  });
-  const output = result.result as
-    | { isNewTab?: boolean; notFound?: boolean; url?: string }
-    | undefined;
-  if (output?.isNewTab && output.url) {
-    const tab = await chrome.tabs.create({ url: output.url, active: false });
-    return { success: true, tabId: tab.id, shouldWaitTabLoadFinished: true };
-  }
-  return { success: !output?.notFound, tabId };
 }
 
 async function inputElement(tabId: number, id: string, text: string) {

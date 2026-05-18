@@ -113,6 +113,10 @@ export const zhCN: LocaleMessages = {
       waitTabLoadFinished: { running: "等待页面加载", done: "页面已加载" },
       inputTextByAiID: { running: "输入文本", done: "输入文本" },
       clickElementByAiID: { running: "点击元素", done: "点击元素" },
+      cdpMouseActionByAiID: {
+        running: "执行 CDP 鼠标操作",
+        done: "已执行 CDP 鼠标操作",
+      },
       getTabContent: { running: "获取网页内容", done: "已获取网页内容" },
       groupTabs: { running: "整理标签页", done: "已整理标签页" },
       getCurrentTab: {
@@ -256,6 +260,9 @@ export const zhCN: LocaleMessages = {
     autoScrollDescription: "AI 输出时自动保持最新内容可见。",
     autoRetry: "自动重试",
     autoRetryDescription: "如果 AI 30 秒没有新输出，自动继续一次。",
+    cdpTools: "CDP 工具",
+    cdpToolsDescription:
+      "开放高级 Chrome DevTools Protocol 浏览器自动化和调试工具。默认关闭，因为 Chrome 会请求调试器访问权限。",
     autoSelectSkills: "自动选择技能",
     autoSelectSkillsDescription:
       "当你没有手动选择技能时，允许 AI 按需查看并使用相关技能。",

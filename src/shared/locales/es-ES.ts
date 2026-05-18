@@ -131,6 +131,10 @@ export const esES: LocaleMessages = {
         running: "Haciendo clic en elemento",
         done: "Elemento pulsado",
       },
+      cdpMouseActionByAiID: {
+        running: "Ejecutando acción de ratón CDP",
+        done: "Acción de ratón CDP ejecutada",
+      },
       getTabContent: {
         running: "Obteniendo contenido",
         done: "Contenido obtenido",
@@ -307,6 +311,9 @@ export const esES: LocaleMessages = {
     autoRetry: "Reintento automático",
     autoRetryDescription:
       "Continúa automáticamente una vez si el asistente no produce salida nueva durante 30 segundos.",
+    cdpTools: "Herramientas CDP",
+    cdpToolsDescription:
+      "Expone herramientas avanzadas de Chrome DevTools Protocol para automatización y depuración del navegador. Desactivado por defecto porque Chrome pedirá acceso de depurador.",
     autoSelectSkills: "Seleccionar habilidades automáticamente",
     autoSelectSkillsDescription:
       "Cuando no selecciones una habilidad manualmente, permite que la IA consulte y use las habilidades relevantes según sea necesario.",

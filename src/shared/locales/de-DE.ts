@@ -133,6 +133,10 @@ export const deDE: LocaleMessages = {
         running: "Element wird angeklickt",
         done: "Element angeklickt",
       },
+      cdpMouseActionByAiID: {
+        running: "CDP-Mausaktion wird ausgeführt",
+        done: "CDP-Mausaktion ausgeführt",
+      },
       getTabContent: {
         running: "Seiteninhalt wird abgerufen",
         done: "Seiteninhalt abgerufen",
@@ -314,6 +318,9 @@ export const deDE: LocaleMessages = {
     autoRetry: "Automatisch erneut versuchen",
     autoRetryDescription:
       "Einmal automatisch fortsetzen, wenn der Assistent 30 Sekunden lang keine neue Ausgabe erzeugt.",
+    cdpTools: "CDP-Tools",
+    cdpToolsDescription:
+      "Erweiterte Chrome-DevTools-Protocol-Tools für Browserautomatisierung und Debugging freigeben. Standardmäßig deaktiviert, da Chrome Debuggerzugriff anfordert.",
     autoSelectSkills: "Fähigkeiten automatisch auswählen",
     autoSelectSkillsDescription:
       "Wenn keine Fähigkeit manuell ausgewählt ist, darf die KI relevante Fähigkeiten bei Bedarf prüfen und verwenden.",

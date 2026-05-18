@@ -113,6 +113,10 @@ export const zhTW: LocaleMessages = {
       waitTabLoadFinished: { running: "等待頁面載入", done: "頁面已載入" },
       inputTextByAiID: { running: "正在輸入文字", done: "已輸入文字" },
       clickElementByAiID: { running: "正在點擊元素", done: "已點擊元素" },
+      cdpMouseActionByAiID: {
+        running: "正在執行 CDP 滑鼠操作",
+        done: "已執行 CDP 滑鼠操作",
+      },
       getTabContent: { running: "正在取得網頁內容", done: "已取得網頁內容" },
       groupTabs: { running: "正在整理分頁", done: "已整理分頁" },
       getCurrentTab: {
@@ -259,6 +263,9 @@ export const zhTW: LocaleMessages = {
     autoScrollDescription: "AI 輸出時自動保持最新內容可見。",
     autoRetry: "自動重試",
     autoRetryDescription: "如果 AI 30 秒沒有新輸出，自動繼續一次。",
+    cdpTools: "CDP 工具",
+    cdpToolsDescription:
+      "開放進階 Chrome DevTools Protocol 瀏覽器自動化與除錯工具。預設關閉，因為 Chrome 會要求偵錯器存取權限。",
     autoSelectSkills: "自動選擇技能",
     autoSelectSkillsDescription:
       "未手動選擇技能時，允許 AI 按需查看並使用相關技能。",

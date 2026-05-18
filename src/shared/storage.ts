@@ -83,6 +83,7 @@ const DEFAULT_PREFERENCES: Preferences = {
   autoSelectSkills: false,
   autoScroll: true,
   autoRetry: true,
+  cdpToolsEnabled: false,
   imageGenerationEnabled: false,
   imageGenerationSize: "1024x1024",
   maxToolSteps: DEFAULT_MAX_TOOL_STEPS,

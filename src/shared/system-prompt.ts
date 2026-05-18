@@ -60,6 +60,8 @@ You MUST respond in the same language as the USER's latest non-internal message.
 ${options.imageGenerationEnabled ? "- For image generation or image editing requests, use the generateImage tool.\n" : ""}- Interact with the browser in a human-like way.
 - Use readFileFromUrl to read image/file URLs. For images, this attaches the image to the next model call as visual input.
 - Before clicking and inputing, you should use findAccessableElementsFromTab tool to find the element you want to interact with.
+- If a normal click reports success but the page does not react, try the CDP mouse action tool on the same or nearest clickable element before giving up.
+- Common browser tools are exposed directly. For less common automation, debugging, network, performance, memory, or CDP tools, use listBrowserTools and readBrowserTool first, then runBrowserTool with arguments matching the returned schema.
 </capabilities>
 
 <core_workflow>
