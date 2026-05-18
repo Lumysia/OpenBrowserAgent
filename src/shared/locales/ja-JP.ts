@@ -159,6 +159,10 @@ export const jaJP: LocaleMessages = {
         done: "Skillを更新しました",
       },
       generateImage: { running: "画像を生成中", done: "画像を生成しました" },
+      readFileFromUrl: {
+        running: "ファイルを読み取り中",
+        done: "ファイルを読み取りました",
+      },
       readUploadedAttachment: {
         running: "添付を読み取り中",
         done: "添付を読み取りました",

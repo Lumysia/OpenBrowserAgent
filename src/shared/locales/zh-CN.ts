@@ -122,6 +122,7 @@ export const zhCN: LocaleMessages = {
       readSkill: { running: "Reading Skill", done: "Read Skill" },
       updateSkillFile: { running: "更新 Skill", done: "已更新 Skill" },
       generateImage: { running: "生成图片", done: "已生成图片" },
+      readFileFromUrl: { running: "读取文件", done: "已读取文件" },
       readUploadedAttachment: { running: "读取附件", done: "已读取附件" },
     },
   },

@@ -208,7 +208,10 @@ function toolIcon(name: string) {
     return <Download size={19} strokeWidth={2.1} />;
   if (name === BROWSER_TOOL_NAME.generateImage)
     return <ImageIcon size={19} strokeWidth={2.1} />;
-  if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
+  if (
+    name === BROWSER_TOOL_NAME.readUploadedAttachment ||
+    name === BROWSER_TOOL_NAME.readFileFromUrl
+  )
     return <FileSearch size={19} strokeWidth={2.1} />;
   if (
     name === BROWSER_TOOL_NAME.listSkills ||

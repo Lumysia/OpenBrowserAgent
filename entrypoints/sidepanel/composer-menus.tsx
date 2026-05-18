@@ -225,7 +225,7 @@ export function ModelMenu({
       {models.map((model) => (
         <Button
           variant="ghost"
-          className="action-list-item model-menu-item"
+          className={`action-list-item model-menu-item ${selectedModelId === model.id ? "active" : ""}`}
           key={model.id}
           onClick={() => onSelect(model.id)}
         >

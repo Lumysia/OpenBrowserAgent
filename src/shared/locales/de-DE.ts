@@ -158,6 +158,7 @@ export const deDE: LocaleMessages = {
         done: "Skill aktualisiert",
       },
       generateImage: { running: "Bild wird generiert", done: "Bild generiert" },
+      readFileFromUrl: { running: "Datei wird gelesen", done: "Datei gelesen" },
       readUploadedAttachment: {
         running: "Anhang wird gelesen",
         done: "Anhang gelesen",

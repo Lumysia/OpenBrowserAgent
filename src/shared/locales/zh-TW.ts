@@ -125,6 +125,7 @@ export const zhTW: LocaleMessages = {
       readSkill: { running: "Reading Skill", done: "Read Skill" },
       updateSkillFile: { running: "更新 Skill", done: "已更新 Skill" },
       generateImage: { running: "生成圖片", done: "已生成圖片" },
+      readFileFromUrl: { running: "正在讀取檔案", done: "已讀取檔案" },
       readUploadedAttachment: { running: "正在讀取附件", done: "已讀取附件" },
     },
   },

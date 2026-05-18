@@ -163,6 +163,7 @@ export const frFR: LocaleMessages = {
         running: "Génération de l’image",
         done: "Image générée",
       },
+      readFileFromUrl: { running: "Lecture du fichier", done: "Fichier lu" },
       readUploadedAttachment: {
         running: "Lecture de la pièce jointe",
         done: "Pièce jointe lue",

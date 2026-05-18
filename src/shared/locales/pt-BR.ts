@@ -141,6 +141,7 @@ export const ptBR: LocaleMessages = {
         done: "Skill atualizada",
       },
       generateImage: { running: "Gerando imagem", done: "Imagem gerada" },
+      readFileFromUrl: { running: "Lendo arquivo", done: "Arquivo lido" },
       readUploadedAttachment: {
         running: "Lendo anexo",
         done: "Anexo lido",

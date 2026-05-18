@@ -165,13 +165,44 @@ export const browserTools = [
   }),
   tool(
     BROWSER_TOOL_NAME.downloadAllImagesInTab,
-    "Download all images in a tab",
+    "Download all images in a tab as a zip for the user. Do not use this to visually inspect or describe image content; use readFileFromUrl when you have an image/file URL that the model needs to read.",
     {
       tabId: {
         type: "number",
         description: "The ID of the tab to download images from",
       },
     },
+  ),
+  tool(
+    BROWSER_TOOL_NAME.readFileFromUrl,
+    "Fetch a file URL and read it according to its type. Use this before making visual claims when the user asks to see, inspect, judge, choose, or describe an image from a URL. Images are attached to the next model call as vision input; text is returned as text; other binary files can be returned as base64 or hex slices for model/tool inspection.",
+    {
+      url: {
+        type: "string",
+        description:
+          "The file URL to fetch. Supports http(s) and data URLs. Blob URLs may only work when they are accessible from the current execution context.",
+      },
+      format: {
+        type: "string",
+        enum: ["auto", "text", "base64", "hex"],
+        description:
+          "How to read the file. auto uses vision for images, text for textual files, and base64 metadata for binary files.",
+      },
+      offset: {
+        type: "number",
+        description: "Zero-based character offset for text/base64/hex output",
+      },
+      limit: {
+        type: "number",
+        description: "Maximum characters to return for text/base64/hex output",
+      },
+      reason: {
+        type: "string",
+        description:
+          "Why this file needs to be read. SHOULD use USER's language.",
+      },
+    },
+    ["url"],
   ),
   tool(
     BROWSER_TOOL_NAME.readUploadedAttachment,

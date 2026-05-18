@@ -17,6 +17,7 @@ export const BROWSER_TOOL_NAME = {
   scrollToBottom: "scrollToBottom",
   downloadTabToMarkdown: "downloadTabToMarkdown",
   downloadAllImagesInTab: "downloadAllImagesInTab",
+  readFileFromUrl: "readFileFromUrl",
   readUploadedAttachment: "readUploadedAttachment",
   listSkills: "listSkills",
   readSkill: "readSkill",

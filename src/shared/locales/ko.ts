@@ -147,6 +147,7 @@ export const ko: LocaleMessages = {
         done: "Skill 업데이트됨",
       },
       generateImage: { running: "이미지 생성 중", done: "이미지 생성됨" },
+      readFileFromUrl: { running: "파일 읽는 중", done: "파일 읽음" },
       readUploadedAttachment: {
         running: "첨부 읽는 중",
         done: "첨부 읽음",

@@ -155,6 +155,10 @@ export const enUS = {
         running: "Reading attachment",
         done: "Read attachment",
       },
+      readFileFromUrl: {
+        running: "Reading file",
+        done: "Read file",
+      },
     },
   },
   options: {

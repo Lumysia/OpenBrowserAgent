@@ -182,10 +182,11 @@ export async function requestOpenAICompatible(
         uploadedAttachments,
         availableSkills,
       });
+      const visionImage = extractVisionImage(rawOutput);
       const output = attachToolSources(
         toolName,
         input,
-        rawOutput,
+        sanitizeToolOutput(rawOutput),
         responseSources,
       );
       responseSources = mergeOutputSources(responseSources, output);
@@ -208,6 +209,17 @@ export async function requestOpenAICompatible(
         tool_call_id: toolCallId,
         content: JSON.stringify(output),
       });
+      if (visionImage)
+        requestMessages.push({
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "The image fetched by readFileFromUrl is attached for visual inspection. Use vision to answer the user's image question.",
+            },
+            { type: "image_url", image_url: { url: visionImage.dataUrl } },
+          ],
+        });
     }
   }
 
@@ -366,10 +378,11 @@ async function requestGemini(
         uploadedAttachments,
         availableSkills,
       });
+      const visionImage = extractVisionImage(rawOutput);
       const output = attachToolSources(
         toolName,
         input,
-        rawOutput,
+        sanitizeToolOutput(rawOutput),
         responseSources,
       );
       responseSources = mergeOutputSources(responseSources, output);
@@ -390,6 +403,17 @@ async function requestGemini(
       responseParts.push({
         functionResponse: { name: toolName, response: output },
       });
+      if (visionImage) {
+        responseParts.push({
+          text: "The image fetched by readFileFromUrl is attached for visual inspection. Use vision to answer the user's image question.",
+        });
+        responseParts.push({
+          inline_data: {
+            mime_type: visionImage.type || "image/png",
+            data: base64FromDataUrl(visionImage.dataUrl),
+          },
+        });
+      }
     }
     contents.push({ role: "user", parts: responseParts });
   }
@@ -437,6 +461,29 @@ function mergeOutputSources(current: ChatSource[], output: unknown) {
   return Array.isArray(sources)
     ? assignChatSources(current, sources as ChatSource[]).sources
     : current;
+}
+
+type VisionImage = { dataUrl: string; type?: string };
+
+function extractVisionImage(output: unknown): VisionImage | undefined {
+  if (!output || typeof output !== "object") return undefined;
+  const image = (output as { _visionImage?: unknown })._visionImage;
+  if (!image || typeof image !== "object") return undefined;
+  const dataUrl = (image as { dataUrl?: unknown }).dataUrl;
+  if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/"))
+    return undefined;
+  const type = (image as { type?: unknown }).type;
+  return { dataUrl, type: typeof type === "string" ? type : undefined };
+}
+
+function sanitizeToolOutput(output: unknown) {
+  if (!output || typeof output !== "object") return output;
+  const { _visionImage, ...rest } = output as Record<string, unknown>;
+  return _visionImage ? { ...rest, visionImageAttached: true } : output;
+}
+
+function base64FromDataUrl(dataUrl: string) {
+  return dataUrl.includes(",") ? dataUrl.split(",", 2)[1] || "" : dataUrl;
 }
 
 function getMessageSources(messages: ChatMessage[]): ChatSource[] {

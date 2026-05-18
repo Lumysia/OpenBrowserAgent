@@ -156,6 +156,7 @@ export const esES: LocaleMessages = {
         done: "Skill actualizada",
       },
       generateImage: { running: "Generando imagen", done: "Imagen generada" },
+      readFileFromUrl: { running: "Leyendo archivo", done: "Archivo leído" },
       readUploadedAttachment: {
         running: "Leyendo adjunto",
         done: "Adjunto leído",
