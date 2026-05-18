@@ -371,14 +371,18 @@ export function SidepanelView({
                     }
                   >
                     <PopoverTrigger asChild>
-                      <button className="composer-trigger" disabled={aiWorking}>
+                      <Button
+                        variant="outline"
+                        className="composer-trigger"
+                        disabled={aiWorking}
+                      >
                         {selectedModelLabel(
                           preferences?.selectedModelId,
                           configuredModels,
                           t,
                         )}{" "}
                         <ChevronDown size={15} />
-                      </button>
+                      </Button>
                     </PopoverTrigger>
                     <PopoverContent
                       className="model-popover-content"
@@ -408,10 +412,14 @@ export function SidepanelView({
                     }
                   >
                     <PopoverTrigger asChild>
-                      <button className="composer-trigger" disabled={aiWorking}>
+                      <Button
+                        variant="outline"
+                        className="composer-trigger"
+                        disabled={aiWorking}
+                      >
                         {mode === CHAT_MODE.agent ? t.words.agent : t.words.ask}{" "}
                         <ChevronDown size={15} />
-                      </button>
+                      </Button>
                     </PopoverTrigger>
                     <PopoverContent
                       className="mode-popover-content"

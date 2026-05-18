@@ -20,6 +20,7 @@ import {
   toolNameFromPartType,
 } from "../../src/shared/types";
 import type { ChatPart } from "../../src/shared/types";
+import { Button } from "../../src/ui/components";
 import { formatToolMessage } from "./format";
 
 export function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
@@ -51,7 +52,8 @@ export function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
         {!!references.length && (
           <div className="tool-references">
             {references.map((reference) => (
-              <button
+              <Button
+                variant="ghost"
                 key={reference.title}
                 onClick={
                   reference.url
@@ -61,7 +63,7 @@ export function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
               >
                 {reference.icon}
                 <span>{reference.title}</span>
-              </button>
+              </Button>
             ))}
           </div>
         )}
@@ -249,20 +251,18 @@ function GeneratedImage({
           <Download size={14} /> {t.sidepanel.downloadGeneratedImage}
         </a>
         {canCopyImage && (
-          <button
-            className="ui-button ui-button-secondary ui-button-sm"
-            onClick={copyImage}
-          >
+          <Button variant="secondary" size="sm" onClick={copyImage}>
             <Copy size={14} /> {t.sidepanel.copyImage}
-          </button>
+          </Button>
         )}
         {prompt && (
-          <button
-            className="ui-button ui-button-ghost ui-button-sm"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => navigator.clipboard.writeText(prompt)}
           >
             <Copy size={14} /> {t.sidepanel.copyPrompt}
-          </button>
+          </Button>
         )}
       </div>
     </div>

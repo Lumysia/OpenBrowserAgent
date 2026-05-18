@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
 import type { Chat } from "../../src/shared/types";
+import { Button } from "../../src/ui/components";
 import {
   formatMessageCount,
   formatRelativeTime,
@@ -32,20 +33,22 @@ export function HistoryPanel({
           className={`history-item ${chat.id === activeChatId ? "active" : ""}`}
           key={chat.id}
         >
-          <button onClick={() => onSelect(chat.id)}>
+          <Button variant="ghost" onClick={() => onSelect(chat.id)}>
             <strong>{chat.title || t.words.newChat}</strong>
             <small>
               {formatMessageCount(t, chat.messages.length)} ·{" "}
               {formatRelativeTime(t, chat.updatedAt)}
             </small>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             className="history-close"
             title={t.sidepanel.closeChat}
             onClick={() => onClose(chat.id)}
           >
             <X size={13} />
-          </button>
+          </Button>
         </div>
       ))}
     </div>

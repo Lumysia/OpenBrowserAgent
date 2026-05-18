@@ -5,6 +5,11 @@ import { storage } from "../../src/shared/storage";
 import type { ModelConfig, ProviderConfig } from "../../src/shared/types";
 import {
   Button,
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
   Input,
   Label,
   Popover,
@@ -49,36 +54,37 @@ export function FetchedModelPicker({
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="fetched-model-trigger"
+            className="ui-combobox-trigger"
             type="button"
           >
             <span>{selectedModel?.displayName || emptyText}</span>
             <ChevronDown size={16} />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="fetched-model-popover" align="start">
-          <Input
-            value={search}
-            placeholder={t.options.searchFetchedModels}
-            onChange={(event) => onSearch(event.target.value)}
-          />
-          <div className="fetched-model-list">
-            {models.map((model) => (
-              <button
-                key={model.id}
-                type="button"
-                className="fetched-model-option"
-                onClick={() => {
-                  onSelect(model.id);
-                  setOpen(false);
-                }}
-              >
-                <span>{model.displayName || model.name}</span>
-                {selectedId === model.id && <Check size={14} />}
-              </button>
-            ))}
-            {!models.length && <p className="muted">{emptyText}</p>}
-          </div>
+        <PopoverContent className="ui-combobox-popover" align="start">
+          <Command shouldFilter={false}>
+            <CommandInput
+              value={search}
+              placeholder={t.options.searchFetchedModels}
+              onValueChange={onSearch}
+            />
+            <CommandList>
+              {models.map((model) => (
+                <CommandItem
+                  key={model.id}
+                  value={model.id}
+                  onSelect={() => {
+                    onSelect(model.id);
+                    setOpen(false);
+                  }}
+                >
+                  <span>{model.displayName || model.name}</span>
+                  {selectedId === model.id && <Check size={14} />}
+                </CommandItem>
+              ))}
+              {!models.length && <CommandEmpty>{emptyText}</CommandEmpty>}
+            </CommandList>
+          </Command>
         </PopoverContent>
       </Popover>
       <Button

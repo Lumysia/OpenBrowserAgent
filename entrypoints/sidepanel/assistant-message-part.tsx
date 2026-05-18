@@ -8,6 +8,7 @@ import { getMessages, type Messages } from "../../src/shared/i18n";
 import type { ChatPart, ChatSource } from "../../src/shared/types";
 import { isToolPartType } from "../../src/shared/types";
 import { storage } from "../../src/shared/storage";
+import { Button } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { IconTooltip } from "./icon-tooltip";
 import { renderMarkdown } from "./markdown";
@@ -123,12 +124,14 @@ export function AssistantText({
       />
       <div className="assistant-actions">
         <IconTooltip label={copied ? t.common.copied : t.common.copy}>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             className={`copy-message${copied ? " copied" : ""}`}
             onClick={copyText}
           >
             {copied ? <Check size={15} /> : <Copy size={15} />}
-          </button>
+          </Button>
         </IconTooltip>
         {(modelLabel || createdAt) && (
           <span className="assistant-model-meta">

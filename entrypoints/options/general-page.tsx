@@ -3,6 +3,7 @@ import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { languageLabels } from "../../src/shared/types";
 import {
+  Button,
   Card,
   CardContent,
   CardDescription,
@@ -73,7 +74,8 @@ export function GeneralPage() {
               const selected =
                 (preferences.accentColor || "pink") === option.id;
               return (
-                <button
+                <Button
+                  variant="ghost"
                   key={option.id}
                   type="button"
                   className={`accent-dot accent-dot-${option.id}${selected ? " active" : ""}`}
@@ -89,7 +91,7 @@ export function GeneralPage() {
                   }
                 >
                   <span />
-                </button>
+                </Button>
               );
             })}
           </div>

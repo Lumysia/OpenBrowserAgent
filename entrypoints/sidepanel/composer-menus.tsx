@@ -191,9 +191,15 @@ export function AttachedTabCard({
           {tab.url || `Tab ${tab.id}`} · {t.sidepanel.willBeSentToAi}
         </small>
       </span>
-      <button className="context-close" title="Remove tab" onClick={onRemove}>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="context-close"
+        title="Remove tab"
+        onClick={onRemove}
+      >
         <X size={14} />
-      </button>
+      </Button>
     </div>
   );
 }
@@ -217,7 +223,8 @@ export function ModelMenu({
         </div>
       )}
       {models.map((model) => (
-        <button
+        <Button
+          variant="ghost"
           className="action-list-item model-menu-item"
           key={model.id}
           onClick={() => onSelect(model.id)}
@@ -232,7 +239,7 @@ export function ModelMenu({
           {selectedModelId === model.id && (
             <Check className="menu-check" size={14} />
           )}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -262,7 +269,8 @@ export function ModeMenu({
   return (
     <div className="mode-menu">
       {modes.map((item) => (
-        <button
+        <Button
+          variant="ghost"
           className={`action-list-item mode-menu-item ${mode === item.id ? "active" : ""}`}
           key={item.id}
           onClick={() => onSelect(item.id)}
@@ -272,7 +280,7 @@ export function ModeMenu({
             <small>{item.description}</small>
           </span>
           {mode === item.id && <Check className="menu-check" size={14} />}
-        </button>
+        </Button>
       ))}
     </div>
   );

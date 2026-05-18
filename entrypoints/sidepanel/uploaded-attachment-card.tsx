@@ -6,6 +6,7 @@ import {
 } from "../../src/shared/attachments";
 import type { Messages } from "../../src/shared/i18n";
 import type { UploadedAttachment } from "../../src/shared/types";
+import { Button } from "../../src/ui/components";
 import { formatAttachmentSize } from "./file-attachments";
 
 export function UploadFileInput({
@@ -52,13 +53,15 @@ export function UploadedAttachmentCard({
           {status} · {formatAttachmentSize(attachment.size)}
         </small>
       </span>
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         className="context-close"
         title={t.sidepanel.removeAttachment}
         onClick={onRemove}
       >
         <X size={14} />
-      </button>
+      </Button>
     </div>
   );
 }

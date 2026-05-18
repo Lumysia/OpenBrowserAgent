@@ -181,14 +181,15 @@ function SourceChips({ sources }: { sources: ChatSource[] }) {
   return (
     <div className="source-chip-list">
       {sources.map((source) => (
-        <button
+        <Button
+          variant="ghost"
           key={source.id}
           title={source.title}
           onClick={() => openSource(source)}
         >
           <span>{source.id.replace(/^source_/, "")}</span>
           {source.title}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -371,14 +372,18 @@ function UserMessageActions({
     <div className="user-message-actions">
       <span>{formatMessageTime(message.createdAt)}</span>
       <IconTooltip label={copied ? t.common.copied : t.common.copy}>
-        <button onClick={copyText}>
+        <Button variant="ghost" size="icon" onClick={copyText}>
           {copied ? <Check size={13} /> : <Copy size={13} />}
-        </button>
+        </Button>
       </IconTooltip>
       <IconTooltip label={t.common.edit}>
-        <button onClick={() => onEdit?.(message, availableAttachments)}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onEdit?.(message, availableAttachments)}
+        >
           <Pencil size={13} />
-        </button>
+        </Button>
       </IconTooltip>
       <Popover
         open={open}
@@ -387,9 +392,9 @@ function UserMessageActions({
         }
       >
         <PopoverTrigger asChild>
-          <button onClick={resend}>
+          <Button variant="ghost" size="icon" onClick={resend}>
             <RotateCcw size={13} />
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverContent align="end" className="attachment-replace-popover">
           <strong>

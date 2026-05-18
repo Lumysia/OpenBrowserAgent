@@ -7,6 +7,7 @@ import type {
   UploadedAttachment,
 } from "../../src/shared/types";
 import { getSkillDisplayName } from "../../src/shared/skills";
+import { Button } from "../../src/ui/components";
 import { AttachedTabCard } from "./composer-menus";
 import { UploadedAttachmentCard } from "./uploaded-attachment-card";
 
@@ -43,13 +44,15 @@ export function ComposerAttachments({
               <strong>{getSkillDisplayName(selectedSkill)}</strong>
               <small>{selectedSkill.description || t.options.skills}</small>
             </span>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               className="context-close"
               title={t.common.cancel}
               onClick={onClearSkill}
             >
               <X size={14} />
-            </button>
+            </Button>
           </div>
         )}
         {attachedTabs.map((tab) => (
@@ -85,13 +88,15 @@ export function ComposerAttachments({
             </strong>
             <small>{t.sidepanel.willBeSentAsPageContext}</small>
           </span>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             className="context-close"
             title={t.sidepanel.selectElement}
             onClick={() => onSetSelectedElement(null)}
           >
             <X size={14} />
-          </button>
+          </Button>
         </div>
       )}
     </div>
