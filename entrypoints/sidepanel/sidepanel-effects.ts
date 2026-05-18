@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import type { RefObject } from "react";
 import {
   AUTO_RETRY_IDLE_MS,
@@ -32,15 +32,13 @@ export function useAutoScroll(
   autoScroll: boolean | undefined,
   streaming: boolean,
 ) {
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (autoScroll === false) return;
     const messagesElement = messagesRef.current;
     if (!messagesElement) return;
-    requestAnimationFrame(() => {
-      messagesElement.scrollTo({
-        top: messagesElement.scrollHeight,
-        behavior: "smooth",
-      });
+    messagesElement.scrollTo({
+      top: messagesElement.scrollHeight,
+      behavior: streaming ? "auto" : "smooth",
     });
   }, [messages, autoScroll, streaming]);
 }

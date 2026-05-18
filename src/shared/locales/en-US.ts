@@ -62,6 +62,12 @@ export const enUS = {
     skillCreated: "Skill Created",
     aiWorking: "AI is working",
     aiWorkingDescription: "Reading, acting, and preparing the response.",
+    typingPhrases: [
+      "Thinking through it",
+      "Reading the page",
+      "Choosing the next move",
+      "Polishing the answer",
+    ],
     operatingBrowser: "Operating the browser",
     preparingFinalReply: "Preparing final response",
     preparingFinalReplyDescription:
@@ -138,6 +144,7 @@ export const enUS = {
         done: "Retrieved page content",
       },
       groupTabs: { running: "Grouping tabs", done: "Grouped tabs" },
+      getCurrentTime: { running: "Checking time", done: "Checked time" },
       getCurrentTab: {
         running: "Getting current page content",
         done: "Got current page content",

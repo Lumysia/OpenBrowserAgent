@@ -20,6 +20,9 @@ async function executeBrowserTool(
   if (isCdpTool(name) && name !== BROWSER_TOOL_NAME.cdpMouseActionByAiID)
     return executeCdpTool(name, args);
   switch (name) {
+    case BROWSER_TOOL_NAME.getCurrentTime: {
+      return getCurrentTime(args);
+    }
     case BROWSER_TOOL_NAME.getCurrentTab: {
       const [tab] = await chrome.tabs.query({
         active: true,
@@ -211,6 +214,45 @@ async function executeBrowserTool(
     default:
       return { error: `Unknown tool: ${name}` };
   }
+}
+
+function getCurrentTime(args: Record<string, unknown>) {
+  const now = new Date();
+  const locale = String(args.locale || navigator.language || "en-US");
+  const requestedTimeZone = String(args.timeZone || "").trim();
+  const timeZone = requestedTimeZone || currentTimeZone();
+  const options: Intl.DateTimeFormatOptions = {
+    dateStyle: "full",
+    timeStyle: "long",
+    timeZone,
+  };
+  try {
+    return {
+      timestamp: now.getTime(),
+      iso: now.toISOString(),
+      locale,
+      timeZone,
+      localDateTime: new Intl.DateTimeFormat(locale, options).format(now),
+      date: new Intl.DateTimeFormat(locale, {
+        dateStyle: "full",
+        timeZone,
+      }).format(now),
+      time: new Intl.DateTimeFormat(locale, {
+        timeStyle: "long",
+        timeZone,
+      }).format(now),
+    };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : String(error),
+      requestedTimeZone,
+      locale,
+    };
+  }
+}
+
+function currentTimeZone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
 export async function safeExecuteBrowserTool(

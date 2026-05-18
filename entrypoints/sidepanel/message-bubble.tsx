@@ -34,6 +34,7 @@ import { useStoredState } from "../../src/ui/useStoredState";
 import { IconTooltip } from "./icon-tooltip";
 import { formatAttachmentSize } from "./file-attachments";
 import { AssistantPart, AssistantText } from "./assistant-message-part";
+import { TypingIndicator } from "./typing-indicator";
 import {
   Button,
   Popover,
@@ -123,11 +124,7 @@ export function MessageBubble({
           />
         ))
       ) : !message.content ? (
-        <span className="typing-dots" aria-label="Thinking">
-          <span />
-          <span />
-          <span />
-        </span>
+        <TypingIndicator t={t} />
       ) : (
         <AssistantText
           text={message.content}

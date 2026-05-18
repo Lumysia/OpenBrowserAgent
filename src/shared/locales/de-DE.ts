@@ -62,6 +62,12 @@ export const deDE: LocaleMessages = {
     skillCreated: "Fähigkeit erstellt",
     aiWorking: "KI arbeitet",
     aiWorkingDescription: "Liest, handelt und bereitet die Antwort vor.",
+    typingPhrases: [
+      "Denke nach",
+      "Lese die Seite",
+      "Wähle den nächsten Schritt",
+      "Formuliere die Antwort",
+    ],
     operatingBrowser: "Browser wird bedient",
     preparingFinalReply: "Finale Antwort wird vorbereitet",
     preparingFinalReplyDescription:
@@ -142,6 +148,7 @@ export const deDE: LocaleMessages = {
         done: "Seiteninhalt abgerufen",
       },
       groupTabs: { running: "Tabs werden gruppiert", done: "Tabs gruppiert" },
+      getCurrentTime: { running: "Zeit wird geprüft", done: "Zeit geprüft" },
       getCurrentTab: {
         running: "Aktuelle Seite wird abgerufen",
         done: "Aktuelle Seite abgerufen",

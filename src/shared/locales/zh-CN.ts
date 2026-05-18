@@ -58,6 +58,12 @@ export const zhCN: LocaleMessages = {
     skillCreated: "技能已创建",
     aiWorking: "AI 正在工作",
     aiWorkingDescription: "正在阅读、操作并准备回复。",
+    typingPhrases: [
+      "正在思考",
+      "正在阅读页面",
+      "正在选择下一步",
+      "正在整理回答",
+    ],
     operatingBrowser: "正在操作网页",
     preparingFinalReply: "正在准备最终回复",
     preparingFinalReplyDescription: "浏览器操作已完成，AI 正在整理结果。",
@@ -119,6 +125,7 @@ export const zhCN: LocaleMessages = {
       },
       getTabContent: { running: "获取网页内容", done: "已获取网页内容" },
       groupTabs: { running: "整理标签页", done: "已整理标签页" },
+      getCurrentTime: { running: "查看时间", done: "已查看时间" },
       getCurrentTab: {
         running: "获取当前页面内容",
         done: "已获取当前页面内容",

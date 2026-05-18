@@ -61,6 +61,12 @@ export const jaJP: LocaleMessages = {
     skillCreated: "スキルを作成しました",
     aiWorking: "AIが作業中です",
     aiWorkingDescription: "読み取り、操作し、回答を準備しています。",
+    typingPhrases: [
+      "考えています",
+      "ページを読んでいます",
+      "次の操作を選んでいます",
+      "回答を整えています",
+    ],
     operatingBrowser: "ブラウザを操作中",
     preparingFinalReply: "最終回答を準備中",
     preparingFinalReplyDescription:
@@ -143,6 +149,7 @@ export const jaJP: LocaleMessages = {
         running: "タブをグループ化中",
         done: "タブをグループ化しました",
       },
+      getCurrentTime: { running: "時刻を確認中", done: "時刻を確認しました" },
       getCurrentTab: {
         running: "現在のページ内容を取得中",
         done: "現在のページ内容を取得しました",

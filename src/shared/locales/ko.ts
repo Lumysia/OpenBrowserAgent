@@ -60,6 +60,12 @@ export const ko: LocaleMessages = {
     skillCreated: "스킬 생성됨",
     aiWorking: "AI 작업 중",
     aiWorkingDescription: "읽고, 실행하고, 응답을 준비하는 중입니다.",
+    typingPhrases: [
+      "생각하는 중",
+      "페이지 읽는 중",
+      "다음 동작 선택 중",
+      "답변 다듬는 중",
+    ],
     operatingBrowser: "브라우저 조작 중",
     preparingFinalReply: "최종 답변 준비 중",
     preparingFinalReplyDescription:
@@ -133,6 +139,7 @@ export const ko: LocaleMessages = {
         done: "페이지 내용 가져옴",
       },
       groupTabs: { running: "탭 그룹화 중", done: "탭 그룹화됨" },
+      getCurrentTime: { running: "시간 확인 중", done: "시간 확인됨" },
       getCurrentTab: {
         running: "현재 페이지 가져오는 중",
         done: "현재 페이지 가져옴",

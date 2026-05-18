@@ -40,6 +40,23 @@ export const catalogBrowserTools = [
 
 export const commonBrowserTools = [
   tool(
+    BROWSER_TOOL_NAME.getCurrentTime,
+    "Get the current date and time from the user's device. Use this when the user asks what time it is, asks for today's exact local date/time, or needs time zone conversion.",
+    {
+      timeZone: {
+        type: "string",
+        description:
+          "Optional IANA time zone, such as America/New_York or Asia/Tokyo. Defaults to the user's device time zone.",
+      },
+      locale: {
+        type: "string",
+        description:
+          "Optional BCP 47 locale for formatted output, such as en-US or zh-CN. Defaults to the browser locale.",
+      },
+    },
+    [],
+  ),
+  tool(
     BROWSER_TOOL_NAME.generateImage,
     "Use this for user requests to create, generate, draw, or edit an image with the configured image generation model. Can use uploaded image attachments as visual references and uploaded text attachments as prompt references.",
     {

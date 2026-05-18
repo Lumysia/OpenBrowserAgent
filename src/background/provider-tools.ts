@@ -43,6 +43,7 @@ export function toolsForMode(
     if (name === BROWSER_TOOL_NAME.readSkillFile) return hasSkills;
     if (name === BROWSER_TOOL_NAME.updateSkillFile) return hasSkills;
     if (name === BROWSER_TOOL_NAME.generateImage) return imageGenerationEnabled;
+    if (name === BROWSER_TOOL_NAME.getCurrentTime) return true;
     if (name === BROWSER_TOOL_NAME.readFileFromUrl) return true;
     return !isAskMode(mode);
   });

@@ -62,6 +62,12 @@ export const frFR: LocaleMessages = {
     skillCreated: "Compétence créée",
     aiWorking: "L'IA travaille",
     aiWorkingDescription: "Lecture, action et préparation de la réponse.",
+    typingPhrases: [
+      "Réflexion en cours",
+      "Lecture de la page",
+      "Choix de la suite",
+      "Finition de la réponse",
+    ],
     operatingBrowser: "Utilisation du navigateur",
     preparingFinalReply: "Préparation de la réponse finale",
     preparingFinalReplyDescription:
@@ -140,6 +146,10 @@ export const frFR: LocaleMessages = {
       groupTabs: {
         running: "Regroupement des onglets",
         done: "Onglets regroupés",
+      },
+      getCurrentTime: {
+        running: "Vérification de l'heure",
+        done: "Heure vérifiée",
       },
       getCurrentTab: {
         running: "Récupération de la page actuelle",

@@ -61,6 +61,12 @@ export const ptBR: LocaleMessages = {
     skillCreated: "Habilidade criada",
     aiWorking: "A IA está trabalhando",
     aiWorkingDescription: "Lendo, agindo e preparando a resposta.",
+    typingPhrases: [
+      "Pensando",
+      "Lendo a página",
+      "Escolhendo o próximo passo",
+      "Ajustando a resposta",
+    ],
     operatingBrowser: "Operando o navegador",
     preparingFinalReply: "Preparando resposta final",
     preparingFinalReplyDescription:
@@ -134,6 +140,10 @@ export const ptBR: LocaleMessages = {
       },
       getTabContent: { running: "Obtendo conteúdo", done: "Conteúdo obtido" },
       groupTabs: { running: "Agrupando abas", done: "Abas agrupadas" },
+      getCurrentTime: {
+        running: "Verificando horário",
+        done: "Horário verificado",
+      },
       getCurrentTab: {
         running: "Obtendo página atual",
         done: "Página atual obtida",

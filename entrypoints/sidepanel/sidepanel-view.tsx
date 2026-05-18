@@ -36,6 +36,7 @@ import { MessageBubble } from "./message-bubble";
 import { ProvidersEmptyState } from "./providers-empty-state";
 import { QueuedMessages } from "./queued-messages";
 import { SidepanelHeader } from "./sidepanel-header";
+import { TypingIndicator } from "./typing-indicator";
 import {
   ADD_MENU_VIEW,
   COMPOSER_MENU,
@@ -249,11 +250,7 @@ export function SidepanelView({
           ))}
           {aiWorking && !hasInlineTypingMessage && (
             <div className="message" aria-live="polite">
-              <span className="typing-dots" aria-label="Thinking">
-                <span />
-                <span />
-                <span />
-              </span>
+              <TypingIndicator t={t} />
             </div>
           )}
         </ScrollArea>

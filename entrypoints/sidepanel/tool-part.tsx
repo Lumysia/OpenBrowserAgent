@@ -1,5 +1,6 @@
 import {
   Copy,
+  Clock,
   Gauge,
   Download,
   ExternalLink,
@@ -117,6 +118,11 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
       ]);
     if (typeof output.error === "string") return output.error;
     if (typeof input.reason === "string") return input.reason;
+    if (name === BROWSER_TOOL_NAME.getCurrentTime)
+      return compactJoin([
+        stringValue(output.localDateTime),
+        stringValue(output.timeZone),
+      ]);
     if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
       return compactJoin([
         stringValue(output.name) || stringValue(input.attachmentId),
@@ -223,6 +229,7 @@ function toolIcon(name: string) {
     return <Search size={19} strokeWidth={2.1} />;
   if (lowerName.includes("download"))
     return <Download size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("time")) return <Clock size={19} strokeWidth={2.1} />;
   if (lowerName.includes("network"))
     return <Network size={19} strokeWidth={2.1} />;
   if (lowerName.includes("performance") || lowerName.includes("trace"))

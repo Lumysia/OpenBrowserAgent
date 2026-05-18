@@ -61,6 +61,12 @@ export const esES: LocaleMessages = {
     skillCreated: "Habilidad creada",
     aiWorking: "La IA está trabajando",
     aiWorkingDescription: "Leyendo, actuando y preparando la respuesta.",
+    typingPhrases: [
+      "Pensando",
+      "Leyendo la página",
+      "Eligiendo el siguiente paso",
+      "Puliendo la respuesta",
+    ],
     operatingBrowser: "Operando el navegador",
     preparingFinalReply: "Preparando la respuesta final",
     preparingFinalReplyDescription:
@@ -140,6 +146,10 @@ export const esES: LocaleMessages = {
         done: "Contenido obtenido",
       },
       groupTabs: { running: "Agrupando pestañas", done: "Pestañas agrupadas" },
+      getCurrentTime: {
+        running: "Consultando la hora",
+        done: "Hora consultada",
+      },
       getCurrentTab: {
         running: "Obteniendo página actual",
         done: "Página actual obtenida",

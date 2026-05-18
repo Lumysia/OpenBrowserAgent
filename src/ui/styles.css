@@ -541,10 +541,10 @@ a {
 }
 @keyframes shiny-text {
   0% {
-    background-position: -180px 0;
+    background-position: -260px 0;
   }
   100% {
-    background-position: calc(100% + 180px) 0;
+    background-position: calc(100% + 260px) 0;
   }
 }
 .spin {
@@ -1992,6 +1992,7 @@ a {
 }
 .messages .ui-scroll-area-viewport {
   overflow-x: hidden !important;
+  overflow-anchor: none;
   padding: 18px 18px 28px;
 }
 .messages .ui-scroll-area-viewport > div {
@@ -3269,10 +3270,10 @@ a {
   background: linear-gradient(
     90deg,
     var(--muted-foreground) 0,
-    var(--muted-foreground) 34%,
-    var(--accent-strong) 45%,
-    var(--foreground) 50%,
-    var(--accent-strong) 55%,
+    var(--muted-foreground) 38%,
+    color-mix(in srgb, var(--accent-strong) 68%, var(--muted-foreground)) 47%,
+    color-mix(in srgb, var(--foreground) 76%, var(--accent-strong)) 52%,
+    color-mix(in srgb, var(--accent-strong) 68%, var(--muted-foreground)) 57%,
     var(--muted-foreground) 66%,
     var(--muted-foreground) 100%
   );
@@ -3280,12 +3281,12 @@ a {
   -webkit-background-clip: text;
   background-color: var(--muted-foreground);
   background-repeat: no-repeat;
-  background-size: 180px 100%;
-  background-position: -180px 0;
+  background-size: 260px 100%;
+  background-position: -260px 0;
   color: transparent;
   -webkit-text-fill-color: transparent;
   display: inline-block;
-  animation: shiny-text 1.25s linear infinite;
+  animation: shiny-text 2.45s ease-in-out infinite;
   will-change: background-position;
 }
 
@@ -3293,11 +3294,11 @@ a {
   background-image: linear-gradient(
     90deg,
     var(--muted-foreground) 0,
-    var(--muted-foreground) 30%,
-    var(--accent-strong) 43%,
-    color-mix(in srgb, var(--foreground) 96%, var(--accent-strong)) 50%,
-    var(--accent-strong) 57%,
-    var(--muted-foreground) 70%,
+    var(--muted-foreground) 36%,
+    color-mix(in srgb, var(--accent-strong) 64%, var(--muted-foreground)) 47%,
+    color-mix(in srgb, var(--foreground) 78%, var(--accent-strong)) 52%,
+    color-mix(in srgb, var(--accent-strong) 64%, var(--muted-foreground)) 57%,
+    var(--muted-foreground) 68%,
     var(--muted-foreground) 100%
   );
 }
@@ -3307,32 +3308,148 @@ a {
     background-image: linear-gradient(
       90deg,
       var(--muted-foreground) 0,
-      var(--muted-foreground) 30%,
-      var(--accent-strong) 43%,
-      color-mix(in srgb, var(--foreground) 96%, var(--accent-strong)) 50%,
-      var(--accent-strong) 57%,
-      var(--muted-foreground) 70%,
+      var(--muted-foreground) 36%,
+      color-mix(in srgb, var(--accent-strong) 64%, var(--muted-foreground)) 47%,
+      color-mix(in srgb, var(--foreground) 78%, var(--accent-strong)) 52%,
+      color-mix(in srgb, var(--accent-strong) 64%, var(--muted-foreground)) 57%,
+      var(--muted-foreground) 68%,
       var(--muted-foreground) 100%
     );
   }
 }
-.typing-dots {
+.typing-indicator {
+  position: relative;
   display: inline-flex;
-  gap: 4px;
   align-items: center;
-}
-.typing-dots span {
-  width: 5px;
-  height: 5px;
+  gap: 8px;
+  max-width: min(260px, 100%);
+  padding: 8px 11px 8px 9px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 52%, var(--border));
   border-radius: 999px;
-  background: currentColor;
-  animation: pulse-dot 1s infinite ease-in-out;
+  background:
+    linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--accent-softer) 22%, transparent),
+      transparent 54%
+    ),
+    color-mix(in srgb, var(--card) 88%, var(--accent-softer));
+  color: var(--muted-foreground);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--shadow) 72%, transparent);
+  overflow: hidden;
 }
-.typing-dots span:nth-child(2) {
-  animation-delay: 0.12s;
+.typing-indicator::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    transparent 36%,
+    color-mix(in srgb, white 30%, transparent) 50%,
+    transparent 64%,
+    transparent 100%
+  );
+  transform: translateX(-120%);
+  animation: typing-sheen 4.2s ease-in-out infinite;
+  pointer-events: none;
 }
-.typing-dots span:nth-child(3) {
-  animation-delay: 0.24s;
+.typing-indicator-icon {
+  position: relative;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-soft) 72%, var(--card));
+  color: var(--accent-strong);
+  animation: typing-icon-float 1.7s ease-in-out infinite;
+}
+.typing-phrase-window {
+  position: relative;
+  z-index: 1;
+  width: min(194px, 48vw);
+  height: 1.25em;
+  display: inline-block;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 720;
+  line-height: 1.25;
+}
+.typing-phrase {
+  position: absolute;
+  inset: 0 auto auto 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(100%);
+  background: linear-gradient(
+    90deg,
+    var(--muted-foreground),
+    color-mix(in srgb, var(--accent-strong) 68%, var(--muted-foreground)) 48%,
+    color-mix(in srgb, var(--foreground) 76%, var(--accent-strong)) 56%,
+    var(--muted-foreground)
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation:
+    typing-phrase-cycle 8s ease-in-out infinite,
+    typing-text-sheen 4.4s ease-in-out infinite;
+}
+.typing-phrase:nth-child(2) {
+  animation-delay: 2s, 0s;
+}
+.typing-phrase:nth-child(3) {
+  animation-delay: 4s, 0s;
+}
+.typing-phrase:nth-child(4) {
+  animation-delay: 6s, 0s;
+}
+
+@keyframes typing-sheen {
+  0%,
+  34% {
+    transform: translateX(-120%);
+  }
+  68%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+@keyframes typing-icon-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-5deg) scale(0.98);
+  }
+  50% {
+    transform: translateY(-2px) rotate(7deg) scale(1.04);
+  }
+}
+@keyframes typing-phrase-cycle {
+  0% {
+    opacity: 0;
+    transform: translateY(90%);
+  }
+  8%,
+  23% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  31%,
+  100% {
+    opacity: 0;
+    transform: translateY(-90%);
+  }
+}
+@keyframes typing-text-sheen {
+  to {
+    background-position: -220% 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3352,7 +3469,10 @@ a {
   .ui-card,
   .tool-card,
   .shiny-text,
-  .typing-dots span {
+  .typing-indicator,
+  .typing-indicator::after,
+  .typing-indicator-icon,
+  .typing-phrase {
     animation: none !important;
   }
 
