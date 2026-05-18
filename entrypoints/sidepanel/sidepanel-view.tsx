@@ -86,6 +86,7 @@ export function SidepanelView({
   onSetChats,
   onSetPreferences,
   onCreateChat,
+  onImportChat,
   onCloseChat,
   onCreateSkill,
   onSend,
@@ -144,6 +145,7 @@ export function SidepanelView({
     value: Preferences | ((previous: Preferences) => Preferences),
   ) => void;
   onCreateChat: () => void;
+  onImportChat: (chat: Chat) => void;
   onCloseChat: (chatId: string) => void;
   onCreateSkill: () => void;
   onSend: () => void;
@@ -198,6 +200,7 @@ export function SidepanelView({
           showHistory={showHistory}
           onSetChats={onSetChats}
           onCreateChat={onCreateChat}
+          onImportChat={onImportChat}
           onSetShowHistory={onSetShowHistory}
           onSelectChat={onSelectChat}
           onCloseChat={onCloseChat}

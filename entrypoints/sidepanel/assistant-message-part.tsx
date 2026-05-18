@@ -1,5 +1,5 @@
 import { Check, Copy } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   COPY_FEEDBACK_MS,
   STREAM_RENDER_THROTTLE_MS,
@@ -43,6 +43,7 @@ export function AssistantText({
   const [language] = useStoredState(storage.language);
   const [copied, setCopied] = useState(false);
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
+  const markdownRef = useRef<HTMLDivElement | null>(null);
   const t = getMessages(language);
   const displayText = useThrottledText(text, STREAM_RENDER_THROTTLE_MS);
   const { html, codeBlocks } = renderMarkdown(
@@ -68,11 +69,29 @@ export function AssistantText({
     return () => window.clearTimeout(timeout);
   }, [copiedCodeId]);
 
+  useEffect(() => {
+    const element = markdownRef.current;
+    if (!element) return undefined;
+    const handler = (event: MouseEvent) => {
+      const citation = (event.target as HTMLElement | null)?.closest(
+        "button[data-source-id]",
+      ) as HTMLButtonElement | null;
+      if (!citation) return;
+      event.preventDefault();
+      event.stopPropagation();
+      openCitationSource(citation.dataset.sourceId || "", sources);
+    };
+    element.addEventListener("click", handler);
+    return () => element.removeEventListener("click", handler);
+  }, [sources]);
+
   async function handleMarkdownClick(event: React.MouseEvent<HTMLDivElement>) {
     const citation = (event.target as HTMLElement | null)?.closest(
       "button[data-source-id]",
     ) as HTMLButtonElement | null;
     if (citation) {
+      event.preventDefault();
+      event.stopPropagation();
       openCitationSource(citation.dataset.sourceId || "", sources);
       return;
     }
@@ -97,6 +116,7 @@ export function AssistantText({
   return (
     <div className={`assistant-text${streaming ? " streaming" : ""}`}>
       <div
+        ref={markdownRef}
         className="markdown"
         dangerouslySetInnerHTML={{ __html: html }}
         onClick={handleMarkdownClick}
@@ -126,10 +146,11 @@ function openCitationSource(sourceId: string, sources: ChatSource[]) {
   const source = sources.find((item) => item.id === sourceId);
   if (!source) return;
   if (source.url) {
-    chrome.tabs.create({ url: source.url });
+    chrome.tabs.create({ url: source.url }).catch(() => undefined);
     return;
   }
-  if (source.tabId) chrome.tabs.update(source.tabId, { active: true });
+  if (source.tabId)
+    chrome.tabs.update(source.tabId, { active: true }).catch(() => undefined);
 }
 
 function formatMessageTime(value: number) {

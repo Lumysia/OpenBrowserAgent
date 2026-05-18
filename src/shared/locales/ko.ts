@@ -28,6 +28,7 @@ export const ko: LocaleMessages = {
     menu: "메뉴",
     chatHistory: "채팅 기록",
     exportChatOpenAi: "OpenAI JSON으로 내보내기",
+    importChatOpenAi: "OpenAI JSON 채팅 가져오기",
     clearAllChats: "모든 채팅 지우기",
     noChatsYet: "아직 채팅이 없습니다",
     closeChat: "채팅 닫기",

@@ -28,6 +28,7 @@ export const jaJP: LocaleMessages = {
     menu: "メニュー",
     chatHistory: "チャット履歴",
     exportChatOpenAi: "OpenAI JSON としてエクスポート",
+    importChatOpenAi: "OpenAI JSON チャットをインポート",
     clearAllChats: "すべてのチャットを消去",
     noChatsYet: "チャットはまだありません",
     closeChat: "チャットを閉じる",

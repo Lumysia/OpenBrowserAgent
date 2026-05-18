@@ -32,6 +32,7 @@ export const enUS = {
     menu: "Menu",
     chatHistory: "Chat History",
     exportChatOpenAi: "Export chat as OpenAI JSON",
+    importChatOpenAi: "Import OpenAI JSON chat",
     clearAllChats: "Clear all chats",
     noChatsYet: "No chats yet",
     closeChat: "Close chat",

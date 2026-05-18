@@ -1,7 +1,11 @@
 import { browserTools } from "../../src/background/tool-schema";
 import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
 import { createSystemPrompt } from "../../src/shared/system-prompt";
-import { isToolPartType } from "../../src/shared/types";
+import {
+  CHAT_PART_STATE,
+  isToolPartType,
+  toolPartType,
+} from "../../src/shared/types";
 import type {
   Chat,
   ChatMessage,
@@ -26,6 +30,11 @@ type OpenAiToolCall = {
     name: string;
     arguments: string;
   };
+};
+
+type OpenAiImportPayload = {
+  messages?: Array<Record<string, unknown>>;
+  sources?: unknown;
 };
 
 export function exportChatAsOpenAiJson(
@@ -60,6 +69,82 @@ export function exportChatAsOpenAiJson(
   anchor.download = `${safeFilename(chat.title || "chat")}.openai.json`;
   anchor.click();
   URL.revokeObjectURL(url);
+}
+
+export async function importChatFromOpenAiJson(file: File): Promise<Chat> {
+  const payload = JSON.parse(await file.text()) as OpenAiImportPayload;
+  if (!Array.isArray(payload.messages)) throw new Error("Invalid chat JSON");
+
+  const now = Date.now();
+  const messages: ChatMessage[] = [];
+  const toolParts = new Map<string, ChatPart>();
+  for (const item of payload.messages) {
+    const role = String(item.role || "");
+    if (role === "system") continue;
+    if (role === "tool") {
+      const part = toolParts.get(String(item.tool_call_id || ""));
+      if (!part) continue;
+      const output = parseJsonString(item.content);
+      part.output = output;
+      part.state = recordValue(output).error
+        ? CHAT_PART_STATE.outputError
+        : CHAT_PART_STATE.outputAvailable;
+      continue;
+    }
+    if (role !== "user" && role !== "assistant") continue;
+
+    const content = stringValue(item.content);
+    const message: ChatMessage = {
+      id: crypto.randomUUID(),
+      role,
+      content,
+      createdAt: now + messages.length,
+    };
+    if (role === "assistant") {
+      const parts = assistantImportParts(item, content, toolParts);
+      if (parts.length) message.parts = parts;
+    }
+    messages.push(message);
+  }
+
+  return {
+    id: crypto.randomUUID(),
+    title:
+      safeFilename(file.name.replace(/\.openai\.json$/i, "")) ||
+      "Imported chat",
+    messages,
+    sources: Array.isArray(payload.sources)
+      ? (payload.sources as Chat["sources"])
+      : [],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function assistantImportParts(
+  item: Record<string, unknown>,
+  content: string,
+  toolParts: Map<string, ChatPart>,
+) {
+  const parts: ChatPart[] = [];
+  if (content.trim())
+    parts.push({ id: crypto.randomUUID(), type: "text", text: content });
+  const toolCalls = Array.isArray(item.tool_calls) ? item.tool_calls : [];
+  for (const call of toolCalls) {
+    const record = recordValue(call);
+    const fn = recordValue(record.function);
+    const name = stringValue(fn.name) || BROWSER_TOOL_NAME.openNewTabWithURL;
+    const part: ChatPart = {
+      id: stringValue(record.id) || crypto.randomUUID(),
+      type: toolPartType(name),
+      toolName: name,
+      state: CHAT_PART_STATE.inputAvailable,
+      input: parseJsonString(fn.arguments),
+    };
+    parts.push(part);
+    toolParts.set(part.id, part);
+  }
+  return parts;
 }
 
 function toOpenAiMessages(message: ChatMessage): OpenAiExportMessage[] {
@@ -128,6 +213,25 @@ function jsonString(value: unknown) {
   } catch {
     return JSON.stringify(String(value));
   }
+}
+
+function parseJsonString(value: unknown) {
+  if (typeof value !== "string") return value ?? {};
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
+function recordValue(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" ? value : "";
 }
 
 function safeFilename(value: string) {

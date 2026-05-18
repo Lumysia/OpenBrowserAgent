@@ -127,7 +127,6 @@ export function SidepanelApp() {
   useEffect(() => void (aiWorking && setOpenMenu(null)), [aiWorking]);
 
   useBuiltinSkills(skills, setSkills);
-
   useEffect(() => {
     chatsRef.current = chats || [];
   }, [chats]);
@@ -460,6 +459,10 @@ export function SidepanelApp() {
       onSetChats={setChats}
       onSetPreferences={setPreferences}
       onCreateChat={createChat}
+      onImportChat={(chat) => {
+        setChats((items) => [...items, chat]);
+        setActiveChatId(chat.id);
+      }}
       onCloseChat={closeChat}
       onCreateSkill={() =>
         createSkillFromChat({
@@ -473,9 +476,7 @@ export function SidepanelApp() {
       }
       onSend={send}
       onStop={stop}
-      onSelectSkill={(skill) => {
-        setSelectedSkill(skill);
-      }}
+      onSelectSkill={setSelectedSkill}
       onCancelEditMessage={cancelEditMessage}
       onShowAllTabsPicker={async () => {
         await showAllTabsPicker();

@@ -28,6 +28,7 @@ export const frFR: LocaleMessages = {
     menu: "Menu",
     chatHistory: "Historique",
     exportChatOpenAi: "Exporter en JSON OpenAI",
+    importChatOpenAi: "Importer un chat JSON OpenAI",
     clearAllChats: "Effacer toutes les discussions",
     noChatsYet: "Aucune discussion",
     closeChat: "Fermer la discussion",

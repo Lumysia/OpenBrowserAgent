@@ -28,6 +28,7 @@ export const ptBR: LocaleMessages = {
     menu: "Menu",
     chatHistory: "Histórico de chats",
     exportChatOpenAi: "Exportar como JSON da OpenAI",
+    importChatOpenAi: "Importar chat JSON da OpenAI",
     clearAllChats: "Limpar todos os chats",
     noChatsYet: "Ainda não há chats",
     closeChat: "Fechar chat",

@@ -1,10 +1,12 @@
 import {
   Download,
   History,
+  Upload,
   MessageCirclePlus,
   Settings,
   Trash2,
 } from "lucide-react";
+import { useRef } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import type { Chat, ChatMode, Preferences } from "../../src/shared/types";
 import {
@@ -13,7 +15,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../../src/ui/components";
-import { exportChatAsOpenAiJson } from "./chat-export";
+import {
+  exportChatAsOpenAiJson,
+  importChatFromOpenAiJson,
+} from "./chat-export";
 import { HistoryPanel } from "./history-panel";
 import { IconTooltip } from "./icon-tooltip";
 
@@ -26,6 +31,7 @@ export function SidepanelHeader({
   showHistory,
   onSetChats,
   onCreateChat,
+  onImportChat,
   onSetShowHistory,
   onSelectChat,
   onCloseChat,
@@ -38,10 +44,24 @@ export function SidepanelHeader({
   showHistory: boolean;
   onSetChats: (value: Chat[]) => void;
   onCreateChat: () => void;
+  onImportChat: (chat: Chat) => void;
   onSetShowHistory: (value: boolean) => void;
   onSelectChat: (chatId: string) => void;
   onCloseChat: (chatId: string) => void;
 }) {
+  const importInputRef = useRef<HTMLInputElement | null>(null);
+
+  async function importChat(file: File | undefined) {
+    if (!file) return;
+    try {
+      onImportChat(await importChatFromOpenAiJson(file));
+    } catch (error) {
+      console.warn("Failed to import chat", error);
+    } finally {
+      if (importInputRef.current) importInputRef.current.value = "";
+    }
+  }
+
   return (
     <header className="sidepanel-header">
       <div className="sidepanel-topbar">
@@ -52,9 +72,25 @@ export function SidepanelHeader({
         </IconTooltip>
         <div />
         <div className="topbar-actions">
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="visually-hidden"
+            onChange={(event) => void importChat(event.target.files?.[0])}
+          />
           <IconTooltip label={t.words.newChat}>
             <Button variant="ghost" size="icon" onClick={onCreateChat}>
               <MessageCirclePlus size={18} />
+            </Button>
+          </IconTooltip>
+          <IconTooltip label={t.sidepanel.importChatOpenAi}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => importInputRef.current?.click()}
+            >
+              <Upload size={18} />
             </Button>
           </IconTooltip>
           <IconTooltip label={t.sidepanel.exportChatOpenAi}>

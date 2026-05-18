@@ -28,6 +28,7 @@ export const zhCN: LocaleMessages = {
     menu: "菜单",
     chatHistory: "对话历史",
     exportChatOpenAi: "导出为 OpenAI JSON",
+    importChatOpenAi: "导入 OpenAI JSON 对话",
     clearAllChats: "清空所有对话",
     noChatsYet: "暂无对话",
     closeChat: "关闭对话",
