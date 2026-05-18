@@ -112,78 +112,93 @@ export function ProvidersPage() {
           <p className="muted">{t.options.providerDescription}</p>
         </div>
       </div>
-      <div className="grid-2">
-        <ModelSelect
-          label={t.options.selectModel}
-          value={preferences.selectedModelId}
-          models={configuredModels}
-          emptyLabel={t.options.selectModel}
-          onChange={(selectedModelId) =>
-            setPreferences((previous) => ({ ...previous, selectedModelId }))
-          }
-        />
-        <ModelSelect
-          label={t.options.selectImageModel}
-          value={preferences.selectedImageModelId}
-          models={configuredModels}
-          emptyLabel={t.options.selectImageModel}
-          disabled={!preferences.imageGenerationEnabled}
-          onChange={(selectedImageModelId) =>
-            setPreferences((previous) => ({
-              ...previous,
-              selectedImageModelId,
-            }))
-          }
-        />
-      </div>
-      <div className="setting-switch-row">
-        <div>
-          <strong>{t.options.enableImageGeneration}</strong>
-          <p className="muted">{t.options.enableImageGenerationDescription}</p>
+      <div className="provider-top-stack">
+        <section className="provider-settings-panel provider-chat-settings">
+          <div className="provider-single-model">
+            <ModelSelect
+              label={t.options.selectModel}
+              value={preferences.selectedModelId}
+              models={configuredModels}
+              emptyLabel={t.options.selectModel}
+              onChange={(selectedModelId) =>
+                setPreferences((previous) => ({ ...previous, selectedModelId }))
+              }
+            />
+          </div>
+        </section>
+        <section className="provider-settings-panel provider-image-settings">
+          <div className="provider-image-controls">
+            <div>
+              <strong>{t.options.enableImageGeneration}</strong>
+              <p className="muted">
+                {t.options.enableImageGenerationDescription}
+              </p>
+            </div>
+            <Switch
+              checked={!!preferences.imageGenerationEnabled}
+              onCheckedChange={(imageGenerationEnabled) =>
+                setPreferences((previous) => ({
+                  ...previous,
+                  imageGenerationEnabled,
+                }))
+              }
+            />
+          </div>
+          <div className="provider-image-fields">
+            <div className="provider-image-model-field">
+              <ModelSelect
+                label={t.options.selectImageModel}
+                value={preferences.selectedImageModelId}
+                models={configuredModels}
+                emptyLabel={t.options.selectImageModel}
+                disabled={!preferences.imageGenerationEnabled}
+                onChange={(selectedImageModelId) =>
+                  setPreferences((previous) => ({
+                    ...previous,
+                    selectedImageModelId,
+                  }))
+                }
+              />
+            </div>
+            <Label className="provider-size-field">
+              {t.options.imageGenerationSize}
+              <Input
+                value={preferences.imageGenerationSize || "1024x1024"}
+                placeholder="1024x1024"
+                disabled={!preferences.imageGenerationEnabled}
+                onChange={(event) =>
+                  setPreferences((previous) => ({
+                    ...previous,
+                    imageGenerationSize: event.target.value,
+                  }))
+                }
+              />
+            </Label>
+          </div>
+        </section>
+        <div className="provider-add-section">
+          <div className="provider-section-divider" />
+          <div className="provider-add-row">
+            <Select
+              value={providerType}
+              onValueChange={(value) => setProviderType(value as ProviderId)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PROVIDER_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {providerLabels[type]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={addProvider}>
+              <Plus size={16} /> {t.sidepanel.addProvider}
+            </Button>
+          </div>
         </div>
-        <Switch
-          checked={!!preferences.imageGenerationEnabled}
-          onCheckedChange={(imageGenerationEnabled) =>
-            setPreferences((previous) => ({
-              ...previous,
-              imageGenerationEnabled,
-            }))
-          }
-        />
-      </div>
-      <Label>
-        {t.options.imageGenerationSize}
-        <Input
-          value={preferences.imageGenerationSize || "1024x1024"}
-          placeholder="1024x1024"
-          disabled={!preferences.imageGenerationEnabled}
-          onChange={(event) =>
-            setPreferences((previous) => ({
-              ...previous,
-              imageGenerationSize: event.target.value,
-            }))
-          }
-        />
-      </Label>
-      <div className="row">
-        <Select
-          value={providerType}
-          onValueChange={(value) => setProviderType(value as ProviderId)}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PROVIDER_TYPES.map((type) => (
-              <SelectItem key={type} value={type}>
-                {providerLabels[type]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button onClick={addProvider}>
-          <Plus size={16} /> {t.sidepanel.addProvider}
-        </Button>
       </div>
       <Accordion
         type="multiple"
@@ -293,88 +308,92 @@ function ProviderAccordion({
     <AccordionItem value={providerId}>
       <AccordionTrigger>
         <span>{value.label || providerLabels[provider]}</span>
-        <Badge className="push-right">
-          {models.length ? t.common.enabled : t.common.disabled}
-        </Badge>
+        <span className="provider-summary">
+          <Badge>{providerLabels[provider]}</Badge>
+          <Badge>
+            {models.length} {t.options.models}
+          </Badge>
+          <Badge>{models.length ? t.common.enabled : t.common.disabled}</Badge>
+        </span>
       </AccordionTrigger>
-      <AccordionContent className="stack">
-        <Label>
-          {t.options.providerName}
-          <Input
-            value={value.label || ""}
-            placeholder={providerLabels[provider]}
-            onChange={(event) =>
-              onChange({ ...value, label: event.target.value })
-            }
-          />
-        </Label>
-        {provider !== "ollama" && (
-          <Label>
-            {t.options.apiKey}
-            <Input
-              type="password"
-              value={value.apiKey || ""}
-              onChange={(event) =>
-                onChange({ ...value, apiKey: event.target.value })
-              }
+      <AccordionContent>
+        <div className="provider-editor-grid">
+          <div className="provider-credentials-panel">
+            <Label>
+              {t.options.providerName}
+              <Input
+                value={value.label || ""}
+                placeholder={providerLabels[provider]}
+                onChange={(event) =>
+                  onChange({ ...value, label: event.target.value })
+                }
+              />
+            </Label>
+            {provider !== "ollama" && (
+              <Label>
+                {t.options.apiKey}
+                <Input
+                  type="password"
+                  value={value.apiKey || ""}
+                  onChange={(event) =>
+                    onChange({ ...value, apiKey: event.target.value })
+                  }
+                />
+              </Label>
+            )}
+            <ProviderBaseUrl
+              provider={provider}
+              value={value}
+              onChange={onChange}
             />
-          </Label>
-        )}
-        <ProviderBaseUrl
-          provider={provider}
-          value={value}
-          onChange={onChange}
-        />
-        <div className="row">
-          <Button variant="destructive" onClick={onDelete}>
+          </div>
+          <div className="provider-models-panel">
+            <div>
+              <strong>{t.options.models}</strong>
+              <p className="muted">{t.options.modelHint}</p>
+            </div>
+            <div className="provider-model-actions">
+              <Button
+                variant="secondary"
+                onClick={fetchModels}
+                disabled={fetching}
+              >
+                {fetching ? <Loader2 size={15} className="spin" /> : null}
+                {fetching ? t.options.fetchingModels : t.options.fetchModels}
+              </Button>
+              {fetchedModels.length > 0 && (
+                <FetchedModelPicker
+                  t={t}
+                  search={fetchedModelSearch}
+                  selectedId={selectedFetchedModelId}
+                  models={selectableFetchedModels}
+                  onSearch={setFetchedModelSearch}
+                  onSelect={setSelectedFetchedModelId}
+                  onAdd={addFetchedModel}
+                />
+              )}
+            </div>
+            {canAddManualModel && (
+              <div className="provider-model-actions">
+                <Input
+                  value={modelName}
+                  placeholder={t.options.addCustomModelName}
+                  onChange={(event) => setModelName(event.target.value)}
+                  onKeyDown={(event) => event.key === "Enter" && addModel()}
+                />
+                <Button variant="secondary" onClick={addModel}>
+                  {t.options.addCustom}
+                </Button>
+              </div>
+            )}
+            {error && <p className="provider-error-text">{error}</p>}
+            <ModelList models={models} value={value} onChange={onChange} />
+          </div>
+        </div>
+        <div className="provider-danger-row">
+          <Button variant="destructive" size="sm" onClick={onDelete}>
             <Trash2 size={16} /> {t.options.deleteProvider}
           </Button>
-        </div>
-        <div className="stack">
-          <div className="split">
-            <strong>{t.options.models}</strong>
-            <span className="muted">{t.options.modelHint}</span>
-          </div>
-          <div className="row">
-            <Button
-              variant="secondary"
-              onClick={fetchModels}
-              disabled={fetching}
-            >
-              {fetching ? <Loader2 size={15} className="spin" /> : null}
-              {fetching ? t.options.fetchingModels : t.options.fetchModels}
-            </Button>
-            {fetchedModels.length > 0 && (
-              <FetchedModelPicker
-                t={t}
-                search={fetchedModelSearch}
-                selectedId={selectedFetchedModelId}
-                models={selectableFetchedModels}
-                onSearch={setFetchedModelSearch}
-                onSelect={setSelectedFetchedModelId}
-                onAdd={addFetchedModel}
-              />
-            )}
-          </div>
-          {canAddManualModel && (
-            <div className="row">
-              <Input
-                value={modelName}
-                placeholder={t.options.addCustomModelName}
-                onChange={(event) => setModelName(event.target.value)}
-                onKeyDown={(event) => event.key === "Enter" && addModel()}
-              />
-              <Button variant="secondary" onClick={addModel}>
-                {t.options.addCustom}
-              </Button>
-            </div>
-          )}
-          {error && (
-            <p className="muted" style={{ color: "var(--destructive)" }}>
-              {error}
-            </p>
-          )}
-          <ModelList models={models} value={value} onChange={onChange} />
         </div>
       </AccordionContent>
     </AccordionItem>

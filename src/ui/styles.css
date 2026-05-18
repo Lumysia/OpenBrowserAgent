@@ -686,6 +686,17 @@ a {
 .ui-textarea::placeholder {
   color: var(--muted-foreground);
 }
+.ui-input:disabled,
+.ui-textarea:disabled,
+.ui-select-trigger:disabled {
+  cursor: not-allowed;
+  border-color: color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--muted) 62%, var(--background));
+  color: var(--muted-foreground);
+  opacity: 0.58;
+  box-shadow: none;
+  transform: none;
+}
 .ui-switch {
   position: relative;
   display: inline-flex;
@@ -782,6 +793,69 @@ a {
   justify-content: space-between;
   gap: 16px;
 }
+.provider-top-stack {
+  display: grid;
+  gap: 10px;
+}
+.provider-settings-panel {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 55%, var(--border));
+  border-radius: calc(var(--radius) + 2px);
+  background: color-mix(in srgb, var(--accent-softer) 22%, var(--card));
+}
+.provider-image-settings {
+  grid-template-columns: 1fr;
+  align-items: stretch;
+}
+.provider-single-model,
+.provider-image-model-field {
+  min-width: 0;
+}
+.provider-model-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.provider-image-controls {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+.provider-image-controls p {
+  margin: 4px 0 0;
+}
+.provider-size-field {
+  margin-left: auto;
+}
+.provider-image-fields {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(150px, 220px);
+  align-items: end;
+  gap: 12px;
+}
+.provider-add-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) minmax(180px, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+.provider-add-section {
+  display: grid;
+  gap: 18px;
+  padding-top: 18px;
+}
+.provider-section-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent-soft) 55%, var(--border)),
+    transparent
+  );
+}
 .sync-status-row {
   display: flex;
   align-items: center;
@@ -843,6 +917,12 @@ a {
 .ui-accordion-trigger:hover {
   background: var(--secondary);
 }
+.provider-summary {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 .ui-accordion-chevron {
   transition: transform 0.2s ease;
   flex-shrink: 0;
@@ -862,6 +942,41 @@ a {
 }
 .ui-accordion-content-inner {
   padding: 16px;
+}
+.provider-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
+  gap: 18px;
+}
+.provider-credentials-panel,
+.provider-models-panel {
+  display: grid;
+  align-content: start;
+  gap: 13px;
+}
+.provider-models-panel {
+  padding-left: 18px;
+  border-left: 1px solid var(--border);
+}
+.provider-models-panel p {
+  margin: 4px 0 0;
+}
+.provider-model-actions {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+.provider-error-text {
+  margin: 0;
+  color: var(--destructive);
+}
+.provider-danger-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
 }
 
 .ui-select-trigger {
@@ -1291,25 +1406,48 @@ a {
 }
 .model-table {
   display: grid;
-  gap: 6px;
+  gap: 4px;
 }
 .model-row {
-  min-height: 38px;
+  min-height: 34px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 5px 6px 5px 11px;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 3px);
-  background: var(--card);
+  padding: 4px 4px 4px 10px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--secondary) 58%, transparent);
   animation: fade-in 0.16s ease both;
+  transition: background-color 0.14s ease;
+}
+.model-row:hover {
+  background: color-mix(in srgb, var(--accent-soft) 46%, var(--secondary));
 }
 .model-row span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .provider-model-grid,
+  .provider-image-settings,
+  .provider-image-controls,
+  .provider-image-fields,
+  .provider-editor-grid,
+  .provider-model-actions {
+    grid-template-columns: 1fr;
+  }
+  .provider-size-field {
+    margin-left: 0;
+  }
+  .provider-models-panel {
+    padding-left: 0;
+    padding-top: 16px;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
 }
 
 .sidepanel {
