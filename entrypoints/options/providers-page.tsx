@@ -178,33 +178,40 @@ export function ProvidersPage() {
         </section>
         <div className="provider-add-section">
           <div className="provider-section-divider" />
-          <div className="provider-add-row">
-            <Select
-              value={providerType}
-              onValueChange={(value) => setProviderType(value as ProviderId)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PROVIDER_TYPES.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {providerLabels[type]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={addProvider}>
-              <Plus size={16} /> {t.sidepanel.addProvider}
-            </Button>
+          <div className="provider-add-card">
+            <div className="provider-add-copy">
+              <span className="provider-add-icon">
+                <Plus size={17} />
+              </span>
+              <div>
+                <strong>{t.sidepanel.addProvider}</strong>
+                <p className="muted">{t.options.providerDescription}</p>
+              </div>
+            </div>
+            <div className="provider-add-row">
+              <Select
+                value={providerType}
+                onValueChange={(value) => setProviderType(value as ProviderId)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROVIDER_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {providerLabels[type]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={addProvider}>
+                <Plus size={16} /> {t.sidepanel.addProvider}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-      <Accordion
-        type="multiple"
-        defaultValue={providerEntries.slice(0, 1).map(([id]) => id)}
-        className="stack"
-      >
+      <Accordion type="multiple" defaultValue={[]} className="stack">
         {providerEntries.map(([providerId, provider]) => (
           <ProviderAccordion
             key={providerId}

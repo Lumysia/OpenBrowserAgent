@@ -838,9 +838,42 @@ a {
 }
 .provider-add-row {
   display: grid;
-  grid-template-columns: minmax(180px, 260px) minmax(180px, 1fr);
+  grid-template-columns: minmax(180px, 0.55fr) minmax(180px, 1fr);
   align-items: center;
   gap: 10px;
+}
+.provider-add-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 62%, var(--border));
+  border-radius: calc(var(--radius) + 4px);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-softer) 28%, transparent),
+      transparent 54%
+    ),
+    var(--card);
+  box-shadow: 0 14px 34px var(--shadow);
+}
+.provider-add-copy {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.provider-add-copy p {
+  margin: 3px 0 0;
+}
+.provider-add-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 .provider-add-section {
   display: grid;
