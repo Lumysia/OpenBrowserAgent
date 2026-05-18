@@ -6,6 +6,7 @@ import {
 import { BROWSER_TOOL_NAME, UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
 import { isScriptableUrl } from "../shared/browser";
 import { downloadTextFile, findImages, safeFileName } from "./downloads";
+import { findAccessibleElements } from "./accessible-elements";
 import { browserTools } from "./tool-schema";
 import { withTimeout } from "./tool-utils";
 
@@ -234,87 +235,6 @@ async function extractMarkdown(tabId: number) {
       `# ${document.title}\n\nURL: ${location.href}\n\n${document.body?.innerText || ""}`,
   });
   return String(result.result || "");
-}
-
-async function findAccessibleElements(tabId: number) {
-  const [result] = await chrome.scripting.executeScript({
-    target: { tabId },
-    func: () => {
-      const selectors =
-        'a, button, input, textarea, img, [contenteditable="true"], [aria-label]';
-      const elements: Array<{
-        type: string;
-        id: string;
-        properties: Record<string, unknown>;
-      }> = [];
-      Array.from(document.querySelectorAll(selectors)).forEach((element) => {
-        const htmlElement = element as
-          | HTMLAnchorElement
-          | HTMLImageElement
-          | HTMLInputElement
-          | HTMLTextAreaElement
-          | HTMLElement;
-        const tag = htmlElement.tagName.toLowerCase();
-        const style = getComputedStyle(htmlElement);
-        if (
-          style.display === "none" ||
-          tag === "img" ||
-          (tag === "a" &&
-            (!(htmlElement as HTMLAnchorElement).href ||
-              /^(javascript:|mailto:|tel:|data:|blob:|about:|chrome:|#)/i.test(
-                (htmlElement as HTMLAnchorElement).href,
-              ))) ||
-          (tag === "input" &&
-            (htmlElement as HTMLInputElement).type === "hidden")
-        ) {
-          return;
-        }
-        if (htmlElement.getAttribute("data-ai-id")) return;
-
-        const id = `ai-id-${Math.random().toString(36).substring(2, 8)}`;
-        htmlElement.setAttribute("data-ai-id", id);
-        let type =
-          (
-            {
-              img: "image",
-              a: "link",
-              button: "button",
-              textarea: "textarea",
-              input: "input",
-            } as Record<string, string>
-          )[tag] || tag;
-        if (htmlElement.hasAttribute("contenteditable"))
-          type = "contentEditable";
-
-        const properties: Record<string, unknown> = {};
-        if (type === "button")
-          properties.buttonType = (htmlElement as HTMLButtonElement).type;
-        if (type === "input") {
-          const input = htmlElement as HTMLInputElement;
-          if (input.type) properties.inputType = input.type;
-          if (input.placeholder) properties.placeholder = input.placeholder;
-        }
-        const ariaLabel = htmlElement.getAttribute("aria-label");
-        if (ariaLabel) properties.ariaLabel = ariaLabel;
-        else if (type === "image")
-          properties.alt = (htmlElement as HTMLImageElement).alt || "";
-        const role = htmlElement.getAttribute("role");
-        if (role) properties.role = role;
-        if (type === "input" || type === "textarea")
-          properties.value = (
-            htmlElement as HTMLInputElement | HTMLTextAreaElement
-          ).value;
-        else if (type === "contentEditable")
-          properties.value = htmlElement.innerHTML;
-        if (type === "link") properties.content = htmlElement.textContent;
-        else if (type === "image")
-          properties.alt = (htmlElement as HTMLImageElement).alt;
-        elements.push({ type, id, properties });
-      });
-      return elements;
-    },
-  });
-  return result.result || [];
 }
 
 async function getElementProperties(tabId: number, ids: string[]) {

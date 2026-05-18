@@ -102,13 +102,22 @@ async function editImage(
 async function parseImageResponse(response: Response) {
   if (!response.ok) return { error: await response.text() };
   const data = await response.json();
-  const first = data.data?.[0] || data.images?.[0] || data;
-  const b64 = first.b64_json || first.base64 || first.image_base64;
-  const url = first.url || first.image_url;
+  const first = data.data?.[0] || data.images?.[0] || data.image || data;
+  const b64 =
+    typeof first === "string"
+      ? first
+      : first.b64_json || first.base64 || first.image_base64;
+  const url = typeof first === "string" ? "" : first.url || first.image_url;
+  if (!b64 && !url)
+    return { error: "Image generation response did not include an image" };
   return {
-    image: b64 ? `data:image/png;base64,${b64}` : url,
+    image: b64.startsWith?.("data:")
+      ? b64
+      : b64
+        ? `data:image/png;base64,${b64}`
+        : url,
     mimeType: "image/png",
-    revisedPrompt: first.revised_prompt,
+    revisedPrompt: typeof first === "string" ? undefined : first.revised_prompt,
   };
 }
 
