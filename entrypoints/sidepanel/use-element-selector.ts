@@ -37,7 +37,8 @@ export function useElementSelector() {
     const tab = await getActiveTab();
     if (!tab?.id) return;
     setSelectingElement(true);
-    await injectElementSelector(tab.id);
+    const injected = await injectElementSelector(tab.id).catch(() => false);
+    if (!injected) setSelectingElement(false);
   }
 
   async function cancelElementSelection() {

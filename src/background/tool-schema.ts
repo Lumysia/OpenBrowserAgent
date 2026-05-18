@@ -167,8 +167,13 @@ export const browserTools = [
     ["attachmentId"],
   ),
   tool(
+    BROWSER_TOOL_NAME.listSkills,
+    "List available skill packages. Call this before readSkill when skills may help the user request.",
+    {},
+  ),
+  tool(
     BROWSER_TOOL_NAME.readSkill,
-    "Read SKILL.md for one available skill package by id. Use this only when a listed skill clearly helps the user request.",
+    "Read SKILL.md for one available skill package by id after listSkills shows it is relevant.",
     {
       skillId: {
         type: "string",
@@ -191,6 +196,31 @@ export const browserTools = [
       },
     },
     ["skillId", "path"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.updateSkillFile,
+    "Update or add a text file in an available skill package after using it. Only make generalized, reusable improvements based on the current context; do not add narrow one-off details, user-specific secrets, or task-only hacks.",
+    {
+      skillId: {
+        type: "string",
+        description: "The id of the available skill package to update",
+      },
+      path: {
+        type: "string",
+        description:
+          "The skill file path to update, such as SKILL.md or references/example.md",
+      },
+      content: {
+        type: "string",
+        description: "The complete new UTF-8 text content for this skill file",
+      },
+      reason: {
+        type: "string",
+        description:
+          "Why this update is broadly reusable and not a narrow one-off change",
+      },
+    },
+    ["skillId", "path", "content", "reason"],
   ),
 ];
 

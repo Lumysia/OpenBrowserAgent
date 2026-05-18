@@ -142,7 +142,16 @@ export const jaJP: LocaleMessages = {
         running: "要素を調査中",
         done: "要素を調査しました",
       },
+      listSkills: {
+        running: "Skill一覧を取得中",
+        done: "Skill一覧を取得しました",
+        found: "{count}件見つかりました",
+      },
       readSkill: { running: "Reading Skill", done: "Read Skill" },
+      updateSkillFile: {
+        running: "Skillを更新中",
+        done: "Skillを更新しました",
+      },
       readUploadedAttachment: {
         running: "添付を読み取り中",
         done: "添付を読み取りました",

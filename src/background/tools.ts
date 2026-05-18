@@ -4,6 +4,7 @@ import {
   TAB_LOAD_WAIT_TIMEOUT_MS,
 } from "../shared/config";
 import { BROWSER_TOOL_NAME, UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
+import { isScriptableUrl } from "../shared/browser";
 import { downloadTextFile, findImages, safeFileName } from "./downloads";
 import { browserTools } from "./tool-schema";
 
@@ -93,7 +94,9 @@ async function executeBrowserTool(
       const contents = [];
       for (const tabId of tabIds) {
         const tab = await chrome.tabs.get(tabId);
-        const markdown = await extractMarkdown(tabId);
+        const markdown = isScriptableUrl(tab.url)
+          ? await extractMarkdown(tabId)
+          : "";
         contents.push({
           tabId,
           title: tab.title || "",

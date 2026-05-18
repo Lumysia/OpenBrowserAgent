@@ -202,7 +202,9 @@ function ProviderAccordion({
     <AccordionItem value={provider}>
       <AccordionTrigger>
         <span>{providerLabels[provider]}</span>
-        <Badge>{models.length ? t.common.enabled : t.common.disabled}</Badge>
+        <Badge className="push-right">
+          {models.length ? t.common.enabled : t.common.disabled}
+        </Badge>
       </AccordionTrigger>
       <AccordionContent className="stack">
         {provider !== "ollama" && (

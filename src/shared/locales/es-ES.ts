@@ -139,7 +139,16 @@ export const esES: LocaleMessages = {
         running: "Inspeccionando elemento",
         done: "Elemento inspeccionado",
       },
+      listSkills: {
+        running: "Listando Skills",
+        done: "Skills listadas",
+        found: "Encontradas {count}",
+      },
       readSkill: { running: "Reading Skill", done: "Read Skill" },
+      updateSkillFile: {
+        running: "Actualizando Skill",
+        done: "Skill actualizada",
+      },
       readUploadedAttachment: {
         running: "Leyendo adjunto",
         done: "Adjunto leído",

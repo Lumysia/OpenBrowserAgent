@@ -11,7 +11,7 @@ import {
   type Skill,
   type UploadedAttachment,
 } from "../shared/types";
-import { getSkillDisplayName, getSkillInstruction } from "../shared/skills";
+import { getSkillInstruction } from "../shared/skills";
 
 export function postText(
   port: chrome.runtime.Port,
@@ -100,7 +100,7 @@ ${context}
 
 ${renderAttachmentContext(attachments)}
 
-${renderSkillCatalog(availableSkills)}
+${renderSkillToolHint(availableSkills)}
 
 </message_context>
 
@@ -109,16 +109,11 @@ ${message.content}
 </message>`;
 }
 
-export function renderSkillCatalog(skills: Skill[]) {
+export function renderSkillToolHint(skills: Skill[]) {
   if (!skills.length) return "";
-  return `<available_skills>
-${skills
-  .map(
-    (skill) =>
-      `- id: ${skill.id}\n  name: ${getSkillDisplayName(skill)}\n  description: ${skill.description || ""}\n  entry: SKILL.md\n  note: Use readSkill with this id to read SKILL.md if this skill is relevant. If SKILL.md lists supporting files, use readSkillFile with the path to read them.`,
-  )
-  .join("\n\n")}
-</available_skills>`;
+  return `<skill_tools>
+Skills may be available. Be proactive: for complex tasks, unclear context, uncertain user intent, reusable workflows, or requests that may need domain/project-specific guidance, call listSkills first to inspect available skill packages. Then call readSkill for relevant SKILL.md content, and readSkillFile for supporting files if needed. If you used a skill and discover a broadly reusable improvement from the current context, proactively call updateSkillFile to update that skill. Do not update skills with narrow one-off details, user-specific secrets, or task-only hacks.
+</skill_tools>`;
 }
 
 export function getUploadedAttachments(message: ChatMessage) {

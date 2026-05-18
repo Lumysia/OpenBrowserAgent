@@ -137,7 +137,13 @@ export const enUS = {
         running: "Inspecting element",
         done: "Inspected element",
       },
+      listSkills: {
+        running: "Listing Skills",
+        done: "Listed Skills",
+        found: "Found {count}",
+      },
       readSkill: { running: "Reading Skill", done: "Read Skill" },
+      updateSkillFile: { running: "Updating Skill", done: "Updated Skill" },
       readUploadedAttachment: {
         running: "Reading attachment",
         done: "Read attachment",

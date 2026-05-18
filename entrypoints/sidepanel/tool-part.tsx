@@ -99,9 +99,16 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
         stringValue(output.encoding),
         rangeLabel(output),
       ]);
+    if (name === BROWSER_TOOL_NAME.listSkills && Array.isArray(output.skills))
+      return formatToolMessage(toolFound, { count: output.skills.length });
     if (name === BROWSER_TOOL_NAME.readSkill)
       return stringValue(output.name) || stringValue(input.skillId);
     if (name === BROWSER_TOOL_NAME.readSkillFile)
+      return compactJoin([
+        stringValue(output.name) || stringValue(input.skillId),
+        stringValue(output.path) || stringValue(input.path),
+      ]);
+    if (name === BROWSER_TOOL_NAME.updateSkillFile)
       return compactJoin([
         stringValue(output.name) || stringValue(input.skillId),
         stringValue(output.path) || stringValue(input.path),
@@ -189,7 +196,11 @@ function toolIcon(name: string) {
     return <Download size={19} strokeWidth={2.1} />;
   if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
     return <FileSearch size={19} strokeWidth={2.1} />;
-  if (name === BROWSER_TOOL_NAME.readSkill)
+  if (
+    name === BROWSER_TOOL_NAME.listSkills ||
+    name === BROWSER_TOOL_NAME.readSkill ||
+    name === BROWSER_TOOL_NAME.updateSkillFile
+  )
     return <FileText size={19} strokeWidth={2.1} />;
   if (name.includes("Content")) return <FileText size={19} strokeWidth={2.1} />;
   if (name.includes("group")) return <Layers size={19} strokeWidth={2.1} />;

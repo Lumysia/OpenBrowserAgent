@@ -141,6 +141,22 @@ export function readSkill(skills: Skill[], input: Record<string, unknown>) {
   };
 }
 
+export function listSkills(skills: Skill[]) {
+  return {
+    skills: skills.map((skill) => ({
+      id: skill.id,
+      name: getSkillDisplayName(skill),
+      description: skill.description || "",
+      entry: "SKILL.md",
+      files: skill.files?.map((file) => ({
+        path: file.path,
+        kind: file.kind,
+        size: file.content.length,
+      })),
+    })),
+  };
+}
+
 export function readSkillFile(skills: Skill[], input: Record<string, unknown>) {
   const skillId = String(input.skillId || input.id || "");
   const path = String(input.path || "");

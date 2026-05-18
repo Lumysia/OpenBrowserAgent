@@ -308,7 +308,7 @@ export function SkillsPage() {
                 )}
               </span>
               <span
-                className="row"
+                className="row push-right"
                 onClick={(event) => event.stopPropagation()}
               >
                 <Switch

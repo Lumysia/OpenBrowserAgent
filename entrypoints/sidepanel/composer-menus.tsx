@@ -52,7 +52,7 @@ export function AddContextMenu({
       <div className="add-context-menu add-context-menu-compact">
         <Button
           variant="ghost"
-          className="composer-menu-item"
+          className="action-list-item"
           onClick={onShowTabs}
         >
           <Layers size={17} />
@@ -62,7 +62,17 @@ export function AddContextMenu({
         </Button>
         <Button
           variant="ghost"
-          className="composer-menu-item"
+          className="action-list-item"
+          onClick={onAttachTab}
+        >
+          <Plus size={17} />
+          <span>
+            <strong>{t.sidepanel.addCurrentTab}</strong>
+          </span>
+        </Button>
+        <Button
+          variant="ghost"
+          className="action-list-item"
           onClick={onUploadFiles}
         >
           <Paperclip size={17} />
@@ -74,7 +84,7 @@ export function AddContextMenu({
         {!!skills.length && (
           <Button
             variant="ghost"
-            className="composer-menu-item"
+            className="action-list-item"
             onClick={onShowSkills}
           >
             <FileText size={17} />
@@ -86,7 +96,7 @@ export function AddContextMenu({
         )}
         <Button
           variant="ghost"
-          className="composer-menu-item"
+          className="action-list-item"
           onClick={onSelectElement}
         >
           <MousePointerClick size={17} />
@@ -101,7 +111,7 @@ export function AddContextMenu({
   if (view === "skills") {
     return (
       <div className="add-context-menu">
-        <div className="composer-menu-item muted">
+        <div className="action-list-item muted">
           <FileText size={17} /> {t.options.skills} ({skills.length})
         </div>
         <div>
@@ -109,7 +119,7 @@ export function AddContextMenu({
             <Button
               key={skill.id}
               variant="ghost"
-              className="composer-menu-item"
+              className="action-list-item"
               onClick={() => onSkill(skill)}
             >
               <FileText size={20} />
@@ -123,33 +133,27 @@ export function AddContextMenu({
 
   return (
     <div className="add-context-menu">
-      <div className="composer-menu-item muted">
+      <Button
+        variant="ghost"
+        className={`action-list-item muted ${selectedTabIds.length === tabs.length ? "active" : ""}`}
+        onClick={() =>
+          tabs.forEach((tab) => {
+            if (
+              selectedTabIds.length === tabs.length ||
+              !selectedTabIds.includes(tab.id)
+            )
+              onToggleTab(tab);
+          })
+        }
+      >
         <Layers size={17} /> {t.sidepanel.allOpenTabs} ({tabs.length})
-      </div>
+      </Button>
       <div>
-        <Button
-          variant="ghost"
-          className={`composer-menu-item ${selectedTabIds.length === tabs.length ? "active" : ""}`}
-          onClick={() =>
-            tabs.forEach((tab) => {
-              if (
-                selectedTabIds.length === tabs.length ||
-                !selectedTabIds.includes(tab.id)
-              )
-                onToggleTab(tab);
-            })
-          }
-        >
-          <Layers size={20} />
-          <span>
-            {t.sidepanel.allOpenTabs} ({tabs.length})
-          </span>
-        </Button>
         {tabs.map((tab) => (
           <Button
             key={tab.id}
             variant="ghost"
-            className={`composer-menu-item ${selectedTabIds.includes(tab.id) ? "active" : ""}`}
+            className={`action-list-item ${selectedTabIds.includes(tab.id) ? "active" : ""}`}
             onClick={() => onToggleTab(tab)}
           >
             {tab.favIconUrl ? (
@@ -160,28 +164,6 @@ export function AddContextMenu({
             <span>{tab.title || tab.url || `Tab ${tab.id}`}</span>
           </Button>
         ))}
-      </div>
-      <div>
-        <Button
-          variant="ghost"
-          className="composer-menu-item"
-          onClick={onAttachTab}
-        >
-          <Plus size={17} />
-          <span>
-            <strong>{t.sidepanel.addCurrentTab}</strong>
-          </span>
-        </Button>
-        <Button
-          variant="ghost"
-          className="composer-menu-item"
-          onClick={onSelectElement}
-        >
-          <MousePointerClick size={17} />
-          <span>
-            <strong>{t.sidepanel.selectElement}</strong>
-          </span>
-        </Button>
       </div>
     </div>
   );
@@ -236,7 +218,7 @@ export function ModelMenu({
       )}
       {models.map((model) => (
         <button
-          className="model-menu-item"
+          className="action-list-item model-menu-item"
           key={model.id}
           onClick={() => onSelect(model.id)}
         >
@@ -281,7 +263,7 @@ export function ModeMenu({
     <div className="mode-menu">
       {modes.map((item) => (
         <button
-          className={`mode-menu-item ${mode === item.id ? "active" : ""}`}
+          className={`action-list-item mode-menu-item ${mode === item.id ? "active" : ""}`}
           key={item.id}
           onClick={() => onSelect(item.id)}
         >

@@ -20,7 +20,13 @@ export async function getAllTabs(): Promise<AttachmentTab[]> {
     }));
 }
 
+export function isScriptableUrl(url?: string) {
+  return !!url && /^https?:\/\//i.test(url);
+}
+
 export async function extractTabText(tabId: number): Promise<string> {
+  const tab = await chrome.tabs.get(tabId);
+  if (!isScriptableUrl(tab.url)) return "";
   const [result] = await chrome.scripting.executeScript({
     target: { tabId },
     func: () => {
@@ -34,15 +40,20 @@ export async function extractTabText(tabId: number): Promise<string> {
 }
 
 export async function injectElementSelector(tabId: number) {
+  const tab = await chrome.tabs.get(tabId);
+  if (!isScriptableUrl(tab.url)) return false;
   await chrome.scripting.executeScript({
     target: { tabId },
     files: ["content-scripts/element-selector.js"],
   });
+  return true;
 }
 
 export async function getSelectedElementFromPage(
   tabId: number,
 ): Promise<SelectedElement | null> {
+  const tab = await chrome.tabs.get(tabId);
+  if (!isScriptableUrl(tab.url)) return null;
   const [result] = await chrome.scripting.executeScript({
     target: { tabId },
     func: () => {

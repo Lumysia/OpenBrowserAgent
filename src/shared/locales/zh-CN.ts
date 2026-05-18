@@ -108,7 +108,13 @@ export const zhCN: LocaleMessages = {
       closeTab: { running: "关闭标签页", done: "已关闭标签页" },
       scrollToBottom: { running: "滚动页面", done: "已滚动页面" },
       getElementPropertiesByAiID: { running: "检查元素", done: "已检查元素" },
+      listSkills: {
+        running: "读取 Skill 列表",
+        done: "已读取 Skill 列表",
+        found: "找到 {count} 个",
+      },
       readSkill: { running: "Reading Skill", done: "Read Skill" },
+      updateSkillFile: { running: "更新 Skill", done: "已更新 Skill" },
       readUploadedAttachment: { running: "读取附件", done: "已读取附件" },
     },
   },

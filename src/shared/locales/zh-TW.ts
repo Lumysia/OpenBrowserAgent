@@ -111,7 +111,13 @@ export const zhTW: LocaleMessages = {
         running: "正在檢查元素",
         done: "已檢查元素",
       },
+      listSkills: {
+        running: "讀取 Skill 清單",
+        done: "已讀取 Skill 清單",
+        found: "找到 {count} 個",
+      },
       readSkill: { running: "Reading Skill", done: "Read Skill" },
+      updateSkillFile: { running: "更新 Skill", done: "已更新 Skill" },
       readUploadedAttachment: { running: "正在讀取附件", done: "已讀取附件" },
     },
   },

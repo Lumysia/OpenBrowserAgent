@@ -124,7 +124,16 @@ export const ptBR: LocaleMessages = {
         running: "Inspecionando elemento",
         done: "Elemento inspecionado",
       },
+      listSkills: {
+        running: "Listando Skills",
+        done: "Skills listadas",
+        found: "Encontradas {count}",
+      },
       readSkill: { running: "Reading Skill", done: "Read Skill" },
+      updateSkillFile: {
+        running: "Atualizando Skill",
+        done: "Skill atualizada",
+      },
       readUploadedAttachment: {
         running: "Lendo anexo",
         done: "Anexo lido",
