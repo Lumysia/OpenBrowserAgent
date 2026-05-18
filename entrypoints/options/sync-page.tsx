@@ -41,10 +41,10 @@ export function SyncPage() {
   };
 
   function updateSyncPreference(key: SyncPreferenceKey, value: boolean) {
-    setPreferences({ ...preferences, [key]: value });
+    setPreferences((previous) => ({ ...previous, [key]: value }));
     setDataSync(key, value).catch((error) => {
       console.warn("Failed to update sync preference", error);
-      setPreferences({ ...preferences, [key]: !value });
+      setPreferences((previous) => ({ ...previous, [key]: !value }));
     });
   }
 

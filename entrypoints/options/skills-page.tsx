@@ -70,7 +70,7 @@ export function SkillsPage() {
       createdAt: now,
       updatedAt: now,
     });
-    setSkills([...skillList, next]);
+    setSkills((items) => [...items, next]);
     setDrafts((items) => ({ ...items, [next.id]: next }));
     setSelectedId(next.id);
   }
@@ -82,7 +82,7 @@ export function SkillsPage() {
     setImportError("");
     try {
       const skill = await importSkillZip(file);
-      setSkills([...skillList, skill]);
+      setSkills((items) => [...items, skill]);
       setSelectedId(skill.id);
     } catch (error) {
       setImportError(error instanceof Error ? error.message : String(error));
@@ -119,8 +119,8 @@ export function SkillsPage() {
 
   function updateSkillEnabled(skill: Skill, enabled: boolean) {
     updateDraft(skill, { enabled });
-    setSkills(
-      skillList.map((item) =>
+    setSkills((items) =>
+      items.map((item) =>
         item.id === skill.id
           ? { ...draftFor(skill), enabled, updatedAt: Date.now() }
           : item,
@@ -182,7 +182,9 @@ export function SkillsPage() {
 
   function saveSkill(skill: Skill) {
     const draft = draftFor(skill);
-    setSkills(skillList.map((item) => (item.id === skill.id ? draft : item)));
+    setSkills((items) =>
+      items.map((item) => (item.id === skill.id ? draft : item)),
+    );
     setSavedId(skill.id);
     setTimeout(
       () => setSavedId((id) => (id === skill.id ? undefined : id)),
@@ -195,7 +197,7 @@ export function SkillsPage() {
       draftFor(skill),
       skillList.map((item) => normalizeSkill(item).name),
     );
-    setSkills([...skillList, copy]);
+    setSkills((items) => [...items, copy]);
     setDrafts((items) => ({ ...items, [copy.id]: copy }));
     setSelectedId(copy.id);
   }
@@ -205,7 +207,7 @@ export function SkillsPage() {
       setDeleteConfirmId(skill.id);
       return;
     }
-    setSkills(skillList.filter((item) => item.id !== skill.id));
+    setSkills((items) => items.filter((item) => item.id !== skill.id));
     setDrafts((items) => {
       const next = { ...items };
       delete next[skill.id];
@@ -260,7 +262,10 @@ export function SkillsPage() {
               <Switch
                 checked={preferences.autoSelectSkills === true}
                 onCheckedChange={(autoSelectSkills) =>
-                  setPreferences({ ...preferences, autoSelectSkills })
+                  setPreferences((previous) => ({
+                    ...previous,
+                    autoSelectSkills,
+                  }))
                 }
               />
             </div>

@@ -82,7 +82,10 @@ export function GeneralPage() {
                   role="radio"
                   title={option.label}
                   onClick={() =>
-                    setPreferences({ ...preferences, accentColor: option.id })
+                    setPreferences((previous) => ({
+                      ...previous,
+                      accentColor: option.id,
+                    }))
                   }
                 >
                   <span />
@@ -101,10 +104,10 @@ export function GeneralPage() {
           <Select
             value={preferences.colorScheme || "system"}
             onValueChange={(colorScheme) =>
-              setPreferences({
-                ...preferences,
+              setPreferences((previous) => ({
+                ...previous,
                 colorScheme: colorScheme as "system" | "light" | "dark",
-              })
+              }))
             }
           >
             <SelectTrigger>
@@ -123,7 +126,7 @@ export function GeneralPage() {
         description={t.options.autoScrollDescription}
         checked={preferences.autoScroll !== false}
         onChange={(checked) =>
-          setPreferences({ ...preferences, autoScroll: checked })
+          setPreferences((previous) => ({ ...previous, autoScroll: checked }))
         }
       />
       <PreferenceSwitch
@@ -131,7 +134,7 @@ export function GeneralPage() {
         description={t.options.autoRetryDescription}
         checked={preferences.autoRetry !== false}
         onChange={(checked) =>
-          setPreferences({ ...preferences, autoRetry: checked })
+          setPreferences((previous) => ({ ...previous, autoRetry: checked }))
         }
       />
       <Card>
@@ -146,10 +149,10 @@ export function GeneralPage() {
             step={1}
             value={String(preferences.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS)}
             onChange={(event) =>
-              setPreferences({
-                ...preferences,
+              setPreferences((previous) => ({
+                ...previous,
                 maxToolSteps: parseMaxToolSteps(event.currentTarget.value),
-              })
+              }))
             }
           />
         </CardContent>

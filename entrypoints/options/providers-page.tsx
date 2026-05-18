@@ -64,32 +64,44 @@ export function ProvidersPage() {
   const t = getMessages(language);
 
   if (!providerState || !preferences) return null;
-  const currentPreferences = preferences;
 
   function updateProvider(providerId: string, next: ProviderConfig) {
-    setProviderState({ ...normalizedProviders, [providerId]: next });
+    setProviderState((previous) => ({
+      ...normalizeProviderState(previous || {}),
+      [providerId]: next,
+    }));
   }
 
   function addProvider() {
     const provider = createProviderConfig(providerType, normalizedProviders);
-    setProviderState({ ...normalizedProviders, [provider.id!]: provider });
+    setProviderState((previous) => ({
+      ...normalizeProviderState(previous || {}),
+      [provider.id!]: provider,
+    }));
   }
 
   function deleteProvider(providerId: string) {
     const { [providerId]: removed, ...rest } = normalizedProviders;
-    setProviderState(rest);
-    if (
-      removed?.models?.some(
-        (model) =>
-          model.id === currentPreferences.selectedModelId ||
-          model.id === currentPreferences.selectedImageModelId,
-      )
-    )
-      setPreferences((previous) => ({
-        ...previous,
-        selectedModelId: undefined,
-        selectedImageModelId: undefined,
-      }));
+    setProviderState((previous) => {
+      const { [providerId]: _removed, ...next } = normalizeProviderState(
+        previous || {},
+      );
+      return next;
+    });
+    if (removed?.models?.length)
+      setPreferences((previous) =>
+        removed.models?.some(
+          (model) =>
+            model.id === previous.selectedModelId ||
+            model.id === previous.selectedImageModelId,
+        )
+          ? {
+              ...previous,
+              selectedModelId: undefined,
+              selectedImageModelId: undefined,
+            }
+          : previous,
+      );
   }
 
   return (
