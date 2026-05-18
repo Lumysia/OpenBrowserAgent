@@ -77,12 +77,14 @@ export function ModelSelect({
   value,
   models,
   emptyLabel,
+  disabled,
   onChange,
 }: {
   label: string;
   value?: string;
   models: ModelConfig[];
   emptyLabel: string;
+  disabled?: boolean;
   onChange: (value?: string) => void;
 }) {
   return (
@@ -90,6 +92,7 @@ export function ModelSelect({
       {label}
       <Select
         value={value || "none"}
+        disabled={disabled}
         onValueChange={(next) => onChange(next === "none" ? undefined : next)}
       >
         <SelectTrigger>

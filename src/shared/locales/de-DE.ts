@@ -173,6 +173,10 @@ export const deDE: LocaleMessages = {
       "Verbinden Sie OpenBrowserAgent mit Ihren bevorzugten KI-Anbietern über Ihren eigenen Schlüssel.",
     selectModel: "Modell auswählen",
     selectImageModel: "Bildmodell auswählen",
+    enableImageGeneration: "Bildgenerierung aktivieren",
+    enableImageGenerationDescription:
+      "Stellt dem Assistenten das Bildgenerierungswerkzeug bereit.",
+    imageGenerationSize: "Bildgröße",
     providerName: "Anbietername",
     deleteProvider: "Anbieter löschen",
     apiKey: "API-Schlüssel",

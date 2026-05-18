@@ -32,6 +32,8 @@ export type ProviderState = Record<string, ProviderConfig>;
 export type Preferences = {
   selectedModelId?: string;
   selectedImageModelId?: string;
+  imageGenerationEnabled?: boolean;
+  imageGenerationSize?: string;
   colorScheme?: "system" | "light" | "dark";
   accentColor?: "green" | "blue" | "pink" | "purple" | "amber";
   syncSettings?: boolean;
@@ -158,8 +160,19 @@ export type Chat = {
   id: string;
   title: string;
   messages: ChatMessage[];
+  sources?: ChatSource[];
   createdAt: number;
   updatedAt: number;
+};
+
+export type ChatSource = {
+  id: string;
+  kind: "page" | "search" | "file" | "image" | "skill" | "tool";
+  title: string;
+  url?: string;
+  tabId?: number;
+  snippet?: string;
+  createdAt: number;
 };
 
 export type ChatTab = {
@@ -198,6 +211,8 @@ export type SendMessagesBody = {
     text?: string;
     uploadedAttachments?: UploadedAttachment[];
     availableSkills?: Skill[];
+    sources?: ChatSource[];
+    imageGenerationEnabled?: boolean;
     autoSelectSkills?: boolean;
   };
 };

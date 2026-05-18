@@ -17,7 +17,6 @@ import {
   COPY_FEEDBACK_MS,
   SENT_ATTACHMENTS_PREVIEW_COUNT,
   SENT_TABS_PREVIEW_COUNT,
-  STREAM_RENDER_THROTTLE_MS,
 } from "../../src/shared/config";
 import { getMessages, type Messages } from "../../src/shared/i18n";
 import { getSkillDisplayName } from "../../src/shared/skills";
@@ -25,18 +24,15 @@ import { storage } from "../../src/shared/storage";
 import type {
   AttachmentTab,
   ChatMessage,
-  ChatPart,
+  ChatSource,
   SelectedElement,
   Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
-import { isToolPartType } from "../../src/shared/types";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { IconTooltip } from "./icon-tooltip";
 import { formatAttachmentSize } from "./file-attachments";
-import { renderMarkdown } from "./markdown";
-import { ToolPart } from "./tool-part";
-import { useThrottledText } from "./use-throttled-text";
+import { AssistantPart, AssistantText } from "./assistant-message-part";
 import {
   Button,
   Popover,
@@ -53,8 +49,10 @@ export function MessageBubble({
   onReplaceAttachment,
   onEdit,
   onResend,
+  sources = [],
 }: {
   message: ChatMessage;
+  sources?: ChatSource[];
   editing?: boolean;
   sentAttachments?: UploadedAttachment[];
   activeAttachments?: UploadedAttachment[];
@@ -75,6 +73,8 @@ export function MessageBubble({
     | { provider?: string; name?: string }
     | undefined;
   const hasParts = !!message.parts?.length;
+  const assistantText = assistantMessageText(message);
+  const displaySources = sourcesForAssistantMessage(message, sources);
   const metadataAttachments = Array.isArray(
     message.metadata?.uploadedAttachments,
   )
@@ -108,7 +108,7 @@ export function MessageBubble({
         <div className="user-bubble">{message.content}</div>
       ) : hasParts ? (
         message.parts?.map((part) => (
-          <AssistantPart key={part.id} t={t} part={part} />
+          <AssistantPart key={part.id} t={t} part={part} sources={sources} />
         ))
       ) : !message.content ? (
         <span className="typing-dots" aria-label="Thinking">
@@ -119,6 +119,7 @@ export function MessageBubble({
       ) : (
         <AssistantText
           text={message.content}
+          sources={sources}
           modelLabel={modelLabel}
           createdAt={message.createdAt}
         />
@@ -132,6 +133,9 @@ export function MessageBubble({
           </span>
         </div>
       )}
+      {message.role === "assistant" &&
+        !!assistantText &&
+        !!displaySources.length && <SourceChips sources={displaySources} />}
       {message.role === "user" && !!sentTabs.length && (
         <div className="sent-context-row">
           <SentTabsChip tabs={sentTabs} />
@@ -173,90 +177,64 @@ export function MessageBubble({
   );
 }
 
-function AssistantPart({ t, part }: { t: Messages; part: ChatPart }) {
-  if (isToolPartType(part.type)) return <ToolPart t={t} part={part} />;
-  if (part.type === "text" && part.text?.trim())
-    return <AssistantText text={part.text} />;
-  return null;
-}
-
-function AssistantText({
-  text,
-  modelLabel,
-  createdAt,
-}: {
-  text: string;
-  modelLabel?: string;
-  createdAt?: number;
-}) {
-  const [language] = useStoredState(storage.language);
-  const [copied, setCopied] = useState(false);
-  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
-  const t = getMessages(language);
-  const displayText = useThrottledText(text, STREAM_RENDER_THROTTLE_MS);
-  const { html, codeBlocks } = renderMarkdown(displayText, t, copiedCodeId);
-  const streaming = displayText.length < text.length;
-
-  useEffect(() => {
-    if (!copied) return undefined;
-    const timeout = window.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
-    return () => window.clearTimeout(timeout);
-  }, [copied]);
-
-  useEffect(() => {
-    if (!copiedCodeId) return undefined;
-    const timeout = window.setTimeout(
-      () => setCopiedCodeId(null),
-      COPY_FEEDBACK_MS,
-    );
-    return () => window.clearTimeout(timeout);
-  }, [copiedCodeId]);
-
-  async function copyCode(event: React.MouseEvent<HTMLDivElement>) {
-    const button = (event.target as HTMLElement | null)?.closest(
-      "button[data-code-index]",
-    ) as HTMLButtonElement | null;
-    if (!button) return;
-    const codeIndex = Number(button.dataset.codeIndex);
-    const code = codeBlocks[codeIndex];
-    if (!code) return;
-    await navigator.clipboard.writeText(code);
-    setCopiedCodeId(button.dataset.codeId || null);
-  }
-
-  function copyText() {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => setCopied(true))
-      .catch(() => undefined);
-  }
-
+function SourceChips({ sources }: { sources: ChatSource[] }) {
   return (
-    <div className={`assistant-text${streaming ? " streaming" : ""}`}>
-      <div
-        className="markdown"
-        dangerouslySetInnerHTML={{ __html: html }}
-        onClick={copyCode}
-      />
-      <div className="assistant-actions">
-        <IconTooltip label={copied ? t.common.copied : t.common.copy}>
-          <button
-            className={`copy-message${copied ? " copied" : ""}`}
-            onClick={copyText}
-          >
-            {copied ? <Check size={15} /> : <Copy size={15} />}
-          </button>
-        </IconTooltip>
-        {(modelLabel || createdAt) && (
-          <span className="assistant-model-meta">
-            {[modelLabel, createdAt ? formatMessageTime(createdAt) : ""]
-              .filter(Boolean)
-              .join(" · ")}
-          </span>
-        )}
-      </div>
+    <div className="source-chip-list">
+      {sources.map((source) => (
+        <button
+          key={source.id}
+          title={source.title}
+          onClick={() => openSource(source)}
+        >
+          <span>{source.id.replace(/^source_/, "")}</span>
+          {source.title}
+        </button>
+      ))}
     </div>
   );
+}
+
+function assistantMessageText(message: ChatMessage) {
+  if (message.role !== "assistant") return "";
+  if (!message.parts?.length) return message.content.trim();
+  return message.parts
+    .filter((part) => part.type === "text" || part.type === "reasoning")
+    .map((part) => part.text || "")
+    .join("")
+    .trim();
+}
+
+function sourcesForAssistantMessage(
+  message: ChatMessage,
+  sources: ChatSource[],
+) {
+  const text = assistantMessageText(message);
+  if (!text || !sources.length) return [];
+  const citedIds = Array.from(
+    text.matchAll(/\[\[cite:([\w-]+)\]\]/g),
+    (match) => match[1],
+  );
+  if (!citedIds.length)
+    return message.parts?.length && !lastAssistantPartIsText(message)
+      ? []
+      : sources;
+  const citedSet = new Set(citedIds);
+  return sources.filter((source) => citedSet.has(source.id));
+}
+
+function lastAssistantPartIsText(message: ChatMessage) {
+  const lastPart = message.parts
+    ?.filter((part) => part.type === "text" || part.type.startsWith("tool-"))
+    .at(-1);
+  return lastPart?.type === "text" && !!lastPart.text?.trim();
+}
+
+function openSource(source: ChatSource) {
+  if (source.url) {
+    chrome.tabs.create({ url: source.url });
+    return;
+  }
+  if (source.tabId) chrome.tabs.update(source.tabId, { active: true });
 }
 
 function SentTabsChip({ tabs }: { tabs: AttachmentTab[] }) {

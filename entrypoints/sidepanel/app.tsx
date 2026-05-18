@@ -15,7 +15,6 @@ import {
   type AiStreamRequest,
   type AiStreamResponse,
   type Chat,
-  type ChatMessage,
   type ChatMode,
   type SendMessagesRequest,
   type Skill,
@@ -172,7 +171,7 @@ export function SidepanelApp() {
     requestAnimationFrame(() => {
       messages.scrollTo({
         top: messages.scrollHeight,
-        behavior: streaming ? "auto" : "smooth",
+        behavior: "smooth",
       });
     });
   }, [currentChat?.messages, preferences?.autoScroll, streaming]);
@@ -228,7 +227,6 @@ export function SidepanelApp() {
       return next;
     });
   }
-
   async function send(
     content = input,
     resendAttachments?: UploadedAttachment[],
@@ -271,6 +269,7 @@ export function SidepanelApp() {
       text,
       t,
       context,
+      sources: baseChat.sources,
       assistantModel,
       sentTabs,
       sentElement,
@@ -315,6 +314,8 @@ export function SidepanelApp() {
           text: context,
           uploadedAttachments: activeAttachments,
           availableSkills,
+          sources: baseChat.sources || [],
+          imageGenerationEnabled: preferences?.imageGenerationEnabled,
           autoSelectSkills: preferences?.autoSelectSkills,
         },
       },
@@ -377,9 +378,7 @@ export function SidepanelApp() {
     }
     try {
       port.disconnect();
-    } catch {
-      // Disconnect is best-effort for stale ports.
-    }
+    } catch {}
   }
 
   function appendToAssistant(

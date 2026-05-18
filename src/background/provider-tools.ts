@@ -25,6 +25,7 @@ export function toolsForMode(
   mode: ChatMode,
   hasUploadedAttachments: boolean,
   hasSkills: boolean,
+  imageGenerationEnabled: boolean,
 ) {
   return browserTools.filter((item) => {
     const name = item.function.name;
@@ -34,7 +35,7 @@ export function toolsForMode(
     if (name === BROWSER_TOOL_NAME.readSkill) return hasSkills;
     if (name === BROWSER_TOOL_NAME.readSkillFile) return hasSkills;
     if (name === BROWSER_TOOL_NAME.updateSkillFile) return hasSkills;
-    if (name === BROWSER_TOOL_NAME.generateImage) return true;
+    if (name === BROWSER_TOOL_NAME.generateImage) return imageGenerationEnabled;
     return !isAskMode(mode);
   });
 }

@@ -78,6 +78,8 @@ const DEFAULT_PREFERENCES: Preferences = {
   autoSelectSkills: false,
   autoScroll: true,
   autoRetry: true,
+  imageGenerationEnabled: false,
+  imageGenerationSize: "1024x1024",
   maxToolSteps: 30,
 };
 

@@ -6,7 +6,7 @@ import {
   Trash2,
 } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
-import type { Chat, ChatMode } from "../../src/shared/types";
+import type { Chat, ChatMode, Preferences } from "../../src/shared/types";
 import {
   Button,
   Popover,
@@ -21,6 +21,7 @@ export function SidepanelHeader({
   t,
   currentChat,
   mode,
+  preferences,
   chats,
   showHistory,
   onSetChats,
@@ -32,6 +33,7 @@ export function SidepanelHeader({
   t: Messages;
   currentChat?: Chat;
   mode: ChatMode;
+  preferences?: Preferences;
   chats: Chat[];
   showHistory: boolean;
   onSetChats: (value: Chat[]) => void;
@@ -60,7 +62,9 @@ export function SidepanelHeader({
               variant="ghost"
               size="icon"
               disabled={!currentChat?.messages.length}
-              onClick={() => exportChatAsOpenAiJson(currentChat, mode)}
+              onClick={() =>
+                exportChatAsOpenAiJson(currentChat, mode, preferences)
+              }
             >
               <Download size={18} />
             </Button>

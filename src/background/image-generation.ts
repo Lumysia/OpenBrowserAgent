@@ -1,4 +1,5 @@
 import { ATTACHMENT_KIND } from "../shared/attachments";
+import { storage } from "../shared/storage";
 import type { UploadedAttachment } from "../shared/types";
 import { resolveImageModel } from "./model-resolver";
 
@@ -10,7 +11,12 @@ export async function generateImage(
 ) {
   const prompt = String(input.prompt || "").trim();
   if (!prompt) return { error: "Missing image prompt" };
+  const preferences = await storage.preferences.get();
   const model = await resolveImageModel(stringInput(input.modelId));
+  const size =
+    stringInput(input.size) ||
+    preferences.imageGenerationSize ||
+    DEFAULT_IMAGE_SIZE;
   const references = referenceAttachments(
     attachments,
     input.referenceAttachmentIds,
@@ -30,8 +36,8 @@ export async function generateImage(
     ? `${prompt}\n\n${textReferences}`
     : prompt;
   const result = imageReferences.length
-    ? await editImage(model, finalPrompt, imageReferences[0], input)
-    : await createImage(model, finalPrompt, input);
+    ? await editImage(model, finalPrompt, imageReferences[0], input, size)
+    : await createImage(model, finalPrompt, input, size);
   return {
     ...result,
     prompt: finalPrompt,
@@ -44,6 +50,7 @@ async function createImage(
   model: Awaited<ReturnType<typeof resolveImageModel>>,
   prompt: string,
   input: Record<string, unknown>,
+  size: string,
 ) {
   const response = await fetch(
     `${model.baseUrl.replace(/\/$/, "")}/images/generations`,
@@ -56,7 +63,7 @@ async function createImage(
       body: JSON.stringify({
         model: model.modelName,
         prompt,
-        size: stringInput(input.size) || DEFAULT_IMAGE_SIZE,
+        size,
         quality: stringInput(input.quality) || undefined,
         n: numberInput(input.count) || 1,
         response_format: "b64_json",
@@ -71,11 +78,12 @@ async function editImage(
   prompt: string,
   image: UploadedAttachment,
   input: Record<string, unknown>,
+  size: string,
 ) {
   const form = new FormData();
   form.append("model", model.modelName);
   form.append("prompt", prompt);
-  form.append("size", stringInput(input.size) || DEFAULT_IMAGE_SIZE);
+  form.append("size", size);
   form.append("n", String(numberInput(input.count) || 1));
   form.append("image", dataUrlFile(image));
   const response = await fetch(

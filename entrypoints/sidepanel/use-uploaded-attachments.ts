@@ -16,8 +16,9 @@ export function useUploadedAttachments(t: Messages) {
   );
 
   async function attachFiles(files: FileList | File[]) {
+    const selectedFiles = Array.from(files);
     const { attachments, rejectedNames } = await readUploadAttachments(
-      files,
+      selectedFiles,
       attachmentBytes(uploadedAttachments),
     );
     if (attachments.length) {

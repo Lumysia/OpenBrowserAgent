@@ -1,4 +1,5 @@
 import { browserTools } from "../../src/background/tool-schema";
+import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
 import { createSystemPrompt } from "../../src/shared/system-prompt";
 import { isToolPartType } from "../../src/shared/types";
 import type {
@@ -6,6 +7,7 @@ import type {
   ChatMessage,
   ChatMode,
   ChatPart,
+  Preferences,
 } from "../../src/shared/types";
 
 type OpenAiExportMessage =
@@ -26,14 +28,27 @@ type OpenAiToolCall = {
   };
 };
 
-export function exportChatAsOpenAiJson(chat: Chat | undefined, mode: ChatMode) {
+export function exportChatAsOpenAiJson(
+  chat: Chat | undefined,
+  mode: ChatMode,
+  preferences?: Preferences,
+) {
   if (!chat) return;
+  const imageGenerationEnabled = !!preferences?.imageGenerationEnabled;
   const payload = {
     messages: [
-      { role: "system" as const, content: createSystemPrompt(mode) },
+      {
+        role: "system" as const,
+        content: createSystemPrompt(mode, { imageGenerationEnabled }),
+      },
       ...chat.messages.flatMap(toOpenAiMessages),
     ],
-    tools: browserTools,
+    tools: imageGenerationEnabled
+      ? browserTools
+      : browserTools.filter(
+          (tool) => tool.function.name !== BROWSER_TOOL_NAME.generateImage,
+        ),
+    sources: chat.sources || [],
     parallel_tool_calls: true,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {

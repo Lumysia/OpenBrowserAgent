@@ -178,6 +178,10 @@ export const frFR: LocaleMessages = {
       "Utilisez votre propre clé et connectez OpenBrowserAgent à vos fournisseurs IA favoris.",
     selectModel: "Sélectionner un modèle",
     selectImageModel: "Sélectionner un modèle d’image",
+    enableImageGeneration: "Activer la génération d’images",
+    enableImageGenerationDescription:
+      "Expose l’outil de génération d’images à l’assistant.",
+    imageGenerationSize: "Taille de l’image",
     providerName: "Nom du fournisseur",
     deleteProvider: "Supprimer le fournisseur",
     apiKey: "Clé API",

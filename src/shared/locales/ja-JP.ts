@@ -174,6 +174,10 @@ export const jaJP: LocaleMessages = {
       "自分のキーでOpenBrowserAgentをお気に入りのAIプロバイダーに接続します。",
     selectModel: "モデルを選択",
     selectImageModel: "画像モデルを選択",
+    enableImageGeneration: "画像生成を有効化",
+    enableImageGenerationDescription:
+      "アシスタントに画像生成ツールを公開します。",
+    imageGenerationSize: "画像サイズ",
     providerName: "プロバイダー名",
     deleteProvider: "プロバイダーを削除",
     apiKey: "APIキー",

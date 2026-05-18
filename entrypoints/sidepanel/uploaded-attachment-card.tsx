@@ -22,7 +22,8 @@ export function UploadFileInput({
       type="file"
       multiple
       onChange={(event) => {
-        if (event.target.files) void onAttachFiles(event.target.files);
+        if (event.target.files)
+          void onAttachFiles(Array.from(event.target.files));
         event.target.value = "";
       }}
     />

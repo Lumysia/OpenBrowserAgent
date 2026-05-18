@@ -119,7 +119,9 @@ async function streamAssistantResponse(
 ) {
   const providerModel = await resolveModel(request.body.modelId);
   const t = getMessages(request.body.language);
-  const system = createSystemPrompt(request.body.chatMode);
+  const system = createSystemPrompt(request.body.chatMode, {
+    imageGenerationEnabled: !!request.body.context?.imageGenerationEnabled,
+  });
   const text = await requestOpenAICompatible(
     providerModel,
     system,

@@ -4,6 +4,7 @@ import type {
   AttachmentTab,
   Chat,
   ChatMessage,
+  ChatSource,
   SelectedElement,
   Skill,
   UploadedAttachment,
@@ -18,6 +19,7 @@ export function createSendMessagePlan({
   sentElement,
   sentAttachments,
   context,
+  sources,
   assistantModel,
   skill,
   autoSelectedSkill,
@@ -29,6 +31,7 @@ export function createSendMessagePlan({
   sentElement: SelectedElement | null;
   sentAttachments: UploadedAttachment[];
   context: string;
+  sources?: ChatSource[];
   assistantModel?: { provider: string; name: string };
   skill?: Skill;
   autoSelectedSkill?: boolean;
@@ -40,6 +43,7 @@ export function createSendMessagePlan({
     createdAt: Date.now(),
     metadata: {
       ...(context ? { context } : {}),
+      ...(sources?.length ? { sources } : {}),
       ...(sentTabs.length ? { attachedTabs: sentTabs } : {}),
       ...(sentElement ? { selectedElement: sentElement } : {}),
       ...(sentAttachments.length

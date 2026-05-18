@@ -29,6 +29,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Switch,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import {
@@ -114,11 +115,38 @@ export function ProvidersPage() {
           value={preferences.selectedImageModelId}
           models={configuredModels}
           emptyLabel={t.options.selectImageModel}
+          disabled={!preferences.imageGenerationEnabled}
           onChange={(selectedImageModelId) =>
             setPreferences({ ...preferences, selectedImageModelId })
           }
         />
       </div>
+      <div className="setting-switch-row">
+        <div>
+          <strong>{t.options.enableImageGeneration}</strong>
+          <p className="muted">{t.options.enableImageGenerationDescription}</p>
+        </div>
+        <Switch
+          checked={!!preferences.imageGenerationEnabled}
+          onCheckedChange={(imageGenerationEnabled) =>
+            setPreferences({ ...preferences, imageGenerationEnabled })
+          }
+        />
+      </div>
+      <Label>
+        {t.options.imageGenerationSize}
+        <Input
+          value={preferences.imageGenerationSize || "1024x1024"}
+          placeholder="1024x1024"
+          disabled={!preferences.imageGenerationEnabled}
+          onChange={(event) =>
+            setPreferences({
+              ...preferences,
+              imageGenerationSize: event.target.value,
+            })
+          }
+        />
+      </Label>
       <div className="row">
         <Select
           value={providerType}

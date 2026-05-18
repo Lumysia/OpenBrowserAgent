@@ -9,6 +9,7 @@ import typescript from "highlight.js/lib/languages/typescript";
 import xml from "highlight.js/lib/languages/xml";
 import { marked } from "marked";
 import type { Messages } from "../../src/shared/i18n";
+import type { ChatSource } from "../../src/shared/types";
 
 hljs.registerLanguage("bash", bash);
 hljs.registerLanguage("sh", bash);
@@ -31,6 +32,7 @@ export function renderMarkdown(
   text: string,
   t: Messages,
   copiedCodeId: string | null,
+  sources: ChatSource[] = [],
 ) {
   const codeBlocks: string[] = [];
   const renderer = new marked.Renderer();
@@ -45,7 +47,22 @@ export function renderMarkdown(
     );
     return `<div class="markdown-code-block${copied ? " copied" : ""}"><div class="markdown-code-header"><span>${displayLanguage}</span><button type="button" class="code-copy" title="${copied ? escapeHtml(t.common.copied) : escapeHtml(t.common.copy)}" data-code-index="${codeIndex}" data-code-id="${codeId}" aria-label="${escapeHtml(t.common.copy)}"><svg class="code-copy-icon code-copy-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="code-copy-icon code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></button></div><pre><code class="hljs${language ? ` language-${escapeHtml(language)}` : ""}">${highlighted.html}</code></pre></div>`;
   };
-  return { html: marked.parse(text, { renderer }), codeBlocks };
+  return {
+    html: marked.parse(renderCitations(text, sources), { renderer }),
+    codeBlocks,
+  };
+}
+
+function renderCitations(text: string, sources: ChatSource[]) {
+  return text.replace(/\[\[cite:([\w-]+)\]\]/g, (_match, sourceId: string) => {
+    const source = sources.find((item) => item.id === sourceId);
+    if (!source) return "";
+    return `<button type="button" class="citation-chip" data-source-id="${escapeHtml(source.id)}" title="${escapeHtml(source.title)}">${escapeHtml(citationLabel(source.id))}</button>`;
+  });
+}
+
+function citationLabel(sourceId: string) {
+  return sourceId.replace(/^source_/, "");
 }
 
 function highlightCode(code: string, language: string) {

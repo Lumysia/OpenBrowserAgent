@@ -156,6 +156,10 @@ export const ptBR: LocaleMessages = {
       "Use sua própria chave e conecte o OpenBrowserAgent aos seus provedores de IA favoritos.",
     selectModel: "Selecionar modelo",
     selectImageModel: "Selecionar modelo de imagem",
+    enableImageGeneration: "Ativar geração de imagens",
+    enableImageGenerationDescription:
+      "Disponibiliza a ferramenta de geração de imagens para o assistente.",
+    imageGenerationSize: "Tamanho da imagem",
     providerName: "Nome do provedor",
     deleteProvider: "Excluir provedor",
     apiKey: "Chave de API",

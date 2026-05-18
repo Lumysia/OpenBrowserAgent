@@ -166,6 +166,10 @@ export const enUS = {
       "Bring your own key and connect OpenBrowserAgent to your favorite AI providers.",
     selectModel: "Select model",
     selectImageModel: "Select image model",
+    enableImageGeneration: "Enable image generation",
+    enableImageGenerationDescription:
+      "Expose the image generation tool to the assistant.",
+    imageGenerationSize: "Image size",
     providerName: "Provider name",
     deleteProvider: "Delete provider",
     apiKey: "API Key",

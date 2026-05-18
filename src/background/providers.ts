@@ -1,5 +1,10 @@
 import { BROWSER_TOOL_NAME, UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
+import { storage } from "../shared/storage";
 import { MODEL_TEMPERATURE, STREAM_CHUNK_DELAY_MS } from "../shared/config";
+import {
+  assignChatSources,
+  extractSourcesFromTool,
+} from "../shared/chat-sources";
 import {
   AI_TEXT_CHUNK_TYPE,
   CHAT_PART_STATE,
@@ -7,6 +12,7 @@ import {
   type AiStreamResponse,
   type ChatMessage,
   type ChatMode,
+  type ChatSource,
   type ProviderId,
   type Skill,
   type UploadedAttachment,
@@ -79,8 +85,10 @@ export async function requestOpenAICompatible(
     mode,
     uploadedAttachments.length > 0,
     availableSkills.length > 0,
+    !!(await storage.preferences.get()).imageGenerationEnabled,
   );
   const useTools = maxToolSteps > 0 && availableTools.length > 0;
+  let responseSources = getMessageSources(messages);
 
   async function fetchChatCompletion(body: Record<string, unknown>) {
     const response = await fetch(chatUrl, {
@@ -168,12 +176,19 @@ export async function requestOpenAICompatible(
           input,
         },
       });
-      const output = await executeContextAwareTool({
+      const rawOutput = await executeContextAwareTool({
         toolName,
         input,
         uploadedAttachments,
         availableSkills,
       });
+      const output = attachToolSources(
+        toolName,
+        input,
+        rawOutput,
+        responseSources,
+      );
+      responseSources = mergeOutputSources(responseSources, output);
       const hasError = isToolError(output);
       post(port, {
         type: "chunk",
@@ -410,8 +425,10 @@ async function requestGemini(
     mode,
     uploadedAttachments.length > 0,
     availableSkills.length > 0,
+    !!(await storage.preferences.get()).imageGenerationEnabled,
   );
   const useTools = maxToolSteps > 0 && availableTools.length > 0;
+  let responseSources = getMessageSources(messages);
 
   if (!useTools) {
     const response = await fetchGemini({
@@ -480,12 +497,19 @@ async function requestGemini(
           input,
         },
       });
-      const output = await executeContextAwareTool({
+      const rawOutput = await executeContextAwareTool({
         toolName,
         input,
         uploadedAttachments,
         availableSkills,
       });
+      const output = attachToolSources(
+        toolName,
+        input,
+        rawOutput,
+        responseSources,
+      );
+      responseSources = mergeOutputSources(responseSources, output);
       const hasError = isToolError(output);
       post(port, {
         type: "chunk",
@@ -526,4 +550,35 @@ async function requestGemini(
       ?.map((part: { text?: string }) => part.text || "")
       .join("") || ""
   );
+}
+
+function attachToolSources(
+  toolName: string,
+  input: Record<string, unknown>,
+  output: unknown,
+  currentSources: ChatSource[],
+) {
+  if (!output || typeof output !== "object") return output;
+  const record = output as Record<string, unknown>;
+  const extracted = extractSourcesFromTool(toolName, input, record);
+  if (toolName === BROWSER_TOOL_NAME.groupTabs && currentSources.length)
+    return { ...record, _sources: currentSources };
+  if (!extracted.length) return output;
+  const { added } = assignChatSources(currentSources, extracted);
+  return added.length ? { ...record, _sources: added } : output;
+}
+
+function mergeOutputSources(current: ChatSource[], output: unknown) {
+  if (!output || typeof output !== "object") return current;
+  const sources = (output as Record<string, unknown>)._sources;
+  return Array.isArray(sources)
+    ? assignChatSources(current, sources as ChatSource[]).sources
+    : current;
+}
+
+function getMessageSources(messages: ChatMessage[]): ChatSource[] {
+  const latest = messages[messages.length - 1];
+  return Array.isArray(latest?.metadata?.sources)
+    ? (latest.metadata.sources as ChatSource[])
+    : [];
 }

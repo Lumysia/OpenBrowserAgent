@@ -191,6 +191,7 @@ export function SidepanelView({
           t={t}
           currentChat={currentChat}
           mode={mode}
+          preferences={preferences}
           chats={chats}
           showHistory={showHistory}
           onSetChats={onSetChats}
@@ -213,6 +214,7 @@ export function SidepanelView({
               key={message.id}
               message={message}
               editing={editingMessageId === message.id}
+              sources={currentChat.sources || []}
               sentAttachments={sentAttachmentPreviews[message.id] || []}
               activeAttachments={uploadedAttachments}
               onReplaceAttachment={onReplaceUploadedAttachment}

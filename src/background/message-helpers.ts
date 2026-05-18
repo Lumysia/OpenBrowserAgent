@@ -8,10 +8,12 @@ import {
   AI_TEXT_CHUNK_TYPE,
   type AiStreamResponse,
   type ChatMessage,
+  type ChatSource,
   type Skill,
   type UploadedAttachment,
 } from "../shared/types";
 import { getSkillInstruction } from "../shared/skills";
+import { renderSourcesForPrompt } from "../shared/chat-sources";
 
 export function postText(
   port: chrome.runtime.Port,
@@ -102,6 +104,8 @@ ${renderAttachmentContext(attachments)}
 
 ${renderSkillToolHint(availableSkills)}
 
+${renderSourcesForPrompt(getMessageSources(message))}
+
 </message_context>
 
 <message>
@@ -119,6 +123,12 @@ Skills may be available. Be proactive: for complex tasks, unclear context, uncer
 export function getUploadedAttachments(message: ChatMessage) {
   return Array.isArray(message.metadata?.uploadedAttachments)
     ? (message.metadata.uploadedAttachments as UploadedAttachment[])
+    : [];
+}
+
+function getMessageSources(message: ChatMessage): ChatSource[] {
+  return Array.isArray(message.metadata?.sources)
+    ? (message.metadata.sources as ChatSource[])
     : [];
 }
 
