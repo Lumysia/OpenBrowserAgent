@@ -1,10 +1,6 @@
 import { nanoid } from "nanoid";
 import { BUILTIN_SKILLS } from "./builtin-skills";
-import {
-  DEFAULT_MAX_TOOL_STEPS,
-  SYNC_MAX_BYTES_PER_ITEM,
-  SYNC_WRITE_DEBOUNCE_MS,
-} from "./config";
+import * as config from "./config";
 import type { Chat, ChatTab, Preferences, ProviderState, Skill } from "./types";
 
 const STORAGE_AREAS = {
@@ -86,7 +82,8 @@ const DEFAULT_PREFERENCES: Preferences = {
   cdpToolsEnabled: false,
   imageGenerationEnabled: false,
   imageGenerationSize: "1024x1024",
-  maxToolSteps: DEFAULT_MAX_TOOL_STEPS,
+  maxToolSteps: config.DEFAULT_MAX_TOOL_STEPS,
+  ...config.DEFAULT_CONTEXT_BUDGET_PREFERENCES,
 };
 
 export function getBrowserApi() {
@@ -127,7 +124,7 @@ async function setStoredValue<T>(area: AreaName, key: string, value: T) {
       pending.reject.push(reject);
       pending.timeoutId = setTimeout(
         () => flushSyncWrite(key),
-        SYNC_WRITE_DEBOUNCE_MS,
+        config.SYNC_WRITE_DEBOUNCE_MS,
       );
       updateSyncWriteStatus().catch(() => undefined);
       return;
@@ -137,7 +134,10 @@ async function setStoredValue<T>(area: AreaName, key: string, value: T) {
       value,
       resolve: [resolve],
       reject: [reject],
-      timeoutId: setTimeout(() => flushSyncWrite(key), SYNC_WRITE_DEBOUNCE_MS),
+      timeoutId: setTimeout(
+        () => flushSyncWrite(key),
+        config.SYNC_WRITE_DEBOUNCE_MS,
+      ),
     });
     updateSyncWriteStatus().catch(() => undefined);
   });
@@ -152,9 +152,9 @@ function assertSyncItemFits(key: string, value: unknown) {
   const size = new TextEncoder().encode(
     JSON.stringify({ [key]: value }),
   ).length;
-  if (size <= SYNC_MAX_BYTES_PER_ITEM) return;
+  if (size <= config.SYNC_MAX_BYTES_PER_ITEM) return;
   throw new Error(
-    `${SYNC_QUOTA_ERROR_PREFIX}: "${key}" is ${size} bytes; limit is ${SYNC_MAX_BYTES_PER_ITEM} bytes. Keep this data local or remove old entries before enabling sync.`,
+    `${SYNC_QUOTA_ERROR_PREFIX}: "${key}" is ${size} bytes; limit is ${config.SYNC_MAX_BYTES_PER_ITEM} bytes. Keep this data local or remove old entries before enabling sync.`,
   );
 }
 

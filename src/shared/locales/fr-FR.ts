@@ -86,6 +86,9 @@ export const frFR: LocaleMessages = {
       reasoning: "Raisonnement",
       estimated: "estimé",
       promptBreakdown: "Répartition du prompt",
+      contextSaved: "Contexte économisé",
+      contextPrunedMessages: "Messages élagués",
+      contextToolResults: "Résultats d’outil élagués",
       prebuiltPrompt: "Prompt préconfiguré",
       userPrompt: "Prompt utilisateur",
       conversationPrompt: "Conversation",
@@ -372,6 +375,15 @@ export const frFR: LocaleMessages = {
     maxToolSteps: "Nombre maximal d'étapes d'outils",
     maxToolStepsDescription:
       "Définit combien d'étapes d'outils navigateur l'assistant peut exécuter. Utilisez 0 pour désactiver les outils.",
+    contextBudget: "Budget de contexte",
+    contextBudgetDescription:
+      "Limite ce que chaque requête modèle transporte afin que les longues discussions restent réactives et que les sorties d'outils ne prennent pas toute la place.",
+    contextBudgetEnabled: "Activer le gestionnaire de budget",
+    contextBudgetEnabledDescription:
+      "Élague uniquement la requête en cours. L'historique enregistré reste intact.",
+    contextRequestMaxChars: "Caractères du budget de requête",
+    contextTailMinMessages: "Messages récents à préserver",
+    contextToolResultMaxChars: "Limite de caractères des résultats d'outil",
     debug: "Débogage",
     debugDescription:
       "Outils développeur pour réinitialiser les données d'OpenBrowserAgent.",

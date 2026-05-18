@@ -82,6 +82,9 @@ export const zhCN: LocaleMessages = {
       reasoning: "推理",
       estimated: "估算",
       promptBreakdown: "Prompt 组成",
+      contextSaved: "已节省上下文",
+      contextPrunedMessages: "已裁剪消息",
+      contextToolResults: "已裁剪工具结果",
       prebuiltPrompt: "预制 Prompt",
       userPrompt: "用户 Prompt",
       conversationPrompt: "对话历史",
@@ -308,6 +311,15 @@ export const zhCN: LocaleMessages = {
     maxToolSteps: "最大工具步数",
     maxToolStepsDescription:
       "设置 AI 最多执行多少次浏览器工具；填 0 表示不允许调用工具。",
+    contextBudget: "上下文预算",
+    contextBudgetDescription:
+      "限制每次模型请求携带的内容，让长对话保持响应速度，并避免工具输出挤占任务上下文。",
+    contextBudgetEnabled: "启用上下文预算管理",
+    contextBudgetEnabledDescription:
+      "只裁剪本次发送给模型的请求，已保存的聊天历史保持完整。",
+    contextRequestMaxChars: "请求预算字符数",
+    contextTailMinMessages: "保留的最近消息数",
+    contextToolResultMaxChars: "工具结果字符上限",
     debug: "调试",
     debugDescription: "用于重置 OpenBrowserAgent 数据的开发工具。",
     debugResetTitle: "清除 OpenBrowserAgent 数据",

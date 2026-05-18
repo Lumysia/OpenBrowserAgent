@@ -5,6 +5,7 @@ import type { Messages } from "../../src/shared/i18n";
 import { PROMPT_BREAKDOWN_SEGMENT } from "../../src/shared/prompt-breakdown";
 import type {
   ChatMessage,
+  ContextBudgetReport,
   PromptBreakdown,
   RunMetrics,
   TokenUsage,
@@ -98,6 +99,7 @@ function RunInfoSection({
         value={modeLabel(t, metrics.outputMode)}
       />
       <PromptBreakdownBar breakdown={metrics.promptBreakdown} t={t} />
+      <ContextBudgetRows budget={metrics.contextBudget} t={t} />
       <div className="run-info-token-grid">
         <MetricRow
           label={t.sidepanel.runInfo.input}
@@ -124,6 +126,37 @@ function RunInfoSection({
           value={formatNumber(metrics.usage?.reasoningTokens, t)}
         />
       </div>
+    </div>
+  );
+}
+
+function ContextBudgetRows({
+  budget,
+  t,
+}: {
+  budget: ContextBudgetReport | undefined;
+  t: Messages;
+}) {
+  if (
+    !budget?.prunedChars &&
+    !budget?.prunedMessages &&
+    !budget?.truncatedToolResults
+  )
+    return null;
+  return (
+    <div className="run-info-token-grid">
+      <MetricRow
+        label={t.sidepanel.runInfo.contextSaved}
+        value={`${budget.prunedChars.toLocaleString()} ${t.sidepanel.runInfo.characters}`}
+      />
+      <MetricRow
+        label={t.sidepanel.runInfo.contextPrunedMessages}
+        value={budget.prunedMessages.toLocaleString()}
+      />
+      <MetricRow
+        label={t.sidepanel.runInfo.contextToolResults}
+        value={budget.truncatedToolResults.toLocaleString()}
+      />
     </div>
   );
 }
@@ -202,12 +235,30 @@ function aggregateRunMetrics(messages: ChatMessage[]): RunMetrics {
       (total, metrics) => addPromptBreakdown(total, metrics.promptBreakdown),
       {},
     ),
+    contextBudget: runs.reduce<ContextBudgetReport>(
+      (total, metrics) => addContextBudget(total, metrics.contextBudget),
+      {} as ContextBudgetReport,
+    ),
     outputCharacters: runs.reduce(
       (total, metrics) => total + (metrics.outputCharacters || 0),
       0,
     ),
     metadataGenerationMs: generationMs,
   } as RunMetrics & { metadataGenerationMs?: number };
+}
+
+function addContextBudget(
+  total: ContextBudgetReport,
+  budget: ContextBudgetReport | undefined,
+): ContextBudgetReport {
+  return {
+    originalChars: add(total.originalChars, budget?.originalChars) || 0,
+    finalChars: add(total.finalChars, budget?.finalChars) || 0,
+    prunedChars: add(total.prunedChars, budget?.prunedChars) || 0,
+    prunedMessages: add(total.prunedMessages, budget?.prunedMessages) || 0,
+    truncatedToolResults:
+      add(total.truncatedToolResults, budget?.truncatedToolResults) || 0,
+  };
 }
 
 function addPromptBreakdown(

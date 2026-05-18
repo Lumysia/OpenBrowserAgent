@@ -1,4 +1,9 @@
-import type { Chat, ChatPart, RunMetrics } from "../../src/shared/types";
+import type {
+  Chat,
+  ChatPart,
+  ContextBudgetReport,
+  RunMetrics,
+} from "../../src/shared/types";
 import {
   extractSourcesFromPart,
   mergeChatSources,
@@ -102,7 +107,26 @@ function mergeRunMetrics(
       ...current,
       ...metrics,
       usage: { ...(current.usage || {}), ...(metrics.usage || {}) },
+      contextBudget: addContextBudget(
+        current.contextBudget,
+        metrics.contextBudget,
+      ),
     },
+  };
+}
+
+function addContextBudget(
+  current: ContextBudgetReport | undefined,
+  next: ContextBudgetReport | undefined,
+) {
+  if (!next) return current;
+  return {
+    originalChars: (current?.originalChars || 0) + next.originalChars,
+    finalChars: (current?.finalChars || 0) + next.finalChars,
+    prunedChars: (current?.prunedChars || 0) + next.prunedChars,
+    prunedMessages: (current?.prunedMessages || 0) + next.prunedMessages,
+    truncatedToolResults:
+      (current?.truncatedToolResults || 0) + next.truncatedToolResults,
   };
 }
 

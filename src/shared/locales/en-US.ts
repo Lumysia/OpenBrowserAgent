@@ -86,6 +86,9 @@ export const enUS = {
       reasoning: "Reasoning",
       estimated: "estimated",
       promptBreakdown: "Prompt breakdown",
+      contextSaved: "Context saved",
+      contextPrunedMessages: "Pruned messages",
+      contextToolResults: "Tool results pruned",
       prebuiltPrompt: "Prebuilt prompt",
       userPrompt: "User prompt",
       conversationPrompt: "Conversation",
@@ -352,6 +355,15 @@ export const enUS = {
     maxToolSteps: "Max Tool Steps",
     maxToolStepsDescription:
       "Set how many browser tool steps the assistant may run. Use 0 to disable tool calls.",
+    contextBudget: "Context Budget",
+    contextBudgetDescription:
+      "Limit what each model request carries so long chats stay responsive and tool output does not crowd out the task.",
+    contextBudgetEnabled: "Enable context budget manager",
+    contextBudgetEnabledDescription:
+      "Prune only the in-flight request. Saved chat history remains intact.",
+    contextRequestMaxChars: "Request budget characters",
+    contextTailMinMessages: "Recent messages to preserve",
+    contextToolResultMaxChars: "Tool result character cap",
     debug: "Debug",
     debugDescription: "Developer tools for resetting OpenBrowserAgent data.",
     debugResetTitle: "Clear OpenBrowserAgent data",

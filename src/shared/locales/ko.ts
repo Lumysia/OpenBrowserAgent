@@ -84,6 +84,9 @@ export const ko: LocaleMessages = {
       reasoning: "추론",
       estimated: "추정",
       promptBreakdown: "프롬프트 구성",
+      contextSaved: "절약한 컨텍스트",
+      contextPrunedMessages: "정리된 메시지",
+      contextToolResults: "정리된 도구 결과",
       prebuiltPrompt: "사전 프롬프트",
       userPrompt: "사용자 프롬프트",
       conversationPrompt: "대화 기록",
@@ -346,6 +349,15 @@ export const ko: LocaleMessages = {
     maxToolSteps: "최대 도구 단계",
     maxToolStepsDescription:
       "어시스턴트가 실행할 수 있는 브라우저 도구 단계 수를 설정합니다. 0은 도구 호출을 비활성화합니다.",
+    contextBudget: "컨텍스트 예산",
+    contextBudgetDescription:
+      "각 모델 요청에 포함되는 내용을 제한해 긴 채팅도 빠르게 유지하고 도구 출력이 작업 컨텍스트를 밀어내지 않게 합니다.",
+    contextBudgetEnabled: "컨텍스트 예산 관리자 사용",
+    contextBudgetEnabledDescription:
+      "전송 중인 요청만 정리합니다. 저장된 채팅 기록은 그대로 유지됩니다.",
+    contextRequestMaxChars: "요청 예산 문자 수",
+    contextTailMinMessages: "보존할 최근 메시지 수",
+    contextToolResultMaxChars: "도구 결과 문자 제한",
     debug: "디버그",
     debugDescription: "OpenBrowserAgent 데이터를 초기화하는 개발자 도구입니다.",
     debugResetTitle: "OpenBrowserAgent 데이터 지우기",

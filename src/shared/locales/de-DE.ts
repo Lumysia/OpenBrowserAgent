@@ -86,6 +86,9 @@ export const deDE: LocaleMessages = {
       reasoning: "Reasoning",
       estimated: "geschätzt",
       promptBreakdown: "Prompt-Aufteilung",
+      contextSaved: "Gesparter Kontext",
+      contextPrunedMessages: "Gekürzte Nachrichten",
+      contextToolResults: "Gekürzte Tool-Ergebnisse",
       prebuiltPrompt: "Vordefinierter Prompt",
       userPrompt: "Nutzer-Prompt",
       conversationPrompt: "Unterhaltung",
@@ -366,6 +369,15 @@ export const deDE: LocaleMessages = {
     maxToolSteps: "Maximale Tool-Schritte",
     maxToolStepsDescription:
       "Legt fest, wie viele Browser-Tool-Schritte der Assistent ausführen darf. 0 deaktiviert Tool-Aufrufe.",
+    contextBudget: "Kontextbudget",
+    contextBudgetDescription:
+      "Begrenzt, was jede Modellanfrage enthält, damit lange Chats reaktionsfähig bleiben und Tool-Ausgaben die Aufgabe nicht verdrängen.",
+    contextBudgetEnabled: "Kontextbudget-Manager aktivieren",
+    contextBudgetEnabledDescription:
+      "Kürzt nur die laufende Anfrage. Der gespeicherte Chatverlauf bleibt vollständig erhalten.",
+    contextRequestMaxChars: "Zeichenbudget pro Anfrage",
+    contextTailMinMessages: "Zu erhaltende neueste Nachrichten",
+    contextToolResultMaxChars: "Zeichenlimit für Tool-Ergebnisse",
     debug: "Debug",
     debugDescription:
       "Entwicklerwerkzeuge zum Zurücksetzen von OpenBrowserAgent-Daten.",

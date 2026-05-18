@@ -85,6 +85,9 @@ export const ptBR: LocaleMessages = {
       reasoning: "Raciocínio",
       estimated: "estimado",
       promptBreakdown: "Divisão do prompt",
+      contextSaved: "Contexto economizado",
+      contextPrunedMessages: "Mensagens podadas",
+      contextToolResults: "Resultados de ferramenta podados",
       prebuiltPrompt: "Prompt predefinido",
       userPrompt: "Prompt do usuário",
       conversationPrompt: "Conversa",
@@ -347,6 +350,16 @@ export const ptBR: LocaleMessages = {
     maxToolSteps: "Máximo de etapas de ferramentas",
     maxToolStepsDescription:
       "Define quantas etapas de ferramentas do navegador o assistente pode executar. Use 0 para desativar ferramentas.",
+    contextBudget: "Orçamento de contexto",
+    contextBudgetDescription:
+      "Limita o que cada solicitação ao modelo carrega para manter chats longos responsivos e evitar que saídas de ferramentas ocupem o contexto da tarefa.",
+    contextBudgetEnabled: "Ativar gerenciador de orçamento",
+    contextBudgetEnabledDescription:
+      "Poda apenas a solicitação em andamento. O histórico salvo permanece intacto.",
+    contextRequestMaxChars: "Caracteres do orçamento da solicitação",
+    contextTailMinMessages: "Mensagens recentes a preservar",
+    contextToolResultMaxChars:
+      "Limite de caracteres de resultados de ferramenta",
     debug: "Depuração",
     debugDescription:
       "Ferramentas de desenvolvedor para redefinir dados do OpenBrowserAgent.",

@@ -32,6 +32,11 @@ import {
   sanitizeToolOutput,
 } from "./provider-output";
 import { executeContextAwareTool, toolsForMode } from "./provider-tools";
+import {
+  applyGeminiContextBudget,
+  applyOpenAIContextBudget,
+} from "./context-budget";
+import { postContextBudget } from "./provider-metrics";
 
 function post(port: chrome.runtime.Port, message: AiStreamResponse) {
   try {
@@ -99,8 +104,11 @@ export async function requestOpenAICompatible(
   const useTools = maxToolSteps > 0 && availableTools.length > 0;
   let responseSources = getMessageSources(messages);
   let responseUsage: TokenUsage | undefined;
+  const postMetric = (message: AiStreamResponse) => post(port, message);
 
   async function fetchChatCompletion(body: Record<string, unknown>) {
+    const budgeted = applyOpenAIContextBudget(requestMessages, preferences);
+    postContextBudget(postMetric, budgeted.report);
     const response = await fetch(chatUrl, {
       method: "POST",
       signal,
@@ -108,7 +116,7 @@ export async function requestOpenAICompatible(
         "Content-Type": "application/json",
         ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...body, messages: budgeted.items }),
     });
     if (response.ok || !usesAttachmentPayload) return response;
 
@@ -128,6 +136,11 @@ export async function requestOpenAICompatible(
         signal,
         false,
       );
+    const retryBudgeted = applyOpenAIContextBudget(
+      requestMessages,
+      preferences,
+    );
+    postContextBudget(postMetric, retryBudgeted.report);
     return fetch(chatUrl, {
       method: "POST",
       signal,
@@ -135,7 +148,7 @@ export async function requestOpenAICompatible(
         "Content-Type": "application/json",
         ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
       },
-      body: JSON.stringify({ ...body, messages: requestMessages }),
+      body: JSON.stringify({ ...body, messages: retryBudgeted.items }),
     });
   }
 
@@ -143,7 +156,6 @@ export async function requestOpenAICompatible(
     const response = await fetchChatCompletion({
       model: model.modelName,
       temperature: MODEL_TEMPERATURE,
-      messages: requestMessages,
       stream: true,
       stream_options: { include_usage: true },
     });
@@ -162,7 +174,6 @@ export async function requestOpenAICompatible(
     const response = await fetchChatCompletion({
       model: model.modelName,
       temperature: MODEL_TEMPERATURE,
-      messages: requestMessages,
       stream: true,
       stream_options: { include_usage: true },
       tools: availableTools,
@@ -255,20 +266,11 @@ export async function requestOpenAICompatible(
       "<internal_instruction>Maximum browser tool steps reached. Do not call more tools. Summarize the findings and clearly state what is known, what remains uncertain, and the best next step for the user. Respond in the same language as the user's latest non-internal message.</internal_instruction>",
   });
 
-  const fallbackResponse = await fetch(chatUrl, {
-    method: "POST",
-    signal,
-    headers: {
-      "Content-Type": "application/json",
-      ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
-    },
-    body: JSON.stringify({
-      model: model.modelName,
-      temperature: MODEL_TEMPERATURE,
-      messages: requestMessages,
-      stream: true,
-      stream_options: { include_usage: true },
-    }),
+  const fallbackResponse = await fetchChatCompletion({
+    model: model.modelName,
+    temperature: MODEL_TEMPERATURE,
+    stream: true,
+    stream_options: { include_usage: true },
   });
 
   if (!fallbackResponse.ok) throw new Error(await fallbackResponse.text());
@@ -308,11 +310,13 @@ async function requestGemini(
   let usesAttachmentPayload = hasImageAttachments(uploadedAttachments);
 
   async function fetchGemini(body: Record<string, unknown>) {
+    const budgeted = applyGeminiContextBudget(contents, preferences);
+    postContextBudget(postMetric, budgeted.report);
     const response = await fetch(url, {
       method: "POST",
       signal,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...body, contents: budgeted.items }),
     });
     if (response.ok || !usesAttachmentPayload) return response;
 
@@ -331,11 +335,13 @@ async function requestGemini(
         signal,
         false,
       );
+    const retryBudgeted = applyGeminiContextBudget(contents, preferences);
+    postContextBudget(postMetric, retryBudgeted.report);
     return fetch(url, {
       method: "POST",
       signal,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, contents }),
+      body: JSON.stringify({ ...body, contents: retryBudgeted.items }),
     });
   }
 
@@ -349,6 +355,7 @@ async function requestGemini(
   );
   const useTools = maxToolSteps > 0 && availableTools.length > 0;
   let responseSources = getMessageSources(messages);
+  const postMetric = (message: AiStreamResponse) => post(port, message);
 
   if (!useTools) {
     const response = await fetchGemini({
@@ -368,17 +375,11 @@ async function requestGemini(
     const response = await fetchGemini({
       systemInstruction: { parts: [{ text: system }] },
       contents,
-      ...(useTools
-        ? {
-            tools: [
-              {
-                functionDeclarations: availableTools.map(
-                  (item) => item.function,
-                ),
-              },
-            ],
-          }
-        : {}),
+      tools: [
+        {
+          functionDeclarations: availableTools.map((item) => item.function),
+        },
+      ],
     });
     if (!response.ok) throw new Error(await response.text());
     const data = await response.json();

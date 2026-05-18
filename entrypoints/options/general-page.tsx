@@ -7,9 +7,15 @@ import {
   ScrollText,
   SlidersHorizontal,
   TerminalSquare,
+  TextSearch,
   Wrench,
 } from "lucide-react";
-import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
+import {
+  DEFAULT_CONTEXT_REQUEST_MAX_CHARS,
+  DEFAULT_CONTEXT_TAIL_MIN_MESSAGES,
+  DEFAULT_CONTEXT_TOOL_RESULT_MAX_CHARS,
+  DEFAULT_MAX_TOOL_STEPS,
+} from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { languageLabels } from "../../src/shared/types";
@@ -185,6 +191,99 @@ export function GeneralPage() {
       <Card>
         <CardHeader>
           <CardTitle className="settings-section-title">
+            <TextSearch size={18} /> {t.options.contextBudget}
+          </CardTitle>
+          <CardDescription>
+            {t.options.contextBudgetDescription}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="stack">
+            <div className="setting-switch-row">
+              <div>
+                <CardTitle className="settings-section-title">
+                  {t.options.contextBudgetEnabled}
+                </CardTitle>
+                <CardDescription>
+                  {t.options.contextBudgetEnabledDescription}
+                </CardDescription>
+              </div>
+              <Switch
+                checked={preferences.contextBudgetEnabled !== false}
+                onCheckedChange={(checked) =>
+                  setPreferences((previous) => ({
+                    ...previous,
+                    contextBudgetEnabled: checked,
+                  }))
+                }
+              />
+            </div>
+            <NumberSetting
+              label={t.options.contextRequestMaxChars}
+              value={String(
+                preferences.contextRequestMaxChars ??
+                  DEFAULT_CONTEXT_REQUEST_MAX_CHARS,
+              )}
+              min={16000}
+              step={1000}
+              onChange={(value) =>
+                setPreferences((previous) => ({
+                  ...previous,
+                  contextRequestMaxChars: parseBoundedInteger(
+                    value,
+                    DEFAULT_CONTEXT_REQUEST_MAX_CHARS,
+                    16000,
+                    500000,
+                  ),
+                }))
+              }
+            />
+            <NumberSetting
+              label={t.options.contextTailMinMessages}
+              value={String(
+                preferences.contextTailMinMessages ??
+                  DEFAULT_CONTEXT_TAIL_MIN_MESSAGES,
+              )}
+              min={2}
+              step={1}
+              onChange={(value) =>
+                setPreferences((previous) => ({
+                  ...previous,
+                  contextTailMinMessages: parseBoundedInteger(
+                    value,
+                    DEFAULT_CONTEXT_TAIL_MIN_MESSAGES,
+                    2,
+                    40,
+                  ),
+                }))
+              }
+            />
+            <NumberSetting
+              label={t.options.contextToolResultMaxChars}
+              value={String(
+                preferences.contextToolResultMaxChars ??
+                  DEFAULT_CONTEXT_TOOL_RESULT_MAX_CHARS,
+              )}
+              min={1000}
+              step={1000}
+              onChange={(value) =>
+                setPreferences((previous) => ({
+                  ...previous,
+                  contextToolResultMaxChars: parseBoundedInteger(
+                    value,
+                    DEFAULT_CONTEXT_TOOL_RESULT_MAX_CHARS,
+                    1000,
+                    96000,
+                  ),
+                }))
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="settings-section-title">
             <Wrench size={18} /> {t.options.maxToolSteps}
           </CardTitle>
           <CardDescription>{t.options.maxToolStepsDescription}</CardDescription>
@@ -205,6 +304,33 @@ export function GeneralPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function NumberSetting({
+  label,
+  value,
+  min,
+  step,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  min: number;
+  step: number;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="stack">
+      <CardDescription>{label}</CardDescription>
+      <Input
+        type="number"
+        min={min}
+        step={step}
+        value={value}
+        onChange={(event) => onChange(event.currentTarget.value)}
+      />
+    </label>
   );
 }
 
@@ -242,4 +368,15 @@ function parseMaxToolSteps(value: string) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return DEFAULT_MAX_TOOL_STEPS;
   return Math.min(Number.MAX_SAFE_INTEGER, Math.max(0, Math.trunc(parsed)));
+}
+
+function parseBoundedInteger(
+  value: string,
+  fallback: number,
+  min: number,
+  max: number,
+) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, Math.trunc(parsed)));
 }

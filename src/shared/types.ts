@@ -45,6 +45,10 @@ export type Preferences = {
   autoRetry?: boolean;
   cdpToolsEnabled?: boolean;
   maxToolSteps?: number;
+  contextBudgetEnabled?: boolean;
+  contextRequestMaxChars?: number;
+  contextTailMinMessages?: number;
+  contextToolResultMaxChars?: number;
 };
 
 export type Skill = {
@@ -150,6 +154,15 @@ export type RunMetrics = {
   outputCharacters?: number;
   usage?: TokenUsage;
   promptBreakdown?: PromptBreakdown;
+  contextBudget?: ContextBudgetReport;
+};
+
+export type ContextBudgetReport = {
+  originalChars: number;
+  finalChars: number;
+  prunedChars: number;
+  prunedMessages: number;
+  truncatedToolResults: number;
 };
 
 export const TOOL_PART_PREFIX = "tool-";

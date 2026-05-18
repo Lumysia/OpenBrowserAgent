@@ -85,6 +85,9 @@ export const jaJP: LocaleMessages = {
       reasoning: "推論",
       estimated: "推定",
       promptBreakdown: "プロンプト内訳",
+      contextSaved: "節約したコンテキスト",
+      contextPrunedMessages: "剪定済みメッセージ",
+      contextToolResults: "剪定済みツール結果",
       prebuiltPrompt: "事前プロンプト",
       userPrompt: "ユーザープロンプト",
       conversationPrompt: "会話履歴",
@@ -365,6 +368,15 @@ export const jaJP: LocaleMessages = {
     maxToolSteps: "最大ツールステップ数",
     maxToolStepsDescription:
       "アシスタントが実行できるブラウザーツールのステップ数を設定します。0にするとツール呼び出しを無効にします。",
+    contextBudget: "コンテキスト予算",
+    contextBudgetDescription:
+      "各モデルリクエストに含める内容を制限し、長いチャットの応答性を保ち、ツール出力がタスクの文脈を圧迫しないようにします。",
+    contextBudgetEnabled: "コンテキスト予算管理を有効化",
+    contextBudgetEnabledDescription:
+      "送信中のリクエストだけを剪定します。保存済みチャット履歴はそのまま残ります。",
+    contextRequestMaxChars: "リクエスト予算文字数",
+    contextTailMinMessages: "保持する直近メッセージ数",
+    contextToolResultMaxChars: "ツール結果の文字数上限",
     debug: "デバッグ",
     debugDescription:
       "OpenBrowserAgentのデータをリセットする開発者向けツールです。",
