@@ -863,16 +863,16 @@ a {
   display: grid;
   gap: 14px;
   padding: 16px;
-  border: 1px solid color-mix(in srgb, var(--accent-soft) 62%, var(--border));
+  border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 4px);
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--accent-softer) 28%, transparent),
-      transparent 54%
+      color-mix(in srgb, var(--accent-softer) 46%, transparent),
+      transparent 58%
     ),
-    var(--card);
-  box-shadow: 0 14px 34px var(--shadow);
+    color-mix(in srgb, var(--accent-softer) 10%, var(--card));
+  box-shadow: 0 10px 28px var(--shadow);
 }
 .provider-add-copy {
   display: flex;
@@ -943,7 +943,13 @@ a {
 .ui-accordion-item {
   overflow: hidden;
   border: 1px solid var(--border);
-  background: var(--card);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-softer) 46%, transparent),
+      transparent 58%
+    ),
+    color-mix(in srgb, var(--accent-softer) 10%, var(--card));
   border-radius: var(--radius);
   box-shadow: 0 10px 24px var(--shadow);
   animation: fade-in 0.22s ease both;
