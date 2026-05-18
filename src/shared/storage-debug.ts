@@ -15,6 +15,7 @@ const STORAGE_KEY_GROUPS = {
     STORAGE_KEYS.syncWriteStatus,
   ],
   providers: [STORAGE_KEYS.provider],
+  agents: [STORAGE_KEYS.agents],
   skills: [STORAGE_KEYS.skills],
   chats: [STORAGE_KEYS.chats, STORAGE_KEYS.chatTabs],
 } as const;

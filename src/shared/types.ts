@@ -31,6 +31,7 @@ export type ProviderState = Record<string, ProviderConfig>;
 
 export type Preferences = {
   selectedModelId?: string;
+  selectedAgentId?: string;
   selectedImageModelId?: string;
   imageGenerationEnabled?: boolean;
   imageGenerationSize?: string;
@@ -38,6 +39,7 @@ export type Preferences = {
   accentColor?: "green" | "blue" | "pink" | "purple" | "amber";
   syncSettings?: boolean;
   syncProviders?: boolean;
+  syncAgents?: boolean;
   syncSkills?: boolean;
   syncChats?: boolean;
   autoSelectSkills?: boolean;
@@ -49,6 +51,16 @@ export type Preferences = {
   contextRequestMaxChars?: number;
   contextTailMinMessages?: number;
   contextToolResultMaxChars?: number;
+};
+
+export type Agent = {
+  id: string;
+  name: string;
+  description?: string;
+  instructions?: string;
+  builtin?: boolean;
+  createdAt: number;
+  updatedAt: number;
 };
 
 export type Skill = {
@@ -264,6 +276,7 @@ export type SendMessagesBody = {
     uploadedAttachments?: UploadedAttachment[];
     availableSkills?: Skill[];
     sources?: ChatSource[];
+    agent?: Agent;
     imageGenerationEnabled?: boolean;
     autoSelectSkills?: boolean;
   };

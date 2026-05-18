@@ -8,6 +8,7 @@ import {
 import type {
   Chat,
   ChatMode,
+  Agent,
   Preferences,
   UploadedAttachment,
 } from "../../src/shared/types";
@@ -101,6 +102,7 @@ export function useAutoRetryStream({
   mode,
   language,
   uploadedAttachments,
+  agent,
   appendToAssistant,
   startStream,
 }: {
@@ -113,6 +115,7 @@ export function useAutoRetryStream({
   mode: ChatMode;
   language: string | undefined;
   uploadedAttachments: UploadedAttachment[];
+  agent?: Agent;
   appendToAssistant: (
     chatId: string,
     messageId: string,
@@ -136,6 +139,7 @@ export function useAutoRetryStream({
         mode,
         language: language || "en-US",
         uploadedAttachments,
+        agent,
         appendToAssistant,
         startStream,
       });

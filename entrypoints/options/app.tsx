@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import type { ReactNode } from "react";
 import {
   Bug,
+  Bot,
   CircleHelp,
   Cloud,
   FileText,
@@ -14,6 +15,7 @@ import { storage } from "../../src/shared/storage";
 import { ScrollArea, TooltipProvider } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { DebugPage } from "./debug-page";
+import { AgentsPage } from "./agents-page";
 import { GeneralPage } from "./general-page";
 import { ProvidersPage } from "./providers-page";
 import { SkillsPage } from "./skills-page";
@@ -22,7 +24,7 @@ import { SyncPage } from "./sync-page";
 
 export function OptionsApp() {
   const route = useHashRoute();
-  const [language] = useStoredState(storage.language);
+  const [language, , languageLoading] = useStoredState(storage.language);
   const [preferences] = useStoredState(storage.preferences);
   const version = chrome.runtime.getManifest().version;
   const t = getMessages(language);
@@ -34,7 +36,7 @@ export function OptionsApp() {
       preferences?.colorScheme || "system";
   }, [preferences?.accentColor, preferences?.colorScheme]);
 
-  return (
+  return languageLoading ? null : (
     <TooltipProvider delayDuration={250}>
       <div className="app-shell">
         <aside className="settings-sidebar">
@@ -50,6 +52,14 @@ export function OptionsApp() {
               icon={<SlidersHorizontal size={16} />}
             >
               {t.options.general}
+            </OptionsLink>
+            <OptionsLink
+              route={route}
+              target={OPTIONS_ROUTE.agents}
+              href={OPTIONS_HASH.agents}
+              icon={<Bot size={16} />}
+            >
+              {t.options.agents}
             </OptionsLink>
             <OptionsLink
               route={route}
@@ -97,7 +107,9 @@ export function OptionsApp() {
         </aside>
         <ScrollArea className="settings-main">
           <div className="settings-content">
-            {route === OPTIONS_ROUTE.providers ? (
+            {route === OPTIONS_ROUTE.agents ? (
+              <AgentsPage />
+            ) : route === OPTIONS_ROUTE.providers ? (
               <ProvidersPage />
             ) : route === OPTIONS_ROUTE.sync ? (
               <SyncPage />

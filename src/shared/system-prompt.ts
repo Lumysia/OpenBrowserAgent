@@ -1,15 +1,17 @@
-import { isAskMode, type ChatMode } from "./types";
+import { isAskMode, type Agent, type ChatMode } from "./types";
 
 export function createSystemPrompt(
   mode: ChatMode,
-  options: { imageGenerationEnabled?: boolean } = {},
+  options: { imageGenerationEnabled?: boolean; agent?: Agent } = {},
 ) {
   const currentDate = new Date().toLocaleDateString("en-CA");
   const imageCapability = options.imageGenerationEnabled
     ? "\nFor image generation or editing requests, use generateImage."
     : "";
+  const agentProfile = renderAgentProfile(options.agent);
   if (isAskMode(mode)) {
     return `You are OpenBrowserAgent.
+${agentProfile}
 
 <task>
 Answer the USER's question from the content they provide.${imageCapability}
@@ -22,6 +24,7 @@ Answer the USER's question from the content they provide.${imageCapability}
 </rules>`;
   }
   return `You are OpenBrowserAgent, a browser co-worker that completes USER tasks with browser tools.
+${agentProfile}
 
 <mission>
 Understand the task, act human-like in the browser, and report results to the USER.${imageCapability}
@@ -47,4 +50,12 @@ Understand the task, act human-like in the browser, and report results to the US
 - Break unclear research tasks into search queries. Do not summarize interim search results unless useful to the task.
 - When research is complete, group opened tabs, do not close them, then stop tools and provide the final cited report.
 </search_guidance>`;
+}
+
+function renderAgentProfile(agent: Agent | undefined) {
+  if (!agent?.description && !agent?.instructions) return "";
+  return `
+<agent_profile>
+${agent.name ? `Name: ${agent.name}\n` : ""}${agent.description ? `Description: ${agent.description}\n` : ""}${agent.instructions ? `Instructions: ${agent.instructions}` : ""}
+</agent_profile>`;
 }

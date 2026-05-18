@@ -4,6 +4,7 @@ import type {
   Chat,
   ChatMessage,
   ChatMode,
+  Agent,
   Preferences,
   SendMessagesRequest,
   UploadedAttachment,
@@ -17,6 +18,7 @@ export function retryStalledStream({
   mode,
   language,
   uploadedAttachments,
+  agent,
   appendToAssistant,
   startStream,
 }: {
@@ -26,6 +28,7 @@ export function retryStalledStream({
   mode: ChatMode;
   language: string;
   uploadedAttachments: UploadedAttachment[];
+  agent?: Agent;
   appendToAssistant: (
     chatId: string,
     messageId: string,
@@ -61,7 +64,7 @@ export function retryStalledStream({
         chatMode: mode,
         language,
         maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
-        context: { uploadedAttachments },
+        context: { uploadedAttachments, agent },
       },
     },
     active.assistantMessageId,

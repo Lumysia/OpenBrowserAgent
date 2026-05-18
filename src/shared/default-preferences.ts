@@ -9,6 +9,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   accentColor: "pink",
   syncSettings: true,
   syncProviders: true,
+  syncAgents: false,
   syncSkills: false,
   syncChats: false,
   autoSelectSkills: false,
@@ -20,3 +21,12 @@ export const DEFAULT_PREFERENCES: Preferences = {
   maxToolSteps: DEFAULT_MAX_TOOL_STEPS,
   ...DEFAULT_CONTEXT_BUDGET_PREFERENCES,
 };
+
+export function mergePreferences(value: Preferences): Preferences {
+  return {
+    ...DEFAULT_PREFERENCES,
+    ...value,
+    syncSettings: true,
+    syncProviders: true,
+  };
+}

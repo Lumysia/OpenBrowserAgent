@@ -9,6 +9,7 @@ import { getSkillInstruction, isSkillEnabled } from "../../src/shared/skills";
 import {
   isToolPartType,
   type AttachmentTab,
+  type Agent,
   type Chat,
   type ChatMode,
   type Preferences,
@@ -38,6 +39,7 @@ export function usePromptUsageEstimate({
   pendingAttachments,
   uploadedAttachments,
   selectedSkill,
+  agent,
   skills,
 }: {
   input: string;
@@ -49,6 +51,7 @@ export function usePromptUsageEstimate({
   pendingAttachments: UploadedAttachment[];
   uploadedAttachments: UploadedAttachment[];
   selectedSkill?: Skill | null;
+  agent?: Agent;
   skills: Skill[];
 }): PromptUsageEstimate {
   const [contextChars, setContextChars] = useState(0);
@@ -72,6 +75,7 @@ export function usePromptUsageEstimate({
     const availableSkills = preferences?.autoSelectSkills ? enabledSkills : [];
     const system = createSystemPrompt(mode, {
       imageGenerationEnabled: preferences?.imageGenerationEnabled,
+      agent,
     });
     return {
       systemPromptChars:
@@ -118,6 +122,7 @@ export function usePromptUsageEstimate({
     pendingAttachments,
     uploadedAttachments,
     selectedSkill,
+    agent,
     skills,
   ]);
 }

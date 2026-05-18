@@ -181,6 +181,9 @@ export function DebugPage() {
               <ToggleGroupItem value="providers">
                 {t.options.debugResetTargetProviders}
               </ToggleGroupItem>
+              <ToggleGroupItem value="agents">
+                {t.options.debugResetTargetAgents}
+              </ToggleGroupItem>
               <ToggleGroupItem value="skills">
                 {t.options.debugResetTargetSkills}
               </ToggleGroupItem>

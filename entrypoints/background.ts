@@ -130,6 +130,7 @@ async function streamAssistantResponse(
   const t = getMessages(request.body.language);
   const system = createSystemPrompt(request.body.chatMode, {
     imageGenerationEnabled: !!request.body.context?.imageGenerationEnabled,
+    agent: request.body.context?.agent,
   });
   const preferences = await storage.preferences.get();
   post(port, {

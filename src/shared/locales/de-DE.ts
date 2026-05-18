@@ -19,7 +19,7 @@ export const deDE: LocaleMessages = {
     noModelsFound: "Keine Modelle gefunden.",
     confirm: "Bestätigen",
   },
-  words: { newChat: "Neuer Chat", agent: "Agent", ask: "Ask" },
+  words: { newChat: "Neuer Chat", agent: "Agent", ask: "Fragen" },
   sidepanel: {
     connectProviderTitle: "Ersten KI-Anbieter verbinden",
     connectProviderDescription:
@@ -243,6 +243,18 @@ export const deDE: LocaleMessages = {
   },
   options: {
     general: "Allgemein",
+    agents: "Agenten",
+    agentsDescription:
+      "Erstellen Sie Agentenprofile mit eigener Rolle, eigenem Verhalten und eigenen Anweisungen.",
+    defaultAgentSummary:
+      "Allgemeiner Browserassistent für Browsing, Suche und Automatisierung.",
+    newAgent: "Neuer Agent",
+    agentName: "Agentenname",
+    agentDescription: "Agentenbeschreibung",
+    agentInstructions: "Agentenanweisungen",
+    agentInstructionsPlaceholder:
+      "Fügen Sie stabile Verhaltensregeln für diesen Agenten hinzu. Speichern Sie hier keine Geheimnisse.",
+    deleteAgent: "Agent löschen",
     sync: "Synchronisierung",
     providers: "Anbieter",
     skills: "Fähigkeiten",
@@ -344,6 +356,9 @@ export const deDE: LocaleMessages = {
     syncProviders: "Anbieter synchronisieren",
     syncProvidersDescription:
       "Anbieterkonfiguration einschließlich API-Schlüssel über Ihr Browserkonto synchronisieren.",
+    syncAgents: "Agenten synchronisieren",
+    syncAgentsDescription:
+      "Agentenprofile über Ihr Browserkonto synchronisieren. Deaktiviert lassen, wenn Agentenanweisungen privaten Kontext enthalten.",
     syncSkills: "Fähigkeiten synchronisieren",
     syncSkillsDescription:
       "Fähigkeitsvorlagen über Ihr Browserkonto synchronisieren.",
@@ -394,6 +409,7 @@ export const deDE: LocaleMessages = {
     debugResetTargetAll: "Alle",
     debugResetTargetSettings: "Einstellungen",
     debugResetTargetProviders: "Anbieter",
+    debugResetTargetAgents: "Agenten",
     debugResetTargetSkills: "Fähigkeiten",
     debugResetTargetChats: "Chats",
     debugResetButton: "Alle App-Daten löschen",

@@ -233,6 +233,18 @@ export const enUS = {
   },
   options: {
     general: "General",
+    agents: "Agents",
+    agentsDescription:
+      "Create agent profiles with their own role, behavior, and instructions.",
+    defaultAgentSummary:
+      "General browser assistant for browsing, search, and automation.",
+    newAgent: "New Agent",
+    agentName: "Agent name",
+    agentDescription: "Agent description",
+    agentInstructions: "Agent instructions",
+    agentInstructionsPlaceholder:
+      "Add stable behavior rules for this agent. Do not store secrets here.",
+    deleteAgent: "Delete agent",
     sync: "Sync",
     providers: "Providers",
     skills: "Skills",
@@ -332,6 +344,9 @@ export const enUS = {
     syncProviders: "Sync Providers",
     syncProvidersDescription:
       "Sync provider configuration, including API keys, through your browser account.",
+    syncAgents: "Sync Agents",
+    syncAgentsDescription:
+      "Sync agent profiles through your browser account. Keep this off if agent instructions contain private context.",
     syncSkills: "Sync Skills",
     syncSkillsDescription: "Sync skill templates through your browser account.",
     syncChats: "Sync Chats",
@@ -379,6 +394,7 @@ export const enUS = {
     debugResetTargetAll: "All",
     debugResetTargetSettings: "Settings",
     debugResetTargetProviders: "Providers",
+    debugResetTargetAgents: "Agents",
     debugResetTargetSkills: "Skills",
     debugResetTargetChats: "Chats",
     debugResetButton: "Clear all app data",

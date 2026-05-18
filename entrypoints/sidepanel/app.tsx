@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
+import { resolveAgent } from "../../src/shared/agents";
 import { getMessages } from "../../src/shared/i18n";
 import { isSkillEnabled } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
@@ -16,7 +17,7 @@ import {
 } from "../../src/shared/types";
 import { useBuiltinSkills } from "../../src/ui/useBuiltinSkills";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { requestGeneratedTitle } from "./ai-requests";
+import { requestChatTitle } from "./ai-requests";
 import {
   closeChatAction,
   createChatAction,
@@ -66,6 +67,7 @@ export function SidepanelApp() {
     storage.ignoreSyncedProvidersForBootstrap,
   );
   const [preferences, setPreferences] = useStoredState(storage.preferences);
+  const [agents] = useStoredState(storage.agents);
   const [language] = useStoredState(storage.language);
   const [skills, setSkills] = useStoredState(storage.skills);
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
@@ -101,6 +103,7 @@ export function SidepanelApp() {
   );
   const modelCount = configuredModels.length;
   const currentChat = chats?.find((chat) => chat.id === activeChatId);
+  const activeAgent = resolveAgent(agents, preferences?.selectedAgentId);
   const streamHandlers = createStreamHandlers(setChats);
   const t = getMessages(language);
   const aiWorking = streaming || creatingSkill;
@@ -122,6 +125,7 @@ export function SidepanelApp() {
     activeTabAttachable,
     selectedElement,
     setAttachedTabs,
+    clearAttachedTabsAfterSend,
     setSelectedElement,
     attachActiveTab,
     showAllTabsPicker,
@@ -138,6 +142,7 @@ export function SidepanelApp() {
     pendingAttachments,
     uploadedAttachments,
     selectedSkill,
+    agent: activeAgent,
     skills: skills || [],
   });
   const { editingMessage, setEditingMessage, editMessage, cancelEditMessage } =
@@ -174,6 +179,9 @@ export function SidepanelApp() {
 
   useSidepanelTheme(preferences?.accentColor, preferences?.colorScheme);
 
+  const createChat = () =>
+    createChatAction({ title: t.words.newChat, setChats, setActiveChatId });
+
   useChatSelection(
     chats,
     activeChatId,
@@ -206,17 +214,10 @@ export function SidepanelApp() {
     mode,
     language,
     uploadedAttachments,
+    agent: activeAgent,
     appendToAssistant: streamHandlers.appendToAssistant,
     startStream,
   });
-
-  function createChat() {
-    return createChatAction({
-      title: t.words.newChat,
-      setChats,
-      setActiveChatId,
-    });
-  }
 
   function closeChat(chatId: string) {
     closeChatAction({
@@ -324,10 +325,16 @@ export function SidepanelApp() {
         pruneSentAttachmentPreviews(items, activeEdit.keptMessageIds),
       );
     updateChatAction(setChats, nextChat);
-    if (shouldGenerateTitle) requestChatTitle(nextChat.id, titleSource);
+    if (shouldGenerateTitle)
+      requestChatTitle({
+        chatId: nextChat.id,
+        modelId: preferences?.selectedModelId,
+        message: titleSource,
+        setChats,
+      });
     if (!options.queued && !options.resendMessage) {
       setInput("");
-      setAttachedTabs([]);
+      clearAttachedTabsAfterSend();
       clearPendingAttachments();
       setSelectedElement(null);
       setSelectedSkill(null);
@@ -352,6 +359,7 @@ export function SidepanelApp() {
           uploadedAttachments: activeAttachments,
           availableSkills,
           sources: baseChat.sources || [],
+          agent: activeAgent,
           imageGenerationEnabled: preferences?.imageGenerationEnabled,
           autoSelectSkills: preferences?.autoSelectSkills,
         },
@@ -392,17 +400,6 @@ export function SidepanelApp() {
     setStreaming(false);
   }
 
-  function requestChatTitle(chatId: string, message: string) {
-    requestGeneratedTitle({
-      modelId: preferences?.selectedModelId,
-      message,
-      onTitle: (title) =>
-        setChats((items) =>
-          items.map((chat) => (chat.id === chatId ? { ...chat, title } : chat)),
-        ),
-    });
-  }
-
   return (
     <SidepanelView
       t={t}
@@ -428,6 +425,7 @@ export function SidepanelApp() {
       creatingSkill={creatingSkill}
       skillCreated={skillCreated}
       skills={(skills || []).filter(isSkillEnabled)}
+      agents={agents || []}
       selectedSkill={selectedSkill}
       openMenu={openMenu}
       addMenuView={addMenuView}

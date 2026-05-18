@@ -19,7 +19,7 @@ export const frFR: LocaleMessages = {
     noModelsFound: "Aucun modèle trouvé.",
     confirm: "Confirmer",
   },
-  words: { newChat: "Nouvelle discussion", agent: "Agent", ask: "Ask" },
+  words: { newChat: "Nouvelle discussion", agent: "Agent", ask: "Question" },
   sidepanel: {
     connectProviderTitle: "Connecter votre premier fournisseur IA",
     connectProviderDescription:
@@ -251,6 +251,18 @@ export const frFR: LocaleMessages = {
   },
   options: {
     general: "Général",
+    agents: "Agents",
+    agentsDescription:
+      "Créez des profils d’agent avec leur propre rôle, comportement et instructions.",
+    defaultAgentSummary:
+      "Assistant navigateur général pour la navigation, la recherche et l’automatisation.",
+    newAgent: "Nouvel agent",
+    agentName: "Nom de l’agent",
+    agentDescription: "Description de l’agent",
+    agentInstructions: "Instructions de l’agent",
+    agentInstructionsPlaceholder:
+      "Ajoutez les règles de comportement stables de cet agent. Ne stockez pas de secrets ici.",
+    deleteAgent: "Supprimer l’agent",
     sync: "Synchronisation",
     providers: "Fournisseurs",
     skills: "Compétences",
@@ -351,6 +363,9 @@ export const frFR: LocaleMessages = {
     syncProviders: "Synchroniser les fournisseurs",
     syncProvidersDescription:
       "Synchronisez la configuration des fournisseurs, y compris les clés API, via votre compte navigateur.",
+    syncAgents: "Synchroniser les agents",
+    syncAgentsDescription:
+      "Synchronisez les profils d’agent via votre compte navigateur. Gardez cette option désactivée si les instructions contiennent du contexte privé.",
     syncSkills: "Synchroniser les compétences",
     syncSkillsDescription:
       "Synchronisez les modèles de compétences via votre compte navigateur.",
@@ -400,6 +415,7 @@ export const frFR: LocaleMessages = {
     debugResetTargetAll: "Tout",
     debugResetTargetSettings: "Paramètres",
     debugResetTargetProviders: "Fournisseurs",
+    debugResetTargetAgents: "Agents",
     debugResetTargetSkills: "Compétences",
     debugResetTargetChats: "Discussions",
     debugResetButton: "Effacer toutes les données de l'app",

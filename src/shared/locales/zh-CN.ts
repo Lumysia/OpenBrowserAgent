@@ -1,7 +1,7 @@
 import type { LocaleMessages } from "./en-US";
 
 export const zhCN: LocaleMessages = {
-  app: { tagline: "浏览器中的 AI Agent" },
+  app: { tagline: "浏览器中的 AI 智能体" },
   common: {
     add: "添加",
     cancel: "取消",
@@ -19,7 +19,7 @@ export const zhCN: LocaleMessages = {
     noModelsFound: "没有找到模型。",
     confirm: "确认",
   },
-  words: { newChat: "新对话", agent: "Agent", ask: "Ask" },
+  words: { newChat: "新对话", agent: "智能体", ask: "询问" },
   sidepanel: {
     connectProviderTitle: "连接第一个 AI 提供商",
     connectProviderDescription:
@@ -196,6 +196,16 @@ export const zhCN: LocaleMessages = {
   },
   options: {
     general: "通用",
+    agents: "智能体",
+    agentsDescription: "创建拥有独立角色、行为和指令的智能体配置。",
+    defaultAgentSummary: "用于浏览、搜索和自动化的通用浏览器助手。",
+    newAgent: "新建智能体",
+    agentName: "智能体名称",
+    agentDescription: "智能体描述",
+    agentInstructions: "智能体指令",
+    agentInstructionsPlaceholder:
+      "添加这个智能体的稳定行为规则。不要在这里保存密钥。",
+    deleteAgent: "删除智能体",
     sync: "同步",
     providers: "提供商",
     skills: "技能",
@@ -204,7 +214,7 @@ export const zhCN: LocaleMessages = {
       "使用自己的密钥，将 OpenBrowserAgent 连接到你常用的 AI 提供商。",
     selectModel: "选择模型",
     selectModelDescription:
-      "选择主对话模型。Agent 模式建议使用支持工具调用的模型。",
+      "选择主对话模型。智能体模式建议使用支持工具调用的模型。",
     selectImageModel: "选择图片模型",
     enableImageGeneration: "启用图片生成",
     enableImageGenerationDescription: "向助手开放图片生成工具。",
@@ -290,6 +300,9 @@ export const zhCN: LocaleMessages = {
       "语言、提供商配置和轻量偏好设置默认通过浏览器账号同步。",
     syncProviders: "同步提供商",
     syncProvidersDescription: "通过浏览器账号同步提供商配置，包括 API Key。",
+    syncAgents: "同步智能体",
+    syncAgentsDescription:
+      "通过浏览器账号同步智能体配置。如果智能体指令包含隐私上下文，建议保持关闭。",
     syncSkills: "同步技能",
     syncSkillsDescription: "通过浏览器账号同步技能模板。",
     syncChats: "同步对话",
@@ -335,6 +348,7 @@ export const zhCN: LocaleMessages = {
     debugResetTargetAll: "全部",
     debugResetTargetSettings: "设置",
     debugResetTargetProviders: "提供商",
+    debugResetTargetAgents: "智能体",
     debugResetTargetSkills: "技能",
     debugResetTargetChats: "对话",
     debugResetButton: "清除全部应用数据",
@@ -346,7 +360,7 @@ export const zhCN: LocaleMessages = {
     debugToolUnavailable: "不可用",
     debugToolRequired: "必填",
     debugToolAlwaysAvailable: "启用工具调用时可用。",
-    debugToolAgentModeAvailable: "在 Agent 模式中可用。",
+    debugToolAgentModeAvailable: "在智能体模式中可用。",
     debugToolImageGenerationEnabled: "图片生成已启用。",
     debugToolImageGenerationDisabled: "需要在提供商中启用图片生成。",
     debugToolSkillsEnabled: "自动选择技能已启用且存在可用技能。",

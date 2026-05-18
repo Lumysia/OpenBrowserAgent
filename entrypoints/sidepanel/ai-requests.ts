@@ -2,9 +2,11 @@ import {
   AI_STREAM_PORT_NAME,
   AI_STREAM_REQUEST_TYPE,
 } from "../../src/shared/types";
+import type { Dispatch, SetStateAction } from "react";
 import type {
   AiStreamRequest,
   AiStreamResponse,
+  Chat,
   ChatMessage,
   Skill,
 } from "../../src/shared/types";
@@ -72,6 +74,27 @@ export function requestGeneratedTitle({
   } catch {
     cleanup();
   }
+}
+
+export function requestChatTitle({
+  chatId,
+  modelId,
+  message,
+  setChats,
+}: {
+  chatId: string;
+  modelId?: string;
+  message: string;
+  setChats: Dispatch<SetStateAction<Chat[]>>;
+}) {
+  requestGeneratedTitle({
+    modelId,
+    message,
+    onTitle: (title) =>
+      setChats((items) =>
+        items.map((chat) => (chat.id === chatId ? { ...chat, title } : chat)),
+      ),
+  });
 }
 
 function createPortCleanup(port: chrome.runtime.Port) {

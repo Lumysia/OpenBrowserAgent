@@ -22,9 +22,17 @@ export const i18nRegistry: Record<string, LocaleMessages> = {
   "pt-BR": ptBR,
 };
 
+let activeLanguage: string | undefined;
+
 export function getMessages(language?: string) {
-  const normalized = language?.replace("_", "-");
-  return i18nRegistry[language || ""] || i18nRegistry[normalized || ""] || enUS;
+  if (language) activeLanguage = language;
+  const requestedLanguage = language || activeLanguage;
+  const normalized = requestedLanguage?.replace("_", "-");
+  return (
+    i18nRegistry[requestedLanguage || ""] ||
+    i18nRegistry[normalized || ""] ||
+    enUS
+  );
 }
 
 export type Messages = LocaleMessages;

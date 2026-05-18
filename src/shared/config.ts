@@ -67,6 +67,7 @@ export const SENT_ATTACHMENTS_PREVIEW_COUNT = 3;
 
 export const OPTIONS_ROUTE = {
   general: "/",
+  agents: "/agents",
   sync: "/sync",
   providers: "/providers",
   skills: "/skills",
@@ -75,6 +76,7 @@ export const OPTIONS_ROUTE = {
 
 export const OPTIONS_HASH = {
   general: "#/",
+  agents: "#/agents",
   sync: "#/sync",
   providers: "#/providers",
   skills: "#/skills",

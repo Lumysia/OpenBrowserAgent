@@ -1,9 +1,9 @@
 import { Plus, Send, Square } from "lucide-react";
 import { useRef, type ClipboardEvent, type RefObject } from "react";
 import type { Messages } from "../../src/shared/i18n";
-import { CHAT_MODE } from "../../src/shared/types";
 import type {
   AttachmentTab,
+  Agent,
   Chat,
   ChatMessage,
   ChatMode,
@@ -26,8 +26,7 @@ import {
 import {
   AddContextMenu,
   ModelMenu,
-  ModeMenu,
-  modeIcon,
+  ModeSelector,
   selectedModelLabel,
 } from "./composer-menus";
 import { ComposerAttachments } from "./composer-attachments";
@@ -78,6 +77,7 @@ export function SidepanelView({
   creatingSkill,
   skillCreated,
   skills,
+  agents,
   openMenu,
   addMenuView,
   showHistory,
@@ -141,6 +141,7 @@ export function SidepanelView({
   creatingSkill: boolean;
   skillCreated: boolean;
   skills: Skill[];
+  agents: Agent[];
   openMenu: ComposerMenu | null;
   addMenuView: AddMenuView;
   showHistory: boolean;
@@ -428,38 +429,17 @@ export function SidepanelView({
                   </Popover>
                 </div>
                 <div className="selector-anchor mode-anchor">
-                  <Popover
-                    open={openMenu === COMPOSER_MENU.mode}
-                    onOpenChange={(open) =>
-                      onSetOpenMenu(open ? COMPOSER_MENU.mode : null)
-                    }
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="composer-trigger composer-mode-trigger"
-                        disabled={aiWorking}
-                        aria-label={
-                          mode === CHAT_MODE.agent ? t.words.agent : t.words.ask
-                        }
-                      >
-                        {modeIcon(mode)}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="mode-popover-content"
-                      align="end"
-                    >
-                      <ModeMenu
-                        t={t}
-                        mode={mode}
-                        onSelect={(nextMode) => {
-                          onSetMode(nextMode);
-                          onSetOpenMenu(null);
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <ModeSelector
+                    t={t}
+                    mode={mode}
+                    agents={agents}
+                    preferences={preferences}
+                    openMenu={openMenu}
+                    aiWorking={aiWorking}
+                    onSetMode={onSetMode}
+                    onSetOpenMenu={onSetOpenMenu}
+                    onSetPreferences={onSetPreferences}
+                  />
                 </div>
               </div>
               {streaming ? (

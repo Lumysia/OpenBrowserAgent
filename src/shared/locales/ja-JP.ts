@@ -19,7 +19,7 @@ export const jaJP: LocaleMessages = {
     noModelsFound: "モデルが見つかりません。",
     confirm: "確認",
   },
-  words: { newChat: "新しいチャット", agent: "Agent", ask: "Ask" },
+  words: { newChat: "新しいチャット", agent: "エージェント", ask: "質問" },
   sidepanel: {
     connectProviderTitle: "最初のAIプロバイダーを接続",
     connectProviderDescription:
@@ -247,6 +247,18 @@ export const jaJP: LocaleMessages = {
   },
   options: {
     general: "一般",
+    agents: "エージェント",
+    agentsDescription:
+      "独自の役割、動作、指示を持つエージェントプロファイルを作成します。",
+    defaultAgentSummary:
+      "ブラウズ、検索、自動化用の汎用ブラウザーアシスタント。",
+    newAgent: "新しいエージェント",
+    agentName: "エージェント名",
+    agentDescription: "エージェントの説明",
+    agentInstructions: "エージェント指示",
+    agentInstructionsPlaceholder:
+      "このエージェントの安定した動作ルールを追加します。ここに秘密情報を保存しないでください。",
+    deleteAgent: "エージェントを削除",
     sync: "同期",
     providers: "プロバイダー",
     skills: "スキル",
@@ -255,7 +267,7 @@ export const jaJP: LocaleMessages = {
       "自分のキーでOpenBrowserAgentをお気に入りのAIプロバイダーに接続します。",
     selectModel: "モデルを選択",
     selectModelDescription:
-      "メインチャットモデルを選択します。Agentモードではツール呼び出し対応モデルがおすすめです。",
+      "メインチャットモデルを選択します。エージェントモードではツール呼び出し対応モデルがおすすめです。",
     selectImageModel: "画像モデルを選択",
     enableImageGeneration: "画像生成を有効化",
     enableImageGenerationDescription:
@@ -344,6 +356,9 @@ export const jaJP: LocaleMessages = {
     syncProviders: "プロバイダーを同期",
     syncProvidersDescription:
       "APIキーを含むプロバイダー設定をブラウザーアカウントで同期します。",
+    syncAgents: "エージェントを同期",
+    syncAgentsDescription:
+      "エージェントプロファイルをブラウザーアカウントで同期します。指示に個人的な文脈が含まれる場合はオフのままにしてください。",
     syncSkills: "スキルを同期",
     syncSkillsDescription:
       "スキルのテンプレートをブラウザーアカウントで同期します。",
@@ -393,6 +408,7 @@ export const jaJP: LocaleMessages = {
     debugResetTargetAll: "すべて",
     debugResetTargetSettings: "設定",
     debugResetTargetProviders: "プロバイダー",
+    debugResetTargetAgents: "エージェント",
     debugResetTargetSkills: "スキル",
     debugResetTargetChats: "チャット",
     debugResetButton: "すべてのアプリデータを消去",
@@ -405,7 +421,7 @@ export const jaJP: LocaleMessages = {
     debugToolUnavailable: "利用不可",
     debugToolRequired: "必須",
     debugToolAlwaysAvailable: "ツール呼び出しが有効なときに利用できます。",
-    debugToolAgentModeAvailable: "Agentモードで利用できます。",
+    debugToolAgentModeAvailable: "エージェントモードで利用できます。",
     debugToolImageGenerationEnabled: "画像生成が有効です。",
     debugToolImageGenerationDisabled:
       "プロバイダーで画像生成を有効にしてください。",

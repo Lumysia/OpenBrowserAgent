@@ -14,11 +14,13 @@ export function useActiveTabContext({
   selectedElement,
   setAttachedTabs,
   setSelectedElement,
+  autoAttachSuppressedRef,
 }: {
   attachedTabs: AttachmentTab[];
   selectedElement: SelectedElement | null;
   setAttachedTabs: Dispatch<SetStateAction<AttachmentTab[]>>;
   setSelectedElement: Dispatch<SetStateAction<SelectedElement | null>>;
+  autoAttachSuppressedRef: MutableRefObject<boolean>;
 }) {
   const autoAttachedRef = useRef(false);
   const autoAttachedTabIdRef = useRef<number | null>(null);
@@ -42,7 +44,12 @@ export function useActiveTabContext({
   }, [setSelectedElement]);
 
   useEffect(() => {
-    if (autoAttachedRef.current || selectedElement || attachedTabs.length)
+    if (
+      autoAttachedRef.current ||
+      autoAttachSuppressedRef.current ||
+      selectedElement ||
+      attachedTabs.length
+    )
       return;
     autoAttachedRef.current = true;
     void autoAttachActiveTab(setAttachedTabs, autoAttachedTabIdRef);
@@ -63,6 +70,7 @@ export function useActiveTabContext({
         selectedElement,
         setAttachedTabs,
         autoAttachedTabIdRef,
+        autoAttachSuppressedRef,
       });
     };
     chrome.tabs.onActivated.addListener(syncActiveTab);
@@ -91,11 +99,13 @@ async function syncActiveTabContext({
   selectedElement,
   setAttachedTabs,
   autoAttachedTabIdRef,
+  autoAttachSuppressedRef,
 }: {
   attachedTabs: AttachmentTab[];
   selectedElement: SelectedElement | null;
   setAttachedTabs: Dispatch<SetStateAction<AttachmentTab[]>>;
   autoAttachedTabIdRef: MutableRefObject<number | null>;
+  autoAttachSuppressedRef: MutableRefObject<boolean>;
 }) {
   const tab = await getActiveTab();
   const attachment = tab ? toAttachmentTab(tab) : null;
@@ -110,6 +120,7 @@ async function syncActiveTabContext({
     return;
   }
   if (
+    autoAttachSuppressedRef.current ||
     selectedElement ||
     attachedTabs.length >= 2 ||
     attachedTabs[0]?.id === attachment.id

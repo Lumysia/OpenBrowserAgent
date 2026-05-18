@@ -1,7 +1,7 @@
 import type { LocaleMessages } from "./en-US";
 
 export const ko: LocaleMessages = {
-  app: { tagline: "브라우저 안의 AI Agent" },
+  app: { tagline: "브라우저 안의 AI 에이전트" },
   common: {
     add: "추가",
     cancel: "취소",
@@ -19,7 +19,7 @@ export const ko: LocaleMessages = {
     noModelsFound: "모델을 찾을 수 없습니다.",
     confirm: "확인",
   },
-  words: { newChat: "새 채팅", agent: "Agent", ask: "Ask" },
+  words: { newChat: "새 채팅", agent: "에이전트", ask: "질문" },
   sidepanel: {
     connectProviderTitle: "첫 AI 제공업체 연결",
     connectProviderDescription:
@@ -228,6 +228,17 @@ export const ko: LocaleMessages = {
   },
   options: {
     general: "일반",
+    agents: "에이전트",
+    agentsDescription:
+      "각자 역할, 동작, 지시를 가진 에이전트 프로필을 만듭니다.",
+    defaultAgentSummary: "탐색, 검색, 자동화를 위한 일반 브라우저 어시스턴트.",
+    newAgent: "새 에이전트",
+    agentName: "에이전트 이름",
+    agentDescription: "에이전트 설명",
+    agentInstructions: "에이전트 지시",
+    agentInstructionsPlaceholder:
+      "이 에이전트의 안정적인 동작 규칙을 추가하세요. 여기에 비밀 정보를 저장하지 마세요.",
+    deleteAgent: "에이전트 삭제",
     sync: "동기화",
     providers: "제공업체",
     skills: "스킬",
@@ -236,7 +247,7 @@ export const ko: LocaleMessages = {
       "개인 키로 OpenBrowserAgent를 선호하는 AI 제공업체에 연결하세요.",
     selectModel: "모델 선택",
     selectModelDescription:
-      "주 채팅 모델을 선택하세요. Agent 모드는 도구 호출을 지원하는 모델에서 가장 잘 작동합니다.",
+      "주 채팅 모델을 선택하세요. 에이전트 모드는 도구 호출을 지원하는 모델에서 가장 잘 작동합니다.",
     selectImageModel: "이미지 모델 선택",
     enableImageGeneration: "이미지 생성 활성화",
     enableImageGenerationDescription:
@@ -326,6 +337,9 @@ export const ko: LocaleMessages = {
     syncProviders: "제공업체 동기화",
     syncProvidersDescription:
       "API 키를 포함한 제공업체 구성을 브라우저 계정으로 동기화합니다.",
+    syncAgents: "에이전트 동기화",
+    syncAgentsDescription:
+      "에이전트 프로필을 브라우저 계정으로 동기화합니다. 에이전트 지시에 개인 컨텍스트가 포함되어 있으면 꺼두세요.",
     syncSkills: "스킬 동기화",
     syncSkillsDescription: "스킬 템플릿을 브라우저 계정으로 동기화합니다.",
     syncChats: "채팅 동기화",
@@ -373,6 +387,7 @@ export const ko: LocaleMessages = {
     debugResetTargetAll: "전체",
     debugResetTargetSettings: "설정",
     debugResetTargetProviders: "제공업체",
+    debugResetTargetAgents: "에이전트",
     debugResetTargetSkills: "스킬",
     debugResetTargetChats: "채팅",
     debugResetButton: "모든 앱 데이터 지우기",
@@ -385,7 +400,7 @@ export const ko: LocaleMessages = {
     debugToolRequired: "필수",
     debugToolAlwaysAvailable:
       "도구 호출이 활성화되어 있으면 사용할 수 있습니다.",
-    debugToolAgentModeAvailable: "Agent 모드에서 사용할 수 있습니다.",
+    debugToolAgentModeAvailable: "에이전트 모드에서 사용할 수 있습니다.",
     debugToolImageGenerationEnabled: "이미지 생성이 활성화되어 있습니다.",
     debugToolImageGenerationDisabled:
       "제공업체에서 이미지 생성을 활성화하세요.",

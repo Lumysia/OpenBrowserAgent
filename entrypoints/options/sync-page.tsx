@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import {
   Activity,
+  Bot,
   Cloud,
   Database,
   FileText,
@@ -43,6 +44,11 @@ export function SyncPage() {
       title: t.options.syncSkills,
       description: t.options.syncSkillsDescription,
       icon: <FileText size={18} />,
+    },
+    syncAgents: {
+      title: t.options.syncAgents,
+      description: t.options.syncAgentsDescription,
+      icon: <Bot size={18} />,
     },
     syncChats: {
       title: t.options.syncChats,

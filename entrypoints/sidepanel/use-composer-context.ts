@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getActiveTab, isScriptableUrl } from "../../src/shared/browser";
 import type {
   AttachmentTab,
@@ -12,6 +12,7 @@ export function useComposerContext(chats: Chat[]) {
   const [attachedTabs, setAttachedTabs] = useState<AttachmentTab[]>([]);
   const [availableTabs, setAvailableTabs] = useState<AttachmentTab[]>([]);
   const [activeTabAttachable, setActiveTabAttachable] = useState(false);
+  const autoAttachSuppressedRef = useRef(false);
   const [selectedElement, setSelectedElement] =
     useState<SelectedElement | null>(null);
 
@@ -20,6 +21,7 @@ export function useComposerContext(chats: Chat[]) {
     selectedElement,
     setAttachedTabs,
     setSelectedElement,
+    autoAttachSuppressedRef,
   });
 
   useEffect(() => {
@@ -38,6 +40,7 @@ export function useComposerContext(chats: Chat[]) {
   }, []);
 
   async function attachActiveTab() {
+    autoAttachSuppressedRef.current = false;
     const tab = await getActiveTab();
     const attachment = tab ? toAttachmentTab(tab) : null;
     if (!attachment) return;
@@ -58,6 +61,7 @@ export function useComposerContext(chats: Chat[]) {
 
   function toggleAttachedTab(tab: AttachmentTab) {
     if (!isScriptableUrl(tab.url)) return;
+    autoAttachSuppressedRef.current = false;
     setAttachedTabs((tabs) =>
       tabs.some((item) => item.id === tab.id)
         ? tabs.filter((item) => item.id !== tab.id)
@@ -69,12 +73,18 @@ export function useComposerContext(chats: Chat[]) {
     setAttachedTabs((tabs) => tabs.filter((item) => item.id !== tabId));
   }
 
+  function clearAttachedTabsAfterSend() {
+    autoAttachSuppressedRef.current = true;
+    setAttachedTabs([]);
+  }
+
   return {
     attachedTabs,
     availableTabs,
     activeTabAttachable,
     selectedElement,
     setAttachedTabs,
+    clearAttachedTabsAfterSend,
     setAvailableTabs,
     setSelectedElement,
     attachActiveTab,

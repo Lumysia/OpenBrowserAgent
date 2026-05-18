@@ -19,7 +19,7 @@ export const esES: LocaleMessages = {
     noModelsFound: "No se encontraron modelos.",
     confirm: "Confirmar",
   },
-  words: { newChat: "Nuevo chat", agent: "Agent", ask: "Ask" },
+  words: { newChat: "Nuevo chat", agent: "Agente", ask: "Preguntar" },
   sidepanel: {
     connectProviderTitle: "Conecta tu primer proveedor de IA",
     connectProviderDescription:
@@ -241,6 +241,18 @@ export const esES: LocaleMessages = {
   },
   options: {
     general: "General",
+    agents: "Agentes",
+    agentsDescription:
+      "Crea perfiles de agente con su propio rol, comportamiento e instrucciones.",
+    defaultAgentSummary:
+      "Asistente general del navegador para navegación, búsqueda y automatización.",
+    newAgent: "Nuevo agente",
+    agentName: "Nombre del agente",
+    agentDescription: "Descripción del agente",
+    agentInstructions: "Instrucciones del agente",
+    agentInstructionsPlaceholder:
+      "Añade reglas de comportamiento estables para este agente. No guardes secretos aquí.",
+    deleteAgent: "Eliminar agente",
     sync: "Sincronización",
     providers: "Proveedores",
     skills: "Habilidades",
@@ -249,7 +261,7 @@ export const esES: LocaleMessages = {
       "Usa tu propia clave y conecta OpenBrowserAgent con tus proveedores de IA favoritos.",
     selectModel: "Seleccionar modelo",
     selectModelDescription:
-      "Elige el modelo principal de chat. El modo Agent funciona mejor con modelos compatibles con llamadas a herramientas.",
+      "Elige el modelo principal de chat. El modo Agente funciona mejor con modelos compatibles con llamadas a herramientas.",
     selectImageModel: "Seleccionar modelo de imagen",
     enableImageGeneration: "Activar generación de imágenes",
     enableImageGenerationDescription:
@@ -341,6 +353,9 @@ export const esES: LocaleMessages = {
     syncProviders: "Sincronizar proveedores",
     syncProvidersDescription:
       "Sincroniza la configuración de proveedores, incluidas las claves API, con tu cuenta del navegador.",
+    syncAgents: "Sincronizar agentes",
+    syncAgentsDescription:
+      "Sincroniza perfiles de agente con tu cuenta del navegador. Mantén esto desactivado si las instrucciones contienen contexto privado.",
     syncSkills: "Sincronizar habilidades",
     syncSkillsDescription:
       "Sincroniza plantillas de habilidades con tu cuenta del navegador.",
@@ -391,6 +406,7 @@ export const esES: LocaleMessages = {
     debugResetTargetAll: "Todo",
     debugResetTargetSettings: "Configuración",
     debugResetTargetProviders: "Proveedores",
+    debugResetTargetAgents: "Agentes",
     debugResetTargetSkills: "Habilidades",
     debugResetTargetChats: "Chats",
     debugResetButton: "Borrar todos los datos de la app",
@@ -404,7 +420,7 @@ export const esES: LocaleMessages = {
     debugToolRequired: "Obligatorio",
     debugToolAlwaysAvailable:
       "Disponible cuando las llamadas a herramientas están activadas.",
-    debugToolAgentModeAvailable: "Disponible en modo Agent.",
+    debugToolAgentModeAvailable: "Disponible en modo Agente.",
     debugToolImageGenerationEnabled: "La generación de imágenes está activada.",
     debugToolImageGenerationDisabled:
       "Activa la generación de imágenes en Proveedores.",

@@ -1,8 +1,22 @@
 import { nanoid } from "nanoid";
+import { normalizeAgents } from "./agents";
 import { BUILTIN_SKILLS } from "./builtin-skills";
 import * as config from "./config";
-import { DEFAULT_PREFERENCES } from "./default-preferences";
-import type { Chat, ChatTab, Preferences, ProviderState, Skill } from "./types";
+import { DEFAULT_PREFERENCES, mergePreferences } from "./default-preferences";
+import {
+  STORAGE_KEYS,
+  SYNCABLE_DATA_ITEMS,
+  type SyncableDataKey,
+  type SyncPreferenceKey,
+} from "./storage-keys";
+import type {
+  Agent,
+  Chat,
+  ChatTab,
+  Preferences,
+  ProviderState,
+  Skill,
+} from "./types";
 
 const STORAGE_AREAS = {
   local: "local",
@@ -11,29 +25,7 @@ const STORAGE_AREAS = {
 
 type AreaName = (typeof STORAGE_AREAS)[keyof typeof STORAGE_AREAS];
 
-export const STORAGE_KEYS = {
-  userId: "userId",
-  language: "language",
-  preferences: "preferences",
-  provider: "provider",
-  skills: "skills",
-  shouldShowUpdateToast: "should-show-update-toast",
-  chats: "chats",
-  chatTabs: "chat-tabs",
-  syncWriteStatus: "sync-write-status",
-  ignoreSyncedProvidersForBootstrap: "ignore-synced-providers-for-bootstrap",
-} as const;
-
-export const SYNCABLE_DATA_ITEMS = [
-  { preferenceKey: "syncProviders", dataKey: STORAGE_KEYS.provider },
-  { preferenceKey: "syncSkills", dataKey: STORAGE_KEYS.skills },
-  { preferenceKey: "syncChats", dataKey: STORAGE_KEYS.chats },
-] as const;
-
-export type SyncPreferenceKey =
-  (typeof SYNCABLE_DATA_ITEMS)[number]["preferenceKey"];
-
-type SyncableDataKey = (typeof SYNCABLE_DATA_ITEMS)[number]["dataKey"];
+export { STORAGE_KEYS, SYNCABLE_DATA_ITEMS, type SyncPreferenceKey };
 
 type StorageItem<T> = {
   key: string;
@@ -212,6 +204,7 @@ function createItem<T>(
   area: AreaName,
   key: string,
   init: () => T,
+  normalize?: (value: T) => T,
 ): StorageItem<T> {
   const storageKey = key;
   const storageArea = () => getBrowserApi().storage[area];
@@ -232,12 +225,19 @@ function createItem<T>(
           await markSyncLocalCacheFlushed(storageKey, initialValue);
         return initialValue;
       }
+      const value = normalize
+        ? normalize(result[storageKey] as T)
+        : (result[storageKey] as T);
       if (area === STORAGE_AREAS.sync)
-        await markSyncLocalCacheFlushed(storageKey, result[storageKey] as T);
-      return result[storageKey] as T;
+        await markSyncLocalCacheFlushed(storageKey, value);
+      return value;
     },
     async set(value) {
-      await setStoredValue(area, storageKey, value);
+      await setStoredValue(
+        area,
+        storageKey,
+        normalize ? normalize(value) : value,
+      );
     },
     async remove() {
       await storageArea().remove(storageKey);
@@ -312,19 +312,11 @@ function createMigratedItem<T>(
   };
 }
 
-function mergePreferences(value: Preferences): Preferences {
-  return {
-    ...DEFAULT_PREFERENCES,
-    ...value,
-    syncSettings: true,
-    syncProviders: true,
-  };
-}
-
 function createSwitchableItem<T>(
   key: string,
   init: () => T,
   syncPreferenceKey: SyncPreferenceKey,
+  normalize?: (value: T) => T,
 ): StorageItem<T> {
   const areaFor = (preferences: Preferences): AreaName =>
     areaForSyncEnabled(preferences[syncPreferenceKey] === true);
@@ -336,10 +328,12 @@ function createSwitchableItem<T>(
   async function getValue() {
     const area = await activeArea();
     const activeValue = await readFrom(area);
-    if (activeValue !== undefined) return activeValue;
+    if (activeValue !== undefined)
+      return normalize ? normalize(activeValue) : activeValue;
 
     const inactiveValue = await readFrom(otherStorageArea(area));
-    const value = inactiveValue === undefined ? init() : inactiveValue;
+    const rawValue = inactiveValue === undefined ? init() : inactiveValue;
+    const value = normalize ? normalize(rawValue) : rawValue;
     await setStoredValueNow(area, key, value);
     return value;
   }
@@ -355,7 +349,7 @@ function createSwitchableItem<T>(
     get: getValue,
     async set(value) {
       const area = await activeArea();
-      await setStoredValue(area, key, value);
+      await setStoredValue(area, key, normalize ? normalize(value) : value);
       await getBrowserApi().storage[otherStorageArea(area)].remove(key);
     },
     async remove() {
@@ -417,6 +411,12 @@ export const storage = {
     STORAGE_KEYS.provider,
     () => ({}),
     "syncProviders",
+  ),
+  agents: createSwitchableItem<Agent[]>(
+    STORAGE_KEYS.agents,
+    () => normalizeAgents(undefined),
+    "syncAgents",
+    normalizeAgents,
   ),
   skills: createSwitchableItem<Skill[]>(
     STORAGE_KEYS.skills,
