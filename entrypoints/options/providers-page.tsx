@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { Bot, Image, Plus, Server } from "lucide-react";
 import { getMessages } from "../../src/shared/i18n";
 import {
   createProviderConfig,
@@ -103,14 +103,18 @@ export function ProvidersPage() {
     <div className="stack">
       <div className="split">
         <div>
-          <h1>{t.options.modelProviders}</h1>
+          <h1 className="settings-page-title">
+            <Server size={24} /> {t.options.modelProviders}
+          </h1>
           <p className="muted">{t.options.providerDescription}</p>
         </div>
       </div>
       <div className="provider-top-stack">
         <Card>
           <CardHeader>
-            <CardTitle>{t.options.selectModel}</CardTitle>
+            <CardTitle className="settings-section-title">
+              <Bot size={18} /> {t.options.selectModel}
+            </CardTitle>
             <CardDescription>
               {t.options.selectModelDescription}
             </CardDescription>
@@ -131,7 +135,9 @@ export function ProvidersPage() {
           <CardHeader>
             <div className="setting-switch-row">
               <div>
-                <CardTitle>{t.options.enableImageGeneration}</CardTitle>
+                <CardTitle className="settings-section-title">
+                  <Image size={18} /> {t.options.enableImageGeneration}
+                </CardTitle>
                 <CardDescription>
                   {t.options.enableImageGenerationDescription}
                 </CardDescription>

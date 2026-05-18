@@ -1,5 +1,15 @@
 import { useRef, useState } from "react";
-import { Check, Copy, Download, FileArchive, Plus, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  Copy,
+  Download,
+  FileArchive,
+  FileText,
+  Plus,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import {
   QUICK_FEEDBACK_MS,
   SYNC_MAX_BYTES_PER_ITEM,
@@ -221,7 +231,9 @@ export function SkillsPage() {
     <div className="skills-page stack">
       <div className="skills-page-header">
         <div>
-          <h1>{t.options.skills}</h1>
+          <h1 className="settings-page-title">
+            <FileText size={24} /> {t.options.skills}
+          </h1>
           <p className="muted">{t.options.skillsDescription}</p>
         </div>
         <div className="skills-page-actions">
@@ -250,7 +262,9 @@ export function SkillsPage() {
           <CardContent>
             <div className="setting-switch-row">
               <div>
-                <CardTitle>{t.options.autoSelectSkills}</CardTitle>
+                <CardTitle className="settings-section-title">
+                  <Sparkles size={18} /> {t.options.autoSelectSkills}
+                </CardTitle>
                 <CardDescription>
                   {t.options.autoSelectSkillsDescription}
                 </CardDescription>
@@ -283,7 +297,9 @@ export function SkillsPage() {
       {importError && (
         <Card className="empty">
           <CardHeader>
-            <CardTitle>{t.options.importSkillZipError}</CardTitle>
+            <CardTitle className="settings-section-title">
+              <AlertCircle size={18} /> {t.options.importSkillZipError}
+            </CardTitle>
             <CardDescription>{importError}</CardDescription>
           </CardHeader>
         </Card>
@@ -291,7 +307,9 @@ export function SkillsPage() {
       {!skillList.length && (
         <Card className="empty">
           <CardHeader>
-            <CardTitle>{t.options.noSkillsTitle}</CardTitle>
+            <CardTitle className="settings-section-title">
+              <FileText size={18} /> {t.options.noSkillsTitle}
+            </CardTitle>
             <CardDescription>{t.options.noSkillsDescription}</CardDescription>
           </CardHeader>
         </Card>
@@ -307,6 +325,7 @@ export function SkillsPage() {
           <AccordionItem value={skill.id} key={skill.id}>
             <AccordionTrigger>
               <span className="skill-trigger-label">
+                <FileText size={18} />
                 {getSkillDisplayName(skill, t.options.untitledSkill)}
                 {normalizeSkill(skill).enabled === false && (
                   <span className="muted">{t.options.disabled}</span>

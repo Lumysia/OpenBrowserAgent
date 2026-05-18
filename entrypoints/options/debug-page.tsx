@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, Wrench, Trash2 } from "lucide-react";
+import { AlertTriangle, Bug, Wrench, Trash2 } from "lucide-react";
 import { browserTools } from "../../src/background/tool-schema";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
@@ -76,16 +76,19 @@ export function DebugPage() {
   return (
     <div className="stack">
       <div>
-        <h1>{t.options.debug}</h1>
+        <h1 className="settings-page-title">
+          <Bug size={24} /> {t.options.debug}
+        </h1>
         <p className="muted">{t.options.debugDescription}</p>
       </div>
       <Accordion type="single" collapsible>
         <AccordionItem value="tools">
           <AccordionTrigger className="debug-tools-trigger">
-            <span>
-              <strong>
-                <Wrench size={18} /> {t.options.debugToolsTitle}
-              </strong>
+            <span className="debug-section-heading">
+              <span className="debug-section-title">
+                <Wrench size={18} />
+                <span>{t.options.debugToolsTitle}</span>
+              </span>
               <small>
                 {t.options.debugToolsDescription.replace(
                   "{count}",
@@ -135,8 +138,9 @@ export function DebugPage() {
       </Accordion>
       <Card>
         <CardHeader>
-          <CardTitle>
-            <AlertTriangle size={18} /> {t.options.debugResetTitle}
+          <CardTitle className="debug-section-title">
+            <AlertTriangle size={18} />
+            <span>{t.options.debugResetTitle}</span>
           </CardTitle>
           <CardDescription>{t.options.debugResetDescription}</CardDescription>
         </CardHeader>

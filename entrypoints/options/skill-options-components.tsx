@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import {
   Check,
   Download,
@@ -19,7 +19,15 @@ import {
 } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
 import type { Skill, SkillFile } from "../../src/shared/types";
-import { Button, Input, Textarea } from "../../src/ui/components";
+import {
+  Button,
+  Input,
+  Textarea,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  type ButtonProps,
+} from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import {
   createEmptySkillFile,
@@ -208,43 +216,35 @@ export function SkillFileList({
                   </small>
                 </span>
                 <div className="skill-file-actions">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    title={t.options.editFile}
+                  <SkillFileActionButton
+                    label={t.options.editFile}
                     disabled={file.encoding === "base64"}
                     onClick={() => startEdit(file)}
                   >
                     <Pencil size={14} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    title={t.options.replaceFile}
+                  </SkillFileActionButton>
+                  <SkillFileActionButton
+                    label={t.options.replaceFile}
                     onClick={() => {
                       setReplacePath(file.path);
                       window.setTimeout(() => replaceInputRef.current?.click());
                     }}
                   >
                     <Upload size={14} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    title={t.options.downloadFile}
+                  </SkillFileActionButton>
+                  <SkillFileActionButton
+                    label={t.options.downloadFile}
                     onClick={() => downloadSkillFile(file)}
                   >
                     <Download size={14} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    title={t.options.deleteFile}
+                  </SkillFileActionButton>
+                  <SkillFileActionButton
+                    label={t.options.deleteFile}
                     disabled={file.path === SKILL_ENTRY_PATH}
                     onClick={() => onDeleteFile(file.path)}
                   >
                     <Trash2 size={14} />
-                  </Button>
+                  </SkillFileActionButton>
                 </div>
               </div>
               {isEditing && editingFile.encoding !== "base64" && (
@@ -273,6 +273,25 @@ export function SkillFileList({
         })}
       </div>
     </div>
+  );
+}
+
+function SkillFileActionButton({
+  label,
+  children,
+  ...props
+}: ButtonProps & { label: string; children: ReactNode }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="tooltip-button-wrapper">
+          <Button variant="ghost" size="icon" aria-label={label} {...props}>
+            {children}
+          </Button>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   );
 }
 

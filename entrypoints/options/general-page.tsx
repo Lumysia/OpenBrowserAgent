@@ -1,3 +1,13 @@
+import type { ReactNode } from "react";
+import {
+  Languages,
+  MonitorCog,
+  Palette,
+  RefreshCw,
+  ScrollText,
+  SlidersHorizontal,
+  Wrench,
+} from "lucide-react";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
@@ -15,6 +25,9 @@ import {
   SelectTrigger,
   SelectValue,
   Switch,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
   ToggleGroup,
   ToggleGroupItem,
 } from "../../src/ui/components";
@@ -37,12 +50,16 @@ export function GeneralPage() {
   return (
     <div className="stack">
       <div>
-        <h1>{t.options.general}</h1>
+        <h1 className="settings-page-title">
+          <SlidersHorizontal size={24} /> {t.options.general}
+        </h1>
         <p className="muted">{t.options.languageDescription}</p>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>{t.common.language}</CardTitle>
+          <CardTitle className="settings-section-title">
+            <Languages size={18} /> {t.common.language}
+          </CardTitle>
           <CardDescription>{t.options.languageDescription}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -62,7 +79,9 @@ export function GeneralPage() {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>{t.options.colorScheme}</CardTitle>
+          <CardTitle className="settings-section-title">
+            <Palette size={18} /> {t.options.colorScheme}
+          </CardTitle>
           <CardDescription>{t.options.colorSchemeDescription}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -75,23 +94,26 @@ export function GeneralPage() {
               const selected =
                 (preferences.accentColor || "pink") === option.id;
               return (
-                <button
-                  key={option.id}
-                  type="button"
-                  className={`accent-dot accent-dot-${option.id}${selected ? " active" : ""}`}
-                  aria-label={option.label}
-                  aria-checked={selected}
-                  role="radio"
-                  title={option.label}
-                  onClick={() =>
-                    setPreferences((previous) => ({
-                      ...previous,
-                      accentColor: option.id,
-                    }))
-                  }
-                >
-                  <span />
-                </button>
+                <Tooltip key={option.id}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className={`accent-dot accent-dot-${option.id}${selected ? " active" : ""}`}
+                      aria-label={option.label}
+                      aria-checked={selected}
+                      role="radio"
+                      onClick={() =>
+                        setPreferences((previous) => ({
+                          ...previous,
+                          accentColor: option.id,
+                        }))
+                      }
+                    >
+                      <span />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>{option.label}</TooltipContent>
+                </Tooltip>
               );
             })}
           </div>
@@ -99,7 +121,9 @@ export function GeneralPage() {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>{t.options.appearance}</CardTitle>
+          <CardTitle className="settings-section-title">
+            <MonitorCog size={18} /> {t.options.appearance}
+          </CardTitle>
           <CardDescription>{t.options.appearanceDescription}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -128,6 +152,7 @@ export function GeneralPage() {
         </CardContent>
       </Card>
       <PreferenceSwitch
+        icon={<ScrollText size={18} />}
         title={t.options.autoScroll}
         description={t.options.autoScrollDescription}
         checked={preferences.autoScroll !== false}
@@ -136,6 +161,7 @@ export function GeneralPage() {
         }
       />
       <PreferenceSwitch
+        icon={<RefreshCw size={18} />}
         title={t.options.autoRetry}
         description={t.options.autoRetryDescription}
         checked={preferences.autoRetry !== false}
@@ -145,7 +171,9 @@ export function GeneralPage() {
       />
       <Card>
         <CardHeader>
-          <CardTitle>{t.options.maxToolSteps}</CardTitle>
+          <CardTitle className="settings-section-title">
+            <Wrench size={18} /> {t.options.maxToolSteps}
+          </CardTitle>
           <CardDescription>{t.options.maxToolStepsDescription}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -168,11 +196,13 @@ export function GeneralPage() {
 }
 
 function PreferenceSwitch({
+  icon,
   title,
   description,
   checked,
   onChange,
 }: {
+  icon: ReactNode;
   title: string;
   description: string;
   checked: boolean;
@@ -183,7 +213,9 @@ function PreferenceSwitch({
       <CardContent>
         <div className="setting-switch-row">
           <div>
-            <CardTitle>{title}</CardTitle>
+            <CardTitle className="settings-section-title">
+              {icon} {title}
+            </CardTitle>
             <CardDescription>{description}</CardDescription>
           </div>
           <Switch checked={checked} onCheckedChange={onChange} />

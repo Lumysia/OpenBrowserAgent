@@ -1,3 +1,11 @@
+import type { ReactNode } from "react";
+import {
+  Activity,
+  Cloud,
+  Database,
+  FileText,
+  MessagesSquare,
+} from "lucide-react";
 import { getMessages } from "../../src/shared/i18n";
 import {
   setDataSync,
@@ -24,19 +32,22 @@ export function SyncPage() {
 
   const syncToggleContent: Record<
     SyncPreferenceKey,
-    { title: string; description: string }
+    { title: string; description: string; icon: ReactNode }
   > = {
     syncProviders: {
       title: t.options.syncProviders,
       description: t.options.syncProvidersDescription,
+      icon: <Database size={18} />,
     },
     syncSkills: {
       title: t.options.syncSkills,
       description: t.options.syncSkillsDescription,
+      icon: <FileText size={18} />,
     },
     syncChats: {
       title: t.options.syncChats,
       description: t.options.syncChatsDescription,
+      icon: <MessagesSquare size={18} />,
     },
   };
 
@@ -51,10 +62,13 @@ export function SyncPage() {
   return (
     <div className="stack">
       <div>
-        <h1>{t.options.sync}</h1>
+        <h1 className="settings-page-title">
+          <Cloud size={24} /> {t.options.sync}
+        </h1>
         <p className="muted">{t.options.syncSettingsDescription}</p>
       </div>
       <SyncToggleCard
+        icon={<Cloud size={18} />}
         title={t.options.syncSettings}
         description={t.options.syncSettingsDescription}
         value
@@ -67,6 +81,7 @@ export function SyncPage() {
           key={preferenceKey}
           title={syncToggleContent[preferenceKey].title}
           description={syncToggleContent[preferenceKey].description}
+          icon={syncToggleContent[preferenceKey].icon}
           value={preferences[preferenceKey] === true}
           onChange={(value) => updateSyncPreference(preferenceKey, value)}
         />
@@ -106,7 +121,9 @@ function SyncWriteStatusCard({
             className={`sync-status-dot ${hasError ? "error" : pendingCount > 0 ? "pending" : ""}`}
           />
           <div>
-            <CardTitle>{title}</CardTitle>
+            <CardTitle className="settings-section-title">
+              <Activity size={18} /> {title}
+            </CardTitle>
             {detail && <CardDescription>{detail}</CardDescription>}
           </div>
         </div>
@@ -116,12 +133,14 @@ function SyncWriteStatusCard({
 }
 
 function SyncToggleCard({
+  icon,
   title,
   description,
   value,
   onChange,
   disabled,
 }: {
+  icon: ReactNode;
   title: string;
   description: string;
   value: boolean;
@@ -133,7 +152,9 @@ function SyncToggleCard({
       <CardContent>
         <div className="setting-switch-row">
           <div>
-            <CardTitle>{title}</CardTitle>
+            <CardTitle className="settings-section-title">
+              {icon} {title}
+            </CardTitle>
             <CardDescription>{description}</CardDescription>
           </div>
           <Switch

@@ -766,7 +766,13 @@ a {
 }
 
 .ui-card {
-  background: var(--card);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-softer) 46%, transparent),
+      transparent 58%
+    ),
+    color-mix(in srgb, var(--accent-softer) 10%, var(--card));
   color: var(--card-foreground);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1116,6 +1122,9 @@ a {
   box-shadow: 0 10px 24px rgba(22, 21, 18, 0.16);
   animation: pop-in 0.14s ease both;
 }
+.tooltip-button-wrapper {
+  display: inline-flex;
+}
 .ui-popover-content {
   z-index: 60;
   overflow: hidden;
@@ -1348,6 +1357,21 @@ a {
   flex-direction: column;
   gap: 12px;
 }
+.settings-page-title,
+.settings-section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.settings-page-title svg,
+.settings-section-title svg {
+  flex-shrink: 0;
+}
+.settings-section-title {
+  font-weight: 600;
+  line-height: 1.25;
+}
 .row {
   display: flex;
   align-items: center;
@@ -1449,6 +1473,9 @@ a {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.skill-trigger-label svg {
+  flex-shrink: 0;
 }
 .skill-trigger-actions {
   margin-left: auto;
@@ -1571,19 +1598,32 @@ a {
   display: grid;
   gap: 8px;
 }
-.debug-tools-trigger > span {
+.debug-tools-trigger {
+  font-weight: 700;
+}
+.debug-section-heading {
   min-width: 0;
   display: grid;
-  gap: 4px;
+  gap: 6px;
 }
-.debug-tools-trigger strong {
+.debug-section-title {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  min-width: 0;
+  font-weight: 700;
+  line-height: 1.25;
 }
-.debug-tools-trigger small {
+.debug-section-title svg {
+  flex-shrink: 0;
+}
+.debug-section-title span {
+  min-width: 0;
+}
+.debug-section-heading small {
   color: var(--muted-foreground);
   font-weight: 400;
+  line-height: 1.45;
 }
 .debug-tool-item {
   box-shadow: none;

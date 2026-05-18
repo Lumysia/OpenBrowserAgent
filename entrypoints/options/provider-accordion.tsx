@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2, Trash2 } from "lucide-react";
+import { Cpu, Loader2, Server, Trash2 } from "lucide-react";
 import { QUICK_FEEDBACK_MS } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { MANUAL_MODEL_PROVIDER_TYPES } from "../../src/shared/provider-instances";
@@ -161,7 +161,9 @@ export function ProviderAccordion({
   return (
     <AccordionItem value={providerId}>
       <AccordionTrigger>
-        <span>{value.label || providerLabels[provider]}</span>
+        <span className="settings-section-title provider-trigger-title">
+          <Server size={18} /> {value.label || providerLabels[provider]}
+        </span>
         <span className="provider-summary">
           <Badge>{providerLabels[provider]}</Badge>
           <Badge>
@@ -203,7 +205,9 @@ export function ProviderAccordion({
           </div>
           <div className="provider-models-panel">
             <div>
-              <strong>{t.options.models}</strong>
+              <strong className="settings-section-title">
+                <Cpu size={18} /> {t.options.models}
+              </strong>
               <p className="muted">{t.options.modelHint}</p>
             </div>
             <div className="provider-model-actions">
