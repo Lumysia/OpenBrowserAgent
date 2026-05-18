@@ -7,6 +7,7 @@ import { BROWSER_TOOL_NAME, UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
 import { isScriptableUrl } from "../shared/browser";
 import { downloadTextFile, findImages, safeFileName } from "./downloads";
 import { browserTools } from "./tool-schema";
+import { withTimeout } from "./tool-utils";
 
 export { browserTools };
 async function executeBrowserTool(
@@ -213,28 +214,6 @@ export async function safeExecuteBrowserTool(
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error) };
   }
-}
-
-function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  message: string,
-) {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
-  });
-  return Promise.race([promise, timeout]).finally(() => {
-    if (timeoutId) clearTimeout(timeoutId);
-  });
-}
-
-export function isToolError(output: unknown) {
-  return typeof output === "object" && output !== null && "error" in output;
-}
-
-export function pickTab(tab: chrome.tabs.Tab) {
-  return { id: tab.id, title: tab.title, url: tab.url };
 }
 
 async function resolveTabId(value: unknown) {

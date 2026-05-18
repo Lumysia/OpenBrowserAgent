@@ -43,6 +43,7 @@ import {
 } from "./sidepanel-menu-state";
 import { SidepanelView } from "./sidepanel-view";
 import { streamPartFromChunk } from "./stream-parts";
+import { closeStreamPort } from "./stream-port";
 import { useComposerContext } from "./use-composer-context";
 import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
@@ -330,7 +331,7 @@ export function SidepanelApp() {
   }
 
   function startStream(request: SendMessagesRequest, targetMessageId: string) {
-    closeStreamPort(false);
+    closeStreamPort(portRef, false);
     const port = chrome.runtime.connect({ name: AI_STREAM_PORT_NAME });
     portRef.current = port;
     port.onMessage.addListener((message: AiStreamResponse) => {
@@ -363,23 +364,6 @@ export function SidepanelApp() {
     }
   }
 
-  function closeStreamPort(abort: boolean) {
-    const port = portRef.current;
-    portRef.current = undefined;
-    if (!port) return;
-    try {
-      if (abort)
-        port.postMessage({
-          type: AI_STREAM_REQUEST_TYPE.abort,
-        } satisfies AiStreamRequest);
-    } catch {
-      // Chrome throws if the service worker already disconnected the port.
-    }
-    try {
-      port.disconnect();
-    } catch {}
-  }
-
   function appendToAssistant(
     chatId: string,
     messageId: string,
@@ -404,7 +388,7 @@ export function SidepanelApp() {
 
   function stop() {
     activeStreamRef.current = null;
-    closeStreamPort(true);
+    closeStreamPort(portRef, true);
     setStreaming(false);
   }
 
