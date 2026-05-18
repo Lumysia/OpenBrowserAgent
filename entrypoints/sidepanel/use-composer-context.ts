@@ -25,17 +25,32 @@ export function useComposerContext(chats: Chat[]) {
   });
 
   useEffect(() => {
-    const updateActiveTabAttachable = () => {
-      void getActiveTab().then((tab) =>
-        setActiveTabAttachable(isScriptableUrl(tab?.url)),
+    const updateActiveTabAttachable = (tab?: chrome.tabs.Tab) => {
+      if (tab) {
+        setActiveTabAttachable(isScriptableUrl(tab.url));
+        return;
+      }
+      void getActiveTab().then((activeTab) =>
+        setActiveTabAttachable(isScriptableUrl(activeTab?.url)),
       );
     };
     updateActiveTabAttachable();
-    chrome.tabs.onActivated.addListener(updateActiveTabAttachable);
-    chrome.tabs.onUpdated.addListener(updateActiveTabAttachable);
+    const handleActivated = (_activeInfo: { tabId: number }) => {
+      updateActiveTabAttachable();
+    };
+    const handleUpdated = (
+      _tabId: number,
+      info: { url?: string; title?: string; favIconUrl?: string },
+      tab: chrome.tabs.Tab,
+    ) => {
+      if (!info.url && !info.title && !info.favIconUrl) return;
+      if (tab.active) updateActiveTabAttachable();
+    };
+    chrome.tabs.onActivated.addListener(handleActivated);
+    chrome.tabs.onUpdated.addListener(handleUpdated);
     return () => {
-      chrome.tabs.onActivated.removeListener(updateActiveTabAttachable);
-      chrome.tabs.onUpdated.removeListener(updateActiveTabAttachable);
+      chrome.tabs.onActivated.removeListener(handleActivated);
+      chrome.tabs.onUpdated.removeListener(handleUpdated);
     };
   }, []);
 

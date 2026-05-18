@@ -64,8 +64,9 @@ export function useActiveTabContext({
   }, [attachedTabs]);
 
   useEffect(() => {
-    const syncActiveTab = () => {
+    const syncActiveTab = (tab?: chrome.tabs.Tab) => {
       void syncActiveTabContext({
+        tab,
         attachedTabs,
         selectedElement,
         setAttachedTabs,
@@ -73,11 +74,22 @@ export function useActiveTabContext({
         autoAttachSuppressedRef,
       });
     };
-    chrome.tabs.onActivated.addListener(syncActiveTab);
-    chrome.tabs.onUpdated.addListener(syncActiveTab);
+    const handleActivated = (_activeInfo: { tabId: number }) => {
+      syncActiveTab();
+    };
+    const handleUpdated = (
+      _tabId: number,
+      info: { url?: string; title?: string; favIconUrl?: string },
+      tab: chrome.tabs.Tab,
+    ) => {
+      if (!info.url && !info.title && !info.favIconUrl) return;
+      if (tab.active) syncActiveTab();
+    };
+    chrome.tabs.onActivated.addListener(handleActivated);
+    chrome.tabs.onUpdated.addListener(handleUpdated);
     return () => {
-      chrome.tabs.onActivated.removeListener(syncActiveTab);
-      chrome.tabs.onUpdated.removeListener(syncActiveTab);
+      chrome.tabs.onActivated.removeListener(handleActivated);
+      chrome.tabs.onUpdated.removeListener(handleUpdated);
     };
   }, [attachedTabs, selectedElement, setAttachedTabs]);
 }
@@ -95,19 +107,21 @@ async function autoAttachActiveTab(
 }
 
 async function syncActiveTabContext({
+  tab,
   attachedTabs,
   selectedElement,
   setAttachedTabs,
   autoAttachedTabIdRef,
   autoAttachSuppressedRef,
 }: {
+  tab?: chrome.tabs.Tab;
   attachedTabs: AttachmentTab[];
   selectedElement: SelectedElement | null;
   setAttachedTabs: Dispatch<SetStateAction<AttachmentTab[]>>;
   autoAttachedTabIdRef: MutableRefObject<number | null>;
   autoAttachSuppressedRef: MutableRefObject<boolean>;
 }) {
-  const tab = await getActiveTab();
+  tab ??= await getActiveTab();
   const attachment = tab ? toAttachmentTab(tab) : null;
   if (!attachment) {
     const autoAttachedTabId = autoAttachedTabIdRef.current;

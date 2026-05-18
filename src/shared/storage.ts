@@ -173,6 +173,12 @@ async function writeSyncLocalCache<T>(key: string, value: T) {
 }
 
 async function markSyncLocalCacheFlushed<T>(key: string, value: T) {
+  const existing = await readSyncLocalCache<T>(key);
+  if (
+    existing?.flushedAt !== undefined &&
+    sameStorageValue(existing.value, value)
+  )
+    return;
   const now = Date.now();
   await getBrowserApi().storage.local.set({
     [syncLocalCacheKey(key)]: {
@@ -181,6 +187,14 @@ async function markSyncLocalCacheFlushed<T>(key: string, value: T) {
       flushedAt: now,
     } satisfies SyncLocalCache<T>,
   });
+}
+
+function sameStorageValue(left: unknown, right: unknown) {
+  try {
+    return JSON.stringify(left) === JSON.stringify(right);
+  } catch {
+    return Object.is(left, right);
+  }
 }
 
 async function readSyncLocalCache<T>(key: string) {
@@ -363,23 +377,38 @@ function createSwitchableItem<T>(
         changes: Record<string, chrome.storage.StorageChange>,
         changedArea: string,
       ) => {
-        const area = await activeArea();
         const cacheChange = changes[syncLocalCacheKey(key)];
         const localCacheChanged = changedArea === STORAGE_AREAS.local;
+        const preferencesCacheChanged =
+          localCacheChanged &&
+          changes[syncLocalCacheKey(STORAGE_KEYS.preferences)];
+
+        if (!cacheChange && !preferencesCacheChanged && !changes[key]) return;
+
+        if (preferencesCacheChanged) {
+          const preferenceChange =
+            preferencesCacheChanged as chrome.storage.StorageChange;
+          const oldPreferences = (
+            preferenceChange.oldValue as SyncLocalCache<Preferences> | undefined
+          )?.value;
+          const newPreferences = (
+            preferenceChange.newValue as SyncLocalCache<Preferences> | undefined
+          )?.value;
+          const oldArea = areaFor(oldPreferences || DEFAULT_PREFERENCES);
+          const newArea = areaFor(newPreferences || DEFAULT_PREFERENCES);
+          if (oldArea === newArea) return;
+          const next = await getValue();
+          callback(next, next);
+          return;
+        }
+
+        const area = await activeArea();
         if (area === STORAGE_AREAS.sync && localCacheChanged && cacheChange) {
           const next = cacheChange.newValue as SyncLocalCache<T> | undefined;
           const previous = cacheChange.oldValue as
             | SyncLocalCache<T>
             | undefined;
           if (next) callback(next.value, previous?.value as T);
-          return;
-        }
-        if (
-          localCacheChanged &&
-          changes[syncLocalCacheKey(STORAGE_KEYS.preferences)]
-        ) {
-          const next = await getValue();
-          callback(next, next);
           return;
         }
         if (changedArea !== area || !changes[key]) return;

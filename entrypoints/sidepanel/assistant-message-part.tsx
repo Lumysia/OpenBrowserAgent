@@ -4,13 +4,11 @@ import {
   COPY_FEEDBACK_MS,
   STREAM_RENDER_THROTTLE_MS,
 } from "../../src/shared/config";
-import { getMessages, type Messages } from "../../src/shared/i18n";
+import type { Messages } from "../../src/shared/i18n";
 import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
 import type { ChatMessage, ChatPart, ChatSource } from "../../src/shared/types";
 import { isToolPartType } from "../../src/shared/types";
-import { storage } from "../../src/shared/storage";
 import { Button } from "../../src/ui/components";
-import { useStoredState } from "../../src/ui/useStoredState";
 import { IconTooltip } from "./icon-tooltip";
 import { renderMarkdown } from "./markdown";
 import { MessageRunInfo } from "./message-run-info";
@@ -36,6 +34,7 @@ export function AssistantPart({
   if (part.type === "text" && part.text?.trim())
     return (
       <AssistantText
+        t={t}
         text={part.text}
         sources={sources}
         onFork={onFork}
@@ -47,6 +46,7 @@ export function AssistantPart({
 }
 
 export function AssistantText({
+  t,
   text,
   modelLabel,
   createdAt,
@@ -55,6 +55,7 @@ export function AssistantText({
   chatMessages = [],
   sources = [],
 }: {
+  t: Messages;
   text: string;
   modelLabel?: string;
   createdAt?: number;
@@ -63,11 +64,9 @@ export function AssistantText({
   chatMessages?: ChatMessage[];
   sources?: ChatSource[];
 }) {
-  const [language] = useStoredState(storage.language);
   const [copied, setCopied] = useState(false);
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const markdownRef = useRef<HTMLDivElement | null>(null);
-  const t = getMessages(language);
   const { text: displayText, animatedFrom } = useThrottledText(
     text,
     STREAM_RENDER_THROTTLE_MS,

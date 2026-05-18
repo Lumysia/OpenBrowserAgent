@@ -132,6 +132,7 @@ export function MessageBubble({
         <TypingIndicator t={t} />
       ) : (
         <AssistantText
+          t={t}
           text={message.content}
           sources={sources}
           modelLabel={modelLabel}
