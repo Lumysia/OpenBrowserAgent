@@ -75,6 +75,7 @@ export const enUS = {
     attachFiles: "Attach files",
     attachFilesHint: "Images or local files",
     removeAttachment: "Remove attachment",
+    removeTab: "Remove tab",
     attachmentTooLarge: "Some files were too large to attach: {names}",
     attachmentsUnsupportedRetry:
       "The selected model rejected the image/file payload, so I retried with text and file details only.",
@@ -85,6 +86,7 @@ export const enUS = {
       "Choose replacements, or resend without them.",
     resendWithoutMissingFiles: "Resend without missing files",
     resendMessage: "Resend",
+    forkChat: "Fork chat",
     unavailableAttachments: "{count} unavailable",
     allOpenTabs: "All open tabs",
     selectElement: "Select element",
@@ -97,6 +99,9 @@ export const enUS = {
     queuedMessages: "Queued messages",
     queuedMessagesDescription:
       "{count} waiting. They will send after the current response.",
+    editingMessage: "Editing message",
+    editingMessageDescription:
+      "Only the composer is active. Press Esc or Cancel to stop editing.",
     stop: "Stop",
     running: "Running",
     done: "Done",

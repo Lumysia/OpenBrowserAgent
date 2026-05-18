@@ -64,7 +64,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   return (
     <div className="sidepanel">
       <div className="empty">
-        <Card className="stack bootstrap-card" style={{ maxWidth: 360 }}>
+        <Card className="stack bootstrap-card">
           <CardHeader>
             <Bot size={34} />
             <CardTitle>{t.sidepanel.connectProviderTitle}</CardTitle>

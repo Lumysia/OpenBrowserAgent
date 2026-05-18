@@ -1,4 +1,5 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
+import { isVisionImageMimeType } from "../shared/attachments";
 import { READ_ATTACHMENT_DEFAULT_LIMIT } from "../shared/config";
 import {
   SKILL_ENTRY_PATH,
@@ -78,10 +79,6 @@ async function readFileFromUrl(input: Record<string, unknown>) {
     const format = String(input.format || "auto");
     const offset = clampOffset(input.offset);
     const limit = clampLimit(input.limit);
-    if (type.startsWith("image/") && format === "auto") {
-      const dataUrl = await blobToDataUrl(blob);
-      return imageToolOutput(dataUrl, type, size, url);
-    }
     if (format === "text" || (format === "auto" && isTextType(type, url))) {
       const text = await blob.text();
       return sliceOutput(
@@ -91,6 +88,10 @@ async function readFileFromUrl(input: Record<string, unknown>) {
         limit,
         "text",
       );
+    }
+    if (isVisionImageMimeType(type) && format === "auto") {
+      const dataUrl = await blobToDataUrl(blob);
+      return imageToolOutput(dataUrl, type, size, url);
     }
     const bytes = new Uint8Array(await blob.arrayBuffer());
     if (format === "hex")

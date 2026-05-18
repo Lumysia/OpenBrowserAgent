@@ -74,6 +74,7 @@ export const esES: LocaleMessages = {
     attachFiles: "Adjuntar archivos",
     attachFilesHint: "Imágenes o archivos locales",
     removeAttachment: "Eliminar adjunto",
+    removeTab: "Eliminar pestaña",
     attachmentTooLarge: "Algunos archivos eran demasiado grandes: {names}",
     attachmentsUnsupportedRetry:
       "El modelo seleccionado rechazó la carga de imagen/archivo, así que reintenté solo con texto y detalles del archivo.",
@@ -84,6 +85,7 @@ export const esES: LocaleMessages = {
       "Elige reemplazos o reenvía sin ellos.",
     resendWithoutMissingFiles: "Reenviar sin archivos faltantes",
     resendMessage: "Reenviar",
+    forkChat: "Bifurcar chat",
     unavailableAttachments: "{count} no disponibles",
     allOpenTabs: "Todas las pestañas abiertas",
     selectElement: "Seleccionar elemento",
@@ -96,6 +98,9 @@ export const esES: LocaleMessages = {
     queuedMessages: "Mensajes en cola",
     queuedMessagesDescription:
       "{count} en espera. Se enviarán después de la respuesta actual.",
+    editingMessage: "Editando mensaje",
+    editingMessageDescription:
+      "Solo el compositor está activo. Pulsa Esc o Cancelar para dejar de editar.",
     stop: "Detener",
     running: "Ejecutando",
     done: "Listo",

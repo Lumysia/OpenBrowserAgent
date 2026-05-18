@@ -55,6 +55,7 @@
   );
   --radius: 12px;
   --shadow: rgba(22, 21, 18, 0.07);
+  --compact-panel-width: 420px;
   font-family:
     Inter,
     ui-sans-serif,
@@ -1799,6 +1800,7 @@ a {
 }
 
 .sidepanel {
+  position: relative;
   width: 100%;
   min-width: 0;
   max-width: 100vw;
@@ -1825,6 +1827,64 @@ a {
       var(--panel-gradient-mid) 58%,
       var(--panel-gradient-bottom) 100%
     );
+}
+.sidepanel.editing-mode .sidepanel-header,
+.sidepanel.editing-mode .messages {
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.38;
+  filter: saturate(0.7);
+}
+.edit-mode-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--background) 54%, transparent),
+    color-mix(in srgb, var(--background) 76%, transparent)
+  );
+  backdrop-filter: blur(1.5px);
+}
+.edit-mode-banner {
+  width: min(var(--compact-panel-width), 100%);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 32%, var(--border));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--accent-softer) 84%, var(--card));
+  color: var(--accent-strong);
+  box-shadow: 0 18px 42px var(--accent-shadow);
+  pointer-events: auto;
+  animation: pop-in 0.16s ease both;
+}
+.edit-mode-banner > svg {
+  flex-shrink: 0;
+}
+.edit-mode-banner span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.edit-mode-banner strong {
+  font-size: 14px;
+  line-height: 1.2;
+}
+.edit-mode-banner small {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.3;
+}
+.sidepanel.editing-mode .composer {
+  z-index: 7;
 }
 .sidepanel-header {
   position: sticky;
@@ -2725,6 +2785,9 @@ a {
 }
 .bootstrap-card .ui-card-header {
   align-items: center;
+}
+.bootstrap-card {
+  max-width: var(--compact-panel-width);
 }
 .bootstrap-steps {
   display: grid;

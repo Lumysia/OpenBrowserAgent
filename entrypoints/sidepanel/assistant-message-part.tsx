@@ -1,4 +1,4 @@
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, GitBranch } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import {
   COPY_FEEDBACK_MS,
@@ -20,14 +20,16 @@ export function AssistantPart({
   t,
   part,
   sources,
+  onFork,
 }: {
   t: Messages;
   part: ChatPart;
   sources: ChatSource[];
+  onFork?: () => void;
 }) {
   if (isToolPartType(part.type)) return <ToolPart t={t} part={part} />;
   if (part.type === "text" && part.text?.trim())
-    return <AssistantText text={part.text} sources={sources} />;
+    return <AssistantText text={part.text} sources={sources} onFork={onFork} />;
   return null;
 }
 
@@ -35,11 +37,13 @@ export function AssistantText({
   text,
   modelLabel,
   createdAt,
+  onFork,
   sources = [],
 }: {
   text: string;
   modelLabel?: string;
   createdAt?: number;
+  onFork?: () => void;
   sources?: ChatSource[];
 }) {
   const [language] = useStoredState(storage.language);
@@ -134,6 +138,18 @@ export function AssistantText({
             {copied ? <Check size={15} /> : <Copy size={15} />}
           </Button>
         </IconTooltip>
+        {onFork && (
+          <IconTooltip label={t.sidepanel.forkChat}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="copy-message"
+              onClick={onFork}
+            >
+              <GitBranch size={15} />
+            </Button>
+          </IconTooltip>
+        )}
         {(modelLabel || createdAt) && (
           <span className="assistant-model-meta">
             {[modelLabel, createdAt ? formatMessageTime(createdAt) : ""]

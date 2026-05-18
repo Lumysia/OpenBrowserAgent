@@ -74,6 +74,7 @@ export const jaJP: LocaleMessages = {
     attachFiles: "ファイルを添付",
     attachFilesHint: "画像またはローカルファイル",
     removeAttachment: "添付を削除",
+    removeTab: "タブを削除",
     attachmentTooLarge: "一部のファイルが大きすぎます: {names}",
     attachmentsUnsupportedRetry:
       "選択したモデルが画像/ファイルのペイロードを拒否したため、テキストとファイル情報のみで再試行しました。",
@@ -84,6 +85,7 @@ export const jaJP: LocaleMessages = {
       "置き換えるファイルを選ぶか、それらを除いて再送信します。",
     resendWithoutMissingFiles: "不足ファイルなしで再送信",
     resendMessage: "再送信",
+    forkChat: "チャットを分岐",
     unavailableAttachments: "{count}件利用不可",
     allOpenTabs: "開いているすべてのタブ",
     selectElement: "要素を選択",
@@ -96,6 +98,9 @@ export const jaJP: LocaleMessages = {
     queuedMessages: "キュー内のメッセージ",
     queuedMessagesDescription:
       "{count}件待機中です。現在の応答が終わると送信されます。",
+    editingMessage: "メッセージを編集中",
+    editingMessageDescription:
+      "入力欄だけ操作できます。Escまたはキャンセルで編集を終了します。",
     stop: "停止",
     running: "実行中",
     done: "完了",

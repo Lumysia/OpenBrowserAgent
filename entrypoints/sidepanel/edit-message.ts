@@ -36,6 +36,18 @@ export function createEditMessageDraft({
   };
 }
 
+export function createResendMessageDraft({
+  chat,
+  message,
+  attachments,
+}: {
+  chat: Chat;
+  message: ChatMessage;
+  attachments: UploadedAttachment[];
+}) {
+  return createEditMessageDraft({ chat, message, attachments });
+}
+
 export type EditMessageDraft = NonNullable<
   ReturnType<typeof createEditMessageDraft>
 > & {

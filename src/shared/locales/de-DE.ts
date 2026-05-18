@@ -75,6 +75,7 @@ export const deDE: LocaleMessages = {
     attachFiles: "Dateien anhängen",
     attachFilesHint: "Bilder oder lokale Dateien",
     removeAttachment: "Anhang entfernen",
+    removeTab: "Tab entfernen",
     attachmentTooLarge: "Einige Dateien waren zu groß zum Anhängen: {names}",
     attachmentsUnsupportedRetry:
       "Das ausgewählte Modell hat die Bild-/Dateinutzlast abgelehnt, daher wurde mit Text und Dateidetails erneut versucht.",
@@ -85,6 +86,7 @@ export const deDE: LocaleMessages = {
       "Ersatzdateien auswählen oder ohne sie erneut senden.",
     resendWithoutMissingFiles: "Ohne fehlende Dateien erneut senden",
     resendMessage: "Erneut senden",
+    forkChat: "Chat verzweigen",
     unavailableAttachments: "{count} nicht verfügbar",
     allOpenTabs: "Alle geöffneten Tabs",
     selectElement: "Element auswählen",
@@ -98,6 +100,9 @@ export const deDE: LocaleMessages = {
     queuedMessages: "Eingereihte Nachrichten",
     queuedMessagesDescription:
       "{count} warten. Sie werden nach der aktuellen Antwort gesendet.",
+    editingMessage: "Nachricht wird bearbeitet",
+    editingMessageDescription:
+      "Nur der Composer ist aktiv. Drücken Sie Esc oder Abbrechen zum Beenden.",
     stop: "Stoppen",
     running: "Läuft",
     done: "Fertig",

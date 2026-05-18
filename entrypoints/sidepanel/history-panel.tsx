@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
 import type { Chat } from "../../src/shared/types";
 import { Button } from "../../src/ui/components";
+import { IconTooltip } from "./icon-tooltip";
 import {
   formatMessageCount,
   formatRelativeTime,
@@ -44,15 +45,17 @@ export function HistoryPanel({
               {formatRelativeTime(t, chat.updatedAt)}
             </small>
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="history-close"
-            title={t.sidepanel.closeChat}
-            onClick={() => onClose(chat.id)}
-          >
-            <X size={13} />
-          </Button>
+          <IconTooltip label={t.sidepanel.closeChat}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="history-close"
+              aria-label={t.sidepanel.closeChat}
+              onClick={() => onClose(chat.id)}
+            >
+              <X size={13} />
+            </Button>
+          </IconTooltip>
         </div>
       ))}
     </div>

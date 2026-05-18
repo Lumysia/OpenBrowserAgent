@@ -7,6 +7,7 @@ import {
 import type { Messages } from "../../src/shared/i18n";
 import type { UploadedAttachment } from "../../src/shared/types";
 import { Button } from "../../src/ui/components";
+import { IconTooltip } from "./icon-tooltip";
 import { formatAttachmentSize } from "./file-attachments";
 
 export function UploadFileInput({
@@ -53,15 +54,17 @@ export function UploadedAttachmentCard({
           {status} · {formatAttachmentSize(attachment.size)}
         </small>
       </span>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="context-close"
-        title={t.sidepanel.removeAttachment}
-        onClick={onRemove}
-      >
-        <X size={14} />
-      </Button>
+      <IconTooltip label={t.sidepanel.removeAttachment}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="context-close"
+          aria-label={t.sidepanel.removeAttachment}
+          onClick={onRemove}
+        >
+          <X size={14} />
+        </Button>
+      </IconTooltip>
     </div>
   );
 }

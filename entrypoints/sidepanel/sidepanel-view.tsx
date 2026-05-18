@@ -30,6 +30,7 @@ import {
   selectedModelLabel,
 } from "./composer-menus";
 import { ComposerAttachments } from "./composer-attachments";
+import { EditModeOverlay } from "./edit-mode-overlay";
 import { IconTooltip } from "./icon-tooltip";
 import { MessageBubble } from "./message-bubble";
 import { ProvidersEmptyState } from "./providers-empty-state";
@@ -109,6 +110,7 @@ export function SidepanelView({
   onReplaceUploadedAttachment,
   onEditMessage,
   onResendMessage,
+  onForkMessage,
   onSelectElement,
   onSelectChat,
 }: {
@@ -172,6 +174,7 @@ export function SidepanelView({
   onReplaceUploadedAttachment: ReplaceAttachmentHandler;
   onEditMessage: MessageAttachmentHandler;
   onResendMessage: MessageAttachmentHandler;
+  onForkMessage: (message: ChatMessage) => void;
   onSelectElement: () => Promise<void>;
   onSelectChat: (chatId: string) => void;
 }) {
@@ -197,13 +200,12 @@ export function SidepanelView({
 
   if (!providersReady) return null;
 
-  if (modelCount === 0) {
-    return <ProvidersEmptyState t={t} />;
-  }
+  if (modelCount === 0) return <ProvidersEmptyState t={t} />;
+  const sidepanelClass = `sidepanel ${editingMessageId ? "editing-mode" : ""}`;
 
   return (
     <TooltipProvider delayDuration={250}>
-      <div className="sidepanel" ref={sidepanelRef}>
+      <div className={sidepanelClass} ref={sidepanelRef}>
         <SidepanelHeader
           t={t}
           currentChat={currentChat}
@@ -218,6 +220,9 @@ export function SidepanelView({
           onSelectChat={onSelectChat}
           onCloseChat={onCloseChat}
         />
+        {editingMessageId && (
+          <EditModeOverlay t={t} onCancel={onCancelEditMessage} />
+        )}
         <ScrollArea className="messages" viewportRef={messagesRef}>
           {!currentChat?.messages.length && (
             <div className="empty">
@@ -238,6 +243,7 @@ export function SidepanelView({
               onReplaceAttachment={onReplaceUploadedAttachment}
               onEdit={onEditMessage}
               onResend={onResendMessage}
+              onFork={onForkMessage}
             />
           ))}
         </ScrollArea>
@@ -251,7 +257,7 @@ export function SidepanelView({
               className="skill-create"
               variant="secondary"
               size="sm"
-              disabled={creatingSkill}
+              disabled={creatingSkill || !!editingMessageId}
               onClick={onCreateSkill}
             >
               <Plus size={16} />{" "}
@@ -434,7 +440,7 @@ export function SidepanelView({
                         variant="outline"
                         className="composer-trigger composer-mode-trigger"
                         disabled={aiWorking}
-                        title={
+                        aria-label={
                           mode === CHAT_MODE.agent ? t.words.agent : t.words.ask
                         }
                       >

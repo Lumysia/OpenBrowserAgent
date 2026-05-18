@@ -74,6 +74,7 @@ export const ptBR: LocaleMessages = {
     attachFiles: "Anexar arquivos",
     attachFilesHint: "Imagens ou arquivos locais",
     removeAttachment: "Remover anexo",
+    removeTab: "Remover aba",
     attachmentTooLarge: "Alguns arquivos eram grandes demais: {names}",
     attachmentsUnsupportedRetry:
       "O modelo selecionado rejeitou o payload de imagem/arquivo, então tentei novamente apenas com texto e detalhes do arquivo.",
@@ -84,6 +85,7 @@ export const ptBR: LocaleMessages = {
       "Escolha substitutos ou reenvie sem eles.",
     resendWithoutMissingFiles: "Reenviar sem arquivos ausentes",
     resendMessage: "Reenviar",
+    forkChat: "Bifurcar chat",
     unavailableAttachments: "{count} indisponíveis",
     allOpenTabs: "Todas as abas abertas",
     selectElement: "Selecionar elemento",
@@ -96,6 +98,9 @@ export const ptBR: LocaleMessages = {
     queuedMessages: "Mensagens na fila",
     queuedMessagesDescription:
       "{count} aguardando. Serão enviadas após a resposta atual.",
+    editingMessage: "Editando mensagem",
+    editingMessageDescription:
+      "Só o compositor está ativo. Pressione Esc ou Cancelar para parar.",
     stop: "Parar",
     running: "Executando",
     done: "Concluído",

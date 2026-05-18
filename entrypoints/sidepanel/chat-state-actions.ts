@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import type { Chat } from "../../src/shared/types";
+import type { Chat, ChatMessage } from "../../src/shared/types";
 import { sortChatsNewestFirst } from "./format";
 
 type ChatSetter = Dispatch<SetStateAction<Chat[]>>;
@@ -31,6 +31,33 @@ export function updateChatAction(setChats: ChatSetter, chat: Chat) {
   setChats((items) =>
     items.map((candidate) => (candidate.id === chat.id ? chat : candidate)),
   );
+}
+
+export function forkChatAction({
+  chat,
+  message,
+  setChats,
+  setActiveChatId,
+}: {
+  chat: Chat;
+  message: ChatMessage;
+  setChats: ChatSetter;
+  setActiveChatId: ActiveChatSetter;
+}) {
+  const messageIndex = chat.messages.findIndex(
+    (item) => item.id === message.id,
+  );
+  if (messageIndex < 0) return;
+  const now = Date.now();
+  const fork: Chat = {
+    ...chat,
+    id: crypto.randomUUID(),
+    messages: chat.messages.slice(0, messageIndex + 1),
+    createdAt: now,
+    updatedAt: now,
+  };
+  setChats((items) => [...items, fork]);
+  setActiveChatId(fork.id);
 }
 
 export function closeChatAction({

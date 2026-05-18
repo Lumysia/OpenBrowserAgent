@@ -1,20 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  AUTO_RETRY_IDLE_MS,
-  AUTO_RETRY_POLL_MS,
-  DEFAULT_MAX_TOOL_STEPS,
-  MAX_AUTO_RETRIES,
-} from "../../src/shared/config";
+import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { isSkillEnabled } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
 import {
-  AI_STREAM_PORT_NAME,
   AI_STREAM_REQUEST_TYPE,
   CHAT_MODE,
   type AiStreamRequest,
-  type AiStreamResponse,
   type Chat,
+  type ChatMessage,
   type ChatMode,
   type SendMessagesRequest,
   type Skill,
@@ -26,12 +20,15 @@ import { requestGeneratedTitle } from "./ai-requests";
 import {
   closeChatAction,
   createChatAction,
+  forkChatAction,
   updateChatAction,
 } from "./chat-state-actions";
 import { appendAssistantContent, appendAssistantPart } from "./chat-updates";
-import { pruneSentAttachmentPreviews } from "./edit-message";
+import {
+  createResendMessageDraft,
+  pruneSentAttachmentPreviews,
+} from "./edit-message";
 import { assistantModelLabel } from "./model-label";
-import { retryStalledStream } from "./retry-stalled-stream";
 import { selectedElementImageAttachment } from "./selected-element-attachment";
 import {
   buildSidepanelContext,
@@ -39,6 +36,8 @@ import {
 } from "./sidepanel-context";
 import {
   useAutoScroll,
+  useActiveChatCleanup,
+  useAutoRetryStream,
   useChatSelection,
   useSidepanelTheme,
 } from "./sidepanel-effects";
@@ -53,7 +52,7 @@ import {
 } from "./sidepanel-menu-state";
 import { SidepanelView } from "./sidepanel-view";
 import { streamPartFromChunk } from "./stream-parts";
-import { closeStreamPort } from "./stream-port";
+import { closeStreamPort, startStreamAction } from "./stream-port";
 import { useComposerContext } from "./use-composer-context";
 import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
@@ -170,11 +169,12 @@ export function SidepanelApp() {
     createChat,
   );
 
-  useEffect(() => {
-    clearUploadedAttachments();
-    setEditingMessage(null);
-    setSentAttachmentPreviews({});
-  }, [activeChatId]);
+  useActiveChatCleanup(
+    activeChatId,
+    clearUploadedAttachments,
+    setEditingMessage,
+    setSentAttachmentPreviews,
+  );
 
   useAutoScroll(
     messagesRef,
@@ -183,28 +183,19 @@ export function SidepanelApp() {
     streaming,
   );
 
-  useEffect(() => {
-    if (!streaming || preferences?.autoRetry === false) return;
-    const interval = window.setInterval(() => {
-      const active = activeStreamRef.current;
-      if (!active || active.retryCount >= MAX_AUTO_RETRIES) return;
-      if (active.hasProgress) return;
-      if (Date.now() - lastStreamActivityRef.current < AUTO_RETRY_IDLE_MS)
-        return;
-      lastStreamActivityRef.current = Date.now();
-      retryStalledStream({
-        active,
-        chats: chatsRef.current,
-        preferences,
-        mode,
-        language: language || "en-US",
-        uploadedAttachments,
-        appendToAssistant,
-        startStream,
-      });
-    }, AUTO_RETRY_POLL_MS);
-    return () => window.clearInterval(interval);
-  }, [preferences?.autoRetry, streaming]);
+  useAutoRetryStream({
+    streaming,
+    autoRetry: preferences?.autoRetry,
+    activeStreamRef,
+    lastStreamActivityRef,
+    chatsRef,
+    preferences,
+    mode,
+    language,
+    uploadedAttachments,
+    appendToAssistant,
+    startStream,
+  });
 
   function createChat() {
     return createChatAction({
@@ -225,7 +216,7 @@ export function SidepanelApp() {
   async function send(
     content = input,
     resendAttachments?: UploadedAttachment[],
-    options: { queued?: boolean } = {},
+    options: { queued?: boolean; resendMessage?: ChatMessage } = {},
   ) {
     const text = interpolateSkillVariables(content.trim());
     if ((!text && !uploadedAttachments.length) || streaming) {
@@ -241,28 +232,48 @@ export function SidepanelApp() {
       selectedSkill && isSkillEnabled(selectedSkill)
         ? interpolateSkillPackage(selectedSkill, interpolateSkillVariables)
         : undefined;
-    const context = await buildSidepanelContext({
-      mode,
-      attachedTabs: options.queued ? [] : attachedTabs,
-      selectedElement: options.queued ? null : selectedElement,
-    });
     const chat = currentChat || createChat();
+    const resendDraft =
+      !options.queued && options.resendMessage
+        ? createResendMessageDraft({
+            chat,
+            message: options.resendMessage,
+            attachments: resendAttachments || [],
+          })
+        : null;
     const activeEdit =
       !options.queued && editingMessage?.chatId === chat.id
         ? editingMessage
-        : null;
+        : resendDraft;
+    const sentTabs = options.queued
+      ? []
+      : activeEdit
+        ? activeEdit.attachedTabs
+        : attachedTabs;
+    const sentElement = options.queued
+      ? null
+      : activeEdit
+        ? activeEdit.selectedElement
+        : selectedElement;
+    const context = await buildSidepanelContext({
+      mode,
+      attachedTabs: sentTabs,
+      selectedElement: sentElement,
+    });
     const baseChat = activeEdit
       ? { ...chat, messages: activeEdit.messagesBefore, updatedAt: Date.now() }
       : chat;
-    const sentTabs = options.queued ? [] : attachedTabs;
-    const sentElement = options.queued ? null : selectedElement;
     const selectedImageAttachment = selectedElementImageAttachment(sentElement);
     const sentAttachments = [
       ...(options.queued ? [] : resendAttachments || pendingAttachments),
       ...(selectedImageAttachment ? [selectedImageAttachment] : []),
     ];
     const activeAttachments = [
-      ...(options.queued ? [] : uploadedAttachments),
+      ...(options.queued
+        ? []
+        : activeEdit
+          ? activeEdit.attachments
+          : uploadedAttachments),
       ...(selectedImageAttachment ? [selectedImageAttachment] : []),
     ];
     const assistantModel = assistantModelLabel({
@@ -301,7 +312,7 @@ export function SidepanelApp() {
       );
     updateChatAction(setChats, nextChat);
     if (shouldGenerateTitle) requestChatTitle(nextChat.id, titleSource);
-    if (!options.queued) {
+    if (!options.queued && !options.resendMessage) {
       setInput("");
       setAttachedTabs([]);
       clearPendingAttachments();
@@ -344,37 +355,16 @@ export function SidepanelApp() {
   }
 
   function startStream(request: SendMessagesRequest, targetMessageId: string) {
-    closeStreamPort(portRef, false);
-    const port = chrome.runtime.connect({ name: AI_STREAM_PORT_NAME });
-    portRef.current = port;
-    port.onMessage.addListener((message: AiStreamResponse) => {
-      lastStreamActivityRef.current = Date.now();
-      if (message.type === "chunk") {
-        if (activeStreamRef.current?.assistantMessageId === targetMessageId)
-          activeStreamRef.current.hasProgress = true;
-        appendStreamChunk(request.chatId, targetMessageId, message.chunk);
-      }
-      if (message.type === "error") {
-        activeStreamRef.current = null;
-        setStreaming(false);
-        appendToAssistant(
-          request.chatId,
-          targetMessageId,
-          `\n\n${message.error}`,
-        );
-      }
-      if (message.type === "end") {
-        activeStreamRef.current = null;
-        setStreaming(false);
-      }
+    startStreamAction({
+      request,
+      targetMessageId,
+      portRef,
+      activeStreamRef,
+      lastStreamActivityRef,
+      setStreaming,
+      appendStreamChunk,
+      appendToAssistant,
     });
-    try {
-      port.postMessage(request);
-    } catch {
-      if (portRef.current === port) portRef.current = undefined;
-      activeStreamRef.current = null;
-      setStreaming(false);
-    }
   }
 
   function appendToAssistant(
@@ -491,8 +481,17 @@ export function SidepanelApp() {
       onReplaceUploadedAttachment={replaceUploadedAttachment}
       onEditMessage={editMessage}
       onResendMessage={(message, attachments) =>
-        send(message.content, attachments)
+        send(message.content, attachments, { resendMessage: message })
       }
+      onForkMessage={(message) => {
+        if (currentChat)
+          forkChatAction({
+            chat: currentChat,
+            message,
+            setChats,
+            setActiveChatId,
+          });
+      }}
       onSelectElement={selectElement}
       onSelectChat={setActiveChatId}
     />

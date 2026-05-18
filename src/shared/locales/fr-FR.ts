@@ -75,6 +75,7 @@ export const frFR: LocaleMessages = {
     attachFiles: "Joindre des fichiers",
     attachFilesHint: "Images ou fichiers locaux",
     removeAttachment: "Retirer la pièce jointe",
+    removeTab: "Retirer l’onglet",
     attachmentTooLarge: "Certains fichiers étaient trop volumineux : {names}",
     attachmentsUnsupportedRetry:
       "Le modèle sélectionné a rejeté la charge image/fichier, j'ai donc réessayé avec le texte et les détails des fichiers seulement.",
@@ -85,6 +86,7 @@ export const frFR: LocaleMessages = {
       "Choisissez des remplacements ou renvoyez sans eux.",
     resendWithoutMissingFiles: "Renvoyer sans fichiers manquants",
     resendMessage: "Renvoyer",
+    forkChat: "Bifurquer la discussion",
     unavailableAttachments: "{count} indisponibles",
     allOpenTabs: "Tous les onglets ouverts",
     selectElement: "Sélectionner un élément",
@@ -97,6 +99,9 @@ export const frFR: LocaleMessages = {
     queuedMessages: "Messages en file",
     queuedMessagesDescription:
       "{count} en attente. Ils seront envoyés après la réponse en cours.",
+    editingMessage: "Modification du message",
+    editingMessageDescription:
+      "Seul le compositeur est actif. Appuyez sur Esc ou Annuler pour arrêter.",
     stop: "Arrêter",
     running: "En cours",
     done: "Terminé",

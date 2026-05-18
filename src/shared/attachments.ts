@@ -81,13 +81,13 @@ export const DOCUMENT_ATTACHMENT_MIME_HINTS = [
 ] as const;
 
 export function classifyAttachment(name: string, type: string) {
-  if (type.startsWith(ATTACHMENT_MIME_PREFIX.image))
-    return ATTACHMENT_KIND.image;
   if (
     TEXT_ATTACHMENT_MIME_TYPES.has(type) ||
     TEXT_ATTACHMENT_EXTENSION_PATTERN.test(name)
   )
     return ATTACHMENT_KIND.text;
+  if (type.startsWith(ATTACHMENT_MIME_PREFIX.image))
+    return ATTACHMENT_KIND.image;
   if (type.startsWith(ATTACHMENT_MIME_PREFIX.audio))
     return ATTACHMENT_KIND.audio;
   if (type.startsWith(ATTACHMENT_MIME_PREFIX.video))
@@ -98,6 +98,10 @@ export function classifyAttachment(name: string, type: string) {
   )
     return ATTACHMENT_KIND.document;
   return ATTACHMENT_KIND.file;
+}
+
+export function isVisionImageMimeType(type?: string) {
+  return !!type && type.startsWith("image/") && type !== "image/svg+xml";
 }
 
 export function isMetadataOnlyAttachment(kind: UploadedAttachmentKind) {

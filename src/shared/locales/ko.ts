@@ -73,6 +73,7 @@ export const ko: LocaleMessages = {
     attachFiles: "파일 첨부",
     attachFilesHint: "이미지 또는 로컬 파일",
     removeAttachment: "첨부 제거",
+    removeTab: "탭 제거",
     attachmentTooLarge: "일부 파일이 너무 커서 첨부할 수 없습니다: {names}",
     attachmentsUnsupportedRetry:
       "선택한 모델이 이미지/파일 페이로드를 거부하여 텍스트와 파일 정보만으로 다시 시도했습니다.",
@@ -83,6 +84,7 @@ export const ko: LocaleMessages = {
       "대체 파일을 선택하거나 제외하고 다시 보냅니다.",
     resendWithoutMissingFiles: "누락 파일 없이 다시 보내기",
     resendMessage: "다시 보내기",
+    forkChat: "채팅 분기",
     unavailableAttachments: "{count}개 사용 불가",
     allOpenTabs: "열린 모든 탭",
     selectElement: "요소 선택",
@@ -95,6 +97,9 @@ export const ko: LocaleMessages = {
     queuedMessages: "대기 중인 메시지",
     queuedMessagesDescription:
       "{count}개가 대기 중이며 현재 응답 후 전송됩니다.",
+    editingMessage: "메시지 편집 중",
+    editingMessageDescription:
+      "입력 영역만 사용할 수 있습니다. Esc 또는 취소로 편집을 중지하세요.",
     stop: "중지",
     running: "실행 중",
     done: "완료",

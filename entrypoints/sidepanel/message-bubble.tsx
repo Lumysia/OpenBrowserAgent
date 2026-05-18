@@ -39,6 +39,9 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
   buttonVariants,
 } from "../../src/ui/components";
 
@@ -50,6 +53,7 @@ export function MessageBubble({
   onReplaceAttachment,
   onEdit,
   onResend,
+  onFork,
   sources = [],
 }: {
   message: ChatMessage;
@@ -60,6 +64,7 @@ export function MessageBubble({
   onReplaceAttachment?: (id: string, files: FileList | File[]) => Promise<void>;
   onEdit?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
   onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
+  onFork?: (message: ChatMessage) => void;
 }) {
   const [language] = useStoredState(storage.language);
   const t = getMessages(language);
@@ -109,7 +114,13 @@ export function MessageBubble({
         <div className="user-bubble">{message.content}</div>
       ) : hasParts ? (
         message.parts?.map((part) => (
-          <AssistantPart key={part.id} t={t} part={part} sources={sources} />
+          <AssistantPart
+            key={part.id}
+            t={t}
+            part={part}
+            sources={sources}
+            onFork={() => onFork?.(message)}
+          />
         ))
       ) : !message.content ? (
         <span className="typing-dots" aria-label="Thinking">
@@ -123,17 +134,20 @@ export function MessageBubble({
           sources={sources}
           modelLabel={modelLabel}
           createdAt={message.createdAt}
+          onFork={() => onFork?.(message)}
         />
       )}
-      {message.role === "assistant" && hasParts && (
-        <div className="assistant-actions">
-          <span className="assistant-model-meta">
-            {[modelLabel, formatMessageTime(message.createdAt)]
-              .filter(Boolean)
-              .join(" · ")}
-          </span>
-        </div>
-      )}
+      {message.role === "assistant" &&
+        hasParts &&
+        (modelLabel || message.createdAt) && (
+          <div className="assistant-actions">
+            <span className="assistant-model-meta">
+              {[modelLabel, formatMessageTime(message.createdAt)]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
+          </div>
+        )}
       {message.role === "assistant" &&
         !!assistantText &&
         !!displaySources.length && <SourceChips sources={displaySources} />}
@@ -182,15 +196,15 @@ function SourceChips({ sources }: { sources: ChatSource[] }) {
   return (
     <div className="source-chip-list">
       {sources.map((source) => (
-        <Button
-          variant="ghost"
-          key={source.id}
-          title={source.title}
-          onClick={() => openSource(source)}
-        >
-          <span>{source.id.replace(/^source_/, "")}</span>
-          {source.title}
-        </Button>
+        <Tooltip key={source.id}>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" onClick={() => openSource(source)}>
+              <span>{source.id.replace(/^source_/, "")}</span>
+              {source.title}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{source.title}</TooltipContent>
+        </Tooltip>
       ))}
     </div>
   );
@@ -393,9 +407,13 @@ function UserMessageActions({
         }
       >
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" onClick={resend}>
-            <RotateCcw size={13} />
-          </Button>
+          <span>
+            <IconTooltip label={t.sidepanel.resendMessage}>
+              <Button variant="ghost" size="icon" onClick={resend}>
+                <RotateCcw size={13} />
+              </Button>
+            </IconTooltip>
+          </span>
         </PopoverTrigger>
         <PopoverContent align="end" className="attachment-replace-popover">
           <strong>
@@ -411,10 +429,15 @@ function UserMessageActions({
           {missingAttachments.map((attachment) => (
             <div key={attachment.id} className="attachment-replace-row">
               <FileIcon attachment={attachment} size={18} />
-              <span title={attachment.name}>
-                <strong>{attachment.name}</strong>
-                <small>{formatAttachmentSize(attachment.size)}</small>
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <strong>{attachment.name}</strong>
+                    <small>{formatAttachmentSize(attachment.size)}</small>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>{attachment.name}</TooltipContent>
+              </Tooltip>
               <label
                 className={buttonVariants({ variant: "secondary", size: "sm" })}
               >

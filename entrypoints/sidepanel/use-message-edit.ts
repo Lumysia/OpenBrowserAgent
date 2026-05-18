@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type {
   AttachmentTab,
   Chat,
@@ -67,6 +67,17 @@ export function useMessageEdit({
     stageUploadedAttachments(editingMessage.previousAttachments);
     setEditingMessage(null);
   }
+
+  useEffect(() => {
+    if (!editingMessage) return;
+    const listener = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.isComposing) return;
+      event.preventDefault();
+      cancelEditMessage();
+    };
+    window.addEventListener("keydown", listener, true);
+    return () => window.removeEventListener("keydown", listener, true);
+  }, [editingMessage]);
 
   return { editingMessage, setEditingMessage, editMessage, cancelEditMessage };
 }

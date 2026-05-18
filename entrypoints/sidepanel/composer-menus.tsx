@@ -21,6 +21,7 @@ import type {
 import { CHAT_MODE } from "../../src/shared/types";
 import { getSkillDisplayName } from "../../src/shared/skills";
 import { Button } from "../../src/ui/components";
+import { IconTooltip } from "./icon-tooltip";
 
 export function AddContextMenu({
   t,
@@ -197,15 +198,17 @@ export function AttachedTabCard({
           {tab.url || `Tab ${tab.id}`} · {t.sidepanel.willBeSentToAi}
         </small>
       </span>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="context-close"
-        title="Remove tab"
-        onClick={onRemove}
-      >
-        <X size={14} />
-      </Button>
+      <IconTooltip label={t.sidepanel.removeTab}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="context-close"
+          aria-label={t.sidepanel.removeTab}
+          onClick={onRemove}
+        >
+          <X size={14} />
+        </Button>
+      </IconTooltip>
     </div>
   );
 }

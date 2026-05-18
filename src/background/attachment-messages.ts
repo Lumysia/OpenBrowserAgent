@@ -2,6 +2,7 @@ import {
   ATTACHMENT_KIND,
   ATTACHMENT_OUTPUT_NOTE,
   ATTACHMENT_TOOL_ERROR,
+  isVisionImageMimeType,
 } from "../shared/attachments";
 import {
   READ_ATTACHMENT_DEFAULT_LIMIT,
@@ -58,7 +59,9 @@ export function createOpenAIRequestMessages(
 export function hasImageAttachments(attachments: UploadedAttachment[]) {
   return attachments.some(
     (attachment) =>
-      attachment.kind === ATTACHMENT_KIND.image && attachment.dataUrl,
+      attachment.kind === ATTACHMENT_KIND.image &&
+      attachment.dataUrl &&
+      isVisionImageMimeType(attachment.type),
   );
 }
 
@@ -201,7 +204,9 @@ function createGeminiParts(
       ...attachments
         .filter(
           (attachment) =>
-            attachment.kind === ATTACHMENT_KIND.image && attachment.dataUrl,
+            attachment.kind === ATTACHMENT_KIND.image &&
+            attachment.dataUrl &&
+            isVisionImageMimeType(attachment.type),
         )
         .map((attachment) => ({
           inline_data: {
@@ -233,7 +238,9 @@ function createOpenAIMessageContent(
   const imageParts = attachments
     .filter(
       (attachment) =>
-        attachment.kind === ATTACHMENT_KIND.image && attachment.dataUrl,
+        attachment.kind === ATTACHMENT_KIND.image &&
+        attachment.dataUrl &&
+        isVisionImageMimeType(attachment.type),
     )
     .map((attachment) => ({
       type: "image_url",

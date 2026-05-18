@@ -9,6 +9,7 @@ import type {
 import { getSkillDisplayName } from "../../src/shared/skills";
 import { Button } from "../../src/ui/components";
 import { AttachedTabCard } from "./composer-menus";
+import { IconTooltip } from "./icon-tooltip";
 import { UploadedAttachmentCard } from "./uploaded-attachment-card";
 
 export function ComposerAttachments({
@@ -44,15 +45,17 @@ export function ComposerAttachments({
               <strong>{getSkillDisplayName(selectedSkill)}</strong>
               <small>{selectedSkill.description || t.options.skills}</small>
             </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="context-close"
-              title={t.common.cancel}
-              onClick={onClearSkill}
-            >
-              <X size={14} />
-            </Button>
+            <IconTooltip label={t.common.cancel}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="context-close"
+                aria-label={t.common.cancel}
+                onClick={onClearSkill}
+              >
+                <X size={14} />
+              </Button>
+            </IconTooltip>
           </div>
         )}
         {attachedTabs.map((tab) => (
@@ -88,15 +91,17 @@ export function ComposerAttachments({
             </strong>
             <small>{t.sidepanel.willBeSentAsPageContext}</small>
           </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="context-close"
-            title={t.sidepanel.selectElement}
-            onClick={() => onSetSelectedElement(null)}
-          >
-            <X size={14} />
-          </Button>
+          <IconTooltip label={t.common.cancel}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="context-close"
+              aria-label={t.common.cancel}
+              onClick={() => onSetSelectedElement(null)}
+            >
+              <X size={14} />
+            </Button>
+          </IconTooltip>
         </div>
       )}
     </div>
