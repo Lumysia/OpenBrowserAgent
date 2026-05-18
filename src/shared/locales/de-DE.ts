@@ -336,5 +336,21 @@ export const deDE: LocaleMessages = {
     debugResetButton: "Alle App-Daten löschen",
     debugResetting: "Wird gelöscht...",
     debugResetSuccess: "OpenBrowserAgent-Daten wurden gelöscht.",
+    debugToolsTitle: "Registrierte Tools",
+    debugToolsDescription: "Aktuelle Browser-Tool-Registry ({count} Tools).",
+    debugToolAvailable: "Verfügbar",
+    debugToolUnavailable: "Nicht verfügbar",
+    debugToolRequired: "Erforderlich",
+    debugToolAlwaysAvailable: "Verfügbar, wenn Tool-Aufrufe aktiviert sind.",
+    debugToolAgentModeAvailable: "Im Agent-Modus verfügbar.",
+    debugToolImageGenerationEnabled: "Bilderzeugung ist aktiviert.",
+    debugToolImageGenerationDisabled: "Bilderzeugung bei Anbietern aktivieren.",
+    debugToolSkillsEnabled:
+      "Auto-Auswahl für Fähigkeiten hat aktivierte Fähigkeiten.",
+    debugToolSkillsDisabled:
+      "Benötigt Auto-Auswahl für Fähigkeiten und aktivierte Fähigkeiten.",
+    debugToolAttachmentsRequired:
+      "Benötigt hochgeladene Anhänge in der aktuellen Nachricht.",
+    debugToolStepsDisabled: "Max Tool Steps ist 0.",
   },
 };

@@ -335,5 +335,21 @@ export const jaJP: LocaleMessages = {
     debugResetButton: "すべてのアプリデータを消去",
     debugResetting: "消去中...",
     debugResetSuccess: "OpenBrowserAgentデータを消去しました。",
+    debugToolsTitle: "登録済みツール",
+    debugToolsDescription:
+      "現在のブラウザツールレジストリ（{count}個のツール）。",
+    debugToolAvailable: "利用可能",
+    debugToolUnavailable: "利用不可",
+    debugToolRequired: "必須",
+    debugToolAlwaysAvailable: "ツール呼び出しが有効なときに利用できます。",
+    debugToolAgentModeAvailable: "Agentモードで利用できます。",
+    debugToolImageGenerationEnabled: "画像生成が有効です。",
+    debugToolImageGenerationDisabled:
+      "プロバイダーで画像生成を有効にしてください。",
+    debugToolSkillsEnabled: "自動選択スキルに有効なスキルがあります。",
+    debugToolSkillsDisabled: "自動選択スキルと有効なスキルが必要です。",
+    debugToolAttachmentsRequired:
+      "現在のメッセージにアップロード済み添付ファイルが必要です。",
+    debugToolStepsDisabled: "最大ツールステップ数が0です。",
   },
 };

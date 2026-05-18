@@ -1567,6 +1567,63 @@ a {
   display: grid;
   gap: 6px;
 }
+.debug-tool-list {
+  display: grid;
+  gap: 8px;
+}
+.debug-tools-trigger > span {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.debug-tools-trigger strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.debug-tools-trigger small {
+  color: var(--muted-foreground);
+  font-weight: 400;
+}
+.debug-tool-item {
+  box-shadow: none;
+  background: color-mix(in srgb, var(--card) 72%, var(--background));
+}
+.debug-tool-trigger {
+  min-height: 48px;
+  padding: 10px 12px;
+  gap: 10px;
+}
+.debug-tool-trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.debug-tool-trigger .ui-badge {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.debug-tool-details {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px 12px;
+}
+.debug-tool-details p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.debug-tool-details small,
+.debug-tool-status {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.debug-tool-disabled {
+  color: var(--muted-foreground);
+  background: var(--secondary);
+}
 .accent-picker {
   display: flex;
   align-items: center;
@@ -3326,12 +3383,6 @@ a {
   }
   .skill-add-file-row {
     grid-template-columns: minmax(0, 1fr) auto auto;
-  }
-  .skill-file-item {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .skill-file-item > svg {
-    display: none;
   }
   .composer-controls {
     grid-template-columns: auto 1fr auto auto;

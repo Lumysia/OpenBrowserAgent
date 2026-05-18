@@ -1,4 +1,10 @@
-import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useRef,
+  type Dispatch,
+  type MutableRefObject,
+  type SetStateAction,
+} from "react";
 import { getActiveTab, isScriptableUrl } from "../../src/shared/browser";
 import type { AttachmentTab, SelectedElement } from "../../src/shared/types";
 import { toAttachmentTab } from "./sidepanel-context";
@@ -15,9 +21,15 @@ export function useActiveTabContext({
   setSelectedElement: Dispatch<SetStateAction<SelectedElement | null>>;
 }) {
   const autoAttachedRef = useRef(false);
+  const autoAttachedTabIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    setAttachedTabs((tabs) => tabs.filter((tab) => isScriptableUrl(tab.url)));
+    setAttachedTabs((tabs) => {
+      const filtered = tabs.filter((tab) => isScriptableUrl(tab.url));
+      if (!filtered.some((tab) => tab.id === autoAttachedTabIdRef.current))
+        autoAttachedTabIdRef.current = null;
+      return filtered;
+    });
   }, [setAttachedTabs]);
 
   useEffect(() => {
@@ -33,8 +45,16 @@ export function useActiveTabContext({
     if (autoAttachedRef.current || selectedElement || attachedTabs.length)
       return;
     autoAttachedRef.current = true;
-    void autoAttachActiveTab(setAttachedTabs);
+    void autoAttachActiveTab(setAttachedTabs, autoAttachedTabIdRef);
   }, [attachedTabs.length, selectedElement, setAttachedTabs]);
+
+  useEffect(() => {
+    if (
+      autoAttachedTabIdRef.current !== null &&
+      !attachedTabs.some((tab) => tab.id === autoAttachedTabIdRef.current)
+    )
+      autoAttachedTabIdRef.current = null;
+  }, [attachedTabs]);
 
   useEffect(() => {
     const syncActiveTab = () => {
@@ -42,6 +62,7 @@ export function useActiveTabContext({
         attachedTabs,
         selectedElement,
         setAttachedTabs,
+        autoAttachedTabIdRef,
       });
     };
     chrome.tabs.onActivated.addListener(syncActiveTab);
@@ -55,33 +76,45 @@ export function useActiveTabContext({
 
 async function autoAttachActiveTab(
   setAttachedTabs: Dispatch<SetStateAction<AttachmentTab[]>>,
+  autoAttachedTabIdRef: MutableRefObject<number | null>,
 ) {
   const tab = await getActiveTab();
   const attachment = tab ? toAttachmentTab(tab) : null;
-  if (attachment) setAttachedTabs([attachment]);
+  if (attachment) {
+    autoAttachedTabIdRef.current = attachment.id;
+    setAttachedTabs([attachment]);
+  }
 }
 
 async function syncActiveTabContext({
   attachedTabs,
   selectedElement,
   setAttachedTabs,
+  autoAttachedTabIdRef,
 }: {
   attachedTabs: AttachmentTab[];
   selectedElement: SelectedElement | null;
   setAttachedTabs: Dispatch<SetStateAction<AttachmentTab[]>>;
+  autoAttachedTabIdRef: MutableRefObject<number | null>;
 }) {
   const tab = await getActiveTab();
   const attachment = tab ? toAttachmentTab(tab) : null;
-  if (!attachment && attachedTabs.length === 1) {
-    const activeTabId = tab?.id;
-    if (activeTabId && attachedTabs[0]?.id === activeTabId) setAttachedTabs([]);
+  if (!attachment) {
+    const autoAttachedTabId = autoAttachedTabIdRef.current;
+    if (autoAttachedTabId !== null) {
+      setAttachedTabs((tabs) =>
+        tabs.filter((item) => item.id !== autoAttachedTabId),
+      );
+      autoAttachedTabIdRef.current = null;
+    }
+    return;
   }
   if (
-    !attachment ||
     selectedElement ||
     attachedTabs.length >= 2 ||
     attachedTabs[0]?.id === attachment.id
   )
     return;
+  autoAttachedTabIdRef.current = attachment.id;
   setAttachedTabs([attachment]);
 }

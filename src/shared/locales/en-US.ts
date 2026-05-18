@@ -321,6 +321,20 @@ export const enUS = {
     debugResetButton: "Clear all app data",
     debugResetting: "Clearing...",
     debugResetSuccess: "OpenBrowserAgent data was cleared.",
+    debugToolsTitle: "Registered tools",
+    debugToolsDescription: "Current browser tool registry ({count} tools).",
+    debugToolAvailable: "Available",
+    debugToolUnavailable: "Unavailable",
+    debugToolRequired: "Required",
+    debugToolAlwaysAvailable: "Available whenever tool calls are enabled.",
+    debugToolAgentModeAvailable: "Available in Agent mode.",
+    debugToolImageGenerationEnabled: "Image generation is enabled.",
+    debugToolImageGenerationDisabled: "Enable image generation in Providers.",
+    debugToolSkillsEnabled: "Auto-select Skills has enabled Skills.",
+    debugToolSkillsDisabled: "Needs Auto-select Skills and enabled Skills.",
+    debugToolAttachmentsRequired:
+      "Requires uploaded attachments in the current message.",
+    debugToolStepsDisabled: "Max Tool Steps is 0.",
   },
 };
 
