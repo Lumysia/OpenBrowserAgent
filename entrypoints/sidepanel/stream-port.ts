@@ -4,6 +4,7 @@ import {
   AI_STREAM_REQUEST_TYPE,
   type AiStreamResponse,
   type AiStreamRequest,
+  type RunMetrics,
   type SendMessagesRequest,
 } from "../../src/shared/types";
 import type { ActiveStream } from "./sidepanel-menu-state";
@@ -39,6 +40,7 @@ export function startStreamAction({
   setStreaming,
   appendStreamChunk,
   appendToAssistant,
+  updateRunMetrics,
 }: {
   request: SendMessagesRequest;
   targetMessageId: string;
@@ -56,6 +58,7 @@ export function startStreamAction({
     messageId: string,
     content: string,
   ) => void;
+  updateRunMetrics: (metrics: Partial<RunMetrics>) => void;
 }) {
   closeStreamPort(portRef, false);
   const port = chrome.runtime.connect({ name: AI_STREAM_PORT_NAME });
@@ -67,6 +70,7 @@ export function startStreamAction({
         activeStreamRef.current.hasProgress = true;
       appendStreamChunk(request.chatId, targetMessageId, message.chunk);
     }
+    if (message.type === "metrics") updateRunMetrics(message.metrics);
     if (message.type === "error") {
       activeStreamRef.current = null;
       setStreaming(false);
@@ -78,6 +82,7 @@ export function startStreamAction({
     }
     if (message.type === "end") {
       activeStreamRef.current = null;
+      updateRunMetrics({ endedAt: Date.now() });
       setStreaming(false);
     }
   });

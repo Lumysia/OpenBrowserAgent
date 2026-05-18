@@ -34,6 +34,7 @@ import { useStoredState } from "../../src/ui/useStoredState";
 import { IconTooltip } from "./icon-tooltip";
 import { formatAttachmentSize } from "./file-attachments";
 import { AssistantPart, AssistantText } from "./assistant-message-part";
+import { FileIcon } from "./attachment-file-icon";
 import { TypingIndicator } from "./typing-indicator";
 import {
   Button,
@@ -56,9 +57,11 @@ export function MessageBubble({
   onResend,
   onFork,
   sources = [],
+  chatMessages,
 }: {
   message: ChatMessage;
   sources?: ChatSource[];
+  chatMessages: ChatMessage[];
   editing?: boolean;
   sentAttachments?: UploadedAttachment[];
   activeAttachments?: UploadedAttachment[];
@@ -121,6 +124,8 @@ export function MessageBubble({
             part={part}
             sources={sources}
             onFork={() => onFork?.(message)}
+            message={message}
+            chatMessages={chatMessages}
           />
         ))
       ) : !message.content ? (
@@ -132,6 +137,8 @@ export function MessageBubble({
           modelLabel={modelLabel}
           createdAt={message.createdAt}
           onFork={() => onFork?.(message)}
+          message={message}
+          chatMessages={chatMessages}
         />
       )}
       {message.role === "assistant" &&
@@ -469,24 +476,6 @@ function UserMessageActions({
       </Popover>
     </div>
   );
-}
-
-function FileIcon({
-  attachment,
-  size,
-}: {
-  attachment: UploadedAttachment;
-  size: number;
-}) {
-  if (attachment.kind === ATTACHMENT_KIND.image) return <Image size={size} />;
-  if (attachment.kind === ATTACHMENT_KIND.audio)
-    return <FileAudio size={size} />;
-  if (attachment.kind === ATTACHMENT_KIND.video)
-    return <FileVideo size={size} />;
-  if (attachment.kind === ATTACHMENT_KIND.text) return <FileText size={size} />;
-  if (attachment.kind === ATTACHMENT_KIND.document)
-    return <FileText size={size} />;
-  return <File size={size} />;
 }
 
 function formatMessageTime(value: number) {

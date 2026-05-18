@@ -12,6 +12,7 @@ import type {
   ChatMode,
   ChatPart,
   Preferences,
+  RunMetrics,
 } from "../../src/shared/types";
 
 type OpenAiExportMessage =
@@ -58,6 +59,7 @@ export function exportChatAsOpenAiJson(
           (tool) => tool.function.name !== BROWSER_TOOL_NAME.generateImage,
         ),
     sources: chat.sources || [],
+    metrics: exportMetrics(chat),
     parallel_tool_calls: true,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -69,6 +71,17 @@ export function exportChatAsOpenAiJson(
   anchor.download = `${safeFilename(chat.title || "chat")}.openai.json`;
   anchor.click();
   URL.revokeObjectURL(url);
+}
+
+function exportMetrics(chat: Chat) {
+  const messages = chat.messages
+    .filter((message) => message.role === "assistant")
+    .map((message) => ({
+      message_id: message.id,
+      metrics: message.metadata?.runMetrics as RunMetrics | undefined,
+    }))
+    .filter((item) => item.metrics && Object.keys(item.metrics).length > 0);
+  return messages.length ? { messages } : undefined;
 }
 
 export async function importChatFromOpenAiJson(file: File): Promise<Chat> {

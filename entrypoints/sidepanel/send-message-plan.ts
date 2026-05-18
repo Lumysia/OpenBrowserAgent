@@ -60,7 +60,10 @@ export function createSendMessagePlan({
     content: "",
     parts: [],
     createdAt: Date.now(),
-    metadata: assistantModel ? { assistantModel } : undefined,
+    metadata: {
+      ...(assistantModel ? { assistantModel } : {}),
+      runMetrics: { startedAt: Date.now(), outputCharacters: 0 },
+    },
   };
   const shouldGenerateTitle = chat.messages.length === 0;
   const titleSource = text || sentAttachments[0]?.name || "";

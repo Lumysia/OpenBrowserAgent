@@ -3,8 +3,9 @@ import {
   CHAT_PART_STATE,
   toolPartType,
   type AiStreamResponse,
+  type TokenUsage,
 } from "../shared/types";
-import { postText } from "./message-helpers";
+import { postTextStream } from "./message-helpers";
 
 type OpenAIToolCall = {
   id?: string;
@@ -28,6 +29,7 @@ export async function readOpenAIStream(
   const announcedToolIndexes = new Set<number>();
   let buffer = "";
   let content = "";
+  let usage: TokenUsage | undefined;
   let textStarted = false;
   let deferredTextPosted = false;
 
@@ -51,13 +53,13 @@ export async function readOpenAIStream(
     });
   }
 
-  function postDeferredTextNote() {
+  async function postDeferredTextNote() {
     if (!deferTextUntilNoTools || deferredTextPosted || !content) return;
     deferredTextPosted = true;
-    postText(port, content, textId, signal, false);
+    await postTextStream(port, content, textId, signal, false);
   }
 
-  function consumeEvent(rawEvent: string) {
+  async function consumeEvent(rawEvent: string) {
     const data = rawEvent
       .split(/\r?\n/)
       .filter((line) => line.startsWith("data:"))
@@ -66,6 +68,7 @@ export async function readOpenAIStream(
     if (!data || data === "[DONE]") return;
 
     const payload = JSON.parse(data) as {
+      usage?: OpenAIUsage | null;
       choices?: Array<{
         delta?: {
           content?: string;
@@ -78,6 +81,7 @@ export async function readOpenAIStream(
         };
       }>;
     };
+    if (payload.usage) usage = normalizeOpenAIUsage(payload.usage);
     const delta = payload.choices?.[0]?.delta;
     emitText(delta?.content || "");
 
@@ -97,7 +101,7 @@ export async function readOpenAIStream(
       const next = toolCalls[index];
       if (!announcedToolIndexes.has(index) && next.id && next.function.name) {
         announcedToolIndexes.add(index);
-        postDeferredTextNote();
+        await postDeferredTextNote();
         post(port, {
           type: "chunk",
           chunk: {
@@ -119,11 +123,11 @@ export async function readOpenAIStream(
     buffer += decoder.decode(value, { stream: true });
     const events = buffer.split(/\r?\n\r?\n/);
     buffer = events.pop() || "";
-    for (const event of events) consumeEvent(event);
+    for (const event of events) await consumeEvent(event);
   }
 
   buffer += decoder.decode();
-  if (buffer.trim()) consumeEvent(buffer);
+  if (buffer.trim()) await consumeEvent(buffer);
   if (textStarted)
     post(port, {
       type: "chunk",
@@ -135,11 +139,47 @@ export async function readOpenAIStream(
   );
   if (deferTextUntilNoTools && content) {
     if (completeToolCalls.length && !deferredTextPosted)
-      postText(port, content, textId, signal, false);
-    if (!completeToolCalls.length) postText(port, content, textId, signal);
+      await postTextStream(port, content, textId, signal, false);
+    if (!completeToolCalls.length)
+      await postTextStream(port, content, textId, signal);
   }
 
-  return { content, toolCalls: completeToolCalls };
+  return { content, toolCalls: completeToolCalls, usage };
+}
+
+type OpenAIUsage = {
+  prompt_tokens?: number;
+  promptTokens?: number;
+  completion_tokens?: number;
+  completionTokens?: number;
+  total_tokens?: number;
+  totalTokens?: number;
+  cost?: number;
+  prompt_tokens_details?: {
+    cached_tokens?: number;
+    cache_write_tokens?: number;
+  };
+  promptTokensDetails?: { cachedTokens?: number; cacheWriteTokens?: number };
+  completion_tokens_details?: { reasoning_tokens?: number };
+  completionTokensDetails?: { reasoningTokens?: number };
+};
+
+function normalizeOpenAIUsage(usage: OpenAIUsage): TokenUsage {
+  return {
+    inputTokens: usage.prompt_tokens ?? usage.promptTokens,
+    outputTokens: usage.completion_tokens ?? usage.completionTokens,
+    totalTokens: usage.total_tokens ?? usage.totalTokens,
+    cachedInputTokens:
+      usage.prompt_tokens_details?.cached_tokens ??
+      usage.promptTokensDetails?.cachedTokens,
+    cacheWriteTokens:
+      usage.prompt_tokens_details?.cache_write_tokens ??
+      usage.promptTokensDetails?.cacheWriteTokens,
+    reasoningTokens:
+      usage.completion_tokens_details?.reasoning_tokens ??
+      usage.completionTokensDetails?.reasoningTokens,
+    cost: usage.cost,
+  };
 }
 
 function post(port: chrome.runtime.Port, message: AiStreamResponse) {

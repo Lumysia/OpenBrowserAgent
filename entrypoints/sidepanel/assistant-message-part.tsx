@@ -6,13 +6,14 @@ import {
 } from "../../src/shared/config";
 import { getMessages, type Messages } from "../../src/shared/i18n";
 import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
-import type { ChatPart, ChatSource } from "../../src/shared/types";
+import type { ChatMessage, ChatPart, ChatSource } from "../../src/shared/types";
 import { isToolPartType } from "../../src/shared/types";
 import { storage } from "../../src/shared/storage";
 import { Button } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { IconTooltip } from "./icon-tooltip";
 import { renderMarkdown } from "./markdown";
+import { MessageRunInfo } from "./message-run-info";
 import { ToolPart } from "./tool-part";
 import { useThrottledText } from "./use-throttled-text";
 
@@ -21,15 +22,27 @@ export function AssistantPart({
   part,
   sources,
   onFork,
+  message,
+  chatMessages,
 }: {
   t: Messages;
   part: ChatPart;
   sources: ChatSource[];
   onFork?: () => void;
+  message: ChatMessage;
+  chatMessages: ChatMessage[];
 }) {
   if (isToolPartType(part.type)) return <ToolPart t={t} part={part} />;
   if (part.type === "text" && part.text?.trim())
-    return <AssistantText text={part.text} sources={sources} onFork={onFork} />;
+    return (
+      <AssistantText
+        text={part.text}
+        sources={sources}
+        onFork={onFork}
+        message={message}
+        chatMessages={chatMessages}
+      />
+    );
   return null;
 }
 
@@ -38,12 +51,16 @@ export function AssistantText({
   modelLabel,
   createdAt,
   onFork,
+  message,
+  chatMessages = [],
   sources = [],
 }: {
   text: string;
   modelLabel?: string;
   createdAt?: number;
   onFork?: () => void;
+  message?: ChatMessage;
+  chatMessages?: ChatMessage[];
   sources?: ChatSource[];
 }) {
   const [language] = useStoredState(storage.language);
@@ -51,12 +68,19 @@ export function AssistantText({
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const markdownRef = useRef<HTMLDivElement | null>(null);
   const t = getMessages(language);
-  const displayText = useThrottledText(text, STREAM_RENDER_THROTTLE_MS);
+  const { text: displayText, animatedFrom } = useThrottledText(
+    text,
+    STREAM_RENDER_THROTTLE_MS,
+  );
   const { html, codeBlocks } = renderMarkdown(
     displayText,
     t,
     copiedCodeId,
     sources,
+    {
+      animatedFromChar:
+        displayText.length < text.length ? animatedFrom : undefined,
+    },
   );
   const streaming = displayText.length < text.length;
 
@@ -128,28 +152,37 @@ export function AssistantText({
         onClick={handleMarkdownClick}
       />
       <div className="assistant-actions">
-        <IconTooltip label={copied ? t.common.copied : t.common.copy}>
-          <Button
-            variant="ghost"
-            size="icon"
-            className={`copy-message${copied ? " copied" : ""}`}
-            onClick={copyText}
-          >
-            {copied ? <Check size={15} /> : <Copy size={15} />}
-          </Button>
-        </IconTooltip>
-        {onFork && (
-          <IconTooltip label={t.sidepanel.forkChat}>
+        <div className="assistant-action-buttons">
+          <IconTooltip label={copied ? t.common.copied : t.common.copy}>
             <Button
               variant="ghost"
               size="icon"
-              className="copy-message"
-              onClick={onFork}
+              className={`copy-message${copied ? " copied" : ""}`}
+              onClick={copyText}
             >
-              <GitBranch size={15} />
+              {copied ? <Check size={15} /> : <Copy size={15} />}
             </Button>
           </IconTooltip>
-        )}
+          {onFork && (
+            <IconTooltip label={t.sidepanel.forkChat}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="copy-message"
+                onClick={onFork}
+              >
+                <GitBranch size={15} />
+              </Button>
+            </IconTooltip>
+          )}
+          {message && (
+            <MessageRunInfo
+              t={t}
+              message={message}
+              chatMessages={chatMessages}
+            />
+          )}
+        </div>
         {(modelLabel || createdAt) && (
           <span className="assistant-model-meta">
             {[modelLabel, createdAt ? formatMessageTime(createdAt) : ""]

@@ -240,6 +240,7 @@ export function SidepanelView({
               message={message}
               editing={editingMessageId === message.id}
               sources={currentChat.sources || []}
+              chatMessages={currentChat.messages}
               sentAttachments={sentAttachmentPreviews[message.id] || []}
               activeAttachments={uploadedAttachments}
               onReplaceAttachment={onReplaceUploadedAttachment}

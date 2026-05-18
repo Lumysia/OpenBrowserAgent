@@ -33,6 +33,7 @@ export function renderMarkdown(
   t: Messages,
   copiedCodeId: string | null,
   sources: ChatSource[] = [],
+  options: { animatedFromChar?: number } = {},
 ) {
   const codeBlocks: string[] = [];
   const renderer = new marked.Renderer();
@@ -47,10 +48,66 @@ export function renderMarkdown(
     );
     return `<div class="markdown-code-block${copied ? " copied" : ""}"><div class="markdown-code-header"><span>${displayLanguage}</span><button type="button" class="code-copy" title="${copied ? escapeHtml(t.common.copied) : escapeHtml(t.common.copy)}" data-code-index="${codeIndex}" data-code-id="${codeId}" aria-label="${escapeHtml(t.common.copy)}"><svg class="code-copy-icon code-copy-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="code-copy-icon code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></button></div><pre><code class="hljs${language ? ` language-${escapeHtml(language)}` : ""}">${highlighted.html}</code></pre></div>`;
   };
+  const html = marked.parse(renderCitations(text, sources), {
+    renderer,
+    async: false,
+  });
   return {
-    html: marked.parse(renderCitations(text, sources), { renderer }),
+    html:
+      options.animatedFromChar !== undefined
+        ? addCharacterFade(html, options.animatedFromChar)
+        : html,
     codeBlocks,
   };
+}
+
+function addCharacterFade(html: string, animatedFromChar: number) {
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  const nodes = collectTextNodes(template.content);
+  let index = 0;
+  let animatedIndex = 0;
+  for (const node of nodes) {
+    const fragment = document.createDocumentFragment();
+    for (const character of Array.from(node.data)) {
+      const characterIndex = index;
+      index += 1;
+      if (characterIndex < animatedFromChar) {
+        fragment.append(character);
+        continue;
+      }
+      const span = document.createElement("span");
+      span.className = "stream-char";
+      span.style.setProperty("--char-index", String(animatedIndex));
+      span.textContent = character;
+      animatedIndex += 1;
+      fragment.append(span);
+    }
+    node.replaceWith(fragment);
+  }
+  return template.innerHTML;
+}
+
+function collectTextNodes(root: ParentNode) {
+  const nodes: Text[] = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const parent = node.parentElement;
+      if (!node.textContent || !parent || shouldSkipFade(parent))
+        return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+  let node = walker.nextNode();
+  while (node) {
+    nodes.push(node as Text);
+    node = walker.nextNode();
+  }
+  return nodes;
+}
+
+function shouldSkipFade(element: Element) {
+  return !!element.closest("pre, code, button, svg");
 }
 
 function renderCitations(text: string, sources: ChatSource[]) {

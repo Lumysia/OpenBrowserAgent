@@ -1,5 +1,7 @@
 import {
   BROWSER_TOOL_TIMEOUT_MS,
+  BROWSER_WAIT_DEFAULT_MS,
+  BROWSER_WAIT_MAX_MS,
   MARKDOWN_FILENAME_MAX_LENGTH,
   TAB_LOAD_WAIT_TIMEOUT_MS,
 } from "../shared/config";
@@ -20,6 +22,11 @@ async function executeBrowserTool(
   if (isCdpTool(name) && name !== BROWSER_TOOL_NAME.cdpMouseActionByAiID)
     return executeCdpTool(name, args);
   switch (name) {
+    case BROWSER_TOOL_NAME.wait: {
+      const milliseconds = clampWaitMs(args.milliseconds ?? args.ms);
+      await wait(milliseconds);
+      return { success: true, milliseconds };
+    }
     case BROWSER_TOOL_NAME.getCurrentTime: {
       return getCurrentTime(args);
     }
@@ -214,6 +221,19 @@ async function executeBrowserTool(
     default:
       return { error: `Unknown tool: ${name}` };
   }
+}
+
+function wait(milliseconds: number) {
+  return new Promise<void>((resolve) =>
+    globalThis.setTimeout(resolve, milliseconds),
+  );
+}
+
+function clampWaitMs(value: unknown) {
+  const milliseconds = Number(value);
+  if (!Number.isFinite(milliseconds) || milliseconds <= 0)
+    return BROWSER_WAIT_DEFAULT_MS;
+  return Math.min(BROWSER_WAIT_MAX_MS, Math.trunc(milliseconds));
 }
 
 function getCurrentTime(args: Record<string, unknown>) {

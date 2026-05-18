@@ -1,19 +1,15 @@
-import { BROWSER_TOOL_NAME, UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
+import { UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
 import { storage } from "../shared/storage";
-import { MODEL_TEMPERATURE, STREAM_CHUNK_DELAY_MS } from "../shared/config";
-import {
-  assignChatSources,
-  extractSourcesFromTool,
-} from "../shared/chat-sources";
+import { MODEL_TEMPERATURE } from "../shared/config";
 import {
   CHAT_PART_STATE,
   toolPartType,
   type AiStreamResponse,
   type ChatMessage,
   type ChatMode,
-  type ChatSource,
   type ProviderId,
   type Skill,
+  type TokenUsage,
   type UploadedAttachment,
 } from "../shared/types";
 import { isToolError } from "./tool-utils";
@@ -22,8 +18,19 @@ import {
   createOpenAIRequestMessages,
   hasImageAttachments,
 } from "./attachment-messages";
-import { chunkText, parseToolArgs, postText } from "./message-helpers";
+import { parseToolArgs, postTextStream } from "./message-helpers";
 import { readOpenAIStream } from "./openai-stream";
+import {
+  attachToolSources,
+  addTokenUsage,
+  base64FromDataUrl,
+  extractVisionImage,
+  geminiText,
+  getMessageSources,
+  mergeOutputSources,
+  normalizeGeminiUsage,
+  sanitizeToolOutput,
+} from "./provider-output";
 import { executeContextAwareTool, toolsForMode } from "./provider-tools";
 
 function post(port: chrome.runtime.Port, message: AiStreamResponse) {
@@ -51,7 +58,7 @@ export async function requestOpenAICompatible(
   attachmentRetryNotice?: string,
   uploadedAttachments: UploadedAttachment[] = [],
   availableSkills: Skill[] = [],
-) {
+): Promise<ProviderTextResult> {
   if (model.provider === "gemini") {
     return requestGemini(
       model,
@@ -91,6 +98,7 @@ export async function requestOpenAICompatible(
   );
   const useTools = maxToolSteps > 0 && availableTools.length > 0;
   let responseSources = getMessageSources(messages);
+  let responseUsage: TokenUsage | undefined;
 
   async function fetchChatCompletion(body: Record<string, unknown>) {
     const response = await fetch(chatUrl, {
@@ -113,7 +121,13 @@ export async function requestOpenAICompatible(
     );
     usesAttachmentPayload = false;
     if (attachmentRetryNotice)
-      postText(port, attachmentRetryNotice, crypto.randomUUID(), signal, false);
+      await postTextStream(
+        port,
+        attachmentRetryNotice,
+        crypto.randomUUID(),
+        signal,
+        false,
+      );
     return fetch(chatUrl, {
       method: "POST",
       signal,
@@ -131,11 +145,17 @@ export async function requestOpenAICompatible(
       temperature: MODEL_TEMPERATURE,
       messages: requestMessages,
       stream: true,
+      stream_options: { include_usage: true },
     });
 
     if (!response.ok) throw new Error(await response.text());
-    await readOpenAIStream(response, port, signal, messageId);
-    return "";
+    const streamResult = await readOpenAIStream(
+      response,
+      port,
+      signal,
+      messageId,
+    );
+    return { text: "", outputMode: "streaming", usage: streamResult.usage };
   }
 
   for (let step = 0; step < maxToolSteps; step++) {
@@ -144,6 +164,7 @@ export async function requestOpenAICompatible(
       temperature: MODEL_TEMPERATURE,
       messages: requestMessages,
       stream: true,
+      stream_options: { include_usage: true },
       tools: availableTools,
       tool_choice: "auto",
     });
@@ -156,8 +177,10 @@ export async function requestOpenAICompatible(
       step === 0 ? messageId : undefined,
       true,
     );
+    responseUsage = addTokenUsage(responseUsage, streamResult.usage);
     const toolCalls = streamResult.toolCalls;
-    if (!toolCalls.length) return "";
+    if (!toolCalls.length)
+      return { text: "", outputMode: "streaming", usage: responseUsage };
 
     requestMessages.push({
       role: "assistant",
@@ -244,13 +267,24 @@ export async function requestOpenAICompatible(
       temperature: MODEL_TEMPERATURE,
       messages: requestMessages,
       stream: true,
+      stream_options: { include_usage: true },
     }),
   });
 
   if (!fallbackResponse.ok) throw new Error(await fallbackResponse.text());
-  await readOpenAIStream(fallbackResponse, port, signal);
-  return "";
+  const fallbackResult = await readOpenAIStream(fallbackResponse, port, signal);
+  return {
+    text: "",
+    outputMode: "streaming",
+    usage: addTokenUsage(responseUsage, fallbackResult.usage),
+  };
 }
+
+type ProviderTextResult = {
+  text: string;
+  outputMode: "streaming" | "buffered";
+  usage?: TokenUsage;
+};
 
 async function requestGemini(
   model: { apiKey: string; modelName: string },
@@ -263,7 +297,7 @@ async function requestGemini(
   attachmentRetryNotice?: string,
   uploadedAttachments: UploadedAttachment[] = [],
   availableSkills: Skill[] = [],
-) {
+): Promise<ProviderTextResult> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model.modelName)}:generateContent?key=${encodeURIComponent(model.apiKey)}`;
   let contents: Array<Record<string, unknown>> = createGeminiContents(
     messages,
@@ -290,7 +324,13 @@ async function requestGemini(
     );
     usesAttachmentPayload = false;
     if (attachmentRetryNotice)
-      postText(port, attachmentRetryNotice, crypto.randomUUID(), signal, false);
+      await postTextStream(
+        port,
+        attachmentRetryNotice,
+        crypto.randomUUID(),
+        signal,
+        false,
+      );
     return fetch(url, {
       method: "POST",
       signal,
@@ -317,11 +357,11 @@ async function requestGemini(
     });
     if (!response.ok) throw new Error(await response.text());
     const data = await response.json();
-    return (
-      data.candidates?.[0]?.content?.parts
-        ?.map((part: { text?: string }) => part.text || "")
-        .join("") || ""
-    );
+    return {
+      text: geminiText(data),
+      outputMode: "buffered",
+      usage: normalizeGeminiUsage(data.usageMetadata),
+    };
   }
 
   for (let step = 0; step < maxToolSteps; step++) {
@@ -351,15 +391,25 @@ async function requestGemini(
       )
       .filter(Boolean);
     if (!functionCalls.length)
-      return (
-        parts.map((part: { text?: string }) => part.text || "").join("") || ""
-      );
+      return {
+        text:
+          parts.map((part: { text?: string }) => part.text || "").join("") ||
+          "",
+        outputMode: "buffered",
+        usage: normalizeGeminiUsage(data.usageMetadata),
+      };
 
     const textBeforeTools = parts
       .map((part: { text?: string }) => part.text || "")
       .join("");
     if (textBeforeTools)
-      postText(port, textBeforeTools, crypto.randomUUID(), signal, false);
+      await postTextStream(
+        port,
+        textBeforeTools,
+        crypto.randomUUID(),
+        signal,
+        false,
+      );
 
     contents.push({ role: "model", parts });
     const responseParts = [];
@@ -438,63 +488,9 @@ async function requestGemini(
   });
   if (!response.ok) throw new Error(await response.text());
   const data = await response.json();
-  return (
-    data.candidates?.[0]?.content?.parts
-      ?.map((part: { text?: string }) => part.text || "")
-      .join("") || ""
-  );
-}
-
-function attachToolSources(
-  toolName: string,
-  input: Record<string, unknown>,
-  output: unknown,
-  currentSources: ChatSource[],
-) {
-  if (!output || typeof output !== "object") return output;
-  const record = output as Record<string, unknown>;
-  const extracted = extractSourcesFromTool(toolName, input, record);
-  if (toolName === BROWSER_TOOL_NAME.groupTabs && currentSources.length)
-    return { ...record, _sources: currentSources };
-  if (!extracted.length) return output;
-  const { added } = assignChatSources(currentSources, extracted);
-  return added.length ? { ...record, _sources: added } : output;
-}
-
-function mergeOutputSources(current: ChatSource[], output: unknown) {
-  if (!output || typeof output !== "object") return current;
-  const sources = (output as Record<string, unknown>)._sources;
-  return Array.isArray(sources)
-    ? assignChatSources(current, sources as ChatSource[]).sources
-    : current;
-}
-
-type VisionImage = { dataUrl: string; type?: string };
-
-function extractVisionImage(output: unknown): VisionImage | undefined {
-  if (!output || typeof output !== "object") return undefined;
-  const image = (output as { _visionImage?: unknown })._visionImage;
-  if (!image || typeof image !== "object") return undefined;
-  const dataUrl = (image as { dataUrl?: unknown }).dataUrl;
-  if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/"))
-    return undefined;
-  const type = (image as { type?: unknown }).type;
-  return { dataUrl, type: typeof type === "string" ? type : undefined };
-}
-
-function sanitizeToolOutput(output: unknown) {
-  if (!output || typeof output !== "object") return output;
-  const { _visionImage, ...rest } = output as Record<string, unknown>;
-  return _visionImage ? { ...rest, visionImageAttached: true } : output;
-}
-
-function base64FromDataUrl(dataUrl: string) {
-  return dataUrl.includes(",") ? dataUrl.split(",", 2)[1] || "" : dataUrl;
-}
-
-function getMessageSources(messages: ChatMessage[]): ChatSource[] {
-  const latest = messages[messages.length - 1];
-  return Array.isArray(latest?.metadata?.sources)
-    ? (latest.metadata.sources as ChatSource[])
-    : [];
+  return {
+    text: geminiText(data),
+    outputMode: "buffered",
+    usage: normalizeGeminiUsage(data.usageMetadata),
+  };
 }

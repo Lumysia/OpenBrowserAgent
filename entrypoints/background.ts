@@ -1,8 +1,16 @@
 import { storage } from "../src/shared/storage";
 import { UNKNOWN_TOOL_NAME } from "../src/shared/browser-tools";
 import { getMessages } from "../src/shared/i18n";
-import { createSkillPackage, normalizeSkillName } from "../src/shared/skills";
+import {
+  createSkillPackage,
+  getSkillInstruction,
+  normalizeSkillName,
+} from "../src/shared/skills";
 import { createSystemPrompt } from "../src/shared/system-prompt";
+import {
+  PROMPT_CONTEXT_TAG,
+  PROMPT_CONTEXT_TAGS,
+} from "../src/shared/prompt-breakdown";
 import {
   clampMaxToolSteps,
   GENERATED_TITLE_MAX_CJK_CHARS,
@@ -12,12 +20,10 @@ import {
   MODEL_TEMPERATURE,
   SKILL_SOURCE_MAX_CHARS,
   SKILL_NAME_MAX_LENGTH,
-  STREAM_CHUNK_DELAY_MS,
 } from "../src/shared/config";
 import {
   AI_STREAM_PORT_NAME,
   AI_STREAM_REQUEST_TYPE,
-  AI_TEXT_CHUNK_TYPE,
   CHAT_PART_STATE,
   isToolPartType,
   toolNameFromPartType,
@@ -25,15 +31,17 @@ import {
   type AiStreamResponse,
   type ChatMessage,
   type ChatMode,
+  type ChatPart,
   type GenerateSkillRequest,
   type GenerateTitleRequest,
+  type PromptBreakdown,
   type ProviderId,
   type Skill,
   type SendMessagesRequest,
 } from "../src/shared/types";
 import { requestOpenAICompatible } from "../src/background/providers";
 import { resolveModel } from "../src/background/model-resolver";
-import { chunkText } from "../src/background/message-helpers";
+import { postTextStream } from "../src/background/message-helpers";
 
 const SIDE_PANEL_OPENED = "side_panel_opened";
 export default defineBackground(() => {
@@ -122,7 +130,11 @@ async function streamAssistantResponse(
   const system = createSystemPrompt(request.body.chatMode, {
     imageGenerationEnabled: !!request.body.context?.imageGenerationEnabled,
   });
-  const text = await requestOpenAICompatible(
+  post(port, {
+    type: "metrics",
+    metrics: { promptBreakdown: promptBreakdown(system, request) },
+  });
+  const result = await requestOpenAICompatible(
     providerModel,
     system,
     request.messages,
@@ -138,34 +150,110 @@ async function streamAssistantResponse(
       : [],
   );
 
-  if (text) {
-    post(port, {
-      type: "chunk",
-      chunk: {
-        type: AI_TEXT_CHUNK_TYPE.textStart,
-        id: request.messageId || crypto.randomUUID(),
-      },
-    });
-    for (const delta of chunkText(text)) {
-      if (signal.aborted) throw new DOMException("Aborted", "AbortError");
-      post(port, {
-        type: "chunk",
-        chunk: {
-          type: AI_TEXT_CHUNK_TYPE.textDelta,
-          id: request.messageId,
-          delta,
-        },
-      });
-      await new Promise((resolve) =>
-        setTimeout(resolve, STREAM_CHUNK_DELAY_MS),
-      );
-    }
-    post(port, {
-      type: "chunk",
-      chunk: { type: AI_TEXT_CHUNK_TYPE.textEnd, id: request.messageId },
-    });
-  }
+  post(port, {
+    type: "metrics",
+    metrics: { outputMode: result.outputMode, usage: result.usage },
+  });
+  if (result.text)
+    await postTextStream(
+      port,
+      result.text,
+      request.messageId || crypto.randomUUID(),
+      signal,
+    );
   post(port, { type: "end" });
+}
+
+function promptBreakdown(
+  system: string,
+  request: SendMessagesRequest,
+): PromptBreakdown {
+  const latestUser = [...request.messages]
+    .reverse()
+    .find((message) => message.role === "user");
+  const attachments = request.body.context?.uploadedAttachments || [];
+  const context = request.body.context?.text || "";
+  const attachedTabs = latestUser?.metadata?.attachedTabs;
+  const selectedElement = latestUser?.metadata?.selectedElement;
+  const skill = latestUser?.metadata?.skill as Skill | undefined;
+  const availableSkills = request.body.context?.availableSkills || [];
+  return {
+    systemPromptChars: system.length,
+    userPromptChars: latestUser?.content.length || 0,
+    conversationPromptChars: request.messages.reduce(
+      (total, message) => total + message.content.length,
+      0,
+    ),
+    tabPromptChars:
+      contextBlockLength(context, PROMPT_CONTEXT_TAG.selectedTabs) +
+      contextBlockLength(context, PROMPT_CONTEXT_TAG.currentTab) +
+      metadataLength(attachedTabs),
+    selectedElementPromptChars:
+      contextBlockLength(context, PROMPT_CONTEXT_TAG.selectedElement) +
+      metadataLength(selectedElement),
+    skillPromptChars:
+      (skill ? getSkillInstruction(skill).length : 0) +
+      availableSkills.reduce(
+        (total, item) => total + item.name.length + item.description.length,
+        0,
+      ),
+    attachmentPromptChars: attachments.reduce(
+      (total, attachment) =>
+        total +
+        attachment.name.length +
+        (attachment.text?.length || 0) +
+        (attachment.dataUrl?.length || 0),
+      0,
+    ),
+    toolCallPromptChars: request.messages.reduce(
+      (total, message) => total + toolCallChars(message.parts),
+      0,
+    ),
+    sourcePromptChars: request.messages.reduce(
+      (total, message) => total + metadataLength(message.metadata?.sources),
+      0,
+    ),
+    otherContextPromptChars: otherContextChars(context),
+  };
+}
+
+function contextBlockLength(context: string, tag: string) {
+  const match = context.match(new RegExp(`<${tag}>[\\s\\S]*?</${tag}>`, "g"));
+  return match?.reduce((total, value) => total + value.length, 0) || 0;
+}
+
+function otherContextChars(context: string) {
+  const known = PROMPT_CONTEXT_TAGS.reduce(
+    (total, tag) => total + contextBlockLength(context, tag),
+    0,
+  );
+  return Math.max(0, context.length - known);
+}
+
+function toolCallChars(parts: ChatPart[] | undefined) {
+  if (!parts?.length) return 0;
+  return parts.reduce((total, part) => {
+    if (!isToolPartType(part.type)) return total;
+    return (
+      total +
+      jsonLength(part.input) +
+      jsonLength(part.output) +
+      (part.toolName?.length || 0)
+    );
+  }, 0);
+}
+
+function metadataLength(value: unknown) {
+  return jsonLength(value);
+}
+
+function jsonLength(value: unknown) {
+  if (!value) return 0;
+  try {
+    return JSON.stringify(value).length;
+  } catch {
+    return String(value).length;
+  }
 }
 
 async function generateTitle(request: GenerateTitleRequest) {

@@ -2,6 +2,7 @@ export const BROWSER_TOOL_NAME = {
   listBrowserTools: "listBrowserTools",
   readBrowserTool: "readBrowserTool",
   runBrowserTool: "runBrowserTool",
+  wait: "wait",
   getCurrentTime: "getCurrentTime",
   openNewTabWithURL: "openNewTabWithURL",
   getCurrentTab: "getCurrentTab",

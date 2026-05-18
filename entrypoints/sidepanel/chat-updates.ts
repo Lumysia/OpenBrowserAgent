@@ -1,4 +1,4 @@
-import type { Chat, ChatPart } from "../../src/shared/types";
+import type { Chat, ChatPart, RunMetrics } from "../../src/shared/types";
 import {
   extractSourcesFromPart,
   mergeChatSources,
@@ -52,6 +52,12 @@ export function appendAssistantPart({
                   ...message,
                   content: delta ? message.content + delta : message.content,
                   parts: part ? applyPart(message.parts, part) : message.parts,
+                  metadata: delta
+                    ? mergeRunMetrics(
+                        message.metadata,
+                        deltaRunMetrics(message.metadata, delta),
+                      )
+                    : message.metadata,
                 }
               : message,
           ),
@@ -59,4 +65,56 @@ export function appendAssistantPart({
         }
       : chat,
   );
+}
+
+export function updateAssistantRunMetrics(
+  chats: Chat[],
+  chatId: string,
+  messageId: string,
+  metrics: Partial<RunMetrics>,
+) {
+  return chats.map((chat) =>
+    chat.id === chatId
+      ? {
+          ...chat,
+          messages: chat.messages.map((message) =>
+            message.id === messageId
+              ? {
+                  ...message,
+                  metadata: mergeRunMetrics(message.metadata, metrics),
+                }
+              : message,
+          ),
+          updatedAt: Date.now(),
+        }
+      : chat,
+  );
+}
+
+function mergeRunMetrics(
+  metadata: Record<string, unknown> | undefined,
+  metrics: Partial<RunMetrics>,
+) {
+  const current = (metadata?.runMetrics || {}) as RunMetrics;
+  return {
+    ...(metadata || {}),
+    runMetrics: {
+      ...current,
+      ...metrics,
+      usage: { ...(current.usage || {}), ...(metrics.usage || {}) },
+    },
+  };
+}
+
+function deltaRunMetrics(
+  metadata: Record<string, unknown> | undefined,
+  delta: string,
+): Partial<RunMetrics> {
+  const current = (metadata?.runMetrics || {}) as RunMetrics;
+  const outputCharacters = Number(current.outputCharacters) || 0;
+  return {
+    firstTokenAt: current.firstTokenAt || Date.now(),
+    outputMode: current.outputMode || "streaming",
+    outputCharacters: outputCharacters + delta.length,
+  };
 }

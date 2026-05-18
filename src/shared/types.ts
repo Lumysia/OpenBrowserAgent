@@ -119,6 +119,39 @@ export type ChatMessage = {
   metadata?: Record<string, unknown>;
 };
 
+export type TokenUsage = {
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+  cachedInputTokens?: number;
+  cacheWriteTokens?: number;
+  reasoningTokens?: number;
+  cost?: number;
+};
+
+export type PromptBreakdown = {
+  systemPromptChars?: number;
+  userPromptChars?: number;
+  conversationPromptChars?: number;
+  tabPromptChars?: number;
+  selectedElementPromptChars?: number;
+  skillPromptChars?: number;
+  attachmentPromptChars?: number;
+  toolCallPromptChars?: number;
+  sourcePromptChars?: number;
+  otherContextPromptChars?: number;
+};
+
+export type RunMetrics = {
+  startedAt?: number;
+  firstTokenAt?: number;
+  endedAt?: number;
+  outputMode?: "streaming" | "buffered";
+  outputCharacters?: number;
+  usage?: TokenUsage;
+  promptBreakdown?: PromptBreakdown;
+};
+
 export const TOOL_PART_PREFIX = "tool-";
 
 export type ToolPartType = `${typeof TOOL_PART_PREFIX}${string}`;
@@ -262,6 +295,7 @@ export type GenerateSkillRequest = Extract<
 
 export type AiStreamResponse =
   | { type: "chunk"; chunk: unknown }
+  | { type: "metrics"; metrics: Partial<RunMetrics> }
   | { type: "end" }
   | { type: "error"; error: string }
   | { type: "title"; title: string }

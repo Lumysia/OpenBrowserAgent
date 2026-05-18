@@ -229,7 +229,8 @@ function toolIcon(name: string) {
     return <Search size={19} strokeWidth={2.1} />;
   if (lowerName.includes("download"))
     return <Download size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("time")) return <Clock size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("time") || lowerName.includes("wait"))
+    return <Clock size={19} strokeWidth={2.1} />;
   if (lowerName.includes("network"))
     return <Network size={19} strokeWidth={2.1} />;
   if (lowerName.includes("performance") || lowerName.includes("trace"))
@@ -319,6 +320,8 @@ function fallbackToolDetail(
         : input.url,
     );
   if (name === BROWSER_TOOL_NAME.openSearchTab) return stringValue(input.query);
+  if (name === BROWSER_TOOL_NAME.wait)
+    return stringValue(output.milliseconds || input.milliseconds || input.ms);
   if (name === BROWSER_TOOL_NAME.goToTab) return idLabel("Tab", input.tabId);
   if (name === BROWSER_TOOL_NAME.waitTabLoadFinished)
     return idLabel("Tab", input.tabId);

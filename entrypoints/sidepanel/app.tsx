@@ -23,7 +23,6 @@ import {
   forkChatAction,
   updateChatAction,
 } from "./chat-state-actions";
-import { appendAssistantContent, appendAssistantPart } from "./chat-updates";
 import {
   createResendMessageDraft,
   pruneSentAttachmentPreviews,
@@ -51,7 +50,7 @@ import {
   type ComposerMenu,
 } from "./sidepanel-menu-state";
 import { SidepanelView } from "./sidepanel-view";
-import { streamPartFromChunk } from "./stream-parts";
+import { createStreamHandlers } from "./stream-handlers";
 import { closeStreamPort, startStreamAction } from "./stream-port";
 import { useComposerContext } from "./use-composer-context";
 import { useElementSelector } from "./use-element-selector";
@@ -101,6 +100,7 @@ export function SidepanelApp() {
   );
   const modelCount = configuredModels.length;
   const currentChat = chats?.find((chat) => chat.id === activeChatId);
+  const streamHandlers = createStreamHandlers(setChats);
   const t = getMessages(language);
   const aiWorking = streaming || creatingSkill;
   const { selectElement } = useElementSelector(t);
@@ -193,7 +193,7 @@ export function SidepanelApp() {
     mode,
     language,
     uploadedAttachments,
-    appendToAssistant,
+    appendToAssistant: streamHandlers.appendToAssistant,
     startStream,
   });
 
@@ -362,31 +362,15 @@ export function SidepanelApp() {
       activeStreamRef,
       lastStreamActivityRef,
       setStreaming,
-      appendStreamChunk,
-      appendToAssistant,
+      appendStreamChunk: streamHandlers.appendStreamChunk,
+      appendToAssistant: streamHandlers.appendToAssistant,
+      updateRunMetrics: (metrics) =>
+        streamHandlers.updateRunMetrics(
+          request.chatId,
+          targetMessageId,
+          metrics,
+        ),
     });
-  }
-
-  function appendToAssistant(
-    chatId: string,
-    messageId: string,
-    content: string,
-  ) {
-    setChats((items) =>
-      appendAssistantContent(items, chatId, messageId, content),
-    );
-  }
-
-  function appendStreamChunk(
-    chatId: string,
-    messageId: string,
-    chunk: unknown,
-  ) {
-    const { delta, part } = streamPartFromChunk(chunk);
-    if (!delta && !part) return;
-    setChats((items) =>
-      appendAssistantPart({ chats: items, chatId, messageId, delta, part }),
-    );
   }
 
   function stop() {

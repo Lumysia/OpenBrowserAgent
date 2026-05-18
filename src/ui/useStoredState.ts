@@ -9,6 +9,9 @@ type StorageItem<T> = {
 export function useStoredState<T>(item: StorageItem<T>) {
   const [value, setValue] = useState<T | undefined>();
   const valueRef = useRef<T | undefined>(undefined);
+  const snapshotRef = useRef<string | undefined>(undefined);
+  const pendingWritesRef = useRef(0);
+  const persistChainRef = useRef<Promise<void>>(Promise.resolve());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,11 +19,16 @@ export function useStoredState<T>(item: StorageItem<T>) {
     item.get().then((next) => {
       if (!mounted) return;
       valueRef.current = next;
+      snapshotRef.current = snapshot(next);
       setValue(next);
       setLoading(false);
     });
     const unwatch = item.watch((next) => {
+      const nextSnapshot = snapshot(next);
+      if (nextSnapshot && nextSnapshot === snapshotRef.current) return;
+      if (pendingWritesRef.current > 0) return;
       valueRef.current = next;
+      snapshotRef.current = nextSnapshot;
       setValue(next);
     });
     return () => {
@@ -37,11 +45,29 @@ export function useStoredState<T>(item: StorageItem<T>) {
         ? (next as (previous: T) => T)(previous)
         : next;
     valueRef.current = resolved;
+    snapshotRef.current = snapshot(resolved);
     setValue(resolved);
-    await item.set(resolved).catch((error) => {
-      console.warn("Failed to persist stored state", error);
-    });
+    pendingWritesRef.current += 1;
+    const write = persistChainRef.current
+      .catch(() => undefined)
+      .then(() => item.set(resolved));
+    persistChainRef.current = write;
+    await write
+      .catch((error) => {
+        console.warn("Failed to persist stored state", error);
+      })
+      .finally(() => {
+        pendingWritesRef.current = Math.max(0, pendingWritesRef.current - 1);
+      });
   }
 
   return [value, update, loading] as const;
+}
+
+function snapshot(value: unknown) {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return undefined;
+  }
 }

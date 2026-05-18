@@ -40,6 +40,23 @@ export const catalogBrowserTools = [
 
 export const commonBrowserTools = [
   tool(
+    BROWSER_TOOL_NAME.wait,
+    "Wait for a specified amount of time before continuing. Use this when the user or page needs a short pause, an animation needs time, or an asynchronous page action needs time to settle.",
+    {
+      milliseconds: {
+        type: "number",
+        description:
+          "How long to wait in milliseconds. Defaults to 1000 and is capped by the extension safety limit.",
+      },
+      reason: {
+        type: "string",
+        description:
+          "Why waiting is useful for this task. SHOULD use USER's language.",
+      },
+    },
+    [],
+  ),
+  tool(
     BROWSER_TOOL_NAME.getCurrentTime,
     "Get the current date and time from the user's device. Use this when the user asks what time it is, asks for today's exact local date/time, or needs time zone conversion.",
     {

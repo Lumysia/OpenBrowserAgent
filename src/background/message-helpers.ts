@@ -1,4 +1,4 @@
-import { POST_TEXT_CHUNK_SIZE } from "../shared/config";
+import { POST_TEXT_CHUNK_SIZE, STREAM_CHUNK_DELAY_MS } from "../shared/config";
 import {
   ATTACHMENT_CONTEXT_TAG,
   ATTACHMENT_KIND,
@@ -40,6 +40,36 @@ export function postText(
       type: "chunk",
       chunk: { type: chunkType.delta, id, delta },
     });
+  }
+  post(port, { type: "chunk", chunk: { type: chunkType.end, id } });
+}
+
+export async function postTextStream(
+  port: chrome.runtime.Port,
+  text: string,
+  id: string,
+  signal: AbortSignal,
+  appendToMessageContent = true,
+) {
+  const chunkType = appendToMessageContent
+    ? {
+        start: AI_TEXT_CHUNK_TYPE.textStart,
+        delta: AI_TEXT_CHUNK_TYPE.textDelta,
+        end: AI_TEXT_CHUNK_TYPE.textEnd,
+      }
+    : {
+        start: AI_TEXT_CHUNK_TYPE.textNoteStart,
+        delta: AI_TEXT_CHUNK_TYPE.textNoteDelta,
+        end: AI_TEXT_CHUNK_TYPE.textNoteEnd,
+      };
+  post(port, { type: "chunk", chunk: { type: chunkType.start, id } });
+  for (const delta of chunkText(text)) {
+    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+    post(port, {
+      type: "chunk",
+      chunk: { type: chunkType.delta, id, delta },
+    });
+    await new Promise((resolve) => setTimeout(resolve, STREAM_CHUNK_DELAY_MS));
   }
   post(port, { type: "chunk", chunk: { type: chunkType.end, id } });
 }
