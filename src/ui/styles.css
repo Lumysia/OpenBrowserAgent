@@ -1100,6 +1100,44 @@ a {
   box-shadow: 0 14px 36px var(--shadow);
   animation: pop-in 0.14s ease both;
 }
+.ui-toggle-group {
+  display: inline-flex;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--background);
+}
+.ui-toggle-group-item {
+  min-height: 42px;
+  flex: 1 1 0;
+  padding: 0 14px;
+  border-left: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-weight: 700;
+  transition:
+    background-color 0.14s ease,
+    color 0.14s ease;
+}
+.ui-toggle-group-item:first-child {
+  border-left: 0;
+}
+.ui-toggle-group-item:hover {
+  background: var(--secondary);
+  color: var(--foreground);
+}
+.ui-toggle-group-item:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+.ui-toggle-group-item[data-state="on"] {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
 .ui-command {
   display: flex;
   min-width: 0;
@@ -2283,15 +2321,22 @@ a {
 .add-context-popover-content,
 .model-popover-content,
 .mode-popover-content {
+  max-width: calc(100vw - 24px);
+  overflow: hidden;
   padding: 0;
 }
 .add-context-menu {
   width: min(440px, calc(100vw - 24px));
+  max-width: 100%;
   max-height: 232px;
   display: grid;
   gap: 6px;
   padding: 8px;
+  overflow-x: hidden;
   overflow-y: auto;
+}
+.add-context-menu > div {
+  min-width: 0;
 }
 .add-context-menu-compact {
   width: max-content;
@@ -2301,8 +2346,10 @@ a {
 }
 .model-menu {
   width: min(210px, calc(100vw - 24px));
+  max-width: 100%;
   max-height: 240px;
   padding: 6px;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 .mode-menu {
@@ -2310,6 +2357,7 @@ a {
   padding: 6px;
 }
 .action-list-item {
+  min-width: 0;
   min-height: 44px;
   padding: 12px 10px;
 }
@@ -2325,11 +2373,19 @@ a {
   justify-content: space-between;
 }
 .model-menu-item strong {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 14px;
   font-weight: 500;
+}
+.add-context-menu .action-list-item strong,
+.add-context-menu .action-list-item > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .model-menu-item small,
 .mode-menu-item small {

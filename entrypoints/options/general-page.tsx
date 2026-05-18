@@ -15,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
   Switch,
+  ToggleGroup,
+  ToggleGroupItem,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 
@@ -101,24 +103,28 @@ export function GeneralPage() {
           <CardDescription>{t.options.appearanceDescription}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Select
+          <ToggleGroup
+            type="single"
+            className="appearance-toggle-group"
             value={preferences.colorScheme || "system"}
-            onValueChange={(colorScheme) =>
+            onValueChange={(colorScheme) => {
+              if (!colorScheme) return;
               setPreferences((previous) => ({
                 ...previous,
                 colorScheme: colorScheme as "system" | "light" | "dark",
-              }))
-            }
+              }));
+            }}
           >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="system">{t.options.systemTheme}</SelectItem>
-              <SelectItem value="light">{t.options.lightTheme}</SelectItem>
-              <SelectItem value="dark">{t.options.darkTheme}</SelectItem>
-            </SelectContent>
-          </Select>
+            <ToggleGroupItem value="system">
+              {t.options.systemTheme}
+            </ToggleGroupItem>
+            <ToggleGroupItem value="light">
+              {t.options.lightTheme}
+            </ToggleGroupItem>
+            <ToggleGroupItem value="dark">
+              {t.options.darkTheme}
+            </ToggleGroupItem>
+          </ToggleGroup>
         </CardContent>
       </Card>
       <PreferenceSwitch
