@@ -1,13 +1,4 @@
-import {
-  ChevronDown,
-  History,
-  MessageCirclePlus,
-  Plus,
-  Send,
-  Settings,
-  Square,
-  Trash2,
-} from "lucide-react";
+import { ChevronDown, Plus, Send, Square } from "lucide-react";
 import { useRef, type ClipboardEvent, type RefObject } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import { CHAT_MODE } from "../../src/shared/types";
@@ -38,10 +29,10 @@ import {
   selectedModelLabel,
 } from "./composer-menus";
 import { ComposerAttachments } from "./composer-attachments";
-import { HistoryPanel } from "./history-panel";
 import { IconTooltip } from "./icon-tooltip";
 import { MessageBubble } from "./message-bubble";
 import { ProvidersEmptyState } from "./providers-empty-state";
+import { SidepanelHeader } from "./sidepanel-header";
 import {
   ADD_MENU_VIEW,
   COMPOSER_MENU,
@@ -196,57 +187,18 @@ export function SidepanelView({
   return (
     <TooltipProvider delayDuration={250}>
       <div className="sidepanel" ref={sidepanelRef}>
-        <header className="sidepanel-header">
-          <div className="sidepanel-topbar">
-            <IconTooltip label={t.sidepanel.clearAllChats}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onSetChats([])}
-              >
-                <Trash2 size={18} />
-              </Button>
-            </IconTooltip>
-            <div />
-            <div className="topbar-actions">
-              <IconTooltip label={t.words.newChat}>
-                <Button variant="ghost" size="icon" onClick={onCreateChat}>
-                  <MessageCirclePlus size={18} />
-                </Button>
-              </IconTooltip>
-              <Popover open={showHistory} onOpenChange={onSetShowHistory}>
-                <IconTooltip label={t.sidepanel.chatHistory}>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <History size={18} />
-                    </Button>
-                  </PopoverTrigger>
-                </IconTooltip>
-                <PopoverContent align="end" className="history-popover-content">
-                  <HistoryPanel
-                    t={t}
-                    chats={chats}
-                    activeChatId={currentChat?.id}
-                    onSelect={(chatId) => {
-                      onSelectChat(chatId);
-                      onSetShowHistory(false);
-                    }}
-                    onClose={onCloseChat}
-                  />
-                </PopoverContent>
-              </Popover>
-              <IconTooltip label={t.common.settings}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => chrome.runtime.openOptionsPage()}
-                >
-                  <Settings size={18} />
-                </Button>
-              </IconTooltip>
-            </div>
-          </div>
-        </header>
+        <SidepanelHeader
+          t={t}
+          currentChat={currentChat}
+          mode={mode}
+          chats={chats}
+          showHistory={showHistory}
+          onSetChats={onSetChats}
+          onCreateChat={onCreateChat}
+          onSetShowHistory={onSetShowHistory}
+          onSelectChat={onSelectChat}
+          onCloseChat={onCloseChat}
+        />
         <ScrollArea className="messages" viewportRef={messagesRef}>
           {!currentChat?.messages.length && (
             <div className="empty">

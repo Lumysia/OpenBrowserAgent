@@ -27,6 +27,7 @@ export const ptBR: LocaleMessages = {
     addProvider: "Adicionar provedor",
     menu: "Menu",
     chatHistory: "Histórico de chats",
+    exportChatOpenAi: "Exportar como JSON da OpenAI",
     clearAllChats: "Limpar todos os chats",
     noChatsYet: "Ainda não há chats",
     closeChat: "Fechar chat",
@@ -76,6 +77,10 @@ export const ptBR: LocaleMessages = {
     running: "Executando",
     done: "Concluído",
     error: "Erro",
+    generatedImage: "Imagem gerada",
+    downloadGeneratedImage: "Baixar imagem",
+    copyImage: "Copiar imagem",
+    copyPrompt: "Copiar prompt",
     tool: {
       openNewTabWithURL: {
         running: "Abrindo nova página",
@@ -134,6 +139,7 @@ export const ptBR: LocaleMessages = {
         running: "Atualizando Skill",
         done: "Skill atualizada",
       },
+      generateImage: { running: "Gerando imagem", done: "Imagem gerada" },
       readUploadedAttachment: {
         running: "Lendo anexo",
         done: "Anexo lido",
@@ -149,12 +155,16 @@ export const ptBR: LocaleMessages = {
     providerDescription:
       "Use sua própria chave e conecte o OpenBrowserAgent aos seus provedores de IA favoritos.",
     selectModel: "Selecionar modelo",
+    selectImageModel: "Selecionar modelo de imagem",
     providerName: "Nome do provedor",
     deleteProvider: "Excluir provedor",
     apiKey: "Chave de API",
     baseUrl: "URL base",
     models: "Modelos",
+    imageModels: "Modelos de geração de imagem",
     modelHint: "Busque modelos e selecione um para adicionar",
+    imageModelHint:
+      "Adicione modelos compatíveis com geração ou edição de imagem",
     fetchModels: "Buscar modelos",
     fetchingModels: "Buscando modelos",
     searchFetchedModels: "Buscar modelos encontrados...",
@@ -163,6 +173,7 @@ export const ptBR: LocaleMessages = {
     allFetchedModelsAdded: "Todos os modelos encontrados já foram adicionados",
     addSelected: "Adicionar selecionado",
     addCustomModelName: "Adicionar nome de modelo personalizado",
+    addCustomImageModelName: "Adicionar nome de modelo de imagem",
     addCustom: "Adicionar personalizado",
     noModelsAddedYet: "Nenhum modelo adicionado ainda.",
     skillsDescription:

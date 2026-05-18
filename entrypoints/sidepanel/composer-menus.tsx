@@ -230,7 +230,7 @@ export function ModelMenu({
             <strong>{model.name}</strong>
           </span>
           {selectedModelId === model.id && (
-            <Check className="menu-check" size={18} />
+            <Check className="menu-check" size={14} />
           )}
         </button>
       ))}
@@ -271,7 +271,7 @@ export function ModeMenu({
             <strong>{item.title}</strong>
             <small>{item.description}</small>
           </span>
-          {mode === item.id && <Check className="menu-check" size={18} />}
+          {mode === item.id && <Check className="menu-check" size={14} />}
         </button>
       ))}
     </div>

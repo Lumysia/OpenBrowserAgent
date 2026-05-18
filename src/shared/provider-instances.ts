@@ -37,6 +37,7 @@ export function normalizeProviderConfig(id: string, config: ProviderConfig) {
     type,
     label: config.label || providerLabels[type] || id,
     baseUrl: config.baseUrl || providerDefaultBaseUrls[type],
+    imageModels: config.imageModels || [],
   };
 }
 
@@ -45,7 +46,7 @@ export function createProviderConfig(
   existing: ProviderState,
 ) {
   const id = uniqueProviderId(type, existing);
-  return normalizeProviderConfig(id, { id, type, models: [] });
+  return normalizeProviderConfig(id, { id, type, models: [], imageModels: [] });
 }
 
 export function providerTypeFromId(id: string, type?: ProviderId) {

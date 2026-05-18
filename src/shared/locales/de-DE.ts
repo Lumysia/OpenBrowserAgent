@@ -27,6 +27,7 @@ export const deDE: LocaleMessages = {
     addProvider: "Anbieter hinzufügen",
     menu: "Menü",
     chatHistory: "Chatverlauf",
+    exportChatOpenAi: "Als OpenAI-JSON exportieren",
     clearAllChats: "Alle Chats löschen",
     noChatsYet: "Noch keine Chats",
     closeChat: "Chat schließen",
@@ -78,6 +79,10 @@ export const deDE: LocaleMessages = {
     running: "Läuft",
     done: "Fertig",
     error: "Fehler",
+    generatedImage: "Generiertes Bild",
+    downloadGeneratedImage: "Bild herunterladen",
+    copyImage: "Bild kopieren",
+    copyPrompt: "Prompt kopieren",
     tool: {
       openNewTabWithURL: {
         running: "Neue Seite wird geöffnet",
@@ -151,6 +156,7 @@ export const deDE: LocaleMessages = {
         running: "Skill wird aktualisiert",
         done: "Skill aktualisiert",
       },
+      generateImage: { running: "Bild wird generiert", done: "Bild generiert" },
       readUploadedAttachment: {
         running: "Anhang wird gelesen",
         done: "Anhang gelesen",
@@ -166,12 +172,16 @@ export const deDE: LocaleMessages = {
     providerDescription:
       "Verbinden Sie OpenBrowserAgent mit Ihren bevorzugten KI-Anbietern über Ihren eigenen Schlüssel.",
     selectModel: "Modell auswählen",
+    selectImageModel: "Bildmodell auswählen",
     providerName: "Anbietername",
     deleteProvider: "Anbieter löschen",
     apiKey: "API-Schlüssel",
     baseUrl: "Basis-URL",
     models: "Modelle",
+    imageModels: "Bildgenerierungsmodelle",
     modelHint: "Modelle abrufen und dann eines hinzufügen",
+    imageModelHint:
+      "Modelle hinzufügen, die Bildgenerierung oder Bildbearbeitung unterstützen",
     fetchModels: "Modelle abrufen",
     fetchingModels: "Modelle werden abgerufen",
     searchFetchedModels: "Abgerufene Modelle suchen...",
@@ -181,6 +191,7 @@ export const deDE: LocaleMessages = {
       "Alle abgerufenen Modelle wurden bereits hinzugefügt",
     addSelected: "Auswahl hinzufügen",
     addCustomModelName: "Benutzerdefinierten Modellnamen hinzufügen",
+    addCustomImageModelName: "Bildmodellnamen hinzufügen",
     addCustom: "Benutzerdefiniert hinzufügen",
     noModelsAddedYet: "Noch keine Modelle hinzugefügt.",
     skillsDescription: "Senden Sie mit Skillen sofort Nachrichten an die KI.",

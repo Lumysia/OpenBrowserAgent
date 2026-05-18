@@ -27,6 +27,7 @@ export const esES: LocaleMessages = {
     addProvider: "Añadir proveedor",
     menu: "Menú",
     chatHistory: "Historial de chats",
+    exportChatOpenAi: "Exportar como JSON de OpenAI",
     clearAllChats: "Borrar todos los chats",
     noChatsYet: "Aún no hay chats",
     closeChat: "Cerrar chat",
@@ -76,6 +77,10 @@ export const esES: LocaleMessages = {
     running: "Ejecutando",
     done: "Listo",
     error: "Error",
+    generatedImage: "Imagen generada",
+    downloadGeneratedImage: "Descargar imagen",
+    copyImage: "Copiar imagen",
+    copyPrompt: "Copiar prompt",
     tool: {
       openNewTabWithURL: {
         running: "Abriendo nueva página",
@@ -149,6 +154,7 @@ export const esES: LocaleMessages = {
         running: "Actualizando Skill",
         done: "Skill actualizada",
       },
+      generateImage: { running: "Generando imagen", done: "Imagen generada" },
       readUploadedAttachment: {
         running: "Leyendo adjunto",
         done: "Adjunto leído",
@@ -164,12 +170,16 @@ export const esES: LocaleMessages = {
     providerDescription:
       "Usa tu propia clave y conecta OpenBrowserAgent con tus proveedores de IA favoritos.",
     selectModel: "Seleccionar modelo",
+    selectImageModel: "Seleccionar modelo de imagen",
     providerName: "Nombre del proveedor",
     deleteProvider: "Eliminar proveedor",
     apiKey: "Clave API",
     baseUrl: "URL base",
     models: "Modelos",
+    imageModels: "Modelos de generación de imágenes",
     modelHint: "Obtén modelos y luego selecciona uno para añadir",
+    imageModelHint:
+      "Añade modelos compatibles con generación o edición de imágenes",
     fetchModels: "Obtener modelos",
     fetchingModels: "Obteniendo modelos",
     searchFetchedModels: "Buscar modelos obtenidos...",
@@ -178,6 +188,7 @@ export const esES: LocaleMessages = {
     allFetchedModelsAdded: "Todos los modelos obtenidos ya se añadieron",
     addSelected: "Añadir seleccionado",
     addCustomModelName: "Añadir nombre de modelo personalizado",
+    addCustomImageModelName: "Añadir nombre de modelo de imagen",
     addCustom: "Añadir personalizado",
     noModelsAddedYet: "Aún no hay modelos añadidos.",
     skillsDescription: "Usa Skills para enviar mensajes a la IA al instante.",

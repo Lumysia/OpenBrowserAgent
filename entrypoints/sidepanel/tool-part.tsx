@@ -1,8 +1,10 @@
 import {
+  Copy,
   Download,
   ExternalLink,
   FileSearch,
   FileText,
+  Image as ImageIcon,
   Layers,
   MousePointerClick,
   Search,
@@ -39,6 +41,12 @@ export function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
         </strong>
       </div>
       <div className="tool-detail">
+        {name === BROWSER_TOOL_NAME.generateImage && (
+          <GeneratedImage
+            output={(part.output || {}) as Record<string, unknown>}
+            t={t}
+          />
+        )}
         {description && <div className="tool-description">{description}</div>}
         {!!references.length && (
           <div className="tool-references">
@@ -133,6 +141,8 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
         input.text,
       ]);
     if (typeof output.filename === "string") return output.filename;
+    if (name === BROWSER_TOOL_NAME.generateImage)
+      return stringValue(output.revisedPrompt) || stringValue(input.prompt);
     const fallback = fallbackToolDetail(name, input, output);
     if (fallback) return fallback;
     if (part.state === CHAT_PART_STATE.outputError) return t.sidepanel.error;
@@ -194,6 +204,8 @@ function toolIcon(name: string) {
   if (name.includes("find")) return <Search size={19} strokeWidth={2.1} />;
   if (name.includes("download"))
     return <Download size={19} strokeWidth={2.1} />;
+  if (name === BROWSER_TOOL_NAME.generateImage)
+    return <ImageIcon size={19} strokeWidth={2.1} />;
   if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
     return <FileSearch size={19} strokeWidth={2.1} />;
   if (
@@ -206,6 +218,55 @@ function toolIcon(name: string) {
   if (name.includes("group")) return <Layers size={19} strokeWidth={2.1} />;
   if (name.includes("Tab")) return <ExternalLink size={19} strokeWidth={2.1} />;
   return <Square size={15} strokeWidth={2.1} />;
+}
+
+function GeneratedImage({
+  output,
+  t,
+}: {
+  output: Record<string, unknown>;
+  t: Messages;
+}) {
+  const image = stringValue(output.image);
+  const prompt = stringValue(output.prompt);
+  if (!image || output.error) return null;
+  const canCopyImage =
+    image.startsWith("data:") && typeof ClipboardItem !== "undefined";
+  async function copyImage() {
+    if (!canCopyImage) return;
+    const blob = await (await fetch(image)).blob();
+    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+  }
+  return (
+    <div className="generated-image-result">
+      <img src={image} alt={prompt || t.sidepanel.generatedImage} />
+      <div className="row">
+        <a
+          className="ui-button ui-button-secondary ui-button-sm generated-image-download"
+          href={image}
+          download="generated-image.png"
+        >
+          <Download size={14} /> {t.sidepanel.downloadGeneratedImage}
+        </a>
+        {canCopyImage && (
+          <button
+            className="ui-button ui-button-secondary ui-button-sm"
+            onClick={copyImage}
+          >
+            <Copy size={14} /> {t.sidepanel.copyImage}
+          </button>
+        )}
+        {prompt && (
+          <button
+            className="ui-button ui-button-ghost ui-button-sm"
+            onClick={() => navigator.clipboard.writeText(prompt)}
+          >
+            <Copy size={14} /> {t.sidepanel.copyPrompt}
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function fallbackToolDetail(

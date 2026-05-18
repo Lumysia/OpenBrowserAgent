@@ -216,6 +216,41 @@
   background: color-mix(in srgb, var(--secondary) 62%, var(--background));
 }
 
+:root[data-theme="dark"] .user-bubble {
+  background: color-mix(in srgb, var(--accent-solid) 54%, var(--card));
+  color: color-mix(in srgb, var(--foreground) 94%, white);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+:root[data-theme="dark"] .user-message-actions {
+  opacity: 0.78;
+}
+
+:root[data-theme="dark"] .user-message-actions button,
+:root[data-theme="dark"] .copy-message {
+  background: color-mix(in srgb, var(--secondary) 76%, var(--background));
+  color: color-mix(in srgb, var(--muted-foreground) 82%, var(--foreground));
+}
+
+:root[data-theme="dark"] .user-message-actions button:hover,
+:root[data-theme="dark"] .copy-message:hover {
+  background: color-mix(in srgb, var(--secondary) 58%, var(--accent-soft));
+  color: var(--foreground);
+}
+
+:root[data-theme="dark"] .tool-card.loading {
+  background: transparent;
+}
+
+:root[data-theme="dark"] .tool-title,
+:root[data-theme="dark"] .tool-title strong {
+  color: color-mix(in srgb, var(--foreground) 76%, var(--muted-foreground));
+}
+
+:root[data-theme="dark"] .tool-icon {
+  color: color-mix(in srgb, var(--accent-strong) 72%, var(--muted-foreground));
+}
+
 :root[data-theme="dark"] .settings-main {
   background:
     radial-gradient(
@@ -340,6 +375,45 @@
 
   :root[data-theme="system"] .context-card {
     background: color-mix(in srgb, var(--secondary) 62%, var(--background));
+  }
+
+  :root[data-theme="system"] .user-bubble {
+    background: color-mix(in srgb, var(--accent-solid) 54%, var(--card));
+    color: color-mix(in srgb, var(--foreground) 94%, white);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+  }
+
+  :root[data-theme="system"] .user-message-actions {
+    opacity: 0.78;
+  }
+
+  :root[data-theme="system"] .user-message-actions button,
+  :root[data-theme="system"] .copy-message {
+    background: color-mix(in srgb, var(--secondary) 76%, var(--background));
+    color: color-mix(in srgb, var(--muted-foreground) 82%, var(--foreground));
+  }
+
+  :root[data-theme="system"] .user-message-actions button:hover,
+  :root[data-theme="system"] .copy-message:hover {
+    background: color-mix(in srgb, var(--secondary) 58%, var(--accent-soft));
+    color: var(--foreground);
+  }
+
+  :root[data-theme="system"] .tool-card.loading {
+    background: transparent;
+  }
+
+  :root[data-theme="system"] .tool-title,
+  :root[data-theme="system"] .tool-title strong {
+    color: color-mix(in srgb, var(--foreground) 76%, var(--muted-foreground));
+  }
+
+  :root[data-theme="system"] .tool-icon {
+    color: color-mix(
+      in srgb,
+      var(--accent-strong) 72%,
+      var(--muted-foreground)
+    );
   }
 
   :root[data-theme="system"] .settings-main {
@@ -949,7 +1023,7 @@ a {
 .brand {
   font-family: Georgia, "Times New Roman", serif;
   font-size: 22px;
-  font-weight: 500;
+  font-weight: inherit;
 }
 .nav-link {
   display: flex;
@@ -1029,6 +1103,11 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 .push-right {
   margin-left: auto;
@@ -1400,7 +1479,7 @@ a {
   border-radius: 13px;
   background: var(--accent-strong);
   color: white;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.45;
   overflow-wrap: anywhere;
   box-shadow: 0 8px 18px var(--accent-shadow);
@@ -1955,14 +2034,14 @@ a {
   max-height: none;
 }
 .model-menu {
-  width: min(260px, calc(100vw - 24px));
-  max-height: 260px;
-  padding: 8px;
+  width: min(140px, calc(100vw - 24px));
+  max-height: 160px;
+  padding: 4px;
   overflow-y: auto;
 }
 .mode-menu {
-  width: min(260px, calc(100vw - 24px));
-  padding: 6px;
+  width: min(148px, calc(100vw - 24px));
+  padding: 4px;
 }
 .action-list-item {
   min-height: 44px;
@@ -1970,33 +2049,40 @@ a {
 }
 .model-menu-item {
   position: relative;
-  padding: 9px 32px 9px 10px;
+  min-height: 32px;
+  gap: 7px;
+  padding: 6px 22px 6px 7px;
 }
 .mode-menu-item {
-  padding: 12px 12px;
+  min-height: 34px;
+  padding: 7px 8px;
   justify-content: space-between;
 }
 .model-menu-item strong {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 18px;
+  font-size: 12px;
   font-weight: 500;
 }
+.model-menu-item small,
+.mode-menu-item small {
+  font-size: 9px;
+}
 .model-provider-mark {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
   background: var(--secondary);
   color: var(--foreground);
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 700;
 }
 .mode-menu-item strong {
-  font-size: 17px;
+  font-size: 12px;
   font-weight: 500;
 }
 .menu-check {
@@ -2431,6 +2517,25 @@ a {
 }
 .tool-card.error .tool-description {
   color: #b3261e;
+}
+.generated-image-result {
+  display: grid;
+  gap: 10px;
+}
+.generated-image-result img {
+  width: 100%;
+  max-height: 320px;
+  border-radius: 12px;
+  object-fit: contain;
+  background: var(--secondary);
+}
+.generated-image-download {
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+.generated-image-download:hover {
+  color: var(--accent-strong);
+  text-decoration: none;
 }
 
 :root[data-theme="dark"] .tool-references button {

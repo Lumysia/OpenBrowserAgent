@@ -18,6 +18,7 @@ import {
   readSkillFile,
   readUploadedAttachment,
 } from "./attachment-messages";
+import { generateImage } from "./image-generation";
 import { browserTools, safeExecuteBrowserTool } from "./tools";
 
 export function toolsForMode(
@@ -33,6 +34,7 @@ export function toolsForMode(
     if (name === BROWSER_TOOL_NAME.readSkill) return hasSkills;
     if (name === BROWSER_TOOL_NAME.readSkillFile) return hasSkills;
     if (name === BROWSER_TOOL_NAME.updateSkillFile) return hasSkills;
+    if (name === BROWSER_TOOL_NAME.generateImage) return true;
     return !isAskMode(mode);
   });
 }
@@ -58,6 +60,8 @@ export function executeContextAwareTool({
     return readSkillFile(availableSkills, input);
   if (toolName === BROWSER_TOOL_NAME.updateSkillFile)
     return updateSkillFile(availableSkills, input);
+  if (toolName === BROWSER_TOOL_NAME.generateImage)
+    return generateImage(uploadedAttachments, input);
   return safeExecuteBrowserTool(toolName, input);
 }
 

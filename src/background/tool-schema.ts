@@ -3,6 +3,34 @@ import { ATTACHMENT_TOOL_DESCRIPTION } from "../shared/attachments";
 
 export const browserTools = [
   tool(
+    BROWSER_TOOL_NAME.generateImage,
+    "Use this for user requests to create, generate, draw, or edit an image with the configured image generation model. Can use uploaded image attachments as visual references and uploaded text attachments as prompt references.",
+    {
+      prompt: {
+        type: "string",
+        description: "Detailed image generation/editing prompt",
+      },
+      referenceAttachmentIds: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Optional uploaded attachment ids to use as references. Image attachments are visual references; text attachments are appended as reference text.",
+      },
+      modelId: {
+        type: "string",
+        description:
+          "Optional configured image model id. Defaults to the selected image model.",
+      },
+      size: {
+        type: "string",
+        description: "Optional image size, such as 1024x1024",
+      },
+      quality: { type: "string", description: "Optional quality setting" },
+      count: { type: "number", description: "Optional image count" },
+    },
+    ["prompt"],
+  ),
+  tool(
     BROWSER_TOOL_NAME.openNewTabWithURL,
     "Open a new tab with the given URL",
     {

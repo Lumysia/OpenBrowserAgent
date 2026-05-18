@@ -27,6 +27,7 @@ export const frFR: LocaleMessages = {
     addProvider: "Ajouter un fournisseur",
     menu: "Menu",
     chatHistory: "Historique",
+    exportChatOpenAi: "Exporter en JSON OpenAI",
     clearAllChats: "Effacer toutes les discussions",
     noChatsYet: "Aucune discussion",
     closeChat: "Fermer la discussion",
@@ -77,6 +78,10 @@ export const frFR: LocaleMessages = {
     running: "En cours",
     done: "Terminé",
     error: "Erreur",
+    generatedImage: "Image générée",
+    downloadGeneratedImage: "Télécharger l’image",
+    copyImage: "Copier l’image",
+    copyPrompt: "Copier le prompt",
     tool: {
       openNewTabWithURL: {
         running: "Ouverture d'une nouvelle page",
@@ -153,6 +158,10 @@ export const frFR: LocaleMessages = {
         running: "Mise à jour du Skill",
         done: "Skill mis à jour",
       },
+      generateImage: {
+        running: "Génération de l’image",
+        done: "Image générée",
+      },
       readUploadedAttachment: {
         running: "Lecture de la pièce jointe",
         done: "Pièce jointe lue",
@@ -168,12 +177,16 @@ export const frFR: LocaleMessages = {
     providerDescription:
       "Utilisez votre propre clé et connectez OpenBrowserAgent à vos fournisseurs IA favoris.",
     selectModel: "Sélectionner un modèle",
+    selectImageModel: "Sélectionner un modèle d’image",
     providerName: "Nom du fournisseur",
     deleteProvider: "Supprimer le fournisseur",
     apiKey: "Clé API",
     baseUrl: "URL de base",
     models: "Modèles",
+    imageModels: "Modèles de génération d’images",
     modelHint: "Récupérez les modèles puis choisissez-en un à ajouter",
+    imageModelHint:
+      "Ajoutez des modèles prenant en charge la génération ou l’édition d’images",
     fetchModels: "Récupérer les modèles",
     fetchingModels: "Récupération des modèles",
     searchFetchedModels: "Rechercher des modèles...",
@@ -182,6 +195,7 @@ export const frFR: LocaleMessages = {
     allFetchedModelsAdded: "Tous les modèles récupérés sont déjà ajoutés",
     addSelected: "Ajouter la sélection",
     addCustomModelName: "Ajouter un nom de modèle personnalisé",
+    addCustomImageModelName: "Ajouter un nom de modèle d’image",
     addCustom: "Ajouter personnalisé",
     noModelsAddedYet: "Aucun modèle ajouté.",
     skillsDescription:

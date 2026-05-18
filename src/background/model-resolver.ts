@@ -38,3 +38,31 @@ export async function resolveModel(modelId?: string) {
 
   throw new Error("No model configured. Add an AI provider in Settings.");
 }
+
+export async function resolveImageModel(modelId?: string) {
+  const providers = normalizeProviderState(await storage.provider.get());
+  const preferences = await storage.preferences.get();
+  const selectedModelId = modelId || preferences.selectedImageModelId;
+
+  for (const [, config] of Object.entries(providers)) {
+    const provider = config.type || "openai";
+    const availableModels = [
+      ...(config.imageModels || []),
+      ...(config.models || []),
+    ];
+    const model = availableModels.find(
+      (candidate) =>
+        candidate.id === selectedModelId || candidate.name === selectedModelId,
+    );
+    if (model) {
+      return {
+        provider,
+        apiKey: config.apiKey || "",
+        baseUrl: config.baseUrl || providerDefaultBaseUrls[provider] || "",
+        modelName: model.name || model.id,
+      };
+    }
+  }
+
+  throw new Error("No image model configured. Select a model in Settings.");
+}

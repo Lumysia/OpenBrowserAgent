@@ -24,12 +24,14 @@ export type ProviderConfig = {
   apiKey?: string;
   baseUrl?: string;
   models?: ModelConfig[];
+  imageModels?: ModelConfig[];
 };
 
 export type ProviderState = Record<string, ProviderConfig>;
 
 export type Preferences = {
   selectedModelId?: string;
+  selectedImageModelId?: string;
   colorScheme?: "system" | "light" | "dark";
   accentColor?: "green" | "blue" | "pink" | "purple" | "amber";
   syncSettings?: boolean;

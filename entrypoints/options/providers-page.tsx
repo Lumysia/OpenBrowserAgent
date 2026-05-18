@@ -31,6 +31,11 @@ import {
   SelectValue,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
+import {
+  FetchedModelPicker,
+  ModelList,
+  ModelSelect,
+} from "./provider-controls";
 import { loadProviderModels } from "./provider-models";
 
 const baseUrlOptions: Partial<Record<ProviderId, string[]>> = {
@@ -74,10 +79,16 @@ export function ProvidersPage() {
     setProviderState(rest);
     if (
       removed?.models?.some(
-        (model) => model.id === currentPreferences.selectedModelId,
+        (model) =>
+          model.id === currentPreferences.selectedModelId ||
+          model.id === currentPreferences.selectedImageModelId,
       )
     )
-      setPreferences({ ...currentPreferences, selectedModelId: undefined });
+      setPreferences({
+        ...currentPreferences,
+        selectedModelId: undefined,
+        selectedImageModelId: undefined,
+      });
   }
 
   return (
@@ -87,30 +98,26 @@ export function ProvidersPage() {
           <h1>{t.options.modelProviders}</h1>
           <p className="muted">{t.options.providerDescription}</p>
         </div>
-        <Label style={{ width: 260 }}>
-          {t.options.selectModel}
-          <Select
-            value={preferences.selectedModelId || "none"}
-            onValueChange={(value) =>
-              setPreferences({
-                ...preferences,
-                selectedModelId: value === "none" ? undefined : value,
-              })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">{t.options.selectModel}</SelectItem>
-              {configuredModels.map((model) => (
-                <SelectItem key={model.id} value={model.id}>
-                  {model.displayName || model.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Label>
+      </div>
+      <div className="grid-2">
+        <ModelSelect
+          label={t.options.selectModel}
+          value={preferences.selectedModelId}
+          models={configuredModels}
+          emptyLabel={t.options.selectModel}
+          onChange={(selectedModelId) =>
+            setPreferences({ ...preferences, selectedModelId })
+          }
+        />
+        <ModelSelect
+          label={t.options.selectImageModel}
+          value={preferences.selectedImageModelId}
+          models={configuredModels}
+          emptyLabel={t.options.selectImageModel}
+          onChange={(selectedImageModelId) =>
+            setPreferences({ ...preferences, selectedImageModelId })
+          }
+        />
       </div>
       <div className="row">
         <Select
@@ -145,8 +152,12 @@ export function ProvidersPage() {
             onChange={(next) => updateProvider(providerId, next)}
             onDelete={() => deleteProvider(providerId)}
             onModelAdded={(model) => {
-              if (!preferences.selectedModelId)
-                setPreferences({ ...preferences, selectedModelId: model.id });
+              setPreferences({
+                ...preferences,
+                selectedModelId: preferences.selectedModelId || model.id,
+                selectedImageModelId:
+                  preferences.selectedImageModelId || model.id,
+              });
             }}
           />
         ))}
@@ -374,98 +385,5 @@ function ProviderBaseUrl({
         }
       />
     </Label>
-  );
-}
-
-function FetchedModelPicker({
-  t,
-  search,
-  selectedId,
-  models,
-  onSearch,
-  onSelect,
-  onAdd,
-}: {
-  t: ReturnType<typeof getMessages>;
-  search: string;
-  selectedId: string;
-  models: ModelConfig[];
-  onSearch: (value: string) => void;
-  onSelect: (value: string) => void;
-  onAdd: () => void;
-}) {
-  return (
-    <>
-      <Input
-        value={search}
-        placeholder={t.options.searchFetchedModels}
-        onChange={(event) => onSearch(event.target.value)}
-      />
-      <Select
-        value={selectedId || "none"}
-        onValueChange={(value) => onSelect(value === "none" ? "" : value)}
-      >
-        <SelectTrigger>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="none">
-            {models.length
-              ? t.options.selectFetchedModel
-              : search
-                ? t.options.noFetchedModelsMatch
-                : t.options.allFetchedModelsAdded}
-          </SelectItem>
-          {models.map((model) => (
-            <SelectItem key={model.id} value={model.id}>
-              {model.displayName || model.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Button
-        onClick={onAdd}
-        disabled={
-          !selectedId || !models.some((model) => model.id === selectedId)
-        }
-      >
-        {t.options.addSelected}
-      </Button>
-    </>
-  );
-}
-
-function ModelList({
-  models,
-  value,
-  onChange,
-}: {
-  models: ModelConfig[];
-  value: ProviderConfig;
-  onChange: (value: ProviderConfig) => void;
-}) {
-  const [language] = useStoredState(storage.language);
-  const t = getMessages(language);
-  return (
-    <div className="model-table">
-      {models.map((model) => (
-        <div className="model-row" key={model.id}>
-          <span>{model.displayName || model.name}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() =>
-              onChange({
-                ...value,
-                models: models.filter((candidate) => candidate.id !== model.id),
-              })
-            }
-          >
-            <Trash2 size={14} />
-          </Button>
-        </div>
-      ))}
-      {!models.length && <p className="muted">{t.options.noModelsAddedYet}</p>}
-    </div>
   );
 }

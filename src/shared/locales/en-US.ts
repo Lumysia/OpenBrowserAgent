@@ -31,6 +31,7 @@ export const enUS = {
     addProvider: "Add Provider",
     menu: "Menu",
     chatHistory: "Chat History",
+    exportChatOpenAi: "Export chat as OpenAI JSON",
     clearAllChats: "Clear all chats",
     noChatsYet: "No chats yet",
     closeChat: "Close chat",
@@ -80,6 +81,10 @@ export const enUS = {
     running: "Running",
     done: "Done",
     error: "Error",
+    generatedImage: "Generated image",
+    downloadGeneratedImage: "Download image",
+    copyImage: "Copy image",
+    copyPrompt: "Copy prompt",
     tool: {
       openNewTabWithURL: {
         running: "Opening new page",
@@ -144,6 +149,7 @@ export const enUS = {
       },
       readSkill: { running: "Reading Skill", done: "Read Skill" },
       updateSkillFile: { running: "Updating Skill", done: "Updated Skill" },
+      generateImage: { running: "Generating image", done: "Generated image" },
       readUploadedAttachment: {
         running: "Reading attachment",
         done: "Read attachment",
@@ -159,12 +165,15 @@ export const enUS = {
     providerDescription:
       "Bring your own key and connect OpenBrowserAgent to your favorite AI providers.",
     selectModel: "Select model",
+    selectImageModel: "Select image model",
     providerName: "Provider name",
     deleteProvider: "Delete provider",
     apiKey: "API Key",
     baseUrl: "Base URL",
     models: "Models",
+    imageModels: "Image generation models",
     modelHint: "Fetch models, then select one to add",
+    imageModelHint: "Add models that support image generation or image editing",
     fetchModels: "Fetch models",
     fetchingModels: "Fetching models",
     searchFetchedModels: "Search fetched models...",
@@ -173,6 +182,7 @@ export const enUS = {
     allFetchedModelsAdded: "All fetched models already added",
     addSelected: "Add selected",
     addCustomModelName: "Add custom model name",
+    addCustomImageModelName: "Add image model name",
     addCustom: "Add custom",
     noModelsAddedYet: "No models added yet.",
     skillsDescription:

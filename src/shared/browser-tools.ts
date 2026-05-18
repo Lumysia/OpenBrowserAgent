@@ -22,6 +22,7 @@ export const BROWSER_TOOL_NAME = {
   readSkill: "readSkill",
   readSkillFile: "readSkillFile",
   updateSkillFile: "updateSkillFile",
+  generateImage: "generateImage",
 } as const;
 
 export type BrowserToolName =
