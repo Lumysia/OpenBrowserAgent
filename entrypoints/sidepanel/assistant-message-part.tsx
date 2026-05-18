@@ -5,6 +5,7 @@ import {
   STREAM_RENDER_THROTTLE_MS,
 } from "../../src/shared/config";
 import { getMessages, type Messages } from "../../src/shared/i18n";
+import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
 import type { ChatPart, ChatSource } from "../../src/shared/types";
 import { isToolPartType } from "../../src/shared/types";
 import { storage } from "../../src/shared/storage";
@@ -149,11 +150,10 @@ function openCitationSource(sourceId: string, sources: ChatSource[]) {
   const source = sources.find((item) => item.id === sourceId);
   if (!source) return;
   if (source.url) {
-    chrome.tabs.create({ url: source.url }).catch(() => undefined);
+    openOrFocusUrl(source.url).catch(() => undefined);
     return;
   }
-  if (source.tabId)
-    chrome.tabs.update(source.tabId, { active: true }).catch(() => undefined);
+  if (source.tabId) focusTab(source.tabId).catch(() => undefined);
 }
 
 function formatMessageTime(value: number) {

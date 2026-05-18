@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useRef } from "react";
 import type { Messages } from "../../src/shared/i18n";
+import { openOrFocusOptions } from "../../src/shared/tab-navigation";
 import type { Chat, ChatMode, Preferences } from "../../src/shared/types";
 import {
   Button,
@@ -130,7 +131,7 @@ export function SidepanelHeader({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => chrome.runtime.openOptionsPage()}
+              onClick={() => openOrFocusOptions().catch(console.warn)}
             >
               <Settings size={18} />
             </Button>

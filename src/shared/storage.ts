@@ -14,7 +14,7 @@ const STORAGE_AREAS = {
 
 type AreaName = (typeof STORAGE_AREAS)[keyof typeof STORAGE_AREAS];
 
-const STORAGE_KEYS = {
+export const STORAGE_KEYS = {
   userId: "userId",
   language: "language",
   preferences: "preferences",
@@ -24,6 +24,7 @@ const STORAGE_KEYS = {
   chats: "chats",
   chatTabs: "chat-tabs",
   syncWriteStatus: "sync-write-status",
+  ignoreSyncedProvidersForBootstrap: "ignore-synced-providers-for-bootstrap",
 } as const;
 
 export const SYNCABLE_DATA_ITEMS = [
@@ -76,7 +77,7 @@ const DEFAULT_PREFERENCES: Preferences = {
   colorScheme: "system",
   accentColor: "pink",
   syncSettings: true,
-  syncProviders: false,
+  syncProviders: true,
   syncSkills: false,
   syncChats: false,
   autoSelectSkills: false,
@@ -87,7 +88,7 @@ const DEFAULT_PREFERENCES: Preferences = {
   maxToolSteps: DEFAULT_MAX_TOOL_STEPS,
 };
 
-function getBrowserApi() {
+export function getBrowserApi() {
   const apiGlobal = globalThis as typeof globalThis & {
     browser?: typeof chrome;
     chrome?: typeof chrome;
@@ -173,8 +174,16 @@ async function flushSyncWrite(key: string) {
   }
 }
 
-function syncLocalCacheKey(key: string) {
+export function syncLocalCacheKey(key: string) {
   return `${key}:sync-local-cache`;
+}
+
+export function clearPendingSyncWrites() {
+  for (const pending of pendingSyncWrites.values()) {
+    clearTimeout(pending.timeoutId);
+    pending.resolve.forEach((resolve) => resolve());
+  }
+  pendingSyncWrites.clear();
 }
 
 async function writeSyncLocalCache<T>(key: string, value: T) {
@@ -258,11 +267,13 @@ function createItem<T>(
           changedArea === STORAGE_AREAS.local &&
           changes[syncLocalCacheKey(storageKey)]
         ) {
-          const next = changes[syncLocalCacheKey(storageKey)]
-            .newValue as SyncLocalCache<T>;
+          const next = changes[syncLocalCacheKey(storageKey)].newValue as
+            | SyncLocalCache<T>
+            | undefined;
           const previous = changes[syncLocalCacheKey(storageKey)].oldValue as
             | SyncLocalCache<T>
             | undefined;
+          if (!next) return;
           callback(next.value, previous?.value as T);
           return;
         }
@@ -317,7 +328,12 @@ function createMigratedItem<T>(
 }
 
 function mergePreferences(value: Preferences): Preferences {
-  return { ...DEFAULT_PREFERENCES, ...value, syncSettings: true };
+  return {
+    ...DEFAULT_PREFERENCES,
+    ...value,
+    syncSettings: true,
+    syncProviders: true,
+  };
 }
 
 function createSwitchableItem<T>(
@@ -429,7 +445,17 @@ export const storage = {
     STORAGE_KEYS.syncWriteStatus,
     () => DEFAULT_SYNC_WRITE_STATUS,
   ),
+  ignoreSyncedProvidersForBootstrap: createItem<boolean>(
+    STORAGE_AREAS.local,
+    STORAGE_KEYS.ignoreSyncedProvidersForBootstrap,
+    () => false,
+  ),
 };
+
+export async function getSyncedProviderState() {
+  const result = await getBrowserApi().storage.sync.get(STORAGE_KEYS.provider);
+  return result[STORAGE_KEYS.provider] as ProviderState | undefined;
+}
 
 export async function setDataSync(key: SyncPreferenceKey, enabled: boolean) {
   const dataKey: SyncableDataKey = syncableItemForPreference(key).dataKey;

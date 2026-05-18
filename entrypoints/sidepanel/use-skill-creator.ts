@@ -1,4 +1,5 @@
 import { OPTIONS_HASH, QUICK_FEEDBACK_MS } from "../../src/shared/config";
+import { openOrFocusOptions } from "../../src/shared/tab-navigation";
 import type { Chat, Skill } from "../../src/shared/types";
 import { requestSkill } from "./ai-requests";
 
@@ -19,9 +20,7 @@ export function createSkillFromChat({
 }) {
   if (creatingSkill) return;
   if (!currentChat?.messages.length) {
-    chrome.tabs.create({
-      url: chrome.runtime.getURL(`/options.html${OPTIONS_HASH.skills}`),
-    });
+    openOrFocusOptions(OPTIONS_HASH.skills).catch(console.warn);
     return;
   }
   setCreatingSkill(true);

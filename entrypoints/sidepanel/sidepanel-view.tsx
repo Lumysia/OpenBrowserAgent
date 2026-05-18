@@ -1,4 +1,4 @@
-import { ChevronDown, Plus, Send, Square } from "lucide-react";
+import { Plus, Send, Square } from "lucide-react";
 import { useRef, type ClipboardEvent, type RefObject } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import { CHAT_MODE } from "../../src/shared/types";
@@ -26,12 +26,14 @@ import {
   AddContextMenu,
   ModelMenu,
   ModeMenu,
+  modeIcon,
   selectedModelLabel,
 } from "./composer-menus";
 import { ComposerAttachments } from "./composer-attachments";
 import { IconTooltip } from "./icon-tooltip";
 import { MessageBubble } from "./message-bubble";
 import { ProvidersEmptyState } from "./providers-empty-state";
+import { QueuedMessages } from "./queued-messages";
 import { SidepanelHeader } from "./sidepanel-header";
 import {
   ADD_MENU_VIEW,
@@ -46,6 +48,7 @@ import type {
 } from "./sidepanel-view-types";
 import { UploadFileInput } from "./uploaded-attachment-card";
 import { aiWorkingStatus } from "./working-status";
+import type { QueuedMessage } from "./use-queued-messages";
 
 export function SidepanelView({
   t,
@@ -61,6 +64,7 @@ export function SidepanelView({
   pendingAttachments,
   selectedSkill,
   uploadedAttachments,
+  queuedMessages,
   sentAttachmentPreviews,
   attachmentNotice,
   availableTabs,
@@ -91,6 +95,8 @@ export function SidepanelView({
   onCreateSkill,
   onSend,
   onStop,
+  onDeleteQueuedMessage,
+  onEditQueuedMessage,
   onSelectSkill,
   onCancelEditMessage,
   onShowAllTabsPicker,
@@ -118,6 +124,7 @@ export function SidepanelView({
   pendingAttachments: UploadedAttachment[];
   selectedSkill?: Skill | null;
   uploadedAttachments: UploadedAttachment[];
+  queuedMessages: QueuedMessage[];
   sentAttachmentPreviews: Record<string, UploadedAttachment[]>;
   attachmentNotice: string;
   availableTabs: AttachmentTab[];
@@ -150,6 +157,8 @@ export function SidepanelView({
   onCreateSkill: () => void;
   onSend: () => void;
   onStop: () => void;
+  onDeleteQueuedMessage: (id: string) => void;
+  onEditQueuedMessage: (message: QueuedMessage) => void;
   onSelectSkill: (skill: Skill) => void;
   onCancelEditMessage: () => void;
   onShowAllTabsPicker: () => void;
@@ -184,7 +193,9 @@ export function SidepanelView({
     onAttachFiles(files).catch(() => undefined);
   }
 
-  if (providersReady && modelCount === 0) {
+  if (!providersReady) return null;
+
+  if (modelCount === 0) {
     return <ProvidersEmptyState t={t} />;
   }
 
@@ -261,25 +272,30 @@ export function SidepanelView({
             onClearSkill={() => onSetSelectedSkill(null)}
             onSetSelectedElement={onSetSelectedElement}
           />
+          <QueuedMessages
+            t={t}
+            messages={queuedMessages}
+            onDelete={onDeleteQueuedMessage}
+            onEdit={onEditQueuedMessage}
+          />
+          {aiWorking && (
+            <div className="ai-working-overlay" aria-live="polite">
+              <span className="ai-working-orb" />
+              <span>
+                <strong>{workingStatus.title}</strong>
+                <small>{workingStatus.description}</small>
+              </span>
+              <span className="ai-working-bars" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+            </div>
+          )}
           <div className="composer-box">
-            {aiWorking && (
-              <div className="ai-working-overlay" aria-live="polite">
-                <span className="ai-working-orb" />
-                <span>
-                  <strong>{workingStatus.title}</strong>
-                  <small>{workingStatus.description}</small>
-                </span>
-                <span className="ai-working-bars" aria-hidden="true">
-                  <i />
-                  <i />
-                  <i />
-                </span>
-              </div>
-            )}
             <Textarea
               value={input}
               placeholder={t.sidepanel.whatDoYouWant}
-              disabled={aiWorking}
               onChange={(event) => onSetInput(event.target.value)}
               onPaste={attachFromClipboard}
               onKeyDown={(event) => {
@@ -373,15 +389,14 @@ export function SidepanelView({
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="composer-trigger"
+                        className="composer-trigger composer-model-trigger"
                         disabled={aiWorking}
                       >
                         {selectedModelLabel(
                           preferences?.selectedModelId,
                           configuredModels,
                           t,
-                        )}{" "}
-                        <ChevronDown size={15} />
+                        )}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -414,11 +429,13 @@ export function SidepanelView({
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="composer-trigger"
+                        className="composer-trigger composer-mode-trigger"
                         disabled={aiWorking}
+                        title={
+                          mode === CHAT_MODE.agent ? t.words.agent : t.words.ask
+                        }
                       >
-                        {mode === CHAT_MODE.agent ? t.words.agent : t.words.ask}{" "}
-                        <ChevronDown size={15} />
+                        {modeIcon(mode)}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -438,11 +455,22 @@ export function SidepanelView({
                 </div>
               </div>
               {streaming ? (
-                <IconTooltip label={t.sidepanel.stop}>
-                  <Button className="send-button" onClick={onStop}>
-                    <Square size={18} />
-                  </Button>
-                </IconTooltip>
+                <>
+                  <IconTooltip label={t.sidepanel.stop}>
+                    <Button
+                      className="send-button stop-button"
+                      variant="secondary"
+                      onClick={onStop}
+                    >
+                      <Square size={18} />
+                    </Button>
+                  </IconTooltip>
+                  <IconTooltip label={t.sidepanel.queueMessage}>
+                    <Button className="send-button" onClick={() => onSend()}>
+                      <Send size={20} />
+                    </Button>
+                  </IconTooltip>
+                </>
               ) : (
                 <IconTooltip label={t.sidepanel.send}>
                   <Button

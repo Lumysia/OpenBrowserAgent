@@ -29,6 +29,21 @@ export const enUS = {
     connectProviderDescription:
       "OpenBrowserAgent works with your favorite AI providers. Add your API key to get started.",
     addProvider: "Add Provider",
+    cloudSync: "Sync from cloud",
+    cloudSyncPulling: "Checking cloud sync...",
+    cloudSyncDescription:
+      "Already set up OpenBrowserAgent on another device? Pull your synced providers first.",
+    cloudSyncSuccess: "Synced provider setup found. Opening chat...",
+    cloudSyncEmpty: "No synced providers found. You can start locally instead.",
+    cloudSyncError: "Cloud sync failed. Check browser sync or start locally.",
+    startLocally: "Start locally",
+    bootstrapStepSyncTitle: "Choose where to start",
+    bootstrapStepProviderTitle: "Add a provider and model",
+    bootstrapStepProviderDescription:
+      "Local setup opens Settings so you can add a provider, add a model, and test it.",
+    bootstrapStepTaskTitle: "Send your first task",
+    bootstrapStepTaskDescription:
+      "After a model responds successfully, return here and ask OpenBrowserAgent to browse or summarize.",
     menu: "Menu",
     chatHistory: "Chat History",
     exportChatOpenAi: "Export chat as OpenAI JSON",
@@ -78,6 +93,10 @@ export const enUS = {
     agentDescription: "Automate tasks, search, and operate your browser",
     askDescription: "Ask questions about web pages",
     send: "Send",
+    queueMessage: "Queue message",
+    queuedMessages: "Queued messages",
+    queuedMessagesDescription:
+      "{count} waiting. They will send after the current response.",
     stop: "Stop",
     running: "Running",
     done: "Done",
@@ -170,6 +189,8 @@ export const enUS = {
     providerDescription:
       "Bring your own key and connect OpenBrowserAgent to your favorite AI providers.",
     selectModel: "Select model",
+    selectModelDescription:
+      "Choose the main chat model. Agent mode works best with models that support tool calls.",
     selectImageModel: "Select image model",
     enableImageGeneration: "Enable image generation",
     enableImageGenerationDescription:
@@ -193,6 +214,10 @@ export const enUS = {
     addCustomModelName: "Add custom model name",
     addCustomImageModelName: "Add image model name",
     addCustom: "Add custom",
+    testModel: "Test",
+    testingModel: "Testing",
+    testModelSuccess: "Model responded successfully.",
+    testModelError: "Model test failed",
     noModelsAddedYet: "No models added yet.",
     skillsDescription:
       "Create reusable browser skills the user or AI can choose for a message.",
@@ -252,7 +277,7 @@ export const enUS = {
     darkTheme: "Dark",
     syncSettings: "Sync Settings",
     syncSettingsDescription:
-      "Language and lightweight preferences are synced with your browser account by default.",
+      "Language, provider setup, and lightweight preferences are synced with your browser account by default.",
     syncProviders: "Sync Providers",
     syncProvidersDescription:
       "Sync provider configuration, including API keys, through your browser account.",
@@ -276,6 +301,26 @@ export const enUS = {
     maxToolSteps: "Max Tool Steps",
     maxToolStepsDescription:
       "Set how many browser tool steps the assistant may run. Use 0 to disable tool calls.",
+    debug: "Debug",
+    debugDescription: "Developer tools for resetting OpenBrowserAgent data.",
+    debugResetTitle: "Clear OpenBrowserAgent data",
+    debugResetDescription:
+      "Deletes local storage, browser sync storage, chats, providers, skills, preferences, and app sync caches written by OpenBrowserAgent.",
+    debugResetConfirmLabel: "Type {phrase} to confirm.",
+    debugResetConfirmPhrase: "RESET",
+    debugResetScope: "Storage location",
+    debugResetScopeAll: "Local + cloud",
+    debugResetScopeLocal: "Local only",
+    debugResetScopeSync: "Cloud only",
+    debugResetTargets: "Data types",
+    debugResetTargetAll: "All",
+    debugResetTargetSettings: "Settings",
+    debugResetTargetProviders: "Providers",
+    debugResetTargetSkills: "Skills",
+    debugResetTargetChats: "Chats",
+    debugResetButton: "Clear all app data",
+    debugResetting: "Clearing...",
+    debugResetSuccess: "OpenBrowserAgent data was cleared.",
   },
 };
 

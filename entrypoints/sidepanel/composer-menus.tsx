@@ -2,7 +2,9 @@ import {
   Check,
   ExternalLink,
   FileText,
+  HelpCircle,
   Layers,
+  Bot,
   MousePointerClick,
   Paperclip,
   Plus,
@@ -234,7 +236,7 @@ export function ModelMenu({
           </span>
           <span>
             <small>{providerName(model)}</small>
-            <strong>{model.name}</strong>
+            <strong>{modelDisplayName(model)}</strong>
           </span>
           {selectedModelId === model.id && (
             <Check className="menu-check" size={14} />
@@ -275,6 +277,11 @@ export function ModeMenu({
           key={item.id}
           onClick={() => onSelect(item.id)}
         >
+          {item.id === CHAT_MODE.agent ? (
+            <Bot size={17} />
+          ) : (
+            <HelpCircle size={17} />
+          )}
           <span>
             <strong>{item.title}</strong>
             <small>{item.description}</small>
@@ -286,13 +293,21 @@ export function ModeMenu({
   );
 }
 
+export function modeIcon(mode: ChatMode) {
+  return mode === CHAT_MODE.agent ? (
+    <Bot size={15} />
+  ) : (
+    <HelpCircle size={15} />
+  );
+}
+
 export function selectedModelLabel(
   modelId: string | undefined,
   models: ModelConfig[],
   t: Messages,
 ) {
   const model = models.find((candidate) => candidate.id === modelId);
-  return model?.name || t.sidepanel.selectModel;
+  return model ? modelDisplayName(model) : t.sidepanel.selectModel;
 }
 
 function providerName(model: ModelConfig) {
@@ -300,4 +315,9 @@ function providerName(model: ModelConfig) {
   if (fromDisplay) return fromDisplay;
   const provider = model.id.split(":")[0] as keyof typeof providerLabels;
   return providerLabels[provider] || provider;
+}
+
+function modelDisplayName(model: ModelConfig) {
+  const fromDisplay = model.displayName?.split("/").slice(1).join("/").trim();
+  return fromDisplay || model.name;
 }

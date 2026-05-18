@@ -60,7 +60,9 @@ export function SyncPage() {
         value
         disabled
       />
-      {SYNCABLE_DATA_ITEMS.map(({ preferenceKey }) => (
+      {SYNCABLE_DATA_ITEMS.filter(
+        ({ preferenceKey }) => preferenceKey !== "syncProviders",
+      ).map(({ preferenceKey }) => (
         <SyncToggleCard
           key={preferenceKey}
           title={syncToggleContent[preferenceKey].title}

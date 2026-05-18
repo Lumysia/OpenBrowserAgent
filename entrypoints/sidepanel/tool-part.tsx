@@ -14,6 +14,7 @@ import {
 import React from "react";
 import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
 import type { Messages } from "../../src/shared/i18n";
+import { openOrFocusUrl } from "../../src/shared/tab-navigation";
 import {
   CHAT_PART_STATE,
   isToolPartType,
@@ -52,23 +53,32 @@ export function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
         {!!references.length && (
           <div className="tool-references">
             {references.map((reference) => (
-              <Button
-                variant="ghost"
+              <ToolReferenceButton
                 key={reference.title}
-                onClick={
-                  reference.url
-                    ? () => chrome.tabs.create({ url: reference.url })
-                    : undefined
-                }
-              >
-                {reference.icon}
-                <span>{reference.title}</span>
-              </Button>
+                reference={reference}
+              />
             ))}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+function ToolReferenceButton({
+  reference,
+}: {
+  reference: { title: string; icon: React.ReactNode; url?: string };
+}) {
+  const url = reference.url;
+  return (
+    <Button
+      variant="ghost"
+      onClick={url ? () => openOrFocusUrl(url).catch(console.warn) : undefined}
+    >
+      {reference.icon}
+      <span>{reference.title}</span>
+    </Button>
   );
 }
 

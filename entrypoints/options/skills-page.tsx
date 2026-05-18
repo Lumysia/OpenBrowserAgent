@@ -218,13 +218,13 @@ export function SkillsPage() {
   }
 
   return (
-    <div className="stack">
-      <div className="split">
+    <div className="skills-page stack">
+      <div className="skills-page-header">
         <div>
           <h1>{t.options.skills}</h1>
           <p className="muted">{t.options.skillsDescription}</p>
         </div>
-        <div className="row">
+        <div className="skills-page-actions">
           <input
             ref={fileInputRef}
             type="file"
@@ -306,14 +306,14 @@ export function SkillsPage() {
         {skillList.map((skill) => (
           <AccordionItem value={skill.id} key={skill.id}>
             <AccordionTrigger>
-              <span className="row">
+              <span className="skill-trigger-label">
                 {getSkillDisplayName(skill, t.options.untitledSkill)}
                 {normalizeSkill(skill).enabled === false && (
                   <span className="muted">{t.options.disabled}</span>
                 )}
               </span>
               <span
-                className="row push-right"
+                className="skill-trigger-actions"
                 onClick={(event) => event.stopPropagation()}
               >
                 <Switch

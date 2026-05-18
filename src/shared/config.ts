@@ -43,6 +43,7 @@ export const OPTIONS_ROUTE = {
   sync: "/sync",
   providers: "/providers",
   skills: "/skills",
+  debug: "/debug",
 } as const;
 
 export const OPTIONS_HASH = {
@@ -50,6 +51,7 @@ export const OPTIONS_HASH = {
   sync: "#/sync",
   providers: "#/providers",
   skills: "#/skills",
+  debug: "#/debug",
 } as const;
 
 export function clampMaxToolSteps(value: number | undefined) {

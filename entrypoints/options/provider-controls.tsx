@@ -1,8 +1,12 @@
-import { Check, ChevronDown, Trash2 } from "lucide-react";
+import { Check, ChevronDown, Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
-import type { ModelConfig, ProviderConfig } from "../../src/shared/types";
+import {
+  providerLabels,
+  type ModelConfig,
+  type ProviderConfig,
+} from "../../src/shared/types";
 import {
   Button,
   Command,
@@ -142,11 +146,17 @@ export function ModelList({
   models,
   value,
   modelKey = "models",
+  testingModelId,
+  testResult,
+  onTestModel,
   onChange,
 }: {
   models: ModelConfig[];
   value: ProviderConfig;
   modelKey?: "models" | "imageModels";
+  testingModelId?: string;
+  testResult?: { modelId: string; ok: boolean; message: string };
+  onTestModel?: (model: ModelConfig) => void;
   onChange: (value: ProviderConfig) => void;
 }) {
   const [language] = useStoredState(storage.language);
@@ -155,24 +165,98 @@ export function ModelList({
     <div className="model-table">
       {models.map((model) => (
         <div className="model-row" key={model.id}>
-          <span>{model.displayName || model.name}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() =>
-              onChange({
-                ...value,
-                [modelKey]: models.filter(
-                  (candidate) => candidate.id !== model.id,
-                ),
-              })
-            }
-          >
-            <Trash2 size={14} />
-          </Button>
+          <div className="model-row-main">
+            <Input
+              className="model-display-input"
+              value={modelDisplayLabel(model)}
+              onChange={(event) =>
+                onChange({
+                  ...value,
+                  [modelKey]: models.map((candidate) =>
+                    candidate.id === model.id
+                      ? renameModelDisplayName(
+                          candidate,
+                          value,
+                          event.target.value,
+                        )
+                      : candidate,
+                  ),
+                })
+              }
+            />
+            <small className="model-api-name">
+              {modelTechnicalLabel(value, model)}
+            </small>
+            {testResult?.modelId === model.id && (
+              <small
+                className={
+                  testResult.ok
+                    ? "provider-success-text"
+                    : "provider-error-text"
+                }
+              >
+                {testResult.message}
+              </small>
+            )}
+          </div>
+          <div className="model-row-actions">
+            {onTestModel && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => onTestModel(model)}
+                disabled={testingModelId === model.id}
+              >
+                {testingModelId === model.id ? (
+                  <Loader2 size={14} className="spin" />
+                ) : null}
+                {testingModelId === model.id
+                  ? t.options.testingModel
+                  : t.options.testModel}
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                onChange({
+                  ...value,
+                  [modelKey]: models.filter(
+                    (candidate) => candidate.id !== model.id,
+                  ),
+                })
+              }
+            >
+              <Trash2 size={14} />
+            </Button>
+          </div>
         </div>
       ))}
       {!models.length && <p className="muted">{t.options.noModelsAddedYet}</p>}
     </div>
   );
+}
+
+function modelDisplayLabel(model: ModelConfig) {
+  const fromDisplay = model.displayName?.split("/").slice(1).join("/").trim();
+  return fromDisplay ?? model.name;
+}
+
+function modelTechnicalLabel(provider: ProviderConfig, model: ModelConfig) {
+  return `${providerDisplayName(provider)} / ${model.name}`;
+}
+
+function renameModelDisplayName(
+  model: ModelConfig,
+  provider: ProviderConfig,
+  label: string,
+) {
+  return {
+    ...model,
+    displayName: `${providerDisplayName(provider)} / ${label}`,
+  };
+}
+
+function providerDisplayName(provider: ProviderConfig) {
+  return provider.label || providerLabels[provider.type || "openai"];
 }

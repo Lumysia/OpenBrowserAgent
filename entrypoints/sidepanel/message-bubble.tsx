@@ -21,6 +21,7 @@ import {
 import { getMessages, type Messages } from "../../src/shared/i18n";
 import { getSkillDisplayName } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
+import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
 import type {
   AttachmentTab,
   ChatMessage,
@@ -232,10 +233,10 @@ function lastAssistantPartIsText(message: ChatMessage) {
 
 function openSource(source: ChatSource) {
   if (source.url) {
-    chrome.tabs.create({ url: source.url });
+    openOrFocusUrl(source.url).catch(console.warn);
     return;
   }
-  if (source.tabId) chrome.tabs.update(source.tabId, { active: true });
+  if (source.tabId) focusTab(source.tabId).catch(console.warn);
 }
 
 function SentTabsChip({ tabs }: { tabs: AttachmentTab[] }) {

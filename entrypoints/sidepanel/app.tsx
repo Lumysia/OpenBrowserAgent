@@ -23,9 +23,13 @@ import {
 import { useBuiltinSkills } from "../../src/ui/useBuiltinSkills";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { requestGeneratedTitle } from "./ai-requests";
+import {
+  closeChatAction,
+  createChatAction,
+  updateChatAction,
+} from "./chat-state-actions";
 import { appendAssistantContent, appendAssistantPart } from "./chat-updates";
 import { pruneSentAttachmentPreviews } from "./edit-message";
-import { sortChatsNewestFirst } from "./format";
 import { assistantModelLabel } from "./model-label";
 import { retryStalledStream } from "./retry-stalled-stream";
 import { selectedElementImageAttachment } from "./selected-element-attachment";
@@ -33,6 +37,11 @@ import {
   buildSidepanelContext,
   interpolateSkillVariables,
 } from "./sidepanel-context";
+import {
+  useAutoScroll,
+  useChatSelection,
+  useSidepanelTheme,
+} from "./sidepanel-effects";
 import { createSendMessagePlan } from "./send-message-plan";
 import { interpolateSkillPackage } from "./skill-context";
 import {
@@ -48,11 +57,15 @@ import { closeStreamPort } from "./stream-port";
 import { useComposerContext } from "./use-composer-context";
 import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
+import { useQueuedMessages } from "./use-queued-messages";
 import { createSkillFromChat } from "./use-skill-creator";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
 
 export function SidepanelApp() {
-  const [providers] = useStoredState(storage.provider);
+  const [providers, , providersLoading] = useStoredState(storage.provider);
+  const [ignoreSyncedProvidersForBootstrap] = useStoredState(
+    storage.ignoreSyncedProvidersForBootstrap,
+  );
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const [language] = useStoredState(storage.language);
   const [skills, setSkills] = useStoredState(storage.skills);
@@ -80,10 +93,12 @@ export function SidepanelApp() {
 
   const configuredModels = useMemo(
     () =>
-      Object.values(providers || {}).flatMap(
-        (provider) => provider?.models || [],
-      ),
-    [providers],
+      ignoreSyncedProvidersForBootstrap
+        ? []
+        : Object.values(providers || {}).flatMap(
+            (provider) => provider?.models || [],
+          ),
+    [ignoreSyncedProvidersForBootstrap, providers],
   );
   const modelCount = configuredModels.length;
   const currentChat = chats?.find((chat) => chat.id === activeChatId);
@@ -125,6 +140,17 @@ export function SidepanelApp() {
       setSelectedElement,
       stageUploadedAttachments,
     });
+  const {
+    queuedMessages,
+    queueMessage: enqueueQueuedMessage,
+    deleteQueuedMessage,
+    editQueuedMessage,
+  } = useQueuedMessages({
+    streaming,
+    creatingSkill,
+    sendQueued: (content) => send(content, undefined, { queued: true }),
+    onEditContent: setInput,
+  });
 
   useEffect(() => void (aiWorking && setOpenMenu(null)), [aiWorking]);
 
@@ -133,31 +159,15 @@ export function SidepanelApp() {
     chatsRef.current = chats || [];
   }, [chats]);
 
-  useEffect(() => {
-    document.documentElement.dataset.accent =
-      preferences?.accentColor || "pink";
-    document.documentElement.dataset.theme =
-      preferences?.colorScheme || "system";
-  }, [preferences?.accentColor, preferences?.colorScheme]);
+  useSidepanelTheme(preferences?.accentColor, preferences?.colorScheme);
 
-  useEffect(() => {
-    if (!chats) return;
-    if (!chats.length) {
-      createChat();
-      return;
-    }
-    if (!initializedChatSelectionRef.current) {
-      initializedChatSelectionRef.current = true;
-      const emptyChat = [...chats]
-        .reverse()
-        .find((chat) => !chat.messages.length);
-      if (emptyChat) setActiveChatId(emptyChat.id);
-      else createChat();
-      return;
-    }
-    if (!activeChatId || !chats.some((chat) => chat.id === activeChatId))
-      setActiveChatId(sortChatsNewestFirst(chats)[0]?.id);
-  }, [activeChatId, chats]);
+  useChatSelection(
+    chats,
+    activeChatId,
+    initializedChatSelectionRef,
+    setActiveChatId,
+    createChat,
+  );
 
   useEffect(() => {
     clearUploadedAttachments();
@@ -165,17 +175,12 @@ export function SidepanelApp() {
     setSentAttachmentPreviews({});
   }, [activeChatId]);
 
-  useEffect(() => {
-    if (preferences?.autoScroll === false) return;
-    const messages = messagesRef.current;
-    if (!messages) return;
-    requestAnimationFrame(() => {
-      messages.scrollTo({
-        top: messages.scrollHeight,
-        behavior: "smooth",
-      });
-    });
-  }, [currentChat?.messages, preferences?.autoScroll, streaming]);
+  useAutoScroll(
+    messagesRef,
+    currentChat?.messages,
+    preferences?.autoScroll,
+    streaming,
+  );
 
   useEffect(() => {
     if (!streaming || preferences?.autoRetry === false) return;
@@ -201,39 +206,34 @@ export function SidepanelApp() {
   }, [preferences?.autoRetry, streaming]);
 
   function createChat() {
-    const now = Date.now();
-    const chat: Chat = {
-      id: crypto.randomUUID(),
+    return createChatAction({
       title: t.words.newChat,
-      messages: [],
-      createdAt: now,
-      updatedAt: now,
-    };
-    setChats((items) => [...items, chat]);
-    setActiveChatId(chat.id);
-    return chat;
-  }
-
-  function updateChat(chat: Chat) {
-    setChats((items) =>
-      items.map((candidate) => (candidate.id === chat.id ? chat : candidate)),
-    );
+      setChats,
+      setActiveChatId,
+    });
   }
 
   function closeChat(chatId: string) {
-    setChats((items) => {
-      const next = items.filter((chat) => chat.id !== chatId);
-      if (activeChatId === chatId)
-        setActiveChatId(sortChatsNewestFirst(next)[0]?.id);
-      return next;
+    closeChatAction({
+      chatId,
+      activeChatId,
+      setChats,
+      setActiveChatId,
     });
   }
   async function send(
     content = input,
     resendAttachments?: UploadedAttachment[],
+    options: { queued?: boolean } = {},
   ) {
     const text = interpolateSkillVariables(content.trim());
-    if ((!text && !uploadedAttachments.length) || streaming) return;
+    if ((!text && !uploadedAttachments.length) || streaming) {
+      if (streaming && text) {
+        enqueueQueuedMessage(content);
+        if (content === input) setInput("");
+      }
+      return;
+    }
     const enabledSkills = (skills || []).filter(isSkillEnabled);
     const availableSkills = preferences?.autoSelectSkills ? enabledSkills : [];
     const sentSkill =
@@ -242,24 +242,26 @@ export function SidepanelApp() {
         : undefined;
     const context = await buildSidepanelContext({
       mode,
-      attachedTabs,
-      selectedElement,
+      attachedTabs: options.queued ? [] : attachedTabs,
+      selectedElement: options.queued ? null : selectedElement,
     });
     const chat = currentChat || createChat();
     const activeEdit =
-      editingMessage?.chatId === chat.id ? editingMessage : null;
+      !options.queued && editingMessage?.chatId === chat.id
+        ? editingMessage
+        : null;
     const baseChat = activeEdit
       ? { ...chat, messages: activeEdit.messagesBefore, updatedAt: Date.now() }
       : chat;
-    const sentTabs = attachedTabs;
-    const sentElement = selectedElement;
+    const sentTabs = options.queued ? [] : attachedTabs;
+    const sentElement = options.queued ? null : selectedElement;
     const selectedImageAttachment = selectedElementImageAttachment(sentElement);
     const sentAttachments = [
-      ...(resendAttachments || pendingAttachments),
+      ...(options.queued ? [] : resendAttachments || pendingAttachments),
       ...(selectedImageAttachment ? [selectedImageAttachment] : []),
     ];
     const activeAttachments = [
-      ...uploadedAttachments,
+      ...(options.queued ? [] : uploadedAttachments),
       ...(selectedImageAttachment ? [selectedImageAttachment] : []),
     ];
     const assistantModel = assistantModelLabel({
@@ -296,14 +298,16 @@ export function SidepanelApp() {
       setSentAttachmentPreviews((items) =>
         pruneSentAttachmentPreviews(items, activeEdit.keptMessageIds),
       );
-    updateChat(nextChat);
+    updateChatAction(setChats, nextChat);
     if (shouldGenerateTitle) requestChatTitle(nextChat.id, titleSource);
-    setInput("");
-    setAttachedTabs([]);
-    clearPendingAttachments();
-    setSelectedElement(null);
-    setSelectedSkill(null);
-    setEditingMessage(null);
+    if (!options.queued) {
+      setInput("");
+      setAttachedTabs([]);
+      clearPendingAttachments();
+      setSelectedElement(null);
+      setSelectedSkill(null);
+      setEditingMessage(null);
+    }
     setStreaming(true);
 
     const request: AiStreamRequest = {
@@ -414,7 +418,7 @@ export function SidepanelApp() {
   return (
     <SidepanelView
       t={t}
-      providersReady={!!providers}
+      providersReady={!providersLoading}
       modelCount={modelCount}
       currentChat={currentChat}
       chats={chats || []}
@@ -425,6 +429,7 @@ export function SidepanelApp() {
       attachedTabs={attachedTabs}
       pendingAttachments={pendingAttachments}
       uploadedAttachments={uploadedAttachments}
+      queuedMessages={queuedMessages}
       sentAttachmentPreviews={sentAttachmentPreviews}
       attachmentNotice={attachmentNotice}
       availableTabs={availableTabs}
@@ -468,6 +473,8 @@ export function SidepanelApp() {
       }
       onSend={send}
       onStop={stop}
+      onDeleteQueuedMessage={deleteQueuedMessage}
+      onEditQueuedMessage={editQueuedMessage}
       onSelectSkill={setSelectedSkill}
       onCancelEditMessage={cancelEditMessage}
       onShowAllTabsPicker={async () => {

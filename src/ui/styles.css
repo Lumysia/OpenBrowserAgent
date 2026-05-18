@@ -76,6 +76,17 @@
   --accent-shadow: rgba(59, 111, 145, 0.18);
   --accent-focus: rgba(59, 111, 145, 0.42);
 }
+:root[data-accent="green"] {
+  --accent-strong: #6f7f24;
+  --accent-solid: #86992c;
+  --accent-soft: #e9efc8;
+  --accent-softer: #f5f8e6;
+  --accent-hover: #dfe8b6;
+  --accent-active: #d3dfa0;
+  --accent-list: #dde7b4;
+  --accent-shadow: rgba(111, 127, 36, 0.18);
+  --accent-focus: rgba(111, 127, 36, 0.42);
+}
 :root[data-accent="pink"] {
   --accent-strong: #a35b76;
   --accent-solid: #b96d8b;
@@ -838,7 +849,7 @@ a {
 }
 .provider-add-row {
   display: grid;
-  grid-template-columns: minmax(180px, 0.55fr) minmax(180px, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
   align-items: center;
   gap: 10px;
 }
@@ -978,11 +989,12 @@ a {
 }
 .provider-editor-grid {
   display: grid;
-  grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 18px;
 }
 .provider-credentials-panel,
 .provider-models-panel {
+  min-width: 0;
   display: grid;
   align-content: start;
   gap: 13px;
@@ -996,15 +1008,15 @@ a {
 }
 .provider-model-actions {
   display: grid;
-  grid-template-columns: auto minmax(240px, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
 }
 .provider-manual-model-actions {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) max-content;
 }
 .provider-manual-model-actions .ui-button {
-  width: 100%;
+  min-width: 132px;
 }
 .ui-combobox-trigger {
   justify-content: space-between;
@@ -1018,15 +1030,21 @@ a {
   white-space: nowrap;
 }
 .ui-combobox-popover {
-  width: var(--radix-popover-trigger-width);
+  width: min(420px, calc(100vw - 24px));
+  min-width: min(320px, calc(100vw - 24px));
 }
 .provider-error-text {
   margin: 0;
   color: var(--destructive);
 }
+.provider-success-text {
+  margin: 0;
+  color: var(--accent-strong);
+}
 .provider-danger-row {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 10px;
   margin-top: 18px;
   padding-top: 14px;
   border-top: 1px solid var(--border);
@@ -1040,7 +1058,9 @@ a {
 }
 .ui-select-content {
   z-index: 50;
-  min-width: var(--radix-select-trigger-width);
+  min-width: min(260px, calc(100vw - 24px));
+  width: var(--radix-select-trigger-width);
+  max-width: min(420px, calc(100vw - 24px));
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1063,6 +1083,12 @@ a {
   outline: none;
   cursor: default;
   color: var(--popover-foreground);
+}
+.ui-select-item span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .ui-select-item[data-highlighted] {
   background: var(--accent-hover);
@@ -1397,6 +1423,39 @@ a {
 .skill-detail .skill-status-panel {
   width: 100%;
 }
+.skills-page,
+.skills-page-header,
+.skill-trigger-label,
+.skill-trigger-actions {
+  min-width: 0;
+}
+.skills-page-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: start;
+  gap: 16px;
+}
+.skills-page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.skill-trigger-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.skill-trigger-actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
 .skill-file-list {
   display: grid;
   gap: 6px;
@@ -1565,16 +1624,15 @@ a {
 }
 .model-table {
   display: grid;
-  gap: 4px;
+  gap: 8px;
 }
 .model-row {
-  min-height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 4px 4px 4px 10px;
-  border-radius: 9px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: start;
+  gap: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
   background: color-mix(in srgb, var(--secondary) 58%, transparent);
   animation: fade-in 0.16s ease both;
   transition: background-color 0.14s ease;
@@ -1588,14 +1646,42 @@ a {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.model-row-main {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+.model-display-input {
+  height: 38px;
+}
+.model-api-name {
+  padding-inline: 2px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.2;
+}
+.model-row-actions {
+  min-height: 38px;
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 8px;
+}
+.model-row-actions .ui-button-sm {
+  height: 34px;
+  min-width: 58px;
+}
+.model-row-actions .ui-button-icon {
+  width: 34px;
+  height: 34px;
+}
 
 @media (max-width: 900px) {
   .provider-model-grid,
   .provider-image-settings,
   .provider-image-controls,
   .provider-image-fields,
-  .provider-editor-grid,
-  .provider-model-actions {
+  .provider-editor-grid {
     grid-template-columns: 1fr;
   }
   .provider-size-field {
@@ -2188,7 +2274,7 @@ a {
   border-color: var(--accent-focus);
   box-shadow: 0 0 0 3px var(--accent-shadow);
 }
-.composer-box:has(.ai-working-overlay) {
+.composer:has(.ai-working-overlay) .composer-box {
   border-color: var(--accent-focus);
   background:
     linear-gradient(
@@ -2215,9 +2301,7 @@ a {
   opacity: 0.45;
 }
 .ai-working-overlay {
-  position: absolute;
-  inset: 12px 12px auto 12px;
-  z-index: 2;
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -2227,7 +2311,6 @@ a {
   background: color-mix(in srgb, var(--card) 82%, var(--accent-softer));
   box-shadow: 0 10px 26px var(--shadow);
   animation: ai-working-enter 0.18s ease both;
-  pointer-events: none;
 }
 .ai-working-overlay span:not(.ai-working-orb):not(.ai-working-bars) {
   min-width: 0;
@@ -2275,7 +2358,7 @@ a {
   position: relative;
   min-height: 52px;
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto 1fr auto auto auto;
   align-items: center;
   gap: 10px;
   padding: 6px 14px 10px 16px;
@@ -2319,18 +2402,28 @@ a {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  min-width: 82px;
+  min-width: 0;
   max-width: 148px;
   height: 34px;
-  padding: 0 10px;
+  padding: 0 8px;
   border-radius: 8px;
+  border-color: transparent;
   background: transparent;
   color: var(--accent-strong);
+  box-shadow: none;
   font-size: 15px;
+  font-weight: 400;
   line-height: 1;
   transition:
     background-color 0.14s ease,
     transform 0.14s ease;
+}
+.composer-model-trigger {
+  font-size: 11px;
+}
+.composer-mode-trigger {
+  width: 44px;
+  padding: 0;
 }
 .composer-trigger:hover {
   background: var(--accent-softer);
@@ -2367,6 +2460,56 @@ a {
 .send-button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
+}
+.stop-button {
+  background: var(--secondary);
+  color: var(--foreground);
+  box-shadow: none;
+}
+.queued-messages {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 58%, var(--border));
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--accent-softer) 42%, var(--card));
+}
+.queued-messages-header {
+  display: grid;
+  gap: 2px;
+}
+.queued-messages-header strong {
+  font-size: 13px;
+}
+.queued-messages-header small {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.queued-message {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--card) 78%, var(--accent-softer));
+}
+.queued-message span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.queued-message-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.queued-message-actions .ui-button-icon {
+  width: 28px;
+  height: 28px;
 }
 .add-context-popover-content,
 .model-popover-content,
@@ -2476,6 +2619,30 @@ a {
   place-items: center;
   text-align: center;
   padding: 24px;
+}
+.bootstrap-card .ui-card-header {
+  align-items: center;
+}
+.bootstrap-steps {
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+.bootstrap-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+}
+.bootstrap-step-copy {
+  gap: 6px;
+}
+.bootstrap-step-muted {
+  opacity: 0.58;
+}
+.bootstrap-actions {
+  display: grid;
+  gap: 8px;
 }
 .markdown p {
   margin: 0 0 16px;
@@ -3150,6 +3317,21 @@ a {
   .sidepanel .split {
     align-items: center;
     flex-direction: row;
+  }
+  .skills-page-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .skills-page-actions {
+    justify-content: flex-start;
+  }
+  .skill-add-file-row {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+  .skill-file-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .skill-file-item svg {
+    display: none;
   }
   .composer-controls {
     grid-template-columns: auto 1fr auto auto;

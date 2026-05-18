@@ -5,6 +5,7 @@ import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { ScrollArea } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { DebugPage } from "./debug-page";
 import { GeneralPage } from "./general-page";
 import { ProvidersPage } from "./providers-page";
 import { SkillsPage } from "./skills-page";
@@ -61,6 +62,13 @@ export function OptionsApp() {
           >
             {t.options.skills}
           </OptionsLink>
+          <OptionsLink
+            route={route}
+            target={OPTIONS_ROUTE.debug}
+            href={OPTIONS_HASH.debug}
+          >
+            {t.options.debug}
+          </OptionsLink>
           <a
             className="nav-link"
             href="https://github.com/Lumysia/OpenBrowserAgent"
@@ -80,6 +88,8 @@ export function OptionsApp() {
             <SyncPage />
           ) : route === OPTIONS_ROUTE.skills ? (
             <SkillsPage />
+          ) : route === OPTIONS_ROUTE.debug ? (
+            <DebugPage />
           ) : (
             <GeneralPage />
           )}
