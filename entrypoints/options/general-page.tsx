@@ -23,9 +23,9 @@ export function GeneralPage() {
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const t = getMessages(language);
   const accentOptions = [
+    { id: "pink", label: t.options.pinkTheme },
     { id: "green", label: t.options.greenTheme },
     { id: "blue", label: t.options.blueTheme },
-    { id: "pink", label: t.options.pinkTheme },
     { id: "purple", label: t.options.purpleTheme },
     { id: "amber", label: t.options.amberTheme },
   ] as const;
@@ -71,7 +71,7 @@ export function GeneralPage() {
           >
             {accentOptions.map((option) => {
               const selected =
-                (preferences.accentColor || "amber") === option.id;
+                (preferences.accentColor || "pink") === option.id;
               return (
                 <button
                   key={option.id}

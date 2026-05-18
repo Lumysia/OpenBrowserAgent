@@ -20,7 +20,7 @@ export function OptionsApp() {
 
   useEffect(() => {
     document.documentElement.dataset.accent =
-      preferences?.accentColor || "amber";
+      preferences?.accentColor || "pink";
     document.documentElement.dataset.theme =
       preferences?.colorScheme || "system";
   }, [preferences?.accentColor, preferences?.colorScheme]);

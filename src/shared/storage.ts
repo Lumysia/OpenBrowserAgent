@@ -70,7 +70,7 @@ const DEFAULT_SYNC_WRITE_STATUS: SyncWriteStatus = { pendingCount: 0 };
 
 const DEFAULT_PREFERENCES: Preferences = {
   colorScheme: "system",
-  accentColor: "amber",
+  accentColor: "pink",
   syncSettings: true,
   syncProviders: false,
   syncSkills: false,

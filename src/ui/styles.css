@@ -19,15 +19,15 @@
   --border: #e2e0d8;
   --input: #e2e0d8;
   --ring: rgba(49, 58, 139, 0.28);
-  --accent-strong: #9a7028;
-  --accent-solid: #ad8336;
-  --accent-soft: #f6e9c8;
-  --accent-softer: #fbf5e8;
-  --accent-hover: #f0dfb7;
-  --accent-active: #e8d3a3;
-  --accent-list: #efddb6;
-  --accent-shadow: rgba(154, 112, 40, 0.18);
-  --accent-focus: rgba(154, 112, 40, 0.42);
+  --accent-strong: #a35b76;
+  --accent-solid: #b96d8b;
+  --accent-soft: #f7e2ea;
+  --accent-softer: #fbf0f4;
+  --accent-hover: #f3d8e3;
+  --accent-active: #edccd9;
+  --accent-list: #f2d7e2;
+  --accent-shadow: rgba(163, 91, 118, 0.18);
+  --accent-focus: rgba(163, 91, 118, 0.42);
   --settings-tint: color-mix(
     in srgb,
     var(--accent-softer) 58%,
