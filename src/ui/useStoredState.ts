@@ -30,7 +30,8 @@ export function useStoredState<T>(item: StorageItem<T>) {
   }, [item]);
 
   async function update(next: T | ((previous: T) => T)) {
-    const previous = valueRef.current ?? (await item.get());
+    const previous = valueRef.current;
+    if (previous === undefined) return;
     const resolved =
       typeof next === "function"
         ? (next as (previous: T) => T)(previous)

@@ -1,6 +1,10 @@
 import { nanoid } from "nanoid";
 import { BUILTIN_SKILLS } from "./builtin-skills";
-import { SYNC_MAX_BYTES_PER_ITEM, SYNC_WRITE_DEBOUNCE_MS } from "./config";
+import {
+  DEFAULT_MAX_TOOL_STEPS,
+  SYNC_MAX_BYTES_PER_ITEM,
+  SYNC_WRITE_DEBOUNCE_MS,
+} from "./config";
 import type { Chat, ChatTab, Preferences, ProviderState, Skill } from "./types";
 
 const STORAGE_AREAS = {
@@ -80,7 +84,7 @@ const DEFAULT_PREFERENCES: Preferences = {
   autoRetry: true,
   imageGenerationEnabled: false,
   imageGenerationSize: "1024x1024",
-  maxToolSteps: 30,
+  maxToolSteps: DEFAULT_MAX_TOOL_STEPS,
 };
 
 function getBrowserApi() {
@@ -444,8 +448,17 @@ export async function setDataSync(key: SyncPreferenceKey, enabled: boolean) {
     await setStoredValueNow(toAreaName, dataKey, existingSource[dataKey]);
 
   await fromArea.remove(dataKey);
-  const preferences = await storage.preferences.get();
-  await storage.preferences.set({ ...preferences, [key]: enabled });
+  await updateStoredValue(storage.preferences, (preferences) => ({
+    ...preferences,
+    [key]: enabled,
+  }));
+}
+
+async function updateStoredValue<T>(
+  item: StorageItem<T>,
+  updater: (value: T) => T,
+) {
+  await item.set(updater(await item.get()));
 }
 
 export async function updateStoredArray<T extends { id: string }>(
