@@ -1,0 +1,98 @@
+import {
+  providerDefaultBaseUrls,
+  providerLabels,
+  type ModelConfig,
+  type ProviderConfig,
+  type ProviderId,
+} from "../../src/shared/types";
+
+export async function loadProviderModels(
+  providerId: string,
+  provider: ProviderId,
+  config: ProviderConfig,
+): Promise<ModelConfig[]> {
+  if (provider === "gemini")
+    return loadGeminiModels(providerId, provider, config);
+  if (provider === "ollama")
+    return loadOllamaModels(providerId, provider, config);
+  return loadOpenAICompatibleModels(providerId, provider, config);
+}
+
+async function loadGeminiModels(
+  providerId: string,
+  provider: ProviderId,
+  config: ProviderConfig,
+) {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(config.apiKey || "")}`,
+  );
+  if (!response.ok) throw new Error(await response.text());
+  const data = await response.json();
+  return (data.models || [])
+    .filter(
+      (model: { name?: string; supportedGenerationMethods?: string[] }) =>
+        model.name &&
+        model.supportedGenerationMethods?.includes("generateContent"),
+    )
+    .map((model: { name: string; displayName?: string }) => {
+      const name = model.name.replace(/^models\//, "");
+      return {
+        id: `${providerId}:${name}`,
+        name,
+        displayName: `${config.label || providerLabels[provider]} / ${model.displayName || name}`,
+      };
+    });
+}
+
+async function loadOllamaModels(
+  providerId: string,
+  provider: ProviderId,
+  config: ProviderConfig,
+) {
+  const baseUrl = (
+    config.baseUrl ||
+    providerDefaultBaseUrls[provider] ||
+    ""
+  ).replace(/\/$/, "");
+  const response = await fetch(`${baseUrl}/api/tags`);
+  if (!response.ok) throw new Error(await response.text());
+  const data = await response.json();
+  return (data.models || [])
+    .map((model: { name?: string }) => model.name)
+    .filter(Boolean)
+    .map((name: string) => ({
+      id: `${providerId}:${name}`,
+      name,
+      displayName: `${config.label || providerLabels[provider]} / ${name}`,
+    }));
+}
+
+async function loadOpenAICompatibleModels(
+  providerId: string,
+  provider: ProviderId,
+  config: ProviderConfig,
+) {
+  const baseUrl = (
+    config.baseUrl ||
+    providerDefaultBaseUrls[provider] ||
+    ""
+  ).replace(/\/$/, "");
+  if (!baseUrl) throw new Error("Base URL is required");
+  const response = await fetch(`${baseUrl}/models`, {
+    headers: config.apiKey
+      ? { Authorization: `Bearer ${config.apiKey}` }
+      : undefined,
+  });
+  if (!response.ok) throw new Error(await response.text());
+  const data = await response.json();
+  return (data.data || data.models || [])
+    .map((model: string | { id?: string; name?: string }) =>
+      typeof model === "string" ? model : model.id || model.name,
+    )
+    .filter(Boolean)
+    .map((name: string) => ({
+      id: `${providerId}:${name}`,
+      name,
+      displayName: `${config.label || providerLabels[provider]} / ${name}`,
+    }));
+}

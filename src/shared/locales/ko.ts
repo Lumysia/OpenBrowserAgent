@@ -155,6 +155,8 @@ export const ko: LocaleMessages = {
     providerDescription:
       "개인 키로 OpenBrowserAgent를 선호하는 AI 제공업체에 연결하세요.",
     selectModel: "모델 선택",
+    providerName: "제공업체 이름",
+    deleteProvider: "제공업체 삭제",
     apiKey: "API 키",
     baseUrl: "기본 URL",
     models: "모델",

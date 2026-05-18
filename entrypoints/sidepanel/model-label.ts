@@ -9,12 +9,16 @@ export function assistantModelLabel({
 }) {
   const model = models.find((candidate) => candidate.id === modelId);
   if (!model && !modelId) return undefined;
+  const displayName = model?.displayName || "";
   const providerId = String(model?.id || modelId || "").split(
     ":",
   )[0] as keyof typeof providerLabels;
-  const provider = providerLabels[providerId] || providerId;
+  const provider =
+    displayName.split("/")[0]?.trim() ||
+    providerLabels[providerId] ||
+    providerId;
   const name = stripProviderPrefix(
-    model?.displayName || model?.name || String(modelId || ""),
+    displayName || model?.name || String(modelId || ""),
     provider,
   );
   return {

@@ -60,15 +60,19 @@ export function ComposerAttachments({
             onRemove={() => onRemoveAttachedTab(tab.id)}
           />
         ))}
-        {pendingAttachments.map((attachment) => (
-          <UploadedAttachmentCard
-            key={attachment.id}
-            t={t}
-            attachment={attachment}
-            onRemove={() => onRemoveUploadedAttachment(attachment.id)}
-          />
-        ))}
       </div>
+      {!!pendingAttachments.length && (
+        <div className="context-file-row">
+          {pendingAttachments.map((attachment) => (
+            <UploadedAttachmentCard
+              key={attachment.id}
+              t={t}
+              attachment={attachment}
+              onRemove={() => onRemoveUploadedAttachment(attachment.id)}
+            />
+          ))}
+        </div>
+      )}
       {attachmentNotice && (
         <div className="attachment-notice">{attachmentNotice}</div>
       )}

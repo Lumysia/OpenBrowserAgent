@@ -149,6 +149,8 @@ export const ptBR: LocaleMessages = {
     providerDescription:
       "Use sua própria chave e conecte o OpenBrowserAgent aos seus provedores de IA favoritos.",
     selectModel: "Selecionar modelo",
+    providerName: "Nome do provedor",
+    deleteProvider: "Excluir provedor",
     apiKey: "Chave de API",
     baseUrl: "URL base",
     models: "Modelos",

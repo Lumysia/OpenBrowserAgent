@@ -1,6 +1,12 @@
 import { useMemo, useState } from "react";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import { getMessages } from "../../src/shared/i18n";
+import {
+  createProviderConfig,
+  MANUAL_MODEL_PROVIDER_TYPES,
+  normalizeProviderState,
+  PROVIDER_TYPES,
+} from "../../src/shared/provider-instances";
 import { storage } from "../../src/shared/storage";
 import {
   providerDefaultBaseUrls,
@@ -25,43 +31,53 @@ import {
   SelectValue,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
-
-const providers: ProviderId[] = [
-  "openai",
-  "ollama",
-  "gemini",
-  "deepseek",
-  "openrouter",
-  "aihubmix",
-  "glm",
-  "aigateway",
-  "minimax",
-];
+import { loadProviderModels } from "./provider-models";
 
 const baseUrlOptions: Partial<Record<ProviderId, string[]>> = {
   glm: ["https://api.z.ai/api/paas/v4", "https://open.bigmodel.cn/api/paas/v4"],
   minimax: ["https://api.minimax.io/v1", "https://api.minimaxi.com/v1"],
 };
 
-const manualModelProviders: ProviderId[] = ["openai", "minimax"];
-
 export function ProvidersPage() {
   const [language] = useStoredState(storage.language);
   const [providerState, setProviderState] = useStoredState(storage.provider);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
+  const [providerType, setProviderType] = useState<ProviderId>("openai");
+  const normalizedProviders = useMemo(
+    () => normalizeProviderState(providerState || {}),
+    [providerState],
+  );
+  const providerEntries = Object.entries(normalizedProviders);
   const configuredModels = useMemo(
     () =>
-      Object.values(providerState || {}).flatMap(
+      Object.values(normalizedProviders).flatMap(
         (provider) => provider?.models || [],
       ),
-    [providerState],
+    [normalizedProviders],
   );
   const t = getMessages(language);
 
   if (!providerState || !preferences) return null;
+  const currentPreferences = preferences;
 
-  function updateProvider(provider: ProviderId, next: ProviderConfig) {
-    setProviderState({ ...providerState, [provider]: next });
+  function updateProvider(providerId: string, next: ProviderConfig) {
+    setProviderState({ ...normalizedProviders, [providerId]: next });
+  }
+
+  function addProvider() {
+    const provider = createProviderConfig(providerType, normalizedProviders);
+    setProviderState({ ...normalizedProviders, [provider.id!]: provider });
+  }
+
+  function deleteProvider(providerId: string) {
+    const { [providerId]: removed, ...rest } = normalizedProviders;
+    setProviderState(rest);
+    if (
+      removed?.models?.some(
+        (model) => model.id === currentPreferences.selectedModelId,
+      )
+    )
+      setPreferences({ ...currentPreferences, selectedModelId: undefined });
   }
 
   return (
@@ -96,22 +112,38 @@ export function ProvidersPage() {
           </Select>
         </Label>
       </div>
+      <div className="row">
+        <Select
+          value={providerType}
+          onValueChange={(value) => setProviderType(value as ProviderId)}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PROVIDER_TYPES.map((type) => (
+              <SelectItem key={type} value={type}>
+                {providerLabels[type]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button onClick={addProvider}>
+          <Plus size={16} /> {t.sidepanel.addProvider}
+        </Button>
+      </div>
       <Accordion
         type="multiple"
-        defaultValue={providers.slice(0, 1)}
+        defaultValue={providerEntries.slice(0, 1).map(([id]) => id)}
         className="stack"
       >
-        {providers.map((provider) => (
+        {providerEntries.map(([providerId, provider]) => (
           <ProviderAccordion
-            key={provider}
-            provider={provider}
-            value={
-              providerState[provider] || {
-                baseUrl: providerDefaultBaseUrls[provider],
-                models: [],
-              }
-            }
-            onChange={(next) => updateProvider(provider, next)}
+            key={providerId}
+            providerId={providerId}
+            value={provider}
+            onChange={(next) => updateProvider(providerId, next)}
+            onDelete={() => deleteProvider(providerId)}
             onModelAdded={(model) => {
               if (!preferences.selectedModelId)
                 setPreferences({ ...preferences, selectedModelId: model.id });
@@ -124,14 +156,16 @@ export function ProvidersPage() {
 }
 
 function ProviderAccordion({
-  provider,
+  providerId,
   value,
   onChange,
+  onDelete,
   onModelAdded,
 }: {
-  provider: ProviderId;
+  providerId: string;
   value: ProviderConfig;
   onChange: (value: ProviderConfig) => void;
+  onDelete: () => void;
   onModelAdded: (model: ModelConfig) => void;
 }) {
   const [language] = useStoredState(storage.language);
@@ -142,8 +176,9 @@ function ProviderAccordion({
   const [fetching, setFetching] = useState(false);
   const [error, setError] = useState("");
   const models = value.models || [];
+  const provider = value.type || "openai";
   const t = getMessages(language);
-  const canAddManualModel = manualModelProviders.includes(provider);
+  const canAddManualModel = MANUAL_MODEL_PROVIDER_TYPES.includes(provider);
   const selectableFetchedModels = fetchedModels
     .filter((model) => !models.some((candidate) => candidate.id === model.id))
     .filter((model) =>
@@ -156,9 +191,9 @@ function ProviderAccordion({
     const name = modelName.trim();
     if (!name) return;
     const model: ModelConfig = {
-      id: `${provider}:${name}`,
+      id: `${providerId}:${name}`,
       name,
-      displayName: `${providerLabels[provider]} / ${name}`,
+      displayName: `${value.label || providerLabels[provider]} / ${name}`,
     };
     onChange({ ...value, models: [...models, model] });
     onModelAdded(model);
@@ -169,7 +204,7 @@ function ProviderAccordion({
     setFetching(true);
     setError("");
     try {
-      const fetched = await loadProviderModels(provider, value);
+      const fetched = await loadProviderModels(providerId, provider, value);
       setFetchedModels(fetched);
       setFetchedModelSearch("");
       const firstAvailable = fetched.find(
@@ -199,14 +234,24 @@ function ProviderAccordion({
   }
 
   return (
-    <AccordionItem value={provider}>
+    <AccordionItem value={providerId}>
       <AccordionTrigger>
-        <span>{providerLabels[provider]}</span>
+        <span>{value.label || providerLabels[provider]}</span>
         <Badge className="push-right">
           {models.length ? t.common.enabled : t.common.disabled}
         </Badge>
       </AccordionTrigger>
       <AccordionContent className="stack">
+        <Label>
+          {t.options.providerName}
+          <Input
+            value={value.label || ""}
+            placeholder={providerLabels[provider]}
+            onChange={(event) =>
+              onChange({ ...value, label: event.target.value })
+            }
+          />
+        </Label>
         {provider !== "ollama" && (
           <Label>
             {t.options.apiKey}
@@ -224,6 +269,11 @@ function ProviderAccordion({
           value={value}
           onChange={onChange}
         />
+        <div className="row">
+          <Button variant="destructive" onClick={onDelete}>
+            <Trash2 size={16} /> {t.options.deleteProvider}
+          </Button>
+        </div>
         <div className="stack">
           <div className="split">
             <strong>{t.options.models}</strong>
@@ -418,83 +468,4 @@ function ModelList({
       {!models.length && <p className="muted">{t.options.noModelsAddedYet}</p>}
     </div>
   );
-}
-
-async function loadProviderModels(
-  provider: ProviderId,
-  config: ProviderConfig,
-): Promise<ModelConfig[]> {
-  if (provider === "gemini") return loadGeminiModels(provider, config);
-  if (provider === "ollama") return loadOllamaModels(provider, config);
-  return loadOpenAICompatibleModels(provider, config);
-}
-
-async function loadGeminiModels(provider: ProviderId, config: ProviderConfig) {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(config.apiKey || "")}`,
-  );
-  if (!response.ok) throw new Error(await response.text());
-  const data = await response.json();
-  return (data.models || [])
-    .filter(
-      (model: { name?: string; supportedGenerationMethods?: string[] }) =>
-        model.name &&
-        model.supportedGenerationMethods?.includes("generateContent"),
-    )
-    .map((model: { name: string; displayName?: string }) => {
-      const name = model.name.replace(/^models\//, "");
-      return {
-        id: `${provider}:${name}`,
-        name,
-        displayName: model.displayName || name,
-      };
-    });
-}
-
-async function loadOllamaModels(provider: ProviderId, config: ProviderConfig) {
-  const baseUrl = (
-    config.baseUrl ||
-    providerDefaultBaseUrls[provider] ||
-    ""
-  ).replace(/\/$/, "");
-  const response = await fetch(`${baseUrl}/api/tags`);
-  if (!response.ok) throw new Error(await response.text());
-  const data = await response.json();
-  return (data.models || [])
-    .map((model: { name?: string }) => model.name)
-    .filter(Boolean)
-    .map((name: string) => ({
-      id: `${provider}:${name}`,
-      name,
-      displayName: `${providerLabels[provider]} / ${name}`,
-    }));
-}
-
-async function loadOpenAICompatibleModels(
-  provider: ProviderId,
-  config: ProviderConfig,
-) {
-  const baseUrl = (
-    config.baseUrl ||
-    providerDefaultBaseUrls[provider] ||
-    ""
-  ).replace(/\/$/, "");
-  if (!baseUrl) throw new Error("Base URL is required");
-  const response = await fetch(`${baseUrl}/models`, {
-    headers: config.apiKey
-      ? { Authorization: `Bearer ${config.apiKey}` }
-      : undefined,
-  });
-  if (!response.ok) throw new Error(await response.text());
-  const data = await response.json();
-  return (data.data || data.models || [])
-    .map((model: string | { id?: string; name?: string }) =>
-      typeof model === "string" ? model : model.id || model.name,
-    )
-    .filter(Boolean)
-    .map((name: string) => ({
-      id: `${provider}:${name}`,
-      name,
-      displayName: `${providerLabels[provider]} / ${name}`,
-    }));
 }

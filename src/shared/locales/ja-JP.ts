@@ -167,6 +167,8 @@ export const jaJP: LocaleMessages = {
     providerDescription:
       "自分のキーでOpenBrowserAgentをお気に入りのAIプロバイダーに接続します。",
     selectModel: "モデルを選択",
+    providerName: "プロバイダー名",
+    deleteProvider: "プロバイダーを削除",
     apiKey: "APIキー",
     baseUrl: "ベースURL",
     models: "モデル",

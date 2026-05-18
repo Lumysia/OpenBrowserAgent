@@ -1652,6 +1652,19 @@ a {
 .context-chip-row:empty {
   display: none;
 }
+.context-file-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.context-file-row::-webkit-scrollbar {
+  height: 6px;
+}
+.context-file-row::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
 .attachment-notice {
   padding: 2px 4px 0;
   color: var(--destructive);
@@ -1671,6 +1684,9 @@ a {
   background: color-mix(in srgb, var(--card) 86%, var(--background));
   color: var(--foreground);
   overflow: hidden;
+}
+.context-file-row .context-card {
+  flex: 0 0 min(334px, 82vw);
 }
 .context-card img {
   width: 34px;
@@ -1939,17 +1955,13 @@ a {
   max-height: none;
 }
 .model-menu {
-  width: max-content;
-  min-width: 190px;
-  max-width: min(360px, calc(100vw - 24px));
+  width: min(260px, calc(100vw - 24px));
   max-height: 260px;
   padding: 8px;
   overflow-y: auto;
 }
 .mode-menu {
-  width: max-content;
-  min-width: 250px;
-  max-width: min(360px, calc(100vw - 24px));
+  width: min(260px, calc(100vw - 24px));
   padding: 6px;
 }
 .action-list-item {
@@ -2279,11 +2291,12 @@ a {
 .assistant-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 8px;
-  text-align: right;
+  text-align: left;
 }
 .assistant-model-meta {
+  margin-left: auto;
   color: var(--muted-foreground);
   font-size: 11px;
   line-height: 1;

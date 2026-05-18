@@ -164,6 +164,8 @@ export const esES: LocaleMessages = {
     providerDescription:
       "Usa tu propia clave y conecta OpenBrowserAgent con tus proveedores de IA favoritos.",
     selectModel: "Seleccionar modelo",
+    providerName: "Nombre del proveedor",
+    deleteProvider: "Eliminar proveedor",
     apiKey: "Clave API",
     baseUrl: "URL base",
     models: "Modelos",

@@ -159,6 +159,8 @@ export const enUS = {
     providerDescription:
       "Bring your own key and connect OpenBrowserAgent to your favorite AI providers.",
     selectModel: "Select model",
+    providerName: "Provider name",
+    deleteProvider: "Delete provider",
     apiKey: "API Key",
     baseUrl: "Base URL",
     models: "Models",

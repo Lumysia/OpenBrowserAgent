@@ -127,6 +127,8 @@ export const zhCN: LocaleMessages = {
     providerDescription:
       "使用自己的密钥，将 OpenBrowserAgent 连接到你常用的 AI 提供商。",
     selectModel: "选择模型",
+    providerName: "提供商名称",
+    deleteProvider: "删除提供商",
     apiKey: "API Key",
     baseUrl: "Base URL",
     models: "模型",

@@ -223,10 +223,10 @@ export function ModelMenu({
           onClick={() => onSelect(model.id)}
         >
           <span className="model-provider-mark">
-            {providerInitial(model.id)}
+            {providerName(model).slice(0, 1).toUpperCase()}
           </span>
           <span>
-            <small>{providerName(model.id)}</small>
+            <small>{providerName(model)}</small>
             <strong>{model.name}</strong>
           </span>
           {selectedModelId === model.id && (
@@ -287,11 +287,9 @@ export function selectedModelLabel(
   return model?.name || t.sidepanel.selectModel;
 }
 
-function providerName(modelId: string) {
-  const provider = modelId.split(":")[0] as keyof typeof providerLabels;
+function providerName(model: ModelConfig) {
+  const fromDisplay = model.displayName?.split("/")[0]?.trim();
+  if (fromDisplay) return fromDisplay;
+  const provider = model.id.split(":")[0] as keyof typeof providerLabels;
   return providerLabels[provider] || provider;
-}
-
-function providerInitial(modelId: string) {
-  return providerName(modelId).slice(0, 1).toUpperCase();
 }

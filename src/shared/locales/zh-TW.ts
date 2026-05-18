@@ -130,6 +130,8 @@ export const zhTW: LocaleMessages = {
     providerDescription:
       "使用自己的金鑰，將 OpenBrowserAgent 連接到你常用的 AI 提供者。",
     selectModel: "選擇模型",
+    providerName: "提供者名稱",
+    deleteProvider: "刪除提供者",
     apiKey: "API Key",
     baseUrl: "Base URL",
     models: "模型",

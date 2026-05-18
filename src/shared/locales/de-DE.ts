@@ -166,6 +166,8 @@ export const deDE: LocaleMessages = {
     providerDescription:
       "Verbinden Sie OpenBrowserAgent mit Ihren bevorzugten KI-Anbietern über Ihren eigenen Schlüssel.",
     selectModel: "Modell auswählen",
+    providerName: "Anbietername",
+    deleteProvider: "Anbieter löschen",
     apiKey: "API-Schlüssel",
     baseUrl: "Basis-URL",
     models: "Modelle",

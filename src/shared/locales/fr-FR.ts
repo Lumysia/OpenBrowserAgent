@@ -168,6 +168,8 @@ export const frFR: LocaleMessages = {
     providerDescription:
       "Utilisez votre propre clé et connectez OpenBrowserAgent à vos fournisseurs IA favoris.",
     selectModel: "Sélectionner un modèle",
+    providerName: "Nom du fournisseur",
+    deleteProvider: "Supprimer le fournisseur",
     apiKey: "Clé API",
     baseUrl: "URL de base",
     models: "Modèles",

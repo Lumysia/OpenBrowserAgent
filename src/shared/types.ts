@@ -18,12 +18,15 @@ export type ModelConfig = {
 };
 
 export type ProviderConfig = {
+  id?: string;
+  type?: ProviderId;
+  label?: string;
   apiKey?: string;
   baseUrl?: string;
   models?: ModelConfig[];
 };
 
-export type ProviderState = Partial<Record<ProviderId, ProviderConfig>>;
+export type ProviderState = Record<string, ProviderConfig>;
 
 export type Preferences = {
   selectedModelId?: string;

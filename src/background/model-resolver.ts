@@ -1,14 +1,14 @@
-import { providerDefaultBaseUrls, type ProviderId } from "../shared/types";
+import { normalizeProviderState } from "../shared/provider-instances";
+import { providerDefaultBaseUrls } from "../shared/types";
 import { storage } from "../shared/storage";
 
 export async function resolveModel(modelId?: string) {
-  const providers = await storage.provider.get();
+  const providers = normalizeProviderState(await storage.provider.get());
   const preferences = await storage.preferences.get();
   const selectedModelId = modelId || preferences.selectedModelId;
 
-  for (const [provider, config] of Object.entries(providers) as Array<
-    [ProviderId, NonNullable<(typeof providers)[ProviderId]>]
-  >) {
+  for (const [, config] of Object.entries(providers)) {
+    const provider = config.type || "openai";
     const model = config.models?.find(
       (candidate) =>
         candidate.id === selectedModelId || candidate.name === selectedModelId,
@@ -23,18 +23,15 @@ export async function resolveModel(modelId?: string) {
     }
   }
 
-  const fallbackProvider = Object.entries(providers)[0] as
-    | [ProviderId, NonNullable<(typeof providers)[ProviderId]>]
-    | undefined;
+  const fallbackProvider = Object.entries(providers)[0];
   const fallbackModel = fallbackProvider?.[1].models?.[0];
   if (fallbackProvider && fallbackModel) {
+    const provider = fallbackProvider[1].type || "openai";
     return {
-      provider: fallbackProvider[0],
+      provider,
       apiKey: fallbackProvider[1].apiKey || "",
       baseUrl:
-        fallbackProvider[1].baseUrl ||
-        providerDefaultBaseUrls[fallbackProvider[0]] ||
-        "",
+        fallbackProvider[1].baseUrl || providerDefaultBaseUrls[provider] || "",
       modelName: fallbackModel.name || fallbackModel.id,
     };
   }
