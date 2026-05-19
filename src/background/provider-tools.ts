@@ -175,13 +175,17 @@ function loadBrowserTools(
     )
     .filter((item) => item.available)
     .filter((item) => !category || item.category === category)
-    .filter((item) => {
-      if (requestedNames.length) return requestedNames.includes(item.name);
-      if (!query) return true;
-      return `${item.name} ${item.description} ${item.category}`
-        .toLowerCase()
-        .includes(query);
-    })
+    .map((item) => ({
+      item,
+      score: requestedNames.length
+        ? requestedNames.includes(item.name)
+          ? 1
+          : 0
+        : queryScore(item, query),
+    }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name))
+    .map(({ item }) => item)
     .slice(0, 8);
   return {
     loadedToolNames: matches.map((item) => item.name),
@@ -192,6 +196,25 @@ function loadBrowserTools(
       )?.function,
     })),
   };
+}
+
+function queryScore(item: ReturnType<typeof toolCatalogItem>, query: string) {
+  if (!query) return 1;
+  const searchable = `${item.name} ${item.description} ${item.category}`
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .toLowerCase();
+  if (searchable.includes(query)) return 100;
+  const terms = query
+    .split(/[^a-z0-9]+/i)
+    .map((term) => term.trim().toLowerCase())
+    .filter(
+      (term) => term.length > 2 && !DEFERRED_TOOL_QUERY_STOP_WORDS.has(term),
+    );
+  if (!terms.length) return 1;
+  return terms.reduce(
+    (score, term) => score + (searchable.includes(term) ? 1 : 0),
+    0,
+  );
 }
 
 function toolCatalogItem(
@@ -234,6 +257,18 @@ const TOOL_CATEGORY_BY_NAME = {
   [BROWSER_TOOL_NAME.updateSkillFile]: "skills",
   [BROWSER_TOOL_NAME.patchSkillFile]: "skills",
 } as const;
+
+const DEFERRED_TOOL_QUERY_STOP_WORDS = new Set([
+  "and",
+  "for",
+  "the",
+  "with",
+  "into",
+  "from",
+  "current",
+  "tool",
+  "tools",
+]);
 
 async function readFileFromUrl(input: Record<string, unknown>) {
   const url = String(input.url || "").trim();

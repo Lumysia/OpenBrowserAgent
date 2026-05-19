@@ -51,6 +51,8 @@ export async function executeCdpTool(
   args: Record<string, unknown>,
 ) {
   switch (name) {
+    case BROWSER_TOOL_NAME.cdpMouseActionByAiID:
+      return mouseActionByAiID(args);
     case BROWSER_TOOL_NAME.cdpListPages:
       return listPages();
     case BROWSER_TOOL_NAME.cdpNewPage:
@@ -109,9 +111,7 @@ async function withCdp(
   args: Record<string, unknown>,
   run: (target: chrome.debugger.Debuggee) => Promise<unknown>,
 ) {
-  const tabId = await resolveTabId(args.tabId);
-  const target = { tabId };
-  await chrome.debugger.attach(target, CDP_VERSION);
+  const target = await attachCdpTarget(args);
   try {
     return await run(target);
   } finally {
@@ -120,8 +120,38 @@ async function withCdp(
 }
 
 async function listPages() {
-  const tabs = await chrome.tabs.query({});
-  return tabs.map((tab) => ({ id: tab.id, title: tab.title, url: tab.url }));
+  const [tabs, targets] = await Promise.all([
+    chrome.tabs.query({}).catch(() => []),
+    getPageTargets().catch(() => []),
+  ]);
+  const targetsByTabId = new Map(
+    targets
+      .filter((target) => target.tabId)
+      .map((target) => [target.tabId, target]),
+  );
+  const tabPages = tabs.map((tab) => {
+    const target = tab.id ? targetsByTabId.get(tab.id) : undefined;
+    return {
+      id: tab.id,
+      targetId: target?.id,
+      tabId: tab.id,
+      title: tab.title || target?.title,
+      url: tab.url || target?.url,
+      attached: target?.attached,
+    };
+  });
+  const tabIds = new Set(tabPages.map((tab) => tab.tabId).filter(Boolean));
+  const targetPages = targets
+    .filter((target) => !target.tabId || !tabIds.has(target.tabId))
+    .map((target) => ({
+      id: target.id,
+      targetId: target.id,
+      tabId: target.tabId,
+      title: target.title,
+      url: target.url,
+      attached: target.attached,
+    }));
+  return [...tabPages, ...targetPages];
 }
 
 async function newPage(args: Record<string, unknown>) {
@@ -133,65 +163,197 @@ async function newPage(args: Record<string, unknown>) {
 }
 
 async function selectPage(args: Record<string, unknown>) {
-  const tab = await chrome.tabs.update(await resolveTabId(args.tabId), {
-    active: args.bringToFront !== false,
-  });
-  if (!tab?.id) return { success: false, error: "Tab not found" };
-  if (tab.windowId !== undefined)
-    await chrome.windows.update(tab.windowId, { focused: true });
-  return { success: true, tabId: tab.id };
+  try {
+    if (hasTargetIdOnly(args)) throw new Error("Target ID cannot be focused");
+    const tab = await chrome.tabs.update(await resolveTabId(args.tabId), {
+      active: args.bringToFront !== false,
+    });
+    if (!tab?.id) return { success: false, error: "Tab not found" };
+    if (tab.windowId !== undefined)
+      await chrome.windows.update(tab.windowId, { focused: true });
+    return { success: true, tabId: tab.id };
+  } catch (error) {
+    const target = await findPageTarget(args);
+    return target
+      ? {
+          success: false,
+          targetId: target.id,
+          tabId: target.tabId,
+          error:
+            "Page target is available through CDP, but this browser does not allow focusing it through tabs/windows APIs.",
+        }
+      : { success: false, error: errorMessage(error) };
+  }
 }
 
 async function closePage(args: Record<string, unknown>) {
-  const tabId = await resolveTabId(args.tabId);
-  await chrome.tabs.remove(tabId);
-  return { success: true, tabId };
+  try {
+    if (hasTargetIdOnly(args)) throw new Error("Close by target ID");
+    const tabId = await resolveTabId(args.tabId);
+    await chrome.tabs.remove(tabId);
+    return { success: true, tabId };
+  } catch {
+    const result = await runtimeEvaluate(args, "window.close(); true");
+    return result.exception
+      ? { success: false, error: result.exception }
+      : { success: true };
+  }
 }
 
 async function navigatePage(args: Record<string, unknown>) {
-  const tabId = await resolveTabId(args.tabId);
   const type = stringInput(args.type) || (args.url ? "url" : "reload");
   if (type === "back" || type === "forward")
-    await withCdp({ tabId }, (target) =>
+    await withCdp(args, (target) =>
       send(target, type === "back" ? "Page.goBack" : "Page.goForward"),
     );
   else if (type === "url")
-    await chrome.tabs.update(tabId, { url: stringInput(args.url) });
+    await withCdp(args, (target) =>
+      send(target, "Page.navigate", { url: stringInput(args.url) }),
+    );
   else
-    await chrome.tabs.reload(tabId, { bypassCache: args.ignoreCache === true });
-  return { success: true, tabId, type };
+    await withCdp(args, (target) =>
+      send(target, "Page.reload", { ignoreCache: args.ignoreCache === true }),
+    );
+  return { success: true, type };
 }
 
 async function waitFor(args: Record<string, unknown>) {
-  const tabId = await resolveTabId(args.tabId);
   const texts = Array.isArray(args.text)
     ? args.text.map(String)
     : [stringInput(args.text)];
   const timeout = numberInput(args.timeout) || DEFAULT_WAIT_MS;
   const started = Date.now();
   while (Date.now() - started < timeout) {
-    const [result] = await chrome.scripting.executeScript({
-      target: { tabId },
-      args: [texts],
-      func: (values) =>
-        values.some((text) => text && document.body?.innerText.includes(text)),
-    });
-    if (result.result)
-      return { success: true, tabId, text: texts.find(Boolean) };
+    const result = await withCdp(args, (target) =>
+      send(target, "Runtime.evaluate", {
+        expression: `(${JSON.stringify(texts)}).some((text) => text && document.body?.innerText.includes(text))`,
+        returnByValue: true,
+      }),
+    );
+    if ((result as Record<string, any>).result?.value)
+      return { success: true, text: texts.find(Boolean) };
     await new Promise((resolve) => setTimeout(resolve, WAIT_FOR_TEXT_POLL_MS));
   }
-  return { success: false, error: "Timed out waiting for text", tabId };
+  return { success: false, error: "Timed out waiting for text" };
+}
+
+async function runtimeEvaluate<T = unknown>(
+  args: Record<string, unknown>,
+  expression: string,
+) {
+  const result = (await withCdp(args, (target) =>
+    send(target, "Runtime.evaluate", {
+      expression,
+      awaitPromise: true,
+      returnByValue: true,
+    }),
+  )) as Record<string, any>;
+  return {
+    value: result.result?.value as T,
+    exception: result.exceptionDetails?.text,
+  };
+}
+
+async function runtimeCall<T = unknown>(
+  args: Record<string, unknown>,
+  fn: string,
+  values: unknown[] = [],
+) {
+  return runtimeEvaluate<T>(
+    args,
+    `(${fn})(...${JSON.stringify(values.map((value) => value ?? null))})`,
+  );
+}
+
+async function attachCdpTarget(args: Record<string, unknown>) {
+  const targetId = stringInput(args.targetId);
+  const tabId = Number(args.tabId);
+  const candidates: chrome.debugger.Debuggee[] = [];
+  if (targetId) candidates.push({ targetId });
+  if (Number.isFinite(tabId) && tabId > 0) candidates.push({ tabId });
+  if (!targetId) {
+    const target = await findPageTarget(args).catch(() => undefined);
+    if (target?.id) candidates.push({ targetId: target.id });
+  }
+  if (!candidates.length) {
+    const activeTabId = await resolveTabId(args.tabId);
+    candidates.push({ tabId: activeTabId });
+    const target = await findPageTarget({ ...args, tabId: activeTabId }).catch(
+      () => undefined,
+    );
+    if (target?.id) candidates.push({ targetId: target.id });
+  }
+
+  const seen = new Set<string>();
+  const errors: string[] = [];
+  for (const candidate of candidates) {
+    const key = candidate.targetId || `tab:${candidate.tabId}`;
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    try {
+      await chrome.debugger.attach(candidate, CDP_VERSION);
+      return candidate;
+    } catch (error) {
+      errors.push(
+        `${key}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+  throw new Error(
+    errors.length
+      ? `Unable to attach CDP target. ${errors.join("; ")}`
+      : "Unable to resolve CDP target",
+  );
+}
+
+async function findPageTarget(args: Record<string, unknown>) {
+  const tabId = Number(args.tabId);
+  const targetId = stringInput(args.targetId);
+  const url = stringInput(args.url);
+  const title = stringInput(args.title);
+  const targets = await getPageTargets();
+  if (targetId) return targets.find((target) => target.id === targetId);
+  if (Number.isFinite(tabId) && tabId > 0)
+    return targets.find((target) => target.tabId === tabId);
+  if (url)
+    return targets.find(
+      (target) => target.url === url || target.url.includes(url),
+    );
+  if (title)
+    return targets.find(
+      (target) => target.title === title || target.title.includes(title),
+    );
+  const active = await chrome.tabs
+    .query({ active: true, currentWindow: true })
+    .then((tabs) => tabs[0])
+    .catch(() => undefined);
+  return active?.id
+    ? targets.find((target) => target.tabId === active.id)
+    : targets.find((target) => !target.attached);
+}
+
+async function getPageTargets() {
+  const targets = await chrome.debugger.getTargets();
+  return targets.filter(
+    (target) =>
+      target.type === "page" && !target.url?.startsWith("devtools://"),
+  );
 }
 
 async function resizePage(args: Record<string, unknown>) {
-  const tab = await chrome.tabs.get(await resolveTabId(args.tabId));
-  if (tab.windowId === undefined)
-    return { success: false, error: "Tab has no window" };
-  await chrome.windows.update(tab.windowId, {
-    width: numberInput(args.width),
-    height: numberInput(args.height),
-  });
-  return { success: true, tabId: tab.id };
+  try {
+    if (hasTargetIdOnly(args)) throw new Error("Resize by target ID");
+    const tab = await chrome.tabs.get(await resolveTabId(args.tabId));
+    if (tab.windowId === undefined)
+      return { success: false, error: "Tab has no window" };
+    await chrome.windows.update(tab.windowId, {
+      width: numberInput(args.width),
+      height: numberInput(args.height),
+    });
+    return { success: true, tabId: tab.id };
+  } catch {
+    return withCdp(args, (target) => emulate(target, args));
+  }
 }
 
 async function clickAt(
@@ -223,6 +385,54 @@ async function clickAt(
   return { success: true, x, y };
 }
 
+async function mouseActionByAiID(args: Record<string, unknown>) {
+  const id = stringInput(args.id || args.uid);
+  const point = await runtimeCall<{
+    success?: boolean;
+    error?: string;
+    x?: number;
+    y?: number;
+    clickedTag?: string;
+    clickedRole?: string;
+  }>(
+    args,
+    `(aiId) => {
+      const element = document.querySelector('[data-ai-id="' + CSS.escape(aiId) + '"]');
+      if (!element) return { success: false, error: "Element not found" };
+      const target = element.closest('button,a,[role="button"],[role="link"],[role="tab"],[role="listitem"],[role="gridcell"],[tabindex],[contenteditable="true"]') || element;
+      target.scrollIntoView({ block: "center", inline: "center" });
+      const rect = target.getBoundingClientRect();
+      if (!rect.width || !rect.height) return { success: false, error: "Element has no clickable box" };
+      return {
+        success: true,
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+        clickedTag: target.tagName.toLowerCase(),
+        clickedRole: target.getAttribute("role") || undefined,
+      };
+    }`,
+    [id],
+  );
+  if (point.exception) return { success: false, error: point.exception };
+  if (!point.value?.success) return point.value || { success: false };
+  const action = stringInput(args.action) || "click";
+  const result = await withCdp(args, (target) => {
+    if (action === "hover")
+      return send(target, "Input.dispatchMouseEvent", {
+        type: "mouseMoved",
+        x: point.value?.x,
+        y: point.value?.y,
+      }).then(() => ({ success: true, x: point.value?.x, y: point.value?.y }));
+    return clickAt(target, {
+      ...args,
+      x: point.value?.x,
+      y: point.value?.y,
+      dblClick: action === "doubleClick",
+    });
+  });
+  return { ...(result as Record<string, unknown>), ...point.value, action };
+}
+
 async function pressKey(
   target: chrome.debugger.Debuggee,
   args: Record<string, unknown>,
@@ -244,29 +454,27 @@ async function typeText(
 }
 
 async function fill(args: Record<string, unknown>) {
-  const tabId = await resolveTabId(args.tabId);
   const id = stringInput(args.id || args.uid);
   const value = stringInput(args.value);
-  const [result] = await chrome.scripting.executeScript({
-    target: { tabId },
-    args: [id, value],
-    func: (aiId, nextValue) => {
-      const element = document.querySelector(
-        `[data-ai-id="${CSS.escape(aiId)}"]`,
-      ) as HTMLInputElement | HTMLTextAreaElement | HTMLElement | null;
+  const result = await runtimeCall<Record<string, unknown>>(
+    args,
+    `(aiId, nextValue) => {
+      const element = document.querySelector('[data-ai-id="' + CSS.escape(aiId) + '"]');
       if (!element) return { success: false, error: "Element not found" };
       element.focus?.();
-      if ("value" in element)
-        (element as HTMLInputElement | HTMLTextAreaElement).value = nextValue;
+      if ("value" in element) element.value = nextValue;
       else element.textContent = nextValue;
       element.dispatchEvent(
         new InputEvent("input", { bubbles: true, data: nextValue }),
       );
       element.dispatchEvent(new Event("change", { bubbles: true }));
       return { success: true };
-    },
-  });
-  return { ...(result.result || { success: false }), tabId };
+    }`,
+    [id, value],
+  );
+  return result.exception
+    ? { success: false, error: result.exception }
+    : result.value || { success: false };
 }
 
 async function fillForm(args: Record<string, unknown>) {
@@ -277,6 +485,9 @@ async function fillForm(args: Record<string, unknown>) {
       await fill({
         ...(element as Record<string, unknown>),
         tabId: args.tabId,
+        targetId: args.targetId,
+        url: args.url,
+        title: args.title,
       }),
     );
   return {
@@ -318,15 +529,16 @@ async function drag(
 }
 
 async function handleDialog(args: Record<string, unknown>) {
-  const tabId = await resolveTabId(args.tabId);
-  const [result] = await chrome.scripting.executeScript({
-    target: { tabId },
-    func: () => ({
-      success: true,
-      note: "No browser dialog is currently tracked.",
+  await withCdp(args, (target) =>
+    send(target, "Page.handleJavaScriptDialog", {
+      accept: stringInput(args.action) !== "dismiss",
+      promptText: stringInput(args.promptText),
     }),
-  });
-  return result.result;
+  ).catch(() => undefined);
+  return {
+    success: true,
+    note: "Dialog handling command sent if a dialog was present.",
+  };
 }
 
 async function emulate(
@@ -355,7 +567,7 @@ async function evaluateScript(
   target: chrome.debugger.Debuggee,
   args: Record<string, unknown>,
 ) {
-  const expression = `(${stringInput(args.function || args.expression)})()`;
+  const expression = `(${stringInput(args["function"] || args.expression)})()`;
   const result = await send(target, "Runtime.evaluate", {
     expression,
     awaitPromise: true,
@@ -368,37 +580,25 @@ async function evaluateScript(
 }
 
 async function executeArbitraryJavaScript(args: Record<string, unknown>) {
-  const tabId = await resolveTabId(args.tabId);
   const code = String(args.code || "");
-  if (!code.trim()) return { success: false, error: "Missing code", tabId };
-  const world =
-    stringInput(args.world).toUpperCase() === "ISOLATED" ? "ISOLATED" : "MAIN";
-  const [result] = await chrome.scripting.executeScript({
-    target: { tabId },
-    world: world as chrome.scripting.ExecutionWorld,
-    args: [code],
-    func: async (source) => {
+  if (!code.trim()) return { success: false, error: "Missing code" };
+  const result = await runtimeCall<Record<string, unknown>>(
+    args,
+    `async (source) => {
       try {
         const value = await (0, eval)(source);
-        return { success: true, value: makeSerializable(value) };
+        if (value === undefined) return { success: true, value: { type: "undefined" } };
+        try { return { success: true, value: JSON.parse(JSON.stringify(value)) }; }
+        catch { return { success: true, value: String(value) }; }
       } catch (error) {
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : String(error),
-        };
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
       }
-
-      function makeSerializable(value: unknown) {
-        if (value === undefined) return { type: "undefined" };
-        try {
-          return JSON.parse(JSON.stringify(value));
-        } catch {
-          return String(value);
-        }
-      }
-    },
-  });
-  return { ...(result.result || { success: false }), tabId, world };
+    }`,
+    [code],
+  );
+  return result.exception
+    ? { success: false, error: result.exception }
+    : result.value || { success: false };
 }
 
 async function takeScreenshot(
@@ -415,12 +615,13 @@ async function takeScreenshot(
 }
 
 async function takeSnapshot(args: Record<string, unknown>) {
-  const tabId = await resolveTabId(args.tabId);
-  const [result] = await chrome.scripting.executeScript({
-    target: { tabId },
-    func: () => document.body?.innerText || "",
-  });
-  return { snapshot: result.result || "", tabId };
+  const result = await runtimeEvaluate<string>(
+    args,
+    "document.body?.innerText || ''",
+  );
+  return result.exception
+    ? { success: false, error: result.exception }
+    : { snapshot: result.value || "" };
 }
 
 async function listConsoleMessages(target: chrome.debugger.Debuggee) {
@@ -473,6 +674,14 @@ function stringInput(value: unknown) {
 function numberInput(value: unknown) {
   const number = Number(value);
   return Number.isFinite(number) ? number : undefined;
+}
+
+function hasTargetIdOnly(args: Record<string, unknown>) {
+  return !!stringInput(args.targetId) && !numberInput(args.tabId);
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function pointInput(x: unknown, y: unknown) {

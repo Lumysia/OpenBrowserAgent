@@ -9,7 +9,7 @@ import { BROWSER_TOOL_NAME, UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
 import { isScriptableUrl } from "../shared/browser";
 import { downloadTextFile, findImages, safeFileName } from "./downloads";
 import { findAccessibleElements } from "./accessible-elements";
-import { cdpMouseActionElement, clickElement } from "./browser-input";
+import { clickElement } from "./browser-input";
 import { executeCdpTool, isCdpTool } from "./cdp-tools";
 import { allBrowserTools, browserTools } from "./tool-schema";
 import { withTimeout } from "./tool-utils";
@@ -19,8 +19,7 @@ async function executeBrowserTool(
   name: string | undefined,
   args: Record<string, unknown>,
 ) {
-  if (isCdpTool(name) && name !== BROWSER_TOOL_NAME.cdpMouseActionByAiID)
-    return executeCdpTool(name, args);
+  if (isCdpTool(name)) return executeCdpTool(name, args);
   switch (name) {
     case BROWSER_TOOL_NAME.wait: {
       const milliseconds = clampWaitMs(args.milliseconds ?? args.ms);
@@ -137,13 +136,6 @@ async function executeBrowserTool(
       return clickElement(
         await resolveTabId(args.tabId),
         String(args.id || ""),
-      );
-    }
-    case BROWSER_TOOL_NAME.cdpMouseActionByAiID: {
-      return cdpMouseActionElement(
-        await resolveTabId(args.tabId),
-        String(args.id || ""),
-        String(args.action || "click"),
       );
     }
     case BROWSER_TOOL_NAME.inputTextByAiID: {

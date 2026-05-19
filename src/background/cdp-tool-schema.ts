@@ -7,18 +7,20 @@ export const cdpTools = [
     {
       id: stringProperty("The AI ID of the element to target"),
       tabId: numberProperty("The tab ID containing the element"),
+      targetId: targetIdProperty(),
       action: enumProperty(
         ["hover", "click", "doubleClick"],
         "The CDP mouse action to perform",
       ),
     },
-    ["id", "tabId"],
+    ["id"],
   ),
   tool(
     BROWSER_TOOL_NAME.cdpClickAt,
     "Click at viewport coordinates through CDP",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       x: numberProperty("Viewport x coordinate"),
       y: numberProperty("Viewport y coordinate"),
       dblClick: {
@@ -33,6 +35,7 @@ export const cdpTools = [
     "Press a key or key combination through CDP",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       key: stringProperty(
         "Key to press, such as Enter, Escape, Tab, or Control+A",
       ),
@@ -44,6 +47,7 @@ export const cdpTools = [
     "Type text into the currently focused element through CDP",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       text: stringProperty("Text to type"),
       submitKey: stringProperty("Optional key to press after typing"),
     },
@@ -54,6 +58,7 @@ export const cdpTools = [
     "Fill an element by AI ID",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       id: stringProperty("AI ID of the element to fill"),
       value: stringProperty("Value to fill"),
     },
@@ -64,6 +69,7 @@ export const cdpTools = [
     "Fill multiple elements by AI ID",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       elements: {
         type: "array",
         items: { type: "object" },
@@ -77,6 +83,7 @@ export const cdpTools = [
     "Drag between viewport coordinates through CDP",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       fromX: numberProperty("Start x"),
       fromY: numberProperty("Start y"),
       toX: numberProperty("End x"),
@@ -89,6 +96,7 @@ export const cdpTools = [
     "Handle a browser dialog if present",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       action: enumProperty(["accept", "dismiss"], "Dialog action"),
       promptText: stringProperty("Optional prompt text"),
     },
@@ -109,6 +117,7 @@ export const cdpTools = [
     "Navigate a page by URL, back, forward, or reload",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       type: enumProperty(
         ["url", "back", "forward", "reload"],
         "Navigation type",
@@ -116,27 +125,33 @@ export const cdpTools = [
       url: stringProperty("URL for type=url"),
       ignoreCache: { type: "boolean", description: "Bypass cache on reload" },
     },
+    [],
   ),
   tool(
     BROWSER_TOOL_NAME.cdpSelectPage,
     "Focus a page",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       bringToFront: { type: "boolean", description: "Focus the page window" },
     },
-    ["tabId"],
+    [],
   ),
   tool(
     BROWSER_TOOL_NAME.cdpClosePage,
     "Close a page",
-    { tabId: numberProperty("The tab ID") },
-    ["tabId"],
+    {
+      tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
+    },
+    [],
   ),
   tool(
     BROWSER_TOOL_NAME.cdpWaitFor,
     "Wait for text to appear on a page",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       text: {
         type: "array",
         items: { type: "string" },
@@ -151,22 +166,30 @@ export const cdpTools = [
     "Resize the page window",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       width: numberProperty("Window width"),
       height: numberProperty("Window height"),
     },
     ["width", "height"],
   ),
-  tool(BROWSER_TOOL_NAME.cdpEmulate, "Apply CDP emulation settings", {
-    tabId: numberProperty("The tab ID"),
-    viewport: stringProperty("Viewport WxHxDPR[,mobile]"),
-    userAgent: stringProperty("User agent override"),
-    colorScheme: enumProperty(["dark", "light", "auto"], "Color scheme"),
-  }),
+  tool(
+    BROWSER_TOOL_NAME.cdpEmulate,
+    "Apply CDP emulation settings",
+    {
+      tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
+      viewport: stringProperty("Viewport WxHxDPR[,mobile]"),
+      userAgent: stringProperty("User agent override"),
+      colorScheme: enumProperty(["dark", "light", "auto"], "Color scheme"),
+    },
+    [],
+  ),
   tool(
     BROWSER_TOOL_NAME.cdpEvaluateScript,
     "Evaluate a JavaScript function in the page through CDP",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       function: stringProperty("Function declaration to execute"),
       expression: stringProperty("Expression fallback"),
     },
@@ -177,6 +200,7 @@ export const cdpTools = [
     "DANGEROUS: Execute arbitrary JavaScript in any scriptable tab without extension-side safety limits. Only available when the dangerous code execution setting is enabled.",
     {
       tabId: numberProperty("The tab ID. Defaults to the active tab."),
+      targetId: targetIdProperty(),
       code: stringProperty(
         "Arbitrary JavaScript source to evaluate in the target tab. Return a JSON-serializable value when possible.",
       ),
@@ -192,27 +216,40 @@ export const cdpTools = [
     "Capture a page screenshot through CDP",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       format: enumProperty(["png", "jpeg", "webp"], "Image format"),
       fullPage: {
         type: "boolean",
         description: "Capture full page if supported",
       },
     },
+    [],
   ),
-  tool(BROWSER_TOOL_NAME.cdpTakeSnapshot, "Take a text snapshot of the page", {
-    tabId: numberProperty("The tab ID"),
-    verbose: { type: "boolean", description: "Include more detail" },
-  }),
+  tool(
+    BROWSER_TOOL_NAME.cdpTakeSnapshot,
+    "Take a text snapshot of the page",
+    {
+      tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
+      verbose: { type: "boolean", description: "Include more detail" },
+    },
+    [],
+  ),
   tool(
     BROWSER_TOOL_NAME.cdpListConsoleMessages,
     "List console messages collected through CDP",
-    { tabId: numberProperty("The tab ID") },
+    {
+      tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
+    },
+    [],
   ),
   tool(
     BROWSER_TOOL_NAME.cdpGetConsoleMessage,
     "Get one console message by ID",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       msgid: numberProperty("Message ID"),
     },
     ["msgid"],
@@ -222,15 +259,18 @@ export const cdpTools = [
     "List network/resource requests for a page",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       pageIdx: numberProperty("Page index"),
       pageSize: numberProperty("Page size"),
     },
+    [],
   ),
   tool(
     BROWSER_TOOL_NAME.cdpGetNetworkRequest,
     "Get one network request by ID",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       reqid: numberProperty("Request ID"),
     },
     ["reqid"],
@@ -240,6 +280,7 @@ export const cdpTools = [
     "Start a CDP performance trace",
     {
       tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
       reload: { type: "boolean", description: "Reload after starting" },
       autoStop: { type: "boolean", description: "Auto-stop trace" },
     },
@@ -247,7 +288,11 @@ export const cdpTools = [
   tool(
     BROWSER_TOOL_NAME.cdpPerformanceStopTrace,
     "Stop a CDP performance trace",
-    { tabId: numberProperty("The tab ID") },
+    {
+      tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
+    },
+    [],
   ),
   tool(
     BROWSER_TOOL_NAME.cdpPerformanceAnalyzeInsight,
@@ -258,10 +303,16 @@ export const cdpTools = [
     },
     ["insightName", "insightSetId"],
   ),
-  tool(BROWSER_TOOL_NAME.cdpTakeMemorySnapshot, "Take a memory heap snapshot", {
-    tabId: numberProperty("The tab ID"),
-    filePath: stringProperty("Output file path"),
-  }),
+  tool(
+    BROWSER_TOOL_NAME.cdpTakeMemorySnapshot,
+    "Take a memory heap snapshot",
+    {
+      tabId: numberProperty("The tab ID"),
+      targetId: targetIdProperty(),
+      filePath: stringProperty("Output file path"),
+    },
+    ["filePath"],
+  ),
   tool(
     BROWSER_TOOL_NAME.cdpGetMemorySnapshotDetails,
     "Get memory snapshot details",
@@ -321,6 +372,10 @@ function tool(
 
 function stringProperty(description: string) {
   return { type: "string", description };
+}
+
+function targetIdProperty() {
+  return stringProperty("The CDP target ID when tab APIs are unavailable");
 }
 
 function numberProperty(description: string) {
