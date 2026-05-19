@@ -43,6 +43,11 @@ import {
   applyOpenAIContextBudget,
 } from "./context-budget";
 import { postContextBudget } from "./provider-metrics";
+import {
+  injectQueuedGeminiMessages,
+  injectQueuedOpenAIMessages,
+  type QueuedUserMessage,
+} from "./provider-queued-messages";
 
 export async function requestOpenAICompatible(
   model: {
@@ -61,6 +66,7 @@ export async function requestOpenAICompatible(
   attachmentRetryNotice?: string,
   uploadedAttachments: UploadedAttachment[] = [],
   availableSkills: Skill[] = [],
+  drainQueuedMessages: () => QueuedUserMessage[] = () => [],
 ): Promise<ProviderTextResult> {
   if (model.provider === "gemini") {
     return requestGemini(
@@ -74,9 +80,9 @@ export async function requestOpenAICompatible(
       attachmentRetryNotice,
       uploadedAttachments,
       availableSkills,
+      drainQueuedMessages,
     );
   }
-
   const baseUrl = model.baseUrl.replace(/\/$/, "");
   const chatUrl =
     model.provider === "ollama"
@@ -105,7 +111,6 @@ export async function requestOpenAICompatible(
   let responseSources = getMessageSources(messages);
   let responseUsage: TokenUsage | undefined;
   const postMetric = (message: AiStreamResponse) => post(port, message);
-
   async function fetchChatCompletion(body: Record<string, unknown>) {
     const budgeted = applyOpenAIContextBudget(requestMessages, preferences);
     postContextBudget(postMetric, budgeted.report);
@@ -119,7 +124,6 @@ export async function requestOpenAICompatible(
       body: JSON.stringify({ ...body, messages: budgeted.items }),
     });
     if (response.ok || !usesAttachmentPayload) return response;
-
     requestMessages = createOpenAIRequestMessages(
       system,
       messages,
@@ -151,7 +155,6 @@ export async function requestOpenAICompatible(
       body: JSON.stringify({ ...body, messages: retryBudgeted.items }),
     });
   }
-
   if (!useTools) {
     const response = await fetchChatCompletion({
       model: model.modelName,
@@ -159,7 +162,6 @@ export async function requestOpenAICompatible(
       stream: true,
       stream_options: { include_usage: true },
     });
-
     if (!response.ok) throw new Error(await response.text());
     const streamResult = await readOpenAIStream(
       response,
@@ -169,7 +171,6 @@ export async function requestOpenAICompatible(
     );
     return { text: "", outputMode: "streaming", usage: streamResult.usage };
   }
-
   for (let step = 0; step < maxToolSteps; step++) {
     const response = await fetchChatCompletion({
       model: model.modelName,
@@ -179,7 +180,6 @@ export async function requestOpenAICompatible(
       tools: availableTools(),
       tool_choice: "auto",
     });
-
     if (!response.ok) throw new Error(await response.text());
     const streamResult = await readOpenAIStream(
       response,
@@ -192,7 +192,6 @@ export async function requestOpenAICompatible(
     const toolCalls = streamResult.toolCalls;
     if (!toolCalls.length)
       return { text: "", outputMode: "streaming", usage: responseUsage };
-
     requestMessages.push({
       role: "assistant",
       content: streamResult.content || null,
@@ -261,21 +260,19 @@ export async function requestOpenAICompatible(
           ],
         });
     }
+    injectQueuedOpenAIMessages(port, requestMessages, drainQueuedMessages);
   }
-
   requestMessages.push({
     role: "user",
     content:
       "<internal_instruction>Maximum browser tool steps reached. Do not call more tools. Summarize the findings and clearly state what is known, what remains uncertain, and the best next step for the user. Respond in the same language as the user's latest non-internal message.</internal_instruction>",
   });
-
   const fallbackResponse = await fetchChatCompletion({
     model: model.modelName,
     temperature: MODEL_TEMPERATURE,
     stream: true,
     stream_options: { include_usage: true },
   });
-
   if (!fallbackResponse.ok) throw new Error(await fallbackResponse.text());
   const fallbackResult = await readOpenAIStream(fallbackResponse, port, signal);
   return {
@@ -284,7 +281,6 @@ export async function requestOpenAICompatible(
     usage: addTokenUsage(responseUsage, fallbackResult.usage),
   };
 }
-
 async function requestGemini(
   model: { apiKey: string; modelName: string },
   system: string,
@@ -296,6 +292,7 @@ async function requestGemini(
   attachmentRetryNotice?: string,
   uploadedAttachments: UploadedAttachment[] = [],
   availableSkills: Skill[] = [],
+  drainQueuedMessages: () => QueuedUserMessage[] = () => [],
 ): Promise<ProviderTextResult> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model.modelName)}:generateContent?key=${encodeURIComponent(model.apiKey)}`;
   let contents: Array<Record<string, unknown>> = createGeminiContents(
@@ -475,6 +472,7 @@ async function requestGemini(
       }
     }
     contents.push({ role: "user", parts: responseParts });
+    injectQueuedGeminiMessages(port, contents, drainQueuedMessages);
   }
 
   contents.push({

@@ -237,6 +237,120 @@ export const esES: LocaleMessages = {
         running: "Leyendo adjunto",
         done: "Adjunto leído",
       },
+      loadBrowserTools: {
+        running: "Cargando herramientas del navegador",
+        done: "Herramientas del navegador cargadas",
+        found: "{count} herramientas cargadas",
+      },
+      cdpClickAt: {
+        running: "Haciendo clic en coordenadas",
+        done: "Coordenadas pulsadas",
+      },
+      cdpPressKey: { running: "Pulsando tecla", done: "Tecla pulsada" },
+      cdpTypeText: { running: "Escribiendo texto", done: "Texto escrito" },
+      cdpFill: { running: "Rellenando campo", done: "Campo rellenado" },
+      cdpFillForm: {
+        running: "Rellenando formulario",
+        done: "Formulario rellenado",
+      },
+      cdpDrag: {
+        running: "Arrastrando en la página",
+        done: "Arrastre realizado",
+      },
+      cdpHandleDialog: {
+        running: "Gestionando diálogo",
+        done: "Diálogo gestionado",
+      },
+      cdpListPages: { running: "Revisando páginas", done: "Páginas revisadas" },
+      cdpNewPage: { running: "Abriendo página", done: "Página abierta" },
+      cdpNavigatePage: { running: "Navegando página", done: "Página navegada" },
+      cdpSelectPage: { running: "Enfocando página", done: "Página enfocada" },
+      cdpClosePage: { running: "Cerrando página", done: "Página cerrada" },
+      cdpWaitFor: {
+        running: "Esperando texto de página",
+        done: "Texto de página encontrado",
+      },
+      cdpResizePage: {
+        running: "Redimensionando página",
+        done: "Página redimensionada",
+      },
+      cdpEmulate: {
+        running: "Aplicando emulación de página",
+        done: "Emulación de página aplicada",
+      },
+      cdpEvaluateScript: {
+        running: "Ejecutando script de página",
+        done: "Script de página ejecutado",
+      },
+      cdpExecuteArbitraryJavaScript: {
+        running: "Ejecutando script personalizado",
+        done: "Script personalizado ejecutado",
+      },
+      cdpTakeScreenshot: { running: "Tomando captura", done: "Captura tomada" },
+      cdpTakeSnapshot: {
+        running: "Tomando instantánea de página",
+        done: "Instantánea de página tomada",
+      },
+      cdpListConsoleMessages: {
+        running: "Leyendo mensajes de consola",
+        done: "Mensajes de consola leídos",
+      },
+      cdpGetConsoleMessage: {
+        running: "Leyendo mensaje de consola",
+        done: "Mensaje de consola leído",
+      },
+      cdpListNetworkRequests: {
+        running: "Leyendo solicitudes de red",
+        done: "Solicitudes de red leídas",
+      },
+      cdpGetNetworkRequest: {
+        running: "Leyendo solicitud de red",
+        done: "Solicitud de red leída",
+      },
+      cdpPerformanceStartTrace: {
+        running: "Iniciando traza de rendimiento",
+        done: "Traza de rendimiento iniciada",
+      },
+      cdpPerformanceStopTrace: {
+        running: "Deteniendo traza de rendimiento",
+        done: "Traza de rendimiento detenida",
+      },
+      cdpPerformanceAnalyzeInsight: {
+        running: "Analizando rendimiento",
+        done: "Rendimiento analizado",
+      },
+      cdpTakeMemorySnapshot: {
+        running: "Tomando instantánea de memoria",
+        done: "Instantánea de memoria tomada",
+      },
+      cdpGetMemorySnapshotDetails: {
+        running: "Leyendo instantánea de memoria",
+        done: "Instantánea de memoria leída",
+      },
+      cdpGetNodesByClass: {
+        running: "Leyendo nodos de memoria",
+        done: "Nodos de memoria leídos",
+      },
+      cdpLoadMemorySnapshot: {
+        running: "Cargando instantánea de memoria",
+        done: "Instantánea de memoria cargada",
+      },
+      cdpLighthouseAudit: {
+        running: "Ejecutando auditoría de página",
+        done: "Auditoría de página ejecutada",
+      },
+      cdpScreencastStart: {
+        running: "Iniciando grabación de página",
+        done: "Grabación de página iniciada",
+      },
+      cdpScreencastStop: {
+        running: "Deteniendo grabación de página",
+        done: "Grabación de página detenida",
+      },
+      readSkillFile: {
+        running: "Leyendo archivo de habilidad",
+        done: "Archivo de habilidad leído",
+      },
     },
   },
   options: {

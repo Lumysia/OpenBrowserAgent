@@ -239,6 +239,132 @@ export const deDE: LocaleMessages = {
         running: "Anhang wird gelesen",
         done: "Anhang gelesen",
       },
+      loadBrowserTools: {
+        running: "Browser-Tools werden geladen",
+        done: "Browser-Tools geladen",
+        found: "{count} Tools geladen",
+      },
+      cdpClickAt: {
+        running: "Koordinaten werden geklickt",
+        done: "Koordinaten geklickt",
+      },
+      cdpPressKey: { running: "Taste wird gedrückt", done: "Taste gedrückt" },
+      cdpTypeText: { running: "Text wird eingegeben", done: "Text eingegeben" },
+      cdpFill: { running: "Feld wird ausgefüllt", done: "Feld ausgefüllt" },
+      cdpFillForm: {
+        running: "Formular wird ausgefüllt",
+        done: "Formular ausgefüllt",
+      },
+      cdpDrag: { running: "Auf Seite wird gezogen", done: "Auf Seite gezogen" },
+      cdpHandleDialog: {
+        running: "Dialog wird verarbeitet",
+        done: "Dialog verarbeitet",
+      },
+      cdpListPages: {
+        running: "Seiten werden geprüft",
+        done: "Seiten geprüft",
+      },
+      cdpNewPage: { running: "Seite wird geöffnet", done: "Seite geöffnet" },
+      cdpNavigatePage: {
+        running: "Seite wird navigiert",
+        done: "Seite navigiert",
+      },
+      cdpSelectPage: {
+        running: "Seite wird fokussiert",
+        done: "Seite fokussiert",
+      },
+      cdpClosePage: {
+        running: "Seite wird geschlossen",
+        done: "Seite geschlossen",
+      },
+      cdpWaitFor: {
+        running: "Warten auf Seitentext",
+        done: "Seitentext gefunden",
+      },
+      cdpResizePage: {
+        running: "Seitengröße wird geändert",
+        done: "Seitengröße geändert",
+      },
+      cdpEmulate: {
+        running: "Seitenemulation wird angewendet",
+        done: "Seitenemulation angewendet",
+      },
+      cdpEvaluateScript: {
+        running: "Seitenskript wird ausgeführt",
+        done: "Seitenskript ausgeführt",
+      },
+      cdpExecuteArbitraryJavaScript: {
+        running: "Benutzerdefiniertes Skript wird ausgeführt",
+        done: "Benutzerdefiniertes Skript ausgeführt",
+      },
+      cdpTakeScreenshot: {
+        running: "Screenshot wird erstellt",
+        done: "Screenshot erstellt",
+      },
+      cdpTakeSnapshot: {
+        running: "Seiten-Snapshot wird erstellt",
+        done: "Seiten-Snapshot erstellt",
+      },
+      cdpListConsoleMessages: {
+        running: "Konsolenmeldungen werden gelesen",
+        done: "Konsolenmeldungen gelesen",
+      },
+      cdpGetConsoleMessage: {
+        running: "Konsolenmeldung wird gelesen",
+        done: "Konsolenmeldung gelesen",
+      },
+      cdpListNetworkRequests: {
+        running: "Netzwerkanfragen werden gelesen",
+        done: "Netzwerkanfragen gelesen",
+      },
+      cdpGetNetworkRequest: {
+        running: "Netzwerkanfrage wird gelesen",
+        done: "Netzwerkanfrage gelesen",
+      },
+      cdpPerformanceStartTrace: {
+        running: "Performance-Trace wird gestartet",
+        done: "Performance-Trace gestartet",
+      },
+      cdpPerformanceStopTrace: {
+        running: "Performance-Trace wird gestoppt",
+        done: "Performance-Trace gestoppt",
+      },
+      cdpPerformanceAnalyzeInsight: {
+        running: "Performance wird analysiert",
+        done: "Performance analysiert",
+      },
+      cdpTakeMemorySnapshot: {
+        running: "Speicher-Snapshot wird erstellt",
+        done: "Speicher-Snapshot erstellt",
+      },
+      cdpGetMemorySnapshotDetails: {
+        running: "Speicher-Snapshot wird gelesen",
+        done: "Speicher-Snapshot gelesen",
+      },
+      cdpGetNodesByClass: {
+        running: "Speicherknoten werden gelesen",
+        done: "Speicherknoten gelesen",
+      },
+      cdpLoadMemorySnapshot: {
+        running: "Speicher-Snapshot wird geladen",
+        done: "Speicher-Snapshot geladen",
+      },
+      cdpLighthouseAudit: {
+        running: "Seitenaudit läuft",
+        done: "Seitenaudit abgeschlossen",
+      },
+      cdpScreencastStart: {
+        running: "Seitenaufzeichnung wird gestartet",
+        done: "Seitenaufzeichnung gestartet",
+      },
+      cdpScreencastStop: {
+        running: "Seitenaufzeichnung wird gestoppt",
+        done: "Seitenaufzeichnung gestoppt",
+      },
+      readSkillFile: {
+        running: "Fähigkeitsdatei wird gelesen",
+        done: "Fähigkeitsdatei gelesen",
+      },
     },
   },
   options: {

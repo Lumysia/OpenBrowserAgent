@@ -229,6 +229,105 @@ export const enUS = {
         running: "Reading file",
         done: "Read file",
       },
+      loadBrowserTools: {
+        running: "Loading browser tools",
+        done: "Loaded browser tools",
+        found: "Loaded {count} tools",
+      },
+      cdpClickAt: {
+        running: "Clicking coordinates",
+        done: "Clicked coordinates",
+      },
+      cdpPressKey: { running: "Pressing key", done: "Pressed key" },
+      cdpTypeText: { running: "Typing text", done: "Typed text" },
+      cdpFill: { running: "Filling field", done: "Filled field" },
+      cdpFillForm: { running: "Filling form", done: "Filled form" },
+      cdpDrag: { running: "Dragging on page", done: "Dragged on page" },
+      cdpHandleDialog: { running: "Handling dialog", done: "Handled dialog" },
+      cdpListPages: { running: "Checking pages", done: "Checked pages" },
+      cdpNewPage: { running: "Opening page", done: "Opened page" },
+      cdpNavigatePage: { running: "Navigating page", done: "Navigated page" },
+      cdpSelectPage: { running: "Focusing page", done: "Focused page" },
+      cdpClosePage: { running: "Closing page", done: "Closed page" },
+      cdpWaitFor: { running: "Waiting for page text", done: "Found page text" },
+      cdpResizePage: { running: "Resizing page", done: "Resized page" },
+      cdpEmulate: {
+        running: "Applying page emulation",
+        done: "Applied page emulation",
+      },
+      cdpEvaluateScript: {
+        running: "Evaluating page script",
+        done: "Evaluated page script",
+      },
+      cdpExecuteArbitraryJavaScript: {
+        running: "Running custom script",
+        done: "Ran custom script",
+      },
+      cdpTakeScreenshot: {
+        running: "Taking screenshot",
+        done: "Took screenshot",
+      },
+      cdpTakeSnapshot: {
+        running: "Taking page snapshot",
+        done: "Took page snapshot",
+      },
+      cdpListConsoleMessages: {
+        running: "Reading console messages",
+        done: "Read console messages",
+      },
+      cdpGetConsoleMessage: {
+        running: "Reading console message",
+        done: "Read console message",
+      },
+      cdpListNetworkRequests: {
+        running: "Reading network requests",
+        done: "Read network requests",
+      },
+      cdpGetNetworkRequest: {
+        running: "Reading network request",
+        done: "Read network request",
+      },
+      cdpPerformanceStartTrace: {
+        running: "Starting performance trace",
+        done: "Started performance trace",
+      },
+      cdpPerformanceStopTrace: {
+        running: "Stopping performance trace",
+        done: "Stopped performance trace",
+      },
+      cdpPerformanceAnalyzeInsight: {
+        running: "Analyzing performance insight",
+        done: "Analyzed performance insight",
+      },
+      cdpTakeMemorySnapshot: {
+        running: "Taking memory snapshot",
+        done: "Took memory snapshot",
+      },
+      cdpGetMemorySnapshotDetails: {
+        running: "Reading memory snapshot",
+        done: "Read memory snapshot",
+      },
+      cdpGetNodesByClass: {
+        running: "Reading memory nodes",
+        done: "Read memory nodes",
+      },
+      cdpLoadMemorySnapshot: {
+        running: "Loading memory snapshot",
+        done: "Loaded memory snapshot",
+      },
+      cdpLighthouseAudit: {
+        running: "Running page audit",
+        done: "Ran page audit",
+      },
+      cdpScreencastStart: {
+        running: "Starting page recording",
+        done: "Started page recording",
+      },
+      cdpScreencastStop: {
+        running: "Stopping page recording",
+        done: "Stopped page recording",
+      },
+      readSkillFile: { running: "Reading Skill file", done: "Read Skill file" },
     },
   },
   options: {

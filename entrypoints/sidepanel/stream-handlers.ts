@@ -3,6 +3,7 @@ import type { Chat, RunMetrics } from "../../src/shared/types";
 import {
   appendAssistantContent,
   appendAssistantPart,
+  appendQueuedMessages,
   updateAssistantRunMetrics,
 } from "./chat-updates";
 import { streamPartFromChunk } from "./stream-parts";
@@ -30,6 +31,22 @@ export function createStreamHandlers(setChats: ChatSetter) {
     ) {
       setChats((items) =>
         updateAssistantRunMetrics(items, chatId, messageId, metrics),
+      );
+    },
+    appendQueuedMessages(
+      chatId: string,
+      messages: Array<{ id: string; content: string; createdAt: number }>,
+      assistantMessageId: string,
+      createdAt: number,
+    ) {
+      setChats((items) =>
+        appendQueuedMessages({
+          chats: items,
+          chatId,
+          messages,
+          assistantMessageId,
+          createdAt,
+        }),
       );
     },
   };

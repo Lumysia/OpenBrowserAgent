@@ -1,5 +1,6 @@
 import type {
   Chat,
+  ChatMessage,
   ChatPart,
   ContextBudgetReport,
   RunMetrics,
@@ -90,6 +91,44 @@ export function updateAssistantRunMetrics(
                 }
               : message,
           ),
+          updatedAt: Date.now(),
+        }
+      : chat,
+  );
+}
+
+export function appendQueuedMessages({
+  chats,
+  chatId,
+  messages,
+  assistantMessageId,
+  createdAt,
+}: {
+  chats: Chat[];
+  chatId: string;
+  messages: Array<{ id: string; content: string; createdAt: number }>;
+  assistantMessageId: string;
+  createdAt: number;
+}) {
+  const queuedMessages: ChatMessage[] = messages.map((message) => ({
+    id: message.id,
+    role: "user",
+    content: message.content,
+    createdAt: message.createdAt,
+  }));
+  const assistantMessage: ChatMessage = {
+    id: assistantMessageId,
+    role: "assistant",
+    content: "",
+    parts: [],
+    createdAt,
+    metadata: { runMetrics: { startedAt: createdAt, outputCharacters: 0 } },
+  };
+  return chats.map((chat) =>
+    chat.id === chatId
+      ? {
+          ...chat,
+          messages: [...chat.messages, ...queuedMessages, assistantMessage],
           updatedAt: Date.now(),
         }
       : chat,

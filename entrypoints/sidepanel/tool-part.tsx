@@ -27,6 +27,7 @@ import {
 } from "../../src/shared/types";
 import type { ChatPart } from "../../src/shared/types";
 import { Button } from "../../src/ui/components";
+import { cdpToolDetail } from "./cdp-tool-detail";
 import { formatToolMessage } from "./format";
 
 export function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
@@ -131,6 +132,14 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
       ]);
     if (name === BROWSER_TOOL_NAME.listSkills && Array.isArray(output.skills))
       return formatToolMessage(toolFound, { count: output.skills.length });
+    if (
+      name === BROWSER_TOOL_NAME.loadBrowserTools &&
+      Array.isArray(output.loadedToolNames)
+    )
+      return compactJoin([
+        formatToolMessage(toolFound, { count: output.loadedToolNames.length }),
+        output.loadedToolNames.map(String).join(", "),
+      ]);
     if (name === BROWSER_TOOL_NAME.readSkill)
       return stringValue(output.name) || stringValue(input.skillId);
     if (name === BROWSER_TOOL_NAME.readSkillFile)
@@ -221,6 +230,8 @@ function toolReferences(
 
 function toolIcon(name: string) {
   const lowerName = name.toLowerCase();
+  if (name === BROWSER_TOOL_NAME.loadBrowserTools)
+    return <Layers size={19} strokeWidth={2.1} />;
   if (lowerName.includes("input") || lowerName.includes("fill"))
     return <Type size={19} strokeWidth={2.1} />;
   if (lowerName.includes("click") || lowerName.includes("mouse"))
@@ -231,8 +242,14 @@ function toolIcon(name: string) {
     return <Download size={19} strokeWidth={2.1} />;
   if (lowerName.includes("time") || lowerName.includes("wait"))
     return <Clock size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("lighthouse"))
+    return <Gauge size={19} strokeWidth={2.1} />;
   if (lowerName.includes("network"))
     return <Network size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("memory"))
+    return <FileSearch size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("screencast"))
+    return <PanelTop size={19} strokeWidth={2.1} />;
   if (lowerName.includes("performance") || lowerName.includes("trace"))
     return <Gauge size={19} strokeWidth={2.1} />;
   if (lowerName.includes("screenshot") || lowerName.includes("snapshot"))
@@ -348,6 +365,7 @@ function fallbackToolDetail(
     ]);
   if (name === BROWSER_TOOL_NAME.groupTabs)
     return arrayLabel("Tabs", input.tabIds);
+  if (name.startsWith("cdp")) return cdpToolDetail(name, input, output);
   return "";
 }
 

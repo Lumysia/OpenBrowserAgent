@@ -91,7 +91,6 @@ export function SidepanelApp() {
   const initializedChatSelectionRef = useRef(false);
   const lastStreamActivityRef = useRef(Date.now());
   const activeStreamRef = useRef<ActiveStream | null>(null);
-
   const configuredModels = useMemo(
     () =>
       ignoreSyncedProvidersForBootstrap
@@ -162,6 +161,7 @@ export function SidepanelApp() {
     queuedMessages,
     queueMessage: enqueueQueuedMessage,
     deleteQueuedMessage,
+    removeQueuedMessage,
     editQueuedMessage,
   } = useQueuedMessages({
     streaming,
@@ -235,7 +235,13 @@ export function SidepanelApp() {
     const text = interpolateSkillVariables(content.trim());
     if ((!text && !uploadedAttachments.length) || streaming) {
       if (streaming && text) {
-        enqueueQueuedMessage(content);
+        const queued = enqueueQueuedMessage(content);
+        if (queued)
+          portRef.current?.postMessage({
+            type: AI_STREAM_REQUEST_TYPE.queueMessage,
+            id: queued.id,
+            content: queued.content,
+          });
         if (content === input) setInput("");
       }
       return;
@@ -385,12 +391,10 @@ export function SidepanelApp() {
       setStreaming,
       appendStreamChunk: streamHandlers.appendStreamChunk,
       appendToAssistant: streamHandlers.appendToAssistant,
-      updateRunMetrics: (metrics) =>
-        streamHandlers.updateRunMetrics(
-          request.chatId,
-          targetMessageId,
-          metrics,
-        ),
+      appendQueuedMessages: streamHandlers.appendQueuedMessages,
+      removeQueuedMessage,
+      updateRunMetrics: (id, metrics) =>
+        streamHandlers.updateRunMetrics(request.chatId, id, metrics),
     });
   }
 

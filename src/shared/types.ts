@@ -251,6 +251,7 @@ export const AI_STREAM_PORT_NAME = "ai-stream";
 
 export const AI_STREAM_REQUEST_TYPE = {
   abort: "abort",
+  queueMessage: "queueMessage",
   sendMessages: "sendMessages",
   generateTitle: "generateTitle",
   generateSkill: "generateSkill",
@@ -285,6 +286,7 @@ export type SendMessagesBody = {
 
 export type AiStreamRequest =
   | { type: "abort" }
+  | { type: "queueMessage"; id: string; content: string }
   | {
       type: "sendMessages";
       chatId: string;
@@ -323,6 +325,12 @@ export type GenerateSkillRequest = Extract<
 export type AiStreamResponse =
   | { type: "chunk"; chunk: unknown }
   | { type: "metrics"; metrics: Partial<RunMetrics> }
+  | {
+      type: "queuedMessages";
+      messages: Array<{ id: string; content: string; createdAt: number }>;
+      assistantMessageId: string;
+      createdAt: number;
+    }
   | { type: "end" }
   | { type: "error"; error: string }
   | { type: "title"; title: string }

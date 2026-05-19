@@ -3199,45 +3199,34 @@ a {
 .source-chip-list {
   max-width: 100%;
   display: flex;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 5px;
   margin-top: 8px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-.source-chip-list::-webkit-scrollbar {
-  height: 5px;
-}
-.source-chip-list::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 999px;
 }
 .source-chip-list .ui-button {
-  flex: 0 0 min(168px, 48vw);
-  max-width: min(168px, 48vw);
+  min-width: 0;
+  max-width: min(252px, 100%);
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  min-height: 30px;
-  padding: 3px 7px 3px 4px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--accent-soft) 58%, var(--card));
-  color: var(--accent-strong);
-  font-size: 10px;
-  font-weight: 650;
+  gap: 6px;
+  height: auto;
+  min-height: 28px;
+  padding: 4px 8px 4px 5px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  overflow: hidden;
+}
+.source-chip-list .ui-badge {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  font-size: 9px;
+}
+.source-chip-list .ui-button > span:last-child {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.source-chip-list span {
-  min-width: 15px;
-  height: 15px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: var(--accent-strong);
-  color: var(--background);
-  font-size: 9px;
 }
 .copy-message {
   width: 24px;

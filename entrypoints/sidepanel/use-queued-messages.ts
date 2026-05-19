@@ -39,11 +39,10 @@ export function useQueuedMessages({
 
   function queueMessage(content: string) {
     const text = content.trim();
-    if (!text) return;
-    setQueuedMessages((items) => [
-      ...items,
-      { id: crypto.randomUUID(), content: text },
-    ]);
+    if (!text) return undefined;
+    const message = { id: crypto.randomUUID(), content: text };
+    setQueuedMessages((items) => [...items, message]);
+    return message;
   }
 
   function deleteQueuedMessage(id: string) {
@@ -61,6 +60,7 @@ export function useQueuedMessages({
     queuedMessages,
     queueMessage,
     deleteQueuedMessage,
+    removeQueuedMessage: deleteQueuedMessage,
     editQueuedMessage,
   };
 }

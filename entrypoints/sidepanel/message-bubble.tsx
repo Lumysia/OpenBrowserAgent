@@ -31,6 +31,7 @@ import { AssistantPart, AssistantText } from "./assistant-message-part";
 import { MessageRunInfo } from "./message-run-info";
 import { TypingIndicator } from "./typing-indicator";
 import {
+  Badge,
   Button,
   Tooltip,
   TooltipContent,
@@ -205,9 +206,13 @@ function SourceChips({ sources }: { sources: ChatSource[] }) {
       {sources.map((source) => (
         <Tooltip key={source.id}>
           <TooltipTrigger asChild>
-            <Button variant="ghost" onClick={() => openSource(source)}>
-              <span>{source.id.replace(/^source_/, "")}</span>
-              {source.title}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => openSource(source)}
+            >
+              <Badge>{source.id.replace(/^source_/, "")}</Badge>
+              <span>{source.title}</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>{source.title}</TooltipContent>

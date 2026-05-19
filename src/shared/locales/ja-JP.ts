@@ -243,6 +243,138 @@ export const jaJP: LocaleMessages = {
         running: "添付を読み取り中",
         done: "添付を読み取りました",
       },
+      loadBrowserTools: {
+        running: "ブラウザーツールを読み込み中",
+        done: "ブラウザーツールを読み込みました",
+        found: "{count}個のツールを読み込みました",
+      },
+      cdpClickAt: {
+        running: "座標をクリック中",
+        done: "座標をクリックしました",
+      },
+      cdpPressKey: { running: "キーを押下中", done: "キーを押下しました" },
+      cdpTypeText: {
+        running: "テキストを入力中",
+        done: "テキストを入力しました",
+      },
+      cdpFill: { running: "項目を入力中", done: "項目を入力しました" },
+      cdpFillForm: {
+        running: "フォームを入力中",
+        done: "フォームを入力しました",
+      },
+      cdpDrag: {
+        running: "ページでドラッグ中",
+        done: "ページでドラッグしました",
+      },
+      cdpHandleDialog: {
+        running: "ダイアログを処理中",
+        done: "ダイアログを処理しました",
+      },
+      cdpListPages: { running: "ページを確認中", done: "ページを確認しました" },
+      cdpNewPage: {
+        running: "ページを開いています",
+        done: "ページを開きました",
+      },
+      cdpNavigatePage: {
+        running: "ページを移動中",
+        done: "ページを移動しました",
+      },
+      cdpSelectPage: {
+        running: "ページにフォーカス中",
+        done: "ページにフォーカスしました",
+      },
+      cdpClosePage: {
+        running: "ページを閉じています",
+        done: "ページを閉じました",
+      },
+      cdpWaitFor: {
+        running: "ページ内テキストを待機中",
+        done: "ページ内テキストを見つけました",
+      },
+      cdpResizePage: {
+        running: "ページサイズを変更中",
+        done: "ページサイズを変更しました",
+      },
+      cdpEmulate: {
+        running: "ページエミュレーションを適用中",
+        done: "ページエミュレーションを適用しました",
+      },
+      cdpEvaluateScript: {
+        running: "ページスクリプトを実行中",
+        done: "ページスクリプトを実行しました",
+      },
+      cdpExecuteArbitraryJavaScript: {
+        running: "カスタムスクリプトを実行中",
+        done: "カスタムスクリプトを実行しました",
+      },
+      cdpTakeScreenshot: {
+        running: "スクリーンショットを撮影中",
+        done: "スクリーンショットを撮影しました",
+      },
+      cdpTakeSnapshot: {
+        running: "ページスナップショットを取得中",
+        done: "ページスナップショットを取得しました",
+      },
+      cdpListConsoleMessages: {
+        running: "コンソールメッセージを読み取り中",
+        done: "コンソールメッセージを読み取りました",
+      },
+      cdpGetConsoleMessage: {
+        running: "コンソールメッセージを読み取り中",
+        done: "コンソールメッセージを読み取りました",
+      },
+      cdpListNetworkRequests: {
+        running: "ネットワークリクエストを読み取り中",
+        done: "ネットワークリクエストを読み取りました",
+      },
+      cdpGetNetworkRequest: {
+        running: "ネットワークリクエストを読み取り中",
+        done: "ネットワークリクエストを読み取りました",
+      },
+      cdpPerformanceStartTrace: {
+        running: "パフォーマンストレースを開始中",
+        done: "パフォーマンストレースを開始しました",
+      },
+      cdpPerformanceStopTrace: {
+        running: "パフォーマンストレースを停止中",
+        done: "パフォーマンストレースを停止しました",
+      },
+      cdpPerformanceAnalyzeInsight: {
+        running: "パフォーマンス分析中",
+        done: "パフォーマンス分析を完了しました",
+      },
+      cdpTakeMemorySnapshot: {
+        running: "メモリスナップショットを取得中",
+        done: "メモリスナップショットを取得しました",
+      },
+      cdpGetMemorySnapshotDetails: {
+        running: "メモリスナップショットを読み取り中",
+        done: "メモリスナップショットを読み取りました",
+      },
+      cdpGetNodesByClass: {
+        running: "メモリノードを読み取り中",
+        done: "メモリノードを読み取りました",
+      },
+      cdpLoadMemorySnapshot: {
+        running: "メモリスナップショットを読み込み中",
+        done: "メモリスナップショットを読み込みました",
+      },
+      cdpLighthouseAudit: {
+        running: "ページ監査を実行中",
+        done: "ページ監査を実行しました",
+      },
+      cdpScreencastStart: {
+        running: "ページ録画を開始中",
+        done: "ページ録画を開始しました",
+      },
+      cdpScreencastStop: {
+        running: "ページ録画を停止中",
+        done: "ページ録画を停止しました",
+      },
+      readSkillFile: {
+        running: "スキルファイルを読み取り中",
+        done: "スキルファイルを読み取りました",
+      },
     },
   },
   options: {

@@ -63,6 +63,7 @@ export default defineBackground(() => {
     if (port.name !== AI_STREAM_PORT_NAME) return;
 
     let abortController: AbortController | undefined;
+    let queuedMessages: Array<{ id: string; content: string }> = [];
 
     port.onMessage.addListener((request: AiStreamRequest) => {
       if (request.type === AI_STREAM_REQUEST_TYPE.abort) {
@@ -70,18 +71,27 @@ export default defineBackground(() => {
         return;
       }
 
+      if (request.type === AI_STREAM_REQUEST_TYPE.queueMessage) {
+        const content = request.content.trim();
+        if (content) queuedMessages.push({ id: request.id, content });
+        return;
+      }
+
       if (request.type === AI_STREAM_REQUEST_TYPE.sendMessages) {
         abortController?.abort();
+        queuedMessages = [];
         abortController = new AbortController();
-        streamAssistantResponse(port, request, abortController.signal).catch(
-          (error) => {
-            if (error?.name === "AbortError") return;
-            post(port, {
-              type: "error",
-              error: error?.message || String(error),
-            });
-          },
-        );
+        streamAssistantResponse(port, request, abortController.signal, () => {
+          const messages = queuedMessages;
+          queuedMessages = [];
+          return messages;
+        }).catch((error) => {
+          if (error?.name === "AbortError") return;
+          post(port, {
+            type: "error",
+            error: error?.message || String(error),
+          });
+        });
         return;
       }
 
@@ -125,6 +135,7 @@ async function streamAssistantResponse(
   port: chrome.runtime.Port,
   request: SendMessagesRequest,
   signal: AbortSignal,
+  drainQueuedMessages: () => Array<{ id: string; content: string }>,
 ) {
   const providerModel = await resolveModel(request.body.modelId);
   const t = getMessages(request.body.language);
@@ -158,6 +169,7 @@ async function streamAssistantResponse(
     request.body.context?.autoSelectSkills
       ? request.body.context.availableSkills || []
       : [],
+    drainQueuedMessages,
   );
 
   post(port, {

@@ -247,6 +247,129 @@ export const frFR: LocaleMessages = {
         running: "Lecture de la pièce jointe",
         done: "Pièce jointe lue",
       },
+      loadBrowserTools: {
+        running: "Chargement des outils du navigateur",
+        done: "Outils du navigateur chargés",
+        found: "{count} outils chargés",
+      },
+      cdpClickAt: {
+        running: "Clic sur les coordonnées",
+        done: "Coordonnées cliquées",
+      },
+      cdpPressKey: { running: "Appui sur une touche", done: "Touche appuyée" },
+      cdpTypeText: { running: "Saisie du texte", done: "Texte saisi" },
+      cdpFill: { running: "Remplissage du champ", done: "Champ rempli" },
+      cdpFillForm: {
+        running: "Remplissage du formulaire",
+        done: "Formulaire rempli",
+      },
+      cdpDrag: {
+        running: "Glissement sur la page",
+        done: "Glissement effectué",
+      },
+      cdpHandleDialog: {
+        running: "Traitement de la boîte de dialogue",
+        done: "Boîte de dialogue traitée",
+      },
+      cdpListPages: {
+        running: "Vérification des pages",
+        done: "Pages vérifiées",
+      },
+      cdpNewPage: { running: "Ouverture de la page", done: "Page ouverte" },
+      cdpNavigatePage: {
+        running: "Navigation dans la page",
+        done: "Navigation effectuée",
+      },
+      cdpSelectPage: { running: "Focus sur la page", done: "Page focalisée" },
+      cdpClosePage: { running: "Fermeture de la page", done: "Page fermée" },
+      cdpWaitFor: {
+        running: "Attente du texte de page",
+        done: "Texte de page trouvé",
+      },
+      cdpResizePage: {
+        running: "Redimensionnement de la page",
+        done: "Page redimensionnée",
+      },
+      cdpEmulate: {
+        running: "Application de l'émulation",
+        done: "Émulation appliquée",
+      },
+      cdpEvaluateScript: {
+        running: "Exécution du script de page",
+        done: "Script de page exécuté",
+      },
+      cdpExecuteArbitraryJavaScript: {
+        running: "Exécution du script personnalisé",
+        done: "Script personnalisé exécuté",
+      },
+      cdpTakeScreenshot: {
+        running: "Capture d'écran",
+        done: "Capture effectuée",
+      },
+      cdpTakeSnapshot: {
+        running: "Capture de l'instantané de page",
+        done: "Instantané de page capturé",
+      },
+      cdpListConsoleMessages: {
+        running: "Lecture des messages console",
+        done: "Messages console lus",
+      },
+      cdpGetConsoleMessage: {
+        running: "Lecture du message console",
+        done: "Message console lu",
+      },
+      cdpListNetworkRequests: {
+        running: "Lecture des requêtes réseau",
+        done: "Requêtes réseau lues",
+      },
+      cdpGetNetworkRequest: {
+        running: "Lecture de la requête réseau",
+        done: "Requête réseau lue",
+      },
+      cdpPerformanceStartTrace: {
+        running: "Démarrage de la trace de performance",
+        done: "Trace de performance démarrée",
+      },
+      cdpPerformanceStopTrace: {
+        running: "Arrêt de la trace de performance",
+        done: "Trace de performance arrêtée",
+      },
+      cdpPerformanceAnalyzeInsight: {
+        running: "Analyse de performance",
+        done: "Analyse de performance terminée",
+      },
+      cdpTakeMemorySnapshot: {
+        running: "Capture de l'instantané mémoire",
+        done: "Instantané mémoire capturé",
+      },
+      cdpGetMemorySnapshotDetails: {
+        running: "Lecture de l'instantané mémoire",
+        done: "Instantané mémoire lu",
+      },
+      cdpGetNodesByClass: {
+        running: "Lecture des nœuds mémoire",
+        done: "Nœuds mémoire lus",
+      },
+      cdpLoadMemorySnapshot: {
+        running: "Chargement de l'instantané mémoire",
+        done: "Instantané mémoire chargé",
+      },
+      cdpLighthouseAudit: {
+        running: "Audit de la page",
+        done: "Audit de page terminé",
+      },
+      cdpScreencastStart: {
+        running: "Démarrage de l'enregistrement",
+        done: "Enregistrement démarré",
+      },
+      cdpScreencastStop: {
+        running: "Arrêt de l'enregistrement",
+        done: "Enregistrement arrêté",
+      },
+      readSkillFile: {
+        running: "Lecture du fichier de compétence",
+        done: "Fichier de compétence lu",
+      },
     },
   },
   options: {

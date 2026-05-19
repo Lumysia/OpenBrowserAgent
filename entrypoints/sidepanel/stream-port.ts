@@ -41,6 +41,8 @@ export function startStreamAction({
   appendStreamChunk,
   appendToAssistant,
   updateRunMetrics,
+  appendQueuedMessages,
+  removeQueuedMessage,
 }: {
   request: SendMessagesRequest;
   targetMessageId: string;
@@ -58,32 +60,54 @@ export function startStreamAction({
     messageId: string,
     content: string,
   ) => void;
-  updateRunMetrics: (metrics: Partial<RunMetrics>) => void;
+  updateRunMetrics: (messageId: string, metrics: Partial<RunMetrics>) => void;
+  appendQueuedMessages: (
+    chatId: string,
+    messages: Array<{ id: string; content: string; createdAt: number }>,
+    assistantMessageId: string,
+    createdAt: number,
+  ) => void;
+  removeQueuedMessage: (id: string) => void;
 }) {
   closeStreamPort(portRef, false);
   const port = chrome.runtime.connect({ name: AI_STREAM_PORT_NAME });
   portRef.current = port;
+  let activeMessageId = targetMessageId;
   port.onMessage.addListener((message: AiStreamResponse) => {
     lastStreamActivityRef.current = Date.now();
-    if (message.type === "chunk") {
-      if (activeStreamRef.current?.assistantMessageId === targetMessageId)
-        activeStreamRef.current.hasProgress = true;
-      appendStreamChunk(request.chatId, targetMessageId, message.chunk);
+    if (message.type === "queuedMessages") {
+      appendQueuedMessages(
+        request.chatId,
+        message.messages,
+        message.assistantMessageId,
+        message.createdAt,
+      );
+      message.messages.forEach((item) => removeQueuedMessage(item.id));
+      activeMessageId = message.assistantMessageId;
+      if (activeStreamRef.current)
+        activeStreamRef.current.assistantMessageId = activeMessageId;
+      return;
     }
-    if (message.type === "metrics") updateRunMetrics(message.metrics);
+    if (message.type === "chunk") {
+      if (activeStreamRef.current?.assistantMessageId === activeMessageId)
+        activeStreamRef.current.hasProgress = true;
+      appendStreamChunk(request.chatId, activeMessageId, message.chunk);
+    }
+    if (message.type === "metrics")
+      updateRunMetrics(activeMessageId, message.metrics);
     if (message.type === "error") {
       activeStreamRef.current = null;
-      updateRunMetrics({ endedAt: Date.now() });
+      updateRunMetrics(activeMessageId, { endedAt: Date.now() });
       setStreaming(false);
       appendToAssistant(
         request.chatId,
-        targetMessageId,
+        activeMessageId,
         `\n\n${message.error}`,
       );
     }
     if (message.type === "end") {
       activeStreamRef.current = null;
-      updateRunMetrics({ endedAt: Date.now() });
+      updateRunMetrics(activeMessageId, { endedAt: Date.now() });
       setStreaming(false);
     }
   });

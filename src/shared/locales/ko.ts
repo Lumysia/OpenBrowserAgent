@@ -224,6 +224,108 @@ export const ko: LocaleMessages = {
         running: "첨부 읽는 중",
         done: "첨부 읽음",
       },
+      loadBrowserTools: {
+        running: "브라우저 도구 로드 중",
+        done: "브라우저 도구 로드됨",
+        found: "도구 {count}개 로드됨",
+      },
+      cdpClickAt: { running: "좌표 클릭 중", done: "좌표 클릭됨" },
+      cdpPressKey: { running: "키 누르는 중", done: "키 눌림" },
+      cdpTypeText: { running: "텍스트 입력 중", done: "텍스트 입력됨" },
+      cdpFill: { running: "필드 입력 중", done: "필드 입력됨" },
+      cdpFillForm: { running: "폼 입력 중", done: "폼 입력됨" },
+      cdpDrag: { running: "페이지 드래그 중", done: "페이지 드래그됨" },
+      cdpHandleDialog: { running: "대화상자 처리 중", done: "대화상자 처리됨" },
+      cdpListPages: { running: "페이지 확인 중", done: "페이지 확인됨" },
+      cdpNewPage: { running: "페이지 여는 중", done: "페이지 열림" },
+      cdpNavigatePage: { running: "페이지 이동 중", done: "페이지 이동됨" },
+      cdpSelectPage: { running: "페이지 포커스 중", done: "페이지 포커스됨" },
+      cdpClosePage: { running: "페이지 닫는 중", done: "페이지 닫힘" },
+      cdpWaitFor: {
+        running: "페이지 텍스트 대기 중",
+        done: "페이지 텍스트 찾음",
+      },
+      cdpResizePage: {
+        running: "페이지 크기 조정 중",
+        done: "페이지 크기 조정됨",
+      },
+      cdpEmulate: {
+        running: "페이지 에뮬레이션 적용 중",
+        done: "페이지 에뮬레이션 적용됨",
+      },
+      cdpEvaluateScript: {
+        running: "페이지 스크립트 실행 중",
+        done: "페이지 스크립트 실행됨",
+      },
+      cdpExecuteArbitraryJavaScript: {
+        running: "사용자 스크립트 실행 중",
+        done: "사용자 스크립트 실행됨",
+      },
+      cdpTakeScreenshot: {
+        running: "스크린샷 캡처 중",
+        done: "스크린샷 캡처됨",
+      },
+      cdpTakeSnapshot: {
+        running: "페이지 스냅샷 가져오는 중",
+        done: "페이지 스냅샷 가져옴",
+      },
+      cdpListConsoleMessages: {
+        running: "콘솔 메시지 읽는 중",
+        done: "콘솔 메시지 읽음",
+      },
+      cdpGetConsoleMessage: {
+        running: "콘솔 메시지 읽는 중",
+        done: "콘솔 메시지 읽음",
+      },
+      cdpListNetworkRequests: {
+        running: "네트워크 요청 읽는 중",
+        done: "네트워크 요청 읽음",
+      },
+      cdpGetNetworkRequest: {
+        running: "네트워크 요청 읽는 중",
+        done: "네트워크 요청 읽음",
+      },
+      cdpPerformanceStartTrace: {
+        running: "성능 추적 시작 중",
+        done: "성능 추적 시작됨",
+      },
+      cdpPerformanceStopTrace: {
+        running: "성능 추적 중지 중",
+        done: "성능 추적 중지됨",
+      },
+      cdpPerformanceAnalyzeInsight: {
+        running: "성능 인사이트 분석 중",
+        done: "성능 인사이트 분석됨",
+      },
+      cdpTakeMemorySnapshot: {
+        running: "메모리 스냅샷 생성 중",
+        done: "메모리 스냅샷 생성됨",
+      },
+      cdpGetMemorySnapshotDetails: {
+        running: "메모리 스냅샷 읽는 중",
+        done: "메모리 스냅샷 읽음",
+      },
+      cdpGetNodesByClass: {
+        running: "메모리 노드 읽는 중",
+        done: "메모리 노드 읽음",
+      },
+      cdpLoadMemorySnapshot: {
+        running: "메모리 스냅샷 로드 중",
+        done: "메모리 스냅샷 로드됨",
+      },
+      cdpLighthouseAudit: {
+        running: "페이지 감사 실행 중",
+        done: "페이지 감사 실행됨",
+      },
+      cdpScreencastStart: {
+        running: "페이지 녹화 시작 중",
+        done: "페이지 녹화 시작됨",
+      },
+      cdpScreencastStop: {
+        running: "페이지 녹화 중지 중",
+        done: "페이지 녹화 중지됨",
+      },
+      readSkillFile: { running: "스킬 파일 읽는 중", done: "스킬 파일 읽음" },
     },
   },
   options: {
