@@ -2252,6 +2252,10 @@ a {
   font-size: 11px;
   opacity: 0.62;
 }
+.message.assistant:has(.assistant-actions)
+  + .message.assistant:has(.tool-card) {
+  margin-top: -12px;
+}
 .user-message-actions {
   justify-content: flex-end;
   margin-top: 5px;
@@ -3299,7 +3303,8 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  margin-top: 8px;
+  margin-top: 10px;
+  margin-bottom: 9px;
 }
 .source-chip-list .ui-button {
   min-width: 0;
@@ -3359,7 +3364,15 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  margin-top: -4px;
+  margin-bottom: 8px;
   text-align: left;
+}
+.assistant-actions:has(.assistant-model-meta) {
+  margin-top: 4px;
+}
+.source-chip-list + .assistant-actions {
+  margin-top: 6px;
 }
 .assistant-model-meta {
   margin-left: auto;
