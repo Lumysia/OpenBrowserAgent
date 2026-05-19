@@ -9,6 +9,7 @@ import {
   type ChatMessage,
   type ChatMode,
   type ProviderId,
+  type McpServerConfig,
   type Skill,
   type TokenUsage,
   type UploadedAttachment,
@@ -67,6 +68,7 @@ export async function requestOpenAICompatible(
   attachmentRetryNotice?: string,
   uploadedAttachments: UploadedAttachment[] = [],
   availableSkills: Skill[] = [],
+  mcpServers: McpServerConfig[] = [],
   drainQueuedMessages: () => QueuedUserMessage[] = () => [],
 ): Promise<ProviderTextResult> {
   if (model.provider === "gemini") {
@@ -82,6 +84,7 @@ export async function requestOpenAICompatible(
       attachmentRetryNotice,
       uploadedAttachments,
       availableSkills,
+      mcpServers,
       drainQueuedMessages,
     );
   }
@@ -107,6 +110,7 @@ export async function requestOpenAICompatible(
     availableSkills,
     preferences,
     latestUserText,
+    mcpServers,
   });
   const availableTools = toolResolver.availableTools;
   const useTools = maxToolSteps > 0 && availableTools().length > 0;
@@ -295,6 +299,7 @@ async function requestGemini(
   attachmentRetryNotice?: string,
   uploadedAttachments: UploadedAttachment[] = [],
   availableSkills: Skill[] = [],
+  mcpServers: McpServerConfig[] = [],
   drainQueuedMessages: () => QueuedUserMessage[] = () => [],
 ): Promise<ProviderTextResult> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model.modelName)}:generateContent?key=${encodeURIComponent(model.apiKey)}`;
@@ -350,6 +355,7 @@ async function requestGemini(
     availableSkills,
     preferences,
     latestUserText,
+    mcpServers,
   });
   const availableTools = toolResolver.availableTools;
   const useTools = maxToolSteps > 0 && availableTools().length > 0;

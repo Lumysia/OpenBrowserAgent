@@ -3,6 +3,7 @@ import { normalizeAgents } from "./agents";
 import { BUILTIN_SKILLS } from "./builtin-skills";
 import * as config from "./config";
 import { DEFAULT_PREFERENCES, mergePreferences } from "./default-preferences";
+import { normalizeMcpServers } from "./mcp";
 import {
   STORAGE_KEYS,
   SYNCABLE_DATA_ITEMS,
@@ -16,6 +17,7 @@ import type {
   Preferences,
   ProviderState,
   Skill,
+  McpServerConfig,
 } from "./types";
 
 const STORAGE_AREAS = {
@@ -460,6 +462,12 @@ export const storage = {
     STORAGE_KEYS.skills,
     () => BUILTIN_SKILLS,
     "syncSkills",
+  ),
+  mcpServers: createSwitchableItem<McpServerConfig[]>(
+    STORAGE_KEYS.mcpServers,
+    () => [],
+    "syncMcpServers",
+    normalizeMcpServers,
   ),
   shouldShowUpdateToast: createItem<boolean>(
     STORAGE_AREAS.local,

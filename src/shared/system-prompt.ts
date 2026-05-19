@@ -1,4 +1,5 @@
 import { isAskMode, type Agent, type ChatMode } from "./types";
+import { isMcpServerTested, type McpServerConfig } from "./mcp";
 
 export function createSystemPrompt(
   mode: ChatMode,
@@ -6,6 +7,7 @@ export function createSystemPrompt(
     imageGenerationEnabled?: boolean;
     agent?: Agent;
     browserTimeZone?: string;
+    mcpServers?: McpServerConfig[];
   } = {},
 ) {
   const currentDate = new Date().toLocaleDateString("en-CA");
@@ -14,9 +16,11 @@ export function createSystemPrompt(
     ? "\nFor image generation or editing requests, use generateImage."
     : "";
   const agentProfile = renderAgentProfile(options.agent);
+  const mcpProfile = renderMcpProfile(options.mcpServers || []);
   if (isAskMode(mode)) {
     return `You are OpenBrowserAgent.
 ${agentProfile}
+${mcpProfile}
 
 <task>
 Answer the USER's question from the content they provide.${imageCapability}
@@ -30,6 +34,7 @@ Answer the USER's question from the content they provide.${imageCapability}
   }
   return `You are OpenBrowserAgent, a browser co-worker that completes USER tasks with browser tools.
 ${agentProfile}
+${mcpProfile}
 
 <mission>
 Understand the task, act human-like in the browser, and report results to the USER.${imageCapability}
@@ -43,6 +48,23 @@ Understand the task, act human-like in the browser, and report results to the US
 - Briefly state the next step before tool use, but never mention tool names or AI IDs to the USER.
 - If tool outputs include _sources, cite sourced claims inline as [[cite:source_id]], especially factual bullets in final reports.
 </rules>`;
+}
+
+function renderMcpProfile(servers: McpServerConfig[]) {
+  const enabledServers = servers.filter(
+    (server) => server.enabled && isMcpServerTested(server),
+  );
+  if (!enabledServers.length) return "";
+  const tools = enabledServers.flatMap((server) =>
+    (server.tools || [])
+      .filter((tool) => tool.enabled)
+      .map((tool) => `- ${tool.name}`),
+  );
+  if (!tools.length) return "";
+  return `
+<mcp_tools>
+${tools.join("\n")}
+</mcp_tools>`;
 }
 
 function currentBrowserTimeZone() {

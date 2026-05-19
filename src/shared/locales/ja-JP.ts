@@ -245,6 +245,22 @@ export const jaJP: LocaleMessages = {
         running: "スキルにパッチ適用中",
         done: "スキルにパッチを適用しました",
       },
+      listMcpServers: {
+        running: "MCPサーバーを一覧表示中",
+        done: "MCPサーバーを一覧表示しました",
+      },
+      addMcpServer: {
+        running: "MCPサーバーを追加中",
+        done: "MCPサーバーを追加しました",
+      },
+      updateMcpServer: {
+        running: "MCPサーバーを更新中",
+        done: "MCPサーバーを更新しました",
+      },
+      deleteMcpServer: {
+        running: "MCPサーバーを削除中",
+        done: "MCPサーバーを削除しました",
+      },
       generateImage: { running: "画像を生成中", done: "画像を生成しました" },
       readFileFromUrl: {
         running: "ファイルを読み取り中",
@@ -406,10 +422,45 @@ export const jaJP: LocaleMessages = {
     deleteAgent: "エージェントを削除",
     sync: "同期",
     providers: "プロバイダー",
+    mcpServers: "MCPサーバー",
     skills: "スキル",
     modelProviders: "モデルプロバイダー",
     providerDescription:
       "自分のキーでOpenBrowserAgentをお気に入りのAIプロバイダーに接続します。",
+    mcpServersDescription:
+      "アシスタントが使用できるリモート Streamable HTTP MCP サーバーを設定します。",
+    newMcpServer: "新しい MCP サーバー",
+    mcpServerName: "サーバー名",
+    mcpServerDescription: "説明",
+    mcpServerUrl: "エンドポイント URL",
+    mcpServerUrlPlaceholder: "https://example.com/mcp",
+    mcpServerHeaders: "Headers JSON",
+    mcpServerEnabled: "有効",
+    mcpServerEnabledDescription:
+      "このサーバー設定をアシスタントツールに公開します。",
+    mcpEnableRequiresTest:
+      "有効にする前にこの MCP サーバーをテストしてください。",
+    mcpEnableTooltipTested:
+      "テストに成功しました。{count} 個のツールが見つかりました。このサーバーを切り替えて、有効なツールをアシスタントに公開または非表示にします。",
+    mcpAdvancedActions: "MCP サーバー操作",
+    mcpImportJson: "MCP JSON 設定を貼り付け",
+    mcpImportButton: "MCP JSON をインポート",
+    mcpImportSuccess: "{count} 件の MCP サーバーをインポートしました。",
+    mcpImportNone:
+      "貼り付けた JSON にリモート HTTP MCP サーバーが見つかりませんでした。",
+    mcpImportError: "MCP インポートに失敗しました",
+    mcpTestServer: "サーバーをテスト",
+    mcpTesting: "テスト中...",
+    mcpTestSuccess: "{count} 個のツールが見つかりました。",
+    mcpTools: "利用可能なツール",
+    deleteMcpServer: "MCP サーバーを削除",
+    resetDefaults: "既定にリセット",
+    resetDefaultMcpServers: "既定の MCP サーバーにリセット",
+    resetDefaultMcpServersDescription:
+      "現在の MCP サーバーを内蔵の既定値に置き換えます。カスタムサーバーとテスト結果は削除されます。",
+    resetDefaultSkills: "既定のスキルにリセット",
+    resetDefaultSkillsDescription:
+      "現在のスキルを内蔵の既定値に置き換えます。カスタムスキルと編集内容は削除されます。",
     selectModel: "モデルを選択",
     selectModelDescription:
       "メインチャットモデルを選択します。エージェントモードではツール呼び出し対応モデルがおすすめです。",
@@ -507,6 +558,9 @@ export const jaJP: LocaleMessages = {
     syncSkills: "スキルを同期",
     syncSkillsDescription:
       "スキルのテンプレートをブラウザーアカウントで同期します。",
+    syncMcpServers: "MCPサーバーを同期",
+    syncMcpServersDescription:
+      "Streamable HTTP MCPサーバー設定をブラウザーアカウントで同期します。",
     syncChats: "チャットを同期",
     syncChatsDescription:
       "チャット履歴をブラウザーアカウントで同期します。ローカルのみの会話にする場合はオフにします。",
@@ -558,6 +612,7 @@ export const jaJP: LocaleMessages = {
     debugResetTargetProviders: "プロバイダー",
     debugResetTargetAgents: "エージェント",
     debugResetTargetSkills: "スキル",
+    debugResetTargetMcpServers: "MCPサーバー",
     debugResetTargetChats: "チャット",
     debugResetButton: "すべてのアプリデータを消去",
     debugResetting: "消去中...",

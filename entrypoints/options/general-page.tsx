@@ -27,6 +27,7 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  Label,
   Select,
   SelectContent,
   SelectItem,
@@ -335,8 +336,8 @@ function NumberSetting({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="stack">
-      <CardDescription>{label}</CardDescription>
+    <Label>
+      {label}
       <Input
         type="number"
         min={min}
@@ -344,7 +345,7 @@ function NumberSetting({
         value={value}
         onChange={(event) => onChange(event.currentTarget.value)}
       />
-    </label>
+    </Label>
   );
 }
 

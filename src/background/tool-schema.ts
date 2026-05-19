@@ -383,6 +383,77 @@ export const commonBrowserTools = [
     },
     ["skillId", "path", "replacements", "reason"],
   ),
+  tool(
+    BROWSER_TOOL_NAME.listMcpServers,
+    "List configured Streamable HTTP MCP servers.",
+    {},
+    [],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.addMcpServer,
+    "Add and test a Streamable HTTP MCP server configuration. The server is saved only if tools/list succeeds.",
+    {
+      name: { type: "string", description: "Display name for the MCP server" },
+      description: {
+        type: "string",
+        description: "Optional description of what this MCP server provides",
+      },
+      url: {
+        type: "string",
+        description:
+          "Streamable HTTP MCP endpoint URL, such as https://example.com/mcp",
+      },
+      enabled: {
+        type: "boolean",
+        description:
+          "Whether the server is enabled. Only tested servers with discovered tools can be enabled.",
+      },
+      headers: {
+        type: "object",
+        description: "Optional HTTP headers, such as Authorization",
+      },
+    },
+    ["name", "url"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.updateMcpServer,
+    "Update a configured Streamable HTTP MCP server. URL/header changes and enable requests are tested before the server can be enabled.",
+    {
+      serverId: { type: "string", description: "MCP server ID" },
+      name: { type: "string", description: "New display name" },
+      description: {
+        type: "string",
+        description: "New description of what this MCP server provides",
+      },
+      url: {
+        type: "string",
+        description: "New Streamable HTTP MCP endpoint URL",
+      },
+      enabled: {
+        type: "boolean",
+        description:
+          "Whether the server is enabled. Only tested servers with discovered tools can be enabled.",
+      },
+      headers: { type: "object", description: "Replacement HTTP headers" },
+    },
+    ["serverId"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.testMcpServer,
+    "Test a configured MCP server and refresh its available tools list.",
+    {
+      serverId: { type: "string", description: "MCP server ID" },
+    },
+    ["serverId"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.deleteMcpServer,
+    "Delete a configured MCP server.",
+    {
+      serverId: { type: "string", description: "MCP server ID" },
+    },
+    ["serverId"],
+  ),
 ];
 
 export const allBrowserTools = [...commonBrowserTools, ...cdpTools];
@@ -424,6 +495,14 @@ export function browserToolsForPrompt({
     if (name === BROWSER_TOOL_NAME.readSkillFile) return hasSkills;
     if (name === BROWSER_TOOL_NAME.updateSkillFile) return hasSkills;
     if (name === BROWSER_TOOL_NAME.patchSkillFile) return hasSkills;
+    if (
+      name === BROWSER_TOOL_NAME.listMcpServers ||
+      name === BROWSER_TOOL_NAME.addMcpServer ||
+      name === BROWSER_TOOL_NAME.updateMcpServer ||
+      name === BROWSER_TOOL_NAME.testMcpServer ||
+      name === BROWSER_TOOL_NAME.deleteMcpServer
+    )
+      return !askMode;
     if (name === BROWSER_TOOL_NAME.generateImage) return imageGenerationEnabled;
     if (name === BROWSER_TOOL_NAME.getCurrentTime) return !askMode;
     if (name === BROWSER_TOOL_NAME.readFileFromUrl)

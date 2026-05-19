@@ -14,6 +14,7 @@ import { storage } from "../shared/storage";
 import {
   type ChatMode,
   type Preferences,
+  type McpServerConfig,
   type Skill,
   type SkillFileKind,
   type UploadedAttachment,
@@ -25,6 +26,16 @@ import {
   readUploadedAttachment,
 } from "./attachment-messages";
 import { generateImage } from "./image-generation";
+import {
+  addMcpServer,
+  deleteMcpServer,
+  executeMcpTool,
+  isMcpToolName,
+  listMcpServers,
+  mcpToolsForPrompt,
+  testMcpServer,
+  updateMcpServer,
+} from "./mcp-tools";
 import { safeExecuteBrowserTool } from "./tools";
 import { browserToolsForPrompt, deferredBrowserTools } from "./tool-schema";
 
@@ -37,17 +48,21 @@ export function toolsForMode(
   dangerousCodeExecutionEnabled: boolean,
   latestUserText = "",
   loadedToolNames: string[] = [],
+  mcpServers: McpServerConfig[] = [],
 ) {
-  return browserToolsForPrompt({
-    mode,
-    hasUploadedAttachments,
-    hasSkills,
-    imageGenerationEnabled,
-    cdpToolsEnabled,
-    dangerousCodeExecutionEnabled,
-    latestUserText,
-    loadedToolNames,
-  });
+  return [
+    ...browserToolsForPrompt({
+      mode,
+      hasUploadedAttachments,
+      hasSkills,
+      imageGenerationEnabled,
+      cdpToolsEnabled,
+      dangerousCodeExecutionEnabled,
+      latestUserText,
+      loadedToolNames,
+    }),
+    ...mcpToolsForPrompt(mode, mcpServers),
+  ];
 }
 
 export function createToolResolver({
@@ -56,12 +71,14 @@ export function createToolResolver({
   availableSkills,
   preferences,
   latestUserText,
+  mcpServers = [],
 }: {
   mode: ChatMode;
   uploadedAttachments: UploadedAttachment[];
   availableSkills: Skill[];
   preferences: Preferences;
   latestUserText: string;
+  mcpServers?: McpServerConfig[];
 }) {
   const loadedToolNames = new Set<string>();
   return {
@@ -76,6 +93,7 @@ export function createToolResolver({
         !!preferences.dangerousCodeExecutionEnabled,
         latestUserText,
         [...loadedToolNames],
+        mcpServers,
       ),
   };
 }
@@ -124,6 +142,14 @@ export function executeContextAwareTool({
     return updateSkillFile(availableSkills, input);
   if (toolName === BROWSER_TOOL_NAME.patchSkillFile)
     return patchSkillFile(availableSkills, input);
+  if (toolName === BROWSER_TOOL_NAME.listMcpServers) return listMcpServers();
+  if (toolName === BROWSER_TOOL_NAME.addMcpServer) return addMcpServer(input);
+  if (toolName === BROWSER_TOOL_NAME.updateMcpServer)
+    return updateMcpServer(input);
+  if (toolName === BROWSER_TOOL_NAME.testMcpServer) return testMcpServer(input);
+  if (toolName === BROWSER_TOOL_NAME.deleteMcpServer)
+    return deleteMcpServer(input);
+  if (isMcpToolName(toolName)) return executeMcpTool(toolName, input);
   if (toolName === BROWSER_TOOL_NAME.generateImage)
     return generateImage(uploadedAttachments, input, context);
   if (toolName === BROWSER_TOOL_NAME.readFileFromUrl)

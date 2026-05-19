@@ -11,6 +11,7 @@ import {
   AccordionItem,
   AccordionTrigger,
   Input,
+  Label,
   Textarea,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
@@ -82,8 +83,8 @@ export function AgentsPage() {
               </AccordionTrigger>
               <AccordionContent>
                 <div className="stack">
-                  <label className="stack">
-                    <CardDescription>{t.options.agentName}</CardDescription>
+                  <Label>
+                    {t.options.agentName}
                     <Input
                       value={agent.name}
                       onChange={(event) =>
@@ -92,11 +93,9 @@ export function AgentsPage() {
                         })
                       }
                     />
-                  </label>
-                  <label className="stack">
-                    <CardDescription>
-                      {t.options.agentDescription}
-                    </CardDescription>
+                  </Label>
+                  <Label>
+                    {t.options.agentDescription}
                     <Input
                       value={agent.description || ""}
                       placeholder={t.options.defaultAgentSummary}
@@ -106,11 +105,9 @@ export function AgentsPage() {
                         })
                       }
                     />
-                  </label>
-                  <label className="stack">
-                    <CardDescription>
-                      {t.options.agentInstructions}
-                    </CardDescription>
+                  </Label>
+                  <Label>
+                    {t.options.agentInstructions}
                     <Textarea
                       value={agent.instructions || ""}
                       placeholder={t.options.agentInstructionsPlaceholder}
@@ -120,7 +117,7 @@ export function AgentsPage() {
                         })
                       }
                     />
-                  </label>
+                  </Label>
                   <div className="row">
                     <Button
                       variant="outline"

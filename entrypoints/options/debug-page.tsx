@@ -187,6 +187,9 @@ export function DebugPage() {
               <ToggleGroupItem value="skills">
                 {t.options.debugResetTargetSkills}
               </ToggleGroupItem>
+              <ToggleGroupItem value="mcpServers">
+                {t.options.debugResetTargetMcpServers}
+              </ToggleGroupItem>
               <ToggleGroupItem value="chats">
                 {t.options.debugResetTargetChats}
               </ToggleGroupItem>

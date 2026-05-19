@@ -7,6 +7,7 @@ import {
   FileArchive,
   FileText,
   Plus,
+  RotateCcw,
   Sparkles,
   Trash2,
 } from "lucide-react";
@@ -14,6 +15,7 @@ import {
   QUICK_FEEDBACK_MS,
   SYNC_MAX_BYTES_PER_ITEM,
 } from "../../src/shared/config";
+import { BUILTIN_SKILLS } from "../../src/shared/builtin-skills";
 import { getMessages } from "../../src/shared/i18n";
 import {
   createSkillPackage,
@@ -227,6 +229,13 @@ export function SkillsPage() {
     if (selectedId === skill.id) setSelectedId("");
   }
 
+  function resetDefaultSkills() {
+    setSkills(cloneDefault(BUILTIN_SKILLS));
+    setDrafts({});
+    setSelectedId("");
+    setDeleteConfirmId(undefined);
+  }
+
   return (
     <div className="skills-page stack">
       <div className="skills-page-header">
@@ -423,6 +432,27 @@ export function SkillsPage() {
           </AccordionItem>
         ))}
       </Accordion>
+      <Card>
+        <CardContent>
+          <div className="setting-switch-row">
+            <div>
+              <CardTitle className="settings-section-title">
+                <RotateCcw size={18} /> {t.options.resetDefaultSkills}
+              </CardTitle>
+              <CardDescription>
+                {t.options.resetDefaultSkillsDescription}
+              </CardDescription>
+            </div>
+            <Button variant="outline" onClick={resetDefaultSkills}>
+              {t.options.resetDefaults}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
+}
+
+function cloneDefault<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
 }

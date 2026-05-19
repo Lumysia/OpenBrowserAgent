@@ -6,6 +6,7 @@ import {
   Database,
   FileText,
   MessagesSquare,
+  Plug,
 } from "lucide-react";
 import { getMessages } from "../../src/shared/i18n";
 import {
@@ -44,6 +45,11 @@ export function SyncPage() {
       title: t.options.syncSkills,
       description: t.options.syncSkillsDescription,
       icon: <FileText size={18} />,
+    },
+    syncMcpServers: {
+      title: t.options.syncMcpServers,
+      description: t.options.syncMcpServersDescription,
+      icon: <Plug size={18} />,
     },
     syncAgents: {
       title: t.options.syncAgents,

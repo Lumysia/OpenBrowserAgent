@@ -228,6 +228,19 @@ export const enUS = {
       readSkill: { running: "Reading Skill", done: "Read Skill" },
       updateSkillFile: { running: "Updating Skill", done: "Updated Skill" },
       patchSkillFile: { running: "Patching Skill", done: "Patched Skill" },
+      listMcpServers: {
+        running: "Listing MCP servers",
+        done: "Listed MCP servers",
+      },
+      addMcpServer: { running: "Adding MCP server", done: "Added MCP server" },
+      updateMcpServer: {
+        running: "Updating MCP server",
+        done: "Updated MCP server",
+      },
+      deleteMcpServer: {
+        running: "Deleting MCP server",
+        done: "Deleted MCP server",
+      },
       generateImage: { running: "Generating image", done: "Generated image" },
       readUploadedAttachment: {
         running: "Reading attachment",
@@ -356,10 +369,43 @@ export const enUS = {
     deleteAgent: "Delete agent",
     sync: "Sync",
     providers: "Providers",
+    mcpServers: "MCP Servers",
     skills: "Skills",
     modelProviders: "Model Providers",
     providerDescription:
       "Bring your own key and connect OpenBrowserAgent to your favorite AI providers.",
+    mcpServersDescription:
+      "Configure remote Streamable HTTP MCP servers the assistant can use.",
+    newMcpServer: "New MCP Server",
+    mcpServerName: "Server name",
+    mcpServerDescription: "Description",
+    mcpServerUrl: "Endpoint URL",
+    mcpServerUrlPlaceholder: "https://example.com/mcp",
+    mcpServerHeaders: "Headers JSON",
+    mcpServerEnabled: "Enabled",
+    mcpServerEnabledDescription:
+      "Expose this server configuration to assistant tools.",
+    mcpEnableRequiresTest: "Test this MCP server before enabling it.",
+    mcpEnableTooltipTested:
+      "Test passed. {count} tools were found. Toggle this server to expose or hide its enabled tools from the assistant.",
+    mcpAdvancedActions: "MCP server actions",
+    mcpImportJson: "Paste MCP JSON configuration",
+    mcpImportButton: "Import MCP JSON",
+    mcpImportSuccess: "Imported {count} MCP servers.",
+    mcpImportNone: "No remote HTTP MCP servers found in the pasted JSON.",
+    mcpImportError: "MCP import failed",
+    mcpTestServer: "Test server",
+    mcpTesting: "Testing...",
+    mcpTestSuccess: "Found {count} tools.",
+    mcpTools: "Available tools",
+    deleteMcpServer: "Delete MCP server",
+    resetDefaults: "Reset defaults",
+    resetDefaultMcpServers: "Reset default MCP servers",
+    resetDefaultMcpServersDescription:
+      "Replace current MCP servers with the built-in defaults. Custom servers and test results will be removed.",
+    resetDefaultSkills: "Reset default skills",
+    resetDefaultSkillsDescription:
+      "Replace current skills with the built-in defaults. Custom skills and edits will be removed.",
     selectModel: "Select model",
     selectModelDescription:
       "Choose the main chat model. Agent mode works best with models that support tool calls.",
@@ -458,6 +504,9 @@ export const enUS = {
       "Sync agent profiles through your browser account. Keep this off if agent instructions contain private context.",
     syncSkills: "Sync Skills",
     syncSkillsDescription: "Sync skill templates through your browser account.",
+    syncMcpServers: "Sync MCP Servers",
+    syncMcpServersDescription:
+      "Sync Streamable HTTP MCP server configuration through your browser account.",
     syncChats: "Sync Chats",
     syncChatsDescription:
       "Sync chat history through your browser account. Keep this off for local-only conversations.",
@@ -508,6 +557,7 @@ export const enUS = {
     debugResetTargetProviders: "Providers",
     debugResetTargetAgents: "Agents",
     debugResetTargetSkills: "Skills",
+    debugResetTargetMcpServers: "MCP Servers",
     debugResetTargetChats: "Chats",
     debugResetButton: "Clear all app data",
     debugResetting: "Clearing...",

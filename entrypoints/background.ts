@@ -164,9 +164,11 @@ async function streamAssistantResponse(
 ) {
   const providerModel = await resolveModel(request.body.modelId);
   const t = getMessages(request.body.language);
+  const mcpServers = await storage.mcpServers.get();
   const system = createSystemPrompt(request.body.chatMode, {
     imageGenerationEnabled: !!request.body.context?.imageGenerationEnabled,
     agent: request.body.context?.agent,
+    mcpServers,
   });
   const preferences = await storage.preferences.get();
   post(port, {
@@ -195,6 +197,7 @@ async function streamAssistantResponse(
     request.body.context?.autoSelectSkills
       ? request.body.context.availableSkills || []
       : [],
+    mcpServers,
     drainQueuedMessages,
   );
 

@@ -61,6 +61,11 @@ export const BROWSER_TOOL_NAME = {
   readSkillFile: "readSkillFile",
   updateSkillFile: "updateSkillFile",
   patchSkillFile: "patchSkillFile",
+  listMcpServers: "listMcpServers",
+  addMcpServer: "addMcpServer",
+  updateMcpServer: "updateMcpServer",
+  testMcpServer: "testMcpServer",
+  deleteMcpServer: "deleteMcpServer",
   generateImage: "generateImage",
 } as const;
 

@@ -11,6 +11,7 @@ import {
   MousePointerClick,
   Network,
   PanelTop,
+  Plug,
   Search,
   TerminalSquare,
   Square,
@@ -26,7 +27,12 @@ import {
   toolNameFromPartType,
 } from "../../src/shared/types";
 import type { ChatPart } from "../../src/shared/types";
-import { Button } from "../../src/ui/components";
+import {
+  Button,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../src/ui/components";
 import { cdpToolDetail } from "./cdp-tool-detail";
 import { formatToolMessage } from "./format";
 
@@ -54,12 +60,19 @@ export function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
   ].join("::");
   return (
     <div className={`tool-card ${status}`}>
-      <div className="tool-title">
-        <span className="tool-icon">{toolIcon(name)}</span>
-        <strong className="tool-title-text" key={title}>
-          {loading ? <span className="shiny-text">{title}</span> : title}
-        </strong>
-      </div>
+      <Popover>
+        <PopoverTrigger asChild>
+          <button className="tool-title tool-title-button" type="button">
+            <span className="tool-icon">{toolIcon(name)}</span>
+            <strong className="tool-title-text" key={title}>
+              {loading ? <span className="shiny-text">{title}</span> : title}
+            </strong>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="tool-json-popover" align="start">
+          <pre>{toolJsonDetail(name, part)}</pre>
+        </PopoverContent>
+      </Popover>
       <div className="tool-detail">
         <div className="tool-detail-content" key={detailKey}>
           {name === BROWSER_TOOL_NAME.generateImage && (
@@ -83,6 +96,32 @@ export function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function toolJsonDetail(name: string, part: ChatPart) {
+  return JSON.stringify(
+    compactJsonValue({
+      toolName: name,
+      state: part.state,
+      input: part.input || {},
+      output: part.output ?? null,
+    }),
+    null,
+    2,
+  );
+}
+
+function compactJsonValue(value: unknown): unknown {
+  if (typeof value === "string")
+    return value.length > 4000 ? `${value.slice(0, 4000)}...` : value;
+  if (Array.isArray(value)) return value.map(compactJsonValue);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([key, item]) => [
+      key,
+      compactJsonValue(item),
+    ]),
   );
 }
 
@@ -136,6 +175,7 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
         stringValue(output.attachmentId) || stringValue(input.attachmentId),
       ]);
     if (typeof output.error === "string") return output.error;
+    if (name.startsWith("mcp__")) return mcpToolDetail(input, output);
     if (typeof input.reason === "string") return input.reason;
     if (name === BROWSER_TOOL_NAME.getCurrentTime)
       return compactJoin([
@@ -172,6 +212,26 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
       return compactJoin([
         stringValue(output.name) || stringValue(input.skillId),
         stringValue(output.path) || stringValue(input.path),
+      ]);
+    if (
+      name === BROWSER_TOOL_NAME.listMcpServers &&
+      Array.isArray(output.servers)
+    )
+      return `${output.servers.length} MCP`;
+    if (
+      name === BROWSER_TOOL_NAME.addMcpServer ||
+      name === BROWSER_TOOL_NAME.updateMcpServer ||
+      name === BROWSER_TOOL_NAME.deleteMcpServer
+    )
+      return compactJoin([
+        stringValue(
+          (output.server as Record<string, unknown> | undefined)?.name,
+        ) ||
+          stringValue(input.name) ||
+          stringValue(input.serverId),
+        stringValue(
+          (output.server as Record<string, unknown> | undefined)?.url,
+        ) || stringValue(input.url),
       ]);
     if (
       name === BROWSER_TOOL_NAME.findAccessableElementsFromTab &&
@@ -253,6 +313,7 @@ function toolIcon(name: string) {
   const lowerName = name.toLowerCase();
   if (name === BROWSER_TOOL_NAME.loadBrowserTools)
     return <Layers size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("mcp")) return <Plug size={19} strokeWidth={2.1} />;
   if (lowerName.includes("input") || lowerName.includes("fill"))
     return <Type size={19} strokeWidth={2.1} />;
   if (lowerName.includes("click") || lowerName.includes("mouse"))
@@ -389,6 +450,43 @@ function fallbackToolDetail(
     return arrayLabel("Tabs", input.tabIds);
   if (name.startsWith("cdp")) return cdpToolDetail(name, input, output);
   return "";
+}
+
+function mcpToolDetail(
+  input: Record<string, unknown>,
+  output: Record<string, unknown>,
+) {
+  const params = Object.entries(input)
+    .slice(0, 3)
+    .map(([key, value]) => `${key}: ${shortValue(value)}`)
+    .join(" · ");
+  const result = output.result as Record<string, unknown> | undefined;
+  const content = Array.isArray(result?.content) ? result.content : [];
+  const text = content
+    .map((item) =>
+      item && typeof item === "object"
+        ? (item as Record<string, unknown>).text
+        : "",
+    )
+    .filter(
+      (value): value is string => typeof value === "string" && !!value.trim(),
+    )
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return compactJoin([
+    params,
+    text
+      ? shortValue(text)
+      : content.length
+        ? `${content.length} result items`
+        : "",
+  ]);
+}
+
+function shortValue(value: unknown) {
+  const text = typeof value === "string" ? value : JSON.stringify(value);
+  return text.length > 140 ? `${text.slice(0, 137)}...` : text;
 }
 
 function stringValue(value: unknown) {

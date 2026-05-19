@@ -11,6 +11,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   syncProviders: true,
   syncAgents: false,
   syncSkills: false,
+  syncMcpServers: false,
   syncChats: false,
   autoSelectSkills: true,
   autoScroll: true,

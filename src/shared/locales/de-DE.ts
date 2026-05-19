@@ -244,6 +244,22 @@ export const deDE: LocaleMessages = {
         running: "Fähigkeit wird gepatcht",
         done: "Fähigkeit gepatcht",
       },
+      listMcpServers: {
+        running: "MCP-Server werden aufgelistet",
+        done: "MCP-Server aufgelistet",
+      },
+      addMcpServer: {
+        running: "MCP-Server wird hinzugefügt",
+        done: "MCP-Server hinzugefügt",
+      },
+      updateMcpServer: {
+        running: "MCP-Server wird aktualisiert",
+        done: "MCP-Server aktualisiert",
+      },
+      deleteMcpServer: {
+        running: "MCP-Server wird gelöscht",
+        done: "MCP-Server gelöscht",
+      },
       generateImage: { running: "Bild wird generiert", done: "Bild generiert" },
       readFileFromUrl: { running: "Datei wird gelesen", done: "Datei gelesen" },
       readUploadedAttachment: {
@@ -396,10 +412,45 @@ export const deDE: LocaleMessages = {
     deleteAgent: "Agent löschen",
     sync: "Synchronisierung",
     providers: "Anbieter",
+    mcpServers: "MCP-Server",
     skills: "Fähigkeiten",
     modelProviders: "Modellanbieter",
     providerDescription:
       "Verbinden Sie OpenBrowserAgent mit Ihren bevorzugten KI-Anbietern über Ihren eigenen Schlüssel.",
+    mcpServersDescription:
+      "Konfigurieren Sie entfernte Streamable-HTTP-MCP-Server, die der Assistent verwenden kann.",
+    newMcpServer: "Neuer MCP-Server",
+    mcpServerName: "Servername",
+    mcpServerDescription: "Beschreibung",
+    mcpServerUrl: "Endpunkt-URL",
+    mcpServerUrlPlaceholder: "https://example.com/mcp",
+    mcpServerHeaders: "Headers JSON",
+    mcpServerEnabled: "Aktiviert",
+    mcpServerEnabledDescription:
+      "Diese Serverkonfiguration für Assistenten-Tools verfügbar machen.",
+    mcpEnableRequiresTest:
+      "Testen Sie diesen MCP-Server, bevor Sie ihn aktivieren.",
+    mcpEnableTooltipTested:
+      "Test bestanden. {count} Tools gefunden. Schalten Sie diesen Server um, um seine aktivierten Tools für den Assistenten ein- oder auszublenden.",
+    mcpAdvancedActions: "MCP-Serveraktionen",
+    mcpImportJson: "MCP-JSON-Konfiguration einfügen",
+    mcpImportButton: "MCP-JSON importieren",
+    mcpImportSuccess: "{count} MCP-Server importiert.",
+    mcpImportNone:
+      "Keine entfernten HTTP-MCP-Server im eingefügten JSON gefunden.",
+    mcpImportError: "MCP-Import fehlgeschlagen",
+    mcpTestServer: "Server testen",
+    mcpTesting: "Wird getestet...",
+    mcpTestSuccess: "{count} Tools gefunden.",
+    mcpTools: "Verfügbare Tools",
+    deleteMcpServer: "MCP-Server löschen",
+    resetDefaults: "Standardwerte zurücksetzen",
+    resetDefaultMcpServers: "Standard-MCP-Server zurücksetzen",
+    resetDefaultMcpServersDescription:
+      "Ersetzt die aktuellen MCP-Server durch die integrierten Standardwerte. Benutzerdefinierte Server und Testergebnisse werden entfernt.",
+    resetDefaultSkills: "Standard-Skills zurücksetzen",
+    resetDefaultSkillsDescription:
+      "Ersetzt die aktuellen Skills durch die integrierten Standardwerte. Benutzerdefinierte Skills und Änderungen werden entfernt.",
     selectModel: "Modell auswählen",
     selectModelDescription:
       "Wählen Sie das Haupt-Chatmodell. Der Agent-Modus funktioniert am besten mit Modellen, die Tool-Aufrufe unterstützen.",
@@ -501,6 +552,9 @@ export const deDE: LocaleMessages = {
     syncSkills: "Fähigkeiten synchronisieren",
     syncSkillsDescription:
       "Fähigkeitsvorlagen über Ihr Browserkonto synchronisieren.",
+    syncMcpServers: "MCP-Server synchronisieren",
+    syncMcpServersDescription:
+      "Streamable-HTTP-MCP-Serverkonfiguration über Ihr Browserkonto synchronisieren.",
     syncChats: "Chats synchronisieren",
     syncChatsDescription:
       "Chatverlauf über Ihr Browserkonto synchronisieren. Deaktivieren für nur lokale Unterhaltungen.",
@@ -553,6 +607,7 @@ export const deDE: LocaleMessages = {
     debugResetTargetProviders: "Anbieter",
     debugResetTargetAgents: "Agenten",
     debugResetTargetSkills: "Fähigkeiten",
+    debugResetTargetMcpServers: "MCP-Server",
     debugResetTargetChats: "Chats",
     debugResetButton: "Alle App-Daten löschen",
     debugResetting: "Wird gelöscht...",

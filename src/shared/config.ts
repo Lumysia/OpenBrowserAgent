@@ -77,6 +77,7 @@ export const OPTIONS_ROUTE = {
   agents: "/agents",
   sync: "/sync",
   providers: "/providers",
+  mcp: "/mcp",
   skills: "/skills",
   debug: "/debug",
 } as const;
@@ -86,6 +87,7 @@ export const OPTIONS_HASH = {
   agents: "#/agents",
   sync: "#/sync",
   providers: "#/providers",
+  mcp: "#/mcp",
   skills: "#/skills",
   debug: "#/debug",
 } as const;

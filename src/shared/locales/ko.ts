@@ -229,6 +229,16 @@ export const ko: LocaleMessages = {
         running: "스킬 패치 중",
         done: "스킬 패치됨",
       },
+      listMcpServers: {
+        running: "MCP 서버 목록 확인 중",
+        done: "MCP 서버 목록 확인됨",
+      },
+      addMcpServer: { running: "MCP 서버 추가 중", done: "MCP 서버 추가됨" },
+      updateMcpServer: {
+        running: "MCP 서버 업데이트 중",
+        done: "MCP 서버 업데이트됨",
+      },
+      deleteMcpServer: { running: "MCP 서버 삭제 중", done: "MCP 서버 삭제됨" },
       generateImage: { running: "이미지 생성 중", done: "이미지 생성됨" },
       readFileFromUrl: { running: "파일 읽는 중", done: "파일 읽음" },
       readUploadedAttachment: {
@@ -356,10 +366,42 @@ export const ko: LocaleMessages = {
     deleteAgent: "에이전트 삭제",
     sync: "동기화",
     providers: "제공업체",
+    mcpServers: "MCP 서버",
     skills: "스킬",
     modelProviders: "모델 제공업체",
     providerDescription:
       "개인 키로 OpenBrowserAgent를 선호하는 AI 제공업체에 연결하세요.",
+    mcpServersDescription:
+      "어시스턴트가 사용할 원격 Streamable HTTP MCP 서버를 설정합니다.",
+    newMcpServer: "새 MCP 서버",
+    mcpServerName: "서버 이름",
+    mcpServerDescription: "설명",
+    mcpServerUrl: "엔드포인트 URL",
+    mcpServerUrlPlaceholder: "https://example.com/mcp",
+    mcpServerHeaders: "Headers JSON",
+    mcpServerEnabled: "사용",
+    mcpServerEnabledDescription: "이 서버 설정을 어시스턴트 도구에 노출합니다.",
+    mcpEnableRequiresTest: "사용하기 전에 이 MCP 서버를 먼저 테스트하세요.",
+    mcpEnableTooltipTested:
+      "테스트를 통과했고 도구 {count}개를 찾았습니다. 이 서버를 켜거나 꺼서 활성화된 도구를 어시스턴트에 노출하거나 숨깁니다.",
+    mcpAdvancedActions: "MCP 서버 작업",
+    mcpImportJson: "MCP JSON 설정 붙여넣기",
+    mcpImportButton: "MCP JSON 가져오기",
+    mcpImportSuccess: "MCP 서버 {count}개를 가져왔습니다.",
+    mcpImportNone: "붙여넣은 JSON에서 원격 HTTP MCP 서버를 찾지 못했습니다.",
+    mcpImportError: "MCP 가져오기 실패",
+    mcpTestServer: "서버 테스트",
+    mcpTesting: "테스트 중...",
+    mcpTestSuccess: "도구 {count}개를 찾았습니다.",
+    mcpTools: "사용 가능한 도구",
+    deleteMcpServer: "MCP 서버 삭제",
+    resetDefaults: "기본값 재설정",
+    resetDefaultMcpServers: "기본 MCP 서버 재설정",
+    resetDefaultMcpServersDescription:
+      "현재 MCP 서버를 내장 기본값으로 바꿉니다. 사용자 지정 서버와 테스트 결과가 제거됩니다.",
+    resetDefaultSkills: "기본 스킬 재설정",
+    resetDefaultSkillsDescription:
+      "현재 스킬을 내장 기본값으로 바꿉니다. 사용자 지정 스킬과 편집 내용이 제거됩니다.",
     selectModel: "모델 선택",
     selectModelDescription:
       "주 채팅 모델을 선택하세요. 에이전트 모드는 도구 호출을 지원하는 모델에서 가장 잘 작동합니다.",
@@ -457,6 +499,9 @@ export const ko: LocaleMessages = {
       "에이전트 프로필을 브라우저 계정으로 동기화합니다. 에이전트 지시에 개인 컨텍스트가 포함되어 있으면 꺼두세요.",
     syncSkills: "스킬 동기화",
     syncSkillsDescription: "스킬 템플릿을 브라우저 계정으로 동기화합니다.",
+    syncMcpServers: "MCP 서버 동기화",
+    syncMcpServersDescription:
+      "Streamable HTTP MCP 서버 구성을 브라우저 계정으로 동기화합니다.",
     syncChats: "채팅 동기화",
     syncChatsDescription:
       "채팅 기록을 브라우저 계정으로 동기화합니다. 로컬 전용 대화는 끄세요.",
@@ -507,6 +552,7 @@ export const ko: LocaleMessages = {
     debugResetTargetProviders: "제공업체",
     debugResetTargetAgents: "에이전트",
     debugResetTargetSkills: "스킬",
+    debugResetTargetMcpServers: "MCP 서버",
     debugResetTargetChats: "채팅",
     debugResetButton: "모든 앱 데이터 지우기",
     debugResetting: "지우는 중...",

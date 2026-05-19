@@ -242,6 +242,22 @@ export const esES: LocaleMessages = {
         running: "Aplicando parche a habilidad",
         done: "Parche aplicado a habilidad",
       },
+      listMcpServers: {
+        running: "Listando servidores MCP",
+        done: "Servidores MCP listados",
+      },
+      addMcpServer: {
+        running: "Añadiendo servidor MCP",
+        done: "Servidor MCP añadido",
+      },
+      updateMcpServer: {
+        running: "Actualizando servidor MCP",
+        done: "Servidor MCP actualizado",
+      },
+      deleteMcpServer: {
+        running: "Eliminando servidor MCP",
+        done: "Servidor MCP eliminado",
+      },
       generateImage: { running: "Generando imagen", done: "Imagen generada" },
       readFileFromUrl: { running: "Leyendo archivo", done: "Archivo leído" },
       readUploadedAttachment: {
@@ -382,10 +398,44 @@ export const esES: LocaleMessages = {
     deleteAgent: "Eliminar agente",
     sync: "Sincronización",
     providers: "Proveedores",
+    mcpServers: "Servidores MCP",
     skills: "Habilidades",
     modelProviders: "Proveedores de modelos",
     providerDescription:
       "Usa tu propia clave y conecta OpenBrowserAgent con tus proveedores de IA favoritos.",
+    mcpServersDescription:
+      "Configura servidores MCP Streamable HTTP remotos que el asistente puede usar.",
+    newMcpServer: "Nuevo servidor MCP",
+    mcpServerName: "Nombre del servidor",
+    mcpServerDescription: "Descripción",
+    mcpServerUrl: "URL del endpoint",
+    mcpServerUrlPlaceholder: "https://example.com/mcp",
+    mcpServerHeaders: "Headers JSON",
+    mcpServerEnabled: "Activado",
+    mcpServerEnabledDescription:
+      "Expone esta configuración de servidor a las herramientas del asistente.",
+    mcpEnableRequiresTest: "Prueba este servidor MCP antes de activarlo.",
+    mcpEnableTooltipTested:
+      "Prueba superada. Se encontraron {count} herramientas. Activa o desactiva este servidor para exponer u ocultar sus herramientas habilitadas al asistente.",
+    mcpAdvancedActions: "Acciones del servidor MCP",
+    mcpImportJson: "Pegar configuración JSON MCP",
+    mcpImportButton: "Importar JSON MCP",
+    mcpImportSuccess: "Se importaron {count} servidores MCP.",
+    mcpImportNone:
+      "No se encontraron servidores MCP HTTP remotos en el JSON pegado.",
+    mcpImportError: "Error al importar MCP",
+    mcpTestServer: "Probar servidor",
+    mcpTesting: "Probando...",
+    mcpTestSuccess: "Se encontraron {count} herramientas.",
+    mcpTools: "Herramientas disponibles",
+    deleteMcpServer: "Eliminar servidor MCP",
+    resetDefaults: "Restablecer valores",
+    resetDefaultMcpServers: "Restablecer servidores MCP predeterminados",
+    resetDefaultMcpServersDescription:
+      "Reemplaza los servidores MCP actuales por los valores integrados predeterminados. Se eliminarán los servidores personalizados y los resultados de prueba.",
+    resetDefaultSkills: "Restablecer skills predeterminadas",
+    resetDefaultSkillsDescription:
+      "Reemplaza las skills actuales por los valores integrados predeterminados. Se eliminarán las skills personalizadas y los cambios.",
     selectModel: "Seleccionar modelo",
     selectModelDescription:
       "Elige el modelo principal de chat. El modo Agente funciona mejor con modelos compatibles con llamadas a herramientas.",
@@ -486,6 +536,9 @@ export const esES: LocaleMessages = {
     syncSkills: "Sincronizar habilidades",
     syncSkillsDescription:
       "Sincroniza plantillas de habilidades con tu cuenta del navegador.",
+    syncMcpServers: "Sincronizar servidores MCP",
+    syncMcpServersDescription:
+      "Sincroniza la configuración de servidores MCP Streamable HTTP con tu cuenta del navegador.",
     syncChats: "Sincronizar chats",
     syncChatsDescription:
       "Sincroniza el historial de chats con tu cuenta del navegador. Desactívalo para conversaciones solo locales.",
@@ -538,6 +591,7 @@ export const esES: LocaleMessages = {
     debugResetTargetProviders: "Proveedores",
     debugResetTargetAgents: "Agentes",
     debugResetTargetSkills: "Habilidades",
+    debugResetTargetMcpServers: "Servidores MCP",
     debugResetTargetChats: "Chats",
     debugResetButton: "Borrar todos los datos de la app",
     debugResetting: "Borrando...",

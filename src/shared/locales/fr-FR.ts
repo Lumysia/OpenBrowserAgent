@@ -249,6 +249,22 @@ export const frFR: LocaleMessages = {
         running: "Correction de la compétence",
         done: "Compétence corrigée",
       },
+      listMcpServers: {
+        running: "Liste des serveurs MCP",
+        done: "Serveurs MCP listés",
+      },
+      addMcpServer: {
+        running: "Ajout du serveur MCP",
+        done: "Serveur MCP ajouté",
+      },
+      updateMcpServer: {
+        running: "Mise à jour du serveur MCP",
+        done: "Serveur MCP mis à jour",
+      },
+      deleteMcpServer: {
+        running: "Suppression du serveur MCP",
+        done: "Serveur MCP supprimé",
+      },
       generateImage: {
         running: "Génération de l’image",
         done: "Image générée",
@@ -401,10 +417,43 @@ export const frFR: LocaleMessages = {
     deleteAgent: "Supprimer l’agent",
     sync: "Synchronisation",
     providers: "Fournisseurs",
+    mcpServers: "Serveurs MCP",
     skills: "Compétences",
     modelProviders: "Fournisseurs de modèles",
     providerDescription:
       "Utilisez votre propre clé et connectez OpenBrowserAgent à vos fournisseurs IA favoris.",
+    mcpServersDescription:
+      "Configurez les serveurs MCP Streamable HTTP distants que l’assistant peut utiliser.",
+    newMcpServer: "Nouveau serveur MCP",
+    mcpServerName: "Nom du serveur",
+    mcpServerDescription: "Description",
+    mcpServerUrl: "URL du point de terminaison",
+    mcpServerUrlPlaceholder: "https://example.com/mcp",
+    mcpServerHeaders: "Headers JSON",
+    mcpServerEnabled: "Activé",
+    mcpServerEnabledDescription:
+      "Expose cette configuration de serveur aux outils de l’assistant.",
+    mcpEnableRequiresTest: "Testez ce serveur MCP avant de l’activer.",
+    mcpEnableTooltipTested:
+      "Test réussi. {count} outils trouvés. Activez ou désactivez ce serveur pour exposer ou masquer ses outils activés à l’assistant.",
+    mcpAdvancedActions: "Actions du serveur MCP",
+    mcpImportJson: "Coller la configuration JSON MCP",
+    mcpImportButton: "Importer le JSON MCP",
+    mcpImportSuccess: "{count} serveurs MCP importés.",
+    mcpImportNone: "Aucun serveur MCP HTTP distant trouvé dans le JSON collé.",
+    mcpImportError: "Échec de l’import MCP",
+    mcpTestServer: "Tester le serveur",
+    mcpTesting: "Test en cours...",
+    mcpTestSuccess: "{count} outils trouvés.",
+    mcpTools: "Outils disponibles",
+    deleteMcpServer: "Supprimer le serveur MCP",
+    resetDefaults: "Réinitialiser",
+    resetDefaultMcpServers: "Réinitialiser les serveurs MCP par défaut",
+    resetDefaultMcpServersDescription:
+      "Remplace les serveurs MCP actuels par les valeurs intégrées par défaut. Les serveurs personnalisés et les résultats de test seront supprimés.",
+    resetDefaultSkills: "Réinitialiser les skills par défaut",
+    resetDefaultSkillsDescription:
+      "Remplace les skills actuels par les valeurs intégrées par défaut. Les skills personnalisés et les modifications seront supprimés.",
     selectModel: "Sélectionner un modèle",
     selectModelDescription:
       "Choisissez le modèle principal de chat. Le mode Agent fonctionne mieux avec les modèles prenant en charge les appels d'outils.",
@@ -505,6 +554,9 @@ export const frFR: LocaleMessages = {
     syncSkills: "Synchroniser les compétences",
     syncSkillsDescription:
       "Synchronisez les modèles de compétences via votre compte navigateur.",
+    syncMcpServers: "Synchroniser les serveurs MCP",
+    syncMcpServersDescription:
+      "Synchronisez la configuration des serveurs MCP Streamable HTTP via votre compte navigateur.",
     syncChats: "Synchroniser les discussions",
     syncChatsDescription:
       "Synchronisez l'historique des discussions via votre compte navigateur. Désactivez pour des conversations locales uniquement.",
@@ -556,6 +608,7 @@ export const frFR: LocaleMessages = {
     debugResetTargetProviders: "Fournisseurs",
     debugResetTargetAgents: "Agents",
     debugResetTargetSkills: "Compétences",
+    debugResetTargetMcpServers: "Serveurs MCP",
     debugResetTargetChats: "Discussions",
     debugResetButton: "Effacer toutes les données de l'app",
     debugResetting: "Effacement...",

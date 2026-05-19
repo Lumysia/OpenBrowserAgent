@@ -6,6 +6,7 @@ import {
   CircleHelp,
   Cloud,
   FileText,
+  Plug,
   Server,
   SlidersHorizontal,
 } from "lucide-react";
@@ -22,6 +23,7 @@ import { DebugPage } from "./debug-page";
 import { AgentsPage } from "./agents-page";
 import { GeneralPage } from "./general-page";
 import { ProvidersPage } from "./providers-page";
+import { McpPage } from "./mcp-page";
 import { SkillsPage } from "./skills-page";
 import { useHashRoute } from "./route";
 import { SyncPage } from "./sync-page";
@@ -83,6 +85,14 @@ export function OptionsApp() {
             </OptionsLink>
             <OptionsLink
               route={route}
+              target={OPTIONS_ROUTE.mcp}
+              href={OPTIONS_HASH.mcp}
+              icon={<Plug size={16} />}
+            >
+              {t.options.mcpServers}
+            </OptionsLink>
+            <OptionsLink
+              route={route}
               target={OPTIONS_ROUTE.skills}
               href={OPTIONS_HASH.skills}
               icon={<FileText size={16} />}
@@ -115,6 +125,8 @@ export function OptionsApp() {
               <AgentsPage />
             ) : route === OPTIONS_ROUTE.providers ? (
               <ProvidersPage />
+            ) : route === OPTIONS_ROUTE.mcp ? (
+              <McpPage />
             ) : route === OPTIONS_ROUTE.sync ? (
               <SyncPage />
             ) : route === OPTIONS_ROUTE.skills ? (

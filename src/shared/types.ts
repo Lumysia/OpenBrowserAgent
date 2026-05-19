@@ -29,6 +29,8 @@ export type ProviderConfig = {
 
 export type ProviderState = Record<string, ProviderConfig>;
 
+export type { McpServerConfig } from "./mcp";
+
 export type Preferences = {
   selectedModelId?: string;
   selectedAgentId?: string;
@@ -41,6 +43,7 @@ export type Preferences = {
   syncProviders?: boolean;
   syncAgents?: boolean;
   syncSkills?: boolean;
+  syncMcpServers?: boolean;
   syncChats?: boolean;
   autoSelectSkills?: boolean;
   autoScroll?: boolean;

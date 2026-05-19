@@ -9,7 +9,14 @@ export const Switch = React.forwardRef<
   }
 >(
   (
-    { checked = false, className, onCheckedChange, disabled, ...props },
+    {
+      checked = false,
+      className,
+      onCheckedChange,
+      disabled,
+      onClick,
+      ...props
+    },
     ref,
   ) => (
     <button
@@ -19,8 +26,11 @@ export const Switch = React.forwardRef<
       aria-checked={checked}
       disabled={disabled}
       className={cn("ui-switch", checked && "checked", className)}
-      onClick={() => !disabled && onCheckedChange?.(!checked)}
       {...props}
+      onClick={(event) => {
+        onClick?.(event);
+        if (!event.defaultPrevented && !disabled) onCheckedChange?.(!checked);
+      }}
     >
       <span />
     </button>

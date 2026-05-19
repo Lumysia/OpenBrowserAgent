@@ -227,6 +227,22 @@ export const ptBR: LocaleMessages = {
         running: "Aplicando patch à habilidade",
         done: "Patch aplicado à habilidade",
       },
+      listMcpServers: {
+        running: "Listando servidores MCP",
+        done: "Servidores MCP listados",
+      },
+      addMcpServer: {
+        running: "Adicionando servidor MCP",
+        done: "Servidor MCP adicionado",
+      },
+      updateMcpServer: {
+        running: "Atualizando servidor MCP",
+        done: "Servidor MCP atualizado",
+      },
+      deleteMcpServer: {
+        running: "Excluindo servidor MCP",
+        done: "Servidor MCP excluído",
+      },
       generateImage: { running: "Gerando imagem", done: "Imagem gerada" },
       readFileFromUrl: { running: "Lendo arquivo", done: "Arquivo lido" },
       readUploadedAttachment: {
@@ -364,10 +380,43 @@ export const ptBR: LocaleMessages = {
     deleteAgent: "Excluir agente",
     sync: "Sincronização",
     providers: "Provedores",
+    mcpServers: "Servidores MCP",
     skills: "Habilidades",
     modelProviders: "Provedores de modelos",
     providerDescription:
       "Use sua própria chave e conecte o OpenBrowserAgent aos seus provedores de IA favoritos.",
+    mcpServersDescription:
+      "Configure servidores MCP Streamable HTTP remotos que o assistente pode usar.",
+    newMcpServer: "Novo servidor MCP",
+    mcpServerName: "Nome do servidor",
+    mcpServerDescription: "Descrição",
+    mcpServerUrl: "URL do endpoint",
+    mcpServerUrlPlaceholder: "https://example.com/mcp",
+    mcpServerHeaders: "Headers JSON",
+    mcpServerEnabled: "Ativado",
+    mcpServerEnabledDescription:
+      "Expõe esta configuração de servidor às ferramentas do assistente.",
+    mcpEnableRequiresTest: "Teste este servidor MCP antes de ativá-lo.",
+    mcpEnableTooltipTested:
+      "Teste aprovado. {count} ferramentas encontradas. Ative ou desative este servidor para expor ou ocultar suas ferramentas habilitadas ao assistente.",
+    mcpAdvancedActions: "Ações do servidor MCP",
+    mcpImportJson: "Cole a configuração JSON MCP",
+    mcpImportButton: "Importar JSON MCP",
+    mcpImportSuccess: "{count} servidores MCP importados.",
+    mcpImportNone: "Nenhum servidor MCP HTTP remoto encontrado no JSON colado.",
+    mcpImportError: "Falha ao importar MCP",
+    mcpTestServer: "Testar servidor",
+    mcpTesting: "Testando...",
+    mcpTestSuccess: "{count} ferramentas encontradas.",
+    mcpTools: "Ferramentas disponíveis",
+    deleteMcpServer: "Excluir servidor MCP",
+    resetDefaults: "Redefinir padrões",
+    resetDefaultMcpServers: "Redefinir servidores MCP padrão",
+    resetDefaultMcpServersDescription:
+      "Substitui os servidores MCP atuais pelos padrões integrados. Servidores personalizados e resultados de teste serão removidos.",
+    resetDefaultSkills: "Redefinir skills padrão",
+    resetDefaultSkillsDescription:
+      "Substitui as skills atuais pelos padrões integrados. Skills personalizadas e edições serão removidas.",
     selectModel: "Selecionar modelo",
     selectModelDescription:
       "Escolha o modelo principal de chat. O modo Agente funciona melhor com modelos compatíveis com chamadas de ferramentas.",
@@ -468,6 +517,9 @@ export const ptBR: LocaleMessages = {
     syncSkills: "Sincronizar ações rápidas",
     syncSkillsDescription:
       "Sincronize modelos de ações rápidas pela sua conta do navegador.",
+    syncMcpServers: "Sincronizar servidores MCP",
+    syncMcpServersDescription:
+      "Sincronize a configuração de servidores MCP Streamable HTTP pela sua conta do navegador.",
     syncChats: "Sincronizar chats",
     syncChatsDescription:
       "Sincronize o histórico de chats pela sua conta do navegador. Desative para conversas somente locais.",
@@ -520,6 +572,7 @@ export const ptBR: LocaleMessages = {
     debugResetTargetProviders: "Provedores",
     debugResetTargetAgents: "Agentes",
     debugResetTargetSkills: "Habilidades",
+    debugResetTargetMcpServers: "Servidores MCP",
     debugResetTargetChats: "Chats",
     debugResetButton: "Limpar todos os dados do app",
     debugResetting: "Limpando...",

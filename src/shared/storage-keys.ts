@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   provider: "provider",
   agents: "agents",
   skills: "skills",
+  mcpServers: "mcp-servers",
   shouldShowUpdateToast: "should-show-update-toast",
   chats: "chats",
   chatTabs: "chat-tabs",
@@ -16,6 +17,7 @@ export const SYNCABLE_DATA_ITEMS = [
   { preferenceKey: "syncProviders", dataKey: STORAGE_KEYS.provider },
   { preferenceKey: "syncAgents", dataKey: STORAGE_KEYS.agents },
   { preferenceKey: "syncSkills", dataKey: STORAGE_KEYS.skills },
+  { preferenceKey: "syncMcpServers", dataKey: STORAGE_KEYS.mcpServers },
   { preferenceKey: "syncChats", dataKey: STORAGE_KEYS.chats },
 ] as const;
 
