@@ -169,6 +169,19 @@ export function AssistantText({
       openCitationSource(citation.dataset.sourceId || "", sources);
       return;
     }
+    const mermaidDownload = (event.target as HTMLElement | null)?.closest(
+      "button[data-mermaid-download-url]",
+    ) as HTMLButtonElement | null;
+    if (mermaidDownload?.dataset.mermaidDownloadUrl) {
+      event.preventDefault();
+      event.stopPropagation();
+      await downloadUrlAsFile(
+        mermaidDownload.dataset.mermaidDownloadUrl,
+        mermaidDownload.dataset.mermaidDownloadFilename ||
+          "mermaid-diagram.svg",
+      );
+      return;
+    }
     const button = (event.target as HTMLElement | null)?.closest(
       "button[data-code-index]",
     ) as HTMLButtonElement | null;
@@ -324,6 +337,17 @@ function metaContent(
   return document
     .querySelector<HTMLMetaElement>(`meta[${attribute}="${value}"]`)
     ?.content?.trim();
+}
+
+async function downloadUrlAsFile(url: string, filename: string) {
+  const response = await fetch(url, { credentials: "omit" });
+  if (!response.ok) throw new Error("Unable to download file");
+  const objectUrl = URL.createObjectURL(await response.blob());
+  try {
+    await chrome.downloads.download({ url: objectUrl, filename });
+  } finally {
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+  }
 }
 
 function openCitationSource(sourceId: string, sources: ChatSource[]) {

@@ -48,7 +48,11 @@ export function renderMarkdown(
     const displayLanguage = escapeHtml(
       language || highlighted.language || "text",
     );
-    return `<div class="markdown-code-block${copied ? " copied" : ""}"><div class="markdown-code-header"><span>${displayLanguage}</span><button type="button" class="code-copy" title="${copied ? escapeHtml(t.common.copied) : escapeHtml(t.common.copy)}" data-code-index="${codeIndex}" data-code-id="${codeId}" aria-label="${escapeHtml(t.common.copy)}"><svg class="code-copy-icon code-copy-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="code-copy-icon code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></button></div><pre><code class="hljs${language ? ` language-${escapeHtml(language)}` : ""}">${highlighted.html}</code></pre></div>`;
+    const preview = mermaidPreview(code, language, t);
+    const source = preview
+      ? ""
+      : `<pre><code class="hljs${language ? ` language-${escapeHtml(language)}` : ""}">${highlighted.html}</code></pre>`;
+    return `<div class="markdown-code-block${copied ? " copied" : ""}"><div class="markdown-code-header"><span>${displayLanguage}</span><button type="button" class="code-copy" title="${copied ? escapeHtml(t.common.copied) : escapeHtml(t.common.copy)}" data-code-index="${codeIndex}" data-code-id="${codeId}" aria-label="${escapeHtml(t.common.copy)}"><svg class="code-copy-icon code-copy-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="code-copy-icon code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></button></div>${preview}${source}</div>`;
   };
   const html = marked.parse(renderCitations(text, sources), {
     renderer,
@@ -89,6 +93,32 @@ export function extractMarkdownLinks(text: string): MarkdownLink[] {
 
 function cleanUrl(url: string) {
   return url.trim().replace(/[\].,!?;:，。！？；：）)]+$/g, "");
+}
+
+function mermaidPreview(code: string, language: string, t: Messages) {
+  if (!isMermaidLanguage(language)) return "";
+  const encoded = encodeMermaidState(code);
+  const imageUrl = `https://mermaid.ink/svg/${encoded}?bgColor=FFFFFF`;
+  const pngUrl = `https://mermaid.ink/img/${encoded}?type=png&bgColor=FFFFFF`;
+  const viewUrl = `https://mermaid.live/view#base64:${encoded}`;
+  return `<div class="mermaid-preview-panel"><a class="mermaid-preview" href="${escapeHtml(viewUrl)}" title="${escapeHtml(t.sidepanel.openMermaidPreview)}"><img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(t.sidepanel.mermaidPreview)}" loading="lazy" /></a><div class="mermaid-preview-actions"><button type="button" data-mermaid-download-url="${escapeHtml(imageUrl)}" data-mermaid-download-filename="mermaid-diagram.svg">${escapeHtml(t.sidepanel.downloadMermaidSvg)}</button><button type="button" data-mermaid-download-url="${escapeHtml(pngUrl)}" data-mermaid-download-filename="mermaid-diagram.png">${escapeHtml(t.sidepanel.downloadMermaidPng)}</button></div></div>`;
+}
+
+function isMermaidLanguage(language: string) {
+  return ["mermaid", "mmd"].includes(language.toLowerCase());
+}
+
+function encodeMermaidState(code: string) {
+  const state = JSON.stringify({ code, mermaid: { theme: "default" } });
+  const bytes = new TextEncoder().encode(state);
+  let binary = "";
+  for (let index = 0; index < bytes.length; index += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
+  }
+  return btoa(binary)
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/, "");
 }
 
 function addCharacterFade(html: string, animatedFromChar: number) {

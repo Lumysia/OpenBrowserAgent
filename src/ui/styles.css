@@ -3004,6 +3004,51 @@ a {
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
+.mermaid-preview-panel {
+  margin: 12px 12px 0;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 48%, var(--border));
+  border-radius: 12px;
+  background: var(--card);
+  overflow: auto;
+}
+.mermaid-preview {
+  display: block;
+  transition: transform 0.16s ease;
+}
+.mermaid-preview:hover {
+  transform: translateY(-1px);
+}
+.mermaid-preview img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+.mermaid-preview-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.mermaid-preview-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-soft) 62%, var(--card));
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.mermaid-preview-actions button:hover {
+  background: var(--accent-hover);
+}
 .markdown pre {
   overflow: auto;
   margin: 0;
