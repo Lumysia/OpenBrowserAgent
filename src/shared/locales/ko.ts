@@ -48,7 +48,7 @@ export const ko: LocaleMessages = {
     importChatOpenAi: "OpenAI JSON 채팅 가져오기",
     clearAllChats: "모든 채팅 지우기",
     noChatsYet: "아직 채팅이 없습니다",
-    closeChat: "채팅 닫기",
+    removeChat: "채팅 제거",
     messageCount: "{count}개 메시지",
     relativeMinutesAgo: "{count}분 전",
     relativeHoursAgo: "{count}시간 전",

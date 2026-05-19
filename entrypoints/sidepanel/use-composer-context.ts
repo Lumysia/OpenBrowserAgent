@@ -13,14 +13,15 @@ export function useComposerContext(chats: Chat[]) {
   const [availableTabs, setAvailableTabs] = useState<AttachmentTab[]>([]);
   const [activeTabAttachable, setActiveTabAttachable] = useState(false);
   const autoAttachSuppressedRef = useRef(false);
-  const [selectedElement, setSelectedElement] =
-    useState<SelectedElement | null>(null);
+  const [selectedElements, setSelectedElements] = useState<SelectedElement[]>(
+    [],
+  );
 
   useActiveTabContext({
     attachedTabs,
-    selectedElement,
+    selectedElements,
     setAttachedTabs,
-    setSelectedElement,
+    setSelectedElements,
     autoAttachSuppressedRef,
   });
 
@@ -97,11 +98,11 @@ export function useComposerContext(chats: Chat[]) {
     attachedTabs,
     availableTabs,
     activeTabAttachable,
-    selectedElement,
+    selectedElements,
     setAttachedTabs,
     clearAttachedTabsAfterSend,
     setAvailableTabs,
-    setSelectedElement,
+    setSelectedElements,
     attachActiveTab,
     showAllTabsPicker,
     toggleAttachedTab,

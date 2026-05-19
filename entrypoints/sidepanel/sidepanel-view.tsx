@@ -73,7 +73,7 @@ export function SidepanelView({
   attachmentNotice,
   availableTabs,
   activeTabAttachable,
-  selectedElement,
+  selectedElements,
   streaming,
   creatingSkill,
   skillCreated,
@@ -91,7 +91,7 @@ export function SidepanelView({
   onSetOpenMenu,
   onSetAddMenuView,
   onSetShowHistory,
-  onSetSelectedElement,
+  onSetSelectedElements,
   onSetSelectedSkill,
   onSetChats,
   onSetPreferences,
@@ -137,7 +137,7 @@ export function SidepanelView({
   attachmentNotice: string;
   availableTabs: AttachmentTab[];
   activeTabAttachable: boolean;
-  selectedElement: SelectedElement | null;
+  selectedElements: SelectedElement[];
   streaming: boolean;
   creatingSkill: boolean;
   skillCreated: boolean;
@@ -155,7 +155,7 @@ export function SidepanelView({
   onSetOpenMenu: (value: ComposerMenu | null) => void;
   onSetAddMenuView: (value: AddMenuView) => void;
   onSetShowHistory: (value: boolean) => void;
-  onSetSelectedElement: (value: SelectedElement | null) => void;
+  onSetSelectedElements: (value: SelectedElement[]) => void;
   onSetSelectedSkill: (value: Skill | null) => void;
   onSetChats: (value: Chat[]) => void;
   onSetPreferences: (
@@ -219,6 +219,10 @@ export function SidepanelView({
             t={t}
             chats={chats}
             activeChatId={currentChat?.id}
+            mode={mode}
+            preferences={preferences}
+            onSetChats={onSetChats}
+            onImportChat={onImportChat}
             onBack={() => onSetShowHistory(false)}
             onSelect={(chatId) => {
               onSelectChat(chatId);
@@ -236,11 +240,7 @@ export function SidepanelView({
         <SidepanelHeader
           t={t}
           currentChat={currentChat}
-          mode={mode}
-          preferences={preferences}
-          onSetChats={onSetChats}
           onCreateChat={onCreateChat}
-          onImportChat={onImportChat}
           onSetShowHistory={onSetShowHistory}
         />
         {editingMessageId && (
@@ -302,12 +302,12 @@ export function SidepanelView({
             attachedTabs={attachedTabs}
             pendingAttachments={pendingAttachments}
             selectedSkill={selectedSkill}
-            selectedElement={selectedElement}
+            selectedElements={selectedElements}
             attachmentNotice={attachmentNotice}
             onRemoveAttachedTab={onRemoveAttachedTab}
             onRemoveUploadedAttachment={onRemoveUploadedAttachment}
             onClearSkill={() => onSetSelectedSkill(null)}
-            onSetSelectedElement={onSetSelectedElement}
+            onSetSelectedElements={onSetSelectedElements}
           />
           <QueuedMessages
             t={t}

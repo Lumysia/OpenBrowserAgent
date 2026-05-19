@@ -16,7 +16,7 @@ export function createSendMessagePlan({
   text,
   t,
   sentTabs,
-  sentElement,
+  sentElements,
   sentAttachments,
   context,
   sources,
@@ -28,7 +28,7 @@ export function createSendMessagePlan({
   text: string;
   t: Messages;
   sentTabs: AttachmentTab[];
-  sentElement: SelectedElement | null;
+  sentElements: SelectedElement[];
   sentAttachments: UploadedAttachment[];
   context: string;
   sources?: ChatSource[];
@@ -45,8 +45,8 @@ export function createSendMessagePlan({
       ...(context ? { context } : {}),
       ...(sources?.length ? { sources } : {}),
       ...(sentTabs.length ? { attachedTabs: sentTabs } : {}),
-      ...(sentElement
-        ? { selectedElement: toSelectedElementMetadata(sentElement) }
+      ...(sentElements.length
+        ? { selectedElements: sentElements.map(toSelectedElementMetadata) }
         : {}),
       ...(sentAttachments.length
         ? { uploadedAttachments: sentAttachments.map(toAttachmentMetadata) }

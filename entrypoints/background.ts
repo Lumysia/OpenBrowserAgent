@@ -217,7 +217,9 @@ function promptBreakdown(
   const attachments = request.body.context?.uploadedAttachments || [];
   const context = request.body.context?.text || "";
   const attachedTabs = latestUser?.metadata?.attachedTabs;
-  const selectedElement = latestUser?.metadata?.selectedElement;
+  const selectedElements =
+    latestUser?.metadata?.selectedElements ||
+    latestUser?.metadata?.selectedElement;
   const skill = latestUser?.metadata?.skill as Skill | undefined;
   const availableSkills = request.body.context?.availableSkills || [];
   return {
@@ -246,7 +248,7 @@ function promptBreakdown(
       metadataLength(attachedTabs),
     selectedElementPromptChars:
       contextBlockLength(context, PROMPT_CONTEXT_TAG.selectedElement) +
-      metadataLength(selectedElement),
+      metadataLength(selectedElements),
     skillPromptChars:
       (skill ? getSkillInstruction(skill).length : 0) +
       availableSkills.reduce(

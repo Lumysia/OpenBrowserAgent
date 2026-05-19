@@ -4,8 +4,16 @@ import type {
   UploadedAttachment,
 } from "../../src/shared/types";
 
-export function selectedElementImageAttachment(
-  element: SelectedElement | null,
+export function selectedElementImageAttachments(
+  elements: SelectedElement[],
+): UploadedAttachment[] {
+  return elements
+    .map(selectedElementImageAttachment)
+    .filter((item): item is UploadedAttachment => !!item);
+}
+
+function selectedElementImageAttachment(
+  element: SelectedElement,
 ): UploadedAttachment | undefined {
   if (!element?.imageDataUrl) return undefined;
   const type = element.imageDataUrl.match(/^data:([^;,]+)/)?.[1] || "image/png";

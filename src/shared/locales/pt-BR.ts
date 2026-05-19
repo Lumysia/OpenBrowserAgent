@@ -49,7 +49,7 @@ export const ptBR: LocaleMessages = {
     importChatOpenAi: "Importar chat JSON da OpenAI",
     clearAllChats: "Limpar todos os chats",
     noChatsYet: "Ainda não há chats",
-    closeChat: "Fechar chat",
+    removeChat: "Remover chat",
     messageCount: "{count} mensagens",
     relativeMinutesAgo: "há {count} min",
     relativeHoursAgo: "há {count} h",

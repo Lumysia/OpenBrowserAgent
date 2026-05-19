@@ -275,7 +275,7 @@ export type SendMessagesBody = {
   maxToolSteps?: number;
   context?: {
     tabs?: AttachmentTab[];
-    selectedElement?: SelectedElement | null;
+    selectedElements?: SelectedElement[];
     text?: string;
     uploadedAttachments?: UploadedAttachment[];
     availableSkills?: Skill[];

@@ -1925,8 +1925,7 @@ a {
   animation: fade-in 0.2s ease both;
 }
 .history-page-header {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
+  display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
@@ -1937,6 +1936,9 @@ a {
 }
 .history-page-header > div {
   min-width: 0;
+}
+.history-page-header > div:not(.history-page-actions) {
+  flex: 1 1 auto;
   display: grid;
   gap: 2px;
 }
@@ -1949,6 +1951,26 @@ a {
   color: var(--muted-foreground);
   font-size: 11px;
   line-height: 1.2;
+}
+.history-page-actions {
+  flex: 0 0 auto;
+  min-width: max-content;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0;
+  color: var(--accent-strong);
+}
+.history-page-actions .ui-button-icon {
+  width: 32px;
+  height: 32px;
+}
+.history-danger-action {
+  color: color-mix(in srgb, var(--destructive) 82%, var(--muted-foreground));
+}
+.history-danger-action:hover,
+.history-danger-action:focus-visible {
+  background: color-mix(in srgb, var(--destructive) 12%, transparent);
+  color: var(--destructive);
 }
 .history-panel {
   min-width: 0;
@@ -1966,7 +1988,7 @@ a {
 .history-item {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 24px;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 2px;
   min-width: 0;
@@ -2051,7 +2073,13 @@ a {
   font-size: 11px;
   line-height: 1.25;
 }
-.history-close {
+.history-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding-right: 2px;
+}
+.history-item-action {
   width: 22px;
   height: 22px;
   display: inline-flex;
@@ -2062,7 +2090,7 @@ a {
   background: transparent;
   color: var(--muted-foreground);
 }
-.history-close:hover {
+.history-item-action:hover {
   background: rgba(22, 21, 18, 0.09);
   color: var(--foreground);
 }

@@ -42,6 +42,9 @@ export async function extractTabText(tabId: number): Promise<string> {
 export async function injectElementSelector(tabId: number, prompt: string) {
   const tab = await chrome.tabs.get(tabId);
   if (!isScriptableUrl(tab.url)) return false;
+  await chrome.tabs
+    .sendMessage(tabId, { type: "cancelElementSelector" })
+    .catch(() => undefined);
   await chrome.scripting.executeScript({
     target: { tabId },
     args: [prompt],

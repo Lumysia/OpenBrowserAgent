@@ -50,7 +50,7 @@ export const enUS = {
     importChatOpenAi: "Import OpenAI JSON chat",
     clearAllChats: "Clear all chats",
     noChatsYet: "No chats yet",
-    closeChat: "Close chat",
+    removeChat: "Remove chat",
     messageCount: "{count} messages",
     relativeMinutesAgo: "{count}m ago",
     relativeHoursAgo: "{count}h ago",

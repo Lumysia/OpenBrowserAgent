@@ -30,8 +30,7 @@ export function createEditMessageDraft({
     attachedTabs: Array.isArray(message.metadata?.attachedTabs)
       ? (message.metadata.attachedTabs as AttachmentTab[])
       : [],
-    selectedElement: (message.metadata?.selectedElement ||
-      null) as SelectedElement | null,
+    selectedElements: selectedElementsFromMetadata(message.metadata),
     keptMessageIds,
   };
 }
@@ -54,8 +53,18 @@ export type EditMessageDraft = NonNullable<
   previousContent: string;
   previousAttachments: UploadedAttachment[];
   previousAttachedTabs: AttachmentTab[];
-  previousSelectedElement: SelectedElement | null;
+  previousSelectedElements: SelectedElement[];
 };
+
+function selectedElementsFromMetadata(
+  metadata: Record<string, unknown> | undefined,
+) {
+  if (Array.isArray(metadata?.selectedElements))
+    return metadata.selectedElements as SelectedElement[];
+  return metadata?.selectedElement
+    ? [metadata.selectedElement as SelectedElement]
+    : [];
+}
 
 export function pruneSentAttachmentPreviews(
   previews: Record<string, UploadedAttachment[]>,

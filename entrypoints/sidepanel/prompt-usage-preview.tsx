@@ -36,7 +36,7 @@ export function usePromptUsageEstimate({
   currentChat,
   preferences,
   attachedTabs,
-  selectedElement,
+  selectedElements,
   pendingAttachments,
   uploadedAttachments,
   selectedSkill,
@@ -48,7 +48,7 @@ export function usePromptUsageEstimate({
   currentChat?: Chat;
   preferences?: Preferences;
   attachedTabs: AttachmentTab[];
-  selectedElement: SelectedElement | null;
+  selectedElements: SelectedElement[];
   pendingAttachments: UploadedAttachment[];
   uploadedAttachments: UploadedAttachment[];
   selectedSkill?: Skill | null;
@@ -59,13 +59,13 @@ export function usePromptUsageEstimate({
 
   useEffect(() => {
     let cancelled = false;
-    buildSidepanelContext({ mode, attachedTabs, selectedElement })
+    buildSidepanelContext({ mode, attachedTabs, selectedElements })
       .then((context) => !cancelled && setContextChars(context.length))
       .catch(() => !cancelled && setContextChars(0));
     return () => {
       cancelled = true;
     };
-  }, [mode, attachedTabs, selectedElement]);
+  }, [mode, attachedTabs, selectedElements]);
 
   return useMemo(() => {
     const attachments = uniqueAttachments([

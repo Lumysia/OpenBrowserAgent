@@ -23,6 +23,8 @@ import {
   closeChatAction,
   createChatAction,
   forkChatAction,
+  pruneEmptyChats,
+  selectChatAction,
   updateChatAction,
 } from "./chat-state-actions";
 import {
@@ -30,7 +32,7 @@ import {
   pruneSentAttachmentPreviews,
 } from "./edit-message";
 import { assistantModelLabel } from "./model-label";
-import { selectedElementImageAttachment } from "./selected-element-attachment";
+import { selectedElementImageAttachments } from "./selected-element-attachment";
 import {
   buildSidepanelContext,
   interpolateSkillVariables,
@@ -127,10 +129,10 @@ export function SidepanelApp() {
     attachedTabs,
     availableTabs,
     activeTabAttachable,
-    selectedElement,
+    selectedElements,
     setAttachedTabs,
     clearAttachedTabsAfterSend,
-    setSelectedElement,
+    setSelectedElements,
     attachActiveTab,
     showAllTabsPicker,
     toggleAttachedTab,
@@ -142,7 +144,7 @@ export function SidepanelApp() {
     currentChat,
     preferences,
     attachedTabs,
-    selectedElement,
+    selectedElements,
     pendingAttachments,
     uploadedAttachments,
     selectedSkill,
@@ -156,10 +158,10 @@ export function SidepanelApp() {
       input,
       pendingAttachments,
       attachedTabs,
-      selectedElement,
+      selectedElements,
       setInput,
       setAttachedTabs,
-      setSelectedElement,
+      setSelectedElements,
       stageUploadedAttachments,
     });
   const {
@@ -181,11 +183,20 @@ export function SidepanelApp() {
   useEffect(() => {
     chatsRef.current = chats || [];
   }, [chats]);
+  useEffect(() => {
+    if (!chats?.some((chat) => !chat.messages.length)) return;
+    setChats((items) => pruneEmptyChats(items));
+  }, [chats, setChats]);
 
   useSidepanelTheme(preferences?.accentColor, preferences?.colorScheme);
 
   const createChat = () =>
-    createChatAction({ title: t.words.newChat, setChats, setActiveChatId });
+    createChatAction({
+      title: t.words.newChat,
+      persist: false,
+      setChats,
+      setActiveChatId,
+    });
 
   useChatSelection(
     chats,
@@ -247,6 +258,10 @@ export function SidepanelApp() {
       setActiveChatId,
     });
   }
+
+  function selectChat(chatId: string) {
+    selectChatAction({ chatId, setChats, setActiveChatId });
+  }
   async function send(
     content = input,
     resendAttachments?: UploadedAttachment[],
@@ -290,23 +305,24 @@ export function SidepanelApp() {
       : activeEdit
         ? activeEdit.attachedTabs
         : attachedTabs;
-    const sentElement = options.queued
-      ? null
+    const sentElements = options.queued
+      ? []
       : activeEdit
-        ? activeEdit.selectedElement
-        : selectedElement;
+        ? activeEdit.selectedElements
+        : selectedElements;
     const context = await buildSidepanelContext({
       mode,
       attachedTabs: sentTabs,
-      selectedElement: sentElement,
+      selectedElements: sentElements,
     });
     const baseChat = activeEdit
       ? { ...chat, messages: activeEdit.messagesBefore, updatedAt: Date.now() }
       : chat;
-    const selectedImageAttachment = selectedElementImageAttachment(sentElement);
+    const selectedImageAttachments =
+      selectedElementImageAttachments(sentElements);
     const sentAttachments = [
       ...(options.queued ? [] : resendAttachments || pendingAttachments),
-      ...(selectedImageAttachment ? [selectedImageAttachment] : []),
+      ...selectedImageAttachments,
     ];
     const activeAttachments = [
       ...(options.queued
@@ -314,7 +330,7 @@ export function SidepanelApp() {
         : activeEdit
           ? activeEdit.attachments
           : uploadedAttachments),
-      ...(selectedImageAttachment ? [selectedImageAttachment] : []),
+      ...selectedImageAttachments,
     ];
     const assistantModel = assistantModelLabel({
       modelId: preferences?.selectedModelId,
@@ -334,7 +350,7 @@ export function SidepanelApp() {
       sources: baseChat.sources,
       assistantModel,
       sentTabs,
-      sentElement,
+      sentElements,
       sentAttachments,
       skill: sentSkill,
       autoSelectedSkill: false,
@@ -362,7 +378,7 @@ export function SidepanelApp() {
       setInput("");
       clearAttachedTabsAfterSend();
       clearPendingAttachments();
-      setSelectedElement(null);
+      setSelectedElements([]);
       setSelectedSkill(null);
       setEditingMessage(null);
     }
@@ -380,7 +396,7 @@ export function SidepanelApp() {
         maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
         context: {
           tabs: sentTabs,
-          selectedElement: sentElement,
+          selectedElements: sentElements,
           text: context,
           uploadedAttachments: activeAttachments,
           availableSkills,
@@ -466,7 +482,7 @@ export function SidepanelApp() {
       attachmentNotice={attachmentNotice}
       availableTabs={availableTabs}
       activeTabAttachable={activeTabAttachable}
-      selectedElement={selectedElement}
+      selectedElements={selectedElements}
       streaming={streaming}
       creatingSkill={creatingSkill}
       skillCreated={skillCreated}
@@ -485,13 +501,13 @@ export function SidepanelApp() {
       onSetOpenMenu={setOpenMenu}
       onSetAddMenuView={setAddMenuView}
       onSetShowHistory={setShowHistory}
-      onSetSelectedElement={setSelectedElement}
+      onSetSelectedElements={setSelectedElements}
       onSetSelectedSkill={setSelectedSkill}
       onSetChats={setChats}
       onSetPreferences={setPreferences}
       onCreateChat={createChat}
       onImportChat={(chat) => {
-        setChats((items) => [...items, chat]);
+        setChats((items) => [...pruneEmptyChats(items), chat]);
         setActiveChatId(chat.id);
       }}
       onCloseChat={closeChat}
@@ -536,7 +552,7 @@ export function SidepanelApp() {
           });
       }}
       onSelectElement={selectElement}
-      onSelectChat={setActiveChatId}
+      onSelectChat={selectChat}
     />
   );
 }

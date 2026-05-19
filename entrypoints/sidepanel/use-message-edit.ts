@@ -14,10 +14,10 @@ export function useMessageEdit({
   input,
   pendingAttachments,
   attachedTabs,
-  selectedElement,
+  selectedElements,
   setInput,
   setAttachedTabs,
-  setSelectedElement,
+  setSelectedElements,
   stageUploadedAttachments,
 }: {
   currentChat?: Chat;
@@ -25,10 +25,10 @@ export function useMessageEdit({
   input: string;
   pendingAttachments: UploadedAttachment[];
   attachedTabs: AttachmentTab[];
-  selectedElement: SelectedElement | null;
+  selectedElements: SelectedElement[];
   setInput: (value: string) => void;
   setAttachedTabs: (tabs: AttachmentTab[]) => void;
-  setSelectedElement: (element: SelectedElement | null) => void;
+  setSelectedElements: (elements: SelectedElement[]) => void;
   stageUploadedAttachments: (attachments: UploadedAttachment[]) => void;
 }) {
   const [editingMessage, setEditingMessage] = useState<EditMessageDraft | null>(
@@ -48,14 +48,14 @@ export function useMessageEdit({
     if (!draft) return;
     setInput(draft.content);
     setAttachedTabs(draft.attachedTabs);
-    setSelectedElement(draft.selectedElement);
+    setSelectedElements(draft.selectedElements);
     stageUploadedAttachments(draft.attachments);
     setEditingMessage({
       ...draft,
       previousContent: input,
       previousAttachments: pendingAttachments,
       previousAttachedTabs: attachedTabs,
-      previousSelectedElement: selectedElement,
+      previousSelectedElements: selectedElements,
     });
   }
 
@@ -63,7 +63,7 @@ export function useMessageEdit({
     if (!editingMessage) return;
     setInput(editingMessage.previousContent);
     setAttachedTabs(editingMessage.previousAttachedTabs);
-    setSelectedElement(editingMessage.previousSelectedElement);
+    setSelectedElements(editingMessage.previousSelectedElements);
     stageUploadedAttachments(editingMessage.previousAttachments);
     setEditingMessage(null);
   }

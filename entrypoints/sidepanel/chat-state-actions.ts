@@ -7,10 +7,12 @@ type ActiveChatSetter = Dispatch<SetStateAction<string | undefined>>;
 
 export function createChatAction({
   title,
+  persist = true,
   setChats,
   setActiveChatId,
 }: {
   title: string;
+  persist?: boolean;
   setChats: ChatSetter;
   setActiveChatId: ActiveChatSetter;
 }) {
@@ -22,15 +24,43 @@ export function createChatAction({
     createdAt: now,
     updatedAt: now,
   };
-  setChats((items) => [...items, chat]);
+  if (persist) setChats((items) => [...pruneEmptyChats(items), chat]);
   setActiveChatId(chat.id);
   return chat;
 }
 
-export function updateChatAction(setChats: ChatSetter, chat: Chat) {
+export function selectChatAction({
+  chatId,
+  setChats,
+  setActiveChatId,
+}: {
+  chatId: string;
+  setChats: ChatSetter;
+  setActiveChatId: ActiveChatSetter;
+}) {
   setChats((items) =>
-    items.map((candidate) => (candidate.id === chat.id ? chat : candidate)),
+    items.filter((chat) => chat.id === chatId || !isEmptyChat(chat)),
   );
+  setActiveChatId(chatId);
+}
+
+export function pruneEmptyChats(chats: Chat[]) {
+  return chats.filter((chat) => !isEmptyChat(chat));
+}
+
+export function updateChatAction(setChats: ChatSetter, chat: Chat) {
+  setChats((items) => {
+    const pruned = pruneEmptyChats(items);
+    if (!pruned.some((candidate) => candidate.id === chat.id))
+      return [...pruned, chat];
+    return pruned.map((candidate) =>
+      candidate.id === chat.id ? chat : candidate,
+    );
+  });
+}
+
+function isEmptyChat(chat: Chat) {
+  return chat.messages.length === 0;
 }
 
 export function forkChatAction({

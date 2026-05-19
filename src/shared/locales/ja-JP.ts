@@ -49,7 +49,7 @@ export const jaJP: LocaleMessages = {
     importChatOpenAi: "OpenAI JSON チャットをインポート",
     clearAllChats: "すべてのチャットを消去",
     noChatsYet: "チャットはまだありません",
-    closeChat: "チャットを閉じる",
+    removeChat: "チャットを削除",
     messageCount: "{count}件のメッセージ",
     relativeMinutesAgo: "{count}分前",
     relativeHoursAgo: "{count}時間前",

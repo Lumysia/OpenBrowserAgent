@@ -198,7 +198,7 @@
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    cleanup();
+    cancel();
   }
 
   function isSelectableTarget(target) {

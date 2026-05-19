@@ -61,15 +61,16 @@ export function isTabAlreadySentAsSelected(chats: Chat[], tabId: number) {
 export async function buildSidepanelContext({
   mode,
   attachedTabs,
-  selectedElement,
+  selectedElements,
 }: {
   mode: ChatMode;
   attachedTabs: AttachmentTab[];
-  selectedElement: SelectedElement | null;
+  selectedElements: SelectedElement[];
 }) {
   const parts: string[] = [];
-  if (selectedElement)
-    parts.push(renderSelectedElement(selectedElement, attachedTabs));
+  selectedElements.forEach((element) =>
+    parts.push(renderSelectedElement(element, attachedTabs)),
+  );
   if (attachedTabs.length) {
     const tabBlocks = [];
     for (const tab of attachedTabs)

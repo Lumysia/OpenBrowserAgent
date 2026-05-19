@@ -46,7 +46,7 @@ export const zhTW: LocaleMessages = {
     importChatOpenAi: "匯入 OpenAI JSON 對話",
     clearAllChats: "清空所有對話",
     noChatsYet: "尚無對話",
-    closeChat: "關閉對話",
+    removeChat: "移除對話",
     messageCount: "{count} 則訊息",
     relativeMinutesAgo: "{count} 分鐘前",
     relativeHoursAgo: "{count} 小時前",

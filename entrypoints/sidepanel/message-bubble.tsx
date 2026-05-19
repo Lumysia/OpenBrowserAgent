@@ -68,9 +68,7 @@ export function MessageBubble({
   const sentTabs = Array.isArray(message.metadata?.attachedTabs)
     ? (message.metadata.attachedTabs as AttachmentTab[])
     : [];
-  const sentElement = message.metadata?.selectedElement as
-    | SelectedElement
-    | undefined;
+  const sentElements = selectedElementsFromMetadata(message.metadata);
   const assistantModel = message.metadata?.assistantModel as
     | { provider?: string; name?: string }
     | undefined;
@@ -173,13 +171,15 @@ export function MessageBubble({
           />
         </div>
       )}
-      {message.role === "user" && sentElement && (
+      {message.role === "user" && !!sentElements.length && (
         <div className="sent-context-row">
           <div className="sent-tab-chip">
             <MousePointerClick size={22} />
             <span>
               <strong>
-                {sentElement.tagName || t.sidepanel.elementSelected}
+                {sentElements.length === 1
+                  ? sentElements[0].tagName || t.sidepanel.elementSelected
+                  : `${t.sidepanel.elementSelected} x${sentElements.length}`}
               </strong>
             </span>
           </div>
@@ -198,6 +198,16 @@ export function MessageBubble({
       )}
     </div>
   );
+}
+
+function selectedElementsFromMetadata(
+  metadata: Record<string, unknown> | undefined,
+) {
+  if (Array.isArray(metadata?.selectedElements))
+    return metadata.selectedElements as SelectedElement[];
+  return metadata?.selectedElement
+    ? [metadata.selectedElement as SelectedElement]
+    : [];
 }
 
 function SourceChips({ sources }: { sources: ChatSource[] }) {

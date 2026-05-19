@@ -49,7 +49,7 @@ export const esES: LocaleMessages = {
     importChatOpenAi: "Importar chat JSON de OpenAI",
     clearAllChats: "Borrar todos los chats",
     noChatsYet: "Aún no hay chats",
-    closeChat: "Cerrar chat",
+    removeChat: "Eliminar chat",
     messageCount: "{count} mensajes",
     relativeMinutesAgo: "hace {count} min",
     relativeHoursAgo: "hace {count} h",

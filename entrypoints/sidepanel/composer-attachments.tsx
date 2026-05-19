@@ -17,23 +17,23 @@ export function ComposerAttachments({
   attachedTabs,
   pendingAttachments,
   selectedSkill,
-  selectedElement,
+  selectedElements,
   attachmentNotice,
   onRemoveAttachedTab,
   onRemoveUploadedAttachment,
   onClearSkill,
-  onSetSelectedElement,
+  onSetSelectedElements,
 }: {
   t: Messages;
   attachedTabs: AttachmentTab[];
   pendingAttachments: UploadedAttachment[];
   selectedSkill?: Skill | null;
-  selectedElement: SelectedElement | null;
+  selectedElements: SelectedElement[];
   attachmentNotice: string;
   onRemoveAttachedTab: (tabId: number) => void;
   onRemoveUploadedAttachment: (id: string) => void;
   onClearSkill: () => void;
-  onSetSelectedElement: (value: SelectedElement | null) => void;
+  onSetSelectedElements: (value: SelectedElement[]) => void;
 }) {
   return (
     <div className="context-strip">
@@ -66,6 +66,32 @@ export function ComposerAttachments({
             onRemove={() => onRemoveAttachedTab(tab.id)}
           />
         ))}
+        {selectedElements.map((element, index) => (
+          <div className="context-card" key={element.aiId || index}>
+            <MousePointerClick size={18} />
+            <span>
+              <strong>{element.tagName || t.sidepanel.elementSelected}</strong>
+              <small>{t.sidepanel.willBeSentAsPageContext}</small>
+            </span>
+            <IconTooltip label={t.common.cancel}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="context-close"
+                aria-label={t.common.cancel}
+                onClick={() =>
+                  onSetSelectedElements(
+                    selectedElements.filter(
+                      (_, itemIndex) => itemIndex !== index,
+                    ),
+                  )
+                }
+              >
+                <X size={14} />
+              </Button>
+            </IconTooltip>
+          </div>
+        ))}
       </div>
       {!!pendingAttachments.length && (
         <div className="context-file-row">
@@ -81,28 +107,6 @@ export function ComposerAttachments({
       )}
       {attachmentNotice && (
         <div className="attachment-notice">{attachmentNotice}</div>
-      )}
-      {selectedElement && (
-        <div className="context-card">
-          <MousePointerClick size={18} />
-          <span>
-            <strong>
-              {selectedElement.tagName || t.sidepanel.elementSelected}
-            </strong>
-            <small>{t.sidepanel.willBeSentAsPageContext}</small>
-          </span>
-          <IconTooltip label={t.common.cancel}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="context-close"
-              aria-label={t.common.cancel}
-              onClick={() => onSetSelectedElement(null)}
-            >
-              <X size={14} />
-            </Button>
-          </IconTooltip>
-        </div>
       )}
     </div>
   );

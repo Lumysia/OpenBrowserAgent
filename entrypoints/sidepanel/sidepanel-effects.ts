@@ -54,20 +54,16 @@ export function useChatSelection(
   useEffect(() => {
     if (!chats) return;
     if (!chats.length) {
+      if (activeChatId) return;
       createChat();
       return;
     }
     if (!initializedChatSelectionRef.current) {
       initializedChatSelectionRef.current = true;
-      const emptyChat = [...chats]
-        .reverse()
-        .find((chat) => !chat.messages.length);
-      if (emptyChat) setActiveChatId(emptyChat.id);
-      else createChat();
+      createChat();
       return;
     }
-    if (!activeChatId || !chats.some((chat) => chat.id === activeChatId))
-      setActiveChatId(sortChatsNewestFirst(chats)[0]?.id);
+    if (!activeChatId) setActiveChatId(sortChatsNewestFirst(chats)[0]?.id);
   }, [
     activeChatId,
     chats,
