@@ -1,36 +1,35 @@
 # OpenBrowserAgent
 
-OpenBrowserAgent is an AI browser side panel for understanding pages, working across tabs, and automating repetitive browser tasks.
+OpenBrowserAgent is an AI browser side panel for understanding pages, researching the web, and completing browser tasks with you in control.
 
-It turns the browser into a working surface for AI: attach the current page, select elements, ask questions, run actions, and let the assistant operate with browser-aware tools while you stay in control.
+It turns your browser into an AI working surface: bring page context into chat, switch between focused Q&A and action-oriented agent mode, connect your own models, and extend the assistant with reusable skills and remote MCP tools.
 
-## What It Does
+## Why Use It
 
-- Chat with an AI assistant directly from the browser side panel.
-- Use `Agent` mode for browser automation and `Ask` mode for page-focused questions.
-- Attach tabs as context, including current page metadata and page content when needed.
-- Select page elements and let the assistant use them as structured context.
-- Configure your own AI providers, models, and base URLs.
-- Create skills for repeated prompts and workflows.
-- Stream assistant responses and tool activity in the UI.
-- Customize light/dark/system appearance, accent colors, language, and auto-scroll behavior.
+- **Work where the web already is.** Ask questions about the current page, compare tabs, summarize content, and keep sources close to the browser session.
+- **Move from answers to action.** Agent mode can inspect pages, navigate tabs, click, type, search, download content, and use richer browser automation tools when needed.
+- **Bring your own AI stack.** Configure model providers, API keys, base URLs, chat models, and image models without being locked into one backend.
+- **Extend it with skills and MCP.** Save repeatable workflows as skills, import skill packages, and connect tested remote Streamable HTTP MCP servers for external tools like search and fetch.
+- **Stay in control.** Tools are visible as they run, MCP servers must be tested before enabling, individual MCP tools can be toggled, and detailed tool JSON is available on demand.
 
-## Product Highlights
+## Highlights
 
-- **Browser-native workflow:** Runs as a Chrome MV3 extension with a dedicated side panel.
-- **Bring your own model:** Supports configurable providers instead of locking the user into one backend.
-- **Tool-aware assistant:** Browser tools can inspect tabs, read page content, search, click, type, group tabs, download content, and more.
-- **Context first:** Tabs, selected elements, skills, and current page context are treated as first-class inputs.
-- **Polished local UI:** Compact side panel, themed settings, streaming states, copy feedback, and multilingual interface support.
+- **Side panel chat** with streaming responses, queued messages, attachment-aware context, and polished tool activity cards.
+- **Agent and Ask modes** for either browser automation or page-focused questions.
+- **Tab and page context** including current tab metadata, page content, selected elements, and source-aware outputs.
+- **Remote MCP tools** with built-in Exa seed, JSON import, test-before-enable flow, per-tool enable switches, and citation extraction from MCP results.
+- **Reusable skills** with built-in browser guidance, skill import/export, editable skill files, and reset-to-default controls.
+- **Source citations** that keep final answers tied to pages, files, skills, generated outputs, and MCP-provided web results.
+- **Product-grade settings** for providers, models, appearance, language, sync, debug reset, skills, and MCP servers.
+- **Theme-aware UI** with light/dark/system modes, accent colors, compact density, subtle motion, and localized interface text.
 
-## Tech Stack
+## Typical Workflows
 
-- WXT + Chrome MV3
-- Vite
-- React + TypeScript
-- Radix UI primitives
-- shadcn-style local components
-- CSS variables for theme and accent systems
+- Research a topic from the side panel, fetch pages through an MCP search/fetch provider, and receive a cited summary.
+- Ask questions about the active tab or attached pages without leaving the browser.
+- Let the agent fill forms, click controls, organize tabs, or inspect page state while showing each tool step.
+- Create a custom skill for a recurring workflow, then reuse it across chats.
+- Configure multiple model providers and choose the best model for chat or image generation.
 
 ## Development
 
@@ -44,14 +43,3 @@ npm run dev
 ```bash
 npm run build
 ```
-
-The generated extension is written to `.output/` and can be loaded from Chrome's `Load unpacked` flow.
-
-## Project Structure
-
-- `entrypoints/background.ts` - MV3 service worker, provider calls, browser tools, and AI streaming protocol.
-- `entrypoints/sidepanel/` - React side panel chat UI with Agent/Ask modes, skills, tab attachment, and element selection.
-- `entrypoints/options/` - React settings UI for providers, models, language, appearance, preferences, and skills.
-- `src/shared/` - storage schema, provider contracts, browser helpers, locale registry, and message types.
-- `src/ui/` - local UI components, shared styles, theme variables, and hooks.
-- `public/` - icons, manifest locale messages, and injected selector script.
