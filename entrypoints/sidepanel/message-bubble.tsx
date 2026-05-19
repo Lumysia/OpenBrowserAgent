@@ -296,24 +296,14 @@ function sourcesForAssistantMessage(
   sources: ChatSource[],
 ) {
   const text = assistantMessageText(message);
-  if (!text || !sources.length) return [];
+  if (!text || !sources.length || !messageRunEnded(message)) return [];
   const citedIds = Array.from(
     text.matchAll(/\[\[cite:([\w-]+)\]\]/g),
     (match) => match[1],
   );
-  if (!citedIds.length)
-    return message.parts?.length && !lastAssistantPartIsText(message)
-      ? []
-      : sources;
+  if (!citedIds.length) return sources;
   const citedSet = new Set(citedIds);
   return sources.filter((source) => citedSet.has(source.id));
-}
-
-function lastAssistantPartIsText(message: ChatMessage) {
-  const lastPart = message.parts
-    ?.filter((part) => part.type === "text" || part.type.startsWith("tool-"))
-    .at(-1);
-  return lastPart?.type === "text" && !!lastPart.text?.trim();
 }
 
 function messageRunEnded(message: ChatMessage) {
