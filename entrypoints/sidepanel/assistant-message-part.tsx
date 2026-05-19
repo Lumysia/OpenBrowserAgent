@@ -1,4 +1,4 @@
-import { Check, Copy, ExternalLink, GitBranch } from "lucide-react";
+import { Brain, Check, Copy, ExternalLink, GitBranch } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   COPY_FEEDBACK_MS,
@@ -7,8 +7,14 @@ import {
 import type { Messages } from "../../src/shared/i18n";
 import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
 import type { ChatMessage, ChatPart, ChatSource } from "../../src/shared/types";
-import { isToolPartType } from "../../src/shared/types";
-import { Button } from "../../src/ui/components";
+import { CHAT_PART_STATE, isToolPartType } from "../../src/shared/types";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+  Button,
+} from "../../src/ui/components";
 import { formatMessageTime } from "./format";
 import { IconTooltip } from "./icon-tooltip";
 import { extractMarkdownLinks, renderMarkdown } from "./markdown";
@@ -33,7 +39,10 @@ export function AssistantPart({
   message: ChatMessage;
   chatMessages: ChatMessage[];
 }) {
-  if (isToolPartType(part.type)) return <ToolPart t={t} part={part} />;
+  if (isToolPartType(part.type))
+    return <ToolPart t={t} part={part} runEnded={messageRunEnded(message)} />;
+  if (part.type === "reasoning" && part.text?.trim())
+    return <AssistantReasoning t={t} text={part.text} />;
   if (part.type === "text" && part.text?.trim())
     return (
       <AssistantText
@@ -46,6 +55,41 @@ export function AssistantPart({
       />
     );
   return null;
+}
+
+function messageRunEnded(message: ChatMessage) {
+  const metrics = message.metadata?.runMetrics as { endedAt?: unknown };
+  return (
+    !!metrics?.endedAt ||
+    !!message.parts?.some((part) => part.state === CHAT_PART_STATE.outputError)
+  );
+}
+
+function AssistantReasoning({ t, text }: { t: Messages; text: string }) {
+  const { text: displayText } = useThrottledText(
+    text,
+    STREAM_RENDER_THROTTLE_MS,
+  );
+  const streaming = displayText.length < text.length;
+  return (
+    <Accordion type="single" collapsible className="assistant-reasoning">
+      <AccordionItem value="reasoning">
+        <AccordionTrigger className="assistant-reasoning-trigger">
+          <span>
+            <Brain size={14} />
+            {t.sidepanel.runInfo.reasoning}
+          </span>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div
+            className={`assistant-reasoning-body${streaming ? " streaming" : ""}`}
+          >
+            {displayText}
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
 }
 
 export function AssistantText({

@@ -255,12 +255,12 @@ export function ProviderAccordion({
             />
           </div>
         </div>
-        <div className="provider-danger-row">
-          <Button onClick={saveProvider} disabled={!dirty}>
-            {saved ? t.common.saved : t.common.save}
-          </Button>
+        <div className="provider-form-actions">
           <Button variant="destructive" size="sm" onClick={onDelete}>
             <Trash2 size={16} /> {t.options.deleteProvider}
+          </Button>
+          <Button onClick={saveProvider} disabled={!dirty}>
+            {saved ? t.common.saved : t.common.save}
           </Button>
         </div>
       </AccordionContent>

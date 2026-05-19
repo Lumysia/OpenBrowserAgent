@@ -126,6 +126,8 @@ export const zhCN: LocaleMessages = {
     resendWithoutMissingFiles: "不带缺失文件重发",
     resendMessage: "重发",
     forkChat: "分叉对话",
+    showMoreSources: "展开剩余 {count} 个来源",
+    showFewerSources: "收起来源",
     unavailableAttachments: "{count} 个不可用",
     allOpenTabs: "所有打开的标签页",
     selectElement: "选择元素",

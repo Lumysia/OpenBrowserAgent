@@ -129,6 +129,8 @@ export const ko: LocaleMessages = {
     resendWithoutMissingFiles: "누락 파일 없이 다시 보내기",
     resendMessage: "다시 보내기",
     forkChat: "채팅 분기",
+    showMoreSources: "출처 {count}개 더 보기",
+    showFewerSources: "출처 접기",
     unavailableAttachments: "{count}개 사용 불가",
     allOpenTabs: "열린 모든 탭",
     selectElement: "요소 선택",

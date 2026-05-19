@@ -126,6 +126,8 @@ export const zhTW: LocaleMessages = {
     resendWithoutMissingFiles: "不帶缺失檔案重發",
     resendMessage: "重發",
     forkChat: "分叉對話",
+    showMoreSources: "展開剩餘 {count} 個來源",
+    showFewerSources: "收起來源",
     unavailableAttachments: "{count} 個不可用",
     allOpenTabs: "所有開啟的分頁",
     selectElement: "選擇元素",

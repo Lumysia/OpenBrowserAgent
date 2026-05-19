@@ -12,7 +12,10 @@ export function useStoredState<T>(item: StorageItem<T>) {
   const [value, setValue] = useState<T | undefined>();
   const valueRef = useRef<T | undefined>(undefined);
   const snapshotRef = useRef<string | undefined>(undefined);
-  const ownWriteSnapshotsRef = useRef(new Set<string>());
+  const ownWriteSnapshotsRef = useRef<OwnWriteSnapshots>({
+    order: [],
+    values: new Set(),
+  });
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -31,8 +34,7 @@ export function useStoredState<T>(item: StorageItem<T>) {
     const unwatch = item.watch((next) => {
       const nextSnapshot = snapshot(next);
       if (nextSnapshot && nextSnapshot === snapshotRef.current) return;
-      if (nextSnapshot && ownWriteSnapshotsRef.current.has(nextSnapshot)) {
-        ownWriteSnapshotsRef.current.delete(nextSnapshot);
+      if (consumeOwnWriteSnapshot(ownWriteSnapshotsRef, nextSnapshot)) {
         return;
       }
       valueRef.current = next;
@@ -55,10 +57,15 @@ export function useStoredState<T>(item: StorageItem<T>) {
         : next;
     const resolvedSnapshot = snapshot(resolved);
     valueRef.current = resolved;
-    if (resolvedSnapshot) ownWriteSnapshotsRef.current.add(resolvedSnapshot);
     if (!item.persistDebounceMs) snapshotRef.current = resolvedSnapshot;
     setValue(resolved);
-    persistValue(item, resolved, persistTimerRef, pendingPersistRef);
+    persistValue(
+      item,
+      resolved,
+      persistTimerRef,
+      pendingPersistRef,
+      ownWriteSnapshotsRef,
+    );
   }
 
   return [value, update, loading] as const;
@@ -69,6 +76,7 @@ function persistValue<T>(
   value: T,
   timerRef: MutableRefObject<ReturnType<typeof setTimeout> | undefined>,
   pendingRef: MutableRefObject<T | undefined>,
+  ownWriteSnapshotsRef: MutableRefObject<OwnWriteSnapshots>,
 ) {
   if (!item.persistDebounceMs) {
     item.set(value).catch(logPersistError);
@@ -80,7 +88,10 @@ function persistValue<T>(
     const pending = pendingRef.current;
     pendingRef.current = undefined;
     timerRef.current = undefined;
-    if (pending !== undefined) item.set(pending).catch(logPersistError);
+    if (pending !== undefined)
+      persistOwnWrite(item, pending, ownWriteSnapshotsRef).catch(
+        logPersistError,
+      );
   }, item.persistDebounceMs);
 }
 
@@ -96,8 +107,60 @@ function flushPendingPersist<T>(
   if (pending !== undefined) item.set(pending).catch(logPersistError);
 }
 
+async function persistOwnWrite<T>(
+  item: StorageItem<T>,
+  value: T,
+  ownWriteSnapshotsRef: MutableRefObject<OwnWriteSnapshots>,
+) {
+  const valueSnapshot = snapshot(value);
+  rememberOwnWriteSnapshot(ownWriteSnapshotsRef, valueSnapshot);
+  try {
+    await item.set(value);
+  } catch (error) {
+    forgetOwnWriteSnapshot(ownWriteSnapshotsRef, valueSnapshot);
+    throw error;
+  }
+}
+
 function logPersistError(error: unknown) {
   console.warn("Failed to persist stored state", error);
+}
+
+type OwnWriteSnapshots = { order: string[]; values: Set<string> };
+
+const OWN_WRITE_SNAPSHOT_LIMIT = 4;
+
+function rememberOwnWriteSnapshot(
+  ref: MutableRefObject<OwnWriteSnapshots>,
+  valueSnapshot: string | undefined,
+) {
+  if (!valueSnapshot || ref.current.values.has(valueSnapshot)) return;
+  ref.current.values.add(valueSnapshot);
+  ref.current.order.push(valueSnapshot);
+  while (ref.current.order.length > OWN_WRITE_SNAPSHOT_LIMIT) {
+    const expired = ref.current.order.shift();
+    if (expired) ref.current.values.delete(expired);
+  }
+}
+
+function consumeOwnWriteSnapshot(
+  ref: MutableRefObject<OwnWriteSnapshots>,
+  valueSnapshot: string | undefined,
+) {
+  if (!valueSnapshot || !ref.current.values.has(valueSnapshot)) return false;
+  forgetOwnWriteSnapshot(ref, valueSnapshot);
+  return true;
+}
+
+function forgetOwnWriteSnapshot(
+  ref: MutableRefObject<OwnWriteSnapshots>,
+  valueSnapshot: string | undefined,
+) {
+  if (!valueSnapshot) return;
+  ref.current.values.delete(valueSnapshot);
+  ref.current.order = ref.current.order.filter(
+    (item) => item !== valueSnapshot,
+  );
 }
 
 function snapshot(value: unknown) {

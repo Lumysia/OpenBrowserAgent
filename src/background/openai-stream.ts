@@ -5,11 +5,24 @@ import {
   type AiStreamResponse,
   type TokenUsage,
 } from "../shared/types";
+import { STREAM_RENDER_THROTTLE_MS } from "../shared/config";
 
 type OpenAIToolCall = {
   id?: string;
   type?: string;
   function: { name?: string; arguments?: string };
+};
+
+type OpenAIStreamDelta = {
+  content?: string;
+  reasoning_content?: string;
+  reasoning_delta?: string;
+  tool_calls?: Array<{
+    index?: number;
+    id?: string;
+    type?: string;
+    function?: { name?: string; arguments?: string };
+  }>;
 };
 
 export async function readOpenAIStream(
@@ -29,6 +42,11 @@ export async function readOpenAIStream(
   let content = "";
   let usage: TokenUsage | undefined;
   let textStarted = false;
+  let reasoningStarted = false;
+  const reasoningId = `${textId}-reasoning`;
+  let reasoning = "";
+  let reasoningBuffer = "";
+  let reasoningFlushTimeout: ReturnType<typeof setTimeout> | undefined;
 
   function emitText(delta: string) {
     if (!delta) return;
@@ -46,6 +64,36 @@ export async function readOpenAIStream(
     });
   }
 
+  function emitReasoning(delta: string) {
+    if (!delta) return;
+    reasoning += delta;
+    reasoningBuffer += delta;
+    if (!reasoningStarted) {
+      reasoningStarted = true;
+      post(port, {
+        type: "chunk",
+        chunk: { type: AI_TEXT_CHUNK_TYPE.textNoteStart, id: reasoningId },
+      });
+    }
+    if (reasoningFlushTimeout) return;
+    reasoningFlushTimeout = setTimeout(
+      flushReasoning,
+      STREAM_RENDER_THROTTLE_MS,
+    );
+  }
+
+  function flushReasoning() {
+    if (reasoningFlushTimeout) clearTimeout(reasoningFlushTimeout);
+    reasoningFlushTimeout = undefined;
+    const delta = reasoningBuffer;
+    reasoningBuffer = "";
+    if (!delta) return;
+    post(port, {
+      type: "chunk",
+      chunk: { type: AI_TEXT_CHUNK_TYPE.textNoteDelta, id: reasoningId, delta },
+    });
+  }
+
   async function consumeEvent(rawEvent: string) {
     const data = rawEvent
       .split(/\r?\n/)
@@ -57,20 +105,16 @@ export async function readOpenAIStream(
     const payload = JSON.parse(data) as {
       usage?: OpenAIUsage | null;
       choices?: Array<{
-        delta?: {
-          content?: string;
-          tool_calls?: Array<{
-            index?: number;
-            id?: string;
-            type?: string;
-            function?: { name?: string; arguments?: string };
-          }>;
-        };
+        delta?: OpenAIStreamDelta;
       }>;
     };
     if (payload.usage) usage = normalizeOpenAIUsage(payload.usage);
     const delta = payload.choices?.[0]?.delta;
-    emitText(delta?.content || "");
+    emitReasoning(
+      optionalString(delta?.reasoning_content) ||
+        optionalString(delta?.reasoning_delta),
+    );
+    emitText(optionalString(delta?.content));
 
     for (const toolDelta of delta?.tool_calls || []) {
       const index = toolDelta.index ?? toolCalls.length;
@@ -114,16 +158,22 @@ export async function readOpenAIStream(
 
   buffer += decoder.decode();
   if (buffer.trim()) await consumeEvent(buffer);
+  flushReasoning();
   if (textStarted)
     post(port, {
       type: "chunk",
       chunk: { type: AI_TEXT_CHUNK_TYPE.textEnd, id: textId },
     });
+  if (reasoningStarted)
+    post(port, {
+      type: "chunk",
+      chunk: { type: AI_TEXT_CHUNK_TYPE.textNoteEnd, id: reasoningId },
+    });
 
   const completeToolCalls = toolCalls.filter(
     (toolCall) => toolCall.function.name,
   );
-  return { content, toolCalls: completeToolCalls, usage };
+  return { content, reasoning, toolCalls: completeToolCalls, usage };
 }
 
 type OpenAIUsage = {
@@ -159,6 +209,10 @@ function normalizeOpenAIUsage(usage: OpenAIUsage): TokenUsage {
       usage.completionTokensDetails?.reasoningTokens,
     cost: usage.cost,
   };
+}
+
+function optionalString(value: unknown) {
+  return typeof value === "string" ? value : "";
 }
 
 function post(port: chrome.runtime.Port, message: AiStreamResponse) {

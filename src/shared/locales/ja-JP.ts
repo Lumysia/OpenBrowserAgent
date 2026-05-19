@@ -130,6 +130,8 @@ export const jaJP: LocaleMessages = {
     resendWithoutMissingFiles: "不足ファイルなしで再送信",
     resendMessage: "再送信",
     forkChat: "チャットを分岐",
+    showMoreSources: "残り{count}件のソースを表示",
+    showFewerSources: "ソースを折りたたむ",
     unavailableAttachments: "{count}件利用不可",
     allOpenTabs: "開いているすべてのタブ",
     selectElement: "要素を選択",

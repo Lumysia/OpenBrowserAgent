@@ -131,6 +131,8 @@ export const deDE: LocaleMessages = {
     resendWithoutMissingFiles: "Ohne fehlende Dateien erneut senden",
     resendMessage: "Erneut senden",
     forkChat: "Chat verzweigen",
+    showMoreSources: "{count} weitere Quellen anzeigen",
+    showFewerSources: "Weniger Quellen anzeigen",
     unavailableAttachments: "{count} nicht verfügbar",
     allOpenTabs: "Alle geöffneten Tabs",
     selectElement: "Element auswählen",

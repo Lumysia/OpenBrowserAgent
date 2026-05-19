@@ -130,6 +130,8 @@ export const ptBR: LocaleMessages = {
     resendWithoutMissingFiles: "Reenviar sem arquivos ausentes",
     resendMessage: "Reenviar",
     forkChat: "Bifurcar chat",
+    showMoreSources: "Mostrar mais {count} fontes",
+    showFewerSources: "Mostrar menos fontes",
     unavailableAttachments: "{count} indisponíveis",
     allOpenTabs: "Todas as abas abertas",
     selectElement: "Selecionar elemento",

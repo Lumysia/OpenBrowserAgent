@@ -13,6 +13,8 @@ import type { ChatSource } from "../../src/shared/types";
 
 export type MarkdownLink = { url: string; title: string; host: string };
 
+const STREAM_CHAR_ANIMATION_LIMIT = 80;
+
 hljs.registerLanguage("bash", bash);
 hljs.registerLanguage("sh", bash);
 hljs.registerLanguage("shell", bash);
@@ -139,12 +141,16 @@ function addCharacterFade(html: string, animatedFromChar: number) {
         fragment.append(character);
         continue;
       }
-      const span = document.createElement("span");
-      span.className = "stream-char";
-      span.style.setProperty("--char-index", String(animatedIndex));
-      span.textContent = character;
-      animatedIndex += 1;
-      fragment.append(span);
+      if (animatedIndex < STREAM_CHAR_ANIMATION_LIMIT) {
+        const span = document.createElement("span");
+        span.className = "stream-char";
+        span.style.setProperty("--char-index", String(animatedIndex));
+        span.textContent = character;
+        animatedIndex += 1;
+        fragment.append(span);
+        continue;
+      }
+      fragment.append(character);
     }
     node.replaceWith(fragment);
   }

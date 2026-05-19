@@ -253,6 +253,54 @@
   display: grid;
   gap: 5px;
 }
+.assistant-reasoning {
+  max-width: min(100%, 520px);
+  margin: 2px 0 8px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 48%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card) 90%, var(--accent-softer));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow) 48%, transparent);
+  overflow: hidden;
+}
+.assistant-reasoning .ui-accordion-item {
+  border: 0;
+}
+.assistant-reasoning-trigger.ui-accordion-trigger {
+  min-height: 34px;
+  padding: 8px 10px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 720;
+}
+.assistant-reasoning-trigger.ui-accordion-trigger > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.assistant-reasoning-trigger svg {
+  color: var(--accent-strong);
+}
+.assistant-reasoning .ui-accordion-content-inner {
+  padding: 0 10px 10px;
+}
+.assistant-reasoning-body {
+  max-height: 260px;
+  padding: 7px 10px 9px;
+  color: var(--muted-foreground);
+  white-space: pre-wrap;
+  overflow: auto;
+}
+.assistant-reasoning-body.streaming::after {
+  content: "";
+  display: inline-block;
+  width: 0.45em;
+  height: 0.9em;
+  margin-left: 2px;
+  border-radius: 999px;
+  background: var(--accent-strong);
+  vertical-align: -0.12em;
+  animation: stream-caret 1s ease-in-out infinite;
+}
 .source-chip-list {
   max-width: 100%;
   display: flex;
@@ -285,6 +333,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.source-chip-toggle.ui-button {
+  padding: 4px 9px;
+  color: var(--accent-strong);
 }
 .copy-message {
   width: 24px;

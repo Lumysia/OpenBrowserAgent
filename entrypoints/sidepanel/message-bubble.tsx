@@ -7,6 +7,7 @@ import {
   Image,
   MousePointerClick,
 } from "lucide-react";
+import { useState } from "react";
 import { ATTACHMENT_KIND } from "../../src/shared/attachments";
 import {
   SENT_ATTACHMENTS_PREVIEW_COUNT,
@@ -164,7 +165,9 @@ export function MessageBubble({
       )}
       {message.role === "assistant" &&
         !!assistantText &&
-        !!displaySources.length && <SourceChips sources={displaySources} />}
+        !!displaySources.length && (
+          <SourceChips t={t} sources={displaySources} />
+        )}
       {message.role === "assistant" &&
         hasParts &&
         (showRunInfo || modelLabel || message.createdAt) && (
@@ -246,10 +249,17 @@ function selectedMessageSkills(metadata: Record<string, unknown> | undefined) {
   return skills.length ? skills : skill ? [skill] : [];
 }
 
-function SourceChips({ sources }: { sources: ChatSource[] }) {
+const SOURCE_CHIP_PREVIEW_COUNT = 5;
+
+function SourceChips({ t, sources }: { t: Messages; sources: ChatSource[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const hiddenCount = Math.max(0, sources.length - SOURCE_CHIP_PREVIEW_COUNT);
+  const visibleSources = expanded
+    ? sources
+    : sources.slice(0, SOURCE_CHIP_PREVIEW_COUNT);
   return (
     <div className="source-chip-list">
-      {sources.map((source) => (
+      {visibleSources.map((source) => (
         <Tooltip key={source.id}>
           <TooltipTrigger asChild>
             <Button
@@ -264,6 +274,21 @@ function SourceChips({ sources }: { sources: ChatSource[] }) {
           <TooltipContent>{source.title}</TooltipContent>
         </Tooltip>
       ))}
+      {!!hiddenCount && (
+        <Button
+          variant="secondary"
+          size="sm"
+          className="source-chip-toggle"
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {expanded
+            ? t.sidepanel.showFewerSources
+            : t.sidepanel.showMoreSources.replace(
+                "{count}",
+                String(hiddenCount),
+              )}
+        </Button>
+      )}
     </div>
   );
 }
@@ -285,7 +310,7 @@ function assistantMessageContentFallback(message: ChatMessage) {
 
 function assistantPartText(message: ChatMessage) {
   return (message.parts || [])
-    .filter((part) => part.type === "text" || part.type === "reasoning")
+    .filter((part) => part.type === "text")
     .map((part) => part.text || "")
     .join("")
     .trim();

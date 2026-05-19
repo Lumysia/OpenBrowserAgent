@@ -131,6 +131,8 @@ export const frFR: LocaleMessages = {
     resendWithoutMissingFiles: "Renvoyer sans fichiers manquants",
     resendMessage: "Renvoyer",
     forkChat: "Bifurquer la discussion",
+    showMoreSources: "Afficher {count} sources de plus",
+    showFewerSources: "Afficher moins de sources",
     unavailableAttachments: "{count} indisponibles",
     allOpenTabs: "Tous les onglets ouverts",
     selectElement: "Sélectionner un élément",

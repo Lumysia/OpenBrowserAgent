@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { STREAM_RENDER_THROTTLE_MS } from "../../src/shared/config";
-import type { Chat, RunMetrics } from "../../src/shared/types";
+import type { Chat, ChatPart, RunMetrics } from "../../src/shared/types";
 import {
   appendAssistantContent,
   appendAssistantPart,
@@ -28,10 +28,10 @@ export function createStreamHandlers(setChats: ChatSetter) {
         chats: items,
         chatId: item.chatId,
         messageId: item.messageId,
-        delta: item.delta,
+        delta: item.partType === "text" ? item.delta : undefined,
         part: {
           id: item.partId,
-          type: "text",
+          type: item.partType,
           text: item.delta,
           append: true,
         },
@@ -55,19 +55,21 @@ export function createStreamHandlers(setChats: ChatSetter) {
     appendStreamChunk(chatId: string, messageId: string, chunk: unknown) {
       const { delta, part } = streamPartFromChunk(chunk);
       if (!delta && !part) return;
-      if (delta && part?.type === "text" && part.append) {
+      if (isAppendableTextPart(part)) {
         const partId = part.id;
         const itemKey = key(chatId, messageId, partId);
+        const partDelta = part.text || "";
         const existing = pendingText.get(itemKey);
         if (existing) {
-          existing.delta += delta;
+          existing.delta += partDelta;
           return;
         }
         pendingText.set(itemKey, {
           chatId,
           messageId,
           partId,
-          delta,
+          partType: part.type,
+          delta: partDelta,
           timeout: window.setTimeout(
             () => flushTextDelta(itemKey),
             STREAM_RENDER_THROTTLE_MS,
@@ -112,6 +114,19 @@ type PendingTextDelta = {
   chatId: string;
   messageId: string;
   partId: string;
+  partType: "text" | "reasoning";
   delta: string;
   timeout?: number;
 };
+
+function isAppendableTextPart(
+  part: ChatPart | undefined,
+): part is ChatPart & { type: "text" | "reasoning"; text: string } {
+  return (
+    !!part &&
+    (part.type === "text" || part.type === "reasoning") &&
+    !!part.append &&
+    typeof part.text === "string" &&
+    part.text.length > 0
+  );
+}

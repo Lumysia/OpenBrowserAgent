@@ -12,7 +12,11 @@ export function applyPart(parts: ChatPart[] = [], part: ChatPart) {
   if (index === -1) return [...parts, part];
   return parts.map((candidate, candidateIndex) => {
     if (candidateIndex !== index) return candidate;
-    if (candidate.type === "text" && part.type === "text" && part.append)
+    if (
+      (candidate.type === "text" || candidate.type === "reasoning") &&
+      candidate.type === part.type &&
+      part.append
+    )
       return {
         ...candidate,
         text: `${candidate.text || ""}${part.text || ""}`,
@@ -46,7 +50,14 @@ export function streamPartFromChunk(chunk: unknown): {
     maybe.type === AI_TEXT_CHUNK_TYPE.textNoteStart
   )
     return {
-      part: { id: maybe.id || crypto.randomUUID(), type: "text", text: "" },
+      part: {
+        id: maybe.id || crypto.randomUUID(),
+        type:
+          maybe.type === AI_TEXT_CHUNK_TYPE.textNoteStart
+            ? "reasoning"
+            : "text",
+        text: "",
+      },
     };
   if (
     maybe.type === AI_TEXT_CHUNK_TYPE.textEnd ||
@@ -64,7 +75,10 @@ export function streamPartFromChunk(chunk: unknown): {
           : undefined,
       part: {
         id: maybe.id || crypto.randomUUID(),
-        type: "text",
+        type:
+          maybe.type === AI_TEXT_CHUNK_TYPE.textNoteDelta
+            ? "reasoning"
+            : "text",
         text: maybe.delta || "",
         append: true,
       },

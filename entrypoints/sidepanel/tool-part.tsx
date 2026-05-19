@@ -36,13 +36,27 @@ import {
 import { cdpToolDetail } from "./cdp-tool-detail";
 import { formatToolMessage } from "./format";
 
-export function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
+export function ToolPart({
+  t,
+  part,
+  runEnded = false,
+}: {
+  t: Messages;
+  part: ChatPart;
+  runEnded?: boolean;
+}) {
   if (!isToolPartType(part.type)) return null;
   const name = part.toolName || toolNameFromPartType(part.type);
-  const { title, description, references } = toolDisplay(name, part, t);
+  const { title, description, references } = toolDisplay(
+    name,
+    part,
+    t,
+    runEnded,
+  );
   const loading =
-    part.state === CHAT_PART_STATE.inputStreaming ||
-    part.state === CHAT_PART_STATE.inputAvailable;
+    !runEnded &&
+    (part.state === CHAT_PART_STATE.inputStreaming ||
+      part.state === CHAT_PART_STATE.inputAvailable);
   const isError = part.state === CHAT_PART_STATE.outputError;
   const isDone = part.state === CHAT_PART_STATE.outputAvailable;
   const status = loading
@@ -152,7 +166,12 @@ function ToolReferenceButton({
   );
 }
 
-function toolDisplay(name: string, part: ChatPart, t: Messages) {
+function toolDisplay(
+  name: string,
+  part: ChatPart,
+  t: Messages,
+  runEnded = false,
+) {
   const input = (part.input || {}) as Record<string, unknown>;
   const outputValue = part.output;
   const output = (outputValue || {}) as Record<string, unknown>;
@@ -161,7 +180,8 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
   const toolFound = (toolText as { found?: string } | undefined)?.found;
   const title = (() => {
     const base =
-      state === CHAT_PART_STATE.outputAvailable
+      state === CHAT_PART_STATE.outputAvailable ||
+      (runEnded && state === CHAT_PART_STATE.inputAvailable)
         ? toolText?.done
         : toolText?.running;
     if (
@@ -540,35 +560,47 @@ function mcpToolDetail(
 ) {
   const params = Object.entries(input)
     .slice(0, 3)
-    .map(([key, value]) => `${key}: ${shortValue(value)}`)
+    .map(([key, value]) => mcpParamLabel(key, value))
+    .filter(Boolean)
     .join(" · ");
+  if (typeof output.error === "string") return compactJoin([params, "error"]);
   const result = output.result as Record<string, unknown> | undefined;
   const content = Array.isArray(result?.content) ? result.content : [];
-  const text = content
-    .map((item) =>
-      item && typeof item === "object"
-        ? (item as Record<string, unknown>).text
-        : "",
-    )
-    .filter(
-      (value): value is string => typeof value === "string" && !!value.trim(),
-    )
-    .join(" ")
-    .replace(/\s+/g, " ")
-    .trim();
+  const textCount = content.filter(
+    (item) =>
+      item &&
+      typeof item === "object" &&
+      typeof (item as Record<string, unknown>).text === "string" &&
+      !!String((item as Record<string, unknown>).text).trim(),
+  ).length;
   return compactJoin([
     params,
-    text
-      ? shortValue(text)
+    textCount
+      ? `${textCount} text result${textCount === 1 ? "" : "s"}`
       : content.length
-        ? `${content.length} result items`
+        ? `${content.length} result item${content.length === 1 ? "" : "s"}`
         : "",
   ]);
 }
 
-function shortValue(value: unknown) {
+function mcpParamLabel(key: string, value: unknown) {
+  if (Array.isArray(value)) {
+    if (key.toLowerCase().includes("url"))
+      return `${value.length} URL${value.length === 1 ? "" : "s"}`;
+    return `${key}: ${value.length} item${value.length === 1 ? "" : "s"}`;
+  }
+  if (typeof value === "number") return `${key}: ${value}`;
+  if (typeof value === "boolean") return `${key}: ${value ? "on" : "off"}`;
+  if (typeof value === "string") {
+    if (/^https?:\/\//i.test(value)) return `${key}: URL`;
+    return `${key}: ${shortValue(value, 72)}`;
+  }
+  return `${key}: ${shortValue(value, 72)}`;
+}
+
+function shortValue(value: unknown, maxLength = 140) {
   const text = typeof value === "string" ? value : JSON.stringify(value);
-  return text.length > 140 ? `${text.slice(0, 137)}...` : text;
+  return text.length > maxLength ? `${text.slice(0, maxLength - 3)}...` : text;
 }
 
 function stringValue(value: unknown) {

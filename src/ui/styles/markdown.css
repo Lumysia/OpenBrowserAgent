@@ -7,6 +7,74 @@
   overflow-wrap: anywhere;
   word-break: break-word;
 }
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  margin: 18px 0 10px;
+  color: var(--foreground);
+  font-weight: 800;
+  line-height: 1.28;
+  letter-spacing: -0.02em;
+}
+.markdown h1:first-child,
+.markdown h2:first-child,
+.markdown h3:first-child,
+.markdown h4:first-child,
+.markdown h5:first-child,
+.markdown h6:first-child {
+  margin-top: 0;
+}
+.markdown h1 {
+  font-size: clamp(24px, 1.55em, 30px);
+}
+.markdown h2 {
+  font-size: clamp(21px, 1.35em, 26px);
+}
+.markdown h3 {
+  font-size: clamp(18px, 1.18em, 22px);
+}
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  font-size: 1.05em;
+}
+.markdown ul,
+.markdown ol {
+  margin: 0 0 16px;
+  padding-left: 1.35em;
+}
+.markdown li + li {
+  margin-top: 4px;
+}
+.markdown table {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 12px 0 16px;
+  font-size: 0.92em;
+  line-height: 1.55;
+}
+.markdown th,
+.markdown td {
+  min-width: 88px;
+  padding: 7px 9px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.markdown th {
+  color: var(--foreground);
+  font-weight: 750;
+  text-align: left;
+  background: color-mix(in srgb, var(--accent-softer) 38%, transparent);
+}
+.markdown td {
+  color: color-mix(in srgb, var(--foreground) 88%, var(--muted-foreground));
+}
 .markdown :not(pre) > code {
   max-width: 100%;
   padding: 2px 5px;

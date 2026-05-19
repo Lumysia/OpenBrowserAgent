@@ -131,6 +131,8 @@ export const enUS = {
     resendWithoutMissingFiles: "Resend without missing files",
     resendMessage: "Resend",
     forkChat: "Fork chat",
+    showMoreSources: "Show {count} more sources",
+    showFewerSources: "Show fewer sources",
     unavailableAttachments: "{count} unavailable",
     allOpenTabs: "All open tabs",
     selectElement: "Select element",

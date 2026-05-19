@@ -200,6 +200,9 @@ export async function requestOpenAICompatible(
     requestMessages.push({
       role: "assistant",
       content: streamResult.content || null,
+      ...(streamResult.reasoning
+        ? { reasoning_content: streamResult.reasoning }
+        : {}),
       tool_calls: toolCalls,
     });
     for (const toolCall of toolCalls) {
