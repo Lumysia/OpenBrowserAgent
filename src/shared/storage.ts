@@ -30,10 +30,15 @@ export { STORAGE_KEYS, SYNCABLE_DATA_ITEMS, type SyncPreferenceKey };
 type StorageItem<T> = {
   key: string;
   area: AreaName;
+  persistDebounceMs?: number;
   get(): Promise<T>;
   set(value: T): Promise<void>;
   remove(): Promise<void>;
   watch(callback: (newValue: T, oldValue: T) => void): () => void;
+};
+
+type StorageItemOptions = {
+  persistDebounceMs?: number;
 };
 
 const SYNC_QUOTA_ERROR_PREFIX = "Sync item exceeds the safe per-item limit";
@@ -219,6 +224,7 @@ function createItem<T>(
   key: string,
   init: () => T,
   normalize?: (value: T) => T,
+  options: StorageItemOptions = {},
 ): StorageItem<T> {
   const storageKey = key;
   const storageArea = () => getBrowserApi().storage[area];
@@ -226,6 +232,7 @@ function createItem<T>(
   return {
     key: storageKey,
     area,
+    persistDebounceMs: options.persistDebounceMs,
     async get() {
       if (area === STORAGE_AREAS.sync) {
         const cache = await readSyncLocalCache<T>(storageKey);
@@ -331,6 +338,7 @@ function createSwitchableItem<T>(
   init: () => T,
   syncPreferenceKey: SyncPreferenceKey,
   normalize?: (value: T) => T,
+  options: StorageItemOptions = {},
 ): StorageItem<T> {
   const areaFor = (preferences: Preferences): AreaName =>
     areaForSyncEnabled(preferences[syncPreferenceKey] === true);
@@ -360,6 +368,7 @@ function createSwitchableItem<T>(
   return {
     key,
     area: STORAGE_AREAS.local,
+    persistDebounceMs: options.persistDebounceMs,
     get: getValue,
     async set(value) {
       const area = await activeArea();
@@ -461,6 +470,8 @@ export const storage = {
     STORAGE_KEYS.chats,
     () => [],
     "syncChats",
+    undefined,
+    { persistDebounceMs: config.CHAT_WRITE_DEBOUNCE_MS },
   ),
   chatTabs: createItem<ChatTab[]>(
     STORAGE_AREAS.local,

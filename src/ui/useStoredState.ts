@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MutableRefObject } from "react";
 
 type StorageItem<T> = {
+  key?: string;
+  persistDebounceMs?: number;
   get(): Promise<T>;
   set(value: T): Promise<void>;
   watch(callback: (newValue: T, oldValue: T) => void): () => void;
@@ -10,6 +12,10 @@ export function useStoredState<T>(item: StorageItem<T>) {
   const [value, setValue] = useState<T | undefined>();
   const valueRef = useRef<T | undefined>(undefined);
   const snapshotRef = useRef<string | undefined>(undefined);
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const pendingPersistRef = useRef<T | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,6 +36,7 @@ export function useStoredState<T>(item: StorageItem<T>) {
     });
     return () => {
       mounted = false;
+      flushPendingPersist(item, persistTimerRef, pendingPersistRef);
       unwatch();
     };
   }, [item]);
@@ -42,14 +49,48 @@ export function useStoredState<T>(item: StorageItem<T>) {
         ? (next as (previous: T) => T)(previous)
         : next;
     valueRef.current = resolved;
-    snapshotRef.current = snapshot(resolved);
+    if (!item.persistDebounceMs) snapshotRef.current = snapshot(resolved);
     setValue(resolved);
-    item.set(resolved).catch((error) => {
-      console.warn("Failed to persist stored state", error);
-    });
+    persistValue(item, resolved, persistTimerRef, pendingPersistRef);
   }
 
   return [value, update, loading] as const;
+}
+
+function persistValue<T>(
+  item: StorageItem<T>,
+  value: T,
+  timerRef: MutableRefObject<ReturnType<typeof setTimeout> | undefined>,
+  pendingRef: MutableRefObject<T | undefined>,
+) {
+  if (!item.persistDebounceMs) {
+    item.set(value).catch(logPersistError);
+    return;
+  }
+  pendingRef.current = value;
+  if (timerRef.current) clearTimeout(timerRef.current);
+  timerRef.current = setTimeout(() => {
+    const pending = pendingRef.current;
+    pendingRef.current = undefined;
+    timerRef.current = undefined;
+    if (pending !== undefined) item.set(pending).catch(logPersistError);
+  }, item.persistDebounceMs);
+}
+
+function flushPendingPersist<T>(
+  item: StorageItem<T>,
+  timerRef: MutableRefObject<ReturnType<typeof setTimeout> | undefined>,
+  pendingRef: MutableRefObject<T | undefined>,
+) {
+  if (timerRef.current) clearTimeout(timerRef.current);
+  timerRef.current = undefined;
+  const pending = pendingRef.current;
+  pendingRef.current = undefined;
+  if (pending !== undefined) item.set(pending).catch(logPersistError);
+}
+
+function logPersistError(error: unknown) {
+  console.warn("Failed to persist stored state", error);
 }
 
 function snapshot(value: unknown) {

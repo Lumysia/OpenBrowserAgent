@@ -8,6 +8,7 @@ export const TAB_LOAD_WAIT_TIMEOUT_MS = 15_000;
 export const BROWSER_WAIT_DEFAULT_MS = 1_000;
 export const BROWSER_WAIT_MAX_MS = 60_000;
 export const SYNC_WRITE_DEBOUNCE_MS = 10_000;
+export const CHAT_WRITE_DEBOUNCE_MS = 300;
 export const SYNC_MAX_BYTES_PER_ITEM = 7_500;
 
 export const MODEL_TEMPERATURE = 0.3;
