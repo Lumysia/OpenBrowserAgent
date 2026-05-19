@@ -82,6 +82,7 @@ export function SidepanelView({
   activeTabAttachable,
   selectedElements,
   streaming,
+  unreadCompletedChatIds,
   skills,
   agents,
   openMenu,
@@ -143,6 +144,7 @@ export function SidepanelView({
   activeTabAttachable: boolean;
   selectedElements: SelectedElement[];
   streaming: boolean;
+  unreadCompletedChatIds: Record<string, true>;
   skills: Skill[];
   agents: Agent[];
   openMenu: ComposerMenu | null;
@@ -220,6 +222,7 @@ export function SidepanelView({
             t={t}
             chats={chats}
             activeChatId={currentChat?.id}
+            unreadCompletedChatIds={unreadCompletedChatIds}
             mode={mode}
             preferences={preferences}
             onSetChats={onSetChats}

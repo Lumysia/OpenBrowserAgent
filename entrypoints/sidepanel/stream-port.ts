@@ -1,21 +1,22 @@
-import type { MutableRefObject } from "react";
+import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import { STREAM_RENDER_THROTTLE_MS } from "../../src/shared/config";
 import {
   AI_STREAM_PORT_NAME,
   AI_STREAM_REQUEST_TYPE,
-  type AiStreamResponse,
   type AiStreamRequest,
+  type AiStreamResponse,
   type RunMetrics,
   type SendMessagesRequest,
 } from "../../src/shared/types";
-import type { ActiveStream } from "./sidepanel-menu-state";
+import type { ActiveStreamMap } from "./sidepanel-menu-state";
 
 export function closeStreamPort(
-  portRef: MutableRefObject<chrome.runtime.Port | undefined>,
+  portRefs: MutableRefObject<Record<string, chrome.runtime.Port | undefined>>,
+  chatId: string,
   abort: boolean,
 ) {
-  const port = portRef.current;
-  portRef.current = undefined;
+  const port = portRefs.current[chatId];
+  delete portRefs.current[chatId];
   if (!port) return;
   try {
     if (abort)
@@ -44,7 +45,7 @@ export function startStreamAction({
     targetMessageId,
     ...options,
   });
-  postStreamRequest(port, request, options);
+  postStreamRequest(port, request, { ...options, chatId: request.chatId });
 }
 
 export function attachStreamAction({
@@ -65,17 +66,18 @@ export function attachStreamAction({
       messageId: targetMessageId,
       afterSequence,
     },
-    options,
+    { ...options, chatId },
   );
 }
 
 type StreamPortOptions = {
   targetMessageId: string;
   chatId: string;
-  portRef: MutableRefObject<chrome.runtime.Port | undefined>;
-  activeStreamRef: MutableRefObject<ActiveStream | null>;
-  lastStreamActivityRef: MutableRefObject<number>;
-  setStreaming: (value: boolean) => void;
+  portRefs: MutableRefObject<Record<string, chrome.runtime.Port | undefined>>;
+  activeStreamsRef: MutableRefObject<ActiveStreamMap>;
+  lastStreamActivityRef: MutableRefObject<Record<string, number>>;
+  setActiveStreams: Dispatch<SetStateAction<ActiveStreamMap>>;
+  onStreamFinished: (chatId: string) => void;
   appendStreamChunk: (
     chatId: string,
     messageId: string,
@@ -93,28 +95,53 @@ type StreamPortOptions = {
     assistantMessageId: string,
     createdAt: number,
   ) => void;
-  removeQueuedMessage: (id: string) => void;
+  removeQueuedMessage: (id: string, chatId: string) => void;
 };
 
 function connectStreamPort({
   chatId,
   targetMessageId,
-  portRef,
-  activeStreamRef,
+  portRefs,
+  activeStreamsRef,
   lastStreamActivityRef,
-  setStreaming,
+  setActiveStreams,
+  onStreamFinished,
   appendStreamChunk,
   appendToAssistant,
   updateRunMetrics,
   appendQueuedMessages,
   removeQueuedMessage,
 }: StreamPortOptions) {
-  closeStreamPort(portRef, false);
+  closeStreamPort(portRefs, chatId, false);
   const port = chrome.runtime.connect({ name: AI_STREAM_PORT_NAME });
-  portRef.current = port;
+  portRefs.current[chatId] = port;
   let activeMessageId = targetMessageId;
   let pendingSequenceMetrics: Partial<RunMetrics> | undefined;
   let pendingSequenceTimeout: number | undefined;
+
+  function updateActiveStream(
+    updater: (stream: ActiveStreamMap[string]) => ActiveStreamMap[string],
+  ) {
+    setActiveStreams((items) => {
+      const current = items[chatId];
+      if (!current) return items;
+      const nextStream = updater(current);
+      const next = { ...items, [chatId]: nextStream };
+      activeStreamsRef.current = next;
+      return next;
+    });
+  }
+
+  function clearActiveStream() {
+    setActiveStreams((items) => {
+      if (!items[chatId]) return items;
+      const next = { ...items };
+      delete next[chatId];
+      activeStreamsRef.current = next;
+      return next;
+    });
+    closeStreamPort(portRefs, chatId, false);
+  }
 
   function scheduleSequenceMetrics(metrics: Partial<RunMetrics> | undefined) {
     if (!metrics) return;
@@ -136,7 +163,7 @@ function connectStreamPort({
   }
 
   port.onMessage.addListener((message: AiStreamResponse) => {
-    lastStreamActivityRef.current = Date.now();
+    lastStreamActivityRef.current[chatId] = Date.now();
     const sequenceMetrics = message.sequence
       ? { streamEventIndex: message.sequence }
       : undefined;
@@ -148,16 +175,17 @@ function connectStreamPort({
         message.assistantMessageId,
         message.createdAt,
       );
-      message.messages.forEach((item) => removeQueuedMessage(item.id));
+      message.messages.forEach((item) => removeQueuedMessage(item.id, chatId));
       activeMessageId = message.assistantMessageId;
-      if (activeStreamRef.current)
-        activeStreamRef.current.assistantMessageId = activeMessageId;
+      updateActiveStream((stream) => ({
+        ...stream,
+        assistantMessageId: activeMessageId,
+      }));
       scheduleSequenceMetrics(sequenceMetrics);
       return;
     }
     if (message.type === "chunk") {
-      if (activeStreamRef.current?.assistantMessageId === activeMessageId)
-        activeStreamRef.current.hasProgress = true;
+      updateActiveStream((stream) => ({ ...stream, hasProgress: true }));
       appendStreamChunk(chatId, activeMessageId, message.chunk);
     }
     scheduleSequenceMetrics(sequenceMetrics);
@@ -167,16 +195,16 @@ function connectStreamPort({
     }
     if (message.type === "error") {
       flushSequenceMetrics();
-      activeStreamRef.current = null;
       updateRunMetrics(activeMessageId, { endedAt: Date.now() });
-      setStreaming(false);
       appendToAssistant(chatId, activeMessageId, `\n\n${message.error}`);
+      clearActiveStream();
+      onStreamFinished(chatId);
     }
     if (message.type === "end") {
       flushSequenceMetrics();
-      activeStreamRef.current = null;
       updateRunMetrics(activeMessageId, { endedAt: Date.now() });
-      setStreaming(false);
+      clearActiveStream();
+      onStreamFinished(chatId);
     }
   });
   return port;
@@ -187,14 +215,19 @@ function postStreamRequest(
   request: AiStreamRequest,
   options: Pick<
     StreamPortOptions,
-    "activeStreamRef" | "portRef" | "setStreaming"
+    "activeStreamsRef" | "chatId" | "portRefs" | "setActiveStreams"
   >,
 ) {
   try {
     port.postMessage(request);
   } catch {
-    if (options.portRef.current === port) options.portRef.current = undefined;
-    options.activeStreamRef.current = null;
-    options.setStreaming(false);
+    if (options.portRefs.current[options.chatId] === port)
+      delete options.portRefs.current[options.chatId];
+    options.setActiveStreams((items) => {
+      const next = { ...items };
+      delete next[options.chatId];
+      options.activeStreamsRef.current = next;
+      return next;
+    });
   }
 }

@@ -94,12 +94,19 @@ export function useComposerContext(chats: Chat[]) {
     setAttachedTabs([]);
   }
 
+  function clearComposerContext() {
+    autoAttachSuppressedRef.current = false;
+    setAttachedTabs([]);
+    setSelectedElements([]);
+  }
+
   return {
     attachedTabs,
     availableTabs,
     activeTabAttachable,
     selectedElements,
     setAttachedTabs,
+    clearComposerContext,
     clearAttachedTabsAfterSend,
     setAvailableTabs,
     setSelectedElements,

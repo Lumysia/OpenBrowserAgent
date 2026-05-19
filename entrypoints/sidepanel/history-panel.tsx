@@ -18,6 +18,7 @@ export function HistoryPanel({
   t,
   chats,
   activeChatId,
+  unreadCompletedChatIds,
   mode,
   preferences,
   onSetChats,
@@ -29,6 +30,7 @@ export function HistoryPanel({
   t: Messages;
   chats: Chat[];
   activeChatId?: string;
+  unreadCompletedChatIds: Record<string, true>;
   mode: ChatMode;
   preferences?: Preferences;
   onSetChats: Dispatch<SetStateAction<Chat[]>>;
@@ -120,7 +122,7 @@ export function HistoryPanel({
         )}
         {sortedChats.map((chat) => (
           <div
-            className={`history-item ${chat.id === activeChatId ? "active" : ""}`}
+            className={`history-item ${chat.id === activeChatId ? "active" : ""} ${unreadCompletedChatIds[chat.id] ? "unread-complete" : ""}`}
             key={chat.id}
           >
             {editingChatId === chat.id ? (
@@ -148,7 +150,12 @@ export function HistoryPanel({
                 className="history-select"
                 onClick={() => onSelect(chat.id)}
               >
-                <strong>{chat.title || t.words.newChat}</strong>
+                <span className="history-title-row">
+                  {unreadCompletedChatIds[chat.id] && (
+                    <span className="history-unread-dot" aria-hidden="true" />
+                  )}
+                  <strong>{chat.title || t.words.newChat}</strong>
+                </span>
                 <small>
                   {formatMessageCount(t, chat.messages.length)} ·{" "}
                   {formatRelativeTime(t, chat.updatedAt)}

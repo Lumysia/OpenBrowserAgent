@@ -6,52 +6,79 @@ export type QueuedMessage = {
 };
 
 export function useQueuedMessages({
+  chatId,
   streaming,
   sendQueued,
   onEditContent,
   onQueueMessage,
   onRemoveMessage,
 }: {
+  chatId?: string;
   streaming: boolean;
   sendQueued: (content: string) => Promise<void>;
   onEditContent: (content: string) => void;
   onQueueMessage?: (message: QueuedMessage) => void;
   onRemoveMessage?: (id: string) => void;
 }) {
-  const [queuedMessages, setQueuedMessages] = useState<QueuedMessage[]>([]);
+  const [queuedMessagesByChat, setQueuedMessagesByChat] = useState<
+    Record<string, QueuedMessage[]>
+  >({});
   const queueDispatchingRef = useRef(false);
+  const queuedMessages = chatId ? queuedMessagesByChat[chatId] || [] : [];
 
   useEffect(() => {
-    if (streaming || !queuedMessages.length || queueDispatchingRef.current)
+    if (
+      !chatId ||
+      streaming ||
+      !queuedMessages.length ||
+      queueDispatchingRef.current
+    )
       return;
     const next = queuedMessages[0];
     queueDispatchingRef.current = true;
-    setQueuedMessages((items) => items.slice(1));
+    setQueuedMessagesByChat((items) => ({
+      ...items,
+      [chatId]: (items[chatId] || []).slice(1),
+    }));
     sendQueued(next.content)
       .catch(console.warn)
       .finally(() => {
         queueDispatchingRef.current = false;
       });
-  }, [queuedMessages.length, sendQueued, streaming]);
+  }, [chatId, queuedMessages.length, sendQueued, streaming]);
 
   function queueMessage(content: string) {
+    if (!chatId) return undefined;
     const text = content.trim();
     if (!text) return undefined;
     const message = { id: crypto.randomUUID(), content: text };
-    setQueuedMessages((items) => [...items, message]);
+    setQueuedMessagesByChat((items) => ({
+      ...items,
+      [chatId]: [...(items[chatId] || []), message],
+    }));
     onQueueMessage?.(message);
     return message;
   }
 
-  function deleteQueuedMessage(id: string) {
-    setQueuedMessages((items) => items.filter((message) => message.id !== id));
+  function deleteQueuedMessage(id: string, targetChatId = chatId) {
+    if (!targetChatId) return;
+    setQueuedMessagesByChat((items) => ({
+      ...items,
+      [targetChatId]: (items[targetChatId] || []).filter(
+        (message) => message.id !== id,
+      ),
+    }));
     onRemoveMessage?.(id);
   }
 
   function editQueuedMessage(message: QueuedMessage) {
-    setQueuedMessages((items) =>
-      items.filter((candidate) => candidate.id !== message.id),
-    );
+    if (!chatId) return;
+    setQueuedMessagesByChat((items) => ({
+      ...items,
+      [chatId]: (items[chatId] || []).filter(
+        (candidate) => candidate.id !== message.id,
+      ),
+    }));
     onEditContent(message.content);
   }
 

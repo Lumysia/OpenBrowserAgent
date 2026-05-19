@@ -2176,6 +2176,25 @@ a {
   font-weight: 600;
   line-height: 1.25;
 }
+.history-title-row {
+  min-width: 0;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.history-unread-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--accent-strong);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.history-title-row strong {
+  width: auto;
+  flex: 1 1 auto;
+}
 .history-item small {
   width: 100%;
   min-width: 0;

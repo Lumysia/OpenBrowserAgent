@@ -12,6 +12,7 @@ export function useStoredState<T>(item: StorageItem<T>) {
   const [value, setValue] = useState<T | undefined>();
   const valueRef = useRef<T | undefined>(undefined);
   const snapshotRef = useRef<string | undefined>(undefined);
+  const ownWriteSnapshotsRef = useRef(new Set<string>());
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -30,6 +31,10 @@ export function useStoredState<T>(item: StorageItem<T>) {
     const unwatch = item.watch((next) => {
       const nextSnapshot = snapshot(next);
       if (nextSnapshot && nextSnapshot === snapshotRef.current) return;
+      if (nextSnapshot && ownWriteSnapshotsRef.current.has(nextSnapshot)) {
+        ownWriteSnapshotsRef.current.delete(nextSnapshot);
+        return;
+      }
       valueRef.current = next;
       snapshotRef.current = nextSnapshot;
       setValue(next);
@@ -48,8 +53,10 @@ export function useStoredState<T>(item: StorageItem<T>) {
       typeof next === "function"
         ? (next as (previous: T) => T)(previous)
         : next;
+    const resolvedSnapshot = snapshot(resolved);
     valueRef.current = resolved;
-    if (!item.persistDebounceMs) snapshotRef.current = snapshot(resolved);
+    if (resolvedSnapshot) ownWriteSnapshotsRef.current.add(resolvedSnapshot);
+    if (!item.persistDebounceMs) snapshotRef.current = resolvedSnapshot;
     setValue(resolved);
     persistValue(item, resolved, persistTimerRef, pendingPersistRef);
   }

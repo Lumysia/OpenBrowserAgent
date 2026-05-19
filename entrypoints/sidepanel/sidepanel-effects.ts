@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import type { RefObject } from "react";
 import {
   AUTO_RETRY_IDLE_MS,
@@ -6,19 +6,18 @@ import {
   MAX_AUTO_RETRIES,
 } from "../../src/shared/config";
 import type {
+  Agent,
   Chat,
   ChatMode,
-  Agent,
   Preferences,
+  SelectedElement,
+  Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
 import { sortChatsNewestFirst } from "./format";
 import { retryStalledStream } from "./retry-stalled-stream";
-import type { ActiveStream } from "./sidepanel-menu-state";
+import type { ActiveStreamMap, ComposerMenu } from "./sidepanel-menu-state";
 import type { SendMessagesRequest } from "../../src/shared/types";
-
-const AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 36;
-const PROGRAMMATIC_SCROLL_IGNORE_MS = 120;
 
 export function useSidepanelTheme(
   accentColor: string | undefined,
@@ -36,76 +35,15 @@ export function useAutoScroll(
   autoScroll: boolean | undefined,
   streaming: boolean,
 ) {
-  const shouldStickToBottomRef = useRef(true);
-  const lastScrollHeightRef = useRef(0);
-  const programmaticScrollUntilRef = useRef(0);
-
-  useEffect(() => {
-    if (autoScroll === false) return undefined;
-    const messagesElement = messagesRef.current;
-    if (!messagesElement) return undefined;
-    const updateStickyState = () => {
-      if (Date.now() < programmaticScrollUntilRef.current) return;
-      shouldStickToBottomRef.current = isNearScrollBottom(messagesElement);
-      lastScrollHeightRef.current = messagesElement.scrollHeight;
-    };
-    const pauseForWheel = (event: WheelEvent) => {
-      if (event.deltaY < 0) shouldStickToBottomRef.current = false;
-      else if (isNearScrollBottom(messagesElement))
-        shouldStickToBottomRef.current = true;
-    };
-    let touchStartY = 0;
-    const rememberTouchStart = (event: TouchEvent) => {
-      touchStartY = event.touches[0]?.clientY || 0;
-    };
-    const pauseForTouch = (event: TouchEvent) => {
-      const nextY = event.touches[0]?.clientY || touchStartY;
-      if (nextY > touchStartY) shouldStickToBottomRef.current = false;
-      else if (isNearScrollBottom(messagesElement))
-        shouldStickToBottomRef.current = true;
-      touchStartY = nextY;
-    };
-    updateStickyState();
-    messagesElement.addEventListener("scroll", updateStickyState, {
-      passive: true,
-    });
-    messagesElement.addEventListener("wheel", pauseForWheel, { passive: true });
-    messagesElement.addEventListener("touchstart", rememberTouchStart, {
-      passive: true,
-    });
-    messagesElement.addEventListener("touchmove", pauseForTouch, {
-      passive: true,
-    });
-    return () => {
-      messagesElement.removeEventListener("scroll", updateStickyState);
-      messagesElement.removeEventListener("wheel", pauseForWheel);
-      messagesElement.removeEventListener("touchstart", rememberTouchStart);
-      messagesElement.removeEventListener("touchmove", pauseForTouch);
-    };
-  }, [autoScroll, messagesRef]);
-
   useLayoutEffect(() => {
     if (autoScroll === false) return;
     const messagesElement = messagesRef.current;
     if (!messagesElement) return;
-    if (messagesElement.scrollHeight < lastScrollHeightRef.current)
-      shouldStickToBottomRef.current = true;
-    if (!shouldStickToBottomRef.current) return;
-    programmaticScrollUntilRef.current =
-      Date.now() + PROGRAMMATIC_SCROLL_IGNORE_MS;
     messagesElement.scrollTo({
       top: messagesElement.scrollHeight,
       behavior: streaming ? "auto" : "smooth",
     });
-    lastScrollHeightRef.current = messagesElement.scrollHeight;
   }, [messages, autoScroll, streaming]);
-}
-
-function isNearScrollBottom(element: HTMLElement) {
-  return (
-    element.scrollHeight - element.scrollTop - element.clientHeight <=
-    AUTO_SCROLL_BOTTOM_THRESHOLD_PX
-  );
 }
 
 export function useChatSelection(
@@ -144,18 +82,26 @@ export function useActiveChatCleanup(
   setSentAttachmentPreviews: (
     value: Record<string, UploadedAttachment[]>,
   ) => void,
+  clearAttachedTabs: () => void,
+  setSelectedElements: (value: SelectedElement[]) => void,
+  setSelectedSkills: (value: Skill[]) => void,
+  setOpenMenu: (value: ComposerMenu | null) => void,
 ) {
   useEffect(() => {
     clearUploadedAttachments();
     setEditingMessage(null);
     setSentAttachmentPreviews({});
+    clearAttachedTabs();
+    setSelectedElements([]);
+    setSelectedSkills([]);
+    setOpenMenu(null);
   }, [activeChatId]);
 }
 
 export function useAutoRetryStream({
   streaming,
   autoRetry,
-  activeStreamRef,
+  activeStreamsRef,
   lastStreamActivityRef,
   chatsRef,
   preferences,
@@ -168,8 +114,8 @@ export function useAutoRetryStream({
 }: {
   streaming: boolean;
   autoRetry: boolean | undefined;
-  activeStreamRef: RefObject<ActiveStream | null>;
-  lastStreamActivityRef: RefObject<number>;
+  activeStreamsRef: RefObject<ActiveStreamMap>;
+  lastStreamActivityRef: RefObject<Record<string, number>>;
   chatsRef: RefObject<Chat[]>;
   preferences: Preferences | undefined;
   mode: ChatMode;
@@ -186,22 +132,23 @@ export function useAutoRetryStream({
   useEffect(() => {
     if (!streaming || autoRetry === false) return;
     const interval = window.setInterval(() => {
-      const active = activeStreamRef.current;
-      if (!active || active.retryCount >= MAX_AUTO_RETRIES) return;
-      if (active.hasProgress) return;
-      if (Date.now() - lastStreamActivityRef.current < AUTO_RETRY_IDLE_MS)
-        return;
-      lastStreamActivityRef.current = Date.now();
-      retryStalledStream({
-        active,
-        chats: chatsRef.current,
-        preferences,
-        mode,
-        language: language || "en-US",
-        uploadedAttachments,
-        agent,
-        appendToAssistant,
-        startStream,
+      Object.values(activeStreamsRef.current).forEach((active) => {
+        if (active.retryCount >= MAX_AUTO_RETRIES) return;
+        if (active.hasProgress) return;
+        const lastActivity = lastStreamActivityRef.current[active.chatId] || 0;
+        if (Date.now() - lastActivity < AUTO_RETRY_IDLE_MS) return;
+        lastStreamActivityRef.current[active.chatId] = Date.now();
+        retryStalledStream({
+          active,
+          chats: chatsRef.current,
+          preferences,
+          mode,
+          language: language || "en-US",
+          uploadedAttachments,
+          agent,
+          appendToAssistant,
+          startStream,
+        });
       });
     }, AUTO_RETRY_POLL_MS);
     return () => window.clearInterval(interval);

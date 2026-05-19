@@ -20,3 +20,5 @@ export type ActiveStream = {
   retryCount: number;
   hasProgress: boolean;
 };
+
+export type ActiveStreamMap = Record<string, ActiveStream>;

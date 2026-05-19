@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import { resolveAgent } from "../../src/shared/agents";
 import { getMessages } from "../../src/shared/i18n";
@@ -50,7 +50,7 @@ import {
   ADD_MENU_VIEW,
   COMPOSER_MENU,
   type AddMenuView,
-  type ActiveStream,
+  type ActiveStreamMap,
   type ComposerMenu,
 } from "./sidepanel-menu-state";
 import { SidepanelView } from "./sidepanel-view";
@@ -79,22 +79,36 @@ export function SidepanelApp() {
   const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
   const [chats, setChats] = useStoredState(storage.chats);
   const [activeChatId, setActiveChatId] = useState<string>();
-  const [input, setInput] = useState("");
+  const [inputDrafts, setInputDrafts] = useState<Record<string, string>>({});
+  const [unreadCompletedChats, setUnreadCompletedChats] = useState<
+    Record<string, true>
+  >({});
   const [mode, setMode] = useState<ChatMode>(CHAT_MODE.agent);
-  const [streaming, setStreaming] = useState(false);
+  const [activeStreams, setActiveStreamsState] = useState<ActiveStreamMap>({});
   const [openMenu, setOpenMenu] = useState<ComposerMenu | null>(null);
   const [addMenuView, setAddMenuView] = useState<AddMenuView>("menu");
   const [showHistory, setShowHistory] = useState(false);
   const [sentAttachmentPreviews, setSentAttachmentPreviews] = useState<
     Record<string, UploadedAttachment[]>
   >({});
-  const portRef = useRef<chrome.runtime.Port | undefined>(undefined);
+  const portRefs = useRef<Record<string, chrome.runtime.Port | undefined>>({});
   const sidepanelRef = useRef<HTMLDivElement | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const chatsRef = useRef<Chat[]>([]);
+  const activeChatIdRef = useRef<string | undefined>(undefined);
   const initializedChatSelectionRef = useRef(false);
-  const lastStreamActivityRef = useRef(Date.now());
-  const activeStreamRef = useRef<ActiveStream | null>(null);
+  const lastStreamActivityRef = useRef<Record<string, number>>({});
+  const activeStreamsRef = useRef<ActiveStreamMap>({});
+  const setActiveStreams: typeof setActiveStreamsState = useCallback(
+    (value) => {
+      setActiveStreamsState((items) => {
+        const next = typeof value === "function" ? value(items) : value;
+        activeStreamsRef.current = next;
+        return next;
+      });
+    },
+    [],
+  );
   const configuredModels = useMemo(
     () =>
       ignoreSyncedProvidersForBootstrap
@@ -106,10 +120,30 @@ export function SidepanelApp() {
   );
   const modelCount = configuredModels.length;
   const currentChat = chats?.find((chat) => chat.id === activeChatId);
+  const inputDraftKey = activeChatId || "new";
+  const input = inputDrafts[inputDraftKey] || "";
+  const setInput = useCallback(
+    (value: string) => {
+      setInputDrafts((items) => ({ ...items, [inputDraftKey]: value }));
+    },
+    [inputDraftKey],
+  );
+  const clearInput = useCallback(() => {
+    setInputDrafts((items) => {
+      const next = { ...items };
+      delete next[inputDraftKey];
+      return next;
+    });
+  }, [inputDraftKey]);
   const activeAgent = resolveAgent(agents, preferences?.selectedAgentId);
-  const streamHandlers = createStreamHandlers(setChats);
+  const streamHandlers = useMemo(
+    () => createStreamHandlers(setChats),
+    [setChats],
+  );
   const t = getMessages(language);
-  const aiWorking = streaming;
+  const streaming = Object.keys(activeStreams).length > 0;
+  const currentChatStreaming = !!(currentChat && activeStreams[currentChat.id]);
+  const aiWorking = currentChatStreaming;
   const { selectElement } = useElementSelector(t);
   const {
     uploadedAttachments,
@@ -128,6 +162,7 @@ export function SidepanelApp() {
     activeTabAttachable,
     selectedElements,
     setAttachedTabs,
+    clearComposerContext,
     clearAttachedTabsAfterSend,
     setSelectedElements,
     attachActiveTab,
@@ -151,7 +186,7 @@ export function SidepanelApp() {
   const { editingMessage, setEditingMessage, editMessage, cancelEditMessage } =
     useMessageEdit({
       currentChat,
-      streaming,
+      streaming: currentChatStreaming,
       input,
       pendingAttachments,
       attachedTabs,
@@ -170,17 +205,20 @@ export function SidepanelApp() {
     removeQueuedMessage,
     editQueuedMessage,
   } = useQueuedMessages({
-    streaming,
+    chatId: currentChat?.id,
+    streaming: currentChatStreaming,
     sendQueued: (content) => send(content, undefined, { queued: true }),
     onEditContent: setInput,
     onQueueMessage: (message) =>
-      portRef.current?.postMessage({
+      currentChat &&
+      portRefs.current[currentChat.id]?.postMessage({
         type: AI_STREAM_REQUEST_TYPE.queueMessage,
         id: message.id,
         content: message.content,
       }),
     onRemoveMessage: (id) =>
-      portRef.current?.postMessage({
+      currentChat &&
+      portRefs.current[currentChat.id]?.postMessage({
         type: AI_STREAM_REQUEST_TYPE.deleteQueuedMessage,
         id,
       }),
@@ -192,6 +230,16 @@ export function SidepanelApp() {
   useEffect(() => {
     chatsRef.current = chats || [];
   }, [chats]);
+  useEffect(() => {
+    activeChatIdRef.current = activeChatId;
+    if (!activeChatId) return;
+    setUnreadCompletedChats((items) => {
+      if (!items[activeChatId]) return items;
+      const next = { ...items };
+      delete next[activeChatId];
+      return next;
+    });
+  }, [activeChatId]);
   useEffect(() => {
     if (!chats?.some((chat) => !chat.messages.length)) return;
     setChats((items) => pruneEmptyChats(items));
@@ -220,19 +268,23 @@ export function SidepanelApp() {
     clearUploadedAttachments,
     setEditingMessage,
     setSentAttachmentPreviews,
+    clearComposerContext,
+    setSelectedElements,
+    setSelectedSkills,
+    setOpenMenu,
   );
 
   useAutoScroll(
     messagesRef,
     currentChat?.messages,
     preferences?.autoScroll,
-    streaming,
+    currentChatStreaming,
   );
 
   useAutoRetryStream({
     streaming,
     autoRetry: preferences?.autoRetry,
-    activeStreamRef,
+    activeStreamsRef,
     lastStreamActivityRef,
     chatsRef,
     preferences,
@@ -245,31 +297,51 @@ export function SidepanelApp() {
   });
 
   useEffect(() => {
-    if (streaming || activeStreamRef.current || !currentChat) return;
+    if (!currentChat || activeStreams[currentChat.id]) return;
     const message = resumableAssistantMessage(currentChat);
     if (!message) return;
-    activeStreamRef.current = {
-      chatId: currentChat.id,
-      assistantMessageId: message.id,
-      retryCount: 0,
-      hasProgress: true,
-    };
-    setStreaming(true);
+    setActiveStreams((items) => ({
+      ...items,
+      [currentChat.id]: {
+        chatId: currentChat.id,
+        assistantMessageId: message.id,
+        retryCount: 0,
+        hasProgress: true,
+      },
+    }));
     const metrics = message.metadata?.runMetrics as RunMetrics | undefined;
     attachStream(currentChat.id, message.id, metrics?.streamEventIndex);
-  }, [currentChat, streaming]);
+  }, [activeStreams, currentChat, setActiveStreams]);
 
   function closeChat(chatId: string) {
+    if (activeStreams[chatId]) {
+      closeStreamPort(portRefs, chatId, true);
+      setActiveStreams((items) => {
+        const next = { ...items };
+        delete next[chatId];
+        return next;
+      });
+    }
     closeChatAction({
       chatId,
       activeChatId,
       setChats,
       setActiveChatId,
     });
+    setUnreadCompletedChats((items) => {
+      if (!items[chatId]) return items;
+      const next = { ...items };
+      delete next[chatId];
+      return next;
+    });
   }
 
   function selectChat(chatId: string) {
     selectChatAction({ chatId, setChats, setActiveChatId });
+  }
+  function markStreamFinished(chatId: string) {
+    if (activeChatIdRef.current === chatId) return;
+    setUnreadCompletedChats((items) => ({ ...items, [chatId]: true }));
   }
   async function send(
     content = input,
@@ -277,10 +349,10 @@ export function SidepanelApp() {
     options: { queued?: boolean; resendMessage?: ChatMessage } = {},
   ) {
     const text = interpolateSkillVariables(content.trim());
-    if ((!text && !uploadedAttachments.length) || streaming) {
-      if (streaming && text) {
+    if ((!text && !uploadedAttachments.length) || currentChatStreaming) {
+      if (currentChatStreaming && text) {
         enqueueQueuedMessage(content);
-        if (content === input) setInput("");
+        if (content === input) clearInput();
       }
       return;
     }
@@ -386,15 +458,13 @@ export function SidepanelApp() {
         setChats,
       });
     if (!options.queued && !options.resendMessage) {
-      setInput("");
+      clearInput();
       clearAttachedTabsAfterSend();
       clearPendingAttachments();
       setSelectedElements([]);
       setSelectedSkills([]);
       setEditingMessage(null);
     }
-    setStreaming(true);
-
     const request: AiStreamRequest = {
       type: AI_STREAM_REQUEST_TYPE.sendMessages,
       chatId: nextChat.id,
@@ -418,13 +488,16 @@ export function SidepanelApp() {
         },
       },
     };
-    activeStreamRef.current = {
-      chatId: nextChat.id,
-      assistantMessageId: assistantMessage.id,
-      retryCount: 0,
-      hasProgress: false,
-    };
-    lastStreamActivityRef.current = Date.now();
+    setActiveStreams((items) => ({
+      ...items,
+      [nextChat.id]: {
+        chatId: nextChat.id,
+        assistantMessageId: assistantMessage.id,
+        retryCount: 0,
+        hasProgress: false,
+      },
+    }));
+    lastStreamActivityRef.current[nextChat.id] = Date.now();
     startStream(request, assistantMessage.id);
   }
 
@@ -432,10 +505,11 @@ export function SidepanelApp() {
     startStreamAction({
       request,
       targetMessageId,
-      portRef,
-      activeStreamRef,
+      portRefs,
+      activeStreamsRef,
       lastStreamActivityRef,
-      setStreaming,
+      setActiveStreams,
+      onStreamFinished: markStreamFinished,
       appendStreamChunk: streamHandlers.appendStreamChunk,
       appendToAssistant: streamHandlers.appendToAssistant,
       appendQueuedMessages: streamHandlers.appendQueuedMessages,
@@ -454,10 +528,11 @@ export function SidepanelApp() {
       chatId,
       targetMessageId,
       afterSequence,
-      portRef,
-      activeStreamRef,
+      portRefs,
+      activeStreamsRef,
       lastStreamActivityRef,
-      setStreaming,
+      setActiveStreams,
+      onStreamFinished: markStreamFinished,
       appendStreamChunk: streamHandlers.appendStreamChunk,
       appendToAssistant: streamHandlers.appendToAssistant,
       appendQueuedMessages: streamHandlers.appendQueuedMessages,
@@ -468,16 +543,20 @@ export function SidepanelApp() {
   }
 
   function stop() {
-    const activeStream = activeStreamRef.current;
+    if (!currentChat) return;
+    const activeStream = activeStreams[currentChat.id];
     if (activeStream)
       streamHandlers.updateRunMetrics(
         activeStream.chatId,
         activeStream.assistantMessageId,
         { endedAt: Date.now() },
       );
-    activeStreamRef.current = null;
-    closeStreamPort(portRef, true);
-    setStreaming(false);
+    setActiveStreams((items) => {
+      const next = { ...items };
+      delete next[currentChat.id];
+      return next;
+    });
+    closeStreamPort(portRefs, currentChat.id, true);
   }
 
   return (
@@ -495,13 +574,14 @@ export function SidepanelApp() {
       attachedTabs={attachedTabs}
       pendingAttachments={pendingAttachments}
       uploadedAttachments={uploadedAttachments}
-      queuedMessages={queuedMessages}
+      queuedMessages={currentChatStreaming ? queuedMessages : []}
       sentAttachmentPreviews={sentAttachmentPreviews}
       attachmentNotice={attachmentNotice}
       availableTabs={availableTabs}
       activeTabAttachable={activeTabAttachable}
       selectedElements={selectedElements}
-      streaming={streaming}
+      streaming={currentChatStreaming}
+      unreadCompletedChatIds={unreadCompletedChats}
       skills={(skills || []).filter(isSkillEnabled)}
       agents={agents || []}
       selectedSkills={selectedSkills}
