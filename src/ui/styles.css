@@ -480,6 +480,16 @@ a {
     transform: translateY(0);
   }
 }
+@keyframes subtle-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
 @keyframes accordion-down {
   from {
     height: 0;
@@ -1912,6 +1922,7 @@ a {
   min-height: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+  animation: fade-in 0.2s ease both;
 }
 .history-page-header {
   display: grid;
@@ -1922,6 +1933,7 @@ a {
   border-bottom: 1px solid var(--border);
   background: color-mix(in srgb, var(--background) 90%, transparent);
   backdrop-filter: blur(12px);
+  animation: subtle-rise-in 0.22s ease both;
 }
 .history-page-header > div {
   min-width: 0;
@@ -1949,6 +1961,7 @@ a {
   padding: 48px 12px;
   color: var(--muted-foreground);
   text-align: center;
+  animation: subtle-rise-in 0.24s ease both;
 }
 .history-item {
   position: relative;
@@ -1961,10 +1974,28 @@ a {
   margin-bottom: 2px;
   transition:
     background-color 0.14s ease,
-    color 0.14s ease;
+    color 0.14s ease,
+    transform 0.14s ease;
+  animation: subtle-rise-in 0.24s ease both;
+}
+.history-item:nth-child(1) {
+  animation-delay: 0.02s;
+}
+.history-item:nth-child(2) {
+  animation-delay: 0.04s;
+}
+.history-item:nth-child(3) {
+  animation-delay: 0.06s;
+}
+.history-item:nth-child(4) {
+  animation-delay: 0.08s;
+}
+.history-item:nth-child(n + 5) {
+  animation-delay: 0.1s;
 }
 .history-item:hover {
   background: color-mix(in srgb, var(--secondary) 72%, transparent);
+  transform: translateY(-1px);
 }
 .history-item.active {
   background: color-mix(in srgb, var(--accent-soft) 42%, transparent);
@@ -3688,6 +3719,10 @@ a {
   .assistant-text,
   .assistant-text.streaming .markdown > *:last-child,
   .stream-char,
+  .history-page,
+  .history-page-header,
+  .history-empty,
+  .history-item,
   .ui-popover-content,
   .ui-tooltip-content,
   .ui-card,
