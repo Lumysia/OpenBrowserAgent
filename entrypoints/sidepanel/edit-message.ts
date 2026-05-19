@@ -2,6 +2,7 @@ import type {
   AttachmentTab,
   Chat,
   ChatMessage,
+  ChatSource,
   SelectedElement,
   Skill,
   UploadedAttachment,
@@ -28,6 +29,7 @@ export function createEditMessageDraft({
     content: message.content,
     attachments,
     messagesBefore,
+    sourcesBefore: sourcesForMessages(chat.sources || [], messagesBefore),
     attachedTabs: Array.isArray(message.metadata?.attachedTabs)
       ? (message.metadata.attachedTabs as AttachmentTab[])
       : [],
@@ -72,6 +74,31 @@ function selectedElementsFromMetadata(
   return metadata?.selectedElement
     ? [metadata.selectedElement as SelectedElement]
     : [];
+}
+
+function sourcesForMessages(sources: ChatSource[], messages: ChatMessage[]) {
+  if (!sources.length || !messages.length) return [];
+  const ids = new Set<string>();
+  for (const message of messages) {
+    collectCitationIds(ids, message.content);
+    if (Array.isArray(message.metadata?.sources))
+      for (const source of message.metadata.sources as ChatSource[])
+        if (source.id) ids.add(source.id);
+    for (const part of message.parts || []) {
+      collectCitationIds(ids, part.text);
+      const output = part.output as Record<string, unknown> | undefined;
+      if (!output || !Array.isArray(output._sources)) continue;
+      for (const source of output._sources as ChatSource[])
+        if (source.id) ids.add(source.id);
+    }
+  }
+  return sources.filter((source) => ids.has(source.id));
+}
+
+function collectCitationIds(ids: Set<string>, text: string | undefined) {
+  if (!text) return;
+  for (const match of text.matchAll(/\[\[cite:([\w-]+)\]\]/g))
+    ids.add(match[1]);
 }
 
 export function pruneSentAttachmentPreviews(

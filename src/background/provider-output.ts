@@ -2,6 +2,7 @@ import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 import {
   assignChatSources,
   extractSourcesFromTool,
+  renderSourcesForPrompt,
 } from "../shared/chat-sources";
 import type { ChatMessage, ChatSource } from "../shared/types";
 import type { TokenUsage } from "../shared/types";
@@ -30,10 +31,10 @@ export function attachToolSources(
   const record = output as Record<string, unknown>;
   const extracted = extractSourcesFromTool(toolName, input, record);
   if (toolName === BROWSER_TOOL_NAME.groupTabs && currentSources.length)
-    return { ...record, _sources: currentSources };
+    return withCitationContext(record, currentSources);
   if (!extracted.length) return output;
   const { added } = assignChatSources(currentSources, extracted);
-  return added.length ? { ...record, _sources: added } : output;
+  return added.length ? withCitationContext(record, added) : output;
 }
 
 export function mergeOutputSources(current: ChatSource[], output: unknown) {
@@ -42,6 +43,19 @@ export function mergeOutputSources(current: ChatSource[], output: unknown) {
   return Array.isArray(sources)
     ? assignChatSources(current, sources as ChatSource[]).sources
     : current;
+}
+
+function withCitationContext(
+  output: Record<string, unknown>,
+  sources: ChatSource[],
+) {
+  return {
+    ...output,
+    _sources: sources,
+    _citationInstructions:
+      "Use these source ids for sourced claims in the final answer with [[cite:source_id]].",
+    _citationSources: renderSourcesForPrompt(sources),
+  };
 }
 
 export function extractVisionImage(output: unknown): VisionImage | undefined {

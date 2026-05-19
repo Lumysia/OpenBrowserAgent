@@ -326,7 +326,12 @@ export function SidepanelApp() {
       selectedElements: sentElements,
     });
     const baseChat = activeEdit
-      ? { ...chat, messages: activeEdit.messagesBefore, updatedAt: Date.now() }
+      ? {
+          ...chat,
+          messages: activeEdit.messagesBefore,
+          sources: activeEdit.sourcesBefore,
+          updatedAt: Date.now(),
+        }
       : chat;
     const selectedImageAttachments =
       selectedElementImageAttachments(sentElements);
