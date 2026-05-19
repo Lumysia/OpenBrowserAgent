@@ -30,12 +30,8 @@ import {
   Textarea,
   TooltipProvider,
 } from "../../src/ui/components";
-import {
-  AddContextMenu,
-  ModelMenu,
-  ModeSelector,
-  selectedModelLabel,
-} from "./composer-menus";
+import { AddContextMenu } from "./composer-menus";
+import { ComposerSelectors } from "./composer-selectors";
 import { ComposerAttachments } from "./composer-attachments";
 import { EditModeOverlay } from "./edit-mode-overlay";
 import { IconTooltip } from "./icon-tooltip";
@@ -404,61 +400,18 @@ export function SidepanelView({
                   </PopoverContent>
                 </Popover>
               </div>
-              <div className="composer-selectors">
-                <div className="selector-anchor model-anchor">
-                  <Popover
-                    open={openMenu === COMPOSER_MENU.model}
-                    onOpenChange={(open) =>
-                      onSetOpenMenu(open ? COMPOSER_MENU.model : null)
-                    }
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="composer-trigger composer-model-trigger"
-                        disabled={aiWorking}
-                      >
-                        {selectedModelLabel(
-                          preferences?.selectedModelId,
-                          configuredModels,
-                          t,
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="model-popover-content"
-                      align="end"
-                    >
-                      <ModelMenu
-                        t={t}
-                        models={configuredModels}
-                        selectedModelId={preferences?.selectedModelId}
-                        onSelect={(modelId) => {
-                          if (preferences)
-                            onSetPreferences((previous) => ({
-                              ...previous,
-                              selectedModelId: modelId,
-                            }));
-                          onSetOpenMenu(null);
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="selector-anchor mode-anchor">
-                  <ModeSelector
-                    t={t}
-                    mode={mode}
-                    agents={agents}
-                    preferences={preferences}
-                    openMenu={openMenu}
-                    aiWorking={aiWorking}
-                    onSetMode={onSetMode}
-                    onSetOpenMenu={onSetOpenMenu}
-                    onSetPreferences={onSetPreferences}
-                  />
-                </div>
-              </div>
+              <ComposerSelectors
+                t={t}
+                preferences={preferences}
+                configuredModels={configuredModels}
+                mode={mode}
+                agents={agents}
+                openMenu={openMenu}
+                aiWorking={aiWorking}
+                onSetMode={onSetMode}
+                onSetOpenMenu={onSetOpenMenu}
+                onSetPreferences={onSetPreferences}
+              />
               {streaming ? (
                 <>
                   <IconTooltip label={t.sidepanel.stop}>

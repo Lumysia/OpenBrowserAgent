@@ -1,6 +1,7 @@
 export const COMPOSER_MENU = {
   add: "add",
   model: "model",
+  reasoning: "reasoning",
   mode: "mode",
 } as const;
 

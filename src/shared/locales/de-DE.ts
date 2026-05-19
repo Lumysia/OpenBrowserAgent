@@ -137,6 +137,12 @@ export const deDE: LocaleMessages = {
     allOpenTabs: "Alle geöffneten Tabs",
     selectElement: "Element auswählen",
     selectModel: "Modell auswählen",
+    reasoningEffort: "Reasoning-Aufwand",
+    reasoningEffortDescription: "Nur für unterstützte Reasoning-Modelle.",
+    reasoningEffortDefault: "Provider-Standard",
+    reasoningEffortLow: "Niedrig",
+    reasoningEffortMedium: "Mittel",
+    reasoningEffortHigh: "Hoch",
     noModelsConfigured: "Keine Modelle konfiguriert",
     agentDescription:
       "Aufgaben automatisieren, suchen und den Browser bedienen",

@@ -137,6 +137,13 @@ export const frFR: LocaleMessages = {
     allOpenTabs: "Tous les onglets ouverts",
     selectElement: "Sélectionner un élément",
     selectModel: "Sélectionner un modèle",
+    reasoningEffort: "Effort de raisonnement",
+    reasoningEffortDescription:
+      "Uniquement pour les modèles de raisonnement compatibles.",
+    reasoningEffortDefault: "Valeur du fournisseur",
+    reasoningEffortLow: "Faible",
+    reasoningEffortMedium: "Moyen",
+    reasoningEffortHigh: "Élevé",
     noModelsConfigured: "Aucun modèle configuré",
     agentDescription: "Automatiser, rechercher et piloter le navigateur",
     askDescription: "Poser des questions sur les pages web",

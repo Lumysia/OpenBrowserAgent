@@ -136,6 +136,13 @@ export const ptBR: LocaleMessages = {
     allOpenTabs: "Todas as abas abertas",
     selectElement: "Selecionar elemento",
     selectModel: "Selecionar modelo",
+    reasoningEffort: "Esforço de raciocínio",
+    reasoningEffortDescription:
+      "Somente para modelos de raciocínio compatíveis.",
+    reasoningEffortDefault: "Padrão do provedor",
+    reasoningEffortLow: "Baixo",
+    reasoningEffortMedium: "Médio",
+    reasoningEffortHigh: "Alto",
     noModelsConfigured: "Nenhum modelo configurado",
     agentDescription: "Automatize tarefas, pesquise e opere seu navegador",
     askDescription: "Faça perguntas sobre páginas web",

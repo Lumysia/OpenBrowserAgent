@@ -136,6 +136,13 @@ export const esES: LocaleMessages = {
     allOpenTabs: "Todas las pestañas abiertas",
     selectElement: "Seleccionar elemento",
     selectModel: "Seleccionar modelo",
+    reasoningEffort: "Esfuerzo de razonamiento",
+    reasoningEffortDescription:
+      "Solo para modelos de razonamiento compatibles.",
+    reasoningEffortDefault: "Predeterminado del proveedor",
+    reasoningEffortLow: "Bajo",
+    reasoningEffortMedium: "Medio",
+    reasoningEffortHigh: "Alto",
     noModelsConfigured: "No hay modelos configurados",
     agentDescription: "Automatiza tareas, busca y opera tu navegador",
     askDescription: "Pregunta sobre páginas web",

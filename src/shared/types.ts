@@ -1,4 +1,5 @@
 import type { UploadedAttachmentKind } from "./attachments";
+import type { ReasoningEffort } from "./reasoning";
 
 export type ProviderId =
   | "gemini"
@@ -51,6 +52,7 @@ export type Preferences = {
   cdpToolsEnabled?: boolean;
   dangerousCodeExecutionEnabled?: boolean;
   maxToolSteps?: number;
+  reasoningEffort?: ReasoningEffort;
   contextBudgetEnabled?: boolean;
   contextRequestMaxChars?: number;
   contextTailMinMessages?: number;

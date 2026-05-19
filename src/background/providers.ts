@@ -2,6 +2,7 @@ import { UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
 import { base64FromDataUrl } from "../shared/attachments";
 import { storage } from "../shared/storage";
 import { MODEL_TEMPERATURE } from "../shared/config";
+import { reasoningRequestParams } from "../shared/reasoning";
 import {
   CHAT_PART_STATE,
   toolPartType,
@@ -118,6 +119,10 @@ export async function requestOpenAICompatible(
   let responseUsage: TokenUsage | undefined;
   const postMetric = (message: AiStreamResponse) => post(port, message);
   async function fetchChatCompletion(body: Record<string, unknown>) {
+    const reasoningParams = reasoningRequestParams(
+      model.provider,
+      preferences.reasoningEffort,
+    );
     const budgeted = applyOpenAIContextBudget(requestMessages, preferences);
     postContextBudget(postMetric, budgeted.report);
     const response = await fetch(chatUrl, {
@@ -127,7 +132,11 @@ export async function requestOpenAICompatible(
         "Content-Type": "application/json",
         ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
       },
-      body: JSON.stringify({ ...body, messages: budgeted.items }),
+      body: JSON.stringify({
+        ...body,
+        ...reasoningParams,
+        messages: budgeted.items,
+      }),
     });
     if (response.ok || !usesAttachmentPayload) return response;
     requestMessages = createOpenAIRequestMessages(
@@ -158,7 +167,11 @@ export async function requestOpenAICompatible(
         "Content-Type": "application/json",
         ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
       },
-      body: JSON.stringify({ ...body, messages: retryBudgeted.items }),
+      body: JSON.stringify({
+        ...body,
+        ...reasoningParams,
+        messages: retryBudgeted.items,
+      }),
     });
   }
   if (!useTools) {
