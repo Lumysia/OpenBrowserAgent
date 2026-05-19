@@ -143,6 +143,72 @@ export const commonBrowserTools = [
       description: "The IDs of the tabs to close",
     },
   }),
+  tool(BROWSER_TOOL_NAME.reloadTab, "Reload a browser tab", {
+    tabId: {
+      type: "number",
+      description: "The ID of the tab to reload. Defaults to the active tab.",
+    },
+    bypassCache: {
+      type: "boolean",
+      description: "Bypass cache while reloading",
+    },
+  }),
+  tool(
+    BROWSER_TOOL_NAME.navigateTab,
+    "Navigate a tab by URL, back, forward, or reload",
+    {
+      tabId: {
+        type: "number",
+        description: "The ID of the tab to navigate. Defaults to active tab.",
+      },
+      type: {
+        type: "string",
+        enum: ["url", "back", "forward", "reload"],
+        description: "Navigation type",
+      },
+      url: { type: "string", description: "URL for type=url" },
+      bypassCache: {
+        type: "boolean",
+        description: "Bypass cache for type=reload",
+      },
+    },
+    [],
+  ),
+  tool(BROWSER_TOOL_NAME.captureVisibleTab, "Capture the visible tab area", {
+    tabId: {
+      type: "number",
+      description: "The tab ID to capture. Defaults to active tab.",
+    },
+    format: {
+      type: "string",
+      enum: ["png", "jpeg"],
+      description: "Image format. Defaults to png.",
+    },
+    quality: {
+      type: "number",
+      description: "JPEG quality from 0 to 100",
+    },
+  }),
+  tool(
+    BROWSER_TOOL_NAME.waitForText,
+    "Wait until text appears in a tab",
+    {
+      tabId: {
+        type: "number",
+        description: "The ID of the tab to inspect. Defaults to active tab.",
+      },
+      text: {
+        type: "array",
+        items: { type: "string" },
+        description: "One or more texts to wait for",
+      },
+      timeout: {
+        type: "number",
+        description: "Timeout in milliseconds. Defaults to 5000.",
+      },
+    },
+    ["text"],
+  ),
   tool(
     BROWSER_TOOL_NAME.openSearchTab,
     "Open a search tab with the given query",

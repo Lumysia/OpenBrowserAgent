@@ -15,6 +15,9 @@ import { allBrowserTools, browserTools } from "./tool-schema";
 import { withTimeout } from "./tool-utils";
 
 export { allBrowserTools, browserTools };
+const WAIT_FOR_TEXT_DEFAULT_MS = 5000;
+const WAIT_FOR_TEXT_POLL_MS = 250;
+
 async function executeBrowserTool(
   name: string | undefined,
   args: Record<string, unknown>,
@@ -65,6 +68,24 @@ async function executeBrowserTool(
         return { success: false, error: "No tab IDs provided" };
       await chrome.tabs.remove(tabIds);
       return { success: true, tabIds };
+    }
+    case BROWSER_TOOL_NAME.reloadTab: {
+      const tabId = await resolveTabId(args.tabId);
+      const bypassCache =
+        args.bypassCache === true || args.ignoreCache === true;
+      await chrome.tabs.reload(tabId, { bypassCache });
+      await wait(100);
+      await waitTabComplete(tabId);
+      return { success: true, tabId, bypassCache };
+    }
+    case BROWSER_TOOL_NAME.navigateTab: {
+      return navigateTab(args);
+    }
+    case BROWSER_TOOL_NAME.captureVisibleTab: {
+      return captureVisibleTab(args);
+    }
+    case BROWSER_TOOL_NAME.waitForText: {
+      return waitForText(args);
     }
     case BROWSER_TOOL_NAME.goToTab: {
       const tab = await chrome.tabs.update(await resolveTabId(args.tabId), {
@@ -265,6 +286,78 @@ function getCurrentTime(args: Record<string, unknown>) {
 
 function currentTimeZone() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+}
+
+async function navigateTab(args: Record<string, unknown>) {
+  const tabId = await resolveTabId(args.tabId);
+  const type = String(args.type || (args.url ? "url" : "reload"));
+  if (type === "back") await chrome.tabs.goBack(tabId);
+  else if (type === "forward") await chrome.tabs.goForward(tabId);
+  else if (type === "url") {
+    const url = String(args.url || "").trim();
+    if (!url) return { success: false, error: "Missing URL" };
+    await chrome.tabs.update(tabId, { url });
+  } else if (type === "reload") {
+    const bypassCache = args.bypassCache === true || args.ignoreCache === true;
+    await chrome.tabs.reload(tabId, { bypassCache });
+  } else {
+    return { success: false, error: `Unknown navigation type: ${type}` };
+  }
+  await wait(100);
+  await waitTabComplete(tabId);
+  return { success: true, tabId, type };
+}
+
+async function captureVisibleTab(args: Record<string, unknown>) {
+  const tabId = await resolveTabId(args.tabId);
+  const tab = await chrome.tabs.get(tabId);
+  if (tab.windowId === undefined)
+    return { success: false, error: "Tab has no window" };
+  await chrome.tabs.update(tabId, { active: true });
+  await chrome.windows.update(tab.windowId, { focused: true });
+  const format = String(args.format || "png") === "jpeg" ? "jpeg" : "png";
+  const quality = Number(args.quality);
+  const image = await chrome.tabs.captureVisibleTab(tab.windowId, {
+    format,
+    ...(format === "jpeg" && Number.isFinite(quality)
+      ? { quality: Math.min(100, Math.max(0, Math.trunc(quality))) }
+      : {}),
+  });
+  return { success: true, tabId, format, image };
+}
+
+async function waitForText(args: Record<string, unknown>) {
+  const tabId = await resolveTabId(args.tabId);
+  const texts = (Array.isArray(args.text) ? args.text : [args.text])
+    .map((text) => String(text || "").trim())
+    .filter(Boolean);
+  if (!texts.length) return { success: false, error: "No text provided" };
+  const timeout = clampTimeoutMs(args.timeout, WAIT_FOR_TEXT_DEFAULT_MS);
+  const started = Date.now();
+  while (Date.now() - started < timeout) {
+    const found = await pageContainsText(tabId, texts);
+    if (found) return { success: true, tabId, text: found };
+    await wait(WAIT_FOR_TEXT_POLL_MS);
+  }
+  return { success: false, tabId, error: "Timed out waiting for text" };
+}
+
+async function pageContainsText(tabId: number, texts: string[]) {
+  const [result] = await chrome.scripting.executeScript({
+    target: { tabId },
+    args: [texts],
+    func: (needles) => {
+      const pageText = document.body?.innerText || "";
+      return needles.find((text) => pageText.includes(text)) || "";
+    },
+  });
+  return String(result.result || "");
+}
+
+function clampTimeoutMs(value: unknown, fallback: number) {
+  const milliseconds = Number(value);
+  if (!Number.isFinite(milliseconds) || milliseconds <= 0) return fallback;
+  return Math.min(60_000, Math.trunc(milliseconds));
 }
 
 export async function safeExecuteBrowserTool(
