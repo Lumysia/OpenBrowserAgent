@@ -26,6 +26,7 @@ import {
   Progress,
 } from "../../src/ui/components";
 import { buildSidepanelContext } from "./sidepanel-context";
+import { IconTooltip } from "./icon-tooltip";
 
 export type PromptUsageEstimate = PromptBreakdown;
 
@@ -142,14 +143,18 @@ export function PromptUsagePreview({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button
-          className="prompt-usage-trigger"
-          variant="ghost"
-          size="icon"
-          aria-label={t.sidepanel.runInfo.promptBreakdown}
-        >
-          <Info size={16} />
-        </Button>
+        <span>
+          <IconTooltip label={t.sidepanel.runInfo.promptBreakdown} side="top">
+            <Button
+              className="prompt-usage-trigger"
+              variant="ghost"
+              size="icon"
+              aria-label={t.sidepanel.runInfo.promptBreakdown}
+            >
+              <Info size={16} />
+            </Button>
+          </IconTooltip>
+        </span>
       </PopoverTrigger>
       <PopoverContent
         className="prompt-usage-popover-content"

@@ -137,6 +137,9 @@ export function MessageBubble({
         />
       )}
       {message.role === "assistant" &&
+        !!assistantText &&
+        !!displaySources.length && <SourceChips sources={displaySources} />}
+      {message.role === "assistant" &&
         hasParts &&
         (showRunInfo || modelLabel || message.createdAt) && (
           <div className="assistant-actions">
@@ -156,9 +159,6 @@ export function MessageBubble({
             </span>
           </div>
         )}
-      {message.role === "assistant" &&
-        !!assistantText &&
-        !!displaySources.length && <SourceChips sources={displaySources} />}
       {message.role === "user" && !!sentTabs.length && (
         <div className="sent-context-row">
           <SentTabsChip tabs={sentTabs} />

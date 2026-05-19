@@ -18,6 +18,7 @@ import {
   PopoverTrigger,
   Progress,
 } from "../../src/ui/components";
+import { IconTooltip } from "./icon-tooltip";
 
 export function MessageRunInfo({
   t,
@@ -35,9 +36,18 @@ export function MessageRunInfo({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="copy-message">
-          <Info />
-        </Button>
+        <span>
+          <IconTooltip label={t.sidepanel.runInfo.title}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="copy-message"
+              aria-label={t.sidepanel.runInfo.title}
+            >
+              <Info />
+            </Button>
+          </IconTooltip>
+        </span>
       </PopoverTrigger>
       <PopoverContent className="run-info-popover" align="end">
         <div className="run-info-header">
@@ -99,7 +109,6 @@ function RunInfoSection({
         value={modeLabel(t, metrics.outputMode)}
       />
       <PromptBreakdownBar breakdown={metrics.promptBreakdown} t={t} />
-      <ContextBudgetRows budget={metrics.contextBudget} t={t} />
       <div className="run-info-token-grid">
         <MetricRow
           label={t.sidepanel.runInfo.input}
@@ -126,37 +135,6 @@ function RunInfoSection({
           value={formatTokenCount(metrics.usage?.reasoningTokens, t)}
         />
       </div>
-    </div>
-  );
-}
-
-function ContextBudgetRows({
-  budget,
-  t,
-}: {
-  budget: ContextBudgetReport | undefined;
-  t: Messages;
-}) {
-  if (
-    !budget?.prunedChars &&
-    !budget?.prunedMessages &&
-    !budget?.truncatedToolResults
-  )
-    return null;
-  return (
-    <div className="run-info-token-grid">
-      <MetricRow
-        label={t.sidepanel.runInfo.contextSaved}
-        value={`${budget.prunedChars.toLocaleString()} ${t.sidepanel.runInfo.characters}`}
-      />
-      <MetricRow
-        label={t.sidepanel.runInfo.contextPrunedMessages}
-        value={budget.prunedMessages.toLocaleString()}
-      />
-      <MetricRow
-        label={t.sidepanel.runInfo.contextToolResults}
-        value={budget.truncatedToolResults.toLocaleString()}
-      />
     </div>
   );
 }
