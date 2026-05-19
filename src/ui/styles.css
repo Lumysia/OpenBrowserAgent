@@ -3663,7 +3663,8 @@ a {
 .typing-phrase-window {
   position: relative;
   z-index: 1;
-  width: min(194px, 48vw);
+  width: max-content;
+  max-width: min(194px, 48vw);
   height: 1.25em;
   display: inline-block;
   overflow: hidden;
@@ -3672,8 +3673,7 @@ a {
   line-height: 1.25;
 }
 .typing-phrase {
-  position: absolute;
-  inset: 0 auto auto 0;
+  display: inline-block;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3692,17 +3692,8 @@ a {
   background-clip: text;
   color: transparent;
   animation:
-    typing-phrase-cycle 8s ease-in-out infinite,
+    typing-phrase-cycle 2s ease-in-out both,
     typing-text-sheen 4.4s ease-in-out infinite;
-}
-.typing-phrase:nth-child(2) {
-  animation-delay: 2s, 0s;
-}
-.typing-phrase:nth-child(3) {
-  animation-delay: 4s, 0s;
-}
-.typing-phrase:nth-child(4) {
-  animation-delay: 6s, 0s;
 }
 
 @keyframes typing-sheen {
@@ -3727,17 +3718,16 @@ a {
 @keyframes typing-phrase-cycle {
   0% {
     opacity: 0;
-    transform: translateY(90%);
+    transform: translateY(60%);
   }
-  8%,
-  23% {
+  14%,
+  84% {
     opacity: 1;
     transform: translateY(0);
   }
-  31%,
   100% {
     opacity: 0;
-    transform: translateY(-90%);
+    transform: translateY(-60%);
   }
 }
 @keyframes typing-text-sheen {
