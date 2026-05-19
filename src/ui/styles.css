@@ -3029,17 +3029,22 @@ a {
   text-transform: uppercase;
 }
 .mermaid-preview-panel {
-  margin: 12px 12px 0;
-  padding: 12px 12px 14px;
+  margin: 12px;
+  padding: 12px;
   border: 1px solid color-mix(in srgb, var(--accent-soft) 48%, var(--border));
   border-radius: 12px;
   background: var(--card);
   overflow: auto;
 }
 .mermaid-preview {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-height: 180px;
+  padding: 12px;
+  box-sizing: border-box;
   border-radius: 10px;
+  background: white;
   transition: transform 0.16s ease;
 }
 .mermaid-preview:hover {
@@ -3051,7 +3056,6 @@ a {
   height: auto;
   margin: 0 auto;
   border-radius: 8px;
-  background: white;
 }
 .mermaid-preview-actions {
   display: flex;
@@ -3059,7 +3063,6 @@ a {
   gap: 6px;
   flex-wrap: wrap;
   margin-top: 12px;
-  padding-bottom: 2px;
 }
 .markdown pre {
   overflow: auto;
@@ -3137,6 +3140,36 @@ a {
   background: var(--accent-soft);
   color: var(--accent-strong);
   transform: translateY(-1px);
+}
+.code-copy::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 40;
+  width: max-content;
+  max-width: 220px;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 8px 24px var(--shadow);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(2px) scale(0.98);
+  transform-origin: bottom right;
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease;
+}
+.code-copy:hover::after,
+.code-copy:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 .code-copy:active {
   transform: scale(0.96);
