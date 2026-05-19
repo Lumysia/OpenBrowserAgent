@@ -1,6 +1,6 @@
 import { ATTACHMENT_KIND } from "../shared/attachments";
 import { storage } from "../shared/storage";
-import type { UploadedAttachment } from "../shared/types";
+import type { ImageGenerationJob, UploadedAttachment } from "../shared/types";
 import { resolveImageModel } from "./model-resolver";
 
 const DEFAULT_IMAGE_SIZE = "1024x1024";
@@ -8,9 +8,15 @@ const DEFAULT_IMAGE_SIZE = "1024x1024";
 export async function generateImage(
   attachments: UploadedAttachment[],
   input: Record<string, unknown>,
+  context: {
+    chatId?: string;
+    messageId?: string;
+    toolCallId?: string;
+  } = {},
 ) {
   const prompt = String(input.prompt || "").trim();
   if (!prompt) return { error: "Missing image prompt" };
+  const jobId = context.toolCallId || crypto.randomUUID();
   const preferences = await storage.preferences.get();
   const model = await resolveImageModel(stringInput(input.modelId));
   const size =
@@ -35,15 +41,100 @@ export async function generateImage(
   const finalPrompt = textReferences
     ? `${prompt}\n\n${textReferences}`
     : prompt;
-  const result = imageReferences.length
-    ? await editImage(model, finalPrompt, imageReferences[0], input, size)
-    : await createImage(model, finalPrompt, input, size);
-  return {
-    ...result,
+  const referenceAttachmentIds = references.map((attachment) => attachment.id);
+  await upsertImageJob({
+    id: jobId,
+    chatId: context.chatId || "",
+    messageId: context.messageId,
+    toolCallId: context.toolCallId,
+    status: "running",
     prompt: finalPrompt,
     model: model.modelName,
-    referenceAttachmentIds: references.map((attachment) => attachment.id),
-  };
+    size,
+    referenceAttachmentIds,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  });
+  try {
+    const result = imageReferences.length
+      ? await editImage(model, finalPrompt, imageReferences[0], input, size)
+      : await createImage(model, finalPrompt, input, size);
+    const output = {
+      ...result,
+      jobId,
+      prompt: finalPrompt,
+      model: model.modelName,
+      referenceAttachmentIds,
+    };
+    await upsertImageJob({
+      id: jobId,
+      chatId: context.chatId || "",
+      messageId: context.messageId,
+      toolCallId: context.toolCallId,
+      status: output.error ? "failed" : "succeeded",
+      prompt: finalPrompt,
+      model: model.modelName,
+      size,
+      referenceAttachmentIds,
+      result: output.error ? undefined : output,
+      error: output.error ? String(output.error) : undefined,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      completedAt: Date.now(),
+    });
+    return output;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await upsertImageJob({
+      id: jobId,
+      chatId: context.chatId || "",
+      messageId: context.messageId,
+      toolCallId: context.toolCallId,
+      status: "failed",
+      prompt: finalPrompt,
+      model: model.modelName,
+      size,
+      referenceAttachmentIds,
+      error: message,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      completedAt: Date.now(),
+    });
+    return {
+      error: message,
+      jobId,
+      prompt: finalPrompt,
+      model: model.modelName,
+    };
+  }
+}
+
+async function upsertImageJob(job: ImageGenerationJob) {
+  if (!job.chatId) return;
+  const chats = await storage.chats.get();
+  const chat = chats.find((item) => item.id === job.chatId);
+  if (!chat) return;
+  const existing = chat.imageGenerationJobs?.find((item) => item.id === job.id);
+  await storage.chats.set(
+    chats.map((item) =>
+      item.id === job.chatId
+        ? {
+            ...item,
+            imageGenerationJobs: [
+              ...(item.imageGenerationJobs || []).filter(
+                (candidate) => candidate.id !== job.id,
+              ),
+              {
+                ...existing,
+                ...job,
+                createdAt: existing?.createdAt || job.createdAt,
+              },
+            ],
+            updatedAt: Date.now(),
+          }
+        : item,
+    ),
+  );
 }
 
 async function createImage(

@@ -113,6 +113,25 @@ export type UploadedAttachment = {
   text?: string;
 };
 
+export type ImageGenerationJobStatus = "running" | "succeeded" | "failed";
+
+export type ImageGenerationJob = {
+  id: string;
+  chatId: string;
+  messageId?: string;
+  toolCallId?: string;
+  status: ImageGenerationJobStatus;
+  prompt: string;
+  model?: string;
+  size?: string;
+  referenceAttachmentIds?: string[];
+  result?: Record<string, unknown>;
+  error?: string;
+  createdAt: number;
+  updatedAt: number;
+  completedAt?: number;
+};
+
 export type SelectedElement = {
   success: boolean;
   aiId?: string;
@@ -226,6 +245,7 @@ export type Chat = {
   id: string;
   title: string;
   messages: ChatMessage[];
+  imageGenerationJobs?: ImageGenerationJob[];
   sources?: ChatSource[];
   createdAt: number;
   updatedAt: number;

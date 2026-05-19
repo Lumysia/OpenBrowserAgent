@@ -182,6 +182,7 @@ async function streamAssistantResponse(
     clampMaxToolSteps(request.body.maxToolSteps),
     signal,
     port,
+    request.chatId,
     request.messageId,
     t.sidepanel.attachmentsUnsupportedRetry,
     request.body.context?.uploadedAttachments || [],

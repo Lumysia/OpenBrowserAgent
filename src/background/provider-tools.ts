@@ -79,6 +79,7 @@ export function createToolResolver({
 export function executeContextAwareTool({
   toolName,
   input,
+  context,
   uploadedAttachments,
   availableSkills,
   cdpToolsEnabled,
@@ -86,6 +87,7 @@ export function executeContextAwareTool({
 }: {
   toolName: string;
   input: Record<string, unknown>;
+  context?: { chatId?: string; messageId?: string; toolCallId?: string };
   uploadedAttachments: UploadedAttachment[];
   availableSkills: Skill[];
   cdpToolsEnabled: boolean;
@@ -117,7 +119,7 @@ export function executeContextAwareTool({
   if (toolName === BROWSER_TOOL_NAME.updateSkillFile)
     return updateSkillFile(availableSkills, input);
   if (toolName === BROWSER_TOOL_NAME.generateImage)
-    return generateImage(uploadedAttachments, input);
+    return generateImage(uploadedAttachments, input, context);
   if (toolName === BROWSER_TOOL_NAME.readFileFromUrl)
     return readFileFromUrl(input);
   return safeExecuteBrowserTool(toolName, input);
