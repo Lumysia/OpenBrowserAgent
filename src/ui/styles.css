@@ -3404,6 +3404,7 @@ a {
   }
 }
 .tool-card {
+  position: relative;
   min-width: 0;
   max-width: 100%;
   display: flex;
@@ -3415,7 +3416,29 @@ a {
   transition:
     background-color 0.16s ease,
     border-color 0.16s ease,
+    box-shadow 0.16s ease,
     transform 0.16s ease;
+  overflow: hidden;
+}
+.tool-card::before {
+  content: "";
+  position: absolute;
+  inset: 4px auto 4px 0;
+  width: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-strong) 42%, transparent);
+  opacity: 0;
+  transform: scaleY(0.65);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    background-color 0.18s ease;
+}
+.tool-card.loading::before,
+.tool-card.done::before,
+.tool-card.error::before {
+  opacity: 1;
+  transform: scaleY(1);
 }
 @keyframes tool-card-enter {
   from {
@@ -3430,6 +3453,15 @@ a {
 .tool-card.loading {
   background: color-mix(in srgb, var(--accent-softer) 28%, transparent);
 }
+.tool-card.loading .tool-icon {
+  animation: tool-icon-thinking 1.35s ease-in-out infinite;
+}
+.tool-card.done .tool-icon {
+  animation: tool-icon-done 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.tool-card.error::before {
+  background: color-mix(in srgb, var(--destructive) 72%, transparent);
+}
 .tool-title {
   min-width: 0;
   display: flex;
@@ -3443,6 +3475,9 @@ a {
   min-width: 0;
   font-size: 14px;
   font-weight: 650;
+}
+.tool-title-text {
+  animation: tool-text-swap 0.22s ease both;
 }
 .tool-icon {
   width: 18px;
@@ -3462,6 +3497,26 @@ a {
   padding-right: 10px;
   border-left: 1px solid var(--border);
   color: var(--muted-foreground);
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+.tool-card.loading .tool-detail {
+  border-left-color: color-mix(
+    in srgb,
+    var(--accent-strong) 28%,
+    var(--border)
+  );
+}
+.tool-card.done .tool-detail {
+  border-left-color: color-mix(
+    in srgb,
+    var(--accent-strong) 18%,
+    var(--border)
+  );
+}
+.tool-detail-content {
+  animation: tool-detail-swap 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .tool-description {
   max-width: 100%;
@@ -3496,6 +3551,8 @@ a {
     background-color 0.14s ease,
     border-color 0.14s ease,
     transform 0.14s ease;
+  animation: tool-reference-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--tool-reference-index, 0) * 38ms);
 }
 .tool-references button svg {
   flex: 0 0 auto;
@@ -3513,6 +3570,60 @@ a {
 }
 .tool-card.error .tool-description {
   color: #b3261e;
+}
+@keyframes tool-icon-thinking {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.08);
+  }
+}
+@keyframes tool-icon-done {
+  0% {
+    transform: scale(0.9) rotate(-4deg);
+  }
+  70% {
+    transform: scale(1.08) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+@keyframes tool-text-swap {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+@keyframes tool-detail-swap {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes tool-reference-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 .generated-image-result {
   min-width: 0;
@@ -3757,6 +3868,10 @@ a {
   .ui-tooltip-content,
   .ui-card,
   .tool-card,
+  .tool-icon,
+  .tool-title-text,
+  .tool-detail-content,
+  .tool-references button,
   .shiny-text,
   .typing-indicator,
   .typing-indicator::after,

@@ -38,34 +38,49 @@ export function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
     part.state === CHAT_PART_STATE.inputStreaming ||
     part.state === CHAT_PART_STATE.inputAvailable;
   const isError = part.state === CHAT_PART_STATE.outputError;
+  const isDone = part.state === CHAT_PART_STATE.outputAvailable;
+  const status = loading
+    ? "loading"
+    : isError
+      ? "error"
+      : isDone
+        ? "done"
+        : "idle";
+  const detailKey = [
+    status,
+    title,
+    description,
+    references.map((reference) => reference.title).join("|"),
+  ].join("::");
   return (
-    <div
-      className={`tool-card ${loading ? "loading" : ""} ${isError ? "error" : ""}`}
-    >
+    <div className={`tool-card ${status}`}>
       <div className="tool-title">
         <span className="tool-icon">{toolIcon(name)}</span>
-        <strong>
+        <strong className="tool-title-text" key={title}>
           {loading ? <span className="shiny-text">{title}</span> : title}
         </strong>
       </div>
       <div className="tool-detail">
-        {name === BROWSER_TOOL_NAME.generateImage && (
-          <GeneratedImage
-            output={(part.output || {}) as Record<string, unknown>}
-            t={t}
-          />
-        )}
-        {description && <div className="tool-description">{description}</div>}
-        {!!references.length && (
-          <div className="tool-references">
-            {references.map((reference) => (
-              <ToolReferenceButton
-                key={reference.title}
-                reference={reference}
-              />
-            ))}
-          </div>
-        )}
+        <div className="tool-detail-content" key={detailKey}>
+          {name === BROWSER_TOOL_NAME.generateImage && (
+            <GeneratedImage
+              output={(part.output || {}) as Record<string, unknown>}
+              t={t}
+            />
+          )}
+          {description && <div className="tool-description">{description}</div>}
+          {!!references.length && (
+            <div className="tool-references">
+              {references.map((reference, index) => (
+                <ToolReferenceButton
+                  key={reference.title}
+                  reference={reference}
+                  index={index}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -73,14 +88,17 @@ export function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
 
 function ToolReferenceButton({
   reference,
+  index,
 }: {
   reference: { title: string; icon: React.ReactNode; url?: string };
+  index: number;
 }) {
   const url = reference.url;
   return (
     <Button
       variant="ghost"
       onClick={url ? () => openOrFocusUrl(url).catch(console.warn) : undefined}
+      style={{ "--tool-reference-index": index } as React.CSSProperties}
     >
       {reference.icon}
       <span>{reference.title}</span>
