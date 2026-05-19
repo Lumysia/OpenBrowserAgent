@@ -188,7 +188,6 @@ export async function requestOpenAICompatible(
       port,
       signal,
       step === 0 ? messageId : undefined,
-      true,
     );
     responseUsage = addTokenUsage(responseUsage, streamResult.usage);
     const toolCalls = streamResult.toolCalls;

@@ -5,7 +5,6 @@ import {
   type AiStreamResponse,
   type TokenUsage,
 } from "../shared/types";
-import { postTextStream } from "./message-helpers";
 
 type OpenAIToolCall = {
   id?: string;
@@ -18,7 +17,6 @@ export async function readOpenAIStream(
   port: chrome.runtime.Port,
   signal: AbortSignal,
   preferredTextId?: string,
-  deferTextUntilNoTools = false,
 ) {
   if (!response.body) throw new Error("Streaming response body is empty");
 
@@ -31,14 +29,9 @@ export async function readOpenAIStream(
   let content = "";
   let usage: TokenUsage | undefined;
   let textStarted = false;
-  let deferredTextPosted = false;
 
   function emitText(delta: string) {
     if (!delta) return;
-    if (deferTextUntilNoTools) {
-      content += delta;
-      return;
-    }
     if (!textStarted) {
       textStarted = true;
       post(port, {
@@ -51,12 +44,6 @@ export async function readOpenAIStream(
       type: "chunk",
       chunk: { type: AI_TEXT_CHUNK_TYPE.textDelta, id: textId, delta },
     });
-  }
-
-  async function postDeferredTextNote() {
-    if (!deferTextUntilNoTools || deferredTextPosted || !content) return;
-    deferredTextPosted = true;
-    await postTextStream(port, content, textId, signal, false);
   }
 
   async function consumeEvent(rawEvent: string) {
@@ -101,7 +88,6 @@ export async function readOpenAIStream(
       const next = toolCalls[index];
       if (!announcedToolIndexes.has(index) && next.id && next.function.name) {
         announcedToolIndexes.add(index);
-        await postDeferredTextNote();
         post(port, {
           type: "chunk",
           chunk: {
@@ -137,13 +123,6 @@ export async function readOpenAIStream(
   const completeToolCalls = toolCalls.filter(
     (toolCall) => toolCall.function.name,
   );
-  if (deferTextUntilNoTools && content) {
-    if (completeToolCalls.length && !deferredTextPosted)
-      await postTextStream(port, content, textId, signal, false);
-    if (!completeToolCalls.length)
-      await postTextStream(port, content, textId, signal);
-  }
-
   return { content, toolCalls: completeToolCalls, usage };
 }
 

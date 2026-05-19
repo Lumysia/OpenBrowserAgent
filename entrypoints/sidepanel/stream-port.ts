@@ -1,4 +1,5 @@
 import type { MutableRefObject } from "react";
+import { STREAM_RENDER_THROTTLE_MS } from "../../src/shared/config";
 import {
   AI_STREAM_PORT_NAME,
   AI_STREAM_REQUEST_TYPE,
@@ -112,6 +113,28 @@ function connectStreamPort({
   const port = chrome.runtime.connect({ name: AI_STREAM_PORT_NAME });
   portRef.current = port;
   let activeMessageId = targetMessageId;
+  let pendingSequenceMetrics: Partial<RunMetrics> | undefined;
+  let pendingSequenceTimeout: number | undefined;
+
+  function scheduleSequenceMetrics(metrics: Partial<RunMetrics> | undefined) {
+    if (!metrics) return;
+    pendingSequenceMetrics = { ...pendingSequenceMetrics, ...metrics };
+    if (pendingSequenceTimeout !== undefined) return;
+    pendingSequenceTimeout = window.setTimeout(
+      flushSequenceMetrics,
+      STREAM_RENDER_THROTTLE_MS,
+    );
+  }
+
+  function flushSequenceMetrics() {
+    if (pendingSequenceTimeout !== undefined)
+      window.clearTimeout(pendingSequenceTimeout);
+    pendingSequenceTimeout = undefined;
+    const metrics = pendingSequenceMetrics;
+    pendingSequenceMetrics = undefined;
+    if (metrics) updateRunMetrics(activeMessageId, metrics);
+  }
+
   port.onMessage.addListener((message: AiStreamResponse) => {
     lastStreamActivityRef.current = Date.now();
     const sequenceMetrics = message.sequence
@@ -129,7 +152,7 @@ function connectStreamPort({
       activeMessageId = message.assistantMessageId;
       if (activeStreamRef.current)
         activeStreamRef.current.assistantMessageId = activeMessageId;
-      if (sequenceMetrics) updateRunMetrics(activeMessageId, sequenceMetrics);
+      scheduleSequenceMetrics(sequenceMetrics);
       return;
     }
     if (message.type === "chunk") {
@@ -137,16 +160,20 @@ function connectStreamPort({
         activeStreamRef.current.hasProgress = true;
       appendStreamChunk(chatId, activeMessageId, message.chunk);
     }
-    if (sequenceMetrics) updateRunMetrics(activeMessageId, sequenceMetrics);
-    if (message.type === "metrics")
+    scheduleSequenceMetrics(sequenceMetrics);
+    if (message.type === "metrics") {
+      flushSequenceMetrics();
       updateRunMetrics(activeMessageId, message.metrics);
+    }
     if (message.type === "error") {
+      flushSequenceMetrics();
       activeStreamRef.current = null;
       updateRunMetrics(activeMessageId, { endedAt: Date.now() });
       setStreaming(false);
       appendToAssistant(chatId, activeMessageId, `\n\n${message.error}`);
     }
     if (message.type === "end") {
+      flushSequenceMetrics();
       activeStreamRef.current = null;
       updateRunMetrics(activeMessageId, { endedAt: Date.now() });
       setStreaming(false);

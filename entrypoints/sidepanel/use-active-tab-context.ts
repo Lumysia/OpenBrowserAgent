@@ -149,10 +149,16 @@ async function syncActiveTabContext({
   if (
     autoAttachSuppressedRef.current ||
     selectedElements.length ||
-    attachedTabs.length >= 2 ||
-    attachedTabs[0]?.id === attachment.id
+    attachedTabs.length >= 2
   )
     return;
+  if (attachedTabs[0]?.id === attachment.id) {
+    setAttachedTabs((tabs) =>
+      tabs.map((item) => (item.id === attachment.id ? attachment : item)),
+    );
+    autoAttachedTabIdRef.current = attachment.id;
+    return;
+  }
   autoAttachedTabIdRef.current = attachment.id;
   setAttachedTabs([attachment]);
 }
