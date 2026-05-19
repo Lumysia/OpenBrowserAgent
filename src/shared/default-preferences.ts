@@ -12,7 +12,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   syncAgents: false,
   syncSkills: false,
   syncChats: false,
-  autoSelectSkills: false,
+  autoSelectSkills: true,
   autoScroll: true,
   autoRetry: true,
   cdpToolsEnabled: false,

@@ -223,6 +223,10 @@ export const ptBR: LocaleMessages = {
         running: "Atualizando habilidade",
         done: "Habilidade atualizada",
       },
+      patchSkillFile: {
+        running: "Aplicando patch à habilidade",
+        done: "Patch aplicado à habilidade",
+      },
       generateImage: { running: "Gerando imagem", done: "Imagem gerada" },
       readFileFromUrl: { running: "Lendo arquivo", done: "Arquivo lido" },
       readUploadedAttachment: {

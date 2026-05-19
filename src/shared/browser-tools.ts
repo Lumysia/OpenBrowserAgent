@@ -60,6 +60,7 @@ export const BROWSER_TOOL_NAME = {
   readSkill: "readSkill",
   readSkillFile: "readSkillFile",
   updateSkillFile: "updateSkillFile",
+  patchSkillFile: "patchSkillFile",
   generateImage: "generateImage",
 } as const;
 

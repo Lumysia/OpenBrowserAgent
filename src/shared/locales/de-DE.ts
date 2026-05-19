@@ -240,6 +240,10 @@ export const deDE: LocaleMessages = {
         running: "Fähigkeit wird aktualisiert",
         done: "Fähigkeit aktualisiert",
       },
+      patchSkillFile: {
+        running: "Fähigkeit wird gepatcht",
+        done: "Fähigkeit gepatcht",
+      },
       generateImage: { running: "Bild wird generiert", done: "Bild generiert" },
       readFileFromUrl: { running: "Datei wird gelesen", done: "Datei gelesen" },
       readUploadedAttachment: {

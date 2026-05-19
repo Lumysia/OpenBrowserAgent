@@ -241,6 +241,10 @@ export const jaJP: LocaleMessages = {
         running: "スキルを更新中",
         done: "スキルを更新しました",
       },
+      patchSkillFile: {
+        running: "スキルにパッチ適用中",
+        done: "スキルにパッチを適用しました",
+      },
       generateImage: { running: "画像を生成中", done: "画像を生成しました" },
       readFileFromUrl: {
         running: "ファイルを読み取り中",

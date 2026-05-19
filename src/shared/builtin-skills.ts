@@ -1,8 +1,46 @@
 import type { Skill } from "./types";
 
 const SKILL_CREATOR_ID = "builtin-skill-creator";
+const BROWSER_GUIDANCE_ID = "builtin-browser-guidance";
 
 export const BUILTIN_SKILLS: Skill[] = [
+  {
+    id: BROWSER_GUIDANCE_ID,
+    name: "browser-guidance",
+    description:
+      "Use browser tools effectively for page inspection, clicking, text entry, visual checks, web research, navigation, and fallback handling during browser automation tasks.",
+    builtin: true,
+    enabled: true,
+    createdAt: 0,
+    updatedAt: 0,
+    files: [
+      {
+        path: "SKILL.md",
+        kind: "markdown",
+        encoding: "utf-8",
+        updatedAt: 0,
+        content: `---
+name: "browser-guidance"
+description: "Use browser tools effectively for page inspection, clicking, text entry, visual checks, web research, navigation, and fallback handling during browser automation tasks."
+---
+
+# Browser Guidance
+
+Use this skill for browser automation tasks that involve inspecting pages, clicking controls, entering text, reading visual content, web research, or recovering from page state changes.
+
+## Workflow
+
+1. Inspect the active page or target tab before acting.
+2. Use accessible elements as the primary map for clicking and text entry.
+3. For text entry, match textbox, contentEditable, input, label, placeholder, and nearby context, then use \`inputTextByAiID\`.
+4. Re-read page state after actions that change controls, navigation, loading, or submitted content.
+5. Use visual evidence for image inspection, judging, choosing, or description.
+6. For search and research, open result pages, compare reliable sources, and cite sourced claims.
+7. Use deferred browser tools when common tools do not provide the needed page control or evidence.
+`,
+      },
+    ],
+  },
   {
     id: SKILL_CREATOR_ID,
     name: "skill-creator",

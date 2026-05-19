@@ -345,6 +345,44 @@ export const commonBrowserTools = [
     },
     ["skillId", "path", "content", "reason"],
   ),
+  tool(
+    BROWSER_TOOL_NAME.patchSkillFile,
+    "Patch an existing skill text file with exact search/replace edits for generalized reusable improvements.",
+    {
+      skillId: {
+        type: "string",
+        description: "The id of the available skill package to patch",
+      },
+      path: {
+        type: "string",
+        description: "The skill file path to patch, such as SKILL.md",
+      },
+      replacements: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            oldText: {
+              type: "string",
+              description: "Exact existing text to replace; must match once",
+            },
+            newText: {
+              type: "string",
+              description: "Replacement text",
+            },
+          },
+          required: ["oldText", "newText"],
+        },
+        description: "Exact replacements to apply in order",
+      },
+      reason: {
+        type: "string",
+        description:
+          "Why this patch is broadly reusable and not a narrow one-off change",
+      },
+    },
+    ["skillId", "path", "replacements", "reason"],
+  ),
 ];
 
 export const allBrowserTools = [...commonBrowserTools, ...cdpTools];
@@ -385,6 +423,7 @@ export function browserToolsForPrompt({
     if (name === BROWSER_TOOL_NAME.readSkill) return hasSkills;
     if (name === BROWSER_TOOL_NAME.readSkillFile) return hasSkills;
     if (name === BROWSER_TOOL_NAME.updateSkillFile) return hasSkills;
+    if (name === BROWSER_TOOL_NAME.patchSkillFile) return hasSkills;
     if (name === BROWSER_TOOL_NAME.generateImage) return imageGenerationEnabled;
     if (name === BROWSER_TOOL_NAME.getCurrentTime) return !askMode;
     if (name === BROWSER_TOOL_NAME.readFileFromUrl)

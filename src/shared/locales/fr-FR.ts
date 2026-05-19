@@ -245,6 +245,10 @@ export const frFR: LocaleMessages = {
         running: "Mise à jour de la compétence",
         done: "Compétence mise à jour",
       },
+      patchSkillFile: {
+        running: "Correction de la compétence",
+        done: "Compétence corrigée",
+      },
       generateImage: {
         running: "Génération de l’image",
         done: "Image générée",

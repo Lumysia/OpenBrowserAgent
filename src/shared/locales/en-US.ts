@@ -227,6 +227,7 @@ export const enUS = {
       },
       readSkill: { running: "Reading Skill", done: "Read Skill" },
       updateSkillFile: { running: "Updating Skill", done: "Updated Skill" },
+      patchSkillFile: { running: "Patching Skill", done: "Patched Skill" },
       generateImage: { running: "Generating image", done: "Generated image" },
       readUploadedAttachment: {
         running: "Reading attachment",

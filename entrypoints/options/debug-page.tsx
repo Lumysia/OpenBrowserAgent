@@ -243,7 +243,8 @@ function toolStatus({
     name === BROWSER_TOOL_NAME.listSkills ||
     name === BROWSER_TOOL_NAME.readSkill ||
     name === BROWSER_TOOL_NAME.readSkillFile ||
-    name === BROWSER_TOOL_NAME.updateSkillFile
+    name === BROWSER_TOOL_NAME.updateSkillFile ||
+    name === BROWSER_TOOL_NAME.patchSkillFile
   )
     return enabledSkillCount && preferences?.autoSelectSkills
       ? { enabled: true, reason: t.options.debugToolSkillsEnabled }

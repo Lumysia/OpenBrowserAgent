@@ -238,6 +238,10 @@ export const esES: LocaleMessages = {
         running: "Actualizando habilidad",
         done: "Habilidad actualizada",
       },
+      patchSkillFile: {
+        running: "Aplicando parche a habilidad",
+        done: "Parche aplicado a habilidad",
+      },
       generateImage: { running: "Generando imagen", done: "Imagen generada" },
       readFileFromUrl: { running: "Leyendo archivo", done: "Archivo leído" },
       readUploadedAttachment: {

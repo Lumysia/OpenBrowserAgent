@@ -122,6 +122,8 @@ export function executeContextAwareTool({
     return readSkillFile(availableSkills, input);
   if (toolName === BROWSER_TOOL_NAME.updateSkillFile)
     return updateSkillFile(availableSkills, input);
+  if (toolName === BROWSER_TOOL_NAME.patchSkillFile)
+    return patchSkillFile(availableSkills, input);
   if (toolName === BROWSER_TOOL_NAME.generateImage)
     return generateImage(uploadedAttachments, input, context);
   if (toolName === BROWSER_TOOL_NAME.readFileFromUrl)
@@ -230,6 +232,7 @@ const TOOL_CATEGORY_BY_NAME = {
   [BROWSER_TOOL_NAME.readSkill]: "skills",
   [BROWSER_TOOL_NAME.readSkillFile]: "skills",
   [BROWSER_TOOL_NAME.updateSkillFile]: "skills",
+  [BROWSER_TOOL_NAME.patchSkillFile]: "skills",
 } as const;
 
 async function readFileFromUrl(input: Record<string, unknown>) {
@@ -447,6 +450,93 @@ async function updateSkillFile(
     updated: true,
     reason,
   };
+}
+
+async function patchSkillFile(
+  availableSkills: Skill[],
+  input: Record<string, unknown>,
+) {
+  const skillId = String(input.skillId || input.id || "");
+  const path = String(input.path || "").trim();
+  const reason = String(input.reason || "").trim();
+  const replacements = parseSkillFileReplacements(input.replacements);
+  if (!skillId || !path)
+    return { error: "Missing skillId or path", skillId, path };
+  if (!reason) return { error: "Missing reusable patch reason", skillId, path };
+  if (!replacements.length)
+    return { error: "Missing replacements", skillId, path };
+
+  const current = availableSkills.find((skill) => skill.id === skillId);
+  if (!current) return { error: "Skill not found", skillId };
+  const existingFile = current.files?.find((file) => file.path === path);
+  if (!existingFile) return { error: "Skill file not found", skillId, path };
+
+  let content = existingFile.content || "";
+  for (const [index, replacement] of replacements.entries()) {
+    const matches = countOccurrences(content, replacement.oldText);
+    if (matches !== 1)
+      return {
+        error:
+          matches === 0
+            ? "Replacement oldText not found"
+            : "Replacement oldText matched more than once",
+        skillId,
+        path,
+        replacementIndex: index,
+        matches,
+      };
+    content = content.replace(replacement.oldText, replacement.newText);
+  }
+
+  const now = Date.now();
+  const file = { ...existingFile, content, updatedAt: now };
+  const nextSkill: Skill = {
+    ...current,
+    ...metadataPatch(path, content),
+    files: current.files.map((item) => (item.path === path ? file : item)),
+    updatedAt: now,
+  };
+
+  const allSkills = (await storage.skills.get()) || [];
+  await storage.skills.set(
+    allSkills.map((skill) => (skill.id === skillId ? nextSkill : skill)),
+  );
+  const availableIndex = availableSkills.findIndex(
+    (skill) => skill.id === skillId,
+  );
+  if (availableIndex >= 0) availableSkills[availableIndex] = nextSkill;
+  return {
+    id: nextSkill.id,
+    name: nextSkill.name,
+    path,
+    patched: true,
+    replacements: replacements.length,
+    reason,
+  };
+}
+
+function parseSkillFileReplacements(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      const replacement = item as { oldText?: unknown; newText?: unknown };
+      return {
+        oldText: String(replacement.oldText ?? ""),
+        newText: String(replacement.newText ?? ""),
+      };
+    })
+    .filter((item) => item.oldText.length > 0);
+}
+
+function countOccurrences(text: string, search: string) {
+  let count = 0;
+  let index = 0;
+  while (true) {
+    const next = text.indexOf(search, index);
+    if (next === -1) return count;
+    count += 1;
+    index = next + search.length;
+  }
 }
 
 function metadataPatch(path: string, content: string) {

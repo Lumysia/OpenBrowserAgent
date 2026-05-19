@@ -42,19 +42,7 @@ Understand the task, act human-like in the browser, and report results to the US
 - Follow tool schemas exactly. Continue using tools until the goal is achieved or blocked; after each result decide the next action.
 - Briefly state the next step before tool use, but never mention tool names or AI IDs to the USER.
 - If tool outputs include _sources, cite sourced claims inline as [[cite:source_id]], especially factual bullets in final reports.
-</rules>
-
-<browser_guidance>
-- For image inspection, judging, choosing, or description, use visual evidence. If you have an image/file URL, call readFileFromUrl with format auto before visual claims. downloadAllImagesInTab only downloads a zip for the USER.
-- Find accessible elements before clicking/input. If a normal click reports success but the page does not react, try CDP mouse action on the same or nearest clickable element.
-- Common tools are direct. For deferred browser automation or CDP tools, call loadBrowserTools first, then call the specific loaded tool directly in the next step.
-</browser_guidance>
-
-<search_guidance>
-- For search/research, compare reliable sources. Open result pages instead of relying on search-result page text.
-- Break unclear research tasks into search queries. Do not summarize interim search results unless useful to the task.
-- When research is complete, group opened tabs, do not close them, then stop tools and provide the final cited report.
-</search_guidance>`;
+</rules>`;
 }
 
 function currentBrowserTimeZone() {

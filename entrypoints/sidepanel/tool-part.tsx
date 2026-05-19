@@ -165,7 +165,10 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
         stringValue(output.name) || stringValue(input.skillId),
         stringValue(output.path) || stringValue(input.path),
       ]);
-    if (name === BROWSER_TOOL_NAME.updateSkillFile)
+    if (
+      name === BROWSER_TOOL_NAME.updateSkillFile ||
+      name === BROWSER_TOOL_NAME.patchSkillFile
+    )
       return compactJoin([
         stringValue(output.name) || stringValue(input.skillId),
         stringValue(output.path) || stringValue(input.path),
@@ -284,7 +287,8 @@ function toolIcon(name: string) {
   if (
     name === BROWSER_TOOL_NAME.listSkills ||
     name === BROWSER_TOOL_NAME.readSkill ||
-    name === BROWSER_TOOL_NAME.updateSkillFile
+    name === BROWSER_TOOL_NAME.updateSkillFile ||
+    name === BROWSER_TOOL_NAME.patchSkillFile
   )
     return <FileText size={19} strokeWidth={2.1} />;
   if (lowerName.includes("content"))
