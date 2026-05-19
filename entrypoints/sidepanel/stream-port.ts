@@ -118,6 +118,7 @@ function connectStreamPort({
       ? { streamEventIndex: message.sequence }
       : undefined;
     if (message.type === "queuedMessages") {
+      updateRunMetrics(activeMessageId, { endedAt: message.createdAt });
       appendQueuedMessages(
         chatId,
         message.messages,

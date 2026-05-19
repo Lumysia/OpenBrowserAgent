@@ -175,6 +175,17 @@ export function SidepanelApp() {
     creatingSkill,
     sendQueued: (content) => send(content, undefined, { queued: true }),
     onEditContent: setInput,
+    onQueueMessage: (message) =>
+      portRef.current?.postMessage({
+        type: AI_STREAM_REQUEST_TYPE.queueMessage,
+        id: message.id,
+        content: message.content,
+      }),
+    onRemoveMessage: (id) =>
+      portRef.current?.postMessage({
+        type: AI_STREAM_REQUEST_TYPE.deleteQueuedMessage,
+        id,
+      }),
   });
 
   useEffect(() => void (aiWorking && setOpenMenu(null)), [aiWorking]);
@@ -270,13 +281,7 @@ export function SidepanelApp() {
     const text = interpolateSkillVariables(content.trim());
     if ((!text && !uploadedAttachments.length) || streaming) {
       if (streaming && text) {
-        const queued = enqueueQueuedMessage(content);
-        if (queued)
-          portRef.current?.postMessage({
-            type: AI_STREAM_REQUEST_TYPE.queueMessage,
-            id: queued.id,
-            content: queued.content,
-          });
+        enqueueQueuedMessage(content);
         if (content === input) setInput("");
       }
       return;

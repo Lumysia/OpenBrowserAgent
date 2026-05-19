@@ -74,7 +74,13 @@ export default defineBackground(() => {
         const content = request.content.trim();
         const session = streamSessions.firstPortSession(port);
         if (content && session)
-          session.queuedMessages.push({ id: request.id, content });
+          streamSessions.queueMessage(session, { id: request.id, content });
+        return;
+      }
+
+      if (request.type === AI_STREAM_REQUEST_TYPE.deleteQueuedMessage) {
+        const session = streamSessions.firstPortSession(port);
+        if (session) streamSessions.deleteQueuedMessage(session, request.id);
         return;
       }
 

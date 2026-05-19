@@ -75,6 +75,7 @@ export function MessageBubble({
     | undefined;
   const hasParts = !!message.parts?.length;
   const assistantText = assistantMessageText(message);
+  const assistantContentFallback = assistantMessageContentFallback(message);
   const displaySources = sourcesForAssistantMessage(message, sources);
   const metadataAttachments = Array.isArray(
     message.metadata?.uploadedAttachments,
@@ -109,17 +110,29 @@ export function MessageBubble({
       {message.role === "user" ? (
         <div className="user-bubble">{message.content}</div>
       ) : hasParts ? (
-        message.parts?.map((part) => (
-          <AssistantPart
-            key={part.id}
-            t={t}
-            part={part}
-            sources={sources}
-            onFork={() => onFork?.(message, part.id)}
-            message={message}
-            chatMessages={chatMessages}
-          />
-        ))
+        <>
+          {assistantContentFallback && (
+            <AssistantText
+              t={t}
+              text={assistantContentFallback}
+              sources={sources}
+              onFork={() => onFork?.(message)}
+              message={message}
+              chatMessages={chatMessages}
+            />
+          )}
+          {message.parts?.map((part) => (
+            <AssistantPart
+              key={part.id}
+              t={t}
+              part={part}
+              sources={sources}
+              onFork={() => onFork?.(message, part.id)}
+              message={message}
+              chatMessages={chatMessages}
+            />
+          ))}
+        </>
       ) : !message.content ? (
         <TypingIndicator t={t} />
       ) : (
@@ -235,8 +248,21 @@ function SourceChips({ sources }: { sources: ChatSource[] }) {
 
 function assistantMessageText(message: ChatMessage) {
   if (message.role !== "assistant") return "";
-  if (!message.parts?.length) return message.content.trim();
-  return message.parts
+  const contentFallback = assistantMessageContentFallback(message);
+  const partText = assistantPartText(message);
+  return [contentFallback, partText].filter(Boolean).join("").trim();
+}
+
+function assistantMessageContentFallback(message: ChatMessage) {
+  const content = message.content.trim();
+  if (message.role !== "assistant" || !content || !message.parts?.length)
+    return !message.parts?.length ? content : "";
+  const partText = assistantPartText(message).trim();
+  return partText.includes(content) ? "" : content;
+}
+
+function assistantPartText(message: ChatMessage) {
+  return (message.parts || [])
     .filter((part) => part.type === "text" || part.type === "reasoning")
     .map((part) => part.text || "")
     .join("")

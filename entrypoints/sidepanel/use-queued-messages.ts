@@ -10,11 +10,15 @@ export function useQueuedMessages({
   creatingSkill,
   sendQueued,
   onEditContent,
+  onQueueMessage,
+  onRemoveMessage,
 }: {
   streaming: boolean;
   creatingSkill: boolean;
   sendQueued: (content: string) => Promise<void>;
   onEditContent: (content: string) => void;
+  onQueueMessage?: (message: QueuedMessage) => void;
+  onRemoveMessage?: (id: string) => void;
 }) {
   const [queuedMessages, setQueuedMessages] = useState<QueuedMessage[]>([]);
   const queueDispatchingRef = useRef(false);
@@ -42,11 +46,13 @@ export function useQueuedMessages({
     if (!text) return undefined;
     const message = { id: crypto.randomUUID(), content: text };
     setQueuedMessages((items) => [...items, message]);
+    onQueueMessage?.(message);
     return message;
   }
 
   function deleteQueuedMessage(id: string) {
     setQueuedMessages((items) => items.filter((message) => message.id !== id));
+    onRemoveMessage?.(id);
   }
 
   function editQueuedMessage(message: QueuedMessage) {

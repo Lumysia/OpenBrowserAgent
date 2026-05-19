@@ -273,6 +273,7 @@ export const AI_STREAM_PORT_NAME = "ai-stream";
 export const AI_STREAM_REQUEST_TYPE = {
   abort: "abort",
   queueMessage: "queueMessage",
+  deleteQueuedMessage: "deleteQueuedMessage",
   attachStream: "attachStream",
   sendMessages: "sendMessages",
   generateTitle: "generateTitle",
@@ -309,6 +310,7 @@ export type SendMessagesBody = {
 export type AiStreamRequest =
   | { type: "abort" }
   | { type: "queueMessage"; id: string; content: string }
+  | { type: "deleteQueuedMessage"; id: string }
   | {
       type: "attachStream";
       chatId: string;

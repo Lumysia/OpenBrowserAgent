@@ -110,29 +110,45 @@ export function appendQueuedMessages({
   assistantMessageId: string;
   createdAt: number;
 }) {
-  const queuedMessages: ChatMessage[] = messages.map((message) => ({
-    id: message.id,
-    role: "user",
-    content: message.content,
-    createdAt: message.createdAt,
-  }));
-  const assistantMessage: ChatMessage = {
-    id: assistantMessageId,
-    role: "assistant",
-    content: "",
-    parts: [],
-    createdAt,
-    metadata: { runMetrics: { startedAt: createdAt, outputCharacters: 0 } },
-  };
   return chats.map((chat) =>
-    chat.id === chatId
-      ? {
-          ...chat,
-          messages: [...chat.messages, ...queuedMessages, assistantMessage],
-          updatedAt: Date.now(),
-        }
-      : chat,
+    chat.id === chatId ? appendQueuedMessagesToChat(chat) : chat,
   );
+
+  function appendQueuedMessagesToChat(chat: Chat) {
+    const existingIds = new Set(chat.messages.map((message) => message.id));
+    const queuedMessages: ChatMessage[] = messages
+      .filter((message) => !existingIds.has(message.id))
+      .map((message) => ({
+        id: message.id,
+        role: "user",
+        content: message.content,
+        createdAt: message.createdAt,
+      }));
+    const assistantMessage: ChatMessage | undefined = existingIds.has(
+      assistantMessageId,
+    )
+      ? undefined
+      : {
+          id: assistantMessageId,
+          role: "assistant",
+          content: "",
+          parts: [],
+          createdAt,
+          metadata: {
+            runMetrics: { startedAt: createdAt, outputCharacters: 0 },
+          },
+        };
+    if (!queuedMessages.length && !assistantMessage) return chat;
+    return {
+      ...chat,
+      messages: [
+        ...chat.messages,
+        ...queuedMessages,
+        ...(assistantMessage ? [assistantMessage] : []),
+      ],
+      updatedAt: Date.now(),
+    };
+  }
 }
 
 function mergeRunMetrics(

@@ -85,6 +85,26 @@ export function drainQueuedMessages(session: StreamSession) {
   return messages;
 }
 
+export function queueMessage(
+  session: StreamSession,
+  message: { id: string; content: string },
+) {
+  const index = session.queuedMessages.findIndex(
+    (item) => item.id === message.id,
+  );
+  if (index >= 0) {
+    session.queuedMessages[index] = message;
+    return;
+  }
+  session.queuedMessages.push(message);
+}
+
+export function deleteQueuedMessage(session: StreamSession, id: string) {
+  session.queuedMessages = session.queuedMessages.filter(
+    (message) => message.id !== id,
+  );
+}
+
 export function scheduleSessionCleanup(session: StreamSession) {
   session.cleanupTimeout = setTimeout(() => {
     if (activeStreamSessions.get(session.chatId) === session)
