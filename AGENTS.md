@@ -79,3 +79,4 @@ rg -i "<unintended brand patterns>" .
 
 - Use Angular-style commit messages, for example `feat: add auto-scroll preference`, `fix: stream assistant responses`, or `chore: update project metadata`.
 - Keep commits focused and avoid mixing unrelated changes when possible.
+- Before committing, review the pending diff against every rule in this file. Check each changed file for UI rules, code quality rules, browser tool protocol stability, localization completeness, source-file size, formatting, and required verification. Do not commit until the review is complete and any exceptions are explicit.

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import { resolveAgent } from "../../src/shared/agents";
 import { getMessages } from "../../src/shared/i18n";
@@ -11,8 +11,6 @@ import {
   type Chat,
   type ChatMessage,
   type ChatMode,
-  type RunMetrics,
-  type SendMessagesRequest,
   type Skill,
   type UploadedAttachment,
 } from "../../src/shared/types";
@@ -40,7 +38,6 @@ import {
 import {
   useAutoScroll,
   useActiveChatCleanup,
-  useAutoRetryStream,
   useChatSelection,
   useSidepanelTheme,
 } from "./sidepanel-effects";
@@ -50,21 +47,18 @@ import {
   ADD_MENU_VIEW,
   COMPOSER_MENU,
   type AddMenuView,
-  type ActiveStreamMap,
   type ComposerMenu,
 } from "./sidepanel-menu-state";
 import { SidepanelView } from "./sidepanel-view";
-import { createStreamHandlers } from "./stream-handlers";
-import {
-  attachStreamAction,
-  closeStreamPort,
-  startStreamAction,
-} from "./stream-port";
 import { useComposerContext } from "./use-composer-context";
+import { useChatDraft } from "./use-chat-drafts";
+import { useConfiguredModels } from "./use-configured-models";
 import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
+import { useParallelChatStreams } from "./use-parallel-chat-streams";
 import { usePromptUsageEstimate } from "./prompt-usage-preview";
 import { useQueuedMessages } from "./use-queued-messages";
+import { useUnreadCompletedChats } from "./use-unread-completed-chats";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
 
 export function SidepanelApp() {
@@ -79,71 +73,30 @@ export function SidepanelApp() {
   const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
   const [chats, setChats] = useStoredState(storage.chats);
   const [activeChatId, setActiveChatId] = useState<string>();
-  const [inputDrafts, setInputDrafts] = useState<Record<string, string>>({});
-  const [unreadCompletedChats, setUnreadCompletedChats] = useState<
-    Record<string, true>
-  >({});
   const [mode, setMode] = useState<ChatMode>(CHAT_MODE.agent);
-  const [activeStreams, setActiveStreamsState] = useState<ActiveStreamMap>({});
   const [openMenu, setOpenMenu] = useState<ComposerMenu | null>(null);
   const [addMenuView, setAddMenuView] = useState<AddMenuView>("menu");
   const [showHistory, setShowHistory] = useState(false);
   const [sentAttachmentPreviews, setSentAttachmentPreviews] = useState<
     Record<string, UploadedAttachment[]>
   >({});
-  const portRefs = useRef<Record<string, chrome.runtime.Port | undefined>>({});
   const sidepanelRef = useRef<HTMLDivElement | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
-  const chatsRef = useRef<Chat[]>([]);
-  const activeChatIdRef = useRef<string | undefined>(undefined);
   const initializedChatSelectionRef = useRef(false);
-  const lastStreamActivityRef = useRef<Record<string, number>>({});
-  const activeStreamsRef = useRef<ActiveStreamMap>({});
-  const setActiveStreams: typeof setActiveStreamsState = useCallback(
-    (value) => {
-      setActiveStreamsState((items) => {
-        const next = typeof value === "function" ? value(items) : value;
-        activeStreamsRef.current = next;
-        return next;
-      });
-    },
-    [],
-  );
-  const configuredModels = useMemo(
-    () =>
-      ignoreSyncedProvidersForBootstrap
-        ? []
-        : Object.values(providers || {}).flatMap(
-            (provider) => provider?.models || [],
-          ),
-    [ignoreSyncedProvidersForBootstrap, providers],
+  const configuredModels = useConfiguredModels(
+    providers,
+    ignoreSyncedProvidersForBootstrap,
   );
   const modelCount = configuredModels.length;
   const currentChat = chats?.find((chat) => chat.id === activeChatId);
-  const inputDraftKey = activeChatId || "new";
-  const input = inputDrafts[inputDraftKey] || "";
-  const setInput = useCallback(
-    (value: string) => {
-      setInputDrafts((items) => ({ ...items, [inputDraftKey]: value }));
-    },
-    [inputDraftKey],
-  );
-  const clearInput = useCallback(() => {
-    setInputDrafts((items) => {
-      const next = { ...items };
-      delete next[inputDraftKey];
-      return next;
-    });
-  }, [inputDraftKey]);
+  const { input, setInput, clearInput } = useChatDraft(activeChatId);
+  const {
+    unreadCompletedChats,
+    setUnreadCompletedChats,
+    clearUnreadCompletedChat,
+  } = useUnreadCompletedChats(activeChatId);
   const activeAgent = resolveAgent(agents, preferences?.selectedAgentId);
-  const streamHandlers = useMemo(
-    () => createStreamHandlers(setChats),
-    [setChats],
-  );
   const t = getMessages(language);
-  const streaming = Object.keys(activeStreams).length > 0;
-  const currentChatStreaming = !!(currentChat && activeStreams[currentChat.id]);
-  const aiWorking = currentChatStreaming;
   const { selectElement } = useElementSelector(t);
   const {
     uploadedAttachments,
@@ -156,6 +109,29 @@ export function SidepanelApp() {
     clearPendingAttachments,
     clearUploadedAttachments,
   } = useUploadedAttachments(t);
+  const {
+    streaming,
+    currentChatStreaming,
+    beginStream,
+    startStream,
+    abortChatStream,
+    stopCurrentStream,
+    postQueuedMessage,
+    deleteQueuedStreamMessage,
+    setQueuedMessageRemover,
+  } = useParallelChatStreams({
+    activeChatId,
+    currentChat,
+    chats,
+    preferences,
+    mode,
+    language,
+    uploadedAttachments,
+    agent: activeAgent,
+    setChats,
+    setUnreadCompletedChats,
+  });
+  const aiWorking = currentChatStreaming;
   const {
     attachedTabs,
     availableTabs,
@@ -211,35 +187,18 @@ export function SidepanelApp() {
     onEditContent: setInput,
     onQueueMessage: (message) =>
       currentChat &&
-      portRefs.current[currentChat.id]?.postMessage({
-        type: AI_STREAM_REQUEST_TYPE.queueMessage,
-        id: message.id,
-        content: message.content,
-      }),
+      postQueuedMessage(currentChat.id, message.id, message.content),
     onRemoveMessage: (id) =>
-      currentChat &&
-      portRefs.current[currentChat.id]?.postMessage({
-        type: AI_STREAM_REQUEST_TYPE.deleteQueuedMessage,
-        id,
-      }),
+      currentChat && deleteQueuedStreamMessage(currentChat.id, id),
   });
+
+  useEffect(() => {
+    setQueuedMessageRemover((id, chatId) => removeQueuedMessage(id, chatId));
+  }, [removeQueuedMessage, setQueuedMessageRemover]);
 
   useEffect(() => void (aiWorking && setOpenMenu(null)), [aiWorking]);
 
   useBuiltinSkills(skills, setSkills);
-  useEffect(() => {
-    chatsRef.current = chats || [];
-  }, [chats]);
-  useEffect(() => {
-    activeChatIdRef.current = activeChatId;
-    if (!activeChatId) return;
-    setUnreadCompletedChats((items) => {
-      if (!items[activeChatId]) return items;
-      const next = { ...items };
-      delete next[activeChatId];
-      return next;
-    });
-  }, [activeChatId]);
   useEffect(() => {
     if (!chats?.some((chat) => !chat.messages.length)) return;
     setChats((items) => pruneEmptyChats(items));
@@ -281,67 +240,19 @@ export function SidepanelApp() {
     currentChatStreaming,
   );
 
-  useAutoRetryStream({
-    streaming,
-    autoRetry: preferences?.autoRetry,
-    activeStreamsRef,
-    lastStreamActivityRef,
-    chatsRef,
-    preferences,
-    mode,
-    language,
-    uploadedAttachments,
-    agent: activeAgent,
-    appendToAssistant: streamHandlers.appendToAssistant,
-    startStream,
-  });
-
-  useEffect(() => {
-    if (!currentChat || activeStreams[currentChat.id]) return;
-    const message = resumableAssistantMessage(currentChat);
-    if (!message) return;
-    setActiveStreams((items) => ({
-      ...items,
-      [currentChat.id]: {
-        chatId: currentChat.id,
-        assistantMessageId: message.id,
-        retryCount: 0,
-        hasProgress: true,
-      },
-    }));
-    const metrics = message.metadata?.runMetrics as RunMetrics | undefined;
-    attachStream(currentChat.id, message.id, metrics?.streamEventIndex);
-  }, [activeStreams, currentChat, setActiveStreams]);
-
   function closeChat(chatId: string) {
-    if (activeStreams[chatId]) {
-      closeStreamPort(portRefs, chatId, true);
-      setActiveStreams((items) => {
-        const next = { ...items };
-        delete next[chatId];
-        return next;
-      });
-    }
+    abortChatStream(chatId);
     closeChatAction({
       chatId,
       activeChatId,
       setChats,
       setActiveChatId,
     });
-    setUnreadCompletedChats((items) => {
-      if (!items[chatId]) return items;
-      const next = { ...items };
-      delete next[chatId];
-      return next;
-    });
+    clearUnreadCompletedChat(chatId);
   }
 
   function selectChat(chatId: string) {
     selectChatAction({ chatId, setChats, setActiveChatId });
-  }
-  function markStreamFinished(chatId: string) {
-    if (activeChatIdRef.current === chatId) return;
-    setUnreadCompletedChats((items) => ({ ...items, [chatId]: true }));
   }
   async function send(
     content = input,
@@ -488,75 +399,8 @@ export function SidepanelApp() {
         },
       },
     };
-    setActiveStreams((items) => ({
-      ...items,
-      [nextChat.id]: {
-        chatId: nextChat.id,
-        assistantMessageId: assistantMessage.id,
-        retryCount: 0,
-        hasProgress: false,
-      },
-    }));
-    lastStreamActivityRef.current[nextChat.id] = Date.now();
+    beginStream(nextChat.id, assistantMessage.id);
     startStream(request, assistantMessage.id);
-  }
-
-  function startStream(request: SendMessagesRequest, targetMessageId: string) {
-    startStreamAction({
-      request,
-      targetMessageId,
-      portRefs,
-      activeStreamsRef,
-      lastStreamActivityRef,
-      setActiveStreams,
-      onStreamFinished: markStreamFinished,
-      appendStreamChunk: streamHandlers.appendStreamChunk,
-      appendToAssistant: streamHandlers.appendToAssistant,
-      appendQueuedMessages: streamHandlers.appendQueuedMessages,
-      removeQueuedMessage,
-      updateRunMetrics: (id, metrics) =>
-        streamHandlers.updateRunMetrics(request.chatId, id, metrics),
-    });
-  }
-
-  function attachStream(
-    chatId: string,
-    targetMessageId: string,
-    afterSequence?: number,
-  ) {
-    attachStreamAction({
-      chatId,
-      targetMessageId,
-      afterSequence,
-      portRefs,
-      activeStreamsRef,
-      lastStreamActivityRef,
-      setActiveStreams,
-      onStreamFinished: markStreamFinished,
-      appendStreamChunk: streamHandlers.appendStreamChunk,
-      appendToAssistant: streamHandlers.appendToAssistant,
-      appendQueuedMessages: streamHandlers.appendQueuedMessages,
-      removeQueuedMessage,
-      updateRunMetrics: (id, metrics) =>
-        streamHandlers.updateRunMetrics(chatId, id, metrics),
-    });
-  }
-
-  function stop() {
-    if (!currentChat) return;
-    const activeStream = activeStreams[currentChat.id];
-    if (activeStream)
-      streamHandlers.updateRunMetrics(
-        activeStream.chatId,
-        activeStream.assistantMessageId,
-        { endedAt: Date.now() },
-      );
-    setActiveStreams((items) => {
-      const next = { ...items };
-      delete next[currentChat.id];
-      return next;
-    });
-    closeStreamPort(portRefs, currentChat.id, true);
   }
 
   return (
@@ -608,7 +452,7 @@ export function SidepanelApp() {
       }}
       onCloseChat={closeChat}
       onSend={send}
-      onStop={stop}
+      onStop={stopCurrentStream}
       onDeleteQueuedMessage={deleteQueuedMessage}
       onEditQueuedMessage={editQueuedMessage}
       onToggleSkill={(skill) =>
@@ -648,11 +492,4 @@ export function SidepanelApp() {
       onSelectChat={selectChat}
     />
   );
-}
-
-function resumableAssistantMessage(chat: Chat) {
-  return [...chat.messages].reverse().find((message) => {
-    const metrics = message.metadata?.runMetrics as { endedAt?: unknown };
-    return message.role === "assistant" && !metrics?.endedAt;
-  });
 }
