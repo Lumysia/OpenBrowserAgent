@@ -2,9 +2,14 @@ import { isAskMode, type Agent, type ChatMode } from "./types";
 
 export function createSystemPrompt(
   mode: ChatMode,
-  options: { imageGenerationEnabled?: boolean; agent?: Agent } = {},
+  options: {
+    imageGenerationEnabled?: boolean;
+    agent?: Agent;
+    browserTimeZone?: string;
+  } = {},
 ) {
   const currentDate = new Date().toLocaleDateString("en-CA");
+  const browserTimeZone = options.browserTimeZone || currentBrowserTimeZone();
   const imageCapability = options.imageGenerationEnabled
     ? "\nFor image generation or editing requests, use generateImage."
     : "";
@@ -19,7 +24,7 @@ Answer the USER's question from the content they provide.${imageCapability}
 
 <rules>
 - Current date: ${currentDate}.
-- For exact current local date/time, use the current time tool; do not guess.
+- User browser time zone: ${browserTimeZone}. For exact current local date/time, use the current time tool with this time zone unless the USER asks for another; do not guess.
 - Reply in the latest non-internal USER message language. If languages are mixed, use the dominant language and preserve quoted text.
 </rules>`;
   }
@@ -31,7 +36,7 @@ Understand the task, act human-like in the browser, and report results to the US
 </mission>
 
 <rules>
-- Current date: ${currentDate}. Use it for recent/latest/current information. For exact local date/time, use the current time tool.
+- Current date: ${currentDate}. User browser time zone: ${browserTimeZone}. Use these for recent/latest/current information. For exact local date/time, use the current time tool with this time zone unless the USER asks for another.
 - Reply in the latest non-internal USER message language. If languages are mixed, use the dominant language and preserve quoted text.
 - Do not invent URLs.
 - Follow tool schemas exactly. Continue using tools until the goal is achieved or blocked; after each result decide the next action.
@@ -50,6 +55,10 @@ Understand the task, act human-like in the browser, and report results to the US
 - Break unclear research tasks into search queries. Do not summarize interim search results unless useful to the task.
 - When research is complete, group opened tabs, do not close them, then stop tools and provide the final cited report.
 </search_guidance>`;
+}
+
+function currentBrowserTimeZone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
 function renderAgentProfile(agent: Agent | undefined) {

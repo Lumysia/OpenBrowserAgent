@@ -32,6 +32,7 @@ import {
 import { ComposerAttachments } from "./composer-attachments";
 import { EditModeOverlay } from "./edit-mode-overlay";
 import { IconTooltip } from "./icon-tooltip";
+import { HistoryPanel } from "./history-panel";
 import { MessageBubble } from "./message-bubble";
 import { ProvidersEmptyState } from "./providers-empty-state";
 import { PromptUsagePreview } from "./prompt-usage-preview";
@@ -210,6 +211,25 @@ export function SidepanelView({
       !message.parts?.length,
   );
 
+  if (showHistory)
+    return (
+      <TooltipProvider delayDuration={250}>
+        <div className="sidepanel history-mode" ref={sidepanelRef}>
+          <HistoryPanel
+            t={t}
+            chats={chats}
+            activeChatId={currentChat?.id}
+            onBack={() => onSetShowHistory(false)}
+            onSelect={(chatId) => {
+              onSelectChat(chatId);
+              onSetShowHistory(false);
+            }}
+            onClose={onCloseChat}
+          />
+        </div>
+      </TooltipProvider>
+    );
+
   return (
     <TooltipProvider delayDuration={250}>
       <div className={sidepanelClass} ref={sidepanelRef}>
@@ -218,14 +238,10 @@ export function SidepanelView({
           currentChat={currentChat}
           mode={mode}
           preferences={preferences}
-          chats={chats}
-          showHistory={showHistory}
           onSetChats={onSetChats}
           onCreateChat={onCreateChat}
           onImportChat={onImportChat}
           onSetShowHistory={onSetShowHistory}
-          onSelectChat={onSelectChat}
-          onCloseChat={onCloseChat}
         />
         {editingMessageId && (
           <EditModeOverlay t={t} onCancel={onCancelEditMessage} />
