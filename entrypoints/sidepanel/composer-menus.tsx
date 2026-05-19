@@ -37,6 +37,7 @@ export function AddContextMenu({
   view,
   tabs,
   skills,
+  selectedSkillIds,
   selectedTabIds,
   activeTabAttachable,
   onShowTabs,
@@ -51,6 +52,7 @@ export function AddContextMenu({
   view: "menu" | "tabs" | "skills";
   tabs: AttachmentTab[];
   skills: Skill[];
+  selectedSkillIds: string[];
   selectedTabIds: number[];
   activeTabAttachable: boolean;
   onShowTabs: () => void;
@@ -135,11 +137,14 @@ export function AddContextMenu({
             <Button
               key={skill.id}
               variant="ghost"
-              className="action-list-item"
+              className={`action-list-item ${selectedSkillIds.includes(skill.id) ? "active" : ""}`}
               onClick={() => onSkill(skill)}
             >
               <FileText size={20} />
               <span>{getSkillDisplayName(skill, t.options.untitledSkill)}</span>
+              {selectedSkillIds.includes(skill.id) && (
+                <Check className="menu-check" size={14} />
+              )}
             </Button>
           ))}
         </div>

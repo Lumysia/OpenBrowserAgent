@@ -77,7 +77,7 @@ export function SidepanelApp() {
   const [agents] = useStoredState(storage.agents);
   const [language] = useStoredState(storage.language);
   const [skills, setSkills] = useStoredState(storage.skills);
-  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+  const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
   const [chats, setChats] = useStoredState(storage.chats);
   const [activeChatId, setActiveChatId] = useState<string>();
   const [input, setInput] = useState("");
@@ -147,7 +147,7 @@ export function SidepanelApp() {
     selectedElements,
     pendingAttachments,
     uploadedAttachments,
-    selectedSkill,
+    selectedSkills,
     agent: activeAgent,
     skills: skills || [],
   });
@@ -159,9 +159,11 @@ export function SidepanelApp() {
       pendingAttachments,
       attachedTabs,
       selectedElements,
+      selectedSkills,
       setInput,
       setAttachedTabs,
       setSelectedElements,
+      setSelectedSkills,
       stageUploadedAttachments,
     });
   const {
@@ -288,10 +290,6 @@ export function SidepanelApp() {
     }
     const enabledSkills = (skills || []).filter(isSkillEnabled);
     const availableSkills = preferences?.autoSelectSkills ? enabledSkills : [];
-    const sentSkill =
-      selectedSkill && isSkillEnabled(selectedSkill)
-        ? interpolateSkillPackage(selectedSkill, interpolateSkillVariables)
-        : undefined;
     const chat = currentChat || createChat();
     const resendDraft =
       !options.queued && options.resendMessage
@@ -315,6 +313,13 @@ export function SidepanelApp() {
       : activeEdit
         ? activeEdit.selectedElements
         : selectedElements;
+    const sentSkills = (
+      options.queued ? [] : activeEdit ? activeEdit.skills : selectedSkills
+    )
+      .filter(isSkillEnabled)
+      .map((skill) =>
+        interpolateSkillPackage(skill, interpolateSkillVariables),
+      );
     const context = await buildSidepanelContext({
       mode,
       attachedTabs: sentTabs,
@@ -357,7 +362,7 @@ export function SidepanelApp() {
       sentTabs,
       sentElements,
       sentAttachments,
-      skill: sentSkill,
+      skills: sentSkills,
       autoSelectedSkill: false,
     });
     if (sentAttachments.length)
@@ -384,7 +389,7 @@ export function SidepanelApp() {
       clearAttachedTabsAfterSend();
       clearPendingAttachments();
       setSelectedElements([]);
-      setSelectedSkill(null);
+      setSelectedSkills([]);
       setEditingMessage(null);
     }
     setStreaming(true);
@@ -462,6 +467,13 @@ export function SidepanelApp() {
   }
 
   function stop() {
+    const activeStream = activeStreamRef.current;
+    if (activeStream)
+      streamHandlers.updateRunMetrics(
+        activeStream.chatId,
+        activeStream.assistantMessageId,
+        { endedAt: Date.now() },
+      );
     activeStreamRef.current = null;
     closeStreamPort(portRef, true);
     setStreaming(false);
@@ -493,7 +505,7 @@ export function SidepanelApp() {
       skillCreated={skillCreated}
       skills={(skills || []).filter(isSkillEnabled)}
       agents={agents || []}
-      selectedSkill={selectedSkill}
+      selectedSkills={selectedSkills}
       openMenu={openMenu}
       addMenuView={addMenuView}
       showHistory={showHistory}
@@ -507,7 +519,7 @@ export function SidepanelApp() {
       onSetAddMenuView={setAddMenuView}
       onSetShowHistory={setShowHistory}
       onSetSelectedElements={setSelectedElements}
-      onSetSelectedSkill={setSelectedSkill}
+      onSetSelectedSkills={setSelectedSkills}
       onSetChats={setChats}
       onSetPreferences={setPreferences}
       onCreateChat={createChat}
@@ -530,7 +542,13 @@ export function SidepanelApp() {
       onStop={stop}
       onDeleteQueuedMessage={deleteQueuedMessage}
       onEditQueuedMessage={editQueuedMessage}
-      onSelectSkill={setSelectedSkill}
+      onToggleSkill={(skill) =>
+        setSelectedSkills((items) =>
+          items.some((item) => item.id === skill.id)
+            ? items.filter((item) => item.id !== skill.id)
+            : [...items, skill],
+        )
+      }
       onCancelEditMessage={cancelEditMessage}
       onShowAllTabsPicker={async () => {
         await showAllTabsPicker();

@@ -16,39 +16,40 @@ export function ComposerAttachments({
   t,
   attachedTabs,
   pendingAttachments,
-  selectedSkill,
+  selectedSkills,
   selectedElements,
   attachmentNotice,
   onRemoveAttachedTab,
   onRemoveUploadedAttachment,
-  onClearSkill,
+  onRemoveSkill,
   onSetSelectedElements,
 }: {
   t: Messages;
   attachedTabs: AttachmentTab[];
   pendingAttachments: UploadedAttachment[];
-  selectedSkill?: Skill | null;
+  selectedSkills: Skill[];
   selectedElements: SelectedElement[];
   attachmentNotice: string;
   onRemoveAttachedTab: (tabId: number) => void;
   onRemoveUploadedAttachment: (id: string) => void;
-  onClearSkill: () => void;
+  onRemoveSkill: (skillId: string) => void;
   onSetSelectedElements: (value: SelectedElement[]) => void;
 }) {
-  const hasContextChips =
-    !!selectedSkill || attachedTabs.length > 0 || selectedElements.length > 0;
+  const hasSkillChips = selectedSkills.length > 0;
+  const hasPageContextChips =
+    attachedTabs.length > 0 || selectedElements.length > 0;
 
   return (
     <div className="context-strip">
-      {hasContextChips && (
+      {hasSkillChips && (
         <ScrollArea className="context-chip-scroll" orientation="horizontal">
           <div className="context-chip-row">
-            {selectedSkill && (
-              <div className="context-card">
+            {selectedSkills.map((skill) => (
+              <div className="context-card" key={skill.id}>
                 <FileText size={18} />
                 <span>
-                  <strong>{getSkillDisplayName(selectedSkill)}</strong>
-                  <small>{selectedSkill.description || t.options.skills}</small>
+                  <strong>{getSkillDisplayName(skill)}</strong>
+                  <small>{skill.description || t.options.skills}</small>
                 </span>
                 <IconTooltip label={t.common.cancel}>
                   <Button
@@ -56,13 +57,19 @@ export function ComposerAttachments({
                     size="icon"
                     className="context-close"
                     aria-label={t.common.cancel}
-                    onClick={onClearSkill}
+                    onClick={() => onRemoveSkill(skill.id)}
                   >
                     <X size={14} />
                   </Button>
                 </IconTooltip>
               </div>
-            )}
+            ))}
+          </div>
+        </ScrollArea>
+      )}
+      {hasPageContextChips && (
+        <ScrollArea className="context-chip-scroll" orientation="horizontal">
+          <div className="context-chip-row">
             {attachedTabs.map((tab) => (
               <AttachedTabCard
                 key={tab.id}

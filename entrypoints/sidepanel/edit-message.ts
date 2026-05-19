@@ -3,6 +3,7 @@ import type {
   Chat,
   ChatMessage,
   SelectedElement,
+  Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
 
@@ -31,6 +32,7 @@ export function createEditMessageDraft({
       ? (message.metadata.attachedTabs as AttachmentTab[])
       : [],
     selectedElements: selectedElementsFromMetadata(message.metadata),
+    skills: skillsFromMetadata(message.metadata),
     keptMessageIds,
   };
 }
@@ -54,7 +56,13 @@ export type EditMessageDraft = NonNullable<
   previousAttachments: UploadedAttachment[];
   previousAttachedTabs: AttachmentTab[];
   previousSelectedElements: SelectedElement[];
+  previousSkills: Skill[];
 };
+
+function skillsFromMetadata(metadata: Record<string, unknown> | undefined) {
+  if (Array.isArray(metadata?.skills)) return metadata.skills as Skill[];
+  return metadata?.skill ? [metadata.skill as Skill] : [];
+}
 
 function selectedElementsFromMetadata(
   metadata: Record<string, unknown> | undefined,

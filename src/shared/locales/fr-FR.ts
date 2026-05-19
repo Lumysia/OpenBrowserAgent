@@ -385,6 +385,8 @@ export const frFR: LocaleMessages = {
   },
   options: {
     general: "Général",
+    generalDescription:
+      "Ajustez l'apparence, la langue, l'automatisation et le contexte de l'extension.",
     agents: "Agents",
     agentsDescription:
       "Créez des profils d’agent avec leur propre rôle, comportement et instructions.",

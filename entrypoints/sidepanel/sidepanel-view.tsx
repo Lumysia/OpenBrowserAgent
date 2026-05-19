@@ -73,7 +73,7 @@ export function SidepanelView({
   mode,
   attachedTabs,
   pendingAttachments,
-  selectedSkill,
+  selectedSkills,
   uploadedAttachments,
   queuedMessages,
   sentAttachmentPreviews,
@@ -99,7 +99,7 @@ export function SidepanelView({
   onSetAddMenuView,
   onSetShowHistory,
   onSetSelectedElements,
-  onSetSelectedSkill,
+  onSetSelectedSkills,
   onSetChats,
   onSetPreferences,
   onCreateChat,
@@ -110,7 +110,7 @@ export function SidepanelView({
   onStop,
   onDeleteQueuedMessage,
   onEditQueuedMessage,
-  onSelectSkill,
+  onToggleSkill,
   onCancelEditMessage,
   onShowAllTabsPicker,
   onToggleAttachedTab,
@@ -137,7 +137,7 @@ export function SidepanelView({
   mode: ChatMode;
   attachedTabs: AttachmentTab[];
   pendingAttachments: UploadedAttachment[];
-  selectedSkill?: Skill | null;
+  selectedSkills: Skill[];
   uploadedAttachments: UploadedAttachment[];
   queuedMessages: QueuedMessage[];
   sentAttachmentPreviews: Record<string, UploadedAttachment[]>;
@@ -163,7 +163,7 @@ export function SidepanelView({
   onSetAddMenuView: (value: AddMenuView) => void;
   onSetShowHistory: (value: boolean) => void;
   onSetSelectedElements: (value: SelectedElement[]) => void;
-  onSetSelectedSkill: (value: Skill | null) => void;
+  onSetSelectedSkills: (value: Skill[]) => void;
   onSetChats: Dispatch<SetStateAction<Chat[]>>;
   onSetPreferences: (
     value: Preferences | ((previous: Preferences) => Preferences),
@@ -176,7 +176,7 @@ export function SidepanelView({
   onStop: () => void;
   onDeleteQueuedMessage: (id: string) => void;
   onEditQueuedMessage: (message: QueuedMessage) => void;
-  onSelectSkill: (skill: Skill) => void;
+  onToggleSkill: (skill: Skill) => void;
   onCancelEditMessage: () => void;
   onShowAllTabsPicker: () => void;
   onToggleAttachedTab: (tab: AttachmentTab) => void;
@@ -308,12 +308,16 @@ export function SidepanelView({
             t={t}
             attachedTabs={attachedTabs}
             pendingAttachments={pendingAttachments}
-            selectedSkill={selectedSkill}
+            selectedSkills={selectedSkills}
             selectedElements={selectedElements}
             attachmentNotice={attachmentNotice}
             onRemoveAttachedTab={onRemoveAttachedTab}
             onRemoveUploadedAttachment={onRemoveUploadedAttachment}
-            onClearSkill={() => onSetSelectedSkill(null)}
+            onRemoveSkill={(skillId) =>
+              onSetSelectedSkills(
+                selectedSkills.filter((skill) => skill.id !== skillId),
+              )
+            }
             onSetSelectedElements={onSetSelectedElements}
           />
           <QueuedMessages
@@ -383,16 +387,14 @@ export function SidepanelView({
                       view={addMenuView}
                       tabs={availableTabs}
                       skills={skills}
+                      selectedSkillIds={selectedSkills.map((skill) => skill.id)}
                       selectedTabIds={attachedTabs.map((tab) => tab.id)}
                       activeTabAttachable={activeTabAttachable}
                       onShowTabs={onShowAllTabsPicker}
                       onShowSkills={() =>
                         onSetAddMenuView(ADD_MENU_VIEW.skills)
                       }
-                      onSkill={(skill) => {
-                        onSelectSkill(skill);
-                        onSetOpenMenu(null);
-                      }}
+                      onSkill={onToggleSkill}
                       onUploadFiles={() => {
                         attachFromPicker();
                         onSetOpenMenu(null);

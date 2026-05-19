@@ -341,6 +341,8 @@ export const ko: LocaleMessages = {
   },
   options: {
     general: "일반",
+    generalDescription:
+      "확장 프로그램의 모양, 언어, 자동화 및 컨텍스트 동작을 조정합니다.",
     agents: "에이전트",
     agentsDescription:
       "각자 역할, 동작, 지시를 가진 에이전트 프로필을 만듭니다.",

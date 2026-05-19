@@ -380,6 +380,8 @@ export const deDE: LocaleMessages = {
   },
   options: {
     general: "Allgemein",
+    generalDescription:
+      "Passe Darstellung, Sprache, Automatisierung und Kontextverhalten der Erweiterung an.",
     agents: "Agenten",
     agentsDescription:
       "Erstellen Sie Agentenprofile mit eigener Rolle, eigenem Verhalten und eigenen Anweisungen.",

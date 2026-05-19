@@ -39,7 +39,7 @@ export function usePromptUsageEstimate({
   selectedElements,
   pendingAttachments,
   uploadedAttachments,
-  selectedSkill,
+  selectedSkills,
   agent,
   skills,
 }: {
@@ -51,7 +51,7 @@ export function usePromptUsageEstimate({
   selectedElements: SelectedElement[];
   pendingAttachments: UploadedAttachment[];
   uploadedAttachments: UploadedAttachment[];
-  selectedSkill?: Skill | null;
+  selectedSkills: Skill[];
   agent?: Agent;
   skills: Skill[];
 }): PromptUsageEstimate {
@@ -99,7 +99,10 @@ export function usePromptUsageEstimate({
       ),
       tabPromptChars: contextChars,
       skillPromptChars:
-        (selectedSkill ? getSkillInstruction(selectedSkill).length : 0) +
+        selectedSkills.reduce(
+          (total, skill) => total + getSkillInstruction(skill).length,
+          0,
+        ) +
         availableSkills.reduce(
           (total, skill) =>
             total + skill.name.length + skill.description.length,
@@ -124,7 +127,7 @@ export function usePromptUsageEstimate({
     contextChars,
     pendingAttachments,
     uploadedAttachments,
-    selectedSkill,
+    selectedSkills,
     agent,
     skills,
   ]);

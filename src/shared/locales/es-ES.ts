@@ -366,6 +366,8 @@ export const esES: LocaleMessages = {
   },
   options: {
     general: "General",
+    generalDescription:
+      "Ajusta la apariencia, el idioma, la automatización y el contexto de la extensión.",
     agents: "Agentes",
     agentsDescription:
       "Crea perfiles de agente con su propio rol, comportamiento e instrucciones.",

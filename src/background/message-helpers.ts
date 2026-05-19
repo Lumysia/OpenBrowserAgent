@@ -114,14 +114,14 @@ ${message.content}
     typeof message.metadata?.context === "string"
       ? message.metadata.context
       : "";
-  const skill = message.metadata?.skill as Skill | undefined;
+  const skills = messageSkills(message.metadata);
   const attachments = requestAttachments.length
     ? requestAttachments
     : getUploadedAttachments(message);
   return `${
-    skill
+    skills.length
       ? `<instruction>
-${getSkillInstruction(skill)}
+${skills.map((skill) => getSkillInstruction(skill)).join("\n\n")}
 </instruction>
 
 `
@@ -141,6 +141,14 @@ ${renderSourcesForPrompt(getMessageSources(message))}
 <message>
 ${message.content}
 </message>`;
+}
+
+function messageSkills(metadata: Record<string, unknown> | undefined) {
+  const skills = Array.isArray(metadata?.skills)
+    ? (metadata.skills as Skill[])
+    : [];
+  const skill = metadata?.skill as Skill | undefined;
+  return skills.length ? skills : skill ? [skill] : [];
 }
 
 export function renderSkillToolHint(skills: Skill[]) {

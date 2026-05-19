@@ -4,6 +4,7 @@ import type {
   Chat,
   ChatMessage,
   SelectedElement,
+  Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
 import { createEditMessageDraft, type EditMessageDraft } from "./edit-message";
@@ -15,9 +16,11 @@ export function useMessageEdit({
   pendingAttachments,
   attachedTabs,
   selectedElements,
+  selectedSkills,
   setInput,
   setAttachedTabs,
   setSelectedElements,
+  setSelectedSkills,
   stageUploadedAttachments,
 }: {
   currentChat?: Chat;
@@ -26,9 +29,11 @@ export function useMessageEdit({
   pendingAttachments: UploadedAttachment[];
   attachedTabs: AttachmentTab[];
   selectedElements: SelectedElement[];
+  selectedSkills: Skill[];
   setInput: (value: string) => void;
   setAttachedTabs: (tabs: AttachmentTab[]) => void;
   setSelectedElements: (elements: SelectedElement[]) => void;
+  setSelectedSkills: (skills: Skill[]) => void;
   stageUploadedAttachments: (attachments: UploadedAttachment[]) => void;
 }) {
   const [editingMessage, setEditingMessage] = useState<EditMessageDraft | null>(
@@ -49,6 +54,7 @@ export function useMessageEdit({
     setInput(draft.content);
     setAttachedTabs(draft.attachedTabs);
     setSelectedElements(draft.selectedElements);
+    setSelectedSkills(draft.skills);
     stageUploadedAttachments(draft.attachments);
     setEditingMessage({
       ...draft,
@@ -56,6 +62,7 @@ export function useMessageEdit({
       previousAttachments: pendingAttachments,
       previousAttachedTabs: attachedTabs,
       previousSelectedElements: selectedElements,
+      previousSkills: selectedSkills,
     });
   }
 
@@ -64,6 +71,7 @@ export function useMessageEdit({
     setInput(editingMessage.previousContent);
     setAttachedTabs(editingMessage.previousAttachedTabs);
     setSelectedElements(editingMessage.previousSelectedElements);
+    setSelectedSkills(editingMessage.previousSkills);
     stageUploadedAttachments(editingMessage.previousAttachments);
     setEditingMessage(null);
   }

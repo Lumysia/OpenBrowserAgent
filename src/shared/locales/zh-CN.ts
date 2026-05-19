@@ -273,6 +273,7 @@ export const zhCN: LocaleMessages = {
   },
   options: {
     general: "通用",
+    generalDescription: "调整扩展的外观、语言、自动化和上下文行为。",
     agents: "智能体",
     agentsDescription: "创建拥有独立角色、行为和指令的智能体配置。",
     defaultAgentSummary: "用于浏览、搜索和自动化的通用浏览器助手。",

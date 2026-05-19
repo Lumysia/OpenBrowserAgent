@@ -390,6 +390,8 @@ export const jaJP: LocaleMessages = {
   },
   options: {
     general: "一般",
+    generalDescription:
+      "拡張機能の外観、言語、自動化、コンテキスト動作を調整します。",
     agents: "エージェント",
     agentsDescription:
       "独自の役割、動作、指示を持つエージェントプロファイルを作成します。",

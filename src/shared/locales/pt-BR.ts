@@ -348,6 +348,8 @@ export const ptBR: LocaleMessages = {
   },
   options: {
     general: "Geral",
+    generalDescription:
+      "Ajuste a aparência, o idioma, a automação e o contexto da extensão.",
     agents: "Agentes",
     agentsDescription:
       "Crie perfis de agente com função, comportamento e instruções próprios.",

@@ -21,7 +21,7 @@ export function createSendMessagePlan({
   context,
   sources,
   assistantModel,
-  skill,
+  skills,
   autoSelectedSkill,
 }: {
   chat: Chat;
@@ -33,9 +33,10 @@ export function createSendMessagePlan({
   context: string;
   sources?: ChatSource[];
   assistantModel?: { provider: string; name: string };
-  skill?: Skill;
+  skills?: Skill[];
   autoSelectedSkill?: boolean;
 }) {
+  const selectedSkills = skills?.filter(Boolean) || [];
   const userMessage: ChatMessage = {
     id: crypto.randomUUID(),
     role: "user",
@@ -51,7 +52,13 @@ export function createSendMessagePlan({
       ...(sentAttachments.length
         ? { uploadedAttachments: sentAttachments.map(toAttachmentMetadata) }
         : {}),
-      ...(skill ? { skill, autoSelectedSkill } : {}),
+      ...(selectedSkills.length
+        ? {
+            skills: selectedSkills,
+            skill: selectedSkills[0],
+            autoSelectedSkill,
+          }
+        : {}),
     },
   };
   const assistantMessage: ChatMessage = {

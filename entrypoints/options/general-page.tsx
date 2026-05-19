@@ -61,7 +61,7 @@ export function GeneralPage() {
         <h1 className="settings-page-title">
           <SlidersHorizontal size={24} /> {t.options.general}
         </h1>
-        <p className="muted">{t.options.languageDescription}</p>
+        <p className="muted">{t.options.generalDescription}</p>
       </div>
       <Card>
         <CardHeader>

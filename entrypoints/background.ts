@@ -227,7 +227,7 @@ function promptBreakdown(
   const selectedElements =
     latestUser?.metadata?.selectedElements ||
     latestUser?.metadata?.selectedElement;
-  const skill = latestUser?.metadata?.skill as Skill | undefined;
+  const selectedSkills = messageSkills(latestUser?.metadata);
   const availableSkills = request.body.context?.availableSkills || [];
   return {
     systemPromptChars:
@@ -257,7 +257,10 @@ function promptBreakdown(
       contextBlockLength(context, PROMPT_CONTEXT_TAG.selectedElement) +
       metadataLength(selectedElements),
     skillPromptChars:
-      (skill ? getSkillInstruction(skill).length : 0) +
+      selectedSkills.reduce(
+        (total, skill) => total + getSkillInstruction(skill).length,
+        0,
+      ) +
       availableSkills.reduce(
         (total, item) => total + item.name.length + item.description.length,
         0,
@@ -280,6 +283,14 @@ function promptBreakdown(
     ),
     otherContextPromptChars: otherContextChars(context),
   };
+}
+
+function messageSkills(metadata: Record<string, unknown> | undefined) {
+  const skills = Array.isArray(metadata?.skills)
+    ? (metadata.skills as Skill[])
+    : [];
+  const skill = metadata?.skill as Skill | undefined;
+  return skills.length ? skills : skill ? [skill] : [];
 }
 
 function contextBlockLength(context: string, tag: string) {

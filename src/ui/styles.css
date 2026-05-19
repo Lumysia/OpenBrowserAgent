@@ -3106,12 +3106,30 @@ a {
   }
 }
 .message-label {
-  margin-bottom: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  opacity: 0.75;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  max-width: min(240px, 100%);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 7px;
+  padding: 4px 8px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 20%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-soft) 72%, var(--card));
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.2;
+  box-shadow: 0 4px 12px
+    color-mix(in srgb, var(--accent-shadow) 18%, transparent);
+}
+.message-label svg {
+  flex: 0 0 auto;
+}
+.message-label span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .assistant-text {
   min-width: 0;

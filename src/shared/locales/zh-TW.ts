@@ -279,6 +279,7 @@ export const zhTW: LocaleMessages = {
   },
   options: {
     general: "一般",
+    generalDescription: "調整擴充功能的外觀、語言、自動化和上下文行為。",
     agents: "智慧體",
     agentsDescription: "建立擁有獨立角色、行為和指令的智慧體設定。",
     defaultAgentSummary: "用於瀏覽、搜尋和自動化的通用瀏覽器助手。",

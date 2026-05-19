@@ -340,6 +340,8 @@ export const enUS = {
   },
   options: {
     general: "General",
+    generalDescription:
+      "Tune the extension's appearance, language, automation, and context behavior.",
     agents: "Agents",
     agentsDescription:
       "Create agent profiles with their own role, behavior, and instructions.",

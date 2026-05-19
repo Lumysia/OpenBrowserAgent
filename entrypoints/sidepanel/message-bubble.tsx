@@ -65,7 +65,7 @@ export function MessageBubble({
 }) {
   const [language] = useStoredState(storage.language);
   const t = getMessages(language);
-  const skill = message.metadata?.skill as Skill | undefined;
+  const messageSkills = selectedMessageSkills(message.metadata);
   const sentTabs = Array.isArray(message.metadata?.attachedTabs)
     ? (message.metadata.attachedTabs as AttachmentTab[])
     : [];
@@ -104,8 +104,20 @@ export function MessageBubble({
     <div
       className={`message ${message.role === "user" ? "user" : ""} ${editing ? "editing" : ""}`}
     >
-      {skill && (
-        <div className="message-label">{getSkillDisplayName(skill)}</div>
+      {!!messageSkills.length && (
+        <div
+          className="message-label"
+          title={messageSkills
+            .map((skill) => getSkillDisplayName(skill))
+            .join(", ")}
+        >
+          <FileText size={13} />
+          <span>
+            {messageSkills
+              .map((skill) => getSkillDisplayName(skill))
+              .join(", ")}
+          </span>
+        </div>
       )}
       {message.role === "user" ? (
         <div className="user-bubble">{message.content}</div>
@@ -134,7 +146,9 @@ export function MessageBubble({
           ))}
         </>
       ) : !message.content ? (
-        <TypingIndicator t={t} />
+        messageRunEnded(message) ? null : (
+          <TypingIndicator t={t} />
+        )
       ) : (
         <AssistantText
           t={t}
@@ -222,6 +236,14 @@ function selectedElementsFromMetadata(
   return metadata?.selectedElement
     ? [metadata.selectedElement as SelectedElement]
     : [];
+}
+
+function selectedMessageSkills(metadata: Record<string, unknown> | undefined) {
+  const skills = Array.isArray(metadata?.skills)
+    ? (metadata.skills as Skill[])
+    : [];
+  const skill = metadata?.skill as Skill | undefined;
+  return skills.length ? skills : skill ? [skill] : [];
 }
 
 function SourceChips({ sources }: { sources: ChatSource[] }) {
