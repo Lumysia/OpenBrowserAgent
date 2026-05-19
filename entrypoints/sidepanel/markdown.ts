@@ -11,6 +11,8 @@ import { marked } from "marked";
 import type { Messages } from "../../src/shared/i18n";
 import type { ChatSource } from "../../src/shared/types";
 
+export type MarkdownLink = { url: string; title: string; host: string };
+
 hljs.registerLanguage("bash", bash);
 hljs.registerLanguage("sh", bash);
 hljs.registerLanguage("shell", bash);
@@ -59,6 +61,34 @@ export function renderMarkdown(
         : html,
     codeBlocks,
   };
+}
+
+export function extractMarkdownLinks(text: string): MarkdownLink[] {
+  const links: MarkdownLink[] = [];
+  const seen = new Set<string>();
+  const addLink = (url: string, title = "") => {
+    const normalized = cleanUrl(url);
+    if (!normalized || seen.has(normalized)) return;
+    let host = "";
+    try {
+      host = new URL(normalized).host;
+    } catch {
+      return;
+    }
+    seen.add(normalized);
+    links.push({ url: normalized, title: title.trim() || normalized, host });
+  };
+
+  for (const match of text.matchAll(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g))
+    addLink(match[2], match[1]);
+  for (const match of text.matchAll(/(?<!\]\()https?:\/\/[^\s<>)]+/g))
+    addLink(match[0]);
+
+  return links;
+}
+
+function cleanUrl(url: string) {
+  return url.trim().replace(/[\].,!?;:，。！？；：）)]+$/g, "");
 }
 
 function addCharacterFade(html: string, animatedFromChar: number) {

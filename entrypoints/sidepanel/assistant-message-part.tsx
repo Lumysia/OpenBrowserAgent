@@ -1,5 +1,5 @@
-import { Check, Copy, GitBranch } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { Check, Copy, ExternalLink, GitBranch } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   COPY_FEEDBACK_MS,
   STREAM_RENDER_THROTTLE_MS,
@@ -11,10 +11,12 @@ import { isToolPartType } from "../../src/shared/types";
 import { Button } from "../../src/ui/components";
 import { formatMessageTime } from "./format";
 import { IconTooltip } from "./icon-tooltip";
-import { renderMarkdown } from "./markdown";
+import { extractMarkdownLinks, renderMarkdown } from "./markdown";
 import { MessageRunInfo } from "./message-run-info";
 import { ToolPart } from "./tool-part";
 import { useThrottledText } from "./use-throttled-text";
+
+const LINK_METADATA_MAX_CARDS = 20;
 
 export function AssistantPart({
   t,
@@ -69,6 +71,9 @@ export function AssistantText({
 }) {
   const [copied, setCopied] = useState(false);
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
+  const [linkMetadata, setLinkMetadata] = useState<
+    Record<string, LinkMetadata>
+  >({});
   const markdownRef = useRef<HTMLDivElement | null>(null);
   const { text: displayText, animatedFrom } = useThrottledText(
     text,
@@ -85,6 +90,43 @@ export function AssistantText({
     },
   );
   const streaming = displayText.length < text.length;
+  const linkCards = useMemo(
+    () => (streaming ? [] : extractMarkdownLinks(displayText)),
+    [displayText, streaming],
+  );
+  const metadataLinks = useMemo(
+    () => linkCards.slice(0, LINK_METADATA_MAX_CARDS),
+    [linkCards],
+  );
+  const metadataLinkKey = metadataLinks.map((link) => link.url).join("\n");
+
+  useEffect(() => {
+    if (!metadataLinks.length) return undefined;
+    const controller = new AbortController();
+    metadataLinks.forEach((link) => {
+      const cached = linkMetadataCache.get(link.url);
+      if (cached) {
+        setLinkMetadata((items) =>
+          items[link.url] ? items : { ...items, [link.url]: cached },
+        );
+        return;
+      }
+      fetchLinkMetadata(link.url, controller.signal)
+        .then((metadata) => {
+          setLinkMetadata((items) =>
+            items[link.url] ? items : { ...items, [link.url]: metadata },
+          );
+        })
+        .catch((error) => {
+          if (controller.signal.aborted || error?.name === "AbortError") return;
+          setLinkMetadata((items) => ({
+            ...items,
+            [link.url]: { title: link.title, icon: "" },
+          }));
+        });
+    });
+    return () => controller.abort();
+  }, [metadataLinkKey]);
 
   useEffect(() => {
     if (!copied) return undefined;
@@ -130,7 +172,16 @@ export function AssistantText({
     const button = (event.target as HTMLElement | null)?.closest(
       "button[data-code-index]",
     ) as HTMLButtonElement | null;
-    if (!button) return;
+    if (!button) {
+      const link = (event.target as HTMLElement | null)?.closest(
+        "a[href]",
+      ) as HTMLAnchorElement | null;
+      if (!link?.href) return;
+      event.preventDefault();
+      event.stopPropagation();
+      await openOrFocusUrl(link.href).catch(() => undefined);
+      return;
+    }
     const codeIndex = Number(button.dataset.codeIndex);
     const code = codeBlocks[codeIndex];
     if (!code) return;
@@ -153,6 +204,17 @@ export function AssistantText({
         dangerouslySetInnerHTML={{ __html: html }}
         onClick={handleMarkdownClick}
       />
+      {!!linkCards.length && (
+        <div className="assistant-link-cards">
+          {linkCards.map((link) => (
+            <LinkCard
+              key={link.url}
+              link={link}
+              metadata={linkMetadata[link.url]}
+            />
+          ))}
+        </div>
+      )}
       <div className="assistant-actions">
         <div className="message-actions assistant-action-buttons">
           <IconTooltip label={copied ? t.common.copied : t.common.copy}>
@@ -195,6 +257,73 @@ export function AssistantText({
       </div>
     </div>
   );
+}
+
+type LinkMetadata = { title: string; icon: string };
+
+const linkMetadataCache = new Map<string, LinkMetadata>();
+
+function LinkCard({
+  link,
+  metadata,
+}: {
+  link: ReturnType<typeof extractMarkdownLinks>[number];
+  metadata?: LinkMetadata;
+}) {
+  const title = metadata?.title || link.title;
+  return (
+    <button
+      type="button"
+      className="assistant-link-card"
+      onClick={() => openOrFocusUrl(link.url).catch(() => undefined)}
+    >
+      <span className="assistant-link-card-icon">
+        {metadata?.icon ? (
+          <img src={metadata.icon} alt="" loading="lazy" />
+        ) : (
+          <ExternalLink size={15} />
+        )}
+      </span>
+      <span className="assistant-link-card-text">
+        <strong>{title}</strong>
+        <small>{link.host}</small>
+      </span>
+    </button>
+  );
+}
+
+async function fetchLinkMetadata(url: string, signal: AbortSignal) {
+  const cached = linkMetadataCache.get(url);
+  if (cached) return cached;
+  const response = await fetch(url, { signal, credentials: "omit" });
+  if (!response.ok) throw new Error("Unable to fetch link metadata");
+  const html = await response.text();
+  const document = new DOMParser().parseFromString(html, "text/html");
+  const title =
+    metaContent(document, "property", "og:title") ||
+    metaContent(document, "name", "twitter:title") ||
+    document.querySelector("title")?.textContent?.trim() ||
+    url;
+  const iconHref =
+    document
+      .querySelector<HTMLLinkElement>(
+        'link[rel~="icon"], link[rel="apple-touch-icon"], link[rel="shortcut icon"]',
+      )
+      ?.getAttribute("href") || "/favicon.ico";
+  const icon = new URL(iconHref, url).href;
+  const metadata = { title, icon };
+  linkMetadataCache.set(url, metadata);
+  return metadata;
+}
+
+function metaContent(
+  document: Document,
+  attribute: "name" | "property",
+  value: string,
+) {
+  return document
+    .querySelector<HTMLMetaElement>(`meta[${attribute}="${value}"]`)
+    ?.content?.trim();
 }
 
 function openCitationSource(sourceId: string, sources: ChatSource[]) {

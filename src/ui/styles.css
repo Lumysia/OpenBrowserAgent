@@ -3226,6 +3226,76 @@ a {
 .assistant-text.streaming .markdown > *:last-child {
   animation: stream-active-block 0.2s ease both;
 }
+.assistant-link-cards {
+  display: grid;
+  gap: 8px;
+  margin: 2px 0 8px;
+}
+.assistant-link-card {
+  min-width: 0;
+  width: min(100%, 440px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 58%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card) 88%, var(--accent-softer));
+  color: var(--foreground);
+  text-align: left;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow) 64%, transparent);
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.assistant-link-card:hover {
+  border-color: color-mix(in srgb, var(--accent-strong) 28%, var(--border));
+  background: color-mix(in srgb, var(--accent-softer) 52%, var(--card));
+  box-shadow: 0 10px 24px
+    color-mix(in srgb, var(--accent-shadow) 36%, var(--shadow));
+  transform: translateY(-1px);
+}
+.assistant-link-card-icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent-soft) 68%, var(--card));
+  color: var(--accent-strong);
+  overflow: hidden;
+}
+.assistant-link-card-icon img {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+.assistant-link-card-text {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.assistant-link-card-text strong,
+.assistant-link-card-text small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.assistant-link-card-text strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+.assistant-link-card-text small {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
 .stream-char {
   display: inline-block;
   opacity: 0;
