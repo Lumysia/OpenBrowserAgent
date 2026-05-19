@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import type { RefObject } from "react";
 import {
   AUTO_RETRY_IDLE_MS,
@@ -17,6 +17,8 @@ import { retryStalledStream } from "./retry-stalled-stream";
 import type { ActiveStream } from "./sidepanel-menu-state";
 import type { SendMessagesRequest } from "../../src/shared/types";
 
+const AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 36;
+
 export function useSidepanelTheme(
   accentColor: string | undefined,
   colorScheme: string | undefined,
@@ -33,15 +35,45 @@ export function useAutoScroll(
   autoScroll: boolean | undefined,
   streaming: boolean,
 ) {
+  const shouldStickToBottomRef = useRef(true);
+  const lastScrollHeightRef = useRef(0);
+
+  useEffect(() => {
+    if (autoScroll === false) return undefined;
+    const messagesElement = messagesRef.current;
+    if (!messagesElement) return undefined;
+    const updateStickyState = () => {
+      shouldStickToBottomRef.current = isNearScrollBottom(messagesElement);
+      lastScrollHeightRef.current = messagesElement.scrollHeight;
+    };
+    updateStickyState();
+    messagesElement.addEventListener("scroll", updateStickyState, {
+      passive: true,
+    });
+    return () =>
+      messagesElement.removeEventListener("scroll", updateStickyState);
+  }, [autoScroll, messagesRef]);
+
   useLayoutEffect(() => {
     if (autoScroll === false) return;
     const messagesElement = messagesRef.current;
     if (!messagesElement) return;
+    if (messagesElement.scrollHeight < lastScrollHeightRef.current)
+      shouldStickToBottomRef.current = true;
+    if (!shouldStickToBottomRef.current) return;
     messagesElement.scrollTo({
       top: messagesElement.scrollHeight,
       behavior: streaming ? "auto" : "smooth",
     });
+    lastScrollHeightRef.current = messagesElement.scrollHeight;
   }, [messages, autoScroll, streaming]);
+}
+
+function isNearScrollBottom(element: HTMLElement) {
+  return (
+    element.scrollHeight - element.scrollTop - element.clientHeight <=
+    AUTO_SCROLL_BOTTOM_THRESHOLD_PX
+  );
 }
 
 export function useChatSelection(
