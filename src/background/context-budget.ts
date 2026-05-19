@@ -25,6 +25,7 @@ export function applyOpenAIContextBudget(
     toolPruned.items,
     settings,
     createOpenAIPrunedNote,
+    protectOpenAIToolPairs,
   );
   return withReport(originalChars, windowed.items, {
     prunedMessages: windowed.prunedMessages,
@@ -120,6 +121,7 @@ function applySlidingWindow<T extends Record<string, unknown>>(
   items: T[],
   settings: ContextBudgetSettings,
   createNote: (count: number, chars: number) => T,
+  protectLinkedItems?: (items: T[], protectedIndexes: Set<number>) => void,
 ) {
   if (jsonLength(items) <= settings.requestMaxChars)
     return { items, prunedMessages: 0 };
@@ -139,6 +141,7 @@ function applySlidingWindow<T extends Record<string, unknown>>(
     tailChars += chars;
     tailMessages += 1;
   }
+  protectLinkedItems?.(items, protectedIndexes);
 
   const pruned = items.filter((_, index) => !protectedIndexes.has(index));
   const kept = items.filter((_, index) => protectedIndexes.has(index));
@@ -150,6 +153,70 @@ function applySlidingWindow<T extends Record<string, unknown>>(
       ? [kept[0], note, ...kept.slice(1)]
       : [note, ...kept];
   return { items: nextItems, prunedMessages: pruned.length };
+}
+
+function protectOpenAIToolPairs(
+  items: Array<Record<string, unknown>>,
+  protectedIndexes: Set<number>,
+) {
+  const assistantIndexes = new Map<string, number>();
+  const toolIndexes = new Map<string, number[]>();
+
+  items.forEach((message, index) => {
+    if (message.role === "assistant" && Array.isArray(message.tool_calls)) {
+      message.tool_calls.forEach((toolCall) => {
+        const id = recordString(toolCall, "id");
+        if (id) assistantIndexes.set(id, index);
+      });
+      return;
+    }
+    if (message.role !== "tool") return;
+    const id = recordString(message, "tool_call_id");
+    if (!id) return;
+    const indexes = toolIndexes.get(id) || [];
+    indexes.push(index);
+    toolIndexes.set(id, indexes);
+  });
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    items.forEach((message, index) => {
+      if (!protectedIndexes.has(index)) return;
+      if (message.role === "tool") {
+        const assistantIndex = assistantIndexes.get(
+          recordString(message, "tool_call_id"),
+        );
+        if (
+          assistantIndex !== undefined &&
+          !protectedIndexes.has(assistantIndex)
+        ) {
+          protectedIndexes.add(assistantIndex);
+          changed = true;
+        }
+        return;
+      }
+      if (message.role !== "assistant" || !Array.isArray(message.tool_calls))
+        return;
+      message.tool_calls.forEach((toolCall) => {
+        const id = recordString(toolCall, "id");
+        if (!id) return;
+        (toolIndexes.get(id) || []).forEach((toolIndex) => {
+          if (protectedIndexes.has(toolIndex)) return;
+          protectedIndexes.add(toolIndex);
+          changed = true;
+        });
+      });
+    });
+  }
+}
+
+function recordString(value: unknown, key: string) {
+  return value &&
+    typeof value === "object" &&
+    typeof (value as Record<string, unknown>)[key] === "string"
+    ? String((value as Record<string, unknown>)[key])
+    : "";
 }
 
 function resolveContextBudgetSettings(preferences: Preferences) {
