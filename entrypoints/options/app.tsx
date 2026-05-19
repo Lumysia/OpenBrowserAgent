@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import type { ReactNode } from "react";
 import {
   Bug,
@@ -29,7 +29,7 @@ export function OptionsApp() {
   const version = chrome.runtime.getManifest().version;
   const t = getMessages(language);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.dataset.accent =
       preferences?.accentColor || "pink";
     document.documentElement.dataset.theme =

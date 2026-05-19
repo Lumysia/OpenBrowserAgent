@@ -21,7 +21,7 @@ export function useSidepanelTheme(
   accentColor: string | undefined,
   colorScheme: string | undefined,
 ) {
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.dataset.accent = accentColor || "pink";
     document.documentElement.dataset.theme = colorScheme || "system";
   }, [accentColor, colorScheme]);
