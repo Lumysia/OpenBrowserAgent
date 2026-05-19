@@ -49,6 +49,7 @@ export const ko: LocaleMessages = {
     clearAllChats: "모든 채팅 지우기",
     noChatsYet: "아직 채팅이 없습니다",
     removeChat: "채팅 제거",
+    forkTitleSuffix: "분기",
     messageCount: "{count}개 메시지",
     relativeMinutesAgo: "{count}분 전",
     relativeHoursAgo: "{count}시간 전",

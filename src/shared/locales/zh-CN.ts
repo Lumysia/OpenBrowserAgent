@@ -47,6 +47,7 @@ export const zhCN: LocaleMessages = {
     clearAllChats: "清空所有对话",
     noChatsYet: "暂无对话",
     removeChat: "移除对话",
+    forkTitleSuffix: "分叉",
     messageCount: "{count} 条消息",
     relativeMinutesAgo: "{count} 分钟前",
     relativeHoursAgo: "{count} 小时前",

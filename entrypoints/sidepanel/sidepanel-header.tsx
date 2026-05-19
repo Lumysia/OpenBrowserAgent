@@ -19,9 +19,13 @@ export function SidepanelHeader({
   return (
     <header className="sidepanel-header">
       <div className="sidepanel-topbar">
-        <IconTooltip label={t.words.newChat}>
-          <Button variant="ghost" size="icon" onClick={onCreateChat}>
-            <MessageCirclePlus size={18} />
+        <IconTooltip label={t.common.settings}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => openOrFocusOptions().catch(console.warn)}
+          >
+            <Settings size={18} />
           </Button>
         </IconTooltip>
         <div />
@@ -35,13 +39,9 @@ export function SidepanelHeader({
               <History size={18} />
             </Button>
           </IconTooltip>
-          <IconTooltip label={t.common.settings}>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => openOrFocusOptions().catch(console.warn)}
-            >
-              <Settings size={18} />
+          <IconTooltip label={t.words.newChat}>
+            <Button variant="ghost" size="icon" onClick={onCreateChat}>
+              <MessageCirclePlus size={18} />
             </Button>
           </IconTooltip>
         </div>

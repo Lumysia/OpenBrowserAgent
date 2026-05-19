@@ -1,5 +1,11 @@
 import { Plus, Send, Square } from "lucide-react";
-import { useRef, type ClipboardEvent, type RefObject } from "react";
+import {
+  useRef,
+  type ClipboardEvent,
+  type Dispatch,
+  type RefObject,
+  type SetStateAction,
+} from "react";
 import { TOOLTIP_DELAY_MS } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import type {
@@ -158,7 +164,7 @@ export function SidepanelView({
   onSetShowHistory: (value: boolean) => void;
   onSetSelectedElements: (value: SelectedElement[]) => void;
   onSetSelectedSkill: (value: Skill | null) => void;
-  onSetChats: (value: Chat[]) => void;
+  onSetChats: Dispatch<SetStateAction<Chat[]>>;
   onSetPreferences: (
     value: Preferences | ((previous: Preferences) => Preferences),
   ) => void;

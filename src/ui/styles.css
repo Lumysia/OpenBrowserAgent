@@ -1257,6 +1257,10 @@ a {
 .ui-scroll-area-scrollbar[data-orientation="vertical"] {
   width: 10px;
 }
+.ui-scroll-area-scrollbar[data-orientation="horizontal"] {
+  height: 10px;
+  flex-direction: column;
+}
 .ui-scroll-area-thumb {
   position: relative;
   flex: 1;
@@ -1975,8 +1979,8 @@ a {
 .history-panel {
   min-width: 0;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+}
+.history-panel .ui-scroll-area-viewport {
   padding: 10px 10px 18px;
 }
 .history-empty {
@@ -2052,6 +2056,17 @@ a {
 .history-select:focus-visible {
   transform: none;
   box-shadow: none;
+}
+.history-title-editor {
+  cursor: default;
+}
+.history-title-input {
+  height: 24px;
+  width: 100%;
+  min-width: 0;
+  padding: 2px 7px;
+  font-size: 14px;
+  font-weight: 600;
 }
 .history-item strong {
   width: 100%;
@@ -2377,31 +2392,28 @@ a {
   padding: 0;
   border-radius: 10px;
   background: transparent;
-  overflow-x: auto;
-  scrollbar-width: thin;
 }
-.context-chip-row::-webkit-scrollbar {
-  height: 6px;
+.context-chip-scroll {
+  width: 100%;
+  min-width: 0;
+  padding-bottom: 2px;
 }
-.context-chip-row::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 999px;
+.context-chip-scroll .ui-scroll-area-viewport,
+.context-file-scroll .ui-scroll-area-viewport {
+  padding-bottom: 7px;
 }
-.context-chip-row:empty {
-  display: none;
+.context-chip-scroll .ui-scroll-area-scrollbar,
+.context-file-scroll .ui-scroll-area-scrollbar {
+  padding-inline: 2px;
 }
 .context-file-row {
   display: flex;
   gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: thin;
 }
-.context-file-row::-webkit-scrollbar {
-  height: 6px;
-}
-.context-file-row::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 999px;
+.context-file-scroll {
+  width: 100%;
+  min-width: 0;
+  padding-bottom: 2px;
 }
 .attachment-notice {
   padding: 2px 4px 0;

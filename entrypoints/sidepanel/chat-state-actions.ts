@@ -67,12 +67,14 @@ export function forkChatAction({
   chat,
   message,
   partId,
+  forkLabel,
   setChats,
   setActiveChatId,
 }: {
   chat: Chat;
   message: ChatMessage;
   partId?: string;
+  forkLabel: string;
   setChats: ChatSetter;
   setActiveChatId: ActiveChatSetter;
 }) {
@@ -87,12 +89,24 @@ export function forkChatAction({
   const fork: Chat = {
     ...chat,
     id: crypto.randomUUID(),
+    title: forkTitle(chat.title, forkLabel, now),
     messages: [...chat.messages.slice(0, messageIndex), forkedMessage],
     createdAt: now,
     updatedAt: now,
   };
   setChats((items) => [...items, fork]);
   setActiveChatId(fork.id);
+}
+
+function forkTitle(title: string, forkLabel: string, now: number) {
+  const time = new Intl.DateTimeFormat(undefined, {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(now);
+  return `${title} · ${forkLabel} ${time}`;
 }
 
 function truncateMessageAtPart(message: ChatMessage, partId: string) {

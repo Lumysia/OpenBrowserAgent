@@ -51,6 +51,7 @@ export const enUS = {
     clearAllChats: "Clear all chats",
     noChatsYet: "No chats yet",
     removeChat: "Remove chat",
+    forkTitleSuffix: "Fork",
     messageCount: "{count} messages",
     relativeMinutesAgo: "{count}m ago",
     relativeHoursAgo: "{count}h ago",

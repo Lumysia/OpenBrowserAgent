@@ -547,6 +547,7 @@ export function SidepanelApp() {
             chat: currentChat,
             message,
             partId,
+            forkLabel: t.sidepanel.forkTitleSuffix,
             setChats,
             setActiveChatId,
           });

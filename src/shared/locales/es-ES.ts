@@ -50,6 +50,7 @@ export const esES: LocaleMessages = {
     clearAllChats: "Borrar todos los chats",
     noChatsYet: "Aún no hay chats",
     removeChat: "Eliminar chat",
+    forkTitleSuffix: "Rama",
     messageCount: "{count} mensajes",
     relativeMinutesAgo: "hace {count} min",
     relativeHoursAgo: "hace {count} h",

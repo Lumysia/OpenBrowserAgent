@@ -1,8 +1,8 @@
-import { ArrowLeft, Download, Trash2, Upload, X } from "lucide-react";
-import { useRef } from "react";
+import { ArrowLeft, Download, Pencil, Trash2, Upload, X } from "lucide-react";
+import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import type { Chat, ChatMode, Preferences } from "../../src/shared/types";
-import { Button } from "../../src/ui/components";
+import { Button, Input, ScrollArea } from "../../src/ui/components";
 import {
   exportChatAsOpenAiJson,
   importChatFromOpenAiJson,
@@ -31,13 +31,15 @@ export function HistoryPanel({
   activeChatId?: string;
   mode: ChatMode;
   preferences?: Preferences;
-  onSetChats: (value: Chat[]) => void;
+  onSetChats: Dispatch<SetStateAction<Chat[]>>;
   onImportChat: (chat: Chat) => void;
   onSelect: (chatId: string) => void;
   onClose: (chatId: string) => void;
   onBack: () => void;
 }) {
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const [editingChatId, setEditingChatId] = useState<string>();
+  const [draftTitle, setDraftTitle] = useState("");
   const sortedChats = sortChatsNewestFirst(chats);
 
   async function importChat(file: File | undefined) {
@@ -49,6 +51,28 @@ export function HistoryPanel({
     } finally {
       if (importInputRef.current) importInputRef.current.value = "";
     }
+  }
+
+  function startEdit(chat: Chat) {
+    setEditingChatId(chat.id);
+    setDraftTitle(chat.title || t.words.newChat);
+  }
+
+  function saveEdit(chatId: string) {
+    const title = draftTitle.trim();
+    if (title)
+      onSetChats((items) =>
+        items.map((chat) =>
+          chat.id === chatId ? { ...chat, title, updatedAt: Date.now() } : chat,
+        ),
+      );
+    setEditingChatId(undefined);
+    setDraftTitle("");
+  }
+
+  function cancelEdit() {
+    setEditingChatId(undefined);
+    setDraftTitle("");
   }
 
   return (
@@ -90,7 +114,7 @@ export function HistoryPanel({
           </IconTooltip>
         </div>
       </div>
-      <div className="history-panel">
+      <ScrollArea className="history-panel">
         {!chats.length && (
           <div className="history-empty">{t.sidepanel.noChatsYet}</div>
         )}
@@ -99,18 +123,50 @@ export function HistoryPanel({
             className={`history-item ${chat.id === activeChatId ? "active" : ""}`}
             key={chat.id}
           >
-            <Button
-              variant="ghost"
-              className="history-select"
-              onClick={() => onSelect(chat.id)}
-            >
-              <strong>{chat.title || t.words.newChat}</strong>
-              <small>
-                {formatMessageCount(t, chat.messages.length)} ·{" "}
-                {formatRelativeTime(t, chat.updatedAt)}
-              </small>
-            </Button>
+            {editingChatId === chat.id ? (
+              <div className="history-select history-title-editor">
+                <Input
+                  className="history-title-input"
+                  value={draftTitle}
+                  aria-label={t.common.edit}
+                  autoFocus
+                  onChange={(event) => setDraftTitle(event.target.value)}
+                  onBlur={() => saveEdit(chat.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") saveEdit(chat.id);
+                    if (event.key === "Escape") cancelEdit();
+                  }}
+                />
+                <small>
+                  {formatMessageCount(t, chat.messages.length)} ·{" "}
+                  {formatRelativeTime(t, chat.updatedAt)}
+                </small>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                className="history-select"
+                onClick={() => onSelect(chat.id)}
+              >
+                <strong>{chat.title || t.words.newChat}</strong>
+                <small>
+                  {formatMessageCount(t, chat.messages.length)} ·{" "}
+                  {formatRelativeTime(t, chat.updatedAt)}
+                </small>
+              </Button>
+            )}
             <div className="history-item-actions">
+              <IconTooltip label={t.common.edit}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="history-item-action"
+                  aria-label={t.common.edit}
+                  onClick={() => startEdit(chat)}
+                >
+                  <Pencil size={13} />
+                </Button>
+              </IconTooltip>
               <IconTooltip label={t.sidepanel.exportChatOpenAi}>
                 <Button
                   variant="ghost"
@@ -139,7 +195,7 @@ export function HistoryPanel({
             </div>
           </div>
         ))}
-      </div>
+      </ScrollArea>
     </div>
   );
 }

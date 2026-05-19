@@ -50,6 +50,7 @@ export const ptBR: LocaleMessages = {
     clearAllChats: "Limpar todos os chats",
     noChatsYet: "Ainda não há chats",
     removeChat: "Remover chat",
+    forkTitleSuffix: "Ramificação",
     messageCount: "{count} mensagens",
     relativeMinutesAgo: "há {count} min",
     relativeHoursAgo: "há {count} h",

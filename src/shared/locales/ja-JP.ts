@@ -50,6 +50,7 @@ export const jaJP: LocaleMessages = {
     clearAllChats: "すべてのチャットを消去",
     noChatsYet: "チャットはまだありません",
     removeChat: "チャットを削除",
+    forkTitleSuffix: "分岐",
     messageCount: "{count}件のメッセージ",
     relativeMinutesAgo: "{count}分前",
     relativeHoursAgo: "{count}時間前",
