@@ -78,6 +78,7 @@ export function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
           {name === BROWSER_TOOL_NAME.generateImage && (
             <GeneratedImage
               output={(part.output || {}) as Record<string, unknown>}
+              loading={loading}
               t={t}
             />
           )}
@@ -403,13 +404,16 @@ function toolIcon(name: string) {
 
 function GeneratedImage({
   output,
+  loading,
   t,
 }: {
   output: Record<string, unknown>;
+  loading: boolean;
   t: Messages;
 }) {
   const image = stringValue(output.image);
   const prompt = stringValue(output.prompt);
+  if (loading) return <div className="generated-image-skeleton ui-skeleton" />;
   if (!image || output.error) return null;
   const canCopyImage =
     image.startsWith("data:") && typeof ClipboardItem !== "undefined";

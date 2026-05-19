@@ -35,7 +35,7 @@ export function renderMarkdown(
   t: Messages,
   copiedCodeId: string | null,
   sources: ChatSource[] = [],
-  options: { animatedFromChar?: number } = {},
+  options: { animatedFromChar?: number; mermaidPreview?: boolean } = {},
 ) {
   const codeBlocks: string[] = [];
   const renderer = new marked.Renderer();
@@ -48,7 +48,9 @@ export function renderMarkdown(
     const displayLanguage = escapeHtml(
       language || highlighted.language || "text",
     );
-    const preview = mermaidPreview(code, language, t);
+    const preview = options.mermaidPreview
+      ? mermaidPreview(code, language, t)
+      : "";
     const source = preview
       ? ""
       : `<pre><code class="hljs${language ? ` language-${escapeHtml(language)}` : ""}">${highlighted.html}</code></pre>`;
@@ -101,7 +103,7 @@ function mermaidPreview(code: string, language: string, t: Messages) {
   const imageUrl = `https://mermaid.ink/svg/${encoded}?bgColor=FFFFFF`;
   const pngUrl = `https://mermaid.ink/img/${encoded}?type=png&bgColor=FFFFFF`;
   const viewUrl = `https://mermaid.live/view#base64:${encoded}`;
-  return `<div class="mermaid-preview-panel"><a class="mermaid-preview" href="${escapeHtml(viewUrl)}" title="${escapeHtml(t.sidepanel.openMermaidPreview)}"><img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(t.sidepanel.mermaidPreview)}" loading="lazy" /></a><div class="mermaid-preview-actions"><button type="button" data-mermaid-download-url="${escapeHtml(imageUrl)}" data-mermaid-download-filename="mermaid-diagram.svg">${escapeHtml(t.sidepanel.downloadMermaidSvg)}</button><button type="button" data-mermaid-download-url="${escapeHtml(pngUrl)}" data-mermaid-download-filename="mermaid-diagram.png">${escapeHtml(t.sidepanel.downloadMermaidPng)}</button></div></div>`;
+  return `<div class="mermaid-preview-panel"><a class="mermaid-preview ui-skeleton" href="${escapeHtml(viewUrl)}" title="${escapeHtml(t.sidepanel.openMermaidPreview)}"><img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(t.sidepanel.mermaidPreview)}" loading="lazy" /></a><div class="mermaid-preview-actions"><button type="button" class="ui-button ui-button-secondary ui-button-sm" data-mermaid-download-url="${escapeHtml(imageUrl)}" data-mermaid-download-filename="mermaid-diagram.svg">${escapeHtml(t.sidepanel.downloadMermaidSvg)}</button><button type="button" class="ui-button ui-button-secondary ui-button-sm" data-mermaid-download-url="${escapeHtml(pngUrl)}" data-mermaid-download-filename="mermaid-diagram.png">${escapeHtml(t.sidepanel.downloadMermaidPng)}</button></div></div>`;
 }
 
 function isMermaidLanguage(language: string) {

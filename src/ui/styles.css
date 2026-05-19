@@ -625,6 +625,30 @@ a {
   padding: 0;
 }
 
+.ui-skeleton {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--accent-soft) 34%, transparent),
+      transparent
+    ),
+    color-mix(in srgb, var(--accent-softer) 36%, var(--card));
+  background-size: 220% 100%;
+  animation: ui-skeleton-loading 1.35s ease-in-out infinite;
+}
+
+@keyframes ui-skeleton-loading {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
 .ui-input,
 .ui-textarea,
 .ui-select-trigger {
@@ -3006,7 +3030,7 @@ a {
 }
 .mermaid-preview-panel {
   margin: 12px 12px 0;
-  padding: 12px;
+  padding: 12px 12px 14px;
   border: 1px solid color-mix(in srgb, var(--accent-soft) 48%, var(--border));
   border-radius: 12px;
   background: var(--card);
@@ -3014,6 +3038,8 @@ a {
 }
 .mermaid-preview {
   display: block;
+  min-height: 180px;
+  border-radius: 10px;
   transition: transform 0.16s ease;
 }
 .mermaid-preview:hover {
@@ -3024,30 +3050,16 @@ a {
   max-width: 100%;
   height: auto;
   margin: 0 auto;
+  border-radius: 8px;
+  background: white;
 }
 .mermaid-preview-actions {
   display: flex;
   justify-content: flex-end;
   gap: 6px;
   flex-wrap: wrap;
-  margin-top: 10px;
-}
-.mermaid-preview-actions button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 28px;
-  padding: 5px 10px;
-  border: 0;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent-soft) 62%, var(--card));
-  color: var(--accent-strong);
-  font-size: 12px;
-  font-weight: 650;
-  cursor: pointer;
-}
-.mermaid-preview-actions button:hover {
-  background: var(--accent-hover);
+  margin-top: 12px;
+  padding-bottom: 2px;
 }
 .markdown pre {
   overflow: auto;
@@ -3926,6 +3938,11 @@ a {
   border-radius: 12px;
   object-fit: contain;
   background: var(--secondary);
+}
+.generated-image-skeleton {
+  width: 100%;
+  min-height: 220px;
+  border-radius: 12px;
 }
 .generated-image-download {
   color: var(--accent-strong);

@@ -79,6 +79,7 @@ export function AssistantText({
     text,
     STREAM_RENDER_THROTTLE_MS,
   );
+  const streaming = displayText.length < text.length;
   const { html, codeBlocks } = renderMarkdown(
     displayText,
     t,
@@ -87,9 +88,9 @@ export function AssistantText({
     {
       animatedFromChar:
         displayText.length < text.length ? animatedFrom : undefined,
+      mermaidPreview: !streaming,
     },
   );
-  const streaming = displayText.length < text.length;
   const linkCards = useMemo(
     () => (streaming ? [] : extractMarkdownLinks(displayText)),
     [displayText, streaming],
