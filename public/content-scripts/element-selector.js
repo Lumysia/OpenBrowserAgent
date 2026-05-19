@@ -21,8 +21,6 @@
   const DEFAULT_SELECTOR_PROMPT = "Select element - Esc to cancel";
 
   let hovered = null;
-  let hoverCandidates = [];
-  let hoverIndex = 0;
   let currentRect = null;
   const previousCursor = document.body.style.cursor;
 
@@ -121,10 +119,9 @@
   function cleanup() {
     root.remove();
     document.body.style.cursor = previousCursor;
-    removeEventListener("mouseover", onPointerMove, true);
+    removeEventListener("mouseover", onMouseOver, true);
     removeEventListener("mousemove", onMouseMove, true);
     removeEventListener("click", onClick, true);
-    removeEventListener("wheel", onWheel, true);
     removeEventListener("keydown", onKeyCancel, true);
     removeEventListener("keyup", onKeyCancel, true);
     removeEventListener("scroll", onViewportChange, true);
@@ -141,31 +138,14 @@
     cleanup();
   }
 
-  function onPointerMove(event) {
-    const candidates = selectableCandidatesAt(event.clientX, event.clientY);
-    if (!candidates.length) return;
-    const current = hoverCandidates[hoverIndex];
-    hoverCandidates = candidates;
-    hoverIndex = Math.max(0, candidates.indexOf(current));
-    hovered = hoverCandidates[hoverIndex];
-    updateOverlay(hovered.getBoundingClientRect());
+  function onMouseOver(event) {
+    const target = event.target;
+    if (!isSelectableTarget(target)) return;
+    hovered = target;
+    updateOverlay(target.getBoundingClientRect());
   }
 
-  function onMouseMove(event) {
-    onPointerMove(event);
-  }
-
-  function onWheel(event) {
-    if (!hoverCandidates.length) return;
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-    const direction = event.deltaY > 0 ? 1 : -1;
-    hoverIndex = Math.max(
-      0,
-      Math.min(hoverCandidates.length - 1, hoverIndex + direction),
-    );
-    hovered = hoverCandidates[hoverIndex];
+  function onMouseMove() {
     if (!hovered) return;
     updateOverlay(hovered.getBoundingClientRect());
   }
@@ -176,8 +156,7 @@
   }
 
   async function onClick(event) {
-    const target =
-      hovered || selectableCandidatesAt(event.clientX, event.clientY)[0];
+    const target = event.target;
     if (!isSelectableTarget(target)) return;
     event.preventDefault();
     event.stopPropagation();
@@ -224,25 +203,6 @@
 
   function isSelectableTarget(target) {
     return target instanceof HTMLElement && !root.contains(target);
-  }
-
-  function selectableCandidatesAt(x, y) {
-    const candidates = [];
-    const seen = new Set();
-    for (const element of document.elementsFromPoint(x, y)) {
-      let current = element;
-      while (current instanceof HTMLElement && current !== document.body) {
-        if (isSelectableTarget(current) && !seen.has(current)) {
-          seen.add(current);
-          candidates.push(current);
-        }
-        current = current.parentElement;
-      }
-    }
-    return candidates.filter((element) => {
-      const rect = element.getBoundingClientRect();
-      return rect.width > 0 && rect.height > 0;
-    });
   }
 
   function imageFromTarget(target) {
@@ -318,10 +278,9 @@
     });
   }
 
-  addEventListener("mouseover", onPointerMove, true);
+  addEventListener("mouseover", onMouseOver, true);
   addEventListener("mousemove", onMouseMove, true);
   addEventListener("click", onClick, true);
-  addEventListener("wheel", onWheel, { capture: true, passive: false });
   addEventListener("keydown", onKeyCancel, true);
   addEventListener("keyup", onKeyCancel, true);
   addEventListener("scroll", onViewportChange, true);
