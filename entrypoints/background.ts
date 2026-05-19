@@ -43,8 +43,10 @@ import { requestOpenAICompatible } from "../src/background/providers";
 import { resolveModel } from "../src/background/model-resolver";
 import { postTextStream } from "../src/background/message-helpers";
 import { browserToolsForPrompt } from "../src/background/tool-schema";
+import * as streamSessions from "../src/background/stream-sessions";
 
 const SIDE_PANEL_OPENED = "side_panel_opened";
+
 export default defineBackground(() => {
   chrome.sidePanel
     ?.setPanelBehavior?.({ openPanelOnActionClick: true })
@@ -62,36 +64,53 @@ export default defineBackground(() => {
   chrome.runtime.onConnect.addListener((port) => {
     if (port.name !== AI_STREAM_PORT_NAME) return;
 
-    let abortController: AbortController | undefined;
-    let queuedMessages: Array<{ id: string; content: string }> = [];
-
     port.onMessage.addListener((request: AiStreamRequest) => {
       if (request.type === AI_STREAM_REQUEST_TYPE.abort) {
-        abortController?.abort();
+        streamSessions.abortPortStreams(port);
         return;
       }
 
       if (request.type === AI_STREAM_REQUEST_TYPE.queueMessage) {
         const content = request.content.trim();
-        if (content) queuedMessages.push({ id: request.id, content });
+        const session = streamSessions.firstPortSession(port);
+        if (content && session)
+          session.queuedMessages.push({ id: request.id, content });
+        return;
+      }
+
+      if (request.type === AI_STREAM_REQUEST_TYPE.attachStream) {
+        const session = streamSessions.getStreamSession(request.chatId);
+        if (!session) {
+          post(port, { type: "end" });
+          return;
+        }
+        streamSessions.attachPortToSession(
+          port,
+          session,
+          request.afterSequence,
+        );
         return;
       }
 
       if (request.type === AI_STREAM_REQUEST_TYPE.sendMessages) {
-        abortController?.abort();
-        queuedMessages = [];
-        abortController = new AbortController();
-        streamAssistantResponse(port, request, abortController.signal, () => {
-          const messages = queuedMessages;
-          queuedMessages = [];
-          return messages;
-        }).catch((error) => {
-          if (error?.name === "AbortError") return;
-          post(port, {
-            type: "error",
-            error: error?.message || String(error),
-          });
-        });
+        streamSessions.abortSession(request.chatId);
+        const session = streamSessions.createStreamSession(request);
+        streamSessions.attachPortToSession(port, session, undefined);
+        const streamPort = streamSessions.streamSessionPort(session);
+        streamAssistantResponse(
+          streamPort,
+          request,
+          session.abortController.signal,
+          () => streamSessions.drainQueuedMessages(session),
+        )
+          .catch((error) => {
+            if (error?.name === "AbortError") return;
+            streamSessions.postToSession(session, {
+              type: "error",
+              error: error?.message || String(error),
+            });
+          })
+          .finally(() => streamSessions.scheduleSessionCleanup(session));
         return;
       }
 
@@ -113,7 +132,7 @@ export default defineBackground(() => {
       }
     });
 
-    port.onDisconnect.addListener(() => abortController?.abort());
+    port.onDisconnect.addListener(() => streamSessions.detachPort(port));
   });
 });
 

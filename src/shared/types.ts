@@ -163,6 +163,7 @@ export type RunMetrics = {
   startedAt?: number;
   firstTokenAt?: number;
   endedAt?: number;
+  streamEventIndex?: number;
   outputMode?: "streaming" | "buffered";
   outputCharacters?: number;
   usage?: TokenUsage;
@@ -252,6 +253,7 @@ export const AI_STREAM_PORT_NAME = "ai-stream";
 export const AI_STREAM_REQUEST_TYPE = {
   abort: "abort",
   queueMessage: "queueMessage",
+  attachStream: "attachStream",
   sendMessages: "sendMessages",
   generateTitle: "generateTitle",
   generateSkill: "generateSkill",
@@ -288,6 +290,12 @@ export type AiStreamRequest =
   | { type: "abort" }
   | { type: "queueMessage"; id: string; content: string }
   | {
+      type: "attachStream";
+      chatId: string;
+      messageId: string;
+      afterSequence?: number;
+    }
+  | {
       type: "sendMessages";
       chatId: string;
       trigger?: string;
@@ -322,7 +330,7 @@ export type GenerateSkillRequest = Extract<
   { type: (typeof AI_STREAM_REQUEST_TYPE)["generateSkill"] }
 >;
 
-export type AiStreamResponse =
+export type AiStreamResponse = (
   | { type: "chunk"; chunk: unknown }
   | { type: "metrics"; metrics: Partial<RunMetrics> }
   | {
@@ -334,7 +342,8 @@ export type AiStreamResponse =
   | { type: "end" }
   | { type: "error"; error: string }
   | { type: "title"; title: string }
-  | { type: "skill"; skill: Skill };
+  | { type: "skill"; skill: Skill }
+) & { sequence?: number };
 
 export const providerLabels: Record<ProviderId, string> = {
   gemini: "Gemini",

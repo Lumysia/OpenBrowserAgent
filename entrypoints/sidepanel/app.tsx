@@ -11,6 +11,7 @@ import {
   type Chat,
   type ChatMessage,
   type ChatMode,
+  type RunMetrics,
   type SendMessagesRequest,
   type Skill,
   type UploadedAttachment,
@@ -52,7 +53,11 @@ import {
 } from "./sidepanel-menu-state";
 import { SidepanelView } from "./sidepanel-view";
 import { createStreamHandlers } from "./stream-handlers";
-import { closeStreamPort, startStreamAction } from "./stream-port";
+import {
+  attachStreamAction,
+  closeStreamPort,
+  startStreamAction,
+} from "./stream-port";
 import { useComposerContext } from "./use-composer-context";
 import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
@@ -218,6 +223,21 @@ export function SidepanelApp() {
     appendToAssistant: streamHandlers.appendToAssistant,
     startStream,
   });
+
+  useEffect(() => {
+    if (streaming || activeStreamRef.current || !currentChat) return;
+    const message = resumableAssistantMessage(currentChat);
+    if (!message) return;
+    activeStreamRef.current = {
+      chatId: currentChat.id,
+      assistantMessageId: message.id,
+      retryCount: 0,
+      hasProgress: true,
+    };
+    setStreaming(true);
+    const metrics = message.metadata?.runMetrics as RunMetrics | undefined;
+    attachStream(currentChat.id, message.id, metrics?.streamEventIndex);
+  }, [currentChat, streaming]);
 
   function closeChat(chatId: string) {
     closeChatAction({
@@ -398,6 +418,28 @@ export function SidepanelApp() {
     });
   }
 
+  function attachStream(
+    chatId: string,
+    targetMessageId: string,
+    afterSequence?: number,
+  ) {
+    attachStreamAction({
+      chatId,
+      targetMessageId,
+      afterSequence,
+      portRef,
+      activeStreamRef,
+      lastStreamActivityRef,
+      setStreaming,
+      appendStreamChunk: streamHandlers.appendStreamChunk,
+      appendToAssistant: streamHandlers.appendToAssistant,
+      appendQueuedMessages: streamHandlers.appendQueuedMessages,
+      removeQueuedMessage,
+      updateRunMetrics: (id, metrics) =>
+        streamHandlers.updateRunMetrics(chatId, id, metrics),
+    });
+  }
+
   function stop() {
     activeStreamRef.current = null;
     closeStreamPort(portRef, true);
@@ -497,4 +539,11 @@ export function SidepanelApp() {
       onSelectChat={setActiveChatId}
     />
   );
+}
+
+function resumableAssistantMessage(chat: Chat) {
+  return [...chat.messages].reverse().find((message) => {
+    const metrics = message.metadata?.runMetrics as { endedAt?: unknown };
+    return message.role === "assistant" && !metrics?.endedAt;
+  });
 }
