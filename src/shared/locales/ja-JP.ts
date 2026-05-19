@@ -172,8 +172,8 @@ export const jaJP: LocaleMessages = {
         done: "要素をクリックしました",
       },
       cdpMouseActionByAiID: {
-        running: "CDPマウス操作を実行中",
-        done: "CDPマウス操作を実行しました",
+        running: "ページ要素を操作中",
+        done: "ページ要素を操作しました",
       },
       getTabContent: {
         running: "ページ内容を取得中",
@@ -377,6 +377,9 @@ export const jaJP: LocaleMessages = {
     cdpTools: "CDPツール",
     cdpToolsDescription:
       "高度なChrome DevTools Protocolのブラウザー自動化・デバッグツールを公開します。Chromeがデバッガーアクセスを要求するため、既定では無効です。",
+    dangerousCodeExecution: "危険なコード実行",
+    dangerousCodeExecutionDescription:
+      "エージェントが任意の注入可能なタブで任意のJavaScriptを実行できるようにします。危険: コードはページデータを読み取りまたは変更でき、拡張機能側の安全制限を受けません。",
     autoSelectSkills: "スキルを自動選択",
     autoSelectSkillsDescription:
       "手動でスキルを選択していない場合、AIが必要に応じて関連するスキルを確認して使用できます。",

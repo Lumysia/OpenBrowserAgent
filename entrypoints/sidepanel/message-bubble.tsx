@@ -1,20 +1,14 @@
 import {
-  Check,
-  Copy,
   ExternalLink,
   File,
   FileAudio,
   FileText,
   FileVideo,
   Image,
-  Pencil,
   MousePointerClick,
-  RotateCcw,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
 import { ATTACHMENT_KIND } from "../../src/shared/attachments";
 import {
-  COPY_FEEDBACK_MS,
   SENT_ATTACHMENTS_PREVIEW_COUNT,
   SENT_TABS_PREVIEW_COUNT,
 } from "../../src/shared/config";
@@ -30,22 +24,19 @@ import type {
   Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
+import { CHAT_PART_STATE } from "../../src/shared/types";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { IconTooltip } from "./icon-tooltip";
 import { formatAttachmentSize } from "./file-attachments";
 import { AssistantPart, AssistantText } from "./assistant-message-part";
-import { FileIcon } from "./attachment-file-icon";
+import { MessageRunInfo } from "./message-run-info";
 import { TypingIndicator } from "./typing-indicator";
 import {
   Button,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-  buttonVariants,
 } from "../../src/ui/components";
+import { UserMessageActions } from "./user-message-actions";
 
 export function MessageBubble({
   message,
@@ -68,7 +59,7 @@ export function MessageBubble({
   onReplaceAttachment?: (id: string, files: FileList | File[]) => Promise<void>;
   onEdit?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
   onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
-  onFork?: (message: ChatMessage) => void;
+  onFork?: (message: ChatMessage, partId?: string) => void;
 }) {
   const [language] = useStoredState(storage.language);
   const t = getMessages(language);
@@ -107,6 +98,7 @@ export function MessageBubble({
   const modelLabel = assistantModel
     ? [assistantModel.provider, assistantModel.name].filter(Boolean).join(" · ")
     : undefined;
+  const showRunInfo = message.role === "assistant" && messageRunEnded(message);
   return (
     <div
       className={`message ${message.role === "user" ? "user" : ""} ${editing ? "editing" : ""}`}
@@ -123,7 +115,7 @@ export function MessageBubble({
             t={t}
             part={part}
             sources={sources}
-            onFork={() => onFork?.(message)}
+            onFork={() => onFork?.(message, part.id)}
             message={message}
             chatMessages={chatMessages}
           />
@@ -140,12 +132,22 @@ export function MessageBubble({
           onFork={() => onFork?.(message)}
           message={message}
           chatMessages={chatMessages}
+          showRunInfo={showRunInfo}
         />
       )}
       {message.role === "assistant" &&
         hasParts &&
-        (modelLabel || message.createdAt) && (
+        (showRunInfo || modelLabel || message.createdAt) && (
           <div className="assistant-actions">
+            {showRunInfo && (
+              <div className="message-actions assistant-action-buttons">
+                <MessageRunInfo
+                  t={t}
+                  message={message}
+                  chatMessages={chatMessages}
+                />
+              </div>
+            )}
             <span className="assistant-model-meta">
               {[modelLabel, formatMessageTime(message.createdAt)]
                 .filter(Boolean)
@@ -250,6 +252,14 @@ function lastAssistantPartIsText(message: ChatMessage) {
   return lastPart?.type === "text" && !!lastPart.text?.trim();
 }
 
+function messageRunEnded(message: ChatMessage) {
+  const metrics = message.metadata?.runMetrics as { endedAt?: unknown };
+  return (
+    !!metrics?.endedAt ||
+    !!message.parts?.some((part) => part.state === CHAT_PART_STATE.outputError)
+  );
+}
+
 function openSource(source: ChatSource) {
   if (source.url) {
     openOrFocusUrl(source.url).catch(console.warn);
@@ -342,139 +352,6 @@ function SentAttachmentsChip({
             : t.sidepanel.willBeSentToAi}
         </small>
       </span>
-    </div>
-  );
-}
-
-function UserMessageActions({
-  t,
-  message,
-  availableAttachments,
-  missingAttachments,
-  onReplaceAttachment,
-  onEdit,
-  onResend,
-}: {
-  t: Messages;
-  message: ChatMessage;
-  availableAttachments: UploadedAttachment[];
-  missingAttachments: UploadedAttachment[];
-  onReplaceAttachment?: (id: string, files: FileList | File[]) => Promise<void>;
-  onEdit?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
-  onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
-}) {
-  const [copied, setCopied] = useState(false);
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!copied) return undefined;
-    const timeout = window.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
-    return () => window.clearTimeout(timeout);
-  }, [copied]);
-
-  function copyText() {
-    navigator.clipboard
-      .writeText(message.content)
-      .then(() => setCopied(true))
-      .catch(() => undefined);
-  }
-
-  function resend() {
-    if (missingAttachments.length) {
-      setOpen(true);
-      return;
-    }
-    onResend?.(message, availableAttachments);
-  }
-  const hasMissingAttachments = missingAttachments.length > 0;
-
-  return (
-    <div className="user-message-actions">
-      <span>{formatMessageTime(message.createdAt)}</span>
-      <IconTooltip label={copied ? t.common.copied : t.common.copy}>
-        <Button variant="ghost" size="icon" onClick={copyText}>
-          {copied ? <Check size={13} /> : <Copy size={13} />}
-        </Button>
-      </IconTooltip>
-      <IconTooltip label={t.common.edit}>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onEdit?.(message, availableAttachments)}
-        >
-          <Pencil size={13} />
-        </Button>
-      </IconTooltip>
-      <Popover
-        open={open}
-        onOpenChange={(nextOpen) =>
-          setOpen(missingAttachments.length ? nextOpen : false)
-        }
-      >
-        <PopoverTrigger asChild>
-          <span>
-            <IconTooltip label={t.sidepanel.resendMessage}>
-              <Button variant="ghost" size="icon" onClick={resend}>
-                <RotateCcw size={13} />
-              </Button>
-            </IconTooltip>
-          </span>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="attachment-replace-popover">
-          <strong>
-            {hasMissingAttachments
-              ? t.sidepanel.replaceUnavailableAttachments
-              : t.sidepanel.resendMessage}
-          </strong>
-          {hasMissingAttachments && (
-            <small>
-              {t.sidepanel.replaceUnavailableAttachmentsDescription}
-            </small>
-          )}
-          {missingAttachments.map((attachment) => (
-            <div key={attachment.id} className="attachment-replace-row">
-              <FileIcon attachment={attachment} size={18} />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <strong>{attachment.name}</strong>
-                    <small>{formatAttachmentSize(attachment.size)}</small>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>{attachment.name}</TooltipContent>
-              </Tooltip>
-              <label
-                className={buttonVariants({ variant: "secondary", size: "sm" })}
-              >
-                {t.sidepanel.attachFiles}
-                <input
-                  type="file"
-                  onChange={(event) => {
-                    if (event.target.files)
-                      void onReplaceAttachment?.(
-                        attachment.id,
-                        event.target.files,
-                      );
-                    event.target.value = "";
-                  }}
-                />
-              </label>
-            </div>
-          ))}
-          <Button
-            size="sm"
-            variant={hasMissingAttachments ? "secondary" : "default"}
-            onClick={() => {
-              setOpen(false);
-              onResend?.(message, availableAttachments);
-            }}
-          >
-            {hasMissingAttachments
-              ? t.sidepanel.resendWithoutMissingFiles
-              : t.sidepanel.resendMessage}
-          </Button>
-        </PopoverContent>
-      </Popover>
     </div>
   );
 }

@@ -479,11 +479,12 @@ export function SidepanelApp() {
       onResendMessage={(message, attachments) =>
         send(message.content, attachments, { resendMessage: message })
       }
-      onForkMessage={(message) => {
+      onForkMessage={(message, partId) => {
         if (currentChat)
           forkChatAction({
             chat: currentChat,
             message,
+            partId,
             setChats,
             setActiveChatId,
           });

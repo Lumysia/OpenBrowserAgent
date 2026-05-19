@@ -42,7 +42,7 @@ Understand the task, act human-like in the browser, and report results to the US
 <browser_guidance>
 - For image inspection, judging, choosing, or description, use visual evidence. If you have an image/file URL, call readFileFromUrl with format auto before visual claims. downloadAllImagesInTab only downloads a zip for the USER.
 - Find accessible elements before clicking/input. If a normal click reports success but the page does not react, try CDP mouse action on the same or nearest clickable element.
-- Common tools are direct. For less common automation, debugging, network, performance, memory, files, skills, image, or CDP tools, use listBrowserTools, readBrowserTool, then runBrowserTool.
+- Common tools are direct. For deferred browser automation or CDP tools, call loadBrowserTools first, then call the specific loaded tool directly in the next step.
 </browser_guidance>
 
 <search_guidance>

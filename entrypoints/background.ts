@@ -140,6 +140,7 @@ async function streamAssistantResponse(
         system,
         request,
         !!preferences.cdpToolsEnabled,
+        !!preferences.dangerousCodeExecutionEnabled,
       ),
     },
   });
@@ -177,6 +178,7 @@ function promptBreakdown(
   system: string,
   request: SendMessagesRequest,
   cdpToolsEnabled: boolean,
+  dangerousCodeExecutionEnabled: boolean,
 ): PromptBreakdown {
   const latestUser = [...request.messages]
     .reverse()
@@ -198,6 +200,7 @@ function promptBreakdown(
           imageGenerationEnabled:
             !!request.body.context?.imageGenerationEnabled,
           cdpToolsEnabled,
+          dangerousCodeExecutionEnabled,
           latestUserText: latestUser?.content || "",
         }),
       ),

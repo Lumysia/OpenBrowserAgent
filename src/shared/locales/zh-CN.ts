@@ -154,8 +154,8 @@ export const zhCN: LocaleMessages = {
       inputTextByAiID: { running: "输入文本", done: "输入文本" },
       clickElementByAiID: { running: "点击元素", done: "点击元素" },
       cdpMouseActionByAiID: {
-        running: "执行 CDP 鼠标操作",
-        done: "已执行 CDP 鼠标操作",
+        running: "操作页面元素",
+        done: "已操作页面元素",
       },
       getTabContent: { running: "获取网页内容", done: "已获取网页内容" },
       groupTabs: { running: "整理标签页", done: "已整理标签页" },
@@ -318,6 +318,9 @@ export const zhCN: LocaleMessages = {
     cdpTools: "CDP 工具",
     cdpToolsDescription:
       "开放高级 Chrome DevTools Protocol 浏览器自动化和调试工具。默认关闭，因为 Chrome 会请求调试器访问权限。",
+    dangerousCodeExecution: "危险代码执行",
+    dangerousCodeExecutionDescription:
+      "允许智能体在任意可注入标签页执行任意 JavaScript。危险：代码可以读取或修改页面数据，且不受扩展侧安全限制。",
     autoSelectSkills: "自动选择技能",
     autoSelectSkillsDescription:
       "当你没有手动选择技能时，允许 AI 按需查看并使用相关技能。",

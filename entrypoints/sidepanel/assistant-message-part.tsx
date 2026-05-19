@@ -54,6 +54,7 @@ export function AssistantText({
   message,
   chatMessages = [],
   sources = [],
+  showRunInfo = false,
 }: {
   t: Messages;
   text: string;
@@ -63,6 +64,7 @@ export function AssistantText({
   message?: ChatMessage;
   chatMessages?: ChatMessage[];
   sources?: ChatSource[];
+  showRunInfo?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
@@ -151,7 +153,7 @@ export function AssistantText({
         onClick={handleMarkdownClick}
       />
       <div className="assistant-actions">
-        <div className="assistant-action-buttons">
+        <div className="message-actions assistant-action-buttons">
           <IconTooltip label={copied ? t.common.copied : t.common.copy}>
             <Button
               variant="ghost"
@@ -159,7 +161,7 @@ export function AssistantText({
               className={`copy-message${copied ? " copied" : ""}`}
               onClick={copyText}
             >
-              {copied ? <Check size={15} /> : <Copy size={15} />}
+              {copied ? <Check /> : <Copy />}
             </Button>
           </IconTooltip>
           {onFork && (
@@ -170,11 +172,11 @@ export function AssistantText({
                 className="copy-message"
                 onClick={onFork}
               >
-                <GitBranch size={15} />
+                <GitBranch />
               </Button>
             </IconTooltip>
           )}
-          {message && (
+          {showRunInfo && message && (
             <MessageRunInfo
               t={t}
               message={message}

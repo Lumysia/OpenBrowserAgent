@@ -174,8 +174,8 @@ export const deDE: LocaleMessages = {
         done: "Element angeklickt",
       },
       cdpMouseActionByAiID: {
-        running: "CDP-Mausaktion wird ausgeführt",
-        done: "CDP-Mausaktion ausgeführt",
+        running: "Seitenelement wird bedient",
+        done: "Seitenelement bedient",
       },
       getTabContent: {
         running: "Seiteninhalt wird abgerufen",
@@ -378,6 +378,9 @@ export const deDE: LocaleMessages = {
     cdpTools: "CDP-Tools",
     cdpToolsDescription:
       "Erweiterte Chrome-DevTools-Protocol-Tools für Browserautomatisierung und Debugging freigeben. Standardmäßig deaktiviert, da Chrome Debuggerzugriff anfordert.",
+    dangerousCodeExecution: "Gefährliche Codeausführung",
+    dangerousCodeExecutionDescription:
+      "Dem Agenten erlauben, beliebiges JavaScript in jedem injizierbaren Tab auszuführen. Gefahr: Code kann Seitendaten lesen oder ändern, ohne sicherheitsseitige Begrenzungen der Erweiterung.",
     autoSelectSkills: "Fähigkeiten automatisch auswählen",
     autoSelectSkillsDescription:
       "Wenn keine Fähigkeit manuell ausgewählt ist, darf die KI relevante Fähigkeiten bei Bedarf prüfen und verwenden.",

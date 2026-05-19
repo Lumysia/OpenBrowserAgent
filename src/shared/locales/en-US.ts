@@ -170,8 +170,8 @@ export const enUS = {
         done: "Clicked element",
       },
       cdpMouseActionByAiID: {
-        running: "Running CDP mouse action",
-        done: "Ran CDP mouse action",
+        running: "Interacting with page element",
+        done: "Interacted with page element",
       },
       getTabContent: {
         running: "Getting page content",
@@ -364,6 +364,9 @@ export const enUS = {
     cdpTools: "CDP tools",
     cdpToolsDescription:
       "Expose advanced Chrome DevTools Protocol tools for browser automation and debugging. Disabled by default because Chrome will request debugger access.",
+    dangerousCodeExecution: "Dangerous code execution",
+    dangerousCodeExecutionDescription:
+      "Allow the agent to execute arbitrary JavaScript in any scriptable tab. Dangerous: code can read or change page data without extension-side safety limits.",
     autoSelectSkills: "Auto-select Skills",
     autoSelectSkillsDescription:
       "When no skill is selected manually, let the AI inspect and use any relevant Skills as needed.",

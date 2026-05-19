@@ -3,39 +3,31 @@ import { ATTACHMENT_TOOL_DESCRIPTION } from "../shared/attachments";
 import { isAskMode, type ChatMode } from "../shared/types";
 import { cdpTools } from "./cdp-tool-schema";
 
-export const catalogBrowserTools = [
+export const deferredBrowserTools = cdpTools;
+
+export const loaderBrowserTools = [
   tool(
-    BROWSER_TOOL_NAME.listBrowserTools,
-    "List available browser automation tools by category. Use this to discover less common tools without loading every schema into the prompt.",
+    BROWSER_TOOL_NAME.loadBrowserTools,
+    "Load deferred browser automation tool schemas by name or search query. Use this when common tools are insufficient. After loading, call the specific loaded tool directly in the next step.",
     {
+      names: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Exact deferred tool names to load, if known. Examples: cdpTakeScreenshot, cdpEvaluateScript.",
+      },
+      query: {
+        type: "string",
+        description:
+          "Natural-language search query for relevant deferred browser tools.",
+      },
       category: {
         type: "string",
         description:
-          "Optional category filter, such as common, cdp, input, navigation, debug, network, performance, memory, files, skills, image",
+          "Optional category filter, such as cdp, input, navigation, debug, network, performance, memory.",
       },
     },
     [],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.readBrowserTool,
-    "Read details and JSON schema for a browser automation tool from the tool catalog.",
-    {
-      name: {
-        type: "string",
-        description: "Tool name returned by listBrowserTools",
-      },
-    },
-  ),
-  tool(
-    BROWSER_TOOL_NAME.runBrowserTool,
-    "Run a browser automation tool by name after checking its details with readBrowserTool. Use this for less common tools that are not directly exposed.",
-    {
-      name: { type: "string", description: "Tool name to run" },
-      arguments: {
-        type: "object",
-        description: "Arguments matching readBrowserTool schema",
-      },
-    },
   ),
 ];
 
@@ -172,26 +164,6 @@ export const commonBrowserTools = [
       description: "The ID of the tab to click the element in",
     },
   }),
-  tool(
-    BROWSER_TOOL_NAME.cdpMouseActionByAiID,
-    "Dispatch a CDP mouse action on an element by its AI ID when DOM click tools do not trigger the page",
-    {
-      id: {
-        type: "string",
-        description: "The ID of the element to target",
-      },
-      tabId: {
-        type: "number",
-        description: "The ID of the tab containing the element",
-      },
-      action: {
-        type: "string",
-        enum: ["hover", "click", "doubleClick"],
-        description: "The CDP mouse action to perform",
-      },
-    },
-    ["id", "tabId"],
-  ),
   tool(
     BROWSER_TOOL_NAME.inputTextByAiID,
     "Input text into an element by its AI ID",
@@ -376,7 +348,7 @@ export const commonBrowserTools = [
 ];
 
 export const allBrowserTools = [...commonBrowserTools, ...cdpTools];
-export const browserTools = [...commonBrowserTools, ...catalogBrowserTools];
+export const browserTools = [...commonBrowserTools, ...loaderBrowserTools];
 
 export function browserToolsForPrompt({
   mode,
@@ -384,21 +356,28 @@ export function browserToolsForPrompt({
   hasSkills,
   imageGenerationEnabled,
   cdpToolsEnabled,
+  dangerousCodeExecutionEnabled,
   latestUserText,
+  loadedToolNames = [],
 }: {
   mode: ChatMode;
   hasUploadedAttachments: boolean;
   hasSkills: boolean;
   imageGenerationEnabled: boolean;
   cdpToolsEnabled: boolean;
+  dangerousCodeExecutionEnabled: boolean;
   latestUserText?: string;
+  loadedToolNames?: string[];
 }) {
   const askMode = isAskMode(mode);
-  return browserTools.filter((item) => {
+  const loadedTools = deferredBrowserTools.filter((tool) =>
+    loadedToolNames.includes(tool.function.name),
+  );
+  return [...browserTools, ...loadedTools].filter((item) => {
     const name = item.function.name;
-    if (name === BROWSER_TOOL_NAME.listBrowserTools) return !askMode;
-    if (name === BROWSER_TOOL_NAME.readBrowserTool) return !askMode;
-    if (name === BROWSER_TOOL_NAME.runBrowserTool) return !askMode;
+    if (name === BROWSER_TOOL_NAME.loadBrowserTools) return !askMode;
+    if (name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript)
+      return dangerousCodeExecutionEnabled;
     if (name.startsWith("cdp") && !cdpToolsEnabled) return false;
     if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
       return hasUploadedAttachments;

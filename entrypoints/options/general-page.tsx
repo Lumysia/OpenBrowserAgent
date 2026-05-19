@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import {
+  AlertTriangle,
   Languages,
   MonitorCog,
   Palette,
@@ -188,6 +189,19 @@ export function GeneralPage() {
           }))
         }
       />
+      <PreferenceSwitch
+        danger
+        icon={<AlertTriangle size={18} />}
+        title={t.options.dangerousCodeExecution}
+        description={t.options.dangerousCodeExecutionDescription}
+        checked={preferences.dangerousCodeExecutionEnabled === true}
+        onChange={(checked) =>
+          setPreferences((previous) => ({
+            ...previous,
+            dangerousCodeExecutionEnabled: checked,
+          }))
+        }
+      />
       <Card>
         <CardHeader>
           <CardTitle className="settings-section-title">
@@ -340,19 +354,23 @@ function PreferenceSwitch({
   description,
   checked,
   onChange,
+  danger,
 }: {
   icon: ReactNode;
   title: string;
   description: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  danger?: boolean;
 }) {
   return (
     <Card>
       <CardContent>
         <div className="setting-switch-row">
           <div>
-            <CardTitle className="settings-section-title">
+            <CardTitle
+              className={`settings-section-title${danger ? " danger-title" : ""}`}
+            >
               {icon} {title}
             </CardTitle>
             <CardDescription>{description}</CardDescription>

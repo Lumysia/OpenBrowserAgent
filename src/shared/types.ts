@@ -46,6 +46,7 @@ export type Preferences = {
   autoScroll?: boolean;
   autoRetry?: boolean;
   cdpToolsEnabled?: boolean;
+  dangerousCodeExecutionEnabled?: boolean;
   maxToolSteps?: number;
   contextBudgetEnabled?: boolean;
   contextRequestMaxChars?: number;

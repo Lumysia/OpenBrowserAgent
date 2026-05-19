@@ -73,6 +73,7 @@ export function startStreamAction({
     if (message.type === "metrics") updateRunMetrics(message.metrics);
     if (message.type === "error") {
       activeStreamRef.current = null;
+      updateRunMetrics({ endedAt: Date.now() });
       setStreaming(false);
       appendToAssistant(
         request.chatId,

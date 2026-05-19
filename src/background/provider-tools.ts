@@ -8,8 +8,8 @@ import {
 } from "../shared/skills";
 import { storage } from "../shared/storage";
 import {
-  isAskMode,
   type ChatMode,
+  type Preferences,
   type Skill,
   type SkillFileKind,
   type UploadedAttachment,
@@ -21,8 +21,8 @@ import {
   readUploadedAttachment,
 } from "./attachment-messages";
 import { generateImage } from "./image-generation";
-import { allBrowserTools, safeExecuteBrowserTool } from "./tools";
-import { browserToolsForPrompt } from "./tool-schema";
+import { safeExecuteBrowserTool } from "./tools";
+import { browserToolsForPrompt, deferredBrowserTools } from "./tool-schema";
 
 export function toolsForMode(
   mode: ChatMode,
@@ -30,7 +30,9 @@ export function toolsForMode(
   hasSkills: boolean,
   imageGenerationEnabled: boolean,
   cdpToolsEnabled: boolean,
+  dangerousCodeExecutionEnabled: boolean,
   latestUserText = "",
+  loadedToolNames: string[] = [],
 ) {
   return browserToolsForPrompt({
     mode,
@@ -38,8 +40,40 @@ export function toolsForMode(
     hasSkills,
     imageGenerationEnabled,
     cdpToolsEnabled,
+    dangerousCodeExecutionEnabled,
     latestUserText,
+    loadedToolNames,
   });
+}
+
+export function createToolResolver({
+  mode,
+  uploadedAttachments,
+  availableSkills,
+  preferences,
+  latestUserText,
+}: {
+  mode: ChatMode;
+  uploadedAttachments: UploadedAttachment[];
+  availableSkills: Skill[];
+  preferences: Preferences;
+  latestUserText: string;
+}) {
+  const loadedToolNames = new Set<string>();
+  return {
+    loadedToolNames,
+    availableTools: () =>
+      toolsForMode(
+        mode,
+        uploadedAttachments.length > 0,
+        availableSkills.length > 0,
+        !!preferences.imageGenerationEnabled,
+        !!preferences.cdpToolsEnabled,
+        !!preferences.dangerousCodeExecutionEnabled,
+        latestUserText,
+        [...loadedToolNames],
+      ),
+  };
 }
 
 export function executeContextAwareTool({
@@ -48,19 +82,30 @@ export function executeContextAwareTool({
   uploadedAttachments,
   availableSkills,
   cdpToolsEnabled,
+  dangerousCodeExecutionEnabled,
 }: {
   toolName: string;
   input: Record<string, unknown>;
   uploadedAttachments: UploadedAttachment[];
   availableSkills: Skill[];
   cdpToolsEnabled: boolean;
+  dangerousCodeExecutionEnabled: boolean;
 }) {
-  if (toolName === BROWSER_TOOL_NAME.listBrowserTools)
-    return listBrowserTools(input, cdpToolsEnabled);
-  if (toolName === BROWSER_TOOL_NAME.readBrowserTool)
-    return readBrowserTool(input, cdpToolsEnabled);
-  if (toolName === BROWSER_TOOL_NAME.runBrowserTool)
-    return runBrowserTool(input, cdpToolsEnabled);
+  if (toolName === BROWSER_TOOL_NAME.loadBrowserTools)
+    return loadBrowserTools(
+      input,
+      cdpToolsEnabled,
+      dangerousCodeExecutionEnabled,
+    );
+  if (
+    toolName === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript &&
+    !dangerousCodeExecutionEnabled
+  )
+    return {
+      success: false,
+      error:
+        "Dangerous arbitrary code execution is disabled in General settings",
+    };
   if (toolName === BROWSER_TOOL_NAME.readUploadedAttachment)
     return readUploadedAttachment(uploadedAttachments, input);
   if (toolName === BROWSER_TOOL_NAME.listSkills)
@@ -78,70 +123,89 @@ export function executeContextAwareTool({
   return safeExecuteBrowserTool(toolName, input);
 }
 
-function listBrowserTools(
+export function loadDeferredToolNames(
+  output: unknown,
+  loadedToolNames: Set<string>,
+) {
+  const names =
+    output && typeof output === "object" && "loadedToolNames" in output
+      ? (output as { loadedToolNames?: unknown }).loadedToolNames
+      : undefined;
+  if (!Array.isArray(names)) return;
+  names
+    .map(String)
+    .filter(Boolean)
+    .forEach((name) => loadedToolNames.add(name));
+}
+
+function loadBrowserTools(
   input: Record<string, unknown>,
   cdpToolsEnabled: boolean,
+  dangerousCodeExecutionEnabled: boolean,
 ) {
+  if (!cdpToolsEnabled && !dangerousCodeExecutionEnabled)
+    return {
+      loadedToolNames: [],
+      tools: [],
+      error: "Deferred CDP tools are disabled in General settings",
+    };
+  const requestedNames = Array.isArray(input.names)
+    ? input.names
+        .map(String)
+        .map((name) => name.trim())
+        .filter(Boolean)
+    : [];
+  const query = String(input.query || "")
+    .trim()
+    .toLowerCase();
   const category = String(input.category || "")
     .trim()
     .toLowerCase();
+  const matches = deferredBrowserTools
+    .map((item) =>
+      toolCatalogItem(item, cdpToolsEnabled, dangerousCodeExecutionEnabled),
+    )
+    .filter((item) => item.available)
+    .filter((item) => !category || item.category === category)
+    .filter((item) => {
+      if (requestedNames.length) return requestedNames.includes(item.name);
+      if (!query) return true;
+      return `${item.name} ${item.description} ${item.category}`
+        .toLowerCase()
+        .includes(query);
+    })
+    .slice(0, 8);
   return {
-    cdpToolsEnabled,
-    tools: allBrowserTools
-      .map((item) => toolCatalogItem(item, cdpToolsEnabled))
-      .filter((item) => !category || item.category === category),
+    loadedToolNames: matches.map((item) => item.name),
+    tools: matches.map((item) => ({
+      ...item,
+      schema: deferredBrowserTools.find(
+        (tool) => tool.function.name === item.name,
+      )?.function,
+    })),
   };
 }
 
-function readBrowserTool(
-  input: Record<string, unknown>,
-  cdpToolsEnabled: boolean,
-) {
-  const name = String(input.name || "").trim();
-  const tool = allBrowserTools.find((item) => item.function.name === name);
-  if (!tool) return { error: `Unknown browser tool: ${name}` };
-  return { ...toolCatalogItem(tool, cdpToolsEnabled), schema: tool.function };
-}
-
-function runBrowserTool(
-  input: Record<string, unknown>,
-  cdpToolsEnabled: boolean,
-) {
-  const name = String(input.name || "").trim();
-  const args =
-    input.arguments && typeof input.arguments === "object"
-      ? (input.arguments as Record<string, unknown>)
-      : {};
-  const tool = allBrowserTools.find((item) => item.function.name === name);
-  if (!tool) return { error: `Unknown browser tool: ${name}` };
-  if (name.startsWith("cdp") && !cdpToolsEnabled)
-    return { error: "CDP tools are disabled in General settings", name };
-  if (
-    name === BROWSER_TOOL_NAME.listBrowserTools ||
-    name === BROWSER_TOOL_NAME.readBrowserTool ||
-    name === BROWSER_TOOL_NAME.runBrowserTool
-  )
-    return {
-      error: "Catalog tools cannot be nested through runBrowserTool",
-      name,
-    };
-  return safeExecuteBrowserTool(name, args);
-}
-
 function toolCatalogItem(
-  item: (typeof allBrowserTools)[number],
+  item: (typeof deferredBrowserTools)[number],
   cdpToolsEnabled: boolean,
+  dangerousCodeExecutionEnabled: boolean,
 ) {
   const name = item.function.name;
+  const dangerous = name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript;
+  const available = dangerous
+    ? dangerousCodeExecutionEnabled
+    : !name.startsWith("cdp") || cdpToolsEnabled;
   return {
     name,
     description: item.function.description,
     category: toolCategory(name),
-    available: !name.startsWith("cdp") || cdpToolsEnabled,
-    unavailableReason:
-      name.startsWith("cdp") && !cdpToolsEnabled
-        ? "CDP tools are disabled in General settings"
-        : undefined,
+    available,
+    unavailableReason: available
+      ? undefined
+      : dangerous
+        ? "Dangerous arbitrary code execution is disabled in General settings"
+        : "CDP tools are disabled in General settings",
   };
 }
 

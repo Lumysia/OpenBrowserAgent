@@ -18,7 +18,7 @@ import {
   createOpenAIRequestMessages,
   hasImageAttachments,
 } from "./attachment-messages";
-import { parseToolArgs, postTextStream } from "./message-helpers";
+import { parseToolArgs, post, postTextStream } from "./message-helpers";
 import { readOpenAIStream } from "./openai-stream";
 import {
   attachToolSources,
@@ -33,20 +33,16 @@ import {
   type ProviderTextResult,
   sanitizeToolOutput,
 } from "./provider-output";
-import { executeContextAwareTool, toolsForMode } from "./provider-tools";
+import {
+  createToolResolver,
+  executeContextAwareTool,
+  loadDeferredToolNames,
+} from "./provider-tools";
 import {
   applyGeminiContextBudget,
   applyOpenAIContextBudget,
 } from "./context-budget";
 import { postContextBudget } from "./provider-metrics";
-
-function post(port: chrome.runtime.Port, message: AiStreamResponse) {
-  try {
-    port.postMessage(message);
-  } catch (error) {
-    console.warn("Failed to post ai-stream message", error);
-  }
-}
 
 export async function requestOpenAICompatible(
   model: {
@@ -97,15 +93,15 @@ export async function requestOpenAICompatible(
     );
   const preferences = await storage.preferences.get();
   const latestUserText = latestUserMessageText(messages);
-  const availableTools = toolsForMode(
+  const toolResolver = createToolResolver({
     mode,
-    uploadedAttachments.length > 0,
-    availableSkills.length > 0,
-    !!preferences.imageGenerationEnabled,
-    !!preferences.cdpToolsEnabled,
+    uploadedAttachments,
+    availableSkills,
+    preferences,
     latestUserText,
-  );
-  const useTools = maxToolSteps > 0 && availableTools.length > 0;
+  });
+  const availableTools = toolResolver.availableTools;
+  const useTools = maxToolSteps > 0 && availableTools().length > 0;
   let responseSources = getMessageSources(messages);
   let responseUsage: TokenUsage | undefined;
   const postMetric = (message: AiStreamResponse) => post(port, message);
@@ -180,7 +176,7 @@ export async function requestOpenAICompatible(
       temperature: MODEL_TEMPERATURE,
       stream: true,
       stream_options: { include_usage: true },
-      tools: availableTools,
+      tools: availableTools(),
       tool_choice: "auto",
     });
 
@@ -222,7 +218,10 @@ export async function requestOpenAICompatible(
         uploadedAttachments,
         availableSkills,
         cdpToolsEnabled: !!preferences.cdpToolsEnabled,
+        dangerousCodeExecutionEnabled:
+          !!preferences.dangerousCodeExecutionEnabled,
       });
+      loadDeferredToolNames(rawOutput, toolResolver.loadedToolNames);
       const visionImage = extractVisionImage(rawOutput);
       const output = attachToolSources(
         toolName,
@@ -345,15 +344,15 @@ async function requestGemini(
 
   const preferences = await storage.preferences.get();
   const latestUserText = latestUserMessageText(messages);
-  const availableTools = toolsForMode(
+  const toolResolver = createToolResolver({
     mode,
-    uploadedAttachments.length > 0,
-    availableSkills.length > 0,
-    !!preferences.imageGenerationEnabled,
-    !!preferences.cdpToolsEnabled,
+    uploadedAttachments,
+    availableSkills,
+    preferences,
     latestUserText,
-  );
-  const useTools = maxToolSteps > 0 && availableTools.length > 0;
+  });
+  const availableTools = toolResolver.availableTools;
+  const useTools = maxToolSteps > 0 && availableTools().length > 0;
   let responseSources = getMessageSources(messages);
   const postMetric = (message: AiStreamResponse) => post(port, message);
 
@@ -377,7 +376,7 @@ async function requestGemini(
       contents,
       tools: [
         {
-          functionDeclarations: availableTools.map((item) => item.function),
+          functionDeclarations: availableTools().map((item) => item.function),
         },
       ],
     });
@@ -434,7 +433,10 @@ async function requestGemini(
         uploadedAttachments,
         availableSkills,
         cdpToolsEnabled: !!preferences.cdpToolsEnabled,
+        dangerousCodeExecutionEnabled:
+          !!preferences.dangerousCodeExecutionEnabled,
       });
+      loadDeferredToolNames(rawOutput, toolResolver.loadedToolNames);
       const visionImage = extractVisionImage(rawOutput);
       const output = attachToolSources(
         toolName,

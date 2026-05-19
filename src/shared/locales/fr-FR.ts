@@ -170,8 +170,8 @@ export const frFR: LocaleMessages = {
         done: "Élément cliqué",
       },
       cdpMouseActionByAiID: {
-        running: "Action souris CDP en cours",
-        done: "Action souris CDP effectuée",
+        running: "Interaction avec l'élément de page",
+        done: "Élément de page manipulé",
       },
       getTabContent: {
         running: "Récupération du contenu",
@@ -384,6 +384,9 @@ export const frFR: LocaleMessages = {
     cdpTools: "Outils CDP",
     cdpToolsDescription:
       "Expose les outils avancés Chrome DevTools Protocol pour l'automatisation et le débogage du navigateur. Désactivé par défaut, car Chrome demandera l'accès au débogueur.",
+    dangerousCodeExecution: "Exécution de code dangereuse",
+    dangerousCodeExecutionDescription:
+      "Autoriser l'agent à exécuter du JavaScript arbitraire dans n'importe quel onglet injectable. Danger : le code peut lire ou modifier les données de la page sans limites de sécurité côté extension.",
     autoSelectSkills: "Sélection automatique des compétences",
     autoSelectSkillsDescription:
       "Lorsqu'aucune compétence n'est sélectionnée manuellement, autorise l'IA à consulter et utiliser les compétences pertinentes au besoin.",

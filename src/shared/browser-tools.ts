@@ -1,7 +1,5 @@
 export const BROWSER_TOOL_NAME = {
-  listBrowserTools: "listBrowserTools",
-  readBrowserTool: "readBrowserTool",
-  runBrowserTool: "runBrowserTool",
+  loadBrowserTools: "loadBrowserTools",
   wait: "wait",
   getCurrentTime: "getCurrentTime",
   openNewTabWithURL: "openNewTabWithURL",
@@ -32,6 +30,7 @@ export const BROWSER_TOOL_NAME = {
   cdpResizePage: "cdpResizePage",
   cdpEmulate: "cdpEmulate",
   cdpEvaluateScript: "cdpEvaluateScript",
+  cdpExecuteArbitraryJavaScript: "cdpExecuteArbitraryJavaScript",
   cdpTakeScreenshot: "cdpTakeScreenshot",
   cdpTakeSnapshot: "cdpTakeSnapshot",
   cdpListConsoleMessages: "cdpListConsoleMessages",

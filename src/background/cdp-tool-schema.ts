@@ -2,6 +2,19 @@ import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 
 export const cdpTools = [
   tool(
+    BROWSER_TOOL_NAME.cdpMouseActionByAiID,
+    "Dispatch a CDP mouse action on an element by its AI ID when DOM click tools do not trigger the page",
+    {
+      id: stringProperty("The AI ID of the element to target"),
+      tabId: numberProperty("The tab ID containing the element"),
+      action: enumProperty(
+        ["hover", "click", "doubleClick"],
+        "The CDP mouse action to perform",
+      ),
+    },
+    ["id", "tabId"],
+  ),
+  tool(
     BROWSER_TOOL_NAME.cdpClickAt,
     "Click at viewport coordinates through CDP",
     {
@@ -158,6 +171,21 @@ export const cdpTools = [
       expression: stringProperty("Expression fallback"),
     },
     ["function"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript,
+    "DANGEROUS: Execute arbitrary JavaScript in any scriptable tab without extension-side safety limits. Only available when the dangerous code execution setting is enabled.",
+    {
+      tabId: numberProperty("The tab ID. Defaults to the active tab."),
+      code: stringProperty(
+        "Arbitrary JavaScript source to evaluate in the target tab. Return a JSON-serializable value when possible.",
+      ),
+      world: enumProperty(
+        ["MAIN", "ISOLATED"],
+        "Execution world. MAIN can affect page scripts; ISOLATED runs in the extension isolated world.",
+      ),
+    },
+    ["code"],
   ),
   tool(
     BROWSER_TOOL_NAME.cdpTakeScreenshot,

@@ -179,7 +179,7 @@ export function SidepanelView({
   onReplaceUploadedAttachment: ReplaceAttachmentHandler;
   onEditMessage: MessageAttachmentHandler;
   onResendMessage: MessageAttachmentHandler;
-  onForkMessage: (message: ChatMessage) => void;
+  onForkMessage: (message: ChatMessage, partId?: string) => void;
   onSelectElement: () => Promise<void>;
   onSelectChat: (chatId: string) => void;
 }) {

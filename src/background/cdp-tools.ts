@@ -5,6 +5,7 @@ const DEFAULT_WAIT_MS = 5000;
 const DEFAULT_KEY = "Enter";
 
 const cdpNames = new Set<string>([
+  BROWSER_TOOL_NAME.cdpMouseActionByAiID,
   BROWSER_TOOL_NAME.cdpClickAt,
   BROWSER_TOOL_NAME.cdpPressKey,
   BROWSER_TOOL_NAME.cdpTypeText,
@@ -21,6 +22,7 @@ const cdpNames = new Set<string>([
   BROWSER_TOOL_NAME.cdpResizePage,
   BROWSER_TOOL_NAME.cdpEmulate,
   BROWSER_TOOL_NAME.cdpEvaluateScript,
+  BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript,
   BROWSER_TOOL_NAME.cdpTakeScreenshot,
   BROWSER_TOOL_NAME.cdpTakeSnapshot,
   BROWSER_TOOL_NAME.cdpListConsoleMessages,
@@ -80,6 +82,8 @@ export async function executeCdpTool(
       return withCdp(args, (target) => emulate(target, args));
     case BROWSER_TOOL_NAME.cdpEvaluateScript:
       return withCdp(args, (target) => evaluateScript(target, args));
+    case BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript:
+      return executeArbitraryJavaScript(args);
     case BROWSER_TOOL_NAME.cdpTakeScreenshot:
       return withCdp(args, (target) => takeScreenshot(target, args));
     case BROWSER_TOOL_NAME.cdpTakeSnapshot:
@@ -360,6 +364,40 @@ async function evaluateScript(
     result: result.result?.value,
     exception: result.exceptionDetails?.text,
   };
+}
+
+async function executeArbitraryJavaScript(args: Record<string, unknown>) {
+  const tabId = await resolveTabId(args.tabId);
+  const code = String(args.code || "");
+  if (!code.trim()) return { success: false, error: "Missing code", tabId };
+  const world =
+    stringInput(args.world).toUpperCase() === "ISOLATED" ? "ISOLATED" : "MAIN";
+  const [result] = await chrome.scripting.executeScript({
+    target: { tabId },
+    world: world as chrome.scripting.ExecutionWorld,
+    args: [code],
+    func: async (source) => {
+      try {
+        const value = await (0, eval)(source);
+        return { success: true, value: makeSerializable(value) };
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        };
+      }
+
+      function makeSerializable(value: unknown) {
+        if (value === undefined) return { type: "undefined" };
+        try {
+          return JSON.parse(JSON.stringify(value));
+        } catch {
+          return String(value);
+        }
+      }
+    },
+  });
+  return { ...(result.result || { success: false }), tabId, world };
 }
 
 async function takeScreenshot(

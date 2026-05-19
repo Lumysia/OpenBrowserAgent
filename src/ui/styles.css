@@ -234,20 +234,14 @@
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
 }
 
-:root[data-theme="dark"] .user-message-actions {
-  opacity: 0.78;
-}
-
-:root[data-theme="dark"] .user-message-actions button,
 :root[data-theme="dark"] .copy-message {
-  background: color-mix(in srgb, var(--secondary) 76%, var(--background));
-  color: color-mix(in srgb, var(--muted-foreground) 82%, var(--foreground));
+  background: color-mix(in srgb, var(--secondary) 30%, transparent);
+  color: color-mix(in srgb, var(--muted-foreground) 88%, var(--foreground));
 }
 
-:root[data-theme="dark"] .user-message-actions button:hover,
 :root[data-theme="dark"] .copy-message:hover {
-  background: color-mix(in srgb, var(--secondary) 58%, var(--accent-soft));
-  color: var(--foreground);
+  background: color-mix(in srgb, var(--secondary) 58%, transparent);
+  color: color-mix(in srgb, var(--foreground) 78%, var(--muted-foreground));
 }
 
 :root[data-theme="dark"] .tool-card.loading {
@@ -395,20 +389,14 @@
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
   }
 
-  :root[data-theme="system"] .user-message-actions {
-    opacity: 0.78;
-  }
-
-  :root[data-theme="system"] .user-message-actions button,
   :root[data-theme="system"] .copy-message {
-    background: color-mix(in srgb, var(--secondary) 76%, var(--background));
-    color: color-mix(in srgb, var(--muted-foreground) 82%, var(--foreground));
+    background: color-mix(in srgb, var(--secondary) 30%, transparent);
+    color: color-mix(in srgb, var(--muted-foreground) 88%, var(--foreground));
   }
 
-  :root[data-theme="system"] .user-message-actions button:hover,
   :root[data-theme="system"] .copy-message:hover {
-    background: color-mix(in srgb, var(--secondary) 58%, var(--accent-soft));
-    color: var(--foreground);
+    background: color-mix(in srgb, var(--secondary) 58%, transparent);
+    color: color-mix(in srgb, var(--foreground) 78%, var(--muted-foreground));
   }
 
   :root[data-theme="system"] .tool-card.loading {
@@ -1377,6 +1365,9 @@ a {
   font-weight: 600;
   line-height: 1.25;
 }
+.settings-section-title.danger-title {
+  color: var(--destructive);
+}
 .row {
   display: flex;
   align-items: center;
@@ -2068,9 +2059,6 @@ a {
   overflow-wrap: anywhere;
   box-shadow: 0 8px 18px var(--accent-shadow);
 }
-.message.user .copy-message {
-  display: none;
-}
 .sent-context-row {
   display: flex;
   justify-content: flex-end;
@@ -2155,28 +2143,20 @@ a {
   font-weight: 500;
   opacity: 0.76;
 }
-.user-message-actions {
+.message-actions {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 5px;
+  gap: 3px;
   color: var(--muted-foreground);
   font-size: 11px;
-  opacity: 0.66;
+  opacity: 0.62;
 }
-.user-message-actions button {
-  width: 20px;
-  height: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 5px;
-  color: inherit;
+.user-message-actions {
+  justify-content: flex-end;
+  margin-top: 5px;
 }
-.user-message-actions button:hover {
-  background: rgba(22, 21, 18, 0.06);
-  color: var(--accent-strong);
+.assistant-action-buttons {
+  justify-content: flex-start;
 }
 .attachment-replace-popover {
   display: grid;
@@ -3260,18 +3240,25 @@ a {
   font-size: 9px;
 }
 .copy-message {
-  width: 25px;
-  height: 25px;
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin-top: 2px;
-  border-radius: 6px;
+  border-radius: 7px;
   background: transparent;
   color: #8b887f;
   transition:
     background-color 0.14s ease,
     color 0.14s ease;
+}
+.message-actions .copy-message {
+  margin-top: 0;
+}
+.copy-message svg {
+  width: 14px;
+  height: 14px;
 }
 .copy-message:hover {
   background: rgba(22, 21, 18, 0.06);
@@ -3286,11 +3273,6 @@ a {
   justify-content: space-between;
   gap: 8px;
   text-align: left;
-}
-.assistant-action-buttons {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
 }
 .assistant-model-meta {
   margin-left: auto;

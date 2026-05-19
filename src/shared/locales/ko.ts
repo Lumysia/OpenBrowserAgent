@@ -165,8 +165,8 @@ export const ko: LocaleMessages = {
       inputTextByAiID: { running: "텍스트 입력 중", done: "텍스트 입력됨" },
       clickElementByAiID: { running: "요소 클릭 중", done: "요소 클릭됨" },
       cdpMouseActionByAiID: {
-        running: "CDP 마우스 동작 실행 중",
-        done: "CDP 마우스 동작 실행됨",
+        running: "페이지 요소 조작 중",
+        done: "페이지 요소 조작 완료",
       },
       getTabContent: {
         running: "페이지 내용 가져오는 중",
@@ -357,6 +357,9 @@ export const ko: LocaleMessages = {
     cdpTools: "CDP 도구",
     cdpToolsDescription:
       "고급 Chrome DevTools Protocol 브라우저 자동화 및 디버깅 도구를 노출합니다. Chrome에서 디버거 접근 권한을 요청하므로 기본값은 꺼짐입니다.",
+    dangerousCodeExecution: "위험한 코드 실행",
+    dangerousCodeExecutionDescription:
+      "에이전트가 주입 가능한 모든 탭에서 임의의 JavaScript를 실행하도록 허용합니다. 위험: 코드는 페이지 데이터를 읽거나 변경할 수 있으며 확장 프로그램 측 안전 제한을 받지 않습니다.",
     autoSelectSkills: "스킬 자동 선택",
     autoSelectSkillsDescription:
       "수동으로 스킬을 선택하지 않았을 때 AI가 필요에 따라 관련 스킬을 확인하고 사용할 수 있습니다.",

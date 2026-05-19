@@ -36,7 +36,7 @@ export function MessageRunInfo({
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="copy-message">
-          <Info size={15} />
+          <Info />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="run-info-popover" align="end">

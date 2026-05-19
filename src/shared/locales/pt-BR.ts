@@ -169,8 +169,8 @@ export const ptBR: LocaleMessages = {
         done: "Elemento clicado",
       },
       cdpMouseActionByAiID: {
-        running: "Executando ação de mouse CDP",
-        done: "Ação de mouse CDP executada",
+        running: "Interagindo com o elemento da página",
+        done: "Elemento da página manipulado",
       },
       getTabContent: { running: "Obtendo conteúdo", done: "Conteúdo obtido" },
       groupTabs: { running: "Agrupando abas", done: "Abas agrupadas" },
@@ -359,6 +359,9 @@ export const ptBR: LocaleMessages = {
     cdpTools: "Ferramentas CDP",
     cdpToolsDescription:
       "Expõe ferramentas avançadas do Chrome DevTools Protocol para automação e depuração do navegador. Desativado por padrão porque o Chrome solicitará acesso de depurador.",
+    dangerousCodeExecution: "Execução perigosa de código",
+    dangerousCodeExecutionDescription:
+      "Permite que o agente execute JavaScript arbitrário em qualquer aba injetável. Perigo: o código pode ler ou alterar dados da página sem limites de segurança da extensão.",
     autoSelectSkills: "Selecionar habilidades automaticamente",
     autoSelectSkillsDescription:
       "Quando nenhuma habilidade for selecionada manualmente, permita que a IA consulte e use habilidades relevantes conforme necessário.",

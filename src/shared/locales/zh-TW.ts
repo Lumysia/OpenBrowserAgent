@@ -154,8 +154,8 @@ export const zhTW: LocaleMessages = {
       inputTextByAiID: { running: "正在輸入文字", done: "已輸入文字" },
       clickElementByAiID: { running: "正在點擊元素", done: "已點擊元素" },
       cdpMouseActionByAiID: {
-        running: "正在執行 CDP 滑鼠操作",
-        done: "已執行 CDP 滑鼠操作",
+        running: "操作頁面元素",
+        done: "已操作頁面元素",
       },
       getTabContent: { running: "正在取得網頁內容", done: "已取得網頁內容" },
       groupTabs: { running: "正在整理分頁", done: "已整理分頁" },
@@ -321,6 +321,9 @@ export const zhTW: LocaleMessages = {
     cdpTools: "CDP 工具",
     cdpToolsDescription:
       "開放進階 Chrome DevTools Protocol 瀏覽器自動化與除錯工具。預設關閉，因為 Chrome 會要求偵錯器存取權限。",
+    dangerousCodeExecution: "危險程式碼執行",
+    dangerousCodeExecutionDescription:
+      "允許智慧體在任意可注入分頁執行任意 JavaScript。危險：程式碼可以讀取或修改頁面資料，且不受擴充功能端安全限制。",
     autoSelectSkills: "自動選擇技能",
     autoSelectSkillsDescription:
       "未手動選擇技能時，允許 AI 按需查看並使用相關技能。",

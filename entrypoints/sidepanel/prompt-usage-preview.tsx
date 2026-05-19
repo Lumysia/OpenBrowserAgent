@@ -86,6 +86,8 @@ export function usePromptUsageEstimate({
           hasSkills: availableSkills.length > 0,
           imageGenerationEnabled: !!preferences?.imageGenerationEnabled,
           cdpToolsEnabled: !!preferences?.cdpToolsEnabled,
+          dangerousCodeExecutionEnabled:
+            !!preferences?.dangerousCodeExecutionEnabled,
           latestUserText: input,
         }),
       userPromptChars: input.trim().length,
@@ -221,6 +223,7 @@ function availableToolSchemaChars({
   hasSkills,
   imageGenerationEnabled,
   cdpToolsEnabled,
+  dangerousCodeExecutionEnabled,
   latestUserText,
 }: {
   mode: ChatMode;
@@ -228,6 +231,7 @@ function availableToolSchemaChars({
   hasSkills: boolean;
   imageGenerationEnabled: boolean;
   cdpToolsEnabled: boolean;
+  dangerousCodeExecutionEnabled: boolean;
   latestUserText: string;
 }) {
   return jsonLength(
@@ -237,6 +241,7 @@ function availableToolSchemaChars({
       hasSkills,
       imageGenerationEnabled,
       cdpToolsEnabled,
+      dangerousCodeExecutionEnabled,
       latestUserText,
     }),
   );

@@ -74,7 +74,7 @@ export async function postTextStream(
   post(port, { type: "chunk", chunk: { type: chunkType.end, id } });
 }
 
-function post(port: chrome.runtime.Port, message: AiStreamResponse) {
+export function post(port: chrome.runtime.Port, message: AiStreamResponse) {
   try {
     port.postMessage(message);
   } catch (error) {
