@@ -1,4 +1,7 @@
-import { RELATIVE_TIME_MINUTE_MS } from "../../src/shared/config";
+import {
+  ESTIMATED_CHARS_PER_TOKEN,
+  RELATIVE_TIME_MINUTE_MS,
+} from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import type { Chat } from "../../src/shared/types";
 
@@ -34,6 +37,14 @@ export function escapeXml(value: string) {
     .replaceAll(">", "&gt;");
 }
 
+export function xmlTag(name: string, value: string | number) {
+  return `<${name}>${escapeXml(String(value))}</${name}>`;
+}
+
+export function xmlBlock(name: string, lines: Array<string | undefined>) {
+  return [`<${name}>`, ...lines.filter(Boolean), `</${name}>`].join("\n");
+}
+
 export function formatToolMessage(
   template: string | undefined,
   values: Record<string, string | number>,
@@ -43,4 +54,29 @@ export function formatToolMessage(
     (text, [key, value]) => text.replaceAll(`{${key}}`, String(value)),
     template,
   );
+}
+
+export function formatMessageTime(value: number) {
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(value);
+}
+
+export function formatEstimatedTokens(chars: number, t: Messages) {
+  return `${formatCompactNumber(Math.ceil(chars / ESTIMATED_CHARS_PER_TOKEN))} ${t.sidepanel.runInfo.estimated} Token`;
+}
+
+export function formatCompactNumber(value: number) {
+  if (Math.abs(value) >= 1_000_000_000)
+    return `${trimCompact(value / 1_000_000_000)}B`;
+  if (Math.abs(value) >= 1_000_000) return `${trimCompact(value / 1_000_000)}M`;
+  if (Math.abs(value) >= 10_000) return `${trimCompact(value / 1_000)}K`;
+  return value.toLocaleString();
+}
+
+function trimCompact(value: number) {
+  return value
+    .toFixed(value >= 100 ? 0 : value >= 10 ? 1 : 2)
+    .replace(/\.0+$/, "");
 }

@@ -27,6 +27,7 @@ import type {
 import { CHAT_PART_STATE } from "../../src/shared/types";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { formatAttachmentSize } from "./file-attachments";
+import { formatMessageTime } from "./format";
 import { AssistantPart, AssistantText } from "./assistant-message-part";
 import { MessageRunInfo } from "./message-run-info";
 import { TypingIndicator } from "./typing-indicator";
@@ -369,11 +370,4 @@ function SentAttachmentsChip({
       </span>
     </div>
   );
-}
-
-function formatMessageTime(value: number) {
-  return new Intl.DateTimeFormat(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(value);
 }

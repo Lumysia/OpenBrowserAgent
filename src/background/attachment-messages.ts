@@ -2,6 +2,7 @@ import {
   ATTACHMENT_KIND,
   ATTACHMENT_OUTPUT_NOTE,
   ATTACHMENT_TOOL_ERROR,
+  base64FromDataUrl,
   isVisionImageMimeType,
 } from "../shared/attachments";
 import {
@@ -296,10 +297,6 @@ function clampReadLimit(value: unknown) {
   const limit = Number(value);
   if (!Number.isFinite(limit)) return READ_ATTACHMENT_DEFAULT_LIMIT;
   return Math.min(READ_ATTACHMENT_MAX_LIMIT, Math.max(1, Math.trunc(limit)));
-}
-
-function base64FromDataUrl(dataUrl: string) {
-  return dataUrl.includes(",") ? dataUrl.split(",", 2)[1] || "" : dataUrl;
 }
 
 function readBase64AsHex(base64: string, hexOffset: number, hexLimit: number) {

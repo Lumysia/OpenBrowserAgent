@@ -1,5 +1,6 @@
 import { Plus, Send, Square } from "lucide-react";
 import { useRef, type ClipboardEvent, type RefObject } from "react";
+import { TOOLTIP_DELAY_MS } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import type {
   AttachmentTab,
@@ -213,7 +214,7 @@ export function SidepanelView({
 
   if (showHistory)
     return (
-      <TooltipProvider delayDuration={250}>
+      <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
         <div className="sidepanel history-mode" ref={sidepanelRef}>
           <HistoryPanel
             t={t}
@@ -235,7 +236,7 @@ export function SidepanelView({
     );
 
   return (
-    <TooltipProvider delayDuration={250}>
+    <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
       <div className={sidepanelClass} ref={sidepanelRef}>
         <SidepanelHeader
           t={t}

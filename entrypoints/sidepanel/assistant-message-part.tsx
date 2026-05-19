@@ -9,6 +9,7 @@ import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
 import type { ChatMessage, ChatPart, ChatSource } from "../../src/shared/types";
 import { isToolPartType } from "../../src/shared/types";
 import { Button } from "../../src/ui/components";
+import { formatMessageTime } from "./format";
 import { IconTooltip } from "./icon-tooltip";
 import { renderMarkdown } from "./markdown";
 import { MessageRunInfo } from "./message-run-info";
@@ -204,11 +205,4 @@ function openCitationSource(sourceId: string, sources: ChatSource[]) {
     return;
   }
   if (source.tabId) focusTab(source.tabId).catch(() => undefined);
-}
-
-function formatMessageTime(value: number) {
-  return new Date(value).toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-  });
 }

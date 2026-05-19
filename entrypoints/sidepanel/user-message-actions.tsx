@@ -15,6 +15,7 @@ import {
 } from "../../src/ui/components";
 import { FileIcon } from "./attachment-file-icon";
 import { formatAttachmentSize } from "./file-attachments";
+import { formatMessageTime } from "./format";
 import { IconTooltip } from "./icon-tooltip";
 
 export function UserMessageActions({
@@ -159,11 +160,4 @@ export function UserMessageActions({
       </Popover>
     </div>
   );
-}
-
-function formatMessageTime(value: number) {
-  return new Intl.DateTimeFormat(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(value);
 }

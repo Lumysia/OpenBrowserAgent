@@ -9,6 +9,7 @@ import {
   Upload,
 } from "lucide-react";
 import { COPY_FEEDBACK_MS, ISO_DATE_LENGTH } from "../../src/shared/config";
+import { formatBytes } from "../../src/shared/format";
 import { getMessages } from "../../src/shared/i18n";
 import {
   normalizeSkill,
@@ -309,11 +310,6 @@ function formatDate(value?: number) {
   return new Date(value).toLocaleString();
 }
 
-function formatBytes(value: number) {
-  if (value < 1024) return `${value} B`;
-  return `${(value / 1024).toFixed(1)} KB`;
-}
-
 export function formatSkillBytes(value: number) {
-  return formatBytes(value);
+  return formatBytes(value, "kb");
 }

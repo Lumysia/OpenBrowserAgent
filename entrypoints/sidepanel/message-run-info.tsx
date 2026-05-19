@@ -1,6 +1,9 @@
 import { Info } from "lucide-react";
 import { useState } from "react";
-import { ESTIMATED_CHARS_PER_TOKEN } from "../../src/shared/config";
+import {
+  ESTIMATED_CHARS_PER_TOKEN,
+  MS_PER_SECOND,
+} from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import { PROMPT_BREAKDOWN_SEGMENT } from "../../src/shared/prompt-breakdown";
 import type {
@@ -18,6 +21,7 @@ import {
   PopoverTrigger,
   Progress,
 } from "../../src/ui/components";
+import { formatCompactNumber, formatEstimatedTokens } from "./format";
 import { IconTooltip } from "./icon-tooltip";
 
 export function MessageRunInfo({
@@ -382,10 +386,11 @@ function formatTps(metrics: RunMetrics, t: Messages) {
       .metadataGenerationMs || generationDuration(metrics);
   const outputTokens = metrics.usage?.outputTokens;
   if (!duration) return t.sidepanel.runInfo.unavailable;
-  if (outputTokens) return `${(outputTokens / (duration / 1000)).toFixed(1)}/s`;
+  if (outputTokens)
+    return `${(outputTokens / (duration / MS_PER_SECOND)).toFixed(1)}/s`;
   const estimatedTokens = estimateTokens(metrics.outputCharacters);
   if (!estimatedTokens) return t.sidepanel.runInfo.unavailable;
-  return `${(estimatedTokens / (duration / 1000)).toFixed(1)}/s ${t.sidepanel.runInfo.estimated}`;
+  return `${(estimatedTokens / (duration / MS_PER_SECOND)).toFixed(1)}/s ${t.sidepanel.runInfo.estimated}`;
 }
 
 function estimateTokens(characters: number | undefined) {
@@ -395,32 +400,14 @@ function estimateTokens(characters: number | undefined) {
 
 function formatMs(value: number | undefined, t: Messages) {
   if (value === undefined) return t.sidepanel.runInfo.unavailable;
-  return value < 1000
+  return value < MS_PER_SECOND
     ? `${Math.round(value)} ms`
-    : `${(value / 1000).toFixed(2)} s`;
-}
-
-function formatEstimatedTokens(chars: number, t: Messages) {
-  return `${formatCompactNumber(Math.ceil(chars / ESTIMATED_CHARS_PER_TOKEN))} ${t.sidepanel.runInfo.estimated} Token`;
+    : `${(value / MS_PER_SECOND).toFixed(2)} s`;
 }
 
 function formatTokenCount(value: number | undefined, t: Messages) {
   if (value === undefined) return t.sidepanel.runInfo.unavailable;
   return `${formatCompactNumber(value)} Token`;
-}
-
-function formatCompactNumber(value: number) {
-  if (Math.abs(value) >= 1_000_000_000)
-    return `${trimCompact(value / 1_000_000_000)}B`;
-  if (Math.abs(value) >= 1_000_000) return `${trimCompact(value / 1_000_000)}M`;
-  if (Math.abs(value) >= 10_000) return `${trimCompact(value / 1_000)}K`;
-  return value.toLocaleString();
-}
-
-function trimCompact(value: number) {
-  return value
-    .toFixed(value >= 100 ? 0 : value >= 10 ? 1 : 2)
-    .replace(/\.0+$/, "");
 }
 
 function formatNumber(value: number | undefined, t: Messages) {

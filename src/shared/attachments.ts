@@ -104,6 +104,10 @@ export function isVisionImageMimeType(type?: string) {
   return !!type && type.startsWith("image/") && type !== "image/svg+xml";
 }
 
+export function base64FromDataUrl(dataUrl: string) {
+  return dataUrl.includes(",") ? dataUrl.split(",", 2)[1] || "" : dataUrl;
+}
+
 export function isMetadataOnlyAttachment(kind: UploadedAttachmentKind) {
   return (
     kind === ATTACHMENT_KIND.audio ||

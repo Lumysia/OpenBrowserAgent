@@ -61,10 +61,6 @@ export function sanitizeToolOutput(output: unknown) {
   return _visionImage ? { ...rest, visionImageAttached: true } : output;
 }
 
-export function base64FromDataUrl(dataUrl: string) {
-  return dataUrl.includes(",") ? dataUrl.split(",", 2)[1] || "" : dataUrl;
-}
-
 export function getMessageSources(messages: ChatMessage[]): ChatSource[] {
   const latest = messages[messages.length - 1];
   return Array.isArray(latest?.metadata?.sources)

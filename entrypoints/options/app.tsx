@@ -9,7 +9,11 @@ import {
   Server,
   SlidersHorizontal,
 } from "lucide-react";
-import { OPTIONS_HASH, OPTIONS_ROUTE } from "../../src/shared/config";
+import {
+  OPTIONS_HASH,
+  OPTIONS_ROUTE,
+  TOOLTIP_DELAY_MS,
+} from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { ScrollArea, TooltipProvider } from "../../src/ui/components";
@@ -37,7 +41,7 @@ export function OptionsApp() {
   }, [preferences?.accentColor, preferences?.colorScheme]);
 
   return languageLoading ? null : (
-    <TooltipProvider delayDuration={250}>
+    <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
       <div className="app-shell">
         <aside className="settings-sidebar">
           <div>

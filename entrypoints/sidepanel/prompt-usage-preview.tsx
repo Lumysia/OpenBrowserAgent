@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Info } from "lucide-react";
 import { browserToolsForPrompt } from "../../src/background/tool-schema";
 import { createSystemPrompt } from "../../src/shared/system-prompt";
-import { ESTIMATED_CHARS_PER_TOKEN } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import { PROMPT_BREAKDOWN_SEGMENT } from "../../src/shared/prompt-breakdown";
 import { getSkillInstruction, isSkillEnabled } from "../../src/shared/skills";
@@ -26,6 +25,7 @@ import {
   Progress,
 } from "../../src/ui/components";
 import { buildSidepanelContext } from "./sidepanel-context";
+import { formatEstimatedTokens } from "./format";
 import { IconTooltip } from "./icon-tooltip";
 
 export type PromptUsageEstimate = PromptBreakdown;
@@ -273,22 +273,4 @@ function jsonLength(value: unknown) {
   } catch {
     return String(value).length;
   }
-}
-
-function formatEstimatedTokens(chars: number, t: Messages) {
-  return `${formatCompactNumber(Math.ceil(chars / ESTIMATED_CHARS_PER_TOKEN))} ${t.sidepanel.runInfo.estimated} Token`;
-}
-
-function formatCompactNumber(value: number) {
-  if (Math.abs(value) >= 1_000_000_000)
-    return `${trimCompact(value / 1_000_000_000)}B`;
-  if (Math.abs(value) >= 1_000_000) return `${trimCompact(value / 1_000_000)}M`;
-  if (Math.abs(value) >= 10_000) return `${trimCompact(value / 1_000)}K`;
-  return value.toLocaleString();
-}
-
-function trimCompact(value: number) {
-  return value
-    .toFixed(value >= 100 ? 0 : value >= 10 ? 1 : 2)
-    .replace(/\.0+$/, "");
 }

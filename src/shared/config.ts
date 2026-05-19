@@ -2,6 +2,7 @@ export const DEFAULT_MAX_TOOL_STEPS = 50;
 
 export const AUTO_RETRY_IDLE_MS = 30_000;
 export const AUTO_RETRY_POLL_MS = 1_000;
+export const MS_PER_SECOND = 1_000;
 export const MAX_AUTO_RETRIES = 1;
 export const BROWSER_TOOL_TIMEOUT_MS = 25_000;
 export const TAB_LOAD_WAIT_TIMEOUT_MS = 15_000;
@@ -55,12 +56,17 @@ export const MAX_UPLOAD_FILE_BYTES = 50_000_000;
 export const MAX_UPLOAD_TOTAL_BYTES = 200_000_000;
 export const READ_ATTACHMENT_DEFAULT_LIMIT = 24_000;
 export const READ_ATTACHMENT_MAX_LIMIT = 96_000;
+export const READ_FILE_MAX_LIMIT = 60_000;
+export const BINARY_STRING_CHUNK_SIZE = 0x8000;
 
 export const SELECTED_ELEMENT_HTML_MAX_CHARS = 4_000;
 export const TAB_CONTENT_MAX_CHARS = 12_000;
 
 export const COPY_FEEDBACK_MS = 1_800;
 export const QUICK_FEEDBACK_MS = 1_200;
+export const TOOLTIP_DELAY_MS = 250;
+export const BYTES_PER_KIB = 1024;
+export const BYTES_PER_MIB = BYTES_PER_KIB * BYTES_PER_KIB;
 export const ISO_DATE_LENGTH = 10;
 export const RELATIVE_TIME_MINUTE_MS = 60_000;
 export const SENT_TABS_PREVIEW_COUNT = 2;

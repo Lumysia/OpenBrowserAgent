@@ -6,6 +6,7 @@ import {
   ATTACHMENT_KIND,
   classifyAttachment,
 } from "../../src/shared/attachments";
+import { formatBytes } from "../../src/shared/format";
 import type { UploadedAttachment } from "../../src/shared/types";
 
 export type AttachmentReadResult = {
@@ -42,9 +43,7 @@ export function attachmentBytes(attachments: UploadedAttachment[]) {
 }
 
 export function formatAttachmentSize(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return formatBytes(bytes);
 }
 
 function readUploadAttachment(file: File): Promise<UploadedAttachment> {

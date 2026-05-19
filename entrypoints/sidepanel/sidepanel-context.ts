@@ -17,7 +17,7 @@ import type {
   SelectedElement,
 } from "../../src/shared/types";
 import { isAskMode } from "../../src/shared/types";
-import { escapeXml } from "./format";
+import { xmlBlock, xmlTag } from "./format";
 
 export function interpolateSkillVariables(value: string) {
   const date = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
@@ -75,12 +75,16 @@ export async function buildSidepanelContext({
     const tabBlocks = [];
     for (const tab of attachedTabs)
       tabBlocks.push(await renderAttachedTab(tab, mode));
-    parts.push(`<selected_tabs>\n${tabBlocks.join("\n")}\n</selected_tabs>`);
+    parts.push(xmlBlock("selected_tabs", tabBlocks));
   } else {
     const tab = await getActiveTab();
     if (tab?.id && isScriptableUrl(tab.url))
       parts.push(
-        `<current_tab>\n<id>${tab.id}</id>\n<title>${escapeXml(tab.title || "")}</title>\n<url>${escapeXml(tab.url || "")}</url>\n</current_tab>`,
+        xmlBlock("current_tab", [
+          xmlTag("id", tab.id),
+          xmlTag("title", tab.title || ""),
+          xmlTag("url", tab.url || ""),
+        ]),
       );
   }
   return parts.join("\n\n");
@@ -90,36 +94,41 @@ function renderSelectedElement(
   selectedElement: SelectedElement,
   attachedTabs: AttachmentTab[],
 ) {
-  return [
-    "<selected_element>",
-    selectedElement.aiId ? `<ai_id>${selectedElement.aiId}</ai_id>` : undefined,
-    `<tab_id>${attachedTabs[0]?.id || ""}</tab_id>`,
+  return xmlBlock("selected_element", [
+    selectedElement.aiId ? xmlTag("ai_id", selectedElement.aiId) : undefined,
+    xmlTag("tab_id", attachedTabs[0]?.id || ""),
     selectedElement.tagName
-      ? `<tag_name>${escapeXml(selectedElement.tagName)}</tag_name>`
+      ? xmlTag("tag_name", selectedElement.tagName)
       : undefined,
     selectedElement.innerText
-      ? `<inner_text>${escapeXml(selectedElement.innerText)}</inner_text>`
+      ? xmlTag("inner_text", selectedElement.innerText)
       : undefined,
-    `<value>${escapeXml(selectedElement.value || "")}</value>`,
+    xmlTag("value", selectedElement.value || ""),
     selectedElement.imageSrc
-      ? `<image_src>${escapeXml(selectedElement.imageSrc)}</image_src>`
+      ? xmlTag("image_src", selectedElement.imageSrc)
       : undefined,
     selectedElement.imageAlt
-      ? `<image_alt>${escapeXml(selectedElement.imageAlt)}</image_alt>`
+      ? xmlTag("image_alt", selectedElement.imageAlt)
       : undefined,
     selectedElement.imageWidth || selectedElement.imageHeight
-      ? `<image_size>${selectedElement.imageWidth || ""}x${selectedElement.imageHeight || ""}</image_size>`
+      ? xmlTag(
+          "image_size",
+          `${selectedElement.imageWidth || ""}x${selectedElement.imageHeight || ""}`,
+        )
       : undefined,
     selectedElement.imageDataUrl
-      ? `<image_attachment>Selected image pixels are available as an image attachment in available_attachments.</image_attachment>`
+      ? xmlTag(
+          "image_attachment",
+          "Selected image pixels are available as an image attachment in available_attachments.",
+        )
       : undefined,
     selectedElement.outerHTML
-      ? `<outer_html>${escapeXml(selectedElement.outerHTML.slice(0, SELECTED_ELEMENT_HTML_MAX_CHARS))}</outer_html>`
+      ? xmlTag(
+          "outer_html",
+          selectedElement.outerHTML.slice(0, SELECTED_ELEMENT_HTML_MAX_CHARS),
+        )
       : undefined,
-    "</selected_element>",
-  ]
-    .filter(Boolean)
-    .join("\n");
+  ]);
 }
 
 async function renderAttachedTab(tab: AttachmentTab, mode: ChatMode) {
@@ -133,11 +142,9 @@ async function renderAttachedTab(tab: AttachmentTab, mode: ChatMode) {
 
 function renderTabBlock(tab: AttachmentTab, text: string) {
   return [
-    "<tab>",
-    `<tab_id>${tab.id}</tab_id>`,
-    "</tab>",
-    `<title>${escapeXml(tab.title || "")}</title>`,
-    `<url>${escapeXml(tab.url || "")}</url>`,
-    `<content>${escapeXml(text ? text.slice(0, TAB_CONTENT_MAX_CHARS) : "")}</content>`,
+    xmlBlock("tab", [xmlTag("tab_id", tab.id)]),
+    xmlTag("title", tab.title || ""),
+    xmlTag("url", tab.url || ""),
+    xmlTag("content", text ? text.slice(0, TAB_CONTENT_MAX_CHARS) : ""),
   ].join("\n");
 }

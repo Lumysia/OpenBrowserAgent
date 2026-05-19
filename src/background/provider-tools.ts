@@ -1,6 +1,10 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 import { isVisionImageMimeType } from "../shared/attachments";
-import { READ_ATTACHMENT_DEFAULT_LIMIT } from "../shared/config";
+import {
+  BINARY_STRING_CHUNK_SIZE,
+  READ_ATTACHMENT_DEFAULT_LIMIT,
+  READ_FILE_MAX_LIMIT,
+} from "../shared/config";
 import {
   SKILL_ENTRY_PATH,
   parseSkillFrontmatter,
@@ -212,13 +216,21 @@ function toolCatalogItem(
 }
 
 function toolCategory(name: string) {
-  const lower = name.toLowerCase();
-  if (lower.startsWith("cdp")) return "cdp";
-  if (lower.includes("skill")) return "skills";
-  if (lower.includes("image")) return "image";
-  if (lower.includes("file") || lower.includes("attachment")) return "files";
+  if (name in TOOL_CATEGORY_BY_NAME)
+    return TOOL_CATEGORY_BY_NAME[name as keyof typeof TOOL_CATEGORY_BY_NAME];
+  if (name.startsWith("cdp")) return "cdp";
   return "common";
 }
+
+const TOOL_CATEGORY_BY_NAME = {
+  [BROWSER_TOOL_NAME.readUploadedAttachment]: "files",
+  [BROWSER_TOOL_NAME.readFileFromUrl]: "files",
+  [BROWSER_TOOL_NAME.generateImage]: "image",
+  [BROWSER_TOOL_NAME.listSkills]: "skills",
+  [BROWSER_TOOL_NAME.readSkill]: "skills",
+  [BROWSER_TOOL_NAME.readSkillFile]: "skills",
+  [BROWSER_TOOL_NAME.updateSkillFile]: "skills",
+} as const;
 
 async function readFileFromUrl(input: Record<string, unknown>) {
   const url = String(input.url || "").trim();
@@ -369,13 +381,13 @@ function clampOffset(value: unknown) {
 function clampLimit(value: unknown) {
   const limit = Number(value);
   if (!Number.isFinite(limit)) return READ_ATTACHMENT_DEFAULT_LIMIT;
-  return Math.min(60000, Math.max(1, Math.trunc(limit)));
+  return Math.min(READ_FILE_MAX_LIMIT, Math.max(1, Math.trunc(limit)));
 }
 
 function bytesToBase64(bytes: Uint8Array) {
   let binary = "";
-  for (let index = 0; index < bytes.length; index += 0x8000) {
-    const chunk = bytes.subarray(index, index + 0x8000);
+  for (let index = 0; index < bytes.length; index += BINARY_STRING_CHUNK_SIZE) {
+    const chunk = bytes.subarray(index, index + BINARY_STRING_CHUNK_SIZE);
     binary += String.fromCharCode(...chunk);
   }
   return btoa(binary);

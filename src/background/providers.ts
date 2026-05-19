@@ -1,4 +1,5 @@
 import { UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
+import { base64FromDataUrl } from "../shared/attachments";
 import { storage } from "../shared/storage";
 import { MODEL_TEMPERATURE } from "../shared/config";
 import {
@@ -23,7 +24,6 @@ import { readOpenAIStream } from "./openai-stream";
 import {
   attachToolSources,
   addTokenUsage,
-  base64FromDataUrl,
   extractVisionImage,
   geminiText,
   getMessageSources,

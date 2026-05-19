@@ -2,6 +2,7 @@ import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 
 const CDP_VERSION = "1.3";
 const DEFAULT_WAIT_MS = 5000;
+const WAIT_FOR_TEXT_POLL_MS = 250;
 const DEFAULT_KEY = "Enter";
 
 const cdpNames = new Set<string>([
@@ -177,7 +178,7 @@ async function waitFor(args: Record<string, unknown>) {
     });
     if (result.result)
       return { success: true, tabId, text: texts.find(Boolean) };
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    await new Promise((resolve) => setTimeout(resolve, WAIT_FOR_TEXT_POLL_MS));
   }
   return { success: false, error: "Timed out waiting for text", tabId };
 }
