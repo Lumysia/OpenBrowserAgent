@@ -1,0 +1,437 @@
+﻿:root {
+  color-scheme: light;
+  --background: #fbfaf7;
+  --foreground: #161512;
+  --card: #ffffff;
+  --card-foreground: #161512;
+  --popover: #ffffff;
+  --popover-foreground: #161512;
+  --primary: var(--accent-strong);
+  --primary-foreground: #ffffff;
+  --secondary: #f1f0ea;
+  --secondary-foreground: #25231f;
+  --muted: #f4f3ee;
+  --muted-foreground: #706d65;
+  --accent: var(--accent-soft);
+  --accent-foreground: var(--accent-strong);
+  --destructive: #b3261e;
+  --destructive-foreground: #ffffff;
+  --border: #e2e0d8;
+  --input: #e2e0d8;
+  --ring: rgba(49, 58, 139, 0.28);
+  --accent-strong: #a35b76;
+  --accent-solid: #b96d8b;
+  --accent-soft: #f7e2ea;
+  --accent-softer: #fbf0f4;
+  --accent-hover: #f3d8e3;
+  --accent-active: #edccd9;
+  --accent-list: #f2d7e2;
+  --accent-shadow: rgba(163, 91, 118, 0.18);
+  --accent-focus: rgba(163, 91, 118, 0.42);
+  --settings-tint: color-mix(
+    in srgb,
+    var(--accent-softer) 58%,
+    var(--background)
+  );
+  --settings-sidebar-tint: color-mix(
+    in srgb,
+    var(--accent-softer) 34%,
+    var(--card)
+  );
+  --panel-gradient-top: color-mix(
+    in srgb,
+    var(--accent-softer) 16%,
+    var(--background)
+  );
+  --panel-gradient-mid: color-mix(
+    in srgb,
+    var(--accent-softer) 10%,
+    var(--background)
+  );
+  --panel-gradient-bottom: color-mix(
+    in srgb,
+    var(--accent-soft) 28%,
+    var(--background)
+  );
+  --radius: 12px;
+  --shadow: rgba(22, 21, 18, 0.07);
+  --compact-panel-width: 420px;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+:root[data-accent="blue"] {
+  --accent-strong: #3b6f91;
+  --accent-solid: #4f86a8;
+  --accent-soft: #dceef6;
+  --accent-softer: #edf7fb;
+  --accent-hover: #d3e9f3;
+  --accent-active: #c7e2ee;
+  --accent-list: #d2e8f2;
+  --accent-shadow: rgba(59, 111, 145, 0.18);
+  --accent-focus: rgba(59, 111, 145, 0.42);
+}
+:root[data-accent="green"] {
+  --accent-strong: #6f7f24;
+  --accent-solid: #86992c;
+  --accent-soft: #e9efc8;
+  --accent-softer: #f5f8e6;
+  --accent-hover: #dfe8b6;
+  --accent-active: #d3dfa0;
+  --accent-list: #dde7b4;
+  --accent-shadow: rgba(111, 127, 36, 0.18);
+  --accent-focus: rgba(111, 127, 36, 0.42);
+}
+:root[data-accent="pink"] {
+  --accent-strong: #a35b76;
+  --accent-solid: #b96d8b;
+  --accent-soft: #f7e2ea;
+  --accent-softer: #fbf0f4;
+  --accent-hover: #f3d8e3;
+  --accent-active: #edccd9;
+  --accent-list: #f2d7e2;
+  --accent-shadow: rgba(163, 91, 118, 0.18);
+  --accent-focus: rgba(163, 91, 118, 0.42);
+}
+:root[data-accent="purple"] {
+  --accent-strong: #7565a6;
+  --accent-solid: #8877ba;
+  --accent-soft: #e9e3f7;
+  --accent-softer: #f4f0fb;
+  --accent-hover: #e1d8f2;
+  --accent-active: #d8cdec;
+  --accent-list: #e0d7f1;
+  --accent-shadow: rgba(117, 101, 166, 0.18);
+  --accent-focus: rgba(117, 101, 166, 0.42);
+}
+:root[data-accent="amber"] {
+  --accent-strong: #9a7028;
+  --accent-solid: #ad8336;
+  --accent-soft: #f6e9c8;
+  --accent-softer: #fbf5e8;
+  --accent-hover: #f0dfb7;
+  --accent-active: #e8d3a3;
+  --accent-list: #efddb6;
+  --accent-shadow: rgba(154, 112, 40, 0.18);
+  --accent-focus: rgba(154, 112, 40, 0.42);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #171612;
+  --foreground: #eee9df;
+  --card: #211f1a;
+  --card-foreground: #eee9df;
+  --popover: #24221d;
+  --popover-foreground: #eee9df;
+  --secondary: #2b2923;
+  --secondary-foreground: #eee9df;
+  --muted: #25231e;
+  --muted-foreground: #aaa397;
+  --border: #39362d;
+  --input: #403c32;
+  --shadow: rgba(0, 0, 0, 0.28);
+  --settings-tint: color-mix(
+    in srgb,
+    var(--accent-softer) 38%,
+    var(--background)
+  );
+  --settings-sidebar-tint: color-mix(
+    in srgb,
+    var(--accent-softer) 22%,
+    var(--card)
+  );
+  --panel-gradient-top: var(--background);
+  --panel-gradient-mid: color-mix(
+    in srgb,
+    var(--accent-softer) 28%,
+    var(--background)
+  );
+  --panel-gradient-bottom: color-mix(
+    in srgb,
+    var(--accent-softer) 58%,
+    var(--background)
+  );
+}
+
+:root[data-theme="dark"][data-accent="green"] {
+  --accent-strong: #b7c568;
+  --accent-solid: #9ead4b;
+  --accent-soft: #3b4125;
+  --accent-softer: #222719;
+  --accent-hover: #31381f;
+  --accent-active: #465026;
+  --accent-list: #343b22;
+  --accent-shadow: rgba(183, 197, 104, 0.18);
+  --accent-focus: rgba(183, 197, 104, 0.34);
+}
+:root[data-theme="dark"][data-accent="blue"] {
+  --accent-strong: #91bdd6;
+  --accent-solid: #6fa4c3;
+  --accent-soft: #263b47;
+  --accent-softer: #18242b;
+  --accent-hover: #21343f;
+  --accent-active: #2c4654;
+  --accent-list: #223743;
+  --accent-shadow: rgba(145, 189, 214, 0.18);
+  --accent-focus: rgba(145, 189, 214, 0.34);
+}
+:root[data-theme="dark"][data-accent="pink"] {
+  --accent-strong: #dda1b7;
+  --accent-solid: #c6819b;
+  --accent-soft: #4a2b36;
+  --accent-softer: #2c1b22;
+  --accent-hover: #3d2630;
+  --accent-active: #55313e;
+  --accent-list: #412833;
+  --accent-shadow: rgba(221, 161, 183, 0.18);
+  --accent-focus: rgba(221, 161, 183, 0.34);
+}
+:root[data-theme="dark"][data-accent="purple"] {
+  --accent-strong: #b9afe0;
+  --accent-solid: #9e91ce;
+  --accent-soft: #39314d;
+  --accent-softer: #221e2d;
+  --accent-hover: #302943;
+  --accent-active: #42375a;
+  --accent-list: #332c45;
+  --accent-shadow: rgba(185, 175, 224, 0.18);
+  --accent-focus: rgba(185, 175, 224, 0.34);
+}
+:root[data-theme="dark"][data-accent="amber"] {
+  --accent-strong: #e1b96e;
+  --accent-solid: #c99a48;
+  --accent-soft: #4a3a20;
+  --accent-softer: #2c2418;
+  --accent-hover: #3e311d;
+  --accent-active: #5a4424;
+  --accent-list: #43351f;
+  --accent-shadow: rgba(225, 185, 110, 0.18);
+  --accent-focus: rgba(225, 185, 110, 0.34);
+}
+
+:root[data-theme="dark"] .composer {
+  background: linear-gradient(180deg, transparent, var(--background) 18%);
+}
+
+:root[data-theme="dark"] .skill-create {
+  background: color-mix(in srgb, var(--accent-soft) 68%, var(--background));
+}
+
+:root[data-theme="dark"] .context-card {
+  background: color-mix(in srgb, var(--secondary) 62%, var(--background));
+}
+
+:root[data-theme="dark"] .user-bubble {
+  background: color-mix(in srgb, var(--accent-solid) 54%, var(--card));
+  color: color-mix(in srgb, var(--foreground) 94%, white);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+:root[data-theme="dark"] .copy-message {
+  background: color-mix(in srgb, var(--secondary) 30%, transparent);
+  color: color-mix(in srgb, var(--muted-foreground) 88%, var(--foreground));
+}
+
+:root[data-theme="dark"] .copy-message:hover {
+  background: color-mix(in srgb, var(--secondary) 58%, transparent);
+  color: color-mix(in srgb, var(--foreground) 78%, var(--muted-foreground));
+}
+
+:root[data-theme="dark"] .tool-card.loading {
+  background: transparent;
+}
+
+:root[data-theme="dark"] .tool-title,
+:root[data-theme="dark"] .tool-title strong {
+  color: color-mix(in srgb, var(--foreground) 76%, var(--muted-foreground));
+}
+
+:root[data-theme="dark"] .tool-icon {
+  color: color-mix(in srgb, var(--accent-strong) 72%, var(--muted-foreground));
+}
+
+:root[data-theme="dark"] .settings-main {
+  background:
+    radial-gradient(
+      circle at 20% 0,
+      color-mix(in srgb, var(--accent-softer) 62%, transparent),
+      transparent 32rem
+    ),
+    linear-gradient(180deg, var(--settings-tint), var(--background));
+}
+
+:root[data-theme="dark"] .ui-select-item[data-highlighted] {
+  background: color-mix(in srgb, var(--accent-hover) 72%, var(--background));
+  color: color-mix(in srgb, var(--accent-strong) 88%, var(--foreground));
+}
+
+:root[data-theme="dark"] .ui-select-item[data-state="checked"] {
+  color: color-mix(in srgb, var(--accent-strong) 88%, var(--foreground));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    color-scheme: dark;
+    --background: #171612;
+    --foreground: #eee9df;
+    --card: #211f1a;
+    --card-foreground: #eee9df;
+    --popover: #24221d;
+    --popover-foreground: #eee9df;
+    --secondary: #2b2923;
+    --secondary-foreground: #eee9df;
+    --muted: #25231e;
+    --muted-foreground: #aaa397;
+    --border: #39362d;
+    --input: #403c32;
+    --shadow: rgba(0, 0, 0, 0.28);
+    --settings-tint: color-mix(
+      in srgb,
+      var(--accent-softer) 38%,
+      var(--background)
+    );
+    --settings-sidebar-tint: color-mix(
+      in srgb,
+      var(--accent-softer) 22%,
+      var(--card)
+    );
+    --panel-gradient-top: var(--background);
+    --panel-gradient-mid: color-mix(
+      in srgb,
+      var(--accent-softer) 28%,
+      var(--background)
+    );
+    --panel-gradient-bottom: color-mix(
+      in srgb,
+      var(--accent-softer) 58%,
+      var(--background)
+    );
+  }
+
+  :root[data-theme="system"][data-accent="green"] {
+    --accent-strong: #b7c568;
+    --accent-solid: #9ead4b;
+    --accent-soft: #3b4125;
+    --accent-softer: #222719;
+    --accent-hover: #31381f;
+    --accent-active: #465026;
+    --accent-list: #343b22;
+    --accent-shadow: rgba(183, 197, 104, 0.18);
+    --accent-focus: rgba(183, 197, 104, 0.34);
+  }
+  :root[data-theme="system"][data-accent="blue"] {
+    --accent-strong: #91bdd6;
+    --accent-solid: #6fa4c3;
+    --accent-soft: #263b47;
+    --accent-softer: #18242b;
+    --accent-hover: #21343f;
+    --accent-active: #2c4654;
+    --accent-list: #223743;
+    --accent-shadow: rgba(145, 189, 214, 0.18);
+    --accent-focus: rgba(145, 189, 214, 0.34);
+  }
+  :root[data-theme="system"][data-accent="pink"] {
+    --accent-strong: #dda1b7;
+    --accent-solid: #c6819b;
+    --accent-soft: #4a2b36;
+    --accent-softer: #2c1b22;
+    --accent-hover: #3d2630;
+    --accent-active: #55313e;
+    --accent-list: #412833;
+    --accent-shadow: rgba(221, 161, 183, 0.18);
+    --accent-focus: rgba(221, 161, 183, 0.34);
+  }
+  :root[data-theme="system"][data-accent="purple"] {
+    --accent-strong: #b9afe0;
+    --accent-solid: #9e91ce;
+    --accent-soft: #39314d;
+    --accent-softer: #221e2d;
+    --accent-hover: #302943;
+    --accent-active: #42375a;
+    --accent-list: #332c45;
+    --accent-shadow: rgba(185, 175, 224, 0.18);
+    --accent-focus: rgba(185, 175, 224, 0.34);
+  }
+  :root[data-theme="system"][data-accent="amber"] {
+    --accent-strong: #e1b96e;
+    --accent-solid: #c99a48;
+    --accent-soft: #4a3a20;
+    --accent-softer: #2c2418;
+    --accent-hover: #3e311d;
+    --accent-active: #5a4424;
+    --accent-list: #43351f;
+    --accent-shadow: rgba(225, 185, 110, 0.18);
+    --accent-focus: rgba(225, 185, 110, 0.34);
+  }
+
+  :root[data-theme="system"] .composer {
+    background: linear-gradient(180deg, transparent, var(--background) 18%);
+  }
+
+  :root[data-theme="system"] .skill-create {
+    background: color-mix(in srgb, var(--accent-soft) 68%, var(--background));
+  }
+
+  :root[data-theme="system"] .context-card {
+    background: color-mix(in srgb, var(--secondary) 62%, var(--background));
+  }
+
+  :root[data-theme="system"] .user-bubble {
+    background: color-mix(in srgb, var(--accent-solid) 54%, var(--card));
+    color: color-mix(in srgb, var(--foreground) 94%, white);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+  }
+
+  :root[data-theme="system"] .copy-message {
+    background: color-mix(in srgb, var(--secondary) 30%, transparent);
+    color: color-mix(in srgb, var(--muted-foreground) 88%, var(--foreground));
+  }
+
+  :root[data-theme="system"] .copy-message:hover {
+    background: color-mix(in srgb, var(--secondary) 58%, transparent);
+    color: color-mix(in srgb, var(--foreground) 78%, var(--muted-foreground));
+  }
+
+  :root[data-theme="system"] .tool-card.loading {
+    background: transparent;
+  }
+
+  :root[data-theme="system"] .tool-title,
+  :root[data-theme="system"] .tool-title strong {
+    color: color-mix(in srgb, var(--foreground) 76%, var(--muted-foreground));
+  }
+
+  :root[data-theme="system"] .tool-icon {
+    color: color-mix(
+      in srgb,
+      var(--accent-strong) 72%,
+      var(--muted-foreground)
+    );
+  }
+
+  :root[data-theme="system"] .settings-main {
+    background:
+      radial-gradient(
+        circle at 20% 0,
+        color-mix(in srgb, var(--accent-softer) 62%, transparent),
+        transparent 32rem
+      ),
+      linear-gradient(180deg, var(--settings-tint), var(--background));
+  }
+
+  :root[data-theme="system"] .ui-select-item[data-highlighted] {
+    background: color-mix(in srgb, var(--accent-hover) 72%, var(--background));
+    color: color-mix(in srgb, var(--accent-strong) 88%, var(--foreground));
+  }
+
+  :root[data-theme="system"] .ui-select-item[data-state="checked"] {
+    color: color-mix(in srgb, var(--accent-strong) 88%, var(--foreground));
+  }
+}

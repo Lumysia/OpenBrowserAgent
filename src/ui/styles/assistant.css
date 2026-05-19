@@ -1,0 +1,373 @@
+﻿.assistant-text {
+  min-width: 0;
+  max-width: 100%;
+  display: grid;
+  gap: 2px;
+  animation: assistant-text-enter 0.46s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.assistant-text.streaming .markdown > *:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin-left: 2px;
+  border-radius: 999px;
+  background: var(--accent-strong);
+  vertical-align: -0.12em;
+  animation: stream-caret 1s ease-in-out infinite;
+}
+.assistant-text.streaming .markdown > *:last-child {
+  animation: stream-active-block 0.2s ease both;
+}
+.assistant-link-cards {
+  display: grid;
+  gap: 8px;
+  margin: 2px 0 8px;
+}
+.assistant-link-card {
+  min-width: 0;
+  width: min(100%, 440px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 58%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card) 88%, var(--accent-softer));
+  color: var(--foreground);
+  text-align: left;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow) 64%, transparent);
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.assistant-link-card:hover {
+  border-color: color-mix(in srgb, var(--accent-strong) 28%, var(--border));
+  background: color-mix(in srgb, var(--accent-softer) 52%, var(--card));
+  box-shadow: 0 10px 24px
+    color-mix(in srgb, var(--accent-shadow) 36%, var(--shadow));
+  transform: translateY(-1px);
+}
+.assistant-link-card-icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent-soft) 68%, var(--card));
+  color: var(--accent-strong);
+  overflow: hidden;
+}
+.assistant-link-card-icon img {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+.assistant-link-card-text {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.assistant-link-card-text strong,
+.assistant-link-card-text small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.assistant-link-card-text strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+.assistant-link-card-text small {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.stream-char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.22em);
+  animation: stream-char-in 0.34s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(min(var(--char-index), 24) * 13ms);
+}
+.citation-chip {
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-soft) 72%, var(--card));
+  color: var(--accent-strong);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 transparent;
+  transition:
+    background-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+  vertical-align: 0.12em;
+}
+.citation-chip:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 3px 10px var(--accent-shadow);
+  transform: translateY(-1px) scale(1.04);
+}
+.citation-chip:active {
+  background: var(--accent-active);
+  box-shadow: none;
+  transform: scale(0.94);
+}
+.citation-chip:focus-visible {
+  outline: 2px solid var(--accent-focus);
+  outline-offset: 2px;
+}
+.run-info-popover {
+  width: min(320px, calc(100vw - 28px));
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+.run-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+.run-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.run-info-tabs {
+  display: inline-flex;
+  justify-content: flex-start;
+  gap: 4px;
+}
+.run-info-tabs .ui-button {
+  height: 28px;
+}
+.run-info-tabs .ui-button-secondary {
+  background: color-mix(in srgb, var(--accent-soft) 72%, var(--card));
+  color: var(--accent-strong);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--accent-soft) 68%, transparent);
+}
+.run-info-tabs .ui-button-secondary:hover {
+  background: var(--accent-hover);
+  color: var(--accent-strong);
+}
+.run-info-header strong {
+  font-size: 13px;
+}
+.run-info-section {
+  display: grid;
+  gap: 7px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.run-info-section-title {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.run-info-row {
+  min-width: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.run-info-row strong {
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 720;
+  text-align: right;
+}
+.run-info-token-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  padding: 8px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent-softer) 26%, transparent);
+}
+.run-info-prompt {
+  display: grid;
+  gap: 7px;
+}
+.run-info-prompt-system {
+  background: var(--accent-strong);
+}
+.run-info-prompt-user {
+  background: color-mix(in srgb, var(--foreground) 72%, var(--accent-strong));
+}
+.run-info-prompt-conversation {
+  background: color-mix(
+    in srgb,
+    var(--accent-strong) 56%,
+    var(--muted-foreground)
+  );
+}
+.run-info-prompt-tabs {
+  background: color-mix(in srgb, var(--accent-soft) 75%, var(--foreground));
+}
+.run-info-prompt-element {
+  background: color-mix(in srgb, var(--accent-strong) 42%, var(--foreground));
+}
+.run-info-prompt-skills {
+  background: color-mix(in srgb, var(--accent-strong) 72%, var(--card));
+}
+.run-info-prompt-attachments {
+  background: color-mix(
+    in srgb,
+    var(--muted-foreground) 60%,
+    var(--accent-soft)
+  );
+}
+.run-info-prompt-tools {
+  background: color-mix(
+    in srgb,
+    var(--foreground) 60%,
+    var(--muted-foreground)
+  );
+}
+.run-info-prompt-sources {
+  background: color-mix(in srgb, var(--accent-hover) 72%, var(--foreground));
+}
+.run-info-prompt-other {
+  background: color-mix(in srgb, var(--muted-foreground) 42%, transparent);
+}
+.run-info-prompt-legend {
+  display: grid;
+  gap: 5px;
+}
+.source-chip-list {
+  max-width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+  margin-bottom: 9px;
+}
+.source-chip-list .ui-button {
+  min-width: 0;
+  max-width: min(252px, 100%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: auto;
+  min-height: 28px;
+  padding: 4px 8px 4px 5px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  overflow: hidden;
+}
+.source-chip-list .ui-badge {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  font-size: 9px;
+}
+.source-chip-list .ui-button > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.copy-message {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  border-radius: 7px;
+  background: transparent;
+  color: #8b887f;
+  transition:
+    background-color 0.14s ease,
+    color 0.14s ease;
+}
+.message-actions .copy-message {
+  margin-top: 0;
+}
+.copy-message svg {
+  width: 14px;
+  height: 14px;
+}
+.copy-message:hover {
+  background: rgba(22, 21, 18, 0.06);
+  color: var(--accent-strong);
+}
+.copy-message.copied {
+  color: var(--accent-strong);
+}
+.assistant-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: -4px;
+  margin-bottom: 8px;
+  text-align: left;
+}
+.assistant-actions:has(.assistant-model-meta) {
+  margin-top: 4px;
+}
+.source-chip-list + .assistant-actions {
+  margin-top: 6px;
+}
+.assistant-model-meta {
+  margin-left: auto;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0.62;
+}
+@keyframes assistant-text-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes stream-active-block {
+  from {
+    opacity: 0.82;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes stream-char-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes stream-caret {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: translateY(1px) scaleY(0.8);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translateY(0) scaleY(1);
+  }
+}

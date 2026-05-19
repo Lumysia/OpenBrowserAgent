@@ -1,0 +1,35 @@
+﻿.provider-add-section {
+  display: grid;
+  gap: 18px;
+  padding-top: 18px;
+}
+.provider-section-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent-soft) 55%, var(--border)),
+    transparent
+  );
+}
+.sync-status-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sync-status-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #62c584;
+  box-shadow: 0 0 0 4px rgba(98, 197, 132, 0.12);
+}
+.sync-status-dot.pending {
+  background: #e5a94f;
+  box-shadow: 0 0 0 4px rgba(229, 169, 79, 0.14);
+}
+.sync-status-dot.error {
+  background: #e46b6b;
+  box-shadow: 0 0 0 4px rgba(228, 107, 107, 0.14);
+}

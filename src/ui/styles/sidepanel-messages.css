@@ -1,0 +1,393 @@
+﻿.messages {
+  min-height: 0;
+  min-width: 0;
+}
+.messages .ui-scroll-area-viewport {
+  overflow-x: hidden !important;
+  overflow-anchor: none;
+  padding: 18px 18px 28px;
+}
+.messages .ui-scroll-area-viewport > div {
+  display: flex !important;
+  flex-direction: column;
+  gap: 22px;
+}
+.messages::-webkit-scrollbar {
+  display: none;
+}
+.message {
+  position: relative;
+  min-width: 0;
+  max-width: 94%;
+  color: var(--foreground);
+  line-height: 1.75;
+  font-size: 16px;
+  animation: fade-in 0.34s ease both;
+}
+.message.user {
+  align-self: flex-end;
+  max-width: 78%;
+  display: grid;
+  justify-items: end;
+}
+.message.user.editing {
+  opacity: 0.58;
+}
+.message.user.editing .user-bubble {
+  background: color-mix(in srgb, var(--muted-foreground) 42%, var(--secondary));
+  color: var(--foreground);
+  box-shadow: none;
+}
+.user-bubble {
+  max-width: 100%;
+  padding: 10px 14px;
+  border-radius: 13px;
+  background: var(--accent-strong);
+  color: white;
+  font-weight: 500;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  box-shadow: 0 8px 18px var(--accent-shadow);
+}
+.sent-context-row {
+  display: flex;
+  justify-content: flex-end;
+  max-width: min(220px, 72vw);
+  margin-top: 6px;
+  overflow-x: hidden;
+}
+.sent-context-row::-webkit-scrollbar {
+  display: none;
+}
+.sent-tabs-chip,
+.sent-tab-chip {
+  width: min(168px, 68vw);
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px;
+  border-radius: 8px;
+  background: var(--secondary);
+  color: var(--muted-foreground);
+  box-shadow: inset 0 0 0 1px var(--border);
+  text-align: left;
+}
+.sent-tabs-icons {
+  position: relative;
+  width: 28px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+}
+.sent-tabs-icons img,
+.sent-tabs-icons svg,
+.sent-tab-chip > svg {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: white;
+  box-shadow: 0 0 0 1px rgba(22, 21, 18, 0.06);
+}
+.sent-tabs-icons img + img,
+.sent-tabs-icons svg + img,
+.sent-tabs-icons img + svg,
+.sent-tabs-icons svg + svg {
+  margin-left: -11px;
+}
+.sent-tabs-chip span,
+.sent-tab-chip span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.sent-tabs-chip strong,
+.sent-tabs-chip small,
+.sent-tab-chip strong,
+.sent-tab-chip small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sent-tabs-chip strong,
+.sent-tab-chip strong {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 750;
+}
+.sent-tabs-chip strong em {
+  flex: 0 0 auto;
+  color: var(--muted-foreground);
+  font-style: normal;
+  font-weight: 500;
+  opacity: 0.76;
+}
+.sent-tabs-chip small {
+  color: var(--muted-foreground);
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.76;
+}
+.message-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  opacity: 0.62;
+}
+.message.assistant:has(.assistant-actions)
+  + .message.assistant:has(.tool-card) {
+  margin-top: -12px;
+}
+.user-message-actions {
+  justify-content: flex-end;
+  margin-top: 5px;
+}
+.assistant-action-buttons {
+  justify-content: flex-start;
+}
+.attachment-replace-popover {
+  display: grid;
+  gap: 10px;
+  width: min(340px, calc(100vw - 24px));
+  padding: 12px;
+}
+.attachment-replace-popover > strong {
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1.15;
+}
+.attachment-replace-popover > small {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: -5px;
+}
+.attachment-replace-row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 8px 8px 9px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 45%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card) 82%, var(--accent-softer));
+  color: var(--foreground);
+  font-size: 12px;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 48%, transparent);
+}
+.attachment-replace-row > svg {
+  width: 30px;
+  height: 30px;
+  padding: 6px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent-soft) 58%, var(--card));
+  color: var(--accent-strong);
+}
+.attachment-replace-row span {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+.attachment-replace-row span strong,
+.attachment-replace-row span small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.attachment-replace-row span strong {
+  font-size: 12px;
+  font-weight: 700;
+}
+.attachment-replace-row span small {
+  color: var(--muted-foreground);
+  font-size: 10px;
+  font-weight: 550;
+  opacity: 0.8;
+}
+.attachment-replace-row label {
+  height: 28px;
+  padding: 0 9px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 16%, var(--border));
+  background: color-mix(in srgb, var(--accent-soft) 42%, var(--card));
+  color: var(--accent-strong);
+  cursor: pointer;
+}
+.attachment-replace-popover > .ui-button {
+  height: 34px;
+  margin-top: 1px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 48%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--secondary) 72%, var(--card));
+  color: var(--muted-foreground);
+}
+.attachment-replace-row input {
+  display: none;
+}
+.composer {
+  position: sticky;
+  bottom: 0;
+  border-top: 1px solid var(--border);
+  padding: 10px 10px 12px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--background) 76%, transparent),
+    var(--card) 34%
+  );
+  display: grid;
+  gap: 10px;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.skill-create-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -34px;
+  margin-bottom: 8px;
+  pointer-events: none;
+}
+.skill-create {
+  pointer-events: auto;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--accent-softer);
+  color: var(--accent-strong);
+  font-size: 16px;
+  box-shadow: none;
+}
+.skill-create:hover {
+  background: var(--accent-hover);
+}
+.context-strip {
+  display: grid;
+  gap: 6px;
+  overflow: hidden;
+}
+.context-chip-row {
+  display: flex;
+  gap: 8px;
+  padding: 0;
+  border-radius: 10px;
+  background: transparent;
+}
+.context-chip-scroll {
+  width: 100%;
+  min-width: 0;
+  padding-bottom: 2px;
+}
+.context-chip-scroll .ui-scroll-area-viewport,
+.context-file-scroll .ui-scroll-area-viewport {
+  padding-bottom: 7px;
+}
+.context-chip-scroll .ui-scroll-area-scrollbar,
+.context-file-scroll .ui-scroll-area-scrollbar {
+  padding-inline: 2px;
+}
+.context-file-row {
+  display: flex;
+  gap: 8px;
+}
+.context-file-scroll {
+  width: 100%;
+  min-width: 0;
+  padding-bottom: 2px;
+}
+.attachment-notice {
+  padding: 2px 4px 0;
+  color: var(--destructive);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.context-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 62px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card) 86%, var(--background));
+  color: var(--foreground);
+  flex: 0 0 min(334px, 82vw);
+  overflow: hidden;
+}
+.context-file-row .context-card {
+  flex: 0 0 min(334px, 82vw);
+}
+.context-card img {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: white;
+}
+.attachment-card > svg {
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  border-radius: 8px;
+  background: var(--accent-softer);
+  color: var(--accent-strong);
+}
+.context-card > svg {
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  border-radius: 8px;
+  background: var(--accent-softer);
+  color: var(--accent-strong);
+}
+.context-card span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.context-card strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 650;
+}
+.context-card small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.context-close {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(22, 21, 18, 0.58);
+  color: white;
+  transition:
+    transform 0.14s ease,
+    background-color 0.14s ease;
+}
+.context-close:hover {
+  background: rgba(22, 21, 18, 0.76);
+  transform: scale(1.05);
+}

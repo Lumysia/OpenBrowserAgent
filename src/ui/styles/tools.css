@@ -1,0 +1,327 @@
+﻿.tool-card {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  color: var(--muted-foreground);
+  animation: tool-card-enter 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+  overflow: hidden;
+}
+.tool-card::before {
+  content: "";
+  position: absolute;
+  inset: 4px auto 4px 0;
+  width: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-strong) 42%, transparent);
+  opacity: 0;
+  transform: scaleY(0.65);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    background-color 0.18s ease;
+}
+.tool-card.loading::before,
+.tool-card.done::before,
+.tool-card.error::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+@keyframes tool-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.tool-card.loading {
+  background: color-mix(in srgb, var(--accent-softer) 28%, transparent);
+}
+.tool-card.loading .tool-icon {
+  animation: tool-icon-thinking 1.35s ease-in-out infinite;
+}
+.tool-card.done .tool-icon {
+  animation: tool-icon-done 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.tool-card.error::before {
+  background: color-mix(in srgb, var(--destructive) 72%, transparent);
+}
+.tool-title {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  font-weight: 650;
+}
+.tool-title-button {
+  width: fit-content;
+  max-width: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background-color 0.14s ease,
+    transform 0.14s ease;
+}
+.tool-title-button:hover {
+  background: color-mix(in srgb, var(--accent-softer) 36%, transparent);
+  transform: translateX(1px);
+}
+.tool-title-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.tool-title strong {
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+.tool-json-popover {
+  width: min(520px, calc(100vw - 24px));
+  max-height: min(420px, calc(100vh - 48px));
+  padding: 10px;
+  overflow: auto;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-softer) 36%, transparent),
+      transparent 54%
+    ),
+    var(--popover);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent-strong) 36%, transparent)
+    transparent;
+}
+.tool-json-popover::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.tool-json-popover::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tool-json-popover::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-strong) 34%, transparent);
+  background-clip: padding-box;
+}
+.tool-json-popover::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--accent-strong) 48%, transparent);
+  background-clip: padding-box;
+}
+.tool-json-popover pre {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 42%, var(--border));
+  border-radius: calc(var(--radius) - 4px);
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+  color: var(--foreground);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.tool-title-text {
+  animation: tool-text-swap 0.22s ease both;
+}
+.tool-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 18px;
+  color: var(--accent-strong);
+}
+.tool-detail {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 16px;
+  margin-left: 6px;
+  padding-left: 12px;
+  padding-right: 10px;
+  border-left: 1px solid var(--border);
+  color: var(--muted-foreground);
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+.tool-card.loading .tool-detail {
+  border-left-color: color-mix(
+    in srgb,
+    var(--accent-strong) 28%,
+    var(--border)
+  );
+}
+.tool-card.done .tool-detail {
+  border-left-color: color-mix(
+    in srgb,
+    var(--accent-strong) 18%,
+    var(--border)
+  );
+}
+.tool-detail-content {
+  animation: tool-detail-swap 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.tool-description {
+  max-width: 100%;
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.tool-references {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.tool-references button {
+  max-width: min(280px, calc(100% - 10px));
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px 5px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 24%, transparent);
+  background: color-mix(in srgb, var(--accent-soft) 72%, var(--card));
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 650;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    background-color 0.14s ease,
+    border-color 0.14s ease,
+    transform 0.14s ease;
+  animation: tool-reference-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--tool-reference-index, 0) * 38ms);
+}
+.tool-references button svg {
+  flex: 0 0 auto;
+}
+.tool-references button span {
+  min-width: 0;
+  overflow: hidden;
+  padding-right: 2px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tool-references button:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+.tool-card.error .tool-description {
+  color: #b3261e;
+}
+@keyframes tool-icon-thinking {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.08);
+  }
+}
+@keyframes tool-icon-done {
+  0% {
+    transform: scale(0.9) rotate(-4deg);
+  }
+  70% {
+    transform: scale(1.08) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+@keyframes tool-text-swap {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+@keyframes tool-detail-swap {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes tool-reference-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.generated-image-result {
+  min-width: 0;
+  max-width: 100%;
+  display: grid;
+  gap: 10px;
+  overflow: hidden;
+}
+.generated-image-result img {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  max-height: 320px;
+  border-radius: 12px;
+  object-fit: contain;
+  background: var(--secondary);
+}
+.generated-image-skeleton {
+  width: 100%;
+  min-height: 220px;
+  border-radius: 12px;
+}
+.generated-image-download {
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+.generated-image-download:hover {
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+:root[data-theme="dark"] .tool-references button {
+  border-color: color-mix(in srgb, var(--accent-strong) 26%, var(--border));
+  background: color-mix(in srgb, var(--accent-soft) 42%, var(--background));
+  color: color-mix(in srgb, var(--accent-strong) 86%, var(--foreground));
+}
+
+:root[data-theme="dark"] .tool-references button:hover {
+  background: color-mix(in srgb, var(--accent-hover) 58%, var(--background));
+}
