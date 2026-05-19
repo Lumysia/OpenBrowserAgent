@@ -132,6 +132,7 @@ export function extractSourcesFromTool(
       }),
     ];
   }
+  if (name.startsWith("mcp__")) return mcpSources(output, now);
   if (name === BROWSER_TOOL_NAME.downloadTabToMarkdown) {
     return [
       compactSource({
@@ -154,6 +155,110 @@ export function extractSourcesFromTool(
     ];
   }
   return [];
+}
+
+function mcpSources(output: Record<string, unknown>, now: number) {
+  const result = recordValue(output.result);
+  const sources: ChatSource[] = [];
+  const content = Array.isArray(result.content) ? result.content : [];
+
+  for (const item of content) {
+    const block = recordValue(item);
+    const uri = stringValue(block.uri || block.url);
+    if (uri)
+      sources.push(
+        compactSource({
+          id: "",
+          kind: "page",
+          title: stringValue(block.title || block.name) || uri,
+          url: uri,
+          snippet: stringValue(block.text),
+          createdAt: now,
+        }),
+      );
+    sources.push(...mcpTextSources(stringValue(block.text), now));
+  }
+
+  const structured = recordValue(result.structuredContent);
+  if (Object.keys(structured).length)
+    sources.push(...mcpStructuredSources(structured, now));
+
+  return dedupeSources(sources);
+}
+
+function mcpTextSources(text: string, now: number) {
+  if (!text) return [];
+  return text
+    .split(/\n\s*---\s*\n/g)
+    .flatMap((block) => sourcesFromTextBlock(block, now));
+}
+
+function sourcesFromTextBlock(block: string, now: number) {
+  const urls = [...block.matchAll(/^URL:\s*(https?:\/\/\S+)\s*$/gim)];
+  return urls.map((match) => {
+    const url = match[1];
+    const beforeUrl = block.slice(0, match.index || 0);
+    const afterUrl = block.slice((match.index || 0) + match[0].length);
+    return compactSource({
+      id: "",
+      kind: "page",
+      title: titleNearUrl(beforeUrl) || url,
+      url,
+      snippet: snippetNearUrl(afterUrl),
+      createdAt: now,
+    });
+  });
+}
+
+function titleNearUrl(text: string) {
+  const titleLine = [...text.matchAll(/^Title:\s*(.+)$/gim)].pop()?.[1];
+  if (titleLine) return titleLine.trim();
+  const headingLine = [...text.matchAll(/^#\s+(.+)$/gm)].pop()?.[1];
+  return headingLine?.trim() || "";
+}
+
+function snippetNearUrl(text: string) {
+  return text
+    .replace(/^Published:\s*.*$/gim, "")
+    .replace(/^Author:\s*.*$/gim, "")
+    .replace(/^Highlights:\s*/gim, "")
+    .replace(/^#+\s*/gm, "")
+    .replace(/\[\.\.\.\]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function mcpStructuredSources(value: Record<string, unknown>, now: number) {
+  const candidates = Array.isArray(value.results)
+    ? value.results
+    : Array.isArray(value.items)
+      ? value.items
+      : [];
+  return candidates.flatMap((item) => {
+    const record = recordValue(item);
+    const url = stringValue(record.url || record.uri || record.link);
+    if (!url) return [];
+    return [
+      compactSource({
+        id: "",
+        kind: "page",
+        title: stringValue(record.title || record.name) || url,
+        url,
+        snippet: stringValue(record.text || record.snippet || record.summary),
+        createdAt: now,
+      }),
+    ];
+  });
+}
+
+function dedupeSources(sources: ChatSource[]) {
+  const seen = new Set<string>();
+  return sources.filter((source) => {
+    const key = sourceKey(source);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export function renderSourcesForPrompt(sources: ChatSource[] = []) {
