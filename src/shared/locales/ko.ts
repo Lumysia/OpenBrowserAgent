@@ -56,9 +56,6 @@ export const ko: LocaleMessages = {
     relativeDaysAgo: "{count}일 전",
     whatDoYouWant: "무엇을 할까요?",
     emptyDescription: "작업 자동화, 검색, 브라우저 제어.",
-    createSkill: "스킬 만들기",
-    generatingSkill: "스킬 생성 중",
-    skillCreated: "스킬 생성됨",
     aiWorking: "AI 작업 중",
     aiWorkingDescription: "읽고, 실행하고, 응답을 준비하는 중입니다.",
     typingPhrases: [
@@ -152,7 +149,9 @@ export const ko: LocaleMessages = {
     done: "완료",
     error: "오류",
     generatedImage: "생성된 이미지",
+    capturedTabImage: "탭 스크린샷",
     downloadGeneratedImage: "이미지 다운로드",
+    downloadCapturedTabImage: "스크린샷 다운로드",
     copyImage: "이미지 복사",
     copyPrompt: "프롬프트 복사",
     tool: {
@@ -210,6 +209,13 @@ export const ko: LocaleMessages = {
         done: "페이지 스타일 제거됨",
       },
       closeTab: { running: "탭 닫는 중", done: "탭 닫힘" },
+      reloadTab: { running: "탭 새로고침 중", done: "탭 새로고침됨" },
+      navigateTab: { running: "탭 이동 중", done: "탭 이동됨" },
+      captureVisibleTab: { running: "탭 캡처 중", done: "탭 캡처됨" },
+      waitForText: {
+        running: "페이지 텍스트 대기 중",
+        done: "페이지 텍스트 찾음",
+      },
       scrollToBottom: { running: "페이지 스크롤 중", done: "페이지 스크롤됨" },
       getElementPropertiesByAiID: {
         running: "요소 검사 중",
@@ -220,6 +226,7 @@ export const ko: LocaleMessages = {
         done: "스킬 목록 읽음",
         found: "{count}개 찾음",
       },
+      createSkill: { running: "스킬 만드는 중", done: "스킬 생성됨" },
       readSkill: { running: "스킬 읽는 중", done: "스킬 읽음" },
       updateSkillFile: {
         running: "스킬 업데이트 중",

@@ -280,7 +280,6 @@ export const AI_STREAM_REQUEST_TYPE = {
   attachStream: "attachStream",
   sendMessages: "sendMessages",
   generateTitle: "generateTitle",
-  generateSkill: "generateSkill",
 } as const;
 
 export const AI_TEXT_CHUNK_TYPE = {
@@ -333,11 +332,6 @@ export type AiStreamRequest =
       modelId?: string;
       message: string;
       metadata?: Record<string, unknown>;
-    }
-  | {
-      type: "generateSkill";
-      modelId?: string;
-      messages: ChatMessage[];
     };
 
 export type SendMessagesRequest = Extract<
@@ -348,11 +342,6 @@ export type SendMessagesRequest = Extract<
 export type GenerateTitleRequest = Extract<
   AiStreamRequest,
   { type: (typeof AI_STREAM_REQUEST_TYPE)["generateTitle"] }
->;
-
-export type GenerateSkillRequest = Extract<
-  AiStreamRequest,
-  { type: (typeof AI_STREAM_REQUEST_TYPE)["generateSkill"] }
 >;
 
 export type AiStreamResponse = (
@@ -367,7 +356,6 @@ export type AiStreamResponse = (
   | { type: "end" }
   | { type: "error"; error: string }
   | { type: "title"; title: string }
-  | { type: "skill"; skill: Skill }
 ) & { sequence?: number };
 
 export const providerLabels: Record<ProviderId, string> = {

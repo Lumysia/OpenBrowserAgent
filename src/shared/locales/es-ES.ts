@@ -57,9 +57,6 @@ export const esES: LocaleMessages = {
     relativeDaysAgo: "hace {count} d",
     whatDoYouWant: "¿Qué quieres hacer?",
     emptyDescription: "Automatiza tareas, busca y controla tu navegador.",
-    createSkill: "Crear habilidad",
-    generatingSkill: "Creando habilidad",
-    skillCreated: "Habilidad creada",
     aiWorking: "La IA está trabajando",
     aiWorkingDescription: "Leyendo, actuando y preparando la respuesta.",
     typingPhrases: [
@@ -153,7 +150,9 @@ export const esES: LocaleMessages = {
     done: "Listo",
     error: "Error",
     generatedImage: "Imagen generada",
+    capturedTabImage: "Captura de pestaña",
     downloadGeneratedImage: "Descargar imagen",
+    downloadCapturedTabImage: "Descargar captura",
     copyImage: "Copiar imagen",
     copyPrompt: "Copiar instrucciones",
     tool: {
@@ -220,6 +219,13 @@ export const esES: LocaleMessages = {
         done: "Estilo eliminado",
       },
       closeTab: { running: "Cerrando pestaña", done: "Pestaña cerrada" },
+      reloadTab: { running: "Recargando pestaña", done: "Pestaña recargada" },
+      navigateTab: { running: "Navegando pestaña", done: "Pestaña navegada" },
+      captureVisibleTab: {
+        running: "Capturando pestaña",
+        done: "Pestaña capturada",
+      },
+      waitForText: { running: "Esperando texto", done: "Texto encontrado" },
       scrollToBottom: {
         running: "Desplazando página",
         done: "Página desplazada",
@@ -233,6 +239,7 @@ export const esES: LocaleMessages = {
         done: "Habilidades listadas",
         found: "Encontradas {count}",
       },
+      createSkill: { running: "Creando habilidad", done: "Habilidad creada" },
       readSkill: { running: "Leyendo habilidad", done: "Habilidad leída" },
       updateSkillFile: {
         running: "Actualizando habilidad",

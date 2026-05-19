@@ -65,7 +65,6 @@ import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
 import { usePromptUsageEstimate } from "./prompt-usage-preview";
 import { useQueuedMessages } from "./use-queued-messages";
-import { createSkillFromChat } from "./use-skill-creator";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
 
 export function SidepanelApp() {
@@ -83,8 +82,6 @@ export function SidepanelApp() {
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<ChatMode>(CHAT_MODE.agent);
   const [streaming, setStreaming] = useState(false);
-  const [creatingSkill, setCreatingSkill] = useState(false);
-  const [skillCreated, setSkillCreated] = useState(false);
   const [openMenu, setOpenMenu] = useState<ComposerMenu | null>(null);
   const [addMenuView, setAddMenuView] = useState<AddMenuView>("menu");
   const [showHistory, setShowHistory] = useState(false);
@@ -112,7 +109,7 @@ export function SidepanelApp() {
   const activeAgent = resolveAgent(agents, preferences?.selectedAgentId);
   const streamHandlers = createStreamHandlers(setChats);
   const t = getMessages(language);
-  const aiWorking = streaming || creatingSkill;
+  const aiWorking = streaming;
   const { selectElement } = useElementSelector(t);
   const {
     uploadedAttachments,
@@ -174,7 +171,6 @@ export function SidepanelApp() {
     editQueuedMessage,
   } = useQueuedMessages({
     streaming,
-    creatingSkill,
     sendQueued: (content) => send(content, undefined, { queued: true }),
     onEditContent: setInput,
     onQueueMessage: (message) =>
@@ -506,8 +502,6 @@ export function SidepanelApp() {
       activeTabAttachable={activeTabAttachable}
       selectedElements={selectedElements}
       streaming={streaming}
-      creatingSkill={creatingSkill}
-      skillCreated={skillCreated}
       skills={(skills || []).filter(isSkillEnabled)}
       agents={agents || []}
       selectedSkills={selectedSkills}
@@ -533,16 +527,6 @@ export function SidepanelApp() {
         setActiveChatId(chat.id);
       }}
       onCloseChat={closeChat}
-      onCreateSkill={() =>
-        createSkillFromChat({
-          currentChat,
-          creatingSkill,
-          modelId: preferences?.selectedModelId,
-          setCreatingSkill,
-          setSkillCreated,
-          setSkills,
-        })
-      }
       onSend={send}
       onStop={stop}
       onDeleteQueuedMessage={deleteQueuedMessage}

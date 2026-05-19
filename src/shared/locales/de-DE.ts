@@ -58,9 +58,6 @@ export const deDE: LocaleMessages = {
     whatDoYouWant: "Was möchten Sie tun?",
     emptyDescription:
       "Aufgaben automatisieren, suchen und den Browser steuern.",
-    createSkill: "Fähigkeit erstellen",
-    generatingSkill: "Fähigkeit wird erstellt",
-    skillCreated: "Fähigkeit erstellt",
     aiWorking: "KI arbeitet",
     aiWorkingDescription: "Liest, handelt und bereitet die Antwort vor.",
     typingPhrases: [
@@ -155,7 +152,9 @@ export const deDE: LocaleMessages = {
     done: "Fertig",
     error: "Fehler",
     generatedImage: "Generiertes Bild",
+    capturedTabImage: "Tab-Screenshot",
     downloadGeneratedImage: "Bild herunterladen",
+    downloadCapturedTabImage: "Screenshot herunterladen",
     copyImage: "Bild kopieren",
     copyPrompt: "Anweisung kopieren",
     tool: {
@@ -219,6 +218,13 @@ export const deDE: LocaleMessages = {
         done: "Seitenstil entfernt",
       },
       closeTab: { running: "Tab wird geschlossen", done: "Tab geschlossen" },
+      reloadTab: { running: "Tab wird neu geladen", done: "Tab neu geladen" },
+      navigateTab: { running: "Tab wird navigiert", done: "Tab navigiert" },
+      captureVisibleTab: {
+        running: "Tab wird aufgenommen",
+        done: "Tab aufgenommen",
+      },
+      waitForText: { running: "Warten auf Text", done: "Text gefunden" },
       scrollToBottom: {
         running: "Seite wird gescrollt",
         done: "Seite gescrollt",
@@ -231,6 +237,10 @@ export const deDE: LocaleMessages = {
         running: "Fähigkeiten werden aufgelistet",
         done: "Fähigkeiten aufgelistet",
         found: "{count} gefunden",
+      },
+      createSkill: {
+        running: "Fähigkeit wird erstellt",
+        done: "Fähigkeit erstellt",
       },
       readSkill: {
         running: "Fähigkeit wird gelesen",

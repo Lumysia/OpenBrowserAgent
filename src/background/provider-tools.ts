@@ -7,6 +7,7 @@ import {
 } from "../shared/config";
 import {
   SKILL_ENTRY_PATH,
+  createSkillPackage,
   parseSkillFrontmatter,
   normalizeSkillName,
 } from "../shared/skills";
@@ -134,6 +135,8 @@ export function executeContextAwareTool({
     return readUploadedAttachment(uploadedAttachments, input);
   if (toolName === BROWSER_TOOL_NAME.listSkills)
     return listSkills(availableSkills);
+  if (toolName === BROWSER_TOOL_NAME.createSkill)
+    return createSkill(availableSkills, input);
   if (toolName === BROWSER_TOOL_NAME.readSkill)
     return readSkill(availableSkills, input);
   if (toolName === BROWSER_TOOL_NAME.readSkillFile)
@@ -278,6 +281,7 @@ const TOOL_CATEGORY_BY_NAME = {
   [BROWSER_TOOL_NAME.readFileFromUrl]: "files",
   [BROWSER_TOOL_NAME.generateImage]: "image",
   [BROWSER_TOOL_NAME.listSkills]: "skills",
+  [BROWSER_TOOL_NAME.createSkill]: "skills",
   [BROWSER_TOOL_NAME.readSkill]: "skills",
   [BROWSER_TOOL_NAME.readSkillFile]: "skills",
   [BROWSER_TOOL_NAME.updateSkillFile]: "skills",
@@ -461,6 +465,48 @@ function bytesToHex(bytes: Uint8Array) {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
     "",
   );
+}
+
+async function createSkill(
+  availableSkills: Skill[],
+  input: Record<string, unknown>,
+) {
+  const name = normalizeSkillName(String(input.name || ""));
+  const description = String(input.description || "").trim();
+  const instruction = String(input.instruction || input.content || "").trim();
+  const reason = String(input.reason || "").trim();
+  if (!name) return { error: "Missing skill name" };
+  if (!instruction)
+    return { error: "Missing reusable skill instruction", name };
+  if (!reason) return { error: "Missing reusable creation reason", name };
+  const existing = availableSkills.find(
+    (skill) => normalizeSkillName(skill.name || "") === name,
+  );
+  if (existing)
+    return {
+      error: "Skill already exists",
+      skillId: existing.id,
+      name: existing.name,
+      nextAction:
+        "Use updateSkillFile or patchSkillFile for this existing skill.",
+    };
+
+  const skill = createSkillPackage({ name, description, instruction });
+  const allSkills = (await storage.skills.get()) || [];
+  await storage.skills.set([...allSkills, skill]);
+  availableSkills.push(skill);
+  return {
+    id: skill.id,
+    name: skill.name,
+    description: skill.description,
+    created: true,
+    reason,
+    files: skill.files?.map((file) => ({
+      path: file.path,
+      kind: file.kind,
+      size: file.content.length,
+    })),
+  };
 }
 
 async function updateSkillFile(

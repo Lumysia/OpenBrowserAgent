@@ -1,11 +1,6 @@
 import { storage } from "../src/shared/storage";
-import { UNKNOWN_TOOL_NAME } from "../src/shared/browser-tools";
 import { getMessages } from "../src/shared/i18n";
-import {
-  createSkillPackage,
-  getSkillInstruction,
-  normalizeSkillName,
-} from "../src/shared/skills";
+import { getSkillInstruction } from "../src/shared/skills";
 import { createSystemPrompt } from "../src/shared/system-prompt";
 import {
   PROMPT_CONTEXT_TAG,
@@ -18,8 +13,6 @@ import {
   GENERATED_TITLE_MAX_WORDS,
   ISO_DATE_LENGTH,
   MODEL_TEMPERATURE,
-  SKILL_SOURCE_MAX_CHARS,
-  SKILL_NAME_MAX_LENGTH,
 } from "../src/shared/config";
 import {
   AI_STREAM_PORT_NAME,
@@ -32,7 +25,6 @@ import {
   type ChatMessage,
   type ChatMode,
   type ChatPart,
-  type GenerateSkillRequest,
   type GenerateTitleRequest,
   type PromptBreakdown,
   type ProviderId,
@@ -124,17 +116,6 @@ export default defineBackground(() => {
         generateTitle(request)
           .then((title) => post(port, { type: "title", title }))
           .catch(() => post(port, { type: "title", title: "New Chat" }));
-      }
-
-      if (request.type === AI_STREAM_REQUEST_TYPE.generateSkill) {
-        generateSkill(request)
-          .then((skill) => post(port, { type: "skill", skill }))
-          .catch((error) =>
-            post(port, {
-              type: "error",
-              error: error?.message || String(error),
-            }),
-          );
       }
     });
 
@@ -380,53 +361,6 @@ function compactTitle(value: string) {
     .slice(0, GENERATED_TITLE_MAX_LENGTH);
 }
 
-async function generateSkill(request: GenerateSkillRequest): Promise<Skill> {
-  const model = await resolveModel(request.modelId);
-  const source = renderSkillSource(request.messages).slice(
-    0,
-    SKILL_SOURCE_MAX_CHARS,
-  );
-  const prompt = `Create a reusable skill from this browser-agent chat.
-
-Return JSON only with this shape:
-{"name":"kebab-case-name","description":"one sentence","instruction":"reusable instruction"}
-
-Rules:
-- Generalize the workflow so it can be reused later.
-- Do not copy one-off facts, personal names, URLs, or results unless they are essential to the reusable workflow.
-- The instruction should tell the browser agent what to do, not describe what already happened.
-- Preserve useful variables such as {{ date }} if appropriate.
-- Name must be lowercase kebab-case and concise.
-
-<chat>
-${source}
-</chat>`;
-  const raw = await requestPlainText(model, [
-    {
-      role: "system",
-      content:
-        "You create concise reusable browser-agent skills. Return valid JSON only.",
-    },
-    { role: "user", content: prompt },
-  ]);
-  const parsed = parseJsonObject(raw) as Partial<Skill>;
-  const name = normalizeSkillName(String(parsed.name || "skill"))
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, SKILL_NAME_MAX_LENGTH);
-  const instruction = String(
-    (parsed.files?.find((file) => file.path === "SKILL.md")?.content ||
-      (parsed as { instruction?: string }).instruction) ??
-      "",
-  ).trim();
-  if (!instruction) throw new Error("The model did not create an instruction.");
-  return createSkillPackage({
-    name: name || "skill",
-    description: String(parsed.description || "").trim(),
-    instruction,
-  });
-}
-
 async function requestPlainText(
   model: {
     provider: ProviderId;
@@ -478,44 +412,4 @@ async function requestPlainText(
   if (!response.ok) throw new Error(await response.text());
   const data = await response.json();
   return data.choices?.[0]?.message?.content || "";
-}
-
-function renderSkillSource(messages: ChatMessage[]) {
-  return messages
-    .map((message) => {
-      const parts = (message.parts || [])
-        .filter((part) => isToolPartType(part.type))
-        .map((part) => {
-          const toolName = isToolPartType(part.type)
-            ? part.toolName || toolNameFromPartType(part.type)
-            : part.toolName;
-          return [
-            `tool=${toolName}`,
-            `state=${part.state || UNKNOWN_TOOL_NAME}`,
-            part.input ? `input=${safeStringify(part.input)}` : undefined,
-            part.output ? `output=${safeStringify(part.output)}` : undefined,
-          ]
-            .filter(Boolean)
-            .join("\n");
-        })
-        .join("\n");
-      return [`role=${message.role}`, message.content, parts]
-        .filter(Boolean)
-        .join("\n");
-    })
-    .join("\n\n---\n\n");
-}
-
-function parseJsonObject(value: string) {
-  const match = value.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error("The model did not return JSON.");
-  return JSON.parse(match[0]);
-}
-
-function safeStringify(value: unknown) {
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return String(value);
-  }
 }

@@ -58,9 +58,6 @@ export const enUS = {
     relativeDaysAgo: "{count}d ago",
     whatDoYouWant: "What do you want to do?",
     emptyDescription: "Automation tasks, search, and control your browser.",
-    createSkill: "Create Skill",
-    generatingSkill: "Creating Skill",
-    skillCreated: "Skill Created",
     aiWorking: "AI is working",
     aiWorkingDescription: "Reading, acting, and preparing the response.",
     typingPhrases: [
@@ -154,7 +151,9 @@ export const enUS = {
     done: "Done",
     error: "Error",
     generatedImage: "Generated image",
+    capturedTabImage: "Captured tab screenshot",
     downloadGeneratedImage: "Download image",
+    downloadCapturedTabImage: "Download screenshot",
     copyImage: "Copy image",
     copyPrompt: "Copy prompt",
     tool: {
@@ -215,6 +214,13 @@ export const enUS = {
         done: "Removed page style",
       },
       closeTab: { running: "Closing tab", done: "Closed tab" },
+      reloadTab: { running: "Reloading tab", done: "Reloaded tab" },
+      navigateTab: { running: "Navigating tab", done: "Navigated tab" },
+      captureVisibleTab: {
+        running: "Capturing tab",
+        done: "Captured tab",
+      },
+      waitForText: { running: "Waiting for text", done: "Found text" },
       scrollToBottom: { running: "Scrolling page", done: "Scrolled page" },
       getElementPropertiesByAiID: {
         running: "Inspecting element",
@@ -225,6 +231,7 @@ export const enUS = {
         done: "Listed Skills",
         found: "Found {count}",
       },
+      createSkill: { running: "Creating Skill", done: "Created Skill" },
       readSkill: { running: "Reading Skill", done: "Read Skill" },
       updateSkillFile: { running: "Updating Skill", done: "Updated Skill" },
       patchSkillFile: { running: "Patching Skill", done: "Patched Skill" },

@@ -57,9 +57,6 @@ export const jaJP: LocaleMessages = {
     relativeDaysAgo: "{count}日前",
     whatDoYouWant: "何をしますか？",
     emptyDescription: "タスクの自動化、検索、ブラウザー操作。",
-    createSkill: "スキルを作成",
-    generatingSkill: "スキルを作成中",
-    skillCreated: "スキルを作成しました",
     aiWorking: "AIが作業中です",
     aiWorkingDescription: "読み取り、操作し、回答を準備しています。",
     typingPhrases: [
@@ -153,7 +150,9 @@ export const jaJP: LocaleMessages = {
     done: "完了",
     error: "エラー",
     generatedImage: "生成画像",
+    capturedTabImage: "タブのスクリーンショット",
     downloadGeneratedImage: "画像をダウンロード",
+    downloadCapturedTabImage: "スクリーンショットをダウンロード",
     copyImage: "画像をコピー",
     copyPrompt: "プロンプトをコピー",
     tool: {
@@ -220,6 +219,19 @@ export const jaJP: LocaleMessages = {
         done: "ページスタイルを削除しました",
       },
       closeTab: { running: "タブを閉じています", done: "タブを閉じました" },
+      reloadTab: {
+        running: "タブを再読み込み中",
+        done: "タブを再読み込みしました",
+      },
+      navigateTab: { running: "タブを移動中", done: "タブを移動しました" },
+      captureVisibleTab: {
+        running: "タブをキャプチャ中",
+        done: "タブをキャプチャしました",
+      },
+      waitForText: {
+        running: "ページテキストを待機中",
+        done: "ページテキストを検出しました",
+      },
       scrollToBottom: {
         running: "ページをスクロール中",
         done: "ページをスクロールしました",
@@ -232,6 +244,10 @@ export const jaJP: LocaleMessages = {
         running: "スキル一覧を取得中",
         done: "スキル一覧を取得しました",
         found: "{count}件見つかりました",
+      },
+      createSkill: {
+        running: "スキルを作成中",
+        done: "スキルを作成しました",
       },
       readSkill: {
         running: "スキルを読み取り中",

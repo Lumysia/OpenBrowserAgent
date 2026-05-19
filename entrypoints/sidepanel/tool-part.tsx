@@ -81,6 +81,12 @@ export function ToolPart({ t, part }: { t: Messages; part: ChatPart }) {
               t={t}
             />
           )}
+          {name === BROWSER_TOOL_NAME.captureVisibleTab && (
+            <CapturedTabImage
+              output={(part.output || {}) as Record<string, unknown>}
+              t={t}
+            />
+          )}
           {description && <div className="tool-description">{description}</div>}
           {!!references.length && (
             <div className="tool-references">
@@ -198,6 +204,8 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
         formatToolMessage(toolFound, { count: output.loadedToolNames.length }),
         output.loadedToolNames.map(String).join(", "),
       ]);
+    if (name === BROWSER_TOOL_NAME.createSkill)
+      return stringValue(output.name) || stringValue(input.name);
     if (name === BROWSER_TOOL_NAME.readSkill)
       return stringValue(output.name) || stringValue(input.skillId);
     if (name === BROWSER_TOOL_NAME.readSkillFile)
@@ -243,6 +251,26 @@ function toolDisplay(name: string, part: ChatPart, t: Messages) {
       ]);
     if (name === BROWSER_TOOL_NAME.getAllTabs && Array.isArray(outputValue))
       return formatToolMessage(toolFound, { count: outputValue.length });
+    if (name === BROWSER_TOOL_NAME.navigateTab)
+      return compactJoin([
+        stringValue(
+          output.type || input.type || (input.url ? "url" : "reload"),
+        ),
+        stringValue(input.url),
+        idLabel("Tab", output.tabId || input.tabId),
+      ]);
+    if (name === BROWSER_TOOL_NAME.reloadTab)
+      return idLabel("Tab", output.tabId || input.tabId);
+    if (name === BROWSER_TOOL_NAME.captureVisibleTab)
+      return compactJoin([
+        idLabel("Tab", output.tabId || input.tabId),
+        stringValue(output.format || input.format || "png"),
+      ]);
+    if (name === BROWSER_TOOL_NAME.waitForText)
+      return compactJoin([
+        stringValue(output.text),
+        idLabel("Tab", output.tabId || input.tabId),
+      ]);
     if (
       name === BROWSER_TOOL_NAME.inputTextByAiID &&
       typeof input.text === "string"
@@ -316,7 +344,11 @@ function toolIcon(name: string) {
   if (lowerName.includes("mcp")) return <Plug size={19} strokeWidth={2.1} />;
   if (lowerName.includes("input") || lowerName.includes("fill"))
     return <Type size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("presskey"))
+    return <Type size={19} strokeWidth={2.1} />;
   if (lowerName.includes("click") || lowerName.includes("mouse"))
+    return <MousePointerClick size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("drag"))
     return <MousePointerClick size={19} strokeWidth={2.1} />;
   if (lowerName.includes("find") || lowerName.includes("search"))
     return <Search size={19} strokeWidth={2.1} />;
@@ -328,9 +360,11 @@ function toolIcon(name: string) {
     return <Gauge size={19} strokeWidth={2.1} />;
   if (lowerName.includes("network"))
     return <Network size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("memory"))
+  if (lowerName.includes("memory") || lowerName.includes("nodesbyclass"))
     return <FileSearch size={19} strokeWidth={2.1} />;
   if (lowerName.includes("screencast"))
+    return <PanelTop size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("dialog") || lowerName.includes("emulate"))
     return <PanelTop size={19} strokeWidth={2.1} />;
   if (lowerName.includes("performance") || lowerName.includes("trace"))
     return <Gauge size={19} strokeWidth={2.1} />;
@@ -347,11 +381,17 @@ function toolIcon(name: string) {
     return <FileSearch size={19} strokeWidth={2.1} />;
   if (
     name === BROWSER_TOOL_NAME.listSkills ||
+    name === BROWSER_TOOL_NAME.createSkill ||
     name === BROWSER_TOOL_NAME.readSkill ||
+    name === BROWSER_TOOL_NAME.readSkillFile ||
     name === BROWSER_TOOL_NAME.updateSkillFile ||
     name === BROWSER_TOOL_NAME.patchSkillFile
   )
     return <FileText size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("element") || lowerName.includes("properties"))
+    return <FileSearch size={19} strokeWidth={2.1} />;
+  if (lowerName.includes("scroll"))
+    return <PanelTop size={19} strokeWidth={2.1} />;
   if (lowerName.includes("content"))
     return <FileText size={19} strokeWidth={2.1} />;
   if (lowerName.includes("group"))
@@ -401,6 +441,44 @@ function GeneratedImage({
             onClick={() => navigator.clipboard.writeText(prompt)}
           >
             <Copy size={14} /> {t.sidepanel.copyPrompt}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CapturedTabImage({
+  output,
+  t,
+}: {
+  output: Record<string, unknown>;
+  t: Messages;
+}) {
+  const image = stringValue(output.image);
+  const format = stringValue(output.format) || "png";
+  if (!image || output.error) return null;
+  const canCopyImage =
+    image.startsWith("data:") && typeof ClipboardItem !== "undefined";
+  async function copyImage() {
+    if (!canCopyImage) return;
+    const blob = await (await fetch(image)).blob();
+    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+  }
+  return (
+    <div className="generated-image-result">
+      <img src={image} alt={t.sidepanel.capturedTabImage} />
+      <div className="row">
+        <a
+          className="ui-button ui-button-secondary ui-button-sm generated-image-download"
+          href={image}
+          download={`tab-screenshot.${format}`}
+        >
+          <Download size={14} /> {t.sidepanel.downloadCapturedTabImage}
+        </a>
+        {canCopyImage && (
+          <Button variant="secondary" size="sm" onClick={copyImage}>
+            <Copy size={14} /> {t.sidepanel.copyImage}
           </Button>
         )}
       </div>

@@ -7,14 +7,12 @@ export type QueuedMessage = {
 
 export function useQueuedMessages({
   streaming,
-  creatingSkill,
   sendQueued,
   onEditContent,
   onQueueMessage,
   onRemoveMessage,
 }: {
   streaming: boolean;
-  creatingSkill: boolean;
   sendQueued: (content: string) => Promise<void>;
   onEditContent: (content: string) => void;
   onQueueMessage?: (message: QueuedMessage) => void;
@@ -24,12 +22,7 @@ export function useQueuedMessages({
   const queueDispatchingRef = useRef(false);
 
   useEffect(() => {
-    if (
-      streaming ||
-      creatingSkill ||
-      !queuedMessages.length ||
-      queueDispatchingRef.current
-    )
+    if (streaming || !queuedMessages.length || queueDispatchingRef.current)
       return;
     const next = queuedMessages[0];
     queueDispatchingRef.current = true;
@@ -39,7 +32,7 @@ export function useQueuedMessages({
       .finally(() => {
         queueDispatchingRef.current = false;
       });
-  }, [creatingSkill, queuedMessages.length, sendQueued, streaming]);
+  }, [queuedMessages.length, sendQueued, streaming]);
 
   function queueMessage(content: string) {
     const text = content.trim();

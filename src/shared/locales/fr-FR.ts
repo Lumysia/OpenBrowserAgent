@@ -58,9 +58,6 @@ export const frFR: LocaleMessages = {
     whatDoYouWant: "Que voulez-vous faire ?",
     emptyDescription:
       "Automatiser des tâches, rechercher et contrôler votre navigateur.",
-    createSkill: "Créer une compétence",
-    generatingSkill: "Création de la compétence",
-    skillCreated: "Compétence créée",
     aiWorking: "L'IA travaille",
     aiWorkingDescription: "Lecture, action et préparation de la réponse.",
     typingPhrases: [
@@ -154,7 +151,9 @@ export const frFR: LocaleMessages = {
     done: "Terminé",
     error: "Erreur",
     generatedImage: "Image générée",
+    capturedTabImage: "Capture d'onglet",
     downloadGeneratedImage: "Télécharger l’image",
+    downloadCapturedTabImage: "Télécharger la capture",
     copyImage: "Copier l’image",
     copyPrompt: "Copier les instructions",
     tool: {
@@ -224,6 +223,19 @@ export const frFR: LocaleMessages = {
         done: "Style supprimé",
       },
       closeTab: { running: "Fermeture de l'onglet", done: "Onglet fermé" },
+      reloadTab: {
+        running: "Rechargement de l'onglet",
+        done: "Onglet rechargé",
+      },
+      navigateTab: {
+        running: "Navigation dans l'onglet",
+        done: "Onglet navigué",
+      },
+      captureVisibleTab: {
+        running: "Capture de l'onglet",
+        done: "Onglet capturé",
+      },
+      waitForText: { running: "Attente du texte", done: "Texte trouvé" },
       scrollToBottom: {
         running: "Défilement de la page",
         done: "Page défilée",
@@ -236,6 +248,10 @@ export const frFR: LocaleMessages = {
         running: "Liste des compétences",
         done: "Compétences listées",
         found: "{count} trouvées",
+      },
+      createSkill: {
+        running: "Création de la compétence",
+        done: "Compétence créée",
       },
       readSkill: {
         running: "Lecture de la compétence",

@@ -54,9 +54,6 @@ export const zhCN: LocaleMessages = {
     relativeDaysAgo: "{count} 天前",
     whatDoYouWant: "你想要做什么？",
     emptyDescription: "自动化任务、搜索并操作你的浏览器。",
-    createSkill: "创建技能",
-    generatingSkill: "正在创建技能",
-    skillCreated: "技能已创建",
     aiWorking: "AI 正在工作",
     aiWorkingDescription: "正在阅读、操作并准备回复。",
     typingPhrases: [
@@ -147,7 +144,9 @@ export const zhCN: LocaleMessages = {
     done: "完成",
     error: "错误",
     generatedImage: "生成的图片",
+    capturedTabImage: "标签页截图",
     downloadGeneratedImage: "下载图片",
+    downloadCapturedTabImage: "下载截图",
     copyImage: "复制图片",
     copyPrompt: "复制提示词",
     tool: {
@@ -187,6 +186,10 @@ export const zhCN: LocaleMessages = {
       insertCSSToTab: { running: "应用页面样式", done: "已应用页面样式" },
       removeCSSToTab: { running: "移除页面样式", done: "已移除页面样式" },
       closeTab: { running: "关闭标签页", done: "已关闭标签页" },
+      reloadTab: { running: "刷新标签页", done: "已刷新标签页" },
+      navigateTab: { running: "导航标签页", done: "已导航标签页" },
+      captureVisibleTab: { running: "截取标签页", done: "已截取标签页" },
+      waitForText: { running: "等待页面文本", done: "已找到页面文本" },
       scrollToBottom: { running: "滚动页面", done: "已滚动页面" },
       getElementPropertiesByAiID: { running: "检查元素", done: "已检查元素" },
       listSkills: {
@@ -194,6 +197,7 @@ export const zhCN: LocaleMessages = {
         done: "已读取技能列表",
         found: "找到 {count} 个",
       },
+      createSkill: { running: "创建技能", done: "已创建技能" },
       readSkill: { running: "读取技能", done: "已读取技能" },
       updateSkillFile: { running: "更新技能", done: "已更新技能" },
       patchSkillFile: { running: "修补技能", done: "已修补技能" },

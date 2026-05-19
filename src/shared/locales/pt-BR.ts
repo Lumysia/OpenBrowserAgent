@@ -57,9 +57,6 @@ export const ptBR: LocaleMessages = {
     relativeDaysAgo: "há {count} d",
     whatDoYouWant: "O que você quer fazer?",
     emptyDescription: "Automatize tarefas, pesquise e controle seu navegador.",
-    createSkill: "Criar habilidade",
-    generatingSkill: "Criando habilidade",
-    skillCreated: "Habilidade criada",
     aiWorking: "A IA está trabalhando",
     aiWorkingDescription: "Lendo, agindo e preparando a resposta.",
     typingPhrases: [
@@ -153,7 +150,9 @@ export const ptBR: LocaleMessages = {
     done: "Concluído",
     error: "Erro",
     generatedImage: "Imagem gerada",
+    capturedTabImage: "Captura da aba",
     downloadGeneratedImage: "Baixar imagem",
+    downloadCapturedTabImage: "Baixar captura",
     copyImage: "Copiar imagem",
     copyPrompt: "Copiar instruções",
     tool: {
@@ -208,6 +207,10 @@ export const ptBR: LocaleMessages = {
       insertCSSToTab: { running: "Aplicando estilo", done: "Estilo aplicado" },
       removeCSSToTab: { running: "Removendo estilo", done: "Estilo removido" },
       closeTab: { running: "Fechando aba", done: "Aba fechada" },
+      reloadTab: { running: "Recarregando aba", done: "Aba recarregada" },
+      navigateTab: { running: "Navegando na aba", done: "Aba navegada" },
+      captureVisibleTab: { running: "Capturando aba", done: "Aba capturada" },
+      waitForText: { running: "Aguardando texto", done: "Texto encontrado" },
       scrollToBottom: { running: "Rolando página", done: "Página rolada" },
       getElementPropertiesByAiID: {
         running: "Inspecionando elemento",
@@ -218,6 +221,7 @@ export const ptBR: LocaleMessages = {
         done: "Habilidades listadas",
         found: "Encontradas {count}",
       },
+      createSkill: { running: "Criando habilidade", done: "Habilidade criada" },
       readSkill: { running: "Lendo habilidade", done: "Habilidade lida" },
       updateSkillFile: {
         running: "Atualizando habilidade",

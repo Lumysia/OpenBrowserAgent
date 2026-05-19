@@ -154,7 +154,7 @@ function messageSkills(metadata: Record<string, unknown> | undefined) {
 export function renderSkillToolHint(skills: Skill[]) {
   if (!skills.length) return "";
   return `<skill_tools>
-For browser automation, search, or research tasks, call readSkill with skillId "builtin-browser-guidance" before acting. For other specialized workflows, call listSkills first. Use patchSkillFile or updateSkillFile only for broadly reusable improvements; never store secrets or one-off task details.
+For browser automation, search, or research tasks, call readSkill with skillId "builtin-browser-guidance" before acting. For other specialized workflows, call listSkills first. Use createSkill, patchSkillFile, or updateSkillFile only for broadly reusable improvements; never store secrets or one-off task details.
 </skill_tools>`;
 }
 

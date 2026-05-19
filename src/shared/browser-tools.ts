@@ -61,6 +61,7 @@ export const BROWSER_TOOL_NAME = {
   readFileFromUrl: "readFileFromUrl",
   readUploadedAttachment: "readUploadedAttachment",
   listSkills: "listSkills",
+  createSkill: "createSkill",
   readSkill: "readSkill",
   readSkillFile: "readSkillFile",
   updateSkillFile: "updateSkillFile",

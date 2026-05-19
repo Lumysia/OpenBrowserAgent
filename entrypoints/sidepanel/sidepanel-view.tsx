@@ -82,8 +82,6 @@ export function SidepanelView({
   activeTabAttachable,
   selectedElements,
   streaming,
-  creatingSkill,
-  skillCreated,
   skills,
   agents,
   openMenu,
@@ -105,7 +103,6 @@ export function SidepanelView({
   onCreateChat,
   onImportChat,
   onCloseChat,
-  onCreateSkill,
   onSend,
   onStop,
   onDeleteQueuedMessage,
@@ -146,8 +143,6 @@ export function SidepanelView({
   activeTabAttachable: boolean;
   selectedElements: SelectedElement[];
   streaming: boolean;
-  creatingSkill: boolean;
-  skillCreated: boolean;
   skills: Skill[];
   agents: Agent[];
   openMenu: ComposerMenu | null;
@@ -171,7 +166,6 @@ export function SidepanelView({
   onCreateChat: () => void;
   onImportChat: (chat: Chat) => void;
   onCloseChat: (chatId: string) => void;
-  onCreateSkill: () => void;
   onSend: () => void;
   onStop: () => void;
   onDeleteQueuedMessage: (id: string) => void;
@@ -293,15 +287,10 @@ export function SidepanelView({
               className="skill-create"
               variant="secondary"
               size="sm"
-              disabled={creatingSkill || !!editingMessageId}
-              onClick={onCreateSkill}
+              disabled={!!editingMessageId}
+              onClick={onCreateChat}
             >
-              <Plus size={16} />{" "}
-              {creatingSkill
-                ? t.sidepanel.generatingSkill
-                : skillCreated
-                  ? t.sidepanel.skillCreated
-                  : t.sidepanel.createSkill}
+              <Plus size={16} /> {t.words.newChat}
             </Button>
           </div>
           <ComposerAttachments
@@ -486,11 +475,7 @@ export function SidepanelView({
                 </>
               ) : (
                 <IconTooltip label={t.sidepanel.send}>
-                  <Button
-                    className="send-button"
-                    disabled={creatingSkill}
-                    onClick={() => onSend()}
-                  >
+                  <Button className="send-button" onClick={() => onSend()}>
                     <Send size={20} />
                   </Button>
                 </IconTooltip>

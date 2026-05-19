@@ -361,6 +361,30 @@ export const commonBrowserTools = [
     {},
   ),
   tool(
+    BROWSER_TOOL_NAME.createSkill,
+    "Create a new reusable skill package when no existing skill fits. Never store secrets or one-off task details.",
+    {
+      name: {
+        type: "string",
+        description: "Short reusable skill name",
+      },
+      description: {
+        type: "string",
+        description: "What this skill helps with",
+      },
+      instruction: {
+        type: "string",
+        description: "Reusable SKILL.md instructions for future tasks",
+      },
+      reason: {
+        type: "string",
+        description:
+          "Why this new skill is broadly reusable and not a narrow one-off note",
+      },
+    },
+    ["name", "instruction", "reason"],
+  ),
+  tool(
     BROWSER_TOOL_NAME.readSkill,
     "Read SKILL.md for one available skill package by id after listSkills shows it is relevant.",
     {
@@ -388,7 +412,7 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.updateSkillFile,
-    "Update/add a skill text file only for generalized reusable improvements. Never add secrets or one-off task details.",
+    "Update/add a text file in an existing skill package only. Use createSkill for new skill packages. Never add secrets or one-off task details.",
     {
       skillId: {
         type: "string",
@@ -557,6 +581,7 @@ export function browserToolsForPrompt({
     if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
       return hasUploadedAttachments;
     if (name === BROWSER_TOOL_NAME.listSkills) return hasSkills;
+    if (name === BROWSER_TOOL_NAME.createSkill) return !askMode;
     if (name === BROWSER_TOOL_NAME.readSkill) return hasSkills;
     if (name === BROWSER_TOOL_NAME.readSkillFile) return hasSkills;
     if (name === BROWSER_TOOL_NAME.updateSkillFile) return hasSkills;
