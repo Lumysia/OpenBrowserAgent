@@ -18,6 +18,7 @@ import type { ActiveStream } from "./sidepanel-menu-state";
 import type { SendMessagesRequest } from "../../src/shared/types";
 
 const AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 36;
+const PROGRAMMATIC_SCROLL_IGNORE_MS = 120;
 
 export function useSidepanelTheme(
   accentColor: string | undefined,
@@ -37,21 +38,50 @@ export function useAutoScroll(
 ) {
   const shouldStickToBottomRef = useRef(true);
   const lastScrollHeightRef = useRef(0);
+  const programmaticScrollUntilRef = useRef(0);
 
   useEffect(() => {
     if (autoScroll === false) return undefined;
     const messagesElement = messagesRef.current;
     if (!messagesElement) return undefined;
     const updateStickyState = () => {
+      if (Date.now() < programmaticScrollUntilRef.current) return;
       shouldStickToBottomRef.current = isNearScrollBottom(messagesElement);
       lastScrollHeightRef.current = messagesElement.scrollHeight;
+    };
+    const pauseForWheel = (event: WheelEvent) => {
+      if (event.deltaY < 0) shouldStickToBottomRef.current = false;
+      else if (isNearScrollBottom(messagesElement))
+        shouldStickToBottomRef.current = true;
+    };
+    let touchStartY = 0;
+    const rememberTouchStart = (event: TouchEvent) => {
+      touchStartY = event.touches[0]?.clientY || 0;
+    };
+    const pauseForTouch = (event: TouchEvent) => {
+      const nextY = event.touches[0]?.clientY || touchStartY;
+      if (nextY > touchStartY) shouldStickToBottomRef.current = false;
+      else if (isNearScrollBottom(messagesElement))
+        shouldStickToBottomRef.current = true;
+      touchStartY = nextY;
     };
     updateStickyState();
     messagesElement.addEventListener("scroll", updateStickyState, {
       passive: true,
     });
-    return () =>
+    messagesElement.addEventListener("wheel", pauseForWheel, { passive: true });
+    messagesElement.addEventListener("touchstart", rememberTouchStart, {
+      passive: true,
+    });
+    messagesElement.addEventListener("touchmove", pauseForTouch, {
+      passive: true,
+    });
+    return () => {
       messagesElement.removeEventListener("scroll", updateStickyState);
+      messagesElement.removeEventListener("wheel", pauseForWheel);
+      messagesElement.removeEventListener("touchstart", rememberTouchStart);
+      messagesElement.removeEventListener("touchmove", pauseForTouch);
+    };
   }, [autoScroll, messagesRef]);
 
   useLayoutEffect(() => {
@@ -61,6 +91,8 @@ export function useAutoScroll(
     if (messagesElement.scrollHeight < lastScrollHeightRef.current)
       shouldStickToBottomRef.current = true;
     if (!shouldStickToBottomRef.current) return;
+    programmaticScrollUntilRef.current =
+      Date.now() + PROGRAMMATIC_SCROLL_IGNORE_MS;
     messagesElement.scrollTo({
       top: messagesElement.scrollHeight,
       behavior: streaming ? "auto" : "smooth",
