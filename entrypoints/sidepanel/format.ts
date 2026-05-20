@@ -64,7 +64,7 @@ export function formatMessageTime(value: number) {
 }
 
 export function formatEstimatedTokens(chars: number, t: Messages) {
-  return `${formatCompactNumber(Math.ceil(chars / ESTIMATED_CHARS_PER_TOKEN))} ${t.sidepanel.runInfo.estimated} Token`;
+  return `${formatCompactNumber(Math.ceil(chars / ESTIMATED_CHARS_PER_TOKEN))} ${t.sidepanel.runInfo.estimated} ${t.sidepanel.runInfo.tokenUnit}`;
 }
 
 export function formatCompactNumber(value: number) {

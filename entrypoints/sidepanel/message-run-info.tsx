@@ -100,18 +100,16 @@ function RunInfoSection({
   return (
     <div className="run-info-section">
       <div className="run-info-section-title">{title}</div>
-      <MetricRow
-        label={t.sidepanel.runInfo.ttft}
-        value={formatMs(ttft(metrics), t)}
-      />
-      <MetricRow
-        label={t.sidepanel.runInfo.tps}
-        value={formatTps(metrics, t)}
-      />
-      <MetricRow
-        label={t.sidepanel.runInfo.output}
-        value={modeLabel(t, metrics.outputMode)}
-      />
+      <div className="run-info-metric-pair">
+        <MetricRow
+          label={t.sidepanel.runInfo.ttft}
+          value={formatMs(ttft(metrics), t)}
+        />
+        <MetricRow
+          label={t.sidepanel.runInfo.tps}
+          value={formatTps(metrics, t)}
+        />
+      </div>
       <PromptBreakdownBar breakdown={metrics.promptBreakdown} t={t} />
       <div className="run-info-token-grid">
         <MetricRow
@@ -407,7 +405,7 @@ function formatMs(value: number | undefined, t: Messages) {
 
 function formatTokenCount(value: number | undefined, t: Messages) {
   if (value === undefined) return t.sidepanel.runInfo.unavailable;
-  return `${formatCompactNumber(value)} Token`;
+  return `${formatCompactNumber(value)} ${t.sidepanel.runInfo.tokenUnit}`;
 }
 
 function formatNumber(value: number | undefined, t: Messages) {

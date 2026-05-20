@@ -184,6 +184,14 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+.run-info-metric-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.run-info-metric-pair .run-info-row {
+  gap: 6px;
+}
 .run-info-row {
   min-width: 0;
   color: var(--muted-foreground);

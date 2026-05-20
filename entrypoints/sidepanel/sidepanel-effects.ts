@@ -62,6 +62,8 @@ export function useChatSelection(
     }
     if (!initializedChatSelectionRef.current) {
       initializedChatSelectionRef.current = true;
+      if (activeChatId && chats.some((chat) => chat.id === activeChatId))
+        return;
       createChat();
       return;
     }
