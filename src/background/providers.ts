@@ -7,6 +7,7 @@ import type {
   Skill,
   UploadedAttachment,
 } from "../shared/types";
+import { requestAnthropic } from "./anthropic-provider";
 import { requestGemini } from "./gemini-provider";
 import { requestOpenAIChatCompletions } from "./openai-chat-provider";
 import { requestOpenAIResponses } from "./openai-responses-provider";
@@ -35,6 +36,24 @@ export async function requestOpenAICompatible(
   workspace?: AgentWorkspace,
   drainQueuedMessages: () => QueuedUserMessage[] = () => [],
 ): Promise<ProviderTextResult> {
+  if (model.provider === "anthropic")
+    return requestAnthropic(
+      model,
+      system,
+      messages,
+      mode,
+      maxToolSteps,
+      signal,
+      port,
+      chatId,
+      messageId,
+      attachmentRetryNotice,
+      uploadedAttachments,
+      availableSkills,
+      mcpServers,
+      workspace,
+      drainQueuedMessages,
+    );
   if (model.provider === "gemini")
     return requestGemini(
       model,

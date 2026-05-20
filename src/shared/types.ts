@@ -6,6 +6,7 @@ export type ProviderId =
   | "ollama"
   | "openai"
   | "openai-responses"
+  | "anthropic"
   | "openrouter"
   | "aihubmix"
   | "deepseek"
@@ -381,6 +382,7 @@ export const providerLabels: Record<ProviderId, string> = {
   ollama: "Ollama",
   openai: "OpenAI",
   "openai-responses": "OpenAI Responses",
+  anthropic: "Anthropic",
   openrouter: "OpenRouter",
   aihubmix: "AIHubMix",
   deepseek: "DeepSeek",
@@ -392,6 +394,7 @@ export const providerLabels: Record<ProviderId, string> = {
 export const providerDefaultBaseUrls: Partial<Record<ProviderId, string>> = {
   openai: "https://api.openai.com/v1",
   "openai-responses": "https://api.openai.com/v1",
+  anthropic: "https://api.anthropic.com/v1",
   openrouter: "https://openrouter.ai/api/v1",
   aihubmix: "https://aihubmix.com/v1",
   deepseek: "https://api.deepseek.com/v1",

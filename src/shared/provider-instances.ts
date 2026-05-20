@@ -9,6 +9,7 @@ import {
 export const PROVIDER_TYPES: ProviderId[] = [
   "openai",
   "openai-responses",
+  "anthropic",
   "ollama",
   "gemini",
   "deepseek",
@@ -22,6 +23,7 @@ export const PROVIDER_TYPES: ProviderId[] = [
 export const MANUAL_MODEL_PROVIDER_TYPES: ProviderId[] = [
   "openai",
   "openai-responses",
+  "anthropic",
   "minimax",
 ];
 

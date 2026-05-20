@@ -86,6 +86,26 @@ export function createOpenAIResponsesInput(
   }));
 }
 
+export function createAnthropicMessages(
+  messages: ChatMessage[],
+  multimodal: boolean,
+  requestAttachments: UploadedAttachment[] = [],
+  availableSkills: Skill[] = [],
+  workspace?: AgentWorkspace,
+) {
+  return messages.map((message, index) => ({
+    role: message.role === "assistant" ? "assistant" : "user",
+    content: createAnthropicContent(
+      message,
+      index === messages.length - 1,
+      multimodal,
+      index === messages.length - 1 ? requestAttachments : [],
+      index === messages.length - 1 ? availableSkills : [],
+      index === messages.length - 1 ? workspace : undefined,
+    ),
+  }));
+}
+
 export function hasImageAttachments(attachments: UploadedAttachment[]) {
   return attachments.some(
     (attachment) =>
@@ -314,6 +334,43 @@ function createOpenAIResponsesContent(
       image_url: attachment.dataUrl,
     }));
   return [{ type: "input_text", text }, ...imageParts];
+}
+
+function createAnthropicContent(
+  message: ChatMessage,
+  isLatest: boolean,
+  multimodal: boolean,
+  requestAttachments: UploadedAttachment[],
+  availableSkills: Skill[],
+  workspace?: AgentWorkspace,
+) {
+  const text = renderMessageText(
+    message,
+    isLatest,
+    requestAttachments,
+    availableSkills,
+    workspace,
+  );
+  const attachments = requestAttachments.length
+    ? requestAttachments
+    : getUploadedAttachments(message);
+  if (!multimodal) return [{ type: "text", text }];
+  const imageParts = attachments
+    .filter(
+      (attachment) =>
+        attachment.kind === ATTACHMENT_KIND.image &&
+        attachment.dataUrl &&
+        isVisionImageMimeType(attachment.type),
+    )
+    .map((attachment) => ({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: attachment.type || "image/png",
+        data: base64FromDataUrl(attachment.dataUrl || ""),
+      },
+    }));
+  return [{ type: "text", text }, ...imageParts];
 }
 
 function renderMessageText(

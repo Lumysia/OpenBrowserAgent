@@ -421,6 +421,30 @@ async function requestPlainText(
     );
   }
 
+  if (model.provider === "anthropic") {
+    const baseUrl = model.baseUrl.replace(/\/$/, "");
+    const response = await fetch(`${baseUrl}/messages`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01",
+        ...(model.apiKey ? { "x-api-key": model.apiKey } : {}),
+      },
+      body: JSON.stringify({
+        model: model.modelName,
+        max_tokens: 512,
+        system: messages[0]?.content || "",
+        messages: messages.slice(1).map((message) => ({
+          role: "user",
+          content: [{ type: "text", text: message.content }],
+        })),
+      }),
+    });
+    if (!response.ok) throw new Error(await response.text());
+    const data = await response.json();
+    return anthropicText(data);
+  }
+
   if (model.provider === "openai-responses") {
     const baseUrl = model.baseUrl.replace(/\/$/, "");
     const response = await fetch(`${baseUrl}/responses`, {
@@ -481,5 +505,13 @@ function responsesText(data: { output_text?: string; output?: unknown[] }) {
         ? String((content as Record<string, unknown>).text)
         : "",
     )
+    .join("");
+}
+
+function anthropicText(data: {
+  content?: Array<{ type?: string; text?: string }>;
+}) {
+  return (data.content || [])
+    .map((part) => (part.type === "text" ? part.text || "" : ""))
     .join("");
 }
