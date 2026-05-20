@@ -38,6 +38,9 @@
     var(--accent-softer) 34%,
     var(--card)
   );
+  --composer-surface: var(--card);
+  --composer-control-surface: var(--card);
+  --composer-border: var(--border);
   --panel-gradient-top: color-mix(
     in srgb,
     var(--accent-softer) 16%,
@@ -146,6 +149,17 @@
     in srgb,
     var(--accent-softer) 22%,
     var(--card)
+  );
+  --composer-surface: color-mix(in srgb, var(--background) 86%, var(--card));
+  --composer-control-surface: color-mix(
+    in srgb,
+    var(--background) 76%,
+    var(--card)
+  );
+  --composer-border: color-mix(
+    in srgb,
+    var(--accent-strong) 18%,
+    var(--border)
   );
   --panel-gradient-top: var(--background);
   --panel-gradient-mid: color-mix(
@@ -301,6 +315,17 @@
       in srgb,
       var(--accent-softer) 22%,
       var(--card)
+    );
+    --composer-surface: color-mix(in srgb, var(--background) 86%, var(--card));
+    --composer-control-surface: color-mix(
+      in srgb,
+      var(--background) 76%,
+      var(--card)
+    );
+    --composer-border: color-mix(
+      in srgb,
+      var(--accent-strong) 18%,
+      var(--border)
     );
     --panel-gradient-top: var(--background);
     --panel-gradient-mid: color-mix(

@@ -1,9 +1,9 @@
 ﻿.composer-box {
   position: relative;
   display: grid;
-  border: 1px solid var(--border);
+  border: 1px solid var(--composer-border);
   border-radius: 13px;
-  background: var(--card);
+  background: var(--composer-surface);
   box-shadow: 0 8px 24px rgba(22, 21, 18, 0.05);
   transition:
     border-color 0.18s ease,
@@ -22,6 +22,7 @@
   padding-top: 18px;
   padding-right: 50px;
   box-shadow: none;
+  background: transparent;
   resize: none;
   overflow-y: auto;
 }
@@ -101,7 +102,7 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: var(--card);
+  background: var(--composer-control-surface);
   color: var(--accent-strong);
   transition:
     transform 0.14s ease,
