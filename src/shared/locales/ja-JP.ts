@@ -507,6 +507,9 @@ export const jaJP: LocaleMessages = {
     agentWorkspaceNewFile: "新しいワークスペースファイル",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "ワークスペースファイルはまだありません。",
+    resetDefaultAgents: "既定のエージェントにリセット",
+    resetDefaultAgentsDescription:
+      "現在のエージェントを組み込みの既定値に置き換えます。カスタムエージェントとワークスペースは削除されます。",
     sync: "同期",
     providers: "プロバイダー",
     mcpServers: "MCPサーバー",

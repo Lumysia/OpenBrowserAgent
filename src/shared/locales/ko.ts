@@ -445,6 +445,9 @@ export const ko: LocaleMessages = {
     agentWorkspaceNewFile: "새 워크스페이스 파일",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "아직 워크스페이스 파일이 없습니다.",
+    resetDefaultAgents: "기본 에이전트 재설정",
+    resetDefaultAgentsDescription:
+      "현재 에이전트를 내장 기본값으로 바꿉니다. 사용자 지정 에이전트와 워크스페이스는 제거됩니다.",
     sync: "동기화",
     providers: "제공업체",
     mcpServers: "MCP 서버",

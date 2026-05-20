@@ -454,6 +454,9 @@ export const ptBR: LocaleMessages = {
     agentWorkspaceNewFile: "Novo arquivo de workspace",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "Ainda não há arquivos de workspace.",
+    resetDefaultAgents: "Redefinir agentes padrão",
+    resetDefaultAgentsDescription:
+      "Substitui os agentes atuais pelo padrão integrado. Agentes personalizados e workspaces serão removidos.",
     sync: "Sincronização",
     providers: "Provedores",
     mcpServers: "Servidores MCP",

@@ -445,6 +445,9 @@ export const enUS = {
     agentWorkspaceNewFile: "New workspace file",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "No workspace files yet.",
+    resetDefaultAgents: "Reset default agents",
+    resetDefaultAgentsDescription:
+      "Replace current agents with the built-in default. Custom agents and workspaces will be removed.",
     sync: "Sync",
     providers: "Providers",
     mcpServers: "MCP Servers",

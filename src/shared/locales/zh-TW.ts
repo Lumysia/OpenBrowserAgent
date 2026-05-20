@@ -363,6 +363,9 @@ export const zhTW: LocaleMessages = {
     agentWorkspaceNewFile: "新增工作區檔案",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "尚無工作區檔案。",
+    resetDefaultAgents: "重設預設智慧體",
+    resetDefaultAgentsDescription:
+      "用內建預設智慧體取代目前智慧體。自訂智慧體和工作區會被移除。",
     sync: "同步",
     providers: "提供者",
     mcpServers: "MCP 伺服器",

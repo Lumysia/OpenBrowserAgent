@@ -6,10 +6,15 @@ import {
   FileText,
   Pencil,
   Plus,
+  RotateCcw,
   Trash2,
   Upload,
 } from "lucide-react";
-import { DEFAULT_AGENT_ID, createAgentDraft } from "../../src/shared/agents";
+import {
+  DEFAULT_AGENT,
+  DEFAULT_AGENT_ID,
+  createAgentDraft,
+} from "../../src/shared/agents";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import type { Agent, AgentWorkspace } from "../../src/shared/types";
@@ -24,7 +29,10 @@ import {
 } from "../../src/shared/workspace";
 import {
   Button,
+  Card,
+  CardContent,
   CardDescription,
+  CardTitle,
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -82,6 +90,16 @@ export function AgentsPage() {
 
   function agentDisplayName(agent: Agent) {
     return agent.id === DEFAULT_AGENT_ID ? t.words.agent : agent.name;
+  }
+
+  function resetDefaultAgents() {
+    const now = Date.now();
+    setAgents([{ ...DEFAULT_AGENT, createdAt: now, updatedAt: now }]);
+    setWorkspaces([createWorkspace(DEFAULT_AGENT_ID, now)]);
+    setPreferences((current) => ({
+      ...current,
+      selectedAgentId: DEFAULT_AGENT_ID,
+    }));
   }
 
   return (
@@ -179,6 +197,23 @@ export function AgentsPage() {
           );
         })}
       </Accordion>
+      <Card>
+        <CardContent>
+          <div className="setting-switch-row">
+            <div>
+              <CardTitle className="settings-section-title">
+                <RotateCcw size={18} /> {t.options.resetDefaultAgents}
+              </CardTitle>
+              <CardDescription>
+                {t.options.resetDefaultAgentsDescription}
+              </CardDescription>
+            </div>
+            <Button variant="outline" onClick={resetDefaultAgents}>
+              {t.options.resetDefaults}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

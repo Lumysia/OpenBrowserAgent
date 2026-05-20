@@ -57,6 +57,7 @@ const DEFAULT_WORKSPACE_FILE_CONTENT: Record<string, string> = {
   [WORKSPACE_FILE_PATH.agents]: `# Workspace Rules
 
 - Use SOUL.md for durable behavior and persona.
+- For browser automation, search, or research tasks, read the browser-guidance skill before acting.
 - Use USER.md for stable user preferences and profile notes.
 - Use MEMORY.md for compact long-term facts, decisions, and lessons.
 - Use NOTES.md for working notes and task context that should persist.

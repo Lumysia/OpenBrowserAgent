@@ -503,6 +503,9 @@ export const deDE: LocaleMessages = {
     agentWorkspaceNewFile: "Neue Arbeitsbereichsdatei",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "Noch keine Arbeitsbereichsdateien.",
+    resetDefaultAgents: "Standard-Agenten zurücksetzen",
+    resetDefaultAgentsDescription:
+      "Ersetzt aktuelle Agenten durch den integrierten Standard. Benutzerdefinierte Agenten und Arbeitsbereiche werden entfernt.",
     sync: "Synchronisierung",
     providers: "Anbieter",
     mcpServers: "MCP-Server",

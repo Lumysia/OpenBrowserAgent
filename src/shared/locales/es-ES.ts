@@ -481,6 +481,9 @@ export const esES: LocaleMessages = {
     agentWorkspaceNewFile: "Nuevo archivo de espacio de trabajo",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "Aún no hay archivos de espacio de trabajo.",
+    resetDefaultAgents: "Restablecer agentes predeterminados",
+    resetDefaultAgentsDescription:
+      "Reemplaza los agentes actuales por el valor integrado predeterminado. Se eliminarán los agentes personalizados y los espacios de trabajo.",
     sync: "Sincronización",
     providers: "Proveedores",
     mcpServers: "Servidores MCP",

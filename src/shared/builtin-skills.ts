@@ -30,13 +30,18 @@ Use this skill for browser automation tasks that involve inspecting pages, click
 
 ## Workflow
 
-1. Inspect the active page or target tab before acting.
+1. Inspect the active page and relevant already-open tabs before opening new pages. Reuse an existing useful tab when it matches the task.
 2. Use accessible elements as the primary map for clicking and text entry.
 3. For text entry, match textbox, contentEditable, input, label, placeholder, and nearby context, then use \`inputTextByAiID\`.
 4. Re-read page state after actions that change controls, navigation, loading, or submitted content.
 5. Use visual evidence for image inspection, judging, choosing, or description.
 6. For search and research, open result pages, compare reliable sources, and cite sourced claims.
-7. Use deferred browser tools when common tools do not provide the needed page control or evidence.
+7. Keep tab state tidy during and after the task:
+   - Track tabs opened by this task.
+   - Close opened tabs that are no longer useful, such as duplicate search pages, dead ends, transient login/interstitial pages, and pages whose information has already been captured.
+   - Keep the final useful tab or small set of useful tabs open when they support the user's goal.
+   - If the user asks to use, open, or end on a specific tab/page, switch to that tab before finishing.
+8. Use deferred browser tools when common tools do not provide the needed page control or evidence.
 `,
       },
     ],
