@@ -319,7 +319,7 @@ function AgentWorkspaceEditor({
                 ref={importInputRef}
                 type="file"
                 accept=".zip,application/zip"
-                className="sr-only"
+                hidden
                 onChange={(event) => importZip(event.currentTarget.files?.[0])}
               />
               <Button
