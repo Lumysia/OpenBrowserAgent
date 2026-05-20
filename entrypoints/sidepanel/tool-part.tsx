@@ -1,22 +1,3 @@
-import {
-  Copy,
-  Clock,
-  Gauge,
-  Download,
-  ExternalLink,
-  FileSearch,
-  FileText,
-  Image as ImageIcon,
-  Layers,
-  MousePointerClick,
-  Network,
-  PanelTop,
-  Plug,
-  Search,
-  TerminalSquare,
-  Square,
-  Type,
-} from "lucide-react";
 import React from "react";
 import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
 import type { Messages } from "../../src/shared/i18n";
@@ -35,6 +16,9 @@ import {
 } from "../../src/ui/components";
 import { cdpToolDetail } from "./cdp-tool-detail";
 import { formatToolMessage } from "./format";
+import { isMemoryToolName, toolIcon } from "./tool-icons";
+import { CapturedTabImage, GeneratedImage } from "./tool-media";
+import { toolReferences, type ToolReference } from "./tool-references";
 
 export function ToolPart({
   t,
@@ -150,7 +134,7 @@ function ToolReferenceButton({
   reference,
   index,
 }: {
-  reference: { title: string; icon: React.ReactNode; url?: string };
+  reference: ToolReference;
   index: number;
 }) {
   const url = reference.url;
@@ -262,6 +246,28 @@ function toolDisplay(
         stringValue(output.query) || stringValue(input.query),
         `${output.results.length} matches`,
       ]);
+    if (isMemoryToolName(name) && Array.isArray(output.entries))
+      return `${output.entries.length} entries`;
+    if (isMemoryToolName(name))
+      return compactJoin([
+        stringValue(
+          (output.entry as Record<string, unknown> | undefined)?.id,
+        ) || stringValue(input.id),
+        stringValue(output.path),
+      ]);
+    if (
+      name === BROWSER_TOOL_NAME.searchChatHistory &&
+      Array.isArray(output.results)
+    )
+      return compactJoin([
+        stringValue(output.query) || stringValue(input.query),
+        `${output.results.length} chats`,
+      ]);
+    if (
+      name === BROWSER_TOOL_NAME.readChatThread ||
+      name === BROWSER_TOOL_NAME.deleteChatThread
+    )
+      return stringValue(output.title) || stringValue(input.chatId);
     if (
       name === BROWSER_TOOL_NAME.listMcpServers &&
       Array.isArray(output.servers)
@@ -331,219 +337,6 @@ function toolDisplay(
   })();
   const references = toolReferences(name, output, input);
   return { title, description, references };
-}
-
-function toolReferences(
-  name: string,
-  output: Record<string, unknown>,
-  input: Record<string, unknown>,
-) {
-  const references: Array<{
-    title: string;
-    url?: string;
-    icon: React.ReactNode;
-  }> = [];
-  if (
-    name === BROWSER_TOOL_NAME.openNewTabWithURL &&
-    output.tab &&
-    typeof output.tab === "object"
-  ) {
-    const tab = output.tab as { title?: string; url?: string };
-    if (tab.title)
-      references.push({
-        title: tab.title,
-        url: tab.url,
-        icon: <ExternalLink size={14} />,
-      });
-    return references;
-  }
-  if (
-    name === BROWSER_TOOL_NAME.getTabContent &&
-    Array.isArray(output.contents)
-  ) {
-    return output.contents
-      .map((item) => item as { title?: string; url?: string })
-      .filter((item) => item.title)
-      .map((item) => ({
-        title: item.title || "",
-        url: item.url,
-        icon: <ExternalLink size={14} />,
-      }));
-  }
-  if (
-    name === BROWSER_TOOL_NAME.openSearchTab &&
-    typeof input.query === "string"
-  )
-    references.push({ title: input.query, icon: <Search size={14} /> });
-  return references;
-}
-
-function toolIcon(name: string) {
-  const lowerName = name.toLowerCase();
-  if (name === BROWSER_TOOL_NAME.loadBrowserTools)
-    return <Layers size={19} strokeWidth={2.1} />;
-  if (isWorkspaceToolName(name)) {
-    if (name === BROWSER_TOOL_NAME.searchWorkspaceFiles)
-      return <FileSearch size={19} strokeWidth={2.1} />;
-    return <FileText size={19} strokeWidth={2.1} />;
-  }
-  if (lowerName.includes("mcp")) return <Plug size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("input") || lowerName.includes("fill"))
-    return <Type size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("presskey"))
-    return <Type size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("click") || lowerName.includes("mouse"))
-    return <MousePointerClick size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("drag"))
-    return <MousePointerClick size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("find") || lowerName.includes("search"))
-    return <Search size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("download"))
-    return <Download size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("time") || lowerName.includes("wait"))
-    return <Clock size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("lighthouse"))
-    return <Gauge size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("network"))
-    return <Network size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("memory") || lowerName.includes("nodesbyclass"))
-    return <FileSearch size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("screencast"))
-    return <PanelTop size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("dialog") || lowerName.includes("emulate"))
-    return <PanelTop size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("performance") || lowerName.includes("trace"))
-    return <Gauge size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("screenshot") || lowerName.includes("snapshot"))
-    return <PanelTop size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("script") || lowerName.includes("console"))
-    return <TerminalSquare size={19} strokeWidth={2.1} />;
-  if (name === BROWSER_TOOL_NAME.generateImage)
-    return <ImageIcon size={19} strokeWidth={2.1} />;
-  if (
-    name === BROWSER_TOOL_NAME.readUploadedAttachment ||
-    name === BROWSER_TOOL_NAME.readFileFromUrl
-  )
-    return <FileSearch size={19} strokeWidth={2.1} />;
-  if (
-    name === BROWSER_TOOL_NAME.listSkills ||
-    name === BROWSER_TOOL_NAME.createSkill ||
-    name === BROWSER_TOOL_NAME.readSkill ||
-    name === BROWSER_TOOL_NAME.readSkillFile ||
-    name === BROWSER_TOOL_NAME.updateSkillFile ||
-    name === BROWSER_TOOL_NAME.patchSkillFile
-  )
-    return <FileText size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("element") || lowerName.includes("properties"))
-    return <FileSearch size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("scroll"))
-    return <PanelTop size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("content"))
-    return <FileText size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("group"))
-    return <Layers size={19} strokeWidth={2.1} />;
-  if (lowerName.includes("tab") || lowerName.includes("page"))
-    return <ExternalLink size={19} strokeWidth={2.1} />;
-  return <Square size={15} strokeWidth={2.1} />;
-}
-
-function isWorkspaceToolName(name: string) {
-  return (
-    name === BROWSER_TOOL_NAME.listWorkspaceFiles ||
-    name === BROWSER_TOOL_NAME.readWorkspaceFile ||
-    name === BROWSER_TOOL_NAME.writeWorkspaceFile ||
-    name === BROWSER_TOOL_NAME.patchWorkspaceFile ||
-    name === BROWSER_TOOL_NAME.deleteWorkspaceFile ||
-    name === BROWSER_TOOL_NAME.searchWorkspaceFiles
-  );
-}
-
-function GeneratedImage({
-  output,
-  loading,
-  t,
-}: {
-  output: Record<string, unknown>;
-  loading: boolean;
-  t: Messages;
-}) {
-  const image = stringValue(output.image);
-  const prompt = stringValue(output.prompt);
-  if (loading) return <div className="generated-image-skeleton ui-skeleton" />;
-  if (!image || output.error) return null;
-  const canCopyImage =
-    image.startsWith("data:") && typeof ClipboardItem !== "undefined";
-  async function copyImage() {
-    if (!canCopyImage) return;
-    const blob = await (await fetch(image)).blob();
-    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-  }
-  return (
-    <div className="generated-image-result">
-      <img src={image} alt={prompt || t.sidepanel.generatedImage} />
-      <div className="row">
-        <a
-          className="ui-button ui-button-secondary ui-button-sm generated-image-download"
-          href={image}
-          download="generated-image.png"
-        >
-          <Download size={14} /> {t.sidepanel.downloadGeneratedImage}
-        </a>
-        {canCopyImage && (
-          <Button variant="secondary" size="sm" onClick={copyImage}>
-            <Copy size={14} /> {t.sidepanel.copyImage}
-          </Button>
-        )}
-        {prompt && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigator.clipboard.writeText(prompt)}
-          >
-            <Copy size={14} /> {t.sidepanel.copyPrompt}
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function CapturedTabImage({
-  output,
-  t,
-}: {
-  output: Record<string, unknown>;
-  t: Messages;
-}) {
-  const image = stringValue(output.image);
-  const format = stringValue(output.format) || "png";
-  if (!image || output.error) return null;
-  const canCopyImage =
-    image.startsWith("data:") && typeof ClipboardItem !== "undefined";
-  async function copyImage() {
-    if (!canCopyImage) return;
-    const blob = await (await fetch(image)).blob();
-    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-  }
-  return (
-    <div className="generated-image-result">
-      <img src={image} alt={t.sidepanel.capturedTabImage} />
-      <div className="row">
-        <a
-          className="ui-button ui-button-secondary ui-button-sm generated-image-download"
-          href={image}
-          download={`tab-screenshot.${format}`}
-        >
-          <Download size={14} /> {t.sidepanel.downloadCapturedTabImage}
-        </a>
-        {canCopyImage && (
-          <Button variant="secondary" size="sm" onClick={copyImage}>
-            <Copy size={14} /> {t.sidepanel.copyImage}
-          </Button>
-        )}
-      </div>
-    </div>
-  );
 }
 
 function fallbackToolDetail(

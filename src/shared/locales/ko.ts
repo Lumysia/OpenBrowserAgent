@@ -390,6 +390,41 @@ export const ko: LocaleMessages = {
         running: "워크스페이스 파일 검색 중",
         done: "워크스페이스 파일 검색함",
       },
+      listMemory: { running: "메모리 나열 중", done: "메모리 나열함" },
+      addMemory: { running: "메모리 추가 중", done: "메모리 추가함" },
+      updateMemory: {
+        running: "메모리 업데이트 중",
+        done: "메모리 업데이트함",
+      },
+      removeMemory: { running: "메모리 제거 중", done: "메모리 제거함" },
+      listUserProfile: {
+        running: "사용자 프로필 나열 중",
+        done: "사용자 프로필 나열함",
+      },
+      addUserProfileNote: {
+        running: "사용자 프로필 노트 추가 중",
+        done: "사용자 프로필 노트 추가함",
+      },
+      updateUserProfileNote: {
+        running: "사용자 프로필 노트 업데이트 중",
+        done: "사용자 프로필 노트 업데이트함",
+      },
+      removeUserProfileNote: {
+        running: "사용자 프로필 노트 제거 중",
+        done: "사용자 프로필 노트 제거함",
+      },
+      searchChatHistory: {
+        running: "채팅 기록 검색 중",
+        done: "채팅 기록 검색함",
+      },
+      readChatThread: {
+        running: "채팅 스레드 읽는 중",
+        done: "채팅 스레드 읽음",
+      },
+      deleteChatThread: {
+        running: "채팅 스레드 삭제 중",
+        done: "채팅 스레드 삭제함",
+      },
     },
   },
   options: {
@@ -481,6 +516,7 @@ export const ko: LocaleMessages = {
     skillsDescription: "스킬로 AI에 즉시 메시지를 보냅니다.",
     newSkill: "새 스킬",
     importSkillZip: "ZIP 가져오기",
+    importWorkspaceZip: "workspace ZIP 가져오기",
     importingSkillZip: "가져오는 중...",
     importSkillZipError: "스킬 가져오기 실패",
     noSkillsTitle: "아직 스킬이 없습니다",
@@ -495,6 +531,7 @@ export const ko: LocaleMessages = {
     filePath: "파일 경로",
     downloadFile: "파일 다운로드",
     downloadSkillZip: "ZIP 다운로드",
+    downloadWorkspaceZip: "workspace ZIP 다운로드",
     downloadSkillPackage: ".skill 다운로드",
     duplicateSkill: "클론",
     disabled: "비활성화됨",

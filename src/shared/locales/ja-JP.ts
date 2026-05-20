@@ -454,6 +454,38 @@ export const jaJP: LocaleMessages = {
         running: "ワークスペースファイルを検索中",
         done: "ワークスペースファイルを検索しました",
       },
+      listMemory: { running: "メモリを一覧中", done: "メモリを一覧しました" },
+      addMemory: { running: "メモリを追加中", done: "メモリを追加しました" },
+      updateMemory: { running: "メモリを更新中", done: "メモリを更新しました" },
+      removeMemory: { running: "メモリを削除中", done: "メモリを削除しました" },
+      listUserProfile: {
+        running: "ユーザープロファイルを一覧中",
+        done: "ユーザープロファイルを一覧しました",
+      },
+      addUserProfileNote: {
+        running: "ユーザープロファイルメモを追加中",
+        done: "ユーザープロファイルメモを追加しました",
+      },
+      updateUserProfileNote: {
+        running: "ユーザープロファイルメモを更新中",
+        done: "ユーザープロファイルメモを更新しました",
+      },
+      removeUserProfileNote: {
+        running: "ユーザープロファイルメモを削除中",
+        done: "ユーザープロファイルメモを削除しました",
+      },
+      searchChatHistory: {
+        running: "チャット履歴を検索中",
+        done: "チャット履歴を検索しました",
+      },
+      readChatThread: {
+        running: "チャットスレッドを読み込み中",
+        done: "チャットスレッドを読み込みました",
+      },
+      deleteChatThread: {
+        running: "チャットスレッドを削除中",
+        done: "チャットスレッドを削除しました",
+      },
     },
   },
   options: {
@@ -550,6 +582,7 @@ export const jaJP: LocaleMessages = {
     skillsDescription: "スキルでAIにすばやく指示を送信します。",
     newSkill: "新しいスキル",
     importSkillZip: "ZIPをインポート",
+    importWorkspaceZip: "workspace ZIPをインポート",
     importingSkillZip: "インポート中...",
     importSkillZipError: "スキルのインポートに失敗しました",
     noSkillsTitle: "スキルはまだありません",
@@ -563,6 +596,7 @@ export const jaJP: LocaleMessages = {
     filePath: "ファイルパス",
     downloadFile: "ファイルをダウンロード",
     downloadSkillZip: "ZIPをダウンロード",
+    downloadWorkspaceZip: "workspace ZIPをダウンロード",
     downloadSkillPackage: ".skillをダウンロード",
     duplicateSkill: "クローン",
     disabled: "無効",

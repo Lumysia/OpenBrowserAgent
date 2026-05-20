@@ -2,6 +2,7 @@ import { storage } from "../shared/storage";
 import type { AgentWorkspace } from "../shared/types";
 import {
   deleteWorkspaceFile as deleteWorkspaceFileHelper,
+  isWorkspaceAgentWritableFile,
   patchWorkspaceFile as patchWorkspaceFileHelper,
   searchWorkspaceFiles as searchWorkspaceFilesHelper,
   upsertWorkspaceFile,
@@ -39,6 +40,12 @@ export async function writeWorkspaceFile(
   if (!workspace) return { error: "No current agent workspace" };
   const path = String(input.path || "").trim();
   const content = String(input.content ?? "");
+  if (!isWorkspaceAgentWritableFile(path))
+    return {
+      error:
+        "This workspace file is managed by product rules or memory tools and cannot be changed with generic workspace file tools.",
+      path,
+    };
   const result = upsertWorkspaceFile(workspace, path, content);
   if (!result.ok) return { error: result.error, path };
   await persistWorkspace(result.workspace);
@@ -60,6 +67,12 @@ export async function patchWorkspaceFile(
   const operation = String(
     input.operation || "replace",
   ) as WorkspacePatchOperation;
+  if (!isWorkspaceAgentWritableFile(path))
+    return {
+      error:
+        "This workspace file is managed by product rules or memory tools and cannot be changed with generic workspace file tools.",
+      path,
+    };
   if (!["replace", "append", "prepend"].includes(operation))
     return { error: "Invalid workspace patch operation", operation };
   const result = patchWorkspaceFileHelper(
@@ -85,6 +98,12 @@ export async function deleteWorkspaceFile(
 ) {
   if (!workspace) return { error: "No current agent workspace" };
   const path = String(input.path || "").trim();
+  if (!isWorkspaceAgentWritableFile(path))
+    return {
+      error:
+        "This workspace file is managed by product rules or memory tools and cannot be deleted with generic workspace file tools.",
+      path,
+    };
   const result = deleteWorkspaceFileHelper(workspace, path);
   if (!result.ok) return { error: result.error, path };
   await persistWorkspace(result.workspace);

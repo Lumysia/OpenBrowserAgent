@@ -392,6 +392,38 @@ export const enUS = {
         running: "Searching workspace files",
         done: "Searched workspace files",
       },
+      listMemory: { running: "Listing memory", done: "Listed memory" },
+      addMemory: { running: "Adding memory", done: "Added memory" },
+      updateMemory: { running: "Updating memory", done: "Updated memory" },
+      removeMemory: { running: "Removing memory", done: "Removed memory" },
+      listUserProfile: {
+        running: "Listing user profile",
+        done: "Listed user profile",
+      },
+      addUserProfileNote: {
+        running: "Adding user profile note",
+        done: "Added user profile note",
+      },
+      updateUserProfileNote: {
+        running: "Updating user profile note",
+        done: "Updated user profile note",
+      },
+      removeUserProfileNote: {
+        running: "Removing user profile note",
+        done: "Removed user profile note",
+      },
+      searchChatHistory: {
+        running: "Searching chat history",
+        done: "Searched chat history",
+      },
+      readChatThread: {
+        running: "Reading chat thread",
+        done: "Read chat thread",
+      },
+      deleteChatThread: {
+        running: "Deleting chat thread",
+        done: "Deleted chat thread",
+      },
     },
   },
   options: {
@@ -486,6 +518,7 @@ export const enUS = {
       "Create reusable browser skills the user or AI can choose for a message.",
     newSkill: "New Skill",
     importSkillZip: "Import ZIP",
+    importWorkspaceZip: "Import workspace ZIP",
     importingSkillZip: "Importing...",
     importSkillZipError: "Skill import failed",
     noSkillsTitle: "No skills yet",
@@ -500,6 +533,7 @@ export const enUS = {
     filePath: "File path",
     downloadFile: "Download file",
     downloadSkillZip: "Download ZIP",
+    downloadWorkspaceZip: "Download workspace ZIP",
     downloadSkillPackage: "Download .skill",
     duplicateSkill: "Duplicate",
     disabled: "Disabled",

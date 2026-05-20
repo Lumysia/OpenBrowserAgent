@@ -536,6 +536,92 @@ export const commonBrowserTools = [
     ["query"],
   ),
   tool(
+    BROWSER_TOOL_NAME.listMemory,
+    "List compact long-term memory entries for the current agent.",
+    {},
+  ),
+  tool(
+    BROWSER_TOOL_NAME.addMemory,
+    "Add a stable long-term fact, decision, or lesson. Do not store secrets or temporary task notes.",
+    {
+      text: { type: "string", description: "Short durable memory text" },
+    },
+    ["text"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.updateMemory,
+    "Update one existing long-term memory entry by id.",
+    {
+      id: { type: "string", description: "Memory entry id" },
+      text: { type: "string", description: "Replacement durable memory text" },
+    },
+    ["id", "text"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.removeMemory,
+    "Remove one long-term memory entry by id.",
+    {
+      id: { type: "string", description: "Memory entry id" },
+    },
+    ["id"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.listUserProfile,
+    "List stable user profile and preference notes for the current agent.",
+    {},
+  ),
+  tool(
+    BROWSER_TOOL_NAME.addUserProfileNote,
+    "Add a stable user preference or profile note. Do not store secrets or transient task details.",
+    {
+      text: { type: "string", description: "Short durable user profile note" },
+    },
+    ["text"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.updateUserProfileNote,
+    "Update one existing user profile note by id.",
+    {
+      id: { type: "string", description: "User profile note id" },
+      text: { type: "string", description: "Replacement user profile note" },
+    },
+    ["id", "text"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.removeUserProfileNote,
+    "Remove one user profile note by id.",
+    {
+      id: { type: "string", description: "User profile note id" },
+    },
+    ["id"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.searchChatHistory,
+    "Search saved chat history by title and message text.",
+    {
+      query: { type: "string", description: "Text to search for" },
+      limit: { type: "number", description: "Maximum chat results" },
+    },
+    ["query"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.readChatThread,
+    "Read a saved chat thread by id with truncated message content.",
+    {
+      chatId: { type: "string", description: "Chat thread id" },
+      limit: { type: "number", description: "Maximum messages to return" },
+    },
+    ["chatId"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.deleteChatThread,
+    "Delete one saved chat thread by id when the user explicitly asks.",
+    {
+      chatId: { type: "string", description: "Chat thread id" },
+    },
+    ["chatId"],
+  ),
+  tool(
     BROWSER_TOOL_NAME.listMcpServers,
     "List configured Streamable HTTP MCP servers.",
     {},
@@ -662,6 +748,26 @@ export function browserToolsForPrompt({
       name === BROWSER_TOOL_NAME.deleteWorkspaceFile
     )
       return !askMode && hasWorkspace;
+    if (
+      name === BROWSER_TOOL_NAME.listMemory ||
+      name === BROWSER_TOOL_NAME.listUserProfile
+    )
+      return hasWorkspace;
+    if (
+      name === BROWSER_TOOL_NAME.addMemory ||
+      name === BROWSER_TOOL_NAME.updateMemory ||
+      name === BROWSER_TOOL_NAME.removeMemory ||
+      name === BROWSER_TOOL_NAME.addUserProfileNote ||
+      name === BROWSER_TOOL_NAME.updateUserProfileNote ||
+      name === BROWSER_TOOL_NAME.removeUserProfileNote
+    )
+      return !askMode && hasWorkspace;
+    if (
+      name === BROWSER_TOOL_NAME.searchChatHistory ||
+      name === BROWSER_TOOL_NAME.readChatThread
+    )
+      return hasWorkspace;
+    if (name === BROWSER_TOOL_NAME.deleteChatThread) return !askMode;
     if (
       name === BROWSER_TOOL_NAME.listMcpServers ||
       name === BROWSER_TOOL_NAME.addMcpServer ||

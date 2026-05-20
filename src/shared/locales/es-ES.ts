@@ -422,6 +422,44 @@ export const esES: LocaleMessages = {
         running: "Buscando en archivos del espacio de trabajo",
         done: "Búsqueda en espacio de trabajo completada",
       },
+      listMemory: { running: "Listando memoria", done: "Memoria listada" },
+      addMemory: { running: "Añadiendo memoria", done: "Memoria añadida" },
+      updateMemory: {
+        running: "Actualizando memoria",
+        done: "Memoria actualizada",
+      },
+      removeMemory: {
+        running: "Eliminando memoria",
+        done: "Memoria eliminada",
+      },
+      listUserProfile: {
+        running: "Listando perfil de usuario",
+        done: "Perfil de usuario listado",
+      },
+      addUserProfileNote: {
+        running: "Añadiendo nota de perfil",
+        done: "Nota de perfil añadida",
+      },
+      updateUserProfileNote: {
+        running: "Actualizando nota de perfil",
+        done: "Nota de perfil actualizada",
+      },
+      removeUserProfileNote: {
+        running: "Eliminando nota de perfil",
+        done: "Nota de perfil eliminada",
+      },
+      searchChatHistory: {
+        running: "Buscando historial de chat",
+        done: "Historial de chat buscado",
+      },
+      readChatThread: {
+        running: "Leyendo hilo de chat",
+        done: "Hilo de chat leído",
+      },
+      deleteChatThread: {
+        running: "Eliminando hilo de chat",
+        done: "Hilo de chat eliminado",
+      },
     },
   },
   options: {
@@ -519,6 +557,7 @@ export const esES: LocaleMessages = {
       "Usa habilidades para enviar mensajes a la IA al instante.",
     newSkill: "Nueva habilidad",
     importSkillZip: "Importar ZIP",
+    importWorkspaceZip: "Importar ZIP del workspace",
     importingSkillZip: "Importando...",
     importSkillZipError: "Error al importar habilidad",
     noSkillsTitle: "Aún no hay habilidades",
@@ -533,6 +572,7 @@ export const esES: LocaleMessages = {
     filePath: "Ruta del archivo",
     downloadFile: "Descargar archivo",
     downloadSkillZip: "Descargar ZIP",
+    downloadWorkspaceZip: "Descargar ZIP del workspace",
     downloadSkillPackage: "Descargar .skill",
     duplicateSkill: "Duplicar",
     disabled: "Deshabilitada",

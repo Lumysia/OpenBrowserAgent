@@ -401,6 +401,38 @@ export const ptBR: LocaleMessages = {
         running: "Pesquisando arquivos do workspace",
         done: "Arquivos do workspace pesquisados",
       },
+      listMemory: { running: "Listando memória", done: "Memória listada" },
+      addMemory: { running: "Adicionando memória", done: "Memória adicionada" },
+      updateMemory: {
+        running: "Atualizando memória",
+        done: "Memória atualizada",
+      },
+      removeMemory: { running: "Removendo memória", done: "Memória removida" },
+      listUserProfile: {
+        running: "Listando perfil do usuário",
+        done: "Perfil do usuário listado",
+      },
+      addUserProfileNote: {
+        running: "Adicionando nota de perfil",
+        done: "Nota de perfil adicionada",
+      },
+      updateUserProfileNote: {
+        running: "Atualizando nota de perfil",
+        done: "Nota de perfil atualizada",
+      },
+      removeUserProfileNote: {
+        running: "Removendo nota de perfil",
+        done: "Nota de perfil removida",
+      },
+      searchChatHistory: {
+        running: "Pesquisando histórico de chats",
+        done: "Histórico de chats pesquisado",
+      },
+      readChatThread: { running: "Lendo conversa", done: "Conversa lida" },
+      deleteChatThread: {
+        running: "Excluindo conversa",
+        done: "Conversa excluída",
+      },
     },
   },
   options: {
@@ -496,6 +528,7 @@ export const ptBR: LocaleMessages = {
       "Use ações rápidas para enviar mensagens instantaneamente para a IA.",
     newSkill: "Nova habilidade",
     importSkillZip: "Importar ZIP",
+    importWorkspaceZip: "Importar ZIP do workspace",
     importingSkillZip: "Importando...",
     importSkillZipError: "Falha ao importar habilidade",
     noSkillsTitle: "Ainda não há ações rápidas",
@@ -510,6 +543,7 @@ export const ptBR: LocaleMessages = {
     filePath: "Caminho do arquivo",
     downloadFile: "Baixar arquivo",
     downloadSkillZip: "Baixar ZIP",
+    downloadWorkspaceZip: "Baixar ZIP do workspace",
     downloadSkillPackage: "Baixar .skill",
     duplicateSkill: "Duplicar",
     disabled: "Desativada",

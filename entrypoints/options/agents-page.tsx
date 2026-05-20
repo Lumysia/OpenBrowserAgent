@@ -1,5 +1,14 @@
-import { useEffect, useState } from "react";
-import { Bot, Check, FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Bot,
+  Check,
+  Download,
+  FileText,
+  Pencil,
+  Plus,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { DEFAULT_AGENT_ID, createAgentDraft } from "../../src/shared/agents";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
@@ -8,6 +17,7 @@ import {
   createWorkspace,
   deleteWorkspaceFile,
   ensureAgentWorkspaces,
+  isWorkspaceUserEditableFile,
   normalizeWorkspacePath,
   upsertWorkspaceFile,
   workspaceTotalChars,
@@ -25,6 +35,7 @@ import {
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { SkillFileActionButton } from "./skill-options-components";
+import { downloadWorkspaceZip, importWorkspaceZip } from "./workspace-import";
 
 export function AgentsPage() {
   const [language] = useStoredState(storage.language);
@@ -139,6 +150,8 @@ export function AgentsPage() {
                       t.options.agentWorkspaceNewFilePlaceholder
                     }
                     emptyText={t.options.agentWorkspaceEmpty}
+                    importZipLabel={t.options.importWorkspaceZip}
+                    exportZipLabel={t.options.downloadWorkspaceZip}
                     editLabel={t.common.edit}
                     saveLabel={t.common.save}
                     deleteLabel={t.common.delete}
@@ -177,6 +190,8 @@ function AgentWorkspaceEditor({
   newFileLabel,
   newFilePlaceholder,
   emptyText,
+  importZipLabel,
+  exportZipLabel,
   editLabel,
   saveLabel,
   deleteLabel,
@@ -188,6 +203,8 @@ function AgentWorkspaceEditor({
   newFileLabel: string;
   newFilePlaceholder: string;
   emptyText: string;
+  importZipLabel: string;
+  exportZipLabel: string;
   editLabel: string;
   saveLabel: string;
   deleteLabel: string;
@@ -198,9 +215,11 @@ function AgentWorkspaceEditor({
   const [editFilePath, setEditFilePath] = useState("");
   const [draftContent, setDraftContent] = useState("");
   const [error, setError] = useState("");
+  const importInputRef = useRef<HTMLInputElement | null>(null);
   const editingFile = workspace.files.find((file) => file.path === editPath);
 
   function startEdit(path: string) {
+    if (!isWorkspaceUserEditableFile(path)) return;
     const file = workspace.files.find((item) => item.path === path);
     setEditPath(editPath === path ? "" : path);
     setEditFilePath(file?.path || path);
@@ -214,6 +233,7 @@ function AgentWorkspaceEditor({
       setError(path.error);
       return;
     }
+    if (!isWorkspaceUserEditableFile(path.path)) return;
     const result = upsertWorkspaceFile(workspace, path.path, "");
     if (!result.ok) {
       setError(result.error);
@@ -228,12 +248,14 @@ function AgentWorkspaceEditor({
 
   function saveFile() {
     if (!editingFile) return;
+    if (!isWorkspaceUserEditableFile(editingFile.path)) return;
     const normalizedPath = normalizeWorkspacePath(editFilePath);
     if (!normalizedPath.ok) {
       setError(normalizedPath.error);
       return;
     }
     const filePath = normalizedPath.path;
+    if (!isWorkspaceUserEditableFile(filePath)) return;
     const deleteResult =
       filePath === editingFile.path
         ? undefined
@@ -251,6 +273,7 @@ function AgentWorkspaceEditor({
   }
 
   function deleteFile(path: string) {
+    if (!isWorkspaceUserEditableFile(path)) return;
     const result = deleteWorkspaceFile(workspace, path);
     if (!result.ok) {
       setError(result.error);
@@ -259,6 +282,18 @@ function AgentWorkspaceEditor({
     onChange(result.workspace);
     if (editPath === path) setEditPath("");
     setError("");
+  }
+
+  async function importZip(file: File | undefined) {
+    if (!file) return;
+    try {
+      onChange(await importWorkspaceZip(file, workspace));
+      setError("");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : String(error));
+    } finally {
+      if (importInputRef.current) importInputRef.current.value = "";
+    }
   }
 
   return (
@@ -279,6 +314,31 @@ function AgentWorkspaceEditor({
         <AccordionContent>
           <div className="stack">
             <CardDescription>{description}</CardDescription>
+            <div className="row">
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".zip,application/zip"
+                className="sr-only"
+                onChange={(event) => importZip(event.currentTarget.files?.[0])}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => importInputRef.current?.click()}
+              >
+                <Upload size={14} /> {importZipLabel}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => downloadWorkspaceZip(workspace)}
+              >
+                <Download size={14} /> {exportZipLabel}
+              </Button>
+            </div>
             <div className="option-add-file-row">
               <Input
                 value={draftPath}
@@ -303,18 +363,22 @@ function AgentWorkspaceEditor({
                         </small>
                       </span>
                       <div className="option-file-actions">
-                        <SkillFileActionButton
-                          label={editLabel}
-                          onClick={() => startEdit(file.path)}
-                        >
-                          <Pencil size={14} />
-                        </SkillFileActionButton>
-                        <SkillFileActionButton
-                          label={deleteLabel}
-                          onClick={() => deleteFile(file.path)}
-                        >
-                          <Trash2 size={14} />
-                        </SkillFileActionButton>
+                        {isWorkspaceUserEditableFile(file.path) ? (
+                          <>
+                            <SkillFileActionButton
+                              label={editLabel}
+                              onClick={() => startEdit(file.path)}
+                            >
+                              <Pencil size={14} />
+                            </SkillFileActionButton>
+                            <SkillFileActionButton
+                              label={deleteLabel}
+                              onClick={() => deleteFile(file.path)}
+                            >
+                              <Trash2 size={14} />
+                            </SkillFileActionButton>
+                          </>
+                        ) : null}
                       </div>
                     </div>
                     {editingFile?.path === file.path ? (

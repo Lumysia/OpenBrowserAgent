@@ -29,6 +29,16 @@ import {
 } from "./attachment-messages";
 import { generateImage } from "./image-generation";
 import {
+  addMemory,
+  addUserProfileNote,
+  listMemory,
+  listUserProfile,
+  removeMemory,
+  removeUserProfileNote,
+  updateMemory,
+  updateUserProfileNote,
+} from "./memory-tools";
+import {
   addMcpServer,
   deleteMcpServer,
   executeMcpTool,
@@ -38,6 +48,11 @@ import {
   testMcpServer,
   updateMcpServer,
 } from "./mcp-tools";
+import {
+  deleteChatThread,
+  readChatThread,
+  searchChatHistory,
+} from "./session-tools";
 import { safeExecuteBrowserTool } from "./tools";
 import { browserToolsForPrompt, deferredBrowserTools } from "./tool-schema";
 import {
@@ -173,6 +188,27 @@ export function executeContextAwareTool({
     return deleteWorkspaceFile(workspace, input);
   if (toolName === BROWSER_TOOL_NAME.searchWorkspaceFiles)
     return searchWorkspaceFiles(workspace, input);
+  if (toolName === BROWSER_TOOL_NAME.listMemory) return listMemory(workspace);
+  if (toolName === BROWSER_TOOL_NAME.addMemory)
+    return addMemory(workspace, input);
+  if (toolName === BROWSER_TOOL_NAME.updateMemory)
+    return updateMemory(workspace, input);
+  if (toolName === BROWSER_TOOL_NAME.removeMemory)
+    return removeMemory(workspace, input);
+  if (toolName === BROWSER_TOOL_NAME.listUserProfile)
+    return listUserProfile(workspace);
+  if (toolName === BROWSER_TOOL_NAME.addUserProfileNote)
+    return addUserProfileNote(workspace, input);
+  if (toolName === BROWSER_TOOL_NAME.updateUserProfileNote)
+    return updateUserProfileNote(workspace, input);
+  if (toolName === BROWSER_TOOL_NAME.removeUserProfileNote)
+    return removeUserProfileNote(workspace, input);
+  if (toolName === BROWSER_TOOL_NAME.searchChatHistory)
+    return searchChatHistory(input);
+  if (toolName === BROWSER_TOOL_NAME.readChatThread)
+    return readChatThread(input);
+  if (toolName === BROWSER_TOOL_NAME.deleteChatThread)
+    return deleteChatThread(input);
   if (toolName === BROWSER_TOOL_NAME.listMcpServers) return listMcpServers();
   if (toolName === BROWSER_TOOL_NAME.addMcpServer) return addMcpServer(input);
   if (toolName === BROWSER_TOOL_NAME.updateMcpServer)
@@ -320,6 +356,17 @@ const TOOL_CATEGORY_BY_NAME = {
   [BROWSER_TOOL_NAME.patchWorkspaceFile]: "files",
   [BROWSER_TOOL_NAME.deleteWorkspaceFile]: "files",
   [BROWSER_TOOL_NAME.searchWorkspaceFiles]: "files",
+  [BROWSER_TOOL_NAME.listMemory]: "memory",
+  [BROWSER_TOOL_NAME.addMemory]: "memory",
+  [BROWSER_TOOL_NAME.updateMemory]: "memory",
+  [BROWSER_TOOL_NAME.removeMemory]: "memory",
+  [BROWSER_TOOL_NAME.listUserProfile]: "memory",
+  [BROWSER_TOOL_NAME.addUserProfileNote]: "memory",
+  [BROWSER_TOOL_NAME.updateUserProfileNote]: "memory",
+  [BROWSER_TOOL_NAME.removeUserProfileNote]: "memory",
+  [BROWSER_TOOL_NAME.searchChatHistory]: "history",
+  [BROWSER_TOOL_NAME.readChatThread]: "history",
+  [BROWSER_TOOL_NAME.deleteChatThread]: "history",
 } as const;
 
 const DEFERRED_TOOL_QUERY_STOP_WORDS = new Set([

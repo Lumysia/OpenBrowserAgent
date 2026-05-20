@@ -438,6 +438,50 @@ export const deDE: LocaleMessages = {
         running: "Arbeitsbereichsdateien werden durchsucht",
         done: "Arbeitsbereichsdateien durchsucht",
       },
+      listMemory: {
+        running: "Speicher wird aufgelistet",
+        done: "Speicher aufgelistet",
+      },
+      addMemory: {
+        running: "Speicher wird hinzugefügt",
+        done: "Speicher hinzugefügt",
+      },
+      updateMemory: {
+        running: "Speicher wird aktualisiert",
+        done: "Speicher aktualisiert",
+      },
+      removeMemory: {
+        running: "Speicher wird entfernt",
+        done: "Speicher entfernt",
+      },
+      listUserProfile: {
+        running: "Benutzerprofil wird aufgelistet",
+        done: "Benutzerprofil aufgelistet",
+      },
+      addUserProfileNote: {
+        running: "Profilnotiz wird hinzugefügt",
+        done: "Profilnotiz hinzugefügt",
+      },
+      updateUserProfileNote: {
+        running: "Profilnotiz wird aktualisiert",
+        done: "Profilnotiz aktualisiert",
+      },
+      removeUserProfileNote: {
+        running: "Profilnotiz wird entfernt",
+        done: "Profilnotiz entfernt",
+      },
+      searchChatHistory: {
+        running: "Chatverlauf wird durchsucht",
+        done: "Chatverlauf durchsucht",
+      },
+      readChatThread: {
+        running: "Chat-Thread wird gelesen",
+        done: "Chat-Thread gelesen",
+      },
+      deleteChatThread: {
+        running: "Chat-Thread wird gelöscht",
+        done: "Chat-Thread gelöscht",
+      },
     },
   },
   options: {
@@ -536,6 +580,7 @@ export const deDE: LocaleMessages = {
       "Senden Sie mit Fähigkeiten sofort Nachrichten an die KI.",
     newSkill: "Neue Fähigkeit",
     importSkillZip: "ZIP importieren",
+    importWorkspaceZip: "Workspace-ZIP importieren",
     importingSkillZip: "Importiert...",
     importSkillZipError: "Fähigkeiten-Import fehlgeschlagen",
     noSkillsTitle: "Noch keine Fähigkeiten",
@@ -550,6 +595,7 @@ export const deDE: LocaleMessages = {
     filePath: "Dateipfad",
     downloadFile: "Datei herunterladen",
     downloadSkillZip: "ZIP herunterladen",
+    downloadWorkspaceZip: "Workspace-ZIP herunterladen",
     downloadSkillPackage: ".skill herunterladen",
     duplicateSkill: "Duplizieren",
     disabled: "Deaktiviert",
