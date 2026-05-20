@@ -6,6 +6,7 @@ import {
 } from "../shared/attachments";
 import {
   AI_TEXT_CHUNK_TYPE,
+  type AgentWorkspace,
   type AiStreamResponse,
   type ChatMessage,
   type ChatSource,
@@ -14,6 +15,7 @@ import {
 } from "../shared/types";
 import { getSkillInstruction } from "../shared/skills";
 import { renderSourcesForPrompt } from "../shared/chat-sources";
+import { renderWorkspaceManifest } from "../shared/workspace";
 
 export function postText(
   port: chrome.runtime.Port,
@@ -103,6 +105,7 @@ export function renderUserMessageWithContext(
   message: ChatMessage,
   requestAttachments: UploadedAttachment[] = [],
   availableSkills: Skill[] = [],
+  workspace?: AgentWorkspace,
 ) {
   if (message.metadata?.internalRetry) {
     return `<internal_instruction>
@@ -134,6 +137,8 @@ ${renderAttachmentContext(attachments)}
 
 ${renderSkillToolHint(availableSkills)}
 
+${renderWorkspaceToolHint(workspace)}
+
 ${renderSourcesForPrompt(getMessageSources(message))}
 
 </message_context>
@@ -156,6 +161,15 @@ export function renderSkillToolHint(skills: Skill[]) {
   return `<skill_tools>
 For browser automation, search, or research tasks, call readSkill with skillId "builtin-browser-guidance" before acting. For other specialized workflows, call listSkills first. Use createSkill, patchSkillFile, or updateSkillFile only for broadly reusable improvements; never store secrets or one-off task details.
 </skill_tools>`;
+}
+
+export function renderWorkspaceToolHint(workspace: AgentWorkspace | undefined) {
+  const manifest = renderWorkspaceManifest(workspace);
+  if (!manifest) return "";
+  return `${manifest}
+<workspace_tools>
+Use workspace tools to read, search, update, or delete these private agent files when they are relevant. Store stable task notes or agent state here, not secrets.
+</workspace_tools>`;
 }
 
 export function getUploadedAttachments(message: ChatMessage) {

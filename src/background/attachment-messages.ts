@@ -9,7 +9,12 @@ import {
   READ_ATTACHMENT_DEFAULT_LIMIT,
   READ_ATTACHMENT_MAX_LIMIT,
 } from "../shared/config";
-import type { ChatMessage, Skill, UploadedAttachment } from "../shared/types";
+import type {
+  AgentWorkspace,
+  ChatMessage,
+  Skill,
+  UploadedAttachment,
+} from "../shared/types";
 import { getSkillDisplayName, getSkillEntryFile } from "../shared/skills";
 import {
   getUploadedAttachments,
@@ -22,6 +27,7 @@ export function createGeminiContents(
   multimodal: boolean,
   requestAttachments: UploadedAttachment[] = [],
   availableSkills: Skill[] = [],
+  workspace?: AgentWorkspace,
 ) {
   return messages.map((message, index) => ({
     role: message.role === "assistant" ? "model" : "user",
@@ -31,6 +37,7 @@ export function createGeminiContents(
       multimodal,
       index === messages.length - 1 ? requestAttachments : [],
       index === messages.length - 1 ? availableSkills : [],
+      index === messages.length - 1 ? workspace : undefined,
     ),
   }));
 }
@@ -41,6 +48,7 @@ export function createOpenAIRequestMessages(
   multimodal: boolean,
   requestAttachments: UploadedAttachment[] = [],
   availableSkills: Skill[] = [],
+  workspace?: AgentWorkspace,
 ) {
   return [
     { role: "system", content: system },
@@ -52,6 +60,7 @@ export function createOpenAIRequestMessages(
         multimodal,
         index === messages.length - 1 ? requestAttachments : [],
         index === messages.length - 1 ? availableSkills : [],
+        index === messages.length - 1 ? workspace : undefined,
       ),
     })),
   ];
@@ -186,6 +195,7 @@ function createGeminiParts(
   multimodal: boolean,
   requestAttachments: UploadedAttachment[],
   availableSkills: Skill[],
+  workspace?: AgentWorkspace,
 ) {
   const attachments = requestAttachments.length
     ? requestAttachments
@@ -197,6 +207,7 @@ function createGeminiParts(
         isLatest,
         requestAttachments,
         availableSkills,
+        workspace,
       ),
     },
   ];
@@ -225,12 +236,14 @@ function createOpenAIMessageContent(
   multimodal: boolean,
   requestAttachments: UploadedAttachment[],
   availableSkills: Skill[],
+  workspace?: AgentWorkspace,
 ) {
   const text = renderMessageText(
     message,
     isLatest,
     requestAttachments,
     availableSkills,
+    workspace,
   );
   const attachments = requestAttachments.length
     ? requestAttachments
@@ -255,12 +268,14 @@ function renderMessageText(
   isLatest: boolean,
   requestAttachments: UploadedAttachment[],
   availableSkills: Skill[] = [],
+  workspace?: AgentWorkspace,
 ) {
   if (isLatest && message.role === "user")
     return renderUserMessageWithContext(
       message,
       requestAttachments,
       availableSkills,
+      workspace,
     );
   const attachmentContext = renderAttachmentContext(
     getUploadedAttachments(message),

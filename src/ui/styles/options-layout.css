@@ -212,9 +212,9 @@
 }
 .skill-detail .ui-label,
 .skill-detail .skill-identity-panel,
-.skill-detail .skill-file-list,
-.skill-detail .skill-add-file-row,
-.skill-detail .skill-file-editor,
+.skill-detail .option-file-list,
+.skill-detail .option-add-file-row,
+.skill-detail .option-file-editor,
 .skill-detail .skill-status-panel {
   width: 100%;
 }
@@ -254,15 +254,15 @@
   align-items: center;
   flex-shrink: 0;
 }
-.skill-file-list {
+.option-file-list {
   display: grid;
   gap: 6px;
 }
-.skill-file-block {
+.option-file-block {
   display: grid;
   gap: 6px;
 }
-.skill-file-item {
+.option-file-item {
   display: grid;
   grid-template-columns: 22px 1fr auto;
   align-items: center;
@@ -277,58 +277,55 @@
     background-color 0.16s ease,
     transform 0.16s ease;
 }
-.skill-file-item:hover {
+.option-file-item:hover {
   border-color: color-mix(in srgb, var(--accent-strong) 18%, var(--border));
   background: color-mix(in srgb, var(--card) 88%, var(--accent-softer));
 }
-.skill-file-item svg {
+.option-file-item svg {
   color: var(--muted-foreground);
 }
-.skill-file-item span {
+.option-file-item span {
   min-width: 0;
   display: grid;
   gap: 1px;
 }
-.skill-file-item strong,
-.skill-file-item small {
+.option-file-item strong,
+.option-file-item small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.skill-file-item strong {
+.option-file-item strong {
   font-size: 13px;
   font-weight: 650;
 }
-.skill-file-item small {
+.option-file-item small {
   color: var(--muted-foreground);
   font-size: 12px;
 }
-.skill-file-actions {
+.option-file-actions {
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
-.skill-add-file-row {
+.option-add-file-row {
   display: grid;
   grid-template-columns: minmax(220px, 1fr) auto auto;
   align-items: center;
   gap: 8px;
 }
-.skill-file-editor {
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--muted) 72%, var(--background));
-  animation: skill-editor-in 0.18s ease both;
+.option-file-editor {
+  padding: 8px 0 2px;
+  animation: option-editor-in 0.18s ease both;
 }
-.skill-file-editor-textarea {
+.option-file-editor-textarea {
   max-height: 280px;
   min-height: 220px;
   font-family:
     ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
   font-size: 12px;
 }
-@keyframes skill-editor-in {
+@keyframes option-editor-in {
   from {
     opacity: 0;
     transform: translateY(-4px);

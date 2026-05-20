@@ -243,6 +243,26 @@ function toolDisplay(
         stringValue(output.path) || stringValue(input.path),
       ]);
     if (
+      name === BROWSER_TOOL_NAME.listWorkspaceFiles &&
+      Array.isArray(output.files)
+    )
+      return `${output.files.length} files`;
+    if (
+      name === BROWSER_TOOL_NAME.readWorkspaceFile ||
+      name === BROWSER_TOOL_NAME.writeWorkspaceFile ||
+      name === BROWSER_TOOL_NAME.patchWorkspaceFile ||
+      name === BROWSER_TOOL_NAME.deleteWorkspaceFile
+    )
+      return stringValue(output.path) || stringValue(input.path);
+    if (
+      name === BROWSER_TOOL_NAME.searchWorkspaceFiles &&
+      Array.isArray(output.results)
+    )
+      return compactJoin([
+        stringValue(output.query) || stringValue(input.query),
+        `${output.results.length} matches`,
+      ]);
+    if (
       name === BROWSER_TOOL_NAME.listMcpServers &&
       Array.isArray(output.servers)
     )
@@ -362,6 +382,11 @@ function toolIcon(name: string) {
   const lowerName = name.toLowerCase();
   if (name === BROWSER_TOOL_NAME.loadBrowserTools)
     return <Layers size={19} strokeWidth={2.1} />;
+  if (isWorkspaceToolName(name)) {
+    if (name === BROWSER_TOOL_NAME.searchWorkspaceFiles)
+      return <FileSearch size={19} strokeWidth={2.1} />;
+    return <FileText size={19} strokeWidth={2.1} />;
+  }
   if (lowerName.includes("mcp")) return <Plug size={19} strokeWidth={2.1} />;
   if (lowerName.includes("input") || lowerName.includes("fill"))
     return <Type size={19} strokeWidth={2.1} />;
@@ -420,6 +445,17 @@ function toolIcon(name: string) {
   if (lowerName.includes("tab") || lowerName.includes("page"))
     return <ExternalLink size={19} strokeWidth={2.1} />;
   return <Square size={15} strokeWidth={2.1} />;
+}
+
+function isWorkspaceToolName(name: string) {
+  return (
+    name === BROWSER_TOOL_NAME.listWorkspaceFiles ||
+    name === BROWSER_TOOL_NAME.readWorkspaceFile ||
+    name === BROWSER_TOOL_NAME.writeWorkspaceFile ||
+    name === BROWSER_TOOL_NAME.patchWorkspaceFile ||
+    name === BROWSER_TOOL_NAME.deleteWorkspaceFile ||
+    name === BROWSER_TOOL_NAME.searchWorkspaceFiles
+  );
 }
 
 function GeneratedImage({

@@ -414,6 +414,30 @@ export const deDE: LocaleMessages = {
         running: "Fähigkeitsdatei wird gelesen",
         done: "Fähigkeitsdatei gelesen",
       },
+      listWorkspaceFiles: {
+        running: "Arbeitsbereichsdateien werden aufgelistet",
+        done: "Arbeitsbereichsdateien aufgelistet",
+      },
+      readWorkspaceFile: {
+        running: "Arbeitsbereichsdatei wird gelesen",
+        done: "Arbeitsbereichsdatei gelesen",
+      },
+      writeWorkspaceFile: {
+        running: "Arbeitsbereichsdatei wird geschrieben",
+        done: "Arbeitsbereichsdatei geschrieben",
+      },
+      patchWorkspaceFile: {
+        running: "Arbeitsbereichsdatei wird bearbeitet",
+        done: "Arbeitsbereichsdatei bearbeitet",
+      },
+      deleteWorkspaceFile: {
+        running: "Arbeitsbereichsdatei wird gelöscht",
+        done: "Arbeitsbereichsdatei gelöscht",
+      },
+      searchWorkspaceFiles: {
+        running: "Arbeitsbereichsdateien werden durchsucht",
+        done: "Arbeitsbereichsdateien durchsucht",
+      },
     },
   },
   options: {
@@ -422,16 +446,19 @@ export const deDE: LocaleMessages = {
       "Passe Darstellung, Sprache, Automatisierung und Kontextverhalten der Erweiterung an.",
     agents: "Agenten",
     agentsDescription:
-      "Erstellen Sie Agentenprofile mit eigener Rolle, eigenem Verhalten und eigenen Anweisungen.",
+      "Erstellen Sie Agentenprofile mit eigener Rolle, eigenem Verhalten und eigenem Arbeitsbereich.",
     defaultAgentSummary:
       "Allgemeiner Browserassistent für Browsing, Suche und Automatisierung.",
     newAgent: "Neuer Agent",
     agentName: "Agentenname",
     agentDescription: "Agentenbeschreibung",
-    agentInstructions: "Agentenanweisungen",
-    agentInstructionsPlaceholder:
-      "Fügen Sie stabile Verhaltensregeln für diesen Agenten hinzu. Speichern Sie hier keine Geheimnisse.",
     deleteAgent: "Agent löschen",
+    agentWorkspace: "Agenten-Arbeitsbereich",
+    agentWorkspaceDescription:
+      "Private Textdateien dieses Agenten. SOUL.md definiert das Verhalten, AGENTS.md die Arbeitsbereichsregeln, MEMORY.md und USER.md werden als eingefrorener Kontext eingefügt, und NOTES.md bleibt bei Bedarf verfügbar.",
+    agentWorkspaceNewFile: "Neue Arbeitsbereichsdatei",
+    agentWorkspaceNewFilePlaceholder: "NOTES.md",
+    agentWorkspaceEmpty: "Noch keine Arbeitsbereichsdateien.",
     sync: "Synchronisierung",
     providers: "Anbieter",
     mcpServers: "MCP-Server",
@@ -452,8 +479,7 @@ export const deDE: LocaleMessages = {
       "Diese Serverkonfiguration für Assistenten-Tools verfügbar machen.",
     mcpEnableRequiresTest:
       "Testen Sie diesen MCP-Server, bevor Sie ihn aktivieren.",
-    mcpEnableTooltipTested:
-      "Test bestanden. {count} Tools gefunden. Schalten Sie diesen Server um, um seine aktivierten Tools für den Assistenten ein- oder auszublenden.",
+    mcpEnableTooltipTested: "Test bestanden. {count} Tools gefunden.",
     mcpAdvancedActions: "MCP-Serveraktionen",
     mcpImportJson: "MCP-JSON-Konfiguration einfügen",
     mcpImportButton: "MCP-JSON importieren",
@@ -570,7 +596,7 @@ export const deDE: LocaleMessages = {
       "Anbieterkonfiguration einschließlich API-Schlüssel über Ihr Browserkonto synchronisieren.",
     syncAgents: "Agenten synchronisieren",
     syncAgentsDescription:
-      "Agentenprofile über Ihr Browserkonto synchronisieren. Deaktiviert lassen, wenn Agentenanweisungen privaten Kontext enthalten.",
+      "Agentenprofile und Arbeitsbereichsdateien über Ihr Browserkonto synchronisieren. Deaktiviert lassen, wenn sie privaten Kontext enthalten.",
     syncSkills: "Fähigkeiten synchronisieren",
     syncSkillsDescription:
       "Fähigkeitsvorlagen über Ihr Browserkonto synchronisieren.",

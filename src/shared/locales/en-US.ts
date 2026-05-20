@@ -368,6 +368,30 @@ export const enUS = {
         done: "Stopped page recording",
       },
       readSkillFile: { running: "Reading Skill file", done: "Read Skill file" },
+      listWorkspaceFiles: {
+        running: "Listing workspace files",
+        done: "Listed workspace files",
+      },
+      readWorkspaceFile: {
+        running: "Reading workspace file",
+        done: "Read workspace file",
+      },
+      writeWorkspaceFile: {
+        running: "Writing workspace file",
+        done: "Wrote workspace file",
+      },
+      patchWorkspaceFile: {
+        running: "Editing workspace file",
+        done: "Edited workspace file",
+      },
+      deleteWorkspaceFile: {
+        running: "Deleting workspace file",
+        done: "Deleted workspace file",
+      },
+      searchWorkspaceFiles: {
+        running: "Searching workspace files",
+        done: "Searched workspace files",
+      },
     },
   },
   options: {
@@ -376,16 +400,19 @@ export const enUS = {
       "Tune the extension's appearance, language, automation, and context behavior.",
     agents: "Agents",
     agentsDescription:
-      "Create agent profiles with their own role, behavior, and instructions.",
+      "Create agent profiles with their own role, behavior, and workspace.",
     defaultAgentSummary:
       "General browser assistant for browsing, search, and automation.",
     newAgent: "New Agent",
     agentName: "Agent name",
     agentDescription: "Agent description",
-    agentInstructions: "Agent instructions",
-    agentInstructionsPlaceholder:
-      "Add stable behavior rules for this agent. Do not store secrets here.",
     deleteAgent: "Delete agent",
+    agentWorkspace: "Agent workspace",
+    agentWorkspaceDescription:
+      "Private text files for this agent. SOUL.md defines behavior, AGENTS.md defines workspace rules, MEMORY.md and USER.md are frozen context, and NOTES.md stays available on demand.",
+    agentWorkspaceNewFile: "New workspace file",
+    agentWorkspaceNewFilePlaceholder: "NOTES.md",
+    agentWorkspaceEmpty: "No workspace files yet.",
     sync: "Sync",
     providers: "Providers",
     mcpServers: "MCP Servers",
@@ -405,8 +432,7 @@ export const enUS = {
     mcpServerEnabledDescription:
       "Expose this server configuration to assistant tools.",
     mcpEnableRequiresTest: "Test this MCP server before enabling it.",
-    mcpEnableTooltipTested:
-      "Test passed. {count} tools were found. Toggle this server to expose or hide its enabled tools from the assistant.",
+    mcpEnableTooltipTested: "Test passed. {count} tools were found.",
     mcpAdvancedActions: "MCP server actions",
     mcpImportJson: "Paste MCP JSON configuration",
     mcpImportButton: "Import MCP JSON",
@@ -520,7 +546,7 @@ export const enUS = {
       "Sync provider configuration, including API keys, through your browser account.",
     syncAgents: "Sync Agents",
     syncAgentsDescription:
-      "Sync agent profiles through your browser account. Keep this off if agent instructions contain private context.",
+      "Sync agent profiles and workspace files through your browser account. Keep this off if they contain private context.",
     syncSkills: "Sync Skills",
     syncSkillsDescription: "Sync skill templates through your browser account.",
     syncMcpServers: "Sync MCP Servers",

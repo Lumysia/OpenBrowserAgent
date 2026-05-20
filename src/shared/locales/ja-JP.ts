@@ -430,6 +430,30 @@ export const jaJP: LocaleMessages = {
         running: "スキルファイルを読み取り中",
         done: "スキルファイルを読み取りました",
       },
+      listWorkspaceFiles: {
+        running: "ワークスペースファイルを一覧表示中",
+        done: "ワークスペースファイルを一覧表示しました",
+      },
+      readWorkspaceFile: {
+        running: "ワークスペースファイルを読み取り中",
+        done: "ワークスペースファイルを読み取りました",
+      },
+      writeWorkspaceFile: {
+        running: "ワークスペースファイルを書き込み中",
+        done: "ワークスペースファイルを書き込みました",
+      },
+      patchWorkspaceFile: {
+        running: "ワークスペースファイルを編集中",
+        done: "ワークスペースファイルを編集しました",
+      },
+      deleteWorkspaceFile: {
+        running: "ワークスペースファイルを削除中",
+        done: "ワークスペースファイルを削除しました",
+      },
+      searchWorkspaceFiles: {
+        running: "ワークスペースファイルを検索中",
+        done: "ワークスペースファイルを検索しました",
+      },
     },
   },
   options: {
@@ -438,16 +462,19 @@ export const jaJP: LocaleMessages = {
       "拡張機能の外観、言語、自動化、コンテキスト動作を調整します。",
     agents: "エージェント",
     agentsDescription:
-      "独自の役割、動作、指示を持つエージェントプロファイルを作成します。",
+      "独自の役割、動作、ワークスペースを持つエージェントプロファイルを作成します。",
     defaultAgentSummary:
       "ブラウズ、検索、自動化用の汎用ブラウザーアシスタント。",
     newAgent: "新しいエージェント",
     agentName: "エージェント名",
     agentDescription: "エージェントの説明",
-    agentInstructions: "エージェント指示",
-    agentInstructionsPlaceholder:
-      "このエージェントの安定した動作ルールを追加します。ここに秘密情報を保存しないでください。",
     deleteAgent: "エージェントを削除",
+    agentWorkspace: "エージェントワークスペース",
+    agentWorkspaceDescription:
+      "このエージェントの非公開テキストファイルです。SOUL.md が動作、AGENTS.md がワークスペース規則を定義し、MEMORY.md と USER.md は固定コンテキストとして入り、NOTES.md は必要時に使われます。",
+    agentWorkspaceNewFile: "新しいワークスペースファイル",
+    agentWorkspaceNewFilePlaceholder: "NOTES.md",
+    agentWorkspaceEmpty: "ワークスペースファイルはまだありません。",
     sync: "同期",
     providers: "プロバイダー",
     mcpServers: "MCPサーバー",
@@ -469,7 +496,7 @@ export const jaJP: LocaleMessages = {
     mcpEnableRequiresTest:
       "有効にする前にこの MCP サーバーをテストしてください。",
     mcpEnableTooltipTested:
-      "テストに成功しました。{count} 個のツールが見つかりました。このサーバーを切り替えて、有効なツールをアシスタントに公開または非表示にします。",
+      "テストに成功しました。{count} 個のツールが見つかりました。",
     mcpAdvancedActions: "MCP サーバー操作",
     mcpImportJson: "MCP JSON 設定を貼り付け",
     mcpImportButton: "MCP JSON をインポート",
@@ -582,7 +609,7 @@ export const jaJP: LocaleMessages = {
       "APIキーを含むプロバイダー設定をブラウザーアカウントで同期します。",
     syncAgents: "エージェントを同期",
     syncAgentsDescription:
-      "エージェントプロファイルをブラウザーアカウントで同期します。指示に個人的な文脈が含まれる場合はオフのままにしてください。",
+      "エージェントプロファイルとワークスペースファイルをブラウザーアカウントで同期します。個人的な文脈が含まれる場合はオフのままにしてください。",
     syncSkills: "スキルを同期",
     syncSkillsDescription:
       "スキルのテンプレートをブラウザーアカウントで同期します。",

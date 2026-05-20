@@ -366,6 +366,30 @@ export const ko: LocaleMessages = {
         done: "페이지 녹화 중지됨",
       },
       readSkillFile: { running: "스킬 파일 읽는 중", done: "스킬 파일 읽음" },
+      listWorkspaceFiles: {
+        running: "워크스페이스 파일 나열 중",
+        done: "워크스페이스 파일 나열함",
+      },
+      readWorkspaceFile: {
+        running: "워크스페이스 파일 읽는 중",
+        done: "워크스페이스 파일 읽음",
+      },
+      writeWorkspaceFile: {
+        running: "워크스페이스 파일 쓰는 중",
+        done: "워크스페이스 파일 씀",
+      },
+      patchWorkspaceFile: {
+        running: "워크스페이스 파일 편집 중",
+        done: "워크스페이스 파일 편집함",
+      },
+      deleteWorkspaceFile: {
+        running: "워크스페이스 파일 삭제 중",
+        done: "워크스페이스 파일 삭제함",
+      },
+      searchWorkspaceFiles: {
+        running: "워크스페이스 파일 검색 중",
+        done: "워크스페이스 파일 검색함",
+      },
     },
   },
   options: {
@@ -374,15 +398,18 @@ export const ko: LocaleMessages = {
       "확장 프로그램의 모양, 언어, 자동화 및 컨텍스트 동작을 조정합니다.",
     agents: "에이전트",
     agentsDescription:
-      "각자 역할, 동작, 지시를 가진 에이전트 프로필을 만듭니다.",
+      "각자 역할, 동작, 워크스페이스를 가진 에이전트 프로필을 만듭니다.",
     defaultAgentSummary: "탐색, 검색, 자동화를 위한 일반 브라우저 어시스턴트.",
     newAgent: "새 에이전트",
     agentName: "에이전트 이름",
     agentDescription: "에이전트 설명",
-    agentInstructions: "에이전트 지시",
-    agentInstructionsPlaceholder:
-      "이 에이전트의 안정적인 동작 규칙을 추가하세요. 여기에 비밀 정보를 저장하지 마세요.",
     deleteAgent: "에이전트 삭제",
+    agentWorkspace: "에이전트 워크스페이스",
+    agentWorkspaceDescription:
+      "이 에이전트의 비공개 텍스트 파일입니다. SOUL.md는 동작, AGENTS.md는 워크스페이스 규칙을 정의하고 MEMORY.md와 USER.md는 고정 컨텍스트로 주입되며 NOTES.md는 필요할 때 사용됩니다.",
+    agentWorkspaceNewFile: "새 워크스페이스 파일",
+    agentWorkspaceNewFilePlaceholder: "NOTES.md",
+    agentWorkspaceEmpty: "아직 워크스페이스 파일이 없습니다.",
     sync: "동기화",
     providers: "제공업체",
     mcpServers: "MCP 서버",
@@ -401,8 +428,7 @@ export const ko: LocaleMessages = {
     mcpServerEnabled: "사용",
     mcpServerEnabledDescription: "이 서버 설정을 어시스턴트 도구에 노출합니다.",
     mcpEnableRequiresTest: "사용하기 전에 이 MCP 서버를 먼저 테스트하세요.",
-    mcpEnableTooltipTested:
-      "테스트를 통과했고 도구 {count}개를 찾았습니다. 이 서버를 켜거나 꺼서 활성화된 도구를 어시스턴트에 노출하거나 숨깁니다.",
+    mcpEnableTooltipTested: "테스트를 통과했고 도구 {count}개를 찾았습니다.",
     mcpAdvancedActions: "MCP 서버 작업",
     mcpImportJson: "MCP JSON 설정 붙여넣기",
     mcpImportButton: "MCP JSON 가져오기",
@@ -515,7 +541,7 @@ export const ko: LocaleMessages = {
       "API 키를 포함한 제공업체 구성을 브라우저 계정으로 동기화합니다.",
     syncAgents: "에이전트 동기화",
     syncAgentsDescription:
-      "에이전트 프로필을 브라우저 계정으로 동기화합니다. 에이전트 지시에 개인 컨텍스트가 포함되어 있으면 꺼두세요.",
+      "에이전트 프로필과 워크스페이스 파일을 브라우저 계정으로 동기화합니다. 개인 컨텍스트가 포함되어 있으면 꺼두세요.",
     syncSkills: "스킬 동기화",
     syncSkillsDescription: "스킬 템플릿을 브라우저 계정으로 동기화합니다.",
     syncMcpServers: "MCP 서버 동기화",

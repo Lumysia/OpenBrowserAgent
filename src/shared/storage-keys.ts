@@ -4,6 +4,7 @@ export const STORAGE_KEYS = {
   preferences: "preferences",
   provider: "provider",
   agents: "agents",
+  agentWorkspaces: "agent-workspaces",
   skills: "skills",
   mcpServers: "mcp-servers",
   shouldShowUpdateToast: "should-show-update-toast",

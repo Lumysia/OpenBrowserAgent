@@ -7,6 +7,7 @@ import {
   CHAT_PART_STATE,
   toolPartType,
   type AiStreamResponse,
+  type AgentWorkspace,
   type ChatMessage,
   type ChatMode,
   type ProviderId,
@@ -70,6 +71,7 @@ export async function requestOpenAICompatible(
   uploadedAttachments: UploadedAttachment[] = [],
   availableSkills: Skill[] = [],
   mcpServers: McpServerConfig[] = [],
+  workspace?: AgentWorkspace,
   drainQueuedMessages: () => QueuedUserMessage[] = () => [],
 ): Promise<ProviderTextResult> {
   if (model.provider === "gemini") {
@@ -86,6 +88,7 @@ export async function requestOpenAICompatible(
       uploadedAttachments,
       availableSkills,
       mcpServers,
+      workspace,
       drainQueuedMessages,
     );
   }
@@ -102,6 +105,7 @@ export async function requestOpenAICompatible(
       usesAttachmentPayload,
       uploadedAttachments,
       availableSkills,
+      workspace,
     );
   const preferences = await storage.preferences.get();
   const latestUserText = latestUserMessageText(messages);
@@ -112,6 +116,7 @@ export async function requestOpenAICompatible(
     preferences,
     latestUserText,
     mcpServers,
+    workspace,
   });
   const availableTools = toolResolver.availableTools;
   const useTools = maxToolSteps > 0 && availableTools().length > 0;
@@ -145,6 +150,7 @@ export async function requestOpenAICompatible(
       false,
       uploadedAttachments,
       availableSkills,
+      workspace,
     );
     usesAttachmentPayload = false;
     if (attachmentRetryNotice)
@@ -241,6 +247,7 @@ export async function requestOpenAICompatible(
         cdpToolsEnabled: !!preferences.cdpToolsEnabled,
         dangerousCodeExecutionEnabled:
           !!preferences.dangerousCodeExecutionEnabled,
+        workspace,
       });
       loadDeferredToolNames(rawOutput, toolResolver.loadedToolNames);
       const visionImage = extractVisionImage(rawOutput);
@@ -316,6 +323,7 @@ async function requestGemini(
   uploadedAttachments: UploadedAttachment[] = [],
   availableSkills: Skill[] = [],
   mcpServers: McpServerConfig[] = [],
+  workspace?: AgentWorkspace,
   drainQueuedMessages: () => QueuedUserMessage[] = () => [],
 ): Promise<ProviderTextResult> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model.modelName)}:generateContent?key=${encodeURIComponent(model.apiKey)}`;
@@ -324,6 +332,7 @@ async function requestGemini(
     true,
     uploadedAttachments,
     availableSkills,
+    workspace,
   );
   let usesAttachmentPayload = hasImageAttachments(uploadedAttachments);
 
@@ -343,6 +352,7 @@ async function requestGemini(
       false,
       uploadedAttachments,
       availableSkills,
+      workspace,
     );
     usesAttachmentPayload = false;
     if (attachmentRetryNotice)
@@ -372,6 +382,7 @@ async function requestGemini(
     preferences,
     latestUserText,
     mcpServers,
+    workspace,
   });
   const availableTools = toolResolver.availableTools;
   const useTools = maxToolSteps > 0 && availableTools().length > 0;
@@ -458,6 +469,7 @@ async function requestGemini(
         cdpToolsEnabled: !!preferences.cdpToolsEnabled,
         dangerousCodeExecutionEnabled:
           !!preferences.dangerousCodeExecutionEnabled,
+        workspace,
       });
       loadDeferredToolNames(rawOutput, toolResolver.loadedToolNames);
       const visionImage = extractVisionImage(rawOutput);

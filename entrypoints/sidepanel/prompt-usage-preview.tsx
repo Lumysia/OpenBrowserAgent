@@ -247,6 +247,7 @@ function availableToolSchemaChars({
       mode,
       hasUploadedAttachments,
       hasSkills,
+      hasWorkspace: false,
       imageGenerationEnabled,
       cdpToolsEnabled,
       dangerousCodeExecutionEnabled,

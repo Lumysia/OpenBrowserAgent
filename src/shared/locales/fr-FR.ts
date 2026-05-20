@@ -426,6 +426,30 @@ export const frFR: LocaleMessages = {
         running: "Lecture du fichier de compétence",
         done: "Fichier de compétence lu",
       },
+      listWorkspaceFiles: {
+        running: "Liste des fichiers d’espace de travail",
+        done: "Fichiers d’espace de travail listés",
+      },
+      readWorkspaceFile: {
+        running: "Lecture du fichier d’espace de travail",
+        done: "Fichier d’espace de travail lu",
+      },
+      writeWorkspaceFile: {
+        running: "Écriture du fichier d’espace de travail",
+        done: "Fichier d’espace de travail écrit",
+      },
+      patchWorkspaceFile: {
+        running: "Modification du fichier d’espace de travail",
+        done: "Fichier d’espace de travail modifié",
+      },
+      deleteWorkspaceFile: {
+        running: "Suppression du fichier d’espace de travail",
+        done: "Fichier d’espace de travail supprimé",
+      },
+      searchWorkspaceFiles: {
+        running: "Recherche dans les fichiers d’espace de travail",
+        done: "Recherche terminée dans l’espace de travail",
+      },
     },
   },
   options: {
@@ -434,16 +458,19 @@ export const frFR: LocaleMessages = {
       "Ajustez l'apparence, la langue, l'automatisation et le contexte de l'extension.",
     agents: "Agents",
     agentsDescription:
-      "Créez des profils d’agent avec leur propre rôle, comportement et instructions.",
+      "Créez des profils d’agent avec leur propre rôle, comportement et espace de travail.",
     defaultAgentSummary:
       "Assistant navigateur général pour la navigation, la recherche et l’automatisation.",
     newAgent: "Nouvel agent",
     agentName: "Nom de l’agent",
     agentDescription: "Description de l’agent",
-    agentInstructions: "Instructions de l’agent",
-    agentInstructionsPlaceholder:
-      "Ajoutez les règles de comportement stables de cet agent. Ne stockez pas de secrets ici.",
     deleteAgent: "Supprimer l’agent",
+    agentWorkspace: "Espace de travail de l’agent",
+    agentWorkspaceDescription:
+      "Fichiers texte privés de cet agent. SOUL.md définit le comportement, AGENTS.md les règles d’espace de travail, MEMORY.md et USER.md sont injectés comme contexte figé, et NOTES.md reste disponible à la demande.",
+    agentWorkspaceNewFile: "Nouveau fichier d’espace de travail",
+    agentWorkspaceNewFilePlaceholder: "NOTES.md",
+    agentWorkspaceEmpty: "Aucun fichier d’espace de travail pour le moment.",
     sync: "Synchronisation",
     providers: "Fournisseurs",
     mcpServers: "Serveurs MCP",
@@ -463,8 +490,7 @@ export const frFR: LocaleMessages = {
     mcpServerEnabledDescription:
       "Expose cette configuration de serveur aux outils de l’assistant.",
     mcpEnableRequiresTest: "Testez ce serveur MCP avant de l’activer.",
-    mcpEnableTooltipTested:
-      "Test réussi. {count} outils trouvés. Activez ou désactivez ce serveur pour exposer ou masquer ses outils activés à l’assistant.",
+    mcpEnableTooltipTested: "Test réussi. {count} outils trouvés.",
     mcpAdvancedActions: "Actions du serveur MCP",
     mcpImportJson: "Coller la configuration JSON MCP",
     mcpImportButton: "Importer le JSON MCP",
@@ -579,7 +605,7 @@ export const frFR: LocaleMessages = {
       "Synchronisez la configuration des fournisseurs, y compris les clés API, via votre compte navigateur.",
     syncAgents: "Synchroniser les agents",
     syncAgentsDescription:
-      "Synchronisez les profils d’agent via votre compte navigateur. Gardez cette option désactivée si les instructions contiennent du contexte privé.",
+      "Synchronisez les profils d’agent et les fichiers d’espace de travail via votre compte navigateur. Gardez cette option désactivée s’ils contiennent du contexte privé.",
     syncSkills: "Synchroniser les compétences",
     syncSkillsDescription:
       "Synchronisez les modèles de compétences via votre compte navigateur.",

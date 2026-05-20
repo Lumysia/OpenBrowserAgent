@@ -1,11 +1,21 @@
-import { isAskMode, type Agent, type ChatMode } from "./types";
+import {
+  isAskMode,
+  type Agent,
+  type AgentWorkspace,
+  type ChatMode,
+} from "./types";
 import { isMcpServerTested, type McpServerConfig } from "./mcp";
+import {
+  renderWorkspaceSystemContext,
+  workspaceSoulInstructions,
+} from "./workspace";
 
 export function createSystemPrompt(
   mode: ChatMode,
   options: {
     imageGenerationEnabled?: boolean;
     agent?: Agent;
+    workspace?: AgentWorkspace;
     browserTimeZone?: string;
     mcpServers?: McpServerConfig[];
   } = {},
@@ -15,11 +25,13 @@ export function createSystemPrompt(
   const imageCapability = options.imageGenerationEnabled
     ? "\nFor image generation or editing requests, use generateImage."
     : "";
-  const agentProfile = renderAgentProfile(options.agent);
+  const agentProfile = renderAgentProfile(options.agent, options.workspace);
+  const workspaceContext = renderWorkspaceSystemContext(options.workspace);
   const mcpProfile = renderMcpProfile(options.mcpServers || []);
   if (isAskMode(mode)) {
     return `You are OpenBrowserAgent.
 ${agentProfile}
+${workspaceContext}
 ${mcpProfile}
 
 <task>
@@ -35,6 +47,7 @@ Answer the USER's question from the content they provide.${imageCapability}
   }
   return `You are OpenBrowserAgent, a browser co-worker that completes USER tasks with browser tools.
 ${agentProfile}
+${workspaceContext}
 ${mcpProfile}
 
 <mission>
@@ -73,10 +86,14 @@ function currentBrowserTimeZone() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
-function renderAgentProfile(agent: Agent | undefined) {
-  if (!agent?.description && !agent?.instructions) return "";
+function renderAgentProfile(
+  agent: Agent | undefined,
+  workspace?: AgentWorkspace,
+) {
+  const instructions = workspaceSoulInstructions(workspace);
+  if (!agent?.description && !instructions) return "";
   return `
 <agent_profile>
-${agent.name ? `Name: ${agent.name}\n` : ""}${agent.description ? `Description: ${agent.description}\n` : ""}${agent.instructions ? `Instructions: ${agent.instructions}` : ""}
+${agent?.name ? `Name: ${agent.name}\n` : ""}${agent?.description ? `Description: ${agent.description}\n` : ""}${instructions ? `Instructions from SOUL.md: ${instructions}` : ""}
 </agent_profile>`;
 }

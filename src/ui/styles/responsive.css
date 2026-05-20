@@ -259,7 +259,7 @@
   .skills-page-actions {
     justify-content: flex-start;
   }
-  .skill-add-file-row {
+  .option-add-file-row {
     grid-template-columns: minmax(0, 1fr) auto auto;
   }
   .composer-controls {

@@ -63,9 +63,24 @@ export type Agent = {
   id: string;
   name: string;
   description?: string;
-  instructions?: string;
   builtin?: boolean;
   createdAt: number;
+  updatedAt: number;
+};
+
+export type AgentWorkspace = {
+  agentId: string;
+  files: WorkspaceFile[];
+  createdAt: number;
+  updatedAt: number;
+};
+
+export type WorkspaceFileKind = "markdown" | "text";
+
+export type WorkspaceFile = {
+  path: string;
+  content: string;
+  kind: WorkspaceFileKind;
   updatedAt: number;
 };
 

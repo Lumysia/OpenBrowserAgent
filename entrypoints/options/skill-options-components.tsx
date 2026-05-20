@@ -170,7 +170,7 @@ export function SkillFileList({
       <span className="muted">
         {t.options.skillFiles} ({files.length})
       </span>
-      <div className="skill-add-file-row">
+      <div className="option-add-file-row">
         <Input
           value={addPath}
           onChange={(event) => setAddPath(event.target.value)}
@@ -202,12 +202,12 @@ export function SkillFileList({
         hidden
         onChange={(event) => replaceFile(event.target.files)}
       />
-      <div className="skill-file-list">
+      <div className="option-file-list">
         {files.map((file) => {
           const isEditing = editingFile?.path === file.path;
           return (
-            <div className="skill-file-block" key={file.path}>
-              <div className="skill-file-item">
+            <div className="option-file-block" key={file.path}>
+              <div className="option-file-item">
                 <FileArchive size={18} />
                 <span>
                   <strong>{file.path}</strong>
@@ -216,7 +216,7 @@ export function SkillFileList({
                     {file.content.length} bytes · {formatDate(file.updatedAt)}
                   </small>
                 </span>
-                <div className="skill-file-actions">
+                <div className="option-file-actions">
                   <SkillFileActionButton
                     label={t.options.editFile}
                     disabled={file.encoding === "base64"}
@@ -249,7 +249,7 @@ export function SkillFileList({
                 </div>
               </div>
               {isEditing && editingFile.encoding !== "base64" && (
-                <div className="skill-file-editor stack">
+                <div className="option-file-editor stack">
                   <Input
                     value={editFilePath}
                     disabled={editingFile.path === SKILL_ENTRY_PATH}
@@ -258,7 +258,7 @@ export function SkillFileList({
                     onChange={(event) => setEditFilePath(event.target.value)}
                   />
                   <Textarea
-                    className="skill-file-editor-textarea"
+                    className="option-file-editor-textarea"
                     value={editContent}
                     onChange={(event) => setEditContent(event.target.value)}
                   />
@@ -277,7 +277,7 @@ export function SkillFileList({
   );
 }
 
-function SkillFileActionButton({
+export function SkillFileActionButton({
   label,
   children,
   ...props

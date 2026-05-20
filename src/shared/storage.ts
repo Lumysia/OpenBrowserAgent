@@ -4,6 +4,7 @@ import { BUILTIN_SKILLS } from "./builtin-skills";
 import * as config from "./config";
 import { DEFAULT_PREFERENCES, mergePreferences } from "./default-preferences";
 import { normalizeMcpServers } from "./mcp";
+import { normalizeWorkspaces } from "./workspace";
 import {
   STORAGE_KEYS,
   SYNCABLE_DATA_ITEMS,
@@ -12,6 +13,7 @@ import {
 } from "./storage-keys";
 import type {
   Agent,
+  AgentWorkspace,
   Chat,
   ChatTab,
   Preferences,
@@ -457,6 +459,12 @@ export const storage = {
     () => normalizeAgents(undefined),
     "syncAgents",
     normalizeAgents,
+  ),
+  agentWorkspaces: createSwitchableItem<AgentWorkspace[]>(
+    STORAGE_KEYS.agentWorkspaces,
+    () => [],
+    "syncAgents",
+    normalizeWorkspaces,
   ),
   skills: createSwitchableItem<Skill[]>(
     STORAGE_KEYS.skills,

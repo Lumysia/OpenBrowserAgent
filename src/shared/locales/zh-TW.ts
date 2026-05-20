@@ -301,21 +301,48 @@ export const zhTW: LocaleMessages = {
       cdpScreencastStart: { running: "開始頁面錄製", done: "已開始頁面錄製" },
       cdpScreencastStop: { running: "停止頁面錄製", done: "已停止頁面錄製" },
       readSkillFile: { running: "讀取技能檔案", done: "已讀取技能檔案" },
+      listWorkspaceFiles: {
+        running: "列出工作區檔案",
+        done: "已列出工作區檔案",
+      },
+      readWorkspaceFile: {
+        running: "讀取工作區檔案",
+        done: "已讀取工作區檔案",
+      },
+      writeWorkspaceFile: {
+        running: "寫入工作區檔案",
+        done: "已寫入工作區檔案",
+      },
+      patchWorkspaceFile: {
+        running: "編輯工作區檔案",
+        done: "已編輯工作區檔案",
+      },
+      deleteWorkspaceFile: {
+        running: "刪除工作區檔案",
+        done: "已刪除工作區檔案",
+      },
+      searchWorkspaceFiles: {
+        running: "搜尋工作區檔案",
+        done: "已搜尋工作區檔案",
+      },
     },
   },
   options: {
     general: "一般",
     generalDescription: "調整擴充功能的外觀、語言、自動化和上下文行為。",
     agents: "智慧體",
-    agentsDescription: "建立擁有獨立角色、行為和指令的智慧體設定。",
+    agentsDescription: "建立擁有獨立角色、行為和工作區的智慧體設定。",
     defaultAgentSummary: "用於瀏覽、搜尋和自動化的通用瀏覽器助手。",
     newAgent: "新增智慧體",
     agentName: "智慧體名稱",
     agentDescription: "智慧體描述",
-    agentInstructions: "智慧體指令",
-    agentInstructionsPlaceholder:
-      "加入此智慧體的穩定行為規則。不要在這裡儲存密鑰。",
     deleteAgent: "刪除智慧體",
+    agentWorkspace: "智慧體工作區",
+    agentWorkspaceDescription:
+      "此智慧體的私有文字檔案。SOUL.md 定義行為，AGENTS.md 定義工作區規則，MEMORY.md 和 USER.md 作為凍結上下文注入，NOTES.md 按需使用。",
+    agentWorkspaceNewFile: "新增工作區檔案",
+    agentWorkspaceNewFilePlaceholder: "NOTES.md",
+    agentWorkspaceEmpty: "尚無工作區檔案。",
     sync: "同步",
     providers: "提供者",
     mcpServers: "MCP 伺服器",
@@ -333,8 +360,7 @@ export const zhTW: LocaleMessages = {
     mcpServerEnabled: "已啟用",
     mcpServerEnabledDescription: "將此伺服器設定提供給助手工具。",
     mcpEnableRequiresTest: "請先測試此 MCP 伺服器，然後才能啟用。",
-    mcpEnableTooltipTested:
-      "測試已通過，找到 {count} 個工具。開啟後會將已啟用的工具提供給助手，關閉後則隱藏。",
+    mcpEnableTooltipTested: "測試已通過，找到 {count} 個工具。",
     mcpAdvancedActions: "MCP 伺服器操作",
     mcpImportJson: "貼上 MCP JSON 設定",
     mcpImportButton: "匯入 MCP JSON",
@@ -443,7 +469,7 @@ export const zhTW: LocaleMessages = {
     syncProvidersDescription: "透過瀏覽器帳號同步提供者設定，包括 API Key。",
     syncAgents: "同步智慧體",
     syncAgentsDescription:
-      "透過瀏覽器帳號同步智慧體設定。如果智慧體指令包含隱私上下文，建議保持關閉。",
+      "透過瀏覽器帳號同步智慧體設定和工作區檔案。如果其中包含隱私上下文，建議保持關閉。",
     syncSkills: "同步技能",
     syncSkillsDescription: "透過瀏覽器帳號同步技能範本。",
     syncMcpServers: "同步 MCP 伺服器",

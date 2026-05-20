@@ -1,7 +1,12 @@
 import { storage } from "../src/shared/storage";
 import { getMessages } from "../src/shared/i18n";
+import { DEFAULT_AGENT_ID } from "../src/shared/agents";
 import { getSkillInstruction } from "../src/shared/skills";
 import { createSystemPrompt } from "../src/shared/system-prompt";
+import {
+  createWorkspace,
+  ensureWorkspaceDefaults,
+} from "../src/shared/workspace";
 import {
   PROMPT_CONTEXT_TAG,
   PROMPT_CONTEXT_TAGS,
@@ -146,9 +151,13 @@ async function streamAssistantResponse(
   const providerModel = await resolveModel(request.body.modelId);
   const t = getMessages(request.body.language);
   const mcpServers = await storage.mcpServers.get();
+  const workspace = await workspaceForAgent(
+    request.body.context?.agent?.id || DEFAULT_AGENT_ID,
+  );
   const system = createSystemPrompt(request.body.chatMode, {
     imageGenerationEnabled: !!request.body.context?.imageGenerationEnabled,
     agent: request.body.context?.agent,
+    workspace,
     mcpServers,
   });
   const preferences = await storage.preferences.get();
@@ -179,6 +188,7 @@ async function streamAssistantResponse(
       ? request.body.context.availableSkills || []
       : [],
     mcpServers,
+    workspace,
     drainQueuedMessages,
   );
 
@@ -221,6 +231,7 @@ function promptBreakdown(
           mode: request.body.chatMode,
           hasUploadedAttachments: attachments.length > 0,
           hasSkills: availableSkills.length > 0,
+          hasWorkspace: !!request.body.context?.agent,
           imageGenerationEnabled:
             !!request.body.context?.imageGenerationEnabled,
           cdpToolsEnabled,
@@ -267,6 +278,24 @@ function promptBreakdown(
     ),
     otherContextPromptChars: otherContextChars(context),
   };
+}
+
+async function workspaceForAgent(agentId: string) {
+  const agents = await storage.agents.get();
+  const agent = agents.find((item) => item.id === agentId);
+  const workspaces = await storage.agentWorkspaces.get();
+  const existing = workspaces.find(
+    (workspace) => workspace.agentId === agentId,
+  );
+  const workspace = ensureWorkspaceDefaults(
+    existing || createWorkspace(agentId),
+    agent,
+  );
+  if (!existing || existing.files.length !== workspace.files.length)
+    await storage.agentWorkspaces.set(
+      workspaces.filter((item) => item.agentId !== agentId).concat(workspace),
+    );
+  return workspace;
 }
 
 function messageSkills(metadata: Record<string, unknown> | undefined) {

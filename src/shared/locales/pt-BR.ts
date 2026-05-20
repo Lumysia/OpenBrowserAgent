@@ -377,6 +377,30 @@ export const ptBR: LocaleMessages = {
         running: "Lendo arquivo de habilidade",
         done: "Arquivo de habilidade lido",
       },
+      listWorkspaceFiles: {
+        running: "Listando arquivos do workspace",
+        done: "Arquivos do workspace listados",
+      },
+      readWorkspaceFile: {
+        running: "Lendo arquivo do workspace",
+        done: "Arquivo do workspace lido",
+      },
+      writeWorkspaceFile: {
+        running: "Gravando arquivo do workspace",
+        done: "Arquivo do workspace gravado",
+      },
+      patchWorkspaceFile: {
+        running: "Editando arquivo do workspace",
+        done: "Arquivo do workspace editado",
+      },
+      deleteWorkspaceFile: {
+        running: "Excluindo arquivo do workspace",
+        done: "Arquivo do workspace excluído",
+      },
+      searchWorkspaceFiles: {
+        running: "Pesquisando arquivos do workspace",
+        done: "Arquivos do workspace pesquisados",
+      },
     },
   },
   options: {
@@ -385,16 +409,19 @@ export const ptBR: LocaleMessages = {
       "Ajuste a aparência, o idioma, a automação e o contexto da extensão.",
     agents: "Agentes",
     agentsDescription:
-      "Crie perfis de agente com função, comportamento e instruções próprios.",
+      "Crie perfis de agente com função, comportamento e workspace próprios.",
     defaultAgentSummary:
       "Assistente geral de navegador para navegação, pesquisa e automação.",
     newAgent: "Novo agente",
     agentName: "Nome do agente",
     agentDescription: "Descrição do agente",
-    agentInstructions: "Instruções do agente",
-    agentInstructionsPlaceholder:
-      "Adicione regras de comportamento estáveis para este agente. Não salve segredos aqui.",
     deleteAgent: "Excluir agente",
+    agentWorkspace: "Workspace do agente",
+    agentWorkspaceDescription:
+      "Arquivos de texto privados deste agente. SOUL.md define o comportamento, AGENTS.md as regras do workspace, MEMORY.md e USER.md são injetados como contexto congelado, e NOTES.md fica disponível sob demanda.",
+    agentWorkspaceNewFile: "Novo arquivo de workspace",
+    agentWorkspaceNewFilePlaceholder: "NOTES.md",
+    agentWorkspaceEmpty: "Ainda não há arquivos de workspace.",
     sync: "Sincronização",
     providers: "Provedores",
     mcpServers: "Servidores MCP",
@@ -414,8 +441,7 @@ export const ptBR: LocaleMessages = {
     mcpServerEnabledDescription:
       "Expõe esta configuração de servidor às ferramentas do assistente.",
     mcpEnableRequiresTest: "Teste este servidor MCP antes de ativá-lo.",
-    mcpEnableTooltipTested:
-      "Teste aprovado. {count} ferramentas encontradas. Ative ou desative este servidor para expor ou ocultar suas ferramentas habilitadas ao assistente.",
+    mcpEnableTooltipTested: "Teste aprovado. {count} ferramentas encontradas.",
     mcpAdvancedActions: "Ações do servidor MCP",
     mcpImportJson: "Cole a configuração JSON MCP",
     mcpImportButton: "Importar JSON MCP",
@@ -530,7 +556,7 @@ export const ptBR: LocaleMessages = {
       "Sincronize a configuração dos provedores, incluindo chaves de API, pela sua conta do navegador.",
     syncAgents: "Sincronizar agentes",
     syncAgentsDescription:
-      "Sincronize perfis de agente pela sua conta do navegador. Mantenha desativado se as instruções contiverem contexto privado.",
+      "Sincronize perfis de agente e arquivos de workspace pela sua conta do navegador. Mantenha desativado se contiverem contexto privado.",
     syncSkills: "Sincronizar ações rápidas",
     syncSkillsDescription:
       "Sincronize modelos de ações rápidas pela sua conta do navegador.",

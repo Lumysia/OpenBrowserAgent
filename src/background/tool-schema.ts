@@ -474,6 +474,68 @@ export const commonBrowserTools = [
     ["skillId", "path", "replacements", "reason"],
   ),
   tool(
+    BROWSER_TOOL_NAME.listWorkspaceFiles,
+    "List private files in the current agent workspace.",
+    {},
+  ),
+  tool(
+    BROWSER_TOOL_NAME.readWorkspaceFile,
+    "Read one private file from the current agent workspace by path.",
+    {
+      path: { type: "string", description: "Workspace file path" },
+    },
+    ["path"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.writeWorkspaceFile,
+    "Create or replace one private text file in the current agent workspace.",
+    {
+      path: { type: "string", description: "Workspace file path" },
+      content: {
+        type: "string",
+        description: "Complete UTF-8 text content for the workspace file",
+      },
+    },
+    ["path", "content"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.patchWorkspaceFile,
+    "Edit one private workspace file with append, prepend, or exact replacement.",
+    {
+      path: { type: "string", description: "Workspace file path" },
+      operation: {
+        type: "string",
+        enum: ["replace", "append", "prepend"],
+        description: "Patch operation",
+      },
+      value: {
+        type: "string",
+        description: "Text to insert or replacement text",
+      },
+      find: {
+        type: "string",
+        description: "Exact text to replace when operation is replace",
+      },
+    },
+    ["path", "operation", "value"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.deleteWorkspaceFile,
+    "Delete one private file from the current agent workspace.",
+    {
+      path: { type: "string", description: "Workspace file path" },
+    },
+    ["path"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.searchWorkspaceFiles,
+    "Search private current-agent workspace files for text.",
+    {
+      query: { type: "string", description: "Text to search for" },
+    },
+    ["query"],
+  ),
+  tool(
     BROWSER_TOOL_NAME.listMcpServers,
     "List configured Streamable HTTP MCP servers.",
     {},
@@ -553,6 +615,7 @@ export function browserToolsForPrompt({
   mode,
   hasUploadedAttachments,
   hasSkills,
+  hasWorkspace,
   imageGenerationEnabled,
   cdpToolsEnabled,
   dangerousCodeExecutionEnabled,
@@ -562,6 +625,7 @@ export function browserToolsForPrompt({
   mode: ChatMode;
   hasUploadedAttachments: boolean;
   hasSkills: boolean;
+  hasWorkspace: boolean;
   imageGenerationEnabled: boolean;
   cdpToolsEnabled: boolean;
   dangerousCodeExecutionEnabled: boolean;
@@ -586,6 +650,18 @@ export function browserToolsForPrompt({
     if (name === BROWSER_TOOL_NAME.readSkillFile) return hasSkills;
     if (name === BROWSER_TOOL_NAME.updateSkillFile) return hasSkills;
     if (name === BROWSER_TOOL_NAME.patchSkillFile) return hasSkills;
+    if (
+      name === BROWSER_TOOL_NAME.listWorkspaceFiles ||
+      name === BROWSER_TOOL_NAME.readWorkspaceFile ||
+      name === BROWSER_TOOL_NAME.searchWorkspaceFiles
+    )
+      return hasWorkspace;
+    if (
+      name === BROWSER_TOOL_NAME.writeWorkspaceFile ||
+      name === BROWSER_TOOL_NAME.patchWorkspaceFile ||
+      name === BROWSER_TOOL_NAME.deleteWorkspaceFile
+    )
+      return !askMode && hasWorkspace;
     if (
       name === BROWSER_TOOL_NAME.listMcpServers ||
       name === BROWSER_TOOL_NAME.addMcpServer ||

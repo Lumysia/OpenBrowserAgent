@@ -295,21 +295,48 @@ export const zhCN: LocaleMessages = {
       cdpScreencastStart: { running: "开始页面录制", done: "已开始页面录制" },
       cdpScreencastStop: { running: "停止页面录制", done: "已停止页面录制" },
       readSkillFile: { running: "读取技能文件", done: "已读取技能文件" },
+      listWorkspaceFiles: {
+        running: "列出工作区文件",
+        done: "已列出工作区文件",
+      },
+      readWorkspaceFile: {
+        running: "读取工作区文件",
+        done: "已读取工作区文件",
+      },
+      writeWorkspaceFile: {
+        running: "写入工作区文件",
+        done: "已写入工作区文件",
+      },
+      patchWorkspaceFile: {
+        running: "编辑工作区文件",
+        done: "已编辑工作区文件",
+      },
+      deleteWorkspaceFile: {
+        running: "删除工作区文件",
+        done: "已删除工作区文件",
+      },
+      searchWorkspaceFiles: {
+        running: "搜索工作区文件",
+        done: "已搜索工作区文件",
+      },
     },
   },
   options: {
     general: "通用",
     generalDescription: "调整扩展的外观、语言、自动化和上下文行为。",
     agents: "智能体",
-    agentsDescription: "创建拥有独立角色、行为和指令的智能体配置。",
+    agentsDescription: "创建拥有独立角色、行为和工作区的智能体配置。",
     defaultAgentSummary: "用于浏览、搜索和自动化的通用浏览器助手。",
     newAgent: "新建智能体",
     agentName: "智能体名称",
     agentDescription: "智能体描述",
-    agentInstructions: "智能体指令",
-    agentInstructionsPlaceholder:
-      "添加这个智能体的稳定行为规则。不要在这里保存密钥。",
     deleteAgent: "删除智能体",
+    agentWorkspace: "智能体工作区",
+    agentWorkspaceDescription:
+      "此智能体的私有文本文件。SOUL.md 定义行为，AGENTS.md 定义工作区规则，MEMORY.md 和 USER.md 作为冻结上下文注入，NOTES.md 按需使用。",
+    agentWorkspaceNewFile: "新建工作区文件",
+    agentWorkspaceNewFilePlaceholder: "NOTES.md",
+    agentWorkspaceEmpty: "还没有工作区文件。",
     sync: "同步",
     providers: "提供商",
     mcpServers: "MCP 服务器",
@@ -327,8 +354,7 @@ export const zhCN: LocaleMessages = {
     mcpServerEnabled: "已启用",
     mcpServerEnabledDescription: "将此服务器配置暴露给助手工具。",
     mcpEnableRequiresTest: "请先测试此 MCP 服务器，然后才能启用。",
-    mcpEnableTooltipTested:
-      "测试已通过，发现 {count} 个工具。打开后会把已启用的工具暴露给助手，关闭后则隐藏。",
+    mcpEnableTooltipTested: "测试已通过，发现 {count} 个工具。",
     mcpAdvancedActions: "MCP 服务器操作",
     mcpImportJson: "粘贴 MCP JSON 配置",
     mcpImportButton: "导入 MCP JSON",
@@ -437,7 +463,7 @@ export const zhCN: LocaleMessages = {
     syncProvidersDescription: "通过浏览器账号同步提供商配置，包括 API Key。",
     syncAgents: "同步智能体",
     syncAgentsDescription:
-      "通过浏览器账号同步智能体配置。如果智能体指令包含隐私上下文，建议保持关闭。",
+      "通过浏览器账号同步智能体配置和工作区文件。如果其中包含隐私上下文，建议保持关闭。",
     syncSkills: "同步技能",
     syncSkillsDescription: "通过浏览器账号同步技能模板。",
     syncMcpServers: "同步 MCP 服务器",

@@ -6,7 +6,6 @@ export const DEFAULT_AGENT: Agent = {
   id: DEFAULT_AGENT_ID,
   name: "Agent",
   description: "",
-  instructions: "",
   builtin: true,
   createdAt: 0,
   updatedAt: 0,
@@ -32,7 +31,6 @@ export function createAgentDraft(name: string): Agent {
     id: crypto.randomUUID(),
     name,
     description: "",
-    instructions: "",
     createdAt: now,
     updatedAt: now,
   };

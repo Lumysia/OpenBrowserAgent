@@ -14,6 +14,7 @@ import {
 import { storage } from "../shared/storage";
 import {
   type ChatMode,
+  type AgentWorkspace,
   type Preferences,
   type McpServerConfig,
   type Skill,
@@ -39,6 +40,14 @@ import {
 } from "./mcp-tools";
 import { safeExecuteBrowserTool } from "./tools";
 import { browserToolsForPrompt, deferredBrowserTools } from "./tool-schema";
+import {
+  deleteWorkspaceFile,
+  listWorkspaceFiles,
+  patchWorkspaceFile,
+  readWorkspaceFile,
+  searchWorkspaceFiles,
+  writeWorkspaceFile,
+} from "./workspace-tools";
 
 export function toolsForMode(
   mode: ChatMode,
@@ -50,12 +59,14 @@ export function toolsForMode(
   latestUserText = "",
   loadedToolNames: string[] = [],
   mcpServers: McpServerConfig[] = [],
+  workspace?: AgentWorkspace,
 ) {
   return [
     ...browserToolsForPrompt({
       mode,
       hasUploadedAttachments,
       hasSkills,
+      hasWorkspace: !!workspace,
       imageGenerationEnabled,
       cdpToolsEnabled,
       dangerousCodeExecutionEnabled,
@@ -73,6 +84,7 @@ export function createToolResolver({
   preferences,
   latestUserText,
   mcpServers = [],
+  workspace,
 }: {
   mode: ChatMode;
   uploadedAttachments: UploadedAttachment[];
@@ -80,6 +92,7 @@ export function createToolResolver({
   preferences: Preferences;
   latestUserText: string;
   mcpServers?: McpServerConfig[];
+  workspace?: AgentWorkspace;
 }) {
   const loadedToolNames = new Set<string>();
   return {
@@ -95,6 +108,7 @@ export function createToolResolver({
         latestUserText,
         [...loadedToolNames],
         mcpServers,
+        workspace,
       ),
   };
 }
@@ -107,6 +121,7 @@ export function executeContextAwareTool({
   availableSkills,
   cdpToolsEnabled,
   dangerousCodeExecutionEnabled,
+  workspace,
 }: {
   toolName: string;
   input: Record<string, unknown>;
@@ -115,6 +130,7 @@ export function executeContextAwareTool({
   availableSkills: Skill[];
   cdpToolsEnabled: boolean;
   dangerousCodeExecutionEnabled: boolean;
+  workspace?: AgentWorkspace;
 }) {
   if (toolName === BROWSER_TOOL_NAME.loadBrowserTools)
     return loadBrowserTools(
@@ -145,6 +161,18 @@ export function executeContextAwareTool({
     return updateSkillFile(availableSkills, input);
   if (toolName === BROWSER_TOOL_NAME.patchSkillFile)
     return patchSkillFile(availableSkills, input);
+  if (toolName === BROWSER_TOOL_NAME.listWorkspaceFiles)
+    return listWorkspaceFiles(workspace);
+  if (toolName === BROWSER_TOOL_NAME.readWorkspaceFile)
+    return readWorkspaceFile(workspace, input);
+  if (toolName === BROWSER_TOOL_NAME.writeWorkspaceFile)
+    return writeWorkspaceFile(workspace, input);
+  if (toolName === BROWSER_TOOL_NAME.patchWorkspaceFile)
+    return patchWorkspaceFile(workspace, input);
+  if (toolName === BROWSER_TOOL_NAME.deleteWorkspaceFile)
+    return deleteWorkspaceFile(workspace, input);
+  if (toolName === BROWSER_TOOL_NAME.searchWorkspaceFiles)
+    return searchWorkspaceFiles(workspace, input);
   if (toolName === BROWSER_TOOL_NAME.listMcpServers) return listMcpServers();
   if (toolName === BROWSER_TOOL_NAME.addMcpServer) return addMcpServer(input);
   if (toolName === BROWSER_TOOL_NAME.updateMcpServer)
@@ -286,6 +314,12 @@ const TOOL_CATEGORY_BY_NAME = {
   [BROWSER_TOOL_NAME.readSkillFile]: "skills",
   [BROWSER_TOOL_NAME.updateSkillFile]: "skills",
   [BROWSER_TOOL_NAME.patchSkillFile]: "skills",
+  [BROWSER_TOOL_NAME.listWorkspaceFiles]: "files",
+  [BROWSER_TOOL_NAME.readWorkspaceFile]: "files",
+  [BROWSER_TOOL_NAME.writeWorkspaceFile]: "files",
+  [BROWSER_TOOL_NAME.patchWorkspaceFile]: "files",
+  [BROWSER_TOOL_NAME.deleteWorkspaceFile]: "files",
+  [BROWSER_TOOL_NAME.searchWorkspaceFiles]: "files",
 } as const;
 
 const DEFERRED_TOOL_QUERY_STOP_WORDS = new Set([
