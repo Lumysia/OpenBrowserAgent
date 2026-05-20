@@ -421,6 +421,29 @@ async function requestPlainText(
     );
   }
 
+  if (model.provider === "openai-responses") {
+    const baseUrl = model.baseUrl.replace(/\/$/, "");
+    const response = await fetch(`${baseUrl}/responses`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
+      },
+      body: JSON.stringify({
+        model: model.modelName,
+        temperature: MODEL_TEMPERATURE,
+        instructions: messages[0]?.content || "",
+        input: messages.slice(1).map((message) => ({
+          role: "user",
+          content: [{ type: "input_text", text: message.content }],
+        })),
+      }),
+    });
+    if (!response.ok) throw new Error(await response.text());
+    const data = await response.json();
+    return responsesText(data);
+  }
+
   const baseUrl = model.baseUrl.replace(/\/$/, "");
   const chatUrl =
     model.provider === "ollama"
@@ -441,4 +464,22 @@ async function requestPlainText(
   if (!response.ok) throw new Error(await response.text());
   const data = await response.json();
   return data.choices?.[0]?.message?.content || "";
+}
+
+function responsesText(data: { output_text?: string; output?: unknown[] }) {
+  if (typeof data.output_text === "string") return data.output_text;
+  return (data.output || [])
+    .flatMap((item) =>
+      item && typeof item === "object"
+        ? (item as { content?: unknown[] }).content || []
+        : [],
+    )
+    .map((content) =>
+      content &&
+      typeof content === "object" &&
+      typeof (content as Record<string, unknown>).text === "string"
+        ? String((content as Record<string, unknown>).text)
+        : "",
+    )
+    .join("");
 }

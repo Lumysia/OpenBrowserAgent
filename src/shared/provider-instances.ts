@@ -8,6 +8,7 @@ import {
 
 export const PROVIDER_TYPES: ProviderId[] = [
   "openai",
+  "openai-responses",
   "ollama",
   "gemini",
   "deepseek",
@@ -18,7 +19,11 @@ export const PROVIDER_TYPES: ProviderId[] = [
   "minimax",
 ];
 
-export const MANUAL_MODEL_PROVIDER_TYPES: ProviderId[] = ["openai", "minimax"];
+export const MANUAL_MODEL_PROVIDER_TYPES: ProviderId[] = [
+  "openai",
+  "openai-responses",
+  "minimax",
+];
 
 export function normalizeProviderState(state: ProviderState = {}) {
   return Object.fromEntries(

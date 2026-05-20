@@ -19,6 +19,7 @@ export const REASONING_EFFORT_OPTIONS: ReasoningEffort[] = [
 
 const OPENAI_REASONING_EFFORT_PROVIDERS = new Set<ProviderId>([
   "openai",
+  "openai-responses",
   "deepseek",
   "aihubmix",
   "glm",

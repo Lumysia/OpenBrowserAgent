@@ -33,6 +33,26 @@ export function applyOpenAIContextBudget(
   });
 }
 
+export function applyOpenAIResponsesContextBudget(
+  input: Array<Record<string, unknown>>,
+  preferences: Preferences,
+): BudgetResult<Record<string, unknown>> {
+  const settings = resolveContextBudgetSettings(preferences);
+  const originalChars = jsonLength(input);
+  if (!settings.enabled) return withReport(originalChars, input, noPruning);
+  const toolPruned = pruneOpenAIResponsesToolResults(input, settings);
+  const windowed = applySlidingWindow(
+    toolPruned.items,
+    settings,
+    createOpenAIResponsesPrunedNote,
+    protectOpenAIResponsesToolPairs,
+  );
+  return withReport(originalChars, windowed.items, {
+    prunedMessages: windowed.prunedMessages,
+    truncatedToolResults: toolPruned.truncatedToolResults,
+  });
+}
+
 export function applyGeminiContextBudget(
   contents: Array<Record<string, unknown>>,
   preferences: Preferences,
@@ -113,6 +133,30 @@ function pruneGeminiToolResults(
       };
     });
     return nextParts === parts ? content : { ...content, parts: nextParts };
+  });
+  return { items: items.reverse(), truncatedToolResults };
+}
+
+function pruneOpenAIResponsesToolResults(
+  input: Array<Record<string, unknown>>,
+  settings: ContextBudgetSettings,
+) {
+  let keptToolResults = 0;
+  let aggregateChars = 0;
+  let truncatedToolResults = 0;
+  const items = [...input].reverse().map((item) => {
+    if (item.type !== "function_call_output" || typeof item.output !== "string")
+      return item;
+    const chars = item.output.length;
+    keptToolResults += 1;
+    aggregateChars += chars;
+    const shouldKeep =
+      keptToolResults <= CONTEXT_TOOL_RESULT_KEEP_RECENT &&
+      chars <= settings.toolResultMaxChars &&
+      aggregateChars <= settings.toolResultAggregateMaxChars;
+    if (shouldKeep) return item;
+    truncatedToolResults += 1;
+    return { ...item, output: prunedToolText(item.output) };
   });
   return { items: items.reverse(), truncatedToolResults };
 }
@@ -211,6 +255,43 @@ function protectOpenAIToolPairs(
   }
 }
 
+function protectOpenAIResponsesToolPairs(
+  items: Array<Record<string, unknown>>,
+  protectedIndexes: Set<number>,
+) {
+  const callIndexes = new Map<string, number>();
+  const outputIndexes = new Map<string, number[]>();
+  items.forEach((item, index) => {
+    const callId = recordString(item, "call_id");
+    if (!callId) return;
+    if (item.type === "function_call") callIndexes.set(callId, index);
+    if (item.type === "function_call_output") {
+      const indexes = outputIndexes.get(callId) || [];
+      indexes.push(index);
+      outputIndexes.set(callId, indexes);
+    }
+  });
+  let changed = true;
+  while (changed) {
+    changed = false;
+    items.forEach((item, index) => {
+      if (!protectedIndexes.has(index)) return;
+      const callId = recordString(item, "call_id");
+      if (!callId) return;
+      const callIndex = callIndexes.get(callId);
+      if (callIndex !== undefined && !protectedIndexes.has(callIndex)) {
+        protectedIndexes.add(callIndex);
+        changed = true;
+      }
+      (outputIndexes.get(callId) || []).forEach((outputIndex) => {
+        if (protectedIndexes.has(outputIndex)) return;
+        protectedIndexes.add(outputIndex);
+        changed = true;
+      });
+    });
+  }
+}
+
 function recordString(value: unknown, key: string) {
   return value &&
     typeof value === "object" &&
@@ -263,6 +344,18 @@ function createOpenAIPrunedNote(count: number, chars: number) {
   return {
     role: "user",
     content: `<context_pruned>Older conversation history was omitted from this request to stay within the context budget. Omitted messages: ${count}. Omitted chars: ${chars}. Continue from the preserved recent messages and ask if an omitted detail is required.</context_pruned>`,
+  };
+}
+
+function createOpenAIResponsesPrunedNote(count: number, chars: number) {
+  return {
+    role: "user",
+    content: [
+      {
+        type: "input_text",
+        text: String(createOpenAIPrunedNote(count, chars).content),
+      },
+    ],
   };
 }
 

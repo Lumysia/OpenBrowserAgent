@@ -66,6 +66,26 @@ export function createOpenAIRequestMessages(
   ];
 }
 
+export function createOpenAIResponsesInput(
+  messages: ChatMessage[],
+  multimodal: boolean,
+  requestAttachments: UploadedAttachment[] = [],
+  availableSkills: Skill[] = [],
+  workspace?: AgentWorkspace,
+) {
+  return messages.map((message, index) => ({
+    role: message.role === "assistant" ? "assistant" : "user",
+    content: createOpenAIResponsesContent(
+      message,
+      index === messages.length - 1,
+      multimodal,
+      index === messages.length - 1 ? requestAttachments : [],
+      index === messages.length - 1 ? availableSkills : [],
+      index === messages.length - 1 ? workspace : undefined,
+    ),
+  }));
+}
+
 export function hasImageAttachments(attachments: UploadedAttachment[]) {
   return attachments.some(
     (attachment) =>
@@ -261,6 +281,39 @@ function createOpenAIMessageContent(
       image_url: { url: attachment.dataUrl },
     }));
   return imageParts.length ? [{ type: "text", text }, ...imageParts] : text;
+}
+
+function createOpenAIResponsesContent(
+  message: ChatMessage,
+  isLatest: boolean,
+  multimodal: boolean,
+  requestAttachments: UploadedAttachment[],
+  availableSkills: Skill[],
+  workspace?: AgentWorkspace,
+) {
+  const text = renderMessageText(
+    message,
+    isLatest,
+    requestAttachments,
+    availableSkills,
+    workspace,
+  );
+  const attachments = requestAttachments.length
+    ? requestAttachments
+    : getUploadedAttachments(message);
+  if (!multimodal) return [{ type: "input_text", text }];
+  const imageParts = attachments
+    .filter(
+      (attachment) =>
+        attachment.kind === ATTACHMENT_KIND.image &&
+        attachment.dataUrl &&
+        isVisionImageMimeType(attachment.type),
+    )
+    .map((attachment) => ({
+      type: "input_image",
+      image_url: attachment.dataUrl,
+    }));
+  return [{ type: "input_text", text }, ...imageParts];
 }
 
 function renderMessageText(

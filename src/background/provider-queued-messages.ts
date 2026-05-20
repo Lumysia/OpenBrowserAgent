@@ -15,6 +15,22 @@ export function injectQueuedOpenAIMessages(
   postQueuedMessages(port, queued);
 }
 
+export function injectQueuedOpenAIResponsesInput(
+  port: chrome.runtime.Port,
+  input: Array<Record<string, unknown>>,
+  drainQueuedMessages: () => QueuedUserMessage[],
+) {
+  const queued = drainQueuedMessages();
+  if (!queued.length) return;
+  queued.forEach((message) =>
+    input.push({
+      role: "user",
+      content: [{ type: "input_text", text: message.content }],
+    }),
+  );
+  postQueuedMessages(port, queued);
+}
+
 export function injectQueuedGeminiMessages(
   port: chrome.runtime.Port,
   contents: Array<Record<string, unknown>>,
