@@ -50,6 +50,7 @@ export function MessageBubble({
   onEdit,
   onResend,
   onFork,
+  resendDisabled = false,
   sources = [],
   chatMessages,
 }: {
@@ -63,6 +64,7 @@ export function MessageBubble({
   onEdit?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
   onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
   onFork?: (message: ChatMessage, partId?: string) => void;
+  resendDisabled?: boolean;
 }) {
   const [language] = useStoredState(storage.language);
   const t = getMessages(language);
@@ -225,6 +227,7 @@ export function MessageBubble({
           onReplaceAttachment={onReplaceAttachment}
           onEdit={onEdit}
           onResend={onResend}
+          resendDisabled={resendDisabled}
         />
       )}
     </div>

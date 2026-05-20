@@ -26,6 +26,7 @@ export function UserMessageActions({
   onReplaceAttachment,
   onEdit,
   onResend,
+  resendDisabled = false,
 }: {
   t: Messages;
   message: ChatMessage;
@@ -34,6 +35,7 @@ export function UserMessageActions({
   onReplaceAttachment?: (id: string, files: FileList | File[]) => Promise<void>;
   onEdit?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
   onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
+  resendDisabled?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
@@ -53,6 +55,7 @@ export function UserMessageActions({
   }
 
   function resend() {
+    if (resendDisabled) return;
     if (missingAttachments.length) {
       setOpen(true);
       return;
@@ -96,6 +99,7 @@ export function UserMessageActions({
                 variant="ghost"
                 size="icon"
                 className="copy-message"
+                disabled={resendDisabled}
                 onClick={resend}
               >
                 <RotateCcw />
@@ -147,6 +151,7 @@ export function UserMessageActions({
           <Button
             size="sm"
             variant={hasMissingAttachments ? "secondary" : "default"}
+            disabled={resendDisabled}
             onClick={() => {
               setOpen(false);
               onResend?.(message, availableAttachments);

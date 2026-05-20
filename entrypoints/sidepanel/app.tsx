@@ -261,7 +261,7 @@ export function SidepanelApp() {
   ) {
     const text = interpolateSkillVariables(content.trim());
     if ((!text && !uploadedAttachments.length) || currentChatStreaming) {
-      if (currentChatStreaming && text) {
+      if (currentChatStreaming && text && !options.resendMessage) {
         enqueueQueuedMessage(content);
         if (content === input) clearInput();
       }

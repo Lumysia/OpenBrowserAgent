@@ -267,6 +267,7 @@ export function SidepanelView({
               onReplaceAttachment={onReplaceUploadedAttachment}
               onEdit={onEditMessage}
               onResend={onResendMessage}
+              resendDisabled={streaming}
               onFork={onForkMessage}
             />
           ))}

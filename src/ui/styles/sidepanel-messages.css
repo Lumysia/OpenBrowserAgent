@@ -41,13 +41,26 @@
 .user-bubble {
   max-width: 100%;
   padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 18%, transparent);
   border-radius: 13px;
-  background: var(--accent-strong);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, white 16%, transparent),
+      transparent 54%
+    ),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-solid) 82%, var(--card)),
+      color-mix(in srgb, var(--accent-strong) 86%, var(--accent-soft))
+    );
   color: white;
   font-weight: 500;
   line-height: 1.45;
   overflow-wrap: anywhere;
-  box-shadow: 0 8px 18px var(--accent-shadow);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 18%, transparent),
+    0 10px 22px color-mix(in srgb, var(--accent-shadow) 86%, transparent);
 }
 .sent-context-row {
   display: flex;
@@ -265,14 +278,27 @@
   pointer-events: auto;
   height: 42px;
   padding: 0 16px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 18%, transparent);
   border-radius: 999px;
-  background: var(--accent-softer);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, white 14%, transparent),
+      transparent 60%
+    ),
+    color-mix(in srgb, var(--accent-soft) 72%, var(--card));
   color: var(--accent-strong);
   font-size: 16px;
-  box-shadow: none;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 16%, transparent);
 }
 .skill-create:hover {
-  background: var(--accent-hover);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, white 16%, transparent),
+      transparent 60%
+    ),
+    color-mix(in srgb, var(--accent-hover) 78%, var(--card));
 }
 .context-strip {
   display: grid;

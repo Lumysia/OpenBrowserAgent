@@ -118,7 +118,7 @@ export async function readAnthropicStream(
       .filter((line) => line.startsWith("data:"))
       .map((line) => line.slice(5).trimStart())
       .join("\n");
-    if (!data) return;
+    if (!data || data === "[DONE]") return;
     const event = JSON.parse(data) as Record<string, unknown>;
     const type = String(event.type || "");
     if (type === "content_block_start") {
