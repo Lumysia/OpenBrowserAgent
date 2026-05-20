@@ -1,5 +1,6 @@
 import { UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
 import { MODEL_TEMPERATURE } from "../shared/config";
+import { openAIChatCompletionsUrl } from "../shared/provider-urls";
 import { reasoningRequestParams } from "../shared/reasoning";
 import { storage } from "../shared/storage";
 import {
@@ -56,11 +57,7 @@ export async function requestOpenAIChatCompletions(
   workspace?: AgentWorkspace,
   drainQueuedMessages: () => QueuedUserMessage[] = () => [],
 ): Promise<ProviderTextResult> {
-  const baseUrl = model.baseUrl.replace(/\/$/, "");
-  const chatUrl =
-    model.provider === "ollama"
-      ? `${baseUrl}/v1/chat/completions`
-      : `${baseUrl}/chat/completions`;
+  const chatUrl = openAIChatCompletionsUrl(model.baseUrl);
   let usesAttachmentPayload = hasImageAttachments(uploadedAttachments);
   let requestMessages: Array<Record<string, unknown>> =
     createOpenAIRequestMessages(

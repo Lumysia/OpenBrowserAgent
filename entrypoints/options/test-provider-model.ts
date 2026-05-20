@@ -3,6 +3,10 @@ import {
   providerDefaultBaseUrls,
   type ProviderConfig,
 } from "../../src/shared/types";
+import {
+  ollamaChatCompletionsUrl,
+  openAIChatCompletionsUrl,
+} from "../../src/shared/provider-urls";
 
 export async function testProviderModel(
   providerConfig: ProviderConfig,
@@ -33,8 +37,8 @@ export async function testProviderModel(
   ).replace(/\/$/, "");
   const chatUrl =
     provider === "ollama"
-      ? `${baseUrl}/v1/chat/completions`
-      : `${baseUrl}/chat/completions`;
+      ? ollamaChatCompletionsUrl(baseUrl)
+      : openAIChatCompletionsUrl(baseUrl);
   const response = await fetch(chatUrl, {
     method: "POST",
     headers: {

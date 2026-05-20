@@ -5,6 +5,7 @@ import {
   type ProviderConfig,
   type ProviderId,
 } from "../../src/shared/types";
+import { loadOllamaModels } from "./ollama-models";
 
 export async function loadProviderModels(
   providerId: string,
@@ -13,8 +14,7 @@ export async function loadProviderModels(
 ): Promise<ModelConfig[]> {
   if (provider === "gemini")
     return loadGeminiModels(providerId, provider, config);
-  if (provider === "ollama")
-    return loadOllamaModels(providerId, provider, config);
+  if (provider === "ollama") return loadOllamaModels(providerId, config);
   if (provider === "anthropic")
     return loadAnthropicModels(providerId, provider, config);
   return loadOpenAICompatibleModels(providerId, provider, config);
@@ -44,29 +44,6 @@ async function loadGeminiModels(
         displayName: `${config.label || providerLabels[provider]} / ${model.displayName || name}`,
       };
     });
-}
-
-async function loadOllamaModels(
-  providerId: string,
-  provider: ProviderId,
-  config: ProviderConfig,
-) {
-  const baseUrl = (
-    config.baseUrl ||
-    providerDefaultBaseUrls[provider] ||
-    ""
-  ).replace(/\/$/, "");
-  const response = await fetch(`${baseUrl}/api/tags`);
-  if (!response.ok) throw new Error(await response.text());
-  const data = await response.json();
-  return (data.models || [])
-    .map((model: { name?: string }) => model.name)
-    .filter(Boolean)
-    .map((name: string) => ({
-      id: `${providerId}:${name}`,
-      name,
-      displayName: `${config.label || providerLabels[provider]} / ${name}`,
-    }));
 }
 
 async function loadOpenAICompatibleModels(

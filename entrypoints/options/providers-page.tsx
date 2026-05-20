@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { Bot, Image, Plus, Server } from "lucide-react";
 import { getMessages } from "../../src/shared/i18n";
 import {
+  ADD_PROVIDER_TYPES,
   createProviderConfig,
   normalizeProviderState,
-  PROVIDER_TYPES,
 } from "../../src/shared/provider-instances";
 import { storage } from "../../src/shared/storage";
 import {
@@ -208,7 +208,7 @@ export function ProvidersPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {PROVIDER_TYPES.map((type) => (
+                  {ADD_PROVIDER_TYPES.map((type) => (
                     <SelectItem key={type} value={type}>
                       {providerLabels[type]}
                     </SelectItem>

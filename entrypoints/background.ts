@@ -40,6 +40,8 @@ import { requestOpenAICompatible } from "../src/background/providers";
 import { resolveModel } from "../src/background/model-resolver";
 import { postTextStream } from "../src/background/message-helpers";
 import { browserToolsForPrompt } from "../src/background/tool-schema";
+import { requestOllamaPlainText } from "../src/background/ollama-provider";
+import { openAIChatCompletionsUrl } from "../src/shared/provider-urls";
 import * as streamSessions from "../src/background/stream-sessions";
 
 const SIDE_PANEL_OPENED = "side_panel_opened";
@@ -468,11 +470,10 @@ async function requestPlainText(
     return responsesText(data);
   }
 
-  const baseUrl = model.baseUrl.replace(/\/$/, "");
-  const chatUrl =
-    model.provider === "ollama"
-      ? `${baseUrl}/v1/chat/completions`
-      : `${baseUrl}/chat/completions`;
+  if (model.provider === "ollama")
+    return requestOllamaPlainText(model, messages);
+
+  const chatUrl = openAIChatCompletionsUrl(model.baseUrl);
   const response = await fetch(chatUrl, {
     method: "POST",
     headers: {

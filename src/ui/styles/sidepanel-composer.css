@@ -465,11 +465,26 @@
 .bootstrap-step {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 10px;
-  align-items: start;
+  column-gap: 10px;
+  row-gap: 6px;
+  align-items: center;
+}
+.bootstrap-step .ui-badge {
+  grid-column: 1;
+  grid-row: 1;
 }
 .bootstrap-step-copy {
+  grid-column: 2;
+  grid-row: 2;
   gap: 6px;
+}
+.bootstrap-step-copy .ui-card-description {
+  margin-top: 0;
+}
+.bootstrap-step-title {
+  grid-column: 2;
+  grid-row: 1;
+  line-height: 1.25;
 }
 .bootstrap-step-muted {
   opacity: 0.58;

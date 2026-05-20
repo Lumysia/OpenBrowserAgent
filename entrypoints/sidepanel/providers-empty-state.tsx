@@ -137,8 +137,8 @@ function BootstrapStep({
   return (
     <div className="bootstrap-step">
       <Badge className={active ? "" : "bootstrap-step-muted"}>{number}</Badge>
+      <strong className="bootstrap-step-title">{title}</strong>
       <div className="stack bootstrap-step-copy">
-        <strong>{title}</strong>
         <CardDescription>{description}</CardDescription>
         {children}
       </div>

@@ -11,6 +11,7 @@ import { requestAnthropic } from "./anthropic-provider";
 import { requestGemini } from "./gemini-provider";
 import { requestOpenAIChatCompletions } from "./openai-chat-provider";
 import { requestOpenAIResponses } from "./openai-responses-provider";
+import { requestOllama } from "./ollama-provider";
 import type { ProviderTextResult } from "./provider-output";
 import type { QueuedUserMessage } from "./provider-queued-messages";
 
@@ -64,6 +65,24 @@ export async function requestOpenAICompatible(
       signal,
       port,
       chatId,
+      attachmentRetryNotice,
+      uploadedAttachments,
+      availableSkills,
+      mcpServers,
+      workspace,
+      drainQueuedMessages,
+    );
+  if (model.provider === "ollama")
+    return requestOllama(
+      model,
+      system,
+      messages,
+      mode,
+      maxToolSteps,
+      signal,
+      port,
+      chatId,
+      messageId,
       attachmentRetryNotice,
       uploadedAttachments,
       availableSkills,

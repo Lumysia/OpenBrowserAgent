@@ -20,6 +20,14 @@ export const PROVIDER_TYPES: ProviderId[] = [
   "minimax",
 ];
 
+export const ADD_PROVIDER_TYPES: ProviderId[] = [
+  "openai",
+  "openai-responses",
+  "anthropic",
+  "ollama",
+  "gemini",
+];
+
 export const MANUAL_MODEL_PROVIDER_TYPES: ProviderId[] = [
   "openai",
   "openai-responses",

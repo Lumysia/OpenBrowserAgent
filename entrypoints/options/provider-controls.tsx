@@ -118,12 +118,14 @@ export function ModelSelect({
   disabled?: boolean;
   onChange: (value?: string) => void;
 }) {
+  const isDisabled = disabled || models.length === 0;
+
   return (
     <Label>
       {label}
       <Select
         value={value || "none"}
-        disabled={disabled}
+        disabled={isDisabled}
         onValueChange={(next) => onChange(next === "none" ? undefined : next)}
       >
         <SelectTrigger>

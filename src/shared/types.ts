@@ -380,9 +380,9 @@ export type AiStreamResponse = (
 export const providerLabels: Record<ProviderId, string> = {
   gemini: "Gemini",
   ollama: "Ollama",
-  openai: "OpenAI",
+  openai: "OpenAI-compatible",
   "openai-responses": "OpenAI Responses",
-  anthropic: "Anthropic",
+  anthropic: "Anthropic-compatible",
   openrouter: "OpenRouter",
   aihubmix: "AIHubMix",
   deepseek: "DeepSeek",
