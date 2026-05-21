@@ -262,6 +262,12 @@
   .option-add-file-row {
     grid-template-columns: minmax(0, 1fr) auto auto;
   }
+  .provider-add-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .provider-add-row .ui-button {
+    justify-self: start;
+  }
   .composer-controls {
     grid-template-columns: auto minmax(0, 1fr) auto auto;
     gap: 8px;

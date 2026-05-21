@@ -35,6 +35,8 @@ export const ko: LocaleMessages = {
     cloudSyncError:
       "클라우드 동기화 실패. 브라우저 동기화를 확인하거나 로컬에서 시작하세요.",
     startLocally: "로컬에서 시작",
+    localSetupHint:
+      "설정이 열렸습니다. 거기에서 제공업체와 모델을 추가한 뒤 여기로 돌아와 계속하세요.",
     bootstrapStepSyncTitle: "시작 위치 선택",
     bootstrapStepProviderTitle: "제공업체와 모델 추가",
     bootstrapStepProviderDescription:

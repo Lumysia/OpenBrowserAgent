@@ -36,6 +36,8 @@ export const deDE: LocaleMessages = {
     cloudSyncError:
       "Cloud-Synchronisierung fehlgeschlagen. Prüfen Sie die Browser-Synchronisierung oder starten Sie lokal.",
     startLocally: "Lokal starten",
+    localSetupHint:
+      "Die Einstellungen sind geöffnet. Fügen Sie dort Anbieter und Modell hinzu und kehren Sie dann hierher zurück.",
     bootstrapStepSyncTitle: "Startpunkt wählen",
     bootstrapStepProviderTitle: "Anbieter und Modell hinzufügen",
     bootstrapStepProviderDescription:

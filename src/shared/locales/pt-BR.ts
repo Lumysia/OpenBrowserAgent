@@ -36,6 +36,8 @@ export const ptBR: LocaleMessages = {
     cloudSyncError:
       "Falha na sincronização da nuvem. Verifique a sincronização do navegador ou comece localmente.",
     startLocally: "Começar localmente",
+    localSetupHint:
+      "As Configurações estão abertas. Adicione um provedor e um modelo lá, depois volte aqui para continuar.",
     bootstrapStepSyncTitle: "Escolha onde começar",
     bootstrapStepProviderTitle: "Adicione provedor e modelo",
     bootstrapStepProviderDescription:

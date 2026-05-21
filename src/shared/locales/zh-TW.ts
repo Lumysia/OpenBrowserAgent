@@ -33,6 +33,8 @@ export const zhTW: LocaleMessages = {
     cloudSyncEmpty: "找不到已同步的提供者，你可以改為從本機開始。",
     cloudSyncError: "雲端同步失敗。請檢查瀏覽器同步，或從本機開始。",
     startLocally: "從本機開始",
+    localSetupHint:
+      "設定頁已開啟。請在那裡新增提供者和模型，然後回到這裡繼續。",
     bootstrapStepSyncTitle: "選擇從哪裡開始",
     bootstrapStepProviderTitle: "新增提供者和模型",
     bootstrapStepProviderDescription:

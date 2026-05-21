@@ -213,6 +213,11 @@ async function readSyncLocalCache<T>(key: string) {
   return result[syncLocalCacheKey(key)] as SyncLocalCache<T> | undefined;
 }
 
+async function readPendingSyncValue<T>(key: string) {
+  const cache = await readSyncLocalCache<T>(key);
+  return cache && cache.flushedAt === undefined ? cache.value : undefined;
+}
+
 async function updateSyncWriteStatus(patch: Partial<SyncWriteStatus> = {}) {
   await getBrowserApi().storage.local.set({
     [STORAGE_KEYS.syncWriteStatus]: {
@@ -239,8 +244,8 @@ function createItem<T>(
     persistDebounceMs: options.persistDebounceMs,
     async get() {
       if (area === STORAGE_AREAS.sync) {
-        const cache = await readSyncLocalCache<T>(storageKey);
-        if (cache && cache.flushedAt === undefined) return cache.value;
+        const pending = await readPendingSyncValue<T>(storageKey);
+        if (pending !== undefined) return pending;
       }
       const result = await storageArea().get(storageKey);
       if (result[storageKey] === undefined) {
@@ -313,9 +318,8 @@ function createMigratedItem<T>(
     async get() {
       const api = getBrowserApi();
       if (area === STORAGE_AREAS.sync) {
-        const cache = await readSyncLocalCache<T>(key);
-        if (cache && cache.flushedAt === undefined)
-          return merge ? merge(cache.value) : cache.value;
+        const pending = await readPendingSyncValue<T>(key);
+        if (pending !== undefined) return merge ? merge(pending) : pending;
       }
       const result = await api.storage[area].get(key);
       if (result[key] !== undefined) {
@@ -353,6 +357,11 @@ function createSwitchableItem<T>(
 
   async function getValue() {
     const area = await activeArea();
+    if (area === STORAGE_AREAS.sync) {
+      const pending = await readPendingSyncValue<T>(key);
+      if (pending !== undefined)
+        return normalize ? normalize(pending) : pending;
+    }
     const activeValue = await readFrom(area);
     if (activeValue !== undefined)
       return normalize ? normalize(activeValue) : activeValue;

@@ -67,11 +67,11 @@ export function ProvidersPage() {
     const provider = createProviderConfig(providerType, normalizedProviders);
     const providerId = provider.id!;
     setProviderState((previous) => ({
-      ...normalizeProviderState(previous || {}),
       [providerId]: provider,
+      ...normalizeProviderState(previous || {}),
     }));
     setOpenProviders((items) =>
-      items.includes(providerId) ? items : [...items, providerId],
+      items.includes(providerId) ? items : [providerId, ...items],
     );
   }
 
@@ -99,6 +99,14 @@ export function ProvidersPage() {
       );
   }
 
+  function handleModelAdded(model: ModelConfig) {
+    setPreferences((previous) => ({
+      ...previous,
+      selectedModelId: previous.selectedModelId || model.id,
+      selectedImageModelId: previous.selectedImageModelId || model.id,
+    }));
+  }
+
   return (
     <div className="stack">
       <div className="split">
@@ -110,6 +118,53 @@ export function ProvidersPage() {
         </div>
       </div>
       <div className="provider-top-stack">
+        <Card>
+          <CardHeader>
+            <CardTitle className="settings-section-title">
+              <Plus size={18} /> {t.sidepanel.addProvider}
+            </CardTitle>
+            <CardDescription>{t.options.providerDescription}</CardDescription>
+          </CardHeader>
+          <CardContent className="stack">
+            <div className="provider-add-row">
+              <Select
+                value={providerType}
+                onValueChange={(value) => setProviderType(value as ProviderId)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ADD_PROVIDER_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {providerLabels[type]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button className="ui-button-soft-accent" onClick={addProvider}>
+                <Plus size={16} /> {t.sidepanel.addProvider}
+              </Button>
+            </div>
+            <Accordion
+              type="multiple"
+              value={openProviders}
+              onValueChange={setOpenProviders}
+              className="stack"
+            >
+              {providerEntries.map(([providerId, provider]) => (
+                <ProviderAccordion
+                  key={providerId}
+                  providerId={providerId}
+                  value={provider}
+                  onChange={(next) => updateProvider(providerId, next)}
+                  onDelete={() => deleteProvider(providerId)}
+                  onModelAdded={handleModelAdded}
+                />
+              ))}
+            </Accordion>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader>
             <CardTitle className="settings-section-title">
@@ -187,64 +242,7 @@ export function ProvidersPage() {
             </div>
           </CardContent>
         </Card>
-        <div className="provider-add-section">
-          <div className="provider-section-divider" />
-          <div className="provider-add-card">
-            <div className="provider-add-copy">
-              <span className="provider-add-icon">
-                <Plus size={17} />
-              </span>
-              <div>
-                <strong>{t.sidepanel.addProvider}</strong>
-                <p className="muted">{t.options.providerDescription}</p>
-              </div>
-            </div>
-            <div className="provider-add-row">
-              <Select
-                value={providerType}
-                onValueChange={(value) => setProviderType(value as ProviderId)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ADD_PROVIDER_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {providerLabels[type]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={addProvider}>
-                <Plus size={16} /> {t.sidepanel.addProvider}
-              </Button>
-            </div>
-          </div>
-        </div>
       </div>
-      <Accordion
-        type="multiple"
-        value={openProviders}
-        onValueChange={setOpenProviders}
-        className="stack"
-      >
-        {providerEntries.map(([providerId, provider]) => (
-          <ProviderAccordion
-            key={providerId}
-            providerId={providerId}
-            value={provider}
-            onChange={(next) => updateProvider(providerId, next)}
-            onDelete={() => deleteProvider(providerId)}
-            onModelAdded={(model) => {
-              setPreferences((previous) => ({
-                ...previous,
-                selectedModelId: previous.selectedModelId || model.id,
-                selectedImageModelId: previous.selectedImageModelId || model.id,
-              }));
-            }}
-          />
-        ))}
-      </Accordion>
     </div>
   );
 }

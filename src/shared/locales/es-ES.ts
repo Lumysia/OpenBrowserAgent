@@ -36,6 +36,8 @@ export const esES: LocaleMessages = {
     cloudSyncError:
       "Falló la sincronización en la nube. Revisa la sincronización del navegador o empieza en local.",
     startLocally: "Empezar en local",
+    localSetupHint:
+      "Configuración está abierta. Añade allí un proveedor y un modelo, y luego vuelve aquí para continuar.",
     bootstrapStepSyncTitle: "Elige dónde empezar",
     bootstrapStepProviderTitle: "Añade proveedor y modelo",
     bootstrapStepProviderDescription:

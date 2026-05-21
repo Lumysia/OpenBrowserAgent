@@ -37,6 +37,8 @@ export const enUS = {
     cloudSyncEmpty: "No synced providers found. You can start locally instead.",
     cloudSyncError: "Cloud sync failed. Check browser sync or start locally.",
     startLocally: "Start locally",
+    localSetupHint:
+      "Settings is open. Add a provider and model there, then return here to continue.",
     bootstrapStepSyncTitle: "Choose where to start",
     bootstrapStepProviderTitle: "Add a provider and model",
     bootstrapStepProviderDescription:

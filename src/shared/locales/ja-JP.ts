@@ -36,6 +36,8 @@ export const jaJP: LocaleMessages = {
     cloudSyncError:
       "クラウド同期に失敗しました。ブラウザー同期を確認するか、ローカルで開始してください。",
     startLocally: "ローカルで開始",
+    localSetupHint:
+      "設定を開きました。そこでプロバイダーとモデルを追加し、ここに戻って続行してください。",
     bootstrapStepSyncTitle: "開始方法を選択",
     bootstrapStepProviderTitle: "プロバイダーとモデルを追加",
     bootstrapStepProviderDescription:

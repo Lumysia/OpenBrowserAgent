@@ -36,6 +36,8 @@ export const frFR: LocaleMessages = {
     cloudSyncError:
       "Échec de la synchronisation cloud. Vérifiez la synchronisation du navigateur ou démarrez en local.",
     startLocally: "Démarrer en local",
+    localSetupHint:
+      "Les paramètres sont ouverts. Ajoutez-y un fournisseur et un modèle, puis revenez ici pour continuer.",
     bootstrapStepSyncTitle: "Choisir le point de départ",
     bootstrapStepProviderTitle: "Ajouter un fournisseur et un modèle",
     bootstrapStepProviderDescription:

@@ -1,18 +1,4 @@
-﻿.provider-add-section {
-  display: grid;
-  gap: 18px;
-  padding-top: 18px;
-}
-.provider-section-divider {
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--accent-soft) 55%, var(--border)),
-    transparent
-  );
-}
-.sync-status-row {
+﻿.sync-status-row {
   display: flex;
   align-items: center;
   gap: 12px;

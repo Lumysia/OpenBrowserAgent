@@ -1,6 +1,6 @@
-import { Bot, Cloud } from "lucide-react";
+import { Bot, Cloud, Settings } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { OPTIONS_HASH, QUICK_FEEDBACK_MS } from "../../src/shared/config";
+import { LOCAL_SETUP_FEEDBACK_MS, OPTIONS_HASH } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import { getSyncedProviderState, setDataSync } from "../../src/shared/storage";
 import { completeLocalBootstrapState } from "../../src/shared/storage-debug";
@@ -48,7 +48,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   async function startLocally() {
     if (startingLocal) return;
     setStartingLocal(true);
-    window.setTimeout(() => setStartingLocal(false), QUICK_FEEDBACK_MS);
+    window.setTimeout(() => setStartingLocal(false), LOCAL_SETUP_FEEDBACK_MS);
     openOrFocusOptions(OPTIONS_HASH.providers).catch(console.warn);
   }
 
@@ -82,6 +82,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
               >
                 <div className="bootstrap-actions">
                   <Button
+                    className="ui-button-soft-accent"
                     onClick={syncProvidersFromCloud}
                     disabled={
                       syncing ||
@@ -99,8 +100,15 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                     onClick={startLocally}
                     disabled={startingLocal}
                   >
+                    <Settings size={16} />
                     {t.sidepanel.startLocally}
                   </Button>
+                  <CardDescription
+                    aria-hidden={!startingLocal}
+                    className={`local-setup-hint ${startingLocal ? "visible" : ""}`}
+                  >
+                    {t.sidepanel.localSetupHint}
+                  </CardDescription>
                 </div>
               </BootstrapStep>
               <BootstrapStep

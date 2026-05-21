@@ -72,6 +72,7 @@ export const TAB_CONTENT_MAX_CHARS = 12_000;
 
 export const COPY_FEEDBACK_MS = 1_800;
 export const QUICK_FEEDBACK_MS = 1_200;
+export const LOCAL_SETUP_FEEDBACK_MS = 3_600;
 export const TOOLTIP_DELAY_MS = 250;
 export const BYTES_PER_KIB = 1024;
 export const BYTES_PER_MIB = BYTES_PER_KIB * BYTES_PER_KIB;

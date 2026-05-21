@@ -33,6 +33,8 @@ export const zhCN: LocaleMessages = {
     cloudSyncEmpty: "没有找到已同步的提供商，你可以改为从本地开始。",
     cloudSyncError: "云端同步失败。请检查浏览器同步，或从本地开始。",
     startLocally: "从本地开始",
+    localSetupHint:
+      "设置页已打开。请在那里添加提供商和模型，然后回到这里继续。",
     bootstrapStepSyncTitle: "选择从哪里开始",
     bootstrapStepProviderTitle: "添加提供商和模型",
     bootstrapStepProviderDescription:

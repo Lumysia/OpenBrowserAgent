@@ -493,3 +493,27 @@
   display: grid;
   gap: 8px;
 }
+.local-setup-hint {
+  max-height: 0;
+  overflow: hidden;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 4px);
+  background: color-mix(in srgb, var(--accent-soft) 50%, var(--card));
+  color: color-mix(in srgb, var(--accent-strong) 86%, var(--foreground));
+  opacity: 0;
+  transform: translateY(-4px) scale(0.985);
+  transition:
+    max-height 0.22s ease,
+    padding 0.22s ease,
+    border-color 0.18s ease,
+    opacity 0.18s ease,
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.local-setup-hint.visible {
+  max-height: 140px;
+  padding: 10px 12px;
+  border-color: color-mix(in srgb, var(--accent-strong) 24%, var(--border));
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
