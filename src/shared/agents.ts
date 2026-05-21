@@ -41,7 +41,7 @@ export const ASK_AGENT_CAPABILITIES: AgentCapabilities = {
   chatHistoryRead: false,
   chatHistoryWrite: false,
   imageGeneration: true,
-  currentTime: false,
+  currentTime: true,
   fileUrlRead: true,
 };
 
