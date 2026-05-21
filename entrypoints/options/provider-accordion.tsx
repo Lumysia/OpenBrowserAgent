@@ -169,7 +169,6 @@ export function ProviderAccordion({
           <Badge>
             {models.length} {t.options.models}
           </Badge>
-          <Badge>{models.length ? t.common.enabled : t.common.disabled}</Badge>
         </span>
       </AccordionTrigger>
       <AccordionContent>

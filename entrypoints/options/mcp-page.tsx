@@ -187,7 +187,9 @@ export function McpPage() {
                     <span>{server.name || t.options.newMcpServer}</span>
                   </span>
                   <small>
-                    {server.url || t.options.mcpServerUrlPlaceholder}
+                    {server.description ||
+                      server.url ||
+                      t.options.mcpServerUrlPlaceholder}
                   </small>
                 </span>
               </AccordionTriggerButton>
@@ -272,54 +274,60 @@ export function McpPage() {
                   value={server.headers}
                   onChange={(value) => updateHeaders(server.id, value)}
                 />
-                {(server.testedAt || server.lastTestError) && (
-                  <div className="row">
-                    {server.testedAt && (
-                      <CardDescription>
-                        {t.options.mcpTestSuccess.replace(
-                          "{count}",
-                          String(server.tools?.length || 0),
-                        )}
-                      </CardDescription>
-                    )}
-                    {server.lastTestError && (
-                      <CardDescription>{server.lastTestError}</CardDescription>
-                    )}
-                  </div>
-                )}
                 {!!server.tools?.length && (
-                  <div className="stack">
-                    <CardDescription>{t.options.mcpTools}</CardDescription>
-                    {server.tools.map((tool) => (
-                      <div
-                        className="setting-switch-row compact"
-                        key={tool.name}
-                      >
-                        <div>
-                          <CardTitle className="settings-section-title">
-                            {tool.name}
-                          </CardTitle>
-                          {tool.description && (
-                            <CardDescription>
-                              {tool.description}
-                            </CardDescription>
-                          )}
-                        </div>
-                        <Switch
-                          checked={tool.enabled}
-                          onCheckedChange={(enabled) =>
-                            updateServer(server.id, {
-                              tools: (server.tools || []).map((item) =>
-                                item.name === tool.name
-                                  ? { ...item, enabled }
-                                  : item,
-                              ),
-                            })
-                          }
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  <Accordion
+                    type="single"
+                    collapsible
+                    className="mcp-tools-accordion"
+                  >
+                    <AccordionItem value="tools">
+                      <AccordionTriggerButton>
+                        <span className="agent-summary">
+                          <strong>{t.options.mcpTools}</strong>
+                          <small>
+                            {t.options.mcpTestSuccess.replace(
+                              "{count}",
+                              String(server.tools.length),
+                            )}
+                          </small>
+                        </span>
+                      </AccordionTriggerButton>
+                      <AccordionContent className="stack">
+                        {server.tools.map((tool) => (
+                          <div
+                            className="setting-switch-row compact"
+                            key={tool.name}
+                          >
+                            <div>
+                              <CardTitle className="settings-section-title">
+                                {tool.name}
+                              </CardTitle>
+                              {tool.description && (
+                                <CardDescription>
+                                  {tool.description}
+                                </CardDescription>
+                              )}
+                            </div>
+                            <Switch
+                              checked={tool.enabled}
+                              onCheckedChange={(enabled) =>
+                                updateServer(server.id, {
+                                  tools: (server.tools || []).map((item) =>
+                                    item.name === tool.name
+                                      ? { ...item, enabled }
+                                      : item,
+                                  ),
+                                })
+                              }
+                            />
+                          </div>
+                        ))}
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                )}
+                {server.lastTestError && (
+                  <CardDescription>{server.lastTestError}</CardDescription>
                 )}
                 <div className="row">
                   <Button
