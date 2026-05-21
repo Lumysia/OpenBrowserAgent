@@ -206,6 +206,9 @@ export function SidepanelView({
       !message.content &&
       !message.parts?.length,
   );
+  const latestUserMessageId = [...(currentChat?.messages || [])]
+    .reverse()
+    .find((message) => message.role === "user")?.id;
 
   if (showHistory)
     return (
@@ -256,6 +259,7 @@ export function SidepanelView({
             <MessageBubble
               key={message.id}
               message={message}
+              latestUserMessage={message.id === latestUserMessageId}
               editing={editingMessageId === message.id}
               sources={currentChat.sources || []}
               chatMessages={currentChat.messages}

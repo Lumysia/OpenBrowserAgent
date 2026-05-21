@@ -20,6 +20,10 @@ import {
   PopoverContent,
   PopoverTrigger,
   Progress,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from "../../src/ui/components";
 import { formatCompactNumber, formatEstimatedTokens } from "./format";
 import { IconTooltip } from "./icon-tooltip";
@@ -36,7 +40,6 @@ export function MessageRunInfo({
   const current = readRunMetrics(message);
   const chat = aggregateRunMetrics(chatMessages);
   const [view, setView] = useState<"turn" | "chat">("turn");
-  const active = view === "turn" ? current : chat;
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -58,31 +61,34 @@ export function MessageRunInfo({
           <strong>{t.sidepanel.runInfo.title}</strong>
           <Badge>{modeLabel(t, current.outputMode)}</Badge>
         </div>
-        <div className="run-info-tabs" role="tablist">
-          <Button
-            variant={view === "turn" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setView("turn")}
-          >
-            {t.sidepanel.runInfo.currentTurn}
-          </Button>
-          <Button
-            variant={view === "chat" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setView("chat")}
-          >
-            {t.sidepanel.runInfo.wholeChat}
-          </Button>
-        </div>
-        <RunInfoSection
-          title={
-            view === "turn"
-              ? t.sidepanel.runInfo.currentTurn
-              : t.sidepanel.runInfo.wholeChat
-          }
-          metrics={active}
-          t={t}
-        />
+        <Tabs
+          value={view}
+          onValueChange={(value) => setView(value as "turn" | "chat")}
+          className="run-info-tabs"
+        >
+          <TabsList aria-label={t.sidepanel.runInfo.title}>
+            <TabsTrigger value="turn">
+              {t.sidepanel.runInfo.currentTurn}
+            </TabsTrigger>
+            <TabsTrigger value="chat">
+              {t.sidepanel.runInfo.wholeChat}
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="turn">
+            <RunInfoSection
+              title={t.sidepanel.runInfo.currentTurn}
+              metrics={current}
+              t={t}
+            />
+          </TabsContent>
+          <TabsContent value="chat">
+            <RunInfoSection
+              title={t.sidepanel.runInfo.wholeChat}
+              metrics={chat}
+              t={t}
+            />
+          </TabsContent>
+        </Tabs>
       </PopoverContent>
     </Popover>
   );

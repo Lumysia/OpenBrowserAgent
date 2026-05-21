@@ -53,6 +53,7 @@ export function MessageBubble({
   resendDisabled = false,
   sources = [],
   chatMessages,
+  latestUserMessage = false,
 }: {
   message: ChatMessage;
   sources?: ChatSource[];
@@ -65,6 +66,7 @@ export function MessageBubble({
   onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
   onFork?: (message: ChatMessage, partId?: string) => void;
   resendDisabled?: boolean;
+  latestUserMessage?: boolean;
 }) {
   const [language] = useStoredState(storage.language);
   const t = getMessages(language);
@@ -105,7 +107,7 @@ export function MessageBubble({
   const showRunInfo = message.role === "assistant" && messageRunEnded(message);
   return (
     <div
-      className={`message ${message.role === "user" ? "user" : ""} ${editing ? "editing" : ""}`}
+      className={`message ${message.role === "user" ? "user" : ""} ${latestUserMessage ? "latest-user" : ""} ${editing ? "editing" : ""}`}
     >
       {!!messageSkills.length && (
         <div

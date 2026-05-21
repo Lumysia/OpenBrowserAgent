@@ -22,7 +22,7 @@
   color: var(--foreground);
   line-height: 1.75;
   font-size: 16px;
-  animation: fade-in 0.34s ease both;
+  animation: message-rise-in 0.52s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .message.user {
   align-self: flex-end;
@@ -62,6 +62,10 @@
     inset 0 1px 0 color-mix(in srgb, white 44%, transparent),
     0 8px 18px color-mix(in srgb, var(--accent-shadow) 42%, transparent);
 }
+.message.user.latest-user .user-bubble {
+  transform-origin: right bottom;
+  animation: user-message-send-in 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
 .sent-context-row {
   display: flex;
   justify-content: flex-end;
@@ -81,9 +85,10 @@
   gap: 6px;
   padding: 5px 7px;
   border-radius: 8px;
-  background: var(--secondary);
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 10%, var(--border));
+  background: color-mix(in srgb, var(--card) 82%, var(--secondary));
   color: var(--muted-foreground);
-  box-shadow: inset 0 0 0 1px var(--border);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow) 50%, transparent);
   text-align: left;
 }
 .sent-tabs-icons {
@@ -131,7 +136,7 @@
   gap: 4px;
   color: var(--muted-foreground);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
 }
 .sent-tabs-chip strong em {
   flex: 0 0 auto;
@@ -348,10 +353,11 @@
   gap: 10px;
   min-height: 62px;
   padding: 9px 10px;
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 10%, var(--border));
   border-radius: 12px;
-  background: color-mix(in srgb, var(--card) 86%, var(--background));
+  background: color-mix(in srgb, var(--card) 88%, var(--secondary));
   color: var(--foreground);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--shadow) 52%, transparent);
   flex: 0 0 min(334px, 82vw);
   overflow: hidden;
 }
@@ -391,7 +397,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
 }
 .context-card small {
   overflow: hidden;
@@ -399,6 +405,7 @@
   white-space: nowrap;
   color: var(--muted-foreground);
   font-size: 12px;
+  font-weight: 400;
 }
 .context-close {
   width: 22px;
@@ -417,4 +424,33 @@
   background: color-mix(in srgb, var(--accent-hover) 68%, var(--card));
   color: var(--accent-strong);
   transform: scale(1.05);
+}
+
+@keyframes message-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes user-message-send-in {
+  0% {
+    opacity: 0;
+    transform: translateY(86px) scale(0.96);
+    filter: blur(1.5px);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.01);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }

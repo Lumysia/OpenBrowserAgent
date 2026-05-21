@@ -7,7 +7,7 @@
   gap: 4px;
   padding: 8px;
   color: var(--muted-foreground);
-  animation: tool-card-enter 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: tool-card-enter 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
   transition:
     background-color 0.16s ease,
     border-color 0.16s ease,
@@ -38,11 +38,11 @@
 @keyframes tool-card-enter {
   from {
     opacity: 0;
-    transform: translateY(5px);
+    transform: translateY(10px) scale(0.99);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 .tool-card.loading {
@@ -177,7 +177,7 @@
   );
 }
 .tool-detail-content {
-  animation: tool-detail-swap 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: tool-detail-swap 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .tool-description {
   max-width: 100%;
