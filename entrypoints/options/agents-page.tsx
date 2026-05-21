@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Bot,
   Check,
   Download,
   FileText,
@@ -11,7 +10,6 @@ import {
   Upload,
 } from "lucide-react";
 import {
-  ASK_AGENT_ID,
   BUILTIN_AGENTS,
   DEFAULT_AGENT_ID,
   createAgentDraft,
@@ -45,7 +43,13 @@ import {
   Textarea,
 } from "../../src/ui/components";
 import { AgentCapabilityEditor } from "./agent-capability-editor";
+import { AgentIconPicker } from "./agent-icon-picker";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { AgentIcon } from "../../src/ui/agent-icons";
+import {
+  agentDisplayDescription,
+  agentDisplayName,
+} from "../../src/ui/agent-display";
 import { SkillFileActionButton } from "./skill-options-components";
 import { downloadWorkspaceZip, importWorkspaceZip } from "./workspace-import";
 
@@ -92,11 +96,6 @@ export function AgentsPage() {
       }));
   }
 
-  function agentDisplayName(agent: Agent) {
-    if (agent.id === ASK_AGENT_ID) return t.words.ask;
-    return agent.id === DEFAULT_AGENT_ID ? t.words.agent : agent.name;
-  }
-
   function resetDefaultAgents() {
     const now = Date.now();
     setAgents(
@@ -120,7 +119,7 @@ export function AgentsPage() {
       <div className="setting-switch-row">
         <div>
           <h1 className="settings-page-title">
-            <Bot size={24} /> {t.options.agents}
+            <AgentIcon size={24} /> {t.options.agents}
           </h1>
           <p className="muted">{t.options.agentsDescription}</p>
         </div>
@@ -130,15 +129,15 @@ export function AgentsPage() {
       </div>
       <Accordion type="multiple" className="stack">
         {items.map((agent) => {
-          const description = agentDescription(agent, t);
+          const description = agentDisplayDescription(agent, t);
           const builtin = isBuiltinAgentId(agent.id);
           return (
             <AccordionItem key={agent.id} value={agent.id}>
               <AccordionTrigger>
                 <span className="agent-summary">
                   <span className="agent-summary-title">
-                    <Bot size={18} />
-                    <span>{agentDisplayName(agent)}</span>
+                    <AgentIcon agent={agent} size={18} />
+                    <span>{agentDisplayName(agent, t)}</span>
                     {builtin && (
                       <Badge className="agent-builtin-badge">
                         {t.options.builtinAgentBadge}
@@ -153,7 +152,7 @@ export function AgentsPage() {
                   <Label>
                     {t.options.agentName}
                     <Input
-                      value={builtin ? agentDisplayName(agent) : agent.name}
+                      value={builtin ? agentDisplayName(agent, t) : agent.name}
                       disabled={builtin}
                       onChange={(event) =>
                         updateAgent(agent.id, {
@@ -175,6 +174,13 @@ export function AgentsPage() {
                       }
                     />
                   </Label>
+                  {!builtin && (
+                    <AgentIconPicker
+                      t={t}
+                      value={agent.icon}
+                      onChange={(icon) => updateAgent(agent.id, { icon })}
+                    />
+                  )}
                   <AgentCapabilityEditor
                     t={t}
                     capabilities={agent.capabilities}
@@ -248,11 +254,6 @@ export function AgentsPage() {
       </Card>
     </div>
   );
-}
-
-function agentDescription(agent: Agent, t: ReturnType<typeof getMessages>) {
-  if (agent.id === ASK_AGENT_ID) return t.sidepanel.askDescription;
-  return agent.description || t.options.defaultAgentSummary;
 }
 
 function AgentWorkspaceEditor({

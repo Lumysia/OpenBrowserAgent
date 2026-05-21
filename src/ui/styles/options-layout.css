@@ -167,6 +167,14 @@
 .agent-capability-row .ui-switch-root {
   flex: 0 0 auto;
 }
+.agent-icon-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(42px, 1fr));
+}
+.agent-icon-picker .ui-toggle-group-item {
+  min-width: 0;
+  padding: 0;
+}
 @media (max-width: 720px) {
   .agent-capability-grid {
     grid-template-columns: 1fr;

@@ -1,8 +1,8 @@
+import { DEFAULT_AGENT_ICON_ID } from "./agent-icon-registry";
 import type { Agent, AgentCapabilities } from "./types";
 
 export const DEFAULT_AGENT_ID = "general-agent";
 export const ASK_AGENT_ID = "ask-agent";
-
 export const AGENT_CAPABILITIES: AgentCapabilities = {
   browserAutomation: true,
   browserTools: true,
@@ -63,6 +63,7 @@ export const DEFAULT_AGENT: Agent = {
   id: DEFAULT_AGENT_ID,
   name: "Browse",
   description: "",
+  icon: "compass",
   capabilities: BROWSE_AGENT_CAPABILITIES,
   builtin: true,
   createdAt: 0,
@@ -73,6 +74,7 @@ export const ASK_AGENT: Agent = {
   id: ASK_AGENT_ID,
   name: "Ask",
   description: "Ask questions about web pages",
+  icon: "help",
   capabilities: ASK_AGENT_CAPABILITIES,
   builtin: true,
   createdAt: 0,
@@ -86,6 +88,7 @@ export const AGENT_CAPABILITY_KEYS: Array<keyof AgentCapabilities> = [
   "browserTools",
   "deferredBrowserTools",
   "cdpTools",
+  "dangerousCodeExecution",
   "mcpTools",
   "mcpManagement",
   "skillTools",
@@ -179,6 +182,7 @@ export function createAgentDraft(name: string): Agent {
     id: crypto.randomUUID(),
     name,
     description: "",
+    icon: DEFAULT_AGENT_ICON_ID,
     capabilities: CUSTOM_AGENT_CAPABILITIES,
     createdAt: now,
     updatedAt: now,

@@ -2,16 +2,14 @@ import {
   Check,
   ExternalLink,
   FileText,
-  HelpCircle,
   Layers,
-  Bot,
   MousePointerClick,
   Paperclip,
   Plus,
   X,
 } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
-import { ASK_AGENT_ID, DEFAULT_AGENT_ID } from "../../src/shared/agents";
+import { DEFAULT_AGENT_ID } from "../../src/shared/agents";
 import { providerLabels } from "../../src/shared/types";
 import type {
   AttachmentTab,
@@ -27,6 +25,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../../src/ui/components";
+import { AgentIcon } from "../../src/ui/agent-icons";
+import {
+  agentDisplayDescription,
+  agentDisplayName,
+} from "../../src/ui/agent-display";
 import { IconTooltip } from "./icon-tooltip";
 import { COMPOSER_MENU, type ComposerMenu } from "./sidepanel-menu-state";
 
@@ -288,7 +291,7 @@ export function AgentMenu({
             key={agent.id}
             onClick={() => onSelectAgent(agent.id)}
           >
-            {agentIcon(agent)}
+            <AgentIcon agent={agent} />
             <span>
               <strong>{agentDisplayName(agent, t)}</strong>
               <small>{agentDisplayDescription(agent, t)}</small>
@@ -299,16 +302,6 @@ export function AgentMenu({
       })}
     </div>
   );
-}
-
-function agentDisplayName(agent: Agent, t: Messages) {
-  if (agent.id === ASK_AGENT_ID) return t.words.ask;
-  return agent.id === DEFAULT_AGENT_ID ? t.words.agent : agent.name;
-}
-
-function agentDisplayDescription(agent: Agent, t: Messages) {
-  if (agent.id === ASK_AGENT_ID) return t.sidepanel.askDescription;
-  return agent.description || t.options.defaultAgentSummary;
 }
 
 export function AgentSelector({
@@ -348,7 +341,7 @@ export function AgentSelector({
             selectedAgent ? agentDisplayName(selectedAgent, t) : t.words.agent
           }
         >
-          {selectedAgent ? agentIcon(selectedAgent, 15) : <Bot size={15} />}
+          <AgentIcon agent={selectedAgent} size={15} />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="agent-popover-content" align="end">
@@ -366,14 +359,6 @@ export function AgentSelector({
         />
       </PopoverContent>
     </Popover>
-  );
-}
-
-function agentIcon(agent: Agent, size = 17) {
-  return agent.id === ASK_AGENT_ID ? (
-    <HelpCircle size={size} />
-  ) : (
-    <Bot size={size} />
   );
 }
 

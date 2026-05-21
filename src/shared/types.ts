@@ -1,4 +1,5 @@
 import type { UploadedAttachmentKind } from "./attachments";
+import type { AgentIconId } from "./agent-icon-registry";
 import type { ReasoningEffort } from "./reasoning";
 
 export type ProviderId =
@@ -63,6 +64,7 @@ export type Agent = {
   id: string;
   name: string;
   description?: string;
+  icon?: AgentIconId;
   capabilities: AgentCapabilities;
   builtin?: boolean;
   createdAt: number;
