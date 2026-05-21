@@ -137,7 +137,7 @@ export const zhCN: LocaleMessages = {
     selectModel: "选择模型",
     reasoningEffort: "推理强度",
     reasoningEffortDescription: "仅对支持推理的模型生效。",
-    reasoningEffortDefault: "服务商默认",
+    reasoningEffortDefault: "默认",
     reasoningEffortLow: "低",
     reasoningEffortMedium: "中",
     reasoningEffortHigh: "高",

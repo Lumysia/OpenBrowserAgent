@@ -53,6 +53,14 @@
   background: var(--destructive);
   color: var(--destructive-foreground);
 }
+.ui-button-destructive-outline {
+  border: 1px solid color-mix(in srgb, var(--destructive) 34%, var(--border));
+  background: var(--card);
+  color: var(--destructive);
+}
+.ui-button-destructive-outline:hover {
+  background: color-mix(in srgb, var(--destructive) 10%, var(--card));
+}
 .ui-button-md {
   height: 36px;
   padding: 0 13px;

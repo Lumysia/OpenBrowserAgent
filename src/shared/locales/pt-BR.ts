@@ -142,7 +142,7 @@ export const ptBR: LocaleMessages = {
     reasoningEffort: "Esforço de raciocínio",
     reasoningEffortDescription:
       "Somente para modelos de raciocínio compatíveis.",
-    reasoningEffortDefault: "Padrão do provedor",
+    reasoningEffortDefault: "Padrão",
     reasoningEffortLow: "Baixo",
     reasoningEffortMedium: "Médio",
     reasoningEffortHigh: "Alto",

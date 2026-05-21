@@ -137,7 +137,7 @@ export const zhTW: LocaleMessages = {
     selectModel: "選擇模型",
     reasoningEffort: "推理強度",
     reasoningEffortDescription: "僅對支援推理的模型生效。",
-    reasoningEffortDefault: "服務商預設",
+    reasoningEffortDefault: "預設",
     reasoningEffortLow: "低",
     reasoningEffortMedium: "中",
     reasoningEffortHigh: "高",

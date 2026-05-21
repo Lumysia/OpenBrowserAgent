@@ -402,7 +402,7 @@ export function SkillsPage() {
                       <Download size={16} /> {t.options.downloadSkillPackage}
                     </Button>
                     <Button
-                      variant="destructive"
+                      variant="destructiveOutline"
                       disabled={!!skill.builtin}
                       onClick={() => deleteSkill(skill)}
                     >

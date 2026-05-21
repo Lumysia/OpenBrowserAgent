@@ -255,7 +255,7 @@ export function ProviderAccordion({
           </div>
         </div>
         <div className="provider-form-actions">
-          <Button variant="destructive" size="sm" onClick={onDelete}>
+          <Button variant="destructiveOutline" size="sm" onClick={onDelete}>
             <Trash2 size={16} /> {t.options.deleteProvider}
           </Button>
           <Button onClick={saveProvider} disabled={!dirty}>

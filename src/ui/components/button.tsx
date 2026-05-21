@@ -10,6 +10,7 @@ const buttonVariants = cva("ui-button", {
       secondary: "ui-button-secondary",
       ghost: "ui-button-ghost",
       destructive: "ui-button-destructive",
+      destructiveOutline: "ui-button-destructive-outline",
       outline: "ui-button-outline",
     },
     size: {

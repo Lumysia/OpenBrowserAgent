@@ -140,7 +140,7 @@ export const ko: LocaleMessages = {
     selectModel: "모델 선택",
     reasoningEffort: "추론 강도",
     reasoningEffortDescription: "추론을 지원하는 모델에만 적용됩니다.",
-    reasoningEffortDefault: "제공자 기본값",
+    reasoningEffortDefault: "기본값",
     reasoningEffortLow: "낮음",
     reasoningEffortMedium: "중간",
     reasoningEffortHigh: "높음",

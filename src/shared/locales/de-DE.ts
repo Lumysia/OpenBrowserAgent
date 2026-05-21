@@ -142,7 +142,7 @@ export const deDE: LocaleMessages = {
     selectModel: "Modell auswählen",
     reasoningEffort: "Reasoning-Aufwand",
     reasoningEffortDescription: "Nur für unterstützte Reasoning-Modelle.",
-    reasoningEffortDefault: "Provider-Standard",
+    reasoningEffortDefault: "Standard",
     reasoningEffortLow: "Niedrig",
     reasoningEffortMedium: "Mittel",
     reasoningEffortHigh: "Hoch",

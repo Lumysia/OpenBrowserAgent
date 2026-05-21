@@ -272,7 +272,7 @@ export function AgentsPage() {
                       <Download size={15} /> {t.options.downloadAgentZip}
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="destructiveOutline"
                       disabled={builtin}
                       onClick={() => deleteAgent(agent.id)}
                     >

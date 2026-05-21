@@ -141,7 +141,7 @@ export const jaJP: LocaleMessages = {
     selectModel: "モデルを選択",
     reasoningEffort: "推論強度",
     reasoningEffortDescription: "推論対応モデルでのみ有効です。",
-    reasoningEffortDefault: "プロバイダー既定",
+    reasoningEffortDefault: "既定",
     reasoningEffortLow: "低",
     reasoningEffortMedium: "中",
     reasoningEffortHigh: "高",

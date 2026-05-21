@@ -338,7 +338,7 @@ export function McpPage() {
                 )}
                 <div className="row">
                   <Button
-                    variant="outline"
+                    variant="destructiveOutline"
                     onClick={() => deleteServer(server.id)}
                   >
                     <Trash2 size={15} /> {t.options.deleteMcpServer}

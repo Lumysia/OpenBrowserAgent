@@ -143,7 +143,7 @@ export const frFR: LocaleMessages = {
     reasoningEffort: "Effort de raisonnement",
     reasoningEffortDescription:
       "Uniquement pour les modèles de raisonnement compatibles.",
-    reasoningEffortDefault: "Valeur du fournisseur",
+    reasoningEffortDefault: "Par défaut",
     reasoningEffortLow: "Faible",
     reasoningEffortMedium: "Moyen",
     reasoningEffortHigh: "Élevé",

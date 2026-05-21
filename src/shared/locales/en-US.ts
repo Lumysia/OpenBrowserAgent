@@ -142,7 +142,7 @@ export const enUS = {
     selectModel: "Select model",
     reasoningEffort: "Reasoning effort",
     reasoningEffortDescription: "For supported reasoning models only.",
-    reasoningEffortDefault: "Provider default",
+    reasoningEffortDefault: "Default",
     reasoningEffortLow: "Low",
     reasoningEffortMedium: "Medium",
     reasoningEffortHigh: "High",
