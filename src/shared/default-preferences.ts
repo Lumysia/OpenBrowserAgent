@@ -17,8 +17,6 @@ export const DEFAULT_PREFERENCES: Preferences = {
   autoSelectSkills: true,
   autoScroll: true,
   autoRetry: true,
-  cdpToolsEnabled: false,
-  dangerousCodeExecutionEnabled: false,
   imageGenerationEnabled: false,
   imageGenerationSize: "1024x1024",
   maxToolSteps: DEFAULT_MAX_TOOL_STEPS,

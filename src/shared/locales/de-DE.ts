@@ -517,6 +517,7 @@ export const deDE: LocaleMessages = {
       browserTools: "Integrierte Tools verwenden",
       deferredBrowserTools: "Erweiterte Browseraktionen laden",
       cdpTools: "CDP-Tools",
+      dangerousCodeExecution: "Seiten-JavaScript ausführen",
       mcpTools: "MCP-Tools",
       mcpManagement: "MCP-Verwaltung",
       skillTools: "Skill-Tools",
@@ -700,12 +701,6 @@ export const deDE: LocaleMessages = {
     autoRetry: "Automatisch erneut versuchen",
     autoRetryDescription:
       "Einmal automatisch fortsetzen, wenn der Assistent 30 Sekunden lang keine neue Ausgabe erzeugt.",
-    cdpTools: "CDP-Tools",
-    cdpToolsDescription:
-      "Erweiterte Chrome-DevTools-Protocol-Tools für Browserautomatisierung und Debugging freigeben. Standardmäßig deaktiviert, da Chrome Debuggerzugriff anfordert.",
-    dangerousCodeExecution: "Gefährliche Codeausführung",
-    dangerousCodeExecutionDescription:
-      "Dem Agenten erlauben, beliebiges JavaScript in jedem injizierbaren Tab auszuführen. Gefahr: Code kann Seitendaten lesen oder ändern, ohne sicherheitsseitige Begrenzungen der Erweiterung.",
     autoSelectSkills: "Fähigkeiten automatisch auswählen",
     autoSelectSkillsDescription:
       "Wenn keine Fähigkeit manuell ausgewählt ist, darf die KI relevante Fähigkeiten bei Bedarf prüfen und verwenden.",

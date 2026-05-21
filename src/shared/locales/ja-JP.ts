@@ -520,6 +520,7 @@ export const jaJP: LocaleMessages = {
       browserTools: "組み込みツールを使用",
       deferredBrowserTools: "高度なブラウザー操作を読み込む",
       cdpTools: "CDP ツール",
+      dangerousCodeExecution: "ページ JavaScript を実行",
       mcpTools: "MCP ツール",
       mcpManagement: "MCP 管理",
       skillTools: "スキルツール",
@@ -699,12 +700,6 @@ export const jaJP: LocaleMessages = {
     autoRetry: "自動再試行",
     autoRetryDescription:
       "アシスタントが30秒間新しい出力を生成しない場合、一度だけ自動的に続行します。",
-    cdpTools: "CDPツール",
-    cdpToolsDescription:
-      "高度なChrome DevTools Protocolのブラウザー自動化・デバッグツールを公開します。Chromeがデバッガーアクセスを要求するため、既定では無効です。",
-    dangerousCodeExecution: "危険なコード実行",
-    dangerousCodeExecutionDescription:
-      "エージェントが任意の注入可能なタブで任意のJavaScriptを実行できるようにします。危険: コードはページデータを読み取りまたは変更でき、拡張機能側の安全制限を受けません。",
     autoSelectSkills: "スキルを自動選択",
     autoSelectSkillsDescription:
       "手動でスキルを選択していない場合、AIが必要に応じて関連するスキルを確認して使用できます。",

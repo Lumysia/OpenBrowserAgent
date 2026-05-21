@@ -65,9 +65,6 @@ export function exportChatAsOpenAiJson(
       hasSkills: true,
       hasWorkspace,
       imageGenerationEnabled,
-      cdpToolsEnabled: !!preferences?.cdpToolsEnabled,
-      dangerousCodeExecutionEnabled:
-        !!preferences?.dangerousCodeExecutionEnabled,
     }),
     sources: chat.sources || [],
     metrics: exportMetrics(chat),

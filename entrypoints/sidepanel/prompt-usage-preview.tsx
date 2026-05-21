@@ -90,9 +90,6 @@ export function usePromptUsageEstimate({
           hasSkills: availableSkills.length > 0,
           hasWorkspace: usesWorkspaceCapabilities(agent.capabilities),
           imageGenerationEnabled: !!preferences?.imageGenerationEnabled,
-          cdpToolsEnabled: !!preferences?.cdpToolsEnabled,
-          dangerousCodeExecutionEnabled:
-            !!preferences?.dangerousCodeExecutionEnabled,
           latestUserText: input,
         }),
       userPromptChars: input.trim().length,
@@ -125,7 +122,6 @@ export function usePromptUsageEstimate({
     input,
     currentChat?.messages,
     preferences?.autoSelectSkills,
-    preferences?.cdpToolsEnabled,
     preferences?.imageGenerationEnabled,
     contextChars,
     pendingAttachments,
@@ -234,8 +230,6 @@ function availableToolSchemaChars({
   hasSkills,
   hasWorkspace,
   imageGenerationEnabled,
-  cdpToolsEnabled,
-  dangerousCodeExecutionEnabled,
   latestUserText,
 }: {
   capabilities: Agent["capabilities"];
@@ -243,8 +237,6 @@ function availableToolSchemaChars({
   hasSkills: boolean;
   hasWorkspace: boolean;
   imageGenerationEnabled: boolean;
-  cdpToolsEnabled: boolean;
-  dangerousCodeExecutionEnabled: boolean;
   latestUserText: string;
 }) {
   return jsonLength(
@@ -254,8 +246,6 @@ function availableToolSchemaChars({
       hasSkills,
       hasWorkspace,
       imageGenerationEnabled,
-      cdpToolsEnabled,
-      dangerousCodeExecutionEnabled,
       latestUserText,
     }),
   );

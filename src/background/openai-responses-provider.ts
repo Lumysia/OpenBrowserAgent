@@ -187,6 +187,7 @@ export async function requestOpenAIResponses(
         uploadedAttachments,
         availableSkills,
         preferences,
+        capabilities,
         workspace,
         responseSources,
         loadedToolNames: toolResolver.loadedToolNames,

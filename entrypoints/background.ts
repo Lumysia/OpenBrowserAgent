@@ -168,16 +168,10 @@ async function streamAssistantResponse(
     workspace,
     mcpServers,
   });
-  const preferences = await storage.preferences.get();
   post(port, {
     type: "metrics",
     metrics: {
-      promptBreakdown: promptBreakdown(
-        system,
-        request,
-        !!preferences.cdpToolsEnabled,
-        !!preferences.dangerousCodeExecutionEnabled,
-      ),
+      promptBreakdown: promptBreakdown(system, request, !!workspace),
     },
   });
   const result = await requestOpenAICompatible(
@@ -217,8 +211,7 @@ async function streamAssistantResponse(
 function promptBreakdown(
   system: string,
   request: SendMessagesRequest,
-  cdpToolsEnabled: boolean,
-  dangerousCodeExecutionEnabled: boolean,
+  hasWorkspace: boolean,
 ): PromptBreakdown {
   const latestUser = [...request.messages]
     .reverse()
@@ -239,11 +232,9 @@ function promptBreakdown(
           capabilities: request.body.agentCapabilities,
           hasUploadedAttachments: attachments.length > 0,
           hasSkills: availableSkills.length > 0,
-          hasWorkspace: !!request.body.context?.agent,
+          hasWorkspace,
           imageGenerationEnabled:
             !!request.body.context?.imageGenerationEnabled,
-          cdpToolsEnabled,
-          dangerousCodeExecutionEnabled,
           latestUserText: latestUser?.content || "",
         }),
       ),

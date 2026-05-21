@@ -9,6 +9,7 @@ export const AGENT_CAPABILITIES: AgentCapabilities = {
   browserTools: true,
   deferredBrowserTools: true,
   cdpTools: true,
+  dangerousCodeExecution: false,
   mcpTools: true,
   mcpManagement: true,
   skillTools: true,
@@ -30,6 +31,7 @@ export const ASK_AGENT_CAPABILITIES: AgentCapabilities = {
   browserTools: true,
   deferredBrowserTools: false,
   cdpTools: false,
+  dangerousCodeExecution: false,
   mcpTools: false,
   mcpManagement: false,
   skillTools: true,
@@ -109,6 +111,7 @@ export const AGENT_CAPABILITY_GROUPS = [
       "readPageContent",
       "deferredBrowserTools",
       "cdpTools",
+      "dangerousCodeExecution",
     ],
   },
   {

@@ -522,6 +522,7 @@ export const frFR: LocaleMessages = {
       browserTools: "Utiliser les outils intégrés",
       deferredBrowserTools: "Charger les actions avancées du navigateur",
       cdpTools: "Outils CDP",
+      dangerousCodeExecution: "Exécuter le JavaScript de la page",
       mcpTools: "Outils MCP",
       mcpManagement: "Gestion MCP",
       skillTools: "Outils de compétences",
@@ -701,12 +702,6 @@ export const frFR: LocaleMessages = {
     autoRetry: "Nouvelle tentative automatique",
     autoRetryDescription:
       "Continuer automatiquement une fois si l'assistant ne produit rien pendant 30 secondes.",
-    cdpTools: "Outils CDP",
-    cdpToolsDescription:
-      "Expose les outils avancés Chrome DevTools Protocol pour l'automatisation et le débogage du navigateur. Désactivé par défaut, car Chrome demandera l'accès au débogueur.",
-    dangerousCodeExecution: "Exécution de code dangereuse",
-    dangerousCodeExecutionDescription:
-      "Autoriser l'agent à exécuter du JavaScript arbitraire dans n'importe quel onglet injectable. Danger : le code peut lire ou modifier les données de la page sans limites de sécurité côté extension.",
     autoSelectSkills: "Sélection automatique des compétences",
     autoSelectSkillsDescription:
       "Lorsqu'aucune compétence n'est sélectionnée manuellement, autorise l'IA à consulter et utiliser les compétences pertinentes au besoin.",

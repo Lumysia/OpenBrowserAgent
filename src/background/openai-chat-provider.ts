@@ -202,6 +202,7 @@ export async function requestOpenAIChatCompletions(
         uploadedAttachments,
         availableSkills,
         preferences,
+        capabilities,
         workspace,
         responseSources,
         loadedToolNames: toolResolver.loadedToolNames,

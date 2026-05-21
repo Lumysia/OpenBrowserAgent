@@ -180,6 +180,7 @@ export async function requestGemini(
         uploadedAttachments,
         availableSkills,
         preferences,
+        capabilities,
         workspace,
         responseSources,
         loadedToolNames: toolResolver.loadedToolNames,

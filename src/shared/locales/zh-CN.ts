@@ -370,6 +370,7 @@ export const zhCN: LocaleMessages = {
       browserTools: "使用内置工具",
       deferredBrowserTools: "加载高级浏览器操作",
       cdpTools: "CDP 工具",
+      dangerousCodeExecution: "执行页面 JavaScript",
       mcpTools: "MCP 工具",
       mcpManagement: "MCP 管理",
       skillTools: "技能工具",
@@ -538,12 +539,6 @@ export const zhCN: LocaleMessages = {
     autoScrollDescription: "AI 输出时自动保持最新内容可见。",
     autoRetry: "自动重试",
     autoRetryDescription: "如果 AI 30 秒没有新输出，自动继续一次。",
-    cdpTools: "CDP 工具",
-    cdpToolsDescription:
-      "开放高级 Chrome DevTools Protocol 浏览器自动化和调试工具。默认关闭，因为 Chrome 会请求调试器访问权限。",
-    dangerousCodeExecution: "危险代码执行",
-    dangerousCodeExecutionDescription:
-      "允许智能体在任意可注入标签页执行任意 JavaScript。危险：代码可以读取或修改页面数据，且不受扩展侧安全限制。",
     autoSelectSkills: "自动选择技能",
     autoSelectSkillsDescription:
       "当你没有手动选择技能时，允许 AI 按需查看并使用相关技能。",

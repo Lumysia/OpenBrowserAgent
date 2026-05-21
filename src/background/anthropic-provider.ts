@@ -196,6 +196,7 @@ export async function requestAnthropic(
         uploadedAttachments,
         availableSkills,
         preferences,
+        capabilities,
         workspace,
         responseSources,
         loadedToolNames: toolResolver.loadedToolNames,

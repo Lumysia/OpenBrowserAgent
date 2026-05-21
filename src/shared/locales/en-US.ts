@@ -458,6 +458,7 @@ export const enUS = {
       browserTools: "Use built-in tools",
       deferredBrowserTools: "Load advanced browser actions",
       cdpTools: "CDP tools",
+      dangerousCodeExecution: "Run page JavaScript",
       mcpTools: "MCP tools",
       mcpManagement: "MCP management",
       skillTools: "Skill tools",
@@ -635,12 +636,6 @@ export const enUS = {
     autoRetry: "Auto Retry",
     autoRetryDescription:
       "Automatically continue once if the assistant produces no new output for 30 seconds.",
-    cdpTools: "CDP tools",
-    cdpToolsDescription:
-      "Expose advanced Chrome DevTools Protocol tools for browser automation and debugging. Disabled by default because Chrome will request debugger access.",
-    dangerousCodeExecution: "Dangerous code execution",
-    dangerousCodeExecutionDescription:
-      "Allow the agent to execute arbitrary JavaScript in any scriptable tab. Dangerous: code can read or change page data without extension-side safety limits.",
     autoSelectSkills: "Auto-select Skills",
     autoSelectSkillsDescription:
       "When no skill is selected manually, let the AI inspect and use any relevant Skills as needed.",

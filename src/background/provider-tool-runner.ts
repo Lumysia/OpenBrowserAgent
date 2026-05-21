@@ -1,6 +1,7 @@
 import {
   CHAT_PART_STATE,
   toolPartType,
+  type AgentCapabilities,
   type AgentWorkspace,
   type ChatSource,
   type Preferences,
@@ -34,6 +35,7 @@ export async function runProviderTool({
   uploadedAttachments,
   availableSkills,
   preferences,
+  capabilities,
   workspace,
   responseSources,
   loadedToolNames,
@@ -48,6 +50,7 @@ export async function runProviderTool({
   uploadedAttachments: UploadedAttachment[];
   availableSkills: Skill[];
   preferences: Preferences;
+  capabilities: AgentCapabilities;
   workspace?: AgentWorkspace;
   responseSources: ChatSource[];
   loadedToolNames: Set<string>;
@@ -70,9 +73,7 @@ export async function runProviderTool({
         context: { chatId, messageId, toolCallId },
         uploadedAttachments,
         availableSkills,
-        cdpToolsEnabled: !!preferences.cdpToolsEnabled,
-        dangerousCodeExecutionEnabled:
-          !!preferences.dangerousCodeExecutionEnabled,
+        capabilities,
         workspace,
       })
     : {

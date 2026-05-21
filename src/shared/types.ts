@@ -51,8 +51,6 @@ export type Preferences = {
   autoSelectSkills?: boolean;
   autoScroll?: boolean;
   autoRetry?: boolean;
-  cdpToolsEnabled?: boolean;
-  dangerousCodeExecutionEnabled?: boolean;
   maxToolSteps?: number;
   reasoningEffort?: ReasoningEffort;
   contextBudgetEnabled?: boolean;
@@ -114,6 +112,7 @@ export type AgentCapabilities = {
   browserTools: boolean;
   deferredBrowserTools: boolean;
   cdpTools: boolean;
+  dangerousCodeExecution: boolean;
   mcpTools: boolean;
   mcpManagement: boolean;
   skillTools: boolean;

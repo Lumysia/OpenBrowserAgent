@@ -703,8 +703,6 @@ export function browserToolsForPrompt({
   hasSkills,
   hasWorkspace,
   imageGenerationEnabled,
-  cdpToolsEnabled,
-  dangerousCodeExecutionEnabled,
   latestUserText,
   loadedToolNames = [],
 }: {
@@ -713,14 +711,13 @@ export function browserToolsForPrompt({
   hasSkills: boolean;
   hasWorkspace: boolean;
   imageGenerationEnabled: boolean;
-  cdpToolsEnabled: boolean;
-  dangerousCodeExecutionEnabled: boolean;
   latestUserText?: string;
   loadedToolNames?: string[];
 }) {
-  const loadedTools = deferredBrowserTools.filter((tool) =>
-    capabilities.deferredBrowserTools &&
-    loadedToolNames.includes(tool.function.name),
+  const loadedTools = deferredBrowserTools.filter(
+    (tool) =>
+      capabilities.deferredBrowserTools &&
+      loadedToolNames.includes(tool.function.name),
   );
   return [...browserTools, ...loadedTools].filter((item) => {
     const name = item.function.name;
@@ -728,8 +725,8 @@ export function browserToolsForPrompt({
     if (name === BROWSER_TOOL_NAME.loadBrowserTools)
       return capabilities.deferredBrowserTools;
     if (name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript)
-      return capabilities.cdpTools && dangerousCodeExecutionEnabled;
-    if (name.startsWith("cdp")) return capabilities.cdpTools && cdpToolsEnabled;
+      return capabilities.cdpTools && capabilities.dangerousCodeExecution;
+    if (name.startsWith("cdp")) return capabilities.cdpTools;
     if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
       return hasUploadedAttachments;
     if (name === BROWSER_TOOL_NAME.listSkills)

@@ -1,13 +1,11 @@
 import type { ReactNode } from "react";
 import {
-  AlertTriangle,
   Languages,
   MonitorCog,
   Palette,
   RefreshCw,
   ScrollText,
   SlidersHorizontal,
-  TerminalSquare,
   TextSearch,
   Wrench,
 } from "lucide-react";
@@ -176,31 +174,6 @@ export function GeneralPage() {
         checked={preferences.autoRetry !== false}
         onChange={(checked) =>
           setPreferences((previous) => ({ ...previous, autoRetry: checked }))
-        }
-      />
-      <PreferenceSwitch
-        icon={<TerminalSquare size={18} />}
-        title={t.options.cdpTools}
-        description={t.options.cdpToolsDescription}
-        checked={preferences.cdpToolsEnabled === true}
-        onChange={(checked) =>
-          setPreferences((previous) => ({
-            ...previous,
-            cdpToolsEnabled: checked,
-          }))
-        }
-      />
-      <PreferenceSwitch
-        danger
-        icon={<AlertTriangle size={18} />}
-        title={t.options.dangerousCodeExecution}
-        description={t.options.dangerousCodeExecutionDescription}
-        checked={preferences.dangerousCodeExecutionEnabled === true}
-        onChange={(checked) =>
-          setPreferences((previous) => ({
-            ...previous,
-            dangerousCodeExecutionEnabled: checked,
-          }))
         }
       />
       <Card>

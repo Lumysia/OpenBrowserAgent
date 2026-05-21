@@ -69,8 +69,6 @@ export function toolsForCapabilities(
   hasUploadedAttachments: boolean,
   hasSkills: boolean,
   imageGenerationEnabled: boolean,
-  cdpToolsEnabled: boolean,
-  dangerousCodeExecutionEnabled: boolean,
   latestUserText = "",
   loadedToolNames: string[] = [],
   mcpServers: McpServerConfig[] = [],
@@ -83,8 +81,6 @@ export function toolsForCapabilities(
       hasSkills,
       hasWorkspace: !!workspace,
       imageGenerationEnabled,
-      cdpToolsEnabled,
-      dangerousCodeExecutionEnabled,
       latestUserText,
       loadedToolNames,
     }),
@@ -118,8 +114,6 @@ export function createToolResolver({
         uploadedAttachments.length > 0,
         availableSkills.length > 0,
         !!preferences.imageGenerationEnabled,
-        !!preferences.cdpToolsEnabled,
-        !!preferences.dangerousCodeExecutionEnabled,
         latestUserText,
         [...loadedToolNames],
         mcpServers,
@@ -134,8 +128,7 @@ export function executeContextAwareTool({
   context,
   uploadedAttachments,
   availableSkills,
-  cdpToolsEnabled,
-  dangerousCodeExecutionEnabled,
+  capabilities,
   workspace,
 }: {
   toolName: string;
@@ -143,24 +136,19 @@ export function executeContextAwareTool({
   context?: { chatId?: string; messageId?: string; toolCallId?: string };
   uploadedAttachments: UploadedAttachment[];
   availableSkills: Skill[];
-  cdpToolsEnabled: boolean;
-  dangerousCodeExecutionEnabled: boolean;
+  capabilities: AgentCapabilities;
   workspace?: AgentWorkspace;
 }) {
   if (toolName === BROWSER_TOOL_NAME.loadBrowserTools)
-    return loadBrowserTools(
-      input,
-      cdpToolsEnabled,
-      dangerousCodeExecutionEnabled,
-    );
+    return loadBrowserTools(input, capabilities);
   if (
     toolName === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript &&
-    !dangerousCodeExecutionEnabled
+    !capabilities.dangerousCodeExecution
   )
     return {
       success: false,
       error:
-        "Dangerous arbitrary code execution is disabled in General settings",
+        "Dangerous page JavaScript execution is disabled for the active agent",
     };
   if (toolName === BROWSER_TOOL_NAME.readUploadedAttachment)
     return readUploadedAttachment(uploadedAttachments, input);
@@ -241,14 +229,13 @@ export function loadDeferredToolNames(
 
 function loadBrowserTools(
   input: Record<string, unknown>,
-  cdpToolsEnabled: boolean,
-  dangerousCodeExecutionEnabled: boolean,
+  capabilities: AgentCapabilities,
 ) {
-  if (!cdpToolsEnabled && !dangerousCodeExecutionEnabled)
+  if (!capabilities.cdpTools)
     return {
       loadedToolNames: [],
       tools: [],
-      error: "Deferred CDP tools are disabled in General settings",
+      error: "CDP tools are disabled for the active agent",
     };
   const requestedNames = Array.isArray(input.names)
     ? input.names
@@ -263,9 +250,7 @@ function loadBrowserTools(
     .trim()
     .toLowerCase();
   const matches = deferredBrowserTools
-    .map((item) =>
-      toolCatalogItem(item, cdpToolsEnabled, dangerousCodeExecutionEnabled),
-    )
+    .map((item) => toolCatalogItem(item, capabilities))
     .filter((item) => item.available)
     .filter((item) => !category || item.category === category)
     .map((item) => ({
@@ -312,14 +297,11 @@ function queryScore(item: ReturnType<typeof toolCatalogItem>, query: string) {
 
 function toolCatalogItem(
   item: (typeof deferredBrowserTools)[number],
-  cdpToolsEnabled: boolean,
-  dangerousCodeExecutionEnabled: boolean,
+  capabilities: AgentCapabilities,
 ) {
   const name = item.function.name;
   const dangerous = name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript;
-  const available = dangerous
-    ? dangerousCodeExecutionEnabled
-    : !name.startsWith("cdp") || cdpToolsEnabled;
+  const available = dangerous ? capabilities.dangerousCodeExecution : true;
   return {
     name,
     description: item.function.description,
@@ -329,7 +311,7 @@ function toolCatalogItem(
       ? undefined
       : dangerous
         ? "Dangerous arbitrary code execution is disabled in General settings"
-        : "CDP tools are disabled in General settings",
+        : "CDP tools are disabled for the active agent",
   };
 }
 

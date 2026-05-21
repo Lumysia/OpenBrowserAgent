@@ -494,6 +494,7 @@ export const esES: LocaleMessages = {
       browserTools: "Usar herramientas integradas",
       deferredBrowserTools: "Cargar acciones avanzadas del navegador",
       cdpTools: "Herramientas CDP",
+      dangerousCodeExecution: "Ejecutar JavaScript de la página",
       mcpTools: "Herramientas MCP",
       mcpManagement: "Gestión MCP",
       skillTools: "Herramientas de habilidades",
@@ -675,12 +676,6 @@ export const esES: LocaleMessages = {
     autoRetry: "Reintento automático",
     autoRetryDescription:
       "Continúa automáticamente una vez si el asistente no produce salida nueva durante 30 segundos.",
-    cdpTools: "Herramientas CDP",
-    cdpToolsDescription:
-      "Expone herramientas avanzadas de Chrome DevTools Protocol para automatización y depuración del navegador. Desactivado por defecto porque Chrome pedirá acceso de depurador.",
-    dangerousCodeExecution: "Ejecución de código peligrosa",
-    dangerousCodeExecutionDescription:
-      "Permite que el agente ejecute JavaScript arbitrario en cualquier pestaña inyectable. Peligro: el código puede leer o cambiar datos de la página sin límites de seguridad de la extensión.",
     autoSelectSkills: "Seleccionar habilidades automáticamente",
     autoSelectSkillsDescription:
       "Cuando no selecciones una habilidad manualmente, permite que la IA consulte y use las habilidades relevantes según sea necesario.",

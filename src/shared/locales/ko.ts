@@ -458,6 +458,7 @@ export const ko: LocaleMessages = {
       browserTools: "내장 도구 사용",
       deferredBrowserTools: "고급 브라우저 작업 불러오기",
       cdpTools: "CDP 도구",
+      dangerousCodeExecution: "페이지 JavaScript 실행",
       mcpTools: "MCP 도구",
       mcpManagement: "MCP 관리",
       skillTools: "스킬 도구",
@@ -633,12 +634,6 @@ export const ko: LocaleMessages = {
     autoRetry: "자동 재시도",
     autoRetryDescription:
       "어시스턴트가 30초 동안 새 출력을 만들지 않으면 한 번 자동으로 계속합니다.",
-    cdpTools: "CDP 도구",
-    cdpToolsDescription:
-      "고급 Chrome DevTools Protocol 브라우저 자동화 및 디버깅 도구를 노출합니다. Chrome에서 디버거 접근 권한을 요청하므로 기본값은 꺼짐입니다.",
-    dangerousCodeExecution: "위험한 코드 실행",
-    dangerousCodeExecutionDescription:
-      "에이전트가 주입 가능한 모든 탭에서 임의의 JavaScript를 실행하도록 허용합니다. 위험: 코드는 페이지 데이터를 읽거나 변경할 수 있으며 확장 프로그램 측 안전 제한을 받지 않습니다.",
     autoSelectSkills: "스킬 자동 선택",
     autoSelectSkillsDescription:
       "수동으로 스킬을 선택하지 않았을 때 AI가 필요에 따라 관련 스킬을 확인하고 사용할 수 있습니다.",
