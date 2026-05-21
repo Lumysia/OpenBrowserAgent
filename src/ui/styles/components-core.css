@@ -32,26 +32,21 @@
 .ui-button-default:hover {
   background: var(--accent-solid);
 }
-.ui-button-secondary {
-  background: var(--secondary);
-  color: var(--secondary-foreground);
+.ui-button-secondary,
+.ui-button-outline {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--foreground);
 }
-.ui-button-secondary:hover {
-  background: var(--muted);
+.ui-button-secondary:hover,
+.ui-button-outline:hover {
+  background: var(--secondary);
 }
 .ui-button-ghost {
   background: transparent;
   color: var(--foreground);
 }
 .ui-button-ghost:hover {
-  background: var(--secondary);
-}
-.ui-button-outline {
-  background: var(--card);
-  border: 1px solid var(--border);
-  color: var(--foreground);
-}
-.ui-button-outline:hover {
   background: var(--secondary);
 }
 .ui-button-destructive {

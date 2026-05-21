@@ -102,6 +102,23 @@
   flex-direction: column;
   gap: 12px;
 }
+.settings-page-header,
+.settings-page-actions {
+  min-width: 0;
+}
+.settings-page-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 16px;
+}
+.settings-page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 .settings-page-title,
 .settings-section-title {
   display: inline-flex;
@@ -180,38 +197,9 @@
     grid-template-columns: 1fr;
   }
 }
-.button-group {
-  display: inline-flex;
-  align-items: center;
-  overflow: hidden;
-  border-radius: calc(var(--radius) - 3px);
-  box-shadow: 0 8px 20px var(--accent-shadow);
-  transition: transform 0.14s ease;
-}
-.button-group:hover {
-  transform: translateY(-1px);
-}
-.button-group:active {
-  transform: translateY(0) scale(0.98);
-}
-.button-group .ui-button + .ui-button {
-  border-left: 1px solid
-    color-mix(in srgb, var(--primary-foreground) 28%, transparent);
-}
-.button-group .ui-button {
-  border-radius: 0;
-  box-shadow: none;
-}
-.button-group .ui-button:hover,
-.button-group .ui-button:active {
-  transform: none;
-}
-.button-group .ui-button-icon {
-  width: 42px;
-  height: 36px;
-}
 .ui-button-soft-accent,
-.settings-main .ui-button-default {
+.settings-main .ui-button-default,
+.settings-popover-content .ui-button-default {
   border: 1px solid color-mix(in srgb, var(--accent-strong) 24%, var(--border));
   background: color-mix(in srgb, var(--accent-soft) 72%, var(--card));
   color: color-mix(in srgb, var(--accent-strong) 82%, var(--foreground));
@@ -219,24 +207,15 @@
     color-mix(in srgb, var(--accent-shadow) 62%, transparent);
 }
 .ui-button-soft-accent:hover,
-.settings-main .ui-button-default:hover {
+.settings-main .ui-button-default:hover,
+.settings-popover-content .ui-button-default:hover {
   border-color: color-mix(in srgb, var(--accent-strong) 34%, var(--border));
   background: color-mix(in srgb, var(--accent-hover) 70%, var(--card));
 }
 .ui-button-soft-accent:active,
-.settings-main .ui-button-default:active {
+.settings-main .ui-button-default:active,
+.settings-popover-content .ui-button-default:active {
   background: color-mix(in srgb, var(--accent-active) 68%, var(--card));
-}
-.settings-main .button-group {
-  box-shadow: 0 8px 18px
-    color-mix(in srgb, var(--accent-shadow) 58%, transparent);
-}
-.settings-main .button-group .ui-button + .ui-button {
-  border-left-color: color-mix(
-    in srgb,
-    var(--accent-strong) 22%,
-    var(--border)
-  );
 }
 .settings-main .ui-switch.checked {
   border-color: color-mix(in srgb, var(--accent-strong) 30%, var(--border));
@@ -319,23 +298,9 @@
   width: 100%;
 }
 .skills-page,
-.skills-page-header,
 .skill-trigger-label,
 .skill-trigger-actions {
   min-width: 0;
-}
-.skills-page-header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) max-content;
-  align-items: start;
-  gap: 16px;
-}
-.skills-page-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
 }
 .skill-trigger-label {
   display: flex;

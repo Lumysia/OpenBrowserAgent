@@ -1,5 +1,10 @@
 import JSZip from "jszip";
-import type { AgentWorkspace, WorkspaceFile } from "../../src/shared/types";
+import { AGENT_CAPABILITY_KEYS } from "../../src/shared/agents";
+import type {
+  Agent,
+  AgentWorkspace,
+  WorkspaceFile,
+} from "../../src/shared/types";
 import {
   isWorkspaceUserEditableFile,
   normalizeWorkspaceFiles,
@@ -24,37 +29,82 @@ const TEXT_FILE_EXTENSIONS = new Set([
   ".xml",
 ]);
 
-export async function importWorkspaceZip(
-  file: File,
-  workspace: AgentWorkspace,
-): Promise<AgentWorkspace> {
+const AGENT_MANIFEST_PATH = "agent.json";
+const AGENT_WORKSPACE_ROOT = "workspace";
+
+type AgentZipImport = {
+  agent: Agent;
+  workspace: AgentWorkspace;
+};
+
+type AgentZipManifest = Pick<
+  Agent,
+  "name" | "description" | "icon" | "capabilities"
+>;
+
+export async function importAgentZip(file: File): Promise<AgentZipImport> {
   const zip = await JSZip.loadAsync(file);
+  const manifestEntry = zip.file(AGENT_MANIFEST_PATH);
+  if (!manifestEntry) throw new Error("Agent package is missing agent.json");
+  const manifest = JSON.parse(
+    await manifestEntry.async("string"),
+  ) as Partial<AgentZipManifest>;
+  if (!manifest.name || !isAgentCapabilities(manifest.capabilities))
+    throw new Error("Agent package has an invalid agent.json");
+  const now = Date.now();
+  const agentId = crypto.randomUUID();
   const entries = Object.values(zip.files).filter(
     (entry) =>
-      !entry.dir && !isHiddenPath(entry.name) && isTextPath(entry.name),
+      !entry.dir &&
+      !isHiddenPath(entry.name) &&
+      normalizePath(entry.name).startsWith(`${AGENT_WORKSPACE_ROOT}/`) &&
+      isTextPath(entry.name),
   );
-  const root = commonRoot(entries.map((entry) => normalizePath(entry.name)));
   const files = await Promise.all(
-    entries.map(async (entry) => readWorkspaceZipFile(entry, root)),
+    entries.map((entry) => readWorkspaceZipFile(entry, AGENT_WORKSPACE_ROOT)),
   );
-  const nextFiles = normalizeWorkspaceFiles([
-    ...workspace.files,
-    ...files.filter((item) => isWorkspaceUserEditableFile(item.path)),
-  ]);
+  const nextFiles = normalizeWorkspaceFiles(
+    files.filter((item) => isWorkspaceUserEditableFile(item.path)),
+  );
   if (workspaceTotalChars(nextFiles) > WORKSPACE_TOTAL_MAX_CHARS)
     throw new Error(
       `Workspace content must be ${WORKSPACE_TOTAL_MAX_CHARS} characters or less`,
     );
-  return { ...workspace, files: nextFiles, updatedAt: Date.now() };
+  return {
+    agent: {
+      id: agentId,
+      name: manifest.name,
+      description: manifest.description || "",
+      icon: manifest.icon,
+      capabilities: manifest.capabilities,
+      createdAt: now,
+      updatedAt: now,
+    },
+    workspace: {
+      agentId,
+      files: nextFiles,
+      createdAt: now,
+      updatedAt: now,
+    },
+  };
 }
 
-export async function downloadWorkspaceZip(workspace: AgentWorkspace) {
+export async function downloadAgentZip(
+  agent: Agent,
+  workspace: AgentWorkspace,
+) {
   const zip = new JSZip();
-  const root = `workspace-${workspace.agentId || "agent"}`;
+  const manifest: AgentZipManifest = {
+    name: agent.name,
+    description: agent.description,
+    icon: agent.icon,
+    capabilities: agent.capabilities,
+  };
+  zip.file(AGENT_MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`);
   for (const file of normalizeWorkspaceFiles(workspace.files))
-    zip.file(`${root}/${file.path}`, file.content);
+    zip.file(`${AGENT_WORKSPACE_ROOT}/${file.path}`, file.content);
   const blob = await zip.generateAsync({ type: "blob" });
-  downloadBlob(blob, `${root}.zip`);
+  downloadBlob(blob, `agent-${safeZipName(agent.name || agent.id)}.zip`);
 }
 
 async function readWorkspaceZipFile(
@@ -70,11 +120,6 @@ async function readWorkspaceZipFile(
     content: await entry.async("string"),
     updatedAt: Date.now(),
   };
-}
-
-function commonRoot(paths: string[]) {
-  const roots = new Set(paths.map((path) => path.split("/")[0] || ""));
-  return roots.size === 1 ? [...roots][0] : "";
 }
 
 function normalizePath(path: string) {
@@ -96,6 +141,22 @@ function isHiddenPath(path: string) {
 function isTextPath(path: string) {
   const extension = path.match(/\.[^.]+$/)?.[0]?.toLowerCase();
   return !extension || TEXT_FILE_EXTENSIONS.has(extension);
+}
+
+function safeZipName(value: string) {
+  return (
+    value
+      .trim()
+      .replace(/[^a-z0-9._-]+/gi, "-")
+      .replace(/^-+|-+$/g, "") || "agent"
+  );
+}
+
+function isAgentCapabilities(value: unknown): value is Agent["capabilities"] {
+  if (!value || typeof value !== "object") return false;
+  return AGENT_CAPABILITY_KEYS.every(
+    (key) => typeof (value as Record<string, unknown>)[key] === "boolean",
+  );
 }
 
 function downloadBlob(blob: Blob, filename: string) {

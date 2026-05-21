@@ -134,12 +134,19 @@
   gap: 14px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--secondary) 58%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 32%, var(--border));
+  background: color-mix(in srgb, var(--card) 92%, var(--accent-softer));
   animation: fade-in 0.16s ease both;
-  transition: background-color 0.14s ease;
+  transition:
+    background-color 0.14s ease,
+    border-color 0.14s ease,
+    box-shadow 0.14s ease;
 }
 .model-row:hover {
-  background: color-mix(in srgb, var(--accent-soft) 46%, var(--secondary));
+  border-color: color-mix(in srgb, var(--accent-strong) 24%, var(--border));
+  background: color-mix(in srgb, var(--card) 86%, var(--accent-softer));
+  box-shadow: 0 8px 20px
+    color-mix(in srgb, var(--accent-shadow) 34%, transparent);
 }
 .model-row span {
   min-width: 0;

@@ -253,10 +253,10 @@
     align-items: center;
     flex-direction: row;
   }
-  .skills-page-header {
+  .settings-page-header {
     grid-template-columns: minmax(0, 1fr);
   }
-  .skills-page-actions {
+  .settings-page-actions {
     justify-content: flex-start;
   }
   .option-add-file-row {

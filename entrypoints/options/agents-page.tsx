@@ -51,13 +51,15 @@ import {
   agentDisplayName,
 } from "../../src/ui/agent-display";
 import { SkillFileActionButton } from "./skill-options-components";
-import { downloadWorkspaceZip, importWorkspaceZip } from "./workspace-import";
+import { downloadAgentZip, importAgentZip } from "./workspace-import";
 
 export function AgentsPage() {
   const [language] = useStoredState(storage.language);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const [agents, setAgents] = useStoredState(storage.agents);
   const [workspaces, setWorkspaces] = useStoredState(storage.agentWorkspaces);
+  const importAgentInputRef = useRef<HTMLInputElement | null>(null);
+  const [importAgentError, setImportAgentError] = useState("");
   const t = getMessages(language);
   const items = agents || [];
   const selectedAgentId = preferences?.selectedAgentId || DEFAULT_AGENT_ID;
@@ -114,19 +116,64 @@ export function AgentsPage() {
     }));
   }
 
+  function workspaceForAgent(agentId: string) {
+    return (
+      workspaces?.find((workspace) => workspace.agentId === agentId) ||
+      createWorkspace(agentId)
+    );
+  }
+
+  async function importAgentPackage(file: File | undefined) {
+    if (!file) return;
+    try {
+      const imported = await importAgentZip(file);
+      setAgents((current) => [...current, imported.agent]);
+      setWorkspaces((current) => [...(current || []), imported.workspace]);
+      setPreferences((current) => ({
+        ...current,
+        selectedAgentId: imported.agent.id,
+      }));
+      setImportAgentError("");
+    } catch (error) {
+      setImportAgentError(
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      if (importAgentInputRef.current) importAgentInputRef.current.value = "";
+    }
+  }
+
   return (
     <div className="stack">
-      <div className="setting-switch-row">
+      <input
+        ref={importAgentInputRef}
+        type="file"
+        accept=".zip,application/zip"
+        hidden
+        onChange={(event) => importAgentPackage(event.currentTarget.files?.[0])}
+      />
+      <div className="settings-page-header">
         <div>
           <h1 className="settings-page-title">
             <AgentIcon size={24} /> {t.options.agents}
           </h1>
           <p className="muted">{t.options.agentsDescription}</p>
         </div>
-        <Button onClick={addAgent}>
-          <Plus size={15} /> {t.options.newAgent}
-        </Button>
+        <div className="settings-page-actions">
+          <Button
+            variant="outline"
+            onClick={() => importAgentInputRef.current?.click()}
+          >
+            <Upload size={15} /> {t.options.importAgentZip}
+          </Button>
+          <Button onClick={addAgent}>
+            <Plus size={15} /> {t.options.newAgent}
+          </Button>
+        </div>
       </div>
+      {importAgentError ? (
+        <CardDescription>{importAgentError}</CardDescription>
+      ) : null}
       <Accordion type="multiple" className="stack">
         {items.map((agent) => {
           const description = agentDisplayDescription(agent, t);
@@ -138,13 +185,14 @@ export function AgentsPage() {
                   <span className="agent-summary-title">
                     <AgentIcon agent={agent} size={18} />
                     <span>{agentDisplayName(agent, t)}</span>
-                    {builtin && (
-                      <Badge className="agent-builtin-badge">
-                        {t.options.builtinAgentBadge}
-                      </Badge>
-                    )}
+                    <Badge>{agent.id}</Badge>
                   </span>
-                  <small>{description}</small>
+                  <small>
+                    {description}
+                    {builtin
+                      ? `${description ? " · " : ""}${t.options.builtinAgentBadge}`
+                      : ""}
+                  </small>
                 </span>
               </AccordionTrigger>
               <AccordionContent>
@@ -192,11 +240,7 @@ export function AgentsPage() {
                   {!builtin && (
                     <>
                       <AgentWorkspaceEditor
-                        workspace={
-                          workspaces?.find(
-                            (workspace) => workspace.agentId === agent.id,
-                          ) || createWorkspace(agent.id)
-                        }
+                        workspace={workspaceForAgent(agent.id)}
                         title={t.options.agentWorkspace}
                         description={t.options.agentWorkspaceDescription}
                         newFileLabel={t.options.agentWorkspaceNewFile}
@@ -204,8 +248,6 @@ export function AgentsPage() {
                           t.options.agentWorkspaceNewFilePlaceholder
                         }
                         emptyText={t.options.agentWorkspaceEmpty}
-                        importZipLabel={t.options.importWorkspaceZip}
-                        exportZipLabel={t.options.downloadWorkspaceZip}
                         editLabel={t.common.edit}
                         saveLabel={t.common.save}
                         deleteLabel={t.common.delete}
@@ -221,6 +263,14 @@ export function AgentsPage() {
                     </>
                   )}
                   <div className="row">
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        downloadAgentZip(agent, workspaceForAgent(agent.id))
+                      }
+                    >
+                      <Download size={15} /> {t.options.downloadAgentZip}
+                    </Button>
                     <Button
                       variant="outline"
                       disabled={builtin}
@@ -263,8 +313,6 @@ function AgentWorkspaceEditor({
   newFileLabel,
   newFilePlaceholder,
   emptyText,
-  importZipLabel,
-  exportZipLabel,
   editLabel,
   saveLabel,
   deleteLabel,
@@ -276,8 +324,6 @@ function AgentWorkspaceEditor({
   newFileLabel: string;
   newFilePlaceholder: string;
   emptyText: string;
-  importZipLabel: string;
-  exportZipLabel: string;
   editLabel: string;
   saveLabel: string;
   deleteLabel: string;
@@ -288,7 +334,6 @@ function AgentWorkspaceEditor({
   const [editFilePath, setEditFilePath] = useState("");
   const [draftContent, setDraftContent] = useState("");
   const [error, setError] = useState("");
-  const importInputRef = useRef<HTMLInputElement | null>(null);
   const editingFile = workspace.files.find((file) => file.path === editPath);
 
   function startEdit(path: string) {
@@ -357,18 +402,6 @@ function AgentWorkspaceEditor({
     setError("");
   }
 
-  async function importZip(file: File | undefined) {
-    if (!file) return;
-    try {
-      onChange(await importWorkspaceZip(file, workspace));
-      setError("");
-    } catch (error) {
-      setError(error instanceof Error ? error.message : String(error));
-    } finally {
-      if (importInputRef.current) importInputRef.current.value = "";
-    }
-  }
-
   return (
     <Accordion type="single" collapsible>
       <AccordionItem value="workspace">
@@ -387,31 +420,6 @@ function AgentWorkspaceEditor({
         <AccordionContent>
           <div className="stack">
             <CardDescription>{description}</CardDescription>
-            <div className="row">
-              <input
-                ref={importInputRef}
-                type="file"
-                accept=".zip,application/zip"
-                hidden
-                onChange={(event) => importZip(event.currentTarget.files?.[0])}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => importInputRef.current?.click()}
-              >
-                <Upload size={14} /> {importZipLabel}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => downloadWorkspaceZip(workspace)}
-              >
-                <Download size={14} /> {exportZipLabel}
-              </Button>
-            </div>
             <div className="option-add-file-row">
               <Input
                 value={draftPath}

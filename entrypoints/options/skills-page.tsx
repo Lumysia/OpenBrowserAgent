@@ -236,14 +236,14 @@ export function SkillsPage() {
 
   return (
     <div className="skills-page stack">
-      <div className="skills-page-header">
+      <div className="settings-page-header">
         <div>
           <h1 className="settings-page-title">
             <FileText size={24} /> {t.options.skills}
           </h1>
           <p className="muted">{t.options.skillsDescription}</p>
         </div>
-        <div className="skills-page-actions">
+        <div className="settings-page-actions">
           <input
             ref={fileInputRef}
             type="file"
@@ -324,12 +324,14 @@ export function SkillsPage() {
                         {t.options.skillSize}:{" "}
                         {formatSkillBytes(skillPackageBytes(normalized))}
                       </Badge>
+                      <Badge>{skill.id}</Badge>
                     </span>
                   </span>
                   <small className="skill-checks skill-trigger-checks">
                     {checks.map((check) => (
                       <span className={check.ok ? "ok" : "warn"} key={check.id}>
-                        {check.ok ? "✓" : "!"} {skillCheckLabel(t, check.id)}
+                        {check.ok ? "✓" : "!"}{" "}
+                        {skillCheckLabel(t, check.id, check.ok)}
                       </span>
                     ))}
                   </small>
@@ -445,11 +447,17 @@ export function SkillsPage() {
   );
 }
 
-function skillCheckLabel(t: ReturnType<typeof getMessages>, id: string) {
+function skillCheckLabel(
+  t: ReturnType<typeof getMessages>,
+  id: string,
+  ok: boolean,
+) {
   const labels: Record<string, string> = {
-    entry: t.options.skillCheckEntry,
-    name: t.options.skillCheckName,
-    description: t.options.skillCheckDescription,
+    entry: ok ? t.options.skillCheckEntry : t.options.skillCheckEntryMissing,
+    name: ok ? t.options.skillCheckName : t.options.skillCheckNameInvalid,
+    description: ok
+      ? t.options.skillCheckDescription
+      : t.options.skillCheckDescriptionMissing,
   };
   return labels[id] || id;
 }

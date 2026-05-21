@@ -1,4 +1,4 @@
-import { ChevronDown, Plug, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { Plug, Plus, RotateCcw, Trash2, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getMessages } from "../../src/shared/i18n";
 import {
@@ -18,6 +18,7 @@ import {
   AccordionHeader,
   AccordionItem,
   AccordionTriggerButton,
+  Badge,
   Button,
   Card,
   CardContent,
@@ -130,50 +131,55 @@ export function McpPage() {
 
   return (
     <div className="stack">
-      <div className="setting-switch-row">
+      <div className="settings-page-header">
         <div>
           <h1 className="settings-page-title">
             <Plug size={24} /> {t.options.mcpServers}
           </h1>
           <p className="muted">{t.options.mcpServersDescription}</p>
         </div>
-        <div className="button-group">
+        <div className="settings-page-actions">
           <Button onClick={addServer}>
             <Plus size={15} /> {t.options.newMcpServer}
           </Button>
-          <Popover open={importMenuOpen} onOpenChange={setImportMenuOpen}>
-            <PopoverTrigger asChild>
-              <Button size="icon" aria-label={t.options.mcpAdvancedActions}>
-                <ChevronDown size={15} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="settings-popover-content" align="end">
-              <div className="settings-popover-menu">
-                <CardDescription>{t.options.mcpImportJson}</CardDescription>
-                <Textarea
-                  className="scrollbar-hidden"
-                  value={importDraft}
-                  placeholder={
-                    '{\n  "mcpServers": {\n    "server": { "url": "https://example.com/mcp" }\n  }\n}'
-                  }
-                  onChange={(event) =>
-                    setImportDraft(event.currentTarget.value)
-                  }
-                />
-                <div className="row">
-                  <Button
-                    disabled={!importDraft.trim()}
-                    onClick={importServers}
-                  >
-                    <Plus size={15} /> {t.options.mcpImportButton}
+          <Tooltip>
+            <Popover open={importMenuOpen} onOpenChange={setImportMenuOpen}>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <Button size="icon" aria-label={t.options.mcpImportButton}>
+                    <Upload size={15} />
                   </Button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <PopoverContent className="settings-popover-content" align="end">
+                <div className="settings-popover-menu">
+                  <CardDescription>{t.options.mcpImportJson}</CardDescription>
+                  <Textarea
+                    className="scrollbar-hidden"
+                    value={importDraft}
+                    placeholder={
+                      '{\n  "mcpServers": {\n    "server": { "url": "https://example.com/mcp" }\n  }\n}'
+                    }
+                    onChange={(event) =>
+                      setImportDraft(event.currentTarget.value)
+                    }
+                  />
+                  <div className="row">
+                    <Button
+                      disabled={!importDraft.trim()}
+                      onClick={importServers}
+                    >
+                      <Plus size={15} /> {t.options.mcpImportButton}
+                    </Button>
+                  </div>
+                  {importMessage && (
+                    <CardDescription>{importMessage}</CardDescription>
+                  )}
                 </div>
-                {importMessage && (
-                  <CardDescription>{importMessage}</CardDescription>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
+              </PopoverContent>
+            </Popover>
+            <TooltipContent>{t.options.mcpImportButton}</TooltipContent>
+          </Tooltip>
         </div>
       </div>
       <Accordion type="multiple" className="stack">
@@ -185,6 +191,7 @@ export function McpPage() {
                   <span className="agent-summary-title">
                     <Plug size={18} />
                     <span>{server.name || t.options.newMcpServer}</span>
+                    <Badge>{server.id}</Badge>
                   </span>
                   <small>
                     {server.description ||
