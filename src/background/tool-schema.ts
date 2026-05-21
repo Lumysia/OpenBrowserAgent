@@ -96,9 +96,12 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.openNewTabWithURL,
-    "Open a new tab with the given URL",
+    "Open a new background tab with the given URL. This does not switch the active browser tab; call goToTab with the returned tab ID if the user needs to see or end on this page.",
     {
-      url: { type: "string", description: "The URL to open in a new tab" },
+      url: {
+        type: "string",
+        description: "The URL to open in a new background tab",
+      },
       reason: {
         type: "string",
         description:
@@ -107,8 +110,11 @@ export const commonBrowserTools = [
     },
   ),
   tool(BROWSER_TOOL_NAME.getCurrentTab, "Get current active tab", {}),
-  tool(BROWSER_TOOL_NAME.goToTab, "Go to a tab by ID", {
-    tabId: { type: "number", description: "The ID of the tab to go to" },
+  tool(BROWSER_TOOL_NAME.goToTab, "Focus and switch to a browser tab by ID", {
+    tabId: {
+      type: "number",
+      description: "The ID of the tab to make active and visible",
+    },
   }),
   tool(BROWSER_TOOL_NAME.insertCSSToTab, "Insert CSS to a tab", {
     tabId: {
