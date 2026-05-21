@@ -160,6 +160,35 @@ export const jaJP: LocaleMessages = {
     running: "実行中",
     done: "完了",
     error: "エラー",
+    toolErrors: {
+      NO_ACTIVE_WEB_TAB_FOUND:
+        "アクティブなWebページのタブが見つかりません。通常の http(s) タブを開くかフォーカスするか、既知のタブIDを使用してください。",
+      ACTIVE_TAB_NOT_WEB_PAGE:
+        "アクティブなタブは読み取り可能なWebページではありません。先に http(s) ページを開いてください。",
+      NO_TAB_IDS_PROVIDED: "タブIDが指定されていません。",
+      TAB_NOT_FOUND: "指定されたタブが見つかりません。",
+      NO_GROUPABLE_NORMAL_TABS:
+        "グループ化できる通常のブラウザーウィンドウのタブがありません。",
+      UNKNOWN_TOOL: "不明なツール: {tool}。",
+      MISSING_URL: "URLが必要です。",
+      UNKNOWN_NAVIGATION_TYPE: "不明なナビゲーション種別: {type}。",
+      TAB_HAS_NO_WINDOW: "タブがブラウザーウィンドウに属していません。",
+      NO_TEXT_PROVIDED: "テキストが指定されていません。",
+      TIMED_OUT_WAITING_FOR_TEXT:
+        "指定されたテキストの待機がタイムアウトしました。",
+      ELEMENT_NOT_TEXT_INPUT:
+        "対象要素は入力欄、テキストエリア、または編集可能領域ではありません。",
+      TARGET_ID_CANNOT_BE_FOCUSED:
+        "このCDPターゲットはブラウザータブとしてフォーカスできません。",
+      CLOSE_BY_TARGET_ID_UNSUPPORTED:
+        "ここではCDPターゲットIDで閉じることはできません。",
+      RESIZE_BY_TARGET_ID_UNSUPPORTED:
+        "ここではCDPターゲットIDでサイズ変更できません。",
+      ELEMENT_NOT_FOUND: "対象要素が見つかりません。",
+      ELEMENT_HAS_NO_CLICKABLE_BOX:
+        "対象要素にクリック可能な領域がありません。",
+      MISSING_CODE: "JavaScriptコードが必要です。",
+    },
     generatedImage: "生成画像",
     capturedTabImage: "タブのスクリーンショット",
     mermaidPreview: "Mermaid図のプレビュー",

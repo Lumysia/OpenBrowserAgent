@@ -161,6 +161,35 @@ export const ptBR: LocaleMessages = {
     running: "Executando",
     done: "Concluído",
     error: "Erro",
+    toolErrors: {
+      NO_ACTIVE_WEB_TAB_FOUND:
+        "Nenhuma aba de página web ativa foi encontrada. Abra ou foque uma aba http(s) normal, ou use um ID de aba conhecido.",
+      ACTIVE_TAB_NOT_WEB_PAGE:
+        "A aba ativa não é uma página web legível. Abra uma página http(s) primeiro.",
+      NO_TAB_IDS_PROVIDED: "Nenhum ID de aba foi informado.",
+      TAB_NOT_FOUND: "A aba solicitada não foi encontrada.",
+      NO_GROUPABLE_NORMAL_TABS:
+        "Nenhuma aba em janela normal do navegador pode ser agrupada.",
+      UNKNOWN_TOOL: "Ferramenta desconhecida: {tool}.",
+      MISSING_URL: "Uma URL é obrigatória.",
+      UNKNOWN_NAVIGATION_TYPE: "Tipo de navegação desconhecido: {type}.",
+      TAB_HAS_NO_WINDOW: "A aba não está vinculada a uma janela do navegador.",
+      NO_TEXT_PROVIDED: "Nenhum texto foi informado.",
+      TIMED_OUT_WAITING_FOR_TEXT:
+        "Tempo esgotado aguardando o texto solicitado.",
+      ELEMENT_NOT_TEXT_INPUT:
+        "O elemento de destino não é um campo, textarea ou área editável.",
+      TARGET_ID_CANNOT_BE_FOCUSED:
+        "Este destino CDP não pode ser focado como uma aba do navegador.",
+      CLOSE_BY_TARGET_ID_UNSUPPORTED:
+        "Fechar por ID de destino CDP não é compatível aqui.",
+      RESIZE_BY_TARGET_ID_UNSUPPORTED:
+        "Redimensionar por ID de destino CDP não é compatível aqui.",
+      ELEMENT_NOT_FOUND: "O elemento de destino não foi encontrado.",
+      ELEMENT_HAS_NO_CLICKABLE_BOX:
+        "O elemento de destino não tem área clicável.",
+      MISSING_CODE: "Código JavaScript é obrigatório.",
+    },
     generatedImage: "Imagem gerada",
     capturedTabImage: "Captura da aba",
     mermaidPreview: "Prévia do diagrama Mermaid",

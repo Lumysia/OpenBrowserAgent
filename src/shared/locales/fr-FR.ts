@@ -162,6 +162,36 @@ export const frFR: LocaleMessages = {
     running: "En cours",
     done: "Terminé",
     error: "Erreur",
+    toolErrors: {
+      NO_ACTIVE_WEB_TAB_FOUND:
+        "Aucun onglet web actif trouvé. Ouvrez ou focalisez un onglet http(s) normal, ou utilisez un ID d'onglet connu.",
+      ACTIVE_TAB_NOT_WEB_PAGE:
+        "L'onglet actif n'est pas une page web lisible. Ouvrez d'abord une page http(s).",
+      NO_TAB_IDS_PROVIDED: "Aucun ID d'onglet fourni.",
+      TAB_NOT_FOUND: "L'onglet demandé est introuvable.",
+      NO_GROUPABLE_NORMAL_TABS:
+        "Aucun onglet de fenêtre normale du navigateur ne peut être groupé.",
+      UNKNOWN_TOOL: "Outil inconnu : {tool}.",
+      MISSING_URL: "Une URL est requise.",
+      UNKNOWN_NAVIGATION_TYPE: "Type de navigation inconnu : {type}.",
+      TAB_HAS_NO_WINDOW:
+        "L'onglet n'est attaché à aucune fenêtre du navigateur.",
+      NO_TEXT_PROVIDED: "Aucun texte fourni.",
+      TIMED_OUT_WAITING_FOR_TEXT:
+        "Délai dépassé en attendant le texte demandé.",
+      ELEMENT_NOT_TEXT_INPUT:
+        "L'élément cible n'est pas un champ, une zone de texte ou une zone modifiable.",
+      TARGET_ID_CANNOT_BE_FOCUSED:
+        "Cette cible CDP ne peut pas être focalisée comme un onglet du navigateur.",
+      CLOSE_BY_TARGET_ID_UNSUPPORTED:
+        "La fermeture par ID de cible CDP n'est pas prise en charge ici.",
+      RESIZE_BY_TARGET_ID_UNSUPPORTED:
+        "Le redimensionnement par ID de cible CDP n'est pas pris en charge ici.",
+      ELEMENT_NOT_FOUND: "L'élément cible est introuvable.",
+      ELEMENT_HAS_NO_CLICKABLE_BOX:
+        "L'élément cible n'a pas de zone cliquable.",
+      MISSING_CODE: "Du code JavaScript est requis.",
+    },
     generatedImage: "Image générée",
     capturedTabImage: "Capture d'onglet",
     mermaidPreview: "Aperçu du diagramme Mermaid",

@@ -161,6 +161,36 @@ export const esES: LocaleMessages = {
     running: "Ejecutando",
     done: "Listo",
     error: "Error",
+    toolErrors: {
+      NO_ACTIVE_WEB_TAB_FOUND:
+        "No se encontró una pestaña web activa. Abre o enfoca una pestaña http(s) normal, o usa un ID de pestaña conocido.",
+      ACTIVE_TAB_NOT_WEB_PAGE:
+        "La pestaña activa no es una página web legible. Abre primero una página http(s).",
+      NO_TAB_IDS_PROVIDED: "No se proporcionaron IDs de pestaña.",
+      TAB_NOT_FOUND: "No se encontró la pestaña solicitada.",
+      NO_GROUPABLE_NORMAL_TABS:
+        "No hay pestañas de ventanas normales del navegador para agrupar.",
+      UNKNOWN_TOOL: "Herramienta desconocida: {tool}.",
+      MISSING_URL: "Se requiere una URL.",
+      UNKNOWN_NAVIGATION_TYPE: "Tipo de navegación desconocido: {type}.",
+      TAB_HAS_NO_WINDOW:
+        "La pestaña no está asociada a una ventana del navegador.",
+      NO_TEXT_PROVIDED: "No se proporcionó texto.",
+      TIMED_OUT_WAITING_FOR_TEXT:
+        "Se agotó el tiempo esperando el texto solicitado.",
+      ELEMENT_NOT_TEXT_INPUT:
+        "El elemento de destino no es un campo de entrada, área de texto o zona editable.",
+      TARGET_ID_CANNOT_BE_FOCUSED:
+        "Este destino CDP no puede enfocarse como una pestaña del navegador.",
+      CLOSE_BY_TARGET_ID_UNSUPPORTED:
+        "Cerrar por ID de destino CDP no es compatible aquí.",
+      RESIZE_BY_TARGET_ID_UNSUPPORTED:
+        "Cambiar tamaño por ID de destino CDP no es compatible aquí.",
+      ELEMENT_NOT_FOUND: "No se encontró el elemento de destino.",
+      ELEMENT_HAS_NO_CLICKABLE_BOX:
+        "El elemento de destino no tiene área clicable.",
+      MISSING_CODE: "Se requiere código JavaScript.",
+    },
     generatedImage: "Imagen generada",
     capturedTabImage: "Captura de pestaña",
     mermaidPreview: "Vista previa del diagrama Mermaid",

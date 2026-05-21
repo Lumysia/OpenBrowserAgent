@@ -161,6 +161,32 @@ export const enUS = {
     running: "Running",
     done: "Done",
     error: "Error",
+    toolErrors: {
+      NO_ACTIVE_WEB_TAB_FOUND:
+        "No active web page tab was found. Open or focus a normal http(s) tab, or use a known tab ID.",
+      ACTIVE_TAB_NOT_WEB_PAGE:
+        "The active tab is not a readable web page. Open an http(s) page first.",
+      NO_TAB_IDS_PROVIDED: "No tab IDs were provided.",
+      TAB_NOT_FOUND: "The requested tab was not found.",
+      NO_GROUPABLE_NORMAL_TABS: "No normal browser-window tabs can be grouped.",
+      UNKNOWN_TOOL: "Unknown tool: {tool}.",
+      MISSING_URL: "A URL is required.",
+      UNKNOWN_NAVIGATION_TYPE: "Unknown navigation type: {type}.",
+      TAB_HAS_NO_WINDOW: "The tab is not attached to a browser window.",
+      NO_TEXT_PROVIDED: "No text was provided.",
+      TIMED_OUT_WAITING_FOR_TEXT: "Timed out waiting for the requested text.",
+      ELEMENT_NOT_TEXT_INPUT:
+        "The target element is not an input, textarea, or editable area.",
+      TARGET_ID_CANNOT_BE_FOCUSED:
+        "This CDP target cannot be focused as a browser tab.",
+      CLOSE_BY_TARGET_ID_UNSUPPORTED:
+        "Closing by CDP target ID is not supported here.",
+      RESIZE_BY_TARGET_ID_UNSUPPORTED:
+        "Resizing by CDP target ID is not supported here.",
+      ELEMENT_NOT_FOUND: "The target element was not found.",
+      ELEMENT_HAS_NO_CLICKABLE_BOX: "The target element has no clickable area.",
+      MISSING_CODE: "JavaScript code is required.",
+    },
     generatedImage: "Generated image",
     capturedTabImage: "Captured tab screenshot",
     mermaidPreview: "Mermaid diagram preview",

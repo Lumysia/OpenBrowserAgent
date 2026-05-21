@@ -1,8 +1,10 @@
+import { TOOL_ERROR } from "../shared/tool-errors";
+
 export async function clickElement(tabId: number, id: string) {
   const [result] = await chrome.scripting.executeScript({
     target: { tabId },
-    args: [id],
-    func: (aiId) => {
+    args: [id, TOOL_ERROR.elementNotFound, TOOL_ERROR.elementHasNoClickableBox],
+    func: (aiId, elementNotFound, elementHasNoClickableBox) => {
       const element = document.querySelector(`[data-ai-id="${aiId}"]`) as
         | HTMLAnchorElement
         | HTMLElement
@@ -85,12 +87,12 @@ function cdpMouseAction(action: string) {
 async function getElementClickPoint(tabId: number, id: string) {
   const [result] = await chrome.scripting.executeScript({
     target: { tabId },
-    args: [id],
-    func: (aiId) => {
+    args: [id, TOOL_ERROR.elementNotFound, TOOL_ERROR.elementHasNoClickableBox],
+    func: (aiId, elementNotFound, elementHasNoClickableBox) => {
       const element = document.querySelector(
         `[data-ai-id="${CSS.escape(aiId)}"]`,
       ) as HTMLElement | null;
-      if (!element) return { success: false, error: "Element not found" };
+      if (!element) return { success: false, error: elementNotFound };
       const target =
         (element.closest(
           'button,a,[role="button"],[role="link"],[role="tab"],[role="listitem"],[role="gridcell"],[tabindex],[contenteditable="true"]',
@@ -98,7 +100,7 @@ async function getElementClickPoint(tabId: number, id: string) {
       target.scrollIntoView({ block: "center", inline: "center" });
       const rect = target.getBoundingClientRect();
       if (!rect.width || !rect.height)
-        return { success: false, error: "Element has no clickable box" };
+        return { success: false, error: elementHasNoClickableBox };
       return {
         success: true,
         aiId,

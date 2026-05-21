@@ -162,6 +162,35 @@ export const deDE: LocaleMessages = {
     running: "Läuft",
     done: "Fertig",
     error: "Fehler",
+    toolErrors: {
+      NO_ACTIVE_WEB_TAB_FOUND:
+        "Kein aktiver Webseiten-Tab gefunden. Öffnen oder fokussieren Sie einen normalen http(s)-Tab oder verwenden Sie eine bekannte Tab-ID.",
+      ACTIVE_TAB_NOT_WEB_PAGE:
+        "Der aktive Tab ist keine lesbare Webseite. Öffnen Sie zuerst eine http(s)-Seite.",
+      NO_TAB_IDS_PROVIDED: "Keine Tab-IDs angegeben.",
+      TAB_NOT_FOUND: "Der angeforderte Tab wurde nicht gefunden.",
+      NO_GROUPABLE_NORMAL_TABS:
+        "Keine Tabs in normalen Browserfenstern können gruppiert werden.",
+      UNKNOWN_TOOL: "Unbekanntes Tool: {tool}.",
+      MISSING_URL: "Eine URL ist erforderlich.",
+      UNKNOWN_NAVIGATION_TYPE: "Unbekannter Navigationstyp: {type}.",
+      TAB_HAS_NO_WINDOW: "Der Tab gehört zu keinem Browserfenster.",
+      NO_TEXT_PROVIDED: "Kein Text angegeben.",
+      TIMED_OUT_WAITING_FOR_TEXT:
+        "Zeitüberschreitung beim Warten auf den Text.",
+      ELEMENT_NOT_TEXT_INPUT:
+        "Das Zielelement ist kein Eingabefeld, Textbereich oder bearbeitbarer Bereich.",
+      TARGET_ID_CANNOT_BE_FOCUSED:
+        "Dieses CDP-Ziel kann nicht als Browser-Tab fokussiert werden.",
+      CLOSE_BY_TARGET_ID_UNSUPPORTED:
+        "Schließen per CDP-Ziel-ID wird hier nicht unterstützt.",
+      RESIZE_BY_TARGET_ID_UNSUPPORTED:
+        "Größenänderung per CDP-Ziel-ID wird hier nicht unterstützt.",
+      ELEMENT_NOT_FOUND: "Das Zielelement wurde nicht gefunden.",
+      ELEMENT_HAS_NO_CLICKABLE_BOX:
+        "Das Zielelement hat keinen anklickbaren Bereich.",
+      MISSING_CODE: "JavaScript-Code ist erforderlich.",
+    },
     generatedImage: "Generiertes Bild",
     capturedTabImage: "Tab-Screenshot",
     mermaidPreview: "Mermaid-Diagrammvorschau",

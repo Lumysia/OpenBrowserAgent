@@ -2,6 +2,7 @@ import React from "react";
 import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
 import type { Messages } from "../../src/shared/i18n";
 import { openOrFocusUrl } from "../../src/shared/tab-navigation";
+import type { ToolErrorCode } from "../../src/shared/tool-errors";
 import {
   CHAT_PART_STATE,
   isToolPartType,
@@ -185,7 +186,7 @@ function toolDisplay(
         output.error,
         stringValue(output.attachmentId) || stringValue(input.attachmentId),
       ]);
-    if (typeof output.error === "string") return output.error;
+    if (typeof output.error === "string") return toolErrorMessage(output, t);
     if (name.startsWith("mcp__")) return mcpToolDetail(input, output);
     if (typeof input.reason === "string") return input.reason;
     if (name === BROWSER_TOOL_NAME.getCurrentTime)
@@ -425,6 +426,16 @@ function mcpParamLabel(key: string, value: unknown) {
     return `${key}: ${shortValue(value, 72)}`;
   }
   return `${key}: ${shortValue(value, 72)}`;
+}
+
+function toolErrorMessage(output: Record<string, unknown>, t: Messages) {
+  const error = String(output.error || "");
+  const message = t.sidepanel.toolErrors[error as ToolErrorCode];
+  if (!message) return error;
+  return formatToolMessage(message, {
+    tool: stringValue(output.toolName),
+    type: stringValue(output.type),
+  });
 }
 
 function shortValue(value: unknown, maxLength = 140) {

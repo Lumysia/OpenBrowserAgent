@@ -5,6 +5,31 @@ export async function getActiveTab(): Promise<chrome.tabs.Tab | undefined> {
   return tab;
 }
 
+export async function getActiveBrowserTab(): Promise<
+  chrome.tabs.Tab | undefined
+> {
+  const [currentWindowTab] = await chrome.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
+  if (currentWindowTab) return currentWindowTab;
+  const [lastFocusedTab] = await chrome.tabs.query({
+    active: true,
+    lastFocusedWindow: true,
+  });
+  if (lastFocusedTab) return lastFocusedTab;
+  const windows = await chrome.windows.getAll({ windowTypes: ["normal"] });
+  for (const window of windows) {
+    if (window.id === undefined) continue;
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      windowId: window.id,
+    });
+    if (tab) return tab;
+  }
+  return undefined;
+}
+
 export async function getAllTabs(): Promise<AttachmentTab[]> {
   const tabs = await chrome.tabs.query({ currentWindow: true });
   return tabs

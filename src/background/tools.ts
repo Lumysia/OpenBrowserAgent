@@ -6,7 +6,8 @@ import {
   TAB_LOAD_WAIT_TIMEOUT_MS,
 } from "../shared/config";
 import { BROWSER_TOOL_NAME, UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
-import { isScriptableUrl } from "../shared/browser";
+import { getActiveBrowserTab, isScriptableUrl } from "../shared/browser";
+import { TOOL_ERROR } from "../shared/tool-errors";
 import { downloadTextFile, findImages, safeFileName } from "./downloads";
 import { findAccessibleElements } from "./accessible-elements";
 import { clickElement } from "./browser-input";
@@ -33,14 +34,11 @@ async function executeBrowserTool(
       return getCurrentTime(args);
     }
     case BROWSER_TOOL_NAME.getCurrentTab: {
-      const [tab] = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      if (!tab) return { error: "NEED_PAGE_CONTENT_ACCESS_PERMISSION" };
+      const tab = await getActiveBrowserTab();
+      if (!tab) return { error: TOOL_ERROR.noActiveWebTabFound };
       return tab.url?.startsWith("http")
         ? { tabId: tab.id, title: tab.title, url: tab.url }
-        : { error: "Not a web page" };
+        : { error: TOOL_ERROR.activeTabNotWebPage };
     }
     case BROWSER_TOOL_NAME.openNewTabWithURL: {
       const tab = await chrome.tabs.create({
@@ -65,7 +63,7 @@ async function executeBrowserTool(
         ? args.tabIds.map(Number).filter(Number.isFinite)
         : [Number(args.tabId)].filter(Number.isFinite);
       if (!tabIds.length)
-        return { success: false, error: "No tab IDs provided" };
+        return { success: false, error: TOOL_ERROR.noTabIdsProvided };
       await chrome.tabs.remove(tabIds);
       return { success: true, tabIds };
     }
@@ -91,7 +89,7 @@ async function executeBrowserTool(
       const tab = await chrome.tabs.update(await resolveTabId(args.tabId), {
         active: true,
       });
-      if (!tab) return { success: false, error: "Tab not found" };
+      if (!tab) return { success: false, error: TOOL_ERROR.tabNotFound };
       if (tab.windowId !== undefined)
         await chrome.windows.update(tab.windowId, { focused: true });
       return { success: true };
@@ -171,7 +169,7 @@ async function executeBrowserTool(
         ? args.tabIds.map(Number).filter(Number.isFinite)
         : [];
       if (!tabIds.length)
-        return { success: false, error: "No tab IDs provided" };
+        return { success: false, error: TOOL_ERROR.noTabIdsProvided };
       const color = String(
         args.color || "cyan",
       ) as chrome.tabGroups.UpdateProperties["color"];
@@ -194,7 +192,7 @@ async function executeBrowserTool(
       if (!normalTabs.length)
         return {
           success: false,
-          error: "No tabs in normal browser windows can be grouped",
+          error: TOOL_ERROR.noGroupableNormalTabs,
           skippedTabIds,
         };
 
@@ -232,7 +230,7 @@ async function executeBrowserTool(
       return findImages(await resolveTabId(args.tabId));
     }
     default:
-      return { error: `Unknown tool: ${name}` };
+      return { error: TOOL_ERROR.unknownTool, toolName: name };
   }
 }
 
@@ -295,13 +293,13 @@ async function navigateTab(args: Record<string, unknown>) {
   else if (type === "forward") await chrome.tabs.goForward(tabId);
   else if (type === "url") {
     const url = String(args.url || "").trim();
-    if (!url) return { success: false, error: "Missing URL" };
+    if (!url) return { success: false, error: TOOL_ERROR.missingUrl };
     await chrome.tabs.update(tabId, { url });
   } else if (type === "reload") {
     const bypassCache = args.bypassCache === true || args.ignoreCache === true;
     await chrome.tabs.reload(tabId, { bypassCache });
   } else {
-    return { success: false, error: `Unknown navigation type: ${type}` };
+    return { success: false, error: TOOL_ERROR.unknownNavigationType, type };
   }
   await wait(100);
   await waitTabComplete(tabId);
@@ -312,7 +310,7 @@ async function captureVisibleTab(args: Record<string, unknown>) {
   const tabId = await resolveTabId(args.tabId);
   const tab = await chrome.tabs.get(tabId);
   if (tab.windowId === undefined)
-    return { success: false, error: "Tab has no window" };
+    return { success: false, error: TOOL_ERROR.tabHasNoWindow };
   await chrome.tabs.update(tabId, { active: true });
   await chrome.windows.update(tab.windowId, { focused: true });
   const format = String(args.format || "png") === "jpeg" ? "jpeg" : "png";
@@ -331,7 +329,8 @@ async function waitForText(args: Record<string, unknown>) {
   const texts = (Array.isArray(args.text) ? args.text : [args.text])
     .map((text) => String(text || "").trim())
     .filter(Boolean);
-  if (!texts.length) return { success: false, error: "No text provided" };
+  if (!texts.length)
+    return { success: false, error: TOOL_ERROR.noTextProvided };
   const timeout = clampTimeoutMs(args.timeout, WAIT_FOR_TEXT_DEFAULT_MS);
   const started = Date.now();
   while (Date.now() - started < timeout) {
@@ -339,7 +338,7 @@ async function waitForText(args: Record<string, unknown>) {
     if (found) return { success: true, tabId, text: found };
     await wait(WAIT_FOR_TEXT_POLL_MS);
   }
-  return { success: false, tabId, error: "Timed out waiting for text" };
+  return { success: false, tabId, error: TOOL_ERROR.timedOutWaitingForText };
 }
 
 async function pageContainsText(tabId: number, texts: string[]) {
@@ -382,7 +381,7 @@ async function resolveTabId(value: unknown) {
     active: true,
     currentWindow: true,
   });
-  if (!activeTab?.id) throw new Error("No active tab available");
+  if (!activeTab?.id) throw new Error(TOOL_ERROR.noActiveWebTabFound);
   return activeTab.id;
 }
 
@@ -432,8 +431,8 @@ async function getElementProperties(tabId: number, ids: string[]) {
 async function inputElement(tabId: number, id: string, text: string) {
   const [result] = await chrome.scripting.executeScript({
     target: { tabId },
-    args: [id, text],
-    func: (aiId, value) => {
+    args: [id, text, TOOL_ERROR.elementNotTextInput],
+    func: (aiId, value, elementNotTextInput) => {
       const element = document.querySelector(
         `[data-ai-id="${CSS.escape(aiId)}"]`,
       ) as HTMLInputElement | HTMLTextAreaElement | HTMLElement | null;
@@ -493,7 +492,7 @@ async function inputElement(tabId: number, id: string, text: string) {
       }
       return {
         success: false,
-        error: "Element is not an input, textarea, or contenteditable",
+        error: elementNotTextInput,
       };
     },
   });

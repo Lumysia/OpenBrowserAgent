@@ -1,4 +1,5 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
+import { TOOL_ERROR } from "../shared/tool-errors";
 
 const CDP_VERSION = "1.3";
 const DEFAULT_WAIT_MS = 5000;
@@ -164,11 +165,12 @@ async function newPage(args: Record<string, unknown>) {
 
 async function selectPage(args: Record<string, unknown>) {
   try {
-    if (hasTargetIdOnly(args)) throw new Error("Target ID cannot be focused");
+    if (hasTargetIdOnly(args))
+      throw new Error(TOOL_ERROR.targetIdCannotBeFocused);
     const tab = await chrome.tabs.update(await resolveTabId(args.tabId), {
       active: args.bringToFront !== false,
     });
-    if (!tab?.id) return { success: false, error: "Tab not found" };
+    if (!tab?.id) return { success: false, error: TOOL_ERROR.tabNotFound };
     if (tab.windowId !== undefined)
       await chrome.windows.update(tab.windowId, { focused: true });
     return { success: true, tabId: tab.id };
@@ -188,7 +190,8 @@ async function selectPage(args: Record<string, unknown>) {
 
 async function closePage(args: Record<string, unknown>) {
   try {
-    if (hasTargetIdOnly(args)) throw new Error("Close by target ID");
+    if (hasTargetIdOnly(args))
+      throw new Error(TOOL_ERROR.closeByTargetIdUnsupported);
     const tabId = await resolveTabId(args.tabId);
     await chrome.tabs.remove(tabId);
     return { success: true, tabId };
@@ -234,7 +237,7 @@ async function waitFor(args: Record<string, unknown>) {
       return { success: true, text: texts.find(Boolean) };
     await new Promise((resolve) => setTimeout(resolve, WAIT_FOR_TEXT_POLL_MS));
   }
-  return { success: false, error: "Timed out waiting for text" };
+  return { success: false, error: TOOL_ERROR.timedOutWaitingForText };
 }
 
 async function runtimeEvaluate<T = unknown>(
@@ -342,10 +345,11 @@ async function getPageTargets() {
 
 async function resizePage(args: Record<string, unknown>) {
   try {
-    if (hasTargetIdOnly(args)) throw new Error("Resize by target ID");
+    if (hasTargetIdOnly(args))
+      throw new Error(TOOL_ERROR.resizeByTargetIdUnsupported);
     const tab = await chrome.tabs.get(await resolveTabId(args.tabId));
     if (tab.windowId === undefined)
-      return { success: false, error: "Tab has no window" };
+      return { success: false, error: TOOL_ERROR.tabHasNoWindow };
     await chrome.windows.update(tab.windowId, {
       width: numberInput(args.width),
       height: numberInput(args.height),
@@ -396,13 +400,13 @@ async function mouseActionByAiID(args: Record<string, unknown>) {
     clickedRole?: string;
   }>(
     args,
-    `(aiId) => {
+    `(aiId, elementNotFound, elementHasNoClickableBox) => {
       const element = document.querySelector('[data-ai-id="' + CSS.escape(aiId) + '"]');
-      if (!element) return { success: false, error: "Element not found" };
+      if (!element) return { success: false, error: elementNotFound };
       const target = element.closest('button,a,[role="button"],[role="link"],[role="tab"],[role="listitem"],[role="gridcell"],[tabindex],[contenteditable="true"]') || element;
       target.scrollIntoView({ block: "center", inline: "center" });
       const rect = target.getBoundingClientRect();
-      if (!rect.width || !rect.height) return { success: false, error: "Element has no clickable box" };
+      if (!rect.width || !rect.height) return { success: false, error: elementHasNoClickableBox };
       return {
         success: true,
         x: rect.left + rect.width / 2,
@@ -411,7 +415,7 @@ async function mouseActionByAiID(args: Record<string, unknown>) {
         clickedRole: target.getAttribute("role") || undefined,
       };
     }`,
-    [id],
+    [id, TOOL_ERROR.elementNotFound, TOOL_ERROR.elementHasNoClickableBox],
   );
   if (point.exception) return { success: false, error: point.exception };
   if (!point.value?.success) return point.value || { success: false };
@@ -458,9 +462,9 @@ async function fill(args: Record<string, unknown>) {
   const value = stringInput(args.value);
   const result = await runtimeCall<Record<string, unknown>>(
     args,
-    `(aiId, nextValue) => {
+    `(aiId, nextValue, elementNotFound) => {
       const element = document.querySelector('[data-ai-id="' + CSS.escape(aiId) + '"]');
-      if (!element) return { success: false, error: "Element not found" };
+      if (!element) return { success: false, error: elementNotFound };
       element.focus?.();
       if ("value" in element) element.value = nextValue;
       else element.textContent = nextValue;
@@ -470,7 +474,7 @@ async function fill(args: Record<string, unknown>) {
       element.dispatchEvent(new Event("change", { bubbles: true }));
       return { success: true };
     }`,
-    [id, value],
+    [id, value, TOOL_ERROR.elementNotFound],
   );
   return result.exception
     ? { success: false, error: result.exception }
@@ -581,7 +585,7 @@ async function evaluateScript(
 
 async function executeArbitraryJavaScript(args: Record<string, unknown>) {
   const code = String(args.code || "");
-  if (!code.trim()) return { success: false, error: "Missing code" };
+  if (!code.trim()) return { success: false, error: TOOL_ERROR.missingCode };
   const result = await runtimeCall<Record<string, unknown>>(
     args,
     `async (source) => {
@@ -663,7 +667,7 @@ async function resolveTabId(value: unknown) {
     active: true,
     currentWindow: true,
   });
-  if (!activeTab?.id) throw new Error("No active tab available");
+  if (!activeTab?.id) throw new Error(TOOL_ERROR.noActiveWebTabFound);
   return activeTab.id;
 }
 

@@ -159,6 +159,34 @@ export const ko: LocaleMessages = {
     running: "실행 중",
     done: "완료",
     error: "오류",
+    toolErrors: {
+      NO_ACTIVE_WEB_TAB_FOUND:
+        "활성 웹 페이지 탭을 찾지 못했습니다. 일반 http(s) 탭을 열거나 포커스하거나, 알고 있는 탭 ID를 사용하세요.",
+      ACTIVE_TAB_NOT_WEB_PAGE:
+        "활성 탭은 읽을 수 있는 웹 페이지가 아닙니다. 먼저 http(s) 페이지를 여세요.",
+      NO_TAB_IDS_PROVIDED: "탭 ID가 제공되지 않았습니다.",
+      TAB_NOT_FOUND: "요청한 탭을 찾지 못했습니다.",
+      NO_GROUPABLE_NORMAL_TABS:
+        "그룹화할 수 있는 일반 브라우저 창 탭이 없습니다.",
+      UNKNOWN_TOOL: "알 수 없는 도구: {tool}.",
+      MISSING_URL: "URL이 필요합니다.",
+      UNKNOWN_NAVIGATION_TYPE: "알 수 없는 탐색 유형: {type}.",
+      TAB_HAS_NO_WINDOW: "탭이 브라우저 창에 연결되어 있지 않습니다.",
+      NO_TEXT_PROVIDED: "텍스트가 제공되지 않았습니다.",
+      TIMED_OUT_WAITING_FOR_TEXT:
+        "요청한 텍스트를 기다리다 시간이 초과되었습니다.",
+      ELEMENT_NOT_TEXT_INPUT:
+        "대상 요소가 입력란, 텍스트 영역 또는 편집 가능한 영역이 아닙니다.",
+      TARGET_ID_CANNOT_BE_FOCUSED:
+        "이 CDP 대상은 브라우저 탭으로 포커스할 수 없습니다.",
+      CLOSE_BY_TARGET_ID_UNSUPPORTED:
+        "여기서는 CDP 대상 ID로 닫을 수 없습니다.",
+      RESIZE_BY_TARGET_ID_UNSUPPORTED:
+        "여기서는 CDP 대상 ID로 크기를 조정할 수 없습니다.",
+      ELEMENT_NOT_FOUND: "대상 요소를 찾지 못했습니다.",
+      ELEMENT_HAS_NO_CLICKABLE_BOX: "대상 요소에 클릭 가능한 영역이 없습니다.",
+      MISSING_CODE: "JavaScript 코드가 필요합니다.",
+    },
     generatedImage: "생성된 이미지",
     capturedTabImage: "탭 스크린샷",
     mermaidPreview: "Mermaid 다이어그램 미리보기",
