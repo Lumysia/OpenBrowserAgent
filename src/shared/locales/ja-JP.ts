@@ -639,6 +639,9 @@ export const jaJP: LocaleMessages = {
     enableImageGenerationDescription:
       "アシスタントに画像生成ツールを公開します。",
     imageGenerationSize: "画像サイズ",
+    providerConnection: "接続情報",
+    providerConnectionHint:
+      "プロバイダー名、キー、エンドポイントを設定します。",
     providerName: "プロバイダー名",
     deleteProvider: "プロバイダーを削除",
     apiKey: "APIキー",
@@ -661,6 +664,7 @@ export const jaJP: LocaleMessages = {
     testingModel: "テスト中",
     testModelSuccess: "モデルが正常に応答しました。",
     testModelError: "モデルテストに失敗しました",
+    configuredModels: "設定済みモデル",
     noModelsAddedYet: "モデルはまだ追加されていません。",
     skillsDescription: "スキルでAIにすばやく指示を送信します。",
     newSkill: "新しいスキル",

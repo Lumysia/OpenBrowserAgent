@@ -3,7 +3,7 @@
   gap: 8px;
 }
 .debug-tools-trigger {
-  font-weight: 700;
+  font-weight: 600;
 }
 .debug-section-heading {
   min-width: 0;
@@ -15,7 +15,7 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.25;
 }
 .debug-section-title svg {
@@ -170,9 +170,10 @@
 }
 .model-row-actions {
   min-height: 38px;
-  display: grid;
-  grid-auto-flow: column;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
 }
 .model-row-actions .ui-button-sm {
@@ -203,5 +204,11 @@
     padding-top: 16px;
     border-left: 0;
     border-top: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 720px) {
+  .model-row {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

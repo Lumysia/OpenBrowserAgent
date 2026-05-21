@@ -571,6 +571,8 @@ export const enUS = {
     enableImageGenerationDescription:
       "Expose the image generation tool to the assistant.",
     imageGenerationSize: "Image size",
+    providerConnection: "Connection",
+    providerConnectionHint: "Configure the provider label, key, and endpoint.",
     providerName: "Provider name",
     deleteProvider: "Delete provider",
     apiKey: "API Key",
@@ -593,6 +595,7 @@ export const enUS = {
     testingModel: "Testing",
     testModelSuccess: "Model responded successfully.",
     testModelError: "Model test failed",
+    configuredModels: "Configured models",
     noModelsAddedYet: "No models added yet.",
     skillsDescription:
       "Create reusable browser skills the user or AI can choose for a message.",

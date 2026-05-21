@@ -1,4 +1,10 @@
-import { Check, ChevronDown, Loader2, Trash2 } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  FlaskConical,
+  Loader2,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
@@ -24,6 +30,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 
@@ -61,7 +70,9 @@ export function FetchedModelPicker({
             className="ui-combobox-trigger"
             type="button"
           >
-            <span>{selectedModel?.displayName || emptyText}</span>
+            <span>
+              {selectedModel ? fetchedModelLabel(selectedModel) : emptyText}
+            </span>
             <ChevronDown size={16} />
           </Button>
         </PopoverTrigger>
@@ -82,7 +93,7 @@ export function FetchedModelPicker({
                     setOpen(false);
                   }}
                 >
-                  <span>{model.displayName || model.name}</span>
+                  <span>{fetchedModelLabel(model)}</span>
                   {selectedId === model.id && <Check size={14} />}
                 </CommandItem>
               ))}
@@ -92,6 +103,7 @@ export function FetchedModelPicker({
         </PopoverContent>
       </Popover>
       <Button
+        className="provider-add-selected-button"
         onClick={onAdd}
         disabled={
           !selectedId || !models.some((model) => model.id === selectedId)
@@ -101,6 +113,10 @@ export function FetchedModelPicker({
       </Button>
     </>
   );
+}
+
+function fetchedModelLabel(model: ModelConfig) {
+  return model.displayName?.split("/").slice(1).join("/").trim() || model.name;
 }
 
 export function ModelSelect({
@@ -203,34 +219,57 @@ export function ModelList({
           </div>
           <div className="model-row-actions">
             {onTestModel && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => onTestModel(model)}
-                disabled={testingModelId === model.id}
-              >
-                {testingModelId === model.id ? (
-                  <Loader2 size={14} className="spin" />
-                ) : null}
-                {testingModelId === model.id
-                  ? t.options.testingModel
-                  : t.options.testModel}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="tooltip-button-wrapper">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={
+                        testingModelId === model.id
+                          ? t.options.testingModel
+                          : t.options.testModel
+                      }
+                      onClick={() => onTestModel(model)}
+                      disabled={testingModelId === model.id}
+                    >
+                      {testingModelId === model.id ? (
+                        <Loader2 size={14} className="spin" />
+                      ) : (
+                        <FlaskConical size={14} />
+                      )}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {testingModelId === model.id
+                    ? t.options.testingModel
+                    : t.options.testModel}
+                </TooltipContent>
+              </Tooltip>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() =>
-                onChange({
-                  ...value,
-                  [modelKey]: models.filter(
-                    (candidate) => candidate.id !== model.id,
-                  ),
-                })
-              }
-            >
-              <Trash2 size={14} />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="tooltip-button-wrapper">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t.common.delete}
+                    onClick={() =>
+                      onChange({
+                        ...value,
+                        [modelKey]: models.filter(
+                          (candidate) => candidate.id !== model.id,
+                        ),
+                      })
+                    }
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{t.common.delete}</TooltipContent>
+            </Tooltip>
           </div>
         </div>
       ))}

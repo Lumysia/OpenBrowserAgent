@@ -438,7 +438,7 @@ function AgentWorkspaceEditor({
                     <div className="option-file-item">
                       <FileText size={18} />
                       <span>
-                        <strong>{file.path}</strong>
+                        <span className="option-file-name">{file.path}</span>
                         <small>
                           {file.kind} · utf-8 · {file.content.length} chars
                         </small>

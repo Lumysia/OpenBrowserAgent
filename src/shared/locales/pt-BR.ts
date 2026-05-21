@@ -583,6 +583,9 @@ export const ptBR: LocaleMessages = {
     enableImageGenerationDescription:
       "Disponibiliza a ferramenta de geração de imagens para o assistente.",
     imageGenerationSize: "Tamanho da imagem",
+    providerConnection: "Conexão",
+    providerConnectionHint:
+      "Configure o nome, a chave e o endpoint do provedor.",
     providerName: "Nome do provedor",
     deleteProvider: "Excluir provedor",
     apiKey: "Chave de API",
@@ -606,6 +609,7 @@ export const ptBR: LocaleMessages = {
     testingModel: "Testando",
     testModelSuccess: "O modelo respondeu com sucesso.",
     testModelError: "Falha no teste do modelo",
+    configuredModels: "Modelos configurados",
     noModelsAddedYet: "Nenhum modelo adicionado ainda.",
     skillsDescription:
       "Use ações rápidas para enviar mensagens instantaneamente para a IA.",

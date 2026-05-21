@@ -572,6 +572,8 @@ export const ko: LocaleMessages = {
     enableImageGenerationDescription:
       "어시스턴트에 이미지 생성 도구를 공개합니다.",
     imageGenerationSize: "이미지 크기",
+    providerConnection: "연결 정보",
+    providerConnectionHint: "제공업체 이름, 키, 엔드포인트를 설정합니다.",
     providerName: "제공업체 이름",
     deleteProvider: "제공업체 삭제",
     apiKey: "API 키",
@@ -594,6 +596,7 @@ export const ko: LocaleMessages = {
     testingModel: "테스트 중",
     testModelSuccess: "모델이 정상적으로 응답했습니다.",
     testModelError: "모델 테스트 실패",
+    configuredModels: "구성된 모델",
     noModelsAddedYet: "아직 추가된 모델이 없습니다.",
     skillsDescription: "스킬로 AI에 즉시 메시지를 보냅니다.",
     newSkill: "새 스킬",

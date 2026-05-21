@@ -8,6 +8,7 @@
   color: var(--muted-foreground);
   padding: 4px 8px;
   font-size: 12px;
+  font-weight: 600;
   line-height: 1;
 }
 
@@ -52,7 +53,7 @@
   padding: 14px 16px;
   background: transparent;
   color: var(--foreground);
-  font-weight: 700;
+  font-weight: 600;
   text-align: left;
   transition: background-color 0.16s ease;
 }
@@ -88,18 +89,19 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
+  font-weight: 600;
 }
 .agent-builtin-badge {
   margin-left: 2px;
   padding: 3px 7px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
 }
 .agent-summary small {
   overflow: hidden;
   color: var(--muted-foreground);
-  font-weight: 600;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -143,21 +145,22 @@
   margin: 4px 0 0;
 }
 .provider-model-actions {
-  display: grid;
-  grid-template-columns: auto max-content auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
-.provider-manual-model-actions {
-  grid-template-columns: minmax(0, 1fr) max-content;
+.provider-fetched-model-actions .ui-combobox-trigger {
+  flex: 1 1 min(280px, 100%);
 }
-.provider-manual-model-actions .ui-button {
-  min-width: 132px;
+.provider-add-selected-button {
+  margin-left: auto;
 }
 .ui-combobox-trigger {
   justify-content: space-between;
   min-width: 0;
-  width: max-content;
+  width: 100%;
   max-width: min(360px, 100%);
 }
 .ui-combobox-trigger span {
@@ -249,7 +252,7 @@
   background: var(--accent-solid);
   color: white;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.25;
   white-space: pre-line;
   box-shadow: 0 10px 24px rgba(22, 21, 18, 0.16);
@@ -297,7 +300,7 @@
   background: transparent;
   color: var(--muted-foreground);
   font: inherit;
-  font-weight: 700;
+  font-weight: 600;
   transition:
     background-color 0.14s ease,
     color 0.14s ease;

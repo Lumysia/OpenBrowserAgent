@@ -290,7 +290,9 @@ export function McpPage() {
                     <AccordionItem value="tools">
                       <AccordionTriggerButton>
                         <span className="agent-summary">
-                          <strong>{t.options.mcpTools}</strong>
+                          <CardTitle className="settings-section-title">
+                            {t.options.mcpTools}
+                          </CardTitle>
                           <small>
                             {t.options.mcpTestSuccess.replace(
                               "{count}",

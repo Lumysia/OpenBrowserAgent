@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Cpu, Loader2, Server, Trash2 } from "lucide-react";
+import { Cpu, Loader2, Plus, Server, Trash2 } from "lucide-react";
 import { QUICK_FEEDBACK_MS } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { MANUAL_MODEL_PROVIDER_TYPES } from "../../src/shared/provider-instances";
@@ -19,11 +19,17 @@ import {
   Button,
   Input,
   Label,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { FetchedModelPicker, ModelList } from "./provider-controls";
@@ -54,6 +60,7 @@ export function ProviderAccordion({
   const [fetchedModelSearch, setFetchedModelSearch] = useState("");
   const [fetchedModels, setFetchedModels] = useState<ModelConfig[]>([]);
   const [selectedFetchedModelId, setSelectedFetchedModelId] = useState("");
+  const [customModelOpen, setCustomModelOpen] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [saved, setSaved] = useState(false);
   const [testingModelId, setTestingModelId] = useState("");
@@ -83,13 +90,18 @@ export function ProviderAccordion({
 
   function addModel() {
     const name = modelName.trim();
-    if (!name) return;
+    if (!name) return false;
     const model = modelWithProviderLabel(
       { id: `${providerId}:${name}`, name },
       draft,
     );
     setDraft({ ...draft, models: [...models, model] });
     setModelName("");
+    return true;
+  }
+
+  function addManualModel() {
+    if (addModel()) setCustomModelOpen(false);
   }
 
   async function fetchModels() {
@@ -174,6 +186,12 @@ export function ProviderAccordion({
       <AccordionContent>
         <div className="provider-editor-grid">
           <div className="provider-credentials-panel">
+            <div>
+              <span className="settings-section-title">
+                <Server size={18} /> {t.options.providerConnection}
+              </span>
+              <p className="muted">{t.options.providerConnectionHint}</p>
+            </div>
             <Label>
               {t.options.providerName}
               <Input
@@ -204,12 +222,12 @@ export function ProviderAccordion({
           </div>
           <div className="provider-models-panel">
             <div>
-              <strong className="settings-section-title">
+              <span className="settings-section-title">
                 <Cpu size={18} /> {t.options.models}
-              </strong>
+              </span>
               <p className="muted">{t.options.modelHint}</p>
             </div>
-            <div className="provider-model-actions">
+            <div className="provider-model-actions provider-fetched-model-actions">
               <Button
                 variant="secondary"
                 onClick={fetchModels}
@@ -229,21 +247,59 @@ export function ProviderAccordion({
                   onAdd={addFetchedModel}
                 />
               )}
+              {canAddManualModel && (
+                <Tooltip>
+                  <Popover
+                    open={customModelOpen}
+                    onOpenChange={setCustomModelOpen}
+                  >
+                    <TooltipTrigger asChild>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          aria-label={t.options.addCustom}
+                        >
+                          <Plus size={15} />
+                        </Button>
+                      </PopoverTrigger>
+                    </TooltipTrigger>
+                    <PopoverContent
+                      className="settings-popover-content"
+                      align="end"
+                    >
+                      <div className="settings-popover-menu">
+                        <Label>
+                          {t.options.addCustomModelName}
+                          <Input
+                            value={modelName}
+                            onChange={(event) =>
+                              setModelName(event.target.value)
+                            }
+                            onKeyDown={(event) =>
+                              event.key === "Enter" && addManualModel()
+                            }
+                          />
+                        </Label>
+                        <div className="row">
+                          <Button
+                            disabled={!modelName.trim()}
+                            onClick={addManualModel}
+                          >
+                            <Plus size={15} /> {t.options.addCustom}
+                          </Button>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  <TooltipContent>{t.options.addCustom}</TooltipContent>
+                </Tooltip>
+              )}
             </div>
-            {canAddManualModel && (
-              <div className="provider-model-actions provider-manual-model-actions">
-                <Input
-                  value={modelName}
-                  placeholder={t.options.addCustomModelName}
-                  onChange={(event) => setModelName(event.target.value)}
-                  onKeyDown={(event) => event.key === "Enter" && addModel()}
-                />
-                <Button variant="secondary" onClick={addModel}>
-                  {t.options.addCustom}
-                </Button>
-              </div>
-            )}
             {error && <p className="provider-error-text">{error}</p>}
+            <span className="settings-field-heading">
+              {t.options.configuredModels}
+            </span>
             <ModelList
               models={models}
               value={draft}

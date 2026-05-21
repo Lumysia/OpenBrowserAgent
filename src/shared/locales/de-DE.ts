@@ -635,6 +635,9 @@ export const deDE: LocaleMessages = {
     enableImageGenerationDescription:
       "Stellt dem Assistenten das Bildgenerierungswerkzeug bereit.",
     imageGenerationSize: "Bildgröße",
+    providerConnection: "Verbindung",
+    providerConnectionHint:
+      "Anbietername, Schlüssel und Endpunkt konfigurieren.",
     providerName: "Anbietername",
     deleteProvider: "Anbieter löschen",
     apiKey: "API-Schlüssel",
@@ -659,6 +662,7 @@ export const deDE: LocaleMessages = {
     testingModel: "Test läuft",
     testModelSuccess: "Modell hat erfolgreich geantwortet.",
     testModelError: "Modelltest fehlgeschlagen",
+    configuredModels: "Konfigurierte Modelle",
     noModelsAddedYet: "Noch keine Modelle hinzugefügt.",
     skillsDescription:
       "Senden Sie mit Fähigkeiten sofort Nachrichten an die KI.",

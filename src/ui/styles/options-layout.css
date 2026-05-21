@@ -28,7 +28,7 @@
   border-top: 1px solid var(--border);
   color: var(--muted-foreground);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
 }
 .settings-main {
   flex: 1;
@@ -137,6 +137,12 @@
 .settings-section-title.danger-title {
   color: var(--destructive);
 }
+.settings-field-heading {
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+}
 .row {
   display: flex;
   align-items: center;
@@ -157,7 +163,7 @@
   margin: 0;
   color: var(--muted-foreground);
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 600;
   letter-spacing: 0.01em;
 }
 .agent-capability-grid {
@@ -306,6 +312,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -381,15 +388,15 @@
   display: grid;
   gap: 1px;
 }
-.option-file-item strong,
+.option-file-name,
 .option-file-item small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.option-file-item strong {
+.option-file-name {
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
 }
 .option-file-item small {
   color: var(--muted-foreground);
