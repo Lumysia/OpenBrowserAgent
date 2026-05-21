@@ -37,6 +37,7 @@ export async function runProviderTool({
   workspace,
   responseSources,
   loadedToolNames,
+  availableTools,
 }: {
   toolName: string;
   toolCallId: string;
@@ -50,6 +51,7 @@ export async function runProviderTool({
   workspace?: AgentWorkspace;
   responseSources: ChatSource[];
   loadedToolNames: Set<string>;
+  availableTools: Array<{ function: { name: string } }>;
 }): Promise<ProviderToolRunResult> {
   post(port, {
     type: "chunk",
@@ -61,16 +63,22 @@ export async function runProviderTool({
       input,
     },
   });
-  const rawOutput = await executeContextAwareTool({
-    toolName,
-    input,
-    context: { chatId, messageId, toolCallId },
-    uploadedAttachments,
-    availableSkills,
-    cdpToolsEnabled: !!preferences.cdpToolsEnabled,
-    dangerousCodeExecutionEnabled: !!preferences.dangerousCodeExecutionEnabled,
-    workspace,
-  });
+  const rawOutput = isAvailableTool(toolName, availableTools)
+    ? await executeContextAwareTool({
+        toolName,
+        input,
+        context: { chatId, messageId, toolCallId },
+        uploadedAttachments,
+        availableSkills,
+        cdpToolsEnabled: !!preferences.cdpToolsEnabled,
+        dangerousCodeExecutionEnabled:
+          !!preferences.dangerousCodeExecutionEnabled,
+        workspace,
+      })
+    : {
+        success: false,
+        error: `Tool "${toolName}" is not available to the active agent.`,
+      };
   loadDeferredToolNames(rawOutput, loadedToolNames);
   const visionImage = extractVisionImage(rawOutput);
   const output = attachToolSources(
@@ -94,6 +102,13 @@ export async function runProviderTool({
     },
   });
   return { output, visionImage, responseSources: nextSources };
+}
+
+function isAvailableTool(
+  toolName: string,
+  availableTools: Array<{ function: { name: string } }>,
+) {
+  return availableTools.some((tool) => tool.function.name === toolName);
 }
 
 function loadDeferredToolNames(output: unknown, loadedToolNames: Set<string>) {

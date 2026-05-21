@@ -3,7 +3,6 @@ import type { Dispatch, SetStateAction } from "react";
 import type {
   Agent,
   Chat,
-  ChatMode,
   Preferences,
   RunMetrics,
   SendMessagesRequest,
@@ -24,7 +23,6 @@ export function useParallelChatStreams({
   currentChat,
   chats,
   preferences,
-  mode,
   language,
   uploadedAttachments,
   agent,
@@ -35,10 +33,9 @@ export function useParallelChatStreams({
   currentChat?: Chat;
   chats: Chat[] | undefined;
   preferences?: Preferences;
-  mode: ChatMode;
   language: string | undefined;
   uploadedAttachments: UploadedAttachment[];
-  agent?: Agent;
+  agent: Agent;
   setChats: Dispatch<SetStateAction<Chat[]>>;
   setUnreadCompletedChats: Dispatch<SetStateAction<Record<string, true>>>;
 }) {
@@ -83,7 +80,6 @@ export function useParallelChatStreams({
     lastStreamActivityRef,
     chatsRef,
     preferences,
-    mode,
     language,
     uploadedAttachments,
     agent,

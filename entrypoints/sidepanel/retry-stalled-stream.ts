@@ -3,7 +3,6 @@ import { AI_STREAM_REQUEST_TYPE } from "../../src/shared/types";
 import type {
   Chat,
   ChatMessage,
-  ChatMode,
   Agent,
   Preferences,
   SendMessagesRequest,
@@ -15,7 +14,6 @@ export function retryStalledStream({
   active,
   chats,
   preferences,
-  mode,
   language,
   uploadedAttachments,
   agent,
@@ -25,10 +23,9 @@ export function retryStalledStream({
   active: ActiveStream;
   chats: Chat[];
   preferences?: Preferences;
-  mode: ChatMode;
   language: string;
   uploadedAttachments: UploadedAttachment[];
-  agent?: Agent;
+  agent: Agent;
   appendToAssistant: (
     chatId: string,
     messageId: string,
@@ -61,7 +58,7 @@ export function retryStalledStream({
       messages: [...chat.messages.slice(0, assistantIndex), retryInstruction],
       body: {
         modelId: preferences?.selectedModelId,
-        chatMode: mode,
+        agentCapabilities: agent.capabilities,
         language,
         maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
         context: { uploadedAttachments, agent },

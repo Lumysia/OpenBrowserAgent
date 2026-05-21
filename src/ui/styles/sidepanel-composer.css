@@ -145,7 +145,7 @@
   flex: 1 1 auto;
   max-width: 148px;
 }
-.mode-anchor {
+.agent-anchor {
   position: static;
   flex: 0 0 auto;
 }
@@ -180,7 +180,7 @@
   white-space: nowrap;
   font-size: 11px;
 }
-.composer-mode-trigger {
+.composer-agent-trigger {
   flex: 0 0 auto;
   width: 44px;
   padding: 0;
@@ -297,7 +297,7 @@
 .add-context-popover-content,
 .model-popover-content,
 .reasoning-popover-content,
-.mode-popover-content {
+.agent-popover-content {
   max-width: calc(100vw - 24px);
   overflow: hidden;
   padding: 0;
@@ -376,7 +376,7 @@
   overflow-x: hidden;
   overflow-y: auto;
 }
-.mode-menu {
+.agent-menu {
   width: min(222px, calc(100vw - 24px));
   padding: 6px;
 }
@@ -391,12 +391,12 @@
   gap: 9px;
   padding: 9px 10px;
 }
-.mode-menu-item {
+.agent-menu-item {
   min-height: 50px;
   padding: 9px 10px;
 }
 .model-menu-item > span:not(.model-provider-mark),
-.mode-menu-item > span {
+.agent-menu-item > span {
   flex: 1 1 auto;
 }
 .model-menu-item strong {
@@ -415,7 +415,7 @@
   white-space: nowrap;
 }
 .model-menu-item small,
-.mode-menu-item small {
+.agent-menu-item small {
   font-size: 11px;
 }
 .model-provider-mark {
@@ -431,7 +431,7 @@
   font-weight: 700;
   flex: 0 0 auto;
 }
-.mode-menu-item strong {
+.agent-menu-item strong {
   font-size: 14px;
   font-weight: 500;
 }

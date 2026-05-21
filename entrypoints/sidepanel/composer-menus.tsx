@@ -11,17 +11,15 @@ import {
   X,
 } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
-import { DEFAULT_AGENT_ID } from "../../src/shared/agents";
+import { ASK_AGENT_ID, DEFAULT_AGENT_ID } from "../../src/shared/agents";
 import { providerLabels } from "../../src/shared/types";
 import type {
   AttachmentTab,
   Agent,
-  ChatMode,
   ModelConfig,
   Preferences,
   Skill,
 } from "../../src/shared/types";
-import { CHAT_MODE } from "../../src/shared/types";
 import { getSkillDisplayName } from "../../src/shared/skills";
 import {
   Button,
@@ -268,114 +266,97 @@ export function ModelMenu({
   );
 }
 
-export function ModeMenu({
+export function AgentMenu({
   t,
-  mode,
   agents,
   selectedAgentId,
-  onSelect,
   onSelectAgent,
 }: {
   t: Messages;
-  mode: ChatMode;
   agents: Agent[];
   selectedAgentId?: string;
-  onSelect: (mode: ChatMode) => void;
   onSelectAgent: (agentId: string) => void;
 }) {
   return (
-    <div className="mode-menu">
+    <div className="agent-menu">
       {agents.map((agent) => {
-        const selected =
-          mode === CHAT_MODE.agent && selectedAgentId === agent.id;
+        const selected = selectedAgentId === agent.id;
         return (
           <Button
             variant="ghost"
-            className={`action-list-item mode-menu-item ${selected ? "active" : ""}`}
+            className={`action-list-item agent-menu-item ${selected ? "active" : ""}`}
             key={agent.id}
             onClick={() => onSelectAgent(agent.id)}
           >
-            <Bot size={17} />
+            {agentIcon(agent)}
             <span>
               <strong>{agentDisplayName(agent, t)}</strong>
-              <small>
-                {agent.description || t.options.defaultAgentSummary}
-              </small>
+              <small>{agentDisplayDescription(agent, t)}</small>
             </span>
             {selected && <Check className="menu-check" size={14} />}
           </Button>
         );
       })}
-      <Button
-        variant="ghost"
-        className={`action-list-item mode-menu-item ${mode === CHAT_MODE.ask ? "active" : ""}`}
-        onClick={() => onSelect(CHAT_MODE.ask)}
-      >
-        <HelpCircle size={17} />
-        <span>
-          <strong>{t.words.ask}</strong>
-          <small>{t.sidepanel.askDescription}</small>
-        </span>
-        {mode === CHAT_MODE.ask && <Check className="menu-check" size={14} />}
-      </Button>
     </div>
   );
 }
 
 function agentDisplayName(agent: Agent, t: Messages) {
+  if (agent.id === ASK_AGENT_ID) return t.words.ask;
   return agent.id === DEFAULT_AGENT_ID ? t.words.agent : agent.name;
 }
 
-export function ModeSelector({
+function agentDisplayDescription(agent: Agent, t: Messages) {
+  if (agent.id === ASK_AGENT_ID) return t.sidepanel.askDescription;
+  return agent.description || t.options.defaultAgentSummary;
+}
+
+export function AgentSelector({
   t,
-  mode,
   agents,
   preferences,
   openMenu,
   aiWorking,
-  onSetMode,
   onSetOpenMenu,
   onSetPreferences,
 }: {
   t: Messages;
-  mode: ChatMode;
   agents: Agent[];
   preferences?: Preferences;
   openMenu: ComposerMenu | null;
   aiWorking: boolean;
-  onSetMode: (value: ChatMode) => void;
   onSetOpenMenu: (value: ComposerMenu | null) => void;
   onSetPreferences: (
     value: Preferences | ((previous: Preferences) => Preferences),
   ) => void;
 }) {
+  const selectedAgent =
+    agents.find((agent) => agent.id === preferences?.selectedAgentId) ||
+    agents.find((agent) => agent.id === DEFAULT_AGENT_ID) ||
+    agents[0];
   return (
     <Popover
-      open={openMenu === COMPOSER_MENU.mode}
-      onOpenChange={(open) => onSetOpenMenu(open ? COMPOSER_MENU.mode : null)}
+      open={openMenu === COMPOSER_MENU.agent}
+      onOpenChange={(open) => onSetOpenMenu(open ? COMPOSER_MENU.agent : null)}
     >
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="composer-trigger composer-mode-trigger"
+          className="composer-trigger composer-agent-trigger"
           disabled={aiWorking}
-          aria-label={mode === CHAT_MODE.agent ? t.words.agent : t.words.ask}
+          aria-label={
+            selectedAgent ? agentDisplayName(selectedAgent, t) : t.words.agent
+          }
         >
-          {modeIcon(mode)}
+          {selectedAgent ? agentIcon(selectedAgent, 15) : <Bot size={15} />}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="mode-popover-content" align="end">
-        <ModeMenu
+      <PopoverContent className="agent-popover-content" align="end">
+        <AgentMenu
           t={t}
-          mode={mode}
           agents={agents}
-          selectedAgentId={preferences?.selectedAgentId}
-          onSelect={(nextMode) => {
-            onSetMode(nextMode);
-            onSetOpenMenu(null);
-          }}
+          selectedAgentId={selectedAgent?.id}
           onSelectAgent={(agentId) => {
-            onSetMode(CHAT_MODE.agent);
             onSetPreferences((previous) => ({
               ...previous,
               selectedAgentId: agentId,
@@ -388,11 +369,11 @@ export function ModeSelector({
   );
 }
 
-export function modeIcon(mode: ChatMode) {
-  return mode === CHAT_MODE.agent ? (
-    <Bot size={15} />
+function agentIcon(agent: Agent, size = 17) {
+  return agent.id === ASK_AGENT_ID ? (
+    <HelpCircle size={size} />
   ) : (
-    <HelpCircle size={15} />
+    <Bot size={size} />
   );
 }
 

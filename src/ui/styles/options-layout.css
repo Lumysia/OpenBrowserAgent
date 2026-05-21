@@ -125,6 +125,53 @@
   align-items: center;
   gap: 10px;
 }
+.agent-capability-accordion .ui-accordion-item {
+  box-shadow: none;
+}
+.agent-capability-groups {
+  display: grid;
+  gap: 16px;
+}
+.agent-capability-group {
+  display: grid;
+  gap: 10px;
+}
+.agent-capability-group h3 {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+}
+.agent-capability-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.agent-capability-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 36%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card) 88%, var(--accent-softer));
+}
+.agent-capability-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+.agent-capability-row .ui-switch-root {
+  flex: 0 0 auto;
+}
+@media (max-width: 720px) {
+  .agent-capability-grid {
+    grid-template-columns: 1fr;
+  }
+}
 .button-group {
   display: inline-flex;
   align-items: center;

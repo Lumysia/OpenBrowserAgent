@@ -1,25 +1,18 @@
-import {
-  isAskMode,
-  type Agent,
-  type AgentWorkspace,
-  type ChatMode,
-} from "./types";
+import type { Agent, AgentCapabilities, AgentWorkspace } from "./types";
 import { isMcpServerTested, type McpServerConfig } from "./mcp";
 import {
   renderWorkspaceSystemContext,
   workspaceSoulInstructions,
 } from "./workspace";
 
-export function createSystemPrompt(
-  mode: ChatMode,
-  options: {
-    imageGenerationEnabled?: boolean;
-    agent?: Agent;
-    workspace?: AgentWorkspace;
-    browserTimeZone?: string;
-    mcpServers?: McpServerConfig[];
-  } = {},
-) {
+export function createSystemPrompt(options: {
+  capabilities: AgentCapabilities;
+  imageGenerationEnabled?: boolean;
+  agent?: Agent;
+  workspace?: AgentWorkspace;
+  browserTimeZone?: string;
+  mcpServers?: McpServerConfig[];
+}) {
   const currentDate = new Date().toLocaleDateString("en-CA");
   const browserTimeZone = options.browserTimeZone || currentBrowserTimeZone();
   const imageCapability = options.imageGenerationEnabled
@@ -28,7 +21,7 @@ export function createSystemPrompt(
   const agentProfile = renderAgentProfile(options.agent, options.workspace);
   const workspaceContext = renderWorkspaceSystemContext(options.workspace);
   const mcpProfile = renderMcpProfile(options.mcpServers || []);
-  if (isAskMode(mode)) {
+  if (!options.capabilities.browserAutomation) {
     return `You are OpenBrowserAgent.
 ${agentProfile}
 ${workspaceContext}

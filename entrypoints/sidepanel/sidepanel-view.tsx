@@ -13,7 +13,6 @@ import type {
   Agent,
   Chat,
   ChatMessage,
-  ChatMode,
   ModelConfig,
   Preferences,
   PromptBreakdown,
@@ -66,7 +65,7 @@ export function SidepanelView({
   configuredModels,
   input,
   promptUsage,
-  mode,
+  activeAgent,
   attachedTabs,
   pendingAttachments,
   selectedSkills,
@@ -89,7 +88,6 @@ export function SidepanelView({
   sidepanelRef,
   messagesRef,
   onSetInput,
-  onSetMode,
   onSetOpenMenu,
   onSetAddMenuView,
   onSetShowHistory,
@@ -128,7 +126,7 @@ export function SidepanelView({
   configuredModels: ModelConfig[];
   input: string;
   promptUsage: PromptBreakdown;
-  mode: ChatMode;
+  activeAgent: Agent;
   attachedTabs: AttachmentTab[];
   pendingAttachments: UploadedAttachment[];
   selectedSkills: Skill[];
@@ -151,7 +149,6 @@ export function SidepanelView({
   sidepanelRef: RefObject<HTMLDivElement | null>;
   messagesRef: RefObject<HTMLDivElement | null>;
   onSetInput: (value: string) => void;
-  onSetMode: (value: ChatMode) => void;
   onSetOpenMenu: (value: ComposerMenu | null) => void;
   onSetAddMenuView: (value: AddMenuView) => void;
   onSetShowHistory: (value: boolean) => void;
@@ -219,7 +216,7 @@ export function SidepanelView({
             chats={chats}
             activeChatId={currentChat?.id}
             unreadCompletedChatIds={unreadCompletedChatIds}
-            mode={mode}
+            agent={activeAgent}
             preferences={preferences}
             onSetChats={onSetChats}
             onImportChat={onImportChat}
@@ -405,11 +402,9 @@ export function SidepanelView({
                 t={t}
                 preferences={preferences}
                 configuredModels={configuredModels}
-                mode={mode}
                 agents={agents}
                 openMenu={openMenu}
                 aiWorking={aiWorking}
-                onSetMode={onSetMode}
                 onSetOpenMenu={onSetOpenMenu}
                 onSetPreferences={onSetPreferences}
               />

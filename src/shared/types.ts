@@ -65,6 +65,7 @@ export type Agent = {
   id: string;
   name: string;
   description?: string;
+  capabilities: AgentCapabilities;
   builtin?: boolean;
   createdAt: number;
   updatedAt: number;
@@ -107,16 +108,26 @@ export type SkillFile = {
   updatedAt?: number;
 };
 
-export const CHAT_MODE = {
-  agent: "Agent",
-  ask: "Ask",
-} as const;
-
-export type ChatMode = (typeof CHAT_MODE)[keyof typeof CHAT_MODE];
-
-export function isAskMode(mode: ChatMode) {
-  return mode === CHAT_MODE.ask;
-}
+export type AgentCapabilities = {
+  browserAutomation: boolean;
+  readPageContent: boolean;
+  browserTools: boolean;
+  deferredBrowserTools: boolean;
+  cdpTools: boolean;
+  mcpTools: boolean;
+  mcpManagement: boolean;
+  skillTools: boolean;
+  skillCreation: boolean;
+  workspaceRead: boolean;
+  workspaceWrite: boolean;
+  memoryRead: boolean;
+  memoryWrite: boolean;
+  chatHistoryRead: boolean;
+  chatHistoryWrite: boolean;
+  imageGeneration: boolean;
+  currentTime: boolean;
+  fileUrlRead: boolean;
+};
 
 export type AttachmentTab = {
   id: number;
@@ -312,7 +323,7 @@ export const AI_TEXT_CHUNK_TYPE = {
 
 export type SendMessagesBody = {
   modelId?: string;
-  chatMode: ChatMode;
+  agentCapabilities: AgentCapabilities;
   language?: string;
   maxToolSteps?: number;
   context?: {

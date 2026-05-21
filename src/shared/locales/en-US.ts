@@ -21,7 +21,7 @@ export const enUS = {
   },
   words: {
     newChat: "New Chat",
-    agent: "Agent",
+    agent: "Browse",
     ask: "Ask",
   },
   sidepanel: {
@@ -437,10 +437,41 @@ export const enUS = {
     agentsDescription:
       "Create agent profiles with their own role, behavior, and workspace.",
     defaultAgentSummary:
-      "General browser assistant for browsing, search, and automation.",
+      "Browser operator for browsing, search, and automation.",
+    builtinAgentBadge: "Built-in · no workspace/memory · read-only",
     newAgent: "New Agent",
     agentName: "Agent name",
     agentDescription: "Agent description",
+    agentCapabilities: "Agent capabilities",
+    agentCapabilitiesDescription:
+      "Choose which tools and context this custom agent can use.",
+    agentCapabilityGroups: {
+      browser: "Browser",
+      builtinTools: "Built-in tools and context",
+      skillsAndMcp: "Skills and MCP",
+      workspaceAndMemory: "Workspace and memory",
+      chatHistory: "Chat history",
+    },
+    agentCapabilityLabels: {
+      browserAutomation: "Operate browser",
+      readPageContent: "Read attached pages",
+      browserTools: "Use built-in tools",
+      deferredBrowserTools: "Load advanced browser actions",
+      cdpTools: "CDP tools",
+      mcpTools: "MCP tools",
+      mcpManagement: "MCP management",
+      skillTools: "Skill tools",
+      skillCreation: "Skill creation",
+      workspaceRead: "Workspace read",
+      workspaceWrite: "Workspace write",
+      memoryRead: "Memory read",
+      memoryWrite: "Memory write",
+      chatHistoryRead: "Chat history read",
+      chatHistoryWrite: "Chat history write",
+      imageGeneration: "Generate images",
+      currentTime: "Read current time",
+      fileUrlRead: "Read URL and file links",
+    },
     deleteAgent: "Delete agent",
     agentWorkspace: "Agent workspace",
     agentWorkspaceDescription:

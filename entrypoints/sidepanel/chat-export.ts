@@ -1,5 +1,6 @@
-import { browserTools } from "../../src/background/tool-schema";
+import { browserToolsForPrompt } from "../../src/background/tool-schema";
 import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
+import { usesWorkspaceCapabilities } from "../../src/shared/agents";
 import { createSystemPrompt } from "../../src/shared/system-prompt";
 import {
   CHAT_PART_STATE,
@@ -9,7 +10,7 @@ import {
 import type {
   Chat,
   ChatMessage,
-  ChatMode,
+  Agent,
   ChatPart,
   Preferences,
   RunMetrics,
@@ -40,24 +41,34 @@ type OpenAiImportPayload = {
 
 export function exportChatAsOpenAiJson(
   chat: Chat | undefined,
-  mode: ChatMode,
+  agent: Agent,
   preferences?: Preferences,
 ) {
   if (!chat) return;
   const imageGenerationEnabled = !!preferences?.imageGenerationEnabled;
+  const hasWorkspace = usesWorkspaceCapabilities(agent.capabilities);
   const payload = {
     messages: [
       {
         role: "system" as const,
-        content: createSystemPrompt(mode, { imageGenerationEnabled }),
+        content: createSystemPrompt({
+          capabilities: agent.capabilities,
+          imageGenerationEnabled,
+          agent,
+        }),
       },
       ...chat.messages.flatMap(toOpenAiMessages),
     ],
-    tools: imageGenerationEnabled
-      ? browserTools
-      : browserTools.filter(
-          (tool) => tool.function.name !== BROWSER_TOOL_NAME.generateImage,
-        ),
+    tools: browserToolsForPrompt({
+      capabilities: agent.capabilities,
+      hasUploadedAttachments: true,
+      hasSkills: true,
+      hasWorkspace,
+      imageGenerationEnabled,
+      cdpToolsEnabled: !!preferences?.cdpToolsEnabled,
+      dangerousCodeExecutionEnabled:
+        !!preferences?.dangerousCodeExecutionEnabled,
+    }),
     sources: chat.sources || [],
     metrics: exportMetrics(chat),
     parallel_tool_calls: true,

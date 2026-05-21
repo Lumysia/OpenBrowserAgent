@@ -19,7 +19,7 @@ export const deDE: LocaleMessages = {
     noModelsFound: "Keine Modelle gefunden.",
     confirm: "Bestätigen",
   },
-  words: { newChat: "Neuer Chat", agent: "Agent", ask: "Fragen" },
+  words: { newChat: "Neuer Chat", agent: "Browsen", ask: "Fragen" },
   sidepanel: {
     connectProviderTitle: "Ersten KI-Anbieter verbinden",
     connectProviderDescription:
@@ -495,10 +495,42 @@ export const deDE: LocaleMessages = {
     agentsDescription:
       "Erstellen Sie Agentenprofile mit eigener Rolle, eigenem Verhalten und eigenem Arbeitsbereich.",
     defaultAgentSummary:
-      "Allgemeiner Browserassistent für Browsing, Suche und Automatisierung.",
+      "Browser-Operator für Browsing, Suche und Automatisierung.",
+    builtinAgentBadge:
+      "Integriert · kein Arbeitsbereich/Speicher · schreibgeschützt",
     newAgent: "Neuer Agent",
     agentName: "Agentenname",
     agentDescription: "Agentenbeschreibung",
+    agentCapabilities: "Agentenfähigkeiten",
+    agentCapabilitiesDescription:
+      "Wähle aus, welche Tools und welchen Kontext dieser benutzerdefinierte Agent verwenden darf.",
+    agentCapabilityGroups: {
+      browser: "Browser",
+      builtinTools: "Integrierte Tools und Kontext",
+      skillsAndMcp: "Skills und MCP",
+      workspaceAndMemory: "Arbeitsbereich und Speicher",
+      chatHistory: "Chatverlauf",
+    },
+    agentCapabilityLabels: {
+      browserAutomation: "Browser bedienen",
+      readPageContent: "Angehängte Seiten lesen",
+      browserTools: "Integrierte Tools verwenden",
+      deferredBrowserTools: "Erweiterte Browseraktionen laden",
+      cdpTools: "CDP-Tools",
+      mcpTools: "MCP-Tools",
+      mcpManagement: "MCP-Verwaltung",
+      skillTools: "Skill-Tools",
+      skillCreation: "Skill-Erstellung",
+      workspaceRead: "Arbeitsbereich lesen",
+      workspaceWrite: "Arbeitsbereich schreiben",
+      memoryRead: "Speicher lesen",
+      memoryWrite: "Speicher schreiben",
+      chatHistoryRead: "Chatverlauf lesen",
+      chatHistoryWrite: "Chatverlauf schreiben",
+      imageGeneration: "Bilder erzeugen",
+      currentTime: "Aktuelle Zeit lesen",
+      fileUrlRead: "URL- und Dateilinks lesen",
+    },
     deleteAgent: "Agent löschen",
     agentWorkspace: "Agenten-Arbeitsbereich",
     agentWorkspaceDescription:

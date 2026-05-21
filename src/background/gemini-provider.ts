@@ -2,10 +2,10 @@ import { UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
 import { base64FromDataUrl } from "../shared/attachments";
 import { storage } from "../shared/storage";
 import {
+  type AgentCapabilities,
   type AgentWorkspace,
   type AiStreamResponse,
   type ChatMessage,
-  type ChatMode,
   type McpServerConfig,
   type Skill,
   type UploadedAttachment,
@@ -35,7 +35,7 @@ export async function requestGemini(
   model: { apiKey: string; modelName: string },
   system: string,
   messages: ChatMessage[],
-  mode: ChatMode,
+  capabilities: AgentCapabilities,
   maxToolSteps: number,
   signal: AbortSignal,
   port: chrome.runtime.Port,
@@ -97,7 +97,7 @@ export async function requestGemini(
   const preferences = await storage.preferences.get();
   const latestUserText = latestUserMessageText(messages);
   const toolResolver = createToolResolver({
-    mode,
+    capabilities,
     uploadedAttachments,
     availableSkills,
     preferences,
@@ -183,6 +183,7 @@ export async function requestGemini(
         workspace,
         responseSources,
         loadedToolNames: toolResolver.loadedToolNames,
+        availableTools: availableTools(),
       });
       responseSources = result.responseSources;
       responseParts.push({

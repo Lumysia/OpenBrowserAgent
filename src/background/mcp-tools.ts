@@ -1,8 +1,4 @@
-import {
-  isAskMode,
-  type ChatMode,
-  type McpServerConfig,
-} from "../shared/types";
+import type { AgentCapabilities, McpServerConfig } from "../shared/types";
 import {
   isMcpServerTested,
   normalizeHeaders,
@@ -11,8 +7,11 @@ import {
 import { callMcpServerTool, listMcpServerTools } from "../shared/mcp-client";
 import { storage } from "../shared/storage";
 
-export function mcpToolsForPrompt(mode: ChatMode, servers: McpServerConfig[]) {
-  if (isAskMode(mode)) return [];
+export function mcpToolsForPrompt(
+  capabilities: AgentCapabilities,
+  servers: McpServerConfig[],
+) {
+  if (!capabilities.mcpTools) return [];
   return servers
     .filter((server) => server.enabled && isMcpServerTested(server))
     .flatMap((server) =>

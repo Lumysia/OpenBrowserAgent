@@ -13,7 +13,7 @@ import {
 } from "../shared/skills";
 import { storage } from "../shared/storage";
 import {
-  type ChatMode,
+  type AgentCapabilities,
   type AgentWorkspace,
   type Preferences,
   type McpServerConfig,
@@ -64,8 +64,8 @@ import {
   writeWorkspaceFile,
 } from "./workspace-tools";
 
-export function toolsForMode(
-  mode: ChatMode,
+export function toolsForCapabilities(
+  capabilities: AgentCapabilities,
   hasUploadedAttachments: boolean,
   hasSkills: boolean,
   imageGenerationEnabled: boolean,
@@ -78,7 +78,7 @@ export function toolsForMode(
 ) {
   return [
     ...browserToolsForPrompt({
-      mode,
+      capabilities,
       hasUploadedAttachments,
       hasSkills,
       hasWorkspace: !!workspace,
@@ -88,12 +88,12 @@ export function toolsForMode(
       latestUserText,
       loadedToolNames,
     }),
-    ...mcpToolsForPrompt(mode, mcpServers),
+    ...mcpToolsForPrompt(capabilities, mcpServers),
   ];
 }
 
 export function createToolResolver({
-  mode,
+  capabilities,
   uploadedAttachments,
   availableSkills,
   preferences,
@@ -101,7 +101,7 @@ export function createToolResolver({
   mcpServers = [],
   workspace,
 }: {
-  mode: ChatMode;
+  capabilities: AgentCapabilities;
   uploadedAttachments: UploadedAttachment[];
   availableSkills: Skill[];
   preferences: Preferences;
@@ -113,8 +113,8 @@ export function createToolResolver({
   return {
     loadedToolNames,
     availableTools: () =>
-      toolsForMode(
-        mode,
+      toolsForCapabilities(
+        capabilities,
         uploadedAttachments.length > 0,
         availableSkills.length > 0,
         !!preferences.imageGenerationEnabled,

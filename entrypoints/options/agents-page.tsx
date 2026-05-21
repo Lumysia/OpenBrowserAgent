@@ -11,9 +11,11 @@ import {
   Upload,
 } from "lucide-react";
 import {
-  DEFAULT_AGENT,
+  ASK_AGENT_ID,
+  BUILTIN_AGENTS,
   DEFAULT_AGENT_ID,
   createAgentDraft,
+  isBuiltinAgentId,
 } from "../../src/shared/agents";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
@@ -37,10 +39,12 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  Badge,
   Input,
   Label,
   Textarea,
 } from "../../src/ui/components";
+import { AgentCapabilityEditor } from "./agent-capability-editor";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { SkillFileActionButton } from "./skill-options-components";
 import { downloadWorkspaceZip, importWorkspaceZip } from "./workspace-import";
@@ -76,7 +80,7 @@ export function AgentsPage() {
   }
 
   function deleteAgent(agentId: string) {
-    if (agentId === DEFAULT_AGENT_ID) return;
+    if (isBuiltinAgentId(agentId)) return;
     setAgents((current) => current.filter((agent) => agent.id !== agentId));
     setWorkspaces((current) =>
       current.filter((workspace) => workspace.agentId !== agentId),
@@ -89,13 +93,22 @@ export function AgentsPage() {
   }
 
   function agentDisplayName(agent: Agent) {
+    if (agent.id === ASK_AGENT_ID) return t.words.ask;
     return agent.id === DEFAULT_AGENT_ID ? t.words.agent : agent.name;
   }
 
   function resetDefaultAgents() {
     const now = Date.now();
-    setAgents([{ ...DEFAULT_AGENT, createdAt: now, updatedAt: now }]);
-    setWorkspaces([createWorkspace(DEFAULT_AGENT_ID, now)]);
+    setAgents(
+      BUILTIN_AGENTS.map((agent) => ({
+        ...agent,
+        createdAt: now,
+        updatedAt: now,
+      })),
+    );
+    setWorkspaces(
+      BUILTIN_AGENTS.map((agent) => createWorkspace(agent.id, now)),
+    );
     setPreferences((current) => ({
       ...current,
       selectedAgentId: DEFAULT_AGENT_ID,
@@ -117,8 +130,8 @@ export function AgentsPage() {
       </div>
       <Accordion type="multiple" className="stack">
         {items.map((agent) => {
-          const description =
-            agent.description || t.options.defaultAgentSummary;
+          const description = agentDescription(agent, t);
+          const builtin = isBuiltinAgentId(agent.id);
           return (
             <AccordionItem key={agent.id} value={agent.id}>
               <AccordionTrigger>
@@ -126,6 +139,11 @@ export function AgentsPage() {
                   <span className="agent-summary-title">
                     <Bot size={18} />
                     <span>{agentDisplayName(agent)}</span>
+                    {builtin && (
+                      <Badge className="agent-builtin-badge">
+                        {t.options.builtinAgentBadge}
+                      </Badge>
+                    )}
                   </span>
                   <small>{description}</small>
                 </span>
@@ -135,7 +153,8 @@ export function AgentsPage() {
                   <Label>
                     {t.options.agentName}
                     <Input
-                      value={agent.name}
+                      value={builtin ? agentDisplayName(agent) : agent.name}
+                      disabled={builtin}
                       onChange={(event) =>
                         updateAgent(agent.id, {
                           name: event.currentTarget.value,
@@ -146,7 +165,8 @@ export function AgentsPage() {
                   <Label>
                     {t.options.agentDescription}
                     <Input
-                      value={agent.description || ""}
+                      value={builtin ? description : agent.description || ""}
+                      disabled={builtin}
                       placeholder={t.options.defaultAgentSummary}
                       onChange={(event) =>
                         updateAgent(agent.id, {
@@ -155,37 +175,48 @@ export function AgentsPage() {
                       }
                     />
                   </Label>
-                  <AgentWorkspaceEditor
-                    workspace={
-                      workspaces?.find(
-                        (workspace) => workspace.agentId === agent.id,
-                      ) || createWorkspace(agent.id)
-                    }
-                    title={t.options.agentWorkspace}
-                    description={t.options.agentWorkspaceDescription}
-                    newFileLabel={t.options.agentWorkspaceNewFile}
-                    newFilePlaceholder={
-                      t.options.agentWorkspaceNewFilePlaceholder
-                    }
-                    emptyText={t.options.agentWorkspaceEmpty}
-                    importZipLabel={t.options.importWorkspaceZip}
-                    exportZipLabel={t.options.downloadWorkspaceZip}
-                    editLabel={t.common.edit}
-                    saveLabel={t.common.save}
-                    deleteLabel={t.common.delete}
-                    onChange={(nextWorkspace) =>
-                      setWorkspaces((current) => {
-                        const others = (current || []).filter(
-                          (workspace) => workspace.agentId !== agent.id,
-                        );
-                        return [...others, nextWorkspace];
-                      })
-                    }
-                  />
+                  {!builtin && (
+                    <>
+                      <AgentCapabilityEditor
+                        t={t}
+                        capabilities={agent.capabilities}
+                        onChange={(capabilities) =>
+                          updateAgent(agent.id, { capabilities })
+                        }
+                      />
+                      <AgentWorkspaceEditor
+                        workspace={
+                          workspaces?.find(
+                            (workspace) => workspace.agentId === agent.id,
+                          ) || createWorkspace(agent.id)
+                        }
+                        title={t.options.agentWorkspace}
+                        description={t.options.agentWorkspaceDescription}
+                        newFileLabel={t.options.agentWorkspaceNewFile}
+                        newFilePlaceholder={
+                          t.options.agentWorkspaceNewFilePlaceholder
+                        }
+                        emptyText={t.options.agentWorkspaceEmpty}
+                        importZipLabel={t.options.importWorkspaceZip}
+                        exportZipLabel={t.options.downloadWorkspaceZip}
+                        editLabel={t.common.edit}
+                        saveLabel={t.common.save}
+                        deleteLabel={t.common.delete}
+                        onChange={(nextWorkspace) =>
+                          setWorkspaces((current) => {
+                            const others = (current || []).filter(
+                              (workspace) => workspace.agentId !== agent.id,
+                            );
+                            return [...others, nextWorkspace];
+                          })
+                        }
+                      />
+                    </>
+                  )}
                   <div className="row">
                     <Button
                       variant="outline"
-                      disabled={agent.id === DEFAULT_AGENT_ID}
+                      disabled={builtin}
                       onClick={() => deleteAgent(agent.id)}
                     >
                       <Trash2 size={15} /> {t.options.deleteAgent}
@@ -216,6 +247,11 @@ export function AgentsPage() {
       </Card>
     </div>
   );
+}
+
+function agentDescription(agent: Agent, t: ReturnType<typeof getMessages>) {
+  if (agent.id === ASK_AGENT_ID) return t.sidepanel.askDescription;
+  return agent.description || t.options.defaultAgentSummary;
 }
 
 function AgentWorkspaceEditor({

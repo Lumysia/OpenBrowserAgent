@@ -1,6 +1,9 @@
 import { storage } from "../src/shared/storage";
 import { getMessages } from "../src/shared/i18n";
-import { DEFAULT_AGENT_ID } from "../src/shared/agents";
+import {
+  DEFAULT_AGENT_ID,
+  usesWorkspaceCapabilities,
+} from "../src/shared/agents";
 import { getSkillInstruction } from "../src/shared/skills";
 import { createSystemPrompt } from "../src/shared/system-prompt";
 import {
@@ -28,7 +31,6 @@ import {
   type AiStreamRequest,
   type AiStreamResponse,
   type ChatMessage,
-  type ChatMode,
   type ChatPart,
   type GenerateTitleRequest,
   type PromptBreakdown,
@@ -153,10 +155,14 @@ async function streamAssistantResponse(
   const providerModel = await resolveModel(request.body.modelId);
   const t = getMessages(request.body.language);
   const mcpServers = await storage.mcpServers.get();
-  const workspace = await workspaceForAgent(
-    request.body.context?.agent?.id || DEFAULT_AGENT_ID,
-  );
-  const system = createSystemPrompt(request.body.chatMode, {
+  const capabilities = request.body.agentCapabilities;
+  const workspace = usesWorkspaceCapabilities(capabilities)
+    ? await workspaceForAgent(
+        request.body.context?.agent?.id || DEFAULT_AGENT_ID,
+      )
+    : undefined;
+  const system = createSystemPrompt({
+    capabilities,
     imageGenerationEnabled: !!request.body.context?.imageGenerationEnabled,
     agent: request.body.context?.agent,
     workspace,
@@ -178,7 +184,7 @@ async function streamAssistantResponse(
     providerModel,
     system,
     request.messages,
-    request.body.chatMode,
+    capabilities,
     clampMaxToolSteps(request.body.maxToolSteps),
     signal,
     port,
@@ -230,7 +236,7 @@ function promptBreakdown(
       system.length +
       jsonLength(
         browserToolsForPrompt({
-          mode: request.body.chatMode,
+          capabilities: request.body.agentCapabilities,
           hasUploadedAttachments: attachments.length > 0,
           hasSkills: availableSkills.length > 0,
           hasWorkspace: !!request.body.context?.agent,

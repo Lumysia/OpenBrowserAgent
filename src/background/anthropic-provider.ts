@@ -2,10 +2,10 @@ import { UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
 import { base64FromDataUrl } from "../shared/attachments";
 import { storage } from "../shared/storage";
 import {
+  type AgentCapabilities,
   type AgentWorkspace,
   type AiStreamResponse,
   type ChatMessage,
-  type ChatMode,
   type McpServerConfig,
   type ProviderId,
   type Skill,
@@ -42,7 +42,7 @@ export async function requestAnthropic(
   },
   system: string,
   messages: ChatMessage[],
-  mode: ChatMode,
+  capabilities: AgentCapabilities,
   maxToolSteps: number,
   signal: AbortSignal,
   port: chrome.runtime.Port,
@@ -67,7 +67,7 @@ export async function requestAnthropic(
   const preferences = await storage.preferences.get();
   const latestUserText = latestUserMessageText(messages);
   const toolResolver = createToolResolver({
-    mode,
+    capabilities,
     uploadedAttachments,
     availableSkills,
     preferences,
@@ -199,6 +199,7 @@ export async function requestAnthropic(
         workspace,
         responseSources,
         loadedToolNames: toolResolver.loadedToolNames,
+        availableTools: availableTools(),
       });
       responseSources = result.responseSources;
       toolResults.push({

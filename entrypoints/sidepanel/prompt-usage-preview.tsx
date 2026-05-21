@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Info } from "lucide-react";
 import { browserToolsForPrompt } from "../../src/background/tool-schema";
+import { usesWorkspaceCapabilities } from "../../src/shared/agents";
 import { createSystemPrompt } from "../../src/shared/system-prompt";
 import type { Messages } from "../../src/shared/i18n";
 import { PROMPT_BREAKDOWN_SEGMENT } from "../../src/shared/prompt-breakdown";
@@ -10,7 +11,6 @@ import {
   type AttachmentTab,
   type Agent,
   type Chat,
-  type ChatMode,
   type Preferences,
   type PromptBreakdown,
   type SelectedElement,
@@ -32,7 +32,6 @@ export type PromptUsageEstimate = PromptBreakdown;
 
 export function usePromptUsageEstimate({
   input,
-  mode,
   currentChat,
   preferences,
   attachedTabs,
@@ -44,7 +43,6 @@ export function usePromptUsageEstimate({
   skills,
 }: {
   input: string;
-  mode: ChatMode;
   currentChat?: Chat;
   preferences?: Preferences;
   attachedTabs: AttachmentTab[];
@@ -52,20 +50,24 @@ export function usePromptUsageEstimate({
   pendingAttachments: UploadedAttachment[];
   uploadedAttachments: UploadedAttachment[];
   selectedSkills: Skill[];
-  agent?: Agent;
+  agent: Agent;
   skills: Skill[];
 }): PromptUsageEstimate {
   const [contextChars, setContextChars] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    buildSidepanelContext({ mode, attachedTabs, selectedElements })
+    buildSidepanelContext({
+      capabilities: agent.capabilities,
+      attachedTabs,
+      selectedElements,
+    })
       .then((context) => !cancelled && setContextChars(context.length))
       .catch(() => !cancelled && setContextChars(0));
     return () => {
       cancelled = true;
     };
-  }, [mode, attachedTabs, selectedElements]);
+  }, [agent.capabilities, attachedTabs, selectedElements]);
 
   return useMemo(() => {
     const attachments = uniqueAttachments([
@@ -74,7 +76,8 @@ export function usePromptUsageEstimate({
     ]);
     const enabledSkills = skills.filter(isSkillEnabled);
     const availableSkills = preferences?.autoSelectSkills ? enabledSkills : [];
-    const system = createSystemPrompt(mode, {
+    const system = createSystemPrompt({
+      capabilities: agent.capabilities,
       imageGenerationEnabled: preferences?.imageGenerationEnabled,
       agent,
     });
@@ -82,9 +85,10 @@ export function usePromptUsageEstimate({
       systemPromptChars:
         system.length +
         availableToolSchemaChars({
-          mode,
+          capabilities: agent.capabilities,
           hasUploadedAttachments: attachments.length > 0,
           hasSkills: availableSkills.length > 0,
+          hasWorkspace: usesWorkspaceCapabilities(agent.capabilities),
           imageGenerationEnabled: !!preferences?.imageGenerationEnabled,
           cdpToolsEnabled: !!preferences?.cdpToolsEnabled,
           dangerousCodeExecutionEnabled:
@@ -119,7 +123,6 @@ export function usePromptUsageEstimate({
     };
   }, [
     input,
-    mode,
     currentChat?.messages,
     preferences?.autoSelectSkills,
     preferences?.cdpToolsEnabled,
@@ -226,17 +229,19 @@ function promptSegments(estimate: PromptUsageEstimate, t: Messages) {
 }
 
 function availableToolSchemaChars({
-  mode,
+  capabilities,
   hasUploadedAttachments,
   hasSkills,
+  hasWorkspace,
   imageGenerationEnabled,
   cdpToolsEnabled,
   dangerousCodeExecutionEnabled,
   latestUserText,
 }: {
-  mode: ChatMode;
+  capabilities: Agent["capabilities"];
   hasUploadedAttachments: boolean;
   hasSkills: boolean;
+  hasWorkspace: boolean;
   imageGenerationEnabled: boolean;
   cdpToolsEnabled: boolean;
   dangerousCodeExecutionEnabled: boolean;
@@ -244,10 +249,10 @@ function availableToolSchemaChars({
 }) {
   return jsonLength(
     browserToolsForPrompt({
-      mode,
+      capabilities,
       hasUploadedAttachments,
       hasSkills,
-      hasWorkspace: false,
+      hasWorkspace,
       imageGenerationEnabled,
       cdpToolsEnabled,
       dangerousCodeExecutionEnabled,

@@ -3,10 +3,10 @@ import { MODEL_TEMPERATURE } from "../shared/config";
 import { reasoningRequestParams } from "../shared/reasoning";
 import { storage } from "../shared/storage";
 import {
+  type AgentCapabilities,
   type AgentWorkspace,
   type AiStreamResponse,
   type ChatMessage,
-  type ChatMode,
   type McpServerConfig,
   type ProviderId,
   type Skill,
@@ -44,7 +44,7 @@ export async function requestOpenAIResponses(
   },
   system: string,
   messages: ChatMessage[],
-  mode: ChatMode,
+  capabilities: AgentCapabilities,
   maxToolSteps: number,
   signal: AbortSignal,
   port: chrome.runtime.Port,
@@ -70,7 +70,7 @@ export async function requestOpenAIResponses(
   const preferences = await storage.preferences.get();
   const latestUserText = latestUserMessageText(messages);
   const toolResolver = createToolResolver({
-    mode,
+    capabilities,
     uploadedAttachments,
     availableSkills,
     preferences,
@@ -190,6 +190,7 @@ export async function requestOpenAIResponses(
         workspace,
         responseSources,
         loadedToolNames: toolResolver.loadedToolNames,
+        availableTools: availableTools(),
       });
       responseSources = result.responseSources;
       input.push({

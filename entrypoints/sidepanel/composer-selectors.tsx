@@ -6,41 +6,32 @@ import {
   REASONING_EFFORT_OPTIONS,
   type ReasoningEffort,
 } from "../../src/shared/reasoning";
-import type {
-  Agent,
-  ChatMode,
-  ModelConfig,
-  Preferences,
-} from "../../src/shared/types";
+import type { Agent, ModelConfig, Preferences } from "../../src/shared/types";
 import {
   Button,
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "../../src/ui/components";
-import { ModelMenu, ModeSelector, selectedModelLabel } from "./composer-menus";
+import { AgentSelector, ModelMenu, selectedModelLabel } from "./composer-menus";
 import { COMPOSER_MENU, type ComposerMenu } from "./sidepanel-menu-state";
 
 export function ComposerSelectors({
   t,
   preferences,
   configuredModels,
-  mode,
   agents,
   openMenu,
   aiWorking,
-  onSetMode,
   onSetOpenMenu,
   onSetPreferences,
 }: {
   t: Messages;
   preferences?: Preferences;
   configuredModels: ModelConfig[];
-  mode: ChatMode;
   agents: Agent[];
   openMenu: ComposerMenu | null;
   aiWorking: boolean;
-  onSetMode: (value: ChatMode) => void;
   onSetOpenMenu: (value: ComposerMenu | null) => void;
   onSetPreferences: Dispatch<SetStateAction<Preferences>>;
 }) {
@@ -91,15 +82,13 @@ export function ComposerSelectors({
         onSetOpenMenu={onSetOpenMenu}
         onSetPreferences={onSetPreferences}
       />
-      <div className="selector-anchor mode-anchor">
-        <ModeSelector
+      <div className="selector-anchor agent-anchor">
+        <AgentSelector
           t={t}
-          mode={mode}
           agents={agents}
           preferences={preferences}
           openMenu={openMenu}
           aiWorking={aiWorking}
-          onSetMode={onSetMode}
           onSetOpenMenu={onSetOpenMenu}
           onSetPreferences={onSetPreferences}
         />

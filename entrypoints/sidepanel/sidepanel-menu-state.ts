@@ -2,7 +2,7 @@ export const COMPOSER_MENU = {
   add: "add",
   model: "model",
   reasoning: "reasoning",
-  mode: "mode",
+  agent: "agent",
 } as const;
 
 export type ComposerMenu = (typeof COMPOSER_MENU)[keyof typeof COMPOSER_MENU];

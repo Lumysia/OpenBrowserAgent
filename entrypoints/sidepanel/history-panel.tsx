@@ -1,7 +1,7 @@
 import { ArrowLeft, Download, Pencil, Trash2, Upload, X } from "lucide-react";
 import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { Messages } from "../../src/shared/i18n";
-import type { Chat, ChatMode, Preferences } from "../../src/shared/types";
+import type { Agent, Chat, Preferences } from "../../src/shared/types";
 import { Button, Input, ScrollArea } from "../../src/ui/components";
 import {
   exportChatAsOpenAiJson,
@@ -19,7 +19,7 @@ export function HistoryPanel({
   chats,
   activeChatId,
   unreadCompletedChatIds,
-  mode,
+  agent,
   preferences,
   onSetChats,
   onImportChat,
@@ -31,7 +31,7 @@ export function HistoryPanel({
   chats: Chat[];
   activeChatId?: string;
   unreadCompletedChatIds: Record<string, true>;
-  mode: ChatMode;
+  agent: Agent;
   preferences?: Preferences;
   onSetChats: Dispatch<SetStateAction<Chat[]>>;
   onImportChat: (chat: Chat) => void;
@@ -182,7 +182,7 @@ export function HistoryPanel({
                   aria-label={t.sidepanel.exportChatOpenAi}
                   disabled={!chat.messages.length}
                   onClick={() =>
-                    exportChatAsOpenAiJson(chat, mode, preferences)
+                    exportChatAsOpenAiJson(chat, agent, preferences)
                   }
                 >
                   <Download size={13} />

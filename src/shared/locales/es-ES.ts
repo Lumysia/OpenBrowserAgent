@@ -19,7 +19,7 @@ export const esES: LocaleMessages = {
     noModelsFound: "No se encontraron modelos.",
     confirm: "Confirmar",
   },
-  words: { newChat: "Nuevo chat", agent: "Agente", ask: "Preguntar" },
+  words: { newChat: "Nuevo chat", agent: "Navegar", ask: "Preguntar" },
   sidepanel: {
     connectProviderTitle: "Conecta tu primer proveedor de IA",
     connectProviderDescription:
@@ -473,10 +473,41 @@ export const esES: LocaleMessages = {
     agentsDescription:
       "Crea perfiles de agente con su propio rol, comportamiento y espacio de trabajo.",
     defaultAgentSummary:
-      "Asistente general del navegador para navegación, búsqueda y automatización.",
+      "Operador del navegador para navegar, buscar y automatizar.",
+    builtinAgentBadge: "Integrado · sin espacio/memoria · solo lectura",
     newAgent: "Nuevo agente",
     agentName: "Nombre del agente",
     agentDescription: "Descripción del agente",
+    agentCapabilities: "Capacidades del agente",
+    agentCapabilitiesDescription:
+      "Elige qué herramientas y contexto puede usar este agente personalizado.",
+    agentCapabilityGroups: {
+      browser: "Navegador",
+      builtinTools: "Herramientas integradas y contexto",
+      skillsAndMcp: "Habilidades y MCP",
+      workspaceAndMemory: "Espacio de trabajo y memoria",
+      chatHistory: "Historial de chat",
+    },
+    agentCapabilityLabels: {
+      browserAutomation: "Operar el navegador",
+      readPageContent: "Leer páginas adjuntas",
+      browserTools: "Usar herramientas integradas",
+      deferredBrowserTools: "Cargar acciones avanzadas del navegador",
+      cdpTools: "Herramientas CDP",
+      mcpTools: "Herramientas MCP",
+      mcpManagement: "Gestión MCP",
+      skillTools: "Herramientas de habilidades",
+      skillCreation: "Creación de habilidades",
+      workspaceRead: "Leer espacio de trabajo",
+      workspaceWrite: "Escribir en espacio de trabajo",
+      memoryRead: "Leer memoria",
+      memoryWrite: "Escribir memoria",
+      chatHistoryRead: "Leer historial de chat",
+      chatHistoryWrite: "Escribir historial de chat",
+      imageGeneration: "Generar imágenes",
+      currentTime: "Leer hora actual",
+      fileUrlRead: "Leer enlaces URL y archivos",
+    },
     deleteAgent: "Eliminar agente",
     agentWorkspace: "Espacio de trabajo del agente",
     agentWorkspaceDescription:

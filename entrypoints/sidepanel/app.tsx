@@ -6,11 +6,9 @@ import { isSkillEnabled } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
 import {
   AI_STREAM_REQUEST_TYPE,
-  CHAT_MODE,
   type AiStreamRequest,
   type Chat,
   type ChatMessage,
-  type ChatMode,
   type Skill,
   type UploadedAttachment,
 } from "../../src/shared/types";
@@ -73,7 +71,6 @@ export function SidepanelApp() {
   const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
   const [chats, setChats] = useStoredState(storage.chats);
   const [activeChatId, setActiveChatId] = useState<string>();
-  const [mode, setMode] = useState<ChatMode>(CHAT_MODE.agent);
   const [openMenu, setOpenMenu] = useState<ComposerMenu | null>(null);
   const [addMenuView, setAddMenuView] = useState<AddMenuView>("menu");
   const [showHistory, setShowHistory] = useState(false);
@@ -124,7 +121,6 @@ export function SidepanelApp() {
     currentChat,
     chats,
     preferences,
-    mode,
     language,
     uploadedAttachments,
     agent: activeAgent,
@@ -148,7 +144,7 @@ export function SidepanelApp() {
   } = useComposerContext(chats || []);
   const promptUsage = usePromptUsageEstimate({
     input,
-    mode,
+    agent: activeAgent,
     currentChat,
     preferences,
     attachedTabs,
@@ -156,7 +152,6 @@ export function SidepanelApp() {
     pendingAttachments,
     uploadedAttachments,
     selectedSkills,
-    agent: activeAgent,
     skills: skills || [],
   });
   const { editingMessage, setEditingMessage, editMessage, cancelEditMessage } =
@@ -300,7 +295,7 @@ export function SidepanelApp() {
         interpolateSkillPackage(skill, interpolateSkillVariables),
       );
     const context = await buildSidepanelContext({
-      mode,
+      capabilities: activeAgent.capabilities,
       attachedTabs: sentTabs,
       selectedElements: sentElements,
     });
@@ -383,7 +378,7 @@ export function SidepanelApp() {
       messages: [...baseChat.messages, userMessage],
       body: {
         modelId: preferences?.selectedModelId,
-        chatMode: mode,
+        agentCapabilities: activeAgent.capabilities,
         language,
         maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
         context: {
@@ -414,7 +409,7 @@ export function SidepanelApp() {
       configuredModels={configuredModels}
       input={input}
       promptUsage={promptUsage}
-      mode={mode}
+      activeAgent={activeAgent}
       attachedTabs={attachedTabs}
       pendingAttachments={pendingAttachments}
       uploadedAttachments={uploadedAttachments}
@@ -437,7 +432,6 @@ export function SidepanelApp() {
       sidepanelRef={sidepanelRef}
       messagesRef={messagesRef}
       onSetInput={setInput}
-      onSetMode={setMode}
       onSetOpenMenu={setOpenMenu}
       onSetAddMenuView={setAddMenuView}
       onSetShowHistory={setShowHistory}

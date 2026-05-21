@@ -19,7 +19,7 @@ export const jaJP: LocaleMessages = {
     noModelsFound: "モデルが見つかりません。",
     confirm: "確認",
   },
-  words: { newChat: "新しいチャット", agent: "エージェント", ask: "質問" },
+  words: { newChat: "新しいチャット", agent: "ブラウズ", ask: "質問" },
   sidepanel: {
     connectProviderTitle: "最初のAIプロバイダーを接続",
     connectProviderDescription:
@@ -499,10 +499,41 @@ export const jaJP: LocaleMessages = {
     agentsDescription:
       "独自の役割、動作、ワークスペースを持つエージェントプロファイルを作成します。",
     defaultAgentSummary:
-      "ブラウズ、検索、自動化用の汎用ブラウザーアシスタント。",
+      "ブラウズ、検索、自動化用のブラウザー操作エージェント。",
+    builtinAgentBadge: "組み込み · ワークスペース/メモリなし · 読み取り専用",
     newAgent: "新しいエージェント",
     agentName: "エージェント名",
     agentDescription: "エージェントの説明",
+    agentCapabilities: "エージェント機能",
+    agentCapabilitiesDescription:
+      "このカスタムエージェントが使えるツールとコンテキストを選択します。",
+    agentCapabilityGroups: {
+      browser: "ブラウザー",
+      builtinTools: "組み込みツールとコンテキスト",
+      skillsAndMcp: "スキルと MCP",
+      workspaceAndMemory: "ワークスペースとメモリ",
+      chatHistory: "チャット履歴",
+    },
+    agentCapabilityLabels: {
+      browserAutomation: "ブラウザーを操作",
+      readPageContent: "添付ページを読む",
+      browserTools: "組み込みツールを使用",
+      deferredBrowserTools: "高度なブラウザー操作を読み込む",
+      cdpTools: "CDP ツール",
+      mcpTools: "MCP ツール",
+      mcpManagement: "MCP 管理",
+      skillTools: "スキルツール",
+      skillCreation: "スキル作成",
+      workspaceRead: "ワークスペース読み取り",
+      workspaceWrite: "ワークスペース書き込み",
+      memoryRead: "メモリ読み取り",
+      memoryWrite: "メモリ書き込み",
+      chatHistoryRead: "チャット履歴読み取り",
+      chatHistoryWrite: "チャット履歴書き込み",
+      imageGeneration: "画像を生成",
+      currentTime: "現在時刻を読む",
+      fileUrlRead: "URL とファイルリンクを読む",
+    },
     deleteAgent: "エージェントを削除",
     agentWorkspace: "エージェントワークスペース",
     agentWorkspaceDescription:

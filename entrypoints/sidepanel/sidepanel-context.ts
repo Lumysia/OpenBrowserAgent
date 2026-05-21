@@ -11,12 +11,11 @@ import {
 } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import type {
+  AgentCapabilities,
   AttachmentTab,
   Chat,
-  ChatMode,
   SelectedElement,
 } from "../../src/shared/types";
-import { isAskMode } from "../../src/shared/types";
 import { xmlBlock, xmlTag } from "./format";
 
 export function interpolateSkillVariables(value: string) {
@@ -59,11 +58,11 @@ export function isTabAlreadySentAsSelected(chats: Chat[], tabId: number) {
 }
 
 export async function buildSidepanelContext({
-  mode,
+  capabilities,
   attachedTabs,
   selectedElements,
 }: {
-  mode: ChatMode;
+  capabilities: AgentCapabilities;
   attachedTabs: AttachmentTab[];
   selectedElements: SelectedElement[];
 }) {
@@ -74,7 +73,7 @@ export async function buildSidepanelContext({
   if (attachedTabs.length) {
     const tabBlocks = [];
     for (const tab of attachedTabs)
-      tabBlocks.push(await renderAttachedTab(tab, mode));
+      tabBlocks.push(await renderAttachedTab(tab, capabilities));
     parts.push(xmlBlock("selected_tabs", tabBlocks));
   } else {
     const tab = await getActiveTab();
@@ -131,9 +130,14 @@ function renderSelectedElement(
   ]);
 }
 
-async function renderAttachedTab(tab: AttachmentTab, mode: ChatMode) {
+async function renderAttachedTab(
+  tab: AttachmentTab,
+  capabilities: AgentCapabilities,
+) {
   try {
-    const text = isAskMode(mode) ? await extractTabText(tab.id) : "";
+    const text = capabilities.readPageContent
+      ? await extractTabText(tab.id)
+      : "";
     return renderTabBlock(tab, text);
   } catch {
     return renderTabBlock(tab, "");

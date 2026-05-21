@@ -8,7 +8,6 @@ import {
 import type {
   Agent,
   Chat,
-  ChatMode,
   Preferences,
   SelectedElement,
   Skill,
@@ -107,7 +106,6 @@ export function useAutoRetryStream({
   lastStreamActivityRef,
   chatsRef,
   preferences,
-  mode,
   language,
   uploadedAttachments,
   agent,
@@ -120,10 +118,9 @@ export function useAutoRetryStream({
   lastStreamActivityRef: RefObject<Record<string, number>>;
   chatsRef: RefObject<Chat[]>;
   preferences: Preferences | undefined;
-  mode: ChatMode;
   language: string | undefined;
   uploadedAttachments: UploadedAttachment[];
-  agent?: Agent;
+  agent: Agent;
   appendToAssistant: (
     chatId: string,
     messageId: string,
@@ -144,7 +141,6 @@ export function useAutoRetryStream({
           active,
           chats: chatsRef.current,
           preferences,
-          mode,
           language: language || "en-US",
           uploadedAttachments,
           agent,

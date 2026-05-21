@@ -1,6 +1,6 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 import { ATTACHMENT_TOOL_DESCRIPTION } from "../shared/attachments";
-import { isAskMode, type ChatMode } from "../shared/types";
+import type { AgentCapabilities } from "../shared/types";
 import { cdpTools } from "./cdp-tool-schema";
 
 export const deferredBrowserTools = cdpTools;
@@ -698,7 +698,7 @@ export const allBrowserTools = [...commonBrowserTools, ...cdpTools];
 export const browserTools = [...commonBrowserTools, ...loaderBrowserTools];
 
 export function browserToolsForPrompt({
-  mode,
+  capabilities,
   hasUploadedAttachments,
   hasSkills,
   hasWorkspace,
@@ -708,7 +708,7 @@ export function browserToolsForPrompt({
   latestUserText,
   loadedToolNames = [],
 }: {
-  mode: ChatMode;
+  capabilities: AgentCapabilities;
   hasUploadedAttachments: boolean;
   hasSkills: boolean;
   hasWorkspace: boolean;
@@ -718,41 +718,49 @@ export function browserToolsForPrompt({
   latestUserText?: string;
   loadedToolNames?: string[];
 }) {
-  const askMode = isAskMode(mode);
   const loadedTools = deferredBrowserTools.filter((tool) =>
+    capabilities.deferredBrowserTools &&
     loadedToolNames.includes(tool.function.name),
   );
   return [...browserTools, ...loadedTools].filter((item) => {
     const name = item.function.name;
-    if (name === BROWSER_TOOL_NAME.loadBrowserTools) return !askMode;
+    if (!capabilities.browserTools) return false;
+    if (name === BROWSER_TOOL_NAME.loadBrowserTools)
+      return capabilities.deferredBrowserTools;
     if (name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript)
-      return dangerousCodeExecutionEnabled;
-    if (name.startsWith("cdp") && !cdpToolsEnabled) return false;
+      return capabilities.cdpTools && dangerousCodeExecutionEnabled;
+    if (name.startsWith("cdp")) return capabilities.cdpTools && cdpToolsEnabled;
     if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
       return hasUploadedAttachments;
-    if (name === BROWSER_TOOL_NAME.listSkills) return hasSkills;
-    if (name === BROWSER_TOOL_NAME.createSkill) return !askMode;
-    if (name === BROWSER_TOOL_NAME.readSkill) return hasSkills;
-    if (name === BROWSER_TOOL_NAME.readSkillFile) return hasSkills;
-    if (name === BROWSER_TOOL_NAME.updateSkillFile) return hasSkills;
-    if (name === BROWSER_TOOL_NAME.patchSkillFile) return hasSkills;
+    if (name === BROWSER_TOOL_NAME.listSkills)
+      return capabilities.skillTools && hasSkills;
+    if (name === BROWSER_TOOL_NAME.createSkill)
+      return capabilities.skillTools && capabilities.skillCreation;
+    if (name === BROWSER_TOOL_NAME.readSkill)
+      return capabilities.skillTools && hasSkills;
+    if (name === BROWSER_TOOL_NAME.readSkillFile)
+      return capabilities.skillTools && hasSkills;
+    if (name === BROWSER_TOOL_NAME.updateSkillFile)
+      return capabilities.skillTools && hasSkills && capabilities.skillCreation;
+    if (name === BROWSER_TOOL_NAME.patchSkillFile)
+      return capabilities.skillTools && hasSkills && capabilities.skillCreation;
     if (
       name === BROWSER_TOOL_NAME.listWorkspaceFiles ||
       name === BROWSER_TOOL_NAME.readWorkspaceFile ||
       name === BROWSER_TOOL_NAME.searchWorkspaceFiles
     )
-      return hasWorkspace;
+      return capabilities.workspaceRead && hasWorkspace;
     if (
       name === BROWSER_TOOL_NAME.writeWorkspaceFile ||
       name === BROWSER_TOOL_NAME.patchWorkspaceFile ||
       name === BROWSER_TOOL_NAME.deleteWorkspaceFile
     )
-      return !askMode && hasWorkspace;
+      return capabilities.workspaceWrite && hasWorkspace;
     if (
       name === BROWSER_TOOL_NAME.listMemory ||
       name === BROWSER_TOOL_NAME.listUserProfile
     )
-      return hasWorkspace;
+      return capabilities.memoryRead && hasWorkspace;
     if (
       name === BROWSER_TOOL_NAME.addMemory ||
       name === BROWSER_TOOL_NAME.updateMemory ||
@@ -761,13 +769,14 @@ export function browserToolsForPrompt({
       name === BROWSER_TOOL_NAME.updateUserProfileNote ||
       name === BROWSER_TOOL_NAME.removeUserProfileNote
     )
-      return !askMode && hasWorkspace;
+      return capabilities.memoryWrite && hasWorkspace;
     if (
       name === BROWSER_TOOL_NAME.searchChatHistory ||
       name === BROWSER_TOOL_NAME.readChatThread
     )
-      return hasWorkspace;
-    if (name === BROWSER_TOOL_NAME.deleteChatThread) return !askMode;
+      return capabilities.chatHistoryRead && hasWorkspace;
+    if (name === BROWSER_TOOL_NAME.deleteChatThread)
+      return capabilities.chatHistoryWrite;
     if (
       name === BROWSER_TOOL_NAME.listMcpServers ||
       name === BROWSER_TOOL_NAME.addMcpServer ||
@@ -775,12 +784,14 @@ export function browserToolsForPrompt({
       name === BROWSER_TOOL_NAME.testMcpServer ||
       name === BROWSER_TOOL_NAME.deleteMcpServer
     )
-      return !askMode;
-    if (name === BROWSER_TOOL_NAME.generateImage) return imageGenerationEnabled;
-    if (name === BROWSER_TOOL_NAME.getCurrentTime) return !askMode;
+      return capabilities.mcpManagement;
+    if (name === BROWSER_TOOL_NAME.generateImage)
+      return capabilities.imageGeneration && imageGenerationEnabled;
+    if (name === BROWSER_TOOL_NAME.getCurrentTime)
+      return capabilities.currentTime;
     if (name === BROWSER_TOOL_NAME.readFileFromUrl)
-      return !askMode || containsFileUrl(latestUserText || "");
-    return !askMode;
+      return capabilities.fileUrlRead || containsFileUrl(latestUserText || "");
+    return capabilities.browserAutomation;
   });
 }
 
