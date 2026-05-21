@@ -68,7 +68,7 @@
 }
 .markdown th {
   color: var(--foreground);
-  font-weight: 750;
+  font-weight: 600;
   text-align: left;
   background: color-mix(in srgb, var(--accent-softer) 38%, transparent);
 }
@@ -110,7 +110,7 @@
   min-width: 0;
   color: var(--muted-foreground);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
@@ -201,7 +201,7 @@
   font-style: italic;
 }
 .markdown .hljs-strong {
-  font-weight: 750;
+  font-weight: 600;
 }
 .code-copy {
   position: relative;
@@ -242,7 +242,7 @@
   color: var(--popover-foreground);
   box-shadow: 0 8px 24px var(--shadow);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 500;
   line-height: 1;
   opacity: 0;
   pointer-events: none;
@@ -367,7 +367,7 @@
   background: color-mix(in srgb, var(--accent-soft) 72%, var(--card));
   color: var(--accent-strong);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.2;
   box-shadow: 0 4px 12px
     color-mix(in srgb, var(--accent-shadow) 18%, transparent);

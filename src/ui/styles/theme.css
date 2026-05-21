@@ -296,22 +296,22 @@
 }
 
 :root[data-theme="dark"] .user-bubble {
-  border-color: color-mix(in srgb, var(--accent-strong) 20%, transparent);
+  border-color: color-mix(in srgb, var(--accent-strong) 16%, var(--border));
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, white 7%, transparent),
-      transparent 58%
+      color-mix(in srgb, white 5%, transparent),
+      transparent 64%
     ),
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--accent-solid) 54%, var(--card)),
-      color-mix(in srgb, var(--accent-soft) 74%, var(--background))
+      color-mix(in srgb, var(--accent-soft) 56%, var(--card)),
+      color-mix(in srgb, var(--accent-softer) 42%, var(--card))
     );
-  color: color-mix(in srgb, var(--foreground) 94%, white);
+  color: color-mix(in srgb, var(--accent-strong) 72%, var(--foreground));
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
-    0 10px 24px rgba(0, 0, 0, 0.2);
+    inset 0 1px 0 color-mix(in srgb, white 8%, transparent),
+    0 8px 18px color-mix(in srgb, var(--accent-shadow) 52%, transparent);
 }
 
 :root[data-theme="dark"] .copy-message {
@@ -528,22 +528,22 @@
   }
 
   :root[data-theme="system"] .user-bubble {
-    border-color: color-mix(in srgb, var(--accent-strong) 20%, transparent);
+    border-color: color-mix(in srgb, var(--accent-strong) 16%, var(--border));
     background:
       linear-gradient(
         180deg,
-        color-mix(in srgb, white 7%, transparent),
-        transparent 58%
+        color-mix(in srgb, white 5%, transparent),
+        transparent 64%
       ),
       linear-gradient(
         135deg,
-        color-mix(in srgb, var(--accent-solid) 54%, var(--card)),
-        color-mix(in srgb, var(--accent-soft) 74%, var(--background))
+        color-mix(in srgb, var(--accent-soft) 56%, var(--card)),
+        color-mix(in srgb, var(--accent-softer) 42%, var(--card))
       );
-    color: color-mix(in srgb, var(--foreground) 94%, white);
+    color: color-mix(in srgb, var(--accent-strong) 72%, var(--foreground));
     box-shadow:
-      inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
-      0 10px 24px rgba(0, 0, 0, 0.2);
+      inset 0 1px 0 color-mix(in srgb, white 8%, transparent),
+      0 8px 18px color-mix(in srgb, var(--accent-shadow) 52%, transparent);
   }
 
   :root[data-theme="system"] .copy-message {

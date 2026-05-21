@@ -248,14 +248,21 @@
   z-index: 100;
   max-width: min(220px, calc(100vw - 24px));
   padding: 8px 12px;
-  border-radius: 8px;
-  background: var(--accent-solid);
-  color: white;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 12%, var(--border));
+  border-radius: 9px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent-softer) 32%, transparent),
+      transparent 72%
+    ),
+    color-mix(in srgb, var(--popover) 92%, var(--accent-softer));
+  color: color-mix(in srgb, var(--accent-strong) 64%, var(--foreground));
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.25;
   white-space: pre-line;
-  box-shadow: 0 10px 24px rgba(22, 21, 18, 0.16);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--shadow) 76%, transparent);
   animation: pop-in 0.14s ease both;
 }
 .tooltip-button-wrapper {

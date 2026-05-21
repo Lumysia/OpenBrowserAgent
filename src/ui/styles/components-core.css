@@ -4,7 +4,7 @@
   justify-content: center;
   gap: 8px;
   border-radius: calc(var(--radius) - 3px);
-  font-weight: 650;
+  font-weight: 600;
   outline: none;
   transition:
     transform 0.14s ease,
@@ -24,13 +24,22 @@
 .ui-button:active {
   transform: translateY(0) scale(0.98);
 }
-.ui-button-default {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  box-shadow: 0 8px 20px var(--accent-shadow);
+.ui-button-default,
+.ui-button-soft-accent {
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 24%, var(--border));
+  background: color-mix(in srgb, var(--accent-soft) 72%, var(--card));
+  color: color-mix(in srgb, var(--accent-strong) 82%, var(--foreground));
+  box-shadow: 0 8px 18px
+    color-mix(in srgb, var(--accent-shadow) 62%, transparent);
 }
-.ui-button-default:hover {
-  background: var(--accent-solid);
+.ui-button-default:hover,
+.ui-button-soft-accent:hover {
+  border-color: color-mix(in srgb, var(--accent-strong) 34%, var(--border));
+  background: color-mix(in srgb, var(--accent-hover) 70%, var(--card));
+}
+.ui-button-default:active,
+.ui-button-soft-accent:active {
+  background: color-mix(in srgb, var(--accent-active) 68%, var(--card));
 }
 .ui-button-secondary,
 .ui-button-outline {

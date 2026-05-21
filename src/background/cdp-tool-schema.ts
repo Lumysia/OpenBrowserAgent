@@ -1,5 +1,15 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 
+const contentSliceParameters = {
+  offset: numberProperty("Zero-based character offset for returned content"),
+  limit: numberProperty("Maximum characters to return for this read"),
+} as const;
+
+const listSliceParameters = {
+  offset: numberProperty("Zero-based item offset for returned results"),
+  limit: numberProperty("Maximum items to return"),
+} as const;
+
 export const cdpTools = [
   tool(
     BROWSER_TOOL_NAME.cdpMouseActionByAiID,
@@ -102,7 +112,9 @@ export const cdpTools = [
     },
     ["action"],
   ),
-  tool(BROWSER_TOOL_NAME.cdpListPages, "List open browser pages", {}),
+  tool(BROWSER_TOOL_NAME.cdpListPages, "List open browser pages", {
+    ...listSliceParameters,
+  }),
   tool(
     BROWSER_TOOL_NAME.cdpNewPage,
     "Open a new browser page",
@@ -192,6 +204,7 @@ export const cdpTools = [
       targetId: targetIdProperty(),
       function: stringProperty("Function declaration to execute"),
       expression: stringProperty("Expression fallback"),
+      ...contentSliceParameters,
     },
     ["function"],
   ),
@@ -208,6 +221,7 @@ export const cdpTools = [
         ["MAIN", "ISOLATED"],
         "Execution world. MAIN can affect page scripts; ISOLATED runs in the extension isolated world.",
       ),
+      ...contentSliceParameters,
     },
     ["code"],
   ),
@@ -232,6 +246,7 @@ export const cdpTools = [
       tabId: numberProperty("The tab ID"),
       targetId: targetIdProperty(),
       verbose: { type: "boolean", description: "Include more detail" },
+      ...contentSliceParameters,
     },
     [],
   ),
@@ -241,6 +256,7 @@ export const cdpTools = [
     {
       tabId: numberProperty("The tab ID"),
       targetId: targetIdProperty(),
+      ...listSliceParameters,
     },
     [],
   ),
@@ -260,8 +276,7 @@ export const cdpTools = [
     {
       tabId: numberProperty("The tab ID"),
       targetId: targetIdProperty(),
-      pageIdx: numberProperty("Page index"),
-      pageSize: numberProperty("Page size"),
+      ...listSliceParameters,
     },
     [],
   ),

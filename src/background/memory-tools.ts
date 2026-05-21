@@ -1,6 +1,8 @@
 import { storage } from "../shared/storage";
+import { MEMORY_ENTRY_TEXT_MAX_CHARS } from "../shared/config";
 import type { AgentWorkspace, WorkspaceFile } from "../shared/types";
 import { upsertWorkspaceFile, WORKSPACE_FILE_PATH } from "../shared/workspace";
+import { withListSlice } from "./tool-utils";
 
 type MemoryKind = "memory" | "user";
 
@@ -19,12 +21,18 @@ const MEMORY_PATH = {
   user: WORKSPACE_FILE_PATH.user,
 } as const;
 
-export function listMemory(workspace: AgentWorkspace | undefined) {
-  return listEntries(workspace, "memory");
+export function listMemory(
+  workspace: AgentWorkspace | undefined,
+  input: Record<string, unknown> = {},
+) {
+  return listEntries(workspace, "memory", input);
 }
 
-export function listUserProfile(workspace: AgentWorkspace | undefined) {
-  return listEntries(workspace, "user");
+export function listUserProfile(
+  workspace: AgentWorkspace | undefined,
+  input: Record<string, unknown> = {},
+) {
+  return listEntries(workspace, "user", input);
 }
 
 export async function addMemory(
@@ -69,9 +77,18 @@ export async function removeUserProfileNote(
   return removeEntry(workspace, "user", input);
 }
 
-function listEntries(workspace: AgentWorkspace | undefined, kind: MemoryKind) {
+function listEntries(
+  workspace: AgentWorkspace | undefined,
+  kind: MemoryKind,
+  input: Record<string, unknown>,
+) {
   if (!workspace) return { error: "No current agent workspace" };
-  return { path: MEMORY_PATH[kind], entries: readEntries(workspace, kind) };
+  return withListSlice(
+    { path: MEMORY_PATH[kind] },
+    readEntries(workspace, kind),
+    input,
+    "entries",
+  );
 }
 
 async function addEntry(
@@ -169,7 +186,7 @@ function normalizeEntryText(value: unknown) {
   return String(value || "")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, 800);
+    .slice(0, MEMORY_ENTRY_TEXT_MAX_CHARS);
 }
 
 function createEntryId(kind: MemoryKind) {

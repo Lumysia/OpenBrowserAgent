@@ -64,7 +64,7 @@
   gap: 5px;
   color: var(--muted-foreground);
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
 }
 .tool-title-button {
   width: fit-content;
@@ -89,7 +89,7 @@
 .tool-title strong {
   min-width: 0;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
 }
 .tool-json-popover {
   width: min(520px, calc(100vw - 24px));
@@ -205,7 +205,7 @@
   background: color-mix(in srgb, var(--accent-soft) 72%, var(--card));
   color: var(--accent-strong);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
   overflow: hidden;
   white-space: nowrap;
   transition:

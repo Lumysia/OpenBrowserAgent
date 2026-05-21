@@ -78,6 +78,7 @@
 }
 .edit-mode-banner strong {
   font-size: 14px;
+  font-weight: 600;
   line-height: 1.2;
 }
 .edit-mode-banner small {
@@ -145,6 +146,7 @@
 .history-page-header strong {
   color: var(--foreground);
   font-size: 15px;
+  font-weight: 600;
   line-height: 1.2;
 }
 .history-page-header small {

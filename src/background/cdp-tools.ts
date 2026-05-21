@@ -1,5 +1,6 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 import { TOOL_ERROR } from "../shared/tool-errors";
+import { withContentSlice, withListSlice } from "./tool-utils";
 
 const CDP_VERSION = "1.3";
 const DEFAULT_WAIT_MS = 5000;
@@ -55,7 +56,7 @@ export async function executeCdpTool(
     case BROWSER_TOOL_NAME.cdpMouseActionByAiID:
       return mouseActionByAiID(args);
     case BROWSER_TOOL_NAME.cdpListPages:
-      return listPages();
+      return listPages(args);
     case BROWSER_TOOL_NAME.cdpNewPage:
       return newPage(args);
     case BROWSER_TOOL_NAME.cdpSelectPage:
@@ -93,11 +94,11 @@ export async function executeCdpTool(
     case BROWSER_TOOL_NAME.cdpTakeSnapshot:
       return takeSnapshot(args);
     case BROWSER_TOOL_NAME.cdpListConsoleMessages:
-      return withCdp(args, listConsoleMessages);
+      return withCdp(args, (target) => listConsoleMessages(target, args));
     case BROWSER_TOOL_NAME.cdpGetConsoleMessage:
       return unsupported(name, "Console message history is not persisted yet.");
     case BROWSER_TOOL_NAME.cdpListNetworkRequests:
-      return withCdp(args, listNetworkRequests);
+      return withCdp(args, (target) => listNetworkRequests(target, args));
     case BROWSER_TOOL_NAME.cdpGetNetworkRequest:
       return unsupported(name, "Network request bodies are not persisted yet.");
     default:
@@ -120,7 +121,7 @@ async function withCdp(
   }
 }
 
-async function listPages() {
+async function listPages(args: Record<string, unknown>) {
   const [tabs, targets] = await Promise.all([
     chrome.tabs.query({}).catch(() => []),
     getPageTargets().catch(() => []),
@@ -152,7 +153,7 @@ async function listPages() {
       url: target.url,
       attached: target.attached,
     }));
-  return [...tabPages, ...targetPages];
+  return withListSlice({}, [...tabPages, ...targetPages], args, "pages");
 }
 
 async function newPage(args: Record<string, unknown>) {
@@ -578,7 +579,7 @@ async function evaluateScript(
     returnByValue: true,
   });
   return {
-    result: result.result?.value,
+    ...sliceStringValue("result", result.result?.value, args),
     exception: result.exceptionDetails?.text,
   };
 }
@@ -600,9 +601,13 @@ async function executeArbitraryJavaScript(args: Record<string, unknown>) {
     }`,
     [code],
   );
-  return result.exception
-    ? { success: false, error: result.exception }
-    : result.value || { success: false };
+  if (result.exception) return { success: false, error: result.exception };
+  if (typeof result.value?.value === "string")
+    return {
+      ...result.value,
+      ...withContentSlice({}, result.value.value, args, "value"),
+    };
+  return result.value || { success: false };
 }
 
 async function takeScreenshot(
@@ -625,25 +630,45 @@ async function takeSnapshot(args: Record<string, unknown>) {
   );
   return result.exception
     ? { success: false, error: result.exception }
-    : { snapshot: result.value || "" };
+    : withContentSlice({}, result.value || "", args, "snapshot");
 }
 
-async function listConsoleMessages(target: chrome.debugger.Debuggee) {
+async function listConsoleMessages(
+  target: chrome.debugger.Debuggee,
+  args: Record<string, unknown>,
+) {
   await send(target, "Runtime.enable");
-  return {
-    messages: [],
-    note: "Console collection starts after this call; persistent history is not stored yet.",
-  };
+  return withListSlice(
+    {
+      note: "Console collection starts after this call; persistent history is not stored yet.",
+    },
+    [],
+    args,
+    "messages",
+  );
 }
 
-async function listNetworkRequests(target: chrome.debugger.Debuggee) {
+async function listNetworkRequests(
+  target: chrome.debugger.Debuggee,
+  args: Record<string, unknown>,
+) {
   await send(target, "Network.enable");
   const result = await send(target, "Runtime.evaluate", {
     expression:
       "performance.getEntriesByType('resource').map((r,i)=>({id:i,url:r.name,type:r.initiatorType,duration:r.duration,transferSize:r.transferSize}))",
     returnByValue: true,
   });
-  return { requests: result.result?.value || [] };
+  return withListSlice({}, result.result?.value || [], args, "requests");
+}
+
+function sliceStringValue(
+  field: string,
+  value: unknown,
+  args: Record<string, unknown>,
+) {
+  return typeof value === "string"
+    ? withContentSlice({}, value, args, field)
+    : { [field]: value };
 }
 
 function unsupported(name: string, reason: string) {

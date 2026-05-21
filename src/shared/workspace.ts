@@ -5,6 +5,7 @@ import {
   WORKSPACE_PATH_MAX_LENGTH,
   WORKSPACE_PROMPT_FILE_MAX_CHARS,
   WORKSPACE_SEARCH_RESULT_MAX_CHARS,
+  WORKSPACE_SEARCH_PREVIEW_MAX_CHARS,
   WORKSPACE_TOTAL_MAX_CHARS,
   WORKSPACE_USER_MAX_CHARS,
 } from "./config";
@@ -435,18 +436,35 @@ function workspacePromptInjectionRisk(content: string) {
 
 export function searchWorkspaceFiles(workspace: AgentWorkspace, query: string) {
   const needle = query.trim().toLowerCase();
-  if (!needle) return [];
+  if (!needle)
+    return {
+      results: [],
+      truncated: false,
+      resultCharLimit: WORKSPACE_SEARCH_RESULT_MAX_CHARS,
+      previewCharLimit: WORKSPACE_SEARCH_PREVIEW_MAX_CHARS,
+    };
   const results: Array<{ path: string; line: number; preview: string }> = [];
   let usedChars = 0;
   for (const file of workspace.files) {
     const lines = file.content.split(/\r?\n/);
     for (const [index, line] of lines.entries()) {
       if (!line.toLowerCase().includes(needle)) continue;
-      const preview = line.trim().slice(0, 300);
+      const preview = line.trim().slice(0, WORKSPACE_SEARCH_PREVIEW_MAX_CHARS);
       usedChars += preview.length;
-      if (usedChars > WORKSPACE_SEARCH_RESULT_MAX_CHARS) return results;
+      if (usedChars > WORKSPACE_SEARCH_RESULT_MAX_CHARS)
+        return {
+          results,
+          truncated: true,
+          resultCharLimit: WORKSPACE_SEARCH_RESULT_MAX_CHARS,
+          previewCharLimit: WORKSPACE_SEARCH_PREVIEW_MAX_CHARS,
+        };
       results.push({ path: file.path, line: index + 1, preview });
     }
   }
-  return results;
+  return {
+    results,
+    truncated: false,
+    resultCharLimit: WORKSPACE_SEARCH_RESULT_MAX_CHARS,
+    previewCharLimit: WORKSPACE_SEARCH_PREVIEW_MAX_CHARS,
+  };
 }

@@ -134,6 +134,6 @@
   color: var(--muted-foreground);
 }
 .history-item-action:hover {
-  background: rgba(22, 21, 18, 0.09);
+  background: color-mix(in srgb, var(--secondary) 74%, transparent);
   color: var(--foreground);
 }

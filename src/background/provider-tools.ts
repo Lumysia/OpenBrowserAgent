@@ -153,7 +153,7 @@ export function executeContextAwareTool({
   if (toolName === BROWSER_TOOL_NAME.readUploadedAttachment)
     return readUploadedAttachment(uploadedAttachments, input);
   if (toolName === BROWSER_TOOL_NAME.listSkills)
-    return listSkills(availableSkills);
+    return listSkills(availableSkills, input);
   if (toolName === BROWSER_TOOL_NAME.createSkill)
     return createSkill(availableSkills, input);
   if (toolName === BROWSER_TOOL_NAME.readSkill)
@@ -165,7 +165,7 @@ export function executeContextAwareTool({
   if (toolName === BROWSER_TOOL_NAME.patchSkillFile)
     return patchSkillFile(availableSkills, input);
   if (toolName === BROWSER_TOOL_NAME.listWorkspaceFiles)
-    return listWorkspaceFiles(workspace);
+    return listWorkspaceFiles(workspace, input);
   if (toolName === BROWSER_TOOL_NAME.readWorkspaceFile)
     return readWorkspaceFile(workspace, input);
   if (toolName === BROWSER_TOOL_NAME.writeWorkspaceFile)
@@ -176,7 +176,8 @@ export function executeContextAwareTool({
     return deleteWorkspaceFile(workspace, input);
   if (toolName === BROWSER_TOOL_NAME.searchWorkspaceFiles)
     return searchWorkspaceFiles(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.listMemory) return listMemory(workspace);
+  if (toolName === BROWSER_TOOL_NAME.listMemory)
+    return listMemory(workspace, input);
   if (toolName === BROWSER_TOOL_NAME.addMemory)
     return addMemory(workspace, input);
   if (toolName === BROWSER_TOOL_NAME.updateMemory)
@@ -184,7 +185,7 @@ export function executeContextAwareTool({
   if (toolName === BROWSER_TOOL_NAME.removeMemory)
     return removeMemory(workspace, input);
   if (toolName === BROWSER_TOOL_NAME.listUserProfile)
-    return listUserProfile(workspace);
+    return listUserProfile(workspace, input);
   if (toolName === BROWSER_TOOL_NAME.addUserProfileNote)
     return addUserProfileNote(workspace, input);
   if (toolName === BROWSER_TOOL_NAME.updateUserProfileNote)

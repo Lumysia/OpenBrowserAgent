@@ -41,26 +41,26 @@
 .user-bubble {
   max-width: 100%;
   padding: 10px 14px;
-  border: 1px solid color-mix(in srgb, var(--accent-strong) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 14%, var(--border));
   border-radius: 13px;
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, white 16%, transparent),
-      transparent 54%
+      color-mix(in srgb, white 42%, transparent),
+      transparent 62%
     ),
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--accent-solid) 82%, var(--card)),
-      color-mix(in srgb, var(--accent-strong) 86%, var(--accent-soft))
+      color-mix(in srgb, var(--accent-soft) 72%, var(--card)),
+      color-mix(in srgb, var(--accent-hover) 58%, var(--card))
     );
-  color: white;
+  color: color-mix(in srgb, var(--accent-strong) 82%, var(--foreground));
   font-weight: 500;
   line-height: 1.45;
   overflow-wrap: anywhere;
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 18%, transparent),
-    0 10px 22px color-mix(in srgb, var(--accent-shadow) 86%, transparent);
+    inset 0 1px 0 color-mix(in srgb, white 44%, transparent),
+    0 8px 18px color-mix(in srgb, var(--accent-shadow) 42%, transparent);
 }
 .sent-context-row {
   display: flex;
@@ -101,7 +101,7 @@
   border-radius: 6px;
   object-fit: cover;
   background: white;
-  box-shadow: 0 0 0 1px rgba(22, 21, 18, 0.06);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--shadow) 70%, transparent);
 }
 .sent-tabs-icons img + img,
 .sent-tabs-icons svg + img,
@@ -131,7 +131,7 @@
   gap: 4px;
   color: var(--muted-foreground);
   font-size: 11px;
-  font-weight: 750;
+  font-weight: 600;
 }
 .sent-tabs-chip strong em {
   flex: 0 0 auto;
@@ -216,7 +216,7 @@
 }
 .attachment-replace-row span strong {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 .attachment-replace-row span small {
   color: var(--muted-foreground);
@@ -391,7 +391,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
 }
 .context-card small {
   overflow: hidden;
@@ -407,13 +407,14 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: rgba(22, 21, 18, 0.58);
-  color: white;
+  background: color-mix(in srgb, var(--foreground) 16%, var(--card));
+  color: var(--muted-foreground);
   transition:
     transform 0.14s ease,
     background-color 0.14s ease;
 }
 .context-close:hover {
-  background: rgba(22, 21, 18, 0.76);
+  background: color-mix(in srgb, var(--accent-hover) 68%, var(--card));
+  color: var(--accent-strong);
   transform: scale(1.05);
 }

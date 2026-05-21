@@ -8,18 +8,24 @@ import {
   upsertWorkspaceFile,
   type WorkspacePatchOperation,
 } from "../shared/workspace";
+import { withContentSlice, withListSlice } from "./tool-utils";
 
-export function listWorkspaceFiles(workspace: AgentWorkspace | undefined) {
+export function listWorkspaceFiles(
+  workspace: AgentWorkspace | undefined,
+  input: Record<string, unknown> = {},
+) {
   if (!workspace) return { error: "No current agent workspace" };
-  return {
-    agentId: workspace.agentId,
-    files: workspace.files.map((file) => ({
+  return withListSlice(
+    { agentId: workspace.agentId },
+    workspace.files.map((file) => ({
       path: file.path,
       kind: file.kind,
       chars: file.content.length,
       updatedAt: file.updatedAt,
     })),
-  };
+    input,
+    "files",
+  );
 }
 
 export function readWorkspaceFile(
@@ -30,7 +36,11 @@ export function readWorkspaceFile(
   const path = String(input.path || "").trim();
   const file = workspace.files.find((item) => item.path === path);
   if (!file) return { error: "Workspace file not found", path };
-  return { path: file.path, kind: file.kind, content: file.content };
+  return withContentSlice(
+    { path: file.path, kind: file.kind },
+    file.content,
+    input,
+  );
 }
 
 export async function writeWorkspaceFile(
@@ -117,7 +127,15 @@ export function searchWorkspaceFiles(
 ) {
   if (!workspace) return { error: "No current agent workspace" };
   const query = String(input.query || "").trim();
-  return { query, results: searchWorkspaceFilesHelper(workspace, query) };
+  const result = searchWorkspaceFilesHelper(workspace, query);
+  const paged = withListSlice({ query }, result.results, input, "results");
+  return {
+    ...paged,
+    truncated: paged.truncated || result.truncated,
+    searchTruncated: result.truncated,
+    resultCharLimit: result.resultCharLimit,
+    previewCharLimit: result.previewCharLimit,
+  };
 }
 
 async function persistWorkspace(workspace: AgentWorkspace) {

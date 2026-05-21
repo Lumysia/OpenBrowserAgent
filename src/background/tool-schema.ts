@@ -1,9 +1,32 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 import { ATTACHMENT_TOOL_DESCRIPTION } from "../shared/attachments";
+import { MEMORY_ENTRY_TEXT_MAX_CHARS } from "../shared/config";
 import type { AgentCapabilities } from "../shared/types";
 import { cdpTools } from "./cdp-tool-schema";
 
 export const deferredBrowserTools = cdpTools;
+
+const contentSliceParameters = {
+  offset: {
+    type: "number",
+    description: "Zero-based character offset for returned content",
+  },
+  limit: {
+    type: "number",
+    description: "Maximum characters to return for this read",
+  },
+} as const;
+
+const listSliceParameters = {
+  offset: {
+    type: "number",
+    description: "Zero-based item offset for returned results",
+  },
+  limit: {
+    type: "number",
+    description: "Maximum items to return",
+  },
+} as const;
 
 export const loaderBrowserTools = [
   tool(
@@ -132,16 +155,19 @@ export const commonBrowserTools = [
   }),
   tool(
     BROWSER_TOOL_NAME.getTabContent,
-    "Get the markdown content of a list of tabs",
+    "Get markdown content for a list of tabs. Large markdown is returned as an offset/limit slice per tab.",
     {
       tabIds: {
         type: "array",
         items: { type: "number" },
         description: "The IDs of the tabs to get the content of",
       },
+      ...contentSliceParameters,
     },
   ),
-  tool(BROWSER_TOOL_NAME.getAllTabs, "Get all tabs", {}),
+  tool(BROWSER_TOOL_NAME.getAllTabs, "Get all tabs with optional pagination", {
+    ...listSliceParameters,
+  }),
   tool(BROWSER_TOOL_NAME.closeTab, "Close tabs by ID", {
     tabIds: {
       type: "array",
@@ -256,12 +282,13 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.findAccessableElementsFromTab,
-    "Find all accessible elements from a tab",
+    "Find accessible elements from a tab with optional pagination",
     {
       tabId: {
         type: "number",
         description: "The ID of the tab to find accessible elements from",
       },
+      ...listSliceParameters,
     },
   ),
   tool(
@@ -363,8 +390,8 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.listSkills,
-    "List available skill packages. Call this before readSkill when skills may help the user request.",
-    {},
+    "List available skill packages with optional pagination. Call this before readSkill when skills may help the user request.",
+    { ...listSliceParameters },
   ),
   tool(
     BROWSER_TOOL_NAME.createSkill,
@@ -398,6 +425,7 @@ export const commonBrowserTools = [
         type: "string",
         description: "The id of the available skill to read",
       },
+      ...contentSliceParameters,
     },
     ["skillId"],
   ),
@@ -413,6 +441,7 @@ export const commonBrowserTools = [
         type: "string",
         description: "The skill file path, such as references/example.md",
       },
+      ...contentSliceParameters,
     },
     ["skillId", "path"],
   ),
@@ -481,14 +510,15 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.listWorkspaceFiles,
-    "List private files in the current agent workspace.",
-    {},
+    "List private files in the current agent workspace with optional pagination.",
+    { ...listSliceParameters },
   ),
   tool(
     BROWSER_TOOL_NAME.readWorkspaceFile,
     "Read one private file from the current agent workspace by path.",
     {
       path: { type: "string", description: "Workspace file path" },
+      ...contentSliceParameters,
     },
     ["path"],
   ),
@@ -535,22 +565,26 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.searchWorkspaceFiles,
-    "Search private current-agent workspace files for text.",
+    "Search private current-agent workspace files for text. Returns matching line previews, capped per line and by total result characters.",
     {
       query: { type: "string", description: "Text to search for" },
+      ...listSliceParameters,
     },
     ["query"],
   ),
   tool(
     BROWSER_TOOL_NAME.listMemory,
-    "List compact long-term memory entries for the current agent.",
-    {},
+    "List compact long-term memory entries for the current agent with optional pagination.",
+    { ...listSliceParameters },
   ),
   tool(
     BROWSER_TOOL_NAME.addMemory,
     "Add a stable long-term fact, decision, or lesson. Do not store secrets or temporary task notes.",
     {
-      text: { type: "string", description: "Short durable memory text" },
+      text: {
+        type: "string",
+        description: `Short durable memory text, normalized to at most ${MEMORY_ENTRY_TEXT_MAX_CHARS} characters`,
+      },
     },
     ["text"],
   ),
@@ -559,7 +593,10 @@ export const commonBrowserTools = [
     "Update one existing long-term memory entry by id.",
     {
       id: { type: "string", description: "Memory entry id" },
-      text: { type: "string", description: "Replacement durable memory text" },
+      text: {
+        type: "string",
+        description: `Replacement durable memory text, normalized to at most ${MEMORY_ENTRY_TEXT_MAX_CHARS} characters`,
+      },
     },
     ["id", "text"],
   ),
@@ -573,14 +610,17 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.listUserProfile,
-    "List stable user profile and preference notes for the current agent.",
-    {},
+    "List stable user profile and preference notes for the current agent with optional pagination.",
+    { ...listSliceParameters },
   ),
   tool(
     BROWSER_TOOL_NAME.addUserProfileNote,
     "Add a stable user preference or profile note. Do not store secrets or transient task details.",
     {
-      text: { type: "string", description: "Short durable user profile note" },
+      text: {
+        type: "string",
+        description: `Short durable user profile note, normalized to at most ${MEMORY_ENTRY_TEXT_MAX_CHARS} characters`,
+      },
     },
     ["text"],
   ),
@@ -589,7 +629,10 @@ export const commonBrowserTools = [
     "Update one existing user profile note by id.",
     {
       id: { type: "string", description: "User profile note id" },
-      text: { type: "string", description: "Replacement user profile note" },
+      text: {
+        type: "string",
+        description: `Replacement user profile note, normalized to at most ${MEMORY_ENTRY_TEXT_MAX_CHARS} characters`,
+      },
     },
     ["id", "text"],
   ),
@@ -606,6 +649,7 @@ export const commonBrowserTools = [
     "Search saved chat history by title and message text.",
     {
       query: { type: "string", description: "Text to search for" },
+      offset: { type: "number", description: "Zero-based result offset" },
       limit: { type: "number", description: "Maximum chat results" },
     },
     ["query"],
@@ -615,6 +659,11 @@ export const commonBrowserTools = [
     "Read a saved chat thread by id with truncated message content.",
     {
       chatId: { type: "string", description: "Chat thread id" },
+      offset: {
+        type: "number",
+        description:
+          "Zero-based message offset. Defaults to the latest messages when omitted.",
+      },
       limit: { type: "number", description: "Maximum messages to return" },
     },
     ["chatId"],

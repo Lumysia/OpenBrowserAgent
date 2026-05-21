@@ -203,26 +203,6 @@
     grid-template-columns: 1fr;
   }
 }
-.ui-button-soft-accent,
-.settings-main .ui-button-default,
-.settings-popover-content .ui-button-default {
-  border: 1px solid color-mix(in srgb, var(--accent-strong) 24%, var(--border));
-  background: color-mix(in srgb, var(--accent-soft) 72%, var(--card));
-  color: color-mix(in srgb, var(--accent-strong) 82%, var(--foreground));
-  box-shadow: 0 8px 18px
-    color-mix(in srgb, var(--accent-shadow) 62%, transparent);
-}
-.ui-button-soft-accent:hover,
-.settings-main .ui-button-default:hover,
-.settings-popover-content .ui-button-default:hover {
-  border-color: color-mix(in srgb, var(--accent-strong) 34%, var(--border));
-  background: color-mix(in srgb, var(--accent-hover) 70%, var(--card));
-}
-.ui-button-soft-accent:active,
-.settings-main .ui-button-default:active,
-.settings-popover-content .ui-button-default:active {
-  background: color-mix(in srgb, var(--accent-active) 68%, var(--card));
-}
 .settings-main .ui-switch.checked {
   border-color: color-mix(in srgb, var(--accent-strong) 30%, var(--border));
   background: color-mix(in srgb, var(--accent-soft) 74%, var(--card));

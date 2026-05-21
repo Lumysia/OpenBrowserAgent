@@ -13,7 +13,7 @@ import { findAccessibleElements } from "./accessible-elements";
 import { clickElement } from "./browser-input";
 import { executeCdpTool, isCdpTool } from "./cdp-tools";
 import { allBrowserTools, browserTools } from "./tool-schema";
-import { withTimeout } from "./tool-utils";
+import { withContentSlice, withListSlice, withTimeout } from "./tool-utils";
 
 export { allBrowserTools, browserTools };
 const WAIT_FOR_TEXT_DEFAULT_MS = 5000;
@@ -56,7 +56,12 @@ async function executeBrowserTool(
     }
     case BROWSER_TOOL_NAME.getAllTabs: {
       const tabs = await chrome.tabs.query({});
-      return tabs.map((tab) => ({ id: tab.id, title: tab.title }));
+      return withListSlice(
+        {},
+        tabs.map((tab) => ({ id: tab.id, title: tab.title })),
+        args,
+        "tabs",
+      );
     }
     case BROWSER_TOOL_NAME.closeTab: {
       const tabIds = Array.isArray(args.tabIds)
@@ -131,19 +136,28 @@ async function executeBrowserTool(
         const markdown = isScriptableUrl(tab.url)
           ? await extractMarkdown(tabId)
           : "";
-        contents.push({
-          tabId,
-          title: tab.title || "",
-          url: tab.url || "",
-          markdown,
-        });
+        contents.push(
+          withContentSlice(
+            {
+              tabId,
+              title: tab.title || "",
+              url: tab.url || "",
+            },
+            markdown,
+            args,
+            "markdown",
+          ),
+        );
       }
       return { contents };
     }
     case BROWSER_TOOL_NAME.findAccessableElementsFromTab: {
-      return {
-        elements: await findAccessibleElements(await resolveTabId(args.tabId)),
-      };
+      return withListSlice(
+        {},
+        await findAccessibleElements(await resolveTabId(args.tabId)),
+        args,
+        "elements",
+      );
     }
     case BROWSER_TOOL_NAME.getElementPropertiesByAiID: {
       const ids = Array.isArray(args.ids)

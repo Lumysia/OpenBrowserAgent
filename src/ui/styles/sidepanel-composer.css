@@ -4,7 +4,7 @@
   border: 1px solid var(--composer-border);
   border-radius: 13px;
   background: var(--composer-surface);
-  box-shadow: 0 8px 24px rgba(22, 21, 18, 0.05);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--shadow) 72%, transparent);
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease,
@@ -83,7 +83,7 @@
 }
 .prompt-usage-preview-row strong {
   color: var(--foreground);
-  font-weight: 650;
+  font-weight: 600;
   white-space: nowrap;
 }
 .composer-controls {
@@ -263,6 +263,7 @@
 }
 .queued-messages-header strong {
   font-size: 13px;
+  font-weight: 600;
 }
 .queued-messages-header small {
   color: var(--muted-foreground);
@@ -428,7 +429,7 @@
   background: var(--secondary);
   color: var(--foreground);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   flex: 0 0 auto;
 }
 .agent-menu-item strong {

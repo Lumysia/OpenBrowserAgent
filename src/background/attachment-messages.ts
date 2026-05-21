@@ -21,6 +21,7 @@ import {
   renderAttachmentContext,
   renderUserMessageWithContext,
 } from "./message-helpers";
+import { withContentSlice, withListSlice } from "./tool-utils";
 
 export function createGeminiContents(
   messages: ChatMessage[],
@@ -145,7 +146,7 @@ export function readUploadedAttachment(
   const base64 = base64FromDataUrl(attachment.dataUrl || "");
   const encoding = format === "hex" ? "hex" : "base64";
   if (encoding === "hex")
-    return withSlice(
+    return withPreSliced(
       {
         id: attachment.id,
         name: attachment.name,
@@ -156,7 +157,7 @@ export function readUploadedAttachment(
         note: noteForAttachment(attachment),
       },
       readBase64AsHex(base64, offset, limit),
-      0,
+      offset,
       limit,
       encoding,
       Math.ceil((base64.length * 3) / 4) * 2,
@@ -183,23 +184,30 @@ export function readSkill(skills: Skill[], input: Record<string, unknown>) {
   const skill = skills.find((item) => item.id === skillId);
   if (!skill) return { error: "Skill not found", skillId };
   const entry = getSkillEntryFile(skill);
-  return {
-    id: skill.id,
-    name: getSkillDisplayName(skill),
-    description: skill.description || "",
-    entry: entry?.path || "SKILL.md",
-    content: entry?.content || "",
-    files: skill.files?.map((file) => ({
-      path: file.path,
-      kind: file.kind,
-      size: file.content.length,
-    })),
-  };
+  return withContentSlice(
+    {
+      id: skill.id,
+      name: getSkillDisplayName(skill),
+      description: skill.description || "",
+      entry: entry?.path || "SKILL.md",
+      files: skill.files?.map((file) => ({
+        path: file.path,
+        kind: file.kind,
+        size: file.content.length,
+      })),
+    },
+    entry?.content || "",
+    input,
+  );
 }
 
-export function listSkills(skills: Skill[]) {
-  return {
-    skills: skills.map((skill) => ({
+export function listSkills(
+  skills: Skill[],
+  input: Record<string, unknown> = {},
+) {
+  return withListSlice(
+    {},
+    skills.map((skill) => ({
       id: skill.id,
       name: getSkillDisplayName(skill),
       description: skill.description || "",
@@ -210,7 +218,9 @@ export function listSkills(skills: Skill[]) {
         size: file.content.length,
       })),
     })),
-  };
+    input,
+    "skills",
+  );
 }
 
 export function readSkillFile(skills: Skill[], input: Record<string, unknown>) {
@@ -220,13 +230,16 @@ export function readSkillFile(skills: Skill[], input: Record<string, unknown>) {
   if (!skill) return { error: "Skill not found", skillId };
   const file = skill.files?.find((item) => item.path === path);
   if (!file) return { error: "Skill file not found", skillId, path };
-  return {
-    id: skill.id,
-    name: getSkillDisplayName(skill),
-    path: file.path,
-    kind: file.kind,
-    content: file.content,
-  };
+  return withContentSlice(
+    {
+      id: skill.id,
+      name: getSkillDisplayName(skill),
+      path: file.path,
+      kind: file.kind,
+    },
+    file.content,
+    input,
+  );
 }
 
 function createGeminiParts(
@@ -410,6 +423,24 @@ function withSlice(
     totalLength,
     truncated: offset + limit < totalLength,
     [field]: content.slice(offset, offset + limit),
+  };
+}
+
+function withPreSliced(
+  metadata: Record<string, unknown>,
+  slice: string,
+  offset: number,
+  limit: number,
+  field: string,
+  totalLength: number,
+) {
+  return {
+    ...metadata,
+    offset,
+    limit,
+    totalLength,
+    truncated: offset + limit < totalLength,
+    [field]: slice,
   };
 }
 
