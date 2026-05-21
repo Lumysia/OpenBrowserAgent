@@ -40,7 +40,7 @@ Use this skill for browser automation tasks that involve inspecting pages, click
    - Track tabs opened by this task.
    - Close opened tabs that are no longer useful, such as duplicate search pages, dead ends, transient login/interstitial pages, and pages whose information has already been captured.
    - Keep the final useful tab or small set of useful tabs open when they support the user's goal.
-   - If the user asks to use, open, or end on a specific tab/page, switch to that tab before finishing.
+   - If the user explicitly asks to open, use, or end on a specific tab/page, use \`goToTab\` to focus that requested tab before finishing.
 8. Use deferred browser tools when common tools do not provide the needed page control or evidence.
 `,
       },

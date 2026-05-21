@@ -12,6 +12,7 @@ import {
 } from "../../src/shared/storage-debug";
 import { storage } from "../../src/shared/storage";
 import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
+import type { AgentCapabilities } from "../../src/shared/types";
 import {
   Accordion,
   AccordionContent,
@@ -242,10 +243,15 @@ function toolStatus({
 }) {
   if ((preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS) <= 0)
     return { enabled: false, reason: t.options.debugToolStepsDisabled };
-  if (name === BROWSER_TOOL_NAME.generateImage)
+  if (!activeAgent.capabilities.browserTools)
+    return capabilityStatus(activeAgent.capabilities, ["browserTools"], t);
+  if (name === BROWSER_TOOL_NAME.generateImage) {
+    if (!activeAgent.capabilities.imageGeneration)
+      return capabilityStatus(activeAgent.capabilities, ["imageGeneration"], t);
     return preferences?.imageGenerationEnabled
-      ? { enabled: true, reason: t.options.debugToolImageGenerationEnabled }
+      ? capabilityStatus(activeAgent.capabilities, ["imageGeneration"], t)
       : { enabled: false, reason: t.options.debugToolImageGenerationDisabled };
+  }
   if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
     return { enabled: false, reason: t.options.debugToolAttachmentsRequired };
   if (
@@ -255,10 +261,91 @@ function toolStatus({
     name === BROWSER_TOOL_NAME.updateSkillFile ||
     name === BROWSER_TOOL_NAME.patchSkillFile
   )
-    return enabledSkillCount && activeAgent.capabilities.skillTools
-      ? { enabled: true, reason: t.options.debugToolSkillsEnabled }
+    return enabledSkillCount
+      ? capabilityStatus(
+          activeAgent.capabilities,
+          skillToolCapabilities(name),
+          t,
+        )
       : { enabled: false, reason: t.options.debugToolSkillsDisabled };
-  if (name === BROWSER_TOOL_NAME.readFileFromUrl)
-    return { enabled: true, reason: t.options.debugToolAlwaysAvailable };
-  return { enabled: true, reason: t.options.debugToolAgentModeAvailable };
+  return capabilityStatus(activeAgent.capabilities, toolCapabilities(name), t);
+}
+
+function capabilityStatus(
+  capabilities: AgentCapabilities,
+  required: Array<keyof AgentCapabilities>,
+  t: ReturnType<typeof getMessages>,
+) {
+  const label = required
+    .map((key) => t.options.agentCapabilityLabels[key])
+    .join(" + ");
+  const enabled = required.every((key) => capabilities[key]);
+  return {
+    enabled,
+    reason: (enabled
+      ? t.options.debugToolCapabilityEnabled
+      : t.options.debugToolCapabilityDisabled
+    ).replace("{capability}", label),
+  };
+}
+
+function skillToolCapabilities(name: string): Array<keyof AgentCapabilities> {
+  if (
+    name === BROWSER_TOOL_NAME.createSkill ||
+    name === BROWSER_TOOL_NAME.updateSkillFile ||
+    name === BROWSER_TOOL_NAME.patchSkillFile
+  )
+    return ["skillTools", "skillCreation"];
+  return ["skillTools"];
+}
+
+function toolCapabilities(name: string): Array<keyof AgentCapabilities> {
+  if (name === BROWSER_TOOL_NAME.loadBrowserTools)
+    return ["deferredBrowserTools"];
+  if (name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript)
+    return ["cdpTools", "dangerousCodeExecution"];
+  if (name.startsWith("cdp")) return ["cdpTools"];
+  if (name === BROWSER_TOOL_NAME.readFileFromUrl) return ["fileUrlRead"];
+  if (
+    name === BROWSER_TOOL_NAME.listWorkspaceFiles ||
+    name === BROWSER_TOOL_NAME.readWorkspaceFile ||
+    name === BROWSER_TOOL_NAME.searchWorkspaceFiles
+  )
+    return ["workspaceRead"];
+  if (
+    name === BROWSER_TOOL_NAME.writeWorkspaceFile ||
+    name === BROWSER_TOOL_NAME.patchWorkspaceFile ||
+    name === BROWSER_TOOL_NAME.deleteWorkspaceFile
+  )
+    return ["workspaceWrite"];
+  if (
+    name === BROWSER_TOOL_NAME.listMemory ||
+    name === BROWSER_TOOL_NAME.listUserProfile
+  )
+    return ["memoryRead"];
+  if (
+    name === BROWSER_TOOL_NAME.addMemory ||
+    name === BROWSER_TOOL_NAME.updateMemory ||
+    name === BROWSER_TOOL_NAME.removeMemory ||
+    name === BROWSER_TOOL_NAME.addUserProfileNote ||
+    name === BROWSER_TOOL_NAME.updateUserProfileNote ||
+    name === BROWSER_TOOL_NAME.removeUserProfileNote
+  )
+    return ["memoryWrite"];
+  if (
+    name === BROWSER_TOOL_NAME.searchChatHistory ||
+    name === BROWSER_TOOL_NAME.readChatThread
+  )
+    return ["chatHistoryRead"];
+  if (name === BROWSER_TOOL_NAME.deleteChatThread) return ["chatHistoryWrite"];
+  if (
+    name === BROWSER_TOOL_NAME.listMcpServers ||
+    name === BROWSER_TOOL_NAME.addMcpServer ||
+    name === BROWSER_TOOL_NAME.updateMcpServer ||
+    name === BROWSER_TOOL_NAME.testMcpServer ||
+    name === BROWSER_TOOL_NAME.deleteMcpServer
+  )
+    return ["mcpManagement"];
+  if (name === BROWSER_TOOL_NAME.getCurrentTime) return ["currentTime"];
+  return ["browserAutomation"];
 }

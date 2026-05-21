@@ -686,12 +686,11 @@ export const enUS = {
     debugToolAvailable: "Available",
     debugToolUnavailable: "Unavailable",
     debugToolRequired: "Required",
-    debugToolAlwaysAvailable: "Available whenever tool calls are enabled.",
-    debugToolAgentModeAvailable: "Available in Agent mode.",
-    debugToolImageGenerationEnabled: "Image generation is enabled.",
+    debugToolCapabilityEnabled: "Controlled by Agent capability: {capability}.",
+    debugToolCapabilityDisabled: "Enable Agent capability: {capability}.",
     debugToolImageGenerationDisabled: "Enable image generation in Providers.",
-    debugToolSkillsEnabled: "Auto-select Skills has enabled Skills.",
-    debugToolSkillsDisabled: "Needs Auto-select Skills and enabled Skills.",
+    debugToolSkillsDisabled:
+      "Needs enabled Skills and the required Agent capability.",
     debugToolAttachmentsRequired:
       "Requires uploaded attachments in the current message.",
     debugToolStepsDisabled: "Max Tool Steps is 0.",

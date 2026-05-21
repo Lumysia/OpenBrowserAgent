@@ -752,13 +752,13 @@ export const jaJP: LocaleMessages = {
     debugToolAvailable: "利用可能",
     debugToolUnavailable: "利用不可",
     debugToolRequired: "必須",
-    debugToolAlwaysAvailable: "ツール呼び出しが有効なときに利用できます。",
-    debugToolAgentModeAvailable: "エージェントモードで利用できます。",
-    debugToolImageGenerationEnabled: "画像生成が有効です。",
+    debugToolCapabilityEnabled:
+      "エージェント能力で制御されています: {capability}。",
+    debugToolCapabilityDisabled:
+      "エージェント能力を有効にしてください: {capability}。",
     debugToolImageGenerationDisabled:
       "プロバイダーで画像生成を有効にしてください。",
-    debugToolSkillsEnabled: "自動選択スキルに有効なスキルがあります。",
-    debugToolSkillsDisabled: "自動選択スキルと有効なスキルが必要です。",
+    debugToolSkillsDisabled: "有効なスキルと必要なエージェント能力が必要です。",
     debugToolAttachmentsRequired:
       "現在のメッセージにアップロード済み添付ファイルが必要です。",
     debugToolStepsDisabled: "最大ツールステップ数が0です。",

@@ -729,16 +729,14 @@ export const esES: LocaleMessages = {
     debugToolAvailable: "Disponible",
     debugToolUnavailable: "No disponible",
     debugToolRequired: "Obligatorio",
-    debugToolAlwaysAvailable:
-      "Disponible cuando las llamadas a herramientas están activadas.",
-    debugToolAgentModeAvailable: "Disponible en modo Agente.",
-    debugToolImageGenerationEnabled: "La generación de imágenes está activada.",
+    debugToolCapabilityEnabled:
+      "Controlado por la capacidad del agente: {capability}.",
+    debugToolCapabilityDisabled:
+      "Activa la capacidad del agente: {capability}.",
     debugToolImageGenerationDisabled:
       "Activa la generación de imágenes en Proveedores.",
-    debugToolSkillsEnabled:
-      "La selección automática de habilidades tiene habilidades activadas.",
     debugToolSkillsDisabled:
-      "Requiere selección automática de habilidades y habilidades activadas.",
+      "Requiere habilidades activadas y la capacidad de agente necesaria.",
     debugToolAttachmentsRequired:
       "Requiere adjuntos cargados en el mensaje actual.",
     debugToolStepsDisabled: "Max Tool Steps es 0.",

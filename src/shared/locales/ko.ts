@@ -684,14 +684,12 @@ export const ko: LocaleMessages = {
     debugToolAvailable: "사용 가능",
     debugToolUnavailable: "사용 불가",
     debugToolRequired: "필수",
-    debugToolAlwaysAvailable:
-      "도구 호출이 활성화되어 있으면 사용할 수 있습니다.",
-    debugToolAgentModeAvailable: "에이전트 모드에서 사용할 수 있습니다.",
-    debugToolImageGenerationEnabled: "이미지 생성이 활성화되어 있습니다.",
+    debugToolCapabilityEnabled: "에이전트 능력으로 제어됨: {capability}.",
+    debugToolCapabilityDisabled: "에이전트 능력을 활성화하세요: {capability}.",
     debugToolImageGenerationDisabled:
       "제공업체에서 이미지 생성을 활성화하세요.",
-    debugToolSkillsEnabled: "자동 선택 스킬에 활성화된 스킬이 있습니다.",
-    debugToolSkillsDisabled: "자동 선택 스킬과 활성화된 스킬이 필요합니다.",
+    debugToolSkillsDisabled:
+      "활성화된 스킬과 필요한 에이전트 능력이 필요합니다.",
     debugToolAttachmentsRequired:
       "현재 메시지에 업로드된 첨부 파일이 필요합니다.",
     debugToolStepsDisabled: "최대 도구 단계가 0입니다.",

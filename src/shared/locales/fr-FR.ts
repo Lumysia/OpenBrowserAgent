@@ -754,16 +754,14 @@ export const frFR: LocaleMessages = {
     debugToolAvailable: "Disponible",
     debugToolUnavailable: "Indisponible",
     debugToolRequired: "Requis",
-    debugToolAlwaysAvailable:
-      "Disponible quand les appels d'outils sont activés.",
-    debugToolAgentModeAvailable: "Disponible en mode Agent.",
-    debugToolImageGenerationEnabled: "La génération d'images est activée.",
+    debugToolCapabilityEnabled:
+      "Contrôlé par la capacité de l'agent : {capability}.",
+    debugToolCapabilityDisabled:
+      "Activez la capacité de l'agent : {capability}.",
     debugToolImageGenerationDisabled:
       "Activez la génération d'images dans les fournisseurs.",
-    debugToolSkillsEnabled:
-      "La sélection auto des compétences contient des compétences activées.",
     debugToolSkillsDisabled:
-      "Nécessite la sélection auto des compétences et des compétences activées.",
+      "Nécessite des compétences activées et la capacité d'agent requise.",
     debugToolAttachmentsRequired:
       "Nécessite des pièces jointes importées dans le message actuel.",
     debugToolStepsDisabled: "Max Tool Steps vaut 0.",
