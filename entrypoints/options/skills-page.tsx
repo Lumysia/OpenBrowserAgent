@@ -357,20 +357,20 @@ export function SkillsPage() {
                 <SkillStatusPanel skill={draftFor(skill)} />
                 <div className="skill-identity-panel stack">
                   <Label>
-                    {t.options.description}
-                    <Input
-                      value={draftFor(skill).description || ""}
-                      onChange={(event) =>
-                        updateSkillDescription(skill, event.target.value)
-                      }
-                    />
-                  </Label>
-                  <Label>
                     {t.options.title}
                     <Input
                       value={draftFor(skill).name}
                       onChange={(event) =>
                         updateSkillName(skill, event.target.value)
+                      }
+                    />
+                  </Label>
+                  <Label>
+                    {t.options.description}
+                    <Input
+                      value={draftFor(skill).description || ""}
+                      onChange={(event) =>
+                        updateSkillDescription(skill, event.target.value)
                       }
                     />
                   </Label>
