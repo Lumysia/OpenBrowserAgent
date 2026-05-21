@@ -509,14 +509,11 @@ export const zhTW: LocaleMessages = {
     binaryPreviewUnavailable: "二進位檔案無法預覽。",
     updatedAt: "更新時間",
     skillSize: "技能大小",
-    totalSkillsSize: "全部技能",
     syncQuotaWarning:
       "技能同步可能超過瀏覽器同步配額。大型技能建議保留本機或移除資源檔。",
-    skillLooksGood: "技能狀態正常",
-    skillNeedsAttention: "技能需要注意",
     skillCheckEntry: "存在 SKILL.md",
-    skillCheckName: "frontmatter name 為 kebab-case",
-    skillCheckDescription: "已填寫 description",
+    skillCheckName: "中繼資料名稱使用短橫線命名",
+    skillCheckDescription: "已填寫描述",
     deleteSkill: "刪除技能",
     deleteSkillConfirm: "刪除此技能？",
     availableVariables: "可用變數（點擊複製）：",
@@ -557,9 +554,6 @@ export const zhTW: LocaleMessages = {
     autoScrollDescription: "AI 輸出時自動保持最新內容可見。",
     autoRetry: "自動重試",
     autoRetryDescription: "如果 AI 30 秒沒有新輸出，自動繼續一次。",
-    autoSelectSkills: "自動選擇技能",
-    autoSelectSkillsDescription:
-      "未手動選擇技能時，允許 AI 按需查看並使用相關技能。",
     maxToolSteps: "最大工具步數",
     maxToolStepsDescription:
       "設定 AI 最多執行多少次瀏覽器工具；填 0 表示不允許呼叫工具。",

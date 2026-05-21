@@ -503,14 +503,11 @@ export const zhCN: LocaleMessages = {
     binaryPreviewUnavailable: "二进制文件无法预览。",
     updatedAt: "更新时间",
     skillSize: "技能大小",
-    totalSkillsSize: "全部技能",
     syncQuotaWarning:
       "技能同步可能超过浏览器同步配额。大技能建议保留本地或移除资源文件。",
-    skillLooksGood: "技能状态正常",
-    skillNeedsAttention: "技能需要注意",
     skillCheckEntry: "存在 SKILL.md",
-    skillCheckName: "frontmatter name 是 kebab-case",
-    skillCheckDescription: "已填写 description",
+    skillCheckName: "元数据名称使用短横线命名",
+    skillCheckDescription: "已填写描述",
     deleteSkill: "删除技能",
     deleteSkillConfirm: "删除这个技能？",
     availableVariables: "可用变量（点击复制）：",
@@ -551,9 +548,6 @@ export const zhCN: LocaleMessages = {
     autoScrollDescription: "AI 输出时自动保持最新内容可见。",
     autoRetry: "自动重试",
     autoRetryDescription: "如果 AI 30 秒没有新输出，自动继续一次。",
-    autoSelectSkills: "自动选择技能",
-    autoSelectSkillsDescription:
-      "当你没有手动选择技能时，允许 AI 按需查看并使用相关技能。",
     maxToolSteps: "最大工具步数",
     maxToolStepsDescription:
       "设置 AI 最多执行多少次浏览器工具；填 0 表示不允许调用工具。",

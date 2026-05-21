@@ -598,14 +598,11 @@ export const enUS = {
     binaryPreviewUnavailable: "Binary preview is unavailable.",
     updatedAt: "Updated",
     skillSize: "Skill size",
-    totalSkillsSize: "All skills",
     syncQuotaWarning:
       "Skills sync may exceed browser sync quota. Keep large skills local or remove bundled files.",
-    skillLooksGood: "Skill looks good",
-    skillNeedsAttention: "Skill needs attention",
     skillCheckEntry: "SKILL.md exists",
-    skillCheckName: "frontmatter name is kebab-case",
-    skillCheckDescription: "description is present",
+    skillCheckName: "Metadata name uses kebab case",
+    skillCheckDescription: "Description is present",
     deleteSkill: "Delete Skill",
     deleteSkillConfirm: "Delete this skill?",
     availableVariables: "Available variables (click to copy):",
@@ -650,9 +647,6 @@ export const enUS = {
     autoRetry: "Auto Retry",
     autoRetryDescription:
       "Automatically continue once if the assistant produces no new output for 30 seconds.",
-    autoSelectSkills: "Auto-select Skills",
-    autoSelectSkillsDescription:
-      "When no skill is selected manually, let the AI inspect and use any relevant Skills as needed.",
     maxToolSteps: "Max Tool Steps",
     maxToolStepsDescription:
       "Set how many browser tool steps the assistant may run. Use 0 to disable tool calls.",

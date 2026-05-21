@@ -186,9 +186,7 @@ async function streamAssistantResponse(
     request.messageId,
     t.sidepanel.attachmentsUnsupportedRetry,
     request.body.context?.uploadedAttachments || [],
-    request.body.context?.autoSelectSkills
-      ? request.body.context.availableSkills || []
-      : [],
+    capabilities.skillTools ? request.body.context?.availableSkills || [] : [],
     mcpServers,
     workspace,
     drainQueuedMessages,

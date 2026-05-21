@@ -8,7 +8,6 @@ import {
   FileText,
   Plus,
   RotateCcw,
-  Sparkles,
   Trash2,
 } from "lucide-react";
 import {
@@ -27,6 +26,8 @@ import {
   parseSkillFrontmatter,
   replaceSkillEntryFile,
   SKILL_ENTRY_PATH,
+  skillPackageBytes,
+  validateSkill,
 } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
 import type { Skill, SkillFile } from "../../src/shared/types";
@@ -35,6 +36,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  Badge,
   Button,
   Card,
   CardContent,
@@ -47,16 +49,12 @@ import {
 } from "../../src/ui/components";
 import { useBuiltinSkills } from "../../src/ui/useBuiltinSkills";
 import { useStoredState } from "../../src/ui/useStoredState";
-import {
-  SkillFileList,
-  SkillStatusPanel,
-  formatSkillBytes,
-} from "./skill-options-components";
+import { SkillFileList, formatSkillBytes } from "./skill-options-components";
 import { downloadSkillZip, importSkillZip } from "./skill-import";
 
 export function SkillsPage() {
   const [language] = useStoredState(storage.language);
-  const [preferences, setPreferences] = useStoredState(storage.preferences);
+  const [preferences] = useStoredState(storage.preferences);
   const [skills, setSkills] = useStoredState(storage.skills);
   const [selectedId, setSelectedId] = useState("");
   const [drafts, setDrafts] = useState<Record<string, Skill>>({});
@@ -266,43 +264,14 @@ export function SkillsPage() {
           </Button>
         </div>
       </div>
-      {preferences && (
-        <Card>
-          <CardContent>
-            <div className="setting-switch-row">
-              <div>
-                <CardTitle className="settings-section-title">
-                  <Sparkles size={18} /> {t.options.autoSelectSkills}
-                </CardTitle>
-                <CardDescription>
-                  {t.options.autoSelectSkillsDescription}
-                </CardDescription>
-                <CardDescription>
-                  {t.options.totalSkillsSize}:{" "}
-                  {formatSkillBytes(totalSkillsBytes)}
-                </CardDescription>
-              </div>
-              <Switch
-                checked={preferences.autoSelectSkills === true}
-                onCheckedChange={(autoSelectSkills) =>
-                  setPreferences((previous) => ({
-                    ...previous,
-                    autoSelectSkills,
-                  }))
-                }
-              />
-            </div>
-          </CardContent>
-          {preferences.syncSkills &&
-            totalSkillsBytes > SYNC_MAX_BYTES_PER_ITEM && (
-              <CardContent>
-                <div className="skill-warning">
-                  {t.options.syncQuotaWarning}
-                </div>
-              </CardContent>
-            )}
-        </Card>
-      )}
+      {preferences?.syncSkills &&
+        totalSkillsBytes > SYNC_MAX_BYTES_PER_ITEM && (
+          <Card>
+            <CardContent>
+              <div className="skill-warning">{t.options.syncQuotaWarning}</div>
+            </CardContent>
+          </Card>
+        )}
       {importError && (
         <Card className="empty">
           <CardHeader>
@@ -330,50 +299,83 @@ export function SkillsPage() {
         onValueChange={setSelectedId}
         className="stack"
       >
-        {skillList.map((skill) => (
-          <AccordionItem value={skill.id} key={skill.id}>
-            <AccordionTrigger>
-              <span className="skill-trigger-label">
-                <FileText size={18} />
-                {getSkillDisplayName(skill, t.options.untitledSkill)}
-                {normalizeSkill(skill).enabled === false && (
-                  <span className="muted">{t.options.disabled}</span>
-                )}
-              </span>
-              <span
-                className="skill-trigger-actions"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <Switch
-                  checked={normalizeSkill(skill).enabled !== false}
-                  onCheckedChange={(enabled) =>
-                    updateSkillEnabled(skill, enabled)
-                  }
-                />
-              </span>
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="skill-detail stack">
-                <SkillStatusPanel skill={draftFor(skill)} />
-                <div className="skill-identity-panel stack">
-                  <Label>
-                    {t.options.title}
-                    <Input
-                      value={draftFor(skill).name}
-                      onChange={(event) =>
-                        updateSkillName(skill, event.target.value)
-                      }
-                    />
-                  </Label>
-                  <Label>
-                    {t.options.description}
-                    <Input
-                      value={draftFor(skill).description || ""}
-                      onChange={(event) =>
-                        updateSkillDescription(skill, event.target.value)
-                      }
-                    />
-                  </Label>
+        {skillList.map((skill) => {
+          const draft = draftFor(skill);
+          const normalized = normalizeSkill(draft);
+          const checks = validateSkill(normalized);
+          return (
+            <AccordionItem value={skill.id} key={skill.id}>
+              <AccordionTrigger>
+                <span className="skill-trigger-summary">
+                  <span className="skill-trigger-title-row">
+                    <span className="skill-trigger-label">
+                      <FileText size={18} />
+                      {getSkillDisplayName(skill, t.options.untitledSkill)}
+                      {normalized.enabled === false && (
+                        <span className="muted">{t.options.disabled}</span>
+                      )}
+                    </span>
+                    <span className="skill-trigger-badges">
+                      <Badge>
+                        {t.options.updatedAt}:{" "}
+                        {formatSkillDate(normalized.updatedAt)}
+                      </Badge>
+                      <Badge>
+                        {t.options.skillSize}:{" "}
+                        {formatSkillBytes(skillPackageBytes(normalized))}
+                      </Badge>
+                    </span>
+                  </span>
+                  <small className="skill-checks skill-trigger-checks">
+                    {checks.map((check) => (
+                      <span className={check.ok ? "ok" : "warn"} key={check.id}>
+                        {check.ok ? "✓" : "!"} {skillCheckLabel(t, check.id)}
+                      </span>
+                    ))}
+                  </small>
+                </span>
+                <span
+                  className="skill-trigger-actions"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <Switch
+                    checked={normalizeSkill(skill).enabled !== false}
+                    onCheckedChange={(enabled) =>
+                      updateSkillEnabled(skill, enabled)
+                    }
+                  />
+                </span>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="skill-detail stack">
+                  <div className="skill-identity-panel stack">
+                    <Label>
+                      {t.options.title}
+                      <Input
+                        value={draftFor(skill).name}
+                        onChange={(event) =>
+                          updateSkillName(skill, event.target.value)
+                        }
+                      />
+                    </Label>
+                    <Label>
+                      {t.options.description}
+                      <Input
+                        value={draftFor(skill).description || ""}
+                        onChange={(event) =>
+                          updateSkillDescription(skill, event.target.value)
+                        }
+                      />
+                    </Label>
+                  </div>
+                  <SkillFileList
+                    skill={draftFor(skill)}
+                    onAddFile={(file) => addSkillFile(skill, file)}
+                    onReplaceFile={(file, previousPath) =>
+                      replaceSkillFile(skill, file, previousPath)
+                    }
+                    onDeleteFile={(path) => deleteSkillFile(skill, path)}
+                  />
                   <div className="row">
                     <Button
                       onClick={() => saveSkill(skill)}
@@ -385,52 +387,42 @@ export function SkillsPage() {
                       {savedId === skill.id ? <Check size={16} /> : null}
                       {savedId === skill.id ? t.common.saved : t.common.save}
                     </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => duplicateCurrentSkill(skill)}
+                    >
+                      <Copy size={16} /> {t.options.duplicateSkill}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => downloadSkillZip(draftFor(skill), "skill")}
+                    >
+                      <Download size={16} /> {t.options.downloadSkillPackage}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      disabled={!!skill.builtin}
+                      onClick={() => deleteSkill(skill)}
+                    >
+                      <Trash2 size={16} />{" "}
+                      {deleteConfirmId === skill.id
+                        ? t.common.confirm
+                        : t.options.deleteSkill}
+                    </Button>
+                    {deleteConfirmId === skill.id && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => setDeleteConfirmId(undefined)}
+                      >
+                        {t.common.cancel}
+                      </Button>
+                    )}
                   </div>
                 </div>
-                <SkillFileList
-                  skill={draftFor(skill)}
-                  onAddFile={(file) => addSkillFile(skill, file)}
-                  onReplaceFile={(file, previousPath) =>
-                    replaceSkillFile(skill, file, previousPath)
-                  }
-                  onDeleteFile={(path) => deleteSkillFile(skill, path)}
-                />
-                <div className="row">
-                  <Button
-                    variant="outline"
-                    onClick={() => duplicateCurrentSkill(skill)}
-                  >
-                    <Copy size={16} /> {t.options.duplicateSkill}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => downloadSkillZip(draftFor(skill), "skill")}
-                  >
-                    <Download size={16} /> {t.options.downloadSkillPackage}
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    disabled={!!skill.builtin}
-                    onClick={() => deleteSkill(skill)}
-                  >
-                    <Trash2 size={16} />{" "}
-                    {deleteConfirmId === skill.id
-                      ? t.common.confirm
-                      : t.options.deleteSkill}
-                  </Button>
-                  {deleteConfirmId === skill.id && (
-                    <Button
-                      variant="secondary"
-                      onClick={() => setDeleteConfirmId(undefined)}
-                    >
-                      {t.common.cancel}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        ))}
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
       </Accordion>
       <Card>
         <CardContent>
@@ -451,6 +443,20 @@ export function SkillsPage() {
       </Card>
     </div>
   );
+}
+
+function skillCheckLabel(t: ReturnType<typeof getMessages>, id: string) {
+  const labels: Record<string, string> = {
+    entry: t.options.skillCheckEntry,
+    name: t.options.skillCheckName,
+    description: t.options.skillCheckDescription,
+  };
+  return labels[id] || id;
+}
+
+function formatSkillDate(value?: number) {
+  if (!value) return "-";
+  return new Date(value).toLocaleString();
 }
 
 function cloneDefault<T>(value: T): T {

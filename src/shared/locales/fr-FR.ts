@@ -663,14 +663,11 @@ export const frFR: LocaleMessages = {
     binaryPreviewUnavailable: "L'aperçu binaire n'est pas disponible.",
     updatedAt: "Mis à jour",
     skillSize: "Taille de la compétence",
-    totalSkillsSize: "Toutes les compétences",
     syncQuotaWarning:
       "La synchronisation des compétences peut dépasser le quota du navigateur. Gardez les grandes compétences locales.",
-    skillLooksGood: "La compétence semble correcte",
-    skillNeedsAttention: "La compétence nécessite une vérification",
     skillCheckEntry: "SKILL.md existe",
-    skillCheckName: "name du frontmatter est en kebab-case",
-    skillCheckDescription: "description présente",
+    skillCheckName: "Le nom des métadonnées utilise le kebab case",
+    skillCheckDescription: "La description est présente",
     deleteSkill: "Supprimer la compétence",
     deleteSkillConfirm: "Supprimer cette compétence ?",
     availableVariables: "Variables disponibles (cliquez pour copier) :",
@@ -716,9 +713,6 @@ export const frFR: LocaleMessages = {
     autoRetry: "Nouvelle tentative automatique",
     autoRetryDescription:
       "Continuer automatiquement une fois si l'assistant ne produit rien pendant 30 secondes.",
-    autoSelectSkills: "Sélection automatique des compétences",
-    autoSelectSkillsDescription:
-      "Lorsqu'aucune compétence n'est sélectionnée manuellement, autorise l'IA à consulter et utiliser les compétences pertinentes au besoin.",
     maxToolSteps: "Nombre maximal d'étapes d'outils",
     maxToolStepsDescription:
       "Définit combien d'étapes d'outils navigateur l'assistant peut exécuter. Utilisez 0 pour désactiver les outils.",

@@ -15,12 +15,14 @@ import {
   normalizeSkill,
   normalizeSkillName,
   SKILL_ENTRY_PATH,
-  skillPackageBytes,
-  validateSkill,
 } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
 import type { Skill, SkillFile } from "../../src/shared/types";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
   Button,
   Input,
   Textarea,
@@ -57,41 +59,6 @@ export function SkillVariables() {
           {t.options.example}:{" "}
           {new Date().toISOString().slice(0, ISO_DATE_LENGTH)}
         </span>
-      </div>
-    </div>
-  );
-}
-
-export function SkillStatusPanel({ skill }: { skill: Skill }) {
-  const [language] = useStoredState(storage.language);
-  const t = getMessages(language);
-  const normalized = normalizeSkill(skill);
-  const checks = validateSkill(normalized);
-  const failed = checks.filter((check) => !check.ok);
-  const skillBytes = skillPackageBytes(normalized);
-  return (
-    <div className="skill-status-panel">
-      <div className="skill-meta-row">
-        <span>
-          {t.options.updatedAt}: {formatDate(normalized.updatedAt)}
-        </span>
-        <span>
-          {t.options.skillSize}: {formatBytes(skillBytes)}
-        </span>
-      </div>
-      <div className="skill-validation">
-        <strong>
-          {failed.length
-            ? t.options.skillNeedsAttention
-            : t.options.skillLooksGood}
-        </strong>
-        <div className="skill-checks">
-          {checks.map((check) => (
-            <span className={check.ok ? "ok" : "warn"} key={check.id}>
-              {check.ok ? "✓" : "!"} {skillCheckLabel(t, check.id)}
-            </span>
-          ))}
-        </div>
       </div>
     </div>
   );
@@ -166,114 +133,130 @@ export function SkillFileList({
   }
 
   return (
-    <div className="stack">
-      <span className="muted">
-        {t.options.skillFiles} ({files.length})
-      </span>
-      <div className="option-add-file-row">
-        <Input
-          value={addPath}
-          onChange={(event) => setAddPath(event.target.value)}
-        />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onAddFile(createEmptySkillFile(addPath))}
-        >
-          <Plus size={14} /> {t.options.addFile}
-        </Button>
-        <input
-          ref={addInputRef}
-          type="file"
-          hidden
-          onChange={(event) => addUploadedFile(event.target.files)}
-        />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => addInputRef.current?.click()}
-        >
-          <Upload size={14} /> {t.options.uploadFile}
-        </Button>
-      </div>
-      <input
-        ref={replaceInputRef}
-        type="file"
-        hidden
-        onChange={(event) => replaceFile(event.target.files)}
-      />
-      <div className="option-file-list">
-        {files.map((file) => {
-          const isEditing = editingFile?.path === file.path;
-          return (
-            <div className="option-file-block" key={file.path}>
-              <div className="option-file-item">
-                <FileArchive size={18} />
-                <span>
-                  <strong>{file.path}</strong>
-                  <small>
-                    {file.kind} · {file.encoding || "utf-8"} ·{" "}
-                    {file.content.length} bytes · {formatDate(file.updatedAt)}
-                  </small>
-                </span>
-                <div className="option-file-actions">
-                  <SkillFileActionButton
-                    label={t.options.editFile}
-                    disabled={file.encoding === "base64"}
-                    onClick={() => startEdit(file)}
-                  >
-                    <Pencil size={14} />
-                  </SkillFileActionButton>
-                  <SkillFileActionButton
-                    label={t.options.replaceFile}
-                    onClick={() => {
-                      setReplacePath(file.path);
-                      window.setTimeout(() => replaceInputRef.current?.click());
-                    }}
-                  >
-                    <Upload size={14} />
-                  </SkillFileActionButton>
-                  <SkillFileActionButton
-                    label={t.options.downloadFile}
-                    onClick={() => downloadSkillFile(file)}
-                  >
-                    <Download size={14} />
-                  </SkillFileActionButton>
-                  <SkillFileActionButton
-                    label={t.options.deleteFile}
-                    disabled={file.path === SKILL_ENTRY_PATH}
-                    onClick={() => onDeleteFile(file.path)}
-                  >
-                    <Trash2 size={14} />
-                  </SkillFileActionButton>
-                </div>
-              </div>
-              {isEditing && editingFile.encoding !== "base64" && (
-                <div className="option-file-editor stack">
-                  <Input
-                    value={editFilePath}
-                    disabled={editingFile.path === SKILL_ENTRY_PATH}
-                    placeholder={t.options.filePath}
-                    aria-label={t.options.filePath}
-                    onChange={(event) => setEditFilePath(event.target.value)}
-                  />
-                  <Textarea
-                    className="option-file-editor-textarea"
-                    value={editContent}
-                    onChange={(event) => setEditContent(event.target.value)}
-                  />
-                  <div className="row">
-                    <Button size="sm" onClick={saveEditedFile}>
-                      <Check size={14} /> {t.options.saveFile}
-                    </Button>
-                  </div>
-                </div>
-              )}
+    <Accordion type="single" collapsible className="stack">
+      <AccordionItem value="files" className="option-file-section">
+        <AccordionTrigger>
+          <span className="skill-trigger-label">
+            <FileArchive size={18} />
+            {t.options.skillFiles} ({files.length})
+          </span>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="stack">
+            <div className="option-add-file-row">
+              <Input
+                value={addPath}
+                onChange={(event) => setAddPath(event.target.value)}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onAddFile(createEmptySkillFile(addPath))}
+              >
+                <Plus size={14} /> {t.options.addFile}
+              </Button>
+              <input
+                ref={addInputRef}
+                type="file"
+                hidden
+                onChange={(event) => addUploadedFile(event.target.files)}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => addInputRef.current?.click()}
+              >
+                <Upload size={14} /> {t.options.uploadFile}
+              </Button>
             </div>
-          );
-        })}
-      </div>
-    </div>
+            <input
+              ref={replaceInputRef}
+              type="file"
+              hidden
+              onChange={(event) => replaceFile(event.target.files)}
+            />
+            <div className="option-file-list">
+              {files.map((file) => {
+                const isEditing = editingFile?.path === file.path;
+                return (
+                  <div className="option-file-block" key={file.path}>
+                    <div className="option-file-item">
+                      <FileArchive size={18} />
+                      <span>
+                        <strong>{file.path}</strong>
+                        <small>
+                          {file.kind} · {file.encoding || "utf-8"} ·{" "}
+                          {file.content.length} bytes ·{" "}
+                          {formatDate(file.updatedAt)}
+                        </small>
+                      </span>
+                      <div className="option-file-actions">
+                        <SkillFileActionButton
+                          label={t.options.editFile}
+                          disabled={file.encoding === "base64"}
+                          onClick={() => startEdit(file)}
+                        >
+                          <Pencil size={14} />
+                        </SkillFileActionButton>
+                        <SkillFileActionButton
+                          label={t.options.replaceFile}
+                          onClick={() => {
+                            setReplacePath(file.path);
+                            window.setTimeout(() =>
+                              replaceInputRef.current?.click(),
+                            );
+                          }}
+                        >
+                          <Upload size={14} />
+                        </SkillFileActionButton>
+                        <SkillFileActionButton
+                          label={t.options.downloadFile}
+                          onClick={() => downloadSkillFile(file)}
+                        >
+                          <Download size={14} />
+                        </SkillFileActionButton>
+                        <SkillFileActionButton
+                          label={t.options.deleteFile}
+                          disabled={file.path === SKILL_ENTRY_PATH}
+                          onClick={() => onDeleteFile(file.path)}
+                        >
+                          <Trash2 size={14} />
+                        </SkillFileActionButton>
+                      </div>
+                    </div>
+                    {isEditing && editingFile.encoding !== "base64" && (
+                      <div className="option-file-editor stack">
+                        <Input
+                          value={editFilePath}
+                          disabled={editingFile.path === SKILL_ENTRY_PATH}
+                          placeholder={t.options.filePath}
+                          aria-label={t.options.filePath}
+                          onChange={(event) =>
+                            setEditFilePath(event.target.value)
+                          }
+                        />
+                        <Textarea
+                          className="option-file-editor-textarea"
+                          value={editContent}
+                          onChange={(event) =>
+                            setEditContent(event.target.value)
+                          }
+                        />
+                        <div className="row">
+                          <Button size="sm" onClick={saveEditedFile}>
+                            <Check size={14} /> {t.options.saveFile}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 }
 
@@ -294,15 +277,6 @@ export function SkillFileActionButton({
       <TooltipContent>{label}</TooltipContent>
     </Tooltip>
   );
-}
-
-function skillCheckLabel(t: ReturnType<typeof getMessages>, id: string) {
-  const labels: Record<string, string> = {
-    entry: t.options.skillCheckEntry,
-    name: t.options.skillCheckName,
-    description: t.options.skillCheckDescription,
-  };
-  return labels[id] || id;
 }
 
 function formatDate(value?: number) {

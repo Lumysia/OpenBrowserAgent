@@ -73,8 +73,9 @@ export function usePromptUsageEstimate({
       ...uploadedAttachments,
       ...pendingAttachments,
     ]);
-    const enabledSkills = skills.filter(isSkillEnabled);
-    const availableSkills = preferences?.autoSelectSkills ? enabledSkills : [];
+    const availableSkills = agent.capabilities.skillTools
+      ? skills.filter(isSkillEnabled)
+      : [];
     const system = createSystemPrompt({
       capabilities: agent.capabilities,
       imageGenerationEnabled: preferences?.imageGenerationEnabled,
@@ -120,7 +121,6 @@ export function usePromptUsageEstimate({
   }, [
     input,
     currentChat?.messages,
-    preferences?.autoSelectSkills,
     preferences?.imageGenerationEnabled,
     contextChars,
     pendingAttachments,

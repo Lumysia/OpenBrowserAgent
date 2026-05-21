@@ -661,14 +661,11 @@ export const deDE: LocaleMessages = {
     binaryPreviewUnavailable: "Binärvorschau ist nicht verfügbar.",
     updatedAt: "Aktualisiert",
     skillSize: "Fähigkeitsgröße",
-    totalSkillsSize: "Alle Fähigkeiten",
     syncQuotaWarning:
       "Fähigkeiten-Sync kann das Browser-Sync-Kontingent überschreiten. Große Fähigkeiten lokal behalten.",
-    skillLooksGood: "Fähigkeit sieht gut aus",
-    skillNeedsAttention: "Fähigkeit benötigt Aufmerksamkeit",
     skillCheckEntry: "SKILL.md vorhanden",
-    skillCheckName: "Frontmatter-name ist kebab-case",
-    skillCheckDescription: "description vorhanden",
+    skillCheckName: "Metadatenname verwendet Kebab Case",
+    skillCheckDescription: "Beschreibung vorhanden",
     deleteSkill: "Fähigkeit löschen",
     deleteSkillConfirm: "Diese Fähigkeit löschen?",
     availableVariables: "Verfügbare Variablen (zum Kopieren klicken):",
@@ -715,9 +712,6 @@ export const deDE: LocaleMessages = {
     autoRetry: "Automatisch erneut versuchen",
     autoRetryDescription:
       "Einmal automatisch fortsetzen, wenn der Assistent 30 Sekunden lang keine neue Ausgabe erzeugt.",
-    autoSelectSkills: "Fähigkeiten automatisch auswählen",
-    autoSelectSkillsDescription:
-      "Wenn keine Fähigkeit manuell ausgewählt ist, darf die KI relevante Fähigkeiten bei Bedarf prüfen und verwenden.",
     maxToolSteps: "Maximale Tool-Schritte",
     maxToolStepsDescription:
       "Legt fest, wie viele Browser-Tool-Schritte der Assistent ausführen darf. 0 deaktiviert Tool-Aufrufe.",

@@ -262,8 +262,9 @@ export function SidepanelApp() {
       }
       return;
     }
-    const enabledSkills = (skills || []).filter(isSkillEnabled);
-    const availableSkills = preferences?.autoSelectSkills ? enabledSkills : [];
+    const availableSkills = activeAgent.capabilities.skillTools
+      ? (skills || []).filter(isSkillEnabled)
+      : [];
     const chat = currentChat || createChat();
     const resendDraft =
       !options.queued && options.resendMessage
@@ -389,7 +390,6 @@ export function SidepanelApp() {
           sources: baseChat.sources || [],
           agent: activeAgent,
           imageGenerationEnabled: preferences?.imageGenerationEnabled,
-          autoSelectSkills: preferences?.autoSelectSkills,
         },
       },
     };

@@ -152,17 +152,15 @@ export function validateSkill(skill: Skill) {
   const entry = getSkillEntryFile(normalized);
   const metadata = entry ? parseSkillFrontmatter(entry.content) : undefined;
   return [
-    { id: "entry", ok: !!entry, message: "SKILL.md exists" },
+    { id: "entry", ok: !!entry },
     {
       id: "name",
       ok:
         !!metadata?.name && normalizeSkillName(metadata.name) === metadata.name,
-      message: "frontmatter name is kebab-case",
     },
     {
       id: "description",
       ok: !!metadata?.description || !!normalized.description,
-      message: "description is present",
     },
   ];
 }

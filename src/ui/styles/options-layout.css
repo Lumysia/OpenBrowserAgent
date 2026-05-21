@@ -312,10 +312,10 @@
 }
 .skill-detail .ui-label,
 .skill-detail .skill-identity-panel,
+.skill-detail .option-file-section,
 .skill-detail .option-file-list,
 .skill-detail .option-add-file-row,
-.skill-detail .option-file-editor,
-.skill-detail .skill-status-panel {
+.skill-detail .option-file-editor {
   width: 100%;
 }
 .skills-page,
@@ -347,6 +347,33 @@
 }
 .skill-trigger-label svg {
   flex-shrink: 0;
+}
+.skill-trigger-summary {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  flex: 1 1 auto;
+}
+.skill-trigger-title-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.skill-trigger-badges,
+.skill-trigger-checks {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.skill-trigger-badges {
+  color: var(--muted-foreground);
+}
+.skill-trigger-checks {
+  padding-left: 28px;
+  font-weight: 400;
 }
 .skill-trigger-actions {
   margin-left: auto;
@@ -435,15 +462,6 @@
     transform: translateY(0);
   }
 }
-.skill-status-panel {
-  display: grid;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--card) 72%, var(--background));
-}
-.skill-meta-row,
 .skill-checks {
   display: flex;
   flex-wrap: wrap;
@@ -456,9 +474,5 @@
   color: var(--destructive);
 }
 .skill-checks .ok {
-  color: var(--accent-strong);
-}
-.skill-validation {
-  display: grid;
-  gap: 6px;
+  color: var(--muted-foreground);
 }

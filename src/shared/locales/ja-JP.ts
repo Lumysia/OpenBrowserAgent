@@ -661,14 +661,11 @@ export const jaJP: LocaleMessages = {
     binaryPreviewUnavailable: "バイナリファイルはプレビューできません。",
     updatedAt: "更新日時",
     skillSize: "スキルサイズ",
-    totalSkillsSize: "全スキル",
     syncQuotaWarning:
       "スキル同期がブラウザ同期容量を超える可能性があります。大きいスキルはローカル保持にしてください。",
-    skillLooksGood: "スキルは正常です",
-    skillNeedsAttention: "スキルに確認が必要です",
     skillCheckEntry: "SKILL.mdが存在します",
-    skillCheckName: "frontmatterのnameがkebab-caseです",
-    skillCheckDescription: "descriptionがあります",
+    skillCheckName: "メタデータ名がケバブケースです",
+    skillCheckDescription: "説明があります",
     deleteSkill: "スキルを削除",
     deleteSkillConfirm: "このスキルを削除しますか？",
     availableVariables: "利用可能な変数（クリックでコピー）：",
@@ -714,9 +711,6 @@ export const jaJP: LocaleMessages = {
     autoRetry: "自動再試行",
     autoRetryDescription:
       "アシスタントが30秒間新しい出力を生成しない場合、一度だけ自動的に続行します。",
-    autoSelectSkills: "スキルを自動選択",
-    autoSelectSkillsDescription:
-      "手動でスキルを選択していない場合、AIが必要に応じて関連するスキルを確認して使用できます。",
     maxToolSteps: "最大ツールステップ数",
     maxToolStepsDescription:
       "アシスタントが実行できるブラウザーツールのステップ数を設定します。0にするとツール呼び出しを無効にします。",

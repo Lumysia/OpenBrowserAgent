@@ -49,7 +49,6 @@ export type Preferences = {
   syncSkills?: boolean;
   syncMcpServers?: boolean;
   syncChats?: boolean;
-  autoSelectSkills?: boolean;
   autoScroll?: boolean;
   autoRetry?: boolean;
   maxToolSteps?: number;
@@ -335,7 +334,6 @@ export type SendMessagesBody = {
     sources?: ChatSource[];
     agent?: Agent;
     imageGenerationEnabled?: boolean;
-    autoSelectSkills?: boolean;
   };
 };
 

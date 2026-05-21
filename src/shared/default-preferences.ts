@@ -14,7 +14,6 @@ export const DEFAULT_PREFERENCES: Preferences = {
   syncSkills: false,
   syncMcpServers: false,
   syncChats: false,
-  autoSelectSkills: true,
   autoScroll: true,
   autoRetry: true,
   imageGenerationEnabled: false,

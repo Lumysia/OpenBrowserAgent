@@ -4,6 +4,7 @@ import { browserTools } from "../../src/background/tool-schema";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { isSkillEnabled } from "../../src/shared/skills";
+import { resolveAgent } from "../../src/shared/agents";
 import {
   clearAppStorage,
   type AppStorageClearScope,
@@ -33,6 +34,7 @@ import { useStoredState } from "../../src/ui/useStoredState";
 export function DebugPage() {
   const [language] = useStoredState(storage.language);
   const [preferences] = useStoredState(storage.preferences);
+  const [agents] = useStoredState(storage.agents);
   const [skills] = useStoredState(storage.skills);
   const [confirmText, setConfirmText] = useState("");
   const [scope, setScope] = useState<AppStorageClearScope>("all");
@@ -40,10 +42,12 @@ export function DebugPage() {
   const [clearing, setClearing] = useState(false);
   const [cleared, setCleared] = useState(false);
   const t = getMessages(language);
+  const activeAgent = resolveAgent(agents, preferences?.selectedAgentId);
   const toolRows = browserTools.map((tool) =>
     toolStatus({
       name: tool.function.name,
       preferences,
+      activeAgent,
       enabledSkillCount: (skills || []).filter(isSkillEnabled).length,
       t,
     }),
@@ -226,11 +230,13 @@ export function DebugPage() {
 function toolStatus({
   name,
   preferences,
+  activeAgent,
   enabledSkillCount,
   t,
 }: {
   name: string;
   preferences: Awaited<ReturnType<typeof storage.preferences.get>> | undefined;
+  activeAgent: ReturnType<typeof resolveAgent>;
   enabledSkillCount: number;
   t: ReturnType<typeof getMessages>;
 }) {
@@ -249,7 +255,7 @@ function toolStatus({
     name === BROWSER_TOOL_NAME.updateSkillFile ||
     name === BROWSER_TOOL_NAME.patchSkillFile
   )
-    return enabledSkillCount && preferences?.autoSelectSkills
+    return enabledSkillCount && activeAgent.capabilities.skillTools
       ? { enabled: true, reason: t.options.debugToolSkillsEnabled }
       : { enabled: false, reason: t.options.debugToolSkillsDisabled };
   if (name === BROWSER_TOOL_NAME.readFileFromUrl)

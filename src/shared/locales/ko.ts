@@ -596,14 +596,11 @@ export const ko: LocaleMessages = {
     binaryPreviewUnavailable: "바이너리 파일은 미리볼 수 없습니다.",
     updatedAt: "업데이트",
     skillSize: "스킬 크기",
-    totalSkillsSize: "전체 스킬",
     syncQuotaWarning:
       "스킬 동기화가 브라우저 동기화 한도를 초과할 수 있습니다. 큰 스킬은 로컬에 보관하세요.",
-    skillLooksGood: "스킬 상태가 좋습니다",
-    skillNeedsAttention: "스킬 확인 필요",
     skillCheckEntry: "SKILL.md 있음",
-    skillCheckName: "frontmatter name은 kebab-case",
-    skillCheckDescription: "description 있음",
+    skillCheckName: "메타데이터 이름이 케밥 케이스입니다",
+    skillCheckDescription: "설명이 있습니다",
     deleteSkill: "스킬 삭제",
     deleteSkillConfirm: "이 스킬을 삭제할까요?",
     availableVariables: "사용 가능한 변수(클릭하여 복사):",
@@ -648,9 +645,6 @@ export const ko: LocaleMessages = {
     autoRetry: "자동 재시도",
     autoRetryDescription:
       "어시스턴트가 30초 동안 새 출력을 만들지 않으면 한 번 자동으로 계속합니다.",
-    autoSelectSkills: "스킬 자동 선택",
-    autoSelectSkillsDescription:
-      "수동으로 스킬을 선택하지 않았을 때 AI가 필요에 따라 관련 스킬을 확인하고 사용할 수 있습니다.",
     maxToolSteps: "최대 도구 단계",
     maxToolStepsDescription:
       "어시스턴트가 실행할 수 있는 브라우저 도구 단계 수를 설정합니다. 0은 도구 호출을 비활성화합니다.",

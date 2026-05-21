@@ -608,14 +608,11 @@ export const ptBR: LocaleMessages = {
     binaryPreviewUnavailable: "Prévia binária indisponível.",
     updatedAt: "Atualizado",
     skillSize: "Tamanho da habilidade",
-    totalSkillsSize: "Todas as habilidades",
     syncQuotaWarning:
       "A sincronização de habilidades pode exceder a cota do navegador. Mantenha habilidades grandes locais.",
-    skillLooksGood: "A habilidade parece boa",
-    skillNeedsAttention: "A habilidade precisa de atenção",
     skillCheckEntry: "SKILL.md existe",
-    skillCheckName: "name no frontmatter é kebab-case",
-    skillCheckDescription: "description presente",
+    skillCheckName: "O nome dos metadados usa kebab case",
+    skillCheckDescription: "Descrição presente",
     deleteSkill: "Excluir habilidade",
     deleteSkillConfirm: "Excluir esta habilidade?",
     availableVariables: "Variáveis disponíveis (clique para copiar):",
@@ -661,9 +658,6 @@ export const ptBR: LocaleMessages = {
     autoRetry: "Nova tentativa automática",
     autoRetryDescription:
       "Continua automaticamente uma vez se o assistente não produzir nova saída por 30 segundos.",
-    autoSelectSkills: "Selecionar habilidades automaticamente",
-    autoSelectSkillsDescription:
-      "Quando nenhuma habilidade for selecionada manualmente, permita que a IA consulte e use habilidades relevantes conforme necessário.",
     maxToolSteps: "Máximo de etapas de ferramentas",
     maxToolStepsDescription:
       "Define quantas etapas de ferramentas do navegador o assistente pode executar. Use 0 para desativar ferramentas.",
