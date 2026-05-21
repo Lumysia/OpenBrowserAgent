@@ -506,7 +506,9 @@ export const jaJP: LocaleMessages = {
     agentDescription: "エージェントの説明",
     agentCapabilities: "エージェント機能",
     agentCapabilitiesDescription:
-      "このカスタムエージェントが使えるツールとコンテキストを選択します。",
+      "このエージェントが使えるツールとコンテキストを選択します。",
+    builtinAgentCapabilitiesDescription:
+      "組み込みエージェントの機能は参照用に表示され、編集できません。",
     agentCapabilityGroups: {
       browser: "ブラウザー",
       builtinTools: "組み込みツールとコンテキスト",
@@ -516,7 +518,6 @@ export const jaJP: LocaleMessages = {
     },
     agentCapabilityLabels: {
       browserAutomation: "ブラウザーを操作",
-      readPageContent: "添付ページを読む",
       browserTools: "組み込みツールを使用",
       deferredBrowserTools: "高度なブラウザー操作を読み込む",
       cdpTools: "CDP ツール",

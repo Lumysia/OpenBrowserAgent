@@ -1,8 +1,4 @@
-import {
-  extractTabText,
-  getActiveTab,
-  isScriptableUrl,
-} from "../../src/shared/browser";
+import { getActiveTab, isScriptableUrl } from "../../src/shared/browser";
 import {
   ISO_DATE_LENGTH,
   LOCAL_CHAT_TITLE_MAX_LENGTH,
@@ -11,7 +7,6 @@ import {
 } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import type {
-  AgentCapabilities,
   AttachmentTab,
   Chat,
   SelectedElement,
@@ -58,11 +53,9 @@ export function isTabAlreadySentAsSelected(chats: Chat[], tabId: number) {
 }
 
 export async function buildSidepanelContext({
-  capabilities,
   attachedTabs,
   selectedElements,
 }: {
-  capabilities: AgentCapabilities;
   attachedTabs: AttachmentTab[];
   selectedElements: SelectedElement[];
 }) {
@@ -72,8 +65,7 @@ export async function buildSidepanelContext({
   );
   if (attachedTabs.length) {
     const tabBlocks = [];
-    for (const tab of attachedTabs)
-      tabBlocks.push(await renderAttachedTab(tab, capabilities));
+    for (const tab of attachedTabs) tabBlocks.push(renderAttachedTab(tab));
     parts.push(xmlBlock("selected_tabs", tabBlocks));
   } else {
     const tab = await getActiveTab();
@@ -130,18 +122,8 @@ function renderSelectedElement(
   ]);
 }
 
-async function renderAttachedTab(
-  tab: AttachmentTab,
-  capabilities: AgentCapabilities,
-) {
-  try {
-    const text = capabilities.readPageContent
-      ? await extractTabText(tab.id)
-      : "";
-    return renderTabBlock(tab, text);
-  } catch {
-    return renderTabBlock(tab, "");
-  }
+function renderAttachedTab(tab: AttachmentTab) {
+  return renderTabBlock(tab, "");
 }
 
 function renderTabBlock(tab: AttachmentTab, text: string) {

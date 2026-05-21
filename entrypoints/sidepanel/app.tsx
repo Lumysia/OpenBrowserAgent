@@ -295,7 +295,6 @@ export function SidepanelApp() {
         interpolateSkillPackage(skill, interpolateSkillVariables),
       );
     const context = await buildSidepanelContext({
-      capabilities: activeAgent.capabilities,
       attachedTabs: sentTabs,
       selectedElements: sentElements,
     });

@@ -361,7 +361,8 @@ export const zhTW: LocaleMessages = {
     agentName: "智慧體名稱",
     agentDescription: "智慧體描述",
     agentCapabilities: "智慧體能力",
-    agentCapabilitiesDescription: "選擇這個自訂智慧體可以使用的工具和上下文。",
+    agentCapabilitiesDescription: "選擇這個智慧體可以使用的工具和上下文。",
+    builtinAgentCapabilitiesDescription: "內建智慧體的能力僅供查看，不能修改。",
     agentCapabilityGroups: {
       browser: "瀏覽器",
       builtinTools: "內建工具和上下文",
@@ -371,7 +372,6 @@ export const zhTW: LocaleMessages = {
     },
     agentCapabilityLabels: {
       browserAutomation: "操作瀏覽器",
-      readPageContent: "讀取已附加網頁",
       browserTools: "使用內建工具",
       deferredBrowserTools: "載入進階瀏覽器操作",
       cdpTools: "CDP 工具",

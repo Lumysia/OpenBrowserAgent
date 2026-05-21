@@ -175,15 +175,16 @@ export function AgentsPage() {
                       }
                     />
                   </Label>
+                  <AgentCapabilityEditor
+                    t={t}
+                    capabilities={agent.capabilities}
+                    readOnly={builtin}
+                    onChange={(capabilities) =>
+                      updateAgent(agent.id, { capabilities })
+                    }
+                  />
                   {!builtin && (
                     <>
-                      <AgentCapabilityEditor
-                        t={t}
-                        capabilities={agent.capabilities}
-                        onChange={(capabilities) =>
-                          updateAgent(agent.id, { capabilities })
-                        }
-                      />
                       <AgentWorkspaceEditor
                         workspace={
                           workspaces?.find(

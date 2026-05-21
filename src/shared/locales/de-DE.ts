@@ -503,7 +503,9 @@ export const deDE: LocaleMessages = {
     agentDescription: "Agentenbeschreibung",
     agentCapabilities: "Agentenfähigkeiten",
     agentCapabilitiesDescription:
-      "Wähle aus, welche Tools und welchen Kontext dieser benutzerdefinierte Agent verwenden darf.",
+      "Wähle aus, welche Tools und welchen Kontext dieser Agent verwenden darf.",
+    builtinAgentCapabilitiesDescription:
+      "Die Fähigkeiten integrierter Agenten werden nur angezeigt und können nicht bearbeitet werden.",
     agentCapabilityGroups: {
       browser: "Browser",
       builtinTools: "Integrierte Tools und Kontext",
@@ -513,7 +515,6 @@ export const deDE: LocaleMessages = {
     },
     agentCapabilityLabels: {
       browserAutomation: "Browser bedienen",
-      readPageContent: "Angehängte Seiten lesen",
       browserTools: "Integrierte Tools verwenden",
       deferredBrowserTools: "Erweiterte Browseraktionen laden",
       cdpTools: "CDP-Tools",

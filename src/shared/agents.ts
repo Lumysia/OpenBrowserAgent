@@ -5,7 +5,6 @@ export const ASK_AGENT_ID = "ask-agent";
 
 export const AGENT_CAPABILITIES: AgentCapabilities = {
   browserAutomation: true,
-  readPageContent: false,
   browserTools: true,
   deferredBrowserTools: true,
   cdpTools: true,
@@ -27,7 +26,6 @@ export const AGENT_CAPABILITIES: AgentCapabilities = {
 
 export const ASK_AGENT_CAPABILITIES: AgentCapabilities = {
   browserAutomation: false,
-  readPageContent: true,
   browserTools: true,
   deferredBrowserTools: false,
   cdpTools: false,
@@ -53,11 +51,12 @@ export const BROWSE_AGENT_CAPABILITIES: AgentCapabilities = {
   workspaceWrite: false,
   memoryRead: false,
   memoryWrite: false,
+  chatHistoryRead: false,
+  chatHistoryWrite: false,
 };
 
 export const CUSTOM_AGENT_CAPABILITIES: AgentCapabilities = {
   ...AGENT_CAPABILITIES,
-  readPageContent: true,
 };
 
 export const DEFAULT_AGENT: Agent = {
@@ -84,7 +83,6 @@ export const BUILTIN_AGENTS = [DEFAULT_AGENT, ASK_AGENT];
 
 export const AGENT_CAPABILITY_KEYS: Array<keyof AgentCapabilities> = [
   "browserAutomation",
-  "readPageContent",
   "browserTools",
   "deferredBrowserTools",
   "cdpTools",
@@ -108,7 +106,6 @@ export const AGENT_CAPABILITY_GROUPS = [
     key: "browser",
     capabilities: [
       "browserAutomation",
-      "readPageContent",
       "deferredBrowserTools",
       "cdpTools",
       "dangerousCodeExecution",

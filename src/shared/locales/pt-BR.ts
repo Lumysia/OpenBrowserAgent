@@ -453,7 +453,9 @@ export const ptBR: LocaleMessages = {
     agentDescription: "Descrição do agente",
     agentCapabilities: "Capacidades do agente",
     agentCapabilitiesDescription:
-      "Escolha quais ferramentas e contexto este agente personalizado pode usar.",
+      "Escolha quais ferramentas e contexto este agente pode usar.",
+    builtinAgentCapabilitiesDescription:
+      "As capacidades dos agentes integrados são exibidas apenas para referência e não podem ser editadas.",
     agentCapabilityGroups: {
       browser: "Navegador",
       builtinTools: "Ferramentas integradas e contexto",
@@ -463,7 +465,6 @@ export const ptBR: LocaleMessages = {
     },
     agentCapabilityLabels: {
       browserAutomation: "Operar o navegador",
-      readPageContent: "Ler páginas anexadas",
       browserTools: "Usar ferramentas integradas",
       deferredBrowserTools: "Carregar ações avançadas do navegador",
       cdpTools: "Ferramentas CDP",

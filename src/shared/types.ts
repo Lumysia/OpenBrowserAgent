@@ -108,7 +108,6 @@ export type SkillFile = {
 
 export type AgentCapabilities = {
   browserAutomation: boolean;
-  readPageContent: boolean;
   browserTools: boolean;
   deferredBrowserTools: boolean;
   cdpTools: boolean;

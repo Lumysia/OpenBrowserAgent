@@ -444,7 +444,9 @@ export const ko: LocaleMessages = {
     agentDescription: "에이전트 설명",
     agentCapabilities: "에이전트 기능",
     agentCapabilitiesDescription:
-      "이 사용자 지정 에이전트가 사용할 수 있는 도구와 컨텍스트를 선택하세요.",
+      "이 에이전트가 사용할 수 있는 도구와 컨텍스트를 선택하세요.",
+    builtinAgentCapabilitiesDescription:
+      "내장 에이전트 기능은 참고용으로 표시되며 수정할 수 없습니다.",
     agentCapabilityGroups: {
       browser: "브라우저",
       builtinTools: "내장 도구 및 컨텍스트",
@@ -454,7 +456,6 @@ export const ko: LocaleMessages = {
     },
     agentCapabilityLabels: {
       browserAutomation: "브라우저 조작",
-      readPageContent: "첨부된 페이지 읽기",
       browserTools: "내장 도구 사용",
       deferredBrowserTools: "고급 브라우저 작업 불러오기",
       cdpTools: "CDP 도구",

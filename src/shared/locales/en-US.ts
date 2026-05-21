@@ -444,7 +444,9 @@ export const enUS = {
     agentDescription: "Agent description",
     agentCapabilities: "Agent capabilities",
     agentCapabilitiesDescription:
-      "Choose which tools and context this custom agent can use.",
+      "Choose which tools and context this agent can use.",
+    builtinAgentCapabilitiesDescription:
+      "Built-in agent capabilities are shown for reference and cannot be edited.",
     agentCapabilityGroups: {
       browser: "Browser",
       builtinTools: "Built-in tools and context",
@@ -454,7 +456,6 @@ export const enUS = {
     },
     agentCapabilityLabels: {
       browserAutomation: "Operate browser",
-      readPageContent: "Read attached pages",
       browserTools: "Use built-in tools",
       deferredBrowserTools: "Load advanced browser actions",
       cdpTools: "CDP tools",

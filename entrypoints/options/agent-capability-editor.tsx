@@ -14,10 +14,12 @@ import {
 export function AgentCapabilityEditor({
   t,
   capabilities,
+  readOnly = false,
   onChange,
 }: {
   t: Messages;
   capabilities: AgentCapabilities;
+  readOnly?: boolean;
   onChange: (capabilities: AgentCapabilities) => void;
 }) {
   return (
@@ -29,7 +31,11 @@ export function AgentCapabilityEditor({
               <SlidersHorizontal size={15} />
               <span>{t.options.agentCapabilities}</span>
             </span>
-            <small>{t.options.agentCapabilitiesDescription}</small>
+            <small>
+              {readOnly
+                ? t.options.builtinAgentCapabilitiesDescription
+                : t.options.agentCapabilitiesDescription}
+            </small>
           </span>
         </AccordionTrigger>
         <AccordionContent>
@@ -49,6 +55,7 @@ export function AgentCapabilityEditor({
                       <Switch
                         id={`agent-capability-${key}`}
                         checked={capabilities[key]}
+                        disabled={readOnly}
                         onCheckedChange={(checked) =>
                           onChange({ ...capabilities, [key]: checked })
                         }

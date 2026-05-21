@@ -58,7 +58,6 @@ export function usePromptUsageEstimate({
   useEffect(() => {
     let cancelled = false;
     buildSidepanelContext({
-      capabilities: agent.capabilities,
       attachedTabs,
       selectedElements,
     })
@@ -67,7 +66,7 @@ export function usePromptUsageEstimate({
     return () => {
       cancelled = true;
     };
-  }, [agent.capabilities, attachedTabs, selectedElements]);
+  }, [attachedTabs, selectedElements]);
 
   return useMemo(() => {
     const attachments = uniqueAttachments([
