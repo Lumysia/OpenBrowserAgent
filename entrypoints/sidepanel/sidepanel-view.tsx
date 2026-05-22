@@ -201,6 +201,9 @@ export function SidepanelView({
 
   if (modelCount === 0) return <ProvidersEmptyState t={t} />;
   const sidepanelClass = `sidepanel ${editingMessageId ? "editing-mode" : ""}`;
+  const parentChat = currentChat?.parentChatId
+    ? chats.find((chat) => chat.id === currentChat.parentChatId)
+    : undefined;
   const latestUserMessageId = [...(currentChat?.messages || [])]
     .reverse()
     .find((message) => message.role === "user")?.id;
@@ -235,8 +238,10 @@ export function SidepanelView({
         <SidepanelHeader
           t={t}
           currentChat={currentChat}
+          parentChat={parentChat}
           onCreateChat={onCreateChat}
           onSetShowHistory={onSetShowHistory}
+          onSelectChat={onSelectChat}
         />
         {editingMessageId && (
           <EditModeOverlay t={t} onCancel={onCancelEditMessage} />
@@ -265,6 +270,7 @@ export function SidepanelView({
               onResend={onResendMessage}
               resendDisabled={streaming}
               onFork={onForkMessage}
+              onSelectChat={onSelectChat}
             />
           ))}
         </ScrollArea>

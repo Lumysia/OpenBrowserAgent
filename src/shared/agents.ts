@@ -6,6 +6,7 @@ export const ASK_AGENT_ID = "ask-agent";
 export const AGENT_CAPABILITIES: AgentCapabilities = {
   browserAutomation: true,
   browserTools: true,
+  subAgents: true,
   deferredBrowserTools: true,
   cdpTools: true,
   javascriptExecution: false,
@@ -27,6 +28,7 @@ export const AGENT_CAPABILITIES: AgentCapabilities = {
 export const ASK_AGENT_CAPABILITIES: AgentCapabilities = {
   browserAutomation: false,
   browserTools: true,
+  subAgents: false,
   deferredBrowserTools: false,
   cdpTools: false,
   javascriptExecution: false,
@@ -86,6 +88,7 @@ export const BUILTIN_AGENTS = [DEFAULT_AGENT, ASK_AGENT];
 export const AGENT_CAPABILITY_KEYS: Array<keyof AgentCapabilities> = [
   "browserAutomation",
   "browserTools",
+  "subAgents",
   "deferredBrowserTools",
   "cdpTools",
   "javascriptExecution",
@@ -118,6 +121,7 @@ export const AGENT_CAPABILITY_GROUPS = [
     key: "builtinTools",
     capabilities: [
       "browserTools",
+      "subAgents",
       "currentTime",
       "fileUrlRead",
       "imageGeneration",
@@ -155,6 +159,7 @@ export function normalizeAgents(value: Agent[] | undefined) {
   const agents = Array.isArray(value) ? value.filter(isAgentLike) : [];
   const normalized = agents.map((agent) => ({
     ...agent,
+    capabilities: { ...CUSTOM_AGENT_CAPABILITIES, ...agent.capabilities },
     name: normalizeAgentName(agent),
     createdAt: agent.createdAt || now,
     updatedAt: agent.updatedAt || agent.createdAt || now,
@@ -232,7 +237,9 @@ function isAgentCapabilities(
 ): value is AgentCapabilities {
   return (
     !!value &&
-    AGENT_CAPABILITY_KEYS.every((key) => typeof value[key] === "boolean")
+    AGENT_CAPABILITY_KEYS.every(
+      (key) => value[key] === undefined || typeof value[key] === "boolean",
+    )
   );
 }
 

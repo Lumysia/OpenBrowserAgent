@@ -1,4 +1,5 @@
 import React from "react";
+import { CornerDownRight } from "lucide-react";
 import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
 import type { Messages } from "../../src/shared/i18n";
 import { openOrFocusUrl } from "../../src/shared/tab-navigation";
@@ -23,22 +24,27 @@ export function ToolPart({
   t,
   part,
   runEnded = false,
+  onSelectChat,
 }: {
   t: Messages;
   part: ChatPart;
   runEnded?: boolean;
+  onSelectChat?: (chatId: string) => void;
 }) {
   if (!isToolPartType(part.type)) return null;
   const name = part.toolName || toolNameFromPartType(part.type);
-  const { title, description, references } = toolDisplay(
+  const { title, description, references, subAgentProgress } = toolDisplay(
     name,
     part,
     t,
     runEnded,
   );
+  const output = (part.output || {}) as Record<string, unknown>;
+  const subAgentRunning = isSubAgentTool(name) && output.state === "running";
   const loading =
     !runEnded &&
-    (part.state === CHAT_PART_STATE.inputStreaming ||
+    (subAgentRunning ||
+      part.state === CHAT_PART_STATE.inputStreaming ||
       part.state === CHAT_PART_STATE.inputAvailable);
   const isError = part.state === CHAT_PART_STATE.outputError;
   const isDone = part.state === CHAT_PART_STATE.outputAvailable;
@@ -55,6 +61,7 @@ export function ToolPart({
     description,
     references.map((reference) => reference.title).join("|"),
   ].join("::");
+  const subAgentChatId = subAgentChildChatId(name, part);
   return (
     <div className={`tool-card ${status}`}>
       <Popover>
@@ -86,6 +93,30 @@ export function ToolPart({
             />
           )}
           {description && <div className="tool-description">{description}</div>}
+          {isSubAgentTool(name) && (
+            <div
+              className={`tool-detail-slot ${subAgentProgress ? "visible" : ""}`}
+              aria-hidden={!subAgentProgress}
+            >
+              <div
+                className="tool-description tool-detail-slot-content"
+                key={subAgentProgress}
+              >
+                {subAgentProgress}
+              </div>
+            </div>
+          )}
+          {subAgentChatId && (
+            <Button
+              className="tool-subagent-link"
+              variant="secondary"
+              size="sm"
+              onClick={() => onSelectChat?.(subAgentChatId)}
+            >
+              <CornerDownRight size={14} />
+              <span>{t.sidepanel.openSubAgentChat}</span>
+            </Button>
+          )}
           {!!references.length && (
             <div className="tool-references">
               {references.map((reference, index) => (
@@ -101,6 +132,23 @@ export function ToolPart({
       </div>
     </div>
   );
+}
+
+function isSubAgentTool(name: string) {
+  return (
+    name === BROWSER_TOOL_NAME.startSubAgent ||
+    name === BROWSER_TOOL_NAME.getSubAgentStatus
+  );
+}
+
+function subAgentChildChatId(name: string, part: ChatPart) {
+  if (!isSubAgentTool(name)) return undefined;
+  const output = part.output as Record<string, unknown> | undefined;
+  if (output?.state === "missing") return undefined;
+  const childChatId = String(
+    output?.childChatId || output?.taskId || "",
+  ).trim();
+  return childChatId || undefined;
 }
 
 function ToolReferenceButton({

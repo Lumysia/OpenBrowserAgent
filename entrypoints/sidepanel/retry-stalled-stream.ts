@@ -9,6 +9,7 @@ import type {
   UploadedAttachment,
 } from "../../src/shared/types";
 import type { ActiveStream } from "./sidepanel-menu-state";
+import { agentWithoutNestedSubAgents } from "./sub-agent-runtime";
 
 export function retryStalledStream({
   active,
@@ -38,6 +39,8 @@ export function retryStalledStream({
     (message) => message.id === active.assistantMessageId,
   );
   if (!chat || assistantIndex === undefined || assistantIndex < 0) return;
+  const runtimeAgent =
+    chat.kind === "subagent" ? agentWithoutNestedSubAgents(agent) : agent;
 
   active.retryCount += 1;
   const retryInstruction: ChatMessage = {
@@ -58,10 +61,10 @@ export function retryStalledStream({
       messages: [...chat.messages.slice(0, assistantIndex), retryInstruction],
       body: {
         modelId: preferences?.selectedModelId,
-        agentCapabilities: agent.capabilities,
+        agentCapabilities: runtimeAgent.capabilities,
         language,
         maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
-        context: { uploadedAttachments, agent },
+        context: { uploadedAttachments, agent: runtimeAgent },
       },
     },
     active.assistantMessageId,

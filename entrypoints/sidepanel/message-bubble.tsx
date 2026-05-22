@@ -49,6 +49,7 @@ export function MessageBubble({
   onEdit,
   onResend,
   onFork,
+  onSelectChat,
   resendDisabled = false,
   sources = [],
   chatMessages,
@@ -64,6 +65,7 @@ export function MessageBubble({
   onEdit?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
   onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
   onFork?: (message: ChatMessage, partId?: string) => void;
+  onSelectChat?: (chatId: string) => void;
   resendDisabled?: boolean;
   latestUserMessage?: boolean;
 }) {
@@ -149,6 +151,7 @@ export function MessageBubble({
               onFork={() => onFork?.(message, part.id)}
               message={message}
               chatMessages={chatMessages}
+              onSelectChat={onSelectChat}
             />
           ))}
         </>

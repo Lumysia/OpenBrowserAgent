@@ -1,6 +1,8 @@
 export const BROWSER_TOOL_NAME = {
   loadBrowserTools: "loadBrowserTools",
   wait: "wait",
+  startSubAgent: "startSubAgent",
+  getSubAgentStatus: "getSubAgentStatus",
   getCurrentTime: "getCurrentTime",
   openNewTabWithURL: "openNewTabWithURL",
   getCurrentTab: "getCurrentTab",

@@ -74,6 +74,63 @@ export const commonBrowserTools = [
     [],
   ),
   tool(
+    BROWSER_TOOL_NAME.startSubAgent,
+    "Delegate a focused task to another agent profile. By default this starts a linked child chat, waits for the child result, and returns that result to you. Set background=true only when you intentionally want to continue before the child finishes; then call getSubAgentStatus later to collect results.",
+    {
+      agentId: {
+        type: "string",
+        description:
+          "Target agent id. Use listSkills/read chat context only if needed to choose; omit to use the default agent.",
+      },
+      agentName: {
+        type: "string",
+        description:
+          "Target agent display name when the id is unknown, such as Browse or Ask.",
+      },
+      task: {
+        type: "string",
+        description:
+          "Clear task instructions for the child agent. Include only the context the child agent needs.",
+      },
+      title: {
+        type: "string",
+        description: "Short title for the child chat",
+      },
+      background: {
+        type: "boolean",
+        description:
+          "When true, return immediately after launching the child chat. Omit or set false to wait for the child result before continuing.",
+      },
+      timeoutMs: {
+        type: "number",
+        description:
+          "Maximum wait duration in milliseconds for the default synchronous mode. Defaults to 60000 and caps at 180000.",
+      },
+    },
+    ["task"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.getSubAgentStatus,
+    "Check or wait for a sub-agent task started by startSubAgent. Use wait=true when the parent needs the child result before answering.",
+    {
+      taskId: {
+        type: "string",
+        description: "The child chat id returned by startSubAgent",
+      },
+      wait: {
+        type: "boolean",
+        description:
+          "When true, wait until the sub-agent finishes or times out",
+      },
+      timeoutMs: {
+        type: "number",
+        description:
+          "Maximum wait duration in milliseconds. Defaults to 60000.",
+      },
+    },
+    ["taskId"],
+  ),
+  tool(
     BROWSER_TOOL_NAME.getCurrentTime,
     "Get current date/time from the user's device for exact local time/date or time zone conversion.",
     {
@@ -783,6 +840,11 @@ export function browserToolsForPrompt({
     if (!capabilities.browserTools) return false;
     if (name === BROWSER_TOOL_NAME.loadBrowserTools)
       return capabilities.deferredBrowserTools && cdpToolsAvailable;
+    if (
+      name === BROWSER_TOOL_NAME.startSubAgent ||
+      name === BROWSER_TOOL_NAME.getSubAgentStatus
+    )
+      return capabilities.subAgents;
     if (name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript)
       return (
         capabilities.cdpTools &&

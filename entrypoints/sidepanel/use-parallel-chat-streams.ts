@@ -28,6 +28,7 @@ export function useParallelChatStreams({
   agent,
   setChats,
   setUnreadCompletedChats,
+  onStreamChunk,
 }: {
   activeChatId?: string;
   currentChat?: Chat;
@@ -38,6 +39,11 @@ export function useParallelChatStreams({
   agent: Agent;
   setChats: Dispatch<SetStateAction<Chat[]>>;
   setUnreadCompletedChats: Dispatch<SetStateAction<Record<string, true>>>;
+  onStreamChunk?: (event: {
+    chatId: string;
+    messageId: string;
+    chunk: unknown;
+  }) => void;
 }) {
   const [activeStreams, setActiveStreamsState] = useState<ActiveStreamMap>({});
   const portRefs = useRef<Record<string, chrome.runtime.Port | undefined>>({});
@@ -114,6 +120,7 @@ export function useParallelChatStreams({
       setActiveStreams,
       onStreamFinished: markStreamFinished,
       appendStreamChunk: streamHandlers.appendStreamChunk,
+      onStreamChunk,
       appendToAssistant: streamHandlers.appendToAssistant,
       appendQueuedMessages: streamHandlers.appendQueuedMessages,
       removeQueuedMessage: (id, chatId) =>
@@ -138,6 +145,7 @@ export function useParallelChatStreams({
       setActiveStreams,
       onStreamFinished: markStreamFinished,
       appendStreamChunk: streamHandlers.appendStreamChunk,
+      onStreamChunk,
       appendToAssistant: streamHandlers.appendToAssistant,
       appendQueuedMessages: streamHandlers.appendQueuedMessages,
       removeQueuedMessage: (id, chatId) =>

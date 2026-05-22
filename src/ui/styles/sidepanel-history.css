@@ -32,6 +32,32 @@
   background: color-mix(in srgb, var(--secondary) 72%, transparent);
   transform: translateY(-1px);
 }
+.history-thread {
+  min-width: 0;
+}
+.history-child-list {
+  position: relative;
+  min-width: 0;
+  margin: 0 0 4px 15px;
+  padding-left: 10px;
+}
+.history-child-list::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 7px;
+  width: 1px;
+  background: color-mix(in srgb, var(--accent-strong) 24%, var(--border));
+}
+.history-item.child {
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent-softer) 18%, transparent);
+}
+.history-item.child:hover,
+.history-item.child:focus-within {
+  background: color-mix(in srgb, var(--secondary) 72%, transparent);
+}
 .history-item.active {
   background: color-mix(in srgb, var(--accent-soft) 42%, transparent);
 }
@@ -63,8 +89,13 @@
 }
 .history-select:hover,
 .history-select:focus-visible {
+  background: transparent;
   transform: none;
   box-shadow: none;
+}
+.history-item:hover .history-select,
+.history-item:focus-within .history-select {
+  background: transparent;
 }
 .history-title-editor {
   cursor: default;
@@ -94,6 +125,11 @@
   align-items: center;
   gap: 7px;
 }
+.history-title-row .ui-badge {
+  flex: 0 0 auto;
+  font-size: 10px;
+  line-height: 1;
+}
 .history-unread-dot {
   width: 7px;
   height: 7px;
@@ -119,8 +155,9 @@
 .history-item-actions {
   display: flex;
   align-items: center;
+  align-self: stretch;
   gap: 0;
-  padding-right: 2px;
+  padding: 0 2px 0 0;
 }
 .history-item-action {
   width: 22px;

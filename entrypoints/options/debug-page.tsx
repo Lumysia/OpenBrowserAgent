@@ -313,6 +313,11 @@ function toolCapabilities(name: string): Array<keyof AgentCapabilities> {
   if (name.startsWith("cdp")) return ["cdpTools"];
   if (name === BROWSER_TOOL_NAME.readFileFromUrl) return ["fileUrlRead"];
   if (
+    name === BROWSER_TOOL_NAME.startSubAgent ||
+    name === BROWSER_TOOL_NAME.getSubAgentStatus
+  )
+    return ["subAgents"];
+  if (
     name === BROWSER_TOOL_NAME.listWorkspaceFiles ||
     name === BROWSER_TOOL_NAME.readWorkspaceFile ||
     name === BROWSER_TOOL_NAME.searchWorkspaceFiles

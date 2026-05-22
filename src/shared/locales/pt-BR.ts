@@ -52,6 +52,13 @@ export const ptBR: LocaleMessages = {
     clearAllChats: "Limpar todos os chats",
     noChatsYet: "Ainda não há chats",
     removeChat: "Remover chat",
+    subAgentChat: "Chat de subagente",
+    subAgentBadge: "Sub",
+    backToParentChat: "Voltar ao chat principal",
+    openSubAgentChat: "Abrir chat do subagente",
+    subAgentRunning: "Em execução",
+    subAgentCompleted: "Concluído",
+    subAgentMissing: "Ausente",
     forkTitleSuffix: "Ramificação",
     messageCount: "{count} mensagens",
     relativeMinutesAgo: "há {count} min",
@@ -288,6 +295,10 @@ export const ptBR: LocaleMessages = {
         running: "Atualizando servidor MCP",
         done: "Servidor MCP atualizado",
       },
+      testMcpServer: {
+        running: "Testando servidor MCP",
+        done: "Servidor MCP testado",
+      },
       deleteMcpServer: {
         running: "Excluindo servidor MCP",
         done: "Servidor MCP excluído",
@@ -465,6 +476,14 @@ export const ptBR: LocaleMessages = {
         running: "Excluindo conversa",
         done: "Conversa excluída",
       },
+      startSubAgent: {
+        running: "Iniciando subagente",
+        done: "Subagente iniciado",
+      },
+      getSubAgentStatus: {
+        running: "Verificando subagente",
+        done: "Subagente verificado",
+      },
     },
   },
   options: {
@@ -514,6 +533,7 @@ export const ptBR: LocaleMessages = {
     agentCapabilityLabels: {
       browserAutomation: "Operar o navegador",
       browserTools: "Usar ferramentas integradas",
+      subAgents: "Iniciar subagentes",
       deferredBrowserTools: "Carregar ações avançadas do navegador",
       cdpTools: "Ferramentas CDP",
       javascriptExecution: "Executar JavaScript da página",

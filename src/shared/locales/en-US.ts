@@ -53,6 +53,13 @@ export const enUS = {
     clearAllChats: "Clear all chats",
     noChatsYet: "No chats yet",
     removeChat: "Remove chat",
+    subAgentChat: "Sub-agent chat",
+    subAgentBadge: "Sub",
+    backToParentChat: "Back to parent chat",
+    openSubAgentChat: "Open sub-agent chat",
+    subAgentRunning: "Running",
+    subAgentCompleted: "Completed",
+    subAgentMissing: "Missing",
     forkTitleSuffix: "Fork",
     messageCount: "{count} messages",
     relativeMinutesAgo: "{count}m ago",
@@ -285,6 +292,10 @@ export const enUS = {
         running: "Updating MCP server",
         done: "Updated MCP server",
       },
+      testMcpServer: {
+        running: "Testing MCP server",
+        done: "Tested MCP server",
+      },
       deleteMcpServer: {
         running: "Deleting MCP server",
         done: "Deleted MCP server",
@@ -453,6 +464,14 @@ export const enUS = {
         running: "Deleting chat thread",
         done: "Deleted chat thread",
       },
+      startSubAgent: {
+        running: "Starting sub-agent",
+        done: "Started sub-agent",
+      },
+      getSubAgentStatus: {
+        running: "Checking sub-agent",
+        done: "Checked sub-agent",
+      },
     },
   },
   options: {
@@ -501,6 +520,7 @@ export const enUS = {
     agentCapabilityLabels: {
       browserAutomation: "Operate browser",
       browserTools: "Use built-in tools",
+      subAgents: "Start sub-agents",
       deferredBrowserTools: "Load advanced browser actions",
       cdpTools: "CDP tools",
       javascriptExecution: "Run page JavaScript",

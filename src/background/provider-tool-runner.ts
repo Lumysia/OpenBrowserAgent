@@ -8,6 +8,7 @@ import {
   type Skill,
   type UploadedAttachment,
 } from "../shared/types";
+import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 import { post } from "./message-helpers";
 import {
   attachToolSources,
@@ -16,7 +17,7 @@ import {
   sanitizeToolOutput,
   type VisionImage,
 } from "./provider-output";
-import { executeContextAwareTool } from "./provider-tools";
+import { executeContextAwareTool, getSubAgentStatus } from "./provider-tools";
 import { isToolError } from "./tool-utils";
 
 export type ProviderToolRunResult = {
@@ -81,11 +82,20 @@ export async function runProviderTool({
         error: `Tool "${toolName}" is not available to the active agent.`,
       };
   loadDeferredToolNames(rawOutput, loadedToolNames);
-  const visionImage = extractVisionImage(rawOutput);
+  const finalRawOutput = shouldWaitForSubAgent(toolName, input, rawOutput)
+    ? await waitForSubAgentResult({
+        rawOutput,
+        input,
+        port,
+        toolName,
+        toolCallId,
+      })
+    : rawOutput;
+  const visionImage = extractVisionImage(finalRawOutput);
   const output = attachToolSources(
     toolName,
     input,
-    sanitizeToolOutput(rawOutput),
+    sanitizeToolOutput(finalRawOutput),
     responseSources,
   );
   const nextSources = mergeOutputSources(responseSources, output);
@@ -103,6 +113,114 @@ export async function runProviderTool({
     },
   });
   return { output, visionImage, responseSources: nextSources };
+}
+
+async function waitForSubAgentResult({
+  rawOutput,
+  input,
+  port,
+  toolName,
+  toolCallId,
+}: {
+  rawOutput: unknown;
+  input: Record<string, unknown>;
+  port: chrome.runtime.Port;
+  toolName: string;
+  toolCallId: string;
+}) {
+  postToolOutput(port, toolName, toolCallId, input, rawOutput);
+  const output = rawOutput as Record<string, unknown>;
+  const taskId = String(output.taskId || output.childChatId || "").trim();
+  const timeoutMs = clampSubAgentTimeout(input.timeoutMs);
+  const startedAt = Date.now();
+  let status = await getSubAgentStatus({ taskId });
+  let lastProgressKey = progressKey(status);
+  while (isPendingSubAgentState(status) && Date.now() - startedAt < timeoutMs) {
+    await sleep(500);
+    status = await getSubAgentStatus({ taskId });
+    const nextProgressKey = progressKey(status);
+    if (nextProgressKey !== lastProgressKey) {
+      lastProgressKey = nextProgressKey;
+      postToolOutput(
+        port,
+        toolName,
+        toolCallId,
+        input,
+        mergeToolObjects(rawOutput, status),
+      );
+    }
+  }
+  return mergeToolObjects(rawOutput, status);
+}
+
+function isPendingSubAgentState(output: unknown) {
+  return (
+    !!output &&
+    typeof output === "object" &&
+    ["running", "missing"].includes(
+      String((output as Record<string, unknown>).state),
+    )
+  );
+}
+
+function progressKey(output: unknown) {
+  if (!output || typeof output !== "object") return "";
+  const progress = (output as Record<string, unknown>).progress;
+  return JSON.stringify(Array.isArray(progress) ? progress.at(-1) : null);
+}
+
+function clampSubAgentTimeout(value: unknown) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 60_000;
+  return Math.min(180_000, Math.max(0, Math.trunc(number)));
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function shouldWaitForSubAgent(
+  toolName: string,
+  input: Record<string, unknown>,
+  output: unknown,
+) {
+  return (
+    toolName === BROWSER_TOOL_NAME.startSubAgent &&
+    input.background !== true &&
+    !!output &&
+    typeof output === "object" &&
+    !isToolError(output)
+  );
+}
+
+function mergeToolObjects(base: unknown, next: unknown) {
+  return {
+    ...(base && typeof base === "object" ? base : {}),
+    ...(next && typeof next === "object" ? next : {}),
+  };
+}
+
+function postToolOutput(
+  port: chrome.runtime.Port,
+  toolName: string,
+  toolCallId: string,
+  input: Record<string, unknown>,
+  rawOutput: unknown,
+) {
+  const output = sanitizeToolOutput(rawOutput);
+  post(port, {
+    type: "chunk",
+    chunk: {
+      type: toolPartType(toolName),
+      toolCallId,
+      toolName,
+      state: isToolError(output)
+        ? CHAT_PART_STATE.outputError
+        : CHAT_PART_STATE.outputAvailable,
+      input,
+      output,
+    },
+  });
 }
 
 function isAvailableTool(

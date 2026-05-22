@@ -158,11 +158,39 @@
   overflow-wrap: anywhere;
   word-break: break-word;
 }
+.tool-detail-slot {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tool-detail-slot.visible {
+  grid-template-rows: 1fr;
+}
+.tool-detail-slot-content {
+  min-height: 0;
+  overflow: hidden;
+  animation: tool-detail-swap 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.tool-detail-slot.visible .tool-detail-slot-content {
+  margin-top: 8px;
+}
 .tool-references {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
   margin-top: 12px;
+}
+.tool-subagent-link {
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 10px;
+  gap: 5px;
+}
+.tool-subagent-link span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .tool-references button {
   max-width: min(280px, calc(100% - 10px));

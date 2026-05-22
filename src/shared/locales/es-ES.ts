@@ -52,6 +52,13 @@ export const esES: LocaleMessages = {
     clearAllChats: "Borrar todos los chats",
     noChatsYet: "Aún no hay chats",
     removeChat: "Eliminar chat",
+    subAgentChat: "Chat de subagente",
+    subAgentBadge: "Sub",
+    backToParentChat: "Volver al chat principal",
+    openSubAgentChat: "Abrir chat del subagente",
+    subAgentRunning: "En curso",
+    subAgentCompleted: "Completado",
+    subAgentMissing: "No encontrado",
     forkTitleSuffix: "Rama",
     messageCount: "{count} mensajes",
     relativeMinutesAgo: "hace {count} min",
@@ -307,6 +314,10 @@ export const esES: LocaleMessages = {
         running: "Actualizando servidor MCP",
         done: "Servidor MCP actualizado",
       },
+      testMcpServer: {
+        running: "Probando servidor MCP",
+        done: "Servidor MCP probado",
+      },
       deleteMcpServer: {
         running: "Eliminando servidor MCP",
         done: "Servidor MCP eliminado",
@@ -493,6 +504,14 @@ export const esES: LocaleMessages = {
         running: "Eliminando hilo de chat",
         done: "Hilo de chat eliminado",
       },
+      startSubAgent: {
+        running: "Iniciando subagente",
+        done: "Subagente iniciado",
+      },
+      getSubAgentStatus: {
+        running: "Comprobando subagente",
+        done: "Subagente comprobado",
+      },
     },
   },
   options: {
@@ -542,6 +561,7 @@ export const esES: LocaleMessages = {
     agentCapabilityLabels: {
       browserAutomation: "Operar el navegador",
       browserTools: "Usar herramientas integradas",
+      subAgents: "Iniciar subagentes",
       deferredBrowserTools: "Cargar acciones avanzadas del navegador",
       cdpTools: "Herramientas CDP",
       javascriptExecution: "Ejecutar JavaScript de la página",

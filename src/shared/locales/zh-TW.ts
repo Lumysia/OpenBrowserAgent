@@ -49,6 +49,13 @@ export const zhTW: LocaleMessages = {
     clearAllChats: "清空所有對話",
     noChatsYet: "尚無對話",
     removeChat: "移除對話",
+    subAgentChat: "子智慧體聊天",
+    subAgentBadge: "子",
+    backToParentChat: "返回父聊天",
+    openSubAgentChat: "開啟子智慧體聊天",
+    subAgentRunning: "執行中",
+    subAgentCompleted: "已完成",
+    subAgentMissing: "找不到",
     forkTitleSuffix: "分叉",
     messageCount: "{count} 則訊息",
     relativeMinutesAgo: "{count} 分鐘前",
@@ -248,6 +255,7 @@ export const zhTW: LocaleMessages = {
         running: "更新 MCP 伺服器",
         done: "已更新 MCP 伺服器",
       },
+      testMcpServer: { running: "測試 MCP 伺服器", done: "已測試 MCP 伺服器" },
       deleteMcpServer: {
         running: "刪除 MCP 伺服器",
         done: "已刪除 MCP 伺服器",
@@ -371,6 +379,8 @@ export const zhTW: LocaleMessages = {
       searchChatHistory: { running: "搜尋聊天記錄", done: "已搜尋聊天記錄" },
       readChatThread: { running: "讀取聊天串", done: "已讀取聊天串" },
       deleteChatThread: { running: "刪除聊天串", done: "已刪除聊天串" },
+      startSubAgent: { running: "啟動子智慧體", done: "已啟動子智慧體" },
+      getSubAgentStatus: { running: "檢查子智慧體", done: "已檢查子智慧體" },
     },
   },
   options: {
@@ -413,6 +423,7 @@ export const zhTW: LocaleMessages = {
     agentCapabilityLabels: {
       browserAutomation: "操作瀏覽器",
       browserTools: "使用內建工具",
+      subAgents: "啟動子智慧體",
       deferredBrowserTools: "載入進階瀏覽器操作",
       cdpTools: "CDP 工具",
       javascriptExecution: "執行 JavaScript",

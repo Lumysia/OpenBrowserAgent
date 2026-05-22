@@ -52,6 +52,13 @@ export const jaJP: LocaleMessages = {
     clearAllChats: "すべてのチャットを消去",
     noChatsYet: "チャットはまだありません",
     removeChat: "チャットを削除",
+    subAgentChat: "サブエージェントチャット",
+    subAgentBadge: "サブ",
+    backToParentChat: "親チャットに戻る",
+    openSubAgentChat: "サブエージェントチャットを開く",
+    subAgentRunning: "実行中",
+    subAgentCompleted: "完了",
+    subAgentMissing: "見つかりません",
     forkTitleSuffix: "分岐",
     messageCount: "{count}件のメッセージ",
     relativeMinutesAgo: "{count}分前",
@@ -317,6 +324,10 @@ export const jaJP: LocaleMessages = {
         running: "MCPサーバーを更新中",
         done: "MCPサーバーを更新しました",
       },
+      testMcpServer: {
+        running: "MCPサーバーをテスト中",
+        done: "MCPサーバーをテストしました",
+      },
       deleteMcpServer: {
         running: "MCPサーバーを削除中",
         done: "MCPサーバーを削除しました",
@@ -518,6 +529,14 @@ export const jaJP: LocaleMessages = {
         running: "チャットスレッドを削除中",
         done: "チャットスレッドを削除しました",
       },
+      startSubAgent: {
+        running: "サブエージェントを開始中",
+        done: "サブエージェントを開始しました",
+      },
+      getSubAgentStatus: {
+        running: "サブエージェントを確認中",
+        done: "サブエージェントを確認しました",
+      },
     },
   },
   options: {
@@ -567,6 +586,7 @@ export const jaJP: LocaleMessages = {
     agentCapabilityLabels: {
       browserAutomation: "ブラウザーを操作",
       browserTools: "組み込みツールを使用",
+      subAgents: "サブエージェントを開始",
       deferredBrowserTools: "高度なブラウザー操作を読み込む",
       cdpTools: "CDP ツール",
       javascriptExecution: "ページ JavaScript を実行",

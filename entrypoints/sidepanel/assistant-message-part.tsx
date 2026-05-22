@@ -32,6 +32,7 @@ export function AssistantPart({
   onFork,
   message,
   chatMessages,
+  onSelectChat,
 }: {
   t: Messages;
   part: ChatPart;
@@ -39,9 +40,17 @@ export function AssistantPart({
   onFork?: () => void;
   message: ChatMessage;
   chatMessages: ChatMessage[];
+  onSelectChat?: (chatId: string) => void;
 }) {
   if (isToolPartType(part.type))
-    return <ToolPart t={t} part={part} runEnded={messageRunEnded(message)} />;
+    return (
+      <ToolPart
+        t={t}
+        part={part}
+        runEnded={messageRunEnded(message)}
+        onSelectChat={onSelectChat}
+      />
+    );
   if (part.type === "reasoning" && part.text?.trim())
     return <AssistantReasoning t={t} text={part.text} />;
   if (part.type === "text" && part.text?.trim())

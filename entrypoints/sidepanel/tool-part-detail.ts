@@ -4,6 +4,11 @@ import type { ToolErrorCode } from "../../src/shared/tool-errors";
 import { CHAT_PART_STATE, type ChatPart } from "../../src/shared/types";
 import { cdpToolDetail } from "./cdp-tool-detail";
 import { formatToolMessage } from "./format";
+import {
+  subAgentDetail,
+  subAgentProgressDetail,
+  subAgentTitle,
+} from "./sub-agent-tool-display";
 import { isMemoryToolName } from "./tool-icons";
 import { toolReferences } from "./tool-references";
 
@@ -43,6 +48,8 @@ export function toolDisplay(
       (runEnded && state === CHAT_PART_STATE.inputAvailable)
         ? toolText?.done
         : toolText?.running;
+    if (name === BROWSER_TOOL_NAME.startSubAgent)
+      return subAgentTitle(base, output, toolText, t);
     if (
       name === BROWSER_TOOL_NAME.groupTabs &&
       state === CHAT_PART_STATE.outputAvailable &&
@@ -68,6 +75,11 @@ export function toolDisplay(
         stringValue(output.localDateTime),
         stringValue(output.timeZone),
       ]);
+    if (
+      name === BROWSER_TOOL_NAME.startSubAgent ||
+      name === BROWSER_TOOL_NAME.getSubAgentStatus
+    )
+      return subAgentDetail(input, output, t, toolText?.running);
     if (name === BROWSER_TOOL_NAME.getCurrentTab)
       return compactJoin([
         idLabel("Tab", output.tabId),
@@ -225,7 +237,8 @@ export function toolDisplay(
     TOOL_DETAIL_DESCRIPTION_MAX_LENGTH,
   );
   const references = toolReferences(name, output, input);
-  return { title, description, references };
+  const subAgentProgress = subAgentProgressDetail(name, output, t, toolLabel);
+  return { title, description, references, subAgentProgress };
 }
 
 function fallbackToolDetail(
@@ -389,11 +402,9 @@ function shortValue(value: unknown, maxLength = 140) {
   const text = typeof value === "string" ? value : JSON.stringify(value);
   return text.length > maxLength ? `${text.slice(0, maxLength - 3)}...` : text;
 }
-
 function stringValue(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : "";
 }
-
 function shortUrl(value: unknown) {
   const text = stringValue(value);
   if (!text) return "";
@@ -402,23 +413,19 @@ function shortUrl(value: unknown) {
     TOOL_DETAIL_URL_MAX_LENGTH,
   );
 }
-
 function idLabel(label: string, value: unknown) {
   const text =
     stringValue(value) || (Number.isFinite(Number(value)) ? String(value) : "");
   return text ? `${label} ${text}` : "";
 }
-
 function arrayLabel(label: string, value: unknown) {
   const items = Array.isArray(value) ? value : value ? [value] : [];
   const text = items.map(String).filter(Boolean).join(", ");
   return text ? `${label} ${text}` : "";
 }
-
 function compactJoin(values: Array<string | undefined>) {
   return values.filter(Boolean).join(" · ");
 }
-
 function rangeLabel(output: Record<string, unknown>) {
   const offset = Number(output.offset);
   const limit = Number(output.limit);
@@ -429,16 +436,13 @@ function rangeLabel(output: Record<string, unknown>) {
     ? `${offset}-${Math.min(end, total)} / ${total}`
     : `${offset}-${end}`;
 }
-
 function contentLengthLabel(value: unknown) {
   return typeof value === "string" ? `${value.length} chars` : "";
 }
-
 function toolLabel(name: string, t: Messages) {
   const toolText = t.sidepanel.tool[name as keyof typeof t.sidepanel.tool];
   return toolText?.done || toolText?.running || humanizeToolName(name);
 }
-
 function humanizeToolName(name: string) {
   if (!name.startsWith("cdp")) return name;
   return `CDP ${name

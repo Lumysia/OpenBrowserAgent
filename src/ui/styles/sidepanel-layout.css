@@ -118,6 +118,28 @@
   width: 32px;
   height: 32px;
 }
+.sidepanel-chat-context {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+.sidepanel-chat-context strong {
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sidepanel-chat-context small {
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .history-page {
   min-width: 0;
   min-height: 0;

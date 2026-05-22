@@ -1,5 +1,6 @@
 import {
   Clock,
+  Bot,
   Download,
   ExternalLink,
   FileSearch,
@@ -22,6 +23,10 @@ export function toolIcon(name: string) {
   const lowerName = name.toLowerCase();
   if (name === BROWSER_TOOL_NAME.loadBrowserTools)
     return <Layers size={19} strokeWidth={2.1} />;
+  if (name === BROWSER_TOOL_NAME.startSubAgent)
+    return <Bot size={19} strokeWidth={2.1} />;
+  if (name === BROWSER_TOOL_NAME.getSubAgentStatus)
+    return <FileSearch size={19} strokeWidth={2.1} />;
   if (isWorkspaceToolName(name)) {
     if (name === BROWSER_TOOL_NAME.searchWorkspaceFiles)
       return <FileSearch size={19} strokeWidth={2.1} />;

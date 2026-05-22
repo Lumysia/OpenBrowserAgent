@@ -1,4 +1,5 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
+import { resolveAgent } from "../shared/agents";
 import { isVisionImageMimeType } from "../shared/attachments";
 import {
   BINARY_STRING_CHUNK_SIZE,
@@ -141,6 +142,10 @@ export function executeContextAwareTool({
 }) {
   if (toolName === BROWSER_TOOL_NAME.loadBrowserTools)
     return loadBrowserTools(input, capabilities);
+  if (toolName === BROWSER_TOOL_NAME.startSubAgent)
+    return startSubAgent(input, context);
+  if (toolName === BROWSER_TOOL_NAME.getSubAgentStatus)
+    return getSubAgentStatus(input);
   if (
     toolName === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript &&
     !capabilities.javascriptExecution
@@ -323,6 +328,8 @@ function toolCategory(name: string) {
 }
 
 const TOOL_CATEGORY_BY_NAME = {
+  [BROWSER_TOOL_NAME.startSubAgent]: "agents",
+  [BROWSER_TOOL_NAME.getSubAgentStatus]: "agents",
   [BROWSER_TOOL_NAME.readUploadedAttachment]: "files",
   [BROWSER_TOOL_NAME.readFileFromUrl]: "files",
   [BROWSER_TOOL_NAME.generateImage]: "image",
@@ -362,6 +369,164 @@ const DEFERRED_TOOL_QUERY_STOP_WORDS = new Set([
   "tool",
   "tools",
 ]);
+
+async function startSubAgent(
+  input: Record<string, unknown>,
+  context?: { chatId?: string; messageId?: string; toolCallId?: string },
+) {
+  const task = String(input.task || "").trim();
+  if (!task) return { error: "Missing sub-agent task" };
+  const agents = await storage.agents.get();
+  const requestedAgentId = String(input.agentId || "").trim();
+  const requestedAgentName = String(input.agentName || "").trim();
+  const namedAgent = requestedAgentName
+    ? agents.find(
+        (item) =>
+          item.name.trim().toLowerCase() === requestedAgentName.toLowerCase(),
+      )
+    : undefined;
+  const agent =
+    namedAgent || resolveAgent(agents, requestedAgentId || undefined);
+  const title = normalizeSubAgentTitle(input.title, task, agent.name);
+  const childChatId = crypto.randomUUID();
+  return {
+    taskId: childChatId,
+    childChatId,
+    state: "running",
+    parentChatId: context?.chatId,
+    parentMessageId: context?.messageId,
+    parentToolCallId: context?.toolCallId,
+    agentId: agent.id,
+    agentName: agent.name,
+    task,
+    title,
+    note:
+      input.background === true
+        ? "Sub-agent started in a linked child chat. Call getSubAgentStatus with taskId and wait=true when you need the result before answering."
+        : "Sub-agent started in a linked child chat. Waiting for the child result before continuing.",
+  };
+}
+
+export async function getSubAgentStatus(input: Record<string, unknown>) {
+  const taskId = String(input.taskId || input.childChatId || "").trim();
+  if (!taskId) return { error: "Missing sub-agent task id" };
+  const wait = input.wait === true;
+  const timeoutMs = clampSubAgentWait(input.timeoutMs);
+  const startedAt = Date.now();
+  let result = await inspectSubAgentTask(taskId);
+  while (
+    wait &&
+    isPendingSubAgentState(result.state) &&
+    Date.now() - startedAt < timeoutMs
+  ) {
+    await sleep(500);
+    result = await inspectSubAgentTask(taskId);
+  }
+  return {
+    ...result,
+    taskId,
+    waitedMs: Date.now() - startedAt,
+    timedOut: wait && isPendingSubAgentState(result.state),
+  };
+}
+
+function isPendingSubAgentState(state: unknown) {
+  return state === "running" || state === "missing";
+}
+
+async function inspectSubAgentTask(taskId: string) {
+  const chats = await storage.chats.get();
+  const chat = chats.find((item) => item.id === taskId);
+  if (!chat) return { state: "missing", error: "Sub-agent task not found" };
+  const assistant = [...chat.messages]
+    .reverse()
+    .find((message) => message.role === "assistant");
+  const metrics = assistant?.metadata?.runMetrics as
+    | { endedAt?: unknown }
+    | undefined;
+  const text = assistantText(assistant);
+  const progress = assistantProgress(assistant);
+  const state = metrics?.endedAt ? "completed" : "running";
+  return {
+    state,
+    title: chat.title,
+    agentId: chat.agentId,
+    parentChatId: chat.parentChatId,
+    parentToolCallId: chat.parentToolCallId,
+    progress,
+    result: state === "completed" ? text : undefined,
+    preview: text ? text.slice(0, 1200) : undefined,
+  };
+}
+
+function assistantText(
+  message:
+    | { content?: string; parts?: Array<{ type: string; text?: string }> }
+    | undefined,
+) {
+  if (!message) return "";
+  const partText = message.parts
+    ?.filter((part) => part.type === "text")
+    .map((part) => part.text || "")
+    .join("");
+  return (partText || message.content || "").trim();
+}
+
+function assistantProgress(
+  message:
+    | {
+        parts?: Array<{
+          type: string;
+          toolName?: string;
+          state?: string;
+          input?: unknown;
+          output?: unknown;
+        }>;
+      }
+    | undefined,
+) {
+  const toolParts = (message?.parts || []).filter((part) =>
+    part.type.startsWith("tool-"),
+  );
+  return toolParts.slice(-6).map((part) => ({
+    toolName: part.toolName || part.type.slice("tool-".length),
+    state: part.state,
+    title: toolProgressTitle(part.input, part.output),
+  }));
+}
+
+function toolProgressTitle(input: unknown, output: unknown) {
+  const source = output && typeof output === "object" ? output : input;
+  if (!source || typeof source !== "object") return undefined;
+  const item = source as Record<string, unknown>;
+  return (
+    String(
+      item.title || item.path || item.query || item.url || item.error || "",
+    )
+      .trim()
+      .slice(0, 160) || undefined
+  );
+}
+
+function clampSubAgentWait(value: unknown) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 60_000;
+  return Math.min(180_000, Math.max(0, Math.trunc(number)));
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function normalizeSubAgentTitle(
+  value: unknown,
+  task: string,
+  agentName: string,
+) {
+  const explicit = String(value || "").trim();
+  const base = explicit || task.replace(/\s+/g, " ").slice(0, 60);
+  return `${agentName}: ${base || "Sub-agent task"}`.slice(0, 90);
+}
 
 async function readFileFromUrl(input: Record<string, unknown>) {
   const url = String(input.url || "").trim();

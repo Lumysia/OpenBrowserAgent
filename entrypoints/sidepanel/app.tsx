@@ -6,9 +6,9 @@ import { isSkillEnabled } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
 import {
   AI_STREAM_REQUEST_TYPE,
-  type AiStreamRequest,
   type Chat,
   type ChatMessage,
+  type SendMessagesRequest,
   type Skill,
   type UploadedAttachment,
 } from "../../src/shared/types";
@@ -16,11 +16,8 @@ import { useBuiltinSkills } from "../../src/ui/useBuiltinSkills";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { requestChatTitle } from "./ai-requests";
 import {
-  closeChatAction,
-  createChatAction,
   forkChatAction,
   pruneEmptyChats,
-  selectChatAction,
   updateChatAction,
 } from "./chat-state-actions";
 import {
@@ -48,20 +45,26 @@ import {
   type ComposerMenu,
 } from "./sidepanel-menu-state";
 import { SidepanelView } from "./sidepanel-view";
+import { agentForChatRuntime } from "./sub-agent-runtime";
+import { useChatActions } from "./use-chat-actions";
 import { useComposerContext } from "./use-composer-context";
 import { useChatDraft } from "./use-chat-drafts";
-import { useConfiguredModels } from "./use-configured-models";
+import { useConfiguredModels as useModels } from "./use-configured-models";
 import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
 import { useParallelChatStreams } from "./use-parallel-chat-streams";
 import { usePromptUsageEstimate } from "./prompt-usage-preview";
 import { useQueuedMessages } from "./use-queued-messages";
+import {
+  type SubAgentHandler,
+  useSubAgentLauncher,
+} from "./use-sub-agent-launcher";
 import { useUnreadCompletedChats } from "./use-unread-completed-chats";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
 
 export function SidepanelApp() {
   const [providers, , providersLoading] = useStoredState(storage.provider);
-  const [ignoreSyncedProvidersForBootstrap] = useStoredState(
+  const [ignoreSyncedBootstrap] = useStoredState(
     storage.ignoreSyncedProvidersForBootstrap,
   );
   const [preferences, setPreferences] = useStoredState(storage.preferences);
@@ -81,11 +84,7 @@ export function SidepanelApp() {
   const sidepanelRef = useRef<HTMLDivElement | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const initializedChatSelectionRef = useRef(false);
-  const configuredModels = useConfiguredModels(
-    providers,
-    ignoreSyncedProvidersForBootstrap,
-  );
-  const modelCount = configuredModels.length;
+  const configuredModels = useModels(providers, ignoreSyncedBootstrap);
   const currentChat = chats?.find((chat) => chat.id === activeChatId);
   const { input, setInput, clearInput } = useChatDraft(activeChatId);
   const {
@@ -93,8 +92,14 @@ export function SidepanelApp() {
     setUnreadCompletedChats,
     clearUnreadCompletedChat,
   } = useUnreadCompletedChats(activeChatId);
-  const activeAgent = resolveAgent(agents, preferences?.selectedAgentId);
+  const selectedAgent = resolveAgent(agents, preferences?.selectedAgentId);
+  const activeAgent = resolveAgent(
+    agents,
+    currentChat?.kind === "subagent" ? currentChat.agentId : selectedAgent.id,
+  );
+  const runtimeAgent = agentForChatRuntime(activeAgent, currentChat);
   const t = getMessages(language);
+  const subAgentLauncherRef = useRef<SubAgentHandler | undefined>(undefined);
   const { selectElement } = useElementSelector(t);
   const {
     uploadedAttachments,
@@ -124,11 +129,25 @@ export function SidepanelApp() {
     preferences,
     language,
     uploadedAttachments,
-    agent: activeAgent,
+    agent: runtimeAgent,
     setChats,
     setUnreadCompletedChats,
+    onStreamChunk: (event) => subAgentLauncherRef.current?.(event),
   });
   const aiWorking = currentChatStreaming;
+  const handleSubAgentStreamChunk = useSubAgentLauncher({
+    chats,
+    agents,
+    preferences,
+    configuredModels,
+    skills,
+    language,
+    t,
+    setChats,
+    beginStream,
+    startStream,
+  });
+  subAgentLauncherRef.current = handleSubAgentStreamChunk;
   const {
     attachedTabs,
     availableTabs,
@@ -145,7 +164,7 @@ export function SidepanelApp() {
   } = useComposerContext(chats || []);
   const promptUsage = usePromptUsageEstimate({
     input,
-    agent: activeAgent,
+    agent: runtimeAgent,
     currentChat,
     preferences,
     attachedTabs,
@@ -202,13 +221,15 @@ export function SidepanelApp() {
 
   useSidepanelTheme(preferences?.accentColor, preferences?.colorScheme);
 
-  const createChat = () =>
-    createChatAction({
-      title: t.words.newChat,
-      persist: false,
-      setChats,
-      setActiveChatId,
-    });
+  const { createChat, closeChat, selectChat } = useChatActions({
+    t,
+    activeChatId,
+    setChats,
+    setActiveChatId,
+    setChatSelectionRequestId,
+    abortChatStream,
+    clearUnreadCompletedChat,
+  });
 
   useChatSelection(
     chats,
@@ -238,21 +259,6 @@ export function SidepanelApp() {
     chatSelectionRequestId,
   );
 
-  function closeChat(chatId: string) {
-    abortChatStream(chatId);
-    closeChatAction({
-      chatId,
-      activeChatId,
-      setChats,
-      setActiveChatId,
-    });
-    clearUnreadCompletedChat(chatId);
-  }
-
-  function selectChat(chatId: string) {
-    selectChatAction({ chatId, setChats, setActiveChatId });
-    setChatSelectionRequestId((value) => value + 1);
-  }
   async function send(
     content = input,
     resendAttachments?: UploadedAttachment[],
@@ -266,7 +272,7 @@ export function SidepanelApp() {
       }
       return;
     }
-    const availableSkills = activeAgent.capabilities.skillTools
+    const availableSkills = runtimeAgent.capabilities.skillTools
       ? (skills || []).filter(isSkillEnabled)
       : [];
     const chat = currentChat || createChat();
@@ -375,14 +381,14 @@ export function SidepanelApp() {
       setSelectedSkills([]);
       setEditingMessage(null);
     }
-    const request: AiStreamRequest = {
+    const request: SendMessagesRequest = {
       type: AI_STREAM_REQUEST_TYPE.sendMessages,
       chatId: nextChat.id,
       messageId: assistantMessage.id,
       messages: [...baseChat.messages, userMessage],
       body: {
         modelId: preferences?.selectedModelId,
-        agentCapabilities: activeAgent.capabilities,
+        agentCapabilities: runtimeAgent.capabilities,
         language,
         maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
         context: {
@@ -392,7 +398,7 @@ export function SidepanelApp() {
           uploadedAttachments: activeAttachments,
           availableSkills,
           sources: baseChat.sources || [],
-          agent: activeAgent,
+          agent: runtimeAgent,
           imageGenerationEnabled: preferences?.imageGenerationEnabled,
         },
       },
@@ -405,14 +411,14 @@ export function SidepanelApp() {
     <SidepanelView
       t={t}
       providersReady={!providersLoading}
-      modelCount={modelCount}
+      modelCount={configuredModels.length}
       currentChat={currentChat}
       chats={chats || []}
       preferences={preferences}
       configuredModels={configuredModels}
       input={input}
       promptUsage={promptUsage}
-      activeAgent={activeAgent}
+      activeAgent={runtimeAgent}
       attachedTabs={attachedTabs}
       pendingAttachments={pendingAttachments}
       uploadedAttachments={uploadedAttachments}

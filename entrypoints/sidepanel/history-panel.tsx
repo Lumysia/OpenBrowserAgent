@@ -2,7 +2,8 @@ import { ArrowLeft, Download, Pencil, Trash2, Upload, X } from "lucide-react";
 import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import type { Agent, Chat, Preferences } from "../../src/shared/types";
-import { Button, Input, ScrollArea } from "../../src/ui/components";
+import { chatDisplayTitle } from "../../src/ui/agent-display";
+import { Badge, Button, Input, ScrollArea } from "../../src/ui/components";
 import {
   exportChatAsOpenAiJson,
   importChatFromOpenAiJson,
@@ -43,6 +44,19 @@ export function HistoryPanel({
   const [editingChatId, setEditingChatId] = useState<string>();
   const [draftTitle, setDraftTitle] = useState("");
   const sortedChats = sortChatsNewestFirst(chats);
+  const chatsByParentId = new Map<string, Chat[]>();
+  for (const chat of sortedChats) {
+    if (!chat.parentChatId) continue;
+    chatsByParentId.set(chat.parentChatId, [
+      ...(chatsByParentId.get(chat.parentChatId) || []),
+      chat,
+    ]);
+  }
+  const rootChats = sortedChats.filter(
+    (chat) =>
+      !chat.parentChatId ||
+      !chats.some((item) => item.id === chat.parentChatId),
+  );
 
   async function importChat(file: File | undefined) {
     if (!file) return;
@@ -57,7 +71,7 @@ export function HistoryPanel({
 
   function startEdit(chat: Chat) {
     setEditingChatId(chat.id);
-    setDraftTitle(chat.title || t.words.newChat);
+    setDraftTitle(chatDisplayTitle(chat, t));
   }
 
   function saveEdit(chatId: string) {
@@ -120,89 +134,180 @@ export function HistoryPanel({
         {!chats.length && (
           <div className="history-empty">{t.sidepanel.noChatsYet}</div>
         )}
-        {sortedChats.map((chat) => (
-          <div
-            className={`history-item ${chat.id === activeChatId ? "active" : ""} ${unreadCompletedChatIds[chat.id] ? "unread-complete" : ""}`}
-            key={chat.id}
-          >
-            {editingChatId === chat.id ? (
-              <div className="history-select history-title-editor">
-                <Input
-                  className="history-title-input"
-                  value={draftTitle}
-                  aria-label={t.common.edit}
-                  autoFocus
-                  onChange={(event) => setDraftTitle(event.target.value)}
-                  onBlur={() => saveEdit(chat.id)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") saveEdit(chat.id);
-                    if (event.key === "Escape") cancelEdit();
-                  }}
-                />
-                <small>
-                  {formatMessageCount(t, chat.messages.length)} ·{" "}
-                  {formatRelativeTime(t, chat.updatedAt)}
-                </small>
+        {rootChats.map((chat) => (
+          <div className="history-thread" key={chat.id}>
+            <HistoryItem
+              t={t}
+              chat={chat}
+              activeChatId={activeChatId}
+              unreadCompletedChatIds={unreadCompletedChatIds}
+              editingChatId={editingChatId}
+              draftTitle={draftTitle}
+              agent={agent}
+              preferences={preferences}
+              onSetDraftTitle={setDraftTitle}
+              onStartEdit={startEdit}
+              onSaveEdit={saveEdit}
+              onCancelEdit={cancelEdit}
+              onSelect={onSelect}
+              onClose={onClose}
+            />
+            {!!chatsByParentId.get(chat.id)?.length && (
+              <div className="history-child-list">
+                {chatsByParentId.get(chat.id)?.map((child) => (
+                  <HistoryItem
+                    key={child.id}
+                    t={t}
+                    chat={child}
+                    activeChatId={activeChatId}
+                    unreadCompletedChatIds={unreadCompletedChatIds}
+                    editingChatId={editingChatId}
+                    draftTitle={draftTitle}
+                    agent={agent}
+                    preferences={preferences}
+                    child
+                    onSetDraftTitle={setDraftTitle}
+                    onStartEdit={startEdit}
+                    onSaveEdit={saveEdit}
+                    onCancelEdit={cancelEdit}
+                    onSelect={onSelect}
+                    onClose={onClose}
+                  />
+                ))}
               </div>
-            ) : (
-              <Button
-                variant="ghost"
-                className="history-select"
-                onClick={() => onSelect(chat.id)}
-              >
-                <span className="history-title-row">
-                  {unreadCompletedChatIds[chat.id] && (
-                    <span className="history-unread-dot" aria-hidden="true" />
-                  )}
-                  <strong>{chat.title || t.words.newChat}</strong>
-                </span>
-                <small>
-                  {formatMessageCount(t, chat.messages.length)} ·{" "}
-                  {formatRelativeTime(t, chat.updatedAt)}
-                </small>
-              </Button>
             )}
-            <div className="history-item-actions">
-              <IconTooltip label={t.common.edit}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="history-item-action"
-                  aria-label={t.common.edit}
-                  onClick={() => startEdit(chat)}
-                >
-                  <Pencil size={13} />
-                </Button>
-              </IconTooltip>
-              <IconTooltip label={t.sidepanel.exportChatOpenAi}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="history-item-action"
-                  aria-label={t.sidepanel.exportChatOpenAi}
-                  disabled={!chat.messages.length}
-                  onClick={() =>
-                    exportChatAsOpenAiJson(chat, agent, preferences)
-                  }
-                >
-                  <Download size={13} />
-                </Button>
-              </IconTooltip>
-              <IconTooltip label={t.sidepanel.removeChat}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="history-item-action"
-                  aria-label={t.sidepanel.removeChat}
-                  onClick={() => onClose(chat.id)}
-                >
-                  <X size={13} />
-                </Button>
-              </IconTooltip>
-            </div>
           </div>
         ))}
       </ScrollArea>
     </div>
   );
+}
+
+function HistoryItem({
+  t,
+  chat,
+  activeChatId,
+  unreadCompletedChatIds,
+  editingChatId,
+  draftTitle,
+  agent,
+  preferences,
+  child = false,
+  onSetDraftTitle,
+  onStartEdit,
+  onSaveEdit,
+  onCancelEdit,
+  onSelect,
+  onClose,
+}: {
+  t: Messages;
+  chat: Chat;
+  activeChatId?: string;
+  unreadCompletedChatIds: Record<string, true>;
+  editingChatId?: string;
+  draftTitle: string;
+  agent: Agent;
+  preferences?: Preferences;
+  child?: boolean;
+  onSetDraftTitle: (value: string) => void;
+  onStartEdit: (chat: Chat) => void;
+  onSaveEdit: (chatId: string) => void;
+  onCancelEdit: () => void;
+  onSelect: (chatId: string) => void;
+  onClose: (chatId: string) => void;
+}) {
+  const status = chatStatus(chat);
+  const title = chatDisplayTitle(chat, t);
+  return (
+    <div
+      className={`history-item ${child ? "child" : ""} ${chat.id === activeChatId ? "active" : ""} ${unreadCompletedChatIds[chat.id] ? "unread-complete" : ""}`}
+    >
+      {editingChatId === chat.id ? (
+        <div className="history-select history-title-editor">
+          <Input
+            className="history-title-input"
+            value={draftTitle}
+            aria-label={t.common.edit}
+            autoFocus
+            onChange={(event) => onSetDraftTitle(event.target.value)}
+            onBlur={() => onSaveEdit(chat.id)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") onSaveEdit(chat.id);
+              if (event.key === "Escape") onCancelEdit();
+            }}
+          />
+          <small>
+            {formatMessageCount(t, chat.messages.length)} ·{" "}
+            {formatRelativeTime(t, chat.updatedAt)}
+          </small>
+        </div>
+      ) : (
+        <Button
+          variant="ghost"
+          className="history-select"
+          onClick={() => onSelect(chat.id)}
+        >
+          <span className="history-title-row">
+            {!child && unreadCompletedChatIds[chat.id] && (
+              <span className="history-unread-dot" aria-hidden="true" />
+            )}
+            {child && <Badge>{t.sidepanel.subAgentBadge}</Badge>}
+            <strong>{title}</strong>
+          </span>
+          <small>
+            {formatMessageCount(t, chat.messages.length)} ·{" "}
+            {formatRelativeTime(t, chat.updatedAt)}
+            {child &&
+              ` · ${status === "running" ? t.sidepanel.subAgentRunning : t.sidepanel.subAgentCompleted}`}
+          </small>
+        </Button>
+      )}
+      <div className="history-item-actions">
+        <IconTooltip label={t.common.edit}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="history-item-action"
+            aria-label={t.common.edit}
+            onClick={() => onStartEdit(chat)}
+          >
+            <Pencil size={13} />
+          </Button>
+        </IconTooltip>
+        <IconTooltip label={t.sidepanel.exportChatOpenAi}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="history-item-action"
+            aria-label={t.sidepanel.exportChatOpenAi}
+            disabled={!chat.messages.length}
+            onClick={() => exportChatAsOpenAiJson(chat, agent, preferences)}
+          >
+            <Download size={13} />
+          </Button>
+        </IconTooltip>
+        <IconTooltip label={t.sidepanel.removeChat}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="history-item-action"
+            aria-label={t.sidepanel.removeChat}
+            onClick={() => onClose(chat.id)}
+          >
+            <X size={13} />
+          </Button>
+        </IconTooltip>
+      </div>
+    </div>
+  );
+}
+
+function chatStatus(chat: Chat) {
+  const assistant = [...chat.messages]
+    .reverse()
+    .find((message) => message.role === "assistant");
+  const metrics = assistant?.metadata?.runMetrics as
+    | { endedAt?: unknown }
+    | undefined;
+  return metrics?.endedAt ? "completed" : "running";
 }

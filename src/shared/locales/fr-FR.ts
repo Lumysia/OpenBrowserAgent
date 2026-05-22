@@ -52,6 +52,13 @@ export const frFR: LocaleMessages = {
     clearAllChats: "Effacer toutes les discussions",
     noChatsYet: "Aucune discussion",
     removeChat: "Supprimer la discussion",
+    subAgentChat: "Discussion de sous-agent",
+    subAgentBadge: "Sous",
+    backToParentChat: "Retour à la discussion parente",
+    openSubAgentChat: "Ouvrir la discussion du sous-agent",
+    subAgentRunning: "En cours",
+    subAgentCompleted: "Terminé",
+    subAgentMissing: "Introuvable",
     forkTitleSuffix: "Branche",
     messageCount: "{count} messages",
     relativeMinutesAgo: "il y a {count} min",
@@ -323,6 +330,10 @@ export const frFR: LocaleMessages = {
         running: "Mise à jour du serveur MCP",
         done: "Serveur MCP mis à jour",
       },
+      testMcpServer: {
+        running: "Test du serveur MCP",
+        done: "Serveur MCP testé",
+      },
       deleteMcpServer: {
         running: "Suppression du serveur MCP",
         done: "Serveur MCP supprimé",
@@ -521,6 +532,14 @@ export const frFR: LocaleMessages = {
         running: "Suppression du fil de discussion",
         done: "Fil de discussion supprimé",
       },
+      startSubAgent: {
+        running: "Démarrage du sous-agent",
+        done: "Sous-agent démarré",
+      },
+      getSubAgentStatus: {
+        running: "Vérification du sous-agent",
+        done: "Sous-agent vérifié",
+      },
     },
   },
   options: {
@@ -570,6 +589,7 @@ export const frFR: LocaleMessages = {
     agentCapabilityLabels: {
       browserAutomation: "Piloter le navigateur",
       browserTools: "Utiliser les outils intégrés",
+      subAgents: "Démarrer des sous-agents",
       deferredBrowserTools: "Charger les actions avancées du navigateur",
       cdpTools: "Outils CDP",
       javascriptExecution: "Exécuter le JavaScript de la page",

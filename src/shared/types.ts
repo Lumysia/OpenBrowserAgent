@@ -110,6 +110,7 @@ export type SkillFile = {
 export type AgentCapabilities = {
   browserAutomation: boolean;
   browserTools: boolean;
+  subAgents: boolean;
   deferredBrowserTools: boolean;
   cdpTools: boolean;
   javascriptExecution: boolean;
@@ -277,6 +278,12 @@ export type Chat = {
   id: string;
   title: string;
   messages: ChatMessage[];
+  agentId?: string;
+  kind?: "normal" | "subagent";
+  parentChatId?: string;
+  parentMessageId?: string;
+  parentToolCallId?: string;
+  childChatIds?: string[];
   imageGenerationJobs?: ImageGenerationJob[];
   sources?: ChatSource[];
   createdAt: number;

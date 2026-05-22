@@ -51,6 +51,13 @@ export const ko: LocaleMessages = {
     clearAllChats: "모든 채팅 지우기",
     noChatsYet: "아직 채팅이 없습니다",
     removeChat: "채팅 제거",
+    subAgentChat: "하위 에이전트 채팅",
+    subAgentBadge: "하위",
+    backToParentChat: "상위 채팅으로 돌아가기",
+    openSubAgentChat: "하위 에이전트 채팅 열기",
+    subAgentRunning: "실행 중",
+    subAgentCompleted: "완료됨",
+    subAgentMissing: "찾을 수 없음",
     forkTitleSuffix: "분기",
     messageCount: "{count}개 메시지",
     relativeMinutesAgo: "{count}분 전",
@@ -288,6 +295,10 @@ export const ko: LocaleMessages = {
         running: "MCP 서버 업데이트 중",
         done: "MCP 서버 업데이트됨",
       },
+      testMcpServer: {
+        running: "MCP 서버 테스트 중",
+        done: "MCP 서버 테스트됨",
+      },
       deleteMcpServer: { running: "MCP 서버 삭제 중", done: "MCP 서버 삭제됨" },
       generateImage: { running: "이미지 생성 중", done: "이미지 생성됨" },
       readFileFromUrl: { running: "파일 읽는 중", done: "파일 읽음" },
@@ -456,6 +467,14 @@ export const ko: LocaleMessages = {
         running: "채팅 스레드 삭제 중",
         done: "채팅 스레드 삭제함",
       },
+      startSubAgent: {
+        running: "하위 에이전트 시작 중",
+        done: "하위 에이전트 시작함",
+      },
+      getSubAgentStatus: {
+        running: "하위 에이전트 확인 중",
+        done: "하위 에이전트 확인함",
+      },
     },
   },
   options: {
@@ -504,6 +523,7 @@ export const ko: LocaleMessages = {
     agentCapabilityLabels: {
       browserAutomation: "브라우저 조작",
       browserTools: "내장 도구 사용",
+      subAgents: "하위 에이전트 시작",
       deferredBrowserTools: "고급 브라우저 작업 불러오기",
       cdpTools: "CDP 도구",
       javascriptExecution: "페이지 JavaScript 실행",
