@@ -294,7 +294,7 @@ export function isWorkspaceAgentWritableFile(path: string) {
 
 export function isWorkspaceUserEditableFile(path: string) {
   const pathResult = normalizeWorkspacePath(path);
-  return pathResult.ok && !isWorkspaceSystemFile(pathResult.path);
+  return pathResult.ok;
 }
 
 export function workspaceTotalChars(files: WorkspaceFile[]) {
