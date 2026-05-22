@@ -55,6 +55,7 @@ export default defineBackground(() => {
 
   const actionApi = chrome.action ?? chrome.browserAction;
   actionApi?.onClicked.addListener(() => {
+    toggleSidebarFromAction().catch(console.warn);
     capture(SIDE_PANEL_OPENED).catch(console.warn);
   });
 
@@ -137,6 +138,15 @@ async function capture(event: string) {
   await getBrowserApi()
     .runtime.sendMessage({ type: "proxy-service.TrackerService", event })
     .catch(() => undefined);
+}
+
+async function toggleSidebarFromAction() {
+  const sidebarAction = (
+    getBrowserApi() as typeof chrome & {
+      sidebarAction?: { toggle?: () => Promise<void> };
+    }
+  ).sidebarAction;
+  await sidebarAction?.toggle?.();
 }
 
 function post(port: chrome.runtime.Port, message: AiStreamResponse) {

@@ -56,7 +56,13 @@ export function MessageRunInfo({
           </IconTooltip>
         </span>
       </PopoverTrigger>
-      <PopoverContent className="run-info-popover" align="end">
+      <PopoverContent
+        className="run-info-popover"
+        align="end"
+        side="top"
+        sideOffset={8}
+        collisionPadding={8}
+      >
         <div className="run-info-header">
           <strong>{t.sidepanel.runInfo.title}</strong>
           <Badge>{modeLabel(t, current.outputMode)}</Badge>

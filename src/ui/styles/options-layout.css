@@ -61,9 +61,9 @@
   padding-bottom: 28px;
 }
 .brand {
-  font-family: Georgia, "Times New Roman", serif;
   font-size: 22px;
-  font-weight: inherit;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 .nav-link {
   display: flex;
@@ -125,6 +125,15 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
+}
+.settings-page-title {
+  margin: 0;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }
 .settings-page-title svg,
 .settings-section-title svg {
