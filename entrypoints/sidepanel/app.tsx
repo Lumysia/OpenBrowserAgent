@@ -233,6 +233,7 @@ export function SidepanelApp() {
     currentChat?.messages,
     preferences?.autoScroll,
     currentChatStreaming,
+    activeChatId,
   );
 
   function closeChat(chatId: string) {

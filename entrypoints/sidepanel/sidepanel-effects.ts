@@ -1,6 +1,8 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import type { RefObject } from "react";
 import {
+  AUTO_SCROLL_BOTTOM_THRESHOLD_PX,
+  AUTO_SCROLL_STREAM_THROTTLE_MS,
   AUTO_RETRY_IDLE_MS,
   AUTO_RETRY_POLL_MS,
   MAX_AUTO_RETRIES,
@@ -33,16 +35,135 @@ export function useAutoScroll(
   messages: Chat["messages"] | undefined,
   autoScroll: boolean | undefined,
   streaming: boolean,
+  activeChatId: string | undefined,
 ) {
+  const stickToBottomRef = useRef(true);
+  const previousChatIdRef = useRef<string | undefined>(undefined);
+  const previousStreamingRef = useRef(false);
+  const boundElementRef = useRef<HTMLDivElement | null>(null);
+  const unbindElementRef = useRef<(() => void) | undefined>(undefined);
+  const frameRef = useRef<number | undefined>(undefined);
+  const lastStreamScrollAtRef = useRef(0);
+
+  function bindScrollElement(element: HTMLDivElement) {
+    if (boundElementRef.current === element) return;
+    unbindElementRef.current?.();
+    boundElementRef.current = element;
+
+    function updateStickToBottom() {
+      const distanceFromBottom =
+        element.scrollHeight - element.scrollTop - element.clientHeight;
+      if (distanceFromBottom <= AUTO_SCROLL_BOTTOM_THRESHOLD_PX) {
+        stickToBottomRef.current = true;
+      }
+    }
+
+    function handleWheel(event: WheelEvent) {
+      if (event.deltaY >= 0) return;
+      stickToBottomRef.current = false;
+    }
+
+    function handleDocumentWheel(event: WheelEvent) {
+      if (event.deltaY >= 0) return;
+      if (!element.contains(event.target as Node | null)) return;
+      stickToBottomRef.current = false;
+    }
+
+    function handlePointerDown() {
+      const distanceFromBottom =
+        element.scrollHeight - element.scrollTop - element.clientHeight;
+      if (distanceFromBottom > AUTO_SCROLL_BOTTOM_THRESHOLD_PX) {
+        stickToBottomRef.current = false;
+      }
+    }
+
+    updateStickToBottom();
+    element.addEventListener("scroll", updateStickToBottom, {
+      passive: true,
+    });
+    element.addEventListener("wheel", handleWheel, { passive: true });
+    element.addEventListener("wheel", handleWheel, {
+      capture: true,
+      passive: true,
+    });
+    document.addEventListener("wheel", handleDocumentWheel, {
+      capture: true,
+      passive: true,
+    });
+    element.addEventListener("pointerdown", handlePointerDown, {
+      passive: true,
+    });
+    unbindElementRef.current = () => {
+      element.removeEventListener("scroll", updateStickToBottom);
+      element.removeEventListener("wheel", handleWheel);
+      element.removeEventListener("wheel", handleWheel, { capture: true });
+      document.removeEventListener("wheel", handleDocumentWheel, {
+        capture: true,
+      });
+      element.removeEventListener("pointerdown", handlePointerDown);
+      if (boundElementRef.current === element) boundElementRef.current = null;
+    };
+  }
+
+  useEffect(() => {
+    const messagesElement = messagesRef.current;
+    if (messagesElement) bindScrollElement(messagesElement);
+    return () => unbindElementRef.current?.();
+  }, [messagesRef]);
+
+  useEffect(
+    () => () => {
+      if (frameRef.current !== undefined)
+        cancelAnimationFrame(frameRef.current);
+    },
+    [],
+  );
+
   useLayoutEffect(() => {
     if (autoScroll === false) return;
     const messagesElement = messagesRef.current;
     if (!messagesElement) return;
-    messagesElement.scrollTo({
-      top: messagesElement.scrollHeight,
-      behavior: streaming ? "auto" : "smooth",
+    bindScrollElement(messagesElement);
+
+    const chatChanged = previousChatIdRef.current !== activeChatId;
+    const streamingStarted = streaming && !previousStreamingRef.current;
+    previousStreamingRef.current = streaming;
+    if (chatChanged || streamingStarted) {
+      previousChatIdRef.current = activeChatId;
+      stickToBottomRef.current = true;
+    }
+
+    if (streaming && !stickToBottomRef.current) {
+      return;
+    }
+    const now = performance.now();
+    if (
+      streaming &&
+      now - lastStreamScrollAtRef.current < AUTO_SCROLL_STREAM_THROTTLE_MS
+    ) {
+      return;
+    }
+
+    if (frameRef.current !== undefined) cancelAnimationFrame(frameRef.current);
+    lastStreamScrollAtRef.current = now;
+    frameRef.current = requestAnimationFrame(() => {
+      frameRef.current = undefined;
+      const distanceFromBottom =
+        messagesElement.scrollHeight -
+        messagesElement.scrollTop -
+        messagesElement.clientHeight;
+      if (streaming && distanceFromBottom <= 2) {
+        return;
+      }
+      if (streaming && !stickToBottomRef.current) {
+        return;
+      }
+      messagesElement.scrollTo({
+        top: messagesElement.scrollHeight,
+        behavior: chatChanged ? "auto" : "smooth",
+      });
     });
-  }, [messages, autoScroll, streaming]);
+  }, [messages, autoScroll, streaming, activeChatId]);
 }
 
 export function useChatSelection(
