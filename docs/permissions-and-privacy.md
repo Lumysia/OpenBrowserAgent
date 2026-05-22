@@ -4,17 +4,24 @@ OpenBrowserAgent is powerful because it can read browser context, automate pages
 
 ## Browser Permissions
 
-Declared in `wxt.config.ts`:
+Declared in `wxt.config.ts`. Permissions differ by browser target.
+
+All builds declare:
 
 - `scripting`: inject scripts/CSS for page text extraction, element selection, DOM interaction, input, scrolling, and content capture.
 - `tabs`: read tab metadata, list tabs, focus tabs, open/close/reload/navigate tabs, and attach tab context to chats.
 - `storage`: persist settings, providers, agents, skills, MCP servers, chats, workspaces, language, and sync status.
+- `downloads`: save Markdown exports, image ZIPs, Mermaid downloads, generated images, and fetched files.
+- `host_permissions: ["<all_urls>"]`: allow extension tools to work across arbitrary pages, provider endpoints, MCP servers, and remote image/file URLs.
+
+Chrome/Chromium builds additionally declare:
+
 - `tabGroups`: group tabs and update group names/colors.
 - `sidePanel`: provide the extension side panel.
-- `downloads`: save Markdown exports, image ZIPs, Mermaid downloads, generated images, and fetched files.
 - `debugger`: enable CDP-style browser automation, screenshots, snapshots, console/network inspection, emulation, and page-level automation when an enabled agent/tool path requires it.
 - `search`: opens search tabs through the browser's configured default search engine.
-- `host_permissions: ["<all_urls>"]`: allow extension tools to work across arbitrary pages, provider endpoints, MCP servers, and remote image/file URLs.
+
+Firefox and Safari builds omit the Chrome-only `tabGroups`, `sidePanel`, `debugger`, and `search` permissions. Safari-compatible builds open `sidepanel.html` as an extension tab when the extension action is clicked because the Chrome side panel API is not available there.
 
 The extension page CSP allows images from `self`, `data:`, `blob:`, `http:`, and `https:` so rendered Markdown images, generated images, and Mermaid previews can display.
 

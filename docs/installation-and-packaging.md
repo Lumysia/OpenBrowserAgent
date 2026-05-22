@@ -5,6 +5,7 @@
 - Node.js and npm.
 - A Chromium-based browser for the default Chrome MV3 build.
 - Optional: Firefox for the Firefox build target.
+- Optional: Safari and Xcode for loading or packaging the Safari MV2 build.
 
 ## Development
 
@@ -24,6 +25,12 @@ Firefox development mode:
 
 ```bash
 npm run dev:firefox
+```
+
+Safari development mode:
+
+```bash
+npm run dev:safari
 ```
 
 ## Build
@@ -53,6 +60,26 @@ Firefox build:
 npm run build:firefox
 ```
 
+The unpacked Firefox extension is generated under:
+
+```text
+.output/firefox-mv2
+```
+
+Safari build:
+
+```bash
+npm run build:safari
+```
+
+The unpacked Safari extension is generated under:
+
+```text
+.output/safari-mv2
+```
+
+Safari does not support Chrome's `sidePanel` manifest entry in this target. In Safari-compatible builds, clicking the extension action opens or focuses `sidepanel.html` as an extension tab instead.
+
 ## Zip Package
 
 Create a zip package with the project script:
@@ -71,6 +98,8 @@ Recommended release flow:
 npm ci
 npm run compile
 npm run build
+npm run build:firefox
+npm run build:safari
 npm run zip
 ```
 
@@ -118,6 +147,8 @@ Run these before a release:
 ```bash
 npm run compile
 npm run build
+npm run build:firefox
+npm run build:safari
 npm audit --json
 ```
 

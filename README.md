@@ -46,8 +46,19 @@ npm install
 npm run dev
 ```
 
+Browser-specific development targets are also available:
+
+```bash
+npm run dev:firefox
+npm run dev:safari
+```
+
 ## Build
 
 ```bash
 npm run build
+npm run build:firefox
+npm run build:safari
 ```
+
+Build outputs are written to `.output/chrome-mv3`, `.output/firefox-mv2`, and `.output/safari-mv2`.

@@ -7,6 +7,8 @@ Use this checklist before publishing a release or release candidate.
 - Working tree is clean: `git status --short`.
 - TypeScript passes: `npm run compile`.
 - Production build passes: `npm run build`.
+- Firefox build passes: `npm run build:firefox`.
+- Safari build passes: `npm run build:safari`.
 - Zip package builds: `npm run zip`.
 - Dependency audit passes: `npm audit --json` reports zero vulnerabilities.
 - No debug logging or temporary test hooks remain.
@@ -17,6 +19,7 @@ Use this checklist before publishing a release or release candidate.
 - Fresh install with no providers configured shows a setup path.
 - Provider creation, model fetching, model test, and default model selection work.
 - Sidepanel chat streams normally.
+- Safari action-click fallback opens or focuses the extension sidepanel tab.
 - Stop, retry, queued send, fork, copy, and chat history work.
 - Auto-scroll follows at the bottom, stops when the user scrolls away, resumes when the user returns to bottom, and resumes on retry/new streaming.
 - Long responses with code blocks, images, math, and Mermaid diagrams remain stable.
@@ -42,6 +45,7 @@ Use this checklist before publishing a release or release candidate.
 - README links to release docs.
 - Installation and packaging instructions are current.
 - Permissions and privacy page is current.
+- Browser-specific compatibility notes are current for Chrome, Firefox, and Safari.
 - Known limitations are documented.
 - Release notes mention broad browser permissions and provider/API-key storage behavior.
 
