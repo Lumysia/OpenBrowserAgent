@@ -36,9 +36,11 @@ export function useAutoScroll(
   autoScroll: boolean | undefined,
   streaming: boolean,
   activeChatId: string | undefined,
+  chatSelectionRequestId: number,
 ) {
   const stickToBottomRef = useRef(true);
   const previousChatIdRef = useRef<string | undefined>(undefined);
+  const previousSelectionRequestIdRef = useRef(chatSelectionRequestId);
   const previousStreamingRef = useRef(false);
   const boundElementRef = useRef<HTMLDivElement | null>(null);
   const unbindElementRef = useRef<(() => void) | undefined>(undefined);
@@ -126,9 +128,12 @@ export function useAutoScroll(
     bindScrollElement(messagesElement);
 
     const chatChanged = previousChatIdRef.current !== activeChatId;
+    const chatSelectionRequested =
+      previousSelectionRequestIdRef.current !== chatSelectionRequestId;
     const streamingStarted = streaming && !previousStreamingRef.current;
+    previousSelectionRequestIdRef.current = chatSelectionRequestId;
     previousStreamingRef.current = streaming;
-    if (chatChanged || streamingStarted) {
+    if (chatChanged || chatSelectionRequested || streamingStarted) {
       previousChatIdRef.current = activeChatId;
       stickToBottomRef.current = true;
     }
@@ -160,10 +165,10 @@ export function useAutoScroll(
       }
       messagesElement.scrollTo({
         top: messagesElement.scrollHeight,
-        behavior: chatChanged ? "auto" : "smooth",
+        behavior: chatChanged || chatSelectionRequested ? "auto" : "smooth",
       });
     });
-  }, [messages, autoScroll, streaming, activeChatId]);
+  }, [messages, autoScroll, streaming, activeChatId, chatSelectionRequestId]);
 }
 
 export function useChatSelection(

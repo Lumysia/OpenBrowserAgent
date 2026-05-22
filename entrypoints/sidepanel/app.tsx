@@ -74,6 +74,7 @@ export function SidepanelApp() {
   const [openMenu, setOpenMenu] = useState<ComposerMenu | null>(null);
   const [addMenuView, setAddMenuView] = useState<AddMenuView>("menu");
   const [showHistory, setShowHistory] = useState(false);
+  const [chatSelectionRequestId, setChatSelectionRequestId] = useState(0);
   const [sentAttachmentPreviews, setSentAttachmentPreviews] = useState<
     Record<string, UploadedAttachment[]>
   >({});
@@ -234,6 +235,7 @@ export function SidepanelApp() {
     preferences?.autoScroll,
     currentChatStreaming,
     activeChatId,
+    chatSelectionRequestId,
   );
 
   function closeChat(chatId: string) {
@@ -249,6 +251,7 @@ export function SidepanelApp() {
 
   function selectChat(chatId: string) {
     selectChatAction({ chatId, setChats, setActiveChatId });
+    setChatSelectionRequestId((value) => value + 1);
   }
   async function send(
     content = input,
