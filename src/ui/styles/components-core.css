@@ -263,6 +263,24 @@
 .ui-card-content {
   padding: 17px;
 }
+.ui-code-surface {
+  margin: 0;
+  padding: 12px;
+  border-radius: calc(var(--radius) - 4px);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-softer) 24%, transparent),
+      transparent 58%
+    ),
+    color-mix(in srgb, var(--card) 86%, transparent);
+  color: var(--foreground);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .setting-switch-row {
   display: flex;
   align-items: center;

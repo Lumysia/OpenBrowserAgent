@@ -11,6 +11,7 @@ import { Button, ScrollArea } from "../../src/ui/components";
 import { AttachedTabCard } from "./composer-menus";
 import { IconTooltip } from "./icon-tooltip";
 import { UploadedAttachmentCard } from "./uploaded-attachment-card";
+import { useDeferredRemove } from "./use-deferred-remove";
 
 export function ComposerAttachments({
   t,
@@ -45,24 +46,12 @@ export function ComposerAttachments({
         <ScrollArea className="context-chip-scroll" orientation="horizontal">
           <div className="context-chip-row">
             {selectedSkills.map((skill) => (
-              <div className="context-card" key={skill.id}>
-                <FileText size={18} />
-                <span>
-                  <strong>{getSkillDisplayName(skill)}</strong>
-                  <small>{skill.description || t.options.skills}</small>
-                </span>
-                <IconTooltip label={t.common.cancel}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="context-close"
-                    aria-label={t.common.cancel}
-                    onClick={() => onRemoveSkill(skill.id)}
-                  >
-                    <X size={14} />
-                  </Button>
-                </IconTooltip>
-              </div>
+              <SkillContextCard
+                key={skill.id}
+                t={t}
+                skill={skill}
+                onRemove={() => onRemoveSkill(skill.id)}
+              />
             ))}
           </div>
         </ScrollArea>
@@ -79,32 +68,18 @@ export function ComposerAttachments({
               />
             ))}
             {selectedElements.map((element, index) => (
-              <div className="context-card" key={element.aiId || index}>
-                <MousePointerClick size={18} />
-                <span>
-                  <strong>
-                    {element.tagName || t.sidepanel.elementSelected}
-                  </strong>
-                  <small>{t.sidepanel.willBeSentAsPageContext}</small>
-                </span>
-                <IconTooltip label={t.common.cancel}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="context-close"
-                    aria-label={t.common.cancel}
-                    onClick={() =>
-                      onSetSelectedElements(
-                        selectedElements.filter(
-                          (_, itemIndex) => itemIndex !== index,
-                        ),
-                      )
-                    }
-                  >
-                    <X size={14} />
-                  </Button>
-                </IconTooltip>
-              </div>
+              <SelectedElementContextCard
+                key={element.aiId || index}
+                t={t}
+                element={element}
+                onRemove={() =>
+                  onSetSelectedElements(
+                    selectedElements.filter(
+                      (_, itemIndex) => itemIndex !== index,
+                    ),
+                  )
+                }
+              />
             ))}
           </div>
         </ScrollArea>
@@ -126,6 +101,70 @@ export function ComposerAttachments({
       {attachmentNotice && (
         <div className="attachment-notice">{attachmentNotice}</div>
       )}
+    </div>
+  );
+}
+
+function SkillContextCard({
+  t,
+  skill,
+  onRemove,
+}: {
+  t: Messages;
+  skill: Skill;
+  onRemove: () => void;
+}) {
+  const { removing, remove } = useDeferredRemove(onRemove);
+  return (
+    <div className={`context-card ${removing ? "is-removing" : ""}`}>
+      <FileText size={18} />
+      <span>
+        <strong>{getSkillDisplayName(skill)}</strong>
+        <small>{skill.description || t.options.skills}</small>
+      </span>
+      <IconTooltip label={t.common.cancel}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="context-close"
+          aria-label={t.common.cancel}
+          onClick={remove}
+        >
+          <X size={14} />
+        </Button>
+      </IconTooltip>
+    </div>
+  );
+}
+
+function SelectedElementContextCard({
+  t,
+  element,
+  onRemove,
+}: {
+  t: Messages;
+  element: SelectedElement;
+  onRemove: () => void;
+}) {
+  const { removing, remove } = useDeferredRemove(onRemove);
+  return (
+    <div className={`context-card ${removing ? "is-removing" : ""}`}>
+      <MousePointerClick size={18} />
+      <span>
+        <strong>{element.tagName || t.sidepanel.elementSelected}</strong>
+        <small>{t.sidepanel.willBeSentAsPageContext}</small>
+      </span>
+      <IconTooltip label={t.common.cancel}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="context-close"
+          aria-label={t.common.cancel}
+          onClick={remove}
+        >
+          <X size={14} />
+        </Button>
+      </IconTooltip>
     </div>
   );
 }

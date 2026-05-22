@@ -3,6 +3,7 @@ import type { Messages } from "../../src/shared/i18n";
 import { Button } from "../../src/ui/components";
 import { IconTooltip } from "./icon-tooltip";
 import type { QueuedMessage } from "./use-queued-messages";
+import { useDeferredRemove } from "./use-deferred-remove";
 
 export function QueuedMessages({
   t,
@@ -29,30 +30,45 @@ export function QueuedMessages({
         </small>
       </div>
       {messages.map((message) => (
-        <div className="queued-message" key={message.id}>
-          <span>{message.content}</span>
-          <div className="queued-message-actions">
-            <IconTooltip label={t.common.edit}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onEdit(message)}
-              >
-                <Pencil size={14} />
-              </Button>
-            </IconTooltip>
-            <IconTooltip label={t.common.delete}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onDelete(message.id)}
-              >
-                <Trash2 size={14} />
-              </Button>
-            </IconTooltip>
-          </div>
-        </div>
+        <QueuedMessageRow
+          key={message.id}
+          t={t}
+          message={message}
+          onDelete={() => onDelete(message.id)}
+          onEdit={() => onEdit(message)}
+        />
       ))}
+    </div>
+  );
+}
+
+function QueuedMessageRow({
+  t,
+  message,
+  onDelete,
+  onEdit,
+}: {
+  t: Messages;
+  message: QueuedMessage;
+  onDelete: () => void;
+  onEdit: () => void;
+}) {
+  const { removing, remove } = useDeferredRemove(onDelete);
+  return (
+    <div className={`queued-message ${removing ? "is-removing" : ""}`}>
+      <span>{message.content}</span>
+      <div className="queued-message-actions">
+        <IconTooltip label={t.common.edit}>
+          <Button variant="ghost" size="icon" onClick={onEdit}>
+            <Pencil size={14} />
+          </Button>
+        </IconTooltip>
+        <IconTooltip label={t.common.delete}>
+          <Button variant="ghost" size="icon" onClick={remove}>
+            <Trash2 size={14} />
+          </Button>
+        </IconTooltip>
+      </div>
     </div>
   );
 }

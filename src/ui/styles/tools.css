@@ -103,39 +103,6 @@
       transparent 54%
     ),
     var(--popover);
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--accent-strong) 36%, transparent)
-    transparent;
-}
-.tool-json-popover::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-.tool-json-popover::-webkit-scrollbar-track {
-  background: transparent;
-}
-.tool-json-popover::-webkit-scrollbar-thumb {
-  border: 3px solid transparent;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent-strong) 34%, transparent);
-  background-clip: padding-box;
-}
-.tool-json-popover::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--accent-strong) 48%, transparent);
-  background-clip: padding-box;
-}
-.tool-json-popover pre {
-  margin: 0;
-  padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--accent-soft) 42%, var(--border));
-  border-radius: calc(var(--radius) - 4px);
-  background: color-mix(in srgb, var(--card) 82%, transparent);
-  color: var(--foreground);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 12px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
 }
 .tool-title-text {
   animation: tool-text-swap 0.22s ease both;

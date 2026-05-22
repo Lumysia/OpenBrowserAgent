@@ -1,4 +1,4 @@
-import { getActiveTab, isScriptableUrl } from "../../src/shared/browser";
+import { isScriptableUrl } from "../../src/shared/browser";
 import {
   ISO_DATE_LENGTH,
   LOCAL_CHAT_TITLE_MAX_LENGTH,
@@ -67,16 +67,6 @@ export async function buildSidepanelContext({
     const tabBlocks = [];
     for (const tab of attachedTabs) tabBlocks.push(renderAttachedTab(tab));
     parts.push(xmlBlock("selected_tabs", tabBlocks));
-  } else {
-    const tab = await getActiveTab();
-    if (tab?.id && isScriptableUrl(tab.url))
-      parts.push(
-        xmlBlock("current_tab", [
-          xmlTag("id", tab.id),
-          xmlTag("title", tab.title || ""),
-          xmlTag("url", tab.url || ""),
-        ]),
-      );
   }
   return parts.join("\n\n");
 }

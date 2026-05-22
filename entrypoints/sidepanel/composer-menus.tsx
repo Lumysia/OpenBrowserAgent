@@ -8,6 +8,7 @@ import {
   Plus,
   X,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import { DEFAULT_AGENT_ID } from "../../src/shared/agents";
 import { providerLabels } from "../../src/shared/types";
@@ -31,6 +32,7 @@ import {
   agentDisplayName,
 } from "../../src/ui/agent-display";
 import { IconTooltip } from "./icon-tooltip";
+import { useDeferredRemove } from "./use-deferred-remove";
 import { COMPOSER_MENU, type ComposerMenu } from "./sidepanel-menu-state";
 
 export function AddContextMenu({
@@ -64,88 +66,139 @@ export function AddContextMenu({
   onAttachTab: () => void;
   onSelectElement: () => void;
 }) {
-  if (view === "menu") {
-    return (
-      <div className="add-context-menu add-context-menu-compact">
-        <Button
-          variant="ghost"
-          className="action-list-item"
-          onClick={onShowTabs}
-        >
-          <Layers size={17} />
-          <span>
-            <strong>{t.sidepanel.addNewTab}</strong>
-          </span>
-        </Button>
-        <Button
-          variant="ghost"
-          className="action-list-item"
-          onClick={onAttachTab}
-          disabled={!activeTabAttachable}
-        >
-          <Plus size={17} />
-          <span>
-            <strong>{t.sidepanel.addCurrentTab}</strong>
-          </span>
-        </Button>
-        <Button
-          variant="ghost"
-          className="action-list-item"
-          onClick={onUploadFiles}
-        >
-          <Paperclip size={17} />
-          <span>
-            <strong>{t.sidepanel.attachFiles}</strong>
-            <small>{t.sidepanel.attachFilesHint}</small>
-          </span>
-        </Button>
-        {!!skills.length && (
+  const [displayView, setDisplayView] = useState(view);
+  const [leavingView, setLeavingView] = useState<typeof view | null>(null);
+
+  useEffect(() => {
+    if (view === displayView) return;
+    setLeavingView(displayView);
+    setDisplayView(view);
+    const timeout = window.setTimeout(() => setLeavingView(null), 180);
+    return () => window.clearTimeout(timeout);
+  }, [displayView, view]);
+
+  function renderView(nextView: typeof view) {
+    if (nextView === "menu")
+      return (
+        <div className="add-context-menu add-context-menu-compact">
           <Button
             variant="ghost"
             className="action-list-item"
-            onClick={onShowSkills}
+            onClick={onShowTabs}
           >
-            <FileText size={17} />
+            <Layers size={17} />
             <span>
-              <strong>{t.options.skills}</strong>
-              <small>{skills.length}</small>
+              <strong>{t.sidepanel.addNewTab}</strong>
             </span>
           </Button>
-        )}
-        <Button
-          variant="ghost"
-          className="action-list-item"
-          onClick={onSelectElement}
-          disabled={!activeTabAttachable}
-        >
-          <MousePointerClick size={17} />
-          <span>
-            <strong>{t.sidepanel.selectElement}</strong>
-          </span>
-        </Button>
-      </div>
-    );
-  }
+          <Button
+            variant="ghost"
+            className="action-list-item"
+            onClick={onAttachTab}
+            disabled={!activeTabAttachable}
+          >
+            <Plus size={17} />
+            <span>
+              <strong>{t.sidepanel.addCurrentTab}</strong>
+            </span>
+          </Button>
+          <Button
+            variant="ghost"
+            className="action-list-item"
+            onClick={onUploadFiles}
+          >
+            <Paperclip size={17} />
+            <span>
+              <strong>{t.sidepanel.attachFiles}</strong>
+              <small>{t.sidepanel.attachFilesHint}</small>
+            </span>
+          </Button>
+          {!!skills.length && (
+            <Button
+              variant="ghost"
+              className="action-list-item"
+              onClick={onShowSkills}
+            >
+              <FileText size={17} />
+              <span>
+                <strong>{t.options.skills}</strong>
+                <small>{skills.length}</small>
+              </span>
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            className="action-list-item"
+            onClick={onSelectElement}
+            disabled={!activeTabAttachable}
+          >
+            <MousePointerClick size={17} />
+            <span>
+              <strong>{t.sidepanel.selectElement}</strong>
+            </span>
+          </Button>
+        </div>
+      );
 
-  if (view === "skills") {
+    if (nextView === "skills")
+      return (
+        <div className="add-context-menu">
+          <div className="action-list-item muted">
+            <FileText size={17} /> {t.options.skills} ({skills.length})
+          </div>
+          <div>
+            {skills.map((skill) => (
+              <Button
+                key={skill.id}
+                variant="ghost"
+                className={`action-list-item ${selectedSkillIds.includes(skill.id) ? "active" : ""}`}
+                onClick={() => onSkill(skill)}
+              >
+                <FileText size={20} />
+                <span>
+                  {getSkillDisplayName(skill, t.options.untitledSkill)}
+                </span>
+                {selectedSkillIds.includes(skill.id) && (
+                  <Check className="menu-check" size={14} />
+                )}
+              </Button>
+            ))}
+          </div>
+        </div>
+      );
+
     return (
       <div className="add-context-menu">
-        <div className="action-list-item muted">
-          <FileText size={17} /> {t.options.skills} ({skills.length})
-        </div>
+        <Button
+          variant="ghost"
+          className={`action-list-item muted ${selectedTabIds.length === tabs.length ? "active" : ""}`}
+          onClick={() =>
+            tabs.forEach((tab) => {
+              if (
+                selectedTabIds.length === tabs.length ||
+                !selectedTabIds.includes(tab.id)
+              )
+                onToggleTab(tab);
+            })
+          }
+        >
+          <Layers size={17} />
+          {t.sidepanel.allOpenTabs} ({tabs.length})
+        </Button>
         <div>
-          {skills.map((skill) => (
+          {tabs.map((tab) => (
             <Button
-              key={skill.id}
+              key={tab.id}
               variant="ghost"
-              className={`action-list-item ${selectedSkillIds.includes(skill.id) ? "active" : ""}`}
-              onClick={() => onSkill(skill)}
+              className={`action-list-item ${selectedTabIds.includes(tab.id) ? "active" : ""}`}
+              onClick={() => onToggleTab(tab)}
             >
-              <FileText size={20} />
-              <span>{getSkillDisplayName(skill, t.options.untitledSkill)}</span>
-              {selectedSkillIds.includes(skill.id) && (
-                <Check className="menu-check" size={14} />
+              {tab.favIconUrl ? (
+                <img src={tab.favIconUrl} alt="" />
+              ) : (
+                <ExternalLink size={20} />
               )}
+              <span>{tab.title || tab.url || `Tab ${tab.id}`}</span>
             </Button>
           ))}
         </div>
@@ -154,38 +207,17 @@ export function AddContextMenu({
   }
 
   return (
-    <div className="add-context-menu">
-      <Button
-        variant="ghost"
-        className={`action-list-item muted ${selectedTabIds.length === tabs.length ? "active" : ""}`}
-        onClick={() =>
-          tabs.forEach((tab) => {
-            if (
-              selectedTabIds.length === tabs.length ||
-              !selectedTabIds.includes(tab.id)
-            )
-              onToggleTab(tab);
-          })
-        }
-      >
-        <Layers size={17} /> {t.sidepanel.allOpenTabs} ({tabs.length})
-      </Button>
-      <div>
-        {tabs.map((tab) => (
-          <Button
-            key={tab.id}
-            variant="ghost"
-            className={`action-list-item ${selectedTabIds.includes(tab.id) ? "active" : ""}`}
-            onClick={() => onToggleTab(tab)}
-          >
-            {tab.favIconUrl ? (
-              <img src={tab.favIconUrl} alt="" />
-            ) : (
-              <ExternalLink size={20} />
-            )}
-            <span>{tab.title || tab.url || `Tab ${tab.id}`}</span>
-          </Button>
-        ))}
+    <div className="add-context-panel-shell" data-view={displayView}>
+      {leavingView && (
+        <div
+          className="add-context-panel is-leaving"
+          key={`leaving-${leavingView}`}
+        >
+          {renderView(leavingView)}
+        </div>
+      )}
+      <div className="add-context-panel is-entering" key={displayView}>
+        {renderView(displayView)}
       </div>
     </div>
   );
@@ -200,8 +232,9 @@ export function AttachedTabCard({
   tab: AttachmentTab;
   onRemove: () => void;
 }) {
+  const { removing, remove } = useDeferredRemove(onRemove);
   return (
-    <div className="context-card">
+    <div className={`context-card ${removing ? "is-removing" : ""}`}>
       {tab.favIconUrl ? (
         <img src={tab.favIconUrl} alt="" />
       ) : (
@@ -219,7 +252,7 @@ export function AttachedTabCard({
           size="icon"
           className="context-close"
           aria-label={t.sidepanel.removeTab}
-          onClick={onRemove}
+          onClick={remove}
         >
           <X size={14} />
         </Button>

@@ -256,6 +256,7 @@
   border: 1px solid color-mix(in srgb, var(--accent-soft) 58%, var(--border));
   border-radius: 13px;
   background: color-mix(in srgb, var(--accent-softer) 42%, var(--card));
+  animation: context-row-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .queued-messages-header {
   display: grid;
@@ -277,6 +278,18 @@
   padding: 8px 8px 8px 10px;
   border-radius: 10px;
   background: color-mix(in srgb, var(--card) 78%, var(--accent-softer));
+  animation: context-chip-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition:
+    background-color 0.16s ease,
+    transform 0.16s ease;
+}
+.queued-message:hover {
+  background: color-mix(in srgb, var(--card) 70%, var(--accent-soft));
+  transform: translateY(-1px);
+}
+.queued-message.is-removing {
+  pointer-events: none;
+  animation: context-chip-remove 0.2s ease both;
 }
 .queued-message span {
   min-width: 0;
@@ -350,6 +363,30 @@
 .reasoning-effort-icon[data-effort="high"] .reasoning-effort-bars span {
   opacity: 0.95;
 }
+.add-context-panel-shell {
+  position: relative;
+  width: min(440px, calc(100vw - 24px));
+  max-width: 100%;
+  overflow: hidden;
+  transition: width 0.18s ease;
+}
+.add-context-panel-shell[data-view="menu"] {
+  width: max-content;
+  min-width: 180px;
+  max-width: min(240px, calc(100vw - 24px));
+}
+.add-context-panel {
+  min-width: 0;
+}
+.add-context-panel.is-entering {
+  animation: add-context-panel-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.add-context-panel.is-leaving {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: add-context-panel-leave 0.18s ease both;
+}
 .add-context-menu {
   width: min(440px, calc(100vw - 24px));
   max-width: 100%;
@@ -368,6 +405,27 @@
   min-width: 180px;
   max-width: min(240px, calc(100vw - 24px));
   max-height: none;
+}
+
+@keyframes add-context-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateX(10px) scale(0.985);
+    filter: blur(1px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes add-context-panel-leave {
+  to {
+    opacity: 0;
+    transform: translateX(-8px) scale(0.985);
+    filter: blur(1px);
+  }
 }
 .model-menu {
   width: min(222px, calc(100vw - 24px));

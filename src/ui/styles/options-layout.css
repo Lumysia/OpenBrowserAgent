@@ -255,7 +255,7 @@
   background: transparent;
   color: var(--muted-foreground);
 }
-.action-list-item.muted:hover {
+.action-list-item.muted:not(button):hover {
   background: transparent;
   transform: none;
 }

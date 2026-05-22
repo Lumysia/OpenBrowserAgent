@@ -69,7 +69,7 @@ export function ToolPart({
           </button>
         </PopoverTrigger>
         <PopoverContent className="tool-json-popover" align="start">
-          <pre>{toolJsonDetail(name, part)}</pre>
+          <pre className="ui-code-surface">{toolJsonDetail(name, part)}</pre>
         </PopoverContent>
       </Popover>
       <div className="tool-detail">

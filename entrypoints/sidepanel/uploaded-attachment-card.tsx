@@ -9,6 +9,7 @@ import type { UploadedAttachment } from "../../src/shared/types";
 import { Button } from "../../src/ui/components";
 import { IconTooltip } from "./icon-tooltip";
 import { formatAttachmentSize } from "./file-attachments";
+import { useDeferredRemove } from "./use-deferred-remove";
 
 export function UploadFileInput({
   inputRef,
@@ -41,12 +42,15 @@ export function UploadedAttachmentCard({
   t: Messages;
   onRemove: () => void;
 }) {
+  const { removing, remove } = useDeferredRemove(onRemove);
   const status = isMetadataOnlyAttachment(attachment.kind)
     ? t.sidepanel.fileMetadataOnly
     : t.sidepanel.willBeSentToAi;
 
   return (
-    <div className="context-card attachment-card">
+    <div
+      className={`context-card attachment-card ${removing ? "is-removing" : ""}`}
+    >
       <AttachmentPreview attachment={attachment} />
       <span>
         <strong>{attachment.name}</strong>
@@ -60,7 +64,7 @@ export function UploadedAttachmentCard({
           size="icon"
           className="context-close"
           aria-label={t.sidepanel.removeAttachment}
-          onClick={onRemove}
+          onClick={remove}
         >
           <X size={14} />
         </Button>
