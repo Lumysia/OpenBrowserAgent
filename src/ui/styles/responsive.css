@@ -79,6 +79,11 @@
   color: var(--muted-foreground);
   box-shadow: 0 8px 20px color-mix(in srgb, var(--shadow) 72%, transparent);
   overflow: hidden;
+  transform-origin: left center;
+  animation: typing-indicator-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.typing-indicator.is-removing {
+  animation: typing-indicator-leave 0.18s ease both;
 }
 .typing-indicator::after {
   content: "";
@@ -155,6 +160,25 @@
     transform: translateX(120%);
   }
 }
+@keyframes typing-indicator-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px) scale(0.97);
+    filter: blur(1px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+@keyframes typing-indicator-leave {
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+    filter: blur(1px);
+  }
+}
 @keyframes typing-icon-float {
   0%,
   100% {
@@ -196,6 +220,10 @@
   }
 
   .assistant-text,
+  .assistant-link-card,
+  .source-chip-list .ui-button,
+  .assistant-actions,
+  .assistant-model-meta,
   .assistant-text.streaming .markdown > *:last-child,
   .stream-char,
   .history-page,

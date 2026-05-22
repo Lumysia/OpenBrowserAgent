@@ -4,7 +4,13 @@ import type { Messages } from "../../src/shared/i18n";
 
 const TYPING_PHRASE_INTERVAL_MS = 2_000;
 
-export function TypingIndicator({ t }: { t: Messages }) {
+export function TypingIndicator({
+  t,
+  removing = false,
+}: {
+  t: Messages;
+  removing?: boolean;
+}) {
   const phrases = t.sidepanel.typingPhrases;
   const [index, setIndex] = useState(0);
   const phrase = phrases[index % phrases.length] || "";
@@ -19,7 +25,10 @@ export function TypingIndicator({ t }: { t: Messages }) {
   }, [phrases.length]);
 
   return (
-    <span className="typing-indicator" aria-label={phrase}>
+    <span
+      className={`typing-indicator${removing ? " is-removing" : ""}`}
+      aria-label={phrase}
+    >
       <span className="typing-indicator-icon" aria-hidden="true">
         <Sparkles size={15} />
       </span>

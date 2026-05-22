@@ -260,6 +260,7 @@
 .composer {
   position: sticky;
   bottom: 0;
+  z-index: 4;
   border-top: 1px solid var(--border);
   padding: 10px 10px 12px;
   background: linear-gradient(
@@ -283,12 +284,20 @@
 }
 .skill-create-row {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   margin-top: -34px;
   margin-bottom: 8px;
   pointer-events: none;
 }
+.skill-create-row .typing-indicator {
+  min-width: 0;
+  pointer-events: none;
+}
 .skill-create {
+  flex: 0 0 auto;
+  margin-left: auto;
   pointer-events: auto;
   height: 42px;
   padding: 0 16px;

@@ -26,6 +26,10 @@ export default defineConfig({
       "debugger",
     ],
     host_permissions: ["<all_urls>"],
+    content_security_policy: {
+      extension_pages:
+        "script-src 'self'; object-src 'self'; img-src 'self' data: blob: http: https:;",
+    },
     icons: {
       16: "icons/16.png",
       32: "icons/32.png",

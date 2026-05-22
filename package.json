@@ -27,6 +27,7 @@
     "cmdk": "^1.1.1",
     "highlight.js": "^11.11.1",
     "jszip": "^3.10.1",
+    "katex": "^0.16.47",
     "lucide-react": "latest",
     "marked": "latest",
     "nanoid": "latest",

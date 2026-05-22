@@ -54,6 +54,7 @@ import type {
 } from "./sidepanel-view-types";
 import { UploadFileInput } from "./uploaded-attachment-card";
 import type { QueuedMessage } from "./use-queued-messages";
+import { useDeferredPresence } from "./use-deferred-remove";
 
 export function SidepanelView({
   t,
@@ -181,6 +182,7 @@ export function SidepanelView({
   onSelectChat: (chatId: string) => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const typingPresence = useDeferredPresence(aiWorking);
 
   function attachFromPicker() {
     fileInputRef.current?.click();
@@ -199,13 +201,6 @@ export function SidepanelView({
 
   if (modelCount === 0) return <ProvidersEmptyState t={t} />;
   const sidepanelClass = `sidepanel ${editingMessageId ? "editing-mode" : ""}`;
-  const hasInlineTypingMessage = !!currentChat?.messages.some(
-    (message, index, messages) =>
-      index === messages.length - 1 &&
-      message.role === "assistant" &&
-      !message.content &&
-      !message.parts?.length,
-  );
   const latestUserMessageId = [...(currentChat?.messages || [])]
     .reverse()
     .find((message) => message.role === "user")?.id;
@@ -272,11 +267,6 @@ export function SidepanelView({
               onFork={onForkMessage}
             />
           ))}
-          {aiWorking && !hasInlineTypingMessage && (
-            <div className="message" aria-live="polite">
-              <TypingIndicator t={t} />
-            </div>
-          )}
         </ScrollArea>
         <footer className="composer">
           <UploadFileInput
@@ -284,6 +274,9 @@ export function SidepanelView({
             onAttachFiles={onAttachFiles}
           />
           <div className="skill-create-row">
+            {typingPresence.mounted && (
+              <TypingIndicator t={t} removing={typingPresence.removing} />
+            )}
             <Button
               className="skill-create"
               variant="secondary"

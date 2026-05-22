@@ -59,6 +59,79 @@
   font-size: 0.92em;
   line-height: 1.55;
 }
+.markdown .katex {
+  color: var(--foreground);
+  font-size: 1.02em;
+}
+.markdown .katex-display {
+  max-width: 100%;
+  margin: 12px 0 18px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 46%, var(--border));
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-softer) 32%, transparent),
+      transparent 58%
+    ),
+    color-mix(in srgb, var(--card) 90%, transparent);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow) 44%, transparent);
+}
+.markdown .katex-display > .katex {
+  display: inline-block;
+  min-width: max-content;
+}
+.markdown-image-card {
+  max-width: min(100%, 520px);
+  margin: 10px 0 18px;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 48%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card) 92%, var(--accent-softer));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow) 48%, transparent);
+}
+.markdown-image-card img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--secondary) 70%, var(--card));
+}
+.markdown-image-card.is-broken {
+  display: grid;
+  place-items: center;
+  min-height: 92px;
+  color: var(--muted-foreground);
+}
+.markdown-image-card.is-broken::before {
+  content: attr(data-alt);
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+.markdown-image-card.is-broken img,
+.markdown-image-card.is-broken figcaption {
+  display: none;
+}
+.markdown-image-card figcaption {
+  margin-top: 7px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: center;
+}
+.markdown-image-card figcaption:empty {
+  display: none;
+}
+.markdown-image-invalid {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
 .markdown th,
 .markdown td {
   min-width: 88px;
@@ -119,7 +192,7 @@
   padding: 12px;
   border: 1px solid color-mix(in srgb, var(--accent-soft) 48%, var(--border));
   border-radius: 12px;
-  background: var(--card);
+  background: color-mix(in srgb, var(--card) 90%, var(--accent-softer));
   overflow: auto;
 }
 .mermaid-preview {
@@ -130,7 +203,13 @@
   padding: 12px;
   box-sizing: border-box;
   border-radius: 10px;
-  background: white;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-softer) 26%, transparent),
+      transparent 58%
+    ),
+    color-mix(in srgb, var(--card) 94%, var(--background));
   transition: transform 0.16s ease;
 }
 .mermaid-preview:hover {

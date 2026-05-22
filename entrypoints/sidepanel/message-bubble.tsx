@@ -31,7 +31,6 @@ import { formatAttachmentSize } from "./file-attachments";
 import { formatMessageTime } from "./format";
 import { AssistantPart, AssistantText } from "./assistant-message-part";
 import { MessageRunInfo } from "./message-run-info";
-import { TypingIndicator } from "./typing-indicator";
 import {
   Badge,
   Button,
@@ -105,6 +104,8 @@ export function MessageBubble({
     ? [assistantModel.provider, assistantModel.name].filter(Boolean).join(" · ")
     : undefined;
   const showRunInfo = message.role === "assistant" && messageRunEnded(message);
+  const assistantEnded =
+    message.role === "assistant" && messageRunEnded(message);
   return (
     <div
       className={`message ${message.role === "user" ? "user" : ""} ${latestUserMessage ? "latest-user" : ""} ${editing ? "editing" : ""}`}
@@ -136,6 +137,7 @@ export function MessageBubble({
               onFork={() => onFork?.(message)}
               message={message}
               chatMessages={chatMessages}
+              hideActions={!assistantEnded}
             />
           )}
           {message.parts?.map((part) => (
@@ -150,11 +152,7 @@ export function MessageBubble({
             />
           ))}
         </>
-      ) : !message.content ? (
-        messageRunEnded(message) ? null : (
-          <TypingIndicator t={t} />
-        )
-      ) : (
+      ) : !message.content ? null : (
         <AssistantText
           t={t}
           text={message.content}
@@ -165,6 +163,7 @@ export function MessageBubble({
           message={message}
           chatMessages={chatMessages}
           showRunInfo={showRunInfo}
+          hideActions={!assistantEnded}
         />
       )}
       {message.role === "assistant" &&
@@ -174,6 +173,7 @@ export function MessageBubble({
         )}
       {message.role === "assistant" &&
         hasParts &&
+        assistantEnded &&
         (showRunInfo || modelLabel || message.createdAt) && (
           <div className="assistant-actions">
             {showRunInfo && (

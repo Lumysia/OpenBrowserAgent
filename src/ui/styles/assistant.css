@@ -38,6 +38,7 @@
   text-align: left;
   box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow) 64%, transparent);
   cursor: pointer;
+  animation: assistant-supplement-enter 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
   transition:
     background-color 0.16s ease,
     border-color 0.16s ease,
@@ -330,6 +331,19 @@
   font-size: 11px;
   font-weight: 500;
   overflow: hidden;
+  animation: assistant-supplement-enter 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.source-chip-list .ui-button:nth-child(2) {
+  animation-delay: 24ms;
+}
+.source-chip-list .ui-button:nth-child(3) {
+  animation-delay: 48ms;
+}
+.source-chip-list .ui-button:nth-child(4) {
+  animation-delay: 72ms;
+}
+.source-chip-list .ui-button:nth-child(n + 5) {
+  animation-delay: 96ms;
 }
 .source-chip-list .ui-badge {
   flex: 0 0 auto;
@@ -383,6 +397,7 @@
   margin-top: -4px;
   margin-bottom: 8px;
   text-align: left;
+  animation: assistant-supplement-enter 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .assistant-actions:has(.assistant-model-meta) {
   margin-top: 4px;
@@ -396,6 +411,7 @@
   font-size: 11px;
   line-height: 1;
   opacity: 0.62;
+  animation: assistant-meta-enter 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 @keyframes assistant-text-enter {
   from {
@@ -404,6 +420,28 @@
   }
   to {
     opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes assistant-supplement-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+    filter: blur(1px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+@keyframes assistant-meta-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 0.62;
     transform: translateY(0);
   }
 }

@@ -52,6 +52,7 @@ export function AssistantPart({
         onFork={onFork}
         message={message}
         chatMessages={chatMessages}
+        hideActions={!messageRunEnded(message)}
       />
     );
   return null;
@@ -102,6 +103,7 @@ export function AssistantText({
   chatMessages = [],
   sources = [],
   showRunInfo = false,
+  hideActions = false,
 }: {
   t: Messages;
   text: string;
@@ -112,6 +114,7 @@ export function AssistantText({
   chatMessages?: ChatMessage[];
   sources?: ChatSource[];
   showRunInfo?: boolean;
+  hideActions?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
@@ -124,6 +127,7 @@ export function AssistantText({
     STREAM_RENDER_THROTTLE_MS,
   );
   const streaming = displayText.length < text.length;
+  const outputSettled = !streaming && !hideActions;
   const { html, codeBlocks } = renderMarkdown(
     displayText,
     t,
@@ -132,12 +136,12 @@ export function AssistantText({
     {
       animatedFromChar:
         displayText.length < text.length ? animatedFrom : undefined,
-      mermaidPreview: !streaming,
+      mermaidPreview: outputSettled,
     },
   );
   const linkCards = useMemo(
-    () => (streaming ? [] : extractMarkdownLinks(displayText)),
-    [displayText, streaming],
+    () => (outputSettled ? extractMarkdownLinks(displayText) : []),
+    [displayText, outputSettled],
   );
   const metadataLinks = useMemo(
     () => linkCards.slice(0, LINK_METADATA_MAX_CARDS),
@@ -254,6 +258,17 @@ export function AssistantText({
       .catch(() => undefined);
   }
 
+  function handleMarkdownImageError(
+    event: React.SyntheticEvent<HTMLDivElement>,
+  ) {
+    const image =
+      event.target instanceof HTMLImageElement ? event.target : null;
+    const card = image?.closest(".markdown-image-card") as HTMLElement | null;
+    if (!image || !card) return;
+    card.classList.add("is-broken");
+    card.dataset.alt = image.alt || "Image failed to load";
+  }
+
   return (
     <div className={`assistant-text${streaming ? " streaming" : ""}`}>
       <div
@@ -261,6 +276,7 @@ export function AssistantText({
         className="markdown"
         dangerouslySetInnerHTML={{ __html: html }}
         onClick={handleMarkdownClick}
+        onErrorCapture={handleMarkdownImageError}
       />
       {!!linkCards.length && (
         <div className="assistant-link-cards">
@@ -273,46 +289,48 @@ export function AssistantText({
           ))}
         </div>
       )}
-      <div className="assistant-actions">
-        <div className="message-actions assistant-action-buttons">
-          <IconTooltip label={copied ? t.common.copied : t.common.copy}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`copy-message${copied ? " copied" : ""}`}
-              onClick={copyText}
-            >
-              {copied ? <Check /> : <Copy />}
-            </Button>
-          </IconTooltip>
-          {onFork && (
-            <IconTooltip label={t.sidepanel.forkChat}>
+      {!hideActions && (
+        <div className="assistant-actions">
+          <div className="message-actions assistant-action-buttons">
+            <IconTooltip label={copied ? t.common.copied : t.common.copy}>
               <Button
                 variant="ghost"
                 size="icon"
-                className="copy-message"
-                onClick={onFork}
+                className={`copy-message${copied ? " copied" : ""}`}
+                onClick={copyText}
               >
-                <GitBranch />
+                {copied ? <Check /> : <Copy />}
               </Button>
             </IconTooltip>
-          )}
-          {showRunInfo && message && (
-            <MessageRunInfo
-              t={t}
-              message={message}
-              chatMessages={chatMessages}
-            />
+            {onFork && (
+              <IconTooltip label={t.sidepanel.forkChat}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="copy-message"
+                  onClick={onFork}
+                >
+                  <GitBranch />
+                </Button>
+              </IconTooltip>
+            )}
+            {showRunInfo && message && (
+              <MessageRunInfo
+                t={t}
+                message={message}
+                chatMessages={chatMessages}
+              />
+            )}
+          </div>
+          {(modelLabel || createdAt) && (
+            <span className="assistant-model-meta">
+              {[modelLabel, createdAt ? formatMessageTime(createdAt) : ""]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
           )}
         </div>
-        {(modelLabel || createdAt) && (
-          <span className="assistant-model-meta">
-            {[modelLabel, createdAt ? formatMessageTime(createdAt) : ""]
-              .filter(Boolean)
-              .join(" · ")}
-          </span>
-        )}
-      </div>
+      )}
     </div>
   );
 }
