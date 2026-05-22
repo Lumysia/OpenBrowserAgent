@@ -25,8 +25,10 @@ export function formatRelativeTime(t: Messages, value: number) {
   const hours = Math.round(minutes / 60);
   if (hours < 24)
     return formatToolMessage(t.sidepanel.relativeHoursAgo, { count: hours });
+  const days = Math.round(hours / 24);
+  if (days >= 7) return formatHistoryDate(value);
   return formatToolMessage(t.sidepanel.relativeDaysAgo, {
-    count: Math.round(hours / 24),
+    count: days,
   });
 }
 
@@ -58,8 +60,20 @@ export function formatToolMessage(
 
 export function formatMessageTime(value: number) {
   return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+  }).format(value);
+}
+
+function formatHistoryDate(value: number) {
+  const date = new Date(value);
+  const sameYear = date.getFullYear() === new Date().getFullYear();
+  return new Intl.DateTimeFormat(undefined, {
+    year: sameYear ? undefined : "numeric",
+    month: "short",
+    day: "numeric",
   }).format(value);
 }
 
