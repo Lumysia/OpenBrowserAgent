@@ -133,7 +133,9 @@
   outline-offset: 2px;
 }
 .run-info-popover {
-  width: min(320px, calc(100vw - 28px));
+  width: max-content;
+  min-width: min(236px, calc(100vw - 28px));
+  max-width: min(360px, calc(100vw - 28px));
   display: grid;
   gap: 10px;
   padding: 12px;
@@ -153,12 +155,20 @@
 .run-info-tabs {
   display: grid;
   gap: 10px;
-  justify-items: start;
+  justify-items: stretch;
+}
+.run-info-tabs .ui-tabs-list {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .run-info-header strong {
   font-size: 13px;
 }
 .run-info-section {
+  width: max-content;
+  min-width: 100%;
+  max-width: 100%;
   display: grid;
   gap: 7px;
   padding-top: 10px;
@@ -173,7 +183,7 @@
 }
 .run-info-metric-pair {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, max-content);
   gap: 12px;
 }
 .run-info-metric-pair .run-info-row {
@@ -181,6 +191,8 @@
 }
 .run-info-row {
   min-width: 0;
+  display: grid;
+  grid-template-columns: max-content max-content;
   color: var(--muted-foreground);
   font-size: 12px;
 }
@@ -192,13 +204,14 @@
 }
 .run-info-token-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, max-content);
   gap: 6px 12px;
   padding: 8px;
   border-radius: 12px;
   background: color-mix(in srgb, var(--accent-softer) 26%, transparent);
 }
 .run-info-prompt {
+  min-width: min(220px, calc(100vw - 52px));
   display: grid;
   gap: 7px;
 }

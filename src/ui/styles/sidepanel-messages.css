@@ -240,10 +240,19 @@
 .attachment-replace-popover > .ui-button {
   height: 34px;
   margin-top: 1px;
-  border: 1px solid color-mix(in srgb, var(--accent-soft) 48%, var(--border));
   border-radius: 12px;
+}
+.attachment-replace-popover > .ui-button-secondary {
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 48%, var(--border));
   background: color-mix(in srgb, var(--secondary) 72%, var(--card));
   color: var(--muted-foreground);
+}
+.attachment-replace-popover > .ui-button-default {
+  border-color: color-mix(in srgb, var(--accent-strong) 30%, var(--border));
+  background: color-mix(in srgb, var(--accent-soft) 78%, var(--card));
+  color: color-mix(in srgb, var(--accent-strong) 88%, var(--foreground));
+  box-shadow: 0 8px 20px
+    color-mix(in srgb, var(--accent-shadow) 56%, transparent);
 }
 .attachment-replace-row input {
   display: none;

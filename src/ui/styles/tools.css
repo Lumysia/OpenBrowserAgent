@@ -151,6 +151,10 @@
   margin-top: 8px;
   font-size: 14px;
   line-height: 1.45;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
