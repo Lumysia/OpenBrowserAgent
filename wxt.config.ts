@@ -1,13 +1,13 @@
 import { defineConfig } from "wxt";
 import { fileURLToPath } from "node:url";
 
-const permissions = [
-  "scripting",
-  "tabs",
-  "storage",
+const permissions = ["scripting", "tabs", "storage", "downloads"] as const;
+
+const chromiumOnlyPermissions = [
   "tabGroups",
   "search",
-  "downloads",
+  "sidePanel",
+  "debugger",
 ] as const;
 
 export default defineConfig({
@@ -25,9 +25,9 @@ export default defineConfig({
     version: "0.1.0",
     default_locale: "en",
     permissions:
-      browser === "firefox"
+      browser === "firefox" || browser === "safari"
         ? [...permissions]
-        : [...permissions, "sidePanel", "debugger"],
+        : [...permissions, ...chromiumOnlyPermissions],
     host_permissions: ["<all_urls>"],
     content_security_policy: {
       extension_pages:
@@ -55,21 +55,29 @@ export default defineConfig({
       open_in_tab: true,
       page: "options.html",
     },
-    side_panel: {
-      default_path: "sidepanel.html",
-    },
-    browser_specific_settings: {
-      gecko: {
-        id: "open-browser-agent@openbrowseragent.local",
-        data_collection_permissions: {
-          required: [
-            "browsingActivity",
-            "searchTerms",
-            "websiteContent",
-            "websiteActivity",
-          ],
-        },
-      },
-    },
+    ...(browser === "safari"
+      ? {}
+      : {
+          side_panel: {
+            default_path: "sidepanel.html",
+          },
+        }),
+    ...(browser === "firefox"
+      ? {
+          browser_specific_settings: {
+            gecko: {
+              id: "open-browser-agent@openbrowseragent.local",
+              data_collection_permissions: {
+                required: [
+                  "browsingActivity",
+                  "searchTerms",
+                  "websiteContent",
+                  "websiteActivity",
+                ],
+              },
+            },
+          },
+        }
+      : {}),
   }),
 });

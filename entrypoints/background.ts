@@ -47,6 +47,7 @@ import { openAIChatCompletionsUrl } from "../src/shared/provider-urls";
 import * as streamSessions from "../src/background/stream-sessions";
 
 const SIDE_PANEL_OPENED = "side_panel_opened";
+const SIDE_PANEL_PAGE = "/sidepanel.html";
 
 export default defineBackground(() => {
   chrome.sidePanel
@@ -55,7 +56,7 @@ export default defineBackground(() => {
 
   const actionApi = chrome.action ?? chrome.browserAction;
   actionApi?.onClicked.addListener(() => {
-    toggleSidebarFromAction().catch(console.warn);
+    openActionSurface().catch(console.warn);
     capture(SIDE_PANEL_OPENED).catch(console.warn);
   });
 
@@ -140,13 +141,29 @@ async function capture(event: string) {
     .catch(() => undefined);
 }
 
-async function toggleSidebarFromAction() {
-  const sidebarAction = (
-    getBrowserApi() as typeof chrome & {
-      sidebarAction?: { toggle?: () => Promise<void> };
-    }
-  ).sidebarAction;
-  await sidebarAction?.toggle?.();
+async function openActionSurface() {
+  const api = getBrowserApi() as typeof chrome & {
+    sidebarAction?: { toggle?: () => Promise<void> };
+  };
+  if (api.sidePanel) return;
+
+  const sidebarAction = api.sidebarAction;
+  if (sidebarAction?.toggle) {
+    await sidebarAction.toggle();
+    return;
+  }
+
+  const sidePanelUrl = api.runtime.getURL(SIDE_PANEL_PAGE);
+  const existing = (await api.tabs.query({})).find(
+    (tab) => tab.url === sidePanelUrl,
+  );
+  if (existing?.id) {
+    const tab = await api.tabs.update(existing.id, { active: true });
+    if (tab?.windowId !== undefined)
+      await api.windows.update(tab.windowId, { focused: true });
+    return;
+  }
+  await api.tabs.create({ url: sidePanelUrl });
 }
 
 function post(port: chrome.runtime.Port, message: AiStreamResponse) {

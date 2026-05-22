@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox",
+    "dev:safari": "wxt -b safari",
     "build": "wxt build",
     "build:firefox": "wxt build -b firefox",
+    "build:safari": "wxt build -b safari",
     "zip": "wxt zip && node scripts/rename-zip-with-hash.mjs",
     "compile": "tsc --noEmit"
   },
