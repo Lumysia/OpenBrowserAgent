@@ -263,6 +263,7 @@
   display: grid;
   gap: 10px;
   overflow: hidden;
+  animation: tool-detail-swap 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .generated-image-result img {
   width: 100%;
@@ -272,6 +273,13 @@
   border-radius: 12px;
   object-fit: contain;
   background: var(--secondary);
+  transition:
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+.generated-image-result img:hover {
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--shadow) 58%, transparent);
+  transform: translateY(-1px);
 }
 .generated-image-skeleton {
   width: 100%;

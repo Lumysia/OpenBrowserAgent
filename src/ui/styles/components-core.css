@@ -274,6 +274,7 @@
 .ui-card:hover {
   border-color: color-mix(in srgb, var(--accent-soft) 58%, var(--border));
   box-shadow: 0 12px 32px var(--shadow);
+  transform: translateY(-1px);
 }
 .ui-card-header {
   padding: 17px 17px 0;

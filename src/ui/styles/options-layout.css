@@ -181,6 +181,18 @@
   border: 1px solid color-mix(in srgb, var(--accent-soft) 36%, var(--border));
   border-radius: 12px;
   background: color-mix(in srgb, var(--card) 88%, var(--accent-softer));
+  animation: subtle-rise-in 0.24s ease both;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+.agent-capability-row:hover {
+  border-color: color-mix(in srgb, var(--accent-strong) 18%, var(--border));
+  background: color-mix(in srgb, var(--card) 82%, var(--accent-softer));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--shadow) 42%, transparent);
+  transform: translateY(-1px);
 }
 .agent-capability-label {
   min-width: 0;

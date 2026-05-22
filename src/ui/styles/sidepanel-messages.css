@@ -90,6 +90,18 @@
   color: var(--muted-foreground);
   box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow) 50%, transparent);
   text-align: left;
+  animation: context-chip-enter 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+.sent-tabs-chip:hover,
+.sent-tab-chip:hover {
+  border-color: color-mix(in srgb, var(--accent-strong) 16%, var(--border));
+  background: color-mix(in srgb, var(--card) 78%, var(--accent-softer));
+  transform: translateY(-1px);
 }
 .sent-tabs-icons {
   position: relative;

@@ -10,6 +10,12 @@
   font-size: 12px;
   font-weight: 600;
   line-height: 1;
+  animation: fade-in 0.18s ease both;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.16s ease;
 }
 
 .ui-accordion-item {
@@ -224,6 +230,10 @@
   outline: none;
   cursor: default;
   color: var(--popover-foreground);
+  transition:
+    background-color 0.14s ease,
+    color 0.14s ease,
+    transform 0.14s ease;
 }
 .ui-select-item span:last-child {
   min-width: 0;
@@ -234,6 +244,7 @@
 .ui-select-item[data-highlighted] {
   background: var(--accent-hover);
   color: var(--accent-strong);
+  transform: translateX(1px);
 }
 .ui-select-item[data-state="checked"] {
   color: var(--accent-strong);
@@ -353,6 +364,10 @@
 .ui-progress-segment {
   height: 100%;
   background: var(--accent-strong);
+  transition:
+    width 0.24s ease,
+    transform 0.24s ease,
+    background-color 0.16s ease;
 }
 .ui-toggle-group {
   display: inline-flex;
@@ -360,13 +375,7 @@
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--accent-strong) 13%, var(--border));
   border-radius: calc(var(--radius) + 2px);
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--accent-softer) 22%, transparent),
-      transparent 58%
-    ),
-    color-mix(in srgb, var(--card) 92%, var(--background));
+  background: color-mix(in srgb, var(--card) 92%, var(--background));
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, white 36%, transparent),
     0 8px 22px color-mix(in srgb, var(--shadow) 42%, transparent);
@@ -406,16 +415,11 @@
   position: relative;
   z-index: 1;
   border-left-color: transparent;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, white 34%, transparent),
-      transparent 64%
-    ),
-    color-mix(in srgb, var(--accent-soft) 72%, var(--card));
+  background: color-mix(in srgb, var(--accent-soft) 64%, var(--card));
   color: color-mix(in srgb, var(--accent-strong) 84%, var(--foreground));
-  box-shadow: 0 8px 18px
-    color-mix(in srgb, var(--accent-shadow) 34%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent-strong) 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 20%, transparent);
   transform: none;
 }
 .ui-toggle-group-item[data-state="on"] + .ui-toggle-group-item {
@@ -423,13 +427,7 @@
 }
 :root[data-theme="dark"] .ui-toggle-group {
   border-color: color-mix(in srgb, var(--accent-strong) 16%, var(--border));
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--accent-softer) 18%, transparent),
-      transparent 60%
-    ),
-    color-mix(in srgb, var(--background) 62%, var(--card));
+  background: color-mix(in srgb, var(--background) 62%, var(--card));
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, white 6%, transparent),
     0 10px 24px rgba(0, 0, 0, 0.16);
@@ -447,17 +445,11 @@
   color: color-mix(in srgb, var(--accent-strong) 72%, var(--foreground));
 }
 :root[data-theme="dark"] .ui-toggle-group-item[data-state="on"] {
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, white 7%, transparent),
-      transparent 58%
-    ),
-    color-mix(in srgb, var(--accent-soft) 56%, var(--background));
+  background: color-mix(in srgb, var(--accent-soft) 44%, var(--background));
   color: color-mix(in srgb, var(--accent-strong) 86%, var(--foreground));
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 9%, transparent),
-    0 8px 18px rgba(0, 0, 0, 0.18);
+    inset 0 0 0 1px color-mix(in srgb, var(--accent-strong) 16%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
 }
 .ui-command {
   display: flex;
@@ -496,6 +488,7 @@
   padding: 10px 8px;
   color: var(--muted-foreground);
   font-size: 13px;
+  animation: fade-in 0.18s ease both;
 }
 .ui-command-item {
   display: flex;
@@ -510,10 +503,15 @@
   color: var(--popover-foreground);
   font-size: 13px;
   outline: none;
+  transition:
+    background-color 0.14s ease,
+    color 0.14s ease,
+    transform 0.14s ease;
 }
 .ui-command-item[data-selected="true"] {
   background: var(--accent-hover);
   color: var(--accent-strong);
+  transform: translateX(1px);
 }
 .ui-command-item span {
   min-width: 0;

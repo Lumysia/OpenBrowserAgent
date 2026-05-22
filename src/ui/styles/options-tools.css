@@ -140,13 +140,15 @@
   transition:
     background-color 0.14s ease,
     border-color 0.14s ease,
-    box-shadow 0.14s ease;
+    box-shadow 0.14s ease,
+    transform 0.14s ease;
 }
 .model-row:hover {
   border-color: color-mix(in srgb, var(--accent-strong) 24%, var(--border));
   background: color-mix(in srgb, var(--card) 86%, var(--accent-softer));
   box-shadow: 0 8px 20px
     color-mix(in srgb, var(--accent-shadow) 34%, transparent);
+  transform: translateY(-1px);
 }
 .model-row span {
   min-width: 0;

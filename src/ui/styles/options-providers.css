@@ -10,12 +10,39 @@
   border-radius: 999px;
   background: #62c584;
   box-shadow: 0 0 0 4px rgba(98, 197, 132, 0.12);
+  animation: sync-dot-ready 0.28s ease both;
+  transition:
+    background-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 .sync-status-dot.pending {
   background: #e5a94f;
   box-shadow: 0 0 0 4px rgba(229, 169, 79, 0.14);
+  animation: sync-dot-pending 1.4s ease-in-out infinite;
 }
 .sync-status-dot.error {
   background: #e46b6b;
   box-shadow: 0 0 0 4px rgba(228, 107, 107, 0.14);
+}
+
+@keyframes sync-dot-ready {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes sync-dot-pending {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.82);
+  }
 }

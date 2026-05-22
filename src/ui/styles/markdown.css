@@ -450,6 +450,16 @@
   line-height: 1.2;
   box-shadow: 0 4px 12px
     color-mix(in srgb, var(--accent-shadow) 18%, transparent);
+  animation: fade-in 0.2s ease both;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
+}
+.message-label:hover {
+  border-color: color-mix(in srgb, var(--accent-strong) 28%, var(--border));
+  background: color-mix(in srgb, var(--accent-hover) 66%, var(--card));
+  transform: translateY(-1px);
 }
 .message-label svg {
   flex: 0 0 auto;
