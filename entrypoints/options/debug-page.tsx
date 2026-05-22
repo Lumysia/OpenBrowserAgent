@@ -212,7 +212,8 @@ export function DebugPage() {
             />
           </Label>
           <Button
-            variant="destructive"
+            variant="destructiveOutline"
+            className="settings-danger-action"
             disabled={!canClear || clearing}
             onClick={clearData}
           >
