@@ -3,13 +3,14 @@ import { readdirSync, renameSync, rmSync, statSync } from "node:fs";
 import { join, parse } from "node:path";
 
 const outputDir = ".output";
+const hashedZipPattern = /-[0-9a-f]{7,}\.zip$/i;
 const hash = execFileSync("git", ["rev-parse", "--short", "HEAD"], {
   encoding: "utf8",
 }).trim();
 
 const zipFiles = readdirSync(outputDir)
   .filter((name) => name.endsWith(".zip"))
-  .filter((name) => !name.includes(`-${hash}.zip`))
+  .filter((name) => !hashedZipPattern.test(name))
   .map((name) => ({ name, mtimeMs: statSync(join(outputDir, name)).mtimeMs }))
   .sort((left, right) => right.mtimeMs - left.mtimeMs);
 
