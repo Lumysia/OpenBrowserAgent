@@ -198,6 +198,9 @@
   min-width: 0;
   padding: 0;
 }
+.agent-icon-picker .ui-toggle-group-item[data-state="on"] svg {
+  filter: drop-shadow(0 2px 5px var(--accent-shadow));
+}
 @media (max-width: 720px) {
   .agent-capability-grid {
     grid-template-columns: 1fr;
