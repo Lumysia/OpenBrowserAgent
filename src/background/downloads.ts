@@ -4,9 +4,12 @@ import {
   IMAGE_FILENAME_MAX_LABEL_LENGTH,
   MAX_IMAGES_PER_DOWNLOAD,
 } from "../shared/config";
+import { getBrowserApi } from "../shared/storage";
+
 export async function findImages(tabId: number) {
-  const tab = await chrome.tabs.get(tabId);
-  const [result] = await chrome.scripting.executeScript({
+  const api = getBrowserApi();
+  const tab = await api.tabs.get(tabId);
+  const [result] = await api.scripting.executeScript({
     target: { tabId },
     func: () => {
       const seen = new Set<string>();
@@ -106,7 +109,7 @@ export async function findImages(tabId: number) {
   }
   if (downloadedCount > 0) {
     const base64 = await zip.generateAsync({ type: "base64" });
-    await chrome.downloads.download({
+    await api.downloads.download({
       url: `data:application/zip;base64,${base64}`,
       filename,
       saveAs: false,
@@ -129,7 +132,7 @@ export async function downloadTextFile(
   content: string,
   mimeType: string,
 ) {
-  await chrome.downloads.download({
+  await getBrowserApi().downloads.download({
     url: `data:${mimeType},${encodeURIComponent(content)}`,
     filename,
     saveAs: false,

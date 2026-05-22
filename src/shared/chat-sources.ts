@@ -79,9 +79,7 @@ export function extractSourcesFromTool(
         id: "",
         kind: "search",
         title: query || "Search",
-        url: query
-          ? `https://www.google.com/search?q=${encodeURIComponent(query)}`
-          : undefined,
+        url: stringValue(recordValue(output.tab).url),
         tabId: numberValue(output.tabId),
         createdAt: now,
       }),

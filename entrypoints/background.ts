@@ -1,4 +1,4 @@
-import { storage } from "../src/shared/storage";
+import { getBrowserApi, storage } from "../src/shared/storage";
 import { getMessages } from "../src/shared/i18n";
 import {
   DEFAULT_AGENT_ID,
@@ -53,7 +53,8 @@ export default defineBackground(() => {
     ?.setPanelBehavior?.({ openPanelOnActionClick: true })
     .catch(console.warn);
 
-  chrome.action.onClicked.addListener(() => {
+  const actionApi = chrome.action ?? chrome.browserAction;
+  actionApi?.onClicked.addListener(() => {
     capture(SIDE_PANEL_OPENED).catch(console.warn);
   });
 
@@ -133,8 +134,8 @@ export default defineBackground(() => {
 });
 
 async function capture(event: string) {
-  await chrome.runtime
-    .sendMessage({ type: "proxy-service.TrackerService", event })
+  await getBrowserApi()
+    .runtime.sendMessage({ type: "proxy-service.TrackerService", event })
     .catch(() => undefined);
 }
 

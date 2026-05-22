@@ -1,27 +1,32 @@
+import { getBrowserApi } from "./storage";
 import type { AttachmentTab, SelectedElement } from "./types";
 
 export async function getActiveTab(): Promise<chrome.tabs.Tab | undefined> {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const [tab] = await getBrowserApi().tabs.query({
+    active: true,
+    currentWindow: true,
+  });
   return tab;
 }
 
 export async function getActiveBrowserTab(): Promise<
   chrome.tabs.Tab | undefined
 > {
-  const [currentWindowTab] = await chrome.tabs.query({
+  const api = getBrowserApi();
+  const [currentWindowTab] = await api.tabs.query({
     active: true,
     currentWindow: true,
   });
   if (currentWindowTab) return currentWindowTab;
-  const [lastFocusedTab] = await chrome.tabs.query({
+  const [lastFocusedTab] = await api.tabs.query({
     active: true,
     lastFocusedWindow: true,
   });
   if (lastFocusedTab) return lastFocusedTab;
-  const windows = await chrome.windows.getAll({ windowTypes: ["normal"] });
+  const windows = await api.windows.getAll({ windowTypes: ["normal"] });
   for (const window of windows) {
     if (window.id === undefined) continue;
-    const [tab] = await chrome.tabs.query({
+    const [tab] = await api.tabs.query({
       active: true,
       windowId: window.id,
     });
@@ -31,7 +36,7 @@ export async function getActiveBrowserTab(): Promise<
 }
 
 export async function getAllTabs(): Promise<AttachmentTab[]> {
-  const tabs = await chrome.tabs.query({ currentWindow: true });
+  const tabs = await getBrowserApi().tabs.query({ currentWindow: true });
   return tabs
     .filter(
       (tab): tab is chrome.tabs.Tab & { id: number } =>
@@ -50,9 +55,10 @@ export function isScriptableUrl(url?: string) {
 }
 
 export async function extractTabText(tabId: number): Promise<string> {
-  const tab = await chrome.tabs.get(tabId);
+  const api = getBrowserApi();
+  const tab = await api.tabs.get(tabId);
   if (!isScriptableUrl(tab.url)) return "";
-  const [result] = await chrome.scripting.executeScript({
+  const [result] = await api.scripting.executeScript({
     target: { tabId },
     func: () => {
       const title = document.title;
@@ -65,12 +71,13 @@ export async function extractTabText(tabId: number): Promise<string> {
 }
 
 export async function injectElementSelector(tabId: number, prompt: string) {
-  const tab = await chrome.tabs.get(tabId);
+  const api = getBrowserApi();
+  const tab = await api.tabs.get(tabId);
   if (!isScriptableUrl(tab.url)) return false;
-  await chrome.tabs
+  await api.tabs
     .sendMessage(tabId, { type: "cancelElementSelector" })
     .catch(() => undefined);
-  await chrome.scripting.executeScript({
+  await api.scripting.executeScript({
     target: { tabId },
     args: [prompt],
     func: (selectorPrompt) => {
@@ -79,7 +86,7 @@ export async function injectElementSelector(tabId: number, prompt: string) {
       ).__obaElementSelectorPrompt = selectorPrompt;
     },
   });
-  await chrome.scripting.executeScript({
+  await api.scripting.executeScript({
     target: { tabId },
     files: ["content-scripts/element-selector.js"],
   });
@@ -89,9 +96,10 @@ export async function injectElementSelector(tabId: number, prompt: string) {
 export async function getSelectedElementFromPage(
   tabId: number,
 ): Promise<SelectedElement | null> {
-  const tab = await chrome.tabs.get(tabId);
+  const api = getBrowserApi();
+  const tab = await api.tabs.get(tabId);
   if (!isScriptableUrl(tab.url)) return null;
-  const [result] = await chrome.scripting.executeScript({
+  const [result] = await api.scripting.executeScript({
     target: { tabId },
     func: () => {
       const element = document.querySelector('[data-oba-selected="true"]') as

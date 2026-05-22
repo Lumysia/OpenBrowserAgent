@@ -5,6 +5,7 @@ import {
   STREAM_RENDER_THROTTLE_MS,
 } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
+import { getBrowserApi } from "../../src/shared/storage";
 import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
 import type { ChatMessage, ChatPart, ChatSource } from "../../src/shared/types";
 import { CHAT_PART_STATE, isToolPartType } from "../../src/shared/types";
@@ -407,7 +408,7 @@ async function downloadUrlAsFile(url: string, filename: string) {
   if (!response.ok) throw new Error("Unable to download file");
   const objectUrl = URL.createObjectURL(await response.blob());
   try {
-    await chrome.downloads.download({ url: objectUrl, filename });
+    await getBrowserApi().downloads.download({ url: objectUrl, filename });
   } finally {
     window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
   }

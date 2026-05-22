@@ -5,6 +5,7 @@ import {
   isScriptableUrl,
 } from "../../src/shared/browser";
 import type { Messages } from "../../src/shared/i18n";
+import { getBrowserApi } from "../../src/shared/storage";
 
 const ELEMENT_SELECTOR_MESSAGE = {
   selected: "getSelectedElement",
@@ -53,8 +54,8 @@ export function useElementSelector(t: Messages) {
     setSelectingElement(false);
     const tab = await getActiveTab();
     if (!tab?.id) return;
-    await chrome.tabs
-      .sendMessage(tab.id, { type: ELEMENT_SELECTOR_MESSAGE.cancel })
+    await getBrowserApi()
+      .tabs.sendMessage(tab.id, { type: ELEMENT_SELECTOR_MESSAGE.cancel })
       .catch(() => undefined);
   }
 

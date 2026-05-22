@@ -760,6 +760,7 @@ export function browserToolsForPrompt({
   imageGenerationEnabled,
   latestUserText,
   loadedToolNames = [],
+  cdpToolsAvailable = areCdpToolsAvailable(),
 }: {
   capabilities: AgentCapabilities;
   hasUploadedAttachments: boolean;
@@ -768,20 +769,27 @@ export function browserToolsForPrompt({
   imageGenerationEnabled: boolean;
   latestUserText?: string;
   loadedToolNames?: string[];
+  cdpToolsAvailable?: boolean;
 }) {
   const loadedTools = deferredBrowserTools.filter(
     (tool) =>
       capabilities.deferredBrowserTools &&
+      cdpToolsAvailable &&
       loadedToolNames.includes(tool.function.name),
   );
   return [...browserTools, ...loadedTools].filter((item) => {
     const name = item.function.name;
     if (!capabilities.browserTools) return false;
     if (name === BROWSER_TOOL_NAME.loadBrowserTools)
-      return capabilities.deferredBrowserTools;
+      return capabilities.deferredBrowserTools && cdpToolsAvailable;
     if (name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript)
-      return capabilities.cdpTools && capabilities.dangerousCodeExecution;
-    if (name.startsWith("cdp")) return capabilities.cdpTools;
+      return (
+        capabilities.cdpTools &&
+        capabilities.dangerousCodeExecution &&
+        cdpToolsAvailable
+      );
+    if (name.startsWith("cdp"))
+      return capabilities.cdpTools && cdpToolsAvailable;
     if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
       return hasUploadedAttachments;
     if (name === BROWSER_TOOL_NAME.listSkills)
@@ -845,6 +853,11 @@ export function browserToolsForPrompt({
       return capabilities.fileUrlRead || containsFileUrl(latestUserText || "");
     return capabilities.browserAutomation;
   });
+}
+
+function areCdpToolsAvailable() {
+  return !!(globalThis as typeof globalThis & { chrome?: typeof chrome }).chrome
+    ?.debugger;
 }
 
 function containsFileUrl(text: string) {

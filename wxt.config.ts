@@ -1,6 +1,15 @@
 import { defineConfig } from "wxt";
 import { fileURLToPath } from "node:url";
 
+const permissions = [
+  "scripting",
+  "tabs",
+  "storage",
+  "tabGroups",
+  "search",
+  "downloads",
+] as const;
+
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
   vite: () => ({
@@ -10,21 +19,15 @@ export default defineConfig({
       },
     },
   }),
-  manifest: {
+  manifest: ({ browser }) => ({
     name: "__MSG_extName__",
     description: "__MSG_extDescription__",
     version: "0.1.0",
     default_locale: "en",
-    permissions: [
-      "scripting",
-      "tabs",
-      "storage",
-      "tabGroups",
-      "search",
-      "sidePanel",
-      "downloads",
-      "debugger",
-    ],
+    permissions:
+      browser === "firefox"
+        ? [...permissions]
+        : [...permissions, "sidePanel", "debugger"],
     host_permissions: ["<all_urls>"],
     content_security_policy: {
       extension_pages:
@@ -55,5 +58,18 @@ export default defineConfig({
     side_panel: {
       default_path: "sidepanel.html",
     },
-  },
+    browser_specific_settings: {
+      gecko: {
+        id: "open-browser-agent@openbrowseragent.local",
+        data_collection_permissions: {
+          required: [
+            "browsingActivity",
+            "searchTerms",
+            "websiteContent",
+            "websiteActivity",
+          ],
+        },
+      },
+    },
+  }),
 });

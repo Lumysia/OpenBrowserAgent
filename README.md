@@ -31,6 +31,14 @@ It turns your browser into an AI working surface: bring page context into chat, 
 - Create a custom skill for a recurring workflow, then reuse it across chats.
 - Configure multiple model providers and choose the best model for chat or image generation.
 
+## Documentation
+
+- [Product overview](docs/product-overview.md)
+- [Installation and packaging](docs/installation-and-packaging.md)
+- [Permissions and privacy](docs/permissions-and-privacy.md)
+- [Release checklist](docs/release-checklist.md)
+- [Media assets guide](docs/media-assets.md)
+
 ## Development
 
 ```bash

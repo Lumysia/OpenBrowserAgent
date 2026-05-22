@@ -1,7 +1,9 @@
+import { getBrowserApi } from "../shared/storage";
 import { TOOL_ERROR } from "../shared/tool-errors";
 
 export async function clickElement(tabId: number, id: string) {
-  const [result] = await chrome.scripting.executeScript({
+  const api = getBrowserApi();
+  const [result] = await api.scripting.executeScript({
     target: { tabId },
     args: [id, TOOL_ERROR.elementNotFound, TOOL_ERROR.elementHasNoClickableBox],
     func: (aiId, elementNotFound, elementHasNoClickableBox) => {
@@ -30,7 +32,7 @@ export async function clickElement(tabId: number, id: string) {
     | { isNewTab?: boolean; notFound?: boolean; url?: string }
     | undefined;
   if (output?.isNewTab && output.url) {
-    const tab = await chrome.tabs.create({ url: output.url, active: false });
+    const tab = await api.tabs.create({ url: output.url, active: false });
     return { success: true, tabId: tab.id, shouldWaitTabLoadFinished: true };
   }
   return { success: !output?.notFound, tabId };
@@ -85,7 +87,7 @@ function cdpMouseAction(action: string) {
 }
 
 async function getElementClickPoint(tabId: number, id: string) {
-  const [result] = await chrome.scripting.executeScript({
+  const [result] = await getBrowserApi().scripting.executeScript({
     target: { tabId },
     args: [id, TOOL_ERROR.elementNotFound, TOOL_ERROR.elementHasNoClickableBox],
     func: (aiId, elementNotFound, elementHasNoClickableBox) => {

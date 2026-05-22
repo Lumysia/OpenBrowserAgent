@@ -1,5 +1,7 @@
+import { getBrowserApi } from "../shared/storage";
+
 export async function findAccessibleElements(tabId: number) {
-  const [result] = await chrome.scripting.executeScript({
+  const [result] = await getBrowserApi().scripting.executeScript({
     target: { tabId },
     func: () => {
       const selectors = [

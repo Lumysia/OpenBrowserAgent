@@ -1,8 +1,10 @@
 import { OPTIONS_HASH } from "./config";
+import { getBrowserApi } from "./storage";
 
 export async function openOrFocusOptions(hash: string = OPTIONS_HASH.general) {
-  const targetUrl = chrome.runtime.getURL(`/options.html${hash}`);
-  const optionsUrl = chrome.runtime.getURL("/options.html");
+  const api = getBrowserApi();
+  const targetUrl = api.runtime.getURL(`/options.html${hash}`);
+  const optionsUrl = api.runtime.getURL("/options.html");
   return openOrFocusTab({ targetUrl, matchUrlPrefix: optionsUrl });
 }
 
@@ -11,10 +13,11 @@ export async function openOrFocusUrl(url: string) {
 }
 
 export async function focusTab(tabId: number) {
-  const tab = await chrome.tabs.update(tabId, { active: true });
+  const api = getBrowserApi();
+  const tab = await api.tabs.update(tabId, { active: true });
   if (!tab) return;
   if (tab.windowId !== undefined)
-    await chrome.windows.update(tab.windowId, { focused: true });
+    await api.windows.update(tab.windowId, { focused: true });
   return tab;
 }
 
@@ -27,20 +30,22 @@ async function openOrFocusTab({
   matchUrl?: string;
   matchUrlPrefix?: string;
 }) {
-  const tabs = await chrome.tabs.query({});
+  const api = getBrowserApi();
+  const tabs = await api.tabs.query({});
   const existing = tabs.find((tab) => {
     if (!tab.url) return false;
     if (matchUrl && tab.url === matchUrl) return true;
     return !!matchUrlPrefix && tab.url.startsWith(matchUrlPrefix);
   });
   if (existing?.id) return focusTabWithUrl(existing.id, targetUrl);
-  return chrome.tabs.create({ url: targetUrl });
+  return api.tabs.create({ url: targetUrl });
 }
 
 async function focusTabWithUrl(tabId: number, url: string) {
-  const tab = await chrome.tabs.update(tabId, { active: true, url });
+  const api = getBrowserApi();
+  const tab = await api.tabs.update(tabId, { active: true, url });
   if (!tab) return;
   if (tab.windowId !== undefined)
-    await chrome.windows.update(tab.windowId, { focused: true });
+    await api.windows.update(tab.windowId, { focused: true });
   return tab;
 }

@@ -7,6 +7,7 @@ import {
 } from "../shared/config";
 import { BROWSER_TOOL_NAME, UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
 import { getActiveBrowserTab, isScriptableUrl } from "../shared/browser";
+import { getBrowserApi } from "../shared/storage";
 import { TOOL_ERROR } from "../shared/tool-errors";
 import { downloadTextFile, findImages, safeFileName } from "./downloads";
 import { findAccessibleElements } from "./accessible-elements";
@@ -24,6 +25,7 @@ async function executeBrowserTool(
   args: Record<string, unknown>,
 ) {
   if (isCdpTool(name)) return executeCdpTool(name, args);
+  const api = getBrowserApi();
   switch (name) {
     case BROWSER_TOOL_NAME.wait: {
       const milliseconds = clampWaitMs(args.milliseconds ?? args.ms);
@@ -41,13 +43,13 @@ async function executeBrowserTool(
         : { error: TOOL_ERROR.activeTabNotWebPage };
     }
     case BROWSER_TOOL_NAME.openNewTabWithURL: {
-      const tab = await chrome.tabs.create({
+      const tab = await api.tabs.create({
         url: String(args.url || ""),
         active: false,
       });
       if (tab.id) {
         await waitTabComplete(tab.id);
-        const loadedTab = await chrome.tabs.get(tab.id);
+        const loadedTab = await api.tabs.get(tab.id);
         return {
           tab: { id: loadedTab.id, url: loadedTab.url, title: loadedTab.title },
         };
@@ -55,7 +57,7 @@ async function executeBrowserTool(
       return { tab: { id: tab.id } };
     }
     case BROWSER_TOOL_NAME.getAllTabs: {
-      const tabs = await chrome.tabs.query({});
+      const tabs = await api.tabs.query({});
       return withListSlice(
         {},
         tabs.map((tab) => ({ id: tab.id, title: tab.title })),
@@ -69,14 +71,14 @@ async function executeBrowserTool(
         : [Number(args.tabId)].filter(Number.isFinite);
       if (!tabIds.length)
         return { success: false, error: TOOL_ERROR.noTabIdsProvided };
-      await chrome.tabs.remove(tabIds);
+      await api.tabs.remove(tabIds);
       return { success: true, tabIds };
     }
     case BROWSER_TOOL_NAME.reloadTab: {
       const tabId = await resolveTabId(args.tabId);
       const bypassCache =
         args.bypassCache === true || args.ignoreCache === true;
-      await chrome.tabs.reload(tabId, { bypassCache });
+      await api.tabs.reload(tabId, { bypassCache });
       await wait(100);
       await waitTabComplete(tabId);
       return { success: true, tabId, bypassCache };
@@ -91,23 +93,23 @@ async function executeBrowserTool(
       return waitForText(args);
     }
     case BROWSER_TOOL_NAME.goToTab: {
-      const tab = await chrome.tabs.update(await resolveTabId(args.tabId), {
+      const tab = await api.tabs.update(await resolveTabId(args.tabId), {
         active: true,
       });
       if (!tab) return { success: false, error: TOOL_ERROR.tabNotFound };
       if (tab.windowId !== undefined)
-        await chrome.windows.update(tab.windowId, { focused: true });
+        await api.windows.update(tab.windowId, { focused: true });
       return { success: true };
     }
     case BROWSER_TOOL_NAME.insertCSSToTab: {
-      await chrome.scripting.insertCSS({
+      await api.scripting.insertCSS({
         target: { tabId: await resolveTabId(args.tabId) },
         css: String(args.css || ""),
       });
       return { success: true };
     }
     case BROWSER_TOOL_NAME.removeCSSToTab: {
-      await chrome.scripting.removeCSS({
+      await api.scripting.removeCSS({
         target: { tabId: await resolveTabId(args.tabId) },
         css: String(args.css || ""),
       });
@@ -115,9 +117,12 @@ async function executeBrowserTool(
     }
     case BROWSER_TOOL_NAME.openSearchTab: {
       const query = String(args.query || "");
-      const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-      const tab = await chrome.tabs.create({ url: searchUrl, active: false });
-      return { success: true, tabId: tab.id };
+      const tab = await openDefaultSearchTab(query);
+      return {
+        success: true,
+        tabId: tab?.id,
+        tab: tab ? { id: tab.id, url: tab.url, title: tab.title } : undefined,
+      };
     }
     case BROWSER_TOOL_NAME.waitTabLoadFinished: {
       const tabId = await resolveTabId(args.tabId);
@@ -132,7 +137,7 @@ async function executeBrowserTool(
         : [await resolveTabId(args.tabId)];
       const contents = [];
       for (const tabId of tabIds) {
-        const tab = await chrome.tabs.get(tabId);
+        const tab = await api.tabs.get(tabId);
         const markdown = isScriptableUrl(tab.url)
           ? await extractMarkdown(tabId)
           : "";
@@ -189,14 +194,14 @@ async function executeBrowserTool(
       ) as chrome.tabGroups.UpdateProperties["color"];
       const title = String(args.title || "");
       const tabs = await Promise.all(
-        tabIds.map((tabId) => chrome.tabs.get(tabId).catch(() => undefined)),
+        tabIds.map((tabId) => api.tabs.get(tabId).catch(() => undefined)),
       );
       const normalTabs = [];
       const skippedTabIds = [];
 
       for (const tab of tabs) {
         if (!tab?.id || tab.windowId === undefined) continue;
-        const window = await chrome.windows
+        const window = await api.windows
           .get(tab.windowId)
           .catch(() => undefined);
         if (window?.type === "normal") normalTabs.push(tab);
@@ -219,10 +224,10 @@ async function executeBrowserTool(
 
       const groupIds = [];
       for (const windowTabIds of tabsByWindow.values()) {
-        const groupId = await chrome.tabs.group({
+        const groupId = await api.tabs.group({
           tabIds: windowTabIds as [number, ...number[]],
         });
-        await chrome.tabGroups.update(groupId, { title, color });
+        await api.tabGroups.update(groupId, { title, color });
         groupIds.push(groupId);
       }
 
@@ -234,7 +239,7 @@ async function executeBrowserTool(
     }
     case BROWSER_TOOL_NAME.downloadTabToMarkdown: {
       const tabId = await resolveTabId(args.tabId);
-      const tab = await chrome.tabs.get(tabId);
+      const tab = await api.tabs.get(tabId);
       const markdown = await extractMarkdown(tabId);
       const filename = `${safeFileName(tab.title || tab.url || "tab").slice(0, MARKDOWN_FILENAME_MAX_LENGTH)}.md`;
       await downloadTextFile(filename, markdown, "text/markdown;charset=utf-8");
@@ -301,17 +306,18 @@ function currentTimeZone() {
 }
 
 async function navigateTab(args: Record<string, unknown>) {
+  const api = getBrowserApi();
   const tabId = await resolveTabId(args.tabId);
   const type = String(args.type || (args.url ? "url" : "reload"));
-  if (type === "back") await chrome.tabs.goBack(tabId);
-  else if (type === "forward") await chrome.tabs.goForward(tabId);
+  if (type === "back") await api.tabs.goBack(tabId);
+  else if (type === "forward") await api.tabs.goForward(tabId);
   else if (type === "url") {
     const url = String(args.url || "").trim();
     if (!url) return { success: false, error: TOOL_ERROR.missingUrl };
-    await chrome.tabs.update(tabId, { url });
+    await api.tabs.update(tabId, { url });
   } else if (type === "reload") {
     const bypassCache = args.bypassCache === true || args.ignoreCache === true;
-    await chrome.tabs.reload(tabId, { bypassCache });
+    await api.tabs.reload(tabId, { bypassCache });
   } else {
     return { success: false, error: TOOL_ERROR.unknownNavigationType, type };
   }
@@ -321,15 +327,16 @@ async function navigateTab(args: Record<string, unknown>) {
 }
 
 async function captureVisibleTab(args: Record<string, unknown>) {
+  const api = getBrowserApi();
   const tabId = await resolveTabId(args.tabId);
-  const tab = await chrome.tabs.get(tabId);
+  const tab = await api.tabs.get(tabId);
   if (tab.windowId === undefined)
     return { success: false, error: TOOL_ERROR.tabHasNoWindow };
-  await chrome.tabs.update(tabId, { active: true });
-  await chrome.windows.update(tab.windowId, { focused: true });
+  await api.tabs.update(tabId, { active: true });
+  await api.windows.update(tab.windowId, { focused: true });
   const format = String(args.format || "png") === "jpeg" ? "jpeg" : "png";
   const quality = Number(args.quality);
-  const image = await chrome.tabs.captureVisibleTab(tab.windowId, {
+  const image = await api.tabs.captureVisibleTab(tab.windowId, {
     format,
     ...(format === "jpeg" && Number.isFinite(quality)
       ? { quality: Math.min(100, Math.max(0, Math.trunc(quality))) }
@@ -356,7 +363,7 @@ async function waitForText(args: Record<string, unknown>) {
 }
 
 async function pageContainsText(tabId: number, texts: string[]) {
-  const [result] = await chrome.scripting.executeScript({
+  const [result] = await getBrowserApi().scripting.executeScript({
     target: { tabId },
     args: [texts],
     func: (needles) => {
@@ -391,7 +398,7 @@ export async function safeExecuteBrowserTool(
 async function resolveTabId(value: unknown) {
   const tabId = Number(value);
   if (Number.isFinite(tabId) && tabId > 0) return tabId;
-  const [activeTab] = await chrome.tabs.query({
+  const [activeTab] = await getBrowserApi().tabs.query({
     active: true,
     currentWindow: true,
   });
@@ -400,7 +407,7 @@ async function resolveTabId(value: unknown) {
 }
 
 async function extractMarkdown(tabId: number) {
-  const [result] = await chrome.scripting.executeScript({
+  const [result] = await getBrowserApi().scripting.executeScript({
     target: { tabId },
     func: () =>
       `# ${document.title}\n\nURL: ${location.href}\n\n${document.body?.innerText || ""}`,
@@ -409,7 +416,7 @@ async function extractMarkdown(tabId: number) {
 }
 
 async function getElementProperties(tabId: number, ids: string[]) {
-  const [result] = await chrome.scripting.executeScript({
+  const [result] = await getBrowserApi().scripting.executeScript({
     target: { tabId },
     args: [ids],
     func: (aiIds) => {
@@ -443,7 +450,7 @@ async function getElementProperties(tabId: number, ids: string[]) {
 }
 
 async function inputElement(tabId: number, id: string, text: string) {
-  const [result] = await chrome.scripting.executeScript({
+  const [result] = await getBrowserApi().scripting.executeScript({
     target: { tabId },
     args: [id, text, TOOL_ERROR.elementNotTextInput],
     func: (aiId, value, elementNotTextInput) => {
@@ -514,7 +521,7 @@ async function inputElement(tabId: number, id: string, text: string) {
 }
 
 async function scrollToBottom(tabId: number) {
-  await chrome.scripting.executeScript({
+  await getBrowserApi().scripting.executeScript({
     target: { tabId },
     func: () => {
       const scrollHeight = Math.max(
@@ -527,8 +534,22 @@ async function scrollToBottom(tabId: number) {
   });
 }
 
+async function openDefaultSearchTab(query: string) {
+  const api = getBrowserApi();
+  const beforeTabs = await api.tabs.query({ currentWindow: true });
+  const beforeIds = new Set(beforeTabs.map((tab) => tab.id).filter(Boolean));
+  await api.search.query({ text: query, disposition: "NEW_TAB" });
+  const afterTabs = await api.tabs.query({ currentWindow: true });
+  return (
+    afterTabs.find((tab) => tab.id && !beforeIds.has(tab.id)) ||
+    afterTabs.find((tab) => tab.active) ||
+    null
+  );
+}
+
 async function waitTabComplete(tabId: number) {
-  const tab = await chrome.tabs.get(tabId);
+  const api = getBrowserApi();
+  const tab = await api.tabs.get(tabId);
   if (tab.status === "complete") return;
   await new Promise<void>((resolve) => {
     const listener = (
@@ -536,13 +557,13 @@ async function waitTabComplete(tabId: number) {
       changeInfo: { status?: string },
     ) => {
       if (changedTabId === tabId && changeInfo.status === "complete") {
-        chrome.tabs.onUpdated.removeListener(listener);
+        api.tabs.onUpdated.removeListener(listener);
         resolve();
       }
     };
-    chrome.tabs.onUpdated.addListener(listener);
+    api.tabs.onUpdated.addListener(listener);
     setTimeout(() => {
-      chrome.tabs.onUpdated.removeListener(listener);
+      api.tabs.onUpdated.removeListener(listener);
       resolve();
     }, TAB_LOAD_WAIT_TIMEOUT_MS);
   });
