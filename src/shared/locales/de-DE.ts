@@ -528,8 +528,11 @@ export const deDE: LocaleMessages = {
     builtinAgentBadge:
       "Integriert · kein Arbeitsbereich/Speicher · schreibgeschützt",
     newAgent: "Neuer Agent",
-    importAgentZip: "Agent-ZIP importieren",
-    downloadAgentZip: "Agent-ZIP herunterladen",
+    importAgentZip: "Agent-Archiv importieren",
+    downloadAgentZip: "Agent-Archiv herunterladen",
+    importAgentPackageMissingManifest: "Im Agent-Archiv fehlt agent.json.",
+    importAgentPackageInvalidManifest:
+      "Das Agent-Archiv enthält eine ungültige agent.json.",
     agentName: "Agentenname",
     agentDescription: "Agentenbeschreibung",
     agentIcon: "Agentensymbol",
@@ -667,9 +670,11 @@ export const deDE: LocaleMessages = {
     skillsDescription:
       "Senden Sie mit Fähigkeiten sofort Nachrichten an die KI.",
     newSkill: "Neue Fähigkeit",
-    importSkillZip: "ZIP importieren",
+    importSkillZip: "Archiv importieren",
     importingSkillZip: "Importiert...",
     importSkillZipError: "Fähigkeiten-Import fehlgeschlagen",
+    importSkillPackageMissingEntry:
+      "SKILL.md wurde im importierten Archiv nicht gefunden.",
     noSkillsTitle: "Noch keine Fähigkeiten",
     noSkillsDescription:
       "Erstellen Sie Ihre erste Fähigkeit, um wiederkehrende Aufgaben zu automatisieren.",
@@ -681,7 +686,7 @@ export const deDE: LocaleMessages = {
     replaceFile: "Datei ersetzen",
     filePath: "Dateipfad",
     downloadFile: "Datei herunterladen",
-    downloadSkillZip: "ZIP herunterladen",
+    downloadSkillZip: "Archiv herunterladen",
     downloadSkillPackage: ".skill herunterladen",
     duplicateSkill: "Duplizieren",
     disabled: "Deaktiviert",

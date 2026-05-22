@@ -468,8 +468,12 @@ export const ko: LocaleMessages = {
     defaultAgentSummary: "탐색, 검색, 자동화를 위한 브라우저 조작 에이전트.",
     builtinAgentBadge: "내장 · 워크스페이스/메모리 없음 · 읽기 전용",
     newAgent: "새 에이전트",
-    importAgentZip: "에이전트 ZIP 가져오기",
-    downloadAgentZip: "에이전트 ZIP 다운로드",
+    importAgentZip: "에이전트 압축 파일 가져오기",
+    downloadAgentZip: "에이전트 압축 파일 다운로드",
+    importAgentPackageMissingManifest:
+      "에이전트 압축 파일에 agent.json이 없습니다.",
+    importAgentPackageInvalidManifest:
+      "에이전트 압축 파일의 agent.json이 올바르지 않습니다.",
     agentName: "에이전트 이름",
     agentDescription: "에이전트 설명",
     agentIcon: "에이전트 아이콘",
@@ -600,9 +604,11 @@ export const ko: LocaleMessages = {
     noModelsAddedYet: "아직 추가된 모델이 없습니다.",
     skillsDescription: "스킬로 AI에 즉시 메시지를 보냅니다.",
     newSkill: "새 스킬",
-    importSkillZip: "ZIP 가져오기",
+    importSkillZip: "압축 파일 가져오기",
     importingSkillZip: "가져오는 중...",
     importSkillZipError: "스킬 가져오기 실패",
+    importSkillPackageMissingEntry:
+      "가져온 압축 파일에서 SKILL.md를 찾을 수 없습니다.",
     noSkillsTitle: "아직 스킬이 없습니다",
     noSkillsDescription:
       "첫 스킬을 만들어 반복 작업을 한 번의 클릭으로 자동화하세요.",
@@ -614,7 +620,7 @@ export const ko: LocaleMessages = {
     replaceFile: "파일 바꾸기",
     filePath: "파일 경로",
     downloadFile: "파일 다운로드",
-    downloadSkillZip: "ZIP 다운로드",
+    downloadSkillZip: "압축 파일 다운로드",
     downloadSkillPackage: ".skill 다운로드",
     duplicateSkill: "클론",
     disabled: "비활성화됨",

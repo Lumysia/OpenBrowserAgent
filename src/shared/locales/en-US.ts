@@ -466,8 +466,11 @@ export const enUS = {
       "Browser operator for browsing, search, and automation.",
     builtinAgentBadge: "Built-in · no workspace/memory · read-only",
     newAgent: "New Agent",
-    importAgentZip: "Import agent ZIP",
-    downloadAgentZip: "Download agent ZIP",
+    importAgentZip: "Import agent archive",
+    downloadAgentZip: "Download agent archive",
+    importAgentPackageMissingManifest: "Agent archive is missing agent.json.",
+    importAgentPackageInvalidManifest:
+      "Agent archive has an invalid agent.json.",
     agentName: "Agent name",
     agentDescription: "Agent description",
     agentIcon: "Agent icon",
@@ -600,9 +603,11 @@ export const enUS = {
     skillsDescription:
       "Create reusable browser skills the user or AI can choose for a message.",
     newSkill: "New Skill",
-    importSkillZip: "Import ZIP",
+    importSkillZip: "Import archive",
     importingSkillZip: "Importing...",
     importSkillZipError: "Skill import failed",
+    importSkillPackageMissingEntry:
+      "SKILL.md was not found in the imported archive.",
     noSkillsTitle: "No skills yet",
     noSkillsDescription:
       "Create your first skill to reuse a browser workflow with one click.",
@@ -614,7 +619,7 @@ export const enUS = {
     replaceFile: "Replace file",
     filePath: "File path",
     downloadFile: "Download file",
-    downloadSkillZip: "Download ZIP",
+    downloadSkillZip: "Download archive",
     downloadSkillPackage: "Download .skill",
     duplicateSkill: "Duplicate",
     disabled: "Disabled",

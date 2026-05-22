@@ -534,8 +534,12 @@ export const frFR: LocaleMessages = {
       "Agent d’opération du navigateur pour naviguer, rechercher et automatiser.",
     builtinAgentBadge: "Intégré · sans espace/mémoire · lecture seule",
     newAgent: "Nouvel agent",
-    importAgentZip: "Importer le ZIP d’agent",
-    downloadAgentZip: "Télécharger le ZIP d’agent",
+    importAgentZip: "Importer l’archive d’agent",
+    downloadAgentZip: "Télécharger l’archive d’agent",
+    importAgentPackageMissingManifest:
+      "L’archive d’agent ne contient pas agent.json.",
+    importAgentPackageInvalidManifest:
+      "L’archive d’agent contient un agent.json invalide.",
     agentName: "Nom de l’agent",
     agentDescription: "Description de l’agent",
     agentIcon: "Icône de l’agent",
@@ -670,9 +674,11 @@ export const frFR: LocaleMessages = {
     skillsDescription:
       "Utilisez les compétences pour envoyer instantanément des messages à l'IA.",
     newSkill: "Nouvelle compétence",
-    importSkillZip: "Importer un ZIP",
+    importSkillZip: "Importer une archive",
     importingSkillZip: "Importation...",
     importSkillZipError: "Échec de l'import de la compétence",
+    importSkillPackageMissingEntry:
+      "SKILL.md est introuvable dans l’archive importée.",
     noSkillsTitle: "Aucune compétence",
     noSkillsDescription:
       "Créez votre première compétence pour automatiser les tâches répétitives.",
@@ -684,7 +690,7 @@ export const frFR: LocaleMessages = {
     replaceFile: "Remplacer le fichier",
     filePath: "Chemin du fichier",
     downloadFile: "Télécharger le fichier",
-    downloadSkillZip: "Télécharger le ZIP",
+    downloadSkillZip: "Télécharger l’archive",
     downloadSkillPackage: "Télécharger .skill",
     duplicateSkill: "Dupliquer",
     disabled: "Désactivée",

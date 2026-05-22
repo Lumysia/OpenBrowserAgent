@@ -91,7 +91,9 @@ export function SkillsPage() {
     setImporting(true);
     setImportError("");
     try {
-      const skill = await importSkillZip(file);
+      const skill = await importSkillZip(file, {
+        missingEntry: t.options.importSkillPackageMissingEntry,
+      });
       setSkills((items) => [...items, skill]);
       setSelectedId(skill.id);
     } catch (error) {

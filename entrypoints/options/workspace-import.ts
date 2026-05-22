@@ -42,15 +42,18 @@ type AgentZipManifest = Pick<
   "name" | "description" | "icon" | "capabilities"
 >;
 
-export async function importAgentZip(file: File): Promise<AgentZipImport> {
+export async function importAgentZip(
+  file: File,
+  messages: { missingManifest: string; invalidManifest: string },
+): Promise<AgentZipImport> {
   const zip = await JSZip.loadAsync(file);
   const manifestEntry = zip.file(AGENT_MANIFEST_PATH);
-  if (!manifestEntry) throw new Error("Agent package is missing agent.json");
+  if (!manifestEntry) throw new Error(messages.missingManifest);
   const manifest = JSON.parse(
     await manifestEntry.async("string"),
   ) as Partial<AgentZipManifest>;
   if (!manifest.name || !isAgentCapabilities(manifest.capabilities))
-    throw new Error("Agent package has an invalid agent.json");
+    throw new Error(messages.invalidManifest);
   const now = Date.now();
   const agentId = crypto.randomUUID();
   const entries = Object.values(zip.files).filter(

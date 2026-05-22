@@ -506,8 +506,12 @@ export const esES: LocaleMessages = {
       "Operador del navegador para navegar, buscar y automatizar.",
     builtinAgentBadge: "Integrado · sin espacio/memoria · solo lectura",
     newAgent: "Nuevo agente",
-    importAgentZip: "Importar ZIP de agente",
-    downloadAgentZip: "Descargar ZIP de agente",
+    importAgentZip: "Importar archivo de agente",
+    downloadAgentZip: "Descargar archivo de agente",
+    importAgentPackageMissingManifest:
+      "Al archivo de agente le falta agent.json.",
+    importAgentPackageInvalidManifest:
+      "El archivo de agente contiene un agent.json no válido.",
     agentName: "Nombre del agente",
     agentDescription: "Descripción del agente",
     agentIcon: "Icono del agente",
@@ -644,9 +648,11 @@ export const esES: LocaleMessages = {
     skillsDescription:
       "Usa habilidades para enviar mensajes a la IA al instante.",
     newSkill: "Nueva habilidad",
-    importSkillZip: "Importar ZIP",
+    importSkillZip: "Importar archivo",
     importingSkillZip: "Importando...",
     importSkillZipError: "Error al importar habilidad",
+    importSkillPackageMissingEntry:
+      "No se encontró SKILL.md en el archivo importado.",
     noSkillsTitle: "Aún no hay habilidades",
     noSkillsDescription:
       "Crea tu primera habilidad para automatizar tareas repetitivas.",
@@ -658,7 +664,7 @@ export const esES: LocaleMessages = {
     replaceFile: "Reemplazar archivo",
     filePath: "Ruta del archivo",
     downloadFile: "Descargar archivo",
-    downloadSkillZip: "Descargar ZIP",
+    downloadSkillZip: "Descargar archivo",
     downloadSkillPackage: "Descargar .skill",
     duplicateSkill: "Duplicar",
     disabled: "Deshabilitada",

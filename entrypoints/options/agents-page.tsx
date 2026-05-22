@@ -126,7 +126,10 @@ export function AgentsPage() {
   async function importAgentPackage(file: File | undefined) {
     if (!file) return;
     try {
-      const imported = await importAgentZip(file);
+      const imported = await importAgentZip(file, {
+        missingManifest: t.options.importAgentPackageMissingManifest,
+        invalidManifest: t.options.importAgentPackageInvalidManifest,
+      });
       setAgents((current) => [...current, imported.agent]);
       setWorkspaces((current) => [...(current || []), imported.workspace]);
       setPreferences((current) => ({

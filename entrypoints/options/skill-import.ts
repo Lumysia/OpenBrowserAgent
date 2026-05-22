@@ -23,7 +23,10 @@ const TEXT_FILE_EXTENSIONS = new Set([
   ".xml",
 ]);
 
-export async function importSkillZip(file: File): Promise<Skill> {
+export async function importSkillZip(
+  file: File,
+  messages: { missingEntry: string },
+): Promise<Skill> {
   const zip = await JSZip.loadAsync(file);
   const entries = Object.values(zip.files).filter(
     (entry) => !entry.dir && !isHiddenPath(entry.name),
@@ -35,7 +38,7 @@ export async function importSkillZip(file: File): Promise<Skill> {
     entries.map(async (entry) => readZipFile(entry, root)),
   );
   const entryFile = files.find((item) => item.path === SKILL_ENTRY_PATH);
-  if (!entryFile) throw new Error("SKILL.md not found in the ZIP package.");
+  if (!entryFile) throw new Error(messages.missingEntry);
   const frontmatter = parseSkillFrontmatter(entryFile.content);
   const fallbackName = normalizeSkillName(
     file.name.replace(/\.(zip|skill)$/i, ""),
