@@ -166,6 +166,8 @@ export const enUS = {
     editingMessageDescription:
       "Only the composer is active. Press Esc or Cancel to stop editing.",
     stop: "Stop",
+    scrollToTop: "Scroll to top",
+    scrollToBottom: "Scroll to bottom",
     running: "Running",
     done: "Done",
     error: "Error",

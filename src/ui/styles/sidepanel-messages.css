@@ -1,4 +1,10 @@
-﻿.messages {
+﻿.messages-shell {
+  position: relative;
+  min-height: 0;
+  min-width: 0;
+}
+.messages {
+  height: 100%;
   min-height: 0;
   min-width: 0;
 }
@@ -14,6 +20,42 @@
 }
 .messages::-webkit-scrollbar {
   display: none;
+}
+.message-jump-controls {
+  position: absolute;
+  right: 12px;
+  top: 52%;
+  z-index: 2;
+  display: grid;
+  gap: 18px;
+  color: var(--accent-strong);
+  animation: message-jump-controls-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1)
+    both;
+  transform: translateY(-50%);
+  transform-origin: right center;
+}
+.message-jump-controls.is-removing {
+  pointer-events: none;
+  animation: message-jump-controls-exit 0.18s ease both;
+}
+.message-jump-button.ui-button-icon {
+  width: 28px;
+  height: 28px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 12%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card) 78%, transparent);
+  color: color-mix(in srgb, var(--accent-strong) 78%, var(--muted-foreground));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow) 36%, transparent);
+  backdrop-filter: blur(10px);
+  opacity: 0.82;
+}
+.message-jump-button.ui-button-icon:hover,
+.message-jump-button.ui-button-icon:focus-visible {
+  border-color: color-mix(in srgb, var(--accent-strong) 20%, var(--border));
+  background: color-mix(in srgb, var(--accent-softer) 64%, var(--card));
+  color: var(--accent-strong);
+  opacity: 1;
+  transform: translateY(-1px);
 }
 .message {
   position: relative;
@@ -513,6 +555,27 @@
   to {
     opacity: 0;
     transform: translateY(6px) scale(0.96);
+    filter: blur(1px);
+  }
+}
+
+@keyframes message-jump-controls-enter {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-50% + 8px)) translateX(6px) scale(0.96);
+    filter: blur(1px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes message-jump-controls-exit {
+  to {
+    opacity: 0;
+    transform: translateY(calc(-50% + 6px)) translateX(6px) scale(0.96);
     filter: blur(1px);
   }
 }

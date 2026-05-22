@@ -159,6 +159,8 @@ export const zhCN: LocaleMessages = {
     editingMessage: "正在编辑消息",
     editingMessageDescription: "只有输入区可操作。按 Esc 或取消即可停止编辑。",
     stop: "停止",
+    scrollToTop: "滚动到顶部",
+    scrollToBottom: "滚动到底部",
     running: "运行中",
     done: "完成",
     error: "错误",

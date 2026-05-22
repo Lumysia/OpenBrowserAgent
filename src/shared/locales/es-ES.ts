@@ -166,6 +166,8 @@ export const esES: LocaleMessages = {
     editingMessageDescription:
       "Solo el compositor está activo. Pulsa Esc o Cancelar para dejar de editar.",
     stop: "Detener",
+    scrollToTop: "Ir arriba",
+    scrollToBottom: "Ir abajo",
     running: "Ejecutando",
     done: "Listo",
     error: "Error",

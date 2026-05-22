@@ -35,6 +35,7 @@ import { ComposerAttachments } from "./composer-attachments";
 import { EditModeOverlay } from "./edit-mode-overlay";
 import { IconTooltip } from "./icon-tooltip";
 import { HistoryPanel } from "./history-panel";
+import { MessageJumpControls } from "./message-jump-controls";
 import { MessageBubble } from "./message-bubble";
 import { ProvidersEmptyState } from "./providers-empty-state";
 import { PromptUsagePreview } from "./prompt-usage-preview";
@@ -246,38 +247,46 @@ export function SidepanelView({
         {editingMessageId && (
           <EditModeOverlay t={t} onCancel={onCancelEditMessage} />
         )}
-        <ScrollArea
-          key={currentChat?.id || "empty"}
-          className="messages"
-          viewportRef={messagesRef}
-        >
-          {!currentChat?.messages.length && (
-            <div className="empty">
-              <div>
-                <h2>{t.sidepanel.whatDoYouWant}</h2>
-                <p className="muted">{t.sidepanel.emptyDescription}</p>
+        <div className="messages-shell">
+          <ScrollArea
+            key={currentChat?.id || "empty"}
+            className="messages"
+            viewportRef={messagesRef}
+          >
+            {!currentChat?.messages.length && (
+              <div className="empty">
+                <div>
+                  <h2>{t.sidepanel.whatDoYouWant}</h2>
+                  <p className="muted">{t.sidepanel.emptyDescription}</p>
+                </div>
               </div>
-            </div>
-          )}
-          {currentChat?.messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              latestUserMessage={message.id === latestUserMessageId}
-              editing={editingMessageId === message.id}
-              sources={currentChat.sources || []}
-              chatMessages={currentChat.messages}
-              sentAttachments={sentAttachmentPreviews[message.id] || []}
-              activeAttachments={uploadedAttachments}
-              onReplaceAttachment={onReplaceUploadedAttachment}
-              onEdit={onEditMessage}
-              onResend={onResendMessage}
-              resendDisabled={streaming}
-              onFork={onForkMessage}
-              onSelectChat={onSelectChat}
-            />
-          ))}
-        </ScrollArea>
+            )}
+            {currentChat?.messages.map((message) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                latestUserMessage={message.id === latestUserMessageId}
+                editing={editingMessageId === message.id}
+                sources={currentChat.sources || []}
+                chatMessages={currentChat.messages}
+                sentAttachments={sentAttachmentPreviews[message.id] || []}
+                activeAttachments={uploadedAttachments}
+                onReplaceAttachment={onReplaceUploadedAttachment}
+                onEdit={onEditMessage}
+                onResend={onResendMessage}
+                resendDisabled={streaming}
+                onFork={onForkMessage}
+                onSelectChat={onSelectChat}
+              />
+            ))}
+          </ScrollArea>
+          <MessageJumpControls
+            t={t}
+            currentChat={currentChat}
+            editingMessageId={editingMessageId}
+            messagesRef={messagesRef}
+          />
+        </div>
         <footer className="composer">
           <UploadFileInput
             inputRef={fileInputRef}

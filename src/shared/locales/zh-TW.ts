@@ -159,6 +159,8 @@ export const zhTW: LocaleMessages = {
     editingMessage: "正在編輯訊息",
     editingMessageDescription: "只有輸入區可操作。按 Esc 或取消即可停止編輯。",
     stop: "停止",
+    scrollToTop: "捲動到頂部",
+    scrollToBottom: "捲動到底部",
     running: "執行中",
     done: "完成",
     error: "錯誤",

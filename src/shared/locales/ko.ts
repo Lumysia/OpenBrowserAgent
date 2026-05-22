@@ -164,6 +164,8 @@ export const ko: LocaleMessages = {
     editingMessageDescription:
       "입력 영역만 사용할 수 있습니다. Esc 또는 취소로 편집을 중지하세요.",
     stop: "중지",
+    scrollToTop: "맨 위로 스크롤",
+    scrollToBottom: "맨 아래로 스크롤",
     running: "실행 중",
     done: "완료",
     error: "오류",
