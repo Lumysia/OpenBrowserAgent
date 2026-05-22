@@ -1,6 +1,7 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 import { ATTACHMENT_TOOL_DESCRIPTION } from "../shared/attachments";
 import { MEMORY_ENTRY_TEXT_MAX_CHARS } from "../shared/config";
+import { areCdpToolsAvailable } from "../shared/runtime-capabilities";
 import type { AgentCapabilities } from "../shared/types";
 import { cdpTools } from "./cdp-tool-schema";
 
@@ -785,7 +786,7 @@ export function browserToolsForPrompt({
     if (name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript)
       return (
         capabilities.cdpTools &&
-        capabilities.dangerousCodeExecution &&
+        capabilities.javascriptExecution &&
         cdpToolsAvailable
       );
     if (name.startsWith("cdp"))
@@ -853,11 +854,6 @@ export function browserToolsForPrompt({
       return capabilities.fileUrlRead || containsFileUrl(latestUserText || "");
     return capabilities.browserAutomation;
   });
-}
-
-function areCdpToolsAvailable() {
-  return !!(globalThis as typeof globalThis & { chrome?: typeof chrome }).chrome
-    ?.debugger;
 }
 
 function containsFileUrl(text: string) {

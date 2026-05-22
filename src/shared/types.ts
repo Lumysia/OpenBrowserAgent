@@ -112,7 +112,7 @@ export type AgentCapabilities = {
   browserTools: boolean;
   deferredBrowserTools: boolean;
   cdpTools: boolean;
-  dangerousCodeExecution: boolean;
+  javascriptExecution: boolean;
   mcpTools: boolean;
   mcpManagement: boolean;
   skillTools: boolean;

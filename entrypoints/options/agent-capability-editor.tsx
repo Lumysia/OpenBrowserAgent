@@ -1,6 +1,10 @@
 import { SlidersHorizontal } from "lucide-react";
 import { AGENT_CAPABILITY_GROUPS } from "../../src/shared/agents";
 import type { Messages } from "../../src/shared/i18n";
+import {
+  areCdpToolsAvailable,
+  CDP_AGENT_CAPABILITY_KEYS,
+} from "../../src/shared/runtime-capabilities";
 import type { AgentCapabilities } from "../../src/shared/types";
 import {
   Accordion,
@@ -22,6 +26,10 @@ export function AgentCapabilityEditor({
   readOnly?: boolean;
   onChange: (capabilities: AgentCapabilities) => void;
 }) {
+  const hiddenCapabilities = new Set<keyof AgentCapabilities>(
+    areCdpToolsAvailable() ? [] : CDP_AGENT_CAPABILITY_KEYS,
+  );
+
   return (
     <Accordion type="single" collapsible className="agent-capability-accordion">
       <AccordionItem value="capabilities">
@@ -40,31 +48,37 @@ export function AgentCapabilityEditor({
         </AccordionTrigger>
         <AccordionContent>
           <div className="agent-capability-groups">
-            {AGENT_CAPABILITY_GROUPS.map((group) => (
-              <div className="agent-capability-group" key={group.key}>
-                <h3>{t.options.agentCapabilityGroups[group.key]}</h3>
-                <div className="agent-capability-grid">
-                  {group.capabilities.map((key) => (
-                    <div className="agent-capability-row" key={key}>
-                      <Label
-                        className="agent-capability-label"
-                        htmlFor={`agent-capability-${key}`}
-                      >
-                        {t.options.agentCapabilityLabels[key]}
-                      </Label>
-                      <Switch
-                        id={`agent-capability-${key}`}
-                        checked={capabilities[key]}
-                        disabled={readOnly}
-                        onCheckedChange={(checked) =>
-                          onChange({ ...capabilities, [key]: checked })
-                        }
-                      />
-                    </div>
-                  ))}
+            {AGENT_CAPABILITY_GROUPS.map((group) => {
+              const visibleCapabilities = group.capabilities.filter(
+                (key) => !hiddenCapabilities.has(key),
+              );
+              if (!visibleCapabilities.length) return null;
+              return (
+                <div className="agent-capability-group" key={group.key}>
+                  <h3>{t.options.agentCapabilityGroups[group.key]}</h3>
+                  <div className="agent-capability-grid">
+                    {visibleCapabilities.map((key) => (
+                      <div className="agent-capability-row" key={key}>
+                        <Label
+                          className="agent-capability-label"
+                          htmlFor={`agent-capability-${key}`}
+                        >
+                          {t.options.agentCapabilityLabels[key]}
+                        </Label>
+                        <Switch
+                          id={`agent-capability-${key}`}
+                          checked={capabilities[key]}
+                          disabled={readOnly}
+                          onCheckedChange={(checked) =>
+                            onChange({ ...capabilities, [key]: checked })
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </AccordionContent>
       </AccordionItem>

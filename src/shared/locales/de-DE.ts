@@ -565,7 +565,7 @@ export const deDE: LocaleMessages = {
       browserTools: "Integrierte Tools verwenden",
       deferredBrowserTools: "Erweiterte Browseraktionen laden",
       cdpTools: "CDP-Tools",
-      dangerousCodeExecution: "Seiten-JavaScript ausführen",
+      javascriptExecution: "Seiten-JavaScript ausführen",
       mcpTools: "MCP-Tools",
       mcpManagement: "MCP-Verwaltung",
       skillTools: "Skill-Tools",

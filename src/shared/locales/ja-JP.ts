@@ -569,7 +569,7 @@ export const jaJP: LocaleMessages = {
       browserTools: "組み込みツールを使用",
       deferredBrowserTools: "高度なブラウザー操作を読み込む",
       cdpTools: "CDP ツール",
-      dangerousCodeExecution: "ページ JavaScript を実行",
+      javascriptExecution: "ページ JavaScript を実行",
       mcpTools: "MCP ツール",
       mcpManagement: "MCP 管理",
       skillTools: "スキルツール",

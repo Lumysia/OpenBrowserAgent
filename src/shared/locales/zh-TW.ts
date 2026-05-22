@@ -415,7 +415,7 @@ export const zhTW: LocaleMessages = {
       browserTools: "使用內建工具",
       deferredBrowserTools: "載入進階瀏覽器操作",
       cdpTools: "CDP 工具",
-      dangerousCodeExecution: "執行頁面 JavaScript",
+      javascriptExecution: "執行 JavaScript",
       mcpTools: "MCP 工具",
       mcpManagement: "MCP 管理",
       skillTools: "技能工具",

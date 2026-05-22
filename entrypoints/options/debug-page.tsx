@@ -3,6 +3,7 @@ import { AlertTriangle, Bug, Wrench, Trash2 } from "lucide-react";
 import { browserTools } from "../../src/background/tool-schema";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
+import { areCdpToolsAvailable } from "../../src/shared/runtime-capabilities";
 import { isSkillEnabled } from "../../src/shared/skills";
 import { resolveAgent } from "../../src/shared/agents";
 import {
@@ -44,7 +45,12 @@ export function DebugPage() {
   const [cleared, setCleared] = useState(false);
   const t = getMessages(language);
   const activeAgent = resolveAgent(agents, preferences?.selectedAgentId);
-  const toolRows = browserTools.map((tool) =>
+  const visibleBrowserTools = browserTools.filter(
+    (tool) =>
+      tool.function.name !== BROWSER_TOOL_NAME.loadBrowserTools ||
+      areCdpToolsAvailable(),
+  );
+  const toolRows = visibleBrowserTools.map((tool) =>
     toolStatus({
       name: tool.function.name,
       preferences,
@@ -97,14 +103,14 @@ export function DebugPage() {
               <small>
                 {t.options.debugToolsDescription.replace(
                   "{count}",
-                  String(browserTools.length),
+                  String(visibleBrowserTools.length),
                 )}
               </small>
             </span>
           </AccordionTrigger>
           <AccordionContent>
             <Accordion type="multiple" className="debug-tool-list">
-              {browserTools.map((tool, index) => {
+              {visibleBrowserTools.map((tool, index) => {
                 const status = toolRows[index];
                 const required = tool.function.parameters.required || [];
                 return (
@@ -303,7 +309,7 @@ function toolCapabilities(name: string): Array<keyof AgentCapabilities> {
   if (name === BROWSER_TOOL_NAME.loadBrowserTools)
     return ["deferredBrowserTools"];
   if (name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript)
-    return ["cdpTools", "dangerousCodeExecution"];
+    return ["cdpTools", "javascriptExecution"];
   if (name.startsWith("cdp")) return ["cdpTools"];
   if (name === BROWSER_TOOL_NAME.readFileFromUrl) return ["fileUrlRead"];
   if (

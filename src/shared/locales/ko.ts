@@ -506,7 +506,7 @@ export const ko: LocaleMessages = {
       browserTools: "내장 도구 사용",
       deferredBrowserTools: "고급 브라우저 작업 불러오기",
       cdpTools: "CDP 도구",
-      dangerousCodeExecution: "페이지 JavaScript 실행",
+      javascriptExecution: "페이지 JavaScript 실행",
       mcpTools: "MCP 도구",
       mcpManagement: "MCP 관리",
       skillTools: "스킬 도구",

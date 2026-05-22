@@ -409,7 +409,7 @@ export const zhCN: LocaleMessages = {
       browserTools: "使用内置工具",
       deferredBrowserTools: "加载高级浏览器操作",
       cdpTools: "CDP 工具",
-      dangerousCodeExecution: "执行页面 JavaScript",
+      javascriptExecution: "执行 JavaScript",
       mcpTools: "MCP 工具",
       mcpManagement: "MCP 管理",
       skillTools: "技能工具",

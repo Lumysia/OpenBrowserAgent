@@ -516,7 +516,7 @@ export const ptBR: LocaleMessages = {
       browserTools: "Usar ferramentas integradas",
       deferredBrowserTools: "Carregar ações avançadas do navegador",
       cdpTools: "Ferramentas CDP",
-      dangerousCodeExecution: "Executar JavaScript da página",
+      javascriptExecution: "Executar JavaScript da página",
       mcpTools: "Ferramentas MCP",
       mcpManagement: "Gerenciamento MCP",
       skillTools: "Ferramentas de habilidades",

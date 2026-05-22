@@ -572,7 +572,7 @@ export const frFR: LocaleMessages = {
       browserTools: "Utiliser les outils intégrés",
       deferredBrowserTools: "Charger les actions avancées du navigateur",
       cdpTools: "Outils CDP",
-      dangerousCodeExecution: "Exécuter le JavaScript de la page",
+      javascriptExecution: "Exécuter le JavaScript de la page",
       mcpTools: "Outils MCP",
       mcpManagement: "Gestion MCP",
       skillTools: "Outils de compétences",

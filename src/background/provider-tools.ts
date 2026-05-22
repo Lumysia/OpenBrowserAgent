@@ -143,12 +143,11 @@ export function executeContextAwareTool({
     return loadBrowserTools(input, capabilities);
   if (
     toolName === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript &&
-    !capabilities.dangerousCodeExecution
+    !capabilities.javascriptExecution
   )
     return {
       success: false,
-      error:
-        "Dangerous page JavaScript execution is disabled for the active agent",
+      error: "Page JavaScript execution is disabled for the active agent",
     };
   if (toolName === BROWSER_TOOL_NAME.readUploadedAttachment)
     return readUploadedAttachment(uploadedAttachments, input);
@@ -302,7 +301,7 @@ function toolCatalogItem(
 ) {
   const name = item.function.name;
   const dangerous = name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript;
-  const available = dangerous ? capabilities.dangerousCodeExecution : true;
+  const available = dangerous ? capabilities.javascriptExecution : true;
   return {
     name,
     description: item.function.description,
@@ -311,7 +310,7 @@ function toolCatalogItem(
     unavailableReason: available
       ? undefined
       : dangerous
-        ? "Dangerous arbitrary code execution is disabled in General settings"
+        ? "Page JavaScript execution is disabled in General settings"
         : "CDP tools are disabled for the active agent",
   };
 }

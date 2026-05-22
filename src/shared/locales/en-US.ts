@@ -503,7 +503,7 @@ export const enUS = {
       browserTools: "Use built-in tools",
       deferredBrowserTools: "Load advanced browser actions",
       cdpTools: "CDP tools",
-      dangerousCodeExecution: "Run page JavaScript",
+      javascriptExecution: "Run page JavaScript",
       mcpTools: "MCP tools",
       mcpManagement: "MCP management",
       skillTools: "Skill tools",

@@ -544,7 +544,7 @@ export const esES: LocaleMessages = {
       browserTools: "Usar herramientas integradas",
       deferredBrowserTools: "Cargar acciones avanzadas del navegador",
       cdpTools: "Herramientas CDP",
-      dangerousCodeExecution: "Ejecutar JavaScript de la página",
+      javascriptExecution: "Ejecutar JavaScript de la página",
       mcpTools: "Herramientas MCP",
       mcpManagement: "Gestión MCP",
       skillTools: "Herramientas de habilidades",
