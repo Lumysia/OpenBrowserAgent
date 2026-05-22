@@ -97,6 +97,7 @@ export const ko: LocaleMessages = {
       reasoning: "추론",
       estimated: "약",
       tokenUnit: "tok.",
+      estimatedTokenCount: "약 {count} tok.",
       promptBreakdown: "지시문 구성",
       contextSaved: "절약한 컨텍스트",
       contextPrunedMessages: "정리된 메시지",

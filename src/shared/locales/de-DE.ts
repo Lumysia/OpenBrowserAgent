@@ -99,6 +99,7 @@ export const deDE: LocaleMessages = {
       reasoning: "Reasoning",
       estimated: "ca.",
       tokenUnit: "tok.",
+      estimatedTokenCount: "ca. {count} tok.",
       promptBreakdown: "Anweisungs-Aufteilung",
       contextSaved: "Gesparter Kontext",
       contextPrunedMessages: "Gekürzte Nachrichten",

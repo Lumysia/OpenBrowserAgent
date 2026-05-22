@@ -55,7 +55,7 @@ export function updateChatAction(setChats: ChatSetter, chat: Chat) {
   setChats((items) => {
     const pruned = pruneEmptyChats(items);
     const nextChat = pruneStaleChildLinks(chat, pruned);
-    const nextItems = detachStaleChildren(pruned, nextChat);
+    const nextItems = removeStaleChildren(pruned, nextChat);
     if (!nextItems.some((candidate) => candidate.id === nextChat.id))
       return [...nextItems, nextChat];
     return nextItems.map((candidate) =>
@@ -81,18 +81,10 @@ function pruneStaleChildLinks(chat: Chat, chats: Chat[]) {
   };
 }
 
-function detachStaleChildren(chats: Chat[], parent: Chat) {
+function removeStaleChildren(chats: Chat[], parent: Chat) {
   const linkedChildIds = new Set(parent.childChatIds || []);
-  return chats.map((chat) =>
-    chat.parentChatId === parent.id && !linkedChildIds.has(chat.id)
-      ? {
-          ...chat,
-          kind: "normal" as const,
-          parentChatId: undefined,
-          parentMessageId: undefined,
-          parentToolCallId: undefined,
-        }
-      : chat,
+  return chats.filter(
+    (chat) => chat.parentChatId !== parent.id || linkedChildIds.has(chat.id),
   );
 }
 
@@ -143,24 +135,105 @@ export function forkChatAction({
   );
   if (messageIndex < 0) return;
   const now = Date.now();
+  const forkId = crypto.randomUUID();
   const forkedMessage = partId
     ? truncateMessageAtPart(message, partId)
     : message;
-  const fork: Chat = {
-    ...chat,
-    id: crypto.randomUUID(),
-    title: forkTitle(chat.title, forkLabel, now),
-    kind: "normal",
-    parentChatId: undefined,
-    parentMessageId: undefined,
-    parentToolCallId: undefined,
-    childChatIds: undefined,
-    messages: [...chat.messages.slice(0, messageIndex), forkedMessage],
-    createdAt: now,
-    updatedAt: now,
-  };
-  setChats((items) => [...items, fork]);
-  setActiveChatId(fork.id);
+  const messages = [...chat.messages.slice(0, messageIndex), forkedMessage];
+  setChats((items) => {
+    const linked = forkLinkedChildren({
+      chats: items,
+      messages,
+      originalParentId: chat.id,
+      forkParentId: forkId,
+      now,
+    });
+    const fork: Chat = {
+      ...chat,
+      id: forkId,
+      title: forkTitle(chat.title, forkLabel, now),
+      kind: "normal",
+      parentChatId: undefined,
+      parentMessageId: undefined,
+      parentToolCallId: undefined,
+      childChatIds: linked.children.length
+        ? linked.children.map((child) => child.id)
+        : undefined,
+      messages: linked.messages,
+      createdAt: now,
+      updatedAt: now,
+    };
+    return [...items, fork, ...linked.children];
+  });
+  setActiveChatId(forkId);
+}
+
+function forkLinkedChildren({
+  chats,
+  messages,
+  originalParentId,
+  forkParentId,
+  now,
+}: {
+  chats: Chat[];
+  messages: ChatMessage[];
+  originalParentId: string;
+  forkParentId: string;
+  now: number;
+}): { messages: ChatMessage[]; children: Chat[] } {
+  const childIdMap = new Map<string, string>();
+  const nextMessages = messages.map((message) => ({
+    ...message,
+    parts: message.parts?.map((part) => {
+      const output = part.output as Record<string, unknown> | undefined;
+      const childChatId = String(
+        output?.childChatId || output?.taskId || "",
+      ).trim();
+      if (!childChatId || !chats.some((chat) => chat.id === childChatId))
+        return part;
+      const nextChildId = childIdMap.get(childChatId) || crypto.randomUUID();
+      childIdMap.set(childChatId, nextChildId);
+      return {
+        ...part,
+        output: {
+          ...output,
+          childChatId: nextChildId,
+          taskId: nextChildId,
+          parentChatId: forkParentId,
+        },
+      };
+    }),
+  }));
+  const children: Chat[] = [];
+  for (const [oldId, nextId] of childIdMap.entries()) {
+    const child = chats.find((chat) => chat.id === oldId);
+    if (child)
+      children.push({
+        ...child,
+        id: nextId,
+        parentChatId: forkParentId,
+        messages: child.messages.map((message) => ({
+          ...message,
+          metadata: relinkChildMetadata(
+            message.metadata,
+            originalParentId,
+            forkParentId,
+          ),
+        })),
+        createdAt: now,
+        updatedAt: now,
+      });
+  }
+  return { messages: nextMessages, children };
+}
+
+function relinkChildMetadata(
+  metadata: Record<string, unknown> | undefined,
+  originalParentId: string,
+  forkParentId: string,
+) {
+  if (metadata?.parentChatId !== originalParentId) return metadata;
+  return { ...metadata, parentChatId: forkParentId };
 }
 
 function forkTitle(title: string, forkLabel: string, now: number) {
@@ -198,9 +271,10 @@ export function closeChatAction({
   setActiveChatId: ActiveChatSetter;
 }) {
   setChats((items) => {
+    const closedIds = closedChatIds(items, chatId);
     const next = cleanupClosedChatRelationships(
-      items.filter((chat) => chat.id !== chatId),
-      chatId,
+      items.filter((chat) => !closedIds.has(chat.id)),
+      closedIds,
     );
     if (activeChatId === chatId)
       setActiveChatId(sortChatsNewestFirst(next)[0]?.id);
@@ -208,22 +282,31 @@ export function closeChatAction({
   });
 }
 
-function cleanupClosedChatRelationships(chats: Chat[], closedChatId: string) {
+function closedChatIds(chats: Chat[], closedChatId: string) {
+  const ids = new Set([closedChatId]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const chat of chats) {
+      if (!chat.parentChatId || ids.has(chat.id)) continue;
+      if (ids.has(chat.parentChatId)) {
+        ids.add(chat.id);
+        changed = true;
+      }
+    }
+  }
+  return ids;
+}
+
+function cleanupClosedChatRelationships(
+  chats: Chat[],
+  closedChatIds: Set<string>,
+) {
   return chats.map((chat) => {
-    const detached =
-      chat.parentChatId === closedChatId
-        ? {
-            ...chat,
-            kind: "normal" as const,
-            parentChatId: undefined,
-            parentMessageId: undefined,
-            parentToolCallId: undefined,
-          }
-        : chat;
-    if (!detached.childChatIds?.includes(closedChatId)) return detached;
+    if (!chat.childChatIds?.some((id) => closedChatIds.has(id))) return chat;
     return {
-      ...detached,
-      childChatIds: detached.childChatIds.filter((id) => id !== closedChatId),
+      ...chat,
+      childChatIds: chat.childChatIds.filter((id) => !closedChatIds.has(id)),
     };
   });
 }

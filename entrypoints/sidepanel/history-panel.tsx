@@ -1,5 +1,11 @@
 import { ArrowLeft, Download, Pencil, Trash2, Upload, X } from "lucide-react";
-import { useRef, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import type { Messages } from "../../src/shared/i18n";
 import type { Agent, Chat, Preferences } from "../../src/shared/types";
 import { chatDisplayTitle } from "../../src/ui/agent-display";
@@ -14,6 +20,8 @@ import {
   formatRelativeTime,
   sortChatsNewestFirst,
 } from "./format";
+
+const HISTORY_REMOVE_DELAY_MS = 190;
 
 export function HistoryPanel({
   t,
@@ -41,8 +49,12 @@ export function HistoryPanel({
   onBack: () => void;
 }) {
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const removeTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [editingChatId, setEditingChatId] = useState<string>();
   const [draftTitle, setDraftTitle] = useState("");
+  const [removingChatIds, setRemovingChatIds] = useState<Record<string, true>>(
+    {},
+  );
   const sortedChats = sortChatsNewestFirst(chats);
   const chatsByParentId = new Map<string, Chat[]>();
   for (const chat of sortedChats) {
@@ -90,6 +102,31 @@ export function HistoryPanel({
     setEditingChatId(undefined);
     setDraftTitle("");
   }
+
+  function closeWithExit(chatId: string) {
+    if (removingChatIds[chatId]) return;
+    const ids = linkedClosedChatIds(chats, chatId);
+    setRemovingChatIds((items) => ({
+      ...items,
+      ...Object.fromEntries([...ids].map((id) => [id, true as const])),
+    }));
+    const timer = setTimeout(() => {
+      onClose(chatId);
+      setRemovingChatIds((items) => {
+        const next = { ...items };
+        ids.forEach((id) => delete next[id]);
+        return next;
+      });
+    }, HISTORY_REMOVE_DELAY_MS);
+    removeTimersRef.current.push(timer);
+  }
+
+  useEffect(
+    () => () => {
+      removeTimersRef.current.forEach(clearTimeout);
+    },
+    [],
+  );
 
   return (
     <div className="history-page">
@@ -141,6 +178,7 @@ export function HistoryPanel({
               chat={chat}
               activeChatId={activeChatId}
               unreadCompletedChatIds={unreadCompletedChatIds}
+              removing={!!removingChatIds[chat.id]}
               editingChatId={editingChatId}
               draftTitle={draftTitle}
               agent={agent}
@@ -150,7 +188,7 @@ export function HistoryPanel({
               onSaveEdit={saveEdit}
               onCancelEdit={cancelEdit}
               onSelect={onSelect}
-              onClose={onClose}
+              onClose={closeWithExit}
             />
             {!!chatsByParentId.get(chat.id)?.length && (
               <div className="history-child-list">
@@ -161,6 +199,7 @@ export function HistoryPanel({
                     chat={child}
                     activeChatId={activeChatId}
                     unreadCompletedChatIds={unreadCompletedChatIds}
+                    removing={!!removingChatIds[child.id]}
                     editingChatId={editingChatId}
                     draftTitle={draftTitle}
                     agent={agent}
@@ -171,7 +210,7 @@ export function HistoryPanel({
                     onSaveEdit={saveEdit}
                     onCancelEdit={cancelEdit}
                     onSelect={onSelect}
-                    onClose={onClose}
+                    onClose={closeWithExit}
                   />
                 ))}
               </div>
@@ -188,6 +227,7 @@ function HistoryItem({
   chat,
   activeChatId,
   unreadCompletedChatIds,
+  removing,
   editingChatId,
   draftTitle,
   agent,
@@ -204,6 +244,7 @@ function HistoryItem({
   chat: Chat;
   activeChatId?: string;
   unreadCompletedChatIds: Record<string, true>;
+  removing: boolean;
   editingChatId?: string;
   draftTitle: string;
   agent: Agent;
@@ -220,7 +261,7 @@ function HistoryItem({
   const title = chatDisplayTitle(chat, t);
   return (
     <div
-      className={`history-item ${child ? "child" : ""} ${chat.id === activeChatId ? "active" : ""} ${unreadCompletedChatIds[chat.id] ? "unread-complete" : ""}`}
+      className={`history-item ${child ? "child" : ""} ${chat.id === activeChatId ? "active" : ""} ${unreadCompletedChatIds[chat.id] ? "unread-complete" : ""} ${removing ? "removing" : ""}`}
     >
       {editingChatId === chat.id ? (
         <div className="history-select history-title-editor">
@@ -245,6 +286,7 @@ function HistoryItem({
         <Button
           variant="ghost"
           className="history-select"
+          disabled={removing}
           onClick={() => onSelect(chat.id)}
         >
           <span className="history-title-row">
@@ -269,6 +311,7 @@ function HistoryItem({
             size="icon"
             className="history-item-action"
             aria-label={t.common.edit}
+            disabled={removing}
             onClick={() => onStartEdit(chat)}
           >
             <Pencil size={13} />
@@ -280,7 +323,7 @@ function HistoryItem({
             size="icon"
             className="history-item-action"
             aria-label={t.sidepanel.exportChatOpenAi}
-            disabled={!chat.messages.length}
+            disabled={removing || !chat.messages.length}
             onClick={() => exportChatAsOpenAiJson(chat, agent, preferences)}
           >
             <Download size={13} />
@@ -290,8 +333,9 @@ function HistoryItem({
           <Button
             variant="ghost"
             size="icon"
-            className="history-item-action"
+            className="history-item-action history-delete-action"
             aria-label={t.sidepanel.removeChat}
+            disabled={removing}
             onClick={() => onClose(chat.id)}
           >
             <X size={13} />
@@ -300,6 +344,22 @@ function HistoryItem({
       </div>
     </div>
   );
+}
+
+function linkedClosedChatIds(chats: Chat[], closedChatId: string) {
+  const ids = new Set([closedChatId]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const chat of chats) {
+      if (!chat.parentChatId || ids.has(chat.id)) continue;
+      if (ids.has(chat.parentChatId)) {
+        ids.add(chat.id);
+        changed = true;
+      }
+    }
+  }
+  return ids;
 }
 
 function chatStatus(chat: Chat) {

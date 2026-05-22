@@ -99,6 +99,7 @@ export const frFR: LocaleMessages = {
       reasoning: "Raisonnement",
       estimated: "env.",
       tokenUnit: "tok.",
+      estimatedTokenCount: "env. {count} tok.",
       promptBreakdown: "Répartition des instructions",
       contextSaved: "Contexte économisé",
       contextPrunedMessages: "Messages élagués",

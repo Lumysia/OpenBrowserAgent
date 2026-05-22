@@ -246,7 +246,11 @@ export function SidepanelView({
         {editingMessageId && (
           <EditModeOverlay t={t} onCancel={onCancelEditMessage} />
         )}
-        <ScrollArea className="messages" viewportRef={messagesRef}>
+        <ScrollArea
+          key={currentChat?.id || "empty"}
+          className="messages"
+          viewportRef={messagesRef}
+        >
           {!currentChat?.messages.length && (
             <div className="empty">
               <div>

@@ -99,6 +99,7 @@ export const enUS = {
       reasoning: "Reasoning",
       estimated: "est.",
       tokenUnit: "tok.",
+      estimatedTokenCount: "{count} est. tok.",
       promptBreakdown: "Prompt breakdown",
       contextSaved: "Context saved",
       contextPrunedMessages: "Pruned messages",

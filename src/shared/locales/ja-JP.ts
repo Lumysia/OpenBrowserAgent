@@ -98,6 +98,7 @@ export const jaJP: LocaleMessages = {
       reasoning: "推論",
       estimated: "約",
       tokenUnit: "tok.",
+      estimatedTokenCount: "約 {count} tok.",
       promptBreakdown: "指示文の内訳",
       contextSaved: "節約したコンテキスト",
       contextPrunedMessages: "剪定済みメッセージ",

@@ -134,9 +134,7 @@
   outline-offset: 2px;
 }
 .run-info-popover {
-  width: max-content;
-  min-width: min(236px, calc(100vw - 28px));
-  max-width: min(360px, calc(100vw - 28px));
+  width: min(336px, calc(100vw - 28px));
   display: grid;
   gap: 10px;
   padding: 12px;
@@ -184,8 +182,9 @@
 }
 .run-info-metric-pair {
   display: grid;
-  grid-template-columns: repeat(2, max-content);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  padding-inline: 8px;
 }
 .run-info-metric-pair .run-info-row {
   gap: 6px;
@@ -193,7 +192,9 @@
 .run-info-row {
   min-width: 0;
   display: grid;
-  grid-template-columns: max-content max-content;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 8px;
   color: var(--muted-foreground);
   font-size: 12px;
 }
@@ -205,7 +206,7 @@
 }
 .run-info-token-grid {
   display: grid;
-  grid-template-columns: repeat(2, max-content);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px 12px;
   padding: 8px;
   border-radius: 12px;

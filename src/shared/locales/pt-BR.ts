@@ -98,6 +98,7 @@ export const ptBR: LocaleMessages = {
       reasoning: "Raciocínio",
       estimated: "aprox.",
       tokenUnit: "tok.",
+      estimatedTokenCount: "aprox. {count} tok.",
       promptBreakdown: "Divisão das instruções",
       contextSaved: "Contexto economizado",
       contextPrunedMessages: "Mensagens podadas",

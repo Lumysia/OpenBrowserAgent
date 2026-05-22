@@ -4,14 +4,20 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 2px;
+  max-height: 72px;
   min-width: 0;
   border-radius: 9px;
   margin-bottom: 2px;
+  overflow: hidden;
   transition:
     background-color 0.14s ease,
     color 0.14s ease,
     transform 0.14s ease;
   animation: subtle-rise-in 0.24s ease both;
+}
+.history-item.removing {
+  pointer-events: none;
+  animation: history-item-exit 0.19s ease both;
 }
 .history-item:nth-child(1) {
   animation-delay: 0.02s;
@@ -173,4 +179,30 @@
 .history-item-action:hover {
   background: color-mix(in srgb, var(--secondary) 74%, transparent);
   color: var(--foreground);
+}
+.history-delete-action {
+  color: color-mix(in srgb, var(--destructive) 70%, var(--muted-foreground));
+}
+.history-delete-action:hover,
+.history-delete-action:focus-visible {
+  background: color-mix(in srgb, var(--destructive) 12%, transparent);
+  color: var(--destructive);
+}
+.history-delete-action:active {
+  background: color-mix(in srgb, var(--destructive) 18%, transparent);
+  transform: scale(0.92);
+}
+@keyframes history-item-exit {
+  from {
+    max-height: 72px;
+    margin-bottom: 2px;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    max-height: 0;
+    margin-bottom: 0;
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
 }

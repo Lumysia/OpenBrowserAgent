@@ -98,6 +98,7 @@ export const esES: LocaleMessages = {
       reasoning: "Razonamiento",
       estimated: "aprox.",
       tokenUnit: "tok.",
+      estimatedTokenCount: "aprox. {count} tok.",
       promptBreakdown: "Desglose de instrucciones",
       contextSaved: "Contexto ahorrado",
       contextPrunedMessages: "Mensajes podados",
