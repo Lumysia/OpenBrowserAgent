@@ -173,7 +173,11 @@ export function extractMarkdownLinks(text: string): MarkdownLink[] {
       return;
     }
     seen.add(normalized);
-    links.push({ url: normalized, title: title.trim() || normalized, host });
+    links.push({
+      url: normalized,
+      title: cleanLinkTitle(title) || normalized,
+      host,
+    });
   };
 
   for (const match of text.matchAll(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g))
@@ -186,6 +190,13 @@ export function extractMarkdownLinks(text: string): MarkdownLink[] {
 
 function cleanUrl(url: string) {
   return url.trim().replace(/[\].,!?;:，。！？；：）)]+$/g, "");
+}
+
+function cleanLinkTitle(title: string) {
+  return title
+    .replace(/\s*\[\[cite:[\w-]+(?:\]\])?/g, "")
+    .trim()
+    .replace(/[\].,!?;:，。！？；：）)]+$/g, "");
 }
 
 function mermaidPreview(code: string, language: string, t: Messages) {
