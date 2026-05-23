@@ -110,7 +110,7 @@ export function SyncPage() {
       description: t.options.syncChatAttachmentsDescription,
       icon: <Paperclip size={18} />,
       value: preferences.syncChatAttachments === true,
-      webDavOnly: true,
+      attachmentBackendOnly: true,
       onChange: (value: boolean) =>
         setPreferences((previous) => ({
           ...previous,

@@ -49,6 +49,15 @@ export const ptBR: LocaleMessages = {
     localSetupHint:
       "As Configurações estão abertas. Adicione um provedor e um modelo lá, depois volte aqui para continuar.",
     bootstrapStepSyncTitle: "Backend de sincronização (opcional)",
+    syncConfigCodeTab: "Colar código",
+    syncManualTab: "Configuração manual",
+    syncConfigCode: "Código de configuração de sincronização",
+    syncConfigCodeDescription: "Cole um código copiado de outro dispositivo.",
+    syncConfigCodeApply: "Aplicar código",
+    syncConfigCodeApplied:
+      "Configuração do backend aplicada. Agora você pode verificar a sincronização em nuvem.",
+    syncConfigCodeInvalid:
+      "Código de configuração inválido. Verifique o código e tente novamente.",
     bootstrapStepProviderTitle: "Adicione provedor e modelo",
     bootstrapStepProviderDescription:
       "Abra as Configurações para adicionar um provedor, adicionar um modelo e testá-lo.",
@@ -720,6 +729,8 @@ export const ptBR: LocaleMessages = {
     syncBackendTesting: "Testando...",
     syncBackendTestSuccess: "Conectado",
     syncBackendTestError: "Falha na conexão",
+    syncBackendCopyConfig: "Copiar código de configuração",
+    syncBackendCopiedConfig: "Código de configuração copiado",
     syncBackendRemove: "Remover",
     syncProviders: "Sincronizar provedores",
     syncProvidersDescription:
@@ -738,7 +749,7 @@ export const ptBR: LocaleMessages = {
       "Sincronize o histórico de chats pelo backend de sincronização atual. Desative para conversas somente locais.",
     syncChatAttachments: "Sincronizar anexos de chat",
     syncChatAttachmentsDescription:
-      "Salva arquivos enviados no chat como arquivos WebDAV brutos com um pequeno JSON de metadados. O Browser Sync fica desativado para anexos por causa dos limites de cota do navegador.",
+      "Sincroniza arquivos enviados no chat pelo backend selecionado com suporte a anexos. O Browser Sync fica desativado para anexos por causa dos limites de cota do navegador.",
     syncWritePending: "Gravações de sincronização na fila",
     syncWritePendingDetail: "{count} item(ns) aguardando sincronização",
     syncWriteOperationWrite: "gravando",

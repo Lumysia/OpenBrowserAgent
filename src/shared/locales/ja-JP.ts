@@ -49,6 +49,16 @@ export const jaJP: LocaleMessages = {
     localSetupHint:
       "設定を開きました。そこでプロバイダーとモデルを追加し、ここに戻って続行してください。",
     bootstrapStepSyncTitle: "同期バックエンド（任意）",
+    syncConfigCodeTab: "コードを貼り付け",
+    syncManualTab: "手動入力",
+    syncConfigCode: "同期設定コード",
+    syncConfigCodeDescription:
+      "別のデバイスからコピーしたコードを貼り付けます。",
+    syncConfigCodeApply: "設定コードを適用",
+    syncConfigCodeApplied:
+      "同期バックエンド設定を適用しました。クラウド同期を確認できます。",
+    syncConfigCodeInvalid:
+      "同期設定コードが無効です。確認してもう一度お試しください。",
     bootstrapStepProviderTitle: "プロバイダーとモデルを追加",
     bootstrapStepProviderDescription:
       "設定を開き、プロバイダーとモデルを追加して動作確認できます。",
@@ -773,6 +783,8 @@ export const jaJP: LocaleMessages = {
     syncBackendTesting: "テスト中...",
     syncBackendTestSuccess: "接続済み",
     syncBackendTestError: "接続に失敗しました",
+    syncBackendCopyConfig: "設定コードをコピー",
+    syncBackendCopiedConfig: "設定コードをコピーしました",
     syncBackendRemove: "削除",
     syncProviders: "プロバイダーを同期",
     syncProvidersDescription:
@@ -791,7 +803,7 @@ export const jaJP: LocaleMessages = {
       "チャット履歴を現在の同期バックエンドで同期します。ローカルのみの会話にする場合はオフにします。",
     syncChatAttachments: "チャット添付を同期",
     syncChatAttachmentsDescription:
-      "チャットにアップロードしたファイルを生の WebDAV ファイルとして保存し、小さな JSON メタデータファイルを添えます。ブラウザー同期は容量制限のため添付では無効です。",
+      "選択中の添付対応バックエンドで、チャットにアップロードしたファイルを同期します。ブラウザー同期は容量制限のため添付では無効です。",
     syncWritePending: "同期書き込みがキューに入っています",
     syncWritePendingDetail: "{count} 件が同期待ちです",
     syncWriteOperationWrite: "書き込み",

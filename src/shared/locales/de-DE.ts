@@ -49,6 +49,16 @@ export const deDE: LocaleMessages = {
     localSetupHint:
       "Die Einstellungen sind geöffnet. Fügen Sie dort Anbieter und Modell hinzu und kehren Sie dann hierher zurück.",
     bootstrapStepSyncTitle: "Synchronisierungs-Backend (optional)",
+    syncConfigCodeTab: "Code einfügen",
+    syncManualTab: "Manuell einrichten",
+    syncConfigCode: "Sync-Konfigurationscode",
+    syncConfigCodeDescription:
+      "Fügen Sie einen von einem anderen Gerät kopierten Code ein.",
+    syncConfigCodeApply: "Konfigurationscode anwenden",
+    syncConfigCodeApplied:
+      "Sync-Backend-Konfiguration angewendet. Sie können nun die Cloud-Synchronisierung prüfen.",
+    syncConfigCodeInvalid:
+      "Ungültiger Sync-Konfigurationscode. Prüfen Sie den Code und versuchen Sie es erneut.",
     bootstrapStepProviderTitle: "Anbieter und Modell hinzufügen",
     bootstrapStepProviderDescription:
       "Öffnen Sie die Einstellungen, um Anbieter und Modell hinzuzufügen und zu testen.",
@@ -772,6 +782,8 @@ export const deDE: LocaleMessages = {
     syncBackendTesting: "Test läuft...",
     syncBackendTestSuccess: "Verbunden",
     syncBackendTestError: "Verbindung fehlgeschlagen",
+    syncBackendCopyConfig: "Konfigurationscode kopieren",
+    syncBackendCopiedConfig: "Konfigurationscode kopiert",
     syncBackendRemove: "Entfernen",
     syncProviders: "Anbieter synchronisieren",
     syncProvidersDescription:
@@ -790,7 +802,7 @@ export const deDE: LocaleMessages = {
       "Chatverlauf über das aktuelle Synchronisierungs-Backend synchronisieren. Deaktivieren für nur lokale Unterhaltungen.",
     syncChatAttachments: "Chat-Anhänge synchronisieren",
     syncChatAttachmentsDescription:
-      "Speichert hochgeladene Chat-Dateien als rohe WebDAV-Dateien mit einer kleinen JSON-Metadatendatei. Browser Sync ist wegen Browser-Kontingenten für Anhänge deaktiviert.",
+      "Synchronisiert hochgeladene Chat-Dateien über das ausgewählte anhängefähige Backend. Browser Sync ist wegen Browser-Kontingenten für Anhänge deaktiviert.",
     syncWritePending:
       "Synchronisierungsschreibvorgänge sind in der Warteschlange",
     syncWritePendingDetail: "{count} Element(e) warten auf Synchronisierung",

@@ -48,6 +48,15 @@ export const ko: LocaleMessages = {
     localSetupHint:
       "설정이 열렸습니다. 거기에서 제공업체와 모델을 추가한 뒤 여기로 돌아와 계속하세요.",
     bootstrapStepSyncTitle: "동기화 백엔드(선택 사항)",
+    syncConfigCodeTab: "코드 붙여넣기",
+    syncManualTab: "수동 입력",
+    syncConfigCode: "동기화 구성 코드",
+    syncConfigCodeDescription: "다른 기기에서 복사한 코드를 붙여넣으세요.",
+    syncConfigCodeApply: "구성 코드 적용",
+    syncConfigCodeApplied:
+      "동기화 백엔드 구성이 적용되었습니다. 이제 클라우드 동기화를 확인할 수 있습니다.",
+    syncConfigCodeInvalid:
+      "동기화 구성 코드가 올바르지 않습니다. 코드를 확인한 뒤 다시 시도하세요.",
     bootstrapStepProviderTitle: "제공업체와 모델 추가",
     bootstrapStepProviderDescription:
       "설정을 열어 제공업체와 모델을 추가한 뒤 테스트할 수 있습니다.",
@@ -706,6 +715,8 @@ export const ko: LocaleMessages = {
     syncBackendTesting: "테스트 중...",
     syncBackendTestSuccess: "연결됨",
     syncBackendTestError: "연결 실패",
+    syncBackendCopyConfig: "구성 코드 복사",
+    syncBackendCopiedConfig: "구성 코드 복사됨",
     syncBackendRemove: "제거",
     syncProviders: "제공업체 동기화",
     syncProvidersDescription:
@@ -723,7 +734,7 @@ export const ko: LocaleMessages = {
       "채팅 기록을 현재 동기화 백엔드로 동기화합니다. 로컬 전용 대화는 끄세요.",
     syncChatAttachments: "채팅 첨부 동기화",
     syncChatAttachmentsDescription:
-      "채팅에 업로드한 파일을 원본 WebDAV 파일로 저장하고 작은 JSON 메타데이터 파일을 함께 둡니다. 브라우저 동기화는 브라우저 할당량 제한 때문에 첨부 파일에 사용할 수 없습니다.",
+      "선택한 첨부 파일 지원 동기화 백엔드로 채팅에 업로드한 파일을 동기화합니다. 브라우저 동기화는 브라우저 할당량 제한 때문에 첨부 파일에 사용할 수 없습니다.",
     syncWritePending: "동기화 쓰기가 대기 중입니다",
     syncWritePendingDetail: "{count}개 항목이 동기화를 기다립니다",
     syncWriteOperationWrite: "쓰기",

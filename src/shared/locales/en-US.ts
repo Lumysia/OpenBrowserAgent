@@ -50,6 +50,15 @@ export const enUS = {
     localSetupHint:
       "Settings is open. Add a provider and model there, then return here to continue.",
     bootstrapStepSyncTitle: "Sync backend (optional)",
+    syncConfigCodeTab: "Paste code",
+    syncManualTab: "Manual setup",
+    syncConfigCode: "Sync config code",
+    syncConfigCodeDescription: "Paste a code copied from another device.",
+    syncConfigCodeApply: "Apply config code",
+    syncConfigCodeApplied:
+      "Sync backend config applied. You can now check cloud sync.",
+    syncConfigCodeInvalid:
+      "Invalid sync config code. Check the code and try again.",
     bootstrapStepProviderTitle: "Add a provider and model",
     bootstrapStepProviderDescription:
       "Open Settings to add a provider, add a model, and test it.",
@@ -705,6 +714,8 @@ export const enUS = {
     syncBackendTesting: "Testing...",
     syncBackendTestSuccess: "Connected",
     syncBackendTestError: "Connection failed",
+    syncBackendCopyConfig: "Copy config code",
+    syncBackendCopiedConfig: "Config code copied",
     syncBackendRemove: "Remove",
     syncProviders: "Sync Providers",
     syncProvidersDescription:
@@ -723,7 +734,7 @@ export const enUS = {
       "Sync chat history through the current sync backend. Keep this off for local-only conversations.",
     syncChatAttachments: "Sync Chat Attachments",
     syncChatAttachmentsDescription:
-      "Store uploaded chat files as raw WebDAV files with a small JSON metadata sidecar. Browser Sync is disabled for attachments because of browser quota limits.",
+      "Sync uploaded chat files with the selected attachment-capable backend. Browser Sync is disabled for attachments because of browser quota limits.",
     syncWritePending: "Sync writes are queued",
     syncWritePendingDetail: "{count} item(s) waiting to sync",
     syncWriteOperationWrite: "writing",

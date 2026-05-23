@@ -2,6 +2,7 @@ import * as config from "./config";
 import { getBrowserApi } from "./browser-api";
 import type { SyncBackend } from "./sync-backends";
 import { STORAGE_KEYS } from "./storage-keys";
+import { sameStorageValue } from "./storage-value";
 
 export type SyncWriteStatus = {
   pendingCount: number;
@@ -172,14 +173,6 @@ async function flushSyncWrite(key: string) {
       lastError: error instanceof Error ? error.message : String(error),
     });
     pending.reject.forEach((reject) => reject(error));
-  }
-}
-
-function sameStorageValue(left: unknown, right: unknown) {
-  try {
-    return JSON.stringify(left) === JSON.stringify(right);
-  } catch {
-    return Object.is(left, right);
   }
 }
 

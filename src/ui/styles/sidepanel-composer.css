@@ -595,6 +595,26 @@
   display: grid;
   gap: 8px;
 }
+.bootstrap-sync-tabs {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.bootstrap-sync-tabs .ui-tabs-trigger {
+  width: 100%;
+  height: 34px;
+}
+.bootstrap-sync-tab-panel {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+.bootstrap-sync-tab-panel .ui-textarea {
+  min-height: 86px;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12px;
+  line-height: 1.45;
+}
 .bootstrap-status-copy,
 .bootstrap-action-label {
   animation: fade-in 0.18s ease both;

@@ -49,6 +49,15 @@ export const esES: LocaleMessages = {
     localSetupHint:
       "Configuración está abierta. Añade allí un proveedor y un modelo, y luego vuelve aquí para continuar.",
     bootstrapStepSyncTitle: "Backend de sincronización (opcional)",
+    syncConfigCodeTab: "Pegar código",
+    syncManualTab: "Configuración manual",
+    syncConfigCode: "Código de configuración de sincronización",
+    syncConfigCodeDescription: "Pega un código copiado desde otro dispositivo.",
+    syncConfigCodeApply: "Aplicar código",
+    syncConfigCodeApplied:
+      "Configuración del backend aplicada. Ahora puedes comprobar la sincronización en la nube.",
+    syncConfigCodeInvalid:
+      "Código de configuración no válido. Revísalo e inténtalo de nuevo.",
     bootstrapStepProviderTitle: "Añade proveedor y modelo",
     bootstrapStepProviderDescription:
       "Abre Configuración para añadir un proveedor, añadir un modelo y probarlo.",
@@ -751,6 +760,8 @@ export const esES: LocaleMessages = {
     syncBackendTesting: "Probando...",
     syncBackendTestSuccess: "Conectado",
     syncBackendTestError: "Falló la conexión",
+    syncBackendCopyConfig: "Copiar código de configuración",
+    syncBackendCopiedConfig: "Código de configuración copiado",
     syncBackendRemove: "Eliminar",
     syncProviders: "Sincronizar proveedores",
     syncProvidersDescription:
@@ -769,7 +780,7 @@ export const esES: LocaleMessages = {
       "Sincroniza el historial de chats con el backend de sincronización actual. Desactívalo para conversaciones solo locales.",
     syncChatAttachments: "Sincronizar adjuntos de chat",
     syncChatAttachmentsDescription:
-      "Guarda los archivos subidos al chat como archivos WebDAV sin procesar con un pequeño JSON de metadatos. Browser Sync está desactivado para adjuntos por los límites de cuota del navegador.",
+      "Sincroniza los archivos subidos al chat con el backend seleccionado que admite adjuntos. Browser Sync está desactivado para adjuntos por los límites de cuota del navegador.",
     syncWritePending: "Escrituras de sincronización en cola",
     syncWritePendingDetail: "{count} elemento(s) esperando sincronización",
     syncWriteOperationWrite: "escribiendo",

@@ -45,6 +45,13 @@ export const zhCN: LocaleMessages = {
     localSetupHint:
       "设置页已打开。请在那里添加提供商和模型，然后回到这里继续。",
     bootstrapStepSyncTitle: "同步后端（可选）",
+    syncConfigCodeTab: "粘贴配置码",
+    syncManualTab: "手动输入",
+    syncConfigCode: "同步配置码",
+    syncConfigCodeDescription: "粘贴另一台设备复制的配置码。",
+    syncConfigCodeApply: "应用配置码",
+    syncConfigCodeApplied: "同步后端配置已应用，可以继续检查云端同步。",
+    syncConfigCodeInvalid: "配置码无效，请检查后重试。",
     bootstrapStepProviderTitle: "添加提供商和模型",
     bootstrapStepProviderDescription:
       "打开设置页，添加提供商、添加模型并测试是否可用。",
@@ -594,6 +601,8 @@ export const zhCN: LocaleMessages = {
     syncBackendTesting: "测试中...",
     syncBackendTestSuccess: "已连接",
     syncBackendTestError: "连接失败",
+    syncBackendCopyConfig: "复制配置码",
+    syncBackendCopiedConfig: "配置码已复制",
     syncBackendRemove: "移除",
     syncProviders: "同步提供商",
     syncProvidersDescription: "通过当前同步后端同步提供商配置，包括 API Key。",
@@ -609,7 +618,7 @@ export const zhCN: LocaleMessages = {
       "通过当前同步后端同步对话历史。关闭时对话只保存在本机。",
     syncChatAttachments: "同步对话附件",
     syncChatAttachmentsDescription:
-      "把上传到对话的文件保存为原始 WebDAV 文件，并附带一个小的 JSON 元数据文件。浏览器内置同步受配额限制，不支持附件。",
+      "通过当前支持附件的同步后端同步对话中上传的文件。浏览器内置同步受配额限制，不支持附件。",
     syncWritePending: "同步写入排队中",
     syncWritePendingDetail: "{count} 项正在等待同步",
     syncWriteOperationWrite: "写入",

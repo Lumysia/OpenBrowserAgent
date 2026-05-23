@@ -1,4 +1,4 @@
-import { Bot, Cloud, Languages, Settings } from "lucide-react";
+import { Bot, Languages, Settings } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { LOCAL_SETUP_FEEDBACK_MS, OPTIONS_HASH } from "../../src/shared/config";
 import { mergePreferences } from "../../src/shared/default-preferences";
@@ -12,10 +12,10 @@ import {
 } from "../../src/shared/storage";
 import { completeLocalBootstrapState } from "../../src/shared/storage-debug";
 import { restoreSyncBackendFromCloud } from "../../src/shared/storage-sync-transition";
+import { parseSyncConfigCode } from "../../src/shared/sync-config-code";
 import {
   BROWSER_SYNC_BACKEND_ID,
   NO_SYNC_BACKEND_ID,
-  SYNC_BACKEND_REGISTRY,
   syncBackendRegistryItem,
   WEBDAV_SYNC_BACKEND_ID,
 } from "../../src/shared/sync-backend-registry";
@@ -34,8 +34,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  Input,
-  Label,
   Select,
   SelectContent,
   SelectItem,
@@ -44,6 +42,7 @@ import {
   ScrollArea,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { SyncBootstrapStep } from "./sync-bootstrap-step";
 
 type CloudBootstrapState = {
   language?: string;
@@ -66,6 +65,11 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
       ? WEBDAV_SYNC_BACKEND_ID
       : BROWSER_SYNC_BACKEND_ID,
   );
+  const [syncSetupMode, setSyncSetupMode] = useState<"code" | "manual">("code");
+  const [syncCodeDraft, setSyncCodeDraft] = useState("");
+  const [syncCodeStatus, setSyncCodeStatus] = useState<
+    "idle" | "applied" | "error"
+  >("idle");
   const [syncing, setSyncing] = useState(false);
   const [syncAction, setSyncAction] = useState<"test" | "confirm">("test");
   const [startingLocal, setStartingLocal] = useState(false);
@@ -138,6 +142,25 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
       nextBackend,
     ]);
     setSyncStatus("idle");
+  }
+
+  function applySyncConfigCode() {
+    if (hasActiveSyncBackend) return;
+    try {
+      const backend = parseSyncConfigCode(syncCodeDraft);
+      setSyncBackends([
+        ...loadedSyncBackends.filter(
+          (existing) => existing.type !== backend.type,
+        ),
+        backend,
+      ]);
+      setSelectedBackendId(backend.id);
+      setSyncStatus("idle");
+      setSyncCodeStatus("applied");
+    } catch (error) {
+      console.warn("Failed to parse sync config code", error);
+      setSyncCodeStatus("error");
+    }
   }
 
   function selectedBackendConfig(): SyncBackendConfig {
@@ -249,6 +272,16 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
           ? t.sidepanel.cloudSyncSyncedButton
           : t.sidepanel.cloudSyncTest;
   const syncStatusMessage = syncing ? cloudActionLabel : syncMessage;
+  const setupFeedbackMessage =
+    syncStatus !== "idle" || syncing
+      ? syncStatusMessage
+      : syncCodeStatus === "applied"
+        ? t.sidepanel.syncConfigCodeApplied
+        : syncCodeStatus === "error"
+          ? t.sidepanel.syncConfigCodeInvalid
+          : "";
+  const setupFeedbackError =
+    syncStatus === "error" || syncCodeStatus === "error";
   const secondaryStartLabel =
     syncStatus === "synced"
       ? t.sidepanel.bootstrapStepProviderTitle
@@ -300,106 +333,29 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                     description={t.sidepanel.cloudSyncDescription}
                     active
                   >
-                    <div className="bootstrap-actions">
-                      <Select
-                        value={selectedBackendId}
-                        onValueChange={(backendId) => {
-                          setSelectedBackendId(backendId);
-                          setSyncStatus("idle");
-                        }}
-                        disabled={syncing || hasActiveSyncBackend}
-                      >
-                        <SelectTrigger>
-                          <Cloud size={16} />
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {SYNC_BACKEND_REGISTRY.map((backend) => (
-                            <SelectItem key={backend.id} value={backend.id}>
-                              {backend.id === BROWSER_SYNC_BACKEND_ID
-                                ? t.options.syncBackendBrowserSync
-                                : backend.defaultName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <div
-                        aria-hidden={
-                          selectedBackendId !== WEBDAV_SYNC_BACKEND_ID
-                        }
-                        className={`bootstrap-backend-fields ${selectedBackendId === WEBDAV_SYNC_BACKEND_ID ? "is-visible" : ""}`}
-                      >
-                        <Label>
-                          {t.options.syncBackendWebDavUrl}
-                          <Input
-                            value={webDavDraft.url}
-                            placeholder="https://example.com/dav/"
-                            disabled={
-                              selectedBackendId !== WEBDAV_SYNC_BACKEND_ID ||
-                              syncing ||
-                              hasActiveSyncBackend
-                            }
-                            onChange={(event) =>
-                              updateWebDavBackend({ url: event.target.value })
-                            }
-                          />
-                        </Label>
-                        <Label>
-                          {t.options.syncBackendUsername}
-                          <Input
-                            value={webDavDraft.username || ""}
-                            disabled={
-                              selectedBackendId !== WEBDAV_SYNC_BACKEND_ID ||
-                              syncing ||
-                              hasActiveSyncBackend
-                            }
-                            onChange={(event) =>
-                              updateWebDavBackend({
-                                username: event.target.value,
-                              })
-                            }
-                          />
-                        </Label>
-                        <Label>
-                          {t.options.syncBackendPassword}
-                          <Input
-                            type="password"
-                            value={webDavDraft.password || ""}
-                            disabled={
-                              selectedBackendId !== WEBDAV_SYNC_BACKEND_ID ||
-                              syncing ||
-                              hasActiveSyncBackend
-                            }
-                            onChange={(event) =>
-                              updateWebDavBackend({
-                                password: event.target.value,
-                              })
-                            }
-                          />
-                        </Label>
-                      </div>
-                      {syncStatus !== "idle" || syncing ? (
-                        <CardDescription
-                          key={syncStatusMessage}
-                          className={`bootstrap-feedback-card ${syncStatus === "error" ? "is-error" : ""}`}
-                        >
-                          {syncStatusMessage}
-                        </CardDescription>
-                      ) : null}
-                      <Button
-                        className={`ui-button-soft-accent bootstrap-cloud-action ${syncing ? "is-loading" : ""}`}
-                        onClick={handleCloudAction}
-                        disabled={!canPull || syncing || hasActiveSyncBackend}
-                      >
-                        <Cloud className={syncing ? "spin" : ""} size={16} />
-                        <span
-                          key={cloudActionLabel}
-                          className="bootstrap-action-label"
-                        >
-                          {cloudActionLabel}
-                        </span>
-                      </Button>
-                    </div>
+                    <SyncBootstrapStep
+                      t={t}
+                      selectedBackendId={selectedBackendId}
+                      setSelectedBackendId={(backendId) => {
+                        setSelectedBackendId(backendId);
+                        setSyncStatus("idle");
+                      }}
+                      webDavDraft={webDavDraft}
+                      updateWebDavBackend={updateWebDavBackend}
+                      syncSetupMode={syncSetupMode}
+                      setSyncSetupMode={setSyncSetupMode}
+                      syncCodeDraft={syncCodeDraft}
+                      setSyncCodeDraft={setSyncCodeDraft}
+                      setSyncCodeStatus={setSyncCodeStatus}
+                      applySyncConfigCode={applySyncConfigCode}
+                      setupFeedbackMessage={setupFeedbackMessage}
+                      setupFeedbackError={setupFeedbackError}
+                      syncing={syncing}
+                      hasActiveSyncBackend={hasActiveSyncBackend}
+                      canPull={canPull}
+                      cloudActionLabel={cloudActionLabel}
+                      handleCloudAction={handleCloudAction}
+                    />
                   </BootstrapStep>
                   <BootstrapStep
                     number="3"

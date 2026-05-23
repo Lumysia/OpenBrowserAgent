@@ -47,6 +47,7 @@ import {
   type SyncableDataKey,
   type SyncPreferenceKey,
 } from "./storage-keys";
+import { isEmptyStorageValue } from "./storage-value";
 import type {
   Agent,
   AgentWorkspace,
@@ -59,12 +60,8 @@ import type {
   SyncBackendConfig,
 } from "./types";
 
-export {
-  STORAGE_KEYS,
-  SYNCABLE_DATA_ITEMS,
-  SYNC_PREFERENCE_KEYS,
-  type SyncPreferenceKey,
-};
+export { STORAGE_KEYS, SYNCABLE_DATA_ITEMS, SYNC_PREFERENCE_KEYS };
+export type { SyncPreferenceKey };
 
 export { getBrowserApi };
 export { clearPendingSyncWrites, syncLocalCacheKey, type SyncWriteStatus };
@@ -419,7 +416,7 @@ async function setDataKeySync(dataKey: SyncableDataKey, enabled: boolean) {
   if (
     enabled &&
     existingSource !== undefined &&
-    !(existingTarget !== undefined && isEmptySyncValue(existingSource))
+    !(existingTarget !== undefined && isEmptyStorageValue(existingSource))
   ) {
     await writeRemoteValueNow(dataKey, existingSource);
   } else if (enabled && existingTarget !== undefined) {
@@ -428,15 +425,6 @@ async function setDataKeySync(dataKey: SyncableDataKey, enabled: boolean) {
     if (existingTarget === undefined)
       await setStoredValueNow(toAreaName, dataKey, existingSource);
   }
-}
-
-function isEmptySyncValue(value: unknown) {
-  if (Array.isArray(value)) return value.length === 0;
-  return (
-    value !== null &&
-    typeof value === "object" &&
-    Object.keys(value as Record<string, unknown>).length === 0
-  );
 }
 
 export async function setActiveSyncBackend(backendId: string) {

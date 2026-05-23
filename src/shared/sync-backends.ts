@@ -99,6 +99,12 @@ export function createSyncBackend(
   return createBrowserSyncBackend(backendConfig);
 }
 
+export function syncBackendSupportsChatAttachments(
+  backendType: SyncBackendConfig["type"],
+) {
+  return backendType === "webdav";
+}
+
 function createBrowserSyncBackend(
   backendConfig: SyncBackendConfig,
 ): SyncBackend {
@@ -352,6 +358,6 @@ function assertBrowserSyncItemFits(key: string, value: unknown) {
   ).length;
   if (size <= config.SYNC_MAX_BYTES_PER_ITEM) return;
   throw new Error(
-    `Sync item exceeds the safe per-item limit: "${key}" is ${size} bytes; limit is ${config.SYNC_MAX_BYTES_PER_ITEM} bytes. Keep this data local or use WebDAV sync.`,
+    `Sync item exceeds the safe per-item limit: "${key}" is ${size} bytes; limit is ${config.SYNC_MAX_BYTES_PER_ITEM} bytes. Keep this data local or use a backend without browser quota limits.`,
   );
 }

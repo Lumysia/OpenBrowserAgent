@@ -1,11 +1,12 @@
-import { Check, FolderSync, TestTube2 } from "lucide-react";
+import { Check, Copy, FolderSync } from "lucide-react";
 import type { ReactNode } from "react";
 import { getMessages } from "../../src/shared/i18n";
 import {
   BROWSER_SYNC_BACKEND_ID,
-  createSyncBackend,
   NO_SYNC_BACKEND_ID,
+  syncBackendSupportsChatAttachments,
 } from "../../src/shared/sync-backends";
+import { createSyncConfigCode } from "../../src/shared/sync-config-code";
 import {
   syncBackendRegistryItem,
   WEBDAV_SYNC_BACKEND_ID,
@@ -38,7 +39,7 @@ export type SyncDataToggle = {
   title: string;
   description: string;
   value: boolean;
-  webDavOnly?: boolean;
+  attachmentBackendOnly?: boolean;
   onChange: (value: boolean) => void;
 };
 
@@ -58,9 +59,7 @@ export function SyncBackendCard({
   t: Messages;
 }) {
   const [testingBackendId, setTestingBackendId] = useState<string>();
-  const [testStatus, setTestStatus] = useState<
-    Record<string, "success" | "error" | undefined>
-  >({});
+  const [copiedBackendId, setCopiedBackendId] = useState<string>();
   const browserBackend = backends.find(
     (backend) => backend.type === "browser-sync",
   )!;
@@ -115,15 +114,12 @@ export function SyncBackendCard({
       onActiveBackendChange(NO_SYNC_BACKEND_ID);
   }
 
-  async function testBackend(backend: SyncBackendConfig) {
+  async function copyBackendConfig(backend: SyncBackendConfig) {
     setTestingBackendId(backend.id);
-    setTestStatus((previous) => ({ ...previous, [backend.id]: undefined }));
     try {
-      await createSyncBackend(backend).test();
-      setTestStatus((previous) => ({ ...previous, [backend.id]: "success" }));
-    } catch (error) {
-      console.warn("Sync backend test failed", error);
-      setTestStatus((previous) => ({ ...previous, [backend.id]: "error" }));
+      await navigator.clipboard.writeText(createSyncConfigCode(backend));
+      setCopiedBackendId(backend.id);
+      window.setTimeout(() => setCopiedBackendId(undefined), 1_200);
     } finally {
       setTestingBackendId(undefined);
     }
@@ -134,9 +130,9 @@ export function SyncBackendCard({
       <SyncBackendHeaderItem
         backend={browserBackend}
         activeBackendId={activeBackendId}
-        testing={testingBackendId === browserBackend.id}
-        testStatus={testStatus[browserBackend.id]}
-        onTest={() => testBackend(browserBackend)}
+        copying={testingBackendId === browserBackend.id}
+        copied={copiedBackendId === browserBackend.id}
+        onCopyConfig={() => copyBackendConfig(browserBackend)}
         onEnabledChange={(enabled) => enableBackend(browserBackend.id, enabled)}
         t={t}
       >
@@ -163,12 +159,12 @@ export function SyncBackendCard({
             onClick={(event) => event.stopPropagation()}
             onKeyDown={(event) => event.stopPropagation()}
           >
-            <BackendTestButton
+            <BackendCopyConfigButton
               backend={webDavDraft}
               disabled={!webDavDraft.url}
-              testing={testingBackendId === webDavDraft.id}
-              status={testStatus[webDavDraft.id]}
-              onTest={() => testBackend(webDavDraft)}
+              copying={testingBackendId === webDavDraft.id}
+              copied={copiedBackendId === webDavDraft.id}
+              onCopyConfig={() => copyBackendConfig(webDavDraft)}
               t={t}
             />
             <Switch
@@ -240,18 +236,18 @@ export function SyncBackendCard({
 function SyncBackendHeaderItem({
   backend,
   activeBackendId,
-  testing,
-  testStatus,
-  onTest,
+  copying,
+  copied,
+  onCopyConfig,
   onEnabledChange,
   t,
   children,
 }: {
   backend: SyncBackendConfig;
   activeBackendId: string;
-  testing: boolean;
-  testStatus: "success" | "error" | undefined;
-  onTest: () => void;
+  copying: boolean;
+  copied: boolean;
+  onCopyConfig: () => void;
   onEnabledChange: (enabled: boolean) => void;
   t: Messages;
   children?: ReactNode;
@@ -273,11 +269,11 @@ function SyncBackendHeaderItem({
           onClick={(event) => event.stopPropagation()}
           onKeyDown={(event) => event.stopPropagation()}
         >
-          <BackendTestButton
+          <BackendCopyConfigButton
             backend={backend}
-            testing={testing}
-            status={testStatus}
-            onTest={onTest}
+            copying={copying}
+            copied={copied}
+            onCopyConfig={onCopyConfig}
             t={t}
           />
           <Switch
@@ -336,9 +332,16 @@ function SyncDataToggleList({
           title={toggle.title}
           description={toggle.description}
           value={
-            toggle.webDavOnly && backendType !== "webdav" ? false : toggle.value
+            toggle.attachmentBackendOnly &&
+            !syncBackendSupportsChatAttachments(backendType)
+              ? false
+              : toggle.value
           }
-          disabled={disabled || (toggle.webDavOnly && backendType !== "webdav")}
+          disabled={
+            disabled ||
+            (toggle.attachmentBackendOnly &&
+              !syncBackendSupportsChatAttachments(backendType))
+          }
           onChange={toggle.onChange}
         />
       ))}
@@ -374,28 +377,24 @@ function SyncToggleRow({
   );
 }
 
-function BackendTestButton({
+function BackendCopyConfigButton({
   backend,
-  testing,
-  status,
-  onTest,
+  copying,
+  copied,
+  onCopyConfig,
   disabled,
   t,
 }: {
   backend: SyncBackendConfig;
-  testing: boolean;
-  status: "success" | "error" | undefined;
-  onTest: () => void;
+  copying: boolean;
+  copied: boolean;
+  onCopyConfig: () => void;
   disabled?: boolean;
   t: Messages;
 }) {
-  const label = testing
-    ? t.options.syncBackendTesting
-    : status === "success"
-      ? t.options.syncBackendTestSuccess
-      : status === "error"
-        ? t.options.syncBackendTestError
-        : t.options.syncBackendTest;
+  const label = copied
+    ? t.options.syncBackendCopiedConfig
+    : t.options.syncBackendCopyConfig;
 
   return (
     <Tooltip>
@@ -404,10 +403,10 @@ function BackendTestButton({
           variant="outline"
           size="icon"
           aria-label={`${label}: ${backendDisplayName(backend, t)}`}
-          onClick={onTest}
-          disabled={disabled || testing}
+          onClick={onCopyConfig}
+          disabled={disabled || copying}
         >
-          {status === "success" ? <Check size={15} /> : <TestTube2 size={15} />}
+          {copied ? <Check size={15} /> : <Copy size={15} />}
         </Button>
       </TooltipTrigger>
       <TooltipContent>{label}</TooltipContent>

@@ -55,6 +55,7 @@ import { useMessageEdit } from "./use-message-edit";
 import { useParallelChatStreams } from "./use-parallel-chat-streams";
 import { usePromptUsageEstimate } from "./prompt-usage-preview";
 import { useQueuedMessages } from "./use-queued-messages";
+import { useRemoteSyncRefresh } from "./use-remote-sync-refresh";
 import {
   type SubAgentHandler,
   useSubAgentLauncher,
@@ -228,6 +229,7 @@ export function SidepanelApp() {
   }, [chats, setChats]);
 
   useSidepanelTheme(preferences?.accentColor, preferences?.colorScheme);
+  useRemoteSyncRefresh(preferences);
 
   const { createChat, closeChat, selectChat } = useChatActions({
     t,

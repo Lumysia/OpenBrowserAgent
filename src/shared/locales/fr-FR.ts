@@ -49,6 +49,15 @@ export const frFR: LocaleMessages = {
     localSetupHint:
       "Les paramètres sont ouverts. Ajoutez-y un fournisseur et un modèle, puis revenez ici pour continuer.",
     bootstrapStepSyncTitle: "Backend de synchronisation (facultatif)",
+    syncConfigCodeTab: "Coller un code",
+    syncManualTab: "Configuration manuelle",
+    syncConfigCode: "Code de configuration de synchronisation",
+    syncConfigCodeDescription: "Collez un code copié depuis un autre appareil.",
+    syncConfigCodeApply: "Appliquer le code",
+    syncConfigCodeApplied:
+      "Configuration du backend appliquée. Vous pouvez maintenant vérifier la synchronisation cloud.",
+    syncConfigCodeInvalid:
+      "Code de configuration invalide. Vérifiez le code puis réessayez.",
     bootstrapStepProviderTitle: "Ajouter un fournisseur et un modèle",
     bootstrapStepProviderDescription:
       "Ouvrez les paramètres pour ajouter un fournisseur, ajouter un modèle et le tester.",
@@ -777,6 +786,8 @@ export const frFR: LocaleMessages = {
     syncBackendTesting: "Test...",
     syncBackendTestSuccess: "Connecté",
     syncBackendTestError: "Connexion échouée",
+    syncBackendCopyConfig: "Copier le code de configuration",
+    syncBackendCopiedConfig: "Code de configuration copié",
     syncBackendRemove: "Supprimer",
     syncProviders: "Synchroniser les fournisseurs",
     syncProvidersDescription:
@@ -795,7 +806,7 @@ export const frFR: LocaleMessages = {
       "Synchronisez l'historique des discussions via le backend de synchronisation actuel. Désactivez pour des conversations locales uniquement.",
     syncChatAttachments: "Synchroniser les pièces jointes",
     syncChatAttachmentsDescription:
-      "Stocke les fichiers importés dans les discussions comme fichiers WebDAV bruts avec un petit fichier JSON de métadonnées. Browser Sync est désactivé pour les pièces jointes à cause des quotas du navigateur.",
+      "Synchronise les fichiers importés dans les discussions avec le backend sélectionné compatible avec les pièces jointes. Browser Sync est désactivé pour les pièces jointes à cause des quotas du navigateur.",
     syncWritePending: "Écritures de synchronisation en attente",
     syncWritePendingDetail: "{count} élément(s) en attente de synchronisation",
     syncWriteOperationWrite: "écriture",
