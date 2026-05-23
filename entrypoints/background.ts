@@ -44,6 +44,8 @@ import { postTextStream } from "../src/background/message-helpers";
 import { browserToolsForPrompt } from "../src/background/tool-schema";
 import { requestOllamaPlainText } from "../src/background/ollama-provider";
 import { openAIChatCompletionsUrl } from "../src/shared/provider-urls";
+import { handleSyncBackendRuntimeMessage } from "../src/shared/sync-backends";
+import "../src/shared/sync-backends-impl";
 import * as streamSessions from "../src/background/stream-sessions";
 
 const SIDE_PANEL_OPENED = "side_panel_opened";
@@ -64,6 +66,10 @@ export default defineBackground(() => {
     if (reason === "update")
       storage.shouldShowUpdateToast.set(true).catch(console.warn);
   });
+
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) =>
+    handleSyncBackendRuntimeMessage(message, sendResponse),
+  );
 
   chrome.runtime.onConnect.addListener((port) => {
     if (port.name !== AI_STREAM_PORT_NAME) return;

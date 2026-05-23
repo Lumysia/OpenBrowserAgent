@@ -1,7 +1,4 @@
-import {
-  automergeLocalCacheKey,
-  removeLocalAutomergeDocument,
-} from "./automerge-sync-doc";
+import { automergeLocalCacheKey } from "./automerge-sync-keys";
 import {
   clearPendingSyncWrites,
   getBrowserApi,
@@ -74,12 +71,6 @@ export async function clearAppStorage({
       ),
     );
   }
-  if (scope === "all")
-    tasks.push(
-      Promise.all(
-        selectedKeys.map((key) => removeLocalAutomergeDocument(key)),
-      ).then(() => undefined),
-    );
   await Promise.all(tasks);
 
   if (scope === "local" && targets.includes("all"))

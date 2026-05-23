@@ -1,12 +1,12 @@
 import { automergeWasmBase64 } from "@automerge/automerge/automerge.wasm.base64";
 import * as Automerge from "@automerge/automerge/slim";
+import { automergeLocalCacheKey } from "./automerge-sync-keys";
 import { getBrowserApi } from "./browser-api";
 
 type SyncDocument<T = unknown> = {
   value?: T;
 };
 
-const AUTOMERGE_CACHE_PREFIX = "automerge-sync-doc";
 let automergeReady: Promise<void> | undefined;
 const documentCache = new Map<string, Automerge.Doc<SyncDocument>>();
 const documentReadCache = new Map<
@@ -17,10 +17,6 @@ const remoteDocumentCache = new Map<
   string,
   { encoded: string; doc: Automerge.Doc<SyncDocument> }
 >();
-
-export function automergeLocalCacheKey(key: string) {
-  return `${AUTOMERGE_CACHE_PREFIX}:${key}`;
-}
 
 export async function readAutomergeValue<T>(
   key: string,

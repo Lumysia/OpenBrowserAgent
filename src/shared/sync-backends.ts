@@ -1,13 +1,5 @@
-import * as config from "./config";
-import {
-  base64ToBytes,
-  bytesToBase64,
-  readAutomergeValue,
-  readCachedAutomergeValue,
-  removeLocalAutomergeDocument,
-  writeAutomergeValue,
-} from "./automerge-sync-doc";
 import { getBrowserApi } from "./browser-api";
+import { STORAGE_AREAS } from "./storage-area-constants";
 import {
   BROWSER_SYNC_BACKEND_ID,
   NO_SYNC_BACKEND_ID,
@@ -15,7 +7,6 @@ import {
   syncBackendDefaultName,
   WEBDAV_SYNC_BACKEND_ID,
 } from "./sync-backend-registry";
-import { STORAGE_AREAS } from "./storage-area-constants";
 import { STORAGE_KEYS } from "./storage-keys";
 import type { SyncBackendConfig } from "./types";
 
@@ -43,6 +34,8 @@ export type WebDavSyncBackendConfig = Extract<
   { type: "webdav" }
 >;
 
+export const SYNC_BACKEND_RUNTIME_MESSAGE_TYPE = "sync-backend.request";
+
 export const DEFAULT_SYNC_BACKENDS: SyncBackendConfig[] = [
   {
     id: BROWSER_SYNC_BACKEND_ID,
@@ -51,7 +44,59 @@ export const DEFAULT_SYNC_BACKENDS: SyncBackendConfig[] = [
   },
 ];
 
-const webDavReadCaches = new Map<string, Map<string, WebDavReadCache>>();
+type SyncBackendOperation =
+  | "read"
+  | "write"
+  | "remove"
+  | "test"
+  | "decodeChange"
+  | "webDavReadObject"
+  | "webDavWriteObject"
+  | "webDavRemoveObject";
+
+type SyncBackendRuntimeRequest = {
+  type: typeof SYNC_BACKEND_RUNTIME_MESSAGE_TYPE;
+  backendConfig: SyncBackendConfig;
+  operation: SyncBackendOperation;
+  key?: string;
+  objectName?: string;
+  contentType?: string;
+  value?: unknown;
+  cachedValue?: unknown;
+};
+
+type SyncBackendRuntimeResponse<T = unknown> =
+  | { ok: true; value?: T }
+  | { ok: false; error: string };
+
+export type SyncBackendImpl = {
+  createSyncBackend: (backendConfig: SyncBackendConfig) => SyncBackend;
+  decodeSyncBackendChangeValue: <T>(
+    backendConfig: SyncBackendConfig,
+    key: string,
+    value: unknown,
+  ) => Promise<T | undefined>;
+  readWebDavObject: (
+    backendConfig: WebDavSyncBackendConfig,
+    objectName: string,
+  ) => Promise<Uint8Array | undefined>;
+  writeWebDavObject: (
+    backendConfig: WebDavSyncBackendConfig,
+    objectName: string,
+    bytes: Uint8Array,
+    contentType?: string,
+  ) => Promise<void>;
+  removeWebDavObject: (
+    backendConfig: WebDavSyncBackendConfig,
+    objectName: string,
+  ) => Promise<void>;
+};
+
+let backgroundSyncBackendImpl: SyncBackendImpl | undefined;
+
+export function registerSyncBackendImpl(impl: SyncBackendImpl) {
+  backgroundSyncBackendImpl = impl;
+}
 
 export async function getActiveSyncBackend() {
   const backends = await getStoredSyncBackends();
@@ -99,9 +144,8 @@ export function normalizeSyncBackends(value: SyncBackendConfig[] | undefined) {
 export function createSyncBackend(
   backendConfig: SyncBackendConfig,
 ): SyncBackend {
-  if (backendConfig.type === SYNC_BACKEND_TYPES.webDav)
-    return createWebDavBackend(backendConfig);
-  return createBrowserSyncBackend(backendConfig);
+  if (isBackgroundContext()) return createBackgroundSyncBackend(backendConfig);
+  return createRuntimeSyncBackend(backendConfig);
 }
 
 export function syncBackendSupportsChatAttachments(
@@ -110,42 +154,122 @@ export function syncBackendSupportsChatAttachments(
   return backendType === SYNC_BACKEND_TYPES.webDav;
 }
 
-function createBrowserSyncBackend(
+export async function readWebDavObject(
+  backendConfig: WebDavSyncBackendConfig,
+  objectName: string,
+) {
+  if (isBackgroundContext()) {
+    return getBackgroundSyncBackendImpl().readWebDavObject(
+      backendConfig,
+      objectName,
+    );
+  }
+  const encoded = await sendSyncBackendRequest<string>({
+    type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
+    backendConfig,
+    operation: "webDavReadObject",
+    objectName,
+  });
+  return encoded ? base64ToBytes(encoded) : undefined;
+}
+
+export async function writeWebDavObject(
+  backendConfig: WebDavSyncBackendConfig,
+  objectName: string,
+  bytes: Uint8Array,
+  contentType: string,
+) {
+  if (isBackgroundContext()) {
+    await getBackgroundSyncBackendImpl().writeWebDavObject(
+      backendConfig,
+      objectName,
+      bytes,
+      contentType,
+    );
+    return;
+  }
+  await sendSyncBackendRequest<void>({
+    type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
+    backendConfig,
+    operation: "webDavWriteObject",
+    objectName,
+    value: bytesToBase64(bytes),
+    contentType,
+  });
+}
+
+export async function removeWebDavObject(
+  backendConfig: WebDavSyncBackendConfig,
+  objectName: string,
+) {
+  if (isBackgroundContext()) {
+    await getBackgroundSyncBackendImpl().removeWebDavObject(
+      backendConfig,
+      objectName,
+    );
+    return;
+  }
+  await sendSyncBackendRequest<void>({
+    type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
+    backendConfig,
+    operation: "webDavRemoveObject",
+    objectName,
+  });
+}
+
+export function handleSyncBackendRuntimeMessage(
+  message: unknown,
+  sendResponse: (response: SyncBackendRuntimeResponse) => void,
+) {
+  if (!isSyncBackendRuntimeRequest(message)) return false;
+  runSyncBackendOperation(message)
+    .then((value) => sendResponse({ ok: true, value }))
+    .catch((error) =>
+      sendResponse({
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    );
+  return true;
+}
+
+function createRuntimeSyncBackend(
   backendConfig: SyncBackendConfig,
 ): SyncBackend {
   return {
     config: backendConfig,
-    async read<T>(key: string) {
-      const result = await getBrowserApi().storage.sync.get(key);
-      const encoded = result[key] as string | undefined;
-      return readAutomergeValue<T>(
-        automergeBackendCacheKey(backendConfig, key),
-        encoded ? base64ToBytes(encoded) : undefined,
-        encoded,
-      );
+    read<T>(key: string, cachedValue?: T) {
+      return sendSyncBackendRequest<T>({
+        type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
+        backendConfig,
+        operation: "read",
+        key,
+        cachedValue,
+      });
     },
-    async write<T>(key: string, value: T) {
-      const stored = await getBrowserApi().storage.sync.get(key);
-      const encoded = stored[key] as string | undefined;
-      const result = await writeAutomergeValue<T>(
-        automergeBackendCacheKey(backendConfig, key),
+    write<T>(key: string, value: T) {
+      return sendSyncBackendRequest<T>({
+        type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
+        backendConfig,
+        operation: "write",
+        key,
         value,
-        encoded ? base64ToBytes(encoded) : undefined,
-        encoded,
-      );
-      const nextValue = bytesToBase64(result.bytes);
-      assertBrowserSyncItemFits(key, nextValue);
-      await getBrowserApi().storage.sync.set({ [key]: nextValue });
-      return result.value;
+      });
     },
-    async remove(key) {
-      await getBrowserApi().storage.sync.remove(key);
-      await removeLocalAutomergeDocument(
-        automergeBackendCacheKey(backendConfig, key),
-      );
+    remove(key: string) {
+      return sendSyncBackendRequest<void>({
+        type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
+        backendConfig,
+        operation: "remove",
+        key,
+      });
     },
-    async test() {
-      await getBrowserApi().storage.sync.get(null);
+    test() {
+      return sendSyncBackendRequest<void>({
+        type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
+        backendConfig,
+        operation: "test",
+      });
     },
     watch<T>(key: string, callback: (change: RemoteStorageChange<T>) => void) {
       const listener = (
@@ -155,14 +279,20 @@ function createBrowserSyncBackend(
         if (changedArea !== STORAGE_AREAS.sync || !changes[key]) return;
         const change = changes[key];
         Promise.all([
-          decodeBrowserSyncChangeValue<T>(
-            automergeBackendCacheKey(backendConfig, key),
-            change.newValue,
-          ),
-          decodeBrowserSyncChangeValue<T>(
-            automergeBackendCacheKey(backendConfig, key),
-            change.oldValue,
-          ),
+          sendSyncBackendRequest<T>({
+            type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
+            backendConfig,
+            operation: "decodeChange",
+            key,
+            value: change.newValue,
+          }),
+          sendSyncBackendRequest<T>({
+            type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
+            backendConfig,
+            operation: "decodeChange",
+            key,
+            value: change.oldValue,
+          }),
         ])
           .then(([newValue, oldValue]) => callback({ newValue, oldValue }))
           .catch(() => undefined);
@@ -173,365 +303,133 @@ function createBrowserSyncBackend(
   };
 }
 
-async function decodeBrowserSyncChangeValue<T>(key: string, value: unknown) {
-  return typeof value === "string"
-    ? readAutomergeValue<T>(key, base64ToBytes(value), value)
-    : undefined;
-}
-
-function createWebDavBackend(
-  backendConfig: WebDavSyncBackendConfig,
+function createBackgroundSyncBackend(
+  backendConfig: SyncBackendConfig,
 ): SyncBackend {
-  const readCache = webDavReadCacheFor(backendConfig);
   return {
     config: backendConfig,
     async read<T>(key: string, cachedValue?: T) {
-      const cached = await readWebDavCache(backendConfig, key, readCache);
-      const bytes = await readWebDavBytes(backendConfig, key, cached);
-      if (bytes?.notModified)
-        return (
-          cachedValue ??
-          (cached?.value as T | undefined) ??
-          (await readCachedAutomergeValue<T>(
-            automergeBackendCacheKey(backendConfig, key),
-          ))
-        );
-      if (!bytes) {
-        readCache.delete(key);
-        await removeWebDavCache(backendConfig, key);
-        return readAutomergeValue<T>(
-          automergeBackendCacheKey(backendConfig, key),
-          undefined,
-        );
-      }
-      const value = await readAutomergeValue<T>(
-        automergeBackendCacheKey(backendConfig, key),
-        bytes.data,
-        webDavVersion(bytes),
-      );
-      readCache.set(key, {
-        etag: bytes.etag,
-        lastModified: bytes.lastModified,
-        value,
-      });
-      await writeWebDavCache(backendConfig, key, bytes, value);
-      return value;
+      const backend = await createSyncBackendImpl(backendConfig);
+      return backend.read<T>(key, cachedValue);
     },
     async write<T>(key: string, value: T) {
-      const bytes = await readWebDavBytes(
-        backendConfig,
-        key,
-        await readWebDavCache(backendConfig, key, readCache),
-      );
-      const result = await writeAutomergeValue<T>(
-        automergeBackendCacheKey(backendConfig, key),
-        value,
-        bytes?.notModified ? undefined : bytes?.data,
-        bytes && !bytes.notModified ? webDavVersion(bytes) : undefined,
-      );
-      const response = await requestWebDav(
-        backendConfig,
-        objectUrl(backendConfig, key),
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/octet-stream" },
-          body: bytesToArrayBuffer(result.bytes),
-        },
-      );
-      if (!response.ok) await throwWebDavError(response, "write");
-      readCache.set(key, {
-        etag: response.headers.get("ETag") || undefined,
-        lastModified: response.headers.get("Last-Modified") || undefined,
-        value: result.value,
-      });
-      await writeWebDavCache(
-        backendConfig,
-        key,
-        {
-          etag: response.headers.get("ETag") || undefined,
-          lastModified: response.headers.get("Last-Modified") || undefined,
-        },
-        result.value,
-      );
-      return result.value;
+      const backend = await createSyncBackendImpl(backendConfig);
+      return backend.write<T>(key, value);
     },
-    async remove(key) {
-      const response = await requestWebDav(
-        backendConfig,
-        objectUrl(backendConfig, key),
-        {
-          method: "DELETE",
-        },
-      );
-      if (!response.ok && response.status !== 404)
-        await throwWebDavError(response, "remove");
-      readCache.delete(key);
-      await removeWebDavCache(backendConfig, key);
-      await removeLocalAutomergeDocument(
-        automergeBackendCacheKey(backendConfig, key),
-      );
+    async remove(key: string) {
+      const backend = await createSyncBackendImpl(backendConfig);
+      await backend.remove(key);
     },
     async test() {
-      const response = await requestWebDav(
-        backendConfig,
-        baseUrl(backendConfig),
-        {
-          method: "PROPFIND",
-          headers: { Depth: "0" },
-        },
-      );
-      if (!response.ok && response.status !== 207)
-        await throwWebDavError(response, "test");
+      const backend = await createSyncBackendImpl(backendConfig);
+      await backend.test();
     },
   };
 }
 
-type WebDavReadCache = {
-  etag?: string;
-  lastModified?: string;
-  value?: unknown;
-};
-
-type WebDavReadResult =
-  | { notModified: true }
-  | { data: Uint8Array; etag?: string; lastModified?: string };
-
-function webDavVersion(
-  bytes: Exclude<WebDavReadResult, { notModified: true }>,
-) {
-  const version = [bytes.etag, bytes.lastModified]
-    .filter((item) => item !== undefined && item !== "")
-    .join(":");
-  return version || undefined;
+async function createSyncBackendImpl(backendConfig: SyncBackendConfig) {
+  return getBackgroundSyncBackendImpl().createSyncBackend(backendConfig);
 }
 
-function webDavReadCacheFor(backendConfig: WebDavSyncBackendConfig) {
-  const scope = automergeBackendCacheKey(backendConfig, "");
-  let cache = webDavReadCaches.get(scope);
-  if (!cache) {
-    cache = new Map<string, WebDavReadCache>();
-    webDavReadCaches.set(scope, cache);
-  }
-  return cache;
-}
-
-function webDavReadCacheKey(
-  backendConfig: WebDavSyncBackendConfig,
-  key: string,
-) {
-  return `${automergeBackendCacheKey(backendConfig, key)}:webdav-read-cache`;
-}
-
-async function readWebDavCache(
-  backendConfig: WebDavSyncBackendConfig,
-  key: string,
-  memoryCache: Map<string, WebDavReadCache>,
-) {
-  const cached = memoryCache.get(key);
-  if (cached?.etag || cached?.lastModified) return cached;
-  const result = await getBrowserApi().storage.local.get(
-    webDavReadCacheKey(backendConfig, key),
-  );
-  const stored = result[webDavReadCacheKey(backendConfig, key)] as
-    | WebDavReadCache
+async function sendSyncBackendRequest<T>(request: SyncBackendRuntimeRequest) {
+  const response = (await getBrowserApi().runtime.sendMessage(request)) as
+    | SyncBackendRuntimeResponse<T>
     | undefined;
-  if (stored?.etag || stored?.lastModified) {
-    memoryCache.set(key, stored);
-    return stored;
+  if (!response) throw new Error("Sync backend did not return a response.");
+  if (!response.ok) throw new Error(response.error);
+  return response.value;
+}
+
+async function runSyncBackendOperation(request: SyncBackendRuntimeRequest) {
+  const backend = createBackgroundSyncBackend(request.backendConfig);
+  if (request.operation === "test") return backend.test();
+  if (request.operation === "webDavReadObject") {
+    if (!isWebDavConfig(request.backendConfig))
+      throw new Error("WebDAV backend config is required.");
+    if (!request.objectName) throw new Error("WebDAV object name is required.");
+    const bytes = await getBackgroundSyncBackendImpl().readWebDavObject(
+      request.backendConfig,
+      request.objectName,
+    );
+    return bytes ? bytesToBase64(bytes) : undefined;
   }
-  return cached;
+  if (request.operation === "webDavWriteObject") {
+    if (!isWebDavConfig(request.backendConfig))
+      throw new Error("WebDAV backend config is required.");
+    if (!request.objectName || typeof request.value !== "string")
+      throw new Error("WebDAV object payload is required.");
+    await getBackgroundSyncBackendImpl().writeWebDavObject(
+      request.backendConfig,
+      request.objectName,
+      base64ToBytes(request.value),
+      request.contentType || "application/octet-stream",
+    );
+    return undefined;
+  }
+  if (request.operation === "webDavRemoveObject") {
+    if (!isWebDavConfig(request.backendConfig))
+      throw new Error("WebDAV backend config is required.");
+    if (!request.objectName) throw new Error("WebDAV object name is required.");
+    await getBackgroundSyncBackendImpl().removeWebDavObject(
+      request.backendConfig,
+      request.objectName,
+    );
+    return undefined;
+  }
+  if (!request.key) throw new Error("Sync backend request key is required.");
+  if (request.operation === "decodeChange") {
+    return getBackgroundSyncBackendImpl().decodeSyncBackendChangeValue(
+      request.backendConfig,
+      request.key,
+      request.value,
+    );
+  }
+  if (request.operation === "read")
+    return backend.read(request.key, request.cachedValue);
+  if (request.operation === "write")
+    return backend.write(request.key, request.value);
+  if (request.operation === "remove") return backend.remove(request.key);
+  throw new Error(`Unknown sync backend operation: ${request.operation}`);
 }
 
-async function writeWebDavCache(
-  backendConfig: WebDavSyncBackendConfig,
-  key: string,
-  cache: Pick<WebDavReadCache, "etag" | "lastModified">,
-  value?: unknown,
-) {
-  if (!cache.etag && !cache.lastModified) return;
-  const stored = {
-    etag: cache.etag,
-    lastModified: cache.lastModified,
-  } satisfies WebDavReadCache;
-  webDavReadCacheFor(backendConfig).set(key, { ...stored, value });
-  await getBrowserApi().storage.local.set({
-    [webDavReadCacheKey(backendConfig, key)]: stored,
-  });
-}
-
-async function removeWebDavCache(
-  backendConfig: WebDavSyncBackendConfig,
-  key: string,
-) {
-  await getBrowserApi().storage.local.remove(
-    webDavReadCacheKey(backendConfig, key),
+function isSyncBackendRuntimeRequest(
+  message: unknown,
+): message is SyncBackendRuntimeRequest {
+  return (
+    !!message &&
+    typeof message === "object" &&
+    (message as { type?: unknown }).type === SYNC_BACKEND_RUNTIME_MESSAGE_TYPE
   );
 }
 
-function automergeBackendCacheKey(
+function isBackgroundContext() {
+  return typeof document === "undefined";
+}
+
+function getBackgroundSyncBackendImpl() {
+  if (!backgroundSyncBackendImpl)
+    throw new Error("Sync backend implementation is not registered.");
+  return backgroundSyncBackendImpl;
+}
+
+function isWebDavConfig(
   backendConfig: SyncBackendConfig,
-  key: string,
-) {
-  const scope =
-    backendConfig.type === SYNC_BACKEND_TYPES.webDav
-      ? `${backendConfig.type}:${backendConfig.username || ""}:${backendConfig.url}`
-      : backendConfig.id;
-  return `${scope}:${key}`;
+): backendConfig is WebDavSyncBackendConfig {
+  return backendConfig.type === SYNC_BACKEND_TYPES.webDav;
 }
 
-export async function readWebDavObject(
-  backendConfig: WebDavSyncBackendConfig,
-  name: string,
-) {
-  const response = await requestWebDav(
-    backendConfig,
-    rawObjectUrl(backendConfig, name),
-    { method: "GET" },
-  );
-  if (response.status === 404) return undefined;
-  if (!response.ok) await throwWebDavError(response, "read");
-  return new Uint8Array(await response.arrayBuffer());
-}
-
-export async function writeWebDavObject(
-  backendConfig: WebDavSyncBackendConfig,
-  name: string,
-  bytes: Uint8Array,
-  contentType = "application/octet-stream",
-) {
-  await ensureWebDavCollections(backendConfig, name);
-  const response = await requestWebDav(
-    backendConfig,
-    rawObjectUrl(backendConfig, name),
-    {
-      method: "PUT",
-      headers: { "Content-Type": contentType },
-      body: bytesToArrayBuffer(bytes),
-    },
-  );
-  if (!response.ok) await throwWebDavError(response, "write");
-}
-
-export async function removeWebDavObject(
-  backendConfig: WebDavSyncBackendConfig,
-  name: string,
-) {
-  const response = await requestWebDav(
-    backendConfig,
-    rawObjectUrl(backendConfig, name),
-    { method: "DELETE" },
-  );
-  if (!response.ok && response.status !== 404)
-    await throwWebDavError(response, "remove");
-}
-
-async function ensureWebDavCollections(
-  backendConfig: WebDavSyncBackendConfig,
-  name: string,
-) {
-  const parts = name.split("/").filter(Boolean);
-  if (parts.length <= 1) return;
-  let currentPath = "";
-  for (const part of parts.slice(0, -1)) {
-    currentPath = currentPath ? `${currentPath}/${part}` : part;
-    const response = await requestWebDav(
-      backendConfig,
-      rawObjectUrl(backendConfig, currentPath),
-      { method: "MKCOL" },
-    );
-    if (!response.ok && response.status !== 405)
-      await throwWebDavError(response, "create folder");
+function bytesToBase64(bytes: Uint8Array) {
+  let binary = "";
+  for (let index = 0; index < bytes.length; index += 0x8000) {
+    binary += String.fromCharCode(...bytes.slice(index, index + 0x8000));
   }
+  return btoa(binary);
 }
 
-function bytesToArrayBuffer(bytes: Uint8Array) {
-  return bytes.buffer.slice(
-    bytes.byteOffset,
-    bytes.byteOffset + bytes.byteLength,
-  ) as ArrayBuffer;
-}
-
-async function readWebDavBytes(
-  backendConfig: WebDavSyncBackendConfig,
-  key: string,
-  cached?: WebDavReadCache,
-) {
-  const headers: Record<string, string> = {};
-  if (cached?.etag) headers["If-None-Match"] = cached.etag;
-  if (cached?.lastModified) headers["If-Modified-Since"] = cached.lastModified;
-  const response = await requestWebDav(
-    backendConfig,
-    objectUrl(backendConfig, key),
-    {
-      method: "GET",
-      headers,
-    },
-  );
-  if (response.status === 304 && cached) return { notModified: true } as const;
-  if (response.status === 404) return undefined;
-  if (!response.ok) await throwWebDavError(response, "read");
-  return {
-    data: new Uint8Array(await response.arrayBuffer()),
-    etag: response.headers.get("ETag") || undefined,
-    lastModified: response.headers.get("Last-Modified") || undefined,
-  } satisfies WebDavReadResult;
-}
-
-function objectUrl(backendConfig: WebDavSyncBackendConfig, key: string) {
-  return new URL(
-    `${encodeURIComponent(key)}.amrg`,
-    baseUrl(backendConfig),
-  ).toString();
-}
-
-function rawObjectUrl(backendConfig: WebDavSyncBackendConfig, name: string) {
-  const encodedPath = name
-    .split("/")
-    .filter(Boolean)
-    .map(encodeURIComponent)
-    .join("/");
-  return new URL(encodedPath, baseUrl(backendConfig)).toString();
-}
-
-function baseUrl(backendConfig: WebDavSyncBackendConfig) {
-  return backendConfig.url.endsWith("/")
-    ? backendConfig.url
-    : `${backendConfig.url}/`;
-}
-
-async function requestWebDav(
-  backendConfig: WebDavSyncBackendConfig,
-  url: string,
-  init: RequestInit,
-) {
-  const headers = new Headers(init.headers);
-  headers.set("Cache-Control", "no-cache");
-  if (backendConfig.username || backendConfig.password) {
-    const credentials = `${backendConfig.username || ""}:${backendConfig.password || ""}`;
-    headers.set(
-      "Authorization",
-      `Basic ${btoa(String.fromCharCode(...new TextEncoder().encode(credentials)))}`,
-    );
-  }
-  return fetch(url, { ...init, cache: "no-store", headers });
-}
-
-async function throwWebDavError(
-  response: Response,
-  action: string,
-): Promise<never> {
-  const body = await response.text().catch(() => "");
-  throw new Error(
-    `WebDAV ${action} failed: ${response.status} ${response.statusText}${body ? ` - ${body.slice(0, 180)}` : ""}`,
-  );
-}
-
-function assertBrowserSyncItemFits(key: string, value: unknown) {
-  const size = new TextEncoder().encode(
-    JSON.stringify({ [key]: value }),
-  ).length;
-  if (size <= config.SYNC_MAX_BYTES_PER_ITEM) return;
-  throw new Error(
-    `Sync item exceeds the safe per-item limit: "${key}" is ${size} bytes; limit is ${config.SYNC_MAX_BYTES_PER_ITEM} bytes. Keep this data local or use a backend without browser quota limits.`,
-  );
+function base64ToBytes(value: string) {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1)
+    bytes[index] = binary.charCodeAt(index);
+  return bytes;
 }
