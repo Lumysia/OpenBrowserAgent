@@ -55,7 +55,7 @@ export async function queueSyncWrite<T>(
       pending.value = value;
       pending.resolve.push(resolve);
       pending.reject.push(reject);
-      pending.timeoutId = setTimeout(() => flushSyncWrite(key), delayMs);
+      pending.timeoutId = syncWriteTimeout(key, delayMs);
       updateSyncWriteStatus().catch(() => undefined);
       return;
     }
@@ -87,7 +87,7 @@ export async function queueSyncRemove(
       pending.value = undefined;
       pending.resolve.push(resolve);
       pending.reject.push(reject);
-      pending.timeoutId = setTimeout(() => flushSyncWrite(key), delayMs);
+      pending.timeoutId = syncWriteTimeout(key, delayMs);
       updateSyncWriteStatus().catch(() => undefined);
       return;
     }
@@ -120,16 +120,26 @@ function setPendingSyncWrite(
 function syncWriteTimeout(
   key: string,
   delayMs: number,
-  previous: PendingSyncWrite | undefined,
+  previous?: PendingSyncWrite,
 ) {
   return setTimeout(() => {
     const waitFor = previous?.flushing;
     if (waitFor) {
-      waitFor.finally(() => flushSyncWrite(key));
+      waitFor.finally(() => scheduleIdleSyncWrite(key));
       return;
     }
-    flushSyncWrite(key);
+    scheduleIdleSyncWrite(key);
   }, delayMs);
+}
+
+function scheduleIdleSyncWrite(key: string) {
+  if (typeof requestIdleCallback !== "function") {
+    flushSyncWrite(key);
+    return;
+  }
+  requestIdleCallback(() => flushSyncWrite(key), {
+    timeout: config.SYNC_WRITE_IDLE_TIMEOUT_MS,
+  });
 }
 
 export function syncLocalCacheKey(key: string) {

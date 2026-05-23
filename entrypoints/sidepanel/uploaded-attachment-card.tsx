@@ -75,7 +75,9 @@ export function UploadedAttachmentCard({
 
 function AttachmentPreview({ attachment }: { attachment: UploadedAttachment }) {
   if (attachment.kind === ATTACHMENT_KIND.image && attachment.dataUrl)
-    return <img src={attachment.dataUrl} alt="" />;
+    return (
+      <img src={attachment.dataUrl} alt="" loading="lazy" decoding="async" />
+    );
   if (attachment.kind === ATTACHMENT_KIND.text) return <FileText size={18} />;
   if (attachment.kind === ATTACHMENT_KIND.audio) return <FileAudio size={18} />;
   if (attachment.kind === ATTACHMENT_KIND.video) return <FileVideo size={18} />;

@@ -379,7 +379,14 @@ function SentTabsChip({ tabs }: { tabs: AttachmentTab[] }) {
       <div className="sent-tabs-icons">
         {visibleTabs.map((tab) =>
           tab.favIconUrl ? (
-            <img key={tab.id} src={tab.favIconUrl} alt="" />
+            <img
+              key={tab.id}
+              src={tab.favIconUrl}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              referrerPolicy="no-referrer"
+            />
           ) : (
             <ExternalLink key={tab.id} size={24} />
           ),
@@ -416,7 +423,13 @@ function SentAttachmentsChip({
       <div className="sent-tabs-icons">
         {visibleAttachments.map((attachment) =>
           attachment.kind === ATTACHMENT_KIND.image && attachment.dataUrl ? (
-            <img key={attachment.id} src={attachment.dataUrl} alt="" />
+            <img
+              key={attachment.id}
+              src={attachment.dataUrl}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
           ) : attachment.kind === ATTACHMENT_KIND.text ? (
             <FileText key={attachment.id} size={24} />
           ) : attachment.kind === ATTACHMENT_KIND.audio ? (

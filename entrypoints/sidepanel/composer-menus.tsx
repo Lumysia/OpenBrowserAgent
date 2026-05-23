@@ -194,7 +194,13 @@ export function AddContextMenu({
               onClick={() => onToggleTab(tab)}
             >
               {tab.favIconUrl ? (
-                <img src={tab.favIconUrl} alt="" />
+                <img
+                  src={tab.favIconUrl}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                />
               ) : (
                 <ExternalLink size={20} />
               )}
@@ -236,7 +242,13 @@ export function AttachedTabCard({
   return (
     <div className={`context-card ${removing ? "is-removing" : ""}`}>
       {tab.favIconUrl ? (
-        <img src={tab.favIconUrl} alt="" />
+        <img
+          src={tab.favIconUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+        />
       ) : (
         <ExternalLink size={18} />
       )}

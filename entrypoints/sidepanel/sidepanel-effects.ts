@@ -165,7 +165,10 @@ export function useAutoScroll(
       }
       messagesElement.scrollTo({
         top: messagesElement.scrollHeight,
-        behavior: chatChanged || chatSelectionRequested ? "auto" : "smooth",
+        behavior:
+          chatChanged || chatSelectionRequested || streaming
+            ? "auto"
+            : "smooth",
       });
     });
   }, [messages, autoScroll, streaming, activeChatId, chatSelectionRequestId]);

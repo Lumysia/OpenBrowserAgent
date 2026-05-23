@@ -7,19 +7,15 @@
   height: 100%;
   min-height: 0;
   min-width: 0;
-}
-.messages .ui-scroll-area-viewport {
-  overflow-x: hidden !important;
+  overflow-x: hidden;
+  overflow-y: auto;
   overflow-anchor: none;
   padding: 18px 18px 28px;
 }
-.messages .ui-scroll-area-viewport > div {
-  display: flex !important;
+.messages-content {
+  display: flex;
   flex-direction: column;
   gap: 22px;
-}
-.messages::-webkit-scrollbar {
-  display: none;
 }
 .message-jump-controls {
   position: absolute;

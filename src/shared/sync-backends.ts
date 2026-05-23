@@ -3,6 +3,7 @@ import {
   base64ToBytes,
   bytesToBase64,
   readAutomergeValue,
+  readCachedAutomergeValue,
   removeLocalAutomergeDocument,
   writeAutomergeValue,
 } from "./automerge-sync-doc";
@@ -27,7 +28,7 @@ export type RemoteStorageChange<T = unknown> = {
 
 export type SyncBackend = {
   config: SyncBackendConfig;
-  read<T>(key: string): Promise<T | undefined>;
+  read<T>(key: string, cachedValue?: T): Promise<T | undefined>;
   write<T>(key: string, value: T): Promise<T | undefined>;
   remove(key: string): Promise<void>;
   test(): Promise<void>;
@@ -182,15 +183,20 @@ function createWebDavBackend(
   const readCache = webDavReadCacheFor(backendConfig);
   return {
     config: backendConfig,
-    async read<T>(key: string) {
-      const bytes = await readWebDavBytes(
-        backendConfig,
-        key,
-        readCache.get(key),
-      );
-      if (bytes?.notModified) return readCache.get(key)?.value as T | undefined;
+    async read<T>(key: string, cachedValue?: T) {
+      const cached = await readWebDavCache(backendConfig, key, readCache);
+      const bytes = await readWebDavBytes(backendConfig, key, cached);
+      if (bytes?.notModified)
+        return (
+          cachedValue ??
+          (cached?.value as T | undefined) ??
+          (await readCachedAutomergeValue<T>(
+            automergeBackendCacheKey(backendConfig, key),
+          ))
+        );
       if (!bytes) {
         readCache.delete(key);
+        await removeWebDavCache(backendConfig, key);
         return readAutomergeValue<T>(
           automergeBackendCacheKey(backendConfig, key),
           undefined,
@@ -205,13 +211,14 @@ function createWebDavBackend(
         lastModified: bytes.lastModified,
         value,
       });
+      await writeWebDavCache(backendConfig, key, bytes, value);
       return value;
     },
     async write<T>(key: string, value: T) {
       const bytes = await readWebDavBytes(
         backendConfig,
         key,
-        readCache.get(key),
+        await readWebDavCache(backendConfig, key, readCache),
       );
       const result = await writeAutomergeValue<T>(
         automergeBackendCacheKey(backendConfig, key),
@@ -233,6 +240,15 @@ function createWebDavBackend(
         lastModified: response.headers.get("Last-Modified") || undefined,
         value: result.value,
       });
+      await writeWebDavCache(
+        backendConfig,
+        key,
+        {
+          etag: response.headers.get("ETag") || undefined,
+          lastModified: response.headers.get("Last-Modified") || undefined,
+        },
+        result.value,
+      );
       return result.value;
     },
     async remove(key) {
@@ -246,6 +262,7 @@ function createWebDavBackend(
       if (!response.ok && response.status !== 404)
         await throwWebDavError(response, "remove");
       readCache.delete(key);
+      await removeWebDavCache(backendConfig, key);
       await removeLocalAutomergeDocument(
         automergeBackendCacheKey(backendConfig, key),
       );
@@ -268,7 +285,7 @@ function createWebDavBackend(
 type WebDavReadCache = {
   etag?: string;
   lastModified?: string;
-  value: unknown;
+  value?: unknown;
 };
 
 type WebDavReadResult =
@@ -283,6 +300,59 @@ function webDavReadCacheFor(backendConfig: WebDavSyncBackendConfig) {
     webDavReadCaches.set(scope, cache);
   }
   return cache;
+}
+
+function webDavReadCacheKey(
+  backendConfig: WebDavSyncBackendConfig,
+  key: string,
+) {
+  return `${automergeBackendCacheKey(backendConfig, key)}:webdav-read-cache`;
+}
+
+async function readWebDavCache(
+  backendConfig: WebDavSyncBackendConfig,
+  key: string,
+  memoryCache: Map<string, WebDavReadCache>,
+) {
+  const cached = memoryCache.get(key);
+  if (cached?.etag || cached?.lastModified) return cached;
+  const result = await getBrowserApi().storage.local.get(
+    webDavReadCacheKey(backendConfig, key),
+  );
+  const stored = result[webDavReadCacheKey(backendConfig, key)] as
+    | WebDavReadCache
+    | undefined;
+  if (stored?.etag || stored?.lastModified) {
+    memoryCache.set(key, stored);
+    return stored;
+  }
+  return cached;
+}
+
+async function writeWebDavCache(
+  backendConfig: WebDavSyncBackendConfig,
+  key: string,
+  cache: Pick<WebDavReadCache, "etag" | "lastModified">,
+  value?: unknown,
+) {
+  if (!cache.etag && !cache.lastModified) return;
+  const stored = {
+    etag: cache.etag,
+    lastModified: cache.lastModified,
+  } satisfies WebDavReadCache;
+  webDavReadCacheFor(backendConfig).set(key, { ...stored, value });
+  await getBrowserApi().storage.local.set({
+    [webDavReadCacheKey(backendConfig, key)]: stored,
+  });
+}
+
+async function removeWebDavCache(
+  backendConfig: WebDavSyncBackendConfig,
+  key: string,
+) {
+  await getBrowserApi().storage.local.remove(
+    webDavReadCacheKey(backendConfig, key),
+  );
 }
 
 function automergeBackendCacheKey(

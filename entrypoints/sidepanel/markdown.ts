@@ -13,8 +13,6 @@ import { marked } from "marked";
 import type { Messages } from "../../src/shared/i18n";
 import type { ChatSource } from "../../src/shared/types";
 
-export type MarkdownLink = { url: string; title: string; host: string };
-
 const STREAM_CHAR_ANIMATION_LIMIT = 80;
 
 hljs.registerLanguage("bash", bash);
@@ -158,45 +156,6 @@ function renderFormula(formula: string, displayMode: boolean) {
   } catch {
     return escapeHtml(displayMode ? `$$${formula}$$` : `$${formula}$`);
   }
-}
-
-export function extractMarkdownLinks(text: string): MarkdownLink[] {
-  const links: MarkdownLink[] = [];
-  const seen = new Set<string>();
-  const addLink = (url: string, title = "") => {
-    const normalized = cleanUrl(url);
-    if (!normalized || seen.has(normalized)) return;
-    let host = "";
-    try {
-      host = new URL(normalized).host;
-    } catch {
-      return;
-    }
-    seen.add(normalized);
-    links.push({
-      url: normalized,
-      title: cleanLinkTitle(title) || normalized,
-      host,
-    });
-  };
-
-  for (const match of text.matchAll(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g))
-    addLink(match[2], match[1]);
-  for (const match of text.matchAll(/(?<!\]\()https?:\/\/[^\s<>)]+/g))
-    addLink(match[0]);
-
-  return links;
-}
-
-function cleanUrl(url: string) {
-  return url.trim().replace(/[\].,!?;:，。！？；：）)]+$/g, "");
-}
-
-function cleanLinkTitle(title: string) {
-  return title
-    .replace(/\s*\[\[cite:[\w-]+(?:\]\])?/g, "")
-    .trim()
-    .replace(/[\].,!?;:，。！？；：）)]+$/g, "");
 }
 
 function mermaidPreview(code: string, language: string, t: Messages) {

@@ -114,7 +114,7 @@ async function refreshSyncKey<T>(
   }
 
   const previous = await readSyncLocalValue<T>(key);
-  const remote = await backend.read<T>(key);
+  const remote = await backend.read<T>(key, previous);
   if (remote === undefined) {
     await removeSyncLocalCache(key);
     return undefined;

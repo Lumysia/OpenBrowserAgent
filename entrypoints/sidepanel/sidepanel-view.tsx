@@ -25,7 +25,6 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  ScrollArea,
   Textarea,
   Tooltip,
   TooltipContent,
@@ -253,41 +252,43 @@ export function SidepanelView({
           <EditModeOverlay t={t} onCancel={onCancelEditMessage} />
         )}
         <div className="messages-shell">
-          <ScrollArea
+          <div
             key={currentChat?.id || "empty"}
+            ref={messagesRef}
             className="messages"
-            viewportRef={messagesRef}
           >
-            {!currentChat?.messages.length && (
-              <div className="empty">
-                <div>
-                  <h2>{t.sidepanel.whatDoYouWant}</h2>
-                  <p className="muted">{t.sidepanel.emptyDescription}</p>
+            <div className="messages-content">
+              {!currentChat?.messages.length && (
+                <div className="empty">
+                  <div>
+                    <h2>{t.sidepanel.whatDoYouWant}</h2>
+                    <p className="muted">{t.sidepanel.emptyDescription}</p>
+                  </div>
                 </div>
-              </div>
-            )}
-            {currentChat?.messages.map((message) => (
-              <MessageBubble
-                key={message.id}
-                message={message}
-                t={t}
-                latestUserMessage={message.id === latestUserMessageId}
-                editing={editingMessageId === message.id}
-                sources={currentChat.sources || []}
-                chats={chats}
-                chatMessages={currentChat.messages}
-                outputActive={message.id === activeAssistantMessageId}
-                sentAttachments={sentAttachmentPreviews[message.id] || []}
-                activeAttachments={uploadedAttachments}
-                onReplaceAttachment={onReplaceUploadedAttachment}
-                onEdit={onEditMessage}
-                onResend={onResendMessage}
-                resendDisabled={streaming}
-                onFork={onForkMessage}
-                onSelectChat={onSelectChat}
-              />
-            ))}
-          </ScrollArea>
+              )}
+              {currentChat?.messages.map((message) => (
+                <MessageBubble
+                  key={message.id}
+                  message={message}
+                  t={t}
+                  latestUserMessage={message.id === latestUserMessageId}
+                  editing={editingMessageId === message.id}
+                  sources={currentChat.sources || []}
+                  chats={chats}
+                  chatMessages={currentChat.messages}
+                  outputActive={message.id === activeAssistantMessageId}
+                  sentAttachments={sentAttachmentPreviews[message.id] || []}
+                  activeAttachments={uploadedAttachments}
+                  onReplaceAttachment={onReplaceUploadedAttachment}
+                  onEdit={onEditMessage}
+                  onResend={onResendMessage}
+                  resendDisabled={streaming}
+                  onFork={onForkMessage}
+                  onSelectChat={onSelectChat}
+                />
+              ))}
+            </div>
+          </div>
           <MessageJumpControls
             t={t}
             currentChat={currentChat}

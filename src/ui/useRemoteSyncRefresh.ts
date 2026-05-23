@@ -10,6 +10,10 @@ import type { SyncDataSettings } from "../shared/sync-data-settings";
 
 let sharedSettingsRefresh: Promise<SyncDataSettings | undefined> | undefined;
 let sharedDataRefresh: Promise<void> | undefined;
+let lastSettingsRefreshAt = 0;
+let lastDataRefreshAt = 0;
+let lastSettingsRefreshValue: SyncDataSettings | undefined;
+let lastDataRefreshSettingsSignature = "";
 let inputListeners = 0;
 let lastScrollInputAt = 0;
 
@@ -118,17 +122,36 @@ export function useRemoteSyncRefresh(
 function noop() {}
 
 function runSharedSettingsRefresh(syncDataSettings: SyncDataSettings) {
-  sharedSettingsRefresh ??= refreshSyncSettingsFromRemote(
-    syncDataSettings,
-  ).finally(() => {
-    sharedSettingsRefresh = undefined;
-  });
+  if (
+    lastSettingsRefreshAt > 0 &&
+    lastSettingsRefreshValue &&
+    performance.now() - lastSettingsRefreshAt < syncSettingsRefreshIntervalMs()
+  )
+    return Promise.resolve(lastSettingsRefreshValue);
+  sharedSettingsRefresh ??= refreshSyncSettingsFromRemote(syncDataSettings)
+    .then((value) => {
+      lastSettingsRefreshAt = performance.now();
+      lastSettingsRefreshValue = value || syncDataSettings;
+      return value;
+    })
+    .finally(() => {
+      sharedSettingsRefresh = undefined;
+    });
   return sharedSettingsRefresh;
 }
 
 function runSharedDataRefresh(syncDataSettings: SyncDataSettings) {
+  const settingsSignature = JSON.stringify(syncDataSettings);
+  if (
+    lastDataRefreshAt > 0 &&
+    settingsSignature === lastDataRefreshSettingsSignature &&
+    performance.now() - lastDataRefreshAt < syncRemoteRefreshIntervalMs()
+  )
+    return Promise.resolve();
   sharedDataRefresh ??= refreshSyncDataFromRemote(syncDataSettings).finally(
     () => {
+      lastDataRefreshAt = performance.now();
+      lastDataRefreshSettingsSignature = settingsSignature;
       sharedDataRefresh = undefined;
     },
   );

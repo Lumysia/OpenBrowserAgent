@@ -8,6 +8,7 @@ type SyncDocument<T = unknown> = {
 
 const AUTOMERGE_CACHE_PREFIX = "automerge-sync-doc";
 let automergeReady: Promise<void> | undefined;
+const documentCache = new Map<string, Automerge.Doc<SyncDocument>>();
 
 export function automergeLocalCacheKey(key: string) {
   return `${AUTOMERGE_CACHE_PREFIX}:${key}`;
@@ -26,6 +27,11 @@ export async function readAutomergeValue<T>(
   return doc?.value as T | undefined;
 }
 
+export async function readCachedAutomergeValue<T>(key: string) {
+  await initializeAutomerge();
+  return (await readLocalDocument<T>(key))?.value as T | undefined;
+}
+
 export async function writeAutomergeValue<T>(
   key: string,
   value: T,
@@ -38,8 +44,9 @@ export async function writeAutomergeValue<T>(
   doc = Automerge.change(doc, `Set ${key}`, (draft) => {
     reconcileProperty(draft, "value", value);
   });
-  await writeLocalDocument(key, doc);
-  return { bytes: Automerge.save(doc), value: doc.value as T | undefined };
+  const bytes = Automerge.save(doc);
+  await writeLocalDocument(key, doc, bytes);
+  return { bytes, value: doc.value as T | undefined };
 }
 
 function initializeAutomerge() {
@@ -48,6 +55,7 @@ function initializeAutomerge() {
 }
 
 export async function removeLocalAutomergeDocument(key: string) {
+  documentCache.delete(key);
   await getBrowserApi().storage.local.remove(automergeLocalCacheKey(key));
 }
 
@@ -80,19 +88,28 @@ async function mergeWithLocalDocument<T>(
 }
 
 async function readLocalDocument<T>(key: string) {
+  const cached = documentCache.get(key) as
+    | Automerge.Doc<SyncDocument<T>>
+    | undefined;
+  if (cached) return cached;
   const result = await getBrowserApi().storage.local.get(
     automergeLocalCacheKey(key),
   );
   const encoded = result[automergeLocalCacheKey(key)] as string | undefined;
-  return encoded ? loadDocument<T>(base64ToBytes(encoded)) : undefined;
+  if (!encoded) return undefined;
+  const doc = loadDocument<T>(base64ToBytes(encoded));
+  documentCache.set(key, doc as Automerge.Doc<SyncDocument>);
+  return doc;
 }
 
 async function writeLocalDocument<T>(
   key: string,
   doc: Automerge.Doc<SyncDocument<T>>,
+  bytes = Automerge.save(doc),
 ) {
+  documentCache.set(key, doc as Automerge.Doc<SyncDocument>);
   await getBrowserApi().storage.local.set({
-    [automergeLocalCacheKey(key)]: bytesToBase64(Automerge.save(doc)),
+    [automergeLocalCacheKey(key)]: bytesToBase64(bytes),
   });
 }
 
