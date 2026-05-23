@@ -15,6 +15,7 @@ export function useChatActions({
   t,
   chats,
   setChats,
+  setDraftChat,
   setActiveChatId,
   setChatSelectionRequestId,
   abortClosedChatStreams,
@@ -24,22 +25,23 @@ export function useChatActions({
   t: Messages;
   chats?: Chat[];
   setChats: Dispatch<SetStateAction<Chat[]>>;
+  setDraftChat: Dispatch<SetStateAction<Chat | undefined>>;
   setActiveChatId: Dispatch<SetStateAction<string | undefined>>;
   setChatSelectionRequestId: Dispatch<SetStateAction<number>>;
   abortClosedChatStreams: (chatId: string) => Set<string>;
   clearUnreadCompletedChat: (chatId: string) => void;
   syncDataSettings?: SyncDataSettings;
 }) {
-  const createChat = useCallback(
-    () =>
-      createChatAction({
-        title: t.words.newChat,
-        persist: false,
-        setChats,
-        setActiveChatId,
-      }),
-    [setActiveChatId, setChats, t.words.newChat],
-  );
+  const createChat = useCallback(() => {
+    const chat = createChatAction({
+      title: t.words.newChat,
+      persist: false,
+      setChats,
+      setActiveChatId,
+    });
+    setDraftChat(chat);
+    return chat;
+  }, [setActiveChatId, setChats, setDraftChat, t.words.newChat]);
 
   const closeChat = useCallback(
     (chatId: string) => {

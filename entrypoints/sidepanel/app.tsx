@@ -77,6 +77,7 @@ export function SidepanelApp() {
   const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
   const [chats, setChats] = useStoredState(storage.chats);
   const [activeChatId, setActiveChatId] = useState<string>();
+  const [draftChat, setDraftChat] = useState<Chat>();
   const [openMenu, setOpenMenu] = useState<ComposerMenu | null>(null);
   const [addMenuView, setAddMenuView] = useState<AddMenuView>("menu");
   const [showHistory, setShowHistory] = useState(false);
@@ -89,7 +90,10 @@ export function SidepanelApp() {
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const initializedChatSelectionRef = useRef(false);
   const configuredModels = useModels(providers, ignoreSyncedBootstrap);
-  const currentChat = chats?.find((chat) => chat.id === activeChatId);
+  const storedCurrentChat = chats?.find((chat) => chat.id === activeChatId);
+  const currentChat =
+    storedCurrentChat ||
+    (draftChat?.id === activeChatId ? draftChat : undefined);
   const { input, setInput, clearInput } = useChatDraft(activeChatId);
   const {
     unreadCompletedChats,
@@ -230,6 +234,12 @@ export function SidepanelApp() {
     setChats((items) => pruneEmptyChats(items));
   }, [chats, setChats]);
 
+  useEffect(() => {
+    if (!draftChat) return;
+    if (activeChatId !== draftChat.id || storedCurrentChat)
+      setDraftChat(undefined);
+  }, [activeChatId, draftChat, storedCurrentChat]);
+
   useSidepanelTheme(preferences?.accentColor, preferences?.colorScheme);
   useRemoteSyncRefresh(syncDataSettings);
 
@@ -238,6 +248,7 @@ export function SidepanelApp() {
     chats,
     syncDataSettings,
     setChats,
+    setDraftChat,
     setActiveChatId,
     setChatSelectionRequestId,
     abortClosedChatStreams,
@@ -247,6 +258,7 @@ export function SidepanelApp() {
   useChatSelection(
     chats,
     activeChatId,
+    draftChat?.id,
     initializedChatSelectionRef,
     setActiveChatId,
     createChat,

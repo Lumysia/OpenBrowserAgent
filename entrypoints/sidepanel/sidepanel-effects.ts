@@ -174,6 +174,7 @@ export function useAutoScroll(
 export function useChatSelection(
   chats: Chat[] | undefined,
   activeChatId: string | undefined,
+  draftChatId: string | undefined,
   initializedChatSelectionRef: RefObject<boolean>,
   setActiveChatId: (chatId: string | undefined) => void,
   createChat: () => Chat,
@@ -181,6 +182,7 @@ export function useChatSelection(
   useEffect(() => {
     if (!chats) return;
     if (!chats.length) {
+      if (activeChatId && activeChatId === draftChatId) return;
       if (activeChatId) {
         setActiveChatId(undefined);
         return;
@@ -190,11 +192,16 @@ export function useChatSelection(
     }
     if (!initializedChatSelectionRef.current) {
       initializedChatSelectionRef.current = true;
-      if (activeChatId && chats.some((chat) => chat.id === activeChatId))
+      if (
+        activeChatId &&
+        (activeChatId === draftChatId ||
+          chats.some((chat) => chat.id === activeChatId))
+      )
         return;
-      createChat();
+      setActiveChatId(sortChatsNewestFirst(chats)[0]?.id);
       return;
     }
+    if (activeChatId && activeChatId === draftChatId) return;
     if (activeChatId && !chats.some((chat) => chat.id === activeChatId)) {
       setActiveChatId(sortChatsNewestFirst(chats)[0]?.id);
       return;
@@ -204,6 +211,7 @@ export function useChatSelection(
     activeChatId,
     chats,
     createChat,
+    draftChatId,
     initializedChatSelectionRef,
     setActiveChatId,
   ]);
