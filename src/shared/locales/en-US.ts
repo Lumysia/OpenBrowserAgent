@@ -721,6 +721,9 @@ export const enUS = {
     syncChats: "Sync Chats",
     syncChatsDescription:
       "Sync chat history through the current sync backend. Keep this off for local-only conversations.",
+    syncChatAttachments: "Sync Chat Attachments",
+    syncChatAttachmentsDescription:
+      "Store uploaded chat files as raw WebDAV files with a small JSON metadata sidecar. Browser Sync is disabled for attachments because of browser quota limits.",
     syncWritePending: "Sync writes are queued",
     syncWritePendingDetail: "{count} item(s) waiting to sync",
     syncWriteOperationWrite: "writing",

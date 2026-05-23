@@ -6,6 +6,7 @@ import {
   Database,
   FileText,
   MessagesSquare,
+  Paperclip,
   Plug,
 } from "lucide-react";
 import { getMessages } from "../../src/shared/i18n";
@@ -92,6 +93,32 @@ export function SyncPage() {
     setSyncBackends(nextBackends);
   }
 
+  const dataToggles: SyncDataToggle[] = [
+    ...SYNC_PREFERENCE_KEYS.filter(
+      (preferenceKey) => preferenceKey !== "syncProviders",
+    ).map((preferenceKey) => ({
+      key: preferenceKey,
+      title: syncToggleContent[preferenceKey].title,
+      description: syncToggleContent[preferenceKey].description,
+      icon: syncToggleContent[preferenceKey].icon,
+      value: preferences[preferenceKey] === true,
+      onChange: (value: boolean) => updateSyncPreference(preferenceKey, value),
+    })),
+    {
+      key: "syncChatAttachments",
+      title: t.options.syncChatAttachments,
+      description: t.options.syncChatAttachmentsDescription,
+      icon: <Paperclip size={18} />,
+      value: preferences.syncChatAttachments === true,
+      webDavOnly: true,
+      onChange: (value: boolean) =>
+        setPreferences((previous) => ({
+          ...previous,
+          syncChatAttachments: value,
+        })),
+    },
+  ];
+
   return (
     <div className="stack">
       <div>
@@ -103,16 +130,7 @@ export function SyncPage() {
       <SyncBackendCard
         activeBackendId={activeSyncBackendId}
         backends={syncBackends}
-        dataToggles={SYNC_PREFERENCE_KEYS.filter(
-          (preferenceKey) => preferenceKey !== "syncProviders",
-        ).map((preferenceKey) => ({
-          key: preferenceKey,
-          title: syncToggleContent[preferenceKey].title,
-          description: syncToggleContent[preferenceKey].description,
-          icon: syncToggleContent[preferenceKey].icon,
-          value: preferences[preferenceKey] === true,
-          onChange: (value) => updateSyncPreference(preferenceKey, value),
-        }))}
+        dataToggles={dataToggles}
         onActiveBackendChange={changeActiveBackend}
         onBackendsChange={updateBackends}
         t={t}

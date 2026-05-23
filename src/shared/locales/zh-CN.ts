@@ -607,6 +607,9 @@ export const zhCN: LocaleMessages = {
     syncChats: "同步对话",
     syncChatsDescription:
       "通过当前同步后端同步对话历史。关闭时对话只保存在本机。",
+    syncChatAttachments: "同步对话附件",
+    syncChatAttachmentsDescription:
+      "把上传到对话的文件保存为原始 WebDAV 文件，并附带一个小的 JSON 元数据文件。浏览器内置同步受配额限制，不支持附件。",
     syncWritePending: "同步写入排队中",
     syncWritePendingDetail: "{count} 项正在等待同步",
     syncWriteOperationWrite: "写入",

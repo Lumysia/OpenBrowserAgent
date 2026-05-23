@@ -721,6 +721,9 @@ export const ko: LocaleMessages = {
     syncChats: "채팅 동기화",
     syncChatsDescription:
       "채팅 기록을 현재 동기화 백엔드로 동기화합니다. 로컬 전용 대화는 끄세요.",
+    syncChatAttachments: "채팅 첨부 동기화",
+    syncChatAttachmentsDescription:
+      "채팅에 업로드한 파일을 원본 WebDAV 파일로 저장하고 작은 JSON 메타데이터 파일을 함께 둡니다. 브라우저 동기화는 브라우저 할당량 제한 때문에 첨부 파일에 사용할 수 없습니다.",
     syncWritePending: "동기화 쓰기가 대기 중입니다",
     syncWritePendingDetail: "{count}개 항목이 동기화를 기다립니다",
     syncWriteOperationWrite: "쓰기",

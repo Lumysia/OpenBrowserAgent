@@ -613,6 +613,9 @@ export const zhTW: LocaleMessages = {
     syncChats: "同步對話",
     syncChatsDescription:
       "透過目前同步後端同步對話記錄。關閉時對話只保存在本機。",
+    syncChatAttachments: "同步對話附件",
+    syncChatAttachmentsDescription:
+      "將上傳到對話的檔案保存為原始 WebDAV 檔案，並附帶一個小型 JSON metadata 檔。瀏覽器內建同步受配額限制，不支援附件。",
     syncWritePending: "同步寫入排隊中",
     syncWritePendingDetail: "{count} 項正在等待同步",
     syncWriteOperationWrite: "寫入",

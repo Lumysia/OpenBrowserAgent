@@ -59,6 +59,7 @@ import {
   type SubAgentHandler,
   useSubAgentLauncher,
 } from "./use-sub-agent-launcher";
+import { useSyncedChatAttachments } from "./use-synced-chat-attachments";
 import { useUnreadCompletedChats } from "./use-unread-completed-chats";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
 
@@ -210,6 +211,13 @@ export function SidepanelApp() {
   useEffect(() => {
     setQueuedMessageRemover((id, chatId) => removeQueuedMessage(id, chatId));
   }, [removeQueuedMessage, setQueuedMessageRemover]);
+
+  const { syncSentAttachments } = useSyncedChatAttachments({
+    currentChat,
+    preferences,
+    sentAttachmentPreviews,
+    setSentAttachmentPreviews,
+  });
 
   useEffect(() => void (aiWorking && setOpenMenu(null)), [aiWorking]);
 
@@ -365,6 +373,11 @@ export function SidepanelApp() {
       setSentAttachmentPreviews((items) =>
         pruneSentAttachmentPreviews(items, activeEdit.keptMessageIds),
       );
+    syncSentAttachments({
+      chatId: nextChat.id,
+      messageId: userMessage.id,
+      attachments: sentAttachments,
+    });
     updateChatAction(setChats, nextChat);
     if (shouldGenerateTitle)
       requestChatTitle({

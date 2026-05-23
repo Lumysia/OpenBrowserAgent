@@ -35,6 +35,11 @@ export type SyncBackend = {
   ): () => void;
 };
 
+export type WebDavSyncBackendConfig = Extract<
+  SyncBackendConfig,
+  { type: "webdav" }
+>;
+
 export const DEFAULT_SYNC_BACKENDS: SyncBackendConfig[] = [
   {
     id: BROWSER_SYNC_BACKEND_ID,
@@ -153,7 +158,7 @@ async function decodeBrowserSyncChangeValue<T>(key: string, value: unknown) {
 }
 
 function createWebDavBackend(
-  backendConfig: Extract<SyncBackendConfig, { type: "webdav" }>,
+  backendConfig: WebDavSyncBackendConfig,
 ): SyncBackend {
   return {
     config: backendConfig,
@@ -205,6 +210,38 @@ function createWebDavBackend(
   };
 }
 
+export async function readWebDavObject(
+  backendConfig: WebDavSyncBackendConfig,
+  name: string,
+) {
+  const response = await requestWebDav(
+    backendConfig,
+    rawObjectUrl(backendConfig, name),
+    { method: "GET" },
+  );
+  if (response.status === 404) return undefined;
+  if (!response.ok) await throwWebDavError(response, "read");
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+export async function writeWebDavObject(
+  backendConfig: WebDavSyncBackendConfig,
+  name: string,
+  bytes: Uint8Array,
+  contentType = "application/octet-stream",
+) {
+  const response = await requestWebDav(
+    backendConfig,
+    rawObjectUrl(backendConfig, name),
+    {
+      method: "PUT",
+      headers: { "Content-Type": contentType },
+      body: bytesToArrayBuffer(bytes),
+    },
+  );
+  if (!response.ok) await throwWebDavError(response, "write");
+}
+
 function bytesToArrayBuffer(bytes: Uint8Array) {
   return bytes.buffer.slice(
     bytes.byteOffset,
@@ -213,7 +250,7 @@ function bytesToArrayBuffer(bytes: Uint8Array) {
 }
 
 async function readWebDavBytes(
-  backendConfig: Extract<SyncBackendConfig, { type: "webdav" }>,
+  backendConfig: WebDavSyncBackendConfig,
   key: string,
 ) {
   const response = await requestWebDav(
@@ -228,26 +265,25 @@ async function readWebDavBytes(
   return new Uint8Array(await response.arrayBuffer());
 }
 
-function objectUrl(
-  backendConfig: Extract<SyncBackendConfig, { type: "webdav" }>,
-  key: string,
-) {
+function objectUrl(backendConfig: WebDavSyncBackendConfig, key: string) {
   return new URL(
     `${encodeURIComponent(key)}.amrg`,
     baseUrl(backendConfig),
   ).toString();
 }
 
-function baseUrl(
-  backendConfig: Extract<SyncBackendConfig, { type: "webdav" }>,
-) {
+function rawObjectUrl(backendConfig: WebDavSyncBackendConfig, name: string) {
+  return new URL(encodeURIComponent(name), baseUrl(backendConfig)).toString();
+}
+
+function baseUrl(backendConfig: WebDavSyncBackendConfig) {
   return backendConfig.url.endsWith("/")
     ? backendConfig.url
     : `${backendConfig.url}/`;
 }
 
 async function requestWebDav(
-  backendConfig: Extract<SyncBackendConfig, { type: "webdav" }>,
+  backendConfig: WebDavSyncBackendConfig,
   url: string,
   init: RequestInit,
 ) {

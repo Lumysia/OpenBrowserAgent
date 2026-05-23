@@ -788,6 +788,9 @@ export const deDE: LocaleMessages = {
     syncChats: "Chats synchronisieren",
     syncChatsDescription:
       "Chatverlauf über das aktuelle Synchronisierungs-Backend synchronisieren. Deaktivieren für nur lokale Unterhaltungen.",
+    syncChatAttachments: "Chat-Anhänge synchronisieren",
+    syncChatAttachmentsDescription:
+      "Speichert hochgeladene Chat-Dateien als rohe WebDAV-Dateien mit einer kleinen JSON-Metadatendatei. Browser Sync ist wegen Browser-Kontingenten für Anhänge deaktiviert.",
     syncWritePending:
       "Synchronisierungsschreibvorgänge sind in der Warteschlange",
     syncWritePendingDetail: "{count} Element(e) warten auf Synchronisierung",

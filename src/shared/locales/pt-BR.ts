@@ -736,6 +736,9 @@ export const ptBR: LocaleMessages = {
     syncChats: "Sincronizar chats",
     syncChatsDescription:
       "Sincronize o histórico de chats pelo backend de sincronização atual. Desative para conversas somente locais.",
+    syncChatAttachments: "Sincronizar anexos de chat",
+    syncChatAttachmentsDescription:
+      "Salva arquivos enviados no chat como arquivos WebDAV brutos com um pequeno JSON de metadados. O Browser Sync fica desativado para anexos por causa dos limites de cota do navegador.",
     syncWritePending: "Gravações de sincronização na fila",
     syncWritePendingDetail: "{count} item(ns) aguardando sincronização",
     syncWriteOperationWrite: "gravando",

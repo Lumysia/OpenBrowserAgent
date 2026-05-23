@@ -38,6 +38,7 @@ export type SyncDataToggle = {
   title: string;
   description: string;
   value: boolean;
+  webDavOnly?: boolean;
   onChange: (value: boolean) => void;
 };
 
@@ -141,6 +142,7 @@ export function SyncBackendCard({
       >
         <BackendDataTogglePanel
           active={browserBackend.id === activeBackendId}
+          backendType={browserBackend.type}
           toggles={dataToggles}
           t={t}
         />
@@ -224,6 +226,7 @@ export function SyncBackendCard({
             </Label>
             <BackendDataTogglePanel
               active={webDavDraft.id === activeBackendId}
+              backendType={webDavDraft.type}
               toggles={dataToggles}
               t={t}
             />
@@ -294,17 +297,23 @@ function SyncBackendHeaderItem({
 
 function BackendDataTogglePanel({
   active,
+  backendType,
   toggles,
   t,
 }: {
   active: boolean;
+  backendType: SyncBackendConfig["type"];
   toggles: SyncDataToggle[];
   t: Messages;
 }) {
   return (
     <div className="stack">
       <CardDescription>{t.options.syncBackendDescription}</CardDescription>
-      <SyncDataToggleList toggles={toggles} disabled={!active} />
+      <SyncDataToggleList
+        toggles={toggles}
+        disabled={!active}
+        backendType={backendType}
+      />
     </div>
   );
 }
@@ -312,9 +321,11 @@ function BackendDataTogglePanel({
 function SyncDataToggleList({
   toggles,
   disabled,
+  backendType,
 }: {
   toggles: SyncDataToggle[];
   disabled?: boolean;
+  backendType: SyncBackendConfig["type"];
 }) {
   return (
     <div className="settings-toggle-list">
@@ -324,8 +335,10 @@ function SyncDataToggleList({
           icon={toggle.icon}
           title={toggle.title}
           description={toggle.description}
-          value={toggle.value}
-          disabled={disabled}
+          value={
+            toggle.webDavOnly && backendType !== "webdav" ? false : toggle.value
+          }
+          disabled={disabled || (toggle.webDavOnly && backendType !== "webdav")}
           onChange={toggle.onChange}
         />
       ))}

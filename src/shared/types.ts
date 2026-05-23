@@ -49,6 +49,7 @@ export type Preferences = {
   syncSkills?: boolean;
   syncMcpServers?: boolean;
   syncChats?: boolean;
+  syncChatAttachments?: boolean;
   autoScroll?: boolean;
   autoRetry?: boolean;
   maxToolSteps?: number;

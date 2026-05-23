@@ -793,6 +793,9 @@ export const frFR: LocaleMessages = {
     syncChats: "Synchroniser les discussions",
     syncChatsDescription:
       "Synchronisez l'historique des discussions via le backend de synchronisation actuel. Désactivez pour des conversations locales uniquement.",
+    syncChatAttachments: "Synchroniser les pièces jointes",
+    syncChatAttachmentsDescription:
+      "Stocke les fichiers importés dans les discussions comme fichiers WebDAV bruts avec un petit fichier JSON de métadonnées. Browser Sync est désactivé pour les pièces jointes à cause des quotas du navigateur.",
     syncWritePending: "Écritures de synchronisation en attente",
     syncWritePendingDetail: "{count} élément(s) en attente de synchronisation",
     syncWriteOperationWrite: "écriture",

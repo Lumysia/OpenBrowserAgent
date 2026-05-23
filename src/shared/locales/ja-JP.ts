@@ -789,6 +789,9 @@ export const jaJP: LocaleMessages = {
     syncChats: "チャットを同期",
     syncChatsDescription:
       "チャット履歴を現在の同期バックエンドで同期します。ローカルのみの会話にする場合はオフにします。",
+    syncChatAttachments: "チャット添付を同期",
+    syncChatAttachmentsDescription:
+      "チャットにアップロードしたファイルを生の WebDAV ファイルとして保存し、小さな JSON メタデータファイルを添えます。ブラウザー同期は容量制限のため添付では無効です。",
     syncWritePending: "同期書き込みがキューに入っています",
     syncWritePendingDetail: "{count} 件が同期待ちです",
     syncWriteOperationWrite: "書き込み",
