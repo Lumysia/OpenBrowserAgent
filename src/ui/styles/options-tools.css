@@ -186,13 +186,6 @@
   width: 34px;
   height: 34px;
 }
-.mcp-tools-accordion .ui-accordion-item {
-  box-shadow: none;
-}
-.mcp-tools-accordion .ui-accordion-trigger {
-  padding: 12px 14px;
-}
-
 @media (max-width: 900px) {
   .provider-image-fields,
   .provider-editor-grid {

@@ -21,27 +21,37 @@ export const ptBR: LocaleMessages = {
   },
   words: { newChat: "Novo chat", agent: "Navegar", ask: "Perguntar" },
   sidepanel: {
-    connectProviderTitle: "Conecte seu primeiro provedor de IA",
+    connectProviderTitle: "Configure o OpenBrowserAgent",
     connectProviderDescription:
-      "O OpenBrowserAgent funciona com seus provedores de IA favoritos. Adicione sua chave de API para começar.",
+      "Escolha o idioma, ative a sincronização se quiser e depois adicione um provedor e um modelo.",
     addProvider: "Adicionar provedor",
     cloudSync: "Sincronizar da nuvem",
+    cloudSyncTest: "Testar sincronização na nuvem",
+    cloudSyncTesting: "Testando sincronização na nuvem...",
     cloudSyncPulling: "Verificando sincronização na nuvem...",
     cloudSyncDescription:
-      "Já configurou o OpenBrowserAgent em outro dispositivo? Busque seus provedores sincronizados primeiro.",
+      "Use a nuvem para iniciar com a configuração de outro dispositivo ou salvar esta nova configuração.",
+    cloudSyncReady:
+      "Configuração de provedor sincronizada encontrada. Você pode começar pela nuvem.",
     cloudSyncSuccess:
       "Configuração de provedor sincronizada encontrada. Abrindo chat...",
     cloudSyncEmpty:
-      "Nenhum provedor sincronizado encontrado. Você pode começar localmente.",
+      "A nuvem está conectada, mas nenhuma configuração existente foi encontrada. Confirme para salvar a nova configuração na nuvem.",
     cloudSyncError:
-      "Falha na sincronização da nuvem. Verifique a sincronização do navegador ou comece localmente.",
+      "Falha no teste de sincronização da nuvem. Verifique o backend ou comece localmente.",
+    cloudSyncStoreNew: "Salvar nova configuração na nuvem",
+    confirmCloudSync: "Confirmar sincronização",
+    cloudSyncSynced:
+      "A sincronização na nuvem está pronta. Agora adicione a configuração do provedor.",
+    cloudSyncSyncedButton: "Sincronizado",
     startLocally: "Começar localmente",
+    startFromCloud: "Começar pela nuvem",
     localSetupHint:
       "As Configurações estão abertas. Adicione um provedor e um modelo lá, depois volte aqui para continuar.",
-    bootstrapStepSyncTitle: "Escolha onde começar",
+    bootstrapStepSyncTitle: "Backend de sincronização (opcional)",
     bootstrapStepProviderTitle: "Adicione provedor e modelo",
     bootstrapStepProviderDescription:
-      "O início local abre as Configurações para adicionar um provedor, adicionar um modelo e testá-lo.",
+      "Abra as Configurações para adicionar um provedor, adicionar um modelo e testá-lo.",
     bootstrapStepTaskTitle: "Envie sua primeira tarefa",
     bootstrapStepTaskDescription:
       "Quando o modelo responder com sucesso, volte aqui e peça ao OpenBrowserAgent para navegar ou resumir.",
@@ -670,8 +680,6 @@ export const ptBR: LocaleMessages = {
     binaryPreviewUnavailable: "Prévia binária indisponível.",
     updatedAt: "Atualizado",
     skillSize: "Tamanho da habilidade",
-    syncQuotaWarning:
-      "A sincronização de habilidades pode exceder a cota do navegador. Mantenha habilidades grandes locais.",
     skillCheckEntry: "SKILL.md existe",
     skillCheckEntryMissing: "SKILL.md ausente",
     skillCheckName: "O nome dos metadados usa kebab case",
@@ -698,22 +706,36 @@ export const ptBR: LocaleMessages = {
     darkTheme: "Escuro",
     syncSettings: "Sincronizar configurações",
     syncSettingsDescription:
-      "Sincronize idioma, provedores e preferências leves com sua conta do navegador.",
+      "Escolha o backend que sincroniza idioma, provedores e preferências leves por padrão.",
+    syncBackend: "Backend de sincronização",
+    syncBackendDescription: "Escolha itens adicionais de sincronização.",
+    syncBackendBrowserSync: "Sincronização integrada da conta do navegador",
+    syncBackendWebDavSync: "Sincronização WebDAV",
+    syncBackendLocalOnly: "Somente local",
+    syncBackendName: "Nome do backend",
+    syncBackendWebDavUrl: "URL WebDAV",
+    syncBackendUsername: "Nome de usuário",
+    syncBackendPassword: "Senha ou senha de app",
+    syncBackendTest: "Testar",
+    syncBackendTesting: "Testando...",
+    syncBackendTestSuccess: "Conectado",
+    syncBackendTestError: "Falha na conexão",
+    syncBackendRemove: "Remover",
     syncProviders: "Sincronizar provedores",
     syncProvidersDescription:
-      "Sincronize a configuração dos provedores, incluindo chaves de API, pela sua conta do navegador.",
+      "Sincronize a configuração dos provedores, incluindo chaves de API, pelo backend de sincronização atual.",
     syncAgents: "Sincronizar agentes",
     syncAgentsDescription:
-      "Sincronize perfis de agente e arquivos de workspace pela sua conta do navegador. Mantenha desativado se contiverem contexto privado.",
+      "Sincronize perfis de agente e arquivos de workspace pelo backend de sincronização atual.",
     syncSkills: "Sincronizar ações rápidas",
     syncSkillsDescription:
-      "Sincronize modelos de ações rápidas pela sua conta do navegador.",
+      "Sincronize modelos de ações rápidas pelo backend de sincronização atual.",
     syncMcpServers: "Sincronizar servidores MCP",
     syncMcpServersDescription:
-      "Sincronize a configuração de servidores MCP Streamable HTTP pela sua conta do navegador.",
+      "Sincronize a configuração de servidores MCP Streamable HTTP pelo backend de sincronização atual.",
     syncChats: "Sincronizar chats",
     syncChatsDescription:
-      "Sincronize o histórico de chats pela sua conta do navegador. Desative para conversas somente locais.",
+      "Sincronize o histórico de chats pelo backend de sincronização atual. Desative para conversas somente locais.",
     syncWritePending: "Gravações de sincronização na fila",
     syncWriteIdle: "Gravações de sincronização atualizadas",
     syncWriteError: "Falha na última gravação de sincronização",

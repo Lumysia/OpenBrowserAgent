@@ -401,7 +401,11 @@ export function selectedModelLabel(
   t: Messages,
 ) {
   const model = models.find((candidate) => candidate.id === modelId);
-  return model ? modelDisplayName(model) : t.sidepanel.selectModel;
+  return model
+    ? modelDisplayName(model)
+    : modelId
+      ? modelId.split(":").slice(1).join(":") || modelId
+      : t.sidepanel.selectModel;
 }
 
 function providerName(model: ModelConfig) {

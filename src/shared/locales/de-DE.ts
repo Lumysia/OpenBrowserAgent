@@ -21,27 +21,37 @@ export const deDE: LocaleMessages = {
   },
   words: { newChat: "Neuer Chat", agent: "Browsen", ask: "Fragen" },
   sidepanel: {
-    connectProviderTitle: "Ersten KI-Anbieter verbinden",
+    connectProviderTitle: "OpenBrowserAgent einrichten",
     connectProviderDescription:
-      "OpenBrowserAgent funktioniert mit Ihren bevorzugten KI-Anbietern. Fügen Sie einen API-Schlüssel hinzu, um zu starten.",
+      "Wählen Sie die Sprache, aktivieren Sie optional die Synchronisierung und fügen Sie dann Anbieter und Modell hinzu.",
     addProvider: "Anbieter hinzufügen",
     cloudSync: "Aus der Cloud synchronisieren",
+    cloudSyncTest: "Cloud-Synchronisierung testen",
+    cloudSyncTesting: "Cloud-Synchronisierung wird getestet...",
     cloudSyncPulling: "Cloud-Synchronisierung wird geprüft...",
     cloudSyncDescription:
-      "OpenBrowserAgent ist bereits auf einem anderen Gerät eingerichtet? Rufen Sie zuerst Ihre synchronisierten Anbieter ab.",
+      "Nutzen Sie die Cloud, um eine Einrichtung von einem anderen Gerät zu übernehmen oder diese neue Einrichtung zu speichern.",
+    cloudSyncReady:
+      "Synchronisierte Anbieterkonfiguration gefunden. Sie können aus der Cloud starten.",
     cloudSyncSuccess:
       "Synchronisierte Anbieterkonfiguration gefunden. Chat wird geöffnet...",
     cloudSyncEmpty:
-      "Keine synchronisierten Anbieter gefunden. Sie können lokal starten.",
+      "Cloud verbunden, aber keine vorhandene Einrichtung gefunden. Bestätigen Sie, um neue Daten in der Cloud zu speichern.",
     cloudSyncError:
-      "Cloud-Synchronisierung fehlgeschlagen. Prüfen Sie die Browser-Synchronisierung oder starten Sie lokal.",
+      "Cloud-Synchronisierungstest fehlgeschlagen. Prüfen Sie das Backend oder starten Sie lokal.",
+    cloudSyncStoreNew: "Neue Konfiguration in der Cloud speichern",
+    confirmCloudSync: "Synchronisierung bestätigen",
+    cloudSyncSynced:
+      "Cloud-Synchronisierung ist bereit. Fügen Sie als Nächstes Anbieter hinzu.",
+    cloudSyncSyncedButton: "Synchronisiert",
     startLocally: "Lokal starten",
+    startFromCloud: "Aus der Cloud starten",
     localSetupHint:
       "Die Einstellungen sind geöffnet. Fügen Sie dort Anbieter und Modell hinzu und kehren Sie dann hierher zurück.",
-    bootstrapStepSyncTitle: "Startpunkt wählen",
+    bootstrapStepSyncTitle: "Synchronisierungs-Backend (optional)",
     bootstrapStepProviderTitle: "Anbieter und Modell hinzufügen",
     bootstrapStepProviderDescription:
-      "Der lokale Start öffnet die Einstellungen, damit Sie Anbieter und Modell hinzufügen und testen können.",
+      "Öffnen Sie die Einstellungen, um Anbieter und Modell hinzuzufügen und zu testen.",
     bootstrapStepTaskTitle: "Erste Aufgabe senden",
     bootstrapStepTaskDescription:
       "Wenn das Modell erfolgreich antwortet, kehren Sie zurück und bitten OpenBrowserAgent um Browsing oder Zusammenfassung.",
@@ -722,8 +732,6 @@ export const deDE: LocaleMessages = {
     binaryPreviewUnavailable: "Binärvorschau ist nicht verfügbar.",
     updatedAt: "Aktualisiert",
     skillSize: "Fähigkeitsgröße",
-    syncQuotaWarning:
-      "Fähigkeiten-Sync kann das Browser-Sync-Kontingent überschreiten. Große Fähigkeiten lokal behalten.",
     skillCheckEntry: "SKILL.md vorhanden",
     skillCheckEntryMissing: "SKILL.md fehlt",
     skillCheckName: "Metadatenname verwendet Kebab Case",
@@ -750,22 +758,36 @@ export const deDE: LocaleMessages = {
     darkTheme: "Dunkel",
     syncSettings: "Einstellungen synchronisieren",
     syncSettingsDescription:
-      "Sprache, Anbieter und leichte Einstellungen mit Ihrem Browserkonto synchronisieren.",
+      "Wählen Sie das Backend, das Sprache, Anbieter und leichte Einstellungen standardmäßig synchronisiert.",
+    syncBackend: "Synchronisierungs-Backend",
+    syncBackendDescription: "Zusätzliche Synchronisierungselemente auswählen.",
+    syncBackendBrowserSync: "Integrierte Browserkonto-Synchronisierung",
+    syncBackendWebDavSync: "WebDAV-Synchronisierung",
+    syncBackendLocalOnly: "Nur lokal",
+    syncBackendName: "Backend-Name",
+    syncBackendWebDavUrl: "WebDAV-URL",
+    syncBackendUsername: "Benutzername",
+    syncBackendPassword: "Passwort oder App-Passwort",
+    syncBackendTest: "Testen",
+    syncBackendTesting: "Test läuft...",
+    syncBackendTestSuccess: "Verbunden",
+    syncBackendTestError: "Verbindung fehlgeschlagen",
+    syncBackendRemove: "Entfernen",
     syncProviders: "Anbieter synchronisieren",
     syncProvidersDescription:
-      "Anbieterkonfiguration einschließlich API-Schlüssel über Ihr Browserkonto synchronisieren.",
+      "Anbieterkonfiguration einschließlich API-Schlüssel über das aktuelle Synchronisierungs-Backend synchronisieren.",
     syncAgents: "Agenten synchronisieren",
     syncAgentsDescription:
-      "Agentenprofile und Arbeitsbereichsdateien über Ihr Browserkonto synchronisieren. Deaktiviert lassen, wenn sie privaten Kontext enthalten.",
+      "Agentenprofile und Arbeitsbereichsdateien über das aktuelle Synchronisierungs-Backend synchronisieren.",
     syncSkills: "Fähigkeiten synchronisieren",
     syncSkillsDescription:
-      "Fähigkeitsvorlagen über Ihr Browserkonto synchronisieren.",
+      "Fähigkeitsvorlagen über das aktuelle Synchronisierungs-Backend synchronisieren.",
     syncMcpServers: "MCP-Server synchronisieren",
     syncMcpServersDescription:
-      "Streamable-HTTP-MCP-Serverkonfiguration über Ihr Browserkonto synchronisieren.",
+      "Streamable-HTTP-MCP-Serverkonfiguration über das aktuelle Synchronisierungs-Backend synchronisieren.",
     syncChats: "Chats synchronisieren",
     syncChatsDescription:
-      "Chatverlauf über Ihr Browserkonto synchronisieren. Deaktivieren für nur lokale Unterhaltungen.",
+      "Chatverlauf über das aktuelle Synchronisierungs-Backend synchronisieren. Deaktivieren für nur lokale Unterhaltungen.",
     syncWritePending:
       "Synchronisierungsschreibvorgänge sind in der Warteschlange",
     syncWriteIdle: "Synchronisierungsschreibvorgänge sind aktuell",

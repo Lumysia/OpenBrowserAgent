@@ -21,26 +21,36 @@ export const ko: LocaleMessages = {
   },
   words: { newChat: "새 채팅", agent: "브라우즈", ask: "질문" },
   sidepanel: {
-    connectProviderTitle: "첫 AI 제공업체 연결",
+    connectProviderTitle: "OpenBrowserAgent 설정",
     connectProviderDescription:
-      "OpenBrowserAgent는 자주 쓰는 AI 제공업체와 연결할 수 있습니다. API 키를 추가해 시작하세요.",
+      "언어를 선택하고 필요하면 동기화를 켠 다음 제공업체와 모델을 추가하세요.",
     addProvider: "제공업체 추가",
     cloudSync: "클라우드에서 동기화",
+    cloudSyncTest: "클라우드 동기화 테스트",
+    cloudSyncTesting: "클라우드 동기화 테스트 중...",
     cloudSyncPulling: "클라우드 동기화 확인 중...",
     cloudSyncDescription:
-      "다른 기기에서 OpenBrowserAgent를 설정했다면 동기화된 제공업체를 먼저 가져오세요.",
+      "클라우드에서 다른 기기의 설정을 가져오거나 이 기기의 새 설정을 클라우드에 저장할 수 있습니다.",
+    cloudSyncReady:
+      "동기화된 제공업체 설정을 찾았습니다. 클라우드에서 시작할 수 있습니다.",
     cloudSyncSuccess: "동기화된 제공업체 설정을 찾았습니다. 채팅을 여는 중...",
     cloudSyncEmpty:
-      "동기화된 제공업체가 없습니다. 로컬에서 시작할 수 있습니다.",
+      "클라우드에 연결했지만 기존 설정을 찾지 못했습니다. 확인하면 새 설정을 클라우드에 저장합니다.",
     cloudSyncError:
-      "클라우드 동기화 실패. 브라우저 동기화를 확인하거나 로컬에서 시작하세요.",
+      "클라우드 동기화 테스트 실패. 백엔드를 확인하거나 로컬에서 시작하세요.",
+    cloudSyncStoreNew: "새 설정을 클라우드에 저장",
+    confirmCloudSync: "동기화 확인",
+    cloudSyncSynced:
+      "클라우드 동기화가 준비되었습니다. 다음으로 제공업체 설정을 추가하세요.",
+    cloudSyncSyncedButton: "동기화됨",
     startLocally: "로컬에서 시작",
+    startFromCloud: "클라우드에서 시작",
     localSetupHint:
       "설정이 열렸습니다. 거기에서 제공업체와 모델을 추가한 뒤 여기로 돌아와 계속하세요.",
-    bootstrapStepSyncTitle: "시작 위치 선택",
+    bootstrapStepSyncTitle: "동기화 백엔드(선택 사항)",
     bootstrapStepProviderTitle: "제공업체와 모델 추가",
     bootstrapStepProviderDescription:
-      "로컬에서 시작하면 설정이 열리고 제공업체와 모델을 추가한 뒤 테스트할 수 있습니다.",
+      "설정을 열어 제공업체와 모델을 추가한 뒤 테스트할 수 있습니다.",
     bootstrapStepTaskTitle: "첫 작업 보내기",
     bootstrapStepTaskDescription:
       "모델이 정상 응답하면 여기로 돌아와 OpenBrowserAgent에 탐색이나 요약을 요청하세요.",
@@ -656,8 +666,6 @@ export const ko: LocaleMessages = {
     binaryPreviewUnavailable: "바이너리 파일은 미리볼 수 없습니다.",
     updatedAt: "업데이트",
     skillSize: "스킬 크기",
-    syncQuotaWarning:
-      "스킬 동기화가 브라우저 동기화 한도를 초과할 수 있습니다. 큰 스킬은 로컬에 보관하세요.",
     skillCheckEntry: "SKILL.md 있음",
     skillCheckEntryMissing: "SKILL.md 없음",
     skillCheckName: "메타데이터 이름이 케밥 케이스입니다",
@@ -684,21 +692,35 @@ export const ko: LocaleMessages = {
     darkTheme: "다크",
     syncSettings: "설정 동기화",
     syncSettingsDescription:
-      "언어, 제공업체 설정, 가벼운 설정을 브라우저 계정과 동기화합니다.",
+      "언어, 제공업체 설정, 가벼운 설정을 기본으로 동기화할 백엔드를 선택하세요.",
+    syncBackend: "동기화 백엔드",
+    syncBackendDescription: "추가 동기화 항목을 선택하세요.",
+    syncBackendBrowserSync: "내장 브라우저 계정 동기화",
+    syncBackendWebDavSync: "WebDAV 동기화",
+    syncBackendLocalOnly: "로컬만",
+    syncBackendName: "백엔드 이름",
+    syncBackendWebDavUrl: "WebDAV URL",
+    syncBackendUsername: "사용자 이름",
+    syncBackendPassword: "비밀번호 또는 앱 비밀번호",
+    syncBackendTest: "테스트",
+    syncBackendTesting: "테스트 중...",
+    syncBackendTestSuccess: "연결됨",
+    syncBackendTestError: "연결 실패",
+    syncBackendRemove: "제거",
     syncProviders: "제공업체 동기화",
     syncProvidersDescription:
-      "API 키를 포함한 제공업체 구성을 브라우저 계정으로 동기화합니다.",
+      "API 키를 포함한 제공업체 구성을 현재 동기화 백엔드로 동기화합니다.",
     syncAgents: "에이전트 동기화",
     syncAgentsDescription:
-      "에이전트 프로필과 워크스페이스 파일을 브라우저 계정으로 동기화합니다. 개인 컨텍스트가 포함되어 있으면 꺼두세요.",
+      "에이전트 프로필과 워크스페이스 파일을 현재 동기화 백엔드로 동기화합니다.",
     syncSkills: "스킬 동기화",
-    syncSkillsDescription: "스킬 템플릿을 브라우저 계정으로 동기화합니다.",
+    syncSkillsDescription: "스킬 템플릿을 현재 동기화 백엔드로 동기화합니다.",
     syncMcpServers: "MCP 서버 동기화",
     syncMcpServersDescription:
-      "Streamable HTTP MCP 서버 구성을 브라우저 계정으로 동기화합니다.",
+      "Streamable HTTP MCP 서버 구성을 현재 동기화 백엔드로 동기화합니다.",
     syncChats: "채팅 동기화",
     syncChatsDescription:
-      "채팅 기록을 브라우저 계정으로 동기화합니다. 로컬 전용 대화는 끄세요.",
+      "채팅 기록을 현재 동기화 백엔드로 동기화합니다. 로컬 전용 대화는 끄세요.",
     syncWritePending: "동기화 쓰기가 대기 중입니다",
     syncWriteIdle: "동기화 쓰기가 최신 상태입니다",
     syncWriteError: "마지막 동기화 쓰기 실패",

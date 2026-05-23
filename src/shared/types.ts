@@ -59,6 +59,27 @@ export type Preferences = {
   contextToolResultMaxChars?: number;
 };
 
+export type SyncBackendType = "browser-sync" | "webdav";
+
+export type BrowserSyncBackendConfig = {
+  id: string;
+  type: "browser-sync";
+  name: string;
+};
+
+export type WebDavSyncBackendConfig = {
+  id: string;
+  type: "webdav";
+  name: string;
+  url: string;
+  username?: string;
+  password?: string;
+};
+
+export type SyncBackendConfig =
+  | BrowserSyncBackendConfig
+  | WebDavSyncBackendConfig;
+
 export type Agent = {
   id: string;
   name: string;

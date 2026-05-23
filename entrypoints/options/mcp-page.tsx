@@ -285,7 +285,7 @@ export function McpPage() {
                   <Accordion
                     type="single"
                     collapsible
-                    className="mcp-tools-accordion"
+                    className="settings-nested-accordion"
                   >
                     <AccordionItem value="tools">
                       <AccordionTriggerButton>

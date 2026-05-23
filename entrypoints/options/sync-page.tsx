@@ -9,29 +9,35 @@ import {
   Plug,
 } from "lucide-react";
 import { getMessages } from "../../src/shared/i18n";
+import { NO_SYNC_BACKEND_ID } from "../../src/shared/sync-backends";
 import {
+  setActiveSyncBackend,
   setDataSync,
   storage,
   SYNCABLE_DATA_ITEMS,
   type SyncPreferenceKey,
 } from "../../src/shared/storage";
+import type { SyncBackendConfig } from "../../src/shared/types";
 import {
   Card,
   CardContent,
   CardDescription,
   CardTitle,
-  Switch,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { SyncBackendCard, type SyncDataToggle } from "./sync-backend-card";
 
 export function SyncPage() {
   const [language] = useStoredState(storage.language);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
+  const [syncBackends, setSyncBackends] = useStoredState(storage.syncBackends);
+  const [activeSyncBackendId, setActiveSyncBackendId] = useStoredState(
+    storage.activeSyncBackendId,
+  );
   const [syncWriteStatus] = useStoredState(storage.syncWriteStatus);
   const t = getMessages(language);
 
-  if (!preferences) return null;
-
+  if (!preferences || !syncBackends || !activeSyncBackendId) return null;
   const syncToggleContent: Record<
     SyncPreferenceKey,
     { title: string; description: string; icon: ReactNode }
@@ -71,6 +77,20 @@ export function SyncPage() {
     });
   }
 
+  function changeActiveBackend(backendId: string) {
+    const previousActiveBackendId = activeSyncBackendId || NO_SYNC_BACKEND_ID;
+    setActiveSyncBackend(backendId)
+      .then(() => setActiveSyncBackendId(backendId))
+      .catch((error) => {
+        console.warn("Failed to change sync backend", error);
+        setActiveSyncBackendId(previousActiveBackendId);
+      });
+  }
+
+  function updateBackends(nextBackends: SyncBackendConfig[]) {
+    setSyncBackends(nextBackends);
+  }
+
   return (
     <div className="stack">
       <div>
@@ -79,25 +99,23 @@ export function SyncPage() {
         </h1>
         <p className="muted">{t.options.syncSettingsDescription}</p>
       </div>
-      <SyncToggleCard
-        icon={<Cloud size={18} />}
-        title={t.options.syncSettings}
-        description={t.options.syncSettingsDescription}
-        value
-        disabled
+      <SyncBackendCard
+        activeBackendId={activeSyncBackendId}
+        backends={syncBackends}
+        dataToggles={SYNCABLE_DATA_ITEMS.filter(
+          ({ preferenceKey }) => preferenceKey !== "syncProviders",
+        ).map(({ preferenceKey }) => ({
+          key: preferenceKey,
+          title: syncToggleContent[preferenceKey].title,
+          description: syncToggleContent[preferenceKey].description,
+          icon: syncToggleContent[preferenceKey].icon,
+          value: preferences[preferenceKey] === true,
+          onChange: (value) => updateSyncPreference(preferenceKey, value),
+        }))}
+        onActiveBackendChange={changeActiveBackend}
+        onBackendsChange={updateBackends}
+        t={t}
       />
-      {SYNCABLE_DATA_ITEMS.filter(
-        ({ preferenceKey }) => preferenceKey !== "syncProviders",
-      ).map(({ preferenceKey }) => (
-        <SyncToggleCard
-          key={preferenceKey}
-          title={syncToggleContent[preferenceKey].title}
-          description={syncToggleContent[preferenceKey].description}
-          icon={syncToggleContent[preferenceKey].icon}
-          value={preferences[preferenceKey] === true}
-          onChange={(value) => updateSyncPreference(preferenceKey, value)}
-        />
-      ))}
       <SyncWriteStatusCard status={syncWriteStatus} />
     </div>
   );
@@ -138,42 +156,6 @@ function SyncWriteStatusCard({
             </CardTitle>
             {detail && <CardDescription>{detail}</CardDescription>}
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function SyncToggleCard({
-  icon,
-  title,
-  description,
-  value,
-  onChange,
-  disabled,
-}: {
-  icon: ReactNode;
-  title: string;
-  description: string;
-  value: boolean;
-  onChange?: (value: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <Card>
-      <CardContent>
-        <div className="setting-switch-row">
-          <div>
-            <CardTitle className="settings-section-title">
-              {icon} {title}
-            </CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </div>
-          <Switch
-            checked={value}
-            disabled={disabled}
-            onCheckedChange={onChange}
-          />
         </div>
       </CardContent>
     </Card>

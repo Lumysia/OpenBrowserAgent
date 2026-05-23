@@ -560,6 +560,16 @@
   column-gap: 10px;
   row-gap: 6px;
   align-items: center;
+  animation: fade-in 0.22s ease both;
+}
+.bootstrap-step:nth-child(2) {
+  animation-delay: 0.04s;
+}
+.bootstrap-step:nth-child(3) {
+  animation-delay: 0.08s;
+}
+.bootstrap-step:nth-child(4) {
+  animation-delay: 0.12s;
 }
 .bootstrap-step .ui-badge {
   grid-column: 1;
@@ -585,14 +595,74 @@
   display: grid;
   gap: 8px;
 }
+.bootstrap-status-copy,
+.bootstrap-action-label {
+  animation: fade-in 0.18s ease both;
+}
+.bootstrap-feedback-card {
+  margin: 0;
+  padding: 9px 11px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 18%, var(--border));
+  border-radius: calc(var(--radius) - 4px);
+  background: color-mix(in srgb, var(--accent-softer) 28%, transparent);
+  color: color-mix(in srgb, var(--accent-strong) 78%, var(--foreground));
+  animation: fade-in 0.18s ease both;
+}
+.bootstrap-feedback-card.is-error {
+  border-color: color-mix(in srgb, var(--destructive) 28%, var(--border));
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
+  color: var(--destructive);
+}
+.bootstrap-cloud-action.is-loading {
+  position: relative;
+  overflow: hidden;
+  opacity: 1;
+}
+.bootstrap-cloud-action.is-loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent-strong) 16%, transparent),
+    transparent
+  );
+  animation: bootstrap-cloud-sweep 1.25s ease-in-out infinite;
+  transform: translateX(-120%);
+}
+.bootstrap-cloud-action.is-loading > * {
+  position: relative;
+  z-index: 1;
+}
+@keyframes bootstrap-cloud-sweep {
+  to {
+    transform: translateX(120%);
+  }
+}
+.bootstrap-backend-fields {
+  display: grid;
+  gap: 8px;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-4px) scale(0.99);
+  transition:
+    max-height 0.24s ease,
+    opacity 0.18s ease,
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.bootstrap-backend-fields.is-visible {
+  max-height: 260px;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
 .local-setup-hint {
   max-height: 0;
   overflow: hidden;
-  padding: 0 12px;
-  border: 1px solid transparent;
-  border-radius: calc(var(--radius) - 4px);
-  background: color-mix(in srgb, var(--accent-soft) 50%, var(--card));
-  color: color-mix(in srgb, var(--accent-strong) 86%, var(--foreground));
+  padding-top: 0;
+  padding-bottom: 0;
+  border-color: transparent;
   opacity: 0;
   transform: translateY(-4px) scale(0.985);
   transition:
@@ -604,7 +674,8 @@
 }
 .local-setup-hint.visible {
   max-height: 140px;
-  padding: 10px 12px;
+  padding-top: 9px;
+  padding-bottom: 9px;
   border-color: color-mix(in srgb, var(--accent-strong) 24%, var(--border));
   opacity: 1;
   transform: translateY(0) scale(1);

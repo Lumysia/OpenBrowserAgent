@@ -15,6 +15,7 @@
     "compile": "tsc --noEmit"
   },
   "dependencies": {
+    "@automerge/automerge": "^3.2.6",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-scroll-area": "^1.2.10",

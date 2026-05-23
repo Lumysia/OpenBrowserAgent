@@ -25,24 +25,34 @@ export const enUS = {
     ask: "Ask",
   },
   sidepanel: {
-    connectProviderTitle: "Connect Your First AI Provider",
+    connectProviderTitle: "Set up OpenBrowserAgent",
     connectProviderDescription:
-      "OpenBrowserAgent works with your favorite AI providers. Add your API key to get started.",
+      "Choose your language, optionally enable sync, then add a provider and model when ready.",
     addProvider: "Add Provider",
     cloudSync: "Sync from cloud",
+    cloudSyncTest: "Test cloud sync",
+    cloudSyncTesting: "Testing cloud sync...",
     cloudSyncPulling: "Checking cloud sync...",
     cloudSyncDescription:
-      "Already set up OpenBrowserAgent on another device? Pull your synced providers first.",
+      "Use cloud sync to start from another device's setup or store this device's new setup in cloud.",
+    cloudSyncReady: "Synced provider setup found. Start from cloud when ready.",
     cloudSyncSuccess: "Synced provider setup found. Opening chat...",
-    cloudSyncEmpty: "No synced providers found. You can start locally instead.",
-    cloudSyncError: "Cloud sync failed. Check browser sync or start locally.",
+    cloudSyncEmpty:
+      "Cloud is connected, but no existing setup was found. Confirm to store your new setup in cloud.",
+    cloudSyncError:
+      "Cloud sync test failed. Check the backend or start locally.",
+    cloudSyncStoreNew: "Store new setup in cloud",
+    confirmCloudSync: "Confirm sync",
+    cloudSyncSynced: "Cloud sync is ready. Add provider setup next.",
+    cloudSyncSyncedButton: "Synced",
     startLocally: "Start locally",
+    startFromCloud: "Start from cloud",
     localSetupHint:
       "Settings is open. Add a provider and model there, then return here to continue.",
-    bootstrapStepSyncTitle: "Choose where to start",
+    bootstrapStepSyncTitle: "Sync backend (optional)",
     bootstrapStepProviderTitle: "Add a provider and model",
     bootstrapStepProviderDescription:
-      "Local setup opens Settings so you can add a provider, add a model, and test it.",
+      "Open Settings to add a provider, add a model, and test it.",
     bootstrapStepTaskTitle: "Send your first task",
     bootstrapStepTaskDescription:
       "After a model responds successfully, return here and ask OpenBrowserAgent to browse or summarize.",
@@ -655,8 +665,6 @@ export const enUS = {
     binaryPreviewUnavailable: "Binary preview is unavailable.",
     updatedAt: "Updated",
     skillSize: "Skill size",
-    syncQuotaWarning:
-      "Skills sync may exceed browser sync quota. Keep large skills local or remove bundled files.",
     skillCheckEntry: "SKILL.md exists",
     skillCheckEntryMissing: "SKILL.md is missing",
     skillCheckName: "Metadata name uses kebab case",
@@ -683,21 +691,36 @@ export const enUS = {
     darkTheme: "Dark",
     syncSettings: "Sync Settings",
     syncSettingsDescription:
-      "Language, provider setup, and lightweight preferences are synced with your browser account by default.",
+      "Choose the backend that syncs language, provider setup, and lightweight preferences by default.",
+    syncBackend: "Sync Backend",
+    syncBackendDescription: "Choose additional sync items.",
+    syncBackendBrowserSync: "Built-in browser account sync",
+    syncBackendWebDavSync: "WebDAV sync",
+    syncBackendLocalOnly: "Local only",
+    syncBackendName: "Backend name",
+    syncBackendWebDavUrl: "WebDAV URL",
+    syncBackendUsername: "Username",
+    syncBackendPassword: "Password or app password",
+    syncBackendTest: "Test",
+    syncBackendTesting: "Testing...",
+    syncBackendTestSuccess: "Connected",
+    syncBackendTestError: "Connection failed",
+    syncBackendRemove: "Remove",
     syncProviders: "Sync Providers",
     syncProvidersDescription:
-      "Sync provider configuration, including API keys, through your browser account.",
+      "Sync provider configuration, including API keys, through the current sync backend.",
     syncAgents: "Sync Agents",
     syncAgentsDescription:
-      "Sync agent profiles and workspace files through your browser account. Keep this off if they contain private context.",
+      "Sync agent profiles and workspace files through the current sync backend.",
     syncSkills: "Sync Skills",
-    syncSkillsDescription: "Sync skill templates through your browser account.",
+    syncSkillsDescription:
+      "Sync skill templates through the current sync backend.",
     syncMcpServers: "Sync MCP Servers",
     syncMcpServersDescription:
-      "Sync Streamable HTTP MCP server configuration through your browser account.",
+      "Sync Streamable HTTP MCP server configuration through the current sync backend.",
     syncChats: "Sync Chats",
     syncChatsDescription:
-      "Sync chat history through your browser account. Keep this off for local-only conversations.",
+      "Sync chat history through the current sync backend. Keep this off for local-only conversations.",
     syncWritePending: "Sync writes are queued",
     syncWriteIdle: "Sync writes are up to date",
     syncWriteError: "Last sync write failed",

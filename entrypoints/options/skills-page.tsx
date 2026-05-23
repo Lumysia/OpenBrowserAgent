@@ -10,10 +10,7 @@ import {
   RotateCcw,
   Trash2,
 } from "lucide-react";
-import {
-  QUICK_FEEDBACK_MS,
-  SYNC_MAX_BYTES_PER_ITEM,
-} from "../../src/shared/config";
+import { QUICK_FEEDBACK_MS } from "../../src/shared/config";
 import { BUILTIN_SKILLS } from "../../src/shared/builtin-skills";
 import { getMessages } from "../../src/shared/i18n";
 import {
@@ -69,10 +66,6 @@ export function SkillsPage() {
   if (!skills) return null;
   const skillList = skills ?? [];
   const t = getMessages(language);
-  const totalSkillsBytes = new TextEncoder().encode(
-    JSON.stringify(skillList),
-  ).length;
-
   function createSkill() {
     const now = Date.now();
     const next = createSkillPackage({
@@ -266,14 +259,6 @@ export function SkillsPage() {
           </Button>
         </div>
       </div>
-      {preferences?.syncSkills &&
-        totalSkillsBytes > SYNC_MAX_BYTES_PER_ITEM && (
-          <Card>
-            <CardContent>
-              <div className="skill-warning">{t.options.syncQuotaWarning}</div>
-            </CardContent>
-          </Card>
-        )}
       {importError && (
         <Card className="empty">
           <CardHeader>

@@ -1,10 +1,15 @@
 import {
+  automergeLocalCacheKey,
+  removeLocalAutomergeDocument,
+} from "./automerge-sync-doc";
+import {
   clearPendingSyncWrites,
   getBrowserApi,
   storage,
   STORAGE_KEYS,
   syncLocalCacheKey,
 } from "./storage";
+import { getActiveSyncBackend, isSyncBackendEnabled } from "./sync-backends";
 
 const STORAGE_KEY_GROUPS = {
   settings: [
@@ -13,6 +18,8 @@ const STORAGE_KEY_GROUPS = {
     STORAGE_KEYS.preferences,
     STORAGE_KEYS.shouldShowUpdateToast,
     STORAGE_KEYS.syncWriteStatus,
+    STORAGE_KEYS.syncBackends,
+    STORAGE_KEYS.activeSyncBackendId,
   ],
   providers: [STORAGE_KEYS.provider],
   agents: [STORAGE_KEYS.agents],
@@ -43,18 +50,35 @@ export async function clearAppStorage({
   const localKeys = [
     ...selectedKeys,
     ...selectedKeys.map((key) => syncLocalCacheKey(key)),
+    ...selectedKeys.map((key) => automergeLocalCacheKey(key)),
   ];
   const tasks: Array<Promise<void>> = [];
   if (scope === "all" || scope === "local")
     tasks.push(getBrowserApi().storage.local.remove(localKeys));
   if (scope === "all" || scope === "sync") {
-    tasks.push(getBrowserApi().storage.sync.remove(selectedKeys));
+    if (await isSyncBackendEnabled()) {
+      const backend = await getActiveSyncBackend();
+      tasks.push(
+        Promise.all(selectedKeys.map((key) => backend.remove(key))).then(
+          () => undefined,
+        ),
+      );
+    }
     tasks.push(
       getBrowserApi().storage.local.remove(
-        selectedKeys.map((key) => syncLocalCacheKey(key)),
+        selectedKeys.flatMap((key) => [
+          syncLocalCacheKey(key),
+          automergeLocalCacheKey(key),
+        ]),
       ),
     );
   }
+  if (scope === "all")
+    tasks.push(
+      Promise.all(
+        selectedKeys.map((key) => removeLocalAutomergeDocument(key)),
+      ).then(() => undefined),
+    );
   await Promise.all(tasks);
 
   if (scope === "local" && targets.includes("all"))

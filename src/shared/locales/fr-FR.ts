@@ -21,27 +21,37 @@ export const frFR: LocaleMessages = {
   },
   words: { newChat: "Nouvelle discussion", agent: "Naviguer", ask: "Question" },
   sidepanel: {
-    connectProviderTitle: "Connecter votre premier fournisseur IA",
+    connectProviderTitle: "Configurer OpenBrowserAgent",
     connectProviderDescription:
-      "OpenBrowserAgent fonctionne avec vos fournisseurs IA favoris. Ajoutez votre clé API pour commencer.",
+      "Choisissez la langue, activez la synchronisation si besoin, puis ajoutez un fournisseur et un modèle.",
     addProvider: "Ajouter un fournisseur",
     cloudSync: "Synchroniser depuis le cloud",
+    cloudSyncTest: "Tester la synchronisation cloud",
+    cloudSyncTesting: "Test de la synchronisation cloud...",
     cloudSyncPulling: "Vérification de la synchronisation cloud...",
     cloudSyncDescription:
-      "OpenBrowserAgent est déjà configuré sur un autre appareil ? Récupérez d'abord vos fournisseurs synchronisés.",
+      "Utilisez le cloud pour reprendre la configuration d'un autre appareil ou enregistrer celle-ci.",
+    cloudSyncReady:
+      "Configuration fournisseur synchronisée trouvée. Vous pouvez démarrer depuis le cloud.",
     cloudSyncSuccess:
       "Configuration fournisseur synchronisée trouvée. Ouverture du chat...",
     cloudSyncEmpty:
-      "Aucun fournisseur synchronisé trouvé. Vous pouvez démarrer en local.",
+      "Cloud connecté, mais aucune configuration existante trouvée. Confirmez pour stocker la nouvelle configuration dans le cloud.",
     cloudSyncError:
-      "Échec de la synchronisation cloud. Vérifiez la synchronisation du navigateur ou démarrez en local.",
+      "Échec du test de synchronisation cloud. Vérifiez le backend ou démarrez en local.",
+    cloudSyncStoreNew: "Stocker la nouvelle configuration dans le cloud",
+    confirmCloudSync: "Confirmer la synchronisation",
+    cloudSyncSynced:
+      "La synchronisation cloud est prête. Ajoutez ensuite la configuration fournisseur.",
+    cloudSyncSyncedButton: "Synchronisé",
     startLocally: "Démarrer en local",
+    startFromCloud: "Démarrer depuis le cloud",
     localSetupHint:
       "Les paramètres sont ouverts. Ajoutez-y un fournisseur et un modèle, puis revenez ici pour continuer.",
-    bootstrapStepSyncTitle: "Choisir le point de départ",
+    bootstrapStepSyncTitle: "Backend de synchronisation (facultatif)",
     bootstrapStepProviderTitle: "Ajouter un fournisseur et un modèle",
     bootstrapStepProviderDescription:
-      "Le démarrage local ouvre les paramètres pour ajouter un fournisseur, ajouter un modèle et le tester.",
+      "Ouvrez les paramètres pour ajouter un fournisseur, ajouter un modèle et le tester.",
     bootstrapStepTaskTitle: "Envoyer votre première tâche",
     bootstrapStepTaskDescription:
       "Après une réponse réussie du modèle, revenez ici et demandez à OpenBrowserAgent de naviguer ou résumer.",
@@ -726,8 +736,6 @@ export const frFR: LocaleMessages = {
     binaryPreviewUnavailable: "L'aperçu binaire n'est pas disponible.",
     updatedAt: "Mis à jour",
     skillSize: "Taille de la compétence",
-    syncQuotaWarning:
-      "La synchronisation des compétences peut dépasser le quota du navigateur. Gardez les grandes compétences locales.",
     skillCheckEntry: "SKILL.md existe",
     skillCheckEntryMissing: "SKILL.md est manquant",
     skillCheckName: "Le nom des métadonnées utilise le kebab case",
@@ -754,22 +762,37 @@ export const frFR: LocaleMessages = {
     darkTheme: "Sombre",
     syncSettings: "Synchroniser les paramètres",
     syncSettingsDescription:
-      "Synchronisez la langue, les fournisseurs et les préférences légères avec votre compte navigateur.",
+      "Choisissez le backend qui synchronise par défaut la langue, les fournisseurs et les préférences légères.",
+    syncBackend: "Backend de synchronisation",
+    syncBackendDescription:
+      "Choisissez les éléments de synchronisation supplémentaires.",
+    syncBackendBrowserSync: "Synchronisation intégrée du compte navigateur",
+    syncBackendWebDavSync: "Synchronisation WebDAV",
+    syncBackendLocalOnly: "Local uniquement",
+    syncBackendName: "Nom du backend",
+    syncBackendWebDavUrl: "URL WebDAV",
+    syncBackendUsername: "Nom d’utilisateur",
+    syncBackendPassword: "Mot de passe ou mot de passe d’app",
+    syncBackendTest: "Tester",
+    syncBackendTesting: "Test...",
+    syncBackendTestSuccess: "Connecté",
+    syncBackendTestError: "Connexion échouée",
+    syncBackendRemove: "Supprimer",
     syncProviders: "Synchroniser les fournisseurs",
     syncProvidersDescription:
-      "Synchronisez la configuration des fournisseurs, y compris les clés API, via votre compte navigateur.",
+      "Synchronisez la configuration des fournisseurs, y compris les clés API, via le backend de synchronisation actuel.",
     syncAgents: "Synchroniser les agents",
     syncAgentsDescription:
-      "Synchronisez les profils d’agent et les fichiers d’espace de travail via votre compte navigateur. Gardez cette option désactivée s’ils contiennent du contexte privé.",
+      "Synchronisez les profils d’agent et les fichiers d’espace de travail via le backend de synchronisation actuel.",
     syncSkills: "Synchroniser les compétences",
     syncSkillsDescription:
-      "Synchronisez les modèles de compétences via votre compte navigateur.",
+      "Synchronisez les modèles de compétences via le backend de synchronisation actuel.",
     syncMcpServers: "Synchroniser les serveurs MCP",
     syncMcpServersDescription:
-      "Synchronisez la configuration des serveurs MCP Streamable HTTP via votre compte navigateur.",
+      "Synchronisez la configuration des serveurs MCP Streamable HTTP via le backend de synchronisation actuel.",
     syncChats: "Synchroniser les discussions",
     syncChatsDescription:
-      "Synchronisez l'historique des discussions via votre compte navigateur. Désactivez pour des conversations locales uniquement.",
+      "Synchronisez l'historique des discussions via le backend de synchronisation actuel. Désactivez pour des conversations locales uniquement.",
     syncWritePending: "Écritures de synchronisation en attente",
     syncWriteIdle: "Écritures de synchronisation à jour",
     syncWriteError: "Dernière écriture de synchronisation échouée",

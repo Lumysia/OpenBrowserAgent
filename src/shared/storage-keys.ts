@@ -11,6 +11,8 @@ export const STORAGE_KEYS = {
   chats: "chats",
   chatTabs: "chat-tabs",
   syncWriteStatus: "sync-write-status",
+  syncBackends: "sync-backends",
+  activeSyncBackendId: "active-sync-backend-id",
   ignoreSyncedProvidersForBootstrap: "ignore-synced-providers-for-bootstrap",
 } as const;
 

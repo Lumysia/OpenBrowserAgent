@@ -1,9 +1,44 @@
 import { nanoid } from "nanoid";
 import { normalizeAgents } from "./agents";
+import { getBrowserApi } from "./browser-api";
 import { BUILTIN_SKILLS } from "./builtin-skills";
 import * as config from "./config";
 import { DEFAULT_PREFERENCES, mergePreferences } from "./default-preferences";
 import { normalizeMcpServers } from "./mcp";
+import {
+  areaForSyncEnabled,
+  effectiveArea,
+  otherStorageArea,
+  STORAGE_AREAS,
+  type AreaName,
+} from "./storage-areas";
+import type { StorageItem, StorageItemOptions } from "./storage-item-types";
+import { makeStorageItemFactory } from "./storage-item-factory";
+import {
+  clearPendingSyncWrites,
+  DEFAULT_SYNC_WRITE_STATUS,
+  markSyncLocalCacheFlushed,
+  queueSyncWrite,
+  queueSyncRemove,
+  readPendingSyncValue,
+  readSyncLocalValue,
+  removeSyncLocalCache,
+  syncLocalCacheKey,
+  type SyncLocalCache,
+  type SyncWriteStatus,
+  writeSyncLocalCache,
+} from "./storage-sync-cache";
+import {
+  isBackendStorageChange,
+  watchRemoteValue,
+} from "./storage-remote-watch";
+import {
+  getActiveSyncBackend,
+  isSyncBackendEnabled,
+  NO_SYNC_BACKEND_ID,
+  normalizeSyncBackends,
+} from "./sync-backends";
+import { activateSyncBackend } from "./storage-sync-transition";
 import { normalizeWorkspaces } from "./workspace";
 import {
   STORAGE_KEYS,
@@ -20,326 +55,79 @@ import type {
   ProviderState,
   Skill,
   McpServerConfig,
+  SyncBackendConfig,
 } from "./types";
-
-const STORAGE_AREAS = {
-  local: "local",
-  sync: "sync",
-} as const;
-
-type AreaName = (typeof STORAGE_AREAS)[keyof typeof STORAGE_AREAS];
 
 export { STORAGE_KEYS, SYNCABLE_DATA_ITEMS, type SyncPreferenceKey };
 
-type StorageItem<T> = {
-  key: string;
-  area: AreaName;
-  persistDebounceMs?: number;
-  get(): Promise<T>;
-  set(value: T): Promise<void>;
-  remove(): Promise<void>;
-  watch(callback: (newValue: T, oldValue: T) => void): () => void;
-};
-
-type StorageItemOptions = {
-  persistDebounceMs?: number;
-};
-
-const SYNC_QUOTA_ERROR_PREFIX = "Sync item exceeds the safe per-item limit";
-
-export type SyncWriteStatus = {
-  pendingCount: number;
-  lastUpdatedAt?: number;
-  lastFlushedAt?: number;
-  lastError?: string;
-};
-
-type PendingSyncWrite = {
-  timeoutId: ReturnType<typeof setTimeout>;
-  value: unknown;
-  resolve: Array<() => void>;
-  reject: Array<(error: unknown) => void>;
-};
-
-type SyncLocalCache<T> = {
-  value: T;
-  updatedAt: number;
-  flushedAt?: number;
-};
-
-const pendingSyncWrites = new Map<string, PendingSyncWrite>();
-
-const DEFAULT_SYNC_WRITE_STATUS: SyncWriteStatus = { pendingCount: 0 };
-
-export function getBrowserApi() {
-  const apiGlobal = globalThis as typeof globalThis & {
-    browser?: typeof chrome;
-    chrome?: typeof chrome;
-  };
-  return apiGlobal.browser ?? apiGlobal.chrome ?? chrome;
-}
-
-function areaForSyncEnabled(enabled: boolean): AreaName {
-  return enabled ? STORAGE_AREAS.sync : STORAGE_AREAS.local;
-}
-
-function otherStorageArea(area: AreaName): AreaName {
-  return area === STORAGE_AREAS.sync ? STORAGE_AREAS.local : STORAGE_AREAS.sync;
-}
+export { getBrowserApi };
+export { clearPendingSyncWrites, syncLocalCacheKey, type SyncWriteStatus };
 
 function syncableItemForPreference(key: SyncPreferenceKey) {
   return SYNCABLE_DATA_ITEMS.find((item) => item.preferenceKey === key)!;
 }
 
 async function setStoredValue<T>(area: AreaName, key: string, value: T) {
+  area = await effectiveArea(area);
   if (area === STORAGE_AREAS.local) {
     await getBrowserApi().storage.local.set({ [key]: value });
     return;
   }
 
-  assertSyncItemFits(key, value);
+  const backend = await getActiveSyncBackend();
   await writeSyncLocalCache(key, value);
-
-  await new Promise<void>((resolve, reject) => {
-    const pending = pendingSyncWrites.get(key);
-    if (pending) {
-      clearTimeout(pending.timeoutId);
-      pending.value = value;
-      pending.resolve.push(resolve);
-      pending.reject.push(reject);
-      pending.timeoutId = setTimeout(
-        () => flushSyncWrite(key),
-        config.SYNC_WRITE_DEBOUNCE_MS,
-      );
-      updateSyncWriteStatus().catch(() => undefined);
-      return;
-    }
-
-    pendingSyncWrites.set(key, {
-      value,
-      resolve: [resolve],
-      reject: [reject],
-      timeoutId: setTimeout(
-        () => flushSyncWrite(key),
-        config.SYNC_WRITE_DEBOUNCE_MS,
-      ),
-    });
-    updateSyncWriteStatus().catch(() => undefined);
-  });
+  queueSyncWrite(backend, key, value).catch(() => undefined);
 }
 
 async function setStoredValueNow<T>(area: AreaName, key: string, value: T) {
-  if (area === STORAGE_AREAS.sync) assertSyncItemFits(key, value);
-  await getBrowserApi().storage[area].set({ [key]: value });
-}
-
-function assertSyncItemFits(key: string, value: unknown) {
-  const size = new TextEncoder().encode(
-    JSON.stringify({ [key]: value }),
-  ).length;
-  if (size <= config.SYNC_MAX_BYTES_PER_ITEM) return;
-  throw new Error(
-    `${SYNC_QUOTA_ERROR_PREFIX}: "${key}" is ${size} bytes; limit is ${config.SYNC_MAX_BYTES_PER_ITEM} bytes. Keep this data local or remove old entries before enabling sync.`,
-  );
-}
-
-async function flushSyncWrite(key: string) {
-  const pending = pendingSyncWrites.get(key);
-  if (!pending) return;
-  pendingSyncWrites.delete(key);
-  try {
-    await getBrowserApi().storage.sync.set({ [key]: pending.value });
-    await markSyncLocalCacheFlushed(key, pending.value);
-    await updateSyncWriteStatus({ lastFlushedAt: Date.now(), lastError: "" });
-    pending.resolve.forEach((resolve) => resolve());
-  } catch (error) {
-    await updateSyncWriteStatus({
-      lastError: error instanceof Error ? error.message : String(error),
-    });
-    pending.reject.forEach((reject) => reject(error));
-  }
-}
-
-export function syncLocalCacheKey(key: string) {
-  return `${key}:sync-local-cache`;
-}
-
-export function clearPendingSyncWrites() {
-  for (const pending of pendingSyncWrites.values()) {
-    clearTimeout(pending.timeoutId);
-    pending.resolve.forEach((resolve) => resolve());
-  }
-  pendingSyncWrites.clear();
-}
-
-async function writeSyncLocalCache<T>(key: string, value: T) {
-  await getBrowserApi().storage.local.set({
-    [syncLocalCacheKey(key)]: {
-      value,
-      updatedAt: Date.now(),
-    } satisfies SyncLocalCache<T>,
-  });
-}
-
-async function markSyncLocalCacheFlushed<T>(key: string, value: T) {
-  const existing = await readSyncLocalCache<T>(key);
-  if (
-    existing?.flushedAt !== undefined &&
-    sameStorageValue(existing.value, value)
-  )
+  area = await effectiveArea(area);
+  if (area === STORAGE_AREAS.local) {
+    await getBrowserApi().storage.local.set({ [key]: value });
     return;
-  const now = Date.now();
-  await getBrowserApi().storage.local.set({
-    [syncLocalCacheKey(key)]: {
-      value,
-      updatedAt: now,
-      flushedAt: now,
-    } satisfies SyncLocalCache<T>,
-  });
-}
-
-function sameStorageValue(left: unknown, right: unknown) {
-  try {
-    return JSON.stringify(left) === JSON.stringify(right);
-  } catch {
-    return Object.is(left, right);
   }
+  await markSyncLocalCacheFlushed(key, value);
 }
 
-async function readSyncLocalCache<T>(key: string) {
-  const result = await getBrowserApi().storage.local.get(
-    syncLocalCacheKey(key),
-  );
-  return result[syncLocalCacheKey(key)] as SyncLocalCache<T> | undefined;
+async function removeStoredValue(area: AreaName, key: string) {
+  area = await effectiveArea(area);
+  if (area === STORAGE_AREAS.local) {
+    await getBrowserApi().storage.local.remove(key);
+    return;
+  }
+  await removeSyncLocalCache(key);
+  queueSyncRemove(await getActiveSyncBackend(), key).catch(() => undefined);
 }
 
-async function readPendingSyncValue<T>(key: string) {
-  const cache = await readSyncLocalCache<T>(key);
-  return cache && cache.flushedAt === undefined ? cache.value : undefined;
+async function readStoredValue<T>(area: AreaName, key: string) {
+  area = await effectiveArea(area);
+  if (area === STORAGE_AREAS.local) {
+    const result = await getBrowserApi().storage.local.get(key);
+    return result[key] as T | undefined;
+  }
+  return readSyncLocalValue<T>(key);
 }
 
-async function updateSyncWriteStatus(patch: Partial<SyncWriteStatus> = {}) {
-  await getBrowserApi().storage.local.set({
-    [STORAGE_KEYS.syncWriteStatus]: {
-      pendingCount: pendingSyncWrites.size,
-      lastUpdatedAt: Date.now(),
-      ...patch,
-    } satisfies SyncWriteStatus,
-  });
+async function readSyncedValue<T>(key: string) {
+  return readStoredValue<T>(STORAGE_AREAS.sync, key);
 }
 
-function createItem<T>(
-  area: AreaName,
-  key: string,
-  init: () => T,
-  normalize?: (value: T) => T,
-  options: StorageItemOptions = {},
-): StorageItem<T> {
-  const storageKey = key;
-  const storageArea = () => getBrowserApi().storage[area];
-
-  return {
-    key: storageKey,
-    area,
-    persistDebounceMs: options.persistDebounceMs,
-    async get() {
-      if (area === STORAGE_AREAS.sync) {
-        const pending = await readPendingSyncValue<T>(storageKey);
-        if (pending !== undefined) return pending;
-      }
-      const result = await storageArea().get(storageKey);
-      if (result[storageKey] === undefined) {
-        const initialValue = init();
-        await setStoredValueNow(area, storageKey, initialValue);
-        if (area === STORAGE_AREAS.sync)
-          await markSyncLocalCacheFlushed(storageKey, initialValue);
-        return initialValue;
-      }
-      const value = normalize
-        ? normalize(result[storageKey] as T)
-        : (result[storageKey] as T);
-      if (area === STORAGE_AREAS.sync)
-        await markSyncLocalCacheFlushed(storageKey, value);
-      return value;
-    },
-    async set(value) {
-      await setStoredValue(
-        area,
-        storageKey,
-        normalize ? normalize(value) : value,
-      );
-    },
-    async remove() {
-      await storageArea().remove(storageKey);
-    },
-    watch(callback) {
-      const listener = (
-        changes: Record<string, chrome.storage.StorageChange>,
-        changedArea: string,
-      ) => {
-        if (
-          area === STORAGE_AREAS.sync &&
-          changedArea === STORAGE_AREAS.local &&
-          changes[syncLocalCacheKey(storageKey)]
-        ) {
-          const next = changes[syncLocalCacheKey(storageKey)].newValue as
-            | SyncLocalCache<T>
-            | undefined;
-          const previous = changes[syncLocalCacheKey(storageKey)].oldValue as
-            | SyncLocalCache<T>
-            | undefined;
-          if (!next) return;
-          callback(next.value, previous?.value as T);
-          return;
-        }
-        if (changedArea !== area || !changes[storageKey]) return;
-        callback(
-          changes[storageKey].newValue as T,
-          changes[storageKey].oldValue as T,
-        );
-      };
-      getBrowserApi().storage.onChanged.addListener(listener);
-      return () => getBrowserApi().storage.onChanged.removeListener(listener);
-    },
-  };
+async function readRemoteValue<T>(key: string) {
+  if (!(await isSyncBackendEnabled())) return undefined;
+  return (await getActiveSyncBackend()).read<T>(key);
 }
 
-function createMigratedItem<T>(
-  area: AreaName,
-  fallbackArea: AreaName,
-  key: string,
-  init: () => T,
-  merge?: (value: T) => T,
-): StorageItem<T> {
-  const item = createItem(area, key, init);
-  const fallbackItem = createItem(fallbackArea, key, init);
-  return {
-    ...item,
-    async get() {
-      const api = getBrowserApi();
-      if (area === STORAGE_AREAS.sync) {
-        const pending = await readPendingSyncValue<T>(key);
-        if (pending !== undefined) return merge ? merge(pending) : pending;
-      }
-      const result = await api.storage[area].get(key);
-      if (result[key] !== undefined) {
-        const value = merge ? merge(result[key] as T) : (result[key] as T);
-        if (area === STORAGE_AREAS.sync)
-          await markSyncLocalCacheFlushed(key, value);
-        return value;
-      }
-
-      const fallback = await api.storage[fallbackArea].get(key);
-      const initialValue =
-        fallback[key] === undefined ? init() : (fallback[key] as T);
-      const value = merge ? merge(initialValue) : initialValue;
-      await setStoredValueNow(area, key, value);
-      if (area === STORAGE_AREAS.sync)
-        await markSyncLocalCacheFlushed(key, value);
-      return value;
-    },
-  };
+async function writeRemoteValueNow<T>(key: string, value: T) {
+  const backend = await getActiveSyncBackend();
+  await backend.write(key, value);
+  await markSyncLocalCacheFlushed(key, value);
 }
+
+const { createItem, createMigratedItem } = makeStorageItemFactory({
+  readStoredValue,
+  setStoredValue,
+  setStoredValueNow,
+  removeStoredValue,
+});
 
 function createSwitchableItem<T>(
   key: string,
@@ -352,7 +140,7 @@ function createSwitchableItem<T>(
     areaForSyncEnabled(preferences[syncPreferenceKey] === true);
 
   async function activeArea() {
-    return areaFor(await storage.preferences.get());
+    return effectiveArea(areaFor(await storage.preferences.get()));
   }
 
   async function getValue() {
@@ -366,7 +154,10 @@ function createSwitchableItem<T>(
     if (activeValue !== undefined)
       return normalize ? normalize(activeValue) : activeValue;
 
-    const inactiveValue = await readFrom(otherStorageArea(area));
+    const inactiveValue =
+      area === STORAGE_AREAS.sync
+        ? await readFrom(otherStorageArea(area))
+        : undefined;
     const rawValue = inactiveValue === undefined ? init() : inactiveValue;
     const value = normalize ? normalize(rawValue) : rawValue;
     await setStoredValueNow(area, key, value);
@@ -374,8 +165,7 @@ function createSwitchableItem<T>(
   }
 
   async function readFrom(area: AreaName) {
-    const result = await getBrowserApi().storage[area].get(key);
-    return result[key] as T | undefined;
+    return readStoredValue<T>(area, key);
   }
 
   return {
@@ -386,19 +176,33 @@ function createSwitchableItem<T>(
     async set(value) {
       const area = await activeArea();
       await setStoredValue(area, key, normalize ? normalize(value) : value);
-      await getBrowserApi().storage[otherStorageArea(area)].remove(key);
+      const inactiveArea = await effectiveArea(otherStorageArea(area));
+      if (area === STORAGE_AREAS.sync && inactiveArea !== area)
+        await removeStoredValue(inactiveArea, key);
     },
     async remove() {
       await Promise.all([
-        getBrowserApi().storage.local.remove(key),
-        getBrowserApi().storage.sync.remove(key),
+        removeStoredValue(STORAGE_AREAS.local, key),
+        removeStoredValue(STORAGE_AREAS.sync, key),
       ]);
     },
     watch(callback) {
+      let activeRemoteUnwatch: (() => void) | undefined;
+      const setupRemoteWatch = async () => {
+        activeRemoteUnwatch?.();
+        activeRemoteUnwatch = watchRemoteValue<T>(key, async (change) => {
+          if ((await activeArea()) !== STORAGE_AREAS.sync) return;
+          if (change.newValue !== undefined)
+            await markSyncLocalCacheFlushed(key, change.newValue);
+          callback(change.newValue as T, change.oldValue as T);
+        });
+      };
+      setupRemoteWatch().catch(() => undefined);
       const listener = async (
         changes: Record<string, chrome.storage.StorageChange>,
         changedArea: string,
       ) => {
+        if (isBackendStorageChange(key, changedArea)) return;
         const cacheChange = changes[syncLocalCacheKey(key)];
         const localCacheChanged = changedArea === STORAGE_AREAS.local;
         const preferencesCacheChanged =
@@ -437,7 +241,10 @@ function createSwitchableItem<T>(
         callback(changes[key].newValue as T, changes[key].oldValue as T);
       };
       getBrowserApi().storage.onChanged.addListener(listener);
-      return () => getBrowserApi().storage.onChanged.removeListener(listener);
+      return () => {
+        activeRemoteUnwatch?.();
+        getBrowserApi().storage.onChanged.removeListener(listener);
+      };
     },
   };
 }
@@ -508,6 +315,17 @@ export const storage = {
     STORAGE_KEYS.syncWriteStatus,
     () => DEFAULT_SYNC_WRITE_STATUS,
   ),
+  syncBackends: createItem<SyncBackendConfig[]>(
+    STORAGE_AREAS.local,
+    STORAGE_KEYS.syncBackends,
+    () => normalizeSyncBackends(undefined),
+    normalizeSyncBackends,
+  ),
+  activeSyncBackendId: createItem<string>(
+    STORAGE_AREAS.local,
+    STORAGE_KEYS.activeSyncBackendId,
+    () => NO_SYNC_BACKEND_ID,
+  ),
   ignoreSyncedProvidersForBootstrap: createItem<boolean>(
     STORAGE_AREAS.local,
     STORAGE_KEYS.ignoreSyncedProvidersForBootstrap,
@@ -516,31 +334,96 @@ export const storage = {
 };
 
 export async function getSyncedProviderState() {
-  const result = await getBrowserApi().storage.sync.get(STORAGE_KEYS.provider);
-  return result[STORAGE_KEYS.provider] as ProviderState | undefined;
+  return readSyncedValue<ProviderState>(STORAGE_KEYS.provider);
 }
 
 export async function setDataSync(key: SyncPreferenceKey, enabled: boolean) {
   const dataKey: SyncableDataKey = syncableItemForPreference(key).dataKey;
-  const api = getBrowserApi();
+  if (enabled && !(await isSyncBackendEnabled()))
+    throw new Error("Enable a sync backend before syncing this data.");
   const toAreaName = areaForSyncEnabled(enabled);
   const fromAreaName = otherStorageArea(toAreaName);
-  const fromArea = api.storage[fromAreaName];
-  const toArea = api.storage[toAreaName];
-  const existingTarget = await toArea.get(dataKey);
-  const existingSource = await fromArea.get(dataKey);
+  const existingTarget = enabled
+    ? await readRemoteValue(dataKey)
+    : await readStoredValue(toAreaName, dataKey);
+  const existingSource = await readStoredValue(fromAreaName, dataKey);
 
   if (
-    existingTarget[dataKey] === undefined &&
-    existingSource[dataKey] !== undefined
-  )
-    await setStoredValueNow(toAreaName, dataKey, existingSource[dataKey]);
+    enabled &&
+    existingSource !== undefined &&
+    !(existingTarget !== undefined && isEmptySyncValue(existingSource))
+  ) {
+    await writeRemoteValueNow(dataKey, existingSource);
+  } else if (enabled && existingTarget !== undefined) {
+    await markSyncLocalCacheFlushed(dataKey, existingTarget);
+  } else if (existingSource !== undefined) {
+    if (existingTarget === undefined)
+      await setStoredValueNow(toAreaName, dataKey, existingSource);
+  }
 
-  await fromArea.remove(dataKey);
   await updateStoredValue(storage.preferences, (preferences) => ({
     ...preferences,
     [key]: enabled,
   }));
+}
+
+function isEmptySyncValue(value: unknown) {
+  if (Array.isArray(value)) return value.length === 0;
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    Object.keys(value as Record<string, unknown>).length === 0
+  );
+}
+
+export async function setActiveSyncBackend(backendId: string) {
+  if (backendId === NO_SYNC_BACKEND_ID) {
+    await disableDataSync();
+    return;
+  }
+
+  await activateSyncBackend({
+    backendId,
+    getLanguage: storage.language.get,
+    getPreferences: storage.preferences.get,
+    readSyncedValue,
+    setActiveBackendId: storage.activeSyncBackendId.set,
+  });
+}
+
+async function disableDataSync() {
+  const language = await readSyncedValue<string>(STORAGE_KEYS.language);
+  const preferences = await storage.preferences.get();
+  const localPreferences = {
+    ...preferences,
+    syncSettings: false,
+    ...Object.fromEntries(
+      SYNCABLE_DATA_ITEMS.map((item) => [item.preferenceKey, false]),
+    ),
+  } as Preferences;
+  const dataSnapshots = await Promise.all(
+    SYNCABLE_DATA_ITEMS.map(async (item) => ({
+      ...item,
+      value: await readSyncedValue(item.dataKey),
+    })),
+  );
+
+  if (language !== undefined)
+    await setStoredValueNow(
+      STORAGE_AREAS.local,
+      STORAGE_KEYS.language,
+      language,
+    );
+  await setStoredValueNow(
+    STORAGE_AREAS.local,
+    STORAGE_KEYS.preferences,
+    localPreferences,
+  );
+  for (const item of dataSnapshots) {
+    if (item.value !== undefined)
+      await setStoredValueNow(STORAGE_AREAS.local, item.dataKey, item.value);
+  }
+  await storage.activeSyncBackendId.set(NO_SYNC_BACKEND_ID);
 }
 
 async function updateStoredValue<T>(

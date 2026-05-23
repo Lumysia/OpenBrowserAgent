@@ -1,0 +1,283 @@
+import * as config from "./config";
+import {
+  base64ToBytes,
+  bytesToBase64,
+  readAutomergeValue,
+  removeLocalAutomergeDocument,
+  writeAutomergeValue,
+} from "./automerge-sync-doc";
+import { getBrowserApi } from "./browser-api";
+import {
+  BROWSER_SYNC_BACKEND_ID,
+  NO_SYNC_BACKEND_ID,
+  SYNC_BACKEND_REGISTRY,
+  WEBDAV_SYNC_BACKEND_ID,
+} from "./sync-backend-registry";
+import { STORAGE_KEYS } from "./storage-keys";
+import type { SyncBackendConfig } from "./types";
+
+export { BROWSER_SYNC_BACKEND_ID, NO_SYNC_BACKEND_ID, WEBDAV_SYNC_BACKEND_ID };
+
+export type RemoteStorageChange<T = unknown> = {
+  newValue?: T;
+  oldValue?: T;
+};
+
+export type SyncBackend = {
+  config: SyncBackendConfig;
+  read<T>(key: string): Promise<T | undefined>;
+  write<T>(key: string, value: T): Promise<void>;
+  remove(key: string): Promise<void>;
+  test(): Promise<void>;
+  watch?<T>(
+    key: string,
+    callback: (change: RemoteStorageChange<T>) => void,
+  ): () => void;
+};
+
+export const DEFAULT_SYNC_BACKENDS: SyncBackendConfig[] = [
+  {
+    id: BROWSER_SYNC_BACKEND_ID,
+    type: "browser-sync",
+    name: SYNC_BACKEND_REGISTRY[0].defaultName,
+  },
+];
+
+export async function getActiveSyncBackend() {
+  const backends = await getStoredSyncBackends();
+  const activeId = await getStoredActiveSyncBackendId();
+  if (activeId === NO_SYNC_BACKEND_ID)
+    throw new Error("Sync backend is disabled.");
+  const backendConfig =
+    backends.find((backend) => backend.id === activeId) || backends[0];
+  return createSyncBackend(backendConfig);
+}
+
+export async function isSyncBackendEnabled() {
+  return (await getStoredActiveSyncBackendId()) !== NO_SYNC_BACKEND_ID;
+}
+
+export async function getStoredSyncBackends() {
+  const api = getBrowserApi();
+  const result = await api.storage.local.get(STORAGE_KEYS.syncBackends);
+  const backends = result[STORAGE_KEYS.syncBackends] as
+    | SyncBackendConfig[]
+    | undefined;
+  return normalizeSyncBackends(backends);
+}
+
+export async function getStoredActiveSyncBackendId() {
+  const api = getBrowserApi();
+  const result = await api.storage.local.get(STORAGE_KEYS.activeSyncBackendId);
+  return (
+    (result[STORAGE_KEYS.activeSyncBackendId] as string | undefined) ||
+    NO_SYNC_BACKEND_ID
+  );
+}
+
+export function normalizeSyncBackends(value: SyncBackendConfig[] | undefined) {
+  const byId = new Map<string, SyncBackendConfig>();
+  for (const backend of DEFAULT_SYNC_BACKENDS) byId.set(backend.id, backend);
+  for (const backend of value || []) {
+    if (!backend?.id || !backend?.type || !backend?.name) continue;
+    if (backend.type === "webdav" && !backend.url) continue;
+    byId.set(backend.id, backend);
+  }
+  return Array.from(byId.values());
+}
+
+export function createSyncBackend(
+  backendConfig: SyncBackendConfig,
+): SyncBackend {
+  if (backendConfig.type === "webdav")
+    return createWebDavBackend(backendConfig);
+  return createBrowserSyncBackend(backendConfig);
+}
+
+function createBrowserSyncBackend(
+  backendConfig: SyncBackendConfig,
+): SyncBackend {
+  return {
+    config: backendConfig,
+    async read<T>(key: string) {
+      const result = await getBrowserApi().storage.sync.get(key);
+      const encoded = result[key] as string | undefined;
+      return readAutomergeValue<T>(
+        key,
+        encoded ? base64ToBytes(encoded) : undefined,
+      );
+    },
+    async write(key, value) {
+      const result = await getBrowserApi().storage.sync.get(key);
+      const encoded = result[key] as string | undefined;
+      const bytes = await writeAutomergeValue(
+        key,
+        value,
+        encoded ? base64ToBytes(encoded) : undefined,
+      );
+      const nextValue = bytesToBase64(bytes);
+      assertBrowserSyncItemFits(key, nextValue);
+      await getBrowserApi().storage.sync.set({ [key]: nextValue });
+    },
+    async remove(key) {
+      await getBrowserApi().storage.sync.remove(key);
+      await removeLocalAutomergeDocument(key);
+    },
+    async test() {
+      await getBrowserApi().storage.sync.get(null);
+    },
+    watch<T>(key: string, callback: (change: RemoteStorageChange<T>) => void) {
+      const listener = (
+        changes: Record<string, chrome.storage.StorageChange>,
+        changedArea: string,
+      ) => {
+        if (changedArea !== "sync" || !changes[key]) return;
+        const change = changes[key];
+        Promise.all([
+          decodeBrowserSyncChangeValue<T>(key, change.newValue),
+          decodeBrowserSyncChangeValue<T>(key, change.oldValue),
+        ])
+          .then(([newValue, oldValue]) => callback({ newValue, oldValue }))
+          .catch(() => undefined);
+      };
+      getBrowserApi().storage.onChanged.addListener(listener);
+      return () => getBrowserApi().storage.onChanged.removeListener(listener);
+    },
+  };
+}
+
+async function decodeBrowserSyncChangeValue<T>(key: string, value: unknown) {
+  return typeof value === "string"
+    ? readAutomergeValue<T>(key, base64ToBytes(value))
+    : undefined;
+}
+
+function createWebDavBackend(
+  backendConfig: Extract<SyncBackendConfig, { type: "webdav" }>,
+): SyncBackend {
+  return {
+    config: backendConfig,
+    async read<T>(key: string) {
+      const bytes = await readWebDavBytes(backendConfig, key);
+      return readAutomergeValue<T>(key, bytes);
+    },
+    async write(key, value) {
+      const bytes = await writeAutomergeValue(
+        key,
+        value,
+        await readWebDavBytes(backendConfig, key),
+      );
+      const response = await requestWebDav(
+        backendConfig,
+        objectUrl(backendConfig, key),
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/octet-stream" },
+          body: bytesToArrayBuffer(bytes),
+        },
+      );
+      if (!response.ok) await throwWebDavError(response, "write");
+    },
+    async remove(key) {
+      const response = await requestWebDav(
+        backendConfig,
+        objectUrl(backendConfig, key),
+        {
+          method: "DELETE",
+        },
+      );
+      if (!response.ok && response.status !== 404)
+        await throwWebDavError(response, "remove");
+      await removeLocalAutomergeDocument(key);
+    },
+    async test() {
+      const response = await requestWebDav(
+        backendConfig,
+        baseUrl(backendConfig),
+        {
+          method: "PROPFIND",
+          headers: { Depth: "0" },
+        },
+      );
+      if (!response.ok && response.status !== 207)
+        await throwWebDavError(response, "test");
+    },
+  };
+}
+
+function bytesToArrayBuffer(bytes: Uint8Array) {
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
+}
+
+async function readWebDavBytes(
+  backendConfig: Extract<SyncBackendConfig, { type: "webdav" }>,
+  key: string,
+) {
+  const response = await requestWebDav(
+    backendConfig,
+    objectUrl(backendConfig, key),
+    {
+      method: "GET",
+    },
+  );
+  if (response.status === 404) return undefined;
+  if (!response.ok) await throwWebDavError(response, "read");
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+function objectUrl(
+  backendConfig: Extract<SyncBackendConfig, { type: "webdav" }>,
+  key: string,
+) {
+  return new URL(
+    `${encodeURIComponent(key)}.amrg`,
+    baseUrl(backendConfig),
+  ).toString();
+}
+
+function baseUrl(
+  backendConfig: Extract<SyncBackendConfig, { type: "webdav" }>,
+) {
+  return backendConfig.url.endsWith("/")
+    ? backendConfig.url
+    : `${backendConfig.url}/`;
+}
+
+async function requestWebDav(
+  backendConfig: Extract<SyncBackendConfig, { type: "webdav" }>,
+  url: string,
+  init: RequestInit,
+) {
+  const headers = new Headers(init.headers);
+  if (backendConfig.username || backendConfig.password) {
+    const credentials = `${backendConfig.username || ""}:${backendConfig.password || ""}`;
+    headers.set(
+      "Authorization",
+      `Basic ${btoa(String.fromCharCode(...new TextEncoder().encode(credentials)))}`,
+    );
+  }
+  return fetch(url, { ...init, headers });
+}
+
+async function throwWebDavError(
+  response: Response,
+  action: string,
+): Promise<never> {
+  const body = await response.text().catch(() => "");
+  throw new Error(
+    `WebDAV ${action} failed: ${response.status} ${response.statusText}${body ? ` - ${body.slice(0, 180)}` : ""}`,
+  );
+}
+
+function assertBrowserSyncItemFits(key: string, value: unknown) {
+  const size = new TextEncoder().encode(
+    JSON.stringify({ [key]: value }),
+  ).length;
+  if (size <= config.SYNC_MAX_BYTES_PER_ITEM) return;
+  throw new Error(
+    `Sync item exceeds the safe per-item limit: "${key}" is ${size} bytes; limit is ${config.SYNC_MAX_BYTES_PER_ITEM} bytes. Keep this data local or use WebDAV sync.`,
+  );
+}

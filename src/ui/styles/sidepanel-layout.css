@@ -34,7 +34,8 @@
   opacity: 0.38;
   filter: saturate(0.7);
 }
-.sidepanel.history-mode {
+.sidepanel.history-mode,
+.sidepanel.bootstrap-mode {
   grid-template-rows: minmax(0, 1fr);
 }
 .edit-mode-shield {

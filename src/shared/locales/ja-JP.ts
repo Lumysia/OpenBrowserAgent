@@ -21,27 +21,37 @@ export const jaJP: LocaleMessages = {
   },
   words: { newChat: "新しいチャット", agent: "ブラウズ", ask: "質問" },
   sidepanel: {
-    connectProviderTitle: "最初のAIプロバイダーを接続",
+    connectProviderTitle: "OpenBrowserAgent をセットアップ",
     connectProviderDescription:
-      "OpenBrowserAgentはよく使うAIプロバイダーに接続できます。APIキーを追加して開始してください。",
+      "言語を選択し、必要に応じて同期を有効にしてから、プロバイダーとモデルを追加します。",
     addProvider: "プロバイダーを追加",
     cloudSync: "クラウドから同期",
+    cloudSyncTest: "クラウド同期をテスト",
+    cloudSyncTesting: "クラウド同期をテスト中...",
     cloudSyncPulling: "クラウド同期を確認中...",
     cloudSyncDescription:
-      "別の端末でOpenBrowserAgentを設定済みの場合は、同期済みプロバイダーを先に取得できます。",
+      "クラウドから別端末の設定を取得することも、この端末の新しい設定をクラウドに保存することもできます。",
+    cloudSyncReady:
+      "同期済みプロバイダー設定が見つかりました。クラウドから開始できます。",
     cloudSyncSuccess:
       "同期済みプロバイダー設定が見つかりました。チャットを開いています...",
     cloudSyncEmpty:
-      "同期済みプロバイダーは見つかりませんでした。ローカルで開始できます。",
+      "クラウドには接続できましたが、既存の設定は見つかりませんでした。確認すると新しい設定をクラウドに保存します。",
     cloudSyncError:
-      "クラウド同期に失敗しました。ブラウザー同期を確認するか、ローカルで開始してください。",
+      "クラウド同期のテストに失敗しました。バックエンドを確認するか、ローカルで開始してください。",
+    cloudSyncStoreNew: "新しい設定をクラウドに保存",
+    confirmCloudSync: "同期を確認",
+    cloudSyncSynced:
+      "クラウド同期の準備ができました。次にプロバイダー設定を追加してください。",
+    cloudSyncSyncedButton: "同期済み",
     startLocally: "ローカルで開始",
+    startFromCloud: "クラウドから開始",
     localSetupHint:
       "設定を開きました。そこでプロバイダーとモデルを追加し、ここに戻って続行してください。",
-    bootstrapStepSyncTitle: "開始方法を選択",
+    bootstrapStepSyncTitle: "同期バックエンド（任意）",
     bootstrapStepProviderTitle: "プロバイダーとモデルを追加",
     bootstrapStepProviderDescription:
-      "ローカルで開始すると設定を開き、プロバイダーとモデルを追加して動作確認できます。",
+      "設定を開き、プロバイダーとモデルを追加して動作確認できます。",
     bootstrapStepTaskTitle: "最初のタスクを送信",
     bootstrapStepTaskDescription:
       "モデルが正常に応答したらここに戻り、OpenBrowserAgentにブラウズや要約を依頼します。",
@@ -723,8 +733,6 @@ export const jaJP: LocaleMessages = {
     binaryPreviewUnavailable: "バイナリファイルはプレビューできません。",
     updatedAt: "更新日時",
     skillSize: "スキルサイズ",
-    syncQuotaWarning:
-      "スキル同期がブラウザ同期容量を超える可能性があります。大きいスキルはローカル保持にしてください。",
     skillCheckEntry: "SKILL.mdが存在します",
     skillCheckEntryMissing: "SKILL.mdがありません",
     skillCheckName: "メタデータ名がケバブケースです",
@@ -751,22 +759,36 @@ export const jaJP: LocaleMessages = {
     darkTheme: "ダーク",
     syncSettings: "設定を同期",
     syncSettingsDescription:
-      "言語、プロバイダー設定、軽量設定をブラウザーアカウントで同期します。",
+      "言語、プロバイダー設定、軽量設定を既定で同期するバックエンドを選択します。",
+    syncBackend: "同期バックエンド",
+    syncBackendDescription: "追加の同期項目を選択します。",
+    syncBackendBrowserSync: "内蔵ブラウザーアカウント同期",
+    syncBackendWebDavSync: "WebDAV同期",
+    syncBackendLocalOnly: "ローカルのみ",
+    syncBackendName: "バックエンド名",
+    syncBackendWebDavUrl: "WebDAV URL",
+    syncBackendUsername: "ユーザー名",
+    syncBackendPassword: "パスワードまたはアプリパスワード",
+    syncBackendTest: "テスト",
+    syncBackendTesting: "テスト中...",
+    syncBackendTestSuccess: "接続済み",
+    syncBackendTestError: "接続に失敗しました",
+    syncBackendRemove: "削除",
     syncProviders: "プロバイダーを同期",
     syncProvidersDescription:
-      "APIキーを含むプロバイダー設定をブラウザーアカウントで同期します。",
+      "APIキーを含むプロバイダー設定を現在の同期バックエンドで同期します。",
     syncAgents: "エージェントを同期",
     syncAgentsDescription:
-      "エージェントプロファイルとワークスペースファイルをブラウザーアカウントで同期します。個人的な文脈が含まれる場合はオフのままにしてください。",
+      "エージェントプロファイルとワークスペースファイルを現在の同期バックエンドで同期します。",
     syncSkills: "スキルを同期",
     syncSkillsDescription:
-      "スキルのテンプレートをブラウザーアカウントで同期します。",
+      "スキルのテンプレートを現在の同期バックエンドで同期します。",
     syncMcpServers: "MCPサーバーを同期",
     syncMcpServersDescription:
-      "Streamable HTTP MCPサーバー設定をブラウザーアカウントで同期します。",
+      "Streamable HTTP MCPサーバー設定を現在の同期バックエンドで同期します。",
     syncChats: "チャットを同期",
     syncChatsDescription:
-      "チャット履歴をブラウザーアカウントで同期します。ローカルのみの会話にする場合はオフにします。",
+      "チャット履歴を現在の同期バックエンドで同期します。ローカルのみの会話にする場合はオフにします。",
     syncWritePending: "同期書き込みがキューに入っています",
     syncWriteIdle: "同期書き込みは最新です",
     syncWriteError: "最後の同期書き込みに失敗しました",

@@ -31,7 +31,7 @@ export default defineConfig({
     host_permissions: ["<all_urls>"],
     content_security_policy: {
       extension_pages:
-        "script-src 'self'; object-src 'self'; img-src 'self' data: blob: http: https:;",
+        "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src 'self' data: blob: http: https:;",
     },
     icons: {
       16: "icons/16.png",

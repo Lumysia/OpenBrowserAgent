@@ -8,8 +8,8 @@ import { REASONING_EFFORT } from "./reasoning";
 export const DEFAULT_PREFERENCES: Preferences = {
   colorScheme: "system",
   accentColor: "pink",
-  syncSettings: true,
-  syncProviders: true,
+  syncSettings: false,
+  syncProviders: false,
   syncAgents: false,
   syncSkills: false,
   syncMcpServers: false,
@@ -27,7 +27,5 @@ export function mergePreferences(value: Preferences): Preferences {
   return {
     ...DEFAULT_PREFERENCES,
     ...value,
-    syncSettings: true,
-    syncProviders: true,
   };
 }

@@ -38,6 +38,7 @@
 .ui-accordion-header-with-actions {
   display: flex;
   align-items: center;
+  padding-inline-end: 8px;
   transition: background-color 0.16s ease;
 }
 .ui-accordion-header-with-actions:hover {
@@ -130,6 +131,33 @@
 }
 .ui-accordion-content-inner {
   padding: 16px;
+}
+.settings-nested-accordion {
+  display: grid;
+  gap: 10px;
+}
+.settings-nested-accordion .ui-accordion-item {
+  box-shadow: none;
+}
+.settings-nested-accordion .ui-accordion-trigger {
+  padding: 12px 14px;
+}
+.settings-toggle-list {
+  display: grid;
+  gap: 8px;
+}
+.settings-toggle-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 24%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card) 88%, var(--accent-softer));
+}
+.settings-toggle-row > div {
+  min-width: 0;
 }
 .provider-editor-grid {
   display: grid;
