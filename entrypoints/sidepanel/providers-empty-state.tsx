@@ -5,6 +5,7 @@ import { mergePreferences } from "../../src/shared/default-preferences";
 import type { Messages } from "../../src/shared/i18n";
 import {
   setActiveSyncBackend,
+  flushPendingSyncWrites,
   storage,
   STORAGE_KEYS,
   SYNCABLE_DATA_ITEMS,
@@ -144,6 +145,9 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
           ? webDavDraft.password
           : patch.password || undefined,
     };
+    void flushPendingSyncWrites().catch((error) =>
+      console.warn("Failed to flush pending sync writes", error),
+    );
     setSyncBackends([
       ...loadedSyncBackends.filter(
         (backend) => backend.type !== SYNC_BACKEND_TYPES.webDav,

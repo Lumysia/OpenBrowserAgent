@@ -18,6 +18,7 @@ import {
   clearPendingSyncWrites,
   DEFAULT_SYNC_WRITE_STATUS,
   markSyncLocalCacheFlushed,
+  flushPendingSyncWrites,
   queueSyncWrite,
   queueSyncRemove,
   readPendingSyncValue,
@@ -75,7 +76,12 @@ export {
 export type { SyncDataSettings, SyncPreferenceKey };
 
 export { getBrowserApi };
-export { clearPendingSyncWrites, syncLocalCacheKey, type SyncWriteStatus };
+export {
+  clearPendingSyncWrites,
+  flushPendingSyncWrites,
+  syncLocalCacheKey,
+  type SyncWriteStatus,
+};
 
 function syncableItemsForPreference(key: SyncPreferenceKey) {
   return SYNCABLE_DATA_ITEMS.filter((item) => item.preferenceKey === key);
@@ -232,8 +238,11 @@ function createSwitchableItem<T>(
         activeRemoteUnwatch?.();
         activeRemoteUnwatch = watchRemoteValue<T>(key, async (change) => {
           if ((await activeArea()) !== STORAGE_AREAS.sync) return;
-          if (change.newValue !== undefined)
+          if (change.newValue !== undefined) {
             await markSyncLocalCacheFlushed(key, change.newValue);
+          } else {
+            await removeSyncLocalCache(key);
+          }
           callback(change.newValue as T, change.oldValue as T);
         });
       };
@@ -305,6 +314,7 @@ function createSwitchableItem<T>(
             | SyncLocalCache<T>
             | undefined;
           if (next) callback(next.value, previous?.value as T);
+          else callback(undefined as T, previous?.value as T);
           return;
         }
         if (changedArea !== area || !changes[key]) return;
@@ -466,6 +476,7 @@ async function setDataKeySync(dataKey: SyncableDataKey, enabled: boolean) {
 }
 
 export async function setActiveSyncBackend(backendId: string) {
+  await flushPendingSyncWrites();
   if (backendId === NO_SYNC_BACKEND_ID) {
     await disableDataSync();
     return;

@@ -175,6 +175,7 @@ export function SyncBackendCard({
             <Switch
               checked={webDavDraft.id === activeBackendId}
               disabled={!webDavDraft.url}
+              aria-label={backendDisplayName(webDavDraft, t)}
               onCheckedChange={(enabled) =>
                 enableBackend(webDavDraft.id, enabled)
               }
@@ -282,6 +283,7 @@ function SyncBackendHeaderItem({
           />
           <Switch
             checked={backend.id === activeBackendId}
+            aria-label={backendDisplayName(backend, t)}
             onCheckedChange={onEnabledChange}
           />
         </span>
@@ -376,7 +378,12 @@ function SyncToggleRow({
         </CardTitle>
         <CardDescription>{description}</CardDescription>
       </div>
-      <Switch checked={value} disabled={disabled} onCheckedChange={onChange} />
+      <Switch
+        checked={value}
+        disabled={disabled}
+        aria-label={title}
+        onCheckedChange={onChange}
+      />
     </div>
   );
 }

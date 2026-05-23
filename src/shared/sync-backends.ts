@@ -55,8 +55,8 @@ export async function getActiveSyncBackend() {
   const activeId = await getStoredActiveSyncBackendId();
   if (activeId === NO_SYNC_BACKEND_ID)
     throw new Error("Sync backend is disabled.");
-  const backendConfig =
-    backends.find((backend) => backend.id === activeId) || backends[0];
+  const backendConfig = backends.find((backend) => backend.id === activeId);
+  if (!backendConfig) throw new Error(`Unknown sync backend: ${activeId}`);
   return createSyncBackend(backendConfig);
 }
 

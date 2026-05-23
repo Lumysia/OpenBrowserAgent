@@ -27,7 +27,8 @@ export function watchRemoteValue<T>(
   ) => {
     if (
       changedArea !== STORAGE_AREAS.local ||
-      !changes[STORAGE_KEYS.activeSyncBackendId]
+      (!changes[STORAGE_KEYS.activeSyncBackendId] &&
+        !changes[STORAGE_KEYS.syncBackends])
     )
       return;
     setupRemoteWatch().catch(() => undefined);

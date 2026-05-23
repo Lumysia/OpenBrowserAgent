@@ -13,22 +13,20 @@ import {
 
 export function useChatActions({
   t,
-  activeChatId,
   chats,
   setChats,
   setActiveChatId,
   setChatSelectionRequestId,
-  abortChatStream,
+  abortClosedChatStreams,
   clearUnreadCompletedChat,
   syncDataSettings,
 }: {
   t: Messages;
-  activeChatId?: string;
   chats?: Chat[];
   setChats: Dispatch<SetStateAction<Chat[]>>;
   setActiveChatId: Dispatch<SetStateAction<string | undefined>>;
   setChatSelectionRequestId: Dispatch<SetStateAction<number>>;
-  abortChatStream: (chatId: string) => void;
+  abortClosedChatStreams: (chatId: string) => Set<string>;
   clearUnreadCompletedChat: (chatId: string) => void;
   syncDataSettings?: SyncDataSettings;
 }) {
@@ -45,14 +43,17 @@ export function useChatActions({
 
   const closeChat = useCallback(
     (chatId: string) => {
-      abortChatStream(chatId);
+      const ids = abortClosedChatStreams(chatId);
+      ids.forEach((id) => {
+        clearUnreadCompletedChat(id);
+      });
       storage.chats
         .get()
-        .then((chats) => {
-          const ids = closedChatIds(chats, chatId);
+        .then((storedChats) => {
+          const storedIds = closedChatIds(storedChats, chatId);
           return removeSyncedChatAttachments(
             syncDataSettings,
-            chats.filter((chat) => ids.has(chat.id)),
+            storedChats.filter((chat) => storedIds.has(chat.id)),
           );
         })
         .catch((error) =>
@@ -60,18 +61,13 @@ export function useChatActions({
         );
       closeChatAction({
         chatId,
-        activeChatId,
         setChats,
-        setActiveChatId,
       });
-      clearUnreadCompletedChat(chatId);
     },
     [
-      abortChatStream,
-      activeChatId,
+      abortClosedChatStreams,
       clearUnreadCompletedChat,
       syncDataSettings,
-      setActiveChatId,
       setChats,
     ],
   );

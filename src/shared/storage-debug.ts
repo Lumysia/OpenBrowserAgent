@@ -20,6 +20,7 @@ const STORAGE_KEY_GROUPS = {
     STORAGE_KEYS.syncWriteStatus,
     STORAGE_KEYS.syncBackends,
     STORAGE_KEYS.activeSyncBackendId,
+    STORAGE_KEYS.syncDataSettings,
   ],
   providers: [STORAGE_KEYS.provider],
   agents: [STORAGE_KEYS.agents, STORAGE_KEYS.agentWorkspaces],

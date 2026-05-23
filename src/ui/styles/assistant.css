@@ -371,7 +371,7 @@
   margin-top: 2px;
   border-radius: 7px;
   background: transparent;
-  color: #8b887f;
+  color: var(--muted-foreground);
   transition:
     background-color 0.14s ease,
     color 0.14s ease;

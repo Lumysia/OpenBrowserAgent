@@ -169,7 +169,7 @@ export function HistoryPanel({
               size="icon"
               className="history-danger-action"
               aria-label={t.sidepanel.clearAllChats}
-              onClick={() => onSetChats([])}
+              onClick={() => rootChats.forEach((chat) => onClose(chat.id))}
             >
               <Trash2 size={18} />
             </Button>

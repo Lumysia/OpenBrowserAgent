@@ -81,6 +81,7 @@ export function SidepanelApp() {
   const [addMenuView, setAddMenuView] = useState<AddMenuView>("menu");
   const [showHistory, setShowHistory] = useState(false);
   const [chatSelectionRequestId, setChatSelectionRequestId] = useState(0);
+  const sendInFlightRef = useRef<Set<string>>(new Set());
   const [sentAttachmentPreviews, setSentAttachmentPreviews] = useState<
     Record<string, UploadedAttachment[]>
   >({});
@@ -121,6 +122,7 @@ export function SidepanelApp() {
     beginStream,
     startStream,
     abortChatStream,
+    abortClosedChatStreams,
     stopCurrentStream,
     postQueuedMessage,
     deleteQueuedStreamMessage,
@@ -206,8 +208,7 @@ export function SidepanelApp() {
     onQueueMessage: (message) =>
       currentChat &&
       postQueuedMessage(currentChat.id, message.id, message.content),
-    onRemoveMessage: (id) =>
-      currentChat && deleteQueuedStreamMessage(currentChat.id, id),
+    onRemoveMessage: (id, chatId) => deleteQueuedStreamMessage(chatId, id),
   });
 
   useEffect(() => {
@@ -234,13 +235,12 @@ export function SidepanelApp() {
 
   const { createChat, closeChat, selectChat } = useChatActions({
     t,
-    activeChatId,
     chats,
     syncDataSettings,
     setChats,
     setActiveChatId,
     setChatSelectionRequestId,
-    abortChatStream,
+    abortClosedChatStreams,
     clearUnreadCompletedChat,
   });
 
@@ -278,151 +278,161 @@ export function SidepanelApp() {
     options: { queued?: boolean; resendMessage?: ChatMessage } = {},
   ) {
     const text = interpolateSkillVariables(content.trim());
-    if ((!text && !uploadedAttachments.length) || currentChatStreaming) {
+    const sendChatId = currentChat?.id || activeChatId || "new";
+    if (
+      (!text && !uploadedAttachments.length) ||
+      currentChatStreaming ||
+      sendInFlightRef.current.has(sendChatId)
+    ) {
       if (currentChatStreaming && text && !options.resendMessage) {
         enqueueQueuedMessage(content);
         if (content === input) clearInput();
       }
       return;
     }
-    const availableSkills = runtimeAgent.capabilities.skillTools
-      ? (skills || []).filter(isSkillEnabled)
-      : [];
-    const chat = currentChat || createChat();
-    const resendDraft =
-      !options.queued && options.resendMessage
-        ? createResendMessageDraft({
-            chat,
-            message: options.resendMessage,
-            attachments: resendAttachments || [],
-          })
-        : null;
-    const activeEdit =
-      !options.queued && editingMessage?.chatId === chat.id
-        ? editingMessage
-        : resendDraft;
-    const sentTabs = options.queued
-      ? []
-      : activeEdit
-        ? activeEdit.attachedTabs
-        : attachedTabs;
-    const sentElements = options.queued
-      ? []
-      : activeEdit
-        ? activeEdit.selectedElements
-        : selectedElements;
-    const sentSkills = (
-      options.queued ? [] : activeEdit ? activeEdit.skills : selectedSkills
-    )
-      .filter(isSkillEnabled)
-      .map((skill) =>
-        interpolateSkillPackage(skill, interpolateSkillVariables),
-      );
-    const context = await buildSidepanelContext({
-      attachedTabs: sentTabs,
-      selectedElements: sentElements,
-    });
-    const baseChat = activeEdit
-      ? {
-          ...chat,
-          messages: activeEdit.messagesBefore,
-          sources: activeEdit.sourcesBefore,
-          updatedAt: Date.now(),
-        }
-      : chat;
-    const selectedImageAttachments =
-      selectedElementImageAttachments(sentElements);
-    const sentAttachments = [
-      ...(options.queued ? [] : resendAttachments || pendingAttachments),
-      ...selectedImageAttachments,
-    ];
-    const activeAttachments = [
-      ...(options.queued
+    sendInFlightRef.current.add(sendChatId);
+    try {
+      const availableSkills = runtimeAgent.capabilities.skillTools
+        ? (skills || []).filter(isSkillEnabled)
+        : [];
+      const chat = currentChat || createChat();
+      const resendDraft =
+        !options.queued && options.resendMessage
+          ? createResendMessageDraft({
+              chat,
+              message: options.resendMessage,
+              attachments: resendAttachments || [],
+            })
+          : null;
+      const activeEdit =
+        !options.queued && editingMessage?.chatId === chat.id
+          ? editingMessage
+          : resendDraft;
+      const sentTabs = options.queued
         ? []
         : activeEdit
-          ? activeEdit.attachments
-          : uploadedAttachments),
-      ...selectedImageAttachments,
-    ];
-    const assistantModel = assistantModelLabel({
-      modelId: preferences?.selectedModelId,
-      models: configuredModels,
-    });
-    const {
-      userMessage,
-      assistantMessage,
-      shouldGenerateTitle,
-      titleSource,
-      nextChat,
-    } = createSendMessagePlan({
-      chat: baseChat,
-      text,
-      t,
-      context,
-      sources: baseChat.sources,
-      assistantModel,
-      sentTabs,
-      sentElements,
-      sentAttachments,
-      skills: sentSkills,
-      autoSelectedSkill: false,
-    });
-    if (sentAttachments.length)
-      setSentAttachmentPreviews((items) => ({
-        ...(activeEdit
-          ? pruneSentAttachmentPreviews(items, activeEdit.keptMessageIds)
-          : items),
-        [userMessage.id]: sentAttachments,
-      }));
-    else if (activeEdit)
-      setSentAttachmentPreviews((items) =>
-        pruneSentAttachmentPreviews(items, activeEdit.keptMessageIds),
-      );
-    syncSentAttachments({
-      chatId: nextChat.id,
-      messageId: userMessage.id,
-      attachments: sentAttachments,
-    });
-    updateChatAction(setChats, nextChat);
-    if (shouldGenerateTitle)
-      requestChatTitle({
-        chatId: nextChat.id,
-        modelId: preferences?.selectedModelId,
-        message: titleSource,
-        setChats,
+          ? activeEdit.attachedTabs
+          : attachedTabs;
+      const sentElements = options.queued
+        ? []
+        : activeEdit
+          ? activeEdit.selectedElements
+          : selectedElements;
+      const sentSkills = (
+        options.queued ? [] : activeEdit ? activeEdit.skills : selectedSkills
+      )
+        .filter(isSkillEnabled)
+        .map((skill) =>
+          interpolateSkillPackage(skill, interpolateSkillVariables),
+        );
+      const context = await buildSidepanelContext({
+        attachedTabs: sentTabs,
+        selectedElements: sentElements,
       });
-    if (!options.queued && !options.resendMessage) {
-      clearInput();
-      clearAttachedTabsAfterSend();
-      clearPendingAttachments();
-      setSelectedElements([]);
-      setSelectedSkills([]);
-      setEditingMessage(null);
-    }
-    const request: SendMessagesRequest = {
-      type: AI_STREAM_REQUEST_TYPE.sendMessages,
-      chatId: nextChat.id,
-      messageId: assistantMessage.id,
-      messages: [...baseChat.messages, userMessage],
-      body: {
+      const baseChat = activeEdit
+        ? {
+            ...chat,
+            messages: activeEdit.messagesBefore,
+            sources: activeEdit.sourcesBefore,
+            updatedAt: Date.now(),
+          }
+        : chat;
+      const selectedImageAttachments =
+        selectedElementImageAttachments(sentElements);
+      const sentAttachments = [
+        ...(options.queued ? [] : resendAttachments || pendingAttachments),
+        ...selectedImageAttachments,
+      ];
+      const activeAttachments = [
+        ...(options.queued
+          ? []
+          : activeEdit
+            ? activeEdit.attachments
+            : uploadedAttachments),
+        ...selectedImageAttachments,
+      ];
+      const assistantModel = assistantModelLabel({
         modelId: preferences?.selectedModelId,
-        agentCapabilities: runtimeAgent.capabilities,
-        language,
-        maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
-        context: {
-          tabs: sentTabs,
-          selectedElements: sentElements,
-          text: context,
-          uploadedAttachments: activeAttachments,
-          availableSkills,
-          sources: baseChat.sources || [],
-          agent: runtimeAgent,
-          imageGenerationEnabled: preferences?.imageGenerationEnabled,
+        models: configuredModels,
+      });
+      const {
+        userMessage,
+        assistantMessage,
+        shouldGenerateTitle,
+        titleSource,
+        nextChat,
+      } = createSendMessagePlan({
+        chat: baseChat,
+        text,
+        t,
+        context,
+        sources: baseChat.sources,
+        assistantModel,
+        sentTabs,
+        sentElements,
+        sentAttachments,
+        skills: sentSkills,
+        autoSelectedSkill: false,
+      });
+      if (sentAttachments.length)
+        setSentAttachmentPreviews((items) => ({
+          ...(activeEdit
+            ? pruneSentAttachmentPreviews(items, activeEdit.keptMessageIds)
+            : items),
+          [userMessage.id]: sentAttachments,
+        }));
+      else if (activeEdit)
+        setSentAttachmentPreviews((items) =>
+          pruneSentAttachmentPreviews(items, activeEdit.keptMessageIds),
+        );
+      syncSentAttachments({
+        chatId: nextChat.id,
+        messageId: userMessage.id,
+        attachments: sentAttachments,
+      });
+      updateChatAction(setChats, nextChat);
+      if (shouldGenerateTitle)
+        requestChatTitle({
+          chatId: nextChat.id,
+          modelId: preferences?.selectedModelId,
+          message: titleSource,
+          setChats,
+        });
+      if (!options.queued && !options.resendMessage) {
+        clearInput();
+        clearAttachedTabsAfterSend();
+        clearPendingAttachments();
+        setSelectedElements([]);
+        setSelectedSkills([]);
+        setEditingMessage(null);
+      }
+      const request: SendMessagesRequest = {
+        type: AI_STREAM_REQUEST_TYPE.sendMessages,
+        chatId: nextChat.id,
+        messageId: assistantMessage.id,
+        messages: [...baseChat.messages, userMessage],
+        body: {
+          modelId: preferences?.selectedModelId,
+          agentCapabilities: runtimeAgent.capabilities,
+          language,
+          maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
+          context: {
+            tabs: sentTabs,
+            selectedElements: sentElements,
+            text: context,
+            uploadedAttachments: activeAttachments,
+            availableSkills,
+            sources: baseChat.sources || [],
+            agent: runtimeAgent,
+            imageGenerationEnabled: preferences?.imageGenerationEnabled,
+          },
         },
-      },
-    };
-    beginStream(nextChat.id, assistantMessage.id);
-    startStream(request, assistantMessage.id);
+      };
+      beginStream(nextChat.id, assistantMessage.id);
+      startStream(request, assistantMessage.id);
+    } finally {
+      sendInFlightRef.current.delete(sendChatId);
+    }
   }
 
   return (

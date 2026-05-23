@@ -229,7 +229,7 @@
   transform: translateY(-1px);
 }
 .tool-card.error .tool-description {
-  color: #b3261e;
+  color: var(--destructive);
 }
 @keyframes tool-icon-thinking {
   0%,

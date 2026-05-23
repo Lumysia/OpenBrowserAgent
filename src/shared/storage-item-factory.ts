@@ -4,6 +4,7 @@ import type { StorageItem, StorageItemOptions } from "./storage-item-types";
 import {
   markSyncLocalCacheFlushed,
   readPendingSyncValue,
+  removeSyncLocalCache,
   syncLocalCacheKey,
   type SyncLocalCache,
 } from "./storage-sync-cache";
@@ -67,8 +68,11 @@ export function makeStorageItemFactory(io: StorageItemIo) {
         const unwatchRemote =
           area === STORAGE_AREAS.sync
             ? watchRemoteValue<T>(storageKey, async (change) => {
-                if (change.newValue !== undefined)
+                if (change.newValue !== undefined) {
                   await markSyncLocalCacheFlushed(storageKey, change.newValue);
+                } else {
+                  await removeSyncLocalCache(storageKey);
+                }
                 callback(change.newValue as T, change.oldValue as T);
               })
             : undefined;
@@ -103,7 +107,10 @@ export function makeStorageItemFactory(io: StorageItemIo) {
             const previous = changes[syncLocalCacheKey(storageKey)].oldValue as
               | SyncLocalCache<T>
               | undefined;
-            if (!next) return;
+            if (!next) {
+              callback(undefined as T, previous?.value as T);
+              return;
+            }
             callback(next.value, previous?.value as T);
             return;
           }

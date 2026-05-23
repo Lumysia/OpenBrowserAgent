@@ -27,7 +27,10 @@ import {
   PopoverTrigger,
   ScrollArea,
   Textarea,
+  Tooltip,
+  TooltipContent,
   TooltipProvider,
+  TooltipTrigger,
 } from "../../src/ui/components";
 import { AddContextMenu } from "./composer-menus";
 import { ComposerSelectors } from "./composer-selectors";
@@ -370,16 +373,22 @@ export function SidepanelView({
                     }
                   }}
                 >
-                  <PopoverTrigger asChild>
-                    <Button
-                      className="composer-icon-button"
-                      variant="outline"
-                      size="icon"
-                      disabled={aiWorking}
-                    >
-                      <Plus size={20} />
-                    </Button>
-                  </PopoverTrigger>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <PopoverTrigger asChild>
+                        <Button
+                          className="composer-icon-button"
+                          variant="outline"
+                          size="icon"
+                          aria-label={t.common.add}
+                          disabled={aiWorking}
+                        >
+                          <Plus size={20} />
+                        </Button>
+                      </PopoverTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>{t.common.add}</TooltipContent>
+                  </Tooltip>
                   <PopoverContent
                     side="top"
                     align="start"
@@ -431,20 +440,29 @@ export function SidepanelView({
                     <Button
                       className="send-button stop-button"
                       variant="secondary"
+                      aria-label={t.sidepanel.stop}
                       onClick={onStop}
                     >
                       <Square size={18} />
                     </Button>
                   </IconTooltip>
                   <IconTooltip label={t.sidepanel.queueMessage}>
-                    <Button className="send-button" onClick={() => onSend()}>
+                    <Button
+                      className="send-button"
+                      aria-label={t.sidepanel.queueMessage}
+                      onClick={() => onSend()}
+                    >
                       <Send size={20} />
                     </Button>
                   </IconTooltip>
                 </>
               ) : (
                 <IconTooltip label={t.sidepanel.send}>
-                  <Button className="send-button" onClick={() => onSend()}>
+                  <Button
+                    className="send-button"
+                    aria-label={t.sidepanel.send}
+                    onClick={() => onSend()}
+                  >
                     <Send size={20} />
                   </Button>
                 </IconTooltip>

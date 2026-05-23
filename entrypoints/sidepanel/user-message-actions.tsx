@@ -11,7 +11,6 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-  buttonVariants,
 } from "../../src/ui/components";
 import { FileIcon } from "./attachment-file-icon";
 import { formatAttachmentSize } from "./file-attachments";
@@ -71,6 +70,7 @@ export function UserMessageActions({
           variant="ghost"
           size="icon"
           className="copy-message"
+          aria-label={copied ? t.common.copied : t.common.copy}
           onClick={copyText}
         >
           {copied ? <Check /> : <Copy />}
@@ -87,6 +87,11 @@ export function UserMessageActions({
           variant="ghost"
           size="icon"
           className="copy-message"
+          aria-label={
+            hasMissingAttachments
+              ? t.sidepanel.replaceUnavailableAttachments
+              : t.common.edit
+          }
           disabled={hasMissingAttachments}
           onClick={() => onEdit?.(message, availableAttachments)}
         >
@@ -106,6 +111,7 @@ export function UserMessageActions({
                 variant="ghost"
                 size="icon"
                 className="copy-message"
+                aria-label={t.sidepanel.resendMessage}
                 disabled={resendDisabled}
                 onClick={resend}
               >
@@ -137,22 +143,22 @@ export function UserMessageActions({
                 </TooltipTrigger>
                 <TooltipContent>{attachment.name}</TooltipContent>
               </Tooltip>
-              <label
-                className={buttonVariants({ variant: "secondary", size: "sm" })}
-              >
-                {t.sidepanel.attachFiles}
-                <input
-                  type="file"
-                  onChange={(event) => {
-                    if (event.target.files)
-                      void onReplaceAttachment?.(
-                        attachment.id,
-                        event.target.files,
-                      );
-                    event.target.value = "";
-                  }}
-                />
-              </label>
+              <Button asChild variant="secondary" size="sm">
+                <label>
+                  {t.sidepanel.attachFiles}
+                  <input
+                    type="file"
+                    onChange={(event) => {
+                      if (event.target.files)
+                        void onReplaceAttachment?.(
+                          attachment.id,
+                          event.target.files,
+                        );
+                      event.target.value = "";
+                    }}
+                  />
+                </label>
+              </Button>
             </div>
           ))}
           <Button

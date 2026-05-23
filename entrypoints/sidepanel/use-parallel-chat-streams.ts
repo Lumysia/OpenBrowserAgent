@@ -12,6 +12,7 @@ import { AI_STREAM_REQUEST_TYPE as STREAM_REQUEST } from "../../src/shared/types
 import { createStreamHandlers } from "./stream-handlers";
 import type { ActiveStreamMap } from "./sidepanel-menu-state";
 import { useAutoRetryStream } from "./sidepanel-effects";
+import { closedChatIds } from "./chat-state-actions";
 import {
   attachStreamAction,
   closeStreamPort,
@@ -122,6 +123,7 @@ export function useParallelChatStreams({
       appendStreamChunk: streamHandlers.appendStreamChunk,
       onStreamChunk,
       appendToAssistant: streamHandlers.appendToAssistant,
+      flushMessageText: streamHandlers.flushMessageText,
       appendQueuedMessages: streamHandlers.appendQueuedMessages,
       removeQueuedMessage: (id, chatId) =>
         queuedMessageRemoverRef.current(id, chatId),
@@ -147,6 +149,7 @@ export function useParallelChatStreams({
       appendStreamChunk: streamHandlers.appendStreamChunk,
       onStreamChunk,
       appendToAssistant: streamHandlers.appendToAssistant,
+      flushMessageText: streamHandlers.flushMessageText,
       appendQueuedMessages: streamHandlers.appendQueuedMessages,
       removeQueuedMessage: (id, chatId) =>
         queuedMessageRemoverRef.current(id, chatId),
@@ -177,6 +180,18 @@ export function useParallelChatStreams({
         return next;
       });
     }
+  }
+
+  function abortClosedChatStreams(chatId: string) {
+    const ids = closedChatIds(chatsRef.current, chatId);
+    ids.forEach((id) => {
+      if (!activeStreamsRef.current[id]) return;
+      closeStreamPort(portRefs, id, true);
+    });
+    setActiveStreams((items) =>
+      Object.fromEntries(Object.entries(items).filter(([id]) => !ids.has(id))),
+    );
+    return ids;
   }
 
   function stopCurrentStream() {
@@ -223,6 +238,7 @@ export function useParallelChatStreams({
     beginStream,
     startStream,
     abortChatStream,
+    abortClosedChatStreams,
     stopCurrentStream,
     postQueuedMessage,
     deleteQueuedStreamMessage,
@@ -232,7 +248,13 @@ export function useParallelChatStreams({
 
 function resumableAssistantMessage(chat: Chat) {
   return [...chat.messages].reverse().find((message) => {
-    const metrics = message.metadata?.runMetrics as { endedAt?: unknown };
-    return message.role === "assistant" && !metrics?.endedAt;
+    const metrics = message.metadata?.runMetrics as
+      | { startedAt?: unknown; endedAt?: unknown }
+      | undefined;
+    return (
+      message.role === "assistant" &&
+      metrics?.startedAt !== undefined &&
+      metrics.endedAt === undefined
+    );
   });
 }

@@ -71,12 +71,12 @@ export function ToolPart({
     <div className={`tool-card ${status}`}>
       <Popover>
         <PopoverTrigger asChild>
-          <button className="tool-title tool-title-button" type="button">
+          <Button variant="ghost" className="tool-title tool-title-button">
             <span className="tool-icon">{toolIcon(name)}</span>
             <strong className="tool-title-text" key={title}>
               {loading ? <span className="shiny-text">{title}</span> : title}
             </strong>
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverContent className="tool-json-popover" align="start">
           <pre className="ui-code-surface">{toolJsonDetail(name, part)}</pre>

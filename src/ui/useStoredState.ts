@@ -24,13 +24,20 @@ export function useStoredState<T>(item: StorageItem<T>) {
 
   useEffect(() => {
     let mounted = true;
-    item.get().then((next) => {
-      if (!mounted) return;
-      valueRef.current = next;
-      snapshotRef.current = snapshot(next);
-      setValue(next);
-      setLoading(false);
-    });
+    item
+      .get()
+      .then((next) => {
+        if (!mounted) return;
+        valueRef.current = next;
+        snapshotRef.current = snapshot(next);
+        setValue(next);
+      })
+      .catch((error) => {
+        console.warn(`Failed to load stored item ${item.key || ""}`, error);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
     const unwatch = item.watch((next) => {
       const nextSnapshot = snapshot(next);
       if (nextSnapshot && nextSnapshot === snapshotRef.current) return;

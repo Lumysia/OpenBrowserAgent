@@ -14,6 +14,7 @@ import { NO_SYNC_BACKEND_ID } from "../../src/shared/sync-backends";
 import {
   setActiveSyncBackend,
   setDataSync,
+  flushPendingSyncWrites,
   storage,
   SYNC_PREFERENCES,
   SYNC_PREFERENCE_KEYS,
@@ -98,7 +99,10 @@ export function SyncPage() {
       });
   }
 
-  function updateBackends(nextBackends: SyncBackendConfig[]) {
+  async function updateBackends(nextBackends: SyncBackendConfig[]) {
+    await flushPendingSyncWrites().catch((error) =>
+      console.warn("Failed to flush pending sync writes", error),
+    );
     setSyncBackends(nextBackends);
   }
 

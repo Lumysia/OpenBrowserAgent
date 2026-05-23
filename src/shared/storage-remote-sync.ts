@@ -9,6 +9,7 @@ import {
   markSyncLocalCacheFlushed,
   readPendingSyncValue,
   readSyncLocalValue,
+  removeSyncLocalCache,
 } from "./storage-sync-cache";
 import {
   STORAGE_KEYS,
@@ -114,7 +115,10 @@ async function refreshSyncKey<T>(
 
   const previous = await readSyncLocalValue<T>(key);
   const remote = await backend.read<T>(key);
-  if (remote === undefined) return undefined;
+  if (remote === undefined) {
+    await removeSyncLocalCache(key);
+    return undefined;
+  }
   const value = normalize ? normalize(remote, key) : remote;
   if (previous !== undefined && !sameStorageValue(previous, value)) {
     if (!writeBackOnChange) {

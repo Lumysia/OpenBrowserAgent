@@ -279,7 +279,7 @@ export function AssistantText({
     const card = image?.closest(".markdown-image-card") as HTMLElement | null;
     if (!image || !card) return;
     card.classList.add("is-broken");
-    card.dataset.alt = image.alt || "Image failed to load";
+    card.dataset.alt = image.alt || "";
   }
 
   return (
@@ -310,6 +310,7 @@ export function AssistantText({
                 variant="ghost"
                 size="icon"
                 className={`copy-message${copied ? " copied" : ""}`}
+                aria-label={copied ? t.common.copied : t.common.copy}
                 onClick={copyText}
               >
                 {copied ? <Check /> : <Copy />}
@@ -321,6 +322,7 @@ export function AssistantText({
                   variant="ghost"
                   size="icon"
                   className="copy-message"
+                  aria-label={t.sidepanel.forkChat}
                   onClick={onFork}
                 >
                   <GitBranch />
@@ -361,8 +363,8 @@ function LinkCard({
 }) {
   const title = metadata?.title || link.title;
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
       className="assistant-link-card"
       onClick={() => openOrFocusUrl(link.url).catch(() => undefined)}
     >
@@ -377,7 +379,7 @@ function LinkCard({
         <strong>{title}</strong>
         <small>{link.host}</small>
       </span>
-    </button>
+    </Button>
   );
 }
 

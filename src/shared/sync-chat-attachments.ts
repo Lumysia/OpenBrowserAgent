@@ -1,4 +1,5 @@
 import { base64FromDataUrl } from "./attachments";
+import { getBrowserApi } from "./browser-api";
 import * as config from "./config";
 import {
   getActiveSyncBackend,
@@ -9,9 +10,11 @@ import {
 } from "./sync-backends";
 import { SYNC_BACKEND_TYPES } from "./sync-backend-registry";
 import {
+  mergeSyncDataSettings,
   SYNC_DATA_SETTING_KEYS,
   type SyncDataSettings,
 } from "./sync-data-settings";
+import { STORAGE_KEYS } from "./storage-keys";
 import type { Chat, UploadedAttachment } from "./types";
 
 const CHAT_ATTACHMENT_ROOT = "attachments";
@@ -55,14 +58,19 @@ export async function writeSyncedChatAttachments({
       attachment.id,
       setTimeout(() => {
         pendingAttachmentWrites.delete(attachment.id);
-        writeSyncedChatAttachment({
-          backendConfig,
-          chatId,
-          messageId,
-          attachment,
-        }).catch((error) =>
-          console.warn("Failed to sync chat attachment", error),
-        );
+        activeWebDavAttachmentBackend(syncDataSettings)
+          .then((currentBackendConfig) => {
+            if (!currentBackendConfig) return;
+            return writeSyncedChatAttachment({
+              backendConfig: currentBackendConfig,
+              chatId,
+              messageId,
+              attachment,
+            });
+          })
+          .catch((error) =>
+            console.warn("Failed to sync chat attachment", error),
+          );
       }, config.CHAT_SYNC_WRITE_DEBOUNCE_MS),
     );
   }
@@ -165,12 +173,22 @@ async function writeSyncedChatAttachment({
 async function activeWebDavAttachmentBackend(
   syncDataSettings: SyncDataSettings | undefined,
 ) {
-  if (!syncDataSettings?.[SYNC_DATA_SETTING_KEYS.chatAttachments])
-    return undefined;
+  const settings = await currentSyncDataSettings(syncDataSettings);
+  if (!settings?.[SYNC_DATA_SETTING_KEYS.chatAttachments]) return undefined;
   const backend = await getActiveSyncBackend().catch(() => undefined);
   return backend?.config.type === SYNC_BACKEND_TYPES.webDav
     ? backend.config
     : undefined;
+}
+
+async function currentSyncDataSettings(fallback: SyncDataSettings | undefined) {
+  const result = await getBrowserApi().storage.sync.get(
+    STORAGE_KEYS.syncDataSettings,
+  );
+  const value = result[STORAGE_KEYS.syncDataSettings] as
+    | Partial<SyncDataSettings>
+    | undefined;
+  return value ? mergeSyncDataSettings(value) : fallback;
 }
 
 function attachmentFromBytes(

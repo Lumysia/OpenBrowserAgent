@@ -59,12 +59,22 @@ function QueuedMessageRow({
       <span>{message.content}</span>
       <div className="queued-message-actions">
         <IconTooltip label={t.common.edit}>
-          <Button variant="ghost" size="icon" onClick={onEdit}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t.common.edit}
+            onClick={onEdit}
+          >
             <Pencil size={14} />
           </Button>
         </IconTooltip>
         <IconTooltip label={t.common.delete}>
-          <Button variant="ghost" size="icon" onClick={remove}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t.common.delete}
+            onClick={remove}
+          >
             <Trash2 size={14} />
           </Button>
         </IconTooltip>

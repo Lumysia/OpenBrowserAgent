@@ -87,6 +87,7 @@ export function createStreamHandlers(setChats: ChatSetter) {
       messageId: string,
       metrics: Partial<RunMetrics>,
     ) {
+      flushMessageText(chatId, messageId);
       setChats((items) =>
         updateAssistantRunMetrics(items, chatId, messageId, metrics),
       );
@@ -107,6 +108,7 @@ export function createStreamHandlers(setChats: ChatSetter) {
         }),
       );
     },
+    flushMessageText,
   };
 }
 

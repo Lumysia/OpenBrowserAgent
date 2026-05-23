@@ -261,24 +261,17 @@ function truncateMessageAtPart(message: ChatMessage, partId: string) {
 
 export function closeChatAction({
   chatId,
-  activeChatId,
   setChats,
-  setActiveChatId,
 }: {
   chatId: string;
-  activeChatId?: string;
   setChats: ChatSetter;
-  setActiveChatId: ActiveChatSetter;
 }) {
   setChats((items) => {
     const closedIds = closedChatIds(items, chatId);
-    const next = cleanupClosedChatRelationships(
+    return cleanupClosedChatRelationships(
       items.filter((chat) => !closedIds.has(chat.id)),
       closedIds,
     );
-    if (activeChatId && closedIds.has(activeChatId))
-      setActiveChatId(sortChatsNewestFirst(next)[0]?.id);
-    return next;
   });
 }
 

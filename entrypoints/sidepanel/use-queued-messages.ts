@@ -18,7 +18,7 @@ export function useQueuedMessages({
   sendQueued: (content: string) => Promise<void>;
   onEditContent: (content: string) => void;
   onQueueMessage?: (message: QueuedMessage) => void;
-  onRemoveMessage?: (id: string) => void;
+  onRemoveMessage?: (id: string, chatId: string) => void;
 }) {
   const [queuedMessagesByChat, setQueuedMessagesByChat] = useState<
     Record<string, QueuedMessage[]>
@@ -68,7 +68,7 @@ export function useQueuedMessages({
         (message) => message.id !== id,
       ),
     }));
-    onRemoveMessage?.(id);
+    onRemoveMessage?.(id, targetChatId);
   }
 
   function editQueuedMessage(message: QueuedMessage) {
@@ -79,6 +79,7 @@ export function useQueuedMessages({
         (candidate) => candidate.id !== message.id,
       ),
     }));
+    onRemoveMessage?.(message.id, chatId);
     onEditContent(message.content);
   }
 

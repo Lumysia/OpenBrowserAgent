@@ -18,6 +18,10 @@ export async function readAutomergeValue<T>(
   remoteBytes: Uint8Array | undefined,
 ) {
   await initializeAutomerge();
+  if (!remoteBytes) {
+    await removeLocalAutomergeDocument(key);
+    return undefined;
+  }
   const doc = await mergeWithLocalDocument<T>(key, remoteBytes);
   return doc?.value as T | undefined;
 }

@@ -1,5 +1,4 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
-import { STREAM_RENDER_THROTTLE_MS } from "../../src/shared/config";
 import {
   AI_STREAM_PORT_NAME,
   AI_STREAM_REQUEST_TYPE,
@@ -93,6 +92,7 @@ type StreamPortOptions = {
     messageId: string,
     content: string,
   ) => void;
+  flushMessageText: (chatId: string, messageId: string) => void;
   updateRunMetrics: (messageId: string, metrics: Partial<RunMetrics>) => void;
   appendQueuedMessages: (
     chatId: string,
@@ -114,6 +114,7 @@ function connectStreamPort({
   appendStreamChunk,
   onStreamChunk,
   appendToAssistant,
+  flushMessageText,
   updateRunMetrics,
   appendQueuedMessages,
   removeQueuedMessage,
@@ -122,8 +123,7 @@ function connectStreamPort({
   const port = chrome.runtime.connect({ name: AI_STREAM_PORT_NAME });
   portRefs.current[chatId] = port;
   let activeMessageId = targetMessageId;
-  let pendingSequenceMetrics: Partial<RunMetrics> | undefined;
-  let pendingSequenceTimeout: number | undefined;
+  let settled = false;
 
   function updateActiveStream(
     updater: (stream: ActiveStreamMap[string]) => ActiveStreamMap[string],
@@ -139,6 +139,7 @@ function connectStreamPort({
   }
 
   function clearActiveStream() {
+    settled = true;
     setActiveStreams((items) => {
       if (!items[chatId]) return items;
       const next = { ...items };
@@ -149,23 +150,15 @@ function connectStreamPort({
     closeStreamPort(portRefs, chatId, false);
   }
 
+  port.onDisconnect.addListener(() => {
+    if (portRefs.current[chatId] === port) delete portRefs.current[chatId];
+    flushMessageText(chatId, activeMessageId);
+    if (!settled) clearActiveStream();
+  });
+
   function scheduleSequenceMetrics(metrics: Partial<RunMetrics> | undefined) {
     if (!metrics) return;
-    pendingSequenceMetrics = { ...pendingSequenceMetrics, ...metrics };
-    if (pendingSequenceTimeout !== undefined) return;
-    pendingSequenceTimeout = window.setTimeout(
-      flushSequenceMetrics,
-      STREAM_RENDER_THROTTLE_MS,
-    );
-  }
-
-  function flushSequenceMetrics() {
-    if (pendingSequenceTimeout !== undefined)
-      window.clearTimeout(pendingSequenceTimeout);
-    pendingSequenceTimeout = undefined;
-    const metrics = pendingSequenceMetrics;
-    pendingSequenceMetrics = undefined;
-    if (metrics) updateRunMetrics(activeMessageId, metrics);
+    updateRunMetrics(activeMessageId, metrics);
   }
 
   port.onMessage.addListener((message: AiStreamResponse) => {
@@ -201,18 +194,17 @@ function connectStreamPort({
     }
     scheduleSequenceMetrics(sequenceMetrics);
     if (message.type === "metrics") {
-      flushSequenceMetrics();
       updateRunMetrics(activeMessageId, message.metrics);
     }
     if (message.type === "error") {
-      flushSequenceMetrics();
+      flushMessageText(chatId, activeMessageId);
       updateRunMetrics(activeMessageId, { endedAt: Date.now() });
       appendToAssistant(chatId, activeMessageId, `\n\n${message.error}`);
       clearActiveStream();
       onStreamFinished(chatId);
     }
     if (message.type === "end") {
-      flushSequenceMetrics();
+      flushMessageText(chatId, activeMessageId);
       updateRunMetrics(activeMessageId, { endedAt: Date.now() });
       clearActiveStream();
       onStreamFinished(chatId);

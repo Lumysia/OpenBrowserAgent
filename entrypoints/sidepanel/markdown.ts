@@ -80,7 +80,7 @@ export function renderMarkdown(
 
 function renderMarkdownImage(href: string, title: string | null, text: string) {
   const url = safeImageUrl(href);
-  const alt = escapeHtml(text || title || "image");
+  const alt = escapeHtml(text || title || "");
   if (!url) return `<span class="markdown-image-invalid">${alt}</span>`;
   return `<figure class="markdown-image-card"><img src="${escapeHtml(url)}" alt="${alt}" title="${escapeHtml(title || "")}" loading="lazy" referrerpolicy="no-referrer" /><figcaption>${alt}</figcaption></figure>`;
 }
@@ -92,8 +92,7 @@ function enhanceMarkdownHtml(value: string | Promise<string>) {
   for (const image of Array.from(template.content.querySelectorAll("img"))) {
     if (image.closest(".markdown-image-card, .mermaid-preview")) continue;
     const url = safeImageUrl(image.getAttribute("src") || "");
-    const alt =
-      image.getAttribute("alt") || image.getAttribute("title") || "image";
+    const alt = image.getAttribute("alt") || image.getAttribute("title") || "";
     if (!url) {
       const fallback = document.createElement("span");
       fallback.className = "markdown-image-invalid";
