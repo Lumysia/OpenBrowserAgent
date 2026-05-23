@@ -282,7 +282,7 @@ export function closeChatAction({
   });
 }
 
-function closedChatIds(chats: Chat[], closedChatId: string) {
+export function closedChatIds(chats: Chat[], closedChatId: string) {
   const ids = new Set([closedChatId]);
   let changed = true;
   while (changed) {

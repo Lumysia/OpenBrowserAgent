@@ -2,11 +2,12 @@ import { base64FromDataUrl } from "./attachments";
 import * as config from "./config";
 import {
   getActiveSyncBackend,
+  removeWebDavObject,
   readWebDavObject,
   writeWebDavObject,
   type WebDavSyncBackendConfig,
 } from "./sync-backends";
-import type { Preferences, UploadedAttachment } from "./types";
+import type { Chat, Preferences, UploadedAttachment } from "./types";
 
 const CHAT_ATTACHMENT_ROOT = "attachments";
 const CHAT_ATTACHMENT_PREFIX = "chat-attachment";
@@ -84,6 +85,40 @@ export async function readSyncedChatAttachment(
   return attachmentFromBytes(metadata, contentBytes);
 }
 
+export async function removeSyncedChatAttachments(
+  preferences: Preferences | undefined,
+  chats: Chat[],
+) {
+  const attachments = chats.flatMap(chatAttachmentMetadata);
+  if (!attachments.length) return;
+  const backendConfig = await activeWebDavAttachmentBackend(preferences);
+  if (!backendConfig) return;
+  await Promise.all(
+    attachments.map(async (attachment) => {
+      const pending = pendingAttachmentWrites.get(attachment.id);
+      if (pending) {
+        clearTimeout(pending);
+        pendingAttachmentWrites.delete(attachment.id);
+      }
+      const metadataBytes = await readWebDavObject(
+        backendConfig,
+        metadataObjectName(attachment.id),
+      );
+      const metadata = metadataBytes
+        ? (JSON.parse(
+            new TextDecoder().decode(metadataBytes),
+          ) as SyncedChatAttachmentMetadata)
+        : undefined;
+      await Promise.all([
+        metadata?.objectName
+          ? removeWebDavObject(backendConfig, metadata.objectName)
+          : Promise.resolve(),
+        removeWebDavObject(backendConfig, metadataObjectName(attachment.id)),
+      ]);
+    }),
+  );
+}
+
 async function writeSyncedChatAttachment({
   backendConfig,
   chatId,
@@ -139,6 +174,14 @@ function attachmentFromBytes(
   if (metadata.kind === "text")
     return { ...attachment, text: new TextDecoder().decode(bytes) };
   return { ...attachment, dataUrl: bytesToDataUrl(bytes, metadata.type) };
+}
+
+function chatAttachmentMetadata(chat: Chat) {
+  return chat.messages.flatMap((message) =>
+    Array.isArray(message.metadata?.uploadedAttachments)
+      ? (message.metadata.uploadedAttachments as UploadedAttachment[])
+      : [],
+  );
 }
 
 function attachmentBytes(attachment: UploadedAttachment) {

@@ -243,6 +243,19 @@ export async function writeWebDavObject(
   if (!response.ok) await throwWebDavError(response, "write");
 }
 
+export async function removeWebDavObject(
+  backendConfig: WebDavSyncBackendConfig,
+  name: string,
+) {
+  const response = await requestWebDav(
+    backendConfig,
+    rawObjectUrl(backendConfig, name),
+    { method: "DELETE" },
+  );
+  if (!response.ok && response.status !== 404)
+    await throwWebDavError(response, "remove");
+}
+
 async function ensureWebDavCollections(
   backendConfig: WebDavSyncBackendConfig,
   name: string,
