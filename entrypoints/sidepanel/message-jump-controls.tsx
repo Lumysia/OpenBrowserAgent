@@ -20,7 +20,10 @@ export function MessageJumpControls({
   messagesRef: RefObject<HTMLDivElement | null>;
 }) {
   const [showScrollJumps, setShowScrollJumps] = useState(false);
-  const visible = showScrollJumps && !editingMessageId;
+  const visible =
+    showScrollJumps &&
+    !editingMessageId &&
+    !hasUnfinishedAssistantRun(currentChat);
   const presence = useDeferredPresence(visible);
 
   useEffect(() => {
@@ -101,4 +104,14 @@ export function MessageJumpControls({
       </IconTooltip>
     </div>
   );
+}
+
+function hasUnfinishedAssistantRun(chat: Chat | undefined) {
+  return chat?.messages.some((message) => {
+    if (message.role !== "assistant") return false;
+    const metrics = message.metadata?.runMetrics as
+      | { startedAt?: unknown; endedAt?: unknown }
+      | undefined;
+    return metrics?.startedAt !== undefined && metrics.endedAt === undefined;
+  });
 }
