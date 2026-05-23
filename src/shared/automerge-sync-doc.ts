@@ -28,13 +28,12 @@ export async function writeAutomergeValue<T>(
   remoteBytes: Uint8Array | undefined,
 ) {
   await initializeAutomerge();
-  let localDoc = await readLocalDocument<T>(key);
-  if (!localDoc && remoteBytes) localDoc = loadDocument<T>(remoteBytes);
-  let doc = localDoc || Automerge.from<SyncDocument<T>>({});
+  let doc =
+    (await mergeWithLocalDocument<T>(key, remoteBytes)) ||
+    Automerge.from<SyncDocument<T>>({});
   doc = Automerge.change(doc, `Set ${key}`, (draft) => {
     reconcileProperty(draft, "value", value);
   });
-  if (remoteBytes) doc = Automerge.merge(doc, loadDocument<T>(remoteBytes));
   await writeLocalDocument(key, doc);
   return { bytes: Automerge.save(doc), value: doc.value as T | undefined };
 }

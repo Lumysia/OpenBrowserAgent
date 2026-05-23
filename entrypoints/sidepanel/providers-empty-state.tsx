@@ -12,6 +12,10 @@ import {
 } from "../../src/shared/storage";
 import { completeLocalBootstrapState } from "../../src/shared/storage-debug";
 import { restoreSyncBackendFromCloud } from "../../src/shared/storage-sync-transition";
+import {
+  mergeSyncDataSettings,
+  type SyncDataSettings,
+} from "../../src/shared/sync-data-settings";
 import { parseSyncConfigCode } from "../../src/shared/sync-config-code";
 import {
   BROWSER_SYNC_BACKEND_ID,
@@ -47,6 +51,7 @@ import { SyncBootstrapStep } from "./sync-bootstrap-step";
 type CloudBootstrapState = {
   language?: string;
   preferences?: Preferences;
+  syncDataSettings?: SyncDataSettings;
   data: Record<string, unknown>;
 };
 
@@ -225,26 +230,29 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     const restoredPreferences = mergePreferences(
       cloudState.preferences || (await storage.preferences.get()),
     );
-    if (syncCodeStatus !== "applied") {
-      const restoredSyncDataSettings = {
-        ...(await storage.syncDataSettings.get()),
-        ...Object.fromEntries(
-          SYNC_PREFERENCE_KEYS.map((preferenceKey) => [
-            preferenceKey,
-            SYNCABLE_DATA_ITEMS.some(
-              (item) =>
-                item.preferenceKey === preferenceKey &&
-                hasCloudValue(cloudState.data[item.dataKey]),
+    const restoredSyncDataSettings =
+      cloudState.syncDataSettings ||
+      (syncCodeStatus === "applied"
+        ? await storage.syncDataSettings.get()
+        : {
+            ...(await storage.syncDataSettings.get()),
+            ...Object.fromEntries(
+              SYNC_PREFERENCE_KEYS.map((preferenceKey) => [
+                preferenceKey,
+                SYNCABLE_DATA_ITEMS.some(
+                  (item) =>
+                    item.preferenceKey === preferenceKey &&
+                    hasCloudValue(cloudState.data[item.dataKey]),
+                ),
+              ]),
             ),
-          ]),
-        ),
-      };
-      await storage.syncDataSettings.set(restoredSyncDataSettings);
-    }
+          });
+    await storage.syncDataSettings.set(restoredSyncDataSettings);
     await restoreSyncBackendFromCloud({
       backendId: selectedBackendId,
       language: cloudState.language,
       preferences: restoredPreferences,
+      syncDataSettings: restoredSyncDataSettings,
       data: cloudState.data,
       setActiveBackendId: storage.activeSyncBackendId.set,
     });
@@ -430,22 +438,28 @@ function hasCloudBootstrapData(cloudState: CloudBootstrapState) {
   return (
     hasCloudData(cloudState.language) ||
     hasCloudData(cloudState.preferences) ||
+    hasCloudData(cloudState.syncDataSettings) ||
     Object.values(cloudState.data).some(hasCloudValue)
   );
 }
 
 async function readCloudBootstrapState(backend: SyncBackend) {
-  const [language, preferences, ...dataValues] = await Promise.all([
-    backend.read<string>(STORAGE_KEYS.language),
-    backend.read<Preferences>(STORAGE_KEYS.preferences),
-    ...BOOTSTRAP_CLOUD_DATA_KEYS.map((key) => backend.read(key)),
-  ]);
+  const [language, preferences, syncDataSettings, ...dataValues] =
+    await Promise.all([
+      backend.read<string>(STORAGE_KEYS.language),
+      backend.read<Preferences>(STORAGE_KEYS.preferences),
+      backend.read<SyncDataSettings>(STORAGE_KEYS.syncDataSettings),
+      ...BOOTSTRAP_CLOUD_DATA_KEYS.map((key) => backend.read(key)),
+    ]);
   const data = Object.fromEntries(
     BOOTSTRAP_CLOUD_DATA_KEYS.map((key, index) => [key, dataValues[index]]),
   );
   return {
     language,
     preferences: preferences ? mergePreferences(preferences) : undefined,
+    syncDataSettings: syncDataSettings
+      ? mergeSyncDataSettings(syncDataSettings)
+      : undefined,
     data,
   } satisfies CloudBootstrapState;
 }

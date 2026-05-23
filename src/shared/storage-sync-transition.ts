@@ -2,7 +2,10 @@ import { markSyncLocalCacheFlushed } from "./storage-sync-cache";
 import { getBrowserApi } from "./browser-api";
 import { STORAGE_KEYS, SYNCABLE_DATA_ITEMS } from "./storage-keys";
 import { createSyncBackend, getStoredSyncBackends } from "./sync-backends";
-import type { SyncDataSettings } from "./sync-data-settings";
+import {
+  mergeSyncDataSettings,
+  type SyncDataSettings,
+} from "./sync-data-settings";
 import type { Preferences } from "./types";
 
 type SyncActivationOptions = {
@@ -18,6 +21,7 @@ type SyncRestoreOptions = {
   backendId: string;
   language?: string;
   preferences?: Preferences;
+  syncDataSettings?: SyncDataSettings;
   data?: Record<string, unknown>;
   setActiveBackendId: (backendId: string) => Promise<void>;
 };
@@ -32,12 +36,22 @@ export async function activateSyncBackend({
 }: SyncActivationOptions) {
   const language = await getLanguage();
   const preferences = await getPreferences();
-  const syncDataSettings = await getSyncDataSettings();
   const backend = await syncBackendForId(backendId);
+  const localSyncDataSettings = await getSyncDataSettings();
+  const remoteSyncDataSettings = await backend.read<SyncDataSettings>(
+    STORAGE_KEYS.syncDataSettings,
+  );
+  const syncDataSettings = mergeSyncDataSettings(
+    remoteSyncDataSettings || localSyncDataSettings,
+  );
+  const localUploadSyncDataSettings =
+    remoteSyncDataSettings === undefined
+      ? syncDataSettings
+      : mergeSyncDataSettings(localSyncDataSettings);
   const dataSnapshots = await Promise.all(
     SYNCABLE_DATA_ITEMS.map(async (item) => ({
       ...item,
-      value: syncDataSettings[item.preferenceKey]
+      value: localUploadSyncDataSettings[item.preferenceKey]
         ? await readSyncedValue(item.dataKey)
         : undefined,
     })),
@@ -56,6 +70,21 @@ export async function activateSyncBackend({
     STORAGE_KEYS.preferences,
     mergedPreferences ?? preferences,
   );
+  if (remoteSyncDataSettings === undefined) {
+    const mergedSyncDataSettings = await backend.write(
+      STORAGE_KEYS.syncDataSettings,
+      syncDataSettings,
+    );
+    await markSyncLocalCacheFlushed(
+      STORAGE_KEYS.syncDataSettings,
+      mergedSyncDataSettings ?? syncDataSettings,
+    );
+  } else {
+    await markSyncLocalCacheFlushed(
+      STORAGE_KEYS.syncDataSettings,
+      syncDataSettings,
+    );
+  }
   for (const item of dataSnapshots) {
     if (item.value === undefined) continue;
     const mergedValue = await backend.write(item.dataKey, item.value);
@@ -68,6 +97,7 @@ export async function restoreSyncBackendFromCloud({
   backendId,
   language,
   preferences,
+  syncDataSettings,
   data = {},
   setActiveBackendId,
 }: SyncRestoreOptions) {
@@ -75,6 +105,8 @@ export async function restoreSyncBackendFromCloud({
   if (language !== undefined) localValues[STORAGE_KEYS.language] = language;
   if (preferences !== undefined)
     localValues[STORAGE_KEYS.preferences] = preferences;
+  if (syncDataSettings !== undefined)
+    localValues[STORAGE_KEYS.syncDataSettings] = syncDataSettings;
   for (const [key, value] of Object.entries(data)) {
     if (value !== undefined) localValues[key] = value;
   }
@@ -85,6 +117,11 @@ export async function restoreSyncBackendFromCloud({
     await markSyncLocalCacheFlushed(STORAGE_KEYS.language, language);
   if (preferences !== undefined)
     await markSyncLocalCacheFlushed(STORAGE_KEYS.preferences, preferences);
+  if (syncDataSettings !== undefined)
+    await markSyncLocalCacheFlushed(
+      STORAGE_KEYS.syncDataSettings,
+      syncDataSettings,
+    );
   for (const [key, value] of Object.entries(data)) {
     if (value !== undefined) await markSyncLocalCacheFlushed(key, value);
   }

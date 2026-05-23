@@ -334,6 +334,7 @@ async function requestWebDav(
   init: RequestInit,
 ) {
   const headers = new Headers(init.headers);
+  headers.set("Cache-Control", "no-cache");
   if (backendConfig.username || backendConfig.password) {
     const credentials = `${backendConfig.username || ""}:${backendConfig.password || ""}`;
     headers.set(
@@ -341,7 +342,7 @@ async function requestWebDav(
       `Basic ${btoa(String.fromCharCode(...new TextEncoder().encode(credentials)))}`,
     );
   }
-  return fetch(url, { ...init, headers });
+  return fetch(url, { ...init, cache: "no-store", headers });
 }
 
 async function throwWebDavError(

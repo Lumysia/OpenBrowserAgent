@@ -213,6 +213,7 @@ function syncStorageKeyLabels(t: ReturnType<typeof getMessages>) {
     [storage.language.key]: t.common.language,
     [storage.preferences.key]: t.options.general,
     [storage.provider.key]: t.options.providers,
+    [storage.syncDataSettings.key]: t.options.sync,
     [storage.agents.key]: t.options.agents,
     [storage.agentWorkspaces.key]: t.options.syncAgents,
     [storage.skills.key]: t.options.skills,

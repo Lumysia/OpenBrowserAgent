@@ -114,6 +114,7 @@ async function removeStoredValue(area: AreaName, key: string) {
 function immediateSyncWriteDelay(key: string) {
   if (key === STORAGE_KEYS.language || key === STORAGE_KEYS.preferences)
     return 0;
+  if (key === STORAGE_KEYS.syncDataSettings) return 0;
   if (key === STORAGE_KEYS.chats) return config.CHAT_SYNC_WRITE_DEBOUNCE_MS;
   return undefined;
 }
@@ -285,6 +286,7 @@ function createSwitchableItem<T>(
             mergeSyncDataSettings(newSettings || DEFAULT_SYNC_DATA_SETTINGS),
           );
           if (oldArea === newArea) return;
+          await preserveValueForRemoteSyncDisable(oldArea, newArea);
           const next = await getValue();
           callback(next, next);
           return;
@@ -309,6 +311,22 @@ function createSwitchableItem<T>(
       };
     },
   };
+
+  async function preserveValueForRemoteSyncDisable(
+    oldArea: AreaName,
+    newArea: AreaName,
+  ) {
+    const fromArea = await effectiveArea(oldArea);
+    const toArea = await effectiveArea(newArea);
+    if (fromArea !== STORAGE_AREAS.sync || toArea !== STORAGE_AREAS.local)
+      return;
+    const [sourceValue, targetValue] = await Promise.all([
+      readFrom(fromArea),
+      readFrom(toArea),
+    ]);
+    if (sourceValue !== undefined && targetValue === undefined)
+      await setStoredValueNow(toArea, key, sourceValue);
+  }
 }
 
 export const storage = {
@@ -389,7 +407,7 @@ export const storage = {
     () => NO_SYNC_BACKEND_ID,
   ),
   syncDataSettings: createItem<SyncDataSettings>(
-    STORAGE_AREAS.local,
+    STORAGE_AREAS.sync,
     STORAGE_KEYS.syncDataSettings,
     () => DEFAULT_SYNC_DATA_SETTINGS,
     mergeSyncDataSettings,
@@ -480,7 +498,12 @@ async function disableDataSync() {
     STORAGE_KEYS.preferences,
     preferences,
   );
-  await storage.syncDataSettings.set(localSyncDataSettings);
+  await setStoredValueNow(
+    STORAGE_AREAS.local,
+    STORAGE_KEYS.syncDataSettings,
+    localSyncDataSettings,
+  );
+  await removeSyncLocalCache(STORAGE_KEYS.syncDataSettings);
   for (const item of dataSnapshots) {
     if (item.value !== undefined)
       await setStoredValueNow(STORAGE_AREAS.local, item.dataKey, item.value);
