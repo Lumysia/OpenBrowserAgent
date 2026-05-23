@@ -19,6 +19,7 @@ import { storage } from "../../src/shared/storage";
 import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
 import type {
   AttachmentTab,
+  Chat,
   ChatMessage,
   ChatSource,
   SelectedElement,
@@ -50,6 +51,7 @@ export function MessageBubble({
   onResend,
   onFork,
   onSelectChat,
+  chats,
   resendDisabled = false,
   sources = [],
   chatMessages,
@@ -66,6 +68,7 @@ export function MessageBubble({
   onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
   onFork?: (message: ChatMessage, partId?: string) => void;
   onSelectChat?: (chatId: string) => void;
+  chats?: Chat[];
   resendDisabled?: boolean;
   latestUserMessage?: boolean;
 }) {
@@ -108,6 +111,8 @@ export function MessageBubble({
   const showRunInfo = message.role === "assistant" && messageRunEnded(message);
   const assistantEnded =
     message.role === "assistant" && messageRunEnded(message);
+  const chatExists = (chatId: string) =>
+    chats?.some((chat) => chat.id === chatId) ?? true;
   return (
     <div
       className={`message ${message.role === "user" ? "user" : ""} ${latestUserMessage ? "latest-user" : ""} ${editing ? "editing" : ""}`}
@@ -152,6 +157,7 @@ export function MessageBubble({
               message={message}
               chatMessages={chatMessages}
               onSelectChat={onSelectChat}
+              chatExists={chatExists}
             />
           ))}
         </>

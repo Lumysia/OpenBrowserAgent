@@ -14,6 +14,7 @@ import {
 export function useChatActions({
   t,
   activeChatId,
+  chats,
   setChats,
   setActiveChatId,
   setChatSelectionRequestId,
@@ -23,6 +24,7 @@ export function useChatActions({
 }: {
   t: Messages;
   activeChatId?: string;
+  chats?: Chat[];
   setChats: Dispatch<SetStateAction<Chat[]>>;
   setActiveChatId: Dispatch<SetStateAction<string | undefined>>;
   setChatSelectionRequestId: Dispatch<SetStateAction<number>>;
@@ -76,10 +78,11 @@ export function useChatActions({
 
   const selectChat = useCallback(
     (chatId: string) => {
+      if (chats && !chats.some((chat) => chat.id === chatId)) return;
       selectChatAction({ chatId, setChats, setActiveChatId });
       setChatSelectionRequestId((value) => value + 1);
     },
-    [setActiveChatId, setChatSelectionRequestId, setChats],
+    [chats, setActiveChatId, setChatSelectionRequestId, setChats],
   );
 
   return { createChat, closeChat, selectChat };

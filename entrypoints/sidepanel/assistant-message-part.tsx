@@ -33,6 +33,7 @@ export function AssistantPart({
   message,
   chatMessages,
   onSelectChat,
+  chatExists,
 }: {
   t: Messages;
   part: ChatPart;
@@ -41,6 +42,7 @@ export function AssistantPart({
   message: ChatMessage;
   chatMessages: ChatMessage[];
   onSelectChat?: (chatId: string) => void;
+  chatExists?: (chatId: string) => boolean;
 }) {
   if (isToolPartType(part.type))
     return (
@@ -49,6 +51,7 @@ export function AssistantPart({
         part={part}
         runEnded={messageRunEnded(message)}
         onSelectChat={onSelectChat}
+        chatExists={chatExists}
       />
     );
   if (part.type === "reasoning" && part.text?.trim())

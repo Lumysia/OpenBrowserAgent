@@ -25,11 +25,13 @@ export function ToolPart({
   part,
   runEnded = false,
   onSelectChat,
+  chatExists,
 }: {
   t: Messages;
   part: ChatPart;
   runEnded?: boolean;
   onSelectChat?: (chatId: string) => void;
+  chatExists?: (chatId: string) => boolean;
 }) {
   if (!isToolPartType(part.type)) return null;
   const name = part.toolName || toolNameFromPartType(part.type);
@@ -62,6 +64,9 @@ export function ToolPart({
     references.map((reference) => reference.title).join("|"),
   ].join("::");
   const subAgentChatId = subAgentChildChatId(name, part);
+  const subAgentChatAvailable = subAgentChatId
+    ? chatExists?.(subAgentChatId) !== false
+    : false;
   return (
     <div className={`tool-card ${status}`}>
       <Popover>
@@ -111,7 +116,10 @@ export function ToolPart({
               className="tool-subagent-link"
               variant="secondary"
               size="sm"
-              onClick={() => onSelectChat?.(subAgentChatId)}
+              disabled={!subAgentChatAvailable}
+              onClick={() => {
+                if (subAgentChatAvailable) onSelectChat?.(subAgentChatId);
+              }}
             >
               <CornerDownRight size={14} />
               <span>{t.sidepanel.openSubAgentChat}</span>

@@ -235,6 +235,7 @@ export function SidepanelApp() {
   const { createChat, closeChat, selectChat } = useChatActions({
     t,
     activeChatId,
+    chats,
     syncDataSettings,
     setChats,
     setActiveChatId,

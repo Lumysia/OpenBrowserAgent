@@ -268,6 +268,7 @@ export function SidepanelView({
                 latestUserMessage={message.id === latestUserMessageId}
                 editing={editingMessageId === message.id}
                 sources={currentChat.sources || []}
+                chats={chats}
                 chatMessages={currentChat.messages}
                 sentAttachments={sentAttachmentPreviews[message.id] || []}
                 activeAttachments={uploadedAttachments}
