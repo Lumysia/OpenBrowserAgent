@@ -4,6 +4,8 @@ import {
 } from "./config";
 import type { Preferences } from "./types";
 import { REASONING_EFFORT } from "./reasoning";
+import { SYNC_DATA_SETTING_KEYS } from "./sync-data-settings";
+import { SYNC_PREFERENCES } from "./storage-keys";
 
 export const DEFAULT_PREFERENCES: Preferences = {
   colorScheme: "system",
@@ -17,19 +19,17 @@ export const DEFAULT_PREFERENCES: Preferences = {
   ...DEFAULT_CONTEXT_BUDGET_PREFERENCES,
 };
 
+const LEGACY_SYNC_PREFERENCE_KEYS = [
+  "syncSettings",
+  ...Object.values(SYNC_PREFERENCES),
+  SYNC_DATA_SETTING_KEYS.chatAttachments,
+] as const;
+
 export function mergePreferences(
   value: Preferences & Record<string, unknown>,
 ): Preferences {
-  const {
-    syncSettings,
-    syncProviders,
-    syncAgents,
-    syncSkills,
-    syncMcpServers,
-    syncChats,
-    syncChatAttachments,
-    ...preferences
-  } = value;
+  const preferences = { ...value };
+  for (const key of LEGACY_SYNC_PREFERENCE_KEYS) delete preferences[key];
   return {
     ...DEFAULT_PREFERENCES,
     ...preferences,

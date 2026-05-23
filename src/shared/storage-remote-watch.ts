@@ -1,4 +1,5 @@
 import { getBrowserApi } from "./browser-api";
+import { STORAGE_AREAS } from "./storage-areas";
 import { STORAGE_KEYS } from "./storage-keys";
 import {
   getActiveSyncBackend,
@@ -24,7 +25,10 @@ export function watchRemoteValue<T>(
     changes: Record<string, chrome.storage.StorageChange>,
     changedArea: string,
   ) => {
-    if (changedArea !== "local" || !changes[STORAGE_KEYS.activeSyncBackendId])
+    if (
+      changedArea !== STORAGE_AREAS.local ||
+      !changes[STORAGE_KEYS.activeSyncBackendId]
+    )
       return;
     setupRemoteWatch().catch(() => undefined);
   };
@@ -38,5 +42,7 @@ export function watchRemoteValue<T>(
 }
 
 export function isBackendStorageChange(key: string, changedArea: string) {
-  return changedArea === "sync" && key !== STORAGE_KEYS.syncWriteStatus;
+  return (
+    changedArea === STORAGE_AREAS.sync && key !== STORAGE_KEYS.syncWriteStatus
+  );
 }

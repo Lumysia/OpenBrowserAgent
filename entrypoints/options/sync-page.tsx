@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Activity,
   Bot,
@@ -15,7 +15,6 @@ import {
   setActiveSyncBackend,
   setDataSync,
   storage,
-  SYNCABLE_DATA_ITEMS,
   SYNC_PREFERENCES,
   SYNC_PREFERENCE_KEYS,
   type SyncPreferenceKey,
@@ -40,6 +39,8 @@ export function SyncPage() {
   const [activeSyncBackendId, setActiveSyncBackendId] = useStoredState(
     storage.activeSyncBackendId,
   );
+  const [pendingActiveBackendId, setPendingActiveBackendId] =
+    useState<string>();
   const [syncWriteStatus] = useStoredState(storage.syncWriteStatus);
   const t = getMessages(language);
 
@@ -48,27 +49,27 @@ export function SyncPage() {
     SyncPreferenceKey,
     { title: string; description: string; icon: ReactNode }
   > = {
-    syncProviders: {
+    [SYNC_PREFERENCES.providers]: {
       title: t.options.syncProviders,
       description: t.options.syncProvidersDescription,
       icon: <Database size={18} />,
     },
-    syncSkills: {
+    [SYNC_PREFERENCES.skills]: {
       title: t.options.syncSkills,
       description: t.options.syncSkillsDescription,
       icon: <FileText size={18} />,
     },
-    syncMcpServers: {
+    [SYNC_PREFERENCES.mcpServers]: {
       title: t.options.syncMcpServers,
       description: t.options.syncMcpServersDescription,
       icon: <Plug size={18} />,
     },
-    syncAgents: {
+    [SYNC_PREFERENCES.agents]: {
       title: t.options.syncAgents,
       description: t.options.syncAgentsDescription,
       icon: <Bot size={18} />,
     },
-    syncChats: {
+    [SYNC_PREFERENCES.chats]: {
       title: t.options.syncChats,
       description: t.options.syncChatsDescription,
       icon: <MessagesSquare size={18} />,
@@ -84,12 +85,16 @@ export function SyncPage() {
   }
 
   function changeActiveBackend(backendId: string) {
-    const previousActiveBackendId = activeSyncBackendId || NO_SYNC_BACKEND_ID;
+    setPendingActiveBackendId(backendId);
     setActiveSyncBackend(backendId)
-      .then(() => setActiveSyncBackendId(backendId))
       .catch((error) => {
         console.warn("Failed to change sync backend", error);
-        setActiveSyncBackendId(previousActiveBackendId);
+        setActiveSyncBackendId(activeSyncBackendId || NO_SYNC_BACKEND_ID);
+      })
+      .finally(() => {
+        setPendingActiveBackendId((pending) =>
+          pending === backendId ? undefined : pending,
+        );
       });
   }
 
@@ -98,9 +103,7 @@ export function SyncPage() {
   }
 
   const dataToggles: SyncDataToggle[] = [
-    ...SYNC_PREFERENCE_KEYS.filter(
-      (preferenceKey) => preferenceKey !== SYNC_PREFERENCES.providers,
-    ).map((preferenceKey) => ({
+    ...SYNC_PREFERENCE_KEYS.map((preferenceKey) => ({
       key: preferenceKey,
       title: syncToggleContent[preferenceKey].title,
       description: syncToggleContent[preferenceKey].description,
@@ -113,7 +116,7 @@ export function SyncPage() {
       title: t.options.syncChatAttachments,
       description: t.options.syncChatAttachmentsDescription,
       icon: <Paperclip size={18} />,
-      value: syncDataSettings.syncChatAttachments === true,
+      value: syncDataSettings[SYNC_DATA_SETTING_KEYS.chatAttachments] === true,
       attachmentBackendOnly: true,
       onChange: (value: boolean) =>
         setSyncDataSettings((previous) => ({
@@ -122,6 +125,8 @@ export function SyncPage() {
         })),
     },
   ];
+
+  const visibleActiveBackendId = pendingActiveBackendId || activeSyncBackendId;
 
   return (
     <div className="stack">
@@ -132,7 +137,7 @@ export function SyncPage() {
         <p className="muted">{t.options.syncSettingsDescription}</p>
       </div>
       <SyncBackendCard
-        activeBackendId={activeSyncBackendId}
+        activeBackendId={visibleActiveBackendId}
         backends={syncBackends}
         dataToggles={dataToggles}
         syncDataSettings={syncDataSettings}

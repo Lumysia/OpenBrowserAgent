@@ -1,5 +1,7 @@
 import {
   BROWSER_SYNC_BACKEND_ID,
+  SYNC_BACKEND_TYPES,
+  syncBackendDefaultName,
   WEBDAV_SYNC_BACKEND_ID,
 } from "./sync-backend-registry";
 import {
@@ -52,18 +54,18 @@ export function parseSyncConfigCode(code: string): ParsedSyncConfigCode {
 function normalizeSyncConfigCodeBackend(
   backend: SyncBackendConfig,
 ): SyncBackendConfig {
-  if (backend.type === "browser-sync") {
+  if (backend.type === SYNC_BACKEND_TYPES.browserSync) {
     return {
       id: BROWSER_SYNC_BACKEND_ID,
-      type: "browser-sync",
-      name: backend.name || "Browser Sync",
+      type: SYNC_BACKEND_TYPES.browserSync,
+      name: backend.name || syncBackendDefaultName(BROWSER_SYNC_BACKEND_ID),
     };
   }
-  if (backend.type === "webdav" && backend.url) {
+  if (backend.type === SYNC_BACKEND_TYPES.webDav && backend.url) {
     return {
       id: WEBDAV_SYNC_BACKEND_ID,
-      type: "webdav",
-      name: backend.name || "WebDAV",
+      type: SYNC_BACKEND_TYPES.webDav,
+      name: backend.name || syncBackendDefaultName(WEBDAV_SYNC_BACKEND_ID),
       url: backend.url,
       username: backend.username || undefined,
       password: backend.password || undefined,

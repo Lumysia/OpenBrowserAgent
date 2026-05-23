@@ -8,8 +8,9 @@
   height: 10px;
   flex: 0 0 auto;
   border-radius: 999px;
-  background: #62c584;
-  box-shadow: 0 0 0 4px rgba(98, 197, 132, 0.12);
+  background: var(--accent-strong);
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--accent-strong) 12%, transparent);
   animation: sync-dot-ready 0.28s ease both;
   transition:
     background-color 0.18s ease,
@@ -17,13 +18,18 @@
     transform 0.18s ease;
 }
 .sync-status-dot.pending {
-  background: #e5a94f;
-  box-shadow: 0 0 0 4px rgba(229, 169, 79, 0.14);
+  background: color-mix(
+    in srgb,
+    var(--muted-foreground) 72%,
+    var(--accent-strong)
+  );
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--muted-foreground) 14%, transparent);
   animation: sync-dot-pending 1.4s ease-in-out infinite;
 }
 .sync-status-dot.error {
-  background: #e46b6b;
-  box-shadow: 0 0 0 4px rgba(228, 107, 107, 0.14);
+  background: var(--destructive);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--destructive) 14%, transparent);
 }
 
 .sync-status-items {

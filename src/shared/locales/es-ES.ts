@@ -66,6 +66,7 @@ export const esES: LocaleMessages = {
       "Cuando el modelo responda correctamente, vuelve aquí y pide a OpenBrowserAgent navegar o resumir.",
     menu: "Menú",
     chatHistory: "Historial de chats",
+    backToChat: "Volver al chat",
     exportChatOpenAi: "Exportar como JSON de OpenAI",
     importChatOpenAi: "Importar chat JSON de OpenAI",
     clearAllChats: "Borrar todos los chats",

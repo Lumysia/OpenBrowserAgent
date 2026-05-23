@@ -65,6 +65,7 @@ export const ko: LocaleMessages = {
       "모델이 정상 응답하면 여기로 돌아와 OpenBrowserAgent에 탐색이나 요약을 요청하세요.",
     menu: "메뉴",
     chatHistory: "채팅 기록",
+    backToChat: "채팅으로 돌아가기",
     exportChatOpenAi: "OpenAI JSON으로 내보내기",
     importChatOpenAi: "OpenAI JSON 채팅 가져오기",
     clearAllChats: "모든 채팅 지우기",

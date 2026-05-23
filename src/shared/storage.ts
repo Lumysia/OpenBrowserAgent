@@ -461,8 +461,7 @@ async function setDataKeySync(dataKey: SyncableDataKey, enabled: boolean) {
   } else if (enabled && existingTarget !== undefined) {
     await markSyncLocalCacheFlushed(dataKey, existingTarget);
   } else if (existingSource !== undefined) {
-    if (existingTarget === undefined)
-      await setStoredValueNow(toAreaName, dataKey, existingSource);
+    await setStoredValueNow(toAreaName, dataKey, existingSource);
   }
 }
 

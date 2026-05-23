@@ -181,7 +181,10 @@ export function useChatSelection(
   useEffect(() => {
     if (!chats) return;
     if (!chats.length) {
-      if (activeChatId) return;
+      if (activeChatId) {
+        setActiveChatId(undefined);
+        return;
+      }
       createChat();
       return;
     }
@@ -190,6 +193,10 @@ export function useChatSelection(
       if (activeChatId && chats.some((chat) => chat.id === activeChatId))
         return;
       createChat();
+      return;
+    }
+    if (activeChatId && !chats.some((chat) => chat.id === activeChatId)) {
+      setActiveChatId(sortChatsNewestFirst(chats)[0]?.id);
       return;
     }
     if (!activeChatId) setActiveChatId(sortChatsNewestFirst(chats)[0]?.id);

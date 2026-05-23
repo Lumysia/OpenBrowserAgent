@@ -7,7 +7,11 @@ import {
   writeWebDavObject,
   type WebDavSyncBackendConfig,
 } from "./sync-backends";
-import type { SyncDataSettings } from "./sync-data-settings";
+import { SYNC_BACKEND_TYPES } from "./sync-backend-registry";
+import {
+  SYNC_DATA_SETTING_KEYS,
+  type SyncDataSettings,
+} from "./sync-data-settings";
 import type { Chat, UploadedAttachment } from "./types";
 
 const CHAT_ATTACHMENT_ROOT = "attachments";
@@ -161,9 +165,12 @@ async function writeSyncedChatAttachment({
 async function activeWebDavAttachmentBackend(
   syncDataSettings: SyncDataSettings | undefined,
 ) {
-  if (!syncDataSettings?.syncChatAttachments) return undefined;
+  if (!syncDataSettings?.[SYNC_DATA_SETTING_KEYS.chatAttachments])
+    return undefined;
   const backend = await getActiveSyncBackend().catch(() => undefined);
-  return backend?.config.type === "webdav" ? backend.config : undefined;
+  return backend?.config.type === SYNC_BACKEND_TYPES.webDav
+    ? backend.config
+    : undefined;
 }
 
 function attachmentFromBytes(

@@ -131,9 +131,16 @@ export function HistoryPanel({
   return (
     <div className="history-page">
       <div className="history-page-header">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft size={18} />
-        </Button>
+        <IconTooltip label={t.sidepanel.backToChat}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t.sidepanel.backToChat}
+            onClick={onBack}
+          >
+            <ArrowLeft size={18} />
+          </Button>
+        </IconTooltip>
         <div>
           <strong>{t.sidepanel.chatHistory}</strong>
           <small>{formatMessageCount(t, chats.length)}</small>
@@ -150,6 +157,7 @@ export function HistoryPanel({
             <Button
               variant="ghost"
               size="icon"
+              aria-label={t.sidepanel.importChatOpenAi}
               onClick={() => importInputRef.current?.click()}
             >
               <Upload size={18} />
@@ -160,6 +168,7 @@ export function HistoryPanel({
               variant="ghost"
               size="icon"
               className="history-danger-action"
+              aria-label={t.sidepanel.clearAllChats}
               onClick={() => onSetChats([])}
             >
               <Trash2 size={18} />

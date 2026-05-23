@@ -8,6 +8,7 @@ import {
   storage,
   STORAGE_KEYS,
   SYNCABLE_DATA_ITEMS,
+  SYNC_PREFERENCES,
   SYNC_PREFERENCE_KEYS,
 } from "../../src/shared/storage";
 import { completeLocalBootstrapState } from "../../src/shared/storage-debug";
@@ -20,7 +21,8 @@ import { parseSyncConfigCode } from "../../src/shared/sync-config-code";
 import {
   BROWSER_SYNC_BACKEND_ID,
   NO_SYNC_BACKEND_ID,
-  syncBackendRegistryItem,
+  SYNC_BACKEND_TYPES,
+  syncBackendDefaultName,
   WEBDAV_SYNC_BACKEND_ID,
 } from "../../src/shared/sync-backend-registry";
 import {
@@ -68,7 +70,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   const [activeSyncBackendId, setActiveSyncBackendId] = useStoredState(
     storage.activeSyncBackendId,
   );
-  const [selectedBackendId, setSelectedBackendId] = useState(
+  const [selectedBackendId, setSelectedBackendId] = useState<string>(
     activeSyncBackendId === WEBDAV_SYNC_BACKEND_ID
       ? WEBDAV_SYNC_BACKEND_ID
       : BROWSER_SYNC_BACKEND_ID,
@@ -106,15 +108,12 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   const hasActiveSyncBackend = activeSyncBackendId !== NO_SYNC_BACKEND_ID;
 
   const webDavBackend = loadedSyncBackends.find(
-    (backend) => backend.type === "webdav",
+    (backend) => backend.type === SYNC_BACKEND_TYPES.webDav,
   );
   const webDavDraft: Extract<SyncBackendConfig, { type: "webdav" }> = {
     id: WEBDAV_SYNC_BACKEND_ID,
-    type: "webdav",
-    name:
-      webDavBackend?.name ||
-      syncBackendRegistryItem(WEBDAV_SYNC_BACKEND_ID)?.defaultName ||
-      "WebDAV",
+    type: SYNC_BACKEND_TYPES.webDav,
+    name: webDavBackend?.name || syncBackendDefaultName(WEBDAV_SYNC_BACKEND_ID),
     url: webDavBackend?.url || "",
     username: webDavBackend?.username,
     password: webDavBackend?.password,
@@ -130,12 +129,11 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
       ...webDavDraft,
       ...patch,
       id: WEBDAV_SYNC_BACKEND_ID,
-      type: "webdav" as const,
+      type: SYNC_BACKEND_TYPES.webDav,
       name:
         patch.name?.trim() ||
         webDavDraft.name ||
-        syncBackendRegistryItem(WEBDAV_SYNC_BACKEND_ID)?.defaultName ||
-        "WebDAV",
+        syncBackendDefaultName(WEBDAV_SYNC_BACKEND_ID),
       url: patch.url ?? webDavDraft.url,
       username:
         patch.username === undefined
@@ -147,7 +145,9 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
           : patch.password || undefined,
     };
     setSyncBackends([
-      ...loadedSyncBackends.filter((backend) => backend.type !== "webdav"),
+      ...loadedSyncBackends.filter(
+        (backend) => backend.type !== SYNC_BACKEND_TYPES.webDav,
+      ),
       nextBackend,
     ]);
     setSyncStatus("idle");
@@ -211,7 +211,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
       } else {
         await storage.syncDataSettings.set({
           ...(await storage.syncDataSettings.get()),
-          syncProviders: true,
+          [SYNC_PREFERENCES.providers]: true,
         });
         await setActiveSyncBackend(selectedBackendId);
       }

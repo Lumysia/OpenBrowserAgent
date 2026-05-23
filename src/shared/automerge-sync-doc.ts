@@ -105,6 +105,7 @@ function reconcileProperty(
     delete target[key];
     return;
   }
+  if (Object.is(target[key], value)) return;
   if (!canReconcile(target[key], value)) {
     target[key] = cloneForAutomerge(value);
     return;

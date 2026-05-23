@@ -60,6 +60,7 @@ export const zhTW: LocaleMessages = {
       "模型測試通過後回到這裡，讓 OpenBrowserAgent 瀏覽、摘要或執行任務。",
     menu: "選單",
     chatHistory: "對話記錄",
+    backToChat: "返回對話",
     exportChatOpenAi: "匯出為 OpenAI JSON",
     importChatOpenAi: "匯入 OpenAI JSON 對話",
     clearAllChats: "清空所有對話",

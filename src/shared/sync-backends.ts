@@ -10,9 +10,11 @@ import { getBrowserApi } from "./browser-api";
 import {
   BROWSER_SYNC_BACKEND_ID,
   NO_SYNC_BACKEND_ID,
-  SYNC_BACKEND_REGISTRY,
+  SYNC_BACKEND_TYPES,
+  syncBackendDefaultName,
   WEBDAV_SYNC_BACKEND_ID,
 } from "./sync-backend-registry";
+import { STORAGE_AREAS } from "./storage-area-constants";
 import { STORAGE_KEYS } from "./storage-keys";
 import type { SyncBackendConfig } from "./types";
 
@@ -43,8 +45,8 @@ export type WebDavSyncBackendConfig = Extract<
 export const DEFAULT_SYNC_BACKENDS: SyncBackendConfig[] = [
   {
     id: BROWSER_SYNC_BACKEND_ID,
-    type: "browser-sync",
-    name: SYNC_BACKEND_REGISTRY[0].defaultName,
+    type: SYNC_BACKEND_TYPES.browserSync,
+    name: syncBackendDefaultName(BROWSER_SYNC_BACKEND_ID),
   },
 ];
 
@@ -85,7 +87,7 @@ export function normalizeSyncBackends(value: SyncBackendConfig[] | undefined) {
   for (const backend of DEFAULT_SYNC_BACKENDS) byId.set(backend.id, backend);
   for (const backend of value || []) {
     if (!backend?.id || !backend?.type || !backend?.name) continue;
-    if (backend.type === "webdav" && !backend.url) continue;
+    if (backend.type === SYNC_BACKEND_TYPES.webDav && !backend.url) continue;
     byId.set(backend.id, backend);
   }
   return Array.from(byId.values());
@@ -94,7 +96,7 @@ export function normalizeSyncBackends(value: SyncBackendConfig[] | undefined) {
 export function createSyncBackend(
   backendConfig: SyncBackendConfig,
 ): SyncBackend {
-  if (backendConfig.type === "webdav")
+  if (backendConfig.type === SYNC_BACKEND_TYPES.webDav)
     return createWebDavBackend(backendConfig);
   return createBrowserSyncBackend(backendConfig);
 }
@@ -102,7 +104,7 @@ export function createSyncBackend(
 export function syncBackendSupportsChatAttachments(
   backendType: SyncBackendConfig["type"],
 ) {
-  return backendType === "webdav";
+  return backendType === SYNC_BACKEND_TYPES.webDav;
 }
 
 function createBrowserSyncBackend(
@@ -114,7 +116,7 @@ function createBrowserSyncBackend(
       const result = await getBrowserApi().storage.sync.get(key);
       const encoded = result[key] as string | undefined;
       return readAutomergeValue<T>(
-        key,
+        automergeBackendCacheKey(backendConfig, key),
         encoded ? base64ToBytes(encoded) : undefined,
       );
     },
@@ -122,7 +124,7 @@ function createBrowserSyncBackend(
       const stored = await getBrowserApi().storage.sync.get(key);
       const encoded = stored[key] as string | undefined;
       const result = await writeAutomergeValue<T>(
-        key,
+        automergeBackendCacheKey(backendConfig, key),
         value,
         encoded ? base64ToBytes(encoded) : undefined,
       );
@@ -133,7 +135,9 @@ function createBrowserSyncBackend(
     },
     async remove(key) {
       await getBrowserApi().storage.sync.remove(key);
-      await removeLocalAutomergeDocument(key);
+      await removeLocalAutomergeDocument(
+        automergeBackendCacheKey(backendConfig, key),
+      );
     },
     async test() {
       await getBrowserApi().storage.sync.get(null);
@@ -143,11 +147,17 @@ function createBrowserSyncBackend(
         changes: Record<string, chrome.storage.StorageChange>,
         changedArea: string,
       ) => {
-        if (changedArea !== "sync" || !changes[key]) return;
+        if (changedArea !== STORAGE_AREAS.sync || !changes[key]) return;
         const change = changes[key];
         Promise.all([
-          decodeBrowserSyncChangeValue<T>(key, change.newValue),
-          decodeBrowserSyncChangeValue<T>(key, change.oldValue),
+          decodeBrowserSyncChangeValue<T>(
+            automergeBackendCacheKey(backendConfig, key),
+            change.newValue,
+          ),
+          decodeBrowserSyncChangeValue<T>(
+            automergeBackendCacheKey(backendConfig, key),
+            change.oldValue,
+          ),
         ])
           .then(([newValue, oldValue]) => callback({ newValue, oldValue }))
           .catch(() => undefined);
@@ -171,11 +181,14 @@ function createWebDavBackend(
     config: backendConfig,
     async read<T>(key: string) {
       const bytes = await readWebDavBytes(backendConfig, key);
-      return readAutomergeValue<T>(key, bytes);
+      return readAutomergeValue<T>(
+        automergeBackendCacheKey(backendConfig, key),
+        bytes,
+      );
     },
     async write<T>(key: string, value: T) {
       const result = await writeAutomergeValue<T>(
-        key,
+        automergeBackendCacheKey(backendConfig, key),
         value,
         await readWebDavBytes(backendConfig, key),
       );
@@ -201,7 +214,9 @@ function createWebDavBackend(
       );
       if (!response.ok && response.status !== 404)
         await throwWebDavError(response, "remove");
-      await removeLocalAutomergeDocument(key);
+      await removeLocalAutomergeDocument(
+        automergeBackendCacheKey(backendConfig, key),
+      );
     },
     async test() {
       const response = await requestWebDav(
@@ -216,6 +231,17 @@ function createWebDavBackend(
         await throwWebDavError(response, "test");
     },
   };
+}
+
+function automergeBackendCacheKey(
+  backendConfig: SyncBackendConfig,
+  key: string,
+) {
+  const scope =
+    backendConfig.type === SYNC_BACKEND_TYPES.webDav
+      ? `${backendConfig.type}:${backendConfig.username || ""}:${backendConfig.url}`
+      : backendConfig.id;
+  return `${scope}:${key}`;
 }
 
 export async function readWebDavObject(

@@ -29,6 +29,7 @@ export function SidepanelHeader({
             <Button
               variant="ghost"
               size="icon"
+              aria-label={t.sidepanel.backToParentChat}
               onClick={() => onSelectChat(parentChat.id)}
             >
               <ArrowLeft size={18} />
@@ -39,6 +40,7 @@ export function SidepanelHeader({
             <Button
               variant="ghost"
               size="icon"
+              aria-label={t.common.settings}
               onClick={() => openOrFocusOptions().catch(console.warn)}
             >
               <Settings size={18} />
@@ -61,13 +63,19 @@ export function SidepanelHeader({
             <Button
               variant="ghost"
               size="icon"
+              aria-label={t.sidepanel.chatHistory}
               onClick={() => onSetShowHistory(true)}
             >
               <History size={18} />
             </Button>
           </IconTooltip>
           <IconTooltip label={t.words.newChat}>
-            <Button variant="ghost" size="icon" onClick={onCreateChat}>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={t.words.newChat}
+              onClick={onCreateChat}
+            >
               <MessageCirclePlus size={18} />
             </Button>
           </IconTooltip>

@@ -66,6 +66,7 @@ export const ptBR: LocaleMessages = {
       "Quando o modelo responder com sucesso, volte aqui e peça ao OpenBrowserAgent para navegar ou resumir.",
     menu: "Menu",
     chatHistory: "Histórico de chats",
+    backToChat: "Voltar ao chat",
     exportChatOpenAi: "Exportar como JSON da OpenAI",
     importChatOpenAi: "Importar chat JSON da OpenAI",
     clearAllChats: "Limpar todos os chats",

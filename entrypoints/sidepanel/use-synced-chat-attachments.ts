@@ -3,7 +3,10 @@ import {
   readSyncedChatAttachment,
   writeSyncedChatAttachments,
 } from "../../src/shared/sync-chat-attachments";
-import type { SyncDataSettings } from "../../src/shared/sync-data-settings";
+import {
+  SYNC_DATA_SETTING_KEYS,
+  type SyncDataSettings,
+} from "../../src/shared/sync-data-settings";
 import type { Chat, UploadedAttachment } from "../../src/shared/types";
 
 export function useSyncedChatAttachments({
@@ -22,7 +25,11 @@ export function useSyncedChatAttachments({
   const requestedAttachmentIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!currentChat || !syncDataSettings?.syncChatAttachments) return;
+    if (
+      !currentChat ||
+      !syncDataSettings?.[SYNC_DATA_SETTING_KEYS.chatAttachments]
+    )
+      return;
     const missingAttachments = currentChat.messages.flatMap((message) => {
       const metadataAttachments = Array.isArray(
         message.metadata?.uploadedAttachments,

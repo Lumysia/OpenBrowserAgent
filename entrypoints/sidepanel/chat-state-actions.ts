@@ -276,7 +276,7 @@ export function closeChatAction({
       items.filter((chat) => !closedIds.has(chat.id)),
       closedIds,
     );
-    if (activeChatId === chatId)
+    if (activeChatId && closedIds.has(activeChatId))
       setActiveChatId(sortChatsNewestFirst(next)[0]?.id);
     return next;
   });

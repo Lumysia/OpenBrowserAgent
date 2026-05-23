@@ -9,7 +9,7 @@ export type SyncDataSettings = Record<SyncPreferenceKey, boolean> & {
 };
 
 export const DEFAULT_SYNC_DATA_SETTINGS: SyncDataSettings = {
-  [SYNC_PREFERENCES.providers]: false,
+  [SYNC_PREFERENCES.providers]: true,
   [SYNC_PREFERENCES.agents]: false,
   [SYNC_PREFERENCES.skills]: false,
   [SYNC_PREFERENCES.mcpServers]: false,

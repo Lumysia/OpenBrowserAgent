@@ -2,14 +2,14 @@ import { Check, Copy, FolderSync } from "lucide-react";
 import type { ReactNode } from "react";
 import { getMessages } from "../../src/shared/i18n";
 import {
-  BROWSER_SYNC_BACKEND_ID,
   NO_SYNC_BACKEND_ID,
   syncBackendSupportsChatAttachments,
 } from "../../src/shared/sync-backends";
 import { createSyncConfigCode } from "../../src/shared/sync-config-code";
 import type { SyncDataSettings } from "../../src/shared/sync-data-settings";
 import {
-  syncBackendRegistryItem,
+  SYNC_BACKEND_TYPES,
+  syncBackendDefaultName,
   WEBDAV_SYNC_BACKEND_ID,
 } from "../../src/shared/sync-backend-registry";
 import type { SyncBackendConfig } from "../../src/shared/types";
@@ -64,16 +64,15 @@ export function SyncBackendCard({
   const [testingBackendId, setTestingBackendId] = useState<string>();
   const [copiedBackendId, setCopiedBackendId] = useState<string>();
   const browserBackend = backends.find(
-    (backend) => backend.type === "browser-sync",
+    (backend) => backend.type === SYNC_BACKEND_TYPES.browserSync,
   )!;
-  const webDavBackend = backends.find((backend) => backend.type === "webdav");
+  const webDavBackend = backends.find(
+    (backend) => backend.type === SYNC_BACKEND_TYPES.webDav,
+  );
   const webDavDraft: Extract<SyncBackendConfig, { type: "webdav" }> = {
     id: WEBDAV_SYNC_BACKEND_ID,
-    type: "webdav",
-    name:
-      webDavBackend?.name ||
-      syncBackendRegistryItem(WEBDAV_SYNC_BACKEND_ID)?.defaultName ||
-      "WebDAV",
+    type: SYNC_BACKEND_TYPES.webDav,
+    name: webDavBackend?.name || syncBackendDefaultName(WEBDAV_SYNC_BACKEND_ID),
     url: webDavBackend?.url || "",
     username: webDavBackend?.username,
     password: webDavBackend?.password,
@@ -86,12 +85,11 @@ export function SyncBackendCard({
       ...webDavDraft,
       ...patch,
       id: WEBDAV_SYNC_BACKEND_ID,
-      type: "webdav" as const,
+      type: SYNC_BACKEND_TYPES.webDav,
       name:
         patch.name?.trim() ||
         webDavDraft.name ||
-        syncBackendRegistryItem(WEBDAV_SYNC_BACKEND_ID)?.defaultName ||
-        "WebDAV",
+        syncBackendDefaultName(WEBDAV_SYNC_BACKEND_ID),
       url: patch.url ?? webDavDraft.url,
       username:
         patch.username === undefined
@@ -103,7 +101,9 @@ export function SyncBackendCard({
           : patch.password || undefined,
     };
     onBackendsChange([
-      ...backends.filter((backend) => backend.type !== "webdav"),
+      ...backends.filter(
+        (backend) => backend.type !== SYNC_BACKEND_TYPES.webDav,
+      ),
       nextBackend,
     ]);
   }
@@ -148,7 +148,7 @@ export function SyncBackendCard({
           t={t}
         />
       </SyncBackendHeaderItem>
-      <AccordionItem value="webdav">
+      <AccordionItem value={WEBDAV_SYNC_BACKEND_ID}>
         <AccordionHeader className="ui-accordion-header-with-actions">
           <AccordionTriggerButton hideChevron>
             <span className="agent-summary">
@@ -200,7 +200,6 @@ export function SyncBackendCard({
               {t.options.syncBackendWebDavUrl}
               <Input
                 value={webDavDraft.url}
-                placeholder="https://example.com/dav/"
                 onChange={(event) =>
                   updateWebDavBackend({ url: event.target.value })
                 }
@@ -420,13 +419,13 @@ function BackendCopyConfigButton({
 }
 
 function backendDisplayName(backend: SyncBackendConfig, t: Messages) {
-  return backend.type === "browser-sync"
+  return backend.type === SYNC_BACKEND_TYPES.browserSync
     ? t.options.syncBackendBrowserSync
     : t.options.syncBackendWebDavSync;
 }
 
 function backendDescription(backend: SyncBackendConfig, t: Messages) {
-  return backend.type === "webdav"
+  return backend.type === SYNC_BACKEND_TYPES.webDav
     ? t.options.syncBackendWebDavSync
     : t.options.syncBackendBrowserSync;
 }

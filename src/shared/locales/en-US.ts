@@ -67,6 +67,7 @@ export const enUS = {
       "After a model responds successfully, return here and ask OpenBrowserAgent to browse or summarize.",
     menu: "Menu",
     chatHistory: "Chat History",
+    backToChat: "Back to chat",
     exportChatOpenAi: "Export chat as OpenAI JSON",
     importChatOpenAi: "Import OpenAI JSON chat",
     clearAllChats: "Clear all chats",

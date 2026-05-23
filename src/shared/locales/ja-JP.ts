@@ -67,6 +67,7 @@ export const jaJP: LocaleMessages = {
       "モデルが正常に応答したらここに戻り、OpenBrowserAgentにブラウズや要約を依頼します。",
     menu: "メニュー",
     chatHistory: "チャット履歴",
+    backToChat: "チャットに戻る",
     exportChatOpenAi: "OpenAI JSON としてエクスポート",
     importChatOpenAi: "OpenAI JSON チャットをインポート",
     clearAllChats: "すべてのチャットを消去",
