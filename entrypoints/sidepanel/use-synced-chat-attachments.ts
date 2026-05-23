@@ -56,9 +56,6 @@ export function useSyncedChatAttachments({
       })),
     )
       .then((attachments) => {
-        missingAttachments.forEach((attachment) =>
-          requestedAttachmentIdsRef.current.delete(attachment.id),
-        );
         const loaded = attachments.filter(
           (
             attachment,
@@ -68,6 +65,9 @@ export function useSyncedChatAttachments({
           } => !!attachment.value,
         );
         if (!loaded.length) return;
+        loaded.forEach((attachment) =>
+          requestedAttachmentIdsRef.current.delete(attachment.value.id),
+        );
         setSentAttachmentPreviews((items) => {
           const next = { ...items };
           for (const attachment of loaded) {

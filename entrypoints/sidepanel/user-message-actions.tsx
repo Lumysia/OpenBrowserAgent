@@ -76,11 +76,18 @@ export function UserMessageActions({
           {copied ? <Check /> : <Copy />}
         </Button>
       </IconTooltip>
-      <IconTooltip label={t.common.edit}>
+      <IconTooltip
+        label={
+          hasMissingAttachments
+            ? t.sidepanel.replaceUnavailableAttachments
+            : t.common.edit
+        }
+      >
         <Button
           variant="ghost"
           size="icon"
           className="copy-message"
+          disabled={hasMissingAttachments}
           onClick={() => onEdit?.(message, availableAttachments)}
         >
           <Pencil />
