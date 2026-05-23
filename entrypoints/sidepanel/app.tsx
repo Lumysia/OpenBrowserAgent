@@ -123,6 +123,7 @@ export function SidepanelApp() {
   const {
     streaming,
     currentChatStreaming,
+    currentAssistantMessageId,
     beginStream,
     startStream,
     abortChatStream,
@@ -469,6 +470,7 @@ export function SidepanelApp() {
       activeTabAttachable={activeTabAttachable}
       selectedElements={selectedElements}
       streaming={currentChatStreaming}
+      activeAssistantMessageId={currentAssistantMessageId}
       unreadCompletedChatIds={unreadCompletedChats}
       skills={(skills || []).filter(isSkillEnabled)}
       agents={agents || []}

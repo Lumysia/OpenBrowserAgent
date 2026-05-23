@@ -82,6 +82,7 @@ export function SidepanelView({
   activeTabAttachable,
   selectedElements,
   streaming,
+  activeAssistantMessageId,
   unreadCompletedChatIds,
   skills,
   agents,
@@ -143,6 +144,7 @@ export function SidepanelView({
   activeTabAttachable: boolean;
   selectedElements: SelectedElement[];
   streaming: boolean;
+  activeAssistantMessageId?: string;
   unreadCompletedChatIds: Record<string, true>;
   skills: Skill[];
   agents: Agent[];
@@ -268,11 +270,13 @@ export function SidepanelView({
               <MessageBubble
                 key={message.id}
                 message={message}
+                t={t}
                 latestUserMessage={message.id === latestUserMessageId}
                 editing={editingMessageId === message.id}
                 sources={currentChat.sources || []}
                 chats={chats}
                 chatMessages={currentChat.messages}
+                outputActive={message.id === activeAssistantMessageId}
                 sentAttachments={sentAttachmentPreviews[message.id] || []}
                 activeAttachments={uploadedAttachments}
                 onReplaceAttachment={onReplaceUploadedAttachment}

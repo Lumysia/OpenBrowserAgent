@@ -71,6 +71,9 @@ export function useParallelChatStreams({
   );
   const streaming = Object.keys(activeStreams).length > 0;
   const currentChatStreaming = !!(currentChat && activeStreams[currentChat.id]);
+  const currentAssistantMessageId = currentChat
+    ? activeStreams[currentChat.id]?.assistantMessageId
+    : undefined;
 
   useEffect(() => {
     chatsRef.current = chats || [];
@@ -235,6 +238,7 @@ export function useParallelChatStreams({
   return {
     streaming,
     currentChatStreaming,
+    currentAssistantMessageId,
     beginStream,
     startStream,
     abortChatStream,

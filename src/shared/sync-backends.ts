@@ -50,6 +50,8 @@ export const DEFAULT_SYNC_BACKENDS: SyncBackendConfig[] = [
   },
 ];
 
+const webDavReadCaches = new Map<string, Map<string, WebDavReadCache>>();
+
 export async function getActiveSyncBackend() {
   const backends = await getStoredSyncBackends();
   const activeId = await getStoredActiveSyncBackendId();
@@ -177,20 +179,44 @@ async function decodeBrowserSyncChangeValue<T>(key: string, value: unknown) {
 function createWebDavBackend(
   backendConfig: WebDavSyncBackendConfig,
 ): SyncBackend {
+  const readCache = webDavReadCacheFor(backendConfig);
   return {
     config: backendConfig,
     async read<T>(key: string) {
-      const bytes = await readWebDavBytes(backendConfig, key);
-      return readAutomergeValue<T>(
-        automergeBackendCacheKey(backendConfig, key),
-        bytes,
+      const bytes = await readWebDavBytes(
+        backendConfig,
+        key,
+        readCache.get(key),
       );
+      if (bytes?.notModified) return readCache.get(key)?.value as T | undefined;
+      if (!bytes) {
+        readCache.delete(key);
+        return readAutomergeValue<T>(
+          automergeBackendCacheKey(backendConfig, key),
+          undefined,
+        );
+      }
+      const value = await readAutomergeValue<T>(
+        automergeBackendCacheKey(backendConfig, key),
+        bytes.data,
+      );
+      readCache.set(key, {
+        etag: bytes.etag,
+        lastModified: bytes.lastModified,
+        value,
+      });
+      return value;
     },
     async write<T>(key: string, value: T) {
+      const bytes = await readWebDavBytes(
+        backendConfig,
+        key,
+        readCache.get(key),
+      );
       const result = await writeAutomergeValue<T>(
         automergeBackendCacheKey(backendConfig, key),
         value,
-        await readWebDavBytes(backendConfig, key),
+        bytes?.notModified ? undefined : bytes?.data,
       );
       const response = await requestWebDav(
         backendConfig,
@@ -202,6 +228,11 @@ function createWebDavBackend(
         },
       );
       if (!response.ok) await throwWebDavError(response, "write");
+      readCache.set(key, {
+        etag: response.headers.get("ETag") || undefined,
+        lastModified: response.headers.get("Last-Modified") || undefined,
+        value: result.value,
+      });
       return result.value;
     },
     async remove(key) {
@@ -214,6 +245,7 @@ function createWebDavBackend(
       );
       if (!response.ok && response.status !== 404)
         await throwWebDavError(response, "remove");
+      readCache.delete(key);
       await removeLocalAutomergeDocument(
         automergeBackendCacheKey(backendConfig, key),
       );
@@ -231,6 +263,26 @@ function createWebDavBackend(
         await throwWebDavError(response, "test");
     },
   };
+}
+
+type WebDavReadCache = {
+  etag?: string;
+  lastModified?: string;
+  value: unknown;
+};
+
+type WebDavReadResult =
+  | { notModified: true }
+  | { data: Uint8Array; etag?: string; lastModified?: string };
+
+function webDavReadCacheFor(backendConfig: WebDavSyncBackendConfig) {
+  const scope = automergeBackendCacheKey(backendConfig, "");
+  let cache = webDavReadCaches.get(scope);
+  if (!cache) {
+    cache = new Map<string, WebDavReadCache>();
+    webDavReadCaches.set(scope, cache);
+  }
+  return cache;
 }
 
 function automergeBackendCacheKey(
@@ -319,17 +371,27 @@ function bytesToArrayBuffer(bytes: Uint8Array) {
 async function readWebDavBytes(
   backendConfig: WebDavSyncBackendConfig,
   key: string,
+  cached?: WebDavReadCache,
 ) {
+  const headers: Record<string, string> = {};
+  if (cached?.etag) headers["If-None-Match"] = cached.etag;
+  if (cached?.lastModified) headers["If-Modified-Since"] = cached.lastModified;
   const response = await requestWebDav(
     backendConfig,
     objectUrl(backendConfig, key),
     {
       method: "GET",
+      headers,
     },
   );
+  if (response.status === 304 && cached) return { notModified: true } as const;
   if (response.status === 404) return undefined;
   if (!response.ok) await throwWebDavError(response, "read");
-  return new Uint8Array(await response.arrayBuffer());
+  return {
+    data: new Uint8Array(await response.arrayBuffer()),
+    etag: response.headers.get("ETag") || undefined,
+    lastModified: response.headers.get("Last-Modified") || undefined,
+  } satisfies WebDavReadResult;
 }
 
 function objectUrl(backendConfig: WebDavSyncBackendConfig, key: string) {

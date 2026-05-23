@@ -13,9 +13,8 @@ import {
   SENT_ATTACHMENTS_PREVIEW_COUNT,
   SENT_TABS_PREVIEW_COUNT,
 } from "../../src/shared/config";
-import { getMessages, type Messages } from "../../src/shared/i18n";
+import type { Messages } from "../../src/shared/i18n";
 import { getSkillDisplayName } from "../../src/shared/skills";
-import { storage } from "../../src/shared/storage";
 import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
 import type {
   AttachmentTab,
@@ -27,7 +26,6 @@ import type {
   UploadedAttachment,
 } from "../../src/shared/types";
 import { CHAT_PART_STATE } from "../../src/shared/types";
-import { useStoredState } from "../../src/ui/useStoredState";
 import { formatAttachmentSize } from "./file-attachments";
 import { formatMessageTime } from "./format";
 import { AssistantPart, AssistantText } from "./assistant-message-part";
@@ -43,6 +41,7 @@ import { UserMessageActions } from "./user-message-actions";
 
 export function MessageBubble({
   message,
+  t,
   editing = false,
   sentAttachments = [],
   activeAttachments = [],
@@ -56,8 +55,10 @@ export function MessageBubble({
   sources = [],
   chatMessages,
   latestUserMessage = false,
+  outputActive = false,
 }: {
   message: ChatMessage;
+  t: Messages;
   sources?: ChatSource[];
   chatMessages: ChatMessage[];
   editing?: boolean;
@@ -71,9 +72,8 @@ export function MessageBubble({
   chats: Chat[];
   resendDisabled?: boolean;
   latestUserMessage?: boolean;
+  outputActive?: boolean;
 }) {
-  const [language] = useStoredState(storage.language);
-  const t = getMessages(language);
   const messageSkills = selectedMessageSkills(message.metadata);
   const sentTabs = Array.isArray(message.metadata?.attachedTabs)
     ? (message.metadata.attachedTabs as AttachmentTab[])
@@ -110,7 +110,7 @@ export function MessageBubble({
     : undefined;
   const showRunInfo = message.role === "assistant" && messageRunEnded(message);
   const assistantEnded =
-    message.role === "assistant" && messageRunEnded(message);
+    message.role === "assistant" && messageRunEnded(message) && !outputActive;
   const chatExists = (chatId: string) =>
     chats.some((chat) => chat.id === chatId);
   return (
@@ -176,6 +176,7 @@ export function MessageBubble({
         />
       )}
       {message.role === "assistant" &&
+        !outputActive &&
         !!assistantText &&
         !!displaySources.length && (
           <SourceChips t={t} sources={displaySources} />
