@@ -121,6 +121,7 @@ function createBrowserSyncBackend(
       return readAutomergeValue<T>(
         automergeBackendCacheKey(backendConfig, key),
         encoded ? base64ToBytes(encoded) : undefined,
+        encoded,
       );
     },
     async write<T>(key: string, value: T) {
@@ -130,6 +131,7 @@ function createBrowserSyncBackend(
         automergeBackendCacheKey(backendConfig, key),
         value,
         encoded ? base64ToBytes(encoded) : undefined,
+        encoded,
       );
       const nextValue = bytesToBase64(result.bytes);
       assertBrowserSyncItemFits(key, nextValue);
@@ -173,7 +175,7 @@ function createBrowserSyncBackend(
 
 async function decodeBrowserSyncChangeValue<T>(key: string, value: unknown) {
   return typeof value === "string"
-    ? readAutomergeValue<T>(key, base64ToBytes(value))
+    ? readAutomergeValue<T>(key, base64ToBytes(value), value)
     : undefined;
 }
 
@@ -205,6 +207,7 @@ function createWebDavBackend(
       const value = await readAutomergeValue<T>(
         automergeBackendCacheKey(backendConfig, key),
         bytes.data,
+        webDavVersion(bytes),
       );
       readCache.set(key, {
         etag: bytes.etag,
@@ -224,6 +227,7 @@ function createWebDavBackend(
         automergeBackendCacheKey(backendConfig, key),
         value,
         bytes?.notModified ? undefined : bytes?.data,
+        bytes && !bytes.notModified ? webDavVersion(bytes) : undefined,
       );
       const response = await requestWebDav(
         backendConfig,
@@ -291,6 +295,15 @@ type WebDavReadCache = {
 type WebDavReadResult =
   | { notModified: true }
   | { data: Uint8Array; etag?: string; lastModified?: string };
+
+function webDavVersion(
+  bytes: Exclude<WebDavReadResult, { notModified: true }>,
+) {
+  const version = [bytes.etag, bytes.lastModified]
+    .filter((item) => item !== undefined && item !== "")
+    .join(":");
+  return version || undefined;
+}
 
 function webDavReadCacheFor(backendConfig: WebDavSyncBackendConfig) {
   const scope = automergeBackendCacheKey(backendConfig, "");

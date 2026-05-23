@@ -130,10 +130,12 @@ export function AssistantText({
   const [copied, setCopied] = useState(false);
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const markdownRef = useRef<HTMLDivElement | null>(null);
-  const { text: displayText, animatedFrom } = useThrottledText(
+  const runEnded = !hideActions;
+  const { text: throttledText, animatedFrom } = useThrottledText(
     text,
     STREAM_RENDER_THROTTLE_MS,
   );
+  const displayText = runEnded ? text : throttledText;
   const streaming = displayText.length < text.length;
   const outputSettled = !streaming && !hideActions;
   const { html, codeBlocks } = renderMarkdown(

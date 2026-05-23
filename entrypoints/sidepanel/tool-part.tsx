@@ -57,12 +57,6 @@ export function ToolPart({
       : isDone
         ? "done"
         : "idle";
-  const detailKey = [
-    status,
-    title,
-    description,
-    references.map((reference) => reference.title).join("|"),
-  ].join("::");
   const subAgentChatId = subAgentChildChatId(name, part);
   const subAgentChatAvailable = subAgentChatId
     ? chatExists(subAgentChatId)
@@ -73,7 +67,7 @@ export function ToolPart({
         <PopoverTrigger asChild>
           <Button variant="ghost" className="tool-title tool-title-button">
             <span className="tool-icon">{toolIcon(name)}</span>
-            <strong className="tool-title-text" key={title}>
+            <strong className="tool-title-text">
               {loading ? <span className="shiny-text">{title}</span> : title}
             </strong>
           </Button>
@@ -83,7 +77,7 @@ export function ToolPart({
         </PopoverContent>
       </Popover>
       <div className="tool-detail">
-        <div className="tool-detail-content" key={detailKey}>
+        <div className="tool-detail-content">
           {name === BROWSER_TOOL_NAME.generateImage && (
             <GeneratedImage
               output={(part.output || {}) as Record<string, unknown>}

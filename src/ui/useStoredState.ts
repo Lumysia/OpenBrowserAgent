@@ -64,7 +64,7 @@ export function useStoredState<T>(item: StorageItem<T>) {
         : next;
     const resolvedSnapshot = snapshot(resolved);
     valueRef.current = resolved;
-    if (!item.persistDebounceMs) snapshotRef.current = resolvedSnapshot;
+    snapshotRef.current = resolvedSnapshot;
     setValue(resolved);
     persistValue(
       item,

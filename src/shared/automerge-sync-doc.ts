@@ -9,6 +9,14 @@ type SyncDocument<T = unknown> = {
 const AUTOMERGE_CACHE_PREFIX = "automerge-sync-doc";
 let automergeReady: Promise<void> | undefined;
 const documentCache = new Map<string, Automerge.Doc<SyncDocument>>();
+const documentReadCache = new Map<
+  string,
+  Promise<Automerge.Doc<SyncDocument> | undefined>
+>();
+const remoteDocumentCache = new Map<
+  string,
+  { encoded: string; doc: Automerge.Doc<SyncDocument> }
+>();
 
 export function automergeLocalCacheKey(key: string) {
   return `${AUTOMERGE_CACHE_PREFIX}:${key}`;
@@ -17,13 +25,14 @@ export function automergeLocalCacheKey(key: string) {
 export async function readAutomergeValue<T>(
   key: string,
   remoteBytes: Uint8Array | undefined,
+  remoteVersion?: string,
 ) {
   await initializeAutomerge();
   if (!remoteBytes) {
     await removeLocalAutomergeDocument(key);
     return undefined;
   }
-  const doc = await mergeWithLocalDocument<T>(key, remoteBytes);
+  const doc = await mergeWithLocalDocument<T>(key, remoteBytes, remoteVersion);
   return doc?.value as T | undefined;
 }
 
@@ -36,10 +45,11 @@ export async function writeAutomergeValue<T>(
   key: string,
   value: T,
   remoteBytes: Uint8Array | undefined,
+  remoteVersion?: string,
 ) {
   await initializeAutomerge();
   let doc =
-    (await mergeWithLocalDocument<T>(key, remoteBytes)) ||
+    (await mergeWithLocalDocument<T>(key, remoteBytes, remoteVersion)) ||
     Automerge.from<SyncDocument<T>>({});
   doc = Automerge.change(doc, `Set ${key}`, (draft) => {
     reconcileProperty(draft, "value", value);
@@ -56,6 +66,8 @@ function initializeAutomerge() {
 
 export async function removeLocalAutomergeDocument(key: string) {
   documentCache.delete(key);
+  documentReadCache.delete(key);
+  remoteDocumentCache.delete(key);
   await getBrowserApi().storage.local.remove(automergeLocalCacheKey(key));
 }
 
@@ -76,9 +88,12 @@ export function base64ToBytes(value: string) {
 async function mergeWithLocalDocument<T>(
   key: string,
   remoteBytes: Uint8Array | undefined,
+  remoteVersion: string | undefined,
 ) {
   const localDoc = await readLocalDocument<T>(key);
-  const remoteDoc = remoteBytes ? loadDocument<T>(remoteBytes) : undefined;
+  const remoteDoc = remoteBytes
+    ? readRemoteDocument<T>(key, remoteBytes, remoteVersion)
+    : undefined;
   const doc =
     localDoc && remoteDoc
       ? Automerge.merge(localDoc, remoteDoc)
@@ -92,6 +107,23 @@ async function readLocalDocument<T>(key: string) {
     | Automerge.Doc<SyncDocument<T>>
     | undefined;
   if (cached) return cached;
+  const pending = documentReadCache.get(key) as
+    | Promise<Automerge.Doc<SyncDocument<T>> | undefined>
+    | undefined;
+  if (pending) return pending;
+  const read = readStoredLocalDocument<T>(key);
+  documentReadCache.set(
+    key,
+    read as Promise<Automerge.Doc<SyncDocument> | undefined>,
+  );
+  try {
+    return await read;
+  } finally {
+    documentReadCache.delete(key);
+  }
+}
+
+async function readStoredLocalDocument<T>(key: string) {
   const result = await getBrowserApi().storage.local.get(
     automergeLocalCacheKey(key),
   );
@@ -99,6 +131,24 @@ async function readLocalDocument<T>(key: string) {
   if (!encoded) return undefined;
   const doc = loadDocument<T>(base64ToBytes(encoded));
   documentCache.set(key, doc as Automerge.Doc<SyncDocument>);
+  return doc;
+}
+
+function readRemoteDocument<T>(
+  key: string,
+  bytes: Uint8Array,
+  remoteVersion: string | undefined,
+) {
+  const encoded = remoteVersion || bytesToBase64(bytes);
+  const cached = remoteDocumentCache.get(key) as
+    | { encoded: string; doc: Automerge.Doc<SyncDocument<T>> }
+    | undefined;
+  if (cached?.encoded === encoded) return cached.doc;
+  const doc = loadDocument<T>(bytes);
+  remoteDocumentCache.set(key, {
+    encoded,
+    doc: doc as Automerge.Doc<SyncDocument>,
+  });
   return doc;
 }
 
