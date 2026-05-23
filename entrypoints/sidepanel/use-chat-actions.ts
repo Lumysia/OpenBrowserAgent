@@ -2,7 +2,8 @@ import { useCallback, type Dispatch, type SetStateAction } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { removeSyncedChatAttachments } from "../../src/shared/sync-chat-attachments";
-import type { Chat, Preferences } from "../../src/shared/types";
+import type { SyncDataSettings } from "../../src/shared/sync-data-settings";
+import type { Chat } from "../../src/shared/types";
 import {
   closedChatIds,
   closeChatAction,
@@ -18,7 +19,7 @@ export function useChatActions({
   setChatSelectionRequestId,
   abortChatStream,
   clearUnreadCompletedChat,
-  preferences,
+  syncDataSettings,
 }: {
   t: Messages;
   activeChatId?: string;
@@ -27,7 +28,7 @@ export function useChatActions({
   setChatSelectionRequestId: Dispatch<SetStateAction<number>>;
   abortChatStream: (chatId: string) => void;
   clearUnreadCompletedChat: (chatId: string) => void;
-  preferences?: Preferences;
+  syncDataSettings?: SyncDataSettings;
 }) {
   const createChat = useCallback(
     () =>
@@ -48,7 +49,7 @@ export function useChatActions({
         .then((chats) => {
           const ids = closedChatIds(chats, chatId);
           return removeSyncedChatAttachments(
-            preferences,
+            syncDataSettings,
             chats.filter((chat) => ids.has(chat.id)),
           );
         })
@@ -67,7 +68,7 @@ export function useChatActions({
       abortChatStream,
       activeChatId,
       clearUnreadCompletedChat,
-      preferences,
+      syncDataSettings,
       setActiveChatId,
       setChats,
     ],

@@ -7,7 +7,8 @@ import {
   writeWebDavObject,
   type WebDavSyncBackendConfig,
 } from "./sync-backends";
-import type { Chat, Preferences, UploadedAttachment } from "./types";
+import type { SyncDataSettings } from "./sync-data-settings";
+import type { Chat, UploadedAttachment } from "./types";
 
 const CHAT_ATTACHMENT_ROOT = "attachments";
 const CHAT_ATTACHMENT_PREFIX = "chat-attachment";
@@ -29,18 +30,18 @@ const pendingAttachmentWrites = new Map<
 >();
 
 export async function writeSyncedChatAttachments({
-  preferences,
+  syncDataSettings,
   chatId,
   messageId,
   attachments,
 }: {
-  preferences?: Preferences;
+  syncDataSettings?: SyncDataSettings;
   chatId: string;
   messageId: string;
   attachments: UploadedAttachment[];
 }) {
   if (!attachments.length) return;
-  const backendConfig = await activeWebDavAttachmentBackend(preferences);
+  const backendConfig = await activeWebDavAttachmentBackend(syncDataSettings);
   if (!backendConfig) return;
 
   for (const attachment of attachments) {
@@ -64,10 +65,10 @@ export async function writeSyncedChatAttachments({
 }
 
 export async function readSyncedChatAttachment(
-  preferences: Preferences | undefined,
+  syncDataSettings: SyncDataSettings | undefined,
   attachmentId: string,
 ) {
-  const backendConfig = await activeWebDavAttachmentBackend(preferences);
+  const backendConfig = await activeWebDavAttachmentBackend(syncDataSettings);
   if (!backendConfig) return undefined;
   const metadataBytes = await readWebDavObject(
     backendConfig,
@@ -86,12 +87,12 @@ export async function readSyncedChatAttachment(
 }
 
 export async function removeSyncedChatAttachments(
-  preferences: Preferences | undefined,
+  syncDataSettings: SyncDataSettings | undefined,
   chats: Chat[],
 ) {
   const attachments = chats.flatMap(chatAttachmentMetadata);
   if (!attachments.length) return;
-  const backendConfig = await activeWebDavAttachmentBackend(preferences);
+  const backendConfig = await activeWebDavAttachmentBackend(syncDataSettings);
   if (!backendConfig) return;
   await Promise.all(
     attachments.map(async (attachment) => {
@@ -158,9 +159,9 @@ async function writeSyncedChatAttachment({
 }
 
 async function activeWebDavAttachmentBackend(
-  preferences: Preferences | undefined,
+  syncDataSettings: SyncDataSettings | undefined,
 ) {
-  if (!preferences?.syncChatAttachments) return undefined;
+  if (!syncDataSettings?.syncChatAttachments) return undefined;
   const backend = await getActiveSyncBackend().catch(() => undefined);
   return backend?.config.type === "webdav" ? backend.config : undefined;
 }

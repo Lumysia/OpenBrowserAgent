@@ -3,20 +3,17 @@ import {
   readSyncedChatAttachment,
   writeSyncedChatAttachments,
 } from "../../src/shared/sync-chat-attachments";
-import type {
-  Chat,
-  Preferences,
-  UploadedAttachment,
-} from "../../src/shared/types";
+import type { SyncDataSettings } from "../../src/shared/sync-data-settings";
+import type { Chat, UploadedAttachment } from "../../src/shared/types";
 
 export function useSyncedChatAttachments({
   currentChat,
-  preferences,
+  syncDataSettings,
   sentAttachmentPreviews,
   setSentAttachmentPreviews,
 }: {
   currentChat?: Chat;
-  preferences?: Preferences;
+  syncDataSettings?: SyncDataSettings;
   sentAttachmentPreviews: Record<string, UploadedAttachment[]>;
   setSentAttachmentPreviews: Dispatch<
     SetStateAction<Record<string, UploadedAttachment[]>>
@@ -25,7 +22,7 @@ export function useSyncedChatAttachments({
   const requestedAttachmentIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!currentChat || !preferences?.syncChatAttachments) return;
+    if (!currentChat || !syncDataSettings?.syncChatAttachments) return;
     const missingAttachments = currentChat.messages.flatMap((message) => {
       const metadataAttachments = Array.isArray(
         message.metadata?.uploadedAttachments,
@@ -52,7 +49,7 @@ export function useSyncedChatAttachments({
     Promise.all(
       missingAttachments.map(async (attachment) => ({
         messageId: attachment.messageId,
-        value: await readSyncedChatAttachment(preferences, attachment.id),
+        value: await readSyncedChatAttachment(syncDataSettings, attachment.id),
       })),
     )
       .then((attachments) => {
@@ -87,7 +84,7 @@ export function useSyncedChatAttachments({
       });
   }, [
     currentChat,
-    preferences,
+    syncDataSettings,
     sentAttachmentPreviews,
     setSentAttachmentPreviews,
   ]);
@@ -102,7 +99,7 @@ export function useSyncedChatAttachments({
     attachments: UploadedAttachment[];
   }) {
     writeSyncedChatAttachments({
-      preferences,
+      syncDataSettings,
       chatId,
       messageId,
       attachments,

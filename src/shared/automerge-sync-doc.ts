@@ -36,7 +36,7 @@ export async function writeAutomergeValue<T>(
   });
   if (remoteBytes) doc = Automerge.merge(doc, loadDocument<T>(remoteBytes));
   await writeLocalDocument(key, doc);
-  return Automerge.save(doc);
+  return { bytes: Automerge.save(doc), value: doc.value as T | undefined };
 }
 
 function initializeAutomerge() {

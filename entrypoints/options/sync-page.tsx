@@ -31,7 +31,9 @@ import { SyncBackendCard, type SyncDataToggle } from "./sync-backend-card";
 
 export function SyncPage() {
   const [language] = useStoredState(storage.language);
-  const [preferences, setPreferences] = useStoredState(storage.preferences);
+  const [syncDataSettings, setSyncDataSettings] = useStoredState(
+    storage.syncDataSettings,
+  );
   const [syncBackends, setSyncBackends] = useStoredState(storage.syncBackends);
   const [activeSyncBackendId, setActiveSyncBackendId] = useStoredState(
     storage.activeSyncBackendId,
@@ -39,7 +41,7 @@ export function SyncPage() {
   const [syncWriteStatus] = useStoredState(storage.syncWriteStatus);
   const t = getMessages(language);
 
-  if (!preferences || !syncBackends || !activeSyncBackendId) return null;
+  if (!syncDataSettings || !syncBackends || !activeSyncBackendId) return null;
   const syncToggleContent: Record<
     SyncPreferenceKey,
     { title: string; description: string; icon: ReactNode }
@@ -72,10 +74,10 @@ export function SyncPage() {
   };
 
   function updateSyncPreference(key: SyncPreferenceKey, value: boolean) {
-    setPreferences((previous) => ({ ...previous, [key]: value }));
+    setSyncDataSettings((previous) => ({ ...previous, [key]: value }));
     setDataSync(key, value).catch((error) => {
       console.warn("Failed to update sync preference", error);
-      setPreferences((previous) => ({ ...previous, [key]: !value }));
+      setSyncDataSettings((previous) => ({ ...previous, [key]: !value }));
     });
   }
 
@@ -101,7 +103,7 @@ export function SyncPage() {
       title: syncToggleContent[preferenceKey].title,
       description: syncToggleContent[preferenceKey].description,
       icon: syncToggleContent[preferenceKey].icon,
-      value: preferences[preferenceKey] === true,
+      value: syncDataSettings[preferenceKey] === true,
       onChange: (value: boolean) => updateSyncPreference(preferenceKey, value),
     })),
     {
@@ -109,10 +111,10 @@ export function SyncPage() {
       title: t.options.syncChatAttachments,
       description: t.options.syncChatAttachmentsDescription,
       icon: <Paperclip size={18} />,
-      value: preferences.syncChatAttachments === true,
+      value: syncDataSettings.syncChatAttachments === true,
       attachmentBackendOnly: true,
       onChange: (value: boolean) =>
-        setPreferences((previous) => ({
+        setSyncDataSettings((previous) => ({
           ...previous,
           syncChatAttachments: value,
         })),
@@ -131,6 +133,7 @@ export function SyncPage() {
         activeBackendId={activeSyncBackendId}
         backends={syncBackends}
         dataToggles={dataToggles}
+        syncDataSettings={syncDataSettings}
         onActiveBackendChange={changeActiveBackend}
         onBackendsChange={updateBackends}
         t={t}

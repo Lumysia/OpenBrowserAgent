@@ -163,8 +163,8 @@ async function flushSyncWrite(key: string) {
     if (pending.operation === "remove") {
       await pending.backend.remove(key);
     } else {
-      await pending.backend.write(key, pending.value);
-      await markSyncLocalCacheFlushed(key, pending.value);
+      const value = await pending.backend.write(key, pending.value);
+      await markSyncLocalCacheFlushed(key, value ?? pending.value);
     }
     await updateSyncWriteStatus({ lastFlushedAt: Date.now(), lastError: "" });
     pending.resolve.forEach((resolve) => resolve());

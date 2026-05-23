@@ -70,6 +70,7 @@ export function SidepanelApp() {
     storage.ignoreSyncedProvidersForBootstrap,
   );
   const [preferences, setPreferences] = useStoredState(storage.preferences);
+  const [syncDataSettings] = useStoredState(storage.syncDataSettings);
   const [agents] = useStoredState(storage.agents);
   const [language] = useStoredState(storage.language);
   const [skills, setSkills] = useStoredState(storage.skills);
@@ -215,7 +216,7 @@ export function SidepanelApp() {
 
   const { syncSentAttachments } = useSyncedChatAttachments({
     currentChat,
-    preferences,
+    syncDataSettings,
     sentAttachmentPreviews,
     setSentAttachmentPreviews,
   });
@@ -229,12 +230,12 @@ export function SidepanelApp() {
   }, [chats, setChats]);
 
   useSidepanelTheme(preferences?.accentColor, preferences?.colorScheme);
-  useRemoteSyncRefresh(preferences);
+  useRemoteSyncRefresh(syncDataSettings);
 
   const { createChat, closeChat, selectChat } = useChatActions({
     t,
     activeChatId,
-    preferences,
+    syncDataSettings,
     setChats,
     setActiveChatId,
     setChatSelectionRequestId,

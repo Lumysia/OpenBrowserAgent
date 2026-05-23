@@ -8,13 +8,6 @@ import { REASONING_EFFORT } from "./reasoning";
 export const DEFAULT_PREFERENCES: Preferences = {
   colorScheme: "system",
   accentColor: "pink",
-  syncSettings: false,
-  syncProviders: false,
-  syncAgents: false,
-  syncSkills: false,
-  syncMcpServers: false,
-  syncChats: false,
-  syncChatAttachments: false,
   autoScroll: true,
   autoRetry: true,
   imageGenerationEnabled: false,
@@ -24,9 +17,21 @@ export const DEFAULT_PREFERENCES: Preferences = {
   ...DEFAULT_CONTEXT_BUDGET_PREFERENCES,
 };
 
-export function mergePreferences(value: Preferences): Preferences {
+export function mergePreferences(
+  value: Preferences & Record<string, unknown>,
+): Preferences {
+  const {
+    syncSettings,
+    syncProviders,
+    syncAgents,
+    syncSkills,
+    syncMcpServers,
+    syncChats,
+    syncChatAttachments,
+    ...preferences
+  } = value;
   return {
     ...DEFAULT_PREFERENCES,
-    ...value,
+    ...preferences,
   };
 }

@@ -7,6 +7,7 @@ import {
   syncBackendSupportsChatAttachments,
 } from "../../src/shared/sync-backends";
 import { createSyncConfigCode } from "../../src/shared/sync-config-code";
+import type { SyncDataSettings } from "../../src/shared/sync-data-settings";
 import {
   syncBackendRegistryItem,
   WEBDAV_SYNC_BACKEND_ID,
@@ -47,6 +48,7 @@ export function SyncBackendCard({
   activeBackendId,
   backends,
   dataToggles,
+  syncDataSettings,
   onActiveBackendChange,
   onBackendsChange,
   t,
@@ -54,6 +56,7 @@ export function SyncBackendCard({
   activeBackendId: string;
   backends: SyncBackendConfig[];
   dataToggles: SyncDataToggle[];
+  syncDataSettings: SyncDataSettings;
   onActiveBackendChange: (backendId: string) => void;
   onBackendsChange: (backends: SyncBackendConfig[]) => void;
   t: Messages;
@@ -117,7 +120,9 @@ export function SyncBackendCard({
   async function copyBackendConfig(backend: SyncBackendConfig) {
     setTestingBackendId(backend.id);
     try {
-      await navigator.clipboard.writeText(createSyncConfigCode(backend));
+      await navigator.clipboard.writeText(
+        createSyncConfigCode({ backend, syncDataSettings }),
+      );
       setCopiedBackendId(backend.id);
       window.setTimeout(() => setCopiedBackendId(undefined), 1_200);
     } finally {

@@ -12,24 +12,19 @@ import {
 } from "./storage-sync-cache";
 import { STORAGE_KEYS, SYNCABLE_DATA_ITEMS } from "./storage-keys";
 import { sameStorageValue } from "./storage-value";
-import type { Preferences } from "./types";
+import type { SyncDataSettings } from "./sync-data-settings";
 
 export async function refreshSyncFromRemote(
-  currentPreferences: Preferences,
+  syncDataSettings: SyncDataSettings,
 ): Promise<void> {
   if (!(await isSyncBackendEnabled())) return;
   const backend = await getActiveSyncBackend();
   await refreshSyncKey(backend, STORAGE_KEYS.language);
-  const syncedPreferences = await refreshSyncKey<Preferences>(
-    backend,
-    STORAGE_KEYS.preferences,
-    mergePreferences,
-  );
-  const preferences = syncedPreferences || currentPreferences;
+  await refreshSyncKey(backend, STORAGE_KEYS.preferences, mergePreferences);
 
   await Promise.all(
     SYNCABLE_DATA_ITEMS.filter(
-      (item) => preferences[item.preferenceKey] === true,
+      (item) => syncDataSettings[item.preferenceKey] === true,
     ).map((item) => refreshSyncKey(backend, item.dataKey)),
   );
 }
@@ -44,9 +39,10 @@ async function refreshSyncKey<T>(
     if (key === STORAGE_KEYS.chats && hasUnfinishedChatRun(pending))
       return pending;
     const value = normalize ? normalize(pending) : pending;
-    await backend.write(key, value);
-    await markSyncLocalCacheFlushed(key, value);
-    return value;
+    const mergedValue = await backend.write(key, value);
+    const nextValue = mergedValue ?? value;
+    await markSyncLocalCacheFlushed(key, nextValue);
+    return nextValue;
   }
 
   const previous = await readSyncLocalValue<T>(key);
@@ -54,8 +50,12 @@ async function refreshSyncKey<T>(
   if (remote === undefined) return undefined;
   const value = normalize ? normalize(remote) : remote;
   await markSyncLocalCacheFlushed(key, value);
-  if (previous !== undefined && !sameStorageValue(previous, value))
-    await backend.write(key, value);
+  if (previous !== undefined && !sameStorageValue(previous, value)) {
+    const mergedValue = await backend.write(key, value);
+    const nextValue = mergedValue ?? value;
+    await markSyncLocalCacheFlushed(key, nextValue);
+    return nextValue;
+  }
   return value;
 }
 

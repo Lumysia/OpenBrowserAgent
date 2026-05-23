@@ -48,6 +48,11 @@ import {
   type SyncPreferenceKey,
 } from "./storage-keys";
 import { isEmptyStorageValue } from "./storage-value";
+import {
+  DEFAULT_SYNC_DATA_SETTINGS,
+  mergeSyncDataSettings,
+  type SyncDataSettings,
+} from "./sync-data-settings";
 import type {
   Agent,
   AgentWorkspace,
@@ -61,7 +66,7 @@ import type {
 } from "./types";
 
 export { STORAGE_KEYS, SYNCABLE_DATA_ITEMS, SYNC_PREFERENCE_KEYS };
-export type { SyncPreferenceKey };
+export type { SyncDataSettings, SyncPreferenceKey };
 
 export { getBrowserApi };
 export { clearPendingSyncWrites, syncLocalCacheKey, type SyncWriteStatus };
@@ -146,8 +151,8 @@ async function readRemoteValue<T>(key: string) {
 
 async function writeRemoteValueNow<T>(key: string, value: T) {
   const backend = await getActiveSyncBackend();
-  await backend.write(key, value);
-  await markSyncLocalCacheFlushed(key, value);
+  const mergedValue = await backend.write(key, value);
+  await markSyncLocalCacheFlushed(key, mergedValue ?? value);
 }
 
 const { createItem, createMigratedItem } = makeStorageItemFactory({
@@ -164,11 +169,11 @@ function createSwitchableItem<T>(
   normalize?: (value: T) => T,
   options: StorageItemOptions = {},
 ): StorageItem<T> {
-  const areaFor = (preferences: Preferences): AreaName =>
-    areaForSyncEnabled(preferences[syncPreferenceKey] === true);
+  const areaFor = (settings: SyncDataSettings): AreaName =>
+    areaForSyncEnabled(settings[syncPreferenceKey] === true);
 
   async function activeArea() {
-    return effectiveArea(areaFor(await storage.preferences.get()));
+    return effectiveArea(areaFor(await storage.syncDataSettings.get()));
   }
 
   async function getValue() {
@@ -233,18 +238,18 @@ function createSwitchableItem<T>(
         if (isBackendStorageChange(key, changedArea)) return;
         const cacheChange = changes[syncLocalCacheKey(key)];
         const localCacheChanged = changedArea === STORAGE_AREAS.local;
-        const preferencesCacheChanged =
+        const syncDataSettingsCacheChanged =
           localCacheChanged &&
-          changes[syncLocalCacheKey(STORAGE_KEYS.preferences)];
-        const preferencesLocalChanged =
-          localCacheChanged && changes[STORAGE_KEYS.preferences];
+          changes[syncLocalCacheKey(STORAGE_KEYS.syncDataSettings)];
+        const syncDataSettingsLocalChanged =
+          localCacheChanged && changes[STORAGE_KEYS.syncDataSettings];
         const activeBackendChanged =
           localCacheChanged && changes[STORAGE_KEYS.activeSyncBackendId];
 
         if (
           !cacheChange &&
-          !preferencesCacheChanged &&
-          !preferencesLocalChanged &&
+          !syncDataSettingsCacheChanged &&
+          !syncDataSettingsLocalChanged &&
           !activeBackendChanged &&
           !changes[key]
         )
@@ -256,25 +261,29 @@ function createSwitchableItem<T>(
           return;
         }
 
-        if (preferencesCacheChanged || preferencesLocalChanged) {
-          const preferenceChange = (preferencesCacheChanged ||
-            preferencesLocalChanged) as chrome.storage.StorageChange;
-          const oldPreferences = preferencesCacheChanged
+        if (syncDataSettingsCacheChanged || syncDataSettingsLocalChanged) {
+          const settingsChange = (syncDataSettingsCacheChanged ||
+            syncDataSettingsLocalChanged) as chrome.storage.StorageChange;
+          const oldSettings = syncDataSettingsCacheChanged
             ? (
-                preferenceChange.oldValue as
-                  | SyncLocalCache<Preferences>
+                settingsChange.oldValue as
+                  | SyncLocalCache<SyncDataSettings>
                   | undefined
               )?.value
-            : (preferenceChange.oldValue as Preferences | undefined);
-          const newPreferences = preferencesCacheChanged
+            : (settingsChange.oldValue as SyncDataSettings | undefined);
+          const newSettings = syncDataSettingsCacheChanged
             ? (
-                preferenceChange.newValue as
-                  | SyncLocalCache<Preferences>
+                settingsChange.newValue as
+                  | SyncLocalCache<SyncDataSettings>
                   | undefined
               )?.value
-            : (preferenceChange.newValue as Preferences | undefined);
-          const oldArea = areaFor(oldPreferences || DEFAULT_PREFERENCES);
-          const newArea = areaFor(newPreferences || DEFAULT_PREFERENCES);
+            : (settingsChange.newValue as SyncDataSettings | undefined);
+          const oldArea = areaFor(
+            mergeSyncDataSettings(oldSettings || DEFAULT_SYNC_DATA_SETTINGS),
+          );
+          const newArea = areaFor(
+            mergeSyncDataSettings(newSettings || DEFAULT_SYNC_DATA_SETTINGS),
+          );
           if (oldArea === newArea) return;
           const next = await getValue();
           callback(next, next);
@@ -379,6 +388,12 @@ export const storage = {
     STORAGE_KEYS.activeSyncBackendId,
     () => NO_SYNC_BACKEND_ID,
   ),
+  syncDataSettings: createItem<SyncDataSettings>(
+    STORAGE_AREAS.local,
+    STORAGE_KEYS.syncDataSettings,
+    () => DEFAULT_SYNC_DATA_SETTINGS,
+    mergeSyncDataSettings,
+  ),
   ignoreSyncedProvidersForBootstrap: createItem<boolean>(
     STORAGE_AREAS.local,
     STORAGE_KEYS.ignoreSyncedProvidersForBootstrap,
@@ -399,10 +414,10 @@ export async function setDataSync(key: SyncPreferenceKey, enabled: boolean) {
     ),
   );
 
-  await updateStoredValue(storage.preferences, (preferences) => ({
-    ...preferences,
+  await storage.syncDataSettings.set({
+    ...(await storage.syncDataSettings.get()),
     [key]: enabled,
-  }));
+  });
 }
 
 async function setDataKeySync(dataKey: SyncableDataKey, enabled: boolean) {
@@ -437,6 +452,7 @@ export async function setActiveSyncBackend(backendId: string) {
     backendId,
     getLanguage: storage.language.get,
     getPreferences: storage.preferences.get,
+    getSyncDataSettings: storage.syncDataSettings.get,
     readSyncedValue,
     setActiveBackendId: storage.activeSyncBackendId.set,
   });
@@ -445,13 +461,7 @@ export async function setActiveSyncBackend(backendId: string) {
 async function disableDataSync() {
   const language = await readSyncedValue<string>(STORAGE_KEYS.language);
   const preferences = await storage.preferences.get();
-  const localPreferences = {
-    ...preferences,
-    syncSettings: false,
-    ...Object.fromEntries(
-      SYNC_PREFERENCE_KEYS.map((preferenceKey) => [preferenceKey, false]),
-    ),
-  } as Preferences;
+  const localSyncDataSettings = mergeSyncDataSettings({});
   const dataSnapshots = await Promise.all(
     SYNCABLE_DATA_ITEMS.map(async (item) => ({
       ...item,
@@ -468,20 +478,14 @@ async function disableDataSync() {
   await setStoredValueNow(
     STORAGE_AREAS.local,
     STORAGE_KEYS.preferences,
-    localPreferences,
+    preferences,
   );
+  await storage.syncDataSettings.set(localSyncDataSettings);
   for (const item of dataSnapshots) {
     if (item.value !== undefined)
       await setStoredValueNow(STORAGE_AREAS.local, item.dataKey, item.value);
   }
   await storage.activeSyncBackendId.set(NO_SYNC_BACKEND_ID);
-}
-
-async function updateStoredValue<T>(
-  item: StorageItem<T>,
-  updater: (value: T) => T,
-) {
-  await item.set(updater(await item.get()));
 }
 
 export async function updateStoredArray<T extends { id: string }>(

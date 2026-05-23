@@ -57,6 +57,9 @@ const BOOTSTRAP_CLOUD_DATA_KEYS = SYNCABLE_DATA_ITEMS.map(
 export function ProvidersEmptyState({ t }: { t: Messages }) {
   const [language, setLanguage] = useStoredState(storage.language);
   const [syncBackends, setSyncBackends] = useStoredState(storage.syncBackends);
+  const [syncDataSettings, setSyncDataSettings] = useStoredState(
+    storage.syncDataSettings,
+  );
   const [activeSyncBackendId, setActiveSyncBackendId] = useStoredState(
     storage.activeSyncBackendId,
   );
@@ -92,7 +95,8 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     setSyncStatus("synced");
   }, [activeSyncBackendId]);
 
-  if (!language || !syncBackends || !activeSyncBackendId) return null;
+  if (!language || !syncBackends || !syncDataSettings || !activeSyncBackendId)
+    return null;
   const loadedSyncBackends = syncBackends;
   const hasActiveSyncBackend = activeSyncBackendId !== NO_SYNC_BACKEND_ID;
 
@@ -147,13 +151,15 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   function applySyncConfigCode() {
     if (hasActiveSyncBackend) return;
     try {
-      const backend = parseSyncConfigCode(syncCodeDraft);
+      const config = parseSyncConfigCode(syncCodeDraft);
+      const { backend } = config;
       setSyncBackends([
         ...loadedSyncBackends.filter(
           (existing) => existing.type !== backend.type,
         ),
         backend,
       ]);
+      setSyncDataSettings(config.syncDataSettings);
       setSelectedBackendId(backend.id);
       setSyncStatus("idle");
       setSyncCodeStatus("applied");
@@ -198,8 +204,8 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
       if (syncStatus === "ready" && cloudBootstrapState) {
         await restoreCloudBootstrapState(cloudBootstrapState);
       } else {
-        await storage.preferences.set({
-          ...(await storage.preferences.get()),
+        await storage.syncDataSettings.set({
+          ...(await storage.syncDataSettings.get()),
           syncProviders: true,
         });
         await setActiveSyncBackend(selectedBackendId);
@@ -219,12 +225,21 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     const restoredPreferences = mergePreferences(
       cloudState.preferences || (await storage.preferences.get()),
     );
-    for (const preferenceKey of SYNC_PREFERENCE_KEYS) {
-      restoredPreferences[preferenceKey] = SYNCABLE_DATA_ITEMS.some(
-        (item) =>
-          item.preferenceKey === preferenceKey &&
-          hasCloudValue(cloudState.data[item.dataKey]),
-      );
+    if (syncCodeStatus !== "applied") {
+      const restoredSyncDataSettings = {
+        ...(await storage.syncDataSettings.get()),
+        ...Object.fromEntries(
+          SYNC_PREFERENCE_KEYS.map((preferenceKey) => [
+            preferenceKey,
+            SYNCABLE_DATA_ITEMS.some(
+              (item) =>
+                item.preferenceKey === preferenceKey &&
+                hasCloudValue(cloudState.data[item.dataKey]),
+            ),
+          ]),
+        ),
+      };
+      await storage.syncDataSettings.set(restoredSyncDataSettings);
     }
     await restoreSyncBackendFromCloud({
       backendId: selectedBackendId,

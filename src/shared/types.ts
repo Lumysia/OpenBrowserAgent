@@ -43,13 +43,6 @@ export type Preferences = {
   imageGenerationSize?: string;
   colorScheme?: "system" | "light" | "dark";
   accentColor?: "green" | "blue" | "pink" | "purple" | "amber";
-  syncSettings?: boolean;
-  syncProviders?: boolean;
-  syncAgents?: boolean;
-  syncSkills?: boolean;
-  syncMcpServers?: boolean;
-  syncChats?: boolean;
-  syncChatAttachments?: boolean;
   autoScroll?: boolean;
   autoRetry?: boolean;
   maxToolSteps?: number;

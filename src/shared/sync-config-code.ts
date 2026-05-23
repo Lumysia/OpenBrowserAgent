@@ -2,6 +2,10 @@ import {
   BROWSER_SYNC_BACKEND_ID,
   WEBDAV_SYNC_BACKEND_ID,
 } from "./sync-backend-registry";
+import {
+  mergeSyncDataSettings,
+  type SyncDataSettings,
+} from "./sync-data-settings";
 import type { SyncBackendConfig } from "./types";
 
 const SYNC_CONFIG_CODE_PREFIX = "oba-sync-v1.";
@@ -9,15 +13,28 @@ const SYNC_CONFIG_CODE_PREFIX = "oba-sync-v1.";
 type SyncConfigCodePayload = {
   version: 1;
   backend: SyncBackendConfig;
+  syncDataSettings?: SyncDataSettings;
 };
 
-export function createSyncConfigCode(backend: SyncBackendConfig) {
+export type ParsedSyncConfigCode = {
+  backend: SyncBackendConfig;
+  syncDataSettings: SyncDataSettings;
+};
+
+export function createSyncConfigCode({
+  backend,
+  syncDataSettings,
+}: ParsedSyncConfigCode) {
   return `${SYNC_CONFIG_CODE_PREFIX}${base64UrlEncode(
-    JSON.stringify({ version: 1, backend } satisfies SyncConfigCodePayload),
+    JSON.stringify({
+      version: 1,
+      backend,
+      syncDataSettings,
+    } satisfies SyncConfigCodePayload),
   )}`;
 }
 
-export function parseSyncConfigCode(code: string): SyncBackendConfig {
+export function parseSyncConfigCode(code: string): ParsedSyncConfigCode {
   const trimmed = code.trim();
   if (!trimmed.startsWith(SYNC_CONFIG_CODE_PREFIX))
     throw new Error("Invalid sync config code.");
@@ -26,7 +43,10 @@ export function parseSyncConfigCode(code: string): SyncBackendConfig {
   ) as Partial<SyncConfigCodePayload>;
   if (payload.version !== 1 || !payload.backend)
     throw new Error("Unsupported sync config code.");
-  return normalizeSyncConfigCodeBackend(payload.backend);
+  return {
+    backend: normalizeSyncConfigCodeBackend(payload.backend),
+    syncDataSettings: mergeSyncDataSettings(payload.syncDataSettings),
+  };
 }
 
 function normalizeSyncConfigCodeBackend(

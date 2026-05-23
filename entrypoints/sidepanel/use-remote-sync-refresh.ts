@@ -3,11 +3,13 @@ import {
   refreshSyncFromRemote,
   syncRemoteRefreshIntervalMs,
 } from "../../src/shared/storage-remote-sync";
-import type { Preferences } from "../../src/shared/types";
+import type { SyncDataSettings } from "../../src/shared/sync-data-settings";
 
-export function useRemoteSyncRefresh(preferences: Preferences | undefined) {
+export function useRemoteSyncRefresh(
+  syncDataSettings: SyncDataSettings | undefined,
+) {
   useEffect(() => {
-    if (!preferences) return;
+    if (!syncDataSettings) return;
     let disposed = false;
     let running = false;
 
@@ -15,7 +17,7 @@ export function useRemoteSyncRefresh(preferences: Preferences | undefined) {
       if (disposed || running) return;
       running = true;
       try {
-        await refreshSyncFromRemote(preferences);
+        await refreshSyncFromRemote(syncDataSettings);
       } catch (error) {
         console.warn("Failed to refresh sync data", error);
       } finally {
@@ -29,5 +31,5 @@ export function useRemoteSyncRefresh(preferences: Preferences | undefined) {
       disposed = true;
       clearInterval(intervalId);
     };
-  }, [preferences]);
+  }, [syncDataSettings]);
 }

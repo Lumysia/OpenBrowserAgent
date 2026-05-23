@@ -13,6 +13,7 @@ export const STORAGE_KEYS = {
   syncWriteStatus: "sync-write-status",
   syncBackends: "sync-backends",
   activeSyncBackendId: "active-sync-backend-id",
+  syncDataSettings: "sync-data-settings",
   ignoreSyncedProvidersForBootstrap: "ignore-synced-providers-for-bootstrap",
 } as const;
 

@@ -26,7 +26,7 @@ export type RemoteStorageChange<T = unknown> = {
 export type SyncBackend = {
   config: SyncBackendConfig;
   read<T>(key: string): Promise<T | undefined>;
-  write<T>(key: string, value: T): Promise<void>;
+  write<T>(key: string, value: T): Promise<T | undefined>;
   remove(key: string): Promise<void>;
   test(): Promise<void>;
   watch?<T>(
@@ -118,17 +118,18 @@ function createBrowserSyncBackend(
         encoded ? base64ToBytes(encoded) : undefined,
       );
     },
-    async write(key, value) {
-      const result = await getBrowserApi().storage.sync.get(key);
-      const encoded = result[key] as string | undefined;
-      const bytes = await writeAutomergeValue(
+    async write<T>(key: string, value: T) {
+      const stored = await getBrowserApi().storage.sync.get(key);
+      const encoded = stored[key] as string | undefined;
+      const result = await writeAutomergeValue<T>(
         key,
         value,
         encoded ? base64ToBytes(encoded) : undefined,
       );
-      const nextValue = bytesToBase64(bytes);
+      const nextValue = bytesToBase64(result.bytes);
       assertBrowserSyncItemFits(key, nextValue);
       await getBrowserApi().storage.sync.set({ [key]: nextValue });
+      return result.value;
     },
     async remove(key) {
       await getBrowserApi().storage.sync.remove(key);
@@ -172,8 +173,8 @@ function createWebDavBackend(
       const bytes = await readWebDavBytes(backendConfig, key);
       return readAutomergeValue<T>(key, bytes);
     },
-    async write(key, value) {
-      const bytes = await writeAutomergeValue(
+    async write<T>(key: string, value: T) {
+      const result = await writeAutomergeValue<T>(
         key,
         value,
         await readWebDavBytes(backendConfig, key),
@@ -184,10 +185,11 @@ function createWebDavBackend(
         {
           method: "PUT",
           headers: { "Content-Type": "application/octet-stream" },
-          body: bytesToArrayBuffer(bytes),
+          body: bytesToArrayBuffer(result.bytes),
         },
       );
       if (!response.ok) await throwWebDavError(response, "write");
+      return result.value;
     },
     async remove(key) {
       const response = await requestWebDav(

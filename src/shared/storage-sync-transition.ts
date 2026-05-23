@@ -2,12 +2,14 @@ import { markSyncLocalCacheFlushed } from "./storage-sync-cache";
 import { getBrowserApi } from "./browser-api";
 import { STORAGE_KEYS, SYNCABLE_DATA_ITEMS } from "./storage-keys";
 import { createSyncBackend, getStoredSyncBackends } from "./sync-backends";
+import type { SyncDataSettings } from "./sync-data-settings";
 import type { Preferences } from "./types";
 
 type SyncActivationOptions = {
   backendId: string;
   getLanguage: () => Promise<string>;
   getPreferences: () => Promise<Preferences>;
+  getSyncDataSettings: () => Promise<SyncDataSettings>;
   readSyncedValue: <T>(key: string) => Promise<T | undefined>;
   setActiveBackendId: (backendId: string) => Promise<void>;
 };
@@ -24,29 +26,40 @@ export async function activateSyncBackend({
   backendId,
   getLanguage,
   getPreferences,
+  getSyncDataSettings,
   readSyncedValue,
   setActiveBackendId,
 }: SyncActivationOptions) {
   const language = await getLanguage();
   const preferences = await getPreferences();
+  const syncDataSettings = await getSyncDataSettings();
   const backend = await syncBackendForId(backendId);
   const dataSnapshots = await Promise.all(
     SYNCABLE_DATA_ITEMS.map(async (item) => ({
       ...item,
-      value: preferences[item.preferenceKey]
+      value: syncDataSettings[item.preferenceKey]
         ? await readSyncedValue(item.dataKey)
         : undefined,
     })),
   );
 
-  await backend.write(STORAGE_KEYS.language, language);
-  await markSyncLocalCacheFlushed(STORAGE_KEYS.language, language);
-  await backend.write(STORAGE_KEYS.preferences, preferences);
-  await markSyncLocalCacheFlushed(STORAGE_KEYS.preferences, preferences);
+  const mergedLanguage = await backend.write(STORAGE_KEYS.language, language);
+  await markSyncLocalCacheFlushed(
+    STORAGE_KEYS.language,
+    mergedLanguage ?? language,
+  );
+  const mergedPreferences = await backend.write(
+    STORAGE_KEYS.preferences,
+    preferences,
+  );
+  await markSyncLocalCacheFlushed(
+    STORAGE_KEYS.preferences,
+    mergedPreferences ?? preferences,
+  );
   for (const item of dataSnapshots) {
     if (item.value === undefined) continue;
-    await backend.write(item.dataKey, item.value);
-    await markSyncLocalCacheFlushed(item.dataKey, item.value);
+    const mergedValue = await backend.write(item.dataKey, item.value);
+    await markSyncLocalCacheFlushed(item.dataKey, mergedValue ?? item.value);
   }
   await setActiveBackendId(backendId);
 }
