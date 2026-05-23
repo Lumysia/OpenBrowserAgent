@@ -82,6 +82,7 @@ async function setStoredValue<T>(area: AreaName, key: string, value: T) {
 
   const backend = await getActiveSyncBackend();
   await writeSyncLocalCache(key, value);
+  if (key === STORAGE_KEYS.chats && hasUnfinishedChatRun(value)) return;
   queueSyncWrite(backend, key, value, {
     delayMs: immediateSyncWriteDelay(key),
   }).catch(() => undefined);
@@ -109,9 +110,23 @@ async function removeStoredValue(area: AreaName, key: string) {
 }
 
 function immediateSyncWriteDelay(key: string) {
-  return key === STORAGE_KEYS.language || key === STORAGE_KEYS.preferences
-    ? 0
-    : undefined;
+  if (key === STORAGE_KEYS.language || key === STORAGE_KEYS.preferences)
+    return 0;
+  if (key === STORAGE_KEYS.chats) return config.CHAT_SYNC_WRITE_DEBOUNCE_MS;
+  return undefined;
+}
+
+function hasUnfinishedChatRun(value: unknown) {
+  if (!Array.isArray(value)) return false;
+  return (value as Chat[]).some((chat) =>
+    chat.messages?.some((message) => {
+      if (message.role !== "assistant") return false;
+      const metrics = message.metadata?.runMetrics as
+        | { startedAt?: unknown; endedAt?: unknown }
+        | undefined;
+      return metrics?.startedAt !== undefined && metrics.endedAt === undefined;
+    }),
+  );
 }
 
 async function readStoredValue<T>(area: AreaName, key: string) {
