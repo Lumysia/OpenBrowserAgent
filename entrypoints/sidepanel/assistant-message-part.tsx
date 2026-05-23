@@ -42,7 +42,7 @@ export function AssistantPart({
   message: ChatMessage;
   chatMessages: ChatMessage[];
   onSelectChat?: (chatId: string) => void;
-  chatExists?: (chatId: string) => boolean;
+  chatExists: (chatId: string) => boolean;
 }) {
   if (isToolPartType(part.type))
     return (

@@ -31,7 +31,7 @@ export function ToolPart({
   part: ChatPart;
   runEnded?: boolean;
   onSelectChat?: (chatId: string) => void;
-  chatExists?: (chatId: string) => boolean;
+  chatExists: (chatId: string) => boolean;
 }) {
   if (!isToolPartType(part.type)) return null;
   const name = part.toolName || toolNameFromPartType(part.type);
@@ -65,7 +65,7 @@ export function ToolPart({
   ].join("::");
   const subAgentChatId = subAgentChildChatId(name, part);
   const subAgentChatAvailable = subAgentChatId
-    ? chatExists?.(subAgentChatId) !== false
+    ? chatExists(subAgentChatId)
     : false;
   return (
     <div className={`tool-card ${status}`}>

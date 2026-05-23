@@ -17,13 +17,27 @@ export const STORAGE_KEYS = {
   ignoreSyncedProvidersForBootstrap: "ignore-synced-providers-for-bootstrap",
 } as const;
 
+export const SYNC_PREFERENCES = {
+  providers: "syncProviders",
+  agents: "syncAgents",
+  skills: "syncSkills",
+  mcpServers: "syncMcpServers",
+  chats: "syncChats",
+} as const;
+
 export const SYNCABLE_DATA_ITEMS = [
-  { preferenceKey: "syncProviders", dataKey: STORAGE_KEYS.provider },
-  { preferenceKey: "syncAgents", dataKey: STORAGE_KEYS.agents },
-  { preferenceKey: "syncAgents", dataKey: STORAGE_KEYS.agentWorkspaces },
-  { preferenceKey: "syncSkills", dataKey: STORAGE_KEYS.skills },
-  { preferenceKey: "syncMcpServers", dataKey: STORAGE_KEYS.mcpServers },
-  { preferenceKey: "syncChats", dataKey: STORAGE_KEYS.chats },
+  { preferenceKey: SYNC_PREFERENCES.providers, dataKey: STORAGE_KEYS.provider },
+  { preferenceKey: SYNC_PREFERENCES.agents, dataKey: STORAGE_KEYS.agents },
+  {
+    preferenceKey: SYNC_PREFERENCES.agents,
+    dataKey: STORAGE_KEYS.agentWorkspaces,
+  },
+  { preferenceKey: SYNC_PREFERENCES.skills, dataKey: STORAGE_KEYS.skills },
+  {
+    preferenceKey: SYNC_PREFERENCES.mcpServers,
+    dataKey: STORAGE_KEYS.mcpServers,
+  },
+  { preferenceKey: SYNC_PREFERENCES.chats, dataKey: STORAGE_KEYS.chats },
 ] as const;
 
 export type SyncPreferenceKey =

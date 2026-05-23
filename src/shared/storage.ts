@@ -43,6 +43,7 @@ import { normalizeWorkspaces } from "./workspace";
 import {
   STORAGE_KEYS,
   SYNCABLE_DATA_ITEMS,
+  SYNC_PREFERENCES,
   SYNC_PREFERENCE_KEYS,
   type SyncableDataKey,
   type SyncPreferenceKey,
@@ -65,7 +66,12 @@ import type {
   SyncBackendConfig,
 } from "./types";
 
-export { STORAGE_KEYS, SYNCABLE_DATA_ITEMS, SYNC_PREFERENCE_KEYS };
+export {
+  STORAGE_KEYS,
+  SYNCABLE_DATA_ITEMS,
+  SYNC_PREFERENCES,
+  SYNC_PREFERENCE_KEYS,
+};
 export type { SyncDataSettings, SyncPreferenceKey };
 
 export { getBrowserApi };
@@ -348,29 +354,29 @@ export const storage = {
   provider: createSwitchableItem<ProviderState>(
     STORAGE_KEYS.provider,
     () => ({}),
-    "syncProviders",
+    SYNC_PREFERENCES.providers,
   ),
   agents: createSwitchableItem<Agent[]>(
     STORAGE_KEYS.agents,
     () => normalizeAgents(undefined),
-    "syncAgents",
+    SYNC_PREFERENCES.agents,
     normalizeAgents,
   ),
   agentWorkspaces: createSwitchableItem<AgentWorkspace[]>(
     STORAGE_KEYS.agentWorkspaces,
     () => [],
-    "syncAgents",
+    SYNC_PREFERENCES.agents,
     normalizeWorkspaces,
   ),
   skills: createSwitchableItem<Skill[]>(
     STORAGE_KEYS.skills,
     () => BUILTIN_SKILLS,
-    "syncSkills",
+    SYNC_PREFERENCES.skills,
   ),
   mcpServers: createSwitchableItem<McpServerConfig[]>(
     STORAGE_KEYS.mcpServers,
     () => [],
-    "syncMcpServers",
+    SYNC_PREFERENCES.mcpServers,
     normalizeMcpServers,
   ),
   shouldShowUpdateToast: createItem<boolean>(
@@ -381,7 +387,7 @@ export const storage = {
   chats: createSwitchableItem<Chat[]>(
     STORAGE_KEYS.chats,
     () => [],
-    "syncChats",
+    SYNC_PREFERENCES.chats,
     undefined,
     { persistDebounceMs: config.CHAT_WRITE_DEBOUNCE_MS },
   ),

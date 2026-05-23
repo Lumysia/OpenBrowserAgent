@@ -68,7 +68,7 @@ export function MessageBubble({
   onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
   onFork?: (message: ChatMessage, partId?: string) => void;
   onSelectChat?: (chatId: string) => void;
-  chats?: Chat[];
+  chats: Chat[];
   resendDisabled?: boolean;
   latestUserMessage?: boolean;
 }) {
@@ -112,7 +112,7 @@ export function MessageBubble({
   const assistantEnded =
     message.role === "assistant" && messageRunEnded(message);
   const chatExists = (chatId: string) =>
-    chats?.some((chat) => chat.id === chatId) ?? true;
+    chats.some((chat) => chat.id === chatId);
   return (
     <div
       className={`message ${message.role === "user" ? "user" : ""} ${latestUserMessage ? "latest-user" : ""} ${editing ? "editing" : ""}`}

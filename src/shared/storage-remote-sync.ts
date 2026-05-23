@@ -10,12 +10,35 @@ import {
   readPendingSyncValue,
   readSyncLocalValue,
 } from "./storage-sync-cache";
-import { STORAGE_KEYS, SYNCABLE_DATA_ITEMS } from "./storage-keys";
+import {
+  STORAGE_KEYS,
+  SYNCABLE_DATA_ITEMS,
+  SYNC_PREFERENCES,
+} from "./storage-keys";
 import { sameStorageValue } from "./storage-value";
 import {
   mergeSyncDataSettings,
   type SyncDataSettings,
 } from "./sync-data-settings";
+
+const SYNC_SETTINGS_REFRESH_ITEMS = [
+  { dataKey: STORAGE_KEYS.language },
+  { dataKey: STORAGE_KEYS.preferences },
+  { dataKey: STORAGE_KEYS.syncDataSettings },
+] as const;
+
+const SYNC_FAST_DATA_REFRESH_ITEMS = [
+  { preferenceKey: SYNC_PREFERENCES.providers, dataKey: STORAGE_KEYS.provider },
+] as const;
+
+const SYNC_REMOTE_DATA_REFRESH_ITEMS = SYNCABLE_DATA_ITEMS.filter(
+  (item) =>
+    !SYNC_FAST_DATA_REFRESH_ITEMS.some(
+      (fastItem) =>
+        fastItem.preferenceKey === item.preferenceKey &&
+        fastItem.dataKey === item.dataKey,
+    ),
+);
 
 export async function refreshSyncFromRemote(
   syncDataSettings: SyncDataSettings,
@@ -32,24 +55,27 @@ export async function refreshSyncSettingsFromRemote(
 ): Promise<SyncDataSettings | undefined> {
   if (!(await isSyncBackendEnabled())) return;
   const backend = await getActiveSyncBackend();
-  await refreshSyncKey(backend, STORAGE_KEYS.language, {
-    writeBackOnChange: false,
-  });
-  await refreshSyncKey(backend, STORAGE_KEYS.preferences, {
-    normalize: mergePreferences,
-    writeBackOnChange: false,
-  });
-  const refreshedSyncDataSettings = await refreshSyncKey<SyncDataSettings>(
-    backend,
-    STORAGE_KEYS.syncDataSettings,
-    { normalize: mergeSyncDataSettings, writeBackOnChange: false },
+  const refreshedSettings = await Promise.all(
+    SYNC_SETTINGS_REFRESH_ITEMS.map(async (item) => ({
+      ...item,
+      value: await refreshSyncKey(backend, item.dataKey, {
+        normalize: normalizeSyncedSetting,
+        writeBackOnChange: false,
+      }),
+    })),
   );
+  const refreshedSyncDataSettings = refreshedSettings.find(
+    (item) => item.dataKey === STORAGE_KEYS.syncDataSettings,
+  )?.value as SyncDataSettings | undefined;
   const effectiveSyncDataSettings =
     refreshedSyncDataSettings || syncDataSettings;
-  if (effectiveSyncDataSettings.syncProviders)
-    await refreshSyncKey(backend, STORAGE_KEYS.provider, {
-      writeBackOnChange: false,
-    });
+  await Promise.all(
+    SYNC_FAST_DATA_REFRESH_ITEMS.filter(
+      (item) => effectiveSyncDataSettings[item.preferenceKey] === true,
+    ).map((item) =>
+      refreshSyncKey(backend, item.dataKey, { writeBackOnChange: false }),
+    ),
+  );
   return effectiveSyncDataSettings;
 }
 
@@ -60,10 +86,8 @@ export async function refreshSyncDataFromRemote(
   const backend = await getActiveSyncBackend();
 
   await Promise.all(
-    SYNCABLE_DATA_ITEMS.filter(
-      (item) =>
-        item.preferenceKey !== "syncProviders" &&
-        syncDataSettings[item.preferenceKey] === true,
+    SYNC_REMOTE_DATA_REFRESH_ITEMS.filter(
+      (item) => syncDataSettings[item.preferenceKey] === true,
     ).map((item) => refreshSyncKey(backend, item.dataKey)),
   );
 }
@@ -72,7 +96,7 @@ async function refreshSyncKey<T>(
   backend: SyncBackend,
   key: string,
   options: {
-    normalize?: (value: T) => T;
+    normalize?: (value: T, key: string) => T;
     writeBackOnChange?: boolean;
   } = {},
 ) {
@@ -81,7 +105,7 @@ async function refreshSyncKey<T>(
   if (pending !== undefined) {
     if (key === STORAGE_KEYS.chats && hasUnfinishedChatRun(pending))
       return pending;
-    const value = normalize ? normalize(pending) : pending;
+    const value = normalize ? normalize(pending, key) : pending;
     const mergedValue = await backend.write(key, value);
     const nextValue = mergedValue ?? value;
     await markSyncLocalCacheFlushed(key, nextValue);
@@ -91,7 +115,7 @@ async function refreshSyncKey<T>(
   const previous = await readSyncLocalValue<T>(key);
   const remote = await backend.read<T>(key);
   if (remote === undefined) return undefined;
-  const value = normalize ? normalize(remote) : remote;
+  const value = normalize ? normalize(remote, key) : remote;
   if (previous !== undefined && !sameStorageValue(previous, value)) {
     if (!writeBackOnChange) {
       await markSyncLocalCacheFlushed(key, value);
@@ -116,6 +140,14 @@ function hasUnfinishedChatRun(value: unknown) {
       return metrics?.startedAt !== undefined && metrics.endedAt === undefined;
     }),
   );
+}
+
+function normalizeSyncedSetting<T>(value: T, key: string) {
+  if (key === STORAGE_KEYS.preferences)
+    return mergePreferences(value as T & Record<string, unknown>) as T;
+  if (key === STORAGE_KEYS.syncDataSettings)
+    return mergeSyncDataSettings(value as Partial<SyncDataSettings>) as T;
+  return value;
 }
 
 export function syncRemoteRefreshIntervalMs() {

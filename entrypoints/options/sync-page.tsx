@@ -16,10 +16,12 @@ import {
   setDataSync,
   storage,
   SYNCABLE_DATA_ITEMS,
+  SYNC_PREFERENCES,
   SYNC_PREFERENCE_KEYS,
   type SyncPreferenceKey,
 } from "../../src/shared/storage";
 import type { SyncBackendConfig } from "../../src/shared/types";
+import { SYNC_DATA_SETTING_KEYS } from "../../src/shared/sync-data-settings";
 import {
   Card,
   CardContent,
@@ -97,7 +99,7 @@ export function SyncPage() {
 
   const dataToggles: SyncDataToggle[] = [
     ...SYNC_PREFERENCE_KEYS.filter(
-      (preferenceKey) => preferenceKey !== "syncProviders",
+      (preferenceKey) => preferenceKey !== SYNC_PREFERENCES.providers,
     ).map((preferenceKey) => ({
       key: preferenceKey,
       title: syncToggleContent[preferenceKey].title,
@@ -107,7 +109,7 @@ export function SyncPage() {
       onChange: (value: boolean) => updateSyncPreference(preferenceKey, value),
     })),
     {
-      key: "syncChatAttachments",
+      key: SYNC_DATA_SETTING_KEYS.chatAttachments,
       title: t.options.syncChatAttachments,
       description: t.options.syncChatAttachmentsDescription,
       icon: <Paperclip size={18} />,
@@ -116,7 +118,7 @@ export function SyncPage() {
       onChange: (value: boolean) =>
         setSyncDataSettings((previous) => ({
           ...previous,
-          syncChatAttachments: value,
+          [SYNC_DATA_SETTING_KEYS.chatAttachments]: value,
         })),
     },
   ];
