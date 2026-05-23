@@ -230,6 +230,7 @@ export async function writeWebDavObject(
   bytes: Uint8Array,
   contentType = "application/octet-stream",
 ) {
+  await ensureWebDavCollections(backendConfig, name);
   const response = await requestWebDav(
     backendConfig,
     rawObjectUrl(backendConfig, name),
@@ -240,6 +241,25 @@ export async function writeWebDavObject(
     },
   );
   if (!response.ok) await throwWebDavError(response, "write");
+}
+
+async function ensureWebDavCollections(
+  backendConfig: WebDavSyncBackendConfig,
+  name: string,
+) {
+  const parts = name.split("/").filter(Boolean);
+  if (parts.length <= 1) return;
+  let currentPath = "";
+  for (const part of parts.slice(0, -1)) {
+    currentPath = currentPath ? `${currentPath}/${part}` : part;
+    const response = await requestWebDav(
+      backendConfig,
+      rawObjectUrl(backendConfig, currentPath),
+      { method: "MKCOL" },
+    );
+    if (!response.ok && response.status !== 405)
+      await throwWebDavError(response, "create folder");
+  }
 }
 
 function bytesToArrayBuffer(bytes: Uint8Array) {
@@ -273,7 +293,12 @@ function objectUrl(backendConfig: WebDavSyncBackendConfig, key: string) {
 }
 
 function rawObjectUrl(backendConfig: WebDavSyncBackendConfig, name: string) {
-  return new URL(encodeURIComponent(name), baseUrl(backendConfig)).toString();
+  const encodedPath = name
+    .split("/")
+    .filter(Boolean)
+    .map(encodeURIComponent)
+    .join("/");
+  return new URL(encodedPath, baseUrl(backendConfig)).toString();
 }
 
 function baseUrl(backendConfig: WebDavSyncBackendConfig) {

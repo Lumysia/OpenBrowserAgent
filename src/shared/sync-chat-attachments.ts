@@ -8,6 +8,7 @@ import {
 } from "./sync-backends";
 import type { Preferences, UploadedAttachment } from "./types";
 
+const CHAT_ATTACHMENT_ROOT = "attachments";
 const CHAT_ATTACHMENT_PREFIX = "chat-attachment";
 
 type SyncedChatAttachmentMetadata = Omit<
@@ -168,10 +169,14 @@ function bytesToBase64(bytes: Uint8Array) {
 }
 
 function metadataObjectName(attachmentId: string) {
-  return `${CHAT_ATTACHMENT_PREFIX}-${attachmentId}.json`;
+  return `${CHAT_ATTACHMENT_ROOT}/${CHAT_ATTACHMENT_PREFIX}-${attachmentId}.json`;
 }
 
 function attachmentObjectName(attachment: UploadedAttachment) {
   const safeName = attachment.name.replace(/[^a-z0-9._-]+/gi, "_") || "file";
-  return `${CHAT_ATTACHMENT_PREFIX}-${attachment.id}-${safeName}`;
+  return `${CHAT_ATTACHMENT_ROOT}/${currentMonthFolder()}/${CHAT_ATTACHMENT_PREFIX}-${attachment.id}-${safeName}`;
+}
+
+function currentMonthFolder() {
+  return new Date().toISOString().slice(0, 7);
 }
