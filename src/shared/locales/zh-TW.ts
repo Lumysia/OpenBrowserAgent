@@ -614,6 +614,9 @@ export const zhTW: LocaleMessages = {
     syncChatsDescription:
       "透過目前同步後端同步對話記錄。關閉時對話只保存在本機。",
     syncWritePending: "同步寫入排隊中",
+    syncWritePendingDetail: "{count} 項正在等待同步",
+    syncWriteOperationWrite: "寫入",
+    syncWriteOperationRemove: "刪除",
     syncWriteIdle: "同步寫入已完成",
     syncWriteError: "最近一次同步寫入失敗",
     autoScroll: "自動捲動",

@@ -15,6 +15,7 @@ import {
   setDataSync,
   storage,
   SYNCABLE_DATA_ITEMS,
+  SYNC_PREFERENCE_KEYS,
   type SyncPreferenceKey,
 } from "../../src/shared/storage";
 import type { SyncBackendConfig } from "../../src/shared/types";
@@ -102,9 +103,9 @@ export function SyncPage() {
       <SyncBackendCard
         activeBackendId={activeSyncBackendId}
         backends={syncBackends}
-        dataToggles={SYNCABLE_DATA_ITEMS.filter(
-          ({ preferenceKey }) => preferenceKey !== "syncProviders",
-        ).map(({ preferenceKey }) => ({
+        dataToggles={SYNC_PREFERENCE_KEYS.filter(
+          (preferenceKey) => preferenceKey !== "syncProviders",
+        ).map((preferenceKey) => ({
           key: preferenceKey,
           title: syncToggleContent[preferenceKey].title,
           description: syncToggleContent[preferenceKey].description,
@@ -138,10 +139,15 @@ function SyncWriteStatusCard({
   const detail = hasError
     ? status?.lastError
     : pendingCount > 0
-      ? `${pendingCount} pending write${pendingCount === 1 ? "" : "s"}`
+      ? t.options.syncWritePendingDetail.replace(
+          "{count}",
+          String(pendingCount),
+        )
       : status?.lastFlushedAt
         ? new Date(status.lastFlushedAt).toLocaleTimeString()
         : "";
+  const pendingItems = status?.pendingItems || [];
+  const keyLabels = syncStorageKeyLabels(t);
 
   return (
     <Card>
@@ -155,9 +161,41 @@ function SyncWriteStatusCard({
               <Activity size={18} /> {title}
             </CardTitle>
             {detail && <CardDescription>{detail}</CardDescription>}
+            {pendingItems.length > 0 && (
+              <div className="sync-status-items">
+                {pendingItems.map((item) => (
+                  <CardDescription
+                    key={`${item.operation}:${item.key}:${item.backendName}`}
+                    className="sync-status-item"
+                  >
+                    <span>{keyLabels[item.key] || item.key}</span>
+                    <span>
+                      {item.operation === "remove"
+                        ? t.options.syncWriteOperationRemove
+                        : t.options.syncWriteOperationWrite}
+                      {" -> "}
+                      {item.backendName}
+                    </span>
+                  </CardDescription>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
     </Card>
   );
+}
+
+function syncStorageKeyLabels(t: ReturnType<typeof getMessages>) {
+  return {
+    [storage.language.key]: t.common.language,
+    [storage.preferences.key]: t.options.general,
+    [storage.provider.key]: t.options.providers,
+    [storage.agents.key]: t.options.agents,
+    [storage.agentWorkspaces.key]: t.options.syncAgents,
+    [storage.skills.key]: t.options.skills,
+    [storage.mcpServers.key]: t.options.mcpServers,
+    [storage.chats.key]: t.sidepanel.chatHistory,
+  } as Record<string, string>;
 }

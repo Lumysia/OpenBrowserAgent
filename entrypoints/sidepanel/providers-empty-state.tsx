@@ -1,14 +1,17 @@
 import { Bot, Cloud, Languages, Settings } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { LOCAL_SETUP_FEEDBACK_MS, OPTIONS_HASH } from "../../src/shared/config";
+import { mergePreferences } from "../../src/shared/default-preferences";
 import type { Messages } from "../../src/shared/i18n";
 import {
   setActiveSyncBackend,
   storage,
   STORAGE_KEYS,
+  SYNCABLE_DATA_ITEMS,
+  SYNC_PREFERENCE_KEYS,
 } from "../../src/shared/storage";
 import { completeLocalBootstrapState } from "../../src/shared/storage-debug";
-import { markSyncLocalCacheFlushed } from "../../src/shared/storage-sync-cache";
+import { restoreSyncBackendFromCloud } from "../../src/shared/storage-sync-transition";
 import {
   BROWSER_SYNC_BACKEND_ID,
   NO_SYNC_BACKEND_ID,
@@ -16,9 +19,12 @@ import {
   syncBackendRegistryItem,
   WEBDAV_SYNC_BACKEND_ID,
 } from "../../src/shared/sync-backend-registry";
-import { createSyncBackend } from "../../src/shared/sync-backends";
+import {
+  createSyncBackend,
+  type SyncBackend,
+} from "../../src/shared/sync-backends";
 import { openOrFocusOptions } from "../../src/shared/tab-navigation";
-import type { ProviderState, SyncBackendConfig } from "../../src/shared/types";
+import type { Preferences, SyncBackendConfig } from "../../src/shared/types";
 import { languageLabels } from "../../src/shared/types";
 import {
   Badge,
@@ -38,6 +44,16 @@ import {
   ScrollArea,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
+
+type CloudBootstrapState = {
+  language?: string;
+  preferences?: Preferences;
+  data: Record<string, unknown>;
+};
+
+const BOOTSTRAP_CLOUD_DATA_KEYS = SYNCABLE_DATA_ITEMS.map(
+  (item) => item.dataKey,
+);
 
 export function ProvidersEmptyState({ t }: { t: Messages }) {
   const [language, setLanguage] = useStoredState(storage.language);
@@ -60,7 +76,8 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
       ? "synced"
       : "idle",
   );
-  const [cloudProviderState, setCloudProviderState] = useState<ProviderState>();
+  const [cloudBootstrapState, setCloudBootstrapState] =
+    useState<CloudBootstrapState>();
 
   useEffect(() => {
     if (!activeSyncBackendId || activeSyncBackendId === NO_SYNC_BACKEND_ID) {
@@ -138,14 +155,10 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     try {
       const backend = createSyncBackend(selectedBackendConfig());
       await backend.test();
-      const syncedProviders = await backend.read<ProviderState>(
-        STORAGE_KEYS.provider,
-      );
-      const syncedModelCount = Object.values(syncedProviders || {}).flatMap(
-        (provider) => provider?.models || [],
-      ).length;
-      setCloudProviderState(syncedModelCount > 0 ? syncedProviders : undefined);
-      setSyncStatus(syncedModelCount > 0 ? "ready" : "empty");
+      const cloudState = await readCloudBootstrapState(backend);
+      const hasExistingCloudConfig = hasCloudBootstrapData(cloudState);
+      setCloudBootstrapState(hasExistingCloudConfig ? cloudState : undefined);
+      setSyncStatus(hasExistingCloudConfig ? "ready" : "empty");
     } catch (error) {
       console.warn("Failed to test sync backend", error);
       setSyncStatus("error");
@@ -159,16 +172,15 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     setSyncAction("confirm");
     try {
       await storage.syncBackends.set(loadedSyncBackends);
-      if (syncStatus === "ready" && cloudProviderState)
-        await markSyncLocalCacheFlushed(
-          STORAGE_KEYS.provider,
-          cloudProviderState,
-        );
-      await storage.preferences.set({
-        ...(await storage.preferences.get()),
-        syncProviders: true,
-      });
-      await setActiveSyncBackend(selectedBackendId);
+      if (syncStatus === "ready" && cloudBootstrapState) {
+        await restoreCloudBootstrapState(cloudBootstrapState);
+      } else {
+        await storage.preferences.set({
+          ...(await storage.preferences.get()),
+          syncProviders: true,
+        });
+        await setActiveSyncBackend(selectedBackendId);
+      }
       setActiveSyncBackendId(selectedBackendId);
       await completeLocalBootstrapState();
       setSyncStatus("synced");
@@ -178,6 +190,26 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     } finally {
       setSyncing(false);
     }
+  }
+
+  async function restoreCloudBootstrapState(cloudState: CloudBootstrapState) {
+    const restoredPreferences = mergePreferences(
+      cloudState.preferences || (await storage.preferences.get()),
+    );
+    for (const preferenceKey of SYNC_PREFERENCE_KEYS) {
+      restoredPreferences[preferenceKey] = SYNCABLE_DATA_ITEMS.some(
+        (item) =>
+          item.preferenceKey === preferenceKey &&
+          hasCloudValue(cloudState.data[item.dataKey]),
+      );
+    }
+    await restoreSyncBackendFromCloud({
+      backendId: selectedBackendId,
+      language: cloudState.language,
+      preferences: restoredPreferences,
+      data: cloudState.data,
+      setActiveBackendId: storage.activeSyncBackendId.set,
+    });
   }
 
   function handleCloudAction() {
@@ -409,6 +441,42 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
       </div>
     </div>
   );
+}
+
+function hasCloudData(value: unknown) {
+  if (value === undefined || value === null) return false;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "object")
+    return Object.keys(value as Record<string, unknown>).length > 0;
+  return true;
+}
+
+function hasCloudValue(value: unknown) {
+  return value !== undefined;
+}
+
+function hasCloudBootstrapData(cloudState: CloudBootstrapState) {
+  return (
+    hasCloudData(cloudState.language) ||
+    hasCloudData(cloudState.preferences) ||
+    Object.values(cloudState.data).some(hasCloudValue)
+  );
+}
+
+async function readCloudBootstrapState(backend: SyncBackend) {
+  const [language, preferences, ...dataValues] = await Promise.all([
+    backend.read<string>(STORAGE_KEYS.language),
+    backend.read<Preferences>(STORAGE_KEYS.preferences),
+    ...BOOTSTRAP_CLOUD_DATA_KEYS.map((key) => backend.read(key)),
+  ]);
+  const data = Object.fromEntries(
+    BOOTSTRAP_CLOUD_DATA_KEYS.map((key, index) => [key, dataValues[index]]),
+  );
+  return {
+    language,
+    preferences: preferences ? mergePreferences(preferences) : undefined,
+    data,
+  } satisfies CloudBootstrapState;
 }
 
 function BootstrapStep({

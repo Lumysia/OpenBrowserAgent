@@ -11,6 +11,7 @@ import {
   isBackendStorageChange,
   watchRemoteValue,
 } from "./storage-remote-watch";
+import { STORAGE_KEYS } from "./storage-keys";
 
 type StorageItemIo = {
   readStoredValue<T>(area: AreaName, key: string): Promise<T | undefined>;
@@ -75,6 +76,16 @@ export function makeStorageItemFactory(io: StorageItemIo) {
           changes: Record<string, chrome.storage.StorageChange>,
           changedArea: string,
         ) => {
+          if (
+            area === STORAGE_AREAS.sync &&
+            changedArea === STORAGE_AREAS.local &&
+            changes[STORAGE_KEYS.activeSyncBackendId]
+          ) {
+            const next = await io.readStoredValue<T>(area, storageKey);
+            if (next !== undefined)
+              callback(normalize ? normalize(next) : next, next as T);
+            return;
+          }
           const watchArea = await effectiveArea(area);
           if (
             watchArea === STORAGE_AREAS.sync &&

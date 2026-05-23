@@ -1,6 +1,6 @@
 ﻿.sync-status-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
 }
 .sync-status-dot {
@@ -24,6 +24,25 @@
 .sync-status-dot.error {
   background: #e46b6b;
   box-shadow: 0 0 0 4px rgba(228, 107, 107, 0.14);
+}
+
+.sync-status-items {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.sync-status-item {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  justify-content: space-between;
+}
+
+.sync-status-item span:first-child {
+  min-width: 0;
+  font-weight: 600;
 }
 
 @keyframes sync-dot-ready {

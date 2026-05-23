@@ -1,4 +1,5 @@
 import { markSyncLocalCacheFlushed } from "./storage-sync-cache";
+import { getBrowserApi } from "./browser-api";
 import { STORAGE_KEYS, SYNCABLE_DATA_ITEMS } from "./storage-keys";
 import { createSyncBackend, getStoredSyncBackends } from "./sync-backends";
 import type { Preferences } from "./types";
@@ -8,6 +9,14 @@ type SyncActivationOptions = {
   getLanguage: () => Promise<string>;
   getPreferences: () => Promise<Preferences>;
   readSyncedValue: <T>(key: string) => Promise<T | undefined>;
+  setActiveBackendId: (backendId: string) => Promise<void>;
+};
+
+type SyncRestoreOptions = {
+  backendId: string;
+  language?: string;
+  preferences?: Preferences;
+  data?: Record<string, unknown>;
   setActiveBackendId: (backendId: string) => Promise<void>;
 };
 
@@ -38,6 +47,33 @@ export async function activateSyncBackend({
     if (item.value === undefined) continue;
     await backend.write(item.dataKey, item.value);
     await markSyncLocalCacheFlushed(item.dataKey, item.value);
+  }
+  await setActiveBackendId(backendId);
+}
+
+export async function restoreSyncBackendFromCloud({
+  backendId,
+  language,
+  preferences,
+  data = {},
+  setActiveBackendId,
+}: SyncRestoreOptions) {
+  const localValues: Record<string, unknown> = {};
+  if (language !== undefined) localValues[STORAGE_KEYS.language] = language;
+  if (preferences !== undefined)
+    localValues[STORAGE_KEYS.preferences] = preferences;
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) localValues[key] = value;
+  }
+  if (Object.keys(localValues).length)
+    await getBrowserApi().storage.local.set(localValues);
+
+  if (language !== undefined)
+    await markSyncLocalCacheFlushed(STORAGE_KEYS.language, language);
+  if (preferences !== undefined)
+    await markSyncLocalCacheFlushed(STORAGE_KEYS.preferences, preferences);
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) await markSyncLocalCacheFlushed(key, value);
   }
   await setActiveBackendId(backendId);
 }

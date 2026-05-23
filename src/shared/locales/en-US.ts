@@ -722,6 +722,9 @@ export const enUS = {
     syncChatsDescription:
       "Sync chat history through the current sync backend. Keep this off for local-only conversations.",
     syncWritePending: "Sync writes are queued",
+    syncWritePendingDetail: "{count} item(s) waiting to sync",
+    syncWriteOperationWrite: "writing",
+    syncWriteOperationRemove: "removing",
     syncWriteIdle: "Sync writes are up to date",
     syncWriteError: "Last sync write failed",
     autoScroll: "Auto Scroll",

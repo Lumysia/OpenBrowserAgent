@@ -794,6 +794,9 @@ export const frFR: LocaleMessages = {
     syncChatsDescription:
       "Synchronisez l'historique des discussions via le backend de synchronisation actuel. Désactivez pour des conversations locales uniquement.",
     syncWritePending: "Écritures de synchronisation en attente",
+    syncWritePendingDetail: "{count} élément(s) en attente de synchronisation",
+    syncWriteOperationWrite: "écriture",
+    syncWriteOperationRemove: "suppression",
     syncWriteIdle: "Écritures de synchronisation à jour",
     syncWriteError: "Dernière écriture de synchronisation échouée",
     autoScroll: "Défilement automatique",

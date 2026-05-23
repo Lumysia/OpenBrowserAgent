@@ -768,6 +768,9 @@ export const esES: LocaleMessages = {
     syncChatsDescription:
       "Sincroniza el historial de chats con el backend de sincronización actual. Desactívalo para conversaciones solo locales.",
     syncWritePending: "Escrituras de sincronización en cola",
+    syncWritePendingDetail: "{count} elemento(s) esperando sincronización",
+    syncWriteOperationWrite: "escribiendo",
+    syncWriteOperationRemove: "eliminando",
     syncWriteIdle: "Escrituras de sincronización actualizadas",
     syncWriteError: "Falló la última escritura de sincronización",
     autoScroll: "Desplazamiento automático",

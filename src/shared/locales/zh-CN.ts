@@ -608,6 +608,9 @@ export const zhCN: LocaleMessages = {
     syncChatsDescription:
       "通过当前同步后端同步对话历史。关闭时对话只保存在本机。",
     syncWritePending: "同步写入排队中",
+    syncWritePendingDetail: "{count} 项正在等待同步",
+    syncWriteOperationWrite: "写入",
+    syncWriteOperationRemove: "删除",
     syncWriteIdle: "同步写入已完成",
     syncWriteError: "最近一次同步写入失败",
     autoScroll: "自动滚动",

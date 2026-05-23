@@ -43,6 +43,7 @@ import { normalizeWorkspaces } from "./workspace";
 import {
   STORAGE_KEYS,
   SYNCABLE_DATA_ITEMS,
+  SYNC_PREFERENCE_KEYS,
   type SyncableDataKey,
   type SyncPreferenceKey,
 } from "./storage-keys";
@@ -58,13 +59,18 @@ import type {
   SyncBackendConfig,
 } from "./types";
 
-export { STORAGE_KEYS, SYNCABLE_DATA_ITEMS, type SyncPreferenceKey };
+export {
+  STORAGE_KEYS,
+  SYNCABLE_DATA_ITEMS,
+  SYNC_PREFERENCE_KEYS,
+  type SyncPreferenceKey,
+};
 
 export { getBrowserApi };
 export { clearPendingSyncWrites, syncLocalCacheKey, type SyncWriteStatus };
 
-function syncableItemForPreference(key: SyncPreferenceKey) {
-  return SYNCABLE_DATA_ITEMS.find((item) => item.preferenceKey === key)!;
+function syncableItemsForPreference(key: SyncPreferenceKey) {
+  return SYNCABLE_DATA_ITEMS.filter((item) => item.preferenceKey === key);
 }
 
 async function setStoredValue<T>(area: AreaName, key: string, value: T) {
@@ -76,7 +82,9 @@ async function setStoredValue<T>(area: AreaName, key: string, value: T) {
 
   const backend = await getActiveSyncBackend();
   await writeSyncLocalCache(key, value);
-  queueSyncWrite(backend, key, value).catch(() => undefined);
+  queueSyncWrite(backend, key, value, {
+    delayMs: immediateSyncWriteDelay(key),
+  }).catch(() => undefined);
 }
 
 async function setStoredValueNow<T>(area: AreaName, key: string, value: T) {
@@ -95,7 +103,15 @@ async function removeStoredValue(area: AreaName, key: string) {
     return;
   }
   await removeSyncLocalCache(key);
-  queueSyncRemove(await getActiveSyncBackend(), key).catch(() => undefined);
+  queueSyncRemove(await getActiveSyncBackend(), key, {
+    delayMs: immediateSyncWriteDelay(key),
+  }).catch(() => undefined);
+}
+
+function immediateSyncWriteDelay(key: string) {
+  return key === STORAGE_KEYS.language || key === STORAGE_KEYS.preferences
+    ? 0
+    : undefined;
 }
 
 async function readStoredValue<T>(area: AreaName, key: string) {
@@ -208,18 +224,43 @@ function createSwitchableItem<T>(
         const preferencesCacheChanged =
           localCacheChanged &&
           changes[syncLocalCacheKey(STORAGE_KEYS.preferences)];
+        const preferencesLocalChanged =
+          localCacheChanged && changes[STORAGE_KEYS.preferences];
+        const activeBackendChanged =
+          localCacheChanged && changes[STORAGE_KEYS.activeSyncBackendId];
 
-        if (!cacheChange && !preferencesCacheChanged && !changes[key]) return;
+        if (
+          !cacheChange &&
+          !preferencesCacheChanged &&
+          !preferencesLocalChanged &&
+          !activeBackendChanged &&
+          !changes[key]
+        )
+          return;
 
-        if (preferencesCacheChanged) {
-          const preferenceChange =
-            preferencesCacheChanged as chrome.storage.StorageChange;
-          const oldPreferences = (
-            preferenceChange.oldValue as SyncLocalCache<Preferences> | undefined
-          )?.value;
-          const newPreferences = (
-            preferenceChange.newValue as SyncLocalCache<Preferences> | undefined
-          )?.value;
+        if (activeBackendChanged) {
+          const next = await getValue();
+          callback(next, next);
+          return;
+        }
+
+        if (preferencesCacheChanged || preferencesLocalChanged) {
+          const preferenceChange = (preferencesCacheChanged ||
+            preferencesLocalChanged) as chrome.storage.StorageChange;
+          const oldPreferences = preferencesCacheChanged
+            ? (
+                preferenceChange.oldValue as
+                  | SyncLocalCache<Preferences>
+                  | undefined
+              )?.value
+            : (preferenceChange.oldValue as Preferences | undefined);
+          const newPreferences = preferencesCacheChanged
+            ? (
+                preferenceChange.newValue as
+                  | SyncLocalCache<Preferences>
+                  | undefined
+              )?.value
+            : (preferenceChange.newValue as Preferences | undefined);
           const oldArea = areaFor(oldPreferences || DEFAULT_PREFERENCES);
           const newArea = areaFor(newPreferences || DEFAULT_PREFERENCES);
           if (oldArea === newArea) return;
@@ -338,9 +379,21 @@ export async function getSyncedProviderState() {
 }
 
 export async function setDataSync(key: SyncPreferenceKey, enabled: boolean) {
-  const dataKey: SyncableDataKey = syncableItemForPreference(key).dataKey;
   if (enabled && !(await isSyncBackendEnabled()))
     throw new Error("Enable a sync backend before syncing this data.");
+  await Promise.all(
+    syncableItemsForPreference(key).map((item) =>
+      setDataKeySync(item.dataKey, enabled),
+    ),
+  );
+
+  await updateStoredValue(storage.preferences, (preferences) => ({
+    ...preferences,
+    [key]: enabled,
+  }));
+}
+
+async function setDataKeySync(dataKey: SyncableDataKey, enabled: boolean) {
   const toAreaName = areaForSyncEnabled(enabled);
   const fromAreaName = otherStorageArea(toAreaName);
   const existingTarget = enabled
@@ -360,11 +413,6 @@ export async function setDataSync(key: SyncPreferenceKey, enabled: boolean) {
     if (existingTarget === undefined)
       await setStoredValueNow(toAreaName, dataKey, existingSource);
   }
-
-  await updateStoredValue(storage.preferences, (preferences) => ({
-    ...preferences,
-    [key]: enabled,
-  }));
 }
 
 function isEmptySyncValue(value: unknown) {
@@ -398,7 +446,7 @@ async function disableDataSync() {
     ...preferences,
     syncSettings: false,
     ...Object.fromEntries(
-      SYNCABLE_DATA_ITEMS.map((item) => [item.preferenceKey, false]),
+      SYNC_PREFERENCE_KEYS.map((preferenceKey) => [preferenceKey, false]),
     ),
   } as Preferences;
   const dataSnapshots = await Promise.all(

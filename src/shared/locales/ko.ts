@@ -722,6 +722,9 @@ export const ko: LocaleMessages = {
     syncChatsDescription:
       "채팅 기록을 현재 동기화 백엔드로 동기화합니다. 로컬 전용 대화는 끄세요.",
     syncWritePending: "동기화 쓰기가 대기 중입니다",
+    syncWritePendingDetail: "{count}개 항목이 동기화를 기다립니다",
+    syncWriteOperationWrite: "쓰기",
+    syncWriteOperationRemove: "삭제",
     syncWriteIdle: "동기화 쓰기가 최신 상태입니다",
     syncWriteError: "마지막 동기화 쓰기 실패",
     autoScroll: "자동 스크롤",

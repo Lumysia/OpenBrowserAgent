@@ -19,6 +19,7 @@ export const STORAGE_KEYS = {
 export const SYNCABLE_DATA_ITEMS = [
   { preferenceKey: "syncProviders", dataKey: STORAGE_KEYS.provider },
   { preferenceKey: "syncAgents", dataKey: STORAGE_KEYS.agents },
+  { preferenceKey: "syncAgents", dataKey: STORAGE_KEYS.agentWorkspaces },
   { preferenceKey: "syncSkills", dataKey: STORAGE_KEYS.skills },
   { preferenceKey: "syncMcpServers", dataKey: STORAGE_KEYS.mcpServers },
   { preferenceKey: "syncChats", dataKey: STORAGE_KEYS.chats },
@@ -28,3 +29,7 @@ export type SyncPreferenceKey =
   (typeof SYNCABLE_DATA_ITEMS)[number]["preferenceKey"];
 
 export type SyncableDataKey = (typeof SYNCABLE_DATA_ITEMS)[number]["dataKey"];
+
+export const SYNC_PREFERENCE_KEYS = Array.from(
+  new Set(SYNCABLE_DATA_ITEMS.map((item) => item.preferenceKey)),
+) as SyncPreferenceKey[];

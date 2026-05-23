@@ -22,7 +22,7 @@ const STORAGE_KEY_GROUPS = {
     STORAGE_KEYS.activeSyncBackendId,
   ],
   providers: [STORAGE_KEYS.provider],
-  agents: [STORAGE_KEYS.agents],
+  agents: [STORAGE_KEYS.agents, STORAGE_KEYS.agentWorkspaces],
   skills: [STORAGE_KEYS.skills],
   mcpServers: [STORAGE_KEYS.mcpServers],
   chats: [STORAGE_KEYS.chats, STORAGE_KEYS.chatTabs],

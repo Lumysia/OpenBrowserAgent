@@ -790,6 +790,9 @@ export const jaJP: LocaleMessages = {
     syncChatsDescription:
       "チャット履歴を現在の同期バックエンドで同期します。ローカルのみの会話にする場合はオフにします。",
     syncWritePending: "同期書き込みがキューに入っています",
+    syncWritePendingDetail: "{count} 件が同期待ちです",
+    syncWriteOperationWrite: "書き込み",
+    syncWriteOperationRemove: "削除",
     syncWriteIdle: "同期書き込みは最新です",
     syncWriteError: "最後の同期書き込みに失敗しました",
     autoScroll: "自動スクロール",

@@ -790,6 +790,9 @@ export const deDE: LocaleMessages = {
       "Chatverlauf über das aktuelle Synchronisierungs-Backend synchronisieren. Deaktivieren für nur lokale Unterhaltungen.",
     syncWritePending:
       "Synchronisierungsschreibvorgänge sind in der Warteschlange",
+    syncWritePendingDetail: "{count} Element(e) warten auf Synchronisierung",
+    syncWriteOperationWrite: "schreibt",
+    syncWriteOperationRemove: "entfernt",
     syncWriteIdle: "Synchronisierungsschreibvorgänge sind aktuell",
     syncWriteError: "Letzter Synchronisierungsschreibvorgang fehlgeschlagen",
     autoScroll: "Automatisch scrollen",

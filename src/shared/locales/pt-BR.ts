@@ -737,6 +737,9 @@ export const ptBR: LocaleMessages = {
     syncChatsDescription:
       "Sincronize o histórico de chats pelo backend de sincronização atual. Desative para conversas somente locais.",
     syncWritePending: "Gravações de sincronização na fila",
+    syncWritePendingDetail: "{count} item(ns) aguardando sincronização",
+    syncWriteOperationWrite: "gravando",
+    syncWriteOperationRemove: "removendo",
     syncWriteIdle: "Gravações de sincronização atualizadas",
     syncWriteError: "Falha na última gravação de sincronização",
     autoScroll: "Rolagem automática",

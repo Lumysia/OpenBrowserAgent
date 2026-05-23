@@ -5,9 +5,17 @@ import { STORAGE_KEYS } from "./storage-keys";
 
 export type SyncWriteStatus = {
   pendingCount: number;
+  pendingItems?: SyncWriteStatusItem[];
   lastUpdatedAt?: number;
   lastFlushedAt?: number;
   lastError?: string;
+};
+
+export type SyncWriteStatusItem = {
+  key: string;
+  operation: "write" | "remove";
+  backendName: string;
+  backendType: SyncBackend["config"]["type"];
 };
 
 type PendingSyncWrite = {
@@ -33,8 +41,10 @@ export async function queueSyncWrite<T>(
   backend: SyncBackend,
   key: string,
   value: T,
+  options: { delayMs?: number } = {},
 ) {
   await new Promise<void>((resolve, reject) => {
+    const delayMs = options.delayMs ?? config.SYNC_WRITE_DEBOUNCE_MS;
     const pending = pendingSyncWrites.get(key);
     if (pending) {
       clearTimeout(pending.timeoutId);
@@ -43,10 +53,7 @@ export async function queueSyncWrite<T>(
       pending.value = value;
       pending.resolve.push(resolve);
       pending.reject.push(reject);
-      pending.timeoutId = setTimeout(
-        () => flushSyncWrite(key),
-        config.SYNC_WRITE_DEBOUNCE_MS,
-      );
+      pending.timeoutId = setTimeout(() => flushSyncWrite(key), delayMs);
       updateSyncWriteStatus().catch(() => undefined);
       return;
     }
@@ -57,17 +64,19 @@ export async function queueSyncWrite<T>(
       value,
       resolve: [resolve],
       reject: [reject],
-      timeoutId: setTimeout(
-        () => flushSyncWrite(key),
-        config.SYNC_WRITE_DEBOUNCE_MS,
-      ),
+      timeoutId: setTimeout(() => flushSyncWrite(key), delayMs),
     });
     updateSyncWriteStatus().catch(() => undefined);
   });
 }
 
-export async function queueSyncRemove(backend: SyncBackend, key: string) {
+export async function queueSyncRemove(
+  backend: SyncBackend,
+  key: string,
+  options: { delayMs?: number } = {},
+) {
   await new Promise<void>((resolve, reject) => {
+    const delayMs = options.delayMs ?? config.SYNC_WRITE_DEBOUNCE_MS;
     const pending = pendingSyncWrites.get(key);
     if (pending) {
       clearTimeout(pending.timeoutId);
@@ -76,10 +85,7 @@ export async function queueSyncRemove(backend: SyncBackend, key: string) {
       pending.value = undefined;
       pending.resolve.push(resolve);
       pending.reject.push(reject);
-      pending.timeoutId = setTimeout(
-        () => flushSyncWrite(key),
-        config.SYNC_WRITE_DEBOUNCE_MS,
-      );
+      pending.timeoutId = setTimeout(() => flushSyncWrite(key), delayMs);
       updateSyncWriteStatus().catch(() => undefined);
       return;
     }
@@ -90,10 +96,7 @@ export async function queueSyncRemove(backend: SyncBackend, key: string) {
       value: undefined,
       resolve: [resolve],
       reject: [reject],
-      timeoutId: setTimeout(
-        () => flushSyncWrite(key),
-        config.SYNC_WRITE_DEBOUNCE_MS,
-      ),
+      timeoutId: setTimeout(() => flushSyncWrite(key), delayMs),
     });
     updateSyncWriteStatus().catch(() => undefined);
   });
@@ -109,6 +112,7 @@ export function clearPendingSyncWrites() {
     pending.resolve.forEach((resolve) => resolve());
   }
   pendingSyncWrites.clear();
+  updateSyncWriteStatus().catch(() => undefined);
 }
 
 export async function writeSyncLocalCache<T>(key: string, value: T) {
@@ -190,6 +194,14 @@ async function updateSyncWriteStatus(patch: Partial<SyncWriteStatus> = {}) {
   await getBrowserApi().storage.local.set({
     [STORAGE_KEYS.syncWriteStatus]: {
       pendingCount: pendingSyncWrites.size,
+      pendingItems: Array.from(pendingSyncWrites.entries()).map(
+        ([key, pending]) => ({
+          key,
+          operation: pending.operation,
+          backendName: pending.backend.config.name,
+          backendType: pending.backend.config.type,
+        }),
+      ),
       lastUpdatedAt: Date.now(),
       ...patch,
     } satisfies SyncWriteStatus,
