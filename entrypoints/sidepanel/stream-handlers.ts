@@ -86,8 +86,10 @@ export function createStreamHandlers(setChats: ChatSetter) {
       chatId: string,
       messageId: string,
       metrics: Partial<RunMetrics>,
+      options?: { flushPendingText?: boolean },
     ) {
-      flushMessageText(chatId, messageId);
+      if (options?.flushPendingText !== false)
+        flushMessageText(chatId, messageId);
       setChats((items) =>
         updateAssistantRunMetrics(items, chatId, messageId, metrics),
       );

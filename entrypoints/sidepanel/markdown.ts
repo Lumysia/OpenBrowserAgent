@@ -10,6 +10,7 @@ import xml from "highlight.js/lib/languages/xml";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import { marked } from "marked";
+import type { Renderer, Tokens } from "marked";
 import type { Messages } from "../../src/shared/i18n";
 import type { ChatSource } from "../../src/shared/types";
 
@@ -41,6 +42,8 @@ export function renderMarkdown(
 ) {
   const codeBlocks: string[] = [];
   const renderer = new marked.Renderer();
+  if (options.animatedFromChar !== undefined)
+    applyStreamingTextRenderer(renderer, options.animatedFromChar);
   renderer.image = ({ href, title, text }) =>
     renderMarkdownImage(href, title, text);
   renderer.code = ({ text: code, lang }) => {
@@ -68,11 +71,37 @@ export function renderMarkdown(
     }),
   );
   return {
-    html:
-      options.animatedFromChar !== undefined
-        ? addCharacterFade(html, options.animatedFromChar)
-        : html,
+    html,
     codeBlocks,
+  };
+}
+
+function applyStreamingTextRenderer(
+  renderer: Renderer,
+  animatedFromChar: number,
+) {
+  let characterIndex = 0;
+  let animatedIndex = 0;
+
+  renderer.text = (token: Tokens.Text | Tokens.Escape) => {
+    if ("tokens" in token && token.tokens)
+      return renderer.parser.parseInline(token.tokens);
+    const text = String("text" in token ? token.text : "");
+    return Array.from(text)
+      .map((character) => {
+        const currentIndex = characterIndex;
+        characterIndex += 1;
+        const escaped = escapeHtml(character);
+        if (
+          currentIndex < animatedFromChar ||
+          animatedIndex >= STREAM_CHAR_ANIMATION_LIMIT
+        )
+          return escaped;
+        const streamIndex = animatedIndex;
+        animatedIndex += 1;
+        return `<span class="stream-char" style="--char-index:${streamIndex}">${escaped}</span>`;
+      })
+      .join("");
   };
 }
 
@@ -85,6 +114,7 @@ function renderMarkdownImage(href: string, title: string | null, text: string) {
 
 function enhanceMarkdownHtml(value: string | Promise<string>) {
   const html = String(value);
+  if (!/<img\s/i.test(html)) return html;
   const template = document.createElement("template");
   template.innerHTML = html;
   for (const image of Array.from(template.content.querySelectorAll("img"))) {
@@ -216,59 +246,6 @@ function mermaidThemeVariables() {
     edgeLabelBackground: background,
     fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
   };
-}
-
-function addCharacterFade(html: string, animatedFromChar: number) {
-  const template = document.createElement("template");
-  template.innerHTML = html;
-  const nodes = collectTextNodes(template.content);
-  let index = 0;
-  let animatedIndex = 0;
-  for (const node of nodes) {
-    const fragment = document.createDocumentFragment();
-    for (const character of Array.from(node.data)) {
-      const characterIndex = index;
-      index += 1;
-      if (characterIndex < animatedFromChar) {
-        fragment.append(character);
-        continue;
-      }
-      if (animatedIndex < STREAM_CHAR_ANIMATION_LIMIT) {
-        const span = document.createElement("span");
-        span.className = "stream-char";
-        span.style.setProperty("--char-index", String(animatedIndex));
-        span.textContent = character;
-        animatedIndex += 1;
-        fragment.append(span);
-        continue;
-      }
-      fragment.append(character);
-    }
-    node.replaceWith(fragment);
-  }
-  return template.innerHTML;
-}
-
-function collectTextNodes(root: ParentNode) {
-  const nodes: Text[] = [];
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-    acceptNode(node) {
-      const parent = node.parentElement;
-      if (!node.textContent || !parent || shouldSkipFade(parent))
-        return NodeFilter.FILTER_REJECT;
-      return NodeFilter.FILTER_ACCEPT;
-    },
-  });
-  let node = walker.nextNode();
-  while (node) {
-    nodes.push(node as Text);
-    node = walker.nextNode();
-  }
-  return nodes;
-}
-
-function shouldSkipFade(element: Element) {
-  return !!element.closest("pre, code, button, svg, .katex");
 }
 
 function renderCitations(text: string, sources: ChatSource[]) {

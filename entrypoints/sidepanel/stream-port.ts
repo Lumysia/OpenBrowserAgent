@@ -1,4 +1,5 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
+import { STREAM_RENDER_THROTTLE_MS } from "../../src/shared/config";
 import {
   AI_STREAM_PORT_NAME,
   AI_STREAM_REQUEST_TYPE,
@@ -93,7 +94,11 @@ type StreamPortOptions = {
     content: string,
   ) => void;
   flushMessageText: (chatId: string, messageId: string) => void;
-  updateRunMetrics: (messageId: string, metrics: Partial<RunMetrics>) => void;
+  updateRunMetrics: (
+    messageId: string,
+    metrics: Partial<RunMetrics>,
+    options?: { flushPendingText?: boolean },
+  ) => void;
   appendQueuedMessages: (
     chatId: string,
     messages: Array<{ id: string; content: string; createdAt: number }>,
@@ -124,6 +129,10 @@ function connectStreamPort({
   portRefs.current[chatId] = port;
   let activeMessageId = targetMessageId;
   let settled = false;
+  let pendingSequenceMetrics:
+    | { messageId: string; metrics: Partial<RunMetrics> }
+    | undefined;
+  let sequenceMetricsTimeout: number | undefined;
 
   function updateActiveStream(
     updater: (stream: ActiveStreamMap[string]) => ActiveStreamMap[string],
@@ -150,15 +159,32 @@ function connectStreamPort({
     closeStreamPort(portRefs, chatId, false);
   }
 
+  function flushSequenceMetrics() {
+    if (sequenceMetricsTimeout !== undefined) {
+      window.clearTimeout(sequenceMetricsTimeout);
+      sequenceMetricsTimeout = undefined;
+    }
+    const item = pendingSequenceMetrics;
+    pendingSequenceMetrics = undefined;
+    if (!item) return;
+    updateRunMetrics(item.messageId, item.metrics, { flushPendingText: false });
+  }
+
   port.onDisconnect.addListener(() => {
     if (portRefs.current[chatId] === port) delete portRefs.current[chatId];
+    flushSequenceMetrics();
     flushMessageText(chatId, activeMessageId);
     if (!settled) clearActiveStream();
   });
 
   function scheduleSequenceMetrics(metrics: Partial<RunMetrics> | undefined) {
     if (!metrics) return;
-    updateRunMetrics(activeMessageId, metrics);
+    pendingSequenceMetrics = { messageId: activeMessageId, metrics };
+    if (sequenceMetricsTimeout !== undefined) return;
+    sequenceMetricsTimeout = window.setTimeout(
+      flushSequenceMetrics,
+      STREAM_RENDER_THROTTLE_MS,
+    );
   }
 
   port.onMessage.addListener((message: AiStreamResponse) => {
@@ -167,6 +193,7 @@ function connectStreamPort({
       ? { streamEventIndex: message.sequence }
       : undefined;
     if (message.type === "queuedMessages") {
+      flushSequenceMetrics();
       updateRunMetrics(activeMessageId, { endedAt: message.createdAt });
       appendQueuedMessages(
         chatId,
@@ -184,7 +211,9 @@ function connectStreamPort({
       return;
     }
     if (message.type === "chunk") {
-      updateActiveStream((stream) => ({ ...stream, hasProgress: true }));
+      updateActiveStream((stream) =>
+        stream.hasProgress ? stream : { ...stream, hasProgress: true },
+      );
       appendStreamChunk(chatId, activeMessageId, message.chunk);
       onStreamChunk?.({
         chatId,
@@ -197,6 +226,7 @@ function connectStreamPort({
       updateRunMetrics(activeMessageId, message.metrics);
     }
     if (message.type === "error") {
+      flushSequenceMetrics();
       flushMessageText(chatId, activeMessageId);
       updateRunMetrics(activeMessageId, { endedAt: Date.now() });
       appendToAssistant(chatId, activeMessageId, `\n\n${message.error}`);
@@ -204,6 +234,7 @@ function connectStreamPort({
       onStreamFinished(chatId);
     }
     if (message.type === "end") {
+      flushSequenceMetrics();
       flushMessageText(chatId, activeMessageId);
       updateRunMetrics(activeMessageId, { endedAt: Date.now() });
       clearActiveStream();

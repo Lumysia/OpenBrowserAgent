@@ -2,6 +2,7 @@ import { defineConfig } from "wxt";
 import { fileURLToPath } from "node:url";
 
 const permissions = ["scripting", "tabs", "storage", "downloads"] as const;
+const sourcemap = process.env.WXT_SOURCEMAP === "true";
 
 const chromiumOnlyPermissions = [
   "tabGroups",
@@ -13,6 +14,9 @@ const chromiumOnlyPermissions = [
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
   vite: () => ({
+    build: {
+      sourcemap,
+    },
     resolve: {
       alias: {
         "@": fileURLToPath(new URL("./src", import.meta.url)),
