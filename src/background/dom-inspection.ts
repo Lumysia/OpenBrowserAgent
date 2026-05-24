@@ -1,7 +1,7 @@
 import { isScriptableUrl } from "../shared/browser";
 import { getBrowserApi } from "../shared/storage";
 import { TOOL_ERROR } from "../shared/tool-errors";
-import { withContentSlice, withListSlice } from "./tool-utils";
+import { sliceInspectablePageOutput } from "./dom-inspection-output";
 
 const DEFAULT_CONTEXT_DEPTH_UP = 6;
 const DEFAULT_CONTEXT_DEPTH_DOWN = 4;
@@ -111,55 +111,6 @@ function positiveInteger(value: unknown, fallback: number) {
   return Math.trunc(number);
 }
 
-export function sliceInspectablePageOutput(
-  output: unknown,
-  args: Record<string, unknown>,
-) {
-  if (
-    !output ||
-    typeof output !== "object" ||
-    !Array.isArray((output as { pages?: unknown[] }).pages)
-  )
-    return output;
-  return {
-    pages: (output as { pages: Array<Record<string, unknown>> }).pages.map(
-      (page) => ({
-        ...withContentSlice(
-          page,
-          String(page.markdown || ""),
-          { offset: args.textOffset, limit: args.textLimit },
-          "markdown",
-        ),
-        ...sliceLists(page, args),
-      }),
-    ),
-  };
-}
-
-function sliceLists(
-  page: Record<string, unknown>,
-  args: Record<string, unknown>,
-) {
-  const itemArgs = {
-    offset: args.itemOffset ?? args.offset,
-    limit: args.itemLimit,
-  };
-  return {
-    ...(Array.isArray(page.elements)
-      ? withListSlice({}, page.elements, itemArgs, "elements")
-      : {}),
-    ...(Array.isArray(page.images)
-      ? withListSlice({}, page.images, itemArgs, "images")
-      : {}),
-    ...(Array.isArray(page.links)
-      ? withListSlice({}, page.links, itemArgs, "links")
-      : {}),
-    ...(Array.isArray(page.forms)
-      ? withListSlice({}, page.forms, itemArgs, "forms")
-      : {}),
-  };
-}
-
 function inspectPageInDom(options: {
   include: string[];
   target: { aiId: string; selector: string; text: string; selected: boolean };
@@ -254,19 +205,8 @@ function inspectPageInDom(options: {
       const element = document.querySelector('[data-oba-selected="true"]');
       if (element) return element as HTMLElement;
     }
-    if (options.target.text) {
-      const needle = options.target.text.toLowerCase();
-      return Array.from(
-        document.querySelectorAll(
-          "a,button,[role],article,section,div,span,p,h1,h2,h3,h4,h5,h6",
-        ),
-      ).find((element) =>
-        (element.textContent || "").toLowerCase().includes(needle),
-      ) as HTMLElement | undefined;
-    }
-    return document.querySelector(
-      '[data-oba-selected="true"]',
-    ) as HTMLElement | null;
+    if (options.target.text) return findBestTextElement(options.target.text);
+    return null;
   };
   const collectElements = (root: ParentNode) => {
     const selectors = [
@@ -366,6 +306,87 @@ function inspectPageInDom(options: {
     )
       .filter((element) => isVisible(element as HTMLElement))
       .map((element) => describeElement(assignAiId(element as HTMLElement)));
+  const isSkippableBlock = (element: HTMLElement) => {
+    const tag = element.tagName.toLowerCase();
+    if (["script", "style", "noscript", "svg", "path"].includes(tag))
+      return true;
+    if (element.closest("nav,menu,button,input,textarea,select")) return true;
+    const role = element.getAttribute("role") || "";
+    return ["button", "link", "menuitem", "tab"].includes(role);
+  };
+  const blockKind = (element: HTMLElement) => {
+    const tag = element.tagName.toLowerCase();
+    if (/^h[1-6]$/.test(tag)) return "heading";
+    if (tag === "p") return "paragraph";
+    if (tag === "li") return "listItem";
+    if (tag === "article" || tag === "section") return "section";
+    if (element.closest("article,section,c-wiz")) return "content";
+    return "text";
+  };
+  const collectBlocks = (root: ParentNode) => {
+    const candidates = Array.from(
+      root.querySelectorAll(
+        "h1,h2,h3,h4,h5,h6,p,li,article,section,[role='heading'],[data-testid],div,span",
+      ),
+    ) as HTMLElement[];
+    const seen = new Set<string>();
+    const blocks: Array<Record<string, unknown>> = [];
+    for (const element of candidates) {
+      if (!isVisible(element) || isSkippableBlock(element)) continue;
+      const text = compactText(element.innerText || element.textContent || "");
+      if (!text || text.length < 20 || text.length > 500 || seen.has(text))
+        continue;
+      const childText = Array.from(element.children).some(
+        (child) =>
+          compactText(
+            (child as HTMLElement).innerText || child.textContent || "",
+          ) === text,
+      );
+      if (childText) continue;
+      seen.add(text);
+      const target = assignAiId(element);
+      blocks.push({
+        blockId: target.getAttribute("data-ai-id") || undefined,
+        kind: blockKind(target),
+        text,
+        rect: rectOf(target),
+        recommendedInsertPosition: "afterend",
+        containerAiId:
+          target.parentElement?.getAttribute("data-ai-id") ||
+          (target.parentElement
+            ? assignAiId(target.parentElement).getAttribute("data-ai-id")
+            : undefined),
+      });
+      if (blocks.length >= 120) break;
+    }
+    return blocks;
+  };
+  const findBestTextElement = (text: string) => {
+    const needle = text.replace(/\s+/g, " ").trim().toLowerCase();
+    if (!needle) return undefined;
+    const candidates = Array.from(
+      document.querySelectorAll(
+        "a,button,[role],article,section,div,span,p,li,h1,h2,h3,h4,h5,h6",
+      ),
+    ) as HTMLElement[];
+    return candidates
+      .filter((element) => isVisible(element))
+      .filter((element) =>
+        (element.innerText || element.textContent || "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase()
+          .includes(needle),
+      )
+      .sort((a, b) => {
+        const aText = compactText(a.innerText || a.textContent || "") || "";
+        const bText = compactText(b.innerText || b.textContent || "") || "";
+        const aExact = aText.toLowerCase() === needle ? 0 : 1;
+        const bExact = bText.toLowerCase() === needle ? 0 : 1;
+        if (aExact !== bExact) return aExact - bExact;
+        return aText.length - bText.length;
+      })[0];
+  };
   const collectDescendants = (root: HTMLElement, depthDown: number) => {
     const items: Array<Record<string, unknown>> = [];
     const walk = (element: Element, depth: number) => {
@@ -428,6 +449,7 @@ function inspectPageInDom(options: {
   const images = include.has("images") ? collectImages(root, target) : [];
   const links = include.has("links") ? collectLinks(root) : [];
   const forms = include.has("forms") ? collectForms(root) : [];
+  const blocks = include.has("blocks") ? collectBlocks(root) : [];
 
   return {
     success: true,
@@ -445,5 +467,6 @@ function inspectPageInDom(options: {
     images,
     links,
     forms,
+    blocks,
   };
 }

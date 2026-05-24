@@ -106,8 +106,8 @@ Use this skill for browser automation tasks that involve inspecting pages, click
 ## Workflow
 
 1. Inspect the active page and relevant already-open tabs before opening new pages. Reuse an existing useful tab when it matches the task.
-2. Use page inspection as the primary map for clicking, text entry, and nearby DOM context.
-3. For page edits or actions, match the target by selected element, aiId, selector, or nearby text, then use \`mutatePage\` with the simplest operation such as \`click\`, \`input\`, \`setText\`, \`insertHtml\`, or \`delete\`.
+2. Use page inspection as the primary map for clicking, text entry, content blocks, and nearby DOM context.
+3. For page edits or actions, match the target by selected element, aiId, selector, nearby text, or an inspected block, then use \`mutatePage\` with the simplest operation such as \`click\`, \`input\`, \`setText\`, \`insertElement\`, \`insertHtml\`, or \`delete\`. Prefer structured \`insertElement\` over raw HTML when a page blocks HTML insertion.
 4. Re-read page state after actions that change controls, navigation, loading, or submitted content.
 5. Use visual evidence for image inspection, judging, choosing, or description.
 6. For search and research, open result pages, compare reliable sources, and cite sourced claims.

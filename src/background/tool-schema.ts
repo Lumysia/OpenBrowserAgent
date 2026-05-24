@@ -253,7 +253,7 @@ export const commonBrowserTools = [
   }),
   tool(
     BROWSER_TOOL_NAME.mutatePage,
-    "Modify the current page DOM or style. Use this for normal page actions and edits before CDP. Operations: click, input, setText, setHtml, insertHtml, delete, setAttribute, removeAttribute, setInlineStyle, insertStyle, removeStyle.",
+    "Modify the current page DOM or style. Use this for normal page actions and edits before CDP. Operations: click, input, setText, setHtml, insertHtml, insertElement, delete, setAttribute, removeAttribute, setInlineStyle, insertStyle, removeStyle. Prefer insertElement over insertHtml on strict dynamic pages.",
     {
       tabId: {
         type: "number",
@@ -268,6 +268,7 @@ export const commonBrowserTools = [
           "setText",
           "setHtml",
           "insertHtml",
+          "insertElement",
           "delete",
           "setAttribute",
           "removeAttribute",
@@ -285,7 +286,18 @@ export const commonBrowserTools = [
       value: {
         type: "string",
         description:
-          "Text, HTML, attribute value, inline CSS declaration, or page CSS depending on operation.",
+          "Text, HTML, attribute value, inline CSS declaration, fallback node text, or page CSS depending on operation.",
+      },
+      node: {
+        type: "object",
+        description:
+          "Structured node for insertElement: { tag, text, attributes, style, children }. Creates DOM nodes without evaluating code or parsing HTML.",
+      },
+      operations: {
+        type: "array",
+        items: { type: "object" },
+        description:
+          "Optional small batch of mutation objects. Use for 2-10 similar safe edits; each item accepts the same fields as this tool.",
       },
       attribute: {
         type: "string",
@@ -295,7 +307,17 @@ export const commonBrowserTools = [
         type: "string",
         enum: ["beforebegin", "afterbegin", "beforeend", "afterend"],
         description:
-          "Insertion position for insertHtml. Defaults to beforeend.",
+          "Insertion position for insertHtml/insertElement. Defaults to beforeend.",
+      },
+      dedupeKey: {
+        type: "string",
+        description:
+          "Optional idempotency key. insertElement adds data-oba-dedupe-key and skips when the target already contains the same key.",
+      },
+      skipIfExistsSelector: {
+        type: "string",
+        description:
+          "Optional selector that skips the mutation if any matching element already exists.",
       },
       css: {
         type: "string",
@@ -307,11 +329,11 @@ export const commonBrowserTools = [
           "For click on links, open a background tab instead of navigating the current tab. Defaults true.",
       },
     },
-    ["operation"],
+    [],
   ),
   tool(
     BROWSER_TOOL_NAME.inspectPage,
-    "Inspect page text, interactive elements, links, images, forms, and selected/target element context. Use this before CDP for normal DOM/page understanding, including DIV/card images without screenshots.",
+    "Inspect page text, translatable/content blocks, interactive elements, links, images, forms, and selected/target element context. Use this before CDP for normal DOM/page understanding, including DIV/card images without screenshots.",
     {
       tabId: {
         type: "number",
@@ -331,10 +353,18 @@ export const commonBrowserTools = [
         type: "array",
         items: {
           type: "string",
-          enum: ["text", "elements", "links", "images", "forms", "actions"],
+          enum: [
+            "text",
+            "blocks",
+            "elements",
+            "links",
+            "images",
+            "forms",
+            "actions",
+          ],
         },
         description:
-          "Content to return. Defaults to text, elements, links, images, and forms.",
+          "Content to return. Defaults to text, elements, links, images, and forms. Use blocks for page-editing or bilingual insertion candidates.",
       },
       depthUp: {
         type: "number",

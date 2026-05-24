@@ -236,7 +236,9 @@ export function toolDisplay(
       ]);
     if (name === BROWSER_TOOL_NAME.mutatePage)
       return compactJoin([
-        stringValue(input.operation || output.operation),
+        Array.isArray(input.operations)
+          ? `${input.operations.length} mutations`
+          : stringValue(input.operation || output.operation),
         idLabel("Tab", output.tabId || input.tabId),
         stringValue(input.value || input.text || input.attribute),
       ]);
@@ -317,6 +319,7 @@ function pageInspectionDetail(
       : "",
     Array.isArray(first.images) ? `${first.images.length} images` : "",
     Array.isArray(first.links) ? `${first.links.length} links` : "",
+    Array.isArray(first.blocks) ? `${first.blocks.length} blocks` : "",
   ];
   return compactJoin([
     idLabel("Tab", first.tabId || input.tabId),
