@@ -2,11 +2,9 @@ import * as config from "./config";
 import {
   base64ToBytes,
   bytesToBase64,
-  readAutomergeValue,
-  readCachedAutomergeValue,
-  removeLocalAutomergeDocument,
-  writeAutomergeValue,
-} from "./automerge-sync-doc";
+  readSyncDocumentValue,
+  writeSyncDocumentValue,
+} from "./sync-json-doc";
 import { getBrowserApi } from "./browser-api";
 import { SYNC_BACKEND_TYPES } from "./sync-backend-registry";
 import { STORAGE_AREAS } from "./storage-area-constants";
@@ -46,24 +44,18 @@ function createBrowserSyncBackend(
 ): SyncBackend {
   return {
     config: backendConfig,
-    async read<T>(key: string) {
+    async read<T>(key: string, cachedValue?: T) {
       const result = await getBrowserApi().storage.sync.get(key);
       const encoded = result[key] as string | undefined;
-      return readAutomergeValue<T>(
+      return readSyncDocumentValue<T>(
         automergeBackendCacheKey(backendConfig, key),
         encoded ? base64ToBytes(encoded) : undefined,
         encoded,
+        cachedValue,
       );
     },
     async write<T>(key: string, value: T) {
-      const stored = await getBrowserApi().storage.sync.get(key);
-      const encoded = stored[key] as string | undefined;
-      const result = await writeAutomergeValue<T>(
-        automergeBackendCacheKey(backendConfig, key),
-        value,
-        encoded ? base64ToBytes(encoded) : undefined,
-        encoded,
-      );
+      const result = writeSyncDocumentValue(value);
       const nextValue = bytesToBase64(result.bytes);
       assertBrowserSyncItemFits(key, nextValue);
       await getBrowserApi().storage.sync.set({ [key]: nextValue });
@@ -71,9 +63,6 @@ function createBrowserSyncBackend(
     },
     async remove(key) {
       await getBrowserApi().storage.sync.remove(key);
-      await removeLocalAutomergeDocument(
-        automergeBackendCacheKey(backendConfig, key),
-      );
     },
     async test() {
       await getBrowserApi().storage.sync.get(null);
@@ -106,7 +95,7 @@ function createBrowserSyncBackend(
 
 async function decodeBrowserSyncChangeValue<T>(key: string, value: unknown) {
   return typeof value === "string"
-    ? readAutomergeValue<T>(key, base64ToBytes(value), value)
+    ? readSyncDocumentValue<T>(key, base64ToBytes(value), value)
     : undefined;
 }
 
@@ -120,25 +109,17 @@ function createWebDavBackend(
       const cached = await readWebDavCache(backendConfig, key, readCache);
       const bytes = await readWebDavBytes(backendConfig, key, cached);
       if (bytes?.notModified)
-        return (
-          cachedValue ??
-          (cached?.value as T | undefined) ??
-          (await readCachedAutomergeValue<T>(
-            automergeBackendCacheKey(backendConfig, key),
-          ))
-        );
+        return cachedValue ?? (cached?.value as T | undefined);
       if (!bytes) {
         readCache.delete(key);
         await removeWebDavCache(backendConfig, key);
-        return readAutomergeValue<T>(
-          automergeBackendCacheKey(backendConfig, key),
-          undefined,
-        );
+        return undefined;
       }
-      const value = await readAutomergeValue<T>(
+      const value = await readSyncDocumentValue<T>(
         automergeBackendCacheKey(backendConfig, key),
         bytes.data,
         webDavVersion(bytes),
+        cachedValue,
       );
       readCache.set(key, {
         etag: bytes.etag,
@@ -149,17 +130,7 @@ function createWebDavBackend(
       return value;
     },
     async write<T>(key: string, value: T) {
-      const bytes = await readWebDavBytes(
-        backendConfig,
-        key,
-        await readWebDavCache(backendConfig, key, readCache),
-      );
-      const result = await writeAutomergeValue<T>(
-        automergeBackendCacheKey(backendConfig, key),
-        value,
-        bytes?.notModified ? undefined : bytes?.data,
-        bytes && !bytes.notModified ? webDavVersion(bytes) : undefined,
-      );
+      const result = writeSyncDocumentValue(value);
       const response = await requestWebDav(
         backendConfig,
         objectUrl(backendConfig, key),
@@ -198,9 +169,6 @@ function createWebDavBackend(
         await throwWebDavError(response, "remove");
       readCache.delete(key);
       await removeWebDavCache(backendConfig, key);
-      await removeLocalAutomergeDocument(
-        automergeBackendCacheKey(backendConfig, key),
-      );
     },
     async test() {
       const response = await requestWebDav(
