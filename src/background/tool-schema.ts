@@ -4,6 +4,7 @@ import { MEMORY_ENTRY_TEXT_MAX_CHARS } from "../shared/config";
 import { areCdpToolsAvailable } from "../shared/runtime-capabilities";
 import type { AgentCapabilities } from "../shared/types";
 import { cdpTools } from "./cdp-tool-schema";
+import { localExecutionBridgeTools } from "./local-agent-tool-schema";
 
 export const deferredBrowserTools = cdpTools;
 
@@ -130,6 +131,7 @@ export const commonBrowserTools = [
     },
     ["taskId"],
   ),
+  ...localExecutionBridgeTools,
   tool(
     BROWSER_TOOL_NAME.getCurrentTime,
     "Get current date/time from the user's device for exact local time/date or time zone conversion.",
@@ -477,11 +479,11 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.readSkill,
-    "Read SKILL.md for one available skill package by id after listSkills shows it is relevant.",
+    "Read SKILL.md for one available skill package by id or unique skill name after listSkills shows it is relevant.",
     {
       skillId: {
         type: "string",
-        description: "The id of the available skill to read",
+        description: "The id or unique name of the available skill to read",
       },
       ...contentSliceParameters,
     },
@@ -489,11 +491,11 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.readSkillFile,
-    "Read a supporting file from an available skill package by id and path after reading SKILL.md.",
+    "Read a supporting file from an available skill package by id or unique skill name and path after reading SKILL.md.",
     {
       skillId: {
         type: "string",
-        description: "The id of the available skill package",
+        description: "The id or unique name of the available skill package",
       },
       path: {
         type: "string",
@@ -845,6 +847,17 @@ export function browserToolsForPrompt({
       name === BROWSER_TOOL_NAME.getSubAgentStatus
     )
       return capabilities.subAgents;
+    if (
+      name === BROWSER_TOOL_NAME.listLocalExecutionBridges ||
+      name === BROWSER_TOOL_NAME.addLocalExecutionBridge ||
+      name === BROWSER_TOOL_NAME.updateLocalExecutionBridge ||
+      name === BROWSER_TOOL_NAME.testLocalExecutionBridge ||
+      name === BROWSER_TOOL_NAME.deleteLocalExecutionBridge ||
+      name === BROWSER_TOOL_NAME.startLocalExecutionBridge ||
+      name === BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus ||
+      name === BROWSER_TOOL_NAME.cancelLocalExecutionBridge
+    )
+      return capabilities.localAgents;
     if (name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript)
       return (
         capabilities.cdpTools &&

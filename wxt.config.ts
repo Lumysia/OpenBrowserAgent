@@ -2,6 +2,7 @@ import { defineConfig } from "wxt";
 import { fileURLToPath } from "node:url";
 
 const permissions = ["scripting", "tabs", "storage", "downloads"] as const;
+const nativeMessagingPermissions = ["nativeMessaging"] as const;
 const sourcemap = process.env.WXT_SOURCEMAP === "true";
 
 const chromiumOnlyPermissions = [
@@ -29,9 +30,15 @@ export default defineConfig({
     version: "0.1.0",
     default_locale: "en",
     permissions:
-      browser === "firefox" || browser === "safari"
+      browser === "safari"
         ? [...permissions]
-        : [...permissions, ...chromiumOnlyPermissions],
+        : browser === "firefox"
+          ? [...permissions, ...nativeMessagingPermissions]
+          : [
+              ...permissions,
+              ...nativeMessagingPermissions,
+              ...chromiumOnlyPermissions,
+            ],
     host_permissions: ["<all_urls>"],
     content_security_policy: {
       extension_pages:

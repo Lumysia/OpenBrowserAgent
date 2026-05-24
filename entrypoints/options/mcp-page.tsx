@@ -1,4 +1,13 @@
-import { Plug, Plus, RotateCcw, Trash2, Upload } from "lucide-react";
+import {
+  Check,
+  FlaskConical,
+  Loader2,
+  Plug,
+  Plus,
+  RotateCcw,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { getMessages } from "../../src/shared/i18n";
 import {
@@ -44,6 +53,7 @@ export function McpPage() {
   const [importMessage, setImportMessage] = useState("");
   const [importMenuOpen, setImportMenuOpen] = useState(false);
   const [testingServerId, setTestingServerId] = useState<string | null>(null);
+  const [recentlyTestedServerId, setRecentlyTestedServerId] = useState("");
   const t = getMessages(language);
   const items = servers || [];
 
@@ -89,6 +99,12 @@ export function McpPage() {
         testedAt: Date.now(),
         lastTestError: "",
       });
+      setRecentlyTestedServerId(server.id);
+      window.setTimeout(() => {
+        setRecentlyTestedServerId((current) =>
+          current === server.id ? "" : current,
+        );
+      }, 2500);
     } catch (error) {
       updateServer(server.id, {
         enabled: false,
@@ -205,15 +221,35 @@ export function McpPage() {
                 onClick={(event) => event.stopPropagation()}
                 onKeyDown={(event) => event.stopPropagation()}
               >
-                <Button
-                  size="sm"
-                  disabled={!server.url || testingServerId === server.id}
-                  onClick={() => testServer(server)}
-                >
-                  {testingServerId === server.id
-                    ? t.options.mcpTesting
-                    : t.options.mcpTestServer}
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="tooltip-button-wrapper">
+                      <Button
+                        size="icon"
+                        aria-label={
+                          testingServerId === server.id
+                            ? t.options.mcpTesting
+                            : t.options.mcpTestServer
+                        }
+                        disabled={!server.url || testingServerId === server.id}
+                        onClick={() => testServer(server)}
+                      >
+                        {testingServerId === server.id ? (
+                          <Loader2 size={14} className="spin" />
+                        ) : recentlyTestedServerId === server.id ? (
+                          <Check size={14} />
+                        ) : (
+                          <FlaskConical size={14} />
+                        )}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {testingServerId === server.id
+                      ? t.options.mcpTesting
+                      : t.options.mcpTestServer}
+                  </TooltipContent>
+                </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Switch

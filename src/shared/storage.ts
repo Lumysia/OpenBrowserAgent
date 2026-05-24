@@ -4,6 +4,7 @@ import { getBrowserApi } from "./browser-api";
 import { BUILTIN_SKILLS } from "./builtin-skills";
 import * as config from "./config";
 import { DEFAULT_PREFERENCES, mergePreferences } from "./default-preferences";
+import { normalizeLocalAgents } from "./local-agents";
 import { normalizeMcpServers } from "./mcp";
 import {
   areaForSyncEnabled,
@@ -64,6 +65,7 @@ import type {
   ProviderState,
   Skill,
   McpServerConfig,
+  LocalAgentConfig,
   SyncBackendConfig,
 } from "./types";
 
@@ -388,6 +390,12 @@ export const storage = {
     () => [],
     SYNC_PREFERENCES.mcpServers,
     normalizeMcpServers,
+  ),
+  localAgents: createSwitchableItem<LocalAgentConfig[]>(
+    STORAGE_KEYS.localAgents,
+    () => [],
+    SYNC_PREFERENCES.localAgents,
+    normalizeLocalAgents,
   ),
   shouldShowUpdateToast: createItem<boolean>(
     STORAGE_AREAS.local,

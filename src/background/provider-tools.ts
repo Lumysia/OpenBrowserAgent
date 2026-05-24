@@ -30,6 +30,16 @@ import {
 } from "./attachment-messages";
 import { generateImage } from "./image-generation";
 import {
+  getLocalExecutionBridgeStatus,
+  listLocalExecutionBridges,
+  startLocalExecutionBridge,
+  cancelLocalExecutionBridge,
+  addLocalExecutionBridge,
+  updateLocalExecutionBridge,
+  testLocalExecutionBridgeConfig,
+  deleteLocalExecutionBridge,
+} from "./local-agent-tools";
+import {
   addMemory,
   addUserProfileNote,
   listMemory,
@@ -146,6 +156,22 @@ export function executeContextAwareTool({
     return startSubAgent(input, context);
   if (toolName === BROWSER_TOOL_NAME.getSubAgentStatus)
     return getSubAgentStatus(input);
+  if (toolName === BROWSER_TOOL_NAME.startLocalExecutionBridge)
+    return startLocalExecutionBridge(input, context, workspace);
+  if (toolName === BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus)
+    return getLocalExecutionBridgeStatus(input);
+  if (toolName === BROWSER_TOOL_NAME.cancelLocalExecutionBridge)
+    return cancelLocalExecutionBridge(input);
+  if (toolName === BROWSER_TOOL_NAME.listLocalExecutionBridges)
+    return listLocalExecutionBridges();
+  if (toolName === BROWSER_TOOL_NAME.addLocalExecutionBridge)
+    return addLocalExecutionBridge(input);
+  if (toolName === BROWSER_TOOL_NAME.updateLocalExecutionBridge)
+    return updateLocalExecutionBridge(input);
+  if (toolName === BROWSER_TOOL_NAME.testLocalExecutionBridge)
+    return testLocalExecutionBridgeConfig(input);
+  if (toolName === BROWSER_TOOL_NAME.deleteLocalExecutionBridge)
+    return deleteLocalExecutionBridge(input);
   if (
     toolName === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript &&
     !capabilities.javascriptExecution

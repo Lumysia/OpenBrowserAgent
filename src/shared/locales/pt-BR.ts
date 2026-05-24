@@ -507,6 +507,38 @@ export const ptBR: LocaleMessages = {
         running: "Verificando subagente",
         done: "Subagente verificado",
       },
+      listLocalExecutionBridges: {
+        running: "Listando pontes de execução",
+        done: "Pontes de execução listadas",
+      },
+      startLocalExecutionBridge: {
+        running: "Iniciando comando local",
+        done: "Comando local finalizado",
+      },
+      getLocalExecutionBridgeStatus: {
+        running: "Verificando comando local",
+        done: "Comando local verificado",
+      },
+      cancelLocalExecutionBridge: {
+        running: "Cancelando comando local",
+        done: "Comando local cancelado",
+      },
+      addLocalExecutionBridge: {
+        running: "Adicionando ponte de execução",
+        done: "Ponte de execução adicionada",
+      },
+      updateLocalExecutionBridge: {
+        running: "Atualizando ponte de execução",
+        done: "Ponte de execução atualizada",
+      },
+      testLocalExecutionBridge: {
+        running: "Testando ponte de execução",
+        done: "Ponte de execução testada",
+      },
+      deleteLocalExecutionBridge: {
+        running: "Excluindo ponte de execução",
+        done: "Ponte de execução excluída",
+      },
     },
   },
   options: {
@@ -557,6 +589,7 @@ export const ptBR: LocaleMessages = {
       browserAutomation: "Operar o navegador",
       browserTools: "Usar ferramentas integradas",
       subAgents: "Iniciar subagentes",
+      localAgents: "Usar pontes de execução locais",
       deferredBrowserTools: "Carregar ações avançadas do navegador",
       cdpTools: "Ferramentas CDP",
       javascriptExecution: "Executar JavaScript da página",
@@ -587,6 +620,27 @@ export const ptBR: LocaleMessages = {
     sync: "Sincronização",
     providers: "Provedores",
     mcpServers: "Servidores MCP",
+    localAgents: "Pontes de execução locais",
+    localAgentsDescription:
+      "Configure pontes de execução locais ou remotas. A extensão envia tarefas para a ponte, e a ponte executa o comando configurado no host.",
+    localAgentsEmpty: "Nenhuma ponte de execução local configurada ainda.",
+    newLocalAgent: "Nova ponte de execução",
+    localAgentName: "Nome da ponte de execução",
+    localAgentDescription: "Descrição",
+    localAgentHostName: "Nome do host de mensagens nativas",
+    localAgentHostAddress: "Endereço do host de execução",
+    localAgentHostAddressPlaceholder:
+      "Deixe vazio para local, ou informe um endereço aceito pela ponte",
+    localAgentSecret: "Segredo da ponte",
+    localAgentRegenerateSecret: "Gerar segredo novamente",
+    localAgentKey: "ID da configuração de comando",
+    localAgentDefaultCwd: "Diretório de trabalho padrão",
+    localAgentTimeoutMs: "Timeout padrão (ms)",
+    localAgentTest: "Testar ponte",
+    localAgentTesting: "Testando...",
+    localAgentTestSuccess: "A ponte respondeu com sucesso.",
+    localAgentTestError: "Falha no teste da ponte",
+    deleteLocalExecutionBridge: "Excluir ponte de execução",
     skills: "Habilidades",
     modelProviders: "Provedores de modelos",
     providerDescription:
@@ -745,6 +799,9 @@ export const ptBR: LocaleMessages = {
     syncMcpServers: "Sincronizar servidores MCP",
     syncMcpServersDescription:
       "Sincronize a configuração de servidores MCP Streamable HTTP pelo backend de sincronização atual.",
+    syncLocalAgents: "Sincronizar pontes de execução locais",
+    syncLocalAgentsDescription:
+      "Sincronize configurações de pontes de execução, nomes de host nativos, endereços de host de execução, segredos da ponte, IDs de configuração de comando e diretórios padrão pelo backend de sincronização atual.",
     syncChats: "Sincronizar chats",
     syncChatsDescription:
       "Sincronize o histórico de chats pelo backend de sincronização atual. Desative para conversas somente locais.",
@@ -795,6 +852,7 @@ export const ptBR: LocaleMessages = {
     debugResetTargetAgents: "Agentes",
     debugResetTargetSkills: "Habilidades",
     debugResetTargetMcpServers: "Servidores MCP",
+    debugResetTargetLocalAgents: "Pontes de comando locais",
     debugResetTargetChats: "Chats",
     debugResetButton: "Limpar todos os dados do app",
     debugResetting: "Limpando...",

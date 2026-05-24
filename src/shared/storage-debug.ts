@@ -23,6 +23,7 @@ const STORAGE_KEY_GROUPS = {
   agents: [STORAGE_KEYS.agents, STORAGE_KEYS.agentWorkspaces],
   skills: [STORAGE_KEYS.skills],
   mcpServers: [STORAGE_KEYS.mcpServers],
+  localAgents: [STORAGE_KEYS.localAgents],
   chats: [STORAGE_KEYS.chats, STORAGE_KEYS.chatTabs],
 } as const;
 

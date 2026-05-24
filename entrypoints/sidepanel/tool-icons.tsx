@@ -27,6 +27,17 @@ export function toolIcon(name: string) {
     return <Bot size={19} strokeWidth={2.1} />;
   if (name === BROWSER_TOOL_NAME.getSubAgentStatus)
     return <FileSearch size={19} strokeWidth={2.1} />;
+  if (
+    name === BROWSER_TOOL_NAME.listLocalExecutionBridges ||
+    name === BROWSER_TOOL_NAME.addLocalExecutionBridge ||
+    name === BROWSER_TOOL_NAME.updateLocalExecutionBridge ||
+    name === BROWSER_TOOL_NAME.testLocalExecutionBridge ||
+    name === BROWSER_TOOL_NAME.deleteLocalExecutionBridge ||
+    name === BROWSER_TOOL_NAME.startLocalExecutionBridge ||
+    name === BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus ||
+    name === BROWSER_TOOL_NAME.cancelLocalExecutionBridge
+  )
+    return <TerminalSquare size={19} strokeWidth={2.1} />;
   if (isWorkspaceToolName(name)) {
     if (name === BROWSER_TOOL_NAME.searchWorkspaceFiles)
       return <FileSearch size={19} strokeWidth={2.1} />;

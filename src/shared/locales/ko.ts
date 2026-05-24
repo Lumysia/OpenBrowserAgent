@@ -498,6 +498,38 @@ export const ko: LocaleMessages = {
         running: "하위 에이전트 확인 중",
         done: "하위 에이전트 확인함",
       },
+      listLocalExecutionBridges: {
+        running: "실행 브리지 나열 중",
+        done: "실행 브리지 나열됨",
+      },
+      startLocalExecutionBridge: {
+        running: "로컬 명령 시작 중",
+        done: "로컬 명령 완료됨",
+      },
+      getLocalExecutionBridgeStatus: {
+        running: "로컬 명령 확인 중",
+        done: "로컬 명령 확인됨",
+      },
+      cancelLocalExecutionBridge: {
+        running: "로컬 명령 취소 중",
+        done: "로컬 명령 취소됨",
+      },
+      addLocalExecutionBridge: {
+        running: "실행 브리지 추가 중",
+        done: "실행 브리지 추가됨",
+      },
+      updateLocalExecutionBridge: {
+        running: "실행 브리지 업데이트 중",
+        done: "실행 브리지 업데이트됨",
+      },
+      testLocalExecutionBridge: {
+        running: "실행 브리지 테스트 중",
+        done: "실행 브리지 테스트됨",
+      },
+      deleteLocalExecutionBridge: {
+        running: "실행 브리지 삭제 중",
+        done: "실행 브리지 삭제됨",
+      },
     },
   },
   options: {
@@ -547,6 +579,7 @@ export const ko: LocaleMessages = {
       browserAutomation: "브라우저 조작",
       browserTools: "내장 도구 사용",
       subAgents: "하위 에이전트 시작",
+      localAgents: "로컬 실행 브리지 사용",
       deferredBrowserTools: "고급 브라우저 작업 불러오기",
       cdpTools: "CDP 도구",
       javascriptExecution: "페이지 JavaScript 실행",
@@ -577,6 +610,27 @@ export const ko: LocaleMessages = {
     sync: "동기화",
     providers: "제공업체",
     mcpServers: "MCP 서버",
+    localAgents: "로컬 실행 브리지",
+    localAgentsDescription:
+      "로컬 또는 원격 실행 브리지를 구성합니다. 확장 프로그램은 작업을 브리지로 보내고, 브리지는 호스트에서 구성된 명령을 실행합니다.",
+    localAgentsEmpty: "아직 구성된 로컬 실행 브리지가 없습니다.",
+    newLocalAgent: "새 실행 브리지",
+    localAgentName: "실행 브리지 이름",
+    localAgentDescription: "설명",
+    localAgentHostName: "네이티브 메시징 호스트 이름",
+    localAgentHostAddress: "실행 호스트 주소",
+    localAgentHostAddressPlaceholder:
+      "로컬이면 비워두거나 브리지가 이해하는 주소를 입력하세요",
+    localAgentSecret: "브리지 시크릿",
+    localAgentRegenerateSecret: "시크릿 다시 생성",
+    localAgentKey: "명령 구성 ID",
+    localAgentDefaultCwd: "기본 작업 디렉터리",
+    localAgentTimeoutMs: "기본 제한 시간(ms)",
+    localAgentTest: "브리지 테스트",
+    localAgentTesting: "테스트 중...",
+    localAgentTestSuccess: "브리지가 성공적으로 응답했습니다.",
+    localAgentTestError: "브리지 테스트 실패",
+    deleteLocalExecutionBridge: "실행 브리지 삭제",
     skills: "스킬",
     modelProviders: "모델 제공업체",
     providerDescription:
@@ -730,6 +784,9 @@ export const ko: LocaleMessages = {
     syncMcpServers: "MCP 서버 동기화",
     syncMcpServersDescription:
       "Streamable HTTP MCP 서버 구성을 현재 동기화 백엔드로 동기화합니다.",
+    syncLocalAgents: "로컬 실행 브리지 동기화",
+    syncLocalAgentsDescription:
+      "실행 브리지 설정, 네이티브 호스트 이름, 실행 호스트 주소, 브리지 시크릿, 명령 구성 ID, 기본 작업 디렉터리를 현재 동기화 백엔드로 동기화합니다.",
     syncChats: "채팅 동기화",
     syncChatsDescription:
       "채팅 기록을 현재 동기화 백엔드로 동기화합니다. 로컬 전용 대화는 끄세요.",
@@ -778,6 +835,7 @@ export const ko: LocaleMessages = {
     debugResetTargetAgents: "에이전트",
     debugResetTargetSkills: "스킬",
     debugResetTargetMcpServers: "MCP 서버",
+    debugResetTargetLocalAgents: "로컬 실행 브리지",
     debugResetTargetChats: "채팅",
     debugResetButton: "모든 앱 데이터 지우기",
     debugResetting: "지우는 중...",

@@ -2,8 +2,134 @@ import type { Skill } from "./types";
 
 const SKILL_CREATOR_ID = "builtin-skill-creator";
 const BROWSER_GUIDANCE_ID = "builtin-browser-guidance";
+const LOCAL_EXECUTION_BRIDGE_SETUP_ID = "builtin-local-execution-bridge-setup";
 
 export const BUILTIN_SKILLS: Skill[] = [
+  {
+    id: LOCAL_EXECUTION_BRIDGE_SETUP_ID,
+    name: "local-execution-bridge-setup",
+    description:
+      "Guide users through creating, updating, testing, and deleting OpenBrowserAgent local execution bridge configurations. Use before calling addLocalExecutionBridge, updateLocalExecutionBridge, testLocalExecutionBridge, or deleteLocalExecutionBridge.",
+    builtin: true,
+    enabled: true,
+    createdAt: 0,
+    updatedAt: 0,
+    files: [
+      {
+        path: "SKILL.md",
+        kind: "markdown",
+        encoding: "utf-8",
+        updatedAt: 0,
+        content: `---
+name: "local-execution-bridge-setup"
+description: "Guide users through creating, updating, testing, and deleting OpenBrowserAgent local execution bridge configurations. Use before calling addLocalExecutionBridge, updateLocalExecutionBridge, testLocalExecutionBridge, or deleteLocalExecutionBridge."
+---
+
+# Local Execution Bridge Setup
+
+Use this skill whenever the user wants to add, configure, modify, test, use, or delete a local execution bridge.
+
+## Concepts
+
+- Native messaging host name: browser-local Native Messaging host name, such as \`openbrowseragent.local_execution_bridge\`. It is not a network address.
+- Execution host address: optional host target passed through to the native bridge. Leave it empty for local execution. The extension does not interpret protocols or manage remote credentials; the native bridge command decides what this value means.
+- Command config ID: command entry inside the native bridge config, such as \`default\`.
+- Bridge secret: long random token stored in both the extension config and native bridge command config. Never invent a weak secret.
+
+## Safe Workflow
+
+1. Call \`listLocalExecutionBridges\` first to see existing bridges and avoid duplicates.
+2. If no suitable bridge exists, do not ask the user to confirm that the Native Messaging host is already installed. Enter the Bootstrap Information Collection flow below. Do not list multiple browser-specific installer commands.
+3. If adding a bridge after installer output is available, collect only the missing values:
+   - display name,
+   - native messaging host name, unless the default is acceptable,
+   - execution host address, if remote execution is needed,
+   - command config ID,
+   - default working directory, if useful.
+4. Do not ask the user to manually create a secret unless they already have one. Prefer the installer-generated secret. If using \`addLocalExecutionBridge\` without installer output, let it generate the secret and tell the user to put the returned secret into the matching native bridge command config.
+5. Use \`testLocalExecutionBridge\` to validate the bridge after adding or changing it. If it fails, report the exact error and the fields most likely to need correction.
+6. When the user asks to run a local command through a configured bridge, call \`testLocalExecutionBridge\` first, then call \`startLocalExecutionBridge\` only if the test succeeds. The start tool also performs its own connection test as a safety net.
+7. Use \`deleteLocalExecutionBridge\` only after confirming the target bridge unless the user explicitly identified it by name or ID.
+
+## Do Not Fall Back To Manual Local Tasks
+
+- If the user asked OpenBrowserAgent to inspect files, list a drive, run a command, or otherwise perform local work, and there is no configured/tested bridge, keep the conversation on bridge setup. Do not switch to instructions that make the user run the requested local task manually.
+- The only command you should ask the user to run during setup is the bridge installer command, or a direct follow-up needed to provide a missing installer placeholder such as the extension ID or local CLI command.
+- After the installer prints JSON, immediately configure the extension side with \`addLocalExecutionBridge\` or \`updateLocalExecutionBridge\`, then test it. Do not ask the user to run diagnostic PowerShell, shell, disk listing, file listing, or task commands as a substitute for configuring the bridge.
+- If the requested local task cannot run yet, say that the bridge must be installed and tested first, then provide the installer command. Do not provide an alternate manual workflow for the original task unless the user explicitly asks to do it manually.
+
+## Native Bridge Installation Guidance
+
+- Prefer the published OpenBrowserAgent npm bridge installer with \`npx openbrowseragent-local-execution-bridge@1 install ...\`.
+- Keep setup guidance user-level: tell the user to choose their browser target, such as \`chrome\`, \`edge\`, \`brave\`, \`vivaldi\`, \`chromium\`, or \`firefox\`. For common Linux packaged browsers, use targets such as \`firefox-flatpak\`, \`chromium-flatpak\`, \`brave-flatpak\`, \`firefox-snap\`, or \`chromium-snap\`. Do not explain browser manifest or registry internals unless troubleshooting a specific failure.
+- On macOS, supported targets include \`chrome\`, \`edge\`, \`brave\`, \`vivaldi\`, \`chromium\`, and \`firefox\`. Do not offer Safari setup for this bridge; OpenBrowserAgent's Safari build does not use this Native Messaging API.
+- Do not tell users to put \`npx\` or \`bunx\` directly in a browser Native Messaging manifest as the long-running bridge command. Browser manifests need a stable local executable or wrapper path.
+- A good installer flow is: run an npm/bun command once, generate or update the Native Messaging manifest, create the bridge config file, and write the matching generated secret into that config.
+- If the npm package is unavailable, fall back to the local source checkout command only when the user is running from an OpenBrowserAgent repository checkout.
+- The extension does not install native hosts by itself and does not manage remote credentials.
+
+## Bootstrap Information Collection
+
+When setup is needed, explicitly say that this is the bootstrap stage and collect the minimum required inputs before showing an installer command.
+
+Required bootstrap inputs:
+
+- Browser target: one of \`chrome\`, \`edge\`, \`brave\`, \`vivaldi\`, \`chromium\`, \`firefox\`, or the Linux packaged targets above. If the user already said the browser, do not ask again.
+- Extension ID: the installed OpenBrowserAgent extension ID from the browser extension management page. If unknown, ask for it before producing a concrete install command.
+- Local CLI command: the local CLI or wrapper that should receive task prompts on stdin. If unknown, ask one concise question for it. Do not invent one.
+
+Optional bootstrap inputs:
+
+- Command config ID, default \`default\`.
+- Fixed command args, only if the user says the command needs them.
+
+After all required inputs are known, show exactly one installer command for the selected browser target. Do not show a menu of Chrome/Edge/Firefox commands. Do not leave \`<extension-id>\` or \`<local-cli-command>\` placeholders in the command once those values are known.
+
+## NPM Installer Flow
+
+Guide users to run the published installer after bootstrap inputs are known. They need the browser extension ID from the browser extension management page.
+
+Important: when setup is needed, do not only tell the user to “confirm installation” or “find command config”. The user cannot test the bridge until the installer has run. First collect missing bootstrap inputs, then show exactly one concrete command.
+
+Command template:
+
+\`\`\`bash
+npx openbrowseragent-local-execution-bridge@1 install --browser <browser-target> --extension-id <extension-id> --command <local-cli-command> --command-id default
+\`\`\`
+
+If the command needs fixed arguments, repeat \`--command-arg\`:
+
+\`\`\`bash
+npx openbrowseragent-local-execution-bridge@1 install --browser chrome --extension-id <extension-id> --command <local-cli-command> --command-arg <arg> --command-id default
+\`\`\`
+
+Local source checkout fallback, only when the user is already in an OpenBrowserAgent repository checkout:
+
+\`\`\`bash
+npm run install-local-execution-bridge -- --browser chrome --extension-id <extension-id> --command <local-cli-command> --command-id default
+\`\`\`
+
+The installer prints JSON containing \`hostName\`, \`commandId\`, \`secret\`, \`configPath\`, \`wrapperPath\`, and \`manifestPath\`. After the user shares those values or confirms the output, create or update the extension bridge config with:
+
+- \`hostName\`: printed \`hostName\`, usually \`openbrowseragent.local_execution_bridge\`
+- \`agentKey\`: printed \`commandId\`, usually \`default\`
+- \`secret\`: printed \`secret\`
+
+Then call \`addLocalExecutionBridge\` or \`updateLocalExecutionBridge\`, followed by \`testLocalExecutionBridge\`. Tell the user to reload the extension or browser if the browser has cached an old Native Messaging host manifest.
+
+If the user does not know which local CLI command to use, ask one concise question for that command. Do not invent one and do not imply that OpenBrowserAgent includes a full local command executor by itself.
+
+## Tool Notes
+
+- \`addLocalExecutionBridge\` returns the generated secret once when it generates one. The secret is not returned by \`listLocalExecutionBridges\`.
+- \`updateLocalExecutionBridge\` with \`regenerateSecret: true\` returns the new secret once.
+- \`testLocalExecutionBridge\` only validates the current bridge connection. There is no separate enabled state.
+- The extension config alone cannot install a Native Messaging host. If testing says the native host is missing, the user must install the host manifest on that machine.
+- To uninstall native bridge files, ask the user to run \`npx openbrowseragent-local-execution-bridge@1 uninstall\`. This removes supported browser registrations, the generated wrapper, copied bridge runtime, and bridge config by default. If the user only wants one browser cleaned, add a browser target such as \`--browser chrome\`. Then delete the matching extension-side bridge configuration with \`deleteLocalExecutionBridge\`.
+`,
+      },
+    ],
+  },
   {
     id: BROWSER_GUIDANCE_ID,
     name: "browser-guidance",

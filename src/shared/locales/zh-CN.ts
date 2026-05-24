@@ -395,6 +395,32 @@ export const zhCN: LocaleMessages = {
       deleteChatThread: { running: "删除聊天线程", done: "已删除聊天线程" },
       startSubAgent: { running: "启动子智能体", done: "已启动子智能体" },
       getSubAgentStatus: { running: "检查子智能体", done: "已检查子智能体" },
+      listLocalExecutionBridges: {
+        running: "列出本地执行桥",
+        done: "已列出本地执行桥",
+      },
+      startLocalExecutionBridge: {
+        running: "启动本地命令",
+        done: "本地命令已完成",
+      },
+      getLocalExecutionBridgeStatus: {
+        running: "检查本地命令",
+        done: "已检查本地命令",
+      },
+      cancelLocalExecutionBridge: {
+        running: "取消本地命令",
+        done: "已取消本地命令",
+      },
+      addLocalExecutionBridge: { running: "添加执行桥", done: "已添加执行桥" },
+      updateLocalExecutionBridge: {
+        running: "更新执行桥",
+        done: "已更新执行桥",
+      },
+      testLocalExecutionBridge: { running: "测试执行桥", done: "已测试执行桥" },
+      deleteLocalExecutionBridge: {
+        running: "删除执行桥",
+        done: "已删除执行桥",
+      },
     },
   },
   options: {
@@ -438,6 +464,7 @@ export const zhCN: LocaleMessages = {
       browserAutomation: "操作浏览器",
       browserTools: "使用内置工具",
       subAgents: "启动子智能体",
+      localAgents: "使用本地执行桥",
       deferredBrowserTools: "加载高级浏览器操作",
       cdpTools: "CDP 工具",
       javascriptExecution: "执行 JavaScript",
@@ -468,6 +495,26 @@ export const zhCN: LocaleMessages = {
     sync: "同步",
     providers: "提供商",
     mcpServers: "MCP 服务器",
+    localAgents: "本地执行桥",
+    localAgentsDescription:
+      "配置可同步的本地或远程执行桥。扩展只把任务发给桥，由桥在主机上执行你配置的命令。",
+    localAgentsEmpty: "还没有配置本地执行桥。",
+    newLocalAgent: "新建执行桥",
+    localAgentName: "执行桥名称",
+    localAgentDescription: "描述",
+    localAgentHostName: "原生消息主机名",
+    localAgentHostAddress: "执行主机地址",
+    localAgentHostAddressPlaceholder: "留空表示本机，或填写桥接器识别的地址",
+    localAgentSecret: "桥接密钥",
+    localAgentRegenerateSecret: "重新生成密钥",
+    localAgentKey: "命令配置 ID",
+    localAgentDefaultCwd: "默认工作目录",
+    localAgentTimeoutMs: "默认超时（毫秒）",
+    localAgentTest: "测试桥接器",
+    localAgentTesting: "测试中...",
+    localAgentTestSuccess: "桥接器已成功响应。",
+    localAgentTestError: "桥接器测试失败",
+    deleteLocalExecutionBridge: "删除执行桥",
     skills: "技能",
     modelProviders: "模型提供商",
     providerDescription:
@@ -614,6 +661,9 @@ export const zhCN: LocaleMessages = {
     syncMcpServers: "同步 MCP 服务器",
     syncMcpServersDescription:
       "通过当前同步后端同步 Streamable HTTP MCP 服务器配置。",
+    syncLocalAgents: "同步本地执行桥",
+    syncLocalAgentsDescription:
+      "通过当前同步后端同步执行桥配置、原生主机名、执行主机地址、桥接密钥、命令配置 ID 和默认工作目录。",
     syncChats: "同步对话",
     syncChatsDescription:
       "通过当前同步后端同步对话历史。关闭时对话只保存在本机。",
@@ -660,6 +710,7 @@ export const zhCN: LocaleMessages = {
     debugResetTargetAgents: "智能体",
     debugResetTargetSkills: "技能",
     debugResetTargetMcpServers: "MCP 服务器",
+    debugResetTargetLocalAgents: "本地执行桥",
     debugResetTargetChats: "对话",
     debugResetButton: "清除全部应用数据",
     debugResetting: "正在清除...",

@@ -535,6 +535,38 @@ export const esES: LocaleMessages = {
         running: "Comprobando subagente",
         done: "Subagente comprobado",
       },
+      listLocalExecutionBridges: {
+        running: "Listando puentes de ejecución",
+        done: "Puentes de ejecución listados",
+      },
+      startLocalExecutionBridge: {
+        running: "Iniciando comando local",
+        done: "Comando local finalizado",
+      },
+      getLocalExecutionBridgeStatus: {
+        running: "Comprobando comando local",
+        done: "Comando local comprobado",
+      },
+      cancelLocalExecutionBridge: {
+        running: "Cancelando comando local",
+        done: "Comando local cancelado",
+      },
+      addLocalExecutionBridge: {
+        running: "Añadiendo puente de ejecución",
+        done: "Puente de ejecución añadido",
+      },
+      updateLocalExecutionBridge: {
+        running: "Actualizando puente de ejecución",
+        done: "Puente de ejecución actualizado",
+      },
+      testLocalExecutionBridge: {
+        running: "Probando puente de ejecución",
+        done: "Puente de ejecución probado",
+      },
+      deleteLocalExecutionBridge: {
+        running: "Eliminando puente de ejecución",
+        done: "Puente de ejecución eliminado",
+      },
     },
   },
   options: {
@@ -585,6 +617,7 @@ export const esES: LocaleMessages = {
       browserAutomation: "Operar el navegador",
       browserTools: "Usar herramientas integradas",
       subAgents: "Iniciar subagentes",
+      localAgents: "Usar puentes de ejecución locales",
       deferredBrowserTools: "Cargar acciones avanzadas del navegador",
       cdpTools: "Herramientas CDP",
       javascriptExecution: "Ejecutar JavaScript de la página",
@@ -615,6 +648,28 @@ export const esES: LocaleMessages = {
     sync: "Sincronización",
     providers: "Proveedores",
     mcpServers: "Servidores MCP",
+    localAgents: "Puentes de ejecución locales",
+    localAgentsDescription:
+      "Configura puentes de ejecución locales o remotos. La extensión envía tareas al puente y el puente ejecuta el comando configurado en el host.",
+    localAgentsEmpty:
+      "Todavía no hay puentes de ejecución locales configurados.",
+    newLocalAgent: "Nuevo puente de ejecución",
+    localAgentName: "Nombre del puente de ejecución",
+    localAgentDescription: "Descripción",
+    localAgentHostName: "Nombre del host de mensajería nativa",
+    localAgentHostAddress: "Dirección del host de ejecución",
+    localAgentHostAddressPlaceholder:
+      "Dejar vacío para local, o introducir una dirección que entienda el puente",
+    localAgentSecret: "Secreto del puente",
+    localAgentRegenerateSecret: "Regenerar secreto",
+    localAgentKey: "ID de configuración de comando",
+    localAgentDefaultCwd: "Directorio de trabajo predeterminado",
+    localAgentTimeoutMs: "Tiempo de espera predeterminado (ms)",
+    localAgentTest: "Probar puente",
+    localAgentTesting: "Probando...",
+    localAgentTestSuccess: "El puente respondió correctamente.",
+    localAgentTestError: "Falló la prueba del puente",
+    deleteLocalExecutionBridge: "Eliminar puente de ejecución",
     skills: "Habilidades",
     modelProviders: "Proveedores de modelos",
     providerDescription:
@@ -776,6 +831,9 @@ export const esES: LocaleMessages = {
     syncMcpServers: "Sincronizar servidores MCP",
     syncMcpServersDescription:
       "Sincroniza la configuración de servidores MCP Streamable HTTP con el backend de sincronización actual.",
+    syncLocalAgents: "Sincronizar puentes de ejecución locales",
+    syncLocalAgentsDescription:
+      "Sincroniza ajustes de puentes de ejecución, nombres de host nativos, direcciones de host de ejecución, secretos del puente, ID de configuración de comando y directorios predeterminados con el backend de sincronización actual.",
     syncChats: "Sincronizar chats",
     syncChatsDescription:
       "Sincroniza el historial de chats con el backend de sincronización actual. Desactívalo para conversaciones solo locales.",
@@ -826,6 +884,7 @@ export const esES: LocaleMessages = {
     debugResetTargetAgents: "Agentes",
     debugResetTargetSkills: "Habilidades",
     debugResetTargetMcpServers: "Servidores MCP",
+    debugResetTargetLocalAgents: "Puentes de comando locales",
     debugResetTargetChats: "Chats",
     debugResetButton: "Borrar todos los datos de la app",
     debugResetting: "Borrando...",

@@ -9,6 +9,7 @@ import {
   Plug,
   Server,
   SlidersHorizontal,
+  TerminalSquare,
 } from "lucide-react";
 import {
   OPTIONS_HASH,
@@ -25,6 +26,7 @@ import { AgentsPage } from "./agents-page";
 import { GeneralPage } from "./general-page";
 import { ProvidersPage } from "./providers-page";
 import { McpPage } from "./mcp-page";
+import { LocalAgentsPage } from "./local-agents-page";
 import { SkillsPage } from "./skills-page";
 import { useHashRoute } from "./route";
 import { SyncPage } from "./sync-page";
@@ -97,6 +99,14 @@ export function OptionsApp() {
             </OptionsLink>
             <OptionsLink
               route={route}
+              target={OPTIONS_ROUTE.localAgents}
+              href={OPTIONS_HASH.localAgents}
+              icon={<TerminalSquare size={16} />}
+            >
+              {t.options.localAgents}
+            </OptionsLink>
+            <OptionsLink
+              route={route}
               target={OPTIONS_ROUTE.skills}
               href={OPTIONS_HASH.skills}
               icon={<FileText size={16} />}
@@ -131,6 +141,8 @@ export function OptionsApp() {
               <ProvidersPage />
             ) : route === OPTIONS_ROUTE.mcp ? (
               <McpPage />
+            ) : route === OPTIONS_ROUTE.localAgents ? (
+              <LocalAgentsPage />
             ) : route === OPTIONS_ROUTE.sync ? (
               <SyncPage />
             ) : route === OPTIONS_ROUTE.skills ? (

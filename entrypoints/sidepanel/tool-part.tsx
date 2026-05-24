@@ -43,9 +43,12 @@ export function ToolPart({
   );
   const output = (part.output || {}) as Record<string, unknown>;
   const subAgentRunning = isSubAgentTool(name) && output.state === "running";
+  const localExecutionBridgeRunning =
+    isLocalExecutionBridgeTool(name) && output.state === "running";
   const loading =
     !runEnded &&
     (subAgentRunning ||
+      localExecutionBridgeRunning ||
       part.state === CHAT_PART_STATE.inputStreaming ||
       part.state === CHAT_PART_STATE.inputAvailable);
   const isError = part.state === CHAT_PART_STATE.outputError;
@@ -140,6 +143,14 @@ function isSubAgentTool(name: string) {
   return (
     name === BROWSER_TOOL_NAME.startSubAgent ||
     name === BROWSER_TOOL_NAME.getSubAgentStatus
+  );
+}
+
+function isLocalExecutionBridgeTool(name: string) {
+  return (
+    name === BROWSER_TOOL_NAME.startLocalExecutionBridge ||
+    name === BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus ||
+    name === BROWSER_TOOL_NAME.cancelLocalExecutionBridge
   );
 }
 

@@ -561,6 +561,38 @@ export const jaJP: LocaleMessages = {
         running: "サブエージェントを確認中",
         done: "サブエージェントを確認しました",
       },
+      listLocalExecutionBridges: {
+        running: "実行ブリッジを一覧表示中",
+        done: "実行ブリッジを一覧表示しました",
+      },
+      startLocalExecutionBridge: {
+        running: "ローカルコマンドを開始中",
+        done: "ローカルコマンドが完了しました",
+      },
+      getLocalExecutionBridgeStatus: {
+        running: "ローカルコマンドを確認中",
+        done: "ローカルコマンドを確認しました",
+      },
+      cancelLocalExecutionBridge: {
+        running: "ローカルコマンドをキャンセル中",
+        done: "ローカルコマンドをキャンセルしました",
+      },
+      addLocalExecutionBridge: {
+        running: "実行ブリッジを追加中",
+        done: "実行ブリッジを追加しました",
+      },
+      updateLocalExecutionBridge: {
+        running: "実行ブリッジを更新中",
+        done: "実行ブリッジを更新しました",
+      },
+      testLocalExecutionBridge: {
+        running: "実行ブリッジをテスト中",
+        done: "実行ブリッジをテストしました",
+      },
+      deleteLocalExecutionBridge: {
+        running: "実行ブリッジを削除中",
+        done: "実行ブリッジを削除しました",
+      },
     },
   },
   options: {
@@ -611,6 +643,7 @@ export const jaJP: LocaleMessages = {
       browserAutomation: "ブラウザーを操作",
       browserTools: "組み込みツールを使用",
       subAgents: "サブエージェントを開始",
+      localAgents: "ローカル実行ブリッジを使用",
       deferredBrowserTools: "高度なブラウザー操作を読み込む",
       cdpTools: "CDP ツール",
       javascriptExecution: "ページ JavaScript を実行",
@@ -641,6 +674,27 @@ export const jaJP: LocaleMessages = {
     sync: "同期",
     providers: "プロバイダー",
     mcpServers: "MCPサーバー",
+    localAgents: "ローカル実行ブリッジ",
+    localAgentsDescription:
+      "ローカルまたはリモートの実行ブリッジを設定します。拡張機能はタスクをブリッジに送り、ブリッジがホスト上で設定済みコマンドを実行します。",
+    localAgentsEmpty: "ローカル実行ブリッジはまだ設定されていません。",
+    newLocalAgent: "新しい実行ブリッジ",
+    localAgentName: "実行ブリッジ名",
+    localAgentDescription: "説明",
+    localAgentHostName: "ネイティブメッセージングホスト名",
+    localAgentHostAddress: "実行ホストアドレス",
+    localAgentHostAddressPlaceholder:
+      "ローカルなら空欄、またはブリッジが解釈できるアドレス",
+    localAgentSecret: "ブリッジシークレット",
+    localAgentRegenerateSecret: "シークレットを再生成",
+    localAgentKey: "コマンド設定 ID",
+    localAgentDefaultCwd: "既定の作業ディレクトリ",
+    localAgentTimeoutMs: "既定のタイムアウト (ms)",
+    localAgentTest: "ブリッジをテスト",
+    localAgentTesting: "テスト中...",
+    localAgentTestSuccess: "ブリッジが正常に応答しました。",
+    localAgentTestError: "ブリッジテストに失敗しました",
+    deleteLocalExecutionBridge: "実行ブリッジを削除",
     skills: "スキル",
     modelProviders: "モデルプロバイダー",
     providerDescription:
@@ -799,6 +853,9 @@ export const jaJP: LocaleMessages = {
     syncMcpServers: "MCPサーバーを同期",
     syncMcpServersDescription:
       "Streamable HTTP MCPサーバー設定を現在の同期バックエンドで同期します。",
+    syncLocalAgents: "ローカル実行ブリッジを同期",
+    syncLocalAgentsDescription:
+      "実行ブリッジ設定、ネイティブホスト名、実行ホストアドレス、ブリッジシークレット、コマンド設定 ID、既定の作業ディレクトリを現在の同期バックエンドで同期します。",
     syncChats: "チャットを同期",
     syncChatsDescription:
       "チャット履歴を現在の同期バックエンドで同期します。ローカルのみの会話にする場合はオフにします。",
@@ -848,6 +905,7 @@ export const jaJP: LocaleMessages = {
     debugResetTargetAgents: "エージェント",
     debugResetTargetSkills: "スキル",
     debugResetTargetMcpServers: "MCPサーバー",
+    debugResetTargetLocalAgents: "ローカル実行ブリッジ",
     debugResetTargetChats: "チャット",
     debugResetButton: "すべてのアプリデータを消去",
     debugResetting: "消去中...",

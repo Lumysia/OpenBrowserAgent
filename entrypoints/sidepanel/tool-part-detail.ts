@@ -80,6 +80,31 @@ export function toolDisplay(
       name === BROWSER_TOOL_NAME.getSubAgentStatus
     )
       return subAgentDetail(input, output, t, toolText?.running);
+    if (
+      name === BROWSER_TOOL_NAME.startLocalExecutionBridge ||
+      name === BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus ||
+      name === BROWSER_TOOL_NAME.cancelLocalExecutionBridge ||
+      name === BROWSER_TOOL_NAME.addLocalExecutionBridge ||
+      name === BROWSER_TOOL_NAME.updateLocalExecutionBridge ||
+      name === BROWSER_TOOL_NAME.testLocalExecutionBridge ||
+      name === BROWSER_TOOL_NAME.deleteLocalExecutionBridge
+    )
+      return compactJoin([
+        stringValue(
+          (output.agent as Record<string, unknown> | undefined)?.name,
+        ) ||
+          stringValue(input.name) ||
+          stringValue(input.agentName) ||
+          stringValue(input.agentId) ||
+          stringValue(output.agentId),
+        stringValue(output.state),
+        stringValue(output.error),
+      ]);
+    if (
+      name === BROWSER_TOOL_NAME.listLocalExecutionBridges &&
+      Array.isArray(output.agents)
+    )
+      return `${output.agents.length} execution bridges`;
     if (name === BROWSER_TOOL_NAME.getCurrentTab)
       return compactJoin([
         idLabel("Tab", output.tabId),

@@ -495,6 +495,38 @@ export const enUS = {
         running: "Checking sub-agent",
         done: "Checked sub-agent",
       },
+      listLocalExecutionBridges: {
+        running: "Listing execution bridges",
+        done: "Listed execution bridges",
+      },
+      startLocalExecutionBridge: {
+        running: "Starting local command",
+        done: "Finished local command",
+      },
+      getLocalExecutionBridgeStatus: {
+        running: "Checking local command",
+        done: "Checked local command",
+      },
+      cancelLocalExecutionBridge: {
+        running: "Canceling local command",
+        done: "Canceled local command",
+      },
+      addLocalExecutionBridge: {
+        running: "Adding execution bridge",
+        done: "Added execution bridge",
+      },
+      updateLocalExecutionBridge: {
+        running: "Updating execution bridge",
+        done: "Updated execution bridge",
+      },
+      testLocalExecutionBridge: {
+        running: "Testing execution bridge",
+        done: "Tested execution bridge",
+      },
+      deleteLocalExecutionBridge: {
+        running: "Deleting execution bridge",
+        done: "Deleted execution bridge",
+      },
     },
   },
   options: {
@@ -544,6 +576,7 @@ export const enUS = {
       browserAutomation: "Operate browser",
       browserTools: "Use built-in tools",
       subAgents: "Start sub-agents",
+      localAgents: "Use local execution bridges",
       deferredBrowserTools: "Load advanced browser actions",
       cdpTools: "CDP tools",
       javascriptExecution: "Run page JavaScript",
@@ -574,6 +607,27 @@ export const enUS = {
     sync: "Sync",
     providers: "Providers",
     mcpServers: "MCP Servers",
+    localAgents: "Local Execution Bridges",
+    localAgentsDescription:
+      "Configure syncable local or remote execution bridges. The extension sends tasks to the bridge, and the bridge runs your configured command on the host.",
+    localAgentsEmpty: "No local execution bridges configured yet.",
+    newLocalAgent: "New execution bridge",
+    localAgentName: "Execution bridge name",
+    localAgentDescription: "Description",
+    localAgentHostName: "Native messaging host name",
+    localAgentHostAddress: "Execution host address",
+    localAgentHostAddressPlaceholder:
+      "Leave empty for local, or enter an address your bridge understands",
+    localAgentSecret: "Bridge secret",
+    localAgentRegenerateSecret: "Regenerate secret",
+    localAgentKey: "Command config ID",
+    localAgentDefaultCwd: "Default working directory",
+    localAgentTimeoutMs: "Default timeout (ms)",
+    localAgentTest: "Test bridge",
+    localAgentTesting: "Testing...",
+    localAgentTestSuccess: "Bridge responded successfully.",
+    localAgentTestError: "Bridge test failed",
+    deleteLocalExecutionBridge: "Delete execution bridge",
     skills: "Skills",
     modelProviders: "Model Providers",
     providerDescription:
@@ -730,6 +784,9 @@ export const enUS = {
     syncMcpServers: "Sync MCP Servers",
     syncMcpServersDescription:
       "Sync Streamable HTTP MCP server configuration through the current sync backend.",
+    syncLocalAgents: "Sync Local Execution Bridges",
+    syncLocalAgentsDescription:
+      "Sync execution bridge settings, native host names, execution host addresses, bridge secrets, command config IDs, and default working directories through the current sync backend.",
     syncChats: "Sync Chats",
     syncChatsDescription:
       "Sync chat history through the current sync backend. Keep this off for local-only conversations.",
@@ -778,6 +835,7 @@ export const enUS = {
     debugResetTargetAgents: "Agents",
     debugResetTargetSkills: "Skills",
     debugResetTargetMcpServers: "MCP Servers",
+    debugResetTargetLocalAgents: "Local Execution Bridges",
     debugResetTargetChats: "Chats",
     debugResetButton: "Clear all app data",
     debugResetting: "Clearing...",

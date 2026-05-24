@@ -8,6 +8,7 @@ import {
   MessagesSquare,
   Paperclip,
   Plug,
+  TerminalSquare,
 } from "lucide-react";
 import { getMessages } from "../../src/shared/i18n";
 import { NO_SYNC_BACKEND_ID } from "../../src/shared/sync-backends";
@@ -64,6 +65,11 @@ export function SyncPage() {
       title: t.options.syncMcpServers,
       description: t.options.syncMcpServersDescription,
       icon: <Plug size={18} />,
+    },
+    [SYNC_PREFERENCES.localAgents]: {
+      title: t.options.syncLocalAgents,
+      description: t.options.syncLocalAgentsDescription,
+      icon: <TerminalSquare size={18} />,
     },
     [SYNC_PREFERENCES.agents]: {
       title: t.options.syncAgents,
@@ -229,6 +235,7 @@ function syncStorageKeyLabels(t: ReturnType<typeof getMessages>) {
     [storage.agentWorkspaces.key]: t.options.syncAgents,
     [storage.skills.key]: t.options.skills,
     [storage.mcpServers.key]: t.options.mcpServers,
+    [storage.localAgents.key]: t.options.localAgents,
     [storage.chats.key]: t.sidepanel.chatHistory,
   } as Record<string, string>;
 }

@@ -126,6 +126,7 @@ export type AgentCapabilities = {
   browserAutomation: boolean;
   browserTools: boolean;
   subAgents: boolean;
+  localAgents: boolean;
   deferredBrowserTools: boolean;
   cdpTools: boolean;
   javascriptExecution: boolean;
@@ -142,6 +143,22 @@ export type AgentCapabilities = {
   imageGeneration: boolean;
   currentTime: boolean;
   fileUrlRead: boolean;
+};
+
+export type LocalAgentConfig = {
+  id: string;
+  name: string;
+  description?: string;
+  hostName: string;
+  hostAddress?: string;
+  secret?: string;
+  agentKey?: string;
+  defaultCwd?: string;
+  timeoutMs?: number;
+  lastTestedAt?: number;
+  lastTestError?: string;
+  createdAt: number;
+  updatedAt: number;
 };
 
 export type AttachmentTab = {

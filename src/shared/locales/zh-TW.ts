@@ -401,6 +401,32 @@ export const zhTW: LocaleMessages = {
       deleteChatThread: { running: "刪除聊天串", done: "已刪除聊天串" },
       startSubAgent: { running: "啟動子智慧體", done: "已啟動子智慧體" },
       getSubAgentStatus: { running: "檢查子智慧體", done: "已檢查子智慧體" },
+      listLocalExecutionBridges: {
+        running: "列出本地執行橋",
+        done: "已列出本地執行橋",
+      },
+      startLocalExecutionBridge: {
+        running: "啟動本地命令",
+        done: "本地命令已完成",
+      },
+      getLocalExecutionBridgeStatus: {
+        running: "檢查本地命令",
+        done: "已檢查本地命令",
+      },
+      cancelLocalExecutionBridge: {
+        running: "取消本地命令",
+        done: "已取消本地命令",
+      },
+      addLocalExecutionBridge: { running: "新增執行橋", done: "已新增執行橋" },
+      updateLocalExecutionBridge: {
+        running: "更新執行橋",
+        done: "已更新執行橋",
+      },
+      testLocalExecutionBridge: { running: "測試執行橋", done: "已測試執行橋" },
+      deleteLocalExecutionBridge: {
+        running: "刪除執行橋",
+        done: "已刪除執行橋",
+      },
     },
   },
   options: {
@@ -444,6 +470,7 @@ export const zhTW: LocaleMessages = {
       browserAutomation: "操作瀏覽器",
       browserTools: "使用內建工具",
       subAgents: "啟動子智慧體",
+      localAgents: "使用本地執行橋",
       deferredBrowserTools: "載入進階瀏覽器操作",
       cdpTools: "CDP 工具",
       javascriptExecution: "執行 JavaScript",
@@ -474,6 +501,26 @@ export const zhTW: LocaleMessages = {
     sync: "同步",
     providers: "提供者",
     mcpServers: "MCP 伺服器",
+    localAgents: "本地執行橋",
+    localAgentsDescription:
+      "設定可同步的本地或遠端執行橋。擴充功能只把任務送給橋，由橋在主機上執行你設定的命令。",
+    localAgentsEmpty: "尚未設定本地執行橋。",
+    newLocalAgent: "新增執行橋",
+    localAgentName: "執行橋名稱",
+    localAgentDescription: "描述",
+    localAgentHostName: "原生訊息主機名",
+    localAgentHostAddress: "執行主機地址",
+    localAgentHostAddressPlaceholder: "留空表示本機，或填寫橋接器識別的地址",
+    localAgentSecret: "橋接密鑰",
+    localAgentRegenerateSecret: "重新產生密鑰",
+    localAgentKey: "命令設定 ID",
+    localAgentDefaultCwd: "預設工作目錄",
+    localAgentTimeoutMs: "預設逾時（毫秒）",
+    localAgentTest: "測試橋接器",
+    localAgentTesting: "測試中...",
+    localAgentTestSuccess: "橋接器已成功回應。",
+    localAgentTestError: "橋接器測試失敗",
+    deleteLocalExecutionBridge: "刪除執行橋",
     skills: "技能",
     modelProviders: "模型提供者",
     providerDescription:
@@ -620,6 +667,9 @@ export const zhTW: LocaleMessages = {
     syncMcpServers: "同步 MCP 伺服器",
     syncMcpServersDescription:
       "透過目前同步後端同步 Streamable HTTP MCP 伺服器設定。",
+    syncLocalAgents: "同步本地執行橋",
+    syncLocalAgentsDescription:
+      "透過目前同步後端同步執行橋設定、原生主機名、執行主機地址、橋接密鑰、命令設定 ID 和預設工作目錄。",
     syncChats: "同步對話",
     syncChatsDescription:
       "透過目前同步後端同步對話記錄。關閉時對話只保存在本機。",
@@ -666,6 +716,7 @@ export const zhTW: LocaleMessages = {
     debugResetTargetAgents: "智慧體",
     debugResetTargetSkills: "技能",
     debugResetTargetMcpServers: "MCP 伺服器",
+    debugResetTargetLocalAgents: "本地執行橋",
     debugResetTargetChats: "對話",
     debugResetButton: "清除全部應用程式資料",
     debugResetting: "正在清除...",

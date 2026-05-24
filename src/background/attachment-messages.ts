@@ -181,8 +181,9 @@ export function readUploadedAttachment(
 
 export function readSkill(skills: Skill[], input: Record<string, unknown>) {
   const skillId = String(input.skillId || input.id || "");
-  const skill = skills.find((item) => item.id === skillId);
-  if (!skill) return { error: "Skill not found", skillId };
+  const resolved = resolveSkill(skills, skillId);
+  if (!resolved.ok) return resolved.result;
+  const skill = resolved.skill;
   const entry = getSkillEntryFile(skill);
   return withContentSlice(
     {
@@ -226,8 +227,9 @@ export function listSkills(
 export function readSkillFile(skills: Skill[], input: Record<string, unknown>) {
   const skillId = String(input.skillId || input.id || "");
   const path = String(input.path || "");
-  const skill = skills.find((item) => item.id === skillId);
-  if (!skill) return { error: "Skill not found", skillId };
+  const resolved = resolveSkill(skills, skillId);
+  if (!resolved.ok) return resolved.result;
+  const skill = resolved.skill;
   const file = skill.files?.find((item) => item.path === path);
   if (!file) return { error: "Skill file not found", skillId, path };
   return withContentSlice(
@@ -240,6 +242,36 @@ export function readSkillFile(skills: Skill[], input: Record<string, unknown>) {
     file.content,
     input,
   );
+}
+
+function resolveSkill(skills: Skill[], skillIdOrName: string) {
+  const exactId = skills.find((item) => item.id === skillIdOrName);
+  if (exactId) return { ok: true as const, skill: exactId };
+
+  const normalized = skillIdOrName.trim().toLowerCase();
+  const nameMatches = skills.filter(
+    (item) =>
+      getSkillDisplayName(item).toLowerCase() === normalized ||
+      item.name.toLowerCase() === normalized,
+  );
+  if (nameMatches.length === 1)
+    return { ok: true as const, skill: nameMatches[0] };
+  if (nameMatches.length > 1)
+    return {
+      ok: false as const,
+      result: {
+        error: "Skill name is ambiguous",
+        skillId: skillIdOrName,
+        matches: nameMatches.map((item) => ({
+          id: item.id,
+          name: getSkillDisplayName(item),
+        })),
+      },
+    };
+  return {
+    ok: false as const,
+    result: { error: "Skill not found", skillId: skillIdOrName },
+  };
 }
 
 function createGeminiParts(

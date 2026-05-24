@@ -557,6 +557,38 @@ export const deDE: LocaleMessages = {
         running: "Subagent wird geprüft",
         done: "Subagent geprüft",
       },
+      listLocalExecutionBridges: {
+        running: "Ausführungs-Bridges werden aufgelistet",
+        done: "Ausführungs-Bridges aufgelistet",
+      },
+      startLocalExecutionBridge: {
+        running: "Lokaler Befehl wird gestartet",
+        done: "Lokaler Befehl beendet",
+      },
+      getLocalExecutionBridgeStatus: {
+        running: "Lokaler Befehl wird geprüft",
+        done: "Lokaler Befehl geprüft",
+      },
+      cancelLocalExecutionBridge: {
+        running: "Lokaler Befehl wird abgebrochen",
+        done: "Lokaler Befehl abgebrochen",
+      },
+      addLocalExecutionBridge: {
+        running: "Ausführungs-Bridge wird hinzugefügt",
+        done: "Ausführungs-Bridge hinzugefügt",
+      },
+      updateLocalExecutionBridge: {
+        running: "Ausführungs-Bridge wird aktualisiert",
+        done: "Ausführungs-Bridge aktualisiert",
+      },
+      testLocalExecutionBridge: {
+        running: "Ausführungs-Bridge wird getestet",
+        done: "Ausführungs-Bridge getestet",
+      },
+      deleteLocalExecutionBridge: {
+        running: "Ausführungs-Bridge wird gelöscht",
+        done: "Ausführungs-Bridge gelöscht",
+      },
     },
   },
   options: {
@@ -607,6 +639,7 @@ export const deDE: LocaleMessages = {
       browserAutomation: "Browser bedienen",
       browserTools: "Integrierte Tools verwenden",
       subAgents: "Subagenten starten",
+      localAgents: "Lokale Ausführungs-Bridges verwenden",
       deferredBrowserTools: "Erweiterte Browseraktionen laden",
       cdpTools: "CDP-Tools",
       javascriptExecution: "Seiten-JavaScript ausführen",
@@ -637,6 +670,27 @@ export const deDE: LocaleMessages = {
     sync: "Synchronisierung",
     providers: "Anbieter",
     mcpServers: "MCP-Server",
+    localAgents: "Lokale Ausführungs-Bridges",
+    localAgentsDescription:
+      "Konfiguriere lokale oder entfernte Ausführungs-Bridges. Die Erweiterung sendet Aufgaben an die Bridge, und die Bridge führt den konfigurierten Befehl auf dem Host aus.",
+    localAgentsEmpty: "Noch keine lokalen Ausführungs-Bridges konfiguriert.",
+    newLocalAgent: "Neue Ausführungs-Bridge",
+    localAgentName: "Name der Ausführungs-Bridge",
+    localAgentDescription: "Beschreibung",
+    localAgentHostName: "Nativer Messaging-Hostname",
+    localAgentHostAddress: "Ausführungs-Hostadresse",
+    localAgentHostAddressPlaceholder:
+      "Leer lassen für lokal oder eine Adresse eingeben, die die Bridge versteht",
+    localAgentSecret: "Bridge-Secret",
+    localAgentRegenerateSecret: "Secret neu generieren",
+    localAgentKey: "Befehls-Konfigurations-ID",
+    localAgentDefaultCwd: "Standard-Arbeitsverzeichnis",
+    localAgentTimeoutMs: "Standard-Timeout (ms)",
+    localAgentTest: "Bridge testen",
+    localAgentTesting: "Test läuft...",
+    localAgentTestSuccess: "Bridge hat erfolgreich geantwortet.",
+    localAgentTestError: "Bridge-Test fehlgeschlagen",
+    deleteLocalExecutionBridge: "Ausführungs-Bridge löschen",
     skills: "Fähigkeiten",
     modelProviders: "Modellanbieter",
     providerDescription:
@@ -798,6 +852,9 @@ export const deDE: LocaleMessages = {
     syncMcpServers: "MCP-Server synchronisieren",
     syncMcpServersDescription:
       "Streamable-HTTP-MCP-Serverkonfiguration über das aktuelle Synchronisierungs-Backend synchronisieren.",
+    syncLocalAgents: "Lokale Ausführungs-Bridges synchronisieren",
+    syncLocalAgentsDescription:
+      "Ausführungs-Bridge-Einstellungen, native Hostnamen, Ausführungs-Hostadressen, Bridge-Secrets, Befehls-Konfigurations-IDs und Standard-Arbeitsverzeichnisse über das aktuelle Synchronisierungs-Backend synchronisieren.",
     syncChats: "Chats synchronisieren",
     syncChatsDescription:
       "Chatverlauf über das aktuelle Synchronisierungs-Backend synchronisieren. Deaktivieren für nur lokale Unterhaltungen.",
@@ -848,6 +905,7 @@ export const deDE: LocaleMessages = {
     debugResetTargetAgents: "Agenten",
     debugResetTargetSkills: "Fähigkeiten",
     debugResetTargetMcpServers: "MCP-Server",
+    debugResetTargetLocalAgents: "Lokale Ausführungs-Bridges",
     debugResetTargetChats: "Chats",
     debugResetButton: "Alle App-Daten löschen",
     debugResetting: "Wird gelöscht...",

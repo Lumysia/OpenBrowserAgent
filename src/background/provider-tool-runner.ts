@@ -18,6 +18,7 @@ import {
   type VisionImage,
 } from "./provider-output";
 import { executeContextAwareTool, getSubAgentStatus } from "./provider-tools";
+import { getLocalExecutionBridgeStatus } from "./local-agent-tools";
 import { isToolError } from "./tool-utils";
 
 export type ProviderToolRunResult = {
@@ -90,7 +91,15 @@ export async function runProviderTool({
         toolName,
         toolCallId,
       })
-    : rawOutput;
+    : shouldWaitForLocalAgent(toolName, input, rawOutput)
+      ? await waitForLocalAgentResult({
+          rawOutput,
+          input,
+          port,
+          toolName,
+          toolCallId,
+        })
+      : rawOutput;
   const visionImage = extractVisionImage(finalRawOutput);
   const output = attachToolSources(
     toolName,
@@ -113,6 +122,44 @@ export async function runProviderTool({
     },
   });
   return { output, visionImage, responseSources: nextSources };
+}
+
+async function waitForLocalAgentResult({
+  rawOutput,
+  input,
+  port,
+  toolName,
+  toolCallId,
+}: {
+  rawOutput: unknown;
+  input: Record<string, unknown>;
+  port: chrome.runtime.Port;
+  toolName: string;
+  toolCallId: string;
+}) {
+  postToolOutput(port, toolName, toolCallId, input, rawOutput);
+  const output = rawOutput as Record<string, unknown>;
+  const taskId = String(output.taskId || "").trim();
+  const timeoutMs = clampLocalAgentTimeout(input.timeoutMs);
+  const startedAt = Date.now();
+  let status = await getLocalExecutionBridgeStatus({ taskId });
+  let lastProgressKey = progressKey(status);
+  while (isPendingDelegateState(status) && Date.now() - startedAt < timeoutMs) {
+    await sleep(500);
+    status = await getLocalExecutionBridgeStatus({ taskId });
+    const nextProgressKey = progressKey(status);
+    if (nextProgressKey !== lastProgressKey) {
+      lastProgressKey = nextProgressKey;
+      postToolOutput(
+        port,
+        toolName,
+        toolCallId,
+        input,
+        mergeToolObjects(rawOutput, status),
+      );
+    }
+  }
+  return mergeToolObjects(rawOutput, status);
 }
 
 async function waitForSubAgentResult({
@@ -154,6 +201,10 @@ async function waitForSubAgentResult({
 }
 
 function isPendingSubAgentState(output: unknown) {
+  return isPendingDelegateState(output);
+}
+
+function isPendingDelegateState(output: unknown) {
   return (
     !!output &&
     typeof output === "object" &&
@@ -191,6 +242,26 @@ function shouldWaitForSubAgent(
     typeof output === "object" &&
     !isToolError(output)
   );
+}
+
+function shouldWaitForLocalAgent(
+  toolName: string,
+  input: Record<string, unknown>,
+  output: unknown,
+) {
+  return (
+    toolName === BROWSER_TOOL_NAME.startLocalExecutionBridge &&
+    input.background !== true &&
+    !!output &&
+    typeof output === "object" &&
+    !isToolError(output)
+  );
+}
+
+function clampLocalAgentTimeout(value: unknown) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 60_000;
+  return Math.min(30 * 60_000, Math.max(0, Math.trunc(number)));
 }
 
 function mergeToolObjects(base: unknown, next: unknown) {

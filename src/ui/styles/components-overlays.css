@@ -18,6 +18,12 @@
     transform 0.16s ease;
 }
 
+.ui-badge.status-error-badge {
+  border-color: color-mix(in srgb, var(--destructive) 24%, transparent);
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
+  color: var(--destructive);
+}
+
 .ui-accordion-item {
   overflow: hidden;
   border: 1px solid var(--border);

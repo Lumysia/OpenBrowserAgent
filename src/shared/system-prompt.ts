@@ -21,11 +21,15 @@ export function createSystemPrompt(options: {
   const agentProfile = renderAgentProfile(options.agent, options.workspace);
   const workspaceContext = renderWorkspaceSystemContext(options.workspace);
   const mcpProfile = renderMcpProfile(options.mcpServers || []);
+  const localExecutionProfile = renderLocalExecutionProfile(
+    options.capabilities,
+  );
   if (!options.capabilities.browserAutomation) {
     return `You are OpenBrowserAgent.
 ${agentProfile}
 ${workspaceContext}
 ${mcpProfile}
+${localExecutionProfile}
 
 <task>
 Answer the USER's question from the content they provide.${imageCapability}
@@ -42,6 +46,7 @@ Answer the USER's question from the content they provide.${imageCapability}
 ${agentProfile}
 ${workspaceContext}
 ${mcpProfile}
+${localExecutionProfile}
 
 <mission>
 Understand the task, act human-like in the browser, and report results to the USER.${imageCapability}
@@ -57,6 +62,14 @@ Understand the task, act human-like in the browser, and report results to the US
 - If tool outputs include _sources, cite sourced claims inline as [[cite:source_id]], especially factual bullets in final reports.
 - For diagrams, use fenced mermaid code blocks so the UI can show a preview while preserving copyable source.
 </rules>`;
+}
+
+function renderLocalExecutionProfile(capabilities: AgentCapabilities) {
+  if (!capabilities.localAgents) return "";
+  return `
+<local_execution>
+If the USER asks to run a local command or delegate work to a local process, use the local execution bridge tools instead of refusing solely because browser extensions cannot execute commands directly. Test the selected bridge connection before starting the local task. If no bridge is configured, explain that a local execution bridge must be configured and tested first. Do not fall back to asking the USER to run the requested local task manually; only ask them to run bridge setup commands when setup is required.
+</local_execution>`;
 }
 
 function renderMcpProfile(servers: McpServerConfig[]) {
