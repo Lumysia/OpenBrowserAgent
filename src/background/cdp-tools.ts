@@ -1,4 +1,5 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
+import { resolveBrowserTabId } from "../shared/browser";
 import { TOOL_ERROR } from "../shared/tool-errors";
 import { withContentSlice, withListSlice } from "./tool-utils";
 
@@ -327,12 +328,11 @@ async function findPageTarget(args: Record<string, unknown>) {
     return targets.find(
       (target) => target.title === title || target.title.includes(title),
     );
-  const active = await chrome.tabs
-    .query({ active: true, currentWindow: true })
-    .then((tabs) => tabs[0])
-    .catch(() => undefined);
-  return active?.id
-    ? targets.find((target) => target.tabId === active.id)
+  const activeTabId = await resolveBrowserTabId(undefined).catch(
+    () => undefined,
+  );
+  return activeTabId
+    ? targets.find((target) => target.tabId === activeTabId)
     : targets.find((target) => !target.attached);
 }
 
@@ -614,12 +614,18 @@ async function takeScreenshot(
   target: chrome.debugger.Debuggee,
   args: Record<string, unknown>,
 ) {
+  const format = stringInput(args.format) || "png";
   const result = await send(target, "Page.captureScreenshot", {
-    format: stringInput(args.format) || "png",
+    format,
     fromSurface: true,
   });
+  const image = `data:image/${format};base64,${result.data}`;
   return {
-    image: `data:image/${stringInput(args.format) || "png"};base64,${result.data}`,
+    success: true,
+    format,
+    image,
+    _visionImage: { dataUrl: image, type: `image/${format}` },
+    note: "Screenshot pixels will be sent to the next model call as a vision image.",
   };
 }
 
@@ -686,14 +692,7 @@ function send(
 }
 
 async function resolveTabId(value: unknown) {
-  const tabId = Number(value);
-  if (Number.isFinite(tabId) && tabId > 0) return tabId;
-  const [activeTab] = await chrome.tabs.query({
-    active: true,
-    currentWindow: true,
-  });
-  if (!activeTab?.id) throw new Error(TOOL_ERROR.noActiveWebTabFound);
-  return activeTab.id;
+  return resolveBrowserTabId(value);
 }
 
 function stringInput(value: unknown) {

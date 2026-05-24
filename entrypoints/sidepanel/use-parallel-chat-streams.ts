@@ -62,11 +62,10 @@ export function useParallelChatStreams({
   );
   const setActiveStreams: typeof setActiveStreamsState = useCallback(
     (value) => {
-      setActiveStreamsState((items) => {
-        const next = typeof value === "function" ? value(items) : value;
-        activeStreamsRef.current = next;
-        return next;
-      });
+      const next =
+        typeof value === "function" ? value(activeStreamsRef.current) : value;
+      activeStreamsRef.current = next;
+      setActiveStreamsState(next);
     },
     [],
   );

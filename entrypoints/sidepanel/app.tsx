@@ -404,7 +404,8 @@ export function SidepanelApp() {
         messageId: userMessage.id,
         attachments: sentAttachments,
       });
-      persistInitialChatSnapshot(nextChat);
+      beginStream(nextChat.id, assistantMessage.id);
+      await persistInitialChatSnapshot(nextChat);
       if (shouldGenerateTitle)
         requestChatTitle({
           chatId: nextChat.id,
@@ -442,15 +443,14 @@ export function SidepanelApp() {
           },
         },
       };
-      beginStream(nextChat.id, assistantMessage.id);
       startStream(request, assistantMessage.id);
     } finally {
       sendInFlightRef.current.delete(sendChatId);
     }
   }
 
-  function persistInitialChatSnapshot(chat: Chat) {
-    setChats((items) => updateChatList(items, chat), {
+  async function persistInitialChatSnapshot(chat: Chat) {
+    await setChats((items) => updateChatList(items, chat), {
       persist: "immediate",
     }).catch((error) => {
       console.warn("Failed to persist initial chat snapshot", error);

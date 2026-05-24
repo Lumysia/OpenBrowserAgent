@@ -1,7 +1,14 @@
 import { getBrowserApi } from "./storage";
+import { TOOL_ERROR } from "./tool-errors";
 import type { AttachmentTab, SelectedElement } from "./types";
 
 export async function getActiveTab(): Promise<chrome.tabs.Tab | undefined> {
+  return getActiveBrowserTab();
+}
+
+async function getCurrentWindowActiveTab(): Promise<
+  chrome.tabs.Tab | undefined
+> {
   const [tab] = await getBrowserApi().tabs.query({
     active: true,
     currentWindow: true,
@@ -13,10 +20,7 @@ export async function getActiveBrowserTab(): Promise<
   chrome.tabs.Tab | undefined
 > {
   const api = getBrowserApi();
-  const [currentWindowTab] = await api.tabs.query({
-    active: true,
-    currentWindow: true,
-  });
+  const currentWindowTab = await getCurrentWindowActiveTab();
   if (currentWindowTab) return currentWindowTab;
   const [lastFocusedTab] = await api.tabs.query({
     active: true,
@@ -35,8 +39,19 @@ export async function getActiveBrowserTab(): Promise<
   return undefined;
 }
 
+export async function resolveBrowserTabId(value: unknown) {
+  const tabId = Number(value);
+  if (Number.isFinite(tabId) && tabId > 0) return tabId;
+  const activeTab = await getActiveBrowserTab();
+  if (!activeTab?.id) throw new Error(TOOL_ERROR.noActiveWebTabFound);
+  return activeTab.id;
+}
+
 export async function getAllTabs(): Promise<AttachmentTab[]> {
-  const tabs = await getBrowserApi().tabs.query({ currentWindow: true });
+  const activeTab = await getActiveBrowserTab();
+  const tabs = await getBrowserApi().tabs.query(
+    activeTab?.windowId === undefined ? {} : { windowId: activeTab.windowId },
+  );
   return tabs
     .filter(
       (tab): tab is chrome.tabs.Tab & { id: number } =>

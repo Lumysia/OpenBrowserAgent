@@ -188,11 +188,11 @@ export async function requestGemini(
       });
       responseSources = result.responseSources;
       responseParts.push({
-        functionResponse: { name: toolName, response: result.output },
+        functionResponse: { name: toolName, response: result.modelOutput },
       });
       if (result.visionImage) {
         responseParts.push({
-          text: "The image fetched by readFileFromUrl is attached for visual inspection. Use vision to answer the user's image question.",
+          text: "The tool image is attached for visual inspection. Use vision to answer the user's image question.",
         });
         responseParts.push({
           inline_data: {

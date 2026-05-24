@@ -6,7 +6,11 @@ import {
   TAB_LOAD_WAIT_TIMEOUT_MS,
 } from "../shared/config";
 import { BROWSER_TOOL_NAME, UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
-import { getActiveBrowserTab, isScriptableUrl } from "../shared/browser";
+import {
+  getActiveBrowserTab,
+  isScriptableUrl,
+  resolveBrowserTabId,
+} from "../shared/browser";
 import { getBrowserApi } from "../shared/storage";
 import { TOOL_ERROR } from "../shared/tool-errors";
 import { downloadTextFile, findImages, safeFileName } from "./downloads";
@@ -342,7 +346,14 @@ async function captureVisibleTab(args: Record<string, unknown>) {
       ? { quality: Math.min(100, Math.max(0, Math.trunc(quality))) }
       : {}),
   });
-  return { success: true, tabId, format, image };
+  return {
+    success: true,
+    tabId,
+    format,
+    image,
+    _visionImage: { dataUrl: image, type: `image/${format}` },
+    note: "Screenshot pixels will be sent to the next model call as a vision image.",
+  };
 }
 
 async function waitForText(args: Record<string, unknown>) {
@@ -396,14 +407,7 @@ export async function safeExecuteBrowserTool(
 }
 
 async function resolveTabId(value: unknown) {
-  const tabId = Number(value);
-  if (Number.isFinite(tabId) && tabId > 0) return tabId;
-  const [activeTab] = await getBrowserApi().tabs.query({
-    active: true,
-    currentWindow: true,
-  });
-  if (!activeTab?.id) throw new Error(TOOL_ERROR.noActiveWebTabFound);
-  return activeTab.id;
+  return resolveBrowserTabId(value);
 }
 
 async function extractMarkdown(tabId: number) {
@@ -536,10 +540,10 @@ async function scrollToBottom(tabId: number) {
 
 async function openDefaultSearchTab(query: string) {
   const api = getBrowserApi();
-  const beforeTabs = await api.tabs.query({ currentWindow: true });
+  const beforeTabs = await api.tabs.query({});
   const beforeIds = new Set(beforeTabs.map((tab) => tab.id).filter(Boolean));
   await api.search.query({ text: query, disposition: "NEW_TAB" });
-  const afterTabs = await api.tabs.query({ currentWindow: true });
+  const afterTabs = await api.tabs.query({});
   return (
     afterTabs.find((tab) => tab.id && !beforeIds.has(tab.id)) ||
     afterTabs.find((tab) => tab.active) ||

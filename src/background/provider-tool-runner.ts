@@ -18,6 +18,7 @@ import {
   extractVisionImage,
   mergeOutputSources,
   sanitizeToolOutput,
+  sanitizeToolOutputForModel,
   type VisionImage,
 } from "./provider-output";
 import { executeContextAwareTool, getSubAgentStatus } from "./provider-tools";
@@ -26,6 +27,7 @@ import { isToolError } from "./tool-utils";
 
 export type ProviderToolRunResult = {
   output: unknown;
+  modelOutput: unknown;
   visionImage?: VisionImage;
   responseSources: ChatSource[];
 };
@@ -112,6 +114,12 @@ export async function runProviderTool({
     sanitizeToolOutput(finalRawOutput),
     responseSources,
   );
+  const modelOutput = attachToolSources(
+    toolName,
+    input,
+    sanitizeToolOutputForModel(finalRawOutput),
+    responseSources,
+  );
   const nextSources = mergeOutputSources(responseSources, output);
   post(port, {
     type: "chunk",
@@ -126,7 +134,7 @@ export async function runProviderTool({
       output,
     },
   });
-  return { output, visionImage, responseSources: nextSources };
+  return { output, modelOutput, visionImage, responseSources: nextSources };
 }
 
 async function askUserQuestion({

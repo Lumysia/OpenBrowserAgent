@@ -206,12 +206,12 @@ export async function requestAnthropic(
       toolResults.push({
         type: "tool_result",
         tool_use_id: toolCallId,
-        content: JSON.stringify(result.output),
+        content: JSON.stringify(result.modelOutput),
       });
       if (result.visionImage) {
         toolResults.push({
           type: "text",
-          text: "The image fetched by readFileFromUrl is attached for visual inspection. Use vision to answer the user's image question.",
+          text: "The tool image is attached for visual inspection. Use vision to answer the user's image question.",
         });
         toolResults.push({
           type: "image",

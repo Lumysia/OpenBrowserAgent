@@ -74,7 +74,7 @@ export function useStoredState<T>(item: StorageItem<T>) {
     valueRef.current = resolved;
     snapshotRef.current = resolvedSnapshot;
     setValue(resolved);
-    persistValue(
+    await persistValue(
       item,
       resolved,
       persistTimerRef,
@@ -100,8 +100,10 @@ function persistValue<T>(
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = undefined;
     pendingRef.current = undefined;
-    persistOwnWrite(item, value, ownWriteSnapshotsRef).catch(logPersistError);
-    return;
+    return persistOwnWrite(item, value, ownWriteSnapshotsRef).catch((error) => {
+      logPersistError(error);
+      throw error;
+    });
   }
   if (!item.persistDebounceMs) {
     item.set(value).catch(logPersistError);

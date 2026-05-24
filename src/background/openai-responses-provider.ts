@@ -197,7 +197,7 @@ export async function requestOpenAIResponses(
       input.push({
         type: "function_call_output",
         call_id: toolCallId,
-        output: JSON.stringify(result.output),
+        output: JSON.stringify(result.modelOutput),
       });
       if (result.visionImage)
         input.push({
@@ -205,7 +205,7 @@ export async function requestOpenAIResponses(
           content: [
             {
               type: "input_text",
-              text: "The image fetched by readFileFromUrl is attached for visual inspection. Use vision to answer the user's image question.",
+              text: "The tool image is attached for visual inspection. Use vision to answer the user's image question.",
             },
             { type: "input_image", image_url: result.visionImage.dataUrl },
           ],

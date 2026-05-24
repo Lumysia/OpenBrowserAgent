@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { getActiveTab, isScriptableUrl } from "../../src/shared/browser";
-import { getBrowserApi } from "../../src/shared/storage";
+import {
+  getActiveTab,
+  getAllTabs,
+  isScriptableUrl,
+} from "../../src/shared/browser";
 import type {
   AttachmentTab,
   Chat,
@@ -68,12 +71,7 @@ export function useComposerContext(chats: Chat[]) {
   }
 
   async function showAllTabsPicker() {
-    const tabs = await getBrowserApi().tabs.query({ currentWindow: true });
-    setAvailableTabs(
-      tabs
-        .map((tab) => toAttachmentTab(tab))
-        .filter((tab): tab is AttachmentTab => !!tab),
-    );
+    setAvailableTabs(await getAllTabs());
   }
 
   function toggleAttachedTab(tab: AttachmentTab) {

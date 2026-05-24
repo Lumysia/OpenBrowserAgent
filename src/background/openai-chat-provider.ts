@@ -212,7 +212,7 @@ export async function requestOpenAIChatCompletions(
       requestMessages.push({
         role: "tool",
         tool_call_id: toolCallId,
-        content: JSON.stringify(result.output),
+        content: JSON.stringify(result.modelOutput),
       });
       if (result.visionImage)
         requestMessages.push({
@@ -220,7 +220,7 @@ export async function requestOpenAIChatCompletions(
           content: [
             {
               type: "text",
-              text: "The image fetched by readFileFromUrl is attached for visual inspection. Use vision to answer the user's image question.",
+              text: "The tool image is attached for visual inspection. Use vision to answer the user's image question.",
             },
             {
               type: "image_url",

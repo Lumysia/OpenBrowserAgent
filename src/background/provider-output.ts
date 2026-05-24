@@ -75,6 +75,18 @@ export function sanitizeToolOutput(output: unknown) {
   return _visionImage ? { ...rest, visionImageAttached: true } : output;
 }
 
+export function sanitizeToolOutputForModel(output: unknown) {
+  const sanitized = sanitizeToolOutput(output);
+  if (!output || typeof output !== "object" || !sanitized) return sanitized;
+  if (!("_visionImage" in output) || typeof sanitized !== "object")
+    return sanitized;
+  const { image, ...rest } = sanitized as Record<string, unknown>;
+  return {
+    ...rest,
+    image: typeof image === "string" ? "[attached as vision image]" : image,
+  };
+}
+
 export function getMessageSources(messages: ChatMessage[]): ChatSource[] {
   const latest = messages[messages.length - 1];
   return Array.isArray(latest?.metadata?.sources)
