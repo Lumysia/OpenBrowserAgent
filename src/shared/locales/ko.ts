@@ -219,6 +219,10 @@ export const ko: LocaleMessages = {
       NO_TEXT_PROVIDED: "텍스트가 제공되지 않았습니다.",
       TIMED_OUT_WAITING_FOR_TEXT:
         "요청한 텍스트를 기다리다 시간이 초과되었습니다.",
+      TIMED_OUT_WAITING_FOR_SELECTOR:
+        "요청한 선택자를 기다리다 시간이 초과되었습니다.",
+      TIMED_OUT_WAITING_FOR_CONDITION:
+        "요청한 페이지 조건을 기다리다 시간이 초과되었습니다.",
       ELEMENT_NOT_TEXT_INPUT:
         "대상 요소가 입력란, 텍스트 영역 또는 편집 가능한 영역이 아닙니다.",
       TARGET_ID_CANNOT_BE_FOCUSED:

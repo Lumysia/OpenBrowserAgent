@@ -40,5 +40,18 @@ export async function waitForInspectablePage(
       return { success: true, waitForFound: found };
     await new Promise((resolve) => setTimeout(resolve, waitFor.pollMs));
   }
-  return { success: false, error: TOOL_ERROR.timedOutWaitingForText };
+  const error = waitFor.selector
+    ? waitFor.text.length
+      ? TOOL_ERROR.timedOutWaitingForCondition
+      : TOOL_ERROR.timedOutWaitingForSelector
+    : TOOL_ERROR.timedOutWaitingForText;
+  return {
+    success: false,
+    error,
+    waitedFor: {
+      selector: waitFor.selector || undefined,
+      text: waitFor.text.length ? waitFor.text : undefined,
+      timeout,
+    },
+  };
 }

@@ -219,6 +219,10 @@ export const enUS = {
       TAB_HAS_NO_WINDOW: "The tab is not attached to a browser window.",
       NO_TEXT_PROVIDED: "No text was provided.",
       TIMED_OUT_WAITING_FOR_TEXT: "Timed out waiting for the requested text.",
+      TIMED_OUT_WAITING_FOR_SELECTOR:
+        "Timed out waiting for the requested selector.",
+      TIMED_OUT_WAITING_FOR_CONDITION:
+        "Timed out waiting for the requested page condition.",
       ELEMENT_NOT_TEXT_INPUT:
         "The target element is not an input, textarea, or editable area.",
       TARGET_ID_CANNOT_BE_FOCUSED:

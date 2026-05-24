@@ -223,6 +223,10 @@ export const deDE: LocaleMessages = {
       NO_TEXT_PROVIDED: "Kein Text angegeben.",
       TIMED_OUT_WAITING_FOR_TEXT:
         "Zeitüberschreitung beim Warten auf den Text.",
+      TIMED_OUT_WAITING_FOR_SELECTOR:
+        "Zeitüberschreitung beim Warten auf den Selektor.",
+      TIMED_OUT_WAITING_FOR_CONDITION:
+        "Zeitüberschreitung beim Warten auf die Seitenbedingung.",
       ELEMENT_NOT_TEXT_INPUT:
         "Das Zielelement ist kein Eingabefeld, Textbereich oder bearbeitbarer Bereich.",
       TARGET_ID_CANNOT_BE_FOCUSED:

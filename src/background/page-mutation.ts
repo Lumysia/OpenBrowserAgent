@@ -1,6 +1,12 @@
 import { isScriptableUrl } from "../shared/browser";
 import { getBrowserApi } from "../shared/storage";
 import { TOOL_ERROR } from "../shared/tool-errors";
+import {
+  buildMutationRequest,
+  isNewTabRequest,
+  type MutationRequest,
+  stringInput,
+} from "./page-mutation-options";
 
 export async function mutatePage(args: Record<string, unknown>) {
   const api = getBrowserApi();
@@ -52,89 +58,7 @@ export async function mutatePage(args: Record<string, unknown>) {
   return { tabId, operation, ...output };
 }
 
-function buildMutationRequest(args: Record<string, unknown>) {
-  const operations = Array.isArray(args.operations)
-    ? args.operations
-        .filter((item): item is Record<string, unknown> =>
-          Boolean(item && typeof item === "object"),
-        )
-        .slice(0, 10)
-    : [];
-  return {
-    operations: operations.length
-      ? operations.map((operation) =>
-          buildMutationOptions({ ...args, ...operation }),
-        )
-      : [buildMutationOptions(args)],
-  };
-}
-
-function buildMutationOptions(args: Record<string, unknown>) {
-  const target = objectInput(args.target);
-  return {
-    operation: stringInput(args.operation || args.action),
-    target: {
-      aiId: stringInput(target.aiId ?? target.id ?? args.aiId ?? args.id),
-      selector: stringInput(target.selector ?? args.selector),
-      text: stringInput(target.text ?? args.text),
-      selected: target.selected === true || args.selected === true,
-    },
-    value: stringInput(args.value ?? args.text ?? args.html),
-    node: objectInput(args.node),
-    attribute: stringInput(args.attribute ?? args.name),
-    position: stringInput(args.position || "beforeend"),
-    dedupeKey: stringInput(args.dedupeKey),
-    skipIfExistsSelector: stringInput(args.skipIfExistsSelector),
-    openLinksInNewTab: args.openLinksInNewTab !== false,
-    scroll: {
-      direction: stringInput(args.direction),
-      x: numberInput(args.x),
-      y: numberInput(args.y),
-      behavior: stringInput(args.behavior || "smooth"),
-    },
-  };
-}
-
-function objectInput(value: unknown) {
-  return value && typeof value === "object"
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function stringInput(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function numberInput(value: unknown) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : undefined;
-}
-
-function isNewTabRequest(
-  output: unknown,
-): output is { newTab: true; url: string } {
-  return (
-    !!output &&
-    typeof output === "object" &&
-    (output as { newTab?: unknown }).newTab === true &&
-    typeof (output as { url?: unknown }).url === "string"
-  );
-}
-
-function mutatePageInDom(request: {
-  operations: Array<{
-    operation: string;
-    target: { aiId: string; selector: string; text: string; selected: boolean };
-    value: string;
-    node: Record<string, unknown>;
-    attribute: string;
-    position: string;
-    dedupeKey: string;
-    skipIfExistsSelector: string;
-    openLinksInNewTab: boolean;
-    scroll: { direction: string; x?: number; y?: number; behavior: string };
-  }>;
-}) {
+function mutatePageInDom(request: MutationRequest) {
   const cssEscape = (value: string) =>
     typeof CSS !== "undefined" && CSS.escape
       ? CSS.escape(value)
@@ -197,6 +121,91 @@ function mutatePageInDom(request: {
     }
     return element;
   };
+  const isVisible = (element: HTMLElement) => {
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    return (
+      rect.width > 0 &&
+      rect.height > 0 &&
+      style.display !== "none" &&
+      style.visibility !== "hidden"
+    );
+  };
+  const isActionable = (element: HTMLElement) => {
+    const tag = element.tagName.toLowerCase();
+    const role = element.getAttribute("role") || "";
+    const tabindex = element.getAttribute("tabindex");
+    return (
+      tag === "a" ||
+      tag === "button" ||
+      tag === "input" ||
+      tag === "textarea" ||
+      tag === "select" ||
+      element.isContentEditable ||
+      role === "button" ||
+      role === "link" ||
+      role === "menuitem" ||
+      role === "option" ||
+      role === "row" ||
+      role === "gridcell" ||
+      role === "tab" ||
+      tabindex !== null
+    );
+  };
+  const resolveClickTarget = (element: HTMLElement) => {
+    let current: HTMLElement | null = element;
+    const elementRect = element.getBoundingClientRect();
+    while (current && current !== document.body) {
+      if (isActionable(current) && isVisible(current)) return current;
+      const rect = current.getBoundingClientRect();
+      const grewTooLarge =
+        rect.width > Math.max(elementRect.width * 8, 700) ||
+        rect.height > Math.max(elementRect.height * 8, 240);
+      if (grewTooLarge) break;
+      current = current.parentElement;
+    }
+    return element;
+  };
+  const dispatchHumanClick = (target: HTMLElement, x?: number, y?: number) => {
+    const rect = target.getBoundingClientRect();
+    const clientX = x ?? rect.left + rect.width / 2;
+    const clientY = y ?? rect.top + rect.height / 2;
+    target.scrollIntoView({ block: "center", inline: "center" });
+    target.focus({ preventScroll: true });
+    const eventInit = {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      view: window,
+      clientX,
+      clientY,
+      button: 0,
+      buttons: 1,
+    };
+    const pointerInit = {
+      ...eventInit,
+      pointerId: 1,
+      pointerType: "mouse",
+      isPrimary: true,
+    };
+    if (typeof PointerEvent !== "undefined") {
+      target.dispatchEvent(new PointerEvent("pointerover", pointerInit));
+      target.dispatchEvent(new PointerEvent("pointerenter", pointerInit));
+      target.dispatchEvent(new PointerEvent("pointerdown", pointerInit));
+    }
+    target.dispatchEvent(new MouseEvent("mouseover", eventInit));
+    target.dispatchEvent(new MouseEvent("mouseenter", eventInit));
+    target.dispatchEvent(new MouseEvent("mousedown", eventInit));
+    target.dispatchEvent(
+      new MouseEvent("mouseup", { ...eventInit, buttons: 0 }),
+    );
+    if (typeof PointerEvent !== "undefined")
+      target.dispatchEvent(
+        new PointerEvent("pointerup", { ...pointerInit, buttons: 0 }),
+      );
+    target.dispatchEvent(new MouseEvent("click", { ...eventInit, buttons: 0 }));
+    return { x: Math.round(clientX), y: Math.round(clientY) };
+  };
   const findBestTextElement = (text: string) => {
     const needle = text.replace(/\s+/g, " ").trim().toLowerCase();
     if (!needle) return undefined;
@@ -209,14 +218,7 @@ function mutatePageInDom(request: {
       ) as HTMLElement[]
     )
       .filter((element) => {
-        const rect = element.getBoundingClientRect();
-        const style = getComputedStyle(element);
-        return (
-          rect.width > 0 &&
-          rect.height > 0 &&
-          style.display !== "none" &&
-          style.visibility !== "hidden"
-        );
+        return isVisible(element);
       })
       .filter((element) =>
         compact(element.innerText || element.textContent || "")
@@ -230,6 +232,42 @@ function mutatePageInDom(request: {
         const bExact = bText.toLowerCase() === needle ? 0 : 1;
         if (aExact !== bExact) return aExact - bExact;
         return aText.length - bText.length;
+      })[0];
+  };
+  const findBestNamedElement = (name: string) => {
+    const needle = name.replace(/\s+/g, " ").trim().toLowerCase();
+    if (!needle) return undefined;
+    const accessibleName = (element: HTMLElement) =>
+      [
+        element.getAttribute("aria-label"),
+        element.getAttribute("title"),
+        element.getAttribute("placeholder"),
+        element.getAttribute("alt"),
+        element.getAttribute("name"),
+        element.innerText || element.textContent || "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+    return (
+      Array.from(
+        document.querySelectorAll(
+          "a,button,input,textarea,select,[contenteditable='true'],[aria-label],[title],[placeholder],[alt],[role],[tabindex]",
+        ),
+      ) as HTMLElement[]
+    )
+      .filter((element) => isVisible(element))
+      .filter((element) =>
+        accessibleName(element).toLowerCase().includes(needle),
+      )
+      .sort((a, b) => {
+        const aName = accessibleName(a).toLowerCase();
+        const bName = accessibleName(b).toLowerCase();
+        const aExact = aName === needle ? 0 : 1;
+        const bExact = bName === needle ? 0 : 1;
+        if (aExact !== bExact) return aExact - bExact;
+        return aName.length - bName.length;
       })[0];
   };
   const runOne = (options: (typeof request.operations)[number]) => {
@@ -256,11 +294,96 @@ function mutatePageInDom(request: {
       targetFound: Boolean(target),
       targetRequested,
     });
-    const dispatchInput = (element: HTMLElement) => {
-      element.dispatchEvent(new Event("input", { bubbles: true }));
+    const dispatchInput = (
+      element: HTMLElement,
+      data: string | null = null,
+    ) => {
+      if (typeof InputEvent !== "undefined") {
+        element.dispatchEvent(
+          new InputEvent("beforeinput", {
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+            data,
+            inputType: "insertText",
+          }),
+        );
+        element.dispatchEvent(
+          new InputEvent("input", {
+            bubbles: true,
+            cancelable: false,
+            composed: true,
+            data,
+            inputType: "insertText",
+          }),
+        );
+      } else element.dispatchEvent(new Event("input", { bubbles: true }));
       element.dispatchEvent(new Event("change", { bubbles: true }));
     };
+    const replaceEditableText = (element: HTMLElement, value: string) => {
+      element.focus({ preventScroll: true });
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      const inserted = document.execCommand("insertText", false, value);
+      if (!inserted) {
+        element.textContent = value;
+        const fallbackRange = document.createRange();
+        fallbackRange.selectNodeContents(element);
+        fallbackRange.collapse(false);
+        selection?.removeAllRanges();
+        selection?.addRange(fallbackRange);
+        dispatchInput(element, value);
+      }
+      return inserted;
+    };
+    const dispatchKey = (
+      element: HTMLElement,
+      keyOptions: typeof options.key,
+    ) => {
+      element.focus({ preventScroll: true });
+      const key = keyOptions.key || "Enter";
+      const code = keyOptions.code;
+      const init = {
+        key,
+        code,
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        ctrlKey: keyOptions.ctrlKey,
+        shiftKey: keyOptions.shiftKey,
+        altKey: keyOptions.altKey,
+        metaKey: keyOptions.metaKey,
+      };
+      const down = new KeyboardEvent("keydown", init);
+      const downResult = element.dispatchEvent(down);
+      const pressResult =
+        key.length === 1 || key === "Enter"
+          ? element.dispatchEvent(new KeyboardEvent("keypress", init))
+          : true;
+      const upResult = element.dispatchEvent(
+        new KeyboardEvent("keyup", { ...init, cancelable: false }),
+      );
+      return {
+        key,
+        code,
+        defaultPrevented: down.defaultPrevented,
+        dispatched: downResult && pressResult && upResult,
+      };
+    };
+    const coordinateTarget =
+      options.operation === "click" &&
+      Number.isFinite(options.scroll.x) &&
+      Number.isFinite(options.scroll.y)
+        ? (document.elementFromPoint(
+            options.scroll.x as number,
+            options.scroll.y as number,
+          ) as HTMLElement | null)
+        : null;
     const target = (() => {
+      if (coordinateTarget) return coordinateTarget;
       if (options.target.aiId) {
         const element = document.querySelector(
           `[data-ai-id="${CSS.escape(options.target.aiId)}"]`,
@@ -275,7 +398,13 @@ function mutatePageInDom(request: {
         const element = document.querySelector('[data-oba-selected="true"]');
         if (element) return element as HTMLElement;
       }
+      if (options.target.ariaLabel)
+        return findBestNamedElement(options.target.ariaLabel);
       if (options.target.text) return findBestTextElement(options.target.text);
+      if (options.operation === "key")
+        return document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
       return document.querySelector(
         '[data-oba-selected="true"]',
       ) as HTMLElement | null;
@@ -337,16 +466,29 @@ function mutatePageInDom(request: {
 
     try {
       if (options.operation === "click") {
-        const link = target.closest("a[href]") as HTMLAnchorElement | null;
+        const clickTarget = resolveClickTarget(target);
+        const clickTargetDescription = describe(clickTarget);
+        const link = clickTarget.closest("a[href]") as HTMLAnchorElement | null;
         if (link?.href && options.openLinksInNewTab)
           return {
             success: true,
             newTab: true,
             url: link.href,
             target: before,
+            clickTarget: clickTargetDescription,
           };
-        target.click();
-        return { success: true, target: before };
+        const clickedAt = dispatchHumanClick(
+          clickTarget,
+          coordinateTarget ? options.scroll.x : undefined,
+          coordinateTarget ? options.scroll.y : undefined,
+        );
+        return {
+          success: true,
+          target: before,
+          clickTarget: clickTargetDescription,
+          clickedAt,
+          coordinateTarget: Boolean(coordinateTarget),
+        };
       }
 
       if (options.operation === "scroll") {
@@ -359,6 +501,11 @@ function mutatePageInDom(request: {
         return { success: true, target: before };
       }
 
+      if (options.operation === "key") {
+        const keyResult = dispatchKey(target, options.key);
+        return { success: true, target: before, ...keyResult };
+      }
+
       if (options.operation === "input" || options.operation === "setValue") {
         if (
           target instanceof HTMLInputElement ||
@@ -366,13 +513,20 @@ function mutatePageInDom(request: {
           target instanceof HTMLSelectElement
         ) {
           target.value = options.value;
-          dispatchInput(target);
+          dispatchInput(target, options.value);
           return { success: true, target: before, value: options.value };
         }
         if (target.isContentEditable) {
-          target.textContent = options.value;
-          dispatchInput(target);
-          return { success: true, target: before, value: options.value };
+          const usedNativeInsertion = replaceEditableText(
+            target,
+            options.value,
+          );
+          return {
+            success: true,
+            target: before,
+            value: options.value,
+            usedNativeInsertion,
+          };
         }
         return {
           success: false,

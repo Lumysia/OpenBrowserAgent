@@ -208,6 +208,8 @@ export const zhTW: LocaleMessages = {
       TAB_HAS_NO_WINDOW: "此分頁不屬於瀏覽器視窗。",
       NO_TEXT_PROVIDED: "未提供要等待的文字。",
       TIMED_OUT_WAITING_FOR_TEXT: "等待指定文字逾時。",
+      TIMED_OUT_WAITING_FOR_SELECTOR: "等待指定選擇器逾時。",
+      TIMED_OUT_WAITING_FOR_CONDITION: "等待指定頁面條件逾時。",
       ELEMENT_NOT_TEXT_INPUT: "目標元素不是輸入框、文字區域或可編輯區域。",
       TARGET_ID_CANNOT_BE_FOCUSED: "此 CDP 目標無法作為瀏覽器分頁聚焦。",
       CLOSE_BY_TARGET_ID_UNSUPPORTED: "此處不支援透過 CDP 目標 ID 關閉頁面。",

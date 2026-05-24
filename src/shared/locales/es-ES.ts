@@ -222,6 +222,10 @@ export const esES: LocaleMessages = {
       NO_TEXT_PROVIDED: "No se proporcionó texto.",
       TIMED_OUT_WAITING_FOR_TEXT:
         "Se agotó el tiempo esperando el texto solicitado.",
+      TIMED_OUT_WAITING_FOR_SELECTOR:
+        "Se agotó el tiempo esperando el selector solicitado.",
+      TIMED_OUT_WAITING_FOR_CONDITION:
+        "Se agotó el tiempo esperando la condición de página solicitada.",
       ELEMENT_NOT_TEXT_INPUT:
         "El elemento de destino no es un campo de entrada, área de texto o zona editable.",
       TARGET_ID_CANNOT_BE_FOCUSED:

@@ -221,6 +221,10 @@ export const jaJP: LocaleMessages = {
       NO_TEXT_PROVIDED: "テキストが指定されていません。",
       TIMED_OUT_WAITING_FOR_TEXT:
         "指定されたテキストの待機がタイムアウトしました。",
+      TIMED_OUT_WAITING_FOR_SELECTOR:
+        "指定されたセレクターの待機がタイムアウトしました。",
+      TIMED_OUT_WAITING_FOR_CONDITION:
+        "指定されたページ条件の待機がタイムアウトしました。",
       ELEMENT_NOT_TEXT_INPUT:
         "対象要素は入力欄、テキストエリア、または編集可能領域ではありません。",
       TARGET_ID_CANNOT_BE_FOCUSED:

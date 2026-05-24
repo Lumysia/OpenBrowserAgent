@@ -73,7 +73,10 @@ export function extractSourcesFromTool(
   ) {
     return sourceFromPage(recordValue(output.tab), now);
   }
-  if (name === BROWSER_TOOL_NAME.manageTabs && input.operation === "search") {
+  if (
+    name === BROWSER_TOOL_NAME.manageTabs &&
+    input.operation === "webSearch"
+  ) {
     const query = stringValue(input.query);
     return [
       compactSource({

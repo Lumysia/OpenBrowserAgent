@@ -164,7 +164,8 @@ async function manageTabs(args: Record<string, unknown>) {
   const operation = String(args.operation || "list");
   if (operation === "list") return listTabs(args);
   if (operation === "open") return openTab(args);
-  if (operation === "search") return openSearch(args);
+  if (operation === "search") return searchTabs(args);
+  if (operation === "webSearch") return openSearch(args);
   if (operation === "focus") {
     const tabId = await resolveTabId(args.tabId);
     await focusTab(tabId);
@@ -181,6 +182,32 @@ async function listTabs(args: Record<string, unknown>) {
   return withListSlice(
     {},
     tabs.map((tab) => ({
+      id: tab.id,
+      title: tab.title,
+      url: tab.url,
+      active: tab.active,
+      windowId: tab.windowId,
+    })),
+    args,
+    "tabs",
+  );
+}
+
+async function searchTabs(args: Record<string, unknown>) {
+  const query = String(args.query || args.url || args.title || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+  const tabs = await getBrowserApi().tabs.query({});
+  const matchedTabs = query
+    ? tabs.filter((tab) => {
+        const haystack = `${tab.title || ""} ${tab.url || ""}`.toLowerCase();
+        return haystack.includes(query);
+      })
+    : tabs;
+  return withListSlice(
+    { query, totalTabCount: tabs.length },
+    matchedTabs.map((tab) => ({
       id: tab.id,
       title: tab.title,
       url: tab.url,

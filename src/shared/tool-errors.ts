@@ -10,6 +10,8 @@ export const TOOL_ERROR = {
   tabHasNoWindow: "TAB_HAS_NO_WINDOW",
   noTextProvided: "NO_TEXT_PROVIDED",
   timedOutWaitingForText: "TIMED_OUT_WAITING_FOR_TEXT",
+  timedOutWaitingForSelector: "TIMED_OUT_WAITING_FOR_SELECTOR",
+  timedOutWaitingForCondition: "TIMED_OUT_WAITING_FOR_CONDITION",
   elementNotTextInput: "ELEMENT_NOT_TEXT_INPUT",
   targetIdCannotBeFocused: "TARGET_ID_CANNOT_BE_FOCUSED",
   closeByTargetIdUnsupported: "CLOSE_BY_TARGET_ID_UNSUPPORTED",

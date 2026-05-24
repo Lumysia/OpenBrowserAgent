@@ -208,6 +208,8 @@ export const zhCN: LocaleMessages = {
       TAB_HAS_NO_WINDOW: "该标签页不属于浏览器窗口。",
       NO_TEXT_PROVIDED: "没有提供要等待的文本。",
       TIMED_OUT_WAITING_FOR_TEXT: "等待指定文本超时。",
+      TIMED_OUT_WAITING_FOR_SELECTOR: "等待指定选择器超时。",
+      TIMED_OUT_WAITING_FOR_CONDITION: "等待指定页面条件超时。",
       ELEMENT_NOT_TEXT_INPUT: "目标元素不是输入框、文本区域或可编辑区域。",
       TARGET_ID_CANNOT_BE_FOCUSED: "此 CDP 目标无法作为浏览器标签页聚焦。",
       CLOSE_BY_TARGET_ID_UNSUPPORTED: "这里不支持通过 CDP 目标 ID 关闭页面。",

@@ -221,6 +221,10 @@ export const ptBR: LocaleMessages = {
       NO_TEXT_PROVIDED: "Nenhum texto foi informado.",
       TIMED_OUT_WAITING_FOR_TEXT:
         "Tempo esgotado aguardando o texto solicitado.",
+      TIMED_OUT_WAITING_FOR_SELECTOR:
+        "Tempo esgotado aguardando o seletor solicitado.",
+      TIMED_OUT_WAITING_FOR_CONDITION:
+        "Tempo esgotado aguardando a condição de página solicitada.",
       ELEMENT_NOT_TEXT_INPUT:
         "O elemento de destino não é um campo, textarea ou área editável.",
       TARGET_ID_CANNOT_BE_FOCUSED:

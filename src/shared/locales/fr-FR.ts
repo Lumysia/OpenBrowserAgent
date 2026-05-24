@@ -223,6 +223,10 @@ export const frFR: LocaleMessages = {
       NO_TEXT_PROVIDED: "Aucun texte fourni.",
       TIMED_OUT_WAITING_FOR_TEXT:
         "Délai dépassé en attendant le texte demandé.",
+      TIMED_OUT_WAITING_FOR_SELECTOR:
+        "Délai dépassé en attendant le sélecteur demandé.",
+      TIMED_OUT_WAITING_FOR_CONDITION:
+        "Délai dépassé en attendant la condition de page demandée.",
       ELEMENT_NOT_TEXT_INPUT:
         "L'élément cible n'est pas un champ, une zone de texte ou une zone modifiable.",
       TARGET_ID_CANNOT_BE_FOCUSED:

@@ -177,11 +177,20 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.manageTabs,
-    "List, open, search, focus, close, group, or navigate browser tabs. Use this for tab lifecycle and tab organization instead of narrow tab tools.",
+    "List, search existing tabs, open URLs, open web searches, focus, close, group, or navigate browser tabs. Use list/search before opening new tabs when the task may match an existing page.",
     {
       operation: {
         type: "string",
-        enum: ["list", "open", "search", "focus", "close", "group", "navigate"],
+        enum: [
+          "list",
+          "search",
+          "open",
+          "webSearch",
+          "focus",
+          "close",
+          "group",
+          "navigate",
+        ],
         description: "Tab operation to perform. Defaults to list.",
       },
       url: {
@@ -190,7 +199,8 @@ export const commonBrowserTools = [
       },
       query: {
         type: "string",
-        description: "Search query for operation=search.",
+        description:
+          "Query for operation=search to find existing tabs by title/URL, or operation=webSearch to open a web search page.",
       },
       tabId: {
         type: "number",
@@ -261,13 +271,14 @@ export const commonBrowserTools = [
           "insertStyle",
           "removeStyle",
           "scroll",
+          "key",
         ],
         description: "Mutation to perform.",
       },
       target: {
         type: "object",
         description:
-          "Target element: { aiId/id, selector, text, selected }. selected=true uses the currently selected element. Not needed for insertStyle/removeStyle.",
+          "Target element: { aiId/id, selector, text, ariaLabel/label/title/placeholder, selected }. selected=true uses the currently selected element. Not needed for insertStyle/removeStyle.",
       },
       value: {
         type: "string",
@@ -322,11 +333,13 @@ export const commonBrowserTools = [
       },
       x: {
         type: "number",
-        description: "Window scroll x for operation=scroll.",
+        description:
+          "Viewport x coordinate for operation=click, or window scroll x for operation=scroll.",
       },
       y: {
         type: "number",
-        description: "Window scroll y for operation=scroll.",
+        description:
+          "Viewport y coordinate for operation=click, or window scroll y for operation=scroll.",
       },
       behavior: {
         type: "string",
@@ -334,6 +347,21 @@ export const commonBrowserTools = [
         description:
           "Scroll behavior for operation=scroll. Defaults to smooth.",
       },
+      key: {
+        type: "string",
+        description: "KeyboardEvent key for operation=key. Defaults to Enter.",
+      },
+      code: {
+        type: "string",
+        description: "Optional KeyboardEvent code for operation=key.",
+      },
+      ctrlKey: { type: "boolean", description: "Hold Ctrl for operation=key." },
+      shiftKey: {
+        type: "boolean",
+        description: "Hold Shift for operation=key.",
+      },
+      altKey: { type: "boolean", description: "Hold Alt for operation=key." },
+      metaKey: { type: "boolean", description: "Hold Meta for operation=key." },
     },
     [],
   ),
@@ -353,7 +381,7 @@ export const commonBrowserTools = [
       target: {
         type: "object",
         description:
-          "Optional target element: { aiId/id, selector, text, selected }. selected=true uses the currently selected element.",
+          "Optional target element: { aiId/id, selector, text, ariaLabel/label/title/placeholder, selected }. selected=true uses the currently selected element.",
       },
       include: {
         type: "array",

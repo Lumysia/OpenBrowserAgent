@@ -87,6 +87,15 @@ function buildInspectOptions(args: Record<string, unknown>) {
       aiId: stringInput(target.aiId ?? target.id ?? args.aiId ?? args.id),
       selector: stringInput(target.selector ?? args.selector),
       text: stringInput(target.text ?? args.text),
+      ariaLabel: stringInput(
+        target.ariaLabel ??
+          target.label ??
+          target.accessibleName ??
+          target.title ??
+          target.placeholder ??
+          args.ariaLabel ??
+          args.label,
+      ),
       selected: target.selected === true || args.selected === true,
     },
     depthUp: positiveInteger(args.depthUp, DEFAULT_CONTEXT_DEPTH_UP),
@@ -119,8 +128,12 @@ function stringInput(value: unknown) {
 }
 
 function stringArray(value: unknown) {
+  if (typeof value === "string") {
+    const text = value.trim();
+    return text ? [text] : [];
+  }
   return Array.isArray(value)
-    ? value.map((item) => String(item)).filter(Boolean)
+    ? value.map((item) => String(item).trim()).filter(Boolean)
     : [];
 }
 
@@ -132,7 +145,13 @@ function positiveInteger(value: unknown, fallback: number) {
 
 function inspectPageInDom(options: {
   include: string[];
-  target: { aiId: string; selector: string; text: string; selected: boolean };
+  target: {
+    aiId: string;
+    selector: string;
+    text: string;
+    ariaLabel: string;
+    selected: boolean;
+  };
   depthUp: number;
   depthDown: number;
   siblingLimit: number;
@@ -230,10 +249,67 @@ function inspectPageInDom(options: {
       const element = document.querySelector('[data-oba-selected="true"]');
       if (element) return element as HTMLElement;
     }
+    if (options.target.ariaLabel)
+      return findBestNamedElement(options.target.ariaLabel);
     if (options.target.text) return findBestTextElement(options.target.text);
     return null;
   };
-  const collectElements = (root: ParentNode) => {
+  const isActionableElement = (element: HTMLElement) => {
+    const tag = element.tagName.toLowerCase();
+    const role = element.getAttribute("role") || "";
+    return (
+      tag === "a" ||
+      tag === "button" ||
+      tag === "input" ||
+      tag === "textarea" ||
+      tag === "select" ||
+      element.isContentEditable ||
+      role === "button" ||
+      role === "link" ||
+      role === "textbox" ||
+      role === "tab" ||
+      role === "menuitem" ||
+      role === "option" ||
+      element.hasAttribute("tabindex")
+    );
+  };
+  const hasAccessibleName = (element: HTMLElement) =>
+    Boolean(
+      element.getAttribute("aria-label") ||
+      element.getAttribute("title") ||
+      element.getAttribute("placeholder") ||
+      element.getAttribute("alt") ||
+      element.getAttribute("name"),
+    );
+  const distanceToTarget = (
+    element: HTMLElement,
+    target: HTMLElement | null,
+  ) => {
+    if (!target) return 0;
+    if (
+      target === element ||
+      target.contains(element) ||
+      element.contains(target)
+    )
+      return 0;
+    const a = element.getBoundingClientRect();
+    const b = target.getBoundingClientRect();
+    const ax = a.left + a.width / 2;
+    const ay = a.top + a.height / 2;
+    const bx = b.left + b.width / 2;
+    const by = b.top + b.height / 2;
+    return Math.hypot(ax - bx, ay - by);
+  };
+  const isNoisyContainer = (element: HTMLElement) => {
+    if (isActionableElement(element) || hasAccessibleName(element))
+      return false;
+    const rect = element.getBoundingClientRect();
+    const area = rect.width * rect.height;
+    const viewportArea = window.innerWidth * window.innerHeight;
+    const text = element.innerText || element.textContent || "";
+    return area > viewportArea * 0.35 && text.length > 400;
+  };
+  const collectElements = (root: ParentNode, target: HTMLElement | null) => {
     const selectors = [
       "a",
       "button",
@@ -250,9 +326,19 @@ function inspectPageInDom(options: {
       '[role="listitem"]',
       "[tabindex]",
     ].join(",");
-    return Array.from(root.querySelectorAll(selectors))
-      .filter((element) => isVisible(element as HTMLElement))
-      .map((element) => describeElement(assignAiId(element as HTMLElement)));
+    return (Array.from(root.querySelectorAll(selectors)) as HTMLElement[])
+      .filter((element) => isVisible(element))
+      .filter((element) => !isNoisyContainer(element))
+      .sort((a, b) => {
+        const aAction = isActionableElement(a) ? 0 : 1;
+        const bAction = isActionableElement(b) ? 0 : 1;
+        if (aAction !== bAction) return aAction - bAction;
+        const aNamed = hasAccessibleName(a) ? 0 : 1;
+        const bNamed = hasAccessibleName(b) ? 0 : 1;
+        if (aNamed !== bNamed) return aNamed - bNamed;
+        return distanceToTarget(a, target) - distanceToTarget(b, target);
+      })
+      .map((element) => describeElement(assignAiId(element)));
   };
   const imageScore = (
     rect: { width: number; height: number },
@@ -412,6 +498,42 @@ function inspectPageInDom(options: {
         return aText.length - bText.length;
       })[0];
   };
+  const findBestNamedElement = (name: string) => {
+    const needle = name.replace(/\s+/g, " ").trim().toLowerCase();
+    if (!needle) return undefined;
+    const accessibleName = (element: HTMLElement) =>
+      [
+        element.getAttribute("aria-label"),
+        element.getAttribute("title"),
+        element.getAttribute("placeholder"),
+        element.getAttribute("alt"),
+        element.getAttribute("name"),
+        element.innerText || element.textContent || "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+    return (
+      Array.from(
+        document.querySelectorAll(
+          "a,button,input,textarea,select,[contenteditable='true'],[aria-label],[title],[placeholder],[alt],[role],[tabindex]",
+        ),
+      ) as HTMLElement[]
+    )
+      .filter((element) => isVisible(element))
+      .filter((element) =>
+        accessibleName(element).toLowerCase().includes(needle),
+      )
+      .sort((a, b) => {
+        const aName = accessibleName(a).toLowerCase();
+        const bName = accessibleName(b).toLowerCase();
+        const aExact = aName === needle ? 0 : 1;
+        const bExact = bName === needle ? 0 : 1;
+        if (aExact !== bExact) return aExact - bExact;
+        return aName.length - bName.length;
+      })[0];
+  };
   const collectDescendants = (root: HTMLElement, depthDown: number) => {
     const items: Array<Record<string, unknown>> = [];
     const walk = (element: Element, depth: number) => {
@@ -461,6 +583,7 @@ function inspectPageInDom(options: {
     options.target.aiId ||
     options.target.selector ||
     options.target.text ||
+    options.target.ariaLabel ||
     options.target.selected,
   );
   const target = resolveTarget() || null;
@@ -469,7 +592,7 @@ function inspectPageInDom(options: {
   const root = target || document.body;
   const elements =
     include.has("elements") || include.has("actions")
-      ? collectElements(document)
+      ? collectElements(root, target)
       : [];
   const images = include.has("images") ? collectImages(root, target) : [];
   const links = include.has("links") ? collectLinks(root) : [];
