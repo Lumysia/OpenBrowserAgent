@@ -58,6 +58,62 @@ export const loaderBrowserTools = [
 
 export const commonBrowserTools = [
   tool(
+    BROWSER_TOOL_NAME.question,
+    "Ask the user structured questions when required information is missing. Use this instead of guessing user preferences or blocking setup in free-form text. Supports 1-6 questions, single-select, multi-select, and an optional custom answer field.",
+    {
+      questions: {
+        type: "array",
+        minItems: 1,
+        maxItems: 6,
+        description: "Questions to ask the user in one compact prompt.",
+        items: {
+          type: "object",
+          properties: {
+            question: {
+              type: "string",
+              description: "Complete question text in the user's language.",
+            },
+            header: {
+              type: "string",
+              description: "Short label, max 30 characters.",
+            },
+            options: {
+              type: "array",
+              minItems: 1,
+              maxItems: 8,
+              description: "Available choices.",
+              items: {
+                type: "object",
+                properties: {
+                  label: {
+                    type: "string",
+                    description: "Choice text, ideally 1-5 words.",
+                  },
+                  description: {
+                    type: "string",
+                    description: "Optional short explanation for the choice.",
+                  },
+                },
+                required: ["label"],
+              },
+            },
+            multiple: {
+              type: "boolean",
+              description: "Allow selecting more than one option.",
+            },
+            custom: {
+              type: "boolean",
+              description:
+                "Allow the user to type their own answer. Defaults to true.",
+            },
+          },
+          required: ["question", "options"],
+        },
+      },
+    },
+    ["questions"],
+  ),
+  tool(
     BROWSER_TOOL_NAME.wait,
     "Pause before continuing when the user/page, animation, or async action needs time to settle.",
     {
@@ -925,6 +981,7 @@ export function browserToolsForPrompt({
       return capabilities.imageGeneration && imageGenerationEnabled;
     if (name === BROWSER_TOOL_NAME.getCurrentTime)
       return capabilities.currentTime;
+    if (name === BROWSER_TOOL_NAME.question) return true;
     if (name === BROWSER_TOOL_NAME.readFileFromUrl)
       return capabilities.fileUrlRead || containsFileUrl(latestUserText || "");
     return capabilities.browserAutomation;

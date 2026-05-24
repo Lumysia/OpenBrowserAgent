@@ -9,11 +9,19 @@ import {
   toolNameFromPartType,
 } from "../../src/shared/types";
 import type { ChatPart } from "../../src/shared/types";
+import type {
+  QuestionToolAnswer,
+  QuestionToolQuestion,
+} from "../../src/shared/types";
 import {
   Button,
+  Input,
   Popover,
   PopoverContent,
   PopoverTrigger,
+  Textarea,
+  ToggleGroup,
+  ToggleGroupItem,
 } from "../../src/ui/components";
 import { toolDisplay, toolJsonDetail } from "./tool-part-detail";
 import { toolIcon } from "./tool-icons";
@@ -26,12 +34,17 @@ export function ToolPart({
   runEnded = false,
   onSelectChat,
   chatExists,
+  onAnswerQuestion,
 }: {
   t: Messages;
   part: ChatPart;
   runEnded?: boolean;
   onSelectChat?: (chatId: string) => void;
   chatExists: (chatId: string) => boolean;
+  onAnswerQuestion?: (
+    toolCallId: string,
+    answers: QuestionToolAnswer[],
+  ) => void;
 }) {
   if (!isToolPartType(part.type)) return null;
   const name = part.toolName || toolNameFromPartType(part.type);
@@ -45,12 +58,15 @@ export function ToolPart({
   const subAgentRunning = isSubAgentTool(name) && output.state === "running";
   const localExecutionBridgeRunning =
     isLocalExecutionBridgeTool(name) && output.state === "running";
+  const questionPending =
+    name === BROWSER_TOOL_NAME.question && isQuestionPending(part);
   const loading =
-    !runEnded &&
-    (subAgentRunning ||
-      localExecutionBridgeRunning ||
-      part.state === CHAT_PART_STATE.inputStreaming ||
-      part.state === CHAT_PART_STATE.inputAvailable);
+    questionPending ||
+    (!runEnded &&
+      (subAgentRunning ||
+        localExecutionBridgeRunning ||
+        part.state === CHAT_PART_STATE.inputStreaming ||
+        part.state === CHAT_PART_STATE.inputAvailable));
   const isError = part.state === CHAT_PART_STATE.outputError;
   const isDone = part.state === CHAT_PART_STATE.outputAvailable;
   const status = loading
@@ -94,7 +110,17 @@ export function ToolPart({
               t={t}
             />
           )}
-          {description && <div className="tool-description">{description}</div>}
+          {name === BROWSER_TOOL_NAME.question && (
+            <QuestionToolForm
+              t={t}
+              part={part}
+              active={isQuestionPending(part)}
+              onSubmit={(answers) => onAnswerQuestion?.(part.id, answers)}
+            />
+          )}
+          {description && name !== BROWSER_TOOL_NAME.question && (
+            <div className="tool-description">{description}</div>
+          )}
           {isSubAgentTool(name) && (
             <div
               className={`tool-detail-slot ${subAgentProgress ? "visible" : ""}`}
@@ -137,6 +163,218 @@ export function ToolPart({
       </div>
     </div>
   );
+}
+
+function QuestionToolForm({
+  t,
+  part,
+  active,
+  onSubmit,
+}: {
+  t: Messages;
+  part: ChatPart;
+  active: boolean;
+  onSubmit: (answers: QuestionToolAnswer[]) => void;
+}) {
+  const questions = questionToolQuestions(part.input);
+  const submittedAnswers = questionToolSubmittedAnswers(part.output);
+  const [selected, setSelected] = React.useState<Record<number, string[]>>({});
+  const [customAnswers, setCustomAnswers] = React.useState<
+    Record<number, string>
+  >({});
+  const complete = questions.every((question, index) =>
+    isQuestionAnswered(question, selected[index] || [], customAnswers[index]),
+  );
+  if (!questions.length) return null;
+  if (submittedAnswers.length)
+    return (
+      <div className="tool-result-list tool-question-answers">
+        {submittedAnswers.map((answer, index) => (
+          <div className="tool-result-row" key={`${answer.header}-${index}`}>
+            <span className="tool-result-label">{answer.header}</span>
+            <span className="tool-result-value">
+              {[...answer.answers, answer.customAnswer]
+                .filter(Boolean)
+                .join(", ") || t.sidepanel.questionNoAnswer}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  return (
+    <form
+      className="tool-question-stack"
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSubmit(
+          questions.map((question, index) => ({
+            header: question.header || `${index + 1}`,
+            question: question.question,
+            answers: selected[index] || [],
+            customAnswer: (customAnswers[index] || "").trim() || undefined,
+          })),
+        );
+      }}
+    >
+      {questions.map((question, index) => {
+        const allowCustom = question.custom !== false;
+        const selectedValues = selected[index] || [];
+        return (
+          <fieldset className="tool-question-fieldset" key={index}>
+            <legend>
+              <span>{question.header || `${index + 1}`}</span>
+              {question.question}
+            </legend>
+            {question.multiple ? (
+              <ToggleGroup
+                type="multiple"
+                value={selectedValues}
+                disabled={!active}
+                onValueChange={(value) =>
+                  setSelected((items) => ({ ...items, [index]: value }))
+                }
+              >
+                {question.options.map((option) => (
+                  <QuestionOptionItem key={option.label} option={option} />
+                ))}
+              </ToggleGroup>
+            ) : (
+              <ToggleGroup
+                type="single"
+                value={selectedValues[0] || ""}
+                disabled={!active}
+                onValueChange={(value) =>
+                  setSelected((items) => ({
+                    ...items,
+                    [index]: value ? [value] : [],
+                  }))
+                }
+              >
+                {question.options.map((option) => (
+                  <QuestionOptionItem key={option.label} option={option} />
+                ))}
+              </ToggleGroup>
+            )}
+            {allowCustom &&
+              (question.multiple ? (
+                <Textarea
+                  value={customAnswers[index] || ""}
+                  disabled={!active}
+                  rows={2}
+                  placeholder={t.sidepanel.questionCustomPlaceholder}
+                  onChange={(event) =>
+                    setCustomAnswers((items) => ({
+                      ...items,
+                      [index]: event.target.value,
+                    }))
+                  }
+                />
+              ) : (
+                <Input
+                  value={customAnswers[index] || ""}
+                  disabled={!active}
+                  placeholder={t.sidepanel.questionCustomPlaceholder}
+                  onChange={(event) =>
+                    setCustomAnswers((items) => ({
+                      ...items,
+                      [index]: event.target.value,
+                    }))
+                  }
+                />
+              ))}
+          </fieldset>
+        );
+      })}
+      <Button type="submit" size="sm" disabled={!active || !complete}>
+        {t.sidepanel.questionSubmit}
+      </Button>
+    </form>
+  );
+}
+
+function isQuestionAnswered(
+  question: QuestionToolQuestion,
+  selected: string[],
+  customAnswer = "",
+) {
+  return (
+    selected.length > 0 || (question.custom !== false && !!customAnswer.trim())
+  );
+}
+
+function isQuestionPending(part: ChatPart) {
+  return (
+    part.state === CHAT_PART_STATE.inputAvailable &&
+    !questionToolSubmittedAnswers(part.output).length
+  );
+}
+
+function QuestionOptionItem({
+  option,
+}: {
+  option: { label: string; description?: string };
+}) {
+  return (
+    <ToggleGroupItem value={option.label} className="tool-question-option">
+      <span>{option.label}</span>
+      {option.description && <small>{option.description}</small>}
+    </ToggleGroupItem>
+  );
+}
+
+function questionToolQuestions(input: unknown): QuestionToolQuestion[] {
+  const questions = (input as { questions?: unknown } | undefined)?.questions;
+  if (!Array.isArray(questions)) return [];
+  return questions.slice(0, 6).flatMap((question, index) => {
+    if (!question || typeof question !== "object") return [];
+    const item = question as Record<string, unknown>;
+    const text = String(item.question || "").trim();
+    const options = Array.isArray(item.options)
+      ? item.options.flatMap((option) => {
+          if (!option || typeof option !== "object") return [];
+          const optionRecord = option as Record<string, unknown>;
+          const label = String(optionRecord.label || "").trim();
+          if (!label) return [];
+          return [
+            {
+              label,
+              description: String(optionRecord.description || "").trim(),
+            },
+          ];
+        })
+      : [];
+    if (!text || !options.length) return [];
+    return [
+      {
+        question: text,
+        header: String(item.header || `${index + 1}`).trim(),
+        options,
+        multiple: item.multiple === true,
+        custom: item.custom !== false,
+      },
+    ];
+  });
+}
+
+function questionToolSubmittedAnswers(output: unknown): QuestionToolAnswer[] {
+  const answers = (output as { answers?: unknown } | undefined)?.answers;
+  if (!Array.isArray(answers)) return [];
+  return answers.flatMap((answer) => {
+    if (!answer || typeof answer !== "object") return [];
+    const item = answer as Record<string, unknown>;
+    const header = String(item.header || "").trim();
+    const question = String(item.question || "").trim();
+    return [
+      {
+        header: header || question || "Question",
+        question,
+        answers: Array.isArray(item.answers)
+          ? item.answers.map((value) => String(value).trim()).filter(Boolean)
+          : [],
+        customAnswer: String(item.customAnswer || "").trim() || undefined,
+      },
+    ];
+  });
 }
 
 function isSubAgentTool(name: string) {

@@ -80,6 +80,10 @@ export const jaJP: LocaleMessages = {
     subAgentRunning: "実行中",
     subAgentCompleted: "完了",
     subAgentMissing: "見つかりません",
+    questionWaiting: "回答を待っています",
+    questionSubmit: "回答を送信",
+    questionCustomPlaceholder: "独自の回答を入力...",
+    questionNoAnswer: "回答なし",
     forkTitleSuffix: "分岐",
     messageCount: "{count}件のメッセージ",
     relativeMinutesAgo: "{count}分前",
@@ -231,6 +235,7 @@ export const jaJP: LocaleMessages = {
     copyImage: "画像をコピー",
     copyPrompt: "プロンプトをコピー",
     tool: {
+      question: { running: "質問しています", done: "質問に回答済み" },
       openNewTabWithURL: {
         running: "新しいページを開いています",
         done: "新しいページを開きました",

@@ -73,6 +73,10 @@ export const zhCN: LocaleMessages = {
     subAgentRunning: "运行中",
     subAgentCompleted: "已完成",
     subAgentMissing: "未找到",
+    questionWaiting: "等待你的回答",
+    questionSubmit: "提交回答",
+    questionCustomPlaceholder: "输入自定义回答……",
+    questionNoAnswer: "未回答",
     forkTitleSuffix: "分叉",
     messageCount: "{count} 条消息",
     relativeMinutesAgo: "{count} 分钟前",
@@ -215,6 +219,7 @@ export const zhCN: LocaleMessages = {
     copyImage: "复制图片",
     copyPrompt: "复制提示词",
     tool: {
+      question: { running: "正在提问", done: "已回答问题" },
       openNewTabWithURL: { running: "正在打开新页面", done: "已打开新页面" },
       findAccessableElementsFromTab: {
         running: "查找页面上的可访问元素",

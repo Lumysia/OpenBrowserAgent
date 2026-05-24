@@ -7,7 +7,12 @@ import {
 import type { Messages } from "../../src/shared/i18n";
 import { getBrowserApi } from "../../src/shared/storage";
 import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
-import type { ChatMessage, ChatPart, ChatSource } from "../../src/shared/types";
+import type {
+  ChatMessage,
+  ChatPart,
+  ChatSource,
+  QuestionToolAnswer,
+} from "../../src/shared/types";
 import { CHAT_PART_STATE, isToolPartType } from "../../src/shared/types";
 import {
   Accordion,
@@ -32,6 +37,7 @@ export function AssistantPart({
   chatMessages,
   onSelectChat,
   chatExists,
+  onAnswerQuestion,
 }: {
   t: Messages;
   part: ChatPart;
@@ -41,6 +47,10 @@ export function AssistantPart({
   chatMessages: ChatMessage[];
   onSelectChat?: (chatId: string) => void;
   chatExists: (chatId: string) => boolean;
+  onAnswerQuestion?: (
+    toolCallId: string,
+    answers: QuestionToolAnswer[],
+  ) => void;
 }) {
   if (isToolPartType(part.type))
     return (
@@ -50,6 +60,7 @@ export function AssistantPart({
         runEnded={messageRunEnded(message)}
         onSelectChat={onSelectChat}
         chatExists={chatExists}
+        onAnswerQuestion={onAnswerQuestion}
       />
     );
   if (part.type === "reasoning" && part.text?.trim())

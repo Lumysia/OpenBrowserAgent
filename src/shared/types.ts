@@ -343,6 +343,7 @@ export const AI_STREAM_PORT_NAME = "ai-stream";
 
 export const AI_STREAM_REQUEST_TYPE = {
   abort: "abort",
+  answerQuestion: "answerQuestion",
   queueMessage: "queueMessage",
   deleteQueuedMessage: "deleteQueuedMessage",
   attachStream: "attachStream",
@@ -378,6 +379,11 @@ export type SendMessagesBody = {
 
 export type AiStreamRequest =
   | { type: "abort" }
+  | {
+      type: "answerQuestion";
+      toolCallId: string;
+      answers: QuestionToolAnswer[];
+    }
   | { type: "queueMessage"; id: string; content: string }
   | { type: "deleteQueuedMessage"; id: string }
   | {
@@ -424,6 +430,26 @@ export type AiStreamResponse = (
   | { type: "error"; error: string }
   | { type: "title"; title: string }
 ) & { sequence?: number };
+
+export type QuestionToolOption = {
+  label: string;
+  description?: string;
+};
+
+export type QuestionToolQuestion = {
+  question: string;
+  header?: string;
+  options: QuestionToolOption[];
+  multiple?: boolean;
+  custom?: boolean;
+};
+
+export type QuestionToolAnswer = {
+  header: string;
+  question: string;
+  answers: string[];
+  customAnswer?: string;
+};
 
 export const providerLabels: Record<ProviderId, string> = {
   gemini: "Gemini",

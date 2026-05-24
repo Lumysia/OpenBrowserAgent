@@ -79,6 +79,10 @@ export const esES: LocaleMessages = {
     subAgentRunning: "En curso",
     subAgentCompleted: "Completado",
     subAgentMissing: "No encontrado",
+    questionWaiting: "Esperando tu respuesta",
+    questionSubmit: "Enviar respuestas",
+    questionCustomPlaceholder: "Escribe tu propia respuesta...",
+    questionNoAnswer: "Sin respuesta",
     forkTitleSuffix: "Rama",
     messageCount: "{count} mensajes",
     relativeMinutesAgo: "hace {count} min",
@@ -232,6 +236,10 @@ export const esES: LocaleMessages = {
     copyImage: "Copiar imagen",
     copyPrompt: "Copiar instrucciones",
     tool: {
+      question: {
+        running: "Haciendo una pregunta",
+        done: "Pregunta respondida",
+      },
       openNewTabWithURL: {
         running: "Abriendo nueva página",
         done: "Nueva página abierta",

@@ -1,5 +1,6 @@
 export const BROWSER_TOOL_NAME = {
   loadBrowserTools: "loadBrowserTools",
+  question: "question",
   wait: "wait",
   startSubAgent: "startSubAgent",
   getSubAgentStatus: "getSubAgentStatus",

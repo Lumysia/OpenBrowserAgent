@@ -6,6 +6,7 @@ import type {
   Preferences,
   RunMetrics,
   SendMessagesRequest,
+  QuestionToolAnswer,
   UploadedAttachment,
 } from "../../src/shared/types";
 import { AI_STREAM_REQUEST_TYPE as STREAM_REQUEST } from "../../src/shared/types";
@@ -224,6 +225,18 @@ export function useParallelChatStreams({
     });
   }
 
+  function answerQuestion(
+    chatId: string,
+    toolCallId: string,
+    answers: QuestionToolAnswer[],
+  ) {
+    portRefs.current[chatId]?.postMessage({
+      type: STREAM_REQUEST.answerQuestion,
+      toolCallId,
+      answers,
+    });
+  }
+
   function setQueuedMessageRemover(
     remover: (id: string, chatId: string) => void,
   ) {
@@ -246,6 +259,7 @@ export function useParallelChatStreams({
     stopCurrentStream,
     postQueuedMessage,
     deleteQueuedStreamMessage,
+    answerQuestion,
     setQueuedMessageRemover,
   };
 }

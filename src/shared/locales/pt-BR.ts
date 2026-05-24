@@ -79,6 +79,10 @@ export const ptBR: LocaleMessages = {
     subAgentRunning: "Em execução",
     subAgentCompleted: "Concluído",
     subAgentMissing: "Ausente",
+    questionWaiting: "Aguardando sua resposta",
+    questionSubmit: "Enviar respostas",
+    questionCustomPlaceholder: "Digite sua própria resposta...",
+    questionNoAnswer: "Sem resposta",
     forkTitleSuffix: "Ramificação",
     messageCount: "{count} mensagens",
     relativeMinutesAgo: "há {count} min",
@@ -231,6 +235,10 @@ export const ptBR: LocaleMessages = {
     copyImage: "Copiar imagem",
     copyPrompt: "Copiar instruções",
     tool: {
+      question: {
+        running: "Fazendo uma pergunta",
+        done: "Pergunta respondida",
+      },
       openNewTabWithURL: {
         running: "Abrindo nova página",
         done: "Nova página aberta",

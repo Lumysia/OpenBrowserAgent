@@ -131,6 +131,7 @@ export function SidepanelApp() {
     stopCurrentStream,
     postQueuedMessage,
     deleteQueuedStreamMessage,
+    answerQuestion,
     setQueuedMessageRemover,
   } = useParallelChatStreams({
     activeChatId,
@@ -500,6 +501,9 @@ export function SidepanelApp() {
       onStop={stopCurrentStream}
       onDeleteQueuedMessage={deleteQueuedMessage}
       onEditQueuedMessage={editQueuedMessage}
+      onAnswerQuestion={(toolCallId, answers) =>
+        currentChat && answerQuestion(currentChat.id, toolCallId, answers)
+      }
       onToggleSkill={(skill) =>
         setSelectedSkills((items) =>
           items.some((item) => item.id === skill.id)

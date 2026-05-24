@@ -192,6 +192,115 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.tool-question-stack {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+.tool-question-fieldset {
+  min-width: 0;
+  display: grid;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 16%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card) 74%, var(--accent-softer));
+}
+.tool-question-fieldset legend {
+  display: grid;
+  gap: 3px;
+  padding: 0;
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.tool-question-fieldset legend span {
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tool-question-fieldset .ui-toggle-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr));
+  width: 100%;
+  gap: 8px;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.tool-question-option {
+  height: auto;
+  min-height: 56px;
+  flex: none;
+  display: grid;
+  justify-items: start;
+  align-content: center;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 12%, var(--border));
+  border-radius: 10px;
+  text-align: left;
+  white-space: normal;
+}
+.tool-question-option span {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.tool-question-option:first-child {
+  border-left: 1px solid
+    color-mix(in srgb, var(--accent-strong) 12%, var(--border));
+}
+.tool-question-option small {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.tool-result-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+.tool-result-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(90px, 0.36fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 9%, transparent);
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-softer) 28%, transparent),
+      transparent 68%
+    ),
+    color-mix(in srgb, var(--card) 86%, var(--accent-softer));
+}
+.tool-result-label {
+  min-width: 0;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tool-result-value {
+  min-width: 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
 .tool-references button {
   max-width: min(280px, calc(100% - 10px));
   min-width: 0;

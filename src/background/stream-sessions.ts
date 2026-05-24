@@ -1,4 +1,8 @@
-import type { AiStreamResponse, SendMessagesRequest } from "../shared/types";
+import type {
+  AiStreamRequest,
+  AiStreamResponse,
+  SendMessagesRequest,
+} from "../shared/types";
 
 const STREAM_SESSION_RETENTION_MS = 5 * 60_000;
 
@@ -9,6 +13,8 @@ type StreamSession = {
   events: AiStreamResponse[];
   nextSequence: number;
   ports: Set<chrome.runtime.Port>;
+  messageListeners: Set<(message: AiStreamRequest) => void>;
+  disconnectListeners: Set<() => void>;
   queuedMessages: Array<{ id: string; content: string }>;
   cleanupTimeout?: ReturnType<typeof setTimeout>;
 };
@@ -24,6 +30,8 @@ export function createStreamSession(request: SendMessagesRequest) {
     events: [],
     nextSequence: 1,
     ports: new Set(),
+    messageListeners: new Set(),
+    disconnectListeners: new Set(),
     queuedMessages: [],
   };
   activeStreamSessions.set(request.chatId, session);
@@ -36,8 +44,28 @@ export function getStreamSession(chatId: string) {
 
 export function streamSessionPort(session: StreamSession) {
   return {
+    name: "ai-stream-session",
     postMessage: (message: AiStreamResponse) => postToSession(session, message),
-  } as chrome.runtime.Port;
+    disconnect: () => {
+      session.disconnectListeners.forEach((listener) => listener());
+    },
+    onMessage: {
+      addListener: (listener: (message: AiStreamRequest) => void) => {
+        session.messageListeners.add(listener);
+      },
+      removeListener: (listener: (message: AiStreamRequest) => void) => {
+        session.messageListeners.delete(listener);
+      },
+    },
+    onDisconnect: {
+      addListener: (listener: () => void) => {
+        session.disconnectListeners.add(listener);
+      },
+      removeListener: (listener: () => void) => {
+        session.disconnectListeners.delete(listener);
+      },
+    },
+  } as unknown as chrome.runtime.Port;
 }
 
 export function attachPortToSession(
@@ -76,7 +104,15 @@ export function abortSession(chatId: string) {
   const session = activeStreamSessions.get(chatId);
   if (!session) return;
   session.abortController.abort();
+  session.disconnectListeners.forEach((listener) => listener());
   activeStreamSessions.delete(chatId);
+}
+
+export function sendMessageToSession(
+  session: StreamSession,
+  message: AiStreamRequest,
+) {
+  session.messageListeners.forEach((listener) => listener(message));
 }
 
 export function drainQueuedMessages(session: StreamSession) {

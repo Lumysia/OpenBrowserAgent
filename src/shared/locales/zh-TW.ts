@@ -73,6 +73,10 @@ export const zhTW: LocaleMessages = {
     subAgentRunning: "執行中",
     subAgentCompleted: "已完成",
     subAgentMissing: "找不到",
+    questionWaiting: "等待你的回答",
+    questionSubmit: "提交回答",
+    questionCustomPlaceholder: "輸入自訂回答……",
+    questionNoAnswer: "未回答",
     forkTitleSuffix: "分叉",
     messageCount: "{count} 則訊息",
     relativeMinutesAgo: "{count} 分鐘前",
@@ -215,6 +219,7 @@ export const zhTW: LocaleMessages = {
     copyImage: "複製圖片",
     copyPrompt: "複製提示詞",
     tool: {
+      question: { running: "正在提問", done: "已回答問題" },
       openNewTabWithURL: { running: "正在開啟新頁面", done: "已開啟新頁面" },
       findAccessableElementsFromTab: {
         running: "正在查找頁面上的可存取元素",

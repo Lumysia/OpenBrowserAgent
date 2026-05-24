@@ -21,6 +21,7 @@ import type {
   Chat,
   ChatMessage,
   ChatSource,
+  QuestionToolAnswer,
   SelectedElement,
   Skill,
   UploadedAttachment,
@@ -50,6 +51,7 @@ export function MessageBubble({
   onResend,
   onFork,
   onSelectChat,
+  onAnswerQuestion,
   chats,
   resendDisabled = false,
   sources = [],
@@ -69,6 +71,10 @@ export function MessageBubble({
   onResend?: (message: ChatMessage, attachments: UploadedAttachment[]) => void;
   onFork?: (message: ChatMessage, partId?: string) => void;
   onSelectChat?: (chatId: string) => void;
+  onAnswerQuestion?: (
+    toolCallId: string,
+    answers: QuestionToolAnswer[],
+  ) => void;
   chats: Chat[];
   resendDisabled?: boolean;
   latestUserMessage?: boolean;
@@ -158,6 +164,7 @@ export function MessageBubble({
               chatMessages={chatMessages}
               onSelectChat={onSelectChat}
               chatExists={chatExists}
+              onAnswerQuestion={onAnswerQuestion}
             />
           ))}
         </>

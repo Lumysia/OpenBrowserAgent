@@ -16,6 +16,7 @@ import type {
   ModelConfig,
   Preferences,
   PromptBreakdown,
+  QuestionToolAnswer,
   SelectedElement,
   Skill,
   UploadedAttachment,
@@ -107,6 +108,7 @@ export function SidepanelView({
   onStop,
   onDeleteQueuedMessage,
   onEditQueuedMessage,
+  onAnswerQuestion,
   onToggleSkill,
   onCancelEditMessage,
   onShowAllTabsPicker,
@@ -171,6 +173,7 @@ export function SidepanelView({
   onStop: () => void;
   onDeleteQueuedMessage: (id: string) => void;
   onEditQueuedMessage: (message: QueuedMessage) => void;
+  onAnswerQuestion: (toolCallId: string, answers: QuestionToolAnswer[]) => void;
   onToggleSkill: (skill: Skill) => void;
   onCancelEditMessage: () => void;
   onShowAllTabsPicker: () => void;
@@ -285,6 +288,7 @@ export function SidepanelView({
                   resendDisabled={streaming}
                   onFork={onForkMessage}
                   onSelectChat={onSelectChat}
+                  onAnswerQuestion={onAnswerQuestion}
                 />
               ))}
             </div>

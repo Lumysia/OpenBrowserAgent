@@ -97,6 +97,12 @@ export default defineBackground(() => {
         return;
       }
 
+      if (request.type === AI_STREAM_REQUEST_TYPE.answerQuestion) {
+        const session = streamSessions.firstPortSession(port);
+        if (session) streamSessions.sendMessageToSession(session, request);
+        return;
+      }
+
       if (request.type === AI_STREAM_REQUEST_TYPE.attachStream) {
         const session = streamSessions.getStreamSession(request.chatId);
         if (!session) {

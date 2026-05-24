@@ -80,6 +80,10 @@ export const enUS = {
     subAgentRunning: "Running",
     subAgentCompleted: "Completed",
     subAgentMissing: "Missing",
+    questionWaiting: "Waiting for your answer",
+    questionSubmit: "Submit answers",
+    questionCustomPlaceholder: "Type your own answer...",
+    questionNoAnswer: "No answer",
     forkTitleSuffix: "Fork",
     messageCount: "{count} messages",
     relativeMinutesAgo: "{count}m ago",
@@ -228,6 +232,7 @@ export const enUS = {
     copyImage: "Copy image",
     copyPrompt: "Copy prompt",
     tool: {
+      question: { running: "Asking a question", done: "Answered question" },
       openNewTabWithURL: {
         running: "Opening new page",
         done: "Opened new page",

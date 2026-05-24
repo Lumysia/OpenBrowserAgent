@@ -78,6 +78,10 @@ export const ko: LocaleMessages = {
     subAgentRunning: "실행 중",
     subAgentCompleted: "완료됨",
     subAgentMissing: "찾을 수 없음",
+    questionWaiting: "답변을 기다리는 중",
+    questionSubmit: "답변 제출",
+    questionCustomPlaceholder: "직접 답변 입력...",
+    questionNoAnswer: "답변 없음",
     forkTitleSuffix: "분기",
     messageCount: "{count}개 메시지",
     relativeMinutesAgo: "{count}분 전",
@@ -228,6 +232,7 @@ export const ko: LocaleMessages = {
     copyImage: "이미지 복사",
     copyPrompt: "프롬프트 복사",
     tool: {
+      question: { running: "질문하는 중", done: "질문 답변 완료" },
       openNewTabWithURL: {
         running: "새 페이지 여는 중",
         done: "새 페이지 열림",

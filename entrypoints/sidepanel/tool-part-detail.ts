@@ -45,7 +45,9 @@ export function toolDisplay(
   const title = (() => {
     const base =
       state === CHAT_PART_STATE.outputAvailable ||
-      (runEnded && state === CHAT_PART_STATE.inputAvailable)
+      (name !== BROWSER_TOOL_NAME.question &&
+        runEnded &&
+        state === CHAT_PART_STATE.inputAvailable)
         ? toolText?.done
         : toolText?.running;
     if (name === BROWSER_TOOL_NAME.startSubAgent)
@@ -75,6 +77,8 @@ export function toolDisplay(
         stringValue(output.localDateTime),
         stringValue(output.timeZone),
       ]);
+    if (name === BROWSER_TOOL_NAME.question)
+      return questionToolDetail(input, output, state, t);
     if (
       name === BROWSER_TOOL_NAME.startSubAgent ||
       name === BROWSER_TOOL_NAME.getSubAgentStatus
@@ -264,6 +268,20 @@ export function toolDisplay(
   const references = toolReferences(name, output, input);
   const subAgentProgress = subAgentProgressDetail(name, output, t, toolLabel);
   return { title, description, references, subAgentProgress };
+}
+
+function questionToolDetail(
+  input: Record<string, unknown>,
+  output: Record<string, unknown>,
+  state: ChatPart["state"],
+  t: Messages,
+) {
+  if (Array.isArray(output.answers))
+    return `${output.answers.length} answers submitted`;
+  const questions = Array.isArray(input.questions) ? input.questions : [];
+  if (state === CHAT_PART_STATE.inputAvailable)
+    return t.sidepanel.questionWaiting;
+  return `${questions.length} questions`;
 }
 
 function fallbackToolDetail(

@@ -1,11 +1,14 @@
 import {
   CHAT_PART_STATE,
+  AI_STREAM_REQUEST_TYPE,
   toolPartType,
   type AgentCapabilities,
   type AgentWorkspace,
   type ChatSource,
   type Preferences,
   type Skill,
+  type QuestionToolAnswer,
+  type QuestionToolQuestion,
   type UploadedAttachment,
 } from "../shared/types";
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
@@ -68,20 +71,22 @@ export async function runProviderTool({
       input,
     },
   });
-  const rawOutput = isAvailableTool(toolName, availableTools)
-    ? await executeContextAwareTool({
-        toolName,
-        input,
-        context: { chatId, messageId, toolCallId },
-        uploadedAttachments,
-        availableSkills,
-        capabilities,
-        workspace,
-      })
-    : {
+  const rawOutput = !isAvailableTool(toolName, availableTools)
+    ? {
         success: false,
         error: `Tool "${toolName}" is not available to the active agent.`,
-      };
+      }
+    : toolName === BROWSER_TOOL_NAME.question
+      ? await askUserQuestion({ input, port, toolCallId })
+      : await executeContextAwareTool({
+          toolName,
+          input,
+          context: { chatId, messageId, toolCallId },
+          uploadedAttachments,
+          availableSkills,
+          capabilities,
+          workspace,
+        });
   loadDeferredToolNames(rawOutput, loadedToolNames);
   const finalRawOutput = shouldWaitForSubAgent(toolName, input, rawOutput)
     ? await waitForSubAgentResult({
@@ -122,6 +127,132 @@ export async function runProviderTool({
     },
   });
   return { output, visionImage, responseSources: nextSources };
+}
+
+async function askUserQuestion({
+  input,
+  port,
+  toolCallId,
+}: {
+  input: Record<string, unknown>;
+  port: chrome.runtime.Port;
+  toolCallId: string;
+}) {
+  const questions = normalizeQuestions(input.questions);
+  if (!questions.length)
+    return { success: false, error: "Question tool requires 1-6 questions." };
+  const answers = await waitForQuestionAnswer(port, toolCallId);
+  return {
+    success: true,
+    answers,
+    summary: formatQuestionAnswers(answers),
+  };
+}
+
+function waitForQuestionAnswer(
+  port: chrome.runtime.Port,
+  toolCallId: string,
+): Promise<QuestionToolAnswer[]> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(
+      () => {
+        cleanup();
+        reject(new Error("Timed out waiting for the user's answer."));
+      },
+      10 * 60 * 1000,
+    );
+
+    function cleanup() {
+      clearTimeout(timeout);
+      port.onMessage.removeListener(onMessage);
+      port.onDisconnect.removeListener(onDisconnect);
+    }
+
+    function onDisconnect() {
+      cleanup();
+      reject(
+        new Error("Question was canceled because the chat stream closed."),
+      );
+    }
+
+    function onMessage(message: unknown) {
+      if (!message || typeof message !== "object") return;
+      const maybe = message as {
+        type?: string;
+        toolCallId?: string;
+        answers?: unknown;
+      };
+      if (
+        maybe.type !== AI_STREAM_REQUEST_TYPE.answerQuestion ||
+        maybe.toolCallId !== toolCallId
+      )
+        return;
+      cleanup();
+      resolve(normalizeAnswers(maybe.answers));
+    }
+
+    port.onMessage.addListener(onMessage);
+    port.onDisconnect.addListener(onDisconnect);
+  });
+}
+
+function normalizeQuestions(value: unknown): QuestionToolQuestion[] {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 6).flatMap((item, index) => {
+    if (!item || typeof item !== "object") return [];
+    const raw = item as Record<string, unknown>;
+    const question = String(raw.question || "").trim();
+    const options = Array.isArray(raw.options)
+      ? raw.options.flatMap((option) => {
+          if (!option || typeof option !== "object") return [];
+          const optionRecord = option as Record<string, unknown>;
+          const label = String(optionRecord.label || "").trim();
+          if (!label) return [];
+          return [
+            {
+              label,
+              description: String(optionRecord.description || "").trim(),
+            },
+          ];
+        })
+      : [];
+    if (!question || !options.length) return [];
+    return [
+      {
+        question,
+        header: String(raw.header || `Question ${index + 1}`).trim(),
+        options,
+        multiple: raw.multiple === true,
+        custom: raw.custom !== false,
+      },
+    ];
+  });
+}
+
+function normalizeAnswers(value: unknown): QuestionToolAnswer[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const raw = item as Record<string, unknown>;
+    const question = String(raw.question || "").trim();
+    const header = String(raw.header || question || "Question").trim();
+    const answers = Array.isArray(raw.answers)
+      ? raw.answers.map((answer) => String(answer).trim()).filter(Boolean)
+      : [];
+    const customAnswer = String(raw.customAnswer || "").trim();
+    return [{ header, question, answers, customAnswer }];
+  });
+}
+
+function formatQuestionAnswers(answers: QuestionToolAnswer[]) {
+  return answers
+    .map((answer) => {
+      const selected = [...answer.answers, answer.customAnswer]
+        .filter(Boolean)
+        .join(", ");
+      return `- ${answer.header}: ${selected || "No answer"}`;
+    })
+    .join("\n");
 }
 
 async function waitForLocalAgentResult({

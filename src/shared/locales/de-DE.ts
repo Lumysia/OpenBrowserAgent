@@ -80,6 +80,10 @@ export const deDE: LocaleMessages = {
     subAgentRunning: "Läuft",
     subAgentCompleted: "Abgeschlossen",
     subAgentMissing: "Fehlt",
+    questionWaiting: "Warten auf deine Antwort",
+    questionSubmit: "Antworten senden",
+    questionCustomPlaceholder: "Eigene Antwort eingeben...",
+    questionNoAnswer: "Keine Antwort",
     forkTitleSuffix: "Abzweig",
     messageCount: "{count} Nachrichten",
     relativeMinutesAgo: "vor {count} Min.",
@@ -233,6 +237,7 @@ export const deDE: LocaleMessages = {
     copyImage: "Bild kopieren",
     copyPrompt: "Anweisung kopieren",
     tool: {
+      question: { running: "Frage wird gestellt", done: "Frage beantwortet" },
       openNewTabWithURL: {
         running: "Neue Seite wird geöffnet",
         done: "Neue Seite geöffnet",

@@ -372,5 +372,6 @@ function toolCapabilities(name: string): Array<keyof AgentCapabilities> {
   )
     return ["mcpManagement"];
   if (name === BROWSER_TOOL_NAME.getCurrentTime) return ["currentTime"];
+  if (name === BROWSER_TOOL_NAME.question) return [];
   return ["browserAutomation"];
 }
