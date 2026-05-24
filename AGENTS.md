@@ -40,6 +40,10 @@ OpenBrowserAgent is a WXT/Vite/React/TypeScript browser extension for AI-assiste
 
 ## Code Quality Rules
 
+- Prefer the best maintainable engineering solution over the smallest possible diff. Narrow patches are only acceptable when the underlying design is already sound and the change fully addresses the issue.
+- When a bug crosses state management, synchronization, background protocols, tool execution, or UI rendering, inspect the full flow and fix the shared abstraction or contract rather than adding local special cases.
+- Refactor when it improves correctness, removes duplication, clarifies ownership, or prevents repeat regressions. Keep refactors focused on the problem area and verify behavior end to end.
+- Keep React state updaters pure. Do not perform storage writes, network calls, logging-only side effects, port messages, or other side effects inside functional state updater callbacks; expose explicit APIs or effects for immediate persistence when needed.
 - Do not add hardcoded language detection. Assistant response language belongs in the model prompt: respond in the user's latest message language.
 - Keep UI language selection only for extension chrome/localized UI, not for forcing assistant replies.
 - Extension UI text must prefer the app's stored UI language (`storage.language` with `getMessages`/local UI registries). Use `chrome.i18n` only as a fallback for manifest/default locale or non-React content-script boundaries where the stored language is unavailable.

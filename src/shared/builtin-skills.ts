@@ -72,6 +72,16 @@ Use this skill whenever the user wants to add, configure, modify, test, use, or 
 
 When setup is needed, explicitly say that this is the bootstrap stage and collect the minimum required inputs before showing an installer command.
 
+Use the \`question\` tool for bootstrap collection whenever any required input is missing. Do not collect these values through ordinary free-form assistant text unless the user has already provided them in the conversation or the \`question\` tool is unavailable. Ask all currently missing required inputs in one \`question\` tool call when possible.
+
+Recommended \`question\` structure:
+
+- Browser target: single-select choices for supported browser targets, with custom answers enabled for Linux packaged targets or uncommon Chromium builds.
+- Extension ID: one short question with a custom answer field. Use choices such as "I'll paste it" only as affordances; the actual ID should come from the custom answer or existing conversation.
+- Local CLI command: one short question with a custom answer field. Do not suggest a default command unless the user already named the local CLI or wrapper they want to use.
+
+After the user answers the \`question\` tool, normalize and validate the answers. If a required answer is still missing or ambiguous, use \`question\` again for only the missing field. Do not show an installer command with placeholders.
+
 Required bootstrap inputs:
 
 - Browser target: one of \`chrome\`, \`edge\`, \`brave\`, \`vivaldi\`, \`chromium\`, \`firefox\`, or the Linux packaged targets above. If the user already said the browser, do not ask again.
