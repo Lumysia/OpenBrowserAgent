@@ -244,24 +244,19 @@ export const ko: LocaleMessages = {
         running: "새 페이지 여는 중",
         done: "새 페이지 열림",
       },
-      findAccessableElementsFromTab: {
-        running: "접근 가능한 요소 찾는 중",
-        done: "요소 찾음",
-        found: "접근 가능한 요소 {count}개 찾음",
+      inspectPage: {
+        running: "페이지 검사 중",
+        done: "페이지 검사됨",
+        found: "요소 {count}개 찾음",
       },
       waitTabLoadFinished: {
         running: "페이지 로드 대기 중",
         done: "페이지 로드됨",
       },
-      inputTextByAiID: { running: "텍스트 입력 중", done: "텍스트 입력됨" },
-      clickElementByAiID: { running: "요소 클릭 중", done: "요소 클릭됨" },
+      mutatePage: { running: "페이지 수정 중", done: "페이지 수정됨" },
       cdpMouseActionByAiID: {
         running: "페이지 요소 조작 중",
         done: "페이지 요소 조작 완료",
-      },
-      getTabContent: {
-        running: "페이지 내용 가져오는 중",
-        done: "페이지 내용 가져옴",
       },
       groupTabs: { running: "탭 그룹화 중", done: "탭 그룹화됨" },
       wait: { running: "대기 중", done: "대기 완료" },
@@ -285,14 +280,6 @@ export const ko: LocaleMessages = {
         running: "Markdown 다운로드 중",
         done: "Markdown 다운로드됨",
       },
-      insertCSSToTab: {
-        running: "페이지 스타일 적용 중",
-        done: "페이지 스타일 적용됨",
-      },
-      removeCSSToTab: {
-        running: "페이지 스타일 제거 중",
-        done: "페이지 스타일 제거됨",
-      },
       closeTab: { running: "탭 닫는 중", done: "탭 닫힘" },
       reloadTab: { running: "탭 새로고침 중", done: "탭 새로고침됨" },
       navigateTab: { running: "탭 이동 중", done: "탭 이동됨" },
@@ -302,10 +289,6 @@ export const ko: LocaleMessages = {
         done: "페이지 텍스트 찾음",
       },
       scrollToBottom: { running: "페이지 스크롤 중", done: "페이지 스크롤됨" },
-      getElementPropertiesByAiID: {
-        running: "요소 검사 중",
-        done: "요소 검사됨",
-      },
       listSkills: {
         running: "스킬 목록 읽는 중",
         done: "스킬 목록 읽음",

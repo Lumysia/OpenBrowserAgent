@@ -66,7 +66,22 @@ export async function getAllTabs(): Promise<AttachmentTab[]> {
 }
 
 export function isScriptableUrl(url?: string) {
-  return !!url && /^https?:\/\//i.test(url);
+  if (!url) return false;
+  const normalized = url.trim().toLowerCase();
+  if (normalized === "about:blank" || normalized === "about:srcdoc")
+    return true;
+  if (
+    normalized.startsWith("data:text/html") ||
+    normalized.startsWith("data:application/xhtml+xml")
+  )
+    return true;
+  try {
+    return ["http:", "https:", "file:", "blob:"].includes(
+      new URL(url).protocol,
+    );
+  } catch {
+    return false;
+  }
 }
 
 export async function extractTabText(tabId: number): Promise<string> {

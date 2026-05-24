@@ -251,31 +251,119 @@ export const commonBrowserTools = [
       description: "The ID of the tab to make active and visible",
     },
   }),
-  tool(BROWSER_TOOL_NAME.insertCSSToTab, "Insert CSS to a tab", {
-    tabId: {
-      type: "number",
-      description: "The ID of the tab to insert CSS to",
-    },
-    css: { type: "string", description: "The CSS to insert" },
-  }),
-  tool(BROWSER_TOOL_NAME.removeCSSToTab, "Remove CSS from a tab", {
-    tabId: {
-      type: "number",
-      description: "The ID of the tab to remove CSS from",
-    },
-    css: { type: "string", description: "The CSS to remove" },
-  }),
   tool(
-    BROWSER_TOOL_NAME.getTabContent,
-    "Get markdown content for a list of tabs. Large markdown is returned as an offset/limit slice per tab.",
+    BROWSER_TOOL_NAME.mutatePage,
+    "Modify the current page DOM or style. Use this for normal page actions and edits before CDP. Operations: click, input, setText, setHtml, insertHtml, delete, setAttribute, removeAttribute, setInlineStyle, insertStyle, removeStyle.",
     {
+      tabId: {
+        type: "number",
+        description: "The tab ID to modify. Defaults to active tab.",
+      },
+      operation: {
+        type: "string",
+        enum: [
+          "click",
+          "input",
+          "setValue",
+          "setText",
+          "setHtml",
+          "insertHtml",
+          "delete",
+          "setAttribute",
+          "removeAttribute",
+          "setInlineStyle",
+          "insertStyle",
+          "removeStyle",
+        ],
+        description: "Mutation to perform.",
+      },
+      target: {
+        type: "object",
+        description:
+          "Target element: { aiId/id, selector, text, selected }. selected=true uses the currently selected element. Not needed for insertStyle/removeStyle.",
+      },
+      value: {
+        type: "string",
+        description:
+          "Text, HTML, attribute value, inline CSS declaration, or page CSS depending on operation.",
+      },
+      attribute: {
+        type: "string",
+        description: "Attribute name for setAttribute/removeAttribute.",
+      },
+      position: {
+        type: "string",
+        enum: ["beforebegin", "afterbegin", "beforeend", "afterend"],
+        description:
+          "Insertion position for insertHtml. Defaults to beforeend.",
+      },
+      css: {
+        type: "string",
+        description: "Page CSS for insertStyle/removeStyle.",
+      },
+      openLinksInNewTab: {
+        type: "boolean",
+        description:
+          "For click on links, open a background tab instead of navigating the current tab. Defaults true.",
+      },
+    },
+    ["operation"],
+  ),
+  tool(
+    BROWSER_TOOL_NAME.inspectPage,
+    "Inspect page text, interactive elements, links, images, forms, and selected/target element context. Use this before CDP for normal DOM/page understanding, including DIV/card images without screenshots.",
+    {
+      tabId: {
+        type: "number",
+        description: "The tab ID to inspect. Defaults to active tab.",
+      },
       tabIds: {
         type: "array",
         items: { type: "number" },
-        description: "The IDs of the tabs to get the content of",
+        description: "Optional multiple tab IDs to inspect.",
       },
-      ...contentSliceParameters,
+      target: {
+        type: "object",
+        description:
+          "Optional target element: { aiId/id, selector, text, selected }. selected=true uses the currently selected element.",
+      },
+      include: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: ["text", "elements", "links", "images", "forms", "actions"],
+        },
+        description:
+          "Content to return. Defaults to text, elements, links, images, and forms.",
+      },
+      depthUp: {
+        type: "number",
+        description:
+          "Ancestor levels to inspect around a target. Defaults to 6.",
+      },
+      depthDown: {
+        type: "number",
+        description:
+          "Descendant levels to inspect around a target. Defaults to 4.",
+      },
+      siblingLimit: {
+        type: "number",
+        description: "Nearby sibling count around a target. Defaults to 3.",
+      },
+      itemOffset: listSliceParameters.offset,
+      itemLimit: {
+        ...listSliceParameters.limit,
+        description:
+          "Maximum items per returned list. Defaults to a compact 30; request more only when needed.",
+      },
+      textOffset: contentSliceParameters.offset,
+      textLimit: {
+        ...contentSliceParameters.limit,
+        description:
+          "Maximum characters of page text to return. Defaults to a compact 6000; request more only when needed.",
+      },
     },
+    [],
   ),
   tool(BROWSER_TOOL_NAME.getAllTabs, "Get all tabs with optional pagination", {
     ...listSliceParameters,
@@ -365,57 +453,6 @@ export const commonBrowserTools = [
     "Wait for a tab to finish loading",
     {
       tabId: { type: "number", description: "The ID of the tab to wait for" },
-    },
-  ),
-  tool(BROWSER_TOOL_NAME.clickElementByAiID, "Click an element by its AI ID", {
-    id: { type: "string", description: "The ID of the element to click" },
-    tabId: {
-      type: "number",
-      description: "The ID of the tab to click the element in",
-    },
-  }),
-  tool(
-    BROWSER_TOOL_NAME.inputTextByAiID,
-    "Input text into an element by its AI ID",
-    {
-      id: {
-        type: "string",
-        description: "The ID of the element to input text into",
-      },
-      tabId: {
-        type: "number",
-        description: "The ID of the tab to input text into",
-      },
-      text: {
-        type: "string",
-        description: "The text to input into the element",
-      },
-    },
-  ),
-  tool(
-    BROWSER_TOOL_NAME.findAccessableElementsFromTab,
-    "Find accessible elements from a tab with optional pagination",
-    {
-      tabId: {
-        type: "number",
-        description: "The ID of the tab to find accessible elements from",
-      },
-      ...listSliceParameters,
-    },
-  ),
-  tool(
-    BROWSER_TOOL_NAME.getElementPropertiesByAiID,
-    "Get element properties by AI ID",
-    {
-      tabId: {
-        type: "number",
-        description: "The ID of the tab that the elements are in",
-      },
-      ids: {
-        type: "array",
-        items: { type: "string" },
-        description: "The ai-ids of the elements",
-      },
     },
   ),
   tool(

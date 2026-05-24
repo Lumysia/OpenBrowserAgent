@@ -247,30 +247,19 @@ export const jaJP: LocaleMessages = {
         running: "新しいページを開いています",
         done: "新しいページを開きました",
       },
-      findAccessableElementsFromTab: {
-        running: "ページ上のアクセス可能な要素を検索中",
-        done: "要素を検出しました",
-        found: "{count}個のアクセス可能な要素を検出しました",
+      inspectPage: {
+        running: "ページを調査中",
+        done: "ページを調査しました",
+        found: "{count}個の要素を検出しました",
       },
       waitTabLoadFinished: {
         running: "ページ読み込みを待機中",
         done: "ページを読み込みました",
       },
-      inputTextByAiID: {
-        running: "テキストを入力中",
-        done: "テキストを入力しました",
-      },
-      clickElementByAiID: {
-        running: "要素をクリック中",
-        done: "要素をクリックしました",
-      },
+      mutatePage: { running: "ページを更新中", done: "ページを更新しました" },
       cdpMouseActionByAiID: {
         running: "ページ要素を操作中",
         done: "ページ要素を操作しました",
-      },
-      getTabContent: {
-        running: "ページ内容を取得中",
-        done: "ページ内容を取得しました",
       },
       groupTabs: {
         running: "タブをグループ化中",
@@ -297,14 +286,6 @@ export const jaJP: LocaleMessages = {
         running: "Markdownをダウンロード中",
         done: "Markdownをダウンロードしました",
       },
-      insertCSSToTab: {
-        running: "ページスタイルを適用中",
-        done: "ページスタイルを適用しました",
-      },
-      removeCSSToTab: {
-        running: "ページスタイルを削除中",
-        done: "ページスタイルを削除しました",
-      },
       closeTab: { running: "タブを閉じています", done: "タブを閉じました" },
       reloadTab: {
         running: "タブを再読み込み中",
@@ -322,10 +303,6 @@ export const jaJP: LocaleMessages = {
       scrollToBottom: {
         running: "ページをスクロール中",
         done: "ページをスクロールしました",
-      },
-      getElementPropertiesByAiID: {
-        running: "要素を調査中",
-        done: "要素を調査しました",
       },
       listSkills: {
         running: "スキル一覧を取得中",

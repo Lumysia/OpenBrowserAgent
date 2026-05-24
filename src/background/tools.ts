@@ -14,11 +14,11 @@ import {
 import { getBrowserApi } from "../shared/storage";
 import { TOOL_ERROR } from "../shared/tool-errors";
 import { downloadTextFile, findImages, safeFileName } from "./downloads";
-import { findAccessibleElements } from "./accessible-elements";
-import { clickElement } from "./browser-input";
 import { executeCdpTool, isCdpTool } from "./cdp-tools";
+import { inspectPage } from "./dom-inspection";
+import { mutatePage } from "./page-mutation";
 import { allBrowserTools, browserTools } from "./tool-schema";
-import { withContentSlice, withListSlice, withTimeout } from "./tool-utils";
+import { withListSlice, withTimeout } from "./tool-utils";
 
 export { allBrowserTools, browserTools };
 const WAIT_FOR_TEXT_DEFAULT_MS = 5000;
@@ -42,7 +42,7 @@ async function executeBrowserTool(
     case BROWSER_TOOL_NAME.getCurrentTab: {
       const tab = await getActiveBrowserTab();
       if (!tab) return { error: TOOL_ERROR.noActiveWebTabFound };
-      return tab.url?.startsWith("http")
+      return isScriptableUrl(tab.url)
         ? { tabId: tab.id, title: tab.title, url: tab.url }
         : { error: TOOL_ERROR.activeTabNotWebPage };
     }
@@ -105,19 +105,8 @@ async function executeBrowserTool(
         await api.windows.update(tab.windowId, { focused: true });
       return { success: true };
     }
-    case BROWSER_TOOL_NAME.insertCSSToTab: {
-      await api.scripting.insertCSS({
-        target: { tabId: await resolveTabId(args.tabId) },
-        css: String(args.css || ""),
-      });
-      return { success: true };
-    }
-    case BROWSER_TOOL_NAME.removeCSSToTab: {
-      await api.scripting.removeCSS({
-        target: { tabId: await resolveTabId(args.tabId) },
-        css: String(args.css || ""),
-      });
-      return { success: true };
+    case BROWSER_TOOL_NAME.mutatePage: {
+      return mutatePage({ ...args, tabId: await resolveTabId(args.tabId) });
     }
     case BROWSER_TOOL_NAME.openSearchTab: {
       const query = String(args.query || "");
@@ -133,59 +122,15 @@ async function executeBrowserTool(
       await waitTabComplete(tabId);
       return { success: true, tabId };
     }
-    case BROWSER_TOOL_NAME.getTabContent: {
-      const tabIds = Array.isArray(args.tabIds)
-        ? args.tabIds
-            .map(Number)
-            .filter((tabId) => Number.isFinite(tabId) && tabId > 0)
-        : [await resolveTabId(args.tabId)];
-      const contents = [];
-      for (const tabId of tabIds) {
-        const tab = await api.tabs.get(tabId);
-        const markdown = isScriptableUrl(tab.url)
-          ? await extractMarkdown(tabId)
-          : "";
-        contents.push(
-          withContentSlice(
-            {
-              tabId,
-              title: tab.title || "",
-              url: tab.url || "",
-            },
-            markdown,
-            args,
-            "markdown",
-          ),
-        );
-      }
-      return { contents };
-    }
-    case BROWSER_TOOL_NAME.findAccessableElementsFromTab: {
-      return withListSlice(
-        {},
-        await findAccessibleElements(await resolveTabId(args.tabId)),
-        args,
-        "elements",
-      );
-    }
-    case BROWSER_TOOL_NAME.getElementPropertiesByAiID: {
-      const ids = Array.isArray(args.ids)
-        ? args.ids.map(String)
-        : [String(args.id || "")].filter(Boolean);
-      return getElementProperties(await resolveTabId(args.tabId), ids);
-    }
-    case BROWSER_TOOL_NAME.clickElementByAiID: {
-      return clickElement(
-        await resolveTabId(args.tabId),
-        String(args.id || ""),
-      );
-    }
-    case BROWSER_TOOL_NAME.inputTextByAiID: {
-      return inputElement(
-        await resolveTabId(args.tabId),
-        String(args.id || ""),
-        String(args.text || ""),
-      );
+    case BROWSER_TOOL_NAME.inspectPage: {
+      return inspectPage({
+        ...args,
+        tabId:
+          args.tabId ??
+          (Array.isArray(args.tabIds)
+            ? undefined
+            : await resolveTabId(args.tabId)),
+      });
     }
     case BROWSER_TOOL_NAME.groupTabs: {
       const tabIds = Array.isArray(args.tabIds)
@@ -417,111 +362,6 @@ async function extractMarkdown(tabId: number) {
       `# ${document.title}\n\nURL: ${location.href}\n\n${document.body?.innerText || ""}`,
   });
   return String(result.result || "");
-}
-
-async function getElementProperties(tabId: number, ids: string[]) {
-  const [result] = await getBrowserApi().scripting.executeScript({
-    target: { tabId },
-    args: [ids],
-    func: (aiIds) => {
-      return aiIds.map((aiId) => {
-        const element = document.querySelector(`[data-ai-id="${aiId}"]`) as
-          | HTMLAnchorElement
-          | HTMLImageElement
-          | HTMLInputElement
-          | HTMLTextAreaElement
-          | null;
-        if (!element) return null;
-        const properties: Record<string, unknown> = {
-          aiId: element.getAttribute("data-ai-id"),
-        };
-        if (element.tagName.toLowerCase() === "img")
-          properties.src = (element as HTMLImageElement).src;
-        else if (element.tagName.toLowerCase() === "a")
-          properties.href = (element as HTMLAnchorElement).href;
-        else if (
-          element.tagName.toLowerCase() === "input" ||
-          element.tagName.toLowerCase() === "textarea"
-        )
-          properties.value = (
-            element as HTMLInputElement | HTMLTextAreaElement
-          ).value;
-        return properties;
-      });
-    },
-  });
-  return result.result ?? [];
-}
-
-async function inputElement(tabId: number, id: string, text: string) {
-  const [result] = await getBrowserApi().scripting.executeScript({
-    target: { tabId },
-    args: [id, text, TOOL_ERROR.elementNotTextInput],
-    func: (aiId, value, elementNotTextInput) => {
-      const element = document.querySelector(
-        `[data-ai-id="${CSS.escape(aiId)}"]`,
-      ) as HTMLInputElement | HTMLTextAreaElement | HTMLElement | null;
-      if (!element) return { success: false };
-      if (element.tagName === "INPUT" || element.tagName === "TEXTAREA") {
-        (element as HTMLInputElement | HTMLTextAreaElement).value = value;
-        element.dispatchEvent(new Event("input", { bubbles: true }));
-        return { success: true };
-      }
-      if (element.hasAttribute("contenteditable")) {
-        element.focus();
-        const selection = window.getSelection();
-        const range = document.createRange();
-        range.selectNodeContents(element);
-        selection?.removeAllRanges();
-        selection?.addRange(range);
-        document.execCommand("delete", false);
-        if (!document.execCommand("insertText", false, value)) {
-          element.textContent = value;
-          const endRange = document.createRange();
-          endRange.selectNodeContents(element);
-          endRange.collapse(false);
-          selection?.removeAllRanges();
-          selection?.addRange(endRange);
-        }
-        for (const eventName of [
-          "input",
-          "change",
-          "keydown",
-          "keyup",
-          "keypress",
-          "textInput",
-          "compositionend",
-          "blur",
-        ]) {
-          let event: Event;
-          if (eventName.startsWith("key"))
-            event = new KeyboardEvent(eventName, {
-              bubbles: true,
-              cancelable: true,
-              key: "Unidentified",
-              code: "Unidentified",
-            });
-          else if (eventName === "textInput")
-            event = new CompositionEvent(eventName, {
-              bubbles: true,
-              data: value,
-            });
-          else event = new Event(eventName, { bubbles: true });
-          element.dispatchEvent(event);
-        }
-        const inputEvent = new Event("input", { bubbles: true });
-        Object.defineProperty(inputEvent, "target", { value: element });
-        Object.defineProperty(inputEvent, "currentTarget", { value: element });
-        element.dispatchEvent(inputEvent);
-        return { success: true };
-      }
-      return {
-        success: false,
-        error: elementNotTextInput,
-      };
-    },
-  });
-  return { ...(result.result || { success: false }), tabId };
 }
 
 async function scrollToBottom(tabId: number) {

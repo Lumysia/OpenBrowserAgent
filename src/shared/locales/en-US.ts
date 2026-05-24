@@ -244,27 +244,19 @@ export const enUS = {
         running: "Opening new page",
         done: "Opened new page",
       },
-      findAccessableElementsFromTab: {
-        running: "Finding accessible elements on the page",
-        done: "Found elements",
-        found: "Found {count} accessible elements",
+      inspectPage: {
+        running: "Inspecting page",
+        done: "Inspected page",
+        found: "Found {count} elements",
       },
       waitTabLoadFinished: {
         running: "Waiting for page load",
         done: "Page loaded",
       },
-      inputTextByAiID: { running: "Inputting text", done: "Input text" },
-      clickElementByAiID: {
-        running: "Clicking element",
-        done: "Clicked element",
-      },
+      mutatePage: { running: "Updating page", done: "Updated page" },
       cdpMouseActionByAiID: {
         running: "Interacting with page element",
         done: "Interacted with page element",
-      },
-      getTabContent: {
-        running: "Getting page content",
-        done: "Retrieved page content",
       },
       groupTabs: { running: "Grouping tabs", done: "Grouped tabs" },
       wait: { running: "Waiting", done: "Waited" },
@@ -288,14 +280,6 @@ export const enUS = {
         running: "Downloading markdown",
         done: "Downloaded markdown",
       },
-      insertCSSToTab: {
-        running: "Applying page style",
-        done: "Applied page style",
-      },
-      removeCSSToTab: {
-        running: "Removing page style",
-        done: "Removed page style",
-      },
       closeTab: { running: "Closing tab", done: "Closed tab" },
       reloadTab: { running: "Reloading tab", done: "Reloaded tab" },
       navigateTab: { running: "Navigating tab", done: "Navigated tab" },
@@ -305,10 +289,6 @@ export const enUS = {
       },
       waitForText: { running: "Waiting for text", done: "Found text" },
       scrollToBottom: { running: "Scrolling page", done: "Scrolled page" },
-      getElementPropertiesByAiID: {
-        running: "Inspecting element",
-        done: "Inspected element",
-      },
       listSkills: {
         running: "Listing Skills",
         done: "Listed Skills",

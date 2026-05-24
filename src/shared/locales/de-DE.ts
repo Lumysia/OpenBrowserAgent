@@ -249,30 +249,19 @@ export const deDE: LocaleMessages = {
         running: "Neue Seite wird geöffnet",
         done: "Neue Seite geöffnet",
       },
-      findAccessableElementsFromTab: {
-        running: "Zugängliche Elemente werden gesucht",
-        done: "Elemente gefunden",
-        found: "{count} zugängliche Elemente gefunden",
+      inspectPage: {
+        running: "Seite wird geprüft",
+        done: "Seite geprüft",
+        found: "{count} Elemente gefunden",
       },
       waitTabLoadFinished: {
         running: "Warten auf Seitenladen",
         done: "Seite geladen",
       },
-      inputTextByAiID: {
-        running: "Text wird eingegeben",
-        done: "Text eingegeben",
-      },
-      clickElementByAiID: {
-        running: "Element wird angeklickt",
-        done: "Element angeklickt",
-      },
+      mutatePage: { running: "Seite wird geändert", done: "Seite geändert" },
       cdpMouseActionByAiID: {
         running: "Seitenelement wird bedient",
         done: "Seitenelement bedient",
-      },
-      getTabContent: {
-        running: "Seiteninhalt wird abgerufen",
-        done: "Seiteninhalt abgerufen",
       },
       groupTabs: { running: "Tabs werden gruppiert", done: "Tabs gruppiert" },
       wait: { running: "Warten", done: "Gewartet" },
@@ -296,14 +285,6 @@ export const deDE: LocaleMessages = {
         running: "Markdown wird heruntergeladen",
         done: "Markdown heruntergeladen",
       },
-      insertCSSToTab: {
-        running: "Seitenstil wird angewendet",
-        done: "Seitenstil angewendet",
-      },
-      removeCSSToTab: {
-        running: "Seitenstil wird entfernt",
-        done: "Seitenstil entfernt",
-      },
       closeTab: { running: "Tab wird geschlossen", done: "Tab geschlossen" },
       reloadTab: { running: "Tab wird neu geladen", done: "Tab neu geladen" },
       navigateTab: { running: "Tab wird navigiert", done: "Tab navigiert" },
@@ -315,10 +296,6 @@ export const deDE: LocaleMessages = {
       scrollToBottom: {
         running: "Seite wird gescrollt",
         done: "Seite gescrollt",
-      },
-      getElementPropertiesByAiID: {
-        running: "Element wird geprüft",
-        done: "Element geprüft",
       },
       listSkills: {
         running: "Fähigkeiten werden aufgelistet",

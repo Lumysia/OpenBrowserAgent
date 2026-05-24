@@ -58,11 +58,8 @@ export function extractSourcesFromTool(
 ): ChatSource[] {
   const now = Date.now();
 
-  if (
-    name === BROWSER_TOOL_NAME.getTabContent &&
-    Array.isArray(output.contents)
-  ) {
-    return output.contents.flatMap((item) => {
+  if (name === BROWSER_TOOL_NAME.inspectPage && Array.isArray(output.pages)) {
+    return output.pages.flatMap((item) => {
       const tab = recordValue(item);
       return sourceFromPage(tab, now, stringValue(tab.markdown));
     });

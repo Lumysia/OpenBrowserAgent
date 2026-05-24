@@ -250,25 +250,20 @@ export const ptBR: LocaleMessages = {
         running: "Abrindo nova página",
         done: "Nova página aberta",
       },
-      findAccessableElementsFromTab: {
-        running: "Buscando elementos acessíveis",
-        done: "Elementos encontrados",
-        found: "Encontrados {count} elementos acessíveis",
+      inspectPage: {
+        running: "Inspecionando página",
+        done: "Página inspecionada",
+        found: "Encontrados {count} elementos",
       },
       waitTabLoadFinished: {
         running: "Aguardando carregamento",
         done: "Página carregada",
       },
-      inputTextByAiID: { running: "Inserindo texto", done: "Texto inserido" },
-      clickElementByAiID: {
-        running: "Clicando no elemento",
-        done: "Elemento clicado",
-      },
+      mutatePage: { running: "Atualizando página", done: "Página atualizada" },
       cdpMouseActionByAiID: {
         running: "Interagindo com o elemento da página",
         done: "Elemento da página manipulado",
       },
-      getTabContent: { running: "Obtendo conteúdo", done: "Conteúdo obtido" },
       groupTabs: { running: "Agrupando abas", done: "Abas agrupadas" },
       wait: { running: "Aguardando", done: "Aguardou" },
       getCurrentTime: {
@@ -294,18 +289,12 @@ export const ptBR: LocaleMessages = {
         running: "Baixando Markdown",
         done: "Markdown baixado",
       },
-      insertCSSToTab: { running: "Aplicando estilo", done: "Estilo aplicado" },
-      removeCSSToTab: { running: "Removendo estilo", done: "Estilo removido" },
       closeTab: { running: "Fechando aba", done: "Aba fechada" },
       reloadTab: { running: "Recarregando aba", done: "Aba recarregada" },
       navigateTab: { running: "Navegando na aba", done: "Aba navegada" },
       captureVisibleTab: { running: "Capturando aba", done: "Aba capturada" },
       waitForText: { running: "Aguardando texto", done: "Texto encontrado" },
       scrollToBottom: { running: "Rolando página", done: "Página rolada" },
-      getElementPropertiesByAiID: {
-        running: "Inspecionando elemento",
-        done: "Elemento inspecionado",
-      },
       listSkills: {
         running: "Listando habilidades",
         done: "Habilidades listadas",

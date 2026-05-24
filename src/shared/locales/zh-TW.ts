@@ -228,19 +228,17 @@ export const zhTW: LocaleMessages = {
     tool: {
       question: { running: "正在提問", done: "已回答問題" },
       openNewTabWithURL: { running: "正在開啟新頁面", done: "已開啟新頁面" },
-      findAccessableElementsFromTab: {
-        running: "正在查找頁面上的可存取元素",
-        done: "已查找頁面上的可存取元素",
-        found: "找到 {count} 個可存取元素",
+      inspectPage: {
+        running: "正在檢查頁面",
+        done: "已檢查頁面",
+        found: "找到 {count} 個元素",
       },
       waitTabLoadFinished: { running: "等待頁面載入", done: "頁面已載入" },
-      inputTextByAiID: { running: "正在輸入文字", done: "已輸入文字" },
-      clickElementByAiID: { running: "正在點擊元素", done: "已點擊元素" },
+      mutatePage: { running: "正在修改頁面", done: "已修改頁面" },
       cdpMouseActionByAiID: {
         running: "操作頁面元素",
         done: "已操作頁面元素",
       },
-      getTabContent: { running: "正在取得網頁內容", done: "已取得網頁內容" },
       groupTabs: { running: "正在整理分頁", done: "已整理分頁" },
       wait: { running: "等待", done: "已等待" },
       getCurrentTime: { running: "查看時間", done: "已查看時間" },
@@ -260,18 +258,12 @@ export const zhTW: LocaleMessages = {
         running: "正在下載 Markdown",
         done: "已下載 Markdown",
       },
-      insertCSSToTab: { running: "正在套用頁面樣式", done: "已套用頁面樣式" },
-      removeCSSToTab: { running: "正在移除頁面樣式", done: "已移除頁面樣式" },
       closeTab: { running: "正在關閉分頁", done: "已關閉分頁" },
       reloadTab: { running: "正在重新整理分頁", done: "已重新整理分頁" },
       navigateTab: { running: "正在導覽分頁", done: "已導覽分頁" },
       captureVisibleTab: { running: "正在截取分頁", done: "已截取分頁" },
       waitForText: { running: "等待頁面文字", done: "已找到頁面文字" },
       scrollToBottom: { running: "正在捲動頁面", done: "已捲動頁面" },
-      getElementPropertiesByAiID: {
-        running: "正在檢查元素",
-        done: "已檢查元素",
-      },
       listSkills: {
         running: "讀取技能清單",
         done: "已讀取技能清單",

@@ -113,8 +113,8 @@ export function toolDisplay(
         shortValue(stringValue(output.title), TOOL_DETAIL_TITLE_MAX_LENGTH),
         shortUrl(output.url),
       ]);
-    if (name === BROWSER_TOOL_NAME.getTabContent)
-      return tabContentDetail(input, output);
+    if (name === BROWSER_TOOL_NAME.inspectPage)
+      return pageInspectionDetail(input, output, toolFound);
     if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
       return compactJoin([
         stringValue(output.name) || stringValue(input.attachmentId),
@@ -210,14 +210,6 @@ export function toolDisplay(
           (output.server as Record<string, unknown> | undefined)?.url,
         ) || stringValue(input.url),
       ]);
-    if (
-      name === BROWSER_TOOL_NAME.findAccessableElementsFromTab &&
-      Array.isArray(output.elements)
-    )
-      return compactJoin([
-        idLabel("Tab", input.tabId),
-        formatToolMessage(toolFound, { count: output.elements.length }),
-      ]);
     if (name === BROWSER_TOOL_NAME.getAllTabs && Array.isArray(output.tabs))
       return formatToolMessage(toolFound, { count: output.tabs.length });
     if (name === BROWSER_TOOL_NAME.getAllTabs && Array.isArray(outputValue))
@@ -242,14 +234,11 @@ export function toolDisplay(
         stringValue(output.text),
         idLabel("Tab", output.tabId || input.tabId),
       ]);
-    if (
-      name === BROWSER_TOOL_NAME.inputTextByAiID &&
-      typeof input.text === "string"
-    )
+    if (name === BROWSER_TOOL_NAME.mutatePage)
       return compactJoin([
-        idLabel("Tab", input.tabId),
-        stringValue(input.id),
-        input.text,
+        stringValue(input.operation || output.operation),
+        idLabel("Tab", output.tabId || input.tabId),
+        stringValue(input.value || input.text || input.attribute),
       ]);
     if (typeof output.filename === "string") return output.filename;
     if (name === BROWSER_TOOL_NAME.generateImage)
@@ -308,38 +297,36 @@ function fallbackToolDetail(
     return idLabel("Tab", input.tabId);
   if (name === BROWSER_TOOL_NAME.downloadTabToMarkdown)
     return idLabel("Tab", input.tabId);
-  if (name === BROWSER_TOOL_NAME.insertCSSToTab)
-    return idLabel("Tab", input.tabId);
-  if (name === BROWSER_TOOL_NAME.removeCSSToTab)
-    return idLabel("Tab", input.tabId);
-  if (name === BROWSER_TOOL_NAME.clickElementByAiID)
-    return compactJoin([idLabel("Tab", input.tabId), stringValue(input.id)]);
-  if (name === BROWSER_TOOL_NAME.getElementPropertiesByAiID)
-    return compactJoin([
-      idLabel("Tab", input.tabId),
-      arrayLabel("Elements", input.ids || input.id),
-    ]);
   if (name === BROWSER_TOOL_NAME.groupTabs)
     return arrayLabel("Tabs", input.tabIds);
   if (name.startsWith("cdp")) return cdpToolDetail(name, input, output);
   return "";
 }
 
-function tabContentDetail(
+function pageInspectionDetail(
   input: Record<string, unknown>,
   output: Record<string, unknown>,
+  toolFound: string | undefined,
 ) {
-  const contents = Array.isArray(output.contents) ? output.contents : [];
-  const first = contents[0] as Record<string, unknown> | undefined;
+  const pages = Array.isArray(output.pages) ? output.pages : [];
+  const first = pages[0] as Record<string, unknown> | undefined;
   if (!first) return arrayLabel("Tabs", input.tabIds || input.tabId);
+  const counts = [
+    Array.isArray(first.elements)
+      ? formatToolMessage(toolFound, { count: first.elements.length })
+      : "",
+    Array.isArray(first.images) ? `${first.images.length} images` : "",
+    Array.isArray(first.links) ? `${first.links.length} links` : "",
+  ];
   return compactJoin([
     idLabel("Tab", first.tabId || input.tabId),
     shortValue(
       stringValue(first.title) || stringValue(first.url),
       TOOL_DETAIL_TITLE_MAX_LENGTH,
     ),
-    contents.length > 1 ? `${contents.length} tabs` : "",
+    pages.length > 1 ? `${pages.length} tabs` : "",
     rangeLabel(first) || contentLengthLabel(first.markdown),
+    compactJoin(counts),
   ]);
 }
 

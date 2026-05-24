@@ -68,11 +68,13 @@ export function ToolPart({
     (!runEnded &&
       (subAgentRunning ||
         localExecutionBridgeRunning ||
+        part.state === CHAT_PART_STATE.streaming ||
         part.state === CHAT_PART_STATE.inputStreaming ||
         part.state === CHAT_PART_STATE.inputAvailable));
   const isError = part.state === CHAT_PART_STATE.outputError;
   const isDone =
     part.state === CHAT_PART_STATE.outputAvailable ||
+    part.state === CHAT_PART_STATE.done ||
     (runEnded && part.state === CHAT_PART_STATE.inputAvailable);
   const status = loading
     ? "loading"

@@ -28,11 +28,8 @@ export function toolReferences(
       });
     return references;
   }
-  if (
-    name === BROWSER_TOOL_NAME.getTabContent &&
-    Array.isArray(output.contents)
-  ) {
-    return output.contents
+  if (name === BROWSER_TOOL_NAME.inspectPage && Array.isArray(output.pages)) {
+    return output.pages
       .map((item) => item as { title?: string; url?: string })
       .filter((item) => item.title)
       .map((item) => ({

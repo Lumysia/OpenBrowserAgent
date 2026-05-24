@@ -249,27 +249,19 @@ export const frFR: LocaleMessages = {
         running: "Ouverture d'une nouvelle page",
         done: "Nouvelle page ouverte",
       },
-      findAccessableElementsFromTab: {
-        running: "Recherche des éléments accessibles",
-        done: "Éléments trouvés",
-        found: "{count} éléments accessibles trouvés",
+      inspectPage: {
+        running: "Inspection de la page",
+        done: "Page inspectée",
+        found: "{count} éléments trouvés",
       },
       waitTabLoadFinished: {
         running: "Attente du chargement",
         done: "Page chargée",
       },
-      inputTextByAiID: { running: "Saisie du texte", done: "Texte saisi" },
-      clickElementByAiID: {
-        running: "Clic sur l'élément",
-        done: "Élément cliqué",
-      },
+      mutatePage: { running: "Modification de la page", done: "Page modifiée" },
       cdpMouseActionByAiID: {
         running: "Interaction avec l'élément de page",
         done: "Élément de page manipulé",
-      },
-      getTabContent: {
-        running: "Récupération du contenu",
-        done: "Contenu récupéré",
       },
       groupTabs: {
         running: "Regroupement des onglets",
@@ -302,14 +294,6 @@ export const frFR: LocaleMessages = {
         running: "Téléchargement du Markdown",
         done: "Markdown téléchargé",
       },
-      insertCSSToTab: {
-        running: "Application du style",
-        done: "Style appliqué",
-      },
-      removeCSSToTab: {
-        running: "Suppression du style",
-        done: "Style supprimé",
-      },
       closeTab: { running: "Fermeture de l'onglet", done: "Onglet fermé" },
       reloadTab: {
         running: "Rechargement de l'onglet",
@@ -327,10 +311,6 @@ export const frFR: LocaleMessages = {
       scrollToBottom: {
         running: "Défilement de la page",
         done: "Page défilée",
-      },
-      getElementPropertiesByAiID: {
-        running: "Inspection de l'élément",
-        done: "Élément inspecté",
       },
       listSkills: {
         running: "Liste des compétences",

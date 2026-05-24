@@ -251,30 +251,22 @@ export const esES: LocaleMessages = {
         running: "Abriendo nueva página",
         done: "Nueva página abierta",
       },
-      findAccessableElementsFromTab: {
-        running: "Buscando elementos accesibles",
-        done: "Elementos encontrados",
-        found: "Se encontraron {count} elementos accesibles",
+      inspectPage: {
+        running: "Inspeccionando página",
+        done: "Página inspeccionada",
+        found: "Se encontraron {count} elementos",
       },
       waitTabLoadFinished: {
         running: "Esperando carga de página",
         done: "Página cargada",
       },
-      inputTextByAiID: {
-        running: "Introduciendo texto",
-        done: "Texto introducido",
-      },
-      clickElementByAiID: {
-        running: "Haciendo clic en elemento",
-        done: "Elemento pulsado",
+      mutatePage: {
+        running: "Actualizando página",
+        done: "Página actualizada",
       },
       cdpMouseActionByAiID: {
         running: "Interactuando con el elemento de la página",
         done: "Elemento de la página manipulado",
-      },
-      getTabContent: {
-        running: "Obteniendo contenido",
-        done: "Contenido obtenido",
       },
       groupTabs: { running: "Agrupando pestañas", done: "Pestañas agrupadas" },
       wait: { running: "Esperando", done: "Espera terminada" },
@@ -304,11 +296,6 @@ export const esES: LocaleMessages = {
         running: "Descargando Markdown",
         done: "Markdown descargado",
       },
-      insertCSSToTab: { running: "Aplicando estilo", done: "Estilo aplicado" },
-      removeCSSToTab: {
-        running: "Eliminando estilo",
-        done: "Estilo eliminado",
-      },
       closeTab: { running: "Cerrando pestaña", done: "Pestaña cerrada" },
       reloadTab: { running: "Recargando pestaña", done: "Pestaña recargada" },
       navigateTab: { running: "Navegando pestaña", done: "Pestaña navegada" },
@@ -320,10 +307,6 @@ export const esES: LocaleMessages = {
       scrollToBottom: {
         running: "Desplazando página",
         done: "Página desplazada",
-      },
-      getElementPropertiesByAiID: {
-        running: "Inspeccionando elemento",
-        done: "Elemento inspeccionado",
       },
       listSkills: {
         running: "Listando habilidades",
