@@ -18,6 +18,11 @@ import {
   createOpenAIRequestMessages,
   hasImageAttachments,
 } from "./attachment-messages";
+import {
+  buildCompactionPrompt,
+  COMPACTION_SYSTEM_PROMPT,
+  renderCompactionContext,
+} from "./compaction-prompt";
 import { applyOpenAIContextBudget } from "./context-budget";
 import { parseToolArgs, post, postTextStream } from "./message-helpers";
 import { readOpenAIStream } from "./openai-stream";
@@ -41,6 +46,7 @@ export async function requestOpenAIChatCompletions(
     apiKey: string;
     baseUrl: string;
     modelName: string;
+    contextLength?: number;
   },
   system: string,
   messages: ChatMessage[],
@@ -84,13 +90,37 @@ export async function requestOpenAIChatCompletions(
   let responseSources = getMessageSources(messages);
   let responseUsage: TokenUsage | undefined;
   const postMetric = (message: AiStreamResponse) => post(port, message);
+  let compactionSummary: string | undefined;
+  let compactionAttempted = false;
 
   async function fetchChatCompletion(body: Record<string, unknown>) {
     const reasoningParams = reasoningRequestParams(
       model.provider,
       preferences.reasoningEffort,
     );
-    const budgeted = applyOpenAIContextBudget(requestMessages, preferences);
+    let budgeted = applyOpenAIContextBudget(
+      requestMessages,
+      preferences,
+      compactionSummary,
+      model.contextLength,
+    );
+    if (budgeted.report.prunedMessages && !compactionAttempted) {
+      compactionAttempted = true;
+      compactionSummary = await createOpenAICompactionSummary({
+        chatUrl,
+        apiKey: model.apiKey,
+        modelName: model.modelName,
+        signal,
+        messages: requestMessages,
+      });
+      if (compactionSummary)
+        budgeted = applyOpenAIContextBudget(
+          requestMessages,
+          preferences,
+          compactionSummary,
+          model.contextLength,
+        );
+    }
     postContextBudget(postMetric, budgeted.report);
     const response = await fetch(chatUrl, {
       method: "POST",
@@ -126,6 +156,8 @@ export async function requestOpenAIChatCompletions(
     const retryBudgeted = applyOpenAIContextBudget(
       requestMessages,
       preferences,
+      compactionSummary,
+      model.contextLength,
     );
     postContextBudget(postMetric, retryBudgeted.report);
     return fetch(chatUrl, {
@@ -250,4 +282,42 @@ export async function requestOpenAIChatCompletions(
     outputMode: "streaming",
     usage: addTokenUsage(responseUsage, fallbackResult.usage),
   };
+}
+
+async function createOpenAICompactionSummary(input: {
+  chatUrl: string;
+  apiKey?: string;
+  modelName: string;
+  signal: AbortSignal;
+  messages: Array<Record<string, unknown>>;
+}) {
+  const context = renderCompactionContext(input.messages, 220_000);
+  if (!context.length) return undefined;
+  try {
+    const response = await fetch(input.chatUrl, {
+      method: "POST",
+      signal: input.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...(input.apiKey ? { Authorization: `Bearer ${input.apiKey}` } : {}),
+      },
+      body: JSON.stringify({
+        model: input.modelName,
+        temperature: 0.1,
+        stream: false,
+        messages: [
+          { role: "system", content: COMPACTION_SYSTEM_PROMPT },
+          { role: "user", content: buildCompactionPrompt({ context }) },
+        ],
+      }),
+    });
+    if (!response.ok) return undefined;
+    const data = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const summary = data.choices?.[0]?.message?.content?.trim();
+    return summary || undefined;
+  } catch {
+    return undefined;
+  }
 }

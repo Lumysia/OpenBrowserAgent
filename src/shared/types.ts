@@ -19,6 +19,7 @@ export type ModelConfig = {
   id: string;
   name: string;
   displayName?: string;
+  contextLength?: number;
 };
 
 export type ProviderConfig = {

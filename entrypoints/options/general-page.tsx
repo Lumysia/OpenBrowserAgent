@@ -13,7 +13,9 @@ import {
   DEFAULT_CONTEXT_REQUEST_MAX_CHARS,
   DEFAULT_CONTEXT_TAIL_MIN_MESSAGES,
   DEFAULT_CONTEXT_TOOL_RESULT_MAX_CHARS,
+  ESTIMATED_CHARS_PER_TOKEN,
   DEFAULT_MAX_TOOL_STEPS,
+  MAX_CONTEXT_BUDGET_TOKENS,
 } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
@@ -221,7 +223,7 @@ export function GeneralPage() {
                     value,
                     DEFAULT_CONTEXT_REQUEST_MAX_CHARS,
                     16000,
-                    500000,
+                    MAX_CONTEXT_BUDGET_TOKENS * ESTIMATED_CHARS_PER_TOKEN,
                   ),
                 }))
               }

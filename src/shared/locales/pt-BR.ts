@@ -243,14 +243,14 @@ export const ptBR: LocaleMessages = {
     copyPrompt: "Copiar instruções",
     tool: {
       loadTools: {
-        running: "Loading tools",
-        done: "Loaded tools",
-        found: "Found {count}",
+        running: "Carregando ferramentas",
+        done: "Ferramentas carregadas",
+        found: "Carregadas {count} ferramentas",
       },
       manageSkills: {
-        running: "Managing skills",
-        done: "Managed skills",
-        found: "Found {count}",
+        running: "Gerenciando habilidades",
+        done: "Habilidades gerenciadas",
+        found: "Encontradas {count} habilidades",
       },
       workspaceFiles: {
         running: "Using workspace files",
@@ -266,8 +266,9 @@ export const ptBR: LocaleMessages = {
         done: "Managed MCP servers",
       },
       manageLocalExecutionBridges: {
-        running: "Managing execution bridges",
-        done: "Managed execution bridges",
+        running: "Gerenciando pontes de execução",
+        done: "Pontes de execução gerenciadas",
+        found: "Encontradas {count} pontes de execução",
       },
       manageTabs: {
         running: "Gerenciando abas",
@@ -557,6 +558,11 @@ export const ptBR: LocaleMessages = {
     testModelSuccess: "O modelo respondeu com sucesso.",
     testModelError: "Falha no teste do modelo",
     configuredModels: "Modelos configurados",
+    modelDisplayName: "Nome exibido",
+    modelContextLength: "Comprimento de contexto",
+    modelContextLengthAuto: "Automático",
+    modelContextLengthDescription:
+      "Tokens disponíveis para este modelo. Deixe em branco para usar o valor informado pelo provedor, se existir.",
     noModelsAddedYet: "Nenhum modelo adicionado ainda.",
     skillsDescription:
       "Use ações rápidas para enviar mensagens instantaneamente para a IA.",

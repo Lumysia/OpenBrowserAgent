@@ -1,3 +1,4 @@
+import { readContextLength } from "../../src/shared/model-context";
 import {
   providerDefaultBaseUrls,
   providerLabels,
@@ -42,6 +43,7 @@ async function loadGeminiModels(
         id: `${providerId}:${name}`,
         name,
         displayName: `${config.label || providerLabels[provider]} / ${model.displayName || name}`,
+        contextLength: readContextLength(model),
       };
     });
 }
@@ -65,15 +67,18 @@ async function loadOpenAICompatibleModels(
   if (!response.ok) throw new Error(await response.text());
   const data = await response.json();
   return (data.data || data.models || [])
-    .map((model: string | { id?: string; name?: string }) =>
-      typeof model === "string" ? model : model.id || model.name,
-    )
-    .filter(Boolean)
-    .map((name: string) => ({
-      id: `${providerId}:${name}`,
-      name,
-      displayName: `${config.label || providerLabels[provider]} / ${name}`,
-    }));
+    .map((model: string | { id?: string; name?: string }) => {
+      const name = typeof model === "string" ? model : model.id || model.name;
+      return name
+        ? {
+            id: `${providerId}:${name}`,
+            name,
+            displayName: `${config.label || providerLabels[provider]} / ${name}`,
+            contextLength: readContextLength(model),
+          }
+        : undefined;
+    })
+    .filter(Boolean) as ModelConfig[];
 }
 
 async function loadAnthropicModels(
@@ -112,5 +117,6 @@ async function loadAnthropicModels(
       id: `${providerId}:${model.id}`,
       name: model.id,
       displayName: `${config.label || providerLabels[provider]} / ${model.label}`,
+      contextLength: readContextLength(model),
     }));
 }

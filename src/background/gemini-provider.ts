@@ -32,7 +32,7 @@ import { createToolResolver } from "./provider-tools";
 import { runProviderTool } from "./provider-tool-runner";
 
 export async function requestGemini(
-  model: { apiKey: string; modelName: string },
+  model: { apiKey: string; modelName: string; contextLength?: number },
   system: string,
   messages: ChatMessage[],
   capabilities: AgentCapabilities,
@@ -58,7 +58,11 @@ export async function requestGemini(
   let usesAttachmentPayload = hasImageAttachments(uploadedAttachments);
 
   async function fetchGemini(body: Record<string, unknown>) {
-    const budgeted = applyGeminiContextBudget(contents, preferences);
+    const budgeted = applyGeminiContextBudget(
+      contents,
+      preferences,
+      model.contextLength,
+    );
     postContextBudget(postMetric, budgeted.report);
     const response = await fetch(url, {
       method: "POST",
@@ -84,7 +88,11 @@ export async function requestGemini(
         signal,
         false,
       );
-    const retryBudgeted = applyGeminiContextBudget(contents, preferences);
+    const retryBudgeted = applyGeminiContextBudget(
+      contents,
+      preferences,
+      model.contextLength,
+    );
     postContextBudget(postMetric, retryBudgeted.report);
     return fetch(url, {
       method: "POST",

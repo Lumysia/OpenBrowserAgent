@@ -21,6 +21,7 @@ export async function requestOpenAICompatible(
     apiKey: string;
     baseUrl: string;
     modelName: string;
+    contextLength?: number;
   },
   system: string,
   messages: ChatMessage[],

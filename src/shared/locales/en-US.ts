@@ -270,7 +270,7 @@ export const enUS = {
       manageSkills: {
         running: "Managing skills",
         done: "Managed skills",
-        found: "Found {count}",
+        found: "Found {count} skills",
       },
       workspaceFiles: {
         running: "Using workspace files",
@@ -288,6 +288,7 @@ export const enUS = {
       manageLocalExecutionBridges: {
         running: "Managing execution bridges",
         done: "Managed execution bridges",
+        found: "Found {count} execution bridges",
       },
       inspectPage: {
         running: "Inspecting page",
@@ -550,6 +551,11 @@ export const enUS = {
     testModelSuccess: "Model responded successfully.",
     testModelError: "Model test failed",
     configuredModels: "Configured models",
+    modelDisplayName: "Display name",
+    modelContextLength: "Context length",
+    modelContextLengthAuto: "Auto",
+    modelContextLengthDescription:
+      "Tokens available to this model. Leave blank to use the provider-reported value, when available.",
     noModelsAddedYet: "No models added yet.",
     skillsDescription:
       "Create reusable browser skills the user or AI can choose for a message.",

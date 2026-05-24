@@ -44,10 +44,12 @@ export function toolDisplay(
   const toolFound = (toolText as { found?: string } | undefined)?.found;
   const title = (() => {
     const base =
-      state === CHAT_PART_STATE.outputAvailable ||
-      (runEnded && state === CHAT_PART_STATE.inputAvailable)
-        ? toolText?.done
-        : toolText?.running;
+      name === BROWSER_TOOL_NAME.question && questionToolAwaitingAnswer(output)
+        ? toolText?.running
+        : state === CHAT_PART_STATE.outputAvailable ||
+            (runEnded && state === CHAT_PART_STATE.inputAvailable)
+          ? toolText?.done
+          : toolText?.running;
     if (name === BROWSER_TOOL_NAME.startSubAgent)
       return subAgentTitle(base, output, toolText, t);
     if (
@@ -84,10 +86,21 @@ export function toolDisplay(
     )
       return subAgentDetail(input, output, t, toolText?.running);
     if (
+      name === BROWSER_TOOL_NAME.manageLocalExecutionBridges &&
+      Array.isArray(output.bridges)
+    )
+      return formatToolMessage(toolFound, {
+        count: (output.bridges as unknown[]).length,
+      });
+    if (name === BROWSER_TOOL_NAME.manageLocalExecutionBridges)
+      return compactJoin([
+        stringValue(input.operation || "list"),
+        stringValue(output.error),
+      ]);
+    if (
       name === BROWSER_TOOL_NAME.startLocalExecutionBridge ||
       name === BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus ||
-      name === BROWSER_TOOL_NAME.cancelLocalExecutionBridge ||
-      name === BROWSER_TOOL_NAME.manageLocalExecutionBridges
+      name === BROWSER_TOOL_NAME.cancelLocalExecutionBridge
     )
       return compactJoin([
         stringValue(
@@ -100,13 +113,6 @@ export function toolDisplay(
         localExecutionBridgeStateLabel(stringValue(output.state), t),
         stringValue(output.error),
       ]);
-    if (
-      name === BROWSER_TOOL_NAME.manageLocalExecutionBridges &&
-      Array.isArray(output.bridges)
-    )
-      return `${(output.bridges as unknown[]).length} execution bridges`;
-    if (name === BROWSER_TOOL_NAME.manageLocalExecutionBridges)
-      return stringValue(input.operation || "list");
     if (name === BROWSER_TOOL_NAME.getCurrentTab)
       return compactJoin([
         idLabel("Tab", output.tabId),
@@ -262,9 +268,13 @@ function questionToolDetail(
   if (Array.isArray(output.answers))
     return `${output.answers.length} answers submitted`;
   const questions = Array.isArray(input.questions) ? input.questions : [];
-  if (state === CHAT_PART_STATE.inputAvailable && !runEnded)
+  if (questionToolAwaitingAnswer(output) && !runEnded)
     return t.sidepanel.questionWaiting;
   return `${questions.length} questions`;
+}
+
+function questionToolAwaitingAnswer(output: Record<string, unknown>) {
+  return !Array.isArray(output.answers) || output.answers.length === 0;
 }
 
 function fallbackToolDetail(

@@ -276,12 +276,12 @@ export const deDE: LocaleMessages = {
       loadTools: {
         running: "Tools werden geladen",
         done: "Tools geladen",
-        found: "Loaded {count} tools",
+        found: "{count} Tools geladen",
       },
       manageSkills: {
         running: "Skills werden verwaltet",
         done: "Skills verwaltet",
-        found: "Found {count}",
+        found: "{count} Skills gefunden",
       },
       workspaceFiles: {
         running: "Workspace-Dateien werden bearbeitet",
@@ -302,6 +302,7 @@ export const deDE: LocaleMessages = {
       manageLocalExecutionBridges: {
         running: "Execution Bridges werden verwaltet",
         done: "Execution Bridges verwaltet",
+        found: "{count} Execution Bridges gefunden",
       },
       inspectPage: {
         running: "Seite wird geprüft",
@@ -568,6 +569,11 @@ export const deDE: LocaleMessages = {
     testModelSuccess: "Modell hat erfolgreich geantwortet.",
     testModelError: "Modelltest fehlgeschlagen",
     configuredModels: "Konfigurierte Modelle",
+    modelDisplayName: "Anzeigename",
+    modelContextLength: "Kontextlänge",
+    modelContextLengthAuto: "Automatisch",
+    modelContextLengthDescription:
+      "Für dieses Modell verfügbare Tokens. Leer lassen, um den vom Anbieter gemeldeten Wert zu verwenden, falls vorhanden.",
     noModelsAddedYet: "Noch keine Modelle hinzugefügt.",
     skillsDescription:
       "Senden Sie mit Fähigkeiten sofort Nachrichten an die KI.",

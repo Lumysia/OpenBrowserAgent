@@ -282,12 +282,12 @@ export const frFR: LocaleMessages = {
       loadTools: {
         running: "Chargement des outils",
         done: "Outils chargés",
-        found: "Loaded {count} tools",
+        found: "{count} outils chargés",
       },
       manageSkills: {
         running: "Gestion des compétences",
         done: "Compétences gérées",
-        found: "Found {count}",
+        found: "{count} compétences trouvées",
       },
       workspaceFiles: {
         running: "Traitement des fichiers workspace",
@@ -305,6 +305,7 @@ export const frFR: LocaleMessages = {
       manageLocalExecutionBridges: {
         running: "Gestion des ponts d'exécution",
         done: "Ponts d'exécution gérés",
+        found: "{count} ponts d'exécution trouvés",
       },
       inspectPage: {
         running: "Inspection de la page",
@@ -571,6 +572,11 @@ export const frFR: LocaleMessages = {
     testModelSuccess: "Le modèle a répondu correctement.",
     testModelError: "Échec du test du modèle",
     configuredModels: "Modèles configurés",
+    modelDisplayName: "Nom affiché",
+    modelContextLength: "Longueur de contexte",
+    modelContextLengthAuto: "Automatique",
+    modelContextLengthDescription:
+      "Tokens disponibles pour ce modèle. Laissez vide pour utiliser la valeur signalée par le fournisseur, si disponible.",
     noModelsAddedYet: "Aucun modèle ajouté.",
     skillsDescription:
       "Utilisez les compétences pour envoyer instantanément des messages à l'IA.",

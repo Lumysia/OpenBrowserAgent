@@ -19,6 +19,7 @@ export async function resolveModel(modelId?: string) {
         apiKey: config.apiKey || "",
         baseUrl: config.baseUrl || providerDefaultBaseUrls[provider] || "",
         modelName: model.name || model.id,
+        contextLength: model.contextLength,
       };
     }
   }
@@ -33,6 +34,7 @@ export async function resolveModel(modelId?: string) {
       baseUrl:
         fallbackProvider[1].baseUrl || providerDefaultBaseUrls[provider] || "",
       modelName: fallbackModel.name || fallbackModel.id,
+      contextLength: fallbackModel.contextLength,
     };
   }
 
@@ -60,6 +62,7 @@ export async function resolveImageModel(modelId?: string) {
         apiKey: config.apiKey || "",
         baseUrl: config.baseUrl || providerDefaultBaseUrls[provider] || "",
         modelName: model.name || model.id,
+        contextLength: model.contextLength,
       };
     }
   }

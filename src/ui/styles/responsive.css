@@ -78,28 +78,13 @@
     color-mix(in srgb, var(--card) 88%, var(--accent-softer));
   color: var(--muted-foreground);
   box-shadow: 0 8px 20px color-mix(in srgb, var(--shadow) 72%, transparent);
-  overflow: hidden;
   transform-origin: left center;
-  animation: typing-indicator-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation:
+    typing-indicator-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1) both,
+    typing-indicator-pulse 2.8s ease-in-out infinite;
 }
 .typing-indicator.is-removing {
   animation: typing-indicator-leave 0.18s ease both;
-}
-.typing-indicator::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    110deg,
-    transparent 0%,
-    transparent 36%,
-    color-mix(in srgb, white 30%, transparent) 50%,
-    transparent 64%,
-    transparent 100%
-  );
-  transform: translateX(-120%);
-  animation: typing-sheen 4.2s ease-in-out infinite;
-  pointer-events: none;
 }
 .typing-indicator-icon {
   position: relative;
@@ -134,30 +119,20 @@
   white-space: nowrap;
   opacity: 0;
   transform: translateY(100%);
-  background: linear-gradient(
-    90deg,
-    var(--muted-foreground),
-    color-mix(in srgb, var(--accent-strong) 68%, var(--muted-foreground)) 48%,
-    color-mix(in srgb, var(--foreground) 76%, var(--accent-strong)) 56%,
-    var(--muted-foreground)
-  );
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation:
-    typing-phrase-cycle 2s ease-in-out both,
-    typing-text-sheen 4.4s ease-in-out infinite;
+  color: color-mix(in srgb, var(--accent-strong) 52%, var(--muted-foreground));
+  animation: typing-phrase-cycle 2s ease-in-out both;
 }
 
-@keyframes typing-sheen {
+@keyframes typing-indicator-pulse {
   0%,
-  34% {
-    transform: translateX(-120%);
-  }
-  68%,
   100% {
-    transform: translateX(120%);
+    border-color: color-mix(in srgb, var(--accent-soft) 44%, var(--border));
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--shadow) 72%, transparent);
+  }
+  50% {
+    border-color: color-mix(in srgb, var(--accent-strong) 18%, var(--border));
+    box-shadow: 0 9px 22px
+      color-mix(in srgb, var(--accent-shadow) 20%, var(--shadow));
   }
 }
 @keyframes typing-indicator-enter {
@@ -203,12 +178,6 @@
     transform: translateY(-60%);
   }
 }
-@keyframes typing-text-sheen {
-  to {
-    background-position: -220% 0;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

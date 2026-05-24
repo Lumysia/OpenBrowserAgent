@@ -92,7 +92,9 @@ export function ToolPart({
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="ghost" className="tool-title tool-title-button">
-            <span className="tool-icon">{toolIcon(name)}</span>
+            <span className="tool-icon">
+              {toolIcon(name, (part.input || {}) as Record<string, unknown>)}
+            </span>
             <strong className="tool-title-text">
               {loading ? <span className="shiny-text">{title}</span> : title}
             </strong>
@@ -318,9 +320,10 @@ function isQuestionAnswered(
 }
 
 function isQuestionPending(part: ChatPart) {
+  if (questionToolSubmittedAnswers(part.output).length) return false;
   return (
-    part.state === CHAT_PART_STATE.inputAvailable &&
-    !questionToolSubmittedAnswers(part.output).length
+    part.state === CHAT_PART_STATE.inputAvailable ||
+    part.state === CHAT_PART_STATE.outputAvailable
   );
 }
 

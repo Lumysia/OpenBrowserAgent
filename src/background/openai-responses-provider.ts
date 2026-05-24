@@ -41,6 +41,7 @@ export async function requestOpenAIResponses(
     apiKey: string;
     baseUrl: string;
     modelName: string;
+    contextLength?: number;
   },
   system: string,
   messages: ChatMessage[],
@@ -85,7 +86,12 @@ export async function requestOpenAIResponses(
   const postMetric = (message: AiStreamResponse) => post(port, message);
 
   async function fetchResponse(body: Record<string, unknown>) {
-    const budgeted = applyOpenAIResponsesContextBudget(input, preferences);
+    const budgeted = applyOpenAIResponsesContextBudget(
+      input,
+      preferences,
+      undefined,
+      model.contextLength,
+    );
     postContextBudget(postMetric, budgeted.report);
     const response = await fetch(responsesUrl, {
       method: "POST",
@@ -118,7 +124,12 @@ export async function requestOpenAIResponses(
         signal,
         false,
       );
-    const retryBudgeted = applyOpenAIResponsesContextBudget(input, preferences);
+    const retryBudgeted = applyOpenAIResponsesContextBudget(
+      input,
+      preferences,
+      undefined,
+      model.contextLength,
+    );
     postContextBudget(postMetric, retryBudgeted.report);
     return fetch(responsesUrl, {
       method: "POST",

@@ -251,12 +251,12 @@ export const zhCN: LocaleMessages = {
       loadTools: {
         running: "加载工具中",
         done: "工具已加载",
-        found: "Loaded {count} tools",
+        found: "已加载 {count} 个工具",
       },
       manageSkills: {
         running: "管理技能中",
         done: "技能已管理",
-        found: "Found {count}",
+        found: "找到 {count} 个技能",
       },
       workspaceFiles: { running: "处理工作区文件中", done: "工作区文件已处理" },
       manageMemory: { running: "管理记忆中", done: "记忆已管理" },
@@ -268,6 +268,7 @@ export const zhCN: LocaleMessages = {
       manageLocalExecutionBridges: {
         running: "管理执行桥中",
         done: "执行桥已管理",
+        found: "找到 {count} 个执行桥",
       },
       inspectPage: {
         running: "检查页面中",
@@ -489,6 +490,11 @@ export const zhCN: LocaleMessages = {
     testModelSuccess: "模型已成功返回。",
     testModelError: "模型测试失败",
     configuredModels: "已配置模型",
+    modelDisplayName: "显示名称",
+    modelContextLength: "上下文长度",
+    modelContextLengthAuto: "自动",
+    modelContextLengthDescription:
+      "该模型可用的 token 数。留空时使用提供商接口返回的值（如有）。",
     noModelsAddedYet: "尚未添加模型。",
     skillsDescription: "创建可复用的浏览器技能，用户或 AI 都可以为消息选择。",
     newSkill: "新建技能",

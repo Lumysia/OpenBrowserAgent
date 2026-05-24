@@ -1,66 +1,93 @@
 import {
   CONTEXT_PRUNED_PREVIEW_CHARS,
   CONTEXT_TOOL_RESULT_KEEP_RECENT,
-  DEFAULT_CONTEXT_BUDGET_ENABLED,
-  DEFAULT_CONTEXT_REQUEST_MAX_CHARS,
-  DEFAULT_CONTEXT_TAIL_MAX_CHARS,
-  DEFAULT_CONTEXT_TAIL_MIN_MESSAGES,
-  DEFAULT_CONTEXT_TOOL_RESULT_AGGREGATE_MAX_CHARS,
-  DEFAULT_CONTEXT_TOOL_RESULT_MAX_CHARS,
 } from "../shared/config";
 import type { ContextBudgetReport, Preferences } from "../shared/types";
+import { compactedContextPlaceholder } from "./compaction-prompt";
+import {
+  latestRealUserMessageIndex,
+  pruneGeminiVisionMessages,
+  pruneOpenAIResponsesVisionMessages,
+  pruneOpenAIVisionMessages,
+} from "./context-budget-helpers";
+import {
+  type ContextBudgetSettings,
+  resolveContextBudgetSettings,
+} from "./context-budget-settings";
 
 type BudgetResult<T> = { items: T[]; report: ContextBudgetReport };
-type ContextBudgetSettings = ReturnType<typeof resolveContextBudgetSettings>;
 
 export function applyOpenAIContextBudget(
   messages: Array<Record<string, unknown>>,
   preferences: Preferences,
+  compactionSummary?: string,
+  modelContextLength?: number,
 ): BudgetResult<Record<string, unknown>> {
-  const settings = resolveContextBudgetSettings(preferences);
+  const settings = resolveContextBudgetSettings(
+    preferences,
+    modelContextLength,
+  );
   const originalChars = jsonLength(messages);
   if (!settings.enabled) return withReport(originalChars, messages, noPruning);
-  const toolPruned = pruneOpenAIToolResults(messages, settings);
+  const mediaPruned = pruneOpenAIVisionMessages(messages);
+  const toolPruned = pruneOpenAIToolResults(mediaPruned.items, settings);
   const windowed = applySlidingWindow(
     toolPruned.items,
     settings,
-    createOpenAIPrunedNote,
+    (count, chars) => createOpenAIPrunedNote(count, chars, compactionSummary),
     protectOpenAIToolPairs,
   );
   return withReport(originalChars, windowed.items, {
     prunedMessages: windowed.prunedMessages,
-    truncatedToolResults: toolPruned.truncatedToolResults,
+    truncatedToolResults:
+      toolPruned.truncatedToolResults + mediaPruned.truncatedToolResults,
   });
 }
 
 export function applyOpenAIResponsesContextBudget(
   input: Array<Record<string, unknown>>,
   preferences: Preferences,
+  compactionSummary?: string,
+  modelContextLength?: number,
 ): BudgetResult<Record<string, unknown>> {
-  const settings = resolveContextBudgetSettings(preferences);
+  const settings = resolveContextBudgetSettings(
+    preferences,
+    modelContextLength,
+  );
   const originalChars = jsonLength(input);
   if (!settings.enabled) return withReport(originalChars, input, noPruning);
-  const toolPruned = pruneOpenAIResponsesToolResults(input, settings);
+  const mediaPruned = pruneOpenAIResponsesVisionMessages(input);
+  const toolPruned = pruneOpenAIResponsesToolResults(
+    mediaPruned.items,
+    settings,
+  );
   const windowed = applySlidingWindow(
     toolPruned.items,
     settings,
-    createOpenAIResponsesPrunedNote,
+    (count, chars) =>
+      createOpenAIResponsesPrunedNote(count, chars, compactionSummary),
     protectOpenAIResponsesToolPairs,
   );
   return withReport(originalChars, windowed.items, {
     prunedMessages: windowed.prunedMessages,
-    truncatedToolResults: toolPruned.truncatedToolResults,
+    truncatedToolResults:
+      toolPruned.truncatedToolResults + mediaPruned.truncatedToolResults,
   });
 }
 
 export function applyGeminiContextBudget(
   contents: Array<Record<string, unknown>>,
   preferences: Preferences,
+  modelContextLength?: number,
 ): BudgetResult<Record<string, unknown>> {
-  const settings = resolveContextBudgetSettings(preferences);
+  const settings = resolveContextBudgetSettings(
+    preferences,
+    modelContextLength,
+  );
   const originalChars = jsonLength(contents);
   if (!settings.enabled) return withReport(originalChars, contents, noPruning);
-  const toolPruned = pruneGeminiToolResults(contents, settings);
+  const mediaPruned = pruneGeminiVisionMessages(contents);
+  const toolPruned = pruneGeminiToolResults(mediaPruned.items, settings);
   const windowed = applySlidingWindow(
     toolPruned.items,
     settings,
@@ -68,7 +95,8 @@ export function applyGeminiContextBudget(
   );
   return withReport(originalChars, windowed.items, {
     prunedMessages: windowed.prunedMessages,
-    truncatedToolResults: toolPruned.truncatedToolResults,
+    truncatedToolResults:
+      toolPruned.truncatedToolResults + mediaPruned.truncatedToolResults,
   });
 }
 
@@ -172,6 +200,8 @@ function applySlidingWindow<T extends Record<string, unknown>>(
 
   const protectedIndexes = new Set<number>();
   if (items[0]?.role === "system") protectedIndexes.add(0);
+  const latestUserIndex = latestRealUserMessageIndex(items);
+  if (latestUserIndex !== undefined) protectedIndexes.add(latestUserIndex);
 
   let tailChars = 0;
   let tailMessages = 0;
@@ -300,60 +330,30 @@ function recordString(value: unknown, key: string) {
     : "";
 }
 
-function resolveContextBudgetSettings(preferences: Preferences) {
-  const toolResultMaxChars = clampNumber(
-    preferences.contextToolResultMaxChars,
-    DEFAULT_CONTEXT_TOOL_RESULT_MAX_CHARS,
-    1_000,
-    96_000,
-  );
-  return {
-    enabled: preferences.contextBudgetEnabled ?? DEFAULT_CONTEXT_BUDGET_ENABLED,
-    requestMaxChars: clampNumber(
-      preferences.contextRequestMaxChars,
-      DEFAULT_CONTEXT_REQUEST_MAX_CHARS,
-      16_000,
-      500_000,
-    ),
-    tailMinMessages: clampNumber(
-      preferences.contextTailMinMessages,
-      DEFAULT_CONTEXT_TAIL_MIN_MESSAGES,
-      2,
-      40,
-    ),
-    tailMaxChars: DEFAULT_CONTEXT_TAIL_MAX_CHARS,
-    toolResultMaxChars,
-    toolResultAggregateMaxChars: Math.max(
-      DEFAULT_CONTEXT_TOOL_RESULT_AGGREGATE_MAX_CHARS,
-      toolResultMaxChars * CONTEXT_TOOL_RESULT_KEEP_RECENT,
-    ),
-  };
-}
-
-function clampNumber(
-  value: number | undefined,
-  fallback: number,
-  min: number,
-  max: number,
+function createOpenAIPrunedNote(
+  count: number,
+  chars: number,
+  compactionSummary?: string,
 ) {
-  if (!Number.isFinite(value)) return fallback;
-  return Math.min(max, Math.max(min, Math.trunc(value || fallback)));
-}
-
-function createOpenAIPrunedNote(count: number, chars: number) {
   return {
     role: "user",
-    content: `<context_pruned>Older conversation history was omitted from this request to stay within the context budget. Omitted messages: ${count}. Omitted chars: ${chars}. Continue from the preserved recent messages and ask if an omitted detail is required.</context_pruned>`,
+    content: compactionSummary || compactedContextPlaceholder(count, chars),
   };
 }
 
-function createOpenAIResponsesPrunedNote(count: number, chars: number) {
+function createOpenAIResponsesPrunedNote(
+  count: number,
+  chars: number,
+  compactionSummary?: string,
+) {
   return {
     role: "user",
     content: [
       {
         type: "input_text",
-        text: String(createOpenAIPrunedNote(count, chars).content),
+        text: String(
+          createOpenAIPrunedNote(count, chars, compactionSummary).content,
+        ),
       },
     ],
   };

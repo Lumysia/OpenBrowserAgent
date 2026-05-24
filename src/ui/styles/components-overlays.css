@@ -1,4 +1,5 @@
 ﻿.ui-badge {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -12,10 +13,16 @@
   line-height: 1;
   animation: fade-in 0.18s ease both;
   transition:
+    filter 0.16s ease,
     background-color 0.16s ease,
     border-color 0.16s ease,
     color 0.16s ease,
     transform 0.16s ease;
+}
+.ui-badge:hover {
+  border-color: color-mix(in srgb, var(--accent-strong) 12%, transparent);
+  background: color-mix(in srgb, var(--secondary) 78%, var(--accent-softer));
+  filter: saturate(1.03) brightness(1.01);
 }
 
 .ui-badge.status-error-badge {
@@ -25,7 +32,7 @@
 }
 
 .ui-accordion-item {
-  overflow: hidden;
+  position: relative;
   border: 1px solid var(--border);
   background:
     linear-gradient(
@@ -37,6 +44,25 @@
   border-radius: var(--radius);
   box-shadow: 0 10px 24px var(--shadow);
   animation: fade-in 0.22s ease both;
+  transition:
+    filter 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+.ui-accordion-item:hover {
+  border-color: color-mix(in srgb, var(--accent-strong) 18%, var(--border));
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-soft) 36%, transparent),
+      transparent 62%
+    ),
+    color-mix(in srgb, var(--card) 86%, var(--accent-softer));
+  filter: saturate(1.04) brightness(1.01);
+  box-shadow:
+    0 12px 28px color-mix(in srgb, var(--accent-shadow) 18%, var(--shadow)),
+    inset 0 1px 0 color-mix(in srgb, white 18%, transparent);
 }
 .ui-accordion-header {
   margin: 0;
@@ -265,6 +291,7 @@
   cursor: default;
   color: var(--popover-foreground);
   transition:
+    filter 0.14s ease,
     background-color 0.14s ease,
     color 0.14s ease,
     transform 0.14s ease;
@@ -276,8 +303,9 @@
   white-space: nowrap;
 }
 .ui-select-item[data-highlighted] {
-  background: var(--accent-hover);
+  background: color-mix(in srgb, var(--accent-hover) 86%, var(--popover));
   color: var(--accent-strong);
+  filter: saturate(1.03) brightness(1.01);
   transform: translateX(1px);
 }
 .ui-select-item[data-state="checked"] {
@@ -415,6 +443,7 @@
     0 8px 22px color-mix(in srgb, var(--shadow) 42%, transparent);
 }
 .ui-toggle-group-item {
+  position: relative;
   min-height: 42px;
   flex: 1 1 0;
   padding: 0 14px;
@@ -427,6 +456,7 @@
   font-weight: 600;
   box-shadow: inset 0 0 0 0 transparent;
   transition:
+    filter 0.16s ease,
     background-color 0.16s ease,
     color 0.16s ease,
     box-shadow 0.16s ease,
@@ -438,6 +468,9 @@
 .ui-toggle-group-item:hover {
   background: color-mix(in srgb, var(--accent-softer) 44%, transparent);
   color: color-mix(in srgb, var(--accent-strong) 72%, var(--foreground));
+  filter: saturate(1.03) brightness(1.01);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--accent-strong) 8%, transparent);
 }
 .ui-toggle-group-item:focus-visible {
   position: relative;
@@ -446,7 +479,6 @@
   box-shadow: inset 0 0 0 2px var(--ring);
 }
 .ui-toggle-group-item[data-state="on"] {
-  position: relative;
   z-index: 1;
   border-left-color: transparent;
   background: color-mix(in srgb, var(--accent-soft) 64%, var(--card));
@@ -525,6 +557,7 @@
   animation: fade-in 0.18s ease both;
 }
 .ui-command-item {
+  position: relative;
   display: flex;
   min-height: 32px;
   min-width: 0;
@@ -538,13 +571,15 @@
   font-size: 13px;
   outline: none;
   transition:
+    filter 0.14s ease,
     background-color 0.14s ease,
     color 0.14s ease,
     transform 0.14s ease;
 }
 .ui-command-item[data-selected="true"] {
-  background: var(--accent-hover);
+  background: color-mix(in srgb, var(--accent-hover) 86%, var(--popover));
   color: var(--accent-strong);
+  filter: saturate(1.03) brightness(1.01);
   transform: translateX(1px);
 }
 .ui-command-item span {

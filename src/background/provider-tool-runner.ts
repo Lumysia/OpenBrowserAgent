@@ -195,8 +195,10 @@ function waitForQuestionAnswer(
         maybe.toolCallId !== toolCallId
       )
         return;
+      const answers = normalizeAnswers(maybe.answers);
+      if (!answers.length) return;
       cleanup();
-      resolve(normalizeAnswers(maybe.answers));
+      resolve(answers);
     }
 
     port.onMessage.addListener(onMessage);

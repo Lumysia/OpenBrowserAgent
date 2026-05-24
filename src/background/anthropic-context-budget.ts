@@ -1,25 +1,28 @@
 import {
   CONTEXT_PRUNED_PREVIEW_CHARS,
   CONTEXT_TOOL_RESULT_KEEP_RECENT,
-  DEFAULT_CONTEXT_BUDGET_ENABLED,
-  DEFAULT_CONTEXT_REQUEST_MAX_CHARS,
-  DEFAULT_CONTEXT_TAIL_MAX_CHARS,
-  DEFAULT_CONTEXT_TAIL_MIN_MESSAGES,
-  DEFAULT_CONTEXT_TOOL_RESULT_AGGREGATE_MAX_CHARS,
-  DEFAULT_CONTEXT_TOOL_RESULT_MAX_CHARS,
 } from "../shared/config";
 import type { ContextBudgetReport, Preferences } from "../shared/types";
+import { compactedContextPlaceholder } from "./compaction-prompt";
+import { latestRealUserMessageIndex } from "./context-budget-helpers";
+import {
+  type ContextBudgetSettings,
+  resolveContextBudgetSettings,
+} from "./context-budget-settings";
 
 type BudgetResult<T> = { items: T[]; report: ContextBudgetReport };
-type ContextBudgetSettings = ReturnType<typeof resolveContextBudgetSettings>;
 
 const noPruning = { prunedMessages: 0, truncatedToolResults: 0 };
 
 export function applyAnthropicContextBudget(
   messages: Array<Record<string, unknown>>,
   preferences: Preferences,
+  modelContextLength?: number,
 ): BudgetResult<Record<string, unknown>> {
-  const settings = resolveContextBudgetSettings(preferences);
+  const settings = resolveContextBudgetSettings(
+    preferences,
+    modelContextLength,
+  );
   const originalChars = jsonLength(messages);
   if (!settings.enabled) return withReport(originalChars, messages, noPruning);
   const toolPruned = pruneAnthropicToolResults(messages, settings);
@@ -78,6 +81,8 @@ function applySlidingWindow<T extends Record<string, unknown>>(
   if (jsonLength(items) <= settings.requestMaxChars)
     return { items, prunedMessages: 0 };
   const protectedIndexes = new Set<number>();
+  const latestUserIndex = latestRealUserMessageIndex(items);
+  if (latestUserIndex !== undefined) protectedIndexes.add(latestUserIndex);
   let tailChars = 0;
   let tailMessages = 0;
   for (let index = items.length - 1; index >= 0; index -= 1) {
@@ -152,43 +157,13 @@ function protectAnthropicToolPairs(
   }
 }
 
-function resolveContextBudgetSettings(preferences: Preferences) {
-  const toolResultMaxChars = clampNumber(
-    preferences.contextToolResultMaxChars,
-    DEFAULT_CONTEXT_TOOL_RESULT_MAX_CHARS,
-    1_000,
-    96_000,
-  );
-  return {
-    enabled: preferences.contextBudgetEnabled ?? DEFAULT_CONTEXT_BUDGET_ENABLED,
-    requestMaxChars: clampNumber(
-      preferences.contextRequestMaxChars,
-      DEFAULT_CONTEXT_REQUEST_MAX_CHARS,
-      16_000,
-      500_000,
-    ),
-    tailMinMessages: clampNumber(
-      preferences.contextTailMinMessages,
-      DEFAULT_CONTEXT_TAIL_MIN_MESSAGES,
-      2,
-      40,
-    ),
-    tailMaxChars: DEFAULT_CONTEXT_TAIL_MAX_CHARS,
-    toolResultMaxChars,
-    toolResultAggregateMaxChars: Math.max(
-      DEFAULT_CONTEXT_TOOL_RESULT_AGGREGATE_MAX_CHARS,
-      toolResultMaxChars * CONTEXT_TOOL_RESULT_KEEP_RECENT,
-    ),
-  };
-}
-
 function createAnthropicPrunedNote(count: number, chars: number) {
   return {
     role: "user",
     content: [
       {
         type: "text",
-        text: `<context_pruned>Older conversation history was omitted from this request to stay within the context budget. Omitted messages: ${count}. Omitted chars: ${chars}. Continue from the preserved recent messages and ask if an omitted detail is required.</context_pruned>`,
+        text: compactedContextPlaceholder(count, chars),
       },
     ],
   };
@@ -264,16 +239,6 @@ function withReport<T>(
       truncatedToolResults: report.truncatedToolResults,
     },
   };
-}
-
-function clampNumber(
-  value: number | undefined,
-  fallback: number,
-  min: number,
-  max: number,
-) {
-  if (!Number.isFinite(value)) return fallback;
-  return Math.min(max, Math.max(min, Math.trunc(value || fallback)));
 }
 
 function jsonLength(value: unknown) {

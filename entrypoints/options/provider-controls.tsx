@@ -14,6 +14,11 @@ import {
   type ProviderConfig,
 } from "../../src/shared/types";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionHeader,
+  AccordionItem,
+  AccordionTriggerButton,
   Button,
   Command,
   CommandEmpty,
@@ -180,102 +185,159 @@ export function ModelList({
   const [language] = useStoredState(storage.language);
   const t = getMessages(language);
   return (
-    <div className="model-table">
+    <Accordion type="multiple" className="model-table model-accordion">
       {models.map((model) => (
-        <div className="model-row" key={model.id}>
-          <div className="model-row-main">
-            <Input
-              className="model-display-input"
-              value={modelDisplayLabel(model)}
-              onChange={(event) =>
-                onChange({
-                  ...value,
-                  [modelKey]: models.map((candidate) =>
-                    candidate.id === model.id
-                      ? renameModelDisplayName(
-                          candidate,
-                          value,
-                          event.target.value,
-                        )
-                      : candidate,
-                  ),
-                })
-              }
-            />
-            <small className="model-api-name">
-              {modelTechnicalLabel(value, model)}
-            </small>
-            {testResult?.modelId === model.id && (
-              <small
-                className={
-                  testResult.ok
-                    ? "provider-success-text"
-                    : "provider-error-text"
-                }
-              >
-                {testResult.message}
-              </small>
-            )}
-          </div>
-          <div className="model-row-actions">
-            {onTestModel && (
+        <AccordionItem className="model-row" key={model.id} value={model.id}>
+          <AccordionHeader className="ui-accordion-header-with-actions model-row-header">
+            <AccordionTriggerButton hideChevron className="model-row-trigger">
+              <span className="model-row-summary">
+                <span className="model-row-title">
+                  {modelDisplayLabel(model)}
+                </span>
+                <small className="model-api-name">
+                  {modelTechnicalLabel(value, model)}
+                </small>
+              </span>
+            </AccordionTriggerButton>
+            <span
+              className="accordion-trigger-actions model-row-actions"
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+            >
+              {onTestModel && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="tooltip-button-wrapper">
+                      <Button
+                        size="icon"
+                        aria-label={
+                          testingModelId === model.id
+                            ? t.options.testingModel
+                            : t.options.testModel
+                        }
+                        onClick={() => onTestModel(model)}
+                        disabled={testingModelId === model.id}
+                      >
+                        {testingModelId === model.id ? (
+                          <Loader2 size={14} className="spin" />
+                        ) : (
+                          <FlaskConical size={14} />
+                        )}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {testingModelId === model.id
+                      ? t.options.testingModel
+                      : t.options.testModel}
+                  </TooltipContent>
+                </Tooltip>
+              )}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="tooltip-button-wrapper">
                     <Button
-                      variant="ghost"
+                      variant="destructiveOutline"
                       size="icon"
-                      aria-label={
-                        testingModelId === model.id
-                          ? t.options.testingModel
-                          : t.options.testModel
+                      aria-label={t.common.delete}
+                      onClick={() =>
+                        onChange({
+                          ...value,
+                          [modelKey]: models.filter(
+                            (candidate) => candidate.id !== model.id,
+                          ),
+                        })
                       }
-                      onClick={() => onTestModel(model)}
-                      disabled={testingModelId === model.id}
                     >
-                      {testingModelId === model.id ? (
-                        <Loader2 size={14} className="spin" />
-                      ) : (
-                        <FlaskConical size={14} />
-                      )}
+                      <Trash2 size={14} />
                     </Button>
                   </span>
                 </TooltipTrigger>
-                <TooltipContent>
-                  {testingModelId === model.id
-                    ? t.options.testingModel
-                    : t.options.testModel}
-                </TooltipContent>
+                <TooltipContent>{t.common.delete}</TooltipContent>
               </Tooltip>
-            )}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="tooltip-button-wrapper">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={t.common.delete}
-                    onClick={() =>
-                      onChange({
-                        ...value,
-                        [modelKey]: models.filter(
-                          (candidate) => candidate.id !== model.id,
-                        ),
-                      })
-                    }
-                  >
-                    <Trash2 size={14} />
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>{t.common.delete}</TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
+            </span>
+            <AccordionTriggerButton
+              className="accordion-chevron-trigger"
+              aria-label={t.options.configuredModels}
+            />
+          </AccordionHeader>
+          <AccordionContent className="model-row-content">
+            <div className="model-row-main">
+              <Label>
+                {t.options.modelDisplayName}
+                <Input
+                  className="model-display-input"
+                  value={modelDisplayLabel(model)}
+                  onChange={(event) =>
+                    onChange({
+                      ...value,
+                      [modelKey]: models.map((candidate) =>
+                        candidate.id === model.id
+                          ? renameModelDisplayName(
+                              candidate,
+                              value,
+                              event.target.value,
+                            )
+                          : candidate,
+                      ),
+                    })
+                  }
+                />
+              </Label>
+              <Label>
+                {t.options.modelContextLength}
+                <Input
+                  inputMode="numeric"
+                  placeholder={t.options.modelContextLengthAuto}
+                  value={model.contextLength ? String(model.contextLength) : ""}
+                  onChange={(event) =>
+                    onChange({
+                      ...value,
+                      [modelKey]: models.map((candidate) =>
+                        candidate.id === model.id
+                          ? withModelContextLength(
+                              candidate,
+                              event.target.value,
+                            )
+                          : candidate,
+                      ),
+                    })
+                  }
+                />
+              </Label>
+              <small className="model-api-name">
+                {t.options.modelContextLengthDescription}
+              </small>
+              {testResult?.modelId === model.id && (
+                <small
+                  className={
+                    testResult.ok
+                      ? "provider-success-text"
+                      : "provider-error-text"
+                  }
+                >
+                  {testResult.message}
+                </small>
+              )}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
       ))}
       {!models.length && <p className="muted">{t.options.noModelsAddedYet}</p>}
-    </div>
+    </Accordion>
   );
+}
+
+function withModelContextLength(
+  model: ModelConfig,
+  value: string,
+): ModelConfig {
+  const contextLength = Number.parseInt(value, 10);
+  if (!Number.isFinite(contextLength) || contextLength <= 0) {
+    const { contextLength: _contextLength, ...rest } = model;
+    return rest;
+  }
+  return { ...model, contextLength };
 }
 
 function modelDisplayLabel(model: ModelConfig) {

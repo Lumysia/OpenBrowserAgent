@@ -635,29 +635,20 @@
 }
 .bootstrap-cloud-action.is-loading {
   position: relative;
-  overflow: hidden;
   opacity: 1;
-}
-.bootstrap-cloud-action.is-loading::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--accent-strong) 16%, transparent),
-    transparent
-  );
-  animation: bootstrap-cloud-sweep 1.25s ease-in-out infinite;
-  transform: translateX(-120%);
+  animation: bootstrap-cloud-pulse 1.8s ease-in-out infinite;
 }
 .bootstrap-cloud-action.is-loading > * {
   position: relative;
   z-index: 1;
 }
-@keyframes bootstrap-cloud-sweep {
-  to {
-    transform: translateX(120%);
+@keyframes bootstrap-cloud-pulse {
+  0%,
+  100% {
+    filter: saturate(1) brightness(1);
+  }
+  50% {
+    filter: saturate(1.03) brightness(1.01);
   }
 }
 .bootstrap-backend-fields {

@@ -265,12 +265,12 @@ export const ko: LocaleMessages = {
       loadTools: {
         running: "도구 불러오는 중",
         done: "도구 불러옴",
-        found: "Loaded {count} tools",
+        found: "도구 {count}개 불러옴",
       },
       manageSkills: {
         running: "스킬 관리 중",
         done: "스킬 관리됨",
-        found: "Found {count}",
+        found: "스킬 {count}개 찾음",
       },
       workspaceFiles: {
         running: "작업공간 파일 처리 중",
@@ -288,6 +288,7 @@ export const ko: LocaleMessages = {
       manageLocalExecutionBridges: {
         running: "실행 브리지 관리 중",
         done: "실행 브리지 관리됨",
+        found: "실행 브리지 {count}개 찾음",
       },
       inspectPage: {
         running: "페이지 검사 중",
@@ -540,6 +541,11 @@ export const ko: LocaleMessages = {
     testModelSuccess: "모델이 정상적으로 응답했습니다.",
     testModelError: "모델 테스트 실패",
     configuredModels: "구성된 모델",
+    modelDisplayName: "표시 이름",
+    modelContextLength: "컨텍스트 길이",
+    modelContextLengthAuto: "자동",
+    modelContextLengthDescription:
+      "이 모델에서 사용할 수 있는 토큰 수입니다. 비워 두면 제공자가 반환한 값이 있을 때 사용합니다.",
     noModelsAddedYet: "아직 추가된 모델이 없습니다.",
     skillsDescription: "스킬로 AI에 즉시 메시지를 보냅니다.",
     newSkill: "새 스킬",

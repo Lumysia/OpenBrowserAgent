@@ -39,6 +39,7 @@ export async function requestAnthropic(
     apiKey: string;
     baseUrl: string;
     modelName: string;
+    contextLength?: number;
   },
   system: string,
   messages: ChatMessage[],
@@ -82,7 +83,11 @@ export async function requestAnthropic(
   const postMetric = (message: AiStreamResponse) => post(port, message);
 
   async function fetchAnthropic(body: Record<string, unknown>) {
-    const budgeted = applyAnthropicContextBudget(requestMessages, preferences);
+    const budgeted = applyAnthropicContextBudget(
+      requestMessages,
+      preferences,
+      model.contextLength,
+    );
     postContextBudget(postMetric, budgeted.report);
     const response = await fetch(url, {
       method: "POST",
@@ -121,6 +126,7 @@ export async function requestAnthropic(
     const retryBudgeted = applyAnthropicContextBudget(
       requestMessages,
       preferences,
+      model.contextLength,
     );
     postContextBudget(postMetric, retryBudgeted.report);
     return fetch(url, {

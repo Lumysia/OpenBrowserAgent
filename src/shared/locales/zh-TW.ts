@@ -251,12 +251,12 @@ export const zhTW: LocaleMessages = {
       loadTools: {
         running: "載入工具中",
         done: "工具已載入",
-        found: "Loaded {count} tools",
+        found: "已載入 {count} 個工具",
       },
       manageSkills: {
         running: "管理技能中",
         done: "技能已管理",
-        found: "Found {count}",
+        found: "找到 {count} 個技能",
       },
       workspaceFiles: { running: "處理工作區檔案中", done: "工作區檔案已處理" },
       manageMemory: { running: "管理記憶中", done: "記憶已管理" },
@@ -268,6 +268,7 @@ export const zhTW: LocaleMessages = {
       manageLocalExecutionBridges: {
         running: "管理執行橋中",
         done: "執行橋已管理",
+        found: "找到 {count} 個執行橋",
       },
       inspectPage: {
         running: "檢查頁面中",
@@ -492,6 +493,11 @@ export const zhTW: LocaleMessages = {
     testModelSuccess: "模型已成功回應。",
     testModelError: "模型測試失敗",
     configuredModels: "已設定模型",
+    modelDisplayName: "顯示名稱",
+    modelContextLength: "上下文長度",
+    modelContextLengthAuto: "自動",
+    modelContextLengthDescription:
+      "此模型可用的 token 數。留空時使用提供商 API 回傳的值（如有）。",
     noModelsAddedYet: "尚未新增模型。",
     skillsDescription: "使用技能，一鍵向 AI 傳送指令。",
     newSkill: "新增技能",

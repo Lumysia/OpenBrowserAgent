@@ -18,6 +18,7 @@ type OllamaModel = {
   apiKey: string;
   baseUrl: string;
   modelName: string;
+  contextLength?: number;
 };
 
 export async function requestOllama(

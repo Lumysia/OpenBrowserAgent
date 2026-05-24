@@ -274,12 +274,12 @@ export const jaJP: LocaleMessages = {
       loadTools: {
         running: "ツールを読み込み中",
         done: "ツールを読み込みました",
-        found: "Loaded {count} tools",
+        found: "{count}個のツールを読み込みました",
       },
       manageSkills: {
         running: "スキルを管理中",
         done: "スキルを管理しました",
-        found: "Found {count}",
+        found: "{count}個のスキルを検出しました",
       },
       workspaceFiles: {
         running: "ワークスペースファイルを処理中",
@@ -297,6 +297,7 @@ export const jaJP: LocaleMessages = {
       manageLocalExecutionBridges: {
         running: "実行ブリッジを管理中",
         done: "実行ブリッジを管理しました",
+        found: "{count}個の実行ブリッジを検出しました",
       },
       inspectPage: {
         running: "ページを調査中",
@@ -565,6 +566,11 @@ export const jaJP: LocaleMessages = {
     testModelSuccess: "モデルが正常に応答しました。",
     testModelError: "モデルテストに失敗しました",
     configuredModels: "設定済みモデル",
+    modelDisplayName: "表示名",
+    modelContextLength: "コンテキスト長",
+    modelContextLengthAuto: "自動",
+    modelContextLengthDescription:
+      "このモデルで利用できるトークン数。空欄の場合はプロバイダーが返した値があれば使用します。",
     noModelsAddedYet: "モデルはまだ追加されていません。",
     skillsDescription: "スキルでAIにすばやく指示を送信します。",
     newSkill: "新しいスキル",
