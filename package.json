@@ -13,6 +13,7 @@
     "build:safari": "wxt build -b safari",
     "local-execution-bridge": "node packages/local-execution-bridge/bin/cli.mjs run",
     "install-local-execution-bridge": "node packages/local-execution-bridge/bin/cli.mjs install",
+    "update-local-execution-bridge": "node packages/local-execution-bridge/bin/cli.mjs update",
     "uninstall-local-execution-bridge": "node packages/local-execution-bridge/bin/cli.mjs uninstall",
     "zip": "node scripts/zip-with-hash.mjs",
     "compile": "tsc --noEmit"

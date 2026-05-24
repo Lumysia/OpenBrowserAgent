@@ -84,7 +84,7 @@ export const localExecutionBridgeTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.testLocalExecutionBridge,
-    "Test a local execution bridge connection. Before using this tool as part of setup, read the builtin skill local-execution-bridge-setup and follow it.",
+    "Test a local execution bridge connection and return the shell, basic environment, and detected local agent CLIs the bridge can see. Before using this tool as part of setup, read the builtin skill local-execution-bridge-setup and follow it.",
     {
       agentId: { type: "string", description: "Execution bridge ID" },
     },

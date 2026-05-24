@@ -43,9 +43,10 @@ Use this skill whenever the user wants to add, configure, modify, test, use, or 
 - Use the \`question\` tool to collect missing setup information when it helps. Ask only for unknown values, keep it concise, and do not make a novice choose technical values they have not said they know.
 - Prefer the published installer: \`npx openbrowseragent-local-execution-bridge@1 install ...\`. It should receive the browser target and extension ID. It does not need a per-task command during setup.
 - After installer output is available, use \`addLocalExecutionBridge\` or \`updateLocalExecutionBridge\` with the printed \`hostName\`, \`commandId\`, and \`secret\`, then call \`testLocalExecutionBridge\`.
-- \`testLocalExecutionBridge\` returns the shell and basic environment information the bridge will use. Use that result to choose command syntax; do not assume a default shell in the conversation.
+- \`testLocalExecutionBridge\` returns the shell, basic environment information, and detected local agent CLIs the bridge can see. Use that result to choose command syntax and available local tools; do not assume a default shell or installed CLI in the conversation.
 - Before running work through a configured bridge, call \`testLocalExecutionBridge\`; then call \`startLocalExecutionBridge\` with the exact shell command to run only if the test succeeds.
 - Use \`deleteLocalExecutionBridge\` for extension-side cleanup. For native bridge files, guide the user to run \`npx openbrowseragent-local-execution-bridge@1 uninstall\`.
+- To update native bridge files, guide the user to run \`npx openbrowseragent-local-execution-bridge@1 update\`. This scans installed bridge manifests and refreshes the copied runtime, wrapper, and manifest while preserving existing secrets. Use \`--browser <browser-target>\` only when the user wants to update one browser, or add install arguments such as \`--extension-id\` only when repairing setup.
 - Do not reinstall or rewrite the bridge for each requested local task. Install once, then send shell commands through \`startLocalExecutionBridge\`.
 - Do not use \`startSubAgent\` for local CLIs, desktop apps, filesystem inspection, or external local processes. Sub-agents are internal OpenBrowserAgent chat profiles; local processes run through the local execution bridge.
 

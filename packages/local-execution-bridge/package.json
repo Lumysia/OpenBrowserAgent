@@ -1,6 +1,6 @@
 {
   "name": "openbrowseragent-local-execution-bridge",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Native Messaging local execution bridge for OpenBrowserAgent.",
   "type": "module",
   "license": "MIT",

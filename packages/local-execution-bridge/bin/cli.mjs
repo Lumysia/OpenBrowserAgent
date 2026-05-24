@@ -5,6 +5,9 @@ const [, , command, ...args] = process.argv;
 if (!command || command === "install") {
   process.argv = [process.argv[0], process.argv[1], ...args];
   await import("./install.mjs");
+} else if (command === "update") {
+  process.argv = [process.argv[0], process.argv[1], ...args];
+  await import("./update.mjs");
 } else if (command === "uninstall") {
   process.argv = [process.argv[0], process.argv[1], ...args];
   await import("./uninstall.mjs");
@@ -14,6 +17,7 @@ if (!command || command === "install") {
 } else if (command === "help" || command === "--help" || command === "-h") {
   console.log(`Usage:
   openbrowseragent-local-execution-bridge install --browser chrome --extension-id <id>
+  openbrowseragent-local-execution-bridge update [--browser chrome]
   openbrowseragent-local-execution-bridge uninstall --browser chrome
   openbrowseragent-local-execution-bridge run`);
 } else {

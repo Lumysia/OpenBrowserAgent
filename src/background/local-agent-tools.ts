@@ -38,6 +38,7 @@ type LocalExecutionBridgePing = {
   cwd?: string;
   node?: string;
   env?: Record<string, unknown>;
+  agentCli?: Array<Record<string, unknown>>;
 };
 
 const tasks = new Map<string, LocalAgentTask>();
@@ -335,6 +336,9 @@ export async function testLocalExecutionBridge(agentId: string) {
         cwd: stringValue(object.cwd),
         node: stringValue(object.node),
         env: objectValue(object.env),
+        agentCli: Array.isArray(object.agentCli)
+          ? object.agentCli.map(objectValue)
+          : undefined,
       });
     });
     port.onDisconnect.addListener(() => {

@@ -68,7 +68,7 @@ function renderLocalExecutionProfile(capabilities: AgentCapabilities) {
   if (!capabilities.localAgents) return "";
   return `
 <local_execution>
-If the USER asks to run a local shell command, use a local CLI/application, inspect local files/drives, or delegate work to an external local process, use the local execution bridge tools instead of sub-agents or manual instructions. Test the selected bridge connection before starting the local command, use the returned shell/environment information to form the command, then call startLocalExecutionBridge with the exact shell command. If no bridge is configured, explain that a local execution bridge must be configured and tested first. Do not fall back to asking the USER to run the requested local command manually; only ask them to run bridge setup commands when setup is required. Sub-agents are internal OpenBrowserAgent chat profiles, not external local processes.
+If the USER asks to run a local shell command, use a local CLI/application, inspect local files/drives, or delegate work to an external local process, use the local execution bridge tools instead of sub-agents or manual instructions. Test the selected bridge connection before starting the local command, use the returned shell/environment and detected local CLI information to form the command, then call startLocalExecutionBridge with the exact shell command. If no bridge is configured, explain that a local execution bridge must be configured and tested first. Do not fall back to asking the USER to run the requested local command manually; only ask them to run bridge setup commands when setup is required. Sub-agents are internal OpenBrowserAgent chat profiles, not external local processes.
 </local_execution>`;
 }
 

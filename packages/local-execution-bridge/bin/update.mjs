@@ -7,7 +7,6 @@ import {
   readFileSync,
   writeFileSync,
 } from "node:fs";
-import { randomBytes } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { homedir, platform } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -24,96 +23,121 @@ if (args.help) {
   process.exit(0);
 }
 
-const browser = stringArg(args.browser || "chrome").toLowerCase();
-assertSupportedBrowser(browser);
-const extensionId = stringArg(args["extension-id"] || args.extensionId);
-const commandId = stringArg(args["command-id"] || args.commandId || "default");
-const commandName = stringArg(
-  args["command-name"] || args.commandName || commandId,
-);
-const cwd = stringArg(args.cwd);
-const shell = stringArg(args.shell);
-const configPath = resolvePath(
-  stringArg(args.config) ||
-    join(openBrowserAgentDir(), "local-execution-bridge.config.json"),
-);
-const bridgePath = resolvePath(
-  stringArg(args.bridge) ||
-    join(openBrowserAgentDir(), "local-execution-bridge.mjs"),
-);
-const wrapperPath = resolvePath(
-  stringArg(args.wrapper) ||
-    join(
-      openBrowserAgentDir(),
-      platform() === "win32"
-        ? "openbrowseragent-local-execution-bridge.cmd"
-        : "openbrowseragent-local-execution-bridge",
-    ),
-);
-const manifestPath = resolvePath(
-  stringArg(args.manifest) || join(nativeHostDir(browser), `${HOST_NAME}.json`),
-);
+if (args["extension-id"] || args.extensionId) {
+  await import("./install.mjs");
+} else {
+  updateInstalledBridges();
+}
 
-if (!extensionId) fail("Missing --extension-id.");
-if (!existsSync(sourceBridgeScript))
-  fail(`Bridge script not found: ${sourceBridgeScript}`);
-
-const existingConfig = readJson(configPath, { commands: [] });
-const existingCommands = Array.isArray(existingConfig.commands)
-  ? existingConfig.commands
-  : [];
-const existingCommand = existingCommands.find((item) => item?.id === commandId);
-const secret =
-  stringArg(args.secret) ||
-  (args["rotate-secret"] || args.rotateSecret
-    ? generateSecret()
-    : stringArg(existingCommand?.secret) || generateSecret());
-const nextCommand = {
-  id: commandId,
-  name: commandName,
-  secret,
-  mode: "shell",
-  ...(shell ? { shell } : {}),
-  ...(cwd ? { cwd } : {}),
-};
-const nextConfig = {
-  ...existingConfig,
-  commands: [
-    ...existingCommands.filter((item) => item?.id !== commandId),
-    nextCommand,
-  ],
-};
-
-mkdirSync(dirname(configPath), { recursive: true });
-writeFileSync(configPath, `${JSON.stringify(nextConfig, null, 2)}\n`, "utf8");
-installBridgeRuntime(bridgePath);
-writeWrapper(wrapperPath, configPath, bridgePath);
-writeManifest(manifestPath, browser, extensionId, wrapperPath);
-const registryKeys = registerNativeHost(browser, manifestPath) || [];
-
-console.log(
-  JSON.stringify(
-    {
-      success: true,
-      hostName: HOST_NAME,
-      commandId,
-      secret,
-      configPath,
-      bridgePath,
-      wrapperPath,
-      manifestPath,
-      registryKey: registryKeys[0],
-      registryKeys,
-      nextExtensionConfig: {
-        hostName: HOST_NAME,
-        agentKey: commandId,
-        secret,
+function updateInstalledBridges() {
+  if (!existsSync(sourceBridgeScript))
+    fail(`Bridge script not found: ${sourceBridgeScript}`);
+  const browserArg = stringArg(args.browser || "all").toLowerCase();
+  const targets = browsersForUpdate(browserArg);
+  const seenManifests = new Set();
+  const updated = [];
+  const missing = [];
+  for (const browser of targets) {
+    const manifestPath = join(nativeHostDir(browser), `${HOST_NAME}.json`);
+    if (seenManifests.has(manifestPath)) continue;
+    seenManifests.add(manifestPath);
+    if (!existsSync(manifestPath)) {
+      missing.push({ browser, manifestPath });
+      continue;
+    }
+    const result = updateManifestInstall(browser, manifestPath);
+    updated.push(result);
+  }
+  if (!updated.length) {
+    fail(
+      `No installed ${HOST_NAME} manifests were found. Run install once with --browser and --extension-id first.`,
+    );
+  }
+  console.log(
+    JSON.stringify(
+      {
+        success: true,
+        updated,
+        missing: missing.map((item) => item.browser),
       },
-    },
-    null,
-    2,
-  ),
-);
+      null,
+      2,
+    ),
+  );
+}
+
+function updateManifestInstall(browser, manifestPath) {
+  const manifest = readJson(manifestPath, undefined);
+  if (!manifest || manifest.name !== HOST_NAME)
+    fail(`Manifest is not an ${HOST_NAME} manifest: ${manifestPath}`);
+  const extensionId = extensionIdFromManifest(manifest, browser);
+  if (!extensionId)
+    fail(`Could not detect extension ID from manifest: ${manifestPath}`);
+  const wrapperPath = stringArg(manifest.path) || defaultWrapperPath();
+  const wrapperInfo = readWrapperInfo(wrapperPath);
+  const configPath = wrapperInfo.configPath || defaultConfigPath();
+  const bridgePath = wrapperInfo.bridgePath || defaultBridgePath();
+
+  installBridgeRuntime(bridgePath);
+  writeWrapper(wrapperPath, configPath, bridgePath);
+  writeManifest(manifestPath, browser, extensionId, wrapperPath);
+  const registryKeys = registerNativeHost(browser, manifestPath) || [];
+  return {
+    browser,
+    extensionId,
+    configPath,
+    bridgePath,
+    wrapperPath,
+    manifestPath,
+    registryKeys,
+  };
+}
+
+function extensionIdFromManifest(manifest, browser) {
+  if (isFirefox(browser)) {
+    const value = Array.isArray(manifest.allowed_extensions)
+      ? manifest.allowed_extensions[0]
+      : "";
+    return stringArg(value);
+  }
+  const origin = Array.isArray(manifest.allowed_origins)
+    ? String(manifest.allowed_origins[0] || "")
+    : "";
+  return origin.replace(/^chrome-extension:\/\//, "").replace(/\/$/, "");
+}
+
+function readWrapperInfo(path) {
+  if (!existsSync(path)) return {};
+  const text = readFileSync(path, "utf8");
+  if (platform() === "win32") {
+    const configPath = matchFirst(
+      text,
+      /OPENBROWSERAGENT_LOCAL_EXECUTION_CONFIG=([^"\r\n]+)/,
+    );
+    const bridgePath = matchFirst(
+      text,
+      /"[^"]*node(?:\.exe)?"\s+"([^"]+local-execution-bridge\.mjs)"/i,
+    );
+    return { configPath, bridgePath };
+  }
+  const configPath = unquoteShellValue(
+    matchFirst(text, /OPENBROWSERAGENT_LOCAL_EXECUTION_CONFIG=([^\s]+)\s+exec/),
+  );
+  const bridgePath = unquoteShellValue(
+    matchFirst(text, /exec\s+[^\s]+\s+([^\s]+local-execution-bridge\.mjs)/),
+  );
+  return { configPath, bridgePath };
+}
+
+function matchFirst(text, pattern) {
+  return stringArg(text.match(pattern)?.[1]);
+}
+
+function unquoteShellValue(value) {
+  const text = stringArg(value);
+  if (!text.startsWith("'") || !text.endsWith("'")) return text;
+  return text.slice(1, -1).replaceAll("'\\''", "'");
+}
 
 function installBridgeRuntime(path) {
   mkdirSync(dirname(path), { recursive: true });
@@ -175,10 +199,7 @@ function registerNativeHost(targetBrowser, manifest) {
     const result = spawnSync(
       "reg",
       ["add", key, "/ve", "/t", "REG_SZ", "/d", manifest, "/f"],
-      {
-        stdio: "pipe",
-        windowsHide: true,
-      },
+      { stdio: "pipe", windowsHide: true },
     );
     if (result.status !== 0)
       fail(
@@ -186,6 +207,37 @@ function registerNativeHost(targetBrowser, manifest) {
       );
   }
   return keys;
+}
+
+function browsersForUpdate(targetBrowser) {
+  const common = [
+    "chrome",
+    "edge",
+    "brave",
+    "vivaldi",
+    "chromium",
+    "firefox",
+    "librewolf",
+  ];
+  const linuxPackaged = [
+    "firefox-flatpak",
+    "chromium-flatpak",
+    "brave-flatpak",
+    "librewolf-flatpak",
+    "firefox-snap",
+    "chromium-snap",
+    "brave-snap",
+  ];
+  const supported =
+    platform() === "linux" ? [...common, ...linuxPackaged] : common;
+  if (targetBrowser === "all") return supported;
+  if (targetBrowser === "safari")
+    fail(
+      "Safari is not supported by this local execution bridge because Safari Web Extensions do not use this Native Messaging API in OpenBrowserAgent.",
+    );
+  if (!supported.includes(targetBrowser))
+    fail(`Unsupported browser target: ${targetBrowser}`);
+  return [targetBrowser];
 }
 
 function nativeHostDir(targetBrowser) {
@@ -399,6 +451,23 @@ function chromeNativeHostRegistryKey() {
   return `HKCU\\Software\\Google\\Chrome\\NativeMessagingHosts\\${HOST_NAME}`;
 }
 
+function defaultConfigPath() {
+  return join(openBrowserAgentDir(), "local-execution-bridge.config.json");
+}
+
+function defaultBridgePath() {
+  return join(openBrowserAgentDir(), "local-execution-bridge.mjs");
+}
+
+function defaultWrapperPath() {
+  return join(
+    openBrowserAgentDir(),
+    platform() === "win32"
+      ? "openbrowseragent-local-execution-bridge.cmd"
+      : "openbrowseragent-local-execution-bridge",
+  );
+}
+
 function openBrowserAgentDir() {
   const os = platform();
   if (os === "win32")
@@ -444,11 +513,6 @@ function readJson(path, fallback) {
   }
 }
 
-function resolvePath(path) {
-  if (!path.startsWith("~")) return resolve(path);
-  return resolve(join(homedir(), path.slice(1)));
-}
-
 function stringArg(value) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -463,10 +527,6 @@ function isFirefox(targetBrowser) {
   ].includes(targetBrowser);
 }
 
-function generateSecret() {
-  return randomBytes(32).toString("hex");
-}
-
 function shellQuote(value) {
   return `'${String(value).replaceAll("'", "'\\''")}'`;
 }
@@ -477,48 +537,14 @@ function fail(message) {
   process.exit(1);
 }
 
-function assertSupportedBrowser(targetBrowser) {
-  const supported = [
-    "chrome",
-    "edge",
-    "brave",
-    "vivaldi",
-    "chromium",
-    "firefox",
-    "librewolf",
-    "firefox-flatpak",
-    "chromium-flatpak",
-    "brave-flatpak",
-    "librewolf-flatpak",
-    "firefox-snap",
-    "chromium-snap",
-    "brave-snap",
-  ];
-  if (supported.includes(targetBrowser)) return;
-  if (targetBrowser === "safari")
-    fail(
-      "Safari is not supported by this local execution bridge because Safari Web Extensions do not use this Native Messaging API in OpenBrowserAgent.",
-    );
-  fail(`Unsupported browser target: ${targetBrowser}`);
-}
-
 function printHelp() {
   console.log(`Usage:
-  openbrowseragent-local-execution-bridge install --browser chrome --extension-id <id> [options]
-  openbrowseragent-local-execution-bridge update --browser chrome --extension-id <id> [options]
+  openbrowseragent-local-execution-bridge update [--browser chrome]
+  openbrowseragent-local-execution-bridge update --browser chrome --extension-id <id> [install options]
 
 Options:
-  --browser <chrome|edge|brave|vivaldi|chromium|firefox|librewolf|firefox-flatpak|chromium-flatpak|brave-flatpak|librewolf-flatpak|firefox-snap|chromium-snap|brave-snap>
-                                           Browser target. Default: chrome
-  --extension-id <id>                       Installed extension ID
-  --command-id <id>                         Bridge shell config ID. Default: default
-  --command-name <name>                     Display name. Default: command ID
-  --cwd <path>                              Default command working directory
-  --shell <shell>                           Shell executable. Omit to let the bridge choose for this platform
-  --secret <token>                          Use an existing bridge secret
-  --rotate-secret true                      Generate a new secret for this command ID
-  --config <path>                           Bridge config path
-  --bridge <path>                           Stable bridge runtime path
-  --wrapper <path>                          Stable wrapper executable path
-  --manifest <path>                         Native Messaging manifest path`);
+  --browser <target|all>                     Browser target to update. Default: all
+  --extension-id <id>                        Optional explicit install/update fallback
+
+Without --extension-id, update scans known Native Messaging manifest locations and refreshes every installed OpenBrowserAgent local execution bridge it can find.`);
 }

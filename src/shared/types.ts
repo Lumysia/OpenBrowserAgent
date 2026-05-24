@@ -438,14 +438,12 @@ export type QuestionToolOption = {
 
 export type QuestionToolQuestion = {
   question: string;
-  header?: string;
   options: QuestionToolOption[];
   multiple?: boolean;
   custom?: boolean;
 };
 
 export type QuestionToolAnswer = {
-  header: string;
   question: string;
   answers: string[];
   customAnswer?: string;

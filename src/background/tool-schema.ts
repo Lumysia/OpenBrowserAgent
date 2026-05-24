@@ -73,10 +73,6 @@ export const commonBrowserTools = [
               type: "string",
               description: "Complete question text in the user's language.",
             },
-            header: {
-              type: "string",
-              description: "Short label, max 30 characters.",
-            },
             options: {
               type: "array",
               minItems: 1,

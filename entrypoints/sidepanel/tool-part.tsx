@@ -15,6 +15,9 @@ import type {
 } from "../../src/shared/types";
 import {
   Button,
+  Card,
+  CardContent,
+  CardTitle,
   Input,
   Popover,
   PopoverContent,
@@ -184,6 +187,7 @@ function QuestionToolForm({
   const [customAnswers, setCustomAnswers] = React.useState<
     Record<number, string>
   >({});
+  const questionGroupId = React.useId();
   const complete = questions.every((question, index) =>
     isQuestionAnswered(question, selected[index] || [], customAnswers[index]),
   );
@@ -192,8 +196,8 @@ function QuestionToolForm({
     return (
       <div className="tool-result-list tool-question-answers">
         {submittedAnswers.map((answer, index) => (
-          <div className="tool-result-row" key={`${answer.header}-${index}`}>
-            <span className="tool-result-label">{answer.header}</span>
+          <div className="tool-result-row" key={`${answer.question}-${index}`}>
+            <span className="tool-result-label">{answer.question}</span>
             <span className="tool-result-value">
               {[...answer.answers, answer.customAnswer]
                 .filter(Boolean)
@@ -211,7 +215,6 @@ function QuestionToolForm({
         if (!active || !complete) return;
         onSubmit(
           questions.map((question, index) => ({
-            header: question.header || `${index + 1}`,
             question: question.question,
             answers: selected[index] || [],
             customAnswer: (customAnswers[index] || "").trim() || undefined,
@@ -222,70 +225,77 @@ function QuestionToolForm({
       {questions.map((question, index) => {
         const allowCustom = question.custom !== false;
         const selectedValues = selected[index] || [];
+        const titleId = `${questionGroupId}-${index}`;
         return (
-          <fieldset className="tool-question-fieldset" key={index}>
-            <legend>
-              <span>{question.header || `${index + 1}`}</span>
-              {question.question}
-            </legend>
-            {question.multiple ? (
-              <ToggleGroup
-                type="multiple"
-                value={selectedValues}
-                disabled={!active}
-                onValueChange={(value) =>
-                  setSelected((items) => ({ ...items, [index]: value }))
-                }
-              >
-                {question.options.map((option) => (
-                  <QuestionOptionItem key={option.label} option={option} />
-                ))}
-              </ToggleGroup>
-            ) : (
-              <ToggleGroup
-                type="single"
-                value={selectedValues[0] || ""}
-                disabled={!active}
-                onValueChange={(value) =>
-                  setSelected((items) => ({
-                    ...items,
-                    [index]: value ? [value] : [],
-                  }))
-                }
-              >
-                {question.options.map((option) => (
-                  <QuestionOptionItem key={option.label} option={option} />
-                ))}
-              </ToggleGroup>
-            )}
-            {allowCustom &&
-              (question.multiple ? (
-                <Textarea
-                  value={customAnswers[index] || ""}
+          <Card
+            className="tool-question-card"
+            key={index}
+            role="group"
+            aria-labelledby={titleId}
+          >
+            <CardContent className="tool-question-card-content">
+              <CardTitle className="tool-question-title" id={titleId}>
+                {question.question}
+              </CardTitle>
+              {question.multiple ? (
+                <ToggleGroup
+                  type="multiple"
+                  value={selectedValues}
                   disabled={!active}
-                  rows={2}
-                  placeholder={t.sidepanel.questionCustomPlaceholder}
-                  onChange={(event) =>
-                    setCustomAnswers((items) => ({
-                      ...items,
-                      [index]: event.target.value,
-                    }))
+                  onValueChange={(value) =>
+                    setSelected((items) => ({ ...items, [index]: value }))
                   }
-                />
+                >
+                  {question.options.map((option) => (
+                    <QuestionOptionItem key={option.label} option={option} />
+                  ))}
+                </ToggleGroup>
               ) : (
-                <Input
-                  value={customAnswers[index] || ""}
+                <ToggleGroup
+                  type="single"
+                  value={selectedValues[0] || ""}
                   disabled={!active}
-                  placeholder={t.sidepanel.questionCustomPlaceholder}
-                  onChange={(event) =>
-                    setCustomAnswers((items) => ({
+                  onValueChange={(value) =>
+                    setSelected((items) => ({
                       ...items,
-                      [index]: event.target.value,
+                      [index]: value ? [value] : [],
                     }))
                   }
-                />
-              ))}
-          </fieldset>
+                >
+                  {question.options.map((option) => (
+                    <QuestionOptionItem key={option.label} option={option} />
+                  ))}
+                </ToggleGroup>
+              )}
+              {allowCustom &&
+                (question.multiple ? (
+                  <Textarea
+                    value={customAnswers[index] || ""}
+                    disabled={!active}
+                    rows={2}
+                    placeholder={t.sidepanel.questionCustomPlaceholder}
+                    onChange={(event) =>
+                      setCustomAnswers((items) => ({
+                        ...items,
+                        [index]: event.target.value,
+                      }))
+                    }
+                  />
+                ) : (
+                  <Input
+                    value={customAnswers[index] || ""}
+                    disabled={!active}
+                    placeholder={t.sidepanel.questionCustomPlaceholder}
+                    onChange={(event) =>
+                      setCustomAnswers((items) => ({
+                        ...items,
+                        [index]: event.target.value,
+                      }))
+                    }
+                  />
+                ))}
+            </CardContent>
+          </Card>
         );
       })}
       <Button type="submit" size="sm" disabled={!active || !complete}>
@@ -328,7 +338,7 @@ function QuestionOptionItem({
 function questionToolQuestions(input: unknown): QuestionToolQuestion[] {
   const questions = (input as { questions?: unknown } | undefined)?.questions;
   if (!Array.isArray(questions)) return [];
-  return questions.slice(0, 6).flatMap((question, index) => {
+  return questions.slice(0, 6).flatMap((question) => {
     if (!question || typeof question !== "object") return [];
     const item = question as Record<string, unknown>;
     const text = String(item.question || "").trim();
@@ -350,7 +360,6 @@ function questionToolQuestions(input: unknown): QuestionToolQuestion[] {
     return [
       {
         question: text,
-        header: String(item.header || `${index + 1}`).trim(),
         options,
         multiple: item.multiple === true,
         custom: item.custom !== false,
@@ -365,11 +374,9 @@ function questionToolSubmittedAnswers(output: unknown): QuestionToolAnswer[] {
   return answers.flatMap((answer) => {
     if (!answer || typeof answer !== "object") return [];
     const item = answer as Record<string, unknown>;
-    const header = String(item.header || "").trim();
     const question = String(item.question || "").trim();
     return [
       {
-        header: header || question || "Question",
         question,
         answers: Array.isArray(item.answers)
           ? item.answers.map((value) => String(value).trim()).filter(Boolean)

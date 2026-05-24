@@ -16,9 +16,17 @@ Example for Firefox:
 npx openbrowseragent-local-execution-bridge@1 install --browser firefox --extension-id <extension-id> --command-id default
 ```
 
-The installer writes a stable local bridge runtime, a wrapper executable, a Native Messaging manifest, and a bridge config containing a generated secret. It prints JSON with the values to enter in OpenBrowserAgent. When OpenBrowserAgent tests the bridge, the bridge reports the shell and basic environment it will use for shell commands. On Windows, Brave, Vivaldi, and Chromium targets also register a Chrome-compatible Native Messaging registry key for browsers that read that location.
+The installer writes a stable local bridge runtime, a wrapper executable, a Native Messaging manifest, and a bridge config containing a generated secret. It prints JSON with the values to enter in OpenBrowserAgent. When OpenBrowserAgent tests the bridge, the bridge reports the shell, basic environment, and detected local agent CLIs it can use for shell commands. On Windows, Brave, Vivaldi, and Chromium targets also register a Chrome-compatible Native Messaging registry key for browsers that read that location.
 
 The Native Messaging manifest points to the generated wrapper path, not to `npx`.
+
+Update existing bridge runtimes by running the latest package updater. With no arguments, it scans known Native Messaging manifest locations and refreshes every installed OpenBrowserAgent bridge it can find:
+
+```bash
+npx openbrowseragent-local-execution-bridge@1 update
+```
+
+Use `--browser chrome` or another browser target to update only one browser. If you need to repair or change the extension ID, pass the normal install arguments such as `--browser chrome --extension-id <extension-id> --command-id default`.
 
 Uninstall the native host files:
 

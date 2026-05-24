@@ -198,7 +198,7 @@ function waitForQuestionAnswer(
 
 function normalizeQuestions(value: unknown): QuestionToolQuestion[] {
   if (!Array.isArray(value)) return [];
-  return value.slice(0, 6).flatMap((item, index) => {
+  return value.slice(0, 6).flatMap((item) => {
     if (!item || typeof item !== "object") return [];
     const raw = item as Record<string, unknown>;
     const question = String(raw.question || "").trim();
@@ -220,7 +220,6 @@ function normalizeQuestions(value: unknown): QuestionToolQuestion[] {
     return [
       {
         question,
-        header: String(raw.header || `Question ${index + 1}`).trim(),
         options,
         multiple: raw.multiple === true,
         custom: raw.custom !== false,
@@ -235,12 +234,11 @@ function normalizeAnswers(value: unknown): QuestionToolAnswer[] {
     if (!item || typeof item !== "object") return [];
     const raw = item as Record<string, unknown>;
     const question = String(raw.question || "").trim();
-    const header = String(raw.header || question || "Question").trim();
     const answers = Array.isArray(raw.answers)
       ? raw.answers.map((answer) => String(answer).trim()).filter(Boolean)
       : [];
     const customAnswer = String(raw.customAnswer || "").trim();
-    return [{ header, question, answers, customAnswer }];
+    return [{ question, answers, customAnswer }];
   });
 }
 
@@ -250,7 +248,7 @@ function formatQuestionAnswers(answers: QuestionToolAnswer[]) {
       const selected = [...answer.answers, answer.customAnswer]
         .filter(Boolean)
         .join(", ");
-      return `- ${answer.header}: ${selected || "No answer"}`;
+      return `- ${answer.question}: ${selected || "No answer"}`;
     })
     .join("\n");
 }
