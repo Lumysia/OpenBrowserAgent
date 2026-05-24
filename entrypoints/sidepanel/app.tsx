@@ -450,12 +450,10 @@ export function SidepanelApp() {
   }
 
   function persistInitialChatSnapshot(chat: Chat) {
-    setChats((items) => {
-      const next = updateChatList(items, chat);
-      storage.chats.set(next).catch((error) => {
-        console.warn("Failed to persist initial chat snapshot", error);
-      });
-      return next;
+    setChats((items) => updateChatList(items, chat), {
+      persist: "immediate",
+    }).catch((error) => {
+      console.warn("Failed to persist initial chat snapshot", error);
     });
   }
 

@@ -1,10 +1,9 @@
-import { useCallback, useRef, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useRef } from "react";
 import { resolveAgent } from "../../src/shared/agents";
 import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import { isSkillEnabled } from "../../src/shared/skills";
-import { storage } from "../../src/shared/storage";
 import {
   AI_STREAM_REQUEST_TYPE,
   CHAT_PART_STATE,
@@ -49,7 +48,10 @@ export function useSubAgentLauncher({
   skills: Skill[] | undefined;
   language: string | undefined;
   t: Messages;
-  setChats: Dispatch<SetStateAction<Chat[]>>;
+  setChats: (
+    value: Chat[] | ((previous: Chat[]) => Chat[]),
+    options?: { persist?: "debounced" | "immediate" },
+  ) => Promise<Chat[] | undefined>;
   beginStream: (chatId: string, messageId: string) => void;
   startStream: (request: SendMessagesRequest, targetMessageId: string) => void;
 }) {
@@ -117,25 +119,26 @@ export function useSubAgentLauncher({
         updatedAt: now,
       };
       launchedSubAgentChatIdsRef.current.add(childChat.id);
-      setChats((items) => {
-        const withChild = items.some((chat) => chat.id === childChat.id)
-          ? items
-          : [...pruneEmptyChats(items), childChat];
-        const next = withChild.map((chat) =>
-          chat.id === chatId
-            ? {
-                ...chat,
-                childChatIds: Array.from(
-                  new Set([...(chat.childChatIds || []), childChat.id]),
-                ),
-                updatedAt: Date.now(),
-              }
-            : chat,
-        );
-        storage.chats.set(next).catch((error) => {
-          console.warn("Failed to persist initial sub-agent chat", error);
-        });
-        return next;
+      setChats(
+        (items) => {
+          const withChild = items.some((chat) => chat.id === childChat.id)
+            ? items
+            : [...pruneEmptyChats(items), childChat];
+          return withChild.map((chat) =>
+            chat.id === chatId
+              ? {
+                  ...chat,
+                  childChatIds: Array.from(
+                    new Set([...(chat.childChatIds || []), childChat.id]),
+                  ),
+                  updatedAt: Date.now(),
+                }
+              : chat,
+          );
+        },
+        { persist: "immediate" },
+      ).catch((error) => {
+        console.warn("Failed to persist initial sub-agent chat", error);
       });
       const availableSkills = childAgent.capabilities.skillTools
         ? (skills || []).filter(isSkillEnabled)

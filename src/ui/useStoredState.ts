@@ -8,6 +8,8 @@ type StorageItem<T> = {
   watch(callback: (newValue: T, oldValue: T) => void): () => void;
 };
 
+type StoredStateUpdateOptions = { persist?: "debounced" | "immediate" };
+
 export function useStoredState<T>(item: StorageItem<T>) {
   const [value, setValue] = useState<T | undefined>();
   const valueRef = useRef<T | undefined>(undefined);
@@ -55,7 +57,10 @@ export function useStoredState<T>(item: StorageItem<T>) {
     };
   }, [item]);
 
-  async function update(next: T | ((previous: T) => T)) {
+  async function update(
+    next: T | ((previous: T) => T),
+    options: StoredStateUpdateOptions = {},
+  ) {
     const previous = valueRef.current;
     if (previous === undefined) return;
     const resolved =
@@ -72,7 +77,9 @@ export function useStoredState<T>(item: StorageItem<T>) {
       persistTimerRef,
       pendingPersistRef,
       ownWriteSnapshotsRef,
+      options,
     );
+    return resolved;
   }
 
   return [value, update, loading] as const;
@@ -84,7 +91,15 @@ function persistValue<T>(
   timerRef: MutableRefObject<ReturnType<typeof setTimeout> | undefined>,
   pendingRef: MutableRefObject<T | undefined>,
   ownWriteSnapshotsRef: MutableRefObject<OwnWriteSnapshots>,
+  options: StoredStateUpdateOptions,
 ) {
+  if (options.persist === "immediate") {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = undefined;
+    pendingRef.current = undefined;
+    persistOwnWrite(item, value, ownWriteSnapshotsRef).catch(logPersistError);
+    return;
+  }
   if (!item.persistDebounceMs) {
     item.set(value).catch(logPersistError);
     return;
