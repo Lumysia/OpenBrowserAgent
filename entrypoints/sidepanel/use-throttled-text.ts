@@ -5,6 +5,7 @@ import {
   STREAM_REVEAL_BACKLOG_SMALL,
   STREAM_REVEAL_BACKLOG_TINY,
   STREAM_REVEAL_MAX_STEP_DELAY_MS,
+  STREAM_REVEAL_MAX_PENDING_CHARS,
   STREAM_REVEAL_MIN_STEP_DELAY_MS,
   STREAM_REVEAL_STEP_LARGE,
   STREAM_REVEAL_STEP_MEDIUM,
@@ -32,6 +33,16 @@ export function useThrottledText(value: string, delayMs: number) {
       setAnimatedFrom(targetLength);
       setDisplayLength(targetLength);
       return undefined;
+    }
+
+    if (
+      targetLength - displayLengthRef.current >
+      STREAM_REVEAL_MAX_PENDING_CHARS
+    ) {
+      const next = targetLength - STREAM_REVEAL_MAX_PENDING_CHARS;
+      displayLengthRef.current = next;
+      setAnimatedFrom(next);
+      setDisplayLength(next);
     }
 
     function schedule() {

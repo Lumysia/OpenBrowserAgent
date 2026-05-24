@@ -1,5 +1,5 @@
 import { Brain, Check, Copy, GitBranch } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   COPY_FEEDBACK_MS,
   STREAM_RENDER_THROTTLE_MS,
@@ -149,16 +149,22 @@ export function AssistantText({
   const displayText = throttledText;
   const streaming = displayText.length < text.length;
   const outputSettled = runEnded && !streaming;
-  const { html, codeBlocks } = renderMarkdown(
-    displayText,
-    t,
-    copiedCodeId,
-    sources,
-    {
-      animatedFromChar:
-        displayText.length < text.length ? animatedFrom : undefined,
-      mermaidPreview: outputSettled,
-    },
+  const { html, codeBlocks } = useMemo(
+    () =>
+      renderMarkdown(displayText, t, copiedCodeId, sources, {
+        animatedFromChar:
+          displayText.length < text.length ? animatedFrom : undefined,
+        mermaidPreview: outputSettled,
+      }),
+    [
+      animatedFrom,
+      copiedCodeId,
+      displayText,
+      outputSettled,
+      sources,
+      t,
+      text.length,
+    ],
   );
   useEffect(() => {
     if (!copied) return undefined;
