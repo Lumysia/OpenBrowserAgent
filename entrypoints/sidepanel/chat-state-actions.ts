@@ -52,16 +52,18 @@ export function pruneEmptyChats(chats: Chat[]) {
 }
 
 export function updateChatAction(setChats: ChatSetter, chat: Chat) {
-  setChats((items) => {
-    const pruned = pruneEmptyChats(items);
-    const nextChat = pruneStaleChildLinks(chat, pruned);
-    const nextItems = removeStaleChildren(pruned, nextChat);
-    if (!nextItems.some((candidate) => candidate.id === nextChat.id))
-      return [...nextItems, nextChat];
-    return nextItems.map((candidate) =>
-      candidate.id === nextChat.id ? nextChat : candidate,
-    );
-  });
+  setChats((items) => updateChatList(items, chat));
+}
+
+export function updateChatList(chats: Chat[], chat: Chat) {
+  const pruned = pruneEmptyChats(chats);
+  const nextChat = pruneStaleChildLinks(chat, pruned);
+  const nextItems = removeStaleChildren(pruned, nextChat);
+  if (!nextItems.some((candidate) => candidate.id === nextChat.id))
+    return [...nextItems, nextChat];
+  return nextItems.map((candidate) =>
+    candidate.id === nextChat.id ? nextChat : candidate,
+  );
 }
 
 function isEmptyChat(chat: Chat) {

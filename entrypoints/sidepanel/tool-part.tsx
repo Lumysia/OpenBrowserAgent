@@ -59,7 +59,7 @@ export function ToolPart({
   const localExecutionBridgeRunning =
     isLocalExecutionBridgeTool(name) && output.state === "running";
   const questionPending =
-    name === BROWSER_TOOL_NAME.question && isQuestionPending(part);
+    name === BROWSER_TOOL_NAME.question && !runEnded && isQuestionPending(part);
   const loading =
     questionPending ||
     (!runEnded &&
@@ -68,7 +68,9 @@ export function ToolPart({
         part.state === CHAT_PART_STATE.inputStreaming ||
         part.state === CHAT_PART_STATE.inputAvailable));
   const isError = part.state === CHAT_PART_STATE.outputError;
-  const isDone = part.state === CHAT_PART_STATE.outputAvailable;
+  const isDone =
+    part.state === CHAT_PART_STATE.outputAvailable ||
+    (runEnded && part.state === CHAT_PART_STATE.inputAvailable);
   const status = loading
     ? "loading"
     : isError
@@ -114,7 +116,7 @@ export function ToolPart({
             <QuestionToolForm
               t={t}
               part={part}
-              active={isQuestionPending(part)}
+              active={questionPending}
               onSubmit={(answers) => onAnswerQuestion?.(part.id, answers)}
             />
           )}
@@ -206,6 +208,7 @@ function QuestionToolForm({
       className="tool-question-stack"
       onSubmit={(event) => {
         event.preventDefault();
+        if (!active || !complete) return;
         onSubmit(
           questions.map((question, index) => ({
             header: question.header || `${index + 1}`,

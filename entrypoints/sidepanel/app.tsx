@@ -18,7 +18,7 @@ import { requestChatTitle } from "./ai-requests";
 import {
   forkChatAction,
   pruneEmptyChats,
-  updateChatAction,
+  updateChatList,
 } from "./chat-state-actions";
 import {
   createResendMessageDraft,
@@ -404,7 +404,7 @@ export function SidepanelApp() {
         messageId: userMessage.id,
         attachments: sentAttachments,
       });
-      updateChatAction(setChats, nextChat);
+      persistInitialChatSnapshot(nextChat);
       if (shouldGenerateTitle)
         requestChatTitle({
           chatId: nextChat.id,
@@ -447,6 +447,16 @@ export function SidepanelApp() {
     } finally {
       sendInFlightRef.current.delete(sendChatId);
     }
+  }
+
+  function persistInitialChatSnapshot(chat: Chat) {
+    setChats((items) => {
+      const next = updateChatList(items, chat);
+      storage.chats.set(next).catch((error) => {
+        console.warn("Failed to persist initial chat snapshot", error);
+      });
+      return next;
+    });
   }
 
   return (

@@ -4,6 +4,7 @@ import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import { isSkillEnabled } from "../../src/shared/skills";
+import { storage } from "../../src/shared/storage";
 import {
   AI_STREAM_REQUEST_TYPE,
   CHAT_PART_STATE,
@@ -120,7 +121,7 @@ export function useSubAgentLauncher({
         const withChild = items.some((chat) => chat.id === childChat.id)
           ? items
           : [...pruneEmptyChats(items), childChat];
-        return withChild.map((chat) =>
+        const next = withChild.map((chat) =>
           chat.id === chatId
             ? {
                 ...chat,
@@ -131,6 +132,10 @@ export function useSubAgentLauncher({
               }
             : chat,
         );
+        storage.chats.set(next).catch((error) => {
+          console.warn("Failed to persist initial sub-agent chat", error);
+        });
+        return next;
       });
       const availableSkills = childAgent.capabilities.skillTools
         ? (skills || []).filter(isSkillEnabled)

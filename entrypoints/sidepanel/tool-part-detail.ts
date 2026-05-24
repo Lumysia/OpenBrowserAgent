@@ -45,9 +45,7 @@ export function toolDisplay(
   const title = (() => {
     const base =
       state === CHAT_PART_STATE.outputAvailable ||
-      (name !== BROWSER_TOOL_NAME.question &&
-        runEnded &&
-        state === CHAT_PART_STATE.inputAvailable)
+      (runEnded && state === CHAT_PART_STATE.inputAvailable)
         ? toolText?.done
         : toolText?.running;
     if (name === BROWSER_TOOL_NAME.startSubAgent)
@@ -78,7 +76,7 @@ export function toolDisplay(
         stringValue(output.timeZone),
       ]);
     if (name === BROWSER_TOOL_NAME.question)
-      return questionToolDetail(input, output, state, t);
+      return questionToolDetail(input, output, state, runEnded, t);
     if (
       name === BROWSER_TOOL_NAME.startSubAgent ||
       name === BROWSER_TOOL_NAME.getSubAgentStatus
@@ -274,12 +272,13 @@ function questionToolDetail(
   input: Record<string, unknown>,
   output: Record<string, unknown>,
   state: ChatPart["state"],
+  runEnded: boolean,
   t: Messages,
 ) {
   if (Array.isArray(output.answers))
     return `${output.answers.length} answers submitted`;
   const questions = Array.isArray(input.questions) ? input.questions : [];
-  if (state === CHAT_PART_STATE.inputAvailable)
+  if (state === CHAT_PART_STATE.inputAvailable && !runEnded)
     return t.sidepanel.questionWaiting;
   return `${questions.length} questions`;
 }
