@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type MutableRefObject } from "react";
 type StorageItem<T> = {
   key?: string;
   persistDebounceMs?: number;
+  snapshot?: "hash";
   get(): Promise<T>;
   set(value: T): Promise<void>;
   watch(callback: (newValue: T, oldValue: T) => void): () => void;
@@ -31,7 +32,7 @@ export function useStoredState<T>(item: StorageItem<T>) {
       .then((next) => {
         if (!mounted) return;
         valueRef.current = next;
-        snapshotRef.current = snapshot(next);
+        snapshotRef.current = snapshot(item, next);
         setValue(next);
       })
       .catch((error) => {
@@ -41,7 +42,7 @@ export function useStoredState<T>(item: StorageItem<T>) {
         if (mounted) setLoading(false);
       });
     const unwatch = item.watch((next) => {
-      const nextSnapshot = snapshot(next);
+      const nextSnapshot = snapshot(item, next);
       if (nextSnapshot && nextSnapshot === snapshotRef.current) return;
       if (consumeOwnWriteSnapshot(ownWriteSnapshotsRef, nextSnapshot)) {
         return;
@@ -67,7 +68,9 @@ export function useStoredState<T>(item: StorageItem<T>) {
       typeof next === "function"
         ? (next as (previous: T) => T)(previous)
         : next;
-    const resolvedSnapshot = snapshot(resolved);
+    const resolvedSnapshot = snapshot(item, resolved);
+    if (resolvedSnapshot && resolvedSnapshot === snapshotRef.current)
+      return resolved;
     valueRef.current = resolved;
     snapshotRef.current = resolvedSnapshot;
     setValue(resolved);
@@ -134,7 +137,7 @@ async function persistOwnWrite<T>(
   value: T,
   ownWriteSnapshotsRef: MutableRefObject<OwnWriteSnapshots>,
 ) {
-  const valueSnapshot = snapshot(value);
+  const valueSnapshot = snapshot(item, value);
   rememberOwnWriteSnapshot(ownWriteSnapshotsRef, valueSnapshot);
   try {
     await item.set(value);
@@ -185,10 +188,20 @@ function forgetOwnWriteSnapshot(
   );
 }
 
-function snapshot(value: unknown) {
+function snapshot(item: StorageItem<unknown>, value: unknown) {
   try {
-    return JSON.stringify(value);
+    const serialized = JSON.stringify(value);
+    return item.snapshot === "hash" ? hashSnapshot(serialized) : serialized;
   } catch {
     return undefined;
   }
+}
+
+function hashSnapshot(value: string) {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return `${value.length}:${hash >>> 0}`;
 }

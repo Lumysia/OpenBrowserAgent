@@ -34,6 +34,7 @@ export function makeStorageItemFactory(io: StorageItemIo) {
       key: storageKey,
       area,
       persistDebounceMs: options.persistDebounceMs,
+      snapshot: options.snapshot,
       async get() {
         if (area === STORAGE_AREAS.sync) {
           const pending = await readPendingSyncValue<T>(storageKey);

@@ -220,6 +220,7 @@ function createSwitchableItem<T>(
     key,
     area: STORAGE_AREAS.local,
     persistDebounceMs: options.persistDebounceMs,
+    snapshot: options.snapshot,
     get: getValue,
     async set(value) {
       const area = await activeArea();
@@ -407,7 +408,7 @@ export const storage = {
     () => [],
     SYNC_PREFERENCES.chats,
     undefined,
-    { persistDebounceMs: config.CHAT_WRITE_DEBOUNCE_MS },
+    { persistDebounceMs: config.CHAT_WRITE_DEBOUNCE_MS, snapshot: "hash" },
   ),
   chatTabs: createItem<ChatTab[]>(
     STORAGE_AREAS.local,

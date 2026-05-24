@@ -4,6 +4,7 @@ export type StorageItem<T> = {
   key: string;
   area: AreaName;
   persistDebounceMs?: number;
+  snapshot?: "hash";
   get(): Promise<T>;
   set(value: T): Promise<void>;
   remove(): Promise<void>;
@@ -12,4 +13,5 @@ export type StorageItem<T> = {
 
 export type StorageItemOptions = {
   persistDebounceMs?: number;
+  snapshot?: "hash";
 };

@@ -41,14 +41,14 @@ export function selectChatAction({
   setChats: ChatSetter;
   setActiveChatId: ActiveChatSetter;
 }) {
-  setChats((items) =>
-    items.filter((chat) => chat.id === chatId || !isEmptyChat(chat)),
-  );
+  setChats((items) => pruneEmptyChats(items));
   setActiveChatId(chatId);
 }
 
 export function pruneEmptyChats(chats: Chat[]) {
-  return chats.filter((chat) => !isEmptyChat(chat));
+  return chats.some(isEmptyChat)
+    ? chats.filter((chat) => !isEmptyChat(chat))
+    : chats;
 }
 
 export function updateChatAction(setChats: ChatSetter, chat: Chat) {
