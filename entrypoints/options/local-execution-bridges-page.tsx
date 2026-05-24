@@ -9,14 +9,14 @@ import {
   Trash2,
 } from "lucide-react";
 import {
-  createLocalAgentDraft,
-  generateLocalAgentSecret,
-  normalizeLocalAgents,
-} from "../../src/shared/local-agents";
-import { sendLocalAgentRuntimeRequest } from "../../src/shared/local-agent-runtime";
+  createLocalExecutionBridgeDraft,
+  generateLocalExecutionBridgeSecret,
+  normalizeLocalExecutionBridges,
+} from "../../src/shared/local-execution-bridges";
+import { sendLocalExecutionBridgeRuntimeRequest } from "../../src/shared/local-execution-bridge-runtime";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
-import type { LocalAgentConfig } from "../../src/shared/types";
+import type { LocalExecutionBridgeConfig } from "../../src/shared/types";
 import {
   Accordion,
   AccordionContent,
@@ -35,62 +35,70 @@ import {
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 
-export function LocalAgentsPage() {
+export function LocalExecutionBridgesPage() {
   const [language] = useStoredState(storage.language);
-  const [agents, setAgents] = useStoredState(storage.localAgents);
-  const [testingAgentId, setTestingAgentId] = useState("");
-  const [recentlyTestedAgentId, setRecentlyTestedAgentId] = useState("");
+  const [bridges, setBridges] = useStoredState(storage.localExecutionBridges);
+  const [testingBridgeId, setTestingBridgeId] = useState("");
+  const [recentlyTestedBridgeId, setRecentlyTestedBridgeId] = useState("");
   const t = getMessages(language);
-  const items = normalizeLocalAgents(agents);
+  const items = normalizeLocalExecutionBridges(bridges);
 
-  function addAgent() {
-    setAgents((current) => [
-      ...normalizeLocalAgents(current),
-      createLocalAgentDraft(t.options.newLocalAgent),
+  function addBridge() {
+    setBridges((current) => [
+      ...normalizeLocalExecutionBridges(current),
+      createLocalExecutionBridgeDraft(t.options.newLocalExecutionBridge),
     ]);
   }
 
-  function updateAgent(agentId: string, patch: Partial<LocalAgentConfig>) {
-    setAgents((current) =>
-      normalizeLocalAgents(current).map((agent) =>
-        agent.id === agentId
+  function updateBridge(
+    bridgeId: string,
+    patch: Partial<LocalExecutionBridgeConfig>,
+  ) {
+    setBridges((current) =>
+      normalizeLocalExecutionBridges(current).map((bridge) =>
+        bridge.id === bridgeId
           ? {
-              ...agent,
+              ...bridge,
               ...patch,
               ...testResetPatch(patch),
               updatedAt: Date.now(),
             }
-          : agent,
+          : bridge,
       ),
     );
   }
 
-  function deleteAgent(agentId: string) {
-    setAgents((current) =>
-      normalizeLocalAgents(current).filter((agent) => agent.id !== agentId),
+  function deleteBridge(bridgeId: string) {
+    setBridges((current) =>
+      normalizeLocalExecutionBridges(current).filter(
+        (bridge) => bridge.id !== bridgeId,
+      ),
     );
   }
 
-  async function testAgent(agentId: string) {
-    setTestingAgentId(agentId);
+  async function testBridge(bridgeId: string) {
+    setTestingBridgeId(bridgeId);
     try {
-      await sendLocalAgentRuntimeRequest({ operation: "test", agentId });
-      updateAgent(agentId, { lastTestedAt: Date.now(), lastTestError: "" });
-      setRecentlyTestedAgentId(agentId);
+      await sendLocalExecutionBridgeRuntimeRequest({
+        operation: "test",
+        bridgeId,
+      });
+      updateBridge(bridgeId, { lastTestedAt: Date.now(), lastTestError: "" });
+      setRecentlyTestedBridgeId(bridgeId);
       window.setTimeout(() => {
-        setRecentlyTestedAgentId((current) =>
-          current === agentId ? "" : current,
+        setRecentlyTestedBridgeId((current) =>
+          current === bridgeId ? "" : current,
         );
       }, 2500);
       return true;
     } catch (error) {
-      updateAgent(agentId, {
+      updateBridge(bridgeId, {
         lastTestedAt: undefined,
-        lastTestError: `${t.options.localAgentTestError}: ${error instanceof Error ? error.message : String(error)}`,
+        lastTestError: `${t.options.localExecutionBridgeTestError}: ${error instanceof Error ? error.message : String(error)}`,
       });
       return false;
     } finally {
-      setTestingAgentId("");
+      setTestingBridgeId("");
     }
   }
 
@@ -99,36 +107,38 @@ export function LocalAgentsPage() {
       <div className="settings-page-header">
         <div>
           <h1 className="settings-page-title">
-            <TerminalSquare size={24} /> {t.options.localAgents}
+            <TerminalSquare size={24} /> {t.options.localExecutionBridges}
           </h1>
-          <p className="muted">{t.options.localAgentsDescription}</p>
+          <p className="muted">{t.options.localExecutionBridgesDescription}</p>
         </div>
         <div className="settings-page-actions">
-          <Button onClick={addAgent}>
-            <Plus size={15} /> {t.options.newLocalAgent}
+          <Button onClick={addBridge}>
+            <Plus size={15} /> {t.options.newLocalExecutionBridge}
           </Button>
         </div>
       </div>
       {!items.length ? (
-        <CardDescription>{t.options.localAgentsEmpty}</CardDescription>
+        <CardDescription>
+          {t.options.localExecutionBridgesEmpty}
+        </CardDescription>
       ) : null}
       <Accordion type="multiple" className="stack">
-        {items.map((agent) => (
-          <AccordionItem key={agent.id} value={agent.id}>
+        {items.map((bridge) => (
+          <AccordionItem key={bridge.id} value={bridge.id}>
             <AccordionHeader className="ui-accordion-header-with-actions">
               <AccordionTriggerButton hideChevron>
-                <span className="agent-summary">
-                  <span className="agent-summary-title">
+                <span className="settings-summary">
+                  <span className="settings-summary-title">
                     <TerminalSquare size={18} />
-                    <span>{agent.name}</span>
-                    <Badge>{agent.id.slice(0, 8)}</Badge>
-                    {agent.lastTestError ? (
+                    <span>{bridge.name}</span>
+                    <Badge>{bridge.id.slice(0, 8)}</Badge>
+                    {bridge.lastTestError ? (
                       <Badge className="status-error-badge">
-                        {t.options.localAgentTestError}
+                        {t.options.localExecutionBridgeTestError}
                       </Badge>
                     ) : null}
                   </span>
-                  <small>{agent.description || agent.hostName}</small>
+                  <small>{bridge.description || bridge.hostName}</small>
                 </span>
               </AccordionTriggerButton>
               <span
@@ -142,18 +152,18 @@ export function LocalAgentsPage() {
                       <Button
                         size="icon"
                         aria-label={
-                          testingAgentId === agent.id
-                            ? t.options.localAgentTesting
-                            : t.options.localAgentTest
+                          testingBridgeId === bridge.id
+                            ? t.options.localExecutionBridgeTesting
+                            : t.options.localExecutionBridgeTest
                         }
                         disabled={
-                          testingAgentId === agent.id || !agent.hostName
+                          testingBridgeId === bridge.id || !bridge.hostName
                         }
-                        onClick={() => testAgent(agent.id)}
+                        onClick={() => testBridge(bridge.id)}
                       >
-                        {testingAgentId === agent.id ? (
+                        {testingBridgeId === bridge.id ? (
                           <Loader2 size={14} className="spin" />
-                        ) : recentlyTestedAgentId === agent.id ? (
+                        ) : recentlyTestedBridgeId === bridge.id ? (
                           <Check size={14} />
                         ) : (
                           <FlaskConical size={14} />
@@ -162,70 +172,74 @@ export function LocalAgentsPage() {
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>
-                    {testingAgentId === agent.id
-                      ? t.options.localAgentTesting
-                      : t.options.localAgentTest}
+                    {testingBridgeId === bridge.id
+                      ? t.options.localExecutionBridgeTesting
+                      : t.options.localExecutionBridgeTest}
                   </TooltipContent>
                 </Tooltip>
               </span>
               <AccordionTriggerButton
                 className="accordion-chevron-trigger"
-                aria-label={agent.name || t.options.newLocalAgent}
+                aria-label={bridge.name || t.options.newLocalExecutionBridge}
               />
             </AccordionHeader>
             <AccordionContent>
               <div className="stack">
                 <Label>
-                  {t.options.localAgentName}
+                  {t.options.localExecutionBridgeName}
                   <Input
-                    value={agent.name}
+                    value={bridge.name}
                     onChange={(event) =>
-                      updateAgent(agent.id, { name: event.currentTarget.value })
+                      updateBridge(bridge.id, {
+                        name: event.currentTarget.value,
+                      })
                     }
                   />
                 </Label>
                 <Label>
-                  {t.options.localAgentDescription}
+                  {t.options.localExecutionBridgeDescription}
                   <Textarea
-                    value={agent.description || ""}
+                    value={bridge.description || ""}
                     onChange={(event) =>
-                      updateAgent(agent.id, {
+                      updateBridge(bridge.id, {
                         description: event.currentTarget.value,
                       })
                     }
                   />
                 </Label>
                 <Label>
-                  {t.options.localAgentHostName}
+                  {t.options.localExecutionBridgeHostName}
                   <Input
-                    value={agent.hostName}
+                    value={bridge.hostName}
                     placeholder="openbrowseragent.local_execution_bridge"
                     onChange={(event) =>
-                      updateAgent(agent.id, {
+                      updateBridge(bridge.id, {
                         hostName: event.currentTarget.value,
                       })
                     }
                   />
                 </Label>
                 <Label>
-                  {t.options.localAgentHostAddress}
+                  {t.options.localExecutionBridgeHostAddress}
                   <Input
-                    value={agent.hostAddress || ""}
-                    placeholder={t.options.localAgentHostAddressPlaceholder}
+                    value={bridge.hostAddress || ""}
+                    placeholder={
+                      t.options.localExecutionBridgeHostAddressPlaceholder
+                    }
                     onChange={(event) =>
-                      updateAgent(agent.id, {
+                      updateBridge(bridge.id, {
                         hostAddress: event.currentTarget.value,
                       })
                     }
                   />
                 </Label>
                 <Label>
-                  {t.options.localAgentSecret}
+                  {t.options.localExecutionBridgeSecret}
                   <div className="row">
                     <Input
-                      value={agent.secret || ""}
+                      value={bridge.secret || ""}
                       onChange={(event) =>
-                        updateAgent(agent.id, {
+                        updateBridge(bridge.id, {
                           secret: event.currentTarget.value,
                         })
                       }
@@ -235,10 +249,12 @@ export function LocalAgentsPage() {
                         <Button
                           variant="outline"
                           size="icon"
-                          aria-label={t.options.localAgentRegenerateSecret}
+                          aria-label={
+                            t.options.localExecutionBridgeRegenerateSecret
+                          }
                           onClick={() =>
-                            updateAgent(agent.id, {
-                              secret: generateLocalAgentSecret(),
+                            updateBridge(bridge.id, {
+                              secret: generateLocalExecutionBridgeSecret(),
                             })
                           }
                         >
@@ -246,60 +262,60 @@ export function LocalAgentsPage() {
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {t.options.localAgentRegenerateSecret}
+                        {t.options.localExecutionBridgeRegenerateSecret}
                       </TooltipContent>
                     </Tooltip>
                   </div>
                 </Label>
                 <Label>
-                  {t.options.localAgentKey}
+                  {t.options.localExecutionBridgeKey}
                   <Input
-                    value={agent.agentKey || ""}
+                    value={bridge.bridgeKey || ""}
                     placeholder="default"
                     onChange={(event) =>
-                      updateAgent(agent.id, {
-                        agentKey: event.currentTarget.value,
+                      updateBridge(bridge.id, {
+                        bridgeKey: event.currentTarget.value,
                       })
                     }
                   />
                 </Label>
                 <Label>
-                  {t.options.localAgentDefaultCwd}
+                  {t.options.localExecutionBridgeDefaultCwd}
                   <Input
-                    value={agent.defaultCwd || ""}
+                    value={bridge.defaultCwd || ""}
                     placeholder="~/Desktop"
                     onChange={(event) =>
-                      updateAgent(agent.id, {
+                      updateBridge(bridge.id, {
                         defaultCwd: event.currentTarget.value,
                       })
                     }
                   />
                 </Label>
                 <Label>
-                  {t.options.localAgentTimeoutMs}
+                  {t.options.localExecutionBridgeTimeoutMs}
                   <Input
                     type="number"
                     min={1000}
-                    value={agent.timeoutMs || 120000}
+                    value={bridge.timeoutMs || 120000}
                     onChange={(event) =>
-                      updateAgent(agent.id, {
+                      updateBridge(bridge.id, {
                         timeoutMs: Number(event.currentTarget.value),
                       })
                     }
                   />
                 </Label>
-                {agent.lastTestError ? (
-                  <CardDescription>{agent.lastTestError}</CardDescription>
+                {bridge.lastTestError ? (
+                  <CardDescription>{bridge.lastTestError}</CardDescription>
                 ) : null}
-                {isLocalAgentTested(agent) ? (
+                {isLocalExecutionBridgeTested(bridge) ? (
                   <CardDescription>
-                    {t.options.localAgentTestSuccess}
+                    {t.options.localExecutionBridgeTestSuccess}
                   </CardDescription>
                 ) : null}
                 <div className="row">
                   <Button
                     variant="destructiveOutline"
-                    onClick={() => deleteAgent(agent.id)}
+                    onClick={() => deleteBridge(bridge.id)}
                   >
                     <Trash2 size={15} /> {t.options.deleteLocalExecutionBridge}
                   </Button>
@@ -313,16 +329,16 @@ export function LocalAgentsPage() {
   );
 }
 
-function isLocalAgentTested(agent: LocalAgentConfig) {
-  return !!agent.lastTestedAt && !agent.lastTestError;
+function isLocalExecutionBridgeTested(bridge: LocalExecutionBridgeConfig) {
+  return !!bridge.lastTestedAt && !bridge.lastTestError;
 }
 
-function testResetPatch(patch: Partial<LocalAgentConfig>) {
+function testResetPatch(patch: Partial<LocalExecutionBridgeConfig>) {
   if (
     !("hostName" in patch) &&
     !("hostAddress" in patch) &&
     !("secret" in patch) &&
-    !("agentKey" in patch)
+    !("bridgeKey" in patch)
   )
     return {};
   return { lastTestedAt: undefined, lastTestError: "" };

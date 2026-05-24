@@ -13,7 +13,7 @@ export const DEFAULT_SYNC_DATA_SETTINGS: SyncDataSettings = {
   [SYNC_PREFERENCES.agents]: false,
   [SYNC_PREFERENCES.skills]: false,
   [SYNC_PREFERENCES.mcpServers]: false,
-  [SYNC_PREFERENCES.localAgents]: false,
+  [SYNC_PREFERENCES.localExecutionBridges]: false,
   [SYNC_PREFERENCES.chats]: false,
   [SYNC_DATA_SETTING_KEYS.chatAttachments]: false,
 };

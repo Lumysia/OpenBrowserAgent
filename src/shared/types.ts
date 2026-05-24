@@ -126,7 +126,7 @@ export type AgentCapabilities = {
   browserAutomation: boolean;
   browserTools: boolean;
   subAgents: boolean;
-  localAgents: boolean;
+  localExecutionBridges: boolean;
   deferredBrowserTools: boolean;
   cdpTools: boolean;
   javascriptExecution: boolean;
@@ -145,14 +145,14 @@ export type AgentCapabilities = {
   fileUrlRead: boolean;
 };
 
-export type LocalAgentConfig = {
+export type LocalExecutionBridgeConfig = {
   id: string;
   name: string;
   description?: string;
   hostName: string;
   hostAddress?: string;
   secret?: string;
-  agentKey?: string;
+  bridgeKey?: string;
   defaultCwd?: string;
   timeoutMs?: number;
   lastTestedAt?: number;

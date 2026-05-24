@@ -1,26 +1,34 @@
 import {
-  generateLocalAgentSecret,
-  normalizeLocalAgents,
-  resolveLocalAgent,
-} from "../shared/local-agents";
+  generateLocalExecutionBridgeSecret,
+  normalizeLocalExecutionBridges,
+  resolveLocalExecutionBridge,
+} from "../shared/local-execution-bridges";
 import {
-  LOCAL_AGENT_RUNTIME_MESSAGE_TYPE,
-  type LocalAgentRuntimeResponse,
-} from "../shared/local-agent-runtime";
+  LOCAL_EXECUTION_BRIDGE_RUNTIME_MESSAGE_TYPE,
+  type LocalExecutionBridgeRuntimeResponse,
+} from "../shared/local-execution-bridge-runtime";
 import { storage } from "../shared/storage";
-import type { AgentWorkspace, LocalAgentConfig } from "../shared/types";
+import type {
+  AgentWorkspace,
+  LocalExecutionBridgeConfig,
+} from "../shared/types";
 
-const LOCAL_AGENT_EVENT_LIMIT = 80;
+const LOCAL_EXECUTION_BRIDGE_EVENT_LIMIT = 80;
 
-type LocalAgentState = "running" | "done" | "error" | "missing" | "canceled";
+type LocalExecutionBridgeState =
+  | "running"
+  | "done"
+  | "error"
+  | "missing"
+  | "canceled";
 
-type LocalAgentTask = {
+type LocalExecutionBridgeTask = {
   taskId: string;
-  agent: Pick<
-    LocalAgentConfig,
-    "id" | "name" | "hostName" | "hostAddress" | "agentKey"
+  bridge: Pick<
+    LocalExecutionBridgeConfig,
+    "id" | "name" | "hostName" | "hostAddress" | "bridgeKey"
   >;
-  state: LocalAgentState;
+  state: LocalExecutionBridgeState;
   output: string;
   result?: unknown;
   error?: string;
@@ -38,23 +46,27 @@ type LocalExecutionBridgePing = {
   cwd?: string;
   node?: string;
   env?: Record<string, unknown>;
-  agentCli?: Array<Record<string, unknown>>;
+  localCli?: Array<Record<string, unknown>>;
 };
 
-const tasks = new Map<string, LocalAgentTask>();
+const tasks = new Map<string, LocalExecutionBridgeTask>();
 
 export async function listLocalExecutionBridges() {
-  const agents = normalizeLocalAgents(await storage.localAgents.get());
+  const bridges = normalizeLocalExecutionBridges(
+    await storage.localExecutionBridges.get(),
+  );
   return {
-    agents: agents.map((agent) => safeLocalAgent(agent)),
+    bridges: bridges.map((bridge) => safeLocalExecutionBridge(bridge)),
   };
 }
 
 export async function addLocalExecutionBridge(input: Record<string, unknown>) {
   const now = Date.now();
   const inputSecret = stringValue(input.secret);
-  const generatedSecret = inputSecret ? "" : generateLocalAgentSecret();
-  const agent = normalizeLocalAgents([
+  const generatedSecret = inputSecret
+    ? ""
+    : generateLocalExecutionBridgeSecret();
+  const bridge = normalizeLocalExecutionBridges([
     {
       id: crypto.randomUUID(),
       name: stringValue(input.name) || "Execution Bridge",
@@ -64,32 +76,43 @@ export async function addLocalExecutionBridge(input: Record<string, unknown>) {
         "openbrowseragent.local_execution_bridge",
       hostAddress: stringValue(input.hostAddress),
       secret: inputSecret || generatedSecret,
-      agentKey: stringValue(input.agentKey),
+      bridgeKey: stringValue(input.bridgeKey),
       defaultCwd: stringValue(input.defaultCwd),
       timeoutMs: input.timeoutMs as number | undefined,
       createdAt: now,
       updatedAt: now,
     },
   ])[0];
-  await storage.localAgents.set([...(await storage.localAgents.get()), agent]);
+  await storage.localExecutionBridges.set([
+    ...(await storage.localExecutionBridges.get()),
+    bridge,
+  ]);
   if (input.test === true) {
-    const tested = await testLocalExecutionBridgeConfig({ agentId: agent.id });
-    return includeSecretResult(tested, agent.id, !inputSecret);
+    const tested = await testLocalExecutionBridgeConfig({
+      bridgeId: bridge.id,
+    });
+    return includeSecretResult(tested, bridge.id, !inputSecret);
   }
-  return { success: true, agent: safeLocalAgent(agent, !inputSecret) };
+  return {
+    success: true,
+    bridge: safeLocalExecutionBridge(bridge, !inputSecret),
+  };
 }
 
 export async function updateLocalExecutionBridge(
   input: Record<string, unknown>,
 ): Promise<unknown> {
-  const agentId = stringValue(input.agentId || input.id);
-  if (!agentId) return { success: false, error: "Missing execution bridge ID" };
-  let updated: LocalAgentConfig | undefined;
+  const bridgeId = stringValue(input.bridgeId || input.id);
+  if (!bridgeId)
+    return { success: false, error: "Missing execution bridge ID" };
+  let updated: LocalExecutionBridgeConfig | undefined;
   const rotateSecret = input.regenerateSecret === true;
-  await storage.localAgents.set(
-    normalizeLocalAgents(await storage.localAgents.get()).map((agent) => {
-      if (agent.id !== agentId) return agent;
-      const patch: Partial<LocalAgentConfig> = {
+  await storage.localExecutionBridges.set(
+    normalizeLocalExecutionBridges(
+      await storage.localExecutionBridges.get(),
+    ).map((bridge) => {
+      if (bridge.id !== bridgeId) return bridge;
+      const patch: Partial<LocalExecutionBridgeConfig> = {
         ...(input.name !== undefined ? { name: stringValue(input.name) } : {}),
         ...(input.description !== undefined
           ? { description: stringValue(input.description) }
@@ -100,8 +123,8 @@ export async function updateLocalExecutionBridge(
         ...(input.hostAddress !== undefined
           ? { hostAddress: stringValue(input.hostAddress) }
           : {}),
-        ...(input.agentKey !== undefined
-          ? { agentKey: stringValue(input.agentKey) }
+        ...(input.bridgeKey !== undefined
+          ? { bridgeKey: stringValue(input.bridgeKey) }
           : {}),
         ...(input.defaultCwd !== undefined
           ? { defaultCwd: stringValue(input.defaultCwd) }
@@ -112,18 +135,20 @@ export async function updateLocalExecutionBridge(
         ...(input.secret !== undefined
           ? { secret: stringValue(input.secret) }
           : {}),
-        ...(rotateSecret ? { secret: generateLocalAgentSecret() } : {}),
+        ...(rotateSecret
+          ? { secret: generateLocalExecutionBridgeSecret() }
+          : {}),
         updatedAt: Date.now(),
       };
       const needsRetest =
         input.hostName !== undefined ||
         input.hostAddress !== undefined ||
-        input.agentKey !== undefined ||
+        input.bridgeKey !== undefined ||
         input.secret !== undefined ||
         rotateSecret;
-      updated = normalizeLocalAgents([
+      updated = normalizeLocalExecutionBridges([
         {
-          ...agent,
+          ...bridge,
           ...patch,
           ...(needsRetest
             ? { lastTestedAt: undefined, lastTestError: "" }
@@ -135,43 +160,49 @@ export async function updateLocalExecutionBridge(
   );
   if (!updated) return { success: false, error: "Execution bridge not found" };
   if (input.test === true) {
-    const tested = await testLocalExecutionBridgeConfig({ agentId });
-    return includeSecretResult(tested, agentId, rotateSecret);
+    const tested = await testLocalExecutionBridgeConfig({ bridgeId });
+    return includeSecretResult(tested, bridgeId, rotateSecret);
   }
-  return { success: true, agent: safeLocalAgent(updated, rotateSecret) };
+  return {
+    success: true,
+    bridge: safeLocalExecutionBridge(updated, rotateSecret),
+  };
 }
 
 export async function testLocalExecutionBridgeConfig(
   input: Record<string, unknown>,
 ) {
-  const agentId = stringValue(input.agentId || input.id);
-  if (!agentId) return { success: false, error: "Missing execution bridge ID" };
+  const bridgeId = stringValue(input.bridgeId || input.id);
+  if (!bridgeId)
+    return { success: false, error: "Missing execution bridge ID" };
   let result: Record<string, unknown> | undefined;
   let testError = "";
-  const agents = normalizeLocalAgents(await storage.localAgents.get());
-  await storage.localAgents.set(
+  const bridges = normalizeLocalExecutionBridges(
+    await storage.localExecutionBridges.get(),
+  );
+  await storage.localExecutionBridges.set(
     await Promise.all(
-      agents.map(async (agent) => {
-        if (agent.id !== agentId) return agent;
+      bridges.map(async (bridge) => {
+        if (bridge.id !== bridgeId) return bridge;
         try {
-          const bridge = await testLocalExecutionBridge(agent.id);
+          const diagnostic = await testLocalExecutionBridge(bridge.id);
           const next = {
-            ...agent,
+            ...bridge,
             lastTestedAt: Date.now(),
             lastTestError: "",
             updatedAt: Date.now(),
           };
-          result = { ...safeLocalAgent(next), bridge };
+          result = { ...safeLocalExecutionBridge(next), diagnostic };
           return next;
         } catch (error) {
           testError = errorMessage(error);
           const next = {
-            ...agent,
+            ...bridge,
             lastTestedAt: undefined,
             lastTestError: testError,
             updatedAt: Date.now(),
           };
-          result = safeLocalAgent(next);
+          result = safeLocalExecutionBridge(next);
           return next;
         }
       }),
@@ -183,19 +214,19 @@ export async function testLocalExecutionBridgeConfig(
         success: false,
         error: testError,
         diagnostic: diagnoseLocalExecutionBridgeError(testError),
-        agent: result,
+        bridge: result,
       }
-    : { success: true, agent: result };
+    : { success: true, bridge: result };
 }
 
 export async function deleteLocalExecutionBridge(
   input: Record<string, unknown>,
 ) {
-  const agentId = stringValue(input.agentId || input.id);
-  const agents = await storage.localAgents.get();
-  const next = agents.filter((agent) => agent.id !== agentId);
-  await storage.localAgents.set(next);
-  return { success: next.length !== agents.length, agentId };
+  const bridgeId = stringValue(input.bridgeId || input.id);
+  const bridges = await storage.localExecutionBridges.get();
+  const next = bridges.filter((bridge) => bridge.id !== bridgeId);
+  await storage.localExecutionBridges.set(next);
+  return { success: next.length !== bridges.length, bridgeId };
 }
 
 export async function startLocalExecutionBridge(
@@ -203,13 +234,13 @@ export async function startLocalExecutionBridge(
   context?: { chatId?: string; messageId?: string; toolCallId?: string },
   workspace?: AgentWorkspace,
 ) {
-  const agents = await storage.localAgents.get();
-  const agent = resolveLocalAgent(
-    agents,
-    stringValue(input.agentId),
-    stringValue(input.agentName),
+  const bridges = await storage.localExecutionBridges.get();
+  const bridge = resolveLocalExecutionBridge(
+    bridges,
+    stringValue(input.bridgeId),
+    stringValue(input.bridgeName),
   );
-  if (!agent)
+  if (!bridge)
     return {
       success: false,
       error: "No local execution bridge is configured.",
@@ -227,30 +258,30 @@ export async function startLocalExecutionBridge(
       state: "missing",
     };
 
-  const task = createTask(agent);
+  const task = createTask(bridge);
   tasks.set(task.taskId, task);
   try {
-    await testLocalExecutionBridge(agent.id);
-    await markLocalExecutionBridgeTested(agent.id, "");
-    task.port = chrome.runtime.connectNative(agent.hostName);
+    await testLocalExecutionBridge(bridge.id);
+    await markLocalExecutionBridgeTested(bridge.id, "");
+    task.port = chrome.runtime.connectNative(bridge.hostName);
     task.port.onMessage.addListener((message) =>
-      receiveAgentMessage(task, message),
+      receiveBridgeMessage(task, message),
     );
     task.port.onDisconnect.addListener(() => finishDisconnectedTask(task));
     task.port.postMessage({
       type: "command.run",
       taskId: task.taskId,
       command: {
-        id: agent.id,
-        key: agent.agentKey || agent.id,
-        name: agent.name,
-        hostAddress: agent.hostAddress || "",
-        secret: agent.secret || "",
+        id: bridge.id,
+        key: bridge.bridgeKey || bridge.id,
+        name: bridge.name,
+        hostAddress: bridge.hostAddress || "",
+        secret: bridge.secret || "",
       },
       commandLine,
       shell: stringValue(input.shell),
       title: stringValue(input.title),
-      cwd: stringValue(input.cwd) || agent.defaultCwd || "",
+      cwd: stringValue(input.cwd) || bridge.defaultCwd || "",
       context: {
         ...context,
         workspaceFiles: workspace?.files?.map((file) => ({
@@ -260,13 +291,13 @@ export async function startLocalExecutionBridge(
         })),
         inputContext: input.context,
       },
-      timeoutMs: input.timeoutMs || agent.timeoutMs,
+      timeoutMs: input.timeoutMs || bridge.timeoutMs,
     });
   } catch (error) {
     task.state = "error";
     task.error = errorMessage(error);
     task.updatedAt = Date.now();
-    await markLocalExecutionBridgeTested(agent.id, task.error);
+    await markLocalExecutionBridgeTested(bridge.id, task.error);
   }
 
   return taskStatus(task.taskId);
@@ -278,7 +309,7 @@ export async function getLocalExecutionBridgeStatus(
   const taskId = stringValue(input.taskId);
   const wait = input.wait === true;
   const timeoutMs = clampStatusTimeout(input.timeoutMs);
-  if (wait) await waitForLocalAgent(taskId, timeoutMs);
+  if (wait) await waitForLocalExecutionBridge(taskId, timeoutMs);
   return taskStatus(taskId);
 }
 
@@ -297,13 +328,13 @@ export async function cancelLocalExecutionBridge(
   return taskStatus(taskId);
 }
 
-export async function testLocalExecutionBridge(agentId: string) {
-  const agent = normalizeLocalAgents(await storage.localAgents.get()).find(
-    (item) => item.id === agentId,
-  );
-  if (!agent) throw new Error("Local execution bridge not found.");
-  if (!agent.hostName) throw new Error("Native host name is required.");
-  const port = chrome.runtime.connectNative(agent.hostName);
+export async function testLocalExecutionBridge(bridgeId: string) {
+  const bridge = normalizeLocalExecutionBridges(
+    await storage.localExecutionBridges.get(),
+  ).find((item) => item.id === bridgeId);
+  if (!bridge) throw new Error("Local execution bridge not found.");
+  if (!bridge.hostName) throw new Error("Native host name is required.");
+  const port = chrome.runtime.connectNative(bridge.hostName);
   return new Promise<LocalExecutionBridgePing>((resolve, reject) => {
     let settled = false;
     const timer = setTimeout(() => {
@@ -336,8 +367,8 @@ export async function testLocalExecutionBridge(agentId: string) {
         cwd: stringValue(object.cwd),
         node: stringValue(object.node),
         env: objectValue(object.env),
-        agentCli: Array.isArray(object.agentCli)
-          ? object.agentCli.map(objectValue)
+        localCli: Array.isArray(object.localCli)
+          ? object.localCli.map(objectValue)
           : undefined,
       });
     });
@@ -350,26 +381,27 @@ export async function testLocalExecutionBridge(agentId: string) {
     port.postMessage({
       type: "command.ping",
       command: {
-        id: agent.id,
-        key: agent.agentKey || agent.id,
-        name: agent.name,
-        hostAddress: agent.hostAddress || "",
-        secret: agent.secret || "",
+        id: bridge.id,
+        key: bridge.bridgeKey || bridge.id,
+        name: bridge.name,
+        hostAddress: bridge.hostAddress || "",
+        secret: bridge.secret || "",
       },
     });
   });
 }
 
-export function handleLocalAgentRuntimeMessage(
+export function handleLocalExecutionBridgeRuntimeMessage(
   message: unknown,
-  sendResponse: (response: LocalAgentRuntimeResponse) => void,
+  sendResponse: (response: LocalExecutionBridgeRuntimeResponse) => void,
 ) {
   const request = objectValue(message);
-  if (request.type !== LOCAL_AGENT_RUNTIME_MESSAGE_TYPE) return false;
+  if (request.type !== LOCAL_EXECUTION_BRIDGE_RUNTIME_MESSAGE_TYPE)
+    return false;
   const operation = stringValue(request.operation);
   const promise =
     operation === "test"
-      ? testLocalExecutionBridge(stringValue(request.agentId))
+      ? testLocalExecutionBridge(stringValue(request.bridgeId))
       : Promise.reject(new Error("Unknown local execution bridge operation."));
   promise
     .then((value) => sendResponse({ ok: true, value }))
@@ -377,16 +409,18 @@ export function handleLocalAgentRuntimeMessage(
   return true;
 }
 
-function createTask(agent: LocalAgentConfig): LocalAgentTask {
+function createTask(
+  bridge: LocalExecutionBridgeConfig,
+): LocalExecutionBridgeTask {
   const now = Date.now();
   return {
     taskId: crypto.randomUUID(),
-    agent: {
-      id: agent.id,
-      name: agent.name,
-      hostName: agent.hostName,
-      hostAddress: agent.hostAddress,
-      agentKey: agent.agentKey,
+    bridge: {
+      id: bridge.id,
+      name: bridge.name,
+      hostName: bridge.hostName,
+      hostAddress: bridge.hostAddress,
+      bridgeKey: bridge.bridgeKey,
     },
     state: "running",
     output: "",
@@ -396,7 +430,10 @@ function createTask(agent: LocalAgentConfig): LocalAgentTask {
   };
 }
 
-function receiveAgentMessage(task: LocalAgentTask, message: unknown) {
+function receiveBridgeMessage(
+  task: LocalExecutionBridgeTask,
+  message: unknown,
+) {
   const event = objectValue(message);
   task.updatedAt = Date.now();
   pushEvent(task, event);
@@ -417,7 +454,7 @@ function receiveAgentMessage(task: LocalAgentTask, message: unknown) {
     task.state = task.error ? "error" : "done";
 }
 
-function finishDisconnectedTask(task: LocalAgentTask) {
+function finishDisconnectedTask(task: LocalExecutionBridgeTask) {
   if (task.state !== "running") return;
   const error = chrome.runtime.lastError?.message;
   task.state = error ? "error" : "done";
@@ -425,7 +462,7 @@ function finishDisconnectedTask(task: LocalAgentTask) {
   task.updatedAt = Date.now();
 }
 
-async function waitForLocalAgent(taskId: string, timeoutMs: number) {
+async function waitForLocalExecutionBridge(taskId: string, timeoutMs: number) {
   const startedAt = Date.now();
   while (Date.now() - startedAt < timeoutMs) {
     const task = tasks.get(taskId);
@@ -441,7 +478,7 @@ function taskStatus(taskId: string) {
     success: task.state !== "error",
     taskId,
     state: task.state,
-    agent: task.agent,
+    bridge: task.bridge,
     output: task.output,
     result: task.result,
     ...(task.error ? { error: task.error } : {}),
@@ -451,59 +488,70 @@ function taskStatus(taskId: string) {
   };
 }
 
-function safeLocalAgent(agent: LocalAgentConfig, includeSecret = false) {
+function safeLocalExecutionBridge(
+  bridge: LocalExecutionBridgeConfig,
+  includeSecret = false,
+) {
   return {
-    id: agent.id,
-    name: agent.name,
-    description: agent.description,
-    hostName: agent.hostName,
-    hostAddress: agent.hostAddress,
-    agentKey: agent.agentKey,
-    tested: isLocalAgentTested(agent),
-    lastTestError: agent.lastTestError || "",
-    defaultCwd: agent.defaultCwd,
-    timeoutMs: agent.timeoutMs,
-    ...(includeSecret ? { secret: agent.secret } : {}),
+    id: bridge.id,
+    name: bridge.name,
+    description: bridge.description,
+    hostName: bridge.hostName,
+    hostAddress: bridge.hostAddress,
+    bridgeKey: bridge.bridgeKey,
+    tested: isLocalExecutionBridgeTested(bridge),
+    lastTestError: bridge.lastTestError || "",
+    defaultCwd: bridge.defaultCwd,
+    timeoutMs: bridge.timeoutMs,
+    ...(includeSecret ? { secret: bridge.secret } : {}),
   };
 }
 
-async function markLocalExecutionBridgeTested(agentId: string, error: string) {
+async function markLocalExecutionBridgeTested(bridgeId: string, error: string) {
   const now = Date.now();
-  await storage.localAgents.set(
-    normalizeLocalAgents(await storage.localAgents.get()).map((agent) =>
-      agent.id === agentId
+  await storage.localExecutionBridges.set(
+    normalizeLocalExecutionBridges(
+      await storage.localExecutionBridges.get(),
+    ).map((bridge) =>
+      bridge.id === bridgeId
         ? {
-            ...agent,
+            ...bridge,
             lastTestedAt: error ? undefined : now,
             lastTestError: error,
             updatedAt: now,
           }
-        : agent,
+        : bridge,
     ),
   );
 }
 
 async function includeSecretResult(
   result: unknown,
-  agentId: string,
+  bridgeId: string,
   includeSecret: boolean,
 ) {
   if (!includeSecret) return result;
-  const agent = normalizeLocalAgents(await storage.localAgents.get()).find(
-    (item) => item.id === agentId,
-  );
-  if (!agent || !result || typeof result !== "object") return result;
-  return { ...result, agent: safeLocalAgent(agent, true) };
+  const bridge = normalizeLocalExecutionBridges(
+    await storage.localExecutionBridges.get(),
+  ).find((item) => item.id === bridgeId);
+  if (!bridge || !result || typeof result !== "object") return result;
+  return { ...result, bridge: safeLocalExecutionBridge(bridge, true) };
 }
 
-function isLocalAgentTested(agent: LocalAgentConfig) {
-  return !!agent.lastTestedAt && !agent.lastTestError;
+function isLocalExecutionBridgeTested(bridge: LocalExecutionBridgeConfig) {
+  return !!bridge.lastTestedAt && !bridge.lastTestError;
 }
 
-function pushEvent(task: LocalAgentTask, event: Record<string, unknown>) {
+function pushEvent(
+  task: LocalExecutionBridgeTask,
+  event: Record<string, unknown>,
+) {
   task.events.push(event);
-  if (task.events.length > LOCAL_AGENT_EVENT_LIMIT)
-    task.events.splice(0, task.events.length - LOCAL_AGENT_EVENT_LIMIT);
+  if (task.events.length > LOCAL_EXECUTION_BRIDGE_EVENT_LIMIT)
+    task.events.splice(
+      0,
+      task.events.length - LOCAL_EXECUTION_BRIDGE_EVENT_LIMIT,
+    );
 }
 
 function clampStatusTimeout(value: unknown) {

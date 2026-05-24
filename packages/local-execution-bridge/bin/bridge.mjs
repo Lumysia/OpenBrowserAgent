@@ -11,7 +11,7 @@ const configPath =
   resolve(scriptDir, "local-execution-bridge.config.json");
 const config = loadConfig(configPath);
 const tasks = new Map();
-const AGENT_CLI_CANDIDATES = [
+const LOCAL_CLI_CANDIDATES = [
   { id: "claude", name: "Claude Code", command: "claude" },
   { id: "codex", name: "OpenAI Codex", command: "codex" },
   { id: "opencode", name: "OpenCode", command: "opencode" },
@@ -71,7 +71,7 @@ function pingCommand(message) {
   const config = resolveCommand(message);
   if (!config) return;
   const shell = resolveShell(String(config.shell || ""));
-  const agentCli = detectAgentCli();
+  const localCli = detectLocalCli();
   writeMessage({
     type: "command.pong",
     command: message.command,
@@ -85,9 +85,9 @@ function pingCommand(message) {
       path: process.env.PATH || "",
       shell: process.env.SHELL || process.env.ComSpec || "",
       executionHost: String(message.command?.hostAddress || ""),
-      agentCli,
+      localCli,
     },
-    agentCli,
+    localCli,
   });
 }
 
@@ -255,8 +255,8 @@ function resolveShell(value) {
   };
 }
 
-function detectAgentCli() {
-  return AGENT_CLI_CANDIDATES.map((candidate) =>
+function detectLocalCli() {
+  return LOCAL_CLI_CANDIDATES.map((candidate) =>
     detectExecutable(candidate),
   ).filter(Boolean);
 }

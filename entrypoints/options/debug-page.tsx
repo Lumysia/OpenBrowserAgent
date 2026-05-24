@@ -201,8 +201,8 @@ export function DebugPage() {
               <ToggleGroupItem value="mcpServers">
                 {t.options.debugResetTargetMcpServers}
               </ToggleGroupItem>
-              <ToggleGroupItem value="localAgents">
-                {t.options.debugResetTargetLocalAgents}
+              <ToggleGroupItem value="localExecutionBridges">
+                {t.options.debugResetTargetLocalExecutionBridges}
               </ToggleGroupItem>
               <ToggleGroupItem value="chats">
                 {t.options.debugResetTargetChats}
@@ -330,7 +330,7 @@ function toolCapabilities(name: string): Array<keyof AgentCapabilities> {
     name === BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus ||
     name === BROWSER_TOOL_NAME.cancelLocalExecutionBridge
   )
-    return ["localAgents"];
+    return ["localExecutionBridges"];
   if (
     name === BROWSER_TOOL_NAME.listWorkspaceFiles ||
     name === BROWSER_TOOL_NAME.readWorkspaceFile ||

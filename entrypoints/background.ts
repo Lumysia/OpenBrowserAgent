@@ -41,7 +41,7 @@ import {
 import { requestOpenAICompatible } from "../src/background/providers";
 import { resolveModel } from "../src/background/model-resolver";
 import { postTextStream } from "../src/background/message-helpers";
-import { handleLocalAgentRuntimeMessage } from "../src/background/local-agent-tools";
+import { handleLocalExecutionBridgeRuntimeMessage } from "../src/background/local-execution-bridge-tools";
 import { browserToolsForPrompt } from "../src/background/tool-schema";
 import { requestOllamaPlainText } from "../src/background/ollama-provider";
 import { openAIChatCompletionsUrl } from "../src/shared/provider-urls";
@@ -71,7 +71,7 @@ export default defineBackground(() => {
   chrome.runtime.onMessage.addListener(
     (message, _sender, sendResponse) =>
       handleSyncBackendRuntimeMessage(message, sendResponse) ||
-      handleLocalAgentRuntimeMessage(message, sendResponse),
+      handleLocalExecutionBridgeRuntimeMessage(message, sendResponse),
   );
 
   chrome.runtime.onConnect.addListener((port) => {

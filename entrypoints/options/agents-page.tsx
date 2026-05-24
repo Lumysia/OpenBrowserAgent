@@ -203,8 +203,8 @@ export function AgentsPage() {
           return (
             <AccordionItem key={agent.id} value={agent.id}>
               <AccordionTrigger>
-                <span className="agent-summary">
-                  <span className="agent-summary-title">
+                <span className="settings-summary">
+                  <span className="settings-summary-title">
                     <AgentIcon agent={agent} size={18} />
                     <span>{agentDisplayName(agent, t)}</span>
                     <Badge>{agent.id}</Badge>
@@ -433,8 +433,8 @@ function AgentWorkspaceEditor({
     <Accordion type="single" collapsible>
       <AccordionItem value="workspace">
         <AccordionTrigger>
-          <span className="agent-summary">
-            <span className="agent-summary-title">
+          <span className="settings-summary">
+            <span className="settings-summary-title">
               <FileText size={15} />
               <span>{title}</span>
             </span>

@@ -26,7 +26,7 @@ export const localExecutionBridgeTools = [
         description:
           "Optional execution host address passed through to the native bridge. Leave empty for local execution. The extension does not interpret protocols or manage remote credentials.",
       },
-      agentKey: {
+      bridgeKey: {
         type: "string",
         description:
           "Shell bridge config ID inside the native bridge config, such as default.",
@@ -50,9 +50,9 @@ export const localExecutionBridgeTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.updateLocalExecutionBridge,
-    "Update a local execution bridge configuration. Before using this tool, read the builtin skill local-execution-bridge-setup and follow it. Changing hostName, hostAddress, agentKey, or secret clears prior test state until it passes a new test.",
+    "Update a local execution bridge configuration. Before using this tool, read the builtin skill local-execution-bridge-setup and follow it. Changing hostName, hostAddress, bridgeKey, or secret clears prior test state until it passes a new test.",
     {
-      agentId: { type: "string", description: "Execution bridge ID" },
+      bridgeId: { type: "string", description: "Execution bridge ID" },
       name: { type: "string", description: "Display name" },
       description: { type: "string", description: "Optional user-facing note" },
       hostName: { type: "string", description: "Native Messaging host name" },
@@ -60,7 +60,7 @@ export const localExecutionBridgeTools = [
         type: "string",
         description: "Optional execution host address",
       },
-      agentKey: {
+      bridgeKey: {
         type: "string",
         description: "Shell bridge config ID inside the native bridge config",
       },
@@ -80,34 +80,34 @@ export const localExecutionBridgeTools = [
       },
       test: { type: "boolean", description: "When true, test after updating" },
     },
-    ["agentId"],
+    ["bridgeId"],
   ),
   tool(
     BROWSER_TOOL_NAME.testLocalExecutionBridge,
-    "Test a local execution bridge connection and return the shell, basic environment, and detected local agent CLIs the bridge can see. Before using this tool as part of setup, read the builtin skill local-execution-bridge-setup and follow it.",
+    "Test a local execution bridge connection and return the shell, basic environment, and detected local execution bridge CLIs the bridge can see. Before using this tool as part of setup, read the builtin skill local-execution-bridge-setup and follow it.",
     {
-      agentId: { type: "string", description: "Execution bridge ID" },
+      bridgeId: { type: "string", description: "Execution bridge ID" },
     },
-    ["agentId"],
+    ["bridgeId"],
   ),
   tool(
     BROWSER_TOOL_NAME.deleteLocalExecutionBridge,
     "Delete a local execution bridge configuration. Before using this tool, read the builtin skill local-execution-bridge-setup and confirm the target bridge with the user unless they clearly identified it.",
     {
-      agentId: { type: "string", description: "Execution bridge ID" },
+      bridgeId: { type: "string", description: "Execution bridge ID" },
     },
-    ["agentId"],
+    ["bridgeId"],
   ),
   tool(
     BROWSER_TOOL_NAME.startLocalExecutionBridge,
     "Execute a shell command through a configured local execution bridge. Use this for local CLI tools/apps, filesystem or drive inspection, and external local processes. By default this starts the command, waits for completion, and returns stdout/stderr/result. Set background=true only when you intentionally want to continue before it finishes; then call getLocalExecutionBridgeStatus later.",
     {
-      agentId: {
+      bridgeId: {
         type: "string",
         description:
           "Target execution bridge id. Call listLocalExecutionBridges first if you need to choose.",
       },
-      agentName: {
+      bridgeName: {
         type: "string",
         description:
           "Target execution bridge display name when the id is unknown.",

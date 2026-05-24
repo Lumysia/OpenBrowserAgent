@@ -151,8 +151,8 @@ export function SyncBackendCard({
       <AccordionItem value={WEBDAV_SYNC_BACKEND_ID}>
         <AccordionHeader className="ui-accordion-header-with-actions">
           <AccordionTriggerButton hideChevron>
-            <span className="agent-summary">
-              <span className="agent-summary-title">
+            <span className="settings-summary">
+              <span className="settings-summary-title">
                 <FolderSync size={18} />
                 <span>{backendDisplayName(webDavDraft, t)}</span>
               </span>
@@ -261,8 +261,8 @@ function SyncBackendHeaderItem({
     <AccordionItem value={backend.id}>
       <AccordionHeader className="ui-accordion-header-with-actions">
         <AccordionTriggerButton hideChevron>
-          <span className="agent-summary">
-            <span className="agent-summary-title">
+          <span className="settings-summary">
+            <span className="settings-summary-title">
               <FolderSync size={18} />
               <span>{backendDisplayName(backend, t)}</span>
             </span>

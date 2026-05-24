@@ -66,9 +66,9 @@ export function SyncPage() {
       description: t.options.syncMcpServersDescription,
       icon: <Plug size={18} />,
     },
-    [SYNC_PREFERENCES.localAgents]: {
-      title: t.options.syncLocalAgents,
-      description: t.options.syncLocalAgentsDescription,
+    [SYNC_PREFERENCES.localExecutionBridges]: {
+      title: t.options.syncLocalExecutionBridges,
+      description: t.options.syncLocalExecutionBridgesDescription,
       icon: <TerminalSquare size={18} />,
     },
     [SYNC_PREFERENCES.agents]: {
@@ -235,7 +235,7 @@ function syncStorageKeyLabels(t: ReturnType<typeof getMessages>) {
     [storage.agentWorkspaces.key]: t.options.syncAgents,
     [storage.skills.key]: t.options.skills,
     [storage.mcpServers.key]: t.options.mcpServers,
-    [storage.localAgents.key]: t.options.localAgents,
+    [storage.localExecutionBridges.key]: t.options.localExecutionBridges,
     [storage.chats.key]: t.sidepanel.chatHistory,
   } as Record<string, string>;
 }

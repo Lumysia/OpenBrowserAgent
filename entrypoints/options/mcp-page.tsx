@@ -214,8 +214,8 @@ export function McpPage() {
           <AccordionItem key={server.id} value={server.id}>
             <AccordionHeader className="ui-accordion-header-with-actions">
               <AccordionTriggerButton hideChevron>
-                <span className="agent-summary">
-                  <span className="agent-summary-title">
+                <span className="settings-summary">
+                  <span className="settings-summary-title">
                     <Plug size={18} />
                     <span>{server.name || t.options.newMcpServer}</span>
                     <Badge>{server.id}</Badge>
@@ -336,7 +336,7 @@ export function McpPage() {
                   >
                     <AccordionItem value="tools">
                       <AccordionTriggerButton>
-                        <span className="agent-summary">
+                        <span className="settings-summary">
                           <CardTitle className="settings-section-title">
                             {t.options.mcpTools}
                           </CardTitle>

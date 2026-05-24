@@ -34,8 +34,8 @@ export function AgentCapabilityEditor({
     <Accordion type="single" collapsible className="agent-capability-accordion">
       <AccordionItem value="capabilities">
         <AccordionTrigger>
-          <span className="agent-summary">
-            <span className="agent-summary-title">
+          <span className="settings-summary">
+            <span className="settings-summary-title">
               <SlidersHorizontal size={15} />
               <span>{t.options.agentCapabilities}</span>
             </span>

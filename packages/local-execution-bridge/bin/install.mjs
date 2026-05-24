@@ -106,7 +106,7 @@ console.log(
       registryKeys,
       nextExtensionConfig: {
         hostName: HOST_NAME,
-        agentKey: commandId,
+        bridgeKey: commandId,
         secret,
       },
     },

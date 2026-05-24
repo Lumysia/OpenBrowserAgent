@@ -21,7 +21,7 @@ import {
   type VisionImage,
 } from "./provider-output";
 import { executeContextAwareTool, getSubAgentStatus } from "./provider-tools";
-import { getLocalExecutionBridgeStatus } from "./local-agent-tools";
+import { getLocalExecutionBridgeStatus } from "./local-execution-bridge-tools";
 import { isToolError } from "./tool-utils";
 
 export type ProviderToolRunResult = {
@@ -96,8 +96,8 @@ export async function runProviderTool({
         toolName,
         toolCallId,
       })
-    : shouldWaitForLocalAgent(toolName, input, rawOutput)
-      ? await waitForLocalAgentResult({
+    : shouldWaitForLocalExecutionBridge(toolName, input, rawOutput)
+      ? await waitForLocalExecutionBridgeResult({
           rawOutput,
           input,
           port,
@@ -253,7 +253,7 @@ function formatQuestionAnswers(answers: QuestionToolAnswer[]) {
     .join("\n");
 }
 
-async function waitForLocalAgentResult({
+async function waitForLocalExecutionBridgeResult({
   rawOutput,
   input,
   port,
@@ -269,7 +269,7 @@ async function waitForLocalAgentResult({
   postToolOutput(port, toolName, toolCallId, input, rawOutput);
   const output = rawOutput as Record<string, unknown>;
   const taskId = String(output.taskId || "").trim();
-  const timeoutMs = clampLocalAgentTimeout(input.timeoutMs);
+  const timeoutMs = clampLocalExecutionBridgeTimeout(input.timeoutMs);
   const startedAt = Date.now();
   let status = await getLocalExecutionBridgeStatus({ taskId });
   let lastProgressKey = progressKey(status);
@@ -373,7 +373,7 @@ function shouldWaitForSubAgent(
   );
 }
 
-function shouldWaitForLocalAgent(
+function shouldWaitForLocalExecutionBridge(
   toolName: string,
   input: Record<string, unknown>,
   output: unknown,
@@ -387,7 +387,7 @@ function shouldWaitForLocalAgent(
   );
 }
 
-function clampLocalAgentTimeout(value: unknown) {
+function clampLocalExecutionBridgeTimeout(value: unknown) {
   const number = Number(value);
   if (!Number.isFinite(number)) return 60_000;
   return Math.min(30 * 60_000, Math.max(0, Math.trunc(number)));

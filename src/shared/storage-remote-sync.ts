@@ -89,7 +89,11 @@ export async function refreshSyncDataFromRemote(
   await Promise.all(
     SYNC_REMOTE_DATA_REFRESH_ITEMS.filter(
       (item) => syncDataSettings[item.preferenceKey] === true,
-    ).map((item) => refreshSyncKey(backend, item.dataKey)),
+    ).map((item) =>
+      refreshSyncKey(backend, item.dataKey, {
+        missingRemoteValue: missingRemoteValueForSyncedKey(item.dataKey),
+      }),
+    ),
   );
 }
 
@@ -98,10 +102,11 @@ async function refreshSyncKey<T>(
   key: string,
   options: {
     normalize?: (value: T, key: string) => T;
+    missingRemoteValue?: T;
     writeBackOnChange?: boolean;
   } = {},
 ) {
-  const { normalize, writeBackOnChange = true } = options;
+  const { normalize, missingRemoteValue, writeBackOnChange = true } = options;
   const pending = await readPendingSyncValue<T>(key);
   if (pending !== undefined) {
     if (key === STORAGE_KEYS.chats && hasUnfinishedChatRun(pending))
@@ -116,6 +121,15 @@ async function refreshSyncKey<T>(
   const previous = await readSyncLocalValue<T>(key);
   const remote = await backend.read<T>(key, previous);
   if (remote === undefined) {
+    if (missingRemoteValue !== undefined) {
+      const value = normalize
+        ? normalize(missingRemoteValue, key)
+        : missingRemoteValue;
+      const mergedValue = await backend.write(key, value);
+      const nextValue = mergedValue ?? value;
+      await markSyncLocalCacheFlushed(key, nextValue);
+      return nextValue;
+    }
     await removeSyncLocalCache(key);
     return undefined;
   }
@@ -152,6 +166,11 @@ function normalizeSyncedSetting<T>(value: T, key: string) {
   if (key === STORAGE_KEYS.syncDataSettings)
     return mergeSyncDataSettings(value as Partial<SyncDataSettings>) as T;
   return value;
+}
+
+function missingRemoteValueForSyncedKey(key: string) {
+  if (key === STORAGE_KEYS.localExecutionBridges) return [];
+  return undefined;
 }
 
 export function syncRemoteRefreshIntervalMs() {

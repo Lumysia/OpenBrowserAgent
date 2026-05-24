@@ -4,7 +4,7 @@ import { getBrowserApi } from "./browser-api";
 import { BUILTIN_SKILLS } from "./builtin-skills";
 import * as config from "./config";
 import { DEFAULT_PREFERENCES, mergePreferences } from "./default-preferences";
-import { normalizeLocalAgents } from "./local-agents";
+import { normalizeLocalExecutionBridges } from "./local-execution-bridges";
 import { normalizeMcpServers } from "./mcp";
 import {
   areaForSyncEnabled,
@@ -65,7 +65,7 @@ import type {
   ProviderState,
   Skill,
   McpServerConfig,
-  LocalAgentConfig,
+  LocalExecutionBridgeConfig,
   SyncBackendConfig,
 } from "./types";
 
@@ -392,11 +392,11 @@ export const storage = {
     SYNC_PREFERENCES.mcpServers,
     normalizeMcpServers,
   ),
-  localAgents: createSwitchableItem<LocalAgentConfig[]>(
-    STORAGE_KEYS.localAgents,
+  localExecutionBridges: createSwitchableItem<LocalExecutionBridgeConfig[]>(
+    STORAGE_KEYS.localExecutionBridges,
     () => [],
-    SYNC_PREFERENCES.localAgents,
-    normalizeLocalAgents,
+    SYNC_PREFERENCES.localExecutionBridges,
+    normalizeLocalExecutionBridges,
   ),
   shouldShowUpdateToast: createItem<boolean>(
     STORAGE_AREAS.local,
@@ -470,18 +470,26 @@ async function setDataKeySync(dataKey: SyncableDataKey, enabled: boolean) {
     ? await readRemoteValue(dataKey)
     : await readStoredValue(toAreaName, dataKey);
   const existingSource = await readStoredValue(fromAreaName, dataKey);
+  const sourceValue =
+    existingSource ??
+    (enabled ? missingRemoteValueForSyncedKey(dataKey) : undefined);
 
   if (
     enabled &&
-    existingSource !== undefined &&
-    !(existingTarget !== undefined && isEmptyStorageValue(existingSource))
+    sourceValue !== undefined &&
+    !(existingTarget !== undefined && isEmptyStorageValue(sourceValue))
   ) {
-    await writeRemoteValueNow(dataKey, existingSource);
+    await writeRemoteValueNow(dataKey, sourceValue);
   } else if (enabled && existingTarget !== undefined) {
     await markSyncLocalCacheFlushed(dataKey, existingTarget);
   } else if (existingSource !== undefined) {
     await setStoredValueNow(toAreaName, dataKey, existingSource);
   }
+}
+
+function missingRemoteValueForSyncedKey(key: SyncableDataKey) {
+  if (key === STORAGE_KEYS.localExecutionBridges) return [];
+  return undefined;
 }
 
 export async function setActiveSyncBackend(backendId: string) {

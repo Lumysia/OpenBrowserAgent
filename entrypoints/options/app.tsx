@@ -26,7 +26,7 @@ import { AgentsPage } from "./agents-page";
 import { GeneralPage } from "./general-page";
 import { ProvidersPage } from "./providers-page";
 import { McpPage } from "./mcp-page";
-import { LocalAgentsPage } from "./local-agents-page";
+import { LocalExecutionBridgesPage } from "./local-execution-bridges-page";
 import { SkillsPage } from "./skills-page";
 import { useHashRoute } from "./route";
 import { SyncPage } from "./sync-page";
@@ -99,11 +99,11 @@ export function OptionsApp() {
             </OptionsLink>
             <OptionsLink
               route={route}
-              target={OPTIONS_ROUTE.localAgents}
-              href={OPTIONS_HASH.localAgents}
+              target={OPTIONS_ROUTE.localExecutionBridges}
+              href={OPTIONS_HASH.localExecutionBridges}
               icon={<TerminalSquare size={16} />}
             >
-              {t.options.localAgents}
+              {t.options.localExecutionBridges}
             </OptionsLink>
             <OptionsLink
               route={route}
@@ -141,8 +141,8 @@ export function OptionsApp() {
               <ProvidersPage />
             ) : route === OPTIONS_ROUTE.mcp ? (
               <McpPage />
-            ) : route === OPTIONS_ROUTE.localAgents ? (
-              <LocalAgentsPage />
+            ) : route === OPTIONS_ROUTE.localExecutionBridges ? (
+              <LocalExecutionBridgesPage />
             ) : route === OPTIONS_ROUTE.sync ? (
               <SyncPage />
             ) : route === OPTIONS_ROUTE.skills ? (

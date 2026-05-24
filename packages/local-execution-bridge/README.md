@@ -16,7 +16,7 @@ Example for Firefox:
 npx openbrowseragent-local-execution-bridge@1 install --browser firefox --extension-id <extension-id> --command-id default
 ```
 
-The installer writes a stable local bridge runtime, a wrapper executable, a Native Messaging manifest, and a bridge config containing a generated secret. It prints JSON with the values to enter in OpenBrowserAgent. When OpenBrowserAgent tests the bridge, the bridge reports the shell, basic environment, and detected local agent CLIs it can use for shell commands. On Windows, Brave, Vivaldi, and Chromium targets also register a Chrome-compatible Native Messaging registry key for browsers that read that location.
+The installer writes a stable local bridge runtime, a wrapper executable, a Native Messaging manifest, and a bridge config containing a generated secret. It prints JSON with the values to enter in OpenBrowserAgent. When OpenBrowserAgent tests the bridge, the bridge reports the shell, basic environment, and detected local CLI tools it can use for shell commands. On Windows, Brave, Vivaldi, and Chromium targets also register a Chrome-compatible Native Messaging registry key for browsers that read that location.
 
 The Native Messaging manifest points to the generated wrapper path, not to `npx`.
 

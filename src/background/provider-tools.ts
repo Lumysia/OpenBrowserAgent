@@ -38,7 +38,7 @@ import {
   updateLocalExecutionBridge,
   testLocalExecutionBridgeConfig,
   deleteLocalExecutionBridge,
-} from "./local-agent-tools";
+} from "./local-execution-bridge-tools";
 import {
   addMemory,
   addUserProfileNote,

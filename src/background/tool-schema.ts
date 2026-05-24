@@ -4,7 +4,7 @@ import { MEMORY_ENTRY_TEXT_MAX_CHARS } from "../shared/config";
 import { areCdpToolsAvailable } from "../shared/runtime-capabilities";
 import type { AgentCapabilities } from "../shared/types";
 import { cdpTools } from "./cdp-tool-schema";
-import { localExecutionBridgeTools } from "./local-agent-tool-schema";
+import { localExecutionBridgeTools } from "./local-execution-bridge-tool-schema";
 
 export const deferredBrowserTools = cdpTools;
 
@@ -909,7 +909,7 @@ export function browserToolsForPrompt({
       name === BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus ||
       name === BROWSER_TOOL_NAME.cancelLocalExecutionBridge
     )
-      return capabilities.localAgents;
+      return capabilities.localExecutionBridges;
     if (name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript)
       return (
         capabilities.cdpTools &&

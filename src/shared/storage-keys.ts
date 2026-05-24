@@ -7,7 +7,7 @@ export const STORAGE_KEYS = {
   agentWorkspaces: "agent-workspaces",
   skills: "skills",
   mcpServers: "mcp-servers",
-  localAgents: "local-agents",
+  localExecutionBridges: "local-execution-bridges",
   shouldShowUpdateToast: "should-show-update-toast",
   chats: "chats",
   chatTabs: "chat-tabs",
@@ -23,7 +23,7 @@ export const SYNC_PREFERENCES = {
   agents: "syncAgents",
   skills: "syncSkills",
   mcpServers: "syncMcpServers",
-  localAgents: "syncLocalAgents",
+  localExecutionBridges: "syncLocalExecutionBridges",
   chats: "syncChats",
 } as const;
 
@@ -40,8 +40,8 @@ export const SYNCABLE_DATA_ITEMS = [
     dataKey: STORAGE_KEYS.mcpServers,
   },
   {
-    preferenceKey: SYNC_PREFERENCES.localAgents,
-    dataKey: STORAGE_KEYS.localAgents,
+    preferenceKey: SYNC_PREFERENCES.localExecutionBridges,
+    dataKey: STORAGE_KEYS.localExecutionBridges,
   },
   { preferenceKey: SYNC_PREFERENCES.chats, dataKey: STORAGE_KEYS.chats },
 ] as const;

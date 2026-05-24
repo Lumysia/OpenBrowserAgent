@@ -2,9 +2,11 @@ import * as config from "./config";
 import {
   base64ToBytes,
   bytesToBase64,
-  readSyncDocumentValue,
-  writeSyncDocumentValue,
-} from "./sync-json-doc";
+  decodeTinyBaseSyncValue,
+  readTinyBaseSyncValue,
+  removeLocalTinyBaseSyncDocument,
+  writeTinyBaseSyncValue,
+} from "./sync-tinybase-doc";
 import { getBrowserApi } from "./browser-api";
 import { SYNC_BACKEND_TYPES } from "./sync-backend-registry";
 import { STORAGE_AREAS } from "./storage-area-constants";
@@ -34,7 +36,7 @@ export async function decodeSyncBackendChangeValue<T>(
 ) {
   if (backendConfig.type !== SYNC_BACKEND_TYPES.browserSync) return undefined;
   return decodeBrowserSyncChangeValue<T>(
-    automergeBackendCacheKey(backendConfig, key),
+    syncBackendCacheKey(backendConfig, key),
     value,
   );
 }
@@ -44,18 +46,22 @@ function createBrowserSyncBackend(
 ): SyncBackend {
   return {
     config: backendConfig,
-    async read<T>(key: string, cachedValue?: T) {
+    async read<T>(key: string, _cachedValue?: T) {
       const result = await getBrowserApi().storage.sync.get(key);
       const encoded = result[key] as string | undefined;
-      return readSyncDocumentValue<T>(
-        automergeBackendCacheKey(backendConfig, key),
+      return readTinyBaseSyncValue<T>(
+        syncBackendCacheKey(backendConfig, key),
         encoded ? base64ToBytes(encoded) : undefined,
-        encoded,
-        cachedValue,
       );
     },
     async write<T>(key: string, value: T) {
-      const result = writeSyncDocumentValue(value);
+      const stored = await getBrowserApi().storage.sync.get(key);
+      const encoded = stored[key] as string | undefined;
+      const result = await writeTinyBaseSyncValue(
+        syncBackendCacheKey(backendConfig, key),
+        value,
+        encoded ? base64ToBytes(encoded) : undefined,
+      );
       const nextValue = bytesToBase64(result.bytes);
       assertBrowserSyncItemFits(key, nextValue);
       await getBrowserApi().storage.sync.set({ [key]: nextValue });
@@ -63,6 +69,9 @@ function createBrowserSyncBackend(
     },
     async remove(key) {
       await getBrowserApi().storage.sync.remove(key);
+      await removeLocalTinyBaseSyncDocument(
+        syncBackendCacheKey(backendConfig, key),
+      );
     },
     async test() {
       await getBrowserApi().storage.sync.get(null);
@@ -76,11 +85,11 @@ function createBrowserSyncBackend(
         const change = changes[key];
         Promise.all([
           decodeBrowserSyncChangeValue<T>(
-            automergeBackendCacheKey(backendConfig, key),
+            syncBackendCacheKey(backendConfig, key),
             change.newValue,
           ),
           decodeBrowserSyncChangeValue<T>(
-            automergeBackendCacheKey(backendConfig, key),
+            syncBackendCacheKey(backendConfig, key),
             change.oldValue,
           ),
         ])
@@ -95,7 +104,7 @@ function createBrowserSyncBackend(
 
 async function decodeBrowserSyncChangeValue<T>(key: string, value: unknown) {
   return typeof value === "string"
-    ? readSyncDocumentValue<T>(key, base64ToBytes(value), value)
+    ? decodeTinyBaseSyncValue<T>(key, base64ToBytes(value))
     : undefined;
 }
 
@@ -115,11 +124,9 @@ function createWebDavBackend(
         await removeWebDavCache(backendConfig, key);
         return undefined;
       }
-      const value = await readSyncDocumentValue<T>(
-        automergeBackendCacheKey(backendConfig, key),
+      const value = await readTinyBaseSyncValue<T>(
+        syncBackendCacheKey(backendConfig, key),
         bytes.data,
-        webDavVersion(bytes),
-        cachedValue,
       );
       readCache.set(key, {
         etag: bytes.etag,
@@ -130,7 +137,16 @@ function createWebDavBackend(
       return value;
     },
     async write<T>(key: string, value: T) {
-      const result = writeSyncDocumentValue(value);
+      const bytes = await readWebDavBytes(
+        backendConfig,
+        key,
+        await readWebDavCache(backendConfig, key, readCache),
+      );
+      const result = await writeTinyBaseSyncValue(
+        syncBackendCacheKey(backendConfig, key),
+        value,
+        bytes && !bytes.notModified ? bytes.data : undefined,
+      );
       const response = await requestWebDav(
         backendConfig,
         objectUrl(backendConfig, key),
@@ -169,6 +185,9 @@ function createWebDavBackend(
         await throwWebDavError(response, "remove");
       readCache.delete(key);
       await removeWebDavCache(backendConfig, key);
+      await removeLocalTinyBaseSyncDocument(
+        syncBackendCacheKey(backendConfig, key),
+      );
     },
     async test() {
       const response = await requestWebDav(
@@ -195,17 +214,8 @@ type WebDavReadResult =
   | { notModified: true }
   | { data: Uint8Array; etag?: string; lastModified?: string };
 
-function webDavVersion(
-  bytes: Exclude<WebDavReadResult, { notModified: true }>,
-) {
-  const version = [bytes.etag, bytes.lastModified]
-    .filter((item) => item !== undefined && item !== "")
-    .join(":");
-  return version || undefined;
-}
-
 function webDavReadCacheFor(backendConfig: WebDavSyncBackendConfig) {
-  const scope = automergeBackendCacheKey(backendConfig, "");
+  const scope = syncBackendCacheKey(backendConfig, "");
   let cache = webDavReadCaches.get(scope);
   if (!cache) {
     cache = new Map<string, WebDavReadCache>();
@@ -218,7 +228,7 @@ function webDavReadCacheKey(
   backendConfig: WebDavSyncBackendConfig,
   key: string,
 ) {
-  return `${automergeBackendCacheKey(backendConfig, key)}:webdav-read-cache`;
+  return `${syncBackendCacheKey(backendConfig, key)}:webdav-read-cache`;
 }
 
 async function readWebDavCache(
@@ -267,10 +277,7 @@ async function removeWebDavCache(
   );
 }
 
-function automergeBackendCacheKey(
-  backendConfig: SyncBackendConfig,
-  key: string,
-) {
+function syncBackendCacheKey(backendConfig: SyncBackendConfig, key: string) {
   const scope =
     backendConfig.type === SYNC_BACKEND_TYPES.webDav
       ? `${backendConfig.type}:${backendConfig.username || ""}:${backendConfig.url}`
@@ -378,7 +385,7 @@ async function readWebDavBytes(
 
 function objectUrl(backendConfig: WebDavSyncBackendConfig, key: string) {
   return new URL(
-    `${encodeURIComponent(key)}.amrg`,
+    `${encodeURIComponent(key)}.tinybase`,
     baseUrl(backendConfig),
   ).toString();
 }
