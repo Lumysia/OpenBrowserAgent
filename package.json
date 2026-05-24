@@ -11,8 +11,8 @@
     "build:chrome": "wxt build -b chrome",
     "build:firefox": "wxt build -b firefox",
     "build:safari": "wxt build -b safari",
-    "local-execution-bridge": "node scripts/local-execution-bridge.mjs",
-    "install-local-execution-bridge": "node scripts/install-local-execution-bridge.mjs",
+    "local-execution-bridge": "node packages/local-execution-bridge/bin/cli.mjs run",
+    "install-local-execution-bridge": "node packages/local-execution-bridge/bin/cli.mjs install",
     "uninstall-local-execution-bridge": "node packages/local-execution-bridge/bin/cli.mjs uninstall",
     "zip": "node scripts/zip-with-hash.mjs",
     "compile": "tsc --noEmit"
