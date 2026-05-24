@@ -1,6 +1,6 @@
 ﻿:root {
   color-scheme: light;
-  --background: #fbfaf7;
+  --background: #fafafa;
   --foreground: #161512;
   --card: #ffffff;
   --card-foreground: #161512;
@@ -8,16 +8,16 @@
   --popover-foreground: #161512;
   --primary: var(--accent-strong);
   --primary-foreground: #ffffff;
-  --secondary: #f1f0ea;
+  --secondary: #f5f5f5;
   --secondary-foreground: #25231f;
-  --muted: #f4f3ee;
+  --muted: #f6f6f6;
   --muted-foreground: #706d65;
   --accent: var(--accent-soft);
   --accent-foreground: var(--accent-strong);
   --destructive: #b3261e;
   --destructive-foreground: #ffffff;
-  --border: #e2e0d8;
-  --input: #e2e0d8;
+  --border: #e4e4e4;
+  --input: #e4e4e4;
   --ring: rgba(49, 58, 139, 0.28);
   --accent-strong: #a35b76;
   --accent-solid: #b96d8b;
@@ -30,12 +30,12 @@
   --accent-focus: rgba(163, 91, 118, 0.42);
   --settings-tint: color-mix(
     in srgb,
-    var(--accent-softer) 58%,
+    var(--accent-softer) 24%,
     var(--background)
   );
   --settings-sidebar-tint: color-mix(
     in srgb,
-    var(--accent-softer) 34%,
+    var(--accent-softer) 12%,
     var(--card)
   );
   --composer-surface: var(--card);
@@ -43,17 +43,17 @@
   --composer-border: var(--border);
   --panel-gradient-top: color-mix(
     in srgb,
-    var(--accent-softer) 16%,
+    var(--accent-softer) 8%,
     var(--background)
   );
   --panel-gradient-mid: color-mix(
     in srgb,
-    var(--accent-softer) 10%,
+    var(--accent-softer) 6%,
     var(--background)
   );
   --panel-gradient-bottom: color-mix(
     in srgb,
-    var(--accent-soft) 28%,
+    var(--accent-soft) 12%,
     var(--background)
   );
   --radius: 12px;
