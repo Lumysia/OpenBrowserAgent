@@ -560,6 +560,7 @@ export const zhTW: LocaleMessages = {
     mcpTools: "可用工具",
     deleteMcpServer: "刪除 MCP 伺服器",
     resetDefaults: "重設預設值",
+    resetBuiltins: "重設內建項目",
     resetDefaultMcpServers: "重設預設 MCP 伺服器",
     resetDefaultMcpServersDescription:
       "用內建預設項目取代目前的 MCP 伺服器。自訂伺服器和測試結果會被移除。",

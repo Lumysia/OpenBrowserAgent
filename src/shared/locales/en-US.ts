@@ -669,6 +669,7 @@ export const enUS = {
     mcpTools: "Available tools",
     deleteMcpServer: "Delete MCP server",
     resetDefaults: "Reset defaults",
+    resetBuiltins: "Reset built-ins",
     resetDefaultMcpServers: "Reset default MCP servers",
     resetDefaultMcpServersDescription:
       "Replace current MCP servers with the built-in defaults. Custom servers and test results will be removed.",

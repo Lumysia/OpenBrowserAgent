@@ -554,6 +554,7 @@ export const zhCN: LocaleMessages = {
     mcpTools: "可用工具",
     deleteMcpServer: "删除 MCP 服务器",
     resetDefaults: "重置默认值",
+    resetBuiltins: "重置内置项",
     resetDefaultMcpServers: "重置默认 MCP 服务器",
     resetDefaultMcpServersDescription:
       "用内置默认项替换当前 MCP 服务器。自定义服务器和测试结果会被移除。",

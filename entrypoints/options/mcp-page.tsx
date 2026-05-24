@@ -145,6 +145,17 @@ export function McpPage() {
     setImportMenuOpen(false);
   }
 
+  function resetBuiltinMcpServers() {
+    const builtinIds = new Set(BUILTIN_MCP_SERVERS.map((server) => server.id));
+    setServers((current) => [
+      ...cloneDefault(BUILTIN_MCP_SERVERS),
+      ...current.filter((server) => !builtinIds.has(server.id)),
+    ]);
+    setImportDraft("");
+    setImportMessage("");
+    setImportMenuOpen(false);
+  }
+
   return (
     <div className="stack">
       <div className="settings-page-header">
@@ -398,9 +409,14 @@ export function McpPage() {
                 {t.options.resetDefaultMcpServersDescription}
               </CardDescription>
             </div>
-            <Button variant="outline" onClick={resetDefaultMcpServers}>
-              {t.options.resetDefaults}
-            </Button>
+            <div className="row">
+              <Button variant="outline" onClick={resetBuiltinMcpServers}>
+                {t.options.resetBuiltins}
+              </Button>
+              <Button variant="outline" onClick={resetDefaultMcpServers}>
+                {t.options.resetDefaults}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

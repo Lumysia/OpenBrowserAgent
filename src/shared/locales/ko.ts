@@ -671,6 +671,7 @@ export const ko: LocaleMessages = {
     mcpTools: "사용 가능한 도구",
     deleteMcpServer: "MCP 서버 삭제",
     resetDefaults: "기본값 재설정",
+    resetBuiltins: "내장 항목 재설정",
     resetDefaultMcpServers: "기본 MCP 서버 재설정",
     resetDefaultMcpServersDescription:
       "현재 MCP 서버를 내장 기본값으로 바꿉니다. 사용자 지정 서버와 테스트 결과가 제거됩니다.",

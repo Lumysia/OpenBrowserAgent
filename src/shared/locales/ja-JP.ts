@@ -739,6 +739,7 @@ export const jaJP: LocaleMessages = {
     mcpTools: "利用可能なツール",
     deleteMcpServer: "MCP サーバーを削除",
     resetDefaults: "既定にリセット",
+    resetBuiltins: "内蔵項目をリセット",
     resetDefaultMcpServers: "既定の MCP サーバーにリセット",
     resetDefaultMcpServersDescription:
       "現在の MCP サーバーを内蔵の既定値に置き換えます。カスタムサーバーとテスト結果は削除されます。",

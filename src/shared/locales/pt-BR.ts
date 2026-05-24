@@ -685,6 +685,7 @@ export const ptBR: LocaleMessages = {
     mcpTools: "Ferramentas disponíveis",
     deleteMcpServer: "Excluir servidor MCP",
     resetDefaults: "Redefinir padrões",
+    resetBuiltins: "Redefinir integrados",
     resetDefaultMcpServers: "Redefinir servidores MCP padrão",
     resetDefaultMcpServersDescription:
       "Substitui os servidores MCP atuais pelos padrões integrados. Servidores personalizados e resultados de teste serão removidos.",

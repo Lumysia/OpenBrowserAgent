@@ -716,6 +716,7 @@ export const esES: LocaleMessages = {
     mcpTools: "Herramientas disponibles",
     deleteMcpServer: "Eliminar servidor MCP",
     resetDefaults: "Restablecer valores",
+    resetBuiltins: "Restablecer integrados",
     resetDefaultMcpServers: "Restablecer servidores MCP predeterminados",
     resetDefaultMcpServersDescription:
       "Reemplaza los servidores MCP actuales por los valores integrados predeterminados. Se eliminarán los servidores personalizados y los resultados de prueba.",

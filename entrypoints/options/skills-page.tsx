@@ -229,6 +229,21 @@ export function SkillsPage() {
     setDeleteConfirmId(undefined);
   }
 
+  function resetBuiltinSkills() {
+    const builtinIds = new Set(BUILTIN_SKILLS.map((skill) => skill.id));
+    setSkills((items) => [
+      ...cloneDefault(BUILTIN_SKILLS),
+      ...items.filter((skill) => !builtinIds.has(skill.id) && !skill.builtin),
+    ]);
+    setDrafts((items) =>
+      Object.fromEntries(
+        Object.entries(items).filter(([id]) => !builtinIds.has(id)),
+      ),
+    );
+    if (selectedId && builtinIds.has(selectedId)) setSelectedId("");
+    setDeleteConfirmId(undefined);
+  }
+
   return (
     <div className="skills-page stack">
       <div className="settings-page-header">
@@ -424,9 +439,14 @@ export function SkillsPage() {
                 {t.options.resetDefaultSkillsDescription}
               </CardDescription>
             </div>
-            <Button variant="outline" onClick={resetDefaultSkills}>
-              {t.options.resetDefaults}
-            </Button>
+            <div className="row">
+              <Button variant="outline" onClick={resetBuiltinSkills}>
+                {t.options.resetBuiltins}
+              </Button>
+              <Button variant="outline" onClick={resetDefaultSkills}>
+                {t.options.resetDefaults}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -116,6 +116,25 @@ export function AgentsPage() {
     }));
   }
 
+  function resetBuiltinAgents() {
+    const now = Date.now();
+    const builtinIds = new Set(BUILTIN_AGENTS.map((agent) => agent.id));
+    setAgents((current) => [
+      ...BUILTIN_AGENTS.map((agent) => ({
+        ...agent,
+        createdAt: now,
+        updatedAt: now,
+      })),
+      ...current.filter((agent) => !builtinIds.has(agent.id) && !agent.builtin),
+    ]);
+    setWorkspaces((current) => [
+      ...BUILTIN_AGENTS.map((agent) => createWorkspace(agent.id, now)),
+      ...(current || []).filter(
+        (workspace) => !builtinIds.has(workspace.agentId),
+      ),
+    ]);
+  }
+
   function workspaceForAgent(agentId: string) {
     return (
       workspaces?.find((workspace) => workspace.agentId === agentId) ||
@@ -299,9 +318,14 @@ export function AgentsPage() {
                 {t.options.resetDefaultAgentsDescription}
               </CardDescription>
             </div>
-            <Button variant="outline" onClick={resetDefaultAgents}>
-              {t.options.resetDefaults}
-            </Button>
+            <div className="row">
+              <Button variant="outline" onClick={resetBuiltinAgents}>
+                {t.options.resetBuiltins}
+              </Button>
+              <Button variant="outline" onClick={resetDefaultAgents}>
+                {t.options.resetDefaults}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
