@@ -141,6 +141,8 @@ export const zhCN: LocaleMessages = {
       characters: "字符",
       unavailable: "不可用",
     },
+    contextSummaryTitle: "上下文摘要",
+    contextSummaryDescription: "较早的对话上下文已为本次请求压缩整理。",
     operatingBrowser: "正在操作网页",
     preparingFinalReply: "正在准备最终回复",
     preparingFinalReplyDescription: "浏览器操作已完成，AI 正在整理结果。",

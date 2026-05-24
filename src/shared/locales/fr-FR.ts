@@ -148,6 +148,9 @@ export const frFR: LocaleMessages = {
       characters: "car.",
       unavailable: "Indisponible",
     },
+    contextSummaryTitle: "Résumé du contexte",
+    contextSummaryDescription:
+      "L'ancien contexte de conversation a été compacté pour cette requête.",
     operatingBrowser: "Utilisation du navigateur",
     preparingFinalReply: "Préparation de la réponse finale",
     preparingFinalReplyDescription:

@@ -182,6 +182,7 @@ function addContextBudget(
     prunedMessages: (current?.prunedMessages || 0) + next.prunedMessages,
     truncatedToolResults:
       (current?.truncatedToolResults || 0) + next.truncatedToolResults,
+    compactionSummary: next.compactionSummary || current?.compactionSummary,
   };
 }
 

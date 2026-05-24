@@ -41,6 +41,7 @@ export function applyOpenAIContextBudget(
     prunedMessages: windowed.prunedMessages,
     truncatedToolResults:
       toolPruned.truncatedToolResults + mediaPruned.truncatedToolResults,
+    compactionSummary,
   });
 }
 
@@ -72,6 +73,7 @@ export function applyOpenAIResponsesContextBudget(
     prunedMessages: windowed.prunedMessages,
     truncatedToolResults:
       toolPruned.truncatedToolResults + mediaPruned.truncatedToolResults,
+    compactionSummary,
   });
 }
 
@@ -434,7 +436,10 @@ function parseJsonObject(content: string): Record<string, unknown> | undefined {
 function withReport<T>(
   originalChars: number,
   items: T[],
-  report: Pick<ContextBudgetReport, "prunedMessages" | "truncatedToolResults">,
+  report: Pick<
+    ContextBudgetReport,
+    "prunedMessages" | "truncatedToolResults" | "compactionSummary"
+  >,
 ): BudgetResult<T> {
   const finalChars = jsonLength(items);
   return {
@@ -445,6 +450,7 @@ function withReport<T>(
       prunedChars: Math.max(0, originalChars - finalChars),
       prunedMessages: report.prunedMessages,
       truncatedToolResults: report.truncatedToolResults,
+      compactionSummary: report.compactionSummary,
     },
   };
 }

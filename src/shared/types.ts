@@ -262,6 +262,7 @@ export type ContextBudgetReport = {
   prunedChars: number;
   prunedMessages: number;
   truncatedToolResults: number;
+  compactionSummary?: string;
 };
 
 export const TOOL_PART_PREFIX = "tool-";

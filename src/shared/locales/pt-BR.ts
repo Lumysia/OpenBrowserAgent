@@ -147,6 +147,9 @@ export const ptBR: LocaleMessages = {
       characters: "car.",
       unavailable: "Indisponível",
     },
+    contextSummaryTitle: "Resumo de contexto",
+    contextSummaryDescription:
+      "O contexto antigo da conversa foi compactado para esta solicitação.",
     operatingBrowser: "Operando o navegador",
     preparingFinalReply: "Preparando resposta final",
     preparingFinalReplyDescription:

@@ -29,7 +29,11 @@ import type {
 import { CHAT_PART_STATE } from "../../src/shared/types";
 import { formatAttachmentSize } from "./file-attachments";
 import { formatMessageTime } from "./format";
-import { AssistantPart, AssistantText } from "./assistant-message-part";
+import {
+  AssistantPart,
+  AssistantSummaryCard,
+  AssistantText,
+} from "./assistant-message-part";
 import { MessageRunInfo } from "./message-run-info";
 import {
   Badge,
@@ -142,6 +146,7 @@ export function MessageBubble({
         <div className="user-bubble">{message.content}</div>
       ) : hasParts ? (
         <>
+          <AssistantSummaryCard t={t} message={message} />
           {assistantContentFallback && (
             <AssistantText
               t={t}

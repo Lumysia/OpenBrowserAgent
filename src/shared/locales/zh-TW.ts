@@ -141,6 +141,8 @@ export const zhTW: LocaleMessages = {
       characters: "字元",
       unavailable: "不可用",
     },
+    contextSummaryTitle: "上下文摘要",
+    contextSummaryDescription: "較早的對話上下文已為本次請求壓縮整理。",
     operatingBrowser: "正在操作網頁",
     preparingFinalReply: "正在準備最終回覆",
     preparingFinalReplyDescription: "瀏覽器操作已完成，AI 正在整理結果。",

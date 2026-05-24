@@ -241,6 +241,7 @@ function addContextBudget(
     prunedMessages: add(total.prunedMessages, budget?.prunedMessages) || 0,
     truncatedToolResults:
       add(total.truncatedToolResults, budget?.truncatedToolResults) || 0,
+    compactionSummary: budget?.compactionSummary || total.compactionSummary,
   };
 }
 

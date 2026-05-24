@@ -148,6 +148,9 @@ export const enUS = {
       characters: "chars",
       unavailable: "Unavailable",
     },
+    contextSummaryTitle: "Context summary",
+    contextSummaryDescription:
+      "Older conversation context was compacted for this request.",
     operatingBrowser: "Operating the browser",
     preparingFinalReply: "Preparing final response",
     preparingFinalReplyDescription:

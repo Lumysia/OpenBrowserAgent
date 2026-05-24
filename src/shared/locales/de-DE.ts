@@ -149,6 +149,9 @@ export const deDE: LocaleMessages = {
       characters: "Zeichen",
       unavailable: "Nicht verfügbar",
     },
+    contextSummaryTitle: "Kontextzusammenfassung",
+    contextSummaryDescription:
+      "Älterer Gesprächskontext wurde für diese Anfrage komprimiert.",
     operatingBrowser: "Browser wird bedient",
     preparingFinalReply: "Finale Antwort wird vorbereitet",
     preparingFinalReplyDescription:

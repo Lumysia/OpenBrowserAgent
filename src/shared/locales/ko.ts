@@ -146,6 +146,9 @@ export const ko: LocaleMessages = {
       characters: "문자",
       unavailable: "사용 불가",
     },
+    contextSummaryTitle: "컨텍스트 요약",
+    contextSummaryDescription:
+      "이전 대화 컨텍스트가 이번 요청을 위해 압축되었습니다.",
     operatingBrowser: "브라우저 조작 중",
     preparingFinalReply: "최종 답변 준비 중",
     preparingFinalReplyDescription:

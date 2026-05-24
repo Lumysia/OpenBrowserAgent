@@ -166,6 +166,24 @@
   overflow-wrap: anywhere;
   word-break: break-word;
 }
+.context-summary-description {
+  -webkit-line-clamp: unset;
+}
+.context-summary-text {
+  max-height: 220px;
+  margin: 8px 0 0;
+  padding: 10px;
+  overflow: auto;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 10%, var(--border));
+  border-radius: calc(var(--radius) - 4px);
+  background: color-mix(in srgb, var(--card) 88%, var(--background));
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .tool-detail-slot {
   display: grid;
   grid-template-rows: 0fr;

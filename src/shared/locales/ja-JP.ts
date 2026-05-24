@@ -148,6 +148,9 @@ export const jaJP: LocaleMessages = {
       characters: "文字",
       unavailable: "利用不可",
     },
+    contextSummaryTitle: "コンテキスト要約",
+    contextSummaryDescription:
+      "以前の会話コンテキストはこのリクエスト用に圧縮されました。",
     operatingBrowser: "ブラウザを操作中",
     preparingFinalReply: "最終回答を準備中",
     preparingFinalReplyDescription:

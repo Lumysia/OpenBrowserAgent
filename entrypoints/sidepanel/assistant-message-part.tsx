@@ -28,6 +28,45 @@ import { MessageRunInfo } from "./message-run-info";
 import { ToolPart } from "./tool-part";
 import { useThrottledText } from "./use-throttled-text";
 
+export function AssistantSummaryCard({
+  t,
+  message,
+}: {
+  t: Messages;
+  message: ChatMessage;
+}) {
+  const summary = compactionSummary(message);
+  if (!summary) return null;
+  return (
+    <div className="tool-card done context-summary-card">
+      <div className="tool-title">
+        <span className="tool-icon">
+          <Brain />
+        </span>
+        <strong className="tool-title-text">
+          {t.sidepanel.contextSummaryTitle}
+        </strong>
+      </div>
+      <div className="tool-detail">
+        <div className="tool-detail-content">
+          <div className="tool-description context-summary-description">
+            {t.sidepanel.contextSummaryDescription}
+          </div>
+          <pre className="context-summary-text">{summary}</pre>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function compactionSummary(message: ChatMessage) {
+  const metrics = message.metadata?.runMetrics as
+    | { contextBudget?: { compactionSummary?: unknown } }
+    | undefined;
+  const summary = metrics?.contextBudget?.compactionSummary;
+  return typeof summary === "string" && summary.trim() ? summary.trim() : "";
+}
+
 export function AssistantPart({
   t,
   part,

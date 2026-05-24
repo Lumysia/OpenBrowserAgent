@@ -147,6 +147,9 @@ export const esES: LocaleMessages = {
       characters: "car.",
       unavailable: "No disponible",
     },
+    contextSummaryTitle: "Resumen de contexto",
+    contextSummaryDescription:
+      "El contexto anterior de la conversación se compactó para esta solicitud.",
     operatingBrowser: "Operando el navegador",
     preparingFinalReply: "Preparando la respuesta final",
     preparingFinalReplyDescription:
