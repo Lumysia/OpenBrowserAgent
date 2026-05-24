@@ -132,7 +132,7 @@ export const commonBrowserTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.startSubAgent,
-    "Delegate a focused task to another agent profile. By default this starts a linked child chat, waits for the child result, and returns that result to you. Set background=true only when you intentionally want to continue before the child finishes; then call getSubAgentStatus later to collect results.",
+    "Delegate a focused task to another internal OpenBrowserAgent chat agent profile. Do not use this for local CLI tools, desktop apps, shell commands, filesystem inspection, or external local processes; use local execution bridge tools for those. By default this starts a linked child chat, waits for the child result, and returns that result to you. Set background=true only when you intentionally want to continue before the child finishes; then call getSubAgentStatus later to collect results.",
     {
       agentId: {
         type: "string",

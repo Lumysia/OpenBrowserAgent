@@ -47,6 +47,7 @@ Use this skill whenever the user wants to add, configure, modify, test, use, or 
 - Before running work through a configured bridge, call \`testLocalExecutionBridge\`; then call \`startLocalExecutionBridge\` with the exact shell command to run only if the test succeeds.
 - Use \`deleteLocalExecutionBridge\` for extension-side cleanup. For native bridge files, guide the user to run \`npx openbrowseragent-local-execution-bridge@1 uninstall\`.
 - Do not reinstall or rewrite the bridge for each requested local task. Install once, then send shell commands through \`startLocalExecutionBridge\`.
+- Do not use \`startSubAgent\` for local CLIs, desktop apps, filesystem inspection, or external local processes. Sub-agents are internal OpenBrowserAgent chat profiles; local processes run through the local execution bridge.
 
 ## Setup Inputs
 

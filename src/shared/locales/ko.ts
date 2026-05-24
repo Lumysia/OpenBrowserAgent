@@ -78,6 +78,13 @@ export const ko: LocaleMessages = {
     subAgentRunning: "실행 중",
     subAgentCompleted: "완료됨",
     subAgentMissing: "찾을 수 없음",
+    localExecutionBridgeStates: {
+      running: "실행 중",
+      done: "완료됨",
+      error: "오류",
+      missing: "찾을 수 없음",
+      canceled: "취소됨",
+    },
     questionWaiting: "답변을 기다리는 중",
     questionSubmit: "답변 제출",
     questionCustomPlaceholder: "직접 답변 입력...",

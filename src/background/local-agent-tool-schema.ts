@@ -3,7 +3,7 @@ import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 export const localExecutionBridgeTools = [
   tool(
     BROWSER_TOOL_NAME.listLocalExecutionBridges,
-    "List configured local execution bridges before delegating a local execution task or managing bridge settings. If the user wants to add, update, test, or delete bridges, read the builtin skill local-execution-bridge-setup first.",
+    "List configured local execution bridges before running local shell commands, using local CLI tools/apps, inspecting local files/drives, delegating to local processes, or managing bridge settings. If the user wants to add, update, test, or delete bridges, read the builtin skill local-execution-bridge-setup first.",
     {},
     [],
   ),
@@ -100,7 +100,7 @@ export const localExecutionBridgeTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.startLocalExecutionBridge,
-    "Execute a shell command through a configured local execution bridge. By default this starts the command, waits for completion, and returns stdout/stderr/result. Set background=true only when you intentionally want to continue before it finishes; then call getLocalExecutionBridgeStatus later.",
+    "Execute a shell command through a configured local execution bridge. Use this for local CLI tools/apps, filesystem or drive inspection, and external local processes. By default this starts the command, waits for completion, and returns stdout/stderr/result. Set background=true only when you intentionally want to continue before it finishes; then call getLocalExecutionBridgeStatus later.",
     {
       agentId: {
         type: "string",

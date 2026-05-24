@@ -79,6 +79,13 @@ export const ptBR: LocaleMessages = {
     subAgentRunning: "Em execução",
     subAgentCompleted: "Concluído",
     subAgentMissing: "Ausente",
+    localExecutionBridgeStates: {
+      running: "Em execução",
+      done: "Concluído",
+      error: "Erro",
+      missing: "Ausente",
+      canceled: "Cancelado",
+    },
     questionWaiting: "Aguardando sua resposta",
     questionSubmit: "Enviar respostas",
     questionCustomPlaceholder: "Digite sua própria resposta...",

@@ -79,6 +79,13 @@ export const esES: LocaleMessages = {
     subAgentRunning: "En curso",
     subAgentCompleted: "Completado",
     subAgentMissing: "No encontrado",
+    localExecutionBridgeStates: {
+      running: "En curso",
+      done: "Completado",
+      error: "Error",
+      missing: "No encontrado",
+      canceled: "Cancelado",
+    },
     questionWaiting: "Esperando tu respuesta",
     questionSubmit: "Enviar respuestas",
     questionCustomPlaceholder: "Escribe tu propia respuesta...",

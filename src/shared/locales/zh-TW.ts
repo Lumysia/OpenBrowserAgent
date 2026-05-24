@@ -73,6 +73,13 @@ export const zhTW: LocaleMessages = {
     subAgentRunning: "執行中",
     subAgentCompleted: "已完成",
     subAgentMissing: "找不到",
+    localExecutionBridgeStates: {
+      running: "執行中",
+      done: "已完成",
+      error: "錯誤",
+      missing: "找不到",
+      canceled: "已取消",
+    },
     questionWaiting: "等待你的回答",
     questionSubmit: "提交回答",
     questionCustomPlaceholder: "輸入自訂回答……",

@@ -80,6 +80,13 @@ export const enUS = {
     subAgentRunning: "Running",
     subAgentCompleted: "Completed",
     subAgentMissing: "Missing",
+    localExecutionBridgeStates: {
+      running: "Running",
+      done: "Done",
+      error: "Error",
+      missing: "Missing",
+      canceled: "Canceled",
+    },
     questionWaiting: "Waiting for your answer",
     questionSubmit: "Submit answers",
     questionCustomPlaceholder: "Type your own answer...",

@@ -73,6 +73,13 @@ export const zhCN: LocaleMessages = {
     subAgentRunning: "运行中",
     subAgentCompleted: "已完成",
     subAgentMissing: "未找到",
+    localExecutionBridgeStates: {
+      running: "运行中",
+      done: "已完成",
+      error: "错误",
+      missing: "未找到",
+      canceled: "已取消",
+    },
     questionWaiting: "等待你的回答",
     questionSubmit: "提交回答",
     questionCustomPlaceholder: "输入自定义回答……",

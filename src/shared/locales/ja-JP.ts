@@ -80,6 +80,13 @@ export const jaJP: LocaleMessages = {
     subAgentRunning: "実行中",
     subAgentCompleted: "完了",
     subAgentMissing: "見つかりません",
+    localExecutionBridgeStates: {
+      running: "実行中",
+      done: "完了",
+      error: "エラー",
+      missing: "見つかりません",
+      canceled: "キャンセル済み",
+    },
     questionWaiting: "回答を待っています",
     questionSubmit: "回答を送信",
     questionCustomPlaceholder: "独自の回答を入力...",

@@ -80,6 +80,13 @@ export const deDE: LocaleMessages = {
     subAgentRunning: "Läuft",
     subAgentCompleted: "Abgeschlossen",
     subAgentMissing: "Fehlt",
+    localExecutionBridgeStates: {
+      running: "Läuft",
+      done: "Fertig",
+      error: "Fehler",
+      missing: "Fehlt",
+      canceled: "Abgebrochen",
+    },
     questionWaiting: "Warten auf deine Antwort",
     questionSubmit: "Antworten senden",
     questionCustomPlaceholder: "Eigene Antwort eingeben...",

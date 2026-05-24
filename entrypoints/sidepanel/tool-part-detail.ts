@@ -99,7 +99,7 @@ export function toolDisplay(
           stringValue(input.agentName) ||
           stringValue(input.agentId) ||
           stringValue(output.agentId),
-        stringValue(output.state),
+        localExecutionBridgeStateLabel(stringValue(output.state), t),
         stringValue(output.error),
       ]);
     if (
@@ -446,6 +446,11 @@ function shortValue(value: unknown, maxLength = 140) {
 }
 function stringValue(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : "";
+}
+function localExecutionBridgeStateLabel(state: string, t: Messages) {
+  if (!state) return "";
+  const labels = t.sidepanel.localExecutionBridgeStates;
+  return labels[state as keyof typeof labels] || state;
 }
 function shortUrl(value: unknown) {
   const text = stringValue(value);
