@@ -244,155 +244,80 @@ export const deDE: LocaleMessages = {
     copyImage: "Bild kopieren",
     copyPrompt: "Anweisung kopieren",
     tool: {
+      manageTabs: {
+        running: "Tabs werden verwaltet",
+        done: "Tabs verwaltet",
+        found: "{count} offene Tabs gefunden",
+      },
+      cdpInput: {
+        running: "CDP-Eingabe wird gesendet",
+        done: "CDP-Eingabe gesendet",
+      },
+      cdpPage: {
+        running: "CDP-Seite wird gesteuert",
+        done: "CDP-Seite gesteuert",
+      },
+      cdpDiagnostics: {
+        running: "CDP-Diagnose wird gelesen",
+        done: "CDP-Diagnose gelesen",
+      },
+      wait: { running: "Warten", done: "Gewartet" },
+      getCurrentTime: { running: "Zeit wird geprüft", done: "Zeit geprüft" },
+      getCurrentTab: {
+        running: "Aktueller Tab wird gelesen",
+        done: "Aktueller Tab gelesen",
+      },
+      captureVisibleTab: { running: "Tab wird erfasst", done: "Tab erfasst" },
+      downloadAllImagesInTab: {
+        running: "Bilder werden heruntergeladen",
+        done: "Bilder heruntergeladen",
+      },
       question: { running: "Frage wird gestellt", done: "Frage beantwortet" },
-      openNewTabWithURL: {
-        running: "Neue Seite wird geöffnet",
-        done: "Neue Seite geöffnet",
+      loadTools: {
+        running: "Tools werden geladen",
+        done: "Tools geladen",
+        found: "Loaded {count} tools",
+      },
+      manageSkills: {
+        running: "Skills werden verwaltet",
+        done: "Skills verwaltet",
+        found: "Found {count}",
+      },
+      workspaceFiles: {
+        running: "Workspace-Dateien werden bearbeitet",
+        done: "Workspace-Dateien bearbeitet",
+      },
+      manageMemory: {
+        running: "Speicher wird verwaltet",
+        done: "Speicher verwaltet",
+      },
+      manageChatHistory: {
+        running: "Chatverlauf wird gelesen",
+        done: "Chatverlauf gelesen",
+      },
+      manageMcpServers: {
+        running: "MCP-Server werden verwaltet",
+        done: "MCP-Server verwaltet",
+      },
+      manageLocalExecutionBridges: {
+        running: "Execution Bridges werden verwaltet",
+        done: "Execution Bridges verwaltet",
       },
       inspectPage: {
         running: "Seite wird geprüft",
         done: "Seite geprüft",
         found: "{count} Elemente gefunden",
       },
-      waitTabLoadFinished: {
-        running: "Warten auf Seitenladen",
-        done: "Seite geladen",
-      },
       mutatePage: { running: "Seite wird geändert", done: "Seite geändert" },
-      cdpMouseActionByAiID: {
-        running: "Seitenelement wird bedient",
-        done: "Seitenelement bedient",
-      },
-      groupTabs: { running: "Tabs werden gruppiert", done: "Tabs gruppiert" },
-      wait: { running: "Warten", done: "Gewartet" },
-      getCurrentTime: { running: "Zeit wird geprüft", done: "Zeit geprüft" },
-      getCurrentTab: {
-        running: "Aktuelle Seite wird abgerufen",
-        done: "Aktuelle Seite abgerufen",
-      },
-      getAllTabs: {
-        running: "Geöffnete Tabs werden geprüft",
-        done: "Geöffnete Tabs geprüft",
-        found: "{count} geöffnete Tabs gefunden",
-      },
-      goToTab: { running: "Tab wird gewechselt", done: "Tab gewechselt" },
-      openSearchTab: { running: "Suche läuft", done: "Suchtab geöffnet" },
-      downloadAllImagesInTab: {
-        running: "Bilder werden heruntergeladen",
-        done: "Bilder heruntergeladen",
-      },
       downloadTabToMarkdown: {
         running: "Markdown wird heruntergeladen",
         done: "Markdown heruntergeladen",
-      },
-      closeTab: { running: "Tab wird geschlossen", done: "Tab geschlossen" },
-      reloadTab: { running: "Tab wird neu geladen", done: "Tab neu geladen" },
-      navigateTab: { running: "Tab wird navigiert", done: "Tab navigiert" },
-      captureVisibleTab: {
-        running: "Tab wird aufgenommen",
-        done: "Tab aufgenommen",
-      },
-      waitForText: { running: "Warten auf Text", done: "Text gefunden" },
-      scrollToBottom: {
-        running: "Seite wird gescrollt",
-        done: "Seite gescrollt",
-      },
-      listSkills: {
-        running: "Fähigkeiten werden aufgelistet",
-        done: "Fähigkeiten aufgelistet",
-        found: "{count} gefunden",
-      },
-      createSkill: {
-        running: "Fähigkeit wird erstellt",
-        done: "Fähigkeit erstellt",
-      },
-      readSkill: {
-        running: "Fähigkeit wird gelesen",
-        done: "Fähigkeit gelesen",
-      },
-      updateSkillFile: {
-        running: "Fähigkeit wird aktualisiert",
-        done: "Fähigkeit aktualisiert",
-      },
-      patchSkillFile: {
-        running: "Fähigkeit wird gepatcht",
-        done: "Fähigkeit gepatcht",
-      },
-      listMcpServers: {
-        running: "MCP-Server werden aufgelistet",
-        done: "MCP-Server aufgelistet",
-      },
-      addMcpServer: {
-        running: "MCP-Server wird hinzugefügt",
-        done: "MCP-Server hinzugefügt",
-      },
-      updateMcpServer: {
-        running: "MCP-Server wird aktualisiert",
-        done: "MCP-Server aktualisiert",
-      },
-      testMcpServer: {
-        running: "MCP-Server wird getestet",
-        done: "MCP-Server getestet",
-      },
-      deleteMcpServer: {
-        running: "MCP-Server wird gelöscht",
-        done: "MCP-Server gelöscht",
       },
       generateImage: { running: "Bild wird generiert", done: "Bild generiert" },
       readFileFromUrl: { running: "Datei wird gelesen", done: "Datei gelesen" },
       readUploadedAttachment: {
         running: "Anhang wird gelesen",
         done: "Anhang gelesen",
-      },
-      loadBrowserTools: {
-        running: "Browser-Tools werden geladen",
-        done: "Browser-Tools geladen",
-        found: "{count} Tools geladen",
-      },
-      cdpClickAt: {
-        running: "Koordinaten werden geklickt",
-        done: "Koordinaten geklickt",
-      },
-      cdpPressKey: { running: "Taste wird gedrückt", done: "Taste gedrückt" },
-      cdpTypeText: { running: "Text wird eingegeben", done: "Text eingegeben" },
-      cdpFill: { running: "Feld wird ausgefüllt", done: "Feld ausgefüllt" },
-      cdpFillForm: {
-        running: "Formular wird ausgefüllt",
-        done: "Formular ausgefüllt",
-      },
-      cdpDrag: { running: "Auf Seite wird gezogen", done: "Auf Seite gezogen" },
-      cdpHandleDialog: {
-        running: "Dialog wird verarbeitet",
-        done: "Dialog verarbeitet",
-      },
-      cdpListPages: {
-        running: "Seiten werden geprüft",
-        done: "Seiten geprüft",
-      },
-      cdpNewPage: { running: "Seite wird geöffnet", done: "Seite geöffnet" },
-      cdpNavigatePage: {
-        running: "Seite wird navigiert",
-        done: "Seite navigiert",
-      },
-      cdpSelectPage: {
-        running: "Seite wird fokussiert",
-        done: "Seite fokussiert",
-      },
-      cdpClosePage: {
-        running: "Seite wird geschlossen",
-        done: "Seite geschlossen",
-      },
-      cdpWaitFor: {
-        running: "Warten auf Seitentext",
-        done: "Seitentext gefunden",
-      },
-      cdpResizePage: {
-        running: "Seitengröße wird geändert",
-        done: "Seitengröße geändert",
-      },
-      cdpEmulate: {
-        running: "Seitenemulation wird angewendet",
-        done: "Seitenemulation angewendet",
       },
       cdpEvaluateScript: {
         running: "Seitenskript wird ausgeführt",
@@ -405,26 +330,6 @@ export const deDE: LocaleMessages = {
       cdpTakeScreenshot: {
         running: "Screenshot wird erstellt",
         done: "Screenshot erstellt",
-      },
-      cdpTakeSnapshot: {
-        running: "Seiten-Snapshot wird erstellt",
-        done: "Seiten-Snapshot erstellt",
-      },
-      cdpListConsoleMessages: {
-        running: "Konsolenmeldungen werden gelesen",
-        done: "Konsolenmeldungen gelesen",
-      },
-      cdpGetConsoleMessage: {
-        running: "Konsolenmeldung wird gelesen",
-        done: "Konsolenmeldung gelesen",
-      },
-      cdpListNetworkRequests: {
-        running: "Netzwerkanfragen werden gelesen",
-        done: "Netzwerkanfragen gelesen",
-      },
-      cdpGetNetworkRequest: {
-        running: "Netzwerkanfrage wird gelesen",
-        done: "Netzwerkanfrage gelesen",
       },
       cdpPerformanceStartTrace: {
         running: "Performance-Trace wird gestartet",
@@ -466,78 +371,6 @@ export const deDE: LocaleMessages = {
         running: "Seitenaufzeichnung wird gestoppt",
         done: "Seitenaufzeichnung gestoppt",
       },
-      readSkillFile: {
-        running: "Fähigkeitsdatei wird gelesen",
-        done: "Fähigkeitsdatei gelesen",
-      },
-      listWorkspaceFiles: {
-        running: "Arbeitsbereichsdateien werden aufgelistet",
-        done: "Arbeitsbereichsdateien aufgelistet",
-      },
-      readWorkspaceFile: {
-        running: "Arbeitsbereichsdatei wird gelesen",
-        done: "Arbeitsbereichsdatei gelesen",
-      },
-      writeWorkspaceFile: {
-        running: "Arbeitsbereichsdatei wird geschrieben",
-        done: "Arbeitsbereichsdatei geschrieben",
-      },
-      patchWorkspaceFile: {
-        running: "Arbeitsbereichsdatei wird bearbeitet",
-        done: "Arbeitsbereichsdatei bearbeitet",
-      },
-      deleteWorkspaceFile: {
-        running: "Arbeitsbereichsdatei wird gelöscht",
-        done: "Arbeitsbereichsdatei gelöscht",
-      },
-      searchWorkspaceFiles: {
-        running: "Arbeitsbereichsdateien werden durchsucht",
-        done: "Arbeitsbereichsdateien durchsucht",
-      },
-      listMemory: {
-        running: "Speicher wird aufgelistet",
-        done: "Speicher aufgelistet",
-      },
-      addMemory: {
-        running: "Speicher wird hinzugefügt",
-        done: "Speicher hinzugefügt",
-      },
-      updateMemory: {
-        running: "Speicher wird aktualisiert",
-        done: "Speicher aktualisiert",
-      },
-      removeMemory: {
-        running: "Speicher wird entfernt",
-        done: "Speicher entfernt",
-      },
-      listUserProfile: {
-        running: "Benutzerprofil wird aufgelistet",
-        done: "Benutzerprofil aufgelistet",
-      },
-      addUserProfileNote: {
-        running: "Profilnotiz wird hinzugefügt",
-        done: "Profilnotiz hinzugefügt",
-      },
-      updateUserProfileNote: {
-        running: "Profilnotiz wird aktualisiert",
-        done: "Profilnotiz aktualisiert",
-      },
-      removeUserProfileNote: {
-        running: "Profilnotiz wird entfernt",
-        done: "Profilnotiz entfernt",
-      },
-      searchChatHistory: {
-        running: "Chatverlauf wird durchsucht",
-        done: "Chatverlauf durchsucht",
-      },
-      readChatThread: {
-        running: "Chat-Thread wird gelesen",
-        done: "Chat-Thread gelesen",
-      },
-      deleteChatThread: {
-        running: "Chat-Thread wird gelöscht",
-        done: "Chat-Thread gelöscht",
-      },
       startSubAgent: {
         running: "Subagent wird gestartet",
         done: "Subagent gestartet",
@@ -545,10 +378,6 @@ export const deDE: LocaleMessages = {
       getSubAgentStatus: {
         running: "Subagent wird geprüft",
         done: "Subagent geprüft",
-      },
-      listLocalExecutionBridges: {
-        running: "Ausführungs-Bridges werden aufgelistet",
-        done: "Ausführungs-Bridges aufgelistet",
       },
       startLocalExecutionBridge: {
         running: "Lokaler Befehl wird gestartet",
@@ -561,22 +390,6 @@ export const deDE: LocaleMessages = {
       cancelLocalExecutionBridge: {
         running: "Lokaler Befehl wird abgebrochen",
         done: "Lokaler Befehl abgebrochen",
-      },
-      addLocalExecutionBridge: {
-        running: "Ausführungs-Bridge wird hinzugefügt",
-        done: "Ausführungs-Bridge hinzugefügt",
-      },
-      updateLocalExecutionBridge: {
-        running: "Ausführungs-Bridge wird aktualisiert",
-        done: "Ausführungs-Bridge aktualisiert",
-      },
-      testLocalExecutionBridge: {
-        running: "Ausführungs-Bridge wird getestet",
-        done: "Ausführungs-Bridge getestet",
-      },
-      deleteLocalExecutionBridge: {
-        running: "Ausführungs-Bridge wird gelöscht",
-        done: "Ausführungs-Bridge gelöscht",
       },
     },
   },

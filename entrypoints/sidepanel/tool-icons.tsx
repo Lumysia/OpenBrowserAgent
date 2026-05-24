@@ -22,7 +22,7 @@ import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
 
 export function toolIcon(name: string) {
   const lowerName = name.toLowerCase();
-  if (name === BROWSER_TOOL_NAME.loadBrowserTools)
+  if (name === BROWSER_TOOL_NAME.loadTools)
     return <Layers size={19} strokeWidth={2.1} />;
   if (name === BROWSER_TOOL_NAME.question)
     return <MessageCircleQuestion size={19} strokeWidth={2.1} />;
@@ -31,18 +31,17 @@ export function toolIcon(name: string) {
   if (name === BROWSER_TOOL_NAME.getSubAgentStatus)
     return <FileSearch size={19} strokeWidth={2.1} />;
   if (
-    name === BROWSER_TOOL_NAME.listLocalExecutionBridges ||
-    name === BROWSER_TOOL_NAME.addLocalExecutionBridge ||
-    name === BROWSER_TOOL_NAME.updateLocalExecutionBridge ||
-    name === BROWSER_TOOL_NAME.testLocalExecutionBridge ||
-    name === BROWSER_TOOL_NAME.deleteLocalExecutionBridge ||
+    name === BROWSER_TOOL_NAME.manageLocalExecutionBridges ||
     name === BROWSER_TOOL_NAME.startLocalExecutionBridge ||
     name === BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus ||
     name === BROWSER_TOOL_NAME.cancelLocalExecutionBridge
   )
     return <TerminalSquare size={19} strokeWidth={2.1} />;
   if (isWorkspaceToolName(name)) {
-    if (name === BROWSER_TOOL_NAME.searchWorkspaceFiles)
+    if (
+      name === BROWSER_TOOL_NAME.workspaceFiles &&
+      lowerName.includes("search")
+    )
       return <FileSearch size={19} strokeWidth={2.1} />;
     return <FileText size={19} strokeWidth={2.1} />;
   }
@@ -87,14 +86,7 @@ export function toolIcon(name: string) {
     name === BROWSER_TOOL_NAME.readFileFromUrl
   )
     return <FileSearch size={19} strokeWidth={2.1} />;
-  if (
-    name === BROWSER_TOOL_NAME.listSkills ||
-    name === BROWSER_TOOL_NAME.createSkill ||
-    name === BROWSER_TOOL_NAME.readSkill ||
-    name === BROWSER_TOOL_NAME.readSkillFile ||
-    name === BROWSER_TOOL_NAME.updateSkillFile ||
-    name === BROWSER_TOOL_NAME.patchSkillFile
-  )
+  if (name === BROWSER_TOOL_NAME.manageSkills)
     return <FileText size={19} strokeWidth={2.1} />;
   if (lowerName.includes("element") || lowerName.includes("properties"))
     return <FileSearch size={19} strokeWidth={2.1} />;
@@ -110,33 +102,13 @@ export function toolIcon(name: string) {
 }
 
 function isWorkspaceToolName(name: string) {
-  return (
-    name === BROWSER_TOOL_NAME.listWorkspaceFiles ||
-    name === BROWSER_TOOL_NAME.readWorkspaceFile ||
-    name === BROWSER_TOOL_NAME.writeWorkspaceFile ||
-    name === BROWSER_TOOL_NAME.patchWorkspaceFile ||
-    name === BROWSER_TOOL_NAME.deleteWorkspaceFile ||
-    name === BROWSER_TOOL_NAME.searchWorkspaceFiles
-  );
+  return name === BROWSER_TOOL_NAME.workspaceFiles;
 }
 
 export function isMemoryToolName(name: string) {
-  return (
-    name === BROWSER_TOOL_NAME.listMemory ||
-    name === BROWSER_TOOL_NAME.addMemory ||
-    name === BROWSER_TOOL_NAME.updateMemory ||
-    name === BROWSER_TOOL_NAME.removeMemory ||
-    name === BROWSER_TOOL_NAME.listUserProfile ||
-    name === BROWSER_TOOL_NAME.addUserProfileNote ||
-    name === BROWSER_TOOL_NAME.updateUserProfileNote ||
-    name === BROWSER_TOOL_NAME.removeUserProfileNote
-  );
+  return name === BROWSER_TOOL_NAME.manageMemory;
 }
 
 export function isSessionToolName(name: string) {
-  return (
-    name === BROWSER_TOOL_NAME.searchChatHistory ||
-    name === BROWSER_TOOL_NAME.readChatThread ||
-    name === BROWSER_TOOL_NAME.deleteChatThread
-  );
+  return name === BROWSER_TOOL_NAME.manageChatHistory;
 }

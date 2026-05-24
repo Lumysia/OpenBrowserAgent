@@ -9,30 +9,12 @@ const WAIT_FOR_TEXT_POLL_MS = 250;
 const DEFAULT_KEY = "Enter";
 
 const cdpNames = new Set<string>([
-  BROWSER_TOOL_NAME.cdpMouseActionByAiID,
-  BROWSER_TOOL_NAME.cdpClickAt,
-  BROWSER_TOOL_NAME.cdpPressKey,
-  BROWSER_TOOL_NAME.cdpTypeText,
-  BROWSER_TOOL_NAME.cdpFill,
-  BROWSER_TOOL_NAME.cdpFillForm,
-  BROWSER_TOOL_NAME.cdpDrag,
-  BROWSER_TOOL_NAME.cdpHandleDialog,
-  BROWSER_TOOL_NAME.cdpListPages,
-  BROWSER_TOOL_NAME.cdpNewPage,
-  BROWSER_TOOL_NAME.cdpNavigatePage,
-  BROWSER_TOOL_NAME.cdpSelectPage,
-  BROWSER_TOOL_NAME.cdpClosePage,
-  BROWSER_TOOL_NAME.cdpWaitFor,
-  BROWSER_TOOL_NAME.cdpResizePage,
-  BROWSER_TOOL_NAME.cdpEmulate,
+  BROWSER_TOOL_NAME.cdpInput,
+  BROWSER_TOOL_NAME.cdpPage,
   BROWSER_TOOL_NAME.cdpEvaluateScript,
   BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript,
   BROWSER_TOOL_NAME.cdpTakeScreenshot,
-  BROWSER_TOOL_NAME.cdpTakeSnapshot,
-  BROWSER_TOOL_NAME.cdpListConsoleMessages,
-  BROWSER_TOOL_NAME.cdpGetConsoleMessage,
-  BROWSER_TOOL_NAME.cdpListNetworkRequests,
-  BROWSER_TOOL_NAME.cdpGetNetworkRequest,
+  BROWSER_TOOL_NAME.cdpDiagnostics,
   BROWSER_TOOL_NAME.cdpPerformanceStartTrace,
   BROWSER_TOOL_NAME.cdpPerformanceStopTrace,
   BROWSER_TOOL_NAME.cdpPerformanceAnalyzeInsight,
@@ -54,54 +36,18 @@ export async function executeCdpTool(
   args: Record<string, unknown>,
 ) {
   switch (name) {
-    case BROWSER_TOOL_NAME.cdpMouseActionByAiID:
-      return mouseActionByAiID(args);
-    case BROWSER_TOOL_NAME.cdpListPages:
-      return listPages(args);
-    case BROWSER_TOOL_NAME.cdpNewPage:
-      return newPage(args);
-    case BROWSER_TOOL_NAME.cdpSelectPage:
-      return selectPage(args);
-    case BROWSER_TOOL_NAME.cdpClosePage:
-      return closePage(args);
-    case BROWSER_TOOL_NAME.cdpNavigatePage:
-      return navigatePage(args);
-    case BROWSER_TOOL_NAME.cdpWaitFor:
-      return waitFor(args);
-    case BROWSER_TOOL_NAME.cdpResizePage:
-      return resizePage(args);
-    case BROWSER_TOOL_NAME.cdpClickAt:
-      return withCdp(args, (target) => clickAt(target, args));
-    case BROWSER_TOOL_NAME.cdpPressKey:
-      return withCdp(args, (target) => pressKey(target, args));
-    case BROWSER_TOOL_NAME.cdpTypeText:
-      return withCdp(args, (target) => typeText(target, args));
-    case BROWSER_TOOL_NAME.cdpFill:
-      return fill(args);
-    case BROWSER_TOOL_NAME.cdpFillForm:
-      return fillForm(args);
-    case BROWSER_TOOL_NAME.cdpDrag:
-      return withCdp(args, (target) => drag(target, args));
-    case BROWSER_TOOL_NAME.cdpHandleDialog:
-      return handleDialog(args);
-    case BROWSER_TOOL_NAME.cdpEmulate:
-      return withCdp(args, (target) => emulate(target, args));
+    case BROWSER_TOOL_NAME.cdpInput:
+      return runCdpInput(args);
+    case BROWSER_TOOL_NAME.cdpPage:
+      return runCdpPage(args);
     case BROWSER_TOOL_NAME.cdpEvaluateScript:
       return withCdp(args, (target) => evaluateScript(target, args));
     case BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript:
       return executeArbitraryJavaScript(args);
     case BROWSER_TOOL_NAME.cdpTakeScreenshot:
       return withCdp(args, (target) => takeScreenshot(target, args));
-    case BROWSER_TOOL_NAME.cdpTakeSnapshot:
-      return takeSnapshot(args);
-    case BROWSER_TOOL_NAME.cdpListConsoleMessages:
-      return withCdp(args, (target) => listConsoleMessages(target, args));
-    case BROWSER_TOOL_NAME.cdpGetConsoleMessage:
-      return unsupported(name, "Console message history is not persisted yet.");
-    case BROWSER_TOOL_NAME.cdpListNetworkRequests:
-      return withCdp(args, (target) => listNetworkRequests(target, args));
-    case BROWSER_TOOL_NAME.cdpGetNetworkRequest:
-      return unsupported(name, "Network request bodies are not persisted yet.");
+    case BROWSER_TOOL_NAME.cdpDiagnostics:
+      return runCdpDiagnostics(args);
     default:
       return unsupported(
         name || "cdp",
@@ -220,6 +166,61 @@ async function navigatePage(args: Record<string, unknown>) {
       send(target, "Page.reload", { ignoreCache: args.ignoreCache === true }),
     );
   return { success: true, type };
+}
+
+async function runCdpInput(args: Record<string, unknown>) {
+  const operation = stringInput(args.operation || args.action) || "click";
+  if (
+    operation === "click" ||
+    operation === "hover" ||
+    operation === "doubleClick"
+  ) {
+    if (args.id || args.uid)
+      return mouseActionByAiID({ ...args, action: operation });
+    return withCdp(args, (target) =>
+      operation === "hover"
+        ? hoverAt(target, args)
+        : clickAt(target, { ...args, dblClick: operation === "doubleClick" }),
+    );
+  }
+  if (operation === "key")
+    return withCdp(args, (target) => pressKey(target, args));
+  if (operation === "type")
+    return withCdp(args, (target) => typeText(target, args));
+  if (operation === "fill") return fill(args);
+  if (operation === "fillForm") return fillForm(args);
+  if (operation === "drag")
+    return withCdp(args, (target) => drag(target, args));
+  if (operation === "dialog") return handleDialog(args);
+  return { success: false, error: "UNKNOWN_CDP_INPUT_OPERATION", operation };
+}
+
+async function runCdpPage(args: Record<string, unknown>) {
+  const operation = stringInput(args.operation) || "list";
+  if (operation === "list") return listPages(args);
+  if (operation === "new") return newPage(args);
+  if (operation === "navigate") return navigatePage(args);
+  if (operation === "focus") return selectPage(args);
+  if (operation === "close") return closePage(args);
+  if (operation === "waitFor") return waitFor(args);
+  if (operation === "resize") return resizePage(args);
+  if (operation === "emulate")
+    return withCdp(args, (target) => emulate(target, args));
+  if (operation === "snapshot") return takeSnapshot(args);
+  return { success: false, error: "UNKNOWN_CDP_PAGE_OPERATION", operation };
+}
+
+async function runCdpDiagnostics(args: Record<string, unknown>) {
+  const operation = stringInput(args.operation) || "resources";
+  if (operation === "console")
+    return withCdp(args, (target) => listConsoleMessages(target, args));
+  if (operation === "resources" || operation === "network")
+    return withCdp(args, (target) => listNetworkRequests(target, args));
+  return {
+    success: false,
+    error: "UNKNOWN_CDP_DIAGNOSTICS_OPERATION",
+    operation,
+  };
 }
 
 async function waitFor(args: Record<string, unknown>) {
@@ -387,6 +388,16 @@ async function clickAt(
       clickCount,
     });
   }
+  return { success: true, x, y };
+}
+
+async function hoverAt(
+  target: chrome.debugger.Debuggee,
+  args: Record<string, unknown>,
+) {
+  const x = numberInput(args.x) || 0;
+  const y = numberInput(args.y) || 0;
+  await send(target, "Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
   return { success: true, x, y };
 }
 

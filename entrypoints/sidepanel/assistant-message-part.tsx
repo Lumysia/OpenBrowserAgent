@@ -146,9 +146,9 @@ export function AssistantText({
     text,
     STREAM_RENDER_THROTTLE_MS,
   );
-  const displayText = runEnded ? text : throttledText;
+  const displayText = throttledText;
   const streaming = displayText.length < text.length;
-  const outputSettled = !streaming && !hideActions;
+  const outputSettled = runEnded && !streaming;
   const { html, codeBlocks } = renderMarkdown(
     displayText,
     t,
@@ -261,7 +261,7 @@ export function AssistantText({
         onClick={handleMarkdownClick}
         onErrorCapture={handleMarkdownImageError}
       />
-      {!hideActions && (
+      {outputSettled && (
         <div className="assistant-actions">
           <div className="message-actions assistant-action-buttons">
             <IconTooltip label={copied ? t.common.copied : t.common.copy}>

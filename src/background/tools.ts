@@ -21,8 +21,6 @@ import { allBrowserTools, browserTools } from "./tool-schema";
 import { withListSlice, withTimeout } from "./tool-utils";
 
 export { allBrowserTools, browserTools };
-const WAIT_FOR_TEXT_DEFAULT_MS = 5000;
-const WAIT_FOR_TEXT_POLL_MS = 250;
 
 async function executeBrowserTool(
   name: string | undefined,
@@ -44,83 +42,21 @@ async function executeBrowserTool(
       if (!tab) return { error: TOOL_ERROR.noActiveWebTabFound };
       return isScriptableUrl(tab.url)
         ? { tabId: tab.id, title: tab.title, url: tab.url }
-        : { error: TOOL_ERROR.activeTabNotWebPage };
+        : {
+            error: TOOL_ERROR.activeTabNotWebPage,
+            title: tab.title,
+            url: tab.url,
+            guidance:
+              "The active tab is not a normal readable page. Use manageTabs operation=list to find an http(s) tab, focus it with manageTabs operation=focus, or open a web page first.",
+          };
     }
-    case BROWSER_TOOL_NAME.openNewTabWithURL: {
-      const tab = await api.tabs.create({
-        url: String(args.url || ""),
-        active: false,
-      });
-      if (tab.id) {
-        await waitTabComplete(tab.id);
-        const loadedTab = await api.tabs.get(tab.id);
-        return {
-          tab: { id: loadedTab.id, url: loadedTab.url, title: loadedTab.title },
-        };
-      }
-      return { tab: { id: tab.id } };
-    }
-    case BROWSER_TOOL_NAME.getAllTabs: {
-      const tabs = await api.tabs.query({});
-      return withListSlice(
-        {},
-        tabs.map((tab) => ({ id: tab.id, title: tab.title })),
-        args,
-        "tabs",
-      );
-    }
-    case BROWSER_TOOL_NAME.closeTab: {
-      const tabIds = Array.isArray(args.tabIds)
-        ? args.tabIds.map(Number).filter(Number.isFinite)
-        : [Number(args.tabId)].filter(Number.isFinite);
-      if (!tabIds.length)
-        return { success: false, error: TOOL_ERROR.noTabIdsProvided };
-      await api.tabs.remove(tabIds);
-      return { success: true, tabIds };
-    }
-    case BROWSER_TOOL_NAME.reloadTab: {
-      const tabId = await resolveTabId(args.tabId);
-      const bypassCache =
-        args.bypassCache === true || args.ignoreCache === true;
-      await api.tabs.reload(tabId, { bypassCache });
-      await wait(100);
-      await waitTabComplete(tabId);
-      return { success: true, tabId, bypassCache };
-    }
-    case BROWSER_TOOL_NAME.navigateTab: {
-      return navigateTab(args);
-    }
+    case BROWSER_TOOL_NAME.manageTabs:
+      return manageTabs(args);
     case BROWSER_TOOL_NAME.captureVisibleTab: {
       return captureVisibleTab(args);
     }
-    case BROWSER_TOOL_NAME.waitForText: {
-      return waitForText(args);
-    }
-    case BROWSER_TOOL_NAME.goToTab: {
-      const tab = await api.tabs.update(await resolveTabId(args.tabId), {
-        active: true,
-      });
-      if (!tab) return { success: false, error: TOOL_ERROR.tabNotFound };
-      if (tab.windowId !== undefined)
-        await api.windows.update(tab.windowId, { focused: true });
-      return { success: true };
-    }
     case BROWSER_TOOL_NAME.mutatePage: {
       return mutatePage({ ...args, tabId: await resolveTabId(args.tabId) });
-    }
-    case BROWSER_TOOL_NAME.openSearchTab: {
-      const query = String(args.query || "");
-      const tab = await openDefaultSearchTab(query);
-      return {
-        success: true,
-        tabId: tab?.id,
-        tab: tab ? { id: tab.id, url: tab.url, title: tab.title } : undefined,
-      };
-    }
-    case BROWSER_TOOL_NAME.waitTabLoadFinished: {
-      const tabId = await resolveTabId(args.tabId);
-      await waitTabComplete(tabId);
-      return { success: true, tabId };
     }
     case BROWSER_TOOL_NAME.inspectPage: {
       return inspectPage({
@@ -131,60 +67,6 @@ async function executeBrowserTool(
             ? undefined
             : await resolveTabId(args.tabId)),
       });
-    }
-    case BROWSER_TOOL_NAME.groupTabs: {
-      const tabIds = Array.isArray(args.tabIds)
-        ? args.tabIds.map(Number).filter(Number.isFinite)
-        : [];
-      if (!tabIds.length)
-        return { success: false, error: TOOL_ERROR.noTabIdsProvided };
-      const color = String(
-        args.color || "cyan",
-      ) as chrome.tabGroups.UpdateProperties["color"];
-      const title = String(args.title || "");
-      const tabs = await Promise.all(
-        tabIds.map((tabId) => api.tabs.get(tabId).catch(() => undefined)),
-      );
-      const normalTabs = [];
-      const skippedTabIds = [];
-
-      for (const tab of tabs) {
-        if (!tab?.id || tab.windowId === undefined) continue;
-        const window = await api.windows
-          .get(tab.windowId)
-          .catch(() => undefined);
-        if (window?.type === "normal") normalTabs.push(tab);
-        else skippedTabIds.push(tab.id);
-      }
-
-      if (!normalTabs.length)
-        return {
-          success: false,
-          error: TOOL_ERROR.noGroupableNormalTabs,
-          skippedTabIds,
-        };
-
-      const tabsByWindow = new Map<number, number[]>();
-      for (const tab of normalTabs) {
-        const windowTabs = tabsByWindow.get(tab.windowId!) || [];
-        windowTabs.push(tab.id!);
-        tabsByWindow.set(tab.windowId!, windowTabs);
-      }
-
-      const groupIds = [];
-      for (const windowTabIds of tabsByWindow.values()) {
-        const groupId = await api.tabs.group({
-          tabIds: windowTabIds as [number, ...number[]],
-        });
-        await api.tabGroups.update(groupId, { title, color });
-        groupIds.push(groupId);
-      }
-
-      return { success: true, groupIds, skippedTabIds };
-    }
-    case BROWSER_TOOL_NAME.scrollToBottom: {
-      await scrollToBottom(await resolveTabId(args.tabId));
-      return { success: true };
     }
     case BROWSER_TOOL_NAME.downloadTabToMarkdown: {
       const tabId = await resolveTabId(args.tabId);
@@ -254,7 +136,7 @@ function currentTimeZone() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
-async function navigateTab(args: Record<string, unknown>) {
+async function navigateManagedTab(args: Record<string, unknown>) {
   const api = getBrowserApi();
   const tabId = await resolveTabId(args.tabId);
   const type = String(args.type || (args.url ? "url" : "reload"));
@@ -270,9 +152,130 @@ async function navigateTab(args: Record<string, unknown>) {
   } else {
     return { success: false, error: TOOL_ERROR.unknownNavigationType, type };
   }
-  await wait(100);
-  await waitTabComplete(tabId);
+  if (args.focus === true) await focusTab(tabId);
+  if (String(args.waitUntil || "load") === "load") {
+    await wait(100);
+    await waitTabComplete(tabId);
+  }
   return { success: true, tabId, type };
+}
+
+async function manageTabs(args: Record<string, unknown>) {
+  const operation = String(args.operation || "list");
+  if (operation === "list") return listTabs(args);
+  if (operation === "open") return openTab(args);
+  if (operation === "search") return openSearch(args);
+  if (operation === "focus") {
+    const tabId = await resolveTabId(args.tabId);
+    await focusTab(tabId);
+    return { success: true, tabId };
+  }
+  if (operation === "close") return closeManagedTabs(args);
+  if (operation === "group") return groupManagedTabs(args);
+  if (operation === "navigate") return navigateManagedTab(args);
+  return { success: false, error: "UNKNOWN_TAB_OPERATION", operation };
+}
+
+async function listTabs(args: Record<string, unknown>) {
+  const tabs = await getBrowserApi().tabs.query({});
+  return withListSlice(
+    {},
+    tabs.map((tab) => ({
+      id: tab.id,
+      title: tab.title,
+      url: tab.url,
+      active: tab.active,
+      windowId: tab.windowId,
+    })),
+    args,
+    "tabs",
+  );
+}
+
+async function openTab(args: Record<string, unknown>) {
+  const tab = await getBrowserApi().tabs.create({
+    url: String(args.url || "about:blank"),
+    active: args.active === true || args.focus === true,
+  });
+  if (tab.id && String(args.waitUntil || "load") === "load")
+    await waitTabComplete(tab.id);
+  const loadedTab = tab.id ? await getBrowserApi().tabs.get(tab.id) : tab;
+  return {
+    success: true,
+    tab: { id: loadedTab.id, url: loadedTab.url, title: loadedTab.title },
+  };
+}
+
+async function openSearch(args: Record<string, unknown>) {
+  const query = String(args.query || "");
+  const tab = await openDefaultSearchTab(query);
+  return {
+    success: true,
+    tabId: tab?.id,
+    tab: tab ? { id: tab.id, url: tab.url, title: tab.title } : undefined,
+  };
+}
+
+async function closeManagedTabs(args: Record<string, unknown>) {
+  const tabIds = Array.isArray(args.tabIds)
+    ? args.tabIds.map(Number).filter(Number.isFinite)
+    : [Number(args.tabId)].filter(Number.isFinite);
+  if (!tabIds.length)
+    return { success: false, error: TOOL_ERROR.noTabIdsProvided };
+  await getBrowserApi().tabs.remove(tabIds);
+  return { success: true, tabIds };
+}
+
+async function focusTab(tabId: number) {
+  const tab = await getBrowserApi().tabs.update(tabId, { active: true });
+  if (!tab) throw new Error(TOOL_ERROR.tabNotFound);
+  if (tab.windowId !== undefined)
+    await getBrowserApi().windows.update(tab.windowId, { focused: true });
+}
+
+async function groupManagedTabs(args: Record<string, unknown>) {
+  const api = getBrowserApi();
+  const tabIds = Array.isArray(args.tabIds)
+    ? args.tabIds.map(Number).filter(Number.isFinite)
+    : [];
+  if (!tabIds.length)
+    return { success: false, error: TOOL_ERROR.noTabIdsProvided };
+  const color = String(
+    args.color || "cyan",
+  ) as chrome.tabGroups.UpdateProperties["color"];
+  const title = String(args.title || "");
+  const tabs = await Promise.all(
+    tabIds.map((tabId) => api.tabs.get(tabId).catch(() => undefined)),
+  );
+  const normalTabs = [];
+  const skippedTabIds = [];
+  for (const tab of tabs) {
+    if (!tab?.id || tab.windowId === undefined) continue;
+    const window = await api.windows.get(tab.windowId).catch(() => undefined);
+    if (window?.type === "normal") normalTabs.push(tab);
+    else skippedTabIds.push(tab.id);
+  }
+  if (!normalTabs.length)
+    return {
+      success: false,
+      error: TOOL_ERROR.noGroupableNormalTabs,
+      skippedTabIds,
+    };
+  const tabsByWindow = new Map<number, number[]>();
+  for (const tab of normalTabs) {
+    const windowTabs = tabsByWindow.get(tab.windowId!) || [];
+    windowTabs.push(tab.id!);
+    tabsByWindow.set(tab.windowId!, windowTabs);
+  }
+  const groupIds = [];
+  for (const windowTabIds of tabsByWindow.values()) {
+    const groupId = await api.tabs.group({
+      tabIds: windowTabIds as [number, ...number[]],
+    });
+    await api.tabGroups.update(groupId, { title, color });
+    groupIds.push(groupId);
+  }
+  return { success: true, groupIds, skippedTabIds };
 }
 
 async function captureVisibleTab(args: Record<string, unknown>) {
@@ -301,41 +304,6 @@ async function captureVisibleTab(args: Record<string, unknown>) {
   };
 }
 
-async function waitForText(args: Record<string, unknown>) {
-  const tabId = await resolveTabId(args.tabId);
-  const texts = (Array.isArray(args.text) ? args.text : [args.text])
-    .map((text) => String(text || "").trim())
-    .filter(Boolean);
-  if (!texts.length)
-    return { success: false, error: TOOL_ERROR.noTextProvided };
-  const timeout = clampTimeoutMs(args.timeout, WAIT_FOR_TEXT_DEFAULT_MS);
-  const started = Date.now();
-  while (Date.now() - started < timeout) {
-    const found = await pageContainsText(tabId, texts);
-    if (found) return { success: true, tabId, text: found };
-    await wait(WAIT_FOR_TEXT_POLL_MS);
-  }
-  return { success: false, tabId, error: TOOL_ERROR.timedOutWaitingForText };
-}
-
-async function pageContainsText(tabId: number, texts: string[]) {
-  const [result] = await getBrowserApi().scripting.executeScript({
-    target: { tabId },
-    args: [texts],
-    func: (needles) => {
-      const pageText = document.body?.innerText || "";
-      return needles.find((text) => pageText.includes(text)) || "";
-    },
-  });
-  return String(result.result || "");
-}
-
-function clampTimeoutMs(value: unknown, fallback: number) {
-  const milliseconds = Number(value);
-  if (!Number.isFinite(milliseconds) || milliseconds <= 0) return fallback;
-  return Math.min(60_000, Math.trunc(milliseconds));
-}
-
 export async function safeExecuteBrowserTool(
   name: string | undefined,
   args: Record<string, unknown>,
@@ -362,20 +330,6 @@ async function extractMarkdown(tabId: number) {
       `# ${document.title}\n\nURL: ${location.href}\n\n${document.body?.innerText || ""}`,
   });
   return String(result.result || "");
-}
-
-async function scrollToBottom(tabId: number) {
-  await getBrowserApi().scripting.executeScript({
-    target: { tabId },
-    func: () => {
-      const scrollHeight = Math.max(
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight,
-      );
-      window.scrollTo({ top: scrollHeight, behavior: "smooth" });
-      return { scrollHeight };
-    },
-  });
 }
 
 async function openDefaultSearchTab(query: string) {

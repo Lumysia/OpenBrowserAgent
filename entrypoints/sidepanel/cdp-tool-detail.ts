@@ -6,47 +6,9 @@ export function cdpToolDetail(
   output: Record<string, unknown>,
 ) {
   const tab = idLabel("Tab", input.tabId || output.tabId);
-  if (name === BROWSER_TOOL_NAME.cdpMouseActionByAiID)
-    return compactJoin([tab, stringValue(input.action), stringValue(input.id)]);
-  if (name === BROWSER_TOOL_NAME.cdpClickAt)
-    return compactJoin([tab, pointLabel(input.x, input.y)]);
-  if (name === BROWSER_TOOL_NAME.cdpPressKey)
-    return compactJoin([tab, stringValue(input.key)]);
-  if (name === BROWSER_TOOL_NAME.cdpTypeText)
-    return compactJoin([tab, truncateValue(input.text)]);
-  if (name === BROWSER_TOOL_NAME.cdpFill)
-    return compactJoin([
-      tab,
-      stringValue(input.id),
-      truncateValue(input.value),
-    ]);
-  if (name === BROWSER_TOOL_NAME.cdpFillForm)
-    return compactJoin([tab, arrayCount("fields", input.elements)]);
-  if (name === BROWSER_TOOL_NAME.cdpDrag)
-    return compactJoin([
-      tab,
-      `${pointLabel(input.fromX, input.fromY)} -> ${pointLabel(input.toX, input.toY)}`,
-    ]);
-  if (name === BROWSER_TOOL_NAME.cdpHandleDialog)
-    return compactJoin([tab, stringValue(input.action)]);
-  if (name === BROWSER_TOOL_NAME.cdpListPages)
-    return arrayCount("pages", output.pages || output.tabs || output.targets);
-  if (name === BROWSER_TOOL_NAME.cdpNewPage)
-    return stringValue(input.url) || stringValue(output.url);
-  if (name === BROWSER_TOOL_NAME.cdpNavigatePage)
-    return compactJoin([tab, stringValue(input.type), stringValue(input.url)]);
-  if (name === BROWSER_TOOL_NAME.cdpSelectPage) return tab;
-  if (name === BROWSER_TOOL_NAME.cdpClosePage) return tab;
-  if (name === BROWSER_TOOL_NAME.cdpWaitFor)
-    return compactJoin([tab, arrayLabel("Text", input.text)]);
-  if (name === BROWSER_TOOL_NAME.cdpResizePage)
-    return compactJoin([tab, sizeLabel(input.width, input.height)]);
-  if (name === BROWSER_TOOL_NAME.cdpEmulate)
-    return compactJoin([
-      tab,
-      stringValue(input.viewport),
-      stringValue(input.colorScheme),
-    ]);
+  if (name === BROWSER_TOOL_NAME.cdpInput) return cdpInputDetail(tab, input);
+  if (name === BROWSER_TOOL_NAME.cdpPage)
+    return cdpPageDetail(tab, input, output);
   if (name === BROWSER_TOOL_NAME.cdpEvaluateScript)
     return compactJoin([
       tab,
@@ -61,23 +23,12 @@ export function cdpToolDetail(
       stringValue(output.filePath),
       stringValue(input.format),
     ]);
-  if (name === BROWSER_TOOL_NAME.cdpTakeSnapshot)
-    return compactJoin([tab, countValue("nodes", output.nodeCount)]);
-  if (name === BROWSER_TOOL_NAME.cdpListConsoleMessages)
-    return compactJoin([tab, arrayCount("messages", output.messages)]);
-  if (name === BROWSER_TOOL_NAME.cdpGetConsoleMessage)
+  if (name === BROWSER_TOOL_NAME.cdpDiagnostics)
     return compactJoin([
       tab,
-      idLabel("Message", input.msgid),
-      outputPreview(output),
-    ]);
-  if (name === BROWSER_TOOL_NAME.cdpListNetworkRequests)
-    return compactJoin([tab, arrayCount("requests", output.requests)]);
-  if (name === BROWSER_TOOL_NAME.cdpGetNetworkRequest)
-    return compactJoin([
-      tab,
-      idLabel("Request", input.reqid),
-      stringValue(output.url),
+      stringValue(input.operation),
+      arrayCount("requests", output.requests),
+      arrayCount("messages", output.messages),
     ]);
   if (name === BROWSER_TOOL_NAME.cdpPerformanceStartTrace)
     return compactJoin([tab, input.reload ? "reload" : undefined]);
@@ -118,6 +69,63 @@ export function cdpToolDetail(
     ]);
   if (name === BROWSER_TOOL_NAME.cdpScreencastStop) return tab;
   return tab;
+}
+
+function cdpInputDetail(tab: string, input: Record<string, unknown>) {
+  const operation = stringValue(input.operation || input.action) || "click";
+  if (["click", "hover", "doubleClick"].includes(operation))
+    return compactJoin([
+      tab,
+      operation,
+      stringValue(input.id),
+      pointLabel(input.x, input.y),
+    ]);
+  if (operation === "key") return compactJoin([tab, stringValue(input.key)]);
+  if (operation === "type")
+    return compactJoin([tab, truncateValue(input.text)]);
+  if (operation === "fill")
+    return compactJoin([
+      tab,
+      stringValue(input.id),
+      truncateValue(input.value),
+    ]);
+  if (operation === "fillForm")
+    return compactJoin([tab, arrayCount("fields", input.elements)]);
+  if (operation === "drag")
+    return compactJoin([
+      tab,
+      `${pointLabel(input.fromX, input.fromY)} -> ${pointLabel(input.toX, input.toY)}`,
+    ]);
+  if (operation === "dialog")
+    return compactJoin([tab, stringValue(input.action)]);
+  return compactJoin([tab, operation]);
+}
+
+function cdpPageDetail(
+  tab: string,
+  input: Record<string, unknown>,
+  output: Record<string, unknown>,
+) {
+  const operation = stringValue(input.operation) || "list";
+  if (operation === "list")
+    return arrayCount("pages", output.pages || output.tabs || output.targets);
+  if (operation === "new")
+    return stringValue(input.url) || stringValue(output.url);
+  if (operation === "navigate")
+    return compactJoin([tab, stringValue(input.type), stringValue(input.url)]);
+  if (operation === "waitFor")
+    return compactJoin([tab, arrayLabel("Text", input.text)]);
+  if (operation === "resize")
+    return compactJoin([tab, sizeLabel(input.width, input.height)]);
+  if (operation === "emulate")
+    return compactJoin([
+      tab,
+      stringValue(input.viewport),
+      stringValue(input.colorScheme),
+    ]);
+  if (operation === "snapshot")
+    return compactJoin([tab, outputPreview(output)]);
+  return compactJoin([tab, operation]);
 }
 
 function stringValue(value: unknown) {

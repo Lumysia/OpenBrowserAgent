@@ -12,189 +12,91 @@ const listSliceParameters = {
 
 export const cdpTools = [
   tool(
-    BROWSER_TOOL_NAME.cdpMouseActionByAiID,
-    "Dispatch a CDP mouse action on an element by its AI ID when DOM click tools do not trigger the page",
+    BROWSER_TOOL_NAME.cdpInput,
+    "Fallback CDP input actions when mutatePage/normal DOM events are insufficient. Handles mouse, keyboard, typing, filling, drag, and dialogs in one tool.",
     {
-      id: stringProperty("The AI ID of the element to target"),
-      tabId: numberProperty("The tab ID containing the element"),
-      targetId: targetIdProperty(),
-      action: enumProperty(
-        ["hover", "click", "doubleClick"],
-        "The CDP mouse action to perform",
+      operation: enumProperty(
+        [
+          "click",
+          "hover",
+          "doubleClick",
+          "key",
+          "type",
+          "fill",
+          "fillForm",
+          "drag",
+          "dialog",
+        ],
+        "Input operation to perform",
       ),
-    },
-    ["id"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpClickAt,
-    "Click at viewport coordinates through CDP",
-    {
-      tabId: numberProperty("The tab ID"),
+      id: stringProperty("AI ID of the element to target for AI-ID operations"),
+      tabId: numberProperty("The tab ID containing the element"),
       targetId: targetIdProperty(),
       x: numberProperty("Viewport x coordinate"),
       y: numberProperty("Viewport y coordinate"),
-      dblClick: {
-        type: "boolean",
-        description: "Double click instead of single click",
-      },
-    },
-    ["x", "y"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpPressKey,
-    "Press a key or key combination through CDP",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
       key: stringProperty(
         "Key to press, such as Enter, Escape, Tab, or Control+A",
       ),
-    },
-    ["key"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpTypeText,
-    "Type text into the currently focused element through CDP",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
       text: stringProperty("Text to type"),
       submitKey: stringProperty("Optional key to press after typing"),
-    },
-    ["text"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpFill,
-    "Fill an element by AI ID",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
-      id: stringProperty("AI ID of the element to fill"),
       value: stringProperty("Value to fill"),
-    },
-    ["id", "value"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpFillForm,
-    "Fill multiple elements by AI ID",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
       elements: {
         type: "array",
         items: { type: "object" },
-        description: "Items with id and value",
+        description: "Form items with id and value for operation=fillForm",
       },
-    },
-    ["elements"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpDrag,
-    "Drag between viewport coordinates through CDP",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
       fromX: numberProperty("Start x"),
       fromY: numberProperty("Start y"),
       toX: numberProperty("End x"),
       toY: numberProperty("End y"),
-    },
-    ["fromX", "fromY", "toX", "toY"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpHandleDialog,
-    "Handle a browser dialog if present",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
       action: enumProperty(["accept", "dismiss"], "Dialog action"),
       promptText: stringProperty("Optional prompt text"),
     },
-    ["action"],
-  ),
-  tool(BROWSER_TOOL_NAME.cdpListPages, "List open browser pages", {
-    ...listSliceParameters,
-  }),
-  tool(
-    BROWSER_TOOL_NAME.cdpNewPage,
-    "Open a new browser page",
-    {
-      url: stringProperty("URL to open"),
-      background: { type: "boolean", description: "Open in background" },
-    },
-    ["url"],
+    ["operation"],
   ),
   tool(
-    BROWSER_TOOL_NAME.cdpNavigatePage,
-    "Navigate a page by URL, back, forward, or reload",
+    BROWSER_TOOL_NAME.cdpPage,
+    "Fallback CDP page management and page-level emulation. Use only when common tab/page tools are insufficient.",
     {
+      operation: enumProperty(
+        [
+          "list",
+          "new",
+          "navigate",
+          "focus",
+          "close",
+          "waitFor",
+          "resize",
+          "emulate",
+          "snapshot",
+        ],
+        "Page operation to perform",
+      ),
       tabId: numberProperty("The tab ID"),
       targetId: targetIdProperty(),
+      url: stringProperty("URL to open"),
+      background: { type: "boolean", description: "Open in background" },
       type: enumProperty(
         ["url", "back", "forward", "reload"],
         "Navigation type",
       ),
-      url: stringProperty("URL for type=url"),
       ignoreCache: { type: "boolean", description: "Bypass cache on reload" },
-    },
-    [],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpSelectPage,
-    "Focus a page",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
       bringToFront: { type: "boolean", description: "Focus the page window" },
-    },
-    [],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpClosePage,
-    "Close a page",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
-    },
-    [],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpWaitFor,
-    "Wait for text to appear on a page",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
       text: {
         type: "array",
         items: { type: "string" },
         description: "Texts to wait for",
       },
       timeout: numberProperty("Timeout in milliseconds"),
-    },
-    ["text"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpResizePage,
-    "Resize the page window",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
       width: numberProperty("Window width"),
       height: numberProperty("Window height"),
-    },
-    ["width", "height"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpEmulate,
-    "Apply CDP emulation settings",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
       viewport: stringProperty("Viewport WxHxDPR[,mobile]"),
       userAgent: stringProperty("User agent override"),
       colorScheme: enumProperty(["dark", "light", "auto"], "Color scheme"),
+      ...listSliceParameters,
+      ...contentSliceParameters,
     },
-    [],
+    ["operation"],
   ),
   tool(
     BROWSER_TOOL_NAME.cdpEvaluateScript,
@@ -240,55 +142,18 @@ export const cdpTools = [
     [],
   ),
   tool(
-    BROWSER_TOOL_NAME.cdpTakeSnapshot,
-    "Take a text snapshot of the page",
+    BROWSER_TOOL_NAME.cdpDiagnostics,
+    "Read lightweight CDP diagnostics. Current network/resources mode returns PerformanceResourceTiming entries, not persisted request bodies.",
     {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
-      verbose: { type: "boolean", description: "Include more detail" },
-      ...contentSliceParameters,
-    },
-    [],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpListConsoleMessages,
-    "List console messages collected through CDP",
-    {
+      operation: enumProperty(
+        ["resources", "network", "console"],
+        "Diagnostics operation. resources/network returns performance resource entries; console starts collection and returns currently buffered extension-side messages when available.",
+      ),
       tabId: numberProperty("The tab ID"),
       targetId: targetIdProperty(),
       ...listSliceParameters,
     },
-    [],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpGetConsoleMessage,
-    "Get one console message by ID",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
-      msgid: numberProperty("Message ID"),
-    },
-    ["msgid"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpListNetworkRequests,
-    "List network/resource requests for a page",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
-      ...listSliceParameters,
-    },
-    [],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpGetNetworkRequest,
-    "Get one network request by ID",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
-      reqid: numberProperty("Request ID"),
-    },
-    ["reqid"],
+    ["operation"],
   ),
   tool(
     BROWSER_TOOL_NAME.cdpPerformanceStartTrace,

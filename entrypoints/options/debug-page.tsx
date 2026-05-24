@@ -47,7 +47,7 @@ export function DebugPage() {
   const activeAgent = resolveAgent(agents, preferences?.selectedAgentId);
   const visibleBrowserTools = browserTools.filter(
     (tool) =>
-      tool.function.name !== BROWSER_TOOL_NAME.loadBrowserTools ||
+      tool.function.name !== BROWSER_TOOL_NAME.loadTools ||
       areCdpToolsAvailable(),
   );
   const toolRows = visibleBrowserTools.map((tool) =>
@@ -263,13 +263,7 @@ function toolStatus({
   }
   if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
     return { enabled: false, reason: t.options.debugToolAttachmentsRequired };
-  if (
-    name === BROWSER_TOOL_NAME.listSkills ||
-    name === BROWSER_TOOL_NAME.readSkill ||
-    name === BROWSER_TOOL_NAME.readSkillFile ||
-    name === BROWSER_TOOL_NAME.updateSkillFile ||
-    name === BROWSER_TOOL_NAME.patchSkillFile
-  )
+  if (name === BROWSER_TOOL_NAME.manageSkills)
     return enabledSkillCount
       ? capabilityStatus(
           activeAgent.capabilities,
@@ -298,19 +292,12 @@ function capabilityStatus(
   };
 }
 
-function skillToolCapabilities(name: string): Array<keyof AgentCapabilities> {
-  if (
-    name === BROWSER_TOOL_NAME.createSkill ||
-    name === BROWSER_TOOL_NAME.updateSkillFile ||
-    name === BROWSER_TOOL_NAME.patchSkillFile
-  )
-    return ["skillTools", "skillCreation"];
+function skillToolCapabilities(_name: string): Array<keyof AgentCapabilities> {
   return ["skillTools"];
 }
 
 function toolCapabilities(name: string): Array<keyof AgentCapabilities> {
-  if (name === BROWSER_TOOL_NAME.loadBrowserTools)
-    return ["deferredBrowserTools"];
+  if (name === BROWSER_TOOL_NAME.loadTools) return ["deferredBrowserTools"];
   if (name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript)
     return ["cdpTools", "javascriptExecution"];
   if (name.startsWith("cdp")) return ["cdpTools"];
@@ -321,56 +308,16 @@ function toolCapabilities(name: string): Array<keyof AgentCapabilities> {
   )
     return ["subAgents"];
   if (
-    name === BROWSER_TOOL_NAME.listLocalExecutionBridges ||
-    name === BROWSER_TOOL_NAME.addLocalExecutionBridge ||
-    name === BROWSER_TOOL_NAME.updateLocalExecutionBridge ||
-    name === BROWSER_TOOL_NAME.testLocalExecutionBridge ||
-    name === BROWSER_TOOL_NAME.deleteLocalExecutionBridge ||
+    name === BROWSER_TOOL_NAME.manageLocalExecutionBridges ||
     name === BROWSER_TOOL_NAME.startLocalExecutionBridge ||
     name === BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus ||
     name === BROWSER_TOOL_NAME.cancelLocalExecutionBridge
   )
     return ["localExecutionBridges"];
-  if (
-    name === BROWSER_TOOL_NAME.listWorkspaceFiles ||
-    name === BROWSER_TOOL_NAME.readWorkspaceFile ||
-    name === BROWSER_TOOL_NAME.searchWorkspaceFiles
-  )
-    return ["workspaceRead"];
-  if (
-    name === BROWSER_TOOL_NAME.writeWorkspaceFile ||
-    name === BROWSER_TOOL_NAME.patchWorkspaceFile ||
-    name === BROWSER_TOOL_NAME.deleteWorkspaceFile
-  )
-    return ["workspaceWrite"];
-  if (
-    name === BROWSER_TOOL_NAME.listMemory ||
-    name === BROWSER_TOOL_NAME.listUserProfile
-  )
-    return ["memoryRead"];
-  if (
-    name === BROWSER_TOOL_NAME.addMemory ||
-    name === BROWSER_TOOL_NAME.updateMemory ||
-    name === BROWSER_TOOL_NAME.removeMemory ||
-    name === BROWSER_TOOL_NAME.addUserProfileNote ||
-    name === BROWSER_TOOL_NAME.updateUserProfileNote ||
-    name === BROWSER_TOOL_NAME.removeUserProfileNote
-  )
-    return ["memoryWrite"];
-  if (
-    name === BROWSER_TOOL_NAME.searchChatHistory ||
-    name === BROWSER_TOOL_NAME.readChatThread
-  )
-    return ["chatHistoryRead"];
-  if (name === BROWSER_TOOL_NAME.deleteChatThread) return ["chatHistoryWrite"];
-  if (
-    name === BROWSER_TOOL_NAME.listMcpServers ||
-    name === BROWSER_TOOL_NAME.addMcpServer ||
-    name === BROWSER_TOOL_NAME.updateMcpServer ||
-    name === BROWSER_TOOL_NAME.testMcpServer ||
-    name === BROWSER_TOOL_NAME.deleteMcpServer
-  )
-    return ["mcpManagement"];
+  if (name === BROWSER_TOOL_NAME.workspaceFiles) return ["workspaceRead"];
+  if (name === BROWSER_TOOL_NAME.manageMemory) return ["memoryRead"];
+  if (name === BROWSER_TOOL_NAME.manageChatHistory) return ["chatHistoryRead"];
+  if (name === BROWSER_TOOL_NAME.manageMcpServers) return ["mcpManagement"];
   if (name === BROWSER_TOOL_NAME.getCurrentTime) return ["currentTime"];
   if (name === BROWSER_TOOL_NAME.question) return [];
   return ["browserAutomation"];

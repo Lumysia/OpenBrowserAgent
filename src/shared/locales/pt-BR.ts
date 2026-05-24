@@ -242,137 +242,77 @@ export const ptBR: LocaleMessages = {
     copyImage: "Copiar imagem",
     copyPrompt: "Copiar instruções",
     tool: {
+      loadTools: {
+        running: "Loading tools",
+        done: "Loaded tools",
+        found: "Found {count}",
+      },
+      manageSkills: {
+        running: "Managing skills",
+        done: "Managed skills",
+        found: "Found {count}",
+      },
+      workspaceFiles: {
+        running: "Using workspace files",
+        done: "Updated workspace files",
+      },
+      manageMemory: { running: "Managing memory", done: "Managed memory" },
+      manageChatHistory: {
+        running: "Reading chat history",
+        done: "Read chat history",
+      },
+      manageMcpServers: {
+        running: "Managing MCP servers",
+        done: "Managed MCP servers",
+      },
+      manageLocalExecutionBridges: {
+        running: "Managing execution bridges",
+        done: "Managed execution bridges",
+      },
+      manageTabs: {
+        running: "Gerenciando abas",
+        done: "Abas gerenciadas",
+        found: "Encontradas {count} abas abertas",
+      },
+      cdpInput: {
+        running: "Enviando entrada CDP",
+        done: "Entrada CDP enviada",
+      },
+      cdpPage: {
+        running: "Controlando página CDP",
+        done: "Página CDP controlada",
+      },
+      cdpDiagnostics: {
+        running: "Lendo diagnósticos CDP",
+        done: "Diagnósticos CDP lidos",
+      },
+      wait: { running: "Aguardando", done: "Aguardou" },
+      getCurrentTime: { running: "Verificando hora", done: "Hora verificada" },
+      getCurrentTab: { running: "Obtendo aba atual", done: "Aba atual obtida" },
+      captureVisibleTab: { running: "Capturando aba", done: "Aba capturada" },
+      downloadAllImagesInTab: {
+        running: "Baixando imagens",
+        done: "Imagens baixadas",
+      },
       question: {
         running: "Fazendo uma pergunta",
         done: "Pergunta respondida",
-      },
-      openNewTabWithURL: {
-        running: "Abrindo nova página",
-        done: "Nova página aberta",
       },
       inspectPage: {
         running: "Inspecionando página",
         done: "Página inspecionada",
         found: "Encontrados {count} elementos",
       },
-      waitTabLoadFinished: {
-        running: "Aguardando carregamento",
-        done: "Página carregada",
-      },
       mutatePage: { running: "Atualizando página", done: "Página atualizada" },
-      cdpMouseActionByAiID: {
-        running: "Interagindo com o elemento da página",
-        done: "Elemento da página manipulado",
-      },
-      groupTabs: { running: "Agrupando abas", done: "Abas agrupadas" },
-      wait: { running: "Aguardando", done: "Aguardou" },
-      getCurrentTime: {
-        running: "Verificando horário",
-        done: "Horário verificado",
-      },
-      getCurrentTab: {
-        running: "Obtendo página atual",
-        done: "Página atual obtida",
-      },
-      getAllTabs: {
-        running: "Verificando abas abertas",
-        done: "Abas abertas verificadas",
-        found: "Encontradas {count} abas abertas",
-      },
-      goToTab: { running: "Alternando aba", done: "Aba alternada" },
-      openSearchTab: { running: "Pesquisando", done: "Aba de pesquisa aberta" },
-      downloadAllImagesInTab: {
-        running: "Baixando imagens",
-        done: "Imagens baixadas",
-      },
       downloadTabToMarkdown: {
         running: "Baixando Markdown",
         done: "Markdown baixado",
-      },
-      closeTab: { running: "Fechando aba", done: "Aba fechada" },
-      reloadTab: { running: "Recarregando aba", done: "Aba recarregada" },
-      navigateTab: { running: "Navegando na aba", done: "Aba navegada" },
-      captureVisibleTab: { running: "Capturando aba", done: "Aba capturada" },
-      waitForText: { running: "Aguardando texto", done: "Texto encontrado" },
-      scrollToBottom: { running: "Rolando página", done: "Página rolada" },
-      listSkills: {
-        running: "Listando habilidades",
-        done: "Habilidades listadas",
-        found: "Encontradas {count}",
-      },
-      createSkill: { running: "Criando habilidade", done: "Habilidade criada" },
-      readSkill: { running: "Lendo habilidade", done: "Habilidade lida" },
-      updateSkillFile: {
-        running: "Atualizando habilidade",
-        done: "Habilidade atualizada",
-      },
-      patchSkillFile: {
-        running: "Aplicando patch à habilidade",
-        done: "Patch aplicado à habilidade",
-      },
-      listMcpServers: {
-        running: "Listando servidores MCP",
-        done: "Servidores MCP listados",
-      },
-      addMcpServer: {
-        running: "Adicionando servidor MCP",
-        done: "Servidor MCP adicionado",
-      },
-      updateMcpServer: {
-        running: "Atualizando servidor MCP",
-        done: "Servidor MCP atualizado",
-      },
-      testMcpServer: {
-        running: "Testando servidor MCP",
-        done: "Servidor MCP testado",
-      },
-      deleteMcpServer: {
-        running: "Excluindo servidor MCP",
-        done: "Servidor MCP excluído",
       },
       generateImage: { running: "Gerando imagem", done: "Imagem gerada" },
       readFileFromUrl: { running: "Lendo arquivo", done: "Arquivo lido" },
       readUploadedAttachment: {
         running: "Lendo anexo",
         done: "Anexo lido",
-      },
-      loadBrowserTools: {
-        running: "Carregando ferramentas do navegador",
-        done: "Ferramentas do navegador carregadas",
-        found: "{count} ferramentas carregadas",
-      },
-      cdpClickAt: {
-        running: "Clicando em coordenadas",
-        done: "Coordenadas clicadas",
-      },
-      cdpPressKey: { running: "Pressionando tecla", done: "Tecla pressionada" },
-      cdpTypeText: { running: "Digitando texto", done: "Texto digitado" },
-      cdpFill: { running: "Preenchendo campo", done: "Campo preenchido" },
-      cdpFillForm: {
-        running: "Preenchendo formulário",
-        done: "Formulário preenchido",
-      },
-      cdpDrag: { running: "Arrastando na página", done: "Arrasto concluído" },
-      cdpHandleDialog: { running: "Tratando diálogo", done: "Diálogo tratado" },
-      cdpListPages: {
-        running: "Verificando páginas",
-        done: "Páginas verificadas",
-      },
-      cdpNewPage: { running: "Abrindo página", done: "Página aberta" },
-      cdpNavigatePage: { running: "Navegando página", done: "Página navegada" },
-      cdpSelectPage: { running: "Focando página", done: "Página focada" },
-      cdpClosePage: { running: "Fechando página", done: "Página fechada" },
-      cdpWaitFor: {
-        running: "Aguardando texto da página",
-        done: "Texto da página encontrado",
-      },
-      cdpResizePage: {
-        running: "Redimensionando página",
-        done: "Página redimensionada",
-      },
-      cdpEmulate: {
-        running: "Aplicando emulação da página",
-        done: "Emulação da página aplicada",
       },
       cdpEvaluateScript: {
         running: "Executando script da página",
@@ -383,26 +323,6 @@ export const ptBR: LocaleMessages = {
         done: "Script personalizado executado",
       },
       cdpTakeScreenshot: { running: "Capturando tela", done: "Tela capturada" },
-      cdpTakeSnapshot: {
-        running: "Capturando snapshot da página",
-        done: "Snapshot da página capturado",
-      },
-      cdpListConsoleMessages: {
-        running: "Lendo mensagens do console",
-        done: "Mensagens do console lidas",
-      },
-      cdpGetConsoleMessage: {
-        running: "Lendo mensagem do console",
-        done: "Mensagem do console lida",
-      },
-      cdpListNetworkRequests: {
-        running: "Lendo requisições de rede",
-        done: "Requisições de rede lidas",
-      },
-      cdpGetNetworkRequest: {
-        running: "Lendo requisição de rede",
-        done: "Requisição de rede lida",
-      },
       cdpPerformanceStartTrace: {
         running: "Iniciando rastreamento de desempenho",
         done: "Rastreamento de desempenho iniciado",
@@ -443,66 +363,6 @@ export const ptBR: LocaleMessages = {
         running: "Parando gravação da página",
         done: "Gravação da página parada",
       },
-      readSkillFile: {
-        running: "Lendo arquivo de habilidade",
-        done: "Arquivo de habilidade lido",
-      },
-      listWorkspaceFiles: {
-        running: "Listando arquivos do workspace",
-        done: "Arquivos do workspace listados",
-      },
-      readWorkspaceFile: {
-        running: "Lendo arquivo do workspace",
-        done: "Arquivo do workspace lido",
-      },
-      writeWorkspaceFile: {
-        running: "Gravando arquivo do workspace",
-        done: "Arquivo do workspace gravado",
-      },
-      patchWorkspaceFile: {
-        running: "Editando arquivo do workspace",
-        done: "Arquivo do workspace editado",
-      },
-      deleteWorkspaceFile: {
-        running: "Excluindo arquivo do workspace",
-        done: "Arquivo do workspace excluído",
-      },
-      searchWorkspaceFiles: {
-        running: "Pesquisando arquivos do workspace",
-        done: "Arquivos do workspace pesquisados",
-      },
-      listMemory: { running: "Listando memória", done: "Memória listada" },
-      addMemory: { running: "Adicionando memória", done: "Memória adicionada" },
-      updateMemory: {
-        running: "Atualizando memória",
-        done: "Memória atualizada",
-      },
-      removeMemory: { running: "Removendo memória", done: "Memória removida" },
-      listUserProfile: {
-        running: "Listando perfil do usuário",
-        done: "Perfil do usuário listado",
-      },
-      addUserProfileNote: {
-        running: "Adicionando nota de perfil",
-        done: "Nota de perfil adicionada",
-      },
-      updateUserProfileNote: {
-        running: "Atualizando nota de perfil",
-        done: "Nota de perfil atualizada",
-      },
-      removeUserProfileNote: {
-        running: "Removendo nota de perfil",
-        done: "Nota de perfil removida",
-      },
-      searchChatHistory: {
-        running: "Pesquisando histórico de chats",
-        done: "Histórico de chats pesquisado",
-      },
-      readChatThread: { running: "Lendo conversa", done: "Conversa lida" },
-      deleteChatThread: {
-        running: "Excluindo conversa",
-        done: "Conversa excluída",
-      },
       startSubAgent: {
         running: "Iniciando subagente",
         done: "Subagente iniciado",
@@ -510,10 +370,6 @@ export const ptBR: LocaleMessages = {
       getSubAgentStatus: {
         running: "Verificando subagente",
         done: "Subagente verificado",
-      },
-      listLocalExecutionBridges: {
-        running: "Listando pontes de execução",
-        done: "Pontes de execução listadas",
       },
       startLocalExecutionBridge: {
         running: "Iniciando comando local",
@@ -526,22 +382,6 @@ export const ptBR: LocaleMessages = {
       cancelLocalExecutionBridge: {
         running: "Cancelando comando local",
         done: "Comando local cancelado",
-      },
-      addLocalExecutionBridge: {
-        running: "Adicionando ponte de execução",
-        done: "Ponte de execução adicionada",
-      },
-      updateLocalExecutionBridge: {
-        running: "Atualizando ponte de execução",
-        done: "Ponte de execução atualizada",
-      },
-      testLocalExecutionBridge: {
-        running: "Testando ponte de execução",
-        done: "Ponte de execução testada",
-      },
-      deleteLocalExecutionBridge: {
-        running: "Excluindo ponte de execução",
-        done: "Ponte de execução excluída",
       },
     },
   },

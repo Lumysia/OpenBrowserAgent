@@ -239,119 +239,65 @@ export const ko: LocaleMessages = {
     copyImage: "이미지 복사",
     copyPrompt: "프롬프트 복사",
     tool: {
+      generateImage: { running: "Generating image", done: "Generated image" },
+      readUploadedAttachment: {
+        running: "Reading attachment",
+        done: "Read attachment",
+      },
+      readFileFromUrl: { running: "Reading file", done: "Read file" },
+      manageTabs: {
+        running: "탭 관리 중",
+        done: "탭 관리됨",
+        found: "열린 탭 {count}개 찾음",
+      },
+      cdpInput: { running: "CDP 입력 전송 중", done: "CDP 입력 전송됨" },
+      cdpPage: { running: "CDP 페이지 제어 중", done: "CDP 페이지 제어됨" },
+      cdpDiagnostics: { running: "CDP 진단 읽는 중", done: "CDP 진단 읽음" },
+      wait: { running: "대기 중", done: "대기함" },
+      getCurrentTime: { running: "시간 확인 중", done: "시간 확인됨" },
+      getCurrentTab: { running: "현재 탭 가져오는 중", done: "현재 탭 가져옴" },
+      captureVisibleTab: { running: "탭 캡처 중", done: "탭 캡처됨" },
+      downloadAllImagesInTab: {
+        running: "이미지 다운로드 중",
+        done: "이미지 다운로드됨",
+      },
       question: { running: "질문하는 중", done: "질문 답변 완료" },
-      openNewTabWithURL: {
-        running: "새 페이지 여는 중",
-        done: "새 페이지 열림",
+      loadTools: {
+        running: "도구 불러오는 중",
+        done: "도구 불러옴",
+        found: "Loaded {count} tools",
+      },
+      manageSkills: {
+        running: "스킬 관리 중",
+        done: "스킬 관리됨",
+        found: "Found {count}",
+      },
+      workspaceFiles: {
+        running: "작업공간 파일 처리 중",
+        done: "작업공간 파일 처리됨",
+      },
+      manageMemory: { running: "메모리 관리 중", done: "메모리 관리됨" },
+      manageChatHistory: {
+        running: "채팅 기록 읽는 중",
+        done: "채팅 기록 읽음",
+      },
+      manageMcpServers: {
+        running: "MCP 서버 관리 중",
+        done: "MCP 서버 관리됨",
+      },
+      manageLocalExecutionBridges: {
+        running: "실행 브리지 관리 중",
+        done: "실행 브리지 관리됨",
       },
       inspectPage: {
         running: "페이지 검사 중",
         done: "페이지 검사됨",
         found: "요소 {count}개 찾음",
       },
-      waitTabLoadFinished: {
-        running: "페이지 로드 대기 중",
-        done: "페이지 로드됨",
-      },
       mutatePage: { running: "페이지 수정 중", done: "페이지 수정됨" },
-      cdpMouseActionByAiID: {
-        running: "페이지 요소 조작 중",
-        done: "페이지 요소 조작 완료",
-      },
-      groupTabs: { running: "탭 그룹화 중", done: "탭 그룹화됨" },
-      wait: { running: "대기 중", done: "대기 완료" },
-      getCurrentTime: { running: "시간 확인 중", done: "시간 확인됨" },
-      getCurrentTab: {
-        running: "현재 페이지 가져오는 중",
-        done: "현재 페이지 가져옴",
-      },
-      getAllTabs: {
-        running: "열린 탭 확인 중",
-        done: "열린 탭 확인됨",
-        found: "열린 탭 {count}개 찾음",
-      },
-      goToTab: { running: "탭 전환 중", done: "탭 전환됨" },
-      openSearchTab: { running: "검색 중", done: "검색 탭 열림" },
-      downloadAllImagesInTab: {
-        running: "이미지 다운로드 중",
-        done: "이미지 다운로드됨",
-      },
       downloadTabToMarkdown: {
         running: "Markdown 다운로드 중",
         done: "Markdown 다운로드됨",
-      },
-      closeTab: { running: "탭 닫는 중", done: "탭 닫힘" },
-      reloadTab: { running: "탭 새로고침 중", done: "탭 새로고침됨" },
-      navigateTab: { running: "탭 이동 중", done: "탭 이동됨" },
-      captureVisibleTab: { running: "탭 캡처 중", done: "탭 캡처됨" },
-      waitForText: {
-        running: "페이지 텍스트 대기 중",
-        done: "페이지 텍스트 찾음",
-      },
-      scrollToBottom: { running: "페이지 스크롤 중", done: "페이지 스크롤됨" },
-      listSkills: {
-        running: "스킬 목록 읽는 중",
-        done: "스킬 목록 읽음",
-        found: "{count}개 찾음",
-      },
-      createSkill: { running: "스킬 만드는 중", done: "스킬 생성됨" },
-      readSkill: { running: "스킬 읽는 중", done: "스킬 읽음" },
-      updateSkillFile: {
-        running: "스킬 업데이트 중",
-        done: "스킬 업데이트됨",
-      },
-      patchSkillFile: {
-        running: "스킬 패치 중",
-        done: "스킬 패치됨",
-      },
-      listMcpServers: {
-        running: "MCP 서버 목록 확인 중",
-        done: "MCP 서버 목록 확인됨",
-      },
-      addMcpServer: { running: "MCP 서버 추가 중", done: "MCP 서버 추가됨" },
-      updateMcpServer: {
-        running: "MCP 서버 업데이트 중",
-        done: "MCP 서버 업데이트됨",
-      },
-      testMcpServer: {
-        running: "MCP 서버 테스트 중",
-        done: "MCP 서버 테스트됨",
-      },
-      deleteMcpServer: { running: "MCP 서버 삭제 중", done: "MCP 서버 삭제됨" },
-      generateImage: { running: "이미지 생성 중", done: "이미지 생성됨" },
-      readFileFromUrl: { running: "파일 읽는 중", done: "파일 읽음" },
-      readUploadedAttachment: {
-        running: "첨부 읽는 중",
-        done: "첨부 읽음",
-      },
-      loadBrowserTools: {
-        running: "브라우저 도구 로드 중",
-        done: "브라우저 도구 로드됨",
-        found: "도구 {count}개 로드됨",
-      },
-      cdpClickAt: { running: "좌표 클릭 중", done: "좌표 클릭됨" },
-      cdpPressKey: { running: "키 누르는 중", done: "키 눌림" },
-      cdpTypeText: { running: "텍스트 입력 중", done: "텍스트 입력됨" },
-      cdpFill: { running: "필드 입력 중", done: "필드 입력됨" },
-      cdpFillForm: { running: "폼 입력 중", done: "폼 입력됨" },
-      cdpDrag: { running: "페이지 드래그 중", done: "페이지 드래그됨" },
-      cdpHandleDialog: { running: "대화상자 처리 중", done: "대화상자 처리됨" },
-      cdpListPages: { running: "페이지 확인 중", done: "페이지 확인됨" },
-      cdpNewPage: { running: "페이지 여는 중", done: "페이지 열림" },
-      cdpNavigatePage: { running: "페이지 이동 중", done: "페이지 이동됨" },
-      cdpSelectPage: { running: "페이지 포커스 중", done: "페이지 포커스됨" },
-      cdpClosePage: { running: "페이지 닫는 중", done: "페이지 닫힘" },
-      cdpWaitFor: {
-        running: "페이지 텍스트 대기 중",
-        done: "페이지 텍스트 찾음",
-      },
-      cdpResizePage: {
-        running: "페이지 크기 조정 중",
-        done: "페이지 크기 조정됨",
-      },
-      cdpEmulate: {
-        running: "페이지 에뮬레이션 적용 중",
-        done: "페이지 에뮬레이션 적용됨",
       },
       cdpEvaluateScript: {
         running: "페이지 스크립트 실행 중",
@@ -364,26 +310,6 @@ export const ko: LocaleMessages = {
       cdpTakeScreenshot: {
         running: "스크린샷 캡처 중",
         done: "스크린샷 캡처됨",
-      },
-      cdpTakeSnapshot: {
-        running: "페이지 스냅샷 가져오는 중",
-        done: "페이지 스냅샷 가져옴",
-      },
-      cdpListConsoleMessages: {
-        running: "콘솔 메시지 읽는 중",
-        done: "콘솔 메시지 읽음",
-      },
-      cdpGetConsoleMessage: {
-        running: "콘솔 메시지 읽는 중",
-        done: "콘솔 메시지 읽음",
-      },
-      cdpListNetworkRequests: {
-        running: "네트워크 요청 읽는 중",
-        done: "네트워크 요청 읽음",
-      },
-      cdpGetNetworkRequest: {
-        running: "네트워크 요청 읽는 중",
-        done: "네트워크 요청 읽음",
       },
       cdpPerformanceStartTrace: {
         running: "성능 추적 시작 중",
@@ -425,66 +351,6 @@ export const ko: LocaleMessages = {
         running: "페이지 녹화 중지 중",
         done: "페이지 녹화 중지됨",
       },
-      readSkillFile: { running: "스킬 파일 읽는 중", done: "스킬 파일 읽음" },
-      listWorkspaceFiles: {
-        running: "워크스페이스 파일 나열 중",
-        done: "워크스페이스 파일 나열함",
-      },
-      readWorkspaceFile: {
-        running: "워크스페이스 파일 읽는 중",
-        done: "워크스페이스 파일 읽음",
-      },
-      writeWorkspaceFile: {
-        running: "워크스페이스 파일 쓰는 중",
-        done: "워크스페이스 파일 씀",
-      },
-      patchWorkspaceFile: {
-        running: "워크스페이스 파일 편집 중",
-        done: "워크스페이스 파일 편집함",
-      },
-      deleteWorkspaceFile: {
-        running: "워크스페이스 파일 삭제 중",
-        done: "워크스페이스 파일 삭제함",
-      },
-      searchWorkspaceFiles: {
-        running: "워크스페이스 파일 검색 중",
-        done: "워크스페이스 파일 검색함",
-      },
-      listMemory: { running: "메모리 나열 중", done: "메모리 나열함" },
-      addMemory: { running: "메모리 추가 중", done: "메모리 추가함" },
-      updateMemory: {
-        running: "메모리 업데이트 중",
-        done: "메모리 업데이트함",
-      },
-      removeMemory: { running: "메모리 제거 중", done: "메모리 제거함" },
-      listUserProfile: {
-        running: "사용자 프로필 나열 중",
-        done: "사용자 프로필 나열함",
-      },
-      addUserProfileNote: {
-        running: "사용자 프로필 노트 추가 중",
-        done: "사용자 프로필 노트 추가함",
-      },
-      updateUserProfileNote: {
-        running: "사용자 프로필 노트 업데이트 중",
-        done: "사용자 프로필 노트 업데이트함",
-      },
-      removeUserProfileNote: {
-        running: "사용자 프로필 노트 제거 중",
-        done: "사용자 프로필 노트 제거함",
-      },
-      searchChatHistory: {
-        running: "채팅 기록 검색 중",
-        done: "채팅 기록 검색함",
-      },
-      readChatThread: {
-        running: "채팅 스레드 읽는 중",
-        done: "채팅 스레드 읽음",
-      },
-      deleteChatThread: {
-        running: "채팅 스레드 삭제 중",
-        done: "채팅 스레드 삭제함",
-      },
       startSubAgent: {
         running: "하위 에이전트 시작 중",
         done: "하위 에이전트 시작함",
@@ -492,10 +358,6 @@ export const ko: LocaleMessages = {
       getSubAgentStatus: {
         running: "하위 에이전트 확인 중",
         done: "하위 에이전트 확인함",
-      },
-      listLocalExecutionBridges: {
-        running: "실행 브리지 나열 중",
-        done: "실행 브리지 나열됨",
       },
       startLocalExecutionBridge: {
         running: "로컬 명령 시작 중",
@@ -508,22 +370,6 @@ export const ko: LocaleMessages = {
       cancelLocalExecutionBridge: {
         running: "로컬 명령 취소 중",
         done: "로컬 명령 취소됨",
-      },
-      addLocalExecutionBridge: {
-        running: "실행 브리지 추가 중",
-        done: "실행 브리지 추가됨",
-      },
-      updateLocalExecutionBridge: {
-        running: "실행 브리지 업데이트 중",
-        done: "실행 브리지 업데이트됨",
-      },
-      testLocalExecutionBridge: {
-        running: "실행 브리지 테스트 중",
-        done: "실행 브리지 테스트됨",
-      },
-      deleteLocalExecutionBridge: {
-        running: "실행 브리지 삭제 중",
-        done: "실행 브리지 삭제됨",
       },
     },
   },

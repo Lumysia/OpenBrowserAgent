@@ -6,8 +6,6 @@ import type { AgentCapabilities } from "../shared/types";
 import { cdpTools } from "./cdp-tool-schema";
 import { localExecutionBridgeTools } from "./local-execution-bridge-tool-schema";
 
-export const deferredBrowserTools = cdpTools;
-
 const contentSliceParameters = {
   offset: {
     type: "number",
@@ -32,24 +30,30 @@ const listSliceParameters = {
 
 export const loaderBrowserTools = [
   tool(
-    BROWSER_TOOL_NAME.loadBrowserTools,
-    "Load deferred browser automation tool schemas by name or search query. Use this when common tools are insufficient. After loading, call the specific loaded tool directly in the next step.",
+    BROWSER_TOOL_NAME.loadTools,
+    "Load deferred tool schemas by name, category, or search query. Use this when common tools are insufficient. After loading, call the specific loaded tool directly in the next step.",
     {
+      operation: {
+        type: "string",
+        enum: ["load", "list"],
+        description:
+          "Use list to inspect all deferred tools and unavailable reasons without loading schemas. Use load to load matching schemas. Defaults to load.",
+      },
       names: {
         type: "array",
         items: { type: "string" },
         description:
-          "Exact deferred tool names to load, if known. Examples: cdpTakeScreenshot, cdpEvaluateScript.",
+          "Exact deferred tool names to load, if known. Examples: manageSkills, workspaceFiles, manageMcpServers, cdpInput.",
       },
       query: {
         type: "string",
         description:
-          "Natural-language search query for relevant deferred browser tools.",
+          "Natural-language search query for relevant deferred tools.",
       },
       category: {
         type: "string",
         description:
-          "Optional category filter, such as cdp, input, navigation, debug, network, performance, memory.",
+          "Optional category filter, such as cdp, skills, workspace, memory, history, mcp, bridges, agents.",
       },
     },
     [],
@@ -127,64 +131,6 @@ export const commonBrowserTools = [
     [],
   ),
   tool(
-    BROWSER_TOOL_NAME.startSubAgent,
-    "Delegate a focused task to another internal OpenBrowserAgent chat agent profile. Do not use this for local CLI tools, desktop apps, shell commands, filesystem inspection, or external local processes; use local execution bridge tools for those. By default this starts a linked child chat, waits for the child result, and returns that result to you. Set background=true only when you intentionally want to continue before the child finishes; then call getSubAgentStatus later to collect results.",
-    {
-      agentId: {
-        type: "string",
-        description:
-          "Target agent id. Use listSkills/read chat context only if needed to choose; omit to use the default agent.",
-      },
-      agentName: {
-        type: "string",
-        description:
-          "Target agent display name when the id is unknown, such as Browse or Ask.",
-      },
-      task: {
-        type: "string",
-        description:
-          "Clear task instructions for the child agent. Include only the context the child agent needs.",
-      },
-      title: {
-        type: "string",
-        description: "Short title for the child chat",
-      },
-      background: {
-        type: "boolean",
-        description:
-          "When true, return immediately after launching the child chat. Omit or set false to wait for the child result before continuing.",
-      },
-      timeoutMs: {
-        type: "number",
-        description:
-          "Maximum wait duration in milliseconds for the default synchronous mode. Defaults to 60000 and caps at 180000.",
-      },
-    },
-    ["task"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.getSubAgentStatus,
-    "Check or wait for a sub-agent task started by startSubAgent. Use wait=true when the parent needs the child result before answering.",
-    {
-      taskId: {
-        type: "string",
-        description: "The child chat id returned by startSubAgent",
-      },
-      wait: {
-        type: "boolean",
-        description:
-          "When true, wait until the sub-agent finishes or times out",
-      },
-      timeoutMs: {
-        type: "number",
-        description:
-          "Maximum wait duration in milliseconds. Defaults to 60000.",
-      },
-    },
-    ["taskId"],
-  ),
-  ...localExecutionBridgeTools,
-  tool(
     BROWSER_TOOL_NAME.getCurrentTime,
     "Get current date/time from the user's device for exact local time/date or time zone conversion.",
     {
@@ -230,30 +176,69 @@ export const commonBrowserTools = [
     ["prompt"],
   ),
   tool(
-    BROWSER_TOOL_NAME.openNewTabWithURL,
-    "Open a new background tab with the given URL. This does not switch the active browser tab; call goToTab with the returned tab ID if the user needs to see or end on this page.",
+    BROWSER_TOOL_NAME.manageTabs,
+    "List, open, search, focus, close, group, or navigate browser tabs. Use this for tab lifecycle and tab organization instead of narrow tab tools.",
     {
+      operation: {
+        type: "string",
+        enum: ["list", "open", "search", "focus", "close", "group", "navigate"],
+        description: "Tab operation to perform. Defaults to list.",
+      },
       url: {
         type: "string",
-        description: "The URL to open in a new background tab",
+        description: "URL for operation=open or navigate with type=url.",
       },
+      query: {
+        type: "string",
+        description: "Search query for operation=search.",
+      },
+      tabId: {
+        type: "number",
+        description:
+          "Tab ID for focus, close, navigate, or active-tab fallback.",
+      },
+      tabIds: {
+        type: "array",
+        items: { type: "number" },
+        description: "Tab IDs for close or group.",
+      },
+      type: {
+        type: "string",
+        enum: ["url", "back", "forward", "reload"],
+        description: "Navigation type for operation=navigate.",
+      },
+      title: { type: "string", description: "Tab group title." },
+      color: { type: "string", description: "Tab group color." },
+      active: {
+        type: "boolean",
+        description: "Open the new tab active for operation=open.",
+      },
+      focus: {
+        type: "boolean",
+        description: "Focus the tab/window after open or navigate.",
+      },
+      waitUntil: {
+        type: "string",
+        enum: ["none", "load"],
+        description: "Whether to wait for page load. Defaults to load.",
+      },
+      bypassCache: {
+        type: "boolean",
+        description: "Bypass cache for navigate reload.",
+      },
+      ...listSliceParameters,
       reason: {
         type: "string",
         description:
-          "The reason to open the new tab. It should be relevant to the USER's query. SHOULD use USER's language.",
+          "The reason for this tab operation. SHOULD use USER's language.",
       },
     },
+    [],
   ),
   tool(BROWSER_TOOL_NAME.getCurrentTab, "Get current active tab", {}),
-  tool(BROWSER_TOOL_NAME.goToTab, "Focus and switch to a browser tab by ID", {
-    tabId: {
-      type: "number",
-      description: "The ID of the tab to make active and visible",
-    },
-  }),
   tool(
     BROWSER_TOOL_NAME.mutatePage,
-    "Modify the current page DOM or style. Use this for normal page actions and edits before CDP. Operations: click, input, setText, setHtml, insertHtml, insertElement, delete, setAttribute, removeAttribute, setInlineStyle, insertStyle, removeStyle. Prefer insertElement over insertHtml on strict dynamic pages.",
+    "Modify the current page DOM, style, or scroll position. Use this for normal page actions and edits before CDP. Operations: click, input, setText, setHtml, insertHtml, insertElement, delete, setAttribute, removeAttribute, setInlineStyle, insertStyle, removeStyle, scroll. Prefer insertElement over insertHtml on strict dynamic pages.",
     {
       tabId: {
         type: "number",
@@ -275,6 +260,7 @@ export const commonBrowserTools = [
           "setInlineStyle",
           "insertStyle",
           "removeStyle",
+          "scroll",
         ],
         description: "Mutation to perform.",
       },
@@ -327,6 +313,26 @@ export const commonBrowserTools = [
         type: "boolean",
         description:
           "For click on links, open a background tab instead of navigating the current tab. Defaults true.",
+      },
+      direction: {
+        type: "string",
+        enum: ["top", "bottom", "pageUp", "pageDown"],
+        description:
+          "Scroll direction for operation=scroll. Defaults to bottom.",
+      },
+      x: {
+        type: "number",
+        description: "Window scroll x for operation=scroll.",
+      },
+      y: {
+        type: "number",
+        description: "Window scroll y for operation=scroll.",
+      },
+      behavior: {
+        type: "string",
+        enum: ["smooth", "instant"],
+        description:
+          "Scroll behavior for operation=scroll. Defaults to smooth.",
       },
     },
     [],
@@ -392,46 +398,10 @@ export const commonBrowserTools = [
         description:
           "Maximum characters of page text to return. Defaults to a compact 6000; request more only when needed.",
       },
-    },
-    [],
-  ),
-  tool(BROWSER_TOOL_NAME.getAllTabs, "Get all tabs with optional pagination", {
-    ...listSliceParameters,
-  }),
-  tool(BROWSER_TOOL_NAME.closeTab, "Close tabs by ID", {
-    tabIds: {
-      type: "array",
-      items: { type: "number" },
-      description: "The IDs of the tabs to close",
-    },
-  }),
-  tool(BROWSER_TOOL_NAME.reloadTab, "Reload a browser tab", {
-    tabId: {
-      type: "number",
-      description: "The ID of the tab to reload. Defaults to the active tab.",
-    },
-    bypassCache: {
-      type: "boolean",
-      description: "Bypass cache while reloading",
-    },
-  }),
-  tool(
-    BROWSER_TOOL_NAME.navigateTab,
-    "Navigate a tab by URL, back, forward, or reload",
-    {
-      tabId: {
-        type: "number",
-        description: "The ID of the tab to navigate. Defaults to active tab.",
-      },
-      type: {
-        type: "string",
-        enum: ["url", "back", "forward", "reload"],
-        description: "Navigation type",
-      },
-      url: { type: "string", description: "URL for type=url" },
-      bypassCache: {
-        type: "boolean",
-        description: "Bypass cache for type=reload",
+      waitFor: {
+        type: "object",
+        description:
+          "Optional wait condition before inspection: { text: string|string[], selector, timeout, pollMs }. Returns the inspected page after the condition is found.",
       },
     },
     [],
@@ -450,57 +420,6 @@ export const commonBrowserTools = [
       type: "number",
       description: "JPEG quality from 0 to 100",
     },
-  }),
-  tool(
-    BROWSER_TOOL_NAME.waitForText,
-    "Wait until text appears in a tab",
-    {
-      tabId: {
-        type: "number",
-        description: "The ID of the tab to inspect. Defaults to active tab.",
-      },
-      text: {
-        type: "array",
-        items: { type: "string" },
-        description: "One or more texts to wait for",
-      },
-      timeout: {
-        type: "number",
-        description: "Timeout in milliseconds. Defaults to 5000.",
-      },
-    },
-    ["text"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.openSearchTab,
-    "Open a search tab with the given query",
-    {
-      query: { type: "string", description: "The search query" },
-    },
-  ),
-  tool(
-    BROWSER_TOOL_NAME.waitTabLoadFinished,
-    "Wait for a tab to finish loading",
-    {
-      tabId: { type: "number", description: "The ID of the tab to wait for" },
-    },
-  ),
-  tool(
-    BROWSER_TOOL_NAME.groupTabs,
-    "Group tabs with title and optional color",
-    {
-      tabIds: {
-        type: "array",
-        items: { type: "number" },
-        description: "The IDs of the tabs to group",
-      },
-      title: { type: "string", description: "The title of the tab group" },
-      color: { type: "string", description: "The color of the tab group" },
-    },
-    ["tabIds", "title"],
-  ),
-  tool(BROWSER_TOOL_NAME.scrollToBottom, "Scroll to the bottom of a tab", {
-    tabId: { type: "number", description: "The ID of the tab to scroll" },
   }),
   tool(BROWSER_TOOL_NAME.downloadTabToMarkdown, "Download a tab to markdown", {
     tabId: { type: "number", description: "The ID of the tab to download" },
@@ -567,368 +486,122 @@ export const commonBrowserTools = [
     },
     ["attachmentId"],
   ),
+];
+
+export const deferredDomainTools = [
   tool(
-    BROWSER_TOOL_NAME.listSkills,
-    "List available skill packages with optional pagination. Call this before readSkill when skills may help the user request.",
-    { ...listSliceParameters },
-  ),
-  tool(
-    BROWSER_TOOL_NAME.createSkill,
-    "Create a new reusable skill package when no existing skill fits. Never store secrets or one-off task details.",
+    BROWSER_TOOL_NAME.startSubAgent,
+    "Delegate a focused task to another internal OpenBrowserAgent chat agent profile.",
     {
-      name: {
-        type: "string",
-        description: "Short reusable skill name",
-      },
-      description: {
-        type: "string",
-        description: "What this skill helps with",
-      },
-      instruction: {
-        type: "string",
-        description: "Reusable SKILL.md instructions for future tasks",
-      },
-      reason: {
-        type: "string",
-        description:
-          "Why this new skill is broadly reusable and not a narrow one-off note",
-      },
+      agentId: { type: "string" },
+      agentName: { type: "string" },
+      task: { type: "string" },
+      title: { type: "string" },
+      background: { type: "boolean" },
+      timeoutMs: { type: "number" },
     },
-    ["name", "instruction", "reason"],
+    ["task"],
   ),
   tool(
-    BROWSER_TOOL_NAME.readSkill,
-    "Read SKILL.md for one available skill package by id or unique skill name after listSkills shows it is relevant.",
+    BROWSER_TOOL_NAME.getSubAgentStatus,
+    "Check or wait for a sub-agent task started by startSubAgent.",
     {
-      skillId: {
-        type: "string",
-        description: "The id or unique name of the available skill to read",
-      },
-      ...contentSliceParameters,
+      taskId: { type: "string" },
+      wait: { type: "boolean" },
+      timeoutMs: { type: "number" },
     },
-    ["skillId"],
+    ["taskId"],
   ),
+  ...localExecutionBridgeTools,
   tool(
-    BROWSER_TOOL_NAME.readSkillFile,
-    "Read a supporting file from an available skill package by id or unique skill name and path after reading SKILL.md.",
+    BROWSER_TOOL_NAME.manageSkills,
+    "List, create, read, read supporting files, update files, or patch available skill packages. For operation=list, no fields are required. For read, pass skillId and optionally offset/limit to page long skill text. For readFile/updateFile/patchFile, pass skillId and path.",
     {
-      skillId: {
-        type: "string",
-        description: "The id or unique name of the available skill package",
-      },
-      path: {
-        type: "string",
-        description: "The skill file path, such as references/example.md",
-      },
-      ...contentSliceParameters,
-    },
-    ["skillId", "path"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.updateSkillFile,
-    "Update/add a text file in an existing skill package only. Use createSkill for new skill packages. Never add secrets or one-off task details.",
-    {
-      skillId: {
-        type: "string",
-        description: "The id of the available skill package to update",
-      },
-      path: {
-        type: "string",
-        description:
-          "The skill file path to update, such as SKILL.md or references/example.md",
-      },
-      content: {
-        type: "string",
-        description: "The complete new UTF-8 text content for this skill file",
-      },
-      reason: {
-        type: "string",
-        description:
-          "Why this update is broadly reusable and not a narrow one-off change",
-      },
-    },
-    ["skillId", "path", "content", "reason"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.patchSkillFile,
-    "Patch an existing skill text file with exact search/replace edits for generalized reusable improvements.",
-    {
-      skillId: {
-        type: "string",
-        description: "The id of the available skill package to patch",
-      },
-      path: {
-        type: "string",
-        description: "The skill file path to patch, such as SKILL.md",
-      },
-      replacements: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            oldText: {
-              type: "string",
-              description: "Exact existing text to replace; must match once",
-            },
-            newText: {
-              type: "string",
-              description: "Replacement text",
-            },
-          },
-          required: ["oldText", "newText"],
-        },
-        description: "Exact replacements to apply in order",
-      },
-      reason: {
-        type: "string",
-        description:
-          "Why this patch is broadly reusable and not a narrow one-off change",
-      },
-    },
-    ["skillId", "path", "replacements", "reason"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.listWorkspaceFiles,
-    "List private files in the current agent workspace with optional pagination.",
-    { ...listSliceParameters },
-  ),
-  tool(
-    BROWSER_TOOL_NAME.readWorkspaceFile,
-    "Read one private file from the current agent workspace by path.",
-    {
-      path: { type: "string", description: "Workspace file path" },
-      ...contentSliceParameters,
-    },
-    ["path"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.writeWorkspaceFile,
-    "Create or replace one private text file in the current agent workspace.",
-    {
-      path: { type: "string", description: "Workspace file path" },
-      content: {
-        type: "string",
-        description: "Complete UTF-8 text content for the workspace file",
-      },
-    },
-    ["path", "content"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.patchWorkspaceFile,
-    "Edit one private workspace file with append, prepend, or exact replacement.",
-    {
-      path: { type: "string", description: "Workspace file path" },
       operation: {
         type: "string",
-        enum: ["replace", "append", "prepend"],
-        description: "Patch operation",
+        enum: ["list", "create", "read", "readFile", "updateFile", "patchFile"],
+        description: "Defaults to list.",
       },
-      value: {
-        type: "string",
-        description: "Text to insert or replacement text",
-      },
-      find: {
-        type: "string",
-        description: "Exact text to replace when operation is replace",
-      },
-    },
-    ["path", "operation", "value"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.deleteWorkspaceFile,
-    "Delete one private file from the current agent workspace.",
-    {
-      path: { type: "string", description: "Workspace file path" },
-    },
-    ["path"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.searchWorkspaceFiles,
-    "Search private current-agent workspace files for text. Returns matching line previews, capped per line and by total result characters.",
-    {
-      query: { type: "string", description: "Text to search for" },
+      skillId: { type: "string" },
+      name: { type: "string" },
+      description: { type: "string" },
+      instruction: { type: "string" },
+      path: { type: "string" },
+      content: { type: "string" },
+      replacements: { type: "array", items: { type: "object" } },
+      reason: { type: "string" },
+      ...contentSliceParameters,
       ...listSliceParameters,
     },
-    ["query"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.listMemory,
-    "List compact long-term memory entries for the current agent with optional pagination.",
-    { ...listSliceParameters },
-  ),
-  tool(
-    BROWSER_TOOL_NAME.addMemory,
-    "Add a stable long-term fact, decision, or lesson. Do not store secrets or temporary task notes.",
-    {
-      text: {
-        type: "string",
-        description: `Short durable memory text, normalized to at most ${MEMORY_ENTRY_TEXT_MAX_CHARS} characters`,
-      },
-    },
-    ["text"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.updateMemory,
-    "Update one existing long-term memory entry by id.",
-    {
-      id: { type: "string", description: "Memory entry id" },
-      text: {
-        type: "string",
-        description: `Replacement durable memory text, normalized to at most ${MEMORY_ENTRY_TEXT_MAX_CHARS} characters`,
-      },
-    },
-    ["id", "text"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.removeMemory,
-    "Remove one long-term memory entry by id.",
-    {
-      id: { type: "string", description: "Memory entry id" },
-    },
-    ["id"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.listUserProfile,
-    "List stable user profile and preference notes for the current agent with optional pagination.",
-    { ...listSliceParameters },
-  ),
-  tool(
-    BROWSER_TOOL_NAME.addUserProfileNote,
-    "Add a stable user preference or profile note. Do not store secrets or transient task details.",
-    {
-      text: {
-        type: "string",
-        description: `Short durable user profile note, normalized to at most ${MEMORY_ENTRY_TEXT_MAX_CHARS} characters`,
-      },
-    },
-    ["text"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.updateUserProfileNote,
-    "Update one existing user profile note by id.",
-    {
-      id: { type: "string", description: "User profile note id" },
-      text: {
-        type: "string",
-        description: `Replacement user profile note, normalized to at most ${MEMORY_ENTRY_TEXT_MAX_CHARS} characters`,
-      },
-    },
-    ["id", "text"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.removeUserProfileNote,
-    "Remove one user profile note by id.",
-    {
-      id: { type: "string", description: "User profile note id" },
-    },
-    ["id"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.searchChatHistory,
-    "Search saved chat history by title and message text.",
-    {
-      query: { type: "string", description: "Text to search for" },
-      offset: { type: "number", description: "Zero-based result offset" },
-      limit: { type: "number", description: "Maximum chat results" },
-    },
-    ["query"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.readChatThread,
-    "Read a saved chat thread by id with truncated message content.",
-    {
-      chatId: { type: "string", description: "Chat thread id" },
-      offset: {
-        type: "number",
-        description:
-          "Zero-based message offset. Defaults to the latest messages when omitted.",
-      },
-      limit: { type: "number", description: "Maximum messages to return" },
-    },
-    ["chatId"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.deleteChatThread,
-    "Delete one saved chat thread by id when the user explicitly asks.",
-    {
-      chatId: { type: "string", description: "Chat thread id" },
-    },
-    ["chatId"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.listMcpServers,
-    "List configured Streamable HTTP MCP servers.",
-    {},
     [],
   ),
   tool(
-    BROWSER_TOOL_NAME.addMcpServer,
-    "Add and test a Streamable HTTP MCP server configuration. The server is saved only if tools/list succeeds.",
+    BROWSER_TOOL_NAME.workspaceFiles,
+    "List, read, write, patch, delete, or search private current-agent workspace files.",
     {
-      name: { type: "string", description: "Display name for the MCP server" },
-      description: {
+      operation: {
         type: "string",
-        description: "Optional description of what this MCP server provides",
+        enum: ["list", "read", "write", "patch", "delete", "search"],
       },
-      url: {
-        type: "string",
-        description:
-          "Streamable HTTP MCP endpoint URL, such as https://example.com/mcp",
-      },
-      enabled: {
-        type: "boolean",
-        description:
-          "Whether the server is enabled. Only tested servers with discovered tools can be enabled.",
-      },
-      headers: {
-        type: "object",
-        description: "Optional HTTP headers, such as Authorization",
-      },
+      path: { type: "string" },
+      content: { type: "string" },
+      value: { type: "string" },
+      find: { type: "string" },
+      query: { type: "string" },
+      ...contentSliceParameters,
+      ...listSliceParameters,
     },
-    ["name", "url"],
+    [],
   ),
   tool(
-    BROWSER_TOOL_NAME.updateMcpServer,
-    "Update a configured Streamable HTTP MCP server. URL/header changes and enable requests are tested before the server can be enabled.",
+    BROWSER_TOOL_NAME.manageMemory,
+    "List, add, update, or remove long-term memory entries or user profile notes.",
     {
-      serverId: { type: "string", description: "MCP server ID" },
-      name: { type: "string", description: "New display name" },
-      description: {
+      operation: { type: "string", enum: ["list", "add", "update", "remove"] },
+      scope: { type: "string", enum: ["memory", "user"] },
+      id: { type: "string" },
+      text: {
         type: "string",
-        description: "New description of what this MCP server provides",
+        description: `Durable text, normalized to at most ${MEMORY_ENTRY_TEXT_MAX_CHARS} characters`,
       },
-      url: {
-        type: "string",
-        description: "New Streamable HTTP MCP endpoint URL",
-      },
-      enabled: {
-        type: "boolean",
-        description:
-          "Whether the server is enabled. Only tested servers with discovered tools can be enabled.",
-      },
-      headers: { type: "object", description: "Replacement HTTP headers" },
+      ...listSliceParameters,
     },
-    ["serverId"],
+    [],
   ),
   tool(
-    BROWSER_TOOL_NAME.testMcpServer,
-    "Test a configured MCP server and refresh its available tools list.",
+    BROWSER_TOOL_NAME.manageChatHistory,
+    "Search, read, or delete saved chat history.",
     {
-      serverId: { type: "string", description: "MCP server ID" },
+      operation: { type: "string", enum: ["search", "read", "delete"] },
+      query: { type: "string" },
+      chatId: { type: "string" },
+      offset: { type: "number" },
+      limit: { type: "number" },
     },
-    ["serverId"],
+    [],
   ),
   tool(
-    BROWSER_TOOL_NAME.deleteMcpServer,
-    "Delete a configured MCP server.",
+    BROWSER_TOOL_NAME.manageMcpServers,
+    "List, add, update, test, or delete configured Streamable HTTP MCP servers.",
     {
-      serverId: { type: "string", description: "MCP server ID" },
+      operation: {
+        type: "string",
+        enum: ["list", "add", "update", "test", "delete"],
+      },
+      serverId: { type: "string" },
+      name: { type: "string" },
+      description: { type: "string" },
+      url: { type: "string" },
+      enabled: { type: "boolean" },
+      headers: { type: "object" },
     },
-    ["serverId"],
+    [],
   ),
 ];
 
-export const allBrowserTools = [...commonBrowserTools, ...cdpTools];
+export const deferredBrowserTools = [...cdpTools, ...deferredDomainTools];
+
+export const allBrowserTools = [...commonBrowserTools, ...deferredBrowserTools];
 export const browserTools = [...commonBrowserTools, ...loaderBrowserTools];
 
 export function browserToolsForPrompt({
@@ -953,30 +626,26 @@ export function browserToolsForPrompt({
   const loadedTools = deferredBrowserTools.filter(
     (tool) =>
       capabilities.deferredBrowserTools &&
-      cdpToolsAvailable &&
+      isDeferredToolAvailable(tool.function.name, {
+        capabilities,
+        hasSkills,
+        hasWorkspace,
+        cdpToolsAvailable,
+      }) &&
       loadedToolNames.includes(tool.function.name),
   );
   return [...browserTools, ...loadedTools].filter((item) => {
     const name = item.function.name;
     if (!capabilities.browserTools) return false;
-    if (name === BROWSER_TOOL_NAME.loadBrowserTools)
-      return capabilities.deferredBrowserTools && cdpToolsAvailable;
-    if (
-      name === BROWSER_TOOL_NAME.startSubAgent ||
-      name === BROWSER_TOOL_NAME.getSubAgentStatus
-    )
-      return capabilities.subAgents;
-    if (
-      name === BROWSER_TOOL_NAME.listLocalExecutionBridges ||
-      name === BROWSER_TOOL_NAME.addLocalExecutionBridge ||
-      name === BROWSER_TOOL_NAME.updateLocalExecutionBridge ||
-      name === BROWSER_TOOL_NAME.testLocalExecutionBridge ||
-      name === BROWSER_TOOL_NAME.deleteLocalExecutionBridge ||
-      name === BROWSER_TOOL_NAME.startLocalExecutionBridge ||
-      name === BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus ||
-      name === BROWSER_TOOL_NAME.cancelLocalExecutionBridge
-    )
-      return capabilities.localExecutionBridges;
+    if (name === BROWSER_TOOL_NAME.loadTools)
+      return capabilities.deferredBrowserTools;
+    if (deferredBrowserTools.some((tool) => tool.function.name === name))
+      return isDeferredToolAvailable(name, {
+        capabilities,
+        hasSkills,
+        hasWorkspace,
+        cdpToolsAvailable,
+      });
     if (name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript)
       return (
         capabilities.cdpTools &&
@@ -987,59 +656,6 @@ export function browserToolsForPrompt({
       return capabilities.cdpTools && cdpToolsAvailable;
     if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
       return hasUploadedAttachments;
-    if (name === BROWSER_TOOL_NAME.listSkills)
-      return capabilities.skillTools && hasSkills;
-    if (name === BROWSER_TOOL_NAME.createSkill)
-      return capabilities.skillTools && capabilities.skillCreation;
-    if (name === BROWSER_TOOL_NAME.readSkill)
-      return capabilities.skillTools && hasSkills;
-    if (name === BROWSER_TOOL_NAME.readSkillFile)
-      return capabilities.skillTools && hasSkills;
-    if (name === BROWSER_TOOL_NAME.updateSkillFile)
-      return capabilities.skillTools && hasSkills && capabilities.skillCreation;
-    if (name === BROWSER_TOOL_NAME.patchSkillFile)
-      return capabilities.skillTools && hasSkills && capabilities.skillCreation;
-    if (
-      name === BROWSER_TOOL_NAME.listWorkspaceFiles ||
-      name === BROWSER_TOOL_NAME.readWorkspaceFile ||
-      name === BROWSER_TOOL_NAME.searchWorkspaceFiles
-    )
-      return capabilities.workspaceRead && hasWorkspace;
-    if (
-      name === BROWSER_TOOL_NAME.writeWorkspaceFile ||
-      name === BROWSER_TOOL_NAME.patchWorkspaceFile ||
-      name === BROWSER_TOOL_NAME.deleteWorkspaceFile
-    )
-      return capabilities.workspaceWrite && hasWorkspace;
-    if (
-      name === BROWSER_TOOL_NAME.listMemory ||
-      name === BROWSER_TOOL_NAME.listUserProfile
-    )
-      return capabilities.memoryRead && hasWorkspace;
-    if (
-      name === BROWSER_TOOL_NAME.addMemory ||
-      name === BROWSER_TOOL_NAME.updateMemory ||
-      name === BROWSER_TOOL_NAME.removeMemory ||
-      name === BROWSER_TOOL_NAME.addUserProfileNote ||
-      name === BROWSER_TOOL_NAME.updateUserProfileNote ||
-      name === BROWSER_TOOL_NAME.removeUserProfileNote
-    )
-      return capabilities.memoryWrite && hasWorkspace;
-    if (
-      name === BROWSER_TOOL_NAME.searchChatHistory ||
-      name === BROWSER_TOOL_NAME.readChatThread
-    )
-      return capabilities.chatHistoryRead && hasWorkspace;
-    if (name === BROWSER_TOOL_NAME.deleteChatThread)
-      return capabilities.chatHistoryWrite;
-    if (
-      name === BROWSER_TOOL_NAME.listMcpServers ||
-      name === BROWSER_TOOL_NAME.addMcpServer ||
-      name === BROWSER_TOOL_NAME.updateMcpServer ||
-      name === BROWSER_TOOL_NAME.testMcpServer ||
-      name === BROWSER_TOOL_NAME.deleteMcpServer
-    )
-      return capabilities.mcpManagement;
     if (name === BROWSER_TOOL_NAME.generateImage)
       return capabilities.imageGeneration && imageGenerationEnabled;
     if (name === BROWSER_TOOL_NAME.getCurrentTime)
@@ -1053,6 +669,53 @@ export function browserToolsForPrompt({
 
 function containsFileUrl(text: string) {
   return /https?:\/\/\S+|data:image\//i.test(text);
+}
+
+function isDeferredToolAvailable(
+  name: string,
+  context: {
+    capabilities: AgentCapabilities;
+    hasSkills: boolean;
+    hasWorkspace: boolean;
+    cdpToolsAvailable: boolean;
+  },
+) {
+  const { capabilities, hasSkills, hasWorkspace, cdpToolsAvailable } = context;
+  if (
+    name === BROWSER_TOOL_NAME.startSubAgent ||
+    name === BROWSER_TOOL_NAME.getSubAgentStatus
+  )
+    return capabilities.subAgents;
+  if (
+    name === BROWSER_TOOL_NAME.manageLocalExecutionBridges ||
+    name === BROWSER_TOOL_NAME.startLocalExecutionBridge ||
+    name === BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus ||
+    name === BROWSER_TOOL_NAME.cancelLocalExecutionBridge
+  )
+    return capabilities.localExecutionBridges;
+  if (name === BROWSER_TOOL_NAME.manageSkills)
+    return capabilities.skillTools && (hasSkills || capabilities.skillCreation);
+  if (name === BROWSER_TOOL_NAME.workspaceFiles)
+    return (
+      hasWorkspace &&
+      (capabilities.workspaceRead || capabilities.workspaceWrite)
+    );
+  if (name === BROWSER_TOOL_NAME.manageMemory)
+    return (
+      hasWorkspace && (capabilities.memoryRead || capabilities.memoryWrite)
+    );
+  if (name === BROWSER_TOOL_NAME.manageChatHistory)
+    return capabilities.chatHistoryRead || capabilities.chatHistoryWrite;
+  if (name === BROWSER_TOOL_NAME.manageMcpServers)
+    return capabilities.mcpManagement;
+  if (name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript)
+    return (
+      capabilities.cdpTools &&
+      capabilities.javascriptExecution &&
+      cdpToolsAvailable
+    );
+  if (name.startsWith("cdp")) return capabilities.cdpTools && cdpToolsAvailable;
+  return true;
 }
 
 function tool(

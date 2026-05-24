@@ -66,10 +66,14 @@ export function extractSourcesFromTool(
   }
   if (name === BROWSER_TOOL_NAME.getCurrentTab)
     return sourceFromPage(output, now);
-  if (name === BROWSER_TOOL_NAME.openNewTabWithURL && output.tab) {
+  if (
+    name === BROWSER_TOOL_NAME.manageTabs &&
+    input.operation === "open" &&
+    output.tab
+  ) {
     return sourceFromPage(recordValue(output.tab), now);
   }
-  if (name === BROWSER_TOOL_NAME.openSearchTab) {
+  if (name === BROWSER_TOOL_NAME.manageTabs && input.operation === "search") {
     const query = stringValue(input.query);
     return [
       compactSource({
@@ -97,8 +101,8 @@ export function extractSourcesFromTool(
     ];
   }
   if (
-    name === BROWSER_TOOL_NAME.readSkill ||
-    name === BROWSER_TOOL_NAME.readSkillFile
+    name === BROWSER_TOOL_NAME.manageSkills &&
+    (input.operation === "read" || input.operation === "readFile")
   ) {
     return [
       compactSource({

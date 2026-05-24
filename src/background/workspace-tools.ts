@@ -10,6 +10,20 @@ import {
 } from "../shared/workspace";
 import { withContentSlice, withListSlice } from "./tool-utils";
 
+export function workspaceFiles(
+  workspace: AgentWorkspace | undefined,
+  input: Record<string, unknown>,
+) {
+  const operation = String(input.operation || "list");
+  if (operation === "list") return listWorkspaceFiles(workspace, input);
+  if (operation === "read") return readWorkspaceFile(workspace, input);
+  if (operation === "write") return writeWorkspaceFile(workspace, input);
+  if (operation === "patch") return patchWorkspaceFile(workspace, input);
+  if (operation === "delete") return deleteWorkspaceFile(workspace, input);
+  if (operation === "search") return searchWorkspaceFiles(workspace, input);
+  return { error: "Unknown workspace file operation", operation };
+}
+
 export function listWorkspaceFiles(
   workspace: AgentWorkspace | undefined,
   input: Record<string, unknown> = {},

@@ -9,7 +9,7 @@ export const BUILTIN_SKILLS: Skill[] = [
     id: LOCAL_EXECUTION_BRIDGE_SETUP_ID,
     name: "local-execution-bridge-setup",
     description:
-      "Guide users through creating, updating, testing, and deleting OpenBrowserAgent local execution bridge configurations. Use before calling addLocalExecutionBridge, updateLocalExecutionBridge, testLocalExecutionBridge, or deleteLocalExecutionBridge.",
+      "Guide users through creating, updating, testing, and deleting OpenBrowserAgent local execution bridge configurations. Use before calling manageLocalExecutionBridges for add, update, test, or delete operations.",
     builtin: true,
     enabled: true,
     createdAt: 0,
@@ -22,7 +22,7 @@ export const BUILTIN_SKILLS: Skill[] = [
         updatedAt: 0,
         content: `---
 name: "local-execution-bridge-setup"
-description: "Guide users through creating, updating, testing, and deleting OpenBrowserAgent local execution bridge configurations. Use before calling addLocalExecutionBridge, updateLocalExecutionBridge, testLocalExecutionBridge, or deleteLocalExecutionBridge."
+description: "Guide users through creating, updating, testing, and deleting OpenBrowserAgent local execution bridge configurations. Use before calling manageLocalExecutionBridges for add, update, test, or delete operations."
 ---
 
 # Local Execution Bridge Setup
@@ -38,14 +38,14 @@ Use this skill whenever the user wants to add, configure, modify, test, use, or 
 
 ## Workflow
 
-- Start with \`listLocalExecutionBridges\` and avoid duplicate configs.
+- Start with \`manageLocalExecutionBridges\` operation \`list\` and avoid duplicate configs.
 - If no suitable tested bridge exists, guide the user through installing/configuring one before attempting the requested shell command. Do not replace the requested local task with manual shell/file instructions unless the user explicitly asks to do it manually.
 - Use the \`question\` tool to collect missing setup information when it helps. Ask only for unknown values, keep it concise, and do not make a novice choose technical values they have not said they know.
 - Prefer the published installer: \`npx openbrowseragent-local-execution-bridge@1 install ...\`. It should receive the browser target and extension ID. It does not need a per-task command during setup.
-- After installer output is available, use \`addLocalExecutionBridge\` or \`updateLocalExecutionBridge\` with the printed \`hostName\`, \`commandId\`, and \`secret\`, then call \`testLocalExecutionBridge\`.
-- \`testLocalExecutionBridge\` returns the shell, basic environment information, and detected local execution bridge CLIs the bridge can see. Use that result to choose command syntax and available local tools; do not assume a default shell or installed CLI in the conversation.
-- Before running work through a configured bridge, call \`testLocalExecutionBridge\`; then call \`startLocalExecutionBridge\` with the exact shell command to run only if the test succeeds.
-- Use \`deleteLocalExecutionBridge\` for extension-side cleanup. For native bridge files, guide the user to run \`npx openbrowseragent-local-execution-bridge@1 uninstall\`.
+- After installer output is available, use \`manageLocalExecutionBridges\` operation \`add\` or \`update\` with the printed \`hostName\`, \`commandId\`, and \`secret\`, then use operation \`test\`.
+- \`manageLocalExecutionBridges\` operation \`test\` returns the shell, basic environment information, and detected local execution bridge CLIs the bridge can see. Use that result to choose command syntax and available local tools; do not assume a default shell or installed CLI in the conversation.
+- Before running work through a configured bridge, use \`manageLocalExecutionBridges\` operation \`test\`; then call \`startLocalExecutionBridge\` with the exact shell command to run only if the test succeeds.
+- Use \`manageLocalExecutionBridges\` operation \`delete\` for extension-side cleanup. For native bridge files, guide the user to run \`npx openbrowseragent-local-execution-bridge@1 uninstall\`.
 - To update native bridge files, guide the user to run \`npx openbrowseragent-local-execution-bridge@1 update\`. This scans installed bridge manifests and refreshes the copied runtime, wrapper, and manifest while preserving existing secrets. Use \`--browser <browser-target>\` only when the user wants to update one browser, or add install arguments such as \`--extension-id\` only when repairing setup.
 - Do not reinstall or rewrite the bridge for each requested local task. Install once, then send shell commands through \`startLocalExecutionBridge\`.
 - Do not use \`startSubAgent\` for local CLIs, desktop apps, filesystem inspection, or external local processes. Sub-agents are internal OpenBrowserAgent chat profiles; local processes run through the local execution bridge.
@@ -72,7 +72,7 @@ If the user wants a specific shell, add \`--shell <shell>\`. If the user is work
 ## Notes
 
 - Do not put \`npx\` or \`bunx\` directly in a browser Native Messaging manifest; the installer creates a stable wrapper/runtime path.
-- Do not invent weak secrets. Prefer installer-generated secrets; \`addLocalExecutionBridge\` and \`updateLocalExecutionBridge\` only return generated secrets once.
+- Do not invent weak secrets. Prefer installer-generated secrets; \`manageLocalExecutionBridges\` add/update operations only return generated secrets once.
 - Treat \`startLocalExecutionBridge.command\` as the shell command to execute. Do not put that shell command into the installer command.
 - If testing says the native host is missing or stale, first use the tool diagnostic if present. For Brave, Vivaldi, or Chromium on Windows, ask the user to rerun the latest installer for the same browser and extension ID because it registers both browser-specific and Chrome-compatible Native Messaging registry keys. Then ask for a full browser restart and test again.
 `,
@@ -115,7 +115,7 @@ Use this skill for browser automation tasks that involve inspecting pages, click
    - Track tabs opened by this task.
    - Close opened tabs that are no longer useful, such as duplicate search pages, dead ends, transient login/interstitial pages, and pages whose information has already been captured.
    - Keep the final useful tab or small set of useful tabs open when they support the user's goal.
-   - If the user explicitly asks to open, use, or end on a specific tab/page, use \`goToTab\` to focus that requested tab before finishing.
+   - If the user explicitly asks to open, use, or end on a specific tab/page, use \`manageTabs\` with operation \`focus\` to focus that requested tab before finishing.
 8. Use deferred browser tools when common tools do not provide the needed page control or evidence.
 `,
       },
@@ -166,7 +166,7 @@ skill-name/
 └── scripts/
 \`\`\`
 
-Only \`SKILL.md\` is required. OpenBrowserAgent can import this structure from a ZIP and stores it as package files. Supporting files are read on demand with \`readSkillFile\`.
+Only \`SKILL.md\` is required. OpenBrowserAgent can import this structure from a ZIP and stores it as package files. Supporting files are read on demand with \`manageSkills\` operation \`readFile\`.
 
 ## Writing SKILL.md
 

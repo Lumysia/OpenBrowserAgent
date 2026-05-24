@@ -239,81 +239,65 @@ export const enUS = {
     copyImage: "Copy image",
     copyPrompt: "Copy prompt",
     tool: {
+      manageTabs: {
+        running: "Managing tabs",
+        done: "Managed tabs",
+        found: "Found {count} open tabs",
+      },
+      cdpInput: { running: "Sending CDP input", done: "Sent CDP input" },
+      cdpPage: { running: "Controlling CDP page", done: "Controlled CDP page" },
+      cdpDiagnostics: {
+        running: "Reading CDP diagnostics",
+        done: "Read CDP diagnostics",
+      },
+      wait: { running: "Waiting", done: "Waited" },
+      getCurrentTime: { running: "Checking time", done: "Checked time" },
+      getCurrentTab: {
+        running: "Getting current tab",
+        done: "Got current tab",
+      },
+      captureVisibleTab: { running: "Capturing tab", done: "Captured tab" },
+      downloadAllImagesInTab: {
+        running: "Downloading images",
+        done: "Downloaded images",
+      },
       question: { running: "Asking a question", done: "Answered question" },
-      openNewTabWithURL: {
-        running: "Opening new page",
-        done: "Opened new page",
+      loadTools: {
+        running: "Loading tools",
+        done: "Loaded tools",
+        found: "Loaded {count} tools",
+      },
+      manageSkills: {
+        running: "Managing skills",
+        done: "Managed skills",
+        found: "Found {count}",
+      },
+      workspaceFiles: {
+        running: "Using workspace files",
+        done: "Updated workspace files",
+      },
+      manageMemory: { running: "Managing memory", done: "Managed memory" },
+      manageChatHistory: {
+        running: "Reading chat history",
+        done: "Read chat history",
+      },
+      manageMcpServers: {
+        running: "Managing MCP servers",
+        done: "Managed MCP servers",
+      },
+      manageLocalExecutionBridges: {
+        running: "Managing execution bridges",
+        done: "Managed execution bridges",
       },
       inspectPage: {
         running: "Inspecting page",
         done: "Inspected page",
         found: "Found {count} elements",
       },
-      waitTabLoadFinished: {
-        running: "Waiting for page load",
-        done: "Page loaded",
-      },
       mutatePage: { running: "Updating page", done: "Updated page" },
-      cdpMouseActionByAiID: {
-        running: "Interacting with page element",
-        done: "Interacted with page element",
-      },
-      groupTabs: { running: "Grouping tabs", done: "Grouped tabs" },
-      wait: { running: "Waiting", done: "Waited" },
-      getCurrentTime: { running: "Checking time", done: "Checked time" },
-      getCurrentTab: {
-        running: "Getting current page content",
-        done: "Got current page content",
-      },
-      getAllTabs: {
-        running: "Checking open tabs",
-        done: "Checked open tabs",
-        found: "Found {count} open tabs",
-      },
-      goToTab: { running: "Switching tab", done: "Switched tab" },
-      openSearchTab: { running: "Searching", done: "Opened search tab" },
-      downloadAllImagesInTab: {
-        running: "Downloading images",
-        done: "Downloaded images",
-      },
       downloadTabToMarkdown: {
         running: "Downloading markdown",
         done: "Downloaded markdown",
-      },
-      closeTab: { running: "Closing tab", done: "Closed tab" },
-      reloadTab: { running: "Reloading tab", done: "Reloaded tab" },
-      navigateTab: { running: "Navigating tab", done: "Navigated tab" },
-      captureVisibleTab: {
-        running: "Capturing tab",
-        done: "Captured tab",
-      },
-      waitForText: { running: "Waiting for text", done: "Found text" },
-      scrollToBottom: { running: "Scrolling page", done: "Scrolled page" },
-      listSkills: {
-        running: "Listing Skills",
-        done: "Listed Skills",
-        found: "Found {count}",
-      },
-      createSkill: { running: "Creating Skill", done: "Created Skill" },
-      readSkill: { running: "Reading Skill", done: "Read Skill" },
-      updateSkillFile: { running: "Updating Skill", done: "Updated Skill" },
-      patchSkillFile: { running: "Patching Skill", done: "Patched Skill" },
-      listMcpServers: {
-        running: "Listing MCP servers",
-        done: "Listed MCP servers",
-      },
-      addMcpServer: { running: "Adding MCP server", done: "Added MCP server" },
-      updateMcpServer: {
-        running: "Updating MCP server",
-        done: "Updated MCP server",
-      },
-      testMcpServer: {
-        running: "Testing MCP server",
-        done: "Tested MCP server",
-      },
-      deleteMcpServer: {
-        running: "Deleting MCP server",
-        done: "Deleted MCP server",
       },
       generateImage: { running: "Generating image", done: "Generated image" },
       readUploadedAttachment: {
@@ -323,32 +307,6 @@ export const enUS = {
       readFileFromUrl: {
         running: "Reading file",
         done: "Read file",
-      },
-      loadBrowserTools: {
-        running: "Loading browser tools",
-        done: "Loaded browser tools",
-        found: "Loaded {count} tools",
-      },
-      cdpClickAt: {
-        running: "Clicking coordinates",
-        done: "Clicked coordinates",
-      },
-      cdpPressKey: { running: "Pressing key", done: "Pressed key" },
-      cdpTypeText: { running: "Typing text", done: "Typed text" },
-      cdpFill: { running: "Filling field", done: "Filled field" },
-      cdpFillForm: { running: "Filling form", done: "Filled form" },
-      cdpDrag: { running: "Dragging on page", done: "Dragged on page" },
-      cdpHandleDialog: { running: "Handling dialog", done: "Handled dialog" },
-      cdpListPages: { running: "Checking pages", done: "Checked pages" },
-      cdpNewPage: { running: "Opening page", done: "Opened page" },
-      cdpNavigatePage: { running: "Navigating page", done: "Navigated page" },
-      cdpSelectPage: { running: "Focusing page", done: "Focused page" },
-      cdpClosePage: { running: "Closing page", done: "Closed page" },
-      cdpWaitFor: { running: "Waiting for page text", done: "Found page text" },
-      cdpResizePage: { running: "Resizing page", done: "Resized page" },
-      cdpEmulate: {
-        running: "Applying page emulation",
-        done: "Applied page emulation",
       },
       cdpEvaluateScript: {
         running: "Evaluating page script",
@@ -361,26 +319,6 @@ export const enUS = {
       cdpTakeScreenshot: {
         running: "Taking screenshot",
         done: "Took screenshot",
-      },
-      cdpTakeSnapshot: {
-        running: "Taking page snapshot",
-        done: "Took page snapshot",
-      },
-      cdpListConsoleMessages: {
-        running: "Reading console messages",
-        done: "Read console messages",
-      },
-      cdpGetConsoleMessage: {
-        running: "Reading console message",
-        done: "Read console message",
-      },
-      cdpListNetworkRequests: {
-        running: "Reading network requests",
-        done: "Read network requests",
-      },
-      cdpGetNetworkRequest: {
-        running: "Reading network request",
-        done: "Read network request",
       },
       cdpPerformanceStartTrace: {
         running: "Starting performance trace",
@@ -422,63 +360,6 @@ export const enUS = {
         running: "Stopping page recording",
         done: "Stopped page recording",
       },
-      readSkillFile: { running: "Reading Skill file", done: "Read Skill file" },
-      listWorkspaceFiles: {
-        running: "Listing workspace files",
-        done: "Listed workspace files",
-      },
-      readWorkspaceFile: {
-        running: "Reading workspace file",
-        done: "Read workspace file",
-      },
-      writeWorkspaceFile: {
-        running: "Writing workspace file",
-        done: "Wrote workspace file",
-      },
-      patchWorkspaceFile: {
-        running: "Editing workspace file",
-        done: "Edited workspace file",
-      },
-      deleteWorkspaceFile: {
-        running: "Deleting workspace file",
-        done: "Deleted workspace file",
-      },
-      searchWorkspaceFiles: {
-        running: "Searching workspace files",
-        done: "Searched workspace files",
-      },
-      listMemory: { running: "Listing memory", done: "Listed memory" },
-      addMemory: { running: "Adding memory", done: "Added memory" },
-      updateMemory: { running: "Updating memory", done: "Updated memory" },
-      removeMemory: { running: "Removing memory", done: "Removed memory" },
-      listUserProfile: {
-        running: "Listing user profile",
-        done: "Listed user profile",
-      },
-      addUserProfileNote: {
-        running: "Adding user profile note",
-        done: "Added user profile note",
-      },
-      updateUserProfileNote: {
-        running: "Updating user profile note",
-        done: "Updated user profile note",
-      },
-      removeUserProfileNote: {
-        running: "Removing user profile note",
-        done: "Removed user profile note",
-      },
-      searchChatHistory: {
-        running: "Searching chat history",
-        done: "Searched chat history",
-      },
-      readChatThread: {
-        running: "Reading chat thread",
-        done: "Read chat thread",
-      },
-      deleteChatThread: {
-        running: "Deleting chat thread",
-        done: "Deleted chat thread",
-      },
       startSubAgent: {
         running: "Starting sub-agent",
         done: "Started sub-agent",
@@ -486,10 +367,6 @@ export const enUS = {
       getSubAgentStatus: {
         running: "Checking sub-agent",
         done: "Checked sub-agent",
-      },
-      listLocalExecutionBridges: {
-        running: "Listing execution bridges",
-        done: "Listed execution bridges",
       },
       startLocalExecutionBridge: {
         running: "Starting local command",
@@ -502,22 +379,6 @@ export const enUS = {
       cancelLocalExecutionBridge: {
         running: "Canceling local command",
         done: "Canceled local command",
-      },
-      addLocalExecutionBridge: {
-        running: "Adding execution bridge",
-        done: "Added execution bridge",
-      },
-      updateLocalExecutionBridge: {
-        running: "Updating execution bridge",
-        done: "Updated execution bridge",
-      },
-      testLocalExecutionBridge: {
-        running: "Testing execution bridge",
-        done: "Tested execution bridge",
-      },
-      deleteLocalExecutionBridge: {
-        running: "Deleting execution bridge",
-        done: "Deleted execution bridge",
       },
     },
   },

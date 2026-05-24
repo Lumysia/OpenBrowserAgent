@@ -21,6 +21,22 @@ const MEMORY_PATH = {
   user: WORKSPACE_FILE_PATH.user,
 } as const;
 
+export function manageMemory(
+  workspace: AgentWorkspace | undefined,
+  input: Record<string, unknown>,
+) {
+  const scope =
+    String(input.scope || input.kind || "memory") === "user"
+      ? "user"
+      : "memory";
+  const operation = String(input.operation || "list");
+  if (operation === "list") return listEntries(workspace, scope, input);
+  if (operation === "add") return addEntry(workspace, scope, input);
+  if (operation === "update") return updateEntry(workspace, scope, input);
+  if (operation === "remove") return removeEntry(workspace, scope, input);
+  return { error: "Unknown memory operation", operation, scope };
+}
+
 export function listMemory(
   workspace: AgentWorkspace | undefined,
   input: Record<string, unknown> = {},

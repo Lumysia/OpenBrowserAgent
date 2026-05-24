@@ -199,8 +199,53 @@ function prunedToolText(content: string) {
     contextPruned: true,
     originalChars: content.length,
     preview: content.slice(0, CONTEXT_PRUNED_PREVIEW_CHARS),
+    preserved: preservePrunedToolFields(content),
     note: "Older tool output was pruned from this request. Re-run or read the relevant tool data again if exact raw output is needed.",
   });
+}
+
+function preservePrunedToolFields(content: string) {
+  const parsed = parseJsonObject(content);
+  if (!parsed) return undefined;
+  const tools = Array.isArray(parsed.tools)
+    ? parsed.tools
+        .map((tool) => {
+          const object = tool && typeof tool === "object" ? tool : undefined;
+          if (!object) return undefined;
+          const record = object as Record<string, unknown>;
+          return {
+            name: record.name,
+            category: record.category,
+            available: record.available,
+            unavailableReason: record.unavailableReason,
+          };
+        })
+        .filter(Boolean)
+    : undefined;
+  const preserved = {
+    success: parsed.success,
+    operation: parsed.operation,
+    categories: parsed.categories,
+    summary: parsed.summary,
+    loadedToolNames: parsed.loadedToolNames,
+    unavailableMatches: parsed.unavailableMatches,
+    unknownNames: parsed.unknownNames,
+    tools,
+  };
+  return Object.fromEntries(
+    Object.entries(preserved).filter(([, value]) => value !== undefined),
+  );
+}
+
+function parseJsonObject(content: string): Record<string, unknown> | undefined {
+  try {
+    const parsed = JSON.parse(content);
+    return parsed && typeof parsed === "object"
+      ? (parsed as Record<string, unknown>)
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function withReport<T>(

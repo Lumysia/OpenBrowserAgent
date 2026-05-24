@@ -60,6 +60,51 @@ export async function listLocalExecutionBridges() {
   };
 }
 
+export function manageLocalExecutionBridges(input: Record<string, unknown>) {
+  const operation = stringValue(input.operation || "list");
+  if (operation === "list") return listLocalExecutionBridges();
+  if (operation === "status") return getLocalExecutionBridgeConfigStatus();
+  if (operation === "add") return addLocalExecutionBridge(input);
+  if (operation === "update") return updateLocalExecutionBridge(input);
+  if (operation === "test") return testLocalExecutionBridgeConfig(input);
+  if (operation === "delete") return deleteLocalExecutionBridge(input);
+  return {
+    success: false,
+    error: "Unknown execution bridge operation",
+    operation,
+  };
+}
+
+export async function getLocalExecutionBridgeConfigStatus() {
+  const bridges = normalizeLocalExecutionBridges(
+    await storage.localExecutionBridges.get(),
+  );
+  const taskStates = [...tasks.values()].reduce<Record<string, number>>(
+    (counts, task) => {
+      counts[task.state] = (counts[task.state] || 0) + 1;
+      return counts;
+    },
+    {},
+  );
+  return {
+    success: true,
+    configured: bridges.length > 0,
+    bridgeCount: bridges.length,
+    usable: bridges.some((bridge) => isLocalExecutionBridgeUsable(bridge)),
+    usableBridgeCount: bridges.filter((bridge) =>
+      isLocalExecutionBridgeUsable(bridge),
+    ).length,
+    bridges: bridges.map((bridge) => safeLocalExecutionBridge(bridge)),
+    activeTaskCount: [...tasks.values()].filter(
+      (task) => task.state === "running",
+    ).length,
+    taskStates,
+    guidance: bridges.length
+      ? "Use operation=test with a bridgeId to verify native messaging connectivity, or startLocalExecutionBridge to run a command."
+      : "No local execution bridge is configured. Add one before trying to run local commands.",
+  };
+}
+
 export async function addLocalExecutionBridge(input: Record<string, unknown>) {
   const now = Date.now();
   const inputSecret = stringValue(input.secret);
@@ -177,6 +222,7 @@ export async function testLocalExecutionBridgeConfig(
     return { success: false, error: "Missing execution bridge ID" };
   let result: Record<string, unknown> | undefined;
   let testError = "";
+  let testDiagnostic: Record<string, unknown> | undefined;
   const bridges = normalizeLocalExecutionBridges(
     await storage.localExecutionBridges.get(),
   );
@@ -196,13 +242,19 @@ export async function testLocalExecutionBridgeConfig(
           return next;
         } catch (error) {
           testError = errorMessage(error);
+          const failure = diagnoseLocalExecutionBridgeTestFailure(
+            bridge,
+            testError,
+          );
           const next = {
             ...bridge,
             lastTestedAt: undefined,
-            lastTestError: testError,
+            lastTestError: failure.message,
             updatedAt: Date.now(),
           };
           result = safeLocalExecutionBridge(next);
+          testError = failure.message;
+          testDiagnostic = failure;
           return next;
         }
       }),
@@ -213,7 +265,9 @@ export async function testLocalExecutionBridgeConfig(
     ? {
         success: false,
         error: testError,
-        diagnostic: diagnoseLocalExecutionBridgeError(testError),
+        errorCode: testDiagnostic?.errorCode,
+        diagnostic:
+          testDiagnostic || diagnoseLocalExecutionBridgeError(testError),
         bridge: result,
       }
     : { success: true, bridge: result };
@@ -492,6 +546,9 @@ function safeLocalExecutionBridge(
   bridge: LocalExecutionBridgeConfig,
   includeSecret = false,
 ) {
+  const tested = isLocalExecutionBridgeTested(bridge);
+  const shellConfigConfigured = !!bridge.bridgeKey || tested;
+  const currentDiagnostic = currentLocalExecutionBridgeDiagnostic(bridge);
   return {
     id: bridge.id,
     name: bridge.name,
@@ -499,8 +556,13 @@ function safeLocalExecutionBridge(
     hostName: bridge.hostName,
     hostAddress: bridge.hostAddress,
     bridgeKey: bridge.bridgeKey,
-    tested: isLocalExecutionBridgeTested(bridge),
+    exists: true,
+    nativeHostConfigured: !!bridge.hostName,
+    shellConfigConfigured,
+    tested,
+    usable: isLocalExecutionBridgeUsable(bridge),
     lastTestError: bridge.lastTestError || "",
+    ...(currentDiagnostic ? { currentDiagnostic } : {}),
     defaultCwd: bridge.defaultCwd,
     timeoutMs: bridge.timeoutMs,
     ...(includeSecret ? { secret: bridge.secret } : {}),
@@ -542,6 +604,38 @@ function isLocalExecutionBridgeTested(bridge: LocalExecutionBridgeConfig) {
   return !!bridge.lastTestedAt && !bridge.lastTestError;
 }
 
+function isLocalExecutionBridgeUsable(bridge: LocalExecutionBridgeConfig) {
+  return !!bridge.hostName && isLocalExecutionBridgeTested(bridge);
+}
+
+function currentLocalExecutionBridgeDiagnostic(
+  bridge: LocalExecutionBridgeConfig,
+) {
+  if (!bridge.hostName) {
+    return {
+      errorCode: "MISSING_NATIVE_HOST",
+      message: "Native host name is missing.",
+      nextStep: "Update this bridge with the Native Messaging host name.",
+    };
+  }
+  if (!bridge.bridgeKey && !isLocalExecutionBridgeTested(bridge)) {
+    return {
+      errorCode: "MISSING_SHELL_CONFIG",
+      message:
+        "Bridge exists, but bridgeKey is empty and the bridge has not passed a test.",
+      nextStep:
+        "Complete local execution bridge setup or update this bridge with a valid bridgeKey, then test again.",
+    };
+  }
+  if (bridge.lastTestError) {
+    return diagnoseLocalExecutionBridgeTestFailure(
+      bridge,
+      bridge.lastTestError,
+    );
+  }
+  return undefined;
+}
+
 function pushEvent(
   task: LocalExecutionBridgeTask,
   event: Record<string, unknown>,
@@ -576,6 +670,18 @@ function errorMessage(error: unknown) {
 
 function diagnoseLocalExecutionBridgeError(error: string) {
   const normalized = error.toLowerCase();
+  if (normalized.includes("unknown shell config")) {
+    return {
+      errorCode: "MISSING_SHELL_CONFIG",
+      reason:
+        "The Native Messaging host is reachable, but it could not find the requested shell configuration.",
+      nextSteps: [
+        "Complete local execution bridge setup and copy the shell config key into bridgeKey.",
+        "If setup already ran, update this bridge with the exact bridgeKey printed by the installer.",
+        "Run manageLocalExecutionBridges operation=test again after updating bridgeKey.",
+      ],
+    };
+  }
   if (
     normalized.includes("native messaging host not found") ||
     normalized.includes("specified native messaging host not found") ||
@@ -602,4 +708,40 @@ function diagnoseLocalExecutionBridgeError(error: string) {
     };
   }
   return undefined;
+}
+
+function diagnoseLocalExecutionBridgeTestFailure(
+  bridge: LocalExecutionBridgeConfig,
+  error: string,
+) {
+  const normalized = error.toLowerCase();
+  if (normalized.includes("unknown shell config")) {
+    const shellKey = bridge.bridgeKey || bridge.id;
+    return {
+      errorCode: "MISSING_SHELL_CONFIG",
+      message: bridge.bridgeKey
+        ? `Native host is reachable, but shell config "${shellKey}" was not found.`
+        : `Bridge exists, but bridgeKey is empty. The native host tried fallback shell config "${shellKey}" and did not find it.`,
+      nextStep:
+        "Complete local execution bridge setup or update this bridge with a valid bridgeKey, then test again.",
+      phases: {
+        bridgeConfig: "ok",
+        nativeHost: "ok",
+        shellConfig: "missing",
+        commandExecution: "skipped",
+      },
+    };
+  }
+  return {
+    errorCode: "BRIDGE_TEST_FAILED",
+    message: error,
+    nextStep:
+      "Review the diagnostic reason and local execution bridge setup, then test again.",
+    phases: {
+      bridgeConfig: bridge.hostName ? "ok" : "missing",
+      nativeHost: "unknown",
+      shellConfig: bridge.bridgeKey ? "unknown" : "missing",
+      commandExecution: "skipped",
+    },
+  };
 }

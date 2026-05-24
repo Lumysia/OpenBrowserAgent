@@ -15,7 +15,8 @@ export function toolReferences(
 ) {
   const references: ToolReference[] = [];
   if (
-    name === BROWSER_TOOL_NAME.openNewTabWithURL &&
+    name === BROWSER_TOOL_NAME.manageTabs &&
+    input.operation === "open" &&
     output.tab &&
     typeof output.tab === "object"
   ) {
@@ -39,7 +40,8 @@ export function toolReferences(
       }));
   }
   if (
-    name === BROWSER_TOOL_NAME.openSearchTab &&
+    name === BROWSER_TOOL_NAME.manageTabs &&
+    input.operation === "search" &&
     typeof input.query === "string"
   )
     references.push({ title: input.query, icon: <Search size={14} /> });

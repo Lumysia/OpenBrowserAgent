@@ -154,7 +154,7 @@ function assistantImportParts(
   for (const call of toolCalls) {
     const record = recordValue(call);
     const fn = recordValue(record.function);
-    const name = stringValue(fn.name) || BROWSER_TOOL_NAME.openNewTabWithURL;
+    const name = stringValue(fn.name) || BROWSER_TOOL_NAME.manageTabs;
     const part: ChatPart = {
       id: stringValue(record.id) || crypto.randomUUID(),
       type: toolPartType(name),

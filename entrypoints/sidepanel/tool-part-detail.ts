@@ -51,7 +51,8 @@ export function toolDisplay(
     if (name === BROWSER_TOOL_NAME.startSubAgent)
       return subAgentTitle(base, output, toolText, t);
     if (
-      name === BROWSER_TOOL_NAME.groupTabs &&
+      name === BROWSER_TOOL_NAME.manageTabs &&
+      input.operation === "group" &&
       state === CHAT_PART_STATE.outputAvailable &&
       typeof input.title === "string"
     )
@@ -86,10 +87,7 @@ export function toolDisplay(
       name === BROWSER_TOOL_NAME.startLocalExecutionBridge ||
       name === BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus ||
       name === BROWSER_TOOL_NAME.cancelLocalExecutionBridge ||
-      name === BROWSER_TOOL_NAME.addLocalExecutionBridge ||
-      name === BROWSER_TOOL_NAME.updateLocalExecutionBridge ||
-      name === BROWSER_TOOL_NAME.testLocalExecutionBridge ||
-      name === BROWSER_TOOL_NAME.deleteLocalExecutionBridge
+      name === BROWSER_TOOL_NAME.manageLocalExecutionBridges
     )
       return compactJoin([
         stringValue(
@@ -103,10 +101,12 @@ export function toolDisplay(
         stringValue(output.error),
       ]);
     if (
-      name === BROWSER_TOOL_NAME.listLocalExecutionBridges &&
-      Array.isArray(output.agents)
+      name === BROWSER_TOOL_NAME.manageLocalExecutionBridges &&
+      Array.isArray(output.bridges)
     )
-      return `${output.agents.length} execution bridges`;
+      return `${(output.bridges as unknown[]).length} execution bridges`;
+    if (name === BROWSER_TOOL_NAME.manageLocalExecutionBridges)
+      return stringValue(input.operation || "list");
     if (name === BROWSER_TOOL_NAME.getCurrentTab)
       return compactJoin([
         idLabel("Tab", output.tabId),
@@ -121,55 +121,64 @@ export function toolDisplay(
         stringValue(output.encoding),
         rangeLabel(output),
       ]);
-    if (name === BROWSER_TOOL_NAME.listSkills && Array.isArray(output.skills))
-      return formatToolMessage(toolFound, { count: output.skills.length });
+    if (name === BROWSER_TOOL_NAME.manageSkills && Array.isArray(output.skills))
+      return formatToolMessage(toolFound, {
+        count: (output.skills as unknown[]).length,
+      });
     if (
-      name === BROWSER_TOOL_NAME.loadBrowserTools &&
+      name === BROWSER_TOOL_NAME.loadTools &&
       Array.isArray(output.loadedToolNames)
     )
       return compactJoin([
-        formatToolMessage(toolFound, { count: output.loadedToolNames.length }),
-        output.loadedToolNames.map(String).join(", "),
+        formatToolMessage(toolFound, {
+          count: (output.loadedToolNames as unknown[]).length,
+        }),
+        (output.loadedToolNames as unknown[]).map(String).join(", "),
       ]);
-    if (name === BROWSER_TOOL_NAME.createSkill)
+    if (name === BROWSER_TOOL_NAME.manageSkills && input.operation === "create")
       return stringValue(output.name) || stringValue(input.name);
-    if (name === BROWSER_TOOL_NAME.readSkill)
+    if (name === BROWSER_TOOL_NAME.manageSkills && input.operation === "read")
       return stringValue(output.name) || stringValue(input.skillId);
-    if (name === BROWSER_TOOL_NAME.readSkillFile)
-      return compactJoin([
-        stringValue(output.name) || stringValue(input.skillId),
-        stringValue(output.path) || stringValue(input.path),
-      ]);
     if (
-      name === BROWSER_TOOL_NAME.updateSkillFile ||
-      name === BROWSER_TOOL_NAME.patchSkillFile
+      name === BROWSER_TOOL_NAME.manageSkills &&
+      input.operation === "readFile"
     )
       return compactJoin([
         stringValue(output.name) || stringValue(input.skillId),
         stringValue(output.path) || stringValue(input.path),
       ]);
     if (
-      name === BROWSER_TOOL_NAME.listWorkspaceFiles &&
+      name === BROWSER_TOOL_NAME.manageSkills &&
+      (input.operation === "updateFile" || input.operation === "patchFile")
+    )
+      return compactJoin([
+        stringValue(output.name) || stringValue(input.skillId),
+        stringValue(output.path) || stringValue(input.path),
+      ]);
+    if (
+      name === BROWSER_TOOL_NAME.workspaceFiles &&
+      input.operation === "list" &&
       Array.isArray(output.files)
     )
-      return `${output.files.length} files`;
+      return `${(output.files as unknown[]).length} files`;
     if (
-      name === BROWSER_TOOL_NAME.readWorkspaceFile ||
-      name === BROWSER_TOOL_NAME.writeWorkspaceFile ||
-      name === BROWSER_TOOL_NAME.patchWorkspaceFile ||
-      name === BROWSER_TOOL_NAME.deleteWorkspaceFile
+      name === BROWSER_TOOL_NAME.workspaceFiles &&
+      ["read", "write", "patch", "delete"].includes(
+        stringValue(input.operation),
+      )
     )
       return stringValue(output.path) || stringValue(input.path);
     if (
-      name === BROWSER_TOOL_NAME.searchWorkspaceFiles &&
+      name === BROWSER_TOOL_NAME.workspaceFiles &&
+      input.operation === "search" &&
       Array.isArray(output.results)
     )
       return compactJoin([
         stringValue(output.query) || stringValue(input.query),
-        `${output.results.length} matches`,
+        `${(output.results as unknown[]).length} matches`,
       ]);
     if (isMemoryToolName(name) && Array.isArray(output.entries))
-      return `${output.entries.length} entries`;
+      return `${(output.entries as unknown[]).length} entries`;
     if (isMemoryToolName(name))
       return compactJoin([
         stringValue(
@@ -178,27 +187,28 @@ export function toolDisplay(
         stringValue(output.path),
       ]);
     if (
-      name === BROWSER_TOOL_NAME.searchChatHistory &&
+      name === BROWSER_TOOL_NAME.manageChatHistory &&
+      input.operation === "search" &&
       Array.isArray(output.results)
     )
       return compactJoin([
         stringValue(output.query) || stringValue(input.query),
-        `${output.results.length} chats`,
+        `${(output.results as unknown[]).length} chats`,
       ]);
     if (
-      name === BROWSER_TOOL_NAME.readChatThread ||
-      name === BROWSER_TOOL_NAME.deleteChatThread
+      name === BROWSER_TOOL_NAME.manageChatHistory &&
+      (input.operation === "read" || input.operation === "delete")
     )
       return stringValue(output.title) || stringValue(input.chatId);
     if (
-      name === BROWSER_TOOL_NAME.listMcpServers &&
+      name === BROWSER_TOOL_NAME.manageMcpServers &&
+      input.operation === "list" &&
       Array.isArray(output.servers)
     )
-      return `${output.servers.length} MCP`;
+      return `${(output.servers as unknown[]).length} MCP`;
     if (
-      name === BROWSER_TOOL_NAME.addMcpServer ||
-      name === BROWSER_TOOL_NAME.updateMcpServer ||
-      name === BROWSER_TOOL_NAME.deleteMcpServer
+      name === BROWSER_TOOL_NAME.manageMcpServers &&
+      ["add", "update", "delete", "test"].includes(stringValue(input.operation))
     )
       return compactJoin([
         stringValue(
@@ -210,34 +220,17 @@ export function toolDisplay(
           (output.server as Record<string, unknown> | undefined)?.url,
         ) || stringValue(input.url),
       ]);
-    if (name === BROWSER_TOOL_NAME.getAllTabs && Array.isArray(output.tabs))
-      return formatToolMessage(toolFound, { count: output.tabs.length });
-    if (name === BROWSER_TOOL_NAME.getAllTabs && Array.isArray(outputValue))
-      return formatToolMessage(toolFound, { count: outputValue.length });
-    if (name === BROWSER_TOOL_NAME.navigateTab)
-      return compactJoin([
-        stringValue(
-          output.type || input.type || (input.url ? "url" : "reload"),
-        ),
-        shortUrl(input.url),
-        idLabel("Tab", output.tabId || input.tabId),
-      ]);
-    if (name === BROWSER_TOOL_NAME.reloadTab)
-      return idLabel("Tab", output.tabId || input.tabId);
+    if (name === BROWSER_TOOL_NAME.manageTabs)
+      return manageTabsDetail(input, output, outputValue, toolFound);
     if (name === BROWSER_TOOL_NAME.captureVisibleTab)
       return compactJoin([
         idLabel("Tab", output.tabId || input.tabId),
         stringValue(output.format || input.format || "png"),
       ]);
-    if (name === BROWSER_TOOL_NAME.waitForText)
-      return compactJoin([
-        stringValue(output.text),
-        idLabel("Tab", output.tabId || input.tabId),
-      ]);
     if (name === BROWSER_TOOL_NAME.mutatePage)
       return compactJoin([
         Array.isArray(input.operations)
-          ? `${input.operations.length} mutations`
+          ? `${(input.operations as unknown[]).length} mutations`
           : stringValue(input.operation || output.operation),
         idLabel("Tab", output.tabId || input.tabId),
         stringValue(input.value || input.text || input.attribute),
@@ -279,30 +272,45 @@ function fallbackToolDetail(
   input: Record<string, unknown>,
   output: Record<string, unknown>,
 ) {
-  if (name === BROWSER_TOOL_NAME.openNewTabWithURL)
+  if (name === BROWSER_TOOL_NAME.wait)
+    return stringValue(output.milliseconds || input.milliseconds || input.ms);
+  if (name === BROWSER_TOOL_NAME.downloadAllImagesInTab)
+    return idLabel("Tab", input.tabId);
+  if (name === BROWSER_TOOL_NAME.downloadTabToMarkdown)
+    return idLabel("Tab", input.tabId);
+  if (name.startsWith("cdp")) return cdpToolDetail(name, input, output);
+  return "";
+}
+
+function manageTabsDetail(
+  input: Record<string, unknown>,
+  output: Record<string, unknown>,
+  outputValue: unknown,
+  toolFound: string | undefined,
+) {
+  const operation = stringValue(input.operation || output.operation) || "list";
+  if (operation === "list" && Array.isArray(output.tabs))
+    return formatToolMessage(toolFound, { count: output.tabs.length });
+  if (operation === "list" && Array.isArray(outputValue))
+    return formatToolMessage(toolFound, { count: outputValue.length });
+  if (operation === "open")
     return shortUrl(
       output.tab && typeof output.tab === "object"
         ? (output.tab as Record<string, unknown>).url
         : input.url,
     );
-  if (name === BROWSER_TOOL_NAME.openSearchTab) return stringValue(input.query);
-  if (name === BROWSER_TOOL_NAME.wait)
-    return stringValue(output.milliseconds || input.milliseconds || input.ms);
-  if (name === BROWSER_TOOL_NAME.goToTab) return idLabel("Tab", input.tabId);
-  if (name === BROWSER_TOOL_NAME.waitTabLoadFinished)
-    return idLabel("Tab", input.tabId);
-  if (name === BROWSER_TOOL_NAME.scrollToBottom)
-    return idLabel("Tab", input.tabId);
-  if (name === BROWSER_TOOL_NAME.closeTab)
+  if (operation === "search") return stringValue(input.query);
+  if (operation === "focus") return idLabel("Tab", output.tabId || input.tabId);
+  if (operation === "close")
     return arrayLabel("Tabs", input.tabIds || input.tabId);
-  if (name === BROWSER_TOOL_NAME.downloadAllImagesInTab)
-    return idLabel("Tab", input.tabId);
-  if (name === BROWSER_TOOL_NAME.downloadTabToMarkdown)
-    return idLabel("Tab", input.tabId);
-  if (name === BROWSER_TOOL_NAME.groupTabs)
-    return arrayLabel("Tabs", input.tabIds);
-  if (name.startsWith("cdp")) return cdpToolDetail(name, input, output);
-  return "";
+  if (operation === "group") return arrayLabel("Tabs", input.tabIds);
+  if (operation === "navigate")
+    return compactJoin([
+      stringValue(output.type || input.type || (input.url ? "url" : "reload")),
+      shortUrl(input.url),
+      idLabel("Tab", output.tabId || input.tabId),
+    ]);
+  return operation;
 }
 
 function pageInspectionDetail(

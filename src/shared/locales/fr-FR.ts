@@ -244,28 +244,22 @@ export const frFR: LocaleMessages = {
     copyImage: "Copier l’image",
     copyPrompt: "Copier les instructions",
     tool: {
-      question: { running: "Question en cours", done: "Question répondue" },
-      openNewTabWithURL: {
-        running: "Ouverture d'une nouvelle page",
-        done: "Nouvelle page ouverte",
+      manageTabs: {
+        running: "Gestion des onglets",
+        done: "Onglets gérés",
+        found: "{count} onglets ouverts trouvés",
       },
-      inspectPage: {
-        running: "Inspection de la page",
-        done: "Page inspectée",
-        found: "{count} éléments trouvés",
+      cdpInput: {
+        running: "Envoi de l'entrée CDP",
+        done: "Entrée CDP envoyée",
       },
-      waitTabLoadFinished: {
-        running: "Attente du chargement",
-        done: "Page chargée",
+      cdpPage: {
+        running: "Contrôle de la page CDP",
+        done: "Page CDP contrôlée",
       },
-      mutatePage: { running: "Modification de la page", done: "Page modifiée" },
-      cdpMouseActionByAiID: {
-        running: "Interaction avec l'élément de page",
-        done: "Élément de page manipulé",
-      },
-      groupTabs: {
-        running: "Regroupement des onglets",
-        done: "Onglets regroupés",
+      cdpDiagnostics: {
+        running: "Lecture des diagnostics CDP",
+        done: "Diagnostics CDP lus",
       },
       wait: { running: "Attente", done: "Attente terminée" },
       getCurrentTime: {
@@ -273,85 +267,54 @@ export const frFR: LocaleMessages = {
         done: "Heure vérifiée",
       },
       getCurrentTab: {
-        running: "Récupération de la page actuelle",
-        done: "Page actuelle récupérée",
-      },
-      getAllTabs: {
-        running: "Vérification des onglets ouverts",
-        done: "Onglets ouverts vérifiés",
-        found: "{count} onglets ouverts trouvés",
-      },
-      goToTab: { running: "Changement d'onglet", done: "Onglet changé" },
-      openSearchTab: {
-        running: "Recherche",
-        done: "Onglet de recherche ouvert",
-      },
-      downloadAllImagesInTab: {
-        running: "Téléchargement des images",
-        done: "Images téléchargées",
-      },
-      downloadTabToMarkdown: {
-        running: "Téléchargement du Markdown",
-        done: "Markdown téléchargé",
-      },
-      closeTab: { running: "Fermeture de l'onglet", done: "Onglet fermé" },
-      reloadTab: {
-        running: "Rechargement de l'onglet",
-        done: "Onglet rechargé",
-      },
-      navigateTab: {
-        running: "Navigation dans l'onglet",
-        done: "Onglet navigué",
+        running: "Lecture de l'onglet actuel",
+        done: "Onglet actuel lu",
       },
       captureVisibleTab: {
         running: "Capture de l'onglet",
         done: "Onglet capturé",
       },
-      waitForText: { running: "Attente du texte", done: "Texte trouvé" },
-      scrollToBottom: {
-        running: "Défilement de la page",
-        done: "Page défilée",
+      downloadAllImagesInTab: {
+        running: "Téléchargement des images",
+        done: "Images téléchargées",
       },
-      listSkills: {
-        running: "Liste des compétences",
-        done: "Compétences listées",
-        found: "{count} trouvées",
+      question: { running: "Question en cours", done: "Question répondue" },
+      loadTools: {
+        running: "Chargement des outils",
+        done: "Outils chargés",
+        found: "Loaded {count} tools",
       },
-      createSkill: {
-        running: "Création de la compétence",
-        done: "Compétence créée",
+      manageSkills: {
+        running: "Gestion des compétences",
+        done: "Compétences gérées",
+        found: "Found {count}",
       },
-      readSkill: {
-        running: "Lecture de la compétence",
-        done: "Compétence lue",
+      workspaceFiles: {
+        running: "Traitement des fichiers workspace",
+        done: "Fichiers workspace traités",
       },
-      updateSkillFile: {
-        running: "Mise à jour de la compétence",
-        done: "Compétence mise à jour",
+      manageMemory: { running: "Gestion de la mémoire", done: "Mémoire gérée" },
+      manageChatHistory: {
+        running: "Lecture de l'historique",
+        done: "Historique lu",
       },
-      patchSkillFile: {
-        running: "Correction de la compétence",
-        done: "Compétence corrigée",
+      manageMcpServers: {
+        running: "Gestion des serveurs MCP",
+        done: "Serveurs MCP gérés",
       },
-      listMcpServers: {
-        running: "Liste des serveurs MCP",
-        done: "Serveurs MCP listés",
+      manageLocalExecutionBridges: {
+        running: "Gestion des ponts d'exécution",
+        done: "Ponts d'exécution gérés",
       },
-      addMcpServer: {
-        running: "Ajout du serveur MCP",
-        done: "Serveur MCP ajouté",
+      inspectPage: {
+        running: "Inspection de la page",
+        done: "Page inspectée",
+        found: "{count} éléments trouvés",
       },
-      updateMcpServer: {
-        running: "Mise à jour du serveur MCP",
-        done: "Serveur MCP mis à jour",
-      },
-      testMcpServer: {
-        running: "Test du serveur MCP",
-        done: "Serveur MCP testé",
-      },
-      deleteMcpServer: {
-        running: "Suppression du serveur MCP",
-        done: "Serveur MCP supprimé",
+      mutatePage: { running: "Modification de la page", done: "Page modifiée" },
+      downloadTabToMarkdown: {
+        running: "Téléchargement du Markdown",
+        done: "Markdown téléchargé",
       },
       generateImage: {
         running: "Génération de l’image",
@@ -361,53 +324,6 @@ export const frFR: LocaleMessages = {
       readUploadedAttachment: {
         running: "Lecture de la pièce jointe",
         done: "Pièce jointe lue",
-      },
-      loadBrowserTools: {
-        running: "Chargement des outils du navigateur",
-        done: "Outils du navigateur chargés",
-        found: "{count} outils chargés",
-      },
-      cdpClickAt: {
-        running: "Clic sur les coordonnées",
-        done: "Coordonnées cliquées",
-      },
-      cdpPressKey: { running: "Appui sur une touche", done: "Touche appuyée" },
-      cdpTypeText: { running: "Saisie du texte", done: "Texte saisi" },
-      cdpFill: { running: "Remplissage du champ", done: "Champ rempli" },
-      cdpFillForm: {
-        running: "Remplissage du formulaire",
-        done: "Formulaire rempli",
-      },
-      cdpDrag: {
-        running: "Glissement sur la page",
-        done: "Glissement effectué",
-      },
-      cdpHandleDialog: {
-        running: "Traitement de la boîte de dialogue",
-        done: "Boîte de dialogue traitée",
-      },
-      cdpListPages: {
-        running: "Vérification des pages",
-        done: "Pages vérifiées",
-      },
-      cdpNewPage: { running: "Ouverture de la page", done: "Page ouverte" },
-      cdpNavigatePage: {
-        running: "Navigation dans la page",
-        done: "Navigation effectuée",
-      },
-      cdpSelectPage: { running: "Focus sur la page", done: "Page focalisée" },
-      cdpClosePage: { running: "Fermeture de la page", done: "Page fermée" },
-      cdpWaitFor: {
-        running: "Attente du texte de page",
-        done: "Texte de page trouvé",
-      },
-      cdpResizePage: {
-        running: "Redimensionnement de la page",
-        done: "Page redimensionnée",
-      },
-      cdpEmulate: {
-        running: "Application de l'émulation",
-        done: "Émulation appliquée",
       },
       cdpEvaluateScript: {
         running: "Exécution du script de page",
@@ -420,26 +336,6 @@ export const frFR: LocaleMessages = {
       cdpTakeScreenshot: {
         running: "Capture d'écran",
         done: "Capture effectuée",
-      },
-      cdpTakeSnapshot: {
-        running: "Capture de l'instantané de page",
-        done: "Instantané de page capturé",
-      },
-      cdpListConsoleMessages: {
-        running: "Lecture des messages console",
-        done: "Messages console lus",
-      },
-      cdpGetConsoleMessage: {
-        running: "Lecture du message console",
-        done: "Message console lu",
-      },
-      cdpListNetworkRequests: {
-        running: "Lecture des requêtes réseau",
-        done: "Requêtes réseau lues",
-      },
-      cdpGetNetworkRequest: {
-        running: "Lecture de la requête réseau",
-        done: "Requête réseau lue",
       },
       cdpPerformanceStartTrace: {
         running: "Démarrage de la trace de performance",
@@ -481,72 +377,6 @@ export const frFR: LocaleMessages = {
         running: "Arrêt de l'enregistrement",
         done: "Enregistrement arrêté",
       },
-      readSkillFile: {
-        running: "Lecture du fichier de compétence",
-        done: "Fichier de compétence lu",
-      },
-      listWorkspaceFiles: {
-        running: "Liste des fichiers d’espace de travail",
-        done: "Fichiers d’espace de travail listés",
-      },
-      readWorkspaceFile: {
-        running: "Lecture du fichier d’espace de travail",
-        done: "Fichier d’espace de travail lu",
-      },
-      writeWorkspaceFile: {
-        running: "Écriture du fichier d’espace de travail",
-        done: "Fichier d’espace de travail écrit",
-      },
-      patchWorkspaceFile: {
-        running: "Modification du fichier d’espace de travail",
-        done: "Fichier d’espace de travail modifié",
-      },
-      deleteWorkspaceFile: {
-        running: "Suppression du fichier d’espace de travail",
-        done: "Fichier d’espace de travail supprimé",
-      },
-      searchWorkspaceFiles: {
-        running: "Recherche dans les fichiers d’espace de travail",
-        done: "Recherche terminée dans l’espace de travail",
-      },
-      listMemory: { running: "Liste de la mémoire", done: "Mémoire listée" },
-      addMemory: { running: "Ajout à la mémoire", done: "Mémoire ajoutée" },
-      updateMemory: {
-        running: "Mise à jour de la mémoire",
-        done: "Mémoire mise à jour",
-      },
-      removeMemory: {
-        running: "Suppression de la mémoire",
-        done: "Mémoire supprimée",
-      },
-      listUserProfile: {
-        running: "Liste du profil utilisateur",
-        done: "Profil utilisateur listé",
-      },
-      addUserProfileNote: {
-        running: "Ajout d’une note de profil",
-        done: "Note de profil ajoutée",
-      },
-      updateUserProfileNote: {
-        running: "Mise à jour d’une note de profil",
-        done: "Note de profil mise à jour",
-      },
-      removeUserProfileNote: {
-        running: "Suppression d’une note de profil",
-        done: "Note de profil supprimée",
-      },
-      searchChatHistory: {
-        running: "Recherche dans l’historique",
-        done: "Historique recherché",
-      },
-      readChatThread: {
-        running: "Lecture du fil de discussion",
-        done: "Fil de discussion lu",
-      },
-      deleteChatThread: {
-        running: "Suppression du fil de discussion",
-        done: "Fil de discussion supprimé",
-      },
       startSubAgent: {
         running: "Démarrage du sous-agent",
         done: "Sous-agent démarré",
@@ -554,10 +384,6 @@ export const frFR: LocaleMessages = {
       getSubAgentStatus: {
         running: "Vérification du sous-agent",
         done: "Sous-agent vérifié",
-      },
-      listLocalExecutionBridges: {
-        running: "Liste des ponts d’exécution",
-        done: "Ponts d’exécution listés",
       },
       startLocalExecutionBridge: {
         running: "Démarrage de la commande locale",
@@ -570,22 +396,6 @@ export const frFR: LocaleMessages = {
       cancelLocalExecutionBridge: {
         running: "Annulation de la commande locale",
         done: "Commande locale annulée",
-      },
-      addLocalExecutionBridge: {
-        running: "Ajout du pont d’exécution",
-        done: "Pont d’exécution ajouté",
-      },
-      updateLocalExecutionBridge: {
-        running: "Mise à jour du pont d’exécution",
-        done: "Pont d’exécution mis à jour",
-      },
-      testLocalExecutionBridge: {
-        running: "Test du pont d’exécution",
-        done: "Pont d’exécution testé",
-      },
-      deleteLocalExecutionBridge: {
-        running: "Suppression du pont d’exécution",
-        done: "Pont d’exécution supprimé",
       },
     },
   },

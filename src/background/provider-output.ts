@@ -30,7 +30,11 @@ export function attachToolSources(
   if (!output || typeof output !== "object") return output;
   const record = output as Record<string, unknown>;
   const extracted = extractSourcesFromTool(toolName, input, record);
-  if (toolName === BROWSER_TOOL_NAME.groupTabs && currentSources.length)
+  if (
+    toolName === BROWSER_TOOL_NAME.manageTabs &&
+    input.operation === "group" &&
+    currentSources.length
+  )
     return withCitationContext(record, currentSources);
   if (!extracted.length) return output;
   const { added } = assignChatSources(currentSources, extracted);

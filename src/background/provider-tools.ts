@@ -1,6 +1,7 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 import { resolveAgent } from "../shared/agents";
 import { isVisionImageMimeType } from "../shared/attachments";
+import { areCdpToolsAvailable } from "../shared/runtime-capabilities";
 import {
   BINARY_STRING_CHUNK_SIZE,
   READ_ATTACHMENT_DEFAULT_LIMIT,
@@ -31,49 +32,22 @@ import {
 import { generateImage } from "./image-generation";
 import {
   getLocalExecutionBridgeStatus,
-  listLocalExecutionBridges,
   startLocalExecutionBridge,
   cancelLocalExecutionBridge,
-  addLocalExecutionBridge,
-  updateLocalExecutionBridge,
-  testLocalExecutionBridgeConfig,
-  deleteLocalExecutionBridge,
+  manageLocalExecutionBridges,
 } from "./local-execution-bridge-tools";
+import { manageMemory } from "./memory-tools";
 import {
-  addMemory,
-  addUserProfileNote,
-  listMemory,
-  listUserProfile,
-  removeMemory,
-  removeUserProfileNote,
-  updateMemory,
-  updateUserProfileNote,
-} from "./memory-tools";
-import {
-  addMcpServer,
-  deleteMcpServer,
   executeMcpTool,
   isMcpToolName,
-  listMcpServers,
+  manageMcpServers,
   mcpToolsForPrompt,
-  testMcpServer,
-  updateMcpServer,
 } from "./mcp-tools";
-import {
-  deleteChatThread,
-  readChatThread,
-  searchChatHistory,
-} from "./session-tools";
+import { manageChatHistory } from "./session-tools";
 import { safeExecuteBrowserTool } from "./tools";
-import { browserToolsForPrompt, deferredBrowserTools } from "./tool-schema";
-import {
-  deleteWorkspaceFile,
-  listWorkspaceFiles,
-  patchWorkspaceFile,
-  readWorkspaceFile,
-  searchWorkspaceFiles,
-  writeWorkspaceFile,
-} from "./workspace-tools";
+import { browserToolsForPrompt } from "./tool-schema";
+import { loadTools } from "./provider-tool-loader";
+import { workspaceFiles } from "./workspace-tools";
 
 export function toolsForCapabilities(
   capabilities: AgentCapabilities,
@@ -150,8 +124,12 @@ export function executeContextAwareTool({
   capabilities: AgentCapabilities;
   workspace?: AgentWorkspace;
 }) {
-  if (toolName === BROWSER_TOOL_NAME.loadBrowserTools)
-    return loadBrowserTools(input, capabilities);
+  if (toolName === BROWSER_TOOL_NAME.loadTools)
+    return loadTools(input, capabilities, {
+      hasSkills: availableSkills.length > 0,
+      hasWorkspace: !!workspace,
+      cdpToolsAvailable: areCdpToolsAvailable(),
+    });
   if (toolName === BROWSER_TOOL_NAME.startSubAgent)
     return startSubAgent(input, context);
   if (toolName === BROWSER_TOOL_NAME.getSubAgentStatus)
@@ -162,16 +140,8 @@ export function executeContextAwareTool({
     return getLocalExecutionBridgeStatus(input);
   if (toolName === BROWSER_TOOL_NAME.cancelLocalExecutionBridge)
     return cancelLocalExecutionBridge(input);
-  if (toolName === BROWSER_TOOL_NAME.listLocalExecutionBridges)
-    return listLocalExecutionBridges();
-  if (toolName === BROWSER_TOOL_NAME.addLocalExecutionBridge)
-    return addLocalExecutionBridge(input);
-  if (toolName === BROWSER_TOOL_NAME.updateLocalExecutionBridge)
-    return updateLocalExecutionBridge(input);
-  if (toolName === BROWSER_TOOL_NAME.testLocalExecutionBridge)
-    return testLocalExecutionBridgeConfig(input);
-  if (toolName === BROWSER_TOOL_NAME.deleteLocalExecutionBridge)
-    return deleteLocalExecutionBridge(input);
+  if (toolName === BROWSER_TOOL_NAME.manageLocalExecutionBridges)
+    return manageLocalExecutionBridges(input);
   if (
     toolName === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript &&
     !capabilities.javascriptExecution
@@ -182,59 +152,16 @@ export function executeContextAwareTool({
     };
   if (toolName === BROWSER_TOOL_NAME.readUploadedAttachment)
     return readUploadedAttachment(uploadedAttachments, input);
-  if (toolName === BROWSER_TOOL_NAME.listSkills)
-    return listSkills(availableSkills, input);
-  if (toolName === BROWSER_TOOL_NAME.createSkill)
-    return createSkill(availableSkills, input);
-  if (toolName === BROWSER_TOOL_NAME.readSkill)
-    return readSkill(availableSkills, input);
-  if (toolName === BROWSER_TOOL_NAME.readSkillFile)
-    return readSkillFile(availableSkills, input);
-  if (toolName === BROWSER_TOOL_NAME.updateSkillFile)
-    return updateSkillFile(availableSkills, input);
-  if (toolName === BROWSER_TOOL_NAME.patchSkillFile)
-    return patchSkillFile(availableSkills, input);
-  if (toolName === BROWSER_TOOL_NAME.listWorkspaceFiles)
-    return listWorkspaceFiles(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.readWorkspaceFile)
-    return readWorkspaceFile(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.writeWorkspaceFile)
-    return writeWorkspaceFile(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.patchWorkspaceFile)
-    return patchWorkspaceFile(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.deleteWorkspaceFile)
-    return deleteWorkspaceFile(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.searchWorkspaceFiles)
-    return searchWorkspaceFiles(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.listMemory)
-    return listMemory(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.addMemory)
-    return addMemory(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.updateMemory)
-    return updateMemory(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.removeMemory)
-    return removeMemory(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.listUserProfile)
-    return listUserProfile(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.addUserProfileNote)
-    return addUserProfileNote(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.updateUserProfileNote)
-    return updateUserProfileNote(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.removeUserProfileNote)
-    return removeUserProfileNote(workspace, input);
-  if (toolName === BROWSER_TOOL_NAME.searchChatHistory)
-    return searchChatHistory(input);
-  if (toolName === BROWSER_TOOL_NAME.readChatThread)
-    return readChatThread(input);
-  if (toolName === BROWSER_TOOL_NAME.deleteChatThread)
-    return deleteChatThread(input);
-  if (toolName === BROWSER_TOOL_NAME.listMcpServers) return listMcpServers();
-  if (toolName === BROWSER_TOOL_NAME.addMcpServer) return addMcpServer(input);
-  if (toolName === BROWSER_TOOL_NAME.updateMcpServer)
-    return updateMcpServer(input);
-  if (toolName === BROWSER_TOOL_NAME.testMcpServer) return testMcpServer(input);
-  if (toolName === BROWSER_TOOL_NAME.deleteMcpServer)
-    return deleteMcpServer(input);
+  if (toolName === BROWSER_TOOL_NAME.manageSkills)
+    return manageSkills(availableSkills, input);
+  if (toolName === BROWSER_TOOL_NAME.workspaceFiles)
+    return workspaceFiles(workspace, input);
+  if (toolName === BROWSER_TOOL_NAME.manageMemory)
+    return manageMemory(workspace, input);
+  if (toolName === BROWSER_TOOL_NAME.manageChatHistory)
+    return manageChatHistory(input);
+  if (toolName === BROWSER_TOOL_NAME.manageMcpServers)
+    return manageMcpServers(input);
   if (isMcpToolName(toolName)) return executeMcpTool(toolName, input);
   if (toolName === BROWSER_TOOL_NAME.generateImage)
     return generateImage(uploadedAttachments, input, context);
@@ -258,143 +185,20 @@ export function loadDeferredToolNames(
     .forEach((name) => loadedToolNames.add(name));
 }
 
-function loadBrowserTools(
+function manageSkills(
+  availableSkills: Skill[],
   input: Record<string, unknown>,
-  capabilities: AgentCapabilities,
 ) {
-  if (!capabilities.cdpTools)
-    return {
-      loadedToolNames: [],
-      tools: [],
-      error: "CDP tools are disabled for the active agent",
-    };
-  const requestedNames = Array.isArray(input.names)
-    ? input.names
-        .map(String)
-        .map((name) => name.trim())
-        .filter(Boolean)
-    : [];
-  const query = String(input.query || "")
-    .trim()
-    .toLowerCase();
-  const category = String(input.category || "")
-    .trim()
-    .toLowerCase();
-  const matches = deferredBrowserTools
-    .map((item) => toolCatalogItem(item, capabilities))
-    .filter((item) => item.available)
-    .filter((item) => !category || item.category === category)
-    .map((item) => ({
-      item,
-      score: requestedNames.length
-        ? requestedNames.includes(item.name)
-          ? 1
-          : 0
-        : queryScore(item, query),
-    }))
-    .filter(({ score }) => score > 0)
-    .sort((a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name))
-    .map(({ item }) => item)
-    .slice(0, 8);
-  return {
-    loadedToolNames: matches.map((item) => item.name),
-    tools: matches.map((item) => ({
-      ...item,
-      schema: deferredBrowserTools.find(
-        (tool) => tool.function.name === item.name,
-      )?.function,
-    })),
-  };
+  const operation = String(input.operation || "list");
+  if (operation === "list") return listSkills(availableSkills, input);
+  if (operation === "create") return createSkill(availableSkills, input);
+  if (operation === "read") return readSkill(availableSkills, input);
+  if (operation === "readFile") return readSkillFile(availableSkills, input);
+  if (operation === "updateFile")
+    return updateSkillFile(availableSkills, input);
+  if (operation === "patchFile") return patchSkillFile(availableSkills, input);
+  return { error: "Unknown skill operation", operation };
 }
-
-function queryScore(item: ReturnType<typeof toolCatalogItem>, query: string) {
-  if (!query) return 1;
-  const searchable = `${item.name} ${item.description} ${item.category}`
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .toLowerCase();
-  if (searchable.includes(query)) return 100;
-  const terms = query
-    .split(/[^a-z0-9]+/i)
-    .map((term) => term.trim().toLowerCase())
-    .filter(
-      (term) => term.length > 2 && !DEFERRED_TOOL_QUERY_STOP_WORDS.has(term),
-    );
-  if (!terms.length) return 1;
-  return terms.reduce(
-    (score, term) => score + (searchable.includes(term) ? 1 : 0),
-    0,
-  );
-}
-
-function toolCatalogItem(
-  item: (typeof deferredBrowserTools)[number],
-  capabilities: AgentCapabilities,
-) {
-  const name = item.function.name;
-  const dangerous = name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript;
-  const available = dangerous ? capabilities.javascriptExecution : true;
-  return {
-    name,
-    description: item.function.description,
-    category: toolCategory(name),
-    available,
-    unavailableReason: available
-      ? undefined
-      : dangerous
-        ? "Page JavaScript execution is disabled in General settings"
-        : "CDP tools are disabled for the active agent",
-  };
-}
-
-function toolCategory(name: string) {
-  if (name in TOOL_CATEGORY_BY_NAME)
-    return TOOL_CATEGORY_BY_NAME[name as keyof typeof TOOL_CATEGORY_BY_NAME];
-  if (name.startsWith("cdp")) return "cdp";
-  return "common";
-}
-
-const TOOL_CATEGORY_BY_NAME = {
-  [BROWSER_TOOL_NAME.startSubAgent]: "agents",
-  [BROWSER_TOOL_NAME.getSubAgentStatus]: "agents",
-  [BROWSER_TOOL_NAME.readUploadedAttachment]: "files",
-  [BROWSER_TOOL_NAME.readFileFromUrl]: "files",
-  [BROWSER_TOOL_NAME.generateImage]: "image",
-  [BROWSER_TOOL_NAME.listSkills]: "skills",
-  [BROWSER_TOOL_NAME.createSkill]: "skills",
-  [BROWSER_TOOL_NAME.readSkill]: "skills",
-  [BROWSER_TOOL_NAME.readSkillFile]: "skills",
-  [BROWSER_TOOL_NAME.updateSkillFile]: "skills",
-  [BROWSER_TOOL_NAME.patchSkillFile]: "skills",
-  [BROWSER_TOOL_NAME.listWorkspaceFiles]: "files",
-  [BROWSER_TOOL_NAME.readWorkspaceFile]: "files",
-  [BROWSER_TOOL_NAME.writeWorkspaceFile]: "files",
-  [BROWSER_TOOL_NAME.patchWorkspaceFile]: "files",
-  [BROWSER_TOOL_NAME.deleteWorkspaceFile]: "files",
-  [BROWSER_TOOL_NAME.searchWorkspaceFiles]: "files",
-  [BROWSER_TOOL_NAME.listMemory]: "memory",
-  [BROWSER_TOOL_NAME.addMemory]: "memory",
-  [BROWSER_TOOL_NAME.updateMemory]: "memory",
-  [BROWSER_TOOL_NAME.removeMemory]: "memory",
-  [BROWSER_TOOL_NAME.listUserProfile]: "memory",
-  [BROWSER_TOOL_NAME.addUserProfileNote]: "memory",
-  [BROWSER_TOOL_NAME.updateUserProfileNote]: "memory",
-  [BROWSER_TOOL_NAME.removeUserProfileNote]: "memory",
-  [BROWSER_TOOL_NAME.searchChatHistory]: "history",
-  [BROWSER_TOOL_NAME.readChatThread]: "history",
-  [BROWSER_TOOL_NAME.deleteChatThread]: "history",
-} as const;
-
-const DEFERRED_TOOL_QUERY_STOP_WORDS = new Set([
-  "and",
-  "for",
-  "the",
-  "with",
-  "into",
-  "from",
-  "current",
-  "tool",
-  "tools",
-]);
 
 async function startSubAgent(
   input: Record<string, unknown>,

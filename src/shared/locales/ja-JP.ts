@@ -242,108 +242,71 @@ export const jaJP: LocaleMessages = {
     copyImage: "画像をコピー",
     copyPrompt: "プロンプトをコピー",
     tool: {
+      manageTabs: {
+        running: "タブを管理中",
+        done: "タブを管理しました",
+        found: "開いているタブ {count} 件",
+      },
+      cdpInput: { running: "CDP 入力を送信中", done: "CDP 入力を送信しました" },
+      cdpPage: {
+        running: "CDP ページを制御中",
+        done: "CDP ページを制御しました",
+      },
+      cdpDiagnostics: {
+        running: "CDP 診断を読み取り中",
+        done: "CDP 診断を読み取りました",
+      },
+      wait: { running: "待機中", done: "待機しました" },
+      getCurrentTime: { running: "時刻を確認中", done: "時刻を確認しました" },
+      getCurrentTab: {
+        running: "現在のタブを取得中",
+        done: "現在のタブを取得しました",
+      },
+      captureVisibleTab: {
+        running: "タブをキャプチャ中",
+        done: "タブをキャプチャしました",
+      },
+      downloadAllImagesInTab: {
+        running: "画像をダウンロード中",
+        done: "画像をダウンロードしました",
+      },
       question: { running: "質問しています", done: "質問に回答済み" },
-      openNewTabWithURL: {
-        running: "新しいページを開いています",
-        done: "新しいページを開きました",
+      loadTools: {
+        running: "ツールを読み込み中",
+        done: "ツールを読み込みました",
+        found: "Loaded {count} tools",
+      },
+      manageSkills: {
+        running: "スキルを管理中",
+        done: "スキルを管理しました",
+        found: "Found {count}",
+      },
+      workspaceFiles: {
+        running: "ワークスペースファイルを処理中",
+        done: "ワークスペースファイルを処理しました",
+      },
+      manageMemory: { running: "メモリを管理中", done: "メモリを管理しました" },
+      manageChatHistory: {
+        running: "チャット履歴を読み取り中",
+        done: "チャット履歴を読み取りました",
+      },
+      manageMcpServers: {
+        running: "MCP サーバーを管理中",
+        done: "MCP サーバーを管理しました",
+      },
+      manageLocalExecutionBridges: {
+        running: "実行ブリッジを管理中",
+        done: "実行ブリッジを管理しました",
       },
       inspectPage: {
         running: "ページを調査中",
         done: "ページを調査しました",
         found: "{count}個の要素を検出しました",
       },
-      waitTabLoadFinished: {
-        running: "ページ読み込みを待機中",
-        done: "ページを読み込みました",
-      },
       mutatePage: { running: "ページを更新中", done: "ページを更新しました" },
-      cdpMouseActionByAiID: {
-        running: "ページ要素を操作中",
-        done: "ページ要素を操作しました",
-      },
-      groupTabs: {
-        running: "タブをグループ化中",
-        done: "タブをグループ化しました",
-      },
-      wait: { running: "待機中", done: "待機しました" },
-      getCurrentTime: { running: "時刻を確認中", done: "時刻を確認しました" },
-      getCurrentTab: {
-        running: "現在のページ内容を取得中",
-        done: "現在のページ内容を取得しました",
-      },
-      getAllTabs: {
-        running: "開いているタブを確認中",
-        done: "開いているタブを確認しました",
-        found: "{count}個のタブを検出しました",
-      },
-      goToTab: { running: "タブを切り替え中", done: "タブを切り替えました" },
-      openSearchTab: { running: "検索中", done: "検索タブを開きました" },
-      downloadAllImagesInTab: {
-        running: "画像をダウンロード中",
-        done: "画像をダウンロードしました",
-      },
       downloadTabToMarkdown: {
         running: "Markdownをダウンロード中",
         done: "Markdownをダウンロードしました",
-      },
-      closeTab: { running: "タブを閉じています", done: "タブを閉じました" },
-      reloadTab: {
-        running: "タブを再読み込み中",
-        done: "タブを再読み込みしました",
-      },
-      navigateTab: { running: "タブを移動中", done: "タブを移動しました" },
-      captureVisibleTab: {
-        running: "タブをキャプチャ中",
-        done: "タブをキャプチャしました",
-      },
-      waitForText: {
-        running: "ページテキストを待機中",
-        done: "ページテキストを検出しました",
-      },
-      scrollToBottom: {
-        running: "ページをスクロール中",
-        done: "ページをスクロールしました",
-      },
-      listSkills: {
-        running: "スキル一覧を取得中",
-        done: "スキル一覧を取得しました",
-        found: "{count}件見つかりました",
-      },
-      createSkill: {
-        running: "スキルを作成中",
-        done: "スキルを作成しました",
-      },
-      readSkill: {
-        running: "スキルを読み取り中",
-        done: "スキルを読み取りました",
-      },
-      updateSkillFile: {
-        running: "スキルを更新中",
-        done: "スキルを更新しました",
-      },
-      patchSkillFile: {
-        running: "スキルにパッチ適用中",
-        done: "スキルにパッチを適用しました",
-      },
-      listMcpServers: {
-        running: "MCPサーバーを一覧表示中",
-        done: "MCPサーバーを一覧表示しました",
-      },
-      addMcpServer: {
-        running: "MCPサーバーを追加中",
-        done: "MCPサーバーを追加しました",
-      },
-      updateMcpServer: {
-        running: "MCPサーバーを更新中",
-        done: "MCPサーバーを更新しました",
-      },
-      testMcpServer: {
-        running: "MCPサーバーをテスト中",
-        done: "MCPサーバーをテストしました",
-      },
-      deleteMcpServer: {
-        running: "MCPサーバーを削除中",
-        done: "MCPサーバーを削除しました",
       },
       generateImage: { running: "画像を生成中", done: "画像を生成しました" },
       readFileFromUrl: {
@@ -353,62 +316,6 @@ export const jaJP: LocaleMessages = {
       readUploadedAttachment: {
         running: "添付を読み取り中",
         done: "添付を読み取りました",
-      },
-      loadBrowserTools: {
-        running: "ブラウザーツールを読み込み中",
-        done: "ブラウザーツールを読み込みました",
-        found: "{count}個のツールを読み込みました",
-      },
-      cdpClickAt: {
-        running: "座標をクリック中",
-        done: "座標をクリックしました",
-      },
-      cdpPressKey: { running: "キーを押下中", done: "キーを押下しました" },
-      cdpTypeText: {
-        running: "テキストを入力中",
-        done: "テキストを入力しました",
-      },
-      cdpFill: { running: "項目を入力中", done: "項目を入力しました" },
-      cdpFillForm: {
-        running: "フォームを入力中",
-        done: "フォームを入力しました",
-      },
-      cdpDrag: {
-        running: "ページでドラッグ中",
-        done: "ページでドラッグしました",
-      },
-      cdpHandleDialog: {
-        running: "ダイアログを処理中",
-        done: "ダイアログを処理しました",
-      },
-      cdpListPages: { running: "ページを確認中", done: "ページを確認しました" },
-      cdpNewPage: {
-        running: "ページを開いています",
-        done: "ページを開きました",
-      },
-      cdpNavigatePage: {
-        running: "ページを移動中",
-        done: "ページを移動しました",
-      },
-      cdpSelectPage: {
-        running: "ページにフォーカス中",
-        done: "ページにフォーカスしました",
-      },
-      cdpClosePage: {
-        running: "ページを閉じています",
-        done: "ページを閉じました",
-      },
-      cdpWaitFor: {
-        running: "ページ内テキストを待機中",
-        done: "ページ内テキストを見つけました",
-      },
-      cdpResizePage: {
-        running: "ページサイズを変更中",
-        done: "ページサイズを変更しました",
-      },
-      cdpEmulate: {
-        running: "ページエミュレーションを適用中",
-        done: "ページエミュレーションを適用しました",
       },
       cdpEvaluateScript: {
         running: "ページスクリプトを実行中",
@@ -421,26 +328,6 @@ export const jaJP: LocaleMessages = {
       cdpTakeScreenshot: {
         running: "スクリーンショットを撮影中",
         done: "スクリーンショットを撮影しました",
-      },
-      cdpTakeSnapshot: {
-        running: "ページスナップショットを取得中",
-        done: "ページスナップショットを取得しました",
-      },
-      cdpListConsoleMessages: {
-        running: "コンソールメッセージを読み取り中",
-        done: "コンソールメッセージを読み取りました",
-      },
-      cdpGetConsoleMessage: {
-        running: "コンソールメッセージを読み取り中",
-        done: "コンソールメッセージを読み取りました",
-      },
-      cdpListNetworkRequests: {
-        running: "ネットワークリクエストを読み取り中",
-        done: "ネットワークリクエストを読み取りました",
-      },
-      cdpGetNetworkRequest: {
-        running: "ネットワークリクエストを読み取り中",
-        done: "ネットワークリクエストを読み取りました",
       },
       cdpPerformanceStartTrace: {
         running: "パフォーマンストレースを開始中",
@@ -482,66 +369,6 @@ export const jaJP: LocaleMessages = {
         running: "ページ録画を停止中",
         done: "ページ録画を停止しました",
       },
-      readSkillFile: {
-        running: "スキルファイルを読み取り中",
-        done: "スキルファイルを読み取りました",
-      },
-      listWorkspaceFiles: {
-        running: "ワークスペースファイルを一覧表示中",
-        done: "ワークスペースファイルを一覧表示しました",
-      },
-      readWorkspaceFile: {
-        running: "ワークスペースファイルを読み取り中",
-        done: "ワークスペースファイルを読み取りました",
-      },
-      writeWorkspaceFile: {
-        running: "ワークスペースファイルを書き込み中",
-        done: "ワークスペースファイルを書き込みました",
-      },
-      patchWorkspaceFile: {
-        running: "ワークスペースファイルを編集中",
-        done: "ワークスペースファイルを編集しました",
-      },
-      deleteWorkspaceFile: {
-        running: "ワークスペースファイルを削除中",
-        done: "ワークスペースファイルを削除しました",
-      },
-      searchWorkspaceFiles: {
-        running: "ワークスペースファイルを検索中",
-        done: "ワークスペースファイルを検索しました",
-      },
-      listMemory: { running: "メモリを一覧中", done: "メモリを一覧しました" },
-      addMemory: { running: "メモリを追加中", done: "メモリを追加しました" },
-      updateMemory: { running: "メモリを更新中", done: "メモリを更新しました" },
-      removeMemory: { running: "メモリを削除中", done: "メモリを削除しました" },
-      listUserProfile: {
-        running: "ユーザープロファイルを一覧中",
-        done: "ユーザープロファイルを一覧しました",
-      },
-      addUserProfileNote: {
-        running: "ユーザープロファイルメモを追加中",
-        done: "ユーザープロファイルメモを追加しました",
-      },
-      updateUserProfileNote: {
-        running: "ユーザープロファイルメモを更新中",
-        done: "ユーザープロファイルメモを更新しました",
-      },
-      removeUserProfileNote: {
-        running: "ユーザープロファイルメモを削除中",
-        done: "ユーザープロファイルメモを削除しました",
-      },
-      searchChatHistory: {
-        running: "チャット履歴を検索中",
-        done: "チャット履歴を検索しました",
-      },
-      readChatThread: {
-        running: "チャットスレッドを読み込み中",
-        done: "チャットスレッドを読み込みました",
-      },
-      deleteChatThread: {
-        running: "チャットスレッドを削除中",
-        done: "チャットスレッドを削除しました",
-      },
       startSubAgent: {
         running: "サブエージェントを開始中",
         done: "サブエージェントを開始しました",
@@ -549,10 +376,6 @@ export const jaJP: LocaleMessages = {
       getSubAgentStatus: {
         running: "サブエージェントを確認中",
         done: "サブエージェントを確認しました",
-      },
-      listLocalExecutionBridges: {
-        running: "実行ブリッジを一覧表示中",
-        done: "実行ブリッジを一覧表示しました",
       },
       startLocalExecutionBridge: {
         running: "ローカルコマンドを開始中",
@@ -565,22 +388,6 @@ export const jaJP: LocaleMessages = {
       cancelLocalExecutionBridge: {
         running: "ローカルコマンドをキャンセル中",
         done: "ローカルコマンドをキャンセルしました",
-      },
-      addLocalExecutionBridge: {
-        running: "実行ブリッジを追加中",
-        done: "実行ブリッジを追加しました",
-      },
-      updateLocalExecutionBridge: {
-        running: "実行ブリッジを更新中",
-        done: "実行ブリッジを更新しました",
-      },
-      testLocalExecutionBridge: {
-        running: "実行ブリッジをテスト中",
-        done: "実行ブリッジをテストしました",
-      },
-      deleteLocalExecutionBridge: {
-        running: "実行ブリッジを削除中",
-        done: "実行ブリッジを削除しました",
       },
     },
   },

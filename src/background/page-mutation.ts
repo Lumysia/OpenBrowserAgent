@@ -86,6 +86,12 @@ function buildMutationOptions(args: Record<string, unknown>) {
     dedupeKey: stringInput(args.dedupeKey),
     skipIfExistsSelector: stringInput(args.skipIfExistsSelector),
     openLinksInNewTab: args.openLinksInNewTab !== false,
+    scroll: {
+      direction: stringInput(args.direction),
+      x: numberInput(args.x),
+      y: numberInput(args.y),
+      behavior: stringInput(args.behavior || "smooth"),
+    },
   };
 }
 
@@ -97,6 +103,11 @@ function objectInput(value: unknown) {
 
 function stringInput(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function numberInput(value: unknown) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
 }
 
 function isNewTabRequest(
@@ -121,6 +132,7 @@ function mutatePageInDom(request: {
     dedupeKey: string;
     skipIfExistsSelector: string;
     openLinksInNewTab: boolean;
+    scroll: { direction: string; x?: number; y?: number; behavior: string };
   }>;
 }) {
   const cssEscape = (value: string) =>
@@ -269,6 +281,29 @@ function mutatePageInDom(request: {
       ) as HTMLElement | null;
     })();
 
+    if (options.operation === "scroll" && !targetRequested) {
+      const scrollHeight = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+      );
+      const direction = options.scroll.direction || "bottom";
+      const top =
+        options.scroll.y ??
+        (direction === "top"
+          ? 0
+          : direction === "pageDown"
+            ? window.scrollY + window.innerHeight
+            : direction === "pageUp"
+              ? window.scrollY - window.innerHeight
+              : scrollHeight);
+      window.scrollTo({
+        top,
+        left: options.scroll.x ?? window.scrollX,
+        behavior: options.scroll.behavior === "instant" ? "instant" : "smooth",
+      });
+      return { success: true, scrollY: Math.round(top), scrollHeight };
+    }
+
     if (!target)
       return {
         success: false,
@@ -311,6 +346,16 @@ function mutatePageInDom(request: {
             target: before,
           };
         target.click();
+        return { success: true, target: before };
+      }
+
+      if (options.operation === "scroll") {
+        target.scrollIntoView({
+          block: options.scroll.direction === "top" ? "start" : "center",
+          inline: "nearest",
+          behavior:
+            options.scroll.behavior === "instant" ? "instant" : "smooth",
+        });
         return { success: true, target: before };
       }
 

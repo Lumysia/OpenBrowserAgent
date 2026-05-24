@@ -2,56 +2,14 @@ import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 
 export const localExecutionBridgeTools = [
   tool(
-    BROWSER_TOOL_NAME.listLocalExecutionBridges,
-    "List configured local execution bridges before running local shell commands, using local CLI tools/apps, inspecting local files/drives, delegating to local processes, or managing bridge settings. If the user wants to add, update, test, or delete bridges, read the builtin skill local-execution-bridge-setup first.",
-    {},
-    [],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.addLocalExecutionBridge,
-    "Add a local execution bridge configuration. Before using this tool, read the builtin skill local-execution-bridge-setup and follow it. This creates the extension-side config only; the user still needs a matching Native Messaging host and matching secret in its config.",
+    BROWSER_TOOL_NAME.manageLocalExecutionBridges,
+    "List, inspect status, add, update, test, or delete local execution bridge configurations. Read local-execution-bridge setup guidance before add/update/test/delete setup work.",
     {
-      name: {
+      operation: {
         type: "string",
-        description: "Display name, such as Local or Workstation",
+        enum: ["list", "status", "add", "update", "test", "delete"],
+        description: "Bridge management operation. Defaults to list.",
       },
-      description: { type: "string", description: "Optional user-facing note" },
-      hostName: {
-        type: "string",
-        description:
-          "Native Messaging host name, not a network address. Defaults to openbrowseragent.local_execution_bridge.",
-      },
-      hostAddress: {
-        type: "string",
-        description:
-          "Optional execution host address passed through to the native bridge. Leave empty for local execution. The extension does not interpret protocols or manage remote credentials.",
-      },
-      bridgeKey: {
-        type: "string",
-        description:
-          "Shell bridge config ID inside the native bridge config, such as default.",
-      },
-      secret: {
-        type: "string",
-        description:
-          "Optional bridge secret. Omit to generate a strong random secret and return it once.",
-      },
-      defaultCwd: {
-        type: "string",
-        description: "Optional default working directory",
-      },
-      timeoutMs: {
-        type: "number",
-        description: "Optional default timeout in milliseconds",
-      },
-      test: { type: "boolean", description: "When true, test after adding" },
-    },
-    ["name"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.updateLocalExecutionBridge,
-    "Update a local execution bridge configuration. Before using this tool, read the builtin skill local-execution-bridge-setup and follow it. Changing hostName, hostAddress, bridgeKey, or secret clears prior test state until it passes a new test.",
-    {
       bridgeId: { type: "string", description: "Execution bridge ID" },
       name: { type: "string", description: "Display name" },
       description: { type: "string", description: "Optional user-facing note" },
@@ -62,14 +20,10 @@ export const localExecutionBridgeTools = [
       },
       bridgeKey: {
         type: "string",
-        description: "Shell bridge config ID inside the native bridge config",
-      },
-      secret: { type: "string", description: "Bridge secret" },
-      regenerateSecret: {
-        type: "boolean",
         description:
-          "When true, generate a new strong bridge secret and return it once",
+          "Shell config key printed by the native bridge setup. Required for a usable bridge; list/status do not need it.",
       },
+      secret: { type: "string", description: "Optional bridge secret" },
       defaultCwd: {
         type: "string",
         description: "Optional default working directory",
@@ -78,25 +32,18 @@ export const localExecutionBridgeTools = [
         type: "number",
         description: "Optional default timeout in milliseconds",
       },
-      test: { type: "boolean", description: "When true, test after updating" },
+      regenerateSecret: {
+        type: "boolean",
+        description:
+          "For update, generate a new strong bridge secret and return it once",
+      },
+      test: {
+        type: "boolean",
+        description:
+          "When true, test native host and shell config connectivity after add/update",
+      },
     },
-    ["bridgeId"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.testLocalExecutionBridge,
-    "Test a local execution bridge connection and return the shell, basic environment, and detected local execution bridge CLIs the bridge can see. Before using this tool as part of setup, read the builtin skill local-execution-bridge-setup and follow it.",
-    {
-      bridgeId: { type: "string", description: "Execution bridge ID" },
-    },
-    ["bridgeId"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.deleteLocalExecutionBridge,
-    "Delete a local execution bridge configuration. Before using this tool, read the builtin skill local-execution-bridge-setup and confirm the target bridge with the user unless they clearly identified it.",
-    {
-      bridgeId: { type: "string", description: "Execution bridge ID" },
-    },
-    ["bridgeId"],
+    [],
   ),
   tool(
     BROWSER_TOOL_NAME.startLocalExecutionBridge,
@@ -105,7 +52,7 @@ export const localExecutionBridgeTools = [
       bridgeId: {
         type: "string",
         description:
-          "Target execution bridge id. Call listLocalExecutionBridges first if you need to choose.",
+          "Target execution bridge id. Call manageLocalExecutionBridges operation=list first if you need to choose.",
       },
       bridgeName: {
         type: "string",
@@ -119,31 +66,24 @@ export const localExecutionBridgeTools = [
       },
       shell: {
         type: "string",
-        description:
-          "Optional shell executable or shell mode. Omit to use the shell reported by the bridge test.",
+        description: "Optional shell executable or shell mode.",
       },
       title: { type: "string", description: "Short task title" },
-      cwd: {
-        type: "string",
-        description:
-          "Optional local working directory. Omit to use the configured default for this execution bridge.",
-      },
+      cwd: { type: "string", description: "Optional local working directory." },
       background: {
         type: "boolean",
-        description:
-          "When true, return immediately after launching the local task. Omit or set false to wait for the local result before continuing.",
+        description: "Return immediately after launching the local task.",
       },
       timeoutMs: {
         type: "number",
-        description:
-          "Maximum wait duration in milliseconds for the default synchronous mode. Defaults to 60000 and caps at 1800000.",
+        description: "Maximum wait duration in milliseconds.",
       },
     },
     ["command"],
   ),
   tool(
     BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus,
-    "Check or wait for a local command task started by startLocalExecutionBridge. Use wait=true when you need the local result before answering.",
+    "Check or wait for a local command task started by startLocalExecutionBridge.",
     {
       taskId: {
         type: "string",
@@ -156,8 +96,7 @@ export const localExecutionBridgeTools = [
       },
       timeoutMs: {
         type: "number",
-        description:
-          "Maximum wait duration in milliseconds. Defaults to 60000.",
+        description: "Maximum wait duration in milliseconds.",
       },
     },
     ["taskId"],
@@ -186,11 +125,7 @@ function tool(
     function: {
       name,
       description,
-      parameters: {
-        type: "object",
-        properties,
-        required,
-      },
+      parameters: { type: "object", properties, required },
     },
   };
 }

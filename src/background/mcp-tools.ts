@@ -115,6 +115,16 @@ export async function listMcpServers() {
   };
 }
 
+export function manageMcpServers(input: Record<string, unknown>) {
+  const operation = stringInput(input.operation || "list");
+  if (operation === "list") return listMcpServers();
+  if (operation === "add") return addMcpServer(input);
+  if (operation === "update") return updateMcpServer(input);
+  if (operation === "test") return testMcpServer(input);
+  if (operation === "delete") return deleteMcpServer(input);
+  return { success: false, error: "Unknown MCP server operation", operation };
+}
+
 export async function addMcpServer(input: Record<string, unknown>) {
   const server = normalizeMcpServer({
     name: input.name,

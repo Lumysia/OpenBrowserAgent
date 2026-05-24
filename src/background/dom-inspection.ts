@@ -2,12 +2,14 @@ import { isScriptableUrl } from "../shared/browser";
 import { getBrowserApi } from "../shared/storage";
 import { TOOL_ERROR } from "../shared/tool-errors";
 import { sliceInspectablePageOutput } from "./dom-inspection-output";
+import { waitForInspectablePage } from "./dom-inspection-wait";
 
 const DEFAULT_CONTEXT_DEPTH_UP = 6;
 const DEFAULT_CONTEXT_DEPTH_DOWN = 4;
 const DEFAULT_SIBLING_LIMIT = 3;
 const DEFAULT_ITEM_LIMIT = 30;
 const DEFAULT_TEXT_LIMIT = 6_000;
+const WAIT_POLL_MS = 250;
 
 export async function inspectPage(args: Record<string, unknown>) {
   const api = getBrowserApi();
@@ -29,6 +31,16 @@ export async function inspectPage(args: Record<string, unknown>) {
         pages.push({
           success: false,
           error: TOOL_ERROR.activeTabNotWebPage,
+          tabId,
+          title: tab.title || "",
+          url: tab.url || "",
+        });
+        continue;
+      }
+      const waitResult = await waitForInspectablePage(tabId, options.waitFor);
+      if (waitResult?.success === false) {
+        pages.push({
+          ...waitResult,
           tabId,
           title: tab.title || "",
           url: tab.url || "",
@@ -68,6 +80,7 @@ export async function inspectPage(args: Record<string, unknown>) {
 
 function buildInspectOptions(args: Record<string, unknown>) {
   const target = objectInput(args.target);
+  const waitFor = objectInput(args.waitFor);
   return {
     include: stringArray(args.include),
     target: {
@@ -86,6 +99,12 @@ function buildInspectOptions(args: Record<string, unknown>) {
       args.textLimit ?? args.limit,
       DEFAULT_TEXT_LIMIT,
     ),
+    waitFor: {
+      text: stringArray(waitFor.text),
+      selector: stringInput(waitFor.selector),
+      timeout: positiveInteger(waitFor.timeout ?? args.timeout, 0),
+      pollMs: positiveInteger(waitFor.pollMs, WAIT_POLL_MS),
+    },
   };
 }
 
@@ -121,6 +140,12 @@ function inspectPageInDom(options: {
   itemLimit: number;
   textOffset: number;
   textLimit: number;
+  waitFor: {
+    text: string[];
+    selector: string;
+    timeout: number;
+    pollMs: number;
+  };
 }) {
   const compactText = (text: string) =>
     text.replace(/\s+/g, " ").trim().slice(0, 300) || undefined;
