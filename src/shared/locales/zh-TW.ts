@@ -508,7 +508,7 @@ export const zhTW: LocaleMessages = {
     mcpServers: "MCP 伺服器",
     localAgents: "本地執行橋",
     localAgentsDescription:
-      "設定可同步的本地或遠端執行橋。擴充功能只把任務送給橋，由橋在主機上執行你設定的命令。",
+      "設定可同步的本地或遠端執行橋。擴充功能把 shell 命令送給橋，由橋在主機上執行。",
     localAgentsEmpty: "尚未設定本地執行橋。",
     newLocalAgent: "新增執行橋",
     localAgentName: "執行橋名稱",
@@ -518,7 +518,7 @@ export const zhTW: LocaleMessages = {
     localAgentHostAddressPlaceholder: "留空表示本機，或填寫橋接器識別的地址",
     localAgentSecret: "橋接密鑰",
     localAgentRegenerateSecret: "重新產生密鑰",
-    localAgentKey: "命令設定 ID",
+    localAgentKey: "Shell 設定 ID",
     localAgentDefaultCwd: "預設工作目錄",
     localAgentTimeoutMs: "預設逾時（毫秒）",
     localAgentTest: "測試橋接器",
@@ -674,7 +674,7 @@ export const zhTW: LocaleMessages = {
       "透過目前同步後端同步 Streamable HTTP MCP 伺服器設定。",
     syncLocalAgents: "同步本地執行橋",
     syncLocalAgentsDescription:
-      "透過目前同步後端同步執行橋設定、原生主機名、執行主機地址、橋接密鑰、命令設定 ID 和預設工作目錄。",
+      "透過目前同步後端同步執行橋設定、原生主機名、執行主機地址、橋接密鑰、Shell 設定 ID 和預設工作目錄。",
     syncChats: "同步對話",
     syncChatsDescription:
       "透過目前同步後端同步對話記錄。關閉時對話只保存在本機。",

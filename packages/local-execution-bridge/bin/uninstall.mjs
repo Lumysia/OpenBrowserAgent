@@ -85,16 +85,17 @@ function removeEmptyDirectory(path) {
 
 function unregisterNativeHost(targetBrowser) {
   if (platform() !== "win32") return;
-  const key = nativeHostRegistryKey(targetBrowser);
-  const result = spawnSync("reg", ["delete", key, "/f"], {
-    stdio: "pipe",
-    windowsHide: true,
-  });
-  if (result.status === 0) {
-    removed.push(key);
-    registryKeys.push(key);
-  } else {
-    missing.push(key);
+  for (const key of nativeHostRegistryKeys(targetBrowser)) {
+    const result = spawnSync("reg", ["delete", key, "/f"], {
+      stdio: "pipe",
+      windowsHide: true,
+    });
+    if (result.status === 0) {
+      removed.push(key);
+      registryKeys.push(key);
+    } else {
+      missing.push(key);
+    }
   }
 }
 
@@ -280,17 +281,32 @@ function nativeHostDir(targetBrowser) {
   return join(homedir(), ".config", "google-chrome", "NativeMessagingHosts");
 }
 
-function nativeHostRegistryKey(targetBrowser) {
+function nativeHostRegistryKeys(targetBrowser) {
   if (isFirefox(targetBrowser))
-    return `HKCU\\Software\\Mozilla\\NativeMessagingHosts\\${HOST_NAME}`;
+    return [`HKCU\\Software\\Mozilla\\NativeMessagingHosts\\${HOST_NAME}`];
   if (targetBrowser === "edge")
-    return `HKCU\\Software\\Microsoft\\Edge\\NativeMessagingHosts\\${HOST_NAME}`;
+    return [
+      `HKCU\\Software\\Microsoft\\Edge\\NativeMessagingHosts\\${HOST_NAME}`,
+    ];
   if (targetBrowser === "brave")
-    return `HKCU\\Software\\BraveSoftware\\Brave-Browser\\NativeMessagingHosts\\${HOST_NAME}`;
+    return [
+      `HKCU\\Software\\BraveSoftware\\Brave-Browser\\NativeMessagingHosts\\${HOST_NAME}`,
+      chromeNativeHostRegistryKey(),
+    ];
   if (targetBrowser === "vivaldi")
-    return `HKCU\\Software\\Vivaldi\\NativeMessagingHosts\\${HOST_NAME}`;
+    return [
+      `HKCU\\Software\\Vivaldi\\NativeMessagingHosts\\${HOST_NAME}`,
+      chromeNativeHostRegistryKey(),
+    ];
   if (targetBrowser === "chromium")
-    return `HKCU\\Software\\Chromium\\NativeMessagingHosts\\${HOST_NAME}`;
+    return [
+      `HKCU\\Software\\Chromium\\NativeMessagingHosts\\${HOST_NAME}`,
+      chromeNativeHostRegistryKey(),
+    ];
+  return [chromeNativeHostRegistryKey()];
+}
+
+function chromeNativeHostRegistryKey() {
   return `HKCU\\Software\\Google\\Chrome\\NativeMessagingHosts\\${HOST_NAME}`;
 }
 
@@ -347,10 +363,11 @@ function parseArgs(values) {
     if (!value.startsWith("--")) continue;
     const [rawKey, inlineValue] = value.slice(2).split(/=(.*)/s, 2);
     const key = rawKey.trim();
+    const hasInlineValue = inlineValue !== undefined;
     const next = inlineValue ?? values[index + 1];
     const argValue =
-      inlineValue !== undefined || !next?.startsWith("--") ? next : true;
-    if (inlineValue === undefined && argValue !== true) index += 1;
+      hasInlineValue || (next && !next.startsWith("--")) ? next : true;
+    if (!hasInlineValue && argValue !== true) index += 1;
     parsed[key] = argValue;
   }
   return parsed;
@@ -414,7 +431,7 @@ function printHelp() {
 Options:
   --browser <all|chrome|edge|brave|vivaldi|chromium|firefox|librewolf|firefox-flatpak|chromium-flatpak|brave-flatpak|librewolf-flatpak|firefox-snap|chromium-snap|brave-snap>
                                            Browser target. Default: all
-  --keep-config                             Keep bridge command config
+  --keep-config                             Keep bridge shell config
   --config <path>                           Bridge config path
   --bridge <path>                           Stable bridge runtime path
   --wrapper <path>                          Stable wrapper executable path

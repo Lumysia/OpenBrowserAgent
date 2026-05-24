@@ -30,6 +30,16 @@ type LocalAgentTask = {
   port?: chrome.runtime.Port;
 };
 
+type LocalExecutionBridgePing = {
+  success: true;
+  shell?: string;
+  shellArgsPreview?: string[];
+  platform?: string;
+  cwd?: string;
+  node?: string;
+  env?: Record<string, unknown>;
+};
+
 const tasks = new Map<string, LocalAgentTask>();
 
 export async function listLocalExecutionBridges() {
@@ -135,7 +145,7 @@ export async function testLocalExecutionBridgeConfig(
 ) {
   const agentId = stringValue(input.agentId || input.id);
   if (!agentId) return { success: false, error: "Missing execution bridge ID" };
-  let result: ReturnType<typeof safeLocalAgent> | undefined;
+  let result: Record<string, unknown> | undefined;
   let testError = "";
   const agents = normalizeLocalAgents(await storage.localAgents.get());
   await storage.localAgents.set(
@@ -143,14 +153,14 @@ export async function testLocalExecutionBridgeConfig(
       agents.map(async (agent) => {
         if (agent.id !== agentId) return agent;
         try {
-          await testLocalExecutionBridge(agent.id);
+          const bridge = await testLocalExecutionBridge(agent.id);
           const next = {
             ...agent,
             lastTestedAt: Date.now(),
             lastTestError: "",
             updatedAt: Date.now(),
           };
-          result = safeLocalAgent(next);
+          result = { ...safeLocalAgent(next), bridge };
           return next;
         } catch (error) {
           testError = errorMessage(error);
@@ -168,7 +178,12 @@ export async function testLocalExecutionBridgeConfig(
   );
   if (!result) return { success: false, error: "Execution bridge not found" };
   return testError
-    ? { success: false, error: testError, agent: result }
+    ? {
+        success: false,
+        error: testError,
+        diagnostic: diagnoseLocalExecutionBridgeError(testError),
+        agent: result,
+      }
     : { success: true, agent: result };
 }
 
@@ -199,6 +214,17 @@ export async function startLocalExecutionBridge(
       error: "No local execution bridge is configured.",
       state: "missing",
     };
+  const commandLine =
+    stringValue(input.command) ||
+    stringValue(input.shellCommand) ||
+    stringValue(input.task) ||
+    stringValue(input.prompt);
+  if (!commandLine)
+    return {
+      success: false,
+      error: "Shell command is required.",
+      state: "missing",
+    };
 
   const task = createTask(agent);
   tasks.set(task.taskId, task);
@@ -220,7 +246,8 @@ export async function startLocalExecutionBridge(
         hostAddress: agent.hostAddress || "",
         secret: agent.secret || "",
       },
-      prompt: stringValue(input.task) || stringValue(input.prompt),
+      commandLine,
+      shell: stringValue(input.shell),
       title: stringValue(input.title),
       cwd: stringValue(input.cwd) || agent.defaultCwd || "",
       context: {
@@ -276,7 +303,7 @@ export async function testLocalExecutionBridge(agentId: string) {
   if (!agent) throw new Error("Local execution bridge not found.");
   if (!agent.hostName) throw new Error("Native host name is required.");
   const port = chrome.runtime.connectNative(agent.hostName);
-  return new Promise<{ success: true }>((resolve, reject) => {
+  return new Promise<LocalExecutionBridgePing>((resolve, reject) => {
     let settled = false;
     const timer = setTimeout(() => {
       if (settled) return;
@@ -298,7 +325,17 @@ export async function testLocalExecutionBridge(agentId: string) {
       settled = true;
       clearTimeout(timer);
       port.disconnect();
-      resolve({ success: true });
+      resolve({
+        success: true,
+        shell: stringValue(object.shell),
+        shellArgsPreview: Array.isArray(object.shellArgsPreview)
+          ? object.shellArgsPreview.map(String)
+          : undefined,
+        platform: stringValue(object.platform),
+        cwd: stringValue(object.cwd),
+        node: stringValue(object.node),
+        env: objectValue(object.env),
+      });
     });
     port.onDisconnect.addListener(() => {
       if (settled) return;
@@ -403,7 +440,7 @@ function taskStatus(taskId: string) {
     agent: task.agent,
     output: task.output,
     result: task.result,
-    error: task.error,
+    ...(task.error ? { error: task.error } : {}),
     progress: task.events.slice(-8),
     startedAt: task.startedAt,
     updatedAt: task.updatedAt,
@@ -483,4 +520,34 @@ function stringValue(value: unknown) {
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
+}
+
+function diagnoseLocalExecutionBridgeError(error: string) {
+  const normalized = error.toLowerCase();
+  if (
+    normalized.includes("native messaging host not found") ||
+    normalized.includes("specified native messaging host not found") ||
+    normalized.includes("not registered")
+  ) {
+    return {
+      reason:
+        "The browser cannot find the Native Messaging host registration for this extension.",
+      nextSteps: [
+        "Run the local execution bridge installer for the exact browser and extension ID.",
+        "For Brave, Vivaldi, or Chromium on Windows, reinstall with the latest bridge package because those browsers may read Chrome-compatible Native Messaging registry keys.",
+        "Fully restart the browser after installing the host, then test again.",
+      ],
+    };
+  }
+  if (normalized.includes("secret")) {
+    return {
+      reason:
+        "The extension-side bridge secret does not match the native bridge shell config.",
+      nextSteps: [
+        "Use the secret printed by the installer output.",
+        "If the secret was rotated, update the extension-side bridge config before testing again.",
+      ],
+    };
+  }
+  return undefined;
 }

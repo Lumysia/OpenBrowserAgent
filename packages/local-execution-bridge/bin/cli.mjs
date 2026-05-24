@@ -13,7 +13,7 @@ if (!command || command === "install") {
   await import("./bridge.mjs");
 } else if (command === "help" || command === "--help" || command === "-h") {
   console.log(`Usage:
-  openbrowseragent-local-execution-bridge install --browser chrome --extension-id <id> --command <command>
+  openbrowseragent-local-execution-bridge install --browser chrome --extension-id <id>
   openbrowseragent-local-execution-bridge uninstall --browser chrome
   openbrowseragent-local-execution-bridge run`);
 } else {

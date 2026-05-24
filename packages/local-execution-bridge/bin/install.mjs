@@ -27,14 +27,12 @@ if (args.help) {
 const browser = stringArg(args.browser || "chrome").toLowerCase();
 assertSupportedBrowser(browser);
 const extensionId = stringArg(args["extension-id"] || args.extensionId);
-const command = stringArg(args.command);
 const commandId = stringArg(args["command-id"] || args.commandId || "default");
 const commandName = stringArg(
   args["command-name"] || args.commandName || commandId,
 );
 const cwd = stringArg(args.cwd);
-const shell = args.shell === true || args.shell === "true";
-const commandArgs = arrayArg(args["command-arg"] || args.commandArg);
+const shell = stringArg(args.shell);
 const configPath = resolvePath(
   stringArg(args.config) ||
     join(openBrowserAgentDir(), "local-execution-bridge.config.json"),
@@ -57,7 +55,6 @@ const manifestPath = resolvePath(
 );
 
 if (!extensionId) fail("Missing --extension-id.");
-if (!command) fail("Missing --command.");
 if (!existsSync(sourceBridgeScript))
   fail(`Bridge script not found: ${sourceBridgeScript}`);
 
@@ -75,9 +72,8 @@ const nextCommand = {
   id: commandId,
   name: commandName,
   secret,
-  command,
-  args: commandArgs,
-  shell,
+  mode: "shell",
+  ...(shell ? { shell } : {}),
   ...(cwd ? { cwd } : {}),
 };
 const nextConfig = {
@@ -93,7 +89,7 @@ writeFileSync(configPath, `${JSON.stringify(nextConfig, null, 2)}\n`, "utf8");
 installBridgeRuntime(bridgePath);
 writeWrapper(wrapperPath, configPath, bridgePath);
 writeManifest(manifestPath, browser, extensionId, wrapperPath);
-const registryKey = registerNativeHost(browser, manifestPath);
+const registryKeys = registerNativeHost(browser, manifestPath) || [];
 
 console.log(
   JSON.stringify(
@@ -106,7 +102,8 @@ console.log(
       bridgePath,
       wrapperPath,
       manifestPath,
-      registryKey,
+      registryKey: registryKeys[0],
+      registryKeys,
       nextExtensionConfig: {
         hostName: HOST_NAME,
         agentKey: commandId,
@@ -173,20 +170,22 @@ function writeManifest(path, targetBrowser, extension, wrapper) {
 
 function registerNativeHost(targetBrowser, manifest) {
   if (platform() !== "win32") return undefined;
-  const key = nativeHostRegistryKey(targetBrowser);
-  const result = spawnSync(
-    "reg",
-    ["add", key, "/ve", "/t", "REG_SZ", "/d", manifest, "/f"],
-    {
-      stdio: "pipe",
-      windowsHide: true,
-    },
-  );
-  if (result.status !== 0)
-    fail(
-      `Failed to register Native Messaging host for ${targetBrowser}: ${String(result.stderr || result.stdout)}`,
+  const keys = nativeHostRegistryKeys(targetBrowser);
+  for (const key of keys) {
+    const result = spawnSync(
+      "reg",
+      ["add", key, "/ve", "/t", "REG_SZ", "/d", manifest, "/f"],
+      {
+        stdio: "pipe",
+        windowsHide: true,
+      },
     );
-  return key;
+    if (result.status !== 0)
+      fail(
+        `Failed to register Native Messaging host for ${targetBrowser}: ${String(result.stderr || result.stdout)}`,
+      );
+  }
+  return keys;
 }
 
 function nativeHostDir(targetBrowser) {
@@ -371,17 +370,32 @@ function nativeHostDir(targetBrowser) {
   return join(homedir(), ".config", "google-chrome", "NativeMessagingHosts");
 }
 
-function nativeHostRegistryKey(targetBrowser) {
+function nativeHostRegistryKeys(targetBrowser) {
   if (isFirefox(targetBrowser))
-    return `HKCU\\Software\\Mozilla\\NativeMessagingHosts\\${HOST_NAME}`;
+    return [`HKCU\\Software\\Mozilla\\NativeMessagingHosts\\${HOST_NAME}`];
   if (targetBrowser === "edge")
-    return `HKCU\\Software\\Microsoft\\Edge\\NativeMessagingHosts\\${HOST_NAME}`;
+    return [
+      `HKCU\\Software\\Microsoft\\Edge\\NativeMessagingHosts\\${HOST_NAME}`,
+    ];
   if (targetBrowser === "brave")
-    return `HKCU\\Software\\BraveSoftware\\Brave-Browser\\NativeMessagingHosts\\${HOST_NAME}`;
+    return [
+      `HKCU\\Software\\BraveSoftware\\Brave-Browser\\NativeMessagingHosts\\${HOST_NAME}`,
+      chromeNativeHostRegistryKey(),
+    ];
   if (targetBrowser === "vivaldi")
-    return `HKCU\\Software\\Vivaldi\\NativeMessagingHosts\\${HOST_NAME}`;
+    return [
+      `HKCU\\Software\\Vivaldi\\NativeMessagingHosts\\${HOST_NAME}`,
+      chromeNativeHostRegistryKey(),
+    ];
   if (targetBrowser === "chromium")
-    return `HKCU\\Software\\Chromium\\NativeMessagingHosts\\${HOST_NAME}`;
+    return [
+      `HKCU\\Software\\Chromium\\NativeMessagingHosts\\${HOST_NAME}`,
+      chromeNativeHostRegistryKey(),
+    ];
+  return [chromeNativeHostRegistryKey()];
+}
+
+function chromeNativeHostRegistryKey() {
   return `HKCU\\Software\\Google\\Chrome\\NativeMessagingHosts\\${HOST_NAME}`;
 }
 
@@ -412,12 +426,12 @@ function parseArgs(values) {
     if (!value.startsWith("--")) continue;
     const [rawKey, inlineValue] = value.slice(2).split(/=(.*)/s, 2);
     const key = rawKey.trim();
+    const hasInlineValue = inlineValue !== undefined;
     const next = inlineValue ?? values[index + 1];
     const argValue =
-      inlineValue !== undefined || !next?.startsWith("--") ? next : true;
-    if (inlineValue === undefined && argValue !== true) index += 1;
-    if (parsed[key] === undefined) parsed[key] = argValue;
-    else parsed[key] = [...arrayArg(parsed[key]), String(argValue)];
+      hasInlineValue || (next && !next.startsWith("--")) ? next : true;
+    if (!hasInlineValue && argValue !== true) index += 1;
+    parsed[key] = argValue;
   }
   return parsed;
 }
@@ -433,12 +447,6 @@ function readJson(path, fallback) {
 function resolvePath(path) {
   if (!path.startsWith("~")) return resolve(path);
   return resolve(join(homedir(), path.slice(1)));
-}
-
-function arrayArg(value) {
-  if (Array.isArray(value)) return value.map(String);
-  if (value === undefined) return [];
-  return [String(value)];
 }
 
 function stringArg(value) {
@@ -496,18 +504,16 @@ function assertSupportedBrowser(targetBrowser) {
 
 function printHelp() {
   console.log(`Usage:
-  openbrowseragent-local-execution-bridge install --browser chrome --extension-id <id> --command <command> [options]
+  openbrowseragent-local-execution-bridge install --browser chrome --extension-id <id> [options]
 
 Options:
   --browser <chrome|edge|brave|vivaldi|chromium|firefox|librewolf|firefox-flatpak|chromium-flatpak|brave-flatpak|librewolf-flatpak|firefox-snap|chromium-snap|brave-snap>
                                            Browser target. Default: chrome
   --extension-id <id>                       Installed extension ID
-  --command <command>                       Local CLI command to run for bridge tasks
-  --command-arg <arg>                       Argument for the command; repeat as needed
-  --command-id <id>                         Bridge command config ID. Default: default
+  --command-id <id>                         Bridge shell config ID. Default: default
   --command-name <name>                     Display name. Default: command ID
   --cwd <path>                              Default command working directory
-  --shell true                              Run command through the shell
+  --shell <shell>                           Shell executable. Omit to let the bridge choose for this platform
   --secret <token>                          Use an existing bridge secret
   --rotate-secret true                      Generate a new secret for this command ID
   --config <path>                           Bridge config path

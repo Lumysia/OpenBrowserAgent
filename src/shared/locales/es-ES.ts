@@ -658,7 +658,7 @@ export const esES: LocaleMessages = {
     mcpServers: "Servidores MCP",
     localAgents: "Puentes de ejecución locales",
     localAgentsDescription:
-      "Configura puentes de ejecución locales o remotos. La extensión envía tareas al puente y el puente ejecuta el comando configurado en el host.",
+      "Configura puentes de ejecución locales o remotos. La extensión envía comandos de shell al puente y el puente los ejecuta en el host.",
     localAgentsEmpty:
       "Todavía no hay puentes de ejecución locales configurados.",
     newLocalAgent: "Nuevo puente de ejecución",
@@ -670,7 +670,7 @@ export const esES: LocaleMessages = {
       "Dejar vacío para local, o introducir una dirección que entienda el puente",
     localAgentSecret: "Secreto del puente",
     localAgentRegenerateSecret: "Regenerar secreto",
-    localAgentKey: "ID de configuración de comando",
+    localAgentKey: "ID de configuración de shell",
     localAgentDefaultCwd: "Directorio de trabajo predeterminado",
     localAgentTimeoutMs: "Tiempo de espera predeterminado (ms)",
     localAgentTest: "Probar puente",
@@ -841,7 +841,7 @@ export const esES: LocaleMessages = {
       "Sincroniza la configuración de servidores MCP Streamable HTTP con el backend de sincronización actual.",
     syncLocalAgents: "Sincronizar puentes de ejecución locales",
     syncLocalAgentsDescription:
-      "Sincroniza ajustes de puentes de ejecución, nombres de host nativos, direcciones de host de ejecución, secretos del puente, ID de configuración de comando y directorios predeterminados con el backend de sincronización actual.",
+      "Sincroniza ajustes de puentes de ejecución, nombres de host nativos, direcciones de host de ejecución, secretos del puente, ID de configuración de shell y directorios predeterminados con el backend de sincronización actual.",
     syncChats: "Sincronizar chats",
     syncChatsDescription:
       "Sincroniza el historial de chats con el backend de sincronización actual. Desactívalo para conversaciones solo locales.",

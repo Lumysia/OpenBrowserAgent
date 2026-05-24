@@ -630,7 +630,7 @@ export const ptBR: LocaleMessages = {
     mcpServers: "Servidores MCP",
     localAgents: "Pontes de execução locais",
     localAgentsDescription:
-      "Configure pontes de execução locais ou remotas. A extensão envia tarefas para a ponte, e a ponte executa o comando configurado no host.",
+      "Configure pontes de execução locais ou remotas. A extensão envia comandos de shell para a ponte, e a ponte os executa no host.",
     localAgentsEmpty: "Nenhuma ponte de execução local configurada ainda.",
     newLocalAgent: "Nova ponte de execução",
     localAgentName: "Nome da ponte de execução",
@@ -641,7 +641,7 @@ export const ptBR: LocaleMessages = {
       "Deixe vazio para local, ou informe um endereço aceito pela ponte",
     localAgentSecret: "Segredo da ponte",
     localAgentRegenerateSecret: "Gerar segredo novamente",
-    localAgentKey: "ID da configuração de comando",
+    localAgentKey: "ID da configuração de shell",
     localAgentDefaultCwd: "Diretório de trabalho padrão",
     localAgentTimeoutMs: "Timeout padrão (ms)",
     localAgentTest: "Testar ponte",
@@ -809,7 +809,7 @@ export const ptBR: LocaleMessages = {
       "Sincronize a configuração de servidores MCP Streamable HTTP pelo backend de sincronização atual.",
     syncLocalAgents: "Sincronizar pontes de execução locais",
     syncLocalAgentsDescription:
-      "Sincronize configurações de pontes de execução, nomes de host nativos, endereços de host de execução, segredos da ponte, IDs de configuração de comando e diretórios padrão pelo backend de sincronização atual.",
+      "Sincronize configurações de pontes de execução, nomes de host nativos, endereços de host de execução, segredos da ponte, IDs da configuração de shell e diretórios padrão pelo backend de sincronização atual.",
     syncChats: "Sincronizar chats",
     syncChatsDescription:
       "Sincronize o histórico de chats pelo backend de sincronização atual. Desative para conversas somente locais.",

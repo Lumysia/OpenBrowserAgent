@@ -681,7 +681,7 @@ export const jaJP: LocaleMessages = {
     mcpServers: "MCPサーバー",
     localAgents: "ローカル実行ブリッジ",
     localAgentsDescription:
-      "ローカルまたはリモートの実行ブリッジを設定します。拡張機能はタスクをブリッジに送り、ブリッジがホスト上で設定済みコマンドを実行します。",
+      "ローカルまたはリモートの実行ブリッジを設定します。拡張機能はシェルコマンドをブリッジに送り、ブリッジがホスト上で実行します。",
     localAgentsEmpty: "ローカル実行ブリッジはまだ設定されていません。",
     newLocalAgent: "新しい実行ブリッジ",
     localAgentName: "実行ブリッジ名",
@@ -692,7 +692,7 @@ export const jaJP: LocaleMessages = {
       "ローカルなら空欄、またはブリッジが解釈できるアドレス",
     localAgentSecret: "ブリッジシークレット",
     localAgentRegenerateSecret: "シークレットを再生成",
-    localAgentKey: "コマンド設定 ID",
+    localAgentKey: "シェル設定 ID",
     localAgentDefaultCwd: "既定の作業ディレクトリ",
     localAgentTimeoutMs: "既定のタイムアウト (ms)",
     localAgentTest: "ブリッジをテスト",
@@ -860,7 +860,7 @@ export const jaJP: LocaleMessages = {
       "Streamable HTTP MCPサーバー設定を現在の同期バックエンドで同期します。",
     syncLocalAgents: "ローカル実行ブリッジを同期",
     syncLocalAgentsDescription:
-      "実行ブリッジ設定、ネイティブホスト名、実行ホストアドレス、ブリッジシークレット、コマンド設定 ID、既定の作業ディレクトリを現在の同期バックエンドで同期します。",
+      "実行ブリッジ設定、ネイティブホスト名、実行ホストアドレス、ブリッジシークレット、シェル設定 ID、既定の作業ディレクトリを現在の同期バックエンドで同期します。",
     syncChats: "チャットを同期",
     syncChatsDescription:
       "チャット履歴を現在の同期バックエンドで同期します。ローカルのみの会話にする場合はオフにします。",

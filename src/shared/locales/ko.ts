@@ -617,7 +617,7 @@ export const ko: LocaleMessages = {
     mcpServers: "MCP 서버",
     localAgents: "로컬 실행 브리지",
     localAgentsDescription:
-      "로컬 또는 원격 실행 브리지를 구성합니다. 확장 프로그램은 작업을 브리지로 보내고, 브리지는 호스트에서 구성된 명령을 실행합니다.",
+      "로컬 또는 원격 실행 브리지를 구성합니다. 확장 프로그램은 셸 명령을 브리지로 보내고, 브리지는 호스트에서 실행합니다.",
     localAgentsEmpty: "아직 구성된 로컬 실행 브리지가 없습니다.",
     newLocalAgent: "새 실행 브리지",
     localAgentName: "실행 브리지 이름",
@@ -628,7 +628,7 @@ export const ko: LocaleMessages = {
       "로컬이면 비워두거나 브리지가 이해하는 주소를 입력하세요",
     localAgentSecret: "브리지 시크릿",
     localAgentRegenerateSecret: "시크릿 다시 생성",
-    localAgentKey: "명령 구성 ID",
+    localAgentKey: "셸 구성 ID",
     localAgentDefaultCwd: "기본 작업 디렉터리",
     localAgentTimeoutMs: "기본 제한 시간(ms)",
     localAgentTest: "브리지 테스트",
@@ -791,7 +791,7 @@ export const ko: LocaleMessages = {
       "Streamable HTTP MCP 서버 구성을 현재 동기화 백엔드로 동기화합니다.",
     syncLocalAgents: "로컬 실행 브리지 동기화",
     syncLocalAgentsDescription:
-      "실행 브리지 설정, 네이티브 호스트 이름, 실행 호스트 주소, 브리지 시크릿, 명령 구성 ID, 기본 작업 디렉터리를 현재 동기화 백엔드로 동기화합니다.",
+      "실행 브리지 설정, 네이티브 호스트 이름, 실행 호스트 주소, 브리지 시크릿, 셸 구성 ID, 기본 작업 디렉터리를 현재 동기화 백엔드로 동기화합니다.",
     syncChats: "채팅 동기화",
     syncChatsDescription:
       "채팅 기록을 현재 동기화 백엔드로 동기화합니다. 로컬 전용 대화는 끄세요.",

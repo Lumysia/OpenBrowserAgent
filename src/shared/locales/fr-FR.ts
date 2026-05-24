@@ -683,7 +683,7 @@ export const frFR: LocaleMessages = {
     mcpServers: "Serveurs MCP",
     localAgents: "Ponts d’exécution locaux",
     localAgentsDescription:
-      "Configurez des ponts d’exécution locaux ou distants. L’extension envoie les tâches au pont, et le pont exécute la commande configurée sur l’hôte.",
+      "Configurez des ponts d’exécution locaux ou distants. L’extension envoie des commandes shell au pont, et le pont les exécute sur l’hôte.",
     localAgentsEmpty: "Aucun pont d’exécution local n’est encore configuré.",
     newLocalAgent: "Nouveau pont d’exécution",
     localAgentName: "Nom du pont d’exécution",
@@ -694,7 +694,7 @@ export const frFR: LocaleMessages = {
       "Laisser vide pour local, ou saisir une adresse comprise par le pont",
     localAgentSecret: "Secret du pont",
     localAgentRegenerateSecret: "Régénérer le secret",
-    localAgentKey: "ID de configuration de commande",
+    localAgentKey: "ID de configuration du shell",
     localAgentDefaultCwd: "Répertoire de travail par défaut",
     localAgentTimeoutMs: "Délai par défaut (ms)",
     localAgentTest: "Tester le pont",
@@ -863,7 +863,7 @@ export const frFR: LocaleMessages = {
       "Synchronisez la configuration des serveurs MCP Streamable HTTP via le backend de synchronisation actuel.",
     syncLocalAgents: "Synchroniser les ponts d’exécution locaux",
     syncLocalAgentsDescription:
-      "Synchronisez les paramètres des ponts d’exécution, les noms d’hôte natifs, les adresses d’hôte d’exécution, les secrets de pont, les ID de configuration de commande et les répertoires par défaut via le backend de synchronisation actuel.",
+      "Synchronisez les paramètres des ponts d’exécution, les noms d’hôte natifs, les adresses d’hôte d’exécution, les secrets de pont, les ID de configuration du shell et les répertoires par défaut via le backend de synchronisation actuel.",
     syncChats: "Synchroniser les discussions",
     syncChatsDescription:
       "Synchronisez l'historique des discussions via le backend de synchronisation actuel. Désactivez pour des conversations locales uniquement.",

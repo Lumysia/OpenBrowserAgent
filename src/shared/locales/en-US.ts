@@ -614,7 +614,7 @@ export const enUS = {
     mcpServers: "MCP Servers",
     localAgents: "Local Execution Bridges",
     localAgentsDescription:
-      "Configure syncable local or remote execution bridges. The extension sends tasks to the bridge, and the bridge runs your configured command on the host.",
+      "Configure syncable local or remote execution bridges. The extension sends shell commands to the bridge, and the bridge runs them on the host.",
     localAgentsEmpty: "No local execution bridges configured yet.",
     newLocalAgent: "New execution bridge",
     localAgentName: "Execution bridge name",
@@ -625,7 +625,7 @@ export const enUS = {
       "Leave empty for local, or enter an address your bridge understands",
     localAgentSecret: "Bridge secret",
     localAgentRegenerateSecret: "Regenerate secret",
-    localAgentKey: "Command config ID",
+    localAgentKey: "Shell config ID",
     localAgentDefaultCwd: "Default working directory",
     localAgentTimeoutMs: "Default timeout (ms)",
     localAgentTest: "Test bridge",
@@ -791,7 +791,7 @@ export const enUS = {
       "Sync Streamable HTTP MCP server configuration through the current sync backend.",
     syncLocalAgents: "Sync Local Execution Bridges",
     syncLocalAgentsDescription:
-      "Sync execution bridge settings, native host names, execution host addresses, bridge secrets, command config IDs, and default working directories through the current sync backend.",
+      "Sync execution bridge settings, native host names, execution host addresses, bridge secrets, shell config IDs, and default working directories through the current sync backend.",
     syncChats: "Sync Chats",
     syncChatsDescription:
       "Sync chat history through the current sync backend. Keep this off for local-only conversations.",

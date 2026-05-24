@@ -502,7 +502,7 @@ export const zhCN: LocaleMessages = {
     mcpServers: "MCP 服务器",
     localAgents: "本地执行桥",
     localAgentsDescription:
-      "配置可同步的本地或远程执行桥。扩展只把任务发给桥，由桥在主机上执行你配置的命令。",
+      "配置可同步的本地或远程执行桥。扩展把 shell 命令发给桥，由桥在主机上执行。",
     localAgentsEmpty: "还没有配置本地执行桥。",
     newLocalAgent: "新建执行桥",
     localAgentName: "执行桥名称",
@@ -512,7 +512,7 @@ export const zhCN: LocaleMessages = {
     localAgentHostAddressPlaceholder: "留空表示本机，或填写桥接器识别的地址",
     localAgentSecret: "桥接密钥",
     localAgentRegenerateSecret: "重新生成密钥",
-    localAgentKey: "命令配置 ID",
+    localAgentKey: "Shell 配置 ID",
     localAgentDefaultCwd: "默认工作目录",
     localAgentTimeoutMs: "默认超时（毫秒）",
     localAgentTest: "测试桥接器",
@@ -668,7 +668,7 @@ export const zhCN: LocaleMessages = {
       "通过当前同步后端同步 Streamable HTTP MCP 服务器配置。",
     syncLocalAgents: "同步本地执行桥",
     syncLocalAgentsDescription:
-      "通过当前同步后端同步执行桥配置、原生主机名、执行主机地址、桥接密钥、命令配置 ID 和默认工作目录。",
+      "通过当前同步后端同步执行桥配置、原生主机名、执行主机地址、桥接密钥、Shell 配置 ID 和默认工作目录。",
     syncChats: "同步对话",
     syncChatsDescription:
       "通过当前同步后端同步对话历史。关闭时对话只保存在本机。",

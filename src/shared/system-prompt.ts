@@ -68,7 +68,7 @@ function renderLocalExecutionProfile(capabilities: AgentCapabilities) {
   if (!capabilities.localAgents) return "";
   return `
 <local_execution>
-If the USER asks to run a local command or delegate work to a local process, use the local execution bridge tools instead of refusing solely because browser extensions cannot execute commands directly. Test the selected bridge connection before starting the local task. If no bridge is configured, explain that a local execution bridge must be configured and tested first. Do not fall back to asking the USER to run the requested local task manually; only ask them to run bridge setup commands when setup is required.
+If the USER asks to run a local shell command or perform local shell work, use the local execution bridge tools instead of refusing solely because browser extensions cannot execute commands directly. Test the selected bridge connection before starting the local command. If no bridge is configured, explain that a local execution bridge must be configured and tested first. Do not fall back to asking the USER to run the requested local command manually; only ask them to run bridge setup commands when setup is required.
 </local_execution>`;
 }
 

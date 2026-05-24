@@ -677,7 +677,7 @@ export const deDE: LocaleMessages = {
     mcpServers: "MCP-Server",
     localAgents: "Lokale Ausführungs-Bridges",
     localAgentsDescription:
-      "Konfiguriere lokale oder entfernte Ausführungs-Bridges. Die Erweiterung sendet Aufgaben an die Bridge, und die Bridge führt den konfigurierten Befehl auf dem Host aus.",
+      "Konfiguriere lokale oder entfernte Ausführungs-Bridges. Die Erweiterung sendet Shell-Befehle an die Bridge, und die Bridge führt sie auf dem Host aus.",
     localAgentsEmpty: "Noch keine lokalen Ausführungs-Bridges konfiguriert.",
     newLocalAgent: "Neue Ausführungs-Bridge",
     localAgentName: "Name der Ausführungs-Bridge",
@@ -688,7 +688,7 @@ export const deDE: LocaleMessages = {
       "Leer lassen für lokal oder eine Adresse eingeben, die die Bridge versteht",
     localAgentSecret: "Bridge-Secret",
     localAgentRegenerateSecret: "Secret neu generieren",
-    localAgentKey: "Befehls-Konfigurations-ID",
+    localAgentKey: "Shell-Konfigurations-ID",
     localAgentDefaultCwd: "Standard-Arbeitsverzeichnis",
     localAgentTimeoutMs: "Standard-Timeout (ms)",
     localAgentTest: "Bridge testen",
@@ -859,7 +859,7 @@ export const deDE: LocaleMessages = {
       "Streamable-HTTP-MCP-Serverkonfiguration über das aktuelle Synchronisierungs-Backend synchronisieren.",
     syncLocalAgents: "Lokale Ausführungs-Bridges synchronisieren",
     syncLocalAgentsDescription:
-      "Ausführungs-Bridge-Einstellungen, native Hostnamen, Ausführungs-Hostadressen, Bridge-Secrets, Befehls-Konfigurations-IDs und Standard-Arbeitsverzeichnisse über das aktuelle Synchronisierungs-Backend synchronisieren.",
+      "Ausführungs-Bridge-Einstellungen, native Hostnamen, Ausführungs-Hostadressen, Bridge-Secrets, Shell-Konfigurations-IDs und Standard-Arbeitsverzeichnisse über das aktuelle Synchronisierungs-Backend synchronisieren.",
     syncChats: "Chats synchronisieren",
     syncChatsDescription:
       "Chatverlauf über das aktuelle Synchronisierungs-Backend synchronisieren. Deaktivieren für nur lokale Unterhaltungen.",

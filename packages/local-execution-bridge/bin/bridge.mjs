@@ -2,6 +2,7 @@
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { platform } from "node:os";
 import { fileURLToPath } from "node:url";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -51,24 +52,51 @@ function handleMessage(message) {
 }
 
 function pingCommand(message) {
-  const command = resolveCommand(message);
-  if (!command) return;
-  writeMessage({ type: "command.pong", command: message.command });
+  const config = resolveCommand(message);
+  if (!config) return;
+  const shell = resolveShell(String(config.shell || ""));
+  writeMessage({
+    type: "command.pong",
+    command: message.command,
+    shell: shell.command,
+    shellArgsPreview: shell.args("<command>"),
+    platform: platform(),
+    cwd: String(config.cwd || process.cwd()),
+    node: process.version,
+    env: {
+      home: process.env.HOME || process.env.USERPROFILE || "",
+      path: process.env.PATH || "",
+      shell: process.env.SHELL || process.env.ComSpec || "",
+      executionHost: String(message.command?.hostAddress || ""),
+    },
+  });
 }
 
 function runCommand(message) {
   const taskId = String(message.taskId || cryptoRandomId());
-  const command = resolveCommand(message, taskId);
-  if (!command) return;
-  const cwd = String(message.cwd || command.cwd || process.cwd());
+  const config = resolveCommand(message, taskId);
+  if (!config) return;
+  const commandLine = String(
+    message.commandLine || message.shellCommand || "",
+  ).trim();
+  if (!commandLine) {
+    writeMessage({
+      type: "command.error",
+      taskId,
+      error: "Shell command is required.",
+    });
+    return;
+  }
+  const cwd = String(message.cwd || config.cwd || process.cwd());
   const hostAddress = String(message.command?.hostAddress || "");
-  const child = spawn(command.command, command.args || [], {
+  const shell = resolveShell(String(message.shell || config.shell || ""));
+  const child = spawn(shell.command, shell.args(commandLine), {
     cwd,
-    shell: command.shell === true,
+    shell: false,
     env: {
       ...process.env,
       OPENBROWSERAGENT_EXECUTION_HOST: hostAddress,
-      ...(command.env || {}),
+      ...(config.env || {}),
     },
     stdio: ["pipe", "pipe", "pipe"],
   });
@@ -77,7 +105,7 @@ function runCommand(message) {
     type: "status",
     event: "started",
     taskId,
-    data: command.name || command.id,
+    data: commandLine,
   });
 
   child.stdout.on("data", (chunk) =>
@@ -98,7 +126,11 @@ function runCommand(message) {
   );
   child.on("error", (error) => {
     tasks.delete(taskId);
-    writeMessage({ type: "command.error", taskId, error: error.message });
+    writeMessage({
+      type: "command.error",
+      taskId,
+      error: formatSpawnError(error, shell.command),
+    });
   });
   child.on("close", (code, signal) => {
     tasks.delete(taskId);
@@ -109,9 +141,7 @@ function runCommand(message) {
       error: code === 0 ? undefined : `Local command exited with code ${code}`,
     });
   });
-
-  const prompt = buildPrompt(message);
-  child.stdin.end(prompt);
+  child.stdin.end();
 }
 
 function resolveCommand(message, taskId = "") {
@@ -123,7 +153,7 @@ function resolveCommand(message, taskId = "") {
     writeMessage({
       type: "command.error",
       taskId,
-      error: `Unknown command config: ${key}`,
+      error: `Unknown shell config: ${key}`,
     });
     return null;
   }
@@ -149,17 +179,6 @@ function cancelTask(taskId) {
   task.child.kill();
   tasks.delete(taskId);
   writeMessage({ type: "command.done", event: "canceled", taskId });
-}
-
-function buildPrompt(message) {
-  const parts = [];
-  if (message.title) parts.push(`# ${message.title}`);
-  parts.push(String(message.prompt || ""));
-  if (message.context) {
-    parts.push("\nContext JSON:");
-    parts.push(JSON.stringify(message.context, null, 2));
-  }
-  return `${parts.filter(Boolean).join("\n\n")}\n`;
 }
 
 function loadConfig(path) {
@@ -188,4 +207,38 @@ function writeMessage(message) {
 
 function cryptoRandomId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
+function resolveShell(value) {
+  const requested = value.trim().toLowerCase();
+  if (platform() === "win32") {
+    if (requested === "cmd") {
+      return {
+        command: process.env.ComSpec || "cmd.exe",
+        args: (commandLine) => ["/d", "/s", "/c", commandLine],
+      };
+    }
+    return {
+      command:
+        requested && requested !== "powershell" ? value : "powershell.exe",
+      args: (commandLine) => [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        commandLine,
+      ],
+    };
+  }
+  return {
+    command: requested || process.env.SHELL || "sh",
+    args: (commandLine) => ["-lc", commandLine],
+  };
+}
+
+function formatSpawnError(error, command) {
+  if (error?.code === "ENOENT") {
+    return `Shell not found: ${command}. Install that shell or choose another shell.`;
+  }
+  return error?.message || String(error);
 }

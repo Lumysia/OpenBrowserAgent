@@ -29,7 +29,7 @@ export const localExecutionBridgeTools = [
       agentKey: {
         type: "string",
         description:
-          "Command config ID inside the native bridge config, such as default.",
+          "Shell bridge config ID inside the native bridge config, such as default.",
       },
       secret: {
         type: "string",
@@ -62,7 +62,7 @@ export const localExecutionBridgeTools = [
       },
       agentKey: {
         type: "string",
-        description: "Command config ID inside the native bridge config",
+        description: "Shell bridge config ID inside the native bridge config",
       },
       secret: { type: "string", description: "Bridge secret" },
       regenerateSecret: {
@@ -100,7 +100,7 @@ export const localExecutionBridgeTools = [
   ),
   tool(
     BROWSER_TOOL_NAME.startLocalExecutionBridge,
-    "Delegate a focused task to a configured local execution bridge. By default this starts the local command task, waits for completion, and returns the result. Set background=true only when you intentionally want to continue before it finishes; then call getLocalExecutionBridgeStatus later.",
+    "Execute a shell command through a configured local execution bridge. By default this starts the command, waits for completion, and returns stdout/stderr/result. Set background=true only when you intentionally want to continue before it finishes; then call getLocalExecutionBridgeStatus later.",
     {
       agentId: {
         type: "string",
@@ -112,21 +112,21 @@ export const localExecutionBridgeTools = [
         description:
           "Target execution bridge display name when the id is unknown.",
       },
-      task: {
+      command: {
         type: "string",
         description:
-          "Clear task instructions for the local command. Include only the context it needs.",
+          "Exact shell command line to execute on the local machine.",
+      },
+      shell: {
+        type: "string",
+        description:
+          "Optional shell executable or shell mode. Omit to use the shell reported by the bridge test.",
       },
       title: { type: "string", description: "Short task title" },
       cwd: {
         type: "string",
         description:
           "Optional local working directory. Omit to use the configured default for this execution bridge.",
-      },
-      context: {
-        type: "object",
-        description:
-          "Optional structured context for the local execution bridge.",
       },
       background: {
         type: "boolean",
@@ -139,7 +139,7 @@ export const localExecutionBridgeTools = [
           "Maximum wait duration in milliseconds for the default synchronous mode. Defaults to 60000 and caps at 1800000.",
       },
     },
-    ["task"],
+    ["command"],
   ),
   tool(
     BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus,
