@@ -130,11 +130,12 @@ async function refreshSyncKey<T>(
       await markSyncLocalCacheFlushed(key, nextValue);
       return nextValue;
     }
-    await removeSyncLocalCache(key);
+    if (previous !== undefined) await removeSyncLocalCache(key);
     return undefined;
   }
   const value = normalize ? normalize(remote, key) : remote;
-  if (previous !== undefined && !sameStorageValue(previous, value)) {
+  if (previous !== undefined && sameStorageValue(previous, value)) return value;
+  if (previous !== undefined) {
     if (!writeBackOnChange) {
       await markSyncLocalCacheFlushed(key, value);
       return value;
