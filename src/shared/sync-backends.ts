@@ -154,6 +154,41 @@ export function syncBackendSupportsChatAttachments(
   return backendType === SYNC_BACKEND_TYPES.webDav;
 }
 
+export async function readSyncBackendObject(
+  backend: SyncBackend,
+  objectName: string,
+) {
+  if (isWebDavConfig(backend.config))
+    return readWebDavObject(backend.config, objectName);
+  throw new Error(
+    `Sync backend does not support attachment objects: ${backend.config.type}`,
+  );
+}
+
+export async function writeSyncBackendObject(
+  backend: SyncBackend,
+  objectName: string,
+  bytes: Uint8Array,
+  contentType: string,
+) {
+  if (isWebDavConfig(backend.config))
+    return writeWebDavObject(backend.config, objectName, bytes, contentType);
+  throw new Error(
+    `Sync backend does not support attachment objects: ${backend.config.type}`,
+  );
+}
+
+export async function removeSyncBackendObject(
+  backend: SyncBackend,
+  objectName: string,
+) {
+  if (isWebDavConfig(backend.config))
+    return removeWebDavObject(backend.config, objectName);
+  throw new Error(
+    `Sync backend does not support attachment objects: ${backend.config.type}`,
+  );
+}
+
 export async function readWebDavObject(
   backendConfig: WebDavSyncBackendConfig,
   objectName: string,

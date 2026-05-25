@@ -30,7 +30,7 @@ export function applyOpenAIContextBudget(
     preferences,
     modelContextLength,
   );
-  const originalChars = jsonLength(messages);
+  const originalChars = budgetLength(messages);
   if (!settings.enabled) return withReport(originalChars, messages, noPruning);
   const mediaPruned = pruneOpenAIVisionMessages(messages);
   const toolPruned = pruneOpenAIToolResults(mediaPruned.items, settings);
@@ -58,7 +58,7 @@ export function applyOpenAIResponsesContextBudget(
     preferences,
     modelContextLength,
   );
-  const originalChars = jsonLength(input);
+  const originalChars = budgetLength(input);
   if (!settings.enabled) return withReport(originalChars, input, noPruning);
   const mediaPruned = pruneOpenAIResponsesVisionMessages(input);
   const toolPruned = pruneOpenAIResponsesToolResults(
@@ -89,7 +89,7 @@ export function applyGeminiContextBudget(
     preferences,
     modelContextLength,
   );
-  const originalChars = jsonLength(contents);
+  const originalChars = budgetLength(contents);
   if (!settings.enabled) return withReport(originalChars, contents, noPruning);
   const mediaPruned = pruneGeminiVisionMessages(contents);
   const toolPruned = pruneGeminiToolResults(mediaPruned.items, settings);
@@ -200,7 +200,7 @@ function applySlidingWindow<T extends Record<string, unknown>>(
   createNote: (count: number, chars: number) => T,
   protectLinkedItems?: (items: T[], protectedIndexes: Set<number>) => void,
 ) {
-  if (jsonLength(items) <= settings.requestMaxChars)
+  if (budgetLength(items) <= settings.requestMaxChars)
     return { items, prunedMessages: 0 };
 
   const protectedIndexes = new Set<number>();
@@ -211,7 +211,7 @@ function applySlidingWindow<T extends Record<string, unknown>>(
   let tailChars = 0;
   let tailMessages = 0;
   for (let index = items.length - 1; index >= 0; index -= 1) {
-    const chars = jsonLength(items[index]);
+    const chars = budgetLength(items[index]);
     const protect =
       tailMessages < settings.tailMinMessages ||
       tailChars + chars <= settings.tailMaxChars;
@@ -226,7 +226,7 @@ function applySlidingWindow<T extends Record<string, unknown>>(
   const kept = items.filter((_, index) => protectedIndexes.has(index));
   if (!pruned.length) return { items, prunedMessages: 0 };
 
-  const note = createNote(pruned.length, jsonLength(pruned));
+  const note = createNote(pruned.length, budgetLength(pruned));
   const nextItems =
     kept[0]?.role === "system"
       ? [kept[0], note, ...kept.slice(1)]
@@ -446,7 +446,7 @@ function withReport<T>(
     "prunedMessages" | "truncatedToolResults" | "compactionSummary"
   >,
 ): BudgetResult<T> {
-  const finalChars = jsonLength(items);
+  const finalChars = budgetLength(items);
   return {
     items,
     report: {
@@ -462,6 +462,58 @@ function withReport<T>(
 
 function jsonLength(value: unknown) {
   return safeStringify(value).length;
+}
+
+function budgetLength(value: unknown) {
+  return safeStringify(withVisionPayloadPlaceholders(value)).length;
+}
+
+function withVisionPayloadPlaceholders(value: unknown): unknown {
+  if (typeof value === "string") {
+    if (value.startsWith("data:image/")) return "[vision image payload]";
+    return value;
+  }
+  if (!value || typeof value !== "object") return value;
+  if (Array.isArray(value)) return value.map(withVisionPayloadPlaceholders);
+
+  const record = value as Record<string, unknown>;
+  const imageUrl = record.image_url;
+  if (record.type === "input_image" && typeof imageUrl === "string")
+    return {
+      ...record,
+      image_url: imageUrl.startsWith("data:image/")
+        ? "[vision image payload]"
+        : imageUrl,
+    };
+  if (imageUrl && typeof imageUrl === "object") {
+    const imageUrlRecord = imageUrl as Record<string, unknown>;
+    const url = imageUrlRecord.url;
+    if (typeof url === "string" && url.startsWith("data:image/"))
+      return {
+        ...record,
+        image_url: { ...imageUrlRecord, url: "[vision image payload]" },
+      };
+  }
+  const inlineData = record.inline_data;
+  if (inlineData && typeof inlineData === "object") {
+    const inlineDataRecord = inlineData as Record<string, unknown>;
+    const mimeType = String(inlineDataRecord.mime_type || "");
+    if (
+      mimeType.startsWith("image/") &&
+      typeof inlineDataRecord.data === "string"
+    )
+      return {
+        ...record,
+        inline_data: { ...inlineDataRecord, data: "[vision image payload]" },
+      };
+  }
+
+  return Object.fromEntries(
+    Object.entries(record).map(([key, item]) => [
+      key,
+      withVisionPayloadPlaceholders(item),
+    ]),
+  );
 }
 
 function safeStringify(value: unknown) {

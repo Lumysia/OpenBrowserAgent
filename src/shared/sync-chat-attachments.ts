@@ -4,15 +4,14 @@ import {
   toAttachmentMetadata,
 } from "./attachments";
 import { getBrowserApi } from "./browser-api";
-import * as config from "./config";
 import {
   getActiveSyncBackend,
-  removeWebDavObject,
-  readWebDavObject,
-  writeWebDavObject,
-  type WebDavSyncBackendConfig,
+  readSyncBackendObject,
+  removeSyncBackendObject,
+  syncBackendSupportsChatAttachments,
+  writeSyncBackendObject,
+  type SyncBackend,
 } from "./sync-backends";
-import { SYNC_BACKEND_TYPES } from "./sync-backend-registry";
 import {
   mergeSyncDataSettings,
   SYNC_DATA_SETTING_KEYS,
@@ -37,11 +36,6 @@ type SyncedChatAttachmentMetadata = Omit<
   createdAt: number;
 };
 
-const pendingAttachmentWrites = new Map<
-  string,
-  ReturnType<typeof setTimeout>
->();
-
 export async function writeSyncedChatAttachments({
   syncDataSettings,
   chatId,
@@ -59,32 +53,18 @@ export async function writeSyncedChatAttachments({
       writeLocalChatAttachment({ chatId, messageId, attachment }),
     ),
   );
-  const backendConfig = await activeWebDavAttachmentBackend(syncDataSettings);
-  if (!backendConfig) return;
-
-  for (const attachment of attachments) {
-    const pending = pendingAttachmentWrites.get(attachment.id);
-    if (pending) clearTimeout(pending);
-    pendingAttachmentWrites.set(
-      attachment.id,
-      setTimeout(() => {
-        pendingAttachmentWrites.delete(attachment.id);
-        activeWebDavAttachmentBackend(syncDataSettings)
-          .then((currentBackendConfig) => {
-            if (!currentBackendConfig) return;
-            return writeSyncedChatAttachment({
-              backendConfig: currentBackendConfig,
-              chatId,
-              messageId,
-              attachment,
-            });
-          })
-          .catch((error) =>
-            console.warn("Failed to sync chat attachment", error),
-          );
-      }, config.CHAT_SYNC_WRITE_DEBOUNCE_MS),
-    );
-  }
+  const backend = await activeAttachmentBackend(syncDataSettings);
+  if (!backend) return;
+  await Promise.all(
+    attachments.map((attachment) =>
+      writeRemoteChatAttachment({
+        backend,
+        chatId,
+        messageId,
+        attachment,
+      }),
+    ),
+  );
 }
 
 export async function readSyncedChatAttachment(
@@ -93,18 +73,18 @@ export async function readSyncedChatAttachment(
 ) {
   const local = await readLocalChatAttachment(attachmentId);
   if (local) return local;
-  const backendConfig = await activeWebDavAttachmentBackend(syncDataSettings);
-  if (!backendConfig) return undefined;
-  const metadataBytes = await readWebDavObject(
-    backendConfig,
+  const backend = await activeAttachmentBackend(syncDataSettings);
+  if (!backend) return undefined;
+  const metadataBytes = await readSyncBackendObject(
+    backend,
     metadataObjectName(attachmentId),
   );
   if (!metadataBytes) return undefined;
   const metadata = JSON.parse(
     new TextDecoder().decode(metadataBytes),
   ) as SyncedChatAttachmentMetadata;
-  const contentBytes = await readWebDavObject(
-    backendConfig,
+  const contentBytes = await readSyncBackendObject(
+    backend,
     metadata.objectName,
   );
   if (!contentBytes) return metadata;
@@ -120,17 +100,12 @@ export async function removeSyncedChatAttachments(
   await Promise.all(
     attachments.map((attachment) => removeLocalChatAttachment(attachment.id)),
   );
-  const backendConfig = await activeWebDavAttachmentBackend(syncDataSettings);
-  if (!backendConfig) return;
+  const backend = await activeAttachmentBackend(syncDataSettings);
+  if (!backend) return;
   await Promise.all(
     attachments.map(async (attachment) => {
-      const pending = pendingAttachmentWrites.get(attachment.id);
-      if (pending) {
-        clearTimeout(pending);
-        pendingAttachmentWrites.delete(attachment.id);
-      }
-      const metadataBytes = await readWebDavObject(
-        backendConfig,
+      const metadataBytes = await readSyncBackendObject(
+        backend,
         metadataObjectName(attachment.id),
       );
       const metadata = metadataBytes
@@ -140,9 +115,9 @@ export async function removeSyncedChatAttachments(
         : undefined;
       await Promise.all([
         metadata?.objectName
-          ? removeWebDavObject(backendConfig, metadata.objectName)
+          ? removeSyncBackendObject(backend, metadata.objectName)
           : Promise.resolve(),
-        removeWebDavObject(backendConfig, metadataObjectName(attachment.id)),
+        removeSyncBackendObject(backend, metadataObjectName(attachment.id)),
       ]);
     }),
   );
@@ -169,13 +144,13 @@ export async function offloadChatInlineAttachments(chats: Chat[]) {
   return nextChats;
 }
 
-async function writeSyncedChatAttachment({
-  backendConfig,
+async function writeRemoteChatAttachment({
+  backend,
   chatId,
   messageId,
   attachment,
 }: {
-  backendConfig: WebDavSyncBackendConfig;
+  backend: SyncBackend;
   chatId: string;
   messageId: string;
   attachment: UploadedAttachment;
@@ -193,18 +168,19 @@ async function writeSyncedChatAttachment({
     objectName,
     createdAt: Date.now(),
   };
-  await writeWebDavObject(
-    backendConfig,
+  await writeSyncBackendObject(
+    backend,
     objectName,
     attachmentBytes(attachment),
     attachment.type || "application/octet-stream",
   );
-  await writeWebDavObject(
-    backendConfig,
+  await writeSyncBackendObject(
+    backend,
     metadataObjectName(attachment.id),
     new TextEncoder().encode(JSON.stringify(metadata, null, 2)),
     "application/json",
   );
+  await removeLocalChatAttachment(attachment.id);
 }
 
 async function writeLocalChatAttachment({
@@ -304,14 +280,14 @@ function dataUrlSize(dataUrl: string) {
   return Math.ceil((base64FromDataUrl(dataUrl).length * 3) / 4);
 }
 
-async function activeWebDavAttachmentBackend(
+async function activeAttachmentBackend(
   syncDataSettings: SyncDataSettings | undefined,
 ) {
   const settings = await currentSyncDataSettings(syncDataSettings);
   if (!settings?.[SYNC_DATA_SETTING_KEYS.chatAttachments]) return undefined;
   const backend = await getActiveSyncBackend().catch(() => undefined);
-  return backend?.config.type === SYNC_BACKEND_TYPES.webDav
-    ? backend.config
+  return backend && syncBackendSupportsChatAttachments(backend.config.type)
+    ? backend
     : undefined;
 }
 
