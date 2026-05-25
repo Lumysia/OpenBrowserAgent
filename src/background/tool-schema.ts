@@ -450,16 +450,24 @@ export const commonBrowserTools = [
         "JPEG quality from 0 to 100. Defaults to an efficient low-quality screenshot.",
     },
   }),
-  tool(BROWSER_TOOL_NAME.downloadTabToMarkdown, "Download a tab to markdown", {
-    tabId: { type: "number", description: "The ID of the tab to download" },
-  }),
   tool(
-    BROWSER_TOOL_NAME.downloadAllImagesInTab,
-    "Download tab images as a zip for the user. Not for visual inspection; use readFileFromUrl for that.",
+    BROWSER_TOOL_NAME.downloadTabToMarkdown,
+    "Download/export the tab as a Markdown file for the USER's device. This creates a user-facing file; it is not a way to pass page content to the agent. For page analysis or summarization, use inspectPage instead.",
     {
       tabId: {
         type: "number",
-        description: "The ID of the tab to download images from",
+        description: "The ID of the tab to export to a user-downloadable file",
+      },
+    },
+  ),
+  tool(
+    BROWSER_TOOL_NAME.downloadAllImagesInTab,
+    "Download/export tab images as a zip file for the USER's device. This creates a user-facing file; it is not a way to pass images to the agent. Not for visual inspection; use readFileFromUrl for that.",
+    {
+      tabId: {
+        type: "number",
+        description:
+          "The ID of the tab whose images should be exported to a user-downloadable zip",
       },
     },
   ),
