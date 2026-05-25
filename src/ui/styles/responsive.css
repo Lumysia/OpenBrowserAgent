@@ -192,7 +192,7 @@
   .source-chip-list .ui-button,
   .assistant-actions,
   .assistant-model-meta,
-  .assistant-text.streaming .markdown > *:last-child,
+  .assistant-text.streaming .markdown-segment:last-child > *:last-child,
   .stream-char,
   .ui-badge,
   .ui-command-empty,
@@ -227,7 +227,7 @@
     transform: none;
   }
 
-  .assistant-text.streaming .markdown > *:last-child::after {
+  .assistant-text.streaming .markdown-segment:last-child > *:last-child::after {
     animation: none !important;
     opacity: 0.7;
   }

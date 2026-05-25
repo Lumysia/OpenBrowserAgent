@@ -5,7 +5,7 @@
   gap: 2px;
   animation: assistant-text-enter 0.68s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.assistant-text.streaming .markdown > *:last-child::after {
+.assistant-text.streaming .markdown-segment:last-child > *:last-child::after {
   content: "";
   display: inline-block;
   width: 0.5em;
@@ -16,7 +16,7 @@
   vertical-align: -0.12em;
   animation: stream-caret 1s ease-in-out infinite;
 }
-.assistant-text.streaming .markdown > *:last-child {
+.assistant-text.streaming .markdown-segment:last-child > *:last-child {
   animation: stream-active-block 0.36s ease both;
 }
 .stream-char {

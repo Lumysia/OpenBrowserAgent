@@ -16,6 +16,13 @@ import type { ChatSource } from "../../src/shared/types";
 
 const STREAM_CHAR_ANIMATION_LIMIT = 80;
 
+export type MarkdownSegment = {
+  key: string;
+  text: string;
+  start: number;
+  end: number;
+};
+
 hljs.registerLanguage("bash", bash);
 hljs.registerLanguage("sh", bash);
 hljs.registerLanguage("shell", bash);
@@ -42,6 +49,7 @@ export function renderMarkdown(
     animatedFromChar?: number;
     mermaidPreview?: boolean;
     syntaxHighlight?: boolean;
+    codeIndexOffset?: number;
   } = {},
 ) {
   const codeBlocks: string[] = [];
@@ -51,7 +59,8 @@ export function renderMarkdown(
   renderer.image = ({ href, title, text }) =>
     renderMarkdownImage(href, title, text);
   renderer.code = ({ text: code, lang }) => {
-    const codeIndex = codeBlocks.push(code) - 1;
+    const localCodeIndex = codeBlocks.push(code) - 1;
+    const codeIndex = (options.codeIndexOffset || 0) + localCodeIndex;
     const codeId = `code-${codeIndex}`;
     const copied = copiedCodeId === codeId;
     const language = lang?.split(/\s+/)[0] || "";
@@ -80,6 +89,87 @@ export function renderMarkdown(
     html,
     codeBlocks,
   };
+}
+
+export function splitStreamingMarkdown(text: string, streaming: boolean) {
+  if (!streaming) return [markdownSegment("full", text, 0, text.length)];
+  const boundaries = stableMarkdownBoundaries(text);
+  const segments: MarkdownSegment[] = [];
+  let start = 0;
+  for (const boundary of boundaries) {
+    if (boundary <= start || boundary > text.length) continue;
+    segments.push(
+      markdownSegment(`stable:${start}:${boundary}`, text, start, boundary),
+    );
+    start = boundary;
+  }
+  if (start < text.length)
+    segments.push(markdownSegment("live", text, start, text.length));
+  return segments.length
+    ? segments
+    : [markdownSegment("live", text, 0, text.length)];
+}
+
+function markdownSegment(
+  key: string,
+  text: string,
+  start: number,
+  end: number,
+) {
+  return {
+    key,
+    text: text.slice(start, end),
+    start,
+    end,
+  } satisfies MarkdownSegment;
+}
+
+function stableMarkdownBoundaries(text: string) {
+  const boundaries: number[] = [];
+  let lineStart = 0;
+  let inFence: { marker: "`" | "~"; length: number } | undefined;
+  let inDisplayMath = false;
+
+  while (lineStart < text.length) {
+    const newlineIndex = text.indexOf("\n", lineStart);
+    const lineEnd = newlineIndex === -1 ? text.length : newlineIndex;
+    const nextLineStart = newlineIndex === -1 ? text.length : newlineIndex + 1;
+    const line = text.slice(lineStart, lineEnd);
+    const fence = line.match(/^\s*(`{3,}|~{3,})/);
+
+    if (fence) {
+      const marker = fence[1][0] as "`" | "~";
+      if (!inFence) {
+        inFence = { marker, length: fence[1].length };
+      } else if (
+        inFence.marker === marker &&
+        fence[1].length >= inFence.length
+      ) {
+        inFence = undefined;
+        if (nextLineStart < text.length) boundaries.push(nextLineStart);
+      }
+    } else if (!inFence) {
+      if (hasOddDisplayMathDelimiterCount(line)) inDisplayMath = !inDisplayMath;
+      if (!inDisplayMath && /^\s*$/.test(line)) boundaries.push(nextLineStart);
+    }
+
+    lineStart = nextLineStart;
+  }
+
+  return boundaries.filter(
+    (boundary, index) => boundary > 0 && boundaries.indexOf(boundary) === index,
+  );
+}
+
+function hasOddDisplayMathDelimiterCount(line: string) {
+  let count = 0;
+  for (let index = 0; index < line.length - 1; index += 1) {
+    if (line[index] !== "$" || line[index + 1] !== "$") continue;
+    if (index > 0 && line[index - 1] === "\\") continue;
+    count += 1;
+    index += 1;
+  }
+  return count % 2 === 1;
 }
 
 function applyStreamingTextRenderer(
