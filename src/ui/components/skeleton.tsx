@@ -5,7 +5,13 @@ function Skeleton({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("ui-skeleton", className)} {...props} />;
+  return (
+    <div
+      className={cn("ui-skeleton", className)}
+      data-loading="true"
+      {...props}
+    />
+  );
 }
 
 export { Skeleton };

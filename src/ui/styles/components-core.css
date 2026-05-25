@@ -100,6 +100,11 @@
 .ui-skeleton {
   position: relative;
   overflow: hidden;
+  background: color-mix(in srgb, var(--accent-softer) 36%, var(--card));
+}
+
+.ui-skeleton[data-loading="true"],
+.ui-skeleton[aria-busy="true"] {
   background:
     linear-gradient(
       90deg,

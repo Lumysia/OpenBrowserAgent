@@ -15,7 +15,13 @@ export function GeneratedImage({
 }) {
   const image = useStoredToolImage(output);
   const prompt = stringValue(output.prompt);
-  if (loading) return <div className="generated-image-skeleton ui-skeleton" />;
+  if (loading)
+    return (
+      <div
+        className="generated-image-skeleton ui-skeleton"
+        data-loading="true"
+      />
+    );
   if (!image || output.error) return null;
   const canCopyImage =
     image.startsWith("data:") && typeof ClipboardItem !== "undefined";

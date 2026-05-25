@@ -45,6 +45,7 @@ export function useStoredState<T>(item: StorageItem<T>) {
       const nextSnapshot = snapshot(item, next);
       if (nextSnapshot && nextSnapshot === snapshotRef.current) return;
       if (consumeOwnWriteSnapshot(ownWriteSnapshotsRef, nextSnapshot)) {
+        snapshotRef.current = nextSnapshot;
         return;
       }
       valueRef.current = next;
@@ -68,11 +69,14 @@ export function useStoredState<T>(item: StorageItem<T>) {
       typeof next === "function"
         ? (next as (previous: T) => T)(previous)
         : next;
-    const resolvedSnapshot = snapshot(item, resolved);
+    const deferSnapshot = shouldDeferUpdateSnapshot(item, options);
+    const resolvedSnapshot = deferSnapshot
+      ? undefined
+      : snapshot(item, resolved);
     if (resolvedSnapshot && resolvedSnapshot === snapshotRef.current)
       return resolved;
     valueRef.current = resolved;
-    snapshotRef.current = resolvedSnapshot;
+    if (!deferSnapshot) snapshotRef.current = resolvedSnapshot;
     setValue(resolved);
     await persistValue(
       item,
@@ -197,6 +201,17 @@ function snapshot(item: StorageItem<unknown>, value: unknown) {
   } catch {
     return undefined;
   }
+}
+
+function shouldDeferUpdateSnapshot(
+  item: StorageItem<unknown>,
+  options: StoredStateUpdateOptions,
+) {
+  return (
+    item.snapshot === "hash" &&
+    !!item.persistDebounceMs &&
+    options.persist !== "immediate"
+  );
 }
 
 function hashSnapshot(value: string) {
