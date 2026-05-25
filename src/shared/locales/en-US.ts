@@ -73,6 +73,8 @@ export const enUS = {
     clearAllChats: "Clear all chats",
     noChatsYet: "No chats yet",
     removeChat: "Remove chat",
+    pinChat: "Pin chat",
+    unpinChat: "Unpin chat",
     subAgentChat: "Sub-agent chat",
     subAgentBadge: "Sub",
     backToParentChat: "Back to parent chat",

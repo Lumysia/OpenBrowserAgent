@@ -66,6 +66,8 @@ export const zhCN: LocaleMessages = {
     clearAllChats: "清空所有对话",
     noChatsYet: "暂无对话",
     removeChat: "移除对话",
+    pinChat: "置顶对话",
+    unpinChat: "取消置顶",
     subAgentChat: "子智能体聊天",
     subAgentBadge: "子",
     backToParentChat: "返回父聊天",

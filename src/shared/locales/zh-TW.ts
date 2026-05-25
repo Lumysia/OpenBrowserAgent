@@ -66,6 +66,8 @@ export const zhTW: LocaleMessages = {
     clearAllChats: "清空所有對話",
     noChatsYet: "尚無對話",
     removeChat: "移除對話",
+    pinChat: "置頂對話",
+    unpinChat: "取消置頂",
     subAgentChat: "子智慧體聊天",
     subAgentBadge: "子",
     backToParentChat: "返回父聊天",

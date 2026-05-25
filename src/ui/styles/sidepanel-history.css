@@ -136,6 +136,10 @@
   font-size: 10px;
   line-height: 1;
 }
+.history-pinned-icon {
+  flex: 0 0 auto;
+  color: var(--accent-strong);
+}
 .history-unread-dot {
   width: 7px;
   height: 7px;
@@ -179,6 +183,15 @@
 .history-item-action:hover {
   background: color-mix(in srgb, var(--secondary) 74%, transparent);
   color: var(--foreground);
+}
+.history-item-action.active {
+  background: color-mix(in srgb, var(--accent-soft) 38%, transparent);
+  color: var(--accent-strong);
+}
+.history-item-action.active:hover,
+.history-item-action.active:focus-visible {
+  background: color-mix(in srgb, var(--accent-soft) 56%, transparent);
+  color: var(--accent-strong);
 }
 .history-delete-action {
   color: color-mix(in srgb, var(--destructive) 70%, var(--muted-foreground));

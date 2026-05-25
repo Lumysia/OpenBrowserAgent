@@ -73,6 +73,8 @@ export const deDE: LocaleMessages = {
     clearAllChats: "Alle Chats löschen",
     noChatsYet: "Noch keine Chats",
     removeChat: "Chat entfernen",
+    pinChat: "Chat anheften",
+    unpinChat: "Chat lösen",
     subAgentChat: "Subagent-Chat",
     subAgentBadge: "Sub",
     backToParentChat: "Zurück zum übergeordneten Chat",

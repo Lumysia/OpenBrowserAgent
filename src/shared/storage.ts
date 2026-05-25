@@ -1,11 +1,13 @@
 import { nanoid } from "nanoid";
 import { normalizeAgents } from "./agents";
 import { getBrowserApi } from "./browser-api";
+import { normalizeChats } from "./chats";
 import { BUILTIN_SKILLS } from "./builtin-skills";
 import * as config from "./config";
 import { DEFAULT_PREFERENCES, mergePreferences } from "./default-preferences";
 import { normalizeLocalExecutionBridges } from "./local-execution-bridges";
 import { normalizeMcpServers } from "./mcp";
+import { normalizeSkills } from "./skills";
 import {
   areaForSyncEnabled,
   effectiveArea,
@@ -188,6 +190,10 @@ function createSwitchableItem<T>(
   const areaFor = (settings: SyncDataSettings): AreaName =>
     areaForSyncEnabled(settings[syncPreferenceKey] === true);
 
+  const normalizeValue = (value: T) => (normalize ? normalize(value) : value);
+  const normalizeOptionalValue = (value: T | undefined) =>
+    value === undefined ? undefined : normalizeValue(value);
+
   async function activeArea() {
     return effectiveArea(areaFor(await storage.syncDataSettings.get()));
   }
@@ -196,19 +202,17 @@ function createSwitchableItem<T>(
     const area = await activeArea();
     if (area === STORAGE_AREAS.sync) {
       const pending = await readPendingSyncValue<T>(key);
-      if (pending !== undefined)
-        return normalize ? normalize(pending) : pending;
+      if (pending !== undefined) return normalizeValue(pending);
     }
     const activeValue = await readFrom(area);
-    if (activeValue !== undefined)
-      return normalize ? normalize(activeValue) : activeValue;
+    if (activeValue !== undefined) return normalizeValue(activeValue);
 
     const inactiveValue =
       area === STORAGE_AREAS.sync
         ? await readFrom(otherStorageArea(area))
         : undefined;
     const rawValue = inactiveValue === undefined ? init() : inactiveValue;
-    const value = normalize ? normalize(rawValue) : rawValue;
+    const value = normalizeValue(rawValue);
     await setStoredValueNow(area, key, value);
     return value;
   }
@@ -225,7 +229,7 @@ function createSwitchableItem<T>(
     get: getValue,
     async set(value) {
       const area = await activeArea();
-      await setStoredValue(area, key, normalize ? normalize(value) : value);
+      await setStoredValue(area, key, normalizeValue(value));
       const inactiveArea = await effectiveArea(otherStorageArea(area));
       if (area === STORAGE_AREAS.sync && inactiveArea !== area)
         await removeStoredValue(inactiveArea, key);
@@ -242,12 +246,18 @@ function createSwitchableItem<T>(
         activeRemoteUnwatch?.();
         activeRemoteUnwatch = watchRemoteValue<T>(key, async (change) => {
           if ((await activeArea()) !== STORAGE_AREAS.sync) return;
+          const newValue = normalizeOptionalValue(
+            change.newValue as T | undefined,
+          );
+          const oldValue = normalizeOptionalValue(
+            change.oldValue as T | undefined,
+          );
           if (change.newValue !== undefined) {
-            await markSyncLocalCacheFlushed(key, change.newValue);
+            await markSyncLocalCacheFlushed(key, newValue as T);
           } else {
             await removeSyncLocalCache(key);
           }
-          callback(change.newValue as T, change.oldValue as T);
+          callback(newValue as T, oldValue as T);
         });
       };
       setupRemoteWatch().catch(() => undefined);
@@ -317,12 +327,18 @@ function createSwitchableItem<T>(
           const previous = cacheChange.oldValue as
             | SyncLocalCache<T>
             | undefined;
-          if (next) callback(next.value, previous?.value as T);
-          else callback(undefined as T, previous?.value as T);
+          const oldValue = normalizeOptionalValue(
+            previous?.value as T | undefined,
+          );
+          if (next) callback(normalizeValue(next.value), oldValue as T);
+          else callback(undefined as T, oldValue as T);
           return;
         }
         if (changedArea !== area || !changes[key]) return;
-        callback(changes[key].newValue as T, changes[key].oldValue as T);
+        callback(
+          normalizeOptionalValue(changes[key].newValue as T | undefined) as T,
+          normalizeOptionalValue(changes[key].oldValue as T | undefined) as T,
+        );
       };
       getBrowserApi().storage.onChanged.addListener(listener);
       return () => {
@@ -345,7 +361,7 @@ function createSwitchableItem<T>(
       readFrom(toArea),
     ]);
     if (sourceValue !== undefined && targetValue === undefined)
-      await setStoredValueNow(toArea, key, sourceValue);
+      await setStoredValueNow(toArea, key, normalizeValue(sourceValue));
   }
 }
 
@@ -386,6 +402,7 @@ export const storage = {
     STORAGE_KEYS.skills,
     () => BUILTIN_SKILLS,
     SYNC_PREFERENCES.skills,
+    normalizeSkills,
   ),
   mcpServers: createSwitchableItem<McpServerConfig[]>(
     STORAGE_KEYS.mcpServers,
@@ -444,7 +461,7 @@ function createChatsStorageItem() {
     STORAGE_KEYS.chats,
     () => [],
     SYNC_PREFERENCES.chats,
-    undefined,
+    normalizeChats,
     { persistDebounceMs: config.CHAT_WRITE_DEBOUNCE_MS, snapshot: "hash" },
   );
   return {

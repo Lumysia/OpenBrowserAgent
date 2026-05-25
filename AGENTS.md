@@ -20,42 +20,36 @@ OpenBrowserAgent is a WXT/Vite/React/TypeScript browser extension for AI-assiste
 
 ## UI Rules
 
-- Use the local shadcn-style components from `src/ui/components` for buttons, inputs, textarea, select, cards, badges, labels, and accordions.
-- Prefer local shadcn/Radix primitives for interactive UI instead of custom interaction code. Tooltips, popovers, dropdowns, scroll containers, accordions, selects, switches, buttons, inputs, textareas, cards, badges, labels, and similar reusable UI behavior should be implemented through `src/ui/components` first. If a primitive is missing, add a local shadcn-style wrapper around the Radix primitive instead of building one-off CSS/DOM behavior.
-- Do not add custom CSS classes or one-off styles for UI layout/state unless existing shadcn/Radix components, existing shared utility classes, and component props cannot reasonably express the design. If custom CSS is unavoidable, keep it generic and reusable rather than feature-specific.
-- Do not keep old custom UI implementations as compatibility layers during development. When migrating a UI surface to local shadcn/Radix primitives, remove the replaced state, selectors, CSS, and event handling in the same change.
-- Do not add raw ad-hoc buttons/inputs/selects in app code unless a native element is required by browser-extension constraints or a rendered Markdown/HTML boundary makes React components impossible.
-- Keep animations subtle: short fades, accordion transitions, hover/press feedback, and streaming typing indicators.
-- Preserve a compact sidepanel density while keeping UI colors and branding consistent with OpenBrowserAgent.
-- Theme-aware UI should use shared CSS variables. Light, dark, and system modes should all be checked when changing colors, shadows, gradients, menus, popovers, or tool states.
-- Accent colors should propagate consistently across settings, sidepanel, buttons, selects, tool cards, and message controls. Prefer soft derived tints over hardcoded one-off colors.
-- Settings controls should use compact, purposeful UI. Prefer direct controls such as segmented choices or color swatches when they communicate better than a dropdown.
-- Settings page visual language must stay consistent across General, Providers, MCP, Agents, Skills, Sync, and Debug. Before changing one surface, inspect comparable surfaces and shared styles first; fix the shared component/style when the issue is a pattern.
-- Do not solve UI issues with narrow one-off patches. For repeated structures such as page headers, accordion summaries, badges, button variants, popovers, model rows, file rows, and validation/status chips, extract or reuse a common component/class/variant and remove obsolete feature-specific styles.
-- Settings typography should be restrained and consistent: page titles are the strongest text, section/card/accordion titles should use the shared title styles, descriptions and metadata should use muted text with lighter weight, and badges should not inherit heavy parent font weights. Avoid raw `strong`/`b` for layout titles; use local title components/classes instead.
-- Settings action buttons should use shared `Button` variants. Every icon-only button must have a `Tooltip` and accessible label; use icon-only buttons only when the surrounding context and tooltip make the action clear. Confirmation buttons inside popovers should generally include text. Destructive actions should use the shared destructive variant that matches the surface instead of ordinary outline buttons with delete icons.
-- Settings layouts must be responsive by construction. Long provider/model names, IDs, badges, and translated strings must not push buttons out of view; use `minmax(0, 1fr)`, `min-width: 0`, wrapping action rows, and ellipsis where appropriate. Check narrow option-page widths after changing grids or flex rows.
-- Interactive feedback should be explicit and temporary when appropriate, such as copy buttons changing to a success icon and tooltip before resetting.
-- UI quality is product quality. Tool cards, menus, settings surfaces, empty states, and debug panels should have complete visual affordances such as appropriate icons, labels, spacing, and state feedback. Do not treat icons, hierarchy, or polished microcopy as narrow one-off fixes; keep them consistent and reusable across the product.
+- Use local shadcn/Radix components from `src/ui/components` for reusable controls and interactions. If a primitive is missing, add a local wrapper instead of building one-off DOM behavior.
+- Avoid raw ad-hoc controls, feature-specific CSS, and compatibility layers. When replacing UI, remove the old selectors, state, and event handling in the same change.
+- Keep the sidepanel compact, responsive, theme-aware, and consistent with OpenBrowserAgent branding. Use shared CSS variables and ensure long labels/IDs cannot push actions out of view.
+- Settings surfaces must share the same visual language across sections. Reuse or extract common structures for headers, summaries, badges, actions, rows, chips, popovers, and empty states.
+- Do not fix UI issues with narrow one-off patches. If a pattern repeats, fix the shared component/class/variant.
+- Typography, actions, destructive states, icon-only buttons, tooltips, feedback states, icons, spacing, and microcopy should be consistent and accessible.
+- Keep animations subtle and preserve real streaming/typing affordances unless the user explicitly accepts a UX tradeoff.
+
+## Communication Rules
+
+- Respond in Chinese when the user writes in Chinese, unless the user explicitly requests another language or the response is constrained by code, logs, commands, or external text.
 
 ## Code Quality Rules
 
-- Prefer the best maintainable engineering solution over the smallest possible diff. Narrow patches are only acceptable when the underlying design is already sound and the change fully addresses the issue.
+- Prefer the best maintainable engineering solution over the smallest possible diff. Do not use narrow one-off patches to hide symptoms, bypass shared contracts, or fix only the visible call site. If a problem points to a shared abstraction, state flow, sync protocol, rendering pipeline, or data contract, fix that layer instead.
 - When a bug crosses state management, synchronization, background protocols, tool execution, or UI rendering, inspect the full flow and fix the shared abstraction or contract rather than adding local special cases.
+- Do not guess root causes. If the code path or trace mapping is unclear, gather evidence first; for production/minified performance issues, build with sourcemaps or temporary diagnostics and ask the user for a new trace/repro instead of patching by assumption.
+- For performance work, use trace/profile evidence when available and optimize the proven root cause rather than the easiest hotspot. Do not degrade streaming UX, animations, responsiveness, data consistency, or browser-extension protocol behavior to reduce CPU unless the user explicitly accepts that tradeoff.
+- Revert or replace changes that are proven ineffective or cause functional regressions. Do not keep a performance patch just because it improves a metric if it breaks rendering, drops content, changes sync semantics, or creates stale UI.
 - Refactor when it improves correctness, removes duplication, clarifies ownership, or prevents repeat regressions. Keep refactors focused on the problem area and verify behavior end to end.
 - Keep React state updaters pure. Do not perform storage writes, network calls, logging-only side effects, port messages, or other side effects inside functional state updater callbacks; expose explicit APIs or effects for immediate persistence when needed.
-- Do not add hardcoded language detection. Assistant response language belongs in the model prompt: respond in the user's latest message language.
-- Keep UI language selection only for extension chrome/localized UI, not for forcing assistant replies.
-- Extension UI text must prefer the app's stored UI language (`storage.language` with `getMessages`/local UI registries). Use `chrome.i18n` only as a fallback for manifest/default locale or non-React content-script boundaries where the stored language is unavailable.
-- Avoid hardcoded theme colors in components and stateful UI; use shared CSS variables and `src/shared/i18n.ts` for user-facing text.
+- Do not add hardcoded language detection. UI language settings are only for extension chrome/localized UI, not assistant replies.
+- Extension UI text must prefer stored UI language (`storage.language` with local registries). Use `chrome.i18n` only as fallback or where stored language is unavailable.
+- Avoid hardcoded theme colors and user-facing strings. Use shared CSS variables and locale files under `src/shared/locales`.
 - Do not add placeholder hacks, debug logs, or narrow special-case branches without an explicit product requirement.
-- Keep localization maintainable: UI message definitions live in per-locale files under `src/shared/locales`, and manifest messages live under `public/_locales`. Do not expose a language option unless its UI locale is implemented.
-- When adding or changing any user-facing UI string, update every supported locale at the same time. Do not rely on English fallback for implemented UI languages. Keep Simplified Chinese and Traditional Chinese as separate locale files with appropriate wording.
-- Keep user-facing text out of component logic unless it is a short technical fallback. Add or update locale keys instead.
+- Keep localization complete: update every supported locale for user-facing UI strings, keep Simplified and Traditional Chinese separate, and do not expose unimplemented locales.
 - Prefer real streaming over simulated streaming. Do not wait for a full model response and then fake token chunks when the provider supports streaming.
 - Keep preferences explicit and defaulted in storage. New preferences should have a type, a storage default, and a settings control when user-facing.
 - Settings changes must take effect in the UI immediately. Do not couple visible state updates to delayed `chrome.storage.sync` writes; persist a local immediate value/cache first and let sync flush in the background.
-- Centralize reusable policy/protocol values in a registry, config, or typed constants instead of repeating literals at call sites. This applies broadly to storage areas and keys, routes and hash paths, port names, request/chunk types, DOM data selectors, state IDs, quotas, timeouts, limits, and user-visible operational messages. Local one-off copy is fine; cross-file or cross-feature behavior is not.
+- Centralize reusable policy/protocol values in registries, config, or typed constants instead of repeating cross-file literals.
 - UI navigation that opens options pages or existing web URLs should reuse and focus an existing tab instead of blindly creating duplicates. Use shared tab-navigation helpers for settings, source citations, references, and similar UI links; reserve raw `chrome.tabs.create` for explicit browser automation tools or product flows that must open a new tab.
 - Keep source files under 500 lines by default. If a file approaches the limit, split by responsibility into components, hooks, helpers, registries, or feature modules before adding more behavior. Exceptions require a clear reason such as generated code, static data, or compact protocol/schema declarations.
 - Format changed source files with Prettier before verification.
@@ -69,16 +63,17 @@ OpenBrowserAgent is a WXT/Vite/React/TypeScript browser extension for AI-assiste
 
 ## Verification
 
-Run these after meaningful changes:
+Run after meaningful changes:
 
 ```bash
 npm run compile
 npm run build
 ```
 
-- Always run `npm run build` after UI changes before telling the user to review or reload the extension; the user cannot reliably inspect sidepanel/options UI changes until the extension bundle is rebuilt.
+- Always run `npm run build` after UI changes before telling the user to review or reload the extension.
+- If a production/minified issue cannot be located confidently, create a sourcemap-enabled build or add temporary diagnostics, then ask for a new trace/repro. Do not commit temporary diagnostics or sourcemap-only config unless explicitly requested.
 
-Also search for unintended third-party branding before final release work:
+Search for unintended third-party branding before final release work:
 
 ```bash
 rg -i "<unintended brand patterns>" .
@@ -86,6 +81,6 @@ rg -i "<unintended brand patterns>" .
 
 ## Git
 
-- Use Angular-style commit messages, for example `feat: add auto-scroll preference`, `fix: stream assistant responses`, or `chore: update project metadata`.
+- Use Angular-style commit messages.
 - Keep commits focused and avoid mixing unrelated changes when possible.
 - Before committing, review the pending diff against every rule in this file. Check each changed file for UI rules, code quality rules, browser tool protocol stability, localization completeness, source-file size, formatting, and required verification. Do not commit until the review is complete and any exceptions are explicit.

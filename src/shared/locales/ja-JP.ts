@@ -73,6 +73,8 @@ export const jaJP: LocaleMessages = {
     clearAllChats: "すべてのチャットを消去",
     noChatsYet: "チャットはまだありません",
     removeChat: "チャットを削除",
+    pinChat: "チャットをピン留め",
+    unpinChat: "ピン留めを解除",
     subAgentChat: "サブエージェントチャット",
     subAgentBadge: "サブ",
     backToParentChat: "親チャットに戻る",

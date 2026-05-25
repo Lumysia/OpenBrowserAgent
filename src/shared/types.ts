@@ -320,6 +320,7 @@ export type Chat = {
   childChatIds?: string[];
   imageGenerationJobs?: ImageGenerationJob[];
   sources?: ChatSource[];
+  pinnedAt?: number;
   createdAt: number;
   updatedAt: number;
 };

@@ -1,4 +1,12 @@
-import { ArrowLeft, Download, Pencil, Trash2, Upload, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  Pencil,
+  Pin,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import {
   useEffect,
   useRef,
@@ -103,6 +111,16 @@ export function HistoryPanel({
     setDraftTitle("");
   }
 
+  function togglePinned(chatId: string) {
+    onSetChats((items) =>
+      items.map((chat) =>
+        chat.id === chatId
+          ? { ...chat, pinnedAt: chat.pinnedAt ? undefined : Date.now() }
+          : chat,
+      ),
+    );
+  }
+
   function closeWithExit(chatId: string) {
     if (removingChatIds[chatId]) return;
     const ids = linkedClosedChatIds(chats, chatId);
@@ -194,6 +212,7 @@ export function HistoryPanel({
               preferences={preferences}
               onSetDraftTitle={setDraftTitle}
               onStartEdit={startEdit}
+              onTogglePin={togglePinned}
               onSaveEdit={saveEdit}
               onCancelEdit={cancelEdit}
               onSelect={onSelect}
@@ -216,6 +235,7 @@ export function HistoryPanel({
                     child
                     onSetDraftTitle={setDraftTitle}
                     onStartEdit={startEdit}
+                    onTogglePin={togglePinned}
                     onSaveEdit={saveEdit}
                     onCancelEdit={cancelEdit}
                     onSelect={onSelect}
@@ -244,6 +264,7 @@ function HistoryItem({
   child = false,
   onSetDraftTitle,
   onStartEdit,
+  onTogglePin,
   onSaveEdit,
   onCancelEdit,
   onSelect,
@@ -261,6 +282,7 @@ function HistoryItem({
   child?: boolean;
   onSetDraftTitle: (value: string) => void;
   onStartEdit: (chat: Chat) => void;
+  onTogglePin: (chatId: string) => void;
   onSaveEdit: (chatId: string) => void;
   onCancelEdit: () => void;
   onSelect: (chatId: string) => void;
@@ -303,6 +325,13 @@ function HistoryItem({
               <span className="history-unread-dot" aria-hidden="true" />
             )}
             {child && <Badge>{t.sidepanel.subAgentBadge}</Badge>}
+            {chat.pinnedAt && (
+              <Pin
+                className="history-pinned-icon"
+                size={12}
+                aria-hidden="true"
+              />
+            )}
             <strong>{title}</strong>
           </span>
           <small>
@@ -314,6 +343,23 @@ function HistoryItem({
         </Button>
       )}
       <div className="history-item-actions">
+        <IconTooltip
+          label={chat.pinnedAt ? t.sidepanel.unpinChat : t.sidepanel.pinChat}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`history-item-action ${chat.pinnedAt ? "active" : ""}`}
+            aria-label={
+              chat.pinnedAt ? t.sidepanel.unpinChat : t.sidepanel.pinChat
+            }
+            aria-pressed={!!chat.pinnedAt}
+            disabled={removing}
+            onClick={() => onTogglePin(chat.id)}
+          >
+            <Pin size={13} />
+          </Button>
+        </IconTooltip>
         <IconTooltip label={t.common.edit}>
           <Button
             variant="ghost"

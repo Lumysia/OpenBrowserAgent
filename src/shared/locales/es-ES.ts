@@ -72,6 +72,8 @@ export const esES: LocaleMessages = {
     clearAllChats: "Borrar todos los chats",
     noChatsYet: "Aún no hay chats",
     removeChat: "Eliminar chat",
+    pinChat: "Fijar chat",
+    unpinChat: "Desfijar chat",
     subAgentChat: "Chat de subagente",
     subAgentBadge: "Sub",
     backToParentChat: "Volver al chat principal",

@@ -71,6 +71,8 @@ export const ko: LocaleMessages = {
     clearAllChats: "모든 채팅 지우기",
     noChatsYet: "아직 채팅이 없습니다",
     removeChat: "채팅 제거",
+    pinChat: "채팅 고정",
+    unpinChat: "채팅 고정 해제",
     subAgentChat: "하위 에이전트 채팅",
     subAgentBadge: "하위",
     backToParentChat: "상위 채팅으로 돌아가기",

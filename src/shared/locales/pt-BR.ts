@@ -72,6 +72,8 @@ export const ptBR: LocaleMessages = {
     clearAllChats: "Limpar todos os chats",
     noChatsYet: "Ainda não há chats",
     removeChat: "Remover chat",
+    pinChat: "Fixar chat",
+    unpinChat: "Desfixar chat",
     subAgentChat: "Chat de subagente",
     subAgentBadge: "Sub",
     backToParentChat: "Voltar ao chat principal",

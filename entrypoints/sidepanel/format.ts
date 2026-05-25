@@ -7,7 +7,10 @@ import type { Chat } from "../../src/shared/types";
 
 export function sortChatsNewestFirst(chats: Chat[]) {
   return [...chats].sort(
-    (a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt),
+    (a, b) =>
+      Number(!!b.pinnedAt) - Number(!!a.pinnedAt) ||
+      (b.pinnedAt || b.updatedAt || b.createdAt) -
+        (a.pinnedAt || a.updatedAt || a.createdAt),
   );
 }
 

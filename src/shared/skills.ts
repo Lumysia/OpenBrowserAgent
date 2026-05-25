@@ -8,6 +8,8 @@ type LegacySkill = Partial<Skill> & {
   instruction?: string;
 };
 
+type LegacySkillFile = Partial<SkillFile>;
+
 export function createSkillPackage({
   id = crypto.randomUUID(),
   name,
@@ -109,18 +111,72 @@ export function getSkillBody(skill: Skill) {
   return stripSkillFrontmatter(getSkillInstruction(skill));
 }
 
-export function normalizeSkill(skill: Skill): Skill {
-  const legacy = skill as LegacySkill;
-  if (skill.name && skill.files?.length)
-    return { ...skill, enabled: skill.enabled !== false };
+export function normalizeSkills(value: unknown): Skill[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((skill) => normalizeSkill(skill));
+}
+
+export function normalizeSkill(
+  skill: Partial<Skill> | null | undefined,
+): Skill {
+  const source = skill || {};
+  const legacy = source as LegacySkill;
+  const id = stringValue(source.id) || crypto.randomUUID();
+  const name =
+    normalizeSkillName(stringValue(legacy.name || legacy.title)) || "skill";
+  const description = stringValue(legacy.description).trim();
+  const files = Array.isArray(source.files)
+    ? source.files.map(normalizeSkillFile).filter(isSkillFile)
+    : [];
+  const createdAt = numberValue(source.createdAt);
+  const updatedAt = numberValue(source.updatedAt);
+
+  if (files.length)
+    return {
+      id,
+      name,
+      description,
+      files,
+      enabled: source.enabled !== false,
+      builtin: source.builtin === true,
+      createdAt,
+      updatedAt,
+    };
+
   return createSkillPackage({
-    id: skill.id,
-    name: legacy.name || legacy.title || "skill",
-    description: legacy.description || "",
-    instruction: legacy.instruction || "",
-    createdAt: skill.createdAt,
-    updatedAt: skill.updatedAt,
+    id,
+    name,
+    description,
+    instruction: stringValue(legacy.instruction),
+    createdAt,
+    updatedAt,
   });
+}
+
+function normalizeSkillFile(file: LegacySkillFile): SkillFile | undefined {
+  const path = stringValue(file?.path).trim();
+  const content = stringValue(file?.content);
+  if (!path) return undefined;
+  return {
+    path,
+    kind: skillFileKind(path),
+    content,
+    updatedAt: numberValue(file?.updatedAt),
+  };
+}
+
+function isSkillFile(file: SkillFile | undefined): file is SkillFile {
+  return !!file;
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" ? value : "";
+}
+
+function numberValue(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : Date.now();
 }
 
 export function isSkillEnabled(skill: Skill) {

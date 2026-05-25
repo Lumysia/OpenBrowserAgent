@@ -72,6 +72,8 @@ export const frFR: LocaleMessages = {
     clearAllChats: "Effacer toutes les discussions",
     noChatsYet: "Aucune discussion",
     removeChat: "Supprimer la discussion",
+    pinChat: "Épingler la discussion",
+    unpinChat: "Désépingler la discussion",
     subAgentChat: "Discussion de sous-agent",
     subAgentBadge: "Sous",
     backToParentChat: "Retour à la discussion parente",
