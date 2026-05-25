@@ -17,6 +17,7 @@ import {
   SYNC_DATA_SETTING_KEYS,
   type SyncDataSettings,
 } from "./sync-data-settings";
+import { readSyncLocalValue } from "./storage-sync-cache";
 import { STORAGE_KEYS } from "./storage-keys";
 import type { Chat, UploadedAttachment } from "./types";
 
@@ -292,6 +293,10 @@ async function activeAttachmentBackend(
 }
 
 async function currentSyncDataSettings(fallback: SyncDataSettings | undefined) {
+  const cached = await readSyncLocalValue<Partial<SyncDataSettings>>(
+    STORAGE_KEYS.syncDataSettings,
+  );
+  if (cached) return mergeSyncDataSettings(cached);
   const result = await getBrowserApi().storage.sync.get(
     STORAGE_KEYS.syncDataSettings,
   );
