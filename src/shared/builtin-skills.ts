@@ -107,16 +107,19 @@ Use this skill for browser automation tasks that involve inspecting pages, click
 
 1. Inspect the active page and relevant already-open tabs before opening new pages. Reuse an existing useful tab when it matches the task.
 2. Use page inspection as the primary map for clicking, text entry, content blocks, and nearby DOM context.
-3. For page edits or actions, match the target by selected element, aiId, selector, nearby text, or an inspected block, then use \`mutatePage\` with the simplest operation such as \`click\`, \`input\`, \`setText\`, \`insertElement\`, \`insertHtml\`, or \`delete\`. Prefer structured \`insertElement\` over raw HTML when a page blocks HTML insertion.
-4. Re-read page state after actions that change controls, navigation, loading, or submitted content.
-5. Use visual evidence for image inspection, judging, choosing, or description.
-6. For search and research, open result pages, compare reliable sources, and cite sourced claims.
-7. Keep tab state tidy during and after the task:
+3. Before an externally visible action such as sending, posting, submitting, purchasing, deleting, or changing account/page state, verify the page, target, and action against every explicit user constraint. A partial match is not enough; conflicting or missing evidence means inspect more or ask the user.
+4. For page edits or actions, match the target by selected element, aiId, selector, nearby text, or an inspected block, then use \`mutatePage\` with the simplest operation such as \`click\`, \`input\`, \`setText\`, \`insertElement\`, \`insertHtml\`, or \`delete\`. Prefer structured \`insertElement\` over raw HTML when a page blocks HTML insertion.
+5. Treat \`mutatePage\` success as evidence that an action was dispatched, not proof that the user goal is complete. If the result includes \`postconditionRequired\`, verify the expected page state before proceeding or claiming success.
+6. If text entry into a rich editor returns \`CONTROLLED_EDITOR_REJECTED_DOM_INPUT\`, do not retry DOM input or \`setText\` on that target. Focus the editor, load the trusted input fallback if needed, then use browser-level typing and browser-level submit keys.
+7. Re-read page state after actions that change controls, navigation, loading, or submitted content. For externally visible submissions, require stronger evidence than a button click: the target is still correct and the submitted item/message/result is visible, or the input cleared and no error state is present.
+8. Use visual evidence for image inspection, judging, choosing, or description.
+9. For search and research, open result pages, compare reliable sources, and cite sourced claims.
+10. Keep tab state tidy during and after the task:
    - Track tabs opened by this task.
    - Close opened tabs that are no longer useful, such as duplicate search pages, dead ends, transient login/interstitial pages, and pages whose information has already been captured.
    - Keep the final useful tab or small set of useful tabs open when they support the user's goal.
    - If the user explicitly asks to open, use, or end on a specific tab/page, use \`manageTabs\` with operation \`focus\` to focus that requested tab before finishing.
-8. Use deferred browser tools when common tools do not provide the needed page control or evidence.
+11. Use deferred browser tools when common tools do not provide the needed page control or evidence.
 `,
       },
     ],

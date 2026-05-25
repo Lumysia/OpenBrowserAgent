@@ -1,5 +1,9 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 import { resolveBrowserTabId } from "../shared/browser";
+import {
+  DEFAULT_SCREENSHOT_FORMAT,
+  DEFAULT_SCREENSHOT_QUALITY,
+} from "../shared/config";
 import { TOOL_ERROR } from "../shared/tool-errors";
 import { withContentSlice, withListSlice } from "./tool-utils";
 
@@ -625,9 +629,21 @@ async function takeScreenshot(
   target: chrome.debugger.Debuggee,
   args: Record<string, unknown>,
 ) {
-  const format = stringInput(args.format) || "png";
+  const requestedFormat = stringInput(args.format);
+  const format =
+    requestedFormat === "png" || requestedFormat === "webp"
+      ? requestedFormat
+      : DEFAULT_SCREENSHOT_FORMAT;
+  const quality = Number(args.quality);
   const result = await send(target, "Page.captureScreenshot", {
     format,
+    ...(format === "jpeg" || format === "webp"
+      ? {
+          quality: Number.isFinite(quality)
+            ? Math.min(100, Math.max(0, Math.trunc(quality)))
+            : DEFAULT_SCREENSHOT_QUALITY,
+        }
+      : {}),
     fromSurface: true,
   });
   const image = `data:image/${format};base64,${result.data}`;

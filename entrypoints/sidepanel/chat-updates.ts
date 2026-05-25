@@ -5,6 +5,7 @@ import type {
   ContextBudgetReport,
   RunMetrics,
 } from "../../src/shared/types";
+import { CHAT_PART_STATE } from "../../src/shared/types";
 import {
   extractSourcesFromPart,
   mergeChatSources,
@@ -85,16 +86,48 @@ export function updateAssistantRunMetrics(
           ...chat,
           messages: chat.messages.map((message) =>
             message.id === messageId
-              ? {
-                  ...message,
-                  metadata: mergeRunMetrics(message.metadata, metrics),
-                }
+              ? updateMessageRunMetrics(message, metrics)
               : message,
           ),
           updatedAt: Date.now(),
         }
       : chat,
   );
+}
+
+function updateMessageRunMetrics(
+  message: ChatMessage,
+  metrics: Partial<RunMetrics>,
+) {
+  return {
+    ...message,
+    parts: appendContextSummaryPart(message, metrics.contextBudget),
+    metadata: mergeRunMetrics(message.metadata, metrics),
+  };
+}
+
+function appendContextSummaryPart(
+  message: ChatMessage,
+  budget: ContextBudgetReport | undefined,
+) {
+  const summary = budget?.compactionSummary?.trim();
+  if (!summary) return message.parts;
+  const parts = message.parts || [];
+  if (
+    parts.some(
+      (part) => part.type === "summary" && part.text?.trim() === summary,
+    )
+  )
+    return message.parts;
+  return [
+    ...parts,
+    {
+      id: `context-summary-${crypto.randomUUID()}`,
+      type: "summary" as const,
+      text: summary,
+      state: CHAT_PART_STATE.done,
+    },
+  ];
 }
 
 export function appendQueuedMessages({

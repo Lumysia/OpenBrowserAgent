@@ -150,3 +150,9 @@ export function compactedContextPlaceholder(count: number, chars: number) {
 - (none)
 </context_compacted>`;
 }
+
+export function compactedContextSummary(summary: string) {
+  return `<context_compacted>
+${summary.trim()}
+</context_compacted>`;
+}

@@ -3,7 +3,10 @@ import {
   CONTEXT_TOOL_RESULT_KEEP_RECENT,
 } from "../shared/config";
 import type { ContextBudgetReport, Preferences } from "../shared/types";
-import { compactedContextPlaceholder } from "./compaction-prompt";
+import {
+  compactedContextPlaceholder,
+  compactedContextSummary,
+} from "./compaction-prompt";
 import {
   latestRealUserMessageIndex,
   pruneGeminiVisionMessages,
@@ -339,7 +342,9 @@ function createOpenAIPrunedNote(
 ) {
   return {
     role: "user",
-    content: compactionSummary || compactedContextPlaceholder(count, chars),
+    content: compactionSummary
+      ? compactedContextSummary(compactionSummary)
+      : compactedContextPlaceholder(count, chars),
   };
 }
 

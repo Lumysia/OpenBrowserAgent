@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { Copy, Download } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
+import { readSyncedChatAttachment } from "../../src/shared/sync-chat-attachments";
 import { Button } from "../../src/ui/components";
 
 export function GeneratedImage({
@@ -11,7 +13,7 @@ export function GeneratedImage({
   loading: boolean;
   t: Messages;
 }) {
-  const image = stringValue(output.image);
+  const image = useStoredToolImage(output);
   const prompt = stringValue(output.prompt);
   if (loading) return <div className="generated-image-skeleton ui-skeleton" />;
   if (!image || output.error) return null;
@@ -59,7 +61,7 @@ export function CapturedTabImage({
   output: Record<string, unknown>;
   t: Messages;
 }) {
-  const image = stringValue(output.image);
+  const image = useStoredToolImage(output);
   const format = stringValue(output.format) || "png";
   if (!image || output.error) return null;
   const canCopyImage =
@@ -88,6 +90,31 @@ export function CapturedTabImage({
       </div>
     </div>
   );
+}
+
+function useStoredToolImage(output: Record<string, unknown>) {
+  const inlineImage = stringValue(output.image);
+  const attachmentId = stringValue(output.imageAttachmentId);
+  const [storedImage, setStoredImage] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    setStoredImage("");
+    if (inlineImage || !attachmentId) return;
+    readSyncedChatAttachment(undefined, attachmentId)
+      .then((attachment) => {
+        if (!cancelled)
+          setStoredImage(
+            attachment && "dataUrl" in attachment
+              ? attachment.dataUrl || ""
+              : "",
+          );
+      })
+      .catch((error) => console.warn("Failed to load tool image", error));
+    return () => {
+      cancelled = true;
+    };
+  }, [attachmentId, inlineImage]);
+  return inlineImage || storedImage;
 }
 
 function stringValue(value: unknown) {

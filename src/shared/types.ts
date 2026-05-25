@@ -292,7 +292,7 @@ export const CHAT_PART_STATE = {
 
 export type ChatPart = {
   id: string;
-  type: "text" | "reasoning" | ToolPartType;
+  type: "text" | "reasoning" | "summary" | ToolPartType;
   text?: string;
   append?: boolean;
   toolName?: string;

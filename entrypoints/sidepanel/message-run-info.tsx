@@ -109,6 +109,12 @@ function RunInfoSection({
   metrics: RunMetrics;
   t: Messages;
 }) {
+  const estimatedInputTokens = estimatePromptTokens(metrics.promptBreakdown);
+  const estimatedOutputTokens = estimateTokens(metrics.outputCharacters);
+  const estimatedTotalTokens =
+    estimatedInputTokens || estimatedOutputTokens
+      ? estimatedInputTokens + estimatedOutputTokens
+      : 0;
   return (
     <div className="run-info-section">
       <div className="run-info-section-title">{title}</div>
@@ -126,11 +132,19 @@ function RunInfoSection({
       <div className="run-info-token-grid">
         <MetricRow
           label={t.sidepanel.runInfo.input}
-          value={formatTokenCount(metrics.usage?.inputTokens, t)}
+          value={formatTokenCount(
+            metrics.usage?.inputTokens,
+            t,
+            estimatedInputTokens,
+          )}
         />
         <MetricRow
           label={t.sidepanel.runInfo.outputTokens}
-          value={formatTokenCount(metrics.usage?.outputTokens, t)}
+          value={formatTokenCount(
+            metrics.usage?.outputTokens,
+            t,
+            estimatedOutputTokens,
+          )}
         />
         <MetricRow
           label={t.sidepanel.runInfo.cached}
@@ -142,7 +156,11 @@ function RunInfoSection({
         />
         <MetricRow
           label={t.sidepanel.runInfo.total}
-          value={formatTokenCount(metrics.usage?.totalTokens, t)}
+          value={formatTokenCount(
+            metrics.usage?.totalTokens,
+            t,
+            estimatedTotalTokens,
+          )}
         />
         <MetricRow
           label={t.sidepanel.runInfo.reasoning}
@@ -409,6 +427,15 @@ function estimateTokens(characters: number | undefined) {
   return Math.max(1, Math.round(characters / ESTIMATED_CHARS_PER_TOKEN));
 }
 
+function estimatePromptTokens(breakdown: PromptBreakdown | undefined) {
+  if (!breakdown) return 0;
+  const characters = Object.values(breakdown).reduce(
+    (sum, value) => sum + (Number(value) || 0),
+    0,
+  );
+  return estimateTokens(characters);
+}
+
 function formatMs(value: number | undefined, t: Messages) {
   if (value === undefined) return t.sidepanel.runInfo.unavailable;
   return value < MS_PER_SECOND
@@ -416,8 +443,16 @@ function formatMs(value: number | undefined, t: Messages) {
     : `${(value / MS_PER_SECOND).toFixed(2)} s`;
 }
 
-function formatTokenCount(value: number | undefined, t: Messages) {
-  if (value === undefined) return t.sidepanel.runInfo.unavailable;
+function formatTokenCount(
+  value: number | undefined,
+  t: Messages,
+  estimatedValue = 0,
+) {
+  if (value === undefined) {
+    if (estimatedValue)
+      return `${formatCompactNumber(estimatedValue)} ${t.sidepanel.runInfo.tokenUnit} ${t.sidepanel.runInfo.estimated}`;
+    return t.sidepanel.runInfo.unavailable;
+  }
   return `${formatCompactNumber(value)} ${t.sidepanel.runInfo.tokenUnit}`;
 }
 

@@ -152,9 +152,37 @@ function mutatePageInDom(request: MutationRequest) {
       tabindex !== null
     );
   };
+  const isReliableTarget = (element: HTMLElement) => {
+    const tag = element.tagName.toLowerCase();
+    const role = element.getAttribute("role") || "";
+    return (
+      tag === "a" ||
+      tag === "button" ||
+      tag === "input" ||
+      tag === "textarea" ||
+      tag === "select" ||
+      element.isContentEditable ||
+      role === "button" ||
+      role === "link" ||
+      role === "textbox" ||
+      role === "menuitem" ||
+      role === "option" ||
+      role === "tab"
+    );
+  };
   const resolveClickTarget = (element: HTMLElement) => {
     let current: HTMLElement | null = element;
     const elementRect = element.getBoundingClientRect();
+    while (current && current !== document.body) {
+      if (isReliableTarget(current) && isVisible(current)) return current;
+      const rect = current.getBoundingClientRect();
+      const grewTooLarge =
+        rect.width > Math.max(elementRect.width * 8, 700) ||
+        rect.height > Math.max(elementRect.height * 8, 240);
+      if (grewTooLarge) break;
+      current = current.parentElement;
+    }
+    current = element;
     while (current && current !== document.body) {
       if (isActionable(current) && isVisible(current)) return current;
       const rect = current.getBoundingClientRect();
@@ -206,75 +234,108 @@ function mutatePageInDom(request: MutationRequest) {
     target.dispatchEvent(new MouseEvent("click", { ...eventInit, buttons: 0 }));
     return { x: Math.round(clientX), y: Math.round(clientY) };
   };
-  const findBestTextElement = (text: string) => {
-    const needle = text.replace(/\s+/g, " ").trim().toLowerCase();
-    if (!needle) return undefined;
-    const compact = (value: string) => value.replace(/\s+/g, " ").trim();
-    return (
-      Array.from(
-        document.querySelectorAll(
-          "a,button,input,textarea,[role],article,section,div,span,p,li,h1,h2,h3,h4,h5,h6",
-        ),
-      ) as HTMLElement[]
-    )
-      .filter((element) => {
-        return isVisible(element);
-      })
-      .filter((element) =>
-        compact(element.innerText || element.textContent || "")
-          .toLowerCase()
-          .includes(needle),
-      )
-      .sort((a, b) => {
-        const aText = compact(a.innerText || a.textContent || "");
-        const bText = compact(b.innerText || b.textContent || "");
-        const aExact = aText.toLowerCase() === needle ? 0 : 1;
-        const bExact = bText.toLowerCase() === needle ? 0 : 1;
-        if (aExact !== bExact) return aExact - bExact;
-        return aText.length - bText.length;
-      })[0];
-  };
-  const findBestNamedElement = (name: string) => {
-    const needle = name.replace(/\s+/g, " ").trim().toLowerCase();
-    if (!needle) return undefined;
-    const accessibleName = (element: HTMLElement) =>
+  const compact = (value: string) => value.replace(/\s+/g, " ").trim();
+  const ownText = (element: HTMLElement) =>
+    compact(
+      Array.from(element.childNodes)
+        .filter((node) => node.nodeType === Node.TEXT_NODE)
+        .map((node) => node.textContent || "")
+        .join(" "),
+    );
+  const accessibleName = (element: HTMLElement) =>
+    compact(
       [
         element.getAttribute("aria-label"),
         element.getAttribute("title"),
         element.getAttribute("placeholder"),
         element.getAttribute("alt"),
         element.getAttribute("name"),
+        ownText(element),
         element.innerText || element.textContent || "",
       ]
         .filter(Boolean)
-        .join(" ")
-        .replace(/\s+/g, " ")
-        .trim();
-    return (
-      Array.from(
-        document.querySelectorAll(
-          "a,button,input,textarea,select,[contenteditable='true'],[aria-label],[title],[placeholder],[alt],[role],[tabindex]",
-        ),
-      ) as HTMLElement[]
+        .join(" "),
+    );
+  const targetScore = (
+    element: HTMLElement,
+    needle: string,
+    mode: "text" | "name",
+  ) => {
+    const target = resolveClickTarget(element);
+    const elementText = compact(element.innerText || element.textContent || "");
+    const elementOwnText = ownText(element);
+    const elementName = accessibleName(element);
+    const targetName = accessibleName(target);
+    const targetText = compact(target.innerText || target.textContent || "");
+    const haystack = mode === "name" ? elementName : elementText;
+    if (!haystack.toLowerCase().includes(needle)) return null;
+
+    let score = 0;
+    if (elementOwnText.toLowerCase() === needle) score += 120;
+    else if (elementName.toLowerCase() === needle) score += 105;
+    else if (elementOwnText.toLowerCase().includes(needle)) score += 90;
+    else if (elementName.toLowerCase().includes(needle)) score += 75;
+    else if (elementText.toLowerCase().includes(needle)) score += 35;
+
+    if (target !== element) score += 80;
+    if (isReliableTarget(target)) score += 80;
+    if (target instanceof HTMLAnchorElement && target.href) score += 80;
+    if (targetName.toLowerCase().includes(needle)) score += 60;
+    if (isReliableTarget(element)) score += 40;
+    if (target === element) score += 20;
+
+    const rect = element.getBoundingClientRect();
+    const area = rect.width * rect.height;
+    if (area > window.innerWidth * window.innerHeight * 0.25) score -= 160;
+    if (elementText.length > 500) score -= 90;
+    if (rect.width > 700 || rect.height > 280) score -= 60;
+    return { score, target, textLength: targetText.length };
+  };
+  const findBestElement = (
+    needle: string,
+    selectors: string,
+    mode: "text" | "name",
+  ) => {
+    const best = (
+      Array.from(document.querySelectorAll(selectors)) as HTMLElement[]
     )
       .filter((element) => isVisible(element))
-      .filter((element) =>
-        accessibleName(element).toLowerCase().includes(needle),
-      )
+      .map((element) => {
+        const match = targetScore(element, needle, mode);
+        return match ? { element, ...match } : null;
+      })
+      .filter(Boolean)
       .sort((a, b) => {
-        const aName = accessibleName(a).toLowerCase();
-        const bName = accessibleName(b).toLowerCase();
-        const aExact = aName === needle ? 0 : 1;
-        const bExact = bName === needle ? 0 : 1;
-        if (aExact !== bExact) return aExact - bExact;
-        return aName.length - bName.length;
+        if (!a || !b) return 0;
+        if (a.score !== b.score) return b.score - a.score;
+        return a.textLength - b.textLength;
       })[0];
+    return best?.target;
+  };
+  const findBestTextElement = (text: string) => {
+    const needle = text.replace(/\s+/g, " ").trim().toLowerCase();
+    if (!needle) return undefined;
+    return findBestElement(
+      needle,
+      "a,button,input,textarea,[role],article,section,div,span,p,li,h1,h2,h3,h4,h5,h6",
+      "text",
+    );
+  };
+  const findBestNamedElement = (name: string) => {
+    const needle = name.replace(/\s+/g, " ").trim().toLowerCase();
+    if (!needle) return undefined;
+    return findBestElement(
+      needle,
+      "a,button,input,textarea,select,[contenteditable='true'],[aria-label],[title],[placeholder],[alt],[role],[tabindex]",
+      "name",
+    );
   };
   const runOne = (options: (typeof request.operations)[number]) => {
     const targetRequested = Boolean(
       options.target.aiId ||
       options.target.selector ||
       options.target.text ||
+      options.target.ariaLabel ||
       options.target.selected,
     );
     const describe = (element: HTMLElement) => ({
@@ -320,8 +381,51 @@ function mutatePageInDom(request: MutationRequest) {
       } else element.dispatchEvent(new Event("input", { bubbles: true }));
       element.dispatchEvent(new Event("change", { bubbles: true }));
     };
+    const controlledEditorRejection = (
+      element: HTMLElement,
+      value: string,
+      beforeText?: string,
+      afterText?: string,
+      usedNativeInsertion?: boolean,
+    ) => ({
+      success: false,
+      error: "CONTROLLED_EDITOR_REJECTED_DOM_INPUT",
+      target: describe(element),
+      value,
+      usedNativeInsertion,
+      beforeText,
+      afterText,
+      requiresTrustedInput: true,
+      recommendation:
+        "Focus the editor, then use a trusted browser input path such as cdpInput operation=type. Do not retry DOM input or setText on this target.",
+    });
+    const requiresTrustedEditableInput = (element: HTMLElement) => {
+      if (!element.isContentEditable) return false;
+      const role = element.getAttribute("role") || "";
+      const isUserInputControl = Boolean(
+        role === "textbox" ||
+        element.getAttribute("aria-label") ||
+        element.getAttribute("aria-placeholder") ||
+        element.getAttribute("placeholder") ||
+        element.getAttribute("aria-multiline") ||
+        element.closest("form"),
+      );
+      const hasEditorManagedChildren = Boolean(
+        Array.from(
+          element.querySelectorAll(
+            "[data-slate-node],[data-slate-leaf],[data-slate-zero-width],[data-lexical-text]",
+          ),
+        ).length,
+      );
+      return isUserInputControl || hasEditorManagedChildren;
+    };
     const replaceEditableText = (element: HTMLElement, value: string) => {
       element.focus({ preventScroll: true });
+      const beforeText = (
+        element.innerText ||
+        element.textContent ||
+        ""
+      ).trim();
       const selection = window.getSelection();
       const range = document.createRange();
       range.selectNodeContents(element);
@@ -337,7 +441,32 @@ function mutatePageInDom(request: MutationRequest) {
         selection?.addRange(fallbackRange);
         dispatchInput(element, value);
       }
-      return inserted;
+      const afterText = (element.innerText || element.textContent || "").trim();
+      return {
+        inserted,
+        beforeText,
+        afterText,
+        accepted: afterText === value,
+        controlledEditorMismatch: isControlledEditorMismatch(element, value),
+      };
+    };
+    const isControlledEditorMismatch = (
+      element: HTMLElement,
+      value: string,
+    ) => {
+      if (!element.isContentEditable) return false;
+      if (!requiresTrustedEditableInput(element)) return false;
+      const zeroWidthText = Array.from(
+        element.querySelectorAll("[data-slate-zero-width]"),
+      )
+        .map((node) => (node.textContent || "").trim())
+        .join("");
+      const emptyLeafText = Array.from(
+        element.querySelectorAll("[class*='empty'],[data-slate-zero-width]"),
+      )
+        .map((node) => (node.textContent || "").trim())
+        .join("");
+      return zeroWidthText.includes(value) || emptyLeafText.includes(value);
     };
     const dispatchKey = (
       element: HTMLElement,
@@ -382,7 +511,7 @@ function mutatePageInDom(request: MutationRequest) {
             options.scroll.y as number,
           ) as HTMLElement | null)
         : null;
-    const target = (() => {
+    const locateTarget = () => {
       if (coordinateTarget) return coordinateTarget;
       if (options.target.aiId) {
         const element = document.querySelector(
@@ -408,7 +537,8 @@ function mutatePageInDom(request: MutationRequest) {
       return document.querySelector(
         '[data-oba-selected="true"]',
       ) as HTMLElement | null;
-    })();
+    };
+    let target = locateTarget();
 
     if (options.operation === "scroll" && !targetRequested) {
       const scrollHeight = Math.max(
@@ -466,8 +596,50 @@ function mutatePageInDom(request: MutationRequest) {
 
     try {
       if (options.operation === "click") {
+        const initialRect = target.getBoundingClientRect();
+        const wasOffscreen =
+          initialRect.bottom < 0 ||
+          initialRect.right < 0 ||
+          initialRect.top > window.innerHeight ||
+          initialRect.left > window.innerWidth;
+        const wasPartiallyOffscreen =
+          initialRect.top < 0 ||
+          initialRect.left < 0 ||
+          initialRect.bottom > window.innerHeight ||
+          initialRect.right > window.innerWidth;
+        if (!coordinateTarget && (wasOffscreen || wasPartiallyOffscreen)) {
+          target.scrollIntoView({
+            block: "center",
+            inline: "center",
+            behavior: "instant",
+          });
+          const refreshedTarget = locateTarget();
+          if (refreshedTarget) target = refreshedTarget;
+        }
+        const refreshedRect = target.getBoundingClientRect();
         const clickTarget = resolveClickTarget(target);
         const clickTargetDescription = describe(clickTarget);
+        const clickTargetRect = clickTarget.getBoundingClientRect();
+        if (
+          !isVisible(clickTarget) ||
+          clickTargetRect.bottom < 0 ||
+          clickTargetRect.right < 0 ||
+          clickTargetRect.top > window.innerHeight ||
+          clickTargetRect.left > window.innerWidth
+        )
+          return {
+            success: false,
+            error: "CLICK_TARGET_NOT_VISIBLE_AFTER_SCROLL",
+            target: before,
+            refreshedTarget: describe(target),
+            clickTarget: clickTargetDescription,
+            actionEvidence: {
+              targetRequested,
+              wasOffscreen,
+              wasPartiallyOffscreen,
+              coordinateTarget: Boolean(coordinateTarget),
+            },
+          };
         const link = clickTarget.closest("a[href]") as HTMLAnchorElement | null;
         if (link?.href && options.openLinksInNewTab)
           return {
@@ -475,7 +647,14 @@ function mutatePageInDom(request: MutationRequest) {
             newTab: true,
             url: link.href,
             target: before,
+            refreshedTarget: describe(target),
             clickTarget: clickTargetDescription,
+            actionEvidence: {
+              targetRequested,
+              wasOffscreen,
+              wasPartiallyOffscreen,
+              coordinateTarget: Boolean(coordinateTarget),
+            },
           };
         const clickedAt = dispatchHumanClick(
           clickTarget,
@@ -485,9 +664,25 @@ function mutatePageInDom(request: MutationRequest) {
         return {
           success: true,
           target: before,
+          refreshedTarget: describe(target),
           clickTarget: clickTargetDescription,
           clickedAt,
           coordinateTarget: Boolean(coordinateTarget),
+          actionEvidence: {
+            targetRequested,
+            wasOffscreen,
+            wasPartiallyOffscreen,
+            finalRect: {
+              x: Math.round(refreshedRect.x),
+              y: Math.round(refreshedRect.y),
+              width: Math.round(refreshedRect.width),
+              height: Math.round(refreshedRect.height),
+            },
+          },
+          postconditionRequired: targetRequested,
+          recommendation: targetRequested
+            ? "Verify the page state changed as intended; a DOM click only confirms the click was dispatched."
+            : undefined,
         };
       }
 
@@ -503,7 +698,12 @@ function mutatePageInDom(request: MutationRequest) {
 
       if (options.operation === "key") {
         const keyResult = dispatchKey(target, options.key);
-        return { success: true, target: before, ...keyResult };
+        return {
+          success: keyResult.dispatched,
+          error: keyResult.dispatched ? undefined : "KEY_EVENT_NOT_ACCEPTED",
+          target: before,
+          ...keyResult,
+        };
       }
 
       if (options.operation === "input" || options.operation === "setValue") {
@@ -517,15 +717,27 @@ function mutatePageInDom(request: MutationRequest) {
           return { success: true, target: before, value: options.value };
         }
         if (target.isContentEditable) {
-          const usedNativeInsertion = replaceEditableText(
-            target,
-            options.value,
-          );
+          if (requiresTrustedEditableInput(target))
+            return controlledEditorRejection(target, options.value);
+          const editableResult = replaceEditableText(target, options.value);
+          if (editableResult.controlledEditorMismatch)
+            return controlledEditorRejection(
+              target,
+              options.value,
+              editableResult.beforeText,
+              editableResult.afterText,
+              editableResult.inserted,
+            );
           return {
-            success: true,
+            success: editableResult.accepted,
+            error: editableResult.accepted
+              ? undefined
+              : "TEXT_INPUT_NOT_ACCEPTED",
             target: before,
             value: options.value,
-            usedNativeInsertion,
+            usedNativeInsertion: editableResult.inserted,
+            beforeText: editableResult.beforeText,
+            afterText: editableResult.afterText,
           };
         }
         return {
@@ -535,8 +747,25 @@ function mutatePageInDom(request: MutationRequest) {
         };
       }
 
-      if (options.operation === "setText") target.textContent = options.value;
-      else if (options.operation === "setHtml")
+      if (options.operation === "setText") {
+        if (target.isContentEditable) {
+          if (requiresTrustedEditableInput(target))
+            return controlledEditorRejection(target, options.value);
+          const editableResult = replaceEditableText(target, options.value);
+          return {
+            success: editableResult.accepted,
+            error: editableResult.accepted
+              ? undefined
+              : "TEXT_INPUT_NOT_ACCEPTED",
+            target: before,
+            value: options.value,
+            usedNativeInsertion: editableResult.inserted,
+            beforeText: editableResult.beforeText,
+            afterText: editableResult.afterText,
+          };
+        }
+        target.textContent = options.value;
+      } else if (options.operation === "setHtml")
         target.innerHTML = options.value;
       else if (options.operation === "insertHtml")
         target.insertAdjacentHTML(

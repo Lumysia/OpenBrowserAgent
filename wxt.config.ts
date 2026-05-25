@@ -1,7 +1,13 @@
 import { defineConfig } from "wxt";
 import { fileURLToPath } from "node:url";
 
-const permissions = ["scripting", "tabs", "storage", "downloads"] as const;
+const permissions = [
+  "scripting",
+  "tabs",
+  "storage",
+  "downloads",
+  "unlimitedStorage",
+] as const;
 const nativeMessagingPermissions = ["nativeMessaging"] as const;
 const sourcemap = process.env.WXT_SOURCEMAP === "true";
 

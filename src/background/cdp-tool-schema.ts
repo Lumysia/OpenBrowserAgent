@@ -134,6 +134,9 @@ export const cdpTools = [
       tabId: numberProperty("The tab ID"),
       targetId: targetIdProperty(),
       format: enumProperty(["png", "jpeg", "webp"], "Image format"),
+      quality: numberProperty(
+        "JPEG/WebP quality from 0 to 100. Defaults to an efficient low-quality screenshot.",
+      ),
       fullPage: {
         type: "boolean",
         description: "Capture full page if supported",

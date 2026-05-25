@@ -2,6 +2,8 @@ import {
   BROWSER_TOOL_TIMEOUT_MS,
   BROWSER_WAIT_DEFAULT_MS,
   BROWSER_WAIT_MAX_MS,
+  DEFAULT_SCREENSHOT_FORMAT,
+  DEFAULT_SCREENSHOT_QUALITY,
   MARKDOWN_FILENAME_MAX_LENGTH,
   TAB_LOAD_WAIT_TIMEOUT_MS,
 } from "../shared/config";
@@ -313,12 +315,17 @@ async function captureVisibleTab(args: Record<string, unknown>) {
     return { success: false, error: TOOL_ERROR.tabHasNoWindow };
   await api.tabs.update(tabId, { active: true });
   await api.windows.update(tab.windowId, { focused: true });
-  const format = String(args.format || "png") === "jpeg" ? "jpeg" : "png";
+  const format =
+    String(args.format || DEFAULT_SCREENSHOT_FORMAT) === "png" ? "png" : "jpeg";
   const quality = Number(args.quality);
   const image = await api.tabs.captureVisibleTab(tab.windowId, {
     format,
-    ...(format === "jpeg" && Number.isFinite(quality)
-      ? { quality: Math.min(100, Math.max(0, Math.trunc(quality))) }
+    ...(format === "jpeg"
+      ? {
+          quality: Number.isFinite(quality)
+            ? Math.min(100, Math.max(0, Math.trunc(quality)))
+            : DEFAULT_SCREENSHOT_QUALITY,
+        }
       : {}),
   });
   return {

@@ -31,11 +31,14 @@ import { useThrottledText } from "./use-throttled-text";
 export function AssistantSummaryCard({
   t,
   message,
+  summary: summaryProp,
 }: {
   t: Messages;
-  message: ChatMessage;
+  message?: ChatMessage;
+  summary?: string;
 }) {
-  const summary = compactionSummary(message);
+  const summary =
+    summaryProp?.trim() || (message ? compactionSummary(message) : "");
   if (!summary) return null;
   return (
     <div className="tool-card done context-summary-card">
@@ -104,6 +107,8 @@ export function AssistantPart({
     );
   if (part.type === "reasoning" && part.text?.trim())
     return <AssistantReasoning t={t} text={part.text} />;
+  if (part.type === "summary" && part.text?.trim())
+    return <AssistantSummaryCard t={t} summary={part.text} />;
   if (part.type === "text" && part.text?.trim())
     return (
       <AssistantText

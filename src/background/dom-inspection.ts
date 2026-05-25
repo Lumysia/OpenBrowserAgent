@@ -273,6 +273,70 @@ function inspectPageInDom(options: {
       element.hasAttribute("tabindex")
     );
   };
+  const isReliableTarget = (element: HTMLElement) => {
+    const tag = element.tagName.toLowerCase();
+    const role = element.getAttribute("role") || "";
+    return (
+      tag === "a" ||
+      tag === "button" ||
+      tag === "input" ||
+      tag === "textarea" ||
+      tag === "select" ||
+      element.isContentEditable ||
+      role === "button" ||
+      role === "link" ||
+      role === "textbox" ||
+      role === "menuitem" ||
+      role === "option" ||
+      role === "tab"
+    );
+  };
+  const compact = (value: string) => value.replace(/\s+/g, " ").trim();
+  const ownText = (element: HTMLElement) =>
+    compact(
+      Array.from(element.childNodes)
+        .filter((node) => node.nodeType === Node.TEXT_NODE)
+        .map((node) => node.textContent || "")
+        .join(" "),
+    );
+  const accessibleName = (element: HTMLElement) =>
+    compact(
+      [
+        element.getAttribute("aria-label"),
+        element.getAttribute("title"),
+        element.getAttribute("placeholder"),
+        element.getAttribute("alt"),
+        element.getAttribute("name"),
+        ownText(element),
+        element.innerText || element.textContent || "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+    );
+  const nearestReliableTarget = (element: HTMLElement) => {
+    const elementRect = element.getBoundingClientRect();
+    let current: HTMLElement | null = element;
+    while (current && current !== document.body) {
+      if (isReliableTarget(current) && isVisible(current)) return current;
+      const rect = current.getBoundingClientRect();
+      const grewTooLarge =
+        rect.width > Math.max(elementRect.width * 8, 700) ||
+        rect.height > Math.max(elementRect.height * 8, 240);
+      if (grewTooLarge) break;
+      current = current.parentElement;
+    }
+    current = element;
+    while (current && current !== document.body) {
+      if (isActionableElement(current) && isVisible(current)) return current;
+      const rect = current.getBoundingClientRect();
+      const grewTooLarge =
+        rect.width > Math.max(elementRect.width * 8, 700) ||
+        rect.height > Math.max(elementRect.height * 8, 240);
+      if (grewTooLarge) break;
+      current = current.parentElement;
+    }
+    return element;
+  };
   const hasAccessibleName = (element: HTMLElement) =>
     Boolean(
       element.getAttribute("aria-label") ||
@@ -472,67 +536,79 @@ function inspectPageInDom(options: {
     }
     return blocks;
   };
+  const targetScore = (
+    element: HTMLElement,
+    needle: string,
+    mode: "text" | "name",
+  ) => {
+    const target = nearestReliableTarget(element);
+    const elementText = compact(element.innerText || element.textContent || "");
+    const elementOwnText = ownText(element);
+    const elementName = accessibleName(element);
+    const targetName = accessibleName(target);
+    const targetText = compact(target.innerText || target.textContent || "");
+    const haystack = mode === "name" ? elementName : elementText;
+    if (!haystack.toLowerCase().includes(needle)) return null;
+
+    let score = 0;
+    if (elementOwnText.toLowerCase() === needle) score += 120;
+    else if (elementName.toLowerCase() === needle) score += 105;
+    else if (elementOwnText.toLowerCase().includes(needle)) score += 90;
+    else if (elementName.toLowerCase().includes(needle)) score += 75;
+    else if (elementText.toLowerCase().includes(needle)) score += 35;
+
+    if (target !== element) score += 80;
+    if (isReliableTarget(target)) score += 80;
+    if (target instanceof HTMLAnchorElement && target.href) score += 80;
+    if (targetName.toLowerCase().includes(needle)) score += 60;
+    if (isReliableTarget(element)) score += 40;
+    if (target === element) score += 20;
+
+    const rect = element.getBoundingClientRect();
+    const area = rect.width * rect.height;
+    if (area > window.innerWidth * window.innerHeight * 0.25) score -= 160;
+    if (elementText.length > 500) score -= 90;
+    if (rect.width > 700 || rect.height > 280) score -= 60;
+    return { score, target, textLength: targetText.length };
+  };
+  const findBestElement = (
+    needle: string,
+    selectors: string,
+    mode: "text" | "name",
+  ) => {
+    const best = (
+      Array.from(document.querySelectorAll(selectors)) as HTMLElement[]
+    )
+      .filter((element) => isVisible(element))
+      .map((element) => {
+        const match = targetScore(element, needle, mode);
+        return match ? { element, ...match } : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => {
+        if (!a || !b) return 0;
+        if (a.score !== b.score) return b.score - a.score;
+        return a.textLength - b.textLength;
+      })[0];
+    return best?.target;
+  };
   const findBestTextElement = (text: string) => {
     const needle = text.replace(/\s+/g, " ").trim().toLowerCase();
     if (!needle) return undefined;
-    const candidates = Array.from(
-      document.querySelectorAll(
-        "a,button,[role],article,section,div,span,p,li,h1,h2,h3,h4,h5,h6",
-      ),
-    ) as HTMLElement[];
-    return candidates
-      .filter((element) => isVisible(element))
-      .filter((element) =>
-        (element.innerText || element.textContent || "")
-          .replace(/\s+/g, " ")
-          .trim()
-          .toLowerCase()
-          .includes(needle),
-      )
-      .sort((a, b) => {
-        const aText = compactText(a.innerText || a.textContent || "") || "";
-        const bText = compactText(b.innerText || b.textContent || "") || "";
-        const aExact = aText.toLowerCase() === needle ? 0 : 1;
-        const bExact = bText.toLowerCase() === needle ? 0 : 1;
-        if (aExact !== bExact) return aExact - bExact;
-        return aText.length - bText.length;
-      })[0];
+    return findBestElement(
+      needle,
+      "a,button,[role],article,section,div,span,p,li,h1,h2,h3,h4,h5,h6",
+      "text",
+    );
   };
   const findBestNamedElement = (name: string) => {
     const needle = name.replace(/\s+/g, " ").trim().toLowerCase();
     if (!needle) return undefined;
-    const accessibleName = (element: HTMLElement) =>
-      [
-        element.getAttribute("aria-label"),
-        element.getAttribute("title"),
-        element.getAttribute("placeholder"),
-        element.getAttribute("alt"),
-        element.getAttribute("name"),
-        element.innerText || element.textContent || "",
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .replace(/\s+/g, " ")
-        .trim();
-    return (
-      Array.from(
-        document.querySelectorAll(
-          "a,button,input,textarea,select,[contenteditable='true'],[aria-label],[title],[placeholder],[alt],[role],[tabindex]",
-        ),
-      ) as HTMLElement[]
-    )
-      .filter((element) => isVisible(element))
-      .filter((element) =>
-        accessibleName(element).toLowerCase().includes(needle),
-      )
-      .sort((a, b) => {
-        const aName = accessibleName(a).toLowerCase();
-        const bName = accessibleName(b).toLowerCase();
-        const aExact = aName === needle ? 0 : 1;
-        const bExact = bName === needle ? 0 : 1;
-        if (aExact !== bExact) return aExact - bExact;
-        return aName.length - bName.length;
-      })[0];
+    return findBestElement(
+      needle,
+      "a,button,input,textarea,select,[contenteditable='true'],[aria-label],[title],[placeholder],[alt],[role],[tabindex]",
+      "name",
+    );
   };
   const collectDescendants = (root: HTMLElement, depthDown: number) => {
     const items: Array<Record<string, unknown>> = [];

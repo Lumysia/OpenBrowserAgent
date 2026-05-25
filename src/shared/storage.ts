@@ -40,6 +40,7 @@ import {
   NO_SYNC_BACKEND_ID,
   normalizeSyncBackends,
 } from "./sync-backends";
+import { offloadChatInlineAttachments } from "./sync-chat-attachments";
 import { activateSyncBackend } from "./storage-sync-transition";
 import { normalizeWorkspaces } from "./workspace";
 import {
@@ -403,13 +404,7 @@ export const storage = {
     STORAGE_KEYS.shouldShowUpdateToast,
     () => false,
   ),
-  chats: createSwitchableItem<Chat[]>(
-    STORAGE_KEYS.chats,
-    () => [],
-    SYNC_PREFERENCES.chats,
-    undefined,
-    { persistDebounceMs: config.CHAT_WRITE_DEBOUNCE_MS, snapshot: "hash" },
-  ),
+  chats: createChatsStorageItem(),
   chatTabs: createItem<ChatTab[]>(
     STORAGE_AREAS.local,
     STORAGE_KEYS.chatTabs,
@@ -443,6 +438,22 @@ export const storage = {
     () => false,
   ),
 };
+
+function createChatsStorageItem() {
+  const item = createSwitchableItem<Chat[]>(
+    STORAGE_KEYS.chats,
+    () => [],
+    SYNC_PREFERENCES.chats,
+    undefined,
+    { persistDebounceMs: config.CHAT_WRITE_DEBOUNCE_MS, snapshot: "hash" },
+  );
+  return {
+    ...item,
+    async set(value: Chat[]) {
+      await item.set(await offloadChatInlineAttachments(value));
+    },
+  };
+}
 
 export async function getSyncedProviderState() {
   return readSyncedValue<ProviderState>(STORAGE_KEYS.provider);

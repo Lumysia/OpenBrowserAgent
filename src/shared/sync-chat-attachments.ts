@@ -1,4 +1,8 @@
-import { base64FromDataUrl } from "./attachments";
+import {
+  ATTACHMENT_KIND,
+  base64FromDataUrl,
+  toAttachmentMetadata,
+} from "./attachments";
 import { getBrowserApi } from "./browser-api";
 import * as config from "./config";
 import {
@@ -19,6 +23,8 @@ import type { Chat, UploadedAttachment } from "./types";
 
 const CHAT_ATTACHMENT_ROOT = "attachments";
 const CHAT_ATTACHMENT_PREFIX = "chat-attachment";
+const CHAT_ATTACHMENT_DB = "openbrowseragent-chat-attachments";
+const CHAT_ATTACHMENT_STORE = "attachments";
 
 type SyncedChatAttachmentMetadata = Omit<
   UploadedAttachment,
@@ -48,6 +54,11 @@ export async function writeSyncedChatAttachments({
   attachments: UploadedAttachment[];
 }) {
   if (!attachments.length) return;
+  await Promise.all(
+    attachments.map((attachment) =>
+      writeLocalChatAttachment({ chatId, messageId, attachment }),
+    ),
+  );
   const backendConfig = await activeWebDavAttachmentBackend(syncDataSettings);
   if (!backendConfig) return;
 
@@ -80,6 +91,8 @@ export async function readSyncedChatAttachment(
   syncDataSettings: SyncDataSettings | undefined,
   attachmentId: string,
 ) {
+  const local = await readLocalChatAttachment(attachmentId);
+  if (local) return local;
   const backendConfig = await activeWebDavAttachmentBackend(syncDataSettings);
   if (!backendConfig) return undefined;
   const metadataBytes = await readWebDavObject(
@@ -104,6 +117,9 @@ export async function removeSyncedChatAttachments(
 ) {
   const attachments = chats.flatMap(chatAttachmentMetadata);
   if (!attachments.length) return;
+  await Promise.all(
+    attachments.map((attachment) => removeLocalChatAttachment(attachment.id)),
+  );
   const backendConfig = await activeWebDavAttachmentBackend(syncDataSettings);
   if (!backendConfig) return;
   await Promise.all(
@@ -130,6 +146,27 @@ export async function removeSyncedChatAttachments(
       ]);
     }),
   );
+}
+
+export async function offloadChatInlineAttachments(chats: Chat[]) {
+  const writes: Array<Promise<void>> = [];
+  const nextChats = chats.map((chat) => ({
+    ...chat,
+    messages: chat.messages.map((message) => ({
+      ...message,
+      parts: message.parts?.map((part) => ({
+        ...part,
+        output: offloadInlineRecord({
+          value: part.output,
+          chatId: chat.id,
+          messageId: message.id,
+          writes,
+        }),
+      })),
+    })),
+  }));
+  await Promise.all(writes);
+  return nextChats;
 }
 
 async function writeSyncedChatAttachment({
@@ -168,6 +205,103 @@ async function writeSyncedChatAttachment({
     new TextEncoder().encode(JSON.stringify(metadata, null, 2)),
     "application/json",
   );
+}
+
+async function writeLocalChatAttachment({
+  chatId,
+  messageId,
+  attachment,
+}: {
+  chatId: string;
+  messageId: string;
+  attachment: UploadedAttachment;
+}) {
+  const metadata = {
+    ...toAttachmentMetadata(attachment),
+    version: 1,
+    chatId,
+    messageId,
+    createdAt: Date.now(),
+  };
+  const db = await openAttachmentDb();
+  await putInStore(db, {
+    id: attachment.id,
+    metadata,
+    content: attachmentBytes(attachment),
+  });
+}
+
+async function readLocalChatAttachment(attachmentId: string) {
+  const db = await openAttachmentDb();
+  const record = await getFromStore(db, attachmentId);
+  if (!record) return undefined;
+  const metadata = record.metadata as SyncedChatAttachmentMetadata;
+  return attachmentFromBytes(metadata, record.content);
+}
+
+async function removeLocalChatAttachment(attachmentId: string) {
+  const db = await openAttachmentDb();
+  await deleteFromStore(db, attachmentId);
+}
+
+function offloadInlineRecord({
+  value,
+  chatId,
+  messageId,
+  writes,
+}: {
+  value: unknown;
+  chatId: string;
+  messageId: string;
+  writes: Array<Promise<void>>;
+}): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  const image = typeof record.image === "string" ? record.image : "";
+  const visionImage = record._visionImage as
+    | { dataUrl?: unknown; type?: unknown }
+    | undefined;
+  const dataUrl = dataImageUrl(image) || dataImageUrl(visionImage?.dataUrl);
+  if (!dataUrl) return value;
+  const type =
+    (typeof visionImage?.type === "string" && visionImage.type) ||
+    dataUrl.match(/^data:([^;,]+)/)?.[1] ||
+    "image/png";
+  const id = `tool-image-${crypto.randomUUID()}`;
+  const attachment: UploadedAttachment = {
+    id,
+    name: `${String(record.format || "image")}.${type.split("/")[1] || "png"}`,
+    type,
+    size: dataUrlSize(dataUrl),
+    kind: ATTACHMENT_KIND.image,
+    dataUrl,
+  };
+  writes.push(
+    writeSyncedChatAttachments({
+      chatId,
+      messageId,
+      attachments: [attachment],
+    }),
+  );
+  const { image: _image, _visionImage, ...rest } = record;
+  return {
+    ...rest,
+    imageAttachmentId: id,
+    imageAttachmentName: attachment.name,
+    imageAttachmentType: attachment.type,
+    imageAttachmentSize: attachment.size,
+    imageStored: true,
+  };
+}
+
+function dataImageUrl(value: unknown) {
+  return typeof value === "string" && value.startsWith("data:image/")
+    ? value
+    : "";
+}
+
+function dataUrlSize(dataUrl: string) {
+  return Math.ceil((base64FromDataUrl(dataUrl).length * 3) / 4);
 }
 
 async function activeWebDavAttachmentBackend(
@@ -248,4 +382,53 @@ function attachmentObjectName(attachment: UploadedAttachment) {
 
 function currentMonthFolder() {
   return new Date().toISOString().slice(0, 7);
+}
+
+type StoredAttachmentRecord = {
+  id: string;
+  metadata: Record<string, unknown>;
+  content: Uint8Array;
+};
+
+function openAttachmentDb() {
+  return new Promise<IDBDatabase>((resolve, reject) => {
+    const request = indexedDB.open(CHAT_ATTACHMENT_DB, 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(CHAT_ATTACHMENT_STORE))
+        db.createObjectStore(CHAT_ATTACHMENT_STORE, { keyPath: "id" });
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function putInStore(db: IDBDatabase, record: StoredAttachmentRecord) {
+  return storeRequest(db, "readwrite", (store) => store.put(record));
+}
+
+function getFromStore(db: IDBDatabase, id: string) {
+  return storeRequest<StoredAttachmentRecord | undefined>(
+    db,
+    "readonly",
+    (store) => store.get(id),
+  );
+}
+
+function deleteFromStore(db: IDBDatabase, id: string) {
+  return storeRequest(db, "readwrite", (store) => store.delete(id));
+}
+
+function storeRequest<T = void>(
+  db: IDBDatabase,
+  mode: IDBTransactionMode,
+  run: (store: IDBObjectStore) => IDBRequest,
+) {
+  return new Promise<T>((resolve, reject) => {
+    const transaction = db.transaction(CHAT_ATTACHMENT_STORE, mode);
+    const request = run(transaction.objectStore(CHAT_ATTACHMENT_STORE));
+    request.onsuccess = () => resolve(request.result as T);
+    request.onerror = () => reject(request.error);
+    transaction.onerror = () => reject(transaction.error);
+  });
 }

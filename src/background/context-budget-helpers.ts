@@ -10,7 +10,11 @@ export function latestRealUserMessageIndex<T extends Record<string, unknown>>(
     if (text.includes("<internal_instruction>")) continue;
     if (text.includes("The tool image is attached for visual inspection."))
       continue;
-    if (text.includes("<context_pruned>")) continue;
+    if (
+      text.includes("<context_pruned>") ||
+      text.includes("<context_compacted>")
+    )
+      continue;
     return index;
   }
   return undefined;

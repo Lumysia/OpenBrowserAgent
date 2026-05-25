@@ -248,7 +248,7 @@ export const commonBrowserTools = [
   tool(BROWSER_TOOL_NAME.getCurrentTab, "Get current active tab", {}),
   tool(
     BROWSER_TOOL_NAME.mutatePage,
-    "Modify the current page DOM, style, or scroll position. Use this for normal page actions and edits before CDP. Operations: click, input, setText, setHtml, insertHtml, insertElement, delete, setAttribute, removeAttribute, setInlineStyle, insertStyle, removeStyle, scroll. Prefer insertElement over insertHtml on strict dynamic pages.",
+    "Modify the current page DOM, style, or scroll position. Use this for normal page actions and edits before CDP. Operations: click, input, setText, setHtml, insertHtml, insertElement, delete, setAttribute, removeAttribute, setInlineStyle, insertStyle, removeStyle, scroll. Clicks may include actionEvidence/postconditionRequired; verify resulting page state for user-visible actions. Prefer insertElement over insertHtml on strict dynamic pages.",
     {
       tabId: {
         type: "number",
@@ -442,11 +442,12 @@ export const commonBrowserTools = [
     format: {
       type: "string",
       enum: ["png", "jpeg"],
-      description: "Image format. Defaults to png.",
+      description: "Image format. Defaults to jpeg for efficient vision input.",
     },
     quality: {
       type: "number",
-      description: "JPEG quality from 0 to 100",
+      description:
+        "JPEG quality from 0 to 100. Defaults to an efficient low-quality screenshot.",
     },
   }),
   tool(BROWSER_TOOL_NAME.downloadTabToMarkdown, "Download a tab to markdown", {
