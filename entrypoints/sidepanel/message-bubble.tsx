@@ -163,6 +163,7 @@ export function MessageBubble({
               <AssistantPart
                 t={t}
                 part={part}
+                partIndex={index}
                 sources={sources}
                 onFork={() => onFork?.(message, part.id)}
                 message={message}

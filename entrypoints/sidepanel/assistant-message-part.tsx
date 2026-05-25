@@ -73,6 +73,7 @@ function compactionSummary(message: ChatMessage) {
 export function AssistantPart({
   t,
   part,
+  partIndex,
   sources,
   onFork,
   message,
@@ -83,6 +84,7 @@ export function AssistantPart({
 }: {
   t: Messages;
   part: ChatPart;
+  partIndex: number;
   sources: ChatSource[];
   onFork?: () => void;
   message: ChatMessage;
@@ -94,12 +96,13 @@ export function AssistantPart({
     answers: QuestionToolAnswer[],
   ) => void;
 }) {
+  const stalePendingTool = isStalePendingTool(message, part, partIndex);
   if (isToolPartType(part.type))
     return (
       <ToolPart
         t={t}
         part={part}
-        runEnded={messageRunEnded(message)}
+        runEnded={messageRunEnded(message) || stalePendingTool}
         onSelectChat={onSelectChat}
         chatExists={chatExists}
         onAnswerQuestion={onAnswerQuestion}
@@ -122,6 +125,26 @@ export function AssistantPart({
       />
     );
   return null;
+}
+
+function isStalePendingTool(
+  message: ChatMessage,
+  part: ChatPart,
+  partIndex: number,
+) {
+  if (!isToolPartType(part.type)) return false;
+  if (part.state !== CHAT_PART_STATE.inputAvailable) return false;
+  return (message.parts || []).slice(partIndex + 1).some(hasRenderedActivity);
+}
+
+function hasRenderedActivity(part: ChatPart) {
+  if (
+    part.type === "text" ||
+    part.type === "reasoning" ||
+    part.type === "summary"
+  )
+    return !!part.text?.trim();
+  return isToolPartType(part.type);
 }
 
 function messageRunEnded(message: ChatMessage) {
