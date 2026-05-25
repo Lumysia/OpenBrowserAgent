@@ -38,7 +38,11 @@ export function renderMarkdown(
   t: Messages,
   copiedCodeId: string | null,
   sources: ChatSource[] = [],
-  options: { animatedFromChar?: number; mermaidPreview?: boolean } = {},
+  options: {
+    animatedFromChar?: number;
+    mermaidPreview?: boolean;
+    syntaxHighlight?: boolean;
+  } = {},
 ) {
   const codeBlocks: string[] = [];
   const renderer = new marked.Renderer();
@@ -51,7 +55,9 @@ export function renderMarkdown(
     const codeId = `code-${codeIndex}`;
     const copied = copiedCodeId === codeId;
     const language = lang?.split(/\s+/)[0] || "";
-    const highlighted = highlightCode(code, language);
+    const highlighted = options.syntaxHighlight
+      ? highlightCode(code, language)
+      : { html: escapeHtml(code), language };
     const displayLanguage = escapeHtml(
       language || highlighted.language || "text",
     );

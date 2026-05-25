@@ -222,6 +222,7 @@ export function AssistantText({
         animatedFromChar:
           displayText.length < text.length ? animatedFrom : undefined,
         mermaidPreview: outputSettled,
+        syntaxHighlight: outputSettled,
       }),
     [
       animatedFrom,
