@@ -104,10 +104,17 @@ export async function readOpenAIStream(
 
     const payload = JSON.parse(data) as {
       usage?: OpenAIUsage | null;
+      error?: { type?: string; message?: string };
       choices?: Array<{
         delta?: OpenAIStreamDelta;
       }>;
     };
+    if (payload.error)
+      throw new OpenAIStreamError(
+        payload.error.message || JSON.stringify(payload.error),
+        textStarted || reasoningStarted || toolCalls.length > 0,
+        payload.error,
+      );
     if (payload.usage) usage = normalizeOpenAIUsage(payload.usage);
     const delta = payload.choices?.[0]?.delta;
     emitReasoning(
@@ -174,6 +181,18 @@ export async function readOpenAIStream(
     (toolCall) => toolCall.function.name,
   );
   return { content, reasoning, toolCalls: completeToolCalls, usage };
+}
+
+export class OpenAIStreamError extends Error {
+  contentStarted: boolean;
+  payload: unknown;
+
+  constructor(message: string, contentStarted: boolean, payload: unknown) {
+    super(message);
+    this.name = "OpenAIStreamError";
+    this.contentStarted = contentStarted;
+    this.payload = payload;
+  }
 }
 
 type OpenAIUsage = {

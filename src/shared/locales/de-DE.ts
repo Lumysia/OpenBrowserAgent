@@ -170,7 +170,7 @@ export const deDE: LocaleMessages = {
     removeTab: "Tab entfernen",
     attachmentTooLarge: "Einige Dateien waren zu groß zum Anhängen: {names}",
     attachmentsUnsupportedRetry:
-      "Das ausgewählte Modell hat die Bild-/Dateinutzlast abgelehnt, daher wurde mit Text und Dateidetails erneut versucht.",
+      "Das ausgewählte Modell hat ein Nicht-Text-Inhaltsformat abgelehnt, daher wurde nur mit Text und Dateidetails erneut versucht.",
     attachmentOnlyMessage: "Bitte prüfen Sie die angehängten Dateien.",
     fileMetadataOnly: "Nur Dateidetails",
     replaceUnavailableAttachments: "Nicht verfügbare Dateien ersetzen",

@@ -168,7 +168,7 @@ export const esES: LocaleMessages = {
     removeTab: "Eliminar pestaña",
     attachmentTooLarge: "Algunos archivos eran demasiado grandes: {names}",
     attachmentsUnsupportedRetry:
-      "El modelo seleccionado rechazó la carga de imagen/archivo, así que reintenté solo con texto y detalles del archivo.",
+      "El modelo seleccionado rechazó un formato de contenido no textual, así que reintenté solo con texto y detalles del archivo.",
     attachmentOnlyMessage: "Revisa los archivos adjuntos.",
     fileMetadataOnly: "Solo detalles del archivo",
     replaceUnavailableAttachments: "Reemplazar archivos no disponibles",

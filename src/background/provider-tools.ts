@@ -51,7 +51,6 @@ import { workspaceFiles } from "./workspace-tools";
 
 export function toolsForCapabilities(
   capabilities: AgentCapabilities,
-  hasUploadedAttachments: boolean,
   hasSkills: boolean,
   imageGenerationEnabled: boolean,
   latestUserText = "",
@@ -62,7 +61,6 @@ export function toolsForCapabilities(
   return [
     ...browserToolsForPrompt({
       capabilities,
-      hasUploadedAttachments,
       hasSkills,
       hasWorkspace: !!workspace,
       imageGenerationEnabled,
@@ -96,7 +94,6 @@ export function createToolResolver({
     availableTools: () =>
       toolsForCapabilities(
         capabilities,
-        uploadedAttachments.length > 0,
         availableSkills.length > 0,
         !!preferences.imageGenerationEnabled,
         latestUserText,

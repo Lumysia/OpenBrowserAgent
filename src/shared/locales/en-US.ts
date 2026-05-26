@@ -169,7 +169,7 @@ export const enUS = {
     removeTab: "Remove tab",
     attachmentTooLarge: "Some files were too large to attach: {names}",
     attachmentsUnsupportedRetry:
-      "The selected model rejected the image/file payload, so I retried with text and file details only.",
+      "The selected model rejected a non-text content format, so I retried with text and file details only.",
     attachmentOnlyMessage: "Please review the attached files.",
     fileMetadataOnly: "File details only",
     replaceUnavailableAttachments: "Replace unavailable files",

@@ -271,7 +271,6 @@ function promptBreakdown(
       jsonLength(
         browserToolsForPrompt({
           capabilities: request.body.agentCapabilities,
-          hasUploadedAttachments: attachments.length > 0,
           hasSkills: availableSkills.length > 0,
           hasWorkspace,
           imageGenerationEnabled:

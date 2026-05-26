@@ -82,9 +82,27 @@ export function sanitizeToolOutput(output: unknown) {
 export function sanitizeToolOutputForModel(output: unknown) {
   const sanitized = sanitizeToolOutput(output);
   if (!output || typeof output !== "object" || !sanitized) return sanitized;
-  if (!("_visionImage" in output) || typeof sanitized !== "object")
-    return sanitized;
+  if (typeof sanitized !== "object") return sanitized;
   const { image, ...rest } = sanitized as Record<string, unknown>;
+  if (typeof rest.imageAttachmentId === "string")
+    return {
+      ...rest,
+      imageAvailable: true,
+      generatedImageCount: 1,
+      note: "Image generation succeeded. The image bytes are available to the UI, but not sent back to the chat model for visual inspection.",
+    };
+  if (!("_visionImage" in output)) {
+    if (typeof image !== "string") return sanitized;
+    return {
+      ...rest,
+      image: image.startsWith("data:image/")
+        ? "[generated image is displayed in the chat UI]"
+        : image,
+      imageAvailable: true,
+      generatedImageCount: 1,
+      note: "Image generation succeeded. The image bytes are available to the UI, but not sent back to the chat model for visual inspection.",
+    };
+  }
   return {
     ...rest,
     image: typeof image === "string" ? "[attached as vision image]" : image,

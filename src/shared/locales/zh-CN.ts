@@ -160,7 +160,7 @@ export const zhCN: LocaleMessages = {
     removeTab: "移除标签页",
     attachmentTooLarge: "部分文件过大，无法添加：{names}",
     attachmentsUnsupportedRetry:
-      "当前模型拒绝了图片/文件负载，已自动改用文字和文件信息重试。",
+      "当前模型拒绝了某种非文本内容格式，已自动改用文字和文件信息重试。",
     attachmentOnlyMessage: "请查看附件内容。",
     fileMetadataOnly: "仅发送文件信息",
     replaceUnavailableAttachments: "替换不可用文件",

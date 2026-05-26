@@ -37,9 +37,9 @@ export const ATTACHMENT_OUTPUT_NOTE = {
 
 export const ATTACHMENT_TOOL_DESCRIPTION = {
   readUploadedAttachment:
-    "Read a user-uploaded attachment that is available in the current active chat memory. Use offset and limit to read only the needed slice and avoid oversized outputs.",
+    "Read a chat attachment by ID, including user-uploaded files and generated image/tool attachments. Use offset and limit to read only the needed slice and avoid oversized outputs.",
   attachmentId:
-    "The attachment ID from the available_attachments list in the user context",
+    "The attachment ID from available_attachments or a tool output such as imageAttachmentId",
   offset: "Zero-based character offset for text, base64, or hex output",
   limit: "Maximum characters to return for this read",
   format:

@@ -22,6 +22,7 @@ import {
   renderUserMessageWithContext,
 } from "./message-helpers";
 import { withContentSlice, withListSlice } from "./tool-utils";
+import { readSyncedChatAttachment } from "../shared/sync-chat-attachments";
 
 export function createGeminiContents(
   messages: ChatMessage[],
@@ -116,7 +117,7 @@ export function hasImageAttachments(attachments: UploadedAttachment[]) {
   );
 }
 
-export function readUploadedAttachment(
+export async function readUploadedAttachment(
   attachments: UploadedAttachment[],
   input: Record<string, unknown>,
 ) {
@@ -124,10 +125,15 @@ export function readUploadedAttachment(
   const offset = clampReadOffset(input.offset);
   const limit = clampReadLimit(input.limit);
   const format = String(input.format || "");
-  const attachment = attachments.find((item) => item.id === attachmentId);
+  const attachment =
+    attachments.find((item) => item.id === attachmentId) ||
+    (await readSyncedChatAttachment(undefined, attachmentId));
   if (!attachment)
     return { error: ATTACHMENT_TOOL_ERROR.notFound, attachmentId };
-  if (attachment.kind === ATTACHMENT_KIND.text)
+  if (attachment.kind === ATTACHMENT_KIND.text) {
+    const text = attachmentText(attachment);
+    if (text === undefined)
+      return { error: "Attachment content not available", attachmentId };
     return withSlice(
       {
         id: attachment.id,
@@ -137,13 +143,17 @@ export function readUploadedAttachment(
         kind: attachment.kind,
         encoding: "text",
       },
-      attachment.text || "",
+      text,
       offset,
       limit,
       "text",
     );
+  }
 
-  const base64 = base64FromDataUrl(attachment.dataUrl || "");
+  const dataUrl = attachmentDataUrl(attachment);
+  if (dataUrl === undefined)
+    return { error: "Attachment content not available", attachmentId };
+  const base64 = base64FromDataUrl(dataUrl);
   const encoding = format === "hex" ? "hex" : "base64";
   if (encoding === "hex")
     return withPreSliced(
@@ -177,6 +187,16 @@ export function readUploadedAttachment(
     limit,
     encoding,
   );
+}
+
+function attachmentText(attachment: object) {
+  const text = (attachment as { text?: unknown }).text;
+  return typeof text === "string" ? text : undefined;
+}
+
+function attachmentDataUrl(attachment: object) {
+  const dataUrl = (attachment as { dataUrl?: unknown }).dataUrl;
+  return typeof dataUrl === "string" ? dataUrl : undefined;
 }
 
 export function readSkill(skills: Skill[], input: Record<string, unknown>) {

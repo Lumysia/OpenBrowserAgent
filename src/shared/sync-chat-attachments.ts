@@ -54,6 +54,27 @@ export async function writeSyncedChatAttachments({
       writeLocalChatAttachment({ chatId, messageId, attachment }),
     ),
   );
+  void syncRemoteChatAttachments({
+    syncDataSettings,
+    chatId,
+    messageId,
+    attachments,
+  }).catch((error) => {
+    console.warn("Failed to sync chat attachments", error);
+  });
+}
+
+async function syncRemoteChatAttachments({
+  syncDataSettings,
+  chatId,
+  messageId,
+  attachments,
+}: {
+  syncDataSettings?: SyncDataSettings;
+  chatId: string;
+  messageId: string;
+  attachments: UploadedAttachment[];
+}) {
   const backend = await activeAttachmentBackend(syncDataSettings);
   if (!backend) return;
   await Promise.all(
@@ -244,10 +265,17 @@ function offloadInlineRecord({
     (typeof visionImage?.type === "string" && visionImage.type) ||
     dataUrl.match(/^data:([^;,]+)/)?.[1] ||
     "image/png";
-  const id = `tool-image-${crypto.randomUUID()}`;
+  const id =
+    typeof record.imageAttachmentId === "string" && record.imageAttachmentId
+      ? record.imageAttachmentId
+      : `tool-image-${crypto.randomUUID()}`;
   const attachment: UploadedAttachment = {
     id,
-    name: `${String(record.format || "image")}.${type.split("/")[1] || "png"}`,
+    name:
+      typeof record.imageAttachmentName === "string" &&
+      record.imageAttachmentName
+        ? record.imageAttachmentName
+        : `${String(record.format || "image")}.${type.split("/")[1] || "png"}`,
     type,
     size: dataUrlSize(dataUrl),
     kind: ATTACHMENT_KIND.image,
@@ -312,9 +340,10 @@ function attachmentFromBytes(
 ): UploadedAttachment {
   const { version, chatId, messageId, objectName, createdAt, ...attachment } =
     metadata;
+  const content = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   if (metadata.kind === "text")
-    return { ...attachment, text: new TextDecoder().decode(bytes) };
-  return { ...attachment, dataUrl: bytesToDataUrl(bytes, metadata.type) };
+    return { ...attachment, text: new TextDecoder().decode(content) };
+  return { ...attachment, dataUrl: bytesToDataUrl(content, metadata.type) };
 }
 
 function chatAttachmentMetadata(chat: Chat) {
@@ -408,8 +437,13 @@ function storeRequest<T = void>(
   return new Promise<T>((resolve, reject) => {
     const transaction = db.transaction(CHAT_ATTACHMENT_STORE, mode);
     const request = run(transaction.objectStore(CHAT_ATTACHMENT_STORE));
-    request.onsuccess = () => resolve(request.result as T);
+    let result: T;
+    request.onsuccess = () => {
+      result = request.result as T;
+    };
     request.onerror = () => reject(request.error);
-    transaction.onerror = () => reject(transaction.error);
+    transaction.oncomplete = () => resolve(result);
+    transaction.onerror = () => reject(transaction.error || request.error);
+    transaction.onabort = () => reject(transaction.error || request.error);
   });
 }

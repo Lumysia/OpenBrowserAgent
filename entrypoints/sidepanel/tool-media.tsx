@@ -13,9 +13,9 @@ export function GeneratedImage({
   loading: boolean;
   t: Messages;
 }) {
-  const image = useStoredToolImage(output);
+  const { image, loading: imageLoading } = useStoredToolImage(output);
   const prompt = stringValue(output.prompt);
-  if (loading)
+  if (loading || imageLoading)
     return (
       <div
         className="generated-image-skeleton ui-skeleton"
@@ -67,8 +67,15 @@ export function CapturedTabImage({
   output: Record<string, unknown>;
   t: Messages;
 }) {
-  const image = useStoredToolImage(output);
+  const { image, loading } = useStoredToolImage(output);
   const format = stringValue(output.format) || "png";
+  if (loading)
+    return (
+      <div
+        className="generated-image-skeleton ui-skeleton"
+        data-loading="true"
+      />
+    );
   if (!image || output.error) return null;
   const canCopyImage =
     image.startsWith("data:") && typeof ClipboardItem !== "undefined";
@@ -102,25 +109,33 @@ function useStoredToolImage(output: Record<string, unknown>) {
   const inlineImage = stringValue(output.image);
   const attachmentId = stringValue(output.imageAttachmentId);
   const [storedImage, setStoredImage] = useState("");
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     let cancelled = false;
     setStoredImage("");
+    setLoading(false);
     if (inlineImage || !attachmentId) return;
+    setLoading(true);
     readSyncedChatAttachment(undefined, attachmentId)
       .then((attachment) => {
-        if (!cancelled)
+        if (!cancelled) {
           setStoredImage(
             attachment && "dataUrl" in attachment
               ? attachment.dataUrl || ""
               : "",
           );
+          setLoading(false);
+        }
       })
-      .catch((error) => console.warn("Failed to load tool image", error));
+      .catch((error) => {
+        if (!cancelled) setLoading(false);
+        console.warn("Failed to load tool image", error);
+      });
     return () => {
       cancelled = true;
     };
   }, [attachmentId, inlineImage]);
-  return inlineImage || storedImage;
+  return { image: inlineImage || storedImage, loading };
 }
 
 function stringValue(value: unknown) {

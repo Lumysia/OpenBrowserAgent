@@ -168,7 +168,8 @@ export const commonBrowserTools = [
       },
       size: {
         type: "string",
-        description: "Optional image size, such as 1024x1024",
+        description:
+          "Optional image size, such as 1024x1024. Values are normalized to gpt-image-2 constraints: multiples of 16, at least 655,360 total pixels, at most 8,294,400 total pixels, and no more than 3:1 aspect ratio.",
       },
       quality: { type: "string", description: "Optional quality setting" },
       count: { type: "number", description: "Optional image count" },
@@ -643,7 +644,6 @@ export const browserTools = [...commonBrowserTools, ...loaderBrowserTools];
 
 export function browserToolsForPrompt({
   capabilities,
-  hasUploadedAttachments,
   hasSkills,
   hasWorkspace,
   imageGenerationEnabled,
@@ -652,7 +652,6 @@ export function browserToolsForPrompt({
   cdpToolsAvailable = areCdpToolsAvailable(),
 }: {
   capabilities: AgentCapabilities;
-  hasUploadedAttachments: boolean;
   hasSkills: boolean;
   hasWorkspace: boolean;
   imageGenerationEnabled: boolean;
@@ -691,8 +690,7 @@ export function browserToolsForPrompt({
       );
     if (name.startsWith("cdp"))
       return capabilities.cdpTools && cdpToolsAvailable;
-    if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
-      return hasUploadedAttachments;
+    if (name === BROWSER_TOOL_NAME.readUploadedAttachment) return true;
     if (name === BROWSER_TOOL_NAME.generateImage)
       return capabilities.imageGeneration && imageGenerationEnabled;
     if (name === BROWSER_TOOL_NAME.getCurrentTime)

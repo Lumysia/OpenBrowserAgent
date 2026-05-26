@@ -25,7 +25,7 @@ import {
 } from "./compaction-prompt";
 import { applyOpenAIContextBudget } from "./context-budget";
 import { parseToolArgs, post, postTextStream } from "./message-helpers";
-import { readOpenAIStream } from "./openai-stream";
+import { OpenAIStreamError, readOpenAIStream } from "./openai-stream";
 import {
   addTokenUsage,
   getMessageSources,
@@ -64,12 +64,12 @@ export async function requestOpenAIChatCompletions(
   drainQueuedMessages: () => QueuedUserMessage[] = () => [],
 ): Promise<ProviderTextResult> {
   const chatUrl = openAIChatCompletionsUrl(model.baseUrl);
-  let usesAttachmentPayload = hasImageAttachments(uploadedAttachments);
+  let supportsStructuredContentPayload = true;
   let requestMessages: Array<Record<string, unknown>> =
     createOpenAIRequestMessages(
       system,
       messages,
-      usesAttachmentPayload,
+      hasImageAttachments(uploadedAttachments),
       uploadedAttachments,
       availableSkills,
       workspace,
@@ -92,12 +92,11 @@ export async function requestOpenAIChatCompletions(
   const postMetric = (message: AiStreamResponse) => post(port, message);
   let compactionSummary: string | undefined;
   let compactionAttempted = false;
+  let lastStructuredPartTypes: string[] = [];
+  let structuredRetryNoticePosted = false;
 
-  async function fetchChatCompletion(body: Record<string, unknown>) {
-    const reasoningParams = reasoningRequestParams(
-      model.provider,
-      preferences.reasoningEffort,
-    );
+  async function budgetRequestMessages() {
+    requestMessages = repairOpenAIToolResultOrder(requestMessages);
     let budgeted = applyOpenAIContextBudget(
       requestMessages,
       preferences,
@@ -122,44 +121,26 @@ export async function requestOpenAIChatCompletions(
         );
     }
     postContextBudget(postMetric, budgeted.report);
-    const response = await fetch(chatUrl, {
-      method: "POST",
-      signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
-      },
-      body: JSON.stringify({
-        ...body,
-        ...reasoningParams,
-        messages: budgeted.items,
-      }),
+    return budgeted;
+  }
+
+  function providerBody(
+    body: Record<string, unknown>,
+    reasoningParams: Record<string, unknown>,
+    items: Array<Record<string, unknown>>,
+  ) {
+    return JSON.stringify({
+      ...body,
+      ...reasoningParams,
+      messages: items,
     });
-    if (response.ok || !usesAttachmentPayload) return response;
-    requestMessages = createOpenAIRequestMessages(
-      system,
-      messages,
-      false,
-      uploadedAttachments,
-      availableSkills,
-      workspace,
-    );
-    usesAttachmentPayload = false;
-    if (attachmentRetryNotice)
-      await postTextStream(
-        port,
-        attachmentRetryNotice,
-        crypto.randomUUID(),
-        signal,
-        false,
-      );
-    const retryBudgeted = applyOpenAIContextBudget(
-      requestMessages,
-      preferences,
-      compactionSummary,
-      model.contextLength,
-    );
-    postContextBudget(postMetric, retryBudgeted.report);
+  }
+
+  async function postChatCompletion(
+    body: Record<string, unknown>,
+    reasoningParams: Record<string, unknown>,
+    items: Array<Record<string, unknown>>,
+  ) {
     return fetch(chatUrl, {
       method: "POST",
       signal,
@@ -167,45 +148,118 @@ export async function requestOpenAIChatCompletions(
         "Content-Type": "application/json",
         ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
       },
-      body: JSON.stringify({
-        ...body,
-        ...reasoningParams,
-        messages: retryBudgeted.items,
-      }),
+      body: providerBody(body, reasoningParams, items),
     });
   }
 
-  if (!useTools) {
-    const response = await fetchChatCompletion({
-      model: model.modelName,
-      temperature: MODEL_TEMPERATURE,
-      stream: true,
-      stream_options: { include_usage: true },
+  async function fetchChatCompletion(body: Record<string, unknown>) {
+    const reasoningParams = reasoningRequestParams(
+      model.provider,
+      preferences.reasoningEffort,
+    );
+    const budgeted = await budgetRequestMessages();
+    const response = await postChatCompletion(
+      body,
+      reasoningParams,
+      budgeted.items,
+    );
+    const structuredPartTypes = openAIStructuredContentPartTypes(
+      budgeted.items,
+    );
+    lastStructuredPartTypes = structuredPartTypes;
+    const hasStructuredPayload = structuredPartTypes.length > 0;
+    if (
+      response.ok ||
+      !supportsStructuredContentPayload ||
+      !hasStructuredPayload
+    )
+      return response;
+    const errorText = await response
+      .clone()
+      .text()
+      .catch(() => "");
+    if (
+      !isUnsupportedOpenAIStructuredPayloadError(
+        response.status,
+        errorText,
+        structuredPartTypes,
+      )
+    )
+      return response;
+
+    return retryTextOnlyChatCompletion(body, reasoningParams);
+  }
+
+  async function retryTextOnlyChatCompletion(
+    body: Record<string, unknown>,
+    reasoningParams = reasoningRequestParams(
+      model.provider,
+      preferences.reasoningEffort,
+    ),
+  ) {
+    supportsStructuredContentPayload = false;
+    requestMessages = createTextOnlyOpenAIMessages(requestMessages);
+    requestMessages.push({
+      role: "user",
+      content:
+        "<internal_instruction>The selected model rejected a non-text message payload, so this retry is text-only. Do not call tools that depend on non-text attachments, media bytes, screenshots, audio, video, files, or visual inspection again in this run. Use text-only browser inspection and file metadata when possible; if non-text content is required, tell the user to switch to a model/provider that supports that content type.</internal_instruction>",
     });
+    if (attachmentRetryNotice && !structuredRetryNoticePosted) {
+      structuredRetryNoticePosted = true;
+      await postTextStream(
+        port,
+        `${attachmentRetryNotice}\n\n`,
+        crypto.randomUUID(),
+        signal,
+      );
+    }
+    const retryBudgeted = await budgetRequestMessages();
+    lastStructuredPartTypes = openAIStructuredContentPartTypes(
+      retryBudgeted.items,
+    );
+    return postChatCompletion(body, reasoningParams, retryBudgeted.items);
+  }
+
+  async function fetchAndReadChatCompletion(
+    body: Record<string, unknown>,
+    preferredTextId?: string,
+  ) {
+    const response = await fetchChatCompletion(body);
     if (!response.ok) throw new Error(await response.text());
-    const streamResult = await readOpenAIStream(
-      response,
-      port,
-      signal,
+    try {
+      return await readOpenAIStream(response, port, signal, preferredTextId);
+    } catch (error) {
+      if (!shouldRetryAfterOpenAIStreamError(error, lastStructuredPartTypes))
+        throw error;
+      const retryResponse = await retryTextOnlyChatCompletion(body);
+      if (!retryResponse.ok) throw new Error(await retryResponse.text());
+      return readOpenAIStream(retryResponse, port, signal, preferredTextId);
+    }
+  }
+
+  if (!useTools) {
+    const streamResult = await fetchAndReadChatCompletion(
+      {
+        model: model.modelName,
+        temperature: MODEL_TEMPERATURE,
+        stream: true,
+        stream_options: { include_usage: true },
+      },
       messageId,
     );
     return { text: "", outputMode: "streaming", usage: streamResult.usage };
   }
 
   for (let step = 0; step < maxToolSteps; step++) {
-    const response = await fetchChatCompletion({
-      model: model.modelName,
-      temperature: MODEL_TEMPERATURE,
-      stream: true,
-      stream_options: { include_usage: true },
-      tools: availableTools(),
-      tool_choice: "auto",
-    });
-    if (!response.ok) throw new Error(await response.text());
-    const streamResult = await readOpenAIStream(
-      response,
-      port,
-      signal,
+    const streamResult = await fetchAndReadChatCompletion(
+      {
+        model: model.modelName,
+        temperature: MODEL_TEMPERATURE,
+        stream: true,
+        stream_options: { include_usage: true },
+        tools: availableTools(),
+        tool_choice: "auto",
+      },
       step === 0 ? messageId : undefined,
     );
     responseUsage = addTokenUsage(responseUsage, streamResult.usage);
@@ -220,6 +274,7 @@ export async function requestOpenAIChatCompletions(
         : {}),
       tool_calls: toolCalls,
     });
+    const deferredMediaMessages: Array<Record<string, unknown>> = [];
     for (const toolCall of toolCalls) {
       const toolName = String(toolCall.function?.name || UNKNOWN_TOOL_NAME);
       const toolCallId = String(toolCall.id || crypto.randomUUID());
@@ -246,8 +301,8 @@ export async function requestOpenAIChatCompletions(
         tool_call_id: toolCallId,
         content: JSON.stringify(result.modelOutput),
       });
-      if (result.visionImage)
-        requestMessages.push({
+      if (result.visionImage && supportsStructuredContentPayload)
+        deferredMediaMessages.push({
           role: "user",
           content: [
             {
@@ -260,7 +315,14 @@ export async function requestOpenAIChatCompletions(
             },
           ],
         });
+      else if (result.visionImage)
+        deferredMediaMessages.push({
+          role: "user",
+          content:
+            "A browser tool produced non-text media, but the selected model rejected non-text message payloads. Continue with the text-only tool result and explain that the media bytes are not available if the answer depends on them.",
+        });
     }
+    requestMessages.push(...deferredMediaMessages);
     injectQueuedOpenAIMessages(port, requestMessages, drainQueuedMessages);
   }
 
@@ -269,19 +331,168 @@ export async function requestOpenAIChatCompletions(
     content:
       "<internal_instruction>Maximum browser tool steps reached. Do not call more tools. Summarize the findings and clearly state what is known, what remains uncertain, and the best next step for the user. Respond in the same language as the user's latest non-internal message.</internal_instruction>",
   });
-  const fallbackResponse = await fetchChatCompletion({
+  const fallbackResult = await fetchAndReadChatCompletion({
     model: model.modelName,
     temperature: MODEL_TEMPERATURE,
     stream: true,
     stream_options: { include_usage: true },
   });
-  if (!fallbackResponse.ok) throw new Error(await fallbackResponse.text());
-  const fallbackResult = await readOpenAIStream(fallbackResponse, port, signal);
   return {
     text: "",
     outputMode: "streaming",
     usage: addTokenUsage(responseUsage, fallbackResult.usage),
   };
+}
+
+function openAIStructuredContentPartTypes(
+  messages: Array<Record<string, unknown>>,
+) {
+  return Array.from(
+    new Set(
+      messages.flatMap((message) =>
+        structuredContentPartTypes(message.content),
+      ),
+    ),
+  );
+}
+
+function structuredContentPartTypes(content: unknown): string[] {
+  if (!Array.isArray(content)) return [];
+  return content.flatMap((part) => {
+    if (!part || typeof part !== "object") return [];
+    const type = (part as Record<string, unknown>).type;
+    return typeof type === "string" && type !== "text" ? [type] : [];
+  });
+}
+
+function createTextOnlyOpenAIMessages(
+  messages: Array<Record<string, unknown>>,
+) {
+  return messages.map((message) => ({
+    ...message,
+    content: textOnlyOpenAIContent(message.content),
+  }));
+}
+
+function repairOpenAIToolResultOrder(messages: Array<Record<string, unknown>>) {
+  const repaired: Array<Record<string, unknown>> = [];
+  let index = 0;
+  while (index < messages.length) {
+    const message = messages[index];
+    repaired.push(message);
+    const toolCallIds = assistantToolCallIds(message);
+    if (!toolCallIds.length) {
+      index += 1;
+      continue;
+    }
+
+    const remaining = new Set(toolCallIds);
+    const toolMessages: Array<Record<string, unknown>> = [];
+    const deferredMessages: Array<Record<string, unknown>> = [];
+    let cursor = index + 1;
+    for (; cursor < messages.length && remaining.size > 0; cursor += 1) {
+      const candidate = messages[cursor];
+      if (candidate.role === "assistant") break;
+      const toolCallId = recordString(candidate, "tool_call_id");
+      if (candidate.role === "tool" && remaining.has(toolCallId)) {
+        toolMessages.push(candidate);
+        remaining.delete(toolCallId);
+        continue;
+      }
+      if (candidate.role === "tool") break;
+      deferredMessages.push(candidate);
+    }
+
+    if (remaining.size > 0) {
+      index += 1;
+      continue;
+    }
+    repaired.push(...toolMessages, ...deferredMessages);
+    index = cursor;
+  }
+  return repaired;
+}
+
+function assistantToolCallIds(message: Record<string, unknown>) {
+  if (message.role !== "assistant" || !Array.isArray(message.tool_calls))
+    return [];
+  return message.tool_calls.flatMap((toolCall) => {
+    const id = recordString(toolCall, "id");
+    return id ? [id] : [];
+  });
+}
+
+function recordString(value: unknown, key: string) {
+  if (!value || typeof value !== "object") return "";
+  const raw = (value as Record<string, unknown>)[key];
+  return typeof raw === "string" ? raw : "";
+}
+
+function textOnlyOpenAIContent(content: unknown): unknown {
+  if (!Array.isArray(content)) return content;
+  let removedNonTextParts = 0;
+  const text = content
+    .flatMap((part) => {
+      if (!part || typeof part !== "object") return [];
+      const record = part as Record<string, unknown>;
+      if (record.type !== "text") {
+        removedNonTextParts += 1;
+        return [];
+      }
+      return typeof record.text === "string" ? [record.text] : [];
+    })
+    .join("\n\n")
+    .trim();
+  if (!removedNonTextParts) return text;
+  if (text.toLowerCase().includes("tool image is attached"))
+    return "A browser tool produced non-text media, but the selected model rejected non-text message payloads. Continue with the text-only tool result and explain that the media bytes are not available if the answer depends on them.";
+  return text
+    ? `${text}\n\n[Non-text content removed because the selected model rejected this message payload format.]`
+    : "[Non-text content removed because the selected model rejected this message payload format.]";
+}
+
+function isUnsupportedOpenAIStructuredPayloadError(
+  status: number,
+  body: string,
+  partTypes: string[],
+) {
+  if (status !== 400) return false;
+  const lower = body.toLowerCase();
+  const mentionsSentPartType = partTypes.some((type) =>
+    lower.includes(type.toLowerCase()),
+  );
+  return (
+    (mentionsSentPartType &&
+      lower.includes("unknown variant") &&
+      (lower.includes("expected `text`") || lower.includes("expected text"))) ||
+    (lower.includes("expected `text`") && lower.includes("messages[")) ||
+    (lower.includes("non-text") &&
+      (lower.includes("unsupported") || lower.includes("not support"))) ||
+    (lower.includes("multimodal") &&
+      (lower.includes("unsupported") || lower.includes("not support"))) ||
+    ((lower.includes("image") ||
+      lower.includes("audio") ||
+      lower.includes("video") ||
+      lower.includes("file") ||
+      lower.includes("attachment")) &&
+      (lower.includes("unsupported") || lower.includes("not support")))
+  );
+}
+
+function shouldRetryAfterOpenAIStreamError(
+  error: unknown,
+  partTypes: string[],
+) {
+  if (!(error instanceof OpenAIStreamError)) return false;
+  if (error.contentStarted || !partTypes.length) return false;
+  const payload = error.payload as { type?: unknown; message?: unknown };
+  const message =
+    typeof payload?.message === "string" ? payload.message : error.message;
+  const type = typeof payload?.type === "string" ? payload.type : "";
+  return (
+    isUnsupportedOpenAIStructuredPayloadError(400, message, partTypes) ||
+    (type === "upstream_error" && message.toLowerCase().includes("upstream"))
+  );
 }
 
 async function createOpenAICompactionSummary(input: {

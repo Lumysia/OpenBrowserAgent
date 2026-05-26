@@ -12,17 +12,54 @@ export function applyPart(parts: ChatPart[] = [], part: ChatPart) {
   if (index === -1) return [...parts, part];
   return parts.map((candidate, candidateIndex) => {
     if (candidateIndex !== index) return candidate;
-    if (
-      (candidate.type === "text" || candidate.type === "reasoning") &&
-      candidate.type === part.type &&
-      part.append
-    )
-      return {
-        ...candidate,
-        text: `${candidate.text || ""}${part.text || ""}`,
-      };
-    return { ...candidate, ...part };
+    return mergePart(candidate, part);
   });
+}
+
+function mergePart(current: ChatPart, next: ChatPart): ChatPart {
+  if (current.type !== next.type) return { ...current, ...definedPart(next) };
+  if (current.type === "text" || current.type === "reasoning")
+    return mergeTextPart(current, next);
+  if (isToolPartType(current.type)) return mergeToolPart(current, next);
+  return { ...current, ...definedPart(next) };
+}
+
+function mergeTextPart(current: ChatPart, next: ChatPart): ChatPart {
+  if (next.append)
+    return { ...current, text: `${current.text || ""}${next.text || ""}` };
+  return {
+    ...current,
+    ...definedPart(next),
+    text: next.text || current.text,
+  };
+}
+
+function mergeToolPart(current: ChatPart, next: ChatPart): ChatPart {
+  const merged = { ...current, ...definedPart(next) };
+  return {
+    ...merged,
+    state: mergeToolState(current.state, next.state),
+  };
+}
+
+function mergeToolState(current: ChatPart["state"], next: ChatPart["state"]) {
+  if (!next) return current;
+  if (!current) return next;
+  return toolStateRank(next) >= toolStateRank(current) ? next : current;
+}
+
+function toolStateRank(state: ChatPart["state"]) {
+  if (state === CHAT_PART_STATE.outputError) return 4;
+  if (state === CHAT_PART_STATE.outputAvailable) return 3;
+  if (state === CHAT_PART_STATE.inputAvailable) return 2;
+  if (state === CHAT_PART_STATE.inputStreaming) return 1;
+  return 0;
+}
+
+function definedPart(part: ChatPart) {
+  return Object.fromEntries(
+    Object.entries(part).filter(([, value]) => value !== undefined),
+  ) as Partial<ChatPart>;
 }
 
 export function streamPartFromChunk(chunk: unknown): {

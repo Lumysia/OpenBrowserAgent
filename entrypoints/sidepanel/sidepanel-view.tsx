@@ -215,6 +215,7 @@ export function SidepanelView({
   const latestUserMessageId = [...(currentChat?.messages || [])]
     .reverse()
     .find((message) => message.role === "user")?.id;
+  const messagesKey = currentChat?.messages.length ? currentChat.id : "empty";
 
   if (showHistory)
     return (
@@ -255,11 +256,7 @@ export function SidepanelView({
           <EditModeOverlay t={t} onCancel={onCancelEditMessage} />
         )}
         <div className="messages-shell">
-          <div
-            key={currentChat?.id || "empty"}
-            ref={messagesRef}
-            className="messages"
-          >
+          <div key={messagesKey} ref={messagesRef} className="messages">
             <div className="messages-content">
               {!currentChat?.messages.length && (
                 <div className="empty">

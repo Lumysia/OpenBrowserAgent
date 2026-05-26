@@ -119,10 +119,9 @@ export async function requestOpenAIResponses(
     if (attachmentRetryNotice)
       await postTextStream(
         port,
-        attachmentRetryNotice,
+        `${attachmentRetryNotice}\n\n`,
         crypto.randomUUID(),
         signal,
-        false,
       );
     const retryBudgeted = applyOpenAIResponsesContextBudget(
       input,

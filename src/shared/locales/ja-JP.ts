@@ -169,7 +169,7 @@ export const jaJP: LocaleMessages = {
     removeTab: "タブを削除",
     attachmentTooLarge: "一部のファイルが大きすぎます: {names}",
     attachmentsUnsupportedRetry:
-      "選択したモデルが画像/ファイルのペイロードを拒否したため、テキストとファイル情報のみで再試行しました。",
+      "選択したモデルが非テキスト形式のコンテンツを拒否したため、テキストとファイル情報のみで再試行しました。",
     attachmentOnlyMessage: "添付ファイルを確認してください。",
     fileMetadataOnly: "ファイル情報のみ",
     replaceUnavailableAttachments: "利用できないファイルを置き換え",

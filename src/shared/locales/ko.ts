@@ -167,7 +167,7 @@ export const ko: LocaleMessages = {
     removeTab: "탭 제거",
     attachmentTooLarge: "일부 파일이 너무 커서 첨부할 수 없습니다: {names}",
     attachmentsUnsupportedRetry:
-      "선택한 모델이 이미지/파일 페이로드를 거부하여 텍스트와 파일 정보만으로 다시 시도했습니다.",
+      "선택한 모델이 비텍스트 콘텐츠 형식을 거부하여 텍스트와 파일 정보만으로 다시 시도했습니다.",
     attachmentOnlyMessage: "첨부 파일을 확인해 주세요.",
     fileMetadataOnly: "파일 정보만",
     replaceUnavailableAttachments: "사용할 수 없는 파일 교체",

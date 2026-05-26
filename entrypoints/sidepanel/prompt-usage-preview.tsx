@@ -86,7 +86,6 @@ export function usePromptUsageEstimate({
         system.length +
         availableToolSchemaChars({
           capabilities: agent.capabilities,
-          hasUploadedAttachments: attachments.length > 0,
           hasSkills: availableSkills.length > 0,
           hasWorkspace: usesWorkspaceCapabilities(agent.capabilities),
           imageGenerationEnabled: !!preferences?.imageGenerationEnabled,
@@ -225,14 +224,12 @@ function promptSegments(estimate: PromptUsageEstimate, t: Messages) {
 
 function availableToolSchemaChars({
   capabilities,
-  hasUploadedAttachments,
   hasSkills,
   hasWorkspace,
   imageGenerationEnabled,
   latestUserText,
 }: {
   capabilities: Agent["capabilities"];
-  hasUploadedAttachments: boolean;
   hasSkills: boolean;
   hasWorkspace: boolean;
   imageGenerationEnabled: boolean;
@@ -241,7 +238,6 @@ function availableToolSchemaChars({
   return jsonLength(
     browserToolsForPrompt({
       capabilities,
-      hasUploadedAttachments,
       hasSkills,
       hasWorkspace,
       imageGenerationEnabled,

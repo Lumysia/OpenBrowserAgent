@@ -160,7 +160,7 @@ export const zhTW: LocaleMessages = {
     removeTab: "移除分頁",
     attachmentTooLarge: "部分檔案過大，無法加入：{names}",
     attachmentsUnsupportedRetry:
-      "目前模型拒絕了圖片/檔案負載，已自動改用文字和檔案資訊重試。",
+      "目前模型拒絕了某種非文字內容格式，已自動改用文字和檔案資訊重試。",
     attachmentOnlyMessage: "請查看附件內容。",
     fileMetadataOnly: "僅傳送檔案資訊",
     replaceUnavailableAttachments: "替換不可用檔案",

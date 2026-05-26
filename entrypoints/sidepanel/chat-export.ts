@@ -61,7 +61,6 @@ export function exportChatAsOpenAiJson(
     ],
     tools: browserToolsForPrompt({
       capabilities: agent.capabilities,
-      hasUploadedAttachments: true,
       hasSkills: true,
       hasWorkspace,
       imageGenerationEnabled,

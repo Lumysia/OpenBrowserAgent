@@ -169,7 +169,7 @@ export const frFR: LocaleMessages = {
     removeTab: "Retirer l’onglet",
     attachmentTooLarge: "Certains fichiers étaient trop volumineux : {names}",
     attachmentsUnsupportedRetry:
-      "Le modèle sélectionné a rejeté la charge image/fichier, j'ai donc réessayé avec le texte et les détails des fichiers seulement.",
+      "Le modèle sélectionné a rejeté un format de contenu non textuel, j'ai donc réessayé avec le texte et les détails des fichiers seulement.",
     attachmentOnlyMessage: "Veuillez examiner les fichiers joints.",
     fileMetadataOnly: "Détails du fichier uniquement",
     replaceUnavailableAttachments: "Remplacer les fichiers indisponibles",

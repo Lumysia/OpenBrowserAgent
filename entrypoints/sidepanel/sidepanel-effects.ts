@@ -15,7 +15,6 @@ import type {
   Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
-import { sortChatsNewestFirst } from "./format";
 import { retryStalledStream } from "./retry-stalled-stream";
 import type { ActiveStreamMap, ComposerMenu } from "./sidepanel-menu-state";
 import type { SendMessagesRequest } from "../../src/shared/types";
@@ -42,6 +41,7 @@ export function useAutoScroll(
   const previousChatIdRef = useRef<string | undefined>(undefined);
   const previousSelectionRequestIdRef = useRef(chatSelectionRequestId);
   const previousStreamingRef = useRef(false);
+  const previousMessagesSignatureRef = useRef<string | undefined>(undefined);
   const boundElementRef = useRef<HTMLDivElement | null>(null);
   const unbindElementRef = useRef<(() => void) | undefined>(undefined);
   const frameRef = useRef<number | undefined>(undefined);
@@ -131,12 +131,23 @@ export function useAutoScroll(
     const chatSelectionRequested =
       previousSelectionRequestIdRef.current !== chatSelectionRequestId;
     const streamingStarted = streaming && !previousStreamingRef.current;
+    const messagesSignature = messageScrollSignature(messages);
+    const messagesChanged =
+      previousMessagesSignatureRef.current !== messagesSignature;
     previousSelectionRequestIdRef.current = chatSelectionRequestId;
     previousStreamingRef.current = streaming;
+    previousMessagesSignatureRef.current = messagesSignature;
     if (chatChanged || chatSelectionRequested || streamingStarted) {
       previousChatIdRef.current = activeChatId;
       stickToBottomRef.current = true;
     }
+    if (
+      !chatChanged &&
+      !chatSelectionRequested &&
+      !streamingStarted &&
+      !messagesChanged
+    )
+      return;
 
     if (streaming && !stickToBottomRef.current) {
       return;
@@ -174,6 +185,40 @@ export function useAutoScroll(
   }, [messages, autoScroll, streaming, activeChatId, chatSelectionRequestId]);
 }
 
+function messageScrollSignature(messages: Chat["messages"] | undefined) {
+  if (!messages?.length) return "empty";
+  const latest = messages[messages.length - 1];
+  const latestParts = latest.parts || [];
+  const latestPart = latestParts[latestParts.length - 1];
+  const runMetrics = latest.metadata?.runMetrics as
+    | {
+        endedAt?: unknown;
+        streamEventIndex?: unknown;
+        outputCharacters?: unknown;
+      }
+    | undefined;
+  return JSON.stringify({
+    count: messages.length,
+    latestId: latest.id,
+    latestRole: latest.role,
+    latestContentLength: latest.content.length,
+    latestPartCount: latestParts.length,
+    latestPart: latestPart
+      ? {
+          id: latestPart.id,
+          type: latestPart.type,
+          state: latestPart.state,
+          textLength: latestPart.text?.length || 0,
+          hasOutput: latestPart.output !== undefined,
+          hasError: !!latestPart.error,
+        }
+      : undefined,
+    endedAt: runMetrics?.endedAt,
+    streamEventIndex: runMetrics?.streamEventIndex,
+    outputCharacters: runMetrics?.outputCharacters,
+  });
+}
+
 export function useChatSelection(
   chats: Chat[] | undefined,
   activeChatId: string | undefined,
@@ -201,15 +246,15 @@ export function useChatSelection(
           chats.some((chat) => chat.id === activeChatId))
       )
         return;
-      setActiveChatId(sortChatsNewestFirst(chats)[0]?.id);
+      createChat();
       return;
     }
     if (activeChatId && activeChatId === draftChatId) return;
     if (activeChatId && !chats.some((chat) => chat.id === activeChatId)) {
-      setActiveChatId(sortChatsNewestFirst(chats)[0]?.id);
+      createChat();
       return;
     }
-    if (!activeChatId) setActiveChatId(sortChatsNewestFirst(chats)[0]?.id);
+    if (!activeChatId) createChat();
   }, [
     activeChatId,
     chats,
@@ -232,7 +277,15 @@ export function useActiveChatCleanup(
   setSelectedSkills: (value: Skill[]) => void,
   setOpenMenu: (value: ComposerMenu | null) => void,
 ) {
+  const previousActiveChatIdRef = useRef<string | undefined>(undefined);
+
   useEffect(() => {
+    const previousActiveChatId = previousActiveChatIdRef.current;
+    previousActiveChatIdRef.current = activeChatId;
+    if (previousActiveChatId === undefined && activeChatId !== undefined)
+      return;
+    if (previousActiveChatId === activeChatId) return;
+
     clearUploadedAttachments();
     setEditingMessage(null);
     setSentAttachmentPreviews({});

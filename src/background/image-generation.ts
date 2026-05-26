@@ -1,9 +1,15 @@
-import { ATTACHMENT_KIND } from "../shared/attachments";
+import { ATTACHMENT_KIND, base64FromDataUrl } from "../shared/attachments";
 import { storage } from "../shared/storage";
-import type { ImageGenerationJob, UploadedAttachment } from "../shared/types";
+import { writeSyncedChatAttachments } from "../shared/sync-chat-attachments";
+import type { UploadedAttachment } from "../shared/types";
 import { resolveImageModel } from "./model-resolver";
 
 const DEFAULT_IMAGE_SIZE = "1024x1024";
+const MIN_IMAGE_PIXELS = 655_360;
+const MAX_IMAGE_PIXELS = 8_294_400;
+const MAX_IMAGE_EDGE = 3840;
+const IMAGE_SIZE_MULTIPLE = 16;
+const MAX_IMAGE_ASPECT_RATIO = 3;
 
 export async function generateImage(
   attachments: UploadedAttachment[],
@@ -15,14 +21,13 @@ export async function generateImage(
   } = {},
 ) {
   const prompt = String(input.prompt || "").trim();
-  if (!prompt) return { error: "Missing image prompt" };
+  if (!prompt) return { success: false, error: "Missing image prompt" };
   const jobId = context.toolCallId || crypto.randomUUID();
   const preferences = await storage.preferences.get();
   const model = await resolveImageModel(stringInput(input.modelId));
-  const size =
-    stringInput(input.size) ||
-    preferences.imageGenerationSize ||
-    DEFAULT_IMAGE_SIZE;
+  const requestedSize =
+    stringInput(input.size) || preferences.imageGenerationSize;
+  const size = normalizeImageSize(requestedSize);
   const references = referenceAttachments(
     attachments,
     input.referenceAttachmentIds,
@@ -42,99 +47,39 @@ export async function generateImage(
     ? `${prompt}\n\n${textReferences}`
     : prompt;
   const referenceAttachmentIds = references.map((attachment) => attachment.id);
-  await upsertImageJob({
-    id: jobId,
-    chatId: context.chatId || "",
-    messageId: context.messageId,
-    toolCallId: context.toolCallId,
-    status: "running",
-    prompt: finalPrompt,
-    model: model.modelName,
-    size,
-    referenceAttachmentIds,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  });
   try {
     const result = imageReferences.length
       ? await editImage(model, finalPrompt, imageReferences[0], input, size)
       : await createImage(model, finalPrompt, input, size);
+    const displayResult = await storeGeneratedImageResult(result, {
+      jobId,
+      chatId: context.chatId,
+      messageId: context.messageId,
+    });
+    const error = stringInput(displayResult.error);
     const output = {
-      ...result,
+      ...displayResult,
+      success: !error,
       jobId,
       prompt: finalPrompt,
       model: model.modelName,
       referenceAttachmentIds,
-    };
-    await upsertImageJob({
-      id: jobId,
-      chatId: context.chatId || "",
-      messageId: context.messageId,
-      toolCallId: context.toolCallId,
-      status: output.error ? "failed" : "succeeded",
-      prompt: finalPrompt,
-      model: model.modelName,
+      requestedSize: requestedSize || undefined,
       size,
-      referenceAttachmentIds,
-      result: output.error ? undefined : output,
-      error: output.error ? String(output.error) : undefined,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      completedAt: Date.now(),
-    });
+    };
     return output;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    await upsertImageJob({
-      id: jobId,
-      chatId: context.chatId || "",
-      messageId: context.messageId,
-      toolCallId: context.toolCallId,
-      status: "failed",
-      prompt: finalPrompt,
-      model: model.modelName,
-      size,
-      referenceAttachmentIds,
-      error: message,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      completedAt: Date.now(),
-    });
     return {
+      success: false,
       error: message,
       jobId,
       prompt: finalPrompt,
       model: model.modelName,
+      requestedSize: requestedSize || undefined,
+      size,
     };
   }
-}
-
-async function upsertImageJob(job: ImageGenerationJob) {
-  if (!job.chatId) return;
-  const chats = await storage.chats.get();
-  const chat = chats.find((item) => item.id === job.chatId);
-  if (!chat) return;
-  const existing = chat.imageGenerationJobs?.find((item) => item.id === job.id);
-  await storage.chats.set(
-    chats.map((item) =>
-      item.id === job.chatId
-        ? {
-            ...item,
-            imageGenerationJobs: [
-              ...(item.imageGenerationJobs || []).filter(
-                (candidate) => candidate.id !== job.id,
-              ),
-              {
-                ...existing,
-                ...job,
-                createdAt: existing?.createdAt || job.createdAt,
-              },
-            ],
-            updatedAt: Date.now(),
-          }
-        : item,
-    ),
-  );
 }
 
 async function createImage(
@@ -191,7 +136,7 @@ async function editImage(
 }
 
 async function parseImageResponse(response: Response) {
-  if (!response.ok) return { error: await response.text() };
+  if (!response.ok) return { success: false, error: await response.text() };
   const data = await response.json();
   const first = data.data?.[0] || data.images?.[0] || data.image || data;
   const b64 =
@@ -200,8 +145,12 @@ async function parseImageResponse(response: Response) {
       : first.b64_json || first.base64 || first.image_base64;
   const url = typeof first === "string" ? "" : first.url || first.image_url;
   if (!b64 && !url)
-    return { error: "Image generation response did not include an image" };
+    return {
+      success: false,
+      error: "Image generation response did not include an image",
+    };
   return {
+    success: true,
     image: b64.startsWith?.("data:")
       ? b64
       : b64
@@ -220,6 +169,46 @@ function referenceAttachments(
   return attachments.filter((attachment) => ids.includes(attachment.id));
 }
 
+async function storeGeneratedImageResult(
+  result: Record<string, unknown>,
+  context: { jobId: string; chatId?: string; messageId?: string },
+) {
+  const image = stringInput(result.image);
+  if (!image.startsWith("data:image/") || !context.chatId || !context.messageId)
+    return result;
+  const type = image.match(/^data:([^;,]+)/)?.[1] || "image/png";
+  const id = context.jobId;
+  const attachment: UploadedAttachment = {
+    id,
+    name: `generated-image.${type.split("/")[1] || "png"}`,
+    type,
+    size: dataUrlSize(image),
+    kind: ATTACHMENT_KIND.image,
+    dataUrl: image,
+  };
+  try {
+    await writeSyncedChatAttachments({
+      chatId: context.chatId,
+      messageId: context.messageId,
+      attachments: [attachment],
+    });
+    const { image: _image, ...rest } = result;
+    return {
+      ...rest,
+      imageAttachmentId: id,
+      imageAttachmentName: attachment.name,
+      imageAttachmentType: attachment.type,
+      imageAttachmentSize: attachment.size,
+      imageStored: true,
+    };
+  } catch (error) {
+    return {
+      ...result,
+      imageStorageError: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 function dataUrlFile(attachment: UploadedAttachment) {
   const [header, base64 = ""] = (attachment.dataUrl || "").split(",");
   const type =
@@ -235,4 +224,48 @@ function stringInput(value: unknown) {
 function numberInput(value: unknown) {
   const number = Number(value);
   return Number.isFinite(number) ? number : undefined;
+}
+
+function dataUrlSize(dataUrl: string) {
+  return Math.ceil((base64FromDataUrl(dataUrl).length * 3) / 4);
+}
+
+function normalizeImageSize(value: string | undefined) {
+  const size = value || DEFAULT_IMAGE_SIZE;
+  const match = size.match(/^(\d+)x(\d+)$/);
+  if (!match) return DEFAULT_IMAGE_SIZE;
+  const originalWidth = Number(match[1]);
+  const originalHeight = Number(match[2]);
+  let width = roundToMultiple(originalWidth, IMAGE_SIZE_MULTIPLE);
+  let height = roundToMultiple(originalHeight, IMAGE_SIZE_MULTIPLE);
+  if (!Number.isFinite(width) || !Number.isFinite(height))
+    return DEFAULT_IMAGE_SIZE;
+  if (!validAspectRatio(width, height)) return DEFAULT_IMAGE_SIZE;
+  if (width > MAX_IMAGE_EDGE || height > MAX_IMAGE_EDGE)
+    return DEFAULT_IMAGE_SIZE;
+  while (width * height < MIN_IMAGE_PIXELS) {
+    const scale = Math.sqrt(MIN_IMAGE_PIXELS / (width * height));
+    width = roundUpToMultiple(originalWidth * scale, IMAGE_SIZE_MULTIPLE);
+    height = roundUpToMultiple(originalHeight * scale, IMAGE_SIZE_MULTIPLE);
+    if (width > MAX_IMAGE_EDGE || height > MAX_IMAGE_EDGE)
+      return DEFAULT_IMAGE_SIZE;
+  }
+  if (width * height > MAX_IMAGE_PIXELS) return DEFAULT_IMAGE_SIZE;
+  return `${width}x${height}`;
+}
+
+function roundToMultiple(value: number, multiple: number) {
+  if (!Number.isFinite(value) || value <= 0) return Number.NaN;
+  return Math.max(multiple, Math.round(value / multiple) * multiple);
+}
+
+function roundUpToMultiple(value: number, multiple: number) {
+  if (!Number.isFinite(value) || value <= 0) return Number.NaN;
+  return Math.max(multiple, Math.ceil(value / multiple) * multiple);
+}
+
+function validAspectRatio(width: number, height: number) {
+  return (
+    Math.max(width, height) / Math.min(width, height) <= MAX_IMAGE_ASPECT_RATIO
+  );
 }

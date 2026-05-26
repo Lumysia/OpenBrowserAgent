@@ -168,7 +168,7 @@ export const ptBR: LocaleMessages = {
     removeTab: "Remover aba",
     attachmentTooLarge: "Alguns arquivos eram grandes demais: {names}",
     attachmentsUnsupportedRetry:
-      "O modelo selecionado rejeitou o payload de imagem/arquivo, então tentei novamente apenas com texto e detalhes do arquivo.",
+      "O modelo selecionado rejeitou um formato de conteúdo não textual, então tentei novamente apenas com texto e detalhes do arquivo.",
     attachmentOnlyMessage: "Revise os arquivos anexados.",
     fileMetadataOnly: "Somente detalhes do arquivo",
     replaceUnavailableAttachments: "Substituir arquivos indisponíveis",
