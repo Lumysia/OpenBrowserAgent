@@ -676,6 +676,7 @@ export const jaJP: LocaleMessages = {
     syncChatAttachmentsDescription:
       "選択中の添付対応バックエンドで、チャットにアップロードしたファイルを同期します。ブラウザー同期は容量制限のため添付では無効です。",
     syncWritePending: "同期書き込みがキューに入っています",
+    syncWriteSyncing: "クラウドに同期中",
     syncWritePendingDetail: "{count} 件が同期待ちです",
     syncWriteOperationWrite: "書き込み",
     syncWriteOperationRemove: "削除",

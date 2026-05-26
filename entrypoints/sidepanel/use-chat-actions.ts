@@ -53,9 +53,16 @@ export function useChatActions({
         .get()
         .then((storedChats) => {
           const storedIds = closedChatIds(storedChats, chatId);
+          const removedChats = storedChats.filter((chat) =>
+            storedIds.has(chat.id),
+          );
+          const retainedChats = storedChats.filter(
+            (chat) => !storedIds.has(chat.id),
+          );
           return removeSyncedChatAttachments(
             syncDataSettings,
-            storedChats.filter((chat) => storedIds.has(chat.id)),
+            removedChats,
+            retainedChats,
           );
         })
         .catch((error) =>

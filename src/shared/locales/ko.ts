@@ -651,6 +651,7 @@ export const ko: LocaleMessages = {
     syncChatAttachmentsDescription:
       "선택한 첨부 파일 지원 동기화 백엔드로 채팅에 업로드한 파일을 동기화합니다. 브라우저 동기화는 브라우저 할당량 제한 때문에 첨부 파일에 사용할 수 없습니다.",
     syncWritePending: "동기화 쓰기가 대기 중입니다",
+    syncWriteSyncing: "클라우드에 동기화 중",
     syncWritePendingDetail: "{count}개 항목이 동기화를 기다립니다",
     syncWriteOperationWrite: "쓰기",
     syncWriteOperationRemove: "삭제",

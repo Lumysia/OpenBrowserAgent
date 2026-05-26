@@ -592,6 +592,7 @@ export const zhCN: LocaleMessages = {
     syncChatAttachmentsDescription:
       "通过当前支持附件的同步后端同步对话中上传的文件。浏览器内置同步受配额限制，不支持附件。",
     syncWritePending: "同步写入排队中",
+    syncWriteSyncing: "正在同步到云端",
     syncWritePendingDetail: "{count} 项正在等待同步",
     syncWriteOperationWrite: "写入",
     syncWriteOperationRemove: "删除",

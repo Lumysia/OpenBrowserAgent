@@ -663,6 +663,7 @@ export const enUS = {
     syncChatAttachmentsDescription:
       "Sync uploaded chat files with the selected attachment-capable backend. Browser Sync is disabled for attachments because of browser quota limits.",
     syncWritePending: "Sync writes are queued",
+    syncWriteSyncing: "Syncing to cloud",
     syncWritePendingDetail: "{count} item(s) waiting to sync",
     syncWriteOperationWrite: "writing",
     syncWriteOperationRemove: "removing",

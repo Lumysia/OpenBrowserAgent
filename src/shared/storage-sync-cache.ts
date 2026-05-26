@@ -6,6 +6,7 @@ import { sameStorageValue } from "./storage-value";
 
 export type SyncWriteStatus = {
   pendingCount: number;
+  activeCount?: number;
   pendingItems?: SyncWriteStatusItem[];
   lastUpdatedAt?: number;
   lastFlushedAt?: number;
@@ -242,17 +243,21 @@ async function readSyncLocalCache<T>(key: string) {
 }
 
 async function updateSyncWriteStatus(patch: Partial<SyncWriteStatus> = {}) {
+  const pendingItems = Array.from(pendingSyncWrites.entries()).map(
+    ([key, pending]) => ({
+      key,
+      operation: pending.operation,
+      backendName: pending.backend.config.name,
+      backendType: pending.backend.config.type,
+    }),
+  );
   await getBrowserApi().storage.local.set({
     [STORAGE_KEYS.syncWriteStatus]: {
       pendingCount: pendingSyncWrites.size,
-      pendingItems: Array.from(pendingSyncWrites.entries()).map(
-        ([key, pending]) => ({
-          key,
-          operation: pending.operation,
-          backendName: pending.backend.config.name,
-          backendType: pending.backend.config.type,
-        }),
-      ),
+      activeCount: Array.from(pendingSyncWrites.values()).filter(
+        (pending) => !!pending.flushing,
+      ).length,
+      pendingItems,
       lastUpdatedAt: Date.now(),
       ...patch,
     } satisfies SyncWriteStatus,

@@ -682,6 +682,7 @@ export const deDE: LocaleMessages = {
       "Synchronisiert hochgeladene Chat-Dateien über das ausgewählte anhängefähige Backend. Browser Sync ist wegen Browser-Kontingenten für Anhänge deaktiviert.",
     syncWritePending:
       "Synchronisierungsschreibvorgänge sind in der Warteschlange",
+    syncWriteSyncing: "Synchronisierung mit der Cloud läuft",
     syncWritePendingDetail: "{count} Element(e) warten auf Synchronisierung",
     syncWriteOperationWrite: "schreibt",
     syncWriteOperationRemove: "entfernt",

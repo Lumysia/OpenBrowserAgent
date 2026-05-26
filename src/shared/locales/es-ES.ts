@@ -683,6 +683,7 @@ export const esES: LocaleMessages = {
     syncChatAttachmentsDescription:
       "Sincroniza los archivos subidos al chat con el backend seleccionado que admite adjuntos. Browser Sync está desactivado para adjuntos por los límites de cuota del navegador.",
     syncWritePending: "Escrituras de sincronización en cola",
+    syncWriteSyncing: "Sincronizando con la nube",
     syncWritePendingDetail: "{count} elemento(s) esperando sincronización",
     syncWriteOperationWrite: "escribiendo",
     syncWriteOperationRemove: "eliminando",

@@ -168,12 +168,15 @@ function SyncWriteStatusCard({
   const [language] = useStoredState(storage.language);
   const t = getMessages(language);
   const pendingCount = status?.pendingCount || 0;
+  const activeCount = status?.activeCount || 0;
   const hasError = !!status?.lastError;
   const title = hasError
     ? t.options.syncWriteError
-    : pendingCount > 0
-      ? t.options.syncWritePending
-      : t.options.syncWriteIdle;
+    : activeCount > 0
+      ? t.options.syncWriteSyncing
+      : pendingCount > 0
+        ? t.options.syncWritePending
+        : t.options.syncWriteIdle;
   const detail = hasError
     ? status?.lastError
     : pendingCount > 0
@@ -192,7 +195,7 @@ function SyncWriteStatusCard({
       <CardContent>
         <div className="sync-status-row">
           <span
-            className={`sync-status-dot ${hasError ? "error" : pendingCount > 0 ? "pending" : ""}`}
+            className={`sync-status-dot ${hasError ? "error" : activeCount > 0 || pendingCount > 0 ? "pending" : ""}`}
           />
           <div>
             <CardTitle className="settings-section-title">

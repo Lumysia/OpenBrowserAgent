@@ -25,6 +25,7 @@ const CHAT_ATTACHMENT_ROOT = "attachments";
 const CHAT_ATTACHMENT_PREFIX = "chat-attachment";
 const CHAT_ATTACHMENT_DB = "openbrowseragent-chat-attachments";
 const CHAT_ATTACHMENT_STORE = "attachments";
+const offloadedInlineAttachmentWrites = new Map<string, Promise<void>>();
 
 type SyncedChatAttachmentMetadata = Omit<
   UploadedAttachment,
@@ -116,19 +117,22 @@ export async function readSyncedChatAttachment(
 export async function removeSyncedChatAttachments(
   syncDataSettings: SyncDataSettings | undefined,
   chats: Chat[],
+  retainedChats: Chat[] = [],
 ) {
-  const attachments = chats.flatMap(chatAttachmentMetadata);
-  if (!attachments.length) return;
-  await Promise.all(
-    attachments.map((attachment) => removeLocalChatAttachment(attachment.id)),
+  const retainedIds = chatAttachmentIds(retainedChats);
+  const attachmentIds = [...chatAttachmentIds(chats)].filter(
+    (id) => !retainedIds.has(id),
   );
+  if (!attachmentIds.length) return;
+  attachmentIds.forEach((id) => offloadedInlineAttachmentWrites.delete(id));
+  await Promise.all(attachmentIds.map(removeLocalChatAttachment));
   const backend = await activeAttachmentBackend(syncDataSettings);
   if (!backend) return;
   await Promise.all(
-    attachments.map(async (attachment) => {
+    attachmentIds.map(async (attachmentId) => {
       const metadataBytes = await readSyncBackendObject(
         backend,
-        metadataObjectName(attachment.id),
+        metadataObjectName(attachmentId),
       );
       const metadata = metadataBytes
         ? (JSON.parse(
@@ -139,7 +143,7 @@ export async function removeSyncedChatAttachments(
         metadata?.objectName
           ? removeSyncBackendObject(backend, metadata.objectName)
           : Promise.resolve(),
-        removeSyncBackendObject(backend, metadataObjectName(attachment.id)),
+        removeSyncBackendObject(backend, metadataObjectName(attachmentId)),
       ]);
     }),
   );
@@ -157,6 +161,7 @@ export async function offloadChatInlineAttachments(chats: Chat[]) {
           value: part.output,
           chatId: chat.id,
           messageId: message.id,
+          partId: part.id,
           writes,
         }),
       })),
@@ -246,11 +251,13 @@ function offloadInlineRecord({
   value,
   chatId,
   messageId,
+  partId,
   writes,
 }: {
   value: unknown;
   chatId: string;
   messageId: string;
+  partId: string;
   writes: Array<Promise<void>>;
 }): unknown {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
@@ -268,7 +275,7 @@ function offloadInlineRecord({
   const id =
     typeof record.imageAttachmentId === "string" && record.imageAttachmentId
       ? record.imageAttachmentId
-      : `tool-image-${crypto.randomUUID()}`;
+      : stableToolAttachmentId(chatId, messageId, partId);
   const attachment: UploadedAttachment = {
     id,
     name:
@@ -281,13 +288,7 @@ function offloadInlineRecord({
     kind: ATTACHMENT_KIND.image,
     dataUrl,
   };
-  writes.push(
-    writeSyncedChatAttachments({
-      chatId,
-      messageId,
-      attachments: [attachment],
-    }),
-  );
+  writes.push(writeInlineAttachmentOnce(chatId, messageId, attachment));
   const { image: _image, _visionImage, ...rest } = record;
   return {
     ...rest,
@@ -303,6 +304,49 @@ function dataImageUrl(value: unknown) {
   return typeof value === "string" && value.startsWith("data:image/")
     ? value
     : "";
+}
+
+function stableToolAttachmentId(
+  chatId: string,
+  messageId: string,
+  partId: string,
+) {
+  return `tool-attachment-${hashText(`${chatId}\u001f${messageId}\u001f${partId}`)}`;
+}
+
+function writeInlineAttachmentOnce(
+  chatId: string,
+  messageId: string,
+  attachment: UploadedAttachment,
+) {
+  const existing = offloadedInlineAttachmentWrites.get(attachment.id);
+  if (existing) return existing;
+  const write = writeLocalChatAttachment({ chatId, messageId, attachment })
+    .then(() => {
+      void syncRemoteChatAttachments({
+        chatId,
+        messageId,
+        attachments: [attachment],
+      }).catch((error) => {
+        offloadedInlineAttachmentWrites.delete(attachment.id);
+        console.warn("Failed to sync chat attachments", error);
+      });
+    })
+    .catch((error) => {
+      offloadedInlineAttachmentWrites.delete(attachment.id);
+      throw error;
+    });
+  offloadedInlineAttachmentWrites.set(attachment.id, write);
+  return write;
+}
+
+function hashText(value: string) {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return `${value.length.toString(36)}-${(hash >>> 0).toString(36)}`;
 }
 
 function dataUrlSize(dataUrl: string) {
@@ -346,11 +390,57 @@ function attachmentFromBytes(
   return { ...attachment, dataUrl: bytesToDataUrl(content, metadata.type) };
 }
 
-function chatAttachmentMetadata(chat: Chat) {
-  return chat.messages.flatMap((message) =>
-    Array.isArray(message.metadata?.uploadedAttachments)
-      ? (message.metadata.uploadedAttachments as UploadedAttachment[])
-      : [],
+function chatAttachmentIds(chats: Chat[]) {
+  const ids = new Set<string>();
+  for (const chat of chats) collectAttachmentReferences(chat, ids);
+  return ids;
+}
+
+function collectAttachmentReferences(
+  value: unknown,
+  ids: Set<string>,
+  seen = new WeakSet<object>(),
+) {
+  if (!value || typeof value !== "object") return;
+  if (seen.has(value)) return;
+  seen.add(value);
+  if (isAttachmentMetadata(value)) ids.add(value.id);
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectAttachmentReferences(item, ids, seen));
+    return;
+  }
+
+  for (const [key, item] of Object.entries(value)) {
+    if (typeof item === "string" && isAttachmentIdKey(key)) {
+      ids.add(item);
+      continue;
+    }
+    if (Array.isArray(item) && isAttachmentIdsKey(key)) {
+      item.forEach((id) => {
+        if (typeof id === "string") ids.add(id);
+      });
+    }
+    collectAttachmentReferences(item, ids, seen);
+  }
+}
+
+function isAttachmentIdKey(key: string) {
+  return key === "attachmentId" || key.endsWith("AttachmentId");
+}
+
+function isAttachmentIdsKey(key: string) {
+  return key === "attachmentIds" || key.endsWith("AttachmentIds");
+}
+
+function isAttachmentMetadata(value: object): value is UploadedAttachment {
+  const record = value as Partial<UploadedAttachment>;
+  return (
+    typeof record.id === "string" &&
+    typeof record.name === "string" &&
+    typeof record.type === "string" &&
+    typeof record.size === "number" &&
+    typeof record.kind === "string"
   );
 }
 

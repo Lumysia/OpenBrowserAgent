@@ -71,6 +71,7 @@ export function SidepanelApp() {
   );
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const [syncDataSettings] = useStoredState(storage.syncDataSettings);
+  const [syncWriteStatus] = useStoredState(storage.syncWriteStatus);
   const [agents] = useStoredState(storage.agents);
   const [language] = useStoredState(storage.language);
   const [skills, setSkills] = useStoredState(storage.skills);
@@ -405,14 +406,7 @@ export function SidepanelApp() {
         attachments: sentAttachments,
       });
       beginStream(nextChat.id, assistantMessage.id);
-      await persistInitialChatSnapshot(nextChat);
-      if (shouldGenerateTitle)
-        requestChatTitle({
-          chatId: nextChat.id,
-          modelId: preferences?.selectedModelId,
-          message: titleSource,
-          setChats,
-        });
+      const initialSnapshotPersist = persistInitialChatSnapshot(nextChat);
       if (!options.queued && !options.resendMessage) {
         clearInput();
         clearAttachedTabsAfterSend();
@@ -421,6 +415,14 @@ export function SidepanelApp() {
         setSelectedSkills([]);
         setEditingMessage(null);
       }
+      await initialSnapshotPersist;
+      if (shouldGenerateTitle)
+        requestChatTitle({
+          chatId: nextChat.id,
+          modelId: preferences?.selectedModelId,
+          message: titleSource,
+          setChats,
+        });
       const request: SendMessagesRequest = {
         type: AI_STREAM_REQUEST_TYPE.sendMessages,
         chatId: nextChat.id,
@@ -469,6 +471,7 @@ export function SidepanelApp() {
       input={input}
       promptUsage={promptUsage}
       activeAgent={runtimeAgent}
+      syncWriteStatus={syncWriteStatus}
       attachedTabs={attachedTabs}
       pendingAttachments={pendingAttachments}
       uploadedAttachments={uploadedAttachments}

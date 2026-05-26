@@ -670,6 +670,7 @@ export const ptBR: LocaleMessages = {
     syncChatAttachmentsDescription:
       "Sincroniza arquivos enviados no chat pelo backend selecionado com suporte a anexos. O Browser Sync fica desativado para anexos por causa dos limites de cota do navegador.",
     syncWritePending: "Gravações de sincronização na fila",
+    syncWriteSyncing: "Sincronizando com a nuvem",
     syncWritePendingDetail: "{count} item(ns) aguardando sincronização",
     syncWriteOperationWrite: "gravando",
     syncWriteOperationRemove: "removendo",

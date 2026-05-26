@@ -8,6 +8,7 @@ import {
 } from "react";
 import { TOOLTIP_DELAY_MS } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
+import type { SyncWriteStatus } from "../../src/shared/storage-sync-cache";
 import type {
   AttachmentTab,
   Agent,
@@ -71,6 +72,7 @@ export function SidepanelView({
   input,
   promptUsage,
   activeAgent,
+  syncWriteStatus,
   attachedTabs,
   pendingAttachments,
   selectedSkills,
@@ -134,6 +136,7 @@ export function SidepanelView({
   input: string;
   promptUsage: PromptBreakdown;
   activeAgent: Agent;
+  syncWriteStatus?: SyncWriteStatus;
   attachedTabs: AttachmentTab[];
   pendingAttachments: UploadedAttachment[];
   selectedSkills: Skill[];
@@ -248,6 +251,7 @@ export function SidepanelView({
           t={t}
           currentChat={currentChat}
           parentChat={parentChat}
+          syncWriteStatus={syncWriteStatus}
           onCreateChat={onCreateChat}
           onSetShowHistory={onSetShowHistory}
           onSelectChat={onSelectChat}

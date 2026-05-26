@@ -595,6 +595,7 @@ export const zhTW: LocaleMessages = {
     syncChatAttachmentsDescription:
       "透過目前支援附件的同步後端同步對話中上傳的檔案。瀏覽器內建同步受配額限制，不支援附件。",
     syncWritePending: "同步寫入排隊中",
+    syncWriteSyncing: "正在同步到雲端",
     syncWritePendingDetail: "{count} 項正在等待同步",
     syncWriteOperationWrite: "寫入",
     syncWriteOperationRemove: "刪除",

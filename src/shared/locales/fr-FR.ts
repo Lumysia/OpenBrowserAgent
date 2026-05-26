@@ -685,6 +685,7 @@ export const frFR: LocaleMessages = {
     syncChatAttachmentsDescription:
       "Synchronise les fichiers importés dans les discussions avec le backend sélectionné compatible avec les pièces jointes. Browser Sync est désactivé pour les pièces jointes à cause des quotas du navigateur.",
     syncWritePending: "Écritures de synchronisation en attente",
+    syncWriteSyncing: "Synchronisation avec le cloud",
     syncWritePendingDetail: "{count} élément(s) en attente de synchronisation",
     syncWriteOperationWrite: "écriture",
     syncWriteOperationRemove: "suppression",
