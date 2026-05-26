@@ -732,6 +732,12 @@ export const frFR: LocaleMessages = {
     debugResetButton: "Effacer toutes les données de l'app",
     debugResetting: "Effacement...",
     debugResetSuccess: "Les données OpenBrowserAgent ont été effacées.",
+    debugLoggingTitle: "Journaux de diagnostic",
+    debugLoggingDescription:
+      "Active des journaux console temporaires pour diagnostiquer l'ordre du streaming, des outils et de l'assistant.",
+    debugLoggingEnabled: "Activer les journaux de diagnostic",
+    debugLoggingEnabledDescription:
+      "Écrit des événements de débogage [OBA ...] dans la console de l'extension jusqu'à désactivation.",
     debugToolsTitle: "Outils enregistrés",
     debugToolsDescription:
       "Registre actuel des outils du navigateur ({count} outils).",

@@ -2,14 +2,19 @@ import { useEffect, useRef, useState, type MutableRefObject } from "react";
 
 type StorageItem<T> = {
   key?: string;
-  persistDebounceMs?: number;
-  snapshot?: "hash";
+  persistDebounceMs?: number | ((value: T) => number | undefined);
+  snapshot?: "hash" | ((value: T) => string | undefined);
+  reconcile?: (current: T | undefined, incoming: T) => T;
   get(): Promise<T>;
   set(value: T): Promise<void>;
   watch(callback: (newValue: T, oldValue: T) => void): () => void;
 };
 
 type StoredStateUpdateOptions = { persist?: "debounced" | "immediate" };
+type SnapshotOptions<T> = Pick<
+  StorageItem<T>,
+  "persistDebounceMs" | "snapshot"
+>;
 
 export function useStoredState<T>(item: StorageItem<T>) {
   const [value, setValue] = useState<T | undefined>();
@@ -48,9 +53,13 @@ export function useStoredState<T>(item: StorageItem<T>) {
         snapshotRef.current = nextSnapshot;
         return;
       }
-      valueRef.current = next;
-      snapshotRef.current = nextSnapshot;
-      setValue(next);
+      const resolved =
+        next !== undefined && item.reconcile
+          ? item.reconcile(valueRef.current, next)
+          : next;
+      valueRef.current = resolved;
+      snapshotRef.current = snapshot(item, resolved);
+      setValue(resolved);
     });
     return () => {
       mounted = false;
@@ -109,7 +118,8 @@ function persistValue<T>(
       throw error;
     });
   }
-  if (!item.persistDebounceMs) {
+  const delayMs = persistDelay(item, value);
+  if (!delayMs) {
     item.set(value).catch(logPersistError);
     return;
   }
@@ -123,7 +133,7 @@ function persistValue<T>(
       persistOwnWrite(item, pending, ownWriteSnapshotsRef).catch(
         logPersistError,
       );
-  }, item.persistDebounceMs);
+  }, delayMs);
 }
 
 function flushPendingPersist<T>(
@@ -194,8 +204,9 @@ function forgetOwnWriteSnapshot(
   );
 }
 
-function snapshot(item: StorageItem<unknown>, value: unknown) {
+function snapshot<T>(item: SnapshotOptions<T>, value: T) {
   try {
+    if (typeof item.snapshot === "function") return item.snapshot(value);
     const serialized = JSON.stringify(value);
     return item.snapshot === "hash" ? hashSnapshot(serialized) : serialized;
   } catch {
@@ -203,12 +214,17 @@ function snapshot(item: StorageItem<unknown>, value: unknown) {
   }
 }
 
-function shouldDeferUpdateSnapshot(
-  item: StorageItem<unknown>,
+function persistDelay<T>(item: StorageItem<T>, value: T) {
+  const delay = item.persistDebounceMs;
+  return typeof delay === "function" ? delay(value) : delay;
+}
+
+function shouldDeferUpdateSnapshot<T>(
+  item: SnapshotOptions<T>,
   options: StoredStateUpdateOptions,
 ) {
   return (
-    item.snapshot === "hash" &&
+    !!item.snapshot &&
     !!item.persistDebounceMs &&
     options.persist !== "immediate"
   );

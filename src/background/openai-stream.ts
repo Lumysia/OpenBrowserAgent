@@ -6,6 +6,7 @@ import {
   type TokenUsage,
 } from "../shared/types";
 import { STREAM_RENDER_THROTTLE_MS } from "../shared/config";
+import { debugLog } from "../shared/debug-logging";
 
 type OpenAIToolCall = {
   id?: string;
@@ -47,17 +48,20 @@ export async function readOpenAIStream(
   let reasoning = "";
   let reasoningBuffer = "";
   let reasoningFlushTimeout: ReturnType<typeof setTimeout> | undefined;
+  let debugSequence = 0;
 
   function emitText(delta: string) {
     if (!delta) return;
     if (!textStarted) {
       textStarted = true;
+      debugOpenAIStream("text-start", { id: textId });
       post(port, {
         type: "chunk",
         chunk: { type: AI_TEXT_CHUNK_TYPE.textStart, id: textId },
       });
     }
     content += delta;
+    debugOpenAIStream("text-delta", { id: textId, deltaLength: delta.length });
     post(port, {
       type: "chunk",
       chunk: { type: AI_TEXT_CHUNK_TYPE.textDelta, id: textId, delta },
@@ -70,6 +74,7 @@ export async function readOpenAIStream(
     reasoningBuffer += delta;
     if (!reasoningStarted) {
       reasoningStarted = true;
+      debugOpenAIStream("reasoning-start", { id: reasoningId });
       post(port, {
         type: "chunk",
         chunk: { type: AI_TEXT_CHUNK_TYPE.textNoteStart, id: reasoningId },
@@ -88,6 +93,10 @@ export async function readOpenAIStream(
     const delta = reasoningBuffer;
     reasoningBuffer = "";
     if (!delta) return;
+    debugOpenAIStream("reasoning-delta", {
+      id: reasoningId,
+      deltaLength: delta.length,
+    });
     post(port, {
       type: "chunk",
       chunk: { type: AI_TEXT_CHUNK_TYPE.textNoteDelta, id: reasoningId, delta },
@@ -139,6 +148,11 @@ export async function readOpenAIStream(
       const next = toolCalls[index];
       if (!announcedToolIndexes.has(index) && next.id && next.function.name) {
         announcedToolIndexes.add(index);
+        debugOpenAIStream("tool-start", {
+          toolCallId: next.id,
+          toolName: next.function.name,
+          index,
+        });
         post(port, {
           type: "chunk",
           chunk: {
@@ -176,11 +190,23 @@ export async function readOpenAIStream(
       type: "chunk",
       chunk: { type: AI_TEXT_CHUNK_TYPE.textNoteEnd, id: reasoningId },
     });
+  if (textStarted) debugOpenAIStream("text-end", { id: textId });
+  if (reasoningStarted) debugOpenAIStream("reasoning-end", { id: reasoningId });
 
   const completeToolCalls = toolCalls.filter(
     (toolCall) => toolCall.function.name,
   );
   return { content, reasoning, toolCalls: completeToolCalls, usage };
+
+  function debugOpenAIStream(event: string, details: Record<string, unknown>) {
+    debugLog("[OBA openai-stream-order]", {
+      sequence: ++debugSequence,
+      event,
+      textId,
+      reasoningId,
+      ...details,
+    });
+  }
 }
 
 export class OpenAIStreamError extends Error {

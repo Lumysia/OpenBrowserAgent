@@ -729,6 +729,12 @@ export const deDE: LocaleMessages = {
     debugResetButton: "Alle App-Daten löschen",
     debugResetting: "Wird gelöscht...",
     debugResetSuccess: "OpenBrowserAgent-Daten wurden gelöscht.",
+    debugLoggingTitle: "Diagnoseprotokolle",
+    debugLoggingDescription:
+      "Aktiviert temporäre Konsolenlogs für Stream-, Tool- und Assistant-Reihenfolge-Diagnosen.",
+    debugLoggingEnabled: "Diagnose-Konsolenlogs aktivieren",
+    debugLoggingEnabledDescription:
+      "Schreibt [OBA ...]-Debug-Ereignisse in die Erweiterungskonsole, bis es deaktiviert wird.",
     debugToolsTitle: "Registrierte Tools",
     debugToolsDescription: "Aktuelle Browser-Tool-Registry ({count} Tools).",
     debugToolAvailable: "Verfügbar",

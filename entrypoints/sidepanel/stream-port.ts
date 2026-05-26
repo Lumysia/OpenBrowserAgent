@@ -82,6 +82,7 @@ type StreamPortOptions = {
     chatId: string,
     messageId: string,
     chunk: unknown,
+    metrics?: Partial<RunMetrics>,
   ) => void;
   onStreamChunk?: (event: {
     chatId: string;
@@ -194,6 +195,7 @@ function connectStreamPort({
       : undefined;
     if (message.type === "queuedMessages") {
       flushSequenceMetrics();
+      flushMessageText(chatId, activeMessageId);
       updateRunMetrics(activeMessageId, { endedAt: message.createdAt });
       appendQueuedMessages(
         chatId,
@@ -214,21 +216,30 @@ function connectStreamPort({
       updateActiveStream((stream) =>
         stream.hasProgress ? stream : { ...stream, hasProgress: true },
       );
-      appendStreamChunk(chatId, activeMessageId, message.chunk);
+      appendStreamChunk(
+        chatId,
+        activeMessageId,
+        message.chunk,
+        sequenceMetrics,
+      );
       onStreamChunk?.({
         chatId,
         messageId: activeMessageId,
         chunk: message.chunk,
       });
+      return;
     }
-    scheduleSequenceMetrics(sequenceMetrics);
     if (message.type === "metrics") {
+      scheduleSequenceMetrics(sequenceMetrics);
       updateRunMetrics(activeMessageId, message.metrics);
     }
     if (message.type === "error") {
       flushSequenceMetrics();
       flushMessageText(chatId, activeMessageId);
-      updateRunMetrics(activeMessageId, { endedAt: Date.now() });
+      updateRunMetrics(activeMessageId, {
+        endedAt: Date.now(),
+        ...sequenceMetrics,
+      });
       appendToAssistant(chatId, activeMessageId, `\n\n${message.error}`);
       clearActiveStream();
       onStreamFinished(chatId);
@@ -236,7 +247,10 @@ function connectStreamPort({
     if (message.type === "end") {
       flushSequenceMetrics();
       flushMessageText(chatId, activeMessageId);
-      updateRunMetrics(activeMessageId, { endedAt: Date.now() });
+      updateRunMetrics(activeMessageId, {
+        endedAt: Date.now(),
+        ...sequenceMetrics,
+      });
       clearActiveStream();
       onStreamFinished(chatId);
     }

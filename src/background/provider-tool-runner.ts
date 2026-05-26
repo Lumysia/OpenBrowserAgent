@@ -12,6 +12,7 @@ import {
   type UploadedAttachment,
 } from "../shared/types";
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
+import { debugLog } from "../shared/debug-logging";
 import { post } from "./message-helpers";
 import {
   attachToolSources,
@@ -63,6 +64,7 @@ export async function runProviderTool({
   loadedToolNames: Set<string>;
   availableTools: Array<{ function: { name: string } }>;
 }): Promise<ProviderToolRunResult> {
+  debugToolOrder("input-available", { toolName, toolCallId });
   post(port, {
     type: "chunk",
     chunk: {
@@ -121,6 +123,11 @@ export async function runProviderTool({
     responseSources,
   );
   const nextSources = mergeOutputSources(responseSources, output);
+  debugToolOrder("output-available", {
+    toolName,
+    toolCallId,
+    outputError: isToolError(output),
+  });
   post(port, {
     type: "chunk",
     chunk: {
@@ -418,6 +425,11 @@ function postToolOutput(
   rawOutput: unknown,
 ) {
   const output = sanitizeToolOutput(rawOutput);
+  debugToolOrder("output-progress", {
+    toolName,
+    toolCallId,
+    outputError: isToolError(output),
+  });
   post(port, {
     type: "chunk",
     chunk: {
@@ -431,6 +443,10 @@ function postToolOutput(
       output,
     },
   });
+}
+
+function debugToolOrder(event: string, details: Record<string, unknown>) {
+  debugLog("[OBA tool-order]", { event, ...details });
 }
 
 function isAvailableTool(

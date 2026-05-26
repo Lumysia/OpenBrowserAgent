@@ -57,7 +57,7 @@ export function useParallelChatStreams({
   const lastStreamActivityRef = useRef<Record<string, number>>({});
   const activeStreamsRef = useRef<ActiveStreamMap>({});
   const streamHandlers = useMemo(
-    () => createStreamHandlers(setChats),
+    () => createStreamHandlers(setChats, () => chatsRef.current),
     [setChats],
   );
   const setActiveStreams: typeof setActiveStreamsState = useCallback(

@@ -1,7 +1,12 @@
 import { nanoid } from "nanoid";
 import { normalizeAgents } from "./agents";
 import { getBrowserApi } from "./browser-api";
-import { normalizeChats } from "./chats";
+import {
+  chatSnapshot,
+  hasUnfinishedChatRun,
+  normalizeChats,
+  reconcileChatSnapshots,
+} from "./chats";
 import { BUILTIN_SKILLS } from "./builtin-skills";
 import * as config from "./config";
 import { DEFAULT_PREFERENCES, mergePreferences } from "./default-preferences";
@@ -134,19 +139,6 @@ function immediateSyncWriteDelay(key: string) {
   if (key === STORAGE_KEYS.syncDataSettings) return 0;
   if (key === STORAGE_KEYS.chats) return config.CHAT_SYNC_WRITE_DEBOUNCE_MS;
   return undefined;
-}
-
-function hasUnfinishedChatRun(value: unknown) {
-  if (!Array.isArray(value)) return false;
-  return (value as Chat[]).some((chat) =>
-    chat.messages?.some((message) => {
-      if (message.role !== "assistant") return false;
-      const metrics = message.metadata?.runMetrics as
-        | { startedAt?: unknown; endedAt?: unknown }
-        | undefined;
-      return metrics?.startedAt !== undefined && metrics.endedAt === undefined;
-    }),
-  );
 }
 
 async function readStoredValue<T>(area: AreaName, key: string) {
@@ -454,6 +446,11 @@ export const storage = {
     STORAGE_KEYS.ignoreSyncedProvidersForBootstrap,
     () => false,
   ),
+  debugLoggingEnabled: createItem<boolean>(
+    STORAGE_AREAS.local,
+    STORAGE_KEYS.debugLoggingEnabled,
+    () => false,
+  ),
 };
 
 function createChatsStorageItem() {
@@ -462,10 +459,17 @@ function createChatsStorageItem() {
     () => [],
     SYNC_PREFERENCES.chats,
     normalizeChats,
-    { persistDebounceMs: config.CHAT_WRITE_DEBOUNCE_MS, snapshot: "hash" },
+    {
+      persistDebounceMs: (value) =>
+        hasUnfinishedChatRun(value)
+          ? config.CHAT_STREAM_WRITE_DEBOUNCE_MS
+          : config.CHAT_WRITE_DEBOUNCE_MS,
+      snapshot: (value) => chatSnapshot(value as Chat[]),
+    },
   );
   return {
     ...item,
+    reconcile: reconcileChatSnapshots,
     async set(value: Chat[]) {
       await item.set(await offloadChatInlineAttachments(value));
     },

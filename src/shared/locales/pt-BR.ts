@@ -718,6 +718,12 @@ export const ptBR: LocaleMessages = {
     debugResetButton: "Limpar todos os dados do app",
     debugResetting: "Limpando...",
     debugResetSuccess: "Os dados do OpenBrowserAgent foram limpos.",
+    debugLoggingTitle: "Logs de diagnóstico",
+    debugLoggingDescription:
+      "Ativa logs temporários no console para diagnosticar a ordem de streaming, ferramentas e assistente.",
+    debugLoggingEnabled: "Ativar logs de diagnóstico no console",
+    debugLoggingEnabledDescription:
+      "Grava eventos de depuração [OBA ...] no console da extensão até ser desativado.",
     debugToolsTitle: "Ferramentas registradas",
     debugToolsDescription:
       "Registro atual de ferramentas do navegador ({count} ferramentas).",

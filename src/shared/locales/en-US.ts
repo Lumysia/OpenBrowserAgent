@@ -709,6 +709,12 @@ export const enUS = {
     debugResetButton: "Clear all app data",
     debugResetting: "Clearing...",
     debugResetSuccess: "OpenBrowserAgent data was cleared.",
+    debugLoggingTitle: "Diagnostic logging",
+    debugLoggingDescription:
+      "Enable temporary console logs for stream, tool, and assistant ordering diagnostics.",
+    debugLoggingEnabled: "Enable diagnostic console logs",
+    debugLoggingEnabledDescription:
+      "Writes [OBA ...] debug events to the extension console until turned off.",
     debugToolsTitle: "Registered tools",
     debugToolsDescription: "Current browser tool registry ({count} tools).",
     debugToolAvailable: "Available",

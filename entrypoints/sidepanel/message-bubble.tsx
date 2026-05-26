@@ -13,6 +13,10 @@ import {
   SENT_ATTACHMENTS_PREVIEW_COUNT,
   SENT_TABS_PREVIEW_COUNT,
 } from "../../src/shared/config";
+import {
+  debugLog,
+  isDebugLoggingEnabled,
+} from "../../src/shared/debug-logging";
 import type { Messages } from "../../src/shared/i18n";
 import { getSkillDisplayName } from "../../src/shared/skills";
 import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
@@ -124,6 +128,21 @@ export function MessageBubble({
     message.role === "assistant" && messageRunEnded(message) && !outputActive;
   const chatExists = (chatId: string) =>
     chats.some((chat) => chat.id === chatId);
+  const assistantPartEntries = chronologicalAssistantPartEntries(
+    message.parts || [],
+  );
+  if (message.role === "assistant" && hasParts && isDebugLoggingEnabled())
+    debugLog("[OBA assistant-order]", {
+      messageId: message.id,
+      contentLength: message.content.length,
+      fallbackLength: assistantContentFallback.length,
+      outputActive,
+      assistantEnded,
+      parts: message.parts?.map(debugAssistantPart),
+      displayParts: assistantPartEntries.map(({ part }) =>
+        debugAssistantPart(part),
+      ),
+    });
   return (
     <div
       className={`message ${message.role === "user" ? "user" : ""} ${latestUserMessage ? "latest-user" : ""} ${editing ? "editing" : ""}`}
@@ -158,7 +177,7 @@ export function MessageBubble({
               hideActions={!assistantEnded}
             />
           )}
-          {message.parts?.map((part, index) => (
+          {assistantPartEntries.map(({ part, index }) => (
             <Fragment key={part.id}>
               <AssistantPart
                 t={t}
@@ -283,6 +302,57 @@ function legacySummaryInsertionIndex(message: ChatMessage) {
     -1,
   );
   return lastToolPartIndex >= 0 ? lastToolPartIndex : parts.length - 1;
+}
+
+function chronologicalAssistantPartEntries(
+  parts: NonNullable<ChatMessage["parts"]>,
+) {
+  const entries: Array<{
+    part: NonNullable<ChatMessage["parts"]>[number];
+    index: number;
+  }> = [];
+  let reasoningGroup:
+    | { firstIndex: number; ids: string[]; texts: string[] }
+    | undefined;
+
+  parts.forEach((part, index) => {
+    if (part.type === "reasoning") {
+      const text = part.text?.trim();
+      if (!text) return;
+      if (!reasoningGroup)
+        reasoningGroup = { firstIndex: index, ids: [], texts: [] };
+      reasoningGroup.ids.push(part.id);
+      reasoningGroup.texts.push(text);
+      return;
+    }
+    flushReasoningGroup();
+    entries.push({ part, index });
+  });
+  flushReasoningGroup();
+  return entries;
+
+  function flushReasoningGroup() {
+    if (!reasoningGroup) return;
+    entries.push({
+      index: reasoningGroup.firstIndex,
+      part: {
+        id: `merged-reasoning-${reasoningGroup.ids.join("-")}`,
+        type: "reasoning" as const,
+        text: reasoningGroup.texts.join("\n\n"),
+      },
+    });
+    reasoningGroup = undefined;
+  }
+}
+
+function debugAssistantPart(part: NonNullable<ChatMessage["parts"]>[number]) {
+  return {
+    id: part.id,
+    type: part.type,
+    toolName: isToolPartType(part.type) ? part.toolName : undefined,
+    state: part.state,
+    textLength: part.text?.length || 0,
+  };
 }
 
 function compactionSummary(message: ChatMessage) {

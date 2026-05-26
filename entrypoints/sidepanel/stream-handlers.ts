@@ -1,17 +1,26 @@
 import type { Dispatch, SetStateAction } from "react";
 import { STREAM_RENDER_THROTTLE_MS } from "../../src/shared/config";
+import {
+  debugLog,
+  isDebugLoggingEnabled,
+} from "../../src/shared/debug-logging";
 import type { Chat, ChatPart, RunMetrics } from "../../src/shared/types";
+import { isToolPartType } from "../../src/shared/types";
 import {
   appendAssistantContent,
   appendAssistantPart,
   appendQueuedMessages,
   updateAssistantRunMetrics,
 } from "./chat-updates";
-import { streamPartFromChunk } from "./stream-parts";
+import { applyPart, streamPartFromChunk } from "./stream-parts";
 
 type ChatSetter = Dispatch<SetStateAction<Chat[]>>;
+type ChatGetter = () => Chat[];
 
-export function createStreamHandlers(setChats: ChatSetter) {
+export function createStreamHandlers(
+  setChats: ChatSetter,
+  getChats?: ChatGetter,
+) {
   const pendingText = new Map<string, PendingTextDelta>();
 
   function key(chatId: string, messageId: string, partId: string) {
@@ -23,18 +32,21 @@ export function createStreamHandlers(setChats: ChatSetter) {
     if (!item) return;
     pendingText.delete(itemKey);
     if (item.timeout !== undefined) window.clearTimeout(item.timeout);
+    const part: ChatPart = {
+      id: item.partId,
+      type: item.partType,
+      text: item.delta,
+      append: true,
+    };
+    debugStreamOrder("flush-text", getChats, item.chatId, item.messageId, part);
     setChats((items) =>
       appendAssistantPart({
         chats: items,
         chatId: item.chatId,
         messageId: item.messageId,
         delta: item.partType === "text" ? item.delta : undefined,
-        part: {
-          id: item.partId,
-          type: item.partType,
-          text: item.delta,
-          append: true,
-        },
+        part,
+        metrics: item.metrics,
       }),
     );
   }
@@ -52,9 +64,22 @@ export function createStreamHandlers(setChats: ChatSetter) {
         appendAssistantContent(items, chatId, messageId, content),
       );
     },
-    appendStreamChunk(chatId: string, messageId: string, chunk: unknown) {
+    appendStreamChunk(
+      chatId: string,
+      messageId: string,
+      chunk: unknown,
+      metrics?: Partial<RunMetrics>,
+    ) {
       const { delta, part } = streamPartFromChunk(chunk);
       if (!delta && !part) return;
+      debugStreamOrder(
+        "chunk-received",
+        getChats,
+        chatId,
+        messageId,
+        part,
+        delta,
+      );
       if (isAppendableTextPart(part)) {
         const partId = part.id;
         const itemKey = key(chatId, messageId, partId);
@@ -62,6 +87,11 @@ export function createStreamHandlers(setChats: ChatSetter) {
         const existing = pendingText.get(itemKey);
         if (existing) {
           existing.delta += partDelta;
+          existing.metrics = {
+            ...(existing.metrics || {}),
+            ...(metrics || {}),
+          };
+          debugPendingText("pending-append", chatId, messageId, part, existing);
           return;
         }
         pendingText.set(itemKey, {
@@ -70,16 +100,40 @@ export function createStreamHandlers(setChats: ChatSetter) {
           partId,
           partType: part.type,
           delta: partDelta,
+          metrics,
           timeout: window.setTimeout(
             () => flushTextDelta(itemKey),
             STREAM_RENDER_THROTTLE_MS,
           ),
         });
+        debugPendingText("pending-start", chatId, messageId, part, {
+          chatId,
+          messageId,
+          partId,
+          partType: part.type,
+          delta: partDelta,
+          metrics,
+        });
         return;
       }
       flushMessageText(chatId, messageId);
+      debugStreamOrder(
+        "apply-immediate",
+        getChats,
+        chatId,
+        messageId,
+        part,
+        delta,
+      );
       setChats((items) =>
-        appendAssistantPart({ chats: items, chatId, messageId, delta, part }),
+        appendAssistantPart({
+          chats: items,
+          chatId,
+          messageId,
+          delta,
+          part,
+          metrics,
+        }),
       );
     },
     updateRunMetrics(
@@ -114,12 +168,69 @@ export function createStreamHandlers(setChats: ChatSetter) {
   };
 }
 
+function debugStreamOrder(
+  event: string,
+  getChats: ChatGetter | undefined,
+  chatId: string,
+  messageId: string,
+  part?: ChatPart,
+  delta?: string,
+) {
+  if (!isDebugLoggingEnabled()) return;
+  if (!getChats) return;
+  const message = getChats()
+    .find((chat) => chat.id === chatId)
+    ?.messages.find((item) => item.id === messageId);
+  const before = message?.parts || [];
+  const after = part ? applyPart(before, part) : before;
+  debugLog("[OBA stream-order]", {
+    event,
+    chatId,
+    messageId,
+    contentLength: message?.content.length || 0,
+    deltaLength: delta?.length || 0,
+    part: part ? debugPart(part) : undefined,
+    before: before.map(debugPart),
+    after: after.map(debugPart),
+  });
+}
+
+function debugPendingText(
+  event: string,
+  chatId: string,
+  messageId: string,
+  part: ChatPart,
+  pending: Omit<PendingTextDelta, "timeout">,
+) {
+  if (!isDebugLoggingEnabled()) return;
+  debugLog("[OBA stream-order]", {
+    event,
+    chatId,
+    messageId,
+    part: debugPart(part),
+    pendingLength: pending.delta.length,
+    metrics: pending.metrics,
+  });
+}
+
+function debugPart(part: ChatPart) {
+  return {
+    id: part.id,
+    type: part.type,
+    toolName: isToolPartType(part.type) ? part.toolName : undefined,
+    state: part.state,
+    append: part.append === true,
+    textLength: part.text?.length || 0,
+  };
+}
+
 type PendingTextDelta = {
   chatId: string;
   messageId: string;
   partId: string;
   partType: "text" | "reasoning";
   delta: string;
+  metrics?: Partial<RunMetrics>;
   timeout?: number;
 };
 

@@ -723,6 +723,12 @@ export const jaJP: LocaleMessages = {
     debugResetButton: "すべてのアプリデータを消去",
     debugResetting: "消去中...",
     debugResetSuccess: "OpenBrowserAgentデータを消去しました。",
+    debugLoggingTitle: "診断ログ",
+    debugLoggingDescription:
+      "ストリーム、ツール、アシスタントの順序診断用の一時的なコンソールログを有効にします。",
+    debugLoggingEnabled: "診断コンソールログを有効化",
+    debugLoggingEnabledDescription:
+      "オフにするまで、拡張機能のコンソールに [OBA ...] デバッグイベントを書き込みます。",
     debugToolsTitle: "登録済みツール",
     debugToolsDescription:
       "現在のブラウザツールレジストリ（{count}個のツール）。",

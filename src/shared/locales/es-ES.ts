@@ -731,6 +731,12 @@ export const esES: LocaleMessages = {
     debugResetButton: "Borrar todos los datos de la app",
     debugResetting: "Borrando...",
     debugResetSuccess: "Los datos de OpenBrowserAgent se borraron.",
+    debugLoggingTitle: "Registros de diagnóstico",
+    debugLoggingDescription:
+      "Activa registros temporales de consola para diagnosticar el orden de streaming, herramientas y asistente.",
+    debugLoggingEnabled: "Activar registros de diagnóstico",
+    debugLoggingEnabledDescription:
+      "Escribe eventos de depuración [OBA ...] en la consola de la extensión hasta que se desactive.",
     debugToolsTitle: "Herramientas registradas",
     debugToolsDescription:
       "Registro actual de herramientas del navegador ({count} herramientas).",

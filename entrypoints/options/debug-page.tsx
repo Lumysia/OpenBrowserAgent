@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { AlertTriangle, Bug, Wrench, Trash2 } from "lucide-react";
 import { browserTools } from "../../src/background/tool-schema";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
@@ -28,6 +28,7 @@ import {
   CardTitle,
   Input,
   Label,
+  Switch,
   ToggleGroup,
   ToggleGroupItem,
 } from "../../src/ui/components";
@@ -36,6 +37,9 @@ import { useStoredState } from "../../src/ui/useStoredState";
 export function DebugPage() {
   const [language] = useStoredState(storage.language);
   const [preferences] = useStoredState(storage.preferences);
+  const [debugLoggingEnabled, setDebugLoggingEnabled] = useStoredState(
+    storage.debugLoggingEnabled,
+  );
   const [agents] = useStoredState(storage.agents);
   const [skills] = useStoredState(storage.skills);
   const [confirmText, setConfirmText] = useState("");
@@ -92,6 +96,13 @@ export function DebugPage() {
         </h1>
         <p className="muted">{t.options.debugDescription}</p>
       </div>
+      <DebugSwitchCard
+        icon={<Bug size={18} />}
+        title={t.options.debugLoggingTitle}
+        description={t.options.debugLoggingDescription}
+        checked={debugLoggingEnabled === true}
+        onChange={(checked) => setDebugLoggingEnabled(checked)}
+      />
       <Accordion type="single" collapsible>
         <AccordionItem value="tools">
           <AccordionTrigger className="debug-tools-trigger">
@@ -149,7 +160,7 @@ export function DebugPage() {
       </Accordion>
       <Card>
         <CardHeader>
-          <CardTitle className="debug-section-title">
+          <CardTitle className="settings-section-title danger-title">
             <AlertTriangle size={18} />
             <span>{t.options.debugResetTitle}</span>
           </CardTitle>
@@ -234,6 +245,36 @@ export function DebugPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function DebugSwitchCard({
+  icon,
+  title,
+  description,
+  checked,
+  onChange,
+}: {
+  icon: ReactNode;
+  title: string;
+  description: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <Card>
+      <CardContent>
+        <div className="setting-switch-row">
+          <div>
+            <CardTitle className="settings-section-title">
+              {icon} {title}
+            </CardTitle>
+            <CardDescription>{description}</CardDescription>
+          </div>
+          <Switch checked={checked} onCheckedChange={onChange} />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

@@ -636,6 +636,12 @@ export const zhCN: LocaleMessages = {
     debugResetButton: "清除全部应用数据",
     debugResetting: "正在清除...",
     debugResetSuccess: "OpenBrowserAgent 数据已清除。",
+    debugLoggingTitle: "诊断日志",
+    debugLoggingDescription:
+      "启用用于流式输出、工具和助手顺序诊断的临时控制台日志。",
+    debugLoggingEnabled: "启用诊断控制台日志",
+    debugLoggingEnabledDescription:
+      "开启后会向扩展控制台写入 [OBA ...] 调试事件，直到手动关闭。",
     debugToolsTitle: "已注册工具",
     debugToolsDescription: "当前浏览器工具注册表（{count} 个工具）。",
     debugToolAvailable: "可用",

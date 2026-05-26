@@ -38,12 +38,14 @@ export function appendAssistantPart({
   messageId,
   delta,
   part,
+  metrics,
 }: {
   chats: Chat[];
   chatId: string;
   messageId: string;
   delta?: string;
   part?: ChatPart;
+  metrics?: Partial<RunMetrics>;
 }) {
   const sources = extractSourcesFromPart(part);
   return chats.map((chat) =>
@@ -59,10 +61,15 @@ export function appendAssistantPart({
                   ...message,
                   content: delta ? message.content + delta : message.content,
                   parts: part ? applyPart(message.parts, part) : message.parts,
-                  metadata: delta
+                  metadata: delta || metrics
                     ? mergeRunMetrics(
                         message.metadata,
-                        deltaRunMetrics(message.metadata, delta),
+                        {
+                          ...(delta
+                            ? deltaRunMetrics(message.metadata, delta)
+                            : {}),
+                          ...(metrics || {}),
+                        },
                       )
                     : message.metadata,
                 }
