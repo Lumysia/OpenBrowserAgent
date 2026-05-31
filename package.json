@@ -34,14 +34,14 @@
     "cmdk": "^1.1.1",
     "highlight.js": "^11.11.1",
     "jszip": "^3.10.1",
-    "katex": "^0.16.47",
+    "katex": "^0.17.0",
     "lucide-react": "latest",
     "marked": "latest",
     "nanoid": "latest",
     "react": "latest",
     "react-dom": "latest",
     "tailwind-merge": "^3.6.0",
-    "tinybase": "^8.4.1",
+    "tinybase": "^8.4.2",
     "wxt": "latest"
   },
   "devDependencies": {
