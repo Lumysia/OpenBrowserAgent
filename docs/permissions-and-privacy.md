@@ -4,7 +4,7 @@ OpenBrowserAgent is powerful because it can read browser context, automate pages
 
 ## Browser Permissions
 
-Declared in `wxt.config.ts`. Permissions differ by browser target.
+Permissions differ by browser target.
 
 All builds declare:
 
@@ -51,8 +51,6 @@ Depending on user action and selected agent capabilities, requests may include:
 - Tool results and MCP results.
 - Generated image prompts and optional reference attachments.
 
-Evidence: `entrypoints/sidepanel/send-message-plan.ts`, `entrypoints/sidepanel/sidepanel-context.ts`, `entrypoints/sidepanel/selected-element-attachment.ts`, `src/background/providers.ts`, `src/background/image-generation.ts`.
-
 ## External Network Calls
 
 OpenBrowserAgent sends data to endpoints configured by the user in Providers and MCP settings. It can also make these external calls:
@@ -64,11 +62,7 @@ OpenBrowserAgent sends data to endpoints configured by the user in Providers and
 - Mermaid preview image URLs through `mermaid.ink` and links to `mermaid.live`.
 - Page image/file download URLs when a download tool is used.
 
-Evidence: `entrypoints/sidepanel/markdown.ts`, `src/shared/mcp-client.ts`, `src/background/downloads.ts`, `src/background/image-generation.ts`.
-
 ## Storage and Sync
-
-Storage keys are centralized in `src/shared/storage-keys.ts`.
 
 Stored data includes:
 
@@ -77,32 +71,19 @@ Stored data includes:
 - Agents and agent workspaces.
 - Skills and skill files.
 - MCP server definitions and headers.
+- Local execution bridge configurations and secrets.
 - Chats and chat tabs.
 - Sync write status and local sync cache entries.
 
-Default sync preferences:
-
-- `syncSettings: true`
-- `syncProviders: true`
-- `syncAgents: false`
-- `syncSkills: false`
-- `syncMcpServers: false`
-- `syncChats: false`
+Language and lightweight preferences use the selected sync backend. Provider sync is enabled by default. Agents, skills, MCP servers, local execution bridges, chats, and chat attachments remain local unless the user enables their sync options.
 
 Important: provider sync is enabled by default, so provider configurations may sync through browser sync. Users should treat synced provider API keys as sensitive browser-synced data.
 
-Evidence: `src/shared/storage.ts`, `src/shared/storage-keys.ts`, `src/shared/default-preferences.ts`.
-
-## Safety Notes
+## Safe Use
 
 - Broad permissions are necessary for cross-site browser assistance, but they increase responsibility for careful use.
 - Attached pages and selected elements may contain sensitive information.
 - Browser automation tools can navigate, click, type, close tabs, download files, interact with dialogs, and modify page state.
-- CDP/debugger tools are powerful and should remain gated by explicit agent capability.
+- Debugger-powered automation is available only when the selected agent has that capability enabled.
 - MCP tools send arguments and context to configured MCP servers.
 - Tool results and page content may be truncated by size limits.
-
-## Known Release Review Items
-
-- Consider clearer user-facing copy for provider sync and API-key storage.
-- Consider documenting exactly which agents expose CDP/browser automation capabilities in the release notes.

@@ -12,8 +12,6 @@ It turns your browser into an AI working surface: bring page context into chat, 
   </a>
   <br>
   <a href="https://github.com/user-attachments/assets/65d18645-f6d6-4ce2-952b-e225b9a923ba"><strong>Watch the demo</strong></a>
-  |
-  <a href="https://github.com/Lumysia/OpenBrowserAgent/issues/10">Demo details</a>
 </p>
 
 <table>
@@ -42,10 +40,10 @@ It turns your browser into an AI working surface: bring page context into chat, 
 - **Side panel chat** with streaming responses, queued messages, attachment-aware context, and polished tool activity cards.
 - **Agent and Ask modes** for either browser automation or page-focused questions.
 - **Tab and page context** including current tab metadata, page content, selected elements, and source-aware outputs.
-- **Remote MCP tools** with built-in Exa seed, JSON import, test-before-enable flow, per-tool enable switches, and citation extraction from MCP results.
+- **Remote MCP tools** with a built-in web search preset, JSON import, connection testing, per-tool controls, and citation extraction from MCP results.
 - **Reusable skills** with built-in browser guidance, skill import/export, editable skill files, and reset-to-default controls.
 - **Source citations** that keep final answers tied to pages, files, skills, generated outputs, and MCP-provided web results.
-- **Product-grade settings** for providers, models, appearance, language, sync, debug reset, skills, and MCP servers.
+- **Comprehensive settings** for providers, models, appearance, language, sync, agents, skills, MCP servers, and local execution bridges.
 - **Theme-aware UI** with light/dark/system modes, accent colors, compact density, subtle motion, and localized interface text.
 
 ## Typical Workflows
@@ -61,8 +59,6 @@ It turns your browser into an AI working surface: bring page context into chat, 
 - [Product overview](docs/product-overview.md)
 - [Installation and packaging](docs/installation-and-packaging.md)
 - [Permissions and privacy](docs/permissions-and-privacy.md)
-- [Release checklist](docs/release-checklist.md)
-- [Media assets guide](docs/media-assets.md)
 
 ## Development
 
