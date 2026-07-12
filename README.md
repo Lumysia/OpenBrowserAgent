@@ -4,6 +4,31 @@ OpenBrowserAgent is an AI browser side panel for understanding pages, researchin
 
 It turns your browser into an AI working surface: bring page context into chat, switch between focused Q&A and action-oriented agent mode, connect your own models, and extend the assistant with reusable skills and remote MCP tools.
 
+## Preview
+
+<p align="center">
+  <a href="https://github.com/user-attachments/assets/65d18645-f6d6-4ce2-952b-e225b9a923ba">
+    <img src="docs/assets/screenshots/general-and-sidepanel.webp" alt="OpenBrowserAgent settings and browser side panel" width="900">
+  </a>
+  <br>
+  <a href="https://github.com/user-attachments/assets/65d18645-f6d6-4ce2-952b-e225b9a923ba"><strong>Watch the demo</strong></a>
+  |
+  <a href="https://github.com/Lumysia/OpenBrowserAgent/issues/10">Demo details</a>
+</p>
+
+<table>
+  <tr>
+    <td width="33.33%"><strong>Custom agents</strong><br><img src="docs/assets/screenshots/agents.webp" alt="Custom agent settings" width="100%"></td>
+    <td width="33.33%"><strong>Model providers</strong><br><img src="docs/assets/screenshots/providers.webp" alt="Model provider settings" width="100%"></td>
+    <td width="33.33%"><strong>Skills</strong><br><img src="docs/assets/screenshots/skills.webp" alt="Reusable skill settings" width="100%"></td>
+  </tr>
+  <tr>
+    <td width="33.33%"><strong>MCP servers</strong><br><img src="docs/assets/screenshots/mcp-servers.webp" alt="MCP server settings" width="100%"></td>
+    <td width="33.33%"><strong>Local execution bridges</strong><br><img src="docs/assets/screenshots/local-execution-bridges.webp" alt="Local execution bridge settings" width="100%"></td>
+    <td width="33.33%"><strong>Sync</strong><br><img src="docs/assets/screenshots/sync.webp" alt="Sync settings" width="100%"></td>
+  </tr>
+</table>
+
 ## Why Use It
 
 - **Work where the web already is.** Ask questions about the current page, compare tabs, summarize content, and keep sources close to the browser session.
