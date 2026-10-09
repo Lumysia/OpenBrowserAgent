@@ -23,6 +23,7 @@ const activeStreamSessions = new Map<string, StreamSession>();
 const portSessions = new WeakMap<chrome.runtime.Port, Set<StreamSession>>();
 
 export function createStreamSession(request: SendMessagesRequest) {
+  abortSession(request.chatId);
   const session: StreamSession = {
     chatId: request.chatId,
     currentMessageId: request.messageId,
@@ -73,7 +74,7 @@ export function attachPortToSession(
   session: StreamSession,
   afterSequence: number | undefined,
 ) {
-  if (session.cleanupTimeout) clearTimeout(session.cleanupTimeout);
+  if (activeStreamSessions.get(session.chatId) !== session) return;
   session.ports.add(port);
   const sessions = portSessions.get(port) || new Set<StreamSession>();
   sessions.add(session);
@@ -92,12 +93,14 @@ export function detachPort(port: chrome.runtime.Port) {
 
 export function firstPortSession(port: chrome.runtime.Port) {
   return portSessions.get(port)?.values().next().value as
-    | StreamSession
-    | undefined;
+    StreamSession | undefined;
 }
 
 export function abortPortStreams(port: chrome.runtime.Port) {
-  portSessions.get(port)?.forEach((session) => abortSession(session.chatId));
+  portSessions.get(port)?.forEach((session) => {
+    if (activeStreamSessions.get(session.chatId) === session)
+      abortSession(session.chatId);
+  });
 }
 
 export function abortSession(chatId: string) {
@@ -105,7 +108,7 @@ export function abortSession(chatId: string) {
   if (!session) return;
   session.abortController.abort();
   session.disconnectListeners.forEach((listener) => listener());
-  activeStreamSessions.delete(chatId);
+  releaseSession(session);
 }
 
 export function sendMessageToSession(
@@ -142,16 +145,38 @@ export function deleteQueuedMessage(session: StreamSession, id: string) {
 }
 
 export function scheduleSessionCleanup(session: StreamSession) {
-  session.cleanupTimeout = setTimeout(() => {
-    if (activeStreamSessions.get(session.chatId) === session)
-      activeStreamSessions.delete(session.chatId);
-  }, STREAM_SESSION_RETENTION_MS);
+  if (
+    activeStreamSessions.get(session.chatId) !== session ||
+    session.cleanupTimeout
+  )
+    return;
+  session.cleanupTimeout = setTimeout(
+    () => releaseSession(session),
+    STREAM_SESSION_RETENTION_MS,
+  );
+}
+
+function releaseSession(session: StreamSession) {
+  if (session.cleanupTimeout) clearTimeout(session.cleanupTimeout);
+  if (activeStreamSessions.get(session.chatId) === session)
+    activeStreamSessions.delete(session.chatId);
+  for (const port of session.ports) {
+    const attached = portSessions.get(port);
+    attached?.delete(session);
+    if (!attached?.size) portSessions.delete(port);
+  }
+  session.ports.clear();
+  session.messageListeners.clear();
+  session.disconnectListeners.clear();
+  session.events.length = 0;
+  session.queuedMessages.length = 0;
 }
 
 export function postToSession(
   session: StreamSession,
   message: AiStreamResponse,
 ) {
+  if (activeStreamSessions.get(session.chatId) !== session) return;
   const event = { ...message, sequence: session.nextSequence++ };
   if (message.type === "queuedMessages")
     session.currentMessageId = message.assistantMessageId;
