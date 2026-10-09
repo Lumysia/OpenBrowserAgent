@@ -1,6 +1,9 @@
 import { getBrowserApi } from "./browser-api";
 import { STORAGE_KEYS, SYNCABLE_DATA_ITEMS } from "./storage-keys";
-import { withStorageMutationLock } from "./storage-lock";
+import {
+  withStorageMutationLock,
+  withStoragePublicationLock,
+} from "./storage-lock";
 import {
   syncLocalCacheKey,
   withCacheLock,
@@ -75,7 +78,7 @@ export async function runStorageTransition(
     withStorageMutationLock(() => {
       const lockCache = (index: number): Promise<T> =>
         index === keys.length
-          ? operation()
+          ? withStoragePublicationLock(operation)
           : withCacheLock(keys[index], () => lockCache(index + 1));
       return lockCache(0);
     });

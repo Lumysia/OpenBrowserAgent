@@ -1,7 +1,11 @@
 import { getBrowserApi } from "./browser-api";
 import { sameStorageValue } from "./storage-value";
-import { withStorageLock } from "./storage-lock";
-import { STORAGE_KEYS } from "./storage-keys";
+import { withStorageLock, withStoragePublicationLock } from "./storage-lock";
+import { STORAGE_KEYS, type SyncPreferenceKey } from "./storage-keys";
+import {
+  mergeSyncDataSettings,
+  type SyncDataSettings,
+} from "./sync-data-settings";
 
 export type SyncLocalCache<T> = {
   value: T;
@@ -13,14 +17,26 @@ export type SyncLocalCache<T> = {
 type CacheGuard = {
   expected: SyncLocalCache<unknown> | undefined;
   backendId?: string;
+  // Effective-value readers and notifications also depend on this category.
+  // Queue settlement keeps its existing ownsSyncKey/legacy settings policy.
+  syncPreferenceKey?: SyncPreferenceKey;
 };
 
-async function acceptsBackend(guard?: CacheGuard) {
-  if (!guard?.backendId) return true;
-  const values = await getBrowserApi().storage.local.get(
-    STORAGE_KEYS.activeSyncBackendId,
+async function acceptsRoute(guard?: CacheGuard) {
+  if (guard?.backendId) {
+    const values = await getBrowserApi().storage.local.get(
+      STORAGE_KEYS.activeSyncBackendId,
+    );
+    if (values[STORAGE_KEYS.activeSyncBackendId] !== guard.backendId)
+      return false;
+  }
+  if (!guard?.syncPreferenceKey) return true;
+  const settings = await readSyncLocalCache<SyncDataSettings>(
+    STORAGE_KEYS.syncDataSettings,
   );
-  return values[STORAGE_KEYS.activeSyncBackendId] === guard.backendId;
+  return (
+    mergeSyncDataSettings(settings?.value)[guard.syncPreferenceKey] === true
+  );
 }
 
 export function syncLocalCacheKey(key: string) {
@@ -36,6 +52,10 @@ export function withCacheLock<T>(
   return withStorageLock(syncLocalCacheKey(key), operation);
 }
 
+function withCachePublication<T>(key: string, operation: () => Promise<T>) {
+  return withCacheLock(key, () => withStoragePublicationLock(operation));
+}
+
 export async function readSyncLocalCache<T>(key: string) {
   const result = await getBrowserApi().storage.local.get(
     syncLocalCacheKey(key),
@@ -44,7 +64,7 @@ export async function readSyncLocalCache<T>(key: string) {
 }
 
 export async function writeSyncLocalCache<T>(key: string, value: T) {
-  await withCacheLock(key, () =>
+  await withCachePublication(key, () =>
     getBrowserApi().storage.local.set({
       [syncLocalCacheKey(key)]: {
         value,
@@ -55,7 +75,7 @@ export async function writeSyncLocalCache<T>(key: string, value: T) {
 }
 
 export function stageSyncRemoval(key: string) {
-  return withCacheLock(key, () =>
+  return withCachePublication(key, () =>
     getBrowserApi().storage.local.set({
       [syncLocalCacheKey(key)]: {
         value: undefined,
@@ -67,8 +87,8 @@ export function stageSyncRemoval(key: string) {
 }
 
 export function removeSyncLocalCache(key: string, guard?: CacheGuard) {
-  return withCacheLock(key, async () => {
-    if (!(await acceptsBackend(guard))) return false;
+  return withCachePublication(key, async () => {
+    if (!(await acceptsRoute(guard))) return false;
     if (
       guard &&
       !sameStorageValue(await readSyncLocalCache(key), guard.expected)
@@ -84,8 +104,8 @@ export function markSyncLocalCacheFlushed<T>(
   value: T,
   guard?: CacheGuard,
 ) {
-  return withCacheLock(key, async () => {
-    if (!(await acceptsBackend(guard))) return false;
+  return withCachePublication(key, async () => {
+    if (!(await acceptsRoute(guard))) return false;
     const existing = await readSyncLocalCache<T>(key);
     if (
       guard

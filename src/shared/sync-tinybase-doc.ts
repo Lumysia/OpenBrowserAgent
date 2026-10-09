@@ -159,19 +159,33 @@ function decodeStore(key: string, bytes: Uint8Array) {
 }
 
 function setStoreValue<T>(store: SyncStore, key: string, value: T) {
-  if (key === STORAGE_KEYS.chats && Array.isArray(value)) {
-    store.setTables(tablesFromChats(value as Array<Record<string, unknown>>));
-    store.setValues({ kind: "chats" });
-    return;
+  const chats = key === STORAGE_KEYS.chats && Array.isArray(value);
+  const tables = chats
+    ? tablesFromChats(value as Array<Record<string, unknown>>)
+    : tablesFromValue(value);
+  // An empty entry can later gain fields through a merge. Its presence cell
+  // remains part of that retained row's identity; dropping it on an unrelated
+  // rewrite would defeat a concurrent clear. Do not add it to unmarked legacy
+  // rows, or retain it for rows absent from the requested snapshot.
+  if (tables && !Array.isArray(value)) {
+    for (const [id, row] of Object.entries(tables.items)) {
+      const presence = store.getCell("items", id, ORDER_CELL);
+      if (presence !== undefined) row[ORDER_CELL] = presence;
+    }
   }
-  const tables = tablesFromValue(value);
-  if (tables) {
-    store.setTables(tables);
-    store.setValues({ kind: Array.isArray(value) ? "array" : "record" });
-    return;
-  }
-  store.setTables({});
-  store.setValues({ kind: "scalar", value: toCellValue(value) });
+  // setTables rejects a snapshot with no cells, leaving old rows intact.
+  // Omit empty tables so setContent uses TinyBase's deletion operation when
+  // the snapshot is empty, preserving tombstones and unchanged-cell stamps.
+  store.setContent([
+    Object.fromEntries(
+      Object.entries(tables || {}).filter(
+        ([, table]) => Object.keys(table).length,
+      ),
+    ),
+    tables
+      ? { kind: chats ? "chats" : Array.isArray(value) ? "array" : "record" }
+      : { kind: "scalar", value: toCellValue(value) },
+  ]);
 }
 
 function valueFromStore<T>(key: string, store: SyncStore) {
@@ -281,6 +295,7 @@ function recordFromTable(table: Tables[string]) {
   return Object.fromEntries(
     Object.entries(table || {}).map(([id, row]) => {
       const cleanRow = stripInternalCells(row);
+      if (!Object.keys(cleanRow).length) return [id, {}];
       const { id: _id, value, ...rest } = cleanRow;
       return [id, Object.keys(rest).length ? cleanRow : value];
     }),
@@ -288,11 +303,14 @@ function recordFromTable(table: Tables[string]) {
 }
 
 function rowFromRecord(value: Record<string, unknown>) {
-  return Object.fromEntries(
+  const row = Object.fromEntries(
     Object.entries(value)
       .filter(([, cell]) => cell !== undefined)
       .map(([key, cell]) => [key, toCellValue(cell)]),
   );
+  // TinyBase drops empty rows. Reuse the internal cell already stripped from
+  // array rows to retain an empty object, without restamping populated records.
+  return Object.keys(row).length ? row : withOrder(row, 0);
 }
 
 function toCellValue(value: unknown): Cell {

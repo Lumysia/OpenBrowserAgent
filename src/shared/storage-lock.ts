@@ -23,6 +23,12 @@ export function withStorageLock<T>(
 export const withStorageMutationLock = <T>(operation: () => Promise<T>) =>
   withStorageLock("storage-mutation", operation);
 
+// Innermost lock: mutation -> sorted cache locks -> publication. Every route
+// writer shares this boundary with guarded cache publication, including remote
+// settings refresh. Never acquire mutation/cache locks or do remote I/O inside it.
+export const withStoragePublicationLock = <T>(operation: () => Promise<T>) =>
+  withStorageLock("storage-publication", operation);
+
 // Remote snapshots and routing transitions share one cross-context owner.
 // Keep this separate from mutation/cache locks: local edits never wait for I/O.
 export const withSyncOwnership = <T>(operation: () => Promise<T>) =>

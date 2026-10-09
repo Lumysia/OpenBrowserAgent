@@ -159,7 +159,7 @@ export function clearPendingSyncWrites() {
     pending.resolve.forEach((resolve) => resolve());
   }
   pendingSyncWrites.clear();
-  updateSyncWriteStatus().catch(() => undefined);
+  return updateSyncWriteStatus().catch(() => undefined);
 }
 
 export async function flushPendingSyncWrites() {
