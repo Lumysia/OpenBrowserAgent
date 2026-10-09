@@ -401,6 +401,8 @@ export const zhCN: LocaleMessages = {
     agentWorkspaceDescription:
       "此智能体的私有文本文件。SOUL.md 定义行为，AGENTS.md 定义工作区规则，MEMORY.md 和 USER.md 作为冻结上下文注入，NOTES.md 按需使用。",
     agentWorkspaceNewFile: "新建工作区文件",
+    agentWorkspaceConflict:
+      "此文件在编辑期间发生了更改。请重新打开并查看最新版本后再保存。",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "还没有工作区文件。",
     resetDefaultAgents: "重置默认智能体",

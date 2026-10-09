@@ -20,7 +20,9 @@ export function withTimeout<T>(
 }
 
 export function isToolError(output: unknown) {
-  return typeof output === "object" && output !== null && "error" in output;
+  if (!output || typeof output !== "object") return false;
+  const result = output as Record<string, unknown>;
+  return result.success === false || result.isError === true || !!result.error;
 }
 
 export function clampToolOffset(value: unknown) {

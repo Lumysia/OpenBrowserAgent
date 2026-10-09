@@ -566,7 +566,17 @@ export const deferredDomainTools = [
       instruction: { type: "string" },
       path: { type: "string" },
       content: { type: "string" },
-      replacements: { type: "array", items: { type: "object" } },
+      replacements: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            oldText: { type: "string", minLength: 1 },
+            newText: { type: "string" },
+          },
+          required: ["oldText", "newText"],
+        },
+      },
       reason: { type: "string" },
       ...contentSliceParameters,
       ...listSliceParameters,
@@ -583,6 +593,12 @@ export const deferredDomainTools = [
       },
       path: { type: "string" },
       content: { type: "string" },
+      patchOperation: {
+        type: "string",
+        enum: ["replace", "append", "prepend"],
+        description:
+          "For operation=patch. Defaults to replace; find selects literal text, or omit find to replace the whole file.",
+      },
       value: { type: "string" },
       find: { type: "string" },
       query: { type: "string" },

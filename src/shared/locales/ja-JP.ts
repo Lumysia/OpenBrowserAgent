@@ -472,6 +472,8 @@ export const jaJP: LocaleMessages = {
     agentWorkspaceDescription:
       "このエージェントの非公開テキストファイルです。SOUL.md が動作、AGENTS.md がワークスペース規則を定義し、MEMORY.md と USER.md は固定コンテキストとして入り、NOTES.md は必要時に使われます。",
     agentWorkspaceNewFile: "新しいワークスペースファイル",
+    agentWorkspaceConflict:
+      "編集中にこのファイルが変更されました。保存する前に開き直して最新の内容を確認してください。",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "ワークスペースファイルはまだありません。",
     resetDefaultAgents: "既定のエージェントにリセット",

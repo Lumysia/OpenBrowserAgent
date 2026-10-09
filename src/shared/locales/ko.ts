@@ -453,6 +453,8 @@ export const ko: LocaleMessages = {
     agentWorkspaceDescription:
       "이 에이전트의 비공개 텍스트 파일입니다. SOUL.md는 동작, AGENTS.md는 워크스페이스 규칙을 정의하고 MEMORY.md와 USER.md는 고정 컨텍스트로 주입되며 NOTES.md는 필요할 때 사용됩니다.",
     agentWorkspaceNewFile: "새 워크스페이스 파일",
+    agentWorkspaceConflict:
+      "편집 중에 이 파일이 변경되었습니다. 저장하기 전에 다시 열어 최신 내용을 확인하세요.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "아직 워크스페이스 파일이 없습니다.",
     resetDefaultAgents: "기본 에이전트 재설정",

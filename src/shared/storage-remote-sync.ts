@@ -1,4 +1,5 @@
 import * as config from "./config";
+import { hasUnfinishedChatRun } from "./chats";
 import { mergePreferences } from "./default-preferences";
 import {
   getActiveSyncBackend,
@@ -7,7 +8,7 @@ import {
 } from "./sync-backends";
 import {
   markSyncLocalCacheFlushed,
-  readPendingSyncValue,
+  readSyncLocalCache,
   readSyncLocalValue,
   removeSyncLocalCache,
 } from "./storage-sync-cache";
@@ -17,6 +18,8 @@ import {
   SYNC_PREFERENCES,
 } from "./storage-keys";
 import { sameStorageValue } from "./storage-value";
+import { withSyncOwnership } from "./storage-lock";
+import { ownsSyncKey } from "./storage-sync-owner";
 import {
   mergeSyncDataSettings,
   type SyncDataSettings,
@@ -97,7 +100,19 @@ export async function refreshSyncDataFromRemote(
   );
 }
 
-async function refreshSyncKey<T>(
+function refreshSyncKey<T>(
+  backend: SyncBackend,
+  key: string,
+  options: Parameters<typeof refreshOwnedSyncKey<T>>[2] = {},
+) {
+  return withSyncOwnership(async () => {
+    if (!(await ownsSyncKey(backend.config.id, key)))
+      return readSyncLocalValue<T>(key);
+    return refreshOwnedSyncKey(backend, key, options);
+  });
+}
+
+async function refreshOwnedSyncKey<T>(
   backend: SyncBackend,
   key: string,
   options: {
@@ -107,18 +122,33 @@ async function refreshSyncKey<T>(
   } = {},
 ) {
   const { normalize, missingRemoteValue, writeBackOnChange = true } = options;
-  const pending = await readPendingSyncValue<T>(key);
+  const expected = await readSyncLocalCache<T>(key);
+  const pending =
+    expected?.flushedAt === undefined ? expected?.value : undefined;
+  async function publish(value: T | undefined) {
+    const guard = { expected, backendId: backend.config.id };
+    if (value === undefined) await removeSyncLocalCache(key, guard);
+    else await markSyncLocalCacheFlushed(key, value, guard);
+    return readSyncLocalValue<T>(key);
+  }
+  if (expected?.removed) {
+    await backend.remove(key);
+    await markSyncLocalCacheFlushed(key, undefined, {
+      expected,
+      backendId: backend.config.id,
+    });
+    return readSyncLocalValue<T>(key);
+  }
   if (pending !== undefined) {
     if (key === STORAGE_KEYS.chats && hasUnfinishedChatRun(pending))
       return pending;
     const value = normalize ? normalize(pending, key) : pending;
     const mergedValue = await backend.write(key, value);
     const nextValue = mergedValue ?? value;
-    await markSyncLocalCacheFlushed(key, nextValue);
-    return nextValue;
+    return publish(nextValue);
   }
 
-  const previous = await readSyncLocalValue<T>(key);
+  const previous = expected?.value;
   const remote = await backend.read<T>(key, previous);
   if (remote === undefined) {
     if (missingRemoteValue !== undefined) {
@@ -127,38 +157,21 @@ async function refreshSyncKey<T>(
         : missingRemoteValue;
       const mergedValue = await backend.write(key, value);
       const nextValue = mergedValue ?? value;
-      await markSyncLocalCacheFlushed(key, nextValue);
-      return nextValue;
+      return publish(nextValue);
     }
-    if (previous !== undefined) await removeSyncLocalCache(key);
-    return undefined;
+    return publish(undefined);
   }
   const value = normalize ? normalize(remote, key) : remote;
   if (previous !== undefined && sameStorageValue(previous, value)) return value;
   if (previous !== undefined) {
     if (!writeBackOnChange) {
-      await markSyncLocalCacheFlushed(key, value);
-      return value;
+      return publish(value);
     }
     const mergedValue = await backend.write(key, value);
     const nextValue = mergedValue ?? value;
-    await markSyncLocalCacheFlushed(key, nextValue);
-    return nextValue;
+    return publish(nextValue);
   }
-  await markSyncLocalCacheFlushed(key, value);
-  return value;
-}
-
-function hasUnfinishedChatRun(value: unknown) {
-  if (!Array.isArray(value)) return false;
-  return value.some((chat) =>
-    chat.messages?.some((message: { role?: string; metadata?: unknown }) => {
-      if (message.role !== "assistant") return false;
-      const metrics = (message.metadata as { runMetrics?: unknown } | undefined)
-        ?.runMetrics as { startedAt?: unknown; endedAt?: unknown } | undefined;
-      return metrics?.startedAt !== undefined && metrics.endedAt === undefined;
-    }),
-  );
+  return publish(value);
 }
 
 function normalizeSyncedSetting<T>(value: T, key: string) {

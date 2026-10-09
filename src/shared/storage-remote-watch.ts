@@ -8,16 +8,22 @@ import {
 
 export function watchRemoteValue<T>(
   key: string,
-  callback: (change: RemoteStorageChange<T>) => void,
+  callback: (change: RemoteStorageChange<T>, backendId: string) => void,
 ) {
   let remoteUnwatch: (() => void) | undefined;
   let disposed = false;
+  let generation = 0;
 
   async function setupRemoteWatch() {
+    const currentGeneration = ++generation;
     remoteUnwatch?.();
     remoteUnwatch = undefined;
     const backend = await getActiveSyncBackend();
-    if (!disposed) remoteUnwatch = backend.watch?.(key, callback);
+    if (!disposed && generation === currentGeneration)
+      remoteUnwatch = backend.watch?.(key, (change) => {
+        if (!disposed && generation === currentGeneration)
+          callback(change as RemoteStorageChange<T>, backend.config.id);
+      });
   }
 
   setupRemoteWatch().catch(() => undefined);

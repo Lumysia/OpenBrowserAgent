@@ -466,6 +466,8 @@ export const ptBR: LocaleMessages = {
     agentWorkspaceDescription:
       "Arquivos de texto privados deste agente. SOUL.md define o comportamento, AGENTS.md as regras do workspace, MEMORY.md e USER.md são injetados como contexto congelado, e NOTES.md fica disponível sob demanda.",
     agentWorkspaceNewFile: "Novo arquivo de workspace",
+    agentWorkspaceConflict:
+      "Este arquivo mudou durante a edição. Abra-o novamente para revisar a versão mais recente antes de salvar.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "Ainda não há arquivos de workspace.",
     resetDefaultAgents: "Redefinir agentes padrão",

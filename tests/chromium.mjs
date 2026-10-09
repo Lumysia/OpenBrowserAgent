@@ -51,7 +51,12 @@ export async function launchExtension({ headed = true } = {}) {
       await exited;
       clearTimeout(timer);
     }
-    await rm(profile, { recursive: true, force: true });
+    await rm(profile, {
+      recursive: true,
+      force: true,
+      maxRetries: 5,
+      retryDelay: 100,
+    });
   };
   try {
     const ws = await poll(() => {
@@ -87,7 +92,17 @@ export async function launchExtension({ headed = true } = {}) {
       );
       const page = await connect(target.webSocketDebuggerUrl);
       connections.push(page);
-      await poll(() => page.call(() => document.readyState === "complete"));
+      await poll(() =>
+        page.call((requestedUrl) => {
+          const expected = new URL(requestedUrl);
+          return (
+            location.href === expected.href &&
+            document.readyState === "complete" &&
+            (expected.protocol !== "chrome-extension:" ||
+              typeof globalThis.chrome?.storage?.local?.set === "function")
+          );
+        }, url),
+      );
       return page;
     };
     return { id, browser, open, close };
@@ -147,8 +162,23 @@ async function connect(url) {
         returnByValue: true,
       });
       // Do not print exceptionDetails: CDP can include the expression/credentials.
-      if (result.exceptionDetails)
-        throw new Error("Extension evaluation failed");
+      if (result.exceptionDetails) {
+        const details = result.exceptionDetails;
+        const name = details.exception?.className;
+        const safeName = [
+          "Error",
+          "TypeError",
+          "ReferenceError",
+          "SyntaxError",
+        ].includes(name)
+          ? name
+          : "OtherError";
+        // Only built-in type and numeric locations: expressions, error messages,
+        // stacks, provider configuration and model text must never be printed.
+        throw new Error(
+          `Extension evaluation failed: ${JSON.stringify({ name: safeName, line: details.lineNumber, column: details.columnNumber })}`,
+        );
+      }
       return result.result?.value;
     },
     close() {

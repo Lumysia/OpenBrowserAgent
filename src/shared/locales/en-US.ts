@@ -462,6 +462,8 @@ export const enUS = {
     agentWorkspaceDescription:
       "Private text files for this agent. SOUL.md defines behavior, AGENTS.md defines workspace rules, MEMORY.md and USER.md are frozen context, and NOTES.md stays available on demand.",
     agentWorkspaceNewFile: "New workspace file",
+    agentWorkspaceConflict:
+      "This file changed while you were editing. Reopen it to review the latest version before saving.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "No workspace files yet.",
     resetDefaultAgents: "Reset default agents",

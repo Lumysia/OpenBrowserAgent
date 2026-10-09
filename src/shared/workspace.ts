@@ -351,16 +351,16 @@ export function patchWorkspaceFile(
   if (!pathResult.ok) return pathResult;
   const file = workspace.files.find((item) => item.path === pathResult.path);
   if (!file) return { ok: false as const, error: "Workspace file not found" };
+  if (operation === "replace" && find && !file.content.includes(find))
+    return { ok: false as const, error: "Text to replace was not found" };
   const nextContent =
     operation === "append"
       ? `${file.content}${value}`
       : operation === "prepend"
         ? `${value}${file.content}`
         : find
-          ? file.content.replace(find, value)
+          ? file.content.replace(find, () => value)
           : value;
-  if (operation === "replace" && find && nextContent === file.content)
-    return { ok: false as const, error: "Text to replace was not found" };
   return upsertWorkspaceFile(workspace, pathResult.path, nextContent, now);
 }
 

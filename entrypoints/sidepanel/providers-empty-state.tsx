@@ -68,9 +68,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   const [syncDataSettings, setSyncDataSettings] = useStoredState(
     storage.syncDataSettings,
   );
-  const [activeSyncBackendId, setActiveSyncBackendId] = useStoredState(
-    storage.activeSyncBackendId,
-  );
+  const [activeSyncBackendId] = useStoredState(storage.activeSyncBackendId);
   const [selectedBackendId, setSelectedBackendId] = useState<string>(
     activeSyncBackendId === WEBDAV_SYNC_BACKEND_ID
       ? WEBDAV_SYNC_BACKEND_ID
@@ -219,7 +217,6 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
         });
         await setActiveSyncBackend(selectedBackendId);
       }
-      setActiveSyncBackendId(selectedBackendId);
       await completeLocalBootstrapState();
       setSyncStatus("synced");
     } catch (error) {
@@ -251,14 +248,12 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
               ]),
             ),
           });
-    await storage.syncDataSettings.set(restoredSyncDataSettings);
     await restoreSyncBackendFromCloud({
       backendId: selectedBackendId,
       language: cloudState.language,
       preferences: restoredPreferences,
       syncDataSettings: restoredSyncDataSettings,
       data: cloudState.data,
-      setActiveBackendId: storage.activeSyncBackendId.set,
     });
   }
 
