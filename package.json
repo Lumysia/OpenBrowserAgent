@@ -16,7 +16,10 @@
     "update-local-execution-bridge": "node packages/local-execution-bridge/bin/cli.mjs update",
     "uninstall-local-execution-bridge": "node packages/local-execution-bridge/bin/cli.mjs uninstall",
     "zip": "node scripts/zip-with-hash.mjs",
-    "compile": "tsc --noEmit"
+    "compile": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:browser": "node tests/browser-smoke.mjs",
+    "bench:sync": "node --import tsx tests/bench-sync.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",
@@ -48,7 +51,9 @@
     "@types/chrome": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "prettier": "3.9.9",
     "rollup": "latest",
+    "tsx": "4.23.15",
     "typescript": "latest"
   },
   "overrides": {
