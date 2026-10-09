@@ -3,7 +3,7 @@ import { effectiveArea, STORAGE_AREAS, type AreaName } from "./storage-areas";
 import type { StorageItem, StorageItemOptions } from "./storage-item-types";
 import {
   markSyncLocalCacheFlushed,
-  readPendingSyncValue,
+  readSyncLocalCache,
   removeSyncLocalCache,
   syncLocalCacheKey,
   type SyncLocalCache,
@@ -13,11 +13,11 @@ import {
   watchRemoteValue,
 } from "./storage-remote-watch";
 import { STORAGE_KEYS } from "./storage-keys";
+import { withStorageMutationLock } from "./storage-lock";
 
 type StorageItemIo = {
   readStoredValue<T>(area: AreaName, key: string): Promise<T | undefined>;
   setStoredValue<T>(area: AreaName, key: string, value: T): Promise<void>;
-  setStoredValueNow<T>(area: AreaName, key: string, value: T): Promise<void>;
   removeStoredValue(area: AreaName, key: string): Promise<void>;
 };
 
@@ -36,45 +36,64 @@ export function makeStorageItemFactory(io: StorageItemIo) {
       persistDebounceMs: options.persistDebounceMs,
       snapshot: options.snapshot,
       async get() {
-        if (area === STORAGE_AREAS.sync) {
-          const pending = await readPendingSyncValue<T>(storageKey);
-          if (pending !== undefined) return pending;
-        }
+        const activeArea = await effectiveArea(area);
+        const expected =
+          activeArea === STORAGE_AREAS.sync
+            ? await readSyncLocalCache<T>(storageKey)
+            : undefined;
+        if (expected && expected.flushedAt === undefined)
+          return expected.removed ? init() : expected.value;
         const storedValue = await io.readStoredValue<T>(area, storageKey);
         if (storedValue === undefined) {
           const initialValue = init();
-          await io.setStoredValueNow(area, storageKey, initialValue);
-          if (area === STORAGE_AREAS.sync)
-            await markSyncLocalCacheFlushed(storageKey, initialValue);
+          if (activeArea === STORAGE_AREAS.sync)
+            await markSyncLocalCacheFlushed(storageKey, initialValue, {
+              expected,
+            });
           return initialValue;
         }
         const value = normalize
           ? normalize(storedValue as T)
           : (storedValue as T);
-        if (area === STORAGE_AREAS.sync)
-          await markSyncLocalCacheFlushed(storageKey, value);
+        if (activeArea === STORAGE_AREAS.sync)
+          await markSyncLocalCacheFlushed(storageKey, value, { expected });
         return value;
       },
       async set(value) {
-        await io.setStoredValue(
-          area,
-          storageKey,
-          normalize ? normalize(value) : value,
+        await withStorageMutationLock(() =>
+          io.setStoredValue(
+            area,
+            storageKey,
+            normalize ? normalize(value) : value,
+          ),
         );
       },
       async remove() {
-        await io.removeStoredValue(area, storageKey);
+        await withStorageMutationLock(() =>
+          io.removeStoredValue(area, storageKey),
+        );
       },
       watch(callback) {
         const unwatchRemote =
           area === STORAGE_AREAS.sync
-            ? watchRemoteValue<T>(storageKey, async (change) => {
+            ? watchRemoteValue<T>(storageKey, async (change, backendId) => {
+                const expected = await readSyncLocalCache<T>(storageKey);
+                if (expected && expected.flushedAt === undefined) return;
+                let published: boolean;
                 if (change.newValue !== undefined) {
-                  await markSyncLocalCacheFlushed(storageKey, change.newValue);
+                  published = await markSyncLocalCacheFlushed(
+                    storageKey,
+                    change.newValue,
+                    { expected, backendId },
+                  );
                 } else {
-                  await removeSyncLocalCache(storageKey);
+                  published = await removeSyncLocalCache(storageKey, {
+                    expected,
+                    backendId,
+                  });
                 }
-                callback(change.newValue as T, change.oldValue as T);
+                if (published)
+                  callback(change.newValue as T, change.oldValue as T);
               })
             : undefined;
         const listener = async (
@@ -103,11 +122,9 @@ export function makeStorageItemFactory(io: StorageItemIo) {
             changes[syncLocalCacheKey(storageKey)]
           ) {
             const next = changes[syncLocalCacheKey(storageKey)].newValue as
-              | SyncLocalCache<T>
-              | undefined;
+              SyncLocalCache<T> | undefined;
             const previous = changes[syncLocalCacheKey(storageKey)].oldValue as
-              | SyncLocalCache<T>
-              | undefined;
+              SyncLocalCache<T> | undefined;
             if (!next) {
               callback(undefined as T, previous?.value as T);
               return;
@@ -141,24 +158,30 @@ export function makeStorageItemFactory(io: StorageItemIo) {
     return {
       ...item,
       async get() {
-        if (area === STORAGE_AREAS.sync) {
-          const pending = await readPendingSyncValue<T>(key);
-          if (pending !== undefined) return merge ? merge(pending) : pending;
-        }
+        const activeArea = await effectiveArea(area);
+        const expected =
+          activeArea === STORAGE_AREAS.sync
+            ? await readSyncLocalCache<T>(key)
+            : undefined;
+        if (expected && expected.flushedAt === undefined)
+          return expected.removed
+            ? init()
+            : merge
+              ? merge(expected.value)
+              : expected.value;
         const storedValue = await io.readStoredValue<T>(area, key);
         if (storedValue !== undefined) {
           const value = merge ? merge(storedValue as T) : (storedValue as T);
-          if (area === STORAGE_AREAS.sync)
-            await markSyncLocalCacheFlushed(key, value);
+          if (activeArea === STORAGE_AREAS.sync)
+            await markSyncLocalCacheFlushed(key, value, { expected });
           return value;
         }
 
         const fallback = await io.readStoredValue<T>(fallbackArea, key);
         const initialValue = fallback === undefined ? init() : fallback;
         const value = merge ? merge(initialValue) : initialValue;
-        await io.setStoredValueNow(area, key, value);
-        if (area === STORAGE_AREAS.sync)
-          await markSyncLocalCacheFlushed(key, value);
+        if (activeArea === STORAGE_AREAS.sync)
+          await markSyncLocalCacheFlushed(key, value, { expected });
         return value;
       },
     };

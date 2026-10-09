@@ -1,4 +1,3 @@
-import { nanoid } from "nanoid";
 import { normalizeAgents } from "./agents";
 import { getBrowserApi } from "./browser-api";
 import {
@@ -22,6 +21,8 @@ import {
 } from "./storage-areas";
 import type { StorageItem, StorageItemOptions } from "./storage-item-types";
 import { makeStorageItemFactory } from "./storage-item-factory";
+import { withStorageMutationLock } from "./storage-lock";
+import { stageSyncRemoval } from "./storage-sync-local";
 import {
   clearPendingSyncWrites,
   DEFAULT_SYNC_WRITE_STATUS,
@@ -29,7 +30,7 @@ import {
   flushPendingSyncWrites,
   queueSyncWrite,
   queueSyncRemove,
-  readPendingSyncValue,
+  readSyncLocalCache,
   readSyncLocalValue,
   removeSyncLocalCache,
   syncLocalCacheKey,
@@ -43,22 +44,20 @@ import {
 } from "./storage-remote-watch";
 import {
   getActiveSyncBackend,
-  isSyncBackendEnabled,
   NO_SYNC_BACKEND_ID,
   normalizeSyncBackends,
 } from "./sync-backends";
 import { offloadChatInlineAttachments } from "./sync-chat-attachments";
-import { activateSyncBackend } from "./storage-sync-transition";
+import { readSyncedValue } from "./storage-sync-settings";
+export { setActiveSyncBackend, setDataSync } from "./storage-sync-settings";
 import { normalizeWorkspaces } from "./workspace";
 import {
   STORAGE_KEYS,
   SYNCABLE_DATA_ITEMS,
   SYNC_PREFERENCES,
   SYNC_PREFERENCE_KEYS,
-  type SyncableDataKey,
   type SyncPreferenceKey,
 } from "./storage-keys";
-import { isEmptyStorageValue } from "./storage-value";
 import {
   DEFAULT_SYNC_DATA_SETTINGS,
   mergeSyncDataSettings,
@@ -93,10 +92,6 @@ export {
   type SyncWriteStatus,
 };
 
-function syncableItemsForPreference(key: SyncPreferenceKey) {
-  return SYNCABLE_DATA_ITEMS.filter((item) => item.preferenceKey === key);
-}
-
 async function setStoredValue<T>(area: AreaName, key: string, value: T) {
   area = await effectiveArea(area);
   if (area === STORAGE_AREAS.local) {
@@ -112,22 +107,13 @@ async function setStoredValue<T>(area: AreaName, key: string, value: T) {
   }).catch(() => undefined);
 }
 
-async function setStoredValueNow<T>(area: AreaName, key: string, value: T) {
-  area = await effectiveArea(area);
-  if (area === STORAGE_AREAS.local) {
-    await getBrowserApi().storage.local.set({ [key]: value });
-    return;
-  }
-  await markSyncLocalCacheFlushed(key, value);
-}
-
 async function removeStoredValue(area: AreaName, key: string) {
   area = await effectiveArea(area);
   if (area === STORAGE_AREAS.local) {
     await getBrowserApi().storage.local.remove(key);
     return;
   }
-  await removeSyncLocalCache(key);
+  await stageSyncRemoval(key);
   queueSyncRemove(await getActiveSyncBackend(), key, {
     delayMs: immediateSyncWriteDelay(key),
   }).catch(() => undefined);
@@ -150,25 +136,9 @@ async function readStoredValue<T>(area: AreaName, key: string) {
   return readSyncLocalValue<T>(key);
 }
 
-async function readSyncedValue<T>(key: string) {
-  return readStoredValue<T>(STORAGE_AREAS.sync, key);
-}
-
-async function readRemoteValue<T>(key: string) {
-  if (!(await isSyncBackendEnabled())) return undefined;
-  return (await getActiveSyncBackend()).read<T>(key);
-}
-
-async function writeRemoteValueNow<T>(key: string, value: T) {
-  const backend = await getActiveSyncBackend();
-  const mergedValue = await backend.write(key, value);
-  await markSyncLocalCacheFlushed(key, mergedValue ?? value);
-}
-
 const { createItem, createMigratedItem } = makeStorageItemFactory({
   readStoredValue,
   setStoredValue,
-  setStoredValueNow,
   removeStoredValue,
 });
 
@@ -178,7 +148,7 @@ function createSwitchableItem<T>(
   syncPreferenceKey: SyncPreferenceKey,
   normalize?: (value: T) => T,
   options: StorageItemOptions = {},
-): StorageItem<T> {
+): StorageItem<T> & { update: (updater: (current: T) => T) => Promise<T> } {
   const areaFor = (settings: SyncDataSettings): AreaName =>
     areaForSyncEnabled(settings[syncPreferenceKey] === true);
 
@@ -192,10 +162,12 @@ function createSwitchableItem<T>(
 
   async function getValue() {
     const area = await activeArea();
-    if (area === STORAGE_AREAS.sync) {
-      const pending = await readPendingSyncValue<T>(key);
-      if (pending !== undefined) return normalizeValue(pending);
-    }
+    const expected =
+      area === STORAGE_AREAS.sync
+        ? await readSyncLocalCache<T>(key)
+        : undefined;
+    if (expected && expected.flushedAt === undefined)
+      return expected.removed ? init() : normalizeValue(expected.value);
     const activeValue = await readFrom(area);
     if (activeValue !== undefined) return normalizeValue(activeValue);
 
@@ -205,12 +177,23 @@ function createSwitchableItem<T>(
         : undefined;
     const rawValue = inactiveValue === undefined ? init() : inactiveValue;
     const value = normalizeValue(rawValue);
-    await setStoredValueNow(area, key, value);
+    // A missing-key read supplies defaults without writing over an edit that
+    // another context may have persisted while this read was in flight.
+    if (area === STORAGE_AREAS.sync)
+      await markSyncLocalCacheFlushed(key, value, { expected });
     return value;
   }
 
   async function readFrom(area: AreaName) {
     return readStoredValue<T>(area, key);
+  }
+
+  async function setValue(value: T) {
+    const area = await activeArea();
+    await setStoredValue(area, key, normalizeValue(value));
+    const inactiveArea = await effectiveArea(otherStorageArea(area));
+    if (area === STORAGE_AREAS.sync && inactiveArea !== area)
+      await removeStoredValue(inactiveArea, key);
   }
 
   return {
@@ -220,37 +203,50 @@ function createSwitchableItem<T>(
     snapshot: options.snapshot,
     get: getValue,
     async set(value) {
-      const area = await activeArea();
-      await setStoredValue(area, key, normalizeValue(value));
-      const inactiveArea = await effectiveArea(otherStorageArea(area));
-      if (area === STORAGE_AREAS.sync && inactiveArea !== area)
-        await removeStoredValue(inactiveArea, key);
+      await withStorageMutationLock(() => setValue(value));
+    },
+    update(updater) {
+      return withStorageMutationLock(async () => {
+        const current = await getValue();
+        const next = updater(current);
+        if (next !== current) await setValue(next);
+        return next;
+      });
     },
     async remove() {
-      await Promise.all([
-        removeStoredValue(STORAGE_AREAS.local, key),
-        removeStoredValue(STORAGE_AREAS.sync, key),
-      ]);
+      await withStorageMutationLock(() =>
+        Promise.all([
+          removeStoredValue(STORAGE_AREAS.local, key),
+          removeStoredValue(STORAGE_AREAS.sync, key),
+        ]),
+      );
     },
     watch(callback) {
       let activeRemoteUnwatch: (() => void) | undefined;
       const setupRemoteWatch = async () => {
         activeRemoteUnwatch?.();
-        activeRemoteUnwatch = watchRemoteValue<T>(key, async (change) => {
-          if ((await activeArea()) !== STORAGE_AREAS.sync) return;
-          const newValue = normalizeOptionalValue(
-            change.newValue as T | undefined,
-          );
-          const oldValue = normalizeOptionalValue(
-            change.oldValue as T | undefined,
-          );
-          if (change.newValue !== undefined) {
-            await markSyncLocalCacheFlushed(key, newValue as T);
-          } else {
-            await removeSyncLocalCache(key);
-          }
-          callback(newValue as T, oldValue as T);
-        });
+        activeRemoteUnwatch = watchRemoteValue<T>(
+          key,
+          async (change, backendId) => {
+            if ((await activeArea()) !== STORAGE_AREAS.sync) return;
+            const expected = await readSyncLocalCache<T>(key);
+            if (expected && expected.flushedAt === undefined) return;
+            const newValue = normalizeOptionalValue(
+              change.newValue as T | undefined,
+            );
+            const oldValue = normalizeOptionalValue(
+              change.oldValue as T | undefined,
+            );
+            const published =
+              change.newValue !== undefined
+                ? await markSyncLocalCacheFlushed(key, newValue as T, {
+                    expected,
+                    backendId,
+                  })
+                : await removeSyncLocalCache(key, { expected, backendId });
+            if (published) callback(newValue as T, oldValue as T);
+          },
+        );
       };
       setupRemoteWatch().catch(() => undefined);
       const listener = async (
@@ -289,15 +285,13 @@ function createSwitchableItem<T>(
           const oldSettings = syncDataSettingsCacheChanged
             ? (
                 settingsChange.oldValue as
-                  | SyncLocalCache<SyncDataSettings>
-                  | undefined
+                  SyncLocalCache<SyncDataSettings> | undefined
               )?.value
             : (settingsChange.oldValue as SyncDataSettings | undefined);
           const newSettings = syncDataSettingsCacheChanged
             ? (
                 settingsChange.newValue as
-                  | SyncLocalCache<SyncDataSettings>
-                  | undefined
+                  SyncLocalCache<SyncDataSettings> | undefined
               )?.value
             : (settingsChange.newValue as SyncDataSettings | undefined);
           const oldArea = areaFor(
@@ -317,12 +311,12 @@ function createSwitchableItem<T>(
         if (area === STORAGE_AREAS.sync && localCacheChanged && cacheChange) {
           const next = cacheChange.newValue as SyncLocalCache<T> | undefined;
           const previous = cacheChange.oldValue as
-            | SyncLocalCache<T>
-            | undefined;
+            SyncLocalCache<T> | undefined;
           const oldValue = normalizeOptionalValue(
             previous?.value as T | undefined,
           );
-          if (next) callback(normalizeValue(next.value), oldValue as T);
+          if (next)
+            callback(normalizeOptionalValue(next.value) as T, oldValue as T);
           else callback(undefined as T, oldValue as T);
           return;
         }
@@ -344,23 +338,22 @@ function createSwitchableItem<T>(
     oldArea: AreaName,
     newArea: AreaName,
   ) {
-    const fromArea = await effectiveArea(oldArea);
-    const toArea = await effectiveArea(newArea);
-    if (fromArea !== STORAGE_AREAS.sync || toArea !== STORAGE_AREAS.local)
-      return;
-    const [sourceValue, targetValue] = await Promise.all([
-      readFrom(fromArea),
-      readFrom(toArea),
-    ]);
-    if (sourceValue !== undefined && targetValue === undefined)
-      await setStoredValueNow(toArea, key, normalizeValue(sourceValue));
+    await withStorageMutationLock(async () => {
+      const fromArea = await effectiveArea(oldArea);
+      const toArea = await effectiveArea(newArea);
+      if (fromArea !== STORAGE_AREAS.sync || toArea !== STORAGE_AREAS.local)
+        return;
+      const [sourceValue, targetValue] = await Promise.all([
+        readFrom(fromArea),
+        readFrom(toArea),
+      ]);
+      if (sourceValue !== undefined && targetValue === undefined)
+        await setStoredValue(toArea, key, normalizeValue(sourceValue));
+    });
   }
 }
 
 export const storage = {
-  userId: createItem<string>(STORAGE_AREAS.local, STORAGE_KEYS.userId, () =>
-    nanoid(),
-  ),
   language: createItem<string>(
     STORAGE_AREAS.sync,
     STORAGE_KEYS.language,
@@ -478,102 +471,6 @@ function createChatsStorageItem() {
 
 export async function getSyncedProviderState() {
   return readSyncedValue<ProviderState>(STORAGE_KEYS.provider);
-}
-
-export async function setDataSync(key: SyncPreferenceKey, enabled: boolean) {
-  if (enabled && !(await isSyncBackendEnabled()))
-    throw new Error("Enable a sync backend before syncing this data.");
-  await Promise.all(
-    syncableItemsForPreference(key).map((item) =>
-      setDataKeySync(item.dataKey, enabled),
-    ),
-  );
-
-  await storage.syncDataSettings.set({
-    ...(await storage.syncDataSettings.get()),
-    [key]: enabled,
-  });
-}
-
-async function setDataKeySync(dataKey: SyncableDataKey, enabled: boolean) {
-  const toAreaName = areaForSyncEnabled(enabled);
-  const fromAreaName = otherStorageArea(toAreaName);
-  const existingTarget = enabled
-    ? await readRemoteValue(dataKey)
-    : await readStoredValue(toAreaName, dataKey);
-  const existingSource = await readStoredValue(fromAreaName, dataKey);
-  const sourceValue =
-    existingSource ??
-    (enabled ? missingRemoteValueForSyncedKey(dataKey) : undefined);
-
-  if (
-    enabled &&
-    sourceValue !== undefined &&
-    !(existingTarget !== undefined && isEmptyStorageValue(sourceValue))
-  ) {
-    await writeRemoteValueNow(dataKey, sourceValue);
-  } else if (enabled && existingTarget !== undefined) {
-    await markSyncLocalCacheFlushed(dataKey, existingTarget);
-  } else if (existingSource !== undefined) {
-    await setStoredValueNow(toAreaName, dataKey, existingSource);
-  }
-}
-
-function missingRemoteValueForSyncedKey(key: SyncableDataKey) {
-  if (key === STORAGE_KEYS.localExecutionBridges) return [];
-  return undefined;
-}
-
-export async function setActiveSyncBackend(backendId: string) {
-  await flushPendingSyncWrites();
-  if (backendId === NO_SYNC_BACKEND_ID) {
-    await disableDataSync();
-    return;
-  }
-
-  await activateSyncBackend({
-    backendId,
-    getLanguage: storage.language.get,
-    getPreferences: storage.preferences.get,
-    getSyncDataSettings: storage.syncDataSettings.get,
-    readSyncedValue,
-    setActiveBackendId: storage.activeSyncBackendId.set,
-  });
-}
-
-async function disableDataSync() {
-  const language = await readSyncedValue<string>(STORAGE_KEYS.language);
-  const preferences = await storage.preferences.get();
-  const localSyncDataSettings = mergeSyncDataSettings({});
-  const dataSnapshots = await Promise.all(
-    SYNCABLE_DATA_ITEMS.map(async (item) => ({
-      ...item,
-      value: await readSyncedValue(item.dataKey),
-    })),
-  );
-
-  if (language !== undefined)
-    await setStoredValueNow(
-      STORAGE_AREAS.local,
-      STORAGE_KEYS.language,
-      language,
-    );
-  await setStoredValueNow(
-    STORAGE_AREAS.local,
-    STORAGE_KEYS.preferences,
-    preferences,
-  );
-  await setStoredValueNow(
-    STORAGE_AREAS.local,
-    STORAGE_KEYS.syncDataSettings,
-    localSyncDataSettings,
-  );
-  await removeSyncLocalCache(STORAGE_KEYS.syncDataSettings);
-  for (const item of dataSnapshots) {
-    if (item.value !== undefined)
-      await setStoredValueNow(STORAGE_AREAS.local, item.dataKey, item.value);
-  }
-  await storage.activeSyncBackendId.set(NO_SYNC_BACKEND_ID);
 }
 
 export async function updateStoredArray<T extends { id: string }>(

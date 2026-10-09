@@ -49,6 +49,7 @@ import { agentForChatRuntime } from "./sub-agent-runtime";
 import { useChatActions } from "./use-chat-actions";
 import { useComposerContext } from "./use-composer-context";
 import { useChatDraft } from "./use-chat-drafts";
+import { useChatSelectionState } from "./use-chat-selection-state";
 import { useConfiguredModels as useModels } from "./use-configured-models";
 import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
@@ -77,8 +78,9 @@ export function SidepanelApp() {
   const [skills, setSkills] = useStoredState(storage.skills);
   const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
   const [chats, setChats] = useStoredState(storage.chats);
-  const [activeChatId, setActiveChatId] = useState<string>();
-  const [draftChat, setDraftChat] = useState<Chat>();
+  const t = getMessages(language);
+  const { activeChatId, setActiveChatId, draftChat, setDraftChat } =
+    useChatSelectionState(t.words.newChat);
   const [openMenu, setOpenMenu] = useState<ComposerMenu | null>(null);
   const [addMenuView, setAddMenuView] = useState<AddMenuView>("menu");
   const [showHistory, setShowHistory] = useState(false);
@@ -107,7 +109,6 @@ export function SidepanelApp() {
     currentChat?.kind === "subagent" ? currentChat.agentId : selectedAgent.id,
   );
   const runtimeAgent = agentForChatRuntime(activeAgent, currentChat);
-  const t = getMessages(language);
   const subAgentLauncherRef = useRef<SubAgentHandler | undefined>(undefined);
   const { selectElement } = useElementSelector(t);
   const {

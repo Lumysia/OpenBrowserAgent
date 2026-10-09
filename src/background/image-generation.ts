@@ -151,7 +151,7 @@ async function parseImageResponse(response: Response) {
     };
   return {
     success: true,
-    image: b64.startsWith?.("data:")
+    image: b64?.startsWith?.("data:")
       ? b64
       : b64
         ? `data:image/png;base64,${b64}`
@@ -243,10 +243,10 @@ function normalizeImageSize(value: string | undefined) {
   if (!validAspectRatio(width, height)) return DEFAULT_IMAGE_SIZE;
   if (width > MAX_IMAGE_EDGE || height > MAX_IMAGE_EDGE)
     return DEFAULT_IMAGE_SIZE;
-  while (width * height < MIN_IMAGE_PIXELS) {
+  if (width * height < MIN_IMAGE_PIXELS) {
     const scale = Math.sqrt(MIN_IMAGE_PIXELS / (width * height));
-    width = roundUpToMultiple(originalWidth * scale, IMAGE_SIZE_MULTIPLE);
-    height = roundUpToMultiple(originalHeight * scale, IMAGE_SIZE_MULTIPLE);
+    width = roundUpToMultiple(width * scale, IMAGE_SIZE_MULTIPLE);
+    height = roundUpToMultiple(height * scale, IMAGE_SIZE_MULTIPLE);
     if (width > MAX_IMAGE_EDGE || height > MAX_IMAGE_EDGE)
       return DEFAULT_IMAGE_SIZE;
   }

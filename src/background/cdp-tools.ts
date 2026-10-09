@@ -6,6 +6,7 @@ import {
 } from "../shared/config";
 import { TOOL_ERROR } from "../shared/tool-errors";
 import { withContentSlice, withListSlice } from "./tool-utils";
+import { navigateCdpPage } from "./cdp-navigation";
 
 const CDP_VERSION = "1.3";
 const DEFAULT_WAIT_MS = 5000;
@@ -155,23 +156,6 @@ async function closePage(args: Record<string, unknown>) {
   }
 }
 
-async function navigatePage(args: Record<string, unknown>) {
-  const type = stringInput(args.type) || (args.url ? "url" : "reload");
-  if (type === "back" || type === "forward")
-    await withCdp(args, (target) =>
-      send(target, type === "back" ? "Page.goBack" : "Page.goForward"),
-    );
-  else if (type === "url")
-    await withCdp(args, (target) =>
-      send(target, "Page.navigate", { url: stringInput(args.url) }),
-    );
-  else
-    await withCdp(args, (target) =>
-      send(target, "Page.reload", { ignoreCache: args.ignoreCache === true }),
-    );
-  return { success: true, type };
-}
-
 async function runCdpInput(args: Record<string, unknown>) {
   const operation = stringInput(args.operation || args.action) || "click";
   if (
@@ -203,7 +187,10 @@ async function runCdpPage(args: Record<string, unknown>) {
   const operation = stringInput(args.operation) || "list";
   if (operation === "list") return listPages(args);
   if (operation === "new") return newPage(args);
-  if (operation === "navigate") return navigatePage(args);
+  if (operation === "navigate")
+    return withCdp(args, (target) =>
+      navigateCdpPage(args, (method, params) => send(target, method, params)),
+    );
   if (operation === "focus") return selectPage(args);
   if (operation === "close") return closePage(args);
   if (operation === "waitFor") return waitFor(args);

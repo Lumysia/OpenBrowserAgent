@@ -322,19 +322,17 @@ function promptBreakdown(
 async function workspaceForAgent(agentId: string) {
   const agents = await storage.agents.get();
   const agent = agents.find((item) => item.id === agentId);
-  const workspaces = await storage.agentWorkspaces.get();
-  const existing = workspaces.find(
-    (workspace) => workspace.agentId === agentId,
-  );
-  const workspace = ensureWorkspaceDefaults(
-    existing || createWorkspace(agentId),
-    agent,
-  );
-  if (!existing || existing.files.length !== workspace.files.length)
-    await storage.agentWorkspaces.set(
-      workspaces.filter((item) => item.agentId !== agentId).concat(workspace),
+  const workspaces = await storage.agentWorkspaces.update((current) => {
+    const existing = current.find((workspace) => workspace.agentId === agentId);
+    const workspace = ensureWorkspaceDefaults(
+      existing || createWorkspace(agentId),
+      agent,
     );
-  return workspace;
+    return !existing || existing.files.length !== workspace.files.length
+      ? current.filter((item) => item.agentId !== agentId).concat(workspace)
+      : current;
+  });
+  return workspaces.find((workspace) => workspace.agentId === agentId)!;
 }
 
 function messageSkills(metadata: Record<string, unknown> | undefined) {

@@ -3,6 +3,22 @@ import { getBrowserApi } from "./browser-api";
 import type { SyncBackend } from "./sync-backends";
 import { STORAGE_KEYS } from "./storage-keys";
 import { sameStorageValue } from "./storage-value";
+import { withSyncOwnership } from "./storage-lock";
+import { ownsSyncKey } from "./storage-sync-owner";
+import {
+  markSyncLocalCacheFlushed,
+  readSyncLocalCache,
+} from "./storage-sync-local";
+export {
+  markSyncLocalCacheFlushed,
+  readSyncLocalCache,
+  readPendingSyncValue,
+  readSyncLocalValue,
+  removeSyncLocalCache,
+  syncLocalCacheKey,
+  writeSyncLocalCache,
+  type SyncLocalCache,
+} from "./storage-sync-local";
 
 export type SyncWriteStatus = {
   pendingCount: number;
@@ -28,12 +44,6 @@ type PendingSyncWrite = {
   resolve: Array<() => void>;
   reject: Array<(error: unknown) => void>;
   flushing?: Promise<void>;
-};
-
-export type SyncLocalCache<T> = {
-  value: T;
-  updatedAt: number;
-  flushedAt?: number;
 };
 
 const pendingSyncWrites = new Map<string, PendingSyncWrite>();
@@ -143,10 +153,6 @@ function scheduleIdleSyncWrite(key: string) {
   });
 }
 
-export function syncLocalCacheKey(key: string) {
-  return `${key}:sync-local-cache`;
-}
-
 export function clearPendingSyncWrites() {
   for (const pending of pendingSyncWrites.values()) {
     clearTimeout(pending.timeoutId);
@@ -164,45 +170,6 @@ export async function flushPendingSyncWrites() {
   }
 }
 
-export async function writeSyncLocalCache<T>(key: string, value: T) {
-  await getBrowserApi().storage.local.set({
-    [syncLocalCacheKey(key)]: {
-      value,
-      updatedAt: Date.now(),
-    } satisfies SyncLocalCache<T>,
-  });
-}
-
-export async function removeSyncLocalCache(key: string) {
-  await getBrowserApi().storage.local.remove(syncLocalCacheKey(key));
-}
-
-export async function markSyncLocalCacheFlushed<T>(key: string, value: T) {
-  const existing = await readSyncLocalCache<T>(key);
-  if (
-    existing?.flushedAt !== undefined &&
-    sameStorageValue(existing.value, value)
-  )
-    return;
-  const now = Date.now();
-  await getBrowserApi().storage.local.set({
-    [syncLocalCacheKey(key)]: {
-      value,
-      updatedAt: now,
-      flushedAt: now,
-    } satisfies SyncLocalCache<T>,
-  });
-}
-
-export async function readPendingSyncValue<T>(key: string) {
-  const cache = await readSyncLocalCache<T>(key);
-  return cache && cache.flushedAt === undefined ? cache.value : undefined;
-}
-
-export async function readSyncLocalValue<T>(key: string) {
-  return (await readSyncLocalCache<T>(key))?.value;
-}
-
 async function flushSyncWrite(key: string) {
   const pending = pendingSyncWrites.get(key);
   if (!pending) return;
@@ -214,12 +181,32 @@ async function flushSyncWrite(key: string) {
   clearTimeout(pending.timeoutId);
   pending.flushing = (async () => {
     try {
-      if (pending.operation === "remove") {
-        await pending.backend.remove(key);
-      } else {
+      await withSyncOwnership(async () => {
+        if (!(await ownsSyncKey(pending.backend.config.id, key))) return;
+        const expected = await readSyncLocalCache(key);
+        // Queues are context-local; the persisted intent is shared. A transition,
+        // refresh or newer context may already have superseded this snapshot.
+        if (!expected || expected.flushedAt !== undefined) return;
+        if (pending.operation === "remove") {
+          if (!expected.removed) return;
+          await pending.backend.remove(key);
+          await markSyncLocalCacheFlushed(key, undefined, {
+            expected,
+            backendId: pending.backend.config.id,
+          });
+          return;
+        }
+        if (
+          expected.removed ||
+          !sameStorageValue(expected.value, pending.value)
+        )
+          return;
         const value = await pending.backend.write(key, pending.value);
-        await markSyncLocalCacheFlushed(key, value ?? pending.value);
-      }
+        await markSyncLocalCacheFlushed(key, value ?? pending.value, {
+          expected,
+          backendId: pending.backend.config.id,
+        });
+      });
       await updateSyncWriteStatus({ lastFlushedAt: Date.now(), lastError: "" });
       pending.resolve.forEach((resolve) => resolve());
     } catch (error) {
@@ -233,13 +220,6 @@ async function flushSyncWrite(key: string) {
     }
   })();
   return pending.flushing;
-}
-
-async function readSyncLocalCache<T>(key: string) {
-  const result = await getBrowserApi().storage.local.get(
-    syncLocalCacheKey(key),
-  );
-  return result[syncLocalCacheKey(key)] as SyncLocalCache<T> | undefined;
 }
 
 async function updateSyncWriteStatus(patch: Partial<SyncWriteStatus> = {}) {

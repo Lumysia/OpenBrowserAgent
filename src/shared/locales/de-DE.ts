@@ -474,6 +474,8 @@ export const deDE: LocaleMessages = {
     agentWorkspaceDescription:
       "Private Textdateien dieses Agenten. SOUL.md definiert das Verhalten, AGENTS.md die Arbeitsbereichsregeln, MEMORY.md und USER.md werden als eingefrorener Kontext eingefügt, und NOTES.md bleibt bei Bedarf verfügbar.",
     agentWorkspaceNewFile: "Neue Arbeitsbereichsdatei",
+    agentWorkspaceConflict:
+      "Diese Datei wurde während der Bearbeitung geändert. Öffnen Sie sie erneut, um vor dem Speichern die aktuelle Version zu prüfen.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "Noch keine Arbeitsbereichsdateien.",
     resetDefaultAgents: "Standard-Agenten zurücksetzen",

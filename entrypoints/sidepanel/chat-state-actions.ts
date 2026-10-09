@@ -5,6 +5,18 @@ import { sortChatsNewestFirst } from "./format";
 type ChatSetter = Dispatch<SetStateAction<Chat[]>>;
 type ActiveChatSetter = Dispatch<SetStateAction<string | undefined>>;
 
+export function createChatDraft(title: string, agentId?: string): Chat {
+  const now = Date.now();
+  return {
+    id: crypto.randomUUID(),
+    title,
+    agentId,
+    messages: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
 export function createChatAction({
   title,
   persist = true,
@@ -18,15 +30,7 @@ export function createChatAction({
   setChats: ChatSetter;
   setActiveChatId: ActiveChatSetter;
 }) {
-  const now = Date.now();
-  const chat: Chat = {
-    id: crypto.randomUUID(),
-    title,
-    agentId,
-    messages: [],
-    createdAt: now,
-    updatedAt: now,
-  };
+  const chat = createChatDraft(title, agentId);
   if (persist) setChats((items) => [...pruneEmptyChats(items), chat]);
   setActiveChatId(chat.id);
   return chat;

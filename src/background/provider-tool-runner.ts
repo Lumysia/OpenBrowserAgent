@@ -93,6 +93,7 @@ export async function runProviderTool({
           availableSkills,
           capabilities,
           workspace,
+          signal,
         });
   loadDeferredToolNames(rawOutput, loadedToolNames);
   const finalRawOutput = shouldWaitForSubAgent(toolName, input, rawOutput)

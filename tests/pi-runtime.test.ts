@@ -1,76 +1,28 @@
 import assert from "node:assert/strict";
-import { afterEach, beforeEach, mock, test } from "node:test";
+import { mock, test } from "node:test";
 import { runPiAgent } from "../src/background/pi-runtime";
 import { storage } from "../src/shared/storage";
 import { DEFAULT_PREFERENCES } from "../src/shared/default-preferences";
 import type {
   AgentCapabilities,
   AiStreamResponse,
-  SendMessagesRequest,
   McpServerConfig,
 } from "../src/shared/types";
 import * as sessions from "../src/background/stream-sessions";
-import { installBrowser } from "./helpers";
+import { installPiRuntimeBrowser, setupPiRuntime } from "./pi-runtime-helpers";
 import { providerFixture, reply, toolResults } from "./provider-fixtures.mjs";
 
-beforeEach(() => {
-  installBrowser();
-  Object.assign(chrome.storage, {
-    onChanged: { addListener() {}, removeListener() {} },
-  });
-  Object.assign(chrome, {
-    tabs: {
-      query: async () => [
-        {
-          id: 42,
-          title: "Fixture tab",
-          url: "https://example.test/",
-          active: true,
-        },
-      ],
-    },
-  });
-  mock.method(storage.preferences, "get", async () => DEFAULT_PREFERENCES);
-});
-afterEach(() => mock.restoreAll());
+installPiRuntimeBrowser();
 
 function setup(
   baseUrl: string,
   maxToolSteps = 2,
   capabilities: Partial<AgentCapabilities> = {},
 ) {
-  const chatId = crypto.randomUUID();
-  const session = sessions.createStreamSession({
-    chatId,
-    messageId: "answer",
-  } as SendMessagesRequest);
-  const options = {
-    agent: session.agent,
-    model: {
-      provider: "openai" as const,
-      baseUrl: `${baseUrl}/v1`,
-      modelName: "fixture",
-      apiKey: "",
-    },
-    system: "Assist with browsing",
-    messages: [
-      { id: "user", role: "user" as const, content: "Help", createdAt: 1 },
-    ],
-    capabilities: {
-      browserTools: true,
-      browserAutomation: true,
-      ...capabilities,
-    } as AgentCapabilities,
-    maxToolSteps,
-    signal: session.abortController.signal,
-    port: sessions.streamSessionPort(session),
-    chatId,
-    messageId: "answer",
-    uploadedAttachments: [],
-    availableSkills: [],
-    mcpServers: [] as McpServerConfig[],
-  };
-  return { session, options, close: () => sessions.abortSession(chatId) };
+  const run = setupPiRuntime(baseUrl);
+  run.options.maxToolSteps = maxToolSteps;
+  Object.assign(run.options.capabilities, capabilities);
+  return run;
 }
 
 test("Pi executes real extension tools, bounds tool turns, and keeps usage", async () => {

@@ -34,6 +34,7 @@ export function mcpToolsForPrompt(
 export async function executeMcpTool(
   toolName: string,
   input: Record<string, unknown>,
+  signal?: AbortSignal,
 ) {
   const servers = await storage.mcpServers.get();
   for (const server of servers) {
@@ -43,14 +44,21 @@ export async function executeMcpTool(
     );
     if (!tool) continue;
     try {
+      const result = await callMcpServerTool(server, tool.name, input, signal);
       return {
-        success: true,
+        success: !(
+          result &&
+          typeof result === "object" &&
+          "isError" in result &&
+          result.isError === true
+        ),
         serverId: server.id,
         serverName: server.name,
         toolName: tool.name,
-        result: await callMcpServerTool(server, tool.name, input),
+        result,
       };
     } catch (error) {
+      signal?.throwIfAborted();
       return {
         success: false,
         serverId: server.id,
