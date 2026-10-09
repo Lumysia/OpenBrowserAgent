@@ -3,6 +3,11 @@ import type {
   AiStreamResponse,
   SendMessagesRequest,
 } from "../shared/types";
+import {
+  createSessionAgent,
+  queueAgentMessage,
+  deleteAgentQueuedMessage,
+} from "./pi-session";
 
 const STREAM_SESSION_RETENTION_MS = 5 * 60_000;
 
@@ -15,7 +20,7 @@ type StreamSession = {
   ports: Set<chrome.runtime.Port>;
   messageListeners: Set<(message: AiStreamRequest) => void>;
   disconnectListeners: Set<() => void>;
-  queuedMessages: Array<{ id: string; content: string }>;
+  agent: ReturnType<typeof createSessionAgent>;
   cleanupTimeout?: ReturnType<typeof setTimeout>;
 };
 
@@ -33,7 +38,7 @@ export function createStreamSession(request: SendMessagesRequest) {
     ports: new Set(),
     messageListeners: new Set(),
     disconnectListeners: new Set(),
-    queuedMessages: [],
+    agent: createSessionAgent(),
   };
   activeStreamSessions.set(request.chatId, session);
   return session;
@@ -107,6 +112,7 @@ export function abortSession(chatId: string) {
   const session = activeStreamSessions.get(chatId);
   if (!session) return;
   session.abortController.abort();
+  session.agent.abort();
   session.disconnectListeners.forEach((listener) => listener());
   releaseSession(session);
 }
@@ -118,30 +124,15 @@ export function sendMessageToSession(
   session.messageListeners.forEach((listener) => listener(message));
 }
 
-export function drainQueuedMessages(session: StreamSession) {
-  const messages = session.queuedMessages;
-  session.queuedMessages = [];
-  return messages;
-}
-
 export function queueMessage(
   session: StreamSession,
   message: { id: string; content: string },
 ) {
-  const index = session.queuedMessages.findIndex(
-    (item) => item.id === message.id,
-  );
-  if (index >= 0) {
-    session.queuedMessages[index] = message;
-    return;
-  }
-  session.queuedMessages.push(message);
+  queueAgentMessage(session.agent, message);
 }
 
 export function deleteQueuedMessage(session: StreamSession, id: string) {
-  session.queuedMessages = session.queuedMessages.filter(
-    (message) => message.id !== id,
-  );
+  deleteAgentQueuedMessage(session.agent, id);
 }
 
 export function scheduleSessionCleanup(session: StreamSession) {
@@ -169,7 +160,7 @@ function releaseSession(session: StreamSession) {
   session.messageListeners.clear();
   session.disconnectListeners.clear();
   session.events.length = 0;
-  session.queuedMessages.length = 0;
+  session.agent.clearAllQueues();
 }
 
 export function postToSession(

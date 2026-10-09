@@ -48,6 +48,7 @@ export async function runProviderTool({
   responseSources,
   loadedToolNames,
   availableTools,
+  signal,
 }: {
   toolName: string;
   toolCallId: string;
@@ -63,7 +64,9 @@ export async function runProviderTool({
   responseSources: ChatSource[];
   loadedToolNames: Set<string>;
   availableTools: Array<{ function: { name: string } }>;
+  signal?: AbortSignal;
 }): Promise<ProviderToolRunResult> {
+  signal?.throwIfAborted();
   debugToolOrder("input-available", { toolName, toolCallId });
   post(port, {
     type: "chunk",
@@ -81,7 +84,7 @@ export async function runProviderTool({
         error: `Tool "${toolName}" is not available to the active agent.`,
       }
     : toolName === BROWSER_TOOL_NAME.question
-      ? await askUserQuestion({ input, port, toolCallId })
+      ? await askUserQuestion({ input, port, toolCallId, signal })
       : await executeContextAwareTool({
           toolName,
           input,
@@ -99,6 +102,7 @@ export async function runProviderTool({
         port,
         toolName,
         toolCallId,
+        signal,
       })
     : shouldWaitForLocalExecutionBridge(toolName, input, rawOutput)
       ? await waitForLocalExecutionBridgeResult({
@@ -107,6 +111,7 @@ export async function runProviderTool({
           port,
           toolName,
           toolCallId,
+          signal,
         })
       : rawOutput;
   const visionImage = extractVisionImage(finalRawOutput);
@@ -148,15 +153,17 @@ async function askUserQuestion({
   input,
   port,
   toolCallId,
+  signal,
 }: {
   input: Record<string, unknown>;
   port: chrome.runtime.Port;
   toolCallId: string;
+  signal?: AbortSignal;
 }) {
   const questions = normalizeQuestions(input.questions);
   if (!questions.length)
     return { success: false, error: "Question tool requires 1-6 questions." };
-  const answers = await waitForQuestionAnswer(port, toolCallId);
+  const answers = await waitForQuestionAnswer(port, toolCallId, signal);
   return {
     success: true,
     answers,
@@ -167,6 +174,7 @@ async function askUserQuestion({
 function waitForQuestionAnswer(
   port: chrome.runtime.Port,
   toolCallId: string,
+  signal?: AbortSignal,
 ): Promise<QuestionToolAnswer[]> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(
@@ -181,6 +189,7 @@ function waitForQuestionAnswer(
       clearTimeout(timeout);
       port.onMessage.removeListener(onMessage);
       port.onDisconnect.removeListener(onDisconnect);
+      signal?.removeEventListener("abort", onDisconnect);
     }
 
     function onDisconnect() {
@@ -210,6 +219,8 @@ function waitForQuestionAnswer(
 
     port.onMessage.addListener(onMessage);
     port.onDisconnect.addListener(onDisconnect);
+    signal?.addEventListener("abort", onDisconnect, { once: true });
+    if (signal?.aborted) onDisconnect();
   });
 }
 
@@ -276,12 +287,14 @@ async function waitForLocalExecutionBridgeResult({
   port,
   toolName,
   toolCallId,
+  signal,
 }: {
   rawOutput: unknown;
   input: Record<string, unknown>;
   port: chrome.runtime.Port;
   toolName: string;
   toolCallId: string;
+  signal?: AbortSignal;
 }) {
   postToolOutput(port, toolName, toolCallId, input, rawOutput);
   const output = rawOutput as Record<string, unknown>;
@@ -291,6 +304,7 @@ async function waitForLocalExecutionBridgeResult({
   let status = await getLocalExecutionBridgeStatus({ taskId });
   let lastProgressKey = progressKey(status);
   while (isPendingDelegateState(status) && Date.now() - startedAt < timeoutMs) {
+    signal?.throwIfAborted();
     await sleep(500);
     status = await getLocalExecutionBridgeStatus({ taskId });
     const nextProgressKey = progressKey(status);
@@ -314,12 +328,14 @@ async function waitForSubAgentResult({
   port,
   toolName,
   toolCallId,
+  signal,
 }: {
   rawOutput: unknown;
   input: Record<string, unknown>;
   port: chrome.runtime.Port;
   toolName: string;
   toolCallId: string;
+  signal?: AbortSignal;
 }) {
   postToolOutput(port, toolName, toolCallId, input, rawOutput);
   const output = rawOutput as Record<string, unknown>;
@@ -329,6 +345,7 @@ async function waitForSubAgentResult({
   let status = await getSubAgentStatus({ taskId });
   let lastProgressKey = progressKey(status);
   while (isPendingSubAgentState(status) && Date.now() - startedAt < timeoutMs) {
+    signal?.throwIfAborted();
     await sleep(500);
     status = await getSubAgentStatus({ taskId });
     const nextProgressKey = progressKey(status);

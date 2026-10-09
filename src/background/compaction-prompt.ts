@@ -1,3 +1,5 @@
+import type { Message } from "@earendil-works/pi-ai";
+
 export const COMPACTION_SYSTEM_PROMPT = `You are an anchored context summarization assistant for coding sessions.
 
 Summarize only the conversation history you are given. The newest turns may be kept verbatim outside your summary, so focus on the older context that still matters for continuing the work.
@@ -52,10 +54,7 @@ export function buildCompactionPrompt(input: {
   return [...input.context, anchor, summaryTemplatePrompt()].join("\n\n");
 }
 
-export function renderCompactionContext(
-  messages: Array<Record<string, unknown>>,
-  maxChars: number,
-) {
+export function renderCompactionContext(messages: Message[], maxChars: number) {
   const chunks: string[] = [];
   let chars = 0;
   for (const message of messages) {
@@ -81,16 +80,13 @@ Rules:
 - Do not mention the summary process or that context was compacted.`;
 }
 
-function renderMessageForCompaction(message: Record<string, unknown>) {
-  const role = typeof message.role === "string" ? message.role : "message";
+function renderMessageForCompaction(message: Message) {
+  if (message.role === "system") return undefined;
+  const role = message.role;
   const content = compactMessageContent(message.content);
-  const toolCalls = Array.isArray(message.tool_calls)
-    ? `\ntool_calls: ${truncate(JSON.stringify(message.tool_calls), 2_000)}`
-    : "";
-  const callId =
-    typeof message.tool_call_id === "string" ? message.tool_call_id : "";
+  const callId = message.role === "toolResult" ? message.toolCallId : "";
   const header = callId ? `${role} tool_call_id=${callId}` : role;
-  const text = `${header}:\n${content}${toolCalls}`.trim();
+  const text = `${header}:\n${content}`.trim();
   return text.length > `${header}:`.length ? text : undefined;
 }
 
@@ -103,8 +99,7 @@ function compactMessageContent(content: unknown): string {
       const record = part as Record<string, unknown>;
       const text = record.text;
       if (typeof text === "string") return truncate(text, 8_000);
-      if (record.type === "image_url" || record.type === "input_image")
-        return "[image omitted]";
+      if (record.type === "image") return "[image omitted]";
       return truncate(JSON.stringify(record), 2_000);
     })
     .filter(Boolean)

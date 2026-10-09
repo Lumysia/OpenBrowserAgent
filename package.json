@@ -19,9 +19,13 @@
     "compile": "tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.ts",
     "test:browser": "node tests/browser-smoke.mjs",
+    "test:browser:composer": "node --test tests/browser-composer.test.mjs",
+    "test:browser:pi": "node tests/browser-pi.mjs",
     "bench:sync": "node --import tsx tests/bench-sync.ts"
   },
   "dependencies": {
+    "@earendil-works/pi-agent-core": "1.1.0",
+    "@earendil-works/pi-ai": "1.1.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-scroll-area": "^1.2.10",
