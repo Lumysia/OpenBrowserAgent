@@ -26,8 +26,10 @@ const server = createServer(async (request, response) => {
         payload.messages.find((message) => message.role === "tool") ||
         toolResult;
       response.writeHead(200, { "Content-Type": "text/event-stream" });
-      const send = (delta) =>
-        response.write(`data: ${JSON.stringify({ choices: [{ delta }] })}\n\n`);
+      const send = (delta, finish_reason = null) =>
+        response.write(
+          `data: ${JSON.stringify({ choices: [{ index: 0, delta, finish_reason }] })}\n\n`,
+        );
       if (modelCalls === 1) {
         send({ content: "Checking tabs. " });
         send({
@@ -48,6 +50,7 @@ const server = createServer(async (request, response) => {
         await delay(30);
         send({ content: "Done." });
       }
+      send({}, modelCalls === 1 ? "tool_calls" : "stop");
       response.end("data: [DONE]\n\n");
       return;
     }

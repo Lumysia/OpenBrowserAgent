@@ -20,7 +20,6 @@ import {
   GENERATED_TITLE_MAX_LENGTH,
   GENERATED_TITLE_MAX_WORDS,
   ISO_DATE_LENGTH,
-  MODEL_TEMPERATURE,
 } from "../src/shared/config";
 import {
   AI_STREAM_PORT_NAME,
@@ -34,17 +33,16 @@ import {
   type ChatPart,
   type GenerateTitleRequest,
   type PromptBreakdown,
-  type ProviderId,
   type Skill,
   type SendMessagesRequest,
 } from "../src/shared/types";
-import { requestOpenAICompatible } from "../src/background/providers";
+import { runPiAgent } from "../src/background/pi-runtime";
+import type { Agent } from "@earendil-works/pi-agent-core";
 import { resolveModel } from "../src/background/model-resolver";
 import { postTextStream } from "../src/background/message-helpers";
 import { handleLocalExecutionBridgeRuntimeMessage } from "../src/background/local-execution-bridge-tools";
 import { browserToolsForPrompt } from "../src/background/tool-schema";
-import { requestOllamaPlainText } from "../src/background/ollama-provider";
-import { openAIChatCompletionsUrl } from "../src/shared/provider-urls";
+import { requestPlainText } from "../src/background/pi-provider";
 import { handleSyncBackendRuntimeMessage } from "../src/shared/sync-backends";
 import "../src/shared/sync-backends-impl";
 import * as streamSessions from "../src/background/stream-sessions";
@@ -126,7 +124,7 @@ export default defineBackground(() => {
           streamPort,
           request,
           session.abortController.signal,
-          () => streamSessions.drainQueuedMessages(session),
+          session.agent,
         )
           .catch((error) => {
             if (error?.name === "AbortError") return;
@@ -193,7 +191,7 @@ async function streamAssistantResponse(
   port: chrome.runtime.Port,
   request: SendMessagesRequest,
   signal: AbortSignal,
-  drainQueuedMessages: () => Array<{ id: string; content: string }>,
+  agent: Agent,
 ) {
   const providerModel = await resolveModel(request.body.modelId);
   const t = getMessages(request.body.language);
@@ -217,23 +215,25 @@ async function streamAssistantResponse(
       promptBreakdown: promptBreakdown(system, request, !!workspace),
     },
   });
-  const result = await requestOpenAICompatible(
-    providerModel,
+  const result = await runPiAgent({
+    agent,
+    model: providerModel,
     system,
-    request.messages,
+    messages: request.messages,
     capabilities,
-    clampMaxToolSteps(request.body.maxToolSteps),
+    maxToolSteps: clampMaxToolSteps(request.body.maxToolSteps),
     signal,
     port,
-    request.chatId,
-    request.messageId,
-    t.sidepanel.attachmentsUnsupportedRetry,
-    request.body.context?.uploadedAttachments || [],
-    capabilities.skillTools ? request.body.context?.availableSkills || [] : [],
+    chatId: request.chatId,
+    messageId: request.messageId,
+    attachmentRetryNotice: t.sidepanel.attachmentsUnsupportedRetry,
+    uploadedAttachments: request.body.context?.uploadedAttachments || [],
+    availableSkills: capabilities.skillTools
+      ? request.body.context?.availableSkills || []
+      : [],
     mcpServers,
     workspace,
-    drainQueuedMessages,
-  );
+  });
 
   post(port, {
     type: "metrics",
@@ -427,129 +427,4 @@ function compactTitle(value: string) {
     .slice(0, GENERATED_TITLE_MAX_WORDS)
     .join(" ")
     .slice(0, GENERATED_TITLE_MAX_LENGTH);
-}
-
-async function requestPlainText(
-  model: {
-    provider: ProviderId;
-    apiKey: string;
-    baseUrl: string;
-    modelName: string;
-  },
-  messages: Array<{ role: "system" | "user"; content: string }>,
-) {
-  if (model.provider === "gemini") {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model.modelName)}:generateContent?key=${encodeURIComponent(model.apiKey)}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: messages[0]?.content || "" }] },
-        contents: messages.slice(1).map((message) => ({
-          role: "user",
-          parts: [{ text: message.content }],
-        })),
-      }),
-    });
-    if (!response.ok) throw new Error(await response.text());
-    const data = await response.json();
-    return (
-      data.candidates?.[0]?.content?.parts
-        ?.map((part: { text?: string }) => part.text || "")
-        .join("") || ""
-    );
-  }
-
-  if (model.provider === "anthropic") {
-    const baseUrl = model.baseUrl.replace(/\/$/, "");
-    const response = await fetch(`${baseUrl}/messages`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "anthropic-version": "2023-06-01",
-        ...(model.apiKey ? { "x-api-key": model.apiKey } : {}),
-      },
-      body: JSON.stringify({
-        model: model.modelName,
-        max_tokens: 512,
-        system: messages[0]?.content || "",
-        messages: messages.slice(1).map((message) => ({
-          role: "user",
-          content: [{ type: "text", text: message.content }],
-        })),
-      }),
-    });
-    if (!response.ok) throw new Error(await response.text());
-    const data = await response.json();
-    return anthropicText(data);
-  }
-
-  if (model.provider === "openai-responses") {
-    const baseUrl = model.baseUrl.replace(/\/$/, "");
-    const response = await fetch(`${baseUrl}/responses`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
-      },
-      body: JSON.stringify({
-        model: model.modelName,
-        temperature: MODEL_TEMPERATURE,
-        instructions: messages[0]?.content || "",
-        input: messages.slice(1).map((message) => ({
-          role: "user",
-          content: [{ type: "input_text", text: message.content }],
-        })),
-      }),
-    });
-    if (!response.ok) throw new Error(await response.text());
-    const data = await response.json();
-    return responsesText(data);
-  }
-
-  if (model.provider === "ollama")
-    return requestOllamaPlainText(model, messages);
-
-  const chatUrl = openAIChatCompletionsUrl(model.baseUrl);
-  const response = await fetch(chatUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
-    },
-    body: JSON.stringify({
-      model: model.modelName,
-      temperature: MODEL_TEMPERATURE,
-      messages,
-    }),
-  });
-  if (!response.ok) throw new Error(await response.text());
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || "";
-}
-
-function responsesText(data: { output_text?: string; output?: unknown[] }) {
-  if (typeof data.output_text === "string") return data.output_text;
-  return (data.output || [])
-    .flatMap((item) =>
-      item && typeof item === "object"
-        ? (item as { content?: unknown[] }).content || []
-        : [],
-    )
-    .map((content) =>
-      content &&
-      typeof content === "object" &&
-      typeof (content as Record<string, unknown>).text === "string"
-        ? String((content as Record<string, unknown>).text)
-        : "",
-    )
-    .join("");
-}
-
-function anthropicText(data: {
-  content?: Array<{ type?: string; text?: string }>;
-}) {
-  return (data.content || [])
-    .map((part) => (part.type === "text" ? part.text || "" : ""))
-    .join("");
 }

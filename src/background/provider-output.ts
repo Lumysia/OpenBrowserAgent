@@ -116,31 +116,6 @@ export function getMessageSources(messages: ChatMessage[]): ChatSource[] {
     : [];
 }
 
-export function geminiText(data: {
-  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-}) {
-  return (
-    data.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text || "")
-      .join("") || ""
-  );
-}
-
-export function normalizeGeminiUsage(usage?: {
-  promptTokenCount?: number;
-  candidatesTokenCount?: number;
-  totalTokenCount?: number;
-  cachedContentTokenCount?: number;
-}): TokenUsage | undefined {
-  if (!usage) return undefined;
-  return {
-    inputTokens: usage.promptTokenCount,
-    outputTokens: usage.candidatesTokenCount,
-    totalTokens: usage.totalTokenCount,
-    cachedInputTokens: usage.cachedContentTokenCount,
-  };
-}
-
 export function addTokenUsage(
   total: TokenUsage | undefined,
   usage: TokenUsage | undefined,
