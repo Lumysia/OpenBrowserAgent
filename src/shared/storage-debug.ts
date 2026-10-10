@@ -7,6 +7,7 @@ import {
 } from "./storage";
 import { getActiveSyncBackend, isSyncBackendEnabled } from "./sync-backends";
 import { tinybaseSyncLocalCacheKey } from "./sync-tinybase-keys";
+import { withStoragePublicationLock } from "./storage-lock";
 
 const STORAGE_KEY_GROUPS = {
   settings: [
@@ -37,7 +38,7 @@ export async function clearAppStorage({
   scope?: AppStorageClearScope;
   targets?: AppStorageClearTarget[];
 } = {}) {
-  clearPendingSyncWrites();
+  await clearPendingSyncWrites();
   const selectedTargets = targets.includes("all")
     ? (Object.keys(STORAGE_KEY_GROUPS) as Array<
         keyof typeof STORAGE_KEY_GROUPS
@@ -46,33 +47,31 @@ export async function clearAppStorage({
   const selectedKeys = selectedTargets.flatMap(
     (target) => STORAGE_KEY_GROUPS[target],
   );
-  const localKeys = [
-    ...selectedKeys,
-    ...selectedKeys.map((key) => syncLocalCacheKey(key)),
-    ...selectedKeys.map((key) => tinybaseSyncLocalCacheKey(key)),
-  ];
-  const tasks: Array<Promise<void>> = [];
-  if (scope === "all" || scope === "local")
-    tasks.push(getBrowserApi().storage.local.remove(localKeys));
-  if (scope === "all" || scope === "sync") {
-    if (await isSyncBackendEnabled()) {
-      const backend = await getActiveSyncBackend();
-      tasks.push(
-        Promise.all(selectedKeys.map((key) => backend.remove(key))).then(
-          () => undefined,
-        ),
-      );
-    }
-    tasks.push(
-      getBrowserApi().storage.local.remove(
-        selectedKeys.flatMap((key) => [
-          syncLocalCacheKey(key),
-          tinybaseSyncLocalCacheKey(key),
-        ]),
-      ),
+  const cacheKeys = selectedKeys.flatMap((key) => [
+    syncLocalCacheKey(key),
+    tinybaseSyncLocalCacheKey(key),
+  ]);
+  const backend = await withStoragePublicationLock(async () => {
+    // Capture the enabled route and its configuration coherently before local
+    // cleanup can delete them. Backend construction performs no remote I/O.
+    const selectedBackend =
+      scope !== "local" && (await isSyncBackendEnabled())
+        ? await getActiveSyncBackend()
+        : undefined;
+    await getBrowserApi().storage.local.remove(
+      scope === "sync" ? cacheKeys : [...selectedKeys, ...cacheKeys],
     );
+    return selectedBackend;
+  });
+  if (backend) {
+    // Finish every started removal before reporting failure. Remote work must
+    // remain outside publication so ordinary local edits can still complete.
+    const results = await Promise.allSettled(
+      selectedKeys.map(async (key) => backend.remove(key)),
+    );
+    for (const result of results)
+      if (result.status === "rejected") throw result.reason;
   }
-  await Promise.all(tasks);
 
   if (scope === "local" && targets.includes("all"))
     await resetLocalBootstrapState();

@@ -90,7 +90,14 @@ export const cdpTools = [
       timeout: numberProperty("Timeout in milliseconds"),
       width: numberProperty("Window width"),
       height: numberProperty("Window height"),
-      viewport: stringProperty("Viewport WxHxDPR[,mobile]"),
+      viewport: stringProperty(
+        "Viewport WxH[xDPR][,mobile]. Persists until reset, debugger detach, or tab closure.",
+      ),
+      reset: {
+        type: "boolean",
+        description:
+          "For emulate: clear all emulation overrides and detach the debugger.",
+      },
       userAgent: stringProperty("User agent override"),
       colorScheme: enumProperty(["dark", "light", "auto"], "Color scheme"),
       ...listSliceParameters,
@@ -108,7 +115,7 @@ export const cdpTools = [
       expression: stringProperty("Expression fallback"),
       ...contentSliceParameters,
     },
-    ["function"],
+    [],
   ),
   tool(
     BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript,
@@ -121,7 +128,7 @@ export const cdpTools = [
       ),
       world: enumProperty(
         ["MAIN", "ISOLATED"],
-        "Execution world. MAIN can affect page scripts; ISOLATED runs in the extension isolated world.",
+        "Execution world. MAIN can affect page scripts; ISOLATED uses a named CDP isolated world, without extension API access.",
       ),
       ...contentSliceParameters,
     },
@@ -150,7 +157,7 @@ export const cdpTools = [
     {
       operation: enumProperty(
         ["resources", "network", "console"],
-        "Diagnostics operation. resources/network returns performance resource entries; console starts collection and returns currently buffered extension-side messages when available.",
+        "Diagnostics operation. resources/network returns performance resource entries; console collection is unavailable in this extension runtime and returns an explicit error.",
       ),
       tabId: numberProperty("The tab ID"),
       targetId: targetIdProperty(),

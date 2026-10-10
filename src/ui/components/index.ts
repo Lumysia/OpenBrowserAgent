@@ -14,3 +14,6 @@ export * from "./scroll-area";
 export * from "./tooltip";
 export * from "./toggle-group";
 export * from "./tabs";
+export * from "./setting-switch";
+export * from "./radio-group";
+export * from "./feedback";

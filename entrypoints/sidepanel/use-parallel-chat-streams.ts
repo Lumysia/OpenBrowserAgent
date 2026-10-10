@@ -10,6 +10,7 @@ import type {
   UploadedAttachment,
 } from "../../src/shared/types";
 import { AI_STREAM_REQUEST_TYPE as STREAM_REQUEST } from "../../src/shared/types";
+import { abortChatStreams } from "../../src/shared/chat-stream-control";
 import { createStreamHandlers } from "./stream-handlers";
 import type { ActiveStreamMap } from "./sidepanel-menu-state";
 import { useAutoRetryStream } from "./sidepanel-effects";
@@ -185,14 +186,23 @@ export function useParallelChatStreams({
     }
   }
 
-  function abortClosedChatStreams(chatId: string) {
+  async function abortClosedChatStreams(chatId: string) {
     const ids = closedChatIds(chatsRef.current, chatId);
+    const ports = new Map([...ids].map((id) => [id, portRefs.current[id]]));
+    const streams = activeStreamsRef.current;
+    await abortChatStreams(ids);
+    const closedStreams = new Set<string>();
     ids.forEach((id) => {
-      if (!activeStreamsRef.current[id]) return;
-      closeStreamPort(portRefs, id, true);
+      const port = ports.get(id);
+      if (portRefs.current[id] !== port) return;
+      if (!port && activeStreamsRef.current[id] !== streams[id]) return;
+      closeStreamPort(portRefs, id, false);
+      closedStreams.add(id);
     });
     setActiveStreams((items) =>
-      Object.fromEntries(Object.entries(items).filter(([id]) => !ids.has(id))),
+      Object.fromEntries(
+        Object.entries(items).filter(([id]) => !closedStreams.has(id)),
+      ),
     );
     return ids;
   }
@@ -266,8 +276,7 @@ export function useParallelChatStreams({
 function resumableAssistantMessage(chat: Chat) {
   return [...chat.messages].reverse().find((message) => {
     const metrics = message.metadata?.runMetrics as
-      | { startedAt?: unknown; endedAt?: unknown }
-      | undefined;
+      { startedAt?: unknown; endedAt?: unknown } | undefined;
     return (
       message.role === "assistant" &&
       metrics?.startedAt !== undefined &&

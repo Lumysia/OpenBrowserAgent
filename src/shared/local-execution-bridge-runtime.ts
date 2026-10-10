@@ -1,3 +1,5 @@
+import { getBrowserApi } from "./browser-api";
+
 export const LOCAL_EXECUTION_BRIDGE_RUNTIME_MESSAGE_TYPE =
   "local-execution-bridge.request";
 
@@ -8,13 +10,12 @@ export type LocalExecutionBridgeRuntimeRequest = {
 };
 
 export type LocalExecutionBridgeRuntimeResponse<T = unknown> =
-  | { ok: true; value?: T }
-  | { ok: false; error: string };
+  { ok: true; value?: T } | { ok: false; error: string };
 
 export async function sendLocalExecutionBridgeRuntimeRequest<T>(
   request: Omit<LocalExecutionBridgeRuntimeRequest, "type">,
 ) {
-  const response = (await chrome.runtime.sendMessage({
+  const response = (await getBrowserApi().runtime.sendMessage({
     type: LOCAL_EXECUTION_BRIDGE_RUNTIME_MESSAGE_TYPE,
     ...request,
   })) as LocalExecutionBridgeRuntimeResponse<T> | undefined;

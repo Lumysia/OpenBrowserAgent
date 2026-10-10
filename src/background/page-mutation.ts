@@ -8,12 +8,17 @@ import {
   stringInput,
 } from "./page-mutation-options";
 
-export async function mutatePage(args: Record<string, unknown>) {
+export async function mutatePage(
+  args: Record<string, unknown>,
+  signal?: AbortSignal,
+) {
+  signal?.throwIfAborted();
   const api = getBrowserApi();
   const tabId = Number(args.tabId);
   if (!Number.isFinite(tabId) || tabId <= 0)
     return { success: false, error: TOOL_ERROR.noActiveWebTabFound };
   const tab = await api.tabs.get(tabId);
+  signal?.throwIfAborted();
   if (!isScriptableUrl(tab.url))
     return { success: false, error: TOOL_ERROR.activeTabNotWebPage };
 
@@ -46,6 +51,7 @@ export async function mutatePage(args: Record<string, unknown>) {
     errorCode: "NO_MUTATION_RESULT",
   };
   if (isNewTabRequest(output)) {
+    signal?.throwIfAborted();
     const created = await api.tabs.create({ url: output.url, active: false });
     return {
       success: true,

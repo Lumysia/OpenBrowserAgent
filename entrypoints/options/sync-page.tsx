@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import {
   Activity,
   Bot,
@@ -11,7 +11,6 @@ import {
   TerminalSquare,
 } from "lucide-react";
 import { getMessages } from "../../src/shared/i18n";
-import { NO_SYNC_BACKEND_ID } from "../../src/shared/sync-backends";
 import {
   setActiveSyncBackend,
   setDataSync,
@@ -20,6 +19,7 @@ import {
   SYNC_PREFERENCES,
   SYNC_PREFERENCE_KEYS,
   type SyncPreferenceKey,
+  type SyncDataSettings,
 } from "../../src/shared/storage";
 import type { SyncBackendConfig } from "../../src/shared/types";
 import { SYNC_DATA_SETTING_KEYS } from "../../src/shared/sync-data-settings";
@@ -34,15 +34,17 @@ import { SyncBackendCard, type SyncDataToggle } from "./sync-backend-card";
 
 export function SyncPage() {
   const [language] = useStoredState(storage.language);
-  const [syncDataSettings, setSyncDataSettings] = useStoredState(
-    storage.syncDataSettings,
-  );
+  const [syncDataSettings] = useStoredState(storage.syncDataSettings);
   const [syncBackends, setSyncBackends] = useStoredState(storage.syncBackends);
-  const [activeSyncBackendId, setActiveSyncBackendId] = useStoredState(
-    storage.activeSyncBackendId,
-  );
+  const [activeSyncBackendId] = useStoredState(storage.activeSyncBackendId);
   const [pendingActiveBackendId, setPendingActiveBackendId] =
     useState<string>();
+  const syncRequestId = useRef(0);
+  const [pendingSyncSettings, setPendingSyncSettings] = useState<
+    Partial<
+      Record<keyof SyncDataSettings, { value: boolean; requestId: number }>
+    >
+  >({});
   const [syncWriteStatus] = useStoredState(storage.syncWriteStatus);
   const t = getMessages(language);
 
@@ -83,12 +85,24 @@ export function SyncPage() {
     },
   };
 
-  function updateSyncPreference(key: SyncPreferenceKey, value: boolean) {
-    setSyncDataSettings((previous) => ({ ...previous, [key]: value }));
-    setDataSync(key, value).catch((error) => {
-      console.warn("Failed to update sync preference", error);
-      setSyncDataSettings((previous) => ({ ...previous, [key]: !value }));
-    });
+  function updateSyncPreference(key: keyof SyncDataSettings, value: boolean) {
+    const requestId = ++syncRequestId.current;
+    setPendingSyncSettings((previous) => ({
+      ...previous,
+      [key]: { value, requestId },
+    }));
+    setDataSync(key, value)
+      .catch((error) => {
+        console.warn("Failed to update sync preference", error);
+      })
+      .finally(() =>
+        setPendingSyncSettings((previous) => {
+          if (previous[key]?.requestId !== requestId) return previous;
+          const next = { ...previous };
+          delete next[key];
+          return next;
+        }),
+      );
   }
 
   function changeActiveBackend(backendId: string) {
@@ -96,7 +110,6 @@ export function SyncPage() {
     setActiveSyncBackend(backendId)
       .catch((error) => {
         console.warn("Failed to change sync backend", error);
-        setActiveSyncBackendId(activeSyncBackendId || NO_SYNC_BACKEND_ID);
       })
       .finally(() => {
         setPendingActiveBackendId((pending) =>
@@ -118,7 +131,9 @@ export function SyncPage() {
       title: syncToggleContent[preferenceKey].title,
       description: syncToggleContent[preferenceKey].description,
       icon: syncToggleContent[preferenceKey].icon,
-      value: syncDataSettings[preferenceKey] === true,
+      value:
+        pendingSyncSettings[preferenceKey]?.value ??
+        syncDataSettings[preferenceKey] === true,
       onChange: (value: boolean) => updateSyncPreference(preferenceKey, value),
     })),
     {
@@ -126,13 +141,12 @@ export function SyncPage() {
       title: t.options.syncChatAttachments,
       description: t.options.syncChatAttachmentsDescription,
       icon: <Paperclip size={18} />,
-      value: syncDataSettings[SYNC_DATA_SETTING_KEYS.chatAttachments] === true,
+      value:
+        pendingSyncSettings[SYNC_DATA_SETTING_KEYS.chatAttachments]?.value ??
+        syncDataSettings[SYNC_DATA_SETTING_KEYS.chatAttachments] === true,
       attachmentBackendOnly: true,
       onChange: (value: boolean) =>
-        setSyncDataSettings((previous) => ({
-          ...previous,
-          [SYNC_DATA_SETTING_KEYS.chatAttachments]: value,
-        })),
+        updateSyncPreference(SYNC_DATA_SETTING_KEYS.chatAttachments, value),
     },
   ];
 

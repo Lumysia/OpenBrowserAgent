@@ -19,12 +19,15 @@ export async function generateImage(
     messageId?: string;
     toolCallId?: string;
   } = {},
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
   const prompt = String(input.prompt || "").trim();
   if (!prompt) return { success: false, error: "Missing image prompt" };
   const jobId = context.toolCallId || crypto.randomUUID();
   const preferences = await storage.preferences.get();
   const model = await resolveImageModel(stringInput(input.modelId));
+  signal?.throwIfAborted();
   const requestedSize =
     stringInput(input.size) || preferences.imageGenerationSize;
   const size = normalizeImageSize(requestedSize);
@@ -49,13 +52,26 @@ export async function generateImage(
   const referenceAttachmentIds = references.map((attachment) => attachment.id);
   try {
     const result = imageReferences.length
-      ? await editImage(model, finalPrompt, imageReferences[0], input, size)
-      : await createImage(model, finalPrompt, input, size);
-    const displayResult = await storeGeneratedImageResult(result, {
-      jobId,
-      chatId: context.chatId,
-      messageId: context.messageId,
-    });
+      ? await editImage(
+          model,
+          finalPrompt,
+          imageReferences[0],
+          input,
+          size,
+          signal,
+        )
+      : await createImage(model, finalPrompt, input, size, signal);
+    signal?.throwIfAborted();
+    const displayResult = await storeGeneratedImageResult(
+      result,
+      {
+        jobId,
+        chatId: context.chatId,
+        messageId: context.messageId,
+      },
+      signal,
+    );
+    signal?.throwIfAborted();
     const error = stringInput(displayResult.error);
     const output = {
       ...displayResult,
@@ -69,6 +85,7 @@ export async function generateImage(
     };
     return output;
   } catch (error) {
+    signal?.throwIfAborted();
     const message = error instanceof Error ? error.message : String(error);
     return {
       success: false,
@@ -87,11 +104,13 @@ async function createImage(
   prompt: string,
   input: Record<string, unknown>,
   size: string,
+  signal?: AbortSignal,
 ) {
   const response = await fetch(
     `${model.baseUrl.replace(/\/$/, "")}/images/generations`,
     {
       method: "POST",
+      signal,
       headers: {
         "Content-Type": "application/json",
         ...(model.apiKey ? { Authorization: `Bearer ${model.apiKey}` } : {}),
@@ -115,6 +134,7 @@ async function editImage(
   image: UploadedAttachment,
   input: Record<string, unknown>,
   size: string,
+  signal?: AbortSignal,
 ) {
   const form = new FormData();
   form.append("model", model.modelName);
@@ -126,6 +146,7 @@ async function editImage(
     `${model.baseUrl.replace(/\/$/, "")}/images/edits`,
     {
       method: "POST",
+      signal,
       headers: model.apiKey
         ? { Authorization: `Bearer ${model.apiKey}` }
         : undefined,
@@ -151,7 +172,7 @@ async function parseImageResponse(response: Response) {
     };
   return {
     success: true,
-    image: b64.startsWith?.("data:")
+    image: b64?.startsWith?.("data:")
       ? b64
       : b64
         ? `data:image/png;base64,${b64}`
@@ -172,6 +193,7 @@ function referenceAttachments(
 async function storeGeneratedImageResult(
   result: Record<string, unknown>,
   context: { jobId: string; chatId?: string; messageId?: string },
+  signal?: AbortSignal,
 ) {
   const image = stringInput(result.image);
   if (!image.startsWith("data:image/") || !context.chatId || !context.messageId)
@@ -191,6 +213,7 @@ async function storeGeneratedImageResult(
       chatId: context.chatId,
       messageId: context.messageId,
       attachments: [attachment],
+      signal,
     });
     const { image: _image, ...rest } = result;
     return {
@@ -202,6 +225,7 @@ async function storeGeneratedImageResult(
       imageStored: true,
     };
   } catch (error) {
+    signal?.throwIfAborted();
     return {
       ...result,
       imageStorageError: error instanceof Error ? error.message : String(error),
@@ -243,10 +267,10 @@ function normalizeImageSize(value: string | undefined) {
   if (!validAspectRatio(width, height)) return DEFAULT_IMAGE_SIZE;
   if (width > MAX_IMAGE_EDGE || height > MAX_IMAGE_EDGE)
     return DEFAULT_IMAGE_SIZE;
-  while (width * height < MIN_IMAGE_PIXELS) {
+  if (width * height < MIN_IMAGE_PIXELS) {
     const scale = Math.sqrt(MIN_IMAGE_PIXELS / (width * height));
-    width = roundUpToMultiple(originalWidth * scale, IMAGE_SIZE_MULTIPLE);
-    height = roundUpToMultiple(originalHeight * scale, IMAGE_SIZE_MULTIPLE);
+    width = roundUpToMultiple(width * scale, IMAGE_SIZE_MULTIPLE);
+    height = roundUpToMultiple(height * scale, IMAGE_SIZE_MULTIPLE);
     if (width > MAX_IMAGE_EDGE || height > MAX_IMAGE_EDGE)
       return DEFAULT_IMAGE_SIZE;
   }

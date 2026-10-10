@@ -1,4 +1,4 @@
-import { storage } from "../shared/storage";
+import { mutateWorkspace } from "../shared/workspace-storage";
 import { MEMORY_ENTRY_TEXT_MAX_CHARS } from "../shared/config";
 import type { AgentWorkspace, WorkspaceFile } from "../shared/types";
 import { upsertWorkspaceFile, WORKSPACE_FILE_PATH } from "../shared/workspace";
@@ -115,9 +115,8 @@ async function addEntry(
   if (!workspace) return { error: "No current agent workspace" };
   const text = normalizeEntryText(input.text || input.note || input.content);
   if (!text) return { error: "Missing memory text" };
-  const entries = readEntries(workspace, kind);
   const entry = { id: createEntryId(kind), text };
-  return persistEntries(workspace, kind, [...entries, entry], entry, "added");
+  return persistEntries(workspace, kind, entry, "added");
 }
 
 async function updateEntry(
@@ -129,13 +128,8 @@ async function updateEntry(
   const id = String(input.id || "").trim();
   const text = normalizeEntryText(input.text || input.note || input.content);
   if (!id || !text) return { error: "Missing memory id or text", id };
-  const entries = readEntries(workspace, kind);
-  const index = entries.findIndex((entry) => entry.id === id);
-  if (index < 0) return { error: "Memory entry not found", id };
   const entry = { id, text };
-  const nextEntries = [...entries];
-  nextEntries[index] = entry;
-  return persistEntries(workspace, kind, nextEntries, entry, "updated");
+  return persistEntries(workspace, kind, entry, "updated");
 }
 
 async function removeEntry(
@@ -149,22 +143,43 @@ async function removeEntry(
   const entries = readEntries(workspace, kind);
   const entry = entries.find((item) => item.id === id);
   if (!entry) return { error: "Memory entry not found", id };
-  const nextEntries = entries.filter((item) => item.id !== id);
-  return persistEntries(workspace, kind, nextEntries, entry, "removed");
+  return persistEntries(workspace, kind, entry, "removed");
 }
 
 async function persistEntries(
   workspace: AgentWorkspace,
   kind: MemoryKind,
-  entries: MemoryEntry[],
   entry: MemoryEntry,
   action: "added" | "updated" | "removed",
 ) {
-  const content = renderEntries(kind, entries);
-  const result = upsertWorkspaceFile(workspace, MEMORY_PATH[kind], content);
+  const expected = readEntries(workspace, kind).find(
+    (item) => item.id === entry.id,
+  );
+  const result = await mutateWorkspace(workspace, (current) => {
+    const entries = readEntries(current, kind);
+    const existing = entries.find((item) => item.id === entry.id);
+    if (action !== "added") {
+      if (!existing) return { ok: false, error: "Memory entry not found" };
+      if (!expected || expected.text !== existing.text)
+        return {
+          ok: false,
+          error:
+            "Memory entry changed since it was read. Read the current entry before editing it.",
+        };
+    }
+    const next =
+      action === "added"
+        ? [...entries, entry]
+        : action === "removed"
+          ? entries.filter((item) => item.id !== entry.id)
+          : entries.map((item) => (item.id === entry.id ? entry : item));
+    return upsertWorkspaceFile(
+      current,
+      MEMORY_PATH[kind],
+      renderEntries(kind, next),
+    );
+  });
   if (!result.ok) return { error: result.error };
-  await persistWorkspace(result.workspace);
-  Object.assign(workspace, result.workspace);
   return {
     path: MEMORY_PATH[kind],
     entry,
@@ -207,12 +222,4 @@ function normalizeEntryText(value: unknown) {
 
 function createEntryId(kind: MemoryKind) {
   return `${kind}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-async function persistWorkspace(workspace: AgentWorkspace) {
-  const allWorkspaces = await storage.agentWorkspaces.get();
-  const others = allWorkspaces.filter(
-    (item) => item.agentId !== workspace.agentId,
-  );
-  await storage.agentWorkspaces.set([...others, workspace]);
 }

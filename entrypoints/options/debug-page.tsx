@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { AlertTriangle, Bug, Wrench, Trash2 } from "lucide-react";
 import { browserTools } from "../../src/background/tool-schema";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
@@ -27,8 +27,9 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  Feedback,
   Label,
-  Switch,
+  SettingSwitchCard,
   ToggleGroup,
   ToggleGroupItem,
 } from "../../src/ui/components";
@@ -47,6 +48,7 @@ export function DebugPage() {
   const [targets, setTargets] = useState<AppStorageClearTarget[]>(["all"]);
   const [clearing, setClearing] = useState(false);
   const [cleared, setCleared] = useState(false);
+  const [clearError, setClearError] = useState("");
   const t = getMessages(language);
   const activeAgent = resolveAgent(agents, preferences?.selectedAgentId);
   const visibleBrowserTools = browserTools.filter(
@@ -79,10 +81,13 @@ export function DebugPage() {
     if (!canClear || clearing) return;
     setClearing(true);
     setCleared(false);
+    setClearError("");
     try {
       await clearAppStorage({ scope, targets });
       setConfirmText("");
       setCleared(true);
+    } catch (error) {
+      setClearError(error instanceof Error ? error.message : String(error));
     } finally {
       setClearing(false);
     }
@@ -96,7 +101,7 @@ export function DebugPage() {
         </h1>
         <p className="muted">{t.options.debugDescription}</p>
       </div>
-      <DebugSwitchCard
+      <SettingSwitchCard
         icon={<Bug size={18} />}
         title={t.options.debugLoggingTitle}
         description={t.options.debugLoggingDescription}
@@ -239,42 +244,11 @@ export function DebugPage() {
             <Trash2 size={16} />
             {clearing ? t.options.debugResetting : t.options.debugResetButton}
           </Button>
-          {cleared && (
-            <CardDescription>{t.options.debugResetSuccess}</CardDescription>
-          )}
+          {cleared && <Feedback>{t.options.debugResetSuccess}</Feedback>}
+          {clearError && <Feedback error>{clearError}</Feedback>}
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function DebugSwitchCard({
-  icon,
-  title,
-  description,
-  checked,
-  onChange,
-}: {
-  icon: ReactNode;
-  title: string;
-  description: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <Card>
-      <CardContent>
-        <div className="setting-switch-row">
-          <div>
-            <CardTitle className="settings-section-title">
-              {icon} {title}
-            </CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </div>
-          <Switch checked={checked} onCheckedChange={onChange} />
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 

@@ -25,6 +25,7 @@ import {
 import { executeContextAwareTool, getSubAgentStatus } from "./provider-tools";
 import { getLocalExecutionBridgeStatus } from "./local-execution-bridge-tools";
 import { isToolError } from "./tool-utils";
+import { delay } from "../shared/cancellation";
 
 export type ProviderToolRunResult = {
   output: unknown;
@@ -48,6 +49,7 @@ export async function runProviderTool({
   responseSources,
   loadedToolNames,
   availableTools,
+  signal,
 }: {
   toolName: string;
   toolCallId: string;
@@ -63,7 +65,9 @@ export async function runProviderTool({
   responseSources: ChatSource[];
   loadedToolNames: Set<string>;
   availableTools: Array<{ function: { name: string } }>;
+  signal?: AbortSignal;
 }): Promise<ProviderToolRunResult> {
+  signal?.throwIfAborted();
   debugToolOrder("input-available", { toolName, toolCallId });
   post(port, {
     type: "chunk",
@@ -81,7 +85,7 @@ export async function runProviderTool({
         error: `Tool "${toolName}" is not available to the active agent.`,
       }
     : toolName === BROWSER_TOOL_NAME.question
-      ? await askUserQuestion({ input, port, toolCallId })
+      ? await askUserQuestion({ input, port, toolCallId, signal })
       : await executeContextAwareTool({
           toolName,
           input,
@@ -90,25 +94,21 @@ export async function runProviderTool({
           availableSkills,
           capabilities,
           workspace,
+          signal,
         });
+  signal?.throwIfAborted();
   loadDeferredToolNames(rawOutput, loadedToolNames);
-  const finalRawOutput = shouldWaitForSubAgent(toolName, input, rawOutput)
-    ? await waitForSubAgentResult({
+  const finalRawOutput = shouldWaitForDelegate(toolName, input, rawOutput)
+    ? await waitForDelegateResult({
         rawOutput,
         input,
         port,
         toolName,
         toolCallId,
+        signal,
       })
-    : shouldWaitForLocalExecutionBridge(toolName, input, rawOutput)
-      ? await waitForLocalExecutionBridgeResult({
-          rawOutput,
-          input,
-          port,
-          toolName,
-          toolCallId,
-        })
-      : rawOutput;
+    : rawOutput;
+  signal?.throwIfAborted();
   const visionImage = extractVisionImage(finalRawOutput);
   const output = attachToolSources(
     toolName,
@@ -148,15 +148,17 @@ async function askUserQuestion({
   input,
   port,
   toolCallId,
+  signal,
 }: {
   input: Record<string, unknown>;
   port: chrome.runtime.Port;
   toolCallId: string;
+  signal?: AbortSignal;
 }) {
   const questions = normalizeQuestions(input.questions);
   if (!questions.length)
     return { success: false, error: "Question tool requires 1-6 questions." };
-  const answers = await waitForQuestionAnswer(port, toolCallId);
+  const answers = await waitForQuestionAnswer(port, toolCallId, signal);
   return {
     success: true,
     answers,
@@ -167,6 +169,7 @@ async function askUserQuestion({
 function waitForQuestionAnswer(
   port: chrome.runtime.Port,
   toolCallId: string,
+  signal?: AbortSignal,
 ): Promise<QuestionToolAnswer[]> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(
@@ -181,6 +184,7 @@ function waitForQuestionAnswer(
       clearTimeout(timeout);
       port.onMessage.removeListener(onMessage);
       port.onDisconnect.removeListener(onDisconnect);
+      signal?.removeEventListener("abort", onDisconnect);
     }
 
     function onDisconnect() {
@@ -210,6 +214,8 @@ function waitForQuestionAnswer(
 
     port.onMessage.addListener(onMessage);
     port.onDisconnect.addListener(onDisconnect);
+    signal?.addEventListener("abort", onDisconnect, { once: true });
+    if (signal?.aborted) onDisconnect();
   });
 }
 
@@ -270,67 +276,37 @@ function formatQuestionAnswers(answers: QuestionToolAnswer[]) {
     .join("\n");
 }
 
-async function waitForLocalExecutionBridgeResult({
+async function waitForDelegateResult({
   rawOutput,
   input,
   port,
   toolName,
   toolCallId,
+  signal,
 }: {
   rawOutput: unknown;
   input: Record<string, unknown>;
   port: chrome.runtime.Port;
   toolName: string;
   toolCallId: string;
-}) {
-  postToolOutput(port, toolName, toolCallId, input, rawOutput);
-  const output = rawOutput as Record<string, unknown>;
-  const taskId = String(output.taskId || "").trim();
-  const timeoutMs = clampLocalExecutionBridgeTimeout(input.timeoutMs);
-  const startedAt = Date.now();
-  let status = await getLocalExecutionBridgeStatus({ taskId });
-  let lastProgressKey = progressKey(status);
-  while (isPendingDelegateState(status) && Date.now() - startedAt < timeoutMs) {
-    await sleep(500);
-    status = await getLocalExecutionBridgeStatus({ taskId });
-    const nextProgressKey = progressKey(status);
-    if (nextProgressKey !== lastProgressKey) {
-      lastProgressKey = nextProgressKey;
-      postToolOutput(
-        port,
-        toolName,
-        toolCallId,
-        input,
-        mergeToolObjects(rawOutput, status),
-      );
-    }
-  }
-  return mergeToolObjects(rawOutput, status);
-}
-
-async function waitForSubAgentResult({
-  rawOutput,
-  input,
-  port,
-  toolName,
-  toolCallId,
-}: {
-  rawOutput: unknown;
-  input: Record<string, unknown>;
-  port: chrome.runtime.Port;
-  toolName: string;
-  toolCallId: string;
+  signal?: AbortSignal;
 }) {
   postToolOutput(port, toolName, toolCallId, input, rawOutput);
   const output = rawOutput as Record<string, unknown>;
   const taskId = String(output.taskId || output.childChatId || "").trim();
-  const timeoutMs = clampSubAgentTimeout(input.timeoutMs);
+  const local = toolName === BROWSER_TOOL_NAME.startLocalExecutionBridge;
+  const getStatus = local ? getLocalExecutionBridgeStatus : getSubAgentStatus;
+  const timeoutMs = local
+    ? clampLocalExecutionBridgeTimeout(input.timeoutMs)
+    : clampSubAgentTimeout(input.timeoutMs);
   const startedAt = Date.now();
-  let status = await getSubAgentStatus({ taskId });
+  let status = await getStatus({ taskId }, signal);
   let lastProgressKey = progressKey(status);
-  while (isPendingSubAgentState(status) && Date.now() - startedAt < timeoutMs) {
-    await sleep(500);
-    status = await getSubAgentStatus({ taskId });
+  while (isPendingDelegateState(status) && Date.now() - startedAt < timeoutMs) {
+    signal?.throwIfAborted();
+    await delay(500, signal);
+    status = await getStatus({ taskId }, signal);
+    signal?.throwIfAborted();
     const nextProgressKey = progressKey(status);
     if (nextProgressKey !== lastProgressKey) {
       lastProgressKey = nextProgressKey;
@@ -344,10 +320,6 @@ async function waitForSubAgentResult({
     }
   }
   return mergeToolObjects(rawOutput, status);
-}
-
-function isPendingSubAgentState(output: unknown) {
-  return isPendingDelegateState(output);
 }
 
 function isPendingDelegateState(output: unknown) {
@@ -372,31 +344,14 @@ function clampSubAgentTimeout(value: unknown) {
   return Math.min(180_000, Math.max(0, Math.trunc(number)));
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function shouldWaitForSubAgent(
+function shouldWaitForDelegate(
   toolName: string,
   input: Record<string, unknown>,
   output: unknown,
 ) {
   return (
-    toolName === BROWSER_TOOL_NAME.startSubAgent &&
-    input.background !== true &&
-    !!output &&
-    typeof output === "object" &&
-    !isToolError(output)
-  );
-}
-
-function shouldWaitForLocalExecutionBridge(
-  toolName: string,
-  input: Record<string, unknown>,
-  output: unknown,
-) {
-  return (
-    toolName === BROWSER_TOOL_NAME.startLocalExecutionBridge &&
+    (toolName === BROWSER_TOOL_NAME.startSubAgent ||
+      toolName === BROWSER_TOOL_NAME.startLocalExecutionBridge) &&
     input.background !== true &&
     !!output &&
     typeof output === "object" &&

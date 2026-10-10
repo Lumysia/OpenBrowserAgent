@@ -3,7 +3,6 @@ import {
   ATTACHMENT_OUTPUT_NOTE,
   ATTACHMENT_TOOL_ERROR,
   base64FromDataUrl,
-  isVisionImageMimeType,
 } from "../shared/attachments";
 import {
   READ_ATTACHMENT_DEFAULT_LIMIT,
@@ -24,110 +23,20 @@ import {
 import { withContentSlice, withListSlice } from "./tool-utils";
 import { readSyncedChatAttachment } from "../shared/sync-chat-attachments";
 
-export function createGeminiContents(
-  messages: ChatMessage[],
-  multimodal: boolean,
-  requestAttachments: UploadedAttachment[] = [],
-  availableSkills: Skill[] = [],
-  workspace?: AgentWorkspace,
-) {
-  return messages.map((message, index) => ({
-    role: message.role === "assistant" ? "model" : "user",
-    parts: createGeminiParts(
-      message,
-      index === messages.length - 1,
-      multimodal,
-      index === messages.length - 1 ? requestAttachments : [],
-      index === messages.length - 1 ? availableSkills : [],
-      index === messages.length - 1 ? workspace : undefined,
-    ),
-  }));
-}
-
-export function createOpenAIRequestMessages(
-  system: string,
-  messages: ChatMessage[],
-  multimodal: boolean,
-  requestAttachments: UploadedAttachment[] = [],
-  availableSkills: Skill[] = [],
-  workspace?: AgentWorkspace,
-) {
-  return [
-    { role: "system", content: system },
-    ...messages.map((message, index) => ({
-      role: message.role === "assistant" ? "assistant" : "user",
-      content: createOpenAIMessageContent(
-        message,
-        index === messages.length - 1,
-        multimodal,
-        index === messages.length - 1 ? requestAttachments : [],
-        index === messages.length - 1 ? availableSkills : [],
-        index === messages.length - 1 ? workspace : undefined,
-      ),
-    })),
-  ];
-}
-
-export function createOpenAIResponsesInput(
-  messages: ChatMessage[],
-  multimodal: boolean,
-  requestAttachments: UploadedAttachment[] = [],
-  availableSkills: Skill[] = [],
-  workspace?: AgentWorkspace,
-) {
-  return messages.map((message, index) => ({
-    role: message.role === "assistant" ? "assistant" : "user",
-    content: createOpenAIResponsesContent(
-      message,
-      index === messages.length - 1,
-      multimodal,
-      index === messages.length - 1 ? requestAttachments : [],
-      index === messages.length - 1 ? availableSkills : [],
-      index === messages.length - 1 ? workspace : undefined,
-    ),
-  }));
-}
-
-export function createAnthropicMessages(
-  messages: ChatMessage[],
-  multimodal: boolean,
-  requestAttachments: UploadedAttachment[] = [],
-  availableSkills: Skill[] = [],
-  workspace?: AgentWorkspace,
-) {
-  return messages.map((message, index) => ({
-    role: message.role === "assistant" ? "assistant" : "user",
-    content: createAnthropicContent(
-      message,
-      index === messages.length - 1,
-      multimodal,
-      index === messages.length - 1 ? requestAttachments : [],
-      index === messages.length - 1 ? availableSkills : [],
-      index === messages.length - 1 ? workspace : undefined,
-    ),
-  }));
-}
-
-export function hasImageAttachments(attachments: UploadedAttachment[]) {
-  return attachments.some(
-    (attachment) =>
-      attachment.kind === ATTACHMENT_KIND.image &&
-      attachment.dataUrl &&
-      isVisionImageMimeType(attachment.type),
-  );
-}
-
 export async function readUploadedAttachment(
   attachments: UploadedAttachment[],
   input: Record<string, unknown>,
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
   const attachmentId = String(input.attachmentId || input.id || "");
   const offset = clampReadOffset(input.offset);
   const limit = clampReadLimit(input.limit);
   const format = String(input.format || "");
   const attachment =
     attachments.find((item) => item.id === attachmentId) ||
-    (await readSyncedChatAttachment(undefined, attachmentId));
+    (await readSyncedChatAttachment(undefined, attachmentId, signal));
+  signal?.throwIfAborted();
   if (!attachment)
     return { error: ATTACHMENT_TOOL_ERROR.notFound, attachmentId };
   if (attachment.kind === ATTACHMENT_KIND.text) {
@@ -294,151 +203,7 @@ function resolveSkill(skills: Skill[], skillIdOrName: string) {
   };
 }
 
-function createGeminiParts(
-  message: ChatMessage,
-  isLatest: boolean,
-  multimodal: boolean,
-  requestAttachments: UploadedAttachment[],
-  availableSkills: Skill[],
-  workspace?: AgentWorkspace,
-) {
-  const attachments = requestAttachments.length
-    ? requestAttachments
-    : getUploadedAttachments(message);
-  const parts: Array<Record<string, unknown>> = [
-    {
-      text: renderMessageText(
-        message,
-        isLatest,
-        requestAttachments,
-        availableSkills,
-        workspace,
-      ),
-    },
-  ];
-  if (multimodal)
-    parts.push(
-      ...attachments
-        .filter(
-          (attachment) =>
-            attachment.kind === ATTACHMENT_KIND.image &&
-            attachment.dataUrl &&
-            isVisionImageMimeType(attachment.type),
-        )
-        .map((attachment) => ({
-          inline_data: {
-            mime_type: attachment.type || "image/png",
-            data: base64FromDataUrl(attachment.dataUrl || ""),
-          },
-        })),
-    );
-  return parts;
-}
-
-function createOpenAIMessageContent(
-  message: ChatMessage,
-  isLatest: boolean,
-  multimodal: boolean,
-  requestAttachments: UploadedAttachment[],
-  availableSkills: Skill[],
-  workspace?: AgentWorkspace,
-) {
-  const text = renderMessageText(
-    message,
-    isLatest,
-    requestAttachments,
-    availableSkills,
-    workspace,
-  );
-  const attachments = requestAttachments.length
-    ? requestAttachments
-    : getUploadedAttachments(message);
-  if (!multimodal) return text;
-  const imageParts = attachments
-    .filter(
-      (attachment) =>
-        attachment.kind === ATTACHMENT_KIND.image &&
-        attachment.dataUrl &&
-        isVisionImageMimeType(attachment.type),
-    )
-    .map((attachment) => ({
-      type: "image_url",
-      image_url: { url: attachment.dataUrl },
-    }));
-  return imageParts.length ? [{ type: "text", text }, ...imageParts] : text;
-}
-
-function createOpenAIResponsesContent(
-  message: ChatMessage,
-  isLatest: boolean,
-  multimodal: boolean,
-  requestAttachments: UploadedAttachment[],
-  availableSkills: Skill[],
-  workspace?: AgentWorkspace,
-) {
-  const text = renderMessageText(
-    message,
-    isLatest,
-    requestAttachments,
-    availableSkills,
-    workspace,
-  );
-  const attachments = requestAttachments.length
-    ? requestAttachments
-    : getUploadedAttachments(message);
-  if (!multimodal) return [{ type: "input_text", text }];
-  const imageParts = attachments
-    .filter(
-      (attachment) =>
-        attachment.kind === ATTACHMENT_KIND.image &&
-        attachment.dataUrl &&
-        isVisionImageMimeType(attachment.type),
-    )
-    .map((attachment) => ({
-      type: "input_image",
-      image_url: attachment.dataUrl,
-    }));
-  return [{ type: "input_text", text }, ...imageParts];
-}
-
-function createAnthropicContent(
-  message: ChatMessage,
-  isLatest: boolean,
-  multimodal: boolean,
-  requestAttachments: UploadedAttachment[],
-  availableSkills: Skill[],
-  workspace?: AgentWorkspace,
-) {
-  const text = renderMessageText(
-    message,
-    isLatest,
-    requestAttachments,
-    availableSkills,
-    workspace,
-  );
-  const attachments = requestAttachments.length
-    ? requestAttachments
-    : getUploadedAttachments(message);
-  if (!multimodal) return [{ type: "text", text }];
-  const imageParts = attachments
-    .filter(
-      (attachment) =>
-        attachment.kind === ATTACHMENT_KIND.image &&
-        attachment.dataUrl &&
-        isVisionImageMimeType(attachment.type),
-    )
-    .map((attachment) => ({
-      type: "image",
-      source: {
-        type: "base64",
-        media_type: attachment.type || "image/png",
-        data: base64FromDataUrl(attachment.dataUrl || ""),
-      },
-    }));
-  return [{ type: "text", text }, ...imageParts];
-}
-
-function renderMessageText(
+export function renderMessageText(
   message: ChatMessage,
   isLatest: boolean,
   requestAttachments: UploadedAttachment[],

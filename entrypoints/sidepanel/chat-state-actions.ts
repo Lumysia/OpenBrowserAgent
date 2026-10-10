@@ -5,6 +5,18 @@ import { sortChatsNewestFirst } from "./format";
 type ChatSetter = Dispatch<SetStateAction<Chat[]>>;
 type ActiveChatSetter = Dispatch<SetStateAction<string | undefined>>;
 
+export function createChatDraft(title: string, agentId?: string): Chat {
+  const now = Date.now();
+  return {
+    id: crypto.randomUUID(),
+    title,
+    agentId,
+    messages: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
 export function createChatAction({
   title,
   persist = true,
@@ -18,15 +30,7 @@ export function createChatAction({
   setChats: ChatSetter;
   setActiveChatId: ActiveChatSetter;
 }) {
-  const now = Date.now();
-  const chat: Chat = {
-    id: crypto.randomUUID(),
-    title,
-    agentId,
-    messages: [],
-    createdAt: now,
-    updatedAt: now,
-  };
+  const chat = createChatDraft(title, agentId);
   if (persist) setChats((items) => [...pruneEmptyChats(items), chat]);
   setActiveChatId(chat.id);
   return chat;
@@ -262,14 +266,13 @@ function truncateMessageAtPart(message: ChatMessage, partId: string) {
 }
 
 export function closeChatAction({
-  chatId,
+  closedIds,
   setChats,
 }: {
-  chatId: string;
+  closedIds: ReadonlySet<string>;
   setChats: ChatSetter;
 }) {
   setChats((items) => {
-    const closedIds = closedChatIds(items, chatId);
     return cleanupClosedChatRelationships(
       items.filter((chat) => !closedIds.has(chat.id)),
       closedIds,
@@ -295,7 +298,7 @@ export function closedChatIds(chats: Chat[], closedChatId: string) {
 
 function cleanupClosedChatRelationships(
   chats: Chat[],
-  closedChatIds: Set<string>,
+  closedChatIds: ReadonlySet<string>,
 ) {
   return chats.map((chat) => {
     if (!chat.childChatIds?.some((id) => closedChatIds.has(id))) return chat;

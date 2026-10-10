@@ -404,6 +404,8 @@ export const zhTW: LocaleMessages = {
     agentWorkspaceDescription:
       "此智慧體的私有文字檔案。SOUL.md 定義行為，AGENTS.md 定義工作區規則，MEMORY.md 和 USER.md 作為凍結上下文注入，NOTES.md 按需使用。",
     agentWorkspaceNewFile: "新增工作區檔案",
+    agentWorkspaceConflict:
+      "此檔案在編輯期間發生了變更。請重新開啟並檢視最新版本後再儲存。",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "尚無工作區檔案。",
     resetDefaultAgents: "重設預設智慧體",

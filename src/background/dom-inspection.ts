@@ -11,7 +11,11 @@ const DEFAULT_ITEM_LIMIT = 30;
 const DEFAULT_TEXT_LIMIT = 6_000;
 const WAIT_POLL_MS = 250;
 
-export async function inspectPage(args: Record<string, unknown>) {
+export async function inspectPage(
+  args: Record<string, unknown>,
+  signal?: AbortSignal,
+) {
+  signal?.throwIfAborted();
   const api = getBrowserApi();
   const tabIds = Array.isArray(args.tabIds)
     ? args.tabIds
@@ -25,6 +29,7 @@ export async function inspectPage(args: Record<string, unknown>) {
   const pages = [];
   const options = buildInspectOptions(args);
   for (const tabId of tabIds) {
+    signal?.throwIfAborted();
     try {
       const tab = await api.tabs.get(tabId);
       if (!isScriptableUrl(tab.url)) {
@@ -37,7 +42,11 @@ export async function inspectPage(args: Record<string, unknown>) {
         });
         continue;
       }
-      const waitResult = await waitForInspectablePage(tabId, options.waitFor);
+      const waitResult = await waitForInspectablePage(
+        tabId,
+        options.waitFor,
+        signal,
+      );
       if (waitResult?.success === false) {
         pages.push({
           ...waitResult,
@@ -47,6 +56,7 @@ export async function inspectPage(args: Record<string, unknown>) {
         });
         continue;
       }
+      signal?.throwIfAborted();
       const [result] = await api.scripting.executeScript({
         target: { tabId },
         args: [options],
@@ -61,6 +71,7 @@ export async function inspectPage(args: Record<string, unknown>) {
         url: tab.url || String(page.url || ""),
       });
     } catch (error) {
+      signal?.throwIfAborted();
       pages.push({
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -205,9 +216,7 @@ function inspectPageInDom(options: {
   };
   const describeElement = (element: HTMLElement) => {
     const input = element as
-      | HTMLInputElement
-      | HTMLTextAreaElement
-      | HTMLSelectElement;
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
     return {
       aiId: element.getAttribute("data-ai-id") || undefined,
       tag: element.tagName.toLowerCase(),

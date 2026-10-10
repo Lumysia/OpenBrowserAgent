@@ -264,6 +264,7 @@ export function McpPage() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Switch
+                      aria-label={server.name || t.options.mcpServerEnabled}
                       checked={server.enabled && isMcpServerTested(server)}
                       disabled={!isMcpServerTested(server)}
                       onCheckedChange={(enabled) =>

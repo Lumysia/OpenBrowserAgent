@@ -5,22 +5,10 @@ import {
   TOOL_LIST_SLICE_MAX_LIMIT,
 } from "../shared/config";
 
-export function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  message: string,
-) {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
-  });
-  return Promise.race([promise, timeout]).finally(() => {
-    if (timeoutId) clearTimeout(timeoutId);
-  });
-}
-
 export function isToolError(output: unknown) {
-  return typeof output === "object" && output !== null && "error" in output;
+  if (!output || typeof output !== "object") return false;
+  const result = output as Record<string, unknown>;
+  return result.success === false || result.isError === true || !!result.error;
 }
 
 export function clampToolOffset(value: unknown) {

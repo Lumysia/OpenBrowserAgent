@@ -99,11 +99,7 @@
     inset 0 0 0 1px color-mix(in srgb, white 18%, transparent);
   transform: scale(1.04);
 }
-.accent-dot:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--ring);
-}
-.accent-dot.active {
+.accent-dot:has(:checked) {
   border-color: var(--accent-strong);
   box-shadow:
     0 0 0 3px var(--accent-shadow),

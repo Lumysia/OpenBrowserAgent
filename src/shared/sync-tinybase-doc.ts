@@ -3,14 +3,26 @@ import type { Cell, Tables } from "tinybase";
 import { getBrowserApi } from "./browser-api";
 import { STORAGE_KEYS } from "./storage-keys";
 import { tinybaseSyncLocalCacheKey } from "./sync-tinybase-keys";
+import {
+  assertMergeableContent,
+  restoreUndefinedPaths,
+  undefinedPaths,
+} from "./sync-document-json";
 
 const TINYBASE_SYNC_DOCUMENT_PREFIX = "OpenBrowserAgentTinyBaseSync:";
-const TINYBASE_SYNC_DOCUMENT_FORMAT = "openbrowseragent.tinybase-sync.v1";
+// Older readers must reject v2 rather than silently turn its tombstones into
+// null data. Existing v1 documents remain readable without speculative repair.
+const TINYBASE_SYNC_DOCUMENT_FORMAT = "openbrowseragent.tinybase-sync.v2";
+const LEGACY_TINYBASE_SYNC_DOCUMENT_FORMAT =
+  "openbrowseragent.tinybase-sync.v1";
 const ORDER_CELL = "__openBrowserAgentSyncOrder";
 
 type TinyBaseSyncDocument = {
-  format: typeof TINYBASE_SYNC_DOCUMENT_FORMAT;
+  format:
+    | typeof TINYBASE_SYNC_DOCUMENT_FORMAT
+    | typeof LEGACY_TINYBASE_SYNC_DOCUMENT_FORMAT;
   content: unknown;
+  undefinedPaths?: Array<Array<string | number>>;
 };
 
 type SyncStore = ReturnType<typeof createMergeableStore>;
@@ -27,11 +39,27 @@ export async function readTinyBaseSyncValue<T>(
     return undefined;
   }
 
+  return (await mergeTinyBaseSyncValue<T>(key, remoteBytes)).value;
+}
+
+// Merge an already-stamped local edit on a transport retry. Applying the user's
+// snapshot again would give stale fields new timestamps and undo remote edits.
+export async function mergeTinyBaseSyncValue<T>(
+  key: string,
+  remoteBytes: Uint8Array,
+) {
+  const localBytes = await readLocalTinyBaseSyncBytes(key);
   const remoteStore = decodeStore(key, remoteBytes);
-  const localStore = await readLocalTinyBaseSyncDocument(key);
-  const store = localStore ? localStore.merge(remoteStore) : remoteStore;
-  await writeLocalTinyBaseSyncDocument(key, store);
-  return valueFromStore<T>(key, store);
+  if (localBytes && sameBytes(localBytes, remoteBytes))
+    return { bytes: remoteBytes, value: valueFromStore<T>(key, remoteStore) };
+
+  const store = localBytes
+    ? decodeStore(key, localBytes).merge(remoteStore)
+    : remoteStore;
+  const bytes = localBytes ? encodeStore(store) : remoteBytes;
+  if (!localBytes || !sameBytes(localBytes, bytes))
+    await writeLocalTinyBaseSyncBytes(key, bytes);
+  return { bytes, value: valueFromStore<T>(key, store) };
 }
 
 export function decodeTinyBaseSyncValue<T>(key: string, bytes: Uint8Array) {
@@ -43,12 +71,16 @@ export async function writeTinyBaseSyncValue<T>(
   value: T,
   remoteBytes: Uint8Array | undefined,
 ) {
-  const store =
-    (await readLocalTinyBaseSyncDocument(key)) || createMergeableStore(key);
+  const localBytes = await readLocalTinyBaseSyncBytes(key);
+  const store = localBytes
+    ? decodeStore(key, localBytes)
+    : createMergeableStore();
   setStoreValue(store, key, value);
   if (remoteBytes) store.merge(decodeStore(key, remoteBytes));
-  await writeLocalTinyBaseSyncDocument(key, store);
-  return { bytes: encodeStore(store), value: valueFromStore<T>(key, store) };
+  const bytes = encodeStore(store);
+  if (!localBytes || !sameBytes(localBytes, bytes))
+    await writeLocalTinyBaseSyncBytes(key, bytes);
+  return { bytes, value: valueFromStore<T>(key, store) };
 }
 
 export async function removeLocalTinyBaseSyncDocument(key: string) {
@@ -71,25 +103,36 @@ export function base64ToBytes(value: string) {
   return bytes;
 }
 
-async function readLocalTinyBaseSyncDocument(key: string) {
+async function readLocalTinyBaseSyncBytes(key: string) {
   const result = await getBrowserApi().storage.local.get(
     tinybaseSyncLocalCacheKey(key),
   );
   const encoded = result[tinybaseSyncLocalCacheKey(key)] as string | undefined;
-  return encoded ? decodeStore(key, base64ToBytes(encoded)) : undefined;
+  return encoded ? base64ToBytes(encoded) : undefined;
 }
 
-async function writeLocalTinyBaseSyncDocument(key: string, store: SyncStore) {
+async function writeLocalTinyBaseSyncBytes(key: string, bytes: Uint8Array) {
   await getBrowserApi().storage.local.set({
-    [tinybaseSyncLocalCacheKey(key)]: bytesToBase64(encodeStore(store)),
+    [tinybaseSyncLocalCacheKey(key)]: bytesToBase64(bytes),
   });
 }
 
+function sameBytes(left: Uint8Array, right: Uint8Array) {
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index++) {
+    if (left[index] !== right[index]) return false;
+  }
+  return true;
+}
+
 function encodeStore(store: SyncStore) {
+  const content = store.getMergeableContent();
+  const paths = undefinedPaths(content);
   return encoder.encode(
     `${TINYBASE_SYNC_DOCUMENT_PREFIX}${JSON.stringify({
       format: TINYBASE_SYNC_DOCUMENT_FORMAT,
-      content: store.getMergeableContent(),
+      content,
+      ...(paths.length ? { undefinedPaths: paths } : {}),
     } satisfies TinyBaseSyncDocument)}`,
   );
 }
@@ -101,27 +144,48 @@ function decodeStore(key: string, bytes: Uint8Array) {
   const document = JSON.parse(
     text.slice(TINYBASE_SYNC_DOCUMENT_PREFIX.length),
   ) as Partial<TinyBaseSyncDocument>;
-  if (document.format !== TINYBASE_SYNC_DOCUMENT_FORMAT)
+  if (
+    document.format !== TINYBASE_SYNC_DOCUMENT_FORMAT &&
+    document.format !== LEGACY_TINYBASE_SYNC_DOCUMENT_FORMAT
+  )
     throw new Error(`Unsupported TinyBase sync document for ${key}.`);
-  return createMergeableStore(key).setMergeableContent(
+  restoreUndefinedPaths(document.content, document.undefinedPaths);
+  assertMergeableContent(document.content);
+  // A document/cache key is shared by replicas. Let TinyBase generate a unique
+  // writer identity so simultaneous changes have a deterministic tie-breaker.
+  return createMergeableStore().setMergeableContent(
     document.content as Parameters<SyncStore["setMergeableContent"]>[0],
   );
 }
 
 function setStoreValue<T>(store: SyncStore, key: string, value: T) {
-  if (key === STORAGE_KEYS.chats && Array.isArray(value)) {
-    store.setTables(tablesFromChats(value as Array<Record<string, unknown>>));
-    store.setValues({ kind: "chats" });
-    return;
+  const chats = key === STORAGE_KEYS.chats && Array.isArray(value);
+  const tables = chats
+    ? tablesFromChats(value as Array<Record<string, unknown>>)
+    : tablesFromValue(value);
+  // An empty entry can later gain fields through a merge. Its presence cell
+  // remains part of that retained row's identity; dropping it on an unrelated
+  // rewrite would defeat a concurrent clear. Do not add it to unmarked legacy
+  // rows, or retain it for rows absent from the requested snapshot.
+  if (tables && !Array.isArray(value)) {
+    for (const [id, row] of Object.entries(tables.items)) {
+      const presence = store.getCell("items", id, ORDER_CELL);
+      if (presence !== undefined) row[ORDER_CELL] = presence;
+    }
   }
-  const tables = tablesFromValue(value);
-  if (tables) {
-    store.setTables(tables);
-    store.setValues({ kind: Array.isArray(value) ? "array" : "record" });
-    return;
-  }
-  store.setTables({});
-  store.setValues({ kind: "scalar", value: toCellValue(value) });
+  // setTables rejects a snapshot with no cells, leaving old rows intact.
+  // Omit empty tables so setContent uses TinyBase's deletion operation when
+  // the snapshot is empty, preserving tombstones and unchanged-cell stamps.
+  store.setContent([
+    Object.fromEntries(
+      Object.entries(tables || {}).filter(
+        ([, table]) => Object.keys(table).length,
+      ),
+    ),
+    tables
+      ? { kind: chats ? "chats" : Array.isArray(value) ? "array" : "record" }
+      : { kind: "scalar", value: toCellValue(value) },
+  ]);
 }
 
 function valueFromStore<T>(key: string, store: SyncStore) {
@@ -231,6 +295,7 @@ function recordFromTable(table: Tables[string]) {
   return Object.fromEntries(
     Object.entries(table || {}).map(([id, row]) => {
       const cleanRow = stripInternalCells(row);
+      if (!Object.keys(cleanRow).length) return [id, {}];
       const { id: _id, value, ...rest } = cleanRow;
       return [id, Object.keys(rest).length ? cleanRow : value];
     }),
@@ -238,11 +303,14 @@ function recordFromTable(table: Tables[string]) {
 }
 
 function rowFromRecord(value: Record<string, unknown>) {
-  return Object.fromEntries(
+  const row = Object.fromEntries(
     Object.entries(value)
       .filter(([, cell]) => cell !== undefined)
       .map(([key, cell]) => [key, toCellValue(cell)]),
   );
+  // TinyBase drops empty rows. Reuse the internal cell already stripped from
+  // array rows to retain an empty object, without restamping populated records.
+  return Object.keys(row).length ? row : withOrder(row, 0);
 }
 
 function toCellValue(value: unknown): Cell {

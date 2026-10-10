@@ -20,11 +20,15 @@ import {
 import { readSyncLocalValue } from "./storage-sync-cache";
 import { STORAGE_KEYS } from "./storage-keys";
 import type { Chat, UploadedAttachment } from "./types";
+import { bytesToBase64, base64ToBytes } from "./binary";
+import {
+  putAttachment,
+  getAttachment,
+  deleteAttachment as removeLocalChatAttachment,
+} from "./attachment-db";
 
 const CHAT_ATTACHMENT_ROOT = "attachments";
 const CHAT_ATTACHMENT_PREFIX = "chat-attachment";
-const CHAT_ATTACHMENT_DB = "openbrowseragent-chat-attachments";
-const CHAT_ATTACHMENT_STORE = "attachments";
 const offloadedInlineAttachmentWrites = new Map<string, Promise<void>>();
 
 type SyncedChatAttachmentMetadata = Omit<
@@ -43,24 +47,30 @@ export async function writeSyncedChatAttachments({
   chatId,
   messageId,
   attachments,
+  signal,
 }: {
   syncDataSettings?: SyncDataSettings;
   chatId: string;
   messageId: string;
   attachments: UploadedAttachment[];
+  signal?: AbortSignal;
 }) {
+  signal?.throwIfAborted();
   if (!attachments.length) return;
   await Promise.all(
     attachments.map((attachment) =>
-      writeLocalChatAttachment({ chatId, messageId, attachment }),
+      writeLocalChatAttachment({ chatId, messageId, attachment, signal }),
     ),
   );
+  signal?.throwIfAborted();
   void syncRemoteChatAttachments({
     syncDataSettings,
     chatId,
     messageId,
     attachments,
+    signal,
   }).catch((error) => {
+    if (signal?.aborted) return;
     console.warn("Failed to sync chat attachments", error);
   });
 }
@@ -70,13 +80,16 @@ async function syncRemoteChatAttachments({
   chatId,
   messageId,
   attachments,
+  signal,
 }: {
   syncDataSettings?: SyncDataSettings;
   chatId: string;
   messageId: string;
   attachments: UploadedAttachment[];
+  signal?: AbortSignal;
 }) {
   const backend = await activeAttachmentBackend(syncDataSettings);
+  signal?.throwIfAborted();
   if (!backend) return;
   await Promise.all(
     attachments.map((attachment) =>
@@ -85,6 +98,7 @@ async function syncRemoteChatAttachments({
         chatId,
         messageId,
         attachment,
+        signal,
       }),
     ),
   );
@@ -93,15 +107,20 @@ async function syncRemoteChatAttachments({
 export async function readSyncedChatAttachment(
   syncDataSettings: SyncDataSettings | undefined,
   attachmentId: string,
+  signal?: AbortSignal,
 ) {
-  const local = await readLocalChatAttachment(attachmentId);
+  const local = await readLocalChatAttachment(attachmentId, signal);
+  signal?.throwIfAborted();
   if (local) return local;
   const backend = await activeAttachmentBackend(syncDataSettings);
+  signal?.throwIfAborted();
   if (!backend) return undefined;
   const metadataBytes = await readSyncBackendObject(
     backend,
     metadataObjectName(attachmentId),
+    signal,
   );
+  signal?.throwIfAborted();
   if (!metadataBytes) return undefined;
   const metadata = JSON.parse(
     new TextDecoder().decode(metadataBytes),
@@ -109,7 +128,9 @@ export async function readSyncedChatAttachment(
   const contentBytes = await readSyncBackendObject(
     backend,
     metadata.objectName,
+    signal,
   );
+  signal?.throwIfAborted();
   if (!contentBytes) return metadata;
   return attachmentFromBytes(metadata, contentBytes);
 }
@@ -125,7 +146,7 @@ export async function removeSyncedChatAttachments(
   );
   if (!attachmentIds.length) return;
   attachmentIds.forEach((id) => offloadedInlineAttachmentWrites.delete(id));
-  await Promise.all(attachmentIds.map(removeLocalChatAttachment));
+  await Promise.all(attachmentIds.map((id) => removeLocalChatAttachment(id)));
   const backend = await activeAttachmentBackend(syncDataSettings);
   if (!backend) return;
   await Promise.all(
@@ -176,12 +197,15 @@ async function writeRemoteChatAttachment({
   chatId,
   messageId,
   attachment,
+  signal,
 }: {
   backend: SyncBackend;
   chatId: string;
   messageId: string;
   attachment: UploadedAttachment;
+  signal?: AbortSignal;
 }) {
+  signal?.throwIfAborted();
   const objectName = attachmentObjectName(attachment);
   const metadata: SyncedChatAttachmentMetadata = {
     id: attachment.id,
@@ -200,24 +224,32 @@ async function writeRemoteChatAttachment({
     objectName,
     attachmentBytes(attachment),
     attachment.type || "application/octet-stream",
+    signal,
   );
+  signal?.throwIfAborted();
   await writeSyncBackendObject(
     backend,
     metadataObjectName(attachment.id),
     new TextEncoder().encode(JSON.stringify(metadata, null, 2)),
     "application/json",
+    signal,
   );
-  await removeLocalChatAttachment(attachment.id);
+  signal?.throwIfAborted();
+  // Uploads are replicas, not owners of local availability. Retain local bytes
+  // until explicit removal: routes and same-ID contents can change while remote
+  // I/O is pending, or after it completes, without making this copy dispensable.
 }
 
 async function writeLocalChatAttachment({
   chatId,
   messageId,
   attachment,
+  signal,
 }: {
   chatId: string;
   messageId: string;
   attachment: UploadedAttachment;
+  signal?: AbortSignal;
 }) {
   const metadata = {
     ...toAttachmentMetadata(attachment),
@@ -226,25 +258,24 @@ async function writeLocalChatAttachment({
     messageId,
     createdAt: Date.now(),
   };
-  const db = await openAttachmentDb();
-  await putInStore(db, {
-    id: attachment.id,
-    metadata,
-    content: attachmentBytes(attachment),
-  });
+  await putAttachment(
+    {
+      id: attachment.id,
+      metadata,
+      content: attachmentBytes(attachment),
+    },
+    signal,
+  );
 }
 
-async function readLocalChatAttachment(attachmentId: string) {
-  const db = await openAttachmentDb();
-  const record = await getFromStore(db, attachmentId);
+async function readLocalChatAttachment(
+  attachmentId: string,
+  signal?: AbortSignal,
+) {
+  const record = await getAttachment(attachmentId, signal);
   if (!record) return undefined;
   const metadata = record.metadata as SyncedChatAttachmentMetadata;
   return attachmentFromBytes(metadata, record.content);
-}
-
-async function removeLocalChatAttachment(attachmentId: string) {
-  const db = await openAttachmentDb();
-  await deleteFromStore(db, attachmentId);
 }
 
 function offloadInlineRecord({
@@ -264,8 +295,7 @@ function offloadInlineRecord({
   const record = value as Record<string, unknown>;
   const image = typeof record.image === "string" ? record.image : "";
   const visionImage = record._visionImage as
-    | { dataUrl?: unknown; type?: unknown }
-    | undefined;
+    { dataUrl?: unknown; type?: unknown } | undefined;
   const dataUrl = dataImageUrl(image) || dataImageUrl(visionImage?.dataUrl);
   if (!dataUrl) return value;
   const type =
@@ -373,8 +403,7 @@ async function currentSyncDataSettings(fallback: SyncDataSettings | undefined) {
     STORAGE_KEYS.syncDataSettings,
   );
   const value = result[STORAGE_KEYS.syncDataSettings] as
-    | Partial<SyncDataSettings>
-    | undefined;
+    Partial<SyncDataSettings> | undefined;
   return value ? mergeSyncDataSettings(value) : fallback;
 }
 
@@ -455,85 +484,11 @@ function bytesToDataUrl(bytes: Uint8Array, type: string) {
   return `data:${type || "application/octet-stream"};base64,${bytesToBase64(bytes)}`;
 }
 
-function base64ToBytes(value: string) {
-  const binary = atob(value);
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1)
-    bytes[index] = binary.charCodeAt(index);
-  return bytes;
-}
-
-function bytesToBase64(bytes: Uint8Array) {
-  let binary = "";
-  for (let index = 0; index < bytes.length; index += 0x8000) {
-    binary += String.fromCharCode(...bytes.slice(index, index + 0x8000));
-  }
-  return btoa(binary);
-}
-
 function metadataObjectName(attachmentId: string) {
   return `${CHAT_ATTACHMENT_ROOT}/${CHAT_ATTACHMENT_PREFIX}-${attachmentId}.json`;
 }
 
 function attachmentObjectName(attachment: UploadedAttachment) {
   const safeName = attachment.name.replace(/[^a-z0-9._-]+/gi, "_") || "file";
-  return `${CHAT_ATTACHMENT_ROOT}/${currentMonthFolder()}/${CHAT_ATTACHMENT_PREFIX}-${attachment.id}-${safeName}`;
-}
-
-function currentMonthFolder() {
-  return new Date().toISOString().slice(0, 7);
-}
-
-type StoredAttachmentRecord = {
-  id: string;
-  metadata: Record<string, unknown>;
-  content: Uint8Array;
-};
-
-function openAttachmentDb() {
-  return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open(CHAT_ATTACHMENT_DB, 1);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(CHAT_ATTACHMENT_STORE))
-        db.createObjectStore(CHAT_ATTACHMENT_STORE, { keyPath: "id" });
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-function putInStore(db: IDBDatabase, record: StoredAttachmentRecord) {
-  return storeRequest(db, "readwrite", (store) => store.put(record));
-}
-
-function getFromStore(db: IDBDatabase, id: string) {
-  return storeRequest<StoredAttachmentRecord | undefined>(
-    db,
-    "readonly",
-    (store) => store.get(id),
-  );
-}
-
-function deleteFromStore(db: IDBDatabase, id: string) {
-  return storeRequest(db, "readwrite", (store) => store.delete(id));
-}
-
-function storeRequest<T = void>(
-  db: IDBDatabase,
-  mode: IDBTransactionMode,
-  run: (store: IDBObjectStore) => IDBRequest,
-) {
-  return new Promise<T>((resolve, reject) => {
-    const transaction = db.transaction(CHAT_ATTACHMENT_STORE, mode);
-    const request = run(transaction.objectStore(CHAT_ATTACHMENT_STORE));
-    let result: T;
-    request.onsuccess = () => {
-      result = request.result as T;
-    };
-    request.onerror = () => reject(request.error);
-    transaction.oncomplete = () => resolve(result);
-    transaction.onerror = () => reject(transaction.error || request.error);
-    transaction.onabort = () => reject(transaction.error || request.error);
-  });
+  return `${CHAT_ATTACHMENT_ROOT}/${new Date().toISOString().slice(0, 7)}/${CHAT_ATTACHMENT_PREFIX}-${attachment.id}-${safeName}`;
 }

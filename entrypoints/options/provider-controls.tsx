@@ -26,6 +26,7 @@ import {
   CommandItem,
   CommandList,
   Input,
+  Feedback,
   Label,
   Popover,
   PopoverContent,
@@ -309,7 +310,8 @@ export function ModelList({
                 {t.options.modelContextLengthDescription}
               </small>
               {testResult?.modelId === model.id && (
-                <small
+                <Feedback
+                  error={!testResult.ok}
                   className={
                     testResult.ok
                       ? "provider-success-text"
@@ -317,7 +319,7 @@ export function ModelList({
                   }
                 >
                   {testResult.message}
-                </small>
+                </Feedback>
               )}
             </div>
           </AccordionContent>
