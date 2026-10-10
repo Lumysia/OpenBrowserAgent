@@ -185,6 +185,12 @@ function runCommand(message) {
       error: formatSpawnError(error, shell.command),
     });
   });
+  // Shell completion bounds the command's lifetime, including background work
+  // that inherited its process group. Start cleanup on exit, not close: a child
+  // may still hold stdout/stderr open after the shell has exited.
+  child.on("exit", () => {
+    if (process.platform !== "win32") cancelTask(taskId, "completed");
+  });
   child.on("close", async (code, signal) => {
     clearTimeout(task.timer);
     if (task.spawnFailed) return;
@@ -241,7 +247,11 @@ function cancelTask(taskId, reason = "canceled") {
     writeMessage({ type: "status", event: "missing", taskId });
     return;
   }
-  if (task.stopping) return task.stopping;
+  if (task.stopping) {
+    if (task.stopReason === "completed" && reason !== "completed")
+      task.stopReason = reason;
+    return task.stopping;
+  }
   clearTimeout(task.timer);
   task.stopReason = reason;
   task.stopping = terminateProcessTree(task.child).catch((error) => {
@@ -253,6 +263,7 @@ function cancelTask(taskId, reason = "canceled") {
 
 // Keep the installed host self-contained. POSIX groups retain ownership of
 // descendants after the shell exits; already committed effects are not undone.
+// This does not contain descendants that deliberately leave the process group.
 async function terminateProcessTree(child) {
   if (!child.pid) return;
   if (process.platform === "win32") {
@@ -274,11 +285,13 @@ async function terminateProcessTree(child) {
   const kill = (signal) => {
     try {
       process.kill(-child.pid, signal);
+      return true;
     } catch (error) {
       if (error.code !== "ESRCH") throw error;
+      return false;
     }
   };
-  kill("SIGTERM");
+  if (!kill("SIGTERM")) return;
   await new Promise((resolve) => setTimeout(resolve, 500));
   kill("SIGKILL");
 }

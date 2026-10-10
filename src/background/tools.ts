@@ -8,6 +8,7 @@ import {
   TAB_LOAD_WAIT_TIMEOUT_MS,
 } from "../shared/config";
 import { BROWSER_TOOL_NAME, UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
+import { openDefaultSearchTab } from "./browser-search";
 import {
   getActiveBrowserTab,
   isScriptableUrl,
@@ -284,6 +285,11 @@ async function groupManagedTabs(
   signal?: AbortSignal,
 ) {
   const api = getBrowserApi();
+  if (!api.tabs.group || !api.tabGroups?.update)
+    return {
+      success: false,
+      error: "Tab groups are unavailable in this browser.",
+    };
   const tabIds = Array.isArray(args.tabIds)
     ? args.tabIds.map(Number).filter(Number.isFinite)
     : [];
@@ -396,21 +402,6 @@ async function extractMarkdown(tabId: number) {
       `# ${document.title}\n\nURL: ${location.href}\n\n${document.body?.innerText || ""}`,
   });
   return String(result.result || "");
-}
-
-async function openDefaultSearchTab(query: string, signal?: AbortSignal) {
-  const api = getBrowserApi();
-  const beforeTabs = await api.tabs.query({});
-  const beforeIds = new Set(beforeTabs.map((tab) => tab.id).filter(Boolean));
-  signal?.throwIfAborted();
-  await api.search.query({ text: query, disposition: "NEW_TAB" });
-  signal?.throwIfAborted();
-  const afterTabs = await api.tabs.query({});
-  return (
-    afterTabs.find((tab) => tab.id && !beforeIds.has(tab.id)) ||
-    afterTabs.find((tab) => tab.active) ||
-    null
-  );
 }
 
 async function waitTabComplete(tabId: number, signal?: AbortSignal) {

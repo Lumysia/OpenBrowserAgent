@@ -39,7 +39,7 @@ export default defineConfig({
       browser === "safari"
         ? [...permissions]
         : browser === "firefox"
-          ? [...permissions, ...nativeMessagingPermissions]
+          ? [...permissions, ...nativeMessagingPermissions, "search"]
           : [
               ...permissions,
               ...nativeMessagingPermissions,

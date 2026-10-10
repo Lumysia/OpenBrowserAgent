@@ -4,7 +4,7 @@ OpenBrowserAgent is currently installed from a source build. The default build t
 
 ## Requirements
 
-- Node.js and npm.
+- Node.js 22.19.0 or later in the 22.x line, or Node.js 24 or newer, and npm. Prefer a supported LTS release.
 - A Chromium-based browser for the default Chrome MV3 build.
 - Optional: Firefox for the Firefox build target.
 - Optional: Safari and Xcode for loading or packaging the Safari MV2 build.
@@ -89,6 +89,10 @@ The unpacked Safari extension is generated under:
 ```
 
 Safari does not support Chrome's `sidePanel` manifest entry in this target. In Safari-compatible builds, clicking the extension action opens or focuses `sidepanel.html` as an extension tab instead.
+
+Firefox uses its native sidebar. DOM scripting, tab navigation, downloads, default-engine search, and the separately installed Native Messaging bridge use Firefox extension APIs. CDP tools require Chromium's `debugger` API and are unavailable in Firefox and Safari. Tab grouping requires a browser exposing the tab-group APIs. Safari has no default-engine search integration or local execution bridge in this project; its output still needs conversion and validation with Safari/Xcode on macOS.
+
+For local execution bridge installation, lifecycle behavior, and browser-specific registration targets, see the [bridge guide](../packages/local-execution-bridge/README.md). Flatpak and Snap registration paths do not by themselves grant the sandbox access to host executables.
 
 ## Zip Package
 
