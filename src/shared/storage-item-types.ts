@@ -1,5 +1,11 @@
 import type { AreaName } from "./storage-areas";
 
+export type StorageItemIo = {
+  readStoredValue<T>(area: AreaName, key: string): Promise<T | undefined>;
+  setStoredValue<T>(area: AreaName, key: string, value: T): Promise<void>;
+  removeStoredValue(area: AreaName, key: string): Promise<void>;
+};
+
 export type StorageItem<T> = {
   key: string;
   area: AreaName;

@@ -81,6 +81,29 @@ async function assertProviders(backend: SyncBackend, expected: ProviderState) {
   );
 }
 
+for (const drain of ["queue", "refresh"] as const) {
+  test(`final-provider deletion stays empty through ${drain} and subsequent remote refresh`, async () => {
+    const { local, backend } = fixture();
+    await storage.provider.set(providers("only"));
+    await flushPendingSyncWrites();
+    await storage.provider.set(providers());
+    assert.deepEqual(await storage.provider.get(), {});
+    assert.equal(
+      (
+        local.data[syncLocalCacheKey(STORAGE_KEYS.provider)] as {
+          flushedAt?: number;
+        }
+      ).flushedAt,
+      undefined,
+    );
+    if (drain === "queue") await flushPendingSyncWrites();
+    else await refreshSyncFromRemote(await storage.syncDataSettings.get());
+    await assertProviders(backend, {});
+    await flushPendingSyncWrites();
+    assert.deepEqual(await storage.provider.get(), {});
+  });
+}
+
 for (const edit of ["add", "delete"] as const) {
   test(`queued sync v2 snapshot cannot undo disable/re-enable with local ${edit}`, async () => {
     const { backend } = fixture();

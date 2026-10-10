@@ -1,6 +1,11 @@
 import { getBrowserApi } from "./browser-api";
 import { effectiveArea, STORAGE_AREAS, type AreaName } from "./storage-areas";
-import type { StorageItem, StorageItemOptions } from "./storage-item-types";
+import type {
+  StorageItem,
+  StorageItemOptions,
+  StorageItemIo,
+} from "./storage-item-types";
+import { createStorageItemValue } from "./storage-item-value";
 import {
   markSyncLocalCacheFlushed,
   readSyncLocalCache,
@@ -8,18 +13,9 @@ import {
   syncLocalCacheKey,
   type SyncLocalCache,
 } from "./storage-sync-cache";
-import {
-  isBackendStorageChange,
-  watchRemoteValue,
-} from "./storage-remote-watch";
+import { watchRemoteValue } from "./storage-remote-watch";
 import { STORAGE_KEYS } from "./storage-keys";
 import { withStorageMutationLock } from "./storage-lock";
-
-type StorageItemIo = {
-  readStoredValue<T>(area: AreaName, key: string): Promise<T | undefined>;
-  setStoredValue<T>(area: AreaName, key: string, value: T): Promise<void>;
-  removeStoredValue(area: AreaName, key: string): Promise<void>;
-};
 
 export function makeStorageItemFactory(io: StorageItemIo) {
   function createItem<T>(
@@ -28,37 +24,23 @@ export function makeStorageItemFactory(io: StorageItemIo) {
     init: () => T,
     normalize?: (value: T) => T,
     options: StorageItemOptions = {},
+    fallbackArea?: AreaName,
   ): StorageItem<T> {
     const storageKey = key;
+    const values = createStorageItemValue({
+      key,
+      init,
+      normalize,
+      activeArea: () => effectiveArea(area),
+      readStoredValue: io.readStoredValue,
+      fallbackArea: () => fallbackArea,
+    });
     return {
       key: storageKey,
       area,
       persistDebounceMs: options.persistDebounceMs,
       snapshot: options.snapshot,
-      async get() {
-        const activeArea = await effectiveArea(area);
-        const expected =
-          activeArea === STORAGE_AREAS.sync
-            ? await readSyncLocalCache<T>(storageKey)
-            : undefined;
-        if (expected && expected.flushedAt === undefined)
-          return expected.removed ? init() : expected.value;
-        const storedValue = await io.readStoredValue<T>(area, storageKey);
-        if (storedValue === undefined) {
-          const initialValue = init();
-          if (activeArea === STORAGE_AREAS.sync)
-            await markSyncLocalCacheFlushed(storageKey, initialValue, {
-              expected,
-            });
-          return initialValue;
-        }
-        const value = normalize
-          ? normalize(storedValue as T)
-          : (storedValue as T);
-        if (activeArea === STORAGE_AREAS.sync)
-          await markSyncLocalCacheFlushed(storageKey, value, { expected });
-        return value;
-      },
+      get: () => values.read(),
       async set(value) {
         await withStorageMutationLock(() =>
           io.setStoredValue(
@@ -73,12 +55,21 @@ export function makeStorageItemFactory(io: StorageItemIo) {
           io.removeStoredValue(area, storageKey),
         );
       },
-      watch(callback) {
+      watch(onChange) {
+        const observer = values.watch(onChange);
         const unwatchRemote =
           area === STORAGE_AREAS.sync
             ? watchRemoteValue<T>(storageKey, async (change, backendId) => {
+                const notify = observer.begin();
+                if ((await effectiveArea(area)) !== STORAGE_AREAS.sync) {
+                  await notify();
+                  return;
+                }
                 const expected = await readSyncLocalCache<T>(storageKey);
-                if (expected && expected.flushedAt === undefined) return;
+                if (expected && expected.flushedAt === undefined) {
+                  await notify();
+                  return;
+                }
                 let published: boolean;
                 if (change.newValue !== undefined) {
                   published = await markSyncLocalCacheFlushed(
@@ -92,30 +83,36 @@ export function makeStorageItemFactory(io: StorageItemIo) {
                     backendId,
                   });
                 }
-                if (published)
-                  callback(change.newValue as T, change.oldValue as T);
+                await notify(
+                  published ? change.newValue : undefined,
+                  change.oldValue,
+                );
               })
             : undefined;
         const listener = async (
           changes: Record<string, chrome.storage.StorageChange>,
           changedArea: string,
         ) => {
+          if (changedArea !== STORAGE_AREAS.local) return;
+          if (
+            !changes[storageKey] &&
+            !(
+              area === STORAGE_AREAS.sync &&
+              (changes[syncLocalCacheKey(storageKey)] ||
+                changes[STORAGE_KEYS.activeSyncBackendId])
+            )
+          )
+            return;
+          const notify = observer.begin();
           if (
             area === STORAGE_AREAS.sync &&
             changedArea === STORAGE_AREAS.local &&
             changes[STORAGE_KEYS.activeSyncBackendId]
           ) {
-            const next = await io.readStoredValue<T>(area, storageKey);
-            if (next !== undefined)
-              callback(normalize ? normalize(next) : next, next as T);
+            await notify();
             return;
           }
           const watchArea = await effectiveArea(area);
-          if (
-            watchArea === STORAGE_AREAS.sync &&
-            isBackendStorageChange(storageKey, changedArea)
-          )
-            return;
           if (
             watchArea === STORAGE_AREAS.sync &&
             changedArea === STORAGE_AREAS.local &&
@@ -125,21 +122,25 @@ export function makeStorageItemFactory(io: StorageItemIo) {
               SyncLocalCache<T> | undefined;
             const previous = changes[syncLocalCacheKey(storageKey)].oldValue as
               SyncLocalCache<T> | undefined;
-            if (!next) {
-              callback(undefined as T, previous?.value as T);
-              return;
-            }
-            callback(next.value, previous?.value as T);
+            await notify(
+              next?.value,
+              previous?.value,
+              previous?.removed === true && previous.flushedAt === undefined,
+            );
             return;
           }
-          if (changedArea !== watchArea || !changes[storageKey]) return;
-          callback(
+          if (changedArea !== watchArea || !changes[storageKey]) {
+            await notify();
+            return;
+          }
+          await notify(
             changes[storageKey].newValue as T,
             changes[storageKey].oldValue as T,
           );
         };
         getBrowserApi().storage.onChanged.addListener(listener);
         return () => {
+          observer.dispose();
           unwatchRemote?.();
           getBrowserApi().storage.onChanged.removeListener(listener);
         };
@@ -154,37 +155,7 @@ export function makeStorageItemFactory(io: StorageItemIo) {
     init: () => T,
     merge?: (value: T) => T,
   ): StorageItem<T> {
-    const item = createItem(area, key, init);
-    return {
-      ...item,
-      async get() {
-        const activeArea = await effectiveArea(area);
-        const expected =
-          activeArea === STORAGE_AREAS.sync
-            ? await readSyncLocalCache<T>(key)
-            : undefined;
-        if (expected && expected.flushedAt === undefined)
-          return expected.removed
-            ? init()
-            : merge
-              ? merge(expected.value)
-              : expected.value;
-        const storedValue = await io.readStoredValue<T>(area, key);
-        if (storedValue !== undefined) {
-          const value = merge ? merge(storedValue as T) : (storedValue as T);
-          if (activeArea === STORAGE_AREAS.sync)
-            await markSyncLocalCacheFlushed(key, value, { expected });
-          return value;
-        }
-
-        const fallback = await io.readStoredValue<T>(fallbackArea, key);
-        const initialValue = fallback === undefined ? init() : fallback;
-        const value = merge ? merge(initialValue) : initialValue;
-        if (activeArea === STORAGE_AREAS.sync)
-          await markSyncLocalCacheFlushed(key, value, { expected });
-        return value;
-      },
-    };
+    return createItem(area, key, init, merge, {}, fallbackArea);
   }
 
   return { createItem, createMigratedItem };
