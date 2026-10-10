@@ -66,8 +66,7 @@ type SyncBackendRuntimeRequest = {
 };
 
 type SyncBackendRuntimeResponse<T = unknown> =
-  | { ok: true; value?: T }
-  | { ok: false; error: string };
+  { ok: true; value?: T } | { ok: false; error: string };
 
 export type SyncBackendImpl = {
   createSyncBackend: (backendConfig: SyncBackendConfig) => SyncBackend;
@@ -79,12 +78,14 @@ export type SyncBackendImpl = {
   readWebDavObject: (
     backendConfig: WebDavSyncBackendConfig,
     objectName: string,
+    signal?: AbortSignal,
   ) => Promise<Uint8Array | undefined>;
   writeWebDavObject: (
     backendConfig: WebDavSyncBackendConfig,
     objectName: string,
     bytes: Uint8Array,
     contentType?: string,
+    signal?: AbortSignal,
   ) => Promise<void>;
   removeWebDavObject: (
     backendConfig: WebDavSyncBackendConfig,
@@ -116,8 +117,7 @@ export async function getStoredSyncBackends() {
   const api = getBrowserApi();
   const result = await api.storage.local.get(STORAGE_KEYS.syncBackends);
   const backends = result[STORAGE_KEYS.syncBackends] as
-    | SyncBackendConfig[]
-    | undefined;
+    SyncBackendConfig[] | undefined;
   return normalizeSyncBackends(backends);
 }
 
@@ -157,9 +157,11 @@ export function syncBackendSupportsChatAttachments(
 export async function readSyncBackendObject(
   backend: SyncBackend,
   objectName: string,
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
   if (isWebDavConfig(backend.config))
-    return readWebDavObject(backend.config, objectName);
+    return readWebDavObject(backend.config, objectName, signal);
   throw new Error(
     `Sync backend does not support attachment objects: ${backend.config.type}`,
   );
@@ -170,9 +172,17 @@ export async function writeSyncBackendObject(
   objectName: string,
   bytes: Uint8Array,
   contentType: string,
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
   if (isWebDavConfig(backend.config))
-    return writeWebDavObject(backend.config, objectName, bytes, contentType);
+    return writeWebDavObject(
+      backend.config,
+      objectName,
+      bytes,
+      contentType,
+      signal,
+    );
   throw new Error(
     `Sync backend does not support attachment objects: ${backend.config.type}`,
   );
@@ -192,11 +202,14 @@ export async function removeSyncBackendObject(
 export async function readWebDavObject(
   backendConfig: WebDavSyncBackendConfig,
   objectName: string,
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
   if (isBackgroundContext()) {
     return getBackgroundSyncBackendImpl().readWebDavObject(
       backendConfig,
       objectName,
+      signal,
     );
   }
   const encoded = await sendSyncBackendRequest<string>({
@@ -213,13 +226,16 @@ export async function writeWebDavObject(
   objectName: string,
   bytes: Uint8Array,
   contentType: string,
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
   if (isBackgroundContext()) {
     await getBackgroundSyncBackendImpl().writeWebDavObject(
       backendConfig,
       objectName,
       bytes,
       contentType,
+      signal,
     );
     return;
   }
@@ -368,8 +384,7 @@ async function createSyncBackendImpl(backendConfig: SyncBackendConfig) {
 
 async function sendSyncBackendRequest<T>(request: SyncBackendRuntimeRequest) {
   const response = (await getBrowserApi().runtime.sendMessage(request)) as
-    | SyncBackendRuntimeResponse<T>
-    | undefined;
+    SyncBackendRuntimeResponse<T> | undefined;
   if (!response) throw new Error("Sync backend did not return a response.");
   if (!response.ok) throw new Error(response.error);
   return response.value;
