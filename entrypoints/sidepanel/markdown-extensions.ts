@@ -1,8 +1,22 @@
 import katex from "katex";
-import type { TokenizerAndRendererExtension, Tokens } from "marked";
+import type {
+  MarkedExtension,
+  TokenizerAndRendererExtension,
+  Tokens,
+} from "marked";
 import type { ChatSource } from "../../src/shared/types";
 
-export function markdownExtensions(
+// Model HTML is shown as text. Turning off Marked's HTML tokenizers (rather
+// than escaping in the renderer) also stops raw tags such as <kbd> from
+// switching the lexer into raw mode, which let later markup through unescaped.
+export function markdownParserOptions(sources: ChatSource[]): MarkedExtension {
+  return {
+    tokenizer: { html: () => undefined, tag: () => undefined },
+    extensions: markdownExtensions(sources),
+  };
+}
+
+function markdownExtensions(
   sources: ChatSource[],
 ): TokenizerAndRendererExtension[] {
   return [

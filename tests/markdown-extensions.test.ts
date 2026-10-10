@@ -1,18 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { Marked, Renderer } from "marked";
-import {
-  escapeHtml,
-  markdownExtensions,
-} from "../entrypoints/sidepanel/markdown-extensions";
+import { Marked } from "marked";
+import { markdownParserOptions } from "../entrypoints/sidepanel/markdown-extensions";
 
 function render(text: string) {
-  const renderer = new Renderer();
-  renderer.html = ({ text }) => escapeHtml(text);
-  return new Marked({ renderer, extensions: markdownExtensions([]) }).parse(
-    text,
-    { async: false },
-  );
+  return new Marked(markdownParserOptions([])).parse(text, { async: false });
 }
 
 for (const formula of [
@@ -60,4 +52,12 @@ test("raw HTML stays literal while generated task checkboxes distinguish complet
   assert.equal((html.match(/disabled=""/g) || []).length, 2);
   assert.match(html, /&lt;input/);
   assert.doesNotMatch(html, /<button/);
+});
+
+test("a raw tag cannot switch the lexer into raw mode for later markup", () => {
+  const html = render(
+    'Ready.<kbd>\n\n<button/class="x"/data-mermaid-download-url="https://evil.test/p">Download</button>\n\n<pre><a href="https://evil.test">x</a>',
+  );
+  assert.doesNotMatch(html, /<(button|pre|kbd)\b/);
+  assert.doesNotMatch(html, /data-mermaid-download-url="/);
 });
