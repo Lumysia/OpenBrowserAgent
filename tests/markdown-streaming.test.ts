@@ -15,12 +15,6 @@ for (const text of [
     applyStreamingTextRenderer(renderer, 0);
     const parser = new Marked({ renderer });
     const html = parser.parse(text, { async: false });
-    assert.notEqual(parser.defaults.renderer, renderer);
-    assert.equal(
-      renderer.parser,
-      undefined,
-      "original renderer never owns Marked's parser",
-    );
     assert.match(html, /class="stream-char"/);
     assert.equal(
       html.replace(

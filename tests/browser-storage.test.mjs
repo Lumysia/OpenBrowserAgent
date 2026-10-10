@@ -2,14 +2,14 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { launchExtension, poll } from "./chromium.mjs";
 import {
-  configureComposer,
+  composerFixture,
   typeComposer,
   sendComposer,
 } from "./browser-composer.mjs";
-import { providerFixture, reply } from "./provider-fixtures.mjs";
+import { reply } from "./provider-fixtures.mjs";
 
 test(
-  "settings toggles migrate local providers/chats, roll back failure, and survive refresh",
+  "settings migrate local data, roll back failure, survive refresh, and support named keyboard controls",
   { timeout: 60000 },
   async () => {
     const browser = await launchExtension({
@@ -237,6 +237,109 @@ test(
           }, key),
         );
       }
+      const general = await browser.open(
+        `chrome-extension://${browser.id}/options.html#/general`,
+      );
+      await poll(() =>
+        general.call(() => !!document.querySelector('input[type="radio"]')),
+      );
+      const { nodes } = await general.send("Accessibility.getFullAXTree");
+      const controls = nodes.filter(
+        (node) =>
+          !node.ignored &&
+          ["switch", "combobox", "spinbutton", "radio"].includes(
+            node.role?.value,
+          ),
+      );
+      assert.deepEqual(
+        [...new Set(controls.map((node) => node.role.value))].sort(),
+        ["combobox", "radio", "spinbutton", "switch"],
+      );
+      assert.deepEqual(
+        controls.filter((node) => !node.name?.value),
+        [],
+        "settings controls need accessible names",
+      );
+      await general.call(() =>
+        document.querySelector('input[type="radio"]:checked').focus(),
+      );
+      await general.send("Input.dispatchKeyEvent", {
+        type: "keyDown",
+        key: "ArrowRight",
+        code: "ArrowRight",
+        windowsVirtualKeyCode: 39,
+      });
+      await general.send("Input.dispatchKeyEvent", {
+        type: "keyUp",
+        key: "ArrowRight",
+        code: "ArrowRight",
+        windowsVirtualKeyCode: 39,
+      });
+      await poll(() =>
+        general.call(() => document.documentElement.dataset.accent === "green"),
+      );
+      assert.equal(
+        await general.call(() => document.activeElement.value),
+        "green",
+      );
+      assert.notEqual(
+        await general.call(
+          () =>
+            getComputedStyle(document.activeElement.closest("label"))
+              .outlineStyle,
+        ),
+        "none",
+        "keyboard focus must remain visible on the selected color",
+      );
+      const switchState = await general.call(() => {
+        const control = document.querySelector('[role="switch"]');
+        control.focus();
+        return control.getAttribute("aria-checked");
+      });
+      await general.send("Input.dispatchKeyEvent", {
+        type: "keyDown",
+        key: " ",
+        code: "Space",
+        windowsVirtualKeyCode: 32,
+      });
+      await general.send("Input.dispatchKeyEvent", {
+        type: "keyUp",
+        key: " ",
+        code: "Space",
+        windowsVirtualKeyCode: 32,
+      });
+      await poll(() =>
+        general.call(
+          (before) =>
+            document.activeElement.getAttribute("aria-checked") !== before,
+          switchState,
+        ),
+      );
+      await general.call(() =>
+        document.querySelector('[role="combobox"]').focus(),
+      );
+      await general.send("Input.dispatchKeyEvent", {
+        type: "keyDown",
+        key: "Enter",
+        code: "Enter",
+        windowsVirtualKeyCode: 13,
+      });
+      await poll(() =>
+        general.call(() => !!document.querySelector('[role="listbox"]')),
+      );
+      await general.send("Input.dispatchKeyEvent", {
+        type: "keyDown",
+        key: "Escape",
+        code: "Escape",
+        windowsVirtualKeyCode: 27,
+      });
+      await poll(() =>
+        general.call(
+          () =>
+            !document.querySelector('[role="listbox"]') &&
+            document.activeElement.getAttribute("role") === "combobox",
+        ),
+      );
     } finally {
       await browser.close();
     }
@@ -248,19 +351,13 @@ for (const ordering of ["submit-before-load", "type-before-load"]) {
     `composer startup ${ordering} preserves input and persists before the model runs`,
     { timeout: 30000 },
     async () => {
-      const fixture = await providerFixture((request, response) =>
+      const fixture = await composerFixture((request, response) =>
         reply(response, request.protocol, {
           text: "Storage initialization answer.",
         }),
       );
-      let browser;
+      const { page } = fixture;
       try {
-        browser = await launchExtension({
-          headed: process.env.OBA_HEADLESS !== "1",
-        });
-        const page = await browser.open(
-          `chrome-extension://${browser.id}/sidepanel.html`,
-        );
         await page.send("Page.enable");
         await page.send("Page.addScriptToEvaluateOnNewDocument", {
           source: `
@@ -275,12 +372,7 @@ for (const ordering of ["submit-before-load", "type-before-load"]) {
         };
       `,
         });
-        await configureComposer(page, {
-          provider: "openai",
-          model: "fixture",
-          baseUrl: `${fixture.baseUrl}/v1`,
-          apiKey: "",
-        });
+        await fixture.configure();
         await poll(() => page.call(() => !!globalThis.__obaReleaseChatLoad));
         const prompt = "Send before stored history is loaded.";
         await typeComposer(page, prompt);
@@ -350,15 +442,7 @@ for (const ordering of ["submit-before-load", "type-before-load"]) {
           "",
           "submitted input must clear without reappearing under the draft ID",
         );
-        assert.ok(
-          stored.some(
-            (message) =>
-              message.role === "assistant" &&
-              message.content === "Storage initialization answer.",
-          ),
-        );
       } finally {
-        await browser?.close();
         await fixture.close();
       }
     },

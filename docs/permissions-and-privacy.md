@@ -13,7 +13,7 @@ All builds declare:
 - `storage`: persist settings, providers, agents, skills, MCP servers, chats, workspaces, language, and sync status.
 - `unlimitedStorage`: allow local chat and attachment storage to grow beyond normal extension storage quotas; browser-sync quotas still apply.
 - `downloads`: save Markdown exports, image ZIPs, Mermaid downloads, generated images, and fetched files.
-- `host_permissions: ["<all_urls>"]`: allow extension tools to work across arbitrary pages, provider endpoints, MCP servers, and remote image/file URLs.
+- `<all_urls>` host access: allow extension tools to work across arbitrary pages, provider endpoints, MCP servers, and remote image/file URLs. Manifest V3 lists this under `host_permissions`; Manifest V2 includes it in `permissions`.
 
 Chrome/Chromium builds additionally declare:
 
@@ -66,6 +66,7 @@ OpenBrowserAgent sends data to endpoints configured by the user in Providers and
 - Assistant link preview fetches with `credentials: "omit"`.
 - Mermaid preview image URLs through `mermaid.ink` and links to `mermaid.live`.
 - Page image/file download URLs when a download tool is used.
+- WebDAV URLs configured as a sync backend, including attachment uploads when attachment sync is enabled.
 
 ## Storage and Sync
 
@@ -80,9 +81,19 @@ Stored data includes:
 - Chats and chat tabs.
 - Sync write status and local sync cache entries.
 
-Language and lightweight preferences use the selected sync backend. Provider sync is enabled by default. Agents, skills, MCP servers, local execution bridges, chats, and chat attachments remain local unless the user enables their sync options.
+Sync is disabled until a backend is selected. Language and lightweight preferences then use that backend. The provider sync option is enabled by default. Agents, skills, MCP servers, local execution bridges, chats, and chat attachments remain local unless the user enables their sync options.
 
 Important: provider sync is enabled by default, so provider configurations may sync through browser sync. Users should treat synced provider API keys as sensitive browser-synced data.
+
+Attachments are saved locally before optional WebDAV uploads finish. Upload completion retains local bytes, so disabling or changing sync cannot make a saved attachment unavailable, and a late upload cannot remove newer local contents under the same attachment ID. These retained copies consume local storage until explicit attachment or chat removal. Local save or tool completion does not confirm remote availability. Uploads are best effort and have no durable retry queue; closing the owning page can interrupt pending work. Attachments absent locally can still be read from the active remote backend.
+
+Concurrent edits to different chats can merge. Within the same chat, the message array is a single merge value: simultaneous edits can select one version of that array. Sync does not currently merge each message independently across devices. Physical deletion of a remote document also does not prevent a later client write from recreating it.
+
+## Stopping Work
+
+Stop applies to the current chat. Subagent chats run independently and can be stopped individually. Closing a parent first asks the background to cancel the parent and linked child chat IDs, including retained runs that this panel has not visited since reload, and waits for acknowledgment before removing those chats. If cancellation cannot be acknowledged, the chats remain. Canceling a wait for a subagent result does not itself stop the child.
+
+Cancellation propagates to owned requests that accept an abort signal, including foreground attachment reads and writes forwarded to the background. It cannot undo committed remote writes or browser actions already dispatched. Background sync operations without a caller abort signal can continue after a local save completes.
 
 ## Safe Use
 

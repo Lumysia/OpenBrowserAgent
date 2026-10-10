@@ -1,3 +1,5 @@
+import { mock } from "node:test";
+
 export function browserStorage() {
   const data: Record<string, unknown> = {};
   const writes: Array<{ keys: string[]; bytes: number }> = [];
@@ -12,11 +14,34 @@ export function browserStorage() {
       });
       Object.assign(data, structuredClone(value));
     },
-    async remove(key: string) {
-      delete data[key];
+    async remove(keys: string | string[]) {
+      for (const key of Array.isArray(keys) ? keys : [keys]) delete data[key];
     },
   };
   return { data, writes, area };
+}
+
+// Hold one matching I/O boundary. `after` captures a stale result before an edit;
+// the default holds before the operation, so no effect has occurred on entry.
+export function holdMethod<T extends object, K extends keyof T>(
+  object: T,
+  method: K,
+  matches: (...args: any[]) => boolean,
+  after = false,
+) {
+  const entered = Promise.withResolvers<void>();
+  const released = Promise.withResolvers<void>();
+  const original = (object[method] as (...args: any[]) => unknown).bind(object);
+  let held = false;
+  mock.method(object, method as never, async (...args: any[]) => {
+    if (held || !matches(...args)) return original(...args);
+    held = true;
+    const result = after ? await original(...args) : undefined;
+    entered.resolve();
+    await released.promise;
+    return after ? result : original(...args);
+  });
+  return { started: entered.promise, release: released.resolve };
 }
 
 export function installBrowser(

@@ -32,12 +32,6 @@ const settingsCacheKey = syncLocalCacheKey(STORAGE_KEYS.syncDataSettings);
 async function fixture() {
   mock.timers.enable({ apis: ["setTimeout"] });
   const { local, sync } = installBrowser();
-  // Match Chrome's array-key removal overload without changing shared fixtures.
-  for (const area of [local, sync])
-    mock.method(area.area, "remove", async (keys: string | string[]) => {
-      for (const key of Array.isArray(keys) ? keys : [keys])
-        delete area.data[key];
-    });
   const config = {
     id: "clear-fixture",
     type: "browser-sync" as const,

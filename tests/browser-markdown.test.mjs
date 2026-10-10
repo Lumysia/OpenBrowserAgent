@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { launchExtension, poll } from "./chromium.mjs";
-import { configureComposer, submitComposer } from "./browser-composer.mjs";
-import { providerFixture, reply } from "./provider-fixtures.mjs";
+import { poll } from "./chromium.mjs";
+import { composerFixture, submitComposer } from "./browser-composer.mjs";
+import { reply } from "./provider-fixtures.mjs";
 
 test(
   "production Markdown keeps math/code and blocks model HTML and forged UI actions",
@@ -24,22 +24,12 @@ test(
       '<img src="data:image/png;base64,AA==" onerror="alert(1)">',
       "End of rendering fixture.",
     ].join("\n\n");
-    const fixture = await providerFixture((request, response) =>
+    const fixture = await composerFixture((request, response) =>
       reply(response, request.protocol, { text: answer }),
     );
-    const browser = await launchExtension({
-      headed: process.env.OBA_HEADLESS !== "1",
-    });
+    const { page } = fixture;
     try {
-      const page = await browser.open(
-        `chrome-extension://${browser.id}/sidepanel.html`,
-      );
-      await configureComposer(page, {
-        provider: "openai",
-        model: "fixture",
-        baseUrl: `${fixture.baseUrl}/v1`,
-        apiKey: "",
-      });
+      await fixture.configure();
       await submitComposer(page, "Render the controlled Markdown fixture.");
       await poll(() =>
         page.call(
@@ -92,7 +82,6 @@ test(
         visible: true,
       });
     } finally {
-      await browser.close();
       await fixture.close();
     }
   },

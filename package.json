@@ -25,6 +25,8 @@
     "test:browser:composer": "node --test tests/browser-composer.test.mjs tests/browser-markdown.test.mjs tests/browser-storage.test.mjs tests/browser-sync-deletion.test.mjs tests/browser-streaming-markdown.test.mjs tests/browser-navigation.test.mjs",
     "test:browser:pi": "node tests/browser-pi.mjs",
     "test:browser:workspace": "node --test tests/browser-workspace.test.mjs",
+    "test:browser:tools": "node --test tests/browser-tools.test.mjs",
+    "test:browser:all": "node --test tests/browser-*.test.mjs && node tests/browser-smoke.mjs && node tests/browser-pi.mjs",
     "bench:sync": "node --import tsx tests/bench-sync.ts"
   },
   "dependencies": {

@@ -1,15 +1,11 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
 import { once } from "node:events";
-import { mkdtemp, rm } from "node:fs/promises";
 import { createServer } from "node:http";
-import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
+import { launchExtension } from "./chromium.mjs";
 
 // Requires npm run build:chrome and Chromium on PATH (or CHROMIUM set). The
 // temporary profile is created inside .output and never uses a personal profile.
-const profile = await mkdtemp(resolve(".output/smoke-profile-"));
-const extension = resolve(".output/chrome-mv3");
 const documents = new Map();
 const requests = [];
 let modelCalls = 0;
@@ -89,76 +85,13 @@ const server = createServer(async (request, response) => {
 server.listen(0, "127.0.0.1");
 await once(server, "listening");
 const baseUrl = `http://127.0.0.1:${server.address().port}`;
-const chromium = spawn(
-  process.env.CHROMIUM || "chromium",
-  [
-    "--headless=new",
-    "--no-sandbox",
-    "--no-first-run",
-    "--no-default-browser-check",
-    "--disable-background-networking",
-    "--disable-component-update",
-    "--disable-sync",
-    `--user-data-dir=${profile}`,
-    `--disable-extensions-except=${extension}`,
-    `--load-extension=${extension}`,
-    "--remote-debugging-port=0",
-    "about:blank",
-  ],
-  {
-    env: { ...process.env, XDG_CONFIG_HOME: profile, XDG_CACHE_HOME: profile },
-    stdio: ["ignore", "ignore", "pipe"],
-  },
-);
-let stderr = "";
-chromium.stderr.on("data", (chunk) => {
-  stderr = (stderr + chunk).slice(-16_000);
-});
 let browser;
-let page;
 try {
-  const websocketUrl = await poll(
-    () => stderr.match(/DevTools listening on (ws:\/\/\S+)/)?.[1],
+  browser = await launchExtension({ headed: false });
+  const page = await browser.open(
+    `chrome-extension://${browser.id}/sidepanel.html`,
   );
-  const debugUrl = new URL(websocketUrl);
-  const targetsUrl = `http://${debugUrl.host}/json/list`;
-  const worker = await poll(async () =>
-    (await (await fetch(targetsUrl)).json()).find(
-      (target) =>
-        target.type === "service_worker" &&
-        target.url.startsWith("chrome-extension://"),
-    ),
-  );
-  const extensionId = new URL(worker.url).host;
-  browser = await connect(websocketUrl);
-  const { targetId } = await browser.send("Target.createTarget", {
-    url: `chrome-extension://${extensionId}/sidepanel.html`,
-  });
-  const target = await poll(async () =>
-    (await (await fetch(targetsUrl)).json()).find(
-      (item) => item.id === targetId,
-    ),
-  );
-  page = await connect(target.webSocketDebuggerUrl);
-  await poll(async () => {
-    const ready = await page.send("Runtime.evaluate", {
-      expression:
-        "typeof chrome !== 'undefined' && !!chrome.runtime?.id && document.readyState === 'complete'",
-      returnByValue: true,
-    });
-    return ready.result?.value;
-  });
-  const result = await page.send("Runtime.evaluate", {
-    expression: `(${runInExtension.toString()})(${JSON.stringify(baseUrl)})`,
-    awaitPromise: true,
-    returnByValue: true,
-  });
-  assert.equal(
-    result.exceptionDetails,
-    undefined,
-    JSON.stringify(result.exceptionDetails),
-  );
-  const value = result.result.value;
+  const value = await page.call(runInExtension, baseUrl);
   assert.deepEqual(value.browserValue, { theme: "dark" });
   assert.deepEqual(value.davValue, [
     { id: "keep", name: "retained", nullable: null },
@@ -199,7 +132,7 @@ try {
   console.log(
     JSON.stringify(
       {
-        browser: (await browser.send("Browser.getVersion")).product,
+        browser: (await browser.browser.send("Browser.getVersion")).product,
         checks: [
           "production extension loaded",
           "real chrome.storage.sync RPC round trip",
@@ -217,13 +150,9 @@ try {
     ),
   );
 } finally {
-  page?.close();
-  browser?.close();
-  chromium.kill("SIGTERM");
-  if (chromium.exitCode === null) await once(chromium, "exit");
+  await browser?.close();
   server.closeAllConnections();
   await new Promise((resolve) => server.close(resolve));
-  await rm(profile, { recursive: true, force: true });
 }
 
 async function runInExtension(baseUrl) {
@@ -318,41 +247,4 @@ async function runInExtension(baseUrl) {
     afterSequence: 1,
   });
   return { browserValue, davValue, warmValue, events, replayed };
-}
-
-async function poll(getValue) {
-  for (let attempt = 0; attempt < 100; attempt++) {
-    const value = await getValue();
-    if (value) return value;
-    await delay(100);
-  }
-  throw new Error(`Chromium target did not become ready. ${stderr}`);
-}
-
-async function connect(url) {
-  const socket = new WebSocket(url);
-  await new Promise((resolve, reject) => {
-    socket.addEventListener("open", resolve, { once: true });
-    socket.addEventListener("error", reject, { once: true });
-  });
-  let id = 0;
-  const pending = new Map();
-  socket.addEventListener("message", ({ data }) => {
-    const message = JSON.parse(String(data));
-    const waiter = pending.get(message.id);
-    if (!waiter) return;
-    pending.delete(message.id);
-    if (message.error) waiter.reject(new Error(JSON.stringify(message.error)));
-    else waiter.resolve(message.result);
-  });
-  return {
-    send(method, params = {}) {
-      return new Promise((resolve, reject) => {
-        const current = ++id;
-        pending.set(current, { resolve, reject });
-        socket.send(JSON.stringify({ id: current, method, params }));
-      });
-    },
-    close: () => socket.close(),
-  };
 }

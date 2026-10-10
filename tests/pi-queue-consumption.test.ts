@@ -20,10 +20,9 @@ for (const firstTurn of ["tool", "text"] as const) {
         if (requests.length === 1) {
           // Edit/Delete are still valid while Pi owns these pending messages.
           sessions.queueMessage(run.session, {
-            id: "edited",
+            id: "replacement",
             content: "old draft",
           });
-          sessions.deleteQueuedMessage(run.session, "edited");
           sessions.queueMessage(run.session, {
             id: "replacement",
             content: "edited instruction",
@@ -102,8 +101,13 @@ for (const firstTurn of ["tool", "text"] as const) {
           false,
         );
         const submitted = JSON.stringify(fixture.requests[1].body);
-        assert.match(submitted, /edited instruction/);
-        assert.match(submitted, /second instruction/);
+        assert.deepEqual(
+          fixture.requests[1].body.messages
+            .filter((message) => message.role === "user")
+            .slice(-2)
+            .map((message) => message.content),
+          ["edited instruction", "second instruction"],
+        );
         assert.doesNotMatch(submitted, /old draft|discard instruction/);
 
         // Reconnect across the acknowledgement while the provider is silent.

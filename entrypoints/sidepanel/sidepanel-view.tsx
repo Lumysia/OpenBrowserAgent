@@ -346,6 +346,7 @@ export function SidepanelView({
             <PromptUsagePreview estimate={promptUsage} t={t} />
             <Textarea
               value={input}
+              aria-label={t.sidepanel.whatDoYouWant}
               placeholder={t.sidepanel.whatDoYouWant}
               onChange={(event) => onSetInput(event.target.value)}
               onPaste={attachFromClipboard}
@@ -361,6 +362,7 @@ export function SidepanelView({
                 }
                 if (
                   event.key === "Enter" &&
+                  !event.nativeEvent.isComposing &&
                   !event.shiftKey &&
                   !event.metaKey &&
                   !event.ctrlKey

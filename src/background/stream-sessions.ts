@@ -4,6 +4,10 @@ import type {
   SendMessagesRequest,
 } from "../shared/types";
 import {
+  ABORT_CHAT_STREAMS,
+  type AbortChatStreamsResponse,
+} from "../shared/chat-stream-control";
+import {
   createSessionAgent,
   queueAgentMessage,
   deleteAgentQueuedMessage,
@@ -115,6 +119,38 @@ export function abortSession(chatId: string) {
   session.agent.abort();
   session.disconnectListeners.forEach((listener) => listener());
   releaseSession(session);
+}
+
+export function handleChatStreamControlMessage(
+  message: unknown,
+  sendResponse: (response: AbortChatStreamsResponse) => void,
+) {
+  if (
+    !message ||
+    typeof message !== "object" ||
+    !("type" in message) ||
+    message.type !== ABORT_CHAT_STREAMS
+  )
+    return false;
+  if (
+    !("chatIds" in message) ||
+    !Array.isArray(message.chatIds) ||
+    !message.chatIds.every((id) => typeof id === "string" && id.length > 0)
+  ) {
+    sendResponse({ ok: false, error: "Chat IDs are required." });
+    return true;
+  }
+  // Snapshot identities before firing synchronous abort callbacks. Replacements
+  // created during cancellation must not be picked up by later cleanup.
+  const sessions = [...new Set(message.chatIds)].map((id) =>
+    activeStreamSessions.get(id),
+  );
+  for (const session of sessions) {
+    if (session && activeStreamSessions.get(session.chatId) === session)
+      abortSession(session.chatId);
+  }
+  sendResponse({ ok: true });
+  return true;
 }
 
 export function sendMessageToSession(
