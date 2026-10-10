@@ -62,6 +62,8 @@ It turns your browser into an AI working surface: bring page context into chat, 
 
 ## Development
 
+Use Node.js 22.19.0 or later in the 22.x line, or Node.js 24 or newer. Prefer a supported LTS release. WXT and its browser launcher are development dependencies installed by the commands below.
+
 ```bash
 npm install
 npm run dev

@@ -12,14 +12,15 @@ import {
   getLocalExecutionBridgeStatus,
   cancelLocalExecutionBridge,
 } from "../src/background/local-execution-bridge-tools";
-import { toolBrowser, eventListeners, deferred } from "./tool-fixtures";
+import { toolBrowser, eventListeners } from "./tool-fixtures";
 
 afterEach(() => mock.restoreAll());
 
 async function nativeFixture() {
-  const directory = await mkdtemp(join(tmpdir(), "oba-followup2-bridge-"));
+  const directory = await mkdtemp(join(tmpdir(), "oba-native-bridge-"));
   const config = join(directory, "fixture.json");
   const marker = join(directory, "unexpected-effect");
+  const ready = join(directory, "ready");
   await writeFile(
     config,
     JSON.stringify({
@@ -85,7 +86,7 @@ async function nativeFixture() {
       received.addListener(listener);
     });
   };
-  const code = `process.on('SIGTERM',()=>{});console.log('ready');setTimeout(()=>require('fs').writeFileSync(${JSON.stringify(marker)},'effect'),1800);setInterval(()=>{},1000)`;
+  const code = `process.on('SIGTERM',()=>{});require('fs').writeFileSync(${JSON.stringify(ready)},String(Date.now()));console.log('ready');setTimeout(()=>require('fs').writeFileSync(${JSON.stringify(marker)},'effect'),1800);setInterval(()=>{},1000)`;
   const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
   const run = (timeoutMs = 10000, extra = {}) =>
     send({
@@ -103,6 +104,16 @@ async function nativeFixture() {
     send,
     wait,
     run,
+    earlyExit(redirect: boolean, exitCode = 0) {
+      run(10000, {
+        commandLine: `${quote(process.execPath)} -e ${quote(code)} ${redirect ? "</dev/null >/dev/null 2>&1" : ""} & while [ ! -f ${quote(ready)} ]; do sleep 0.01; done; printf 'shell output\\n'; exit ${exitCode}`,
+      });
+    },
+    async assertNoEffect() {
+      const started = Number(await readFile(ready, "utf8"));
+      await delay(Math.max(0, started + 1900 - Date.now()));
+      await assert.rejects(readFile(marker), { code: "ENOENT" });
+    },
     async close() {
       if (child.exitCode === null) {
         const exit = once(child, "exit");
@@ -134,14 +145,49 @@ for (const mode of ["cancel", "timeout", "eof"] as const)
         );
         if (mode === "timeout") assert.match(terminal.error, /timed out/);
         else assert.equal(terminal.event, "canceled");
-        await delay(1900);
-        await assert.rejects(readFile(fixture.marker), { code: "ENOENT" });
+        await fixture.assertNoEffect();
         assert.equal(
           fixture.events.filter((event) =>
             ["command.done", "command.error"].includes(event.type),
           ).length,
           1,
         );
+      } finally {
+        await fixture.close();
+      }
+    },
+  );
+
+for (const { redirect, exitCode } of [
+  { redirect: false, exitCode: 7 },
+  { redirect: true, exitCode: 0 },
+])
+  test(
+    `native shell exit ${exitCode} terminates owned background work (${redirect ? "redirected" : "inherited"} stdio)`,
+    { timeout: 10000 },
+    async () => {
+      const fixture = await nativeFixture();
+      try {
+        fixture.earlyExit(redirect, exitCode);
+        const terminal = await fixture.wait((event) =>
+          ["command.done", "command.error"].includes(event.type),
+        );
+        assert.equal(
+          terminal.type,
+          exitCode ? "command.error" : "command.done",
+        );
+        assert.equal(terminal.result.code, exitCode);
+        assert.equal(terminal.event, undefined);
+        assert.ok(
+          fixture.events.some(
+            (event) =>
+              event.type === "stdout" && event.data.includes("shell output\n"),
+          ),
+        );
+        fixture.send({ type: "command.cancel", taskId: "fixture" });
+        await fixture.wait((event) => event.event === "missing");
+        fixture.child.stdin.end();
+        await fixture.assertNoEffect();
       } finally {
         await fixture.close();
       }

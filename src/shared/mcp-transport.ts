@@ -1,6 +1,15 @@
 import type { McpServerConfig } from "./mcp";
 
 const MCP_PROTOCOL_VERSION = "2025-06-18";
+const SUPPORTED_PROTOCOL_VERSIONS = [
+  "2025-03-26",
+  MCP_PROTOCOL_VERSION,
+  "2025-11-25",
+];
+type McpRequest = (
+  method: string,
+  params: Record<string, unknown>,
+) => Promise<unknown>;
 type RpcResponse = {
   jsonrpc: "2.0";
   id: string;
@@ -8,16 +17,18 @@ type RpcResponse = {
   error?: unknown;
 };
 
-export async function openMcpSession(
+export async function withMcpSession<T>(
   server: McpServerConfig,
+  run: (request: McpRequest) => Promise<T>,
   signal?: AbortSignal,
 ) {
   let sessionId: string | undefined;
+  let protocolVersion = MCP_PROTOCOL_VERSION;
   const headers = () => ({
     ...server.headers,
     Accept: "application/json, text/event-stream",
     "Content-Type": "application/json",
-    "MCP-Protocol-Version": MCP_PROTOCOL_VERSION,
+    "MCP-Protocol-Version": protocolVersion,
     ...(sessionId ? { "Mcp-Session-Id": sessionId } : {}),
   });
   async function send(body: object) {
@@ -42,17 +53,44 @@ export async function openMcpSession(
     if ("error" in body) throw new Error(formatMcpError(body.error));
     return body.result;
   }
-  await request("initialize", {
-    protocolVersion: MCP_PROTOCOL_VERSION,
-    capabilities: {},
-    clientInfo: { name: "OpenBrowserAgent", version: "0.1.0" },
-  });
-  const initialized = await send({
-    jsonrpc: "2.0",
-    method: "notifications/initialized",
-  });
-  await initialized.body?.cancel();
-  return { request };
+  try {
+    const initializedResult = (await request("initialize", {
+      protocolVersion: MCP_PROTOCOL_VERSION,
+      capabilities: {},
+      clientInfo: { name: "OpenBrowserAgent", version: "0.1.0" },
+    })) as { protocolVersion?: string } | undefined;
+    const negotiated = initializedResult?.protocolVersion;
+    if (!negotiated || !SUPPORTED_PROTOCOL_VERSIONS.includes(negotiated))
+      throw new Error(
+        `Unsupported MCP protocol version: ${negotiated || "missing"}`,
+      );
+    protocolVersion = negotiated;
+    const initialized = await send({
+      jsonrpc: "2.0",
+      method: "notifications/initialized",
+    });
+    await initialized.body?.cancel();
+    return await run(request);
+  } finally {
+    if (sessionId) {
+      // Each operation owns its session. Abort must still release server state;
+      // cleanup has its own bounded lifetime and cannot replace the tool result.
+      const cleanup = new AbortController();
+      const timer = setTimeout(() => cleanup.abort(), 2000);
+      try {
+        const response = await fetch(server.url, {
+          method: "DELETE",
+          headers: headers(),
+          signal: cleanup.signal,
+        });
+        await response.body?.cancel();
+      } catch {
+        /* Session termination is best effort (servers may return 405). */
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+  }
 }
 
 async function readRpcResponse(
