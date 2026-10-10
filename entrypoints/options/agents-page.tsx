@@ -1,14 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Check,
-  Download,
-  FileText,
-  Pencil,
-  Plus,
-  RotateCcw,
-  Trash2,
-  Upload,
-} from "lucide-react";
+import { Download, Plus, RotateCcw, Trash2, Upload } from "lucide-react";
 import {
   BUILTIN_AGENTS,
   DEFAULT_AGENT_ID,
@@ -17,15 +8,10 @@ import {
 } from "../../src/shared/agents";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
-import type { Agent, AgentWorkspace } from "../../src/shared/types";
+import type { Agent } from "../../src/shared/types";
 import {
   createWorkspace,
-  deleteWorkspaceFile,
   ensureAgentWorkspaces,
-  isWorkspaceUserEditableFile,
-  normalizeWorkspacePath,
-  upsertWorkspaceFile,
-  workspaceTotalChars,
 } from "../../src/shared/workspace";
 import {
   Button,
@@ -40,7 +26,6 @@ import {
   Badge,
   Input,
   Label,
-  Textarea,
 } from "../../src/ui/components";
 import { AgentCapabilityEditor } from "./agent-capability-editor";
 import { AgentIconPicker } from "./agent-icon-picker";
@@ -50,14 +35,14 @@ import {
   agentDisplayDescription,
   agentDisplayName,
 } from "../../src/ui/agent-display";
-import { SkillFileActionButton } from "./skill-options-components";
+import { AgentWorkspaceEditor } from "./agent-workspace-editor";
 import { downloadAgentZip, importAgentZip } from "./workspace-import";
 
 export function AgentsPage() {
   const [language] = useStoredState(storage.language);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const [agents, setAgents] = useStoredState(storage.agents);
-  const [workspaces, setWorkspaces] = useStoredState(storage.agentWorkspaces);
+  const [workspaces] = useStoredState(storage.agentWorkspaces);
   const importAgentInputRef = useRef<HTMLInputElement | null>(null);
   const [importAgentError, setImportAgentError] = useState("");
   const t = getMessages(language);
@@ -66,9 +51,21 @@ export function AgentsPage() {
 
   useEffect(() => {
     if (!agents) return;
-    const ensured = ensureAgentWorkspaces(agents, workspaces);
-    if (ensured.changed) setWorkspaces(ensured.workspaces);
-  }, [agents, workspaces, setWorkspaces]);
+    storage.agentWorkspaces
+      .update((current) => {
+        const ensured = ensureAgentWorkspaces(agents, current);
+        return ensured.changed
+          ? [
+              ...ensured.workspaces,
+              ...current.filter(
+                (workspace) =>
+                  !agents.some((agent) => agent.id === workspace.agentId),
+              ),
+            ]
+          : current;
+      })
+      .catch(console.warn);
+  }, [agents, workspaces]);
 
   function updateAgent(agentId: string, patch: Partial<Agent>) {
     setAgents((current) =>
@@ -88,9 +85,11 @@ export function AgentsPage() {
   function deleteAgent(agentId: string) {
     if (isBuiltinAgentId(agentId)) return;
     setAgents((current) => current.filter((agent) => agent.id !== agentId));
-    setWorkspaces((current) =>
-      current.filter((workspace) => workspace.agentId !== agentId),
-    );
+    storage.agentWorkspaces
+      .update((current) =>
+        current.filter((workspace) => workspace.agentId !== agentId),
+      )
+      .catch(console.warn);
     if (selectedAgentId === agentId)
       setPreferences((current) => ({
         ...current,
@@ -107,9 +106,9 @@ export function AgentsPage() {
         updatedAt: now,
       })),
     );
-    setWorkspaces(
-      BUILTIN_AGENTS.map((agent) => createWorkspace(agent.id, now)),
-    );
+    storage.agentWorkspaces
+      .set(BUILTIN_AGENTS.map((agent) => createWorkspace(agent.id, now)))
+      .catch(console.warn);
     setPreferences((current) => ({
       ...current,
       selectedAgentId: DEFAULT_AGENT_ID,
@@ -127,12 +126,14 @@ export function AgentsPage() {
       })),
       ...current.filter((agent) => !builtinIds.has(agent.id) && !agent.builtin),
     ]);
-    setWorkspaces((current) => [
-      ...BUILTIN_AGENTS.map((agent) => createWorkspace(agent.id, now)),
-      ...(current || []).filter(
-        (workspace) => !builtinIds.has(workspace.agentId),
-      ),
-    ]);
+    storage.agentWorkspaces
+      .update((current) => [
+        ...BUILTIN_AGENTS.map((agent) => createWorkspace(agent.id, now)),
+        ...(current || []).filter(
+          (workspace) => !builtinIds.has(workspace.agentId),
+        ),
+      ])
+      .catch(console.warn);
   }
 
   function workspaceForAgent(agentId: string) {
@@ -150,7 +151,10 @@ export function AgentsPage() {
         invalidManifest: t.options.importAgentPackageInvalidManifest,
       });
       setAgents((current) => [...current, imported.agent]);
-      setWorkspaces((current) => [...(current || []), imported.workspace]);
+      await storage.agentWorkspaces.update((current) => [
+        ...current,
+        imported.workspace,
+      ]);
       setPreferences((current) => ({
         ...current,
         selectedAgentId: imported.agent.id,
@@ -263,24 +267,7 @@ export function AgentsPage() {
                     <>
                       <AgentWorkspaceEditor
                         workspace={workspaceForAgent(agent.id)}
-                        title={t.options.agentWorkspace}
-                        description={t.options.agentWorkspaceDescription}
-                        newFileLabel={t.options.agentWorkspaceNewFile}
-                        newFilePlaceholder={
-                          t.options.agentWorkspaceNewFilePlaceholder
-                        }
-                        emptyText={t.options.agentWorkspaceEmpty}
-                        editLabel={t.common.edit}
-                        saveLabel={t.common.save}
-                        deleteLabel={t.common.delete}
-                        onChange={(nextWorkspace) =>
-                          setWorkspaces((current) => {
-                            const others = (current || []).filter(
-                              (workspace) => workspace.agentId !== agent.id,
-                            );
-                            return [...others, nextWorkspace];
-                          })
-                        }
+                        t={t}
                       />
                     </>
                   )}
@@ -330,197 +317,5 @@ export function AgentsPage() {
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function AgentWorkspaceEditor({
-  workspace,
-  title,
-  description,
-  newFileLabel,
-  newFilePlaceholder,
-  emptyText,
-  editLabel,
-  saveLabel,
-  deleteLabel,
-  onChange,
-}: {
-  workspace: AgentWorkspace;
-  title: string;
-  description: string;
-  newFileLabel: string;
-  newFilePlaceholder: string;
-  emptyText: string;
-  editLabel: string;
-  saveLabel: string;
-  deleteLabel: string;
-  onChange: (workspace: AgentWorkspace) => void;
-}) {
-  const [draftPath, setDraftPath] = useState("NOTES.md");
-  const [editPath, setEditPath] = useState("");
-  const [editFilePath, setEditFilePath] = useState("");
-  const [draftContent, setDraftContent] = useState("");
-  const [error, setError] = useState("");
-  const editingFile = workspace.files.find((file) => file.path === editPath);
-
-  function startEdit(path: string) {
-    if (!isWorkspaceUserEditableFile(path)) return;
-    const file = workspace.files.find((item) => item.path === path);
-    setEditPath(editPath === path ? "" : path);
-    setEditFilePath(file?.path || path);
-    setDraftContent(file?.content || "");
-    setError("");
-  }
-
-  function createFile() {
-    const path = normalizeWorkspacePath(draftPath);
-    if (!path.ok) {
-      setError(path.error);
-      return;
-    }
-    if (!isWorkspaceUserEditableFile(path.path)) return;
-    const result = upsertWorkspaceFile(workspace, path.path, "");
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    onChange(result.workspace);
-    setDraftPath("");
-    setEditPath(path.path);
-    setEditFilePath(path.path);
-    setDraftContent("");
-  }
-
-  function saveFile() {
-    if (!editingFile) return;
-    if (!isWorkspaceUserEditableFile(editingFile.path)) return;
-    const normalizedPath = normalizeWorkspacePath(editFilePath);
-    if (!normalizedPath.ok) {
-      setError(normalizedPath.error);
-      return;
-    }
-    const filePath = normalizedPath.path;
-    if (!isWorkspaceUserEditableFile(filePath)) return;
-    const deleteResult =
-      filePath === editingFile.path
-        ? undefined
-        : deleteWorkspaceFile(workspace, editingFile.path);
-    const nextWorkspace = deleteResult?.ok ? deleteResult.workspace : workspace;
-    const result = upsertWorkspaceFile(nextWorkspace, filePath, draftContent);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    onChange(result.workspace);
-    setEditPath("");
-    setEditFilePath(filePath);
-    setError("");
-  }
-
-  function deleteFile(path: string) {
-    if (!isWorkspaceUserEditableFile(path)) return;
-    const result = deleteWorkspaceFile(workspace, path);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    onChange(result.workspace);
-    if (editPath === path) setEditPath("");
-    setError("");
-  }
-
-  return (
-    <Accordion type="single" collapsible>
-      <AccordionItem value="workspace">
-        <AccordionTrigger>
-          <span className="settings-summary">
-            <span className="settings-summary-title">
-              <FileText size={15} />
-              <span>{title}</span>
-            </span>
-            <small>
-              {workspace.files.length} files ·{" "}
-              {workspaceTotalChars(workspace.files)} chars
-            </small>
-          </span>
-        </AccordionTrigger>
-        <AccordionContent>
-          <div className="stack">
-            <CardDescription>{description}</CardDescription>
-            <div className="option-add-file-row">
-              <Input
-                value={draftPath}
-                aria-label={newFileLabel}
-                placeholder={newFilePlaceholder}
-                onChange={(event) => setDraftPath(event.currentTarget.value)}
-              />
-              <Button variant="outline" size="sm" onClick={createFile}>
-                <Plus size={14} /> {newFileLabel}
-              </Button>
-            </div>
-            {workspace.files.length ? (
-              <div className="option-file-list">
-                {workspace.files.map((file) => (
-                  <div className="option-file-block" key={file.path}>
-                    <div className="option-file-item">
-                      <FileText size={18} />
-                      <span>
-                        <span className="option-file-name">{file.path}</span>
-                        <small>
-                          {file.kind} · utf-8 · {file.content.length} chars
-                        </small>
-                      </span>
-                      <div className="option-file-actions">
-                        {isWorkspaceUserEditableFile(file.path) ? (
-                          <>
-                            <SkillFileActionButton
-                              label={editLabel}
-                              onClick={() => startEdit(file.path)}
-                            >
-                              <Pencil size={14} />
-                            </SkillFileActionButton>
-                            <SkillFileActionButton
-                              label={deleteLabel}
-                              onClick={() => deleteFile(file.path)}
-                            >
-                              <Trash2 size={14} />
-                            </SkillFileActionButton>
-                          </>
-                        ) : null}
-                      </div>
-                    </div>
-                    {editingFile?.path === file.path ? (
-                      <div className="option-file-editor stack">
-                        <Input
-                          value={editFilePath}
-                          onChange={(event) =>
-                            setEditFilePath(event.currentTarget.value)
-                          }
-                        />
-                        <Textarea
-                          className="option-file-editor-textarea"
-                          value={draftContent}
-                          onChange={(event) =>
-                            setDraftContent(event.currentTarget.value)
-                          }
-                        />
-                        <div className="row">
-                          <Button size="sm" onClick={saveFile}>
-                            <Check size={14} /> {saveLabel}
-                          </Button>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <CardDescription>{emptyText}</CardDescription>
-            )}
-            {error ? <CardDescription>{error}</CardDescription> : null}
-          </div>
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
   );
 }

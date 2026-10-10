@@ -1,55 +1,21 @@
 import {
   generateLocalExecutionBridgeSecret,
   normalizeLocalExecutionBridges,
-  resolveLocalExecutionBridge,
 } from "../shared/local-execution-bridges";
 import {
   LOCAL_EXECUTION_BRIDGE_RUNTIME_MESSAGE_TYPE,
   type LocalExecutionBridgeRuntimeResponse,
 } from "../shared/local-execution-bridge-runtime";
 import { storage } from "../shared/storage";
-import type {
-  AgentWorkspace,
-  LocalExecutionBridgeConfig,
-} from "../shared/types";
-
-const LOCAL_EXECUTION_BRIDGE_EVENT_LIMIT = 80;
-
-type LocalExecutionBridgeState =
-  | "running"
-  | "done"
-  | "error"
-  | "missing"
-  | "canceled";
-
-type LocalExecutionBridgeTask = {
-  taskId: string;
-  bridge: Pick<
-    LocalExecutionBridgeConfig,
-    "id" | "name" | "hostName" | "hostAddress" | "bridgeKey"
-  >;
-  state: LocalExecutionBridgeState;
-  output: string;
-  result?: unknown;
-  error?: string;
-  events: Array<Record<string, unknown>>;
-  startedAt: number;
-  updatedAt: number;
-  port?: chrome.runtime.Port;
-};
-
-type LocalExecutionBridgePing = {
-  success: true;
-  shell?: string;
-  shellArgsPreview?: string[];
-  platform?: string;
-  cwd?: string;
-  node?: string;
-  env?: Record<string, unknown>;
-  localCli?: Array<Record<string, unknown>>;
-};
-
-const tasks = new Map<string, LocalExecutionBridgeTask>();
+import type { LocalExecutionBridgeConfig } from "../shared/types";
+import { bridgeTaskCounts } from "./local-execution-bridge-tasks";
+import { testLocalExecutionBridge } from "./bridge-connection";
+export { testLocalExecutionBridge } from "./bridge-connection";
+export {
+  startLocalExecutionBridge,
+  getLocalExecutionBridgeStatus,
+  cancelLocalExecutionBridge,
+} from "./local-execution-bridge-tasks";
 
 export async function listLocalExecutionBridges() {
   const bridges = normalizeLocalExecutionBridges(
@@ -79,13 +45,6 @@ export async function getLocalExecutionBridgeConfigStatus() {
   const bridges = normalizeLocalExecutionBridges(
     await storage.localExecutionBridges.get(),
   );
-  const taskStates = [...tasks.values()].reduce<Record<string, number>>(
-    (counts, task) => {
-      counts[task.state] = (counts[task.state] || 0) + 1;
-      return counts;
-    },
-    {},
-  );
   return {
     success: true,
     configured: bridges.length > 0,
@@ -95,10 +54,7 @@ export async function getLocalExecutionBridgeConfigStatus() {
       isLocalExecutionBridgeUsable(bridge),
     ).length,
     bridges: bridges.map((bridge) => safeLocalExecutionBridge(bridge)),
-    activeTaskCount: [...tasks.values()].filter(
-      (task) => task.state === "running",
-    ).length,
-    taskStates,
+    ...bridgeTaskCounts(),
     guidance: bridges.length
       ? "Use operation=test with a bridgeId to verify native messaging connectivity, or startLocalExecutionBridge to run a command."
       : "No local execution bridge is configured. Add one before trying to run local commands.",
@@ -283,168 +239,6 @@ export async function deleteLocalExecutionBridge(
   return { success: next.length !== bridges.length, bridgeId };
 }
 
-export async function startLocalExecutionBridge(
-  input: Record<string, unknown>,
-  context?: { chatId?: string; messageId?: string; toolCallId?: string },
-  workspace?: AgentWorkspace,
-) {
-  const bridges = await storage.localExecutionBridges.get();
-  const bridge = resolveLocalExecutionBridge(
-    bridges,
-    stringValue(input.bridgeId),
-    stringValue(input.bridgeName),
-  );
-  if (!bridge)
-    return {
-      success: false,
-      error: "No local execution bridge is configured.",
-      state: "missing",
-    };
-  const commandLine =
-    stringValue(input.command) ||
-    stringValue(input.shellCommand) ||
-    stringValue(input.task) ||
-    stringValue(input.prompt);
-  if (!commandLine)
-    return {
-      success: false,
-      error: "Shell command is required.",
-      state: "missing",
-    };
-
-  const task = createTask(bridge);
-  tasks.set(task.taskId, task);
-  try {
-    await testLocalExecutionBridge(bridge.id);
-    await markLocalExecutionBridgeTested(bridge.id, "");
-    task.port = chrome.runtime.connectNative(bridge.hostName);
-    task.port.onMessage.addListener((message) =>
-      receiveBridgeMessage(task, message),
-    );
-    task.port.onDisconnect.addListener(() => finishDisconnectedTask(task));
-    task.port.postMessage({
-      type: "command.run",
-      taskId: task.taskId,
-      command: {
-        id: bridge.id,
-        key: bridge.bridgeKey || bridge.id,
-        name: bridge.name,
-        hostAddress: bridge.hostAddress || "",
-        secret: bridge.secret || "",
-      },
-      commandLine,
-      shell: stringValue(input.shell),
-      title: stringValue(input.title),
-      cwd: stringValue(input.cwd) || bridge.defaultCwd || "",
-      context: {
-        ...context,
-        workspaceFiles: workspace?.files?.map((file) => ({
-          path: file.path,
-          kind: file.kind,
-          content: file.content,
-        })),
-        inputContext: input.context,
-      },
-      timeoutMs: input.timeoutMs || bridge.timeoutMs,
-    });
-  } catch (error) {
-    task.state = "error";
-    task.error = errorMessage(error);
-    task.updatedAt = Date.now();
-    await markLocalExecutionBridgeTested(bridge.id, task.error);
-  }
-
-  return taskStatus(task.taskId);
-}
-
-export async function getLocalExecutionBridgeStatus(
-  input: Record<string, unknown>,
-) {
-  const taskId = stringValue(input.taskId);
-  const wait = input.wait === true;
-  const timeoutMs = clampStatusTimeout(input.timeoutMs);
-  if (wait) await waitForLocalExecutionBridge(taskId, timeoutMs);
-  return taskStatus(taskId);
-}
-
-export async function cancelLocalExecutionBridge(
-  input: Record<string, unknown>,
-) {
-  const taskId = stringValue(input.taskId);
-  const task = tasks.get(taskId);
-  if (!task) return { success: false, state: "missing", taskId };
-  if (task.state === "running") {
-    task.port?.postMessage({ type: "command.cancel", taskId });
-    task.port?.disconnect();
-    task.state = "canceled";
-    task.updatedAt = Date.now();
-  }
-  return taskStatus(taskId);
-}
-
-export async function testLocalExecutionBridge(bridgeId: string) {
-  const bridge = normalizeLocalExecutionBridges(
-    await storage.localExecutionBridges.get(),
-  ).find((item) => item.id === bridgeId);
-  if (!bridge) throw new Error("Local execution bridge not found.");
-  if (!bridge.hostName) throw new Error("Native host name is required.");
-  const port = chrome.runtime.connectNative(bridge.hostName);
-  return new Promise<LocalExecutionBridgePing>((resolve, reject) => {
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      port.disconnect();
-      reject(new Error("Local execution bridge test timed out."));
-    }, 5_000);
-    port.onMessage.addListener((message) => {
-      if (settled) return;
-      const object = objectValue(message);
-      if (object.type === "command.error" || object.type === "error") {
-        settled = true;
-        clearTimeout(timer);
-        port.disconnect();
-        reject(new Error(stringValue(object.error) || "Bridge test failed."));
-        return;
-      }
-      if (object.type !== "command.pong" && object.type !== "pong") return;
-      settled = true;
-      clearTimeout(timer);
-      port.disconnect();
-      resolve({
-        success: true,
-        shell: stringValue(object.shell),
-        shellArgsPreview: Array.isArray(object.shellArgsPreview)
-          ? object.shellArgsPreview.map(String)
-          : undefined,
-        platform: stringValue(object.platform),
-        cwd: stringValue(object.cwd),
-        node: stringValue(object.node),
-        env: objectValue(object.env),
-        localCli: Array.isArray(object.localCli)
-          ? object.localCli.map(objectValue)
-          : undefined,
-      });
-    });
-    port.onDisconnect.addListener(() => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      reject(new Error(chrome.runtime.lastError?.message || "Disconnected."));
-    });
-    port.postMessage({
-      type: "command.ping",
-      command: {
-        id: bridge.id,
-        key: bridge.bridgeKey || bridge.id,
-        name: bridge.name,
-        hostAddress: bridge.hostAddress || "",
-        secret: bridge.secret || "",
-      },
-    });
-  });
-}
-
 export function handleLocalExecutionBridgeRuntimeMessage(
   message: unknown,
   sendResponse: (response: LocalExecutionBridgeRuntimeResponse) => void,
@@ -461,85 +255,6 @@ export function handleLocalExecutionBridgeRuntimeMessage(
     .then((value) => sendResponse({ ok: true, value }))
     .catch((error) => sendResponse({ ok: false, error: errorMessage(error) }));
   return true;
-}
-
-function createTask(
-  bridge: LocalExecutionBridgeConfig,
-): LocalExecutionBridgeTask {
-  const now = Date.now();
-  return {
-    taskId: crypto.randomUUID(),
-    bridge: {
-      id: bridge.id,
-      name: bridge.name,
-      hostName: bridge.hostName,
-      hostAddress: bridge.hostAddress,
-      bridgeKey: bridge.bridgeKey,
-    },
-    state: "running",
-    output: "",
-    events: [],
-    startedAt: now,
-    updatedAt: now,
-  };
-}
-
-function receiveBridgeMessage(
-  task: LocalExecutionBridgeTask,
-  message: unknown,
-) {
-  const event = objectValue(message);
-  task.updatedAt = Date.now();
-  pushEvent(task, event);
-  const text = stringValue(event.data) || stringValue(event.text);
-  if (
-    text &&
-    ["stdout", "stderr", "message_delta", "text"].includes(
-      stringValue(event.event) || stringValue(event.type),
-    )
-  ) {
-    task.output += text;
-  }
-  if (event.result !== undefined) task.result = event.result;
-  if (event.error !== undefined) task.error = stringValue(event.error);
-  const type = stringValue(event.type) || stringValue(event.event);
-  if (type === "command.error" || type === "error") task.state = "error";
-  if (type === "command.done" || type === "done")
-    task.state = task.error ? "error" : "done";
-}
-
-function finishDisconnectedTask(task: LocalExecutionBridgeTask) {
-  if (task.state !== "running") return;
-  const error = chrome.runtime.lastError?.message;
-  task.state = error ? "error" : "done";
-  task.error = error || task.error;
-  task.updatedAt = Date.now();
-}
-
-async function waitForLocalExecutionBridge(taskId: string, timeoutMs: number) {
-  const startedAt = Date.now();
-  while (Date.now() - startedAt < timeoutMs) {
-    const task = tasks.get(taskId);
-    if (!task || task.state !== "running") return;
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-}
-
-function taskStatus(taskId: string) {
-  const task = tasks.get(taskId);
-  if (!task) return { success: false, state: "missing", taskId };
-  return {
-    success: task.state !== "error",
-    taskId,
-    state: task.state,
-    bridge: task.bridge,
-    output: task.output,
-    result: task.result,
-    ...(task.error ? { error: task.error } : {}),
-    progress: task.events.slice(-8),
-    startedAt: task.startedAt,
-    updatedAt: task.updatedAt,
-  };
 }
 
 function safeLocalExecutionBridge(
@@ -567,24 +282,6 @@ function safeLocalExecutionBridge(
     timeoutMs: bridge.timeoutMs,
     ...(includeSecret ? { secret: bridge.secret } : {}),
   };
-}
-
-async function markLocalExecutionBridgeTested(bridgeId: string, error: string) {
-  const now = Date.now();
-  await storage.localExecutionBridges.set(
-    normalizeLocalExecutionBridges(
-      await storage.localExecutionBridges.get(),
-    ).map((bridge) =>
-      bridge.id === bridgeId
-        ? {
-            ...bridge,
-            lastTestedAt: error ? undefined : now,
-            lastTestError: error,
-            updatedAt: now,
-          }
-        : bridge,
-    ),
-  );
 }
 
 async function includeSecretResult(
@@ -634,24 +331,6 @@ function currentLocalExecutionBridgeDiagnostic(
     );
   }
   return undefined;
-}
-
-function pushEvent(
-  task: LocalExecutionBridgeTask,
-  event: Record<string, unknown>,
-) {
-  task.events.push(event);
-  if (task.events.length > LOCAL_EXECUTION_BRIDGE_EVENT_LIMIT)
-    task.events.splice(
-      0,
-      task.events.length - LOCAL_EXECUTION_BRIDGE_EVENT_LIMIT,
-    );
-}
-
-function clampStatusTimeout(value: unknown) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return 60_000;
-  return Math.min(30 * 60_000, Math.max(0, Math.trunc(number)));
 }
 
 function objectValue(value: unknown): Record<string, unknown> {

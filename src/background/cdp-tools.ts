@@ -1,36 +1,15 @@
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 import { resolveBrowserTabId } from "../shared/browser";
-import {
-  DEFAULT_SCREENSHOT_FORMAT,
-  DEFAULT_SCREENSHOT_QUALITY,
-} from "../shared/config";
+import { delay } from "../shared/cancellation";
 import { TOOL_ERROR } from "../shared/tool-errors";
 import { withContentSlice, withListSlice } from "./tool-utils";
+import { navigateCdpPage } from "./cdp-navigation";
+import { cdpTools } from "./cdp-tool-schema";
+import { createCdpRun, cdpEvaluate, type CdpRun } from "./cdp-session";
+import { takeCdpScreenshot, emulateCdpPage } from "./cdp-display";
+import { runCdpInput } from "./cdp-input";
 
-const CDP_VERSION = "1.3";
-const DEFAULT_WAIT_MS = 5000;
-const WAIT_FOR_TEXT_POLL_MS = 250;
-const DEFAULT_KEY = "Enter";
-
-const cdpNames = new Set<string>([
-  BROWSER_TOOL_NAME.cdpInput,
-  BROWSER_TOOL_NAME.cdpPage,
-  BROWSER_TOOL_NAME.cdpEvaluateScript,
-  BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript,
-  BROWSER_TOOL_NAME.cdpTakeScreenshot,
-  BROWSER_TOOL_NAME.cdpDiagnostics,
-  BROWSER_TOOL_NAME.cdpPerformanceStartTrace,
-  BROWSER_TOOL_NAME.cdpPerformanceStopTrace,
-  BROWSER_TOOL_NAME.cdpPerformanceAnalyzeInsight,
-  BROWSER_TOOL_NAME.cdpTakeMemorySnapshot,
-  BROWSER_TOOL_NAME.cdpGetMemorySnapshotDetails,
-  BROWSER_TOOL_NAME.cdpGetNodesByClass,
-  BROWSER_TOOL_NAME.cdpLoadMemorySnapshot,
-  BROWSER_TOOL_NAME.cdpLighthouseAudit,
-  BROWSER_TOOL_NAME.cdpScreencastStart,
-  BROWSER_TOOL_NAME.cdpScreencastStop,
-]);
-
+const cdpNames = new Set(cdpTools.map((tool) => tool.function.name));
 export function isCdpTool(name: string | undefined) {
   return !!name && cdpNames.has(name);
 }
@@ -38,707 +17,245 @@ export function isCdpTool(name: string | undefined) {
 export async function executeCdpTool(
   name: string | undefined,
   args: Record<string, unknown>,
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
+  const run = createCdpRun(signal);
   switch (name) {
     case BROWSER_TOOL_NAME.cdpInput:
-      return runCdpInput(args);
+      return runCdpInput(args, run);
     case BROWSER_TOOL_NAME.cdpPage:
-      return runCdpPage(args);
-    case BROWSER_TOOL_NAME.cdpEvaluateScript:
-      return withCdp(args, (target) => evaluateScript(target, args));
-    case BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript:
-      return executeArbitraryJavaScript(args);
-    case BROWSER_TOOL_NAME.cdpTakeScreenshot:
-      return withCdp(args, (target) => takeScreenshot(target, args));
-    case BROWSER_TOOL_NAME.cdpDiagnostics:
-      return runCdpDiagnostics(args);
-    default:
-      return unsupported(
-        name || "cdp",
-        "This CDP MCP tool is registered but not implemented in the extension runtime yet.",
+      return runCdpPage(args, run, signal);
+    case BROWSER_TOOL_NAME.cdpEvaluateScript: {
+      if (!args.function && !args.expression)
+        return {
+          success: false,
+          error: "Provide a function or expression to evaluate.",
+        };
+      const result = await cdpEvaluate(
+        run,
+        args,
+        args.function
+          ? `(${String(args.function)})()`
+          : String(args.expression || "undefined"),
       );
+      if (result.exception)
+        return {
+          success: false,
+          error: result.exception,
+          exception: result.exception,
+        };
+      return {
+        ...(typeof result.value === "string"
+          ? withContentSlice({}, result.value, args, "result")
+          : { result: result.value }),
+        exception: result.exception,
+      };
+    }
+    case BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript:
+      return executeArbitraryJavaScript(args, run);
+    case BROWSER_TOOL_NAME.cdpTakeScreenshot:
+      return run(args, (send) => takeCdpScreenshot(send, args));
+    case BROWSER_TOOL_NAME.cdpDiagnostics: {
+      const operation = String(args.operation || "resources");
+      if (operation === "console")
+        return {
+          success: false,
+          error:
+            "Persistent console collection is not implemented in this extension runtime.",
+        };
+      if (!["resources", "network"].includes(operation))
+        return {
+          success: false,
+          error: "UNKNOWN_CDP_DIAGNOSTICS_OPERATION",
+          operation,
+        };
+      const result = await cdpEvaluate(
+        run,
+        args,
+        "performance.getEntriesByType('resource').map((r,i)=>({id:i,url:r.name,type:r.initiatorType,duration:r.duration,transferSize:r.transferSize}))",
+      );
+      return result.exception
+        ? { success: false, error: result.exception }
+        : withListSlice({}, result.value || [], args, "requests");
+    }
+    default:
+      return {
+        success: false,
+        error:
+          "This CDP tool is registered but not implemented in the extension runtime yet.",
+        tool: name,
+      };
   }
 }
 
-async function withCdp(
+async function runCdpPage(
   args: Record<string, unknown>,
-  run: (target: chrome.debugger.Debuggee) => Promise<unknown>,
+  run: CdpRun,
+  signal?: AbortSignal,
 ) {
-  const target = await attachCdpTarget(args);
-  try {
-    return await run(target);
-  } finally {
-    await chrome.debugger.detach(target).catch(() => undefined);
+  const operation = String(args.operation || "list");
+  if (operation === "list") {
+    const [tabs, targets] = await Promise.all([
+      chrome.tabs.query({}).catch(() => []),
+      chrome.debugger.getTargets().catch(() => []),
+    ]);
+    const pages = targets
+      .filter((target) => target.type === "page")
+      .map((target) => ({
+        id: target.tabId || target.id,
+        targetId: target.id,
+        tabId: target.tabId,
+        title: target.title,
+        url: target.url,
+        attached: target.attached,
+      }));
+    for (const tab of tabs)
+      if (!pages.some((page) => page.tabId === tab.id))
+        pages.push({
+          id: tab.id!,
+          targetId: "",
+          tabId: tab.id,
+          title: tab.title || "",
+          url: tab.url || "",
+          attached: false,
+        });
+    return withListSlice({}, pages, args, "pages");
   }
-}
-
-async function listPages(args: Record<string, unknown>) {
-  const [tabs, targets] = await Promise.all([
-    chrome.tabs.query({}).catch(() => []),
-    getPageTargets().catch(() => []),
-  ]);
-  const targetsByTabId = new Map(
-    targets
-      .filter((target) => target.tabId)
-      .map((target) => [target.tabId, target]),
-  );
-  const tabPages = tabs.map((tab) => {
-    const target = tab.id ? targetsByTabId.get(tab.id) : undefined;
-    return {
-      id: tab.id,
-      targetId: target?.id,
-      tabId: tab.id,
-      title: tab.title || target?.title,
-      url: tab.url || target?.url,
-      attached: target?.attached,
-    };
-  });
-  const tabIds = new Set(tabPages.map((tab) => tab.tabId).filter(Boolean));
-  const targetPages = targets
-    .filter((target) => !target.tabId || !tabIds.has(target.tabId))
-    .map((target) => ({
-      id: target.id,
-      targetId: target.id,
-      tabId: target.tabId,
-      title: target.title,
-      url: target.url,
-      attached: target.attached,
-    }));
-  return withListSlice({}, [...tabPages, ...targetPages], args, "pages");
-}
-
-async function newPage(args: Record<string, unknown>) {
-  const tab = await chrome.tabs.create({
-    url: stringInput(args.url) || "about:blank",
-    active: args.background !== true,
-  });
-  return { tab: { id: tab.id, title: tab.title, url: tab.url } };
-}
-
-async function selectPage(args: Record<string, unknown>) {
-  try {
-    if (hasTargetIdOnly(args))
-      throw new Error(TOOL_ERROR.targetIdCannotBeFocused);
-    const tab = await chrome.tabs.update(await resolveTabId(args.tabId), {
+  if (operation === "new") {
+    const tab = await chrome.tabs.create({
+      url: String(args.url || "about:blank"),
+      active: args.background !== true,
+    });
+    return { tab: { id: tab.id, title: tab.title, url: tab.url } };
+  }
+  if (operation === "navigate")
+    return run(args, (send) => navigateCdpPage(args, send));
+  if (operation === "focus") {
+    if (args.targetId && !args.tabId)
+      return { success: false, error: TOOL_ERROR.targetIdCannotBeFocused };
+    const tabId = await resolveBrowserTabId(args.tabId);
+    signal?.throwIfAborted();
+    const tab = await chrome.tabs.update(tabId, {
       active: args.bringToFront !== false,
     });
-    if (!tab?.id) return { success: false, error: TOOL_ERROR.tabNotFound };
-    if (tab.windowId !== undefined)
+    signal?.throwIfAborted();
+    if (tab?.windowId !== undefined)
       await chrome.windows.update(tab.windowId, { focused: true });
-    return { success: true, tabId: tab.id };
-  } catch (error) {
-    const target = await findPageTarget(args);
-    return target
-      ? {
-          success: false,
-          targetId: target.id,
-          tabId: target.tabId,
-          error:
-            "Page target is available through CDP, but this browser does not allow focusing it through tabs/windows APIs.",
-        }
-      : { success: false, error: errorMessage(error) };
-  }
-}
-
-async function closePage(args: Record<string, unknown>) {
-  try {
-    if (hasTargetIdOnly(args))
-      throw new Error(TOOL_ERROR.closeByTargetIdUnsupported);
-    const tabId = await resolveTabId(args.tabId);
-    await chrome.tabs.remove(tabId);
     return { success: true, tabId };
-  } catch {
-    const result = await runtimeEvaluate(args, "window.close(); true");
-    return result.exception
-      ? { success: false, error: result.exception }
-      : { success: true };
   }
-}
-
-async function navigatePage(args: Record<string, unknown>) {
-  const type = stringInput(args.type) || (args.url ? "url" : "reload");
-  if (type === "back" || type === "forward")
-    await withCdp(args, (target) =>
-      send(target, type === "back" ? "Page.goBack" : "Page.goForward"),
-    );
-  else if (type === "url")
-    await withCdp(args, (target) =>
-      send(target, "Page.navigate", { url: stringInput(args.url) }),
-    );
-  else
-    await withCdp(args, (target) =>
-      send(target, "Page.reload", { ignoreCache: args.ignoreCache === true }),
-    );
-  return { success: true, type };
-}
-
-async function runCdpInput(args: Record<string, unknown>) {
-  const operation = stringInput(args.operation || args.action) || "click";
-  if (
-    operation === "click" ||
-    operation === "hover" ||
-    operation === "doubleClick"
-  ) {
-    if (args.id || args.uid)
-      return mouseActionByAiID({ ...args, action: operation });
-    return withCdp(args, (target) =>
-      operation === "hover"
-        ? hoverAt(target, args)
-        : clickAt(target, { ...args, dblClick: operation === "doubleClick" }),
-    );
-  }
-  if (operation === "key")
-    return withCdp(args, (target) => pressKey(target, args));
-  if (operation === "type")
-    return withCdp(args, (target) => typeText(target, args));
-  if (operation === "fill") return fill(args);
-  if (operation === "fillForm") return fillForm(args);
-  if (operation === "drag")
-    return withCdp(args, (target) => drag(target, args));
-  if (operation === "dialog") return handleDialog(args);
-  return { success: false, error: "UNKNOWN_CDP_INPUT_OPERATION", operation };
-}
-
-async function runCdpPage(args: Record<string, unknown>) {
-  const operation = stringInput(args.operation) || "list";
-  if (operation === "list") return listPages(args);
-  if (operation === "new") return newPage(args);
-  if (operation === "navigate") return navigatePage(args);
-  if (operation === "focus") return selectPage(args);
-  if (operation === "close") return closePage(args);
-  if (operation === "waitFor") return waitFor(args);
-  if (operation === "resize") return resizePage(args);
-  if (operation === "emulate")
-    return withCdp(args, (target) => emulate(target, args));
-  if (operation === "snapshot") return takeSnapshot(args);
-  return { success: false, error: "UNKNOWN_CDP_PAGE_OPERATION", operation };
-}
-
-async function runCdpDiagnostics(args: Record<string, unknown>) {
-  const operation = stringInput(args.operation) || "resources";
-  if (operation === "console")
-    return withCdp(args, (target) => listConsoleMessages(target, args));
-  if (operation === "resources" || operation === "network")
-    return withCdp(args, (target) => listNetworkRequests(target, args));
-  return {
-    success: false,
-    error: "UNKNOWN_CDP_DIAGNOSTICS_OPERATION",
-    operation,
-  };
-}
-
-async function waitFor(args: Record<string, unknown>) {
-  const texts = Array.isArray(args.text)
-    ? args.text.map(String)
-    : [stringInput(args.text)];
-  const timeout = numberInput(args.timeout) || DEFAULT_WAIT_MS;
-  const started = Date.now();
-  while (Date.now() - started < timeout) {
-    const result = await withCdp(args, (target) =>
-      send(target, "Runtime.evaluate", {
-        expression: `(${JSON.stringify(texts)}).some((text) => text && document.body?.innerText.includes(text))`,
-        returnByValue: true,
-      }),
-    );
-    if ((result as Record<string, any>).result?.value)
-      return { success: true, text: texts.find(Boolean) };
-    await new Promise((resolve) => setTimeout(resolve, WAIT_FOR_TEXT_POLL_MS));
-  }
-  return { success: false, error: TOOL_ERROR.timedOutWaitingForText };
-}
-
-async function runtimeEvaluate<T = unknown>(
-  args: Record<string, unknown>,
-  expression: string,
-) {
-  const result = (await withCdp(args, (target) =>
-    send(target, "Runtime.evaluate", {
-      expression,
-      awaitPromise: true,
-      returnByValue: true,
-    }),
-  )) as Record<string, any>;
-  return {
-    value: result.result?.value as T,
-    exception: result.exceptionDetails?.text,
-  };
-}
-
-async function runtimeCall<T = unknown>(
-  args: Record<string, unknown>,
-  fn: string,
-  values: unknown[] = [],
-) {
-  return runtimeEvaluate<T>(
-    args,
-    `(${fn})(...${JSON.stringify(values.map((value) => value ?? null))})`,
-  );
-}
-
-async function attachCdpTarget(args: Record<string, unknown>) {
-  const targetId = stringInput(args.targetId);
-  const tabId = Number(args.tabId);
-  const candidates: chrome.debugger.Debuggee[] = [];
-  if (targetId) candidates.push({ targetId });
-  if (Number.isFinite(tabId) && tabId > 0) candidates.push({ tabId });
-  if (!targetId) {
-    const target = await findPageTarget(args).catch(() => undefined);
-    if (target?.id) candidates.push({ targetId: target.id });
-  }
-  if (!candidates.length) {
-    const activeTabId = await resolveTabId(args.tabId);
-    candidates.push({ tabId: activeTabId });
-    const target = await findPageTarget({ ...args, tabId: activeTabId }).catch(
-      () => undefined,
-    );
-    if (target?.id) candidates.push({ targetId: target.id });
-  }
-
-  const seen = new Set<string>();
-  const errors: string[] = [];
-  for (const candidate of candidates) {
-    const key = candidate.targetId || `tab:${candidate.tabId}`;
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
+  if (operation === "close") {
+    if (args.targetId && !args.tabId)
+      return run(args, async (send) => {
+        await send("Page.close");
+        return { success: true };
+      });
+    const tabId = await resolveBrowserTabId(args.tabId);
+    signal?.throwIfAborted();
     try {
-      await chrome.debugger.attach(candidate, CDP_VERSION);
-      return candidate;
-    } catch (error) {
-      errors.push(
-        `${key}: ${error instanceof Error ? error.message : String(error)}`,
+      await chrome.tabs.remove(tabId);
+    } catch {
+      signal?.throwIfAborted();
+      return run({ ...args, tabId }, async (send) => {
+        await send("Page.close");
+        return { success: true, tabId };
+      });
+    }
+    return { success: true, tabId };
+  }
+  if (operation === "emulate") {
+    if (args.reset === true) {
+      await run.release(args);
+      return { success: true, reset: true };
+    }
+    return run(args, (send) => emulateCdpPage(send, args), true);
+  }
+  if (operation === "resize") {
+    if (args.targetId && !args.tabId)
+      return run(args, (send) => emulateCdpPage(send, args), true);
+    const tabId = await resolveBrowserTabId(args.tabId);
+    try {
+      const tab = await chrome.tabs.get(tabId);
+      signal?.throwIfAborted();
+      if (tab.windowId === undefined)
+        throw new Error(TOOL_ERROR.tabHasNoWindow);
+      await chrome.windows.update(tab.windowId, {
+        ...(args.width !== undefined ? { width: Number(args.width) } : {}),
+        ...(args.height !== undefined ? { height: Number(args.height) } : {}),
+      });
+      return { success: true, tabId };
+    } catch {
+      signal?.throwIfAborted();
+      return run(
+        { ...args, tabId },
+        (send) => emulateCdpPage(send, args),
+        true,
       );
     }
   }
-  throw new Error(
-    errors.length
-      ? `Unable to attach CDP target. ${errors.join("; ")}`
-      : "Unable to resolve CDP target",
-  );
-}
-
-async function findPageTarget(args: Record<string, unknown>) {
-  const tabId = Number(args.tabId);
-  const targetId = stringInput(args.targetId);
-  const url = stringInput(args.url);
-  const title = stringInput(args.title);
-  const targets = await getPageTargets();
-  if (targetId) return targets.find((target) => target.id === targetId);
-  if (Number.isFinite(tabId) && tabId > 0)
-    return targets.find((target) => target.tabId === tabId);
-  if (url)
-    return targets.find(
-      (target) => target.url === url || target.url.includes(url),
+  if (operation === "snapshot") {
+    const result = await cdpEvaluate(
+      run,
+      args,
+      "document.body?.innerText || ''",
     );
-  if (title)
-    return targets.find(
-      (target) => target.title === title || target.title.includes(title),
-    );
-  const activeTabId = await resolveBrowserTabId(undefined).catch(
-    () => undefined,
-  );
-  return activeTabId
-    ? targets.find((target) => target.tabId === activeTabId)
-    : targets.find((target) => !target.attached);
-}
-
-async function getPageTargets() {
-  const targets = await chrome.debugger.getTargets();
-  return targets.filter(
-    (target) =>
-      target.type === "page" && !target.url?.startsWith("devtools://"),
-  );
-}
-
-async function resizePage(args: Record<string, unknown>) {
-  try {
-    if (hasTargetIdOnly(args))
-      throw new Error(TOOL_ERROR.resizeByTargetIdUnsupported);
-    const tab = await chrome.tabs.get(await resolveTabId(args.tabId));
-    if (tab.windowId === undefined)
-      return { success: false, error: TOOL_ERROR.tabHasNoWindow };
-    await chrome.windows.update(tab.windowId, {
-      width: numberInput(args.width),
-      height: numberInput(args.height),
-    });
-    return { success: true, tabId: tab.id };
-  } catch {
-    return withCdp(args, (target) => emulate(target, args));
+    return result.exception
+      ? { success: false, error: result.exception }
+      : withContentSlice({}, result.value || "", args, "snapshot");
   }
-}
-
-async function clickAt(
-  target: chrome.debugger.Debuggee,
-  args: Record<string, unknown>,
-) {
-  const x = numberInput(args.x) || 0;
-  const y = numberInput(args.y) || 0;
-  const count = args.dblClick === true ? 2 : 1;
-  await send(target, "Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
-  for (let clickCount = 1; clickCount <= count; clickCount += 1) {
-    await send(target, "Input.dispatchMouseEvent", {
-      type: "mousePressed",
-      x,
-      y,
-      button: "left",
-      buttons: 1,
-      clickCount,
-    });
-    await send(target, "Input.dispatchMouseEvent", {
-      type: "mouseReleased",
-      x,
-      y,
-      button: "left",
-      buttons: 0,
-      clickCount,
+  if (operation === "waitFor") {
+    const texts = Array.isArray(args.text)
+      ? args.text.map(String)
+      : [String(args.text || "")];
+    const timeout = Number(args.timeout) || 5000;
+    const until = Date.now() + timeout;
+    return run(args, async (send) => {
+      while (Date.now() <= until) {
+        const result = await send("Runtime.evaluate", {
+          expression: `(${JSON.stringify(texts)}).find(text => text && document.body?.innerText.includes(text))`,
+          returnByValue: true,
+        });
+        if (result.result?.value)
+          return { success: true, text: result.result.value };
+        await delay(Math.min(250, Math.max(0, until - Date.now())), signal);
+      }
+      return { success: false, error: TOOL_ERROR.timedOutWaitingForText };
     });
   }
-  return { success: true, x, y };
+  return { success: false, error: "UNKNOWN_CDP_PAGE_OPERATION", operation };
 }
 
-async function hoverAt(
-  target: chrome.debugger.Debuggee,
+async function executeArbitraryJavaScript(
   args: Record<string, unknown>,
+  run: CdpRun,
 ) {
-  const x = numberInput(args.x) || 0;
-  const y = numberInput(args.y) || 0;
-  await send(target, "Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
-  return { success: true, x, y };
-}
-
-async function mouseActionByAiID(args: Record<string, unknown>) {
-  const id = stringInput(args.id || args.uid);
-  const point = await runtimeCall<{
-    success?: boolean;
-    error?: string;
-    x?: number;
-    y?: number;
-    clickedTag?: string;
-    clickedRole?: string;
-  }>(
-    args,
-    `(aiId, elementNotFound, elementHasNoClickableBox) => {
-      const element = document.querySelector('[data-ai-id="' + CSS.escape(aiId) + '"]');
-      if (!element) return { success: false, error: elementNotFound };
-      const target = element.closest('button,a,[role="button"],[role="link"],[role="tab"],[role="listitem"],[role="gridcell"],[tabindex],[contenteditable="true"]') || element;
-      target.scrollIntoView({ block: "center", inline: "center" });
-      const rect = target.getBoundingClientRect();
-      if (!rect.width || !rect.height) return { success: false, error: elementHasNoClickableBox };
-      return {
-        success: true,
-        x: rect.left + rect.width / 2,
-        y: rect.top + rect.height / 2,
-        clickedTag: target.tagName.toLowerCase(),
-        clickedRole: target.getAttribute("role") || undefined,
-      };
-    }`,
-    [id, TOOL_ERROR.elementNotFound, TOOL_ERROR.elementHasNoClickableBox],
-  );
-  if (point.exception) return { success: false, error: point.exception };
-  if (!point.value?.success) return point.value || { success: false };
-  const action = stringInput(args.action) || "click";
-  const result = await withCdp(args, (target) => {
-    if (action === "hover")
-      return send(target, "Input.dispatchMouseEvent", {
-        type: "mouseMoved",
-        x: point.value?.x,
-        y: point.value?.y,
-      }).then(() => ({ success: true, x: point.value?.x, y: point.value?.y }));
-    return clickAt(target, {
-      ...args,
-      x: point.value?.x,
-      y: point.value?.y,
-      dblClick: action === "doubleClick",
-    });
-  });
-  return { ...(result as Record<string, unknown>), ...point.value, action };
-}
-
-async function pressKey(
-  target: chrome.debugger.Debuggee,
-  args: Record<string, unknown>,
-) {
-  const key = stringInput(args.key) || DEFAULT_KEY;
-  await send(target, "Input.dispatchKeyEvent", { type: "keyDown", key });
-  await send(target, "Input.dispatchKeyEvent", { type: "keyUp", key });
-  return { success: true, key };
-}
-
-async function typeText(
-  target: chrome.debugger.Debuggee,
-  args: Record<string, unknown>,
-) {
-  const text = stringInput(args.text);
-  await send(target, "Input.insertText", { text });
-  if (args.submitKey) await pressKey(target, { key: args.submitKey });
-  return { success: true, textLength: text.length };
-}
-
-async function fill(args: Record<string, unknown>) {
-  const id = stringInput(args.id || args.uid);
-  const value = stringInput(args.value);
-  const result = await runtimeCall<Record<string, unknown>>(
-    args,
-    `(aiId, nextValue, elementNotFound) => {
-      const element = document.querySelector('[data-ai-id="' + CSS.escape(aiId) + '"]');
-      if (!element) return { success: false, error: elementNotFound };
-      element.focus?.();
-      if ("value" in element) element.value = nextValue;
-      else element.textContent = nextValue;
-      element.dispatchEvent(
-        new InputEvent("input", { bubbles: true, data: nextValue }),
-      );
-      element.dispatchEvent(new Event("change", { bubbles: true }));
-      return { success: true };
-    }`,
-    [id, value, TOOL_ERROR.elementNotFound],
-  );
-  return result.exception
-    ? { success: false, error: result.exception }
-    : result.value || { success: false };
-}
-
-async function fillForm(args: Record<string, unknown>) {
-  const elements = Array.isArray(args.elements) ? args.elements : [];
-  const results = [];
-  for (const element of elements)
-    results.push(
-      await fill({
-        ...(element as Record<string, unknown>),
-        tabId: args.tabId,
-        targetId: args.targetId,
-        url: args.url,
-        title: args.title,
-      }),
-    );
-  return {
-    success: results.every(
-      (result) => (result as { success?: boolean }).success,
-    ),
-    results,
-  };
-}
-
-async function drag(
-  target: chrome.debugger.Debuggee,
-  args: Record<string, unknown>,
-) {
-  const from = pointInput(args.fromX, args.fromY);
-  const to = pointInput(args.toX, args.toY);
-  await send(target, "Input.dispatchMouseEvent", {
-    type: "mouseMoved",
-    ...from,
-  });
-  await send(target, "Input.dispatchMouseEvent", {
-    type: "mousePressed",
-    ...from,
-    button: "left",
-    buttons: 1,
-  });
-  await send(target, "Input.dispatchMouseEvent", {
-    type: "mouseMoved",
-    ...to,
-    buttons: 1,
-  });
-  await send(target, "Input.dispatchMouseEvent", {
-    type: "mouseReleased",
-    ...to,
-    button: "left",
-    buttons: 0,
-  });
-  return { success: true, from, to };
-}
-
-async function handleDialog(args: Record<string, unknown>) {
-  await withCdp(args, (target) =>
-    send(target, "Page.handleJavaScriptDialog", {
-      accept: stringInput(args.action) !== "dismiss",
-      promptText: stringInput(args.promptText),
-    }),
-  ).catch(() => undefined);
-  return {
-    success: true,
-    note: "Dialog handling command sent if a dialog was present.",
-  };
-}
-
-async function emulate(
-  target: chrome.debugger.Debuggee,
-  args: Record<string, unknown>,
-) {
-  if (args.viewport) {
-    const [width, height, deviceScaleFactor = 1] = stringInput(args.viewport)
-      .split(/[x,]/)
-      .map(Number);
-    await send(target, "Emulation.setDeviceMetricsOverride", {
-      width,
-      height,
-      deviceScaleFactor,
-      mobile: stringInput(args.viewport).includes("mobile"),
-    });
-  }
-  if (args.userAgent !== undefined)
-    await send(target, "Network.setUserAgentOverride", {
-      userAgent: stringInput(args.userAgent),
-    });
-  return { success: true };
-}
-
-async function evaluateScript(
-  target: chrome.debugger.Debuggee,
-  args: Record<string, unknown>,
-) {
-  const expression = `(${stringInput(args["function"] || args.expression)})()`;
-  const result = await send(target, "Runtime.evaluate", {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
-  });
-  return {
-    ...sliceStringValue("result", result.result?.value, args),
-    exception: result.exceptionDetails?.text,
-  };
-}
-
-async function executeArbitraryJavaScript(args: Record<string, unknown>) {
   const code = String(args.code || "");
   if (!code.trim()) return { success: false, error: TOOL_ERROR.missingCode };
-  const result = await runtimeCall<Record<string, unknown>>(
-    args,
-    `async (source) => {
-      try {
-        const value = await (0, eval)(source);
-        if (value === undefined) return { success: true, value: { type: "undefined" } };
-        try { return { success: true, value: JSON.parse(JSON.stringify(value)) }; }
-        catch { return { success: true, value: String(value) }; }
-      } catch (error) {
-        return { success: false, error: error instanceof Error ? error.message : String(error) };
-      }
-    }`,
-    [code],
-  );
-  if (result.exception) return { success: false, error: result.exception };
-  if (typeof result.value?.value === "string")
-    return {
-      ...result.value,
-      ...withContentSlice({}, result.value.value, args, "value"),
-    };
-  return result.value || { success: false };
-}
-
-async function takeScreenshot(
-  target: chrome.debugger.Debuggee,
-  args: Record<string, unknown>,
-) {
-  const requestedFormat = stringInput(args.format);
-  const format =
-    requestedFormat === "png" || requestedFormat === "webp"
-      ? requestedFormat
-      : DEFAULT_SCREENSHOT_FORMAT;
-  const quality = Number(args.quality);
-  const result = await send(target, "Page.captureScreenshot", {
-    format,
-    ...(format === "jpeg" || format === "webp"
-      ? {
-          quality: Number.isFinite(quality)
-            ? Math.min(100, Math.max(0, Math.trunc(quality)))
-            : DEFAULT_SCREENSHOT_QUALITY,
-        }
-      : {}),
-    fromSurface: true,
+  return run(args, async (send) => {
+    let contextId;
+    if (args.world === "ISOLATED") {
+      const tree = await send("Page.getFrameTree");
+      const world = await send("Page.createIsolatedWorld", {
+        frameId: tree.frameTree.frame.id,
+        worldName: "OpenBrowserAgent",
+      });
+      contextId = world.executionContextId;
+      if (!Number.isInteger(contextId) || contextId <= 0)
+        throw new Error(
+          "CDP did not return a valid isolated execution context.",
+        );
+    }
+    const result = await send("Runtime.evaluate", {
+      expression: `(async () => { try { const value = await (0,eval)(${JSON.stringify(code)}); if(value === undefined) return {success:true,value:{type:'undefined'}}; try {return {success:true,value:JSON.parse(JSON.stringify(value))}} catch {return {success:true,value:String(value)}} } catch(error) {return {success:false,error:error instanceof Error ? error.message : String(error)}} })()`,
+      awaitPromise: true,
+      returnByValue: true,
+      ...(contextId ? { contextId } : {}),
+    });
+    if (result.exceptionDetails)
+      return { success: false, error: result.exceptionDetails.text };
+    const output = result.result?.value || { success: false };
+    return typeof output.value === "string"
+      ? { ...output, ...withContentSlice({}, output.value, args, "value") }
+      : output;
   });
-  const image = `data:image/${format};base64,${result.data}`;
-  return {
-    success: true,
-    format,
-    image,
-    _visionImage: { dataUrl: image, type: `image/${format}` },
-    note: "Screenshot pixels will be sent to the next model call as a vision image.",
-  };
-}
-
-async function takeSnapshot(args: Record<string, unknown>) {
-  const result = await runtimeEvaluate<string>(
-    args,
-    "document.body?.innerText || ''",
-  );
-  return result.exception
-    ? { success: false, error: result.exception }
-    : withContentSlice({}, result.value || "", args, "snapshot");
-}
-
-async function listConsoleMessages(
-  target: chrome.debugger.Debuggee,
-  args: Record<string, unknown>,
-) {
-  await send(target, "Runtime.enable");
-  return withListSlice(
-    {
-      note: "Console collection starts after this call; persistent history is not stored yet.",
-    },
-    [],
-    args,
-    "messages",
-  );
-}
-
-async function listNetworkRequests(
-  target: chrome.debugger.Debuggee,
-  args: Record<string, unknown>,
-) {
-  await send(target, "Network.enable");
-  const result = await send(target, "Runtime.evaluate", {
-    expression:
-      "performance.getEntriesByType('resource').map((r,i)=>({id:i,url:r.name,type:r.initiatorType,duration:r.duration,transferSize:r.transferSize}))",
-    returnByValue: true,
-  });
-  return withListSlice({}, result.result?.value || [], args, "requests");
-}
-
-function sliceStringValue(
-  field: string,
-  value: unknown,
-  args: Record<string, unknown>,
-) {
-  return typeof value === "string"
-    ? withContentSlice({}, value, args, field)
-    : { [field]: value };
-}
-
-function unsupported(name: string, reason: string) {
-  return { success: false, error: reason, tool: name };
-}
-
-function send(
-  target: chrome.debugger.Debuggee,
-  command: string,
-  params?: Record<string, unknown>,
-) {
-  return chrome.debugger.sendCommand(target, command, params) as Promise<
-    Record<string, any>
-  >;
-}
-
-async function resolveTabId(value: unknown) {
-  return resolveBrowserTabId(value);
-}
-
-function stringInput(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function numberInput(value: unknown) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : undefined;
-}
-
-function hasTargetIdOnly(args: Record<string, unknown>) {
-  return !!stringInput(args.targetId) && !numberInput(args.tabId);
-}
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : String(error);
-}
-
-function pointInput(x: unknown, y: unknown) {
-  return { x: numberInput(x) || 0, y: numberInput(y) || 0 };
 }

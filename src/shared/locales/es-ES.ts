@@ -476,6 +476,8 @@ export const esES: LocaleMessages = {
     agentWorkspaceDescription:
       "Archivos de texto privados de este agente. SOUL.md define el comportamiento, AGENTS.md las reglas del espacio de trabajo, MEMORY.md y USER.md se inyectan como contexto fijo, y NOTES.md queda disponible bajo demanda.",
     agentWorkspaceNewFile: "Nuevo archivo de espacio de trabajo",
+    agentWorkspaceConflict:
+      "Este archivo cambió mientras lo editabas. Vuelve a abrirlo para revisar la última versión antes de guardar.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     agentWorkspaceEmpty: "Aún no hay archivos de espacio de trabajo.",
     resetDefaultAgents: "Restablecer agentes predeterminados",

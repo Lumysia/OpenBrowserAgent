@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
   "scripts": {
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox",
@@ -16,9 +19,19 @@
     "update-local-execution-bridge": "node packages/local-execution-bridge/bin/cli.mjs update",
     "uninstall-local-execution-bridge": "node packages/local-execution-bridge/bin/cli.mjs uninstall",
     "zip": "node scripts/zip-with-hash.mjs",
-    "compile": "tsc --noEmit"
+    "compile": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:browser": "node tests/browser-smoke.mjs",
+    "test:browser:composer": "node --test tests/browser-composer.test.mjs tests/browser-markdown.test.mjs tests/browser-storage.test.mjs tests/browser-sync-deletion.test.mjs tests/browser-streaming-markdown.test.mjs tests/browser-navigation.test.mjs",
+    "test:browser:pi": "node tests/browser-pi.mjs",
+    "test:browser:workspace": "node --test tests/browser-workspace.test.mjs",
+    "test:browser:tools": "node --test tests/browser-tools.test.mjs",
+    "test:browser:all": "node --test tests/browser-*.test.mjs && node tests/browser-smoke.mjs && node tests/browser-pi.mjs",
+    "bench:sync": "node --import tsx tests/bench-sync.ts"
   },
   "dependencies": {
+    "@earendil-works/pi-agent-core": "1.1.0",
+    "@earendil-works/pi-ai": "1.1.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-scroll-area": "^1.2.10",
@@ -27,31 +40,36 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@vitejs/plugin-react": "latest",
-    "@wxt-dev/module-react": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "dompurify": "^3.4.16",
     "highlight.js": "^11.11.1",
     "jszip": "^3.10.1",
-    "katex": "^0.16.47",
+    "katex": "^0.18.2",
     "lucide-react": "latest",
     "marked": "latest",
-    "nanoid": "latest",
+    "nanoid": "^5.1.16",
     "react": "latest",
     "react-dom": "latest",
     "tailwind-merge": "^3.6.0",
-    "tinybase": "^8.4.1",
-    "wxt": "latest"
+    "tinybase": "^8.4.1"
   },
   "devDependencies": {
     "@types/chrome": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "rollup": "latest",
-    "typescript": "latest"
+    "@wxt-dev/module-react": "^1.2.2",
+    "prettier": "3.9.9",
+    "tsx": "4.23.15",
+    "typescript": "latest",
+    "vite": "^8.3.4",
+    "web-ext": "^10.7.0",
+    "wxt": "^0.21.4"
   },
   "overrides": {
-    "uuid": "^11.1.1"
+    "fx-runner": {
+      "shell-quote": "^1.12.0"
+    }
   }
 }

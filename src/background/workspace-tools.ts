@@ -1,4 +1,8 @@
-import { storage } from "../shared/storage";
+import {
+  mutateWorkspace,
+  workspaceFileUnchanged,
+  WORKSPACE_FILE_CONFLICT,
+} from "../shared/workspace-storage";
 import type { AgentWorkspace } from "../shared/types";
 import {
   deleteWorkspaceFile as deleteWorkspaceFileHelper,
@@ -70,10 +74,12 @@ export async function writeWorkspaceFile(
         "This workspace file is managed by product rules or memory tools and cannot be changed with generic workspace file tools.",
       path,
     };
-  const result = upsertWorkspaceFile(workspace, path, content);
+  const result = await mutateWorkspace(workspace, (current) =>
+    workspaceFileUnchanged(workspace, current, path)
+      ? upsertWorkspaceFile(current, path, content)
+      : { ok: false, error: WORKSPACE_FILE_CONFLICT },
+  );
   if (!result.ok) return { error: result.error, path };
-  await persistWorkspace(result.workspace);
-  Object.assign(workspace, result.workspace);
   return {
     path: result.file?.path,
     kind: result.file?.kind,
@@ -89,7 +95,7 @@ export async function patchWorkspaceFile(
   if (!workspace) return { error: "No current agent workspace" };
   const path = String(input.path || "").trim();
   const operation = String(
-    input.operation || "replace",
+    input.patchOperation || "replace",
   ) as WorkspacePatchOperation;
   if (!isWorkspaceAgentWritableFile(path))
     return {
@@ -99,16 +105,18 @@ export async function patchWorkspaceFile(
     };
   if (!["replace", "append", "prepend"].includes(operation))
     return { error: "Invalid workspace patch operation", operation };
-  const result = patchWorkspaceFileHelper(
-    workspace,
-    path,
-    operation,
-    String(input.value ?? ""),
-    String(input.find || ""),
+  const result = await mutateWorkspace(workspace, (current) =>
+    operation === "replace" && !workspaceFileUnchanged(workspace, current, path)
+      ? { ok: false, error: WORKSPACE_FILE_CONFLICT }
+      : patchWorkspaceFileHelper(
+          current,
+          path,
+          operation,
+          String(input.value ?? ""),
+          String(input.find || ""),
+        ),
   );
   if (!result.ok) return { error: result.error, path };
-  await persistWorkspace(result.workspace);
-  Object.assign(workspace, result.workspace);
   return {
     path: result.file?.path,
     chars: result.file?.content.length,
@@ -128,10 +136,12 @@ export async function deleteWorkspaceFile(
         "This workspace file is managed by product rules or memory tools and cannot be deleted with generic workspace file tools.",
       path,
     };
-  const result = deleteWorkspaceFileHelper(workspace, path);
+  const result = await mutateWorkspace(workspace, (current) =>
+    workspaceFileUnchanged(workspace, current, path)
+      ? deleteWorkspaceFileHelper(current, path)
+      : { ok: false, error: WORKSPACE_FILE_CONFLICT },
+  );
   if (!result.ok) return { error: result.error, path };
-  await persistWorkspace(result.workspace);
-  Object.assign(workspace, result.workspace);
   return { path, deleted: true };
 }
 
@@ -150,12 +160,4 @@ export function searchWorkspaceFiles(
     resultCharLimit: result.resultCharLimit,
     previewCharLimit: result.previewCharLimit,
   };
-}
-
-async function persistWorkspace(workspace: AgentWorkspace) {
-  const allWorkspaces = await storage.agentWorkspaces.get();
-  const others = allWorkspaces.filter(
-    (item) => item.agentId !== workspace.agentId,
-  );
-  await storage.agentWorkspaces.set([...others, workspace]);
 }

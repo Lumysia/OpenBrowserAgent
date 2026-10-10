@@ -5,7 +5,6 @@ import { removeSyncedChatAttachments } from "../../src/shared/sync-chat-attachme
 import type { SyncDataSettings } from "../../src/shared/sync-data-settings";
 import type { Chat } from "../../src/shared/types";
 import {
-  closedChatIds,
   closeChatAction,
   createChatAction,
   selectChatAction,
@@ -28,7 +27,7 @@ export function useChatActions({
   setDraftChat: Dispatch<SetStateAction<Chat | undefined>>;
   setActiveChatId: Dispatch<SetStateAction<string | undefined>>;
   setChatSelectionRequestId: Dispatch<SetStateAction<number>>;
-  abortClosedChatStreams: (chatId: string) => Set<string>;
+  abortClosedChatStreams: (chatId: string) => Promise<Set<string>>;
   clearUnreadCompletedChat: (chatId: string) => void;
   syncDataSettings?: SyncDataSettings;
 }) {
@@ -44,21 +43,22 @@ export function useChatActions({
   }, [setActiveChatId, setChats, setDraftChat, t.words.newChat]);
 
   const closeChat = useCallback(
-    (chatId: string) => {
-      const ids = abortClosedChatStreams(chatId);
+    async (chatId: string) => {
+      let ids: Set<string>;
+      try {
+        ids = await abortClosedChatStreams(chatId);
+      } catch (error) {
+        console.warn("Failed to close chat streams", error);
+        return;
+      }
       ids.forEach((id) => {
         clearUnreadCompletedChat(id);
       });
       storage.chats
         .get()
         .then((storedChats) => {
-          const storedIds = closedChatIds(storedChats, chatId);
-          const removedChats = storedChats.filter((chat) =>
-            storedIds.has(chat.id),
-          );
-          const retainedChats = storedChats.filter(
-            (chat) => !storedIds.has(chat.id),
-          );
+          const removedChats = storedChats.filter((chat) => ids.has(chat.id));
+          const retainedChats = storedChats.filter((chat) => !ids.has(chat.id));
           return removeSyncedChatAttachments(
             syncDataSettings,
             removedChats,
@@ -69,7 +69,7 @@ export function useChatActions({
           console.warn("Failed to remove synced chat attachments", error),
         );
       closeChatAction({
-        chatId,
+        closedIds: ids,
         setChats,
       });
     },

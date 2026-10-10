@@ -2,7 +2,6 @@
   if (window.__obaElementSelectorActive) return;
   window.__obaElementSelectorActive = true;
 
-  const STORAGE_KEY_PREFERENCES = "preferences";
   const MESSAGE_CANCEL = "cancelElementSelector";
   const MESSAGE_CANCELLED = "elementSelectorCancelled";
   const Z_INDEX = "2147483647";
@@ -68,12 +67,9 @@
   });
   root.appendChild(label);
 
-  applyTheme(DEFAULT_PREFERENCES);
+  applyTheme(window.__obaElementSelectorPreferences || DEFAULT_PREFERENCES);
   document.documentElement.appendChild(root);
   document.body.style.cursor = "crosshair";
-  loadPreferences()
-    .then(applyTheme)
-    .catch(() => undefined);
   updateOverlay(null);
 
   function applyTheme(preferences) {
@@ -102,18 +98,6 @@
         ? `rgba(2, 6, 23, ${DIM_OPACITY})`
         : `rgba(15, 23, 42, ${DIM_OPACITY * 0.82})`,
     );
-  }
-
-  async function loadPreferences() {
-    const [syncData, localData] = await Promise.all([
-      chrome.storage.sync.get(STORAGE_KEY_PREFERENCES).catch(() => ({})),
-      chrome.storage.local.get(STORAGE_KEY_PREFERENCES).catch(() => ({})),
-    ]);
-    return {
-      ...DEFAULT_PREFERENCES,
-      ...(localData[STORAGE_KEY_PREFERENCES] || {}),
-      ...(syncData[STORAGE_KEY_PREFERENCES] || {}),
-    };
   }
 
   function cleanup() {

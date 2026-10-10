@@ -342,3 +342,21 @@
   align-items: center;
   gap: 10px;
 }
+.ui-radio-item {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+}
+.ui-radio-item > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.ui-radio-item:has(:focus-visible) {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}

@@ -435,22 +435,28 @@ export const commonBrowserTools = [
     },
     [],
   ),
-  tool(BROWSER_TOOL_NAME.captureVisibleTab, "Capture the visible tab area", {
-    tabId: {
-      type: "number",
-      description: "The tab ID to capture. Defaults to active tab.",
+  tool(
+    BROWSER_TOOL_NAME.captureVisibleTab,
+    "Capture the visible tab area",
+    {
+      tabId: {
+        type: "number",
+        description: "The tab ID to capture. Defaults to active tab.",
+      },
+      format: {
+        type: "string",
+        enum: ["png", "jpeg"],
+        description:
+          "Image format. Defaults to jpeg for efficient vision input.",
+      },
+      quality: {
+        type: "number",
+        description:
+          "JPEG quality from 0 to 100. Defaults to an efficient low-quality screenshot.",
+      },
     },
-    format: {
-      type: "string",
-      enum: ["png", "jpeg"],
-      description: "Image format. Defaults to jpeg for efficient vision input.",
-    },
-    quality: {
-      type: "number",
-      description:
-        "JPEG quality from 0 to 100. Defaults to an efficient low-quality screenshot.",
-    },
-  }),
+    [],
+  ),
   tool(
     BROWSER_TOOL_NAME.downloadTabToMarkdown,
     "Download/export the tab as a Markdown file for the USER's device. This creates a user-facing file; it is not a way to pass page content to the agent. For page analysis or summarization, use inspectPage instead.",
@@ -566,7 +572,17 @@ export const deferredDomainTools = [
       instruction: { type: "string" },
       path: { type: "string" },
       content: { type: "string" },
-      replacements: { type: "array", items: { type: "object" } },
+      replacements: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            oldText: { type: "string", minLength: 1 },
+            newText: { type: "string" },
+          },
+          required: ["oldText", "newText"],
+        },
+      },
       reason: { type: "string" },
       ...contentSliceParameters,
       ...listSliceParameters,
@@ -583,6 +599,12 @@ export const deferredDomainTools = [
       },
       path: { type: "string" },
       content: { type: "string" },
+      patchOperation: {
+        type: "string",
+        enum: ["replace", "append", "prepend"],
+        description:
+          "For operation=patch. Defaults to replace; find selects literal text, or omit find to replace the whole file.",
+      },
       value: { type: "string" },
       find: { type: "string" },
       query: { type: "string" },

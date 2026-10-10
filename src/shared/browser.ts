@@ -1,4 +1,4 @@
-import { getBrowserApi } from "./storage";
+import { getBrowserApi, storage } from "./storage";
 import { TOOL_ERROR } from "./tool-errors";
 import type { AttachmentTab, SelectedElement } from "./types";
 
@@ -107,13 +107,15 @@ export async function injectElementSelector(tabId: number, prompt: string) {
   await api.tabs
     .sendMessage(tabId, { type: "cancelElementSelector" })
     .catch(() => undefined);
+  const { colorScheme, accentColor } = await storage.preferences.get();
   await api.scripting.executeScript({
     target: { tabId },
-    args: [prompt],
-    func: (selectorPrompt) => {
-      (
-        window as Window & { __obaElementSelectorPrompt?: string }
-      ).__obaElementSelectorPrompt = selectorPrompt;
+    args: [prompt, { colorScheme, accentColor }],
+    func: (selectorPrompt, preferences) => {
+      Object.assign(window, {
+        __obaElementSelectorPrompt: selectorPrompt,
+        __obaElementSelectorPreferences: preferences,
+      });
     },
   });
   await api.scripting.executeScript({
@@ -133,8 +135,7 @@ export async function getSelectedElementFromPage(
     target: { tabId },
     func: () => {
       const element = document.querySelector('[data-oba-selected="true"]') as
-        | (HTMLInputElement & HTMLElement)
-        | null;
+        (HTMLInputElement & HTMLElement) | null;
       if (!element) return null;
       const image =
         element instanceof HTMLImageElement

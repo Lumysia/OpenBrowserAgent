@@ -19,6 +19,7 @@ type SnapshotOptions<T> = Pick<
 export function useStoredState<T>(item: StorageItem<T>) {
   const [value, setValue] = useState<T | undefined>();
   const valueRef = useRef<T | undefined>(undefined);
+  const initialLoadRef = useRef<Promise<void> | undefined>(undefined);
   const snapshotRef = useRef<string | undefined>(undefined);
   const ownWriteSnapshotsRef = useRef<OwnWriteSnapshots>({
     order: [],
@@ -32,10 +33,11 @@ export function useStoredState<T>(item: StorageItem<T>) {
 
   useEffect(() => {
     let mounted = true;
-    item
+    let receivedUpdate = false;
+    initialLoadRef.current = item
       .get()
       .then((next) => {
-        if (!mounted) return;
+        if (!mounted || receivedUpdate) return;
         valueRef.current = next;
         snapshotRef.current = snapshot(item, next);
         setValue(next);
@@ -47,6 +49,7 @@ export function useStoredState<T>(item: StorageItem<T>) {
         if (mounted) setLoading(false);
       });
     const unwatch = item.watch((next) => {
+      receivedUpdate = true;
       const nextSnapshot = snapshot(item, next);
       if (nextSnapshot && nextSnapshot === snapshotRef.current) return;
       if (consumeOwnWriteSnapshot(ownWriteSnapshotsRef, nextSnapshot)) {
@@ -72,8 +75,12 @@ export function useStoredState<T>(item: StorageItem<T>) {
     next: T | ((previous: T) => T),
     options: StoredStateUpdateOptions = {},
   ) {
+    // Controls can become usable before a slower storage item has loaded. Keep
+    // the update pending so callers awaiting persistence cannot silently lose it.
+    if (valueRef.current === undefined) await initialLoadRef.current;
     const previous = valueRef.current;
-    if (previous === undefined) return;
+    if (previous === undefined)
+      throw new Error(`Stored item ${item.key || ""} has not loaded`);
     const resolved =
       typeof next === "function"
         ? (next as (previous: T) => T)(previous)

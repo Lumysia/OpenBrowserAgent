@@ -2,9 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
-    branches: [main]
 
 permissions:
   contents: read
@@ -29,6 +28,9 @@ jobs:
 
       - name: Type check
         run: npm run compile
+
+      - name: Unit and protocol tests
+        run: npm test
 
       - name: Build
         run: npm run build

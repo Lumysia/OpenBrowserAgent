@@ -131,8 +131,7 @@ function connectStreamPort({
   let activeMessageId = targetMessageId;
   let settled = false;
   let pendingSequenceMetrics:
-    | { messageId: string; metrics: Partial<RunMetrics> }
-    | undefined;
+    { messageId: string; metrics: Partial<RunMetrics> } | undefined;
   let sequenceMetricsTimeout: number | undefined;
 
   function updateActiveStream(
@@ -150,6 +149,7 @@ function connectStreamPort({
 
   function clearActiveStream() {
     settled = true;
+    if (portRefs.current[chatId] !== port) return;
     setActiveStreams((items) => {
       if (!items[chatId]) return items;
       const next = { ...items };
@@ -167,13 +167,13 @@ function connectStreamPort({
     }
     const item = pendingSequenceMetrics;
     pendingSequenceMetrics = undefined;
-    if (!item) return;
+    if (!item || portRefs.current[chatId] !== port) return;
     updateRunMetrics(item.messageId, item.metrics, { flushPendingText: false });
   }
 
   port.onDisconnect.addListener(() => {
-    if (portRefs.current[chatId] === port) delete portRefs.current[chatId];
     flushSequenceMetrics();
+    if (portRefs.current[chatId] !== port) return;
     flushMessageText(chatId, activeMessageId);
     if (!settled) clearActiveStream();
   });
@@ -189,6 +189,7 @@ function connectStreamPort({
   }
 
   port.onMessage.addListener((message: AiStreamResponse) => {
+    if (settled || portRefs.current[chatId] !== port) return;
     lastStreamActivityRef.current[chatId] = Date.now();
     const sequenceMetrics = message.sequence
       ? { streamEventIndex: message.sequence }
