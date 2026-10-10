@@ -5,13 +5,17 @@ import {
   MAX_IMAGES_PER_DOWNLOAD,
 } from "../shared/config";
 import { getBrowserApi } from "../shared/storage";
+import { abortable } from "../shared/cancellation";
 
-export async function findImages(tabId: number) {
+export async function findImages(tabId: number, signal?: AbortSignal) {
+  signal?.throwIfAborted();
   const api = getBrowserApi();
   const tab = await api.tabs.get(tabId);
+  signal?.throwIfAborted();
   const [result] = await api.scripting.executeScript({
     target: { tabId },
-    func: () => {
+    args: [IMAGE_ALT_MAX_LENGTH],
+    func: (altMaxLength) => {
       const seen = new Set<string>();
       const images: Array<{
         src: string;
@@ -77,7 +81,7 @@ export async function findImages(tabId: number) {
           element.tagName.toLowerCase();
         images.push({
           src,
-          alt: `bg-${label}-${index}`.slice(0, IMAGE_ALT_MAX_LENGTH),
+          alt: `bg-${label}-${index}`.slice(0, altMaxLength),
           index: index++,
           type: "background",
         });
@@ -90,30 +94,37 @@ export async function findImages(tabId: number) {
   const zip = new JSZip();
   let downloadedCount = 0;
   for (const image of images.slice(0, MAX_IMAGES_PER_DOWNLOAD)) {
+    signal?.throwIfAborted();
     try {
-      const response = await fetch(image.src);
+      const response = await fetch(image.src, { signal });
       if (!response.ok) continue;
-      const blob = await response.blob();
+      const bytes = await response.arrayBuffer();
+      signal?.throwIfAborted();
       const extension = imageExtension(
         response.headers.get("content-type"),
         image.src,
       );
       zip.file(
         `${String(image.index + 1).padStart(3, "0")}_${safeFileName(image.alt || image.type || "image").slice(0, IMAGE_FILENAME_MAX_LABEL_LENGTH)}.${extension}`,
-        blob,
+        bytes,
       );
       downloadedCount += 1;
     } catch {
+      signal?.throwIfAborted();
       // Some sites block image fetches; keep going and zip the images we can access.
     }
   }
   if (downloadedCount > 0) {
-    const base64 = await zip.generateAsync({ type: "base64" });
-    await api.downloads.download({
-      url: `data:application/zip;base64,${base64}`,
-      filename,
-      saveAs: false,
-    });
+    signal?.throwIfAborted();
+    const base64 = await generateZipBase64(zip, signal);
+    await downloadFile(
+      {
+        url: `data:application/zip;base64,${base64}`,
+        filename,
+        saveAs: false,
+      },
+      signal,
+    );
   }
   return {
     success: downloadedCount > 0,
@@ -127,16 +138,88 @@ export function safeFileName(value: string) {
   return value.replace(/[\\/:*?"<>|]+/g, "_").replace(/\s+/g, "_");
 }
 
+export async function generateZipBase64(zip: JSZip, signal?: AbortSignal) {
+  signal?.throwIfAborted();
+  const stream = zip.generateInternalStream({
+    type: "base64",
+    streamFiles: true,
+  });
+  const abort = () => {
+    stream.pause();
+  };
+  signal?.addEventListener("abort", abort, { once: true });
+  // JSZip schedules resume asynchronously. Also pause at the first chunk if
+  // abort happened before that resume ran. Throwing from onUpdate would escape
+  // JSZip's promise and does not reliably stop its worker chain.
+  stream.on("data", () => {
+    if (signal?.aborted) stream.pause();
+  });
+  try {
+    return await abortable(stream.accumulate(), signal);
+  } finally {
+    signal?.removeEventListener("abort", abort);
+  }
+}
+
 export async function downloadTextFile(
   filename: string,
   content: string,
   mimeType: string,
+  signal?: AbortSignal,
 ) {
-  await getBrowserApi().downloads.download({
-    url: `data:${mimeType},${encodeURIComponent(content)}`,
-    filename,
-    saveAs: false,
-  });
+  return downloadFile(
+    {
+      url: `data:${mimeType},${encodeURIComponent(content)}`,
+      filename,
+      saveAs: false,
+    },
+    signal,
+  );
+}
+
+export async function downloadFile(
+  options: chrome.downloads.DownloadOptions,
+  signal?: AbortSignal,
+) {
+  signal?.throwIfAborted();
+  const api = getBrowserApi().downloads;
+  // Keep observing creation even if the caller aborts before Chrome returns its ID.
+  const id = await api.download(options);
+  const cancel = () => api.cancel(id).catch(() => undefined);
+  if (signal?.aborted) {
+    await cancel();
+    signal.throwIfAborted();
+  }
+  let listener: (delta: chrome.downloads.DownloadDelta) => void;
+  const onAbort = () => {
+    void cancel();
+  };
+  signal?.addEventListener("abort", onAbort, { once: true });
+  try {
+    await abortable(
+      new Promise<void>((resolve, reject) => {
+        const check = (state?: string, error?: string) => {
+          if (state === "complete") resolve();
+          if (state === "interrupted" || error)
+            reject(new Error(error || "Download interrupted"));
+        };
+        listener = (delta) => {
+          if (delta.id === id)
+            check(delta.state?.current, delta.error?.current);
+        };
+        api.onChanged.addListener(listener);
+        api.search({ id }).then(([item]) => {
+          if (!item) reject(new Error("Download not found"));
+          else check(item.state, item.error);
+        }, reject);
+      }),
+      signal,
+    );
+    return id;
+  } finally {
+    signal?.removeEventListener("abort", onAbort);
+    api.onChanged.removeListener(listener!);
+  }
 }
 
 function imageExtension(contentType: string | null, url: string) {

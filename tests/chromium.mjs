@@ -105,7 +105,7 @@ export async function launchExtension({ headed = true } = {}) {
       );
       return page;
     };
-    return { id, browser, open, close };
+    return { id, browser, open, close, profile };
   } catch (error) {
     await close();
     throw error;

@@ -35,7 +35,18 @@ process.stdin.on("data", (chunk) => {
 });
 
 process.stdin.on("end", () => {
-  for (const task of tasks.values()) task.child.kill();
+  for (const taskId of tasks.keys()) cancelTask(taskId);
+});
+for (const signal of ["SIGTERM", "SIGINT"])
+  process.once(signal, async () => {
+    await Promise.all([...tasks.keys()].map((taskId) => cancelTask(taskId)));
+    process.exit(0);
+  });
+// A disconnected browser may close stdout before cancellation has completed.
+process.stdout.on("error", (error) => {
+  if (error.code === "EPIPE")
+    for (const taskId of tasks.keys()) cancelTask(taskId);
+  else throw error;
 });
 
 function readMessages() {
@@ -93,6 +104,14 @@ function pingCommand(message) {
 
 function runCommand(message) {
   const taskId = String(message.taskId || cryptoRandomId());
+  if (tasks.has(taskId)) {
+    writeMessage({
+      type: "command.error",
+      taskId,
+      error: "Task ID is already running.",
+    });
+    return;
+  }
   const config = resolveCommand(message, taskId);
   if (!config) return;
   const commandLine = String(
@@ -110,6 +129,7 @@ function runCommand(message) {
   const hostAddress = String(message.command?.hostAddress || "");
   const shell = resolveShell(String(message.shell || config.shell || ""));
   const child = spawn(shell.command, shell.args(commandLine), {
+    detached: process.platform !== "win32",
     cwd,
     shell: false,
     env: {
@@ -119,7 +139,19 @@ function runCommand(message) {
     },
     stdio: ["pipe", "pipe", "pipe"],
   });
-  tasks.set(taskId, { child });
+  const task = {
+    child,
+    stopping: undefined,
+    stopReason: undefined,
+    stopError: undefined,
+    timer: undefined,
+    spawnFailed: false,
+  };
+  tasks.set(taskId, task);
+  task.timer = setTimeout(
+    () => cancelTask(taskId, "timeout"),
+    commandTimeout(message.timeoutMs || config.timeoutMs),
+  );
   writeMessage({
     type: "status",
     event: "started",
@@ -144,6 +176,8 @@ function runCommand(message) {
     }),
   );
   child.on("error", (error) => {
+    task.spawnFailed = true;
+    clearTimeout(task.timer);
     tasks.delete(taskId);
     writeMessage({
       type: "command.error",
@@ -151,13 +185,25 @@ function runCommand(message) {
       error: formatSpawnError(error, shell.command),
     });
   });
-  child.on("close", (code, signal) => {
+  child.on("close", async (code, signal) => {
+    clearTimeout(task.timer);
+    if (task.spawnFailed) return;
+    await task.stopping;
     tasks.delete(taskId);
+    const canceled = task.stopReason === "canceled" && !task.stopError;
+    const error =
+      task.stopError ||
+      (task.stopReason === "timeout"
+        ? "Local command timed out."
+        : canceled || code === 0
+          ? undefined
+          : `Local command exited with code ${code}`);
     writeMessage({
-      type: code === 0 ? "command.done" : "command.error",
+      type: error ? "command.error" : "command.done",
+      ...(canceled ? { event: "canceled" } : {}),
       taskId,
       result: { code, signal },
-      error: code === 0 ? undefined : `Local command exited with code ${code}`,
+      error,
     });
   });
   child.stdin.end();
@@ -189,15 +235,59 @@ function resolveCommand(message, taskId = "") {
   return command;
 }
 
-function cancelTask(taskId) {
+function cancelTask(taskId, reason = "canceled") {
   const task = tasks.get(taskId);
   if (!task) {
     writeMessage({ type: "status", event: "missing", taskId });
     return;
   }
-  task.child.kill();
-  tasks.delete(taskId);
-  writeMessage({ type: "command.done", event: "canceled", taskId });
+  if (task.stopping) return task.stopping;
+  clearTimeout(task.timer);
+  task.stopReason = reason;
+  task.stopping = terminateProcessTree(task.child).catch((error) => {
+    task.stopError = error.message;
+    writeMessage({ type: "command.error", taskId, error: task.stopError });
+  });
+  return task.stopping;
+}
+
+// Keep the installed host self-contained. POSIX groups retain ownership of
+// descendants after the shell exits; already committed effects are not undone.
+async function terminateProcessTree(child) {
+  if (!child.pid) return;
+  if (process.platform === "win32") {
+    await new Promise((resolve, reject) => {
+      const killer = spawn(
+        "taskkill",
+        ["/pid", String(child.pid), "/T", "/F"],
+        { windowsHide: true },
+      );
+      killer.once("error", reject);
+      killer.once("exit", (code) =>
+        code === 0
+          ? resolve()
+          : reject(new Error(`Process tree termination failed (${code})`)),
+      );
+    });
+    return;
+  }
+  const kill = (signal) => {
+    try {
+      process.kill(-child.pid, signal);
+    } catch (error) {
+      if (error.code !== "ESRCH") throw error;
+    }
+  };
+  kill("SIGTERM");
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  kill("SIGKILL");
+}
+
+function commandTimeout(value) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0
+    ? Math.min(30 * 60_000, Math.trunc(number))
+    : 60_000;
 }
 
 function loadConfig(path) {

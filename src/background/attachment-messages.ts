@@ -26,14 +26,17 @@ import { readSyncedChatAttachment } from "../shared/sync-chat-attachments";
 export async function readUploadedAttachment(
   attachments: UploadedAttachment[],
   input: Record<string, unknown>,
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
   const attachmentId = String(input.attachmentId || input.id || "");
   const offset = clampReadOffset(input.offset);
   const limit = clampReadLimit(input.limit);
   const format = String(input.format || "");
   const attachment =
     attachments.find((item) => item.id === attachmentId) ||
-    (await readSyncedChatAttachment(undefined, attachmentId));
+    (await readSyncedChatAttachment(undefined, attachmentId, signal));
+  signal?.throwIfAborted();
   if (!attachment)
     return { error: ATTACHMENT_TOOL_ERROR.notFound, attachmentId };
   if (attachment.kind === ATTACHMENT_KIND.text) {

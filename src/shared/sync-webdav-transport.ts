@@ -3,11 +3,13 @@ import type { WebDavSyncBackendConfig } from "./sync-backends";
 export async function readWebDavObject(
   backendConfig: WebDavSyncBackendConfig,
   name: string,
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
   const response = await requestWebDav(
     backendConfig,
     rawObjectUrl(backendConfig, name),
-    { method: "GET" },
+    { method: "GET", signal },
   );
   if (response.status === 404) return undefined;
   if (!response.ok) await throwWebDavError(response, "read");
@@ -19,13 +21,17 @@ export async function writeWebDavObject(
   name: string,
   bytes: Uint8Array,
   contentType = "application/octet-stream",
+  signal?: AbortSignal,
 ) {
-  await ensureWebDavCollections(backendConfig, name);
+  signal?.throwIfAborted();
+  await ensureWebDavCollections(backendConfig, name, signal);
+  signal?.throwIfAborted();
   const response = await requestWebDav(
     backendConfig,
     rawObjectUrl(backendConfig, name),
     {
       method: "PUT",
+      signal,
       headers: { "Content-Type": contentType },
       body: bytesToArrayBuffer(bytes),
     },
@@ -49,16 +55,18 @@ export async function removeWebDavObject(
 async function ensureWebDavCollections(
   backendConfig: WebDavSyncBackendConfig,
   name: string,
+  signal?: AbortSignal,
 ) {
   const parts = name.split("/").filter(Boolean);
   if (parts.length <= 1) return;
   let currentPath = "";
   for (const part of parts.slice(0, -1)) {
+    signal?.throwIfAborted();
     currentPath = currentPath ? `${currentPath}/${part}` : part;
     const response = await requestWebDav(
       backendConfig,
       rawObjectUrl(backendConfig, currentPath),
-      { method: "MKCOL" },
+      { method: "MKCOL", signal },
     );
     if (!response.ok && response.status !== 405)
       await throwWebDavError(response, "create folder");

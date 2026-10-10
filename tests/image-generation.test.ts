@@ -1,24 +1,12 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 import { generateImage } from "../src/background/image-generation";
-import { storage } from "../src/shared/storage";
-import { DEFAULT_PREFERENCES } from "../src/shared/default-preferences";
+import { imageModelFixture } from "./image-fixture";
 
 afterEach(() => mock.restoreAll());
 
 function setup(response: unknown) {
-  mock.method(storage.preferences, "get", async () => ({
-    ...DEFAULT_PREFERENCES,
-    selectedImageModelId: "fixture-image",
-  }));
-  mock.method(storage.provider, "get", async () => ({
-    fixture: {
-      id: "fixture",
-      type: "openai" as const,
-      baseUrl: "https://example.test/v1",
-      imageModels: [{ id: "fixture-image", name: "fixture-image" }],
-    },
-  }));
+  imageModelFixture();
   return mock.method(globalThis, "fetch", async () => Response.json(response));
 }
 
