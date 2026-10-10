@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import {
   Languages,
   MonitorCog,
@@ -33,7 +32,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Switch,
+  SettingSwitch,
+  SettingSwitchCard,
+  RadioGroup,
+  RadioGroupItem,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -73,7 +75,7 @@ export function GeneralPage() {
         </CardHeader>
         <CardContent>
           <Select value={language || "en-US"} onValueChange={setLanguage}>
-            <SelectTrigger>
+            <SelectTrigger aria-label={t.common.language}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -94,38 +96,34 @@ export function GeneralPage() {
           <CardDescription>{t.options.colorSchemeDescription}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div
+          <RadioGroup
             className="accent-picker"
-            role="radiogroup"
             aria-label={t.options.colorScheme}
+            value={preferences.accentColor || "pink"}
+            onValueChange={(value) =>
+              setPreferences((previous) => ({
+                ...previous,
+                accentColor: value as typeof preferences.accentColor,
+              }))
+            }
           >
             {accentOptions.map((option) => {
-              const selected =
-                (preferences.accentColor || "pink") === option.id;
               return (
                 <Tooltip key={option.id}>
                   <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      className={`accent-dot accent-dot-${option.id}${selected ? " active" : ""}`}
+                    <RadioGroupItem
+                      value={option.id}
+                      className={`accent-dot accent-dot-${option.id}`}
                       aria-label={option.label}
-                      aria-checked={selected}
-                      role="radio"
-                      onClick={() =>
-                        setPreferences((previous) => ({
-                          ...previous,
-                          accentColor: option.id,
-                        }))
-                      }
                     >
                       <span />
-                    </button>
+                    </RadioGroupItem>
                   </TooltipTrigger>
                   <TooltipContent>{option.label}</TooltipContent>
                 </Tooltip>
               );
             })}
-          </div>
+          </RadioGroup>
         </CardContent>
       </Card>
       <Card>
@@ -160,7 +158,7 @@ export function GeneralPage() {
           </ToggleGroup>
         </CardContent>
       </Card>
-      <PreferenceSwitch
+      <SettingSwitchCard
         icon={<ScrollText size={18} />}
         title={t.options.autoScroll}
         description={t.options.autoScrollDescription}
@@ -169,7 +167,7 @@ export function GeneralPage() {
           setPreferences((previous) => ({ ...previous, autoScroll: checked }))
         }
       />
-      <PreferenceSwitch
+      <SettingSwitchCard
         icon={<RefreshCw size={18} />}
         title={t.options.autoRetry}
         description={t.options.autoRetryDescription}
@@ -189,25 +187,17 @@ export function GeneralPage() {
         </CardHeader>
         <CardContent>
           <div className="stack">
-            <div className="setting-switch-row">
-              <div>
-                <CardTitle className="settings-section-title">
-                  {t.options.contextBudgetEnabled}
-                </CardTitle>
-                <CardDescription>
-                  {t.options.contextBudgetEnabledDescription}
-                </CardDescription>
-              </div>
-              <Switch
-                checked={preferences.contextBudgetEnabled !== false}
-                onCheckedChange={(checked) =>
-                  setPreferences((previous) => ({
-                    ...previous,
-                    contextBudgetEnabled: checked,
-                  }))
-                }
-              />
-            </div>
+            <SettingSwitch
+              title={t.options.contextBudgetEnabled}
+              description={t.options.contextBudgetEnabledDescription}
+              checked={preferences.contextBudgetEnabled !== false}
+              onChange={(checked) =>
+                setPreferences((previous) => ({
+                  ...previous,
+                  contextBudgetEnabled: checked,
+                }))
+              }
+            />
             <NumberSetting
               label={t.options.contextRequestMaxChars}
               value={String(
@@ -280,6 +270,7 @@ export function GeneralPage() {
         </CardHeader>
         <CardContent>
           <Input
+            aria-label={t.options.maxToolSteps}
             type="number"
             min={0}
             step={1}
@@ -321,40 +312,6 @@ function NumberSetting({
         onChange={(event) => onChange(event.currentTarget.value)}
       />
     </Label>
-  );
-}
-
-function PreferenceSwitch({
-  icon,
-  title,
-  description,
-  checked,
-  onChange,
-  danger,
-}: {
-  icon: ReactNode;
-  title: string;
-  description: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  danger?: boolean;
-}) {
-  return (
-    <Card>
-      <CardContent>
-        <div className="setting-switch-row">
-          <div>
-            <CardTitle
-              className={`settings-section-title${danger ? " danger-title" : ""}`}
-            >
-              {icon} {title}
-            </CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </div>
-          <Switch checked={checked} onCheckedChange={onChange} />
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
-import { installBrowser } from "./helpers";
+import { installBrowser, holdMethod } from "./helpers";
 import {
   storage,
   setActiveSyncBackend,
@@ -227,23 +227,16 @@ for (const key of ["preferences", "provider"] as const) {
       local.data[key] =
         key === "preferences" ? preferences : providers("fallback");
       const events = watch<unknown>(storage[key]);
-      const started = Promise.withResolvers<void>();
-      const release = Promise.withResolvers<void>();
-      const get = local.area.get.bind(local.area);
-      let held = false;
-      mock.method(local.area, "get", async (requested) => {
-        const result = await get(requested);
-        if (requested === key && !held) {
-          held = true;
-          started.resolve();
-          await release.promise;
-        }
-        return result;
-      });
+      const hold = holdMethod(
+        local.area,
+        "get",
+        (requested) => requested === key,
+        true,
+      );
       const removing = emit({
         [syncLocalCacheKey(key)]: { oldValue: cache({}) },
       });
-      await started.promise;
+      await hold.started;
       if (action === "unsubscribe")
         unwatchers.splice(0).forEach((unwatch) => unwatch());
       else {
@@ -260,7 +253,7 @@ for (const key of ["preferences", "provider"] as const) {
           },
         });
       }
-      release.resolve();
+      hold.release();
       await removing;
       if (action === "unsubscribe") assert.deepEqual(events, []);
       else {
@@ -279,24 +272,17 @@ for (const key of ["preferences", "provider"] as const) {
 test("a getter cannot publish an old fallback over a newer pending edit", async () => {
   const { local } = fixture();
   local.data.provider = providers("fallback");
-  const started = Promise.withResolvers<void>();
-  const release = Promise.withResolvers<void>();
-  const get = local.area.get.bind(local.area);
-  let held = false;
-  mock.method(local.area, "get", async (requested) => {
-    const result = await get(requested);
-    if (requested === "provider" && !held) {
-      held = true;
-      started.resolve();
-      await release.promise;
-    }
-    return result;
-  });
+  const hold = holdMethod(
+    local.area,
+    "get",
+    (requested) => requested === "provider",
+    true,
+  );
   const reading = storage.provider.get();
-  await started.promise;
+  await hold.started;
   await storage.provider.set(providers("newer"));
   const pending = structuredClone(local.data["provider:sync-local-cache"]);
-  release.resolve();
+  hold.release();
   assert.deepEqual(await reading, providers("newer"));
   assert.deepEqual(local.data["provider:sync-local-cache"], pending);
 });
@@ -327,21 +313,14 @@ test("a delayed fallback follows a category route change without publishing the 
   const { local, emit } = fixture();
   local.data.provider = providers("old-fallback");
   const events = watch(storage.provider);
-  const started = Promise.withResolvers<void>();
-  const release = Promise.withResolvers<void>();
-  const get = local.area.get.bind(local.area);
-  let held = false;
-  mock.method(local.area, "get", async (requested) => {
-    const result = await get(requested);
-    if (requested === "provider" && !held) {
-      held = true;
-      started.resolve();
-      await release.promise;
-    }
-    return result;
-  });
+  const hold = holdMethod(
+    local.area,
+    "get",
+    (requested) => requested === "provider",
+    true,
+  );
   const reading = storage.provider.get();
-  await started.promise;
+  await hold.started;
   const previous = local.data["sync-data-settings:sync-local-cache"];
   await storage.syncDataSettings.set({
     ...DEFAULT_SYNC_DATA_SETTINGS,
@@ -354,7 +333,7 @@ test("a delayed fallback follows a category route change without publishing the 
       newValue: local.data["sync-data-settings:sync-local-cache"],
     },
   });
-  release.resolve();
+  hold.release();
   assert.deepEqual(await reading, providers("new-local"));
   assert.deepEqual(events.at(-1), providers("new-local"));
   assert.equal(local.data["provider:sync-local-cache"], undefined);

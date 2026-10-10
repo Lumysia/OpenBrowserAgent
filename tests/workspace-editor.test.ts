@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 import { build } from "esbuild";
-import { installBrowser } from "./helpers";
+import { installBrowser, holdMethod } from "./helpers";
 import { createWorkspace, upsertWorkspaceFile } from "../src/shared/workspace";
 import type { AgentWorkspace } from "../src/shared/types";
 
@@ -174,23 +174,16 @@ for (const action of ["type", "switch"] as const) {
     const editor = await fixture();
     editor.click("NOTES.md", "Edit");
     editor.type("submitted text");
-    const started = Promise.withResolvers<void>();
-    const release = Promise.withResolvers<void>();
-    const originalSet = editor.local.area.set.bind(editor.local.area);
-    let held = false;
-    mock.method(editor.local.area, "set", async (values) => {
-      if (STORAGE_KEY in values && !held) {
-        held = true;
-        started.resolve();
-        await release.promise;
-      }
-      return originalSet(values);
-    });
+    const hold = holdMethod(
+      editor.local.area,
+      "set",
+      (values) => STORAGE_KEY in values,
+    );
     const save = editor.click("NOTES.md", "Save");
-    await started.promise;
+    await hold.started;
     if (action === "switch") editor.click("other.md", "Edit");
     editor.type("new draft text");
-    release.resolve();
+    hold.release();
     await save;
     await editor.refresh();
     assert.equal(editor.content("NOTES.md"), "submitted text");

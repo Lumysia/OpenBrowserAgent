@@ -1,6 +1,46 @@
 import assert from "node:assert/strict";
-import { poll } from "./chromium.mjs";
+import { launchExtension, poll } from "./chromium.mjs";
 import { composerStatus, installComposerProbe } from "./composer-probe.mjs";
+import { providerFixture } from "./provider-fixtures.mjs";
+
+// Own the loopback provider and disposable browser together, including partial
+// setup failures. Tests can install pre-navigation barriers before configure().
+export async function composerFixture(handle) {
+  const fixture = await providerFixture(handle);
+  let browser;
+  const close = async () => {
+    try {
+      await browser?.close();
+    } finally {
+      await fixture.close();
+    }
+  };
+  try {
+    browser = await launchExtension({
+      headed: process.env.OBA_HEADLESS !== "1",
+    });
+    const page = await browser.open(
+      `chrome-extension://${browser.id}/sidepanel.html`,
+    );
+    const config = {
+      provider: "openai",
+      model: "fixture",
+      baseUrl: `${fixture.baseUrl}/v1`,
+      apiKey: "",
+    };
+    return {
+      ...fixture,
+      browser,
+      page,
+      config,
+      configure: () => configureComposer(page, config),
+      close,
+    };
+  } catch (error) {
+    await close();
+    throw error;
+  }
+}
 
 // Drive React's actual composer with browser input events, then verify persisted
 // chat parts and the rendered answer. Return counts only, including in live mode.

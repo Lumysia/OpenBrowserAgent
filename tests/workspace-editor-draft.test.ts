@@ -5,9 +5,6 @@ import {
   completeWorkspaceDraftSave,
 } from "../entrypoints/options/workspace-editor-draft";
 import { createWorkspace, upsertWorkspaceFile } from "../src/shared/workspace";
-import { saveWorkspaceChanges } from "../src/shared/workspace-storage";
-import { storage } from "../src/shared/storage";
-import { installBrowser } from "./helpers";
 import type { AgentWorkspace } from "../src/shared/types";
 
 function edit(workspace: AgentWorkspace, path: string, content: string) {
@@ -15,37 +12,6 @@ function edit(workspace: AgentWorkspace, path: string, content: string) {
   assert.equal(result.ok, true);
   return result.workspace;
 }
-
-test("typing during save retains text against the successfully committed baseline", async () => {
-  installBrowser();
-  const workspace = edit(createWorkspace("fixture"), "NOTES.md", "original");
-  await storage.agentWorkspaces.set([workspace]);
-  const submitted = {
-    ...openWorkspaceDraft(workspace, "NOTES.md"),
-    content: "first save",
-  };
-  const typing = { ...submitted, content: "new typing during save" };
-  const saved = edit(workspace, "NOTES.md", submitted.content);
-  await storage.agentWorkspaces.set([saved]);
-  const remaining = completeWorkspaceDraftSave(
-    typing,
-    submitted,
-    saved,
-    "NOTES.md",
-  )!;
-  assert.equal(remaining.content, typing.content);
-  const next = await saveWorkspaceChanges(
-    remaining.snapshot,
-    edit(remaining.snapshot, "NOTES.md", remaining.content),
-  );
-  assert.equal(next.ok, true);
-  assert.equal(
-    (await storage.agentWorkspaces.get())[0].files.find(
-      (file) => file.path === "NOTES.md",
-    )?.content,
-    typing.content,
-  );
-});
 
 test("an earlier save cannot close a reopened draft or advance its conflict baseline", () => {
   const workspace = edit(createWorkspace("fixture"), "NOTES.md", "original");

@@ -28,7 +28,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Switch,
+  SettingSwitch,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { ModelSelect } from "./provider-controls";
@@ -131,7 +131,7 @@ export function ProvidersPage() {
                 value={providerType}
                 onValueChange={(value) => setProviderType(value as ProviderId)}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-label={t.options.providers}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -188,25 +188,18 @@ export function ProvidersPage() {
         </Card>
         <Card>
           <CardHeader>
-            <div className="setting-switch-row">
-              <div>
-                <CardTitle className="settings-section-title">
-                  <Image size={18} /> {t.options.enableImageGeneration}
-                </CardTitle>
-                <CardDescription>
-                  {t.options.enableImageGenerationDescription}
-                </CardDescription>
-              </div>
-              <Switch
-                checked={!!preferences.imageGenerationEnabled}
-                onCheckedChange={(imageGenerationEnabled) =>
-                  setPreferences((previous) => ({
-                    ...previous,
-                    imageGenerationEnabled,
-                  }))
-                }
-              />
-            </div>
+            <SettingSwitch
+              icon={<Image size={18} />}
+              title={t.options.enableImageGeneration}
+              description={t.options.enableImageGenerationDescription}
+              checked={!!preferences.imageGenerationEnabled}
+              onChange={(imageGenerationEnabled) =>
+                setPreferences((previous) => ({
+                  ...previous,
+                  imageGenerationEnabled,
+                }))
+              }
+            />
           </CardHeader>
           <CardContent>
             <div className="provider-image-fields">

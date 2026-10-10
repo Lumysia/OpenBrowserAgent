@@ -235,7 +235,9 @@ async function writeRemoteChatAttachment({
     signal,
   );
   signal?.throwIfAborted();
-  await removeLocalChatAttachment(attachment.id, signal);
+  // Uploads are replicas, not owners of local availability. Retain local bytes
+  // until explicit removal: routes and same-ID contents can change while remote
+  // I/O is pending, or after it completes, without making this copy dispensable.
 }
 
 async function writeLocalChatAttachment({

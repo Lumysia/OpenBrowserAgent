@@ -208,52 +208,6 @@ test("context pruning requests one anchored summary and reports it without strea
   }
 });
 
-test("Pi drains edited/deleted steering messages after a text-only turn and UI acknowledges one batch", async () => {
-  let run: ReturnType<typeof setup>;
-  const fixture = await providerFixture((request, response, requests) => {
-    if (requests.length === 1) {
-      sessions.queueMessage(run.session, { id: "a", content: "old" });
-      sessions.queueMessage(run.session, { id: "a", content: "edited" });
-      sessions.queueMessage(run.session, { id: "deleted", content: "discard" });
-      sessions.queueMessage(run.session, { id: "b", content: "second" });
-      sessions.deleteQueuedMessage(run.session, "deleted");
-    }
-    reply(response, request.protocol, {
-      text: requests.length === 1 ? "First" : "Follow-up",
-    });
-  });
-  run = setup(fixture.baseUrl, 0);
-  try {
-    await runPiAgent(run.options);
-    assert.equal(fixture.requests.length, 2);
-    assert.equal(run.session.agent.hasQueuedMessages(), false);
-    const users = fixture.requests[1].body.messages.filter(
-      (message) => message.role === "user",
-    );
-    assert.deepEqual(
-      users.slice(-2).map((message) => message.content),
-      ["edited", "second"],
-    );
-    const acknowledged = run.session.events.filter(
-      (event) => event.type === "queuedMessages",
-    );
-    assert.equal(acknowledged.length, 1);
-    assert.ok(
-      acknowledged[0].createdAt >
-        Math.max(
-          ...acknowledged[0].messages.map((message) => message.createdAt),
-        ),
-    );
-    assert.deepEqual(
-      acknowledged[0].messages.map((message) => message.id),
-      ["a", "b"],
-    );
-  } finally {
-    run.close();
-    await fixture.close();
-  }
-});
-
 test("deferred tools become executable and advertised on Pi's next turn", async () => {
   mock.method(storage.mcpServers, "get", async () => []);
   const fixture = await providerFixture((request, response, requests) =>

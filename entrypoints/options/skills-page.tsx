@@ -32,7 +32,8 @@ import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger,
+  AccordionHeader,
+  AccordionTriggerButton,
   Badge,
   Button,
   Card,
@@ -307,49 +308,62 @@ export function SkillsPage() {
           const checks = validateSkill(normalized);
           return (
             <AccordionItem value={skill.id} key={skill.id}>
-              <AccordionTrigger>
-                <span className="skill-trigger-summary">
-                  <span className="skill-trigger-title-row">
-                    <span className="skill-trigger-label">
-                      <FileText size={18} />
-                      {getSkillDisplayName(skill, t.options.untitledSkill)}
-                      {normalized.enabled === false && (
-                        <span className="muted">{t.options.disabled}</span>
-                      )}
-                    </span>
-                    <span className="skill-trigger-badges">
-                      <Badge>
-                        {t.options.updatedAt}:{" "}
-                        {formatSkillDate(normalized.updatedAt)}
-                      </Badge>
-                      <Badge>
-                        {t.options.skillSize}:{" "}
-                        {formatSkillBytes(skillPackageBytes(normalized))}
-                      </Badge>
-                      <Badge>{skill.id}</Badge>
-                    </span>
-                  </span>
-                  <small className="skill-checks skill-trigger-checks">
-                    {checks.map((check) => (
-                      <span className={check.ok ? "ok" : "warn"} key={check.id}>
-                        {check.ok ? "✓" : "!"}{" "}
-                        {skillCheckLabel(t, check.id, check.ok)}
+              <AccordionHeader className="ui-accordion-header-with-actions">
+                <AccordionTriggerButton hideChevron>
+                  <span className="skill-trigger-summary">
+                    <span className="skill-trigger-title-row">
+                      <span className="skill-trigger-label">
+                        <FileText size={18} />
+                        {getSkillDisplayName(skill, t.options.untitledSkill)}
+                        {normalized.enabled === false && (
+                          <span className="muted">{t.options.disabled}</span>
+                        )}
                       </span>
-                    ))}
-                  </small>
-                </span>
-                <span
-                  className="skill-trigger-actions"
-                  onClick={(event) => event.stopPropagation()}
-                >
+                      <span className="skill-trigger-badges">
+                        <Badge>
+                          {t.options.updatedAt}:{" "}
+                          {formatSkillDate(normalized.updatedAt)}
+                        </Badge>
+                        <Badge>
+                          {t.options.skillSize}:{" "}
+                          {formatSkillBytes(skillPackageBytes(normalized))}
+                        </Badge>
+                        <Badge>{skill.id}</Badge>
+                      </span>
+                    </span>
+                    <small className="skill-checks skill-trigger-checks">
+                      {checks.map((check) => (
+                        <span
+                          className={check.ok ? "ok" : "warn"}
+                          key={check.id}
+                        >
+                          {check.ok ? "✓" : "!"}{" "}
+                          {skillCheckLabel(t, check.id, check.ok)}
+                        </span>
+                      ))}
+                    </small>
+                  </span>
+                </AccordionTriggerButton>
+                <span className="accordion-trigger-actions">
                   <Switch
+                    aria-label={getSkillDisplayName(
+                      skill,
+                      t.options.untitledSkill,
+                    )}
                     checked={normalizeSkill(skill).enabled !== false}
                     onCheckedChange={(enabled) =>
                       updateSkillEnabled(skill, enabled)
                     }
                   />
                 </span>
-              </AccordionTrigger>
+                <AccordionTriggerButton
+                  className="accordion-chevron-trigger"
+                  aria-label={getSkillDisplayName(
+                    skill,
+                    t.options.untitledSkill,
+                  )}
+                />
+              </AccordionHeader>
               <AccordionContent>
                 <div className="skill-detail stack">
                   <div className="skill-identity-panel stack">

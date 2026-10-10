@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
-import { installBrowser } from "./helpers";
+import { installBrowser, holdMethod } from "./helpers";
 import { createSyncBackend } from "../src/shared/sync-backends-impl";
 import {
   BROWSER_SYNC_BACKEND_ID,
@@ -52,19 +52,7 @@ function fixture() {
 }
 
 function holdWrite(backend: SyncBackend, key: string) {
-  const started = Promise.withResolvers<void>();
-  const release = Promise.withResolvers<void>();
-  const write = backend.write.bind(backend);
-  let held = false;
-  mock.method(backend, "write", async (requested: string, value: unknown) => {
-    if (requested === key && !held) {
-      held = true;
-      started.resolve();
-      await release.promise;
-    }
-    return write(requested, value);
-  });
-  return { started: started.promise, release: release.resolve };
+  return holdMethod(backend, "write", (requested) => requested === key);
 }
 
 async function assertProviders(backend: SyncBackend, expected: ProviderState) {

@@ -43,7 +43,10 @@ import { postTextStream } from "../src/background/message-helpers";
 import { handleLocalExecutionBridgeRuntimeMessage } from "../src/background/local-execution-bridge-tools";
 import { browserToolsForPrompt } from "../src/background/tool-schema";
 import { requestPlainText } from "../src/background/pi-provider";
-import { handleSyncBackendRuntimeMessage } from "../src/shared/sync-backends";
+import {
+  handleSyncBackendRuntimeMessage,
+  handleSyncBackendRuntimePort,
+} from "../src/shared/sync-backends";
 import "../src/shared/sync-backends-impl";
 import * as streamSessions from "../src/background/stream-sessions";
 
@@ -68,11 +71,13 @@ export default defineBackground(() => {
 
   chrome.runtime.onMessage.addListener(
     (message, _sender, sendResponse) =>
+      streamSessions.handleChatStreamControlMessage(message, sendResponse) ||
       handleSyncBackendRuntimeMessage(message, sendResponse) ||
       handleLocalExecutionBridgeRuntimeMessage(message, sendResponse),
   );
 
   chrome.runtime.onConnect.addListener((port) => {
+    if (handleSyncBackendRuntimePort(port)) return;
     if (port.name !== AI_STREAM_PORT_NAME) return;
 
     port.onMessage.addListener((request: AiStreamRequest) => {

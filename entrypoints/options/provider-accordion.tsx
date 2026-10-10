@@ -17,6 +17,7 @@ import {
   AccordionTrigger,
   Badge,
   Button,
+  Feedback,
   Input,
   Label,
   Popover,
@@ -296,7 +297,11 @@ export function ProviderAccordion({
                 </Tooltip>
               )}
             </div>
-            {error && <p className="provider-error-text">{error}</p>}
+            {error && (
+              <Feedback error className="provider-error-text">
+                {error}
+              </Feedback>
+            )}
             <span className="settings-field-heading">
               {t.options.configuredModels}
             </span>

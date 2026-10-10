@@ -330,8 +330,7 @@
   width: 100%;
 }
 .skills-page,
-.skill-trigger-label,
-.skill-trigger-actions {
+.skill-trigger-label {
   min-width: 0;
 }
 .skill-trigger-label {
@@ -372,12 +371,6 @@
 .skill-trigger-checks {
   padding-left: 28px;
   font-weight: 400;
-}
-.skill-trigger-actions {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
 }
 .option-file-list {
   display: grid;

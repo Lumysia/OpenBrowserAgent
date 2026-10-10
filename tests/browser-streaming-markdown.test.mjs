@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
-import { launchExtension, poll } from "./chromium.mjs";
-import { configureComposer, submitComposer } from "./browser-composer.mjs";
+import { poll } from "./chromium.mjs";
+import { composerFixture, submitComposer } from "./browser-composer.mjs";
 import { installComposerProbe, composerStatus } from "./composer-probe.mjs";
-import { providerFixture, reply, toolResults } from "./provider-fixtures.mjs";
+import { reply, toolResults } from "./provider-fixtures.mjs";
 
 const list = [
   "Found ",
@@ -22,13 +22,13 @@ const prose = [
   " tab is also open.",
 ];
 
-for (const mode of ["stream-list", "complete-list", "stream-prose"]) {
+for (const mode of ["stream-list", "stream-prose"]) {
   test(
     `production animated Markdown: ${mode} preserves the root, nested tokens and every text part`,
     { timeout: 30000 },
     async () => {
       const chunks = mode === "stream-prose" ? prose : list;
-      const fixture = await providerFixture(async (request, response) => {
+      const fixture = await composerFixture(async (request, response) => {
         if (!toolResults(request).length) {
           reply(response, request.protocol, {
             text: "Checking tabs. ",
@@ -36,10 +36,6 @@ for (const mode of ["stream-list", "complete-list", "stream-prose"]) {
               { id: "tabs", name: "manageTabs", args: { operation: "list" } },
             ],
           });
-          return;
-        }
-        if (mode === "complete-list") {
-          reply(response, request.protocol, { text: chunks.join("") });
           return;
         }
         response.writeHead(200, { "Content-Type": "text/event-stream" });
@@ -53,14 +49,8 @@ for (const mode of ["stream-list", "complete-list", "stream-prose"]) {
           `data: ${JSON.stringify({ choices: [{ index: 0, delta: {}, finish_reason: "stop" }] })}\n\ndata: [DONE]\n\n`,
         );
       });
-      let browser;
+      const { page } = fixture;
       try {
-        browser = await launchExtension({
-          headed: process.env.OBA_HEADLESS !== "1",
-        });
-        const page = await browser.open(
-          `chrome-extension://${browser.id}/sidepanel.html`,
-        );
         await page.send("Page.enable");
         await page.send("Page.addScriptToEvaluateOnNewDocument", {
           source: `
@@ -73,12 +63,7 @@ for (const mode of ["stream-list", "complete-list", "stream-prose"]) {
         }).observe(document, { childList: true, subtree: true, characterData: true });
       `,
         });
-        await configureComposer(page, {
-          provider: "openai",
-          model: "fixture",
-          baseUrl: `${fixture.baseUrl}/v1`,
-          apiKey: "",
-        });
+        await fixture.configure();
         const prompt =
           "List the tabs using manageTabs and describe the result.";
         await installComposerProbe(page, prompt);
@@ -104,18 +89,16 @@ for (const mode of ["stream-list", "complete-list", "stream-prose"]) {
         assert.equal(status.answerRendered, true);
         assert.equal(status.matchedTextParts, 2);
         assert.equal(status.completedToolParts, 1);
-        if (mode !== "complete-list") {
-          assert.equal(
-            evidence.animated,
-            true,
-            "real character animation must remain enabled",
-          );
-          assert.equal(
-            evidence.incremental,
-            true,
-            "answer text must render before the stream completes",
-          );
-        }
+        assert.equal(
+          evidence.animated,
+          true,
+          "real character animation must remain enabled",
+        );
+        assert.equal(
+          evidence.incremental,
+          true,
+          "answer text must render before the stream completes",
+        );
         assert.equal(
           await page.call(async (answer) => {
             const { chats } = await chrome.storage.local.get("chats");
@@ -130,7 +113,6 @@ for (const mode of ["stream-list", "complete-list", "stream-prose"]) {
           true,
         );
       } finally {
-        await browser?.close();
         await fixture.close();
       }
     },

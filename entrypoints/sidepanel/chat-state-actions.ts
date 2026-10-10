@@ -266,14 +266,13 @@ function truncateMessageAtPart(message: ChatMessage, partId: string) {
 }
 
 export function closeChatAction({
-  chatId,
+  closedIds,
   setChats,
 }: {
-  chatId: string;
+  closedIds: ReadonlySet<string>;
   setChats: ChatSetter;
 }) {
   setChats((items) => {
-    const closedIds = closedChatIds(items, chatId);
     return cleanupClosedChatRelationships(
       items.filter((chat) => !closedIds.has(chat.id)),
       closedIds,
@@ -299,7 +298,7 @@ export function closedChatIds(chats: Chat[], closedChatId: string) {
 
 function cleanupClosedChatRelationships(
   chats: Chat[],
-  closedChatIds: Set<string>,
+  closedChatIds: ReadonlySet<string>,
 ) {
   return chats.map((chat) => {
     if (!chat.childChatIds?.some((id) => closedChatIds.has(id))) return chat;

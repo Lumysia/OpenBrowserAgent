@@ -23,7 +23,7 @@ import {
 } from "../../src/ui/components";
 import { formatMessageTime } from "./format";
 import { IconTooltip } from "./icon-tooltip";
-import { renderMarkdown, splitStreamingMarkdown } from "./markdown";
+import { createMarkdownSegmentRenderer } from "./markdown-segments";
 import { MessageRunInfo } from "./message-run-info";
 import { ToolPart } from "./tool-part";
 import { useThrottledText } from "./use-throttled-text";
@@ -64,8 +64,7 @@ export function AssistantSummaryCard({
 
 function compactionSummary(message: ChatMessage) {
   const metrics = message.metadata?.runMetrics as
-    | { contextBudget?: { compactionSummary?: unknown } }
-    | undefined;
+    { contextBudget?: { compactionSummary?: unknown } } | undefined;
   const summary = metrics?.contextBudget?.compactionSummary;
   return typeof summary === "string" && summary.trim() ? summary.trim() : "";
 }
@@ -216,15 +215,19 @@ export function AssistantText({
   const displayText = throttledText;
   const streaming = displayText.length < text.length;
   const outputSettled = runEnded && !streaming;
+  const renderSegments = useMemo(
+    () => createMarkdownSegmentRenderer(t, sources),
+    [t, sources],
+  );
   const { segments, codeBlocks } = useMemo(
     () =>
-      renderMarkdownSegments(displayText, t, copiedCodeId, sources, {
+      renderSegments(displayText, copiedCodeId, {
         animatedFromChar: streaming ? animatedFrom : undefined,
         incremental: !outputSettled,
         mermaidPreview: outputSettled,
         syntaxHighlight: outputSettled,
       }),
-    [animatedFrom, copiedCodeId, displayText, outputSettled, sources, t],
+    [animatedFrom, copiedCodeId, displayText, outputSettled, renderSegments],
   );
   useEffect(() => {
     if (!copied) return undefined;
@@ -390,37 +393,6 @@ const MarkdownSegmentHtml = React.memo(function MarkdownSegmentHtml({
     />
   );
 });
-
-function renderMarkdownSegments(
-  text: string,
-  t: Messages,
-  copiedCodeId: string | null,
-  sources: ChatSource[],
-  options: {
-    animatedFromChar?: number;
-    incremental: boolean;
-    mermaidPreview: boolean;
-    syntaxHighlight: boolean;
-  },
-) {
-  const markdownSegments = splitStreamingMarkdown(text, options.incremental);
-  const codeBlocks: string[] = [];
-  const segments = markdownSegments.map((segment) => {
-    const animatedFromChar =
-      options.animatedFromChar === undefined
-        ? undefined
-        : Math.max(0, options.animatedFromChar - segment.start);
-    const rendered = renderMarkdown(segment.text, t, copiedCodeId, sources, {
-      animatedFromChar,
-      codeIndexOffset: codeBlocks.length,
-      mermaidPreview: options.mermaidPreview,
-      syntaxHighlight: options.syntaxHighlight,
-    });
-    codeBlocks.push(...rendered.codeBlocks);
-    return { key: segment.key, html: rendered.html };
-  });
-  return { segments, codeBlocks };
-}
 
 async function downloadUrlAsFile(url: string, filename: string) {
   const response = await fetch(url, { credentials: "omit" });

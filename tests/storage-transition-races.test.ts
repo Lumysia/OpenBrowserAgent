@@ -23,7 +23,7 @@ import {
 } from "../src/shared/storage-sync-cache";
 import { refreshSyncFromRemote } from "../src/shared/storage-remote-sync";
 import { restoreSyncBackendFromCloud } from "../src/shared/storage-sync-transition";
-import { installBrowser } from "./helpers";
+import { installBrowser, holdMethod } from "./helpers";
 import type { Chat, ProviderState } from "../src/shared/types";
 
 afterEach(() => {
@@ -74,26 +74,6 @@ function fixture(active = true) {
   };
   remote[STORAGE_KEYS.syncDataSettings] = settings;
   return { local, remote, backend };
-}
-
-function holdBackend(
-  backend: SyncBackend,
-  operation: "read" | "write",
-  key: string,
-) {
-  const started = Promise.withResolvers<void>();
-  const release = Promise.withResolvers<void>();
-  const original = backend[operation].bind(backend);
-  let held = false;
-  mock.method(backend, operation, async (requested: string, value: unknown) => {
-    if (requested === key && !held) {
-      held = true;
-      started.resolve();
-      await release.promise;
-    }
-    return original(requested, value);
-  });
-  return { started: started.promise, release: release.resolve };
 }
 
 const provider = (id: string) =>
@@ -197,12 +177,14 @@ for (const operation of ["read", "write"] as const) {
   test(`backend activation keeps a local language edit during remote ${operation}`, async () => {
     const { backend } = fixture(false);
     await storage.language.set("en-US");
-    const hold = holdBackend(
+    const hold = holdMethod(
       backend,
       operation,
-      operation === "read"
-        ? STORAGE_KEYS.syncDataSettings
-        : STORAGE_KEYS.language,
+      (key) =>
+        key ===
+        (operation === "read"
+          ? STORAGE_KEYS.syncDataSettings
+          : STORAGE_KEYS.language),
     );
     const activation = setActiveSyncBackend(BROWSER_SYNC_BACKEND_ID);
     await hold.started;
@@ -220,7 +202,11 @@ for (const operation of ["read", "write"] as const) {
   test(`enabling chat sync preserves a streamed message edited during remote ${operation}`, async () => {
     const { backend, remote } = fixture();
     await storage.chats.set([chat()]);
-    const hold = holdBackend(backend, operation, STORAGE_KEYS.chats);
+    const hold = holdMethod(
+      backend,
+      operation,
+      (key) => key === STORAGE_KEYS.chats,
+    );
     const transition = setDataSync(SYNC_PREFERENCES.chats, true);
     await hold.started;
     const edited = normalizeChats([
@@ -257,23 +243,11 @@ for (const transition of [
     const category = transition === "enable" || transition === "disable";
     if (transition === "disable")
       await setDataSync(SYNC_PREFERENCES.providers, true);
-    const started = Promise.withResolvers<void>();
-    const release = Promise.withResolvers<void>();
-    const original = local.area.set.bind(local.area);
-    let held = false;
-    mock.method(local.area, "set", async (values) => {
-      if (
-        !held &&
-        (category
-          ? syncLocalCacheKey(STORAGE_KEYS.syncDataSettings) in values
-          : STORAGE_KEYS.activeSyncBackendId in values)
-      ) {
-        held = true;
-        started.resolve();
-        await release.promise;
-      }
-      await original(values);
-    });
+    const hold = holdMethod(local.area, "set", (values) =>
+      category
+        ? syncLocalCacheKey(STORAGE_KEYS.syncDataSettings) in values
+        : STORAGE_KEYS.activeSyncBackendId in values,
+    );
     const change =
       transition === "activate"
         ? setActiveSyncBackend(BROWSER_SYNC_BACKEND_ID)
@@ -285,11 +259,11 @@ for (const transition of [
           : transition === "shutdown"
             ? setActiveSyncBackend(NO_SYNC_BACKEND_ID)
             : setDataSync(SYNC_PREFERENCES.providers, transition === "enable");
-    await started.promise;
+    await hold.started;
     const edit = category
       ? storage.provider.set(provider("latest"))
       : storage.language.set("de-DE");
-    release.resolve();
+    hold.release();
     await Promise.all([change, edit]);
     assert.deepEqual(
       category ? await storage.provider.get() : await storage.language.get(),

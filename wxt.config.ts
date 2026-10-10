@@ -8,15 +8,10 @@ const permissions = [
   "downloads",
   "unlimitedStorage",
 ] as const;
-const nativeMessagingPermissions = ["nativeMessaging"] as const;
+const chromiumAndFirefoxPermissions = ["nativeMessaging", "search"] as const;
 const sourcemap = process.env.WXT_SOURCEMAP === "true";
 
-const chromiumOnlyPermissions = [
-  "tabGroups",
-  "search",
-  "sidePanel",
-  "debugger",
-] as const;
+const chromiumOnlyPermissions = ["tabGroups", "sidePanel", "debugger"] as const;
 
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
@@ -39,10 +34,10 @@ export default defineConfig({
       browser === "safari"
         ? [...permissions]
         : browser === "firefox"
-          ? [...permissions, ...nativeMessagingPermissions, "search"]
+          ? [...permissions, ...chromiumAndFirefoxPermissions]
           : [
               ...permissions,
-              ...nativeMessagingPermissions,
+              ...chromiumAndFirefoxPermissions,
               ...chromiumOnlyPermissions,
             ],
     host_permissions: ["<all_urls>"],

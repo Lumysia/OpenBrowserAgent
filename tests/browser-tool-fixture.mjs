@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { once } from "node:events";
 import { launchExtension, poll } from "./chromium.mjs";
+import { reply } from "./provider-fixtures.mjs";
 
 // Runs the production extension's Pi loop against an entirely local provider.
 // Tests supply tool calls, never import/inject a replacement tool implementation.
@@ -18,30 +19,13 @@ export async function browserToolFixture(handleRequest) {
     for await (const chunk of request) chunks.push(chunk);
     requests.push(JSON.parse(Buffer.concat(chunks).toString()));
     const step = steps[calls++];
-    const delta = step
-      ? {
-          tool_calls: [
-            {
-              index: 0,
-              id: `tool-${calls}`,
-              type: "function",
-              function: {
-                name: step.name,
-                arguments: JSON.stringify(step.args),
-              },
-            },
-          ],
-        }
-      : { content: "Fixture complete." };
-    response.writeHead(200, { "Content-Type": "text/event-stream" });
-    for (const [value, finish] of [
-      [delta, null],
-      [{}, step ? "tool_calls" : "stop"],
-    ])
-      response.write(
-        `data: ${JSON.stringify({ choices: [{ index: 0, delta: value, finish_reason: finish }] })}\n\n`,
-      );
-    response.end("data: [DONE]\n\n");
+    reply(
+      response,
+      "openai",
+      step
+        ? { calls: [{ id: `tool-${calls}`, name: step.name, args: step.args }] }
+        : { text: "Fixture complete." },
+    );
   });
   server.listen(0, "127.0.0.1");
   await once(server, "listening");

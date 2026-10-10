@@ -23,6 +23,7 @@ import {
   Input,
   Textarea,
 } from "../../src/ui/components";
+import { Feedback } from "../../src/ui/components/feedback";
 import { SkillFileActionButton } from "./skill-options-components";
 import {
   completeWorkspaceDraftSave,
@@ -258,7 +259,7 @@ export function AgentWorkspaceEditor({
             ) : (
               <CardDescription>{t.options.agentWorkspaceEmpty}</CardDescription>
             )}
-            {error ? <CardDescription>{error}</CardDescription> : null}
+            {error ? <Feedback error>{error}</Feedback> : null}
           </div>
         </AccordionContent>
       </AccordionItem>

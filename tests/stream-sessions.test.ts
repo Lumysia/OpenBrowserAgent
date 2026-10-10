@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 import * as sessions from "../src/background/stream-sessions";
+import { ABORT_CHAT_STREAMS } from "../src/shared/chat-stream-control";
 import type {
   AiStreamResponse,
   SendMessagesRequest,
@@ -45,6 +46,66 @@ test("an obsolete port cannot abort the replacement run of the same chat", () =>
   assert.equal(next.abortController.signal.aborted, false);
   assert.equal(sessions.getStreamSession("replacement"), next);
   sessions.abortSession("replacement");
+});
+
+test("chat close acknowledges cancellation of detached and attached sessions only", () => {
+  const detached = sessions.createStreamSession(request("detached"));
+  const attached = sessions.createStreamSession(request("attached"));
+  const unrelated = sessions.createStreamSession(request("unrelated"));
+  const previous = port();
+  sessions.attachPortToSession(previous.port, detached, undefined);
+  sessions.detachPort(previous.port);
+  sessions.attachPortToSession(port().port, attached, undefined);
+  const message = {
+    type: ABORT_CHAT_STREAMS,
+    chatIds: ["detached", "attached", "missing"],
+  };
+  const acknowledge = (response: unknown) => {
+    assert.deepEqual(response, { ok: true });
+    for (const session of [detached, attached]) {
+      assert.equal(session.abortController.signal.aborted, true);
+      assert.equal(sessions.getStreamSession(session.chatId), undefined);
+    }
+    assert.equal(unrelated.abortController.signal.aborted, false);
+  };
+  try {
+    assert.equal(
+      sessions.handleChatStreamControlMessage(message, acknowledge),
+      true,
+    );
+    sessions.handleChatStreamControlMessage(message, acknowledge);
+  } finally {
+    sessions.abortSession("unrelated");
+  }
+});
+
+test("close cancellation cannot capture a replacement created by an abort callback", () => {
+  const parent = sessions.createStreamSession(request("parent"));
+  const child = sessions.createStreamSession(request("child"));
+  const obsolete = port();
+  sessions.attachPortToSession(obsolete.port, child, undefined);
+  let replacement: ReturnType<typeof sessions.createStreamSession>;
+  parent.abortController.signal.addEventListener(
+    "abort",
+    () => {
+      replacement = sessions.createStreamSession(request("child"));
+    },
+    { once: true },
+  );
+  try {
+    sessions.handleChatStreamControlMessage(
+      { type: ABORT_CHAT_STREAMS, chatIds: ["parent", "child"] },
+      (response) => assert.deepEqual(response, { ok: true }),
+    );
+    sessions.abortPortStreams(obsolete.port);
+    sessions.scheduleSessionCleanup(child);
+    assert.equal(child.abortController.signal.aborted, true);
+    assert.equal(sessions.getStreamSession("child"), replacement!);
+    assert.equal(replacement!.abortController.signal.aborted, false);
+  } finally {
+    sessions.abortSession("parent");
+    sessions.abortSession("child");
+  }
 });
 
 test("reconnect replays only unseen streaming and tool events in order", () => {
