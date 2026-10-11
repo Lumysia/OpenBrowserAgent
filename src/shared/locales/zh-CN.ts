@@ -24,20 +24,15 @@ export const zhCN: LocaleMessages = {
     connectProviderDescription:
       "选择界面语言，可选配置同步，然后添加提供商和模型即可开始。",
     addProvider: "添加提供商",
-    cloudSyncTest: "测试云端同步",
-    cloudSyncTesting: "正在测试云端同步...",
+    cloudSyncConnect: "连接并同步",
+    cloudSyncTesting: "正在连接...",
     cloudSyncPulling: "正在检查云端同步...",
     cloudSyncDescription:
       "可从云端拉取其他设备的配置，也可以把当前设备的新配置保存到云端。",
-    cloudSyncReady: "已找到同步的提供商配置，可以从云端开始。",
-    cloudSyncEmpty:
-      "云端连接成功，但没有找到已有配置。确认后会把新的配置保存到云端。",
     cloudSyncError: "云端同步测试失败。请检查后端，或从本地开始。",
-    confirmCloudSync: "确认同步",
     cloudSyncSynced: "云端同步已准备好。接下来添加提供商配置。",
     cloudSyncSyncedButton: "已同步",
     startLocally: "从本地开始",
-    startFromCloud: "从云端开始",
     localSetupHint:
       "设置页已打开。请在那里添加提供商和模型，然后回到这里继续。",
     bootstrapStepSyncTitle: "同步后端（可选）",
@@ -45,7 +40,6 @@ export const zhCN: LocaleMessages = {
     syncManualTab: "手动输入",
     syncConfigCode: "同步配置码",
     syncConfigCodeDescription: "粘贴另一台设备复制的配置码。",
-    syncConfigCodeApplied: "同步后端配置已应用，可以继续检查云端同步。",
     syncConfigCodeInvalid: "配置码无效，请检查后重试。",
     bootstrapStepProviderTitle: "添加提供商和模型",
     bootstrapStepProviderDescription:

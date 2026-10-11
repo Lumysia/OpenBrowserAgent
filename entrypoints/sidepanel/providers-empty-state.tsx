@@ -66,9 +66,7 @@ const BOOTSTRAP_CLOUD_DATA_KEYS = SYNCABLE_DATA_ITEMS.map(
 export function ProvidersEmptyState({ t }: { t: Messages }) {
   const [language, setLanguage] = useStoredState(storage.language);
   const [syncBackends, setSyncBackends] = useStoredState(storage.syncBackends);
-  const [syncDataSettings, setSyncDataSettings] = useStoredState(
-    storage.syncDataSettings,
-  );
+  const [syncDataSettings] = useStoredState(storage.syncDataSettings);
   const [activeSyncBackendId] = useStoredState(storage.activeSyncBackendId);
   const [selectedBackendId, setSelectedBackendId] = useState<string>(
     activeSyncBackendId === WEBDAV_SYNC_BACKEND_ID
@@ -77,21 +75,15 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   );
   const [syncSetupMode, setSyncSetupMode] = useState<"code" | "manual">("code");
   const [syncCodeDraft, setSyncCodeDraft] = useState("");
-  const [syncCodeStatus, setSyncCodeStatus] = useState<
-    "idle" | "applied" | "error"
-  >("idle");
+  const [syncCodeInvalid, setSyncCodeInvalid] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncAction, setSyncAction] = useState<"test" | "confirm">("test");
   const [startingLocal, setStartingLocal] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<
-    "idle" | "ready" | "empty" | "synced" | "error"
-  >(
+  const [syncStatus, setSyncStatus] = useState<"idle" | "synced" | "error">(
     activeSyncBackendId && activeSyncBackendId !== NO_SYNC_BACKEND_ID
       ? "synced"
       : "idle",
   );
-  const [cloudBootstrapState, setCloudBootstrapState] =
-    useState<CloudBootstrapState>();
 
   useEffect(() => {
     if (!activeSyncBackendId || activeSyncBackendId === NO_SYNC_BACKEND_ID) {
@@ -158,31 +150,6 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     setSyncStatus("idle");
   }
 
-  // Returns the backend from the pasted code, so it can be tested right away
-  // before the stored state catches up.
-  function applySyncConfigCode(): SyncBackendConfig | undefined {
-    if (hasActiveSyncBackend) return;
-    try {
-      const config = parseSyncConfigCode(syncCodeDraft);
-      const { backend } = config;
-      setSyncBackends([
-        ...loadedSyncBackends.filter(
-          (existing) => existing.type !== backend.type,
-        ),
-        backend,
-      ]);
-      setSyncDataSettings(config.syncDataSettings);
-      setSelectedBackendId(backend.id);
-      setSyncStatus("idle");
-      setSyncCodeStatus("applied");
-      return backend;
-    } catch (error) {
-      console.warn("Failed to parse sync config code", error);
-      setSyncCodeStatus("error");
-      return undefined;
-    }
-  }
-
   function selectedBackendConfig(): SyncBackendConfig {
     if (selectedBackendId === WEBDAV_SYNC_BACKEND_ID) return webDavDraft;
     return (
@@ -191,75 +158,72 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     );
   }
 
-  async function testCloudBackend(config = selectedBackendConfig()) {
+  // Test the backend and, when it works, start syncing at once: take the
+  // cloud's setup if it has one, otherwise upload this device's.
+  async function connectCloud({
+    backend,
+    backends,
+    codeSettings,
+  }: {
+    backend: SyncBackendConfig;
+    backends: SyncBackendConfig[];
+    codeSettings?: SyncDataSettings;
+  }) {
     setSyncing(true);
     setSyncAction("test");
     setSyncStatus("idle");
     try {
-      const backend = createSyncBackend(config);
-      await backend.test();
-      const cloudState = await readCloudBootstrapState(backend);
-      const hasExistingCloudConfig = hasCloudBootstrapData(cloudState);
-      setCloudBootstrapState(hasExistingCloudConfig ? cloudState : undefined);
-      setSyncStatus(hasExistingCloudConfig ? "ready" : "empty");
-    } catch (error) {
-      console.warn("Failed to test sync backend", error);
-      setSyncStatus("error");
-    } finally {
-      setSyncing(false);
-    }
-  }
-
-  async function confirmCloudSync() {
-    setSyncing(true);
-    setSyncAction("confirm");
-    try {
-      await storage.syncBackends.set(loadedSyncBackends);
-      if (syncStatus === "ready" && cloudBootstrapState) {
-        await restoreCloudBootstrapState(cloudBootstrapState);
+      const remote = createSyncBackend(backend);
+      await remote.test();
+      const cloudState = await readCloudBootstrapState(remote);
+      setSyncAction("confirm");
+      await storage.syncBackends.set(backends);
+      if (hasCloudBootstrapData(cloudState)) {
+        await restoreCloudBootstrapState(backend.id, cloudState, codeSettings);
       } else {
         await storage.syncDataSettings.set({
-          ...(await storage.syncDataSettings.get()),
+          ...(codeSettings ?? (await storage.syncDataSettings.get())),
           [SYNC_PREFERENCES.providers]: true,
         });
-        await setActiveSyncBackend(selectedBackendId);
+        await setActiveSyncBackend(backend.id);
       }
       await completeLocalBootstrapState();
       setSyncStatus("synced");
     } catch (error) {
-      console.warn("Failed to confirm cloud sync", error);
+      console.warn("Failed to connect sync backend", error);
       setSyncStatus("error");
     } finally {
       setSyncing(false);
     }
   }
 
-  async function restoreCloudBootstrapState(cloudState: CloudBootstrapState) {
+  async function restoreCloudBootstrapState(
+    backendId: string,
+    cloudState: CloudBootstrapState,
+    codeSettings: SyncDataSettings | undefined,
+  ) {
     const restoredPreferences = mergePreferences(
       cloudState.preferences || (await storage.preferences.get()),
     );
-    const restoredSyncDataSettings =
-      cloudState.syncDataSettings ||
-      (syncCodeStatus === "applied"
-        ? await storage.syncDataSettings.get()
-        : {
-            ...(await storage.syncDataSettings.get()),
-            ...Object.fromEntries(
-              // Without cloud settings, sync what the cloud has, plus the
-              // categories synced by default (providers).
-              SYNC_PREFERENCE_KEYS.map((preferenceKey) => [
-                preferenceKey,
-                DEFAULT_SYNC_DATA_SETTINGS[preferenceKey] ||
-                  SYNCABLE_DATA_ITEMS.some(
-                    (item) =>
-                      item.preferenceKey === preferenceKey &&
-                      hasCloudValue(cloudState.data[item.dataKey]),
-                  ),
-              ]),
-            ),
-          });
+    const restoredSyncDataSettings = cloudState.syncDataSettings ||
+      codeSettings || {
+        ...(await storage.syncDataSettings.get()),
+        ...Object.fromEntries(
+          // Without cloud settings, sync what the cloud has, plus the
+          // categories synced by default (providers).
+          SYNC_PREFERENCE_KEYS.map((preferenceKey) => [
+            preferenceKey,
+            DEFAULT_SYNC_DATA_SETTINGS[preferenceKey] ||
+              SYNCABLE_DATA_ITEMS.some(
+                (item) =>
+                  item.preferenceKey === preferenceKey &&
+                  hasCloudValue(cloudState.data[item.dataKey]),
+              ),
+          ]),
+        ),
+      };
     await restoreSyncBackendFromCloud({
-      backendId: selectedBackendId,
+      backendId,
       language: cloudState.language,
       preferences: restoredPreferences,
       syncDataSettings: restoredSyncDataSettings,
@@ -268,17 +232,34 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   }
 
   function handleCloudAction() {
-    if (syncStatus === "ready" || syncStatus === "empty") {
-      confirmCloudSync().catch(() => undefined);
+    if (hasActiveSyncBackend) return;
+    if (syncSetupMode === "manual") {
+      void connectCloud({
+        backend: selectedBackendConfig(),
+        backends: loadedSyncBackends,
+      });
       return;
     }
-    // On the code tab the one button applies the pasted code, then tests it.
-    if (syncSetupMode === "code") {
-      const backend = applySyncConfigCode();
-      if (backend) testCloudBackend(backend).catch(() => undefined);
+    let parsed;
+    try {
+      parsed = parseSyncConfigCode(syncCodeDraft);
+    } catch (error) {
+      console.warn("Failed to parse sync config code", error);
+      setSyncCodeInvalid(true);
       return;
     }
-    testCloudBackend().catch(() => undefined);
+    const { backend, syncDataSettings: codeSettings } = parsed;
+    setSelectedBackendId(backend.id);
+    void connectCloud({
+      backend,
+      backends: [
+        ...loadedSyncBackends.filter(
+          (existing) => existing.type !== backend.type,
+        ),
+        backend,
+      ],
+      codeSettings,
+    });
   }
 
   async function startLocally() {
@@ -291,35 +272,25 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   const syncMessage =
     syncStatus === "synced"
       ? t.sidepanel.cloudSyncSynced
-      : syncStatus === "ready"
-        ? t.sidepanel.cloudSyncReady
-        : syncStatus === "empty"
-          ? t.sidepanel.cloudSyncEmpty
-          : syncStatus === "error"
-            ? t.sidepanel.cloudSyncError
-            : t.sidepanel.cloudSyncDescription;
+      : syncStatus === "error"
+        ? t.sidepanel.cloudSyncError
+        : t.sidepanel.cloudSyncDescription;
   const cloudActionLabel = syncing
     ? syncAction === "test"
       ? t.sidepanel.cloudSyncTesting
       : t.sidepanel.cloudSyncPulling
-    : syncStatus === "ready"
-      ? t.sidepanel.startFromCloud
-      : syncStatus === "empty"
-        ? t.sidepanel.confirmCloudSync
-        : syncStatus === "synced"
-          ? t.sidepanel.cloudSyncSyncedButton
-          : t.sidepanel.cloudSyncTest;
-  const syncStatusMessage = syncing ? cloudActionLabel : syncMessage;
+    : syncStatus === "synced"
+      ? t.sidepanel.cloudSyncSyncedButton
+      : t.sidepanel.cloudSyncConnect;
   const setupFeedbackMessage =
     syncStatus !== "idle" || syncing
-      ? syncStatusMessage
-      : syncCodeStatus === "applied"
-        ? t.sidepanel.syncConfigCodeApplied
-        : syncCodeStatus === "error"
-          ? t.sidepanel.syncConfigCodeInvalid
-          : "";
-  const setupFeedbackError =
-    syncStatus === "error" || syncCodeStatus === "error";
+      ? syncing
+        ? cloudActionLabel
+        : syncMessage
+      : syncCodeInvalid
+        ? t.sidepanel.syncConfigCodeInvalid
+        : "";
+  const setupFeedbackError = syncStatus === "error" || syncCodeInvalid;
   const secondaryStartLabel =
     syncStatus === "synced"
       ? t.sidepanel.bootstrapStepProviderTitle
@@ -385,7 +356,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                       syncCodeDraft={syncCodeDraft}
                       setSyncCodeDraft={(value) => {
                         setSyncCodeDraft(value);
-                        setSyncCodeStatus("idle");
+                        setSyncCodeInvalid(false);
                         setSyncStatus("idle");
                       }}
                       setupFeedbackMessage={setupFeedbackMessage}

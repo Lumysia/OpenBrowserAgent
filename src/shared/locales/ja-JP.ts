@@ -24,23 +24,17 @@ export const jaJP: LocaleMessages = {
     connectProviderDescription:
       "言語を選択し、必要に応じて同期を有効にしてから、プロバイダーとモデルを追加します。",
     addProvider: "プロバイダーを追加",
-    cloudSyncTest: "クラウド同期をテスト",
-    cloudSyncTesting: "クラウド同期をテスト中...",
+    cloudSyncConnect: "接続して同期",
+    cloudSyncTesting: "接続中...",
     cloudSyncPulling: "クラウド同期を確認中...",
     cloudSyncDescription:
       "クラウドから別端末の設定を取得することも、この端末の新しい設定をクラウドに保存することもできます。",
-    cloudSyncReady:
-      "同期済みプロバイダー設定が見つかりました。クラウドから開始できます。",
-    cloudSyncEmpty:
-      "クラウドには接続できましたが、既存の設定は見つかりませんでした。確認すると新しい設定をクラウドに保存します。",
     cloudSyncError:
       "クラウド同期のテストに失敗しました。バックエンドを確認するか、ローカルで開始してください。",
-    confirmCloudSync: "同期を確認",
     cloudSyncSynced:
       "クラウド同期の準備ができました。次にプロバイダー設定を追加してください。",
     cloudSyncSyncedButton: "同期済み",
     startLocally: "ローカルで開始",
-    startFromCloud: "クラウドから開始",
     localSetupHint:
       "設定を開きました。そこでプロバイダーとモデルを追加し、ここに戻って続行してください。",
     bootstrapStepSyncTitle: "同期バックエンド（任意）",
@@ -49,8 +43,6 @@ export const jaJP: LocaleMessages = {
     syncConfigCode: "同期設定コード",
     syncConfigCodeDescription:
       "別のデバイスからコピーしたコードを貼り付けます。",
-    syncConfigCodeApplied:
-      "同期バックエンド設定を適用しました。クラウド同期を確認できます。",
     syncConfigCodeInvalid:
       "同期設定コードが無効です。確認してもう一度お試しください。",
     bootstrapStepProviderTitle: "プロバイダーとモデルを追加",

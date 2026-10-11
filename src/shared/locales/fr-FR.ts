@@ -24,23 +24,17 @@ export const frFR: LocaleMessages = {
     connectProviderDescription:
       "Choisissez la langue, activez la synchronisation si besoin, puis ajoutez un fournisseur et un modèle.",
     addProvider: "Ajouter un fournisseur",
-    cloudSyncTest: "Tester la synchronisation cloud",
-    cloudSyncTesting: "Test de la synchronisation cloud...",
+    cloudSyncConnect: "Connecter et synchroniser",
+    cloudSyncTesting: "Connexion...",
     cloudSyncPulling: "Vérification de la synchronisation cloud...",
     cloudSyncDescription:
       "Utilisez le cloud pour reprendre la configuration d'un autre appareil ou enregistrer celle-ci.",
-    cloudSyncReady:
-      "Configuration fournisseur synchronisée trouvée. Vous pouvez démarrer depuis le cloud.",
-    cloudSyncEmpty:
-      "Cloud connecté, mais aucune configuration existante trouvée. Confirmez pour stocker la nouvelle configuration dans le cloud.",
     cloudSyncError:
       "Échec du test de synchronisation cloud. Vérifiez le backend ou démarrez en local.",
-    confirmCloudSync: "Confirmer la synchronisation",
     cloudSyncSynced:
       "La synchronisation cloud est prête. Ajoutez ensuite la configuration fournisseur.",
     cloudSyncSyncedButton: "Synchronisé",
     startLocally: "Démarrer en local",
-    startFromCloud: "Démarrer depuis le cloud",
     localSetupHint:
       "Les paramètres sont ouverts. Ajoutez-y un fournisseur et un modèle, puis revenez ici pour continuer.",
     bootstrapStepSyncTitle: "Backend de synchronisation (facultatif)",
@@ -48,8 +42,6 @@ export const frFR: LocaleMessages = {
     syncManualTab: "Configuration manuelle",
     syncConfigCode: "Code de configuration de synchronisation",
     syncConfigCodeDescription: "Collez un code copié depuis un autre appareil.",
-    syncConfigCodeApplied:
-      "Configuration du backend appliquée. Vous pouvez maintenant vérifier la synchronisation cloud.",
     syncConfigCodeInvalid:
       "Code de configuration invalide. Vérifiez le code puis réessayez.",
     bootstrapStepProviderTitle: "Ajouter un fournisseur et un modèle",

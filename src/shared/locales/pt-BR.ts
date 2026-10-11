@@ -24,23 +24,17 @@ export const ptBR: LocaleMessages = {
     connectProviderDescription:
       "Escolha o idioma, ative a sincronização se quiser e depois adicione um provedor e um modelo.",
     addProvider: "Adicionar provedor",
-    cloudSyncTest: "Testar sincronização na nuvem",
-    cloudSyncTesting: "Testando sincronização na nuvem...",
+    cloudSyncConnect: "Conectar e sincronizar",
+    cloudSyncTesting: "Conectando...",
     cloudSyncPulling: "Verificando sincronização na nuvem...",
     cloudSyncDescription:
       "Use a nuvem para iniciar com a configuração de outro dispositivo ou salvar esta nova configuração.",
-    cloudSyncReady:
-      "Configuração de provedor sincronizada encontrada. Você pode começar pela nuvem.",
-    cloudSyncEmpty:
-      "A nuvem está conectada, mas nenhuma configuração existente foi encontrada. Confirme para salvar a nova configuração na nuvem.",
     cloudSyncError:
       "Falha no teste de sincronização da nuvem. Verifique o backend ou comece localmente.",
-    confirmCloudSync: "Confirmar sincronização",
     cloudSyncSynced:
       "A sincronização na nuvem está pronta. Agora adicione a configuração do provedor.",
     cloudSyncSyncedButton: "Sincronizado",
     startLocally: "Começar localmente",
-    startFromCloud: "Começar pela nuvem",
     localSetupHint:
       "As Configurações estão abertas. Adicione um provedor e um modelo lá, depois volte aqui para continuar.",
     bootstrapStepSyncTitle: "Backend de sincronização (opcional)",
@@ -48,8 +42,6 @@ export const ptBR: LocaleMessages = {
     syncManualTab: "Configuração manual",
     syncConfigCode: "Código de configuração de sincronização",
     syncConfigCodeDescription: "Cole um código copiado de outro dispositivo.",
-    syncConfigCodeApplied:
-      "Configuração do backend aplicada. Agora você pode verificar a sincronização em nuvem.",
     syncConfigCodeInvalid:
       "Código de configuração inválido. Verifique o código e tente novamente.",
     bootstrapStepProviderTitle: "Adicione provedor e modelo",
