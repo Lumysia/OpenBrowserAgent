@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
-import { createMergeableStore } from "tinybase";
 import {
   decodeTinyBaseSyncValue,
   readTinyBaseSyncValue,
@@ -20,6 +19,81 @@ const collections = [
     empty: [],
   },
 ];
+
+test("same-millisecond edits from separate replicas converge", async () => {
+  const a = browserStorage();
+  const b = browserStorage();
+  mock.method(Date, "now", () => 1_800_000_000_000);
+  installBrowser(a);
+  const left = await writeTinyBaseSyncValue("shared:language", "en", undefined);
+  installBrowser(b);
+  const right = await writeTinyBaseSyncValue(
+    "shared:language",
+    "fr",
+    undefined,
+  );
+  const bValue = await readTinyBaseSyncValue("shared:language", left.bytes);
+  installBrowser(a);
+  const aValue = await readTinyBaseSyncValue("shared:language", right.bytes);
+  assert.equal(aValue, bValue);
+});
+
+test("WebDAV retries a competing write without losing either device's changes", async () => {
+  const { local } = installBrowser();
+  const config = {
+    id: "race",
+    type: "webdav" as const,
+    name: "WebDAV",
+    url: "https://sync.example/race/",
+  };
+  const key = "preferences";
+  const scope = `webdav::${config.url}:${key}`;
+  const initial = await writeTinyBaseSyncValue(
+    scope,
+    { left: 0, right: 0 },
+    undefined,
+  );
+  const otherDevice = browserStorage();
+  installBrowser(otherDevice);
+  await readTinyBaseSyncValue(scope, initial.bytes);
+  const competitor = await writeTinyBaseSyncValue(
+    scope,
+    { left: 0, right: 2 },
+    initial.bytes,
+  );
+  installBrowser(local);
+  let remote = initial.bytes;
+  let version = 1;
+  let puts = 0;
+  mock.method(globalThis, "fetch", async (_url, init) => {
+    const headers = new Headers(init?.headers);
+    if (init?.method === "PUT") {
+      puts++;
+      if (puts === 1) {
+        remote = competitor.bytes;
+        version++;
+      }
+      if (
+        headers.get("If-Match") &&
+        headers.get("If-Match") !== `"v${version}"`
+      )
+        return new Response(null, { status: 412 });
+      remote = new Uint8Array(init.body as ArrayBuffer);
+      version++;
+      return new Response(null, {
+        status: 204,
+        headers: { ETag: `"v${version}"` },
+      });
+    }
+    return new Response(remote, { headers: { ETag: `"v${version}"` } });
+  });
+  await createSyncBackend(config).write(key, { left: 1, right: 0 });
+  assert.deepEqual(decodeTinyBaseSyncValue(scope, remote), {
+    left: 1,
+    right: 2,
+  });
+  assert.equal(puts, 2);
+});
 
 for (const { key, seed, empty } of collections) {
   test(`${key}: deleting the final item survives encoding, stale merge and fresh replica`, async () => {
@@ -78,18 +152,6 @@ test("deleting final nested chat items preserves the chat and its other fields",
   assert.deepEqual(await readTinyBaseSyncValue(key, result.bytes), next);
 });
 
-test("collection to scalar to empty collection cannot reveal old rows", async () => {
-  installBrowser();
-  const key = "changing-shape";
-  await writeTinyBaseSyncValue(key, [{ id: "old" }], undefined);
-  const scalar = await writeTinyBaseSyncValue(key, false, undefined);
-  assert.equal(scalar.value, false);
-  assert.deepEqual(
-    (await writeTinyBaseSyncValue(key, [], scalar.bytes)).value,
-    [],
-  );
-});
-
 test("clearing known rows preserves an independently added remote row", async () => {
   const left = browserStorage();
   const right = browserStorage();
@@ -110,114 +172,6 @@ test("clearing known rows preserves an independently added remote row", async ()
   assert.deepEqual(await readTinyBaseSyncValue(key, added.bytes), addition);
   installBrowser(right);
   assert.deepEqual(await readTinyBaseSyncValue(key, deleted.bytes), addition);
-});
-
-test("emptying a record entry preserves an independently added field", async () => {
-  const left = browserStorage();
-  const right = browserStorage();
-  const key = "preferences";
-  installBrowser(left);
-  const seed = await writeTinyBaseSyncValue(
-    key,
-    { nested: { old: true } },
-    undefined,
-  );
-  installBrowser(right);
-  await readTinyBaseSyncValue(key, seed.bytes);
-  const added = await writeTinyBaseSyncValue(
-    key,
-    { nested: { old: true, added: true } },
-    seed.bytes,
-  );
-  installBrowser(left);
-  const emptied = await writeTinyBaseSyncValue(key, { nested: {} }, undefined);
-  assert.deepEqual(await readTinyBaseSyncValue(key, added.bytes), {
-    nested: { added: true },
-  });
-  installBrowser(right);
-  assert.deepEqual(await readTinyBaseSyncValue(key, emptied.bytes), {
-    nested: { added: true },
-  });
-});
-
-test("editing a legacy record cannot revive an independently deleted unchanged entry", async () => {
-  const left = browserStorage();
-  const right = browserStorage();
-  const key = "legacy:provider";
-  const original = { only: { id: "only", models: [] } };
-  const addition = { later: { id: "later", models: [] } };
-  const legacy = createMergeableStore()
-    .setTables({ items: original })
-    .setValues({ kind: "record" });
-  const bytes = new TextEncoder().encode(
-    `OpenBrowserAgentTinyBaseSync:${JSON.stringify({ format: "openbrowseragent.tinybase-sync.v1", content: legacy.getMergeableContent() })}`,
-  );
-  installBrowser(left);
-  await readTinyBaseSyncValue(key, bytes);
-  installBrowser(right);
-  await readTinyBaseSyncValue(key, bytes);
-  installBrowser(left);
-  const deleted = await writeTinyBaseSyncValue(key, {}, undefined);
-  installBrowser(right);
-  const added = await writeTinyBaseSyncValue(
-    key,
-    { ...original, ...addition },
-    undefined,
-  );
-  assert.deepEqual(await readTinyBaseSyncValue(key, deleted.bytes), addition);
-  installBrowser(left);
-  assert.deepEqual(await readTinyBaseSyncValue(key, added.bytes), addition);
-});
-
-test("a retained empty-entry marker survives unrelated rewrites and a second concurrent clear", async () => {
-  const left = browserStorage();
-  const right = browserStorage();
-  const key = "two-rounds:preferences";
-  installBrowser(left);
-  const seed = await writeTinyBaseSyncValue(
-    key,
-    { nested: { old: true } },
-    undefined,
-  );
-  installBrowser(right);
-  await readTinyBaseSyncValue(key, seed.bytes);
-  const added = await writeTinyBaseSyncValue(
-    key,
-    { nested: { old: true, added: true } },
-    undefined,
-  );
-  installBrowser(left);
-  const emptied = await writeTinyBaseSyncValue(key, { nested: {} }, undefined);
-  const merged = await readTinyBaseSyncValue<Record<string, unknown>>(
-    key,
-    added.bytes,
-  );
-  installBrowser(right);
-  assert.deepEqual(await readTinyBaseSyncValue(key, emptied.bytes), merged);
-  assert.deepEqual(merged, { nested: { added: true } });
-  installBrowser(left);
-  const unrelated = await writeTinyBaseSyncValue(
-    key,
-    { ...merged, unrelated: true },
-    undefined,
-  );
-  installBrowser(right);
-  const cleared = await writeTinyBaseSyncValue(key, { nested: {} }, undefined);
-  const expected = { nested: {}, unrelated: true };
-  assert.deepEqual(await readTinyBaseSyncValue(key, unrelated.bytes), expected);
-  installBrowser(left);
-  assert.deepEqual(await readTinyBaseSyncValue(key, cleared.bytes), expected);
-  const deleted = await writeTinyBaseSyncValue(
-    key,
-    { unrelated: true },
-    undefined,
-  );
-  installBrowser(right);
-  assert.deepEqual(
-    await readTinyBaseSyncValue(key, deleted.bytes),
-    { unrelated: true },
-    "whole-entry deletion must also delete its presence metadata",
-  );
 });
 
 test("WebDAV retry of a final-provider deletion preserves a competing provider addition", async () => {

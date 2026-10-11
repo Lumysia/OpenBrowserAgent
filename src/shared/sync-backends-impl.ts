@@ -127,9 +127,8 @@ type RemoteDocument = {
   lastModified?: string;
   decoded?: { value: unknown };
 };
+// One entry per synced document (a handful of keys per configured backend).
 const readCache = new Map<string, RemoteDocument>();
-const MAX_CACHE_BYTES = 32 * 1024 * 1024;
-const MAX_CACHE_ENTRIES = 32;
 const MAX_WRITE_ATTEMPTS = 3;
 
 function createWebDavBackend(config: WebDavSyncBackendConfig): SyncBackend {
@@ -218,10 +217,7 @@ async function readDocument(
     method: "GET",
     headers,
   });
-  if (response.status === 304 && cached) {
-    cacheDocument(scope, cached);
-    return cached;
-  }
+  if (response.status === 304 && cached) return cached;
   if (response.status === 404) {
     readCache.delete(scope);
     return undefined;
@@ -258,22 +254,8 @@ function writePrecondition(
 }
 
 function cacheDocument(scope: string, remote: RemoteDocument) {
-  readCache.delete(scope);
-  if (
-    (!remote.etag && !remote.lastModified) ||
-    remote.data.byteLength > MAX_CACHE_BYTES
-  )
-    return;
-  readCache.set(scope, remote);
-  let bytes = Array.from(readCache.values()).reduce(
-    (total, item) => total + item.data.byteLength,
-    0,
-  );
-  for (const [key, item] of readCache) {
-    if (bytes <= MAX_CACHE_BYTES && readCache.size <= MAX_CACHE_ENTRIES) break;
-    readCache.delete(key);
-    bytes -= item.data.byteLength;
-  }
+  if (remote.etag || remote.lastModified) readCache.set(scope, remote);
+  else readCache.delete(scope);
 }
 
 // WebDAV transport and attachment objects

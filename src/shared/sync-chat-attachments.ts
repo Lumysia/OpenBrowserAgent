@@ -16,7 +16,7 @@ import {
   SYNC_DATA_SETTING_KEYS,
   type SyncDataSettings,
 } from "./storage-keys";
-import { readSyncLocalValue } from "./storage-sync-cache";
+import { readSyncedValue } from "./storage-sync";
 import { STORAGE_KEYS } from "./storage-keys";
 import type { Chat, UploadedAttachment } from "./types";
 import { bytesToBase64, base64ToBytes } from "./binary";
@@ -58,7 +58,7 @@ export async function writeSyncedChatAttachments({
   if (!attachments.length) return;
   await Promise.all(
     attachments.map((attachment) =>
-      writeLocalChatAttachment({ chatId, messageId, attachment, signal }),
+      writeLocalChatAttachment({ chatId, messageId, attachment }),
     ),
   );
   signal?.throwIfAborted();
@@ -108,7 +108,7 @@ export async function readSyncedChatAttachment(
   attachmentId: string,
   signal?: AbortSignal,
 ) {
-  const local = await readLocalChatAttachment(attachmentId, signal);
+  const local = await readLocalChatAttachment(attachmentId);
   signal?.throwIfAborted();
   if (local) return local;
   const backend = await activeAttachmentBackend(syncDataSettings);
@@ -243,12 +243,10 @@ async function writeLocalChatAttachment({
   chatId,
   messageId,
   attachment,
-  signal,
 }: {
   chatId: string;
   messageId: string;
   attachment: UploadedAttachment;
-  signal?: AbortSignal;
 }) {
   const metadata = {
     ...toAttachmentMetadata(attachment),
@@ -257,21 +255,15 @@ async function writeLocalChatAttachment({
     messageId,
     createdAt: Date.now(),
   };
-  await putAttachment(
-    {
-      id: attachment.id,
-      metadata,
-      content: attachmentBytes(attachment),
-    },
-    signal,
-  );
+  await putAttachment({
+    id: attachment.id,
+    metadata,
+    content: attachmentBytes(attachment),
+  });
 }
 
-async function readLocalChatAttachment(
-  attachmentId: string,
-  signal?: AbortSignal,
-) {
-  const record = await getAttachment(attachmentId, signal);
+async function readLocalChatAttachment(attachmentId: string) {
+  const record = await getAttachment(attachmentId);
   if (!record) return undefined;
   const metadata = record.metadata as SyncedChatAttachmentMetadata;
   return attachmentFromBytes(metadata, record.content);
@@ -394,7 +386,7 @@ async function activeAttachmentBackend(
 }
 
 async function currentSyncDataSettings(fallback: SyncDataSettings | undefined) {
-  const cached = await readSyncLocalValue<Partial<SyncDataSettings>>(
+  const cached = await readSyncedValue<Partial<SyncDataSettings>>(
     STORAGE_KEYS.syncDataSettings,
   );
   return cached ? mergeSyncDataSettings(cached) : fallback;

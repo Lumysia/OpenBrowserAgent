@@ -7,7 +7,6 @@ import {
 } from "./storage";
 import { getActiveSyncBackend, isSyncBackendEnabled } from "./sync-backends";
 import { tinybaseSyncLocalCacheKey } from "./sync-tinybase-doc";
-import { withStoragePublicationLock } from "./storage-lock";
 
 const STORAGE_KEY_GROUPS = {
   settings: [
@@ -52,21 +51,16 @@ export async function clearAppStorage({
     .filter((stored) => stored.startsWith(tinybaseSyncLocalCacheKey("")))
     .filter((stored) => selectedKeys.some((key) => stored.endsWith(`:${key}`)));
   const cacheKeys = [...selectedKeys.map(syncLocalCacheKey), ...replicaKeys];
-  const backend = await withStoragePublicationLock(async () => {
-    // Capture the enabled route and its configuration coherently before local
-    // cleanup can delete them. Backend construction performs no remote I/O.
-    const selectedBackend =
-      scope !== "local" && (await isSyncBackendEnabled())
-        ? await getActiveSyncBackend()
-        : undefined;
-    await getBrowserApi().storage.local.remove(
-      scope === "sync" ? cacheKeys : [...selectedKeys, ...cacheKeys],
-    );
-    return selectedBackend;
-  });
+  // Capture the backend before local cleanup deletes its configuration.
+  const backend =
+    scope !== "local" && (await isSyncBackendEnabled())
+      ? await getActiveSyncBackend()
+      : undefined;
+  await getBrowserApi().storage.local.remove(
+    scope === "sync" ? cacheKeys : [...selectedKeys, ...cacheKeys],
+  );
   if (backend) {
-    // Finish every started removal before reporting failure. Remote work must
-    // remain outside publication so ordinary local edits can still complete.
+    // Finish every started removal before reporting failure.
     const results = await Promise.allSettled(
       selectedKeys.map(async (key) => backend.remove(key)),
     );

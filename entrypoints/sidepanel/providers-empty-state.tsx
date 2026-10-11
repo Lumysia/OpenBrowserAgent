@@ -4,6 +4,7 @@ import { LOCAL_SETUP_FEEDBACK_MS, OPTIONS_HASH } from "../../src/shared/config";
 import { mergePreferences } from "../../src/shared/default-preferences";
 import type { Messages } from "../../src/shared/i18n";
 import {
+  restoreSyncBackendFromCloud,
   setActiveSyncBackend,
   flushPendingSyncWrites,
   storage,
@@ -13,7 +14,6 @@ import {
   SYNC_PREFERENCE_KEYS,
 } from "../../src/shared/storage";
 import { completeLocalBootstrapState } from "../../src/shared/storage-debug";
-import { restoreSyncBackendFromCloud } from "../../src/shared/storage-sync-transition";
 import {
   mergeSyncDataSettings,
   type SyncDataSettings,

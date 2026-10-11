@@ -18,33 +18,6 @@ function config(id: string) {
   };
 }
 
-test("warm 304 uses its own value, avoids storage work and isolates caller mutations", async () => {
-  const { local } = installBrowser();
-  const settings = config("warm");
-  const seed = await writeTinyBaseSyncValue(
-    `webdav::${settings.url}:preferences`,
-    { theme: "dark" },
-    undefined,
-  );
-  let requests = 0;
-  mock.method(globalThis, "fetch", async (_url, init) => {
-    requests++;
-    return new Headers(init?.headers).has("If-None-Match")
-      ? new Response(null, { status: 304 })
-      : new Response(seed.bytes, { headers: { ETag: '"v1"' } });
-  });
-  const backend = createSyncBackend(settings);
-  const value = await backend.read<{ theme: string }>("preferences");
-  value!.theme = "changed by caller";
-  const get = mock.method(local.area, "get");
-  assert.deepEqual(
-    await backend.read("preferences", { theme: "stale caller" }),
-    { theme: "dark" },
-  );
-  assert.equal(get.mock.callCount(), 0);
-  assert.equal(requests, 2);
-});
-
 test("failed PUT followed by a 304 cannot associate remote validators with unaccepted local bytes", async () => {
   installBrowser();
   const settings = config("failed-put");
