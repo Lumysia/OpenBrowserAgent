@@ -87,11 +87,14 @@ export async function writeDocument<T>(
   name: string,
   value: T,
   codec: SyncDocCodec<T>,
-): Promise<DocumentValue<T> & { rev: string }> {
+  // Skip the cached copy, which may be stale (e.g. cloud data was cleared).
+  fresh = false,
+): Promise<DocumentValue<T> & { rev: string; created: boolean }> {
   const scope = documentScope(transport.config, name);
   // A cached document is written optimistically; a conflict fetches the
   // current one and merges it.
-  let remote = transport.peek(name) ?? (await transport.get(name));
+  let remote =
+    (!fresh && transport.peek(name)) || (await transport.get(name, fresh));
   if (remote) delete remote.decoded;
   // Stamp the user's changes once. Conflict retries only merge CRDT state.
   let result = await writeTinyBaseSyncValue(scope, value, remote?.data, codec);
@@ -102,7 +105,8 @@ export async function writeDocument<T>(
         : await transport.put(name, result.bytes, remote);
     if (stored !== "conflict") {
       stored.decoded = { value: result.value, rev: result.rev };
-      return { value: result.value, rev: result.rev };
+      // `created`: the document did not exist (e.g. cloud data was cleared).
+      return { value: result.value, rev: result.rev, created: !remote };
     }
     if (attempt + 1 === MAX_WRITE_ATTEMPTS) break;
     remote = await transport.get(name, true);

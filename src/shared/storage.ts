@@ -137,8 +137,11 @@ function createItem<T>(
         area: string,
       ) => {
         if (area === "sync") {
-          if (sync && changes[key] && (await routed()))
-            refreshChangedSyncKey(key);
+          // A split collection's item documents can arrive after its index.
+          const changed = Object.keys(changes).some(
+            (name) => name === key || name.startsWith(`${key}/`),
+          );
+          if (sync && changed && (await routed())) refreshChangedSyncKey(key);
           return;
         }
         if (area !== "local") return;
