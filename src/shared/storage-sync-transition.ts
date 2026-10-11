@@ -19,10 +19,7 @@ import {
   rebaseStorageEdit,
 } from "./storage-transition-upload";
 import { createSyncBackend, getStoredSyncBackends } from "./sync-backends";
-import {
-  mergeSyncDataSettings,
-  type SyncDataSettings,
-} from "./sync-data-settings";
+import { mergeSyncDataSettings, type SyncDataSettings } from "./storage-keys";
 import type { Preferences } from "./types";
 import { settleSyncWrites } from "./storage-sync-owner";
 

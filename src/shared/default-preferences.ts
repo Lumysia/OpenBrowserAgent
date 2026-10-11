@@ -4,7 +4,7 @@ import {
 } from "./config";
 import type { Preferences } from "./types";
 import { REASONING_EFFORT } from "./reasoning";
-import { SYNC_DATA_SETTING_KEYS } from "./sync-data-settings";
+import { SYNC_DATA_SETTING_KEYS } from "./storage-keys";
 import { SYNC_PREFERENCES } from "./storage-keys";
 
 export const DEFAULT_PREFERENCES: Preferences = {

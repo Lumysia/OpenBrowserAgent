@@ -1,5 +1,5 @@
 import { isSyncBackendEnabled } from "./sync-backends";
-import { STORAGE_AREAS, type AreaName } from "./storage-area-constants";
+import { STORAGE_AREAS, type AreaName } from "./storage-keys";
 
 export { STORAGE_AREAS, type AreaName };
 

@@ -15,7 +15,7 @@ import {
   setActiveSyncBackend,
   clearPendingSyncWrites,
 } from "../src/shared/storage";
-import { DEFAULT_SYNC_DATA_SETTINGS } from "../src/shared/sync-data-settings";
+import { DEFAULT_SYNC_DATA_SETTINGS } from "../src/shared/storage-keys";
 import { STORAGE_KEYS, SYNC_PREFERENCES } from "../src/shared/storage-keys";
 import { syncLocalCacheKey } from "../src/shared/storage-sync-cache";
 import type { Chat } from "../src/shared/types";

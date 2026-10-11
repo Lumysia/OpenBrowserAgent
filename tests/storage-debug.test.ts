@@ -7,9 +7,9 @@ import { clearPendingSyncWrites, storage } from "../src/shared/storage";
 import * as backendImpl from "../src/shared/sync-backends-impl";
 import { registerSyncBackendImpl } from "../src/shared/sync-backends";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
-import { DEFAULT_SYNC_DATA_SETTINGS } from "../src/shared/sync-data-settings";
+import { DEFAULT_SYNC_DATA_SETTINGS } from "../src/shared/storage-keys";
 import { syncLocalCacheKey } from "../src/shared/storage-sync-local";
-import { tinybaseSyncLocalCacheKey } from "../src/shared/sync-tinybase-keys";
+import { tinybaseSyncLocalCacheKey } from "../src/shared/sync-tinybase-doc";
 import type { SyncBackendConfig } from "../src/shared/types";
 
 const cleanups: Array<() => void> = [];

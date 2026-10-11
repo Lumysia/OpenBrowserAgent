@@ -2,10 +2,7 @@ import { getBrowserApi } from "./browser-api";
 import { sameStorageValue } from "./storage-value";
 import { withStorageLock, withStoragePublicationLock } from "./storage-lock";
 import { STORAGE_KEYS, type SyncPreferenceKey } from "./storage-keys";
-import {
-  mergeSyncDataSettings,
-  type SyncDataSettings,
-} from "./sync-data-settings";
+import { mergeSyncDataSettings, type SyncDataSettings } from "./storage-keys";
 
 export type SyncLocalCache<T> = {
   value: T;

@@ -3,7 +3,6 @@ import {
   base64FromDataUrl,
   toAttachmentMetadata,
 } from "./attachments";
-import { getBrowserApi } from "./browser-api";
 import {
   getActiveSyncBackend,
   readSyncBackendObject,
@@ -16,7 +15,7 @@ import {
   mergeSyncDataSettings,
   SYNC_DATA_SETTING_KEYS,
   type SyncDataSettings,
-} from "./sync-data-settings";
+} from "./storage-keys";
 import { readSyncLocalValue } from "./storage-sync-cache";
 import { STORAGE_KEYS } from "./storage-keys";
 import type { Chat, UploadedAttachment } from "./types";
@@ -398,13 +397,7 @@ async function currentSyncDataSettings(fallback: SyncDataSettings | undefined) {
   const cached = await readSyncLocalValue<Partial<SyncDataSettings>>(
     STORAGE_KEYS.syncDataSettings,
   );
-  if (cached) return mergeSyncDataSettings(cached);
-  const result = await getBrowserApi().storage.sync.get(
-    STORAGE_KEYS.syncDataSettings,
-  );
-  const value = result[STORAGE_KEYS.syncDataSettings] as
-    Partial<SyncDataSettings> | undefined;
-  return value ? mergeSyncDataSettings(value) : fallback;
+  return cached ? mergeSyncDataSettings(cached) : fallback;
 }
 
 function attachmentFromBytes(

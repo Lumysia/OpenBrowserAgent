@@ -25,10 +25,7 @@ import {
   type SyncLocalCache,
 } from "./storage-sync-local";
 import { STORAGE_KEYS, type SyncPreferenceKey } from "./storage-keys";
-import {
-  mergeSyncDataSettings,
-  type SyncDataSettings,
-} from "./sync-data-settings";
+import { mergeSyncDataSettings, type SyncDataSettings } from "./storage-keys";
 
 export function makeSwitchableItemFactory(
   io: StorageItemIo,

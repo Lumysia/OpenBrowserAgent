@@ -9,7 +9,7 @@ import {
   getActiveSyncBackend,
   isSyncBackendEnabled,
 } from "./sync-backends";
-import { mergeSyncDataSettings } from "./sync-data-settings";
+import { mergeSyncDataSettings } from "./storage-keys";
 import { hasUnfinishedChatRun } from "./chats";
 
 // Call while holding sync ownership, before touching a backend. Routing can no

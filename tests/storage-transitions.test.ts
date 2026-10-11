@@ -7,7 +7,7 @@ import {
   clearPendingSyncWrites,
 } from "../src/shared/storage";
 import { DEFAULT_PREFERENCES } from "../src/shared/default-preferences";
-import { DEFAULT_SYNC_DATA_SETTINGS } from "../src/shared/sync-data-settings";
+import { DEFAULT_SYNC_DATA_SETTINGS } from "../src/shared/storage-keys";
 import { STORAGE_KEYS, SYNCABLE_DATA_ITEMS } from "../src/shared/storage-keys";
 import {
   BROWSER_SYNC_BACKEND_ID,

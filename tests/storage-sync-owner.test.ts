@@ -18,7 +18,7 @@ import {
 import { refreshSyncFromRemote } from "../src/shared/storage-remote-sync";
 import { restoreSyncBackendFromCloud } from "../src/shared/storage-sync-transition";
 import { STORAGE_KEYS, SYNC_PREFERENCES } from "../src/shared/storage-keys";
-import { DEFAULT_SYNC_DATA_SETTINGS } from "../src/shared/sync-data-settings";
+import { DEFAULT_SYNC_DATA_SETTINGS } from "../src/shared/storage-keys";
 import { syncLocalCacheKey } from "../src/shared/storage-sync-cache";
 import type { ProviderState } from "../src/shared/types";
 

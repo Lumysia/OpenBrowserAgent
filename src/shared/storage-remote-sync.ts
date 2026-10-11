@@ -20,10 +20,7 @@ import {
 import { sameStorageValue } from "./storage-value";
 import { withSyncOwnership } from "./storage-lock";
 import { ownsSyncKey } from "./storage-sync-owner";
-import {
-  mergeSyncDataSettings,
-  type SyncDataSettings,
-} from "./sync-data-settings";
+import { mergeSyncDataSettings, type SyncDataSettings } from "./storage-keys";
 
 const SYNC_SETTINGS_REFRESH_ITEMS = [
   { dataKey: STORAGE_KEYS.language },
@@ -149,7 +146,7 @@ async function refreshOwnedSyncKey<T>(
   }
 
   const previous = expected?.value;
-  const remote = await backend.read<T>(key, previous);
+  const remote = await backend.read<T>(key);
   if (remote === undefined) {
     if (missingRemoteValue !== undefined) {
       const value = normalize

@@ -180,6 +180,7 @@ async function flushSyncWrite(key: string) {
   }
   clearTimeout(pending.timeoutId);
   pending.flushing = (async () => {
+    let status: Partial<SyncWriteStatus>;
     try {
       await withSyncOwnership(async () => {
         if (!(await ownsSyncKey(pending.backend.config.id, key))) return;
@@ -207,22 +208,26 @@ async function flushSyncWrite(key: string) {
           backendId: pending.backend.config.id,
         });
       });
-      await updateSyncWriteStatus({ lastFlushedAt: Date.now(), lastError: "" });
+      status = { lastFlushedAt: Date.now(), lastError: "" };
       pending.resolve.forEach((resolve) => resolve());
     } catch (error) {
-      await updateSyncWriteStatus({
+      status = {
         lastError: error instanceof Error ? error.message : String(error),
-      });
+      };
       pending.reject.forEach((reject) => reject(error));
-    } finally {
-      if (pendingSyncWrites.get(key) === pending) pendingSyncWrites.delete(key);
-      await updateSyncWriteStatus();
     }
+    if (pendingSyncWrites.get(key) === pending) pendingSyncWrites.delete(key);
+    await updateSyncWriteStatus(status);
   })();
   return pending.flushing;
 }
 
-async function updateSyncWriteStatus(patch: Partial<SyncWriteStatus> = {}) {
+// Status keeps the last flush result until the next flush replaces it, so the
+// UI can show a failure after the queue drains.
+let lastResult: Partial<SyncWriteStatus> = {};
+
+async function updateSyncWriteStatus(patch?: Partial<SyncWriteStatus>) {
+  if (patch) lastResult = patch;
   const pendingItems = Array.from(pendingSyncWrites.entries()).map(
     ([key, pending]) => ({
       key,
@@ -239,7 +244,7 @@ async function updateSyncWriteStatus(patch: Partial<SyncWriteStatus> = {}) {
       ).length,
       pendingItems,
       lastUpdatedAt: Date.now(),
-      ...patch,
+      ...lastResult,
     } satisfies SyncWriteStatus,
   });
 }

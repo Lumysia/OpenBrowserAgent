@@ -6,7 +6,7 @@ import {
   syncLocalCacheKey,
 } from "./storage";
 import { getActiveSyncBackend, isSyncBackendEnabled } from "./sync-backends";
-import { tinybaseSyncLocalCacheKey } from "./sync-tinybase-keys";
+import { tinybaseSyncLocalCacheKey } from "./sync-tinybase-doc";
 import { withStoragePublicationLock } from "./storage-lock";
 
 const STORAGE_KEY_GROUPS = {
@@ -47,10 +47,11 @@ export async function clearAppStorage({
   const selectedKeys = selectedTargets.flatMap(
     (target) => STORAGE_KEY_GROUPS[target],
   );
-  const cacheKeys = selectedKeys.flatMap((key) => [
-    syncLocalCacheKey(key),
-    tinybaseSyncLocalCacheKey(key),
-  ]);
+  // Replicas are scoped per backend (`tinybase-sync-doc:<scope>:<key>`).
+  const replicaKeys = Object.keys(await getBrowserApi().storage.local.get(null))
+    .filter((stored) => stored.startsWith(tinybaseSyncLocalCacheKey("")))
+    .filter((stored) => selectedKeys.some((key) => stored.endsWith(`:${key}`)));
+  const cacheKeys = [...selectedKeys.map(syncLocalCacheKey), ...replicaKeys];
   const backend = await withStoragePublicationLock(async () => {
     // Capture the enabled route and its configuration coherently before local
     // cleanup can delete them. Backend construction performs no remote I/O.

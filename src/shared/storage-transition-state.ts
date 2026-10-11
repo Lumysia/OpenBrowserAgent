@@ -11,10 +11,7 @@ import {
 } from "./storage-sync-local";
 import { sameStorageValue } from "./storage-value";
 import { NO_SYNC_BACKEND_ID } from "./sync-backends";
-import {
-  mergeSyncDataSettings,
-  type SyncDataSettings,
-} from "./sync-data-settings";
+import { mergeSyncDataSettings, type SyncDataSettings } from "./storage-keys";
 
 export class StorageTransitionState {
   constructor(readonly raw: Record<string, unknown>) {}

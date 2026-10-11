@@ -6,12 +6,12 @@ import {
   syncBackendSupportsChatAttachments,
 } from "../../src/shared/sync-backends";
 import { createSyncConfigCode } from "../../src/shared/sync-config-code";
-import type { SyncDataSettings } from "../../src/shared/sync-data-settings";
+import type { SyncDataSettings } from "../../src/shared/storage-keys";
 import {
   SYNC_BACKEND_TYPES,
   syncBackendDefaultName,
   WEBDAV_SYNC_BACKEND_ID,
-} from "../../src/shared/sync-backend-registry";
+} from "../../src/shared/sync-backends";
 import type { SyncBackendConfig } from "../../src/shared/types";
 import {
   Accordion,

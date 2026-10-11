@@ -17,7 +17,7 @@ import { restoreSyncBackendFromCloud } from "../../src/shared/storage-sync-trans
 import {
   mergeSyncDataSettings,
   type SyncDataSettings,
-} from "../../src/shared/sync-data-settings";
+} from "../../src/shared/storage-keys";
 import { parseSyncConfigCode } from "../../src/shared/sync-config-code";
 import {
   BROWSER_SYNC_BACKEND_ID,
@@ -25,7 +25,7 @@ import {
   SYNC_BACKEND_TYPES,
   syncBackendDefaultName,
   WEBDAV_SYNC_BACKEND_ID,
-} from "../../src/shared/sync-backend-registry";
+} from "../../src/shared/sync-backends";
 import {
   createSyncBackend,
   type SyncBackend,

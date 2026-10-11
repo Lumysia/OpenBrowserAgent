@@ -6,7 +6,7 @@ import { executeContextAwareTool } from "../src/background/provider-tools";
 import type { AgentCapabilities } from "../src/shared/types";
 import { imageModelFixture } from "./image-fixture";
 import { generateImage } from "../src/background/image-generation";
-import { writeWebDavObject } from "../src/shared/sync-webdav-transport";
+import { writeWebDavObject } from "../src/shared/sync-backends-impl";
 
 afterEach(() => mock.restoreAll());
 

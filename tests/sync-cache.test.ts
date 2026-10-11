@@ -16,7 +16,7 @@ import {
   type SyncBackendImpl,
 } from "../src/shared/sync-backends";
 import { refreshSyncSettingsFromRemote } from "../src/shared/storage-remote-sync";
-import { DEFAULT_SYNC_DATA_SETTINGS } from "../src/shared/sync-data-settings";
+import { DEFAULT_SYNC_DATA_SETTINGS } from "../src/shared/storage-keys";
 import { markSyncLocalCacheFlushed } from "../src/shared/storage-sync-cache";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 

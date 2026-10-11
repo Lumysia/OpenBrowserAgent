@@ -2,7 +2,7 @@ import { useCallback, type Dispatch, type SetStateAction } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { removeSyncedChatAttachments } from "../../src/shared/sync-chat-attachments";
-import type { SyncDataSettings } from "../../src/shared/sync-data-settings";
+import type { SyncDataSettings } from "../../src/shared/storage-keys";
 import type { Chat } from "../../src/shared/types";
 import {
   closeChatAction,

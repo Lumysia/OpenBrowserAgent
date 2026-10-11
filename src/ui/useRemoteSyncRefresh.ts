@@ -6,7 +6,7 @@ import {
   syncRemoteRefreshIntervalMs,
   syncSettingsRefreshIntervalMs,
 } from "../shared/storage-remote-sync";
-import type { SyncDataSettings } from "../shared/sync-data-settings";
+import type { SyncDataSettings } from "../shared/storage-keys";
 
 let sharedSettingsRefresh: Promise<SyncDataSettings | undefined> | undefined;
 let sharedDataRefresh: Promise<void> | undefined;

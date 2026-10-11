@@ -8,7 +8,7 @@ import {
   flushPendingSyncWrites,
 } from "../src/shared/storage";
 import { STORAGE_KEYS, SYNC_PREFERENCES } from "../src/shared/storage-keys";
-import { DEFAULT_SYNC_DATA_SETTINGS } from "../src/shared/sync-data-settings";
+import { DEFAULT_SYNC_DATA_SETTINGS } from "../src/shared/storage-keys";
 import {
   BROWSER_SYNC_BACKEND_ID,
   NO_SYNC_BACKEND_ID,

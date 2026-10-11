@@ -49,7 +49,7 @@ import {
   DEFAULT_SYNC_DATA_SETTINGS,
   mergeSyncDataSettings,
   type SyncDataSettings,
-} from "./sync-data-settings";
+} from "./storage-keys";
 import type {
   Agent,
   AgentWorkspace,

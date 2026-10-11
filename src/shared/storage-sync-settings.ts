@@ -10,10 +10,7 @@ import {
 import { activateSyncBackend } from "./storage-sync-transition";
 import { flushedCache, runStorageTransition } from "./storage-transition-state";
 import { createTransitionUploader } from "./storage-transition-upload";
-import {
-  mergeSyncDataSettings,
-  type SyncDataSettings,
-} from "./sync-data-settings";
+import { mergeSyncDataSettings, type SyncDataSettings } from "./storage-keys";
 import { getActiveSyncBackend, NO_SYNC_BACKEND_ID } from "./sync-backends";
 import { settleSyncWrites } from "./storage-sync-owner";
 

@@ -8,7 +8,7 @@ import {
   readTinyBaseSyncValue,
   writeTinyBaseSyncValue,
 } from "../src/shared/sync-tinybase-doc";
-import { tinybaseSyncLocalCacheKey } from "../src/shared/sync-tinybase-keys";
+import { tinybaseSyncLocalCacheKey } from "../src/shared/sync-tinybase-doc";
 import { createSyncBackend } from "../src/shared/sync-backends-impl";
 import { browserStorage, chatHistory, installBrowser } from "./helpers";
 

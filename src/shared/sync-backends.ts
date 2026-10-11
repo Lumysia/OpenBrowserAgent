@@ -1,41 +1,134 @@
 import { getBrowserApi } from "./browser-api";
-import { STORAGE_AREAS } from "./storage-area-constants";
-import {
-  BROWSER_SYNC_BACKEND_ID,
-  NO_SYNC_BACKEND_ID,
-  SYNC_BACKEND_TYPES,
-  syncBackendDefaultName,
-  WEBDAV_SYNC_BACKEND_ID,
-} from "./sync-backend-registry";
 import { STORAGE_KEYS } from "./storage-keys";
-import type { SyncBackendConfig } from "./types";
+import type { SyncBackendConfig, SyncBackendType } from "./types";
 import { bytesToBase64, base64ToBytes } from "./binary";
-import {
-  sendSyncBackendRequest,
-  SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
-  SYNC_BACKEND_RUNTIME_PORT_NAME,
-  type SyncBackendRuntimeRequest,
-  type SyncBackendRuntimeResponse,
-} from "./sync-backend-runtime";
-export { SYNC_BACKEND_RUNTIME_MESSAGE_TYPE } from "./sync-backend-runtime";
+export const SYNC_BACKEND_TYPES = {
+  browserSync: "browser-sync",
+  webDav: "webdav",
+} as const satisfies Record<string, SyncBackendType>;
 
-export { BROWSER_SYNC_BACKEND_ID, NO_SYNC_BACKEND_ID, WEBDAV_SYNC_BACKEND_ID };
+export const BROWSER_SYNC_BACKEND_ID = SYNC_BACKEND_TYPES.browserSync;
+export const WEBDAV_SYNC_BACKEND_ID = SYNC_BACKEND_TYPES.webDav;
+export const NO_SYNC_BACKEND_ID = "local";
 
-export type RemoteStorageChange<T = unknown> = {
-  newValue?: T;
-  oldValue?: T;
+export type SyncBackendRegistryItem = {
+  id: string;
+  type: SyncBackendType;
+  defaultName: string;
 };
+
+export const SYNC_BACKEND_REGISTRY = [
+  {
+    id: BROWSER_SYNC_BACKEND_ID,
+    type: SYNC_BACKEND_TYPES.browserSync,
+    defaultName: "Browser Sync",
+  },
+  {
+    id: WEBDAV_SYNC_BACKEND_ID,
+    type: SYNC_BACKEND_TYPES.webDav,
+    defaultName: "WebDAV",
+  },
+] as const satisfies readonly SyncBackendRegistryItem[];
+
+export function syncBackendRegistryItem(id: string) {
+  return SYNC_BACKEND_REGISTRY.find((item) => item.id === id);
+}
+
+export function syncBackendDefaultName(id: string) {
+  return syncBackendRegistryItem(id)?.defaultName || id;
+}
+
+export const SYNC_BACKEND_RUNTIME_MESSAGE_TYPE = "sync-backend.request";
+const SYNC_BACKEND_RUNTIME_PORT_NAME = "sync-backend.operation";
+
+export type SyncBackendRuntimeRequest = {
+  type: typeof SYNC_BACKEND_RUNTIME_MESSAGE_TYPE;
+  backendConfig: SyncBackendConfig;
+  operation:
+    | "read"
+    | "write"
+    | "remove"
+    | "test"
+    | "webDavReadObject"
+    | "webDavWriteObject"
+    | "webDavRemoveObject";
+  key?: string;
+  objectName?: string;
+  contentType?: string;
+  value?: unknown;
+};
+
+export type SyncBackendRuntimeResponse<T = unknown> =
+  { ok: true; value?: T } | { ok: false; error: string };
+
+async function sendSyncBackendRequest<T>(
+  request: SyncBackendRuntimeRequest,
+  signal?: AbortSignal,
+) {
+  signal?.throwIfAborted();
+  const response = signal
+    ? await requestWithSignal<T>(request, signal)
+    : ((await getBrowserApi().runtime.sendMessage(request)) as
+        SyncBackendRuntimeResponse<T> | undefined);
+  if (!response) throw new Error("Sync backend did not return a response.");
+  if (!response.ok) throw new Error(response.error);
+  return response.value;
+}
+
+// One operation per port makes cancellation ownership explicit. Closing a page
+// or aborting its caller closes the port and aborts the background fetch too.
+function requestWithSignal<T>(
+  request: SyncBackendRuntimeRequest,
+  signal: AbortSignal,
+) {
+  return new Promise<SyncBackendRuntimeResponse<T>>((resolve, reject) => {
+    const runtime = getBrowserApi().runtime;
+    const port = runtime.connect({ name: SYNC_BACKEND_RUNTIME_PORT_NAME });
+    const cleanup = () => {
+      signal.removeEventListener("abort", abort);
+      port.onMessage.removeListener(receive);
+      port.onDisconnect.removeListener(disconnect);
+      port.disconnect();
+    };
+    const abort = () => {
+      cleanup();
+      reject(signal.reason);
+    };
+    const receive = (response: SyncBackendRuntimeResponse<T>) => {
+      cleanup();
+      resolve(response);
+    };
+    const disconnect = () => {
+      const error = runtime.lastError;
+      cleanup();
+      reject(
+        new Error(
+          error?.message || "Sync backend disconnected before responding.",
+        ),
+      );
+    };
+    port.onMessage.addListener(receive);
+    port.onDisconnect.addListener(disconnect);
+    signal.addEventListener("abort", abort, { once: true });
+    if (signal.aborted) {
+      abort();
+      return;
+    }
+    try {
+      port.postMessage(request);
+    } catch (error) {
+      cleanup();
+      reject(error);
+    }
+  });
+}
 
 export type SyncBackend = {
   config: SyncBackendConfig;
-  read<T>(key: string, cachedValue?: T): Promise<T | undefined>;
+  read<T>(key: string): Promise<T | undefined>;
   write<T>(key: string, value: T): Promise<T | undefined>;
   remove(key: string): Promise<void>;
   test(): Promise<void>;
-  watch?<T>(
-    key: string,
-    callback: (change: RemoteStorageChange<T>) => void,
-  ): () => void;
 };
 
 export type WebDavSyncBackendConfig = Extract<
@@ -53,11 +146,6 @@ export const DEFAULT_SYNC_BACKENDS: SyncBackendConfig[] = [
 
 export type SyncBackendImpl = {
   createSyncBackend: (backendConfig: SyncBackendConfig) => SyncBackend;
-  decodeSyncBackendChangeValue: <T>(
-    backendConfig: SyncBackendConfig,
-    key: string,
-    value: unknown,
-  ) => Promise<T | undefined>;
   readWebDavObject: (
     backendConfig: WebDavSyncBackendConfig,
     objectName: string,
@@ -137,64 +225,26 @@ export function syncBackendSupportsChatAttachments(
   return backendType === SYNC_BACKEND_TYPES.webDav;
 }
 
+function webDavConfig(backend: SyncBackend) {
+  if (isWebDavConfig(backend.config)) return backend.config;
+  throw new Error(
+    `Sync backend does not support attachment objects: ${backend.config.type}`,
+  );
+}
+
 export async function readSyncBackendObject(
   backend: SyncBackend,
   objectName: string,
   signal?: AbortSignal,
 ) {
   signal?.throwIfAborted();
-  if (isWebDavConfig(backend.config))
-    return readWebDavObject(backend.config, objectName, signal);
-  throw new Error(
-    `Sync backend does not support attachment objects: ${backend.config.type}`,
-  );
-}
-
-export async function writeSyncBackendObject(
-  backend: SyncBackend,
-  objectName: string,
-  bytes: Uint8Array,
-  contentType: string,
-  signal?: AbortSignal,
-) {
-  signal?.throwIfAborted();
-  if (isWebDavConfig(backend.config))
-    return writeWebDavObject(
-      backend.config,
-      objectName,
-      bytes,
-      contentType,
-      signal,
-    );
-  throw new Error(
-    `Sync backend does not support attachment objects: ${backend.config.type}`,
-  );
-}
-
-export async function removeSyncBackendObject(
-  backend: SyncBackend,
-  objectName: string,
-) {
-  if (isWebDavConfig(backend.config))
-    return removeWebDavObject(backend.config, objectName);
-  throw new Error(
-    `Sync backend does not support attachment objects: ${backend.config.type}`,
-  );
-}
-
-export async function readWebDavObject(
-  backendConfig: WebDavSyncBackendConfig,
-  objectName: string,
-  signal?: AbortSignal,
-) {
-  signal?.throwIfAborted();
-  if (isBackgroundContext()) {
+  const backendConfig = webDavConfig(backend);
+  if (isBackgroundContext())
     return getBackgroundSyncBackendImpl().readWebDavObject(
       backendConfig,
       objectName,
       signal,
     );
-  }
   const encoded = await sendSyncBackendRequest<string>(
     {
       type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
@@ -207,24 +257,23 @@ export async function readWebDavObject(
   return encoded ? base64ToBytes(encoded) : undefined;
 }
 
-export async function writeWebDavObject(
-  backendConfig: WebDavSyncBackendConfig,
+export async function writeSyncBackendObject(
+  backend: SyncBackend,
   objectName: string,
   bytes: Uint8Array,
   contentType: string,
   signal?: AbortSignal,
 ) {
   signal?.throwIfAborted();
-  if (isBackgroundContext()) {
-    await getBackgroundSyncBackendImpl().writeWebDavObject(
+  const backendConfig = webDavConfig(backend);
+  if (isBackgroundContext())
+    return getBackgroundSyncBackendImpl().writeWebDavObject(
       backendConfig,
       objectName,
       bytes,
       contentType,
       signal,
     );
-    return;
-  }
   await sendSyncBackendRequest<void>(
     {
       type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
@@ -238,17 +287,16 @@ export async function writeWebDavObject(
   );
 }
 
-export async function removeWebDavObject(
-  backendConfig: WebDavSyncBackendConfig,
+export async function removeSyncBackendObject(
+  backend: SyncBackend,
   objectName: string,
 ) {
-  if (isBackgroundContext()) {
-    await getBackgroundSyncBackendImpl().removeWebDavObject(
+  const backendConfig = webDavConfig(backend);
+  if (isBackgroundContext())
+    return getBackgroundSyncBackendImpl().removeWebDavObject(
       backendConfig,
       objectName,
     );
-    return;
-  }
   await sendSyncBackendRequest<void>({
     type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
     backendConfig,
@@ -308,99 +356,40 @@ export function handleSyncBackendRuntimePort(port: chrome.runtime.Port) {
 function createRuntimeSyncBackend(
   backendConfig: SyncBackendConfig,
 ): SyncBackend {
+  const send = <T>(
+    operation: SyncBackendRuntimeRequest["operation"],
+    key?: string,
+    value?: unknown,
+  ) =>
+    sendSyncBackendRequest<T>({
+      type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
+      backendConfig,
+      operation,
+      key,
+      value,
+    });
   return {
     config: backendConfig,
-    read<T>(key: string, cachedValue?: T) {
-      return sendSyncBackendRequest<T>({
-        type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
-        backendConfig,
-        operation: "read",
-        key,
-        cachedValue,
-      });
-    },
-    write<T>(key: string, value: T) {
-      return sendSyncBackendRequest<T>({
-        type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
-        backendConfig,
-        operation: "write",
-        key,
-        value,
-      });
-    },
-    remove(key: string) {
-      return sendSyncBackendRequest<void>({
-        type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
-        backendConfig,
-        operation: "remove",
-        key,
-      });
-    },
-    test() {
-      return sendSyncBackendRequest<void>({
-        type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
-        backendConfig,
-        operation: "test",
-      });
-    },
-    watch<T>(key: string, callback: (change: RemoteStorageChange<T>) => void) {
-      const listener = (
-        changes: Record<string, chrome.storage.StorageChange>,
-        changedArea: string,
-      ) => {
-        if (changedArea !== STORAGE_AREAS.sync || !changes[key]) return;
-        const change = changes[key];
-        Promise.all([
-          sendSyncBackendRequest<T>({
-            type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
-            backendConfig,
-            operation: "decodeChange",
-            key,
-            value: change.newValue,
-          }),
-          sendSyncBackendRequest<T>({
-            type: SYNC_BACKEND_RUNTIME_MESSAGE_TYPE,
-            backendConfig,
-            operation: "decodeChange",
-            key,
-            value: change.oldValue,
-          }),
-        ])
-          .then(([newValue, oldValue]) => callback({ newValue, oldValue }))
-          .catch(() => undefined);
-      };
-      getBrowserApi().storage.onChanged.addListener(listener);
-      return () => getBrowserApi().storage.onChanged.removeListener(listener);
-    },
+    read: (key) => send("read", key),
+    write: (key, value) => send("write", key, value),
+    remove: (key) => send<void>("remove", key).then(() => undefined),
+    test: () => send<void>("test").then(() => undefined),
   };
 }
 
+// The implementation registers itself when the background imports it.
 function createBackgroundSyncBackend(
   backendConfig: SyncBackendConfig,
 ): SyncBackend {
+  const impl = () =>
+    getBackgroundSyncBackendImpl().createSyncBackend(backendConfig);
   return {
     config: backendConfig,
-    async read<T>(key: string, cachedValue?: T) {
-      const backend = await createSyncBackendImpl(backendConfig);
-      return backend.read<T>(key, cachedValue);
-    },
-    async write<T>(key: string, value: T) {
-      const backend = await createSyncBackendImpl(backendConfig);
-      return backend.write<T>(key, value);
-    },
-    async remove(key: string) {
-      const backend = await createSyncBackendImpl(backendConfig);
-      await backend.remove(key);
-    },
-    async test() {
-      const backend = await createSyncBackendImpl(backendConfig);
-      await backend.test();
-    },
+    read: (key) => impl().read(key),
+    write: (key, value) => impl().write(key, value),
+    remove: (key) => impl().remove(key),
+    test: () => impl().test(),
   };
-}
-
-async function createSyncBackendImpl(backendConfig: SyncBackendConfig) {
-  return getBackgroundSyncBackendImpl().createSyncBackend(backendConfig);
 }
 
 async function runSyncBackendOperation(
@@ -446,15 +435,7 @@ async function runSyncBackendOperation(
     return undefined;
   }
   if (!request.key) throw new Error("Sync backend request key is required.");
-  if (request.operation === "decodeChange") {
-    return getBackgroundSyncBackendImpl().decodeSyncBackendChangeValue(
-      request.backendConfig,
-      request.key,
-      request.value,
-    );
-  }
-  if (request.operation === "read")
-    return backend.read(request.key, request.cachedValue);
+  if (request.operation === "read") return backend.read(request.key);
   if (request.operation === "write")
     return backend.write(request.key, request.value);
   if (request.operation === "remove") return backend.remove(request.key);

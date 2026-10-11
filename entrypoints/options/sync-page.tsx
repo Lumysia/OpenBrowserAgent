@@ -22,7 +22,7 @@ import {
   type SyncDataSettings,
 } from "../../src/shared/storage";
 import type { SyncBackendConfig } from "../../src/shared/types";
-import { SYNC_DATA_SETTING_KEYS } from "../../src/shared/sync-data-settings";
+import { SYNC_DATA_SETTING_KEYS } from "../../src/shared/storage-keys";
 import {
   Card,
   CardContent,
