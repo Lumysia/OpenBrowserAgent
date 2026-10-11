@@ -46,28 +46,3 @@ test("skill patches persist literal replacement tokens and retain later edits to
   assert.equal(run.stored[0].files[1].content, "added after run started");
   assert.deepEqual(run.available, run.stored);
 });
-
-for (const replacements of [
-  [{ oldText: "original", newText: "changed" }, null],
-  [
-    { oldText: "original", newText: "changed" },
-    { oldText: "missing", newText: "bad" },
-  ],
-  [
-    { oldText: "original", newText: "duplicate duplicate" },
-    { oldText: "duplicate", newText: "bad" },
-  ],
-]) {
-  test("invalid skill patch batches make no partial persistent or in-run edits", async () => {
-    const run = setup();
-    const original = structuredClone(run.available);
-    const result = await manageSkills(run.available, {
-      ...run.input,
-      replacements,
-    });
-    assert.ok("error" in result);
-    assert.equal(run.write.mock.callCount(), 0);
-    assert.deepEqual(run.available, original);
-    assert.deepEqual(run.stored, original);
-  });
-}

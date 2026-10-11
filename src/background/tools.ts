@@ -31,7 +31,6 @@ async function executeBrowserTool(
   args: Record<string, unknown>,
   signal?: AbortSignal,
 ) {
-  signal?.throwIfAborted();
   if (isCdpTool(name)) return executeCdpTool(name, args, signal);
   const api = getBrowserApi();
   switch (name) {
@@ -83,7 +82,6 @@ async function executeBrowserTool(
     case BROWSER_TOOL_NAME.downloadTabToMarkdown: {
       const tabId = await resolveTabId(args.tabId);
       const tab = await api.tabs.get(tabId);
-      signal?.throwIfAborted();
       const markdown = await extractMarkdown(tabId);
       const filename = `${safeFileName(tab.title || tab.url || "tab").slice(0, MARKDOWN_FILENAME_MAX_LENGTH)}.md`;
       await downloadTextFile(
@@ -243,7 +241,6 @@ async function openTab(args: Record<string, unknown>, signal?: AbortSignal) {
   });
   if (tab.id && String(args.waitUntil || "load") === "load")
     await waitTabComplete(tab.id, signal);
-  signal?.throwIfAborted();
   const loadedTab = tab.id ? await getBrowserApi().tabs.get(tab.id) : tab;
   return {
     success: true,
@@ -275,7 +272,6 @@ async function focusTab(tabId: number, signal?: AbortSignal) {
   signal?.throwIfAborted();
   const tab = await getBrowserApi().tabs.update(tabId, { active: true });
   if (!tab) throw new Error(TOOL_ERROR.tabNotFound);
-  signal?.throwIfAborted();
   if (tab.windowId !== undefined)
     await getBrowserApi().windows.update(tab.windowId, { focused: true });
 }
@@ -305,7 +301,6 @@ async function groupManagedTabs(
   const normalTabs = [];
   const skippedTabIds = [];
   for (const tab of tabs) {
-    signal?.throwIfAborted();
     if (!tab?.id || tab.windowId === undefined) continue;
     const window = await api.windows.get(tab.windowId).catch(() => undefined);
     if (window?.type === "normal") normalTabs.push(tab);
@@ -329,7 +324,6 @@ async function groupManagedTabs(
     const groupId = await api.tabs.group({
       tabIds: windowTabIds as [number, ...number[]],
     });
-    signal?.throwIfAborted();
     await api.tabGroups.update(groupId, { title, color });
     groupIds.push(groupId);
   }
@@ -347,9 +341,7 @@ async function captureVisibleTab(
     return { success: false, error: TOOL_ERROR.tabHasNoWindow };
   signal?.throwIfAborted();
   await api.tabs.update(tabId, { active: true });
-  signal?.throwIfAborted();
   await api.windows.update(tab.windowId, { focused: true });
-  signal?.throwIfAborted();
   const format =
     String(args.format || DEFAULT_SCREENSHOT_FORMAT) === "png" ? "png" : "jpeg";
   const quality = Number(args.quality);

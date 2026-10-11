@@ -3,13 +3,21 @@ import { getCurrentSystemMessage } from "@earendil-works/pi-ai/utils/transcript"
 import {
   CONTEXT_PRUNED_PREVIEW_CHARS,
   CONTEXT_TOOL_RESULT_KEEP_RECENT,
+  DEFAULT_CONTEXT_BUDGET_ENABLED,
+  DEFAULT_CONTEXT_REQUEST_MAX_CHARS,
+  DEFAULT_CONTEXT_TAIL_MAX_CHARS,
+  DEFAULT_CONTEXT_TAIL_MIN_MESSAGES,
+  DEFAULT_CONTEXT_TOOL_RESULT_AGGREGATE_MAX_CHARS,
+  DEFAULT_CONTEXT_TOOL_RESULT_MAX_CHARS,
+  ESTIMATED_CHARS_PER_TOKEN,
+  MAX_CONTEXT_BUDGET_TOKENS,
 } from "../shared/config";
+import { modelContextChars } from "../shared/model-context";
 import type { ContextBudgetReport, Preferences } from "../shared/types";
 import {
   compactedContextPlaceholder,
   compactedContextSummary,
 } from "./compaction-prompt";
-import { resolveContextBudgetSettings } from "./context-budget-settings";
 
 export function applyPiContextBudget(
   messages: Message[],
@@ -26,42 +34,48 @@ export function applyPiContextBudget(
   let prunedMessages = 0;
   let items = messages;
   if (settings.enabled) {
-    let images = 0;
+    // The user's latest message and the newest other message with images keep
+    // their images; older screenshots are replaced with a note.
+    const latestUser = latestUserIndex(messages);
+    let imageMessage: number | undefined;
     let tools = 0;
     let toolChars = 0;
-    items = [...messages]
-      .reverse()
-      .map((message): Message => {
-        if (message.role !== "toolResult" && message.role !== "user")
-          return message;
-        if (typeof message.content === "string") return message;
-        const content = message.content.map((part): typeof part => {
-          if (part.type !== "image" || ++images <= 1) return part;
-          truncatedToolResults++;
-          return {
-            type: "text",
-            text: "[Previous image omitted to preserve context budget. Re-read or re-capture it if visual evidence is still needed.]",
-          };
-        });
-        if (message.role === "user") return { ...message, content };
-        tools++;
-        const chars = contextLength(content);
-        toolChars += chars;
-        if (
-          tools <= CONTEXT_TOOL_RESULT_KEEP_RECENT &&
-          chars <= settings.toolResultMaxChars &&
-          toolChars <= settings.toolResultAggregateMaxChars
-        )
-          return { ...message, content };
+    items = [...messages];
+    for (let index = items.length - 1; index >= 0; index--) {
+      const message = items[index];
+      if (message.role !== "toolResult" && message.role !== "user") continue;
+      if (typeof message.content === "string") continue;
+      const content = message.content.map((part): typeof part => {
+        if (part.type !== "image" || index === latestUser) return part;
+        imageMessage ??= index;
+        if (imageMessage === index) return part;
         truncatedToolResults++;
         return {
-          ...message,
-          content: content.map((part) =>
-            part.type === "text" ? pruneToolText(part) : part,
-          ),
+          type: "text",
+          text: "[Previous image omitted to preserve context budget. Re-read or re-capture it if visual evidence is still needed.]",
         };
-      })
-      .reverse();
+      });
+      if (message.role === "user") {
+        items[index] = { ...message, content };
+        continue;
+      }
+      tools++;
+      const chars = contextLength(content);
+      toolChars += chars;
+      const keep =
+        tools <= CONTEXT_TOOL_RESULT_KEEP_RECENT &&
+        chars <= settings.toolResultMaxChars &&
+        toolChars <= settings.toolResultAggregateMaxChars;
+      if (!keep) truncatedToolResults++;
+      items[index] = {
+        ...message,
+        content: keep
+          ? content
+          : content.map((part) =>
+              part.type === "text" ? pruneToolText(part) : part,
+            ),
+      };
+    }
     // Collapse system/tool deltas before windowing so removing older messages
     // cannot revive a removed tool or discard the active system instructions.
     const system = getCurrentSystemMessage(items);
@@ -72,13 +86,7 @@ export function applyPiContextBudget(
     if (contextLength(items) > settings.requestMaxChars) {
       const keep = new Set<number>();
       if (items[0]?.role === "system") keep.add(0);
-      const latestUser = items.findLastIndex(
-        (message) =>
-          message.role === "user" &&
-          !/<internal_instruction>|<context_pruned>|<context_compacted>/.test(
-            messageText(message),
-          ),
-      );
+      const latestUser = latestUserIndex(items);
       if (latestUser >= 0) keep.add(latestUser);
       let tailChars = 0;
       let tailMessages = 0;
@@ -142,6 +150,16 @@ export function applyPiContextBudget(
   };
 }
 
+function latestUserIndex(messages: Message[]) {
+  return messages.findLastIndex(
+    (message) =>
+      message.role === "user" &&
+      !/<internal_instruction>|<context_pruned>|<context_compacted>/.test(
+        messageText(message),
+      ),
+  );
+}
+
 export function contextLength(value: unknown): number {
   return JSON.stringify(value, (key, item) => {
     if (key === "details") return undefined;
@@ -203,4 +221,53 @@ function pruneToolText(part: TextContent): TextContent {
       note: "Older tool output was pruned. Re-run or read the relevant tool data if exact output is needed.",
     }),
   };
+}
+
+function resolveContextBudgetSettings(
+  preferences: Preferences,
+  modelContextLength?: number,
+) {
+  const toolResultMaxChars = clampNumber(
+    preferences.contextToolResultMaxChars,
+    DEFAULT_CONTEXT_TOOL_RESULT_MAX_CHARS,
+    1_000,
+    96_000,
+  );
+  const modelRequestMaxChars = modelContextChars(modelContextLength);
+  const requestMaxChars =
+    modelRequestMaxChars &&
+    preferences.contextRequestMaxChars === DEFAULT_CONTEXT_REQUEST_MAX_CHARS
+      ? modelRequestMaxChars
+      : preferences.contextRequestMaxChars;
+  return {
+    enabled: preferences.contextBudgetEnabled ?? DEFAULT_CONTEXT_BUDGET_ENABLED,
+    requestMaxChars: clampNumber(
+      requestMaxChars,
+      DEFAULT_CONTEXT_REQUEST_MAX_CHARS,
+      16_000,
+      MAX_CONTEXT_BUDGET_TOKENS * ESTIMATED_CHARS_PER_TOKEN,
+    ),
+    tailMinMessages: clampNumber(
+      preferences.contextTailMinMessages,
+      DEFAULT_CONTEXT_TAIL_MIN_MESSAGES,
+      2,
+      40,
+    ),
+    tailMaxChars: DEFAULT_CONTEXT_TAIL_MAX_CHARS,
+    toolResultMaxChars,
+    toolResultAggregateMaxChars: Math.max(
+      DEFAULT_CONTEXT_TOOL_RESULT_AGGREGATE_MAX_CHARS,
+      toolResultMaxChars * CONTEXT_TOOL_RESULT_KEEP_RECENT,
+    ),
+  };
+}
+
+function clampNumber(
+  value: number | undefined,
+  fallback: number,
+  min: number,
+  max: number,
+) {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, Math.trunc(value || fallback)));
 }

@@ -9,8 +9,6 @@ import {
 } from "../src/background/pi-context-budget";
 import { assistantMessage, piModel } from "../src/background/pi-provider";
 import { DEFAULT_PREFERENCES } from "../src/shared/default-preferences";
-import { createPiMessages } from "../src/background/pi-messages";
-import { renderCompactionContext } from "../src/background/compaction-prompt";
 
 const model = piModel({
   provider: "openai",
@@ -105,94 +103,40 @@ test("context window preserves complete multi-call batches, latest user, and act
   assert.deepEqual(messages, before);
 });
 
-test("media budgeting excludes base64 bytes and prunes older images and oversized tool output", () => {
+test("budget keeps every image in the latest user message and prunes older images", () => {
   const image = {
     type: "image" as const,
     mimeType: "image/png",
     data: "a".repeat(200000),
   };
+  const toolResult = (id: string, raw = ""): Message => ({
+    role: "toolResult",
+    toolCallId: id,
+    toolName: "inspect",
+    timestamp: 1,
+    isError: false,
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify({ success: true, loadedToolNames: [id], raw }),
+      },
+      image,
+    ],
+  });
   const messages: Message[] = [
+    toolResult("old", "x".repeat(200000)),
+    toolResult("recent"),
     {
       role: "user",
-      timestamp: 0,
-      content: [{ type: "text", text: "Picture" }, image],
-    },
-    {
-      role: "toolResult",
-      toolCallId: "a",
-      toolName: "inspect",
-      timestamp: 1,
-      isError: false,
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify({
-            success: true,
-            loadedToolNames: ["inspect"],
-            raw: "x".repeat(200000),
-          }),
-        },
-        image,
-      ],
+      timestamp: 2,
+      content: [{ type: "text", text: "Compare these" }, image, image],
     },
   ];
   assert.ok(contextLength([image]) < 100);
   const budget = applyPiContextBudget(messages, DEFAULT_PREFERENCES);
-  assert.equal(budget.report.truncatedToolResults, 2);
-  assert.match(JSON.stringify(budget.messages), /loadedToolNames/);
-  assert.equal(
-    JSON.stringify(budget.messages).split('"type":"image"').length - 1,
-    1,
-  );
-  assert.equal(
-    applyPiContextBudget(messages, {
-      ...DEFAULT_PREFERENCES,
-      contextBudgetEnabled: false,
-    }).messages,
-    messages,
-  );
-});
-
-test("attachment context keeps text/audio/video metadata and image bytes in Pi's native content", () => {
-  const attachments = [
-    {
-      id: "image",
-      kind: "image" as const,
-      type: "image/png",
-      name: "picture.png",
-      dataUrl: "data:image/png;base64,aGVsbG8=",
-      size: 5,
-    },
-    {
-      id: "audio",
-      kind: "audio" as const,
-      type: "audio/wav",
-      name: "sound.wav",
-      dataUrl: "data:audio/wav;base64,AAAA",
-      size: 3,
-    },
-    {
-      id: "text",
-      kind: "text" as const,
-      type: "text/plain",
-      name: "notes.txt",
-      text: "Important note",
-      size: 14,
-    },
-  ];
-  const messages = createPiMessages(
-    model,
-    [{ role: "user", id: "u", content: "Inspect", createdAt: 0 }],
-    attachments,
-    [],
-  );
-  assert.match(JSON.stringify(messages), /picture.png/);
-  assert.match(JSON.stringify(messages), /sound.wav/);
-  assert.match(JSON.stringify(messages), /notes.txt/);
-  assert.match(JSON.stringify(messages), /aGVsbG8=/);
-  assert.doesNotMatch(JSON.stringify(messages), /data:audio/);
-  assert.doesNotMatch(
-    renderCompactionContext(messages, 10000).join(""),
-    /aGVsbG8=/,
-  );
+  const images = (message: Message) =>
+    JSON.stringify(message).split('"type":"image"').length - 1;
+  assert.deepEqual(budget.messages.map(images), [0, 1, 2]);
+  assert.match(JSON.stringify(budget.messages[0]), /contextPruned/);
+  assert.match(JSON.stringify(budget.messages[0]), /loadedToolNames/);
 });

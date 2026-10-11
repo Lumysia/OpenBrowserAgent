@@ -108,7 +108,6 @@ export function executeContextAwareTool({
   workspace?: AgentWorkspace;
   signal?: AbortSignal;
 }) {
-  signal?.throwIfAborted();
   if (toolName === BROWSER_TOOL_NAME.loadTools)
     return loadTools(input, capabilities, {
       hasSkills: availableSkills.length > 0,
@@ -198,7 +197,6 @@ export async function getSubAgentStatus(
   input: Record<string, unknown>,
   signal?: AbortSignal,
 ) {
-  signal?.throwIfAborted();
   const taskId = String(input.taskId || input.childChatId || "").trim();
   if (!taskId) return { error: "Missing sub-agent task id" };
   const wait = input.wait === true;

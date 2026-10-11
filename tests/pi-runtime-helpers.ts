@@ -1,10 +1,6 @@
 import { afterEach, beforeEach, mock } from "node:test";
 import type { ServerResponse } from "node:http";
-import type {
-  AgentCapabilities,
-  ProviderId,
-  SendMessagesRequest,
-} from "../src/shared/types";
+import type { AgentCapabilities, ProviderId } from "../src/shared/types";
 import { DEFAULT_PREFERENCES } from "../src/shared/default-preferences";
 import { storage } from "../src/shared/storage";
 import { runPiAgent } from "../src/background/pi-runtime";
@@ -32,12 +28,9 @@ export function setupPiRuntime(
   provider: ProviderId = "openai",
 ) {
   const chatId = crypto.randomUUID();
-  const session = sessions.createStreamSession({
-    chatId,
-    messageId: "answer",
-  } as SendMessagesRequest);
+  const session = sessions.createStreamSession(chatId);
   const options: Parameters<typeof runPiAgent>[0] = {
-    agent: session.agent,
+    session,
     model: {
       provider,
       baseUrl: `${baseUrl}${provider === "ollama" ? "" : provider === "gemini" ? "/v1beta" : "/v1"}`,
@@ -51,9 +44,6 @@ export function setupPiRuntime(
       browserAutomation: true,
     } as AgentCapabilities,
     maxToolSteps: 3,
-    signal: session.abortController.signal,
-    port: sessions.streamSessionPort(session),
-    chatId,
     messageId: "answer",
     uploadedAttachments: [],
     availableSkills: [],

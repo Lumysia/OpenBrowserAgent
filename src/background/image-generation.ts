@@ -21,13 +21,11 @@ export async function generateImage(
   } = {},
   signal?: AbortSignal,
 ) {
-  signal?.throwIfAborted();
   const prompt = String(input.prompt || "").trim();
   if (!prompt) return { success: false, error: "Missing image prompt" };
   const jobId = context.toolCallId || crypto.randomUUID();
   const preferences = await storage.preferences.get();
   const model = await resolveImageModel(stringInput(input.modelId));
-  signal?.throwIfAborted();
   const requestedSize =
     stringInput(input.size) || preferences.imageGenerationSize;
   const size = normalizeImageSize(requestedSize);
@@ -71,7 +69,6 @@ export async function generateImage(
       },
       signal,
     );
-    signal?.throwIfAborted();
     const error = stringInput(displayResult.error);
     const output = {
       ...displayResult,

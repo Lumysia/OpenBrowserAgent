@@ -2,12 +2,14 @@ import { storage } from "../shared/storage";
 import {
   SKILL_ENTRY_PATH,
   createSkillPackage,
+  getSkillDisplayName,
+  getSkillEntryFile,
   normalizeSkillName,
   parseSkillFrontmatter,
   skillFileKind,
 } from "../shared/skills";
 import type { Skill } from "../shared/types";
-import { listSkills, readSkill, readSkillFile } from "./attachment-messages";
+import { withContentSlice, withListSlice } from "./tool-utils";
 
 export function manageSkills(
   availableSkills: Skill[],
@@ -160,4 +162,96 @@ function parseReplacements(value: unknown) {
     edits.push({ oldText: item.oldText, newText: item.newText });
   }
   return edits;
+}
+
+function readSkill(skills: Skill[], input: Record<string, unknown>) {
+  const skillId = String(input.skillId || input.id || "");
+  const resolved = resolveSkill(skills, skillId);
+  if (!resolved.ok) return resolved.result;
+  const skill = resolved.skill;
+  const entry = getSkillEntryFile(skill);
+  return withContentSlice(
+    {
+      id: skill.id,
+      name: getSkillDisplayName(skill),
+      description: skill.description || "",
+      entry: entry?.path || "SKILL.md",
+      files: skill.files?.map((file) => ({
+        path: file.path,
+        kind: file.kind,
+        size: file.content.length,
+      })),
+    },
+    entry?.content || "",
+    input,
+  );
+}
+
+function listSkills(skills: Skill[], input: Record<string, unknown> = {}) {
+  return withListSlice(
+    {},
+    skills.map((skill) => ({
+      id: skill.id,
+      name: getSkillDisplayName(skill),
+      description: skill.description || "",
+      entry: "SKILL.md",
+      files: skill.files?.map((file) => ({
+        path: file.path,
+        kind: file.kind,
+        size: file.content.length,
+      })),
+    })),
+    input,
+    "skills",
+  );
+}
+
+function readSkillFile(skills: Skill[], input: Record<string, unknown>) {
+  const skillId = String(input.skillId || input.id || "");
+  const path = String(input.path || "");
+  const resolved = resolveSkill(skills, skillId);
+  if (!resolved.ok) return resolved.result;
+  const skill = resolved.skill;
+  const file = skill.files?.find((item) => item.path === path);
+  if (!file) return { error: "Skill file not found", skillId, path };
+  return withContentSlice(
+    {
+      id: skill.id,
+      name: getSkillDisplayName(skill),
+      path: file.path,
+      kind: file.kind,
+    },
+    file.content,
+    input,
+  );
+}
+
+function resolveSkill(skills: Skill[], skillIdOrName: string) {
+  const exactId = skills.find((item) => item.id === skillIdOrName);
+  if (exactId) return { ok: true as const, skill: exactId };
+
+  const normalized = skillIdOrName.trim().toLowerCase();
+  const nameMatches = skills.filter(
+    (item) =>
+      getSkillDisplayName(item).toLowerCase() === normalized ||
+      item.name.toLowerCase() === normalized,
+  );
+  if (nameMatches.length === 1)
+    return { ok: true as const, skill: nameMatches[0] };
+  if (nameMatches.length > 1)
+    return {
+      ok: false as const,
+      result: {
+        error: "Skill name is ambiguous",
+        skillId: skillIdOrName,
+        matches: nameMatches.map((item) => ({
+          id: item.id,
+          name: getSkillDisplayName(item),
+        })),
+      },
+    };
+  return {
+    ok: false as const,
+    result: { error: "Skill not found", skillId: skillIdOrName },
+  };
 }

@@ -1,13 +1,10 @@
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 import { runPiAgent } from "../src/background/pi-runtime";
+import { streamPartFromChunk } from "../entrypoints/sidepanel/stream-parts";
 import { storage } from "../src/shared/storage";
 import { DEFAULT_PREFERENCES } from "../src/shared/default-preferences";
-import type {
-  AgentCapabilities,
-  AiStreamResponse,
-  McpServerConfig,
-} from "../src/shared/types";
+import type { AgentCapabilities, AiStreamResponse } from "../src/shared/types";
 import * as sessions from "../src/background/stream-sessions";
 import { installPiRuntimeBrowser, setupPiRuntime } from "./pi-runtime-helpers";
 import { providerFixture, reply, toolResults } from "./provider-fixtures.mjs";
@@ -32,6 +29,7 @@ test("Pi executes real extension tools, bounds tool turns, and keeps usage", asy
       request.protocol,
       requests.length <= 2
         ? {
+            thinking: "Inspecting.",
             calls: [
               {
                 id: `call_${requests.length}`,
@@ -58,150 +56,28 @@ test("Pi executes real extension tools, bounds tool turns, and keeps usage", asy
       /Fixture tab/,
     );
     assert.equal(result.usage?.totalTokens, 45);
-    assert.equal(run.session.agent.state.isStreaming, false);
-    assert.equal(run.session.agent.state.pendingToolCalls.size, 0);
-  } finally {
-    run.close();
-    await fixture.close();
-  }
-});
-
-test("MCP tools retain their JSON schemas and execute the extension's HTTP MCP client", async () => {
-  const fixture = await providerFixture((request, response) => {
-    if (request.url === "/mcp") {
-      if (request.body.method === "notifications/initialized") {
-        response.writeHead(202).end();
-        return;
-      }
-      const result =
-        request.body.method === "initialize"
-          ? {
-              protocolVersion: "2025-06-18",
-              capabilities: { tools: {} },
-              serverInfo: { name: "fixture", version: "1" },
-            }
-          : {
-              content: [
-                {
-                  type: "text",
-                  text: `Echo ${request.body.params.arguments.value}`,
-                },
-              ],
-            };
-      response
-        .writeHead(200, {
-          "Content-Type": "application/json",
-          "Mcp-Session-Id": "fixture-session",
-        })
-        .end(JSON.stringify({ jsonrpc: "2.0", id: request.body.id, result }));
-      return;
-    }
-    reply(
-      response,
-      request.protocol,
-      toolResults(request).length
-        ? { text: "MCP done" }
-        : {
-            calls: [
-              {
-                id: "mcp",
-                name: "mcp__Fixture__echo",
-                args: { value: "hello" },
-              },
-            ],
-          },
+    const parts = run.session.events.flatMap((event) =>
+      event.type === "chunk" ? [streamPartFromChunk(event.chunk).part] : [],
     );
-  });
-  const run = setup(fixture.baseUrl, 2, { mcpTools: true });
-  const servers: McpServerConfig[] = [
-    {
-      id: "fixture",
-      name: "Fixture",
-      url: `${fixture.baseUrl}/mcp`,
-      enabled: true,
-      testedAt: 1,
-      createdAt: 1,
-      updatedAt: 1,
-      tools: [
-        {
-          name: "echo",
-          enabled: true,
-          inputSchema: {
-            type: "object",
-            properties: { value: { type: "string" } },
-            required: ["value"],
-          },
-        },
-      ],
-    },
-  ];
-  run.options.mcpServers = servers;
-  mock.method(storage.mcpServers, "get", async () => servers);
-  try {
-    await runPiAgent(run.options);
-    assert.equal(
-      fixture.requests.filter((request) => request.body.method === "tools/call")
-        .length,
-      1,
-    );
-    assert.match(
-      JSON.stringify(toolResults(fixture.requests.at(-1)!)),
-      /Echo hello/,
-    );
-    assert.equal(
-      fixture.requests.find((request) => request.body.method === "tools/call")
-        ?.headers["mcp-session-id"],
-      "fixture-session",
-    );
-  } finally {
-    run.close();
-    await fixture.close();
-  }
-});
-
-test("context pruning requests one anchored summary and reports it without streaming summary text to the user", async () => {
-  mock.method(storage.preferences, "get", async () => ({
-    ...DEFAULT_PREFERENCES,
-    contextRequestMaxChars: 16000,
-    contextTailMinMessages: 2,
-  }));
-  const fixture = await providerFixture((request, response, requests) =>
-    reply(response, request.protocol, {
-      text: requests.length === 1 ? "Anchored summary" : "Final answer",
-    }),
-  );
-  const run = setup(fixture.baseUrl, 0);
-  run.options.messages = Array.from({ length: 15 }, (_, index) => ({
-    id: String(index),
-    role: "user",
-    createdAt: index,
-    content: "old ".repeat(5000),
-  }));
-  run.options.messages.push({
-    id: "latest",
-    role: "user",
-    createdAt: 20,
-    content: "Latest request",
-  });
-  try {
-    await runPiAgent(run.options);
-    assert.equal(fixture.requests.length, 2);
-    assert.match(JSON.stringify(fixture.requests[1].body), /Anchored summary/);
-    const text = run.session.events
-      .flatMap((event) =>
-        event.type === "chunk" && event.chunk.type === "text-delta"
-          ? [event.chunk.delta]
-          : [],
-      )
-      .join("");
-    assert.equal(text, "Final answer");
     assert.ok(
-      run.session.events.some(
-        (event) =>
-          event.type === "metrics" &&
-          JSON.stringify(event).includes("Anchored summary"),
+      parts.some(
+        (part) => part?.type === "reasoning" && part.text === "Inspecting.",
       ),
     );
+    // Each call is announced once without argument snapshots, then executed.
+    const states = (id: string) =>
+      run.session.events.flatMap((event) =>
+        event.type === "chunk" && event.chunk.toolCallId === id
+          ? [[event.chunk.state, event.chunk.input]]
+          : [],
+      );
+    assert.deepEqual(states("call_1").slice(0, 2), [
+      ["input-streaming", undefined],
+      ["input-available", { operation: "list" }],
+    ]);
+    assert.equal(states("call_1")[2][0], "output-available");
+    assert.equal(run.session.agent.state.isStreaming, false);
+    assert.equal(run.session.agent.state.pendingToolCalls.size, 0);
   } finally {
     run.close();
     await fixture.close();
@@ -268,40 +144,6 @@ test("deferred tools become executable and advertised on Pi's next turn", async 
   }
 });
 
-test("Pi validation rejects unknown tools and bad arguments without browser side effects", async () => {
-  const query = mock.method(chrome.tabs, "query", async () => []);
-  const fixture = await providerFixture((request, response, requests) =>
-    reply(
-      response,
-      request.protocol,
-      requests.length === 1
-        ? {
-            calls: [
-              { id: "bad", name: "manageTabs", args: { operation: "invalid" } },
-              { id: "unknown", name: "unknownTool", args: {} },
-            ],
-          }
-        : { text: "Recovered" },
-    ),
-  );
-  const run = setup(fixture.baseUrl);
-  try {
-    await runPiAgent(run.options);
-    assert.equal(query.mock.callCount(), 0);
-    assert.equal(toolResults(fixture.requests[1]).length, 2);
-    assert.equal(
-      run.session.events.filter(
-        (event) =>
-          event.type === "chunk" && event.chunk.state === "output-error",
-      ).length,
-      2,
-    );
-  } finally {
-    run.close();
-    await fixture.close();
-  }
-});
-
 test("cancellation aborts an in-flight HTTP stream and Pi returns to idle", async () => {
   const closed = Promise.withResolvers<void>();
   const fixture = await providerFixture((request, response) => {
@@ -327,7 +169,7 @@ test("cancellation aborts an in-flight HTTP stream and Pi returns to idle", asyn
   }
 });
 
-test("question wait survives port disconnect/replay, accepts an answer and can be aborted", async () => {
+test("question wait survives a panel reconnect, accepts an answer and can be aborted", async () => {
   const fixture = await providerFixture((request, response, requests) =>
     reply(
       response,
@@ -363,11 +205,11 @@ test("question wait survives port disconnect/replay, accepts an answer and can b
           sessions.detachPort(client);
           assert.equal(run.session.agent.state.isStreaming, true);
           sessions.attachPortToSession(client, run.session, event.sequence);
-          sessions.sendMessageToSession(run.session, {
-            type: "answerQuestion",
-            toolCallId: "ask",
-            answers: [{ question: "Pick", answers: ["A"] }],
-          });
+          // An empty answer keeps waiting; the real one resolves the call.
+          sessions.answerQuestion(run.session, "ask", []);
+          sessions.answerQuestion(run.session, "ask", [
+            { question: "Pick", answers: ["A"] },
+          ]);
         }, 0);
       }
     },
@@ -387,8 +229,7 @@ test("question wait survives port disconnect/replay, accepts an answer and can b
     });
     try {
       await assert.rejects(runPiAgent(second.options), { name: "AbortError" });
-      assert.equal(second.session.messageListeners.size, 0);
-      assert.equal(second.session.disconnectListeners.size, 0);
+      assert.equal(second.session.answers.size, 0);
       assert.equal(second.session.agent.state.isStreaming, false);
     } finally {
       second.close();

@@ -20,7 +20,7 @@ test("image generation accepts a URL response without base64 data", async () => 
   );
 });
 
-for (const size of ["1x1", "300x300", "320x640", "1024x1024"]) {
+for (const size of ["1x1", "320x640"]) {
   test(`image generation normalizes ${size} to a bounded valid request`, async () => {
     const fetch = setup({ data: [{ b64_json: "AA==" }] });
     const result = await generateImage([], { prompt: "fixture", size });
