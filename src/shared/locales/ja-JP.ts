@@ -114,7 +114,6 @@ export const jaJP: LocaleMessages = {
       ttft: "初回トークン遅延",
       tps: "TPS",
       output: "出力方式",
-      streaming: "ストリーミング",
       input: "入力",
       outputTokens: "出力",
       total: "合計",
@@ -310,10 +309,6 @@ export const jaJP: LocaleMessages = {
         running: "添付を読み取り中",
         done: "添付を読み取りました",
       },
-      cdpEvaluateScript: {
-        running: "ページスクリプトを実行中",
-        done: "ページスクリプトを実行しました",
-      },
       cdpExecuteArbitraryJavaScript: {
         running: "カスタムスクリプトを実行中",
         done: "カスタムスクリプトを実行しました",
@@ -321,46 +316,6 @@ export const jaJP: LocaleMessages = {
       cdpTakeScreenshot: {
         running: "スクリーンショットを撮影中",
         done: "スクリーンショットを撮影しました",
-      },
-      cdpPerformanceStartTrace: {
-        running: "パフォーマンストレースを開始中",
-        done: "パフォーマンストレースを開始しました",
-      },
-      cdpPerformanceStopTrace: {
-        running: "パフォーマンストレースを停止中",
-        done: "パフォーマンストレースを停止しました",
-      },
-      cdpPerformanceAnalyzeInsight: {
-        running: "パフォーマンス分析中",
-        done: "パフォーマンス分析を完了しました",
-      },
-      cdpTakeMemorySnapshot: {
-        running: "メモリスナップショットを取得中",
-        done: "メモリスナップショットを取得しました",
-      },
-      cdpGetMemorySnapshotDetails: {
-        running: "メモリスナップショットを読み取り中",
-        done: "メモリスナップショットを読み取りました",
-      },
-      cdpGetNodesByClass: {
-        running: "メモリノードを読み取り中",
-        done: "メモリノードを読み取りました",
-      },
-      cdpLoadMemorySnapshot: {
-        running: "メモリスナップショットを読み込み中",
-        done: "メモリスナップショットを読み込みました",
-      },
-      cdpLighthouseAudit: {
-        running: "ページ監査を実行中",
-        done: "ページ監査を実行しました",
-      },
-      cdpScreencastStart: {
-        running: "ページ録画を開始中",
-        done: "ページ録画を開始しました",
-      },
-      cdpScreencastStop: {
-        running: "ページ録画を停止中",
-        done: "ページ録画を停止しました",
       },
       startSubAgent: {
         running: "サブエージェントを開始中",

@@ -115,7 +115,6 @@ export const deDE: LocaleMessages = {
       ttft: "TTFT",
       tps: "TPS",
       output: "Ausgabe",
-      streaming: "Streaming",
       input: "Eingabe",
       outputTokens: "Ausgabe",
       total: "Gesamt",
@@ -312,10 +311,6 @@ export const deDE: LocaleMessages = {
         running: "Anhang wird gelesen",
         done: "Anhang gelesen",
       },
-      cdpEvaluateScript: {
-        running: "Seitenskript wird ausgeführt",
-        done: "Seitenskript ausgeführt",
-      },
       cdpExecuteArbitraryJavaScript: {
         running: "Benutzerdefiniertes Skript wird ausgeführt",
         done: "Benutzerdefiniertes Skript ausgeführt",
@@ -323,46 +318,6 @@ export const deDE: LocaleMessages = {
       cdpTakeScreenshot: {
         running: "Screenshot wird erstellt",
         done: "Screenshot erstellt",
-      },
-      cdpPerformanceStartTrace: {
-        running: "Performance-Trace wird gestartet",
-        done: "Performance-Trace gestartet",
-      },
-      cdpPerformanceStopTrace: {
-        running: "Performance-Trace wird gestoppt",
-        done: "Performance-Trace gestoppt",
-      },
-      cdpPerformanceAnalyzeInsight: {
-        running: "Performance wird analysiert",
-        done: "Performance analysiert",
-      },
-      cdpTakeMemorySnapshot: {
-        running: "Speicher-Snapshot wird erstellt",
-        done: "Speicher-Snapshot erstellt",
-      },
-      cdpGetMemorySnapshotDetails: {
-        running: "Speicher-Snapshot wird gelesen",
-        done: "Speicher-Snapshot gelesen",
-      },
-      cdpGetNodesByClass: {
-        running: "Speicherknoten werden gelesen",
-        done: "Speicherknoten gelesen",
-      },
-      cdpLoadMemorySnapshot: {
-        running: "Speicher-Snapshot wird geladen",
-        done: "Speicher-Snapshot geladen",
-      },
-      cdpLighthouseAudit: {
-        running: "Seitenaudit läuft",
-        done: "Seitenaudit abgeschlossen",
-      },
-      cdpScreencastStart: {
-        running: "Seitenaufzeichnung wird gestartet",
-        done: "Seitenaufzeichnung gestartet",
-      },
-      cdpScreencastStop: {
-        running: "Seitenaufzeichnung wird gestoppt",
-        done: "Seitenaufzeichnung gestoppt",
       },
       startSubAgent: {
         running: "Subagent wird gestartet",

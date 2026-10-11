@@ -239,7 +239,6 @@ function deltaRunMetrics(
   const outputCharacters = Number(current.outputCharacters) || 0;
   return {
     firstTokenAt: current.firstTokenAt || Date.now(),
-    outputMode: current.outputMode || "streaming",
     outputCharacters: outputCharacters + delta.length,
   };
 }

@@ -4,17 +4,11 @@ import { getBrowserApi } from "./browser-api";
 import { STORAGE_KEYS } from "./storage-keys";
 
 const TINYBASE_SYNC_DOCUMENT_PREFIX = "OpenBrowserAgentTinyBaseSync:";
-// Older readers must reject v2 rather than silently turn its tombstones into
-// null data. Existing v1 documents remain readable without speculative repair.
 const TINYBASE_SYNC_DOCUMENT_FORMAT = "openbrowseragent.tinybase-sync.v2";
-const LEGACY_TINYBASE_SYNC_DOCUMENT_FORMAT =
-  "openbrowseragent.tinybase-sync.v1";
 const ORDER_CELL = "__openBrowserAgentSyncOrder";
 
 type TinyBaseSyncDocument = {
-  format:
-    | typeof TINYBASE_SYNC_DOCUMENT_FORMAT
-    | typeof LEGACY_TINYBASE_SYNC_DOCUMENT_FORMAT;
+  format: typeof TINYBASE_SYNC_DOCUMENT_FORMAT;
   content: unknown;
   undefinedPaths?: Array<Array<string | number>>;
 };
@@ -149,10 +143,7 @@ function decodeStore(key: string, bytes: Uint8Array) {
   const document = JSON.parse(
     text.slice(TINYBASE_SYNC_DOCUMENT_PREFIX.length),
   ) as Partial<TinyBaseSyncDocument>;
-  if (
-    document.format !== TINYBASE_SYNC_DOCUMENT_FORMAT &&
-    document.format !== LEGACY_TINYBASE_SYNC_DOCUMENT_FORMAT
-  )
+  if (document.format !== TINYBASE_SYNC_DOCUMENT_FORMAT)
     throw new Error(`Unsupported TinyBase sync document for ${key}.`);
   restoreUndefinedPaths(document.content, document.undefinedPaths);
   assertMergeableContent(document.content);
@@ -181,8 +172,8 @@ function setStoreValue<T>(
     }
   // An empty entry can later gain fields through a merge. Its presence cell
   // remains part of that retained row's identity; dropping it on an unrelated
-  // rewrite would defeat a concurrent clear. Do not add it to unmarked legacy
-  // rows, or retain it for rows absent from the requested snapshot.
+  // rewrite would defeat a concurrent clear. Do not retain it for rows absent
+  // from the requested snapshot.
   if (tables && !Array.isArray(value)) {
     for (const [id, row] of Object.entries(tables.items)) {
       const presence = store.getCell("items", id, ORDER_CELL);

@@ -1,69 +1,16 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
-import { createMergeableStore } from "tinybase";
 import {
   base64ToBytes,
-  bytesToBase64,
   decodeTinyBaseSyncValue,
   readTinyBaseSyncValue,
   writeTinyBaseSyncValue,
 } from "../src/shared/sync-tinybase-doc";
 import { tinybaseSyncLocalCacheKey } from "../src/shared/sync-tinybase-doc";
 import { createSyncBackend } from "../src/shared/sync-backends-impl";
-import { browserStorage, chatHistory, installBrowser } from "./helpers";
+import { browserStorage, installBrowser } from "./helpers";
 
 afterEach(() => mock.restoreAll());
-
-test("v1 history with nested tools, media and metadata survives round trips", async () => {
-  const { local } = installBrowser();
-  const key = "existing-backend:chats";
-  const history = chatHistory(2, 2);
-  Object.assign(history[0].messages[1], {
-    parts: [
-      {
-        id: "tool",
-        type: "tool-screenshot",
-        input: { tabId: 4 },
-        output: { media: [{ dataUrl: "data:image/png;base64,eA==" }] },
-      },
-    ],
-    metadata: {
-      uploadedAttachments: [
-        {
-          id: "file",
-          syncAttachment: { objectName: "attachments/sha256.png" },
-        },
-      ],
-    },
-  });
-  Object.assign(history[0], {
-    imageGenerationJobs: [{ id: "job", status: "complete" }],
-    childChatIds: ["child"],
-  });
-  // Construct the exact legacy envelope and array schema, including the old
-  // shared replica ID. New code must read it without restamping its contents.
-  const legacy = createMergeableStore(key, () => 1_700_000_000_000);
-  legacy.setTables({
-    items: Object.fromEntries(
-      history.map((chat, index) => [
-        chat.id,
-        { ...chat, __openBrowserAgentSyncOrder: index },
-      ]),
-    ),
-  });
-  legacy.setValues({ kind: "array" });
-  const bytes = new TextEncoder().encode(
-    `OpenBrowserAgentTinyBaseSync:${JSON.stringify({ format: "openbrowseragent.tinybase-sync.v1", content: legacy.getMergeableContent() })}`,
-  );
-  assert.deepEqual(await readTinyBaseSyncValue(key, bytes), history);
-  const cachedBytes = local.data[tinybaseSyncLocalCacheKey(key)];
-  assert.equal(cachedBytes, bytesToBase64(bytes));
-  local.writes.length = 0;
-  assert.deepEqual(await readTinyBaseSyncValue(key, bytes), history);
-  assert.equal(local.writes.length, 0);
-  const written = await writeTinyBaseSyncValue(key, history, bytes);
-  assert.deepEqual(decodeTinyBaseSyncValue(key, written.bytes), history);
-});
 
 test("new deletion markers survive JSON without converting legitimate nulls to deletions", async () => {
   installBrowser();
@@ -86,18 +33,6 @@ test("new deletion markers survive JSON without converting legitimate nulls to d
   const { local } = installBrowser();
   assert.deepEqual(await readTinyBaseSyncValue(key, deleted.bytes), next);
   assert.ok(local.data[tinybaseSyncLocalCacheKey(key)]);
-});
-
-test("legacy null values remain null because old tombstones cannot be distinguished", () => {
-  const legacy = createMergeableStore("legacy-null")
-    .setCell("items", "row", "nullable", null)
-    .setValues({ kind: "array" });
-  const bytes = new TextEncoder().encode(
-    `OpenBrowserAgentTinyBaseSync:${JSON.stringify({ format: "openbrowseragent.tinybase-sync.v1", content: legacy.getMergeableContent() })}`,
-  );
-  assert.deepEqual(decodeTinyBaseSyncValue("legacy-null", bytes), [
-    { id: "row", nullable: null },
-  ]);
 });
 
 test("independent row additions, edits and deletions merge across devices", async () => {
@@ -165,7 +100,7 @@ test("malformed remote data cannot replace a valid local document", async () => 
     ],
   ]) {
     const bytes = new TextEncoder().encode(
-      `OpenBrowserAgentTinyBaseSync:${JSON.stringify({ format: "openbrowseragent.tinybase-sync.v1", content })}`,
+      `OpenBrowserAgentTinyBaseSync:${JSON.stringify({ format: "openbrowseragent.tinybase-sync.v2", content })}`,
     );
     await assert.rejects(
       readTinyBaseSyncValue(key, bytes),

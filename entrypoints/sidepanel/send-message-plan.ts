@@ -73,7 +73,6 @@ export function createSendMessagePlan({
       ...(selectedSkills.length
         ? {
             skills: selectedSkills,
-            skill: selectedSkills[0],
             autoSelectedSkill,
           }
         : {}),

@@ -248,7 +248,6 @@ export type RunMetrics = {
   firstTokenAt?: number;
   endedAt?: number;
   streamEventIndex?: number;
-  outputMode?: "streaming";
   outputCharacters?: number;
   usage?: TokenUsage;
   promptBreakdown?: PromptBreakdown;

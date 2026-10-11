@@ -1,5 +1,4 @@
 import { FileText, MousePointerClick } from "lucide-react";
-import { Fragment } from "react";
 import {
   debugLog,
   isDebugLoggingEnabled,
@@ -20,7 +19,6 @@ import { CHAT_PART_STATE, isToolPartType } from "../../src/shared/types";
 import { formatMessageTime } from "./format";
 import {
   AssistantPart,
-  AssistantSummaryCard,
   AssistantText,
   NO_SOURCES,
 } from "./assistant-message-part";
@@ -80,7 +78,6 @@ export function MessageBubble({
   const assistantModel = message.metadata?.assistantModel as
     { provider?: string; name?: string } | undefined;
   const hasParts = !!message.parts?.length;
-  const summaryAfterPartIndex = legacySummaryInsertionIndex(message);
   const assistantText = assistantMessageText(message);
   const assistantContentFallback = assistantMessageContentFallback(message);
   const displaySources = sourcesForAssistantMessage(message, sources);
@@ -161,23 +158,19 @@ export function MessageBubble({
             />
           )}
           {assistantPartEntries.map(({ part, index }) => (
-            <Fragment key={part.id}>
-              <AssistantPart
-                t={t}
-                part={part}
-                partIndex={index}
-                sources={sources}
-                onFork={() => onFork?.(message, part.id)}
-                message={message}
-                chatMessages={chatMessages}
-                onSelectChat={onSelectChat}
-                chatExists={chatExists}
-                onAnswerQuestion={onAnswerQuestion}
-              />
-              {index === summaryAfterPartIndex && (
-                <AssistantSummaryCard t={t} message={message} />
-              )}
-            </Fragment>
+            <AssistantPart
+              key={part.id}
+              t={t}
+              part={part}
+              partIndex={index}
+              sources={sources}
+              onFork={() => onFork?.(message, part.id)}
+              message={message}
+              chatMessages={chatMessages}
+              onSelectChat={onSelectChat}
+              chatExists={chatExists}
+              onAnswerQuestion={onAnswerQuestion}
+            />
           ))}
         </>
       ) : !message.content ? null : (
@@ -268,23 +261,9 @@ export function MessageBubble({
 function selectedElementsFromMetadata(
   metadata: Record<string, unknown> | undefined,
 ) {
-  if (Array.isArray(metadata?.selectedElements))
-    return metadata.selectedElements as SelectedElement[];
-  return metadata?.selectedElement
-    ? [metadata.selectedElement as SelectedElement]
+  return Array.isArray(metadata?.selectedElements)
+    ? (metadata.selectedElements as SelectedElement[])
     : [];
-}
-
-function legacySummaryInsertionIndex(message: ChatMessage) {
-  const parts = message.parts || [];
-  if (parts.some((part) => part.type === "summary")) return -1;
-  if (!compactionSummary(message)) return -1;
-  if (!parts.length) return -1;
-  const lastToolPartIndex = parts.reduce(
-    (lastIndex, part, index) => (isToolPartType(part.type) ? index : lastIndex),
-    -1,
-  );
-  return lastToolPartIndex >= 0 ? lastToolPartIndex : parts.length - 1;
 }
 
 function chronologicalAssistantPartEntries(
@@ -337,19 +316,8 @@ function debugAssistantPart(part: NonNullable<ChatMessage["parts"]>[number]) {
   };
 }
 
-function compactionSummary(message: ChatMessage) {
-  const metrics = message.metadata?.runMetrics as
-    { contextBudget?: { compactionSummary?: unknown } } | undefined;
-  const summary = metrics?.contextBudget?.compactionSummary;
-  return typeof summary === "string" && summary.trim() ? summary.trim() : "";
-}
-
 function selectedMessageSkills(metadata: Record<string, unknown> | undefined) {
-  const skills = Array.isArray(metadata?.skills)
-    ? (metadata.skills as Skill[])
-    : [];
-  const skill = metadata?.skill as Skill | undefined;
-  return skills.length ? skills : skill ? [skill] : [];
+  return Array.isArray(metadata?.skills) ? (metadata.skills as Skill[]) : [];
 }
 
 function assistantMessageText(message: ChatMessage) {

@@ -108,7 +108,6 @@ export const zhCN: LocaleMessages = {
       ttft: "首字延迟",
       tps: "每秒 Token",
       output: "输出方式",
-      streaming: "流式输出",
       input: "输入",
       outputTokens: "输出",
       total: "总计",
@@ -274,40 +273,11 @@ export const zhCN: LocaleMessages = {
       generateImage: { running: "生成图片", done: "已生成图片" },
       readFileFromUrl: { running: "读取文件", done: "已读取文件" },
       readUploadedAttachment: { running: "读取附件", done: "已读取附件" },
-      cdpEvaluateScript: { running: "执行页面脚本中", done: "页面脚本已执行" },
       cdpExecuteArbitraryJavaScript: {
         running: "运行自定义脚本中",
         done: "自定义脚本已运行",
       },
       cdpTakeScreenshot: { running: "截取页面截图", done: "已截取页面截图" },
-      cdpPerformanceStartTrace: {
-        running: "开始性能跟踪",
-        done: "已开始性能跟踪",
-      },
-      cdpPerformanceStopTrace: {
-        running: "停止性能跟踪",
-        done: "已停止性能跟踪",
-      },
-      cdpPerformanceAnalyzeInsight: {
-        running: "分析性能洞察",
-        done: "已分析性能洞察",
-      },
-      cdpTakeMemorySnapshot: {
-        running: "获取内存快照",
-        done: "已获取内存快照",
-      },
-      cdpGetMemorySnapshotDetails: {
-        running: "读取内存快照",
-        done: "已读取内存快照",
-      },
-      cdpGetNodesByClass: { running: "读取内存节点", done: "已读取内存节点" },
-      cdpLoadMemorySnapshot: {
-        running: "加载内存快照",
-        done: "已加载内存快照",
-      },
-      cdpLighthouseAudit: { running: "运行页面审计", done: "已运行页面审计" },
-      cdpScreencastStart: { running: "开始页面录制", done: "已开始页面录制" },
-      cdpScreencastStop: { running: "停止页面录制", done: "已停止页面录制" },
       startLocalExecutionBridge: {
         running: "启动本地命令",
         done: "本地命令已完成",

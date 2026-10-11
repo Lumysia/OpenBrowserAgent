@@ -62,11 +62,7 @@ ${message.content}
 }
 
 function messageSkills(metadata: Record<string, unknown> | undefined) {
-  const skills = Array.isArray(metadata?.skills)
-    ? (metadata.skills as Skill[])
-    : [];
-  const skill = metadata?.skill as Skill | undefined;
-  return skills.length ? skills : skill ? [skill] : [];
+  return Array.isArray(metadata?.skills) ? (metadata.skills as Skill[]) : [];
 }
 
 export function renderSkillToolHint(skills: Skill[]) {

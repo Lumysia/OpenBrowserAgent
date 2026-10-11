@@ -114,7 +114,6 @@ export const frFR: LocaleMessages = {
       ttft: "TTFT",
       tps: "TPS",
       output: "Sortie",
-      streaming: "Streaming",
       input: "Entrée",
       outputTokens: "Sortie",
       total: "Total",
@@ -318,10 +317,6 @@ export const frFR: LocaleMessages = {
         running: "Lecture de la pièce jointe",
         done: "Pièce jointe lue",
       },
-      cdpEvaluateScript: {
-        running: "Exécution du script de page",
-        done: "Script de page exécuté",
-      },
       cdpExecuteArbitraryJavaScript: {
         running: "Exécution du script personnalisé",
         done: "Script personnalisé exécuté",
@@ -329,46 +324,6 @@ export const frFR: LocaleMessages = {
       cdpTakeScreenshot: {
         running: "Capture d'écran",
         done: "Capture effectuée",
-      },
-      cdpPerformanceStartTrace: {
-        running: "Démarrage de la trace de performance",
-        done: "Trace de performance démarrée",
-      },
-      cdpPerformanceStopTrace: {
-        running: "Arrêt de la trace de performance",
-        done: "Trace de performance arrêtée",
-      },
-      cdpPerformanceAnalyzeInsight: {
-        running: "Analyse de performance",
-        done: "Analyse de performance terminée",
-      },
-      cdpTakeMemorySnapshot: {
-        running: "Capture de l'instantané mémoire",
-        done: "Instantané mémoire capturé",
-      },
-      cdpGetMemorySnapshotDetails: {
-        running: "Lecture de l'instantané mémoire",
-        done: "Instantané mémoire lu",
-      },
-      cdpGetNodesByClass: {
-        running: "Lecture des nœuds mémoire",
-        done: "Nœuds mémoire lus",
-      },
-      cdpLoadMemorySnapshot: {
-        running: "Chargement de l'instantané mémoire",
-        done: "Instantané mémoire chargé",
-      },
-      cdpLighthouseAudit: {
-        running: "Audit de la page",
-        done: "Audit de page terminé",
-      },
-      cdpScreencastStart: {
-        running: "Démarrage de l'enregistrement",
-        done: "Enregistrement démarré",
-      },
-      cdpScreencastStop: {
-        running: "Arrêt de l'enregistrement",
-        done: "Enregistrement arrêté",
       },
       startSubAgent: {
         running: "Démarrage du sous-agent",

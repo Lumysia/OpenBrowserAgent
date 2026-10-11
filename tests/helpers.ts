@@ -30,27 +30,3 @@ export function installBrowser(
   });
   return { local, sync };
 }
-
-export function chatHistory(count: number, messages = 20) {
-  return Array.from({ length: count }, (_, index) => ({
-    id: `chat-${index}`,
-    title: `Conversation ${index}`,
-    createdAt: index,
-    updatedAt: index,
-    messages: Array.from({ length: messages }, (_, message) => ({
-      id: `message-${message}`,
-      role: message % 2 ? "assistant" : "user",
-      content: `Message ${message}: ${"browser history ".repeat(64)}`,
-      createdAt: message,
-      parts: [
-        { id: `part-${message}`, type: "text", text: "A streamed answer" },
-      ],
-      metadata: {
-        runMetrics: { startedAt: 1, endedAt: 2, streamEventIndex: 10 },
-      },
-    })),
-    sources: [
-      { id: "source", url: "https://example.org/", title: "Reference" },
-    ],
-  }));
-}

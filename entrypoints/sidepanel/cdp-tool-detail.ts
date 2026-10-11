@@ -15,12 +15,6 @@ export function cdpToolDetail(
   if (name === BROWSER_TOOL_NAME.cdpInput) return cdpInputDetail(tab, input);
   if (name === BROWSER_TOOL_NAME.cdpPage)
     return cdpPageDetail(tab, input, output);
-  if (name === BROWSER_TOOL_NAME.cdpEvaluateScript)
-    return compactJoin([
-      tab,
-      codeSummary(input.function || input.expression),
-      outputPreview(output),
-    ]);
   if (name === BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript)
     return compactJoin([tab, codeSummary(input.code), outputPreview(output)]);
   if (name === BROWSER_TOOL_NAME.cdpTakeScreenshot)
@@ -36,44 +30,6 @@ export function cdpToolDetail(
       arrayCount("requests", output.requests),
       arrayCount("messages", output.messages),
     ]);
-  if (name === BROWSER_TOOL_NAME.cdpPerformanceStartTrace)
-    return compactJoin([tab, input.reload ? "reload" : undefined]);
-  if (name === BROWSER_TOOL_NAME.cdpPerformanceStopTrace)
-    return compactJoin([tab, countValue("insights", output.insightCount)]);
-  if (name === BROWSER_TOOL_NAME.cdpPerformanceAnalyzeInsight)
-    return compactJoin([
-      stringValue(input.insightName),
-      stringValue(input.insightSetId),
-    ]);
-  if (name === BROWSER_TOOL_NAME.cdpTakeMemorySnapshot)
-    return compactJoin([
-      tab,
-      stringValue(output.filePath) || stringValue(input.filePath),
-    ]);
-  if (name === BROWSER_TOOL_NAME.cdpGetMemorySnapshotDetails)
-    return compactJoin([
-      stringValue(input.filePath),
-      arrayCount("items", output.items),
-    ]);
-  if (name === BROWSER_TOOL_NAME.cdpGetNodesByClass)
-    return compactJoin([
-      stringValue(input.filePath),
-      idLabel("Class", input.uid),
-    ]);
-  if (name === BROWSER_TOOL_NAME.cdpLoadMemorySnapshot)
-    return stringValue(input.filePath);
-  if (name === BROWSER_TOOL_NAME.cdpLighthouseAudit)
-    return compactJoin([
-      tab,
-      stringValue(input.device),
-      stringValue(input.mode),
-    ]);
-  if (name === BROWSER_TOOL_NAME.cdpScreencastStart)
-    return compactJoin([
-      tab,
-      stringValue(output.filePath) || stringValue(input.filePath),
-    ]);
-  if (name === BROWSER_TOOL_NAME.cdpScreencastStop) return tab;
   return tab;
 }
 

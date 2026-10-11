@@ -113,7 +113,6 @@ export const ko: LocaleMessages = {
       ttft: "첫 토큰 지연",
       tps: "TPS",
       output: "출력 방식",
-      streaming: "스트리밍",
       input: "입력",
       outputTokens: "출력",
       total: "합계",
@@ -293,10 +292,6 @@ export const ko: LocaleMessages = {
         running: "Markdown 다운로드 중",
         done: "Markdown 다운로드됨",
       },
-      cdpEvaluateScript: {
-        running: "페이지 스크립트 실행 중",
-        done: "페이지 스크립트 실행됨",
-      },
       cdpExecuteArbitraryJavaScript: {
         running: "사용자 스크립트 실행 중",
         done: "사용자 스크립트 실행됨",
@@ -304,46 +299,6 @@ export const ko: LocaleMessages = {
       cdpTakeScreenshot: {
         running: "스크린샷 캡처 중",
         done: "스크린샷 캡처됨",
-      },
-      cdpPerformanceStartTrace: {
-        running: "성능 추적 시작 중",
-        done: "성능 추적 시작됨",
-      },
-      cdpPerformanceStopTrace: {
-        running: "성능 추적 중지 중",
-        done: "성능 추적 중지됨",
-      },
-      cdpPerformanceAnalyzeInsight: {
-        running: "성능 인사이트 분석 중",
-        done: "성능 인사이트 분석됨",
-      },
-      cdpTakeMemorySnapshot: {
-        running: "메모리 스냅샷 생성 중",
-        done: "메모리 스냅샷 생성됨",
-      },
-      cdpGetMemorySnapshotDetails: {
-        running: "메모리 스냅샷 읽는 중",
-        done: "메모리 스냅샷 읽음",
-      },
-      cdpGetNodesByClass: {
-        running: "메모리 노드 읽는 중",
-        done: "메모리 노드 읽음",
-      },
-      cdpLoadMemorySnapshot: {
-        running: "메모리 스냅샷 로드 중",
-        done: "메모리 스냅샷 로드됨",
-      },
-      cdpLighthouseAudit: {
-        running: "페이지 감사 실행 중",
-        done: "페이지 감사 실행됨",
-      },
-      cdpScreencastStart: {
-        running: "페이지 녹화 시작 중",
-        done: "페이지 녹화 시작됨",
-      },
-      cdpScreencastStop: {
-        running: "페이지 녹화 중지 중",
-        done: "페이지 녹화 중지됨",
       },
       startSubAgent: {
         running: "하위 에이전트 시작 중",

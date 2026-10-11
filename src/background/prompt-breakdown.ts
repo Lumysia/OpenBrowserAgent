@@ -24,9 +24,7 @@ export function promptBreakdown(
   const attachments = request.body.context?.uploadedAttachments || [];
   const context = request.body.context?.text || "";
   const attachedTabs = latestUser?.metadata?.attachedTabs;
-  const selectedElements =
-    latestUser?.metadata?.selectedElements ||
-    latestUser?.metadata?.selectedElement;
+  const selectedElements = latestUser?.metadata?.selectedElements;
   const selectedSkills = messageSkills(latestUser?.metadata);
   const availableSkills = request.body.context?.availableSkills || [];
   return {
@@ -84,11 +82,7 @@ export function promptBreakdown(
 }
 
 function messageSkills(metadata: Record<string, unknown> | undefined) {
-  const skills = Array.isArray(metadata?.skills)
-    ? (metadata.skills as Skill[])
-    : [];
-  const skill = metadata?.skill as Skill | undefined;
-  return skills.length ? skills : skill ? [skill] : [];
+  return Array.isArray(metadata?.skills) ? (metadata.skills as Skill[]) : [];
 }
 
 function contextBlockLength(context: string, tag: string) {

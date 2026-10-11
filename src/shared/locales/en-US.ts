@@ -115,7 +115,6 @@ export const enUS = {
       ttft: "TTFT",
       tps: "TPS",
       output: "Output",
-      streaming: "Streaming",
       input: "Input",
       outputTokens: "Output",
       total: "Total",
@@ -302,10 +301,6 @@ export const enUS = {
         running: "Reading file",
         done: "Read file",
       },
-      cdpEvaluateScript: {
-        running: "Evaluating page script",
-        done: "Evaluated page script",
-      },
       cdpExecuteArbitraryJavaScript: {
         running: "Running custom script",
         done: "Ran custom script",
@@ -313,46 +308,6 @@ export const enUS = {
       cdpTakeScreenshot: {
         running: "Taking screenshot",
         done: "Took screenshot",
-      },
-      cdpPerformanceStartTrace: {
-        running: "Starting performance trace",
-        done: "Started performance trace",
-      },
-      cdpPerformanceStopTrace: {
-        running: "Stopping performance trace",
-        done: "Stopped performance trace",
-      },
-      cdpPerformanceAnalyzeInsight: {
-        running: "Analyzing performance insight",
-        done: "Analyzed performance insight",
-      },
-      cdpTakeMemorySnapshot: {
-        running: "Taking memory snapshot",
-        done: "Took memory snapshot",
-      },
-      cdpGetMemorySnapshotDetails: {
-        running: "Reading memory snapshot",
-        done: "Read memory snapshot",
-      },
-      cdpGetNodesByClass: {
-        running: "Reading memory nodes",
-        done: "Read memory nodes",
-      },
-      cdpLoadMemorySnapshot: {
-        running: "Loading memory snapshot",
-        done: "Loaded memory snapshot",
-      },
-      cdpLighthouseAudit: {
-        running: "Running page audit",
-        done: "Ran page audit",
-      },
-      cdpScreencastStart: {
-        running: "Starting page recording",
-        done: "Started page recording",
-      },
-      cdpScreencastStop: {
-        running: "Stopping page recording",
-        done: "Stopped page recording",
       },
       startSubAgent: {
         running: "Starting sub-agent",

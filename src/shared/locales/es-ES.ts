@@ -113,7 +113,6 @@ export const esES: LocaleMessages = {
       ttft: "TTFT",
       tps: "TPS",
       output: "Salida",
-      streaming: "Streaming",
       input: "Entrada",
       outputTokens: "Salida",
       total: "Total",
@@ -317,55 +316,11 @@ export const esES: LocaleMessages = {
         running: "Leyendo adjunto",
         done: "Adjunto leído",
       },
-      cdpEvaluateScript: {
-        running: "Ejecutando script de página",
-        done: "Script de página ejecutado",
-      },
       cdpExecuteArbitraryJavaScript: {
         running: "Ejecutando script personalizado",
         done: "Script personalizado ejecutado",
       },
       cdpTakeScreenshot: { running: "Tomando captura", done: "Captura tomada" },
-      cdpPerformanceStartTrace: {
-        running: "Iniciando traza de rendimiento",
-        done: "Traza de rendimiento iniciada",
-      },
-      cdpPerformanceStopTrace: {
-        running: "Deteniendo traza de rendimiento",
-        done: "Traza de rendimiento detenida",
-      },
-      cdpPerformanceAnalyzeInsight: {
-        running: "Analizando rendimiento",
-        done: "Rendimiento analizado",
-      },
-      cdpTakeMemorySnapshot: {
-        running: "Tomando instantánea de memoria",
-        done: "Instantánea de memoria tomada",
-      },
-      cdpGetMemorySnapshotDetails: {
-        running: "Leyendo instantánea de memoria",
-        done: "Instantánea de memoria leída",
-      },
-      cdpGetNodesByClass: {
-        running: "Leyendo nodos de memoria",
-        done: "Nodos de memoria leídos",
-      },
-      cdpLoadMemorySnapshot: {
-        running: "Cargando instantánea de memoria",
-        done: "Instantánea de memoria cargada",
-      },
-      cdpLighthouseAudit: {
-        running: "Ejecutando auditoría de página",
-        done: "Auditoría de página ejecutada",
-      },
-      cdpScreencastStart: {
-        running: "Iniciando grabación de página",
-        done: "Grabación de página iniciada",
-      },
-      cdpScreencastStop: {
-        running: "Deteniendo grabación de página",
-        done: "Grabación de página detenida",
-      },
       startSubAgent: {
         running: "Iniciando subagente",
         done: "Subagente iniciado",

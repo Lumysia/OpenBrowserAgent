@@ -30,18 +30,13 @@ import { useThrottledText } from "./use-throttled-text";
 
 export const NO_SOURCES: ChatSource[] = [];
 
-export function AssistantSummaryCard({
+function AssistantSummaryCard({
   t,
-  message,
-  summary: summaryProp,
+  summary,
 }: {
   t: Messages;
-  message?: ChatMessage;
-  summary?: string;
+  summary: string;
 }) {
-  const summary =
-    summaryProp?.trim() || (message ? compactionSummary(message) : "");
-  if (!summary) return null;
   return (
     <div className="tool-card done context-summary-card">
       <div className="tool-title">
@@ -62,13 +57,6 @@ export function AssistantSummaryCard({
       </div>
     </div>
   );
-}
-
-function compactionSummary(message: ChatMessage) {
-  const metrics = message.metadata?.runMetrics as
-    { contextBudget?: { compactionSummary?: unknown } } | undefined;
-  const summary = metrics?.contextBudget?.compactionSummary;
-  return typeof summary === "string" && summary.trim() ? summary.trim() : "";
 }
 
 export function AssistantPart({
@@ -112,7 +100,7 @@ export function AssistantPart({
   if (part.type === "reasoning" && part.text?.trim())
     return <AssistantReasoning t={t} text={part.text} />;
   if (part.type === "summary" && part.text?.trim())
-    return <AssistantSummaryCard t={t} summary={part.text} />;
+    return <AssistantSummaryCard t={t} summary={part.text.trim()} />;
   if (part.type === "text" && part.text?.trim())
     return (
       <AssistantText
