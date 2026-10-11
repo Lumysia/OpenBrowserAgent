@@ -28,21 +28,16 @@ export const enUS = {
     connectProviderDescription:
       "Choose your language, optionally enable sync, then add a provider and model when ready.",
     addProvider: "Add Provider",
-    cloudSyncTest: "Test cloud sync",
-    cloudSyncTesting: "Testing cloud sync...",
+    cloudSyncConnect: "Connect and sync",
+    cloudSyncTesting: "Connecting...",
     cloudSyncPulling: "Checking cloud sync...",
     cloudSyncDescription:
       "Use cloud sync to start from another device's setup or store this device's new setup in cloud.",
-    cloudSyncReady: "Synced provider setup found. Start from cloud when ready.",
-    cloudSyncEmpty:
-      "Cloud is connected, but no existing setup was found. Confirm to store your new setup in cloud.",
     cloudSyncError:
       "Cloud sync test failed. Check the backend or start locally.",
-    confirmCloudSync: "Confirm sync",
     cloudSyncSynced: "Cloud sync is ready. Add provider setup next.",
     cloudSyncSyncedButton: "Synced",
     startLocally: "Start locally",
-    startFromCloud: "Start from cloud",
     localSetupHint:
       "Settings is open. Add a provider and model there, then return here to continue.",
     bootstrapStepSyncTitle: "Sync backend (optional)",
@@ -50,9 +45,6 @@ export const enUS = {
     syncManualTab: "Manual setup",
     syncConfigCode: "Sync config code",
     syncConfigCodeDescription: "Paste a code copied from another device.",
-    syncConfigCodeApply: "Apply config code",
-    syncConfigCodeApplied:
-      "Sync backend config applied. You can now check cloud sync.",
     syncConfigCodeInvalid:
       "Invalid sync config code. Check the code and try again.",
     bootstrapStepProviderTitle: "Add a provider and model",
@@ -185,8 +177,8 @@ export const enUS = {
     editingMessageDescription:
       "Only the composer is active. Press Esc or Cancel to stop editing.",
     stop: "Stop",
-    scrollToTop: "Scroll to top",
-    scrollToBottom: "Scroll to bottom",
+    previousUserMessage: "Previous message of yours",
+    nextUserMessage: "Next message of yours",
     running: "Running",
     done: "Done",
     error: "Error",

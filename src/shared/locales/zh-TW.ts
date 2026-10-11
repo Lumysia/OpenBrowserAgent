@@ -24,20 +24,15 @@ export const zhTW: LocaleMessages = {
     connectProviderDescription:
       "選擇介面語言，可選設定同步，然後新增提供者與模型即可開始。",
     addProvider: "新增提供者",
-    cloudSyncTest: "測試雲端同步",
-    cloudSyncTesting: "正在測試雲端同步...",
+    cloudSyncConnect: "連線並同步",
+    cloudSyncTesting: "正在連線...",
     cloudSyncPulling: "正在檢查雲端同步...",
     cloudSyncDescription:
       "可從雲端拉取其他裝置的設定，也可以把目前裝置的新設定儲存到雲端。",
-    cloudSyncReady: "已找到同步的提供者設定，可以從雲端開始。",
-    cloudSyncEmpty:
-      "雲端連線成功，但找不到既有設定。確認後會把新的設定儲存到雲端。",
     cloudSyncError: "雲端同步測試失敗。請檢查後端，或從本機開始。",
-    confirmCloudSync: "確認同步",
     cloudSyncSynced: "雲端同步已準備好。接下來新增提供者設定。",
     cloudSyncSyncedButton: "已同步",
     startLocally: "從本機開始",
-    startFromCloud: "從雲端開始",
     localSetupHint:
       "設定頁已開啟。請在那裡新增提供者和模型，然後回到這裡繼續。",
     bootstrapStepSyncTitle: "同步後端（可選）",
@@ -45,8 +40,6 @@ export const zhTW: LocaleMessages = {
     syncManualTab: "手動輸入",
     syncConfigCode: "同步配置碼",
     syncConfigCodeDescription: "貼上從另一台裝置複製的配置碼。",
-    syncConfigCodeApply: "套用配置碼",
-    syncConfigCodeApplied: "同步後端配置已套用，可以繼續檢查雲端同步。",
     syncConfigCodeInvalid: "配置碼無效，請檢查後再試。",
     bootstrapStepProviderTitle: "新增提供者和模型",
     bootstrapStepProviderDescription:
@@ -175,8 +168,8 @@ export const zhTW: LocaleMessages = {
     editingMessage: "正在編輯訊息",
     editingMessageDescription: "只有輸入區可操作。按 Esc 或取消即可停止編輯。",
     stop: "停止",
-    scrollToTop: "捲動到頂部",
-    scrollToBottom: "捲動到底部",
+    previousUserMessage: "上一則我的訊息",
+    nextUserMessage: "下一則我的訊息",
     running: "執行中",
     done: "完成",
     error: "錯誤",

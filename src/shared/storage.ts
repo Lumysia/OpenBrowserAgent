@@ -57,6 +57,7 @@ import type {
 } from "./types";
 
 export {
+  DEFAULT_SYNC_DATA_SETTINGS,
   STORAGE_KEYS,
   SYNCABLE_DATA_ITEMS,
   SYNC_PREFERENCES,

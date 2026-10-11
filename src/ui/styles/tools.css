@@ -7,7 +7,7 @@
   gap: 4px;
   padding: 8px;
   color: var(--muted-foreground);
-  animation: tool-card-enter 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: tool-card-enter 0.72s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   transition:
     background-color 0.16s ease,
     border-color 0.16s ease,
@@ -51,7 +51,7 @@
   animation: tool-icon-thinking 1.35s ease-in-out infinite;
 }
 .tool-card.done .tool-icon {
-  animation: tool-icon-done 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: tool-icon-done 0.34s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 .tool-card.error::before {
   background: color-mix(in srgb, var(--destructive) 72%, transparent);
@@ -106,7 +106,7 @@
     var(--popover);
 }
 .tool-title-text {
-  animation: tool-text-swap 0.22s ease both;
+  animation: tool-text-swap 0.22s ease backwards;
 }
 .tool-icon {
   width: 24px;
@@ -152,7 +152,7 @@
   );
 }
 .tool-detail-content {
-  animation: tool-detail-swap 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: tool-detail-swap 0.42s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 .tool-description {
   max-width: 100%;
@@ -195,7 +195,7 @@
 .tool-detail-slot-content {
   min-height: 0;
   overflow: hidden;
-  animation: tool-detail-swap 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: tool-detail-swap 0.42s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 .tool-detail-slot.visible .tool-detail-slot-content {
   margin-top: 8px;
@@ -349,7 +349,7 @@
     background-color 0.14s ease,
     border-color 0.14s ease,
     transform 0.14s ease;
-  animation: tool-reference-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: tool-reference-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   animation-delay: calc(var(--tool-reference-index, 0) * 38ms);
 }
 .tool-references button svg {
@@ -429,7 +429,7 @@
   display: grid;
   gap: 10px;
   overflow: hidden;
-  animation: tool-detail-swap 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: tool-detail-swap 0.32s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 .generated-image-result img {
   width: 100%;

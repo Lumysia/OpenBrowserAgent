@@ -26,7 +26,7 @@
   gap: 18px;
   color: var(--accent-strong);
   animation: message-jump-controls-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1)
-    both;
+    backwards;
   transform: translateY(-50%);
   transform-origin: right center;
 }
@@ -60,7 +60,7 @@
   color: var(--foreground);
   line-height: 1.75;
   font-size: 16px;
-  animation: message-rise-in 0.52s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: message-rise-in 0.52s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 .message.user {
   align-self: flex-end;
@@ -102,7 +102,7 @@
 }
 .message.user.latest-user .user-bubble {
   transform-origin: right bottom;
-  animation: user-message-send-in 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: user-message-send-in 0.72s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 .sent-context-row {
   display: flex;
@@ -128,7 +128,7 @@
   color: var(--muted-foreground);
   box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow) 50%, transparent);
   text-align: left;
-  animation: context-chip-enter 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: context-chip-enter 0.28s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   transition:
     background-color 0.16s ease,
     border-color 0.16s ease,
@@ -379,7 +379,7 @@
   overflow: hidden;
 }
 .context-strip > * {
-  animation: context-row-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: context-row-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 .context-chip-row {
   display: flex;
@@ -427,7 +427,7 @@
   box-shadow: 0 6px 16px color-mix(in srgb, var(--shadow) 52%, transparent);
   flex: 0 0 min(334px, 82vw);
   overflow: hidden;
-  animation: context-chip-enter 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: context-chip-enter 0.38s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   transition:
     border-color 0.18s ease,
     background-color 0.18s ease,

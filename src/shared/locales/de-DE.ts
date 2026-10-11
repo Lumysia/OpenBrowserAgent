@@ -24,23 +24,17 @@ export const deDE: LocaleMessages = {
     connectProviderDescription:
       "Wählen Sie die Sprache, aktivieren Sie optional die Synchronisierung und fügen Sie dann Anbieter und Modell hinzu.",
     addProvider: "Anbieter hinzufügen",
-    cloudSyncTest: "Cloud-Synchronisierung testen",
-    cloudSyncTesting: "Cloud-Synchronisierung wird getestet...",
+    cloudSyncConnect: "Verbinden und synchronisieren",
+    cloudSyncTesting: "Verbinde...",
     cloudSyncPulling: "Cloud-Synchronisierung wird geprüft...",
     cloudSyncDescription:
       "Nutzen Sie die Cloud, um eine Einrichtung von einem anderen Gerät zu übernehmen oder diese neue Einrichtung zu speichern.",
-    cloudSyncReady:
-      "Synchronisierte Anbieterkonfiguration gefunden. Sie können aus der Cloud starten.",
-    cloudSyncEmpty:
-      "Cloud verbunden, aber keine vorhandene Einrichtung gefunden. Bestätigen Sie, um neue Daten in der Cloud zu speichern.",
     cloudSyncError:
       "Cloud-Synchronisierungstest fehlgeschlagen. Prüfen Sie das Backend oder starten Sie lokal.",
-    confirmCloudSync: "Synchronisierung bestätigen",
     cloudSyncSynced:
       "Cloud-Synchronisierung ist bereit. Fügen Sie als Nächstes Anbieter hinzu.",
     cloudSyncSyncedButton: "Synchronisiert",
     startLocally: "Lokal starten",
-    startFromCloud: "Aus der Cloud starten",
     localSetupHint:
       "Die Einstellungen sind geöffnet. Fügen Sie dort Anbieter und Modell hinzu und kehren Sie dann hierher zurück.",
     bootstrapStepSyncTitle: "Synchronisierungs-Backend (optional)",
@@ -49,9 +43,6 @@ export const deDE: LocaleMessages = {
     syncConfigCode: "Sync-Konfigurationscode",
     syncConfigCodeDescription:
       "Fügen Sie einen von einem anderen Gerät kopierten Code ein.",
-    syncConfigCodeApply: "Konfigurationscode anwenden",
-    syncConfigCodeApplied:
-      "Sync-Backend-Konfiguration angewendet. Sie können nun die Cloud-Synchronisierung prüfen.",
     syncConfigCodeInvalid:
       "Ungültiger Sync-Konfigurationscode. Prüfen Sie den Code und versuchen Sie es erneut.",
     bootstrapStepProviderTitle: "Anbieter und Modell hinzufügen",
@@ -186,8 +177,8 @@ export const deDE: LocaleMessages = {
     editingMessageDescription:
       "Nur der Composer ist aktiv. Drücken Sie Esc oder Abbrechen zum Beenden.",
     stop: "Stoppen",
-    scrollToTop: "Nach oben scrollen",
-    scrollToBottom: "Nach unten scrollen",
+    previousUserMessage: "Vorherige eigene Nachricht",
+    nextUserMessage: "Nächste eigene Nachricht",
     running: "Läuft",
     done: "Fertig",
     error: "Fehler",

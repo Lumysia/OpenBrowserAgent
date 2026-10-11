@@ -24,23 +24,17 @@ export const esES: LocaleMessages = {
     connectProviderDescription:
       "Elige el idioma, activa la sincronización si quieres y luego añade un proveedor y un modelo.",
     addProvider: "Añadir proveedor",
-    cloudSyncTest: "Probar sincronización en la nube",
-    cloudSyncTesting: "Probando sincronización en la nube...",
+    cloudSyncConnect: "Conectar y sincronizar",
+    cloudSyncTesting: "Conectando...",
     cloudSyncPulling: "Comprobando sincronización en la nube...",
     cloudSyncDescription:
       "Usa la nube para empezar con la configuración de otro dispositivo o guardar esta nueva configuración.",
-    cloudSyncReady:
-      "Configuración de proveedor sincronizada encontrada. Puedes empezar desde la nube.",
-    cloudSyncEmpty:
-      "La nube está conectada, pero no se encontró una configuración existente. Confirma para guardar la nueva configuración en la nube.",
     cloudSyncError:
       "Falló la prueba de sincronización en la nube. Revisa el backend o empieza en local.",
-    confirmCloudSync: "Confirmar sincronización",
     cloudSyncSynced:
       "La sincronización en la nube está lista. Añade ahora la configuración del proveedor.",
     cloudSyncSyncedButton: "Sincronizado",
     startLocally: "Empezar en local",
-    startFromCloud: "Empezar desde la nube",
     localSetupHint:
       "Configuración está abierta. Añade allí un proveedor y un modelo, y luego vuelve aquí para continuar.",
     bootstrapStepSyncTitle: "Backend de sincronización (opcional)",
@@ -48,9 +42,6 @@ export const esES: LocaleMessages = {
     syncManualTab: "Configuración manual",
     syncConfigCode: "Código de configuración de sincronización",
     syncConfigCodeDescription: "Pega un código copiado desde otro dispositivo.",
-    syncConfigCodeApply: "Aplicar código",
-    syncConfigCodeApplied:
-      "Configuración del backend aplicada. Ahora puedes comprobar la sincronización en la nube.",
     syncConfigCodeInvalid:
       "Código de configuración no válido. Revísalo e inténtalo de nuevo.",
     bootstrapStepProviderTitle: "Añade proveedor y modelo",
@@ -184,8 +175,8 @@ export const esES: LocaleMessages = {
     editingMessageDescription:
       "Solo el compositor está activo. Pulsa Esc o Cancelar para dejar de editar.",
     stop: "Detener",
-    scrollToTop: "Ir arriba",
-    scrollToBottom: "Ir abajo",
+    previousUserMessage: "Tu mensaje anterior",
+    nextUserMessage: "Tu mensaje siguiente",
     running: "Ejecutando",
     done: "Listo",
     error: "Error",

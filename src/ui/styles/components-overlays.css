@@ -11,7 +11,7 @@
   font-size: 12px;
   font-weight: 600;
   line-height: 1;
-  animation: fade-in 0.18s ease both;
+  animation: fade-in 0.18s ease backwards;
   transition:
     filter 0.16s ease,
     background-color 0.16s ease,
@@ -43,7 +43,7 @@
     color-mix(in srgb, var(--accent-softer) 10%, var(--card));
   border-radius: var(--radius);
   box-shadow: 0 10px 24px var(--shadow);
-  animation: fade-in 0.22s ease both;
+  animation: fade-in 0.22s ease backwards;
   transition:
     filter 0.16s ease,
     border-color 0.16s ease,
@@ -274,7 +274,7 @@
   background: var(--popover);
   color: var(--popover-foreground);
   box-shadow: 0 16px 40px rgba(22, 21, 18, 0.16);
-  animation: pop-in 0.14s ease both;
+  animation: pop-in 0.14s ease backwards;
 }
 .ui-select-viewport {
   padding: 5px;
@@ -336,7 +336,7 @@
   line-height: 1.25;
   white-space: pre-line;
   box-shadow: 0 10px 24px color-mix(in srgb, var(--shadow) 76%, transparent);
-  animation: pop-in 0.14s ease both;
+  animation: pop-in 0.14s ease backwards;
 }
 .tooltip-button-wrapper {
   display: inline-flex;
@@ -349,7 +349,7 @@
   background: var(--popover);
   color: var(--popover-foreground);
   box-shadow: 0 14px 36px var(--shadow);
-  animation: pop-in 0.14s ease both;
+  animation: pop-in 0.14s ease backwards;
 }
 .ui-tabs-list {
   position: relative;
@@ -402,7 +402,7 @@
   box-shadow: 0 0 0 3px var(--ring);
 }
 .ui-tabs-content {
-  animation: tabs-content-in 0.24s ease both;
+  animation: tabs-content-in 0.24s ease backwards;
 }
 @keyframes tabs-content-in {
   from {
@@ -554,7 +554,7 @@
   padding: 10px 8px;
   color: var(--muted-foreground);
   font-size: 13px;
-  animation: fade-in 0.18s ease both;
+  animation: fade-in 0.18s ease backwards;
 }
 .ui-command-item {
   position: relative;

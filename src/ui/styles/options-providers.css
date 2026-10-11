@@ -11,7 +11,7 @@
   background: var(--accent-strong);
   box-shadow: 0 0 0 4px
     color-mix(in srgb, var(--accent-strong) 12%, transparent);
-  animation: sync-dot-ready 0.28s ease both;
+  animation: sync-dot-ready 0.28s ease backwards;
   transition:
     background-color 0.18s ease,
     box-shadow 0.18s ease,

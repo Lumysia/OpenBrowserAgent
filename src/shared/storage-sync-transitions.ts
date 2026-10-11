@@ -217,21 +217,31 @@ export async function restoreSyncBackendFromCloud({
   syncDataSettings?: SyncDataSettings;
   data?: Record<string, unknown>;
 }) {
-  await syncBackendForId(backendId);
+  const backend = await syncBackendForId(backendId);
   const values: Record<string, unknown> = {
     [STORAGE_KEYS.activeSyncBackendId]: backendId,
   };
-  for (const [key, value] of Object.entries({
-    ...data,
+  const alwaysSynced = {
     [STORAGE_KEYS.language]: language,
     [STORAGE_KEYS.preferences]: preferences,
     [STORAGE_KEYS.syncDataSettings]: syncDataSettings,
-  })) {
+  };
+  // An always-synced value the cloud lacks (a partial upload, say) is uploaded.
+  // Published as flushed, every refresh would read the missing document and
+  // drop it again, so the account would never get sync settings.
+  const missing: string[] = [];
+  for (const [key, value] of Object.entries(alwaysSynced))
+    if (value !== undefined && (await backend.read(key)) === undefined)
+      missing.push(key);
+  for (const [key, value] of Object.entries({ ...data, ...alwaysSynced })) {
     if (value === undefined) continue;
     values[key] = value;
-    values[syncLocalCacheKey(key)] = flushedCache(value);
+    values[syncLocalCacheKey(key)] = missing.includes(key)
+      ? pendingCache(value)
+      : flushedCache(value);
   }
   await local().set(values);
+  for (const key of missing) queueSyncWrite(backend, key);
 }
 
 async function syncBackendForId(backendId: string) {

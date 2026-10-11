@@ -25,27 +25,60 @@ export async function mutatePage(
   const operation = Array.isArray(args.operations)
     ? "batch"
     : stringInput(args.operation || args.action);
-  if (operation === "insertStyle" || operation === "removeStyle") {
-    const injection = {
-      target: { tabId },
-      css: stringInput(args.css || args.value),
-    };
-    if (operation === "insertStyle") await api.scripting.insertCSS(injection);
-    else await api.scripting.removeCSS(injection);
+  if (isStyleOperation(operation)) {
+    await applyStyle(tabId, args);
     return { success: true, tabId, operation };
   }
+
+  // Style items in a batch use the extension stylesheet API, like a single
+  // style operation; the page script only knows DOM operations.
+  const request = buildMutationRequest(args);
+  const items = batchItems(args);
+  const styleResults = new Map<number, Record<string, unknown>>();
+  for (const [index, item] of items.entries()) {
+    const itemOperation = stringInput(item.operation || item.action);
+    if (!isStyleOperation(itemOperation)) continue;
+    signal?.throwIfAborted();
+    await applyStyle(tabId, { ...args, ...item });
+    styleResults.set(index, { success: true, operation: itemOperation });
+  }
+  if (items.length && styleResults.size === items.length)
+    return {
+      tabId,
+      operation,
+      success: true,
+      results: [...styleResults.values()],
+    };
+  if (styleResults.size)
+    request.operations = request.operations.filter(
+      (_, index) => !styleResults.has(index),
+    );
 
   await injectPageDom(tabId);
   const [result] = await api.scripting.executeScript({
     target: { tabId },
-    args: [buildMutationRequest(args)],
+    args: [request],
     func: mutatePageInDom,
   });
-  const output = result.result ?? {
+  let output: Record<string, unknown> = result.result ?? {
     success: false,
     error: "Mutation script returned no result.",
     errorCode: "NO_MUTATION_RESULT",
   };
+  if (styleResults.size) {
+    const domResults = (
+      "results" in output && Array.isArray(output.results)
+        ? output.results
+        : [output]
+    ) as Array<Record<string, unknown>>;
+    const results = items.map(
+      (_, index) => styleResults.get(index) ?? domResults.shift() ?? {},
+    );
+    output = {
+      success: results.every((item) => item.success !== false),
+      results,
+    };
+  }
   if (isNewTabRequest(output)) {
     signal?.throwIfAborted();
     const created = await api.tabs.create({ url: output.url, active: false });
@@ -63,14 +96,32 @@ export async function mutatePage(
 export type MutationOperation = ReturnType<typeof buildMutationOptions>;
 export type MutationRequest = { operations: MutationOperation[] };
 
-function buildMutationRequest(args: Record<string, unknown>) {
-  const operations = Array.isArray(args.operations)
+function isStyleOperation(operation: string) {
+  return operation === "insertStyle" || operation === "removeStyle";
+}
+
+async function applyStyle(tabId: number, args: Record<string, unknown>) {
+  const injection = {
+    target: { tabId },
+    css: stringInput(args.css || args.value),
+  };
+  if (stringInput(args.operation || args.action) === "insertStyle")
+    await getBrowserApi().scripting.insertCSS(injection);
+  else await getBrowserApi().scripting.removeCSS(injection);
+}
+
+function batchItems(args: Record<string, unknown>) {
+  return Array.isArray(args.operations)
     ? args.operations
         .filter((item): item is Record<string, unknown> =>
           Boolean(item && typeof item === "object"),
         )
         .slice(0, 10)
     : [];
+}
+
+function buildMutationRequest(args: Record<string, unknown>) {
+  const operations = batchItems(args);
   return {
     operations: operations.length
       ? operations.map((operation) =>

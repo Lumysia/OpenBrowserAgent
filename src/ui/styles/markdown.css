@@ -450,7 +450,7 @@
   line-height: 1.2;
   box-shadow: 0 4px 12px
     color-mix(in srgb, var(--accent-shadow) 18%, transparent);
-  animation: fade-in 0.2s ease both;
+  animation: fade-in 0.2s ease backwards;
   transition:
     background-color 0.16s ease,
     border-color 0.16s ease,

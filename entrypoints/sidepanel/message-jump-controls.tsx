@@ -7,6 +7,7 @@ import { IconTooltip } from "./icon-tooltip";
 import { useDeferredPresence } from "./use-deferred-remove";
 
 const SCROLL_EDGE_THRESHOLD_PX = 24;
+const JUMP_GAP_PX = 12;
 
 export function MessageJumpControls({
   t,
@@ -65,13 +66,26 @@ export function MessageJumpControls({
     };
   }, [currentChat?.id, currentChat?.messages.length, messagesRef]);
 
-  function scrollMessagesTo(position: "top" | "bottom") {
-    const messagesElement = messagesRef.current;
-    if (!messagesElement) return;
-    messagesElement.scrollTo({
-      top: position === "top" ? 0 : messagesElement.scrollHeight,
-      behavior: "smooth",
-    });
+  // Step between the user's own messages; past the first or last one, go to
+  // the very top or bottom.
+  function jump(direction: "previous" | "next") {
+    const element = messagesRef.current;
+    if (!element) return;
+    const top = element.getBoundingClientRect().top;
+    const offsets = [...element.querySelectorAll(".message.user")].map(
+      (message) =>
+        message.getBoundingClientRect().top -
+        top +
+        element.scrollTop -
+        JUMP_GAP_PX,
+    );
+    const current = element.scrollTop;
+    const target =
+      direction === "previous"
+        ? (offsets.filter((offset) => offset < current - 1).pop() ?? 0)
+        : (offsets.find((offset) => offset > current + 1) ??
+          element.scrollHeight);
+    element.scrollTo({ top: target, behavior: "smooth" });
   }
 
   if (!presence.mounted) return null;
@@ -80,24 +94,24 @@ export function MessageJumpControls({
     <div
       className={`message-jump-controls${presence.removing ? " is-removing" : ""}`}
     >
-      <IconTooltip label={t.sidepanel.scrollToTop} side="left">
+      <IconTooltip label={t.sidepanel.previousUserMessage} side="left">
         <Button
           className="message-jump-button"
           variant="secondary"
           size="icon"
-          aria-label={t.sidepanel.scrollToTop}
-          onClick={() => scrollMessagesTo("top")}
+          aria-label={t.sidepanel.previousUserMessage}
+          onClick={() => jump("previous")}
         >
           <ArrowUp size={15} />
         </Button>
       </IconTooltip>
-      <IconTooltip label={t.sidepanel.scrollToBottom} side="left">
+      <IconTooltip label={t.sidepanel.nextUserMessage} side="left">
         <Button
           className="message-jump-button"
           variant="secondary"
           size="icon"
-          aria-label={t.sidepanel.scrollToBottom}
-          onClick={() => scrollMessagesTo("bottom")}
+          aria-label={t.sidepanel.nextUserMessage}
+          onClick={() => jump("next")}
         >
           <ArrowDown size={15} />
         </Button>
@@ -110,8 +124,7 @@ function hasUnfinishedAssistantRun(chat: Chat | undefined) {
   return chat?.messages.some((message) => {
     if (message.role !== "assistant") return false;
     const metrics = message.metadata?.runMetrics as
-      | { startedAt?: unknown; endedAt?: unknown }
-      | undefined;
+      { startedAt?: unknown; endedAt?: unknown } | undefined;
     return metrics?.startedAt !== undefined && metrics.endedAt === undefined;
   });
 }

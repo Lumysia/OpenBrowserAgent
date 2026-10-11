@@ -24,23 +24,17 @@ export const ko: LocaleMessages = {
     connectProviderDescription:
       "언어를 선택하고 필요하면 동기화를 켠 다음 제공업체와 모델을 추가하세요.",
     addProvider: "제공업체 추가",
-    cloudSyncTest: "클라우드 동기화 테스트",
-    cloudSyncTesting: "클라우드 동기화 테스트 중...",
+    cloudSyncConnect: "연결 및 동기화",
+    cloudSyncTesting: "연결 중...",
     cloudSyncPulling: "클라우드 동기화 확인 중...",
     cloudSyncDescription:
       "클라우드에서 다른 기기의 설정을 가져오거나 이 기기의 새 설정을 클라우드에 저장할 수 있습니다.",
-    cloudSyncReady:
-      "동기화된 제공업체 설정을 찾았습니다. 클라우드에서 시작할 수 있습니다.",
-    cloudSyncEmpty:
-      "클라우드에 연결했지만 기존 설정을 찾지 못했습니다. 확인하면 새 설정을 클라우드에 저장합니다.",
     cloudSyncError:
       "클라우드 동기화 테스트 실패. 백엔드를 확인하거나 로컬에서 시작하세요.",
-    confirmCloudSync: "동기화 확인",
     cloudSyncSynced:
       "클라우드 동기화가 준비되었습니다. 다음으로 제공업체 설정을 추가하세요.",
     cloudSyncSyncedButton: "동기화됨",
     startLocally: "로컬에서 시작",
-    startFromCloud: "클라우드에서 시작",
     localSetupHint:
       "설정이 열렸습니다. 거기에서 제공업체와 모델을 추가한 뒤 여기로 돌아와 계속하세요.",
     bootstrapStepSyncTitle: "동기화 백엔드(선택 사항)",
@@ -48,9 +42,6 @@ export const ko: LocaleMessages = {
     syncManualTab: "수동 입력",
     syncConfigCode: "동기화 구성 코드",
     syncConfigCodeDescription: "다른 기기에서 복사한 코드를 붙여넣으세요.",
-    syncConfigCodeApply: "구성 코드 적용",
-    syncConfigCodeApplied:
-      "동기화 백엔드 구성이 적용되었습니다. 이제 클라우드 동기화를 확인할 수 있습니다.",
     syncConfigCodeInvalid:
       "동기화 구성 코드가 올바르지 않습니다. 코드를 확인한 뒤 다시 시도하세요.",
     bootstrapStepProviderTitle: "제공업체와 모델 추가",
@@ -183,8 +174,8 @@ export const ko: LocaleMessages = {
     editingMessageDescription:
       "입력 영역만 사용할 수 있습니다. Esc 또는 취소로 편집을 중지하세요.",
     stop: "중지",
-    scrollToTop: "맨 위로 스크롤",
-    scrollToBottom: "맨 아래로 스크롤",
+    previousUserMessage: "이전 내 메시지",
+    nextUserMessage: "다음 내 메시지",
     running: "실행 중",
     done: "완료",
     error: "오류",

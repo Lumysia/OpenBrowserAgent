@@ -1,4 +1,4 @@
-import { Cloud, KeyRound } from "lucide-react";
+import { Cloud } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import {
@@ -36,8 +36,6 @@ export function SyncBootstrapStep({
   setSyncSetupMode,
   syncCodeDraft,
   setSyncCodeDraft,
-  setSyncCodeStatus,
-  applySyncConfigCode,
   setupFeedbackMessage,
   setupFeedbackError,
   syncing,
@@ -54,9 +52,7 @@ export function SyncBootstrapStep({
   syncSetupMode: "code" | "manual";
   setSyncSetupMode: Dispatch<SetStateAction<"code" | "manual">>;
   syncCodeDraft: string;
-  setSyncCodeDraft: Dispatch<SetStateAction<string>>;
-  setSyncCodeStatus: Dispatch<SetStateAction<"idle" | "applied" | "error">>;
-  applySyncConfigCode: () => void;
+  setSyncCodeDraft: (value: string) => void;
   setupFeedbackMessage: string;
   setupFeedbackError: boolean;
   syncing: boolean;
@@ -86,23 +82,12 @@ export function SyncBootstrapStep({
               value={syncCodeDraft}
               placeholder="oba-sync-v1..."
               disabled={syncing || hasActiveSyncBackend}
-              onChange={(event) => {
-                setSyncCodeDraft(event.target.value);
-                setSyncCodeStatus("idle");
-              }}
+              onChange={(event) => setSyncCodeDraft(event.target.value)}
             />
           </Label>
           <CardDescription>
             {t.sidepanel.syncConfigCodeDescription}
           </CardDescription>
-          <Button
-            variant="secondary"
-            onClick={applySyncConfigCode}
-            disabled={!syncCodeDraft.trim() || syncing || hasActiveSyncBackend}
-          >
-            <KeyRound size={16} />
-            {t.sidepanel.syncConfigCodeApply}
-          </Button>
         </TabsContent>
         <TabsContent value="manual" className="bootstrap-sync-tab-panel">
           <ManualSyncBackendFields
@@ -178,7 +163,7 @@ function ManualSyncBackendFields({
         </SelectContent>
       </Select>
       {!webDavInactive ? (
-        <div className="bootstrap-backend-fields is-visible">
+        <div className="bootstrap-backend-fields">
           <Label>
             {t.options.syncBackendWebDavUrl}
             <Input
