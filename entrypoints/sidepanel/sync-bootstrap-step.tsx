@@ -178,7 +178,7 @@ function ManualSyncBackendFields({
         </SelectContent>
       </Select>
       {!webDavInactive ? (
-        <div className="bootstrap-backend-fields is-visible">
+        <div className="bootstrap-backend-fields">
           <Label>
             {t.options.syncBackendWebDavUrl}
             <Input

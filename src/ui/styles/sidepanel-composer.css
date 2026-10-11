@@ -673,19 +673,7 @@
 .bootstrap-backend-fields {
   display: grid;
   gap: 8px;
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(-4px) scale(0.99);
-  transition:
-    max-height 0.24s ease,
-    opacity 0.18s ease,
-    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.bootstrap-backend-fields.is-visible {
-  max-height: 260px;
-  opacity: 1;
-  transform: translateY(0) scale(1);
+  animation: fade-in 0.2s ease both;
 }
 .local-setup-hint {
   max-height: 0;
