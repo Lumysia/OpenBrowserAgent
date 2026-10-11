@@ -6,7 +6,7 @@ import {
 import {
   SYNC_DATA_SETTING_KEYS,
   type SyncDataSettings,
-} from "../../src/shared/sync-data-settings";
+} from "../../src/shared/storage-keys";
 import type { Chat, UploadedAttachment } from "../../src/shared/types";
 
 export function useSyncedChatAttachments({

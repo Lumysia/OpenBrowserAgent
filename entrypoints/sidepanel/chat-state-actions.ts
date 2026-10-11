@@ -1,6 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { Chat, ChatMessage } from "../../src/shared/types";
-import { sortChatsNewestFirst } from "./format";
 
 type ChatSetter = Dispatch<SetStateAction<Chat[]>>;
 type ActiveChatSetter = Dispatch<SetStateAction<string | undefined>>;
@@ -53,10 +52,6 @@ export function pruneEmptyChats(chats: Chat[]) {
   return chats.some(isEmptyChat)
     ? chats.filter((chat) => !isEmptyChat(chat))
     : chats;
-}
-
-export function updateChatAction(setChats: ChatSetter, chat: Chat) {
-  setChats((items) => updateChatList(items, chat));
 }
 
 export function updateChatList(chats: Chat[], chat: Chat) {

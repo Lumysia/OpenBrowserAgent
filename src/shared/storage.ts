@@ -12,44 +12,37 @@ import { DEFAULT_PREFERENCES, mergePreferences } from "./default-preferences";
 import { normalizeLocalExecutionBridges } from "./local-execution-bridges";
 import { normalizeMcpServers } from "./mcp";
 import { normalizeSkills } from "./skills";
-import { effectiveArea, STORAGE_AREAS, type AreaName } from "./storage-areas";
-import type { StorageItem } from "./storage-item-types";
-import { makeStorageItemFactory } from "./storage-item-factory";
-import { makeSwitchableItemFactory } from "./storage-switchable-item";
-import { stageSyncRemoval } from "./storage-sync-local";
-import { withStoragePublicationLock } from "./storage-lock";
+import {
+  DEFAULT_SYNC_DATA_SETTINGS,
+  mergeSyncDataSettings,
+  STORAGE_KEYS,
+  SYNCABLE_DATA_ITEMS,
+  SYNC_PREFERENCES,
+  SYNC_PREFERENCE_KEYS,
+  type SyncDataSettings,
+  type SyncPreferenceKey,
+} from "./storage-keys";
 import {
   clearPendingSyncWrites,
   DEFAULT_SYNC_WRITE_STATUS,
   flushPendingSyncWrites,
+  isSyncRouted,
   queueSyncWrite,
-  queueSyncRemove,
-  readSyncLocalValue,
+  readSyncedValue,
+  refreshChangedSyncKey,
   syncLocalCacheKey,
+  withLock,
+  writePendingSyncValue,
+  type SyncLocalCache,
   type SyncWriteStatus,
-  writeSyncLocalCache,
-} from "./storage-sync-cache";
+} from "./storage-sync";
 import {
   getActiveSyncBackend,
   NO_SYNC_BACKEND_ID,
   normalizeSyncBackends,
 } from "./sync-backends";
 import { offloadChatInlineAttachments } from "./sync-chat-attachments";
-import { readSyncedValue } from "./storage-sync-settings";
-export { setActiveSyncBackend, setDataSync } from "./storage-sync-settings";
 import { normalizeWorkspaces } from "./workspace";
-import {
-  STORAGE_KEYS,
-  SYNCABLE_DATA_ITEMS,
-  SYNC_PREFERENCES,
-  SYNC_PREFERENCE_KEYS,
-  type SyncPreferenceKey,
-} from "./storage-keys";
-import {
-  DEFAULT_SYNC_DATA_SETTINGS,
-  mergeSyncDataSettings,
-  type SyncDataSettings,
-} from "./sync-data-settings";
 import type {
   Agent,
   AgentWorkspace,
@@ -69,183 +62,125 @@ export {
   SYNC_PREFERENCES,
   SYNC_PREFERENCE_KEYS,
 };
-export type { SyncDataSettings, SyncPreferenceKey };
-
+export type { SyncDataSettings, SyncPreferenceKey, SyncWriteStatus };
 export { getBrowserApi };
+export { clearPendingSyncWrites, flushPendingSyncWrites, syncLocalCacheKey };
 export {
-  clearPendingSyncWrites,
-  flushPendingSyncWrites,
-  syncLocalCacheKey,
-  type SyncWriteStatus,
+  restoreSyncBackendFromCloud,
+  setActiveSyncBackend,
+  setDataSync,
+} from "./storage-sync-transitions";
+
+type ItemOptions<T> = {
+  normalize?: (value: T) => T;
+  // `true` follows the active backend; a preference key also follows that
+  // data category's toggle. Omitted: always local.
+  sync?: SyncPreferenceKey | true;
+  persistDebounceMs?: number | ((value: T) => number | undefined);
+  snapshot?: (value: T) => string | undefined;
 };
 
-async function setStoredValue<T>(area: AreaName, key: string, value: T) {
-  area = await effectiveArea(area);
-  if (area === STORAGE_AREAS.local) {
-    await withStoragePublicationLock(() =>
-      getBrowserApi().storage.local.set({ [key]: value }),
-    );
-    return;
+function createItem<T>(
+  key: string,
+  init: () => T,
+  options: ItemOptions<T> = {},
+) {
+  const { normalize = (value: T) => value, sync } = options;
+  const resolve = (value: T | undefined) =>
+    normalize(value === undefined ? init() : value);
+  const routed = async () => !!sync && (await isSyncRouted(sync));
+  const local = () => getBrowserApi().storage.local;
+
+  async function get() {
+    if (await routed()) return resolve(await readSyncedValue<T>(key));
+    return resolve((await local().get(key))[key] as T | undefined);
   }
 
-  const backend = await getActiveSyncBackend();
-  await writeSyncLocalCache(key, value);
-  if (key === STORAGE_KEYS.chats && hasUnfinishedChatRun(value)) return;
-  queueSyncWrite(backend, key, value, {
-    delayMs: immediateSyncWriteDelay(key),
-  }).catch(() => undefined);
-}
-
-async function removeStoredValue(area: AreaName, key: string) {
-  area = await effectiveArea(area);
-  if (area === STORAGE_AREAS.local) {
-    await withStoragePublicationLock(() =>
-      getBrowserApi().storage.local.remove(key),
-    );
-    return;
+  async function set(value: T) {
+    value = normalize(value);
+    if (!(await routed())) {
+      await local().set({ [key]: value });
+      return;
+    }
+    await writePendingSyncValue(key, value);
+    // A streaming chat uploads once its run has finished.
+    if (key === STORAGE_KEYS.chats && hasUnfinishedChatRun(value)) return;
+    queueSyncWrite(await getActiveSyncBackend(), key);
   }
-  await stageSyncRemoval(key);
-  queueSyncRemove(await getActiveSyncBackend(), key, {
-    delayMs: immediateSyncWriteDelay(key),
-  }).catch(() => undefined);
-}
 
-function immediateSyncWriteDelay(key: string) {
-  if (key === STORAGE_KEYS.language || key === STORAGE_KEYS.preferences)
-    return 0;
-  if (key === STORAGE_KEYS.syncDataSettings) return 0;
-  if (key === STORAGE_KEYS.chats) return config.CHAT_SYNC_WRITE_DEBOUNCE_MS;
-  return undefined;
-}
-
-async function readStoredValue<T>(area: AreaName, key: string) {
-  area = await effectiveArea(area);
-  if (area === STORAGE_AREAS.local) {
-    const result = await getBrowserApi().storage.local.get(key);
-    return result[key] as T | undefined;
-  }
-  return readSyncLocalValue<T>(key);
-}
-
-const itemIo = {
-  readStoredValue,
-  setStoredValue,
-  removeStoredValue,
-};
-const { createItem, createMigratedItem } = makeStorageItemFactory(itemIo);
-const createSwitchableItem = makeSwitchableItemFactory(itemIo, async () =>
-  mergeSyncDataSettings(
-    await readSyncedValue<SyncDataSettings>(STORAGE_KEYS.syncDataSettings),
-  ),
-);
-
-export const storage = {
-  language: createItem<string>(
-    STORAGE_AREAS.sync,
-    STORAGE_KEYS.language,
-    () => getBrowserApi().i18n?.getUILanguage?.() || "en-US",
-  ),
-  preferences: createMigratedItem<Preferences>(
-    STORAGE_AREAS.sync,
-    STORAGE_AREAS.local,
-    STORAGE_KEYS.preferences,
-    () => DEFAULT_PREFERENCES,
-    mergePreferences,
-  ),
-  provider: createSwitchableItem<ProviderState>(
-    STORAGE_KEYS.provider,
-    () => ({}),
-    SYNC_PREFERENCES.providers,
-  ),
-  agents: createSwitchableItem<Agent[]>(
-    STORAGE_KEYS.agents,
-    () => normalizeAgents(undefined),
-    SYNC_PREFERENCES.agents,
-    normalizeAgents,
-  ),
-  agentWorkspaces: createSwitchableItem<AgentWorkspace[]>(
-    STORAGE_KEYS.agentWorkspaces,
-    () => [],
-    SYNC_PREFERENCES.agents,
-    normalizeWorkspaces,
-  ),
-  skills: createSwitchableItem<Skill[]>(
-    STORAGE_KEYS.skills,
-    () => BUILTIN_SKILLS,
-    SYNC_PREFERENCES.skills,
-    normalizeSkills,
-  ),
-  mcpServers: createSwitchableItem<McpServerConfig[]>(
-    STORAGE_KEYS.mcpServers,
-    () => [],
-    SYNC_PREFERENCES.mcpServers,
-    normalizeMcpServers,
-  ),
-  localExecutionBridges: createSwitchableItem<LocalExecutionBridgeConfig[]>(
-    STORAGE_KEYS.localExecutionBridges,
-    () => [],
-    SYNC_PREFERENCES.localExecutionBridges,
-    normalizeLocalExecutionBridges,
-  ),
-  shouldShowUpdateToast: createItem<boolean>(
-    STORAGE_AREAS.local,
-    STORAGE_KEYS.shouldShowUpdateToast,
-    () => false,
-  ),
-  chats: createChatsStorageItem(),
-  chatTabs: createItem<ChatTab[]>(
-    STORAGE_AREAS.local,
-    STORAGE_KEYS.chatTabs,
-    () => [],
-  ),
-  syncWriteStatus: createItem<SyncWriteStatus>(
-    STORAGE_AREAS.local,
-    STORAGE_KEYS.syncWriteStatus,
-    () => DEFAULT_SYNC_WRITE_STATUS,
-  ),
-  syncBackends: createItem<SyncBackendConfig[]>(
-    STORAGE_AREAS.local,
-    STORAGE_KEYS.syncBackends,
-    () => normalizeSyncBackends(undefined),
-    normalizeSyncBackends,
-  ),
-  activeSyncBackendId: createItem<string>(
-    STORAGE_AREAS.local,
-    STORAGE_KEYS.activeSyncBackendId,
-    () => NO_SYNC_BACKEND_ID,
-  ),
-  syncDataSettings: createItem<SyncDataSettings>(
-    STORAGE_AREAS.sync,
-    STORAGE_KEYS.syncDataSettings,
-    () => DEFAULT_SYNC_DATA_SETTINGS,
-    mergeSyncDataSettings,
-  ),
-  ignoreSyncedProvidersForBootstrap: createItem<boolean>(
-    STORAGE_AREAS.local,
-    STORAGE_KEYS.ignoreSyncedProvidersForBootstrap,
-    () => false,
-  ),
-  debugLoggingEnabled: createItem<boolean>(
-    STORAGE_AREAS.local,
-    STORAGE_KEYS.debugLoggingEnabled,
-    () => false,
-  ),
-};
-
-function createChatsStorageItem() {
-  const item = createSwitchableItem<Chat[]>(
-    STORAGE_KEYS.chats,
-    () => [],
-    SYNC_PREFERENCES.chats,
-    normalizeChats,
-    {
-      persistDebounceMs: (value) =>
-        hasUnfinishedChatRun(value)
-          ? config.CHAT_STREAM_WRITE_DEBOUNCE_MS
-          : config.CHAT_WRITE_DEBOUNCE_MS,
-      snapshot: (value) => chatSnapshot(value as Chat[]),
+  return {
+    key,
+    persistDebounceMs: options.persistDebounceMs,
+    snapshot: options.snapshot,
+    get,
+    set,
+    // Read-modify-write across extension contexts: agent tools in the
+    // background and the options editor both edit workspaces.
+    update(updater: (current: T) => T) {
+      return withLock(`item:${key}`, async () => {
+        const current = await get();
+        const next = updater(current);
+        if (next !== current) await set(next);
+        return next;
+      });
     },
-  );
+    watch(callback: (newValue: T, oldValue: T) => void) {
+      let previous: T | undefined;
+      const notify = (value: T) => {
+        const old = previous ?? value;
+        previous = value;
+        callback(value, old);
+      };
+      const listener = async (
+        changes: Record<string, chrome.storage.StorageChange>,
+        area: string,
+      ) => {
+        if (area === "sync") {
+          if (sync && changes[key] && (await routed()))
+            refreshChangedSyncKey(key);
+          return;
+        }
+        if (area !== "local") return;
+        const plain = changes[key];
+        const cache = changes[syncLocalCacheKey(key)];
+        const routeChanged =
+          !!sync &&
+          !!(
+            changes[STORAGE_KEYS.activeSyncBackendId] ||
+            (sync !== true &&
+              (changes[STORAGE_KEYS.syncDataSettings] ||
+                changes[syncLocalCacheKey(STORAGE_KEYS.syncDataSettings)]))
+          );
+        if (routeChanged) return notify(await get());
+        if (!sync) {
+          if (plain) notify(resolve(plain.newValue as T | undefined));
+          return;
+        }
+        const isRouted = await routed();
+        if (isRouted ? !cache : !plain) return;
+        const next = isRouted
+          ? (cache!.newValue as SyncLocalCache<T> | undefined)?.value
+          : (plain!.newValue as T | undefined);
+        notify(next === undefined ? await get() : normalize(next));
+      };
+      getBrowserApi().storage.onChanged.addListener(listener);
+      return () => getBrowserApi().storage.onChanged.removeListener(listener);
+    },
+  };
+}
+
+export type StorageItem<T> = ReturnType<typeof createItem<T>>;
+
+function createChatsItem() {
+  const item = createItem<Chat[]>(STORAGE_KEYS.chats, () => [], {
+    sync: SYNC_PREFERENCES.chats,
+    normalize: normalizeChats,
+    persistDebounceMs: (value) =>
+      hasUnfinishedChatRun(value)
+        ? config.CHAT_STREAM_WRITE_DEBOUNCE_MS
+        : config.CHAT_WRITE_DEBOUNCE_MS,
+    snapshot: chatSnapshot,
+  });
   return {
     ...item,
     reconcile: reconcileChatSnapshots,
@@ -255,16 +190,76 @@ function createChatsStorageItem() {
   };
 }
 
-export async function getSyncedProviderState() {
-  return readSyncedValue<ProviderState>(STORAGE_KEYS.provider);
-}
-
-export async function updateStoredArray<T extends { id: string }>(
-  item: StorageItem<T[]>,
-  updater: (items: T[]) => T[],
-) {
-  const items = await item.get();
-  const next = updater(items);
-  await item.set(next);
-  return next;
-}
+export const storage = {
+  language: createItem<string>(
+    STORAGE_KEYS.language,
+    () => getBrowserApi().i18n?.getUILanguage?.() || "en-US",
+    { sync: true },
+  ),
+  preferences: createItem<Preferences>(
+    STORAGE_KEYS.preferences,
+    () => DEFAULT_PREFERENCES,
+    { sync: true, normalize: mergePreferences },
+  ),
+  provider: createItem<ProviderState>(STORAGE_KEYS.provider, () => ({}), {
+    sync: SYNC_PREFERENCES.providers,
+  }),
+  agents: createItem<Agent[]>(
+    STORAGE_KEYS.agents,
+    () => normalizeAgents(undefined),
+    { sync: SYNC_PREFERENCES.agents, normalize: normalizeAgents },
+  ),
+  agentWorkspaces: createItem<AgentWorkspace[]>(
+    STORAGE_KEYS.agentWorkspaces,
+    () => [],
+    { sync: SYNC_PREFERENCES.agents, normalize: normalizeWorkspaces },
+  ),
+  skills: createItem<Skill[]>(STORAGE_KEYS.skills, () => BUILTIN_SKILLS, {
+    sync: SYNC_PREFERENCES.skills,
+    normalize: normalizeSkills,
+  }),
+  mcpServers: createItem<McpServerConfig[]>(STORAGE_KEYS.mcpServers, () => [], {
+    sync: SYNC_PREFERENCES.mcpServers,
+    normalize: normalizeMcpServers,
+  }),
+  localExecutionBridges: createItem<LocalExecutionBridgeConfig[]>(
+    STORAGE_KEYS.localExecutionBridges,
+    () => [],
+    {
+      sync: SYNC_PREFERENCES.localExecutionBridges,
+      normalize: normalizeLocalExecutionBridges,
+    },
+  ),
+  shouldShowUpdateToast: createItem<boolean>(
+    STORAGE_KEYS.shouldShowUpdateToast,
+    () => false,
+  ),
+  chats: createChatsItem(),
+  chatTabs: createItem<ChatTab[]>(STORAGE_KEYS.chatTabs, () => []),
+  syncWriteStatus: createItem<SyncWriteStatus>(
+    STORAGE_KEYS.syncWriteStatus,
+    () => DEFAULT_SYNC_WRITE_STATUS,
+  ),
+  syncBackends: createItem<SyncBackendConfig[]>(
+    STORAGE_KEYS.syncBackends,
+    () => normalizeSyncBackends(undefined),
+    { normalize: normalizeSyncBackends },
+  ),
+  activeSyncBackendId: createItem<string>(
+    STORAGE_KEYS.activeSyncBackendId,
+    () => NO_SYNC_BACKEND_ID,
+  ),
+  syncDataSettings: createItem<SyncDataSettings>(
+    STORAGE_KEYS.syncDataSettings,
+    () => DEFAULT_SYNC_DATA_SETTINGS,
+    { sync: true, normalize: mergeSyncDataSettings },
+  ),
+  ignoreSyncedProvidersForBootstrap: createItem<boolean>(
+    STORAGE_KEYS.ignoreSyncedProvidersForBootstrap,
+    () => false,
+  ),
+  debugLoggingEnabled: createItem<boolean>(
+    STORAGE_KEYS.debugLoggingEnabled,
+    () => false,
+  ),
+};

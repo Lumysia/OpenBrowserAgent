@@ -54,7 +54,7 @@ Use this skill whenever the user wants to add, configure, modify, test, use, or 
 
 Collect enough information to produce one concrete installer command without placeholders:
 
-- Browser target, such as \`chrome\`, \`edge\`, \`brave\`, \`vivaldi\`, \`chromium\`, \`firefox\`, or a supported Linux packaged target such as \`firefox-flatpak\` or \`chromium-snap\`.
+- Browser target, such as \`chrome\`, \`edge\`, \`brave\`, \`vivaldi\`, \`chromium\`, or \`firefox\`.
 - Extension ID from the installed OpenBrowserAgent extension management page.
 - Optional shell config ID, defaulting to \`default\`.
 - Optional shell executable, only when the user wants a non-default shell.

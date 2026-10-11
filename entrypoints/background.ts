@@ -4,16 +4,11 @@ import {
   DEFAULT_AGENT_ID,
   usesWorkspaceCapabilities,
 } from "../src/shared/agents";
-import { getSkillInstruction } from "../src/shared/skills";
 import { createSystemPrompt } from "../src/shared/system-prompt";
 import {
   createWorkspace,
   ensureWorkspaceDefaults,
 } from "../src/shared/workspace";
-import {
-  PROMPT_CONTEXT_TAG,
-  PROMPT_CONTEXT_TAGS,
-} from "../src/shared/prompt-breakdown";
 import {
   clampMaxToolSteps,
   GENERATED_TITLE_MAX_CJK_CHARS,
@@ -24,24 +19,15 @@ import {
 import {
   AI_STREAM_PORT_NAME,
   AI_STREAM_REQUEST_TYPE,
-  CHAT_PART_STATE,
-  isToolPartType,
-  toolNameFromPartType,
   type AiStreamRequest,
   type AiStreamResponse,
-  type ChatMessage,
-  type ChatPart,
   type GenerateTitleRequest,
-  type PromptBreakdown,
-  type Skill,
   type SendMessagesRequest,
 } from "../src/shared/types";
 import { runPiAgent } from "../src/background/pi-runtime";
-import type { Agent } from "@earendil-works/pi-agent-core";
+import { promptBreakdown } from "../src/background/prompt-breakdown";
 import { resolveModel } from "../src/background/model-resolver";
-import { postTextStream } from "../src/background/message-helpers";
 import { handleLocalExecutionBridgeRuntimeMessage } from "../src/background/local-execution-bridge-tools";
-import { browserToolsForPrompt } from "../src/background/tool-schema";
 import { requestPlainText } from "../src/background/pi-provider";
 import {
   handleSyncBackendRuntimeMessage,
@@ -81,71 +67,65 @@ export default defineBackground(() => {
     if (port.name !== AI_STREAM_PORT_NAME) return;
 
     port.onMessage.addListener((request: AiStreamRequest) => {
+      const session = streamSessions.getPortSession(port);
       if (request.type === AI_STREAM_REQUEST_TYPE.abort) {
-        streamSessions.abortPortStreams(port);
+        if (session) streamSessions.abortSession(session.chatId);
         return;
       }
 
       if (request.type === AI_STREAM_REQUEST_TYPE.queueMessage) {
         const content = request.content.trim();
-        const session = streamSessions.firstPortSession(port);
         if (content && session)
           streamSessions.queueMessage(session, { id: request.id, content });
         return;
       }
 
       if (request.type === AI_STREAM_REQUEST_TYPE.deleteQueuedMessage) {
-        const session = streamSessions.firstPortSession(port);
         if (session) streamSessions.deleteQueuedMessage(session, request.id);
         return;
       }
 
       if (request.type === AI_STREAM_REQUEST_TYPE.answerQuestion) {
-        const session = streamSessions.firstPortSession(port);
-        if (session) streamSessions.sendMessageToSession(session, request);
+        if (session)
+          streamSessions.answerQuestion(
+            session,
+            request.toolCallId,
+            request.answers,
+          );
         return;
       }
 
       if (request.type === AI_STREAM_REQUEST_TYPE.attachStream) {
-        const session = streamSessions.getStreamSession(request.chatId);
-        if (!session) {
-          post(port, { type: "end" });
+        const target = streamSessions.getStreamSession(request.chatId);
+        if (!target) {
+          streamSessions.post(port, { type: "end" });
           return;
         }
-        streamSessions.attachPortToSession(
-          port,
-          session,
-          request.afterSequence,
-        );
+        streamSessions.attachPortToSession(port, target, request.afterSequence);
         return;
       }
 
       if (request.type === AI_STREAM_REQUEST_TYPE.sendMessages) {
-        streamSessions.abortSession(request.chatId);
-        const session = streamSessions.createStreamSession(request);
-        streamSessions.attachPortToSession(port, session, undefined);
-        const streamPort = streamSessions.streamSessionPort(session);
-        streamAssistantResponse(
-          streamPort,
-          request,
-          session.abortController.signal,
-          session.agent,
-        )
+        const next = streamSessions.createStreamSession(request.chatId);
+        streamSessions.attachPortToSession(port, next, undefined);
+        streamAssistantResponse(next, request)
           .catch((error) => {
             if (error?.name === "AbortError") return;
-            streamSessions.postToSession(session, {
+            streamSessions.postToSession(next, {
               type: "error",
               error: error?.message || String(error),
             });
           })
-          .finally(() => streamSessions.scheduleSessionCleanup(session));
+          .finally(() => streamSessions.scheduleSessionCleanup(next));
         return;
       }
 
       if (request.type === AI_STREAM_REQUEST_TYPE.generateTitle) {
         generateTitle(request)
-          .then((title) => post(port, { type: "title", title }))
-          .catch(() => post(port, { type: "title", title: "New Chat" }));
+          .then((title) => streamSessions.post(port, { type: "title", title }))
+          .catch(() =>
+            streamSessions.post(port, { type: "title", title: "New Chat" }),
+          );
       }
     });
 
@@ -184,20 +164,12 @@ async function openActionSurface() {
   await api.tabs.create({ url: sidePanelUrl });
 }
 
-function post(port: chrome.runtime.Port, message: AiStreamResponse) {
-  try {
-    port.postMessage(message);
-  } catch (error) {
-    console.warn("Failed to post ai-stream message", error);
-  }
-}
-
 async function streamAssistantResponse(
-  port: chrome.runtime.Port,
+  session: streamSessions.StreamSession,
   request: SendMessagesRequest,
-  signal: AbortSignal,
-  agent: Agent,
 ) {
+  const post = (message: AiStreamResponse) =>
+    streamSessions.postToSession(session, message);
   const providerModel = await resolveModel(request.body.modelId);
   const t = getMessages(request.body.language);
   const mcpServers = await storage.mcpServers.get();
@@ -214,22 +186,19 @@ async function streamAssistantResponse(
     workspace,
     mcpServers,
   });
-  post(port, {
+  post({
     type: "metrics",
     metrics: {
       promptBreakdown: promptBreakdown(system, request, !!workspace),
     },
   });
   const result = await runPiAgent({
-    agent,
+    session,
     model: providerModel,
     system,
     messages: request.messages,
     capabilities,
     maxToolSteps: clampMaxToolSteps(request.body.maxToolSteps),
-    signal,
-    port,
-    chatId: request.chatId,
     messageId: request.messageId,
     attachmentRetryNotice: t.sidepanel.attachmentsUnsupportedRetry,
     uploadedAttachments: request.body.context?.uploadedAttachments || [],
@@ -240,88 +209,8 @@ async function streamAssistantResponse(
     workspace,
   });
 
-  post(port, {
-    type: "metrics",
-    metrics: { outputMode: result.outputMode, usage: result.usage },
-  });
-  if (result.text)
-    await postTextStream(
-      port,
-      result.text,
-      request.messageId || crypto.randomUUID(),
-      signal,
-    );
-  post(port, { type: "end" });
-}
-
-function promptBreakdown(
-  system: string,
-  request: SendMessagesRequest,
-  hasWorkspace: boolean,
-): PromptBreakdown {
-  const latestUser = [...request.messages]
-    .reverse()
-    .find((message) => message.role === "user");
-  const attachments = request.body.context?.uploadedAttachments || [];
-  const context = request.body.context?.text || "";
-  const attachedTabs = latestUser?.metadata?.attachedTabs;
-  const selectedElements =
-    latestUser?.metadata?.selectedElements ||
-    latestUser?.metadata?.selectedElement;
-  const selectedSkills = messageSkills(latestUser?.metadata);
-  const availableSkills = request.body.context?.availableSkills || [];
-  return {
-    systemPromptChars:
-      system.length +
-      jsonLength(
-        browserToolsForPrompt({
-          capabilities: request.body.agentCapabilities,
-          hasSkills: availableSkills.length > 0,
-          hasWorkspace,
-          imageGenerationEnabled:
-            !!request.body.context?.imageGenerationEnabled,
-          latestUserText: latestUser?.content || "",
-        }),
-      ),
-    userPromptChars: latestUser?.content.length || 0,
-    conversationPromptChars: request.messages.reduce(
-      (total, message) => total + message.content.length,
-      0,
-    ),
-    tabPromptChars:
-      contextBlockLength(context, PROMPT_CONTEXT_TAG.selectedTabs) +
-      contextBlockLength(context, PROMPT_CONTEXT_TAG.currentTab) +
-      metadataLength(attachedTabs),
-    selectedElementPromptChars:
-      contextBlockLength(context, PROMPT_CONTEXT_TAG.selectedElement) +
-      metadataLength(selectedElements),
-    skillPromptChars:
-      selectedSkills.reduce(
-        (total, skill) => total + getSkillInstruction(skill).length,
-        0,
-      ) +
-      availableSkills.reduce(
-        (total, item) => total + item.name.length + item.description.length,
-        0,
-      ),
-    attachmentPromptChars: attachments.reduce(
-      (total, attachment) =>
-        total +
-        attachment.name.length +
-        (attachment.text?.length || 0) +
-        (attachment.dataUrl?.length || 0),
-      0,
-    ),
-    toolCallPromptChars: request.messages.reduce(
-      (total, message) => total + toolCallChars(message.parts),
-      0,
-    ),
-    sourcePromptChars: request.messages.reduce(
-      (total, message) => total + metadataLength(message.metadata?.sources),
-      0,
-    ),
-    otherContextPromptChars: otherContextChars(context),
-  };
+  post({ type: "metrics", metrics: { usage: result.usage } });
+  post({ type: "end" });
 }
 
 async function workspaceForAgent(agentId: string) {
@@ -338,53 +227,6 @@ async function workspaceForAgent(agentId: string) {
       : current;
   });
   return workspaces.find((workspace) => workspace.agentId === agentId)!;
-}
-
-function messageSkills(metadata: Record<string, unknown> | undefined) {
-  const skills = Array.isArray(metadata?.skills)
-    ? (metadata.skills as Skill[])
-    : [];
-  const skill = metadata?.skill as Skill | undefined;
-  return skills.length ? skills : skill ? [skill] : [];
-}
-
-function contextBlockLength(context: string, tag: string) {
-  const match = context.match(new RegExp(`<${tag}>[\\s\\S]*?</${tag}>`, "g"));
-  return match?.reduce((total, value) => total + value.length, 0) || 0;
-}
-
-function otherContextChars(context: string) {
-  const known = PROMPT_CONTEXT_TAGS.reduce(
-    (total, tag) => total + contextBlockLength(context, tag),
-    0,
-  );
-  return Math.max(0, context.length - known);
-}
-
-function toolCallChars(parts: ChatPart[] | undefined) {
-  if (!parts?.length) return 0;
-  return parts.reduce((total, part) => {
-    if (!isToolPartType(part.type)) return total;
-    return (
-      total +
-      jsonLength(part.input) +
-      jsonLength(part.output) +
-      (part.toolName?.length || 0)
-    );
-  }, 0);
-}
-
-function metadataLength(value: unknown) {
-  return jsonLength(value);
-}
-
-function jsonLength(value: unknown) {
-  if (!value) return 0;
-  try {
-    return JSON.stringify(value).length;
-  } catch {
-    return String(value).length;
-  }
 }
 
 async function generateTitle(request: GenerateTitleRequest) {

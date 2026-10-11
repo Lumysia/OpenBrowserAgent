@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Info } from "lucide-react";
-import { browserToolsForPrompt } from "../../src/background/tool-schema";
+import { browserToolsForPrompt } from "../../src/background/tool-prompt-selection";
 import { usesWorkspaceCapabilities } from "../../src/shared/agents";
 import { createSystemPrompt } from "../../src/shared/system-prompt";
 import type { Messages } from "../../src/shared/i18n";
@@ -28,7 +28,7 @@ import { buildSidepanelContext } from "./sidepanel-context";
 import { formatEstimatedTokens } from "./format";
 import { IconTooltip } from "./icon-tooltip";
 
-export type PromptUsageEstimate = PromptBreakdown;
+type PromptUsageEstimate = PromptBreakdown;
 
 export function usePromptUsageEstimate({
   input,

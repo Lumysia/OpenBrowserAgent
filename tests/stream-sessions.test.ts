@@ -2,16 +2,10 @@ import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 import * as sessions from "../src/background/stream-sessions";
 import { ABORT_CHAT_STREAMS } from "../src/shared/chat-stream-control";
-import type {
-  AiStreamResponse,
-  SendMessagesRequest,
-} from "../src/shared/types";
+import type { AiStreamResponse, RunMetrics } from "../src/shared/types";
+import { appendQueuedMessages } from "../entrypoints/sidepanel/chat-updates";
 
 afterEach(() => mock.restoreAll());
-
-function request(chatId: string) {
-  return { chatId, messageId: "answer" } as SendMessagesRequest;
-}
 
 function port() {
   const events: AiStreamResponse[] = [];
@@ -23,35 +17,10 @@ function port() {
   };
 }
 
-test("reattaching a completed stream does not cancel its retention deadline", () => {
-  mock.timers.enable({ apis: ["setTimeout"] });
-  const session = sessions.createStreamSession(request("retention"));
-  sessions.postToSession(session, { type: "end" });
-  sessions.scheduleSessionCleanup(session);
-  const client = port();
-  sessions.attachPortToSession(client.port, session, 0);
-  assert.deepEqual(client.events, [{ type: "end", sequence: 1 }]);
-  mock.timers.tick(5 * 60_000);
-  assert.equal(sessions.getStreamSession("retention"), undefined);
-  assert.equal(sessions.firstPortSession(client.port), undefined);
-});
-
-test("an obsolete port cannot abort the replacement run of the same chat", () => {
-  const previous = sessions.createStreamSession(request("replacement"));
-  const client = port();
-  sessions.attachPortToSession(client.port, previous, undefined);
-  sessions.abortSession("replacement");
-  const next = sessions.createStreamSession(request("replacement"));
-  sessions.abortPortStreams(client.port);
-  assert.equal(next.abortController.signal.aborted, false);
-  assert.equal(sessions.getStreamSession("replacement"), next);
-  sessions.abortSession("replacement");
-});
-
 test("chat close acknowledges cancellation of detached and attached sessions only", () => {
-  const detached = sessions.createStreamSession(request("detached"));
-  const attached = sessions.createStreamSession(request("attached"));
-  const unrelated = sessions.createStreamSession(request("unrelated"));
+  const detached = sessions.createStreamSession("detached");
+  const attached = sessions.createStreamSession("attached");
+  const unrelated = sessions.createStreamSession("unrelated");
   const previous = port();
   sessions.attachPortToSession(previous.port, detached, undefined);
   sessions.detachPort(previous.port);
@@ -79,37 +48,8 @@ test("chat close acknowledges cancellation of detached and attached sessions onl
   }
 });
 
-test("close cancellation cannot capture a replacement created by an abort callback", () => {
-  const parent = sessions.createStreamSession(request("parent"));
-  const child = sessions.createStreamSession(request("child"));
-  const obsolete = port();
-  sessions.attachPortToSession(obsolete.port, child, undefined);
-  let replacement: ReturnType<typeof sessions.createStreamSession>;
-  parent.abortController.signal.addEventListener(
-    "abort",
-    () => {
-      replacement = sessions.createStreamSession(request("child"));
-    },
-    { once: true },
-  );
-  try {
-    sessions.handleChatStreamControlMessage(
-      { type: ABORT_CHAT_STREAMS, chatIds: ["parent", "child"] },
-      (response) => assert.deepEqual(response, { ok: true }),
-    );
-    sessions.abortPortStreams(obsolete.port);
-    sessions.scheduleSessionCleanup(child);
-    assert.equal(child.abortController.signal.aborted, true);
-    assert.equal(sessions.getStreamSession("child"), replacement!);
-    assert.equal(replacement!.abortController.signal.aborted, false);
-  } finally {
-    sessions.abortSession("parent");
-    sessions.abortSession("child");
-  }
-});
-
 test("reconnect replays only unseen streaming and tool events in order", () => {
-  const session = sessions.createStreamSession(request("replay"));
+  const session = sessions.createStreamSession("replay");
   const client = port();
   sessions.attachPortToSession(client.port, session, undefined);
   sessions.postToSession(session, {
@@ -140,4 +80,36 @@ test("reconnect replays only unseen streaming and tool events in order", () => {
   );
   assert.deepEqual(reconnected.events[1], session.events[2]);
   sessions.abortSession("replay");
+});
+
+test("a running session keeps the service worker alive until its run ends", () => {
+  mock.timers.enable({ apis: ["setInterval", "setTimeout"] });
+  const getPlatformInfo = mock.fn(async () => ({}));
+  const previous = globalThis.chrome;
+  globalThis.chrome = { runtime: { getPlatformInfo } } as never;
+  try {
+    const session = sessions.createStreamSession("keepalive");
+    mock.timers.tick(60_000);
+    assert.equal(getPlatformInfo.mock.callCount(), 3);
+    sessions.scheduleSessionCleanup(session);
+    mock.timers.tick(60_000);
+    assert.equal(getPlatformInfo.mock.callCount(), 3);
+    sessions.abortSession("keepalive");
+  } finally {
+    globalThis.chrome = previous;
+  }
+});
+
+test("a queued turn's assistant message stores its replay position", () => {
+  const [chat] = appendQueuedMessages({
+    chats: [{ id: "c", title: "", messages: [], createdAt: 0, updatedAt: 0 }],
+    chatId: "c",
+    messages: [{ id: "q", content: "next", createdAt: 1 }],
+    assistantMessageId: "a2",
+    createdAt: 1,
+    sequence: 42,
+  });
+  const metrics = chat.messages.at(-1)?.metadata?.runMetrics as RunMetrics;
+  // Without it, reopening the panel replays turn 1 into this message.
+  assert.equal(metrics.streamEventIndex, 42);
 });

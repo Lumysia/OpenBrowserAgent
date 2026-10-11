@@ -14,7 +14,6 @@ import type {
   TokenUsage,
 } from "../../src/shared/types";
 import {
-  Badge,
   Button,
   Popover,
   PopoverContent,
@@ -65,7 +64,6 @@ export function MessageRunInfo({
       >
         <div className="run-info-header">
           <strong>{t.sidepanel.runInfo.title}</strong>
-          <Badge>{modeLabel(t, current.outputMode)}</Badge>
         </div>
         <Tabs
           value={view}
@@ -230,7 +228,6 @@ function aggregateRunMetrics(messages: ChatMessage[]): RunMetrics {
     startedAt: Number.isFinite(firstStartedAt) ? firstStartedAt : undefined,
     firstTokenAt: averageTtftStart(runs),
     endedAt: lastEndedAt || undefined,
-    outputMode: aggregateMode(runs),
     usage,
     promptBreakdown: runs.reduce<PromptBreakdown>(
       (total, metrics) => addPromptBreakdown(total, metrics.promptBreakdown),
@@ -388,16 +385,6 @@ function averageTtftStart(runs: RunMetrics[]) {
   );
 }
 
-function aggregateMode(
-  runs: RunMetrics[],
-): RunMetrics["outputMode"] | "mixed" | undefined {
-  const modes = new Set(
-    runs.map((metrics) => metrics.outputMode).filter(Boolean),
-  );
-  if (modes.size > 1) return "mixed" as RunMetrics["outputMode"];
-  return modes.values().next().value;
-}
-
 function ttft(metrics: RunMetrics) {
   return metrics.startedAt && metrics.firstTokenAt
     ? metrics.firstTokenAt - metrics.startedAt
@@ -454,20 +441,4 @@ function formatTokenCount(
     return t.sidepanel.runInfo.unavailable;
   }
   return `${formatCompactNumber(value)} ${t.sidepanel.runInfo.tokenUnit}`;
-}
-
-function formatNumber(value: number | undefined, t: Messages) {
-  return value === undefined
-    ? t.sidepanel.runInfo.unavailable
-    : value.toLocaleString();
-}
-
-function modeLabel(
-  t: Messages,
-  mode: RunMetrics["outputMode"] | "mixed" | undefined,
-) {
-  if (mode === "streaming") return t.sidepanel.runInfo.streaming;
-  if (mode === "buffered") return t.sidepanel.runInfo.buffered;
-  if (mode === "mixed") return t.sidepanel.runInfo.mixed;
-  return t.sidepanel.runInfo.unavailable;
 }

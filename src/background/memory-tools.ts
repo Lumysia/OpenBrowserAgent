@@ -190,8 +190,9 @@ async function persistEntries(
 
 function readEntries(workspace: AgentWorkspace, kind: MemoryKind) {
   const file = workspace.files.find((item) => item.path === MEMORY_PATH[kind]);
+  // Hand-written lines have no id; number them so they can still be edited.
   return parseEntries(file).map((entry, index) => ({
-    id: entry.id || `legacy-${index + 1}`,
+    id: entry.id || `line-${index + 1}`,
     text: entry.text,
   }));
 }

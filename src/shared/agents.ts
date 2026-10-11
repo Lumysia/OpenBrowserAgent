@@ -248,8 +248,6 @@ function isAgentCapabilities(
 }
 
 function normalizeAgentName(agent: Agent) {
-  if (agent.id === DEFAULT_AGENT_ID && agent.name === "OpenBrowserAgent")
-    return DEFAULT_AGENT.name;
   if (agent.id === ASK_AGENT_ID) return ASK_AGENT.name;
   if (agent.id === DEFAULT_AGENT_ID) return DEFAULT_AGENT.name;
   return agent.name.trim() || DEFAULT_AGENT.name;

@@ -5,7 +5,6 @@ import type {
   Message,
   AssistantMessage,
   AssistantMessageEvent,
-  Usage,
 } from "@earendil-works/pi-ai";
 import { stream as chatStream } from "@earendil-works/pi-ai/api/openai-completions";
 import { stream as responsesStream } from "@earendil-works/pi-ai/api/openai-responses";
@@ -13,7 +12,6 @@ import { stream as anthropicStream } from "@earendil-works/pi-ai/api/anthropic-m
 import { stream as googleStream } from "@earendil-works/pi-ai/api/google-generative-ai";
 import { AssistantMessageEventStream } from "@earendil-works/pi-ai/utils/event-stream";
 import { normalizeContext } from "@earendil-works/pi-ai/utils/transcript";
-import { MODEL_TEMPERATURE } from "../shared/config";
 import {
   reasoningRequestParams,
   type ReasoningEffort,
@@ -68,17 +66,6 @@ export function piModel(model: ProviderModel): Model<Api> {
   };
 }
 
-export function emptyUsage(): Usage {
-  return {
-    input: 0,
-    output: 0,
-    cacheRead: 0,
-    cacheWrite: 0,
-    totalTokens: 0,
-    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
-  };
-}
-
 export function assistantMessage(model: Model<Api>): AssistantMessage {
   return {
     role: "assistant",
@@ -86,7 +73,14 @@ export function assistantMessage(model: Model<Api>): AssistantMessage {
     api: model.api,
     provider: model.provider,
     model: model.id,
-    usage: emptyUsage(),
+    usage: {
+      input: 0,
+      output: 0,
+      cacheRead: 0,
+      cacheWrite: 0,
+      totalTokens: 0,
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+    },
     stopReason: "stop",
     timestamp: Date.now(),
   };
@@ -131,10 +125,6 @@ export function createProviderStream(
             ? anthropicFetch(configuration.baseUrl)
             : undefined,
         cacheRetention: "none" as const,
-        ...(model.api === "openai-completions" ||
-        model.api === "openai-responses"
-          ? { temperature: MODEL_TEMPERATURE }
-          : {}),
         onPayload: (payload: unknown) => ({
           ...(payload as object),
           ...(model.api === "openai-responses" && reasoning.reasoning_effort
@@ -227,12 +217,12 @@ function anthropicFetch(baseUrl: string): typeof fetch {
 }
 
 function rejectsImages(error: string) {
-  return /(?:image|non-text|multimodal|image_url|input_image).*?(?:unsupported|not support|unknown|invalid)|(?:unsupported|not support|unknown variant|invalid).*?(?:image|non-text|multimodal)|expected [`']?text|upstream_error/i.test(
+  return /(?:image|non-text|multimodal|image_url|input_image).*?(?:unsupported|not support|unknown|invalid)|(?:unsupported|not support|unknown variant|invalid).*?(?:image|non-text|multimodal)|expected [`']?text/i.test(
     error,
   );
 }
 
-export function withoutImages(messages: Message[]): Message[] {
+function withoutImages(messages: Message[]): Message[] {
   return [
     ...messages.map((message): Message => {
       if (message.role !== "user" && message.role !== "toolResult")

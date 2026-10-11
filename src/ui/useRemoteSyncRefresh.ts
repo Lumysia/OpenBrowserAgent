@@ -1,187 +1,54 @@
 import { useEffect } from "react";
-import { SYNC_REMOTE_REFRESH_INPUT_IDLE_MS } from "../shared/config";
+import {
+  SYNC_REMOTE_REFRESH_INTERVAL_MS,
+  SYNC_SETTINGS_REFRESH_INTERVAL_MS,
+} from "../shared/config";
+import type { SyncDataSettings } from "../shared/storage-keys";
 import {
   refreshSyncDataFromRemote,
   refreshSyncSettingsFromRemote,
-  syncRemoteRefreshIntervalMs,
-  syncSettingsRefreshIntervalMs,
-} from "../shared/storage-remote-sync";
-import type { SyncDataSettings } from "../shared/sync-data-settings";
+} from "../shared/storage-sync";
 
-let sharedSettingsRefresh: Promise<SyncDataSettings | undefined> | undefined;
-let sharedDataRefresh: Promise<void> | undefined;
-let lastSettingsRefreshAt = 0;
-let lastDataRefreshAt = 0;
-let lastSettingsRefreshValue: SyncDataSettings | undefined;
-let lastDataRefreshSettingsSignature = "";
-let inputListeners = 0;
-let lastScrollInputAt = 0;
+// Pages share one refresh at a time. A refresh that finds nothing new does not
+// write storage, so nothing re-renders.
+let running: Promise<void> | undefined;
+
+function refresh(includeData: boolean) {
+  running ??= (async () => {
+    await refreshSyncSettingsFromRemote();
+    if (includeData) await refreshSyncDataFromRemote();
+  })()
+    .catch((error) => console.warn("Failed to refresh sync data", error))
+    .finally(() => {
+      running = undefined;
+    });
+  return running;
+}
 
 export function useRemoteSyncRefresh(
   syncDataSettings: SyncDataSettings | undefined,
 ) {
   useEffect(() => {
     if (!syncDataSettings) return;
-    let disposed = false;
-    let settingsRunning = false;
-    let dataRunning = false;
-    let deferredSettingsRefresh: ReturnType<typeof setTimeout> | undefined;
-    let deferredFullRefresh: ReturnType<typeof setTimeout> | undefined;
-    const unwatchInput = watchScrollInput();
-
-    const refreshSettings = async () => {
-      if (disposed || settingsRunning) return syncDataSettings;
-      settingsRunning = true;
-      try {
-        return (
-          (await runSharedSettingsRefresh(syncDataSettings)) || syncDataSettings
-        );
-      } catch (error) {
-        console.warn("Failed to refresh sync settings", error);
-        return syncDataSettings;
-      } finally {
-        settingsRunning = false;
-      }
-    };
-
-    const refreshData = async (settings: SyncDataSettings) => {
-      if (disposed || dataRunning) return;
-      dataRunning = true;
-      try {
-        await runSharedDataRefresh(settings);
-      } catch (error) {
-        console.warn("Failed to refresh sync data", error);
-      } finally {
-        dataRunning = false;
-      }
-    };
-
-    const refreshAll = async () => {
-      const settings = await refreshSettings();
-      await refreshData(settings);
-    };
-
-    const scheduleRefreshSettings = () => {
-      if (disposed) return;
-      const waitMs = inputIdleWaitMs();
-      if (waitMs <= 0) {
-        refreshSettings().catch(noop);
-        return;
-      }
-      if (deferredSettingsRefresh) clearTimeout(deferredSettingsRefresh);
-      deferredSettingsRefresh = setTimeout(() => {
-        deferredSettingsRefresh = undefined;
-        refreshSettings().catch(noop);
-      }, waitMs);
-    };
-
-    const scheduleRefreshAll = () => {
-      if (disposed) return;
-      const waitMs = inputIdleWaitMs();
-      if (waitMs <= 0) {
-        refreshAll().catch(noop);
-        return;
-      }
-      if (deferredFullRefresh) clearTimeout(deferredFullRefresh);
-      deferredFullRefresh = setTimeout(() => {
-        deferredFullRefresh = undefined;
-        refreshAll().catch(noop);
-      }, waitMs);
-    };
-
+    const refreshAll = () => void refresh(true);
     const refreshVisible = () => {
-      if (document.visibilityState === "visible") scheduleRefreshAll();
+      if (document.visibilityState === "visible") refreshAll();
     };
-
-    scheduleRefreshAll();
-    const settingsIntervalId = setInterval(
-      () => scheduleRefreshSettings(),
-      syncSettingsRefreshIntervalMs(),
+    refreshAll();
+    const settingsTimer = setInterval(
+      () => void refresh(false),
+      SYNC_SETTINGS_REFRESH_INTERVAL_MS,
     );
-    const dataIntervalId = setInterval(
-      () => scheduleRefreshAll(),
-      syncRemoteRefreshIntervalMs(),
-    );
+    const dataTimer = setInterval(refreshAll, SYNC_REMOTE_REFRESH_INTERVAL_MS);
     window.addEventListener("focus", refreshVisible);
     window.addEventListener("online", refreshVisible);
     document.addEventListener("visibilitychange", refreshVisible);
     return () => {
-      disposed = true;
-      if (deferredSettingsRefresh) clearTimeout(deferredSettingsRefresh);
-      if (deferredFullRefresh) clearTimeout(deferredFullRefresh);
-      clearInterval(settingsIntervalId);
-      clearInterval(dataIntervalId);
-      unwatchInput();
+      clearInterval(settingsTimer);
+      clearInterval(dataTimer);
       window.removeEventListener("focus", refreshVisible);
       window.removeEventListener("online", refreshVisible);
       document.removeEventListener("visibilitychange", refreshVisible);
     };
   }, [syncDataSettings]);
-}
-
-function noop() {}
-
-function runSharedSettingsRefresh(syncDataSettings: SyncDataSettings) {
-  if (
-    lastSettingsRefreshAt > 0 &&
-    lastSettingsRefreshValue &&
-    performance.now() - lastSettingsRefreshAt < syncSettingsRefreshIntervalMs()
-  )
-    return Promise.resolve(lastSettingsRefreshValue);
-  sharedSettingsRefresh ??= refreshSyncSettingsFromRemote(syncDataSettings)
-    .then((value) => {
-      lastSettingsRefreshAt = performance.now();
-      lastSettingsRefreshValue = value || syncDataSettings;
-      return value;
-    })
-    .finally(() => {
-      sharedSettingsRefresh = undefined;
-    });
-  return sharedSettingsRefresh;
-}
-
-function runSharedDataRefresh(syncDataSettings: SyncDataSettings) {
-  const settingsSignature = JSON.stringify(syncDataSettings);
-  if (
-    lastDataRefreshAt > 0 &&
-    settingsSignature === lastDataRefreshSettingsSignature &&
-    performance.now() - lastDataRefreshAt < syncRemoteRefreshIntervalMs()
-  )
-    return Promise.resolve();
-  sharedDataRefresh ??= refreshSyncDataFromRemote(syncDataSettings).finally(
-    () => {
-      lastDataRefreshAt = performance.now();
-      lastDataRefreshSettingsSignature = settingsSignature;
-      sharedDataRefresh = undefined;
-    },
-  );
-  return sharedDataRefresh;
-}
-
-function watchScrollInput() {
-  inputListeners += 1;
-  if (inputListeners === 1) {
-    window.addEventListener("wheel", markScrollInput, { passive: true });
-    window.addEventListener("touchmove", markScrollInput, { passive: true });
-    window.addEventListener("scroll", markScrollInput, {
-      capture: true,
-      passive: true,
-    });
-  }
-  return () => {
-    inputListeners -= 1;
-    if (inputListeners > 0) return;
-    window.removeEventListener("wheel", markScrollInput);
-    window.removeEventListener("touchmove", markScrollInput);
-    window.removeEventListener("scroll", markScrollInput, { capture: true });
-  };
-}
-
-function markScrollInput() {
-  lastScrollInputAt = performance.now();
-}
-
-function inputIdleWaitMs() {
-  const elapsed = performance.now() - lastScrollInputAt;
-  return Math.max(0, SYNC_REMOTE_REFRESH_INPUT_IDLE_MS - elapsed);
 }

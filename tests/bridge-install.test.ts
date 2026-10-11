@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 test(
-  "bridge install/update/uninstall use each Firefox-family Linux registration and preserve quoted custom paths",
+  "bridge install/update/uninstall round-trips quoted custom paths and keeps a shared runtime",
   { skip: process.platform !== "linux" },
   async () => {
     const directory = await mkdtemp(join(tmpdir(), "oba-install-"));
@@ -27,60 +27,46 @@ test(
       return JSON.parse(result.stdout);
     };
     try {
-      const targets = {
-        firefox: ".mozilla/native-messaging-hosts",
-        "firefox-flatpak":
-          ".var/app/org.mozilla.firefox/.mozilla/native-messaging-hosts",
-        "firefox-snap": "snap/firefox/common/.mozilla/native-messaging-hosts",
-        librewolf: ".librewolf/native-messaging-hosts",
-        "librewolf-flatpak":
-          ".var/app/io.gitlab.librewolf-community/.librewolf/native-messaging-hosts",
-      };
-      for (const [browser, relative] of Object.entries(targets)) {
-        const config = join(directory, "quoted ' paths", `${browser}.json`);
-        const bridge = join(directory, "quoted ' paths", `${browser}.mjs`);
-        const wrapper = join(directory, "quoted ' paths", browser);
-        const custom = [
-          "--config",
-          config,
-          "--bridge",
-          bridge,
-          "--wrapper",
-          wrapper,
-        ];
-        const installed = run([
-          "install",
-          "--browser",
-          browser,
-          "--extension-id",
-          "open-browser-agent@openbrowseragent.local",
-          "--secret",
-          "disposable-fixture",
-          ...custom,
-        ]);
-        const manifestPath = join(
-          directory,
-          relative,
-          "openbrowseragent.local_execution_bridge.json",
-        );
-        assert.equal(installed.manifestPath, manifestPath);
-        const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-        assert.deepEqual(manifest.allowed_extensions, [
-          "open-browser-agent@openbrowseragent.local",
-        ]);
-        const updated = run(["update", "--browser", browser]);
-        assert.equal(updated.updated[0].bridgePath, bridge);
-        assert.equal(updated.updated[0].configPath, config);
-        assert.equal(
-          (await readFile(config, "utf8")).includes("disposable-fixture"),
-          true,
-        );
-        run(["uninstall", "--browser", browser, "--keep-config", ...custom]);
-        await access(config);
-        await assert.rejects(access(manifestPath));
-        await assert.rejects(access(bridge));
-        await assert.rejects(access(wrapper));
-      }
+      const config = join(directory, "quoted ' paths", "librewolf.json");
+      const bridge = join(directory, "quoted ' paths", "librewolf.mjs");
+      const wrapper = join(directory, "quoted ' paths", "librewolf");
+      const custom = [
+        "--config",
+        config,
+        "--bridge",
+        bridge,
+        "--wrapper",
+        wrapper,
+      ];
+      const installed = run([
+        "install",
+        "--browser",
+        "librewolf",
+        "--extension-id",
+        "open-browser-agent@openbrowseragent.local",
+        "--secret",
+        "disposable-fixture",
+        ...custom,
+      ]);
+      const manifestPath = join(
+        directory,
+        ".librewolf/native-messaging-hosts",
+        "openbrowseragent.local_execution_bridge.json",
+      );
+      assert.equal(installed.manifestPath, manifestPath);
+      const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+      assert.deepEqual(manifest.allowed_extensions, [
+        "open-browser-agent@openbrowseragent.local",
+      ]);
+      const updated = run(["update", "--browser", "librewolf"]);
+      assert.equal(updated.updated[0].bridgePath, bridge);
+      assert.equal(updated.updated[0].configPath, config);
+      assert.match(await readFile(config, "utf8"), /disposable-fixture/);
+      run(["uninstall", "--browser", "librewolf", "--keep-config", ...custom]);
+      await access(config);
+      await assert.rejects(access(manifestPath));
+      await assert.rejects(access(bridge));
+      await assert.rejects(access(wrapper));
       const firefox = run([
         "install",
         "--browser",

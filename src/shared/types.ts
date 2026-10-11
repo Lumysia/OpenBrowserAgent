@@ -72,8 +72,7 @@ export type WebDavSyncBackendConfig = {
 };
 
 export type SyncBackendConfig =
-  | BrowserSyncBackendConfig
-  | WebDavSyncBackendConfig;
+  BrowserSyncBackendConfig | WebDavSyncBackendConfig;
 
 export type Agent = {
   id: string;
@@ -249,7 +248,6 @@ export type RunMetrics = {
   firstTokenAt?: number;
   endedAt?: number;
   streamEventIndex?: number;
-  outputMode?: "streaming" | "buffered";
   outputCharacters?: number;
   usage?: TokenUsage;
   promptBreakdown?: PromptBreakdown;

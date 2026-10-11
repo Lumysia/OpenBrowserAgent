@@ -3,11 +3,8 @@ import {
   SYNC_BACKEND_TYPES,
   syncBackendDefaultName,
   WEBDAV_SYNC_BACKEND_ID,
-} from "./sync-backend-registry";
-import {
-  mergeSyncDataSettings,
-  type SyncDataSettings,
-} from "./sync-data-settings";
+} from "./sync-backends";
+import { mergeSyncDataSettings, type SyncDataSettings } from "./storage-keys";
 import type { SyncBackendConfig } from "./types";
 
 const SYNC_CONFIG_CODE_PREFIX = "oba-sync-v1.";

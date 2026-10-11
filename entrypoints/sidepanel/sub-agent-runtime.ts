@@ -1,6 +1,6 @@
 import type { Agent, AgentCapabilities, Chat } from "../../src/shared/types";
 
-export function withoutNestedSubAgents(
+function withoutNestedSubAgents(
   capabilities: AgentCapabilities,
 ): AgentCapabilities {
   return capabilities.subAgents

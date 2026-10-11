@@ -5,6 +5,13 @@ import { CHAT_PART_STATE, type ChatPart } from "../../src/shared/types";
 import { cdpToolDetail } from "./cdp-tool-detail";
 import { formatToolMessage } from "./format";
 import {
+  arrayLabel,
+  compactJoin,
+  idLabel,
+  shortValue,
+  stringValue,
+} from "./tool-detail-format";
+import {
   subAgentDetail,
   subAgentProgressDetail,
   subAgentTitle,
@@ -448,13 +455,6 @@ function compactJsonValue(value: unknown): unknown {
   );
 }
 
-function shortValue(value: unknown, maxLength = 140) {
-  const text = typeof value === "string" ? value : JSON.stringify(value);
-  return text.length > maxLength ? `${text.slice(0, maxLength - 3)}...` : text;
-}
-function stringValue(value: unknown) {
-  return typeof value === "string" && value.trim() ? value.trim() : "";
-}
 function localExecutionBridgeStateLabel(state: string, t: Messages) {
   if (!state) return "";
   const labels = t.sidepanel.localExecutionBridgeStates;
@@ -467,19 +467,6 @@ function shortUrl(value: unknown) {
     text.replace(/^https?:\/\//i, ""),
     TOOL_DETAIL_URL_MAX_LENGTH,
   );
-}
-function idLabel(label: string, value: unknown) {
-  const text =
-    stringValue(value) || (Number.isFinite(Number(value)) ? String(value) : "");
-  return text ? `${label} ${text}` : "";
-}
-function arrayLabel(label: string, value: unknown) {
-  const items = Array.isArray(value) ? value : value ? [value] : [];
-  const text = items.map(String).filter(Boolean).join(", ");
-  return text ? `${label} ${text}` : "";
-}
-function compactJoin(values: Array<string | undefined>) {
-  return values.filter(Boolean).join(" · ");
 }
 function rangeLabel(output: Record<string, unknown>) {
   const offset = Number(output.offset);

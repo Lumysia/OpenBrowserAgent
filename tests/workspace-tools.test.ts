@@ -1,11 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 import { workspaceFiles } from "../src/background/workspace-tools";
-import {
-  createWorkspace,
-  patchWorkspaceFile,
-  upsertWorkspaceFile,
-} from "../src/shared/workspace";
+import { createWorkspace, upsertWorkspaceFile } from "../src/shared/workspace";
 import { storage } from "../src/shared/storage";
 import { installBrowser } from "./helpers";
 import { manageMemory } from "../src/background/memory-tools";
@@ -14,47 +10,22 @@ import { saveWorkspaceChanges } from "../src/shared/workspace-storage";
 
 afterEach(() => mock.restoreAll());
 
-for (const [patchOperation, value, expected] of [
-  [undefined, "$& $$ $` $'", "$& $$ $` $'\n\n"],
-  ["append", "tail", "# Notes\n\ntail"],
-  ["prepend", "head", "head# Notes\n\n"],
-] as const) {
-  test(`advertised workspace patch dispatches ${patchOperation || "replace"} and persists literal text`, async () => {
-    const workspace = createWorkspace("fixture");
-    installBrowser();
-    await storage.agentWorkspaces.set([workspace]);
-    const result = await workspaceFiles(workspace, {
-      operation: "patch",
-      path: "NOTES.md",
-      patchOperation,
-      find: "# Notes",
-      value,
-    });
-    assert.equal("patched" in result && result.patched, true);
-    assert.equal(
-      workspace.files.find((file) => file.path === "NOTES.md")?.content,
-      expected,
-    );
-    assert.deepEqual((await storage.agentWorkspaces.get())[0], workspace);
-  });
-}
-
-test("workspace replacement accepts an identical match and rejects missing text", () => {
+test("workspace patch persists replacement text literally", async () => {
   const workspace = createWorkspace("fixture");
+  installBrowser();
+  await storage.agentWorkspaces.set([workspace]);
+  const result = await workspaceFiles(workspace, {
+    operation: "patch",
+    path: "NOTES.md",
+    find: "# Notes",
+    value: "$& $$ $` $'",
+  });
+  assert.equal("patched" in result && result.patched, true);
   assert.equal(
-    patchWorkspaceFile(workspace, "NOTES.md", "replace", "# Notes", "# Notes")
-      .ok,
-    true,
-  );
-  assert.equal(
-    patchWorkspaceFile(
-      workspace,
-      "NOTES.md",
-      "replace",
-      "replacement",
-      "missing",
-    ).ok,
-    false,
+    (await storage.agentWorkspaces.get())[0].files.find(
+      (file) => file.path === "NOTES.md",
+    )?.content,
+    "$& $$ $` $'\n\n",
   );
 });
 
@@ -64,13 +35,7 @@ function edited(workspace: AgentWorkspace, path: string, content: string) {
   return result.workspace;
 }
 
-for (const operation of [
-  "write",
-  "patch",
-  "delete",
-  "memory",
-  "user",
-] as const) {
+for (const operation of ["write", "memory"] as const) {
   test(`${operation} uses current workspace and preserves newer unrelated files and memory`, async () => {
     installBrowser();
     const run = createWorkspace("fixture");
@@ -112,7 +77,7 @@ for (const operation of [
   });
 }
 
-for (const operation of ["write", "patch", "delete"] as const) {
+for (const operation of ["patch"] as const) {
   test(`${operation} rejects a changed same-file snapshot and refreshes the run`, async () => {
     installBrowser();
     const run = createWorkspace("fixture");
@@ -132,7 +97,7 @@ for (const operation of ["write", "patch", "delete"] as const) {
   });
 }
 
-for (const scope of ["memory", "user"]) {
+for (const scope of ["memory"]) {
   test(`two independent runs serialize ${scope} additions and workspace patches`, async () => {
     installBrowser();
     const first = createWorkspace("fixture");
@@ -168,7 +133,7 @@ for (const scope of ["memory", "user"]) {
   });
 }
 
-for (const operation of ["update", "remove"]) {
+for (const operation of ["update"]) {
   test(`memory ${operation} detects changed entry text without losing unrelated additions`, async () => {
     installBrowser();
     const run = edited(

@@ -15,6 +15,7 @@ import type {
   Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
+import { pruneEmptyChats } from "./chat-state-actions";
 import { retryStalledStream } from "./retry-stalled-stream";
 import type { ActiveStreamMap, ComposerMenu } from "./sidepanel-menu-state";
 import type { SendMessagesRequest } from "../../src/shared/types";
@@ -348,4 +349,33 @@ export function useAutoRetryStream({
     }, AUTO_RETRY_POLL_MS);
     return () => window.clearInterval(interval);
   }, [autoRetry, streaming]);
+}
+
+// Drops empty chats from history, and the composer draft once it is stored
+// (or the user moved to another chat).
+export function useChatListCleanup({
+  chats,
+  setChats,
+  activeChatId,
+  draftChat,
+  storedCurrentChat,
+  setDraftChat,
+}: {
+  chats: Chat[] | undefined;
+  setChats: (update: (items: Chat[]) => Chat[]) => unknown;
+  activeChatId: string | undefined;
+  draftChat: Chat | undefined;
+  storedCurrentChat: Chat | undefined;
+  setDraftChat: (chat: Chat | undefined) => void;
+}) {
+  useEffect(() => {
+    if (!chats?.some((chat) => !chat.messages.length)) return;
+    setChats((items) => pruneEmptyChats(items));
+  }, [chats, setChats]);
+
+  useEffect(() => {
+    if (!draftChat) return;
+    if (activeChatId !== draftChat.id || storedCurrentChat)
+      setDraftChat(undefined);
+  }, [activeChatId, draftChat, storedCurrentChat, setDraftChat]);
 }

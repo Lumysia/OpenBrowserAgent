@@ -5,13 +5,10 @@ import {
   MAX_IMAGES_PER_DOWNLOAD,
 } from "../shared/config";
 import { getBrowserApi } from "../shared/storage";
-import { abortable } from "../shared/cancellation";
 
 export async function findImages(tabId: number, signal?: AbortSignal) {
-  signal?.throwIfAborted();
   const api = getBrowserApi();
   const tab = await api.tabs.get(tabId);
-  signal?.throwIfAborted();
   const [result] = await api.scripting.executeScript({
     target: { tabId },
     args: [IMAGE_ALT_MAX_LENGTH],
@@ -99,7 +96,6 @@ export async function findImages(tabId: number, signal?: AbortSignal) {
       const response = await fetch(image.src, { signal });
       if (!response.ok) continue;
       const bytes = await response.arrayBuffer();
-      signal?.throwIfAborted();
       const extension = imageExtension(
         response.headers.get("content-type"),
         image.src,
@@ -110,13 +106,11 @@ export async function findImages(tabId: number, signal?: AbortSignal) {
       );
       downloadedCount += 1;
     } catch {
-      signal?.throwIfAborted();
       // Some sites block image fetches; keep going and zip the images we can access.
     }
   }
   if (downloadedCount > 0) {
-    signal?.throwIfAborted();
-    const base64 = await generateZipBase64(zip, signal);
+    const base64 = await zip.generateAsync({ type: "base64" });
     await downloadFile(
       {
         url: `data:application/zip;base64,${base64}`,
@@ -138,29 +132,6 @@ export function safeFileName(value: string) {
   return value.replace(/[\\/:*?"<>|]+/g, "_").replace(/\s+/g, "_");
 }
 
-export async function generateZipBase64(zip: JSZip, signal?: AbortSignal) {
-  signal?.throwIfAborted();
-  const stream = zip.generateInternalStream({
-    type: "base64",
-    streamFiles: true,
-  });
-  const abort = () => {
-    stream.pause();
-  };
-  signal?.addEventListener("abort", abort, { once: true });
-  // JSZip schedules resume asynchronously. Also pause at the first chunk if
-  // abort happened before that resume ran. Throwing from onUpdate would escape
-  // JSZip's promise and does not reliably stop its worker chain.
-  stream.on("data", () => {
-    if (signal?.aborted) stream.pause();
-  });
-  try {
-    return await abortable(stream.accumulate(), signal);
-  } finally {
-    signal?.removeEventListener("abort", abort);
-  }
-}
-
 export async function downloadTextFile(
   filename: string,
   content: string,
@@ -177,49 +148,14 @@ export async function downloadTextFile(
   );
 }
 
+// The data: URLs used here are complete as soon as Chrome accepts them, so
+// there is nothing to wait for (and waiting would cancel a slow Save dialog).
 export async function downloadFile(
   options: chrome.downloads.DownloadOptions,
   signal?: AbortSignal,
 ) {
   signal?.throwIfAborted();
-  const api = getBrowserApi().downloads;
-  // Keep observing creation even if the caller aborts before Chrome returns its ID.
-  const id = await api.download(options);
-  const cancel = () => api.cancel(id).catch(() => undefined);
-  if (signal?.aborted) {
-    await cancel();
-    signal.throwIfAborted();
-  }
-  let listener: (delta: chrome.downloads.DownloadDelta) => void;
-  const onAbort = () => {
-    void cancel();
-  };
-  signal?.addEventListener("abort", onAbort, { once: true });
-  try {
-    await abortable(
-      new Promise<void>((resolve, reject) => {
-        const check = (state?: string, error?: string) => {
-          if (state === "complete") resolve();
-          if (state === "interrupted" || error)
-            reject(new Error(error || "Download interrupted"));
-        };
-        listener = (delta) => {
-          if (delta.id === id)
-            check(delta.state?.current, delta.error?.current);
-        };
-        api.onChanged.addListener(listener);
-        api.search({ id }).then(([item]) => {
-          if (!item) reject(new Error("Download not found"));
-          else check(item.state, item.error);
-        }, reject);
-      }),
-      signal,
-    );
-    return id;
-  } finally {
-    signal?.removeEventListener("abort", onAbort);
-    api.onChanged.removeListener(listener!);
-  }
+  return getBrowserApi().downloads.download(options);
 }
 
 function imageExtension(contentType: string | null, url: string) {

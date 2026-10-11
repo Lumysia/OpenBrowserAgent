@@ -1,8 +1,54 @@
 import katex from "katex";
-import type { TokenizerAndRendererExtension, Tokens } from "marked";
+import {
+  Renderer,
+  type MarkedExtension,
+  type TokenizerAndRendererExtension,
+  type Tokens,
+} from "marked";
 import type { ChatSource } from "../../src/shared/types";
 
-export function markdownExtensions(
+// Model HTML is shown as text. Turning off Marked's HTML tokenizers (rather
+// than escaping in the renderer) also stops raw tags such as <kbd> from
+// switching the lexer into raw mode, which let later markup through unescaped.
+export function markdownParserOptions(sources: ChatSource[]): MarkedExtension {
+  return {
+    tokenizer: { html: () => undefined, tag: () => undefined },
+    extensions: markdownExtensions(sources),
+  };
+}
+
+const STREAM_CHAR_ANIMATION_LIMIT = 80;
+// One visible character of Marked's escaped text: an entity or a code point.
+const VISIBLE_CHARACTER = /&(?:#\d{1,7}|#[xX][\da-fA-F]{1,6}|\w+);|[\s\S]/gu;
+
+// Wraps newly revealed characters in animated spans. Marked installs this
+// method on its own renderer, so nested tokens must use the active receiver.
+export function applyStreamingTextRenderer(
+  renderer: Renderer,
+  animatedFromChar: number,
+) {
+  let characterIndex = 0;
+  let animatedIndex = 0;
+  renderer.text = function (
+    this: Renderer,
+    token: Tokens.Text | Tokens.Escape,
+  ) {
+    if ("tokens" in token && token.tokens)
+      return this.parser.parseInline(token.tokens);
+    return Renderer.prototype.text
+      .call(this, token)
+      .replace(VISIBLE_CHARACTER, (character: string) => {
+        if (
+          characterIndex++ < animatedFromChar ||
+          animatedIndex >= STREAM_CHAR_ANIMATION_LIMIT
+        )
+          return character;
+        return `<span class="stream-char" style="--char-index:${animatedIndex++}">${character}</span>`;
+      });
+  };
+}
+
+function markdownExtensions(
   sources: ChatSource[],
 ): TokenizerAndRendererExtension[] {
   return [

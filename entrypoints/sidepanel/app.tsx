@@ -1,31 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import { resolveAgent } from "../../src/shared/agents";
 import { getMessages } from "../../src/shared/i18n";
 import { isSkillEnabled } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
-import {
-  AI_STREAM_REQUEST_TYPE,
-  type Chat,
-  type ChatMessage,
-  type SendMessagesRequest,
-  type Skill,
-  type UploadedAttachment,
+import type {
+  Chat,
+  ChatMessage,
+  Skill,
+  UploadedAttachment,
 } from "../../src/shared/types";
 import { useBuiltinSkills } from "../../src/ui/useBuiltinSkills";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { requestChatTitle } from "./ai-requests";
-import {
-  forkChatAction,
-  pruneEmptyChats,
-  updateChatList,
-} from "./chat-state-actions";
-import {
-  createResendMessageDraft,
-  pruneSentAttachmentPreviews,
-} from "./edit-message";
+import { createChatDraft, updateChatList } from "./chat-state-actions";
+import { pruneSentAttachmentPreviews } from "./edit-message";
+import { toggleSkill } from "./skill-context";
 import { assistantModelLabel } from "./model-label";
-import { selectedElementImageAttachments } from "./selected-element-attachment";
 import {
   buildSidepanelContext,
   interpolateSkillVariables,
@@ -33,14 +23,17 @@ import {
 import {
   useAutoScroll,
   useActiveChatCleanup,
+  useChatListCleanup,
   useChatSelection,
   useSidepanelTheme,
 } from "./sidepanel-effects";
-import { createSendMessagePlan } from "./send-message-plan";
-import { interpolateSkillPackage } from "./skill-context";
+import {
+  createSendMessagePlan,
+  pickSendInputs,
+  sendMessagesRequest,
+} from "./send-message-plan";
 import {
   ADD_MENU_VIEW,
-  COMPOSER_MENU,
   type AddMenuView,
   type ComposerMenu,
 } from "./sidepanel-menu-state";
@@ -49,14 +42,13 @@ import { agentForChatRuntime } from "./sub-agent-runtime";
 import { useChatActions } from "./use-chat-actions";
 import { useComposerContext } from "./use-composer-context";
 import { useChatDraft } from "./use-chat-drafts";
-import { useChatSelectionState } from "./use-chat-selection-state";
 import { useConfiguredModels as useModels } from "./use-configured-models";
 import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
 import { useParallelChatStreams } from "./use-parallel-chat-streams";
 import { usePromptUsageEstimate } from "./prompt-usage-preview";
 import { useQueuedMessages } from "./use-queued-messages";
-import { useRemoteSyncRefresh } from "./use-remote-sync-refresh";
+import { useRemoteSyncRefresh } from "../../src/ui/useRemoteSyncRefresh";
 import {
   type SubAgentHandler,
   useSubAgentLauncher,
@@ -79,8 +71,12 @@ export function SidepanelApp() {
   const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
   const [chats, setChats] = useStoredState(storage.chats);
   const t = getMessages(language);
-  const { activeChatId, setActiveChatId, draftChat, setDraftChat } =
-    useChatSelectionState(t.words.newChat);
+  // The composer owns a draft chat before history loads, so text typed early
+  // and an early send keep one chat ID.
+  const [draftChat, setDraftChat] = useState<Chat | undefined>(() =>
+    createChatDraft(t.words.newChat),
+  );
+  const [activeChatId, setActiveChatId] = useState(draftChat?.id);
   const [openMenu, setOpenMenu] = useState<ComposerMenu | null>(null);
   const [addMenuView, setAddMenuView] = useState<AddMenuView>("menu");
   const [showHistory, setShowHistory] = useState(false);
@@ -123,12 +119,10 @@ export function SidepanelApp() {
     clearUploadedAttachments,
   } = useUploadedAttachments(t);
   const {
-    streaming,
     currentChatStreaming,
     currentAssistantMessageId,
     beginStream,
     startStream,
-    abortChatStream,
     abortClosedChatStreams,
     stopCurrentStream,
     postQueuedMessage,
@@ -147,7 +141,6 @@ export function SidepanelApp() {
     setUnreadCompletedChats,
     onStreamChunk: (event) => subAgentLauncherRef.current?.(event),
   });
-  const aiWorking = currentChatStreaming;
   const handleSubAgentStreamChunk = useSubAgentLauncher({
     chats,
     agents,
@@ -230,34 +223,36 @@ export function SidepanelApp() {
     setSentAttachmentPreviews,
   });
 
-  useEffect(() => void (aiWorking && setOpenMenu(null)), [aiWorking]);
+  useEffect(
+    () => void (currentChatStreaming && setOpenMenu(null)),
+    [currentChatStreaming],
+  );
 
   useBuiltinSkills(skills, setSkills);
-  useEffect(() => {
-    if (!chats?.some((chat) => !chat.messages.length)) return;
-    setChats((items) => pruneEmptyChats(items));
-  }, [chats, setChats]);
-
-  useEffect(() => {
-    if (!draftChat) return;
-    if (activeChatId !== draftChat.id || storedCurrentChat)
-      setDraftChat(undefined);
-  }, [activeChatId, draftChat, storedCurrentChat]);
+  useChatListCleanup({
+    chats,
+    setChats,
+    activeChatId,
+    draftChat,
+    storedCurrentChat,
+    setDraftChat,
+  });
 
   useSidepanelTheme(preferences?.accentColor, preferences?.colorScheme);
   useRemoteSyncRefresh(syncDataSettings);
 
-  const { createChat, closeChat, selectChat } = useChatActions({
-    t,
-    chats,
-    syncDataSettings,
-    setChats,
-    setDraftChat,
-    setActiveChatId,
-    setChatSelectionRequestId,
-    abortClosedChatStreams,
-    clearUnreadCompletedChat,
-  });
+  const { createChat, closeChat, selectChat, importChat, forkMessage } =
+    useChatActions({
+      t,
+      chats,
+      syncDataSettings,
+      setChats,
+      setDraftChat,
+      setActiveChatId,
+      setChatSelectionRequestId,
+      abortClosedChatStreams,
+      clearUnreadCompletedChat,
+    });
 
   useChatSelection(
     chats,
@@ -312,64 +307,29 @@ export function SidepanelApp() {
         ? (skills || []).filter(isSkillEnabled)
         : [];
       const chat = currentChat || createChat();
-      const resendDraft =
-        !options.queued && options.resendMessage
-          ? createResendMessageDraft({
-              chat,
-              message: options.resendMessage,
-              attachments: resendAttachments || [],
-            })
-          : null;
-      const activeEdit =
-        !options.queued && editingMessage?.chatId === chat.id
-          ? editingMessage
-          : resendDraft;
-      const sentTabs = options.queued
-        ? []
-        : activeEdit
-          ? activeEdit.attachedTabs
-          : attachedTabs;
-      const sentElements = options.queued
-        ? []
-        : activeEdit
-          ? activeEdit.selectedElements
-          : selectedElements;
-      const sentSkills = (
-        options.queued ? [] : activeEdit ? activeEdit.skills : selectedSkills
-      )
-        .filter(isSkillEnabled)
-        .map((skill) =>
-          interpolateSkillPackage(skill, interpolateSkillVariables),
-        );
+      const {
+        activeEdit,
+        baseChat,
+        sentTabs,
+        sentElements,
+        sentSkills,
+        sentAttachments,
+        activeAttachments,
+      } = pickSendInputs({
+        chat,
+        queued: !!options.queued,
+        editingMessage,
+        resendMessage: options.resendMessage,
+        attachedTabs,
+        selectedElements,
+        selectedSkills,
+        resendAttachments,
+        pendingAttachments,
+        uploadedAttachments,
+      });
       const context = await buildSidepanelContext({
         attachedTabs: sentTabs,
         selectedElements: sentElements,
-      });
-      const baseChat = activeEdit
-        ? {
-            ...chat,
-            messages: activeEdit.messagesBefore,
-            sources: activeEdit.sourcesBefore,
-            updatedAt: Date.now(),
-          }
-        : chat;
-      const selectedImageAttachments =
-        selectedElementImageAttachments(sentElements);
-      const sentAttachments = [
-        ...(options.queued ? [] : resendAttachments || pendingAttachments),
-        ...selectedImageAttachments,
-      ];
-      const activeAttachments = [
-        ...(options.queued
-          ? []
-          : activeEdit
-            ? activeEdit.attachments
-            : uploadedAttachments),
-        ...selectedImageAttachments,
-      ];
-      const assistantModel = assistantModelLabel({
-        modelId: preferences?.selectedModelId,
-        models: configuredModels,
       });
       const {
         userMessage,
@@ -383,31 +343,37 @@ export function SidepanelApp() {
         t,
         context,
         sources: baseChat.sources,
-        assistantModel,
+        assistantModel: assistantModelLabel({
+          modelId: preferences?.selectedModelId,
+          models: configuredModels,
+        }),
         sentTabs,
         sentElements,
         sentAttachments,
         skills: sentSkills,
         autoSelectedSkill: false,
       });
-      if (sentAttachments.length)
-        setSentAttachmentPreviews((items) => ({
-          ...(activeEdit
+      if (sentAttachments.length || activeEdit)
+        setSentAttachmentPreviews((items) => {
+          const kept = activeEdit
             ? pruneSentAttachmentPreviews(items, activeEdit.keptMessageIds)
-            : items),
-          [userMessage.id]: sentAttachments,
-        }));
-      else if (activeEdit)
-        setSentAttachmentPreviews((items) =>
-          pruneSentAttachmentPreviews(items, activeEdit.keptMessageIds),
-        );
+            : items;
+          return sentAttachments.length
+            ? { ...kept, [userMessage.id]: sentAttachments }
+            : kept;
+        });
       syncSentAttachments({
         chatId: nextChat.id,
         messageId: userMessage.id,
         attachments: sentAttachments,
       });
       beginStream(nextChat.id, assistantMessage.id);
-      const initialSnapshotPersist = persistInitialChatSnapshot(nextChat);
+      const initialSnapshotPersist = setChats(
+        (items) => updateChatList(items, nextChat),
+        { persist: "immediate" },
+      ).catch((error) =>
+        console.warn("Failed to persist initial chat snapshot", error),
+      );
       if (!options.queued && !options.resendMessage) {
         clearInput();
         clearAttachedTabsAfterSend();
@@ -424,40 +390,26 @@ export function SidepanelApp() {
           message: titleSource,
           setChats,
         });
-      const request: SendMessagesRequest = {
-        type: AI_STREAM_REQUEST_TYPE.sendMessages,
+      const request = sendMessagesRequest({
         chatId: nextChat.id,
         messageId: assistantMessage.id,
         messages: [...baseChat.messages, userMessage],
-        body: {
-          modelId: preferences?.selectedModelId,
-          agentCapabilities: runtimeAgent.capabilities,
-          language,
-          maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
-          context: {
-            tabs: sentTabs,
-            selectedElements: sentElements,
-            text: context,
-            uploadedAttachments: activeAttachments,
-            availableSkills,
-            sources: baseChat.sources || [],
-            agent: runtimeAgent,
-            imageGenerationEnabled: preferences?.imageGenerationEnabled,
-          },
+        preferences,
+        agent: runtimeAgent,
+        language,
+        context: {
+          tabs: sentTabs,
+          selectedElements: sentElements,
+          text: context,
+          uploadedAttachments: activeAttachments,
+          availableSkills,
+          sources: baseChat.sources || [],
         },
-      };
+      });
       startStream(request, assistantMessage.id);
     } finally {
       sendInFlightRef.current.delete(sendChatId);
     }
-  }
-
-  async function persistInitialChatSnapshot(chat: Chat) {
-    await setChats((items) => updateChatList(items, chat), {
-      persist: "immediate",
-    }).catch((error) => {
-      console.warn("Failed to persist initial chat snapshot", error);
-    });
   }
 
   return (
@@ -491,7 +443,7 @@ export function SidepanelApp() {
       openMenu={openMenu}
       addMenuView={addMenuView}
       showHistory={showHistory}
-      aiWorking={aiWorking}
+      aiWorking={currentChatStreaming}
       editingMessageId={editingMessage?.messageId}
       sidepanelRef={sidepanelRef}
       messagesRef={messagesRef}
@@ -504,10 +456,7 @@ export function SidepanelApp() {
       onSetChats={setChats}
       onSetPreferences={setPreferences}
       onCreateChat={createChat}
-      onImportChat={(chat) => {
-        setChats((items) => [...pruneEmptyChats(items), chat]);
-        setActiveChatId(chat.id);
-      }}
+      onImportChat={importChat}
       onCloseChat={closeChat}
       onSend={send}
       onStop={stopCurrentStream}
@@ -517,11 +466,7 @@ export function SidepanelApp() {
         currentChat && answerQuestion(currentChat.id, toolCallId, answers)
       }
       onToggleSkill={(skill) =>
-        setSelectedSkills((items) =>
-          items.some((item) => item.id === skill.id)
-            ? items.filter((item) => item.id !== skill.id)
-            : [...items, skill],
-        )
+        setSelectedSkills((items) => toggleSkill(items, skill))
       }
       onCancelEditMessage={cancelEditMessage}
       onShowAllTabsPicker={async () => {
@@ -538,17 +483,9 @@ export function SidepanelApp() {
       onResendMessage={(message, attachments) =>
         send(message.content, attachments, { resendMessage: message })
       }
-      onForkMessage={(message, partId) => {
-        if (currentChat)
-          forkChatAction({
-            chat: currentChat,
-            message,
-            partId,
-            forkLabel: t.sidepanel.forkTitleSuffix,
-            setChats,
-            setActiveChatId,
-          });
-      }}
+      onForkMessage={(message, partId) =>
+        forkMessage(currentChat, message, partId)
+      }
       onSelectElement={selectElement}
       onSelectChat={selectChat}
     />

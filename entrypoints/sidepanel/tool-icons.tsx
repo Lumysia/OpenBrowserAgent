@@ -167,6 +167,6 @@ export function isMemoryToolName(name: string) {
   return name === BROWSER_TOOL_NAME.manageMemory;
 }
 
-export function isSessionToolName(name: string) {
+function isSessionToolName(name: string) {
   return name === BROWSER_TOOL_NAME.manageChatHistory;
 }

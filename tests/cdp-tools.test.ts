@@ -1,15 +1,21 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 import { setImmediate } from "node:timers/promises";
-import { executeCdpTool } from "../src/background/cdp-tools";
+import { executeCdpTool, isCdpTool } from "../src/background/cdp-tools";
+import { executeContextAwareTool } from "../src/background/provider-tools";
+import type { AgentCapabilities } from "../src/shared/types";
+import { cdpFixture } from "./cdp-fixture";
 import { deferred } from "./tool-fixtures";
-import { cdpFixture as fixture } from "./cdp-fixture";
 
 afterEach(() => mock.restoreAll());
-test("full-page screenshot uses CSS content bounds and emulation persists across tools until reset", async () => {
-  const f = fixture();
+
+const methods = (f: ReturnType<typeof cdpFixture>) =>
+  f.calls.map((call) => call.method);
+
+test("full-page screenshot uses CSS content bounds; emulation persists until reset", async () => {
+  const f = cdpFixture();
   await executeCdpTool("cdpTakeScreenshot", {
-    tabId: f.tabId,
+    tabId: 501,
     fullPage: true,
     format: "png",
   });
@@ -19,104 +25,73 @@ test("full-page screenshot uses CSS content bounds and emulation persists across
     { x: 0, y: 0, width: 800, height: 3000, scale: 1 },
   );
   await executeCdpTool("cdpPage", {
-    tabId: f.tabId,
+    tabId: 501,
     operation: "emulate",
     viewport: "390x844,mobile",
+  });
+  // The same page by targetId reuses the retained session.
+  await executeCdpTool("cdpTakeScreenshot", { targetId: "page-1" });
+  assert.equal(f.attaches.length, 2);
+  assert.equal(f.detaches.length, 1);
+  await executeCdpTool("cdpPage", {
+    tabId: 501,
+    operation: "emulate",
+    reset: true,
+  });
+  assert.equal(f.detaches.length, 2);
+  assert.equal(f.attached.size, 0);
+});
+
+test("a retained session closed by Chrome is attached again on next use", async () => {
+  const f = cdpFixture();
+  await executeCdpTool("cdpPage", {
+    tabId: 501,
+    operation: "emulate",
     colorScheme: "dark",
   });
-  assert.equal(f.detached.length, 1);
-  const attachCount = f.attached.length;
-  await executeCdpTool("cdpEvaluateScript", {
-    targetId: `target-${f.tabId}`,
-    function: "() => true",
-  });
-  assert.equal(f.attached.length, attachCount);
-  assert.equal(f.detached.length, 1);
-  await executeCdpTool("cdpPage", {
-    tabId: f.tabId,
-    operation: "emulate",
-    reset: true,
-  });
-  assert.equal(f.detached.length, 2);
+  f.drop({ tabId: 501 });
+  await executeCdpTool("cdpTakeScreenshot", { tabId: 501 });
+  assert.equal(f.attaches.length, 2);
+  assert.equal(f.attached.size, 0);
 });
 
-test("invalid emulation fails before sending overrides", async () => {
-  const f = fixture();
-  await assert.rejects(
-    executeCdpTool("cdpPage", {
-      tabId: f.tabId,
-      operation: "emulate",
-      viewport: "390x844xNaN",
-      userAgent: "fixture",
-    }),
-    /Invalid viewport/,
-  );
-  assert.equal(f.calls.length, 0);
-  assert.equal(f.detached.length, 1);
-});
-
-test("resize retains its CDP fallback when the window API is unavailable", async () => {
-  const f = fixture();
-  Object.assign(chrome, {
-    windows: {
-      update: async () => {
-        throw new Error("Window resize unavailable");
-      },
-    },
-  });
-  await executeCdpTool("cdpPage", {
-    tabId: f.tabId,
-    operation: "resize",
-    width: 400,
-    height: 600,
-  });
-  assert.deepEqual(f.calls[0], {
-    method: "Emulation.setDeviceMetricsOverride",
-    params: { width: 400, height: 600, deviceScaleFactor: 1, mobile: false },
-  });
-  await executeCdpTool("cdpPage", {
-    tabId: f.tabId,
-    operation: "emulate",
-    reset: true,
-  });
-});
-
-test("abort during attach detaches the late session without sending page commands", async () => {
-  const f = fixture();
+test("abort during attach detaches the late session without page commands", async () => {
+  const f = cdpFixture();
   const entered = deferred();
   const release = deferred();
-  mock.method(chrome.debugger, "attach", async () => {
+  const attach = f.api.attach;
+  mock.method(f.api, "attach", async (target: chrome.debugger.Debuggee) => {
     entered.resolve();
     await release.promise;
+    return attach(target);
   });
   const controller = new AbortController();
   const result = executeCdpTool(
     "cdpInput",
-    { tabId: f.tabId, operation: "click", x: 1, y: 2 },
+    { tabId: 501, operation: "click", x: 1, y: 2 },
     controller.signal,
   );
   await entered.promise;
   controller.abort();
   release.resolve();
   await assert.rejects(result, { name: "AbortError" });
-  await setImmediate();
-  assert.equal(f.calls.length, 0);
-  assert.equal(f.detached.length, 1);
+  assert.deepEqual(f.calls, []);
+  assert.equal(f.attached.size, 0);
 });
 
-test("abort between CDP input commands prevents later mouse effects and detaches", async () => {
-  const f = fixture();
+test("abort between input events stops later mouse events and detaches", async () => {
+  const f = cdpFixture();
   const entered = deferred();
   const release = deferred<any>();
-  mock.method(chrome.debugger, "sendCommand", async (_target, method) => {
-    f.calls.push({ method });
+  mock.method(f.api, "sendCommand", async (target: any, method: string) => {
+    f.calls.push({ target, method });
     entered.resolve();
     return release.promise;
   });
   const controller = new AbortController();
   const result = executeCdpTool(
     "cdpInput",
-    { tabId: f.tabId, operation: "click" },
+    { tabId: 501, operation: "click" },
     controller.signal,
   );
   await entered.promise;
@@ -124,61 +99,141 @@ test("abort between CDP input commands prevents later mouse effects and detaches
   await assert.rejects(result, { name: "AbortError" });
   release.resolve({});
   await setImmediate();
-  assert.deepEqual(
-    f.calls.map((call) => call.method),
-    ["Input.dispatchMouseEvent"],
-  );
-  assert.equal(f.detached.length, 1);
+  assert.deepEqual(methods(f), ["Input.dispatchMouseEvent"]);
+  assert.equal(f.attached.size, 0);
 });
 
-test("dangerous script isolated-world contract sets the CDP execution context", async () => {
-  const f = fixture();
+test("navigate without a tab id drives the active tab, not a tab whose URL matches", async () => {
+  const f = cdpFixture([
+    { id: "active", tabId: 501 },
+    { id: "other", tabId: 502, url: "https://example.com/inbox" },
+  ]);
+  await executeCdpTool("cdpPage", {
+    operation: "navigate",
+    url: "https://example.com",
+  });
+  assert.deepEqual(
+    f.calls
+      .filter((call) => call.method === "Page.navigate")
+      .map((call) => call.target),
+    [{ tabId: 501 }],
+  );
+});
+
+test("a targetId/tabId pair naming different pages produces no effects", async () => {
+  const f = cdpFixture([
+    { id: "page-1", tabId: 501 },
+    { id: "page-2", tabId: 502 },
+  ]);
+  await assert.rejects(
+    executeCdpTool("cdpInput", {
+      operation: "click",
+      targetId: "page-1",
+      tabId: 502,
+    }),
+    /different pages/,
+  );
+  assert.deepEqual(f.attaches, []);
+});
+
+test("back at the first history entry sends no navigation", async () => {
+  const f = cdpFixture();
+  mock.method(f.api, "sendCommand", async (target: any, method: string) => {
+    f.calls.push({ target, method });
+    return { currentIndex: 0, entries: [{ id: 11 }, { id: 22 }] };
+  });
+  const result = await executeCdpTool("cdpPage", {
+    operation: "navigate",
+    type: "back",
+    tabId: 501,
+  });
+  assert.equal((result as any).success, false);
+  assert.deepEqual(methods(f), ["Page.getNavigationHistory"]);
+});
+
+test("key presses carry the text Chromium needs for their default action", async () => {
+  const f = cdpFixture();
+  for (const key of ["Enter", "a", "Control+A", "Backspace"])
+    await executeCdpTool("cdpInput", { tabId: 501, operation: "key", key });
+  assert.deepEqual(
+    f.calls
+      .filter((call) => call.params?.type === "keyDown")
+      .map((call) => call.params.text),
+    ["\r", "a", undefined, undefined],
+  );
+});
+
+test("missing isolated execution context cannot fall through to main-world evaluation", async () => {
+  const f = cdpFixture();
+  const send = f.api.sendCommand;
   mock.method(
-    chrome.debugger,
+    f.api,
     "sendCommand",
-    async (_target, method, params) => {
-      f.calls.push({ method, params });
-      if (method === "Page.getFrameTree")
-        return { frameTree: { frame: { id: "frame" } } };
-      if (method === "Page.createIsolatedWorld")
-        return { executionContextId: 7 };
-      return { result: { value: { success: true, value: 1 } } };
+    async (target: any, method: string, params: any) => {
+      if (method === "Page.createIsolatedWorld") return {};
+      return send(target, method, params);
     },
   );
-  await executeCdpTool("cdpExecuteArbitraryJavaScript", {
-    tabId: f.tabId,
-    code: "1",
-    world: "ISOLATED",
-  });
-  assert.equal(f.calls.at(-1)?.params.contextId, 7);
+  await assert.rejects(
+    executeCdpTool("cdpExecuteArbitraryJavaScript", {
+      tabId: 501,
+      code: "document.body.remove()",
+      world: "ISOLATED",
+    }),
+    /isolated execution context/,
+  );
+  assert.equal(methods(f).includes("Runtime.evaluate"), false);
+  assert.equal(f.attached.size, 0);
 });
 
-test("a canceled queued CDP operation cannot attach or send after the previous operation finishes", async () => {
-  const f = fixture();
+test("abort during isolated-world creation prevents evaluation after a late result", async () => {
+  const f = cdpFixture();
   const entered = deferred();
-  const release = deferred<any>();
-  mock.method(chrome.debugger, "sendCommand", async (_target, method) => {
-    f.calls.push({ method });
-    entered.resolve();
-    return release.promise;
-  });
-  const first = executeCdpTool("cdpTakeScreenshot", { tabId: f.tabId });
-  await entered.promise;
+  const world = deferred<any>();
+  const send = f.api.sendCommand;
+  mock.method(
+    f.api,
+    "sendCommand",
+    async (target: any, method: string, params: any) => {
+      if (method !== "Page.createIsolatedWorld")
+        return send(target, method, params);
+      f.calls.push({ target, method });
+      entered.resolve();
+      return world.promise;
+    },
+  );
   const controller = new AbortController();
-  const second = executeCdpTool(
-    "cdpInput",
-    { targetId: `target-${f.tabId}`, operation: "click" },
+  const running = executeCdpTool(
+    "cdpExecuteArbitraryJavaScript",
+    { tabId: 501, code: "document.body.remove()", world: "ISOLATED" },
     controller.signal,
   );
-  await setImmediate();
+  await entered.promise;
   controller.abort();
-  await assert.rejects(second, { name: "AbortError" });
-  release.resolve({ data: "AA==" });
-  await first;
+  await assert.rejects(running, { name: "AbortError" });
+  world.resolve({ executionContextId: 77 });
   await setImmediate();
-  assert.equal(f.attached.length, 1);
-  assert.deepEqual(
-    f.calls.map((call) => call.method),
-    ["Page.captureScreenshot"],
-  );
+  assert.deepEqual(methods(f), [
+    "Page.getFrameTree",
+    "Page.createIsolatedWorld",
+  ]);
+});
+
+test("page JavaScript is unreachable when its capability is off or via other CDP tools", async () => {
+  const f = cdpFixture();
+  const result = await executeContextAwareTool({
+    toolName: "cdpExecuteArbitraryJavaScript",
+    input: { tabId: 501, code: "document.body.remove()" },
+    uploadedAttachments: [],
+    availableSkills: [],
+    capabilities: { javascriptExecution: false } as AgentCapabilities,
+  });
+  assert.equal((result as any).success, false);
+  assert.equal(isCdpTool("cdpEvaluateScript"), false);
+  const evaluated = await executeCdpTool("cdpEvaluateScript", {
+    tabId: 501,
+    function: "() => document.body.remove()",
+  });
+  assert.equal((evaluated as any).success, false);
+  assert.deepEqual(f.attaches, []);
 });

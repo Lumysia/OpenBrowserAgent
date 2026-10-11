@@ -108,6 +108,8 @@ for (const provider of [
         );
       if (provider === "openai")
         assert.equal(fixture.requests[0].body.reasoning_effort, "high");
+      // OpenAI reasoning models reject any non-default temperature.
+      assert.equal(fixture.requests[0].body.temperature, undefined);
     } finally {
       await fixture.close();
     }
@@ -217,34 +219,43 @@ test("Anthropic preserves a configured proxy base path without requiring a /v1 s
   }
 });
 
-test("authentication errors are not retried as image failures", async () => {
-  const fixture = await providerFixture((_request, response) =>
-    response.writeHead(401).end('{"error":{"message":"bad key"}}'),
-  );
-  try {
-    const config = {
-      provider: "openai" as const,
-      apiKey: "fixture",
-      modelName: "fixture",
-      baseUrl: `${fixture.baseUrl}/v1`,
-    };
-    const stream = await createProviderStream(config)(
-      piModel(config),
-      normalizeContext({
-        messages: [
-          {
-            role: "user",
-            timestamp: 0,
-            content: [
-              { type: "image", data: "aGVsbG8=", mimeType: "image/png" },
-            ],
-          },
-        ],
-      }),
+for (const [status, body] of [
+  [401, '{"error":{"message":"bad key"}}'],
+  [
+    502,
+    '{"error":{"message":"Provider returned error","type":"upstream_error"}}',
+  ],
+] as const) {
+  test(`HTTP ${status} on an image request is not retried as an image rejection`, async () => {
+    const fixture = await providerFixture((_request, response) =>
+      response.writeHead(status).end(body),
     );
-    assert.equal((await stream.result()).stopReason, "error");
-    assert.equal(fixture.requests.length, 1);
-  } finally {
-    await fixture.close();
-  }
-});
+    try {
+      const config = {
+        provider: "openai" as const,
+        apiKey: "fixture-key",
+        modelName: "fixture",
+        baseUrl: `${fixture.baseUrl}/v1`,
+      };
+      const stream = await createProviderStream(config)(
+        piModel(config),
+        normalizeContext({
+          messages: [
+            {
+              role: "user",
+              timestamp: 0,
+              content: [
+                { type: "image", data: "aGVsbG8=", mimeType: "image/png" },
+              ],
+            },
+          ],
+        }),
+      );
+      const result = await stream.result();
+      assert.equal(result.stopReason, "error");
+      assert.equal(fixture.requests.length, 1, result.errorMessage);
+    } finally {
+      await fixture.close();
+    }
+  });
+}

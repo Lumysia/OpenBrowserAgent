@@ -12,6 +12,7 @@ import {
   openBrowserAgentDir,
   parseArgs,
   readJson,
+  readRegistryValue,
   readInstalledPaths,
   resolvePath,
   stringArg,
@@ -43,7 +44,15 @@ const manifests = stringArg(args.manifest)
   : targets.map((browser) => join(nativeHostDir(browser), `${HOST_NAME}.json`));
 for (const path of new Set(manifests)) removeFile(path);
 if (platform() === "win32") {
-  for (const key of new Set(targets.flatMap(nativeHostRegistryKeys))) {
+  const keys = new Set();
+  for (const browser of targets) {
+    const { own, fallback } = nativeHostRegistryKeys(browser);
+    keys.add(own);
+    // Remove Chrome's key only when it points at a manifest removed here.
+    if (fallback && manifests.includes(readRegistryValue(fallback)))
+      keys.add(fallback);
+  }
+  for (const key of keys) {
     const result = spawnSync("reg", ["delete", key, "/f"], {
       stdio: "pipe",
       windowsHide: true,

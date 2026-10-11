@@ -2,11 +2,14 @@ import { useCallback, type Dispatch, type SetStateAction } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { removeSyncedChatAttachments } from "../../src/shared/sync-chat-attachments";
-import type { SyncDataSettings } from "../../src/shared/sync-data-settings";
-import type { Chat } from "../../src/shared/types";
+import type { SyncDataSettings } from "../../src/shared/storage-keys";
+import type { Chat, ChatMessage } from "../../src/shared/types";
 import {
   closeChatAction,
+  closedChatIds,
   createChatAction,
+  forkChatAction,
+  pruneEmptyChats,
   selectChatAction,
 } from "./chat-state-actions";
 
@@ -44,13 +47,12 @@ export function useChatActions({
 
   const closeChat = useCallback(
     async (chatId: string) => {
-      let ids: Set<string>;
-      try {
-        ids = await abortClosedChatStreams(chatId);
-      } catch (error) {
+      // Closing must not depend on the background acknowledging the abort;
+      // otherwise the close button silently does nothing.
+      const ids = await abortClosedChatStreams(chatId).catch((error) => {
         console.warn("Failed to close chat streams", error);
-        return;
-      }
+        return closedChatIds(chats || [], chatId);
+      });
       ids.forEach((id) => {
         clearUnreadCompletedChat(id);
       });
@@ -75,6 +77,7 @@ export function useChatActions({
     },
     [
       abortClosedChatStreams,
+      chats,
       clearUnreadCompletedChat,
       syncDataSettings,
       setChats,
@@ -90,5 +93,28 @@ export function useChatActions({
     [chats, setActiveChatId, setChatSelectionRequestId, setChats],
   );
 
-  return { createChat, closeChat, selectChat };
+  const importChat = useCallback(
+    (chat: Chat) => {
+      setChats((items) => [...pruneEmptyChats(items), chat]);
+      setActiveChatId(chat.id);
+    },
+    [setActiveChatId, setChats],
+  );
+
+  const forkMessage = useCallback(
+    (chat: Chat | undefined, message: ChatMessage, partId?: string) => {
+      if (!chat) return;
+      forkChatAction({
+        chat,
+        message,
+        partId,
+        forkLabel: t.sidepanel.forkTitleSuffix,
+        setChats,
+        setActiveChatId,
+      });
+    },
+    [setActiveChatId, setChats, t.sidepanel.forkTitleSuffix],
+  );
+
+  return { createChat, closeChat, selectChat, importChat, forkMessage };
 }

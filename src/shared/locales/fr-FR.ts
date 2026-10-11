@@ -16,7 +16,6 @@ export const frFR: LocaleMessages = {
     language: "Langue",
     enabled: "Activé",
     disabled: "Désactivé",
-    noModelsFound: "Aucun modèle trouvé.",
     confirm: "Confirmer",
   },
   words: { newChat: "Nouvelle discussion", agent: "Naviguer", ask: "Question" },
@@ -25,7 +24,6 @@ export const frFR: LocaleMessages = {
     connectProviderDescription:
       "Choisissez la langue, activez la synchronisation si besoin, puis ajoutez un fournisseur et un modèle.",
     addProvider: "Ajouter un fournisseur",
-    cloudSync: "Synchroniser depuis le cloud",
     cloudSyncTest: "Tester la synchronisation cloud",
     cloudSyncTesting: "Test de la synchronisation cloud...",
     cloudSyncPulling: "Vérification de la synchronisation cloud...",
@@ -33,13 +31,10 @@ export const frFR: LocaleMessages = {
       "Utilisez le cloud pour reprendre la configuration d'un autre appareil ou enregistrer celle-ci.",
     cloudSyncReady:
       "Configuration fournisseur synchronisée trouvée. Vous pouvez démarrer depuis le cloud.",
-    cloudSyncSuccess:
-      "Configuration fournisseur synchronisée trouvée. Ouverture du chat...",
     cloudSyncEmpty:
       "Cloud connecté, mais aucune configuration existante trouvée. Confirmez pour stocker la nouvelle configuration dans le cloud.",
     cloudSyncError:
       "Échec du test de synchronisation cloud. Vérifiez le backend ou démarrez en local.",
-    cloudSyncStoreNew: "Stocker la nouvelle configuration dans le cloud",
     confirmCloudSync: "Confirmer la synchronisation",
     cloudSyncSynced:
       "La synchronisation cloud est prête. Ajoutez ensuite la configuration fournisseur.",
@@ -100,8 +95,6 @@ export const frFR: LocaleMessages = {
     whatDoYouWant: "Que voulez-vous faire ?",
     emptyDescription:
       "Automatiser des tâches, rechercher et contrôler votre navigateur.",
-    aiWorking: "L'IA travaille",
-    aiWorkingDescription: "Lecture, action et préparation de la réponse.",
     typingPhrases: [
       "Cogite...",
       "Fouille...",
@@ -121,9 +114,6 @@ export const frFR: LocaleMessages = {
       ttft: "TTFT",
       tps: "TPS",
       output: "Sortie",
-      streaming: "Streaming",
-      buffered: "Non streaming",
-      mixed: "Mixte",
       input: "Entrée",
       outputTokens: "Sortie",
       total: "Total",
@@ -134,9 +124,6 @@ export const frFR: LocaleMessages = {
       tokenUnit: "tok.",
       estimatedTokenCount: "env. {count} tok.",
       promptBreakdown: "Répartition des instructions",
-      contextSaved: "Contexte économisé",
-      contextPrunedMessages: "Messages élagués",
-      contextToolResults: "Résultats d’outil élagués",
       prebuiltPrompt: "Instructions préconfigurées",
       userPrompt: "Instructions utilisateur",
       conversationPrompt: "Conversation",
@@ -147,16 +134,11 @@ export const frFR: LocaleMessages = {
       toolCallPrompt: "Appels d'outils",
       sourcePrompt: "Sources",
       otherPrompt: "Autre contexte",
-      characters: "car.",
       unavailable: "Indisponible",
     },
     contextSummaryTitle: "Résumé du contexte",
     contextSummaryDescription:
       "L'ancien contexte de conversation a été compacté pour cette requête.",
-    operatingBrowser: "Utilisation du navigateur",
-    preparingFinalReply: "Préparation de la réponse finale",
-    preparingFinalReplyDescription:
-      "Les actions du navigateur sont terminées. L'IA résume le résultat.",
     willBeSentToAi: "Sera envoyé à l'IA",
     willBeSentAsPageContext: "Sera envoyé comme contexte de page",
     currentPage: "Page actuelle",
@@ -335,10 +317,6 @@ export const frFR: LocaleMessages = {
         running: "Lecture de la pièce jointe",
         done: "Pièce jointe lue",
       },
-      cdpEvaluateScript: {
-        running: "Exécution du script de page",
-        done: "Script de page exécuté",
-      },
       cdpExecuteArbitraryJavaScript: {
         running: "Exécution du script personnalisé",
         done: "Script personnalisé exécuté",
@@ -346,46 +324,6 @@ export const frFR: LocaleMessages = {
       cdpTakeScreenshot: {
         running: "Capture d'écran",
         done: "Capture effectuée",
-      },
-      cdpPerformanceStartTrace: {
-        running: "Démarrage de la trace de performance",
-        done: "Trace de performance démarrée",
-      },
-      cdpPerformanceStopTrace: {
-        running: "Arrêt de la trace de performance",
-        done: "Trace de performance arrêtée",
-      },
-      cdpPerformanceAnalyzeInsight: {
-        running: "Analyse de performance",
-        done: "Analyse de performance terminée",
-      },
-      cdpTakeMemorySnapshot: {
-        running: "Capture de l'instantané mémoire",
-        done: "Instantané mémoire capturé",
-      },
-      cdpGetMemorySnapshotDetails: {
-        running: "Lecture de l'instantané mémoire",
-        done: "Instantané mémoire lu",
-      },
-      cdpGetNodesByClass: {
-        running: "Lecture des nœuds mémoire",
-        done: "Nœuds mémoire lus",
-      },
-      cdpLoadMemorySnapshot: {
-        running: "Chargement de l'instantané mémoire",
-        done: "Instantané mémoire chargé",
-      },
-      cdpLighthouseAudit: {
-        running: "Audit de la page",
-        done: "Audit de page terminé",
-      },
-      cdpScreencastStart: {
-        running: "Démarrage de l'enregistrement",
-        done: "Enregistrement démarré",
-      },
-      cdpScreencastStop: {
-        running: "Arrêt de l'enregistrement",
-        done: "Enregistrement arrêté",
       },
       startSubAgent: {
         running: "Démarrage du sous-agent",
@@ -525,11 +463,8 @@ export const frFR: LocaleMessages = {
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "Headers JSON",
     mcpServerEnabled: "Activé",
-    mcpServerEnabledDescription:
-      "Expose cette configuration de serveur aux outils de l’assistant.",
     mcpEnableRequiresTest: "Testez ce serveur MCP avant de l’activer.",
     mcpEnableTooltipTested: "Test réussi. {count} outils trouvés.",
-    mcpAdvancedActions: "Actions du serveur MCP",
     mcpImportJson: "Coller la configuration JSON MCP",
     mcpImportButton: "Importer le JSON MCP",
     mcpImportSuccess: "{count} serveurs MCP importés.",
@@ -566,8 +501,6 @@ export const frFR: LocaleMessages = {
     models: "Modèles",
     imageModels: "Modèles de génération d’images",
     modelHint: "Récupérez les modèles puis choisissez-en un à ajouter",
-    imageModelHint:
-      "Ajoutez des modèles prenant en charge la génération ou l’édition d’images",
     fetchModels: "Récupérer les modèles",
     fetchingModels: "Récupération des modèles",
     searchFetchedModels: "Rechercher des modèles...",
@@ -576,7 +509,6 @@ export const frFR: LocaleMessages = {
     allFetchedModelsAdded: "Tous les modèles récupérés sont déjà ajoutés",
     addSelected: "Ajouter la sélection",
     addCustomModelName: "Ajouter un nom de modèle personnalisé",
-    addCustomImageModelName: "Ajouter un nom de modèle d’image",
     addCustom: "Ajouter personnalisé",
     testModel: "Tester",
     testingModel: "Test...",
@@ -608,7 +540,6 @@ export const frFR: LocaleMessages = {
     replaceFile: "Remplacer le fichier",
     filePath: "Chemin du fichier",
     downloadFile: "Télécharger le fichier",
-    downloadSkillZip: "Télécharger l’archive",
     downloadSkillPackage: "Télécharger .skill",
     duplicateSkill: "Dupliquer",
     disabled: "Désactivée",
@@ -616,9 +547,7 @@ export const frFR: LocaleMessages = {
     uploadFile: "Importer un fichier",
     editFile: "Modifier le fichier",
     saveFile: "Enregistrer le fichier",
-    previewFile: "Aperçu du fichier",
     deleteFile: "Supprimer le fichier",
-    binaryPreviewUnavailable: "L'aperçu binaire n'est pas disponible.",
     updatedAt: "Mis à jour",
     skillSize: "Taille de la compétence",
     skillCheckEntry: "SKILL.md existe",
@@ -628,9 +557,6 @@ export const frFR: LocaleMessages = {
     skillCheckDescription: "La description est présente",
     skillCheckDescriptionMissing: "La description est manquante",
     deleteSkill: "Supprimer la compétence",
-    deleteSkillConfirm: "Supprimer cette compétence ?",
-    availableVariables: "Variables disponibles (cliquez pour copier) :",
-    example: "Exemple",
     languageDescription: "Choisissez la langue de l'interface de l'extension.",
     colorScheme: "Palette de couleurs",
     colorSchemeDescription:
@@ -645,26 +571,18 @@ export const frFR: LocaleMessages = {
     systemTheme: "Système",
     lightTheme: "Clair",
     darkTheme: "Sombre",
-    syncSettings: "Synchroniser les paramètres",
     syncSettingsDescription:
       "Choisissez le backend qui synchronise par défaut la langue, les fournisseurs et les préférences légères.",
-    syncBackend: "Backend de synchronisation",
     syncBackendDescription:
       "Choisissez les éléments de synchronisation supplémentaires.",
     syncBackendBrowserSync: "Synchronisation intégrée du compte navigateur",
     syncBackendWebDavSync: "Synchronisation WebDAV",
-    syncBackendLocalOnly: "Local uniquement",
     syncBackendName: "Nom du backend",
     syncBackendWebDavUrl: "URL WebDAV",
     syncBackendUsername: "Nom d’utilisateur",
     syncBackendPassword: "Mot de passe ou mot de passe d’app",
-    syncBackendTest: "Tester",
-    syncBackendTesting: "Test...",
-    syncBackendTestSuccess: "Connecté",
-    syncBackendTestError: "Connexion échouée",
     syncBackendCopyConfig: "Copier le code de configuration",
     syncBackendCopiedConfig: "Code de configuration copié",
-    syncBackendRemove: "Supprimer",
     syncProviders: "Synchroniser les fournisseurs",
     syncProvidersDescription:
       "Synchronisez la configuration des fournisseurs, y compris les clés API, via le backend de synchronisation actuel.",
@@ -739,8 +657,6 @@ export const frFR: LocaleMessages = {
     debugLoggingDescription:
       "Active des journaux console temporaires pour diagnostiquer l'ordre du streaming, des outils et de l'assistant.",
     debugLoggingEnabled: "Activer les journaux de diagnostic",
-    debugLoggingEnabledDescription:
-      "Écrit des événements de débogage [OBA ...] dans la console de l'extension jusqu'à désactivation.",
     debugToolsTitle: "Outils enregistrés",
     debugToolsDescription:
       "Registre actuel des outils du navigateur ({count} outils).",

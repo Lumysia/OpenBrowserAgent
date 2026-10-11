@@ -9,7 +9,7 @@ import {
 import { formatBytes } from "../../src/shared/format";
 import type { UploadedAttachment } from "../../src/shared/types";
 
-export type AttachmentReadResult = {
+type AttachmentReadResult = {
   attachments: UploadedAttachment[];
   rejectedNames: string[];
 };

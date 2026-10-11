@@ -11,7 +11,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const HOST_NAME = "openbrowseragent.local_execution_bridge";
-const commonBrowsers = [
+const browsers = [
   "chrome",
   "edge",
   "brave",
@@ -20,28 +20,16 @@ const commonBrowsers = [
   "firefox",
   "librewolf",
 ];
-const linuxBrowsers = [
-  "firefox-flatpak",
-  "chromium-flatpak",
-  "brave-flatpak",
-  "librewolf-flatpak",
-  "firefox-snap",
-  "chromium-snap",
-  "brave-snap",
-];
-export const isFirefox = (browser) => /^(firefox|librewolf)(-|$)/.test(browser);
+export const isFirefox = (browser) =>
+  browser === "firefox" || browser === "librewolf";
 export const stringArg = (value) =>
   typeof value === "string" ? value.trim() : "";
 export const shellQuote = (value) =>
   `'${String(value).replaceAll("'", "'\\''")}'`;
 
 export function browsersFor(browser) {
-  const supported = [
-    ...commonBrowsers,
-    ...(platform() === "linux" ? linuxBrowsers : []),
-  ];
-  if (browser === "all") return supported;
-  if (supported.includes(browser)) return [browser];
+  if (browser === "all") return browsers;
+  if (browsers.includes(browser)) return [browser];
   throw new Error(
     browser === "safari"
       ? "Safari is not supported by this local execution bridge because Safari Web Extensions do not use this Native Messaging API in OpenBrowserAgent."
@@ -92,40 +80,46 @@ export function nativeHostDir(browser) {
   }
   const directories = {
     firefox: ".mozilla/native-messaging-hosts",
-    "firefox-flatpak":
-      ".var/app/org.mozilla.firefox/.mozilla/native-messaging-hosts",
-    "firefox-snap": "snap/firefox/common/.mozilla/native-messaging-hosts",
     librewolf: ".librewolf/native-messaging-hosts",
-    "librewolf-flatpak":
-      ".var/app/io.gitlab.librewolf-community/.librewolf/native-messaging-hosts",
     chrome: ".config/google-chrome/NativeMessagingHosts",
     chromium: ".config/chromium/NativeMessagingHosts",
-    "chromium-flatpak":
-      ".var/app/org.chromium.Chromium/config/chromium/NativeMessagingHosts",
-    "chromium-snap": "snap/chromium/common/chromium/NativeMessagingHosts",
     edge: ".config/microsoft-edge/NativeMessagingHosts",
     brave: ".config/BraveSoftware/Brave-Browser/NativeMessagingHosts",
-    "brave-flatpak":
-      ".var/app/com.brave.Browser/config/BraveSoftware/Brave-Browser/NativeMessagingHosts",
-    "brave-snap":
-      "snap/brave/common/.config/BraveSoftware/Brave-Browser/NativeMessagingHosts",
     vivaldi: ".config/vivaldi/NativeMessagingHosts",
   };
   return join(home, directories[browser]);
 }
 
+const registryKey = (vendor) =>
+  `HKCU\\Software\\${vendor}\\NativeMessagingHosts\\${HOST_NAME}`;
+const chromeKey = registryKey("Google\\Chrome");
+
+// Brave, Vivaldi and Chromium may read Chrome's key instead of their own. That
+// key is a fallback only: it must never replace or remove Chrome's own entry.
 export function nativeHostRegistryKeys(browser) {
-  const prefix = "HKCU\\Software\\";
-  const suffix = `\\NativeMessagingHosts\\${HOST_NAME}`;
-  const chromeKey = `${prefix}Google\\Chrome${suffix}`;
-  if (isFirefox(browser)) return [`${prefix}Mozilla${suffix}`];
-  if (browser === "edge") return [`${prefix}Microsoft\\Edge${suffix}`];
+  if (isFirefox(browser)) return { own: registryKey("Mozilla") };
   const vendor = {
+    chrome: "Google\\Chrome",
+    edge: "Microsoft\\Edge",
     brave: "BraveSoftware\\Brave-Browser",
     vivaldi: "Vivaldi",
     chromium: "Chromium",
   }[browser];
-  return vendor ? [`${prefix}${vendor}${suffix}`, chromeKey] : [chromeKey];
+  return {
+    own: registryKey(vendor),
+    ...(browser === "edge" || browser === "chrome"
+      ? {}
+      : { fallback: chromeKey }),
+  };
+}
+
+export function readRegistryValue(key) {
+  const result = spawnSync("reg", ["query", key, "/ve"], {
+    encoding: "utf8",
+    windowsHide: true,
+  });
+  if (result.status !== 0) return undefined;
+  return result.stdout.match(/REG_SZ\s+(.*?)\s*$/m)?.[1] ?? "";
 }
 
 export function openBrowserAgentDir() {
@@ -227,7 +221,10 @@ export function writeManifest(path, browser, extensionId, wrapperPath) {
       : { allowed_origins: [`chrome-extension://${extensionId}/`] }),
   });
   if (platform() !== "win32") return [];
-  const keys = nativeHostRegistryKeys(browser);
+  const { own, fallback } = nativeHostRegistryKeys(browser);
+  const keys = [own];
+  if (fallback && [undefined, path].includes(readRegistryValue(fallback)))
+    keys.push(fallback);
   for (const key of keys) {
     const result = spawnSync(
       "reg",

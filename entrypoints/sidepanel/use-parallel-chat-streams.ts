@@ -58,7 +58,7 @@ export function useParallelChatStreams({
   const lastStreamActivityRef = useRef<Record<string, number>>({});
   const activeStreamsRef = useRef<ActiveStreamMap>({});
   const streamHandlers = useMemo(
-    () => createStreamHandlers(setChats, () => chatsRef.current),
+    () => createStreamHandlers(setChats),
     [setChats],
   );
   const setActiveStreams: typeof setActiveStreamsState = useCallback(
@@ -188,22 +188,17 @@ export function useParallelChatStreams({
 
   async function abortClosedChatStreams(chatId: string) {
     const ids = closedChatIds(chatsRef.current, chatId);
-    const ports = new Map([...ids].map((id) => [id, portRefs.current[id]]));
-    const streams = activeStreamsRef.current;
-    await abortChatStreams(ids);
-    const closedStreams = new Set<string>();
-    ids.forEach((id) => {
-      const port = ports.get(id);
-      if (portRefs.current[id] !== port) return;
-      if (!port && activeStreamsRef.current[id] !== streams[id]) return;
-      closeStreamPort(portRefs, id, false);
-      closedStreams.add(id);
-    });
-    setActiveStreams((items) =>
-      Object.fromEntries(
-        Object.entries(items).filter(([id]) => !closedStreams.has(id)),
-      ),
-    );
+    try {
+      await abortChatStreams(ids);
+    } finally {
+      // Also abort over each port, in case the background never acknowledged.
+      ids.forEach((id) => closeStreamPort(portRefs, id, true));
+      setActiveStreams((items) =>
+        Object.fromEntries(
+          Object.entries(items).filter(([id]) => !ids.has(id)),
+        ),
+      );
+    }
     return ids;
   }
 

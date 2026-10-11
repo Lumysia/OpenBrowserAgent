@@ -10,17 +10,15 @@ export const BROWSER_WAIT_DEFAULT_MS = 1_000;
 export const BROWSER_WAIT_MAX_MS = 60_000;
 export const SYNC_WRITE_DEBOUNCE_MS = 1_000;
 export const CHAT_SYNC_WRITE_DEBOUNCE_MS = 5_000;
-export const SYNC_WRITE_IDLE_TIMEOUT_MS = 2_000;
 export const SYNC_SETTINGS_REFRESH_INTERVAL_MS = 5_000;
 export const SYNC_REMOTE_REFRESH_INTERVAL_MS = 30_000;
-export const SYNC_REMOTE_REFRESH_INPUT_IDLE_MS = 1_500;
 export const CHAT_WRITE_DEBOUNCE_MS = 300;
 export const CHAT_STREAM_WRITE_DEBOUNCE_MS = 1_500;
+// A run with no chat update for this long is treated as dead (its panel closed
+// mid-run), so it stops holding back chat sync. Longer than the question wait.
+export const CHAT_RUN_STALE_MS = 15 * 60_000;
 export const SYNC_MAX_BYTES_PER_ITEM = 7_500;
 
-export const MODEL_TEMPERATURE = 0.3;
-export const STREAM_CHUNK_DELAY_MS = 8;
-export const POST_TEXT_CHUNK_SIZE = 24;
 export const STREAM_RENDER_THROTTLE_MS = 80;
 export const STREAM_REVEAL_MIN_STEP_DELAY_MS = 16;
 export const STREAM_REVEAL_MAX_STEP_DELAY_MS = 52;
@@ -55,7 +53,6 @@ export const DEFAULT_CONTEXT_BUDGET_PREFERENCES = {
 export const LOCAL_CHAT_TITLE_MAX_LENGTH = 42;
 export const GENERATED_TITLE_MAX_LENGTH = 48;
 export const SKILL_NAME_MAX_LENGTH = 64;
-export const SKILL_SOURCE_MAX_CHARS = 12_000;
 export const WORKSPACE_PATH_MAX_LENGTH = 160;
 export const WORKSPACE_FILE_MAX_CHARS = 48_000;
 export const WORKSPACE_TOTAL_MAX_CHARS = 96_000;
@@ -98,8 +95,6 @@ export const ISO_DATE_LENGTH = 10;
 export const RELATIVE_TIME_MINUTE_MS = 60_000;
 export const SENT_TABS_PREVIEW_COUNT = 2;
 export const SENT_ATTACHMENTS_PREVIEW_COUNT = 3;
-export const MAX_PERSISTED_INLINE_DATA_URL_CHARS = 8_000;
-export const MAX_PERSISTED_TOOL_STRING_CHARS = 80_000;
 
 export const OPTIONS_ROUTE = {
   general: "/",

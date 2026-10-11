@@ -1,5 +1,5 @@
 import { Brain, Check, Copy, GitBranch } from "lucide-react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   COPY_FEEDBACK_MS,
   STREAM_RENDER_THROTTLE_MS,
@@ -23,23 +23,20 @@ import {
 } from "../../src/ui/components";
 import { formatMessageTime } from "./format";
 import { IconTooltip } from "./icon-tooltip";
-import { createMarkdownSegmentRenderer } from "./markdown-segments";
+import { renderMarkdown, splitStreamingMarkdown } from "./markdown";
 import { MessageRunInfo } from "./message-run-info";
 import { ToolPart } from "./tool-part";
 import { useThrottledText } from "./use-throttled-text";
 
-export function AssistantSummaryCard({
+export const NO_SOURCES: ChatSource[] = [];
+
+function AssistantSummaryCard({
   t,
-  message,
-  summary: summaryProp,
+  summary,
 }: {
   t: Messages;
-  message?: ChatMessage;
-  summary?: string;
+  summary: string;
 }) {
-  const summary =
-    summaryProp?.trim() || (message ? compactionSummary(message) : "");
-  if (!summary) return null;
   return (
     <div className="tool-card done context-summary-card">
       <div className="tool-title">
@@ -60,13 +57,6 @@ export function AssistantSummaryCard({
       </div>
     </div>
   );
-}
-
-function compactionSummary(message: ChatMessage) {
-  const metrics = message.metadata?.runMetrics as
-    { contextBudget?: { compactionSummary?: unknown } } | undefined;
-  const summary = metrics?.contextBudget?.compactionSummary;
-  return typeof summary === "string" && summary.trim() ? summary.trim() : "";
 }
 
 export function AssistantPart({
@@ -110,7 +100,7 @@ export function AssistantPart({
   if (part.type === "reasoning" && part.text?.trim())
     return <AssistantReasoning t={t} text={part.text} />;
   if (part.type === "summary" && part.text?.trim())
-    return <AssistantSummaryCard t={t} summary={part.text} />;
+    return <AssistantSummaryCard t={t} summary={part.text.trim()} />;
   if (part.type === "text" && part.text?.trim())
     return (
       <AssistantText
@@ -189,7 +179,7 @@ export function AssistantText({
   onFork,
   message,
   chatMessages = [],
-  sources = [],
+  sources = NO_SOURCES,
   showRunInfo = false,
   hideActions = false,
 }: {
@@ -205,103 +195,19 @@ export function AssistantText({
   hideActions?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
-  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
-  const markdownRef = useRef<HTMLDivElement | null>(null);
   const runEnded = !hideActions;
-  const { text: throttledText, animatedFrom } = useThrottledText(
+  const { text: displayText, animatedFrom } = useThrottledText(
     text,
     STREAM_RENDER_THROTTLE_MS,
   );
-  const displayText = throttledText;
   const streaming = displayText.length < text.length;
   const outputSettled = runEnded && !streaming;
-  const renderSegments = useMemo(
-    () => createMarkdownSegmentRenderer(t, sources),
-    [t, sources],
-  );
-  const { segments, codeBlocks } = useMemo(
-    () =>
-      renderSegments(displayText, copiedCodeId, {
-        animatedFromChar: streaming ? animatedFrom : undefined,
-        incremental: !outputSettled,
-        mermaidPreview: outputSettled,
-        syntaxHighlight: outputSettled,
-      }),
-    [animatedFrom, copiedCodeId, displayText, outputSettled, renderSegments],
-  );
+  const segments = splitStreamingMarkdown(displayText, !outputSettled);
   useEffect(() => {
     if (!copied) return undefined;
     const timeout = window.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
     return () => window.clearTimeout(timeout);
   }, [copied]);
-
-  useEffect(() => {
-    if (!copiedCodeId) return undefined;
-    const timeout = window.setTimeout(
-      () => setCopiedCodeId(null),
-      COPY_FEEDBACK_MS,
-    );
-    return () => window.clearTimeout(timeout);
-  }, [copiedCodeId]);
-
-  useEffect(() => {
-    const element = markdownRef.current;
-    if (!element) return undefined;
-    const handler = (event: MouseEvent) => {
-      const citation = (event.target as HTMLElement | null)?.closest(
-        "button[data-source-id]",
-      ) as HTMLButtonElement | null;
-      if (!citation) return;
-      event.preventDefault();
-      event.stopPropagation();
-      openCitationSource(citation.dataset.sourceId || "", sources);
-    };
-    element.addEventListener("click", handler);
-    return () => element.removeEventListener("click", handler);
-  }, [sources]);
-
-  async function handleMarkdownClick(event: React.MouseEvent<HTMLDivElement>) {
-    const citation = (event.target as HTMLElement | null)?.closest(
-      "button[data-source-id]",
-    ) as HTMLButtonElement | null;
-    if (citation) {
-      event.preventDefault();
-      event.stopPropagation();
-      openCitationSource(citation.dataset.sourceId || "", sources);
-      return;
-    }
-    const mermaidDownload = (event.target as HTMLElement | null)?.closest(
-      "button[data-mermaid-download-url]",
-    ) as HTMLButtonElement | null;
-    if (mermaidDownload?.dataset.mermaidDownloadUrl) {
-      event.preventDefault();
-      event.stopPropagation();
-      await downloadUrlAsFile(
-        mermaidDownload.dataset.mermaidDownloadUrl,
-        mermaidDownload.dataset.mermaidDownloadFilename ||
-          "mermaid-diagram.svg",
-      );
-      return;
-    }
-    const button = (event.target as HTMLElement | null)?.closest(
-      "button[data-code-index]",
-    ) as HTMLButtonElement | null;
-    if (!button) {
-      const link = (event.target as HTMLElement | null)?.closest(
-        "a[href]",
-      ) as HTMLAnchorElement | null;
-      if (!link?.href) return;
-      event.preventDefault();
-      event.stopPropagation();
-      await openOrFocusUrl(link.href).catch(() => undefined);
-      return;
-    }
-    const codeIndex = Number(button.dataset.codeIndex);
-    const code = codeBlocks[codeIndex];
-    if (!code) return;
-    await navigator.clipboard.writeText(code);
-    setCopiedCodeId(button.dataset.codeId || null);
-  }
 
   function copyText() {
     navigator.clipboard
@@ -323,14 +229,20 @@ export function AssistantText({
 
   return (
     <div className={`assistant-text${streaming ? " streaming" : ""}`}>
-      <div
-        ref={markdownRef}
-        className="markdown"
-        onClick={handleMarkdownClick}
-        onErrorCapture={handleMarkdownImageError}
-      >
+      <div className="markdown" onErrorCapture={handleMarkdownImageError}>
         {segments.map((segment) => (
-          <MarkdownSegmentHtml key={segment.key} html={segment.html} />
+          <MarkdownSegment
+            key={segment.key}
+            t={t}
+            text={segment.text}
+            sources={sources}
+            animatedFromChar={
+              streaming && animatedFrom < segment.end
+                ? Math.max(0, animatedFrom - segment.start)
+                : undefined
+            }
+            settled={outputSettled}
+          />
         ))}
       </div>
       {outputSettled && (
@@ -381,14 +293,70 @@ export function AssistantText({
   );
 }
 
-const MarkdownSegmentHtml = React.memo(function MarkdownSegmentHtml({
-  html,
+// Memoized per segment so a streaming answer re-renders and re-sanitizes only
+// its live tail, not every finished block on each reveal tick.
+const MarkdownSegment = React.memo(function MarkdownSegment({
+  t,
+  text,
+  sources,
+  animatedFromChar,
+  settled,
 }: {
-  html: string;
+  t: Messages;
+  text: string;
+  sources: ChatSource[];
+  animatedFromChar?: number;
+  settled: boolean;
 }) {
+  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
+  const { html, codeBlocks } = useMemo(
+    () =>
+      renderMarkdown(text, t, copiedCodeId, sources, {
+        animatedFromChar,
+        mermaidPreview: settled,
+        syntaxHighlight: settled,
+      }),
+    [animatedFromChar, copiedCodeId, settled, sources, t, text],
+  );
+
+  useEffect(() => {
+    if (!copiedCodeId) return undefined;
+    const timeout = window.setTimeout(
+      () => setCopiedCodeId(null),
+      COPY_FEEDBACK_MS,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [copiedCodeId]);
+
+  async function handleClick(event: React.MouseEvent<HTMLDivElement>) {
+    const target = event.target as HTMLElement;
+    const citation = target.closest<HTMLElement>("button[data-source-id]");
+    const download = target.closest<HTMLElement>(
+      "button[data-mermaid-download-url]",
+    );
+    const copy = target.closest<HTMLElement>("button[data-code-index]");
+    const link = target.closest<HTMLAnchorElement>("a[href]");
+    if (!citation && !download && !copy && !link?.href) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (citation) openCitationSource(citation.dataset.sourceId || "", sources);
+    else if (download)
+      await downloadUrlAsFile(
+        download.dataset.mermaidDownloadUrl || "",
+        download.dataset.mermaidDownloadFilename || "mermaid-diagram.svg",
+      );
+    else if (copy) {
+      const code = codeBlocks[Number(copy.dataset.codeIndex)];
+      if (!code) return;
+      await navigator.clipboard.writeText(code);
+      setCopiedCodeId(copy.dataset.codeId || null);
+    } else if (link) await openOrFocusUrl(link.href).catch(() => undefined);
+  }
+
   return (
     <div
       className="markdown-segment"
+      onClick={handleClick}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

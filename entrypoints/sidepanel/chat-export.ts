@@ -1,4 +1,4 @@
-import { browserToolsForPrompt } from "../../src/background/tool-schema";
+import { browserToolsForPrompt } from "../../src/background/tool-prompt-selection";
 import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
 import { usesWorkspaceCapabilities } from "../../src/shared/agents";
 import { createSystemPrompt } from "../../src/shared/system-prompt";

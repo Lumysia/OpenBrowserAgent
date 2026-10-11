@@ -1,19 +1,20 @@
 import {
   CHAT_PART_STATE,
-  AI_STREAM_REQUEST_TYPE,
   toolPartType,
   type AgentCapabilities,
   type AgentWorkspace,
   type ChatSource,
-  type Preferences,
   type Skill,
   type QuestionToolAnswer,
   type QuestionToolQuestion,
   type UploadedAttachment,
 } from "../shared/types";
 import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
-import { debugLog } from "../shared/debug-logging";
-import { post } from "./message-helpers";
+import {
+  postToSession,
+  waitForAnswer,
+  type StreamSession,
+} from "./stream-sessions";
 import {
   attachToolSources,
   extractVisionImage,
@@ -23,7 +24,7 @@ import {
   type VisionImage,
 } from "./provider-output";
 import { executeContextAwareTool, getSubAgentStatus } from "./provider-tools";
-import { getLocalExecutionBridgeStatus } from "./local-execution-bridge-tools";
+import { getLocalExecutionBridgeStatus } from "./local-execution-bridge-tasks";
 import { isToolError } from "./tool-utils";
 import { delay } from "../shared/cancellation";
 
@@ -38,75 +39,63 @@ export async function runProviderTool({
   toolName,
   toolCallId,
   input,
-  port,
-  chatId,
+  session,
   messageId,
   uploadedAttachments,
   availableSkills,
-  preferences,
   capabilities,
   workspace,
   responseSources,
   loadedToolNames,
-  availableTools,
   signal,
 }: {
   toolName: string;
   toolCallId: string;
   input: Record<string, unknown>;
-  port: chrome.runtime.Port;
-  chatId?: string;
+  session: StreamSession;
   messageId?: string;
   uploadedAttachments: UploadedAttachment[];
   availableSkills: Skill[];
-  preferences: Preferences;
   capabilities: AgentCapabilities;
   workspace?: AgentWorkspace;
   responseSources: ChatSource[];
   loadedToolNames: Set<string>;
-  availableTools: Array<{ function: { name: string } }>;
   signal?: AbortSignal;
 }): Promise<ProviderToolRunResult> {
-  signal?.throwIfAborted();
-  debugToolOrder("input-available", { toolName, toolCallId });
-  post(port, {
-    type: "chunk",
-    chunk: {
-      type: toolPartType(toolName),
-      toolCallId,
-      toolName,
-      state: CHAT_PART_STATE.inputAvailable,
-      input,
-    },
-  });
-  const rawOutput = !isAvailableTool(toolName, availableTools)
-    ? {
-        success: false,
-        error: `Tool "${toolName}" is not available to the active agent.`,
-      }
-    : toolName === BROWSER_TOOL_NAME.question
-      ? await askUserQuestion({ input, port, toolCallId, signal })
+  const post = (output?: unknown) =>
+    postToSession(session, {
+      type: "chunk",
+      chunk: {
+        type: toolPartType(toolName),
+        toolCallId,
+        toolName,
+        state:
+          output === undefined
+            ? CHAT_PART_STATE.inputAvailable
+            : isToolError(output)
+              ? CHAT_PART_STATE.outputError
+              : CHAT_PART_STATE.outputAvailable,
+        input,
+        output,
+      },
+    });
+  post();
+  const rawOutput =
+    toolName === BROWSER_TOOL_NAME.question
+      ? await askUserQuestion(session, input, toolCallId, signal)
       : await executeContextAwareTool({
           toolName,
           input,
-          context: { chatId, messageId, toolCallId },
+          context: { chatId: session.chatId, messageId, toolCallId },
           uploadedAttachments,
           availableSkills,
           capabilities,
           workspace,
           signal,
         });
-  signal?.throwIfAborted();
   loadDeferredToolNames(rawOutput, loadedToolNames);
   const finalRawOutput = shouldWaitForDelegate(toolName, input, rawOutput)
-    ? await waitForDelegateResult({
-        rawOutput,
-        input,
-        port,
-        toolName,
-        toolCallId,
-        signal,
-      })
+    ? await waitForDelegateResult(rawOutput, input, toolName, post, signal)
     : rawOutput;
   signal?.throwIfAborted();
   const visionImage = extractVisionImage(finalRawOutput);
@@ -123,100 +112,33 @@ export async function runProviderTool({
     responseSources,
   );
   const nextSources = mergeOutputSources(responseSources, output);
-  debugToolOrder("output-available", {
-    toolName,
-    toolCallId,
-    outputError: isToolError(output),
-  });
-  post(port, {
-    type: "chunk",
-    chunk: {
-      type: toolPartType(toolName),
-      toolCallId,
-      toolName,
-      state: isToolError(output)
-        ? CHAT_PART_STATE.outputError
-        : CHAT_PART_STATE.outputAvailable,
-      input,
-      output,
-    },
-  });
+  post(output);
   return { output, modelOutput, visionImage, responseSources: nextSources };
 }
 
-async function askUserQuestion({
-  input,
-  port,
-  toolCallId,
-  signal,
-}: {
-  input: Record<string, unknown>;
-  port: chrome.runtime.Port;
-  toolCallId: string;
-  signal?: AbortSignal;
-}) {
+async function askUserQuestion(
+  session: StreamSession,
+  input: Record<string, unknown>,
+  toolCallId: string,
+  signal?: AbortSignal,
+) {
   const questions = normalizeQuestions(input.questions);
   if (!questions.length)
     return { success: false, error: "Question tool requires 1-6 questions." };
-  const answers = await waitForQuestionAnswer(port, toolCallId, signal);
+  const answers = await waitForAnswer(
+    session,
+    toolCallId,
+    (raw) => {
+      const answers = normalizeAnswers(raw);
+      return answers.length ? answers : undefined;
+    },
+    signal,
+  );
   return {
     success: true,
     answers,
     summary: formatQuestionAnswers(answers),
   };
-}
-
-function waitForQuestionAnswer(
-  port: chrome.runtime.Port,
-  toolCallId: string,
-  signal?: AbortSignal,
-): Promise<QuestionToolAnswer[]> {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(
-      () => {
-        cleanup();
-        reject(new Error("Timed out waiting for the user's answer."));
-      },
-      10 * 60 * 1000,
-    );
-
-    function cleanup() {
-      clearTimeout(timeout);
-      port.onMessage.removeListener(onMessage);
-      port.onDisconnect.removeListener(onDisconnect);
-      signal?.removeEventListener("abort", onDisconnect);
-    }
-
-    function onDisconnect() {
-      cleanup();
-      reject(
-        new Error("Question was canceled because the chat stream closed."),
-      );
-    }
-
-    function onMessage(message: unknown) {
-      if (!message || typeof message !== "object") return;
-      const maybe = message as {
-        type?: string;
-        toolCallId?: string;
-        answers?: unknown;
-      };
-      if (
-        maybe.type !== AI_STREAM_REQUEST_TYPE.answerQuestion ||
-        maybe.toolCallId !== toolCallId
-      )
-        return;
-      const answers = normalizeAnswers(maybe.answers);
-      if (!answers.length) return;
-      cleanup();
-      resolve(answers);
-    }
-
-    port.onMessage.addListener(onMessage);
-    port.onDisconnect.addListener(onDisconnect);
-    signal?.addEventListener("abort", onDisconnect, { once: true });
-    if (signal?.aborted) onDisconnect();
-  });
 }
 
 function normalizeQuestions(value: unknown): QuestionToolQuestion[] {
@@ -276,22 +198,14 @@ function formatQuestionAnswers(answers: QuestionToolAnswer[]) {
     .join("\n");
 }
 
-async function waitForDelegateResult({
-  rawOutput,
-  input,
-  port,
-  toolName,
-  toolCallId,
-  signal,
-}: {
-  rawOutput: unknown;
-  input: Record<string, unknown>;
-  port: chrome.runtime.Port;
-  toolName: string;
-  toolCallId: string;
-  signal?: AbortSignal;
-}) {
-  postToolOutput(port, toolName, toolCallId, input, rawOutput);
+async function waitForDelegateResult(
+  rawOutput: unknown,
+  input: Record<string, unknown>,
+  toolName: string,
+  post: (output: unknown) => void,
+  signal?: AbortSignal,
+) {
+  post(sanitizeToolOutput(rawOutput));
   const output = rawOutput as Record<string, unknown>;
   const taskId = String(output.taskId || output.childChatId || "").trim();
   const local = toolName === BROWSER_TOOL_NAME.startLocalExecutionBridge;
@@ -303,20 +217,13 @@ async function waitForDelegateResult({
   let status = await getStatus({ taskId }, signal);
   let lastProgressKey = progressKey(status);
   while (isPendingDelegateState(status) && Date.now() - startedAt < timeoutMs) {
-    signal?.throwIfAborted();
     await delay(500, signal);
     status = await getStatus({ taskId }, signal);
     signal?.throwIfAborted();
     const nextProgressKey = progressKey(status);
     if (nextProgressKey !== lastProgressKey) {
       lastProgressKey = nextProgressKey;
-      postToolOutput(
-        port,
-        toolName,
-        toolCallId,
-        input,
-        mergeToolObjects(rawOutput, status),
-      );
+      post(sanitizeToolOutput(mergeToolObjects(rawOutput, status)));
     }
   }
   return mergeToolObjects(rawOutput, status);
@@ -370,45 +277,6 @@ function mergeToolObjects(base: unknown, next: unknown) {
     ...(base && typeof base === "object" ? base : {}),
     ...(next && typeof next === "object" ? next : {}),
   };
-}
-
-function postToolOutput(
-  port: chrome.runtime.Port,
-  toolName: string,
-  toolCallId: string,
-  input: Record<string, unknown>,
-  rawOutput: unknown,
-) {
-  const output = sanitizeToolOutput(rawOutput);
-  debugToolOrder("output-progress", {
-    toolName,
-    toolCallId,
-    outputError: isToolError(output),
-  });
-  post(port, {
-    type: "chunk",
-    chunk: {
-      type: toolPartType(toolName),
-      toolCallId,
-      toolName,
-      state: isToolError(output)
-        ? CHAT_PART_STATE.outputError
-        : CHAT_PART_STATE.outputAvailable,
-      input,
-      output,
-    },
-  });
-}
-
-function debugToolOrder(event: string, details: Record<string, unknown>) {
-  debugLog("[OBA tool-order]", { event, ...details });
-}
-
-function isAvailableTool(
-  toolName: string,
-  availableTools: Array<{ function: { name: string } }>,
-) {
-  return availableTools.some((tool) => tool.function.name === toolName);
 }
 
 function loadDeferredToolNames(output: unknown, loadedToolNames: Set<string>) {

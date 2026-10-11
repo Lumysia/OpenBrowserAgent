@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Check, FileText, Pencil, Plus, Trash2 } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
 import type { AgentWorkspace } from "../../src/shared/types";
@@ -8,9 +8,10 @@ import {
   normalizeWorkspacePath,
   upsertWorkspaceFile,
   workspaceTotalChars,
+  type WorkspaceMutationResult,
 } from "../../src/shared/workspace";
 import {
-  saveWorkspaceChanges,
+  mutateWorkspace,
   WORKSPACE_FILE_CONFLICT,
 } from "../../src/shared/workspace-storage";
 import {
@@ -25,11 +26,15 @@ import {
 } from "../../src/ui/components";
 import { Feedback } from "../../src/ui/components/feedback";
 import { SkillFileActionButton } from "./skill-options-components";
-import {
-  completeWorkspaceDraftSave,
-  openWorkspaceDraft,
-  type WorkspaceEditorDraft,
-} from "./workspace-editor-draft";
+
+type Draft = {
+  originalPath: string;
+  path: string;
+  content: string;
+  // File text when editing started; a save is rejected if the stored file no
+  // longer matches it (an agent run changed it meanwhile).
+  baseContent: string;
+};
 
 export function AgentWorkspaceEditor({
   workspace,
@@ -38,133 +43,112 @@ export function AgentWorkspaceEditor({
   workspace: AgentWorkspace;
   t: Messages;
 }) {
-  const [draftPath, setDraftPath] = useState("NOTES.md");
-  const [draft, setDraft] = useState<WorkspaceEditorDraft>();
+  const [newPath, setNewPath] = useState("");
+  const [draft, setDraft] = useState<Draft>();
   const [error, setError] = useState("");
-  const currentDraft = useRef({ value: draft });
 
-  function replaceDraft(next: WorkspaceEditorDraft | undefined) {
-    if (currentDraft.current.value === next) return;
-    currentDraft.current = { value: next };
-    setDraft(next);
-  }
-
-  function updateDraft(
-    patch: Partial<Pick<WorkspaceEditorDraft, "path" | "content">>,
-  ) {
-    if (currentDraft.current.value)
-      replaceDraft({ ...currentDraft.current.value, ...patch });
-  }
+  const fileContent = (files: AgentWorkspace["files"], path: string) =>
+    files.find((file) => file.path === path)?.content;
 
   function startEdit(path: string) {
-    if (!isWorkspaceUserEditableFile(path)) return;
-    replaceDraft(
-      currentDraft.current.value?.originalPath === path
+    const content = fileContent(workspace.files, path);
+    if (content === undefined || !isWorkspaceUserEditableFile(path)) return;
+    setDraft(
+      draft?.originalPath === path
         ? undefined
-        : openWorkspaceDraft(workspace, path),
+        : { originalPath: path, path, content, baseContent: content },
     );
     setError("");
   }
 
-  async function persist(
-    previous: AgentWorkspace,
-    next: AgentWorkspace,
-    owner: typeof currentDraft.current,
+  // Applies one change to the latest stored workspace so files written by a
+  // running agent since this page loaded are kept.
+  async function save(
+    mutate: (current: AgentWorkspace) => WorkspaceMutationResult,
   ) {
     try {
-      const result = await saveWorkspaceChanges(
-        structuredClone(previous),
-        next,
+      const result = await mutateWorkspace({ ...workspace }, mutate);
+      setError(
+        result.ok
+          ? ""
+          : result.error === WORKSPACE_FILE_CONFLICT
+            ? t.options.agentWorkspaceConflict
+            : result.error,
       );
-      if (!result.ok) {
-        if (currentDraft.current === owner)
-          setError(
-            result.error === WORKSPACE_FILE_CONFLICT
-              ? t.options.agentWorkspaceConflict
-              : result.error,
-          );
-        return;
-      }
-      if (currentDraft.current === owner) setError("");
-      return result.workspace;
+      return result.ok;
     } catch (error) {
-      if (currentDraft.current === owner)
-        setError(error instanceof Error ? error.message : String(error));
+      setError(error instanceof Error ? error.message : String(error));
+      return false;
     }
   }
 
   async function createFile() {
-    const owner = currentDraft.current;
-    const path = normalizeWorkspacePath(draftPath);
-    if (!path.ok) {
-      setError(path.error);
-      return;
-    }
+    const path = normalizeWorkspacePath(newPath);
+    if (!path.ok) return setError(path.error);
     if (!isWorkspaceUserEditableFile(path.path)) return;
-    const result = upsertWorkspaceFile(workspace, path.path, "");
-    if (!result.ok) {
-      setError(result.error);
+    setNewPath("");
+    // An existing path opens that file rather than replacing it with "".
+    if (fileContent(workspace.files, path.path) !== undefined) {
+      if (draft?.originalPath !== path.path) startEdit(path.path);
       return;
     }
-    const saved = await persist(workspace, result.workspace, owner);
-    if (!saved) return;
-    setDraftPath((current) => (current === draftPath ? "" : current));
-    if (currentDraft.current === owner)
-      replaceDraft(openWorkspaceDraft(saved, path.path));
+    const created = await save((current) =>
+      fileContent(current.files, path.path) === undefined
+        ? upsertWorkspaceFile(current, path.path, "")
+        : { ok: true, workspace: current },
+    );
+    if (created)
+      setDraft({
+        originalPath: path.path,
+        path: path.path,
+        content: "",
+        baseContent: "",
+      });
   }
 
   async function saveFile() {
-    const owner = currentDraft.current;
-    const submitted = owner.value;
+    const submitted = draft;
     if (!submitted) return;
-    const previous = submitted.snapshot;
-    const editingFile = previous.files.find(
-      (file) => file.path === submitted.originalPath,
-    );
-    if (!editingFile || !isWorkspaceUserEditableFile(editingFile.path)) return;
-    const normalizedPath = normalizeWorkspacePath(submitted.path);
-    if (!normalizedPath.ok) {
-      setError(normalizedPath.error);
-      return;
-    }
-    const filePath = normalizedPath.path;
-    if (!isWorkspaceUserEditableFile(filePath)) return;
-    const deletion =
-      filePath === editingFile.path
+    const path = normalizeWorkspacePath(submitted.path);
+    if (!path.ok) return setError(path.error);
+    if (!isWorkspaceUserEditableFile(path.path)) return;
+    const saved = await save((current) => {
+      if (
+        fileContent(current.files, submitted.originalPath) !==
+        submitted.baseContent
+      )
+        return { ok: false, error: WORKSPACE_FILE_CONFLICT };
+      if (path.path !== submitted.originalPath) {
+        const deleted = deleteWorkspaceFile(current, submitted.originalPath);
+        if (!deleted.ok) return deleted;
+        current = deleted.workspace;
+      }
+      return upsertWorkspaceFile(current, path.path, submitted.content);
+    });
+    if (!saved) return;
+    // Close the editor unless the user kept typing while the save ran.
+    setDraft((current) =>
+      current === submitted
         ? undefined
-        : deleteWorkspaceFile(previous, editingFile.path);
-    const result = upsertWorkspaceFile(
-      deletion?.ok ? deletion.workspace : previous,
-      filePath,
-      submitted.content,
+        : current?.originalPath === submitted.originalPath
+          ? {
+              ...current,
+              originalPath: path.path,
+              baseContent: submitted.content,
+            }
+          : current,
     );
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    const saved = await persist(previous, result.workspace, owner);
-    if (saved)
-      replaceDraft(
-        completeWorkspaceDraftSave(
-          currentDraft.current.value,
-          submitted,
-          saved,
-          filePath,
-        ),
-      );
   }
 
   async function deleteFile(path: string) {
-    const owner = currentDraft.current;
     if (!isWorkspaceUserEditableFile(path)) return;
-    const result = deleteWorkspaceFile(workspace, path);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    if (!(await persist(workspace, result.workspace, owner))) return;
-    if (currentDraft.current === owner && owner.value?.originalPath === path)
-      replaceDraft(undefined);
+    const shown = fileContent(workspace.files, path);
+    const deleted = await save((current) =>
+      fileContent(current.files, path) === shown
+        ? deleteWorkspaceFile(current, path)
+        : { ok: false, error: WORKSPACE_FILE_CONFLICT },
+    );
+    if (deleted && draft?.originalPath === path) setDraft(undefined);
   }
 
   return (
@@ -189,10 +173,10 @@ export function AgentWorkspaceEditor({
             </CardDescription>
             <div className="option-add-file-row">
               <Input
-                value={draftPath}
+                value={newPath}
                 aria-label={t.options.agentWorkspaceNewFile}
                 placeholder={t.options.agentWorkspaceNewFilePlaceholder}
-                onChange={(event) => setDraftPath(event.currentTarget.value)}
+                onChange={(event) => setNewPath(event.currentTarget.value)}
               />
               <Button variant="outline" size="sm" onClick={createFile}>
                 <Plus size={14} />
@@ -235,14 +219,20 @@ export function AgentWorkspaceEditor({
                         <Input
                           value={draft.path}
                           onChange={(event) =>
-                            updateDraft({ path: event.currentTarget.value })
+                            setDraft({
+                              ...draft,
+                              path: event.currentTarget.value,
+                            })
                           }
                         />
                         <Textarea
                           className="option-file-editor-textarea"
                           value={draft.content}
                           onChange={(event) =>
-                            updateDraft({ content: event.currentTarget.value })
+                            setDraft({
+                              ...draft,
+                              content: event.currentTarget.value,
+                            })
                           }
                         />
                         <div className="row">

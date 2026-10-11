@@ -5,10 +5,6 @@ import type {
   AgentWorkspace,
   LocalExecutionBridgeConfig,
 } from "../shared/types";
-import {
-  testLocalExecutionBridge,
-  markLocalExecutionBridgeTested,
-} from "./bridge-connection";
 
 type Task = {
   taskId: string;
@@ -24,13 +20,12 @@ type Task = {
   startedAt: number;
   updatedAt: number;
   port?: chrome.runtime.Port;
-  canceling?: Promise<void>;
-  finish?: () => void;
   cleanup?: () => void;
 };
 const tasks = new Map<string, Task>();
 const EVENT_LIMIT = 80;
-const CANCEL_ACK_TIMEOUT = 5_000;
+const OUTPUT_LIMIT = 64 * 1024;
+const FINISHED_TASK_LIMIT = 20;
 
 export function bridgeTaskCounts() {
   const taskStates: Record<string, number> = {};
@@ -45,7 +40,6 @@ export async function startLocalExecutionBridge(
   workspace?: AgentWorkspace,
   signal?: AbortSignal,
 ) {
-  signal?.throwIfAborted();
   const bridges = await storage.localExecutionBridges.get();
   signal?.throwIfAborted();
   const bridge = resolveLocalExecutionBridge(
@@ -84,11 +78,12 @@ export async function startLocalExecutionBridge(
     updatedAt: Date.now(),
   };
   tasks.set(task.taskId, task);
+  // Keep only recent finished tasks; Map order is insertion order.
+  const finished = [...tasks.values()].filter((t) => t.state !== "running");
+  for (const old of finished.slice(0, -FINISHED_TASK_LIMIT))
+    tasks.delete(old.taskId);
   try {
-    await testLocalExecutionBridge(bridge.id, signal);
-    signal?.throwIfAborted();
-    await markLocalExecutionBridgeTested(bridge.id, "", signal);
-    signal?.throwIfAborted();
+    // No ping first: command.run reports a bad key or secret itself.
     const port = chrome.runtime.connectNative(bridge.hostName);
     task.port = port;
     const receive = (message: unknown) => receiveMessage(task, message);
@@ -102,9 +97,7 @@ export async function startLocalExecutionBridge(
           error || "Execution bridge disconnected before reporting completion.",
         );
     };
-    const abort = () => {
-      void cancelTask(task);
-    };
+    const abort = () => cancelTask(task);
     port.onMessage.addListener(receive);
     port.onDisconnect.addListener(disconnect);
     signal?.addEventListener("abort", abort, { once: true });
@@ -141,18 +134,10 @@ export async function startLocalExecutionBridge(
       timeoutMs: input.timeoutMs || bridge.timeoutMs,
     });
   } catch (error) {
-    if (signal?.aborted) {
-      await cancelTask(task);
-      signal.throwIfAborted();
-    }
     finish(
       task,
       "error",
       error instanceof Error ? error.message : String(error),
-    );
-    await markLocalExecutionBridgeTested(
-      bridge.id,
-      task.error || "Bridge startup failed.",
     );
   }
   return status(task.taskId);
@@ -162,7 +147,6 @@ export async function getLocalExecutionBridgeStatus(
   input: Record<string, unknown>,
   signal?: AbortSignal,
 ) {
-  signal?.throwIfAborted();
   const taskId = text(input.taskId);
   const timeout = Number(input.timeoutMs);
   const until =
@@ -176,7 +160,6 @@ export async function getLocalExecutionBridgeStatus(
     Date.now() < until
   )
     await delay(Math.min(500, until - Date.now()), signal);
-  signal?.throwIfAborted();
   return status(taskId);
 }
 
@@ -185,40 +168,20 @@ export async function cancelLocalExecutionBridge(
 ) {
   const taskId = text(input.taskId);
   const task = tasks.get(taskId);
-  if (task) await cancelTask(task);
+  if (task) cancelTask(task);
   return status(taskId);
 }
 
-function cancelTask(task: Task): Promise<void> {
-  if (task.canceling) return task.canceling;
-  if (task.state !== "running") return Promise.resolve();
-  if (!task.port) {
-    finish(task, "canceled");
-    return Promise.resolve();
+// Disconnecting closes the host's stdin; the host then kills every task's
+// process group, so there is no acknowledgement to wait for.
+function cancelTask(task: Task) {
+  if (task.state !== "running") return;
+  try {
+    task.port?.postMessage({ type: "command.cancel", taskId: task.taskId });
+  } catch {
+    // The port is already gone; disconnect below still applies.
   }
-  task.canceling = new Promise<void>((resolve) => {
-    const timer = setTimeout(() => {
-      finish(
-        task,
-        "error",
-        "Cancellation was requested but the native bridge did not acknowledge it. Process termination is unconfirmed.",
-      );
-    }, CANCEL_ACK_TIMEOUT);
-    task.finish = () => {
-      clearTimeout(timer);
-      resolve();
-    };
-    try {
-      task.port!.postMessage({ type: "command.cancel", taskId: task.taskId });
-    } catch {
-      finish(
-        task,
-        "error",
-        "Could not deliver cancellation to the native bridge. Process termination is unconfirmed.",
-      );
-    }
-  });
-  return task.canceling;
+  finish(task, "canceled");
 }
 
 function receiveMessage(task: Task, value: unknown) {
@@ -235,7 +198,9 @@ function receiveMessage(task: Task, value: unknown) {
       text(event.event || event.type),
     )
   )
-    task.output += String(event.data ?? event.text ?? "");
+    task.output = (task.output + String(event.data ?? event.text ?? "")).slice(
+      -OUTPUT_LIMIT,
+    );
   if (event.result !== undefined) task.result = event.result;
   if (event.error !== undefined) task.error = text(event.error);
   const type = text(event.type || event.event);
@@ -255,7 +220,6 @@ function finish(task: Task, state: Task["state"], error?: string) {
   task.updatedAt = Date.now();
   task.cleanup?.();
   task.cleanup = undefined;
-  task.finish?.();
 }
 
 function status(taskId: string) {

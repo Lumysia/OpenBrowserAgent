@@ -14,13 +14,11 @@ import type {
   Skill,
   UploadedAttachment,
 } from "../shared/types";
-import { getSkillDisplayName, getSkillEntryFile } from "../shared/skills";
 import {
   getUploadedAttachments,
   renderAttachmentContext,
   renderUserMessageWithContext,
 } from "./message-helpers";
-import { withContentSlice, withListSlice } from "./tool-utils";
 import { readSyncedChatAttachment } from "../shared/sync-chat-attachments";
 
 export async function readUploadedAttachment(
@@ -28,7 +26,6 @@ export async function readUploadedAttachment(
   input: Record<string, unknown>,
   signal?: AbortSignal,
 ) {
-  signal?.throwIfAborted();
   const attachmentId = String(input.attachmentId || input.id || "");
   const offset = clampReadOffset(input.offset);
   const limit = clampReadLimit(input.limit);
@@ -36,7 +33,6 @@ export async function readUploadedAttachment(
   const attachment =
     attachments.find((item) => item.id === attachmentId) ||
     (await readSyncedChatAttachment(undefined, attachmentId, signal));
-  signal?.throwIfAborted();
   if (!attachment)
     return { error: ATTACHMENT_TOOL_ERROR.notFound, attachmentId };
   if (attachment.kind === ATTACHMENT_KIND.text) {
@@ -106,101 +102,6 @@ function attachmentText(attachment: object) {
 function attachmentDataUrl(attachment: object) {
   const dataUrl = (attachment as { dataUrl?: unknown }).dataUrl;
   return typeof dataUrl === "string" ? dataUrl : undefined;
-}
-
-export function readSkill(skills: Skill[], input: Record<string, unknown>) {
-  const skillId = String(input.skillId || input.id || "");
-  const resolved = resolveSkill(skills, skillId);
-  if (!resolved.ok) return resolved.result;
-  const skill = resolved.skill;
-  const entry = getSkillEntryFile(skill);
-  return withContentSlice(
-    {
-      id: skill.id,
-      name: getSkillDisplayName(skill),
-      description: skill.description || "",
-      entry: entry?.path || "SKILL.md",
-      files: skill.files?.map((file) => ({
-        path: file.path,
-        kind: file.kind,
-        size: file.content.length,
-      })),
-    },
-    entry?.content || "",
-    input,
-  );
-}
-
-export function listSkills(
-  skills: Skill[],
-  input: Record<string, unknown> = {},
-) {
-  return withListSlice(
-    {},
-    skills.map((skill) => ({
-      id: skill.id,
-      name: getSkillDisplayName(skill),
-      description: skill.description || "",
-      entry: "SKILL.md",
-      files: skill.files?.map((file) => ({
-        path: file.path,
-        kind: file.kind,
-        size: file.content.length,
-      })),
-    })),
-    input,
-    "skills",
-  );
-}
-
-export function readSkillFile(skills: Skill[], input: Record<string, unknown>) {
-  const skillId = String(input.skillId || input.id || "");
-  const path = String(input.path || "");
-  const resolved = resolveSkill(skills, skillId);
-  if (!resolved.ok) return resolved.result;
-  const skill = resolved.skill;
-  const file = skill.files?.find((item) => item.path === path);
-  if (!file) return { error: "Skill file not found", skillId, path };
-  return withContentSlice(
-    {
-      id: skill.id,
-      name: getSkillDisplayName(skill),
-      path: file.path,
-      kind: file.kind,
-    },
-    file.content,
-    input,
-  );
-}
-
-function resolveSkill(skills: Skill[], skillIdOrName: string) {
-  const exactId = skills.find((item) => item.id === skillIdOrName);
-  if (exactId) return { ok: true as const, skill: exactId };
-
-  const normalized = skillIdOrName.trim().toLowerCase();
-  const nameMatches = skills.filter(
-    (item) =>
-      getSkillDisplayName(item).toLowerCase() === normalized ||
-      item.name.toLowerCase() === normalized,
-  );
-  if (nameMatches.length === 1)
-    return { ok: true as const, skill: nameMatches[0] };
-  if (nameMatches.length > 1)
-    return {
-      ok: false as const,
-      result: {
-        error: "Skill name is ambiguous",
-        skillId: skillIdOrName,
-        matches: nameMatches.map((item) => ({
-          id: item.id,
-          name: getSkillDisplayName(item),
-        })),
-      },
-    };
-  return {
-    ok: false as const,
-    result: { error: "Skill not found", skillId: skillIdOrName },
-  };
 }
 
 export function renderMessageText(

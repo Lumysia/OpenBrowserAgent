@@ -2,25 +2,13 @@ import { createMergeableStore } from "tinybase";
 import type { Cell, Tables } from "tinybase";
 import { getBrowserApi } from "./browser-api";
 import { STORAGE_KEYS } from "./storage-keys";
-import { tinybaseSyncLocalCacheKey } from "./sync-tinybase-keys";
-import {
-  assertMergeableContent,
-  restoreUndefinedPaths,
-  undefinedPaths,
-} from "./sync-document-json";
 
 const TINYBASE_SYNC_DOCUMENT_PREFIX = "OpenBrowserAgentTinyBaseSync:";
-// Older readers must reject v2 rather than silently turn its tombstones into
-// null data. Existing v1 documents remain readable without speculative repair.
 const TINYBASE_SYNC_DOCUMENT_FORMAT = "openbrowseragent.tinybase-sync.v2";
-const LEGACY_TINYBASE_SYNC_DOCUMENT_FORMAT =
-  "openbrowseragent.tinybase-sync.v1";
 const ORDER_CELL = "__openBrowserAgentSyncOrder";
 
 type TinyBaseSyncDocument = {
-  format:
-    | typeof TINYBASE_SYNC_DOCUMENT_FORMAT
-    | typeof LEGACY_TINYBASE_SYNC_DOCUMENT_FORMAT;
+  format: typeof TINYBASE_SYNC_DOCUMENT_FORMAT;
   content: unknown;
   undefinedPaths?: Array<Array<string | number>>;
 };
@@ -72,6 +60,17 @@ export async function writeTinyBaseSyncValue<T>(
   remoteBytes: Uint8Array | undefined,
 ) {
   const localBytes = await readLocalTinyBaseSyncBytes(key);
+  if (!localBytes && remoteBytes) {
+    // A fresh replica first takes in the remote document so its clock is past
+    // every remote stamp; otherwise a device with a fast clock would win over
+    // this edit. Rows and cells the edit doesn't mention stay, since this
+    // device never saw them and must not delete them.
+    const store = decodeStore(key, remoteBytes);
+    setStoreValue(store, key, value, { keepUnseen: true });
+    const bytes = encodeStore(store);
+    await writeLocalTinyBaseSyncBytes(key, bytes);
+    return { bytes, value: valueFromStore<T>(key, store) };
+  }
   const store = localBytes
     ? decodeStore(key, localBytes)
     : createMergeableStore();
@@ -144,10 +143,7 @@ function decodeStore(key: string, bytes: Uint8Array) {
   const document = JSON.parse(
     text.slice(TINYBASE_SYNC_DOCUMENT_PREFIX.length),
   ) as Partial<TinyBaseSyncDocument>;
-  if (
-    document.format !== TINYBASE_SYNC_DOCUMENT_FORMAT &&
-    document.format !== LEGACY_TINYBASE_SYNC_DOCUMENT_FORMAT
-  )
+  if (document.format !== TINYBASE_SYNC_DOCUMENT_FORMAT)
     throw new Error(`Unsupported TinyBase sync document for ${key}.`);
   restoreUndefinedPaths(document.content, document.undefinedPaths);
   assertMergeableContent(document.content);
@@ -158,15 +154,26 @@ function decodeStore(key: string, bytes: Uint8Array) {
   );
 }
 
-function setStoreValue<T>(store: SyncStore, key: string, value: T) {
+function setStoreValue<T>(
+  store: SyncStore,
+  key: string,
+  value: T,
+  { keepUnseen = false } = {},
+) {
   const chats = key === STORAGE_KEYS.chats && Array.isArray(value);
   const tables = chats
     ? tablesFromChats(value as Array<Record<string, unknown>>)
     : tablesFromValue(value);
+  if (tables && keepUnseen)
+    for (const [tableId, rows] of Object.entries(store.getTables())) {
+      const table = (tables[tableId] ||= {});
+      for (const [rowId, row] of Object.entries(rows))
+        table[rowId] = { ...row, ...table[rowId] };
+    }
   // An empty entry can later gain fields through a merge. Its presence cell
   // remains part of that retained row's identity; dropping it on an unrelated
-  // rewrite would defeat a concurrent clear. Do not add it to unmarked legacy
-  // rows, or retain it for rows absent from the requested snapshot.
+  // rewrite would defeat a concurrent clear. Do not retain it for rows absent
+  // from the requested snapshot.
   if (tables && !Array.isArray(value)) {
     for (const [id, row] of Object.entries(tables.items)) {
       const presence = store.getCell("items", id, ORDER_CELL);
@@ -349,4 +356,79 @@ function compareByOrderThenCreatedAt(
   const rightCreatedAt =
     typeof right.createdAt === "number" ? right.createdAt : 0;
   return leftCreatedAt - rightCreatedAt;
+}
+
+const TINYBASE_SYNC_CACHE_PREFIX = "tinybase-sync-doc";
+
+export function tinybaseSyncLocalCacheKey(key: string) {
+  return `${TINYBASE_SYNC_CACHE_PREFIX}:${key}`;
+}
+
+type JsonPath = Array<string | number>;
+
+// setMergeableContent silently ignores malformed input. Reject corrupt remote
+// envelopes before treating them as an empty document or persisting them locally.
+function assertMergeableContent(content: unknown) {
+  if (
+    !Array.isArray(content) ||
+    content.length !== 2 ||
+    !isStamp(content[0], 3) ||
+    !isStamp(content[1], 1)
+  )
+    throw new Error("Invalid TinyBase sync content.");
+}
+
+function isStamp(value: unknown, depth: number): boolean {
+  if (
+    !Array.isArray(value) ||
+    value.length !== 3 ||
+    typeof value[1] !== "string" ||
+    typeof value[2] !== "number" ||
+    !Number.isFinite(value[2])
+  )
+    return false;
+  if (!depth) return true;
+  return (
+    !!value[0] &&
+    typeof value[0] === "object" &&
+    !Array.isArray(value[0]) &&
+    Object.values(value[0]).every((child) => isStamp(child, depth - 1))
+  );
+}
+
+// JSON turns undefined array elements into null. TinyBase uses undefined for
+// tombstones and supports real null values, so their locations must travel with
+// the document. Paths avoid reserving any string/object value in user data.
+function undefinedPaths(value: unknown, path: JsonPath = []): JsonPath[] {
+  if (value === undefined) return [path];
+  if (!value || typeof value !== "object") return [];
+  return Object.entries(value).flatMap(([key, child]) =>
+    undefinedPaths(child, [...path, Array.isArray(value) ? Number(key) : key]),
+  );
+}
+
+function restoreUndefinedPaths(value: unknown, paths: unknown) {
+  if (paths === undefined) return;
+  if (!Array.isArray(paths))
+    throw new Error("Invalid sync document tombstones.");
+  for (const path of paths) {
+    if (!Array.isArray(path) || !path.length)
+      throw new Error("Invalid sync document tombstone path.");
+    let parent = value;
+    for (const [index, key] of path.entries()) {
+      if (
+        (typeof key !== "string" && typeof key !== "number") ||
+        !parent ||
+        typeof parent !== "object" ||
+        !Object.hasOwn(parent, key)
+      )
+        throw new Error("Invalid sync document tombstone path.");
+      const record = parent as Record<string | number, unknown>;
+      if (index === path.length - 1) {
+        if (record[key] !== null)
+          throw new Error("Invalid sync document tombstone value.");
+        record[key] = undefined;
+      } else parent = record[key];
+    }
+  }
 }

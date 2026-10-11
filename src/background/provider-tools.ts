@@ -18,8 +18,8 @@ import {
   getLocalExecutionBridgeStatus,
   startLocalExecutionBridge,
   cancelLocalExecutionBridge,
-  manageLocalExecutionBridges,
-} from "./local-execution-bridge-tools";
+} from "./local-execution-bridge-tasks";
+import { manageLocalExecutionBridges } from "./local-execution-bridge-tools";
 import { manageMemory } from "./memory-tools";
 import {
   executeMcpTool,
@@ -29,7 +29,7 @@ import {
 } from "./mcp-tools";
 import { manageChatHistory } from "./session-tools";
 import { safeExecuteBrowserTool } from "./tools";
-import { browserToolsForPrompt } from "./tool-schema";
+import { browserToolsForPrompt } from "./tool-prompt-selection";
 import { loadTools } from "./provider-tool-loader";
 import { workspaceFiles } from "./workspace-tools";
 import { delay } from "../shared/cancellation";
@@ -108,6 +108,7 @@ export function executeContextAwareTool({
   workspace?: AgentWorkspace;
   signal?: AbortSignal;
 }) {
+  // A run stopped before dispatch must not touch tabs, fetch, or storage.
   signal?.throwIfAborted();
   if (toolName === BROWSER_TOOL_NAME.loadTools)
     return loadTools(input, capabilities, {
@@ -198,7 +199,6 @@ export async function getSubAgentStatus(
   input: Record<string, unknown>,
   signal?: AbortSignal,
 ) {
-  signal?.throwIfAborted();
   const taskId = String(input.taskId || input.childChatId || "").trim();
   if (!taskId) return { error: "Missing sub-agent task id" };
   const wait = input.wait === true;

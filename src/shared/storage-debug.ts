@@ -6,8 +6,7 @@ import {
   syncLocalCacheKey,
 } from "./storage";
 import { getActiveSyncBackend, isSyncBackendEnabled } from "./sync-backends";
-import { tinybaseSyncLocalCacheKey } from "./sync-tinybase-keys";
-import { withStoragePublicationLock } from "./storage-lock";
+import { tinybaseSyncLocalCacheKey } from "./sync-tinybase-doc";
 
 const STORAGE_KEY_GROUPS = {
   settings: [
@@ -47,25 +46,21 @@ export async function clearAppStorage({
   const selectedKeys = selectedTargets.flatMap(
     (target) => STORAGE_KEY_GROUPS[target],
   );
-  const cacheKeys = selectedKeys.flatMap((key) => [
-    syncLocalCacheKey(key),
-    tinybaseSyncLocalCacheKey(key),
-  ]);
-  const backend = await withStoragePublicationLock(async () => {
-    // Capture the enabled route and its configuration coherently before local
-    // cleanup can delete them. Backend construction performs no remote I/O.
-    const selectedBackend =
-      scope !== "local" && (await isSyncBackendEnabled())
-        ? await getActiveSyncBackend()
-        : undefined;
-    await getBrowserApi().storage.local.remove(
-      scope === "sync" ? cacheKeys : [...selectedKeys, ...cacheKeys],
-    );
-    return selectedBackend;
-  });
+  // Replicas are scoped per backend (`tinybase-sync-doc:<scope>:<key>`).
+  const replicaKeys = Object.keys(await getBrowserApi().storage.local.get(null))
+    .filter((stored) => stored.startsWith(tinybaseSyncLocalCacheKey("")))
+    .filter((stored) => selectedKeys.some((key) => stored.endsWith(`:${key}`)));
+  const cacheKeys = [...selectedKeys.map(syncLocalCacheKey), ...replicaKeys];
+  // Capture the backend before local cleanup deletes its configuration.
+  const backend =
+    scope !== "local" && (await isSyncBackendEnabled())
+      ? await getActiveSyncBackend()
+      : undefined;
+  await getBrowserApi().storage.local.remove(
+    scope === "sync" ? cacheKeys : [...selectedKeys, ...cacheKeys],
+  );
   if (backend) {
-    // Finish every started removal before reporting failure. Remote work must
-    // remain outside publication so ordinary local edits can still complete.
+    // Finish every started removal before reporting failure.
     const results = await Promise.allSettled(
       selectedKeys.map(async (key) => backend.remove(key)),
     );

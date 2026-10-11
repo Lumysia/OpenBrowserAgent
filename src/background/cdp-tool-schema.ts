@@ -106,18 +106,6 @@ export const cdpTools = [
     ["operation"],
   ),
   tool(
-    BROWSER_TOOL_NAME.cdpEvaluateScript,
-    "Evaluate a JavaScript function in the page through CDP",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
-      function: stringProperty("Function declaration to execute"),
-      expression: stringProperty("Expression fallback"),
-      ...contentSliceParameters,
-    },
-    [],
-  ),
-  tool(
     BROWSER_TOOL_NAME.cdpExecuteArbitraryJavaScript,
     "DANGEROUS: Execute arbitrary JavaScript in any scriptable tab without extension-side safety limits. Only available when the dangerous code execution setting is enabled.",
     {
@@ -156,8 +144,8 @@ export const cdpTools = [
     "Read lightweight CDP diagnostics. Current network/resources mode returns PerformanceResourceTiming entries, not persisted request bodies.",
     {
       operation: enumProperty(
-        ["resources", "network", "console"],
-        "Diagnostics operation. resources/network returns performance resource entries; console collection is unavailable in this extension runtime and returns an explicit error.",
+        ["resources", "network"],
+        "Diagnostics operation. Both return performance resource entries.",
       ),
       tabId: numberProperty("The tab ID"),
       targetId: targetIdProperty(),
@@ -165,83 +153,6 @@ export const cdpTools = [
     },
     ["operation"],
   ),
-  tool(
-    BROWSER_TOOL_NAME.cdpPerformanceStartTrace,
-    "Start a CDP performance trace",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
-      reload: { type: "boolean", description: "Reload after starting" },
-      autoStop: { type: "boolean", description: "Auto-stop trace" },
-    },
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpPerformanceStopTrace,
-    "Stop a CDP performance trace",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
-    },
-    [],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpPerformanceAnalyzeInsight,
-    "Analyze a performance insight from a trace",
-    {
-      insightName: stringProperty("Insight name"),
-      insightSetId: stringProperty("Insight set ID"),
-    },
-    ["insightName", "insightSetId"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpTakeMemorySnapshot,
-    "Take a memory heap snapshot",
-    {
-      tabId: numberProperty("The tab ID"),
-      targetId: targetIdProperty(),
-      filePath: stringProperty("Output file path"),
-    },
-    ["filePath"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpGetMemorySnapshotDetails,
-    "Get memory snapshot details",
-    {
-      filePath: stringProperty("Heap snapshot path"),
-      pageIdx: numberProperty("Page index"),
-      pageSize: numberProperty("Page size"),
-    },
-    ["filePath"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpGetNodesByClass,
-    "Get memory nodes by class",
-    {
-      filePath: stringProperty("Heap snapshot path"),
-      uid: numberProperty("Class UID"),
-      pageIdx: numberProperty("Page index"),
-      pageSize: numberProperty("Page size"),
-    },
-    ["filePath", "uid"],
-  ),
-  tool(
-    BROWSER_TOOL_NAME.cdpLoadMemorySnapshot,
-    "Load a memory heap snapshot",
-    { filePath: stringProperty("Heap snapshot path") },
-    ["filePath"],
-  ),
-  tool(BROWSER_TOOL_NAME.cdpLighthouseAudit, "Run a Lighthouse-style audit", {
-    tabId: numberProperty("The tab ID"),
-    device: enumProperty(["desktop", "mobile"], "Device"),
-    mode: enumProperty(["navigation", "snapshot"], "Audit mode"),
-  }),
-  tool(BROWSER_TOOL_NAME.cdpScreencastStart, "Start page screencast capture", {
-    tabId: numberProperty("The tab ID"),
-    filePath: stringProperty("Output path"),
-  }),
-  tool(BROWSER_TOOL_NAME.cdpScreencastStop, "Stop page screencast capture", {
-    tabId: numberProperty("The tab ID"),
-  }),
 ];
 
 function tool(

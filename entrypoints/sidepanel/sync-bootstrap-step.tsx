@@ -5,7 +5,7 @@ import {
   BROWSER_SYNC_BACKEND_ID,
   SYNC_BACKEND_REGISTRY,
   WEBDAV_SYNC_BACKEND_ID,
-} from "../../src/shared/sync-backend-registry";
+} from "../../src/shared/sync-backends";
 import type { SyncBackendConfig } from "../../src/shared/types";
 import {
   Button,

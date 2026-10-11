@@ -62,17 +62,14 @@ export type EditMessageDraft = NonNullable<
 };
 
 function skillsFromMetadata(metadata: Record<string, unknown> | undefined) {
-  if (Array.isArray(metadata?.skills)) return metadata.skills as Skill[];
-  return metadata?.skill ? [metadata.skill as Skill] : [];
+  return Array.isArray(metadata?.skills) ? (metadata.skills as Skill[]) : [];
 }
 
 function selectedElementsFromMetadata(
   metadata: Record<string, unknown> | undefined,
 ) {
-  if (Array.isArray(metadata?.selectedElements))
-    return metadata.selectedElements as SelectedElement[];
-  return metadata?.selectedElement
-    ? [metadata.selectedElement as SelectedElement]
+  return Array.isArray(metadata?.selectedElements)
+    ? (metadata.selectedElements as SelectedElement[])
     : [];
 }
 

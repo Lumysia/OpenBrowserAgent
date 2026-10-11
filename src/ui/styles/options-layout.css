@@ -212,9 +212,6 @@
   overflow-wrap: anywhere;
   line-height: 1.35;
 }
-.agent-capability-row .ui-switch-root {
-  flex: 0 0 auto;
-}
 .agent-icon-picker {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(42px, 1fr));
@@ -460,7 +457,6 @@
   color: var(--muted-foreground);
   font-size: 12px;
 }
-.skill-warning,
 .skill-checks .warn {
   color: var(--destructive);
 }

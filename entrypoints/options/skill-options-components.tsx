@@ -8,14 +8,9 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { COPY_FEEDBACK_MS, ISO_DATE_LENGTH } from "../../src/shared/config";
 import { formatBytes } from "../../src/shared/format";
 import { getMessages } from "../../src/shared/i18n";
-import {
-  normalizeSkill,
-  normalizeSkillName,
-  SKILL_ENTRY_PATH,
-} from "../../src/shared/skills";
+import { normalizeSkill, SKILL_ENTRY_PATH } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
 import type { Skill, SkillFile } from "../../src/shared/types";
 import {
@@ -37,32 +32,6 @@ import {
   downloadSkillFile,
   readReplacementSkillFile,
 } from "./skill-import";
-
-export function SkillVariables() {
-  const [language] = useStoredState(storage.language);
-  const [copied, setCopied] = useState(false);
-  const t = getMessages(language);
-  async function copyDateToken() {
-    await navigator.clipboard.writeText("{{ date }}").catch(() => undefined);
-    setCopied(true);
-    setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
-  }
-  return (
-    <div className="stack">
-      <span className="muted">{t.options.availableVariables}</span>
-      <div className="row">
-        <Button variant="outline" size="sm" onClick={copyDateToken}>
-          {copied ? <Check size={14} /> : null}
-          {"{{ date }}"}
-        </Button>
-        <span className="muted">
-          {t.options.example}:{" "}
-          {new Date().toISOString().slice(0, ISO_DATE_LENGTH)}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 export function SkillFileList({
   skill,

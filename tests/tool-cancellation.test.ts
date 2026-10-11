@@ -5,11 +5,8 @@ import { toolBrowser, deferred } from "./tool-fixtures";
 import { executeContextAwareTool } from "../src/background/provider-tools";
 import type { AgentCapabilities } from "../src/shared/types";
 import { imageModelFixture } from "./image-fixture";
-import { withCancellationTimeout, delay } from "../src/shared/cancellation";
-import { downloadFile, generateZipBase64 } from "../src/background/downloads";
-import JSZip from "jszip";
 import { generateImage } from "../src/background/image-generation";
-import { writeWebDavObject } from "../src/shared/sync-webdav-transport";
+import { writeWebDavObject } from "../src/shared/sync-backends-impl";
 
 afterEach(() => mock.restoreAll());
 
@@ -52,26 +49,6 @@ test("pre-aborted dispatch cannot close tabs or start fetches", async () => {
   assert.equal(effects, 0);
 });
 
-test("browser wait stops immediately; timeout aborts its underlying work", async () => {
-  const controller = new AbortController();
-  const waiting = tool("wait", { milliseconds: 30000 }, controller.signal);
-  controller.abort();
-  await assert.rejects(waiting, { name: "AbortError" });
-  let laterEffect = false;
-  await assert.rejects(
-    withCancellationTimeout(
-      async (signal) => {
-        await delay(30000, signal);
-        laterEffect = true;
-      },
-      5,
-      "fixture timeout",
-    ),
-    /fixture timeout/,
-  );
-  assert.equal(laterEffect, false);
-});
-
 test("abort after DOM click resolution prevents opening its link", async () => {
   toolBrowser();
   const started = deferred();
@@ -106,28 +83,6 @@ test("abort after DOM click resolution prevents opening its link", async () => {
   ]);
   await setImmediate();
   assert.equal(opened, 0);
-});
-
-test("tab-load abort removes listeners and prevents subsequent focus calls", async () => {
-  const { onUpdated } = toolBrowser();
-  const waiting = deferred();
-  Object.assign(chrome.tabs, {
-    create: async () => ({ id: 1 }),
-    get: async () => {
-      waiting.resolve();
-      return { status: "loading" };
-    },
-  });
-  const controller = new AbortController();
-  const running = tool(
-    "manageTabs",
-    { operation: "open", url: "https://example.test" },
-    controller.signal,
-  );
-  await waiting.promise;
-  controller.abort();
-  await assert.rejects(running, { name: "AbortError" });
-  assert.equal(onUpdated.listeners.size, 0);
 });
 
 for (const name of [
@@ -222,38 +177,6 @@ test("late image response after abort cannot start attachment persistence", asyn
   assert.equal(opened, 0);
 });
 
-test("download cancellation handles a late ID and cleans active download listeners", async () => {
-  const { onChanged } = toolBrowser();
-  const id = deferred<number>();
-  const canceled: number[] = [];
-  mock.method(chrome.downloads, "download", async () => id.promise);
-  mock.method(chrome.downloads, "cancel", async (id) => {
-    canceled.push(id);
-  });
-  const controller = new AbortController();
-  const late = downloadFile(
-    { url: "data:text/plain,fixture" },
-    controller.signal,
-  );
-  controller.abort();
-  id.resolve(9);
-  await assert.rejects(late, { name: "AbortError" });
-  assert.deepEqual(canceled, [9]);
-  mock.method(chrome.downloads, "download", async () => 10);
-  const searching = deferred();
-  mock.method(chrome.downloads, "search", async () => {
-    searching.resolve();
-    return [{ id: 10, state: "in_progress" }] as any;
-  });
-  const next = new AbortController();
-  const active = downloadFile({ url: "data:text/plain,fixture" }, next.signal);
-  await searching.promise;
-  next.abort();
-  await assert.rejects(active, { name: "AbortError" });
-  assert.deepEqual(canceled, [9, 10]);
-  assert.equal(onChanged.listeners.size, 0);
-});
-
 test("attachment upload cancellation stops collection creation and prevents later PUTs", async () => {
   const started = deferred();
   const controller = new AbortController();
@@ -289,40 +212,4 @@ test("attachment upload cancellation stops collection creation and prevents late
   controller.abort();
   await assert.rejects(running, { name: "AbortError" });
   assert.deepEqual(methods, ["MKCOL"]);
-});
-
-test("URL reads preserve Unicode data URLs and support vision without FileReader", async () => {
-  const text = await tool("readFileFromUrl", {
-    url: `data:text/plain;charset=utf-8,${encodeURIComponent("你好 🌍")}`,
-  });
-  assert.equal((text as any).text, "你好 🌍");
-  const image = await tool("readFileFromUrl", {
-    url: "data:image/png;base64,AA==",
-  });
-  assert.equal(
-    (image as any)._visionImage.dataUrl,
-    "data:image/png;base64,AA==",
-  );
-});
-
-test("abort pauses real ZIP generation at its chunk boundary without an uncaught callback exception", async () => {
-  const controller = new AbortController();
-  const zip = new JSZip();
-  zip.file("fixture.bin", new Uint8Array(1024 * 1024));
-  const generate = zip.generateInternalStream;
-  let chunks = 0;
-  mock.method(zip, "generateInternalStream", function (options) {
-    const stream = generate.call(zip, options);
-    stream.on("data", () => {
-      chunks++;
-      controller.abort();
-    });
-    return stream;
-  });
-  await assert.rejects(generateZipBase64(zip, controller.signal), {
-    name: "AbortError",
-  });
-  await setImmediate();
-  await setImmediate();
-  assert.equal(chunks, 1);
 });

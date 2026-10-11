@@ -3,13 +3,6 @@ import type { Skill, SkillFile } from "./types";
 
 export const SKILL_ENTRY_PATH = "SKILL.md";
 
-type LegacySkill = Partial<Skill> & {
-  title?: string;
-  instruction?: string;
-};
-
-type LegacySkillFile = Partial<SkillFile>;
-
 export function createSkillPackage({
   id = crypto.randomUUID(),
   name,
@@ -85,22 +78,11 @@ export function replaceSkillEntryFile(
 }
 
 export function getSkillDisplayName(skill: Skill, fallback = "Skill") {
-  const legacy = skill as LegacySkill;
-  return legacy.name || legacy.title || fallback;
+  return skill.name || fallback;
 }
 
 export function getSkillEntryFile(skill: Skill) {
-  const legacy = skill as LegacySkill;
-  return (
-    skill.files?.find((file) => file.path === SKILL_ENTRY_PATH) ||
-    (legacy.instruction
-      ? createSkillFile(
-          getSkillDisplayName(skill),
-          legacy.description || "",
-          legacy.instruction,
-        )
-      : undefined)
-  );
+  return skill.files?.find((file) => file.path === SKILL_ENTRY_PATH);
 }
 
 export function getSkillInstruction(skill: Skill) {
@@ -120,11 +102,9 @@ export function normalizeSkill(
   skill: Partial<Skill> | null | undefined,
 ): Skill {
   const source = skill || {};
-  const legacy = source as LegacySkill;
   const id = stringValue(source.id) || crypto.randomUUID();
-  const name =
-    normalizeSkillName(stringValue(legacy.name || legacy.title)) || "skill";
-  const description = stringValue(legacy.description).trim();
+  const name = normalizeSkillName(stringValue(source.name)) || "skill";
+  const description = stringValue(source.description).trim();
   const files = Array.isArray(source.files)
     ? source.files.map(normalizeSkillFile).filter(isSkillFile)
     : [];
@@ -147,13 +127,12 @@ export function normalizeSkill(
     id,
     name,
     description,
-    instruction: stringValue(legacy.instruction),
     createdAt,
     updatedAt,
   });
 }
 
-function normalizeSkillFile(file: LegacySkillFile): SkillFile | undefined {
+function normalizeSkillFile(file: Partial<SkillFile>): SkillFile | undefined {
   const path = stringValue(file?.path).trim();
   const content = stringValue(file?.content);
   if (!path) return undefined;
