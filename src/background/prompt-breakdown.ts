@@ -10,7 +10,7 @@ import {
   type SendMessagesRequest,
   type Skill,
 } from "../shared/types";
-import { browserToolsForPrompt } from "./tool-schema";
+import { browserToolsForPrompt } from "./tool-prompt-selection";
 
 // Approximate prompt size by source, shown in the run info panel.
 export function promptBreakdown(

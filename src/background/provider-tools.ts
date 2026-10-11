@@ -29,7 +29,7 @@ import {
 } from "./mcp-tools";
 import { manageChatHistory } from "./session-tools";
 import { safeExecuteBrowserTool } from "./tools";
-import { browserToolsForPrompt } from "./tool-schema";
+import { browserToolsForPrompt } from "./tool-prompt-selection";
 import { loadTools } from "./provider-tool-loader";
 import { workspaceFiles } from "./workspace-tools";
 import { delay } from "../shared/cancellation";
