@@ -38,6 +38,33 @@ test("same-millisecond edits from separate replicas converge", async () => {
   assert.equal(aValue, bValue);
 });
 
+test("a fresh device's edit wins over an older remote edit from a fast clock", async () => {
+  installBrowser();
+  const realNow = Date.now();
+  mock.method(Date, "now", () => realNow + 60_000);
+  const remote = await writeTinyBaseSyncValue("fast:language", "fr", undefined);
+  const providers = await writeTinyBaseSyncValue(
+    "fast:provider",
+    { a: { id: "a" } },
+    undefined,
+  );
+  mock.restoreAll();
+  installBrowser(browserStorage());
+  const edit = await writeTinyBaseSyncValue(
+    "fresh:language",
+    "de",
+    remote.bytes,
+  );
+  assert.equal(edit.value, "de");
+  // Remote rows this device never saw are kept.
+  const added = await writeTinyBaseSyncValue(
+    "fresh:provider",
+    { b: { id: "b" } },
+    providers.bytes,
+  );
+  assert.deepEqual(Object.keys(added.value).sort(), ["a", "b"]);
+});
+
 test("WebDAV retries a competing write without losing either device's changes", async () => {
   const { local } = installBrowser();
   const config = {

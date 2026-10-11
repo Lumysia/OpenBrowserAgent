@@ -66,6 +66,17 @@ export async function writeTinyBaseSyncValue<T>(
   remoteBytes: Uint8Array | undefined,
 ) {
   const localBytes = await readLocalTinyBaseSyncBytes(key);
+  if (!localBytes && remoteBytes) {
+    // A fresh replica first takes in the remote document so its clock is past
+    // every remote stamp; otherwise a device with a fast clock would win over
+    // this edit. Rows and cells the edit doesn't mention stay, since this
+    // device never saw them and must not delete them.
+    const store = decodeStore(key, remoteBytes);
+    setStoreValue(store, key, value, { keepUnseen: true });
+    const bytes = encodeStore(store);
+    await writeLocalTinyBaseSyncBytes(key, bytes);
+    return { bytes, value: valueFromStore<T>(key, store) };
+  }
   const store = localBytes
     ? decodeStore(key, localBytes)
     : createMergeableStore();
@@ -152,11 +163,22 @@ function decodeStore(key: string, bytes: Uint8Array) {
   );
 }
 
-function setStoreValue<T>(store: SyncStore, key: string, value: T) {
+function setStoreValue<T>(
+  store: SyncStore,
+  key: string,
+  value: T,
+  { keepUnseen = false } = {},
+) {
   const chats = key === STORAGE_KEYS.chats && Array.isArray(value);
   const tables = chats
     ? tablesFromChats(value as Array<Record<string, unknown>>)
     : tablesFromValue(value);
+  if (tables && keepUnseen)
+    for (const [tableId, rows] of Object.entries(store.getTables())) {
+      const table = (tables[tableId] ||= {});
+      for (const [rowId, row] of Object.entries(rows))
+        table[rowId] = { ...row, ...table[rowId] };
+    }
   // An empty entry can later gain fields through a merge. Its presence cell
   // remains part of that retained row's identity; dropping it on an unrelated
   // rewrite would defeat a concurrent clear. Do not add it to unmarked legacy
