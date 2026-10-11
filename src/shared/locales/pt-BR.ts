@@ -184,8 +184,8 @@ export const ptBR: LocaleMessages = {
     editingMessageDescription:
       "Só o compositor está ativo. Pressione Esc ou Cancelar para parar.",
     stop: "Parar",
-    scrollToTop: "Rolar para o topo",
-    scrollToBottom: "Rolar para o fim",
+    previousUserMessage: "Sua mensagem anterior",
+    nextUserMessage: "Sua próxima mensagem",
     running: "Executando",
     done: "Concluído",
     error: "Erro",

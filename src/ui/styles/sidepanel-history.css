@@ -13,7 +13,7 @@
     background-color 0.14s ease,
     color 0.14s ease,
     transform 0.14s ease;
-  animation: subtle-rise-in 0.24s ease both;
+  animation: subtle-rise-in 0.24s ease backwards;
 }
 .history-item.removing {
   pointer-events: none;

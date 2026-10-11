@@ -256,7 +256,7 @@
   border: 1px solid color-mix(in srgb, var(--accent-soft) 58%, var(--border));
   border-radius: 13px;
   background: color-mix(in srgb, var(--accent-softer) 42%, var(--card));
-  animation: context-row-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: context-row-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 .queued-messages-header {
   display: grid;
@@ -278,7 +278,7 @@
   padding: 8px 8px 8px 10px;
   border-radius: 10px;
   background: color-mix(in srgb, var(--card) 78%, var(--accent-softer));
-  animation: context-chip-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: context-chip-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   transition:
     background-color 0.16s ease,
     transform 0.16s ease;
@@ -379,7 +379,8 @@
   min-width: 0;
 }
 .add-context-panel.is-entering {
-  animation: add-context-panel-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: add-context-panel-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1)
+    backwards;
 }
 .add-context-panel.is-leaving {
   position: absolute;
@@ -528,7 +529,7 @@
   padding: 24px;
 }
 .empty > div {
-  animation: empty-state-in 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: empty-state-in 0.72s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 @keyframes empty-state-in {
@@ -560,7 +561,7 @@
   column-gap: 10px;
   row-gap: 6px;
   align-items: center;
-  animation: fade-in 0.22s ease both;
+  animation: fade-in 0.22s ease backwards;
 }
 .bootstrap-step:nth-child(2) {
   animation-delay: 0.04s;
@@ -617,7 +618,7 @@
 }
 .bootstrap-status-copy,
 .bootstrap-action-label {
-  animation: fade-in 0.18s ease both;
+  animation: fade-in 0.18s ease backwards;
 }
 .bootstrap-feedback-card {
   margin: 0;
@@ -626,7 +627,7 @@
   border-radius: calc(var(--radius) - 4px);
   background: color-mix(in srgb, var(--accent-softer) 28%, transparent);
   color: color-mix(in srgb, var(--accent-strong) 78%, var(--foreground));
-  animation: fade-in 0.18s ease both;
+  animation: fade-in 0.18s ease backwards;
 }
 .bootstrap-feedback-card.is-error {
   border-color: color-mix(in srgb, var(--destructive) 28%, var(--border));
@@ -673,7 +674,7 @@
 .bootstrap-backend-fields {
   display: grid;
   gap: 8px;
-  animation: fade-in 0.2s ease both;
+  animation: fade-in 0.2s ease backwards;
 }
 .local-setup-hint {
   max-height: 0;

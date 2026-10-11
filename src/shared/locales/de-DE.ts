@@ -186,8 +186,8 @@ export const deDE: LocaleMessages = {
     editingMessageDescription:
       "Nur der Composer ist aktiv. Drücken Sie Esc oder Abbrechen zum Beenden.",
     stop: "Stoppen",
-    scrollToTop: "Nach oben scrollen",
-    scrollToBottom: "Nach unten scrollen",
+    previousUserMessage: "Vorherige eigene Nachricht",
+    nextUserMessage: "Nächste eigene Nachricht",
     running: "Läuft",
     done: "Fertig",
     error: "Fehler",

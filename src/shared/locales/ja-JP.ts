@@ -184,8 +184,8 @@ export const jaJP: LocaleMessages = {
     editingMessageDescription:
       "入力欄だけ操作できます。Escまたはキャンセルで編集を終了します。",
     stop: "停止",
-    scrollToTop: "一番上へスクロール",
-    scrollToBottom: "一番下へスクロール",
+    previousUserMessage: "前の自分のメッセージ",
+    nextUserMessage: "次の自分のメッセージ",
     running: "実行中",
     done: "完了",
     error: "エラー",

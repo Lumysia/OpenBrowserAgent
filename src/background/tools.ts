@@ -250,12 +250,29 @@ async function openTab(args: Record<string, unknown>, signal?: AbortSignal) {
 
 async function openSearch(args: Record<string, unknown>, signal?: AbortSignal) {
   const query = String(args.query || "");
-  const tab = await openDefaultSearchTab(query, signal);
+  let tab = await openDefaultSearchTab(query, signal);
+  // search.query returns before navigation; wait so the result and its source
+  // carry the results page, not the about:blank placeholder.
+  if (tab?.id !== undefined) tab = await waitForSearchPage(tab.id, signal);
   return {
     success: true,
     tabId: tab?.id,
     tab: tab ? { id: tab.id, url: tab.url, title: tab.title } : undefined,
   };
+}
+
+async function waitForSearchPage(tabId: number, signal?: AbortSignal) {
+  const api = getBrowserApi();
+  const end = Date.now() + TAB_LOAD_WAIT_TIMEOUT_MS;
+  let tab = await api.tabs.get(tabId);
+  while (
+    (tab.url === "about:blank" || tab.status !== "complete") &&
+    Date.now() < end
+  ) {
+    await delay(100, signal);
+    tab = await api.tabs.get(tabId);
+  }
+  return tab;
 }
 
 async function closeManagedTabs(args: Record<string, unknown>) {

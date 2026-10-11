@@ -185,8 +185,8 @@ export const frFR: LocaleMessages = {
     editingMessageDescription:
       "Seul le compositeur est actif. Appuyez sur Esc ou Annuler pour arrêter.",
     stop: "Arrêter",
-    scrollToTop: "Faire défiler en haut",
-    scrollToBottom: "Faire défiler en bas",
+    previousUserMessage: "Votre message précédent",
+    nextUserMessage: "Votre message suivant",
     running: "En cours",
     done: "Terminé",
     error: "Erreur",

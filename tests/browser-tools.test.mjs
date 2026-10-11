@@ -231,6 +231,36 @@ test(
         ]);
         assert.deepEqual(out[2].value, { xss: null, bold: true });
       });
+
+      await t.test("a mutatePage batch applies its style item", async () => {
+        const out = await run([
+          {
+            name: "mutatePage",
+            args: {
+              tabId: tab.id,
+              operations: [
+                {
+                  operation: "insertStyle",
+                  css: ".oba-batch{color:rgb(1, 2, 3)}",
+                },
+                {
+                  operation: "insertElement",
+                  target: { selector: "#target" },
+                  position: "afterend",
+                  node: { tag: "p", attributes: { class: "oba-batch" } },
+                },
+              ],
+            },
+          },
+          js("getComputedStyle(document.querySelector('.oba-batch')).color"),
+        ]);
+        assert.equal(out[0].success, true);
+        assert.deepEqual(
+          out[0].results.map((result) => result.success),
+          [true, true],
+        );
+        assert.equal(out[1].value, "rgb(1, 2, 3)");
+      });
       assert.equal(await attached(), false);
     } finally {
       await fixture.close();
