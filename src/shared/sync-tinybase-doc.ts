@@ -234,8 +234,14 @@ export function setOrderedTable(
 
 // Rows in their stored order, with the row id restored as `keyField`.
 export function itemsFromTable(table: Table | undefined, keyField: string) {
+  // Rows added concurrently on two devices can share an order; createdAt and
+  // then the row id break the tie, so every device lists them the same way.
   return Object.entries(table || {})
-    .sort(([, left], [, right]) => compareByOrderThenCreatedAt(left, right))
+    .sort(
+      ([leftId, left], [rightId, right]) =>
+        compareByOrderThenCreatedAt(left, right) ||
+        (leftId < rightId ? -1 : leftId > rightId ? 1 : 0),
+    )
     .map(([rowId, row]) => ({ [keyField]: rowId, ...stripInternalCells(row) }));
 }
 
