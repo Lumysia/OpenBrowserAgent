@@ -9,6 +9,7 @@ import {
 } from "../src/shared/sync-backends";
 import {
   storage,
+  restoreSyncBackendFromCloud,
   setDataSync,
   setActiveSyncBackend,
   flushPendingSyncWrites,
@@ -359,4 +360,33 @@ test("a run abandoned mid-stream stops blocking chat sync", async () => {
     "c",
     "d",
   ]);
+});
+
+test("starting from cloud uploads sync settings the cloud is missing", async () => {
+  const { local } = installBrowser();
+  const backend = browserSync();
+  // An earlier device uploaded language and preferences but not the settings.
+  await backend.write(STORAGE_KEYS.language, "en-US");
+  await restoreSyncBackendFromCloud({
+    backendId: BROWSER_SYNC_BACKEND_ID,
+    language: "en-US",
+    syncDataSettings: DEFAULT_SYNC_DATA_SETTINGS,
+  });
+  await flushPendingSyncWrites();
+  assert.deepEqual(
+    await backend.read(STORAGE_KEYS.syncDataSettings),
+    DEFAULT_SYNC_DATA_SETTINGS,
+  );
+  assert.equal(
+    local.data[syncLocalCacheKey(STORAGE_KEYS.language)].flushedAt !==
+      undefined,
+    true,
+    "a value already in the cloud is not uploaded again",
+  );
+  // A refresh now finds the document and keeps provider sync on.
+  await refresh();
+  assert.equal(
+    (await storage.syncDataSettings.get())[SYNC_PREFERENCES.providers],
+    true,
+  );
 });

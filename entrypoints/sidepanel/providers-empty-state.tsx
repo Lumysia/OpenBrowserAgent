@@ -4,6 +4,7 @@ import { LOCAL_SETUP_FEEDBACK_MS, OPTIONS_HASH } from "../../src/shared/config";
 import { mergePreferences } from "../../src/shared/default-preferences";
 import type { Messages } from "../../src/shared/i18n";
 import {
+  DEFAULT_SYNC_DATA_SETTINGS,
   restoreSyncBackendFromCloud,
   setActiveSyncBackend,
   flushPendingSyncWrites,
@@ -238,13 +239,16 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
         : {
             ...(await storage.syncDataSettings.get()),
             ...Object.fromEntries(
+              // Without cloud settings, sync what the cloud has, plus the
+              // categories synced by default (providers).
               SYNC_PREFERENCE_KEYS.map((preferenceKey) => [
                 preferenceKey,
-                SYNCABLE_DATA_ITEMS.some(
-                  (item) =>
-                    item.preferenceKey === preferenceKey &&
-                    hasCloudValue(cloudState.data[item.dataKey]),
-                ),
+                DEFAULT_SYNC_DATA_SETTINGS[preferenceKey] ||
+                  SYNCABLE_DATA_ITEMS.some(
+                    (item) =>
+                      item.preferenceKey === preferenceKey &&
+                      hasCloudValue(cloudState.data[item.dataKey]),
+                  ),
               ]),
             ),
           });
