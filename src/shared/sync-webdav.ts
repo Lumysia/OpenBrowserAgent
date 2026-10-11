@@ -167,7 +167,28 @@ export async function removeWebDavObject(
   await deleteWebDav(backendConfig, rawObjectUrl(backendConfig, name));
 }
 
-async function ensureWebDavCollections(
+// Item uploads run in parallel, and the first ones of a collection all find
+// its folder missing; they share one creation, since servers can fail a MKCOL
+// that races another (WsgiDAV answers 500).
+const pendingCollections = new Map<string, Promise<void>>();
+
+function ensureWebDavCollections(
+  backendConfig: WebDavSyncBackendConfig,
+  name: string,
+  signal?: AbortSignal,
+) {
+  const key = rawObjectUrl(backendConfig, name.replace(/[^/]*$/, ""));
+  let pending = pendingCollections.get(key);
+  if (!pending) {
+    pending = createWebDavCollections(backendConfig, name, signal).finally(() =>
+      pendingCollections.delete(key),
+    );
+    pendingCollections.set(key, pending);
+  }
+  return pending;
+}
+
+async function createWebDavCollections(
   backendConfig: WebDavSyncBackendConfig,
   name: string,
   signal?: AbortSignal,
