@@ -109,8 +109,6 @@ export const zhTW: LocaleMessages = {
       tps: "每秒 Token",
       output: "輸出方式",
       streaming: "串流輸出",
-      buffered: "非串流輸出",
-      mixed: "混合",
       input: "輸入",
       outputTokens: "輸出",
       total: "總計",

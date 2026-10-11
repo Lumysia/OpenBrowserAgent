@@ -116,8 +116,6 @@ export const deDE: LocaleMessages = {
       tps: "TPS",
       output: "Ausgabe",
       streaming: "Streaming",
-      buffered: "Nicht-Streaming",
-      mixed: "Gemischt",
       input: "Eingabe",
       outputTokens: "Ausgabe",
       total: "Gesamt",

@@ -324,7 +324,7 @@ export const commonBrowserTools = [
       openLinksInNewTab: {
         type: "boolean",
         description:
-          "For click on links, open a background tab instead of navigating the current tab. Defaults true.",
+          "For click on links, open a background tab instead of navigating the current tab. Defaults false.",
       },
       direction: {
         type: "string",

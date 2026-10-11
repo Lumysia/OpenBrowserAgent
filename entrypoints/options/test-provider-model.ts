@@ -1,4 +1,3 @@
-import { MODEL_TEMPERATURE } from "../../src/shared/config";
 import {
   providerDefaultBaseUrls,
   type ProviderConfig,
@@ -49,7 +48,6 @@ export async function testProviderModel(
     },
     body: JSON.stringify({
       model: modelName,
-      temperature: MODEL_TEMPERATURE,
       messages: [
         { role: "system", content: system },
         { role: "user", content: prompt },

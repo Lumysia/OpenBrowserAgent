@@ -18,9 +18,6 @@ export const CHAT_WRITE_DEBOUNCE_MS = 300;
 export const CHAT_STREAM_WRITE_DEBOUNCE_MS = 1_500;
 export const SYNC_MAX_BYTES_PER_ITEM = 7_500;
 
-export const MODEL_TEMPERATURE = 0.3;
-export const STREAM_CHUNK_DELAY_MS = 8;
-export const POST_TEXT_CHUNK_SIZE = 24;
 export const STREAM_RENDER_THROTTLE_MS = 80;
 export const STREAM_REVEAL_MIN_STEP_DELAY_MS = 16;
 export const STREAM_REVEAL_MAX_STEP_DELAY_MS = 52;

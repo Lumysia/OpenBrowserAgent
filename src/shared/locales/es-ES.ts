@@ -114,8 +114,6 @@ export const esES: LocaleMessages = {
       tps: "TPS",
       output: "Salida",
       streaming: "Streaming",
-      buffered: "No streaming",
-      mixed: "Mixto",
       input: "Entrada",
       outputTokens: "Salida",
       total: "Total",

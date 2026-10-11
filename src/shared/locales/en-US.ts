@@ -116,8 +116,6 @@ export const enUS = {
       tps: "TPS",
       output: "Output",
       streaming: "Streaming",
-      buffered: "Non-streaming",
-      mixed: "Mixed",
       input: "Input",
       outputTokens: "Output",
       total: "Total",

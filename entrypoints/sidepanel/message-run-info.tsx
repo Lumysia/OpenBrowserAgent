@@ -388,14 +388,8 @@ function averageTtftStart(runs: RunMetrics[]) {
   );
 }
 
-function aggregateMode(
-  runs: RunMetrics[],
-): RunMetrics["outputMode"] | "mixed" | undefined {
-  const modes = new Set(
-    runs.map((metrics) => metrics.outputMode).filter(Boolean),
-  );
-  if (modes.size > 1) return "mixed" as RunMetrics["outputMode"];
-  return modes.values().next().value;
+function aggregateMode(runs: RunMetrics[]): RunMetrics["outputMode"] {
+  return runs.some((metrics) => metrics.outputMode) ? "streaming" : undefined;
 }
 
 function ttft(metrics: RunMetrics) {
@@ -456,12 +450,7 @@ function formatTokenCount(
   return `${formatCompactNumber(value)} ${t.sidepanel.runInfo.tokenUnit}`;
 }
 
-function modeLabel(
-  t: Messages,
-  mode: RunMetrics["outputMode"] | "mixed" | undefined,
-) {
+function modeLabel(t: Messages, mode: RunMetrics["outputMode"]) {
   if (mode === "streaming") return t.sidepanel.runInfo.streaming;
-  if (mode === "buffered") return t.sidepanel.runInfo.buffered;
-  if (mode === "mixed") return t.sidepanel.runInfo.mixed;
   return t.sidepanel.runInfo.unavailable;
 }

@@ -114,8 +114,6 @@ export const ko: LocaleMessages = {
       tps: "TPS",
       output: "출력 방식",
       streaming: "스트리밍",
-      buffered: "비스트리밍",
-      mixed: "혼합",
       input: "입력",
       outputTokens: "출력",
       total: "합계",

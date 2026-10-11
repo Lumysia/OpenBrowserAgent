@@ -108,6 +108,8 @@ export function executeContextAwareTool({
   workspace?: AgentWorkspace;
   signal?: AbortSignal;
 }) {
+  // A run stopped before dispatch must not touch tabs, fetch, or storage.
+  signal?.throwIfAborted();
   if (toolName === BROWSER_TOOL_NAME.loadTools)
     return loadTools(input, capabilities, {
       hasSkills: availableSkills.length > 0,

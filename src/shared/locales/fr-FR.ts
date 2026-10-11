@@ -115,8 +115,6 @@ export const frFR: LocaleMessages = {
       tps: "TPS",
       output: "Sortie",
       streaming: "Streaming",
-      buffered: "Non streaming",
-      mixed: "Mixte",
       input: "Entrée",
       outputTokens: "Sortie",
       total: "Total",

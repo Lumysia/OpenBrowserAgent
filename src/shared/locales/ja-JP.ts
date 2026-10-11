@@ -115,8 +115,6 @@ export const jaJP: LocaleMessages = {
       tps: "TPS",
       output: "出力方式",
       streaming: "ストリーミング",
-      buffered: "非ストリーミング",
-      mixed: "混在",
       input: "入力",
       outputTokens: "出力",
       total: "合計",

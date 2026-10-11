@@ -109,8 +109,6 @@ export const zhCN: LocaleMessages = {
       tps: "每秒 Token",
       output: "输出方式",
       streaming: "流式输出",
-      buffered: "非流式输出",
-      mixed: "混合",
       input: "输入",
       outputTokens: "输出",
       total: "总计",

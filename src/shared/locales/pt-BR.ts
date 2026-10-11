@@ -114,8 +114,6 @@ export const ptBR: LocaleMessages = {
       tps: "TPS",
       output: "Saída",
       streaming: "Streaming",
-      buffered: "Sem streaming",
-      mixed: "Misto",
       input: "Entrada",
       outputTokens: "Saída",
       total: "Total",
