@@ -119,7 +119,9 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     password: webDavBackend?.password,
   };
   const canPull =
-    selectedBackendId !== WEBDAV_SYNC_BACKEND_ID || !!webDavDraft.url;
+    syncSetupMode === "code"
+      ? !!syncCodeDraft.trim()
+      : selectedBackendId !== WEBDAV_SYNC_BACKEND_ID || !!webDavDraft.url;
 
   function updateWebDavBackend(
     patch: Partial<Extract<SyncBackendConfig, { type: "webdav" }>>,
@@ -156,7 +158,9 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     setSyncStatus("idle");
   }
 
-  function applySyncConfigCode() {
+  // Returns the backend from the pasted code, so it can be tested right away
+  // before the stored state catches up.
+  function applySyncConfigCode(): SyncBackendConfig | undefined {
     if (hasActiveSyncBackend) return;
     try {
       const config = parseSyncConfigCode(syncCodeDraft);
@@ -171,9 +175,11 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
       setSelectedBackendId(backend.id);
       setSyncStatus("idle");
       setSyncCodeStatus("applied");
+      return backend;
     } catch (error) {
       console.warn("Failed to parse sync config code", error);
       setSyncCodeStatus("error");
+      return undefined;
     }
   }
 
@@ -185,12 +191,12 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     );
   }
 
-  async function testCloudBackend() {
+  async function testCloudBackend(config = selectedBackendConfig()) {
     setSyncing(true);
     setSyncAction("test");
     setSyncStatus("idle");
     try {
-      const backend = createSyncBackend(selectedBackendConfig());
+      const backend = createSyncBackend(config);
       await backend.test();
       const cloudState = await readCloudBootstrapState(backend);
       const hasExistingCloudConfig = hasCloudBootstrapData(cloudState);
@@ -264,6 +270,12 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   function handleCloudAction() {
     if (syncStatus === "ready" || syncStatus === "empty") {
       confirmCloudSync().catch(() => undefined);
+      return;
+    }
+    // On the code tab the one button applies the pasted code, then tests it.
+    if (syncSetupMode === "code") {
+      const backend = applySyncConfigCode();
+      if (backend) testCloudBackend(backend).catch(() => undefined);
       return;
     }
     testCloudBackend().catch(() => undefined);
@@ -371,9 +383,11 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                       syncSetupMode={syncSetupMode}
                       setSyncSetupMode={setSyncSetupMode}
                       syncCodeDraft={syncCodeDraft}
-                      setSyncCodeDraft={setSyncCodeDraft}
-                      setSyncCodeStatus={setSyncCodeStatus}
-                      applySyncConfigCode={applySyncConfigCode}
+                      setSyncCodeDraft={(value) => {
+                        setSyncCodeDraft(value);
+                        setSyncCodeStatus("idle");
+                        setSyncStatus("idle");
+                      }}
                       setupFeedbackMessage={setupFeedbackMessage}
                       setupFeedbackError={setupFeedbackError}
                       syncing={syncing}

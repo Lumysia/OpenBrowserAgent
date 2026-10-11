@@ -45,7 +45,6 @@ export const zhTW: LocaleMessages = {
     syncManualTab: "手動輸入",
     syncConfigCode: "同步配置碼",
     syncConfigCodeDescription: "貼上從另一台裝置複製的配置碼。",
-    syncConfigCodeApply: "套用配置碼",
     syncConfigCodeApplied: "同步後端配置已套用，可以繼續檢查雲端同步。",
     syncConfigCodeInvalid: "配置碼無效，請檢查後再試。",
     bootstrapStepProviderTitle: "新增提供者和模型",

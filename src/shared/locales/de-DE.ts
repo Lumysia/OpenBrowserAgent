@@ -49,7 +49,6 @@ export const deDE: LocaleMessages = {
     syncConfigCode: "Sync-Konfigurationscode",
     syncConfigCodeDescription:
       "Fügen Sie einen von einem anderen Gerät kopierten Code ein.",
-    syncConfigCodeApply: "Konfigurationscode anwenden",
     syncConfigCodeApplied:
       "Sync-Backend-Konfiguration angewendet. Sie können nun die Cloud-Synchronisierung prüfen.",
     syncConfigCodeInvalid:

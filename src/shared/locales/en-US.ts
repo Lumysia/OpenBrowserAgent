@@ -50,7 +50,6 @@ export const enUS = {
     syncManualTab: "Manual setup",
     syncConfigCode: "Sync config code",
     syncConfigCodeDescription: "Paste a code copied from another device.",
-    syncConfigCodeApply: "Apply config code",
     syncConfigCodeApplied:
       "Sync backend config applied. You can now check cloud sync.",
     syncConfigCodeInvalid:

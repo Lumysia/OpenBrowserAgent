@@ -48,7 +48,6 @@ export const ko: LocaleMessages = {
     syncManualTab: "수동 입력",
     syncConfigCode: "동기화 구성 코드",
     syncConfigCodeDescription: "다른 기기에서 복사한 코드를 붙여넣으세요.",
-    syncConfigCodeApply: "구성 코드 적용",
     syncConfigCodeApplied:
       "동기화 백엔드 구성이 적용되었습니다. 이제 클라우드 동기화를 확인할 수 있습니다.",
     syncConfigCodeInvalid:

@@ -48,7 +48,6 @@ export const esES: LocaleMessages = {
     syncManualTab: "Configuración manual",
     syncConfigCode: "Código de configuración de sincronización",
     syncConfigCodeDescription: "Pega un código copiado desde otro dispositivo.",
-    syncConfigCodeApply: "Aplicar código",
     syncConfigCodeApplied:
       "Configuración del backend aplicada. Ahora puedes comprobar la sincronización en la nube.",
     syncConfigCodeInvalid:

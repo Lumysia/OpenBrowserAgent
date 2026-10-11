@@ -49,7 +49,6 @@ export const jaJP: LocaleMessages = {
     syncConfigCode: "同期設定コード",
     syncConfigCodeDescription:
       "別のデバイスからコピーしたコードを貼り付けます。",
-    syncConfigCodeApply: "設定コードを適用",
     syncConfigCodeApplied:
       "同期バックエンド設定を適用しました。クラウド同期を確認できます。",
     syncConfigCodeInvalid:

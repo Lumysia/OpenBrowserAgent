@@ -45,7 +45,6 @@ export const zhCN: LocaleMessages = {
     syncManualTab: "手动输入",
     syncConfigCode: "同步配置码",
     syncConfigCodeDescription: "粘贴另一台设备复制的配置码。",
-    syncConfigCodeApply: "应用配置码",
     syncConfigCodeApplied: "同步后端配置已应用，可以继续检查云端同步。",
     syncConfigCodeInvalid: "配置码无效，请检查后重试。",
     bootstrapStepProviderTitle: "添加提供商和模型",
