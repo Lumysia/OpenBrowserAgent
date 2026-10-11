@@ -14,6 +14,9 @@ export const SYNC_SETTINGS_REFRESH_INTERVAL_MS = 5_000;
 export const SYNC_REMOTE_REFRESH_INTERVAL_MS = 30_000;
 export const CHAT_WRITE_DEBOUNCE_MS = 300;
 export const CHAT_STREAM_WRITE_DEBOUNCE_MS = 1_500;
+// A run with no chat update for this long is treated as dead (its panel closed
+// mid-run), so it stops holding back chat sync. Longer than the question wait.
+export const CHAT_RUN_STALE_MS = 15 * 60_000;
 export const SYNC_MAX_BYTES_PER_ITEM = 7_500;
 
 export const STREAM_RENDER_THROTTLE_MS = 80;

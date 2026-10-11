@@ -242,7 +242,7 @@ for (const type of ["browser-sync", "webdav"] as const) {
         });
       }
       if (init?.method === "DELETE") {
-        assert.equal(headers.get("If-Match"), `"${version}"`);
+        assert.equal(headers.get("If-Match"), null);
         remote = undefined;
         return new Response(null, { status: 204 });
       }

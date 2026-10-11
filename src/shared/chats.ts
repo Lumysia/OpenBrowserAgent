@@ -6,6 +6,7 @@ import {
   type ChatPart,
   type RunMetrics,
 } from "./types";
+import { CHAT_RUN_STALE_MS } from "./config";
 
 const CHAT_MESSAGE_ROLES = new Set(["user", "assistant", "system", "tool"]);
 const TEXT_PART_TYPES = new Set(["text", "reasoning", "summary"]);
@@ -83,9 +84,12 @@ export function chatSnapshot(chats: Chat[]) {
   return tokens.join("\u001f");
 }
 
-export function hasUnfinishedChatRun(value: unknown) {
+export function hasUnfinishedChatRun(value: unknown, now = Date.now()) {
   if (!Array.isArray(value)) return false;
-  return (value as Chat[]).some(hasUnfinishedRun);
+  return (value as Chat[]).some(
+    (chat) =>
+      hasUnfinishedRun(chat) && now - (chat.updatedAt || 0) < CHAT_RUN_STALE_MS,
+  );
 }
 
 function reconcileChatSnapshot(current: Chat, incoming: Chat) {

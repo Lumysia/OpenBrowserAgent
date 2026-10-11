@@ -178,3 +178,16 @@ test("servers without write validators fail explicitly without issuing an unsafe
   );
   assert.equal(puts, 0);
 });
+
+test("clearing a document works on servers that send only weak ETags", async () => {
+  installBrowser();
+  const requests: string[] = [];
+  mock.method(globalThis, "fetch", async (_url, init) => {
+    requests.push(init?.method || "GET");
+    return init?.method === "DELETE"
+      ? new Response(null, { status: 204 })
+      : new Response(new Uint8Array([1]), { headers: { ETag: 'W/"weak"' } });
+  });
+  await createSyncBackend(config("weak-etag")).remove("preferences");
+  assert.deepEqual(requests, ["DELETE"]);
+});

@@ -177,15 +177,14 @@ function createWebDavBackend(config: WebDavSyncBackendConfig): SyncBackend {
       throw new Error("WebDAV write conflict retries exhausted.");
     },
     async remove(key) {
-      const remote = await readDocument(config, key);
-      if (remote) {
-        const response = await requestWebDav(config, objectUrl(config, key), {
-          method: "DELETE",
-          headers: writePrecondition(remote),
-        });
-        if (!response.ok && response.status !== 404)
-          await throwWebDavError(response, "remove");
-      }
+      // Only "clear data" removes documents, and it wants them gone whatever
+      // another device wrote, so the delete is unconditional. A conditional
+      // delete also fails on servers that send only weak ETags.
+      const response = await requestWebDav(config, objectUrl(config, key), {
+        method: "DELETE",
+      });
+      if (!response.ok && response.status !== 404)
+        await throwWebDavError(response, "remove");
       readCache.delete(syncBackendCacheKey(config, key));
       await removeLocalTinyBaseSyncDocument(syncBackendCacheKey(config, key));
     },
