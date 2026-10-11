@@ -105,6 +105,7 @@ type StreamPortOptions = {
     messages: Array<{ id: string; content: string; createdAt: number }>,
     assistantMessageId: string,
     createdAt: number,
+    sequence?: number,
   ) => void;
   removeQueuedMessage: (id: string, chatId: string) => void;
 };
@@ -203,6 +204,7 @@ function connectStreamPort({
         message.messages,
         message.assistantMessageId,
         message.createdAt,
+        message.sequence,
       );
       message.messages.forEach((item) => removeQueuedMessage(item.id, chatId));
       activeMessageId = message.assistantMessageId;
@@ -210,7 +212,6 @@ function connectStreamPort({
         ...stream,
         assistantMessageId: activeMessageId,
       }));
-      scheduleSequenceMetrics(sequenceMetrics);
       return;
     }
     if (message.type === "chunk") {

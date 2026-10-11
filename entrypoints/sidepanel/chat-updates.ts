@@ -61,17 +61,15 @@ export function appendAssistantPart({
                   ...message,
                   content: delta ? message.content + delta : message.content,
                   parts: part ? applyPart(message.parts, part) : message.parts,
-                  metadata: delta || metrics
-                    ? mergeRunMetrics(
-                        message.metadata,
-                        {
+                  metadata:
+                    delta || metrics
+                      ? mergeRunMetrics(message.metadata, {
                           ...(delta
                             ? deltaRunMetrics(message.metadata, delta)
                             : {}),
                           ...(metrics || {}),
-                        },
-                      )
-                    : message.metadata,
+                        })
+                      : message.metadata,
                 }
               : message,
           ),
@@ -143,12 +141,14 @@ export function appendQueuedMessages({
   messages,
   assistantMessageId,
   createdAt,
+  sequence,
 }: {
   chats: Chat[];
   chatId: string;
   messages: Array<{ id: string; content: string; createdAt: number }>;
   assistantMessageId: string;
   createdAt: number;
+  sequence?: number;
 }) {
   return chats.map((chat) =>
     chat.id === chatId ? appendQueuedMessagesToChat(chat) : chat,
@@ -175,7 +175,12 @@ export function appendQueuedMessages({
           parts: [],
           createdAt,
           metadata: {
-            runMetrics: { startedAt: createdAt, outputCharacters: 0 },
+            runMetrics: {
+              startedAt: createdAt,
+              outputCharacters: 0,
+              // Reattaching replays only events after this one.
+              streamEventIndex: sequence,
+            },
           },
         };
     if (!queuedMessages.length && !assistantMessage) return chat;

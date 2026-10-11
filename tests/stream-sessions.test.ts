@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 import * as sessions from "../src/background/stream-sessions";
 import { ABORT_CHAT_STREAMS } from "../src/shared/chat-stream-control";
-import type { AiStreamResponse } from "../src/shared/types";
+import type { AiStreamResponse, RunMetrics } from "../src/shared/types";
+import { appendQueuedMessages } from "../entrypoints/sidepanel/chat-updates";
 
 afterEach(() => mock.restoreAll());
 
@@ -97,4 +98,18 @@ test("a running session keeps the service worker alive until its run ends", () =
   } finally {
     globalThis.chrome = previous;
   }
+});
+
+test("a queued turn's assistant message stores its replay position", () => {
+  const [chat] = appendQueuedMessages({
+    chats: [{ id: "c", title: "", messages: [], createdAt: 0, updatedAt: 0 }],
+    chatId: "c",
+    messages: [{ id: "q", content: "next", createdAt: 1 }],
+    assistantMessageId: "a2",
+    createdAt: 1,
+    sequence: 42,
+  });
+  const metrics = chat.messages.at(-1)?.metadata?.runMetrics as RunMetrics;
+  // Without it, reopening the panel replays turn 1 into this message.
+  assert.equal(metrics.streamEventIndex, 42);
 });

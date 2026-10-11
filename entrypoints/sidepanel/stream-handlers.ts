@@ -118,6 +118,7 @@ export function createStreamHandlers(setChats: ChatSetter) {
       messages: Array<{ id: string; content: string; createdAt: number }>,
       assistantMessageId: string,
       createdAt: number,
+      sequence?: number,
     ) {
       setChats((items) =>
         appendQueuedMessages({
@@ -126,6 +127,7 @@ export function createStreamHandlers(setChats: ChatSetter) {
           messages,
           assistantMessageId,
           createdAt,
+          sequence,
         }),
       );
     },
