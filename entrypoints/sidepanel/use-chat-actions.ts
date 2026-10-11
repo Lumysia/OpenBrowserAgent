@@ -3,11 +3,13 @@ import type { Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { removeSyncedChatAttachments } from "../../src/shared/sync-chat-attachments";
 import type { SyncDataSettings } from "../../src/shared/storage-keys";
-import type { Chat } from "../../src/shared/types";
+import type { Chat, ChatMessage } from "../../src/shared/types";
 import {
   closeChatAction,
   closedChatIds,
   createChatAction,
+  forkChatAction,
+  pruneEmptyChats,
   selectChatAction,
 } from "./chat-state-actions";
 
@@ -91,5 +93,28 @@ export function useChatActions({
     [chats, setActiveChatId, setChatSelectionRequestId, setChats],
   );
 
-  return { createChat, closeChat, selectChat };
+  const importChat = useCallback(
+    (chat: Chat) => {
+      setChats((items) => [...pruneEmptyChats(items), chat]);
+      setActiveChatId(chat.id);
+    },
+    [setActiveChatId, setChats],
+  );
+
+  const forkMessage = useCallback(
+    (chat: Chat | undefined, message: ChatMessage, partId?: string) => {
+      if (!chat) return;
+      forkChatAction({
+        chat,
+        message,
+        partId,
+        forkLabel: t.sidepanel.forkTitleSuffix,
+        setChats,
+        setActiveChatId,
+      });
+    },
+    [setActiveChatId, setChats, t.sidepanel.forkTitleSuffix],
+  );
+
+  return { createChat, closeChat, selectChat, importChat, forkMessage };
 }

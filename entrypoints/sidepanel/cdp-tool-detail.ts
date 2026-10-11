@@ -1,4 +1,10 @@
 import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
+import {
+  arrayLabel,
+  compactJoin,
+  idLabel,
+  stringValue,
+} from "./tool-detail-format";
 
 export function cdpToolDetail(
   name: string,
@@ -128,22 +134,6 @@ function cdpPageDetail(
   return compactJoin([tab, operation]);
 }
 
-function stringValue(value: unknown) {
-  return typeof value === "string" && value.trim() ? value.trim() : "";
-}
-
-function idLabel(label: string, value: unknown) {
-  const text =
-    stringValue(value) || (Number.isFinite(Number(value)) ? String(value) : "");
-  return text ? `${label} ${text}` : "";
-}
-
-function arrayLabel(label: string, value: unknown) {
-  const items = Array.isArray(value) ? value : value ? [value] : [];
-  const text = items.map(String).filter(Boolean).join(", ");
-  return text ? `${label} ${text}` : "";
-}
-
 function arrayCount(label: string, value: unknown) {
   return Array.isArray(value) ? countValue(label, value.length) : "";
 }
@@ -184,8 +174,4 @@ function outputPreview(output: Record<string, unknown>) {
   if (typeof value === "number" || typeof value === "boolean")
     return String(value);
   return truncateValue(JSON.stringify(value));
-}
-
-function compactJoin(values: Array<string | undefined>) {
-  return values.filter(Boolean).join(" · ");
 }

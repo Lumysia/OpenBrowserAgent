@@ -15,3 +15,9 @@ export function interpolateSkillPackage(
     ),
   };
 }
+
+export function toggleSkill(skills: Skill[], skill: Skill) {
+  return skills.some((item) => item.id === skill.id)
+    ? skills.filter((item) => item.id !== skill.id)
+    : [...skills, skill];
+}
