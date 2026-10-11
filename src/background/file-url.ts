@@ -10,7 +10,6 @@ export async function readFileFromUrl(
   input: Record<string, unknown>,
   signal?: AbortSignal,
 ) {
-  signal?.throwIfAborted();
   const url = String(input.url || "").trim();
   if (!url) return { error: "Missing file URL" };
   try {
@@ -20,7 +19,6 @@ export async function readFileFromUrl(
     if (!response.ok)
       throw new Error(`Failed to fetch file: ${response.status}`);
     const blob = await response.blob();
-    signal?.throwIfAborted();
     const type = blob.type || "application/octet-stream";
     const size = blob.size;
     const format = String(input.format || "auto");
@@ -43,11 +41,9 @@ export async function readFileFromUrl(
     });
     if (format === "text" || (format === "auto" && isTextType(type, url))) {
       const text = await blob.text();
-      signal?.throwIfAborted();
       return slice(text, "text", "text");
     }
     const bytes = new Uint8Array(await blob.arrayBuffer());
-    signal?.throwIfAborted();
     if (format === "auto" && isVisionImageMimeType(type))
       return {
         success: true,
@@ -76,6 +72,7 @@ export async function readFileFromUrl(
       note: "Binary file content is provided as a slice. If this is PDF, Office, audio, or video, semantic understanding may require a provider-specific file parser/transcription tool.",
     };
   } catch (error) {
+    // A fetch aborted by Stop must surface as an abort, not a tool result.
     signal?.throwIfAborted();
     return {
       error: error instanceof Error ? error.message : String(error),

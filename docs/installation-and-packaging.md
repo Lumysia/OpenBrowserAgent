@@ -92,7 +92,7 @@ Safari does not support Chrome's `sidePanel` manifest entry in this target. In S
 
 Firefox uses its native sidebar. DOM scripting, tab navigation, downloads, default-engine search, and the separately installed Native Messaging bridge use Firefox extension APIs. CDP tools require Chromium's `debugger` API and are unavailable in Firefox and Safari. Tab grouping requires a browser exposing the tab-group APIs. Safari has no default-engine search integration or local execution bridge in this project; its output still needs conversion and validation with Safari/Xcode on macOS.
 
-For local execution bridge installation, lifecycle behavior, and browser-specific registration targets, see the [bridge guide](../packages/local-execution-bridge/README.md). Flatpak and Snap registration paths do not by themselves grant the sandbox access to host executables.
+For local execution bridge installation, lifecycle behavior, and browser-specific registration targets, see the [bridge guide](../packages/local-execution-bridge/README.md).
 
 ## Zip Package
 

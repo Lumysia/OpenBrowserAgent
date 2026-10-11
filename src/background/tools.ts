@@ -10,7 +10,7 @@ import {
 import { BROWSER_TOOL_NAME, UNKNOWN_TOOL_NAME } from "../shared/browser-tools";
 import { openDefaultSearchTab } from "./browser-search";
 import {
-  getActiveBrowserTab,
+  getActiveTab,
   isScriptableUrl,
   resolveBrowserTabId,
 } from "../shared/browser";
@@ -43,7 +43,7 @@ async function executeBrowserTool(
       return getCurrentTime(args);
     }
     case BROWSER_TOOL_NAME.getCurrentTab: {
-      const tab = await getActiveBrowserTab();
+      const tab = await getActiveTab();
       if (!tab) return { error: TOOL_ERROR.noActiveWebTabFound };
       return isScriptableUrl(tab.url)
         ? { tabId: tab.id, title: tab.title, url: tab.url }

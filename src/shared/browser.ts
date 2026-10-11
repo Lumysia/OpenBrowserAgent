@@ -3,37 +3,18 @@ import { TOOL_ERROR } from "./tool-errors";
 import type { AttachmentTab, SelectedElement } from "./types";
 
 export async function getActiveTab(): Promise<chrome.tabs.Tab | undefined> {
-  return getActiveBrowserTab();
-}
-
-async function getCurrentWindowActiveTab(): Promise<
-  chrome.tabs.Tab | undefined
-> {
-  const [tab] = await getBrowserApi().tabs.query({
-    active: true,
-    currentWindow: true,
-  });
-  return tab;
-}
-
-export async function getActiveBrowserTab(): Promise<
-  chrome.tabs.Tab | undefined
-> {
   const api = getBrowserApi();
-  const currentWindowTab = await getCurrentWindowActiveTab();
-  if (currentWindowTab) return currentWindowTab;
-  const [lastFocusedTab] = await api.tabs.query({
-    active: true,
-    lastFocusedWindow: true,
-  });
-  if (lastFocusedTab) return lastFocusedTab;
+  for (const query of [
+    { active: true, currentWindow: true },
+    { active: true, lastFocusedWindow: true },
+  ]) {
+    const [tab] = await api.tabs.query(query);
+    if (tab) return tab;
+  }
   const windows = await api.windows.getAll({ windowTypes: ["normal"] });
   for (const window of windows) {
     if (window.id === undefined) continue;
-    const [tab] = await api.tabs.query({
-      active: true,
-      windowId: window.id,
-    });
+    const [tab] = await api.tabs.query({ active: true, windowId: window.id });
     if (tab) return tab;
   }
   return undefined;
@@ -42,13 +23,13 @@ export async function getActiveBrowserTab(): Promise<
 export async function resolveBrowserTabId(value: unknown) {
   const tabId = Number(value);
   if (Number.isFinite(tabId) && tabId > 0) return tabId;
-  const activeTab = await getActiveBrowserTab();
+  const activeTab = await getActiveTab();
   if (!activeTab?.id) throw new Error(TOOL_ERROR.noActiveWebTabFound);
   return activeTab.id;
 }
 
 export async function getAllTabs(): Promise<AttachmentTab[]> {
-  const activeTab = await getActiveBrowserTab();
+  const activeTab = await getActiveTab();
   const tabs = await getBrowserApi().tabs.query(
     activeTab?.windowId === undefined ? {} : { windowId: activeTab.windowId },
   );

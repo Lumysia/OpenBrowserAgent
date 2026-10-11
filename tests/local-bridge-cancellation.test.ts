@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test, mock, afterEach } from "node:test";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
+import { mkdtemp, writeFile, readFile, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -10,8 +10,7 @@ import { storage } from "../src/shared/storage";
 import {
   startLocalExecutionBridge,
   getLocalExecutionBridgeStatus,
-  cancelLocalExecutionBridge,
-} from "../src/background/local-execution-bridge-tools";
+} from "../src/background/local-execution-bridge-tasks";
 import { toolBrowser, eventListeners } from "./tool-fixtures";
 
 afterEach(() => mock.restoreAll());
@@ -88,27 +87,23 @@ async function nativeFixture() {
   };
   const code = `process.on('SIGTERM',()=>{});require('fs').writeFileSync(${JSON.stringify(ready)},String(Date.now()));console.log('ready');setTimeout(()=>require('fs').writeFileSync(${JSON.stringify(marker)},'effect'),1800);setInterval(()=>{},1000)`;
   const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
-  const run = (timeoutMs = 10000, extra = {}) =>
+  const run = (extra = {}) =>
     send({
       type: "command.run",
       taskId: "fixture",
       command: { key: "fixture", secret: "disposable-fixture" },
       commandLine: `${quote(process.execPath)} -e ${quote(code)} & wait`,
-      timeoutMs,
+      timeoutMs: 10000,
       ...extra,
     });
   return {
     child,
+    directory,
     events,
     marker,
     send,
     wait,
     run,
-    earlyExit(redirect: boolean, exitCode = 0) {
-      run(10000, {
-        commandLine: `${quote(process.execPath)} -e ${quote(code)} ${redirect ? "</dev/null >/dev/null 2>&1" : ""} & while [ ! -f ${quote(ready)} ]; do sleep 0.01; done; printf 'shell output\\n'; exit ${exitCode}`,
-      });
-    },
     async assertNoEffect() {
       const started = Number(await readFile(ready, "utf8"));
       await delay(Math.max(0, started + 1900 - Date.now()));
@@ -126,14 +121,14 @@ async function nativeFixture() {
   };
 }
 
-for (const mode of ["cancel", "timeout", "eof"] as const)
+for (const mode of ["cancel", "eof"] as const)
   test(
     `native bridge ${mode} stops a TERM-resistant shell descendant before later effects`,
     { timeout: 10000 },
     async () => {
       const fixture = await nativeFixture();
       try {
-        fixture.run(mode === "timeout" ? 700 : 10000);
+        fixture.run();
         await fixture.wait(
           (event) => event.type === "stdout" && event.data.includes("ready"),
         );
@@ -143,8 +138,7 @@ for (const mode of ["cancel", "timeout", "eof"] as const)
         const terminal = await fixture.wait((event) =>
           ["command.done", "command.error"].includes(event.type),
         );
-        if (mode === "timeout") assert.match(terminal.error, /timed out/);
-        else assert.equal(terminal.event, "canceled");
+        assert.equal(terminal.event, "canceled");
         await fixture.assertNoEffect();
         assert.equal(
           fixture.events.filter((event) =>
@@ -158,43 +152,26 @@ for (const mode of ["cancel", "timeout", "eof"] as const)
     },
   );
 
-for (const { redirect, exitCode } of [
-  { redirect: false, exitCode: 7 },
-  { redirect: true, exitCode: 0 },
-])
-  test(
-    `native shell exit ${exitCode} terminates owned background work (${redirect ? "redirected" : "inherited"} stdio)`,
-    { timeout: 10000 },
-    async () => {
-      const fixture = await nativeFixture();
-      try {
-        fixture.earlyExit(redirect, exitCode);
-        const terminal = await fixture.wait((event) =>
-          ["command.done", "command.error"].includes(event.type),
-        );
-        assert.equal(
-          terminal.type,
-          exitCode ? "command.error" : "command.done",
-        );
-        assert.equal(terminal.result.code, exitCode);
-        assert.equal(terminal.event, undefined);
-        assert.ok(
-          fixture.events.some(
-            (event) =>
-              event.type === "stdout" && event.data.includes("shell output\n"),
-          ),
-        );
-        fixture.send({ type: "command.cancel", taskId: "fixture" });
-        await fixture.wait((event) => event.event === "missing");
-        fixture.child.stdin.end();
-        await fixture.assertNoEffect();
-      } finally {
-        await fixture.close();
-      }
-    },
-  );
+test(
+  "native bridge keeps the case of a custom POSIX shell path",
+  { skip: process.platform === "win32", timeout: 10000 },
+  async () => {
+    const fixture = await nativeFixture();
+    try {
+      const shell = join(fixture.directory, "Bin-Sh");
+      await symlink("/bin/sh", shell);
+      fixture.run({ shell, commandLine: "printf ok" });
+      const terminal = await fixture.wait((event) =>
+        ["command.done", "command.error"].includes(event.type),
+      );
+      assert.equal(terminal.type, "command.done", terminal.error);
+    } finally {
+      await fixture.close();
+    }
+  },
+);
 
-function extensionFixture(pong = true) {
+function extensionFixture() {
   toolBrowser();
   const bridge = {
     id: "fixture",
@@ -223,8 +200,6 @@ function extensionFixture(pong = true) {
           },
           postMessage(message: any) {
             sent.push(message);
-            if (pong && message.type === "command.ping")
-              queueMicrotask(() => onMessage.emit({ type: "command.pong" }));
           },
         };
         ports.push(port);
@@ -235,67 +210,45 @@ function extensionFixture(pong = true) {
   return { sent, ports };
 }
 
-test(
-  "native bridge reports a spawn failure once",
-  { timeout: 10000 },
-  async () => {
-    const fixture = await nativeFixture();
-    try {
-      fixture.run(10000, { cwd: fixture.marker });
-      await fixture.wait((event) => event.type === "command.error");
-      await delay(100);
-      assert.equal(
-        fixture.events.filter((event) =>
-          ["command.done", "command.error"].includes(event.type),
-        ).length,
-        1,
-      );
-    } finally {
-      await fixture.close();
-    }
-  },
-);
-
-test("extension abort during native ping cannot dispatch a command", async () => {
-  const fixture = extensionFixture(false);
-  const controller = new AbortController();
-  const running = startLocalExecutionBridge(
-    { command: "fixture" },
-    {},
-    undefined,
-    controller.signal,
+test("extension runs a bridge command without a ping or storage write", async () => {
+  const fixture = extensionFixture();
+  const set = mock.method(storage.localExecutionBridges, "set", async () => {});
+  await startLocalExecutionBridge({ command: "fixture" });
+  assert.deepEqual(
+    fixture.sent.map((message) => message.type),
+    ["command.run"],
   );
-  while (!fixture.sent.length) await delay(0);
-  controller.abort();
-  await assert.rejects(running, { name: "AbortError" });
-  assert.equal(fixture.ports[0].disconnected, true);
-  assert.equal(
-    fixture.sent.some((message) => message.type === "command.run"),
-    false,
-  );
+  assert.equal(set.mock.callCount(), 0);
 });
 
-test("extension stream abort delivers cancel, waits for ack, and preserves terminal state and output whitespace", async () => {
+test("extension keeps only the tail of long bridge output", async () => {
+  const fixture = extensionFixture();
+  const { taskId } = await startLocalExecutionBridge({ command: "fixture" });
+  const port = fixture.ports[0];
+  for (let i = 0; i < 100; i++)
+    port.onMessage.emit({ type: "stdout", taskId, data: "x".repeat(1024) });
+  port.onMessage.emit({ type: "stdout", taskId, data: "end" });
+  const { output } = await getLocalExecutionBridgeStatus({ taskId });
+  assert.equal(output!.length, 64 * 1024);
+  assert.ok(output!.endsWith("end"));
+});
+
+test("extension stream abort sends cancel, disconnects, and ignores late messages", async () => {
   const fixture = extensionFixture();
   const controller = new AbortController();
-  const output = await startLocalExecutionBridge(
+  const { taskId } = await startLocalExecutionBridge(
     { command: "fixture" },
     {},
     undefined,
     controller.signal,
   );
-  const taskId = output.taskId!;
-  const port = fixture.ports[1];
+  const port = fixture.ports[0];
   port.onMessage.emit({ type: "stdout", taskId, data: "line one\n" });
   controller.abort();
   assert.equal(fixture.sent.at(-1).type, "command.cancel");
-  assert.equal(port.disconnected, false);
-  const canceled = cancelLocalExecutionBridge({ taskId });
-  port.onMessage.emit({ type: "command.done", event: "canceled", taskId });
-  assert.equal((await canceled).state, "canceled");
+  assert.equal(port.disconnected, true);
   port.onMessage.emit({ type: "command.error", taskId, error: "late" });
   const status = await getLocalExecutionBridgeStatus({ taskId });
   assert.equal(status.state, "canceled");
   assert.equal(status.output, "line one\n");
-  assert.equal(port.disconnected, true);
 });

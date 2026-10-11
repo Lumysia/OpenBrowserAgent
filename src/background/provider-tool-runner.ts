@@ -24,7 +24,7 @@ import {
   type VisionImage,
 } from "./provider-output";
 import { executeContextAwareTool, getSubAgentStatus } from "./provider-tools";
-import { getLocalExecutionBridgeStatus } from "./local-execution-bridge-tools";
+import { getLocalExecutionBridgeStatus } from "./local-execution-bridge-tasks";
 import { isToolError } from "./tool-utils";
 import { delay } from "../shared/cancellation";
 

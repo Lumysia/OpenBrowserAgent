@@ -16,7 +16,6 @@ export async function testLocalExecutionBridge(
   bridgeId: string,
   signal?: AbortSignal,
 ) {
-  signal?.throwIfAborted();
   const bridge = normalizeLocalExecutionBridges(
     await storage.localExecutionBridges.get(),
   ).find((item) => item.id === bridgeId);
@@ -86,29 +85,6 @@ export async function testLocalExecutionBridge(
   });
 }
 
-export async function markLocalExecutionBridgeTested(
-  bridgeId: string,
-  error: string,
-  signal?: AbortSignal,
-) {
-  const bridges = normalizeLocalExecutionBridges(
-    await storage.localExecutionBridges.get(),
-  );
-  signal?.throwIfAborted();
-  const now = Date.now();
-  await storage.localExecutionBridges.set(
-    bridges.map((bridge) =>
-      bridge.id === bridgeId
-        ? {
-            ...bridge,
-            lastTestedAt: error ? undefined : now,
-            lastTestError: error,
-            updatedAt: now,
-          }
-        : bridge,
-    ),
-  );
-}
 function text(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }

@@ -13,10 +13,7 @@ export async function openDefaultSearchTab(
   try {
     signal?.throwIfAborted();
     await api.search.query({ text: query, tabId: tab.id });
-    signal?.throwIfAborted();
-    const searchedTab = await api.tabs.get(tab.id);
-    signal?.throwIfAborted();
-    return searchedTab;
+    return await api.tabs.get(tab.id);
   } catch (error) {
     await api.tabs.remove(tab.id).catch(() => undefined);
     throw error;

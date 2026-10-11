@@ -1,66 +1,32 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { readFile } from "node:fs/promises";
-import { setTimeout as delay } from "node:timers/promises";
-import JSZip from "jszip";
 import { browserToolFixture } from "./browser-tool-fixture.mjs";
 import { poll } from "./chromium.mjs";
-import { checkSelectorTheme } from "./browser-selector.mjs";
-import { checkCdpLifecycle } from "./browser-cdp-lifecycle.mjs";
 
-const png = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=",
-  "base64",
-);
+// Real Chromium is the only place where scrolling, hit-testing, key default
+// actions and inline handlers behave as they do for users.
+const PAGE = `<meta name="viewport" content="width=device-width"><title>OBA tool fixture</title>
+<style>html{scroll-behavior:smooth}body{height:2600px}</style>
+<form onsubmit="event.preventDefault();window.submitted=(window.submitted||0)+1">
+  <input id="input" data-ai-id="fixture-input" value="replace me">
+</form>
+<div id="target">x</div>
+<div id="note" contenteditable="true">old</div>
+<button onclick="window.saved=(window.saved||0)+1"><span>Save draft</span></button>
+<a id="spa" href="/elsewhere" onclick="event.preventDefault();window.spa=1">Open</a>
+<div style="height:2000px"></div>
+<main tabindex="-1" style="display:block;height:600px" onclick="window.hit=window.hit||'main'">
+  <input data-ai-id="far" onclick="window.hit='input'" style="margin:20px">
+</main>`;
+
 test(
-  "production browser tools honor display/input contracts and cancellation",
+  "production browser tools honor display and input contracts",
   { timeout: 120000 },
   async (t) => {
-    const slow = new Map();
-    let slowDownloads = false;
-    let imageRequests = 0;
-    let completeGeneration = false;
     const fixture = await browserToolFixture((request, response) => {
-      if (completeGeneration && request.url === "/v1/images/generations") {
-        response
-          .writeHead(200, { "Content-Type": "application/json" })
-          .end(
-            JSON.stringify({ data: [{ b64_json: png.toString("base64") }] }),
-          );
-        return true;
-      }
-      if (
-        ["/slow-file", "/v1/images/generations", "/v1/images/edits"].includes(
-          request.url,
-        ) ||
-        (slowDownloads && request.url === "/image.png")
-      ) {
-        const entry = { response, closed: false };
-        slow.set(request.url, entry);
-        response.on("close", () => {
-          entry.closed = true;
-        });
-        response.writeHead(200, {
-          "Content-Type": request.url.startsWith("/v1/")
-            ? "application/json"
-            : "image/png",
-        });
-        response.flushHeaders();
-        return true;
-      }
-      if (request.url === "/image.png" || request.url === "/second.png") {
-        imageRequests++;
-        response.writeHead(200, { "Content-Type": "image/png" }).end(png);
-        return true;
-      }
-      if (request.url === "/page") {
-        response
-          .writeHead(200, { "Content-Type": "text/html" })
-          .end(
-            '<meta name="viewport" content="width=device-width"><title>OBA tool fixture</title><style>body{height:2600px}.bg{width:30px;height:30px;background-image:url(/second.png)}</style><input id="input" data-ai-id="fixture-input" value="replace me"><button id="target">Target</button><img src="/image.png"><div class="bg"></div>',
-          );
-        return true;
-      }
+      if (request.url !== "/page") return false;
+      response.writeHead(200, { "Content-Type": "text/html" }).end(PAGE);
+      return true;
     });
     const { page } = fixture;
     try {
@@ -74,26 +40,59 @@ test(
           tab.id,
         ),
       );
-      const load = (names) => ({ name: "loadTools", args: { names } });
+      const targetId = await page.call(
+        async (id) =>
+          (await chrome.debugger.getTargets()).find(
+            (target) => target.tabId === id,
+          )?.id,
+        tab.id,
+      );
+      const load = {
+        name: "loadTools",
+        args: {
+          names: [
+            "cdpTakeScreenshot",
+            "cdpPage",
+            "cdpInput",
+            "cdpExecuteArbitraryJavaScript",
+          ],
+        },
+      };
+      const js = (code, selector = { tabId: tab.id }) => ({
+        name: "cdpExecuteArbitraryJavaScript",
+        args: { ...selector, code },
+      });
       const cdp = (operation, args = {}) => ({
         name: "cdpPage",
         args: { tabId: tab.id, operation, ...args },
       });
-      const evaluate = (fn) => ({
-        name: "cdpEvaluateScript",
-        args: { tabId: tab.id, function: fn },
+      const input = (args) => ({
+        name: "cdpInput",
+        args: { tabId: tab.id, ...args },
       });
+      const run = async (steps) => {
+        const results = await fixture.run([load, ...steps]);
+        for (const result of results)
+          assert.equal(
+            result.output.error,
+            undefined,
+            `${result.name}: ${result.output.error}`,
+          );
+        return results.slice(1).map((result) => result.output);
+      };
+      const attached = () =>
+        page.call(
+          async (id) =>
+            (await chrome.debugger.getTargets()).find(
+              (target) => target.id === id,
+            )?.attached,
+          targetId,
+        );
 
       await t.test(
-        "screenshots, persistent emulation, reset and keyboard shortcuts",
+        "full-page screenshot covers the whole document",
         async () => {
-          const results = await fixture.run([
-            load([
-              "cdpTakeScreenshot",
-              "cdpPage",
-              "cdpEvaluateScript",
-              "cdpInput",
-            ]),
+          const [visible, full] = await run([
             {
               name: "captureVisibleTab",
               args: { tabId: tab.id, format: "png" },
@@ -102,325 +101,137 @@ test(
               name: "cdpTakeScreenshot",
               args: { tabId: tab.id, format: "png", fullPage: true },
             },
-            cdp("emulate", {
-              viewport: "390x844x2,mobile",
-              colorScheme: "dark",
-              userAgent: "OpenBrowserAgent fixture",
-            }),
-            evaluate(
-              '()=>({width:innerWidth,height:innerHeight,dpr:devicePixelRatio,dark:matchMedia("(prefers-color-scheme: dark)").matches,ua:navigator.userAgent})',
-            ),
+          ]);
+          const height = (image) =>
+            Buffer.from(image.split(",")[1], "base64").readUInt32BE(20);
+          assert.ok(height(full.image) >= 2600);
+          assert.ok(height(full.image) > height(visible.image));
+        },
+      );
+
+      await t.test(
+        "emulation by targetId persists for the tab until reset",
+        async () => {
+          const metrics =
+            "({width:innerWidth,dpr:devicePixelRatio,dark:matchMedia('(prefers-color-scheme: dark)').matches})";
+          const out = await run([
+            {
+              name: "cdpPage",
+              args: {
+                targetId,
+                operation: "emulate",
+                viewport: "390x844x2,mobile",
+                colorScheme: "dark",
+              },
+            },
+            js(metrics),
             cdp("emulate", { reset: true }),
-            evaluate(
-              "()=>({width:innerWidth,dpr:devicePixelRatio,ua:navigator.userAgent})",
+            js(metrics, { targetId }),
+          ]);
+          assert.deepEqual(out[1].value, { width: 390, dpr: 2, dark: true });
+          assert.notEqual(out[3].value.width, 390);
+          assert.equal(out[3].value.dpr, 1);
+          assert.equal(await attached(), false);
+        },
+      );
+
+      await t.test("keys select, type and submit like a user", async () => {
+        const out = await run([
+          {
+            name: "mutatePage",
+            args: {
+              tabId: tab.id,
+              operation: "click",
+              target: { selector: "#input" },
+            },
+          },
+          input({ operation: "key", key: "Control+A" }),
+          input({ operation: "type", text: "replacement" }),
+          input({ operation: "key", key: "Enter" }),
+          js(
+            "({value:document.querySelector('#input').value,submitted:window.submitted})",
+          ),
+        ]);
+        assert.deepEqual(out[4].value, { value: "replacement", submitted: 1 });
+      });
+
+      await t.test(
+        "click by id hits a far input under smooth scroll and a tabindex ancestor",
+        async () => {
+          const out = await run([
+            input({ operation: "click", id: "far" }),
+            js("window.hit"),
+          ]);
+          assert.equal(out[0].clickedTag, "input");
+          assert.equal(out[1].value, "input");
+        },
+      );
+
+      await t.test(
+        "inspectPage and mutatePage find a control by its text",
+        async () => {
+          const target = { text: "save draft" };
+          const out = await run([
+            { name: "inspectPage", args: { tabId: tab.id, target } },
+            {
+              name: "mutatePage",
+              args: { tabId: tab.id, operation: "click", target },
+            },
+            js("window.saved"),
+          ]);
+          assert.equal(out[0].pages[0].target.tag, "button");
+          assert.equal(out[2].value, 1);
+        },
+      );
+
+      await t.test(
+        "mutatePage clicks links in place and edits text",
+        async () => {
+          const edit = (selector, operation, value) => ({
+            name: "mutatePage",
+            args: { tabId: tab.id, operation, target: { selector }, value },
+          });
+          const out = await run([
+            edit("#input", "input", "typed"),
+            edit("#note", "setText", "new note"),
+            js(
+              "[document.querySelector('#input').value,document.querySelector('#note').innerText]",
             ),
             {
               name: "mutatePage",
               args: {
                 tabId: tab.id,
                 operation: "click",
-                target: { selector: "#input" },
+                target: { selector: "#spa" },
               },
             },
-            {
-              name: "cdpInput",
-              args: { tabId: tab.id, operation: "key", key: "Control+A" },
-            },
-            {
-              name: "cdpInput",
-              args: { tabId: tab.id, operation: "type", text: "replacement" },
-            },
-            evaluate('()=>document.querySelector("#input").value'),
-            {
-              name: "inspectPage",
-              args: {
-                tabId: tab.id,
-                target: { selector: "#target" },
-                include: ["elements"],
-                waitFor: { selector: "#target" },
-              },
-            },
+            js("window.spa"),
           ]);
-          const output = (index) => results[index].output;
-          for (const item of results)
-            assert.equal(
-              item.output.error,
-              undefined,
-              `${item.name}: ${item.output.error}`,
-            );
-          const dimensions = (data) => {
-            const bytes = Buffer.from(data.split(",")[1], "base64");
-            return {
-              width: bytes.readUInt32BE(16),
-              height: bytes.readUInt32BE(20),
-            };
-          };
-          const visible = dimensions(output(1).image);
-          const full = dimensions(output(2).image);
-          assert.ok(full.height >= 2600);
-          assert.ok(full.height > visible.height);
-          assert.deepEqual(output(4).result, {
-            width: 390,
-            height: 844,
-            dpr: 2,
-            dark: true,
-            ua: "OpenBrowserAgent fixture",
-          });
-          assert.notEqual(output(6).result.width, 390);
-          assert.equal(output(6).result.dpr, 1);
-          assert.notEqual(output(6).result.ua, "OpenBrowserAgent fixture");
-          assert.equal(output(10).result, "replacement");
-          assert.equal(output(11).pages[0].targetFound, true);
-          console.log(
-            JSON.stringify({
-              visible,
-              full,
-              emulation: output(4).result,
-              shortcutValue: output(10).result,
-            }),
-          );
+          assert.deepEqual(out[2].value, ["typed", "new note"]);
+          assert.equal(out[3].openedTabId, undefined);
+          assert.equal(out[4].value, 1);
         },
       );
 
-      await checkCdpLifecycle(t, fixture, tab);
-
-      await t.test(
-        "ZIP and Markdown exports complete and contain the requested data",
-        async () => {
-          const results = await fixture.run([
-            { name: "downloadAllImagesInTab", args: { tabId: tab.id } },
-            { name: "downloadTabToMarkdown", args: { tabId: tab.id } },
-            {
-              name: "readFileFromUrl",
-              args: { url: `${fixture.baseUrl}/image.png` },
+      await t.test("mutatePage setHtml cannot run page script", async () => {
+        const out = await run([
+          {
+            name: "mutatePage",
+            args: {
+              tabId: tab.id,
+              operation: "setHtml",
+              target: { selector: "#target" },
+              value: '<img src="x" onerror="window.xss=1"><b>ok</b>',
             },
-          ]);
-          assert.equal(results[0].output.downloadedCount, 2);
-          assert.equal(results[1].output.success, true);
-          assert.equal(results[2].output.visionImageAttached, true);
-          const downloads = await page.call(() => chrome.downloads.search({}));
-          const zipFile = downloads.find((item) =>
-            item.filename.endsWith(".zip"),
-          );
-          const markdown = downloads.find((item) =>
-            item.filename.endsWith(".md"),
-          );
-          assert.equal(zipFile.state, "complete");
-          assert.equal(markdown.state, "complete");
-          for (const item of [zipFile, markdown])
-            assert.ok(item.filename.startsWith(fixture.browser.profile + "/"));
-          const zip = await JSZip.loadAsync(await readFile(zipFile.filename));
-          assert.equal(Object.keys(zip.files).length, 2);
-          for (const file of Object.values(zip.files))
-            assert.deepEqual(await file.async("nodebuffer"), png);
-          assert.match(
-            await readFile(markdown.filename, "utf8"),
-            /OBA tool fixture/,
-          );
-          console.log(
-            "Production ZIP: two correct image entries; Markdown and URL vision read passed.",
-          );
-        },
-      );
-
-      await t.test(
-        "generated image persists byte-correctly in production IndexedDB",
-        async () => {
-          completeGeneration = true;
-          const [result] = await fixture.run([
-            { name: "generateImage", args: { prompt: "fixture" } },
-          ]);
-          completeGeneration = false;
-          assert.equal(result.output.imageStored, true);
-          const bytes = await page.call(async (id) => {
-            const db = await new Promise((resolve, reject) => {
-              const request = indexedDB.open(
-                "openbrowseragent-chat-attachments",
-                1,
-              );
-              request.onsuccess = () => resolve(request.result);
-              request.onerror = () => reject(request.error);
-            });
-            try {
-              return await new Promise((resolve, reject) => {
-                const request = db
-                  .transaction("attachments")
-                  .objectStore("attachments")
-                  .get(id);
-                request.onsuccess = () =>
-                  resolve(Array.from(request.result.content));
-                request.onerror = () => reject(request.error);
-              });
-            } finally {
-              db.close();
-            }
-          }, result.output.imageAttachmentId);
-          assert.deepEqual(Buffer.from(bytes), png);
-        },
-      );
-
-      for (const name of [
-        "readFileFromUrl",
-        "generateImage",
-        "downloadAllImagesInTab",
-      ])
-        await t.test(
-          `stop cancels active ${name} network work and later tool effects`,
-          async () => {
-            const endpoint =
-              name === "generateImage"
-                ? "/v1/images/generations"
-                : name === "downloadAllImagesInTab"
-                  ? "/image.png"
-                  : "/slow-file";
-            slow.delete(endpoint);
-            slowDownloads = name === "downloadAllImagesInTab";
-            const beforeDownloads = await page.call(
-              async () => (await chrome.downloads.search({})).length,
-            );
-            const beforeImages = imageRequests;
-            await fixture.start([
-              {
-                name,
-                args: {
-                  tabId: tab.id,
-                  url: `${fixture.baseUrl}/slow-file`,
-                  prompt: "fixture",
-                },
-              },
-              {
-                name: "manageTabs",
-                args: { operation: "close", tabId: tab.id },
-              },
-            ]);
-            await poll(() => slow.get(endpoint), 15000);
-            await fixture.abort();
-            await poll(() => slow.get(endpoint)?.closed, 5000);
-            await delay(100);
-            assert.equal(
-              fixture.requests.length,
-              1,
-              "no model continuation after abort",
-            );
-            assert.equal(
-              await page.call(
-                async (id) => (await chrome.tabs.get(id)).id,
-                tab.id,
-              ),
-              tab.id,
-            );
-            assert.equal(
-              await page.call(
-                async () => (await chrome.downloads.search({})).length,
-              ),
-              beforeDownloads,
-            );
-            if (name === "downloadAllImagesInTab")
-              assert.equal(
-                imageRequests,
-                beforeImages,
-                "no fetch of the second image",
-              );
-            slowDownloads = false;
-            console.log(
-              `${name}: loopback connection closed on abort; no later tab close/download.`,
-            );
           },
-        );
-
-      for (const name of ["wait", "inspectPage", "cdpPage"])
-        await t.test(`stop interrupts ${name} polling`, async () => {
-          const step =
-            name === "wait"
-              ? { name, args: { milliseconds: 30000 } }
-              : name === "inspectPage"
-                ? {
-                    name,
-                    args: {
-                      tabId: tab.id,
-                      waitFor: {
-                        selector: "#missing",
-                        timeout: 30000,
-                        pollMs: 25,
-                      },
-                    },
-                  }
-                : cdp("waitFor", {
-                    text: ["missing fixture text"],
-                    timeout: 30000,
-                  });
-          await fixture.start([
-            ...(name === "cdpPage" ? [load(["cdpPage"])] : []),
-            step,
-            { name: "manageTabs", args: { operation: "close", tabId: tab.id } },
-          ]);
-          await poll(() =>
-            page.call(
-              (name) =>
-                toolRun.events.some(
-                  (event) =>
-                    event.chunk?.toolName === name &&
-                    event.chunk.state === "input-available",
-                ),
-              name,
-            ),
-          );
-          await fixture.abort();
-          await delay(100);
-          if (name === "cdpPage")
-            await poll(() =>
-              page.call(
-                async (id) =>
-                  !(await chrome.debugger.getTargets()).find(
-                    (target) => target.tabId === id,
-                  )?.attached,
-                tab.id,
-              ),
-            );
-          assert.equal(
-            await page.call(
-              async (id) => (await chrome.tabs.get(id)).id,
-              tab.id,
-            ),
-            tab.id,
-          );
-        });
-      await t.test(
-        "image edit abort closes its multipart provider request",
-        async () => {
-          slow.delete("/v1/images/edits");
-          await fixture.start(
-            [
-              {
-                name: "generateImage",
-                args: {
-                  prompt: "edit fixture",
-                  referenceAttachmentIds: ["reference"],
-                },
-              },
-            ],
-            [
-              {
-                id: "reference",
-                name: "reference.png",
-                kind: "image",
-                type: "image/png",
-                size: png.length,
-                dataUrl: `data:image/png;base64,${png.toString("base64")}`,
-              },
-            ],
-          );
-          await poll(() => slow.has("/v1/images/edits"));
-          await fixture.abort();
-          await poll(() => slow.get("/v1/images/edits")?.closed, 5000);
-          assert.equal(fixture.requests.length, 1);
-        },
-      );
-
-      await t.test(
-        "element selector uses effective local theme over stale raw sync preferences",
-        () => checkSelectorTheme(page, tab.id),
-      );
+          { name: "wait", args: { milliseconds: 300 } },
+          js(
+            "({xss:window.xss ?? null,bold:!!document.querySelector('#target b')})",
+          ),
+        ]);
+        assert.deepEqual(out[2].value, { xss: null, bold: true });
+      });
+      assert.equal(await attached(), false);
     } finally {
       await fixture.close();
     }

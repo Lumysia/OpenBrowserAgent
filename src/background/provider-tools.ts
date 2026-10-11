@@ -18,8 +18,8 @@ import {
   getLocalExecutionBridgeStatus,
   startLocalExecutionBridge,
   cancelLocalExecutionBridge,
-  manageLocalExecutionBridges,
-} from "./local-execution-bridge-tools";
+} from "./local-execution-bridge-tasks";
+import { manageLocalExecutionBridges } from "./local-execution-bridge-tools";
 import { manageMemory } from "./memory-tools";
 import {
   executeMcpTool,

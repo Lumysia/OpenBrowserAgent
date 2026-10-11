@@ -10,30 +10,23 @@ import { storage } from "../shared/storage";
 import type { LocalExecutionBridgeConfig } from "../shared/types";
 import { bridgeTaskCounts } from "./local-execution-bridge-tasks";
 import { testLocalExecutionBridge } from "./bridge-connection";
-export { testLocalExecutionBridge } from "./bridge-connection";
-export {
-  startLocalExecutionBridge,
-  getLocalExecutionBridgeStatus,
-  cancelLocalExecutionBridge,
-} from "./local-execution-bridge-tasks";
 
-export async function listLocalExecutionBridges() {
-  const bridges = normalizeLocalExecutionBridges(
+type Bridge = LocalExecutionBridgeConfig;
+
+async function loadBridges() {
+  return normalizeLocalExecutionBridges(
     await storage.localExecutionBridges.get(),
   );
-  return {
-    bridges: bridges.map((bridge) => safeLocalExecutionBridge(bridge)),
-  };
 }
 
 export function manageLocalExecutionBridges(input: Record<string, unknown>) {
-  const operation = stringValue(input.operation || "list");
-  if (operation === "list") return listLocalExecutionBridges();
-  if (operation === "status") return getLocalExecutionBridgeConfigStatus();
-  if (operation === "add") return addLocalExecutionBridge(input);
-  if (operation === "update") return updateLocalExecutionBridge(input);
-  if (operation === "test") return testLocalExecutionBridgeConfig(input);
-  if (operation === "delete") return deleteLocalExecutionBridge(input);
+  const operation = text(input.operation || "list");
+  if (operation === "list") return listBridges();
+  if (operation === "status") return bridgeStatus();
+  if (operation === "add") return addBridge(input);
+  if (operation === "update") return updateBridge(input);
+  if (operation === "test") return testBridge(text(input.bridgeId || input.id));
+  if (operation === "delete") return deleteBridge(input);
   return {
     success: false,
     error: "Unknown execution bridge operation",
@@ -41,19 +34,20 @@ export function manageLocalExecutionBridges(input: Record<string, unknown>) {
   };
 }
 
-export async function getLocalExecutionBridgeConfigStatus() {
-  const bridges = normalizeLocalExecutionBridges(
-    await storage.localExecutionBridges.get(),
-  );
+async function listBridges() {
+  return { bridges: (await loadBridges()).map((bridge) => safeBridge(bridge)) };
+}
+
+async function bridgeStatus() {
+  const bridges = (await loadBridges()).map((bridge) => safeBridge(bridge));
+  const usable = bridges.filter((bridge) => bridge.usable).length;
   return {
     success: true,
     configured: bridges.length > 0,
     bridgeCount: bridges.length,
-    usable: bridges.some((bridge) => isLocalExecutionBridgeUsable(bridge)),
-    usableBridgeCount: bridges.filter((bridge) =>
-      isLocalExecutionBridgeUsable(bridge),
-    ).length,
-    bridges: bridges.map((bridge) => safeLocalExecutionBridge(bridge)),
+    usable: usable > 0,
+    usableBridgeCount: usable,
+    bridges,
     ...bridgeTaskCounts(),
     guidance: bridges.length
       ? "Use operation=test with a bridgeId to verify native messaging connectivity, or startLocalExecutionBridge to run a command."
@@ -61,178 +55,112 @@ export async function getLocalExecutionBridgeConfigStatus() {
   };
 }
 
-export async function addLocalExecutionBridge(input: Record<string, unknown>) {
+async function addBridge(input: Record<string, unknown>) {
   const now = Date.now();
-  const inputSecret = stringValue(input.secret);
-  const generatedSecret = inputSecret
-    ? ""
-    : generateLocalExecutionBridgeSecret();
-  const bridge = normalizeLocalExecutionBridges([
+  const secret = text(input.secret);
+  const [bridge] = normalizeLocalExecutionBridges([
     {
       id: crypto.randomUUID(),
-      name: stringValue(input.name) || "Execution Bridge",
-      description: stringValue(input.description),
+      name: text(input.name) || "Execution Bridge",
+      description: text(input.description),
       hostName:
-        stringValue(input.hostName) ||
-        "openbrowseragent.local_execution_bridge",
-      hostAddress: stringValue(input.hostAddress),
-      secret: inputSecret || generatedSecret,
-      bridgeKey: stringValue(input.bridgeKey),
-      defaultCwd: stringValue(input.defaultCwd),
+        text(input.hostName) || "openbrowseragent.local_execution_bridge",
+      hostAddress: text(input.hostAddress),
+      secret: secret || generateLocalExecutionBridgeSecret(),
+      bridgeKey: text(input.bridgeKey),
+      defaultCwd: text(input.defaultCwd),
       timeoutMs: input.timeoutMs as number | undefined,
       createdAt: now,
       updatedAt: now,
     },
-  ])[0];
+  ]);
   await storage.localExecutionBridges.set([
     ...(await storage.localExecutionBridges.get()),
     bridge,
   ]);
-  if (input.test === true) {
-    const tested = await testLocalExecutionBridgeConfig({
-      bridgeId: bridge.id,
-    });
-    return includeSecretResult(tested, bridge.id, !inputSecret);
-  }
-  return {
-    success: true,
-    bridge: safeLocalExecutionBridge(bridge, !inputSecret),
-  };
+  // A generated secret is shown once so the user can copy it to the host.
+  return finish(bridge.id, input.test === true, !secret);
 }
 
-export async function updateLocalExecutionBridge(
-  input: Record<string, unknown>,
-): Promise<unknown> {
-  const bridgeId = stringValue(input.bridgeId || input.id);
+const EDITABLE = [
+  "name",
+  "description",
+  "hostName",
+  "hostAddress",
+  "bridgeKey",
+  "defaultCwd",
+  "secret",
+] as const;
+const CONNECTION = new Set(["hostName", "hostAddress", "bridgeKey", "secret"]);
+
+async function updateBridge(input: Record<string, unknown>) {
+  const bridgeId = text(input.bridgeId || input.id);
   if (!bridgeId)
     return { success: false, error: "Missing execution bridge ID" };
-  let updated: LocalExecutionBridgeConfig | undefined;
-  const rotateSecret = input.regenerateSecret === true;
+  const bridges = await loadBridges();
+  const current = bridges.find((bridge) => bridge.id === bridgeId);
+  if (!current) return { success: false, error: "Execution bridge not found" };
+  const rotate = input.regenerateSecret === true;
+  const patch: Partial<Bridge> = { updatedAt: Date.now() };
+  for (const key of EDITABLE)
+    if (input[key] !== undefined) patch[key] = text(input[key]);
+  if (input.timeoutMs !== undefined) patch.timeoutMs = Number(input.timeoutMs);
+  if (rotate) patch.secret = generateLocalExecutionBridgeSecret();
+  // A changed connection invalidates the previous test result.
+  if (rotate || EDITABLE.some((key) => CONNECTION.has(key) && key in patch))
+    Object.assign(patch, { lastTestedAt: undefined, lastTestError: "" });
   await storage.localExecutionBridges.set(
     normalizeLocalExecutionBridges(
-      await storage.localExecutionBridges.get(),
-    ).map((bridge) => {
-      if (bridge.id !== bridgeId) return bridge;
-      const patch: Partial<LocalExecutionBridgeConfig> = {
-        ...(input.name !== undefined ? { name: stringValue(input.name) } : {}),
-        ...(input.description !== undefined
-          ? { description: stringValue(input.description) }
-          : {}),
-        ...(input.hostName !== undefined
-          ? { hostName: stringValue(input.hostName) }
-          : {}),
-        ...(input.hostAddress !== undefined
-          ? { hostAddress: stringValue(input.hostAddress) }
-          : {}),
-        ...(input.bridgeKey !== undefined
-          ? { bridgeKey: stringValue(input.bridgeKey) }
-          : {}),
-        ...(input.defaultCwd !== undefined
-          ? { defaultCwd: stringValue(input.defaultCwd) }
-          : {}),
-        ...(input.timeoutMs !== undefined
-          ? { timeoutMs: Number(input.timeoutMs) }
-          : {}),
-        ...(input.secret !== undefined
-          ? { secret: stringValue(input.secret) }
-          : {}),
-        ...(rotateSecret
-          ? { secret: generateLocalExecutionBridgeSecret() }
-          : {}),
-        updatedAt: Date.now(),
-      };
-      const needsRetest =
-        input.hostName !== undefined ||
-        input.hostAddress !== undefined ||
-        input.bridgeKey !== undefined ||
-        input.secret !== undefined ||
-        rotateSecret;
-      updated = normalizeLocalExecutionBridges([
-        {
-          ...bridge,
-          ...patch,
-          ...(needsRetest
-            ? { lastTestedAt: undefined, lastTestError: "" }
-            : {}),
-        },
-      ])[0];
-      return updated;
-    }),
-  );
-  if (!updated) return { success: false, error: "Execution bridge not found" };
-  if (input.test === true) {
-    const tested = await testLocalExecutionBridgeConfig({ bridgeId });
-    return includeSecretResult(tested, bridgeId, rotateSecret);
-  }
-  return {
-    success: true,
-    bridge: safeLocalExecutionBridge(updated, rotateSecret),
-  };
-}
-
-export async function testLocalExecutionBridgeConfig(
-  input: Record<string, unknown>,
-) {
-  const bridgeId = stringValue(input.bridgeId || input.id);
-  if (!bridgeId)
-    return { success: false, error: "Missing execution bridge ID" };
-  let result: Record<string, unknown> | undefined;
-  let testError = "";
-  let testDiagnostic: Record<string, unknown> | undefined;
-  const bridges = normalizeLocalExecutionBridges(
-    await storage.localExecutionBridges.get(),
-  );
-  await storage.localExecutionBridges.set(
-    await Promise.all(
-      bridges.map(async (bridge) => {
-        if (bridge.id !== bridgeId) return bridge;
-        try {
-          const diagnostic = await testLocalExecutionBridge(bridge.id);
-          const next = {
-            ...bridge,
-            lastTestedAt: Date.now(),
-            lastTestError: "",
-            updatedAt: Date.now(),
-          };
-          result = { ...safeLocalExecutionBridge(next), diagnostic };
-          return next;
-        } catch (error) {
-          testError = errorMessage(error);
-          const failure = diagnoseLocalExecutionBridgeTestFailure(
-            bridge,
-            testError,
-          );
-          const next = {
-            ...bridge,
-            lastTestedAt: undefined,
-            lastTestError: failure.message,
-            updatedAt: Date.now(),
-          };
-          result = safeLocalExecutionBridge(next);
-          testError = failure.message;
-          testDiagnostic = failure;
-          return next;
-        }
-      }),
+      bridges.map((bridge) =>
+        bridge.id === bridgeId ? { ...bridge, ...patch } : bridge,
+      ),
     ),
   );
-  if (!result) return { success: false, error: "Execution bridge not found" };
-  return testError
-    ? {
-        success: false,
-        error: testError,
-        errorCode: testDiagnostic?.errorCode,
-        diagnostic:
-          testDiagnostic || diagnoseLocalExecutionBridgeError(testError),
-        bridge: result,
-      }
-    : { success: true, bridge: result };
+  return finish(bridgeId, input.test === true, rotate);
 }
 
-export async function deleteLocalExecutionBridge(
-  input: Record<string, unknown>,
-) {
-  const bridgeId = stringValue(input.bridgeId || input.id);
+async function finish(bridgeId: string, test: boolean, showSecret: boolean) {
+  const result: Record<string, unknown> = test
+    ? await testBridge(bridgeId)
+    : { success: true };
+  const bridge = (await loadBridges()).find((item) => item.id === bridgeId);
+  return bridge
+    ? { ...result, bridge: safeBridge(bridge, showSecret) }
+    : result;
+}
+
+async function testBridge(bridgeId: string): Promise<Record<string, unknown>> {
+  if (!bridgeId)
+    return { success: false, error: "Missing execution bridge ID" };
+  const bridges = await loadBridges();
+  const bridge = bridges.find((item) => item.id === bridgeId);
+  if (!bridge) return { success: false, error: "Execution bridge not found" };
+  let result: Record<string, unknown>;
+  let lastTestError = "";
+  try {
+    result = { success: true, ping: await testLocalExecutionBridge(bridgeId) };
+  } catch (error) {
+    lastTestError = error instanceof Error ? error.message : String(error);
+    result = {
+      success: false,
+      error: lastTestError,
+      ...diagnose(bridge, lastTestError),
+    };
+  }
+  const tested = {
+    ...bridge,
+    lastTestedAt: lastTestError ? undefined : Date.now(),
+    lastTestError,
+    updatedAt: Date.now(),
+  };
+  await storage.localExecutionBridges.set(
+    bridges.map((item) => (item.id === bridgeId ? tested : item)),
+  );
+  return { ...result, bridge: safeBridge(tested) };
+}
+
+async function deleteBridge(input: Record<string, unknown>) {
+  const bridgeId = text(input.bridgeId || input.id);
   const bridges = await storage.localExecutionBridges.get();
   const next = bridges.filter((bridge) => bridge.id !== bridgeId);
   await storage.localExecutionBridges.set(next);
@@ -243,27 +171,26 @@ export function handleLocalExecutionBridgeRuntimeMessage(
   message: unknown,
   sendResponse: (response: LocalExecutionBridgeRuntimeResponse) => void,
 ) {
-  const request = objectValue(message);
+  const request = (message || {}) as Record<string, unknown>;
   if (request.type !== LOCAL_EXECUTION_BRIDGE_RUNTIME_MESSAGE_TYPE)
     return false;
-  const operation = stringValue(request.operation);
   const promise =
-    operation === "test"
-      ? testLocalExecutionBridge(stringValue(request.bridgeId))
+    request.operation === "test"
+      ? testLocalExecutionBridge(text(request.bridgeId))
       : Promise.reject(new Error("Unknown local execution bridge operation."));
   promise
     .then((value) => sendResponse({ ok: true, value }))
-    .catch((error) => sendResponse({ ok: false, error: errorMessage(error) }));
+    .catch((error) =>
+      sendResponse({
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    );
   return true;
 }
 
-function safeLocalExecutionBridge(
-  bridge: LocalExecutionBridgeConfig,
-  includeSecret = false,
-) {
-  const tested = isLocalExecutionBridgeTested(bridge);
-  const shellConfigConfigured = !!bridge.bridgeKey || tested;
-  const currentDiagnostic = currentLocalExecutionBridgeDiagnostic(bridge);
+function safeBridge(bridge: Bridge, includeSecret = false) {
+  const tested = !!bridge.lastTestedAt && !bridge.lastTestError;
   return {
     id: bridge.id,
     name: bridge.name,
@@ -271,156 +198,42 @@ function safeLocalExecutionBridge(
     hostName: bridge.hostName,
     hostAddress: bridge.hostAddress,
     bridgeKey: bridge.bridgeKey,
-    exists: true,
-    nativeHostConfigured: !!bridge.hostName,
-    shellConfigConfigured,
     tested,
-    usable: isLocalExecutionBridgeUsable(bridge),
+    usable: !!bridge.hostName && tested,
     lastTestError: bridge.lastTestError || "",
-    ...(currentDiagnostic ? { currentDiagnostic } : {}),
+    ...(bridge.lastTestError ? diagnose(bridge, bridge.lastTestError) : {}),
     defaultCwd: bridge.defaultCwd,
     timeoutMs: bridge.timeoutMs,
     ...(includeSecret ? { secret: bridge.secret } : {}),
   };
 }
 
-async function includeSecretResult(
-  result: unknown,
-  bridgeId: string,
-  includeSecret: boolean,
-) {
-  if (!includeSecret) return result;
-  const bridge = normalizeLocalExecutionBridges(
-    await storage.localExecutionBridges.get(),
-  ).find((item) => item.id === bridgeId);
-  if (!bridge || !result || typeof result !== "object") return result;
-  return { ...result, bridge: safeLocalExecutionBridge(bridge, true) };
-}
-
-function isLocalExecutionBridgeTested(bridge: LocalExecutionBridgeConfig) {
-  return !!bridge.lastTestedAt && !bridge.lastTestError;
-}
-
-function isLocalExecutionBridgeUsable(bridge: LocalExecutionBridgeConfig) {
-  return !!bridge.hostName && isLocalExecutionBridgeTested(bridge);
-}
-
-function currentLocalExecutionBridgeDiagnostic(
-  bridge: LocalExecutionBridgeConfig,
-) {
-  if (!bridge.hostName) {
-    return {
-      errorCode: "MISSING_NATIVE_HOST",
-      message: "Native host name is missing.",
-      nextStep: "Update this bridge with the Native Messaging host name.",
-    };
-  }
-  if (!bridge.bridgeKey && !isLocalExecutionBridgeTested(bridge)) {
+// Turn a native host error into the one setup step that fixes it.
+function diagnose(bridge: Bridge, error: string) {
+  const message = error.toLowerCase();
+  if (message.includes("unknown shell config"))
     return {
       errorCode: "MISSING_SHELL_CONFIG",
-      message:
-        "Bridge exists, but bridgeKey is empty and the bridge has not passed a test.",
+      nextStep: `The native host is reachable but has no shell config "${bridge.bridgeKey || bridge.id}". Set bridgeKey to the command ID printed by the installer, then test again.`,
+    };
+  if (message.includes("secret"))
+    return {
+      errorCode: "SECRET_MISMATCH",
       nextStep:
-        "Complete local execution bridge setup or update this bridge with a valid bridgeKey, then test again.",
+        "Set this bridge's secret to the one printed by the installer (or rerun the installer with --secret), then test again.",
     };
-  }
-  if (bridge.lastTestError) {
-    return diagnoseLocalExecutionBridgeTestFailure(
-      bridge,
-      bridge.lastTestError,
-    );
-  }
-  return undefined;
-}
-
-function objectValue(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object"
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function stringValue(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : String(error);
-}
-
-function diagnoseLocalExecutionBridgeError(error: string) {
-  const normalized = error.toLowerCase();
-  if (normalized.includes("unknown shell config")) {
+  if (message.includes("not found") || message.includes("not registered"))
     return {
-      errorCode: "MISSING_SHELL_CONFIG",
-      reason:
-        "The Native Messaging host is reachable, but it could not find the requested shell configuration.",
-      nextSteps: [
-        "Complete local execution bridge setup and copy the shell config key into bridgeKey.",
-        "If setup already ran, update this bridge with the exact bridgeKey printed by the installer.",
-        "Run manageLocalExecutionBridges operation=test again after updating bridgeKey.",
-      ],
-    };
-  }
-  if (
-    normalized.includes("native messaging host not found") ||
-    normalized.includes("specified native messaging host not found") ||
-    normalized.includes("not registered")
-  ) {
-    return {
-      reason:
-        "The browser cannot find the Native Messaging host registration for this extension.",
-      nextSteps: [
-        "Run the local execution bridge installer for the exact browser and extension ID.",
-        "For Brave, Vivaldi, or Chromium on Windows, reinstall with the latest bridge package because those browsers may read Chrome-compatible Native Messaging registry keys.",
-        "Fully restart the browser after installing the host, then test again.",
-      ],
-    };
-  }
-  if (normalized.includes("secret")) {
-    return {
-      reason:
-        "The extension-side bridge secret does not match the native bridge shell config.",
-      nextSteps: [
-        "Use the secret printed by the installer output.",
-        "If the secret was rotated, update the extension-side bridge config before testing again.",
-      ],
-    };
-  }
-  return undefined;
-}
-
-function diagnoseLocalExecutionBridgeTestFailure(
-  bridge: LocalExecutionBridgeConfig,
-  error: string,
-) {
-  const normalized = error.toLowerCase();
-  if (normalized.includes("unknown shell config")) {
-    const shellKey = bridge.bridgeKey || bridge.id;
-    return {
-      errorCode: "MISSING_SHELL_CONFIG",
-      message: bridge.bridgeKey
-        ? `Native host is reachable, but shell config "${shellKey}" was not found.`
-        : `Bridge exists, but bridgeKey is empty. The native host tried fallback shell config "${shellKey}" and did not find it.`,
+      errorCode: "NATIVE_HOST_NOT_FOUND",
       nextStep:
-        "Complete local execution bridge setup or update this bridge with a valid bridgeKey, then test again.",
-      phases: {
-        bridgeConfig: "ok",
-        nativeHost: "ok",
-        shellConfig: "missing",
-        commandExecution: "skipped",
-      },
+        "Run the local execution bridge installer for this browser and extension ID, fully restart the browser, then test again.",
     };
-  }
   return {
     errorCode: "BRIDGE_TEST_FAILED",
-    message: error,
-    nextStep:
-      "Review the diagnostic reason and local execution bridge setup, then test again.",
-    phases: {
-      bridgeConfig: bridge.hostName ? "ok" : "missing",
-      nativeHost: "unknown",
-      shellConfig: bridge.bridgeKey ? "unknown" : "missing",
-      commandExecution: "skipped",
-    },
+    nextStep: "Review the local execution bridge setup, then test again.",
   };
+}
+
+function text(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
 }

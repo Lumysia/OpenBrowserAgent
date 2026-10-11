@@ -104,14 +104,6 @@ function pingCommand(message) {
 
 function runCommand(message) {
   const taskId = String(message.taskId || cryptoRandomId());
-  if (tasks.has(taskId)) {
-    writeMessage({
-      type: "command.error",
-      taskId,
-      error: "Task ID is already running.",
-    });
-    return;
-  }
   const config = resolveCommand(message, taskId);
   if (!config) return;
   const commandLine = String(
@@ -139,16 +131,11 @@ function runCommand(message) {
     },
     stdio: ["pipe", "pipe", "pipe"],
   });
-  const task = {
-    child,
-    stopping: undefined,
-    stopReason: undefined,
-    stopError: undefined,
-    timer: undefined,
-    spawnFailed: false,
-  };
+  // reason: why the process group is being stopped ("completed" when the
+  // shell exited on its own); stopping: the kill in progress.
+  const task = { child, reason: undefined, stopping: undefined, error: "" };
   tasks.set(taskId, task);
-  task.timer = setTimeout(
+  const timer = setTimeout(
     () => cancelTask(taskId, "timeout"),
     commandTimeout(message.timeoutMs || config.timeoutMs),
   );
@@ -158,32 +145,18 @@ function runCommand(message) {
     taskId,
     data: commandLine,
   });
-
-  child.stdout.on("data", (chunk) =>
-    writeMessage({
-      type: "stdout",
-      event: "stdout",
-      taskId,
-      data: chunk.toString(),
-    }),
-  );
-  child.stderr.on("data", (chunk) =>
-    writeMessage({
-      type: "stderr",
-      event: "stderr",
-      taskId,
-      data: chunk.toString(),
-    }),
-  );
+  for (const stream of ["stdout", "stderr"])
+    child[stream].on("data", (chunk) =>
+      writeMessage({
+        type: stream,
+        event: stream,
+        taskId,
+        data: chunk.toString(),
+      }),
+    );
+  // A spawn failure emits "error" and then "close"; report it from close.
   child.on("error", (error) => {
-    task.spawnFailed = true;
-    clearTimeout(task.timer);
-    tasks.delete(taskId);
-    writeMessage({
-      type: "command.error",
-      taskId,
-      error: formatSpawnError(error, shell.command),
-    });
+    task.error = formatSpawnError(error, shell.command);
   });
   // Shell completion bounds the command's lifetime, including background work
   // that inherited its process group. Start cleanup on exit, not close: a child
@@ -192,14 +165,13 @@ function runCommand(message) {
     if (process.platform !== "win32") cancelTask(taskId, "completed");
   });
   child.on("close", async (code, signal) => {
-    clearTimeout(task.timer);
-    if (task.spawnFailed) return;
+    clearTimeout(timer);
     await task.stopping;
     tasks.delete(taskId);
-    const canceled = task.stopReason === "canceled" && !task.stopError;
+    const canceled = task.reason === "canceled" && !task.error;
     const error =
-      task.stopError ||
-      (task.stopReason === "timeout"
+      task.error ||
+      (task.reason === "timeout"
         ? "Local command timed out."
         : canceled || code === 0
           ? undefined
@@ -247,16 +219,10 @@ function cancelTask(taskId, reason = "canceled") {
     writeMessage({ type: "status", event: "missing", taskId });
     return;
   }
-  if (task.stopping) {
-    if (task.stopReason === "completed" && reason !== "completed")
-      task.stopReason = reason;
-    return task.stopping;
-  }
-  clearTimeout(task.timer);
-  task.stopReason = reason;
-  task.stopping = terminateProcessTree(task.child).catch((error) => {
-    task.stopError = error.message;
-    writeMessage({ type: "command.error", taskId, error: task.stopError });
+  // A cancel or timeout that arrives during exit cleanup still decides the result.
+  if (!task.reason || task.reason === "completed") task.reason = reason;
+  task.stopping ??= terminateProcessTree(task.child).catch((error) => {
+    task.error = error.message;
   });
   return task.stopping;
 }
@@ -353,7 +319,7 @@ function resolveShell(value) {
     };
   }
   return {
-    command: requested || process.env.SHELL || "sh",
+    command: value.trim() || process.env.SHELL || "sh",
     args: (commandLine) => ["-lc", commandLine],
   };
 }
