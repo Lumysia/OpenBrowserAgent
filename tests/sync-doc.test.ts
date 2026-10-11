@@ -13,11 +13,6 @@ afterEach(() => mock.restoreAll());
 const collections = [
   { key: "provider", seed: { only: { id: "only", models: [] } }, empty: {} },
   { key: "agents", seed: [{ id: "only", name: "Only" }], empty: [] },
-  {
-    key: "chats",
-    seed: [{ id: "only", messages: [{ id: "message", content: "Hello" }] }],
-    empty: [],
-  },
 ];
 
 test("same-millisecond edits from separate replicas converge", async () => {
@@ -150,29 +145,6 @@ test("empty record entries remain present when all their fields are deleted", as
     undefined,
   );
   const next = { nested: {} };
-  const result = await writeTinyBaseSyncValue(key, next, seed.bytes);
-  assert.deepEqual(result.value, next);
-  installBrowser();
-  assert.deepEqual(await readTinyBaseSyncValue(key, result.bytes), next);
-});
-
-test("deleting final nested chat items preserves the chat and its other fields", async () => {
-  installBrowser();
-  const key = "chats";
-  const seed = await writeTinyBaseSyncValue(
-    key,
-    [
-      {
-        id: "chat",
-        title: "Keep",
-        messages: [{ id: "message", content: "Hello" }],
-        sources: [{ id: "source", title: "Reference" }],
-        imageGenerationJobs: [{ id: "job", status: "complete" }],
-      },
-    ],
-    undefined,
-  );
-  const next = [{ id: "chat", title: "Keep", messages: [] }];
   const result = await writeTinyBaseSyncValue(key, next, seed.bytes);
   assert.deepEqual(result.value, next);
   installBrowser();

@@ -6,7 +6,7 @@ import {
   syncLocalCacheKey,
 } from "./storage";
 import { getActiveSyncBackend, isSyncBackendEnabled } from "./sync-backends";
-import { tinybaseSyncLocalCacheKey } from "./sync-tinybase-doc";
+import { syncLocalDataKey } from "./sync-tinybase-doc";
 
 const STORAGE_KEY_GROUPS = {
   settings: [
@@ -46,10 +46,12 @@ export async function clearAppStorage({
   const selectedKeys = selectedTargets.flatMap(
     (target) => STORAGE_KEY_GROUPS[target],
   );
-  // Replicas are scoped per backend (`tinybase-sync-doc:<scope>:<key>`).
-  const replicaKeys = Object.keys(await getBrowserApi().storage.local.get(null))
-    .filter((stored) => stored.startsWith(tinybaseSyncLocalCacheKey("")))
-    .filter((stored) => selectedKeys.some((key) => stored.endsWith(`:${key}`)));
+  // Replicas and split-collection state are scoped per backend.
+  const replicaKeys = Object.keys(
+    await getBrowserApi().storage.local.get(null),
+  ).filter((stored) =>
+    (selectedKeys as string[]).includes(syncLocalDataKey(stored) ?? ""),
+  );
   const cacheKeys = [...selectedKeys.map(syncLocalCacheKey), ...replicaKeys];
   // Capture the backend before local cleanup deletes its configuration.
   const backend =
