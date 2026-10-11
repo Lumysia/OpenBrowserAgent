@@ -3,9 +3,9 @@ import {
   RELATIVE_TIME_MINUTE_MS,
 } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
-import type { Chat } from "../../src/shared/types";
+import type { ChatMeta } from "../../src/shared/types";
 
-export function sortChatsNewestFirst(chats: Chat[]) {
+export function sortChatsNewestFirst<T extends ChatMeta>(chats: T[]) {
   return [...chats].sort(
     (a, b) =>
       Number(!!b.pinnedAt) - Number(!!a.pinnedAt) ||

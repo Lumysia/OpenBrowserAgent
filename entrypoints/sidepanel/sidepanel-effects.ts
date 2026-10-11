@@ -10,6 +10,7 @@ import {
 import type {
   Agent,
   Chat,
+  ChatSummary,
   Preferences,
   SelectedElement,
   Skill,
@@ -221,7 +222,7 @@ function messageScrollSignature(messages: Chat["messages"] | undefined) {
 }
 
 export function useChatSelection(
-  chats: Chat[] | undefined,
+  chats: ChatSummary[] | undefined,
   activeChatId: string | undefined,
   draftChatId: string | undefined,
   initializedChatSelectionRef: RefObject<boolean>,
@@ -302,7 +303,7 @@ export function useAutoRetryStream({
   autoRetry,
   activeStreamsRef,
   lastStreamActivityRef,
-  chatsRef,
+  getChat,
   preferences,
   language,
   uploadedAttachments,
@@ -314,7 +315,7 @@ export function useAutoRetryStream({
   autoRetry: boolean | undefined;
   activeStreamsRef: RefObject<ActiveStreamMap>;
   lastStreamActivityRef: RefObject<Record<string, number>>;
-  chatsRef: RefObject<Chat[]>;
+  getChat: (chatId: string) => Chat | undefined;
   preferences: Preferences | undefined;
   language: string | undefined;
   uploadedAttachments: UploadedAttachment[];
@@ -337,7 +338,7 @@ export function useAutoRetryStream({
         lastStreamActivityRef.current[active.chatId] = Date.now();
         retryStalledStream({
           active,
-          chats: chatsRef.current,
+          chat: getChat(active.chatId),
           preferences,
           language: language || "en-US",
           uploadedAttachments,
@@ -361,15 +362,15 @@ export function useChatListCleanup({
   storedCurrentChat,
   setDraftChat,
 }: {
-  chats: Chat[] | undefined;
-  setChats: (update: (items: Chat[]) => Chat[]) => unknown;
+  chats: ChatSummary[] | undefined;
+  setChats: (update: (items: ChatSummary[]) => ChatSummary[]) => unknown;
   activeChatId: string | undefined;
   draftChat: Chat | undefined;
-  storedCurrentChat: Chat | undefined;
+  storedCurrentChat: ChatSummary | undefined;
   setDraftChat: (chat: Chat | undefined) => void;
 }) {
   useEffect(() => {
-    if (!chats?.some((chat) => !chat.messages.length)) return;
+    if (!chats?.some((chat) => !chat.messageCount)) return;
     setChats((items) => pruneEmptyChats(items));
   }, [chats, setChats]);
 

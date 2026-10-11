@@ -2,7 +2,10 @@ import {
   CHAT_PART_STATE,
   isToolPartType,
   type Chat,
+  type ChatContent,
   type ChatMessage,
+  type ChatMeta,
+  type ChatSummary,
   type ChatPart,
   type RunMetrics,
 } from "./types";
@@ -12,87 +15,155 @@ const CHAT_MESSAGE_ROLES = new Set(["user", "assistant", "system", "tool"]);
 const TEXT_PART_TYPES = new Set(["text", "reasoning", "summary"]);
 const CHAT_PART_STATES = new Set<string>(Object.values(CHAT_PART_STATE));
 
-export function normalizeChats(value: unknown): Chat[] {
+export function normalizeChatSummaries(value: unknown): ChatSummary[] {
   if (!Array.isArray(value)) return [];
-  return value.map(normalizeChat);
-}
-
-export function reconcileChatSnapshots(
-  current: Chat[] | undefined,
-  incoming: Chat[],
-) {
-  if (!current?.length) return incoming;
-  const currentById = new Map(current.map((chat) => [chat.id, chat]));
-  const incomingIds = new Set(incoming.map((chat) => chat.id));
-  let changed = false;
-  const reconciled = incoming.map((chat) => {
-    const currentChat = currentById.get(chat.id);
-    if (!currentChat) return chat;
-    const nextChat = reconcileChatSnapshot(currentChat, chat);
-    if (nextChat !== chat) changed = true;
-    return nextChat;
+  return value.map((item) => {
+    const summary = objectValue(item);
+    return {
+      ...chatMeta(normalizeChat(summary)),
+      messageCount: numberValue(summary.messageCount, 0),
+      running: summary.running === true || undefined,
+      attachmentIds: stringArray(summary.attachmentIds),
+    };
   });
-  for (const chat of current) {
-    if (incomingIds.has(chat.id) || !hasUnfinishedRun(chat)) continue;
-    reconciled.push(chat);
-    changed = true;
-  }
-  return changed ? reconciled : incoming;
 }
 
-export function chatSnapshot(chats: Chat[]) {
-  const tokens = [`chats:${chats.length}`];
-  for (const chat of chats) {
-    tokens.push(
-      chat.id,
-      String(chat.createdAt),
-      String(chat.updatedAt),
-      stringFingerprint(chat.title),
-      String(chat.pinnedAt || 0),
-      String(chat.messages.length),
-      String(chat.sources?.length || 0),
-      String(chat.imageGenerationJobs?.length || 0),
+export function normalizeChatContent(value: unknown): ChatContent {
+  return chatContent(normalizeChat(value));
+}
+
+const CONTENT_FIELDS = ["messages", "sources", "imageGenerationJobs"] as const;
+
+export function chatContent(chat: ChatContent): ChatContent {
+  return {
+    messages: chat.messages,
+    ...(chat.sources ? { sources: chat.sources } : {}),
+    ...(chat.imageGenerationJobs
+      ? { imageGenerationJobs: chat.imageGenerationJobs }
+      : {}),
+  };
+}
+
+export function chatMeta(chat: ChatMeta): ChatMeta {
+  const meta = { ...chat } as Record<string, unknown>;
+  for (const field of [
+    ...CONTENT_FIELDS,
+    "messageCount",
+    "running",
+    "attachmentIds",
+  ])
+    delete meta[field];
+  for (const [field, value] of Object.entries(meta))
+    if (value === undefined) delete meta[field];
+  return meta as ChatMeta;
+}
+
+// What the list keeps about a chat's content. `attachmentIds` is derived when
+// the content is stored (it scans the whole content).
+export function chatFacts(content: ChatContent, attachmentIds?: string[]) {
+  return {
+    messageCount: content.messages.length,
+    ...(hasUnfinishedRun(content) ? { running: true } : {}),
+    ...(attachmentIds?.length ? { attachmentIds } : {}),
+  };
+}
+
+export function chatSummary(chat: Chat): ChatSummary {
+  return { ...chatMeta(chat), ...chatFacts(chat) };
+}
+
+// A list entry with new metadata or facts; facts left out are cleared.
+export function withChatFacts(
+  summary: ChatMeta,
+  facts: ReturnType<typeof chatFacts>,
+): ChatSummary {
+  return { ...chatMeta(summary), ...facts };
+}
+
+// The list without these chats (their contents leave with them) and without
+// links to them.
+export function withoutChats(
+  chats: ChatSummary[],
+  removedIds: ReadonlySet<string>,
+) {
+  if (!chats.some((chat) => removedIds.has(chat.id))) return chats;
+  return chats
+    .filter((chat) => !removedIds.has(chat.id))
+    .map((chat) =>
+      chat.childChatIds?.some((id) => removedIds.has(id))
+        ? {
+            ...chat,
+            childChatIds: chat.childChatIds.filter((id) => !removedIds.has(id)),
+          }
+        : chat,
     );
-    for (const message of chat.messages) {
-      const metrics = runMetrics(message);
+}
+
+export function joinChat(meta: ChatMeta, content: ChatContent): Chat {
+  return { ...chatMeta(meta), ...content };
+}
+
+// A summary differs in what the list shows or sync needs.
+export function sameChatSummary(left: ChatSummary, right: ChatSummary) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+// Merge an incoming copy of a chat's content into the one in use, keeping the
+// progress of a reply that is still streaming here.
+export function reconcileChatContent(
+  current: ChatContent | undefined,
+  incoming: ChatContent,
+): ChatContent {
+  if (!current) return incoming;
+  const reconciled = reconcileChatSnapshot(current, incoming);
+  return reconciled === incoming ? incoming : chatContent(reconciled);
+}
+
+// Cheap fingerprint of content, enough to recognize a copy this context wrote.
+export function chatContentSnapshot(content: ChatContent) {
+  const tokens = [
+    String(content.messages.length),
+    String(content.sources?.length || 0),
+    String(content.imageGenerationJobs?.length || 0),
+  ];
+  for (const message of content.messages) {
+    const metrics = runMetrics(message);
+    tokens.push(
+      message.id,
+      message.role,
+      String(message.createdAt),
+      stringFingerprint(message.content),
+      String(message.parts?.length || 0),
+      String(metrics.startedAt || 0),
+      String(metrics.firstTokenAt || 0),
+      String(metrics.endedAt || 0),
+      String(metrics.streamEventIndex || 0),
+      String(metrics.outputCharacters || 0),
+    );
+    for (const part of message.parts || []) {
       tokens.push(
-        message.id,
-        message.role,
-        String(message.createdAt),
-        stringFingerprint(message.content),
-        String(message.parts?.length || 0),
-        String(metrics.startedAt || 0),
-        String(metrics.firstTokenAt || 0),
-        String(metrics.endedAt || 0),
-        String(metrics.streamEventIndex || 0),
-        String(metrics.outputCharacters || 0),
+        part.id,
+        part.type,
+        part.state || "",
+        part.toolName || "",
+        stringFingerprint(part.text || ""),
+        part.input === undefined ? "i0" : "i1",
+        part.output === undefined ? "o0" : "o1",
+        part.error ? stringFingerprint(part.error) : "e0",
       );
-      for (const part of message.parts || []) {
-        tokens.push(
-          part.id,
-          part.type,
-          part.state || "",
-          part.toolName || "",
-          stringFingerprint(part.text || ""),
-          part.input === undefined ? "i0" : "i1",
-          part.output === undefined ? "o0" : "o1",
-          part.error ? stringFingerprint(part.error) : "e0",
-        );
-      }
     }
   }
   return tokens.join("\u001f");
 }
 
-export function hasUnfinishedChatRun(value: unknown, now = Date.now()) {
-  if (!Array.isArray(value)) return false;
-  return (value as Chat[]).some(
-    (chat) =>
-      hasUnfinishedRun(chat) && now - (chat.updatedAt || 0) < CHAT_RUN_STALE_MS,
+// A reply is streaming in this chat and has not gone stale.
+export function isChatRunActive(summary: ChatSummary, now = Date.now()) {
+  return (
+    !!summary.running && now - (summary.updatedAt || 0) < CHAT_RUN_STALE_MS
   );
 }
 
-function reconcileChatSnapshot(current: Chat, incoming: Chat) {
+function reconcileChatSnapshot(current: ChatContent, incoming: ChatContent) {
   const currentMessages = new Map(
     current.messages.map((message) => [message.id, message]),
   );
@@ -124,14 +195,14 @@ function reconcileChatSnapshot(current: Chat, incoming: Chat) {
   };
 }
 
-function hasMissingUnfinishedRun(current: Chat, incoming: Chat) {
+function hasMissingUnfinishedRun(current: ChatContent, incoming: ChatContent) {
   const incomingIds = new Set(incoming.messages.map((message) => message.id));
   return current.messages.some(
     (message) => isUnfinishedRun(message) && !incomingIds.has(message.id),
   );
 }
 
-function hasUnfinishedRun(chat: Chat) {
+function hasUnfinishedRun(chat: ChatContent) {
   return chat.messages.some(isUnfinishedRun);
 }
 

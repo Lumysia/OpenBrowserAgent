@@ -56,6 +56,10 @@ export const ptBR: LocaleMessages = {
     exportChatOpenAi: "Exportar como JSON da OpenAI",
     importChatOpenAi: "Importar chat JSON da OpenAI",
     clearAllChats: "Limpar todos os chats",
+    chatLoading: "Carregando chat…",
+    chatLoadFailed:
+      "Não foi possível carregar este chat. Verifique a conexão de sincronização e tente novamente.",
+    retryLoadChat: "Tentar novamente",
     noChatsYet: "Ainda não há chats",
     removeChat: "Remover chat",
     pinChat: "Fixar chat",

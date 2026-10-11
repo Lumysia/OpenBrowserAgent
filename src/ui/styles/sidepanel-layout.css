@@ -253,3 +253,20 @@
   text-align: center;
   animation: subtle-rise-in 0.24s ease backwards;
 }
+
+/* Stands in for the messages while the open chat loads or failed to. */
+.chat-content-status {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  padding: 8px 0;
+}
+.chat-content-skeleton {
+  width: 100%;
+  height: 56px;
+  border-radius: var(--radius);
+}
+.chat-content-skeleton.short {
+  width: 62%;
+  justify-self: end;
+}

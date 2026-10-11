@@ -18,7 +18,8 @@ import {
 } from "./storage-keys";
 import { readSyncedValue } from "./storage-sync";
 import { STORAGE_KEYS } from "./storage-keys";
-import type { Chat, UploadedAttachment } from "./types";
+import { chatContent } from "./chats";
+import type { ChatContent, ChatSummary, UploadedAttachment } from "./types";
 import { bytesToBase64, base64ToBytes } from "./binary";
 import {
   putAttachment,
@@ -134,15 +135,18 @@ export async function readSyncedChatAttachment(
   return attachmentFromBytes(metadata, contentBytes);
 }
 
+// Attachments of removed chats that no retained chat refers to.
 export async function removeSyncedChatAttachments(
   syncDataSettings: SyncDataSettings | undefined,
-  chats: Chat[],
-  retainedChats: Chat[] = [],
+  chats: ChatSummary[],
+  retainedChats: ChatSummary[] = [],
 ) {
-  const retainedIds = chatAttachmentIds(retainedChats);
-  const attachmentIds = [...chatAttachmentIds(chats)].filter(
-    (id) => !retainedIds.has(id),
+  const retainedIds = new Set(
+    retainedChats.flatMap((chat) => chat.attachmentIds || []),
   );
+  const attachmentIds = [
+    ...new Set(chats.flatMap((chat) => chat.attachmentIds || [])),
+  ].filter((id) => !retainedIds.has(id));
   if (!attachmentIds.length) return;
   attachmentIds.forEach((id) => offloadedInlineAttachmentWrites.delete(id));
   await Promise.all(attachmentIds.map((id) => removeLocalChatAttachment(id)));
@@ -169,26 +173,29 @@ export async function removeSyncedChatAttachments(
   );
 }
 
-export async function offloadChatInlineAttachments(chats: Chat[]) {
+export async function offloadChatInlineAttachments(
+  chatId: string,
+  content: ChatContent,
+): Promise<ChatContent> {
   const writes: Array<Promise<void>> = [];
-  const nextChats = chats.map((chat) => ({
-    ...chat,
-    messages: chat.messages.map((message) => ({
+  const next = {
+    ...chatContent(content),
+    messages: content.messages.map((message) => ({
       ...message,
       parts: message.parts?.map((part) => ({
         ...part,
         output: offloadInlineRecord({
           value: part.output,
-          chatId: chat.id,
+          chatId,
           messageId: message.id,
           partId: part.id,
           writes,
         }),
       })),
     })),
-  }));
+  };
   await Promise.all(writes);
-  return nextChats;
+  return next;
 }
 
 async function writeRemoteChatAttachment({
@@ -404,9 +411,10 @@ function attachmentFromBytes(
   return { ...attachment, dataUrl: bytesToDataUrl(content, metadata.type) };
 }
 
-function chatAttachmentIds(chats: Chat[]) {
+// Attachment ids a chat's content refers to.
+export function chatAttachmentIds(content: ChatContent) {
   const ids = new Set<string>();
-  for (const chat of chats) collectAttachmentReferences(chat, ids);
+  collectAttachmentReferences(content, ids);
   return ids;
 }
 

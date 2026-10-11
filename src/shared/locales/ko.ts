@@ -56,6 +56,10 @@ export const ko: LocaleMessages = {
     exportChatOpenAi: "OpenAI JSON으로 내보내기",
     importChatOpenAi: "OpenAI JSON 채팅 가져오기",
     clearAllChats: "모든 채팅 지우기",
+    chatLoading: "채팅을 불러오는 중…",
+    chatLoadFailed:
+      "이 채팅을 불러올 수 없습니다. 동기화 연결을 확인한 후 다시 시도하세요.",
+    retryLoadChat: "다시 시도",
     noChatsYet: "아직 채팅이 없습니다",
     removeChat: "채팅 제거",
     pinChat: "채팅 고정",

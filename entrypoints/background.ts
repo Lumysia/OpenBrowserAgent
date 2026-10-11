@@ -32,7 +32,7 @@ import { requestPlainText } from "../src/background/pi-provider";
 import {
   handleSyncBackendRuntimeMessage,
   handleSyncBackendRuntimePort,
-} from "../src/shared/sync-backends";
+} from "../src/shared/sync-backends-runtime";
 import "../src/shared/sync-backends-impl";
 import * as streamSessions from "../src/background/stream-sessions";
 

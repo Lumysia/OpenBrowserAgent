@@ -7,15 +7,14 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Messages } from "../../src/shared/i18n";
-import type { Agent, Chat, Preferences } from "../../src/shared/types";
+import type {
+  Agent,
+  Chat,
+  ChatSummary,
+  Preferences,
+} from "../../src/shared/types";
 import { chatDisplayTitle } from "../../src/ui/agent-display";
 import { Badge, Button, Input, ScrollArea } from "../../src/ui/components";
 import {
@@ -28,6 +27,7 @@ import {
   formatRelativeTime,
   sortChatsNewestFirst,
 } from "./format";
+import type { SummariesUpdater } from "./use-chats";
 
 const HISTORY_REMOVE_DELAY_MS = 190;
 
@@ -39,18 +39,20 @@ export function HistoryPanel({
   agent,
   preferences,
   onSetChats,
+  onLoadChat,
   onImportChat,
   onSelect,
   onClose,
   onBack,
 }: {
   t: Messages;
-  chats: Chat[];
+  chats: ChatSummary[];
   activeChatId?: string;
   unreadCompletedChatIds: Record<string, true>;
   agent: Agent;
   preferences?: Preferences;
-  onSetChats: Dispatch<SetStateAction<Chat[]>>;
+  onSetChats: SummariesUpdater;
+  onLoadChat: (chatId: string) => Promise<Chat | undefined>;
   onImportChat: (chat: Chat) => void;
   onSelect: (chatId: string) => void;
   onClose: (chatId: string) => void;
@@ -64,7 +66,7 @@ export function HistoryPanel({
     {},
   );
   const sortedChats = sortChatsNewestFirst(chats);
-  const chatsByParentId = new Map<string, Chat[]>();
+  const chatsByParentId = new Map<string, ChatSummary[]>();
   for (const chat of sortedChats) {
     if (!chat.parentChatId) continue;
     chatsByParentId.set(chat.parentChatId, [
@@ -89,7 +91,7 @@ export function HistoryPanel({
     }
   }
 
-  function startEdit(chat: Chat) {
+  function startEdit(chat: ChatSummary) {
     setEditingChatId(chat.id);
     setDraftTitle(chatDisplayTitle(chat, t));
   }
@@ -97,7 +99,7 @@ export function HistoryPanel({
   function saveEdit(chatId: string) {
     const title = draftTitle.trim();
     if (title)
-      onSetChats((items) =>
+      void onSetChats((items) =>
         items.map((chat) =>
           chat.id === chatId ? { ...chat, title, updatedAt: Date.now() } : chat,
         ),
@@ -112,13 +114,23 @@ export function HistoryPanel({
   }
 
   function togglePinned(chatId: string) {
-    onSetChats((items) =>
+    void onSetChats((items) =>
       items.map((chat) =>
         chat.id === chatId
           ? { ...chat, pinnedAt: chat.pinnedAt ? undefined : Date.now() }
           : chat,
       ),
     );
+  }
+
+  // Exporting needs the chat's content, loaded on demand.
+  async function exportChat(chatId: string) {
+    try {
+      const chat = await onLoadChat(chatId);
+      if (chat) exportChatAsOpenAiJson(chat, agent, preferences);
+    } catch (error) {
+      console.warn("Failed to export chat", error);
+    }
   }
 
   function closeWithExit(chatId: string) {
@@ -208,14 +220,13 @@ export function HistoryPanel({
               removing={!!removingChatIds[chat.id]}
               editingChatId={editingChatId}
               draftTitle={draftTitle}
-              agent={agent}
-              preferences={preferences}
               onSetDraftTitle={setDraftTitle}
               onStartEdit={startEdit}
               onTogglePin={togglePinned}
               onSaveEdit={saveEdit}
               onCancelEdit={cancelEdit}
               onSelect={onSelect}
+              onExport={exportChat}
               onClose={closeWithExit}
             />
             {!!chatsByParentId.get(chat.id)?.length && (
@@ -230,8 +241,6 @@ export function HistoryPanel({
                     removing={!!removingChatIds[child.id]}
                     editingChatId={editingChatId}
                     draftTitle={draftTitle}
-                    agent={agent}
-                    preferences={preferences}
                     child
                     onSetDraftTitle={setDraftTitle}
                     onStartEdit={startEdit}
@@ -239,6 +248,7 @@ export function HistoryPanel({
                     onSaveEdit={saveEdit}
                     onCancelEdit={cancelEdit}
                     onSelect={onSelect}
+                    onExport={exportChat}
                     onClose={closeWithExit}
                   />
                 ))}
@@ -259,8 +269,6 @@ function HistoryItem({
   removing,
   editingChatId,
   draftTitle,
-  agent,
-  preferences,
   child = false,
   onSetDraftTitle,
   onStartEdit,
@@ -268,27 +276,26 @@ function HistoryItem({
   onSaveEdit,
   onCancelEdit,
   onSelect,
+  onExport,
   onClose,
 }: {
   t: Messages;
-  chat: Chat;
+  chat: ChatSummary;
   activeChatId?: string;
   unreadCompletedChatIds: Record<string, true>;
   removing: boolean;
   editingChatId?: string;
   draftTitle: string;
-  agent: Agent;
-  preferences?: Preferences;
   child?: boolean;
   onSetDraftTitle: (value: string) => void;
-  onStartEdit: (chat: Chat) => void;
+  onStartEdit: (chat: ChatSummary) => void;
   onTogglePin: (chatId: string) => void;
   onSaveEdit: (chatId: string) => void;
   onCancelEdit: () => void;
   onSelect: (chatId: string) => void;
+  onExport: (chatId: string) => void;
   onClose: (chatId: string) => void;
 }) {
-  const status = chatStatus(chat);
   const title = chatDisplayTitle(chat, t);
   return (
     <div
@@ -309,7 +316,7 @@ function HistoryItem({
             }}
           />
           <small>
-            {formatMessageCount(t, chat.messages.length)} ·{" "}
+            {formatMessageCount(t, chat.messageCount)} ·{" "}
             {formatRelativeTime(t, chat.updatedAt)}
           </small>
         </div>
@@ -335,10 +342,10 @@ function HistoryItem({
             <strong>{title}</strong>
           </span>
           <small>
-            {formatMessageCount(t, chat.messages.length)} ·{" "}
+            {formatMessageCount(t, chat.messageCount)} ·{" "}
             {formatRelativeTime(t, chat.updatedAt)}
             {child &&
-              ` · ${status === "running" ? t.sidepanel.subAgentRunning : t.sidepanel.subAgentCompleted}`}
+              ` · ${chat.running ? t.sidepanel.subAgentRunning : t.sidepanel.subAgentCompleted}`}
           </small>
         </Button>
       )}
@@ -378,8 +385,8 @@ function HistoryItem({
             size="icon"
             className="history-item-action"
             aria-label={t.sidepanel.exportChatOpenAi}
-            disabled={removing || !chat.messages.length}
-            onClick={() => exportChatAsOpenAiJson(chat, agent, preferences)}
+            disabled={removing || !chat.messageCount}
+            onClick={() => onExport(chat.id)}
           >
             <Download size={13} />
           </Button>
@@ -401,7 +408,7 @@ function HistoryItem({
   );
 }
 
-function linkedClosedChatIds(chats: Chat[], closedChatId: string) {
+function linkedClosedChatIds(chats: ChatSummary[], closedChatId: string) {
   const ids = new Set([closedChatId]);
   let changed = true;
   while (changed) {
@@ -415,14 +422,4 @@ function linkedClosedChatIds(chats: Chat[], closedChatId: string) {
     }
   }
   return ids;
-}
-
-function chatStatus(chat: Chat) {
-  const assistant = [...chat.messages]
-    .reverse()
-    .find((message) => message.role === "assistant");
-  const metrics = assistant?.metadata?.runMetrics as
-    | { endedAt?: unknown }
-    | undefined;
-  return metrics?.endedAt ? "completed" : "running";
 }

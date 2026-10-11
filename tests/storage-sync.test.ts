@@ -23,6 +23,12 @@ import {
   refreshSyncSettingsFromRemote,
 } from "../src/shared/storage-sync";
 import { clearAppStorage } from "../src/shared/storage-debug";
+import {
+  deleteChats,
+  loadChatContent,
+  saveChatContent,
+} from "../src/shared/chat-storage";
+import { withChatFacts } from "../src/shared/chats";
 import { DEFAULT_SYNC_DATA_SETTINGS } from "../src/shared/storage-keys";
 import type { Chat, ProviderState } from "../src/shared/types";
 
@@ -333,7 +339,63 @@ test("clearing local data removes every synced replica", async () => {
   assert.ok(!JSON.stringify(local.data).includes("p-key"));
 });
 
-test("a run abandoned mid-stream stops blocking chat sync", async () => {
+// Store a chat the way the side panel does: its content, then its list entry.
+async function saveChat(value: Chat) {
+  const { facts } = await saveChatContent(value.id, value);
+  const summary = withChatFacts(value, facts);
+  await storage.chats.update((chats) => [
+    ...chats.filter((item) => item.id !== value.id),
+    summary,
+  ]);
+}
+
+const chatWith = (id: string, content: string, updatedAt = 1): Chat => ({
+  ...chat(id),
+  updatedAt,
+  messages: [{ id: `${id}-m`, role: "user", content, createdAt: 1 }],
+});
+
+test("synced chats arrive as a list; a chat's content loads when opened", async () => {
+  const { sync } = await activeDevice({ syncChats: true });
+  await saveChat(chatWith("one", "hello"));
+  await saveChat(chatWith("two", "world"));
+  await flushPendingSyncWrites();
+
+  const other = installBrowser(undefined, sync);
+  other.local.data[STORAGE_KEYS.syncDataSettings] = {
+    ...DEFAULT_SYNC_DATA_SETTINGS,
+    syncChats: true,
+  };
+  await setActiveSyncBackend(BROWSER_SYNC_BACKEND_ID);
+  assert.deepEqual(ids(await storage.chats.get()), ["one", "two"]);
+  assert.equal((await storage.chats.get())[0].messageCount, 1);
+  const contents = () =>
+    Object.keys(other.local.data).filter((key) => key.startsWith("chats/"));
+  assert.deepEqual(contents(), [], "no content before a chat is opened");
+  assert.equal((await loadChatContent("one"))?.messages[0].content, "hello");
+  assert.deepEqual(contents(), ["chats/one"]);
+
+  // An edit uploads that chat's content and the list, nothing else.
+  sync.writes.length = 0;
+  await saveChat(chatWith("one", "hello again", 2));
+  await flushPendingSyncWrites();
+  assert.deepEqual(
+    sync.writes
+      .map((write) => write.keys)
+      .flat()
+      .sort(),
+    ["chats", "chats/one"],
+  );
+  assert.deepEqual(contents(), ["chats/one"], "two was never downloaded");
+
+  // Deleting a chat removes its content here and in the cloud.
+  await deleteChats(["one"]);
+  await flushPendingSyncWrites();
+  assert.deepEqual(contents(), []);
+  assert.equal(sync.data["chats/one"], undefined);
+});
+
+test("a streaming reply's content uploads once the run ends or goes stale", async () => {
   await activeDevice({ syncChats: true });
   const running = (updatedAt: number): Chat => ({
     ...chat("c"),
@@ -342,24 +404,22 @@ test("a run abandoned mid-stream stops blocking chat sync", async () => {
       {
         id: "a",
         role: "assistant",
-        content: "",
+        content: "partial",
         createdAt: updatedAt,
         metadata: { runMetrics: { startedAt: updatedAt } },
       },
     ],
   });
-  // A live run waits until it ends before uploading.
-  await storage.chats.set([running(Date.now())]);
+  const cloudContent = async () =>
+    (await browserSync().readItem(STORAGE_KEYS.chats, "c", false)).value;
+  await saveChat(running(Date.now()));
   await flushPendingSyncWrites();
-  assert.deepEqual(ids(await browserSync().read(STORAGE_KEYS.chats)), []);
-  // A run whose panel closed long ago never gets endedAt; it must not freeze
-  // chat sync for good.
-  await storage.chats.set([running(Date.now() - 60 * 60_000), chat("d")]);
+  assert.deepEqual(ids(await browserSync().read(STORAGE_KEYS.chats)), ["c"]);
+  assert.equal(await cloudContent(), undefined, "held while streaming");
+  // A run whose panel closed long ago never ends; it must not stay held.
+  await saveChat(running(Date.now() - 60 * 60_000));
   await flushPendingSyncWrites();
-  assert.deepEqual(ids(await browserSync().read(STORAGE_KEYS.chats)), [
-    "c",
-    "d",
-  ]);
+  assert.ok(await cloudContent());
 });
 
 test("starting from cloud uploads sync settings the cloud is missing", async () => {

@@ -1,22 +1,21 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
+import { withoutChats } from "../../src/shared/chats";
 import type { Messages } from "../../src/shared/i18n";
-import { storage } from "../../src/shared/storage";
 import { removeSyncedChatAttachments } from "../../src/shared/sync-chat-attachments";
 import type { SyncDataSettings } from "../../src/shared/storage-keys";
 import type { Chat, ChatMessage } from "../../src/shared/types";
 import {
-  closeChatAction,
   closedChatIds,
-  createChatAction,
+  createChatDraft,
   forkChatAction,
   pruneEmptyChats,
   selectChatAction,
 } from "./chat-state-actions";
+import type { useChats } from "./use-chats";
 
 export function useChatActions({
   t,
   chats,
-  setChats,
   setDraftChat,
   setActiveChatId,
   setChatSelectionRequestId,
@@ -25,8 +24,7 @@ export function useChatActions({
   syncDataSettings,
 }: {
   t: Messages;
-  chats?: Chat[];
-  setChats: Dispatch<SetStateAction<Chat[]>>;
+  chats: ReturnType<typeof useChats>;
   setDraftChat: Dispatch<SetStateAction<Chat | undefined>>;
   setActiveChatId: Dispatch<SetStateAction<string | undefined>>;
   setChatSelectionRequestId: Dispatch<SetStateAction<number>>;
@@ -34,71 +32,64 @@ export function useChatActions({
   clearUnreadCompletedChat: (chatId: string) => void;
   syncDataSettings?: SyncDataSettings;
 }) {
+  const { summaries, summariesRef, setSummaries, store, loadChat, saveChats } =
+    chats;
+
+  // A new chat is a draft until its first message is sent.
   const createChat = useCallback(() => {
-    const chat = createChatAction({
-      title: t.words.newChat,
-      persist: false,
-      setChats,
-      setActiveChatId,
-    });
+    const chat = createChatDraft(t.words.newChat);
+    setActiveChatId(chat.id);
     setDraftChat(chat);
     return chat;
-  }, [setActiveChatId, setChats, setDraftChat, t.words.newChat]);
+  }, [setActiveChatId, setDraftChat, t.words.newChat]);
 
   const closeChat = useCallback(
     async (chatId: string) => {
+      const list = summariesRef.current || [];
       // Closing must not depend on the background acknowledging the abort;
       // otherwise the close button silently does nothing.
       const ids = await abortClosedChatStreams(chatId).catch((error) => {
         console.warn("Failed to close chat streams", error);
-        return closedChatIds(chats || [], chatId);
+        return closedChatIds(list, chatId);
       });
       ids.forEach((id) => {
         clearUnreadCompletedChat(id);
       });
-      storage.chats
-        .get()
-        .then((storedChats) => {
-          const removedChats = storedChats.filter((chat) => ids.has(chat.id));
-          const retainedChats = storedChats.filter((chat) => !ids.has(chat.id));
-          return removeSyncedChatAttachments(
-            syncDataSettings,
-            removedChats,
-            retainedChats,
-          );
-        })
-        .catch((error) =>
-          console.warn("Failed to remove synced chat attachments", error),
-        );
-      closeChatAction({
-        closedIds: ids,
-        setChats,
-      });
+      removeSyncedChatAttachments(
+        syncDataSettings,
+        list.filter((chat) => ids.has(chat.id)),
+        list.filter((chat) => !ids.has(chat.id)),
+      ).catch((error) =>
+        console.warn("Failed to remove synced chat attachments", error),
+      );
+      store.drop(ids);
+      void setSummaries((items) => withoutChats(items, ids));
     },
     [
       abortClosedChatStreams,
-      chats,
       clearUnreadCompletedChat,
+      setSummaries,
+      store,
+      summariesRef,
       syncDataSettings,
-      setChats,
     ],
   );
 
   const selectChat = useCallback(
     (chatId: string) => {
-      if (chats && !chats.some((chat) => chat.id === chatId)) return;
-      selectChatAction({ chatId, setChats, setActiveChatId });
+      if (summaries && !summaries.some((chat) => chat.id === chatId)) return;
+      selectChatAction({ chatId, setSummaries, setActiveChatId });
       setChatSelectionRequestId((value) => value + 1);
     },
-    [chats, setActiveChatId, setChatSelectionRequestId, setChats],
+    [summaries, setActiveChatId, setChatSelectionRequestId, setSummaries],
   );
 
   const importChat = useCallback(
     (chat: Chat) => {
-      setChats((items) => [...pruneEmptyChats(items), chat]);
+      void saveChats([chat], pruneEmptyChats);
       setActiveChatId(chat.id);
     },
-    [setActiveChatId, setChats],
+    [saveChats, setActiveChatId],
   );
 
   const forkMessage = useCallback(
@@ -109,11 +100,13 @@ export function useChatActions({
         message,
         partId,
         forkLabel: t.sidepanel.forkTitleSuffix,
-        setChats,
+        chats: summariesRef.current || [],
+        loadChat,
+        saveChats: (items) => saveChats(items),
         setActiveChatId,
-      });
+      }).catch((error) => console.warn("Failed to fork chat", error));
     },
-    [setActiveChatId, setChats, t.sidepanel.forkTitleSuffix],
+    [loadChat, saveChats, setActiveChatId, summariesRef, t.sidepanel],
   );
 
   return { createChat, closeChat, selectChat, importChat, forkMessage };

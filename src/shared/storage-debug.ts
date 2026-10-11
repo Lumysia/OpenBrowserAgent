@@ -5,6 +5,7 @@ import {
   STORAGE_KEYS,
   syncLocalCacheKey,
 } from "./storage";
+import { isSplitStorageKey, splitItemKey } from "./storage-split";
 import { getActiveSyncBackend, isSyncBackendEnabled } from "./sync-backends";
 import { syncLocalDataKey } from "./sync-tinybase-doc";
 
@@ -46,11 +47,17 @@ export async function clearAppStorage({
   const selectedKeys = selectedTargets.flatMap(
     (target) => STORAGE_KEY_GROUPS[target],
   );
+  const storedKeys = Object.keys(await getBrowserApi().storage.local.get(null));
   // Replicas and split-collection state are scoped per backend.
-  const replicaKeys = Object.keys(
-    await getBrowserApi().storage.local.get(null),
-  ).filter((stored) =>
+  const replicaKeys = storedKeys.filter((stored) =>
     (selectedKeys as string[]).includes(syncLocalDataKey(stored) ?? ""),
+  );
+  // Item contents of split collections are local data like their lists.
+  const itemKeys = storedKeys.filter((stored) =>
+    selectedKeys.some(
+      (key) =>
+        isSplitStorageKey(key) && stored.startsWith(splitItemKey(key, "")),
+    ),
   );
   const cacheKeys = [...selectedKeys.map(syncLocalCacheKey), ...replicaKeys];
   // Capture the backend before local cleanup deletes its configuration.
@@ -59,7 +66,7 @@ export async function clearAppStorage({
       ? await getActiveSyncBackend()
       : undefined;
   await getBrowserApi().storage.local.remove(
-    scope === "sync" ? cacheKeys : [...selectedKeys, ...cacheKeys],
+    scope === "sync" ? cacheKeys : [...selectedKeys, ...itemKeys, ...cacheKeys],
   );
   if (backend) {
     // Finish every started removal before reporting failure.

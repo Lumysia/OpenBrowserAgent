@@ -4,15 +4,11 @@ import {
   getAllTabs,
   isScriptableUrl,
 } from "../../src/shared/browser";
-import type {
-  AttachmentTab,
-  Chat,
-  SelectedElement,
-} from "../../src/shared/types";
+import type { AttachmentTab, SelectedElement } from "../../src/shared/types";
 import { toAttachmentTab } from "./sidepanel-context";
 import { useActiveTabContext } from "./use-active-tab-context";
 
-export function useComposerContext(chats: Chat[]) {
+export function useComposerContext() {
   const [attachedTabs, setAttachedTabs] = useState<AttachmentTab[]>([]);
   const [availableTabs, setAvailableTabs] = useState<AttachmentTab[]>([]);
   const [activeTabAttachable, setActiveTabAttachable] = useState(false);

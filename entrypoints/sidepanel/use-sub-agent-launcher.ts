@@ -11,6 +11,7 @@ import {
   type Agent,
   type Chat,
   type ChatMessage,
+  type ChatSummary,
   type ModelConfig,
   type Preferences,
   type SendMessagesRequest,
@@ -37,21 +38,21 @@ export function useSubAgentLauncher({
   skills,
   language,
   t,
-  setChats,
+  saveChats,
   beginStream,
   startStream,
 }: {
-  chats: Chat[] | undefined;
+  chats: ChatSummary[] | undefined;
   agents: Agent[] | undefined;
   preferences: Preferences | undefined;
   configuredModels: ModelConfig[];
   skills: Skill[] | undefined;
   language: string | undefined;
   t: Messages;
-  setChats: (
-    value: Chat[] | ((previous: Chat[]) => Chat[]),
-    options?: { persist?: "debounced" | "immediate" },
-  ) => Promise<Chat[] | undefined>;
+  saveChats: (
+    chats: Chat[],
+    list?: (items: ChatSummary[]) => ChatSummary[],
+  ) => Promise<void>;
   beginStream: (chatId: string, messageId: string) => void;
   startStream: (request: SendMessagesRequest, targetMessageId: string) => void;
 }) {
@@ -119,24 +120,18 @@ export function useSubAgentLauncher({
         updatedAt: now,
       };
       launchedSubAgentChatIdsRef.current.add(childChat.id);
-      setChats(
-        (items) => {
-          const withChild = items.some((chat) => chat.id === childChat.id)
-            ? items
-            : [...pruneEmptyChats(items), childChat];
-          return withChild.map((chat) =>
-            chat.id === chatId
-              ? {
-                  ...chat,
-                  childChatIds: Array.from(
-                    new Set([...(chat.childChatIds || []), childChat.id]),
-                  ),
-                  updatedAt: Date.now(),
-                }
-              : chat,
-          );
-        },
-        { persist: "immediate" },
+      saveChats([childChat], (items) =>
+        pruneEmptyChats(items).map((chat) =>
+          chat.id === chatId
+            ? {
+                ...chat,
+                childChatIds: Array.from(
+                  new Set([...(chat.childChatIds || []), childChat.id]),
+                ),
+                updatedAt: Date.now(),
+              }
+            : chat,
+        ),
       ).catch((error) => {
         console.warn("Failed to persist initial sub-agent chat", error);
       });
@@ -176,7 +171,7 @@ export function useSubAgentLauncher({
       configuredModels,
       language,
       preferences,
-      setChats,
+      saveChats,
       skills,
       startStream,
       t,

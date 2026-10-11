@@ -7,7 +7,7 @@ import type { Messages } from "../../src/shared/i18n";
 import { getSkillDisplayName } from "../../src/shared/skills";
 import type {
   AttachmentTab,
-  Chat,
+  ChatSummary,
   ChatMessage,
   ChatSource,
   QuestionToolAnswer,
@@ -65,7 +65,7 @@ export function MessageBubble({
     toolCallId: string,
     answers: QuestionToolAnswer[],
   ) => void;
-  chats: Chat[];
+  chats: ChatSummary[];
   resendDisabled?: boolean;
   latestUserMessage?: boolean;
   outputActive?: boolean;

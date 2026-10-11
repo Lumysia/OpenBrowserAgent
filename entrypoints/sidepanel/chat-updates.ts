@@ -12,92 +12,78 @@ import {
 } from "../../src/shared/chat-sources";
 import { applyPart } from "./stream-parts";
 
+// Updates of one chat; each returns the chat unchanged when nothing applies.
+// Streaming updates leave `updatedAt` alone, so the chat list does not change
+// with every chunk; it moves when a message is added or a run ends.
+
 export function appendAssistantContent(
-  chats: Chat[],
-  chatId: string,
+  chat: Chat,
   messageId: string,
   content: string,
-) {
-  return chats.map((chat) =>
-    chat.id === chatId
-      ? {
-          ...chat,
-          messages: chat.messages.map((message) =>
-            message.id === messageId
-              ? { ...message, content: message.content + content }
-              : message,
-          ),
-        }
-      : chat,
-  );
+): Chat {
+  return {
+    ...chat,
+    messages: chat.messages.map((message) =>
+      message.id === messageId
+        ? { ...message, content: message.content + content }
+        : message,
+    ),
+  };
 }
 
-export function appendAssistantPart({
-  chats,
-  chatId,
-  messageId,
-  delta,
-  part,
-  metrics,
-}: {
-  chats: Chat[];
-  chatId: string;
-  messageId: string;
-  delta?: string;
-  part?: ChatPart;
-  metrics?: Partial<RunMetrics>;
-}) {
+export function appendAssistantPart(
+  chat: Chat,
+  {
+    messageId,
+    delta,
+    part,
+    metrics,
+  }: {
+    messageId: string;
+    delta?: string;
+    part?: ChatPart;
+    metrics?: Partial<RunMetrics>;
+  },
+): Chat {
   const sources = extractSourcesFromPart(part);
-  return chats.map((chat) =>
-    chat.id === chatId
-      ? {
-          ...chat,
-          sources: sources.length
-            ? mergeChatSources(chat.sources, sources)
-            : chat.sources,
-          messages: chat.messages.map((message) =>
-            message.id === messageId
-              ? {
-                  ...message,
-                  content: delta ? message.content + delta : message.content,
-                  parts: part ? applyPart(message.parts, part) : message.parts,
-                  metadata:
-                    delta || metrics
-                      ? mergeRunMetrics(message.metadata, {
-                          ...(delta
-                            ? deltaRunMetrics(message.metadata, delta)
-                            : {}),
-                          ...(metrics || {}),
-                        })
-                      : message.metadata,
-                }
-              : message,
-          ),
-          updatedAt: Date.now(),
-        }
-      : chat,
-  );
+  return {
+    ...chat,
+    sources: sources.length
+      ? mergeChatSources(chat.sources, sources)
+      : chat.sources,
+    messages: chat.messages.map((message) =>
+      message.id === messageId
+        ? {
+            ...message,
+            content: delta ? message.content + delta : message.content,
+            parts: part ? applyPart(message.parts, part) : message.parts,
+            metadata:
+              delta || metrics
+                ? mergeRunMetrics(message.metadata, {
+                    ...(delta ? deltaRunMetrics(message.metadata, delta) : {}),
+                    ...(metrics || {}),
+                  })
+                : message.metadata,
+          }
+        : message,
+    ),
+  };
 }
 
 export function updateAssistantRunMetrics(
-  chats: Chat[],
-  chatId: string,
+  chat: Chat,
   messageId: string,
   metrics: Partial<RunMetrics>,
-) {
-  return chats.map((chat) =>
-    chat.id === chatId
-      ? {
-          ...chat,
-          messages: chat.messages.map((message) =>
-            message.id === messageId
-              ? updateMessageRunMetrics(message, metrics)
-              : message,
-          ),
-          updatedAt: Date.now(),
-        }
-      : chat,
-  );
+): Chat {
+  return {
+    ...chat,
+    messages: chat.messages.map((message) =>
+      message.id === messageId
+        ? updateMessageRunMetrics(message, metrics)
+        : message,
+    ),
+    ...(metrics.endedAt ? { updatedAt: Date.now() } : {}),
+  };
 }
 
 function updateMessageRunMetrics(
@@ -135,65 +121,58 @@ function appendContextSummaryPart(
   ];
 }
 
-export function appendQueuedMessages({
-  chats,
-  chatId,
-  messages,
-  assistantMessageId,
-  createdAt,
-  sequence,
-}: {
-  chats: Chat[];
-  chatId: string;
-  messages: Array<{ id: string; content: string; createdAt: number }>;
-  assistantMessageId: string;
-  createdAt: number;
-  sequence?: number;
-}) {
-  return chats.map((chat) =>
-    chat.id === chatId ? appendQueuedMessagesToChat(chat) : chat,
-  );
-
-  function appendQueuedMessagesToChat(chat: Chat) {
-    const existingIds = new Set(chat.messages.map((message) => message.id));
-    const queuedMessages: ChatMessage[] = messages
-      .filter((message) => !existingIds.has(message.id))
-      .map((message) => ({
-        id: message.id,
-        role: "user",
-        content: message.content,
-        createdAt: message.createdAt,
-      }));
-    const assistantMessage: ChatMessage | undefined = existingIds.has(
-      assistantMessageId,
-    )
-      ? undefined
-      : {
-          id: assistantMessageId,
-          role: "assistant",
-          content: "",
-          parts: [],
-          createdAt,
-          metadata: {
-            runMetrics: {
-              startedAt: createdAt,
-              outputCharacters: 0,
-              // Reattaching replays only events after this one.
-              streamEventIndex: sequence,
-            },
+export function appendQueuedMessages(
+  chat: Chat,
+  {
+    messages,
+    assistantMessageId,
+    createdAt,
+    sequence,
+  }: {
+    messages: Array<{ id: string; content: string; createdAt: number }>;
+    assistantMessageId: string;
+    createdAt: number;
+    sequence?: number;
+  },
+): Chat {
+  const existingIds = new Set(chat.messages.map((message) => message.id));
+  const queuedMessages: ChatMessage[] = messages
+    .filter((message) => !existingIds.has(message.id))
+    .map((message) => ({
+      id: message.id,
+      role: "user",
+      content: message.content,
+      createdAt: message.createdAt,
+    }));
+  const assistantMessage: ChatMessage | undefined = existingIds.has(
+    assistantMessageId,
+  )
+    ? undefined
+    : {
+        id: assistantMessageId,
+        role: "assistant",
+        content: "",
+        parts: [],
+        createdAt,
+        metadata: {
+          runMetrics: {
+            startedAt: createdAt,
+            outputCharacters: 0,
+            // Reattaching replays only events after this one.
+            streamEventIndex: sequence,
           },
-        };
-    if (!queuedMessages.length && !assistantMessage) return chat;
-    return {
-      ...chat,
-      messages: [
-        ...chat.messages,
-        ...queuedMessages,
-        ...(assistantMessage ? [assistantMessage] : []),
-      ],
-      updatedAt: Date.now(),
-    };
-  }
+        },
+      };
+  if (!queuedMessages.length && !assistantMessage) return chat;
+  return {
+    ...chat,
+    messages: [
+      ...chat.messages,
+      ...queuedMessages,
+      ...(assistantMessage ? [assistantMessage] : []),
+    ],
+    updatedAt: Date.now(),
+  };
 }
 
 function mergeRunMetrics(

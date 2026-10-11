@@ -1,13 +1,7 @@
 import { normalizeAgents } from "./agents";
 import { getBrowserApi } from "./browser-api";
-import {
-  chatSnapshot,
-  hasUnfinishedChatRun,
-  normalizeChats,
-  reconcileChatSnapshots,
-} from "./chats";
+import { normalizeChatSummaries } from "./chats";
 import { BUILTIN_SKILLS } from "./builtin-skills";
-import * as config from "./config";
 import { DEFAULT_PREFERENCES, mergePreferences } from "./default-preferences";
 import { normalizeLocalExecutionBridges } from "./local-execution-bridges";
 import { normalizeMcpServers } from "./mcp";
@@ -37,16 +31,20 @@ import {
   type SyncWriteStatus,
 } from "./storage-sync";
 import {
+  isSplitStorageKey,
+  removeSplitItems,
+  splitItemIds,
+} from "./storage-split";
+import {
   getActiveSyncBackend,
   NO_SYNC_BACKEND_ID,
   normalizeSyncBackends,
 } from "./sync-backends";
-import { offloadChatInlineAttachments } from "./sync-chat-attachments";
 import { normalizeWorkspaces } from "./workspace";
 import type {
   Agent,
   AgentWorkspace,
-  Chat,
+  ChatSummary,
   ChatTab,
   Preferences,
   ProviderState,
@@ -99,14 +97,18 @@ function createItem<T>(
 
   async function set(value: T) {
     value = normalize(value);
-    if (!(await routed())) {
-      await local().set({ [key]: value });
-      return;
+    // Items removed from a split collection take their content along.
+    const removed = isSplitStorageKey(key)
+      ? splitItemIds(key, await get()).filter(
+          (id) => !splitItemIds(key, value).includes(id),
+        )
+      : [];
+    if (!(await routed())) await local().set({ [key]: value });
+    else {
+      await writePendingSyncValue(key, value);
+      queueSyncWrite(await getActiveSyncBackend(), key);
     }
-    await writePendingSyncValue(key, value);
-    // A streaming chat uploads once its run has finished.
-    if (key === STORAGE_KEYS.chats && hasUnfinishedChatRun(value)) return;
-    queueSyncWrite(await getActiveSyncBackend(), key);
+    await removeSplitItems(key, removed);
   }
 
   return {
@@ -175,25 +177,6 @@ function createItem<T>(
 
 export type StorageItem<T> = ReturnType<typeof createItem<T>>;
 
-function createChatsItem() {
-  const item = createItem<Chat[]>(STORAGE_KEYS.chats, () => [], {
-    sync: SYNC_PREFERENCES.chats,
-    normalize: normalizeChats,
-    persistDebounceMs: (value) =>
-      hasUnfinishedChatRun(value)
-        ? config.CHAT_STREAM_WRITE_DEBOUNCE_MS
-        : config.CHAT_WRITE_DEBOUNCE_MS,
-    snapshot: chatSnapshot,
-  });
-  return {
-    ...item,
-    reconcile: reconcileChatSnapshots,
-    async set(value: Chat[]) {
-      await item.set(await offloadChatInlineAttachments(value));
-    },
-  };
-}
-
 export const storage = {
   language: createItem<string>(
     STORAGE_KEYS.language,
@@ -238,7 +221,11 @@ export const storage = {
     STORAGE_KEYS.shouldShowUpdateToast,
     () => false,
   ),
-  chats: createChatsItem(),
+  // Chat list; each chat's content is stored apart (see chat-storage).
+  chats: createItem<ChatSummary[]>(STORAGE_KEYS.chats, () => [], {
+    sync: SYNC_PREFERENCES.chats,
+    normalize: normalizeChatSummaries,
+  }),
   chatTabs: createItem<ChatTab[]>(STORAGE_KEYS.chatTabs, () => []),
   syncWriteStatus: createItem<SyncWriteStatus>(
     STORAGE_KEYS.syncWriteStatus,

@@ -57,6 +57,10 @@ export const deDE: LocaleMessages = {
     exportChatOpenAi: "Als OpenAI-JSON exportieren",
     importChatOpenAi: "OpenAI-JSON-Chat importieren",
     clearAllChats: "Alle Chats löschen",
+    chatLoading: "Chat wird geladen…",
+    chatLoadFailed:
+      "Dieser Chat konnte nicht geladen werden. Prüfe die Sync-Verbindung und versuche es erneut.",
+    retryLoadChat: "Erneut versuchen",
     noChatsYet: "Noch keine Chats",
     removeChat: "Chat entfernen",
     pinChat: "Chat anheften",

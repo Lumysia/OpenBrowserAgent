@@ -57,6 +57,10 @@ export const jaJP: LocaleMessages = {
     exportChatOpenAi: "OpenAI JSON としてエクスポート",
     importChatOpenAi: "OpenAI JSON チャットをインポート",
     clearAllChats: "すべてのチャットを消去",
+    chatLoading: "チャットを読み込み中…",
+    chatLoadFailed:
+      "このチャットを読み込めませんでした。同期の接続を確認して、もう一度お試しください。",
+    retryLoadChat: "再試行",
     noChatsYet: "チャットはまだありません",
     removeChat: "チャットを削除",
     pinChat: "チャットをピン留め",

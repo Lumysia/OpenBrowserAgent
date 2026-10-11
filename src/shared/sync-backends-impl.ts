@@ -7,6 +7,7 @@ import {
   SYNC_BACKEND_TYPES,
   type SyncBackend,
   type SyncBackendImpl,
+  type SyncItemRead,
 } from "./sync-backends";
 import {
   documentScope,
@@ -33,6 +34,11 @@ export function createSyncBackend(
       : createBrowserSyncTransport(backendConfig);
   // Values cross into callers that may mutate them; caches keep their own.
   const copy = <T>(value: unknown) => structuredClone(value) as T | undefined;
+  const splitStore = (key: string) => {
+    const collection = splitCollection(key);
+    if (!collection?.lazy) throw new Error(`Not an item collection: ${key}`);
+    return createSplitCollectionStore(transport, collection);
+  };
   return serializeSyncBackend({
     config: backendConfig,
     async read<T>(key: string) {
@@ -53,6 +59,20 @@ export function createSyncBackend(
         (await writeDocument(transport, key, value as unknown, valueCodec))
           .value,
       );
+    },
+    async writeItems<T>(
+      key: string,
+      value: T,
+      contents: Record<string, unknown>,
+    ) {
+      const result = await splitStore(key).writeItems(
+        value,
+        contents as Record<string, Record<string, unknown>>,
+      );
+      return copy<{ value?: T; contents: Record<string, unknown> }>(result)!;
+    },
+    async readItem(key, id, have) {
+      return copy<SyncItemRead>(await splitStore(key).readItem(id, have))!;
     },
     async remove(key) {
       const collection = splitCollection(key);
@@ -134,6 +154,10 @@ function serializeSyncBackend(backend: SyncBackend): SyncBackend {
     read: <T>(key: string) => run(key, () => backend.read<T>(key)),
     write: <T>(key: string, value: T) =>
       run(key, () => backend.write(key, value)),
+    writeItems: (key, value, contents) =>
+      run(key, () => backend.writeItems(key, value, contents)),
+    readItem: (key, id, have) =>
+      run(key, () => backend.readItem(key, id, have)),
     remove: (key) => run(key, () => backend.remove(key)),
   };
 }

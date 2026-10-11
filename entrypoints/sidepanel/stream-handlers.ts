@@ -1,6 +1,5 @@
-import type { Dispatch, SetStateAction } from "react";
 import { STREAM_RENDER_THROTTLE_MS } from "../../src/shared/config";
-import type { Chat, ChatPart, RunMetrics } from "../../src/shared/types";
+import type { ChatPart, RunMetrics } from "../../src/shared/types";
 import {
   appendAssistantContent,
   appendAssistantPart,
@@ -8,10 +7,9 @@ import {
   updateAssistantRunMetrics,
 } from "./chat-updates";
 import { streamPartFromChunk } from "./stream-parts";
+import type { ChatUpdater } from "./use-chats";
 
-type ChatSetter = Dispatch<SetStateAction<Chat[]>>;
-
-export function createStreamHandlers(setChats: ChatSetter) {
+export function createStreamHandlers(updateChat: ChatUpdater) {
   const pendingText = new Map<string, PendingTextDelta>();
 
   function key(chatId: string, messageId: string, partId: string) {
@@ -29,10 +27,8 @@ export function createStreamHandlers(setChats: ChatSetter) {
       text: item.delta,
       append: true,
     };
-    setChats((items) =>
-      appendAssistantPart({
-        chats: items,
-        chatId: item.chatId,
+    updateChat(item.chatId, (chat) =>
+      appendAssistantPart(chat, {
         messageId: item.messageId,
         delta: item.partType === "text" ? item.delta : undefined,
         part,
@@ -50,8 +46,8 @@ export function createStreamHandlers(setChats: ChatSetter) {
 
   return {
     appendToAssistant(chatId: string, messageId: string, content: string) {
-      setChats((items) =>
-        appendAssistantContent(items, chatId, messageId, content),
+      updateChat(chatId, (chat) =>
+        appendAssistantContent(chat, messageId, content),
       );
     },
     appendStreamChunk(
@@ -90,15 +86,8 @@ export function createStreamHandlers(setChats: ChatSetter) {
         return;
       }
       flushMessageText(chatId, messageId);
-      setChats((items) =>
-        appendAssistantPart({
-          chats: items,
-          chatId,
-          messageId,
-          delta,
-          part,
-          metrics,
-        }),
+      updateChat(chatId, (chat) =>
+        appendAssistantPart(chat, { messageId, delta, part, metrics }),
       );
     },
     updateRunMetrics(
@@ -109,8 +98,8 @@ export function createStreamHandlers(setChats: ChatSetter) {
     ) {
       if (options?.flushPendingText !== false)
         flushMessageText(chatId, messageId);
-      setChats((items) =>
-        updateAssistantRunMetrics(items, chatId, messageId, metrics),
+      updateChat(chatId, (chat) =>
+        updateAssistantRunMetrics(chat, messageId, metrics),
       );
     },
     appendQueuedMessages(
@@ -120,10 +109,8 @@ export function createStreamHandlers(setChats: ChatSetter) {
       createdAt: number,
       sequence?: number,
     ) {
-      setChats((items) =>
-        appendQueuedMessages({
-          chats: items,
-          chatId,
+      updateChat(chatId, (chat) =>
+        appendQueuedMessages(chat, {
           messages,
           assistantMessageId,
           createdAt,

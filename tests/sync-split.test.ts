@@ -2,7 +2,14 @@ import assert from "node:assert/strict";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { afterEach, mock, test } from "node:test";
 import { createSyncBackend } from "../src/shared/sync-backends-impl";
-import type { Chat, ChatMessage, Skill } from "../src/shared/types";
+import { chatContent, chatSummary } from "../src/shared/chats";
+import type {
+  Chat,
+  ChatContent,
+  ChatMessage,
+  ChatSummary,
+  Skill,
+} from "../src/shared/types";
 import { browserStorage } from "./helpers";
 
 afterEach(() => mock.restoreAll());
@@ -125,6 +132,22 @@ function device(offset = 0) {
     storage: state.storage,
     read: <T>(key: string) => run(() => backend.read<T>(key)),
     write: <T>(key: string, value: T) => run(() => backend.write(key, value)),
+    // Chats: the list plus the given chats' contents.
+    writeChats: (chats: Chat[], contents: string[] = []) =>
+      run(() =>
+        backend.writeItems(
+          "chats",
+          chats.map(summary),
+          Object.fromEntries(
+            chats
+              .filter((chat) => contents.includes(chat.id))
+              .map((chat) => [chat.id, chatContent(chat)]),
+          ),
+        ),
+      ),
+    // A chat's content as opening it on this device would get it.
+    openChat: (id: string, have = false) =>
+      run(() => backend.readItem("chats", id, have)),
     remove: (key: string) => run(() => backend.remove(key)),
   };
 }
@@ -142,8 +165,11 @@ const chat = (id: string, ...messages: ChatMessage[]): Chat => ({
   updatedAt: 1,
   messages,
 });
+const summary = (value: Chat) => chatSummary(value);
+const texts = (read: { value?: unknown }) =>
+  (read.value as ChatContent | undefined)?.messages.map((m) => m.content);
 
-test("chats are an index plus one document per chat; only changed chats travel", async () => {
+test("chat content is downloaded only when a chat is opened", async () => {
   const server = webDavServer();
   const a = device();
   const b = device();
@@ -151,7 +177,7 @@ test("chats are an index plus one document per chat; only changed chats travel",
     chat("one", message("m1", "hello")),
     chat("two", message("m2", "world")),
   ];
-  assert.deepEqual(await a.write("chats", chats), chats);
+  await a.writeChats(chats, ["one", "two"]);
   assert.deepEqual([...server.files.keys()].sort(), [
     "chats.tinybase",
     "chats/one.tinybase",
@@ -162,23 +188,32 @@ test("chats are an index plus one document per chat; only changed chats travel",
   );
   assert.ok(!index.includes("hello"), "the index holds no content");
 
-  assert.deepEqual(await b.read("chats"), chats);
+  // The list arrives without content.
   server.take();
-  // A refresh without changes is one conditional request.
-  assert.deepEqual(await b.read("chats"), chats);
+  assert.deepEqual(await b.read("chats"), chats.map(summary));
   assert.deepEqual(server.take(), ["GET chats.tinybase"]);
+  assert.deepEqual(await b.read("chats"), chats.map(summary));
+  assert.deepEqual(server.take(), ["GET chats.tinybase"], "304, one request");
 
+  // Opening a chat downloads that chat once.
+  assert.deepEqual(texts(await b.openChat("one")), ["hello"]);
+  assert.deepEqual(server.take(), ["GET chats/one.tinybase"]);
+  assert.deepEqual(await b.openChat("one", true), { unchanged: true });
+  assert.deepEqual(server.take(), []);
+
+  // An edit uploads only that chat; the other device downloads it on opening.
   const edited = [chat("one", message("m1", "hello!")), chats[1]];
-  assert.deepEqual(await a.write("chats", edited), edited);
+  await a.writeChats(edited, ["one"]);
   assert.deepEqual(
     server.take().filter((request) => request.startsWith("PUT")),
     ["PUT chats/one.tinybase", "PUT chats.tinybase"],
   );
-  assert.deepEqual(await b.read("chats"), edited);
-  assert.deepEqual(server.take(), [
-    "GET chats.tinybase",
-    "GET chats/one.tinybase",
-  ]);
+  await b.read("chats");
+  assert.deepEqual(texts(await b.openChat("one", true)), ["hello!"]);
+  assert.ok(
+    !server.log.includes("GET chats/two.tinybase"),
+    "a chat never opened is never downloaded",
+  );
 });
 
 test("overlapping edits to different chats and messages merge", async () => {
@@ -186,28 +221,39 @@ test("overlapping edits to different chats and messages merge", async () => {
   // A has the faster clock, so its index write wins whatever it carries.
   const a = device(60_000);
   const b = device();
-  const base = [chat("one", message("m1", "a"), message("m2", "b"))];
-  await a.write("chats", base);
+  await a.writeChats(
+    [chat("one", message("m1", "a"), message("m2", "b"))],
+    ["one"],
+  );
   await b.read("chats");
+  await b.openChat("one");
   // A stores its content, then B stores and indexes its edit before A's
   // index write lands.
   const indexWrite = server.pause("PUT chats.tinybase");
-  const aWrite = a.write("chats", [
-    chat("one", message("m1", "a edited"), message("m2", "b")),
-  ]);
+  const aWrite = a.writeChats(
+    [chat("one", message("m1", "a edited"), message("m2", "b"))],
+    ["one"],
+  );
   await indexWrite.reached;
-  await b.write("chats", [
-    chat("one", message("m1", "a"), message("m2", "b edited")),
-    chat("new", message("m3", "c")),
-  ]);
+  await b.writeChats(
+    [
+      chat("one", message("m1", "a"), message("m2", "b edited")),
+      chat("new", message("m3", "c")),
+    ],
+    ["one", "new"],
+  );
   indexWrite.release();
   await aWrite;
-  const expected = [
-    chat("one", message("m1", "a edited"), message("m2", "b edited")),
-    chat("new", message("m3", "c")),
-  ];
-  assert.deepEqual(await a.read("chats"), expected);
-  assert.deepEqual(await b.read("chats"), expected);
+  assert.deepEqual(
+    (await a.read<ChatSummary[]>("chats"))?.map((item) => item.id),
+    ["one", "new"],
+  );
+  await b.read("chats");
+  for (const opened of [a, b])
+    assert.deepEqual(texts(await opened.openChat("one", true)), [
+      "a edited",
+      "b edited",
+    ]);
 });
 
 test("content survives a clear that another device has not seen yet", async () => {
@@ -215,32 +261,37 @@ test("content survives a clear that another device has not seen yet", async () =
   const a = device();
   const b = device();
   const chats = [chat("one", message("m1", "hello")), chat("two")];
-  await a.write("chats", chats);
+  await a.writeChats(chats, ["one", "two"]);
   await b.read("chats");
+  await b.openChat("one");
   await a.remove("chats");
-  // B only renames a chat; its content must reach the cloud again.
-  const renamed = [chats[0], { ...chats[1], title: "renamed" }];
-  await b.write("chats", renamed);
+  // B only renames a chat; the content it has must reach the cloud again.
+  await b.writeChats([chats[0], { ...chats[1], title: "renamed" }]);
   assert.ok(server.files.has("chats/one.tinybase"));
-  assert.deepEqual(await a.read("chats"), renamed);
+  await a.read("chats");
+  assert.deepEqual(texts(await a.openChat("one")), ["hello"]);
 });
 
 test("a deleted chat stays deleted and its document leaves the cloud", async () => {
   const server = webDavServer();
   const a = device();
   const b = device();
-  await a.write("chats", [chat("keep"), chat("drop", message("m", "x"))]);
+  await a.writeChats(
+    [chat("keep"), chat("drop", message("m", "x"))],
+    ["keep", "drop"],
+  );
   await b.read("chats");
-  await a.write("chats", [chat("keep")]);
+  await b.openChat("drop");
+  await a.writeChats([chat("keep")]);
   assert.equal(server.files.has("chats/drop.tinybase"), false);
-  assert.deepEqual(await b.read("chats"), [chat("keep")]);
-  // An unchanged copy written by the other device does not bring it back.
-  assert.deepEqual(await b.write("chats", [chat("keep")]), [chat("keep")]);
-  assert.deepEqual(await a.read("chats"), [chat("keep")]);
+  assert.deepEqual(await b.read("chats"), [summary(chat("keep"))]);
   assert.ok(
     !Object.keys(b.storage.data).some((key) => key.includes("chats/drop")),
     "the local replica is gone too",
   );
+  // A list written by the other device without it does not bring it back.
+  await b.writeChats([chat("keep")]);
+  assert.deepEqual(await a.read("chats"), [summary(chat("keep"))]);
 
   await a.remove("chats");
   assert.deepEqual([...server.files.keys()], []);

@@ -1,5 +1,10 @@
+import {
+  deleteChats,
+  readChat,
+  readLocalChatContent,
+} from "../shared/chat-storage";
 import { storage } from "../shared/storage";
-import type { Chat, ChatMessage } from "../shared/types";
+import type { ChatContent, ChatMessage, ChatSummary } from "../shared/types";
 
 const CHAT_SEARCH_LIMIT = 12;
 const CHAT_READ_MESSAGE_LIMIT = 80;
@@ -20,22 +25,35 @@ export async function searchChatHistory(input: Record<string, unknown>) {
     .toLowerCase();
   const offset = clampOffset(input.offset);
   const limit = clampLimit(input.limit, CHAT_SEARCH_LIMIT, 1, 30);
-  const chats = await storage.chats.get();
+  // Titles of every chat; messages only of chats whose content is on this
+  // device, so a search never downloads every synced chat.
+  const chats = await Promise.all(
+    (await storage.chats.get()).map(async (chat) => ({
+      chat,
+      content: await readLocalChatContent(chat.id),
+    })),
+  );
   const allMatches = chats
-    .map((chat) => ({ chat, score: chatSearchScore(chat, query) }))
+    .map(({ chat, content }) => ({
+      chat,
+      content,
+      score: chatSearchScore(chat, content, query),
+    }))
     .filter(({ score }) => score > 0)
     .sort(
       (left, right) =>
         right.score - left.score || right.chat.updatedAt - left.chat.updatedAt,
     );
-  const results = allMatches.slice(offset, offset + limit).map(({ chat }) => ({
-    id: chat.id,
-    title: chat.title,
-    createdAt: chat.createdAt,
-    updatedAt: chat.updatedAt,
-    messageCount: chat.messages.length,
-    preview: chatPreview(chat),
-  }));
+  const results = allMatches
+    .slice(offset, offset + limit)
+    .map(({ chat, content }) => ({
+      id: chat.id,
+      title: chat.title,
+      createdAt: chat.createdAt,
+      updatedAt: chat.updatedAt,
+      messageCount: chat.messageCount,
+      preview: content ? chatPreview(content) : "",
+    }));
   return {
     query,
     offset,
@@ -52,8 +70,7 @@ export async function readChatThread(input: Record<string, unknown>) {
   if (!chatId) return { error: "Missing chatId" };
   const requestedOffset = input.offset;
   const limit = clampLimit(input.limit, CHAT_READ_MESSAGE_LIMIT, 1, 200);
-  const chats = await storage.chats.get();
-  const chat = chats.find((item) => item.id === chatId);
+  const chat = await readChat(chatId);
   if (!chat) return { error: "Chat thread not found", chatId };
   const offset =
     requestedOffset === undefined
@@ -79,17 +96,20 @@ export async function readChatThread(input: Record<string, unknown>) {
 export async function deleteChatThread(input: Record<string, unknown>) {
   const chatId = String(input.chatId || input.id || "").trim();
   if (!chatId) return { error: "Missing chatId" };
-  const chats = await storage.chats.get();
-  const chat = chats.find((item) => item.id === chatId);
+  const chat = (await storage.chats.get()).find((item) => item.id === chatId);
   if (!chat) return { error: "Chat thread not found", chatId };
-  await storage.chats.set(chats.filter((item) => item.id !== chatId));
+  await deleteChats([chatId]);
   return { id: chat.id, title: chat.title, deleted: true };
 }
 
-function chatSearchScore(chat: Chat, query: string) {
+function chatSearchScore(
+  chat: ChatSummary,
+  content: ChatContent | undefined,
+  query: string,
+) {
   if (!query) return chat.updatedAt || 1;
   const titleScore = chat.title.toLowerCase().includes(query) ? 100 : 0;
-  const messageScore = chat.messages.reduce(
+  const messageScore = (content?.messages || []).reduce(
     (score, message) =>
       score + (messageText(message).toLowerCase().includes(query) ? 1 : 0),
     0,
@@ -97,7 +117,7 @@ function chatSearchScore(chat: Chat, query: string) {
   return titleScore + messageScore;
 }
 
-function chatPreview(chat: Chat) {
+function chatPreview(chat: ChatContent) {
   const message = [...chat.messages]
     .reverse()
     .find((item) => messageText(item).trim());

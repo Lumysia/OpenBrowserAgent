@@ -1,5 +1,6 @@
 import { getBrowserApi } from "./browser-api";
 import { STORAGE_KEYS } from "./storage-keys";
+import { SPLIT_ITEMS } from "./storage-split";
 import {
   documentScope,
   readDocument,
@@ -9,34 +10,36 @@ import {
   type DocumentTransport,
 } from "./sync-documents";
 import {
+  bodyCodec,
+  hashBody,
+  indexCodec,
+  mapLimit,
+  revKey,
+  sameRevs,
+  syncDeviceId,
+  type Body,
+  type Index,
+  type Item,
+  type Revs,
+  type SplitCollection,
+} from "./sync-split-format";
+import {
   hasStringKey,
-  itemsFromTable,
   removeLocalTinyBaseSyncDocument,
-  setOrderedTable,
   tinybaseSyncLocalCacheKey,
-  type SyncDocCodec,
 } from "./sync-tinybase-doc";
 
 // A collection whose items carry large content. Its cloud form is a small
 // index document (each item's other fields plus the revs of its content) and
 // one content document per item, so a change uploads and downloads only the
 // items it touched.
-type SplitCollection = {
-  key: string;
-  idField: string;
-  // Content fields: arrays of items stored one row per item, keyed by the
-  // given field, so concurrent edits of different entries merge.
-  body: Record<string, string>;
-  // Content fields left out of an item while empty.
-  omitEmpty?: string[];
-};
-
 const SPLIT_COLLECTIONS: SplitCollection[] = [
   {
     key: STORAGE_KEYS.chats,
     idField: "id",
-    body: { messages: "id", sources: "id", imageGenerationJobs: "id" },
+    body: SPLIT_ITEMS[STORAGE_KEYS.chats].content,
     omitEmpty: ["sources", "imageGenerationJobs"],
+    lazy: true,
   },
   { key: STORAGE_KEYS.skills, idField: "id", body: { files: "path" } },
   {
@@ -50,80 +53,16 @@ export function splitCollection(key: string) {
   return SPLIT_COLLECTIONS.find((collection) => collection.key === key);
 }
 
-type Item = Record<string, unknown>;
-type Body = Record<string, unknown[]>;
-// An item's content rev: each device writes only its own cell (the rev of the
-// content document it stored), so concurrent writers never overwrite each
-// other's rev and a reader sees a change whenever any cell changes.
-type Revs = Record<string, string>;
-type Index = { items: Item[]; revs: Record<string, Revs> };
+// `value` absent and not `unchanged`: the item or its content is missing.
+export type ItemRead = { value?: Item; unchanged?: boolean };
 // What this device last synced per item: the revs its local content matches
 // and a hash of that content, so unchanged items are neither uploaded nor
 // downloaded.
 type SyncedItems = Record<string, { rev: Revs; body: string }>;
 
-const ITEMS_TABLE = "items";
-const REVS_TABLE = "revs";
-const ITEM_CONCURRENCY = 4;
-
 // Decoded content of unchanged items, so a refresh decodes each stored
 // replica at most once per background lifetime.
 const bodyCache = new Map<string, { rev: string; body: Body | undefined }>();
-
-// `revs` sets only the given cells; the others keep theirs.
-function indexCodec(collection: SplitCollection): SyncDocCodec<Index> {
-  return {
-    set(store, { items, revs }, keepUnseen) {
-      store.transaction(() => {
-        setOrderedTable(
-          store,
-          ITEMS_TABLE,
-          items,
-          collection.idField,
-          keepUnseen,
-        );
-        for (const [id, row] of Object.entries(revs))
-          for (const [device, rev] of Object.entries(row))
-            store.setCell(REVS_TABLE, id, device, rev);
-        for (const id of store.getRowIds(REVS_TABLE))
-          if (!store.hasRow(ITEMS_TABLE, id)) store.delRow(REVS_TABLE, id);
-      });
-    },
-    get(store) {
-      return {
-        items: itemsFromTable(store.getTable(ITEMS_TABLE), collection.idField),
-        revs: Object.fromEntries(
-          Object.entries(store.getTable(REVS_TABLE)).map(([id, row]) => [
-            id,
-            Object.fromEntries(
-              Object.entries(row).map(([device, rev]) => [device, String(rev)]),
-            ),
-          ]),
-        ),
-      };
-    },
-  };
-}
-
-function bodyCodec(collection: SplitCollection): SyncDocCodec<Body> {
-  const fields = Object.entries(collection.body);
-  return {
-    set(store, body, keepUnseen) {
-      store.transaction(() => {
-        for (const [field, keyField] of fields)
-          setOrderedTable(store, field, body[field], keyField, keepUnseen);
-      });
-    },
-    get(store) {
-      return Object.fromEntries(
-        fields.map(([field, keyField]) => [
-          field,
-          itemsFromTable(store.getTable(field), keyField),
-        ]),
-      );
-    },
-  };
-}
 
 export function createSplitCollectionStore(
   transport: DocumentTransport,
@@ -235,153 +174,198 @@ export function createSplitCollectionStore(
     return values;
   }
 
+  // Store the given contents, then the index; returns the merged index and
+  // what this device now has. Entries without a body keep their content.
+  async function store(
+    entries: Array<{ id: string; meta: Item; body?: Body }>,
+  ) {
+    const state = await readState();
+    const device = await syncDeviceId();
+    const local = new Map<string, Body>();
+    for (const { id, body } of entries) if (body) local.set(id, body);
+    const stored = new Set<string>();
+    const expected: Record<string, Revs> = {};
+    const written: Record<string, Revs> = {};
+    let current: Record<string, Revs | undefined> = Object.fromEntries(
+      Object.entries(state).map(([id, { rev }]) => [id, rev]),
+    );
+    const upload = async (id: string, body: Body, fresh = false) => {
+      const result = await writeDocument(
+        transport,
+        itemName(id),
+        body,
+        bodies,
+        fresh,
+      );
+      local.set(id, result.value ?? body);
+      stored.add(id);
+      written[id] = { [device]: result.rev };
+      expected[id] = { ...current[id], [device]: result.rev };
+    };
+    const writeIndex = (items: Item[], revs: Record<string, Revs>) =>
+      writeDocument(transport, key, { items, revs }, index);
+    // Content first: the index must never name content not yet stored.
+    await mapLimit([...local], async ([id, body]) => {
+      if (state[id]?.body !== hashBody(body)) await upload(id, body);
+    });
+
+    const first = await writeIndex(
+      entries.map(({ meta }) => meta),
+      written,
+    );
+    let merged = first.value!;
+    // Content is stored again where the index names no rev for it, or the
+    // index itself was gone (cloud data was cleared meanwhile).
+    const lost = entries.filter(
+      ({ id }) => !stored.has(id) && (first.created || !(id in merged.revs)),
+    );
+    if (lost.length) {
+      current = merged.revs;
+      for (const id of Object.keys(written)) delete written[id];
+      await mapLimit(lost, async ({ id }) => {
+        const body =
+          local.get(id) ?? (await localBody(id, state[id]?.rev ?? {}));
+        if (body) await upload(id, body, true);
+      });
+      merged = (await writeIndex(merged.items, written)).value!;
+    }
+    // Content of items this device synced but that are no longer indexed
+    // (deleted here or elsewhere) is removed from the cloud as well.
+    const removable = new Set([...Object.keys(state), ...stored]);
+    return { merged, state, local, stored, expected, removable };
+  }
+
+  async function forgetRemoved(
+    { items }: Index,
+    state: SyncedItems,
+    removable: Set<string>,
+  ) {
+    const ids = new Set(items.map(idOf));
+    const removed = Object.keys(state).filter((id) => !ids.has(id));
+    for (const id of removed) await forget(id, removable.has(id));
+    return removed;
+  }
+
+  async function readIndex() {
+    const state = await readState();
+    const { value } = await readDocument(transport, key, index);
+    if (!value) {
+      await Promise.all(Object.keys(state).map((id) => forget(id, false)));
+      await getBrowserApi().storage.local.remove(stateKey);
+    }
+    return { value, state };
+  }
+
+  const entriesOf = (value: unknown) => {
+    if (!Array.isArray(value))
+      throw new Error(`Sync collection ${key} must be an array.`);
+    return value
+      .filter((item): item is Item => hasStringKey(item, idField))
+      .map((item) => ({ id: idOf(item), ...split(item) }));
+  };
+
   return {
+    // Every item with its content. A lazy collection returns its items'
+    // other fields only; content is read per item with `readItem`.
     async read() {
-      const state = await readState();
-      const { value } = await readDocument(transport, key, index);
-      if (!value) {
-        await Promise.all(Object.keys(state).map((id) => forget(id, false)));
-        await getBrowserApi().storage.local.remove(stateKey);
-        return undefined;
+      const { value, state } = await readIndex();
+      if (!value) return undefined;
+      if (!collection.lazy)
+        return reconcile(value, state, new Map(), {}, new Set());
+      const removed = await forgetRemoved(value, state, new Set());
+      if (removed.length) {
+        for (const id of removed) delete state[id];
+        await writeState(state);
       }
-      return reconcile(value, state, new Map(), {}, new Set());
+      return value.items;
     },
 
     async write(value: unknown) {
-      if (!Array.isArray(value))
-        throw new Error(`Sync collection ${key} must be an array.`);
-      const state = await readState();
-      const device = await syncDeviceId();
-      const entries = value
-        .filter((item): item is Item => hasStringKey(item, idField))
-        .map((item) => ({ id: idOf(item), ...split(item) }));
-      const local = new Map(entries.map(({ id, body }) => [id, body]));
-      const stored = new Set<string>();
-      const expected: Record<string, Revs> = {};
-      const written: Record<string, Revs> = {};
-      let current: Record<string, Revs | undefined> = Object.fromEntries(
-        Object.entries(state).map(([id, { rev }]) => [id, rev]),
+      if (collection.lazy) return (await writeItems(value, {})).value;
+      const { merged, state, local, expected, removable } = await store(
+        entriesOf(value),
       );
-      const upload = async (
-        { id, body }: { id: string; body: Body },
-        fresh = false,
-      ) => {
-        const result = await writeDocument(
-          transport,
-          itemName(id),
-          body,
-          bodies,
-          fresh,
-        );
-        local.set(id, result.value ?? body);
-        stored.add(id);
-        written[id] = { [device]: result.rev };
-        expected[id] = { ...current[id], [device]: result.rev };
-      };
-      const writeIndex = (items: Item[], revs: Record<string, Revs>) =>
-        writeDocument(transport, key, { items, revs }, index);
-      // Content first: the index must never name content not yet stored.
-      await mapLimit(
-        entries.filter(({ id, body }) => state[id]?.body !== hashBody(body)),
-        upload,
-      );
-      const first = await writeIndex(
-        entries.map(({ meta }) => meta),
-        written,
-      );
-      let merged = first.value!;
-      // Content is stored again where the index names no rev for it, or the
-      // index itself was gone (cloud data was cleared meanwhile).
-      const lost = entries.filter(
-        ({ id }) => !stored.has(id) && (first.created || !(id in merged.revs)),
-      );
-      if (lost.length) {
-        current = merged.revs;
-        for (const id of Object.keys(written)) delete written[id];
-        await mapLimit(lost, (entry) => upload(entry, true));
-        merged = (await writeIndex(merged.items, written)).value!;
-      }
-      // Content of items this device synced but that are no longer indexed
-      // (deleted here or elsewhere) is removed from the cloud as well.
-      const removable = new Set([...Object.keys(state), ...stored]);
       return reconcile(merged, state, local, expected, removable);
     },
 
-    async remove() {
-      const state = await readState();
-      await transport.removeFolder(key);
-      await removeDocument(transport, key);
-      await Promise.all(Object.keys(state).map((id) => forget(id, false)));
-      await getBrowserApi().storage.local.remove(stateKey);
-    },
+    writeItems,
+    readItem,
+    remove,
   };
-}
 
-// Stable per-device identity for rev cells.
-async function syncDeviceId() {
-  const storageKey = STORAGE_KEYS.syncDeviceId;
-  const local = getBrowserApi().storage.local;
-  const stored = (await local.get(storageKey))[storageKey];
-  if (typeof stored === "string" && stored) return stored;
-  const id = crypto.randomUUID();
-  await local.set({ [storageKey]: id });
-  return id;
-}
-
-function sameRevs(left: Revs, right: Revs) {
-  return revKey(left) === revKey(right);
-}
-
-function revKey(revs: Revs) {
-  return JSON.stringify(
-    Object.entries(revs).sort(([a], [b]) => (a < b ? -1 : 1)),
-  );
-}
-
-async function mapLimit<T, R>(items: T[], run: (item: T) => Promise<R>) {
-  const results: R[] = new Array(items.length);
-  let next = 0;
-  const worker = async () => {
-    while (next < items.length) {
-      const index = next++;
-      results[index] = await run(items[index]);
+  // Lazy collections: write the items' other fields and the given items'
+  // content; returns the merged items and the merged given contents.
+  async function writeItems(value: unknown, contents: Record<string, Item>) {
+    const entries = entriesOf(value).map(({ id, meta }) => ({
+      id,
+      meta,
+      body: id in contents ? split(contents[id]).body : undefined,
+    }));
+    const { merged, state, local, stored, expected, removable } =
+      await store(entries);
+    const next = { ...state };
+    for (const id of await forgetRemoved(merged, state, removable))
+      delete next[id];
+    for (const id of stored) {
+      const row = merged.revs[id] ?? {};
+      const synced = sameRevs(row, expected[id]);
+      next[id] = {
+        rev: synced ? row : expected[id],
+        body: hashBody(local.get(id)),
+      };
+      if (synced)
+        bodyCache.set(itemScope(id), {
+          rev: revKey(row),
+          body: local.get(id),
+        });
     }
-  };
-  await Promise.all(
-    Array.from({ length: Math.min(ITEM_CONCURRENCY, items.length) }, worker),
-  );
-  return results;
-}
-
-function hashBody(body: Body | undefined) {
-  return hashString(canonicalJson(body ?? {}));
-}
-
-// Key order differs between an app value and a decoded document.
-function canonicalJson(value: unknown) {
-  return JSON.stringify(value, (_key, child: unknown) =>
-    child && typeof child === "object" && !Array.isArray(child)
-      ? Object.fromEntries(
-          Object.entries(child).sort(([left], [right]) =>
-            left < right ? -1 : left > right ? 1 : 0,
-          ),
-        )
-      : child,
-  );
-}
-
-// 53-bit string hash (cyrb53); detects changes, not adversarial collisions.
-function hashString(text: string) {
-  let h1 = 0xdeadbeef;
-  let h2 = 0x41c6ce57;
-  for (let index = 0; index < text.length; index++) {
-    const code = text.charCodeAt(index);
-    h1 = Math.imul(h1 ^ code, 2654435761);
-    h2 = Math.imul(h2 ^ code, 1597334677);
+    if (JSON.stringify(next) !== JSON.stringify(state)) await writeState(next);
+    const ids = new Set(merged.items.map(idOf));
+    return {
+      value: merged.items,
+      contents: Object.fromEntries(
+        Object.keys(contents)
+          .filter((id) => ids.has(id) && local.has(id))
+          .map((id) => [id, join({}, local.get(id))]),
+      ),
+    };
   }
-  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
-  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
-  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+
+  // One item's content, fetched only when its revs differ from the content
+  // this device has (`have`). `unchanged`: the device's copy is current.
+  async function readItem(id: string, have: boolean): Promise<ItemRead> {
+    const state = await readState();
+    const current =
+      (await readLocalDocument(transport, key, index))?.value ??
+      (await readDocument(transport, key, index)).value;
+    if (!current?.items.some((item) => idOf(item) === id)) return {};
+    const row = current.revs[id] ?? {};
+    const base = state[id]?.rev;
+    if (base && sameRevs(row, base)) {
+      if (have) return { unchanged: true };
+      const body = await localBody(id, row);
+      if (body) return { value: join({}, body) };
+    }
+    if (!Object.keys(row).length) {
+      if (have) return { unchanged: true };
+      const body = await localBody(id, base ?? {});
+      return body ? { value: join({}, body) } : {};
+    }
+    const { body, synced } = await fetchBody(id, row, base);
+    if (!body) return have ? { unchanged: true } : {};
+    if (synced) bodyCache.set(itemScope(id), { rev: revKey(row), body });
+    await writeState({
+      ...state,
+      [id]: { rev: synced ? row : (base ?? {}), body: hashBody(body) },
+    });
+    return { value: join({}, body) };
+  }
+
+  async function remove() {
+    const state = await readState();
+    await transport.removeFolder(key);
+    await removeDocument(transport, key);
+    await Promise.all(Object.keys(state).map((id) => forget(id, false)));
+    await getBrowserApi().storage.local.remove(stateKey);
+  }
 }
