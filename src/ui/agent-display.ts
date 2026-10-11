@@ -11,7 +11,7 @@ export function agentDisplayName(agent: Agent, t: Messages) {
   return agentDisplayNameById(agent.id, agent.name, t);
 }
 
-export function agentDisplayNameById(
+function agentDisplayNameById(
   agentId: string | undefined,
   fallbackName: string | undefined,
   t: Messages,

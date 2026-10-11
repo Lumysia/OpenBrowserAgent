@@ -12,8 +12,11 @@ import "katex/dist/katex.min.css";
 import { Marked, Renderer } from "marked";
 import type { Messages } from "../../src/shared/i18n";
 import type { ChatSource } from "../../src/shared/types";
-import { escapeHtml, markdownParserOptions } from "./markdown-extensions";
-import { applyStreamingTextRenderer } from "./markdown-streaming";
+import {
+  applyStreamingTextRenderer,
+  escapeHtml,
+  markdownParserOptions,
+} from "./markdown-extensions";
 
 const markdownSanitizer = DOMPurify();
 // Only generated image sources can retain blob URLs. All other attributes use
@@ -28,7 +31,7 @@ markdownSanitizer.addHook("uponSanitizeAttribute", (node, attribute) => {
     attribute.forceKeepAttr = true;
 });
 
-export type MarkdownSegment = {
+type MarkdownSegment = {
   key: string;
   text: string;
   start: number;
@@ -61,7 +64,6 @@ export function renderMarkdown(
     animatedFromChar?: number;
     mermaidPreview?: boolean;
     syntaxHighlight?: boolean;
-    codeIndexOffset?: number;
   } = {},
 ) {
   const codeBlocks: string[] = [];
@@ -71,8 +73,7 @@ export function renderMarkdown(
   renderer.image = ({ href, title, text }) =>
     renderMarkdownImage(href, title, text);
   renderer.code = ({ text: code, lang }) => {
-    const localCodeIndex = codeBlocks.push(code) - 1;
-    const codeIndex = (options.codeIndexOffset || 0) + localCodeIndex;
+    const codeIndex = codeBlocks.push(code) - 1;
     const codeId = `code-${codeIndex}`;
     const copied = copiedCodeId === codeId;
     const language = lang?.split(/\s+/)[0] || "";

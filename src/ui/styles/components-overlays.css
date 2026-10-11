@@ -627,30 +627,3 @@
 .ui-scroll-area-viewport::-webkit-scrollbar-track {
   background: transparent;
 }
-.ui-scroll-area-scrollbar {
-  display: flex;
-  touch-action: none;
-  user-select: none;
-  padding: 2px;
-  transition: background-color 0.14s ease;
-}
-.ui-scroll-area-scrollbar:hover {
-  background: color-mix(in srgb, var(--scrollbar-track) 72%, transparent);
-}
-.ui-scroll-area-scrollbar[data-orientation="vertical"] {
-  width: 10px;
-}
-.ui-scroll-area-scrollbar[data-orientation="horizontal"] {
-  height: 10px;
-  flex-direction: column;
-}
-.ui-scroll-area-thumb {
-  position: relative;
-  flex: 1;
-  border-radius: 999px;
-  background: var(--scrollbar-thumb);
-  transition: background-color 0.14s ease;
-}
-.ui-scroll-area-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
-}

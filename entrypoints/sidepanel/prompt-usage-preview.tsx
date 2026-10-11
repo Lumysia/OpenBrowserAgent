@@ -28,7 +28,7 @@ import { buildSidepanelContext } from "./sidepanel-context";
 import { formatEstimatedTokens } from "./format";
 import { IconTooltip } from "./icon-tooltip";
 
-export type PromptUsageEstimate = PromptBreakdown;
+type PromptUsageEstimate = PromptBreakdown;
 
 export function usePromptUsageEstimate({
   input,

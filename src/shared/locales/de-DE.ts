@@ -16,7 +16,6 @@ export const deDE: LocaleMessages = {
     language: "Sprache",
     enabled: "Aktiviert",
     disabled: "Deaktiviert",
-    noModelsFound: "Keine Modelle gefunden.",
     confirm: "Bestätigen",
   },
   words: { newChat: "Neuer Chat", agent: "Browsen", ask: "Fragen" },
@@ -25,7 +24,6 @@ export const deDE: LocaleMessages = {
     connectProviderDescription:
       "Wählen Sie die Sprache, aktivieren Sie optional die Synchronisierung und fügen Sie dann Anbieter und Modell hinzu.",
     addProvider: "Anbieter hinzufügen",
-    cloudSync: "Aus der Cloud synchronisieren",
     cloudSyncTest: "Cloud-Synchronisierung testen",
     cloudSyncTesting: "Cloud-Synchronisierung wird getestet...",
     cloudSyncPulling: "Cloud-Synchronisierung wird geprüft...",
@@ -33,13 +31,10 @@ export const deDE: LocaleMessages = {
       "Nutzen Sie die Cloud, um eine Einrichtung von einem anderen Gerät zu übernehmen oder diese neue Einrichtung zu speichern.",
     cloudSyncReady:
       "Synchronisierte Anbieterkonfiguration gefunden. Sie können aus der Cloud starten.",
-    cloudSyncSuccess:
-      "Synchronisierte Anbieterkonfiguration gefunden. Chat wird geöffnet...",
     cloudSyncEmpty:
       "Cloud verbunden, aber keine vorhandene Einrichtung gefunden. Bestätigen Sie, um neue Daten in der Cloud zu speichern.",
     cloudSyncError:
       "Cloud-Synchronisierungstest fehlgeschlagen. Prüfen Sie das Backend oder starten Sie lokal.",
-    cloudSyncStoreNew: "Neue Konfiguration in der Cloud speichern",
     confirmCloudSync: "Synchronisierung bestätigen",
     cloudSyncSynced:
       "Cloud-Synchronisierung ist bereit. Fügen Sie als Nächstes Anbieter hinzu.",
@@ -101,8 +96,6 @@ export const deDE: LocaleMessages = {
     whatDoYouWant: "Was möchten Sie tun?",
     emptyDescription:
       "Aufgaben automatisieren, suchen und den Browser steuern.",
-    aiWorking: "KI arbeitet",
-    aiWorkingDescription: "Liest, handelt und bereitet die Antwort vor.",
     typingPhrases: [
       "Grübelt...",
       "Spürt...",
@@ -135,9 +128,6 @@ export const deDE: LocaleMessages = {
       tokenUnit: "tok.",
       estimatedTokenCount: "ca. {count} tok.",
       promptBreakdown: "Anweisungs-Aufteilung",
-      contextSaved: "Gesparter Kontext",
-      contextPrunedMessages: "Gekürzte Nachrichten",
-      contextToolResults: "Gekürzte Tool-Ergebnisse",
       prebuiltPrompt: "Vordefinierte Anweisung",
       userPrompt: "Nutzeranweisung",
       conversationPrompt: "Unterhaltung",
@@ -148,16 +138,11 @@ export const deDE: LocaleMessages = {
       toolCallPrompt: "Tool-Aufrufe",
       sourcePrompt: "Quellen",
       otherPrompt: "Anderer Kontext",
-      characters: "Zeichen",
       unavailable: "Nicht verfügbar",
     },
     contextSummaryTitle: "Kontextzusammenfassung",
     contextSummaryDescription:
       "Älterer Gesprächskontext wurde für diese Anfrage komprimiert.",
-    operatingBrowser: "Browser wird bedient",
-    preparingFinalReply: "Finale Antwort wird vorbereitet",
-    preparingFinalReplyDescription:
-      "Die Browseraktionen sind abgeschlossen. Die KI fasst das Ergebnis zusammen.",
     willBeSentToAi: "Wird an die KI gesendet",
     willBeSentAsPageContext: "Wird als Seitenkontext gesendet",
     currentPage: "Aktuelle Seite",
@@ -519,12 +504,9 @@ export const deDE: LocaleMessages = {
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "Headers JSON",
     mcpServerEnabled: "Aktiviert",
-    mcpServerEnabledDescription:
-      "Diese Serverkonfiguration für Assistenten-Tools verfügbar machen.",
     mcpEnableRequiresTest:
       "Testen Sie diesen MCP-Server, bevor Sie ihn aktivieren.",
     mcpEnableTooltipTested: "Test bestanden. {count} Tools gefunden.",
-    mcpAdvancedActions: "MCP-Serveraktionen",
     mcpImportJson: "MCP-JSON-Konfiguration einfügen",
     mcpImportButton: "MCP-JSON importieren",
     mcpImportSuccess: "{count} MCP-Server importiert.",
@@ -562,8 +544,6 @@ export const deDE: LocaleMessages = {
     models: "Modelle",
     imageModels: "Bildgenerierungsmodelle",
     modelHint: "Modelle abrufen und dann eines hinzufügen",
-    imageModelHint:
-      "Modelle hinzufügen, die Bildgenerierung oder Bildbearbeitung unterstützen",
     fetchModels: "Modelle abrufen",
     fetchingModels: "Modelle werden abgerufen",
     searchFetchedModels: "Abgerufene Modelle suchen...",
@@ -573,7 +553,6 @@ export const deDE: LocaleMessages = {
       "Alle abgerufenen Modelle wurden bereits hinzugefügt",
     addSelected: "Auswahl hinzufügen",
     addCustomModelName: "Benutzerdefinierten Modellnamen hinzufügen",
-    addCustomImageModelName: "Bildmodellnamen hinzufügen",
     addCustom: "Benutzerdefiniert hinzufügen",
     testModel: "Testen",
     testingModel: "Test läuft",
@@ -605,7 +584,6 @@ export const deDE: LocaleMessages = {
     replaceFile: "Datei ersetzen",
     filePath: "Dateipfad",
     downloadFile: "Datei herunterladen",
-    downloadSkillZip: "Archiv herunterladen",
     downloadSkillPackage: ".skill herunterladen",
     duplicateSkill: "Duplizieren",
     disabled: "Deaktiviert",
@@ -613,9 +591,7 @@ export const deDE: LocaleMessages = {
     uploadFile: "Datei hochladen",
     editFile: "Datei bearbeiten",
     saveFile: "Datei speichern",
-    previewFile: "Datei vorschau",
     deleteFile: "Datei löschen",
-    binaryPreviewUnavailable: "Binärvorschau ist nicht verfügbar.",
     updatedAt: "Aktualisiert",
     skillSize: "Fähigkeitsgröße",
     skillCheckEntry: "SKILL.md vorhanden",
@@ -625,9 +601,6 @@ export const deDE: LocaleMessages = {
     skillCheckDescription: "Beschreibung vorhanden",
     skillCheckDescriptionMissing: "Beschreibung fehlt",
     deleteSkill: "Fähigkeit löschen",
-    deleteSkillConfirm: "Diese Fähigkeit löschen?",
-    availableVariables: "Verfügbare Variablen (zum Kopieren klicken):",
-    example: "Beispiel",
     languageDescription: "Wählen Sie die Sprache der Erweiterungsoberfläche.",
     colorScheme: "Farbschema",
     colorSchemeDescription:
@@ -642,25 +615,17 @@ export const deDE: LocaleMessages = {
     systemTheme: "System",
     lightTheme: "Hell",
     darkTheme: "Dunkel",
-    syncSettings: "Einstellungen synchronisieren",
     syncSettingsDescription:
       "Wählen Sie das Backend, das Sprache, Anbieter und leichte Einstellungen standardmäßig synchronisiert.",
-    syncBackend: "Synchronisierungs-Backend",
     syncBackendDescription: "Zusätzliche Synchronisierungselemente auswählen.",
     syncBackendBrowserSync: "Integrierte Browserkonto-Synchronisierung",
     syncBackendWebDavSync: "WebDAV-Synchronisierung",
-    syncBackendLocalOnly: "Nur lokal",
     syncBackendName: "Backend-Name",
     syncBackendWebDavUrl: "WebDAV-URL",
     syncBackendUsername: "Benutzername",
     syncBackendPassword: "Passwort oder App-Passwort",
-    syncBackendTest: "Testen",
-    syncBackendTesting: "Test läuft...",
-    syncBackendTestSuccess: "Verbunden",
-    syncBackendTestError: "Verbindung fehlgeschlagen",
     syncBackendCopyConfig: "Konfigurationscode kopieren",
     syncBackendCopiedConfig: "Konfigurationscode kopiert",
-    syncBackendRemove: "Entfernen",
     syncProviders: "Anbieter synchronisieren",
     syncProvidersDescription:
       "Anbieterkonfiguration einschließlich API-Schlüssel über das aktuelle Synchronisierungs-Backend synchronisieren.",
@@ -736,8 +701,6 @@ export const deDE: LocaleMessages = {
     debugLoggingDescription:
       "Aktiviert temporäre Konsolenlogs für Stream-, Tool- und Assistant-Reihenfolge-Diagnosen.",
     debugLoggingEnabled: "Diagnose-Konsolenlogs aktivieren",
-    debugLoggingEnabledDescription:
-      "Schreibt [OBA ...]-Debug-Ereignisse in die Erweiterungskonsole, bis es deaktiviert wird.",
     debugToolsTitle: "Registrierte Tools",
     debugToolsDescription: "Aktuelle Browser-Tool-Registry ({count} Tools).",
     debugToolAvailable: "Verfügbar",

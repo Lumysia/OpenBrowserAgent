@@ -16,7 +16,6 @@ export const ptBR: LocaleMessages = {
     language: "Idioma",
     enabled: "Ativado",
     disabled: "Desativado",
-    noModelsFound: "Nenhum modelo encontrado.",
     confirm: "Confirmar",
   },
   words: { newChat: "Novo chat", agent: "Navegar", ask: "Perguntar" },
@@ -25,7 +24,6 @@ export const ptBR: LocaleMessages = {
     connectProviderDescription:
       "Escolha o idioma, ative a sincronização se quiser e depois adicione um provedor e um modelo.",
     addProvider: "Adicionar provedor",
-    cloudSync: "Sincronizar da nuvem",
     cloudSyncTest: "Testar sincronização na nuvem",
     cloudSyncTesting: "Testando sincronização na nuvem...",
     cloudSyncPulling: "Verificando sincronização na nuvem...",
@@ -33,13 +31,10 @@ export const ptBR: LocaleMessages = {
       "Use a nuvem para iniciar com a configuração de outro dispositivo ou salvar esta nova configuração.",
     cloudSyncReady:
       "Configuração de provedor sincronizada encontrada. Você pode começar pela nuvem.",
-    cloudSyncSuccess:
-      "Configuração de provedor sincronizada encontrada. Abrindo chat...",
     cloudSyncEmpty:
       "A nuvem está conectada, mas nenhuma configuração existente foi encontrada. Confirme para salvar a nova configuração na nuvem.",
     cloudSyncError:
       "Falha no teste de sincronização da nuvem. Verifique o backend ou comece localmente.",
-    cloudSyncStoreNew: "Salvar nova configuração na nuvem",
     confirmCloudSync: "Confirmar sincronização",
     cloudSyncSynced:
       "A sincronização na nuvem está pronta. Agora adicione a configuração do provedor.",
@@ -99,8 +94,6 @@ export const ptBR: LocaleMessages = {
     relativeDaysAgo: "há {count} d",
     whatDoYouWant: "O que você quer fazer?",
     emptyDescription: "Automatize tarefas, pesquise e controle seu navegador.",
-    aiWorking: "A IA está trabalhando",
-    aiWorkingDescription: "Lendo, agindo e preparando a resposta.",
     typingPhrases: [
       "Matutando...",
       "Farejando...",
@@ -133,9 +126,6 @@ export const ptBR: LocaleMessages = {
       tokenUnit: "tok.",
       estimatedTokenCount: "aprox. {count} tok.",
       promptBreakdown: "Divisão das instruções",
-      contextSaved: "Contexto economizado",
-      contextPrunedMessages: "Mensagens podadas",
-      contextToolResults: "Resultados de ferramenta podados",
       prebuiltPrompt: "Instruções predefinidas",
       userPrompt: "Instruções do usuário",
       conversationPrompt: "Conversa",
@@ -146,16 +136,11 @@ export const ptBR: LocaleMessages = {
       toolCallPrompt: "Chamadas de ferramenta",
       sourcePrompt: "Fontes",
       otherPrompt: "Outro contexto",
-      characters: "car.",
       unavailable: "Indisponível",
     },
     contextSummaryTitle: "Resumo de contexto",
     contextSummaryDescription:
       "O contexto antigo da conversa foi compactado para esta solicitação.",
-    operatingBrowser: "Operando o navegador",
-    preparingFinalReply: "Preparando resposta final",
-    preparingFinalReplyDescription:
-      "As ações do navegador terminaram. A IA está resumindo o resultado.",
     willBeSentToAi: "Será enviado para a IA",
     willBeSentAsPageContext: "Será enviado como contexto da página",
     currentPage: "Página atual",
@@ -511,11 +496,8 @@ export const ptBR: LocaleMessages = {
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "Headers JSON",
     mcpServerEnabled: "Ativado",
-    mcpServerEnabledDescription:
-      "Expõe esta configuração de servidor às ferramentas do assistente.",
     mcpEnableRequiresTest: "Teste este servidor MCP antes de ativá-lo.",
     mcpEnableTooltipTested: "Teste aprovado. {count} ferramentas encontradas.",
-    mcpAdvancedActions: "Ações do servidor MCP",
     mcpImportJson: "Cole a configuração JSON MCP",
     mcpImportButton: "Importar JSON MCP",
     mcpImportSuccess: "{count} servidores MCP importados.",
@@ -552,8 +534,6 @@ export const ptBR: LocaleMessages = {
     models: "Modelos",
     imageModels: "Modelos de geração de imagem",
     modelHint: "Busque modelos e selecione um para adicionar",
-    imageModelHint:
-      "Adicione modelos compatíveis com geração ou edição de imagem",
     fetchModels: "Buscar modelos",
     fetchingModels: "Buscando modelos",
     searchFetchedModels: "Buscar modelos encontrados...",
@@ -562,7 +542,6 @@ export const ptBR: LocaleMessages = {
     allFetchedModelsAdded: "Todos os modelos encontrados já foram adicionados",
     addSelected: "Adicionar selecionado",
     addCustomModelName: "Adicionar nome de modelo personalizado",
-    addCustomImageModelName: "Adicionar nome de modelo de imagem",
     addCustom: "Adicionar personalizado",
     testModel: "Testar",
     testingModel: "Testando",
@@ -594,7 +573,6 @@ export const ptBR: LocaleMessages = {
     replaceFile: "Substituir arquivo",
     filePath: "Caminho do arquivo",
     downloadFile: "Baixar arquivo",
-    downloadSkillZip: "Baixar arquivo",
     downloadSkillPackage: "Baixar .skill",
     duplicateSkill: "Duplicar",
     disabled: "Desativada",
@@ -602,9 +580,7 @@ export const ptBR: LocaleMessages = {
     uploadFile: "Enviar arquivo",
     editFile: "Editar arquivo",
     saveFile: "Salvar arquivo",
-    previewFile: "Visualizar arquivo",
     deleteFile: "Excluir arquivo",
-    binaryPreviewUnavailable: "Prévia binária indisponível.",
     updatedAt: "Atualizado",
     skillSize: "Tamanho da habilidade",
     skillCheckEntry: "SKILL.md existe",
@@ -614,9 +590,6 @@ export const ptBR: LocaleMessages = {
     skillCheckDescription: "Descrição presente",
     skillCheckDescriptionMissing: "Descrição ausente",
     deleteSkill: "Excluir habilidade",
-    deleteSkillConfirm: "Excluir esta habilidade?",
-    availableVariables: "Variáveis disponíveis (clique para copiar):",
-    example: "Exemplo",
     languageDescription: "Escolha o idioma usado pela interface da extensão.",
     colorScheme: "Esquema de cores",
     colorSchemeDescription:
@@ -631,25 +604,17 @@ export const ptBR: LocaleMessages = {
     systemTheme: "Sistema",
     lightTheme: "Claro",
     darkTheme: "Escuro",
-    syncSettings: "Sincronizar configurações",
     syncSettingsDescription:
       "Escolha o backend que sincroniza idioma, provedores e preferências leves por padrão.",
-    syncBackend: "Backend de sincronização",
     syncBackendDescription: "Escolha itens adicionais de sincronização.",
     syncBackendBrowserSync: "Sincronização integrada da conta do navegador",
     syncBackendWebDavSync: "Sincronização WebDAV",
-    syncBackendLocalOnly: "Somente local",
     syncBackendName: "Nome do backend",
     syncBackendWebDavUrl: "URL WebDAV",
     syncBackendUsername: "Nome de usuário",
     syncBackendPassword: "Senha ou senha de app",
-    syncBackendTest: "Testar",
-    syncBackendTesting: "Testando...",
-    syncBackendTestSuccess: "Conectado",
-    syncBackendTestError: "Falha na conexão",
     syncBackendCopyConfig: "Copiar código de configuração",
     syncBackendCopiedConfig: "Código de configuração copiado",
-    syncBackendRemove: "Remover",
     syncProviders: "Sincronizar provedores",
     syncProvidersDescription:
       "Sincronize a configuração dos provedores, incluindo chaves de API, pelo backend de sincronização atual.",
@@ -725,8 +690,6 @@ export const ptBR: LocaleMessages = {
     debugLoggingDescription:
       "Ativa logs temporários no console para diagnosticar a ordem de streaming, ferramentas e assistente.",
     debugLoggingEnabled: "Ativar logs de diagnóstico no console",
-    debugLoggingEnabledDescription:
-      "Grava eventos de depuração [OBA ...] no console da extensão até ser desativado.",
     debugToolsTitle: "Ferramentas registradas",
     debugToolsDescription:
       "Registro atual de ferramentas do navegador ({count} ferramentas).",

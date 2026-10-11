@@ -31,12 +31,12 @@ import type {
   UploadedAttachment,
 } from "../../src/shared/types";
 import { CHAT_PART_STATE, isToolPartType } from "../../src/shared/types";
-import { formatAttachmentSize } from "./file-attachments";
 import { formatMessageTime } from "./format";
 import {
   AssistantPart,
   AssistantSummaryCard,
   AssistantText,
+  NO_SOURCES,
 } from "./assistant-message-part";
 import { MessageRunInfo } from "./message-run-info";
 import {
@@ -62,7 +62,7 @@ export function MessageBubble({
   onAnswerQuestion,
   chats,
   resendDisabled = false,
-  sources = [],
+  sources = NO_SOURCES,
   chatMessages,
   latestUserMessage = false,
   outputActive = false,
@@ -94,8 +94,7 @@ export function MessageBubble({
     : [];
   const sentElements = selectedElementsFromMetadata(message.metadata);
   const assistantModel = message.metadata?.assistantModel as
-    | { provider?: string; name?: string }
-    | undefined;
+    { provider?: string; name?: string } | undefined;
   const hasParts = !!message.parts?.length;
   const summaryAfterPartIndex = legacySummaryInsertionIndex(message);
   const assistantText = assistantMessageText(message);
@@ -312,8 +311,7 @@ function chronologicalAssistantPartEntries(
     index: number;
   }> = [];
   let reasoningGroup:
-    | { firstIndex: number; ids: string[]; texts: string[] }
-    | undefined;
+    { firstIndex: number; ids: string[]; texts: string[] } | undefined;
 
   parts.forEach((part, index) => {
     if (part.type === "reasoning") {
@@ -357,8 +355,7 @@ function debugAssistantPart(part: NonNullable<ChatMessage["parts"]>[number]) {
 
 function compactionSummary(message: ChatMessage) {
   const metrics = message.metadata?.runMetrics as
-    | { contextBudget?: { compactionSummary?: unknown } }
-    | undefined;
+    { contextBudget?: { compactionSummary?: unknown } } | undefined;
   const summary = metrics?.contextBudget?.compactionSummary;
   return typeof summary === "string" && summary.trim() ? summary.trim() : "";
 }

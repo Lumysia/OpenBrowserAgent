@@ -6,7 +6,6 @@ export * from "./command";
 export * from "./input";
 export * from "./label";
 export * from "./select";
-export * from "./skeleton";
 export * from "./switch";
 export * from "./popover";
 export * from "./progress";

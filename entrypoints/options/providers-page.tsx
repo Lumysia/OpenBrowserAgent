@@ -76,7 +76,7 @@ export function ProvidersPage() {
   }
 
   function deleteProvider(providerId: string) {
-    const { [providerId]: removed, ...rest } = normalizedProviders;
+    const removed = normalizedProviders[providerId];
     setProviderState((previous) => {
       const { [providerId]: _removed, ...next } = normalizeProviderState(
         previous || {},

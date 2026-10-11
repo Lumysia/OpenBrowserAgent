@@ -16,6 +16,7 @@ import { useBuiltinSkills } from "../../src/ui/useBuiltinSkills";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { requestChatTitle } from "./ai-requests";
 import {
+  createChatDraft,
   forkChatAction,
   pruneEmptyChats,
   updateChatList,
@@ -40,7 +41,6 @@ import { createSendMessagePlan } from "./send-message-plan";
 import { interpolateSkillPackage } from "./skill-context";
 import {
   ADD_MENU_VIEW,
-  COMPOSER_MENU,
   type AddMenuView,
   type ComposerMenu,
 } from "./sidepanel-menu-state";
@@ -49,7 +49,6 @@ import { agentForChatRuntime } from "./sub-agent-runtime";
 import { useChatActions } from "./use-chat-actions";
 import { useComposerContext } from "./use-composer-context";
 import { useChatDraft } from "./use-chat-drafts";
-import { useChatSelectionState } from "./use-chat-selection-state";
 import { useConfiguredModels as useModels } from "./use-configured-models";
 import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
@@ -79,8 +78,12 @@ export function SidepanelApp() {
   const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
   const [chats, setChats] = useStoredState(storage.chats);
   const t = getMessages(language);
-  const { activeChatId, setActiveChatId, draftChat, setDraftChat } =
-    useChatSelectionState(t.words.newChat);
+  // The composer owns a draft chat before history loads, so text typed early
+  // and an early send keep one chat ID.
+  const [draftChat, setDraftChat] = useState<Chat | undefined>(() =>
+    createChatDraft(t.words.newChat),
+  );
+  const [activeChatId, setActiveChatId] = useState(draftChat?.id);
   const [openMenu, setOpenMenu] = useState<ComposerMenu | null>(null);
   const [addMenuView, setAddMenuView] = useState<AddMenuView>("menu");
   const [showHistory, setShowHistory] = useState(false);
@@ -123,12 +126,10 @@ export function SidepanelApp() {
     clearUploadedAttachments,
   } = useUploadedAttachments(t);
   const {
-    streaming,
     currentChatStreaming,
     currentAssistantMessageId,
     beginStream,
     startStream,
-    abortChatStream,
     abortClosedChatStreams,
     stopCurrentStream,
     postQueuedMessage,

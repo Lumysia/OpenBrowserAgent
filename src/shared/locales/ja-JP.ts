@@ -16,7 +16,6 @@ export const jaJP: LocaleMessages = {
     language: "言語",
     enabled: "有効",
     disabled: "無効",
-    noModelsFound: "モデルが見つかりません。",
     confirm: "確認",
   },
   words: { newChat: "新しいチャット", agent: "ブラウズ", ask: "質問" },
@@ -25,7 +24,6 @@ export const jaJP: LocaleMessages = {
     connectProviderDescription:
       "言語を選択し、必要に応じて同期を有効にしてから、プロバイダーとモデルを追加します。",
     addProvider: "プロバイダーを追加",
-    cloudSync: "クラウドから同期",
     cloudSyncTest: "クラウド同期をテスト",
     cloudSyncTesting: "クラウド同期をテスト中...",
     cloudSyncPulling: "クラウド同期を確認中...",
@@ -33,13 +31,10 @@ export const jaJP: LocaleMessages = {
       "クラウドから別端末の設定を取得することも、この端末の新しい設定をクラウドに保存することもできます。",
     cloudSyncReady:
       "同期済みプロバイダー設定が見つかりました。クラウドから開始できます。",
-    cloudSyncSuccess:
-      "同期済みプロバイダー設定が見つかりました。チャットを開いています...",
     cloudSyncEmpty:
       "クラウドには接続できましたが、既存の設定は見つかりませんでした。確認すると新しい設定をクラウドに保存します。",
     cloudSyncError:
       "クラウド同期のテストに失敗しました。バックエンドを確認するか、ローカルで開始してください。",
-    cloudSyncStoreNew: "新しい設定をクラウドに保存",
     confirmCloudSync: "同期を確認",
     cloudSyncSynced:
       "クラウド同期の準備ができました。次にプロバイダー設定を追加してください。",
@@ -100,8 +95,6 @@ export const jaJP: LocaleMessages = {
     relativeDaysAgo: "{count}日前",
     whatDoYouWant: "何をしますか？",
     emptyDescription: "タスクの自動化、検索、ブラウザー操作。",
-    aiWorking: "AIが作業中です",
-    aiWorkingDescription: "読み取り、操作し、回答を準備しています。",
     typingPhrases: [
       "思案中...",
       "探索中...",
@@ -134,9 +127,6 @@ export const jaJP: LocaleMessages = {
       tokenUnit: "tok.",
       estimatedTokenCount: "約 {count} tok.",
       promptBreakdown: "指示文の内訳",
-      contextSaved: "節約したコンテキスト",
-      contextPrunedMessages: "剪定済みメッセージ",
-      contextToolResults: "剪定済みツール結果",
       prebuiltPrompt: "事前指示文",
       userPrompt: "ユーザー指示文",
       conversationPrompt: "会話履歴",
@@ -147,16 +137,11 @@ export const jaJP: LocaleMessages = {
       toolCallPrompt: "ツール呼び出し",
       sourcePrompt: "ソース",
       otherPrompt: "その他のコンテキスト",
-      characters: "文字",
       unavailable: "利用不可",
     },
     contextSummaryTitle: "コンテキスト要約",
     contextSummaryDescription:
       "以前の会話コンテキストはこのリクエスト用に圧縮されました。",
-    operatingBrowser: "ブラウザを操作中",
-    preparingFinalReply: "最終回答を準備中",
-    preparingFinalReplyDescription:
-      "ブラウザ操作は完了しました。AIが結果をまとめています。",
     willBeSentToAi: "AIに送信されます",
     willBeSentAsPageContext: "ページコンテキストとして送信されます",
     currentPage: "現在のページ",
@@ -517,13 +502,10 @@ export const jaJP: LocaleMessages = {
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "Headers JSON",
     mcpServerEnabled: "有効",
-    mcpServerEnabledDescription:
-      "このサーバー設定をアシスタントツールに公開します。",
     mcpEnableRequiresTest:
       "有効にする前にこの MCP サーバーをテストしてください。",
     mcpEnableTooltipTested:
       "テストに成功しました。{count} 個のツールが見つかりました。",
-    mcpAdvancedActions: "MCP サーバー操作",
     mcpImportJson: "MCP JSON 設定を貼り付け",
     mcpImportButton: "MCP JSON をインポート",
     mcpImportSuccess: "{count} 件の MCP サーバーをインポートしました。",
@@ -561,7 +543,6 @@ export const jaJP: LocaleMessages = {
     models: "モデル",
     imageModels: "画像生成モデル",
     modelHint: "モデルを取得してから追加するものを選択",
-    imageModelHint: "画像生成または画像編集に対応するモデルを追加",
     fetchModels: "モデルを取得",
     fetchingModels: "モデルを取得中",
     searchFetchedModels: "取得済みモデルを検索...",
@@ -570,7 +551,6 @@ export const jaJP: LocaleMessages = {
     allFetchedModelsAdded: "取得済みモデルはすべて追加済みです",
     addSelected: "選択項目を追加",
     addCustomModelName: "カスタムモデル名を追加",
-    addCustomImageModelName: "画像モデル名を追加",
     addCustom: "カスタムを追加",
     testModel: "テスト",
     testingModel: "テスト中",
@@ -600,7 +580,6 @@ export const jaJP: LocaleMessages = {
     replaceFile: "ファイルを置換",
     filePath: "ファイルパス",
     downloadFile: "ファイルをダウンロード",
-    downloadSkillZip: "アーカイブをダウンロード",
     downloadSkillPackage: ".skillをダウンロード",
     duplicateSkill: "クローン",
     disabled: "無効",
@@ -608,9 +587,7 @@ export const jaJP: LocaleMessages = {
     uploadFile: "ファイルをアップロード",
     editFile: "ファイルを編集",
     saveFile: "ファイルを保存",
-    previewFile: "ファイルをプレビュー",
     deleteFile: "ファイルを削除",
-    binaryPreviewUnavailable: "バイナリファイルはプレビューできません。",
     updatedAt: "更新日時",
     skillSize: "スキルサイズ",
     skillCheckEntry: "SKILL.mdが存在します",
@@ -620,9 +597,6 @@ export const jaJP: LocaleMessages = {
     skillCheckDescription: "説明があります",
     skillCheckDescriptionMissing: "説明がありません",
     deleteSkill: "スキルを削除",
-    deleteSkillConfirm: "このスキルを削除しますか？",
-    availableVariables: "利用可能な変数（クリックでコピー）：",
-    example: "例",
     languageDescription: "拡張機能UIで使用する言語を選択します。",
     colorScheme: "配色",
     colorSchemeDescription:
@@ -637,25 +611,17 @@ export const jaJP: LocaleMessages = {
     systemTheme: "システム",
     lightTheme: "ライト",
     darkTheme: "ダーク",
-    syncSettings: "設定を同期",
     syncSettingsDescription:
       "言語、プロバイダー設定、軽量設定を既定で同期するバックエンドを選択します。",
-    syncBackend: "同期バックエンド",
     syncBackendDescription: "追加の同期項目を選択します。",
     syncBackendBrowserSync: "内蔵ブラウザーアカウント同期",
     syncBackendWebDavSync: "WebDAV同期",
-    syncBackendLocalOnly: "ローカルのみ",
     syncBackendName: "バックエンド名",
     syncBackendWebDavUrl: "WebDAV URL",
     syncBackendUsername: "ユーザー名",
     syncBackendPassword: "パスワードまたはアプリパスワード",
-    syncBackendTest: "テスト",
-    syncBackendTesting: "テスト中...",
-    syncBackendTestSuccess: "接続済み",
-    syncBackendTestError: "接続に失敗しました",
     syncBackendCopyConfig: "設定コードをコピー",
     syncBackendCopiedConfig: "設定コードをコピーしました",
-    syncBackendRemove: "削除",
     syncProviders: "プロバイダーを同期",
     syncProvidersDescription:
       "APIキーを含むプロバイダー設定を現在の同期バックエンドで同期します。",
@@ -730,8 +696,6 @@ export const jaJP: LocaleMessages = {
     debugLoggingDescription:
       "ストリーム、ツール、アシスタントの順序診断用の一時的なコンソールログを有効にします。",
     debugLoggingEnabled: "診断コンソールログを有効化",
-    debugLoggingEnabledDescription:
-      "オフにするまで、拡張機能のコンソールに [OBA ...] デバッグイベントを書き込みます。",
     debugToolsTitle: "登録済みツール",
     debugToolsDescription:
       "現在のブラウザツールレジストリ（{count}個のツール）。",

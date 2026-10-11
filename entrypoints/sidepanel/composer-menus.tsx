@@ -314,7 +314,7 @@ export function ModelMenu({
   );
 }
 
-export function AgentMenu({
+function AgentMenu({
   t,
   agents,
   selectedAgentId,

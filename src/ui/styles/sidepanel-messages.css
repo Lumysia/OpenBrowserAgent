@@ -397,10 +397,6 @@
 .context-file-scroll .ui-scroll-area-viewport {
   padding-bottom: 7px;
 }
-.context-chip-scroll .ui-scroll-area-scrollbar,
-.context-file-scroll .ui-scroll-area-scrollbar {
-  padding-inline: 2px;
-}
 .context-file-row {
   display: flex;
   gap: 8px;

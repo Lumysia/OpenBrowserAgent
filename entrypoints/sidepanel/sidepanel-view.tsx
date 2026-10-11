@@ -277,7 +277,7 @@ export function SidepanelView({
                   t={t}
                   latestUserMessage={message.id === latestUserMessageId}
                   editing={editingMessageId === message.id}
-                  sources={currentChat.sources || []}
+                  sources={currentChat.sources}
                   chats={chats}
                   chatMessages={currentChat.messages}
                   outputActive={message.id === activeAssistantMessageId}

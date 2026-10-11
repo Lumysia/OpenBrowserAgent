@@ -18,7 +18,6 @@ import {
   AccordionContent,
   AccordionHeader,
   AccordionItem,
-  AccordionTrigger,
   AccordionTriggerButton,
   Button,
   CardDescription,
@@ -40,6 +39,7 @@ export type SyncDataToggle = {
   title: string;
   description: string;
   value: boolean;
+  pending: boolean;
   attachmentBackendOnly?: boolean;
   onChange: (value: boolean) => void;
 };
@@ -345,6 +345,7 @@ function SyncDataToggleList({
           }
           disabled={
             disabled ||
+            toggle.pending ||
             (toggle.attachmentBackendOnly &&
               !syncBackendSupportsChatAttachments(backendType))
           }

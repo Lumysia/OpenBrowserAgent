@@ -52,13 +52,14 @@ export function useThrottledText(value: string, delayMs: number) {
     }
 
     function step() {
-      setDisplayLength((current) => {
-        const backlog = targetLength - current;
-        const next = Math.min(targetLength, current + stepSize(backlog));
-        setAnimatedFrom(current);
-        displayLengthRef.current = next;
-        return next;
-      });
+      const current = displayLengthRef.current;
+      const next = Math.min(
+        targetLength,
+        current + stepSize(targetLength - current),
+      );
+      displayLengthRef.current = next;
+      setAnimatedFrom(current);
+      setDisplayLength(next);
       schedule();
     }
 

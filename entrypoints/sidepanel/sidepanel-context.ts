@@ -6,11 +6,7 @@ import {
   TAB_CONTENT_MAX_CHARS,
 } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
-import type {
-  AttachmentTab,
-  Chat,
-  SelectedElement,
-} from "../../src/shared/types";
+import type { AttachmentTab, SelectedElement } from "../../src/shared/types";
 import { xmlBlock, xmlTag } from "./format";
 
 export function interpolateSkillVariables(value: string) {
@@ -33,23 +29,6 @@ export function toAttachmentTab(tab: chrome.tabs.Tab): AttachmentTab | null {
     url: tab.url,
     favIconUrl: tab.favIconUrl,
   };
-}
-
-export function isTabAlreadySentAsSelected(chats: Chat[], tabId: number) {
-  return chats.some((chat) =>
-    chat.messages.some((message) => {
-      const selectedTabs = message.metadata?.attachedTabs;
-      return (
-        Array.isArray(selectedTabs) &&
-        selectedTabs.some(
-          (tab) =>
-            typeof tab === "object" &&
-            tab !== null &&
-            (tab as AttachmentTab).id === tabId,
-        )
-      );
-    }),
-  );
 }
 
 export async function buildSidepanelContext({

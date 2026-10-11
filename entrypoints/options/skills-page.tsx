@@ -52,7 +52,6 @@ import { downloadSkillZip, importSkillZip } from "./skill-import";
 
 export function SkillsPage() {
   const [language] = useStoredState(storage.language);
-  const [preferences] = useStoredState(storage.preferences);
   const [skills, setSkills] = useStoredState(storage.skills);
   const [selectedId, setSelectedId] = useState("");
   const [drafts, setDrafts] = useState<Record<string, Skill>>({});

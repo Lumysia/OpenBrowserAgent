@@ -9,7 +9,7 @@ import type {
   Chat,
 } from "../../src/shared/types";
 
-export function requestGeneratedTitle({
+function requestGeneratedTitle({
   modelId,
   message,
   onTitle,

@@ -30,19 +30,4 @@ const ScrollArea = React.forwardRef<
 );
 ScrollArea.displayName = "ScrollArea";
 
-const ScrollBar = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & {
-    orientation?: "vertical" | "horizontal";
-  }
->(({ className, orientation = "vertical", ...props }, ref) => (
-  <div
-    ref={ref}
-    data-orientation={orientation}
-    className={cn("ui-scroll-area-scrollbar", className)}
-    {...props}
-  />
-));
-ScrollBar.displayName = "ScrollBar";
-
-export { ScrollArea, ScrollBar };
+export { ScrollArea };

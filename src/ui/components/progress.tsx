@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "../utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
-export type ProgressSegment = {
+type ProgressSegment = {
   key: string;
   value: number;
   className?: string;

@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Activity,
   Bot,
@@ -39,11 +39,10 @@ export function SyncPage() {
   const [activeSyncBackendId] = useStoredState(storage.activeSyncBackendId);
   const [pendingActiveBackendId, setPendingActiveBackendId] =
     useState<string>();
-  const syncRequestId = useRef(0);
+  // Shows the requested value until the sync transition finishes; the toggle
+  // stays disabled meanwhile so requests cannot overlap.
   const [pendingSyncSettings, setPendingSyncSettings] = useState<
-    Partial<
-      Record<keyof SyncDataSettings, { value: boolean; requestId: number }>
-    >
+    Partial<Record<keyof SyncDataSettings, boolean>>
   >({});
   const [syncWriteStatus] = useStoredState(storage.syncWriteStatus);
   const t = getMessages(language);
@@ -86,22 +85,13 @@ export function SyncPage() {
   };
 
   function updateSyncPreference(key: keyof SyncDataSettings, value: boolean) {
-    const requestId = ++syncRequestId.current;
-    setPendingSyncSettings((previous) => ({
-      ...previous,
-      [key]: { value, requestId },
-    }));
+    setPendingSyncSettings((previous) => ({ ...previous, [key]: value }));
     setDataSync(key, value)
       .catch((error) => {
         console.warn("Failed to update sync preference", error);
       })
       .finally(() =>
-        setPendingSyncSettings((previous) => {
-          if (previous[key]?.requestId !== requestId) return previous;
-          const next = { ...previous };
-          delete next[key];
-          return next;
-        }),
+        setPendingSyncSettings(({ [key]: _done, ...rest }) => rest),
       );
   }
 
@@ -132,8 +122,9 @@ export function SyncPage() {
       description: syncToggleContent[preferenceKey].description,
       icon: syncToggleContent[preferenceKey].icon,
       value:
-        pendingSyncSettings[preferenceKey]?.value ??
+        pendingSyncSettings[preferenceKey] ??
         syncDataSettings[preferenceKey] === true,
+      pending: pendingSyncSettings[preferenceKey] !== undefined,
       onChange: (value: boolean) => updateSyncPreference(preferenceKey, value),
     })),
     {
@@ -142,8 +133,11 @@ export function SyncPage() {
       description: t.options.syncChatAttachmentsDescription,
       icon: <Paperclip size={18} />,
       value:
-        pendingSyncSettings[SYNC_DATA_SETTING_KEYS.chatAttachments]?.value ??
+        pendingSyncSettings[SYNC_DATA_SETTING_KEYS.chatAttachments] ??
         syncDataSettings[SYNC_DATA_SETTING_KEYS.chatAttachments] === true,
+      pending:
+        pendingSyncSettings[SYNC_DATA_SETTING_KEYS.chatAttachments] !==
+        undefined,
       attachmentBackendOnly: true,
       onChange: (value: boolean) =>
         updateSyncPreference(SYNC_DATA_SETTING_KEYS.chatAttachments, value),

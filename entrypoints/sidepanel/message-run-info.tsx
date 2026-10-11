@@ -456,12 +456,6 @@ function formatTokenCount(
   return `${formatCompactNumber(value)} ${t.sidepanel.runInfo.tokenUnit}`;
 }
 
-function formatNumber(value: number | undefined, t: Messages) {
-  return value === undefined
-    ? t.sidepanel.runInfo.unavailable
-    : value.toLocaleString();
-}
-
 function modeLabel(
   t: Messages,
   mode: RunMetrics["outputMode"] | "mixed" | undefined,

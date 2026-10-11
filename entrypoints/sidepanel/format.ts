@@ -35,7 +35,7 @@ export function formatRelativeTime(t: Messages, value: number) {
   });
 }
 
-export function escapeXml(value: string) {
+function escapeXml(value: string) {
   return value
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
