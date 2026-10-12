@@ -81,7 +81,17 @@ export function streamPartFromChunk(chunk: unknown): {
     input?: unknown;
     output?: unknown;
     error?: string;
+    text?: string;
   };
+  if (maybe.type === AI_TEXT_CHUNK_TYPE.contextSummary)
+    return {
+      part: {
+        id: maybe.id || crypto.randomUUID(),
+        type: "summary",
+        text: maybe.text || "",
+        state: CHAT_PART_STATE.done,
+      },
+    };
   if (
     maybe.type === AI_TEXT_CHUNK_TYPE.textStart ||
     maybe.type === AI_TEXT_CHUNK_TYPE.textNoteStart

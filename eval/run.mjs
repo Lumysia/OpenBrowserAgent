@@ -196,6 +196,7 @@ async function runTask(task) {
       toolCalls: run.toolCalls || {},
       attachedTabs: run.attachedTabs,
       answerChars: answer.length,
+      ...(verdict.ok ? {} : { answer: answer.slice(0, 600) }),
       ...callMetrics(server.state.calls),
     };
   } finally {

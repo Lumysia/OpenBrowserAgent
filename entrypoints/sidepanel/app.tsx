@@ -47,7 +47,6 @@ import { useConfiguredModels as useModels } from "./use-configured-models";
 import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
 import { useParallelChatStreams } from "./use-parallel-chat-streams";
-import { usePromptUsageEstimate } from "./prompt-usage-preview";
 import { useQueuedMessages } from "./use-queued-messages";
 import { useRemoteSyncRefresh } from "../../src/ui/useRemoteSyncRefresh";
 import {
@@ -175,18 +174,6 @@ export function SidepanelApp() {
     toggleAttachedTab,
     removeAttachedTab,
   } = useComposerContext();
-  const promptUsage = usePromptUsageEstimate({
-    input,
-    agent: runtimeAgent,
-    currentChat,
-    preferences,
-    attachedTabs,
-    selectedElements,
-    pendingAttachments,
-    uploadedAttachments,
-    selectedSkills,
-    skills: skills || [],
-  });
   const { editingMessage, setEditingMessage, editMessage, cancelEditMessage } =
     useMessageEdit({
       currentChat,
@@ -422,7 +409,6 @@ export function SidepanelApp() {
       preferences={preferences}
       configuredModels={configuredModels}
       input={input}
-      promptUsage={promptUsage}
       activeAgent={runtimeAgent}
       syncWriteStatus={syncWriteStatus}
       attachedTabs={attachedTabs}

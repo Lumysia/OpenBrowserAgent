@@ -27,7 +27,7 @@ test("Pi executes real extension tools, bounds tool turns, and keeps usage", asy
     reply(
       response,
       request.protocol,
-      requests.length <= 2
+      requests.length <= 3
         ? {
             thinking: "Inspecting.",
             calls: [
@@ -43,19 +43,26 @@ test("Pi executes real extension tools, bounds tool turns, and keeps usage", asy
   );
   const run = setup(fixture.baseUrl);
   try {
-    const result = await runPiAgent(run.options);
-    assert.equal(fixture.requests.length, 3);
+    await runPiAgent(run.options);
+    assert.equal(fixture.requests.length, 4);
+    // Tools stay declared, byte for byte, so the cached prefix holds; the
+    // call past the step limit is refused in its result instead.
     assert.ok(fixture.requests[0].body.tools.length);
-    assert.equal(fixture.requests[2].body.tools?.length || 0, 0);
+    for (const request of fixture.requests)
+      assert.deepEqual(request.body.tools, fixture.requests[0].body.tools);
     assert.match(
-      JSON.stringify(fixture.requests[2].body),
-      /Maximum browser tool steps reached/,
+      JSON.stringify(toolResults(fixture.requests[3])),
+      /tool step limit for this run is reached/,
     );
     assert.match(
       JSON.stringify(toolResults(fixture.requests[1])),
       /Fixture tab/,
     );
-    assert.equal(result.usage?.totalTokens, 45);
+    const metrics = run.session.events.flatMap((event) =>
+      event.type === "metrics" ? [event.metrics] : [],
+    );
+    assert.equal(metrics.at(-1)?.modelCalls, 4);
+    assert.equal(metrics.at(-1)?.usage?.totalTokens, 60);
     const parts = run.session.events.flatMap((event) =>
       event.type === "chunk" ? [streamPartFromChunk(event.chunk).part] : [],
     );

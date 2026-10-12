@@ -47,7 +47,9 @@ export function createStreamSession(chatId: string) {
       },
       steeringMode: "all",
       followUpMode: "all",
-      toolExecution: "sequential",
+      // Tools that only read run concurrently; any other tool in a batch
+      // makes the whole batch run in order (AgentTool.executionMode).
+      toolExecution: "parallel",
     }),
   };
   activeStreamSessions.set(chatId, session);

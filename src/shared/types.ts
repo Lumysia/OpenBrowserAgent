@@ -48,10 +48,9 @@ export type Preferences = {
   autoRetry?: boolean;
   maxToolSteps?: number;
   reasoningEffort?: ReasoningEffort;
-  contextBudgetEnabled?: boolean;
-  contextRequestMaxChars?: number;
-  contextTailMinMessages?: number;
-  contextToolResultMaxChars?: number;
+  // Model for auxiliary requests such as compaction; unset uses the chat's
+  // own model.
+  helperModelId?: string;
 };
 
 export type SyncBackendType = "browser-sync" | "webdav";
@@ -230,37 +229,17 @@ export type TokenUsage = {
   cost?: number;
 };
 
-export type PromptBreakdown = {
-  systemPromptChars?: number;
-  userPromptChars?: number;
-  conversationPromptChars?: number;
-  tabPromptChars?: number;
-  selectedElementPromptChars?: number;
-  skillPromptChars?: number;
-  attachmentPromptChars?: number;
-  toolCallPromptChars?: number;
-  sourcePromptChars?: number;
-  otherContextPromptChars?: number;
-};
-
 export type RunMetrics = {
   startedAt?: number;
   firstTokenAt?: number;
   endedAt?: number;
   streamEventIndex?: number;
   outputCharacters?: number;
+  // Provider-reported totals over every model request of the run.
   usage?: TokenUsage;
-  promptBreakdown?: PromptBreakdown;
-  contextBudget?: ContextBudgetReport;
-};
-
-export type ContextBudgetReport = {
-  originalChars: number;
-  finalChars: number;
-  prunedChars: number;
-  prunedMessages: number;
-  truncatedToolResults: number;
-  compactionSummary?: string;
+  modelCalls?: number;
+  // Input tokens (cached included) of the run's largest single request.
+  largestInputTokens?: number;
 };
 
 export const TOOL_PART_PREFIX = "tool-";
@@ -344,6 +323,8 @@ export const AI_TEXT_CHUNK_TYPE = {
   textNoteStart: "text-note-start",
   textNoteDelta: "text-note-delta",
   textNoteEnd: "text-note-end",
+  // A compaction summary that replaced earlier context of the run.
+  contextSummary: "context-summary",
 } as const;
 
 export type SendMessagesBody = {

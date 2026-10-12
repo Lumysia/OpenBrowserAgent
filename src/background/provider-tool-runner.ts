@@ -16,11 +16,12 @@ import {
   type StreamSession,
 } from "./stream-sessions";
 import {
-  attachToolSources,
   extractVisionImage,
-  mergeOutputSources,
+  newToolSources,
   sanitizeToolOutput,
   sanitizeToolOutputForModel,
+  withModelSources,
+  withSources,
   type VisionImage,
 } from "./provider-output";
 import { executeContextAwareTool, getSubAgentStatus } from "./provider-tools";
@@ -32,7 +33,6 @@ export type ProviderToolRunResult = {
   output: unknown;
   modelOutput: unknown;
   visionImage?: VisionImage;
-  responseSources: ChatSource[];
 };
 
 export async function runProviderTool({
@@ -45,8 +45,9 @@ export async function runProviderTool({
   availableSkills,
   capabilities,
   workspace,
-  responseSources,
+  sources,
   loadedToolNames,
+  readArtifact,
   signal,
 }: {
   toolName: string;
@@ -58,8 +59,10 @@ export async function runProviderTool({
   availableSkills: Skill[];
   capabilities: AgentCapabilities;
   workspace?: AgentWorkspace;
-  responseSources: ChatSource[];
+  // The run's citation sources; updated in place when a result adds some.
+  sources: { current: ChatSource[] };
   loadedToolNames: Set<string>;
+  readArtifact: (input: Record<string, unknown>) => Promise<unknown>;
   signal?: AbortSignal;
 }): Promise<ProviderToolRunResult> {
   const post = (output?: unknown) =>
@@ -83,37 +86,33 @@ export async function runProviderTool({
   const rawOutput =
     toolName === BROWSER_TOOL_NAME.question
       ? await askUserQuestion(session, input, toolCallId, signal)
-      : await executeContextAwareTool({
-          toolName,
-          input,
-          context: { chatId: session.chatId, messageId, toolCallId },
-          uploadedAttachments,
-          availableSkills,
-          capabilities,
-          workspace,
-          signal,
-        });
+      : toolName === BROWSER_TOOL_NAME.read
+        ? await readArtifact(input)
+        : await executeContextAwareTool({
+            toolName,
+            input,
+            context: { chatId: session.chatId, messageId, toolCallId },
+            uploadedAttachments,
+            availableSkills,
+            capabilities,
+            workspace,
+            signal,
+          });
   loadDeferredToolNames(rawOutput, loadedToolNames);
   const finalRawOutput = shouldWaitForDelegate(toolName, input, rawOutput)
     ? await waitForDelegateResult(rawOutput, input, toolName, post, signal)
     : rawOutput;
   signal?.throwIfAborted();
   const visionImage = extractVisionImage(finalRawOutput);
-  const output = attachToolSources(
-    toolName,
-    input,
-    sanitizeToolOutput(finalRawOutput),
-    responseSources,
-  );
-  const modelOutput = attachToolSources(
-    toolName,
-    input,
+  // No await between reading and updating `sources`.
+  const added = newToolSources(toolName, input, finalRawOutput, sources);
+  const output = withSources(sanitizeToolOutput(finalRawOutput), added);
+  const modelOutput = withModelSources(
     sanitizeToolOutputForModel(finalRawOutput),
-    responseSources,
+    added,
   );
-  const nextSources = mergeOutputSources(responseSources, output);
   post(output);
-  return { output, modelOutput, visionImage, responseSources: nextSources };
+  return { output, modelOutput, visionImage };
 }
 
 async function askUserQuestion(

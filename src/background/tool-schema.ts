@@ -3,7 +3,11 @@ import { ATTACHMENT_TOOL_DESCRIPTION } from "../shared/attachments";
 import { cdpTools } from "./cdp-tool-schema";
 import { deferredDomainTools } from "./deferred-tool-schema";
 import { inspectPageTool, mutatePageTool } from "./page-tool-schema";
-import { listSliceParameters, tool } from "./tool-schema-helpers";
+import {
+  contentSliceParameters,
+  listSliceParameters,
+  tool,
+} from "./tool-schema-helpers";
 
 export const loaderBrowserTools = [
   tool(
@@ -323,7 +327,30 @@ export const commonBrowserTools = [
   ),
 ];
 
+// Pages through stored outputs. Later sources (page text, files) extend the
+// same handle + range contract.
+export const readTool = tool(
+  BROWSER_TOOL_NAME.read,
+  'Read a stored output by handle, such as "art-1a2b3c4d" from a truncated, masked or unchanged tool result. Returns a character range; continue with the offset it reports.',
+  {
+    handle: {
+      type: "string",
+      description: "Handle of the stored output.",
+    },
+    ...contentSliceParameters,
+  },
+  ["handle"],
+);
+
 export const deferredBrowserTools = [...cdpTools, ...deferredDomainTools];
 
-export const allBrowserTools = [...commonBrowserTools, ...deferredBrowserTools];
-export const browserTools = [...commonBrowserTools, ...loaderBrowserTools];
+export const allBrowserTools = [
+  ...commonBrowserTools,
+  readTool,
+  ...deferredBrowserTools,
+];
+export const browserTools = [
+  ...commonBrowserTools,
+  readTool,
+  ...loaderBrowserTools,
+];

@@ -25,10 +25,12 @@ import {
   type SendMessagesRequest,
 } from "../src/shared/types";
 import { runPiAgent } from "../src/background/pi-runtime";
-import { promptBreakdown } from "../src/background/prompt-breakdown";
-import { resolveModel } from "../src/background/model-resolver";
+import {
+  resolveHelperModel,
+  resolveModel,
+} from "../src/background/model-resolver";
 import { handleLocalExecutionBridgeRuntimeMessage } from "../src/background/local-execution-bridge-tools";
-import { requestPlainText } from "../src/background/pi-provider";
+import { requestText } from "../src/background/pi-provider";
 import {
   handleSyncBackendRuntimeMessage,
   handleSyncBackendRuntimePort,
@@ -186,15 +188,14 @@ async function streamAssistantResponse(
     workspace,
     mcpServers,
   });
-  post({
-    type: "metrics",
-    metrics: {
-      promptBreakdown: promptBreakdown(system, request, !!workspace),
-    },
-  });
-  const result = await runPiAgent({
+  const preferences = await storage.preferences.get();
+  await runPiAgent({
     session,
     model: providerModel,
+    helperModel: await resolveHelperModel(
+      preferences.helperModelId,
+      providerModel,
+    ),
     system,
     messages: request.messages,
     capabilities,
@@ -209,7 +210,6 @@ async function streamAssistantResponse(
     workspace,
   });
 
-  post({ type: "metrics", metrics: { usage: result.usage } });
   post({ type: "end" });
 }
 
@@ -233,15 +233,10 @@ async function generateTitle(request: GenerateTitleRequest) {
   const fallback = compactTitle(request.message) || "New Chat";
   try {
     const model = await resolveModel(request.modelId);
-    const raw = await requestPlainText(model, [
-      {
-        role: "system",
-        content:
-          "Create concise chat titles. Return only the title, no quotes, no punctuation wrapper, no explanation.",
-      },
-      {
-        role: "user",
-        content: `Summarize this chat starter into a title in the same language as the message.
+    const { text: raw } = await requestText(model, {
+      system:
+        "Create concise chat titles. Return only the title, no quotes, no punctuation wrapper, no explanation.",
+      prompt: `Summarize this chat starter into a title in the same language as the message.
 
 Rules:
 - Maximum 10 English words, or maximum 10 CJK characters for Chinese/Japanese/Korean.
@@ -250,8 +245,7 @@ Rules:
 
 Message:
 ${request.message}`,
-      },
-    ]);
+    });
     return compactTitle(raw) || fallback;
   } catch {
     return fallback;

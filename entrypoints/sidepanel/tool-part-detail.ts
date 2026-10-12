@@ -128,6 +128,7 @@ export function toolDisplay(
       ]);
     if (name === BROWSER_TOOL_NAME.inspectPage)
       return pageInspectionDetail(input, output, toolFound);
+    if (name === BROWSER_TOOL_NAME.read) return stringValue(input.handle);
     if (name === BROWSER_TOOL_NAME.readUploadedAttachment)
       return compactJoin([
         stringValue(output.name) || stringValue(input.attachmentId),

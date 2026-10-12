@@ -95,6 +95,7 @@ export function toolIcon(name: string, input: Record<string, unknown> = {}) {
     return icon(Code2);
   if (name === BROWSER_TOOL_NAME.generateImage) return icon(ImageIcon);
   if (
+    name === BROWSER_TOOL_NAME.read ||
     name === BROWSER_TOOL_NAME.readUploadedAttachment ||
     name === BROWSER_TOOL_NAME.readFileFromUrl
   )

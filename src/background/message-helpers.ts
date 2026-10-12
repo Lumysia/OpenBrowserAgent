@@ -68,7 +68,7 @@ function messageSkills(metadata: Record<string, unknown> | undefined) {
 export function renderSkillToolHint(skills: Skill[]) {
   if (!skills.length) return "";
   return `<skill_tools>
-For browser automation, search, or research tasks, load manageSkills if needed, then call manageSkills with operation="read" and skillId="builtin-browser-guidance" before acting. For other specialized workflows, call manageSkills with operation="list" first. Use manageSkills create/updateFile/patchFile only for broadly reusable improvements; never store secrets or one-off task details.
+Skills hold instructions for specialized workflows. When a task may need one, load manageSkills and call it with operation="list". Use manageSkills create/updateFile/patchFile only for broadly reusable improvements; never store secrets or one-off task details.
 </skill_tools>`;
 }
 

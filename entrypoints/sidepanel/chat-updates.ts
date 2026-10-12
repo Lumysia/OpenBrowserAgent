@@ -2,10 +2,8 @@ import type {
   Chat,
   ChatMessage,
   ChatPart,
-  ContextBudgetReport,
   RunMetrics,
 } from "../../src/shared/types";
-import { CHAT_PART_STATE } from "../../src/shared/types";
 import {
   extractSourcesFromPart,
   mergeChatSources,
@@ -92,33 +90,8 @@ function updateMessageRunMetrics(
 ) {
   return {
     ...message,
-    parts: appendContextSummaryPart(message, metrics.contextBudget),
     metadata: mergeRunMetrics(message.metadata, metrics),
   };
-}
-
-function appendContextSummaryPart(
-  message: ChatMessage,
-  budget: ContextBudgetReport | undefined,
-) {
-  const summary = budget?.compactionSummary?.trim();
-  if (!summary) return message.parts;
-  const parts = message.parts || [];
-  if (
-    parts.some(
-      (part) => part.type === "summary" && part.text?.trim() === summary,
-    )
-  )
-    return message.parts;
-  return [
-    ...parts,
-    {
-      id: `context-summary-${crypto.randomUUID()}`,
-      type: "summary" as const,
-      text: summary,
-      state: CHAT_PART_STATE.done,
-    },
-  ];
 }
 
 export function appendQueuedMessages(
@@ -186,27 +159,7 @@ function mergeRunMetrics(
       ...current,
       ...metrics,
       usage: { ...(current.usage || {}), ...(metrics.usage || {}) },
-      contextBudget: addContextBudget(
-        current.contextBudget,
-        metrics.contextBudget,
-      ),
     },
-  };
-}
-
-function addContextBudget(
-  current: ContextBudgetReport | undefined,
-  next: ContextBudgetReport | undefined,
-) {
-  if (!next) return current;
-  return {
-    originalChars: (current?.originalChars || 0) + next.originalChars,
-    finalChars: (current?.finalChars || 0) + next.finalChars,
-    prunedChars: (current?.prunedChars || 0) + next.prunedChars,
-    prunedMessages: (current?.prunedMessages || 0) + next.prunedMessages,
-    truncatedToolResults:
-      (current?.truncatedToolResults || 0) + next.truncatedToolResults,
-    compactionSummary: next.compactionSummary || current?.compactionSummary,
   };
 }
 

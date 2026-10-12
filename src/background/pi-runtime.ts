@@ -1,6 +1,11 @@
 import type { AgentEvent, AgentTool } from "@earendil-works/pi-agent-core";
-import type { Api, ImageContent, Message, Model } from "@earendil-works/pi-ai";
-import { normalizeContext } from "@earendil-works/pi-ai/utils/transcript";
+import type {
+  Api,
+  ImageContent,
+  Message,
+  Model,
+  Usage,
+} from "@earendil-works/pi-ai";
 import {
   AI_TEXT_CHUNK_TYPE,
   CHAT_PART_STATE,
@@ -11,7 +16,6 @@ import {
   type ChatMessage,
   type McpServerConfig,
   type Skill,
-  type TokenUsage,
   type UploadedAttachment,
 } from "../shared/types";
 import {
@@ -21,26 +25,21 @@ import {
 import { storage } from "../shared/storage";
 import { renderMessageText } from "./attachment-messages";
 import { getUploadedAttachments } from "./message-helpers";
-import { applyPiContextBudget, messageText } from "./pi-context-budget";
 import {
   assistantMessage,
   createProviderStream,
   piModel,
+  requestText,
   type ProviderModel,
 } from "./pi-provider";
+import { indexedDbArtifacts, type ArtifactStore } from "../shared/artifacts";
+import { createContextEngine } from "./context/engine";
+import { runsInParallel } from "./context/policy";
+import { createUsageMeter } from "./run-usage";
 import { createToolResolver } from "./provider-tools";
 import { runProviderTool } from "./provider-tool-runner";
-import {
-  addTokenUsage,
-  getMessageSources,
-  latestUserMessageText,
-} from "./provider-output";
+import { getMessageSources, latestUserMessageText } from "./provider-output";
 import { isToolError } from "./tool-utils";
-import {
-  buildCompactionPrompt,
-  COMPACTION_SYSTEM_PROMPT,
-  renderCompactionContext,
-} from "./compaction-prompt";
 import {
   isQueuedMessage,
   postToSession,
@@ -48,12 +47,15 @@ import {
   type StreamSession,
 } from "./stream-sessions";
 
-const TOOL_LIMIT_INSTRUCTION =
-  "<internal_instruction>Maximum browser tool steps reached. Do not call more tools. Summarize the findings and clearly state what is known, what remains uncertain, and the best next step for the user. Respond in the same language as the user's latest non-internal message.</internal_instruction>";
+// Tools stay declared for the whole run so the cached prefix never changes.
+// Past the step limit, calls are answered with this instead of running.
+const TOOL_LIMIT_NOTICE =
+  "Not executed: the tool step limit for this run is reached. Do not call more tools. Answer now with what you know, say what remains uncertain, and suggest the best next step.";
 
 export async function runPiAgent(options: {
   session: StreamSession;
   model: ProviderModel;
+  helperModel: ProviderModel;
   system: string;
   messages: ChatMessage[];
   capabilities: AgentCapabilities;
@@ -64,10 +66,12 @@ export async function runPiAgent(options: {
   availableSkills: Skill[];
   mcpServers: McpServerConfig[];
   workspace?: AgentWorkspace;
+  artifacts?: ArtifactStore;
 }) {
   const {
     session,
     model,
+    helperModel,
     system,
     messages,
     capabilities,
@@ -103,6 +107,29 @@ export async function runPiAgent(options: {
       post({ type: "chunk", chunk: { type: "text-end", id } });
     },
   );
+  const context = createContextEngine({
+    chatId,
+    store: options.artifacts || indexedDbArtifacts,
+    contextWindow: model.contextLength,
+    async summarize(system, prompt, abortSignal) {
+      const result = await requestText(
+        helperModel,
+        { system, prompt },
+        abortSignal,
+      );
+      events.recordUsage(result.usage);
+      return result.text;
+    },
+    onCompacted: (summary) =>
+      post({
+        type: "chunk",
+        chunk: {
+          type: AI_TEXT_CHUNK_TYPE.contextSummary,
+          id: crypto.randomUUID(),
+          text: summary,
+        },
+      }),
+  });
   const resolver = createToolResolver({
     capabilities,
     uploadedAttachments,
@@ -112,40 +139,51 @@ export async function runPiAgent(options: {
     mcpServers,
     workspace,
   });
-  let sources = getMessageSources(messages);
+  // Read and written synchronously around each tool's await, so parallel
+  // calls never assign the same source id twice.
+  const sources = { current: getMessageSources(messages) };
   let steps = 0;
-  let limitAnnounced = false;
   const tools = (): AgentTool[] =>
-    steps >= maxToolSteps
+    maxToolSteps <= 0
       ? []
       : resolver.availableTools().map((tool) => ({
           name: tool.function.name,
           label: tool.function.name,
           description: tool.function.description || "",
           parameters: tool.function.parameters as AgentTool["parameters"],
-          async execute(toolCallId, input, toolSignal) {
+          executionMode: runsInParallel(tool.function.name)
+            ? "parallel"
+            : "sequential",
+          async execute(toolCallId, params, toolSignal) {
+            const input = params as Record<string, unknown>;
             const result = await runProviderTool({
               toolName: tool.function.name,
               toolCallId,
-              input: input as Record<string, unknown>,
+              input,
               session,
               messageId: events.messageId,
               uploadedAttachments,
               availableSkills,
               capabilities,
               workspace,
-              responseSources: sources,
+              sources,
               loadedToolNames: resolver.loadedToolNames,
+              readArtifact: context.read,
               signal: toolSignal,
             });
-            sources = result.responseSources;
             const image = result.visionImage;
+            const text = await context.acceptToolOutput({
+              toolCallId,
+              toolName: tool.function.name,
+              input,
+              text:
+                typeof result.modelOutput === "string"
+                  ? result.modelOutput
+                  : (JSON.stringify(result.modelOutput) ?? "null"),
+            });
             return {
               content: [
-                {
-                  type: "text" as const,
-                  text: JSON.stringify(result.modelOutput) ?? "null",
-                },
+                { type: "text" as const, text },
                 ...(image ? [imageContent(image.dataUrl, image.type)] : []),
               ],
               details: { output: result.output },
@@ -160,79 +198,25 @@ export async function runPiAgent(options: {
   ];
   agent.streamFunction = stream;
   agent.sessionId = chatId;
-  let summary: string | undefined;
-  let summaryAttempted = false;
   // Pi has injected the whole consumed batch here. Publish it before context
   // processing (including compaction requests), even if the provider is slow.
   agent.prepareRequest = () => events.acknowledgeConsumedMessages();
-  agent.transformContext = async (transcript, abortSignal) => {
-    let budget = applyPiContextBudget(
-      transcript,
-      preferences,
-      model.contextLength,
-      summary,
-    );
-    if (budget.report.prunedMessages && !summaryAttempted) {
-      summaryAttempted = true;
-      // One provider request, never an auxiliary agent loop. Failure keeps the
-      // normal pruning placeholder.
-      try {
-        const context = renderCompactionContext(transcript, 220_000);
-        const result = await (
-          await stream(
-            resolved,
-            normalizeContext({
-              systemPrompt: COMPACTION_SYSTEM_PROMPT,
-              messages: [
-                {
-                  role: "user",
-                  timestamp: Date.now(),
-                  content: buildCompactionPrompt({ context }),
-                },
-              ],
-            }),
-            { signal: abortSignal },
-          )
-        ).result();
-        if (result.stopReason !== "error" && result.stopReason !== "aborted")
-          summary = messageText(result).trim() || undefined;
-        if (summary)
-          budget = applyPiContextBudget(
-            transcript,
-            preferences,
-            model.contextLength,
-            summary,
-          );
-      } catch {
-        /* Best-effort compaction must not prevent normal generation. */
-      }
-    }
-    post({ type: "metrics", metrics: { contextBudget: budget.report } });
-    return budget.messages;
-  };
+  agent.transformContext = (transcript, abortSignal) =>
+    context.transform(transcript, abortSignal);
+  agent.beforeToolCall = async () =>
+    steps >= maxToolSteps
+      ? { block: true, reason: TOOL_LIMIT_NOTICE }
+      : undefined;
   agent.finishTurn = ({ toolResults }) => {
     if (toolResults.length) steps++;
-    // Bound a model that still returns calls after its tools were removed.
-    if (steps > maxToolSteps) return { action: "end" };
+    // A model that keeps calling after its calls were refused is stopped.
+    if (steps > maxToolSteps + 1) return { action: "end" };
   };
-  agent.prepareNextTurnWithContext = ({ context }) => {
+  agent.prepareNextTurnWithContext = ({ context: next }) => {
+    // Loaded deferred tools are appended; nothing is ever removed mid-run.
     const nextTools = tools();
     agent.state.tools = nextTools;
-    const announce =
-      steps >= maxToolSteps && maxToolSteps > 0 && !limitAnnounced;
-    if (announce) limitAnnounced = true;
-    return {
-      context: { ...context, tools: nextTools },
-      messages: announce
-        ? [
-            {
-              role: "user" as const,
-              timestamp: Date.now(),
-              content: TOOL_LIMIT_INSTRUCTION,
-            },
-          ]
-        : [],
-    };
+    return { context: { ...next, tools: nextTools } };
   };
   const unsubscribe = agent.subscribe((event) => events.handle(event));
   // agent.abort() also aborts the provider request and every tool signal.
@@ -250,7 +234,6 @@ export async function runPiAgent(options: {
     );
     signal.throwIfAborted();
     if (agent.state.errorMessage) throw new Error(agent.state.errorMessage);
-    return { usage: events.usage };
   } finally {
     signal.removeEventListener("abort", abort);
     unsubscribe();
@@ -328,7 +311,9 @@ function createEventHandler(
 ) {
   let assistantId = initialMessageId || crypto.randomUUID();
   let turnId = crypto.randomUUID();
-  let usage: TokenUsage | undefined;
+  const meter = createUsageMeter();
+  const recordUsage = (usage: Usage) =>
+    post({ type: "metrics", metrics: meter.record(usage) });
   const openParts = new Map<string, string>();
   const announcedCalls = new Set<string>();
   const consumed: QueuedUserMessage[] = [];
@@ -338,14 +323,13 @@ function createEventHandler(
     get messageId() {
       return assistantId;
     },
-    get usage() {
-      return usage;
-    },
+    recordUsage,
     acknowledgeConsumedMessages() {
       if (!consumed.length) return;
       const createdAt = Date.now();
       const batch = consumed.splice(0);
       assistantId = crypto.randomUUID();
+      meter.reset();
       post({
         type: "queuedMessages",
         messages: batch.map((message, index) => ({
@@ -419,15 +403,7 @@ function createEventHandler(
         // A stream that fails mid-part never sends its end event.
         for (const [id, type] of openParts) chunk({ type, id });
         openParts.clear();
-        const current = event.message.usage;
-        usage = addTokenUsage(usage, {
-          inputTokens: current.input + current.cacheRead + current.cacheWrite,
-          outputTokens: current.output,
-          totalTokens: current.totalTokens,
-          cachedInputTokens: current.cacheRead,
-          cacheWriteTokens: current.cacheWrite,
-          reasoningTokens: current.reasoning,
-        });
+        recordUsage(event.message.usage);
       }
     },
   };

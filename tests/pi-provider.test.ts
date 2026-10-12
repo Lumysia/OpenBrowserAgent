@@ -219,11 +219,14 @@ test("Anthropic preserves a configured proxy base path without requiring a /v1 s
   }
 });
 
-for (const [status, body] of [
-  [401, '{"error":{"message":"bad key"}}'],
+// 401 fails at once; 502 is transient and retried with backoff, but never as
+// a text-only image-rejection retry.
+for (const [status, body, attempts] of [
+  [401, '{"error":{"message":"bad key"}}', 1],
   [
     502,
     '{"error":{"message":"Provider returned error","type":"upstream_error"}}',
+    4,
   ],
 ] as const) {
   test(`HTTP ${status} on an image request is not retried as an image rejection`, async () => {
@@ -253,7 +256,12 @@ for (const [status, body] of [
       );
       const result = await stream.result();
       assert.equal(result.stopReason, "error");
-      assert.equal(fixture.requests.length, 1, result.errorMessage);
+      assert.equal(fixture.requests.length, attempts, result.errorMessage);
+      assert.ok(
+        fixture.requests.every((request) =>
+          JSON.stringify(request.body).includes("image"),
+        ),
+      );
     } finally {
       await fixture.close();
     }

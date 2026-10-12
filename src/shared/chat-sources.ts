@@ -268,8 +268,9 @@ export function renderSourcesForPrompt(sources: ChatSource[] = []) {
   return `<sources>\n${sources.map(renderSourceLine).join("\n")}\n</sources>`;
 }
 
+// Ids for citing earlier sources; their content was in earlier results.
 function renderSourceLine(source: ChatSource) {
-  return `- [${source.id}] ${source.title}${source.url ? `\n  URL: ${source.url}` : ""}${source.snippet ? `\n  Snippet: ${source.snippet.slice(0, 500)}` : ""}`;
+  return `- [${source.id}] ${source.title}${source.url ? ` ${source.url}` : ""}`;
 }
 
 function sourceFromPage(

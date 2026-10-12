@@ -1,11 +1,8 @@
-import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 import {
   assignChatSources,
   extractSourcesFromTool,
-  renderSourcesForPrompt,
 } from "../shared/chat-sources";
 import type { ChatMessage, ChatSource } from "../shared/types";
-import type { TokenUsage } from "../shared/types";
 
 export type VisionImage = { dataUrl: string; type?: string };
 
@@ -16,44 +13,41 @@ export function latestUserMessageText(messages: ChatMessage[]) {
   );
 }
 
-export function attachToolSources(
+// Sources this result adds to the run, with their chat-wide ids assigned.
+export function newToolSources(
   toolName: string,
   input: Record<string, unknown>,
   output: unknown,
-  currentSources: ChatSource[],
+  sources: { current: ChatSource[] },
 ) {
-  if (!output || typeof output !== "object") return output;
-  const record = output as Record<string, unknown>;
-  const extracted = extractSourcesFromTool(toolName, input, record);
-  if (
-    toolName === BROWSER_TOOL_NAME.manageTabs &&
-    input.operation === "group" &&
-    currentSources.length
-  )
-    return withCitationContext(record, currentSources);
-  if (!extracted.length) return output;
-  const { added } = assignChatSources(currentSources, extracted);
-  return added.length ? withCitationContext(record, added) : output;
+  if (!output || typeof output !== "object") return [];
+  const extracted = extractSourcesFromTool(
+    toolName,
+    input,
+    output as Record<string, unknown>,
+  );
+  if (!extracted.length) return [];
+  const { sources: merged, added } = assignChatSources(
+    sources.current,
+    extracted,
+  );
+  sources.current = merged;
+  return added;
 }
 
-export function mergeOutputSources(current: ChatSource[], output: unknown) {
-  if (!output || typeof output !== "object") return current;
-  const sources = (output as Record<string, unknown>)._sources;
-  return Array.isArray(sources)
-    ? assignChatSources(current, sources as ChatSource[]).sources
-    : current;
+// The side panel keeps full source records for its citation list.
+export function withSources(output: unknown, sources: ChatSource[]) {
+  if (!sources.length || !output || typeof output !== "object") return output;
+  return { ...output, _sources: sources };
 }
 
-function withCitationContext(
-  output: Record<string, unknown>,
-  sources: ChatSource[],
-) {
+// The model gets each new source once, as id, title and URL; the page text
+// itself is already in the result. Citation rules live in the system prompt.
+export function withModelSources(output: unknown, sources: ChatSource[]) {
+  if (!sources.length || !output || typeof output !== "object") return output;
   return {
     ...output,
-    _sources: sources,
-    _citationInstructions:
-      "Use these source ids for sourced claims in the final answer with [[cite:source_id]].",
-    _citationSources: renderSourcesForPrompt(sources),
+    _sources: sources.map(({ id, title, url }) => ({ id, title, url })),
   };
 }
 
@@ -109,25 +103,4 @@ export function getMessageSources(messages: ChatMessage[]): ChatSource[] {
   return Array.isArray(latest?.metadata?.sources)
     ? (latest.metadata.sources as ChatSource[])
     : [];
-}
-
-export function addTokenUsage(
-  total: TokenUsage | undefined,
-  usage: TokenUsage | undefined,
-): TokenUsage | undefined {
-  if (!total) return usage;
-  if (!usage) return total;
-  return {
-    inputTokens: add(total.inputTokens, usage.inputTokens),
-    outputTokens: add(total.outputTokens, usage.outputTokens),
-    totalTokens: add(total.totalTokens, usage.totalTokens),
-    cachedInputTokens: add(total.cachedInputTokens, usage.cachedInputTokens),
-    cacheWriteTokens: add(total.cacheWriteTokens, usage.cacheWriteTokens),
-    reasoningTokens: add(total.reasoningTokens, usage.reasoningTokens),
-    cost: add(total.cost, usage.cost),
-  };
-}
-
-function add(a: number | undefined, b: number | undefined) {
-  return a === undefined && b === undefined ? undefined : (a || 0) + (b || 0);
 }

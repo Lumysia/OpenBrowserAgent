@@ -11,7 +11,6 @@ import type {
   ChatSummary,
   ModelConfig,
   Preferences,
-  PromptBreakdown,
   QuestionToolAnswer,
   SelectedElement,
   Skill,
@@ -37,7 +36,6 @@ import { HistoryPanel } from "./history-panel";
 import { MessageJumpControls } from "./message-jump-controls";
 import { MessageBubble } from "./message-bubble";
 import { ProvidersEmptyState } from "./providers-empty-state";
-import { PromptUsagePreview } from "./prompt-usage-preview";
 import { QueuedMessages } from "./queued-messages";
 import { SidepanelHeader } from "./sidepanel-header";
 import { TypingIndicator } from "./typing-indicator";
@@ -70,7 +68,6 @@ export function SidepanelView({
   preferences,
   configuredModels,
   input,
-  promptUsage,
   activeAgent,
   syncWriteStatus,
   attachedTabs,
@@ -138,7 +135,6 @@ export function SidepanelView({
   preferences?: Preferences;
   configuredModels: ModelConfig[];
   input: string;
-  promptUsage: PromptBreakdown;
   activeAgent: Agent;
   syncWriteStatus?: SyncWriteStatus;
   attachedTabs: AttachmentTab[];
@@ -351,7 +347,6 @@ export function SidepanelView({
             onEdit={onEditQueuedMessage}
           />
           <div className="composer-box">
-            <PromptUsagePreview estimate={promptUsage} t={t} />
             <Textarea
               value={input}
               aria-label={t.sidepanel.whatDoYouWant}

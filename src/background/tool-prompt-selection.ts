@@ -52,6 +52,7 @@ export function browserToolsForPrompt({
     if (name.startsWith("cdp"))
       return capabilities.cdpTools && cdpToolsAvailable;
     if (name === BROWSER_TOOL_NAME.readUploadedAttachment) return true;
+    if (name === BROWSER_TOOL_NAME.read) return true;
     if (name === BROWSER_TOOL_NAME.generateImage)
       return capabilities.imageGeneration && imageGenerationEnabled;
     if (name === BROWSER_TOOL_NAME.getCurrentTime)

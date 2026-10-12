@@ -82,11 +82,6 @@ test(
       );
       const afterAck = seen.filter((event) => event.sequence! > ack.sequence!);
       assert.equal(
-        afterAck[0]?.type,
-        "metrics",
-        "acknowledge before next context-budget work",
-      );
-      assert.equal(
         afterAck.some((event) => event.type === "chunk"),
         false,
       );
