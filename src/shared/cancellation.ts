@@ -40,8 +40,10 @@ export function delay(
   });
 }
 
+// Gives up on `run` after `milliseconds`. Work that `run` wraps in `pause`
+// (such as a request with limits of its own) does not count toward the limit.
 export async function withCancellationTimeout<T>(
-  run: (signal: AbortSignal) => Promise<T>,
+  run: (signal: AbortSignal, pause: Pause) => Promise<T>,
   milliseconds: number,
   message: string,
   parent?: AbortSignal,
@@ -50,14 +52,37 @@ export async function withCancellationTimeout<T>(
   const controller = new AbortController();
   const abort = () => controller.abort(parent?.reason);
   parent?.addEventListener("abort", abort, { once: true });
-  const timer = setTimeout(
-    () => controller.abort(new Error(message)),
-    milliseconds,
-  );
+  let remaining = milliseconds;
+  let started = 0;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const start = () => {
+    started = Date.now();
+    timer = setTimeout(
+      () => controller.abort(new Error(message)),
+      Math.max(0, remaining),
+    );
+  };
+  let paused = 0;
+  let done = false;
+  const pause: Pause = async (task) => {
+    if (paused++ === 0) {
+      clearTimeout(timer);
+      remaining -= Date.now() - started;
+    }
+    try {
+      return await task();
+    } finally {
+      if (--paused === 0 && !done && !controller.signal.aborted) start();
+    }
+  };
+  start();
   try {
-    return await abortable(run(controller.signal), controller.signal);
+    return await abortable(run(controller.signal, pause), controller.signal);
   } finally {
+    done = true;
     clearTimeout(timer);
     parent?.removeEventListener("abort", abort);
   }
 }
+
+export type Pause = <R>(task: () => Promise<R>) => Promise<R>;

@@ -1,9 +1,10 @@
 import { assignChatSources } from "../../shared/chat-sources";
-import { withCancellationTimeout } from "../../shared/cancellation";
+import { withCancellationTimeout, type Pause } from "../../shared/cancellation";
 import { BROWSER_TOOL_TIMEOUT_MS } from "../../shared/config";
 import type { ChatSource } from "../../shared/types";
 import {
   errorMessage,
+  type RunContext,
   type ToolContext,
   type ToolDefinition,
   type ToolResult,
@@ -22,6 +23,26 @@ export type ToolOutcome = {
   isError: boolean;
 };
 
+// The time limit covers waiting for the browser. Helper model requests have
+// their own provider limits and the user can stop them, so their time is not
+// counted, and their failures say where they came from.
+function helperOutsideLimit(
+  run: RunContext,
+  pause: Pause,
+): RunContext["askHelper"] {
+  return (system, prompt, signal) =>
+    pause(async () => {
+      try {
+        return await run.askHelper(system, prompt, signal);
+      } catch (error) {
+        signal?.throwIfAborted();
+        throw new Error(
+          `The helper model request failed: ${errorMessage(error)}`,
+        );
+      }
+    });
+}
+
 export async function runTool(
   tool: ToolDefinition,
   input: Record<string, unknown>,
@@ -38,9 +59,17 @@ export async function runTool(
   try {
     result = timeout
       ? await withCancellationTimeout(
-          (signal) => tool.execute(input, { ...context, signal }),
+          (signal, pause) =>
+            tool.execute(input, {
+              ...context,
+              signal,
+              run: {
+                ...context.run,
+                askHelper: helperOutsideLimit(context.run, pause),
+              },
+            }),
           timeout,
-          `${tool.name} timed out after ${timeout / 1000} s. The page may be busy or showing a dialog; try again or take a screenshot.`,
+          `${tool.name} timed out after ${timeout / 1000} s waiting for the browser. The page may be busy or showing a dialog; try again or take a screenshot.`,
           context.signal,
         )
       : await tool.execute(input, context);
