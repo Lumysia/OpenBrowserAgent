@@ -6,8 +6,8 @@ import {
 } from "../storage-keys";
 import {
   bodyFor,
-  collectGarbage,
-  hasExpiredGarbage,
+  deleteBlobs,
+  dropExpiredGarbage,
   nextRoot,
   ORPHAN_SWEEP_INTERVAL_MS,
   restoreLostBlobs,
@@ -193,8 +193,10 @@ async function round(
       break;
     }
     const now = env.now();
-    const collect = hasExpiredGarbage(remote, now);
-    if (!outcome.pushes.size && !collect) {
+    await localPayloads(env, remote, outcome.pushes, payloads);
+    const next = nextRoot(remote, device, outcome.pushes, now);
+    const collected = dropExpiredGarbage(next, now);
+    if (!outcome.pushes.size && !collected.length) {
       state.remote = { root: remote, etag };
       break;
     }
@@ -204,10 +206,7 @@ async function round(
       state.remote = { root: remote, etag };
       break;
     }
-    await localPayloads(env, remote, outcome.pushes, payloads);
     await uploadBlobs(transport, remote, outcome.pushes, payloads);
-    const next = nextRoot(remote, device, outcome.pushes, now);
-    if (collect) await collectGarbage(transport, next, now);
     const written = await transport.writeRoot(next, etag);
     if (written.status === "ok") {
       for (const [recordId, record] of outcome.pushes) {
@@ -217,6 +216,7 @@ async function round(
       }
       state.remote = { root: next, etag: written.etag };
       result.wrote = true;
+      await deleteBlobs(transport, collected);
       break;
     }
     state.remote = { root: remote, etag };

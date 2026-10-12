@@ -83,25 +83,27 @@ export async function uploadBlobs(
   return uploads.size;
 }
 
-// Delete garbage older than the grace period (nobody refers to it any more)
-// and drop it from the root about to be written.
-export async function collectGarbage(
-  transport: Transport,
-  root: Root,
-  now: number,
-) {
+// Drop garbage older than the grace period (nobody refers to it any more)
+// from the root about to be written; returns the blobs to delete once that
+// root is written. Deleting first would remove blobs a concurrent writer,
+// whose root then wins, may refer to again.
+export function dropExpiredGarbage(root: Root, now: number) {
   const used = referencedBlobs(root);
-  const expired = root.garbage.filter(
-    (entry) => now - entry.since >= GARBAGE_GRACE_MS && !used.has(entry.blob),
-  );
-  for (const entry of expired) await transport.deleteBlob(entry.blob);
-  const gone = new Set(expired.map((entry) => entry.blob));
-  root.garbage = root.garbage.filter((entry) => !gone.has(entry.blob));
-  return expired.length;
+  const expired = root.garbage
+    .filter(
+      (entry) => now - entry.since >= GARBAGE_GRACE_MS && !used.has(entry.blob),
+    )
+    .map((entry) => entry.blob);
+  root.garbage = root.garbage.filter((entry) => !expired.includes(entry.blob));
+  return expired;
 }
 
-export const hasExpiredGarbage = (root: Root, now: number) =>
-  root.garbage.some((entry) => now - entry.since >= GARBAGE_GRACE_MS);
+// Delete collected blobs. One that fails stays behind as an orphan for the
+// weekly sweep.
+export async function deleteBlobs(transport: Transport, blobs: string[]) {
+  for (const blob of blobs)
+    await transport.deleteBlob(blob).catch(() => undefined);
+}
 
 // Blobs on the server that no record and no garbage entry names, older than
 // the grace period: left by rounds that uploaded and then failed.

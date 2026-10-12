@@ -3,6 +3,7 @@ import test from "node:test";
 import { loadContent, resetSync } from "../src/background/sync/service";
 import { storageLockName } from "../src/shared/locks";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
+import { decodeRoot } from "../src/shared/sync/root";
 import {
   ALL_ON,
   chat,
@@ -151,4 +152,36 @@ test("an edit made while a round reads local data is uploaded by the next round"
   await a.sync();
   assert.deepEqual(a.get(PROVIDERS), { p1: { apiKey: "k3" } });
   assert.deepEqual(b.get(PROVIDERS), { p1: { apiKey: "k3" } });
+});
+
+test("collecting garbage never deletes a blob the current root refers to", async () => {
+  const clock = { now: 1_000_000 };
+  const server = memoryServer();
+  const hooked = hookedTransport(memoryTransport(server));
+  const a = device("deviceA", hooked.transport, clock, ALL_ON);
+  const b = device("deviceB", memoryTransport(server), clock, ALL_ON);
+  await saveChat(a, "X", [["m1", 1]]);
+  await a.sync("edit");
+  await b.sync();
+  await b.env.local.set({ [`${CHATS}/X`]: chat("X", [["m1", 1]]).content });
+  await b.sync();
+  clock.now += 1000;
+  await saveChat(a, "X", [
+    ["m1", 1],
+    ["a2", 2],
+  ]);
+  await a.sync("edit");
+  await b.sync();
+  clock.now += 25 * 60 * 60_000;
+  // b removes a2 again, so X refers to its first blob (now day-old garbage)
+  // once more. b's whole round runs while a collects that garbage.
+  await saveChat(b, "X", [["m1", 1]]);
+  const bRound = async () => void (await b.sync("edit"));
+  hooked.hooks.deleteBlob = bRound;
+  hooked.hooks.writeRoot = bRound;
+  await a.sync("poll");
+  const root = await decodeRoot(server.root!);
+  assert.ok(server.blobs.has(root.records["chats/X"].blob!));
+  await a.sync();
+  assert.deepEqual(messageIds(a, "X"), ["m1"]);
 });

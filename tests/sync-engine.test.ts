@@ -262,7 +262,7 @@ test("cleared cloud data is uploaded again by devices that have it", async () =>
   await b.sync();
   assert.deepEqual(ids(b), ["c1"]);
   // b never had c1's content, so it leaves c1 to a device that has it.
-  assert.equal((await decodeRoot(server.root!)).records["chats/c1"], undefined);
+  assert.equal(server.root, undefined);
   await a.sync();
   assert.deepEqual(ids(a), ["c1"]);
   assert.ok(a.get(`${CHATS}/c1`));
