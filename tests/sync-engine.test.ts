@@ -364,3 +364,18 @@ test("a blob upload that failed is sent with the next round, before the root", a
   await b.env.local.set({ [`${CHATS}/c1`]: undefined });
   assert.ok(await transport.getBlob(root.records["chats/c1"].blob!));
 });
+
+test("a root that fails validation is not applied", async () => {
+  const { a, b, server } = setup();
+  await addChat(a, "c1", [["m1", 1]]);
+  await a.sync("edit");
+  await b.sync();
+  const { encodeRoot } = await import("../src/shared/sync/root");
+  const root = await decodeRoot(server.root!);
+  // A damaged record: a delete with a clock that is not a clock.
+  root.records["chats/c1"] = { clock: "zzzz", deleted: true } as never;
+  server.root = await encodeRoot(root);
+  server.etag = '"damaged"';
+  await assert.rejects(b.sync());
+  assert.deepEqual(ids(b), ["c1"]);
+});
