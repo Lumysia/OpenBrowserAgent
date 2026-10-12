@@ -109,8 +109,8 @@ test("changing a built-in with the skills tool saves an override, never the buil
     {
       action: "patch",
       name: "skill-creator",
-      find: "# Skill Creator",
-      content: "# Skill Creator (mine)",
+      find: "# Skill creator",
+      content: "# Skill creator (mine)",
     },
     context,
   );
@@ -119,7 +119,7 @@ test("changing a built-in with the skills tool saves an override, never the buil
   assert.equal(stored.length, 1);
   assert.notEqual(stored[0].id, creator.id);
   assert.equal(stored[0].builtin, undefined);
-  assert.match(getSkillInstruction(stored[0]), /# Skill Creator \(mine\)/);
+  assert.match(getSkillInstruction(stored[0]), /# Skill creator \(mine\)/);
   assert.doesNotMatch(getSkillInstruction(creator), /\(mine\)/);
   const entry = (await catalog()).find(
     (item) => item.skill.name === "skill-creator",
