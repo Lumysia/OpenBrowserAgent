@@ -118,6 +118,17 @@ test("smart bar", { timeout: 240000 }, async (t) => {
         preferences: { selectedModelId: "fixture" },
       });
     }, fixture.baseUrl);
+    // Counts the page scripts' requests to the background.
+    const worker = await browser.attach(
+      (url) => url === extensionUrl("background.js"),
+      "service_worker",
+    );
+    await worker.call(() => {
+      self.prepares = 0;
+      chrome.runtime.onMessage.addListener((message) => {
+        if (message?.type === "smart-bar:prepare") self.prepares++;
+      });
+    });
     const page = await browser.open(pageUrl);
 
     await t.test("off by default: no bar on selection", async () => {
@@ -317,18 +328,9 @@ test("smart bar", { timeout: 240000 }, async (t) => {
     });
 
     await t.test("allow-list mode shows only on listed sites", async () => {
-      await options.call(async () => {
-        const { preferences } = await chrome.storage.local.get("preferences");
-        await chrome.storage.local.set({
-          preferences: {
-            ...preferences,
-            smartBar: {
-              ...preferences.smartBar,
-              siteMode: "allowList",
-              allowedHosts: ["localhost"],
-            },
-          },
-        });
+      await updateSmartBar(options, {
+        siteMode: "allowList",
+        allowedHosts: ["localhost"],
       });
       listed = await browser.open(listedUrl);
       await poll(async () => {
@@ -376,18 +378,13 @@ test("smart bar", { timeout: 240000 }, async (t) => {
     });
 
     await t.test("shortcut mode shows the bar only on command", async () => {
-      await options.call(async () => {
-        const { preferences } = await chrome.storage.local.get("preferences");
-        await chrome.storage.local.set({
-          preferences: {
-            ...preferences,
-            smartBar: { ...preferences.smartBar, trigger: "shortcut" },
-          },
-        });
-      });
+      await updateSmartBar(options, { trigger: "shortcut" });
+      const prepares = await worker.call(() => self.prepares);
       await selectText(listed, "#text");
       await delay(600);
       assert.equal(await barState(listed), "none");
+      // The page script knows; it doesn't ask the background on mouseup.
+      assert.equal(await worker.call(() => self.prepares), prepares);
       // What the background sends for the keyboard command.
       await options.call(async (url) => {
         const [tab] = await chrome.tabs.query({ url });
@@ -400,6 +397,32 @@ test("smart bar", { timeout: 240000 }, async (t) => {
         await inSmartBar(listed, (root) => root.activeElement?.ariaLabel),
         "Ask",
       );
+    });
+
+    await t.test("turned off from the bar, open tabs go quiet", async () => {
+      await updateSmartBar(options, { trigger: "selection" });
+      await poll(async () => {
+        await selectText(listed, "#text");
+        return (await barState(listed)) === "toolbar";
+      });
+      await clickInBar(listed, '[aria-label="Smart bar options"]');
+      await clickInBar(listed, ".smart-bar-menu-item", "Turn off smart bar");
+      await poll(() =>
+        options.call(
+          async () =>
+            (await chrome.storage.local.get("preferences")).preferences.smartBar
+              .enabled === false,
+        ),
+      );
+      await delay(300);
+      const prepares = await worker.call(() => self.prepares);
+      assert.ok(prepares > 0);
+      for (let i = 0; i < 2; i++) {
+        await selectText(listed, "#text");
+        await delay(300);
+        assert.equal(await barState(listed), "none");
+      }
+      assert.equal(await worker.call(() => self.prepares), prepares);
     });
   } finally {
     release();
@@ -422,4 +445,16 @@ function fieldValue(page, selector) {
     const element = document.querySelector(selector);
     return "value" in element ? element.value : element.textContent;
   }, selector);
+}
+
+function updateSmartBar(options, change) {
+  return options.call(async (change) => {
+    const { preferences } = await chrome.storage.local.get("preferences");
+    await chrome.storage.local.set({
+      preferences: {
+        ...preferences,
+        smartBar: { ...preferences.smartBar, ...change },
+      },
+    });
+  }, change);
 }

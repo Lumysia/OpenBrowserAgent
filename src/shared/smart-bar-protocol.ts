@@ -10,8 +10,9 @@ export const SMART_BAR_MESSAGE = {
   hideOnSite: "smart-bar:hide-on-site",
   turnOff: "smart-bar:turn-off",
   openSidePanel: "smart-bar:open-side-panel",
-  // Background -> page script (keyboard command).
+  // Background -> page scripts.
   showForSelection: "smart-bar:show-for-selection",
+  settingsChanged: "smart-bar:settings-changed",
 } as const;
 
 export const SMART_BAR_STREAM_PORT = "smart-bar-stream";
@@ -36,7 +37,23 @@ export type SmartBarPrepareRequest = {
   uiLoaded: boolean;
 };
 
-// What the page UI needs; undefined when the bar must not show.
+export type SmartBarPrepareResult = {
+  // Whether selecting text with the mouse can show the bar in this frame:
+  // false while the bar is off, shortcut-only or not allowed on the site,
+  // so the page script stops asking until the settings change.
+  onSelection: boolean;
+  // Undefined when the bar must not show now.
+  config?: SmartBarPageConfig;
+};
+
+// Sent to every tab when the smart bar settings change.
+export type SmartBarSettingsChangedMessage = {
+  type: typeof SMART_BAR_MESSAGE.settingsChanged;
+  // False when no site can show the bar on selection any more.
+  onSelection: boolean;
+};
+
+// What the page UI needs.
 export type SmartBarPageConfig = {
   pageActions: SmartBarAction[];
   editActions: SmartBarAction[];

@@ -18,7 +18,9 @@ import {
   type SmartBarOpenSidePanelRequest,
   type SmartBarPageConfig,
   type SmartBarPrepareRequest,
+  type SmartBarPrepareResult,
   type SmartBarRunRequest,
+  type SmartBarSettingsChangedMessage,
   type SmartBarStreamEvent,
 } from "../../shared/smart-bar-protocol";
 import { smartBarHandoffStorage } from "../../shared/smart-bar-handoff";
@@ -44,9 +46,17 @@ export function setupSmartBar() {
       .catch((error) => console.warn("Smart bar registration failed", error));
   };
   void readSettings().then(sync);
-  storage.preferences.watch((preferences) =>
-    sync(normalizeSmartBarSettings(preferences.smartBar)),
-  );
+  // The first change after the worker starts is always announced: the
+  // settings it read at startup may already be the changed ones.
+  let announced: string | undefined;
+  storage.preferences.watch((preferences) => {
+    const settings = normalizeSmartBarSettings(preferences.smartBar);
+    sync(settings);
+    const key = JSON.stringify(settings);
+    if (key === announced) return;
+    announced = key;
+    void announceSettings(settings);
+  });
 
   chrome.commands?.onCommand.addListener((command, tab) => {
     if (command === SMART_BAR_COMMAND && tab?.id) void showForSelection(tab.id);
@@ -129,12 +139,30 @@ function siteHost(sender: Sender) {
   return pageHost(sender.tab?.url);
 }
 
+// Page scripts in open tabs stop or resume asking on mouseup.
+async function announceSettings(settings: SmartBarSettings) {
+  const message: SmartBarSettingsChangedMessage = {
+    type: SMART_BAR_MESSAGE.settingsChanged,
+    onSelection:
+      settings.enabled && settings.trigger === SMART_BAR_TRIGGER.selection,
+  };
+  const api = getBrowserApi();
+  const tabs = await api.tabs.query({ url: ["http://*/*", "https://*/*"] });
+  await Promise.all(
+    tabs.map((tab) =>
+      tab.id === undefined
+        ? undefined
+        : api.tabs.sendMessage(tab.id, message).catch(() => undefined),
+    ),
+  );
+}
+
 // Whether this frame may show the bar now, and what it shows. Loads the bar's
 // UI into the frame the first time. Nothing about the selection is sent.
 async function prepare(
   request: SmartBarPrepareRequest,
   sender: Sender,
-): Promise<SmartBarPageConfig | undefined> {
+): Promise<SmartBarPrepareResult> {
   const [preferences, language] = await Promise.all([
     storage.preferences.get(),
     storage.language.get(),
@@ -142,17 +170,19 @@ async function prepare(
   const settings = normalizeSmartBarSettings(preferences.smartBar);
   const host = siteHost(sender);
   const tabId = sender.tab?.id;
+  const allowed =
+    settings.enabled && !!host && isSmartBarAllowedOnHost(settings, host);
+  const onSelection =
+    allowed && settings.trigger === SMART_BAR_TRIGGER.selection;
   if (
-    !settings.enabled ||
     !host ||
+    !allowed ||
     tabId === undefined ||
-    !isSmartBarAllowedOnHost(settings, host) ||
-    (request.reason === "selection" &&
-      settings.trigger !== SMART_BAR_TRIGGER.selection)
+    (request.reason === "selection" && !onSelection)
   )
-    return undefined;
+    return { onSelection };
   if (!request.uiLoaded) await injectUi(tabId, sender.frameId ?? 0);
-  return {
+  const config: SmartBarPageConfig = {
     pageActions: smartBarActions(settings, false),
     editActions: smartBarActions(settings, true),
     hideSite: smartBarHideSite(settings, host),
@@ -160,6 +190,7 @@ async function prepare(
     colorScheme: preferences.colorScheme || "system",
     accentColor: preferences.accentColor || "pink",
   };
+  return { onSelection, config };
 }
 
 async function showForSelection(tabId: number) {

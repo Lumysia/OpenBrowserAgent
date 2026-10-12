@@ -1,7 +1,8 @@
 import {
   SMART_BAR_MESSAGE,
-  type SmartBarPageConfig,
   type SmartBarPrepareRequest,
+  type SmartBarPrepareResult,
+  type SmartBarSettingsChangedMessage,
   type SmartBarShowReason,
 } from "../shared/smart-bar-protocol";
 import { getBrowserApi } from "../shared/browser-api";
@@ -37,6 +38,9 @@ export function installSmartBarTrigger() {
 
   // A newer mouseup or shortcut supersedes a pending one.
   let generation = 0;
+  // Whether a mouse selection is worth asking the background about (see
+  // SmartBarPrepareResult); unknown until it answers or settings change.
+  let onSelection: boolean | undefined;
 
   const show = async (
     snapshot: SelectionSnapshot,
@@ -52,8 +56,10 @@ export function installSmartBarTrigger() {
     const response = (await Promise.resolve()
       .then(() => getBrowserApi().runtime.sendMessage(request))
       .catch(() => undefined)) as
-      { ok: boolean; value?: SmartBarPageConfig } | undefined;
-    const config = response?.ok ? response.value : undefined;
+      { ok: boolean; value?: SmartBarPrepareResult } | undefined;
+    if (!response?.ok || !response.value) return;
+    onSelection = response.value.onSelection;
+    const { config } = response.value;
     if (!config || current !== generation) return;
     getSmartBarUi()?.show(snapshot, config, reason);
   };
@@ -65,7 +71,8 @@ export function installSmartBarTrigger() {
   });
 
   listen(document, "mouseup", (event) => {
-    if (event.button !== 0 || isSmartBarEvent(event)) return;
+    if (event.button !== 0 || onSelection === false || isSmartBarEvent(event))
+      return;
     const point = { x: event.clientX, y: event.clientY };
     const current = ++generation;
     // After the click's own selection change (a click that clears it).
@@ -105,7 +112,12 @@ export function installSmartBarTrigger() {
   listen(window, "blur", () => getSmartBarUi()?.frameBlurred(), false);
 
   getBrowserApi().runtime.onMessage.addListener(
-    (message: { type?: string }) => {
+    (message: { type?: string } & Partial<SmartBarSettingsChangedMessage>) => {
+      if (message?.type === SMART_BAR_MESSAGE.settingsChanged) {
+        // Allowed again somewhere: this site is checked on the next mouseup.
+        onSelection = message.onSelection ? undefined : false;
+        return;
+      }
       if (message?.type !== SMART_BAR_MESSAGE.showForSelection) return;
       // Every frame of the tab gets the command; the focused one answers.
       if (!document.hasFocus()) return;
