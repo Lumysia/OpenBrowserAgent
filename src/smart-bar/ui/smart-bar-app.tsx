@@ -54,7 +54,9 @@ function SmartBarFrame({
   // The toolbar goes with its selection; a result stays at the viewport edge.
   usePlacement(frameRef, snapshot, result ? undefined : store.hide);
 
-  // Clicks must not take the selection or the field's focus away.
+  // Clicks must not take the selection or the field's focus away. The result
+  // text stays selectable; accepted risk: what the user selects there is in
+  // the page's selection too, as the user chose.
   const keepSelection = (event: MouseEvent) => {
     const target = event.target as Element;
     if (!target.closest(".smart-bar-result-text")) event.preventDefault();
