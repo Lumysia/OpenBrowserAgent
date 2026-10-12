@@ -251,8 +251,7 @@ async function readRun(prompt) {
       .filter((message) => message.role === "assistant");
     const parts = replies.flatMap((message) => message.parts || []);
     const question = parts.some(
-      (part) =>
-        part.toolName === "question" && part.state === "input-available",
+      (part) => part.toolName === "ask" && part.state === "input-available",
     );
     const last = replies.at(-1);
     const endedAt = last?.metadata?.runMetrics?.endedAt;

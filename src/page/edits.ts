@@ -91,7 +91,8 @@ function setText(element: Element, text: string) {
   if ((element as HTMLElement).isContentEditable)
     throw new Error("This is an editor. Use act with a type step.");
   const nodes: Node[] = [];
-  const pattern = /\[([^\]]*)\]\((e\d+)\)/g;
+  // Labels may contain brackets themselves, like a citation "[16]".
+  const pattern = /\[((?:[^[\]]|\[[^\]]*\])*)\]\((e\d+)\)/g;
   let last = 0;
   for (const match of text.matchAll(pattern)) {
     let child: Element | undefined;

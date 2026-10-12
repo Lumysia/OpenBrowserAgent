@@ -7,7 +7,7 @@ import { poll } from "./chromium.mjs";
 // and inline handlers behave as they do for users.
 const PAGE = `<title>OBA tool fixture</title>
 <h1>Fixture heading</h1>
-<p id="intro">Read the <a href="/docs">documentation</a> before you start.</p>
+<p id="intro">Read the <a href="/docs">documentation</a> before you start.<sup><a href="#note-1">[1]</a></sup></p>
 <form onsubmit="event.preventDefault();window.submitted=(window.submitted||0)+1">
   <label>Name <input id="name" value="old"></label>
   <label>Country <select id="country"><option>Chile</option><option>Norway</option><option>Sweden</option></select></label>
@@ -218,6 +218,7 @@ test(
           ]);
           const intro = ref(snapshot, "paragraph");
           const link = snapshot.match(/\[documentation\]\((e\d+)\)/)[1];
+          const note = snapshot.match(/\[\[1\]\]\((e\d+)\)/)[1];
           const [edited] = await fixture.run([
             {
               name: "editPage",
@@ -227,7 +228,7 @@ test(
                   {
                     op: "setText",
                     ref: intro,
-                    text: `Lisez la [documentation](${link}) avant de commencer.`,
+                    text: `Lisez la [documentation](${link}) avant de commencer.[[1]](${note})`,
                   },
                   {
                     op: "insert",
@@ -245,9 +246,15 @@ test(
           assert.deepEqual(
             await evaluate(
               tabId,
-              "[document.querySelector('#intro').textContent, document.querySelector('#intro a').getAttribute('href'), window.xss ?? null, !!document.querySelector('[data-oba-inserted] b, b[data-oba-inserted]')]",
+              "[document.querySelector('#intro').textContent, document.querySelector('#intro a').getAttribute('href'), document.querySelectorAll('#intro a').length, window.xss ?? null, !!document.querySelector('[data-oba-inserted] b, b[data-oba-inserted]')]",
             ),
-            ["Lisez la documentation avant de commencer.", "/docs", null, true],
+            [
+              "Lisez la documentation avant de commencer.[1]",
+              "/docs",
+              2,
+              null,
+              true,
+            ],
           );
         },
       );
