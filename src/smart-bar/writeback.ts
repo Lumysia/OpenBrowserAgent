@@ -56,20 +56,35 @@ export function writeIntoSelection(
 }
 
 // Clipboard API where the page allows it (secure context, user gesture),
-// else the legacy copy command on a scratch field.
-export async function copyText(text: string, scratchParent: Node) {
+// else the legacy copy command. The page decides which one runs (http, its
+// permissions policy), so the fallback must not show it the text either.
+export async function copyText(text: string) {
   try {
     await navigator.clipboard.writeText(text);
     return true;
   } catch {
-    const field = document.createElement("textarea");
-    field.value = text;
-    field.style.position = "fixed";
-    field.style.opacity = "0";
-    scratchParent.appendChild(field);
-    field.select();
-    const copied = document.execCommand("copy");
-    field.remove();
-    return copied;
+    return copyThroughEvent(text);
   }
+}
+
+// The copy command with nothing selected: the text goes into the copy event
+// in this world's window listener, which stops the event before the page's
+// later listeners. Listeners the page added earlier still see the event,
+// but not the text, which is set after them. False when the page stopped it.
+function copyThroughEvent(text: string) {
+  let copied = false;
+  const write = (event: ClipboardEvent) => {
+    if (!event.clipboardData) return;
+    event.clipboardData.setData("text/plain", text);
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    copied = true;
+  };
+  addEventListener("copy", write, { capture: true, once: true });
+  try {
+    document.execCommand("copy");
+  } finally {
+    removeEventListener("copy", write, { capture: true });
+  }
+  return copied;
 }

@@ -8,7 +8,7 @@ import {
   Square,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { COPY_FEEDBACK_MS } from "../../shared/config";
 import { SMART_BAR_MAX_TEXT_CHARS } from "../../shared/smart-bar";
 import type {
@@ -34,7 +34,6 @@ export function SmartBarResultCard({
   result: SmartBarResult;
 }) {
   const t = config.messages;
-  const cardRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   // The user changed the selected text meanwhile: Copy only.
   const [changed, setChanged] = useState(false);
@@ -56,7 +55,6 @@ export function SmartBarResultCard({
 
   return (
     <div
-      ref={cardRef}
       className="smart-bar-result"
       role="region"
       aria-label={t.actions[result.action]}
@@ -130,9 +128,7 @@ export function SmartBarResultCard({
               size="icon"
               className="smart-bar-icon-button"
               aria-label={copied ? t.copied : t.actions.copy}
-              onClick={onTrusted(
-                () => void copyText(text, cardRef.current!).then(setCopied),
-              )}
+              onClick={onTrusted(() => void copyText(text).then(setCopied))}
             >
               {copied ? <Check size={15} /> : <Copy size={15} />}
             </Button>

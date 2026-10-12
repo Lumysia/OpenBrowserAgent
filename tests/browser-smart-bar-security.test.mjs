@@ -4,6 +4,7 @@ import { poll } from "./chromium.mjs";
 import {
   barState,
   clickAway,
+  inSmartBar,
   clickInBar,
   resultText,
   selectText,
@@ -41,9 +42,36 @@ const PAGE = `<!doctype html><title>Smart bar</title>
       .length;
 </script>`;
 
+// The async clipboard is turned off by the page's own permissions policy, so
+// Copy takes the fallback; the page records what its copy listeners see.
+const COPY_PAGE = {
+  headers: { "Permissions-Policy": "clipboard-write=()" },
+  html: `<!doctype html><title>Copy</title>
+<textarea id="area" rows="2">hello wrold</textarea>
+<script>
+  window.copies = [];
+  const record = (event) => {
+    const read = () => ({
+      selection: String(getSelection()),
+      data: event.clipboardData.getData("text/plain"),
+    });
+    window.copies.push(read());
+    // Also once the other listeners ran.
+    queueMicrotask(() => window.copies.push(read()));
+    setTimeout(() => window.copies.push(read()));
+  };
+  addEventListener("copy", record, true);
+  document.addEventListener("copy", record, true);
+  window.fieldState = () => {
+    const area = document.getElementById("area");
+    return [document.activeElement === area, area.selectionStart, area.selectionEnd];
+  };
+</script>`,
+};
+
 test("smart bar security", { timeout: 240000 }, async (t) => {
   const session = await startSmartBar({
-    pages: { "/page": PAGE },
+    pages: { "/page": PAGE, "/copy": COPY_PAGE },
     smartBar: { enabled: true },
     answer: async (_prompt, write) => write("SECRET_MODEL_OUTPUT"),
   });
@@ -99,7 +127,50 @@ test("smart bar security", { timeout: 240000 }, async (t) => {
       assert.equal(await page.call(() => window.readBar()), null);
       assert.deepEqual(await page.call(() => window.customElementLog), []);
     });
+
+    await t.test(
+      "Copy without the clipboard API shows the page nothing",
+      async () => {
+        const copyPage = await browser.open(url("/copy"));
+        await poll(async () => {
+          await selectText(copyPage, "#area");
+          return (await barState(copyPage)) === "toolbar";
+        });
+        await clickInBar(copyPage, '[aria-label="Fix spelling & grammar"]');
+        await poll(async () =>
+          (await resultText(copyPage)).includes("SECRET_MODEL_OUTPUT"),
+        );
+        const field = await copyPage.call(() => window.fieldState());
+        await clickInBar(copyPage, '.smart-bar-result [aria-label="Copy"]');
+        await poll(() =>
+          inSmartBar(
+            copyPage,
+            (root) => !!root?.querySelector('[aria-label="Copied"]'),
+          ),
+        );
+        const copies = await copyPage.call(() => window.copies);
+        assert.ok(
+          copies.every(
+            ({ selection, data }) =>
+              !`${selection}${data}`.includes("SECRET_MODEL_OUTPUT"),
+          ),
+        );
+        // The user's selection and focus stay where they were.
+        assert.deepEqual(await copyPage.call(() => window.fieldState()), field);
+        assert.equal(await readClipboard(session), "SECRET_MODEL_OUTPUT");
+      },
+    );
   } finally {
     await session.close();
   }
 });
+
+// Through an extension page, which may read the clipboard.
+async function readClipboard({ browser, options, extensionUrl }) {
+  await browser.browser.send("Browser.grantPermissions", {
+    origin: extensionUrl("").slice(0, -1),
+    permissions: ["clipboardReadWrite"],
+  });
+  await options.send("Page.bringToFront");
+  return options.call(() => navigator.clipboard.readText());
+}

@@ -57,7 +57,7 @@ export function SmartBarToolbar({
       void openInSidePanel(snapshot.text);
       return store.hide();
     }
-    void copyText(snapshot.text, toolbarRef.current!).then(setCopied);
+    void copyText(snapshot.text).then(setCopied);
   };
 
   return (
