@@ -12,7 +12,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 - **Agents, not "the assistant".** Settings text that talks about the AI acting in the browser calls it the agent. "AI" is fine in marketing text such as the extension description, and "assistant" stays where it means the assistant's messages in a chat (as in the debug logging option).
 - **Keep placeholders.** `{count}`, `{name}`, `{max}` and the like stay exactly as they are.
 - **Use the ellipsis character** `…`, never three dots.
-- **Leave these untranslated:** OpenBrowserAgent, MCP, Streamable HTTP, JSON, OpenAI, WebDAV, SKILL.md, agent.json, example.com, and the `RESET` confirmation word (the code compares what people type against it).
+- **Leave these untranslated:** OpenBrowserAgent, MCP, Streamable HTTP, JSON, OpenAI, WebDAV, ETag, HTTP, SKILL.md, agent.json, example.com, and the `RESET` confirmation word (the code compares what people type against it).
 - **English titles and buttons use sentence case** ("Chat history", not "Chat History").
 
 ## Core terms
@@ -39,6 +39,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | memory                         | 记忆               | 記憶               | メモリ               | 메모리           |
 | sync                           | 同步               | 同步               | 同期                 | 동기화           |
 | attachment                     | 附件               | 附件               | 添付ファイル         | 첨부 파일        |
+| device (a synced browser)      | 设备               | 裝置               | デバイス             | 기기             |
 | screenshot                     | 截图               | 截圖               | スクリーンショット   | 스크린샷         |
 | fork (a chat)                  | 分叉               | 分叉               | 分岐                 | 분기             |
 | built-in                       | 内置               | 內建               | 組み込み             | 내장             |
@@ -69,6 +70,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | memory                         | mémoire                      | Gedächtnis                  | memoria                           | memória                          |
 | sync                           | synchronisation              | Synchronisierung            | sincronización                    | sincronização                    |
 | attachment                     | pièce jointe                 | Anhang                      | adjunto                           | anexo                            |
+| device (a synced browser)      | appareil                     | Gerät                       | dispositivo                       | dispositivo                      |
 | screenshot                     | capture d’écran              | Screenshot                  | captura de pantalla               | captura de tela                  |
 | fork (a chat)                  | créer une branche            | verzweigen                  | bifurcar                          | ramificar                        |
 | built-in                       | intégré                      | integriert                  | integrado                         | integrado                        |
