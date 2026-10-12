@@ -178,6 +178,21 @@ export const TASKS = [
       ),
   },
   {
+    // The post is only linked from the index: reading it needs no tab.
+    id: "read-linked-post",
+    tabs: ["/blog"],
+    prompt:
+      "Who wrote the post about quantum dots in display panels that this blog links to, and when was it published?",
+    check: ({ answer }) =>
+      result(
+        has(
+          answer,
+          /ines okafor/i,
+          /14 march 2026|march 14,? 2026|2026-03-14/i,
+        ),
+      ),
+  },
+  {
     id: "check-todos",
     tabs: ["/todos"],
     prompt:
