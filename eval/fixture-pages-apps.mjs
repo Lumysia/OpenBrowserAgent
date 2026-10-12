@@ -262,3 +262,54 @@ export function todosPage() {
     .join("");
   return layout("Tasks", `<h1>Tasks</h1><ul id="todos">${items}</ul>`);
 }
+
+// A chat app: two contacts share a name, and only the one marked "(You)"
+// is the user's own chat. The composer is a contenteditable box.
+export const MESSENGER_CHATS = [
+  { id: "lunch", name: "Team Lunch", note: "Group · 14 members" },
+  { id: "mara", name: "Mara Lindqvist", note: "See you on Friday!" },
+  { id: "jonas", name: "Jonas Berg", note: "Thanks for the photos" },
+  { id: "self", name: "Mara Lindqvist (You)", note: "Message yourself" },
+  { id: "family", name: "Family", note: "Group · 6 members" },
+];
+
+export function messengerPage() {
+  return layout(
+    "Messenger",
+    `<h1>Messenger</h1><div style="display:flex;gap:16px">
+<aside style="width:260px"><input aria-label="Search chats" placeholder="Search"><ul id="chats" style="list-style:none;padding:0">${MESSENGER_CHATS.map(
+      (chat) =>
+        `<li><div role="button" tabindex="0" class="chat" data-id="${chat.id}"><strong>${chat.name}</strong><br><small>${chat.note}</small></div></li>`,
+    ).join("")}</ul></aside>
+<main id="thread" style="flex:1"><p>Select a chat to start messaging.</p></main></div>`,
+    `const chats = ${JSON.stringify(MESSENGER_CHATS)};
+const thread = document.getElementById("thread");
+document.getElementById("chats").addEventListener("click", (event) => {
+  const item = event.target.closest(".chat");
+  if (!item) return;
+  const chat = chats.find((entry) => entry.id === item.dataset.id);
+  thread.innerHTML = '<h2>' + chat.name + '</h2><ul id="messages"></ul>' +
+    '<div contenteditable="true" role="textbox" aria-label="Type a message" id="composer" style="border:1px solid #ccc;min-height:2em"></div>' +
+    '<button aria-label="Send" id="send">&#10148;</button>';
+  thread.dataset.chat = chat.id;
+});
+thread.addEventListener("click", async (event) => {
+  if (!event.target.closest("#send")) return;
+  const composer = document.getElementById("composer");
+  const text = composer.textContent.trim();
+  if (!text) return;
+  composer.textContent = "";
+  const response = await fetch("/api/message", { method: "POST", body: JSON.stringify({ chat: thread.dataset.chat, text }) });
+  const { code } = await response.json();
+  const item = document.createElement("li");
+  item.innerHTML = '<span>' + text + '</span> <small>&#10003;&#10003; Delivered · ref ' + code + '</small>';
+  document.getElementById("messages").append(item);
+  // A fresh composer after each message, as real chat apps re-render it:
+  // refs taken before sending no longer exist.
+  for (const id of ["composer", "send"]) {
+    const node = document.getElementById(id);
+    node.replaceWith(node.cloneNode(true));
+  }
+});`,
+  );
+}

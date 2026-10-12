@@ -169,31 +169,14 @@ async function runTask(task) {
     // Wait for the active tab to be attached as context.
     await delay(1500);
     const startedAt = Date.now();
-    await panel.call((prompt) => {
-      const textarea = document.querySelector(".composer-box textarea");
-      const setter = Object.getOwnPropertyDescriptor(
-        HTMLTextAreaElement.prototype,
-        "value",
-      ).set;
-      textarea.focus();
-      setter.call(textarea, prompt);
-      textarea.dispatchEvent(new Event("input", { bubbles: true }));
-    }, task.prompt);
-    await delay(300);
-    await panel.call(() =>
-      document.querySelector(".composer-box textarea").dispatchEvent(
-        new KeyboardEvent("keydown", {
-          key: "Enter",
-          code: "Enter",
-          keyCode: 13,
-          bubbles: true,
-        }),
-      ),
-    );
-    const run = await poll(
-      () => panel.call(readRun, task.prompt),
-      Number(args.timeout) * 1000,
-    ).catch(() => ({ timedOut: true }));
+    // Follow-up prompts are sent in the same chat once the previous run ended.
+    const runs = [];
+    for (const prompt of [task.prompt, ...(task.followUps || [])]) {
+      const run = await ask(panel, prompt);
+      runs.push({ ...run, callsAfter: server.state.calls.length });
+      if (run.timedOut || run.question) break;
+    }
+    const run = runs.at(-1);
     const wallMs = (run.endedAt || Date.now()) - startedAt;
     const answer = run.answer || "";
     const verdict = run.timedOut
@@ -202,6 +185,7 @@ async function runTask(task) {
         ? { ok: false, detail: { askedQuestion: true } }
         : await task.check({
             answer,
+            runs,
             posts: server.state.posts,
             page,
             prepared,
@@ -213,8 +197,13 @@ async function runTask(task) {
       ok: verdict.ok,
       detail: verdict.detail,
       wallMs,
-      toolCalls: run.toolCalls || {},
-      attachedTabs: run.attachedTabs,
+      toolCalls: runs.reduce((all, item) => {
+        for (const [name, count] of Object.entries(item.toolCalls || {}))
+          all[name] = (all[name] || 0) + count;
+        return all;
+      }, {}),
+      attachedTabs: runs[0].attachedTabs,
+      ...(runs.length > 1 ? { turns: turnMetrics(runs) } : {}),
       answerChars: answer.length,
       ...(verdict.ok ? {} : { answer: answer.slice(0, 600) }),
       ...callMetrics(server.state.calls),
@@ -222,6 +211,57 @@ async function runTask(task) {
   } finally {
     await chromium.close();
   }
+}
+
+// Agent requests and their input tokens, per prompt of a multi-turn task.
+function turnMetrics(runs) {
+  const agent = (calls) => calls.filter((call) => !call.aux && !call.helper);
+  return runs.map((run, index) => {
+    const calls = agent(
+      server.state.calls.slice(
+        index ? runs[index - 1].callsAfter : 0,
+        run.callsAfter,
+      ),
+    );
+    const input = calls.map(
+      (call) => call.input + call.cacheRead + call.cacheWrite,
+    );
+    return {
+      agentCalls: calls.length,
+      agentInputTokens: input.reduce((sum, value) => sum + value, 0),
+      firstRequestTokens: input[0] || 0,
+      cachedInputTokens: calls.reduce((sum, call) => sum + call.cacheRead, 0),
+    };
+  });
+}
+
+// Sends `prompt` through the side panel composer and waits for its run.
+async function ask(panel, prompt) {
+  await panel.call((text) => {
+    const textarea = document.querySelector(".composer-box textarea");
+    const setter = Object.getOwnPropertyDescriptor(
+      HTMLTextAreaElement.prototype,
+      "value",
+    ).set;
+    textarea.focus();
+    setter.call(textarea, text);
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  }, prompt);
+  await delay(300);
+  await panel.call(() =>
+    document.querySelector(".composer-box textarea").dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "Enter",
+        code: "Enter",
+        keyCode: 13,
+        bubbles: true,
+      }),
+    ),
+  );
+  return poll(
+    () => panel.call(readRun, prompt),
+    Number(args.timeout) * 1000,
+  ).catch(() => ({ timedOut: true }));
 }
 
 function callMetrics(calls) {
@@ -278,8 +318,11 @@ async function readRun(prompt) {
       (message) => message.role === "user" && message.content === prompt,
     );
     if (index < 0) continue;
+    const next = messages.findIndex(
+      (message, at) => at > index && message.role === "user",
+    );
     const replies = messages
-      .slice(index + 1)
+      .slice(index + 1, next < 0 ? undefined : next)
       .filter((message) => message.role === "assistant");
     const parts = replies.flatMap((message) => message.parts || []);
     const question = parts.some(
@@ -302,6 +345,9 @@ async function readRun(prompt) {
       question,
       answer: replies.map((message) => message.content).join("\n"),
       toolCalls,
+      toolInputs: parts.flatMap((part) =>
+        part.toolName ? [{ name: part.toolName, input: part.input }] : [],
+      ),
     };
   }
   return undefined;
