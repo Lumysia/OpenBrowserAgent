@@ -1,5 +1,5 @@
 import { Check, EyeOff, Power, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { QUICK_FEEDBACK_MS } from "../../shared/config";
 import {
   isGenerateAction,
@@ -67,6 +67,7 @@ export function SmartBarToolbar({
       role="toolbar"
       aria-label={t.barLabel}
       className="smart-bar-toolbar"
+      onKeyDown={moveFocus}
     >
       {actions.map((action) => {
         const done = copied && action === SMART_BAR_ACTION.copy;
@@ -90,6 +91,17 @@ export function SmartBarToolbar({
       <CloseMenu store={store} config={config} />
     </div>
   );
+}
+
+// Arrow keys move between the toolbar's buttons.
+function moveFocus(event: KeyboardEvent<HTMLDivElement>) {
+  const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+  if (!step) return;
+  const buttons = [...event.currentTarget.querySelectorAll("button")];
+  const index = buttons.indexOf(event.target as HTMLButtonElement);
+  if (index < 0) return;
+  event.preventDefault();
+  buttons[(index + step + buttons.length) % buttons.length].focus();
 }
 
 function CloseMenu({

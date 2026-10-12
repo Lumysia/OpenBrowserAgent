@@ -50,7 +50,7 @@ export function SmartBarResultCard({
     <div
       ref={cardRef}
       className="smart-bar-result"
-      role="dialog"
+      role="region"
       aria-label={t.actions[result.action]}
     >
       <div className="smart-bar-result-header">
