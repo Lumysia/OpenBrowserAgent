@@ -200,6 +200,7 @@ const cases: Record<string, () => Promise<void>> = {
     await tick();
     await a.sync();
     await b.sync();
+    await a.sync();
     assert.deepEqual(ids(a), ["c1", "c2"]);
     assert.deepEqual(ids(b), ["c1", "c2"]);
     assert.ok(messages(a, "c1"));
