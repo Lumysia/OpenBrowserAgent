@@ -1,0 +1,31 @@
+.settings-host-list {
+  display: grid;
+  gap: 8px;
+}
+.settings-inline-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 8px;
+}
+.settings-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.settings-chip.ui-badge {
+  max-width: 100%;
+  gap: 2px;
+  padding: 2px 2px 2px 10px;
+}
+.settings-chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-chip-remove.ui-button-icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 999px;
+}

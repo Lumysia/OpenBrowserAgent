@@ -1,5 +1,6 @@
 import { defineConfig } from "wxt";
 import { fileURLToPath } from "node:url";
+import { SMART_BAR_COMMAND } from "./src/shared/smart-bar-protocol";
 
 const permissions = [
   "scripting",
@@ -61,6 +62,10 @@ export default defineConfig({
           mac: "Command+J",
         },
         description: "OpenBrowserAgent",
+      },
+      // No default key: the user picks one in the browser's shortcut settings.
+      [SMART_BAR_COMMAND]: {
+        description: "__MSG_smartBarCommand__",
       },
     },
     options_ui: {

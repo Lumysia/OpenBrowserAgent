@@ -20,9 +20,9 @@ import {
   AccordionItem,
   AccordionTrigger,
   Button,
+  IconTooltip,
 } from "../../src/ui/components";
 import { formatMessageTime } from "./format";
-import { IconTooltip } from "./icon-tooltip";
 import { renderMarkdown, splitStreamingMarkdown } from "./markdown";
 import { MessageRunInfo } from "./message-run-info";
 import { ToolPart } from "./tool-part";

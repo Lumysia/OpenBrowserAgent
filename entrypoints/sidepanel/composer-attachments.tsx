@@ -7,9 +7,8 @@ import type {
   UploadedAttachment,
 } from "../../src/shared/types";
 import { getSkillDisplayName } from "../../src/shared/skills";
-import { Button, ScrollArea } from "../../src/ui/components";
+import { Button, IconTooltip, ScrollArea } from "../../src/ui/components";
 import { AttachedTabCard } from "./composer-menus";
-import { IconTooltip } from "./icon-tooltip";
 import { UploadedAttachmentCard } from "./uploaded-attachment-card";
 import { useDeferredRemove } from "./use-deferred-remove";
 

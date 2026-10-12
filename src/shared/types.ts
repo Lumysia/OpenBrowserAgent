@@ -2,6 +2,7 @@ import type { UploadedAttachmentKind } from "./attachments";
 import type { AgentIconId } from "./agent-icon-registry";
 import type { ToolGroup } from "./agents";
 import type { ReasoningEffort } from "./reasoning";
+import type { SmartBarSettings } from "./smart-bar";
 
 export type ProviderId =
   | "gemini"
@@ -52,6 +53,7 @@ export type Preferences = {
   // Model for auxiliary requests such as compaction; unset uses the chat's
   // own model.
   helperModelId?: string;
+  smartBar?: SmartBarSettings;
 };
 
 export type SyncBackendType = "browser-sync" | "webdav";

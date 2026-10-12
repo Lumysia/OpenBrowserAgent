@@ -17,3 +17,4 @@ export * from "./setting-switch";
 export * from "./radio-group";
 export * from "./feedback";
 export * from "./skeleton";
+export * from "./portal-container";

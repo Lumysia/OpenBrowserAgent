@@ -76,6 +76,7 @@ export const OPTIONS_ROUTE = {
   mcp: "/mcp",
   localExecutionBridges: "/local-execution-bridges",
   skills: "/skills",
+  smartBar: "/smart-bar",
   debug: "/debug",
 } as const;
 
@@ -87,6 +88,7 @@ export const OPTIONS_HASH = {
   mcp: "#/mcp",
   localExecutionBridges: "#/local-execution-bridges",
   skills: "#/skills",
+  smartBar: "#/smart-bar",
   debug: "#/debug",
 } as const;
 

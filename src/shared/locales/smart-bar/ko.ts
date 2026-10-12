@@ -1,0 +1,62 @@
+import type { SmartBarLocaleMessages } from "./en-US";
+
+export const smartBarKo: SmartBarLocaleMessages = {
+  barLabel: "스마트 바",
+  actions: {
+    ask: "사이드 패널에서 질문",
+    explain: "설명",
+    translate: "번역",
+    summarize: "요약",
+    copy: "복사",
+    improve: "글 다듬기",
+    fixGrammar: "맞춤법 및 문법 수정",
+  },
+  copied: "복사됨",
+  closeMenu: "스마트 바 옵션",
+  hideOnSite: "{site}에서 숨기기",
+  turnOff: "스마트 바 끄기",
+  close: "닫기",
+  stop: "중지",
+  retry: "다시 시도",
+  replace: "바꾸기",
+  insertBelow: "아래에 삽입",
+  continueInSidePanel: "사이드 패널에서 계속",
+  readSource: "원문 읽어 주기",
+  readResult: "결과 읽어 주기",
+  stopReading: "읽기 중지",
+  writing: "작성 중…",
+  emptyResult: "모델이 텍스트를 반환하지 않았습니다.",
+  selectionChanged: "선택한 텍스트가 변경되었습니다. 대신 결과를 복사하세요.",
+  selectionTooLong:
+    "선택 영역이 너무 깁니다({max}자 초과). 대신 사이드 패널에서 계속하세요.",
+  settingsTitle: "스마트 바",
+  settingsDescription:
+    "선택한 텍스트 옆에 빠른 AI 작업을 보여 주는 작은 도구 모음입니다. 작업을 선택하기 전에는 아무것도 전송되지 않습니다.",
+  enable: "스마트 바 표시",
+  enableDescription:
+    "기본값은 꺼짐입니다. 켜면 OpenBrowserAgent가 허용된 페이지에서 텍스트 선택을 감지합니다.",
+  trigger: "표시 시점",
+  triggerDescription:
+    "키보드 단축키는 두 모드 모두에서 작동합니다. 브라우저의 확장 프로그램 단축키 설정에서 지정하세요.",
+  triggerSelection: "텍스트를 선택할 때",
+  triggerShortcut: "단축키로만",
+  sites: "사이트",
+  sitesDescription:
+    "두 목록은 모두 유지되며, 모드에 따라 적용할 목록이 정해집니다. 사이트에는 하위 도메인도 포함됩니다.",
+  siteModeBlockList: "차단한 사이트를 제외한 모든 곳",
+  siteModeAllowList: "허용한 사이트에서만",
+  blockedSites: "차단한 사이트",
+  allowedSites: "허용한 사이트",
+  sitePlaceholder: "example.com",
+  addSite: "사이트 추가",
+  removeSite: "{host} 제거",
+  invalidSite: "example.com 같은 사이트를 입력하세요.",
+  noSites: "아직 사이트가 없습니다.",
+  pageActions: "페이지 텍스트 작업",
+  pageActionsDescription: "페이지에서 텍스트를 선택하면 표시됩니다.",
+  editActions: "편집 중인 텍스트 작업",
+  editActionsDescription:
+    "입력란에서 텍스트를 선택하면 표시됩니다. 결과로 선택한 텍스트를 바꿀 수 있습니다.",
+  model: "스마트 바 모델",
+  modelDescription: "설명, 번역, 요약 및 글쓰기 작업에 사용할 모델입니다.",
+};

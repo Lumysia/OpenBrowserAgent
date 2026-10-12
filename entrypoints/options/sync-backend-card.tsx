@@ -21,9 +21,9 @@ import {
   AccordionTriggerButton,
   Button,
   CardDescription,
-  CardTitle,
   Input,
   Label,
+  SettingToggleRow,
   Switch,
   Tooltip,
   TooltipContent,
@@ -332,7 +332,7 @@ function SyncDataToggleList({
   return (
     <div className="settings-toggle-list">
       {toggles.map((toggle) => (
-        <SyncToggleRow
+        <SettingToggleRow
           key={toggle.key}
           icon={toggle.icon}
           title={toggle.title}
@@ -352,39 +352,6 @@ function SyncDataToggleList({
           onChange={toggle.onChange}
         />
       ))}
-    </div>
-  );
-}
-
-function SyncToggleRow({
-  icon,
-  title,
-  description,
-  value,
-  onChange,
-  disabled,
-}: {
-  icon: ReactNode;
-  title: string;
-  description: string;
-  value: boolean;
-  onChange?: (value: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="settings-toggle-row">
-      <div>
-        <CardTitle className="settings-section-title">
-          {icon} {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </div>
-      <Switch
-        checked={value}
-        disabled={disabled}
-        aria-label={title}
-        onCheckedChange={onChange}
-      />
     </div>
   );
 }

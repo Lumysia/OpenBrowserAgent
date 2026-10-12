@@ -1,5 +1,4 @@
 import {
-  Bot,
   Languages,
   MonitorCog,
   Palette,
@@ -33,7 +32,6 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "../../src/ui/components";
-import { ModelSelect } from "./model-select";
 import { useStoredState } from "../../src/ui/useStoredState";
 
 export function GeneralPage() {
@@ -168,24 +166,6 @@ export function GeneralPage() {
           setPreferences((previous) => ({ ...previous, autoRetry: checked }))
         }
       />
-      <Card>
-        <CardHeader>
-          <CardTitle className="settings-section-title">
-            <Bot size={18} /> {t.options.helperModel}
-          </CardTitle>
-          <CardDescription>{t.options.helperModelDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ModelSelect
-            value={preferences.helperModelId}
-            label={t.options.helperModel}
-            defaultLabel={t.options.helperModelSameAsChat}
-            onChange={(helperModelId) =>
-              setPreferences((previous) => ({ ...previous, helperModelId }))
-            }
-          />
-        </CardContent>
-      </Card>
       <Card>
         <CardHeader>
           <CardTitle className="settings-section-title">

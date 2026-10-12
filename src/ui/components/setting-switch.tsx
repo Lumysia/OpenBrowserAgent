@@ -48,3 +48,37 @@ export function SettingSwitchCard(props: Props) {
     </Card>
   );
 }
+
+// A switch row inside a settings card's list (`settings-toggle-list`).
+export function SettingToggleRow({
+  icon,
+  title,
+  description,
+  value,
+  onChange,
+  disabled,
+}: {
+  icon?: ReactNode;
+  title: string;
+  description?: string;
+  value: boolean;
+  onChange?: (value: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="settings-toggle-row">
+      <div>
+        <CardTitle className="settings-section-title">
+          {icon} {title}
+        </CardTitle>
+        {description && <CardDescription>{description}</CardDescription>}
+      </div>
+      <Switch
+        checked={value}
+        disabled={disabled}
+        aria-label={title}
+        onCheckedChange={onChange}
+      />
+    </div>
+  );
+}

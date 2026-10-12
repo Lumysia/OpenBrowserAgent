@@ -48,6 +48,7 @@ import { useMessageEdit } from "./use-message-edit";
 import { useParallelChatStreams } from "./use-parallel-chat-streams";
 import { useQueuedMessages } from "./use-queued-messages";
 import { useRemoteSyncRefresh } from "../../src/ui/useRemoteSyncRefresh";
+import { useSmartBarHandoff } from "./use-smart-bar-handoff";
 import { useSyncedChatAttachments } from "./use-synced-chat-attachments";
 import { useUnreadCompletedChats } from "./use-unread-completed-chats";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
@@ -83,6 +84,7 @@ export function SidepanelApp() {
   >({});
   const sidepanelRef = useRef<HTMLDivElement | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const initializedChatSelectionRef = useRef(false);
   const configuredModels = useModels(providers, ignoreSyncedBootstrap);
   const { currentChat, currentChatStatus, retryCurrentChat } = useCurrentChat({
@@ -217,6 +219,15 @@ export function SidepanelApp() {
       abortClosedChatStreams,
       clearUnreadCompletedChat,
     });
+
+  useSmartBarHandoff({
+    ready: !!chats,
+    t,
+    input,
+    setInput,
+    importChat,
+    composerRef,
+  });
 
   useChatSelection(
     chats,
@@ -408,6 +419,7 @@ export function SidepanelApp() {
       editingMessageId={editingMessage?.messageId}
       sidepanelRef={sidepanelRef}
       messagesRef={messagesRef}
+      composerRef={composerRef}
       onSetInput={setInput}
       onSetOpenMenu={setOpenMenu}
       onSetAddMenuView={setAddMenuView}

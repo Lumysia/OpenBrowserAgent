@@ -295,24 +295,28 @@ function withoutImages(messages: Message[]): Message[] {
   ];
 }
 
-// One plain-text request outside the agent loop (titles, compaction).
+// One plain-text request outside the agent loop (titles, compaction, smart
+// bar). `onText` receives the answer's text as it streams.
 export async function requestText(
   model: ProviderModel,
   request: { system?: string; prompt: string },
   signal?: AbortSignal,
+  onText?: (delta: string) => void,
 ): Promise<{ text: string; usage: Usage }> {
-  const result = await (
-    await createProviderStream(model)(
-      piModel(model),
-      normalizeContext({
-        systemPrompt: request.system,
-        messages: [
-          { role: "user", content: request.prompt, timestamp: Date.now() },
-        ],
-      }),
-      { signal },
-    )
-  ).result();
+  const events = await createProviderStream(model)(
+    piModel(model),
+    normalizeContext({
+      systemPrompt: request.system,
+      messages: [
+        { role: "user", content: request.prompt, timestamp: Date.now() },
+      ],
+    }),
+    { signal },
+  );
+  if (onText)
+    for await (const event of events)
+      if (event.type === "text_delta") onText(event.delta);
+  const result = await events.result();
   if (result.stopReason === "error" || result.stopReason === "aborted")
     throw new Error(result.errorMessage || result.stopReason);
   return {

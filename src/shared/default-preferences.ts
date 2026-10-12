@@ -1,6 +1,10 @@
 import { DEFAULT_MAX_TOOL_STEPS } from "./config";
 import type { Preferences } from "./types";
 import { REASONING_EFFORT } from "./reasoning";
+import {
+  DEFAULT_SMART_BAR_SETTINGS,
+  normalizeSmartBarSettings,
+} from "./smart-bar";
 
 export const DEFAULT_PREFERENCES: Preferences = {
   colorScheme: "system",
@@ -13,8 +17,13 @@ export const DEFAULT_PREFERENCES: Preferences = {
   reasoningEffort: REASONING_EFFORT.default,
   // Empty: auxiliary requests use the chat's own model.
   helperModelId: "",
+  smartBar: DEFAULT_SMART_BAR_SETTINGS,
 };
 
 export function mergePreferences(value: Partial<Preferences>): Preferences {
-  return { ...DEFAULT_PREFERENCES, ...value };
+  return {
+    ...DEFAULT_PREFERENCES,
+    ...value,
+    smartBar: normalizeSmartBarSettings(value.smartBar),
+  };
 }

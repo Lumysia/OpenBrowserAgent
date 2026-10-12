@@ -113,11 +113,12 @@ export async function launchExtension({
       );
       return page;
     };
-    // Connect to an existing page target, e.g. a tab the extension opened.
-    const attach = async (matches) => {
+    // Connect to an existing target, e.g. a tab the extension opened or its
+    // service worker.
+    const attach = async (matches, type = "page") => {
       const target = await poll(async () =>
         (await targets()).find(
-          (item) => item.type === "page" && matches(item.url),
+          (item) => item.type === type && matches(item.url),
         ),
       );
       const page = await connect(target.webSocketDebuggerUrl);

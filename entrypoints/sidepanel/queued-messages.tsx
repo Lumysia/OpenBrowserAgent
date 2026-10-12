@@ -1,7 +1,6 @@
 import { Pencil, Trash2 } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
-import { Button } from "../../src/ui/components";
-import { IconTooltip } from "./icon-tooltip";
+import { Button, IconTooltip } from "../../src/ui/components";
 import type { QueuedMessage } from "./use-queued-messages";
 import { useDeferredRemove } from "./use-deferred-remove";
 

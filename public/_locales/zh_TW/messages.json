@@ -3,9 +3,12 @@
     "message": "OpenBrowserAgent"
   },
   "extDescription": {
-    "message": "OpenBrowserAgent 將 AI Agent 帶入你的瀏覽器，協助你智慧地自動化任務。"
+    "message": "OpenBrowserAgent 將 AI 智慧體帶入你的瀏覽器，協助你智慧地自動化任務。"
   },
   "selectorPrompt": {
     "message": "選擇元素 - 按 Esc 取消"
+  },
+  "smartBarCommand": {
+    "message": "為選取的文字顯示智慧工具列"
   }
 }
