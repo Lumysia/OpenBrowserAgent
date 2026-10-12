@@ -1,10 +1,4 @@
-import {
-  centerOf,
-  clip,
-  compact,
-  nameOf,
-  roleOf,
-} from "./dom";
+import { centerOf, clip, compact, nameOf, roleOf } from "./dom";
 import { RefError, resolveRef } from "./refs";
 
 // One `act` step, run in the page. The background drives the batch: it

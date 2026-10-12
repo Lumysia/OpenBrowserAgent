@@ -138,6 +138,13 @@ export function snapshotLines(root: Element, options: SnapshotOptions) {
       } else visitChildren(element, depth);
       return;
     }
+    // A wrapper around one control (a list item holding one link) is just
+    // that control.
+    const control = soleControl(element);
+    if (control) {
+      push(depth, controlLine(control, roleOf(control), options));
+      return;
+    }
     const text = inline(element);
     if (text)
       push(
@@ -353,4 +360,20 @@ function isDataTable(table: Element) {
   for (const cell of Array.from(rows[0].cells))
     if (cell.querySelector("h1,h2,h3,h4,h5,h6,ul,ol,p,div > div")) return false;
   return true;
+}
+
+// The one interactive element that is all of `element`'s visible content.
+function soleControl(element: Element): Element | undefined {
+  let found: Element | undefined;
+  const walk = (node: Node): boolean => {
+    if (node.nodeType === Node.TEXT_NODE) return !compact(node.textContent);
+    if (!(node instanceof Element) || isHidden(node)) return true;
+    if (isInteractive(node)) {
+      if (found) return false;
+      found = node;
+      return true;
+    }
+    return children(node).every(walk);
+  };
+  return children(element).every(walk) ? found : undefined;
 }

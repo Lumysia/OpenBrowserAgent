@@ -1,4 +1,4 @@
-import { beginChanges, collectChanges } from "./changes";
+import { beginChanges, collectChanges, hasBaseline } from "./changes";
 import {
   editableText,
   hasText,
@@ -86,6 +86,7 @@ const methods: Record<string, (args: Args) => unknown> = {
   }),
   step: (args) => runStep(args.step as ActStep),
   begin: () => beginChanges(),
+  sameDocument: () => hasBaseline(),
   changes: () => collectChanges(),
   edits: (args) => runEdits((args.ops as EditOp[]) || []),
   hasText: (args) => hasText(String(args.text || "")),

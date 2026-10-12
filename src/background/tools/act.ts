@@ -208,12 +208,21 @@ export const actTool: ToolDefinition = {
           current.status === "loading" ||
           pageUrl(current.url || "") !== pageUrl(tab.url)
         ) {
-          navigated =
-            pageUrl(current.url || "") !== pageUrl(tab.url) ||
-            current.status === "loading";
           await waitTabComplete(tab.id, signal);
-          if (index < steps.length - 1) {
-            failure = `The page navigated after step ${index + 1}; the remaining steps were not run because their refs belong to the old page.`;
+          // A route change inside the page keeps its refs; a new document
+          // does not.
+          const same = await callPage<boolean>(
+            tab.id,
+            "sameDocument",
+            {},
+            signal,
+          )
+            .then((reply) => reply.value)
+            .catch(() => false);
+          if (!same) {
+            navigated = true;
+            if (index < steps.length - 1)
+              failure = `The page loaded a new document after step ${index + 1}; the remaining steps were not run because their refs belong to the old page.`;
             break;
           }
         }

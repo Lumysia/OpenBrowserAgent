@@ -30,6 +30,11 @@ function openDialogs() {
   );
 }
 
+// Whether this document is the one the batch began on.
+export function hasBaseline() {
+  return !!baseline;
+}
+
 export function beginChanges() {
   baseline = {
     controls: visibleControls(),
