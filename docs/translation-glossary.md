@@ -17,57 +17,61 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 
 ## Core terms
 
-| English                        | 简体中文    | 繁體中文    | 日本語               | 한국어           |
-| ------------------------------ | ----------- | ----------- | -------------------- | ---------------- |
-| chat                           | 对话        | 對話        | チャット             | 채팅             |
-| chat history                   | 对话历史    | 對話紀錄    | チャット履歴         | 채팅 기록        |
-| agent                          | 智能体      | 智慧體      | エージェント         | 에이전트         |
-| sub-agent                      | 子智能体    | 子智慧體    | サブエージェント     | 하위 에이전트    |
-| Browse / Ask (built-in agents) | 浏览 / 询问 | 瀏覽 / 詢問 | ブラウズ / 質問      | 탐색 / 질문      |
-| side panel                     | 侧边栏      | 側邊欄      | サイドパネル         | 사이드 패널      |
-| smart bar                      | 智能工具栏  | 智慧工具列  | スマートバー         | 스마트 바        |
-| model                          | 模型        | 模型        | モデル               | 모델             |
-| helper model                   | 辅助模型    | 輔助模型    | 補助モデル           | 보조 모델        |
-| provider                       | 提供商      | 提供者      | プロバイダー         | 제공업체         |
-| API key                        | API Key     | API Key     | API キー             | API 키           |
-| base URL                       | Base URL    | Base URL    | ベース URL           | Base URL         |
-| skill                          | 技能        | 技能        | スキル               | 스킬             |
-| tool                           | 工具        | 工具        | ツール               | 도구             |
-| MCP server                     | MCP 服务器  | MCP 伺服器  | MCP サーバー         | MCP 서버         |
-| local execution bridge         | 本地执行桥  | 本機執行橋  | ローカル実行ブリッジ | 로컬 실행 브리지 |
-| workspace                      | 工作区      | 工作區      | ワークスペース       | 워크스페이스     |
-| memory                         | 记忆        | 記憶        | メモリ               | 메모리           |
-| sync                           | 同步        | 同步        | 同期                 | 동기화           |
-| attachment                     | 附件        | 附件        | 添付ファイル         | 첨부 파일        |
-| screenshot                     | 截图        | 截圖        | スクリーンショット   | 스크린샷         |
-| fork (a chat)                  | 分叉        | 分叉        | 分岐                 | 분기             |
-| built-in                       | 内置        | 內建        | 組み込み             | 내장             |
+| English                        | 简体中文           | 繁體中文           | 日本語               | 한국어           |
+| ------------------------------ | ------------------ | ------------------ | -------------------- | ---------------- |
+| chat                           | 对话               | 對話               | チャット             | 채팅             |
+| chat history                   | 对话历史           | 對話紀錄           | チャット履歴         | 채팅 기록        |
+| agent                          | 智能体             | 智慧體             | エージェント         | 에이전트         |
+| sub-agent                      | 子智能体           | 子智慧體           | サブエージェント     | 하위 에이전트    |
+| Browse / Ask (built-in agents) | 浏览 / 询问        | 瀏覽 / 詢問        | ブラウズ / 質問      | 탐색 / 질문      |
+| side panel                     | 侧边栏             | 側邊欄             | サイドパネル         | 사이드 패널      |
+| smart bar                      | 智能工具栏         | 智慧工具列         | スマートバー         | 스마트 바        |
+| model                          | 模型               | 模型               | モデル               | 모델             |
+| helper model                   | 辅助模型           | 輔助模型           | 補助モデル           | 보조 모델        |
+| provider                       | 提供商             | 提供者             | プロバイダー         | 제공업체         |
+| API key                        | API Key            | API Key            | API キー             | API 키           |
+| base URL                       | Base URL           | Base URL           | ベース URL           | Base URL         |
+| skill                          | 技能               | 技能               | スキル               | 스킬             |
+| tool                           | 工具               | 工具               | ツール               | 도구             |
+| MCP server                     | MCP 服务器         | MCP 伺服器         | MCP サーバー         | MCP 서버         |
+| local execution bridge         | 本地执行桥         | 本機執行橋         | ローカル実行ブリッジ | 로컬 실행 브리지 |
+| workspace                      | 工作区             | 工作區             | ワークスペース       | 워크스페이스     |
+| memory                         | 记忆               | 記憶               | メモリ               | 메모리           |
+| sync                           | 同步               | 同步               | 同期                 | 동기화           |
+| attachment                     | 附件               | 附件               | 添付ファイル         | 첨부 파일        |
+| screenshot                     | 截图               | 截圖               | スクリーンショット   | 스크린샷         |
+| fork (a chat)                  | 分叉               | 分叉               | 分岐                 | 분기             |
+| built-in                       | 内置               | 內建               | 組み込み             | 내장             |
+| customize (a built-in skill)   | 自定义             | 自訂               | カスタマイズ         | 사용자 지정      |
+| skill use: Auto / Manual / Off | 自动 / 手动 / 关闭 | 自動 / 手動 / 關閉 | 自動 / 手動 / オフ   | 자동 / 수동 / 끔 |
 
-| English                        | Français                   | Deutsch                   | Español                   | Português (Brasil)      |
-| ------------------------------ | -------------------------- | ------------------------- | ------------------------- | ----------------------- |
-| chat                           | discussion                 | Chat                      | chat                      | conversa                |
-| chat history                   | historique des discussions | Chatverlauf               | historial de chats        | histórico de conversas  |
-| agent                          | agent                      | Agent                     | agente                    | agente                  |
-| sub-agent                      | sous-agent                 | Subagent                  | subagente                 | subagente               |
-| Browse / Ask (built-in agents) | Naviguer / Demander        | Browsen / Fragen          | Navegar / Preguntar       | Navegar / Perguntar     |
-| side panel                     | panneau latéral            | Seitenleiste              | panel lateral             | painel lateral          |
-| smart bar                      | barre intelligente         | Smart Bar                 | barra inteligente         | barra inteligente       |
-| model                          | modèle                     | Modell                    | modelo                    | modelo                  |
-| helper model                   | modèle auxiliaire          | Hilfsmodell               | modelo auxiliar           | modelo auxiliar         |
-| provider                       | fournisseur                | Anbieter                  | proveedor                 | provedor                |
-| API key                        | clé API                    | API-Schlüssel             | clave API                 | chave de API            |
-| base URL                       | URL de base                | Basis-URL                 | URL base                  | URL base                |
-| skill                          | compétence                 | Skill                     | habilidad                 | habilidade              |
-| tool                           | outil                      | Tool                      | herramienta               | ferramenta              |
-| MCP server                     | serveur MCP                | MCP-Server                | servidor MCP              | servidor MCP            |
-| local execution bridge         | pont d’exécution local     | lokale Ausführungs-Bridge | puente de ejecución local | ponte de execução local |
-| workspace                      | espace de travail          | Arbeitsbereich            | espacio de trabajo        | espaço de trabalho      |
-| memory                         | mémoire                    | Gedächtnis                | memoria                   | memória                 |
-| sync                           | synchronisation            | Synchronisierung          | sincronización            | sincronização           |
-| attachment                     | pièce jointe               | Anhang                    | adjunto                   | anexo                   |
-| screenshot                     | capture d’écran            | Screenshot                | captura de pantalla       | captura de tela         |
-| fork (a chat)                  | créer une branche          | verzweigen                | bifurcar                  | ramificar               |
-| built-in                       | intégré                    | integriert                | integrado                 | integrado               |
+| English                        | Français                     | Deutsch                     | Español                           | Português (Brasil)               |
+| ------------------------------ | ---------------------------- | --------------------------- | --------------------------------- | -------------------------------- |
+| chat                           | discussion                   | Chat                        | chat                              | conversa                         |
+| chat history                   | historique des discussions   | Chatverlauf                 | historial de chats                | histórico de conversas           |
+| agent                          | agent                        | Agent                       | agente                            | agente                           |
+| sub-agent                      | sous-agent                   | Subagent                    | subagente                         | subagente                        |
+| Browse / Ask (built-in agents) | Naviguer / Demander          | Browsen / Fragen            | Navegar / Preguntar               | Navegar / Perguntar              |
+| side panel                     | panneau latéral              | Seitenleiste                | panel lateral                     | painel lateral                   |
+| smart bar                      | barre intelligente           | Smart Bar                   | barra inteligente                 | barra inteligente                |
+| model                          | modèle                       | Modell                      | modelo                            | modelo                           |
+| helper model                   | modèle auxiliaire            | Hilfsmodell                 | modelo auxiliar                   | modelo auxiliar                  |
+| provider                       | fournisseur                  | Anbieter                    | proveedor                         | provedor                         |
+| API key                        | clé API                      | API-Schlüssel               | clave API                         | chave de API                     |
+| base URL                       | URL de base                  | Basis-URL                   | URL base                          | URL base                         |
+| skill                          | compétence                   | Skill                       | habilidad                         | habilidade                       |
+| tool                           | outil                        | Tool                        | herramienta                       | ferramenta                       |
+| MCP server                     | serveur MCP                  | MCP-Server                  | servidor MCP                      | servidor MCP                     |
+| local execution bridge         | pont d’exécution local       | lokale Ausführungs-Bridge   | puente de ejecución local         | ponte de execução local          |
+| workspace                      | espace de travail            | Arbeitsbereich              | espacio de trabajo                | espaço de trabalho               |
+| memory                         | mémoire                      | Gedächtnis                  | memoria                           | memória                          |
+| sync                           | synchronisation              | Synchronisierung            | sincronización                    | sincronização                    |
+| attachment                     | pièce jointe                 | Anhang                      | adjunto                           | anexo                            |
+| screenshot                     | capture d’écran              | Screenshot                  | captura de pantalla               | captura de tela                  |
+| fork (a chat)                  | créer une branche            | verzweigen                  | bifurcar                          | ramificar                        |
+| built-in                       | intégré                      | integriert                  | integrado                         | integrado                        |
+| customize (a built-in skill)   | personnaliser                | anpassen                    | personalizar                      | personalizar                     |
+| skill use: Auto / Manual / Off | Auto / Manuelle / Désactivée | Automatisch / Manuell / Aus | Automático / Manual / Desactivada | Automático / Manual / Desativada |
 
 ## Notes per language
 
