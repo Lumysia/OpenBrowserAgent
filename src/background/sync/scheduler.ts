@@ -34,7 +34,9 @@ import {
 import {
   getActiveSyncBackendConfig,
   SYNC_BACKEND_TYPES,
+  syncBackendScope,
 } from "../../shared/sync-backends";
+import type { ServerCheck } from "../../shared/sync/transport";
 
 // When sync runs. All triggers live here in the background:
 // - browser start, and an extension page opening or getting focus (at most
@@ -54,6 +56,7 @@ const EDIT_DEBOUNCE_MS = 8_000;
 const REMOTE_DEBOUNCE_MS = 2_000;
 const OPEN_CHECK_MIN_MS = 15_000;
 const PAGES_KEY = "sync-visible-pages";
+const RECENT_CHECK_MS = 60_000;
 
 type PageStates = Record<string, { visible: boolean; at: number }>;
 
@@ -65,6 +68,7 @@ export function setupSync() {
   );
   const session = api.storage.session ?? api.storage.local;
   let editTimer: ReturnType<typeof setTimeout> | undefined;
+  let lastCheck: { scope: string; at: number; result: ServerCheck } | undefined;
   let remoteTimer: ReturnType<typeof setTimeout> | undefined;
 
   const request = (next: RoundRequest) =>
@@ -175,8 +179,15 @@ export function setupSync() {
         else await keepLocalCopies(collections);
         return loadSyncStatus(env.local);
       }
-      case SYNC_MESSAGE.check:
-        return checkBackend(env, message.backend);
+      case SYNC_MESSAGE.check: {
+        const result = await checkBackend(env, message.backend);
+        lastCheck = {
+          scope: syncBackendScope(message.backend),
+          at: Date.now(),
+          result,
+        };
+        return result;
+      }
       case SYNC_MESSAGE.reset:
         await runner.idle();
         await resetSync(env, message.remote, message.keys);
@@ -249,7 +260,13 @@ export function setupSync() {
     });
     const context = await syncContext(env);
     if (!context) return;
-    const check = await context.transport.check().catch(() => undefined);
+    // The setup flow has just checked this server.
+    const recent =
+      lastCheck?.scope === context.scope &&
+      Date.now() - lastCheck.at < RECENT_CHECK_MS;
+    const check = recent
+      ? lastCheck!.result
+      : await context.transport.check().catch(() => undefined);
     if (!check) return;
     const warnings = [
       ...(check.strongEtags ? [] : [SYNC_WARNINGS.unreliableEtags]),
