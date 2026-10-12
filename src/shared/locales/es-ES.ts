@@ -1,3 +1,4 @@
+import { smartBarEsES } from "./smart-bar/es-ES";
 import type { LocaleMessages } from "./en-US";
 
 export const esES: LocaleMessages = {
@@ -542,4 +543,5 @@ export const esES: LocaleMessages = {
     debugToolOnDemand: "Cargada bajo demanda",
     debugToolRequired: "Obligatorio",
   },
+  smartBar: smartBarEsES,
 };

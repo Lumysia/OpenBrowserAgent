@@ -1,3 +1,4 @@
+import { smartBarZhCN } from "./smart-bar/zh-CN";
 import type { LocaleMessages } from "./en-US";
 
 export const zhCN: LocaleMessages = {
@@ -483,4 +484,5 @@ export const zhCN: LocaleMessages = {
     debugToolOnDemand: "按需加载",
     debugToolRequired: "必填",
   },
+  smartBar: smartBarZhCN,
 };

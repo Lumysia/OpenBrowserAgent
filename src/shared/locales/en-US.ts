@@ -1,3 +1,4 @@
+import { smartBarEnUS } from "./smart-bar/en-US";
 export const enUS = {
   app: {
     tagline: "Your AI Agent in browser",
@@ -527,6 +528,7 @@ export const enUS = {
     debugToolOnDemand: "Loaded on demand",
     debugToolRequired: "Required",
   },
+  smartBar: smartBarEnUS,
 };
 
 export type LocaleMessages = typeof enUS;

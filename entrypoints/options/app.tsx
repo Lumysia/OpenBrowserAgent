@@ -6,6 +6,7 @@ import {
   CircleHelp,
   Cloud,
   FileText,
+  Highlighter,
   Plug,
   Server,
   SlidersHorizontal,
@@ -28,6 +29,7 @@ import { ProvidersPage } from "./providers-page";
 import { McpPage } from "./mcp-page";
 import { LocalExecutionBridgesPage } from "./local-execution-bridges-page";
 import { SkillsPage } from "./skills-page";
+import { SmartBarPage } from "./smart-bar-page";
 import { useHashRoute } from "./route";
 import { SyncPage } from "./sync-page";
 
@@ -115,6 +117,14 @@ export function OptionsApp() {
             </OptionsLink>
             <OptionsLink
               route={route}
+              target={OPTIONS_ROUTE.smartBar}
+              href={OPTIONS_HASH.smartBar}
+              icon={<Highlighter size={16} />}
+            >
+              {t.smartBar.settingsTitle}
+            </OptionsLink>
+            <OptionsLink
+              route={route}
               target={OPTIONS_ROUTE.debug}
               href={OPTIONS_HASH.debug}
               icon={<Bug size={16} />}
@@ -147,6 +157,8 @@ export function OptionsApp() {
               <SyncPage />
             ) : route === OPTIONS_ROUTE.skills ? (
               <SkillsPage />
+            ) : route === OPTIONS_ROUTE.smartBar ? (
+              <SmartBarPage />
             ) : route === OPTIONS_ROUTE.debug ? (
               <DebugPage />
             ) : (

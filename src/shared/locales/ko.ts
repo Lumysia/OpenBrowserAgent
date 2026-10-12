@@ -1,3 +1,4 @@
+import { smartBarKo } from "./smart-bar/ko";
 import type { LocaleMessages } from "./en-US";
 
 export const ko: LocaleMessages = {
@@ -513,4 +514,5 @@ export const ko: LocaleMessages = {
     debugToolOnDemand: "필요할 때 로드",
     debugToolRequired: "필수",
   },
+  smartBar: smartBarKo,
 };

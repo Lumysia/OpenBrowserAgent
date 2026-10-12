@@ -92,6 +92,7 @@ export function SidepanelView({
   editingMessageId,
   sidepanelRef,
   messagesRef,
+  composerRef,
   onSetInput,
   onSetOpenMenu,
   onSetAddMenuView,
@@ -159,6 +160,7 @@ export function SidepanelView({
   editingMessageId?: string;
   sidepanelRef: RefObject<HTMLDivElement | null>;
   messagesRef: RefObject<HTMLDivElement | null>;
+  composerRef: RefObject<HTMLTextAreaElement | null>;
   onSetInput: (value: string) => void;
   onSetOpenMenu: (value: ComposerMenu | null) => void;
   onSetAddMenuView: (value: AddMenuView) => void;
@@ -347,6 +349,7 @@ export function SidepanelView({
           />
           <div className="composer-box">
             <Textarea
+              ref={composerRef}
               value={input}
               aria-label={t.sidepanel.whatDoYouWant}
               placeholder={t.sidepanel.whatDoYouWant}

@@ -1,3 +1,4 @@
+import { smartBarPtBR } from "./smart-bar/pt-BR";
 import type { LocaleMessages } from "./en-US";
 
 export const ptBR: LocaleMessages = {
@@ -546,4 +547,5 @@ export const ptBR: LocaleMessages = {
     debugToolOnDemand: "Carregada sob demanda",
     debugToolRequired: "Obrigatório",
   },
+  smartBar: smartBarPtBR,
 };

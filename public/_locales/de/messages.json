@@ -7,5 +7,8 @@
   },
   "selectorPrompt": {
     "message": "Element auswählen - Esc zum Abbrechen"
+  },
+  "smartBarCommand": {
+    "message": "Smart Bar für den markierten Text anzeigen"
   }
 }

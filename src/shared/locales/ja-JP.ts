@@ -1,3 +1,4 @@
+import { smartBarJaJP } from "./smart-bar/ja-JP";
 import type { LocaleMessages } from "./en-US";
 
 export const jaJP: LocaleMessages = {
@@ -546,4 +547,5 @@ export const jaJP: LocaleMessages = {
     debugToolOnDemand: "必要時に読み込み",
     debugToolRequired: "必須",
   },
+  smartBar: smartBarJaJP,
 };

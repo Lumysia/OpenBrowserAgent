@@ -1,0 +1,137 @@
+/* Smart bar, inside its shadow root. Theme variables come from theme.css with
+   :root mapped to .smart-bar-theme. */
+.smart-bar-theme {
+  --smart-bar-layer: 2147483647;
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* Radix positions overlays in wrappers with its own z-index; above the page. */
+.smart-bar-theme [data-radix-popper-content-wrapper] {
+  z-index: var(--smart-bar-layer) !important;
+}
+
+.smart-bar-frame {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--smart-bar-layer);
+  animation: fade-in 0.12s ease backwards;
+}
+
+.smart-bar-toolbar,
+.smart-bar-result {
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 12%, var(--border));
+  border-radius: var(--radius);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--shadow) 160%, transparent);
+}
+
+.smart-bar-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+}
+
+.smart-bar-icon-button.ui-button-icon {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  color: var(--muted-foreground);
+}
+
+.smart-bar-icon-button:hover:not(:disabled),
+.smart-bar-icon-button:focus-visible {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.smart-bar-divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 2px;
+  background: var(--border);
+}
+
+.smart-bar-menu {
+  display: flex;
+  min-width: 180px;
+  flex-direction: column;
+  padding: 4px;
+}
+
+.smart-bar-menu-item.ui-button {
+  justify-content: flex-start;
+  width: 100%;
+  font-weight: 500;
+}
+
+.smart-bar-result {
+  display: flex;
+  width: min(380px, calc(100vw - 16px));
+  flex-direction: column;
+}
+
+.smart-bar-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 4px 0 12px;
+}
+
+.smart-bar-result-title {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  color: var(--accent-foreground);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.smart-bar-result-text {
+  max-height: min(260px, 45vh);
+  overflow: auto;
+  padding: 4px 12px 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  user-select: text;
+  white-space: pre-wrap;
+}
+
+.smart-bar-result-text[data-status="error"] {
+  color: var(--destructive);
+}
+
+.smart-bar-caret {
+  display: inline-block;
+  width: 6px;
+  height: 1em;
+  margin-left: 2px;
+  border-radius: 2px;
+  background: var(--accent-solid);
+  vertical-align: text-bottom;
+  animation: pulse-dot 1s ease-in-out infinite;
+}
+
+.smart-bar-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 8px;
+  border-top: 1px solid var(--border);
+}
+
+.smart-bar-spacer {
+  flex: 1;
+}

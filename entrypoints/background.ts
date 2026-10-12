@@ -22,9 +22,13 @@ import {
 } from "../src/shared/sync-backends-runtime";
 import "../src/shared/sync-backends-impl";
 import * as streamSessions from "../src/background/stream-sessions";
+import { openActionSurface } from "../src/background/action-surface";
+import {
+  handleSmartBarMessage,
+  setupSmartBar,
+} from "../src/background/smart-bar";
 
 const SIDE_PANEL_OPENED = "side_panel_opened";
-const SIDE_PANEL_PAGE = "/sidepanel.html";
 
 export default defineBackground(() => {
   chrome.sidePanel
@@ -37,13 +41,16 @@ export default defineBackground(() => {
     capture(SIDE_PANEL_OPENED).catch(console.warn);
   });
 
+  setupSmartBar();
+
   chrome.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === "update")
       storage.shouldShowUpdateToast.set(true).catch(console.warn);
   });
 
   chrome.runtime.onMessage.addListener(
-    (message, _sender, sendResponse) =>
+    (message, sender, sendResponse) =>
+      handleSmartBarMessage(message, sender, sendResponse) ||
       streamSessions.handleChatStreamControlMessage(message, sendResponse) ||
       handleSyncBackendRuntimeMessage(message, sendResponse) ||
       handleLocalExecutionBridgeRuntimeMessage(message, sendResponse) ||
@@ -125,31 +132,6 @@ async function capture(event: string) {
   await getBrowserApi()
     .runtime.sendMessage({ type: "proxy-service.TrackerService", event })
     .catch(() => undefined);
-}
-
-async function openActionSurface() {
-  const api = getBrowserApi() as typeof chrome & {
-    sidebarAction?: { toggle?: () => Promise<void> };
-  };
-  if (api.sidePanel) return;
-
-  const sidebarAction = api.sidebarAction;
-  if (sidebarAction?.toggle) {
-    await sidebarAction.toggle();
-    return;
-  }
-
-  const sidePanelUrl = api.runtime.getURL(SIDE_PANEL_PAGE);
-  const existing = (await api.tabs.query({})).find(
-    (tab) => tab.url === sidePanelUrl,
-  );
-  if (existing?.id) {
-    const tab = await api.tabs.update(existing.id, { active: true });
-    if (tab?.windowId !== undefined)
-      await api.windows.update(tab.windowId, { focused: true });
-    return;
-  }
-  await api.tabs.create({ url: sidePanelUrl });
 }
 
 async function streamAssistantResponse(
