@@ -106,8 +106,13 @@ export function createSmartBarStore() {
     hide,
     selectionChanged() {
       const { snapshot, result } = state;
-      if (!snapshot || result || snapshot.target.kind === "control") return;
-      if (getSelection()?.isCollapsed) hide();
+      if (!snapshot || result) return;
+      const { target } = snapshot;
+      const collapsed =
+        target.kind === "control"
+          ? target.element.selectionStart === target.element.selectionEnd
+          : getSelection()?.isCollapsed;
+      if (collapsed) hide();
     },
     frameBlurred() {
       if (!state.result) hide();

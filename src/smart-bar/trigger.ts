@@ -76,8 +76,12 @@ export function installSmartBarTrigger(ctx: ContentScriptContext) {
     { capture: true },
   );
 
-  ctx.addEventListener(document, "selectionchange", () =>
-    getSmartBarUi()?.selectionChanged(),
+  // Text fields fire it on themselves; it reaches the document captured.
+  ctx.addEventListener(
+    document,
+    "selectionchange",
+    () => getSmartBarUi()?.selectionChanged(),
+    { capture: true },
   );
 
   ctx.addEventListener(window, "pagehide", () => getSmartBarUi()?.hide());
