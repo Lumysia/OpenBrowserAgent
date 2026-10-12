@@ -2,6 +2,7 @@
 @import "./styles/base.css";
 @import "./styles/components-core.css";
 @import "./styles/components-overlays.css";
+@import "./styles/components-toggle.css";
 @import "./styles/options-providers.css";
 @import "./styles/options-layout.css";
 @import "./styles/options-tools.css";
