@@ -36,7 +36,13 @@ import {
 } from "./local";
 import { decide, type Decision } from "./plan";
 import { localBodies, massDeletes, mergeRecord } from "./engine-merge";
-import { emptyRoot, maxRootClock, type Root, type SyncRecord } from "./root";
+import {
+  emptyRoot,
+  maxRootClock,
+  referencedBlobs,
+  type Root,
+  type SyncRecord,
+} from "./root";
 import {
   loadDirty,
   loadSyncState,
@@ -184,6 +190,7 @@ export async function runSyncRound(
       state.remote = { root: remote, etag };
       break;
     }
+    await localPayloads(env, state, remote, outcome.pushes, payloads);
     await uploadBlobs(transport, remote, outcome.pushes, payloads);
     const next = nextRoot(remote, device, outcome.pushes, now);
     if (collect) await collectGarbage(transport, next, now);
@@ -209,7 +216,7 @@ export async function runSyncRound(
     transport.kind === "webdav" &&
     state.remote?.etag &&
     !result.massDelete &&
-    env.now() - (state.lastSweepAt ?? 0) >= ORPHAN_SWEEP_INTERVAL_MS
+    env.now() - (state.lastSweepAt ??= env.now()) >= ORPHAN_SWEEP_INTERVAL_MS
   ) {
     await sweepOrphans(transport, state.remote.root, env.now());
     state.lastSweepAt = env.now();
@@ -218,6 +225,49 @@ export async function runSyncRound(
   result.pending = Object.keys(state.pending).length;
   result.warnings = [...new Set(result.warnings)];
   return result;
+}
+
+// Bodies of blobs to upload that this round did not read (a change stamped
+// in an earlier round whose upload failed) come from local data. A changed
+// body that is gone meanwhile waits for the next round; a body this device
+// never held (it changed only the record's data, or re-uploads after the
+// cloud was cleared) is referred to as it is.
+async function localPayloads(
+  env: SyncEnv,
+  state: SyncState,
+  remote: Root,
+  pushes: Map<string, SyncRecord>,
+  payloads: Payloads,
+) {
+  const present = referencedBlobs(remote);
+  const missing = [...pushes].filter(
+    ([, record]) =>
+      record.blob && !present.has(record.blob) && !payloads.has(record.blob),
+  );
+  const byCollection = new Map<string, Set<string>>();
+  for (const [recordId] of missing) {
+    const { collection, id } = splitRecordId(recordId);
+    byCollection.set(
+      collection,
+      (byCollection.get(collection) ?? new Set()).add(id),
+    );
+  }
+  for (const [name, ids] of byCollection) {
+    const collection = syncCollection(name)!;
+    const entries = await collection.read(env, (id) => ids.has(id));
+    for (const id of ids) {
+      const entry = entries.get(id);
+      if (entry?.body !== undefined)
+        await project(collection, entry, undefined, payloads);
+    }
+  }
+  for (const [recordId, record] of missing)
+    if (
+      !payloads.has(record.blob!) &&
+      state.pending[recordId]?.clock === record.clock &&
+      record.blob !== state.synced[recordId]?.blob
+    )
+      pushes.delete(recordId);
 }
 
 // Remove the dirty keys this round compared, unless they changed again

@@ -347,3 +347,20 @@ test("replaced blobs are collected a day later, orphans on the weekly sweep", as
   assert.equal(server.blobs.has(first[0]), false);
   assert.deepEqual((await decodeRoot(server.root!)).garbage, []);
 });
+
+test("a blob upload that failed is sent with the next round, before the root", async () => {
+  const { a, b, transport, server } = setup();
+  const put = transport.putBlob;
+  transport.putBlob = async () => {
+    throw new TypeError("fetch failed");
+  };
+  await addChat(a, "c1", [["m1", 1]]);
+  await assert.rejects(a.sync("edit"));
+  transport.putBlob = put;
+  await a.sync("poll");
+  const root = await decodeRoot(server.root!);
+  assert.ok(server.blobs.has(root.records["chats/c1"].blob!));
+  await b.sync();
+  await b.env.local.set({ [`${CHATS}/c1`]: undefined });
+  assert.ok(await transport.getBlob(root.records["chats/c1"].blob!));
+});

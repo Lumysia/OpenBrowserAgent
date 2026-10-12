@@ -61,20 +61,22 @@ export function createWebDavTransport(
     );
   }
 
-  // Folders are created on the first 404/409; a parallel MKCOL of the same
-  // folder can fail (WsgiDAV answers 500), so creations are shared.
+  // Folders are created on the first 404/409, deepest first: a missing
+  // parent (409) is created before trying again. A parallel MKCOL of the
+  // same folder can fail (WsgiDAV answers 500), so creations are shared.
   const creating = new Map<string, Promise<void>>();
-  function ensureFolder(path: string) {
+  function ensureFolder(path: string): Promise<void> {
     let pending = creating.get(path);
     if (!pending) {
       pending = (async () => {
-        let current = "";
-        for (const part of path.split("/").filter(Boolean)) {
-          current += `${part}/`;
-          const response = await request(current, { method: "MKCOL" });
-          if (!response.ok && response.status !== 405)
-            await fail(response, "create folder");
+        let response = await request(path, { method: "MKCOL" });
+        const parent = path.replace(/[^/]+\/$/, "");
+        if (response.status === 409 && parent) {
+          await ensureFolder(parent);
+          response = await request(path, { method: "MKCOL" });
         }
+        if (!response.ok && response.status !== 405)
+          await fail(response, "create folder");
       })().finally(() => creating.delete(path));
       creating.set(path, pending);
     }
@@ -89,9 +91,14 @@ export function createWebDavTransport(
         body: toArrayBuffer(bytes),
       });
     let response = await send();
-    if (
+    // The folder is missing, or was removed meanwhile (a cloud clear on
+    // another device): create it and try again, twice at most.
+    for (
+      let attempt = 0;
+      attempt < 2 &&
       (response.status === 404 || response.status === 409) &&
-      path.includes("/")
+      path.includes("/");
+      attempt++
     ) {
       await ensureFolder(path.slice(0, path.lastIndexOf("/") + 1));
       response = await send();
@@ -182,11 +189,21 @@ export function createWebDavTransport(
     // Connection test plus what writes rely on: strong ETags and a refused
     // stale If-Match. Leaves nothing behind.
     async check() {
-      const listing = await request("", {
+      let listing = await request("", {
         method: "PROPFIND",
         headers: { Depth: "0" },
       });
+      // A folder that does not exist yet is created (its parent must exist).
+      if (listing.status === 404) {
+        const created = await request("", { method: "MKCOL" });
+        if (!created.ok) await fail(created, "create folder");
+        listing = await request("", {
+          method: "PROPFIND",
+          headers: { Depth: "0" },
+        });
+      }
       if (!listing.ok) await fail(listing, "connect");
+      await listing.arrayBuffer().catch(() => undefined);
       const probe = new TextEncoder().encode(String(Date.now()));
       const created = await request(PROBE_NAME, {
         method: "PUT",

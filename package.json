@@ -21,6 +21,7 @@
     "zip": "node scripts/zip-with-hash.mjs",
     "compile": "tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.ts",
+    "test:sync:webdav": "node --import tsx tests/sync-two-devices.ts",
     "test:browser": "node tests/browser-smoke.mjs",
     "test:browser:pi": "node tests/browser-pi.mjs",
     "test:browser:tools": "node --test tests/browser-tools.test.mjs tests/browser-input.test.mjs tests/browser-agent-tabs.test.mjs tests/browser-serp.test.mjs",

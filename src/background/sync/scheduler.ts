@@ -109,12 +109,18 @@ export function setupSync() {
   }
 
   async function visiblePages() {
+    // A background page (Firefox, Safari) sees the pages themselves.
+    const views = api.extension?.getViews?.();
+    if (views && !api.runtime.getContexts)
+      return views.filter((view) => view.document.visibilityState === "visible")
+        .length;
     const pages = ((await session.get(PAGES_KEY))[PAGES_KEY] ??
       {}) as PageStates;
-    const getContexts = api.runtime.getContexts;
-    if (getContexts) {
+    if (api.runtime.getContexts) {
       const alive = new Set(
-        (await getContexts({})).map((context) => context.documentId),
+        (await api.runtime.getContexts({})).map(
+          (context) => context.documentId,
+        ),
       );
       for (const id of Object.keys(pages)) if (!alive.has(id)) delete pages[id];
       await session.set({ [PAGES_KEY]: pages });
