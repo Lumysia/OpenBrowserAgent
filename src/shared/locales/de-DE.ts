@@ -175,6 +175,12 @@ export const deDE: LocaleMessages = {
     openMermaidPreview: "Mermaid-Vorschau öffnen",
     downloadMermaidSvg: "SVG herunterladen",
     downloadMermaidPng: "PNG herunterladen",
+    loadImage: "Bild laden",
+    openImage: "Bild öffnen",
+    remoteImageNotLoaded:
+      "Dieses Bild stammt von einer anderen Website. Es wird erst geladen, wenn Sie es auswählen.",
+    footnotes: "Fußnoten",
+    footnoteBackReference: "Zurück zu Verweis {label}",
     downloadGeneratedImage: "Bild herunterladen",
     downloadCapturedTabImage: "Screenshot herunterladen",
     copyImage: "Bild kopieren",

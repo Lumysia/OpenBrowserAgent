@@ -175,6 +175,12 @@ export const ptBR: LocaleMessages = {
     openMermaidPreview: "Abrir prévia Mermaid",
     downloadMermaidSvg: "Baixar SVG",
     downloadMermaidPng: "Baixar PNG",
+    loadImage: "Carregar imagem",
+    openImage: "Abrir imagem",
+    remoteImageNotLoaded:
+      "Esta imagem vem de outro site. Ela só é carregada quando você escolher.",
+    footnotes: "Notas de rodapé",
+    footnoteBackReference: "Voltar à referência {label}",
     downloadGeneratedImage: "Baixar imagem",
     downloadCapturedTabImage: "Baixar captura de tela",
     copyImage: "Copiar imagem",

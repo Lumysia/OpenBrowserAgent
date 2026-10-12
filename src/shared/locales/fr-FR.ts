@@ -176,6 +176,12 @@ export const frFR: LocaleMessages = {
     openMermaidPreview: "Ouvrir l’aperçu Mermaid",
     downloadMermaidSvg: "Télécharger le SVG",
     downloadMermaidPng: "Télécharger le PNG",
+    loadImage: "Charger l’image",
+    openImage: "Ouvrir l’image",
+    remoteImageNotLoaded:
+      "Cette image provient d’un autre site. Elle ne se charge que si vous le choisissez.",
+    footnotes: "Notes de bas de page",
+    footnoteBackReference: "Revenir à la référence {label}",
     downloadGeneratedImage: "Télécharger l’image",
     downloadCapturedTabImage: "Télécharger la capture d’écran",
     copyImage: "Copier l’image",

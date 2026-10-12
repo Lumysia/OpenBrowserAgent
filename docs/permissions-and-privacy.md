@@ -28,7 +28,7 @@ Chromium and Firefox additionally declare:
 
 Firefox and Safari omit the Chrome-only `tabGroups`, `sidePanel` and `debugger` permissions. Firefox uses `sidebar_action` for its sidebar. Safari also omits `search` and `nativeMessaging`; its action opens or focuses `sidepanel.html` as an extension tab.
 
-The extension page CSP allows images from `self`, `data:`, `blob:`, `http:`, and `https:` so rendered Markdown images, generated images, and Mermaid previews can display.
+The extension page CSP allows images from `self`, `data:`, `blob:`, `http:`, and `https:` so rendered Markdown images, generated images, and Mermaid previews can display. Images that an answer links from other sites do not load on their own: the answer shows a placeholder, and the image is fetched only after the user chooses Load image (or opens it in a tab). A prompt-injected page therefore cannot leak data through an image URL. Images the extension made itself (`data:` and `blob:` URLs) still show directly.
 
 ## Firefox Data Collection Declaration
 
@@ -65,6 +65,7 @@ OpenBrowserAgent sends data to endpoints configured by the user in Providers and
 - MCP Streamable HTTP server URLs configured by the user.
 - Assistant link preview fetches with `credentials: "omit"`.
 - Mermaid preview image URLs through `mermaid.ink` and links to `mermaid.live`.
+- Image URLs from an answer, only after the user chooses to load them.
 - Page image/file download URLs when a download tool is used.
 - WebDAV URLs configured as a sync backend, including attachment uploads when attachment sync is enabled.
 
