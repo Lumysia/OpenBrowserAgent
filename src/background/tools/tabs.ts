@@ -25,6 +25,16 @@ import {
 } from "./types";
 
 const SEARCH_RESULT_LIMIT = 8;
+const SEARCH_RESULT_POLL_MS = 300;
+
+function isLoadedPage(tab: chrome.tabs.Tab) {
+  return (
+    isScriptableUrl(tab.url) &&
+    tab.url !== "about:blank" &&
+    !tab.pendingUrl &&
+    tab.status === "complete"
+  );
+}
 
 // Resolves once the tab finished loading (or after the load timeout).
 export async function waitTabComplete(tabId: number, signal?: AbortSignal) {
@@ -313,21 +323,26 @@ export const webSearchTool: ToolDefinition = {
     let keep = false;
     try {
       await api.search.query({ text: query, tabId });
-      // search.query returns before navigation starts.
+      // search.query returns before navigation starts, and engines that
+      // render results with script fill them in after the page loads.
       const end = Date.now() + TAB_LOAD_WAIT_TIMEOUT_MS;
       let tab = await api.tabs.get(tabId);
-      while (
-        (!isScriptableUrl(tab.url) ||
-          tab.url === "about:blank" ||
-          tab.status !== "complete") &&
-        Date.now() < end
-      ) {
+      while (!isLoadedPage(tab) && Date.now() < end) {
         await delay(150, signal);
         tab = await api.tabs.get(tabId);
       }
-      const { value: results } = await callPage<
-        Array<{ title: string; url: string; snippet: string }>
-      >(tabId, "searchResults", { limit: SEARCH_RESULT_LIMIT }, signal);
+      const read = async () =>
+        (
+          await callPage<
+            Array<{ title: string; url: string; snippet: string }>
+          >(tabId, "searchResults", { limit: SEARCH_RESULT_LIMIT }, signal)
+        ).value;
+      let results = await read();
+      while (!results.length && Date.now() < end) {
+        await delay(SEARCH_RESULT_POLL_MS, signal);
+        results = await read();
+      }
+      tab = await api.tabs.get(tabId);
       if (!results.length) {
         keep = true;
         await adoptAgentTab(run, tab);

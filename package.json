@@ -23,7 +23,7 @@
     "test": "node --import tsx --test tests/*.test.ts",
     "test:browser": "node tests/browser-smoke.mjs",
     "test:browser:pi": "node tests/browser-pi.mjs",
-    "test:browser:tools": "node --test tests/browser-tools.test.mjs tests/browser-input.test.mjs tests/browser-agent-tabs.test.mjs",
+    "test:browser:tools": "node --test tests/browser-tools.test.mjs tests/browser-input.test.mjs tests/browser-agent-tabs.test.mjs tests/browser-serp.test.mjs",
     "test:browser:all": "node --test tests/browser-*.test.mjs && node tests/browser-smoke.mjs && node tests/browser-pi.mjs",
     "eval": "node --import tsx eval/run.mjs"
   },

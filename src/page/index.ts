@@ -10,7 +10,8 @@ import {
 import { runEdits, type EditOp } from "./edits";
 import { pageMarkdown } from "./markdown";
 import { raiseFloor, refCounter, resolveRef, RefError } from "./refs";
-import { findLines, searchResults } from "./search";
+import { findLines } from "./search";
+import { searchResults } from "./search-results";
 import { renderLines, snapshotLines } from "./snapshot";
 
 // The in-page side of the page tools, installed once per document in the

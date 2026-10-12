@@ -29,7 +29,8 @@ const ALL_GROUPS = [
 // Runs the production extension's Pi loop against an entirely local provider.
 // Tests supply tool calls, never import/inject a replacement tool implementation.
 // `respond(body, index)` may replace the step list to route by request content.
-export async function browserToolFixture(handleRequest) {
+// `launch` holds extra launchExtension options, such as browser preferences.
+export async function browserToolFixture(handleRequest, launch = {}) {
   let steps = [];
   let respond;
   let calls = 0;
@@ -61,6 +62,7 @@ export async function browserToolFixture(handleRequest) {
   try {
     browser = await launchExtension({
       headed: process.env.OBA_HEADLESS !== "1",
+      ...launch,
     });
     await browser.browser.send("Browser.setDownloadBehavior", {
       behavior: "allow",

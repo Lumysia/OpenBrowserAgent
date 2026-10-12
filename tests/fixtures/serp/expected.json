@@ -1,0 +1,627 @@
+{
+  "baidu-1": {
+    "url": "https://www.baidu.com/s?wd=rust+borrow+checker",
+    "results": [
+      {
+        "title": "The borrow checker - Rust Compiler Development Guide",
+        "url": "https://rustc-dev-guide.rust-lang.org/borrow_check.html"
+      },
+      {
+        "title": "Rust 借用检查器(Borrow Checker)全景剖析_rust borrow checker-CSDN博客",
+        "url": "https://blog.csdn.net/2303_80636300/article/details/154129997"
+      },
+      {
+        "title": "你真得懂 Rust 借用检查吗?一文聊透 Borrow Checker 底层逻辑:权限模型_rust 所有权系统和借用检查器-CSDN博客",
+        "url": "https://laurence.blog.csdn.net/article/details/161653647"
+      },
+      {
+        "title": "揭秘Rust 的“守护神”:借用检查器 (Borrow Checker) 工作原理解析_rust预演-CSDN博客",
+        "url": "https://blog.csdn.net/2401_89799096/article/details/154120841"
+      },
+      {
+        "title": "Tracking moves and initialization - Rust Compiler Development Guide",
+        "url": "https://rustc-dev-guide.rust-lang.org/borrow_check/moves_and_initialization.html"
+      }
+    ]
+  },
+  "baidu-2": {
+    "url": "https://www.baidu.com/s?wd=rust+%E5%80%9F%E7%94%A8%E6%A3%80%E6%9F%A5%E5%99%A8",
+    "results": [
+      {
+        "title": "第15 条:理解借用检查器 - Effective Rust 中文版",
+        "url": "https://colobu.com/effective-rust/chapter_3/item15-borrows.html"
+      },
+      {
+        "title": "【Rust】12-借用检查器与非词法生命周期-CSDN博客",
+        "url": "https://lishizheng.blog.csdn.net/article/details/161894256"
+      },
+      {
+        "title": "Rust 借用检查器(Borrow Checker)全景剖析_rust borrow checker-CSDN博 ...",
+        "url": "https://blog.csdn.net/2303_80636300/article/details/154129997"
+      },
+      {
+        "title": "生命周期 - Rust By Example",
+        "url": "https://doc.rust-lang.org/rust-by-example/zh/scope/lifetime.html"
+      },
+      {
+        "title": "Rust借用检查器实战:从E0502到Arc<Mutex>的突围策略-CSDN博客",
+        "url": "https://blog.csdn.net/weixin_29209801/article/details/166277229"
+      }
+    ]
+  },
+  "baidu-3": {
+    "url": "https://www.baidu.com/s?wd=best+hiking+boots+2026",
+    "results": [
+      {
+        "title": "Top Hiking Boots for Every Adventure | Ultimate Guide...",
+        "url": "https://www.hiking-boots.net/"
+      },
+      {
+        "title": "The 14 Best Hiking Boots of 2026: Tested | REI Expert Advice",
+        "url": "https://www.rei.com/learn/expert-advice/the-best-hiking-boots.html"
+      },
+      {
+        "title": "The Best Men’s Hiking Shoes and Boots (2026)",
+        "url": "https://www.backpacker.com/gear/footwear/hiking-boots/best-hiking-shoes/"
+      },
+      {
+        "title": "7 Best Gore-Tex Hiking Boots in 2026 | RunRepeat",
+        "url": "https://runrepeat.com/guides/best-gore-tex-hiking-boots"
+      },
+      {
+        "title": "Home - outdoortrekker.com",
+        "url": "https://outdoortrekker.com/"
+      }
+    ]
+  },
+  "bing-1": {
+    "url": "https://www.bing.com/search?q=rust+borrow+checker&rdr=1&rdrig=63731B5EB34245F699B4D42FA05748B8",
+    "results": [
+      {
+        "title": "Rust - Explore, Build and Survive",
+        "url": "https://rust.facepunch.com/"
+      },
+      {
+        "title": "Rust Programming Language",
+        "url": "https://rust-lang.org/"
+      },
+      {
+        "title": "Rust on Steam",
+        "url": "https://store.steampowered.com/app/252490/Rust/"
+      },
+      {
+        "title": "Install Rust - Rust Programming Language",
+        "url": "https://rust-lang.org/tools/install/"
+      },
+      {
+        "title": "Rust (programming language) - Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Rust_(programming_language)"
+      }
+    ]
+  },
+  "bing-2": {
+    "url": "https://www.bing.com/search?q=mini+hidden+camera+amazon.ca&rdr=1&rdrig=0B6B556408754A3BA45531F6FC529804",
+    "results": [
+      {
+        "title": "Official Homepage | MINI Canada",
+        "url": "https://mini.ca/"
+      },
+      {
+        "title": "MINI New Inventory Search | MINI Canada",
+        "url": "https://mini.ca/en/shopping/mini-next/list"
+      },
+      {
+        "title": "Mini - Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Mini"
+      },
+      {
+        "title": "Mini Ottawa | MINI Dealership in Ottawa",
+        "url": "https://www.miniottawa.com/"
+      },
+      {
+        "title": "Official Homepage | mini.com",
+        "url": "https://www.mini.com/en_MS/home.html"
+      }
+    ]
+  },
+  "bing-3": {
+    "url": "https://www.bing.com/search?q=best+hiking+boots+2026&rdr=1&rdrig=1DDE0F4D4D724AC0B028C79698940A12",
+    "results": [
+      {
+        "title": "Best Buy | Official Online Store | Shop Now & Save",
+        "url": "https://www.bestbuy.com/"
+      },
+      {
+        "title": "Best Buy: Shop Online For Deals & Save | Best Buy Canada",
+        "url": "https://www.bestbuy.ca/en-ca"
+      },
+      {
+        "title": "BEST Definition & Meaning - Merriam-Webster",
+        "url": "https://www.merriam-webster.com/dictionary/best"
+      },
+      {
+        "title": "BEST | English meaning - Cambridge Dictionary",
+        "url": "https://dictionary.cambridge.org/dictionary/english/best"
+      },
+      {
+        "title": "Computers & Tablets - Best Buy",
+        "url": "https://www.bestbuy.com/site/electronics/computers-pcs/abcat0500000.c?id=abcat0500000%2F"
+      }
+    ]
+  },
+  "brave-1": {
+    "url": "https://search.brave.com/search?q=site%3Aamazon.ca+mini+hidden+camera&source=desktop",
+    "results": [
+      {
+        "title": "Amazon.ca: Mini Spy Camera",
+        "url": "https://www.amazon.ca/mini-spy-camera/s?k=mini+spy+camera"
+      },
+      {
+        "title": "Mini Hidden Camera 1080P Full HD Hidden Camera - Portable Small Nanny Cam with Night Vision - Covert Security Camera for Home/Office/Indoor/Outdoor : Amazon.ca: Electronics",
+        "url": "https://www.amazon.ca/Mini-Hidden-Camera-1080P-Full/dp/B0HGRXB95R"
+      },
+      {
+        "title": "Amazon.ca: Hidden Cameras: Electronics",
+        "url": "https://www.amazon.ca/Hidden-Cameras/b?ie=UTF8&node=3322622011"
+      },
+      {
+        "title": "VIDCASTIVE 4K Mini Hidden Camera Dual-Band 2.4/5GHz WiFi Indoor Security Camera with AI Human Detection, Night Vision, Cloud/SD Storage, Up to 150 Days Standby Battery Life : Amazon.ca: Electronics",
+        "url": "https://www.amazon.ca/VIDCASTIVE-Dual-Band-Security-Detection-Storage/dp/B0FDBCSPPW"
+      },
+      {
+        "title": "Mini Hidden Camera WiFi Spy Camera HD 1080P Small DIY Module Nanny Cam for Home Indoor Outdoor Security : Amazon.ca: Electronics",
+        "url": "https://www.amazon.ca/Hidden-Camera-Module-Office-Security/dp/B0CW68FPQ9"
+      }
+    ]
+  },
+  "brave-2": {
+    "url": "https://search.brave.com/search?q=rust+borrow+checker&source=desktop&conversation=09ace0e7953e80ee11c76141ac47ae0af58b",
+    "results": [
+      {
+        "title": "Understanding the Rust borrow checker - LogRocket Blog",
+        "url": "https://blog.logrocket.com/introducing-rust-borrow-checker/"
+      },
+      {
+        "title": "The Rust Borrow Checker - a Deep Dive - InfoQ",
+        "url": "https://www.infoq.com/presentations/rust-borrow-checker/"
+      },
+      {
+        "title": "The borrow checker - Rust Compiler Development Guide",
+        "url": "https://rustc-dev-guide.rust-lang.org/borrow-check.html"
+      },
+      {
+        "title": "r/rust on Reddit: Is the Rust Borrow Checker Really That Challenging?",
+        "url": "https://www.reddit.com/r/rust/comments/15lr1do/is_the_rust_borrow_checker_really_that_challenging/"
+      },
+      {
+        "title": "Borrowing - Rust By Example",
+        "url": "https://doc.rust-lang.org/rust-by-example/scope/borrow.html"
+      }
+    ]
+  },
+  "brave-3": {
+    "url": "https://search.brave.com/search?q=best+hiking+boots+2026&source=desktop&conversation=09ac0d387a99bb022f1319f897595b3be5ed",
+    "results": [
+      {
+        "title": "Best Hiking Boots of 2026 | Better Trail",
+        "url": "https://bettertrail.com/outdoor-gear/best-hiking-boots"
+      },
+      {
+        "title": "10 Best Hiking Boots of 2026 | Tested & Ranked",
+        "url": "https://www.outdoorgearlab.com/topics/shoes-and-boots/best-hiking-boots"
+      },
+      {
+        "title": "Best hiking boots 2026: The pairs that stood out in testing",
+        "url": "https://trailandkale.com/best-hiking-boots-buyers-guide/"
+      },
+      {
+        "title": "The 14 Best Hiking Boots of 2026: Tested | REI Expert Advice",
+        "url": "https://www.rei.com/learn/expert-advice/the-best-hiking-boots.html"
+      },
+      {
+        "title": "Best Hiking Boots for 2026: How to Choose - www.hikingfeet.com",
+        "url": "https://hikingfeet.com/best-hiking-boots/"
+      }
+    ]
+  },
+  "ddg-1": {
+    "url": "https://duckduckgo.com/?q=rust+borrow+checker&ia=web",
+    "results": [
+      {
+        "title": "Understanding the Rust borrow checker - LogRocket Blog",
+        "url": "https://blog.logrocket.com/introducing-rust-borrow-checker/"
+      },
+      {
+        "title": "The borrow checker - Rust Compiler Development Guide",
+        "url": "https://rustc-dev-guide.rust-lang.org/borrow-check.html"
+      },
+      {
+        "title": "Borrowing - Rust By Example",
+        "url": "https://doc.rust-lang.org/beta/rust-by-example/scope/borrow.html"
+      },
+      {
+        "title": "GitHub - rust-lang/polonius: Defines the Rust borrow checker.",
+        "url": "https://github.com/rust-lang/polonius"
+      },
+      {
+        "title": "References and Borrowing - The Rust Programming Language",
+        "url": "https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html"
+      }
+    ]
+  },
+  "ddg-2": {
+    "url": "https://duckduckgo.com/?q=mini+hidden+camera+amazon.ca&ia=web",
+    "results": [
+      {
+        "title": "Amazon.ca: Mini Camera",
+        "url": "https://www.amazon.ca/mini-camera/s?k=mini+camera"
+      },
+      {
+        "title": "Amazon.ca: Camera Mini",
+        "url": "https://www.amazon.ca/camera-mini/s?k=camera+mini"
+      },
+      {
+        "title": "Amazon.ca: Mini Spy Camera",
+        "url": "https://www.amazon.ca/mini-spy-camera/s?k=mini+spy+camera"
+      },
+      {
+        "title": "Amazon.ca: Hidden Security Cameras",
+        "url": "https://www.amazon.ca/hidden-security-cameras/s?k=hidden+security+cameras"
+      },
+      {
+        "title": "Amazon.ca: Hidden Spy Cameras",
+        "url": "https://www.amazon.ca/hidden-spy-cameras/s?k=hidden+spy+cameras"
+      }
+    ]
+  },
+  "ddg-3": {
+    "url": "https://duckduckgo.com/?q=best+hiking+boots+2026&ia=web",
+    "results": [
+      {
+        "title": "10 Best Hiking Boots of 2026 | Tested & Ranked - GearLab",
+        "url": "https://www.outdoorgearlab.com/topics/shoes-and-boots/best-hiking-boots"
+      },
+      {
+        "title": "The 14 Best Hiking Boots of 2026: Tested | REI Expert Advice",
+        "url": "https://www.rei.com/learn/expert-advice/the-best-hiking-boots.html"
+      },
+      {
+        "title": "Best Hiking Boots of 2026 (Top Picks & Reviews) - Outdoor Shell",
+        "url": "https://outdoorshell.com/best-hiking-boots/"
+      },
+      {
+        "title": "The Best Hiking Boots of 2026 - GearJunkie",
+        "url": "https://gearjunkie.com/footwear/boots/best-hiking-boots"
+      },
+      {
+        "title": "Best Hiking Boots of 2026 - Better Trail",
+        "url": "https://bettertrail.com/outdoor-gear/best-hiking-boots"
+      }
+    ]
+  },
+  "ecosia-1": {
+    "url": "https://www.ecosia.org/search?q=rust+borrow+checker",
+    "results": [
+      {
+        "title": "The Borrow Checker: Rust's Tough-Love Mentor",
+        "url": "https://woodruff.dev/blog/the-borrow-checker-rusts-tough-love-mentor/"
+      },
+      {
+        "title": "Is the Rust Borrow Checker Really That Challenging?",
+        "url": "https://www.reddit.com/r/rust/comments/15lr1do/is_the_rust_borrow_checker_really_that_challenging/"
+      },
+      {
+        "title": "The borrow checker - Rust Compiler Development Guide",
+        "url": "https://rustc-dev-guide.rust-lang.org/borrow-check.html"
+      },
+      {
+        "title": "Understanding the Rust borrow checker",
+        "url": "https://blog.logrocket.com/introducing-rust-borrow-checker/"
+      },
+      {
+        "title": "Four limitations of Rust's borrow checker",
+        "url": "https://news.ycombinator.com/item?id=42485536"
+      }
+    ]
+  },
+  "ecosia-2": {
+    "url": "https://www.ecosia.org/search?q=mini+hidden+camera+amazon.ca",
+    "results": [
+      {
+        "title": "Mini Spy Camera - Amazon.ca",
+        "url": "https://www.amazon.ca/mini-spy-camera/s?k=mini+spy+camera"
+      },
+      {
+        "title": "Hidden Cameras: Electronics - Amazon.ca",
+        "url": "https://www.amazon.ca/Hidden-Cameras/b?ie=UTF8&node=3322622011"
+      },
+      {
+        "title": "Spy Camera - Amazon.ca",
+        "url": "https://www.amazon.ca/spy-camera/s?k=spy+camera"
+      },
+      {
+        "title": "Mini Camera - Amazon.ca",
+        "url": "https://www.amazon.ca/mini-camera/s?k=mini+camera"
+      },
+      {
+        "title": "Small Spy Camera - Amazon.ca",
+        "url": "https://www.amazon.ca/small-spy-camera/s?k=small+spy+camera"
+      }
+    ]
+  },
+  "ecosia-3": {
+    "url": "https://www.ecosia.org/search?q=best+hiking+boots+2026",
+    "results": [
+      {
+        "title": "10 Best Hiking Boots of 2026 - Outdoor Gear Lab",
+        "url": "https://www.outdoorgearlab.com/topics/shoes-and-boots/best-hiking-boots"
+      },
+      {
+        "title": "Best Backpacking Boots of 2026 - www.hikingfeet.com",
+        "url": "https://hikingfeet.com/best-backpacking-boots/"
+      },
+      {
+        "title": "Best Hiking Boots of 2026 - Better Trail",
+        "url": "https://bettertrail.com/outdoor-gear/best-hiking-boots"
+      },
+      {
+        "title": "Best Hiking Boots of 2026 | Switchback Tested",
+        "url": "https://www.switchbacktravel.com/footwear/best-hiking-boots"
+      },
+      {
+        "title": "7 Best Lightweight Waterproof Hiking Boots in 2026",
+        "url": "https://runrepeat.com/guides/best-lightweight-waterproof-hiking-boots"
+      }
+    ]
+  },
+  "searxng-1": {
+    "url": "https://search.inetol.net/search?q=rust+borrow+checker",
+    "results": [
+      {
+        "title": "Rust - Explore, Build and Survive",
+        "url": "https://rust.facepunch.com/"
+      },
+      {
+        "title": "Understanding the Rust borrow checker - LogRocket Blog",
+        "url": "https://blog.logrocket.com/introducing-rust-borrow-checker/"
+      },
+      {
+        "title": "Rust Programming Language",
+        "url": "https://rust-lang.org/"
+      },
+      {
+        "title": "The borrow checker - Rust Compiler Development Guide",
+        "url": "https://rustc-dev-guide.rust-lang.org/borrow-check.html"
+      },
+      {
+        "title": "Rust on Steam",
+        "url": "https://store.steampowered.com/app/252490/Rust/"
+      }
+    ]
+  },
+  "searxng-2": {
+    "url": "https://search.inetol.net/search?q=mini+hidden+camera+amazon.ca",
+    "results": [
+      {
+        "title": "MINI España | Web Oficial",
+        "url": "https://www.mini.es/es_ES/home.html"
+      },
+      {
+        "title": "Amazon.ca: Camera Mini",
+        "url": "https://www.amazon.ca/camera-mini/s?k=camera+mini"
+      },
+      {
+        "title": "La gama de modelos MINI | MINI ES",
+        "url": "https://www.mini.es/es_ES/home/range.html"
+      },
+      {
+        "title": "Amazon.ca: Mini Camera",
+        "url": "https://www.amazon.ca/mini-camera/s?k=mini+camera"
+      },
+      {
+        "title": "Coches MINI de segunda mano | coches.net",
+        "url": "https://www.coches.net/mini/segunda-mano/?msockid=1c62e6049c906b7c3a0ff1f49d156ae0"
+      }
+    ]
+  },
+  "searxng-3": {
+    "url": "https://search.inetol.net/search?q=best+hiking+boots+2026",
+    "results": [
+      {
+        "title": "Best Hotels | Web Oficial | Mejor Precio Online Garantizado",
+        "url": "https://www.besthotels.es/"
+      },
+      {
+        "title": "10 Best Hiking Boots of 2026 | Tested & Ranked - GearLab",
+        "url": "https://www.outdoorgearlab.com/topics/shoes-and-boots/best-hiking-boots"
+      },
+      {
+        "title": "www.best.es",
+        "url": "http://www.best.es/inicio"
+      },
+      {
+        "title": "The 14 Best Hiking Boots of 2026: Tested | REI Expert Advice",
+        "url": "https://www.rei.com/learn/expert-advice/the-best-hiking-boots.html"
+      },
+      {
+        "title": "Best Hotels | Official Website | Best Online Price Guaranteed",
+        "url": "https://www.besthotels.es/en/"
+      }
+    ]
+  },
+  "startpage-1": {
+    "url": "https://www.startpage.com/do/search?q=rust+borrow+checker",
+    "results": [
+      {
+        "title": "The Borrow Checker: Rust's Tough-Love Mentor",
+        "url": "https://woodruff.dev/blog/the-borrow-checker-rusts-tough-love-mentor/"
+      },
+      {
+        "title": "What do you guys do about the borrow checker? : r/rust_gamedev",
+        "url": "https://www.reddit.com/r/rust_gamedev/comments/1j0pb1p/what_do_you_guys_do_about_the_borrow_checker/"
+      },
+      {
+        "title": "The borrow checker - Rust Compiler Development Guide",
+        "url": "https://rustc-dev-guide.rust-lang.org/borrow-check.html"
+      },
+      {
+        "title": "Understanding the Rust borrow checker - LogRocket Blog",
+        "url": "https://blog.logrocket.com/introducing-rust-borrow-checker/"
+      },
+      {
+        "title": "Rust's new borrow checker is coming! - YouTube",
+        "url": "https://www.youtube.com/watch?v=kD0w3YQxV6E"
+      }
+    ]
+  },
+  "startpage-2": {
+    "url": "https://www.startpage.com/do/search?q=mini+hidden+camera+amazon.ca",
+    "results": [
+      {
+        "title": "Mini Spy Camera - Amazon.ca",
+        "url": "https://www.amazon.ca/mini-spy-camera/s?k=mini+spy+camera"
+      },
+      {
+        "title": "Hidden Cameras: Electronics - Amazon.ca",
+        "url": "https://www.amazon.ca/Hidden-Cameras/b?ie=UTF8&node=3322622011"
+      },
+      {
+        "title": "Spy Camera - Amazon.ca",
+        "url": "https://www.amazon.ca/spy-camera/s?k=spy+camera"
+      },
+      {
+        "title": "Mini Camera - Amazon.ca",
+        "url": "https://www.amazon.ca/mini-camera/s?k=mini+camera"
+      },
+      {
+        "title": "Small Spy Camera - Amazon.ca",
+        "url": "https://www.amazon.ca/small-spy-camera/s?k=small+spy+camera"
+      }
+    ]
+  },
+  "startpage-3": {
+    "url": "https://www.startpage.com/do/search?q=best+hiking+boots+2026",
+    "results": [
+      {
+        "title": "10 Best Hiking Boots of 2026 | Tested & Ranked - Outdoor Gear Lab",
+        "url": "https://www.outdoorgearlab.com/topics/shoes-and-boots/best-hiking-boots"
+      },
+      {
+        "title": "Best Backpacking Boots of 2026 - www.hikingfeet.com",
+        "url": "https://hikingfeet.com/best-backpacking-boots/"
+      },
+      {
+        "title": "Best Hiking Boots of 2026 - Better Trail",
+        "url": "https://bettertrail.com/outdoor-gear/best-hiking-boots"
+      },
+      {
+        "title": "Best Hiking Boots of 2026 | Switchback Tested",
+        "url": "https://www.switchbacktravel.com/footwear/best-hiking-boots"
+      },
+      {
+        "title": "7 Best Lightweight Waterproof Hiking Boots in 2026 - RunRepeat",
+        "url": "https://runrepeat.com/guides/best-lightweight-waterproof-hiking-boots"
+      }
+    ]
+  },
+  "yahoo-1": {
+    "url": "https://search.yahoo.com/search?p=rust+borrow+checker",
+    "results": [
+      {
+        "title": "Understanding the Rust borrow checker - LogRocket Blog",
+        "url": "https://blog.logrocket.com/introducing-rust-borrow-checker/"
+      },
+      {
+        "title": "The borrow checker - Rust Compiler Development Guide",
+        "url": "https://rustc-dev-guide.rust-lang.org/borrow-check.html"
+      },
+      {
+        "title": "Borrowing - Rust By Example",
+        "url": "https://doc.rust-lang.org/beta/rust-by-example/scope/borrow.html"
+      },
+      {
+        "title": "References and Borrowing - The Rust Programming Language",
+        "url": "https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html"
+      },
+      {
+        "title": "The next-gen borrow checker, a drop-in replacement for Rust ...",
+        "url": "https://gist.github.com/FlameyosSnowy/a49a35ba006238be55d8c3e410c31061"
+      }
+    ]
+  },
+  "yahoo-2": {
+    "url": "https://search.yahoo.com/search?p=mini+hidden+camera+amazon.ca",
+    "results": [
+      {
+        "title": "Amazon.ca: Camera Mini",
+        "url": "https://www.amazon.ca/camera-mini/s?k=camera+mini"
+      },
+      {
+        "title": "Amazon.ca: Mini Camera",
+        "url": "https://www.amazon.ca/mini-camera/s?k=mini+camera"
+      },
+      {
+        "title": "Amazon.ca: Hidden Security Cameras",
+        "url": "https://www.amazon.ca/hidden-security-cameras/s?k=hidden+security+cameras"
+      },
+      {
+        "title": "Amazon.ca: Mini Spy Camera",
+        "url": "https://www.amazon.ca/mini-spy-camera/s?k=mini+spy+camera"
+      },
+      {
+        "title": "Amazon.ca: Mini Spy Camera Wireless",
+        "url": "https://www.amazon.ca/mini-spy-camera-wireless/s?k=mini+spy+camera+wireless"
+      }
+    ]
+  },
+  "yahoo-3": {
+    "url": "https://search.yahoo.com/search?p=best+hiking+boots+2026",
+    "results": [
+      {
+        "title": "10 Best Hiking Boots of 2026 | Tested & Ranked - GearLab",
+        "url": "https://www.outdoorgearlab.com/topics/shoes-and-boots/best-hiking-boots"
+      },
+      {
+        "title": "The 14 Best Hiking Boots of 2026: Tested | REI Expert Advice",
+        "url": "https://www.rei.com/learn/expert-advice/the-best-hiking-boots.html"
+      },
+      {
+        "title": "Best Hiking Boots of 2026 (Top Picks & Reviews) - Outdoor Shell",
+        "url": "https://outdoorshell.com/best-hiking-boots/"
+      },
+      {
+        "title": "The Best Hiking Boots of 2026 - GearJunkie",
+        "url": "https://gearjunkie.com/footwear/boots/best-hiking-boots"
+      },
+      {
+        "title": "Best Hiking Boots of 2026 - Better Trail",
+        "url": "https://bettertrail.com/outdoor-gear/best-hiking-boots"
+      }
+    ]
+  },
+  "yahoo-4": {
+    "url": "https://search.yahoo.com/search?p=site%3Aamazon.ca+mini+hidden+camera",
+    "results": [
+      {
+        "title": "Amazon.ca: Mini Camera",
+        "url": "https://www.amazon.ca/mini-camera/s?k=mini+camera"
+      },
+      {
+        "title": "Amazon.ca: Mini Spy Camera",
+        "url": "https://www.amazon.ca/mini-spy-camera/s?k=mini+spy+camera"
+      },
+      {
+        "title": "Amazon.ca Best Sellers: The most popular items in Camera & Photo",
+        "url": "https://www.cdn.amazon.ca/Best-Sellers-Camera-Photo/zgbs/electronics/677230011"
+      },
+      {
+        "title": "Amazon.ca: Surveillance - Camera, Photo & Video: Electronics ...",
+        "url": "https://www.cdn.amazon.ca/Surveillance/b?node=7204593011"
+      },
+      {
+        "title": "Amazon.ca: Mini Spy Camera Wireless",
+        "url": "https://www.amazon.ca/mini-spy-camera-wireless/s?k=mini+spy+camera+wireless"
+      }
+    ]
+  }
+}

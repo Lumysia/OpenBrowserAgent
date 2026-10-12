@@ -1,4 +1,4 @@
-import { clip, compact, isHidden } from "./dom";
+import { compact } from "./dom";
 import { snapshotLines } from "./snapshot";
 
 const LINE_WINDOW = 300;
@@ -35,63 +35,4 @@ function window(text: string, index: number) {
   const head = text.slice(0, text.indexOf(":") + 1 || 40);
   const start = Math.max(head.length, index - LINE_WINDOW / 2);
   return `${head} …${text.slice(start, start + LINE_WINDOW)}…`;
-}
-
-// Organic results of a search engine page: links that carry a heading,
-// with the text around them as the snippet.
-export function searchResults(limit: number) {
-  const host = location.hostname.replace(/^www\./, "");
-  const seen = new Set<string>();
-  const results: Array<{ title: string; url: string; snippet: string }> = [];
-  for (const heading of Array.from(document.querySelectorAll("h2, h3"))) {
-    if (isHidden(heading)) continue;
-    const link = (heading.closest("a[href]") ||
-      heading.querySelector("a[href]")) as HTMLAnchorElement | null;
-    if (!link) continue;
-    let url: URL;
-    try {
-      url = new URL(link.href);
-    } catch {
-      continue;
-    }
-    url = unwrapRedirect(url);
-    if (!/^https?:$/.test(url.protocol)) continue;
-    const target = url.hostname.replace(/^www\./, "");
-    if (target === host || target.endsWith(`.${host}`)) continue;
-    if (seen.has(url.href)) continue;
-    seen.add(url.href);
-    const title = compact(heading.textContent);
-    results.push({ title, url: url.href, snippet: snippetFor(link, title) });
-    if (results.length >= limit) break;
-  }
-  return results;
-}
-
-// Engines often link results through their own redirect URLs.
-function unwrapRedirect(url: URL) {
-  for (const key of ["uddg", "url", "q"]) {
-    const value = url.searchParams.get(key);
-    if (value && /^https?:\/\//.test(value)) return new URL(value);
-  }
-  const bing = url.searchParams.get("u");
-  if (bing?.startsWith("a1")) {
-    try {
-      const decoded = atob(bing.slice(2).replace(/-/g, "+").replace(/_/g, "/"));
-      if (/^https?:\/\//.test(decoded)) return new URL(decoded);
-    } catch {
-      // Not an encoded URL; keep the link as it is.
-    }
-  }
-  return url;
-}
-
-function snippetFor(link: Element, title: string) {
-  let container: Element = link;
-  for (let level = 0; level < 6 && container.parentElement; level++) {
-    const parent = container.parentElement;
-    if (parent.querySelectorAll("h2, h3").length > 1) break;
-    container = parent;
-  }
-  const text = compact((container as HTMLElement).innerText).replace(title, "");
-  return clip(compact(text), 300);
 }
