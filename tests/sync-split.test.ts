@@ -261,6 +261,8 @@ test("content survives a clear that overlaps another device's write", async () =
   const a = device();
   const b = device();
   const chats = [chat("one", message("m1", "hello")), chat("two")];
+  // A list written without its content reports that content as missing.
+  assert.deepEqual((await a.writeChats(chats)).missing, ["one", "two"]);
   await a.writeChats(chats, ["one", "two"]);
   await b.read("chats");
   await b.openChat("one");

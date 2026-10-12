@@ -272,8 +272,11 @@ export function createSplitCollectionStore(
     const { merged, state, local, stored, expected, missing } =
       await store(entries);
     const ids = idsOf(merged);
+    // Missing content is no longer synced: the next write sends it.
     const next: SyncedItems = Object.fromEntries(
-      Object.entries(state).filter(([id]) => ids.has(id)),
+      Object.entries(state).filter(
+        ([id]) => ids.has(id) && !missing.includes(id),
+      ),
     );
     for (const id of stored) {
       if (!ids.has(id)) continue;

@@ -23,6 +23,7 @@ import {
 import {
   deleteChats,
   loadChatContent,
+  readLocalChatContent,
   refreshChatContent,
   saveChatContent,
 } from "../src/shared/chat-storage";
@@ -66,11 +67,17 @@ const chat = (id: string, ...texts: string[]): Chat => ({
 });
 const texts = (content: ChatContent | undefined) =>
   content?.messages.map((message) => message.content);
-const cloudTexts = async (id: string) =>
-  texts(
-    (await browserSync().readItem(STORAGE_KEYS.chats, id, false)).value as
-      ChatContent | undefined,
-  );
+// What a device without any local copy gets from the cloud.
+async function cloudTexts(id: string) {
+  const self = globalThis.chrome;
+  installBrowser(undefined, { area: self.storage.sync } as never);
+  try {
+    const read = await browserSync().readItem(STORAGE_KEYS.chats, id, false);
+    return texts(read.value as ChatContent | undefined);
+  } finally {
+    Object.assign(globalThis, { chrome: self });
+  }
+}
 
 // A device with chat sync on, sharing `sync` (the browser-sync area) with
 // the other devices of the test.
@@ -95,7 +102,8 @@ async function saveChat(value: Chat) {
 }
 
 test("synced chats arrive as a list; a chat's content loads when opened", async () => {
-  const { sync } = await chatDevice();
+  const first = await chatDevice();
+  const { sync } = first;
   await saveChat(chat("one", "hello"));
   await saveChat(chat("two", "world"));
   await flushPendingSyncWrites();
@@ -122,18 +130,22 @@ test("synced chats arrive as a list; a chat's content loads when opened", async 
   );
   assert.deepEqual(contents(), ["chats/one"], "two was never downloaded");
 
-  // Deleting a chat removes its content here and in the cloud.
+  // Deleting a chat removes its content here and in the cloud, and from
+  // the first device once it refreshes.
   await deleteChats(["one"]);
   await flushPendingSyncWrites();
   assert.deepEqual(contents(), []);
   assert.equal(sync.data["chats/one"], undefined);
+  installBrowser(first.local, sync);
+  await refresh();
+  assert.equal(first.local.data["chats/one"], undefined);
 });
 
 test("a check for newer content racing a local edit keeps both edits", async () => {
   const a = await chatDevice();
   await saveChat(chat("one", "m1"));
   await flushPendingSyncWrites();
-  await chatDevice(a.sync);
+  const b = await chatDevice(a.sync);
   await loadChatContent("one");
   await saveChat(chat("one", "m1", "from b"));
   await flushPendingSyncWrites();
@@ -167,9 +179,20 @@ test("a check for newer content racing a local edit keeps both edits", async () 
     "from b",
     "from a",
   ]);
+
+  // B edits without having seen A's message; its upload brings it along.
+  installBrowser(b.local, a.sync);
+  await saveChatContent("one", { messages: messages("m1", "from b", "b2") });
+  await flushPendingSyncWrites();
+  assert.deepEqual(texts(await readLocalChatContent("one"))?.sort(), [
+    "b2",
+    "from a",
+    "from b",
+    "m1",
+  ]);
 });
 
-test("content a failed activation could not upload is uploaded later", async () => {
+test("content missing from the cloud is uploaded again", async () => {
   const { local, sync } = installBrowser();
   local.data[STORAGE_KEYS.syncDataSettings] = {
     ...DEFAULT_SYNC_DATA_SETTINGS,
@@ -185,6 +208,17 @@ test("content a failed activation could not upload is uploaded later", async () 
   sync.area.get = get;
   await flushPendingSyncWrites();
   await refresh();
+  await flushPendingSyncWrites();
+  assert.deepEqual(await cloudTexts("one"), ["hello"]);
+
+  // Another device clears the cloud; renaming the chat stores its content
+  // again.
+  installBrowser(undefined, sync);
+  await browserSync().remove(STORAGE_KEYS.chats);
+  installBrowser(local, sync);
+  await storage.chats.update((chats) =>
+    chats.map((item) => ({ ...item, title: "renamed" })),
+  );
   await flushPendingSyncWrites();
   assert.deepEqual(await cloudTexts("one"), ["hello"]);
 });
