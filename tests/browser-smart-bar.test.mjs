@@ -92,6 +92,13 @@ test("smart bar", { timeout: 240000 }, async (t) => {
       await selectText(page, "#text");
       await delay(600);
       assert.equal(await barState(page), "none");
+      // Zero cost while off: no page script is registered at all.
+      assert.deepEqual(
+        await options.call(() =>
+          chrome.scripting.getRegisteredContentScripts(),
+        ),
+        [],
+      );
     });
 
     await t.test("turned on in the options page, the bar shows", async () => {
