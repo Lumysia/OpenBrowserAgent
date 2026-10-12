@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { Bot, Image, Plus, Server } from "lucide-react";
+import { Bot, Highlighter, Image, Plus, Server } from "lucide-react";
 import { getMessages } from "../../src/shared/i18n";
 import {
   ADD_PROVIDER_TYPES,
   createProviderConfig,
   normalizeProviderState,
 } from "../../src/shared/provider-instances";
+import { normalizeSmartBarSettings } from "../../src/shared/smart-bar";
 import { storage } from "../../src/shared/storage";
 import {
   providerLabels,
@@ -31,6 +32,7 @@ import {
   SettingSwitch,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { ModelSelect as DefaultableModelSelect } from "./model-select";
 import { ModelSelect } from "./provider-controls";
 import { ProviderAccordion } from "./provider-accordion";
 
@@ -182,6 +184,50 @@ export function ProvidersPage() {
               emptyLabel={t.options.selectModel}
               onChange={(selectedModelId) =>
                 setPreferences((previous) => ({ ...previous, selectedModelId }))
+              }
+            />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="settings-section-title">
+              <Bot size={18} /> {t.options.helperModel}
+            </CardTitle>
+            <CardDescription>
+              {t.options.helperModelDescription}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DefaultableModelSelect
+              value={preferences.helperModelId}
+              label={t.options.helperModel}
+              defaultLabel={t.options.helperModelSameAsChat}
+              onChange={(helperModelId) =>
+                setPreferences((previous) => ({ ...previous, helperModelId }))
+              }
+            />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="settings-section-title">
+              <Highlighter size={18} /> {t.smartBar.model}
+            </CardTitle>
+            <CardDescription>{t.smartBar.modelDescription}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DefaultableModelSelect
+              value={normalizeSmartBarSettings(preferences.smartBar).modelId}
+              label={t.smartBar.model}
+              defaultLabel={t.smartBar.modelSameAsAgent}
+              onChange={(modelId) =>
+                setPreferences((previous) => ({
+                  ...previous,
+                  smartBar: {
+                    ...normalizeSmartBarSettings(previous.smartBar),
+                    modelId,
+                  },
+                }))
               }
             />
           </CardContent>

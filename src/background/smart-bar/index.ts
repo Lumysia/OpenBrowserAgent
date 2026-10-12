@@ -263,17 +263,17 @@ async function runAction(
   // The bar refuses these itself; never cut them here.
   if (smartBarTextTooLong(request.text))
     throw new Error("Smart bar text too long");
-  const [preferences, agents] = await Promise.all([
+  const [preferences, agents, language] = await Promise.all([
     storage.preferences.get(),
     storage.agents.get(),
+    storage.language.get(),
   ]);
   const settings = normalizeSmartBarSettings(preferences.smartBar);
   const agent = resolveAgent(agents, preferences.selectedAgentId);
   const model = await resolveModel(settings.modelId, agent.modelId);
-  const uiLanguage = getBrowserApi().i18n?.getUILanguage?.() || "en-US";
   await requestText(
     model,
-    smartBarPrompt(request.action, request.text, uiLanguage),
+    smartBarPrompt(request.action, request.text, language),
     signal,
     (text) => post({ type: "delta", text }),
   );

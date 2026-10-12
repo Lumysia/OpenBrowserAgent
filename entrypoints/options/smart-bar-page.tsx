@@ -1,4 +1,4 @@
-import { Bot, Globe, Highlighter, Keyboard, ListChecks } from "lucide-react";
+import { Globe, Highlighter, Keyboard, ListChecks } from "lucide-react";
 import { getMessages } from "../../src/shared/i18n";
 import {
   normalizeSmartBarSettings,
@@ -25,7 +25,6 @@ import {
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { HostListEditor } from "./host-list-editor";
-import { ModelSelect } from "./model-select";
 
 export function SmartBarPage() {
   const [language] = useStoredState(storage.language);
@@ -174,22 +173,6 @@ export function SmartBarPage() {
             settings.disabledEditActions,
             "disabledEditActions",
           )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="settings-section-title">
-            <Bot size={18} /> {s.model}
-          </CardTitle>
-          <CardDescription>{s.modelDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ModelSelect
-            value={settings.modelId}
-            label={s.model}
-            defaultLabel={s.modelSameAsAgent}
-            onChange={(modelId) => update({ modelId })}
-          />
         </CardContent>
       </Card>
     </div>

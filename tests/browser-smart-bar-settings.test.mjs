@@ -269,6 +269,26 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
       }
       assert.equal(await session.prepares(), prepares);
     });
+
+    await t.test("model choices live on the providers page", async () => {
+      const pickers = (route) =>
+        options
+          .send("Page.navigate", { url: extensionUrl(`options.html#${route}`) })
+          .then(() => delay(800))
+          .then(() =>
+            options.call(() =>
+              [...document.querySelectorAll("[aria-label]")]
+                .map((item) => item.getAttribute("aria-label"))
+                .filter((label) => /^(Smart bar|Helper) model$/.test(label)),
+            ),
+          );
+      assert.deepEqual(await pickers("/providers"), [
+        "Helper model",
+        "Smart bar model",
+      ]);
+      assert.deepEqual(await pickers("/smart-bar"), []);
+      assert.deepEqual(await pickers("/"), []);
+    });
   } finally {
     await session.close();
   }

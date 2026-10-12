@@ -205,6 +205,30 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
       assert.equal(event.type, "error");
       assert.equal(fixture.requests.length, requests);
     });
+
+    await t.test("replies use the extension's language setting", async () => {
+      await session.options.call(() =>
+        chrome.storage.local.set({ language: "zh-CN" }),
+      );
+      const requests = fixture.requests.length;
+      const event = await session.options.call(
+        () =>
+          new Promise((resolve) => {
+            const port = chrome.runtime.connect({ name: "smart-bar-stream" });
+            port.onMessage.addListener((event) => {
+              if (event.type !== "delta") resolve(event);
+            });
+            port.postMessage({
+              type: "run",
+              action: "translate",
+              text: "Good morning",
+            });
+          }),
+      );
+      assert.equal(event.type, "done");
+      const body = JSON.stringify(fixture.requests[requests].body);
+      assert.match(body, /Translate the text below into Chinese \(China\)/);
+    });
   } finally {
     release();
     await session.close();

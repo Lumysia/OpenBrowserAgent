@@ -6,14 +6,14 @@ import {
 const SYSTEM =
   "You are a reading and writing assistant inside a browser toolbar. Return only the requested output: no preamble, no quotes around it, no follow-up questions. Use plain text; short '-' lists are fine, but no Markdown headings, tables or bold.";
 
-// The reply language comes from the browser's UI language: the extension has
-// no separate reply-language setting.
+// Replies use the extension's language setting, which defaults to the
+// browser's UI language.
 export function smartBarPrompt(
   action: SmartBarGenerateAction,
   text: string,
-  uiLanguage: string,
+  replyLanguage: string,
 ) {
-  const language = languageName(uiLanguage);
+  const language = languageName(replyLanguage);
   const instructions: Record<SmartBarGenerateAction, string> = {
     [SMART_BAR_ACTION.explain]: `Explain the text below in ${language} so that a non-expert understands it. Be brief: one short paragraph, or a few short points.`,
     [SMART_BAR_ACTION.summarize]: `Summarize the text below in ${language}: one sentence for a short text, otherwise a few short points.`,
