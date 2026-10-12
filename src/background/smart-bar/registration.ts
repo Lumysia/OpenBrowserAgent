@@ -43,7 +43,9 @@ export async function syncSmartBarRegistration(settings: SmartBarSettings) {
     ]);
   else await registerScript(script);
   // Registration covers pages loaded from now on; open pages of newly
-  // covered sites get the script here.
+  // covered sites get the script here. That includes every covered page after
+  // an extension update or reload: the browser drops the registration then,
+  // and the old page scripts are cut off.
   await injectIntoOpenTabs(
     (host) =>
       smartBarPatternsCover(patterns, host) &&
