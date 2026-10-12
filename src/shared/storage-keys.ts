@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
   agents: "agents",
   agentWorkspaces: "agent-workspaces",
   skills: "skills",
+  skillSettings: "skill-settings",
   mcpServers: "mcp-servers",
   localExecutionBridges: "local-execution-bridges",
   shouldShowUpdateToast: "should-show-update-toast",
@@ -37,6 +38,10 @@ export const SYNCABLE_DATA_ITEMS = [
     dataKey: STORAGE_KEYS.agentWorkspaces,
   },
   { preferenceKey: SYNC_PREFERENCES.skills, dataKey: STORAGE_KEYS.skills },
+  {
+    preferenceKey: SYNC_PREFERENCES.skills,
+    dataKey: STORAGE_KEYS.skillSettings,
+  },
   {
     preferenceKey: SYNC_PREFERENCES.mcpServers,
     dataKey: STORAGE_KEYS.mcpServers,

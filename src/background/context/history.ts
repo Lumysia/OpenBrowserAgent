@@ -15,6 +15,7 @@ import {
   toolNameFromPartType,
   type ChatMessage,
   type ChatPart,
+  type Skill,
   type ToolPartType,
   type UploadedAttachment,
 } from "../../shared/types";
@@ -32,6 +33,8 @@ export type HistoryOptions = {
   tools: boolean;
   // Tools whose long arguments shrink once applied (as in the engine).
   compactArgs: (toolName: string) => boolean;
+  // The skills the run can use, to resolve skills the user picked.
+  skills: Skill[];
 };
 
 // Assistant messages replayed from the chat are marked as coming from
@@ -50,11 +53,11 @@ export function historyMessages(
   return messages.flatMap((message, index): Message[] => {
     const latest = index === messages.length - 1;
     if (message.role === "assistant") return assistantTurn(message, options);
-    const text = renderMessageText(
-      message,
+    const text = renderMessageText(message, {
       latest,
-      latest ? options.attachments : [],
-    );
+      attachments: latest ? options.attachments : [],
+      skills: options.skills,
+    });
     const images = (
       latest && options.attachments.length
         ? options.attachments

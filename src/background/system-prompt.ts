@@ -3,6 +3,7 @@ import {
   WORKSPACE_MEMORY_MAX_CHARS,
   WORKSPACE_USER_MAX_CHARS,
 } from "../shared/config";
+import { skillListingLine } from "../shared/skill-catalog";
 import { WORKSPACE_FILE_PATH } from "../shared/workspace";
 import type { Agent, AgentWorkspace, Skill } from "../shared/types";
 
@@ -11,6 +12,7 @@ import type { Agent, AgentWorkspace, Skill } from "../shared/types";
 // tools they talk about.
 export function createSystemPrompt(options: {
   agent: Agent;
+  // The skills to list: auto ones, for agents with the skills group.
   skills: Skill[];
   workspace?: AgentWorkspace;
   // Local execution bridges that are configured and tested.
@@ -58,7 +60,7 @@ function skillIndex(skills: Skill[]) {
   if (!skills.length) return "";
   return `<skills>
 Skills are instructions for specific tasks. When one fits, read it first with read "skill:NAME".
-${skills.map((skill) => `- ${skill.name}: ${skill.description.replace(/\s+/g, " ").trim()}`).join("\n")}
+${skills.map(skillListingLine).join("\n")}
 </skills>`;
 }
 

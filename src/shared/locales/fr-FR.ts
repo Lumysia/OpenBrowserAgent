@@ -134,6 +134,8 @@ export const frFR: LocaleMessages = {
     attachmentsUnsupportedRetry:
       "Le modèle sélectionné a rejeté un format de contenu non textuel. Le message a donc été renvoyé avec uniquement le texte et les détails des fichiers.",
     attachmentOnlyMessage: "Veuillez examiner les fichiers joints.",
+    skillOnlyMessage: "Utilisez la compétence sélectionnée.",
+    noSkillsFound: "Aucune compétence correspondante",
     fileMetadataOnly: "Détails du fichier uniquement",
     replaceUnavailableAttachments: "Remplacer les fichiers indisponibles",
     replaceUnavailableAttachmentsDescription:
@@ -381,9 +383,6 @@ export const frFR: LocaleMessages = {
     resetDefaultMcpServers: "Réinitialiser les serveurs MCP par défaut",
     resetDefaultMcpServersDescription:
       "Remplace les serveurs MCP actuels par les valeurs intégrées par défaut. Les serveurs personnalisés et les résultats de test seront supprimés.",
-    resetDefaultSkills: "Réinitialiser les compétences par défaut",
-    resetDefaultSkillsDescription:
-      "Remplace les compétences actuelles par les compétences intégrées par défaut. Les compétences personnalisées et les modifications seront supprimées.",
     selectModel: "Sélectionner un modèle",
     selectModelDescription:
       "Choisissez le modèle principal des discussions. Les agents fonctionnent mieux avec les modèles prenant en charge les appels d’outils.",
@@ -429,9 +428,6 @@ export const frFR: LocaleMessages = {
     importSkillZipError: "Échec de l’importation de la compétence",
     importSkillPackageMissingEntry:
       "SKILL.md est introuvable dans l’archive importée.",
-    noSkillsTitle: "Aucune compétence",
-    noSkillsDescription:
-      "Créez votre première compétence pour réutiliser un flux de travail du navigateur en un clic.",
     untitledSkill: "Compétence sans titre",
     title: "Titre",
     description: "Description",
@@ -441,7 +437,6 @@ export const frFR: LocaleMessages = {
     downloadFile: "Télécharger le fichier",
     downloadSkillPackage: "Télécharger .skill",
     duplicateSkill: "Dupliquer",
-    disabled: "Désactivée",
     addFile: "Ajouter un fichier",
     uploadFile: "Importer un fichier",
     editFile: "Modifier le fichier",
@@ -457,6 +452,20 @@ export const frFR: LocaleMessages = {
     skillCheckDescription: "La description est présente",
     skillCheckDescriptionMissing: "La description est manquante",
     deleteSkill: "Supprimer la compétence",
+    builtinSkillBadge: "Intégrée",
+    overrideSkillBadge: "Compétence intégrée personnalisée",
+    customizeSkill: "Personnaliser",
+    revertSkillToBuiltin: "Revenir à la version intégrée",
+    viewFile: "Afficher le fichier",
+    skillInvokeMode: "Utilisation",
+    skillInvokeAuto: "Auto",
+    skillInvokeManual: "Manuelle",
+    skillInvokeOff: "Désactivée",
+    skillInvokeHint:
+      "Auto : l’agent utilise la compétence quand votre demande s’y prête. Manuelle : uniquement quand vous la choisissez avec / ou + dans le panneau latéral. Désactivée : jamais. Les compétences intégrées sont en lecture seule ; personnalisez-en une pour modifier votre propre copie.",
+    skillListOverBudget: "La liste des compétences est longue",
+    skillListOverBudgetDescription:
+      "Les descriptions des compétences en mode Auto occupent {chars} caractères de chaque requête (la limite est de {limit}). Passez les compétences rarement utiles en Manuelle ou raccourcissez leur description.",
     languageDescription: "Choisissez la langue de l’interface de l’extension.",
     colorScheme: "Palette de couleurs",
     colorSchemeDescription:

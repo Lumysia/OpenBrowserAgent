@@ -7,7 +7,7 @@ import { base64ToBytes, bytesToBase64 } from "../../shared/binary";
 import { documentText } from "../file-text";
 import { fetchedHtmlMarkdown } from "../html-markdown";
 import { hasToolGroup } from "../../shared/agents";
-import { BUILTIN_SKILLS } from "../../shared/builtin-skills";
+import { findSkill } from "../../shared/skill-catalog";
 import { SKILL_ENTRY_PATH } from "../../shared/skills";
 import { readSyncedChatAttachment } from "../../shared/sync-chat-attachments";
 import { TOOL_NAME } from "../../shared/tool-names";
@@ -153,12 +153,9 @@ function readSkill(
   path: string,
   input: Record<string, unknown>,
 ): ToolResult {
-  const wanted = name.trim().toLowerCase();
-  // Built-in skills stay readable for agents without the skills group: the
-  // prompt and tools point to them.
-  const skill = [...run.skills, ...BUILTIN_SKILLS].find(
-    (item) => item.name.toLowerCase() === wanted || item.id === name,
-  );
+  // run.skills holds the resolved skills: a user's copy of a built-in
+  // replaces it.
+  const skill = findSkill(run.skills, name.trim());
   if (!skill)
     return fail(
       `No skill "${name}". Skills: ${run.skills.map((item) => item.name).join(", ") || "none"}.`,

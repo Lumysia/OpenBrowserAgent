@@ -1,6 +1,5 @@
 import { isScriptableUrl } from "../../src/shared/browser";
 import {
-  ISO_DATE_LENGTH,
   LOCAL_CHAT_TITLE_MAX_LENGTH,
   SELECTED_ELEMENT_HTML_MAX_CHARS,
   TAB_CONTENT_MAX_CHARS,
@@ -8,11 +7,6 @@ import {
 import type { Messages } from "../../src/shared/i18n";
 import type { AttachmentTab, SelectedElement } from "../../src/shared/types";
 import { xmlBlock, xmlTag } from "./format";
-
-export function interpolateSkillVariables(value: string) {
-  const date = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
-  return value.replaceAll("{{ date }}", date);
-}
 
 export function generateLocalTitle(value: string, t: Messages) {
   const title = value.replace(/\s+/g, " ").trim();

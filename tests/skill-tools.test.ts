@@ -16,6 +16,7 @@ test("skill patches keep literal replacement tokens and later edits to other fil
   const stored = [structuredClone(skill)];
   const run = { skills: [structuredClone(skill)] };
   mock.method(storage.skills, "get", async () => structuredClone(stored));
+  mock.method(storage.skillSettings, "get", async () => ({}));
   mock.method(storage.skills, "set", async (value: typeof stored) => {
     stored.splice(0, stored.length, ...value);
   });

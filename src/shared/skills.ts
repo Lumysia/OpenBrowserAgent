@@ -1,5 +1,5 @@
-import { SKILL_NAME_MAX_LENGTH } from "./config";
-import type { Skill, SkillFile } from "./types";
+import { ISO_DATE_LENGTH, SKILL_NAME_MAX_LENGTH } from "./config";
+import type { PickedSkill, Skill, SkillFile } from "./types";
 
 export const SKILL_ENTRY_PATH = "SKILL.md";
 
@@ -24,7 +24,6 @@ export function createSkillPackage({
     name: skillName,
     description: description.trim(),
     files: [createSkillFile(skillName, description, instruction, updatedAt)],
-    enabled: true,
     createdAt,
     updatedAt,
   };
@@ -45,7 +44,6 @@ export function createSkillPackageFromFiles({
     name: normalizeSkillName(name) || "skill",
     description: description.trim(),
     files,
-    enabled: true,
     createdAt: now,
     updatedAt: now,
   };
@@ -77,7 +75,7 @@ export function replaceSkillEntryFile(
   return [entry, ...files];
 }
 
-export function getSkillDisplayName(skill: Skill, fallback = "Skill") {
+export function getSkillDisplayName(skill: PickedSkill, fallback = "Skill") {
   return skill.name || fallback;
 }
 
@@ -93,9 +91,39 @@ export function getSkillBody(skill: Skill) {
   return stripSkillFrontmatter(getSkillInstruction(skill));
 }
 
+export function toPickedSkill(skill: PickedSkill): PickedSkill {
+  return { id: skill.id, name: skill.name, description: skill.description };
+}
+
+// The skills the user picked for a message.
+export function pickedSkillsFromMetadata(
+  metadata: Record<string, unknown> | undefined,
+): PickedSkill[] {
+  if (!Array.isArray(metadata?.skills)) return [];
+  return (metadata.skills as Partial<PickedSkill>[])
+    .filter((skill) => typeof skill?.name === "string" && !!skill.name)
+    .map((skill) =>
+      toPickedSkill({
+        id: stringValue(skill.id),
+        name: stringValue(skill.name),
+        description: stringValue(skill.description),
+      }),
+    );
+}
+
+// Variables skills and messages may use, filled in when they are sent.
+export function interpolateSkillVariables(value: string, now = new Date()) {
+  const date = now.toISOString().slice(0, ISO_DATE_LENGTH);
+  return value.replaceAll("{{ date }}", date);
+}
+
+// Stored skills are the user's own: built-ins come from the code, so stored
+// built-in copies are dropped.
 export function normalizeSkills(value: unknown): Skill[] {
   if (!Array.isArray(value)) return [];
-  return value.map((skill) => normalizeSkill(skill));
+  return value
+    .filter((skill) => !(skill as Partial<Skill> | null)?.builtin)
+    .map((skill) => normalizeSkill(skill));
 }
 
 export function normalizeSkill(
@@ -117,8 +145,7 @@ export function normalizeSkill(
       name,
       description,
       files,
-      enabled: source.enabled !== false,
-      builtin: source.builtin === true,
+      ...(source.builtin === true ? { builtin: true } : {}),
       createdAt,
       updatedAt,
     };
@@ -158,19 +185,21 @@ function numberValue(value: unknown) {
     : Date.now();
 }
 
-export function isSkillEnabled(skill: Skill) {
-  return normalizeSkill(skill).enabled !== false;
-}
-
-export function duplicateSkill(skill: Skill, existingNames: string[]) {
+export function duplicateSkill(skill: Skill, existingNames: string[]): Skill {
   const normalized = normalizeSkill(skill);
   const name = uniqueSkillName(`${normalized.name}-copy`, existingNames);
+  return copySkill(normalized, name);
+}
+
+// A user copy of a skill under `name`; a copy with a built-in's name
+// overrides that built-in.
+export function copySkill(skill: Skill, name = skill.name): Skill {
+  const normalized = normalizeSkill(skill);
+  const { builtin: _builtin, ...rest } = normalized;
   return {
-    ...normalized,
+    ...rest,
     id: crypto.randomUUID(),
     name,
-    enabled: true,
-    builtin: false,
     createdAt: Date.now(),
     updatedAt: Date.now(),
     files: replaceSkillEntryFile(

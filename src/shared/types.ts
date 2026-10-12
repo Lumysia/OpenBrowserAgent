@@ -114,11 +114,21 @@ export type Skill = {
   name: string;
   description: string;
   files: SkillFile[];
-  enabled?: boolean;
+  // Set only on the skills that ship in the code (BUILTIN_SKILLS).
   builtin?: boolean;
   createdAt?: number;
   updatedAt?: number;
 };
+
+// auto: listed in the system prompt, the model reads it when a request fits;
+// manual: used only when the user picks it; off: unavailable.
+export type SkillInvokeMode = "auto" | "manual" | "off";
+
+export type SkillSettings = Record<string, { invoke: SkillInvokeMode }>;
+
+// A skill the user picked for a message; the run resolves its body when it
+// starts.
+export type PickedSkill = Pick<Skill, "id" | "name" | "description">;
 
 export type SkillFileKind = "markdown" | "text" | "asset" | "script";
 

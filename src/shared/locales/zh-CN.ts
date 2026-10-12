@@ -126,6 +126,8 @@ export const zhCN: LocaleMessages = {
     attachmentsUnsupportedRetry:
       "当前模型拒绝了某种非文本内容格式，已自动改用文字和文件信息重试。",
     attachmentOnlyMessage: "请查看附件内容。",
+    skillOnlyMessage: "使用所选技能。",
+    noSkillsFound: "没有匹配的技能",
     fileMetadataOnly: "仅发送文件信息",
     replaceUnavailableAttachments: "替换不可用文件",
     replaceUnavailableAttachmentsDescription:
@@ -323,9 +325,6 @@ export const zhCN: LocaleMessages = {
     resetDefaultMcpServers: "重置默认 MCP 服务器",
     resetDefaultMcpServersDescription:
       "用内置默认项替换当前 MCP 服务器。自定义服务器和测试结果会被移除。",
-    resetDefaultSkills: "重置默认技能",
-    resetDefaultSkillsDescription:
-      "用内置默认项替换当前技能。自定义技能和修改会被移除。",
     selectModel: "选择模型",
     selectModelDescription:
       "选择主对话模型。智能体最好使用支持工具调用的模型。",
@@ -368,8 +367,6 @@ export const zhCN: LocaleMessages = {
     importingSkillZip: "导入中…",
     importSkillZipError: "技能导入失败",
     importSkillPackageMissingEntry: "导入的压缩包中未找到 SKILL.md。",
-    noSkillsTitle: "暂无技能",
-    noSkillsDescription: "创建第一个技能，一键复用浏览器工作流。",
     untitledSkill: "未命名技能",
     title: "标题",
     description: "描述",
@@ -379,7 +376,6 @@ export const zhCN: LocaleMessages = {
     downloadFile: "下载文件",
     downloadSkillPackage: "下载 .skill",
     duplicateSkill: "创建副本",
-    disabled: "已禁用",
     addFile: "添加文件",
     uploadFile: "上传文件",
     editFile: "编辑文件",
@@ -394,6 +390,20 @@ export const zhCN: LocaleMessages = {
     skillCheckDescription: "已填写描述",
     skillCheckDescriptionMissing: "缺少描述",
     deleteSkill: "删除技能",
+    builtinSkillBadge: "内置",
+    overrideSkillBadge: "已自定义的内置技能",
+    customizeSkill: "自定义",
+    revertSkillToBuiltin: "恢复为内置版本",
+    viewFile: "查看文件",
+    skillInvokeMode: "使用方式",
+    skillInvokeAuto: "自动",
+    skillInvokeManual: "手动",
+    skillInvokeOff: "关闭",
+    skillInvokeHint:
+      "自动：请求适合时，智能体会使用该技能。手动：仅在侧边栏中用 / 或 + 选择时使用。关闭：从不使用。内置技能为只读；点击“自定义”可编辑你自己的副本。",
+    skillListOverBudget: "技能列表过长",
+    skillListOverBudgetDescription:
+      "“自动”技能的描述在每次请求中占用 {chars} 个字符（上限为 {limit}）。请将不常用的技能设为“手动”，或缩短其描述。",
     languageDescription: "选择扩展界面使用的语言。",
     colorScheme: "配色方案",
     colorSchemeDescription: "选择按钮、标签和高亮使用的柔和主色。",

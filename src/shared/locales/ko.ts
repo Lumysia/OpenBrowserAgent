@@ -131,6 +131,8 @@ export const ko: LocaleMessages = {
     attachmentsUnsupportedRetry:
       "선택한 모델이 비텍스트 콘텐츠 형식을 거부하여 텍스트와 파일 정보만으로 다시 시도했습니다.",
     attachmentOnlyMessage: "첨부 파일을 확인해 주세요.",
+    skillOnlyMessage: "선택한 스킬을 사용해 주세요.",
+    noSkillsFound: "일치하는 스킬이 없습니다",
     fileMetadataOnly: "파일 정보만",
     replaceUnavailableAttachments: "사용할 수 없는 파일 교체",
     replaceUnavailableAttachmentsDescription:
@@ -344,9 +346,6 @@ export const ko: LocaleMessages = {
     resetDefaultMcpServers: "기본 MCP 서버 재설정",
     resetDefaultMcpServersDescription:
       "현재 MCP 서버를 내장 기본값으로 바꿉니다. 사용자 지정 서버와 테스트 결과가 제거됩니다.",
-    resetDefaultSkills: "기본 스킬 재설정",
-    resetDefaultSkillsDescription:
-      "현재 스킬을 내장 기본값으로 바꿉니다. 사용자 지정 스킬과 편집 내용이 제거됩니다.",
     selectModel: "모델 선택",
     selectModelDescription:
       "주 채팅 모델을 선택하세요. 에이전트는 도구 호출을 지원하는 모델에서 가장 잘 작동합니다.",
@@ -391,9 +390,6 @@ export const ko: LocaleMessages = {
     importSkillZipError: "스킬 가져오기 실패",
     importSkillPackageMissingEntry:
       "가져온 압축 파일에서 SKILL.md를 찾을 수 없습니다.",
-    noSkillsTitle: "아직 스킬이 없습니다",
-    noSkillsDescription:
-      "첫 스킬을 만들어 브라우저 워크플로를 클릭 한 번으로 재사용하세요.",
     untitledSkill: "제목 없는 스킬",
     title: "제목",
     description: "설명",
@@ -403,7 +399,6 @@ export const ko: LocaleMessages = {
     downloadFile: "파일 다운로드",
     downloadSkillPackage: ".skill 다운로드",
     duplicateSkill: "복제",
-    disabled: "비활성화됨",
     addFile: "파일 추가",
     uploadFile: "파일 업로드",
     editFile: "파일 편집",
@@ -418,6 +413,20 @@ export const ko: LocaleMessages = {
     skillCheckDescription: "설명이 있습니다",
     skillCheckDescriptionMissing: "설명이 없습니다",
     deleteSkill: "스킬 삭제",
+    builtinSkillBadge: "내장",
+    overrideSkillBadge: "사용자 지정된 내장 스킬",
+    customizeSkill: "사용자 지정",
+    revertSkillToBuiltin: "내장 버전으로 되돌리기",
+    viewFile: "파일 보기",
+    skillInvokeMode: "사용 시점",
+    skillInvokeAuto: "자동",
+    skillInvokeManual: "수동",
+    skillInvokeOff: "끔",
+    skillInvokeHint:
+      "자동: 요청에 맞으면 에이전트가 스킬을 사용합니다. 수동: 사이드 패널에서 / 또는 +로 선택할 때만 사용합니다. 끔: 사용하지 않습니다. 내장 스킬은 읽기 전용이며, 사용자 지정을 누르면 편집할 수 있는 사본이 만들어집니다.",
+    skillListOverBudget: "스킬 목록이 너무 깁니다",
+    skillListOverBudgetDescription:
+      "자동 스킬의 설명이 매 요청마다 {chars}자를 차지합니다(한도 {limit}자). 자주 쓰지 않는 스킬은 수동으로 바꾸거나 설명을 줄이세요.",
     languageDescription: "확장 프로그램 UI에 사용할 언어를 선택하세요.",
     colorScheme: "색상 구성",
     colorSchemeDescription:

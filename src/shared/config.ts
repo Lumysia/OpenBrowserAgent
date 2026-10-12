@@ -36,6 +36,10 @@ export const ESTIMATED_CHARS_PER_TOKEN = 4;
 export const LOCAL_CHAT_TITLE_MAX_LENGTH = 42;
 export const GENERATED_TITLE_MAX_LENGTH = 48;
 export const SKILL_NAME_MAX_LENGTH = 64;
+// The skill list in the system prompt: each description is cut at the first
+// limit; past the second the Options page warns instead of dropping skills.
+export const SKILL_DESCRIPTION_MAX_CHARS = 200;
+export const SKILL_LISTING_MAX_CHARS = 6_000;
 export const WORKSPACE_PATH_MAX_LENGTH = 160;
 export const WORKSPACE_FILE_MAX_CHARS = 48_000;
 export const WORKSPACE_TOTAL_MAX_CHARS = 96_000;

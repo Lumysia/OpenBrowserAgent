@@ -134,6 +134,8 @@ export const jaJP: LocaleMessages = {
     attachmentsUnsupportedRetry:
       "選択したモデルが非テキスト形式のコンテンツを拒否したため、テキストとファイル情報のみで再試行しました。",
     attachmentOnlyMessage: "添付ファイルを確認してください。",
+    skillOnlyMessage: "選択したスキルを使ってください。",
+    noSkillsFound: "一致するスキルはありません",
     fileMetadataOnly: "ファイル情報のみ",
     replaceUnavailableAttachments: "利用できないファイルを置き換え",
     replaceUnavailableAttachmentsDescription:
@@ -375,9 +377,6 @@ export const jaJP: LocaleMessages = {
     resetDefaultMcpServers: "既定の MCP サーバーにリセット",
     resetDefaultMcpServersDescription:
       "現在の MCP サーバーを組み込みの既定値に置き換えます。カスタムサーバーとテスト結果は削除されます。",
-    resetDefaultSkills: "既定のスキルにリセット",
-    resetDefaultSkillsDescription:
-      "現在のスキルを組み込みの既定値に置き換えます。カスタムスキルと編集内容は削除されます。",
     selectModel: "モデルを選択",
     selectModelDescription:
       "メインのチャットモデルを選択します。エージェントにはツール呼び出しに対応したモデルがおすすめです。",
@@ -423,9 +422,6 @@ export const jaJP: LocaleMessages = {
     importSkillZipError: "スキルのインポートに失敗しました",
     importSkillPackageMissingEntry:
       "インポートしたアーカイブに SKILL.md が見つかりません。",
-    noSkillsTitle: "スキルはまだありません",
-    noSkillsDescription:
-      "最初のスキルを作成すると、ブラウザーでのワークフローをワンクリックで再利用できます。",
     untitledSkill: "無題のスキル",
     title: "タイトル",
     description: "説明",
@@ -435,7 +431,6 @@ export const jaJP: LocaleMessages = {
     downloadFile: "ファイルをダウンロード",
     downloadSkillPackage: ".skill をダウンロード",
     duplicateSkill: "複製",
-    disabled: "無効",
     addFile: "ファイルを追加",
     uploadFile: "ファイルをアップロード",
     editFile: "ファイルを編集",
@@ -450,6 +445,20 @@ export const jaJP: LocaleMessages = {
     skillCheckDescription: "説明があります",
     skillCheckDescriptionMissing: "説明がありません",
     deleteSkill: "スキルを削除",
+    builtinSkillBadge: "組み込み",
+    overrideSkillBadge: "カスタマイズ済みの組み込み",
+    customizeSkill: "カスタマイズ",
+    revertSkillToBuiltin: "組み込みに戻す",
+    viewFile: "ファイルを表示",
+    skillInvokeMode: "使用タイミング",
+    skillInvokeAuto: "自動",
+    skillInvokeManual: "手動",
+    skillInvokeOff: "オフ",
+    skillInvokeHint:
+      "自動：リクエストに合うときにエージェントがスキルを使います。手動：サイドパネルで / または + から選んだときだけ使います。オフ：使いません。組み込みスキルは読み取り専用です。編集するには「カスタマイズ」で自分用のコピーを作成します。",
+    skillListOverBudget: "スキル一覧が長すぎます",
+    skillListOverBudgetDescription:
+      "「自動」スキルの説明が、毎回のリクエストで {chars} 文字を使っています（上限は {limit} 文字）。あまり使わないスキルを「手動」にするか、説明を短くしてください。",
     languageDescription: "拡張機能の UI で使用する言語を選択します。",
     colorScheme: "配色",
     colorSchemeDescription:

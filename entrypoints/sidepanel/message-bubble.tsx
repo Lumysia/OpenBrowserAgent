@@ -4,7 +4,10 @@ import {
   isDebugLoggingEnabled,
 } from "../../src/shared/debug-logging";
 import type { Messages } from "../../src/shared/i18n";
-import { getSkillDisplayName } from "../../src/shared/skills";
+import {
+  getSkillDisplayName,
+  pickedSkillsFromMetadata,
+} from "../../src/shared/skills";
 import type {
   AttachmentTab,
   ChatSummary,
@@ -12,7 +15,6 @@ import type {
   ChatSource,
   QuestionToolAnswer,
   SelectedElement,
-  Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
 import { CHAT_PART_STATE, isToolPartType } from "../../src/shared/types";
@@ -70,7 +72,7 @@ export function MessageBubble({
   latestUserMessage?: boolean;
   outputActive?: boolean;
 }) {
-  const messageSkills = selectedMessageSkills(message.metadata);
+  const messageSkills = pickedSkillsFromMetadata(message.metadata);
   const sentTabs = Array.isArray(message.metadata?.attachedTabs)
     ? (message.metadata.attachedTabs as AttachmentTab[])
     : [];
@@ -314,10 +316,6 @@ function debugAssistantPart(part: NonNullable<ChatMessage["parts"]>[number]) {
     state: part.state,
     textLength: part.text?.length || 0,
   };
-}
-
-function selectedMessageSkills(metadata: Record<string, unknown> | undefined) {
-  return Array.isArray(metadata?.skills) ? (metadata.skills as Skill[]) : [];
 }
 
 function assistantMessageText(message: ChatMessage) {

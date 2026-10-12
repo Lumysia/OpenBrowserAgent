@@ -133,6 +133,8 @@ export const esES: LocaleMessages = {
     attachmentsUnsupportedRetry:
       "El modelo seleccionado ha rechazado un formato de contenido no textual, así que el mensaje se ha reenviado solo con el texto y los detalles de los archivos.",
     attachmentOnlyMessage: "Revisa los archivos adjuntos.",
+    skillOnlyMessage: "Usa la habilidad seleccionada.",
+    noSkillsFound: "No hay habilidades que coincidan",
     fileMetadataOnly: "Solo detalles del archivo",
     replaceUnavailableAttachments: "Reemplazar archivos no disponibles",
     replaceUnavailableAttachmentsDescription:
@@ -391,9 +393,6 @@ export const esES: LocaleMessages = {
     resetDefaultMcpServers: "Restablecer servidores MCP predeterminados",
     resetDefaultMcpServersDescription:
       "Reemplaza los servidores MCP actuales por los servidores predeterminados integrados. Se eliminarán los servidores personalizados y los resultados de prueba.",
-    resetDefaultSkills: "Restablecer habilidades predeterminadas",
-    resetDefaultSkillsDescription:
-      "Reemplaza las habilidades actuales por las predeterminadas integradas. Se eliminarán las habilidades personalizadas y los cambios.",
     selectModel: "Seleccionar modelo",
     selectModelDescription:
       "Elige el modelo de chat principal. Los agentes funcionan mejor con modelos compatibles con llamadas a herramientas.",
@@ -439,9 +438,6 @@ export const esES: LocaleMessages = {
     importSkillZipError: "Error al importar la habilidad",
     importSkillPackageMissingEntry:
       "No se ha encontrado SKILL.md en el paquete importado.",
-    noSkillsTitle: "Aún no hay habilidades",
-    noSkillsDescription:
-      "Crea tu primera habilidad para reutilizar un flujo de trabajo del navegador con un clic.",
     untitledSkill: "Habilidad sin título",
     title: "Título",
     description: "Descripción",
@@ -451,7 +447,6 @@ export const esES: LocaleMessages = {
     downloadFile: "Descargar archivo",
     downloadSkillPackage: "Descargar .skill",
     duplicateSkill: "Duplicar",
-    disabled: "Desactivada",
     addFile: "Añadir archivo",
     uploadFile: "Subir archivo",
     editFile: "Editar archivo",
@@ -466,6 +461,20 @@ export const esES: LocaleMessages = {
     skillCheckDescription: "Tiene descripción",
     skillCheckDescriptionMissing: "Falta la descripción",
     deleteSkill: "Eliminar habilidad",
+    builtinSkillBadge: "Integrada",
+    overrideSkillBadge: "Habilidad integrada personalizada",
+    customizeSkill: "Personalizar",
+    revertSkillToBuiltin: "Volver a la versión integrada",
+    viewFile: "Ver archivo",
+    skillInvokeMode: "Uso",
+    skillInvokeAuto: "Automático",
+    skillInvokeManual: "Manual",
+    skillInvokeOff: "Desactivada",
+    skillInvokeHint:
+      "Automático: el agente usa la habilidad cuando tu petición encaja con ella. Manual: solo cuando la eliges con / o + en el panel lateral. Desactivada: nunca. Las habilidades integradas son de solo lectura; personaliza una para editar tu propia copia.",
+    skillListOverBudget: "La lista de habilidades es larga",
+    skillListOverBudgetDescription:
+      "Las descripciones de las habilidades en modo Automático ocupan {chars} caracteres de cada petición (el límite es {limit}). Pon en Manual las que uses poco o acorta sus descripciones.",
     languageDescription: "Elige el idioma de la interfaz de la extensión.",
     colorScheme: "Esquema de color",
     colorSchemeDescription:

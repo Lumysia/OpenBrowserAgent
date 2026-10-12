@@ -3,10 +3,11 @@ import type {
   Chat,
   ChatMessage,
   ChatSource,
+  PickedSkill,
   SelectedElement,
-  Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
+import { pickedSkillsFromMetadata } from "../../src/shared/skills";
 
 export function createEditMessageDraft({
   chat,
@@ -34,7 +35,7 @@ export function createEditMessageDraft({
       ? (message.metadata.attachedTabs as AttachmentTab[])
       : [],
     selectedElements: selectedElementsFromMetadata(message.metadata),
-    skills: skillsFromMetadata(message.metadata),
+    skills: pickedSkillsFromMetadata(message.metadata),
     keptMessageIds,
   };
 }
@@ -58,12 +59,8 @@ export type EditMessageDraft = NonNullable<
   previousAttachments: UploadedAttachment[];
   previousAttachedTabs: AttachmentTab[];
   previousSelectedElements: SelectedElement[];
-  previousSkills: Skill[];
+  previousSkills: PickedSkill[];
 };
-
-function skillsFromMetadata(metadata: Record<string, unknown> | undefined) {
-  return Array.isArray(metadata?.skills) ? (metadata.skills as Skill[]) : [];
-}
 
 function selectedElementsFromMetadata(
   metadata: Record<string, unknown> | undefined,

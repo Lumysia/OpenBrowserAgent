@@ -281,6 +281,7 @@ export async function runPiAgent(options: {
         attachments: setup.attachments,
         tools: agent.state.tools.length > 0,
         compactArgs: (name) => !!toolSet.find(name)?.compactArgs,
+        skills: setup.skills,
       }),
     );
     signal.throwIfAborted();

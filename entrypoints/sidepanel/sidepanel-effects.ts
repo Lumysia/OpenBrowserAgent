@@ -13,7 +13,7 @@ import type {
   ChatSummary,
   Preferences,
   SelectedElement,
-  Skill,
+  PickedSkill,
   UploadedAttachment,
 } from "../../src/shared/types";
 import { pruneEmptyChats } from "./chat-state-actions";
@@ -276,7 +276,7 @@ export function useActiveChatCleanup(
   ) => void,
   clearAttachedTabs: () => void,
   setSelectedElements: (value: SelectedElement[]) => void,
-  setSelectedSkills: (value: Skill[]) => void,
+  setSelectedSkills: (value: PickedSkill[]) => void,
   setOpenMenu: (value: ComposerMenu | null) => void,
 ) {
   const previousActiveChatIdRef = useRef<string | undefined>(undefined);

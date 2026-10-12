@@ -1,25 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { resolveAgent } from "../../src/shared/agents";
 import { getMessages } from "../../src/shared/i18n";
-import { isSkillEnabled } from "../../src/shared/skills";
+import { availableSkills } from "../../src/shared/skill-catalog";
+import { interpolateSkillVariables } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
 import type {
   Chat,
   ChatMessage,
-  Skill,
+  PickedSkill,
   UploadedAttachment,
 } from "../../src/shared/types";
-import { useBuiltinSkills } from "../../src/ui/useBuiltinSkills";
+import { useSkillCatalog } from "../../src/ui/useSkillCatalog";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { requestChatTitle } from "./ai-requests";
 import { createChatDraft } from "./chat-state-actions";
 import { pruneSentAttachmentPreviews } from "./edit-message";
-import { toggleSkill } from "./skill-context";
+import { addSkill, takeSlashSkill, toggleSkill } from "./skill-context";
 import { assistantModelLabel } from "./model-label";
-import {
-  buildSidepanelContext,
-  interpolateSkillVariables,
-} from "./sidepanel-context";
+import { buildSidepanelContext } from "./sidepanel-context";
 import {
   useAutoScroll,
   useActiveChatCleanup,
@@ -63,8 +61,9 @@ export function SidepanelApp() {
   const [syncWriteStatus] = useStoredState(storage.syncWriteStatus);
   const [agents] = useStoredState(storage.agents);
   const [language] = useStoredState(storage.language);
-  const [skills, setSkills] = useStoredState(storage.skills);
-  const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
+  const { entries: skillEntries } = useSkillCatalog();
+  const skills = availableSkills(skillEntries || []);
+  const [selectedSkills, setSelectedSkills] = useState<PickedSkill[]>([]);
   const chatState = useChats();
   const chats = chatState.summaries;
   const t = getMessages(language);
@@ -203,8 +202,6 @@ export function SidepanelApp() {
     [currentChatStreaming],
   );
 
-  useBuiltinSkills(skills, setSkills);
-
   useSidepanelTheme(preferences?.accentColor, preferences?.colorScheme);
   useRemoteSyncRefresh(syncDataSettings);
 
@@ -263,11 +260,18 @@ export function SidepanelApp() {
     resendAttachments?: UploadedAttachment[],
     options: { queued?: boolean; resendMessage?: ChatMessage } = {},
   ) {
-    const text = interpolateSkillVariables(content.trim());
+    // "/name request" picks the named skill for this message.
+    const slash = options.resendMessage
+      ? undefined
+      : takeSlashSkill(content.trim(), skills);
+    const text = interpolateSkillVariables(slash?.rest ?? content.trim());
     const sendChatId = currentChat?.id || activeChatId || "new";
     if (
       currentChatStatus !== "ready" ||
-      (!text && !uploadedAttachments.length) ||
+      (!text &&
+        !uploadedAttachments.length &&
+        !slash &&
+        !(selectedSkills.length && !options.queued)) ||
       currentChatStreaming ||
       sendInFlightRef.current.has(sendChatId)
     ) {
@@ -329,8 +333,7 @@ export function SidepanelApp() {
         sentTabs,
         sentElements,
         sentAttachments,
-        skills: sentSkills,
-        autoSelectedSkill: false,
+        skills: slash ? addSkill(sentSkills, slash.skill) : sentSkills,
       });
       if (sentAttachments.length || activeEdit)
         setSentAttachmentPreviews((items) => {
@@ -409,7 +412,7 @@ export function SidepanelApp() {
       streaming={currentChatStreaming}
       activeAssistantMessageId={currentAssistantMessageId}
       unreadCompletedChatIds={unreadCompletedChats}
-      skills={(skills || []).filter(isSkillEnabled)}
+      skills={skills}
       agents={agents || []}
       selectedSkills={selectedSkills}
       openMenu={openMenu}

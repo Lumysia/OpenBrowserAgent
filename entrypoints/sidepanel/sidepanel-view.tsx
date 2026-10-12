@@ -1,4 +1,4 @@
-import { Plus, Send, Square } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRef, type ClipboardEvent, type RefObject } from "react";
 import { TOOLTIP_DELAY_MS } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
@@ -12,25 +12,13 @@ import type {
   ModelConfig,
   Preferences,
   QuestionToolAnswer,
+  PickedSkill,
   SelectedElement,
-  Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
-import {
-  Button,
-  IconTooltip,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  Textarea,
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../../src/ui/components";
-import { AddContextMenu } from "./composer-menus";
-import { ComposerSelectors } from "./composer-selectors";
+import { Button, TooltipProvider } from "../../src/ui/components";
 import { ComposerAttachments } from "./composer-attachments";
+import { ComposerBox } from "./composer-box";
 import { EditModeOverlay } from "./edit-mode-overlay";
 import { HistoryPanel } from "./history-panel";
 import { MessageJumpControls } from "./message-jump-controls";
@@ -39,12 +27,8 @@ import { ProvidersEmptyState } from "./providers-empty-state";
 import { QueuedMessages } from "./queued-messages";
 import { SidepanelHeader } from "./sidepanel-header";
 import { TypingIndicator } from "./typing-indicator";
-import {
-  ADD_MENU_VIEW,
-  COMPOSER_MENU,
-  type AddMenuView,
-  type ComposerMenu,
-} from "./sidepanel-menu-state";
+import type { AddMenuView, ComposerMenu } from "./sidepanel-menu-state";
+import { addSkill } from "./skill-context";
 import type {
   FileHandler,
   MessageAttachmentHandler,
@@ -140,7 +124,7 @@ export function SidepanelView({
   syncWriteStatus?: SyncWriteStatus;
   attachedTabs: AttachmentTab[];
   pendingAttachments: UploadedAttachment[];
-  selectedSkills: Skill[];
+  selectedSkills: PickedSkill[];
   uploadedAttachments: UploadedAttachment[];
   queuedMessages: QueuedMessage[];
   sentAttachmentPreviews: Record<string, UploadedAttachment[]>;
@@ -151,7 +135,7 @@ export function SidepanelView({
   streaming: boolean;
   activeAssistantMessageId?: string;
   unreadCompletedChatIds: Record<string, true>;
-  skills: Skill[];
+  skills: PickedSkill[];
   agents: Agent[];
   openMenu: ComposerMenu | null;
   addMenuView: AddMenuView;
@@ -166,7 +150,7 @@ export function SidepanelView({
   onSetAddMenuView: (value: AddMenuView) => void;
   onSetShowHistory: (value: boolean) => void;
   onSetSelectedElements: (value: SelectedElement[]) => void;
-  onSetSelectedSkills: (value: Skill[]) => void;
+  onSetSelectedSkills: (value: PickedSkill[]) => void;
   onSetChats: SummariesUpdater;
   onLoadChat: (chatId: string) => Promise<Chat | undefined>;
   onRetryChat: () => void;
@@ -181,7 +165,7 @@ export function SidepanelView({
   onDeleteQueuedMessage: (id: string) => void;
   onEditQueuedMessage: (message: QueuedMessage) => void;
   onAnswerQuestion: (toolCallId: string, answers: QuestionToolAnswer[]) => void;
-  onToggleSkill: (skill: Skill) => void;
+  onToggleSkill: (skill: PickedSkill) => void;
   onCancelEditMessage: () => void;
   onShowAllTabsPicker: () => void;
   onToggleAttachedTab: (tab: AttachmentTab) => void;
@@ -198,10 +182,6 @@ export function SidepanelView({
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const typingPresence = useDeferredPresence(aiWorking);
-
-  function attachFromPicker() {
-    fileInputRef.current?.click();
-  }
 
   function attachFromClipboard(event: ClipboardEvent<HTMLTextAreaElement>) {
     const files = Array.from(event.clipboardData.files).filter(
@@ -347,145 +327,42 @@ export function SidepanelView({
             onDelete={onDeleteQueuedMessage}
             onEdit={onEditQueuedMessage}
           />
-          <div className="composer-box">
-            <Textarea
-              ref={composerRef}
-              value={input}
-              aria-label={t.sidepanel.whatDoYouWant}
-              placeholder={t.sidepanel.whatDoYouWant}
-              onChange={(event) => onSetInput(event.target.value)}
-              onPaste={attachFromClipboard}
-              onKeyDown={(event) => {
-                if (
-                  event.key === "Escape" &&
-                  editingMessageId &&
-                  !event.nativeEvent.isComposing
-                ) {
-                  event.preventDefault();
-                  onCancelEditMessage();
-                  return;
-                }
-                if (
-                  event.key === "Enter" &&
-                  !event.nativeEvent.isComposing &&
-                  !event.shiftKey &&
-                  !event.metaKey &&
-                  !event.ctrlKey
-                ) {
-                  event.preventDefault();
-                  onSend();
-                }
-              }}
-            />
-            <div className="composer-controls">
-              <div className="composer-left">
-                <Popover
-                  open={openMenu === COMPOSER_MENU.add}
-                  onOpenChange={(open) => {
-                    if (open) {
-                      onSetAddMenuView(ADD_MENU_VIEW.menu);
-                      onSetOpenMenu(COMPOSER_MENU.add);
-                    } else {
-                      onSetOpenMenu(null);
-                    }
-                  }}
-                >
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <PopoverTrigger asChild>
-                        <Button
-                          className="composer-icon-button"
-                          variant="outline"
-                          size="icon"
-                          aria-label={t.common.add}
-                          disabled={aiWorking}
-                        >
-                          <Plus size={20} />
-                        </Button>
-                      </PopoverTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>{t.common.add}</TooltipContent>
-                  </Tooltip>
-                  <PopoverContent
-                    side="top"
-                    align="start"
-                    className="add-context-popover-content"
-                  >
-                    <AddContextMenu
-                      t={t}
-                      view={addMenuView}
-                      tabs={availableTabs}
-                      skills={skills}
-                      selectedSkillIds={selectedSkills.map((skill) => skill.id)}
-                      selectedTabIds={attachedTabs.map((tab) => tab.id)}
-                      activeTabAttachable={activeTabAttachable}
-                      onShowTabs={onShowAllTabsPicker}
-                      onShowSkills={() =>
-                        onSetAddMenuView(ADD_MENU_VIEW.skills)
-                      }
-                      onSkill={onToggleSkill}
-                      onUploadFiles={() => {
-                        attachFromPicker();
-                        onSetOpenMenu(null);
-                      }}
-                      onToggleTab={onToggleAttachedTab}
-                      onAttachTab={async () => {
-                        await onAttachActiveTab();
-                        onSetOpenMenu(null);
-                      }}
-                      onSelectElement={async () => {
-                        await onSelectElement();
-                        onSetOpenMenu(null);
-                      }}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <ComposerSelectors
-                t={t}
-                preferences={preferences}
-                configuredModels={configuredModels}
-                agents={agents}
-                openMenu={openMenu}
-                aiWorking={aiWorking}
-                onSetOpenMenu={onSetOpenMenu}
-                onSetPreferences={onSetPreferences}
-              />
-              {streaming ? (
-                <>
-                  <IconTooltip label={t.sidepanel.stop}>
-                    <Button
-                      className="send-button stop-button"
-                      variant="secondary"
-                      aria-label={t.sidepanel.stop}
-                      onClick={onStop}
-                    >
-                      <Square size={18} />
-                    </Button>
-                  </IconTooltip>
-                  <IconTooltip label={t.sidepanel.queueMessage}>
-                    <Button
-                      className="send-button"
-                      aria-label={t.sidepanel.queueMessage}
-                      onClick={() => onSend()}
-                    >
-                      <Send size={20} />
-                    </Button>
-                  </IconTooltip>
-                </>
-              ) : (
-                <IconTooltip label={t.sidepanel.send}>
-                  <Button
-                    className="send-button"
-                    aria-label={t.sidepanel.send}
-                    onClick={() => onSend()}
-                  >
-                    <Send size={20} />
-                  </Button>
-                </IconTooltip>
-              )}
-            </div>
-          </div>
+          <ComposerBox
+            t={t}
+            input={input}
+            composerRef={composerRef}
+            editingMessageId={editingMessageId}
+            aiWorking={aiWorking}
+            streaming={streaming}
+            openMenu={openMenu}
+            addMenuView={addMenuView}
+            availableTabs={availableTabs}
+            attachedTabs={attachedTabs}
+            activeTabAttachable={activeTabAttachable}
+            skills={skills}
+            selectedSkills={selectedSkills}
+            preferences={preferences}
+            configuredModels={configuredModels}
+            agents={agents}
+            onSetInput={onSetInput}
+            onPaste={attachFromClipboard}
+            onCancelEditMessage={onCancelEditMessage}
+            onSend={onSend}
+            onStop={onStop}
+            onSetOpenMenu={onSetOpenMenu}
+            onSetAddMenuView={onSetAddMenuView}
+            onShowAllTabsPicker={onShowAllTabsPicker}
+            onToggleSkill={onToggleSkill}
+            onPickSkill={(skill) => {
+              onSetSelectedSkills(addSkill(selectedSkills, skill));
+              onSetInput("");
+            }}
+            onToggleAttachedTab={onToggleAttachedTab}
+            onAttachActiveTab={onAttachActiveTab}
+            onAttachFiles={() => fileInputRef.current?.click()}
+            onSelectElement={onSelectElement}
+            onSetPreferences={onSetPreferences}
+          />
         </footer>
       </div>
     </TooltipProvider>

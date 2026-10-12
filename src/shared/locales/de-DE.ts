@@ -134,6 +134,8 @@ export const deDE: LocaleMessages = {
     attachmentsUnsupportedRetry:
       "Das ausgewählte Modell hat ein Inhaltsformat außer Text abgelehnt. Die Nachricht wurde daher nur mit Text und Dateidetails erneut gesendet.",
     attachmentOnlyMessage: "Bitte prüfen Sie die angehängten Dateien.",
+    skillOnlyMessage: "Verwenden Sie den ausgewählten Skill.",
+    noSkillsFound: "Keine passenden Skills",
     fileMetadataOnly: "Nur Dateidetails",
     replaceUnavailableAttachments: "Nicht verfügbare Dateien ersetzen",
     replaceUnavailableAttachmentsDescription:
@@ -379,9 +381,6 @@ export const deDE: LocaleMessages = {
     resetDefaultMcpServers: "Standard-MCP-Server zurücksetzen",
     resetDefaultMcpServersDescription:
       "Ersetzt die aktuellen MCP-Server durch die integrierten Standardserver. Benutzerdefinierte Server und Testergebnisse werden entfernt.",
-    resetDefaultSkills: "Standard-Skills zurücksetzen",
-    resetDefaultSkillsDescription:
-      "Ersetzt die aktuellen Skills durch die integrierten Standard-Skills. Benutzerdefinierte Skills und Änderungen werden entfernt.",
     selectModel: "Modell auswählen",
     selectModelDescription:
       "Wählen Sie das Haupt-Chatmodell. Agenten funktionieren am besten mit Modellen, die Tool-Aufrufe unterstützen.",
@@ -428,9 +427,6 @@ export const deDE: LocaleMessages = {
     importSkillZipError: "Skill-Import fehlgeschlagen",
     importSkillPackageMissingEntry:
       "SKILL.md wurde im importierten Archiv nicht gefunden.",
-    noSkillsTitle: "Noch keine Skills",
-    noSkillsDescription:
-      "Erstellen Sie Ihren ersten Skill, um einen Browser-Ablauf mit einem Klick wiederzuverwenden.",
     untitledSkill: "Unbenannter Skill",
     title: "Titel",
     description: "Beschreibung",
@@ -440,7 +436,6 @@ export const deDE: LocaleMessages = {
     downloadFile: "Datei herunterladen",
     downloadSkillPackage: ".skill herunterladen",
     duplicateSkill: "Duplizieren",
-    disabled: "Deaktiviert",
     addFile: "Datei hinzufügen",
     uploadFile: "Datei hochladen",
     editFile: "Datei bearbeiten",
@@ -455,6 +450,20 @@ export const deDE: LocaleMessages = {
     skillCheckDescription: "Beschreibung vorhanden",
     skillCheckDescriptionMissing: "Beschreibung fehlt",
     deleteSkill: "Skill löschen",
+    builtinSkillBadge: "Integriert",
+    overrideSkillBadge: "Angepasster integrierter Skill",
+    customizeSkill: "Anpassen",
+    revertSkillToBuiltin: "Auf integrierte Version zurücksetzen",
+    viewFile: "Datei anzeigen",
+    skillInvokeMode: "Verwendung",
+    skillInvokeAuto: "Automatisch",
+    skillInvokeManual: "Manuell",
+    skillInvokeOff: "Aus",
+    skillInvokeHint:
+      "Automatisch: Der Agent verwendet den Skill, wenn Ihre Anfrage dazu passt. Manuell: nur, wenn Sie ihn in der Seitenleiste mit / oder + auswählen. Aus: nie. Integrierte Skills sind schreibgeschützt; passen Sie einen an, um Ihre eigene Kopie zu bearbeiten.",
+    skillListOverBudget: "Die Skill-Liste ist lang",
+    skillListOverBudgetDescription:
+      "Die Beschreibungen automatischer Skills belegen bei jeder Anfrage {chars} Zeichen (Grenze: {limit}). Stellen Sie selten benötigte Skills auf „Manuell“ oder kürzen Sie ihre Beschreibungen.",
     languageDescription: "Wählen Sie die Sprache der Erweiterungsoberfläche.",
     colorScheme: "Farbschema",
     colorSchemeDescription:

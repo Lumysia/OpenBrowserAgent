@@ -2,6 +2,7 @@ import { useRef, useState, type ReactNode } from "react";
 import {
   Check,
   Download,
+  Eye,
   FileArchive,
   Pencil,
   Plus,
@@ -33,6 +34,7 @@ import {
   readReplacementSkillFile,
 } from "./skill-import";
 
+// Without edit handlers the files are read-only (built-in skills).
 export function SkillFileList({
   skill,
   onAddFile,
@@ -40,10 +42,11 @@ export function SkillFileList({
   onDeleteFile,
 }: {
   skill: Skill;
-  onAddFile: (file: SkillFile) => void;
-  onReplaceFile: (file: SkillFile, previousPath?: string) => void;
-  onDeleteFile: (path: string) => void;
+  onAddFile?: (file: SkillFile) => void;
+  onReplaceFile?: (file: SkillFile, previousPath?: string) => void;
+  onDeleteFile?: (path: string) => void;
 }) {
+  const readOnly = !onAddFile || !onReplaceFile || !onDeleteFile;
   const [language] = useStoredState(storage.language);
   const [replacePath, setReplacePath] = useState("");
   const [addPath, setAddPath] = useState("references/new-file.md");
@@ -59,7 +62,7 @@ export function SkillFileList({
   async function replaceFile(files: FileList | null) {
     const file = files?.[0];
     if (!file || !replacePath) return;
-    onReplaceFile(await readReplacementSkillFile(file, replacePath));
+    onReplaceFile?.(await readReplacementSkillFile(file, replacePath));
     setReplacePath("");
     if (replaceInputRef.current) replaceInputRef.current.value = "";
   }
@@ -67,7 +70,7 @@ export function SkillFileList({
   async function addUploadedFile(files: FileList | null) {
     const file = files?.[0];
     if (!file || !addPath) return;
-    onAddFile(await readReplacementSkillFile(file, addPath));
+    onAddFile?.(await readReplacementSkillFile(file, addPath));
     if (addInputRef.current) addInputRef.current.value = "";
   }
 
@@ -79,7 +82,7 @@ export function SkillFileList({
   }
 
   function saveEditedFile() {
-    if (!editingFile) return;
+    if (!editingFile || !onReplaceFile) return;
     const nextPath =
       editingFile.path === SKILL_ENTRY_PATH
         ? SKILL_ENTRY_PATH
@@ -112,32 +115,34 @@ export function SkillFileList({
         </AccordionTrigger>
         <AccordionContent>
           <div className="stack">
-            <div className="option-add-file-row">
-              <Input
-                value={addPath}
-                onChange={(event) => setAddPath(event.target.value)}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onAddFile(createEmptySkillFile(addPath))}
-              >
-                <Plus size={14} /> {t.options.addFile}
-              </Button>
-              <input
-                ref={addInputRef}
-                type="file"
-                hidden
-                onChange={(event) => addUploadedFile(event.target.files)}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => addInputRef.current?.click()}
-              >
-                <Upload size={14} /> {t.options.uploadFile}
-              </Button>
-            </div>
+            {!readOnly && (
+              <div className="option-add-file-row">
+                <Input
+                  value={addPath}
+                  onChange={(event) => setAddPath(event.target.value)}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onAddFile?.(createEmptySkillFile(addPath))}
+                >
+                  <Plus size={14} /> {t.options.addFile}
+                </Button>
+                <input
+                  ref={addInputRef}
+                  type="file"
+                  hidden
+                  onChange={(event) => addUploadedFile(event.target.files)}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addInputRef.current?.click()}
+                >
+                  <Upload size={14} /> {t.options.uploadFile}
+                </Button>
+              </div>
+            )}
             <input
               ref={replaceInputRef}
               type="file"
@@ -161,43 +166,51 @@ export function SkillFileList({
                       </span>
                       <div className="option-file-actions">
                         <SkillFileActionButton
-                          label={t.options.editFile}
+                          label={
+                            readOnly ? t.options.viewFile : t.options.editFile
+                          }
                           disabled={file.encoding === "base64"}
                           onClick={() => startEdit(file)}
                         >
-                          <Pencil size={14} />
+                          {readOnly ? <Eye size={14} /> : <Pencil size={14} />}
                         </SkillFileActionButton>
-                        <SkillFileActionButton
-                          label={t.options.replaceFile}
-                          onClick={() => {
-                            setReplacePath(file.path);
-                            window.setTimeout(() =>
-                              replaceInputRef.current?.click(),
-                            );
-                          }}
-                        >
-                          <Upload size={14} />
-                        </SkillFileActionButton>
+                        {!readOnly && (
+                          <SkillFileActionButton
+                            label={t.options.replaceFile}
+                            onClick={() => {
+                              setReplacePath(file.path);
+                              window.setTimeout(() =>
+                                replaceInputRef.current?.click(),
+                              );
+                            }}
+                          >
+                            <Upload size={14} />
+                          </SkillFileActionButton>
+                        )}
                         <SkillFileActionButton
                           label={t.options.downloadFile}
                           onClick={() => downloadSkillFile(file)}
                         >
                           <Download size={14} />
                         </SkillFileActionButton>
-                        <SkillFileActionButton
-                          label={t.options.deleteFile}
-                          disabled={file.path === SKILL_ENTRY_PATH}
-                          onClick={() => onDeleteFile(file.path)}
-                        >
-                          <Trash2 size={14} />
-                        </SkillFileActionButton>
+                        {!readOnly && (
+                          <SkillFileActionButton
+                            label={t.options.deleteFile}
+                            disabled={file.path === SKILL_ENTRY_PATH}
+                            onClick={() => onDeleteFile?.(file.path)}
+                          >
+                            <Trash2 size={14} />
+                          </SkillFileActionButton>
+                        )}
                       </div>
                     </div>
                     {isEditing && editingFile.encoding !== "base64" && (
                       <div className="option-file-editor stack">
                         <Input
                           value={editFilePath}
-                          disabled={editingFile.path === SKILL_ENTRY_PATH}
+                          disabled={
+                            readOnly || editingFile.path === SKILL_ENTRY_PATH
+                          }
                           placeholder={t.options.filePath}
                           aria-label={t.options.filePath}
                           onChange={(event) =>
@@ -207,15 +220,18 @@ export function SkillFileList({
                         <Textarea
                           className="option-file-editor-textarea"
                           value={editContent}
+                          readOnly={readOnly}
                           onChange={(event) =>
                             setEditContent(event.target.value)
                           }
                         />
-                        <div className="row">
-                          <Button size="sm" onClick={saveEditedFile}>
-                            <Check size={14} /> {t.options.saveFile}
-                          </Button>
-                        </div>
+                        {!readOnly && (
+                          <div className="row">
+                            <Button size="sm" onClick={saveEditedFile}>
+                              <Check size={14} /> {t.options.saveFile}
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

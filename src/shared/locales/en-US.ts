@@ -134,6 +134,8 @@ export const enUS = {
     attachmentsUnsupportedRetry:
       "The selected model rejected a non-text content format, so the message was retried with text and file details only.",
     attachmentOnlyMessage: "Please review the attached files.",
+    skillOnlyMessage: "Use the selected skill.",
+    noSkillsFound: "No matching skills",
     fileMetadataOnly: "File details only",
     replaceUnavailableAttachments: "Replace unavailable files",
     replaceUnavailableAttachmentsDescription:
@@ -355,9 +357,6 @@ export const enUS = {
     resetDefaultMcpServers: "Reset default MCP servers",
     resetDefaultMcpServersDescription:
       "Replace current MCP servers with the built-in defaults. Custom servers and test results will be removed.",
-    resetDefaultSkills: "Reset default skills",
-    resetDefaultSkillsDescription:
-      "Replace current skills with the built-in defaults. Custom skills and edits will be removed.",
     selectModel: "Select model",
     selectModelDescription:
       "Choose the main chat model. Agents work best with models that support tool calls.",
@@ -402,9 +401,6 @@ export const enUS = {
     importSkillZipError: "Skill import failed",
     importSkillPackageMissingEntry:
       "SKILL.md was not found in the imported archive.",
-    noSkillsTitle: "No skills yet",
-    noSkillsDescription:
-      "Create your first skill to reuse a browser workflow with one click.",
     untitledSkill: "Untitled skill",
     title: "Title",
     description: "Description",
@@ -414,7 +410,6 @@ export const enUS = {
     downloadFile: "Download file",
     downloadSkillPackage: "Download .skill",
     duplicateSkill: "Duplicate",
-    disabled: "Disabled",
     addFile: "Add file",
     uploadFile: "Upload file",
     editFile: "Edit file",
@@ -429,6 +424,20 @@ export const enUS = {
     skillCheckDescription: "Description is present",
     skillCheckDescriptionMissing: "Description is missing",
     deleteSkill: "Delete skill",
+    builtinSkillBadge: "Built-in",
+    overrideSkillBadge: "Customized built-in",
+    customizeSkill: "Customize",
+    revertSkillToBuiltin: "Revert to built-in",
+    viewFile: "View file",
+    skillInvokeMode: "When to use",
+    skillInvokeAuto: "Auto",
+    skillInvokeManual: "Manual",
+    skillInvokeOff: "Off",
+    skillInvokeHint:
+      "Auto: the agent uses a skill when your request fits it. Manual: only when you pick it with / or + in the side panel. Off: never. Built-in skills are read-only; customize one to edit your own copy.",
+    skillListOverBudget: "The skill list is long",
+    skillListOverBudgetDescription:
+      "Descriptions of Auto skills take {chars} characters of every request (the budget is {limit}). Set skills you rarely need to Manual or shorten their descriptions.",
     languageDescription: "Choose the language used by the extension UI.",
     colorScheme: "Color scheme",
     colorSchemeDescription:
