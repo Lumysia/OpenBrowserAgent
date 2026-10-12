@@ -75,8 +75,6 @@ type ItemOptions<T> = {
   // `true` follows the active backend; a preference key also follows that
   // data category's toggle. Omitted: always local.
   sync?: SyncPreferenceKey | true;
-  persistDebounceMs?: number | ((value: T) => number | undefined);
-  snapshot?: (value: T) => string | undefined;
 };
 
 function createItem<T>(
@@ -113,8 +111,6 @@ function createItem<T>(
 
   return {
     key,
-    persistDebounceMs: options.persistDebounceMs,
-    snapshot: options.snapshot,
     get,
     set,
     // Read-modify-write across extension contexts: agent tools in the
