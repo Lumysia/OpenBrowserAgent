@@ -129,24 +129,33 @@ export function fieldValue(page, selector) {
 // Runs `fn(root, argument)` in the page with the bar's shadow root, or null
 // when the page has no bar.
 export async function inSmartBar(page, fn, argument) {
-  const { root } = await page.send("DOM.getDocument", {
-    depth: -1,
-    pierce: true,
-  });
-  const shadow = findShadowRoot(root);
   const options = { awaitPromise: true, returnByValue: true };
-  if (!shadow)
-    return value(
-      await page.send("Runtime.evaluate", {
-        ...options,
-        expression: `(${fn})(null, ${JSON.stringify(argument) ?? "undefined"})`,
-      }),
-    );
   const objectGroup = "smart-bar-test";
-  const { object } = await page.send("DOM.resolveNode", {
-    nodeId: shadow.nodeId,
-    objectGroup,
-  });
+  let object;
+  // The snapshot's node ids go stale when the bar's host moves (into or out
+  // of a modal dialog) right after it was taken.
+  for (let attempt = 0; !object; attempt++) {
+    const { root } = await page.send("DOM.getDocument", {
+      depth: -1,
+      pierce: true,
+    });
+    const shadow = findShadowRoot(root);
+    if (!shadow)
+      return value(
+        await page.send("Runtime.evaluate", {
+          ...options,
+          expression: `(${fn})(null, ${JSON.stringify(argument) ?? "undefined"})`,
+        }),
+      );
+    object = await page
+      .send("DOM.resolveNode", { nodeId: shadow.nodeId, objectGroup })
+      .then(
+        (result) => result.object,
+        (error) => {
+          if (attempt === 2) throw error;
+        },
+      );
+  }
   try {
     return value(
       await page.send("Runtime.callFunctionOn", {
