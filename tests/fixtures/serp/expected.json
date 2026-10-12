@@ -598,5 +598,30 @@
         "url": "https://bettertrail.com/outdoor-gear/best-hiking-boots"
       }
     ]
+  },
+  "yahoo-4": {
+    "url": "https://search.yahoo.com/search?p=site%3Aamazon.ca+mini+hidden+camera",
+    "results": [
+      {
+        "title": "Amazon.ca: Mini Camera",
+        "url": "https://www.amazon.ca/mini-camera/s?k=mini+camera"
+      },
+      {
+        "title": "Amazon.ca: Mini Spy Camera",
+        "url": "https://www.amazon.ca/mini-spy-camera/s?k=mini+spy+camera"
+      },
+      {
+        "title": "Amazon.ca Best Sellers: The most popular items in Camera & Photo",
+        "url": "https://www.cdn.amazon.ca/Best-Sellers-Camera-Photo/zgbs/electronics/677230011"
+      },
+      {
+        "title": "Amazon.ca: Surveillance - Camera, Photo & Video: Electronics ...",
+        "url": "https://www.cdn.amazon.ca/Surveillance/b?node=7204593011"
+      },
+      {
+        "title": "Amazon.ca: Mini Spy Camera Wireless",
+        "url": "https://www.amazon.ca/mini-spy-camera-wireless/s?k=mini+spy+camera+wireless"
+      }
+    ]
   }
 }

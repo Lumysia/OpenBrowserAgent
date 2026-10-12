@@ -9,6 +9,8 @@ import { clip, compact, isBlock, isHidden, roleOf } from "./dom";
 export type SearchResult = { title: string; url: string; snippet: string };
 
 const SNIPPET_MAX = 300;
+// Text beyond the title and URL that makes a block a described result.
+const SNIPPET_MIN = 40;
 const LIST_MIN = 3;
 const LANDMARKS = new Set([
   "navigation",
@@ -188,19 +190,21 @@ function resultBlocks(candidates: Candidate[]) {
       groups.set(key, group);
     }
   }
-  // Wrappers inside each block repeat as often as the blocks themselves:
-  // the outermost of equally frequent levels is the whole block.
-  let best: { depth: number; items: Element[] } | undefined;
+  // Results describe their page, so the list with the most described items
+  // wins over carousels of bare links (products, videos). Wrappers inside
+  // each block repeat as often as the blocks themselves: the outermost of
+  // equally good levels is the whole block.
+  let best: { score: number[]; items: Element[] } | undefined;
   for (const group of groups.values()) {
     const items = listed(alike(Array.from(group.items)));
-    if (
-      !best ||
-      items.length > best.items.length ||
-      (items.length === best.items.length && group.depth < best.depth)
-    )
-      best = { depth: group.depth, items };
+    if (!items.length) continue;
+    const described = items.filter(
+      (item) => snippetOf(item, "").length >= SNIPPET_MIN,
+    ).length;
+    const score = [described, items.length, -group.depth];
+    if (!best || isGreater(score, best.score)) best = { score, items };
   }
-  return best?.items.length ? best.items : headingBlocks(candidates);
+  return best ? best.items : headingBlocks(candidates);
 }
 
 // Too few results for a list: links titled by a heading, each with the
