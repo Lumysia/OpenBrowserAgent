@@ -37,7 +37,7 @@ const FRAME = `<!doctype html><p id="framed" style="font:16px sans-serif">Text i
 
 test("smart bar settings", { timeout: 240000 }, async (t) => {
   const session = await startSmartBar({
-    pages: { "/page": PAGE, "/page/frame": FRAME },
+    pages: { "/page": PAGE, "/page/frame": FRAME, "/away": "<p>Away</p>" },
     answer: async (_prompt, write) => write("Streamed explanation finished."),
   });
   const { browser, options, extensionUrl, url, updateSmartBar } = session;
@@ -100,6 +100,32 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
       await poll(async () => (await barState(page)) === "toolbar");
       await updateSmartBar({ disabledPageActions: [] });
     });
+
+    await t.test(
+      "a page back from the back/forward cache asks again",
+      async () => {
+        // Shortcut mode: the page script learns not to ask on mouseup.
+        await updateSmartBar({ trigger: "shortcut" });
+        await selectText(page, "#text");
+        await delay(600);
+        assert.equal(await barState(page), "none");
+        await page.call(() => (window.kept = true));
+        await page.send("Page.navigate", { url: url("/away") });
+        await poll(() => page.call(() => location.pathname === "/away"));
+        // Switched back while the page sits in the cache, missing the news.
+        await updateSmartBar({ trigger: "selection" });
+        await delay(300);
+        const { currentIndex, entries } = await page.send(
+          "Page.getNavigationHistory",
+        );
+        await page.send("Page.navigateToHistoryEntry", {
+          entryId: entries[currentIndex - 1].id,
+        });
+        await poll(() => page.call(() => window.kept === true));
+        await selectText(page, "#text");
+        await poll(async () => (await barState(page)) === "toolbar");
+      },
+    );
 
     await t.test("Hide on this site stops it", async () => {
       await selectText(page, "#text");

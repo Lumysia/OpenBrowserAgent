@@ -104,6 +104,16 @@ export function installSmartBarTrigger() {
   );
 
   listen(window, "pagehide", () => getSmartBarUi()?.hide(), false);
+  // Settings announcements don't reach pages in the back/forward cache: ask
+  // again once one is back.
+  listen(
+    window,
+    "pageshow",
+    (event) => {
+      if (event.persisted) onSelection = undefined;
+    },
+    false,
+  );
   // Single-page apps navigate without unloading the page (Navigation API
   // where the browser has it).
   (globalThis as { navigation?: EventTarget }).navigation?.addEventListener(
