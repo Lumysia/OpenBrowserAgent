@@ -13,6 +13,20 @@ export function withLock<T>(name: string, operation: () => Promise<T>) {
   return next;
 }
 
+// Several locks at once, always taken in the same order.
+export function withLocks<T>(
+  lock: <R>(name: string, run: () => Promise<R>) => Promise<R>,
+  names: string[],
+  operation: () => Promise<T>,
+) {
+  const sorted = [...new Set(names)].sort();
+  const step = (index: number): Promise<T> =>
+    index === sorted.length
+      ? operation()
+      : lock(sorted[index], () => step(index + 1));
+  return step(0);
+}
+
 // Lock of one stored value, shared by every writer of that key (pages, tools
 // in the background and the sync engine).
 export const storageLockName = (key: string) => `item:${key}`;

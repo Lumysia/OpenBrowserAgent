@@ -1,5 +1,6 @@
-import { storageLockName } from "../locks";
+import { storageLockName, withLocks } from "../locks";
 import { chatAttachmentIds } from "../chat-attachment-ids";
+import { chatContentKey } from "../chat-keys";
 import { chatFacts, chatMeta, isChatRunActive } from "../chats";
 import { STORAGE_KEYS, SYNC_PREFERENCES } from "../storage-keys";
 import type { ChatContent, ChatSummary } from "../types";
@@ -11,7 +12,7 @@ import { mergeChatBodies } from "./merge-content";
 // blob, downloaded only on devices that open that chat.
 
 const CHATS = STORAGE_KEYS.chats;
-const contentKey = (id: string) => `${CHATS}/${id}`;
+const contentKey = chatContentKey;
 
 const summariesOf = (value: unknown) =>
   (Array.isArray(value) ? value : []).filter(
@@ -44,8 +45,11 @@ export const chatsCollection: Collection = {
       ]),
     );
   },
+  // Under the locks of the list and of each content key written, the ones
+  // the app saves with.
   write(env, changes, verify) {
-    return env.lock(storageLockName(CHATS), async () => {
+    const locks = [CHATS, ...changes.map((change) => contentKey(change.id))];
+    return withLocks(env.lock, locks.map(storageLockName), async () => {
       const summaries = summariesOf(await readKey(env.local, CHATS));
       const contents = await readContents(
         env,

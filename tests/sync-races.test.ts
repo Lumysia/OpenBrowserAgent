@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { loadContent, resetSync } from "../src/background/sync/service";
+import { storageLockName } from "../src/shared/locks";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import {
   ALL_ON,
+  chat,
   device,
   hookedTransport,
   memoryServer,
@@ -78,4 +80,46 @@ test("clearing local chats while a round runs downloads them again and deletes n
     ["c1", "c2", "c3"],
   );
   assert.equal(b.get<unknown[]>(CHATS)?.length, 3);
+});
+
+test("a chat saved by the app while the engine writes that chat is not overwritten", async () => {
+  const { clock, a, b } = setup();
+  await saveChat(a, "X", [["m1", 1]]);
+  await a.sync("edit");
+  await b.sync();
+  await b.env.local.set({ [`${CHATS}/X`]: chat("X", [["m1", 1]]).content });
+  await b.sync();
+  clock.now += 1000;
+  await saveChat(a, "X", [
+    ["m1", 1],
+    ["a2", 2],
+  ]);
+  await a.sync("edit");
+  // The app saves the chat (under the lock of its content key) while b's
+  // engine is between checking the chat and writing it.
+  const set = b.env.local.set.bind(b.env.local);
+  const mine = chat("X", [
+    ["m1", 1],
+    ["b3", 3],
+  ]);
+  let appSave: Promise<void> | undefined;
+  b.env.local.set = async (items) => {
+    if (!appSave && `${CHATS}/X` in items) {
+      appSave = b.env.lock(storageLockName(`${CHATS}/X`), () =>
+        set({ [`${CHATS}/X`]: mine.content }),
+      );
+      await Promise.race([appSave, sleep(20)]);
+    }
+    return set(items);
+  };
+  await b.sync();
+  b.env.local.set = set;
+  await appSave;
+  assert.deepEqual(messageIds(b, "X"), ["m1", "b3"]);
+  await b.set(CHATS, [mine.summary]);
+  await b.set(`${CHATS}/X`, mine.content);
+  clock.now += 1000;
+  await b.sync("edit");
+  await a.sync();
+  assert.ok(messageIds(a, "X").includes("b3"));
 });
