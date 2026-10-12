@@ -11,10 +11,7 @@ import {
 import { useEffect, useState } from "react";
 import { COPY_FEEDBACK_MS } from "../../shared/config";
 import { SMART_BAR_MAX_TEXT_CHARS } from "../../shared/smart-bar";
-import type {
-  SmartBarMessages,
-  SmartBarPageConfig,
-} from "../../shared/smart-bar-protocol";
+import type { SmartBarPageConfig } from "../../shared/smart-bar-protocol";
 import { Button, IconTooltip } from "../../ui/components";
 import { isEditableSnapshot, type SelectionSnapshot } from "../selection";
 import { copyText, writeIntoSelection, type WriteMode } from "../writeback";
@@ -81,7 +78,7 @@ export function SmartBarResultCard({
         aria-live="polite"
         aria-busy={streaming}
       >
-        {resultMessage(result, t)}
+        {resultMessage(result, config)}
         {streaming && result.text && (
           <span className="smart-bar-caret" aria-hidden="true" />
         )}
@@ -157,14 +154,17 @@ export function SmartBarResultCard({
   );
 }
 
-function resultMessage(result: SmartBarResult, t: SmartBarMessages) {
+function resultMessage(
+  result: SmartBarResult,
+  { messages: t, language }: SmartBarPageConfig,
+) {
   switch (result.status) {
     case "error":
       return result.error || t.emptyResult;
     case "tooLong":
       return t.selectionTooLong.replace(
         "{max}",
-        SMART_BAR_MAX_TEXT_CHARS.toLocaleString(),
+        new Intl.NumberFormat(language).format(SMART_BAR_MAX_TEXT_CHARS),
       );
     case "streaming":
       return result.text || t.writing;

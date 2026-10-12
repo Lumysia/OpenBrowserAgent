@@ -63,6 +63,8 @@ export type SmartBarPageConfig = {
   // What "Hide on this site" hides the bar on, for its label.
   hideSite: string;
   messages: SmartBarMessages;
+  // The language of `messages`, for numbers in them.
+  language: string;
   colorScheme: NonNullable<Preferences["colorScheme"]>;
   accentColor: NonNullable<Preferences["accentColor"]>;
 };

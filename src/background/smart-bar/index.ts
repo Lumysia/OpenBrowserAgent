@@ -1,5 +1,5 @@
 import { resolveAgent } from "../../shared/agents";
-import { getMessages } from "../../shared/i18n";
+import { getMessages, resolveLanguage } from "../../shared/i18n";
 import {
   hideSmartBarOnHost,
   isSmartBarAllowedOnHost,
@@ -193,6 +193,7 @@ async function prepare(
     actions,
     hideSite: smartBarHideSite(settings, host),
     messages: getMessages(language).smartBar,
+    language: resolveLanguage(language),
     colorScheme: preferences.colorScheme || "system",
     accentColor: preferences.accentColor || "pink",
   };

@@ -25,13 +25,19 @@ export const i18nRegistry: Record<string, LocaleMessages> = {
 let activeLanguage: string | undefined;
 
 export function getMessages(language?: string) {
+  return i18nRegistry[resolveLanguage(language)];
+}
+
+// The supported language the messages for `language` come from, e.g. to
+// format numbers in the same language as the text around them.
+export function resolveLanguage(language?: string) {
   if (language) activeLanguage = language;
-  const requestedLanguage = language || activeLanguage;
-  const normalized = requestedLanguage?.replace("_", "-");
+  const requestedLanguage = language || activeLanguage || "";
+  const normalized = requestedLanguage.replace("_", "-");
   return (
-    i18nRegistry[requestedLanguage || ""] ||
-    i18nRegistry[normalized || ""] ||
-    enUS
+    [requestedLanguage, normalized].find((code) =>
+      Object.hasOwn(i18nRegistry, code),
+    ) || "en-US"
   );
 }
 

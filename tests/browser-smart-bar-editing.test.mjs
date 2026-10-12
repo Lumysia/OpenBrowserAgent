@@ -164,6 +164,29 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
       await poll(() => page.call(() => !dialog.open));
       assert.equal(await page.call(() => window.escapes), escapes + 1);
     });
+
+    await t.test("the too-long notice uses the UI language", async () => {
+      await session.options.call(() =>
+        chrome.storage.local.set({ language: "de-DE" }),
+      );
+      await page.call(() => {
+        const area = document.getElementById("area");
+        area.value = "x".repeat(20001);
+        area.focus();
+        area.select();
+      });
+      // What the background sends for the keyboard command.
+      await session.options.call(async (url) => {
+        const [tab] = await chrome.tabs.query({ url });
+        await chrome.tabs.sendMessage(tab.id, {
+          type: "smart-bar:show-for-selection",
+        });
+      }, url("/page"));
+      await poll(async () => (await barState(page)) === "toolbar");
+      // Improve, the first action for fields.
+      await clickInBar(page, '[role="toolbar"] button');
+      await poll(async () => (await resultText(page)).includes("20.000"));
+    });
   } finally {
     release();
     await session.close();
