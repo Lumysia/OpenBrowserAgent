@@ -21,6 +21,9 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
   replace: "Ersetzen",
   insertBelow: "Darunter einfügen",
   continueInSidePanel: "In der Seitenleiste fortfahren",
+  readSource: "Original vorlesen",
+  readResult: "Ergebnis vorlesen",
+  stopReading: "Vorlesen beenden",
   writing: "Wird geschrieben…",
   emptyResult: "Das Modell hat keinen Text geliefert.",
   selectionChanged:

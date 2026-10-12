@@ -21,6 +21,9 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
   replace: "置き換え",
   insertBelow: "下に挿入",
   continueInSidePanel: "サイドパネルで続ける",
+  readSource: "原文を読み上げ",
+  readResult: "結果を読み上げ",
+  stopReading: "読み上げを停止",
   writing: "生成中…",
   emptyResult: "モデルからテキストが返されませんでした。",
   selectionChanged:

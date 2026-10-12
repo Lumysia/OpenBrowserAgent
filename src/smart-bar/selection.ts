@@ -96,6 +96,15 @@ export function readSelection(
   );
 }
 
+// The page's language for the selected text (its nearest lang attribute),
+// for reading it aloud with a fitting voice.
+export function selectionLanguage({ target }: SelectionSnapshot) {
+  const node =
+    target.kind === "control" ? target.element : target.range.startContainer;
+  const element = node instanceof Element ? node : node.parentElement;
+  return element?.closest("[lang]")?.getAttribute("lang") || undefined;
+}
+
 function withPoint(snapshot: SelectionSnapshot, point: Point | undefined) {
   const rect = point && selectionRect(snapshot);
   return rect

@@ -16,6 +16,7 @@ import {
 } from "../src/shared/smart-bar";
 import { smartBarPrompt } from "../src/background/smart-bar/prompts";
 import { placeSmartBar } from "../src/smart-bar/placement";
+import { speechChunks } from "../src/smart-bar/speech";
 
 test("the smart bar is off by default and stored settings are cleaned", () => {
   assert.equal(mergePreferences({}).smartBar?.enabled, false);
@@ -123,4 +124,18 @@ test("long selections are refused, never cut", () => {
     smartBarPrompt("improve", `${limit}TAIL`, "en-US").prompt,
     /TAIL\n<\/text>$/,
   );
+});
+
+test("text is read aloud in sentence-sized pieces, all of it", () => {
+  assert.deepEqual(speechChunks("One. Two? Three!", 8), [
+    "One.",
+    "Two?",
+    "Three!",
+  ]);
+  assert.deepEqual(speechChunks("你好。再见！", 200), ["你好。 再见！"]);
+  const long = "x".repeat(450);
+  const chunks = speechChunks(`${long}. End.`, 200);
+  assert.ok(chunks.every((chunk) => chunk.length <= 200));
+  assert.equal(chunks.join("").replace(/ /g, ""), `${long}.End.`);
+  assert.deepEqual(speechChunks("   "), []);
 });

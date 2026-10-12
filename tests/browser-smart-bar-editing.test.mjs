@@ -7,6 +7,7 @@ import {
   barState,
   clickInBar,
   fieldValue,
+  inSmartBar,
   pressKey,
   resultText,
   selectText,
@@ -15,7 +16,7 @@ import {
 
 // Results: streaming into the card, written back into fields, and the keys
 // the bar takes from the page while it shows.
-const PAGE = `<!doctype html><title>Smart bar</title>
+const PAGE = `<!doctype html><html lang="en"><title>Smart bar</title>
 <style>body{font:16px/1.4 sans-serif;margin:20px}p,textarea,input,div{display:block;width:420px;margin:0 0 24px}</style>
 <p id="text">The quick brown fox jumps over the lazy dog.</p>
 <textarea id="area" rows="2">hello wrold</textarea>
@@ -102,6 +103,31 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
         JSON.stringify(explain.body),
         /The quick brown fox jumps over the lazy dog\./,
       );
+    });
+
+    await t.test("the result card fits its text and reads aloud", async () => {
+      const card = () =>
+        inSmartBar(page, (root) => ({
+          width: root.querySelector(".smart-bar-result").offsetWidth,
+          labels: [...root.querySelectorAll(".smart-bar-result button")].map(
+            (item) => item.getAttribute("aria-label"),
+          ),
+        }));
+      const { width, labels } = await card();
+      // The explanation is short: narrower than the card's maximum.
+      assert.ok(width < 380, `card is ${width}px wide`);
+      assert.ok(labels.includes("Read original aloud"));
+      assert.ok(labels.includes("Read result aloud"));
+      // Headless Chromium refuses to speak: the button shows it reads, then
+      // returns to idle when the voice ends or fails.
+      await clickInBar(page, '[aria-label="Read result aloud"]');
+      await poll(async () => {
+        const now = (await card()).labels;
+        return (
+          now.includes("Read original aloud") &&
+          now.includes("Read result aloud")
+        );
+      });
     });
 
     for (const [selector, kind] of [

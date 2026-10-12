@@ -79,9 +79,13 @@
   white-space: nowrap;
 }
 
+/* As wide as its text (it grows while the answer streams), up to a
+   readable line length. */
 .smart-bar-result {
   display: flex;
-  width: min(380px, calc(100vw - 16px));
+  width: fit-content;
+  min-width: min(240px, calc(100vw - 16px));
+  max-width: min(380px, calc(100vw - 16px));
   flex-direction: column;
 }
 

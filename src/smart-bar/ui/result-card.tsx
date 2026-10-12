@@ -2,18 +2,28 @@ import {
   ArrowDownToLine,
   Check,
   Copy,
+  FileVolume,
   PanelRightOpen,
   Replace,
   RotateCcw,
   Square,
+  Volume2,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { COPY_FEEDBACK_MS } from "../../shared/config";
-import { SMART_BAR_MAX_TEXT_CHARS } from "../../shared/smart-bar";
+import {
+  SMART_BAR_ACTION,
+  SMART_BAR_MAX_TEXT_CHARS,
+} from "../../shared/smart-bar";
 import type { SmartBarPageConfig } from "../../shared/smart-bar-protocol";
 import { Button, IconTooltip } from "../../ui/components";
-import { isEditableSnapshot, type SelectionSnapshot } from "../selection";
+import {
+  isEditableSnapshot,
+  selectionLanguage,
+  type SelectionSnapshot,
+} from "../selection";
+import { speak } from "../speech";
 import { copyText, writeIntoSelection, type WriteMode } from "../writeback";
 import { openInSidePanel, SMART_BAR_ICONS } from "./page-actions";
 import type { SmartBarResult, SmartBarStore } from "./store";
@@ -38,6 +48,51 @@ export function SmartBarResultCard({
   const text = result.text.trim();
   const ready = result.status === "done" && !!text;
   const Icon = SMART_BAR_ICONS[result.action];
+  const [reading, setReading] = useState<"source" | "result">();
+  const stopReading = useRef<() => void>(undefined);
+  // Reading stops with the card.
+  useEffect(() => () => stopReading.current?.(), []);
+  const sourceLanguage = selectionLanguage(snapshot);
+  // Edits keep the text's language; the other actions reply in the
+  // extension's language.
+  const resultLanguage =
+    result.action === SMART_BAR_ACTION.improve ||
+    result.action === SMART_BAR_ACTION.fixGrammar
+      ? sourceLanguage
+      : config.language;
+  const read = (which: "source" | "result") => {
+    if (reading === which) return stopReading.current?.();
+    setReading(which);
+    stopReading.current = speak(
+      which === "source" ? snapshot.text : text,
+      which === "source" ? sourceLanguage : resultLanguage,
+      () => setReading((now) => (now === which ? undefined : now)),
+    );
+  };
+  const readButton = (which: "source" | "result") => {
+    const label =
+      reading === which
+        ? t.stopReading
+        : which === "source"
+          ? t.readSource
+          : t.readResult;
+    const ReadIcon =
+      reading === which ? Square : which === "source" ? FileVolume : Volume2;
+    return (
+      <IconTooltip label={label} side="top">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="smart-bar-icon-button"
+          aria-label={label}
+          aria-pressed={reading === which}
+          onClick={onTrusted(() => read(which))}
+        >
+          <ReadIcon size={15} />
+        </Button>
+      </IconTooltip>
+    );
+  };
 
   useEffect(() => {
     if (!copied) return undefined;
@@ -118,6 +173,8 @@ export function SmartBarResultCard({
           </>
         )}
         <span className="smart-bar-spacer" />
+        {readButton("source")}
+        {ready && readButton("result")}
         {ready && (
           <IconTooltip label={copied ? t.copied : t.actions.copy} side="top">
             <Button

@@ -21,6 +21,9 @@ export const smartBarEsES: SmartBarLocaleMessages = {
   replace: "Reemplazar",
   insertBelow: "Insertar debajo",
   continueInSidePanel: "Continuar en el panel lateral",
+  readSource: "Leer el original en voz alta",
+  readResult: "Leer el resultado en voz alta",
+  stopReading: "Detener la lectura",
   writing: "Escribiendo…",
   emptyResult: "El modelo no devolvió texto.",
   selectionChanged:
