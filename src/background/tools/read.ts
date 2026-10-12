@@ -67,6 +67,7 @@ function parseSource(value: string): Source {
 export const readTool: ToolDefinition = {
   name: TOOL_NAME.read,
   readOnly: true,
+  timeoutMs: 60_000,
   summary: "Read text in ranges",
   description:
     'Read one source in character ranges: "tab" or "tab:ID" (page text as Markdown; default: active tab), a stored output handle "art-…", a URL, "attachment:ID", "skill:NAME" or "skill:NAME/PATH", "workspace:PATH". Continue with the offset it reports. Images come back as images.',

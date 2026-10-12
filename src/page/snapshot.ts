@@ -119,7 +119,11 @@ export function snapshotLines(root: Element, options: SnapshotOptions) {
         );
       return;
     }
-    if (role === "iframe" || role === "video" || role === "audio") {
+    if (role === "iframe") {
+      push(depth, frameLine(element as HTMLIFrameElement));
+      return;
+    }
+    if (role === "video" || role === "audio") {
       const name = nameOf(element, role);
       push(depth, `- ${role}${name ? ` "${clip(name, NAME_MAX)}"` : ""}`);
       return;
@@ -209,6 +213,14 @@ export function snapshotLines(root: Element, options: SnapshotOptions) {
 
   visit(root, 0);
   return { lines, truncated: full() };
+}
+
+// Page tools read the top document only; a frame's content is named, not
+// shown.
+function frameLine(frame: HTMLIFrameElement) {
+  const name = nameOf(frame, "iframe");
+  const url = frame.getAttribute("src") ? frame.src : "";
+  return `- iframe${name ? ` "${clip(name, NAME_MAX)}"` : ""}${url ? ` ${url}` : ""} (content not included${url ? "; open its URL in a tab to read it" : ""})`;
 }
 
 export function renderLines({
@@ -344,8 +356,11 @@ function isBlockish(element: Element) {
   );
 }
 
+const OWN_LINE_ROLES = new Set(["iframe", "video", "audio"]);
+
 function isInlineNode(element: Element) {
-  if (roleOf(element) && CONTAINER_ROLES.has(roleOf(element))) return false;
+  const role = roleOf(element);
+  if (CONTAINER_ROLES.has(role) || OWN_LINE_ROLES.has(role)) return false;
   if (element.localName === "table") return false;
   return !isBlock(element) && !hasBlockContent(element);
 }

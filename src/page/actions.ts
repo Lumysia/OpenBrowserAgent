@@ -14,6 +14,7 @@ export type ActStep = {
   direction?: string;
   clear?: boolean;
   submit?: boolean;
+  double?: boolean;
 };
 
 export type StepResult = {
@@ -34,7 +35,7 @@ export function runStep(step: ActStep): StepResult {
   try {
     switch (step.action) {
       case "click":
-        return click(resolveRef(step.ref));
+        return click(resolveRef(step.ref), step.double === true);
       case "type":
         return type(
           resolveRef(step.ref),
@@ -112,7 +113,7 @@ function pointer(element: Element, type: string, init: MouseEventInit) {
   );
 }
 
-function click(element: Element): StepResult {
+function click(element: Element, double: boolean): StepResult {
   if ((element as HTMLButtonElement).disabled)
     return failed(
       `${describe(element)} is disabled. Complete the required fields first, or snapshot to see why.`,
@@ -126,11 +127,18 @@ function click(element: Element): StepResult {
       : undefined;
   if (element instanceof HTMLElement) element.focus({ preventScroll: true });
   pointer(element, "pointerover", init);
-  pointer(element, "pointerdown", { ...init, buttons: 1 });
-  element.dispatchEvent(new MouseEvent("mousedown", { ...init, buttons: 1 }));
-  pointer(element, "pointerup", init);
-  element.dispatchEvent(new MouseEvent("mouseup", init));
-  element.dispatchEvent(new MouseEvent("click", init));
+  for (let detail = 1; detail <= (double ? 2 : 1); detail++) {
+    const press = { ...init, detail };
+    pointer(element, "pointerdown", { ...press, buttons: 1 });
+    element.dispatchEvent(
+      new MouseEvent("mousedown", { ...press, buttons: 1 }),
+    );
+    pointer(element, "pointerup", press);
+    element.dispatchEvent(new MouseEvent("mouseup", press));
+    element.dispatchEvent(new MouseEvent("click", press));
+  }
+  if (double)
+    element.dispatchEvent(new MouseEvent("dblclick", { ...init, detail: 2 }));
   return ok(covered);
 }
 
@@ -191,7 +199,13 @@ function type(
     element.focus({ preventScroll: true });
     const next = clear ? text : element.value + text;
     setNativeValue(element, next);
-    if (element.value !== next && element.type !== "number")
+    // Number fields normalize their value ("1.50" -> "1.5") but empty it
+    // when the text is not a number.
+    const rejected =
+      element.type === "number"
+        ? next.trim() !== "" && element.value === ""
+        : element.value !== next;
+    if (rejected)
       return failed(
         `${describe(element)} did not accept the text (value is now "${clip(element.value, 60)}").`,
       );
@@ -237,6 +251,16 @@ export function prepareTrustedInput(ref: string, clear: boolean) {
   if (!clear) range.collapse(false);
   getSelection()?.removeAllRanges();
   getSelection()?.addRange(range);
+}
+
+// Where trusted (debugger) input should land for an element, in viewport
+// coordinates, after scrolling it into view and optionally focusing it.
+export function inputPoint(ref: string, focus: boolean) {
+  const element = resolveRef(ref);
+  reveal(element);
+  if (focus && element instanceof HTMLElement)
+    element.focus({ preventScroll: true });
+  return centerOf(element);
 }
 
 export function editableText(ref: string) {

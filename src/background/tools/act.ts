@@ -1,25 +1,23 @@
 import { delay } from "../../shared/cancellation";
-import { areCdpAvailable } from "../../shared/runtime-capabilities";
 import { getBrowserApi } from "../../shared/storage";
 import { TOOL_NAME } from "../../shared/tool-names";
-import { withCdp } from "../cdp";
 import { callPage, pageTab, PageError } from "../page-agent";
+import {
+  dialogLines,
+  endDialogs,
+  runStep,
+  STEP_SETTLE_MS,
+  stepLabel,
+  watchDialogs,
+  type Step,
+  type StepOutcome,
+} from "./act-steps";
 import { pageHeader } from "./page";
 import { tabLine, waitTabComplete } from "./tabs";
-import {
-  errorMessage,
-  fail,
-  schema,
-  stringArg,
-  type ToolDefinition,
-} from "./types";
+import { errorMessage, fail, schema, type ToolDefinition } from "./types";
 
-const STEP_SETTLE_MS = 120;
 const BATCH_SETTLE_MS = 300;
-const WAIT_DEFAULT_MS = 1_000;
-const WAIT_MAX_MS = 10_000;
 const MAX_STEPS = 30;
-const MAX_EDITS = 100;
 
 const ACTIONS = [
   "click",
@@ -30,100 +28,8 @@ const ACTIONS = [
   "scroll",
   "wait",
   "drag",
+  "dialog",
 ];
-
-type Step = Record<string, unknown> & { action: string };
-
-function stepLabel(step: Step) {
-  const target = step.ref ? ` ${step.ref}` : "";
-  if (step.action === "type")
-    return `type${target} "${String(step.text ?? "").slice(0, 40)}"`;
-  if (step.action === "press") return `press ${step.key || "Enter"}${target}`;
-  if (step.action === "select")
-    return `select${target} "${step.value ?? step.text ?? ""}"`;
-  if (step.action === "wait")
-    return step.text
-      ? `wait for "${step.text}"`
-      : `wait ${step.ms || WAIT_DEFAULT_MS}ms`;
-  if (step.action === "drag") return `drag${target} to ${step.to}`;
-  if (step.action === "scroll")
-    return `scroll${target}${step.direction ? ` ${step.direction}` : ""}`;
-  return `${step.action}${target}`;
-}
-
-async function waitStep(tabId: number, step: Step, signal?: AbortSignal) {
-  const ms = Math.min(
-    WAIT_MAX_MS,
-    Math.max(0, Number(step.ms) || WAIT_DEFAULT_MS),
-  );
-  const text = stringArg(step.text);
-  if (!text) {
-    await delay(ms, signal);
-    return undefined;
-  }
-  const end = Date.now() + (Number(step.ms) ? ms : 5_000);
-  while (Date.now() < end) {
-    const { value } = await callPage<boolean>(
-      tabId,
-      "hasText",
-      { text },
-      signal,
-    );
-    if (value) return undefined;
-    await delay(250, signal);
-  }
-  return `"${text}" did not appear. Take a snapshot to see the page.`;
-}
-
-// Typing into editors that ignore synthetic input, through the debugger.
-async function trustedType(tabId: number, step: Step, signal?: AbortSignal) {
-  if (!areCdpAvailable())
-    return "This editor ignores page-script typing, and real keyboard input needs the Chrome debugger, which this browser lacks.";
-  const text = String(step.text ?? "");
-  await callPage(
-    tabId,
-    "prepareTrusted",
-    { ref: step.ref, clear: step.clear !== false },
-    signal,
-  );
-  await withCdp(
-    { tabId },
-    (send) => send("Input.insertText", { text }),
-    signal,
-  );
-  await delay(STEP_SETTLE_MS, signal);
-  const { value } = await callPage<string>(
-    tabId,
-    "editableText",
-    { ref: step.ref },
-    signal,
-  );
-  if (!value.includes(text.replace(/\s+/g, " ").trim()))
-    return `The editor did not accept the text (it now shows "${value.slice(0, 80)}").`;
-  if (step.submit === true) {
-    const result = await callPage<{ ok: boolean; error?: string }>(
-      tabId,
-      "step",
-      { step: { action: "press", ref: step.ref, key: "Enter" } },
-      signal,
-    );
-    if (!result.value.ok) return result.value.error;
-  }
-  return undefined;
-}
-
-async function runPageStep(tabId: number, step: Step, signal?: AbortSignal) {
-  if (step.action === "wait")
-    return { error: await waitStep(tabId, step, signal) };
-  const { value } = await callPage<{
-    ok: boolean;
-    error?: string;
-    note?: string;
-    trusted?: boolean;
-  }>(tabId, "step", { step }, signal);
-  if (value.trusted) return { error: await trustedType(tabId, step, signal) };
-  return { error: value.ok ? undefined : value.error, note: value.note };
-}
 
 const pageUrl = (url: string) => url.split("#")[0];
 
@@ -133,7 +39,7 @@ export const actTool: ToolDefinition = {
   timeoutMs: 120_000,
   summary: "Click, type, select, press keys, scroll on a page",
   description:
-    "Run steps on a page in order, by snapshot ref: click, type (text; clear defaults to true; submit presses Enter), press (key like Enter or Control+A; ref optional), select (value or option text of a select), hover, scroll (ref, or direction up/down/top/bottom), wait (ms, or text to wait for), drag (ref to ref 'to'). Stops at the first failing step. Returns what changed (navigation, new or gone controls, dialogs), not a full snapshot.",
+    "Run steps on a page in order, by snapshot ref: click (double for a double-click; or x,y viewport pixels from a screenshot), type (text; clear defaults to true; submit presses Enter), press (key like Enter or Control+A; ref optional), select (value or option text of a select), hover, scroll (ref, or direction up/down/top/bottom), wait (ms, or text to wait for), drag (ref to ref 'to'), dialog (value accept or dismiss, text for a prompt: how JavaScript dialogs opened by later steps are answered; without it they are dismissed and reported). trusted: true sends real mouse or keyboard input for click, hover and press when the page ignores the normal ones. Stops at the first failing step. Returns what changed (navigation, new or gone controls, dialogs), not a full snapshot.",
   parameters: schema(
     {
       tabId: { type: "number", description: "Defaults to the active tab." },
@@ -155,6 +61,10 @@ export const actTool: ToolDefinition = {
             ms: { type: "number" },
             clear: { type: "boolean" },
             submit: { type: "boolean" },
+            double: { type: "boolean" },
+            trusted: { type: "boolean" },
+            x: { type: "number" },
+            y: { type: "number" },
           },
           ["action"],
         ),
@@ -181,27 +91,49 @@ export const actTool: ToolDefinition = {
     const onCreated = (created: chrome.tabs.Tab) => {
       if (created.openerTabId === tab.id) opened.push(created);
     };
-    api.tabs.onCreated.addListener(onCreated);
     const done: string[] = [];
     let failure = "";
     let navigated = false;
-    try {
+    const record = (index: number, step: Step, result: StepOutcome) => {
+      if (result.error) {
+        failure = `Step ${index + 1} (${stepLabel(step)}) failed: ${result.error}${index < steps.length - 1 ? " Later steps were not run." : ""}`;
+        return false;
+      }
+      done.push(
+        `${index + 1}. ${stepLabel(step)}${result.note ? ` (${result.note})` : ""}`,
+      );
+      return true;
+    };
+    const begin = async () => {
       await callPage(tab.id, "begin", {}, signal);
+      await watchDialogs(tab.id, signal);
+    };
+    let first = 0;
+    try {
+      await begin();
+    } catch (error) {
+      // A dialog that opened outside a batch blocks the page; a leading
+      // dialog step answers it before the batch starts.
+      if (!(error instanceof PageError) || steps[0].action !== "dialog")
+        throw error;
+      if (!record(0, steps[0], await runStep(tab.id, steps[0], signal)))
+        return fail(`${pageHeader(tab)}\n${failure}`);
+      first = 1;
+      await delay(STEP_SETTLE_MS, signal);
+      await begin();
+    }
+    api.tabs.onCreated.addListener(onCreated);
+    try {
       for (const [index, step] of steps.entries()) {
-        let result: { error?: string; note?: string };
+        if (index < first) continue;
+        let result: StepOutcome;
         try {
-          result = await runPageStep(tab.id, step, signal);
+          result = await runStep(tab.id, step, signal);
         } catch (error) {
           if (!(error instanceof PageError)) signal?.throwIfAborted();
           result = { error: errorMessage(error) };
         }
-        if (result.error) {
-          failure = `Step ${index + 1} (${stepLabel(step)}) failed: ${result.error}${index < steps.length - 1 ? " Later steps were not run." : ""}`;
-          break;
-        }
-        done.push(
-          `${index + 1}. ${stepLabel(step)}${result.note ? ` (${result.note})` : ""}`,
-        );
+        if (!record(index, step, result)) break;
         await delay(STEP_SETTLE_MS, signal);
         const current = await api.tabs.get(tab.id);
         if (
@@ -231,9 +163,14 @@ export const actTool: ToolDefinition = {
     } finally {
       api.tabs.onCreated.removeListener(onCreated);
     }
+    const dialogs = dialogLines(
+      await endDialogs(tab.id),
+      steps.some((step) => step.action === "dialog"),
+    );
     const lines = [pageHeader(tab)];
     if (done.length) lines.push(`Done: ${done.join("; ")}`);
     if (failure) lines.push(failure);
+    lines.push(...dialogs);
     const after = await api.tabs.get(tab.id);
     let changes: string[] = [];
     let fresh = navigated;
@@ -262,15 +199,21 @@ export const actTool: ToolDefinition = {
     }
     lines.push(...changes);
     const moved = steps.some((step) =>
-      ["scroll", "wait"].includes(step.action),
+      ["scroll", "wait", "dialog"].includes(step.action),
     );
-    if (!failure && !changes.length && !fresh && !opened.length && !moved)
+    if (
+      !failure &&
+      !changes.length &&
+      !dialogs.length &&
+      !fresh &&
+      !opened.length &&
+      !moved
+    )
       lines.push(
         "No visible change in the viewport. Check with snapshot or find if you expected one.",
       );
-    const text = lines.join("\n");
     return {
-      text,
+      text: lines.join("\n"),
       details: {
         tabId: tab.id,
         steps: steps.length,
@@ -278,120 +221,6 @@ export const actTool: ToolDefinition = {
         ...(failure ? { error: failure } : {}),
       },
       isError: !!failure,
-    };
-  },
-};
-
-const EDIT_OPS = [
-  "setText",
-  "insert",
-  "remove",
-  "setAttribute",
-  "removeAttribute",
-  "style",
-  "css",
-];
-
-type Edit = Record<string, unknown> & { op: string };
-
-export const editPageTool: ToolDefinition = {
-  name: TOOL_NAME.editPage,
-  group: "browser",
-  compactArgs: true,
-  summary: "Change page content and style",
-  description:
-    "Edit the page in place by snapshot ref, in one batch: setText (text; keep links by writing them as [label](e12) like the snapshot), insert (text or plain html at position before/after/prepend/append; tag optional; returns the new ref; no script, frames, SVG or event handlers), remove, setAttribute / removeAttribute (name, value), style (inline CSS in value), css (stylesheet text in value, no ref). For translation, replace each block's text with setText. Stops at the first failing edit.",
-  parameters: schema(
-    {
-      tabId: { type: "number", description: "Defaults to the active tab." },
-      edits: {
-        type: "array",
-        minItems: 1,
-        items: schema(
-          {
-            op: { type: "string", enum: EDIT_OPS },
-            ref: { type: "string" },
-            text: { type: "string" },
-            html: { type: "string" },
-            position: {
-              type: "string",
-              enum: ["before", "after", "prepend", "append"],
-            },
-            tag: { type: "string" },
-            name: { type: "string" },
-            value: { type: "string" },
-          },
-          ["op"],
-        ),
-      },
-    },
-    ["edits"],
-  ),
-  async execute(input, { signal }) {
-    const edits = (Array.isArray(input.edits) ? input.edits : []).filter(
-      (edit): edit is Edit =>
-        !!edit &&
-        typeof edit === "object" &&
-        typeof (edit as Edit).op === "string",
-    );
-    if (!edits.length)
-      return fail(
-        "edits is required: a list like [{op:'setText', ref:'e12', text:'…'}].",
-      );
-    if (edits.length > MAX_EDITS)
-      return fail(`At most ${MAX_EDITS} edits per call; split the batch.`);
-    const tab = await pageTab(input.tabId);
-    let applied = 0;
-    const inserted: string[] = [];
-    let error = "";
-    // Page edits run in the page; stylesheet edits through the extension API,
-    // keeping the batch order.
-    for (let start = 0; start < edits.length && !error;) {
-      const edit = edits[start];
-      if (edit.op === "css") {
-        const css = String(edit.value ?? edit.text ?? "");
-        try {
-          await getBrowserApi().scripting.insertCSS({
-            target: { tabId: tab.id },
-            css,
-          });
-          applied++;
-        } catch (cause) {
-          error = `Edit ${start + 1} (css) failed: ${errorMessage(cause)}`;
-        }
-        start++;
-        continue;
-      }
-      let end = start;
-      while (end < edits.length && edits[end].op !== "css") end++;
-      const { value } = await callPage<{
-        applied: number;
-        inserted: string[];
-        error?: string;
-      }>(tab.id, "edits", { ops: edits.slice(start, end) }, signal);
-      applied += value.applied;
-      inserted.push(...value.inserted);
-      if (value.error)
-        error = value.error.replace(
-          /^Edit (\d+)/,
-          (_, n) => `Edit ${start + Number(n)}`,
-        );
-      start = end;
-    }
-    const lines = [
-      `Applied ${applied} of ${edits.length} edits on tab ${tab.id}.`,
-    ];
-    if (inserted.length) lines.push(`Inserted: ${inserted.join(", ")}`);
-    if (error) lines.push(`${error} Later edits were not applied.`);
-    return {
-      text: lines.join("\n"),
-      details: {
-        tabId: tab.id,
-        edits: edits.length,
-        applied,
-        ...(error ? { error } : {}),
-      },
-      isError: !!error,
     };
   },
 };

@@ -2,6 +2,7 @@ import { beginChanges, collectChanges, hasBaseline } from "./changes";
 import {
   editableText,
   hasText,
+  inputPoint,
   prepareTrustedInput,
   runStep,
   type ActStep,
@@ -78,6 +79,7 @@ const methods: Record<string, (args: Args) => unknown> = {
   prepareTrusted: (args) =>
     prepareTrustedInput(String(args.ref || ""), args.clear !== false),
   editableText: (args) => editableText(String(args.ref || "")),
+  inputPoint: (args) => inputPoint(String(args.ref || ""), args.focus === true),
   searchResults: (args) => searchResults(Number(args.limit) || 10),
 };
 

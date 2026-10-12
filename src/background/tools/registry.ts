@@ -1,8 +1,9 @@
 import { hasToolGroup } from "../../shared/agents";
 import { TOOL_NAME } from "../../shared/tool-names";
-import { actTool, editPageTool } from "./act";
+import { actTool } from "./act";
 import { askTool } from "./ask";
 import { devtoolsTool, runScriptTool } from "./devtools";
+import { editPageTool } from "./edit-page";
 import { exportTool } from "./export";
 import { chatHistoryTool } from "./history";
 import { generateImageTool } from "./images";

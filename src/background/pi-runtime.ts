@@ -194,7 +194,10 @@ export async function runPiAgent(options: {
               toolName: tool.name,
               input,
               text: outcome.text,
-              repeatable: !!tool.readOnly && tool.name !== TOOL_NAME.read,
+              repeatable:
+                !!tool.readOnly &&
+                !outcome.isError &&
+                tool.name !== TOOL_NAME.read,
             });
             const image = outcome.image;
             return {
