@@ -45,6 +45,11 @@ export function installSmartBarTrigger() {
   // Whether a mouse selection is worth asking the background about (see
   // SmartBarPrepareResult); unknown until it answers or settings change.
   let onSelection: boolean | undefined;
+  // The user is working with the shown bar: pressed it, and hasn't clicked
+  // or typed outside it since. A page that closes its suggestion dropdown on
+  // that press often clears the field's selection too; that must not hide
+  // the bar under the user's click.
+  let usingBar = false;
 
   const show = async (
     snapshot: SelectionSnapshot,
@@ -66,11 +71,13 @@ export function installSmartBarTrigger() {
     onSelection = response.value.onSelection;
     const { config } = response.value;
     if (!config || current !== generation) return;
+    usingBar = false;
     getSmartBarUi()?.show(snapshot, config, reason);
   };
 
   listen(document, "mousedown", (event) => {
-    if (isSmartBarEvent(event)) return;
+    usingBar = isSmartBarEvent(event);
+    if (usingBar) return;
     generation++;
     getSmartBarUi()?.hide();
   });
@@ -98,10 +105,15 @@ export function installSmartBarTrigger() {
     ui.dismiss();
   });
 
+  // Typing in the field is the user's own change again.
+  listen(document, "keydown", (event) => {
+    if (!isSmartBarEvent(event)) usingBar = false;
+  });
+
   // Text fields fire it on themselves; it reaches the document captured.
-  listen(document, "selectionchange", () =>
-    getSmartBarUi()?.selectionChanged(),
-  );
+  listen(document, "selectionchange", () => {
+    if (!usingBar) getSmartBarUi()?.selectionChanged();
+  });
 
   listen(window, "pagehide", () => getSmartBarUi()?.hide(), false);
   // Settings announcements don't reach pages in the back/forward cache: ask

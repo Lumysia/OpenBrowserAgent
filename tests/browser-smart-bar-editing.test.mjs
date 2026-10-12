@@ -22,6 +22,8 @@ const PAGE = `<!doctype html><title>Smart bar</title>
 <div id="editor" contenteditable="true">teh draft</div>
 <input id="controlled" value="recieve">
 <input id="password" type="password" value="secretpassword">
+<input id="suggest" value="hello wrold">
+<ul id="suggestions" hidden><li>hello world</li></ul>
 <dialog id="dialog"><p id="dialog-text">Text in a modal dialog.</p></dialog>
 <script>
   // Like a framework-controlled input: state follows input events only.
@@ -31,6 +33,19 @@ const PAGE = `<!doctype html><title>Smart bar</title>
     window.inputEvents++;
     window.controlledState = event.target.value;
   });
+  // A suggestion dropdown that closes on any press outside the field and
+  // leaves the caret at the end, as many sites' search boxes do.
+  const suggest = document.getElementById("suggest");
+  suggest.addEventListener("focus", () => (suggestions.hidden = false));
+  document.addEventListener(
+    "mousedown",
+    (event) => {
+      if (event.target === suggest || suggestions.hidden) return;
+      suggestions.hidden = true;
+      suggest.setSelectionRange(suggest.value.length, suggest.value.length);
+    },
+    true,
+  );
   // The page's own Esc handling, like a form or menu would have.
   window.escapes = 0;
   addEventListener("keydown", (event) => {
@@ -149,6 +164,14 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
       await delay(600);
       assert.equal(await barState(page), "none");
     });
+
+    await t.test(
+      "a field whose dropdown closes on the bar's click",
+      async () => {
+        await replaceWithFix(page, "#suggest");
+        assert.equal(await fieldValue(page, "#suggest"), "hello world");
+      },
+    );
 
     await t.test("Esc hides the bar, not the page's dialog", async () => {
       await page.call(() => document.getElementById("dialog").showModal());
