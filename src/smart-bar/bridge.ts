@@ -13,7 +13,9 @@ export type SmartBarUi = {
     reason: SmartBarShowReason,
   ): void;
   hide(): void;
+  // The toolbar goes with its selection; a result stays until dismissed.
   selectionChanged(): void;
+  frameBlurred(): void;
 };
 
 export const SMART_BAR_HOST_TAG = "oba-smart-bar";

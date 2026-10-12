@@ -105,10 +105,12 @@ export function createSmartBarStore() {
     },
     hide,
     selectionChanged() {
-      // The toolbar belongs to a selection; a result outlives it.
       const { snapshot, result } = state;
       if (!snapshot || result || snapshot.target.kind === "control") return;
       if (getSelection()?.isCollapsed) hide();
+    },
+    frameBlurred() {
+      if (!state.result) hide();
     },
   };
 

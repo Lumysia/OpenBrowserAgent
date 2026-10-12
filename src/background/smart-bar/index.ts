@@ -173,9 +173,9 @@ async function showForSelection(tabId: number) {
 // the selection where the panel picks it up.
 function handOff(request: SmartBarOpenSidePanelRequest, sender: Sender) {
   const windowId = sender.tab?.windowId;
-  const opened = Promise.resolve(openSidePanel(windowId)).catch((error) =>
-    console.warn("Failed to open the side panel", error),
-  );
+  const opened = new Promise((resolve) =>
+    resolve(openSidePanel(windowId)),
+  ).catch((error) => console.warn("Failed to open the side panel", error));
   const handoff: SmartBarHandoff = {
     id: crypto.randomUUID(),
     windowId,

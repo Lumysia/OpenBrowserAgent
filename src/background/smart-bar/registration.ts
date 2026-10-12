@@ -1,6 +1,6 @@
 import {
-  isSmartBarAllowedOnHost,
   smartBarMatchPatterns,
+  smartBarPatternsCover,
   type SmartBarSettings,
 } from "../../shared/smart-bar";
 import { SMART_BAR_SCRIPT } from "../../shared/smart-bar-protocol";
@@ -35,10 +35,20 @@ export async function syncSmartBarRegistration(settings: SmartBarSettings) {
     persistAcrossSessions: true,
   };
   if (existing && samePatterns(existing, script)) return;
-  if (existing) await scripting.unregisterContentScripts({ ids: [SCRIPT_ID] });
-  await registerScript(script);
-  // Registration covers pages loaded from now on; open pages get it here.
-  await injectIntoOpenTabs(settings);
+  // Updated in place: a page loading meanwhile gets the old or the new
+  // registration, never none.
+  if (existing)
+    await scripting.updateContentScripts([
+      { ...script, matchOriginAsFallback: existing.matchOriginAsFallback },
+    ]);
+  else await registerScript(script);
+  // Registration covers pages loaded from now on; open pages of newly
+  // covered sites get the script here.
+  await injectIntoOpenTabs(
+    (host) =>
+      smartBarPatternsCover(patterns, host) &&
+      !(existing && smartBarPatternsCover(existing, host)),
+  );
 }
 
 async function registerScript(script: RegisteredScript) {
@@ -63,15 +73,12 @@ function samePatterns(a: RegisteredScript, b: RegisteredScript) {
   return key(a) === key(b);
 }
 
-async function injectIntoOpenTabs(settings: SmartBarSettings) {
-  const api = getBrowserApi();
-  const tabs = await api.tabs.query({});
+async function injectIntoOpenTabs(covers: (host: string) => boolean) {
+  const tabs = await getBrowserApi().tabs.query({});
   await Promise.all(
     tabs.map((tab) => {
       const host = pageHost(tab.url);
-      if (!tab.id || !host || !isSmartBarAllowedOnHost(settings, host))
-        return undefined;
-      return injectTrigger(tab.id);
+      return tab.id && host && covers(host) ? injectTrigger(tab.id) : undefined;
     }),
   );
 }

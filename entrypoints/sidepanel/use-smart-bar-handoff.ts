@@ -75,11 +75,14 @@ export function useSmartBarHandoff({
   }, [composerRef, handoff, importChat, input, ready, setInput, t]);
 }
 
-// A side panel belongs to one window; the panel page opened as a tab
-// (browsers without a side panel) takes any handoff.
+// The side panel of the window the selection came from takes the handoff.
+// Where the browser has no side panel, the panel page runs as a tab and
+// takes any; elsewhere such a tab takes none.
 async function isForThisPanel(handoff: SmartBarHandoff) {
-  const api = getBrowserApi();
-  if (handoff.windowId === undefined || (await api.tabs.getCurrent()))
-    return true;
-  return (await api.windows.getCurrent()).id === handoff.windowId;
+  const api = getBrowserApi() as typeof chrome & { sidebarAction?: object };
+  if (await api.tabs.getCurrent()) return !api.sidePanel && !api.sidebarAction;
+  return (
+    handoff.windowId === undefined ||
+    (await api.windows.getCurrent()).id === handoff.windowId
+  );
 }

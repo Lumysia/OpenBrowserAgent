@@ -164,19 +164,43 @@ export function hideSmartBarOnHost(
     : { ...settings, blockedHosts: [...settings.blockedHosts, host] };
 }
 
+const ALL_PAGES = ["http://*/*", "https://*/*"];
+const hostPattern = (host: string) => `*://*.${host}/*`;
+
+export type SmartBarMatchPatterns = {
+  matches: string[];
+  excludeMatches: string[];
+};
+
 // Where the page script is registered; undefined when it runs nowhere.
 // Pages already open are checked again by the background on each selection.
-export function smartBarMatchPatterns(settings: SmartBarSettings) {
+export function smartBarMatchPatterns(
+  settings: SmartBarSettings,
+): SmartBarMatchPatterns | undefined {
   if (!settings.enabled) return undefined;
-  const patterns = (hosts: string[]) => hosts.map((host) => `*://*.${host}/*`);
+  const patterns = (hosts: string[]) => hosts.map(hostPattern);
   if (settings.siteMode === SMART_BAR_SITE_MODE.allowList)
     return settings.allowedHosts.length
       ? { matches: patterns(settings.allowedHosts), excludeMatches: [] }
       : undefined;
   return {
-    matches: ["http://*/*", "https://*/*"],
+    matches: ALL_PAGES,
     excludeMatches: patterns(settings.blockedHosts),
   };
+}
+
+// Whether patterns from smartBarMatchPatterns cover a host.
+export function smartBarPatternsCover(
+  patterns: Partial<SmartBarMatchPatterns>,
+  host: string,
+) {
+  const covers = (list: string[] = []) =>
+    list.some((pattern) => {
+      if (ALL_PAGES.includes(pattern)) return true;
+      const listed = pattern.match(/^\*:\/\/\*\.(.+)\/\*$/)?.[1];
+      return !!listed && hostMatches(host, listed);
+    });
+  return covers(patterns.matches) && !covers(patterns.excludeMatches);
 }
 
 export function smartBarActions(

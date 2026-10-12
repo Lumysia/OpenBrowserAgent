@@ -9,6 +9,7 @@ import {
   normalizeSmartBarSettings,
   smartBarActions,
   smartBarMatchPatterns,
+  smartBarPatternsCover,
 } from "../src/shared/smart-bar";
 import { placeSmartBar } from "../src/smart-bar/placement";
 
@@ -71,6 +72,9 @@ test("the page script is registered only where the bar may run", () => {
     })?.matches,
     ["*://*.example.org/*"],
   );
+  const blockMode = smartBarMatchPatterns(on)!;
+  assert.equal(smartBarPatternsCover(blockMode, "example.org"), true);
+  assert.equal(smartBarPatternsCover(blockMode, "a.docs.google.com"), false);
   assert.deepEqual(
     smartBarActions({ ...on, disabledEditActions: ["translate"] }, true),
     ["improve", "fixGrammar", "ask"],

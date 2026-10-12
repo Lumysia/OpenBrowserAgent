@@ -82,6 +82,9 @@ export function installSmartBarTrigger(ctx: ContentScriptContext) {
 
   ctx.addEventListener(window, "pagehide", () => getSmartBarUi()?.hide());
 
+  // A click in another frame (or the parent page) never reaches this one.
+  ctx.addEventListener(window, "blur", () => getSmartBarUi()?.frameBlurred());
+
   const onMessage = (message: { type?: string }) => {
     if (message?.type !== SMART_BAR_MESSAGE.showForSelection) return;
     // Every frame of the tab gets the command; the focused one answers.
