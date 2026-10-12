@@ -273,7 +273,7 @@ export const webSearchTool: ToolDefinition = {
   readOnly: true,
   summary: "Search the web",
   description:
-    "Search the web with the browser's default search engine and get the results (title, URL, snippet). Open a result with tabs to read it.",
+    "Search the web with the browser's default search engine and get the results (title, URL, snippet). Read a result with read and its URL; open it in a tab only to interact with it or to show it to the user.",
   parameters: schema({ query: { type: "string" } }, ["query"]),
   async execute(input, { signal }) {
     const query = stringArg(input.query);
