@@ -182,13 +182,15 @@ test("smart bar", { timeout: 240000 }, async (t) => {
       await clickInBar(page, '[aria-label="Smart bar options"]');
       await clickInBar(page, ".smart-bar-menu-item");
       await poll(async () => (await barState(page)) === "none");
-      const settings = await options.call(
-        async () => (await chrome.storage.local.get("preferences")).preferences,
+      await poll(() =>
+        options.call(
+          async () =>
+            (
+              await chrome.storage.local.get("preferences")
+            ).preferences.smartBar.blockedHosts.join() ===
+            "docs.google.com,127.0.0.1",
+        ),
       );
-      assert.deepEqual(settings.smartBar.blockedHosts, [
-        "docs.google.com",
-        "127.0.0.1",
-      ]);
       await selectText(page, "#text");
       await delay(600);
       assert.equal(await barState(page), "none");
@@ -221,18 +223,19 @@ test("smart bar", { timeout: 240000 }, async (t) => {
     });
 
     await t.test("Ask and Continue hand off to the side panel", async () => {
-      // Opened as a tab, the panel page takes handoffs from any window.
-      const panel = await browser.open(extensionUrl("sidepanel.html"));
-      const composer = () =>
-        panel.call(
-          () => document.querySelector(".composer-box textarea")?.value,
-        );
-      await poll(async () => (await composer()) !== undefined);
       await selectText(listed, "#text");
       await clickInBar(listed, '[aria-label="Ask"]');
-      await poll(async () =>
-        (await composer()).startsWith(
-          "> The quick brown fox jumps over the lazy dog.",
+      // The click's user gesture opens the window's real side panel.
+      const panel = await browser.attach(
+        (url) => url === extensionUrl("sidepanel.html"),
+      );
+      await poll(() =>
+        panel.call(() =>
+          document
+            .querySelector(".composer-box textarea")
+            ?.value.startsWith(
+              "> The quick brown fox jumps over the lazy dog.",
+            ),
         ),
       );
       await selectText(listed, "#text");
@@ -344,9 +347,12 @@ async function click(page, { x, y }) {
     });
 }
 
+// Clicks once the element stops moving (the page can resize, e.g. when the
+// side panel opens, and the bar follows).
 async function clickInBar(page, selector, text) {
-  const point = await poll(() =>
-    page.call(
+  let last;
+  const point = await poll(async () => {
+    const current = await page.call(
       ({ selector, text }) => {
         const root = document.querySelector("oba-smart-bar")?.shadowRoot;
         const element = [...(root?.querySelectorAll(selector) || [])].find(
@@ -357,8 +363,13 @@ async function clickInBar(page, selector, text) {
         return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
       },
       { selector, text },
-    ),
-  );
+    );
+    const stable =
+      current && last && current.x === last.x && current.y === last.y;
+    last = current;
+    if (!stable) await delay(100);
+    return stable && current;
+  });
   await click(page, point);
 }
 
