@@ -132,7 +132,7 @@ export const deDE: LocaleMessages = {
     removeTab: "Tab entfernen",
     attachmentTooLarge: "Einige Dateien waren zu groß zum Anhängen: {names}",
     attachmentsUnsupportedRetry:
-      "Das ausgewählte Modell hat ein Inhaltsformat außer Text abgelehnt, daher wurde es nur mit Text und Dateidetails erneut versucht.",
+      "Das ausgewählte Modell hat ein Inhaltsformat außer Text abgelehnt. Die Nachricht wurde daher nur mit Text und Dateidetails erneut gesendet.",
     attachmentOnlyMessage: "Bitte prüfen Sie die angehängten Dateien.",
     fileMetadataOnly: "Nur Dateidetails",
     replaceUnavailableAttachments: "Nicht verfügbare Dateien ersetzen",
@@ -352,7 +352,7 @@ export const deDE: LocaleMessages = {
     providerDescription:
       "Verbinden Sie OpenBrowserAgent mit Ihren bevorzugten KI-Anbietern über Ihren eigenen Schlüssel.",
     mcpServersDescription:
-      "Konfigurieren Sie entfernte Streamable-HTTP-MCP-Server, die der Assistent nutzen kann.",
+      "Konfigurieren Sie entfernte Streamable-HTTP-MCP-Server, die Agenten nutzen können.",
     newMcpServer: "Neuer MCP-Server",
     mcpServerName: "Servername",
     mcpServerDescription: "Beschreibung",
@@ -384,15 +384,15 @@ export const deDE: LocaleMessages = {
       "Ersetzt die aktuellen Skills durch die integrierten Standard-Skills. Benutzerdefinierte Skills und Änderungen werden entfernt.",
     selectModel: "Modell auswählen",
     selectModelDescription:
-      "Wählen Sie das Haupt-Chatmodell. Der Agentenmodus funktioniert am besten mit Modellen, die Tool-Aufrufe unterstützen.",
+      "Wählen Sie das Haupt-Chatmodell. Agenten funktionieren am besten mit Modellen, die Tool-Aufrufe unterstützen.",
     selectImageModel: "Bildmodell auswählen",
     enableImageGeneration: "Bildgenerierung aktivieren",
     enableImageGenerationDescription:
-      "Stellt dem Assistenten das Tool zur Bildgenerierung bereit.",
+      "Stellt Agenten das Tool zur Bildgenerierung bereit.",
     imageGenerationSize: "Bildgröße",
     providerConnection: "Verbindung",
     providerConnectionHint:
-      "Anbietername, API-Schlüssel und Endpunkt konfigurieren.",
+      "Anbietername, API-Schlüssel und Basis-URL konfigurieren.",
     providerName: "Anbietername",
     deleteProvider: "Anbieter löschen",
     apiKey: "API-Schlüssel",
@@ -421,7 +421,7 @@ export const deDE: LocaleMessages = {
       "Für dieses Modell verfügbare Tokens. Leer lassen, um den vom Anbieter gemeldeten Wert zu verwenden, falls vorhanden.",
     noModelsAddedYet: "Noch keine Modelle hinzugefügt.",
     skillsDescription:
-      "Erstellen Sie wiederverwendbare Browser-Skills, die Sie oder die KI für eine Nachricht auswählen können.",
+      "Erstellen Sie wiederverwendbare Browser-Skills, die Sie oder der Agent für eine Nachricht auswählen können.",
     newSkill: "Neuer Skill",
     importSkillZip: "Archiv importieren",
     importingSkillZip: "Wird importiert…",
@@ -515,10 +515,10 @@ export const deDE: LocaleMessages = {
       "Die neueste KI-Ausgabe während des Streamings automatisch sichtbar halten.",
     autoRetry: "Automatisch erneut versuchen",
     autoRetryDescription:
-      "Einmal automatisch fortsetzen, wenn der Assistent 30 Sekunden lang keine neue Ausgabe erzeugt.",
+      "Einmal automatisch fortsetzen, wenn der Agent 30 Sekunden lang keine neue Ausgabe erzeugt.",
     maxToolSteps: "Maximale Tool-Schritte",
     maxToolStepsDescription:
-      "Legt fest, wie viele Browser-Tool-Schritte der Assistent ausführen darf. 0 deaktiviert Tool-Aufrufe.",
+      "Legt fest, wie viele Tool-Schritte der Agent ausführen darf. 0 deaktiviert Tool-Aufrufe.",
     helperModel: "Hilfsmodell",
     helperModelDescription:
       "Modell für Hintergrundanfragen wie das Zusammenfassen langer Aufgaben. Standardmäßig wird das Modell des Chats verwendet.",
@@ -554,7 +554,7 @@ export const deDE: LocaleMessages = {
     debugToolsDescription: "Tools des gewählten Agenten ({count}).",
     debugToolCore: "Immer geladen",
     debugToolOnDemand: "Bei Bedarf geladen",
-    debugToolRequired: "Erforderlich",
+    debugToolRequired: "Erforderliche Parameter",
   },
   smartBar: smartBarDeDE,
 };

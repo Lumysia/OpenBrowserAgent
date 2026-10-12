@@ -131,7 +131,7 @@ export const ptBR: LocaleMessages = {
     attachmentTooLarge:
       "Alguns arquivos eram grandes demais para anexar: {names}",
     attachmentsUnsupportedRetry:
-      "O modelo selecionado rejeitou um formato de conteúdo não textual, então tentei novamente apenas com texto e detalhes do arquivo.",
+      "O modelo selecionado rejeitou um formato de conteúdo não textual, então a mensagem foi reenviada apenas com o texto e os detalhes dos arquivos.",
     attachmentOnlyMessage: "Revise os arquivos anexados.",
     fileMetadataOnly: "Somente detalhes do arquivo",
     replaceUnavailableAttachments: "Substituir arquivos indisponíveis",
@@ -360,7 +360,7 @@ export const ptBR: LocaleMessages = {
     providerDescription:
       "Use sua própria chave e conecte o OpenBrowserAgent aos seus provedores de IA favoritos.",
     mcpServersDescription:
-      "Configure servidores MCP remotos (Streamable HTTP) que o assistente pode usar.",
+      "Configure servidores MCP remotos (Streamable HTTP) que os agentes podem usar.",
     newMcpServer: "Novo servidor MCP",
     mcpServerName: "Nome do servidor",
     mcpServerDescription: "Descrição",
@@ -390,15 +390,15 @@ export const ptBR: LocaleMessages = {
       "Substitui as habilidades atuais pelas padrão integradas. Habilidades personalizadas e edições serão removidas.",
     selectModel: "Selecionar modelo",
     selectModelDescription:
-      "Escolha o modelo principal das conversas. O modo Navegar funciona melhor com modelos compatíveis com chamadas de ferramentas.",
+      "Escolha o modelo principal das conversas. Os agentes funcionam melhor com modelos compatíveis com chamadas de ferramentas.",
     selectImageModel: "Selecionar modelo de imagem",
     enableImageGeneration: "Ativar geração de imagens",
     enableImageGenerationDescription:
-      "Disponibiliza a ferramenta de geração de imagens para o assistente.",
+      "Disponibiliza a ferramenta de geração de imagens para os agentes.",
     imageGenerationSize: "Tamanho da imagem",
     providerConnection: "Conexão",
     providerConnectionHint:
-      "Configure o nome, a chave e o endpoint do provedor.",
+      "Configure o nome do provedor, a chave de API e a URL base.",
     providerName: "Nome do provedor",
     deleteProvider: "Excluir provedor",
     apiKey: "Chave de API",
@@ -426,7 +426,7 @@ export const ptBR: LocaleMessages = {
       "Tokens disponíveis para este modelo. Deixe em branco para usar o valor informado pelo provedor, se existir.",
     noModelsAddedYet: "Nenhum modelo adicionado ainda.",
     skillsDescription:
-      "Crie habilidades reutilizáveis para o navegador que você ou a IA podem escolher para uma mensagem.",
+      "Crie habilidades reutilizáveis para o navegador que você ou o agente podem escolher para uma mensagem.",
     newSkill: "Nova habilidade",
     importSkillZip: "Importar pacote",
     importingSkillZip: "Importando…",
@@ -519,10 +519,10 @@ export const ptBR: LocaleMessages = {
       "Mantém automaticamente a saída mais recente da IA visível enquanto as mensagens são transmitidas.",
     autoRetry: "Nova tentativa automática",
     autoRetryDescription:
-      "Continua automaticamente uma vez se o assistente não produzir nova saída por 30 segundos.",
+      "Continua automaticamente uma vez se o agente não produzir nova saída por 30 segundos.",
     maxToolSteps: "Máximo de etapas de ferramentas",
     maxToolStepsDescription:
-      "Define quantas etapas de ferramentas do navegador o assistente pode executar. Use 0 para desativar as chamadas de ferramentas.",
+      "Define quantas etapas de ferramentas o agente pode executar. Use 0 para desativar as chamadas de ferramentas.",
     helperModel: "Modelo auxiliar",
     helperModelDescription:
       "Modelo para solicitações em segundo plano, como resumir tarefas longas. Por padrão, usa o modelo da própria conversa.",
@@ -558,7 +558,7 @@ export const ptBR: LocaleMessages = {
     debugToolsDescription: "Ferramentas do agente selecionado ({count}).",
     debugToolCore: "Sempre carregada",
     debugToolOnDemand: "Carregada sob demanda",
-    debugToolRequired: "Obrigatória",
+    debugToolRequired: "Parâmetros obrigatórios",
   },
   smartBar: smartBarPtBR,
 };

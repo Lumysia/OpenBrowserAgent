@@ -370,7 +370,7 @@ export const enUS = {
     providerConnectionHint: "Set the provider name, API key, and base URL.",
     providerName: "Provider name",
     deleteProvider: "Delete provider",
-    apiKey: "API Key",
+    apiKey: "API key",
     baseUrl: "Base URL",
     models: "Models",
     modelHint: "Fetch models, then select one to add",

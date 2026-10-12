@@ -127,7 +127,7 @@ export const jaJP: LocaleMessages = {
     addCurrentTab: "現在のタブを追加",
     attachFiles: "ファイルを添付",
     attachFilesHint: "画像またはローカルファイル",
-    removeAttachment: "添付を削除",
+    removeAttachment: "添付ファイルを削除",
     removeTab: "タブを外す",
     attachmentTooLarge:
       "サイズが大きすぎて添付できなかったファイルがあります: {names}",
@@ -347,7 +347,7 @@ export const jaJP: LocaleMessages = {
     providerDescription:
       "自分の API キーを使って、OpenBrowserAgent をお気に入りの AI プロバイダーに接続します。",
     mcpServersDescription:
-      "アシスタントが使用できるリモート Streamable HTTP MCP サーバーを設定します。",
+      "エージェントが使用できるリモート Streamable HTTP MCP サーバーを設定します。",
     newMcpServer: "新しい MCP サーバー",
     mcpServerName: "サーバー名",
     mcpServerDescription: "説明",
@@ -380,15 +380,15 @@ export const jaJP: LocaleMessages = {
       "現在のスキルを組み込みの既定値に置き換えます。カスタムスキルと編集内容は削除されます。",
     selectModel: "モデルを選択",
     selectModelDescription:
-      "メインのチャットモデルを選択します。エージェントとして使う場合は、ツール呼び出しに対応したモデルがおすすめです。",
+      "メインのチャットモデルを選択します。エージェントにはツール呼び出しに対応したモデルがおすすめです。",
     selectImageModel: "画像モデルを選択",
     enableImageGeneration: "画像生成を有効化",
     enableImageGenerationDescription:
-      "アシスタントが画像生成ツールを使えるようにします。",
+      "エージェントが画像生成ツールを使えるようにします。",
     imageGenerationSize: "画像サイズ",
     providerConnection: "接続情報",
     providerConnectionHint:
-      "プロバイダー名、キー、エンドポイントを設定します。",
+      "プロバイダー名、API キー、ベース URL を設定します。",
     providerName: "プロバイダー名",
     deleteProvider: "プロバイダーを削除",
     apiKey: "API キー",
@@ -416,7 +416,7 @@ export const jaJP: LocaleMessages = {
       "このモデルで利用できるトークン数。空欄の場合はプロバイダーが返した値があれば使用します。",
     noModelsAddedYet: "モデルはまだ追加されていません。",
     skillsDescription:
-      "ユーザーまたは AI がメッセージごとに選べる、再利用可能なブラウザースキルを作成します。",
+      "あなたやエージェントがメッセージごとに選べる、再利用可能なブラウザースキルを作成します。",
     newSkill: "新しいスキル",
     importSkillZip: "アーカイブをインポート",
     importingSkillZip: "インポート中…",
@@ -509,10 +509,10 @@ export const jaJP: LocaleMessages = {
       "メッセージのストリーミング中、最新の AI 出力を自動的に表示し続けます。",
     autoRetry: "自動再試行",
     autoRetryDescription:
-      "アシスタントが30秒間新しい出力を生成しない場合、一度だけ自動的に続行します。",
+      "エージェントが 30 秒間新しい出力を生成しない場合、一度だけ自動的に続行します。",
     maxToolSteps: "最大ツールステップ数",
     maxToolStepsDescription:
-      "アシスタントが実行できるブラウザーツールのステップ数を設定します。0 にするとツール呼び出しを無効にします。",
+      "エージェントが実行できるツールのステップ数を設定します。0 にするとツール呼び出しを無効にします。",
     helperModel: "補助モデル",
     helperModelDescription:
       "長いタスクの要約などバックグラウンド処理に使うモデル。既定ではチャットのモデルを使います。",
@@ -548,7 +548,7 @@ export const jaJP: LocaleMessages = {
     debugToolsDescription: "選択中のエージェントのツール（{count}個）。",
     debugToolCore: "常時読み込み",
     debugToolOnDemand: "必要時に読み込み",
-    debugToolRequired: "必須",
+    debugToolRequired: "必須パラメーター",
   },
   smartBar: smartBarJaJP,
 };

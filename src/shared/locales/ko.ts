@@ -319,7 +319,7 @@ export const ko: LocaleMessages = {
     providerDescription:
       "자신의 API 키로 OpenBrowserAgent를 원하는 AI 제공업체에 연결하세요.",
     mcpServersDescription:
-      "어시스턴트가 사용할 원격 Streamable HTTP MCP 서버를 구성합니다.",
+      "에이전트가 사용할 원격 Streamable HTTP MCP 서버를 구성합니다.",
     newMcpServer: "새 MCP 서버",
     mcpServerName: "서버 이름",
     mcpServerDescription: "설명",
@@ -349,14 +349,14 @@ export const ko: LocaleMessages = {
       "현재 스킬을 내장 기본값으로 바꿉니다. 사용자 지정 스킬과 편집 내용이 제거됩니다.",
     selectModel: "모델 선택",
     selectModelDescription:
-      "주 채팅 모델을 선택하세요. 에이전트 모드는 도구 호출을 지원하는 모델에서 가장 잘 작동합니다.",
+      "주 채팅 모델을 선택하세요. 에이전트는 도구 호출을 지원하는 모델에서 가장 잘 작동합니다.",
     selectImageModel: "이미지 모델 선택",
     enableImageGeneration: "이미지 생성 활성화",
     enableImageGenerationDescription:
-      "어시스턴트가 이미지 생성 도구를 사용할 수 있게 합니다.",
+      "에이전트가 이미지 생성 도구를 사용할 수 있게 합니다.",
     imageGenerationSize: "이미지 크기",
     providerConnection: "연결 정보",
-    providerConnectionHint: "제공업체 이름, 키, 엔드포인트를 구성합니다.",
+    providerConnectionHint: "제공업체 이름, API 키, Base URL을 구성합니다.",
     providerName: "제공업체 이름",
     deleteProvider: "제공업체 삭제",
     apiKey: "API 키",
@@ -384,7 +384,7 @@ export const ko: LocaleMessages = {
       "이 모델에서 사용할 수 있는 토큰 수입니다. 비워 두면 제공업체가 알려 주는 값을 사용합니다(있는 경우).",
     noModelsAddedYet: "아직 추가된 모델이 없습니다.",
     skillsDescription:
-      "사용자나 AI가 메시지에 골라 쓸 수 있는 재사용 가능한 브라우저 스킬을 만듭니다.",
+      "사용자나 에이전트가 메시지에 골라 쓸 수 있는 재사용 가능한 브라우저 스킬을 만듭니다.",
     newSkill: "새 스킬",
     importSkillZip: "압축 파일 가져오기",
     importingSkillZip: "가져오는 중…",
@@ -476,10 +476,10 @@ export const ko: LocaleMessages = {
       "메시지가 스트리밍되는 동안 최신 AI 출력을 자동으로 보이게 유지합니다.",
     autoRetry: "자동 재시도",
     autoRetryDescription:
-      "어시스턴트가 30초 동안 새 출력을 만들지 않으면 한 번 자동으로 계속합니다.",
+      "에이전트가 30초 동안 새 출력을 만들지 않으면 한 번 자동으로 계속합니다.",
     maxToolSteps: "최대 도구 단계",
     maxToolStepsDescription:
-      "어시스턴트가 실행할 수 있는 브라우저 도구 단계 수를 설정합니다. 0으로 설정하면 도구 호출을 사용하지 않습니다.",
+      "에이전트가 실행할 수 있는 도구 단계 수를 설정합니다. 0으로 설정하면 도구 호출을 사용하지 않습니다.",
     helperModel: "보조 모델",
     helperModelDescription:
       "긴 작업 요약 같은 백그라운드 요청에 사용할 모델입니다. 기본적으로 해당 채팅의 모델을 사용합니다.",
@@ -514,7 +514,7 @@ export const ko: LocaleMessages = {
     debugToolsDescription: "선택한 에이전트의 도구({count}개).",
     debugToolCore: "항상 불러옴",
     debugToolOnDemand: "필요할 때 불러옴",
-    debugToolRequired: "필수",
+    debugToolRequired: "필수 매개변수",
   },
   smartBar: smartBarKo,
 };

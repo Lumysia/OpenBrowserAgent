@@ -46,7 +46,7 @@ OpenBrowserAgent is a WXT/Vite/React/TypeScript browser extension for AI-assiste
 - Extension UI text must prefer stored UI language (`storage.language` with local registries). Use `chrome.i18n` only as fallback or where stored language is unavailable.
 - Avoid hardcoded theme colors and user-facing strings. Use shared CSS variables and locale files under `src/shared/locales`.
 - Do not add placeholder hacks, debug logs, or narrow special-case branches without an explicit product requirement.
-- Keep localization complete: update every supported locale for user-facing UI strings, keep Simplified and Traditional Chinese separate, and do not expose unimplemented locales.
+- Keep localization complete: update every supported locale for user-facing UI strings, keep Simplified and Traditional Chinese separate, and do not expose unimplemented locales. Use the terms in `docs/translation-glossary.md`, and add new concepts there in the same change.
 - Prefer real streaming over simulated streaming. Do not wait for a full model response and then fake token chunks when the provider supports streaming.
 - Keep preferences explicit and defaulted in storage. New preferences should have a type, a storage default, and a settings control when user-facing.
 - Settings changes must take effect in the UI immediately. Do not couple visible state updates to delayed `chrome.storage.sync` writes; persist a local immediate value/cache first and let sync flush in the background.

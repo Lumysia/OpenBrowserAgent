@@ -132,7 +132,7 @@ export const frFR: LocaleMessages = {
     attachmentTooLarge:
       "Certains fichiers étaient trop volumineux pour être joints : {names}",
     attachmentsUnsupportedRetry:
-      "Le modèle sélectionné a rejeté un format de contenu non textuel, j’ai donc réessayé avec le texte et les détails des fichiers seulement.",
+      "Le modèle sélectionné a rejeté un format de contenu non textuel. Le message a donc été renvoyé avec uniquement le texte et les détails des fichiers.",
     attachmentOnlyMessage: "Veuillez examiner les fichiers joints.",
     fileMetadataOnly: "Détails du fichier uniquement",
     replaceUnavailableAttachments: "Remplacer les fichiers indisponibles",
@@ -356,7 +356,7 @@ export const frFR: LocaleMessages = {
     providerDescription:
       "Utilisez votre propre clé API et connectez OpenBrowserAgent à vos fournisseurs d’IA préférés.",
     mcpServersDescription:
-      "Configurez les serveurs MCP Streamable HTTP distants que l’assistant peut utiliser.",
+      "Configurez les serveurs MCP Streamable HTTP distants que les agents peuvent utiliser.",
     newMcpServer: "Nouveau serveur MCP",
     mcpServerName: "Nom du serveur",
     mcpServerDescription: "Description",
@@ -390,11 +390,11 @@ export const frFR: LocaleMessages = {
     selectImageModel: "Sélectionner un modèle d’image",
     enableImageGeneration: "Activer la génération d’images",
     enableImageGenerationDescription:
-      "Met l’outil de génération d’images à la disposition de l’assistant.",
+      "Met l’outil de génération d’images à la disposition des agents.",
     imageGenerationSize: "Taille de l’image",
     providerConnection: "Connexion",
     providerConnectionHint:
-      "Configurez le nom, la clé et le point de terminaison du fournisseur.",
+      "Configurez le nom du fournisseur, la clé API et l’URL de base.",
     providerName: "Nom du fournisseur",
     deleteProvider: "Supprimer le fournisseur",
     apiKey: "Clé API",
@@ -422,7 +422,7 @@ export const frFR: LocaleMessages = {
       "Tokens disponibles pour ce modèle. Laissez vide pour utiliser la valeur signalée par le fournisseur, si disponible.",
     noModelsAddedYet: "Aucun modèle ajouté.",
     skillsDescription:
-      "Créez des compétences de navigation réutilisables, que vous ou l’IA pouvez choisir pour un message.",
+      "Créez des compétences de navigation réutilisables, que vous ou l’agent pouvez choisir pour un message.",
     newSkill: "Nouvelle compétence",
     importSkillZip: "Importer une archive",
     importingSkillZip: "Importation…",
@@ -517,10 +517,10 @@ export const frFR: LocaleMessages = {
       "Garder automatiquement la dernière réponse de l’IA visible pendant la génération des messages.",
     autoRetry: "Nouvelle tentative automatique",
     autoRetryDescription:
-      "Continuer automatiquement une fois si l’assistant ne produit rien de nouveau pendant 30 secondes.",
+      "Continuer automatiquement une fois si l’agent ne produit rien de nouveau pendant 30 secondes.",
     maxToolSteps: "Nombre maximal d’étapes d’outils",
     maxToolStepsDescription:
-      "Définit combien d’étapes d’outils navigateur l’assistant peut exécuter. Utilisez 0 pour désactiver les appels d’outils.",
+      "Définit combien d’étapes d’outils l’agent peut exécuter. Utilisez 0 pour désactiver les appels d’outils.",
     helperModel: "Modèle auxiliaire",
     helperModelDescription:
       "Modèle pour les requêtes en arrière-plan, comme le résumé des longues tâches. Par défaut, le modèle de la discussion est utilisé.",
@@ -556,7 +556,7 @@ export const frFR: LocaleMessages = {
     debugToolsDescription: "Outils de l’agent sélectionné ({count}).",
     debugToolCore: "Toujours chargé",
     debugToolOnDemand: "Chargé à la demande",
-    debugToolRequired: "Requis",
+    debugToolRequired: "Paramètres requis",
   },
   smartBar: smartBarFrFR,
 };
