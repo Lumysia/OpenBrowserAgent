@@ -73,7 +73,6 @@ export const esES: LocaleMessages = {
     openSubAgentChat: "Abrir chat del subagente",
     subAgentRunning: "En curso",
     subAgentCompleted: "Completado",
-    questionWaiting: "Esperando tu respuesta",
     questionSubmit: "Enviar respuestas",
     questionCustomPlaceholder: "Escribe tu propia respuesta...",
     questionNoAnswer: "Sin respuesta",

@@ -68,7 +68,6 @@ export const zhCN: LocaleMessages = {
     openSubAgentChat: "打开子智能体聊天",
     subAgentRunning: "运行中",
     subAgentCompleted: "已完成",
-    questionWaiting: "等待你的回答",
     questionSubmit: "提交回答",
     questionCustomPlaceholder: "输入自定义回答……",
     questionNoAnswer: "未回答",

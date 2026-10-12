@@ -8,9 +8,9 @@ It turns the browser into an AI working surface: users can chat with a selected 
 
 - Ask questions about the active page or attached tabs.
 - Research topics with page context, tools, MCP servers, and source citations.
-- Use the Browse agent to inspect pages, navigate tabs, click, type, download, and automate browser tasks.
-- Use the Ask agent for more focused page Q&A with a smaller capability surface.
-- Create custom agents with explicit capabilities, icons, instructions, memory, and workspace files.
+- Use the Browse agent to read pages, navigate tabs, click, type, edit pages, download, and automate browser tasks.
+- Use the Ask agent for focused page Q&A: it reads pages but does not operate the browser.
+- Create custom agents with their own instructions, tool groups, model, icon, and an optional workspace with memory.
 - Create/import reusable skills for repeatable workflows.
 - Configure model providers, chat models, image models, sync preferences, MCP servers, and UI settings.
 
@@ -30,19 +30,23 @@ It turns the browser into an AI working surface: users can chat with a selected 
 
 - Built-in Browse agent for browser automation and broader tool usage.
 - Built-in Ask agent for page-focused questions.
-- Custom agents with editable capabilities and workspace files.
+- Every agent has the same shape: instructions, tool groups, an optional model, and an optional private workspace (files plus MEMORY.md and USER.md). Browse and Ask are built-in presets.
+- Agents can delegate tasks to sub-agents, which run in the background (also with the side panel closed) in their own linked chats.
 - Agent ZIP import/export.
 - Built-in agents are read-only; custom agents are user-editable.
 
 ### Skills
 
 - Skills are reusable instruction packages with a required `SKILL.md`.
-- Built-in skills include browser automation guidance and skill creation guidance.
+- Built-in skills cover local execution bridge setup and skill creation. Agents see each skill's name and description and read the full skill only when it fits the task.
 - Skills support import/export, duplication, editing, validation, enable/disable, and reset to built-ins.
 
 ### Browser Tools
 
-OpenBrowserAgent includes tools for tab navigation, tab search/listing/closing/reloading/grouping, page content extraction, accessible element discovery, clicking, typing, screenshots, downloads, image extraction, uploaded attachment reading, skill/workspace/memory/history operations, MCP tool execution, and image generation.
+Every agent starts with a small set of core tools; the rest load on demand through a tool search, so each request stays small.
+
+- Core: `tabs` (list, open, switch, close, navigate), `snapshot` (the page as compact lines with element refs), `find` (search the whole page), `read` (page text, stored outputs, attachments, URLs, skills and workspace files in ranges), `extract` (answer a question about a page with the helper model), `act` (click, type, select, press keys, scroll, wait, drag in one batch), `editPage` (batched in-place edits such as translation), `webSearch`, `screenshot`, and `ask` (questions to the user).
+- On demand: export to Markdown or image zip, skills editing, workspace and memory, chat history, sub-agents, MCP servers and their tools, local commands and bridges, image generation, page JavaScript (off by default), and developer diagnostics.
 
 Tool runs are shown as visible cards with status, summaries, references, generated media, and JSON detail popovers.
 

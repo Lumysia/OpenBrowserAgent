@@ -74,7 +74,6 @@ export const deDE: LocaleMessages = {
     openSubAgentChat: "Subagent-Chat öffnen",
     subAgentRunning: "Läuft",
     subAgentCompleted: "Abgeschlossen",
-    questionWaiting: "Warten auf deine Antwort",
     questionSubmit: "Antworten senden",
     questionCustomPlaceholder: "Eigene Antwort eingeben...",
     questionNoAnswer: "Keine Antwort",

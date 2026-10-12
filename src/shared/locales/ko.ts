@@ -72,7 +72,6 @@ export const ko: LocaleMessages = {
     openSubAgentChat: "하위 에이전트 채팅 열기",
     subAgentRunning: "실행 중",
     subAgentCompleted: "완료됨",
-    questionWaiting: "답변을 기다리는 중",
     questionSubmit: "답변 제출",
     questionCustomPlaceholder: "직접 답변 입력...",
     questionNoAnswer: "답변 없음",

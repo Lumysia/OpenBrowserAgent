@@ -68,7 +68,6 @@ export const zhTW: LocaleMessages = {
     openSubAgentChat: "開啟子智慧體聊天",
     subAgentRunning: "執行中",
     subAgentCompleted: "已完成",
-    questionWaiting: "等待你的回答",
     questionSubmit: "提交回答",
     questionCustomPlaceholder: "輸入自訂回答……",
     questionNoAnswer: "未回答",

@@ -30,7 +30,7 @@ It turns your browser into an AI working surface: bring page context into chat, 
 ## Why Use It
 
 - **Work where the web already is.** Ask questions about the current page, compare tabs, summarize content, and keep sources close to the browser session.
-- **Move from answers to action.** Agent mode can inspect pages, navigate tabs, click, type, search, download content, and use richer browser automation tools when needed.
+- **Move from answers to action.** Agent mode reads pages as compact snapshots, navigates tabs, clicks, types, edits pages in place, searches, downloads content, and loads richer tools only when needed.
 - **Bring your own AI stack.** Configure model providers, API keys, base URLs, chat models, and image models without being locked into one backend.
 - **Extend it with skills and MCP.** Save repeatable workflows as skills, import skill packages, and connect tested remote Streamable HTTP MCP servers for external tools like search and fetch.
 - **Stay in control.** Tools are visible as they run, MCP servers must be tested before enabling, individual MCP tools can be toggled, and detailed tool JSON is available on demand.
@@ -38,10 +38,10 @@ It turns your browser into an AI working surface: bring page context into chat, 
 ## Highlights
 
 - **Side panel chat** with streaming responses, queued messages, attachment-aware context, and polished tool activity cards.
-- **Agent and Ask modes** for either browser automation or page-focused questions.
+- **Agents** built from instructions, tool groups, a model and an optional workspace; Browse and Ask are presets, and sub-agents run in the background.
 - **Tab and page context** including current tab metadata, page content, selected elements, and source-aware outputs.
 - **Remote MCP tools** with a built-in web search preset, JSON import, connection testing, per-tool controls, and citation extraction from MCP results.
-- **Reusable skills** with built-in browser guidance, skill import/export, editable skill files, and reset-to-default controls.
+- **Reusable skills** with skill import/export, editable skill files, a skill index the agent reads on demand, and reset-to-default controls.
 - **Source citations** that keep final answers tied to pages, files, skills, generated outputs, and MCP-provided web results.
 - **Comprehensive settings** for providers, models, appearance, language, sync, agents, skills, MCP servers, and local execution bridges.
 - **Theme-aware UI** with light/dark/system modes, accent colors, compact density, subtle motion, and localized interface text.

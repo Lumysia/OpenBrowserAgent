@@ -74,7 +74,6 @@ export const jaJP: LocaleMessages = {
     openSubAgentChat: "サブエージェントチャットを開く",
     subAgentRunning: "実行中",
     subAgentCompleted: "完了",
-    questionWaiting: "回答を待っています",
     questionSubmit: "回答を送信",
     questionCustomPlaceholder: "独自の回答を入力...",
     questionNoAnswer: "回答なし",

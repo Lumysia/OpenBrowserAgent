@@ -19,7 +19,7 @@ async function loadBridges() {
   );
 }
 
-export function manageLocalExecutionBridges(input: Record<string, unknown>) {
+export function runLocalBridgesAction(input: Record<string, unknown>) {
   const action = text(input.action || "list");
   if (action === "list") return listBridges();
   if (action === "status") return bridgeStatus();

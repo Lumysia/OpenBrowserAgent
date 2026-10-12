@@ -96,7 +96,7 @@ export async function listMcpServers() {
   };
 }
 
-export function manageMcpServers(input: Record<string, unknown>) {
+export function runMcpServersAction(input: Record<string, unknown>) {
   const action = stringInput(input.action || "list");
   if (action === "list") return listMcpServers();
   if (action === "add") return addMcpServer(input);

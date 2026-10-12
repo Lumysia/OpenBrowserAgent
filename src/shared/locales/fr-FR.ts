@@ -73,7 +73,6 @@ export const frFR: LocaleMessages = {
     openSubAgentChat: "Ouvrir la discussion du sous-agent",
     subAgentRunning: "En cours",
     subAgentCompleted: "Terminé",
-    questionWaiting: "En attente de votre réponse",
     questionSubmit: "Envoyer les réponses",
     questionCustomPlaceholder: "Saisissez votre propre réponse...",
     questionNoAnswer: "Aucune réponse",

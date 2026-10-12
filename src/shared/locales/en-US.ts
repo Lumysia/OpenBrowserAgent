@@ -75,7 +75,6 @@ export const enUS = {
     openSubAgentChat: "Open sub-agent chat",
     subAgentRunning: "Running",
     subAgentCompleted: "Completed",
-    questionWaiting: "Waiting for your answer",
     questionSubmit: "Submit answers",
     questionCustomPlaceholder: "Type your own answer...",
     questionNoAnswer: "No answer",

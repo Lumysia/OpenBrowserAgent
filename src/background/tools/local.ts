@@ -1,6 +1,6 @@
 import { TOOL_NAME } from "../../shared/tool-names";
 import { runLocalCommand } from "../local-execution-bridge-tasks";
-import { manageLocalExecutionBridges } from "../local-execution-bridge-tools";
+import { runLocalBridgesAction } from "../local-execution-bridge-tools";
 import { fail, json, schema, stringArg, type ToolDefinition } from "./types";
 
 export const localCommandTool: ToolDefinition = {
@@ -89,7 +89,7 @@ export const localBridgesTool: ToolDefinition = {
   ),
   async execute(input) {
     return json(
-      (await manageLocalExecutionBridges(input)) as Record<string, unknown>,
+      (await runLocalBridgesAction(input)) as Record<string, unknown>,
     );
   },
 };

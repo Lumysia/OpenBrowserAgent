@@ -4,7 +4,7 @@ import { TOOL_NAME } from "../../shared/tool-names";
 import type { McpServerConfig } from "../../shared/types";
 import {
   executeMcpTool,
-  manageMcpServers,
+  runMcpServersAction,
   mcpToolName,
   sanitizeMcpInputSchema,
 } from "../mcp-tools";
@@ -33,7 +33,7 @@ export const mcpServersTool: ToolDefinition = {
     ["action"],
   ),
   async execute(input) {
-    return json((await manageMcpServers(input)) as Record<string, unknown>);
+    return json((await runMcpServersAction(input)) as Record<string, unknown>);
   },
 };
 

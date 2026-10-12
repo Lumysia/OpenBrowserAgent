@@ -73,7 +73,6 @@ export const ptBR: LocaleMessages = {
     openSubAgentChat: "Abrir chat do subagente",
     subAgentRunning: "Em execução",
     subAgentCompleted: "Concluído",
-    questionWaiting: "Aguardando sua resposta",
     questionSubmit: "Enviar respostas",
     questionCustomPlaceholder: "Digite sua própria resposta...",
     questionNoAnswer: "Sem resposta",
