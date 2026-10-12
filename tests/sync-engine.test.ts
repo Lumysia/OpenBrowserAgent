@@ -379,3 +379,31 @@ test("a root that fails validation is not applied", async () => {
   await assert.rejects(b.sync());
   assert.deepEqual(ids(b), ["c1"]);
 });
+
+test("on a server that ignores If-Match, a lost write is sent again", async () => {
+  const { clock, server, a, b } = setup();
+  await addChat(a, "c1", [["m1", 1]]);
+  await addChat(a, "c2", [["m2", 1]]);
+  await a.sync("edit");
+  await b.sync();
+  const before = { root: server.root, etag: server.etag };
+  clock.now += 1000;
+  await a.set(
+    CHATS,
+    a.get<Array<{ id: string }>>(CHATS).filter((item) => item.id !== "c1"),
+  );
+  await addChat(a, "c3", [["m3", 1]]);
+  await a.sync("edit");
+  // b writes from the root it read before, and the server (ignoring
+  // If-Match) lets it replace a's write.
+  server.root = before.root;
+  server.etag = before.etag;
+  await b.set(STORAGE_KEYS.language, "de-DE");
+  await b.sync("edit");
+  assert.ok(!(await decodeRoot(server.root!)).records["chats/c3"]);
+  await a.sync();
+  await b.sync();
+  assert.deepEqual(ids(b), ["c2", "c3"]);
+  assert.deepEqual(ids(a), ["c2", "c3"]);
+  assert.equal(a.get(STORAGE_KEYS.language), "de-DE");
+});

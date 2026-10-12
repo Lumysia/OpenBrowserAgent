@@ -57,15 +57,15 @@ export async function decide({
     if (synced && remote.clock === synced.clock) return push(pending);
     return conflict({ synced, pending, remote, mergesContent, dataHash });
   }
-  // Remote lost the record, or went back to an older copy (a server restored
-  // from a backup, cloud data cleared): never a delete, upload this copy.
-  if (
-    synced &&
-    !synced.deleted &&
-    local &&
-    (!remote || compareClocks(remote.clock, synced.clock) < 0)
-  )
-    return push(local);
+  // Remote lost the record, or went back to an older copy (a server that
+  // ignored If-Match let another write replace this device's, a server
+  // restored from a backup, cloud data cleared): never a delete, upload this
+  // device's copy again. A delete that was lost is sent again too.
+  const remoteBehind =
+    !!synced && (!remote || compareClocks(remote.clock, synced.clock) < 0);
+  if (remoteBehind && !synced.deleted && local) return push(local);
+  if (remoteBehind && synced.deleted && remote)
+    return push({ clock: synced.clock, deleted: true });
   if (!remote || remote.clock === synced?.clock) return { kind: "none" };
   return { kind: "apply", record: remote };
 }

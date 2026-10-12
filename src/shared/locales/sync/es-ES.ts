@@ -20,7 +20,7 @@ export const syncEsES: SyncMessages = {
     "unreliable-etags":
       "Las versiones de archivo de este servidor no son fiables, así que los cambios de este dispositivo no se suben. Usa un servidor WebDAV que envíe ETag fuertes.",
     "ignores-preconditions":
-      "Este servidor ignora las comprobaciones de versión al subir. Los cambios guardados a la vez en dos dispositivos pueden sobrescribirse.",
+      "Este servidor ignora las comprobaciones de versión al subir. Si dos dispositivos guardan a la vez, el cambio sobrescrito se vuelve a subir en la siguiente comprobación de ese dispositivo.",
     "newer-format":
       "Otro dispositivo usa un formato de sincronización más reciente. Actualiza OpenBrowserAgent en este dispositivo para seguir sincronizando.",
     "missing-content":

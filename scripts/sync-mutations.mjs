@@ -80,6 +80,12 @@ const MUTATIONS = [
     from: "(!remote || compareClocks(remote.clock, synced.clock) < 0)",
     to: "remote && compareClocks(remote.clock, synced.clock) < 0",
   },
+  {
+    name: "a lost delete is not sent again (server ignored If-Match)",
+    file: "src/shared/sync/plan.ts",
+    from: "if (remoteBehind && synced.deleted && remote)",
+    to: "if (false)",
+  },
 ];
 
 function runTests() {

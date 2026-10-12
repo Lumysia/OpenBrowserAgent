@@ -10,7 +10,9 @@ import {
 } from "lucide-react";
 import { OPTIONS_HASH } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
-import type { SyncStatus } from "../../src/shared/storage";
+import { storage, type SyncStatus } from "../../src/shared/storage";
+import { NO_SYNC_BACKEND_ID } from "../../src/shared/sync-backends";
+import { useStoredState } from "../../src/ui/useStoredState";
 import { describeSyncStatus, type SyncTone } from "../../src/ui/sync-status";
 import { openOrFocusOptions } from "../../src/shared/tab-navigation";
 import type { ChatMeta } from "../../src/shared/types";
@@ -34,7 +36,12 @@ export function SidepanelHeader({
   onSetShowHistory: (value: boolean) => void;
   onSelectChat: (chatId: string) => void;
 }) {
-  const cloudStatus = cloudSyncStatus(t, syncStatus);
+  const [activeSyncBackendId] = useStoredState(storage.activeSyncBackendId);
+  const cloudStatus = cloudSyncStatus(
+    t,
+    syncStatus,
+    !!activeSyncBackendId && activeSyncBackendId !== NO_SYNC_BACKEND_ID,
+  );
   const SyncIcon = cloudStatus.Icon;
   return (
     <header className="sidepanel-header">
@@ -125,7 +132,11 @@ const CLOUD_ICONS: Record<SyncTone, typeof Cloud> = {
   error: CloudOff,
 };
 
-function cloudSyncStatus(t: Messages, status: SyncStatus | undefined) {
-  const { tone, label } = describeSyncStatus(t, status, true);
+function cloudSyncStatus(
+  t: Messages,
+  status: SyncStatus | undefined,
+  enabled: boolean,
+) {
+  const { tone, label } = describeSyncStatus(t, status, enabled);
   return { label, className: tone, Icon: CLOUD_ICONS[tone] };
 }
