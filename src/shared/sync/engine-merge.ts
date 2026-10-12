@@ -1,4 +1,4 @@
-import { bodyFor } from "./blobs";
+import { bodyFor, storedBlobs } from "./blobs";
 import { isOrderId, type Collection } from "./collection";
 import { recordIdOf, splitRecordId } from "./collections";
 import type { SyncContext } from "./engine";
@@ -6,7 +6,7 @@ import type { SyncEnv } from "./env";
 import { compareClocks, tickClock } from "./hlc";
 import { project, type Payloads, type Projection } from "./local";
 import type { BlobMerge, Decision } from "./plan";
-import type { SyncRecord } from "./root";
+import type { Root, SyncRecord } from "./root";
 import type { MassDelete, SyncState } from "./state";
 
 // Parts of a round's reconciliation: which lazy bodies to keep current,
@@ -142,4 +142,62 @@ export function massDeletes(
       result.push({ collection: collection.name, count, total });
   }
   return result;
+}
+
+// The user keeps what the remote deletions would remove: this device's
+// copies of exactly those records are uploaded again as new changes. A copy
+// whose content is neither here nor on the server any more (a chat never
+// opened here, deleted elsewhere over a day ago) cannot come back; its
+// deletion is applied.
+export async function keepLocalCopies(
+  context: SyncContext,
+  collections: Collection[],
+  state: SyncState,
+  remote: Root,
+  decisions: Map<string, Decision>,
+  local: Map<string, Projection | null>,
+  payloads: Payloads,
+) {
+  const { env, device } = context;
+  const stored = storedBlobs(remote);
+  for (const collection of collections) {
+    const deleted = [...decisions]
+      .filter(
+        ([recordId, decision]) =>
+          splitRecordId(recordId).collection === collection.name &&
+          decision.kind === "apply" &&
+          decision.record.deleted,
+      )
+      .map(([recordId]) => splitRecordId(recordId).id);
+    const wanted = new Set(deleted);
+    const entries = await collection.read(env, (id) => wanted.has(id));
+    for (const id of deleted) {
+      const recordId = recordIdOf(collection, id);
+      const entry = entries.get(id);
+      if (!entry) continue;
+      const projection = await project(
+        collection,
+        entry,
+        state.synced[recordId],
+        payloads,
+      );
+      local.set(recordId, projection);
+      if (
+        projection.blob &&
+        !payloads.has(projection.blob) &&
+        !stored.has(projection.blob)
+      )
+        continue;
+      const [clock, hlc] = tickClock(state.hlc, device, env.now());
+      state.hlc = hlc;
+      const record: SyncRecord = {
+        clock,
+        data: projection.data,
+        ...(projection.blob ? { blob: projection.blob } : {}),
+        ...(projection.size !== undefined ? { size: projection.size } : {}),
+      };
+      state.pending[recordId] = record;
+      decisions.set(recordId, { kind: "push", record });
+    }
+  }
 }

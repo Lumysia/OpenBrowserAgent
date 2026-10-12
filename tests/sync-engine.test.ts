@@ -287,7 +287,9 @@ test("mass deletions from another device wait for the user", async () => {
     { collection: "chats", count: 6, total: 8 },
   ]);
   assert.equal(ids(b).length, 8);
-  await b.sync("manual", { allowMassDelete: true });
+  await b.sync("manual", {
+    massDelete: { collections: ["chats"], keep: false },
+  });
   assert.equal(ids(b).length, 2);
 });
 

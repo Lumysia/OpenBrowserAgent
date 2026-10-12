@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import { runSyncRound } from "../src/shared/sync/engine";
+import { decodeRoot } from "../src/shared/sync/root";
 import {
   ALL_ON,
   chat,
@@ -221,4 +222,68 @@ test("on joining an account, the newer of two differing values wins", async () =
     assert.deepEqual(on.get(PROVIDERS), { p1: { apiKey: "typed on b" } });
     assert.equal(on.get(LANGUAGE), "de-DE");
   }
+});
+
+const keep = (collection: string) => ({
+  massDelete: { collections: [collection], keep: true },
+});
+
+test("keeping local copies after a mass delete reverts no other device's edits", async () => {
+  const { clock, a, b } = setup();
+  const AGENTS = STORAGE_KEYS.agents;
+  const agents = Array.from({ length: 8 }, (_, i) => ({
+    id: `g${i}`,
+    name: `agent ${i}`,
+    createdAt: i,
+  }));
+  await a.set(AGENTS, agents);
+  await a.sync("edit");
+  await b.sync();
+  clock.now += 1000;
+  // a deletes six agents and renames one it keeps.
+  await a.set(AGENTS, [{ ...agents[6], name: "renamed on a" }, agents[7]]);
+  await a.sync("edit");
+  assert.ok((await b.sync()).massDelete);
+  clock.now += 1000;
+  await b.sync("manual", keep("agents"));
+  await a.sync();
+  for (const on of [a, b]) {
+    const list = on.get<Array<{ id: string; name: string }>>(AGENTS);
+    assert.equal(list.length, 8);
+    assert.equal(list.find((agent) => agent.id === "g6")?.name, "renamed on a");
+  }
+});
+
+async function deleteChatsElsewhere(waitHours: number) {
+  const { clock, server, a, b } = setup();
+  const c = device("deviceC", memoryTransport(server), clock, ALL_ON);
+  for (let i = 0; i < 8; i++) await saveChat(a, `c${i}`, [[`m${i}`, i]]);
+  await a.sync("edit");
+  await b.sync(); // b holds the chat list only
+  clock.now += 1000;
+  await a.set(CHATS, []);
+  await a.sync("edit");
+  assert.ok((await b.sync()).massDelete);
+  clock.now += waitHours * HOUR;
+  await a.sync(); // collects garbage older than a day
+  await b.sync("manual", keep("chats"));
+  await c.sync();
+  const root = await decodeRoot(server.root!);
+  const live = Object.entries(root.records).filter(
+    ([id, record]) => id.startsWith("chats/") && !record.deleted,
+  );
+  return { live, server, b, c };
+}
+
+test("chats kept after a mass delete come back with their content", async () => {
+  const { live, server, c } = await deleteChatsElsewhere(1);
+  assert.equal(live.length, 8);
+  for (const [, record] of live) assert.ok(server.blobs.has(record.blob!));
+  assert.equal(c.get<unknown[]>(CHATS).length, 8);
+});
+
+test("chats whose content is gone everywhere are not kept without it", async () => {
+  const { live, b } = await deleteChatsElsewhere(25);
+  assert.equal(live.length, 0);
+  assert.deepEqual(b.get(CHATS), []);
 });

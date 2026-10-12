@@ -14,11 +14,9 @@ import {
 import { ownsKey } from "../../shared/sync/collection";
 import { SYNC_COLLECTIONS } from "../../shared/sync/collections";
 import {
-  loadSyncState,
   markDirty as markDirtyKeys,
   pruneSyncStates,
   loadSyncStatus,
-  saveSyncState,
   SYNC_WARNINGS,
   updateSyncStatus,
 } from "../../shared/sync/state";
@@ -170,9 +168,10 @@ export function setupSync() {
             (entry) => entry.collection,
           ) ?? [];
         await updateSyncStatus(env.local, { massDelete: undefined });
-        if (message.apply)
-          await request({ reason: "manual", allowMassDelete: true });
-        else await keepLocalCopies(collections);
+        await request({
+          reason: "manual",
+          massDelete: { collections, keep: !message.apply },
+        });
         return loadSyncStatus(env.local);
       }
       case SYNC_MESSAGE.check: {
@@ -193,20 +192,6 @@ export function setupSync() {
         );
         return request({ reason: "manual" });
     }
-  }
-
-  // The user keeps what the remote deletions would remove: this device's
-  // copies of those collections count as new edits, newer than the deletes.
-  async function keepLocalCopies(collections: string[]) {
-    const context = await syncContext(env);
-    if (!context) return;
-    const state = await loadSyncState(env.local, context.scope);
-    for (const [recordId, entry] of Object.entries(state.synced))
-      if (collections.includes(recordId.slice(0, recordId.indexOf("/"))))
-        state.synced[recordId] = { ...entry, dataHash: undefined };
-    state.rescan = [...new Set([...state.rescan, ...collections])];
-    await saveSyncState(env.local, state);
-    await request({ reason: "manual" });
   }
 
   registerSyncHandler((message) => handle(message));

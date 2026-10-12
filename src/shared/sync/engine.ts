@@ -37,14 +37,13 @@ import {
   type Projection,
 } from "./local";
 import { decide, type Decision } from "./plan";
-import { localBodies, massDeletes, mergeRecord } from "./engine-merge";
 import {
-  emptyRoot,
-  maxRootClock,
-  referencedBlobs,
-  type Root,
-  type SyncRecord,
-} from "./root";
+  keepLocalCopies,
+  localBodies,
+  massDeletes,
+  mergeRecord,
+} from "./engine-merge";
+import { emptyRoot, maxRootClock, type Root, type SyncRecord } from "./root";
 import {
   clearDirty,
   loadDirty,
@@ -52,6 +51,7 @@ import {
   saveSyncState,
   SYNC_WARNINGS,
   type MassDelete,
+  type MassDeleteAnswer,
   type SyncState,
   type SyncWarning,
 } from "./state";
@@ -101,10 +101,12 @@ export function enabledCollections(
 // One sync round: stamp local changes, read the root (one conditional GET),
 // apply what others changed, upload new blobs and write the merged root with
 // If-Match, merging again when another device wrote first.
+export type RoundOptions = { massDelete?: MassDeleteAnswer };
+
 export function runSyncRound(
   context: SyncContext,
   reason: RoundReason,
-  options: { allowMassDelete?: boolean } = {},
+  options: RoundOptions = {},
 ): Promise<RoundResult> {
   return context.env.lock(SYNC_LOCK, () => round(context, reason, options));
 }
@@ -112,7 +114,7 @@ export function runSyncRound(
 async function round(
   context: SyncContext,
   reason: RoundReason,
-  options: { allowMassDelete?: boolean },
+  options: RoundOptions,
 ): Promise<RoundResult> {
   const { env, transport, device } = context;
   const collections = enabledCollections(context.settings, transport.kind);
@@ -190,9 +192,7 @@ async function round(
       remote,
       scan.local,
       payloads,
-      {
-        allowMassDelete: !!options.allowMassDelete,
-      },
+      options.massDelete,
     );
     result.warnings.push(...outcome.warnings);
     if (outcome.massDelete) {
@@ -309,7 +309,7 @@ async function reconcile(
   remote: Root,
   local: Map<string, Projection | null>,
   payloads: Payloads,
-  options: { allowMassDelete: boolean },
+  answer: MassDeleteAnswer | undefined,
 ): Promise<Outcome> {
   const { env, transport } = context;
   const outcome: Outcome = { pushes: new Map(), warnings: [] };
@@ -373,10 +373,22 @@ async function reconcile(
   }
 
   const massDelete = massDeletes(collections, state, decisions, local);
-  if (massDelete.length && !options.allowMassDelete) {
+  if (
+    massDelete.some((entry) => !answer?.collections.includes(entry.collection))
+  ) {
     outcome.massDelete = massDelete;
     return outcome;
   }
+  if (answer?.keep && massDelete.length)
+    await keepLocalCopies(
+      context,
+      massDelete.map((entry) => syncCollection(entry.collection)!),
+      state,
+      remote,
+      decisions,
+      local,
+      payloads,
+    );
 
   const writes = new Map<Collection, LocalWrite[]>();
   const addWrite = (collection: Collection, write: LocalWrite) =>

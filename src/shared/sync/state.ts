@@ -41,6 +41,10 @@ export type SyncWarning = (typeof SYNC_WARNINGS)[keyof typeof SYNC_WARNINGS];
 
 export type MassDelete = { collection: string; count: number; total: number };
 
+// The user's answer for collections the guard stopped at: apply the
+// deletions here, or keep this device's copies and upload them again.
+export type MassDeleteAnswer = { collections: string[]; keep: boolean };
+
 export type SyncStatus = {
   running?: boolean;
   lastSyncAt?: number;

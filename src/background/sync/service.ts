@@ -32,6 +32,7 @@ import { readKey, type SyncEnv } from "../../shared/sync/env";
 import {
   enabledCollections,
   runSyncRound,
+  type RoundOptions,
   type RoundReason,
   type SyncContext,
 } from "../../shared/sync/engine";
@@ -139,7 +140,7 @@ export async function countPending(env: SyncEnv, context: SyncContext) {
   return Object.keys(state.pending).length + dirty.length;
 }
 
-export type RoundRequest = { reason: RoundReason; allowMassDelete?: boolean };
+export type RoundRequest = { reason: RoundReason } & RoundOptions;
 
 export function createSyncRunner(
   env: SyncEnv,
@@ -151,7 +152,7 @@ export function createSyncRunner(
   let running: Promise<void> | undefined;
   let queued: RoundRequest | undefined;
 
-  async function round({ reason, allowMassDelete }: RoundRequest) {
+  async function round({ reason, ...options }: RoundRequest) {
     const status = await loadSyncStatus(env.local);
     const now = env.now();
     if (status.pausedUntil && status.pausedUntil > now) return;
@@ -165,7 +166,7 @@ export function createSyncRunner(
     }
     await updateSyncStatus(env.local, { running: true });
     try {
-      const result = await runSyncRound(context, reason, { allowMassDelete });
+      const result = await runSyncRound(context, reason, options);
       // Read again: the server check may have added warnings meanwhile.
       const latest = await loadSyncStatus(env.local);
       const sticky = latest.warnings.filter(
@@ -227,7 +228,7 @@ export function createSyncRunner(
       queued = {
         reason:
           queued?.reason === "edit" || !queued ? next.reason : queued.reason,
-        allowMassDelete: queued?.allowMassDelete || next.allowMassDelete,
+        massDelete: next.massDelete ?? queued?.massDelete,
       };
       return running;
     }
