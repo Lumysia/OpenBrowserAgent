@@ -2,6 +2,7 @@ import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "../utils";
+import { usePortalContainer } from "./portal-container";
 
 const Select = SelectPrimitive.Root;
 const SelectValue = SelectPrimitive.Value;
@@ -27,7 +28,7 @@ const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Portal>
+  <SelectPrimitive.Portal container={usePortalContainer()}>
     <SelectPrimitive.Content
       ref={ref}
       className={cn("ui-select-content", className)}

@@ -12,6 +12,7 @@ import type {
 } from "../../src/shared/types";
 import {
   Button,
+  IconTooltip,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -22,7 +23,6 @@ import {
   TabsTrigger,
 } from "../../src/ui/components";
 import { formatCompactNumber, formatToolMessage } from "./format";
-import { IconTooltip } from "./icon-tooltip";
 
 export function MessageRunInfo({
   t,

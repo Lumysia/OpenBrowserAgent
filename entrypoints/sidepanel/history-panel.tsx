@@ -15,6 +15,7 @@ import {
   Badge,
   Button,
   Feedback,
+  IconTooltip,
   Input,
   ScrollArea,
 } from "../../src/ui/components";
@@ -22,7 +23,6 @@ import {
   exportChatAsOpenAiJson,
   importChatFromOpenAiJson,
 } from "./chat-export";
-import { IconTooltip } from "./icon-tooltip";
 import {
   formatMessageCount,
   formatRelativeTime,

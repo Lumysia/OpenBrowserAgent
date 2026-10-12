@@ -14,8 +14,7 @@ import type { SyncWriteStatus } from "../../src/shared/storage";
 import { openOrFocusOptions } from "../../src/shared/tab-navigation";
 import type { ChatMeta } from "../../src/shared/types";
 import { chatDisplayTitle } from "../../src/ui/agent-display";
-import { Button } from "../../src/ui/components";
-import { IconTooltip } from "./icon-tooltip";
+import { Button, IconTooltip } from "../../src/ui/components";
 
 export function SidepanelHeader({
   t,

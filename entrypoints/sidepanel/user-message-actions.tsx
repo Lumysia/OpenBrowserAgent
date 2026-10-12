@@ -5,6 +5,7 @@ import type { Messages } from "../../src/shared/i18n";
 import type { ChatMessage, UploadedAttachment } from "../../src/shared/types";
 import {
   Button,
+  IconTooltip,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -15,7 +16,6 @@ import {
 import { FileIcon } from "./attachment-file-icon";
 import { formatAttachmentSize } from "./file-attachments";
 import { formatMessageTime } from "./format";
-import { IconTooltip } from "./icon-tooltip";
 
 export function UserMessageActions({
   t,

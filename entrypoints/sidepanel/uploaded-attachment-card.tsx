@@ -6,8 +6,7 @@ import {
 } from "../../src/shared/attachments";
 import type { Messages } from "../../src/shared/i18n";
 import type { UploadedAttachment } from "../../src/shared/types";
-import { Button } from "../../src/ui/components";
-import { IconTooltip } from "./icon-tooltip";
+import { Button, IconTooltip } from "../../src/ui/components";
 import { formatAttachmentSize } from "./file-attachments";
 import { useDeferredRemove } from "./use-deferred-remove";
 

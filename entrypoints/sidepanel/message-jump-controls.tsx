@@ -2,8 +2,7 @@ import { useEffect, useState, type RefObject } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
 import type { Chat } from "../../src/shared/types";
-import { Button } from "../../src/ui/components";
-import { IconTooltip } from "./icon-tooltip";
+import { Button, IconTooltip } from "../../src/ui/components";
 import { useDeferredPresence } from "./use-deferred-remove";
 
 const SCROLL_EDGE_THRESHOLD_PX = 24;

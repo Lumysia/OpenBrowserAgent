@@ -18,6 +18,7 @@ import type {
 } from "../../src/shared/types";
 import {
   Button,
+  IconTooltip,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -31,7 +32,6 @@ import { AddContextMenu } from "./composer-menus";
 import { ComposerSelectors } from "./composer-selectors";
 import { ComposerAttachments } from "./composer-attachments";
 import { EditModeOverlay } from "./edit-mode-overlay";
-import { IconTooltip } from "./icon-tooltip";
 import { HistoryPanel } from "./history-panel";
 import { MessageJumpControls } from "./message-jump-controls";
 import { MessageBubble } from "./message-bubble";

@@ -22,6 +22,7 @@ import type {
 import { getSkillDisplayName } from "../../src/shared/skills";
 import {
   Button,
+  IconTooltip,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -31,7 +32,6 @@ import {
   agentDisplayDescription,
   agentDisplayName,
 } from "../../src/ui/agent-display";
-import { IconTooltip } from "./icon-tooltip";
 import { useDeferredRemove } from "./use-deferred-remove";
 import { COMPOSER_MENU, type ComposerMenu } from "./sidepanel-menu-state";
 
