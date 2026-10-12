@@ -1,4 +1,4 @@
-import { storageLockName } from "../locks";
+import { storageLockName, SYNC_LOCK } from "../locks";
 import {
   STORAGE_KEYS,
   SYNC_DATA_SETTING_KEYS,
@@ -98,10 +98,18 @@ export function enabledCollections(
 // One sync round: stamp local changes, read the root (one conditional GET),
 // apply what others changed, upload new blobs and write the merged root with
 // If-Match, merging again when another device wrote first.
-export async function runSyncRound(
+export function runSyncRound(
   context: SyncContext,
   reason: RoundReason,
   options: { allowMassDelete?: boolean } = {},
+): Promise<RoundResult> {
+  return context.env.lock(SYNC_LOCK, () => round(context, reason, options));
+}
+
+async function round(
+  context: SyncContext,
+  reason: RoundReason,
+  options: { allowMassDelete?: boolean },
 ): Promise<RoundResult> {
   const { env, transport, device } = context;
   const collections = enabledCollections(context.settings, transport.kind);

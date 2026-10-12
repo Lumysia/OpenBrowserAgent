@@ -16,3 +16,8 @@ export function withLock<T>(name: string, operation: () => Promise<T>) {
 // Lock of one stored value, shared by every writer of that key (pages, tools
 // in the background and the sync engine).
 export const storageLockName = (key: string) => `item:${key}`;
+
+// The sync engine's own state: every job that reads and saves it (a round,
+// storing downloaded content, clearing sync data) holds this lock, so none
+// saves a state another job changed meanwhile.
+export const SYNC_LOCK = "sync";

@@ -228,3 +228,54 @@ export function chat(
     },
   };
 }
+
+// Saves a chat the way the side panel does: its summary, then its content.
+export async function saveChat(
+  on: Device,
+  id: string,
+  messages: Array<[string, number]>,
+) {
+  const { summary, content } = chat(id, messages);
+  const list = (on.get<Array<{ id: string }>>(STORAGE_KEYS.chats) ?? []).filter(
+    (item) => item.id !== id,
+  );
+  await on.set(STORAGE_KEYS.chats, [...list, summary]);
+  await on.set(`${STORAGE_KEYS.chats}/${id}`, content);
+}
+
+export const messageIds = (on: Device, id: string) =>
+  (
+    on.get<{ messages: Array<{ id: string }> }>(`${STORAGE_KEYS.chats}/${id}`)
+      ?.messages ?? []
+  ).map((message) => message.id);
+
+// A transport whose calls can be intercepted once (to run another device's
+// or another job's work in the middle of a request).
+export function hookedTransport(base: Transport) {
+  const hooks: Partial<Record<keyof Transport, () => Promise<void>>> = {};
+  const once = (name: keyof Transport) => {
+    const hook = hooks[name];
+    delete hooks[name];
+    return hook?.();
+  };
+  const transport: Transport = {
+    ...base,
+    async readRoot(etag) {
+      await once("readRoot");
+      return base.readRoot(etag);
+    },
+    async writeRoot(root, etag) {
+      await once("writeRoot");
+      return base.writeRoot(root, etag);
+    },
+    async getBlob(hash) {
+      await once("getBlob");
+      return base.getBlob(hash);
+    },
+    async deleteBlob(hash) {
+      await once("deleteBlob");
+      return base.deleteBlob(hash);
+    },
+  };
+  return { transport, hooks };
+}

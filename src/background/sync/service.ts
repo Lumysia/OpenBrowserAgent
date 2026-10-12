@@ -5,7 +5,7 @@ import {
 } from "../../shared/attachment-db";
 import { deleteChatArtifacts } from "../../shared/artifacts";
 import { getBrowserApi } from "../../shared/browser-api";
-import { withLock } from "../../shared/locks";
+import { SYNC_LOCK, withLock } from "../../shared/locks";
 import {
   mergeSyncDataSettings,
   STORAGE_KEYS,
@@ -21,7 +21,8 @@ import {
   SyncNotReadyError,
   SyncQuotaError,
 } from "../../shared/sync/browser-sync";
-import { ownsKey } from "../../shared/sync/collection";
+import { ownsKey, type Collection } from "../../shared/sync/collection";
+import { hashJson } from "../../shared/sync/codec";
 import {
   recordIdOf,
   SYNC_COLLECTIONS,
@@ -55,6 +56,8 @@ import type { SyncBackendConfig } from "../../shared/types";
 // during a round runs once after it, and 429/503 pause everything.
 
 const BACKOFF_START_MS = 60_000;
+// Downloads of content whose version moved on while it downloaded.
+const LOAD_ATTEMPTS = 3;
 const BACKOFF_MAX_MS = 60 * 60_000;
 // Warnings about the server that outlive a round: missing ETags until a
 // write succeeds, ignored preconditions until the backend changes (a
@@ -241,7 +244,9 @@ export function createSyncRunner(
 }
 
 // Content this device has not held: download its blob now (a chat opened
-// for the first time here, an attachment shown).
+// for the first time here, an attachment shown). The download runs outside
+// the sync lock; the content is stored only if it is still the version this
+// device's copy is synced to, since a round may have moved on meanwhile.
 export async function loadContent(
   context: SyncContext | undefined,
   collectionName: string,
@@ -250,23 +255,49 @@ export async function loadContent(
   const collection = syncCollection(collectionName);
   if (!collection?.lazy || !context) return false;
   const { env } = context;
-  const status = await loadSyncStatus(env.local);
-  if (status.pausedUntil && status.pausedUntil > env.now()) return false;
-  const state = await loadSyncState(env.local, context.scope);
-  const blob = state.synced[recordIdOf(collection, id)]?.blob;
-  if (!blob) return false;
-  const payload = await context.transport.getBlob(blob);
-  if (!payload) return false;
-  const body = parseBody(collection, payload);
-  const current = (await collection.read(env, (other) => other === id)).get(id);
+  const recordId = recordIdOf(collection, id);
+  for (let attempt = 0; attempt < LOAD_ATTEMPTS; attempt++) {
+    const status = await loadSyncStatus(env.local);
+    if (status.pausedUntil && status.pausedUntil > env.now()) return false;
+    const state = await loadSyncState(env.local, context.scope);
+    const blob = state.synced[recordId]?.blob;
+    if (!blob) return false;
+    const payload = await context.transport.getBlob(blob);
+    if (!payload) return false;
+    const body = parseBody(collection, payload);
+    const stored = await env.lock(SYNC_LOCK, async () => {
+      const latest = await loadSyncState(env.local, context.scope);
+      if (latest.synced[recordId]?.blob !== blob) return undefined;
+      return storeContent(env, collection, id, body);
+    });
+    if (stored !== undefined) return stored;
+  }
+  return false;
+}
+
+// Store a body under the chat or file it belongs to, unless the local copy
+// changed meanwhile. Resolves whether a body is stored now.
+async function storeContent(
+  env: SyncEnv,
+  collection: Collection,
+  id: string,
+  body: unknown,
+) {
+  const read = async () =>
+    (await collection.read(env, (other) => other === id)).get(id);
+  const current = await read();
   if (!current) return false;
   if (current.body !== undefined) return true;
-  const stored = await collection.write(
+  const dataHash = await hashJson(current.data);
+  const written = await collection.write(
     env,
     [{ id, entry: { data: current.data, body } }],
-    async (_id, now) => !!now && now.body === undefined,
+    async (_id, now) =>
+      !!now &&
+      now.body === undefined &&
+      (await hashJson(now.data)) === dataHash,
   );
-  return stored.has(id);
+  return written.has(id) || (await read())?.body !== undefined;
 }
 
 // Delete everything on the server (this device's data is uploaded again on
