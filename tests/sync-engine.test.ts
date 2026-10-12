@@ -261,12 +261,15 @@ test("cleared cloud data is uploaded again by devices that have it", async () =>
   server.blobs.clear();
   await b.sync();
   assert.deepEqual(ids(b), ["c1"]);
-  const root = await decodeRoot(server.root!);
-  assert.ok(root.records["chats/c1"]);
-  // a still has the content and can upload it again; b never had it.
+  // b never had c1's content, so it leaves c1 to a device that has it.
+  assert.equal((await decodeRoot(server.root!)).records["chats/c1"], undefined);
   await a.sync();
   assert.deepEqual(ids(a), ["c1"]);
   assert.ok(a.get(`${CHATS}/c1`));
+  const blob = (await decodeRoot(server.root!)).records["chats/c1"]?.blob;
+  assert.ok(blob && server.blobs.has(blob));
+  await b.sync();
+  assert.deepEqual(ids(b), ["c1"]);
 });
 
 test("mass deletions from another device wait for the user", async () => {

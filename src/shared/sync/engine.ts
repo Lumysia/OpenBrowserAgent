@@ -10,6 +10,8 @@ import {
   hasExpiredGarbage,
   nextRoot,
   ORPHAN_SWEEP_INTERVAL_MS,
+  restoreLostBlobs,
+  storedBlobs,
   sweepOrphans,
   uploadBlobs,
 } from "./blobs";
@@ -202,7 +204,7 @@ async function round(
       state.remote = { root: remote, etag };
       break;
     }
-    await localPayloads(env, state, remote, outcome.pushes, payloads);
+    await localPayloads(env, remote, outcome.pushes, payloads);
     await uploadBlobs(transport, remote, outcome.pushes, payloads);
     const next = nextRoot(remote, device, outcome.pushes, now);
     if (collect) await collectGarbage(transport, next, now);
@@ -230,7 +232,15 @@ async function round(
     !result.massDelete &&
     env.now() - (state.lastSweepAt ??= env.now()) >= ORPHAN_SWEEP_INTERVAL_MS
   ) {
-    await sweepOrphans(transport, state.remote.root, env.now());
+    const stored = await transport.listBlobs();
+    await sweepOrphans(transport, state.remote.root, stored, env.now());
+    await restoreLostBlobs(
+      env,
+      transport,
+      collections,
+      state.remote.root,
+      stored,
+    );
     state.lastSweepAt = env.now();
   }
   await saveSyncState(env.local, state);
@@ -239,19 +249,19 @@ async function round(
   return result;
 }
 
-// Bodies of blobs to upload that this round did not read (a change stamped
-// in an earlier round whose upload failed) come from local data. A changed
-// body that is gone meanwhile waits for the next round; a body this device
-// never held (it changed only the record's data, or re-uploads after the
-// cloud was cleared) is referred to as it is.
+// Bodies of blobs to upload that this round did not read come from local
+// data. A push whose blob is neither on the server nor here waits: a changed
+// body that is gone meanwhile is compared again next round, and a record
+// this device holds no content of (a chat it never opened, re-uploaded after
+// the cloud was cleared) is left to a device that has the content, so no
+// root ever refers to content nobody can download.
 async function localPayloads(
   env: SyncEnv,
-  state: SyncState,
   remote: Root,
   pushes: Map<string, SyncRecord>,
   payloads: Payloads,
 ) {
-  const present = referencedBlobs(remote);
+  const present = storedBlobs(remote);
   const missing = [...pushes].filter(
     ([, record]) =>
       record.blob && !present.has(record.blob) && !payloads.has(record.blob),
@@ -274,12 +284,7 @@ async function localPayloads(
     }
   }
   for (const [recordId, record] of missing)
-    if (
-      !payloads.has(record.blob!) &&
-      state.pending[recordId]?.clock === record.clock &&
-      record.blob !== state.synced[recordId]?.blob
-    )
-      pushes.delete(recordId);
+    if (!payloads.has(record.blob!)) pushes.delete(recordId);
 }
 
 type Outcome = {

@@ -124,3 +124,35 @@ test("a chat change from a failed round merges with another device's change", as
   assert.deepEqual(messageIds(a, "X"), ["m1", "b2", "a3"]);
   assert.deepEqual(messageIds(b, "X"), ["m1", "b2", "a3"]);
 });
+
+test("after a cloud clear, a chat's content comes back from the device that has it", async () => {
+  const { clock, server, a, b } = setup();
+  const c = device("deviceC", memoryTransport(server), clock, ALL_ON);
+  await saveChat(a, "X", [["m1", 1]]);
+  await a.sync("edit");
+  await b.sync();
+  // Cleared by hand or from a third device; b, which never opened X, runs
+  // first.
+  await memoryTransport(server).clear();
+  clock.now += 1000;
+  await b.sync();
+  await a.sync();
+  await b.sync();
+  await c.sync();
+  const blob = (await c.state()).synced["chats/X"]?.blob;
+  assert.ok(blob && server.blobs.has(blob));
+});
+
+test("content the server lost is uploaded again by the weekly check of a device that has it", async () => {
+  const { clock, server, a, b } = setup();
+  await saveChat(a, "X", [["m1", 1]]);
+  await a.sync("edit");
+  await b.sync();
+  // A server restored from a backup without its blobs.
+  server.blobs.clear();
+  clock.now += 8 * 24 * HOUR;
+  await b.sync();
+  await a.sync();
+  const blob = (await a.state()).synced["chats/X"].blob!;
+  assert.ok(server.blobs.has(blob));
+});

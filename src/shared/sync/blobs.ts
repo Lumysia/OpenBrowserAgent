@@ -1,8 +1,10 @@
-import { bytesText } from "./codec";
+import { bytesText, sha256Hex } from "./codec";
 import type { Collection } from "./collection";
-import type { Payloads } from "./local";
+import { recordIdOf } from "./collections";
+import type { SyncEnv } from "./env";
+import { bodyBytes, idsWithPrefix, type Payloads } from "./local";
 import { referencedBlobs, type Root, type SyncRecord } from "./root";
-import type { Transport } from "./transport";
+import type { StoredBlob, Transport } from "./transport";
 
 // Blob handling of a round: reading bodies, building the next root with its
 // garbage list, and collecting garbage.
@@ -54,16 +56,24 @@ export function nextRoot(
   return root;
 }
 
-// Upload the blobs `root` needs that the remote root did not refer to. A
-// blob this device does not hold (content it never downloaded) cannot be
-// uploaded; readers then find it missing and keep their copies.
+// Blobs the server holds according to a root: the ones its records refer
+// to, and garbage not yet collected (collection drops a blob from the root
+// before deleting it).
+export function storedBlobs(root: Root) {
+  const blobs = referencedBlobs(root);
+  for (const entry of root.garbage) blobs.add(entry.blob);
+  return blobs;
+}
+
+// Upload the blobs the pushes need that the server does not hold. Pushes
+// never refer to a blob this device cannot provide (see the engine).
 export async function uploadBlobs(
   transport: Transport,
   remote: Root,
   pushes: Map<string, SyncRecord>,
   payloads: Payloads,
 ) {
-  const present = referencedBlobs(remote);
+  const present = storedBlobs(remote);
   const uploads = new Set<string>();
   for (const record of pushes.values())
     if (record.blob && !present.has(record.blob) && payloads.has(record.blob))
@@ -98,12 +108,12 @@ export const hasExpiredGarbage = (root: Root, now: number) =>
 export async function sweepOrphans(
   transport: Transport,
   root: Root,
+  stored: StoredBlob[],
   now: number,
 ) {
-  const known = referencedBlobs(root);
-  for (const entry of root.garbage) known.add(entry.blob);
+  const known = storedBlobs(root);
   let removed = 0;
-  for (const blob of await transport.listBlobs()) {
+  for (const blob of stored) {
     if (
       known.has(blob.hash) ||
       !blob.modifiedAt ||
@@ -114,4 +124,37 @@ export async function sweepOrphans(
     removed++;
   }
   return removed;
+}
+
+// Blobs the root refers to that the server lost (a folder restored without
+// its blobs, files removed by hand): this device uploads the ones it holds.
+export async function restoreLostBlobs(
+  env: SyncEnv,
+  transport: Transport,
+  collections: Collection[],
+  root: Root,
+  stored: StoredBlob[],
+) {
+  const present = new Set(stored.map((blob) => blob.hash));
+  let restored = 0;
+  for (const collection of collections) {
+    if (!collection.body) continue;
+    const lost = new Map<string, string>();
+    for (const id of idsWithPrefix(root.records, collection)) {
+      const blob = root.records[recordIdOf(collection, id)].blob;
+      if (blob && !present.has(blob)) lost.set(id, blob);
+    }
+    if (!lost.size) continue;
+    const entries = await collection.read(env, (id) => lost.has(id));
+    for (const [id, blob] of lost) {
+      const entry = entries.get(id);
+      if (entry?.body === undefined) continue;
+      const bytes = bodyBytes(collection, entry.body);
+      if ((await sha256Hex(bytes)) !== blob) continue;
+      await transport.putBlob(blob, bytes);
+      present.add(blob);
+      restored++;
+    }
+  }
+  return restored;
 }
