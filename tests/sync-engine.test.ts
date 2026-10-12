@@ -78,13 +78,14 @@ test("settings and lists sync both ways; an idle check is one request", async ()
   assert.deepEqual(server.requests, ["GET root"]);
 });
 
-test("a device joining an account keeps its own chats and takes the account's settings", async () => {
+test("a device joining an account keeps its own chats and takes settings it never changed", async () => {
   const { clock, a, b } = setup();
   await a.set(STORAGE_KEYS.language, "de-DE");
   await addChat(a, "c1", [["m1", 1]]);
   await a.sync("edit");
   clock.now += 1000;
-  await b.set(STORAGE_KEYS.language, "en-US");
+  // Stored before changes were recorded: older than the account's.
+  await b.env.local.set({ [STORAGE_KEYS.language]: "en-US" });
   await addChat(b, "c2", [["n1", 2]]);
   await b.sync("startup");
   await a.sync();

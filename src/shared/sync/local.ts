@@ -8,7 +8,7 @@ import {
 } from "./collection";
 import { recordIdOf } from "./collections";
 import type { SyncEnv } from "./env";
-import { tickClock } from "./hlc";
+import { tickClock, unknownAgeClock } from "./hlc";
 import type { SyncedEntry } from "./plan";
 import type { SyncRecord } from "./root";
 import type { DirtyKeys, SyncState } from "./state";
@@ -105,7 +105,7 @@ export async function collectLocalChanges(
     keys.forEach((key) => scan.processed.add(key));
     // When each record was last edited: the latest change of the keys that
     // hold it (the collection's own keys, and the record's key if it has
-    // one); a full comparison without such changes counts as now.
+    // one). 0 when no change was recorded (a full comparison).
     let listEditedAt = 0;
     const editedAt = new Map<string, number>();
     for (const key of keys) {
@@ -115,8 +115,8 @@ export async function collectLocalChanges(
       else editedAt.set(id, dirty[key].at);
     }
     const bodyIds = new Set(editedAt.keys());
-    const seen = (id: string) =>
-      Math.max(listEditedAt, editedAt.get(id) ?? 0) || env.now();
+    const editTime = (id: string) =>
+      Math.max(listEditedAt, editedAt.get(id) ?? 0);
     const entries = await collection.read(
       env,
       (id) =>
@@ -148,7 +148,12 @@ export async function collectLocalChanges(
       }
       scan.local.set(recordId, projection);
       const stamp = () => {
-        const [clock, hlc] = tickClock(state.hlc, device, seen(id));
+        const at = editTime(id);
+        // Never synced and never seen changing (it predates change
+        // tracking): the copy of any device that did change it is newer.
+        if (!at && !synced) return unknownAgeClock(device);
+        // Synced, changed while another backend was active: now.
+        const [clock, hlc] = tickClock(state.hlc, device, at || env.now());
         state.hlc = hlc;
         return clock;
       };

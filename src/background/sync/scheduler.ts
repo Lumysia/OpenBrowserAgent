@@ -16,6 +16,7 @@ import { SYNC_COLLECTIONS } from "../../shared/sync/collections";
 import {
   loadSyncState,
   markDirty as markDirtyKeys,
+  pruneSyncStates,
   loadSyncStatus,
   saveSyncState,
   SYNC_WARNINGS,
@@ -33,6 +34,7 @@ import {
 } from "./service";
 import {
   getActiveSyncBackendConfig,
+  getStoredSyncBackends,
   SYNC_BACKEND_TYPES,
   syncBackendScope,
 } from "../../shared/sync-backends";
@@ -239,6 +241,7 @@ export function setupSync() {
       changes[STORAGE_KEYS.syncBackends]
     ) {
       verifying = verifying.then(verifyServer).catch(() => undefined);
+      void forgetRemovedBackends();
       void updatePolling();
       void request({ reason: "startup" });
     }
@@ -246,6 +249,12 @@ export function setupSync() {
     if (settings)
       void followEnabledCategories(settings.oldValue, settings.newValue);
   });
+
+  // States of backends no longer configured are dropped.
+  async function forgetRemovedBackends() {
+    const backends = await getStoredSyncBackends();
+    await pruneSyncStates(env.local, backends.map(syncBackendScope));
+  }
 
   // A new backend: check what safe writes need, once.
   async function verifyServer() {

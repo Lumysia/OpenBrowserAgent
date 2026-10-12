@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { pauseDuration } from "../src/background/sync/service";
+import { syncBackendScope } from "../src/shared/sync-backends";
 import {
   BROWSER_SYNC_LIMITS,
   createBrowserSyncTransport,
@@ -14,6 +15,7 @@ import {
   INITIAL_HLC,
   observeClock,
   tickClock,
+  unknownAgeClock,
 } from "../src/shared/sync/hlc";
 import { mergeChatBodies, mergeFiles } from "../src/shared/sync/merge-content";
 import { decide } from "../src/shared/sync/plan";
@@ -182,14 +184,22 @@ test("a missing or older remote record is uploaded again, never deleted", async 
   );
 });
 
-test("a device joining an account takes the account's values", async () => {
-  const decision = await decide({
-    pending: { clock: clock(9), data: "device default" },
-    remote: { clock: clock(1, "b"), data: "account value" },
-    mergesContent: false,
-    dataHash: hashJson,
-  });
-  assert.equal(decision.kind, "apply");
+test("joining an account: the newer value wins, one of unknown age loses", async () => {
+  const join = (pending: { clock: string; data: string }) =>
+    decide({
+      pending,
+      remote: { clock: clock(5, "b"), data: "account value" },
+      mergesContent: false,
+      dataHash: hashJson,
+    });
+  const unknownAge = { clock: unknownAgeClock("a"), data: "device value" };
+  assert.equal((await join(unknownAge)).kind, "apply");
+  assert.equal((await join({ clock: clock(3), data: "older" })).kind, "apply");
+  assert.equal((await join({ clock: clock(9), data: "newer" })).kind, "push");
+  assert.equal(
+    (await join({ clock: clock(9), data: "account value" })).kind,
+    "apply",
+  );
 });
 
 test("chat message union keeps messages from both devices in time order", () => {
@@ -312,6 +322,22 @@ test("WebDAV helpers: strong ETags only, listings by name", () => {
     },
     { path: "f.gz", folder: false, modifiedAt: undefined },
   ]);
+});
+
+test("one WebDAV folder is one sync scope, however its URL is spelled", () => {
+  const scope = (url: string, username = "u") =>
+    syncBackendScope({
+      id: "webdav",
+      type: "webdav",
+      name: "W",
+      url,
+      username,
+    });
+  const base = scope("https://dav.example.com/x/");
+  assert.equal(scope("http://DAV.example.com/x"), base);
+  assert.equal(scope("https://dav.example.com:443/x"), base);
+  assert.notEqual(scope("https://dav.example.com/y/"), base);
+  assert.notEqual(scope("https://dav.example.com/x/", "v"), base);
 });
 
 test("browser sync: records split into items under 8 KB, quotas enforced", async () => {

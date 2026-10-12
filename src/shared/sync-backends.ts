@@ -99,9 +99,19 @@ export function syncBackendSupportsChats(type: SyncBackendConfig["type"]) {
   return type === SYNC_BACKEND_TYPES.webDav;
 }
 
-// What the sync state belongs to: another URL or account starts over.
+// What the sync state belongs to: another folder or account has its own.
+// Spellings of one folder (http or https, host name case, default port, a
+// trailing slash) are the same scope.
 export function syncBackendScope(backend: SyncBackendConfig) {
-  return backend.type === SYNC_BACKEND_TYPES.webDav
-    ? `${backend.type}:${backend.username || ""}@${backend.url.replace(/\/?$/, "/")}`
-    : backend.type;
+  if (backend.type !== SYNC_BACKEND_TYPES.webDav) return backend.type;
+  return `${backend.type}:${backend.username || ""}@${folderOf(backend.url)}`;
+}
+
+function folderOf(url: string) {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.host}${parsed.pathname.replace(/\/?$/, "/")}`;
+  } catch {
+    return url.replace(/\/?$/, "/");
+  }
 }

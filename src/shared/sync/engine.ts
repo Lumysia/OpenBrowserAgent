@@ -1,5 +1,6 @@
 import { SYNC_LOCK } from "../locks";
 import {
+  STORAGE_KEYS,
   SYNC_DATA_SETTING_KEYS,
   SYNC_PREFERENCES,
   type SyncDataSettings,
@@ -23,7 +24,7 @@ import {
   syncCollection,
   splitRecordId,
 } from "./collections";
-import type { SyncEnv } from "./env";
+import { readKey, type SyncEnv } from "./env";
 import { compareClocks, observeClock } from "./hlc";
 import {
   applyToLocal,
@@ -116,6 +117,10 @@ async function round(
   const { env, transport, device } = context;
   const collections = enabledCollections(context.settings, transport.kind);
   const state = await loadSyncState(env.local, context.scope);
+  // Local data changed while another backend was active is compared in full.
+  const lastScope = await readKey<string>(env.local, STORAGE_KEYS.syncScope);
+  if (lastScope !== context.scope)
+    state.rescan = SYNC_COLLECTIONS.map((collection) => collection.name);
   const dirty = await loadDirty(env.local);
   const payloads: Payloads = new Map();
   const scan = await collectLocalChanges(
@@ -130,6 +135,8 @@ async function round(
     (name) => !collections.some((collection) => collection.name === name),
   );
   await saveSyncState(env.local, state);
+  if (lastScope !== context.scope)
+    await env.local.set({ [STORAGE_KEYS.syncScope]: context.scope });
   await clearDirty(
     env,
     dirty,
@@ -365,7 +372,7 @@ async function reconcile(
     }
   }
 
-  const massDelete = massDeletes(collections, state, decisions);
+  const massDelete = massDeletes(collections, state, decisions, local);
   if (massDelete.length && !options.allowMassDelete) {
     outcome.massDelete = massDelete;
     return outcome;

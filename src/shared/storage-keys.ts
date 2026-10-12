@@ -14,7 +14,10 @@ export const STORAGE_KEYS = {
   chatTabs: "chat-tabs",
   chatAttachments: "chat-attachments",
   syncStatus: "sync-status",
+  // One per backend scope: `sync-state:<scope>`.
   syncState: "sync-state",
+  // The scope of the last round; another one compares all local data.
+  syncScope: "sync-scope",
   syncDirty: "sync-dirty",
   // storage.session: extension pages and whether they are visible.
   syncVisiblePages: "sync-visible-pages",

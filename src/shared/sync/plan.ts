@@ -72,6 +72,8 @@ export async function decide({
 
 const push = (record: SyncRecord): Decision => ({ kind: "push", record });
 
+// Both sides changed the record since `synced` (a device joining an account
+// has no synced version: every difference is a change on both sides).
 async function conflict({
   synced,
   pending,
@@ -81,23 +83,6 @@ async function conflict({
 }: Required<Pick<DecisionInput, "pending" | "remote">> &
   Omit<DecisionInput, "pending" | "remote" | "local">): Promise<Decision> {
   const mineNewer = compareClocks(pending.clock, remote.clock) > 0;
-  // A device that never synced this record joins the account: the remote
-  // copy wins, except content that merges without loss.
-  if (!synced) {
-    if (pending.deleted || remote.deleted)
-      return { kind: "apply", record: remote };
-    if (
-      !mergesContent ||
-      !pending.blob ||
-      !remote.blob ||
-      pending.blob === remote.blob
-    )
-      return { kind: "apply", record: remote };
-    return mergeDecision(remote.data, {
-      mine: pending.blob,
-      theirs: remote.blob,
-    });
-  }
   // A delete against an edit: the newer one wins.
   if (pending.deleted || remote.deleted)
     return mineNewer ? push(pending) : { kind: "apply", record: remote };
@@ -106,15 +91,18 @@ async function conflict({
     dataHash(pending.data),
     dataHash(remote.data),
   ]);
-  const mineDataChanged = mineData !== synced.dataHash;
-  const theirsDataChanged = theirsData !== synced.dataHash;
+  // Both made the same change.
+  if (mineData === theirsData && pending.blob === remote.blob)
+    return { kind: "apply", record: remote };
+  const mineDataChanged = mineData !== synced?.dataHash;
+  const theirsDataChanged = theirsData !== synced?.dataHash;
   const data =
     mineDataChanged && (!theirsDataChanged || mineNewer)
       ? pending.data
       : remote.data;
 
-  const mineBlobChanged = pending.blob !== synced.blob;
-  const theirsBlobChanged = remote.blob !== synced.blob;
+  const mineBlobChanged = pending.blob !== synced?.blob;
+  const theirsBlobChanged = remote.blob !== synced?.blob;
   let blob: string | BlobMerge | undefined;
   let size: number | undefined;
   if (!mineBlobChanged || pending.blob === remote.blob || !theirsBlobChanged) {
@@ -122,7 +110,7 @@ async function conflict({
     blob = mine ? pending.blob : remote.blob;
     size = mine ? pending.size : remote.size;
   } else if (mergesContent && pending.blob && remote.blob)
-    blob = { base: synced.blob, mine: pending.blob, theirs: remote.blob };
+    blob = { base: synced?.blob, mine: pending.blob, theirs: remote.blob };
   else {
     blob = mineNewer ? pending.blob : remote.blob;
     size = mineNewer ? pending.size : remote.size;
@@ -133,8 +121,4 @@ async function conflict({
   if (blob === pending.blob && data === pending.data && mineNewer)
     return push(pending);
   return { kind: "merge", data, blob, size };
-}
-
-function mergeDecision(data: unknown, blob: BlobMerge): Decision {
-  return { kind: "merge", data, blob };
 }

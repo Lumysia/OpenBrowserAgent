@@ -58,6 +58,10 @@ export function tickClock(
   return [formatClock(next.wall, next.counter, device), next];
 }
 
+// The clock of data whose age is unknown (stored before changes were
+// recorded): older than any change made anywhere.
+export const unknownAgeClock = (device: string) => formatClock(0, 0, device);
+
 // Take in a clock seen on another device, so later local events order after it.
 export function observeClock(state: HlcState, clock: Clock): HlcState {
   const parsed = parseClock(clock);

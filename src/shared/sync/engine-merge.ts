@@ -4,7 +4,7 @@ import { recordIdOf, splitRecordId } from "./collections";
 import type { SyncContext } from "./engine";
 import type { SyncEnv } from "./env";
 import { compareClocks, tickClock } from "./hlc";
-import { project, type Payloads } from "./local";
+import { project, type Payloads, type Projection } from "./local";
 import type { BlobMerge, Decision } from "./plan";
 import type { SyncRecord } from "./root";
 import type { MassDelete, SyncState } from "./state";
@@ -110,32 +110,36 @@ export async function mergeRecord(
   return { record, body };
 }
 
-// Collections where applying the remote root would delete most items.
+// Collections where applying the remote root would delete most items this
+// device has: synced ones, and on joining an account its own ones.
 export function massDeletes(
   collections: Collection[],
   state: SyncState,
   decisions: Map<string, Decision>,
+  local: Map<string, Projection | null>,
 ) {
   const result: MassDelete[] = [];
+  const heldHere = (recordId: string) => {
+    const synced = state.synced[recordId];
+    return synced ? !synced.deleted : !!local.get(recordId);
+  };
   for (const collection of collections) {
     const prefix = `${collection.name}/`;
-    const live = Object.entries(state.synced).filter(
-      ([recordId, entry]) =>
-        recordId.startsWith(prefix) &&
-        !entry.deleted &&
-        !isOrderId(recordId.slice(prefix.length)),
-    ).length;
-    const count = [...decisions].filter(
-      ([recordId, decision]) =>
+    const items = [
+      ...new Set([...Object.keys(state.synced), ...local.keys()]),
+    ].filter(
+      (recordId) =>
         recordId.startsWith(prefix) &&
         !isOrderId(recordId.slice(prefix.length)) &&
-        decision.kind === "apply" &&
-        decision.record.deleted &&
-        state.synced[recordId] &&
-        !state.synced[recordId].deleted,
-    ).length;
-    if (live > MASS_DELETE_MIN_ITEMS && count > live * MASS_DELETE_SHARE)
-      result.push({ collection: collection.name, count, total: live });
+        heldHere(recordId),
+    );
+    const total = items.length;
+    const count = items.filter((recordId) => {
+      const decision = decisions.get(recordId);
+      return decision?.kind === "apply" && decision.record.deleted;
+    }).length;
+    if (total > MASS_DELETE_MIN_ITEMS && count > total * MASS_DELETE_SHARE)
+      result.push({ collection: collection.name, count, total });
   }
   return result;
 }

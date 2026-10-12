@@ -71,13 +71,26 @@ export const newSyncState = (scope: string): SyncState => ({
   rescan: SYNC_COLLECTIONS.map((collection) => collection.name),
 });
 
+// Each backend keeps its own state, so switching to another backend and
+// back resumes where this device left off instead of joining anew.
+const stateKey = (scope: string) => `${STORAGE_KEYS.syncState}:${scope}`;
+
 export async function loadSyncState(local: StorageArea, scope: string) {
-  const stored = await readKey<SyncState>(local, STORAGE_KEYS.syncState);
+  const stored = await readKey<SyncState>(local, stateKey(scope));
   return stored?.scope === scope ? stored : newSyncState(scope);
 }
 
 export const saveSyncState = (local: StorageArea, state: SyncState) =>
-  local.set({ [STORAGE_KEYS.syncState]: state });
+  local.set({ [stateKey(state.scope)]: state });
+
+// Forget the states of backends no longer configured.
+export async function pruneSyncStates(local: StorageArea, keep: string[]) {
+  const kept = new Set(keep.map(stateKey));
+  const stale = Object.keys(await local.get(null)).filter(
+    (key) => key.startsWith(`${STORAGE_KEYS.syncState}:`) && !kept.has(key),
+  );
+  if (stale.length) await local.remove(stale);
+}
 
 export async function loadSyncStatus(local: StorageArea) {
   return {

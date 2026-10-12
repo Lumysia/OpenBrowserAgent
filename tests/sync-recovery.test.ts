@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
+import { runSyncRound } from "../src/shared/sync/engine";
 import {
   ALL_ON,
   chat,
@@ -155,4 +156,69 @@ test("content the server lost is uploaded again by the weekly check of a device 
   await a.sync();
   const blob = (await a.state()).synced["chats/X"].blob!;
   assert.ok(server.blobs.has(blob));
+});
+
+test("switching to another backend and back resumes sync in both directions", async () => {
+  const { clock, a, b } = setup();
+  await a.set(PROVIDERS, { p1: { apiKey: "v0" } });
+  await a.sync("edit");
+  await b.sync();
+  clock.now += 1000;
+  await a.set(PROVIDERS, { p1: { apiKey: "a" }, p3: { apiKey: "a" } });
+  await a.sync("edit");
+  // b tries another backend for a while and edits there, after a did.
+  const elsewhere = {
+    ...b.context,
+    scope: "other",
+    transport: memoryTransport(memoryServer()),
+  };
+  clock.now += 1000;
+  await b.set(PROVIDERS, { p1: { apiKey: "b" }, p2: { apiKey: "b" } });
+  await runSyncRound(elsewhere, "edit");
+  // Back to the first backend: b resumes instead of joining anew.
+  clock.now += 1000;
+  await b.sync("startup");
+  await a.sync();
+  const expected = {
+    p1: { apiKey: "b" },
+    p2: { apiKey: "b" },
+    p3: { apiKey: "a" },
+  };
+  assert.deepEqual(a.get(PROVIDERS), expected);
+  assert.deepEqual(b.get(PROVIDERS), expected);
+});
+
+test("a device joining an account where most of its chats were deleted asks first", async () => {
+  const { clock, a, b } = setup();
+  for (let i = 0; i < 8; i++) await saveChat(a, `c${i}`, [[`m${i}`, i]]);
+  await a.sync("edit");
+  await b.sync();
+  clock.now += 1000;
+  await a.set(CHATS, []);
+  await a.sync("edit");
+  // b joins this account anew (another folder URL for the same server).
+  const joined = await runSyncRound({ ...b.context, scope: "new" }, "startup");
+  assert.deepEqual(joined.massDelete, [
+    { collection: "chats", count: 8, total: 8 },
+  ]);
+  assert.equal(b.get<unknown[]>(CHATS).length, 8);
+});
+
+test("on joining an account, the newer of two differing values wins", async () => {
+  const { clock, a, b } = setup();
+  const LANGUAGE = STORAGE_KEYS.language;
+  await a.set(PROVIDERS, { p1: { apiKey: "account" } });
+  await a.set(LANGUAGE, "de-DE");
+  await a.sync("edit");
+  clock.now += 1000;
+  // b changed p1 after the account did; its language is older than change
+  // tracking (stored without a change being recorded).
+  await b.set(PROVIDERS, { p1: { apiKey: "typed on b" } });
+  await b.env.local.set({ [LANGUAGE]: "fr-FR" });
+  await b.sync("startup");
+  await a.sync();
+  for (const on of [a, b]) {
+    assert.deepEqual(on.get(PROVIDERS), { p1: { apiKey: "typed on b" } });
+    assert.equal(on.get(LANGUAGE), "de-DE");
+  }
 });

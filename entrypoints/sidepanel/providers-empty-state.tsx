@@ -128,7 +128,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   }
 
   // Test the backend and, when it works, start syncing at once. A device
-  // joining an account takes the account's settings and data; what only
+  // joining an account takes the account's data where it is newer; what only
   // this device has is uploaded.
   async function connectCloud({
     backend,
