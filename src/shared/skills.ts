@@ -1,5 +1,5 @@
 import { ISO_DATE_LENGTH, SKILL_NAME_MAX_LENGTH } from "./config";
-import type { PickedSkill, Skill, SkillFile } from "./types";
+import type { PickedSkill, Skill, SkillFile, SkillFileKind } from "./types";
 
 export const SKILL_ENTRY_PATH = "SKILL.md";
 
@@ -260,7 +260,7 @@ export function parseSkillFrontmatter(value: string) {
   };
 }
 
-export function skillFileKind(path: string) {
+export function skillFileKind(path: string): SkillFileKind {
   if (path.startsWith("assets/")) return "asset";
   if (path.startsWith("scripts/")) return "script";
   if (path.endsWith(".md") || path === SKILL_ENTRY_PATH) return "markdown";

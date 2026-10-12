@@ -200,6 +200,7 @@ export const LAPTOPS = {
     battery: "17 hours",
     weight: "1.18 kg",
     price: "$1,349",
+    shipping: "$79 (express only)",
   },
   c: {
     name: "Lumen 13 Pro",
@@ -215,7 +216,7 @@ export function laptopPage(id) {
   return layout(
     `${laptop.name} - specifications`,
     `<nav><a href="#">Laptops</a><a href="#">Deals</a><a href="#">Support</a></nav>
-<h1>${laptop.name}</h1><p class="price">${laptop.price}</p><p>${filler(next, 5)}</p>
+<h1>${laptop.name}</h1><p class="price">${laptop.price}</p><p>${filler(next, 5)}</p>${laptop.shipping ? `<p class="shipping">Shipping: ${laptop.shipping}</p>` : `<p class="shipping">Free shipping</p>`}
 <h2>Specifications</h2><table>
 <tr><th>Display</th><td>${13 + (id.charCodeAt(0) % 3)}-inch IPS</td></tr>
 <tr><th>Battery life</th><td>Up to ${laptop.battery} (video playback)</td></tr>

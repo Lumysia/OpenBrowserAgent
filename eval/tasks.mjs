@@ -1,4 +1,5 @@
 import { orderRows, todoItems } from "./fixture-pages-apps.mjs";
+import { SKILL_TASKS } from "./tasks-skills.mjs";
 
 // Each task opens `tabs` (fixture paths or live URLs; the first is active),
 // sends `prompt` through the side panel composer, then `check` decides success
@@ -309,6 +310,7 @@ export const TASKS = [
       );
     },
   },
+  ...SKILL_TASKS,
 ];
 
 async function topStory(tab) {

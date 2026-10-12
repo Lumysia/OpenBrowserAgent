@@ -51,10 +51,13 @@ test(
       await typeComposer(page, "/");
       await poll(async () => (await options()).length >= 2);
       await page.send("Input.insertText", { text: "bridge" });
+      // Names match before descriptions.
       await poll(async () => {
         const shown = await options();
         return (
-          shown.length === 1 && shown[0].name === "local-execution-bridge-setup"
+          shown.length >= 1 &&
+          shown.length < 5 &&
+          shown[0].name === "local-execution-bridge-setup"
         );
       });
       await page.call(() => {

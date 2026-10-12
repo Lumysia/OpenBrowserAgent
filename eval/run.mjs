@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { setTimeout as delay } from "node:timers/promises";
+import { BUILTIN_SKILLS } from "../src/shared/builtin-skills.ts";
 import { launchExtension, poll } from "../tests/chromium.mjs";
 import { renderReport, summarize } from "./report.mjs";
 import { startServer } from "./server.mjs";
@@ -14,6 +15,7 @@ import { TASKS } from "./tasks.mjs";
 //   OBA_EVAL_PROVIDER (default openai: Chat Completions), OBA_EVAL_CONTEXT_LENGTH (optional).
 // Usage: npm run eval -- [--tasks id,id] [--skip-live] [--out path/name]
 //        [--compare baseline.json] [--extension built-extension-dir]
+//        [--skills off] (turns every built-in skill off, to measure a skill)
 // A frozen build records where it came from, so reports name the build's
 // commit, not the repository's:
 //   cp -r .output/chrome-mv3 DIR && git rev-parse --short HEAD > DIR/build-commit.txt
@@ -25,8 +27,16 @@ const { values: args } = parseArgs({
     compare: { type: "string" },
     timeout: { type: "string", default: "600" },
     extension: { type: "string" },
+    skills: { type: "string", default: "on" },
   },
 });
+// "off" runs with every built-in skill turned off.
+const skillSettings =
+  args.skills === "off"
+    ? Object.fromEntries(
+        BUILTIN_SKILLS.map((skill) => [skill.id, { invoke: "off" }]),
+      )
+    : {};
 const extensionDir = resolve(args.extension || ".output/chrome-mv3");
 const buildCommit = await readFile(`${extensionDir}/build-commit.txt`, "utf8")
   .then((text) => text.trim())
@@ -84,6 +94,7 @@ const report = {
     model: env.model,
     commit: buildCommit,
     extension: extensionDir,
+    skills: args.skills,
   },
   totals: summarize(results),
   tasks: results,
@@ -151,9 +162,10 @@ async function runTask(task) {
           },
           language: "en-US",
           preferences: { selectedModelId: "eval-model" },
+          "skill-settings": config.skillSettings,
         });
       },
-      { ...env, baseUrl: `${server.origin}/v1` },
+      { ...env, baseUrl: `${server.origin}/v1`, skillSettings },
     );
     await panel.send("Page.reload");
     await poll(() =>
@@ -174,24 +186,27 @@ async function runTask(task) {
     for (const prompt of [task.prompt, ...(task.followUps || [])]) {
       const run = await ask(panel, prompt);
       runs.push({ ...run, callsAfter: server.state.calls.length });
-      if (run.timedOut || run.question) break;
+      if (run.timedOut || (run.question && !task.allowQuestion)) break;
     }
     const run = runs.at(-1);
     const wallMs = (run.endedAt || Date.now()) - startedAt;
     const answer = run.answer || "";
     const verdict = run.timedOut
       ? { ok: false, detail: { timedOut: true } }
-      : run.question
+      : run.question && !task.allowQuestion
         ? { ok: false, detail: { askedQuestion: true } }
         : await task.check({
             answer,
             runs,
+            question: run.questionText,
             posts: server.state.posts,
             page,
+            panel,
             prepared,
           });
     return {
       id: task.id,
+      ...(task.skill ? { skill: task.skill } : {}),
       live: !!task.live,
       informational: !!task.informational,
       ok: verdict.ok,
@@ -204,8 +219,9 @@ async function runTask(task) {
       }, {}),
       attachedTabs: runs[0].attachedTabs,
       ...(runs.length > 1 ? { turns: turnMetrics(runs) } : {}),
+      skillsRead: [...new Set(runs.flatMap((item) => item.skillsRead || []))],
       answerChars: answer.length,
-      ...(verdict.ok ? {} : { answer: answer.slice(0, 600) }),
+      ...(verdict.ok ? {} : { answer: answer.slice(0, 4000) }),
       ...callMetrics(server.state.calls),
     };
   } finally {
@@ -325,29 +341,36 @@ async function readRun(prompt) {
       .slice(index + 1, next < 0 ? undefined : next)
       .filter((message) => message.role === "assistant");
     const parts = replies.flatMap((message) => message.parts || []);
-    const question = parts.some(
+    const asking = parts.find(
       (part) => part.toolName === "ask" && part.state === "input-available",
     );
+    const question = !!asking;
     const last = replies.at(-1);
     const endedAt = last?.metadata?.runMetrics?.endedAt;
     if (!question && (!endedAt || document.querySelector(".stop-button")))
       return undefined;
     const toolCalls = {};
+    const skillsRead = [];
     const seen = new Set();
     for (const part of parts) {
       if (!part.toolName || seen.has(part.id)) continue;
       seen.add(part.id);
       toolCalls[part.toolName] = (toolCalls[part.toolName] || 0) + 1;
+      const source = String(part.input?.source || "");
+      if (part.toolName === "read" && source.startsWith("skill:"))
+        skillsRead.push(source.slice("skill:".length));
     }
     return {
       endedAt: endedAt || Date.now(),
       attachedTabs: messages[index].metadata?.attachedTabs?.length || 0,
       question,
+      questionText: asking ? JSON.stringify(asking.input) : undefined,
       answer: replies.map((message) => message.content).join("\n"),
       toolCalls,
       toolInputs: parts.flatMap((part) =>
         part.toolName ? [{ name: part.toolName, input: part.input }] : [],
       ),
+      skillsRead,
     };
   }
   return undefined;
