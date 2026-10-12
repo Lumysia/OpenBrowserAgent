@@ -59,8 +59,8 @@ const MUTATIONS = [
   {
     name: "drop the mass-delete guard",
     file: "src/shared/sync/engine.ts",
-    from: "if (massDelete.length && !options.allowMassDelete) {",
-    to: "if (false) {",
+    from: "massDelete.some((entry) => !answer?.collections.includes(entry.collection))",
+    to: "false",
   },
   {
     name: "apply an unvalidated root",
@@ -86,6 +86,108 @@ const MUTATIONS = [
     from: "if (remoteBehind && synced.deleted && remote)",
     to: "if (false)",
   },
+  {
+    name: "content downloads stored without re-checking the synced version",
+    file: "src/background/sync/service.ts",
+    from: "if (latest.synced[recordId]?.blob !== blob) return undefined;",
+    to: "",
+  },
+  {
+    name: "clearing sync data without the sync lock",
+    file: "src/background/sync/service.ts",
+    from: "return env.lock(SYNC_LOCK, () => reset(env, context, remote, keys));",
+    to: "return reset(env, context, remote, keys);",
+  },
+  {
+    name: "chat content written without the content key's lock",
+    file: "src/shared/sync/collections-chats.ts",
+    from: "const locks = [CHATS, ...changes.map((change) => contentKey(change.id))];",
+    to: "const locks = [CHATS];",
+  },
+  {
+    name: "dirty keys cleared even when they changed during the round",
+    file: "src/shared/sync/state.ts",
+    from: "if (current[key]?.changes === seen[key]?.changes) delete current[key];",
+    to: "delete current[key];",
+  },
+  {
+    name: "changes stamped with the first edit's time",
+    file: "src/shared/sync/state.ts",
+    from: "at: Math.max(now, dirty[key]?.at ?? 0),",
+    to: "at: dirty[key]?.at ?? now,",
+  },
+  {
+    name: "chat changes stamped with the oldest edit of the collection",
+    file: "src/shared/sync/local.ts",
+    from: "Math.max(listEditedAt, editedAt.get(id) ?? 0);",
+    to: "Math.min(...[listEditedAt, ...editedAt.values()].filter(Boolean));",
+  },
+  {
+    name: "collections with pending changes skipped when nothing is dirty",
+    file: "src/shared/sync/local.ts",
+    from: "if (!keys.length && !full && !hasPending) continue;",
+    to: "if (!keys.length && !full) continue;",
+  },
+  {
+    name: "pushes refer to content nobody can download",
+    file: "src/shared/sync/engine.ts",
+    from: "if (!payloads.has(record.blob!)) pushes.delete(recordId);",
+    to: "if (false) pushes.delete(recordId);",
+  },
+  {
+    name: "blobs the server lost are not uploaded again",
+    file: "src/shared/sync/blobs.ts",
+    from: "await transport.putBlob(blob, bytes);",
+    to: "",
+  },
+  {
+    name: "one sync state for every backend",
+    file: "src/shared/sync/state.ts",
+    from: "const stateKey = (scope: string) => `${STORAGE_KEYS.syncState}:${scope}`;",
+    to: "const stateKey = (_scope: string) => STORAGE_KEYS.syncState;",
+  },
+  {
+    name: "local data not compared again after another backend was active",
+    file: "src/shared/sync/engine.ts",
+    from: `  if (lastScope !== context.scope)
+    state.rescan = `,
+    to: `  if (false)
+    state.rescan = `,
+  },
+  {
+    name: "local data of unknown age counts as new when joining",
+    file: "src/shared/sync/local.ts",
+    from: "if (!at && !synced) return unknownAgeClock(device);",
+    to: "",
+  },
+  {
+    name: "joined items left out of the mass-delete guard",
+    file: "src/shared/sync/engine-merge.ts",
+    from: "return synced ? !synced.deleted : !!local.get(recordId);",
+    to: "return !!synced && !synced.deleted;",
+  },
+  {
+    name: "garbage deleted before the root without it is written",
+    file: "src/shared/sync/engine.ts",
+    from: `    await uploadBlobs(transport, remote, outcome.pushes, payloads);
+    const written`,
+    to: `    await uploadBlobs(transport, remote, outcome.pushes, payloads);
+    await deleteBlobs(transport, collected);
+    const written`,
+  },
+  {
+    name: "keeping after a mass delete re-uploads every record",
+    file: "src/shared/sync/engine-merge.ts",
+    from: `          decision.kind === "apply" &&
+          decision.record.deleted,`,
+    to: `          true,`,
+  },
+  {
+    name: "kept records refer to content that is gone",
+    file: "src/shared/sync/engine-merge.ts",
+    from: "!stored.has(projection.blob)",
+    to: "false",
+  },
 ];
 
 function runTests() {
@@ -97,6 +199,8 @@ function runTests() {
       "--test",
       "tests/sync-units.test.ts",
       "tests/sync-engine.test.ts",
+      "tests/sync-races.test.ts",
+      "tests/sync-recovery.test.ts",
     ],
     { encoding: "utf8" },
   );
