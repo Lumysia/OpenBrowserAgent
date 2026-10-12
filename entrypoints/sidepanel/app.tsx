@@ -45,9 +45,9 @@ import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
 import { useParallelChatStreams } from "./use-parallel-chat-streams";
 import { useQueuedMessages } from "./use-queued-messages";
-import { useRemoteSyncRefresh } from "../../src/ui/useRemoteSyncRefresh";
+import { useSyncPageState } from "../../src/ui/useSyncPageState";
 import { useSmartBarHandoff } from "./use-smart-bar-handoff";
-import { useSyncedChatAttachments } from "./use-synced-chat-attachments";
+import { useChatAttachments } from "./use-chat-attachments";
 import { useUnreadCompletedChats } from "./use-unread-completed-chats";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
 
@@ -57,8 +57,7 @@ export function SidepanelApp() {
     storage.ignoreSyncedProvidersForBootstrap,
   );
   const [preferences, setPreferences] = useStoredState(storage.preferences);
-  const [syncDataSettings] = useStoredState(storage.syncDataSettings);
-  const [syncWriteStatus] = useStoredState(storage.syncWriteStatus);
+  const [syncStatus] = useStoredState(storage.syncStatus);
   const [agents] = useStoredState(storage.agents);
   const [language] = useStoredState(storage.language);
   const { entries: skillEntries } = useSkillCatalog();
@@ -190,9 +189,8 @@ export function SidepanelApp() {
     setQueuedMessageRemover((id, chatId) => removeQueuedMessage(id, chatId));
   }, [removeQueuedMessage, setQueuedMessageRemover]);
 
-  const { syncSentAttachments } = useSyncedChatAttachments({
+  const { storeSentAttachments } = useChatAttachments({
     currentChat,
-    syncDataSettings,
     sentAttachmentPreviews,
     setSentAttachmentPreviews,
   });
@@ -203,13 +201,12 @@ export function SidepanelApp() {
   );
 
   useSidepanelTheme(preferences?.accentColor, preferences?.colorScheme);
-  useRemoteSyncRefresh(syncDataSettings);
+  useSyncPageState();
 
   const { createChat, closeChat, selectChat, importChat, forkMessage } =
     useChatActions({
       t,
       chats: chatState,
-      syncDataSettings,
       setDraftChat,
       setActiveChatId,
       setChatSelectionRequestId,
@@ -344,7 +341,7 @@ export function SidepanelApp() {
             ? { ...kept, [userMessage.id]: sentAttachments }
             : kept;
         });
-      syncSentAttachments({
+      storeSentAttachments({
         chatId: nextChat.id,
         messageId: userMessage.id,
         attachments: sentAttachments,
@@ -399,7 +396,7 @@ export function SidepanelApp() {
       configuredModels={configuredModels}
       input={input}
       activeAgent={activeAgent}
-      syncWriteStatus={syncWriteStatus}
+      syncStatus={syncStatus}
       attachedTabs={attachedTabs}
       pendingAttachments={pendingAttachments}
       uploadedAttachments={uploadedAttachments}

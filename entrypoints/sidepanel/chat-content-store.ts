@@ -1,8 +1,8 @@
 import {
+  ChatContentUnavailableError,
   chatContentKey,
   contentFacts,
   loadChatContent,
-  refreshChatContent,
   saveChatContent,
 } from "../../src/shared/chat-storage";
 import {
@@ -15,7 +15,6 @@ import {
   CHAT_STREAM_WRITE_DEBOUNCE_MS,
   CHAT_WRITE_DEBOUNCE_MS,
 } from "../../src/shared/config";
-import { SplitItemUnavailableError } from "../../src/shared/storage-split";
 import type { ChatContent } from "../../src/shared/types";
 
 export type ChatContentEntry =
@@ -151,16 +150,10 @@ export function createChatContentStore(
         if (entries.get(chatId)?.status === "loading")
           setEntry(chatId, {
             status: "error",
-            unavailable: error instanceof SplitItemUnavailableError,
+            unavailable: error instanceof ChatContentUnavailableError,
           });
         return undefined;
       }
-    },
-    // Check a loaded chat against the cloud; a newer copy arrives through
-    // storage. Skipped while local edits wait to be stored.
-    revalidate(chatId: string) {
-      if (!content(chatId) || timers.has(chatId)) return;
-      refreshChatContent(chatId).catch(() => undefined);
     },
     set(chatId: string, next: ChatContent, mode: PersistMode = "debounced") {
       if (content(chatId) === next) return Promise.resolve();

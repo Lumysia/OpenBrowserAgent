@@ -1,24 +1,10 @@
 import { Bot, Languages, Settings } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { LOCAL_SETUP_FEEDBACK_MS, OPTIONS_HASH } from "../../src/shared/config";
-import { mergePreferences } from "../../src/shared/default-preferences";
 import type { Messages } from "../../src/shared/i18n";
-import {
-  DEFAULT_SYNC_DATA_SETTINGS,
-  restoreSyncBackendFromCloud,
-  setActiveSyncBackend,
-  flushPendingSyncWrites,
-  storage,
-  STORAGE_KEYS,
-  SYNCABLE_DATA_ITEMS,
-  SYNC_PREFERENCES,
-  SYNC_PREFERENCE_KEYS,
-} from "../../src/shared/storage";
+import { storage } from "../../src/shared/storage";
 import { completeLocalBootstrapState } from "../../src/shared/storage-debug";
-import {
-  mergeSyncDataSettings,
-  type SyncDataSettings,
-} from "../../src/shared/storage-keys";
+import type { SyncDataSettings } from "../../src/shared/storage-keys";
 import { parseSyncConfigCode } from "../../src/shared/sync-config-code";
 import {
   BROWSER_SYNC_BACKEND_ID,
@@ -27,12 +13,9 @@ import {
   syncBackendDefaultName,
   WEBDAV_SYNC_BACKEND_ID,
 } from "../../src/shared/sync-backends";
-import {
-  createSyncBackend,
-  type SyncBackend,
-} from "../../src/shared/sync-backends";
+import { checkSyncBackend, syncNow } from "../../src/shared/sync/client";
 import { openOrFocusOptions } from "../../src/shared/tab-navigation";
-import type { Preferences, SyncBackendConfig } from "../../src/shared/types";
+import type { SyncBackendConfig } from "../../src/shared/types";
 import { languageLabels } from "../../src/shared/types";
 import {
   Badge,
@@ -51,17 +34,6 @@ import {
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { SyncBootstrapStep } from "./sync-bootstrap-step";
-
-type CloudBootstrapState = {
-  language?: string;
-  preferences?: Preferences;
-  syncDataSettings?: SyncDataSettings;
-  data: Record<string, unknown>;
-};
-
-const BOOTSTRAP_CLOUD_DATA_KEYS = SYNCABLE_DATA_ITEMS.map(
-  (item) => item.dataKey,
-);
 
 export function ProvidersEmptyState({ t }: { t: Messages }) {
   const [language, setLanguage] = useStoredState(storage.language);
@@ -138,9 +110,6 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
           ? webDavDraft.password
           : patch.password || undefined,
     };
-    void flushPendingSyncWrites().catch((error) =>
-      console.warn("Failed to flush pending sync writes", error),
-    );
     setSyncBackends([
       ...loadedSyncBackends.filter(
         (backend) => backend.type !== SYNC_BACKEND_TYPES.webDav,
@@ -158,8 +127,9 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     );
   }
 
-  // Test the backend and, when it works, start syncing at once: take the
-  // cloud's setup if it has one, otherwise upload this device's.
+  // Test the backend and, when it works, start syncing at once. A device
+  // joining an account takes the account's settings and data; what only
+  // this device has is uploaded.
   async function connectCloud({
     backend,
     backends,
@@ -173,20 +143,13 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     setSyncAction("test");
     setSyncStatus("idle");
     try {
-      const remote = createSyncBackend(backend);
-      await remote.test();
-      const cloudState = await readCloudBootstrapState(remote);
+      await checkSyncBackend(backend);
       setSyncAction("confirm");
       await storage.syncBackends.set(backends);
-      if (hasCloudBootstrapData(cloudState)) {
-        await restoreCloudBootstrapState(backend.id, cloudState, codeSettings);
-      } else {
-        await storage.syncDataSettings.set({
-          ...(codeSettings ?? (await storage.syncDataSettings.get())),
-          [SYNC_PREFERENCES.providers]: true,
-        });
-        await setActiveSyncBackend(backend.id);
-      }
+      if (codeSettings) await storage.syncDataSettings.set(codeSettings);
+      await storage.activeSyncBackendId.set(backend.id);
+      const status = await syncNow();
+      if (status.error) throw new Error(status.error);
       await completeLocalBootstrapState();
       setSyncStatus("synced");
     } catch (error) {
@@ -195,40 +158,6 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     } finally {
       setSyncing(false);
     }
-  }
-
-  async function restoreCloudBootstrapState(
-    backendId: string,
-    cloudState: CloudBootstrapState,
-    codeSettings: SyncDataSettings | undefined,
-  ) {
-    const restoredPreferences = mergePreferences(
-      cloudState.preferences || (await storage.preferences.get()),
-    );
-    const restoredSyncDataSettings = cloudState.syncDataSettings ||
-      codeSettings || {
-        ...(await storage.syncDataSettings.get()),
-        ...Object.fromEntries(
-          // Without cloud settings, sync what the cloud has, plus the
-          // categories synced by default (providers).
-          SYNC_PREFERENCE_KEYS.map((preferenceKey) => [
-            preferenceKey,
-            DEFAULT_SYNC_DATA_SETTINGS[preferenceKey] ||
-              SYNCABLE_DATA_ITEMS.some(
-                (item) =>
-                  item.preferenceKey === preferenceKey &&
-                  hasCloudValue(cloudState.data[item.dataKey]),
-              ),
-          ]),
-        ),
-      };
-    await restoreSyncBackendFromCloud({
-      backendId,
-      language: cloudState.language,
-      preferences: restoredPreferences,
-      syncDataSettings: restoredSyncDataSettings,
-      data: cloudState.data,
-    });
   }
 
   function handleCloudAction() {
@@ -408,48 +337,6 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
       </div>
     </div>
   );
-}
-
-function hasCloudData(value: unknown) {
-  if (value === undefined || value === null) return false;
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "object")
-    return Object.keys(value as Record<string, unknown>).length > 0;
-  return true;
-}
-
-function hasCloudValue(value: unknown) {
-  return value !== undefined;
-}
-
-function hasCloudBootstrapData(cloudState: CloudBootstrapState) {
-  return (
-    hasCloudData(cloudState.language) ||
-    hasCloudData(cloudState.preferences) ||
-    hasCloudData(cloudState.syncDataSettings) ||
-    Object.values(cloudState.data).some(hasCloudValue)
-  );
-}
-
-async function readCloudBootstrapState(backend: SyncBackend) {
-  const [language, preferences, syncDataSettings, ...dataValues] =
-    await Promise.all([
-      backend.read<string>(STORAGE_KEYS.language),
-      backend.read<Preferences>(STORAGE_KEYS.preferences),
-      backend.read<SyncDataSettings>(STORAGE_KEYS.syncDataSettings),
-      ...BOOTSTRAP_CLOUD_DATA_KEYS.map((key) => backend.read(key)),
-    ]);
-  const data = Object.fromEntries(
-    BOOTSTRAP_CLOUD_DATA_KEYS.map((key, index) => [key, dataValues[index]]),
-  );
-  return {
-    language,
-    preferences: preferences ? mergePreferences(preferences) : undefined,
-    syncDataSettings: syncDataSettings
-      ? mergeSyncDataSettings(syncDataSettings)
-      : undefined,
-    data,
-  } satisfies CloudBootstrapState;
 }
 
 function BootstrapStep({

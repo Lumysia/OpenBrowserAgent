@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import { OPTIONS_HASH } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
-import type { SyncWriteStatus } from "../../src/shared/storage";
+import type { SyncStatus } from "../../src/shared/storage";
+import { describeSyncStatus, type SyncTone } from "../../src/ui/sync-status";
 import { openOrFocusOptions } from "../../src/shared/tab-navigation";
 import type { ChatMeta } from "../../src/shared/types";
 import { chatDisplayTitle } from "../../src/ui/agent-display";
@@ -20,7 +21,7 @@ export function SidepanelHeader({
   t,
   currentChat,
   parentChat,
-  syncWriteStatus,
+  syncStatus,
   onCreateChat,
   onSetShowHistory,
   onSelectChat,
@@ -28,13 +29,13 @@ export function SidepanelHeader({
   t: Messages;
   currentChat?: ChatMeta;
   parentChat?: ChatMeta;
-  syncWriteStatus?: SyncWriteStatus;
+  syncStatus?: SyncStatus;
   onCreateChat: () => void;
   onSetShowHistory: (value: boolean) => void;
   onSelectChat: (chatId: string) => void;
 }) {
-  const syncStatus = cloudSyncStatus(t, syncWriteStatus);
-  const SyncIcon = syncStatus.Icon;
+  const cloudStatus = cloudSyncStatus(t, syncStatus);
+  const SyncIcon = cloudStatus.Icon;
   return (
     <header className="sidepanel-header">
       <div className="sidepanel-topbar">
@@ -62,12 +63,12 @@ export function SidepanelHeader({
               </Button>
             </IconTooltip>
           )}
-          <IconTooltip label={syncStatus.label}>
+          <IconTooltip label={cloudStatus.label}>
             <Button
               variant="ghost"
               size="icon"
-              className={`cloud-sync-button ${syncStatus.className}`}
-              aria-label={syncStatus.label}
+              className={`cloud-sync-button ${cloudStatus.className}`}
+              aria-label={cloudStatus.label}
               onClick={() =>
                 openOrFocusOptions(OPTIONS_HASH.sync).catch(console.warn)
               }
@@ -114,34 +115,17 @@ export function SidepanelHeader({
   );
 }
 
-function cloudSyncStatus(t: Messages, status: SyncWriteStatus | undefined) {
-  if (status?.lastError) {
-    return {
-      label: t.options.syncWriteError,
-      className: "error",
-      Icon: CloudOff,
-    };
-  }
-  if ((status?.activeCount || 0) > 0) {
-    return {
-      label: t.options.syncWriteSyncing,
-      className: "syncing",
-      Icon: CloudUpload,
-    };
-  }
-  if ((status?.pendingCount || 0) > 0) {
-    return {
-      label: `${t.options.syncWritePending} · ${t.options.syncWritePendingDetail.replace("{count}", String(status?.pendingCount || 0))}`,
-      className: "pending",
-      Icon: CloudUpload,
-    };
-  }
-  if (status?.lastFlushedAt) {
-    return {
-      label: t.options.syncWriteIdle,
-      className: "synced",
-      Icon: CloudCheck,
-    };
-  }
-  return { label: t.options.syncWriteIdle, className: "idle", Icon: Cloud };
+const CLOUD_ICONS: Record<SyncTone, typeof Cloud> = {
+  off: Cloud,
+  idle: Cloud,
+  synced: CloudCheck,
+  syncing: CloudUpload,
+  pending: CloudUpload,
+  paused: CloudOff,
+  error: CloudOff,
+};
+
+function cloudSyncStatus(t: Messages, status: SyncStatus | undefined) {
+  const { tone, label } = describeSyncStatus(t, status, true);
+  return { label, className: tone, Icon: CLOUD_ICONS[tone] };
 }

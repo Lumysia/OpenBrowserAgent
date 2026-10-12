@@ -1,6 +1,6 @@
 import { ATTACHMENT_KIND, base64FromDataUrl } from "../shared/attachments";
 import { storage } from "../shared/storage";
-import { writeSyncedChatAttachments } from "../shared/sync-chat-attachments";
+import { writeChatAttachments } from "../shared/chat-attachments";
 import type { UploadedAttachment } from "../shared/types";
 import { resolveImageModel } from "./model-resolver";
 
@@ -206,7 +206,7 @@ async function storeGeneratedImageResult(
     dataUrl: image,
   };
   try {
-    await writeSyncedChatAttachments({
+    await writeChatAttachments({
       chatId: context.chatId,
       messageId: context.messageId,
       attachments: [attachment],

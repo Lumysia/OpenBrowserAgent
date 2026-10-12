@@ -16,11 +16,7 @@ import { describeRun, runChat } from "../src/background/run-chat";
 import { resolveModel } from "../src/background/model-resolver";
 import { handleLocalExecutionBridgeRuntimeMessage } from "../src/background/local-execution-bridge-tools";
 import { requestText } from "../src/background/pi-provider";
-import {
-  handleSyncBackendRuntimeMessage,
-  handleSyncBackendRuntimePort,
-} from "../src/shared/sync-backends-runtime";
-import "../src/shared/sync-backends-impl";
+import { setupSync } from "../src/background/sync/scheduler";
 import * as streamSessions from "../src/background/stream-sessions";
 import { openActionSurface } from "../src/background/action-surface";
 import {
@@ -42,6 +38,7 @@ export default defineBackground(() => {
   });
 
   setupSmartBar();
+  setupSync();
 
   chrome.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === "update")
@@ -52,13 +49,11 @@ export default defineBackground(() => {
     (message, sender, sendResponse) =>
       handleSmartBarMessage(message, sender, sendResponse) ||
       streamSessions.handleChatStreamControlMessage(message, sendResponse) ||
-      handleSyncBackendRuntimeMessage(message, sendResponse) ||
       handleLocalExecutionBridgeRuntimeMessage(message, sendResponse) ||
       handleDescribeRunMessage(message, sendResponse),
   );
 
   chrome.runtime.onConnect.addListener((port) => {
-    if (handleSyncBackendRuntimePort(port)) return;
     if (port.name !== AI_STREAM_PORT_NAME) return;
 
     port.onMessage.addListener((request: AiStreamRequest) => {

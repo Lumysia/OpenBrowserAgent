@@ -1,4 +1,5 @@
 import { smartBarPtBR } from "./smart-bar/pt-BR";
+import { syncPtBR } from "./sync/pt-BR";
 import type { LocaleMessages } from "./en-US";
 
 export const ptBR: LocaleMessages = {
@@ -522,13 +523,6 @@ export const ptBR: LocaleMessages = {
     syncChatAttachments: "Sincronizar anexos das conversas",
     syncChatAttachmentsDescription:
       "Sincronize os arquivos enviados nas conversas pelo backend selecionado, se ele suportar anexos. A sincronização da conta do navegador fica desativada para anexos por causa dos limites de cota do navegador.",
-    syncWritePending: "Gravações de sincronização na fila",
-    syncWriteSyncing: "Sincronizando com a nuvem",
-    syncWritePendingDetail: "{count} item(ns) aguardando sincronização",
-    syncWriteOperationWrite: "gravando",
-    syncWriteOperationRemove: "removendo",
-    syncWriteIdle: "Gravações de sincronização em dia",
-    syncWriteError: "Falha na última gravação de sincronização",
     autoScroll: "Rolagem automática",
     autoScrollDescription:
       "Mantém automaticamente a saída mais recente da IA visível enquanto as mensagens são transmitidas.",
@@ -576,4 +570,5 @@ export const ptBR: LocaleMessages = {
     debugToolRequired: "Parâmetros obrigatórios",
   },
   smartBar: smartBarPtBR,
+  sync: syncPtBR,
 };

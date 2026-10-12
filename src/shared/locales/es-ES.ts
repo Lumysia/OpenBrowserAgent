@@ -1,4 +1,5 @@
 import { smartBarEsES } from "./smart-bar/es-ES";
+import { syncEsES } from "./sync/es-ES";
 import type { LocaleMessages } from "./en-US";
 
 export const esES: LocaleMessages = {
@@ -528,13 +529,6 @@ export const esES: LocaleMessages = {
     syncChatAttachments: "Sincronizar adjuntos de chat",
     syncChatAttachmentsDescription:
       "Sincroniza los archivos subidos al chat con el backend seleccionado que admite adjuntos. La sincronización de la cuenta del navegador está desactivada para los adjuntos por los límites de cuota del navegador.",
-    syncWritePending: "Escrituras de sincronización en cola",
-    syncWriteSyncing: "Sincronizando con la nube",
-    syncWritePendingDetail: "{count} elemento(s) pendiente(s) de sincronizar",
-    syncWriteOperationWrite: "escribiendo",
-    syncWriteOperationRemove: "eliminando",
-    syncWriteIdle: "Escrituras de sincronización al día",
-    syncWriteError: "Falló la última escritura de sincronización",
     autoScroll: "Desplazamiento automático",
     autoScrollDescription:
       "Mantiene visible automáticamente la última respuesta de la IA mientras se generan los mensajes.",
@@ -582,4 +576,5 @@ export const esES: LocaleMessages = {
     debugToolRequired: "Parámetros obligatorios",
   },
   smartBar: smartBarEsES,
+  sync: syncEsES,
 };

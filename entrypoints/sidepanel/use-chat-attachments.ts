@@ -1,22 +1,19 @@
 import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import {
-  readSyncedChatAttachment,
-  writeSyncedChatAttachments,
-} from "../../src/shared/sync-chat-attachments";
-import {
-  SYNC_DATA_SETTING_KEYS,
-  type SyncDataSettings,
-} from "../../src/shared/storage-keys";
+  readChatAttachment,
+  writeChatAttachments,
+} from "../../src/shared/chat-attachments";
 import type { Chat, UploadedAttachment } from "../../src/shared/types";
 
-export function useSyncedChatAttachments({
+// Previews of a chat's sent attachments that this page does not hold (sent
+// from another context, or synced from another device), and storing the ones
+// this page sends.
+export function useChatAttachments({
   currentChat,
-  syncDataSettings,
   sentAttachmentPreviews,
   setSentAttachmentPreviews,
 }: {
   currentChat?: Chat;
-  syncDataSettings?: SyncDataSettings;
   sentAttachmentPreviews: Record<string, UploadedAttachment[]>;
   setSentAttachmentPreviews: Dispatch<
     SetStateAction<Record<string, UploadedAttachment[]>>
@@ -25,11 +22,7 @@ export function useSyncedChatAttachments({
   const requestedAttachmentIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    if (
-      !currentChat ||
-      !syncDataSettings?.[SYNC_DATA_SETTING_KEYS.chatAttachments]
-    )
-      return;
+    if (!currentChat) return;
     const missingAttachments = currentChat.messages.flatMap((message) => {
       const metadataAttachments = Array.isArray(
         message.metadata?.uploadedAttachments,
@@ -56,7 +49,7 @@ export function useSyncedChatAttachments({
     Promise.all(
       missingAttachments.map(async (attachment) => ({
         messageId: attachment.messageId,
-        value: await readSyncedChatAttachment(syncDataSettings, attachment.id),
+        value: await readChatAttachment(attachment.id),
       })),
     )
       .then((attachments) => {
@@ -87,16 +80,11 @@ export function useSyncedChatAttachments({
         missingAttachments.forEach((attachment) =>
           requestedAttachmentIdsRef.current.delete(attachment.id),
         );
-        console.warn("Failed to load synced chat attachments", error);
+        console.warn("Failed to load chat attachments", error);
       });
-  }, [
-    currentChat,
-    syncDataSettings,
-    sentAttachmentPreviews,
-    setSentAttachmentPreviews,
-  ]);
+  }, [currentChat, sentAttachmentPreviews, setSentAttachmentPreviews]);
 
-  function syncSentAttachments({
+  function storeSentAttachments({
     chatId,
     messageId,
     attachments,
@@ -105,15 +93,14 @@ export function useSyncedChatAttachments({
     messageId: string;
     attachments: UploadedAttachment[];
   }) {
-    writeSyncedChatAttachments({
-      syncDataSettings,
+    writeChatAttachments({
       chatId,
       messageId,
       attachments,
     }).catch((error) =>
-      console.warn("Failed to queue synced chat attachments", error),
+      console.warn("Failed to store chat attachments", error),
     );
   }
 
-  return { syncSentAttachments };
+  return { storeSentAttachments };
 }

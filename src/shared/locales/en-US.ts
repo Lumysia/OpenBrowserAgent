@@ -1,4 +1,5 @@
 import { smartBarEnUS } from "./smart-bar/en-US";
+import { syncEnUS } from "./sync/en-US";
 export const enUS = {
   app: {
     tagline: "Your AI agent in the browser",
@@ -490,13 +491,6 @@ export const enUS = {
     syncChatAttachments: "Sync chat attachments",
     syncChatAttachmentsDescription:
       "Sync uploaded chat files with the selected attachment-capable backend. Built-in browser account sync can't store attachments because of browser quota limits.",
-    syncWritePending: "Sync writes are queued",
-    syncWriteSyncing: "Syncing to cloud",
-    syncWritePendingDetail: "{count} item(s) waiting to sync",
-    syncWriteOperationWrite: "writing",
-    syncWriteOperationRemove: "removing",
-    syncWriteIdle: "Sync writes are up to date",
-    syncWriteError: "Last sync write failed",
     autoScroll: "Auto scroll",
     autoScrollDescription:
       "Automatically keep the latest AI output visible while messages stream.",
@@ -543,6 +537,7 @@ export const enUS = {
     debugToolRequired: "Required parameters",
   },
   smartBar: smartBarEnUS,
+  sync: syncEnUS,
 };
 
 export type LocaleMessages = typeof enUS;

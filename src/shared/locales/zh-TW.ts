@@ -1,4 +1,5 @@
 import { smartBarZhTW } from "./smart-bar/zh-TW";
+import { syncZhTW } from "./sync/zh-TW";
 import type { LocaleMessages } from "./en-US";
 
 export const zhTW: LocaleMessages = {
@@ -451,13 +452,6 @@ export const zhTW: LocaleMessages = {
     syncChatAttachments: "同步對話附件",
     syncChatAttachmentsDescription:
       "透過目前支援附件的同步後端同步對話中上傳的檔案。「內建瀏覽器帳號同步」受瀏覽器配額限制，不支援附件。",
-    syncWritePending: "同步寫入排隊中",
-    syncWriteSyncing: "正在同步到雲端",
-    syncWritePendingDetail: "{count} 項正在等待同步",
-    syncWriteOperationWrite: "寫入",
-    syncWriteOperationRemove: "刪除",
-    syncWriteIdle: "同步寫入已完成",
-    syncWriteError: "最近一次同步寫入失敗",
     autoScroll: "自動捲動",
     autoScrollDescription: "AI 輸出時自動保持最新內容可見。",
     autoRetry: "自動重試",
@@ -502,4 +496,5 @@ export const zhTW: LocaleMessages = {
     debugToolRequired: "必要參數",
   },
   smartBar: smartBarZhTW,
+  sync: syncZhTW,
 };

@@ -1,0 +1,35 @@
+export const syncEnUS = {
+  statusTitle: "Sync status",
+  stateOff: "Sync is off",
+  stateNeverSynced: "Not synced yet",
+  stateSynced: "Up to date",
+  stateSyncing: "Syncing…",
+  statePending: "{count} change(s) waiting to sync",
+  statePaused: "Paused until {time}",
+  stateError: "Last sync failed",
+  stateAttention: "Sync needs your attention",
+  lastSync: "Last sync: {time}",
+  pausedRateLimit:
+    "The server asked to slow down (HTTP {status}). Sync resumes on its own.",
+  syncNow: "Sync now",
+  webDavOnly:
+    "Chats and attachments sync through WebDAV only. Browser account sync storage is too small for them.",
+  warnings: {
+    "unreliable-etags":
+      "This server's file versions are unreliable, so changes from this device are not uploaded. Use a WebDAV server that sends strong ETags.",
+    "ignores-preconditions":
+      "This server ignores version checks on upload. Changes saved on two devices at the same moment may overwrite each other.",
+    "newer-format":
+      "Another device uses a newer sync format. Update OpenBrowserAgent on this device to keep syncing.",
+    "missing-content":
+      "Some synced content is missing on the server. This device keeps its copy until another device uploads it again.",
+    quota:
+      "Browser account sync storage is full. Turn off some sync items or use WebDAV.",
+  },
+  massDeleteTitle: "Confirm deletions from another device",
+  massDeleteDescription:
+    "The latest sync would delete {count} of {total} items in {collection} on this device.",
+  massDeleteApply: "Delete on this device",
+  massDeleteKeep: "Keep and upload again",
+};
+export type SyncMessages = typeof syncEnUS;

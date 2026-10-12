@@ -1,5 +1,7 @@
 import { normalizeAgents } from "./agents";
+import { deleteChatArtifacts } from "./artifacts";
 import { getBrowserApi } from "./browser-api";
+import { chatContentKey } from "./chat-keys";
 import { normalizeChatSummaries } from "./chats";
 import { DEFAULT_PREFERENCES, mergePreferences } from "./default-preferences";
 import { normalizeLocalExecutionBridges } from "./local-execution-bridges";
@@ -16,30 +18,9 @@ import {
   type SyncDataSettings,
   type SyncPreferenceKey,
 } from "./storage-keys";
-import {
-  clearPendingSyncWrites,
-  DEFAULT_SYNC_WRITE_STATUS,
-  flushPendingSyncWrites,
-  isSyncRouted,
-  queueSyncWrite,
-  readSyncedValue,
-  refreshChangedSyncKey,
-  syncLocalCacheKey,
-  withLock,
-  writePendingSyncValue,
-  type SyncLocalCache,
-  type SyncWriteStatus,
-} from "./storage-sync";
-import {
-  isSplitStorageKey,
-  removeSplitItems,
-  splitItemIds,
-} from "./storage-split";
-import {
-  getActiveSyncBackend,
-  NO_SYNC_BACKEND_ID,
-  normalizeSyncBackends,
-} from "./sync-backends";
+import { storageLockName, withLock } from "./locks";
+import { NO_SYNC_BACKEND_ID, normalizeSyncBackends } from "./sync-backends";
+import { DEFAULT_SYNC_STATUS, type SyncStatus } from "./sync/state";
 import { normalizeWorkspaces } from "./workspace";
 import type {
   Agent,
@@ -62,20 +43,16 @@ export {
   SYNC_PREFERENCES,
   SYNC_PREFERENCE_KEYS,
 };
-export type { SyncDataSettings, SyncPreferenceKey, SyncWriteStatus };
+export type { SyncDataSettings, SyncPreferenceKey, SyncStatus };
 export { getBrowserApi };
-export { clearPendingSyncWrites, flushPendingSyncWrites, syncLocalCacheKey };
-export {
-  restoreSyncBackendFromCloud,
-  setActiveSyncBackend,
-  setDataSync,
-} from "./storage-sync-transitions";
 
+// Every value lives in storage.local. Sync runs in the background: it notices
+// changes through storage events and writes other devices' changes back
+// into the same keys, under the same per-key lock as `set` and `update`.
 type ItemOptions<T> = {
   normalize?: (value: T) => T;
-  // `true` follows the active backend; a preference key also follows that
-  // data category's toggle. Omitted: always local.
-  sync?: SyncPreferenceKey | true;
+  // Runs after a write with the previous and the stored value.
+  afterSet?: (previous: T, next: T) => Promise<void>;
 };
 
 function createItem<T>(
@@ -83,93 +60,67 @@ function createItem<T>(
   init: () => T,
   options: ItemOptions<T> = {},
 ) {
-  const { normalize = (value: T) => value, sync } = options;
+  const { normalize = (value: T) => value, afterSet } = options;
   const resolve = (value: T | undefined) =>
     normalize(value === undefined ? init() : value);
-  const routed = async () => !!sync && (await isSyncRouted(sync));
   const local = () => getBrowserApi().storage.local;
+  const lock = <R>(run: () => Promise<R>) =>
+    withLock(storageLockName(key), run);
 
   async function get() {
-    if (await routed()) return resolve(await readSyncedValue<T>(key));
     return resolve((await local().get(key))[key] as T | undefined);
   }
 
-  async function set(value: T) {
+  async function write(value: T) {
+    const previous = afterSet ? await get() : undefined;
     value = normalize(value);
-    // Items removed from a split collection take their content along.
-    const removed = isSplitStorageKey(key)
-      ? splitItemIds(key, await get()).filter(
-          (id) => !splitItemIds(key, value).includes(id),
-        )
-      : [];
-    if (!(await routed())) await local().set({ [key]: value });
-    else {
-      await writePendingSyncValue(key, value);
-      queueSyncWrite(await getActiveSyncBackend(), key);
-    }
-    await removeSplitItems(key, removed);
+    await local().set({ [key]: value });
+    if (afterSet) await afterSet(previous as T, value);
   }
 
   return {
     key,
     get,
-    set,
+    set: (value: T) => lock(() => write(value)),
     // Read-modify-write across extension contexts: agent tools in the
     // background and the options editor both edit workspaces.
     update(updater: (current: T) => T) {
-      return withLock(`item:${key}`, async () => {
+      return lock(async () => {
         const current = await get();
         const next = updater(current);
-        if (next !== current) await set(next);
+        if (next !== current) await write(next);
         return next;
       });
     },
     watch(callback: (newValue: T, oldValue: T) => void) {
       let previous: T | undefined;
-      const notify = (value: T) => {
-        const old = previous ?? value;
-        previous = value;
-        callback(value, old);
-      };
-      const listener = async (
+      const listener = (
         changes: Record<string, chrome.storage.StorageChange>,
         area: string,
       ) => {
-        if (area === "sync") {
-          // A split collection's item documents can arrive after its index.
-          const changed = Object.keys(changes).some(
-            (name) => name === key || name.startsWith(`${key}/`),
-          );
-          if (sync && changed && (await routed())) refreshChangedSyncKey(key);
-          return;
-        }
-        if (area !== "local") return;
-        const plain = changes[key];
-        const cache = changes[syncLocalCacheKey(key)];
-        const routeChanged =
-          !!sync &&
-          !!(
-            changes[STORAGE_KEYS.activeSyncBackendId] ||
-            (sync !== true &&
-              (changes[STORAGE_KEYS.syncDataSettings] ||
-                changes[syncLocalCacheKey(STORAGE_KEYS.syncDataSettings)]))
-          );
-        if (routeChanged) return notify(await get());
-        if (!sync) {
-          if (plain) notify(resolve(plain.newValue as T | undefined));
-          return;
-        }
-        const isRouted = await routed();
-        if (isRouted ? !cache : !plain) return;
-        const next = isRouted
-          ? (cache!.newValue as SyncLocalCache<T> | undefined)?.value
-          : (plain!.newValue as T | undefined);
-        notify(next === undefined ? await get() : normalize(next));
+        if (area !== "local" || !changes[key]) return;
+        const value = resolve(changes[key].newValue as T | undefined);
+        const old = previous ?? value;
+        previous = value;
+        callback(value, old);
       };
       getBrowserApi().storage.onChanged.addListener(listener);
       return () => getBrowserApi().storage.onChanged.removeListener(listener);
     },
   };
+}
+
+async function removeContentOfRemovedChats(
+  previous: ChatSummary[],
+  next: ChatSummary[],
+) {
+  const kept = new Set(next.map((chat) => chat.id));
+  const removed = previous.map((chat) => chat.id).filter((id) => !kept.has(id));
+  if (!removed.length) return;
+  await getBrowserApi().storage.local.remove(removed.map(chatContentKey));
+  await deleteChatArtifacts(removed).catch((error) =>
+    console.warn("Failed to remove chat artifacts", error),
+  );
 }
 
 export type StorageItem<T> = ReturnType<typeof createItem<T>>;
@@ -178,45 +129,39 @@ export const storage = {
   language: createItem<string>(
     STORAGE_KEYS.language,
     () => getBrowserApi().i18n?.getUILanguage?.() || "en-US",
-    { sync: true },
   ),
   preferences: createItem<Preferences>(
     STORAGE_KEYS.preferences,
     () => DEFAULT_PREFERENCES,
-    { sync: true, normalize: mergePreferences },
+    { normalize: mergePreferences },
   ),
-  provider: createItem<ProviderState>(STORAGE_KEYS.provider, () => ({}), {
-    sync: SYNC_PREFERENCES.providers,
-  }),
+  provider: createItem<ProviderState>(STORAGE_KEYS.provider, () => ({})),
   agents: createItem<Agent[]>(
     STORAGE_KEYS.agents,
     () => normalizeAgents(undefined),
-    { sync: SYNC_PREFERENCES.agents, normalize: normalizeAgents },
+    { normalize: normalizeAgents },
   ),
   agentWorkspaces: createItem<AgentWorkspace[]>(
     STORAGE_KEYS.agentWorkspaces,
     () => [],
-    { sync: SYNC_PREFERENCES.agents, normalize: normalizeWorkspaces },
+    { normalize: normalizeWorkspaces },
   ),
   // The user's own skills; built-ins come from the code (skill-catalog).
   skills: createItem<Skill[]>(STORAGE_KEYS.skills, () => [], {
-    sync: SYNC_PREFERENCES.skills,
     normalize: normalizeSkills,
   }),
   skillSettings: createItem<SkillSettings>(
     STORAGE_KEYS.skillSettings,
     () => ({}),
-    { sync: SYNC_PREFERENCES.skills, normalize: normalizeSkillSettings },
+    { normalize: normalizeSkillSettings },
   ),
   mcpServers: createItem<McpServerConfig[]>(STORAGE_KEYS.mcpServers, () => [], {
-    sync: SYNC_PREFERENCES.mcpServers,
     normalize: normalizeMcpServers,
   }),
   localExecutionBridges: createItem<LocalExecutionBridgeConfig[]>(
     STORAGE_KEYS.localExecutionBridges,
     () => [],
     {
-      sync: SYNC_PREFERENCES.localExecutionBridges,
       normalize: normalizeLocalExecutionBridges,
     },
   ),
@@ -224,15 +169,17 @@ export const storage = {
     STORAGE_KEYS.shouldShowUpdateToast,
     () => false,
   ),
-  // Chat list; each chat's content is stored apart (see chat-storage).
+  // Chat list; each chat's content is stored apart (see chat-storage), and
+  // leaves with its list entry.
   chats: createItem<ChatSummary[]>(STORAGE_KEYS.chats, () => [], {
-    sync: SYNC_PREFERENCES.chats,
     normalize: normalizeChatSummaries,
+    afterSet: removeContentOfRemovedChats,
   }),
   chatTabs: createItem<ChatTab[]>(STORAGE_KEYS.chatTabs, () => []),
-  syncWriteStatus: createItem<SyncWriteStatus>(
-    STORAGE_KEYS.syncWriteStatus,
-    () => DEFAULT_SYNC_WRITE_STATUS,
+  syncStatus: createItem<SyncStatus>(
+    STORAGE_KEYS.syncStatus,
+    () => DEFAULT_SYNC_STATUS,
+    { normalize: (value) => ({ ...DEFAULT_SYNC_STATUS, ...value }) },
   ),
   syncBackends: createItem<SyncBackendConfig[]>(
     STORAGE_KEYS.syncBackends,
@@ -246,7 +193,7 @@ export const storage = {
   syncDataSettings: createItem<SyncDataSettings>(
     STORAGE_KEYS.syncDataSettings,
     () => DEFAULT_SYNC_DATA_SETTINGS,
-    { sync: true, normalize: mergeSyncDataSettings },
+    { normalize: mergeSyncDataSettings },
   ),
   ignoreSyncedProvidersForBootstrap: createItem<boolean>(
     STORAGE_KEYS.ignoreSyncedProvidersForBootstrap,

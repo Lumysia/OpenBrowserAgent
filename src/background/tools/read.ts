@@ -9,7 +9,7 @@ import { fetchedHtmlMarkdown } from "../html-markdown";
 import { hasToolGroup } from "../../shared/agents";
 import { findSkill } from "../../shared/skill-catalog";
 import { SKILL_ENTRY_PATH } from "../../shared/skills";
-import { readSyncedChatAttachment } from "../../shared/sync-chat-attachments";
+import { readChatAttachment } from "../../shared/chat-attachments";
 import { TOOL_NAME } from "../../shared/tool-names";
 import type { UploadedAttachment } from "../../shared/types";
 import { CONTEXT_POLICY, tokenChars } from "../context/policy";
@@ -187,8 +187,7 @@ async function readAttachment(
 ): Promise<ToolResult> {
   const attachment: UploadedAttachment | undefined =
     run.attachments.find((item) => item.id === id) ||
-    ((await readSyncedChatAttachment(undefined, id, signal)) as
-      UploadedAttachment | undefined);
+    ((await readChatAttachment(id, signal)) as UploadedAttachment | undefined);
   if (!attachment)
     return fail(
       `No attachment "${id}". Use an id from available_attachments, written as attachment:ID.`,

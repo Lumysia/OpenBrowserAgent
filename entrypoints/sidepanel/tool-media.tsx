@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Copy, Download } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
-import { readSyncedChatAttachment } from "../../src/shared/sync-chat-attachments";
+import { readChatAttachment } from "../../src/shared/chat-attachments";
 import { Button } from "../../src/ui/components";
 
 export function GeneratedImage({
@@ -116,7 +116,7 @@ function useStoredToolImage(output: Record<string, unknown>) {
     setLoading(false);
     if (inlineImage || !attachmentId) return;
     setLoading(true);
-    readSyncedChatAttachment(undefined, attachmentId)
+    readChatAttachment(attachmentId)
       .then((attachment) => {
         if (!cancelled) {
           setStoredImage(

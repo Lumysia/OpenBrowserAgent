@@ -1,4 +1,5 @@
 import { smartBarZhCN } from "./smart-bar/zh-CN";
+import { syncZhCN } from "./sync/zh-CN";
 import type { LocaleMessages } from "./en-US";
 
 export const zhCN: LocaleMessages = {
@@ -451,13 +452,6 @@ export const zhCN: LocaleMessages = {
     syncChatAttachments: "同步对话附件",
     syncChatAttachmentsDescription:
       "通过当前支持附件的同步后端同步对话中上传的文件。“内置浏览器账号同步”受浏览器配额限制，不支持附件。",
-    syncWritePending: "同步写入排队中",
-    syncWriteSyncing: "正在同步到云端",
-    syncWritePendingDetail: "{count} 项正在等待同步",
-    syncWriteOperationWrite: "写入",
-    syncWriteOperationRemove: "删除",
-    syncWriteIdle: "同步写入已完成",
-    syncWriteError: "最近一次同步写入失败",
     autoScroll: "自动滚动",
     autoScrollDescription: "AI 输出时自动保持最新内容可见。",
     autoRetry: "自动重试",
@@ -502,4 +496,5 @@ export const zhCN: LocaleMessages = {
     debugToolRequired: "必需参数",
   },
   smartBar: smartBarZhCN,
+  sync: syncZhCN,
 };

@@ -41,11 +41,6 @@ export function useCurrentChat({
       void store.load(storedId);
   }, [entry, storedId, store]);
 
-  // A list change may come with newer content from the cloud.
-  useEffect(() => {
-    if (storedId) store.revalidate(storedId);
-  }, [summaries, storedId, store]);
-
   const currentChat = useMemo(() => {
     if (!storedSummary)
       return draftChat?.id === activeChatId ? draftChat : undefined;

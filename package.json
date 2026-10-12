@@ -53,8 +53,7 @@
     "nanoid": "^5.1.16",
     "react": "latest",
     "react-dom": "latest",
-    "remend": "1.4.0",
-    "tinybase": "^8.4.1"
+    "remend": "1.4.0"
   },
   "devDependencies": {
     "@types/chrome": "latest",

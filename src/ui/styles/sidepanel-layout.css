@@ -130,7 +130,8 @@
   width: 32px;
   height: 32px;
 }
-.cloud-sync-button.idle {
+.cloud-sync-button.idle,
+.cloud-sync-button.off {
   color: var(--muted-foreground);
 }
 .cloud-sync-button.synced,
@@ -140,7 +141,8 @@
 .cloud-sync-button.pending {
   color: color-mix(in srgb, var(--accent-strong) 70%, var(--foreground));
 }
-.cloud-sync-button.error {
+.cloud-sync-button.error,
+.cloud-sync-button.paused {
   color: var(--destructive);
 }
 .cloud-sync-button.syncing svg {

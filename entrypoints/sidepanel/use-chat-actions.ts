@@ -1,8 +1,7 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 import { withoutChats } from "../../src/shared/chats";
 import type { Messages } from "../../src/shared/i18n";
-import { removeSyncedChatAttachments } from "../../src/shared/sync-chat-attachments";
-import type { SyncDataSettings } from "../../src/shared/storage-keys";
+import { removeChatAttachments } from "../../src/shared/chat-attachments";
 import type { Chat, ChatMessage } from "../../src/shared/types";
 import {
   closedChatIds,
@@ -21,7 +20,6 @@ export function useChatActions({
   setChatSelectionRequestId,
   abortClosedChatStreams,
   clearUnreadCompletedChat,
-  syncDataSettings,
 }: {
   t: Messages;
   chats: ReturnType<typeof useChats>;
@@ -30,7 +28,6 @@ export function useChatActions({
   setChatSelectionRequestId: Dispatch<SetStateAction<number>>;
   abortClosedChatStreams: (chatId: string) => Promise<Set<string>>;
   clearUnreadCompletedChat: (chatId: string) => void;
-  syncDataSettings?: SyncDataSettings;
 }) {
   const { summaries, summariesRef, setSummaries, store, loadChat, saveChats } =
     chats;
@@ -55,12 +52,11 @@ export function useChatActions({
       ids.forEach((id) => {
         clearUnreadCompletedChat(id);
       });
-      removeSyncedChatAttachments(
-        syncDataSettings,
+      removeChatAttachments(
         list.filter((chat) => ids.has(chat.id)),
         list.filter((chat) => !ids.has(chat.id)),
       ).catch((error) =>
-        console.warn("Failed to remove synced chat attachments", error),
+        console.warn("Failed to remove chat attachments", error),
       );
       store.drop(ids);
       void setSummaries((items) => withoutChats(items, ids));
@@ -71,7 +67,6 @@ export function useChatActions({
       setSummaries,
       store,
       summariesRef,
-      syncDataSettings,
     ],
   );
 

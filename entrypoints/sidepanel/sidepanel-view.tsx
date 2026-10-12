@@ -2,7 +2,7 @@ import { Plus } from "lucide-react";
 import { useRef, type ClipboardEvent, type RefObject } from "react";
 import { TOOLTIP_DELAY_MS } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
-import type { SyncWriteStatus } from "../../src/shared/storage";
+import type { SyncStatus } from "../../src/shared/storage";
 import type {
   AttachmentTab,
   Agent,
@@ -53,7 +53,7 @@ export function SidepanelView({
   configuredModels,
   input,
   activeAgent,
-  syncWriteStatus,
+  syncStatus,
   attachedTabs,
   pendingAttachments,
   selectedSkills,
@@ -121,7 +121,7 @@ export function SidepanelView({
   configuredModels: ModelConfig[];
   input: string;
   activeAgent: Agent;
-  syncWriteStatus?: SyncWriteStatus;
+  syncStatus?: SyncStatus;
   attachedTabs: AttachmentTab[];
   pendingAttachments: UploadedAttachment[];
   selectedSkills: PickedSkill[];
@@ -238,7 +238,7 @@ export function SidepanelView({
           t={t}
           currentChat={currentMeta}
           parentChat={parentChat}
-          syncWriteStatus={syncWriteStatus}
+          syncStatus={syncStatus}
           onCreateChat={onCreateChat}
           onSetShowHistory={onSetShowHistory}
           onSelectChat={onSelectChat}
