@@ -190,7 +190,7 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
 
     await t.test("Ask and Continue hand off to the side panel", async () => {
       await selectText(listed, "#text");
-      await clickInBar(listed, '[aria-label="Ask"]');
+      await clickInBar(listed, '[aria-label="Ask in side panel"]');
       // The click's user gesture opens the window's real side panel.
       const panel = await browser.attach(
         (url) => url === extensionUrl("sidepanel.html"),
@@ -229,7 +229,7 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
       await poll(async () => (await barState(listed)) === "toolbar");
       assert.equal(
         await inSmartBar(listed, (root) => root.activeElement?.ariaLabel),
-        "Ask",
+        "Ask in side panel",
       );
       // In a field, Esc hands the keyboard user's focus and selection back.
       await pressKey(listed, "Escape", "Escape", 27);

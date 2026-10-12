@@ -277,7 +277,7 @@ export function AgentsPage() {
                         <ModelSelect
                           value={agent.modelId}
                           label={t.options.agentModel}
-                          defaultLabel={t.options.agentModelDefault}
+                          defaultLabel={t.options.modelSameAsChat}
                           onChange={(modelId) =>
                             updateAgent(agent.id, {
                               modelId: modelId || undefined,

@@ -201,7 +201,7 @@ export function ProvidersPage() {
             <DefaultableModelSelect
               value={preferences.helperModelId}
               label={t.options.helperModel}
-              defaultLabel={t.options.helperModelSameAsChat}
+              defaultLabel={t.options.modelSameAsChat}
               onChange={(helperModelId) =>
                 setPreferences((previous) => ({ ...previous, helperModelId }))
               }
@@ -219,7 +219,7 @@ export function ProvidersPage() {
             <DefaultableModelSelect
               value={normalizeSmartBarSettings(preferences.smartBar).modelId}
               label={t.smartBar.model}
-              defaultLabel={t.smartBar.modelSameAsAgent}
+              defaultLabel={t.options.modelSameAsChat}
               onChange={(modelId) =>
                 setPreferences((previous) => ({
                   ...previous,

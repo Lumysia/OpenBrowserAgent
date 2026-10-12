@@ -267,7 +267,6 @@ export const ptBR: LocaleMessages = {
     agentPromptPlaceholder:
       "Como este agente deve agir, para que serve e o que evitar.",
     agentModel: "Modelo",
-    agentModelDefault: "Modelo escolhido na conversa",
     agentTools: "Ferramentas",
     agentToolsDescription:
       "Escolha o que este agente pode usar. Ferramentas extras carregam só quando necessário.",
@@ -513,7 +512,7 @@ export const ptBR: LocaleMessages = {
     helperModel: "Modelo auxiliar",
     helperModelDescription:
       "Modelo para solicitações em segundo plano, como resumir tarefas longas. Por padrão, usa o modelo do chat.",
-    helperModelSameAsChat: "Igual ao modelo do chat",
+    modelSameAsChat: "Igual ao modelo do chat",
     debug: "Depuração",
     debugDescription:
       "Ferramentas de desenvolvedor para redefinir dados do OpenBrowserAgent.",

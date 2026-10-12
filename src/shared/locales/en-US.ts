@@ -252,7 +252,6 @@ export const enUS = {
     agentPromptPlaceholder:
       "How this agent should behave, what it is for, what to avoid.",
     agentModel: "Model",
-    agentModelDefault: "Model selected in the chat",
     agentTools: "Tools",
     agentToolsDescription:
       "Choose what this agent can use. Extra tools load only when needed.",
@@ -495,7 +494,7 @@ export const enUS = {
     helperModel: "Helper model",
     helperModelDescription:
       "Model for background requests such as summarizing long tasks. By default the chat's own model is used.",
-    helperModelSameAsChat: "Same as chat model",
+    modelSameAsChat: "Same as chat model",
     debug: "Debug",
     debugDescription: "Developer tools for resetting OpenBrowserAgent data.",
     debugResetTitle: "Clear OpenBrowserAgent data",

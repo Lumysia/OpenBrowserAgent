@@ -3,7 +3,7 @@ import type { SmartBarLocaleMessages } from "./en-US";
 export const smartBarDeDE: SmartBarLocaleMessages = {
   barLabel: "Smart Bar",
   actions: {
-    ask: "Fragen",
+    ask: "In der Seitenleiste fragen",
     explain: "Erklären",
     translate: "Übersetzen",
     summarize: "Zusammenfassen",
@@ -29,7 +29,7 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
   selectionChanged:
     "Der markierte Text hat sich geändert. Kopieren Sie stattdessen das Ergebnis.",
   selectionTooLong:
-    "Die Auswahl ist zu lang (über {max} Zeichen). Fahren Sie stattdessen im Seitenbereich fort.",
+    "Die Auswahl ist zu lang (über {max} Zeichen). Fahren Sie stattdessen in der Seitenleiste fort.",
   settingsTitle: "Smart Bar",
   settingsDescription:
     "Eine kleine Leiste neben markiertem Text mit schnellen KI-Aktionen. Es wird nichts gesendet, bevor Sie eine Aktion wählen.",
@@ -62,5 +62,4 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
   model: "Smart-Bar-Modell",
   modelDescription:
     "Modell für Erklären, Übersetzen, Zusammenfassen und die Schreibaktionen.",
-  modelSameAsAgent: "Wie Agent-Modell",
 };

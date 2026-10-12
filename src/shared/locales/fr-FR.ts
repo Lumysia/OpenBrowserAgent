@@ -262,7 +262,6 @@ export const frFR: LocaleMessages = {
     agentPromptPlaceholder:
       "Comment cet agent doit se comporter, son rôle, ce qu'il doit éviter.",
     agentModel: "Modèle",
-    agentModelDefault: "Modèle choisi dans la discussion",
     agentTools: "Outils",
     agentToolsDescription:
       "Choisissez ce que cet agent peut utiliser. Les outils supplémentaires se chargent à la demande.",
@@ -511,7 +510,7 @@ export const frFR: LocaleMessages = {
     helperModel: "Modèle auxiliaire",
     helperModelDescription:
       "Modèle pour les requêtes en arrière-plan, comme le résumé des longues tâches. Par défaut, le modèle de la discussion est utilisé.",
-    helperModelSameAsChat: "Identique au modèle de la discussion",
+    modelSameAsChat: "Identique au modèle de la discussion",
     debug: "Débogage",
     debugDescription:
       "Outils développeur pour réinitialiser les données d'OpenBrowserAgent.",

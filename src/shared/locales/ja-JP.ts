@@ -267,7 +267,6 @@ export const jaJP: LocaleMessages = {
     agentPromptPlaceholder:
       "このエージェントのふるまい、目的、避けることを書きます。",
     agentModel: "モデル",
-    agentModelDefault: "チャットで選んだモデル",
     agentTools: "ツール",
     agentToolsDescription:
       "このエージェントが使えるものを選びます。追加ツールは必要なときだけ読み込まれます。",
@@ -513,7 +512,7 @@ export const jaJP: LocaleMessages = {
     helperModel: "補助モデル",
     helperModelDescription:
       "長いタスクの要約などバックグラウンド処理に使うモデル。既定ではチャットのモデルを使います。",
-    helperModelSameAsChat: "チャットのモデルと同じ",
+    modelSameAsChat: "チャットのモデルと同じ",
     debug: "デバッグ",
     debugDescription:
       "OpenBrowserAgentのデータをリセットする開発者向けツールです。",

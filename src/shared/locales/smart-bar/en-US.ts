@@ -1,7 +1,7 @@
 export const smartBarEnUS = {
   barLabel: "Smart bar",
   actions: {
-    ask: "Ask",
+    ask: "Ask in side panel",
     explain: "Explain",
     translate: "Translate",
     summarize: "Summarize",
@@ -58,7 +58,6 @@ export const smartBarEnUS = {
   model: "Smart bar model",
   modelDescription:
     "Model for Explain, Translate, Summarize and the writing actions.",
-  modelSameAsAgent: "Same as agent model",
 };
 
 export type SmartBarLocaleMessages = typeof smartBarEnUS;

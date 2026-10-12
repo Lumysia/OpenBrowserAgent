@@ -3,7 +3,7 @@ import type { SmartBarLocaleMessages } from "./en-US";
 export const smartBarKo: SmartBarLocaleMessages = {
   barLabel: "스마트 바",
   actions: {
-    ask: "질문",
+    ask: "사이드 패널에서 질문",
     explain: "설명",
     translate: "번역",
     summarize: "요약",
@@ -59,5 +59,4 @@ export const smartBarKo: SmartBarLocaleMessages = {
     "입력란에서 텍스트를 선택하면 표시됩니다. 결과로 선택 영역을 바꿀 수 있습니다.",
   model: "스마트 바 모델",
   modelDescription: "설명, 번역, 요약 및 글쓰기 작업에 사용할 모델입니다.",
-  modelSameAsAgent: "에이전트 모델과 동일",
 };

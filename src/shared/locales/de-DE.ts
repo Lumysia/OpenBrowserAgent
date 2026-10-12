@@ -265,7 +265,6 @@ export const deDE: LocaleMessages = {
     agentPromptPlaceholder:
       "Wie sich dieser Agent verhalten soll, wofür er da ist, was er meiden soll.",
     agentModel: "Modell",
-    agentModelDefault: "Im Chat gewähltes Modell",
     agentTools: "Tools",
     agentToolsDescription:
       "Wählen Sie, was dieser Agent nutzen darf. Zusätzliche Tools werden nur bei Bedarf geladen.",
@@ -515,7 +514,7 @@ export const deDE: LocaleMessages = {
     helperModel: "Hilfsmodell",
     helperModelDescription:
       "Modell für Hintergrundanfragen wie das Zusammenfassen langer Aufgaben. Standardmäßig wird das Modell des Chats verwendet.",
-    helperModelSameAsChat: "Wie Chat-Modell",
+    modelSameAsChat: "Wie Chat-Modell",
     debug: "Debug",
     debugDescription:
       "Entwicklerwerkzeuge zum Zurücksetzen von OpenBrowserAgent-Daten.",

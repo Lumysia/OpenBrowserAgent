@@ -3,7 +3,7 @@ import type { SmartBarLocaleMessages } from "./en-US";
 export const smartBarEsES: SmartBarLocaleMessages = {
   barLabel: "Barra inteligente",
   actions: {
-    ask: "Preguntar",
+    ask: "Preguntar en el panel lateral",
     explain: "Explicar",
     translate: "Traducir",
     summarize: "Resumir",
@@ -61,5 +61,4 @@ export const smartBarEsES: SmartBarLocaleMessages = {
   model: "Modelo de la barra inteligente",
   modelDescription:
     "Modelo para Explicar, Traducir, Resumir y las acciones de escritura.",
-  modelSameAsAgent: "Igual que el modelo del agente",
 };

@@ -3,7 +3,7 @@ import type { SmartBarLocaleMessages } from "./en-US";
 export const smartBarJaJP: SmartBarLocaleMessages = {
   barLabel: "スマートバー",
   actions: {
-    ask: "質問",
+    ask: "サイドパネルで質問",
     explain: "説明",
     translate: "翻訳",
     summarize: "要約",
@@ -60,5 +60,4 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
     "テキスト入力欄で選択したときに表示されます。結果で選択範囲を置き換えられます。",
   model: "スマートバーのモデル",
   modelDescription: "説明、翻訳、要約、文章操作に使うモデル。",
-  modelSameAsAgent: "エージェントのモデルと同じ",
 };

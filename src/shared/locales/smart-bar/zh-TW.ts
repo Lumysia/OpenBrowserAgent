@@ -3,12 +3,12 @@ import type { SmartBarLocaleMessages } from "./en-US";
 export const smartBarZhTW: SmartBarLocaleMessages = {
   barLabel: "智慧工具列",
   actions: {
-    ask: "提問",
+    ask: "在側邊欄提問",
     explain: "解釋",
     translate: "翻譯",
     summarize: "摘要",
     copy: "複製",
-    improve: "改善寫作",
+    improve: "改善寫法",
     fixGrammar: "修正拼字與文法",
   },
   copied: "已複製",
@@ -56,6 +56,5 @@ export const smartBarZhTW: SmartBarLocaleMessages = {
   editActions: "正在編輯的文字的操作",
   editActionsDescription: "在文字欄位中選取文字時顯示。結果可以取代所選內容。",
   model: "智慧工具列模型",
-  modelDescription: "用於解釋、翻譯、摘要和寫作操作的模型。",
-  modelSameAsAgent: "與智慧體模型相同",
+  modelDescription: "用於解釋、翻譯、摘要、改善寫法和修正拼字文法的模型。",
 };

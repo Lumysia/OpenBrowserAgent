@@ -242,7 +242,6 @@ export const ko: LocaleMessages = {
     agentPrompt: "지침",
     agentPromptPlaceholder: "이 에이전트의 행동 방식, 목적, 피해야 할 것.",
     agentModel: "모델",
-    agentModelDefault: "채팅에서 선택한 모델",
     agentTools: "도구",
     agentToolsDescription:
       "이 에이전트가 사용할 수 있는 항목을 고릅니다. 추가 도구는 필요할 때만 불러옵니다.",
@@ -481,7 +480,7 @@ export const ko: LocaleMessages = {
     helperModel: "보조 모델",
     helperModelDescription:
       "긴 작업 요약 같은 백그라운드 요청에 사용할 모델입니다. 기본값은 채팅 모델입니다.",
-    helperModelSameAsChat: "채팅 모델과 동일",
+    modelSameAsChat: "채팅 모델과 동일",
     debug: "디버그",
     debugDescription: "OpenBrowserAgent 데이터를 초기화하는 개발자 도구입니다.",
     debugResetTitle: "OpenBrowserAgent 데이터 지우기",
