@@ -5,8 +5,8 @@ import {
   appendAssistantPart,
   appendQueuedMessages,
   updateAssistantRunMetrics,
-} from "./chat-updates";
-import { streamPartFromChunk } from "./stream-parts";
+} from "../../src/shared/chat-updates";
+import { streamPartFromChunk } from "../../src/shared/chat-stream-parts";
 import type { ChatUpdater } from "./use-chats";
 
 export function createStreamHandlers(updateChat: ChatUpdater) {

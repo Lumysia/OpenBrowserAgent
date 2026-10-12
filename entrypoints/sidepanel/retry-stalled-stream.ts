@@ -1,5 +1,3 @@
-import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
-import { AI_STREAM_REQUEST_TYPE } from "../../src/shared/types";
 import type {
   Chat,
   ChatMessage,
@@ -9,7 +7,7 @@ import type {
   UploadedAttachment,
 } from "../../src/shared/types";
 import type { ActiveStream } from "./sidepanel-menu-state";
-import { agentWithoutNestedSubAgents } from "./sub-agent-runtime";
+import { sendMessagesRequest } from "./send-message-plan";
 
 export function retryStalledStream({
   active,
@@ -38,8 +36,6 @@ export function retryStalledStream({
     (message) => message.id === active.assistantMessageId,
   );
   if (!chat || assistantIndex === undefined || assistantIndex < 0) return;
-  const runtimeAgent =
-    chat.kind === "subagent" ? agentWithoutNestedSubAgents(agent) : agent;
 
   active.retryCount += 1;
   const retryInstruction: ChatMessage = {
@@ -53,19 +49,15 @@ export function retryStalledStream({
   if (chat.messages[assistantIndex]?.content.trim())
     appendToAssistant(active.chatId, active.assistantMessageId, "\n\n");
   startStream(
-    {
-      type: AI_STREAM_REQUEST_TYPE.sendMessages,
-      chatId: active.chatId,
+    sendMessagesRequest({
+      chat,
       messageId: crypto.randomUUID(),
       messages: [...chat.messages.slice(0, assistantIndex), retryInstruction],
-      body: {
-        modelId: preferences?.selectedModelId,
-        agentCapabilities: runtimeAgent.capabilities,
-        language,
-        maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
-        context: { uploadedAttachments, agent: runtimeAgent },
-      },
-    },
+      preferences,
+      agent,
+      language,
+      uploadedAttachments,
+    }),
     active.assistantMessageId,
   );
 }

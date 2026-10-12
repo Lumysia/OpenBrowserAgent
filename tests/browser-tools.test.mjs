@@ -1,267 +1,475 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { browserToolFixture } from "./browser-tool-fixture.mjs";
-import { poll } from "./chromium.mjs";
+import { browserToolFixture, ref } from "./browser-tool-fixture.mjs";
 
-// Real Chromium is the only place where scrolling, hit-testing, key default
-// actions and inline handlers behave as they do for users.
-const PAGE = `<meta name="viewport" content="width=device-width"><title>OBA tool fixture</title>
-<style>html{scroll-behavior:smooth}body{height:2600px}</style>
+// Real Chromium is the only place where layout, hit-testing, form defaults
+// and inline handlers behave as they do for users.
+const PAGE = `<title>OBA tool fixture</title>
+<h1>Fixture heading</h1>
+<p id="intro">Read the <a href="/docs">documentation</a> before you start.<sup><a href="#note-1">[1]</a></sup></p>
 <form onsubmit="event.preventDefault();window.submitted=(window.submitted||0)+1">
-  <input id="input" data-ai-id="fixture-input" value="replace me">
+  <label>Name <input id="name" value="old"></label>
+  <label>Country <select id="country"><option>Chile</option><option>Norway</option><option>Sweden</option></select></label>
 </form>
-<div id="target">x</div>
-<div id="note" contenteditable="true">old</div>
-<button onclick="window.saved=(window.saved||0)+1"><span>Save draft</span></button>
-<a id="spa" href="/elsewhere" onclick="event.preventDefault();window.spa=1">Open</a>
-<div style="height:2000px"></div>
-<main tabindex="-1" style="display:block;height:600px" onclick="window.hit=window.hit||'main'">
-  <input data-ai-id="far" onclick="window.hit='input'" style="margin:20px">
-</main>`;
+<button id="once" onclick="document.body.dataset.once=(+document.body.dataset.once||0)+1;this.remove()">Click once</button>
+<button id="count" onclick="window.counter=(window.counter||0)+1">Count</button>
+<div id="note" style="margin-top:3000px">Far below: the secret word is pelican.</div>`;
+
+const BIG = `<title>Big</title><ul>${Array.from(
+  { length: 3000 },
+  (_, index) => `<li>Row ${index} with some filler text to make it long</li>`,
+).join("")}</ul>`;
+
+const SHADOW = `<title>Shadow</title><h1>Shadow</h1>
+<my-card><span>Slotted words</span><button>Slotted button</button></my-card>
+<script>customElements.define("my-card", class extends HTMLElement {
+  constructor() { super(); this.attachShadow({ mode: "open" }).innerHTML = "<h2>Card title</h2><slot></slot>"; }
+});</script>`;
+
+const HUGE = `<title>Huge</title>${Array.from(
+  { length: 9000 },
+  (_, index) =>
+    `<p>Paragraph ${index} with enough filler text to make the page very long indeed.</p>`,
+).join("")}`;
 
 test(
-  "production browser tools honor display and input contracts",
-  { timeout: 120000 },
+  "page tools: refs, batches, caps, edits and the tool set",
+  { timeout: 240000 },
   async (t) => {
     const fixture = await browserToolFixture((request, response) => {
-      if (request.url !== "/page") return false;
-      response.writeHead(200, { "Content-Type": "text/html" }).end(PAGE);
+      const pages = {
+        "/page": PAGE,
+        "/big": BIG,
+        "/other": "<title>Other</title><p>Other page</p>",
+        "/shadow": SHADOW,
+        "/huge": HUGE,
+        "/table": `<title>Table</title><table><tr><th>Id</th><th>Status</th></tr>${Array.from(
+          { length: 24 },
+          (_, index) =>
+            `<tr><td>${index}</td><td>${index % 4 ? "Paid" : "Refunded"}</td></tr>`,
+        ).join("")}</table>`,
+      };
+      if (!pages[request.url]) return false;
+      response
+        .writeHead(200, { "Content-Type": "text/html" })
+        .end(pages[request.url]);
       return true;
     });
-    const { page } = fixture;
+    const { page, open, evaluate } = fixture;
     try {
-      const tab = await page.call(
-        (url) => chrome.tabs.create({ url }),
-        `${fixture.baseUrl}/page`,
-      );
-      await poll(() =>
-        page.call(
-          async (id) => (await chrome.tabs.get(id)).status === "complete",
-          tab.id,
-        ),
-      );
-      const targetId = await page.call(
-        async (id) =>
-          (await chrome.debugger.getTargets()).find(
-            (target) => target.tabId === id,
-          )?.id,
-        tab.id,
-      );
-      const load = {
-        name: "loadTools",
-        args: {
-          names: [
-            "cdpTakeScreenshot",
-            "cdpPage",
-            "cdpInput",
-            "cdpExecuteArbitraryJavaScript",
-          ],
-        },
-      };
-      const js = (code, selector = { tabId: tab.id }) => ({
-        name: "cdpExecuteArbitraryJavaScript",
-        args: { ...selector, code },
+      const tabId = await open("/page");
+
+      await t.test("only the core tools are declared", async () => {
+        await fixture.run([]);
+        const names = fixture.requests[0].tools
+          .map((tool) => tool.function.name)
+          .sort();
+        assert.deepEqual(names, [
+          "act",
+          "ask",
+          "editPage",
+          "extract",
+          "find",
+          "read",
+          "screenshot",
+          "snapshot",
+          "tabs",
+          "toolSearch",
+          "webSearch",
+        ]);
       });
-      const cdp = (operation, args = {}) => ({
-        name: "cdpPage",
-        args: { tabId: tab.id, operation, ...args },
-      });
-      const input = (args) => ({
-        name: "cdpInput",
-        args: { tabId: tab.id, ...args },
-      });
-      const run = async (steps) => {
-        const results = await fixture.run([load, ...steps]);
-        for (const result of results)
-          assert.equal(
-            result.output.error,
-            undefined,
-            `${result.name}: ${result.output.error}`,
+
+      await t.test(
+        "refs stay stable and a stale ref fails clearly",
+        async () => {
+          const [first, second] = await fixture.run([
+            { name: "snapshot", args: { tabId } },
+            { name: "snapshot", args: { tabId, scope: "page" } },
+          ]);
+          assert.match(first, /heading \[e\d+\] h1: Fixture heading/);
+          assert.match(first, /\[documentation\]\(e\d+\)/);
+          assert.equal(ref(first, "Click once"), ref(second, "Click once"));
+          const once = ref(first, "Click once");
+          const [acted, stale] = await fixture.run([
+            {
+              name: "act",
+              args: { tabId, steps: [{ action: "click", ref: once }] },
+            },
+            {
+              name: "act",
+              args: { tabId, steps: [{ action: "click", ref: once }] },
+            },
+          ]);
+          assert.match(acted, /Done: 1\. click/);
+          assert.match(acted, /Gone \(1\): button "Click once"/);
+          assert.match(
+            stale,
+            /is stale: that element is no longer on the page\. Take a new snapshot/,
           );
-        return results.slice(1).map((result) => result.output);
-      };
-      const attached = () =>
-        page.call(
-          async (id) =>
-            (await chrome.debugger.getTargets()).find(
-              (target) => target.id === id,
-            )?.attached,
-          targetId,
-        );
-
-      await t.test(
-        "full-page screenshot covers the whole document",
-        async () => {
-          const [visible, full] = await run([
-            {
-              name: "captureVisibleTab",
-              args: { tabId: tab.id, format: "png" },
-            },
-            {
-              name: "cdpTakeScreenshot",
-              args: { tabId: tab.id, format: "png", fullPage: true },
-            },
-          ]);
-          const height = (image) =>
-            Buffer.from(image.split(",")[1], "base64").readUInt32BE(20);
-          assert.ok(height(full.image) >= 2600);
-          assert.ok(height(full.image) > height(visible.image));
+          assert.equal(
+            await evaluate(tabId, "document.body.dataset.once"),
+            "1",
+          );
         },
       );
 
       await t.test(
-        "emulation by targetId persists for the tab until reset",
+        "a batch types, selects and submits, and stops at the first failure",
         async () => {
-          const metrics =
-            "({width:innerWidth,dpr:devicePixelRatio,dark:matchMedia('(prefers-color-scheme: dark)').matches})";
-          const out = await run([
+          const [snapshot] = await fixture.run([
+            { name: "snapshot", args: { tabId } },
+          ]);
+          const name = ref(snapshot, 'textbox "Name"');
+          const country = ref(snapshot, 'combobox "Country"');
+          const count = ref(snapshot, 'button "Count"');
+          const [done, failed] = await fixture.run([
             {
-              name: "cdpPage",
+              name: "act",
               args: {
-                targetId,
-                operation: "emulate",
-                viewport: "390x844x2,mobile",
-                colorScheme: "dark",
+                tabId,
+                steps: [
+                  { action: "type", ref: name, text: "Mara" },
+                  { action: "select", ref: country, value: "sweden" },
+                  { action: "press", ref: name, key: "Enter" },
+                ],
               },
             },
-            js(metrics),
-            cdp("emulate", { reset: true }),
-            js(metrics, { targetId }),
-          ]);
-          assert.deepEqual(out[1].value, { width: 390, dpr: 2, dark: true });
-          assert.notEqual(out[3].value.width, 390);
-          assert.equal(out[3].value.dpr, 1);
-          assert.equal(await attached(), false);
-        },
-      );
-
-      await t.test("keys select, type and submit like a user", async () => {
-        const out = await run([
-          {
-            name: "mutatePage",
-            args: {
-              tabId: tab.id,
-              operation: "click",
-              target: { selector: "#input" },
-            },
-          },
-          input({ operation: "key", key: "Control+A" }),
-          input({ operation: "type", text: "replacement" }),
-          input({ operation: "key", key: "Enter" }),
-          js(
-            "({value:document.querySelector('#input').value,submitted:window.submitted})",
-          ),
-        ]);
-        assert.deepEqual(out[4].value, { value: "replacement", submitted: 1 });
-      });
-
-      await t.test(
-        "click by id hits a far input under smooth scroll and a tabindex ancestor",
-        async () => {
-          const out = await run([
-            input({ operation: "click", id: "far" }),
-            js("window.hit"),
-          ]);
-          assert.equal(out[0].clickedTag, "input");
-          assert.equal(out[1].value, "input");
-        },
-      );
-
-      await t.test(
-        "inspectPage and mutatePage find a control by its text",
-        async () => {
-          const target = { text: "save draft" };
-          const out = await run([
-            { name: "inspectPage", args: { tabId: tab.id, target } },
             {
-              name: "mutatePage",
-              args: { tabId: tab.id, operation: "click", target },
+              name: "act",
+              args: {
+                tabId,
+                steps: [
+                  { action: "click", ref: count },
+                  { action: "click", ref: "e999999" },
+                  { action: "click", ref: count },
+                ],
+              },
             },
-            js("window.saved"),
           ]);
-          assert.equal(out[0].pages[0].target.tag, "button");
-          assert.equal(out[2].value, 1);
-        },
-      );
-
-      await t.test(
-        "mutatePage clicks links in place and edits text",
-        async () => {
-          const edit = (selector, operation, value) => ({
-            name: "mutatePage",
-            args: { tabId: tab.id, operation, target: { selector }, value },
-          });
-          const out = await run([
-            edit("#input", "input", "typed"),
-            edit("#note", "setText", "new note"),
-            js(
-              "[document.querySelector('#input').value,document.querySelector('#note').innerText]",
+          assert.match(done, /selected "Sweden"/);
+          assert.deepEqual(
+            await evaluate(
+              tabId,
+              "[document.querySelector('#name').value, document.querySelector('#country').value, window.submitted]",
             ),
-            {
-              name: "mutatePage",
-              args: {
-                tabId: tab.id,
-                operation: "click",
-                target: { selector: "#spa" },
-              },
-            },
-            js("window.spa"),
-          ]);
-          assert.deepEqual(out[2].value, ["typed", "new note"]);
-          assert.equal(out[3].openedTabId, undefined);
-          assert.equal(out[4].value, 1);
+            ["Mara", "Sweden", 1],
+          );
+          assert.match(
+            failed,
+            /Step 2 \(click e999999\) failed: Ref e999999 is not on this page.*Later steps were not run/s,
+          );
+          assert.equal(await evaluate(tabId, "window.counter"), 1);
         },
       );
 
-      await t.test("mutatePage setHtml cannot run page script", async () => {
-        const out = await run([
-          {
-            name: "mutatePage",
-            args: {
-              tabId: tab.id,
-              operation: "setHtml",
-              target: { selector: "#target" },
-              value: '<img src="x" onerror="window.xss=1"><b>ok</b>',
-            },
-          },
-          { name: "wait", args: { milliseconds: 300 } },
-          js(
-            "({xss:window.xss ?? null,bold:!!document.querySelector('#target b')})",
-          ),
-        ]);
-        assert.deepEqual(out[2].value, { xss: null, bold: true });
-      });
+      await t.test(
+        "find searches beyond the viewport and returns refs",
+        async () => {
+          const [found, missing] = await fixture.run([
+            { name: "find", args: { tabId, query: "pelican" } },
+            { name: "find", args: { tabId, query: "/flamingo|ostrich/" } },
+          ]);
+          assert.match(
+            found,
+            /1 matches for "pelican":\n- text \[e\d+\]: Far below: the secret word is pelican\./,
+          );
+          assert.match(missing, /No match/);
+        },
+      );
 
-      await t.test("a mutatePage batch applies its style item", async () => {
-        const out = await run([
-          {
-            name: "mutatePage",
-            args: {
-              tabId: tab.id,
-              operations: [
-                {
-                  operation: "insertStyle",
-                  css: ".oba-batch{color:rgb(1, 2, 3)}",
-                },
-                {
-                  operation: "insertElement",
-                  target: { selector: "#target" },
-                  position: "afterend",
-                  node: { tag: "p", attributes: { class: "oba-batch" } },
-                },
-              ],
+      await t.test(
+        "editPage keeps marked links and never runs or loads script",
+        async () => {
+          const [snapshot] = await fixture.run([
+            { name: "snapshot", args: { tabId } },
+          ]);
+          const intro = ref(snapshot, "paragraph");
+          const link = snapshot.match(/\[documentation\]\((e\d+)\)/)[1];
+          const note = snapshot.match(/\[\[1\]\]\((e\d+)\)/)[1];
+          const edit = (edits) => ({
+            name: "editPage",
+            args: { tabId, edits },
+          });
+          const results = await fixture.run([
+            edit([
+              {
+                op: "setText",
+                ref: intro,
+                text: `Lisez la [documentation](${link}) avant de commencer.[[1]](${note})`,
+              },
+              {
+                op: "insert",
+                ref: intro,
+                position: "after",
+                html: '<b>ajouté</b> <img src="data:image/png;base64,AA==" alt="">',
+              },
+            ]),
+            edit([{ op: "insert", ref: intro, tag: "script", text: "" }]),
+            edit([
+              { op: "insert", ref: intro, tag: "script", html: "<b>x</b>" },
+            ]),
+            edit([
+              {
+                op: "insert",
+                ref: intro,
+                html: '<img src="x" onerror="window.xss=1">',
+              },
+            ]),
+            edit([
+              {
+                op: "insert",
+                ref: intro,
+                html: '<svg><a><animate attributeName="href" values="javascript:window.xss=1"/></a></svg>',
+              },
+            ]),
+            edit([
+              {
+                op: "setAttribute",
+                ref: link,
+                name: "href",
+                value: " java\tscript:window.xss=1",
+              },
+            ]),
+            edit([
+              { op: "setAttribute", ref: link, name: "onclick", value: "1" },
+            ]),
+          ]);
+          const [edited, ...refused] = results;
+          assert.match(edited, /Applied 2 of 2 edits/);
+          assert.match(edited, /Inserted: e\d+/);
+          for (const text of refused)
+            assert.match(
+              text,
+              /Applied 0 of 1 edits[\s\S]*(is not allowed|cannot hold a script URL)/,
+            );
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          assert.deepEqual(
+            await evaluate(
+              tabId,
+              "[document.querySelector('#intro').textContent, document.querySelector('#intro a').getAttribute('href'), document.querySelectorAll('#intro a').length, window.xss ?? null, !!document.querySelector('[data-oba-inserted] b, b[data-oba-inserted]'), document.querySelectorAll('script, svg').length]",
+            ),
+            [
+              "Lisez la documentation avant de commencer.[1]",
+              "/docs",
+              2,
+              null,
+              true,
+              0,
+            ],
+          );
+        },
+      );
+
+      await t.test(
+        "refs from a previous page fail after navigation",
+        async () => {
+          const [snapshot] = await fixture.run([
+            { name: "snapshot", args: { tabId } },
+          ]);
+          const count = ref(snapshot, 'button "Count"');
+          const [navigated, old] = await fixture.run([
+            {
+              name: "tabs",
+              args: {
+                action: "navigate",
+                tabId,
+                url: `${fixture.baseUrl}/other`,
+              },
             },
-          },
-          js("getComputedStyle(document.querySelector('.oba-batch')).color"),
-        ]);
-        assert.equal(out[0].success, true);
-        assert.deepEqual(
-          out[0].results.map((result) => result.success),
-          [true, true],
+            {
+              name: "act",
+              args: { tabId, steps: [{ action: "click", ref: count }] },
+            },
+          ]);
+          assert.match(navigated, /Other/);
+          assert.match(
+            old,
+            /is not on this page: the page navigated or reloaded/,
+          );
+        },
+      );
+
+      await t.test(
+        "a long page shows the viewport, caps the result and keeps the full text readable",
+        async () => {
+          const big = await open("/big");
+          const [pageScope] = await fixture.run([
+            { name: "snapshot", args: { tabId: big, scope: "page" } },
+          ]);
+          const list = pageScope.match(
+            /… 2950 more items \(snapshot ref=(e\d+) shows all\)/,
+          )?.[1];
+          assert.ok(list, pageScope.slice(0, 300));
+          const [snapshot] = await fixture.run([
+            { name: "snapshot", args: { tabId: big, ref: list } },
+          ]);
+          assert.match(
+            snapshot,
+            /\[Output truncated: showed \d+ of \d+ characters\. The full output is stored as "art-[0-9a-f]+"/,
+          );
+          assert.ok(!/Row 2999/.test(snapshot));
+          // Handles belong to their chat, so the read runs in the same chat.
+          const [auto, read] = await fixture.run((body) => {
+            const results = body.messages.filter(
+              (message) => message.role === "tool",
+            );
+            if (!results.length)
+              return {
+                calls: [{ id: "auto", name: "snapshot", args: { tabId: big } }],
+              };
+            if (results.length === 1) {
+              const handle = results[0].content.match(
+                /is stored as "(art-[0-9a-f]+)"/,
+              )?.[1];
+              return {
+                calls: [
+                  {
+                    id: "read",
+                    name: "read",
+                    args: { source: handle, offset: 150000 },
+                  },
+                ],
+              };
+            }
+            return { text: "done" };
+          });
+          assert.match(auto, /\[Viewport y=0-/);
+          assert.match(
+            auto,
+            /full page snapshot \(\d+ chars\) is stored as "art-/,
+          );
+          assert.match(read, /characters 150000-/);
+          await page.call((id) => chrome.tabs.remove(id), big);
+        },
+      );
+
+      await t.test(
+        "slotted content shows, and a cut full snapshot says so",
+        async () => {
+          const shadow = await open("/shadow");
+          const [snapshot, found] = await fixture.run([
+            { name: "snapshot", args: { tabId: shadow } },
+            { name: "find", args: { tabId: shadow, query: "Slotted" } },
+          ]);
+          assert.match(
+            snapshot,
+            /Slotted words \[button "Slotted button" e\d+\]/,
+          );
+          assert.match(found, /1 matches for "Slotted"/);
+          const table = await open("/table");
+          const [counted] = await fixture.run([
+            { name: "snapshot", args: { tabId: table } },
+          ]);
+          assert.match(
+            counted,
+            /- counts of Status \(24 rows\): Paid 18, Refunded 6/,
+          );
+          const huge = await open("/huge");
+          const [, end] = await fixture.run((body) => {
+            const results = body.messages.filter(
+              (message) => message.role === "tool",
+            );
+            if (!results.length)
+              return {
+                calls: [
+                  { id: "full", name: "snapshot", args: { tabId: huge } },
+                ],
+              };
+            if (results.length === 1) {
+              const [, chars, handle] = results[0].content.match(
+                /\((\d+) chars\) is stored as "(art-[0-9a-f]+)"/,
+              );
+              return {
+                calls: [
+                  {
+                    id: "end",
+                    name: "read",
+                    args: { source: handle, offset: Number(chars) - 300 },
+                  },
+                ],
+              };
+            }
+            return { text: "done" };
+          });
+          assert.match(
+            end,
+            /\[Snapshot cut at \d+ characters: the rest is missing/,
+          );
+          await page.call(
+            (ids) => chrome.tabs.remove(ids),
+            [shadow, huge, table],
+          );
+        },
+      );
+
+      await t.test(
+        "on-demand tools are appended by toolSearch without schemas in the result",
+        async () => {
+          const [loaded] = await fixture.run([
+            { name: "toolSearch", args: { names: ["runScript"] } },
+          ]);
+          assert.equal(loaded, "Loaded runScript. Call them directly now.");
+          const before = fixture.requests[0].tools.map(
+            (tool) => tool.function.name,
+          );
+          const after = fixture.requests[1].tools.map(
+            (tool) => tool.function.name,
+          );
+          assert.deepEqual(after.slice(0, before.length), before);
+          assert.deepEqual(after.slice(before.length), ["runScript"]);
+        },
+      );
+    } finally {
+      await fixture.close();
+    }
+  },
+);
+
+test(
+  "a sub-agent runs in the background with no side panel open",
+  { timeout: 120000 },
+  async () => {
+    const fixture = await browserToolFixture();
+    try {
+      await fixture.run((body) => {
+        const user = JSON.stringify(
+          body.messages.find((message) => message.role === "user"),
         );
-        assert.equal(out[1].value, "rgb(1, 2, 3)");
+        const results = body.messages.filter(
+          (message) => message.role === "tool",
+        );
+        if (user.includes("Count the moons"))
+          return { text: "Mars has 2 moons." };
+        if (!results.length)
+          return {
+            calls: [
+              { id: "load", name: "toolSearch", args: { names: ["subAgent"] } },
+            ],
+          };
+        if (results.length === 1)
+          return {
+            calls: [
+              {
+                id: "child",
+                name: "subAgent",
+                args: { task: "Count the moons of Mars." },
+              },
+            ],
+          };
+        return { text: "Parent done." };
       });
-      assert.equal(await attached(), false);
+      const [, result] = fixture.toolTexts();
+      assert.match(
+        result,
+        /Sub-agent "Count the moons of Mars\." \(Fixture\) finished\.\nMars has 2 moons\./,
+      );
+      const child = await fixture.page.call(async () => {
+        const { chats } = await chrome.storage.local.get("chats");
+        return chats.find((chat) => chat.kind === "subagent");
+      });
+      assert.equal(child.title, "Count the moons of Mars.");
+      assert.equal(child.messageCount, 2);
+      assert.equal(child.running, undefined);
     } finally {
       await fixture.close();
     }

@@ -1,5 +1,6 @@
 import type { UploadedAttachmentKind } from "./attachments";
 import type { AgentIconId } from "./agent-icon-registry";
+import type { ToolGroup } from "./agents";
 import type { ReasoningEffort } from "./reasoning";
 
 export type ProviderId =
@@ -48,10 +49,9 @@ export type Preferences = {
   autoRetry?: boolean;
   maxToolSteps?: number;
   reasoningEffort?: ReasoningEffort;
-  contextBudgetEnabled?: boolean;
-  contextRequestMaxChars?: number;
-  contextTailMinMessages?: number;
-  contextToolResultMaxChars?: number;
+  // Model for auxiliary requests such as compaction; unset uses the chat's
+  // own model.
+  helperModelId?: string;
 };
 
 export type SyncBackendType = "browser-sync" | "webdav";
@@ -79,7 +79,13 @@ export type Agent = {
   name: string;
   description?: string;
   icon?: AgentIconId;
-  capabilities: AgentCapabilities;
+  // Instructions added to the system prompt.
+  prompt: string;
+  toolGroups: ToolGroup[];
+  // Unset uses the model picked in the composer.
+  modelId?: string;
+  // Private files (memory, user notes) that persist across chats.
+  workspace: boolean;
   builtin?: boolean;
   createdAt: number;
   updatedAt: number;
@@ -120,29 +126,6 @@ export type SkillFile = {
   kind: SkillFileKind;
   encoding?: "utf-8" | "base64";
   updatedAt?: number;
-};
-
-export type AgentCapabilities = {
-  browserAutomation: boolean;
-  browserTools: boolean;
-  subAgents: boolean;
-  localExecutionBridges: boolean;
-  deferredBrowserTools: boolean;
-  cdpTools: boolean;
-  javascriptExecution: boolean;
-  mcpTools: boolean;
-  mcpManagement: boolean;
-  skillTools: boolean;
-  skillCreation: boolean;
-  workspaceRead: boolean;
-  workspaceWrite: boolean;
-  memoryRead: boolean;
-  memoryWrite: boolean;
-  chatHistoryRead: boolean;
-  chatHistoryWrite: boolean;
-  imageGeneration: boolean;
-  currentTime: boolean;
-  fileUrlRead: boolean;
 };
 
 export type LocalExecutionBridgeConfig = {
@@ -199,7 +182,8 @@ export type ImageGenerationJob = {
 
 export type SelectedElement = {
   success: boolean;
-  aiId?: string;
+  // Ref of the element for page tools ("sel-…").
+  ref?: string;
   innerText?: string;
   outerHTML?: string;
   tagName?: string;
@@ -230,37 +214,17 @@ export type TokenUsage = {
   cost?: number;
 };
 
-export type PromptBreakdown = {
-  systemPromptChars?: number;
-  userPromptChars?: number;
-  conversationPromptChars?: number;
-  tabPromptChars?: number;
-  selectedElementPromptChars?: number;
-  skillPromptChars?: number;
-  attachmentPromptChars?: number;
-  toolCallPromptChars?: number;
-  sourcePromptChars?: number;
-  otherContextPromptChars?: number;
-};
-
 export type RunMetrics = {
   startedAt?: number;
   firstTokenAt?: number;
   endedAt?: number;
   streamEventIndex?: number;
   outputCharacters?: number;
+  // Provider-reported totals over every model request of the run.
   usage?: TokenUsage;
-  promptBreakdown?: PromptBreakdown;
-  contextBudget?: ContextBudgetReport;
-};
-
-export type ContextBudgetReport = {
-  originalChars: number;
-  finalChars: number;
-  prunedChars: number;
-  prunedMessages: number;
-  truncatedToolResults: number;
-  compactionSummary?: string;
+  modelCalls?: number;
+  // Input tokens (cached included) of the run's largest single request.
+  largestInputTokens?: number;
 };
 
 export const TOOL_PART_PREFIX = "tool-";
@@ -344,23 +308,17 @@ export const AI_TEXT_CHUNK_TYPE = {
   textNoteStart: "text-note-start",
   textNoteDelta: "text-note-delta",
   textNoteEnd: "text-note-end",
+  // A compaction summary that replaced earlier context of the run.
+  contextSummary: "context-summary",
 } as const;
 
 export type SendMessagesBody = {
+  agentId?: string;
   modelId?: string;
-  agentCapabilities: AgentCapabilities;
   language?: string;
-  maxToolSteps?: number;
-  context?: {
-    tabs?: AttachmentTab[];
-    selectedElements?: SelectedElement[];
-    text?: string;
-    uploadedAttachments?: UploadedAttachment[];
-    availableSkills?: Skill[];
-    sources?: ChatSource[];
-    agent?: Agent;
-    imageGenerationEnabled?: boolean;
-  };
+  uploadedAttachments?: UploadedAttachment[];
+  // A sub-agent chat, whose agent cannot start further sub-agents.
+  subAgent?: boolean;
 };
 
 export type AiStreamRequest =

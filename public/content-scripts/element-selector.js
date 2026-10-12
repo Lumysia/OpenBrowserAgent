@@ -145,12 +145,11 @@
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    const aiId =
-      target.getAttribute("data-ai-id") ||
-      (crypto.randomUUID
-        ? crypto.randomUUID()
-        : Math.random().toString(36).slice(2, 15));
-    target.setAttribute("data-ai-id", aiId);
+    // Page tools accept this value as a ref.
+    const ref =
+      target.getAttribute("data-oba-selection") ||
+      `sel-${Math.random().toString(36).slice(2, 10)}`;
+    target.setAttribute("data-oba-selection", ref);
     document
       .querySelectorAll('[data-oba-selected="true"]')
       .forEach((node) => node.removeAttribute("data-oba-selected"));
@@ -159,7 +158,7 @@
     chrome.runtime.sendMessage({
       type: "getSelectedElement",
       success: true,
-      aiId,
+      ref,
       innerText: target.innerText || "",
       outerHTML: target.outerHTML,
       tagName: target.tagName.toLowerCase(),

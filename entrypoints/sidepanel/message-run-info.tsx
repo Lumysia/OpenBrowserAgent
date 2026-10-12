@@ -5,11 +5,8 @@ import {
   MS_PER_SECOND,
 } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
-import { PROMPT_BREAKDOWN_SEGMENT } from "../../src/shared/prompt-breakdown";
 import type {
   ChatMessage,
-  ContextBudgetReport,
-  PromptBreakdown,
   RunMetrics,
   TokenUsage,
 } from "../../src/shared/types";
@@ -24,7 +21,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../src/ui/components";
-import { formatCompactNumber, formatEstimatedTokens } from "./format";
+import { formatCompactNumber, formatToolMessage } from "./format";
 import { IconTooltip } from "./icon-tooltip";
 
 export function MessageRunInfo({
@@ -107,12 +104,7 @@ function RunInfoSection({
   metrics: RunMetrics;
   t: Messages;
 }) {
-  const estimatedInputTokens = estimatePromptTokens(metrics.promptBreakdown);
-  const estimatedOutputTokens = estimateTokens(metrics.outputCharacters);
-  const estimatedTotalTokens =
-    estimatedInputTokens || estimatedOutputTokens
-      ? estimatedInputTokens + estimatedOutputTokens
-      : 0;
+  const usage = metrics.usage;
   return (
     <div className="run-info-section">
       <div className="run-info-section-title">{title}</div>
@@ -126,69 +118,78 @@ function RunInfoSection({
           value={formatTps(metrics, t)}
         />
       </div>
-      <PromptBreakdownBar breakdown={metrics.promptBreakdown} t={t} />
+      <CacheShareBar usage={usage} t={t} />
       <div className="run-info-token-grid">
         <MetricRow
-          label={t.sidepanel.runInfo.input}
-          value={formatTokenCount(
-            metrics.usage?.inputTokens,
-            t,
-            estimatedInputTokens,
-          )}
+          label={t.sidepanel.runInfo.modelCalls}
+          value={
+            metrics.modelCalls === undefined
+              ? t.sidepanel.runInfo.unavailable
+              : String(metrics.modelCalls)
+          }
         />
         <MetricRow
-          label={t.sidepanel.runInfo.outputTokens}
-          value={formatTokenCount(
-            metrics.usage?.outputTokens,
-            t,
-            estimatedOutputTokens,
-          )}
+          label={t.sidepanel.runInfo.largestRequest}
+          value={formatTokenCount(metrics.largestInputTokens, t)}
+        />
+        <MetricRow
+          label={t.sidepanel.runInfo.input}
+          value={formatTokenCount(usage?.inputTokens, t)}
         />
         <MetricRow
           label={t.sidepanel.runInfo.cached}
-          value={formatTokenCount(metrics.usage?.cachedInputTokens, t)}
+          value={formatTokenCount(usage?.cachedInputTokens, t)}
         />
         <MetricRow
           label={t.sidepanel.runInfo.cacheWrite}
-          value={formatTokenCount(metrics.usage?.cacheWriteTokens, t)}
+          value={formatTokenCount(usage?.cacheWriteTokens, t)}
         />
         <MetricRow
-          label={t.sidepanel.runInfo.total}
-          value={formatTokenCount(
-            metrics.usage?.totalTokens,
-            t,
-            estimatedTotalTokens,
-          )}
+          label={t.sidepanel.runInfo.outputTokens}
+          value={formatTokenCount(usage?.outputTokens, t)}
         />
         <MetricRow
           label={t.sidepanel.runInfo.reasoning}
-          value={formatTokenCount(metrics.usage?.reasoningTokens, t)}
+          value={formatTokenCount(usage?.reasoningTokens, t)}
         />
       </div>
     </div>
   );
 }
 
-function PromptBreakdownBar({
-  breakdown,
+// Share of input tokens the provider served from its prompt cache.
+function CacheShareBar({
+  usage,
   t,
 }: {
-  breakdown: PromptBreakdown | undefined;
+  usage: TokenUsage | undefined;
   t: Messages;
 }) {
-  const segments = promptSegments(breakdown, t);
-  const total = segments.reduce((sum, segment) => sum + segment.value, 0);
-  if (!total) return null;
+  const input = usage?.inputTokens || 0;
+  if (!input) return null;
+  const cached = Math.min(input, usage?.cachedInputTokens || 0);
+  const share = formatToolMessage(t.sidepanel.runInfo.cachedShare, {
+    percent: Math.round((cached / input) * 100),
+  });
   return (
-    <div className="run-info-prompt">
+    <div className="run-info-cache" title={share}>
+      <span>{share}</span>
       <Progress
-        aria-label={t.sidepanel.runInfo.promptBreakdown}
-        segments={segments.map((segment) => ({
-          key: segment.key,
-          value: segment.value,
-          className: `run-info-prompt-${segment.key}`,
-          tooltip: `${segment.label}\n${formatEstimatedTokens(segment.value, t)}`,
-        }))}
+        aria-label={share}
+        segments={[
+          {
+            key: "cached",
+            value: cached,
+            className: "run-info-cache-hit",
+            tooltip: `${t.sidepanel.runInfo.cached}\n${formatTokenCount(cached, t)}`,
+          },
+          {
+            key: "uncached",
+            value: input - cached,
+            className: "run-info-cache-miss",
+            tooltip: `${t.sidepanel.runInfo.uncached}\n${formatTokenCount(input - cached, t)}`,
+          },
+        ]}
       />
     </div>
   );
@@ -229,13 +230,13 @@ function aggregateRunMetrics(messages: ChatMessage[]): RunMetrics {
     firstTokenAt: averageTtftStart(runs),
     endedAt: lastEndedAt || undefined,
     usage,
-    promptBreakdown: runs.reduce<PromptBreakdown>(
-      (total, metrics) => addPromptBreakdown(total, metrics.promptBreakdown),
-      {},
+    modelCalls: runs.reduce(
+      (total, metrics) => total + (metrics.modelCalls || 0),
+      0,
     ),
-    contextBudget: runs.reduce<ContextBudgetReport>(
-      (total, metrics) => addContextBudget(total, metrics.contextBudget),
-      {} as ContextBudgetReport,
+    largestInputTokens: Math.max(
+      0,
+      ...runs.map((metrics) => metrics.largestInputTokens || 0),
     ),
     outputCharacters: runs.reduce(
       (total, metrics) => total + (metrics.outputCharacters || 0),
@@ -243,116 +244,6 @@ function aggregateRunMetrics(messages: ChatMessage[]): RunMetrics {
     ),
     metadataGenerationMs: generationMs,
   } as RunMetrics & { metadataGenerationMs?: number };
-}
-
-function addContextBudget(
-  total: ContextBudgetReport,
-  budget: ContextBudgetReport | undefined,
-): ContextBudgetReport {
-  return {
-    originalChars: add(total.originalChars, budget?.originalChars) || 0,
-    finalChars: add(total.finalChars, budget?.finalChars) || 0,
-    prunedChars: add(total.prunedChars, budget?.prunedChars) || 0,
-    prunedMessages: add(total.prunedMessages, budget?.prunedMessages) || 0,
-    truncatedToolResults:
-      add(total.truncatedToolResults, budget?.truncatedToolResults) || 0,
-    compactionSummary: budget?.compactionSummary || total.compactionSummary,
-  };
-}
-
-function addPromptBreakdown(
-  total: PromptBreakdown,
-  breakdown: PromptBreakdown | undefined,
-): PromptBreakdown {
-  return {
-    systemPromptChars: add(
-      total.systemPromptChars,
-      breakdown?.systemPromptChars,
-    ),
-    userPromptChars: add(total.userPromptChars, breakdown?.userPromptChars),
-    conversationPromptChars: add(
-      total.conversationPromptChars,
-      breakdown?.conversationPromptChars,
-    ),
-    tabPromptChars: add(total.tabPromptChars, breakdown?.tabPromptChars),
-    selectedElementPromptChars: add(
-      total.selectedElementPromptChars,
-      breakdown?.selectedElementPromptChars,
-    ),
-    skillPromptChars: add(total.skillPromptChars, breakdown?.skillPromptChars),
-    attachmentPromptChars: add(
-      total.attachmentPromptChars,
-      breakdown?.attachmentPromptChars,
-    ),
-    toolCallPromptChars: add(
-      total.toolCallPromptChars,
-      breakdown?.toolCallPromptChars,
-    ),
-    sourcePromptChars: add(
-      total.sourcePromptChars,
-      breakdown?.sourcePromptChars,
-    ),
-    otherContextPromptChars: add(
-      total.otherContextPromptChars,
-      breakdown?.otherContextPromptChars,
-    ),
-  };
-}
-
-function promptSegments(breakdown: PromptBreakdown | undefined, t: Messages) {
-  const values = [
-    {
-      key: PROMPT_BREAKDOWN_SEGMENT.system,
-      label: t.sidepanel.runInfo.prebuiltPrompt,
-      value: breakdown?.systemPromptChars || 0,
-    },
-    {
-      key: PROMPT_BREAKDOWN_SEGMENT.user,
-      label: t.sidepanel.runInfo.userPrompt,
-      value: breakdown?.userPromptChars || 0,
-    },
-    {
-      key: PROMPT_BREAKDOWN_SEGMENT.conversation,
-      label: t.sidepanel.runInfo.conversationPrompt,
-      value: breakdown?.conversationPromptChars || 0,
-    },
-    {
-      key: PROMPT_BREAKDOWN_SEGMENT.tabs,
-      label: t.sidepanel.runInfo.tabPrompt,
-      value: breakdown?.tabPromptChars || 0,
-    },
-    {
-      key: PROMPT_BREAKDOWN_SEGMENT.element,
-      label: t.sidepanel.runInfo.selectedElementPrompt,
-      value: breakdown?.selectedElementPromptChars || 0,
-    },
-    {
-      key: PROMPT_BREAKDOWN_SEGMENT.skills,
-      label: t.sidepanel.runInfo.skillPrompt,
-      value: breakdown?.skillPromptChars || 0,
-    },
-    {
-      key: PROMPT_BREAKDOWN_SEGMENT.attachments,
-      label: t.sidepanel.runInfo.attachmentPrompt,
-      value: breakdown?.attachmentPromptChars || 0,
-    },
-    {
-      key: PROMPT_BREAKDOWN_SEGMENT.tools,
-      label: t.sidepanel.runInfo.toolCallPrompt,
-      value: breakdown?.toolCallPromptChars || 0,
-    },
-    {
-      key: PROMPT_BREAKDOWN_SEGMENT.sources,
-      label: t.sidepanel.runInfo.sourcePrompt,
-      value: breakdown?.sourcePromptChars || 0,
-    },
-    {
-      key: PROMPT_BREAKDOWN_SEGMENT.other,
-      label: t.sidepanel.runInfo.otherPrompt,
-      value: breakdown?.otherContextPromptChars || 0,
-    },
-  ];
-  return values.filter((segment) => segment.value > 0);
 }
 
 function addUsage(
@@ -414,15 +305,6 @@ function estimateTokens(characters: number | undefined) {
   return Math.max(1, Math.round(characters / ESTIMATED_CHARS_PER_TOKEN));
 }
 
-function estimatePromptTokens(breakdown: PromptBreakdown | undefined) {
-  if (!breakdown) return 0;
-  const characters = Object.values(breakdown).reduce(
-    (sum, value) => sum + (Number(value) || 0),
-    0,
-  );
-  return estimateTokens(characters);
-}
-
 function formatMs(value: number | undefined, t: Messages) {
   if (value === undefined) return t.sidepanel.runInfo.unavailable;
   return value < MS_PER_SECOND
@@ -430,15 +312,7 @@ function formatMs(value: number | undefined, t: Messages) {
     : `${(value / MS_PER_SECOND).toFixed(2)} s`;
 }
 
-function formatTokenCount(
-  value: number | undefined,
-  t: Messages,
-  estimatedValue = 0,
-) {
-  if (value === undefined) {
-    if (estimatedValue)
-      return `${formatCompactNumber(estimatedValue)} ${t.sidepanel.runInfo.tokenUnit} ${t.sidepanel.runInfo.estimated}`;
-    return t.sidepanel.runInfo.unavailable;
-  }
+function formatTokenCount(value: number | undefined, t: Messages) {
+  if (value === undefined) return t.sidepanel.runInfo.unavailable;
   return `${formatCompactNumber(value)} ${t.sidepanel.runInfo.tokenUnit}`;
 }

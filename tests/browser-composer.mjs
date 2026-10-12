@@ -48,7 +48,7 @@ export async function checkComposer(page, config, verifyRendered) {
   await configureComposer(page, config);
   try {
     const prompt =
-      "Use manageTabs with operation=list to list the open tabs, then briefly report the result.";
+      "Use tabs with action=list to list the open tabs, then briefly report the result.";
     await installComposerProbe(page, prompt);
     await submitComposer(page, prompt);
     let persisted;

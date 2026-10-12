@@ -1,7 +1,6 @@
 import type { Skill } from "./types";
 
 const SKILL_CREATOR_ID = "builtin-skill-creator";
-const BROWSER_GUIDANCE_ID = "builtin-browser-guidance";
 const LOCAL_EXECUTION_BRIDGE_SETUP_ID = "builtin-local-execution-bridge-setup";
 
 export const BUILTIN_SKILLS: Skill[] = [
@@ -9,7 +8,7 @@ export const BUILTIN_SKILLS: Skill[] = [
     id: LOCAL_EXECUTION_BRIDGE_SETUP_ID,
     name: "local-execution-bridge-setup",
     description:
-      "Guide users through creating, updating, testing, and deleting OpenBrowserAgent local execution bridge configurations. Use before calling manageLocalExecutionBridges for add, update, test, or delete operations.",
+      "Set up, test, update and remove OpenBrowserAgent local execution bridges. Use before localBridges add, update, test or delete, and whenever the user wants to run something on their computer but no tested bridge exists.",
     builtin: true,
     enabled: true,
     createdAt: 0,
@@ -22,7 +21,7 @@ export const BUILTIN_SKILLS: Skill[] = [
         updatedAt: 0,
         content: `---
 name: "local-execution-bridge-setup"
-description: "Guide users through creating, updating, testing, and deleting OpenBrowserAgent local execution bridge configurations. Use before calling manageLocalExecutionBridges for add, update, test, or delete operations."
+description: "Set up, test, update and remove OpenBrowserAgent local execution bridges. Use before localBridges add, update, test or delete, and whenever the user wants to run something on their computer but no tested bridge exists."
 ---
 
 # Local Execution Bridge Setup
@@ -38,17 +37,17 @@ Use this skill whenever the user wants to add, configure, modify, test, use, or 
 
 ## Workflow
 
-- Start with \`manageLocalExecutionBridges\` operation \`list\` and avoid duplicate configs.
+- Start with \`localBridges\` action \`list\` and avoid duplicate configs.
 - If no suitable tested bridge exists, guide the user through installing/configuring one before attempting the requested shell command. Do not replace the requested local task with manual shell/file instructions unless the user explicitly asks to do it manually.
-- Use the \`question\` tool to collect missing setup information when it helps. Ask only for unknown values, keep it concise, and do not make a novice choose technical values they have not said they know.
+- Use the \`ask\` tool to collect missing setup information when it helps. Ask only for unknown values, keep it concise, and do not make a novice choose technical values they have not said they know.
 - Prefer the published installer: \`npx openbrowseragent-local-execution-bridge@1 install ...\`. It should receive the browser target and extension ID. It does not need a per-task command during setup.
-- After installer output is available, use \`manageLocalExecutionBridges\` operation \`add\` or \`update\` with the printed \`hostName\`, \`commandId\`, and \`secret\`, then use operation \`test\`.
-- \`manageLocalExecutionBridges\` operation \`test\` returns the shell, basic environment information, and detected local execution bridge CLIs the bridge can see. Use that result to choose command syntax and available local tools; do not assume a default shell or installed CLI in the conversation.
-- Before running work through a configured bridge, use \`manageLocalExecutionBridges\` operation \`test\`; then call \`startLocalExecutionBridge\` with the exact shell command to run only if the test succeeds.
-- Use \`manageLocalExecutionBridges\` operation \`delete\` for extension-side cleanup. For native bridge files, guide the user to run \`npx openbrowseragent-local-execution-bridge@1 uninstall\`.
+- After installer output is available, use \`localBridges\` action \`add\` or \`update\` with the printed \`hostName\`, \`commandId\` (as \`bridgeKey\`), and \`secret\`, then action \`test\`.
+- \`localBridges\` action \`test\` returns the shell, basic environment information, and detected local execution bridge CLIs the bridge can see. Use that result to choose command syntax and available local tools; do not assume a default shell or installed CLI in the conversation.
+- Before running work through a newly configured bridge, use \`localBridges\` action \`test\`; then call \`localCommand\` with the exact shell command only if the test succeeds.
+- Use \`localBridges\` action \`delete\` for extension-side cleanup. For native bridge files, guide the user to run \`npx openbrowseragent-local-execution-bridge@1 uninstall\`.
 - To update native bridge files, guide the user to run \`npx openbrowseragent-local-execution-bridge@1 update\`. This scans installed bridge manifests and refreshes the copied runtime, wrapper, and manifest while preserving existing secrets. Use \`--browser <browser-target>\` only when the user wants to update one browser, or add install arguments such as \`--extension-id\` only when repairing setup.
-- Do not reinstall or rewrite the bridge for each requested local task. Install once, then send shell commands through \`startLocalExecutionBridge\`.
-- Do not use \`startSubAgent\` for local CLIs, desktop apps, filesystem inspection, or external local processes. Sub-agents are internal OpenBrowserAgent chat profiles; local processes run through the local execution bridge.
+- Do not reinstall or rewrite the bridge for each requested local task. Install once, then send shell commands through \`localCommand\`.
+- Do not use \`subAgent\` for local CLIs, desktop apps, filesystem inspection, or external local processes. Sub-agents are internal OpenBrowserAgent chat profiles; local processes run through the local execution bridge.
 
 ## Setup Inputs
 
@@ -72,54 +71,9 @@ If the user wants a specific shell, add \`--shell <shell>\`. If the user is work
 ## Notes
 
 - Do not put \`npx\` or \`bunx\` directly in a browser Native Messaging manifest; the installer creates a stable wrapper/runtime path.
-- Do not invent weak secrets. Prefer installer-generated secrets; \`manageLocalExecutionBridges\` add/update operations only return generated secrets once.
-- Treat \`startLocalExecutionBridge.command\` as the shell command to execute. Do not put that shell command into the installer command.
+- Do not invent weak secrets. Prefer installer-generated secrets; \`localBridges\` add/update only return generated secrets once.
+- Treat \`localCommand.command\` as the shell command to execute. Do not put that shell command into the installer command.
 - If testing says the native host is missing or stale, first use the tool diagnostic if present. For Brave, Vivaldi, or Chromium on Windows, ask the user to rerun the latest installer for the same browser and extension ID because it registers both browser-specific and Chrome-compatible Native Messaging registry keys. Then ask for a full browser restart and test again.
-`,
-      },
-    ],
-  },
-  {
-    id: BROWSER_GUIDANCE_ID,
-    name: "browser-guidance",
-    description:
-      "Use browser tools effectively for page inspection, clicking, text entry, visual checks, web research, navigation, and fallback handling during browser automation tasks.",
-    builtin: true,
-    enabled: true,
-    createdAt: 0,
-    updatedAt: 0,
-    files: [
-      {
-        path: "SKILL.md",
-        kind: "markdown",
-        encoding: "utf-8",
-        updatedAt: 0,
-        content: `---
-name: "browser-guidance"
-description: "Use browser tools effectively for page inspection, clicking, text entry, visual checks, web research, navigation, and fallback handling during browser automation tasks."
----
-
-# Browser Guidance
-
-Use this skill for browser automation tasks that involve inspecting pages, clicking controls, entering text, reading visual content, web research, or recovering from page state changes.
-
-## Workflow
-
-1. Inspect the active page and relevant already-open tabs before opening new pages. Reuse an existing useful tab when it matches the task.
-2. Use page inspection as the primary map for clicking, text entry, content blocks, and nearby DOM context.
-3. Before an externally visible action such as sending, posting, submitting, purchasing, deleting, or changing account/page state, verify the page, target, and action against every explicit user constraint. A partial match is not enough; conflicting or missing evidence means inspect more or ask the user.
-4. For page edits or actions, match the target by selected element, aiId, selector, nearby text, or an inspected block, then use \`mutatePage\` with the simplest operation such as \`click\`, \`input\`, \`setText\`, \`insertElement\`, \`insertHtml\`, or \`delete\`. Prefer structured \`insertElement\` over raw HTML when a page blocks HTML insertion.
-5. Treat \`mutatePage\` success as evidence that an action was dispatched, not proof that the user goal is complete. If the result includes \`postconditionRequired\`, verify the expected page state before proceeding or claiming success.
-6. If text entry into a rich editor returns \`CONTROLLED_EDITOR_REJECTED_DOM_INPUT\`, do not retry DOM input or \`setText\` on that target. Focus the editor, load the trusted input fallback if needed, then use browser-level typing and browser-level submit keys.
-7. Re-read page state after actions that change controls, navigation, loading, or submitted content. For externally visible submissions, require stronger evidence than a button click: the target is still correct and the submitted item/message/result is visible, or the input cleared and no error state is present.
-8. Use visual evidence for image inspection, judging, choosing, or description.
-9. For search and research, open result pages, compare reliable sources, and cite sourced claims.
-10. Keep tab state tidy during and after the task:
-   - Track tabs opened by this task.
-   - Close opened tabs that are no longer useful, such as duplicate search pages, dead ends, transient login/interstitial pages, and pages whose information has already been captured.
-   - Keep the final useful tab or small set of useful tabs open when they support the user's goal.
-   - If the user explicitly asks to open, use, or end on a specific tab/page, use \`manageTabs\` with operation \`focus\` to focus that requested tab before finishing.
-11. Use deferred browser tools when common tools do not provide the needed page control or evidence.
 `,
       },
     ],
@@ -128,7 +82,7 @@ Use this skill for browser automation tasks that involve inspecting pages, click
     id: SKILL_CREATOR_ID,
     name: "skill-creator",
     description:
-      "Create, improve, review, package, and troubleshoot OpenBrowserAgent skills. Use whenever the user asks to make a new skill, turn a workflow into a reusable skill, import or edit a SKILL.md package, optimize skill triggering, design references/assets/scripts, or debug why a skill was not selected.",
+      "Create or improve OpenBrowserAgent skills. Use when the user asks to make a skill, turn a workflow from this chat into a reusable skill, edit a SKILL.md, or fix a skill that is not picked up.",
     builtin: true,
     enabled: true,
     createdAt: 0,
@@ -141,76 +95,32 @@ Use this skill for browser automation tasks that involve inspecting pages, click
         updatedAt: 0,
         content: `---
 name: "skill-creator"
-description: "Create, improve, review, package, and troubleshoot OpenBrowserAgent skills. Use whenever the user asks to make a new skill, turn a workflow into a reusable skill, import or edit a SKILL.md package, optimize skill triggering, design references/assets/scripts, or debug why a skill was not selected."
+description: "Create or improve OpenBrowserAgent skills. Use when the user asks to make a skill, turn a workflow from this chat into a reusable skill, edit a SKILL.md, or fix a skill that is not picked up."
 ---
 
 # Skill Creator
 
-Use this skill to create or improve OpenBrowserAgent skill packages. A skill is a folder-like package stored in browser storage with a required \`SKILL.md\` file and optional bundled files under \`references/\`, \`assets/\`, and \`scripts/\`.
+A skill is a package with a required \`SKILL.md\` and optional files (\`references/\`, \`assets/\`). Every agent with skills sees each skill's name and description in its system prompt and reads the body with \`read\` source \`skill:NAME\` only when the task fits. Other files are read with \`skill:NAME/PATH\`.
 
-## Core Workflow
+## How skills are used
 
-1. Capture the user's intent before writing.
-2. Identify when the skill should trigger and when it should not.
-3. Draft \`SKILL.md\` with YAML frontmatter and concise instructions.
-4. Add supporting files only when they reduce context or repeated work.
-5. Review the result against realistic user prompts.
-6. Package or present the skill so it can be imported as a ZIP.
+- The description is the only thing the agent sees before deciding to read a skill. It must say what the skill does and when to use it, with trigger words the user is likely to say.
+- The body is read in full when used, so keep it short and operational: steps, rules, output format. Move long examples, tables and templates into \`references/\` and say in the body when to read each one.
+- Skills are instructions, not code: files in \`scripts/\` are never run automatically.
 
-If the current conversation already contains the workflow to capture, extract the steps, tools used, corrections, inputs, outputs, and edge cases from the conversation before asking new questions.
+## Workflow
 
-## Required Package Shape
+1. Find the workflow: if this chat already shows it, extract the steps, tools, inputs, outputs, corrections and edge cases from it; otherwise ask (with \`ask\`) only for what is missing.
+2. Write \`SKILL.md\` from the template in \`references/skill-template.md\`.
+3. Save it with the \`skills\` tool (load it with toolSearch): action \`create\` with name, description and content; action \`write\` or \`patch\` to change an existing skill or add files.
+4. Check it against two realistic user requests: would the description make you read it, and would the body be enough to do the task?
 
-\`\`\`
-skill-name/
-├── SKILL.md
-├── references/
-├── assets/
-└── scripts/
-\`\`\`
+## Rules
 
-Only \`SKILL.md\` is required. OpenBrowserAgent can import this structure from a ZIP and stores it as package files. Supporting files are read on demand with \`manageSkills\` operation \`readFile\`.
-
-## Writing SKILL.md
-
-Use the template in \`references/skill-template.md\` when creating a new skill.
-
-The frontmatter must include:
-
-- \`name\`: lowercase kebab-case identifier, matching the folder name when packaged.
-- \`description\`: the primary trigger. Include what the skill does and specific contexts where it should be used.
-
-The body should include only the operational knowledge needed after activation. Keep it under 500 lines. Move detailed schemas, long examples, lookup tables, and templates into supporting files.
-
-## Description Optimization
-
-Descriptions should be explicit and a little pushy because skills tend to under-trigger. Include trigger phrases, adjacent use cases, and exclusions.
-
-Bad:
-
-\`\`\`yaml
-description: "Creates spreadsheets."
-\`\`\`
-
-Good:
-
-\`\`\`yaml
-description: "Create, inspect, transform, and format Excel spreadsheets. Use when the user mentions .xlsx, workbook, worksheet, formulas, pivots, charts, conditional formatting, or asks to turn tabular data into a spreadsheet. Do not use for plain prose documents or PDFs."
-\`\`\`
-
-## Supporting Files
-
-- Put long documentation in \`references/\` and mention when to read each file from \`SKILL.md\`.
-- Put reusable output templates in \`assets/\`.
-- Put deterministic automation in \`scripts/\`, but in OpenBrowserAgent scripts are imported as files and are not executed automatically.
-
-## Safety And Fit
-
-Do not create misleading skills, hidden data-exfiltration behavior, credential collection, malware, exploit workflows, or instructions that would surprise the user. If a skill needs sensitive inputs, state that clearly in \`SKILL.md\`.
-
-## Review Checklist
-
-Before presenting a skill, read \`references/quality-checklist.md\` and verify the package against it.
+- \`name\`: lowercase kebab-case.
+- \`description\`: what it does + when to use it + when not to. Specific beats short.
+- Reference tool names exactly; never include secrets, credentials or hidden side effects.
+- Only save workflows that will be reused; one-off task details do not belong in a skill.
 `,
       },
       {
@@ -220,63 +130,27 @@ Before presenting a skill, read \`references/quality-checklist.md\` and verify t
         updatedAt: 0,
         content: `---
 name: "my-skill-name"
-description: "What this skill does. Use when the user asks for specific trigger phrases, adjacent workflows, file types, tools, or outputs. Include exclusions when useful."
+description: "What this skill does. Use when the user asks for <trigger phrases, file types, sites, outputs>. Do not use for <exclusions>."
 ---
 
-# Skill Title
+# Skill title
 
-One sentence describing the capability.
+## Steps
 
-## When To Use
+1. ...
+2. ...
 
-- Use when ...
-- Also use when ...
-- Do not use when ...
+## Rules
 
-## Inputs
-
-- Expected user inputs, files, pages, or context.
-- Required assumptions or missing information to ask for.
-
-## Workflow
-
-1. Step one.
-2. Step two.
-3. Step three.
+- ...
 
 ## Output
 
-Define the expected final response, file, or browser action.
+What the final answer, file or page change looks like.
 
-## Examples
-
-Input: ...
-Output: ...
-
-## Bundled Resources
+## Files
 
 - \`references/example.md\`: read when ...
-- \`assets/template.md\`: use when ...
-- \`scripts/tool.py\`: available as reference only unless the host explicitly supports script execution.
-`,
-      },
-      {
-        path: "references/quality-checklist.md",
-        kind: "markdown",
-        encoding: "utf-8",
-        updatedAt: 0,
-        content: `# Skill Quality Checklist
-
-- The package has exactly one required entry file: \`SKILL.md\`.
-- The \`name\` is lowercase kebab-case and matches the intended folder name.
-- The \`description\` says both what the skill does and when to use it.
-- The description includes realistic trigger phrases and useful exclusions.
-- The body is concise and operational, not a generic essay.
-- Supporting files are referenced from \`SKILL.md\` with clear read/use conditions.
-- Long examples, schemas, and templates live in \`references/\` or \`assets/\`.
-- Scripts are treated as optional bundled resources and are not assumed to execute automatically.
-- The skill avoids secrets, hidden network behavior, surprise side effects, and unsafe instructions.
-- The skill has at least two realistic test prompts or example scenarios.
 `,
       },
     ],

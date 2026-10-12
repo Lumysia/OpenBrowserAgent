@@ -10,6 +10,7 @@ import { stream as chatStream } from "@earendil-works/pi-ai/api/openai-completio
 import { stream as responsesStream } from "@earendil-works/pi-ai/api/openai-responses";
 import { stream as anthropicStream } from "@earendil-works/pi-ai/api/anthropic-messages";
 import { stream as googleStream } from "@earendil-works/pi-ai/api/google-generative-ai";
+import type { Usage } from "@earendil-works/pi-ai";
 import { AssistantMessageEventStream } from "@earendil-works/pi-ai/utils/event-stream";
 import { normalizeContext } from "@earendil-works/pi-ai/utils/transcript";
 import {
@@ -52,6 +53,17 @@ export function piModel(model: ProviderModel): Model<Api> {
     contextWindow: model.contextLength || 128_000,
     maxTokens: 8192,
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    // Tools loaded mid-run are declared in a system message after the cached
+    // prefix instead of changing the tool list. Models without this support
+    // reject such a request; createProviderStream then falls back.
+    ...(api === "anthropic-messages"
+      ? {
+          compat: {
+            supportsMidConvoSystemMessages: true,
+            supportsMidConvoToolChanges: true,
+          },
+        }
+      : {}),
     ...(api === "openai-completions"
       ? {
           compat: {
@@ -86,15 +98,30 @@ export function assistantMessage(model: Model<Api>): AssistantMessage {
   };
 }
 
-// Pi owns parsing and streaming. This adapter supplies extension configuration and
-// the product's single text-only retry when a model rejects image content.
+// Transient failures (429, 5xx, network) before the response starts are
+// retried with backoff by Pi's provider wrapper (Retry-After honoured).
+const PROVIDER_RETRIES = 3;
+
+// Models that rejected mid-conversation tool declarations, for the life of
+// the service worker.
+const withoutInlineTools = new Set<string>();
+
+// Pi owns parsing and streaming. This adapter supplies extension configuration,
+// retries, and the product's single retries without what a model rejects:
+// image content, or mid-conversation tool declarations (the tool list then
+// carries every loaded tool). Prompt caching uses Pi's defaults: Anthropic
+// breakpoints on tools, system prompt and the latest message; automatic
+// caching elsewhere.
 export function createProviderStream(
   configuration: ProviderModel,
   effort?: ReasoningEffort,
   onImageRejected?: () => void,
 ): StreamFn {
   let textOnly = false;
-  return (model, context, options) => {
+  const modelKey = `${configuration.baseUrl}|${configuration.modelName}`;
+  let inlineTools = !withoutInlineTools.has(modelKey);
+  return (requested, context, options) => {
+    let model = inlineTools ? requested : { ...requested, compat: undefined };
     const output = new AssistantMessageEventStream();
     const stream =
       model.api === "anthropic-messages"
@@ -119,12 +146,11 @@ export function createProviderStream(
               "x-api-key": null,
               "x-goog-api-key": null,
             },
-        maxRetries: 0,
+        maxRetries: PROVIDER_RETRIES,
         fetch:
           model.api === "anthropic-messages"
             ? anthropicFetch(configuration.baseUrl)
             : undefined,
-        cacheRetention: "none" as const,
         onPayload: (payload: unknown) => ({
           ...(payload as object),
           ...(model.api === "openai-responses" && reasoning.reasoning_effort
@@ -162,6 +188,20 @@ export function createProviderStream(
           onImageRejected?.();
           return run(withoutImages(messages), false);
         }
+        if (
+          event.type === "error" &&
+          inlineTools &&
+          model.compat &&
+          !started &&
+          event.reason !== "aborted" &&
+          rejectsInlineTools(event.error.errorMessage || "")
+        ) {
+          inlineTools = false;
+          withoutInlineTools.add(modelKey);
+          model = { ...model, compat: undefined };
+          return run(messages, canRetry);
+        }
+
         // Delay only the empty start, not content. A rejected request must not
         // append a phantom assistant to Pi's transcript before its retry.
         if (pendingStart) {
@@ -216,6 +256,12 @@ function anthropicFetch(baseUrl: string): typeof fetch {
   };
 }
 
+function rejectsInlineTools(error: string) {
+  return /tool_addition|tool_removal|inline-tools|\bsystem\b.{0,40}(role|message)|(role|message).{0,40}\bsystem\b/i.test(
+    error,
+  );
+}
+
 function rejectsImages(error: string) {
   return /(?:image|non-text|multimodal|image_url|input_image).*?(?:unsupported|not support|unknown|invalid)|(?:unsupported|not support|unknown variant|invalid).*?(?:image|non-text|multimodal)|expected [`']?text/i.test(
     error,
@@ -249,24 +295,30 @@ function withoutImages(messages: Message[]): Message[] {
   ];
 }
 
-export async function requestPlainText(
+// One plain-text request outside the agent loop (titles, compaction).
+export async function requestText(
   model: ProviderModel,
-  messages: Array<{ role: "system" | "user"; content: string }>,
-) {
+  request: { system?: string; prompt: string },
+  signal?: AbortSignal,
+): Promise<{ text: string; usage: Usage }> {
   const result = await (
     await createProviderStream(model)(
       piModel(model),
       normalizeContext({
-        messages: messages.map((message) => ({
-          ...message,
-          timestamp: Date.now(),
-        })),
+        systemPrompt: request.system,
+        messages: [
+          { role: "user", content: request.prompt, timestamp: Date.now() },
+        ],
       }),
+      { signal },
     )
   ).result();
   if (result.stopReason === "error" || result.stopReason === "aborted")
     throw new Error(result.errorMessage || result.stopReason);
-  return result.content
-    .flatMap((part) => (part.type === "text" ? [part.text] : []))
-    .join("");
+  return {
+    text: result.content
+      .flatMap((part) => (part.type === "text" ? [part.text] : []))
+      .join(""),
+    usage: result.usage,
+  };
 }

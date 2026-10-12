@@ -55,7 +55,7 @@ function renderSelectedElement(
   attachedTabs: AttachmentTab[],
 ) {
   return xmlBlock("selected_element", [
-    selectedElement.aiId ? xmlTag("ai_id", selectedElement.aiId) : undefined,
+    selectedElement.ref ? xmlTag("ref", selectedElement.ref) : undefined,
     xmlTag("tab_id", attachedTabs[0]?.id || ""),
     selectedElement.tagName
       ? xmlTag("tag_name", selectedElement.tagName)

@@ -1,4 +1,3 @@
-import { BROWSER_TOOL_NAME } from "./browser-tools";
 import {
   CHAT_PART_STATE,
   isToolPartType,
@@ -38,125 +37,21 @@ export function assignChatSources(
   };
 }
 
+// Sources a finished tool part added, as the background attached them.
 export function extractSourcesFromPart(part?: ChatPart): ChatSource[] {
   if (!part || !isToolPartType(part.type)) return [];
   if (part.state !== CHAT_PART_STATE.outputAvailable) return [];
   const output = recordValue(part.output);
-  if (Array.isArray(output._sources))
-    return output._sources
-      .map((source) => recordValue(source) as unknown as ChatSource)
-      .filter((source) => source.id && source.title);
-  const input = recordValue(part.input);
-  const name = part.toolName || part.type.replace(/^tool-/, "");
-  return extractSourcesFromTool(name, input, output);
+  return Array.isArray(output._sources)
+    ? output._sources
+        .map((source) => recordValue(source) as unknown as ChatSource)
+        .filter((source) => source.id && source.title)
+    : [];
 }
 
-export function extractSourcesFromTool(
-  name: string,
-  input: Record<string, unknown>,
-  output: Record<string, unknown>,
-): ChatSource[] {
-  const now = Date.now();
-
-  if (name === BROWSER_TOOL_NAME.inspectPage && Array.isArray(output.pages)) {
-    return output.pages.flatMap((item) => {
-      const tab = recordValue(item);
-      return sourceFromPage(tab, now, stringValue(tab.markdown));
-    });
-  }
-  if (name === BROWSER_TOOL_NAME.getCurrentTab)
-    return sourceFromPage(output, now);
-  if (
-    name === BROWSER_TOOL_NAME.manageTabs &&
-    input.operation === "open" &&
-    output.tab
-  ) {
-    return sourceFromPage(recordValue(output.tab), now);
-  }
-  if (
-    name === BROWSER_TOOL_NAME.manageTabs &&
-    input.operation === "webSearch"
-  ) {
-    const query = stringValue(input.query);
-    return [
-      compactSource({
-        id: "",
-        kind: "search",
-        title: query || "Search",
-        url: stringValue(recordValue(output.tab).url),
-        tabId: numberValue(output.tabId),
-        createdAt: now,
-      }),
-    ];
-  }
-  if (name === BROWSER_TOOL_NAME.readUploadedAttachment) {
-    return [
-      compactSource({
-        id: "",
-        kind: "file",
-        title:
-          stringValue(output.name) ||
-          stringValue(input.attachmentId) ||
-          "Attachment",
-        snippet: stringValue(output.text),
-        createdAt: now,
-      }),
-    ];
-  }
-  if (
-    name === BROWSER_TOOL_NAME.manageSkills &&
-    (input.operation === "read" || input.operation === "readFile")
-  ) {
-    return [
-      compactSource({
-        id: "",
-        kind: "skill",
-        title:
-          [stringValue(output.name), stringValue(output.path)]
-            .filter(Boolean)
-            .join(" / ") || "Skill",
-        snippet: stringValue(output.content),
-        createdAt: now,
-      }),
-    ];
-  }
-  if (name === BROWSER_TOOL_NAME.generateImage) {
-    return [
-      compactSource({
-        id: "",
-        kind: "image",
-        title: stringValue(output.model) || "Generated image",
-        url: stringValue(output.image).startsWith("http")
-          ? stringValue(output.image)
-          : undefined,
-        snippet: stringValue(output.prompt) || stringValue(input.prompt),
-        createdAt: now,
-      }),
-    ];
-  }
-  if (name.startsWith("mcp__")) return mcpSources(output, now);
-  if (name === BROWSER_TOOL_NAME.downloadTabToMarkdown) {
-    return [
-      compactSource({
-        id: "",
-        kind: "file",
-        title: stringValue(output.filename) || "Downloaded markdown",
-        createdAt: now,
-      }),
-    ];
-  }
-  if (name === BROWSER_TOOL_NAME.downloadAllImagesInTab) {
-    return [
-      compactSource({
-        id: "",
-        kind: "tool",
-        title: "Downloaded images",
-        tabId: numberValue(input.tabId),
-        createdAt: now,
-      }),
-    ];
-  }
-  return [];
+// Pages an MCP tool result points to.
+export function mcpResultSources(output: Record<string, unknown>) {
+  return mcpSources(output, Date.now());
 }
 
 function mcpSources(output: Record<string, unknown>, now: number) {
@@ -268,28 +163,9 @@ export function renderSourcesForPrompt(sources: ChatSource[] = []) {
   return `<sources>\n${sources.map(renderSourceLine).join("\n")}\n</sources>`;
 }
 
+// Ids for citing earlier sources; their content was in earlier results.
 function renderSourceLine(source: ChatSource) {
-  return `- [${source.id}] ${source.title}${source.url ? `\n  URL: ${source.url}` : ""}${source.snippet ? `\n  Snippet: ${source.snippet.slice(0, 500)}` : ""}`;
-}
-
-function sourceFromPage(
-  value: Record<string, unknown>,
-  now: number,
-  snippet = "",
-) {
-  const title = stringValue(value.title) || stringValue(value.url) || "Page";
-  if (!title && !value.url) return [];
-  return [
-    compactSource({
-      id: "",
-      kind: "page",
-      title,
-      url: stringValue(value.url),
-      tabId: numberValue(value.tabId) || numberValue(value.id),
-      snippet,
-      createdAt: now,
-    }),
-  ];
+  return `- [${source.id}] ${source.title}${source.url ? ` ${source.url}` : ""}`;
 }
 
 function sourceKey(source: ChatSource) {
@@ -312,9 +188,4 @@ function recordValue(value: unknown): Record<string, unknown> {
 
 function stringValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
-}
-
-function numberValue(value: unknown) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : undefined;
 }

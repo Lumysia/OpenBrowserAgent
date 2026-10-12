@@ -17,16 +17,16 @@ All builds declare:
 
 Chrome/Chromium builds additionally declare:
 
-- `tabGroups`: group tabs and update group names/colors.
 - `sidePanel`: provide the extension side panel.
-- `debugger`: enable CDP-style browser automation, screenshots, snapshots, console/network inspection, emulation, and page-level automation when an enabled agent/tool path requires it.
+- `tabGroups`: name and color the tab groups the agent creates with `tabs` (group, ungroup), and show group names in tab lists.
+- `debugger`: real mouse and keyboard input where pages ignore synthetic events (rich text editors, `trusted` or coordinate `act` steps), answering a JavaScript dialog that opened outside an `act` batch, full-page screenshots, page JavaScript (`runScript`, off by default), and developer diagnostics (network resources, device emulation). The debugger attaches only for those calls.
 
 Chromium and Firefox additionally declare:
 
-- `search`: open search tabs through the browser's configured default search engine.
+- `search`: run web searches through the browser's configured default search engine.
 - `nativeMessaging`: connect to a separately installed local execution bridge, which can execute shell commands when enabled for the active agent.
 
-Firefox and Safari omit the Chrome-only `tabGroups`, `sidePanel`, and `debugger` permissions. Firefox uses `sidebar_action` for its sidebar. Safari also omits `search` and `nativeMessaging`; its action opens or focuses `sidepanel.html` as an extension tab.
+Firefox and Safari omit the Chrome-only `tabGroups`, `sidePanel` and `debugger` permissions. Firefox uses `sidebar_action` for its sidebar. Safari also omits `search` and `nativeMessaging`; its action opens or focuses `sidepanel.html` as an extension tab.
 
 The extension page CSP allows images from `self`, `data:`, `blob:`, `http:`, and `https:` so rendered Markdown images, generated images, and Mermaid previews can display.
 
@@ -37,23 +37,23 @@ For Firefox builds, the manifest declares required data collection permissions u
 The current required declaration is intentionally conservative because OpenBrowserAgent can transmit user-selected browser context and messages to user-configured providers, search engines, and MCP servers:
 
 - `browsingActivity`: tab URLs, titles, and browser task context may be included in model/tool requests.
-- `searchTerms`: the search tool opens searches through the browser's configured default search engine.
+- `searchTerms`: the web search tool runs searches through the browser's configured default search engine in a background tab and reads the results.
 - `websiteContent`: attached pages, selected elements, extracted text, images, and tool results may be sent to configured providers or MCP servers.
-- `websiteActivity`: browser automation tools can navigate tabs, inspect pages, and interact with page state when the user enables those agent capabilities.
+- `websiteActivity`: browser automation tools can navigate tabs, read pages, and interact with page state when the selected agent has those tool groups.
 
 ## Data Sent to Model Providers
 
-Depending on user action and selected agent capabilities, requests may include:
+Depending on user action and the selected agent's tool groups, requests may include:
 
 - User messages.
 - Chat history.
-- Selected agent instructions and capabilities.
+- Selected agent instructions, tool definitions, and (for agents with a workspace) MEMORY.md and USER.md.
 - Selected skills.
 - Attached tab metadata, URLs, titles, and extracted page text.
 - Selected element metadata such as tag name, text, input value, truncated HTML, image URL, and image data URL when captured.
 - Uploaded text files as text.
-- Uploaded binary/image files as data URLs or base64-like payloads when used by supported provider flows.
-- Tool results and MCP results.
+- Uploaded images as image input when read by the agent; other binary files are described by name and size only.
+- Tool results and MCP results, including page text and the helper model's requests when it is used for page extraction, sub-agent summaries, or context compaction.
 - Generated image prompts and optional reference attachments.
 
 ## External Network Calls
@@ -100,6 +100,6 @@ Cancellation propagates to owned requests that accept an abort signal, including
 - Broad permissions are necessary for cross-site browser assistance, but they increase responsibility for careful use.
 - Attached pages and selected elements may contain sensitive information.
 - Browser automation tools can navigate, click, type, close tabs, download files, interact with dialogs, and modify page state.
-- Debugger-powered automation is available only when the selected agent has that capability enabled.
+- Debugger-powered tools (page JavaScript, diagnostics) are available only when the selected agent has those tool groups.
 - MCP tools send arguments and context to configured MCP servers.
 - Tool results and page content may be truncated by size limits.

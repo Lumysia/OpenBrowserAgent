@@ -26,8 +26,10 @@ import {
   Badge,
   Input,
   Label,
+  Textarea,
 } from "../../src/ui/components";
-import { AgentCapabilityEditor } from "./agent-capability-editor";
+import { AgentToolsEditor } from "./agent-tools-editor";
+import { ModelSelect } from "./model-select";
 import { AgentIconPicker } from "./agent-icon-picker";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { AgentIcon } from "../../src/ui/agent-icons";
@@ -255,21 +257,47 @@ export function AgentsPage() {
                       onChange={(icon) => updateAgent(agent.id, { icon })}
                     />
                   )}
-                  <AgentCapabilityEditor
-                    t={t}
-                    capabilities={agent.capabilities}
-                    readOnly={builtin}
-                    onChange={(capabilities) =>
-                      updateAgent(agent.id, { capabilities })
-                    }
-                  />
                   {!builtin && (
                     <>
-                      <AgentWorkspaceEditor
-                        workspace={workspaceForAgent(agent.id)}
-                        t={t}
-                      />
+                      <Label>
+                        {t.options.agentPrompt}
+                        <Textarea
+                          value={agent.prompt}
+                          rows={5}
+                          placeholder={t.options.agentPromptPlaceholder}
+                          onChange={(event) =>
+                            updateAgent(agent.id, {
+                              prompt: event.currentTarget.value,
+                            })
+                          }
+                        />
+                      </Label>
+                      <Label>
+                        {t.options.agentModel}
+                        <ModelSelect
+                          value={agent.modelId}
+                          label={t.options.agentModel}
+                          defaultLabel={t.options.agentModelDefault}
+                          onChange={(modelId) =>
+                            updateAgent(agent.id, {
+                              modelId: modelId || undefined,
+                            })
+                          }
+                        />
+                      </Label>
                     </>
+                  )}
+                  <AgentToolsEditor
+                    t={t}
+                    agent={agent}
+                    readOnly={builtin}
+                    onChange={(patch) => updateAgent(agent.id, patch)}
+                  />
+                  {!builtin && agent.workspace && (
+                    <AgentWorkspaceEditor
+                      workspace={workspaceForAgent(agent.id)}
+                      t={t}
+                    />
                   )}
                   <div className="row">
                     <Button

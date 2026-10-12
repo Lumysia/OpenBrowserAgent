@@ -1,23 +1,3 @@
-import { ESTIMATED_CHARS_PER_TOKEN, MAX_CONTEXT_BUDGET_TOKENS } from "./config";
-
-export const MODEL_CONTEXT_BUDGET_RATIO = 0.75;
-
-export function modelContextChars(contextLength?: number) {
-  if (!contextLength || !Number.isFinite(contextLength)) return undefined;
-  const cappedContextLength = Math.min(
-    contextLength,
-    MAX_CONTEXT_BUDGET_TOKENS,
-  );
-  return Math.max(
-    16_000,
-    Math.floor(
-      cappedContextLength *
-        ESTIMATED_CHARS_PER_TOKEN *
-        MODEL_CONTEXT_BUDGET_RATIO,
-    ),
-  );
-}
-
 export function readContextLength(value: unknown): number | undefined {
   if (!value || typeof value !== "object") return undefined;
   const record = value as Record<string, unknown>;

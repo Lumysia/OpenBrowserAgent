@@ -1,7 +1,4 @@
-import {
-  ESTIMATED_CHARS_PER_TOKEN,
-  RELATIVE_TIME_MINUTE_MS,
-} from "../../src/shared/config";
+import { RELATIVE_TIME_MINUTE_MS } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import type { ChatMeta } from "../../src/shared/types";
 
@@ -78,12 +75,6 @@ function formatHistoryDate(value: number) {
     month: "short",
     day: "numeric",
   }).format(value);
-}
-
-export function formatEstimatedTokens(chars: number, t: Messages) {
-  return formatToolMessage(t.sidepanel.runInfo.estimatedTokenCount, {
-    count: formatCompactNumber(Math.ceil(chars / ESTIMATED_CHARS_PER_TOKEN)),
-  });
 }
 
 export function formatCompactNumber(value: number) {

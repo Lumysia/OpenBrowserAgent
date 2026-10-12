@@ -1,21 +1,14 @@
 import {
+  Bot,
   Languages,
   MonitorCog,
   Palette,
   RefreshCw,
   ScrollText,
   SlidersHorizontal,
-  TextSearch,
   Wrench,
 } from "lucide-react";
-import {
-  DEFAULT_CONTEXT_REQUEST_MAX_CHARS,
-  DEFAULT_CONTEXT_TAIL_MIN_MESSAGES,
-  DEFAULT_CONTEXT_TOOL_RESULT_MAX_CHARS,
-  ESTIMATED_CHARS_PER_TOKEN,
-  DEFAULT_MAX_TOOL_STEPS,
-  MAX_CONTEXT_BUDGET_TOKENS,
-} from "../../src/shared/config";
+import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { languageLabels } from "../../src/shared/types";
@@ -26,13 +19,11 @@ import {
   CardHeader,
   CardTitle,
   Input,
-  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  SettingSwitch,
   SettingSwitchCard,
   RadioGroup,
   RadioGroupItem,
@@ -42,6 +33,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "../../src/ui/components";
+import { ModelSelect } from "./model-select";
 import { useStoredState } from "../../src/ui/useStoredState";
 
 export function GeneralPage() {
@@ -179,86 +171,19 @@ export function GeneralPage() {
       <Card>
         <CardHeader>
           <CardTitle className="settings-section-title">
-            <TextSearch size={18} /> {t.options.contextBudget}
+            <Bot size={18} /> {t.options.helperModel}
           </CardTitle>
-          <CardDescription>
-            {t.options.contextBudgetDescription}
-          </CardDescription>
+          <CardDescription>{t.options.helperModelDescription}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="stack">
-            <SettingSwitch
-              title={t.options.contextBudgetEnabled}
-              description={t.options.contextBudgetEnabledDescription}
-              checked={preferences.contextBudgetEnabled !== false}
-              onChange={(checked) =>
-                setPreferences((previous) => ({
-                  ...previous,
-                  contextBudgetEnabled: checked,
-                }))
-              }
-            />
-            <NumberSetting
-              label={t.options.contextRequestMaxChars}
-              value={String(
-                preferences.contextRequestMaxChars ??
-                  DEFAULT_CONTEXT_REQUEST_MAX_CHARS,
-              )}
-              min={16000}
-              step={1000}
-              onChange={(value) =>
-                setPreferences((previous) => ({
-                  ...previous,
-                  contextRequestMaxChars: parseBoundedInteger(
-                    value,
-                    DEFAULT_CONTEXT_REQUEST_MAX_CHARS,
-                    16000,
-                    MAX_CONTEXT_BUDGET_TOKENS * ESTIMATED_CHARS_PER_TOKEN,
-                  ),
-                }))
-              }
-            />
-            <NumberSetting
-              label={t.options.contextTailMinMessages}
-              value={String(
-                preferences.contextTailMinMessages ??
-                  DEFAULT_CONTEXT_TAIL_MIN_MESSAGES,
-              )}
-              min={2}
-              step={1}
-              onChange={(value) =>
-                setPreferences((previous) => ({
-                  ...previous,
-                  contextTailMinMessages: parseBoundedInteger(
-                    value,
-                    DEFAULT_CONTEXT_TAIL_MIN_MESSAGES,
-                    2,
-                    40,
-                  ),
-                }))
-              }
-            />
-            <NumberSetting
-              label={t.options.contextToolResultMaxChars}
-              value={String(
-                preferences.contextToolResultMaxChars ??
-                  DEFAULT_CONTEXT_TOOL_RESULT_MAX_CHARS,
-              )}
-              min={1000}
-              step={1000}
-              onChange={(value) =>
-                setPreferences((previous) => ({
-                  ...previous,
-                  contextToolResultMaxChars: parseBoundedInteger(
-                    value,
-                    DEFAULT_CONTEXT_TOOL_RESULT_MAX_CHARS,
-                    1000,
-                    96000,
-                  ),
-                }))
-              }
-            />
-          </div>
+          <ModelSelect
+            value={preferences.helperModelId}
+            label={t.options.helperModel}
+            defaultLabel={t.options.helperModelSameAsChat}
+            onChange={(helperModelId) =>
+              setPreferences((previous) => ({ ...previous, helperModelId }))
+            }
+          />
         </CardContent>
       </Card>
       <Card>
@@ -288,46 +213,8 @@ export function GeneralPage() {
   );
 }
 
-function NumberSetting({
-  label,
-  value,
-  min,
-  step,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  min: number;
-  step: number;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <Label>
-      {label}
-      <Input
-        type="number"
-        min={min}
-        step={step}
-        value={value}
-        onChange={(event) => onChange(event.currentTarget.value)}
-      />
-    </Label>
-  );
-}
-
 function parseMaxToolSteps(value: string) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return DEFAULT_MAX_TOOL_STEPS;
   return Math.min(Number.MAX_SAFE_INTEGER, Math.max(0, Math.trunc(parsed)));
-}
-
-function parseBoundedInteger(
-  value: string,
-  fallback: number,
-  min: number,
-  max: number,
-) {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return fallback;
-  return Math.min(max, Math.max(min, Math.trunc(parsed)));
 }

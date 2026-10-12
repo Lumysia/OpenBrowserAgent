@@ -23,7 +23,7 @@ function agentDisplayNameById(
     : fallbackName || "";
 }
 
-export function localizedAgentTitle({
+function localizedAgentTitle({
   title,
   agentId,
   agentName,

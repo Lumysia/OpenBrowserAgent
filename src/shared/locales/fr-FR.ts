@@ -14,8 +14,6 @@ export const frFR: LocaleMessages = {
     edit: "Modifier",
     help: "Aide",
     language: "Langue",
-    enabled: "Activé",
-    disabled: "Désactivé",
     confirm: "Confirmer",
   },
   words: { newChat: "Nouvelle discussion", agent: "Naviguer", ask: "Question" },
@@ -50,7 +48,6 @@ export const frFR: LocaleMessages = {
     bootstrapStepTaskTitle: "Envoyer votre première tâche",
     bootstrapStepTaskDescription:
       "Après une réponse réussie du modèle, revenez ici et demandez à OpenBrowserAgent de naviguer ou résumer.",
-    menu: "Menu",
     chatHistory: "Historique",
     backToChat: "Retour au chat",
     exportChatOpenAi: "Exporter en JSON OpenAI",
@@ -73,15 +70,6 @@ export const frFR: LocaleMessages = {
     openSubAgentChat: "Ouvrir la discussion du sous-agent",
     subAgentRunning: "En cours",
     subAgentCompleted: "Terminé",
-    subAgentMissing: "Introuvable",
-    localExecutionBridgeStates: {
-      running: "En cours",
-      done: "Terminé",
-      error: "Erreur",
-      missing: "Introuvable",
-      canceled: "Annulé",
-    },
-    questionWaiting: "En attente de votre réponse",
     questionSubmit: "Envoyer les réponses",
     questionCustomPlaceholder: "Saisissez votre propre réponse...",
     questionNoAnswer: "Aucune réponse",
@@ -111,32 +99,25 @@ export const frFR: LocaleMessages = {
       wholeChat: "Discussion entière",
       ttft: "TTFT",
       tps: "TPS",
-      output: "Sortie",
       input: "Entrée",
       outputTokens: "Sortie",
-      total: "Total",
       cached: "Cache",
       cacheWrite: "Écriture cache",
       reasoning: "Raisonnement",
       estimated: "env.",
       tokenUnit: "tok.",
-      estimatedTokenCount: "env. {count} tok.",
-      promptBreakdown: "Répartition des instructions",
-      prebuiltPrompt: "Instructions préconfigurées",
-      userPrompt: "Instructions utilisateur",
-      conversationPrompt: "Conversation",
-      tabPrompt: "Onglets / page",
-      selectedElementPrompt: "Élément sélectionné",
-      skillPrompt: "Compétences",
-      attachmentPrompt: "Pièces jointes",
-      toolCallPrompt: "Appels d'outils",
-      sourcePrompt: "Sources",
-      otherPrompt: "Autre contexte",
+      modelCalls: "Appels au modèle",
+      largestRequest: "Plus grande requête",
+      cachedShare: "{percent} % de l'entrée depuis le cache",
+      uncached: "Hors cache",
       unavailable: "Indisponible",
     },
     contextSummaryTitle: "Résumé du contexte",
     contextSummaryDescription:
       "L'ancien contexte de conversation a été compacté pour cette requête.",
+    contextSummaryFailedTitle: "Échec du compactage du contexte",
+    contextSummaryFailedDescription:
+      "L'ancien contexte n'a pas pu être résumé ; l'exécution continue avec le contexte complet et réessaiera plus tard.",
     willBeSentToAi: "Sera envoyé à l'IA",
     willBeSentAsPageContext: "Sera envoyé comme contexte de page",
     currentPage: "Page actuelle",
@@ -172,7 +153,6 @@ export const frFR: LocaleMessages = {
     reasoningEffortMedium: "Moyen",
     reasoningEffortHigh: "Élevé",
     noModelsConfigured: "Aucun modèle configuré",
-    agentDescription: "Automatiser, rechercher et piloter le navigateur",
     askDescription: "Poser des questions sur les pages web",
     send: "Envoyer",
     queueMessage: "Mettre en file",
@@ -185,43 +165,7 @@ export const frFR: LocaleMessages = {
     stop: "Arrêter",
     previousUserMessage: "Votre message précédent",
     nextUserMessage: "Votre message suivant",
-    running: "En cours",
-    done: "Terminé",
     error: "Erreur",
-    toolErrors: {
-      NO_ACTIVE_WEB_TAB_FOUND:
-        "Aucun onglet web actif trouvé. Ouvrez ou focalisez un onglet http(s) normal, ou utilisez un ID d'onglet connu.",
-      ACTIVE_TAB_NOT_WEB_PAGE:
-        "L'onglet actif n'est pas une page web lisible. Ouvrez d'abord une page http(s).",
-      NO_TAB_IDS_PROVIDED: "Aucun ID d'onglet fourni.",
-      TAB_NOT_FOUND: "L'onglet demandé est introuvable.",
-      NO_GROUPABLE_NORMAL_TABS:
-        "Aucun onglet de fenêtre normale du navigateur ne peut être groupé.",
-      UNKNOWN_TOOL: "Outil inconnu : {tool}.",
-      MISSING_URL: "Une URL est requise.",
-      UNKNOWN_NAVIGATION_TYPE: "Type de navigation inconnu : {type}.",
-      TAB_HAS_NO_WINDOW:
-        "L'onglet n'est attaché à aucune fenêtre du navigateur.",
-      NO_TEXT_PROVIDED: "Aucun texte fourni.",
-      TIMED_OUT_WAITING_FOR_TEXT:
-        "Délai dépassé en attendant le texte demandé.",
-      TIMED_OUT_WAITING_FOR_SELECTOR:
-        "Délai dépassé en attendant le sélecteur demandé.",
-      TIMED_OUT_WAITING_FOR_CONDITION:
-        "Délai dépassé en attendant la condition de page demandée.",
-      ELEMENT_NOT_TEXT_INPUT:
-        "L'élément cible n'est pas un champ, une zone de texte ou une zone modifiable.",
-      TARGET_ID_CANNOT_BE_FOCUSED:
-        "Cette cible CDP ne peut pas être focalisée comme un onglet du navigateur.",
-      CLOSE_BY_TARGET_ID_UNSUPPORTED:
-        "La fermeture par ID de cible CDP n'est pas prise en charge ici.",
-      RESIZE_BY_TARGET_ID_UNSUPPORTED:
-        "Le redimensionnement par ID de cible CDP n'est pas pris en charge ici.",
-      ELEMENT_NOT_FOUND: "L'élément cible est introuvable.",
-      ELEMENT_HAS_NO_CLICKABLE_BOX:
-        "L'élément cible n'a pas de zone cliquable.",
-      MISSING_CODE: "Du code JavaScript est requis.",
-    },
     generatedImage: "Image générée",
     capturedTabImage: "Capture d'onglet",
     mermaidPreview: "Aperçu du diagramme Mermaid",
@@ -233,116 +177,52 @@ export const frFR: LocaleMessages = {
     copyImage: "Copier l’image",
     copyPrompt: "Copier les instructions",
     tool: {
-      manageTabs: {
-        running: "Gestion des onglets",
-        done: "Onglets gérés",
-        found: "{count} onglets ouverts trouvés",
+      tabs: { running: "Gestion des onglets", done: "Onglets gérés" },
+      snapshot: { running: "Lecture de la structure", done: "Structure lue" },
+      find: { running: "Recherche dans la page", done: "Page parcourue" },
+      read: { running: "Lecture", done: "Lu" },
+      extract: {
+        running: "Extraction de la réponse",
+        done: "Réponse extraite",
       },
-      cdpInput: {
-        running: "Envoi de l'entrée CDP",
-        done: "Entrée CDP envoyée",
+      act: { running: "Action sur la page", done: "Action effectuée" },
+      editPage: { running: "Modification de la page", done: "Page modifiée" },
+      webSearch: {
+        running: "Recherche sur le web",
+        done: "Recherche web effectuée",
       },
-      cdpPage: {
-        running: "Contrôle de la page CDP",
-        done: "Page CDP contrôlée",
+      screenshot: { running: "Capture d'écran", done: "Capture effectuée" },
+      ask: { running: "Question en cours", done: "Question répondue" },
+      toolSearch: { running: "Chargement des outils", done: "Outils chargés" },
+      export: { running: "Exportation", done: "Exporté" },
+      skills: {
+        running: "Mise à jour des compétences",
+        done: "Compétences mises à jour",
       },
-      cdpDiagnostics: {
-        running: "Lecture des diagnostics CDP",
-        done: "Diagnostics CDP lus",
+      workspace: {
+        running: "Mise à jour de l'espace de travail",
+        done: "Espace de travail mis à jour",
       },
-      wait: { running: "Attente", done: "Attente terminée" },
-      getCurrentTime: {
-        running: "Vérification de l'heure",
-        done: "Heure vérifiée",
-      },
-      getCurrentTab: {
-        running: "Lecture de l'onglet actuel",
-        done: "Onglet actuel lu",
-      },
-      captureVisibleTab: {
-        running: "Capture de l'onglet",
-        done: "Onglet capturé",
-      },
-      downloadAllImagesInTab: {
-        running: "Téléchargement des images",
-        done: "Images téléchargées",
-      },
-      question: { running: "Question en cours", done: "Question répondue" },
-      loadTools: {
-        running: "Chargement des outils",
-        done: "Outils chargés",
-        found: "{count} outils chargés",
-      },
-      manageSkills: {
-        running: "Gestion des compétences",
-        done: "Compétences gérées",
-        found: "{count} compétences trouvées",
-      },
-      workspaceFiles: {
-        running: "Traitement des fichiers workspace",
-        done: "Fichiers workspace traités",
-      },
-      manageMemory: { running: "Gestion de la mémoire", done: "Mémoire gérée" },
-      manageChatHistory: {
+      chatHistory: {
         running: "Lecture de l'historique",
         done: "Historique lu",
       },
-      manageMcpServers: {
+      subAgent: { running: "Sous-agent en cours", done: "Sous-agent terminé" },
+      mcpServers: {
         running: "Gestion des serveurs MCP",
         done: "Serveurs MCP gérés",
       },
-      manageLocalExecutionBridges: {
+      localCommand: {
+        running: "Commande locale en cours",
+        done: "Commande locale exécutée",
+      },
+      localBridges: {
         running: "Gestion des ponts d'exécution",
         done: "Ponts d'exécution gérés",
-        found: "{count} ponts d'exécution trouvés",
       },
-      inspectPage: {
-        running: "Inspection de la page",
-        done: "Page inspectée",
-        found: "{count} éléments trouvés",
-      },
-      mutatePage: { running: "Modification de la page", done: "Page modifiée" },
-      downloadTabToMarkdown: {
-        running: "Téléchargement du Markdown",
-        done: "Markdown téléchargé",
-      },
-      generateImage: {
-        running: "Génération de l’image",
-        done: "Image générée",
-      },
-      readFileFromUrl: { running: "Lecture du fichier", done: "Fichier lu" },
-      readUploadedAttachment: {
-        running: "Lecture de la pièce jointe",
-        done: "Pièce jointe lue",
-      },
-      cdpExecuteArbitraryJavaScript: {
-        running: "Exécution du script personnalisé",
-        done: "Script personnalisé exécuté",
-      },
-      cdpTakeScreenshot: {
-        running: "Capture d'écran",
-        done: "Capture effectuée",
-      },
-      startSubAgent: {
-        running: "Démarrage du sous-agent",
-        done: "Sous-agent démarré",
-      },
-      getSubAgentStatus: {
-        running: "Vérification du sous-agent",
-        done: "Sous-agent vérifié",
-      },
-      startLocalExecutionBridge: {
-        running: "Démarrage de la commande locale",
-        done: "Commande locale terminée",
-      },
-      getLocalExecutionBridgeStatus: {
-        running: "Vérification de la commande locale",
-        done: "Commande locale vérifiée",
-      },
-      cancelLocalExecutionBridge: {
-        running: "Annulation de la commande locale",
-        done: "Commande locale annulée",
-      },
+      generateImage: { running: "Génération d'image", done: "Image générée" },
+      runScript: { running: "Exécution du script", done: "Script exécuté" },
+      devtools: { running: "Diagnostic en cours", done: "Diagnostic effectué" },
     },
   },
   options: {
@@ -377,44 +257,55 @@ export const frFR: LocaleMessages = {
       wrench: "Outils",
       fileText: "Document",
     },
-    agentCapabilities: "Capacités de l’agent",
-    agentCapabilitiesDescription:
-      "Choisissez les outils et le contexte que cet agent peut utiliser.",
-    builtinAgentCapabilitiesDescription:
-      "Les capacités des agents intégrés sont affichées à titre indicatif et ne peuvent pas être modifiées.",
-    agentCapabilityGroups: {
-      browser: "Navigateur",
-      builtinTools: "Outils intégrés et contexte",
-      skillsAndMcp: "Compétences et MCP",
-      workspaceAndMemory: "Espace de travail et mémoire",
-      chatHistory: "Historique de discussion",
+    agentPrompt: "Instructions",
+    agentPromptPlaceholder:
+      "Comment cet agent doit se comporter, son rôle, ce qu'il doit éviter.",
+    agentModel: "Modèle",
+    agentModelDefault: "Modèle choisi dans la discussion",
+    agentTools: "Outils",
+    agentToolsDescription:
+      "Choisissez ce que cet agent peut utiliser. Les outils supplémentaires se chargent à la demande.",
+    builtinAgentToolsDescription:
+      "Les outils des agents intégrés sont affichés pour référence et ne sont pas modifiables.",
+    agentWorkspaceToggle: "Espace de travail privé",
+    agentWorkspaceToggleDescription:
+      "Fichiers et mémoire conservés d'une discussion à l'autre.",
+    agentToolGroups: {
+      pages: "Lire les pages",
+      browser: "Piloter le navigateur",
+      web: "Recherche web",
+      images: "Générer des images",
+      skills: "Compétences",
+      history: "Historique",
+      subAgents: "Sous-agents",
+      mcp: "Outils MCP",
+      mcpServers: "Serveurs MCP",
+      localExecution: "Commandes locales",
+      scripts: "JavaScript de page",
+      devtools: "Diagnostics développeur",
     },
-    agentCapabilityLabels: {
-      browserAutomation: "Piloter le navigateur",
-      browserTools: "Utiliser les outils intégrés",
-      subAgents: "Démarrer des sous-agents",
-      localExecutionBridges: "Utiliser les ponts d’exécution locaux",
-      deferredBrowserTools: "Charger les actions avancées du navigateur",
-      cdpTools: "Outils CDP",
-      javascriptExecution: "Exécuter le JavaScript de la page",
-      mcpTools: "Outils MCP",
-      mcpManagement: "Gestion MCP",
-      skillTools: "Outils de compétences",
-      skillCreation: "Création de compétences",
-      workspaceRead: "Lecture de l’espace de travail",
-      workspaceWrite: "Écriture dans l’espace de travail",
-      memoryRead: "Lecture de la mémoire",
-      memoryWrite: "Écriture dans la mémoire",
-      chatHistoryRead: "Lecture de l’historique",
-      chatHistoryWrite: "Écriture dans l’historique",
-      imageGeneration: "Générer des images",
-      currentTime: "Lire l’heure actuelle",
-      fileUrlRead: "Lire les liens URL et fichiers",
+    agentToolGroupDescriptions: {
+      pages:
+        "Structure, recherche, lecture et extraction de pages ; captures d'écran.",
+      browser:
+        "Onglets, clics, saisie, modification de pages, export de fichiers.",
+      web: "Rechercher avec le moteur par défaut.",
+      images: "Créer et modifier des images (si activé dans Fournisseurs).",
+      skills: "Utiliser, créer et améliorer les compétences.",
+      history: "Rechercher, lire et supprimer les discussions.",
+      subAgents:
+        "Déléguer des tâches à des agents dans leurs propres discussions.",
+      mcp: "Utiliser les outils des serveurs MCP connectés.",
+      mcpServers: "Ajouter, tester et supprimer des serveurs MCP.",
+      localExecution:
+        "Exécuter des commandes sur cet ordinateur via un pont d'exécution.",
+      scripts: "Exécuter du JavaScript dans les pages. Désactivé par défaut.",
+      devtools: "Ressources réseau et émulation d'appareils.",
     },
     deleteAgent: "Supprimer l’agent",
     agentWorkspace: "Espace de travail de l’agent",
     agentWorkspaceDescription:
-      "Fichiers texte privés de cet agent. SOUL.md définit le comportement, AGENTS.md les règles d’espace de travail, MEMORY.md et USER.md sont injectés comme contexte figé, et NOTES.md reste disponible à la demande.",
+      "Fichiers texte privés de cet agent. MEMORY.md et USER.md lui sont montrés à chaque discussion ; les autres fichiers sont lus au besoin.",
     agentWorkspaceNewFile: "Nouveau fichier d’espace de travail",
     agentWorkspaceConflict:
       "Ce fichier a changé pendant votre modification. Rouvrez-le pour consulter la dernière version avant d’enregistrer.",
@@ -497,7 +388,6 @@ export const frFR: LocaleMessages = {
     apiKey: "Clé API",
     baseUrl: "URL de base",
     models: "Modèles",
-    imageModels: "Modèles de génération d’images",
     modelHint: "Récupérez les modèles puis choisissez-en un à ajouter",
     fetchModels: "Récupérer les modèles",
     fetchingModels: "Récupération des modèles",
@@ -533,7 +423,6 @@ export const frFR: LocaleMessages = {
     untitledSkill: "Action sans titre",
     title: "Titre",
     description: "Description",
-    instruction: "Instruction",
     skillFiles: "Fichiers de compétence",
     replaceFile: "Remplacer le fichier",
     filePath: "Chemin du fichier",
@@ -618,15 +507,10 @@ export const frFR: LocaleMessages = {
     maxToolSteps: "Nombre maximal d'étapes d'outils",
     maxToolStepsDescription:
       "Définit combien d'étapes d'outils navigateur l'assistant peut exécuter. Utilisez 0 pour désactiver les outils.",
-    contextBudget: "Budget de contexte",
-    contextBudgetDescription:
-      "Limite ce que chaque requête modèle transporte afin que les longues discussions restent réactives et que les sorties d'outils ne prennent pas toute la place.",
-    contextBudgetEnabled: "Activer le gestionnaire de budget",
-    contextBudgetEnabledDescription:
-      "Élague uniquement la requête en cours. L'historique enregistré reste intact.",
-    contextRequestMaxChars: "Caractères du budget de requête",
-    contextTailMinMessages: "Messages récents à préserver",
-    contextToolResultMaxChars: "Limite de caractères des résultats d'outil",
+    helperModel: "Modèle auxiliaire",
+    helperModelDescription:
+      "Modèle pour les requêtes en arrière-plan, comme le résumé des longues tâches. Par défaut, le modèle de la discussion est utilisé.",
+    helperModelSameAsChat: "Identique au modèle de la discussion",
     debug: "Débogage",
     debugDescription:
       "Outils développeur pour réinitialiser les données d'OpenBrowserAgent.",
@@ -654,23 +538,10 @@ export const frFR: LocaleMessages = {
     debugLoggingTitle: "Journaux de diagnostic",
     debugLoggingDescription:
       "Active des journaux console temporaires pour diagnostiquer l'ordre du streaming, des outils et de l'assistant.",
-    debugLoggingEnabled: "Activer les journaux de diagnostic",
     debugToolsTitle: "Outils enregistrés",
-    debugToolsDescription:
-      "Registre actuel des outils du navigateur ({count} outils).",
-    debugToolAvailable: "Disponible",
-    debugToolUnavailable: "Indisponible",
+    debugToolsDescription: "Outils de l'agent sélectionné ({count}).",
+    debugToolCore: "Toujours chargé",
+    debugToolOnDemand: "Chargé à la demande",
     debugToolRequired: "Requis",
-    debugToolCapabilityEnabled:
-      "Contrôlé par la capacité de l'agent : {capability}.",
-    debugToolCapabilityDisabled:
-      "Activez la capacité de l'agent : {capability}.",
-    debugToolImageGenerationDisabled:
-      "Activez la génération d'images dans les fournisseurs.",
-    debugToolSkillsDisabled:
-      "Nécessite des compétences activées et la capacité d'agent requise.",
-    debugToolAttachmentsRequired:
-      "Nécessite des pièces jointes importées dans le message actuel.",
-    debugToolStepsDisabled: "Max Tool Steps vaut 0.",
   },
 };

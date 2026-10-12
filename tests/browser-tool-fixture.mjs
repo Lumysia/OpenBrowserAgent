@@ -1,12 +1,37 @@
 import { createServer } from "node:http";
 import { once } from "node:events";
+import assert from "node:assert/strict";
 import { launchExtension, poll } from "./chromium.mjs";
 import { reply } from "./provider-fixtures.mjs";
 
+// The ref written right after `label` in a snapshot line.
+export const ref = (text, label) => {
+  const line = text.split("\n").find((item) => item.includes(label));
+  assert.ok(line, `no line with ${label} in:\n${text}`);
+  return line.slice(line.indexOf(label)).match(/\b(e\d+)\b/)?.[1];
+};
+
+const ALL_GROUPS = [
+  "pages",
+  "browser",
+  "web",
+  "images",
+  "skills",
+  "history",
+  "subAgents",
+  "mcp",
+  "mcpServers",
+  "localExecution",
+  "scripts",
+  "devtools",
+];
+
 // Runs the production extension's Pi loop against an entirely local provider.
 // Tests supply tool calls, never import/inject a replacement tool implementation.
+// `respond(body, index)` may replace the step list to route by request content.
 export async function browserToolFixture(handleRequest) {
   let steps = [];
+  let respond;
   let calls = 0;
   const requests = [];
   const server = createServer(async (request, response) => {
@@ -17,7 +42,9 @@ export async function browserToolFixture(handleRequest) {
     }
     const chunks = [];
     for await (const chunk of request) chunks.push(chunk);
-    requests.push(JSON.parse(Buffer.concat(chunks).toString()));
+    const body = JSON.parse(Buffer.concat(chunks).toString());
+    requests.push(body);
+    if (respond) return reply(response, "openai", respond(body, calls++));
     const step = steps[calls++];
     reply(
       response,
@@ -39,36 +66,56 @@ export async function browserToolFixture(handleRequest) {
       behavior: "allow",
       downloadPath: browser.profile,
     });
+    // Runs start from the options page: no side panel is open.
     const page = await browser.open(
-      `chrome-extension://${browser.id}/sidepanel.html`,
+      `chrome-extension://${browser.id}/options.html`,
     );
-    await page.call(async (baseUrl) => {
-      await chrome.storage.local.set({
-        provider: {
-          fixture: {
-            id: "fixture",
-            type: "openai",
-            baseUrl: `${baseUrl}/v1`,
-            models: [{ id: "fixture", name: "fixture", supportsImages: true }],
-            imageModels: [{ id: "fixture-image", name: "fixture-image" }],
+    await page.call(
+      async ({ baseUrl, groups }) => {
+        await chrome.storage.local.set({
+          provider: {
+            fixture: {
+              id: "fixture",
+              type: "openai",
+              baseUrl: `${baseUrl}/v1`,
+              models: [
+                { id: "fixture", name: "fixture", supportsImages: true },
+              ],
+              imageModels: [{ id: "fixture-image", name: "fixture-image" }],
+            },
           },
-        },
-        preferences: {
-          imageGenerationEnabled: true,
-          selectedImageModelId: "fixture-image",
-        },
-      });
-    }, baseUrl);
-    const start = async (
-      toolSteps,
-      uploadedAttachments = [],
-      capabilities = {},
-    ) => {
-      steps = toolSteps;
+          preferences: {
+            imageGenerationEnabled: true,
+            selectedImageModelId: "fixture-image",
+            maxToolSteps: 40,
+          },
+          agents: [
+            {
+              id: "fixture-agent",
+              name: "Fixture",
+              prompt: "",
+              toolGroups: groups,
+              workspace: false,
+              createdAt: 1,
+              updatedAt: 1,
+            },
+          ],
+        });
+      },
+      { baseUrl, groups: ALL_GROUPS },
+    );
+    const start = async (toolSteps, uploadedAttachments = []) => {
+      if (typeof toolSteps === "function") {
+        respond = toolSteps;
+        steps = [];
+      } else {
+        respond = undefined;
+        steps = toolSteps;
+      }
       calls = 0;
       requests.length = 0;
       await page.call(
-        ({ maxToolSteps, uploadedAttachments, capabilities }) => {
+        ({ uploadedAttachments }) => {
           const chatId = crypto.randomUUID();
           const port = chrome.runtime.connect({ name: "ai-stream" });
           const run = { chatId, events: [], done: false, port };
@@ -93,42 +140,77 @@ export async function browserToolFixture(handleRequest) {
               },
             ],
             body: {
-              context: { uploadedAttachments },
+              agentId: "fixture-agent",
               modelId: "fixture",
-              maxToolSteps,
-              agentCapabilities: {
-                browserTools: true,
-                browserAutomation: true,
-                deferredBrowserTools: true,
-                cdpTools: true,
-                javascriptExecution: true,
-                fileUrlRead: true,
-                imageGeneration: true,
-                localExecutionBridges: true,
-                ...capabilities,
-              },
+              uploadedAttachments,
             },
           });
         },
-        {
-          maxToolSteps: toolSteps.length + 1,
-          uploadedAttachments,
-          capabilities,
-        },
+        { uploadedAttachments },
       );
     };
+    // The text the model read for each tool call, in call order.
+    const toolTexts = () =>
+      (requests.at(-1)?.messages || [])
+        .filter((message) => message.role === "tool")
+        .map((message) =>
+          typeof message.content === "string"
+            ? message.content
+            : message.content.map((part) => part.text || "").join(""),
+        );
+    // Opens a fixture page in a new active tab and waits for it to load.
+    const open = async (path) => {
+      const tab = await page.call(
+        (url) => chrome.tabs.create({ url, active: true }),
+        `${baseUrl}${path}`,
+      );
+      await poll(() =>
+        page.call(
+          async (id) => (await chrome.tabs.get(id)).status === "complete",
+          tab.id,
+        ),
+      );
+      return tab.id;
+    };
+    // Evaluates code in a tab's own JavaScript world.
+    const evaluate = (tabId, code) =>
+      page.call(
+        async ({ tabId, code }) =>
+          (
+            await chrome.scripting.executeScript({
+              target: { tabId },
+              world: "MAIN",
+              func: (source) => (0, eval)(source),
+              args: [code],
+            })
+          )[0].result,
+        { tabId, code },
+      );
     return {
       browser,
       page,
       baseUrl,
+      open,
+      evaluate,
       requests,
       start,
-      async run(steps, capabilities) {
-        await start(steps, [], capabilities);
-        await poll(() => page.call(() => toolRun.done), 60000);
+      toolTexts,
+      async run(steps) {
+        await start(steps);
+        await poll(() => page.call(() => toolRun.done), 90000);
+        return toolTexts();
+      },
+      // Side panel outputs of finished tool parts.
+      outputs() {
         return page.call(() =>
           toolRun.events
-            .filter((event) => event.chunk?.output)
+            .filter(
+              (event) =>
+                event.chunk?.output &&
+                ["output-available", "output-error"].includes(
+                  event.chunk.state,
+                ),
+            )
             .map((event) => ({
               name: event.chunk.toolName,
               output: event.chunk.output,

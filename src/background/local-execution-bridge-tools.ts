@@ -19,18 +19,18 @@ async function loadBridges() {
   );
 }
 
-export function manageLocalExecutionBridges(input: Record<string, unknown>) {
-  const operation = text(input.operation || "list");
-  if (operation === "list") return listBridges();
-  if (operation === "status") return bridgeStatus();
-  if (operation === "add") return addBridge(input);
-  if (operation === "update") return updateBridge(input);
-  if (operation === "test") return testBridge(text(input.bridgeId || input.id));
-  if (operation === "delete") return deleteBridge(input);
+export function runLocalBridgesAction(input: Record<string, unknown>) {
+  const action = text(input.action || "list");
+  if (action === "list") return listBridges();
+  if (action === "status") return bridgeStatus();
+  if (action === "add") return addBridge(input);
+  if (action === "update") return updateBridge(input);
+  if (action === "test") return testBridge(text(input.bridgeId || input.id));
+  if (action === "delete") return deleteBridge(input);
   return {
     success: false,
-    error: "Unknown execution bridge operation",
-    operation,
+    error: "Unknown execution bridge action",
+    action,
   };
 }
 
@@ -50,7 +50,7 @@ async function bridgeStatus() {
     bridges,
     ...bridgeTaskCounts(),
     guidance: bridges.length
-      ? "Use operation=test with a bridgeId to verify native messaging connectivity, or startLocalExecutionBridge to run a command."
+      ? "Use action test with a bridgeId to verify native messaging connectivity, or localCommand to run a command."
       : "No local execution bridge is configured. Add one before trying to run local commands.",
   };
 }

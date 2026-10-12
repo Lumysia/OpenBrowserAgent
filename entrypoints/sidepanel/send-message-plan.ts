@@ -9,13 +9,11 @@ import type {
   Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
-import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
 import { isSkillEnabled } from "../../src/shared/skills";
 import {
   AI_STREAM_REQUEST_TYPE,
   type Agent,
   type Preferences,
-  type SendMessagesBody,
   type SendMessagesRequest,
 } from "../../src/shared/types";
 import {
@@ -185,37 +183,33 @@ export function pickSendInputs({
 }
 
 export function sendMessagesRequest({
-  chatId,
+  chat,
   messageId,
   messages,
   preferences,
   agent,
   language,
-  context,
+  uploadedAttachments,
 }: {
-  chatId: string;
+  chat: Chat;
   messageId: string;
   messages: ChatMessage[];
   preferences?: Preferences;
   agent: Agent;
   language?: string;
-  context: NonNullable<SendMessagesBody["context"]>;
+  uploadedAttachments: UploadedAttachment[];
 }): SendMessagesRequest {
   return {
     type: AI_STREAM_REQUEST_TYPE.sendMessages,
-    chatId,
+    chatId: chat.id,
     messageId,
     messages,
     body: {
+      agentId: agent.id,
       modelId: preferences?.selectedModelId,
-      agentCapabilities: agent.capabilities,
       language,
-      maxToolSteps: preferences?.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS,
-      context: {
-        ...context,
-        agent,
-        imageGenerationEnabled: preferences?.imageGenerationEnabled,
-      },
+      uploadedAttachments,
+      subAgent: chat.kind === "subagent",
     },
   };
 }

@@ -37,7 +37,7 @@ const fixture = live
           calls: [
             {
               id: "question_call",
-              name: "question",
+              name: "ask",
               args: {
                 questions: [
                   { question: "Continue?", options: [{ label: "Continue" }] },
@@ -58,8 +58,8 @@ const fixture = live
           calls: [
             {
               id: "browser_call",
-              name: "manageTabs",
-              args: { operation: "list" },
+              name: "tabs",
+              args: { action: "list" },
             },
           ],
         });
@@ -173,24 +173,16 @@ async function runInExtension(config) {
         },
       },
       "debug-logging-enabled": false,
+      preferences: { maxToolSteps: 3 },
     });
-    const request = (chatId, content, maxToolSteps = 3) => ({
+    const request = (chatId, content) => ({
       type: "sendMessages",
       chatId,
       messageId: `${chatId}-answer`,
       messages: [
         { id: `${chatId}-user`, role: "user", content, createdAt: Date.now() },
       ],
-      body: {
-        modelId: "acceptance-model",
-        language: "en",
-        maxToolSteps,
-        agentCapabilities: {
-          browserTools: true,
-          browserAutomation: true,
-          deferredBrowserTools: false,
-        },
-      },
+      body: { modelId: "acceptance-model", language: "en" },
     });
     const collect = (
       initial,
@@ -228,7 +220,7 @@ async function runInExtension(config) {
                 event.chunk.type === "reasoning-delta" ||
                 event.chunk.state === "input-available");
             const question =
-              event.chunk?.toolName === "question" &&
+              event.chunk?.toolName === "ask" &&
               event.chunk?.state === "input-available";
             if (!progress || acted || (queue && !question)) return;
             acted = true;
@@ -247,7 +239,7 @@ async function runInExtension(config) {
                 type: "queueMessage",
                 id: "keep",
                 content:
-                  "Please acknowledge this queued input and summarize the browser tab tool result. Use manageTabs with operation=list if you have not called it yet.",
+                  "Please acknowledge this queued input and summarize the browser tab tool result. Use tabs with action=list if you have not called it yet.",
               });
               port.postMessage({
                 type: "queueMessage",
@@ -287,7 +279,7 @@ async function runInExtension(config) {
     const flow = await collect(
       request(
         chatId,
-        "OBA_FLOW: First call question with one question 'Continue?' and one option 'Continue', and wait for the answer. After the answer, call manageTabs with operation=list to inspect the open tabs. Then briefly report the tab count. Start with a short sentence about what you will do.",
+        "OBA_FLOW: First call ask with one question 'Continue?' and one option 'Continue', and wait for the answer. After the answer, call tabs with action=list to inspect the open tabs. Then briefly report the tab count. Start with a short sentence about what you will do.",
       ),
       { reconnect: true, queue: true },
     );
@@ -311,7 +303,7 @@ async function runInExtension(config) {
     );
     const tools = flow.events.filter(
       (event) =>
-        event.chunk?.toolName === "manageTabs" &&
+        event.chunk?.toolName === "tabs" &&
         event.chunk?.state === "output-available",
     );
     const queued = flow.events.flatMap((event) =>
@@ -351,7 +343,6 @@ async function runInExtension(config) {
       request(
         cancelChat,
         "OBA_CANCEL: Write a detailed 3000-word explanation of browser history, numbered in 100 sections. Begin immediately and keep writing.",
-        0,
       ),
       { abort: true },
     );
@@ -369,7 +360,7 @@ async function runInExtension(config) {
       return { ok: false, stage };
     stage = "replacement run";
     const recovered = await collect(
-      request(cancelChat, "OBA_RECOVER: Say recovered.", 0),
+      request(cancelChat, "OBA_RECOVER: Say recovered."),
     );
     if (
       recovered.timedOut ||

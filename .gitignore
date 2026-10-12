@@ -4,3 +4,4 @@ node_modules
 dist
 downloads/
 *.log
+eval-results/

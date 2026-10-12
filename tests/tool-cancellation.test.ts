@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 import { setImmediate } from "node:timers/promises";
 import { toolBrowser, deferred } from "./tool-fixtures";
-import { executeContextAwareTool } from "../src/background/provider-tools";
-import type { AgentCapabilities } from "../src/shared/types";
+import { BUILTIN_TOOLS } from "../src/background/tools/registry";
+import { runTool } from "../src/background/tools/run-tool";
+import type { ToolContext } from "../src/background/tools/types";
 import { imageModelFixture } from "./image-fixture";
 import { generateImage } from "../src/background/image-generation";
 import { writeWebDavObject } from "../src/shared/sync-webdav";
@@ -15,14 +16,14 @@ async function tool(
   input: Record<string, unknown>,
   signal?: AbortSignal,
 ) {
-  return executeContextAwareTool({
-    toolName: name,
-    input,
+  const definition = BUILTIN_TOOLS.find((item) => item.name === name)!;
+  const context = {
+    run: { chatId: "fixture", attachments: [] },
+    toolCallId: "call",
     signal,
-    capabilities: { javascriptExecution: true } as AgentCapabilities,
-    uploadedAttachments: [],
-    availableSkills: [],
-  });
+    progress() {},
+  } as unknown as ToolContext;
+  return runTool(definition, input, context, { current: [] });
 }
 
 test("pre-aborted dispatch cannot close tabs or start fetches", async () => {
@@ -40,8 +41,8 @@ test("pre-aborted dispatch cannot close tabs or start fetches", async () => {
   const controller = new AbortController();
   controller.abort();
   for (const [name, args] of [
-    ["manageTabs", { operation: "close", tabId: 1 }],
-    ["readFileFromUrl", { url: "https://example.test" }],
+    ["tabs", { action: "close", tabId: 1 }],
+    ["read", { source: "https://example.test" }],
   ] as const)
     await assert.rejects(async () => tool(name, args, controller.signal), {
       name: "AbortError",
@@ -49,47 +50,11 @@ test("pre-aborted dispatch cannot close tabs or start fetches", async () => {
   assert.equal(effects, 0);
 });
 
-test("abort after DOM click resolution prevents opening its link", async () => {
-  toolBrowser();
-  const started = deferred();
-  const release = deferred<any>();
-  let opened = 0;
-  mock.method(chrome.scripting, "executeScript", async () => {
-    started.resolve();
-    return release.promise;
-  });
-  Object.assign(chrome.tabs, {
-    create: async () => {
-      opened++;
-    },
-  });
-  const controller = new AbortController();
-  const running = tool(
-    "mutatePage",
-    { tabId: 1, operation: "click" },
-    controller.signal,
-  );
-  await started.promise;
-  controller.abort();
-  await assert.rejects(running, { name: "AbortError" });
-  release.resolve([
-    {
-      result: {
-        success: true,
-        newTab: true,
-        url: "https://example.test/new",
-      },
-    },
-  ]);
-  await setImmediate();
-  assert.equal(opened, 0);
-});
-
-for (const name of [
-  "readFileFromUrl",
-  "downloadAllImagesInTab",
-  "generateImage",
-])
+for (const [name, input] of [
+  ["read", { source: "https://example.test/image" }],
+  ["export", { action: "images", tabId: 1 }],
+  ["generateImage", { prompt: "fixture" }],
+] as const)
   test(`${name} cancels an active fetch and cannot continue to downloads`, async () => {
     toolBrowser();
     imageModelFixture();
@@ -133,11 +98,7 @@ for (const name of [
       },
     );
     const controller = new AbortController();
-    const running = tool(
-      name,
-      { tabId: 1, url: "https://example.test/image", prompt: "fixture" },
-      controller.signal,
-    );
+    const running = tool(name, input, controller.signal);
     await started.promise;
     controller.abort();
     await assert.rejects(running, { name: "AbortError" });

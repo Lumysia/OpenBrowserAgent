@@ -39,8 +39,8 @@ test(
           calls: [
             {
               id: "tabs",
-              name: "manageTabs",
-              args: { operation: "list" },
+              name: "tabs",
+              args: { action: "list" },
             },
           ],
         });
@@ -81,11 +81,6 @@ test(
           Math.max(...ack.messages.map((message) => message.createdAt)),
       );
       const afterAck = seen.filter((event) => event.sequence! > ack.sequence!);
-      assert.equal(
-        afterAck[0]?.type,
-        "metrics",
-        "acknowledge before next context-budget work",
-      );
       assert.equal(
         afterAck.some((event) => event.type === "chunk"),
         false,

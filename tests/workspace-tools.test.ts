@@ -1,33 +1,19 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
-import { workspaceFiles } from "../src/background/workspace-tools";
+import { workspaceTool } from "../src/background/tools/workspace";
+import type { ToolContext } from "../src/background/tools/types";
 import { createWorkspace, upsertWorkspaceFile } from "../src/shared/workspace";
 import { storage } from "../src/shared/storage";
 import { installBrowser } from "./helpers";
-import { manageMemory } from "../src/background/memory-tools";
 import type { AgentWorkspace } from "../src/shared/types";
 import { saveWorkspaceChanges } from "../src/shared/workspace-storage";
 
 afterEach(() => mock.restoreAll());
 
-test("workspace patch persists replacement text literally", async () => {
-  const workspace = createWorkspace("fixture");
-  installBrowser();
-  await storage.agentWorkspaces.set([workspace]);
-  const result = await workspaceFiles(workspace, {
-    operation: "patch",
-    path: "NOTES.md",
-    find: "# Notes",
-    value: "$& $$ $` $'",
-  });
-  assert.equal("patched" in result && result.patched, true);
-  assert.equal(
-    (await storage.agentWorkspaces.get())[0].files.find(
-      (file) => file.path === "NOTES.md",
-    )?.content,
-    "$& $$ $` $'\n\n",
-  );
-});
+const call = (workspace: AgentWorkspace, input: Record<string, unknown>) =>
+  workspaceTool.execute(input, {
+    run: { workspace },
+  } as unknown as ToolContext);
 
 function edited(workspace: AgentWorkspace, path: string, content: string) {
   const result = upsertWorkspaceFile(workspace, path, content);
@@ -35,160 +21,98 @@ function edited(workspace: AgentWorkspace, path: string, content: string) {
   return result.workspace;
 }
 
-for (const operation of ["write", "memory"] as const) {
-  test(`${operation} uses current workspace and preserves newer unrelated files and memory`, async () => {
-    installBrowser();
-    const run = createWorkspace("fixture");
-    const current = edited(
-      edited(run, "later.md", "new file"),
-      "MEMORY.md",
-      "# Memory\n\n- [existing] newer memory\n",
-    );
-    await storage.agentWorkspaces.set([
-      current,
-      createWorkspace("other-agent"),
-    ]);
-    const result =
-      operation === "memory" || operation === "user"
-        ? await manageMemory(run, {
-            operation: "add",
-            scope: operation,
-            text: "new entry",
-          })
-        : await workspaceFiles(run, {
-            operation,
-            path: "NOTES.md",
-            find: "# Notes",
-            value: "replacement",
-            content: "replacement",
-          });
-    assert.ok(!("error" in result), JSON.stringify(result));
-    const stored = await storage.agentWorkspaces.get();
-    assert.equal(stored.length, 2);
-    assert.equal(
-      stored[0].files.find((file) => file.path === "later.md")?.content,
-      "new file",
-    );
-    assert.match(
-      stored[0].files.find((file) => file.path === "MEMORY.md")!.content,
-      /newer memory/,
-    );
-    assert.deepEqual(run, stored[0]);
-  });
-}
+const file = (workspace: AgentWorkspace, path: string) =>
+  workspace.files.find((item) => item.path === path)?.content;
 
-for (const operation of ["patch"] as const) {
-  test(`${operation} rejects a changed same-file snapshot and refreshes the run`, async () => {
-    installBrowser();
-    const run = createWorkspace("fixture");
-    const current = edited(run, "NOTES.md", "# Notes\n\nnewer content");
-    await storage.agentWorkspaces.set([current]);
-    const result = await workspaceFiles(run, {
-      operation,
-      path: "NOTES.md",
-      find: "# Notes",
-      value: "replacement",
-      content: "replacement",
-    });
-    assert.ok("error" in result);
-    assert.match(result.error!, /changed/);
-    assert.deepEqual((await storage.agentWorkspaces.get())[0], current);
-    assert.deepEqual(run, current);
+test("replace writes replacement text literally", async () => {
+  installBrowser();
+  const workspace = createWorkspace("fixture");
+  await storage.agentWorkspaces.set([workspace]);
+  const result = await call(workspace, {
+    action: "replace",
+    path: "NOTES.md",
+    find: "# Notes",
+    content: "$& $$ $` $'",
   });
-}
+  assert.equal(result.isError, undefined);
+  assert.equal(
+    file((await storage.agentWorkspaces.get())[0], "NOTES.md"),
+    "$& $$ $` $'\n\n",
+  );
+});
 
-for (const scope of ["memory"]) {
-  test(`two independent runs serialize ${scope} additions and workspace patches`, async () => {
-    installBrowser();
-    const first = createWorkspace("fixture");
-    const second = structuredClone(first);
-    await storage.agentWorkspaces.set([first]);
-    const results = await Promise.all([
-      manageMemory(first, { operation: "add", scope, text: "first entry" }),
-      manageMemory(second, { operation: "add", scope, text: "second entry" }),
-      workspaceFiles(structuredClone(first), {
-        operation: "patch",
-        path: "NOTES.md",
-        patchOperation: "append",
-        value: "first patch",
-      }),
-      workspaceFiles(structuredClone(second), {
-        operation: "patch",
-        path: "NOTES.md",
-        patchOperation: "append",
-        value: "second patch",
-      }),
-    ]);
-    assert.ok(results.every((result) => !("error" in result)));
-    const stored = (await storage.agentWorkspaces.get())[0];
-    const memory = stored.files.find(
-      (file) => file.path === (scope === "memory" ? "MEMORY.md" : "USER.md"),
-    )!.content;
-    assert.match(memory, /first entry/);
-    assert.match(memory, /second entry/);
-    const notes = stored.files.find(
-      (file) => file.path === "NOTES.md",
-    )!.content;
-    assert.match(notes, /first patchsecond patch/);
+test("a write applies to the current workspace and keeps newer unrelated files", async () => {
+  installBrowser();
+  const run = createWorkspace("fixture");
+  const current = edited(
+    edited(run, "later.md", "new file"),
+    "MEMORY.md",
+    "# Memory\n\n- newer\n",
+  );
+  await storage.agentWorkspaces.set([current, createWorkspace("other-agent")]);
+  const result = await call(run, {
+    action: "write",
+    path: "NOTES.md",
+    content: "replacement",
   });
-}
+  assert.equal(result.isError, undefined);
+  const stored = await storage.agentWorkspaces.get();
+  assert.equal(stored.length, 2);
+  assert.equal(file(stored[0], "later.md"), "new file");
+  assert.match(file(stored[0], "MEMORY.md")!, /newer/);
+  assert.deepEqual(run, stored[0]);
+});
 
-for (const operation of ["update"]) {
-  test(`memory ${operation} detects changed entry text without losing unrelated additions`, async () => {
-    installBrowser();
-    const run = edited(
-      createWorkspace("fixture"),
-      "MEMORY.md",
-      "# Memory\n\n- [entry] original\n",
-    );
-    const current = edited(
-      run,
-      "MEMORY.md",
-      "# Memory\n\n- [entry] newer\n- [later] keep\n",
-    );
-    await storage.agentWorkspaces.set([current]);
-    const result = await manageMemory(run, {
-      operation,
-      id: "entry",
-      text: "replacement",
-    });
-    assert.ok("error" in result);
-    assert.match(result.error!, /changed/);
-    assert.deepEqual((await storage.agentWorkspaces.get())[0], current);
+test("replace rejects a file changed since the run read it, and refreshes the run", async () => {
+  installBrowser();
+  const run = createWorkspace("fixture");
+  const current = edited(run, "NOTES.md", "# Notes\n\nnewer content");
+  await storage.agentWorkspaces.set([current]);
+  const result = await call(run, {
+    action: "replace",
+    path: "NOTES.md",
+    find: "# Notes",
+    content: "x",
   });
-}
+  assert.equal(result.isError, true);
+  assert.match(result.text, /changed/);
+  assert.deepEqual((await storage.agentWorkspaces.get())[0], current);
+  assert.deepEqual(run, current);
+});
 
-test("a settings draft and two agent runs preserve each other's unrelated changes", async () => {
+test("memory appends from two runs and a settings draft keep each other's changes", async () => {
   installBrowser();
   const original = createWorkspace("fixture");
   await storage.agentWorkspaces.set([original]);
-  const draft = edited(original, "NOTES.md", "settings draft");
   const results = await Promise.all([
-    manageMemory(structuredClone(original), {
-      operation: "add",
-      text: "memory from run one",
+    call(structuredClone(original), {
+      action: "append",
+      path: "MEMORY.md",
+      content: "- first entry",
     }),
-    saveWorkspaceChanges(structuredClone(original), draft),
-    workspaceFiles(structuredClone(original), {
-      operation: "write",
+    call(structuredClone(original), {
+      action: "append",
+      path: "MEMORY.md",
+      content: "- second entry",
+    }),
+    saveWorkspaceChanges(
+      structuredClone(original),
+      edited(original, "NOTES.md", "settings draft"),
+    ),
+    call(structuredClone(original), {
+      action: "write",
       path: "later.md",
-      content: "file from run two",
+      content: "file from run",
     }),
   ]);
-  assert.ok(results.every((result) => !("error" in result)));
+  assert.ok(
+    results.every((result) => !("isError" in result && result.isError)),
+  );
   const stored = (await storage.agentWorkspaces.get())[0];
-  assert.match(
-    stored.files.find((file) => file.path === "MEMORY.md")!.content,
-    /memory from run one/,
-  );
-  assert.equal(
-    stored.files.find((file) => file.path === "NOTES.md")!.content,
-    "settings draft",
-  );
-  assert.equal(
-    stored.files.find((file) => file.path === "later.md")!.content,
-    "file from run two",
-  );
+  assert.match(file(stored, "MEMORY.md")!, /first entry/);
+  assert.match(file(stored, "MEMORY.md")!, /second entry/);
+  assert.equal(file(stored, "NOTES.md"), "settings draft");
+  assert.equal(file(stored, "later.md"), "file from run");
 });
 
 test("a settings rename validates the draft's original file before changing any paths", async () => {
@@ -197,7 +121,7 @@ test("a settings rename validates the draft's original file before changing any 
   const draft = edited(
     {
       ...original,
-      files: original.files.filter((file) => file.path !== "custom.md"),
+      files: original.files.filter((item) => item.path !== "custom.md"),
     },
     "renamed.md",
     "edited",
@@ -207,16 +131,4 @@ test("a settings rename validates the draft's original file before changing any 
   const result = await saveWorkspaceChanges(original, draft);
   assert.ok(!result.ok);
   assert.deepEqual((await storage.agentWorkspaces.get())[0], current);
-});
-
-test("workspace patch keeps protected files unchanged", async () => {
-  const workspace = createWorkspace("fixture");
-  const before = structuredClone(workspace);
-  const result = await workspaceFiles(workspace, {
-    operation: "patch",
-    path: "AGENTS.md",
-    value: "override",
-  });
-  assert.ok("error" in result);
-  assert.deepEqual(workspace, before);
 });

@@ -1,35 +1,26 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
-import { manageSkills } from "../src/background/skill-tools";
+import { skillsTool } from "../src/background/tools/skills";
+import type { ToolContext } from "../src/background/tools/types";
 import { storage } from "../src/shared/storage";
 import { createSkillPackage } from "../src/shared/skills";
 
 afterEach(() => mock.restoreAll());
 
-function setup() {
+test("skill patches keep literal replacement tokens and later edits to other files", async () => {
   const skill = createSkillPackage({
     name: "fixture",
     description: "Fixture",
     instruction: "original",
   });
-  const available = [structuredClone(skill)];
-  const stored = [skill];
+  const stored = [structuredClone(skill)];
+  const run = { skills: [structuredClone(skill)] };
   mock.method(storage.skills, "get", async () => structuredClone(stored));
-  const write = mock.method(storage.skills, "set", async (value) => {
+  mock.method(storage.skills, "set", async (value: typeof stored) => {
     stored.splice(0, stored.length, ...value);
   });
-  const input = {
-    operation: "patchFile",
-    skillId: skill.id,
-    path: "SKILL.md",
-    reason: "Preserve literal examples",
-  };
-  return { skill, available, stored, write, input };
-}
-
-test("skill patches persist literal replacement tokens and retain later edits to other files", async () => {
-  const run = setup();
-  run.skill.files.push({
+  // Another context adds a file after this run loaded its skills.
+  stored[0].files.push({
     path: "reference.md",
     kind: "markdown",
     encoding: "utf-8",
@@ -37,12 +28,21 @@ test("skill patches persist literal replacement tokens and retain later edits to
     updatedAt: 2,
   });
   const replacement = "$& $$ $` $'";
-  const result = await manageSkills(run.available, {
-    ...run.input,
-    replacements: [{ oldText: "original", newText: replacement }],
-  });
-  assert.ok("patched" in result && result.patched);
-  assert.ok(run.stored[0].files[0].content.includes(replacement));
-  assert.equal(run.stored[0].files[1].content, "added after run started");
-  assert.deepEqual(run.available, run.stored);
+  const result = await skillsTool.execute(
+    {
+      action: "patch",
+      name: "fixture",
+      find: "original",
+      content: replacement,
+    },
+    { run } as unknown as ToolContext,
+  );
+  assert.equal(result.isError, undefined);
+  const entry = stored[0].files.find((file) => file.path === "SKILL.md");
+  assert.ok(entry?.content.includes(replacement));
+  assert.equal(
+    stored[0].files.find((file) => file.path === "reference.md")?.content,
+    "added after run started",
+  );
+  assert.deepEqual(run.skills, stored);
 });

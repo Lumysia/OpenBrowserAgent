@@ -322,8 +322,6 @@ function reconcileRunMetadata(
         ...(currentMetrics.usage || {}),
         ...(incomingMetrics.usage || {}),
       },
-      contextBudget:
-        incomingMetrics.contextBudget || currentMetrics.contextBudget,
     },
   };
 }

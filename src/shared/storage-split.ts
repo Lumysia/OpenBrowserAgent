@@ -1,4 +1,5 @@
-import { SYNCABLE_DATA_ITEMS } from "./storage-keys";
+import { deleteChatArtifacts } from "./artifacts";
+import { STORAGE_KEYS, SYNCABLE_DATA_ITEMS } from "./storage-keys";
 import {
   flushedCache,
   isSyncRouted,
@@ -50,8 +51,15 @@ export function setSplitItem(key: string, id: string, value: unknown) {
   );
 }
 
+// Every removal of list items (here, by sync, by a tool) passes here, so a
+// removed chat's stored tool outputs go with its content.
 export async function removeSplitItems(key: string, ids: string[]) {
-  if (ids.length) await local().remove(ids.map((id) => splitItemKey(key, id)));
+  if (!ids.length) return;
+  await local().remove(ids.map((id) => splitItemKey(key, id)));
+  if (key === STORAGE_KEYS.chats)
+    await deleteChatArtifacts(ids).catch((error) =>
+      console.warn("Failed to remove chat artifacts", error),
+    );
 }
 
 export async function isSplitSyncRouted(key: string) {

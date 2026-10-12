@@ -1,7 +1,4 @@
-import {
-  DEFAULT_CONTEXT_BUDGET_PREFERENCES,
-  DEFAULT_MAX_TOOL_STEPS,
-} from "./config";
+import { DEFAULT_MAX_TOOL_STEPS } from "./config";
 import type { Preferences } from "./types";
 import { REASONING_EFFORT } from "./reasoning";
 
@@ -14,7 +11,8 @@ export const DEFAULT_PREFERENCES: Preferences = {
   imageGenerationSize: "1024x1024",
   maxToolSteps: DEFAULT_MAX_TOOL_STEPS,
   reasoningEffort: REASONING_EFFORT.default,
-  ...DEFAULT_CONTEXT_BUDGET_PREFERENCES,
+  // Empty: auxiliary requests use the chat's own model.
+  helperModelId: "",
 };
 
 export function mergePreferences(value: Partial<Preferences>): Preferences {

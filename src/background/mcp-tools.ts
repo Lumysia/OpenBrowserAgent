@@ -1,4 +1,5 @@
-import type { AgentCapabilities, McpServerConfig } from "../shared/types";
+import { MCP_TOOL_PREFIX } from "../shared/tool-names";
+import type { McpServerConfig } from "../shared/types";
 import {
   isMcpServerTested,
   normalizeHeaders,
@@ -6,30 +7,6 @@ import {
 } from "../shared/mcp";
 import { callMcpServerTool, listMcpServerTools } from "../shared/mcp-client";
 import { storage } from "../shared/storage";
-
-export function mcpToolsForPrompt(
-  capabilities: AgentCapabilities,
-  servers: McpServerConfig[],
-) {
-  if (!capabilities.mcpTools) return [];
-  return servers
-    .filter((server) => server.enabled && isMcpServerTested(server))
-    .flatMap((server) =>
-      (server.tools || [])
-        .filter((tool) => tool.enabled)
-        .map((tool) => ({
-          type: "function",
-          function: {
-            name: mcpToolName(server, tool.name),
-            description: [
-              tool.description || `Call ${tool.name} on ${server.name}`,
-              `MCP server: ${server.name}.`,
-            ].join(" "),
-            parameters: sanitizeMcpInputSchema(tool.inputSchema),
-          },
-        })),
-    );
-}
 
 export async function executeMcpTool(
   toolName: string,
@@ -74,12 +51,8 @@ export async function executeMcpTool(
   };
 }
 
-export function isMcpToolName(name: string) {
-  return name.startsWith("mcp__");
-}
-
-function mcpToolName(server: McpServerConfig, toolName: string) {
-  return `mcp__${toolSlug(server.name || server.id)}__${toolSlug(toolName)}`;
+export function mcpToolName(server: McpServerConfig, toolName: string) {
+  return `${MCP_TOOL_PREFIX}${toolSlug(server.name || server.id)}__${toolSlug(toolName)}`;
 }
 
 function toolSlug(value: string) {
@@ -91,7 +64,7 @@ function toolSlug(value: string) {
   );
 }
 
-function sanitizeMcpInputSchema(value: unknown) {
+export function sanitizeMcpInputSchema(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value))
     return { type: "object", properties: {}, required: [] };
   const schema = value as Record<string, unknown>;
@@ -123,14 +96,14 @@ export async function listMcpServers() {
   };
 }
 
-export function manageMcpServers(input: Record<string, unknown>) {
-  const operation = stringInput(input.operation || "list");
-  if (operation === "list") return listMcpServers();
-  if (operation === "add") return addMcpServer(input);
-  if (operation === "update") return updateMcpServer(input);
-  if (operation === "test") return testMcpServer(input);
-  if (operation === "delete") return deleteMcpServer(input);
-  return { success: false, error: "Unknown MCP server operation", operation };
+export function runMcpServersAction(input: Record<string, unknown>) {
+  const action = stringInput(input.action || "list");
+  if (action === "list") return listMcpServers();
+  if (action === "add") return addMcpServer(input);
+  if (action === "update") return updateMcpServer(input);
+  if (action === "test") return testMcpServer(input);
+  if (action === "delete") return deleteMcpServer(input);
+  return { success: false, error: "Unknown MCP server action", action };
 }
 
 export async function addMcpServer(input: Record<string, unknown>) {

@@ -69,7 +69,7 @@ export function ComposerAttachments({
             ))}
             {selectedElements.map((element, index) => (
               <SelectedElementContextCard
-                key={element.aiId || index}
+                key={element.ref || index}
                 t={t}
                 element={element}
                 onRemove={() =>

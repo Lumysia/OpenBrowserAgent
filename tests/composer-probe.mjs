@@ -131,11 +131,10 @@ async function initializeComposerProbe(prompt) {
     status.textCharacters = assistant.content?.length || 0;
     status.textParts = parts.length;
     status.toolParts = (assistant.parts || []).filter(
-      (part) => part.toolName === "manageTabs",
+      (part) => part.toolName === "tabs",
     ).length;
     status.completedToolParts = (assistant.parts || []).filter(
-      (part) =>
-        part.toolName === "manageTabs" && part.state === "output-available",
+      (part) => part.toolName === "tabs" && part.state === "output-available",
     ).length;
     status.persistedTextConsistent =
       (assistant.parts || [])

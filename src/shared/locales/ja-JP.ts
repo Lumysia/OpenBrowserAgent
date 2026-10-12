@@ -14,8 +14,6 @@ export const jaJP: LocaleMessages = {
     edit: "編集",
     help: "ヘルプ",
     language: "言語",
-    enabled: "有効",
-    disabled: "無効",
     confirm: "確認",
   },
   words: { newChat: "新しいチャット", agent: "ブラウズ", ask: "質問" },
@@ -51,7 +49,6 @@ export const jaJP: LocaleMessages = {
     bootstrapStepTaskTitle: "最初のタスクを送信",
     bootstrapStepTaskDescription:
       "モデルが正常に応答したらここに戻り、OpenBrowserAgentにブラウズや要約を依頼します。",
-    menu: "メニュー",
     chatHistory: "チャット履歴",
     backToChat: "チャットに戻る",
     exportChatOpenAi: "OpenAI JSON としてエクスポート",
@@ -74,15 +71,6 @@ export const jaJP: LocaleMessages = {
     openSubAgentChat: "サブエージェントチャットを開く",
     subAgentRunning: "実行中",
     subAgentCompleted: "完了",
-    subAgentMissing: "見つかりません",
-    localExecutionBridgeStates: {
-      running: "実行中",
-      done: "完了",
-      error: "エラー",
-      missing: "見つかりません",
-      canceled: "キャンセル済み",
-    },
-    questionWaiting: "回答を待っています",
     questionSubmit: "回答を送信",
     questionCustomPlaceholder: "独自の回答を入力...",
     questionNoAnswer: "回答なし",
@@ -111,32 +99,25 @@ export const jaJP: LocaleMessages = {
       wholeChat: "チャット全体",
       ttft: "初回トークン遅延",
       tps: "TPS",
-      output: "出力方式",
       input: "入力",
       outputTokens: "出力",
-      total: "合計",
       cached: "キャッシュ",
       cacheWrite: "キャッシュ書き込み",
       reasoning: "推論",
       estimated: "約",
       tokenUnit: "tok.",
-      estimatedTokenCount: "約 {count} tok.",
-      promptBreakdown: "指示文の内訳",
-      prebuiltPrompt: "事前指示文",
-      userPrompt: "ユーザー指示文",
-      conversationPrompt: "会話履歴",
-      tabPrompt: "タブ / ページ",
-      selectedElementPrompt: "選択要素",
-      skillPrompt: "スキル",
-      attachmentPrompt: "添付ファイル",
-      toolCallPrompt: "ツール呼び出し",
-      sourcePrompt: "ソース",
-      otherPrompt: "その他のコンテキスト",
+      modelCalls: "モデル呼び出し",
+      largestRequest: "最大リクエスト",
+      cachedShare: "入力の {percent}% がキャッシュ",
+      uncached: "非キャッシュ",
       unavailable: "利用不可",
     },
     contextSummaryTitle: "コンテキスト要約",
     contextSummaryDescription:
       "以前の会話コンテキストはこのリクエスト用に圧縮されました。",
+    contextSummaryFailedTitle: "コンテキストの圧縮に失敗しました",
+    contextSummaryFailedDescription:
+      "以前のコンテキストを要約できませんでした。完全なコンテキストのまま続行し、後で再試行します。",
     willBeSentToAi: "AIに送信されます",
     willBeSentAsPageContext: "ページコンテキストとして送信されます",
     currentPage: "現在のページ",
@@ -171,7 +152,6 @@ export const jaJP: LocaleMessages = {
     reasoningEffortMedium: "中",
     reasoningEffortHigh: "高",
     noModelsConfigured: "モデルが設定されていません",
-    agentDescription: "タスクを自動化し、検索し、ブラウザーを操作します",
     askDescription: "Webページについて質問します",
     send: "送信",
     queueMessage: "キューに追加",
@@ -184,42 +164,7 @@ export const jaJP: LocaleMessages = {
     stop: "停止",
     previousUserMessage: "前の自分のメッセージ",
     nextUserMessage: "次の自分のメッセージ",
-    running: "実行中",
-    done: "完了",
     error: "エラー",
-    toolErrors: {
-      NO_ACTIVE_WEB_TAB_FOUND:
-        "アクティブなWebページのタブが見つかりません。通常の http(s) タブを開くかフォーカスするか、既知のタブIDを使用してください。",
-      ACTIVE_TAB_NOT_WEB_PAGE:
-        "アクティブなタブは読み取り可能なWebページではありません。先に http(s) ページを開いてください。",
-      NO_TAB_IDS_PROVIDED: "タブIDが指定されていません。",
-      TAB_NOT_FOUND: "指定されたタブが見つかりません。",
-      NO_GROUPABLE_NORMAL_TABS:
-        "グループ化できる通常のブラウザーウィンドウのタブがありません。",
-      UNKNOWN_TOOL: "不明なツール: {tool}。",
-      MISSING_URL: "URLが必要です。",
-      UNKNOWN_NAVIGATION_TYPE: "不明なナビゲーション種別: {type}。",
-      TAB_HAS_NO_WINDOW: "タブがブラウザーウィンドウに属していません。",
-      NO_TEXT_PROVIDED: "テキストが指定されていません。",
-      TIMED_OUT_WAITING_FOR_TEXT:
-        "指定されたテキストの待機がタイムアウトしました。",
-      TIMED_OUT_WAITING_FOR_SELECTOR:
-        "指定されたセレクターの待機がタイムアウトしました。",
-      TIMED_OUT_WAITING_FOR_CONDITION:
-        "指定されたページ条件の待機がタイムアウトしました。",
-      ELEMENT_NOT_TEXT_INPUT:
-        "対象要素は入力欄、テキストエリア、または編集可能領域ではありません。",
-      TARGET_ID_CANNOT_BE_FOCUSED:
-        "このCDPターゲットはブラウザータブとしてフォーカスできません。",
-      CLOSE_BY_TARGET_ID_UNSUPPORTED:
-        "ここではCDPターゲットIDで閉じることはできません。",
-      RESIZE_BY_TARGET_ID_UNSUPPORTED:
-        "ここではCDPターゲットIDでサイズ変更できません。",
-      ELEMENT_NOT_FOUND: "対象要素が見つかりません。",
-      ELEMENT_HAS_NO_CLICKABLE_BOX:
-        "対象要素にクリック可能な領域がありません。",
-      MISSING_CODE: "JavaScriptコードが必要です。",
-    },
     generatedImage: "生成画像",
     capturedTabImage: "タブのスクリーンショット",
     mermaidPreview: "Mermaid図のプレビュー",
@@ -231,110 +176,58 @@ export const jaJP: LocaleMessages = {
     copyImage: "画像をコピー",
     copyPrompt: "プロンプトをコピー",
     tool: {
-      manageTabs: {
-        running: "タブを管理中",
-        done: "タブを管理しました",
-        found: "開いているタブ {count} 件",
+      tabs: { running: "タブを管理中", done: "タブを管理しました" },
+      snapshot: {
+        running: "ページ構造を読み取り中",
+        done: "ページ構造を読み取りました",
       },
-      cdpInput: { running: "CDP 入力を送信中", done: "CDP 入力を送信しました" },
-      cdpPage: {
-        running: "CDP ページを制御中",
-        done: "CDP ページを制御しました",
-      },
-      cdpDiagnostics: {
-        running: "CDP 診断を読み取り中",
-        done: "CDP 診断を読み取りました",
-      },
-      wait: { running: "待機中", done: "待機しました" },
-      getCurrentTime: { running: "時刻を確認中", done: "時刻を確認しました" },
-      getCurrentTab: {
-        running: "現在のタブを取得中",
-        done: "現在のタブを取得しました",
-      },
-      captureVisibleTab: {
-        running: "タブをキャプチャ中",
-        done: "タブをキャプチャしました",
-      },
-      downloadAllImagesInTab: {
-        running: "画像をダウンロード中",
-        done: "画像をダウンロードしました",
-      },
-      question: { running: "質問しています", done: "質問に回答済み" },
-      loadTools: {
-        running: "ツールを読み込み中",
-        done: "ツールを読み込みました",
-        found: "{count}個のツールを読み込みました",
-      },
-      manageSkills: {
-        running: "スキルを管理中",
-        done: "スキルを管理しました",
-        found: "{count}個のスキルを検出しました",
-      },
-      workspaceFiles: {
-        running: "ワークスペースファイルを処理中",
-        done: "ワークスペースファイルを処理しました",
-      },
-      manageMemory: { running: "メモリを管理中", done: "メモリを管理しました" },
-      manageChatHistory: {
-        running: "チャット履歴を読み取り中",
-        done: "チャット履歴を読み取りました",
-      },
-      manageMcpServers: {
-        running: "MCP サーバーを管理中",
-        done: "MCP サーバーを管理しました",
-      },
-      manageLocalExecutionBridges: {
-        running: "実行ブリッジを管理中",
-        done: "実行ブリッジを管理しました",
-        found: "{count}個の実行ブリッジを検出しました",
-      },
-      inspectPage: {
-        running: "ページを調査中",
-        done: "ページを調査しました",
-        found: "{count}個の要素を検出しました",
-      },
-      mutatePage: { running: "ページを更新中", done: "ページを更新しました" },
-      downloadTabToMarkdown: {
-        running: "Markdownをダウンロード中",
-        done: "Markdownをダウンロードしました",
-      },
-      generateImage: { running: "画像を生成中", done: "画像を生成しました" },
-      readFileFromUrl: {
-        running: "ファイルを読み取り中",
-        done: "ファイルを読み取りました",
-      },
-      readUploadedAttachment: {
-        running: "添付を読み取り中",
-        done: "添付を読み取りました",
-      },
-      cdpExecuteArbitraryJavaScript: {
-        running: "カスタムスクリプトを実行中",
-        done: "カスタムスクリプトを実行しました",
-      },
-      cdpTakeScreenshot: {
+      find: { running: "ページを検索中", done: "ページを検索しました" },
+      read: { running: "読み取り中", done: "読み取りました" },
+      extract: { running: "回答を抽出中", done: "回答を抽出しました" },
+      act: { running: "ページを操作中", done: "ページを操作しました" },
+      editPage: { running: "ページを編集中", done: "ページを編集しました" },
+      webSearch: { running: "ウェブを検索中", done: "ウェブを検索しました" },
+      screenshot: {
         running: "スクリーンショットを撮影中",
         done: "スクリーンショットを撮影しました",
       },
-      startSubAgent: {
-        running: "サブエージェントを開始中",
-        done: "サブエージェントを開始しました",
+      ask: { running: "質問しています", done: "質問に回答済み" },
+      toolSearch: {
+        running: "ツールを読み込み中",
+        done: "ツールを読み込みました",
       },
-      getSubAgentStatus: {
-        running: "サブエージェントを確認中",
-        done: "サブエージェントを確認しました",
+      export: { running: "エクスポート中", done: "エクスポートしました" },
+      skills: { running: "スキルを更新中", done: "スキルを更新しました" },
+      workspace: {
+        running: "ワークスペースを更新中",
+        done: "ワークスペースを更新しました",
       },
-      startLocalExecutionBridge: {
-        running: "ローカルコマンドを開始中",
-        done: "ローカルコマンドが完了しました",
+      chatHistory: {
+        running: "チャット履歴を読み取り中",
+        done: "チャット履歴を読み取りました",
       },
-      getLocalExecutionBridgeStatus: {
-        running: "ローカルコマンドを確認中",
-        done: "ローカルコマンドを確認しました",
+      subAgent: {
+        running: "サブエージェント実行中",
+        done: "サブエージェント完了",
       },
-      cancelLocalExecutionBridge: {
-        running: "ローカルコマンドをキャンセル中",
-        done: "ローカルコマンドをキャンセルしました",
+      mcpServers: {
+        running: "MCP サーバーを管理中",
+        done: "MCP サーバーを管理しました",
       },
+      localCommand: {
+        running: "ローカルコマンドを実行中",
+        done: "ローカルコマンドを実行しました",
+      },
+      localBridges: {
+        running: "実行ブリッジを管理中",
+        done: "実行ブリッジを管理しました",
+      },
+      generateImage: { running: "画像を生成中", done: "画像を生成しました" },
+      runScript: {
+        running: "スクリプトを実行中",
+        done: "スクリプトを実行しました",
+      },
+      devtools: { running: "診断を実行中", done: "診断を実行しました" },
     },
   },
   options: {
@@ -369,44 +262,52 @@ export const jaJP: LocaleMessages = {
       wrench: "ツール",
       fileText: "ドキュメント",
     },
-    agentCapabilities: "エージェント機能",
-    agentCapabilitiesDescription:
-      "このエージェントが使えるツールとコンテキストを選択します。",
-    builtinAgentCapabilitiesDescription:
-      "組み込みエージェントの機能は参照用に表示され、編集できません。",
-    agentCapabilityGroups: {
-      browser: "ブラウザー",
-      builtinTools: "組み込みツールとコンテキスト",
-      skillsAndMcp: "スキルと MCP",
-      workspaceAndMemory: "ワークスペースとメモリ",
-      chatHistory: "チャット履歴",
+    agentPrompt: "指示",
+    agentPromptPlaceholder:
+      "このエージェントのふるまい、目的、避けることを書きます。",
+    agentModel: "モデル",
+    agentModelDefault: "チャットで選んだモデル",
+    agentTools: "ツール",
+    agentToolsDescription:
+      "このエージェントが使えるものを選びます。追加ツールは必要なときだけ読み込まれます。",
+    builtinAgentToolsDescription:
+      "組み込みエージェントのツールは参照用で、編集できません。",
+    agentWorkspaceToggle: "専用ワークスペース",
+    agentWorkspaceToggleDescription: "チャットをまたいで残るファイルとメモリ。",
+    agentToolGroups: {
+      pages: "ページを読む",
+      browser: "ブラウザを操作",
+      web: "ウェブ検索",
+      images: "画像を生成",
+      skills: "スキル",
+      history: "チャット履歴",
+      subAgents: "サブエージェント",
+      mcp: "MCP ツール",
+      mcpServers: "MCP サーバー",
+      localExecution: "ローカルコマンド",
+      scripts: "ページ JavaScript",
+      devtools: "開発者診断",
     },
-    agentCapabilityLabels: {
-      browserAutomation: "ブラウザーを操作",
-      browserTools: "組み込みツールを使用",
-      subAgents: "サブエージェントを開始",
-      localExecutionBridges: "ローカル実行ブリッジを使用",
-      deferredBrowserTools: "高度なブラウザー操作を読み込む",
-      cdpTools: "CDP ツール",
-      javascriptExecution: "ページ JavaScript を実行",
-      mcpTools: "MCP ツール",
-      mcpManagement: "MCP 管理",
-      skillTools: "スキルツール",
-      skillCreation: "スキル作成",
-      workspaceRead: "ワークスペース読み取り",
-      workspaceWrite: "ワークスペース書き込み",
-      memoryRead: "メモリ読み取り",
-      memoryWrite: "メモリ書き込み",
-      chatHistoryRead: "チャット履歴読み取り",
-      chatHistoryWrite: "チャット履歴書き込み",
-      imageGeneration: "画像を生成",
-      currentTime: "現在時刻を読む",
-      fileUrlRead: "URL とファイルリンクを読む",
+    agentToolGroupDescriptions: {
+      pages: "ページ構造の取得、検索、読み取り、抽出、スクリーンショット。",
+      browser:
+        "タブの管理、クリック、入力、ページ編集、ファイルのエクスポート。",
+      web: "既定の検索エンジンでウェブを検索します。",
+      images: "画像の作成と編集（プロバイダーで有効な場合）。",
+      skills: "有効なスキルを使い、作成や改善を行います。",
+      history: "保存済みチャットの検索、読み取り、削除。",
+      subAgents: "別のチャットで動くエージェントにタスクを委任します。",
+      mcp: "接続済み MCP サーバーのツールを使います。",
+      mcpServers: "MCP サーバーを追加、テスト、削除します。",
+      localExecution:
+        "実行ブリッジ経由でこのコンピューターでコマンドを実行します。",
+      scripts: "ページで任意の JavaScript を実行します。既定ではオフ。",
+      devtools: "ネットワークリソースとデバイスエミュレーション。",
     },
     deleteAgent: "エージェントを削除",
     agentWorkspace: "エージェントワークスペース",
     agentWorkspaceDescription:
-      "このエージェントの非公開テキストファイルです。SOUL.md が動作、AGENTS.md がワークスペース規則を定義し、MEMORY.md と USER.md は固定コンテキストとして入り、NOTES.md は必要時に使われます。",
+      "このエージェント専用のテキストファイル。MEMORY.md と USER.md は毎回のチャットでエージェントに渡され、ほかのファイルは必要なときに読み込まれます。",
     agentWorkspaceNewFile: "新しいワークスペースファイル",
     agentWorkspaceConflict:
       "編集中にこのファイルが変更されました。保存する前に開き直して最新の内容を確認してください。",
@@ -492,7 +393,6 @@ export const jaJP: LocaleMessages = {
     apiKey: "APIキー",
     baseUrl: "ベースURL",
     models: "モデル",
-    imageModels: "画像生成モデル",
     modelHint: "モデルを取得してから追加するものを選択",
     fetchModels: "モデルを取得",
     fetchingModels: "モデルを取得中",
@@ -526,7 +426,6 @@ export const jaJP: LocaleMessages = {
     untitledSkill: "無題のアクション",
     title: "タイトル",
     description: "Description",
-    instruction: "指示",
     skillFiles: "スキルファイル",
     replaceFile: "ファイルを置換",
     filePath: "ファイルパス",
@@ -610,15 +509,10 @@ export const jaJP: LocaleMessages = {
     maxToolSteps: "最大ツールステップ数",
     maxToolStepsDescription:
       "アシスタントが実行できるブラウザーツールのステップ数を設定します。0にするとツール呼び出しを無効にします。",
-    contextBudget: "コンテキスト予算",
-    contextBudgetDescription:
-      "各モデルリクエストに含める内容を制限し、長いチャットの応答性を保ち、ツール出力がタスクの文脈を圧迫しないようにします。",
-    contextBudgetEnabled: "コンテキスト予算管理を有効化",
-    contextBudgetEnabledDescription:
-      "送信中のリクエストだけを剪定します。保存済みチャット履歴はそのまま残ります。",
-    contextRequestMaxChars: "リクエスト予算文字数",
-    contextTailMinMessages: "保持する直近メッセージ数",
-    contextToolResultMaxChars: "ツール結果の文字数上限",
+    helperModel: "補助モデル",
+    helperModelDescription:
+      "長いタスクの要約などバックグラウンド処理に使うモデル。既定ではチャットのモデルを使います。",
+    helperModelSameAsChat: "チャットのモデルと同じ",
     debug: "デバッグ",
     debugDescription:
       "OpenBrowserAgentのデータをリセットする開発者向けツールです。",
@@ -646,22 +540,10 @@ export const jaJP: LocaleMessages = {
     debugLoggingTitle: "診断ログ",
     debugLoggingDescription:
       "ストリーム、ツール、アシスタントの順序診断用の一時的なコンソールログを有効にします。",
-    debugLoggingEnabled: "診断コンソールログを有効化",
     debugToolsTitle: "登録済みツール",
-    debugToolsDescription:
-      "現在のブラウザツールレジストリ（{count}個のツール）。",
-    debugToolAvailable: "利用可能",
-    debugToolUnavailable: "利用不可",
+    debugToolsDescription: "選択中のエージェントのツール（{count} 件）。",
+    debugToolCore: "常に読み込み",
+    debugToolOnDemand: "必要時に読み込み",
     debugToolRequired: "必須",
-    debugToolCapabilityEnabled:
-      "エージェント能力で制御されています: {capability}。",
-    debugToolCapabilityDisabled:
-      "エージェント能力を有効にしてください: {capability}。",
-    debugToolImageGenerationDisabled:
-      "プロバイダーで画像生成を有効にしてください。",
-    debugToolSkillsDisabled: "有効なスキルと必要なエージェント能力が必要です。",
-    debugToolAttachmentsRequired:
-      "現在のメッセージにアップロード済み添付ファイルが必要です。",
-    debugToolStepsDisabled: "最大ツールステップ数が0です。",
   },
 };

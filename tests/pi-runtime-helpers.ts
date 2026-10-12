@@ -1,6 +1,8 @@
+import type { Artifact, ArtifactStore } from "../src/shared/artifacts";
 import { afterEach, beforeEach, mock } from "node:test";
 import type { ServerResponse } from "node:http";
-import type { AgentCapabilities, ProviderId } from "../src/shared/types";
+import type { ProviderId } from "../src/shared/types";
+import { DEFAULT_AGENT } from "../src/shared/agents";
 import { DEFAULT_PREFERENCES } from "../src/shared/default-preferences";
 import { storage } from "../src/shared/storage";
 import { runPiAgent } from "../src/background/pi-runtime";
@@ -29,25 +31,29 @@ export function setupPiRuntime(
 ) {
   const chatId = crypto.randomUUID();
   const session = sessions.createStreamSession(chatId);
+  const model = {
+    provider,
+    baseUrl: `${baseUrl}${provider === "ollama" ? "" : provider === "gemini" ? "/v1beta" : "/v1"}`,
+    modelName: "fixture",
+    apiKey: "",
+  };
   const options: Parameters<typeof runPiAgent>[0] = {
     session,
-    model: {
-      provider,
-      baseUrl: `${baseUrl}${provider === "ollama" ? "" : provider === "gemini" ? "/v1beta" : "/v1"}`,
-      modelName: "fixture",
-      apiKey: "",
-    },
+    model,
+    helperModel: model,
+    artifacts: memoryArtifacts(),
     system: "Assist with browsing",
     messages: [{ id: "user", role: "user", content: "Help", createdAt: 1 }],
-    capabilities: {
-      browserTools: true,
-      browserAutomation: true,
-    } as AgentCapabilities,
+    setup: {
+      agent: { ...DEFAULT_AGENT, toolGroups: [...DEFAULT_AGENT.toolGroups] },
+      skills: [],
+      attachments: [],
+      mcpServers: [],
+      preferences: DEFAULT_PREFERENCES,
+      depth: 0,
+    },
     maxToolSteps: 3,
     messageId: "answer",
-    uploadedAttachments: [],
-    availableSkills: [],
-    mcpServers: [],
   };
   return { session, options, close: () => sessions.abortSession(chatId) };
 }
@@ -76,8 +82,20 @@ export function toolDelta(
       {
         index: 0,
         ...(start ? { id: "close", type: "function" } : {}),
-        function: { ...(start ? { name: "manageTabs" } : {}), arguments: args },
+        function: { ...(start ? { name: "tabs" } : {}), arguments: args },
       },
     ],
   });
+}
+
+export function memoryArtifacts(): ArtifactStore {
+  const items = new Map<string, Artifact>();
+  return {
+    async put(artifact) {
+      items.set(`${artifact.chatId}/${artifact.handle}`, artifact);
+    },
+    async get(chatId, handle) {
+      return items.get(`${chatId}/${handle}`);
+    },
+  };
 }
