@@ -1,6 +1,7 @@
 import { delay } from "../../shared/cancellation";
 import { getBrowserApi } from "../../shared/storage";
 import { TOOL_NAME } from "../../shared/tool-names";
+import { adoptAgentTab } from "../agent-tabs";
 import { callPage, pageTab, PageError } from "../page-agent";
 import {
   dialogLines,
@@ -72,7 +73,7 @@ export const actTool: ToolDefinition = {
     },
     ["steps"],
   ),
-  async execute(input, { signal }) {
+  async execute(input, { run, signal }) {
     const steps = (Array.isArray(input.steps) ? input.steps : []).filter(
       (step): step is Step =>
         !!step &&
@@ -195,7 +196,8 @@ export const actTool: ToolDefinition = {
       );
     for (const created of opened) {
       const current = await api.tabs.get(created.id!).catch(() => created);
-      lines.push(`Opened new ${tabLine(current).slice(2)}`);
+      await adoptAgentTab(run, current);
+      lines.push(`Opened new ${tabLine(current, { mine: true }).slice(2)}`);
     }
     lines.push(...changes);
     const moved = steps.some((step) =>

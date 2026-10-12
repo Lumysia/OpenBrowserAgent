@@ -11,6 +11,7 @@ import {
 import { getBrowserApi } from "../../shared/storage";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { areCdpAvailable } from "../../shared/runtime-capabilities";
+import { adoptAgentTab, agentTabIds, openAgentTab } from "../agent-tabs";
 import { withCdp } from "../cdp";
 import { callPage } from "../page-agent";
 import {
@@ -18,6 +19,7 @@ import {
   ok,
   schema,
   stringArg,
+  type RunContext,
   type ToolDefinition,
   type ToolResult,
 } from "./types";
@@ -59,13 +61,20 @@ export async function waitTabComplete(tabId: number, signal?: AbortSignal) {
   });
 }
 
-export function tabLine(tab: chrome.tabs.Tab, group?: string) {
-  return `- tab ${tab.id}${tab.active ? " (active)" : ""}${group ? ` [group: ${group}]` : ""}: ${tab.title || "(untitled)"} | ${tab.url || ""}`;
+export function tabLine(
+  tab: chrome.tabs.Tab,
+  options: { group?: string; mine?: boolean } = {},
+) {
+  const marks = [tab.active && "active", options.mine && "opened by you"]
+    .filter(Boolean)
+    .join(", ");
+  return `- tab ${tab.id}${marks ? ` (${marks})` : ""}${options.group ? ` [group: ${options.group}]` : ""}: ${tab.title || "(untitled)"} | ${tab.url || ""}`;
 }
 
 // Open tabs, optionally only those whose title or URL holds every word of
-// `query`, with the names of their tab groups.
-async function listTabs(query: string) {
+// `query`, with the names of their tab groups and which ones this chat
+// opened.
+async function listTabs(query: string, run: RunContext) {
   const api = getBrowserApi();
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   const tabs = (await api.tabs.query({})).filter((tab) => {
@@ -78,7 +87,13 @@ async function listTabs(query: string) {
       group.title || group.color,
     ]) || [],
   );
-  const lines = tabs.map((tab) => tabLine(tab, groups.get(tab.groupId ?? -1)));
+  const mine = await agentTabIds(run);
+  const lines = tabs.map((tab) =>
+    tabLine(tab, {
+      group: groups.get(tab.groupId ?? -1),
+      mine: mine.has(tab.id ?? -1),
+    }),
+  );
   return ok(
     lines.join("\n") ||
       (query ? `No open tab matches "${query}".` : "No tabs are open."),
@@ -169,7 +184,7 @@ export const tabsTool: ToolDefinition = {
   group: "browser",
   summary: "List, open, switch, close and navigate tabs",
   description:
-    "Manage browser tabs: list (query: only tabs whose title or URL has these words), open (url), switch (tabId), close (tabId or tabIds), navigate (tabId, url), back, forward, reload, group (tabIds, title, color), ungroup (tabIds). Opening and navigating wait for the page to load. Check list before opening a page that may already be open.",
+    "Manage browser tabs: list (query: only tabs whose title or URL has these words; marks the tabs opened by you), open (url; the tab joins this chat's tab group), switch (tabId), close (tabId or tabIds), navigate (tabId, url), back, forward, reload, group (tabIds, title, color), ungroup (tabIds). Opening and navigating wait for the page to load. Check list before opening a page that may already be open.",
   parameters: schema(
     {
       action: { type: "string", enum: TAB_ACTIONS },
@@ -193,16 +208,16 @@ export const tabsTool: ToolDefinition = {
     },
     ["action"],
   ),
-  async execute(input, { signal }) {
+  async execute(input, { run, signal }) {
     const api = getBrowserApi();
     const action = stringArg(input.action) || "list";
-    if (action === "list") return listTabs(stringArg(input.query));
+    if (action === "list") return listTabs(stringArg(input.query), run);
     if (action === "group" || action === "ungroup")
       return groupTabs(action, input);
     if (action === "open") {
       const url = stringArg(input.url);
       if (!url) return fail("url is required to open a tab.");
-      const created = await api.tabs.create({
+      const { tab: created, group } = await openAgentTab(run, {
         url,
         active: input.background !== true,
       });
@@ -210,8 +225,14 @@ export const tabsTool: ToolDefinition = {
       const tab =
         created.id !== undefined ? await api.tabs.get(created.id) : created;
       return {
-        text: `Opened ${tabLine(tab).slice(2)}`,
-        details: { action, tabId: tab.id, title: tab.title, url: tab.url },
+        text: `Opened ${tabLine(tab, { group, mine: true }).slice(2)}`,
+        details: {
+          action,
+          tabId: tab.id,
+          title: tab.title,
+          url: tab.url,
+          group,
+        },
         sources: [
           {
             kind: "page",
@@ -275,7 +296,7 @@ export const webSearchTool: ToolDefinition = {
   description:
     "Search the web with the browser's default search engine and get the results (title, URL, snippet). Read a result with read and its URL; open it in a tab only to interact with it or to show it to the user.",
   parameters: schema({ query: { type: "string" } }, ["query"]),
-  async execute(input, { signal }) {
+  async execute(input, { run, signal }) {
     const query = stringArg(input.query);
     if (!query) return fail("query is required.");
     const api = getBrowserApi();
@@ -309,6 +330,7 @@ export const webSearchTool: ToolDefinition = {
       >(tabId, "searchResults", { limit: SEARCH_RESULT_LIMIT }, signal);
       if (!results.length) {
         keep = true;
+        await adoptAgentTab(run, tab);
         return fail(
           `No results could be read from the search page (tab ${tabId}: ${tab.title || tab.url}). It stays open: snapshot it to see what it shows.`,
           { query, tabId },
