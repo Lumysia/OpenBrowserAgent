@@ -2,7 +2,10 @@ import { orderRows, todoItems } from "./fixture-pages-apps.mjs";
 
 // Each task opens `tabs` (fixture paths or live URLs; the first is active),
 // sends `prompt` through the side panel composer, then `check` decides success
-// from the final answer, fixture server posts, or page DOM state.
+// from the final answer, fixture server posts, or page DOM state. `prepare`
+// (optional) records page state before the prompt is sent, for `check`.
+// Informational tasks are run and reported but not counted as passed or
+// failed: their answer can come from the model's memory.
 const has = (answer, ...patterns) =>
   patterns.every((pattern) => pattern.test(answer));
 const result = (ok, detail) => ({ ok: !!ok, detail });
@@ -30,7 +33,8 @@ export const TASKS = [
         });
         return { total: nodes.length, translated: translated.length };
       });
-      return result(stats.translated >= stats.total * 0.9, stats);
+      // Every heading and paragraph of the fixture article.
+      return result(stats.total === 17 && stats.translated === 17, stats);
     },
   },
   {
@@ -76,22 +80,33 @@ export const TASKS = [
     prompt:
       "In this inventory table, what are the price and the stock count of SKU-48213, and which warehouse is it in?",
     check: ({ answer }) =>
-      result(has(answer, /115[.,]63/, /\b557\b/, /malm[oö]/i)),
+      result(
+        has(
+          answer,
+          /115[.,]63/,
+          /stock[^.\n]{0,40}\b557\b|\b557\b[^.\n]{0,20}(units|in stock|stock)/i,
+          /malm[oö]/i,
+        ),
+      ),
   },
   {
     id: "compare-tabs",
     tabs: ["/laptop/a", "/laptop/b", "/laptop/c"],
     prompt:
       "I have three laptop pages open in my tabs. Which laptop has the longest battery life? Tell me its weight and price.",
+    // The winner's weight and price, not every laptop's.
     check: ({ answer }) =>
-      result(has(answer, /corvid 14/i, /1[.,]18\s?kg/i, /1[,.]?349/)),
+      result(
+        has(answer, /corvid 14/i, /1[.,]18\s?kg/i, /1[,.]?349/) &&
+          !/1[,.]?199|1[,.]?599|1[.,]62\s?kg|1[.,]09\s?kg/i.test(answer),
+      ),
   },
   {
     id: "scroll-answer",
     tabs: ["/help"],
     prompt:
       "According to this help page, how many days do I have to return opened electronics?",
-    check: ({ answer }) => result(has(answer, /\b21\b/)),
+    check: ({ answer }) => result(has(answer, /\b21[\s-]?days?\b/i)),
   },
   {
     id: "checkout-flow",
@@ -187,6 +202,7 @@ export const TASKS = [
   {
     id: "live-wikipedia",
     live: true,
+    informational: true,
     tabs: ["https://en.wikipedia.org/wiki/Web_browser"],
     prompt:
       "According to this Wikipedia article, who created the first web browser and in which year?",
@@ -198,15 +214,29 @@ export const TASKS = [
     tabs: ["https://news.ycombinator.com/"],
     prompt:
       "What is the title of the top story on this page right now, and how many points does it have?",
-    async check({ answer, page }) {
-      const top = await (
-        await page("news.ycombinator.com")
-      ).call(() => document.querySelector(".titleline > a")?.textContent || "");
-      const words = top.toLowerCase().split(/\s+/).slice(0, 4).join(" ");
-      return result(
-        words && answer.toLowerCase().replace(/\s+/g, " ").includes(words),
-        { top: top.slice(0, 80) },
+    // The top story can change during the run: either the one shown when
+    // the prompt was sent or the one at check time counts, with its points
+    // (which keep rising) within a margin.
+    prepare: async ({ page }) => topStory(await page("news.ycombinator.com")),
+    async check({ answer, page, prepared }) {
+      const stories = [
+        prepared,
+        await topStory(await page("news.ycombinator.com")),
+      ];
+      const text = answer.toLowerCase().replace(/\s+/g, " ");
+      const numbers = (answer.match(/\d[\d,]*/g) || []).map((value) =>
+        Number(value.replace(/,/g, "")),
       );
+      const ok = stories.some(
+        (story) =>
+          story?.words &&
+          text.includes(story.words) &&
+          numbers.some(
+            (value) =>
+              Math.abs(value - story.points) <= Math.max(5, story.points * 0.2),
+          ),
+      );
+      return result(ok, { stories });
     },
   },
   {
@@ -215,7 +245,27 @@ export const TASKS = [
     tabs: ["https://en.wikipedia.org/wiki/Main_Page"],
     prompt:
       "Use Wikipedia's own search box on this page to find the article about Ada Lovelace, open it, and tell me her date of birth.",
-    check: ({ answer }) =>
-      result(has(answer, /10 december 1815|december 10,? 1815/i)),
+    // The article must have been opened, not answered from memory.
+    async check({ answer, page }) {
+      const opened = await page("wikipedia.org/wiki/Ada_Lovelace")
+        .then(() => true)
+        .catch(() => false);
+      return result(
+        opened && has(answer, /10 december 1815|december 10,? 1815/i),
+        { opened },
+      );
+    },
   },
 ];
+
+async function topStory(tab) {
+  const story = await tab.call(() => {
+    const title = document.querySelector(".titleline > a")?.textContent || "";
+    const score = document.querySelector(".score")?.textContent || "";
+    return { title, points: parseInt(score, 10) || 0 };
+  });
+  return {
+    ...story,
+    words: story.title.toLowerCase().split(/\s+/).slice(0, 4).join(" "),
+  };
+}

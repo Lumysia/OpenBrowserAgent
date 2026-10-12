@@ -14,6 +14,9 @@ import { TASKS } from "./tasks.mjs";
 //   OBA_EVAL_PROVIDER (default openai: Chat Completions), OBA_EVAL_CONTEXT_LENGTH (optional).
 // Usage: npm run eval -- [--tasks id,id] [--skip-live] [--out path/name]
 //        [--compare baseline.json] [--extension built-extension-dir]
+// A frozen build records where it came from, so reports name the build's
+// commit, not the repository's:
+//   cp -r .output/chrome-mv3 DIR && git rev-parse --short HEAD > DIR/build-commit.txt
 const { values: args } = parseArgs({
   options: {
     tasks: { type: "string" },
@@ -24,6 +27,19 @@ const { values: args } = parseArgs({
     extension: { type: "string" },
   },
 });
+const extensionDir = resolve(args.extension || ".output/chrome-mv3");
+const buildCommit = await readFile(`${extensionDir}/build-commit.txt`, "utf8")
+  .then((text) => text.trim())
+  .catch(() => {
+    if (args.extension)
+      throw new Error(`${extensionDir}/build-commit.txt is missing`);
+    // The working tree's own build; dirty when files changed since HEAD.
+    const head = execSync("git rev-parse --short HEAD").toString().trim();
+    const dirty = execSync("git status --porcelain --untracked-files=no")
+      .toString()
+      .trim();
+    return dirty ? `${head}-dirty` : head;
+  });
 const env = {
   provider: process.env.OBA_EVAL_PROVIDER || "openai",
   baseUrl: process.env.OBA_EVAL_BASE_URL?.replace(/\/$/, ""),
@@ -66,8 +82,8 @@ const report = {
     date: new Date().toISOString(),
     provider: env.provider,
     model: env.model,
-    commit: execSync("git rev-parse --short HEAD").toString().trim(),
-    branch: execSync("git rev-parse --abbrev-ref HEAD").toString().trim(),
+    commit: buildCommit,
+    extension: extensionDir,
   },
   totals: summarize(results),
   tasks: results,
@@ -87,7 +103,7 @@ async function runTask(task) {
   server.reset();
   const chromium = await launchExtension({
     headed: false,
-    ...(args.extension ? { extension: resolve(args.extension) } : {}),
+    extension: extensionDir,
     args: [
       "--disable-background-timer-throttling",
       "--disable-renderer-backgrounding",
@@ -143,6 +159,13 @@ async function runTask(task) {
     await poll(() =>
       panel.call(() => !!document.querySelector(".composer-box textarea")),
     );
+    const page = (match) =>
+      chromium.attach((url) =>
+        url.includes(
+          match.startsWith("/") ? `${server.origin}${match}` : match,
+        ),
+      );
+    const prepared = await task.prepare?.({ page });
     // Wait for the active tab to be attached as context.
     await delay(1500);
     const startedAt = Date.now();
@@ -180,16 +203,13 @@ async function runTask(task) {
         : await task.check({
             answer,
             posts: server.state.posts,
-            page: (match) =>
-              chromium.attach((url) =>
-                url.includes(
-                  match.startsWith("/") ? `${server.origin}${match}` : match,
-                ),
-              ),
+            page,
+            prepared,
           });
     return {
       id: task.id,
       live: !!task.live,
+      informational: !!task.informational,
       ok: verdict.ok,
       detail: verdict.detail,
       wallMs,
@@ -206,22 +226,33 @@ async function runTask(task) {
 
 function callMetrics(calls) {
   const main = calls.filter((call) => !call.aux);
+  const agent = main.filter((call) => !call.helper);
+  const helper = main.filter((call) => call.helper);
   const input = (call) => call.input + call.cacheRead + call.cacheWrite;
-  const largest = main.reduce(
+  const sum = (items, value) =>
+    items.reduce((total, call) => total + value(call), 0);
+  const largest = agent.reduce(
     (best, call) => (input(call) > input(best || call) ? call : best || call),
     undefined,
   );
   return {
     modelCalls: main.length,
     failedCalls: main.filter((call) => call.status >= 400 || call.error).length,
-    inputTokens: main.reduce((sum, call) => sum + input(call), 0),
-    cachedInputTokens: main.reduce((sum, call) => sum + call.cacheRead, 0),
-    cacheWriteTokens: main.reduce((sum, call) => sum + call.cacheWrite, 0),
-    outputTokens: main.reduce((sum, call) => sum + call.output, 0),
+    inputTokens: sum(main, input),
+    cachedInputTokens: sum(main, (call) => call.cacheRead),
+    cacheWriteTokens: sum(main, (call) => call.cacheWrite),
+    outputTokens: sum(main, (call) => call.output),
+    agentCalls: agent.length,
+    agentInputTokens: sum(agent, input),
+    agentCachedInputTokens: sum(agent, (call) => call.cacheRead),
+    helperCalls: helper.length,
+    helperInputTokens: sum(helper, input),
+    // The agent's own largest request; helper requests carry page text.
     largestRequest: largest
       ? { inputTokens: input(largest), chars: largest.requestChars }
       : undefined,
-    toolSchemaChars: Math.max(0, ...main.map((call) => call.toolsChars)),
+    largestHelperRequestTokens: Math.max(0, ...helper.map(input)),
+    toolSchemaChars: Math.max(0, ...agent.map((call) => call.toolsChars)),
     calls: main.map((call) => ({
       input: call.input,
       cacheRead: call.cacheRead,
@@ -229,6 +260,7 @@ function callMetrics(calls) {
       output: call.output,
       chars: call.requestChars,
       status: call.status,
+      ...(call.helper ? { helper: true } : {}),
     })),
   };
 }

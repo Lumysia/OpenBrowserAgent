@@ -97,6 +97,9 @@ async function proxy({ request, response, body, url, upstream, state }) {
     toolsChars: JSON.stringify(parsed.tools || []).length,
     messages: (parsed.messages || parsed.input || []).length,
     aux: /Create concise chat titles/.test(text),
+    // Tool-less requests are helper-model work (extract, compaction,
+    // sub-agent summaries), not the agent's own turns.
+    helper: !(parsed.tools || []).length,
     input: 0,
     cacheRead: 0,
     cacheWrite: 0,
