@@ -15,6 +15,8 @@ export type SmartBarUi = {
     reason: SmartBarShowReason,
   ): void;
   hide(): void;
+  // Esc: closes an open popover in the bar, else the bar.
+  dismiss(): void;
   // Whether the toolbar or a result shows.
   isShown(): boolean;
   // The toolbar goes with its selection; a result stays until dismissed.

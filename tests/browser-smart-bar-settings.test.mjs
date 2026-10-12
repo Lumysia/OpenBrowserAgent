@@ -3,10 +3,12 @@ import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { poll } from "./chromium.mjs";
 import {
+  barHas,
   barState,
   click,
   clickInBar,
   inSmartBar,
+  pressKey,
   resultText,
   selectInFrame,
   selectText,
@@ -126,6 +128,20 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
         await poll(async () => (await barState(page)) === "toolbar");
       },
     );
+
+    await t.test("Esc closes the open menu first, then the bar", async () => {
+      const menuOpen = () =>
+        barHas(page, ".smart-bar-menu-item", "Turn off smart bar");
+      await selectText(page, "#text");
+      await poll(async () => (await barState(page)) === "toolbar");
+      await clickInBar(page, '[aria-label="Smart bar options"]');
+      await poll(menuOpen);
+      await pressKey(page, "Escape", "Escape", 27);
+      await poll(async () => !(await menuOpen()));
+      assert.equal(await barState(page), "toolbar");
+      await pressKey(page, "Escape", "Escape", 27);
+      await poll(async () => (await barState(page)) === "none");
+    });
 
     await t.test("Hide on this site stops it", async () => {
       await selectText(page, "#text");

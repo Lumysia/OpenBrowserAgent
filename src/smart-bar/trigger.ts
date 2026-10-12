@@ -88,14 +88,14 @@ export function installSmartBarTrigger() {
     });
   });
 
-  // Esc closes a shown bar and nothing else: the page's dialog or form
-  // doesn't see it. With no bar, it's left to the page.
+  // Esc closes a shown bar (or its open menu) and nothing else: the page's
+  // dialog or form doesn't see it. With no bar, it's left to the page.
   listen(window, "keydown", (event) => {
     const ui = getSmartBarUi();
     if (event.key !== "Escape" || event.isComposing || !ui?.isShown()) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    ui.hide();
+    ui.dismiss();
   });
 
   // Text fields fire it on themselves; it reaches the document captured.

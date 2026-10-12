@@ -28,6 +28,9 @@ export type SmartBarState = {
   config?: SmartBarPageConfig;
   reason?: SmartBarShowReason;
   result?: SmartBarResult;
+  // A popover in the bar (the × menu) is open. Kept here, not in the
+  // popover: the page script handles Esc before the popover could see it.
+  popoverOpen: boolean;
 };
 
 // State of the bar in this frame, outside React so the page script can show
@@ -35,7 +38,7 @@ export type SmartBarState = {
 // port (stop, hide, new run) aborts the request in the background. `host`
 // holds the bar's shadow root.
 export function createSmartBarStore(host: HTMLElement) {
-  let state: SmartBarState = { id: 0 };
+  let state: SmartBarState = { id: 0, popoverOpen: false };
   let port: chrome.runtime.Port | undefined;
   const listeners = new Set<() => void>();
 
@@ -60,7 +63,12 @@ export function createSmartBarStore(host: HTMLElement) {
     // Keyboard users return to what they had selected.
     const focusInBar = document.activeElement === host;
     const { snapshot, reason } = state;
-    set({ snapshot: undefined, config: undefined, result: undefined });
+    set({
+      snapshot: undefined,
+      config: undefined,
+      result: undefined,
+      popoverOpen: false,
+    });
     if (reason === "shortcut" && focusInBar) restoreSelection(snapshot);
   };
 
@@ -69,8 +77,14 @@ export function createSmartBarStore(host: HTMLElement) {
     if (!snapshot) return;
     stop();
     if (smartBarTextTooLong(snapshot.text))
-      return set({ result: { action, text: "", status: "tooLong" } });
-    set({ result: { action, text: "", status: "streaming" } });
+      return set({
+        result: { action, text: "", status: "tooLong" },
+        popoverOpen: false,
+      });
+    set({
+      result: { action, text: "", status: "streaming" },
+      popoverOpen: false,
+    });
     const current = getBrowserApi().runtime.connect({
       name: SMART_BAR_STREAM_PORT,
     });
@@ -108,9 +122,20 @@ export function createSmartBarStore(host: HTMLElement) {
     host,
     show(snapshot, config, reason) {
       stop();
-      set({ id: state.id + 1, snapshot, config, reason, result: undefined });
+      set({
+        id: state.id + 1,
+        snapshot,
+        config,
+        reason,
+        result: undefined,
+        popoverOpen: false,
+      });
     },
     hide,
+    dismiss() {
+      if (state.popoverOpen) set({ popoverOpen: false });
+      else hide();
+    },
     isShown: () => !!state.snapshot,
     selectionChanged() {
       const { snapshot, result } = state;
@@ -132,6 +157,7 @@ export function createSmartBarStore(host: HTMLElement) {
     run,
     stop,
     hide,
+    setPopoverOpen: (popoverOpen: boolean) => set({ popoverOpen }),
     getState: () => state,
     subscribe(listener: () => void) {
       listeners.add(listener);

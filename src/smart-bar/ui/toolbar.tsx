@@ -1,5 +1,11 @@
 import { Check, EyeOff, Power, X } from "lucide-react";
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type KeyboardEvent,
+} from "react";
 import { QUICK_FEEDBACK_MS } from "../../shared/config";
 import {
   isGenerateAction,
@@ -111,12 +117,16 @@ function CloseMenu({
   config: SmartBarPageConfig;
 }) {
   const t = config.messages;
+  const open = useSyncExternalStore(
+    store.subscribe,
+    () => store.getState().popoverOpen,
+  );
   const choose = (action: () => Promise<unknown>) => {
     void action();
     store.hide();
   };
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={store.setPopoverOpen}>
       <IconTooltip label={t.closeMenu} side="top">
         <PopoverTrigger asChild>
           <Button
