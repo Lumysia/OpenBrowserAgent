@@ -11,7 +11,7 @@ const permissions = [
 const chromiumAndFirefoxPermissions = ["nativeMessaging", "search"] as const;
 const sourcemap = process.env.WXT_SOURCEMAP === "true";
 
-const chromiumOnlyPermissions = ["sidePanel", "debugger"] as const;
+const chromiumOnlyPermissions = ["tabGroups", "sidePanel", "debugger"] as const;
 
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],

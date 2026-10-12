@@ -10,8 +10,17 @@ import {
 } from "../../shared/config";
 import { getBrowserApi } from "../../shared/storage";
 import { TOOL_NAME } from "../../shared/tool-names";
+import { areCdpAvailable } from "../../shared/runtime-capabilities";
+import { withCdp } from "../cdp";
 import { callPage } from "../page-agent";
-import { fail, ok, schema, stringArg, type ToolDefinition } from "./types";
+import {
+  fail,
+  ok,
+  schema,
+  stringArg,
+  type ToolDefinition,
+  type ToolResult,
+} from "./types";
 
 const SEARCH_RESULT_LIMIT = 8;
 
@@ -50,8 +59,89 @@ export async function waitTabComplete(tabId: number, signal?: AbortSignal) {
   });
 }
 
-export function tabLine(tab: chrome.tabs.Tab) {
-  return `- tab ${tab.id}${tab.active ? " (active)" : ""}: ${tab.title || "(untitled)"} | ${tab.url || ""}`;
+export function tabLine(tab: chrome.tabs.Tab, group?: string) {
+  return `- tab ${tab.id}${tab.active ? " (active)" : ""}${group ? ` [group: ${group}]` : ""}: ${tab.title || "(untitled)"} | ${tab.url || ""}`;
+}
+
+// Open tabs, optionally only those whose title or URL holds every word of
+// `query`, with the names of their tab groups.
+async function listTabs(query: string) {
+  const api = getBrowserApi();
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const tabs = (await api.tabs.query({})).filter((tab) => {
+    const text = `${tab.title || ""} ${tab.url || ""}`.toLowerCase();
+    return words.every((word) => text.includes(word));
+  });
+  const groups = new Map(
+    (await api.tabGroups?.query({}).catch(() => []))?.map((group) => [
+      group.id,
+      group.title || group.color,
+    ]) || [],
+  );
+  const lines = tabs.map((tab) => tabLine(tab, groups.get(tab.groupId ?? -1)));
+  return ok(
+    lines.join("\n") ||
+      (query ? `No open tab matches "${query}".` : "No tabs are open."),
+    { action: "list", count: tabs.length },
+  );
+}
+
+const GROUP_COLORS = [
+  "grey",
+  "blue",
+  "red",
+  "yellow",
+  "green",
+  "pink",
+  "purple",
+  "cyan",
+  "orange",
+];
+
+// Groups tabs per window (a group cannot span windows), or ungroups them.
+async function groupTabs(action: string, input: Record<string, unknown>) {
+  const api = getBrowserApi();
+  if (!api.tabs.group || !api.tabGroups)
+    return fail("Tab groups are unavailable in this browser.");
+  const ids = tabIdList(input);
+  if (!ids.length) return fail(`Give tabIds to ${action}.`);
+  if (action === "ungroup") {
+    await api.tabs.ungroup(ids as [number, ...number[]]);
+    return ok(`Ungrouped tab ${ids.join(", ")}.`, { action, tabIds: ids });
+  }
+  const byWindow = new Map<number, number[]>();
+  for (const id of ids) {
+    const tab = await api.tabs.get(id).catch(() => undefined);
+    if (tab?.windowId === undefined) continue;
+    byWindow.set(tab.windowId, [...(byWindow.get(tab.windowId) || []), id]);
+  }
+  if (!byWindow.size) return fail("None of these tabs exist.");
+  const color = GROUP_COLORS.includes(String(input.color))
+    ? (String(input.color) as chrome.tabGroups.Color)
+    : undefined;
+  const title = stringArg(input.title);
+  const groupIds: number[] = [];
+  for (const windowTabs of byWindow.values()) {
+    const groupId = await api.tabs.group({
+      tabIds: windowTabs as [number, ...number[]],
+    });
+    await api.tabGroups.update(groupId, {
+      ...(title ? { title } : {}),
+      ...(color ? { color } : {}),
+    });
+    groupIds.push(groupId);
+  }
+  return ok(`Grouped tab ${ids.join(", ")}${title ? ` as "${title}"` : ""}.`, {
+    action,
+    tabIds: ids,
+    groupIds,
+  });
+}
+
+function tabIdList(input: Record<string, unknown>) {
+  return Array.isArray(input.tabIds)
+    ? input.tabIds.map(Number).filter(Number.isFinite)
+    : [Number(input.tabId)].filter((id) => Number.isFinite(id) && id > 0);
 }
 
 async function focusTab(tabId: number) {
@@ -70,6 +160,8 @@ const TAB_ACTIONS = [
   "back",
   "forward",
   "reload",
+  "group",
+  "ungroup",
 ];
 
 export const tabsTool: ToolDefinition = {
@@ -77,7 +169,7 @@ export const tabsTool: ToolDefinition = {
   group: "browser",
   summary: "List, open, switch, close and navigate tabs",
   description:
-    "Manage browser tabs: list, open (url), switch (tabId), close (tabId or tabIds), navigate (tabId, url), back, forward, reload. Opening and navigating wait for the page to load. Check list before opening a page that may already be open.",
+    "Manage browser tabs: list (query: only tabs whose title or URL has these words), open (url), switch (tabId), close (tabId or tabIds), navigate (tabId, url), back, forward, reload, group (tabIds, title, color), ungroup (tabIds). Opening and navigating wait for the page to load. Check list before opening a page that may already be open.",
   parameters: schema(
     {
       action: { type: "string", enum: TAB_ACTIONS },
@@ -88,9 +180,12 @@ export const tabsTool: ToolDefinition = {
       tabIds: {
         type: "array",
         items: { type: "number" },
-        description: "Tabs to close.",
+        description: "Tabs to close, group or ungroup.",
       },
       url: { type: "string" },
+      query: { type: "string" },
+      title: { type: "string", description: "Group name." },
+      color: { type: "string", enum: GROUP_COLORS },
       background: {
         type: "boolean",
         description: "open: do not switch to the new tab.",
@@ -101,13 +196,9 @@ export const tabsTool: ToolDefinition = {
   async execute(input, { signal }) {
     const api = getBrowserApi();
     const action = stringArg(input.action) || "list";
-    if (action === "list") {
-      const tabs = await api.tabs.query({});
-      return ok(tabs.map(tabLine).join("\n") || "No tabs are open.", {
-        action,
-        count: tabs.length,
-      });
-    }
+    if (action === "list") return listTabs(stringArg(input.query));
+    if (action === "group" || action === "ungroup")
+      return groupTabs(action, input);
     if (action === "open") {
       const url = stringArg(input.url);
       if (!url) return fail("url is required to open a tab.");
@@ -132,9 +223,7 @@ export const tabsTool: ToolDefinition = {
       };
     }
     if (action === "close") {
-      const ids = Array.isArray(input.tabIds)
-        ? input.tabIds.map(Number).filter(Number.isFinite)
-        : [Number(input.tabId)].filter((id) => Number.isFinite(id) && id > 0);
+      const ids = tabIdList(input);
       if (!ids.length) return fail("Give tabId or tabIds to close.");
       await api.tabs.remove(ids);
       return ok(`Closed tab ${ids.join(", ")}.`, { action, tabIds: ids });
@@ -250,14 +339,19 @@ export const webSearchTool: ToolDefinition = {
   },
 };
 
+// Longest edge of a full-page screenshot; vision models scale larger images
+// down anyway.
+const FULL_PAGE_MAX_EDGE = 8_000;
+
 export const screenshotTool: ToolDefinition = {
   name: TOOL_NAME.screenshot,
   group: "pages",
-  summary: "Image of the visible part of a tab",
+  summary: "Image of a tab",
   description:
-    "See the visible part of a tab as an image. Use it only when the layout or visuals matter; snapshot is cheaper for text and controls. Brings the tab to the front.",
+    "See a tab as an image: the visible part (brings the tab to the front), or fullPage: true for the whole page through the Chrome debugger. Use it only when the layout or visuals matter; snapshot is cheaper for text and controls.",
   parameters: schema({
     tabId: { type: "number", description: "Defaults to the active tab." },
+    fullPage: { type: "boolean" },
   }),
   async execute(input, { signal }) {
     const api = getBrowserApi();
@@ -266,6 +360,7 @@ export const screenshotTool: ToolDefinition = {
         ? (await getActiveTab())?.id
         : Number(input.tabId);
     if (!tabId) return fail("No tab to capture. Give a tabId from tabs list.");
+    if (input.fullPage === true) return fullPageShot(tabId, signal);
     await focusTab(tabId);
     signal?.throwIfAborted();
     const tab = await api.tabs.get(tabId);
@@ -280,3 +375,37 @@ export const screenshotTool: ToolDefinition = {
     };
   },
 };
+
+async function fullPageShot(
+  tabId: number,
+  signal?: AbortSignal,
+): Promise<ToolResult> {
+  if (!areCdpAvailable())
+    return fail(
+      "Full-page screenshots need the Chrome debugger, which this browser lacks. Take the visible part and scroll.",
+    );
+  const tab = await getBrowserApi().tabs.get(tabId);
+  const { image, width, height, scale } = await withCdp(
+    { tabId },
+    async (send) => {
+      const metrics = await send("Page.getLayoutMetrics");
+      const size = metrics.cssContentSize || metrics.contentSize;
+      const width = Math.ceil(size.width);
+      const height = Math.ceil(size.height);
+      const scale = Math.min(1, FULL_PAGE_MAX_EDGE / Math.max(width, height));
+      const { data } = await send("Page.captureScreenshot", {
+        format: "jpeg",
+        quality: DEFAULT_SCREENSHOT_QUALITY,
+        captureBeyondViewport: true,
+        clip: { x: 0, y: 0, width, height, scale },
+      });
+      return { image: `data:image/jpeg;base64,${data}`, width, height, scale };
+    },
+    signal,
+  );
+  return {
+    text: `Full-page screenshot of tab ${tabId} (${tab.title || tab.url}, ${width}x${height} px${scale < 1 ? `, scaled to ${Math.round(scale * 100)}%` : ""}) attached.`,
+    details: { tabId, title: tab.title, url: tab.url, image, format: "jpeg" },
+    image: { dataUrl: image, type: "image/jpeg" },
+  };
+}

@@ -18,14 +18,15 @@ All builds declare:
 Chrome/Chromium builds additionally declare:
 
 - `sidePanel`: provide the extension side panel.
-- `debugger`: real keyboard input for rich text editors that ignore page-script typing, page JavaScript (`runScript`, off by default), and developer diagnostics (network resources, device emulation). The debugger attaches only for those calls.
+- `tabGroups`: name and color the tab groups the agent creates with `tabs` (group, ungroup), and show group names in tab lists.
+- `debugger`: real mouse and keyboard input where pages ignore synthetic events (rich text editors, `trusted` or coordinate `act` steps), answering a JavaScript dialog that opened outside an `act` batch, full-page screenshots, page JavaScript (`runScript`, off by default), and developer diagnostics (network resources, device emulation). The debugger attaches only for those calls.
 
 Chromium and Firefox additionally declare:
 
 - `search`: run web searches through the browser's configured default search engine.
 - `nativeMessaging`: connect to a separately installed local execution bridge, which can execute shell commands when enabled for the active agent.
 
-Firefox and Safari omit the Chrome-only `sidePanel` and `debugger` permissions. Firefox uses `sidebar_action` for its sidebar. Safari also omits `search` and `nativeMessaging`; its action opens or focuses `sidepanel.html` as an extension tab.
+Firefox and Safari omit the Chrome-only `tabGroups`, `sidePanel` and `debugger` permissions. Firefox uses `sidebar_action` for its sidebar. Safari also omits `search` and `nativeMessaging`; its action opens or focuses `sidepanel.html` as an extension tab.
 
 The extension page CSP allows images from `self`, `data:`, `blob:`, `http:`, and `https:` so rendered Markdown images, generated images, and Mermaid previews can display.
 

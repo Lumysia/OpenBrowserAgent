@@ -513,6 +513,48 @@ test(
       );
 
       await t.test(
+        "tabs are searched and grouped; a full page is captured",
+        async () => {
+          const other = await open("/shadow");
+          const [found, grouped, listed, ungrouped, shot] = await fixture.run([
+            {
+              name: "tabs",
+              args: { action: "list", query: "shadow 127.0.0.1" },
+            },
+            {
+              name: "tabs",
+              args: {
+                action: "group",
+                tabIds: [tabId, other],
+                title: "Research",
+                color: "blue",
+              },
+            },
+            { name: "tabs", args: { action: "list", query: "127.0.0.1" } },
+            {
+              name: "tabs",
+              args: { action: "ungroup", tabIds: [tabId, other] },
+            },
+            { name: "screenshot", args: { tabId, fullPage: true } },
+          ]);
+          assert.equal(found.split("\n").length, 1);
+          assert.match(found, new RegExp(`tab ${other}.*Shadow`));
+          assert.match(grouped, /Grouped tab .* as "Research"/);
+          assert.match(listed, /\[group: Research\]: Shadow/);
+          assert.match(ungrouped, /Ungrouped/);
+          assert.match(shot, /Full-page screenshot of tab \d+ .*\d+x\d+ px/);
+          assert.equal(
+            await page.call(
+              async (id) => (await chrome.tabs.get(id)).groupId,
+              other,
+            ),
+            -1,
+          );
+          await page.call((id) => chrome.tabs.remove(id), other);
+        },
+      );
+
+      await t.test(
         "on-demand tools are appended by toolSearch without schemas in the result",
         async () => {
           const [loaded] = await fixture.run([
