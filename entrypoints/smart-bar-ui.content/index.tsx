@@ -1,5 +1,4 @@
-import { createRoot, type Root } from "react-dom/client";
-import { createShadowRootUi } from "wxt/utils/content-script-ui/shadow-root";
+import { createRoot } from "react-dom/client";
 import { defineContentScript } from "wxt/utils/define-content-script";
 import {
   getSmartBarUi,
@@ -16,52 +15,58 @@ import componentsCoreCss from "../../src/ui/styles/components-core.css?inline";
 import componentsOverlaysCss from "../../src/ui/styles/components-overlays.css?inline";
 import themeCss from "../../src/ui/styles/theme.css?inline";
 
+const CSS = [
+  // The page's styles stop at the host.
+  ":host { all: initial !important; }",
+  themeCss.replaceAll(":root", ".smart-bar-theme"),
+  baseCss,
+  componentsCoreCss,
+  componentsOverlaysCss,
+  smartBarCss,
+].join("\n");
+
 // The smart bar's UI. The background injects it into a frame the first time
 // the bar shows there (see src/smart-bar/trigger.ts); never in the manifest.
+// It doesn't use WXT's context or shadow-root UI: pages could invalidate the
+// context with a DOM event, and the root must be closed.
 export default defineContentScript({
   registration: "runtime",
   cssInjectionMode: "manual",
-  async main(ctx) {
+  // Tells the page nothing about the extension.
+  noScriptStartedPostMessage: true,
+  main() {
+    if (getSmartBarUi()) return;
     const store = createSmartBarStore();
-    const ui = await createShadowRootUi<Root>(ctx, {
-      name: SMART_BAR_HOST_TAG,
-      position: "inline",
-      anchor: () => document.documentElement,
-      append: "last",
-      css: [
-        themeCss.replaceAll(":root", ".smart-bar-theme"),
-        baseCss,
-        componentsCoreCss,
-        componentsOverlaysCss,
-        smartBarCss,
-      ].join("\n"),
-      onMount(container) {
-        const root = createRoot(container);
-        root.render(<SmartBarApp store={store} />);
-        return root;
-      },
-      onRemove: (root) => root?.unmount(),
-    });
-    ui.mount();
-    const bridge: SmartBarUi = {
+    const { host, container } = createHost();
+    createRoot(container).render(<SmartBarApp store={store} />);
+    setSmartBarUi({
       ...store.ui,
       show(snapshot, config, reason) {
-        placeHost(ui.shadowHost, snapshot);
+        placeHost(host, snapshot);
         store.ui.show(snapshot, config, reason);
       },
-    };
-    setSmartBarUi(bridge);
-    // Single-page apps navigate without unloading the page.
-    ctx.addEventListener(window, "wxt:locationchange", store.hide);
-    ctx.onInvalidated(() => {
-      store.hide();
-      if (getSmartBarUi() === bridge) setSmartBarUi(undefined);
-    });
+    } satisfies SmartBarUi);
   },
 });
 
+// Closed: page scripts can't reach the bar's buttons or read its results.
+function createHost() {
+  const host = document.createElement(SMART_BAR_HOST_TAG);
+  const shadow = host.attachShadow({ mode: "closed" });
+  const html = document.createElement("html");
+  const head = document.createElement("head");
+  const container = document.createElement("body");
+  const style = document.createElement("style");
+  style.textContent = CSS;
+  head.append(style);
+  html.append(head, container);
+  shadow.append(html);
+  document.documentElement.append(host);
+  return { host, container };
+}
+
 // Inside an open modal dialog the page outside it is inert and below the top
-// layer, so the bar goes into the dialog.
+// layer, so the bar goes into the dialog. The page may also have removed it.
 function placeHost(host: HTMLElement, snapshot: SelectionSnapshot) {
   const { target } = snapshot;
   const node =

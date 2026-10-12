@@ -23,6 +23,7 @@ import {
   turnOffSmartBar,
 } from "./page-actions";
 import type { SmartBarStore } from "./store";
+import { onTrusted } from "./trusted";
 
 export function SmartBarToolbar({
   store,
@@ -67,7 +68,7 @@ export function SmartBarToolbar({
       role="toolbar"
       aria-label={t.barLabel}
       className="smart-bar-toolbar"
-      onKeyDown={moveFocus}
+      onKeyDown={onTrusted(moveFocus)}
     >
       {actions.map((action) => {
         const done = copied && action === SMART_BAR_ACTION.copy;
@@ -80,7 +81,7 @@ export function SmartBarToolbar({
               size="icon"
               className="smart-bar-icon-button"
               aria-label={label}
-              onClick={() => run(action)}
+              onClick={onTrusted(() => run(action))}
             >
               <Icon size={16} />
             </Button>
@@ -135,7 +136,7 @@ function CloseMenu({
           variant="ghost"
           size="sm"
           className="smart-bar-menu-item"
-          onClick={() => choose(hideOnThisSite)}
+          onClick={onTrusted(() => choose(hideOnThisSite))}
         >
           <EyeOff size={15} /> {t.hideOnSite}
         </Button>
@@ -143,7 +144,7 @@ function CloseMenu({
           variant="ghost"
           size="sm"
           className="smart-bar-menu-item"
-          onClick={() => choose(turnOffSmartBar)}
+          onClick={onTrusted(() => choose(turnOffSmartBar))}
         >
           <Power size={15} /> {t.turnOff}
         </Button>

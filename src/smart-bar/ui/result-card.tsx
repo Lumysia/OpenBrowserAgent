@@ -16,6 +16,7 @@ import { isEditableSnapshot, type SelectionSnapshot } from "../selection";
 import { copyText, writeIntoSelection, type WriteMode } from "../writeback";
 import { openInSidePanel, SMART_BAR_ICONS } from "./page-actions";
 import type { SmartBarResult, SmartBarStore } from "./store";
+import { onTrusted } from "./trusted";
 
 export function SmartBarResultCard({
   store,
@@ -63,7 +64,7 @@ export function SmartBarResultCard({
             size="icon"
             className="smart-bar-icon-button"
             aria-label={t.close}
-            onClick={store.hide}
+            onClick={onTrusted(store.hide)}
           >
             <X size={15} />
           </Button>
@@ -84,7 +85,7 @@ export function SmartBarResultCard({
       </div>
       <div className="smart-bar-result-actions">
         {streaming && (
-          <Button variant="outline" size="sm" onClick={store.stop}>
+          <Button variant="outline" size="sm" onClick={onTrusted(store.stop)}>
             <Square size={13} /> {t.stop}
           </Button>
         )}
@@ -92,20 +93,20 @@ export function SmartBarResultCard({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => store.run(result.action)}
+            onClick={onTrusted(() => store.run(result.action))}
           >
             <RotateCcw size={13} /> {t.retry}
           </Button>
         )}
         {ready && isEditableSnapshot(snapshot) && (
           <>
-            <Button size="sm" onClick={() => write("replace")}>
+            <Button size="sm" onClick={onTrusted(() => write("replace"))}>
               <Replace size={13} /> {t.replace}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => write("insertBelow")}
+              onClick={onTrusted(() => write("insertBelow"))}
             >
               <ArrowDownToLine size={13} /> {t.insertBelow}
             </Button>
@@ -119,9 +120,9 @@ export function SmartBarResultCard({
               size="icon"
               className="smart-bar-icon-button"
               aria-label={copied ? t.copied : t.actions.copy}
-              onClick={() =>
-                void copyText(text, cardRef.current!).then(setCopied)
-              }
+              onClick={onTrusted(
+                () => void copyText(text, cardRef.current!).then(setCopied),
+              )}
             >
               {copied ? <Check size={15} /> : <Copy size={15} />}
             </Button>
@@ -134,13 +135,13 @@ export function SmartBarResultCard({
             className="smart-bar-icon-button"
             aria-label={t.continueInSidePanel}
             disabled={streaming}
-            onClick={() => {
+            onClick={onTrusted(() => {
               void openInSidePanel(
                 snapshot.text,
                 text ? { action: result.action, text } : undefined,
               );
               store.hide();
-            }}
+            })}
           >
             <PanelRightOpen size={15} />
           </Button>

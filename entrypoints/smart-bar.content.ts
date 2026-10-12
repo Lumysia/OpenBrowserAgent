@@ -5,5 +5,8 @@ import { installSmartBarTrigger } from "../src/smart-bar/trigger";
 // src/background/smart-bar/registration.ts); never listed in the manifest.
 export default defineContentScript({
   registration: "runtime",
-  main: (ctx) => installSmartBarTrigger(ctx),
+  // Tells the page nothing about the extension.
+  noScriptStartedPostMessage: true,
+  // Not WXT's context: pages can invalidate it with a DOM event.
+  main: () => installSmartBarTrigger(),
 });

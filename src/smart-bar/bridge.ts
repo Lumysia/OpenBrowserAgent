@@ -21,8 +21,18 @@ export type SmartBarUi = {
 export const SMART_BAR_HOST_TAG = "oba-smart-bar";
 
 const UI_KEY = "__obaSmartBarUi";
+const TRIGGER_KEY = "__obaSmartBarTrigger";
 
-type Globals = { [UI_KEY]?: SmartBarUi };
+// Globals of the extension's isolated world in this frame.
+type Globals = { [UI_KEY]?: SmartBarUi; [TRIGGER_KEY]?: true };
+
+// True for the first page script in this frame, false for later copies.
+export function claimSmartBarTrigger() {
+  const globals = globalThis as Globals;
+  if (globals[TRIGGER_KEY]) return false;
+  globals[TRIGGER_KEY] = true;
+  return true;
+}
 
 export function getSmartBarUi() {
   return (globalThis as Globals)[UI_KEY];

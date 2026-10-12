@@ -3,6 +3,17 @@ import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { launchExtension, poll } from "./chromium.mjs";
 import { providerFixture } from "./provider-fixtures.mjs";
+import {
+  barHas,
+  barState,
+  click,
+  clickAway,
+  clickInBar,
+  inSmartBar,
+  pressKey,
+  resultText,
+  selectText,
+} from "./smart-bar-page.mjs";
 
 // The smart bar in the production build: off by default, turned on through
 // the options page, streaming a fixture model's answer and writing results
@@ -22,6 +33,9 @@ const PAGE = `<!doctype html><title>Smart bar</title>
     window.inputEvents++;
     window.controlledState = event.target.value;
   });
+  // Anything the extension announces to the page.
+  window.extensionMessages = 0;
+  addEventListener("message", () => window.extensionMessages++);
 </script>`;
 
 const FIXES = {
@@ -124,6 +138,47 @@ test("smart bar", { timeout: 240000 }, async (t) => {
       });
     });
 
+    await t.test(
+      "a page script can neither open nor reach the bar",
+      async () => {
+        await clickAway(page);
+        const requests = fixture.requests.length;
+        const reached = await page.call(async (extensionId) => {
+          const wait = (ms) =>
+            new Promise((resolve) => setTimeout(resolve, ms));
+          // A page dispatching WXT's own "newer script started" event must not
+          // tear down the extension's listeners.
+          document.dispatchEvent(
+            new CustomEvent(
+              `${extensionId}:smart-bar:wxt:content-script-started`,
+              {
+                detail: { contentScriptName: "smart-bar", messageId: "page" },
+              },
+            ),
+          );
+          getSelection().selectAllChildren(document.getElementById("text"));
+          document.dispatchEvent(
+            new MouseEvent("mouseup", { bubbles: true, button: 0 }),
+          );
+          await wait(600);
+          return document.querySelector("oba-smart-bar")?.shadowRoot || null;
+        }, browser.id);
+        assert.equal(reached, null);
+        assert.equal(await barState(page), "none");
+        // The user's own selection still works, and the page can't reach in.
+        await selectText(page, "#text");
+        await poll(async () => (await barState(page)) === "toolbar");
+        assert.equal(
+          await page.call(
+            () => document.querySelector("oba-smart-bar").shadowRoot,
+          ),
+          null,
+        );
+        assert.equal(fixture.requests.length, requests);
+        assert.equal(await page.call(() => window.extensionMessages), 0);
+      },
+    );
+
     await t.test("Explain streams the fixture answer", async () => {
       await clickInBar(page, '[aria-label="Explain"]');
       await poll(async () =>
@@ -151,21 +206,7 @@ test("smart bar", { timeout: 240000 }, async (t) => {
         const before = await fieldValue(page, selector);
         await replaceWithFix(page, selector);
         assert.equal(await fieldValue(page, selector), FIXES[before]);
-        await page.send("Input.dispatchKeyEvent", {
-          type: "rawKeyDown",
-          modifiers: 2,
-          key: "z",
-          code: "KeyZ",
-          windowsVirtualKeyCode: 90,
-          commands: ["undo"],
-        });
-        await page.send("Input.dispatchKeyEvent", {
-          type: "keyUp",
-          modifiers: 2,
-          key: "z",
-          code: "KeyZ",
-          windowsVirtualKeyCode: 90,
-        });
+        await pressKey(page, "z", "KeyZ", 90, 2, ["undo"]);
         await poll(async () => (await fieldValue(page, selector)) === before);
       });
 
@@ -280,11 +321,7 @@ test("smart bar", { timeout: 240000 }, async (t) => {
       }, listedUrl);
       await poll(async () => (await barState(listed)) === "toolbar");
       assert.equal(
-        await listed.call(
-          () =>
-            document.querySelector("oba-smart-bar").shadowRoot.activeElement
-              ?.ariaLabel,
-        ),
+        await inSmartBar(listed, (root) => root.activeElement?.ariaLabel),
         "Ask",
       );
     });
@@ -302,113 +339,6 @@ async function replaceWithFix(page, selector) {
   await poll(() => barHas(page, "button", "Replace"));
   await clickInBar(page, "button", "Replace");
   await poll(async () => (await barState(page)) === "none");
-}
-
-// A real mouse drag across the element's first line.
-async function selectText(page, selector) {
-  await page.send("Page.bringToFront");
-  const rect = await page.call((selector) => {
-    const box = document.querySelector(selector).getBoundingClientRect();
-    return { left: box.left, right: box.right, top: box.top };
-  }, selector);
-  const y = rect.top + 10;
-  const mouse = (type, x, buttons) =>
-    page.send("Input.dispatchMouseEvent", {
-      type,
-      x,
-      y,
-      button: "left",
-      buttons,
-      clickCount: 1,
-    });
-  // Away first, so a shown bar hides like after a user's click.
-  await page.send("Input.dispatchMouseEvent", {
-    type: "mousePressed",
-    x: 600,
-    y: 560,
-    button: "left",
-    clickCount: 1,
-  });
-  await page.send("Input.dispatchMouseEvent", {
-    type: "mouseReleased",
-    x: 600,
-    y: 560,
-    button: "left",
-    clickCount: 1,
-  });
-  await mouse("mousePressed", rect.left + 2, 1);
-  await mouse("mouseMoved", (rect.left + rect.right) / 2, 1);
-  await mouse("mouseMoved", rect.right - 2, 1);
-  await mouse("mouseReleased", rect.right - 2, 0);
-  await delay(300);
-}
-
-async function click(page, { x, y }) {
-  for (const type of ["mousePressed", "mouseReleased"])
-    await page.send("Input.dispatchMouseEvent", {
-      type,
-      x,
-      y,
-      button: "left",
-      clickCount: 1,
-    });
-}
-
-// Clicks once the element stops moving (the page can resize, e.g. when the
-// side panel opens, and the bar follows).
-async function clickInBar(page, selector, text) {
-  let last;
-  const point = await poll(async () => {
-    const current = await page.call(
-      ({ selector, text }) => {
-        const root = document.querySelector("oba-smart-bar")?.shadowRoot;
-        const element = [...(root?.querySelectorAll(selector) || [])].find(
-          (item) => !text || item.textContent.trim() === text,
-        );
-        if (!element) return undefined;
-        const rect = element.getBoundingClientRect();
-        return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
-      },
-      { selector, text },
-    );
-    const stable =
-      current && last && current.x === last.x && current.y === last.y;
-    last = current;
-    if (!stable) await delay(100);
-    return stable && current;
-  });
-  await click(page, point);
-}
-
-function barState(page) {
-  return page.call(() => {
-    const root = document.querySelector("oba-smart-bar")?.shadowRoot;
-    if (root?.querySelector(".smart-bar-result")) return "result";
-    if (root?.querySelector('[role="toolbar"]')) return "toolbar";
-    return "none";
-  });
-}
-
-function barHas(page, selector, text) {
-  return page.call(
-    ({ selector, text }) =>
-      [
-        ...(document
-          .querySelector("oba-smart-bar")
-          ?.shadowRoot?.querySelectorAll(selector) || []),
-      ].some((item) => item.textContent.trim() === text),
-    { selector, text },
-  );
-}
-
-function resultText(page) {
-  return page.call(
-    () =>
-      document
-        .querySelector("oba-smart-bar")
-        ?.shadowRoot?.querySelector(".smart-bar-result-text")?.textContent ||
-      "",
-  );
 }
 
 function fieldValue(page, selector) {
