@@ -54,6 +54,7 @@ export function searchResults(limit: number) {
     } catch {
       continue;
     }
+    url = unwrapRedirect(url);
     if (!/^https?:$/.test(url.protocol)) continue;
     const target = url.hostname.replace(/^www\./, "");
     if (target === host || target.endsWith(`.${host}`)) continue;
@@ -64,6 +65,24 @@ export function searchResults(limit: number) {
     if (results.length >= limit) break;
   }
   return results;
+}
+
+// Engines often link results through their own redirect URLs.
+function unwrapRedirect(url: URL) {
+  for (const key of ["uddg", "url", "q"]) {
+    const value = url.searchParams.get(key);
+    if (value && /^https?:\/\//.test(value)) return new URL(value);
+  }
+  const bing = url.searchParams.get("u");
+  if (bing?.startsWith("a1")) {
+    try {
+      const decoded = atob(bing.slice(2).replace(/-/g, "+").replace(/_/g, "/"));
+      if (/^https?:\/\//.test(decoded)) return new URL(decoded);
+    } catch {
+      // Not an encoded URL; keep the link as it is.
+    }
+  }
+  return url;
 }
 
 function snippetFor(link: Element, title: string) {
