@@ -35,10 +35,10 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
     "Eine kleine Leiste neben markiertem Text mit schnellen KI-Aktionen. Es wird nichts gesendet, bevor Sie eine Aktion wählen.",
   enable: "Smart Bar anzeigen",
   enableDescription:
-    "Standardmäßig aus. Wenn aktiviert, reagiert OpenBrowserAgent auf erlaubten Seiten auf Textauswahl.",
+    "Standardmäßig aus. Wenn aktiviert, beobachtet OpenBrowserAgent auf erlaubten Seiten, welcher Text markiert wird.",
   trigger: "Wann anzeigen",
   triggerDescription:
-    "Das Tastenkürzel funktioniert in beiden Modi. Legen Sie es in den Erweiterungs-Tastenkürzeln Ihres Browsers fest.",
+    "Das Tastenkürzel funktioniert in beiden Modi. Legen Sie es in den Tastenkürzel-Einstellungen für Erweiterungen Ihres Browsers fest.",
   triggerSelection: "Beim Markieren von Text",
   triggerShortcut: "Nur per Tastenkürzel",
   sites: "Websites",

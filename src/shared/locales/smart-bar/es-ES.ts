@@ -25,9 +25,9 @@ export const smartBarEsES: SmartBarLocaleMessages = {
   readResult: "Leer el resultado en voz alta",
   stopReading: "Detener la lectura",
   writing: "Escribiendo…",
-  emptyResult: "El modelo no devolvió texto.",
+  emptyResult: "El modelo no ha devuelto texto.",
   selectionChanged:
-    "El texto seleccionado ha cambiado. Copia el resultado en su lugar.",
+    "El texto seleccionado ha cambiado. Copia el resultado en vez de reemplazarlo.",
   selectionTooLong:
     "La selección es demasiado larga (más de {max} caracteres). Continúa en el panel lateral.",
   settingsTitle: "Barra inteligente",
@@ -35,10 +35,10 @@ export const smartBarEsES: SmartBarLocaleMessages = {
     "Una pequeña barra junto al texto seleccionado con acciones rápidas de IA. No se envía nada hasta que eliges una acción.",
   enable: "Mostrar la barra inteligente",
   enableDescription:
-    "Desactivada de forma predeterminada. Al activarla, OpenBrowserAgent responde a la selección de texto en las páginas permitidas.",
+    "Desactivada de forma predeterminada. Al activarla, OpenBrowserAgent detecta la selección de texto en las páginas permitidas.",
   trigger: "Cuándo mostrarla",
   triggerDescription:
-    "El atajo de teclado funciona en ambos modos. Configúralo en los atajos de extensiones del navegador.",
+    "El atajo de teclado funciona en ambos modos. Configúralo en los ajustes de atajos de extensiones del navegador.",
   triggerSelection: "Al seleccionar texto",
   triggerShortcut: "Solo con el atajo",
   sites: "Sitios",
@@ -55,9 +55,9 @@ export const smartBarEsES: SmartBarLocaleMessages = {
   noSites: "Aún no hay sitios.",
   pageActions: "Acciones para el texto de la página",
   pageActionsDescription: "Se muestran al seleccionar texto en una página.",
-  editActions: "Acciones para el texto que editas",
+  editActions: "Acciones para el texto que estás editando",
   editActionsDescription:
-    "Se muestran al seleccionar texto en un campo. El resultado puede reemplazar la selección.",
+    "Se muestran al seleccionar texto en un campo de texto. El resultado puede reemplazar la selección.",
   model: "Modelo de la barra inteligente",
   modelDescription:
     "Modelo para Explicar, Traducir, Resumir y las acciones de escritura.",

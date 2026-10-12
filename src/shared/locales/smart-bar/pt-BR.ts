@@ -26,18 +26,19 @@ export const smartBarPtBR: SmartBarLocaleMessages = {
   stopReading: "Parar a leitura",
   writing: "Escrevendo…",
   emptyResult: "O modelo não retornou texto.",
-  selectionChanged: "O texto selecionado mudou. Copie o resultado.",
+  selectionChanged:
+    "O texto selecionado mudou. Copie o resultado em vez disso.",
   selectionTooLong:
-    "A seleção é longa demais (mais de {max} caracteres). Continue no painel lateral.",
+    "A seleção é longa demais (mais de {max} caracteres). Continue no painel lateral em vez disso.",
   settingsTitle: "Barra inteligente",
   settingsDescription:
     "Uma pequena barra ao lado do texto selecionado com ações rápidas de IA. Nada é enviado até você escolher uma ação.",
   enable: "Mostrar a barra inteligente",
   enableDescription:
-    "Desativada por padrão. Quando ativada, o OpenBrowserAgent responde à seleção de texto nas páginas permitidas.",
+    "Desativada por padrão. Quando ativada, o OpenBrowserAgent acompanha a seleção de texto nas páginas permitidas.",
   trigger: "Quando mostrar",
   triggerDescription:
-    "O atalho de teclado funciona nos dois modos. Defina-o nos atalhos de extensões do navegador.",
+    "O atalho de teclado funciona nos dois modos. Defina-o nas configurações de atalhos de extensões do navegador.",
   triggerSelection: "Ao selecionar texto",
   triggerShortcut: "Somente com o atalho",
   sites: "Sites",
@@ -52,11 +53,11 @@ export const smartBarPtBR: SmartBarLocaleMessages = {
   removeSite: "Remover {host}",
   invalidSite: "Digite um site como example.com.",
   noSites: "Nenhum site ainda.",
-  pageActions: "Ações para texto da página",
+  pageActions: "Ações para o texto da página",
   pageActionsDescription: "Aparecem ao selecionar texto em uma página.",
   editActions: "Ações para o texto que você está editando",
   editActionsDescription:
-    "Aparecem ao selecionar texto em um campo. O resultado pode substituir a seleção.",
+    "Aparecem ao selecionar texto em um campo de texto. O resultado pode substituir a seleção.",
   model: "Modelo da barra inteligente",
   modelDescription:
     "Modelo para Explicar, Traduzir, Resumir e as ações de escrita.",

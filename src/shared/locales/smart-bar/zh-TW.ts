@@ -43,7 +43,7 @@ export const smartBarZhTW: SmartBarLocaleMessages = {
   sitesDescription:
     "兩份清單都會保留，由模式決定使用哪一份。網站包含其子網域。",
   siteModeBlockList: "除已封鎖網站外的所有網站",
-  siteModeAllowList: "僅在允許的網站",
+  siteModeAllowList: "僅在允許的網站上",
   blockedSites: "已封鎖的網站",
   allowedSites: "允許的網站",
   sitePlaceholder: "example.com",

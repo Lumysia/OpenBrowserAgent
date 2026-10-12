@@ -34,7 +34,7 @@ export const smartBarKo: SmartBarLocaleMessages = {
     "선택한 텍스트 옆에 빠른 AI 작업을 보여 주는 작은 도구 모음입니다. 작업을 선택하기 전에는 아무것도 전송되지 않습니다.",
   enable: "스마트 바 표시",
   enableDescription:
-    "기본값은 꺼짐입니다. 켜면 OpenBrowserAgent가 허용된 페이지에서 텍스트 선택에 반응합니다.",
+    "기본값은 꺼짐입니다. 켜면 OpenBrowserAgent가 허용된 페이지에서 텍스트 선택을 감지합니다.",
   trigger: "표시 시점",
   triggerDescription:
     "키보드 단축키는 두 모드 모두에서 작동합니다. 브라우저의 확장 프로그램 단축키 설정에서 지정하세요.",
@@ -49,14 +49,14 @@ export const smartBarKo: SmartBarLocaleMessages = {
   allowedSites: "허용한 사이트",
   sitePlaceholder: "example.com",
   addSite: "사이트 추가",
-  removeSite: "{host} 삭제",
+  removeSite: "{host} 제거",
   invalidSite: "example.com 같은 사이트를 입력하세요.",
   noSites: "아직 사이트가 없습니다.",
   pageActions: "페이지 텍스트 작업",
   pageActionsDescription: "페이지에서 텍스트를 선택하면 표시됩니다.",
   editActions: "편집 중인 텍스트 작업",
   editActionsDescription:
-    "입력란에서 텍스트를 선택하면 표시됩니다. 결과로 선택 영역을 바꿀 수 있습니다.",
+    "입력란에서 텍스트를 선택하면 표시됩니다. 결과로 선택한 텍스트를 바꿀 수 있습니다.",
   model: "스마트 바 모델",
   modelDescription: "설명, 번역, 요약 및 글쓰기 작업에 사용할 모델입니다.",
 };

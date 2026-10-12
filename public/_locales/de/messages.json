@@ -6,7 +6,7 @@
     "message": "OpenBrowserAgent bringt KI-Agenten in Ihren Browser und hilft Ihnen, Aufgaben intelligent zu automatisieren."
   },
   "selectorPrompt": {
-    "message": "Element auswählen - Esc zum Abbrechen"
+    "message": "Element auswählen – Esc zum Abbrechen"
   },
   "smartBarCommand": {
     "message": "Smart Bar für den markierten Text anzeigen"

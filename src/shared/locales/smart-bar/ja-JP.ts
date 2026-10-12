@@ -32,13 +32,13 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
     "選択範囲が長すぎます（{max} 文字超）。代わりにサイドパネルで続けてください。",
   settingsTitle: "スマートバー",
   settingsDescription:
-    "選択したテキストの近くに表示される小さなツールバーで、AI のクイック操作を提供します。操作を選ぶまで何も送信されません。",
+    "選択したテキストの横に表示される小さなツールバーで、AI のクイック操作を使えます。操作を選ぶまで何も送信されません。",
   enable: "スマートバーを表示",
   enableDescription:
     "既定ではオフです。オンにすると、OpenBrowserAgent は許可されたページでテキストの選択に反応します。",
   trigger: "表示するタイミング",
   triggerDescription:
-    "キーボードショートカットはどちらのモードでも使えます。ブラウザの拡張機能ショートカット設定で設定してください。",
+    "キーボードショートカットはどちらのモードでも使えます。ブラウザーの拡張機能のショートカット設定で設定してください。",
   triggerSelection: "テキストを選択したとき",
   triggerShortcut: "ショートカットのみ",
   sites: "サイト",
@@ -57,7 +57,7 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
   pageActionsDescription: "ページ上のテキストを選択したときに表示されます。",
   editActions: "編集中のテキスト用の操作",
   editActionsDescription:
-    "テキスト入力欄で選択したときに表示されます。結果で選択範囲を置き換えられます。",
+    "テキスト入力欄でテキストを選択したときに表示されます。結果で選択範囲を置き換えられます。",
   model: "スマートバーのモデル",
-  modelDescription: "説明、翻訳、要約、文章操作に使うモデル。",
+  modelDescription: "「説明」「翻訳」「要約」と文章作成の操作に使うモデル。",
 };

@@ -3,10 +3,10 @@
     "message": "OpenBrowserAgent"
   },
   "extDescription": {
-    "message": "OpenBrowserAgentはAIエージェントをブラウザーに組み込み、タスクのスマートな自動化を支援します。"
+    "message": "OpenBrowserAgent は AI エージェントをブラウザーに組み込み、タスクをスマートに自動化します。"
   },
   "selectorPrompt": {
-    "message": "要素を選択 - Escでキャンセル"
+    "message": "要素を選択 - Esc でキャンセル"
   },
   "smartBarCommand": {
     "message": "選択したテキストにスマートバーを表示"

@@ -34,10 +34,10 @@ export const smartBarFrFR: SmartBarLocaleMessages = {
     "Une petite barre d’outils près du texte sélectionné, avec des actions IA rapides. Rien n’est envoyé avant que vous choisissiez une action.",
   enable: "Afficher la barre intelligente",
   enableDescription:
-    "Désactivée par défaut. Une fois activée, OpenBrowserAgent réagit à la sélection de texte sur les pages autorisées.",
+    "Désactivée par défaut. Une fois activée, OpenBrowserAgent surveille la sélection de texte sur les pages autorisées.",
   trigger: "Quand l’afficher",
   triggerDescription:
-    "Le raccourci clavier fonctionne dans les deux modes. Définissez-le dans les raccourcis d’extensions de votre navigateur.",
+    "Le raccourci clavier fonctionne dans les deux modes. Définissez-le dans les paramètres des raccourcis d’extensions de votre navigateur.",
   triggerSelection: "À la sélection de texte",
   triggerShortcut: "Uniquement avec le raccourci",
   sites: "Sites",
