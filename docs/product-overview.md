@@ -37,7 +37,7 @@ It turns the browser into an AI working surface: users can chat with a selected 
 
 ### Skills
 
-- Skills are reusable instruction packages with a required `SKILL.md`.
+- Skills are reusable instruction packages with a required `SKILL.md`. The built-in skills and how to use them are listed in [skills.md](skills.md).
 - Built-in skills ship with the extension and update with it; they are read-only. Customizing one saves the user's own copy under the same name, which replaces the built-in until it is deleted.
 - Each skill is Auto (agents see its name and description and read the full skill when a request fits), Manual (used only when the user picks it) or Off.
 - In the side panel, typing `/` at the start of the message or opening "+" → Skills picks a skill for that message: the agent follows it for the request typed after it.
