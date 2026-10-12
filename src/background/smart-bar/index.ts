@@ -260,14 +260,13 @@ async function runAction(
   signal: AbortSignal,
   post: (event: SmartBarStreamEvent) => void,
 ) {
-  const [preferences, agents, language] = await Promise.all([
-    storage.preferences.get(),
-    storage.agents.get(),
-    storage.language.get(),
-  ]);
   // The bar refuses these itself; never cut them here.
   if (smartBarTextTooLong(request.text))
-    throw new Error(getMessages(language).smartBar.selectionTooLong);
+    throw new Error("Smart bar text too long");
+  const [preferences, agents] = await Promise.all([
+    storage.preferences.get(),
+    storage.agents.get(),
+  ]);
   const settings = normalizeSmartBarSettings(preferences.smartBar);
   const agent = resolveAgent(agents, preferences.selectedAgentId);
   const model = await resolveModel(settings.modelId, agent.modelId);

@@ -187,6 +187,24 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
       await clickInBar(page, '[role="toolbar"] button');
       await poll(async () => (await resultText(page)).includes("20.000"));
     });
+
+    await t.test("the background refuses too-long text as well", async () => {
+      const requests = fixture.requests.length;
+      const event = await session.options.call(
+        () =>
+          new Promise((resolve) => {
+            const port = chrome.runtime.connect({ name: "smart-bar-stream" });
+            port.onMessage.addListener(resolve);
+            port.postMessage({
+              type: "run",
+              action: "improve",
+              text: "x".repeat(20001),
+            });
+          }),
+      );
+      assert.equal(event.type, "error");
+      assert.equal(fixture.requests.length, requests);
+    });
   } finally {
     release();
     await session.close();
