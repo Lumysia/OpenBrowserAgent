@@ -59,7 +59,7 @@ function run(contextWindow = 20_000) {
         { type: "toolCall", id, name, arguments: input },
       ],
     });
-    const text = await engine.acceptToolOutput({
+    const { text } = await engine.acceptToolOutput({
       toolCallId: id,
       toolName: name,
       input: { ...input, call: calls },
@@ -151,7 +151,7 @@ test("an identical read on an unchanged page returns a short reference", async (
   const { engine, turn } = run();
   const first = await turn("same page", { tabId: 1 });
   assert.equal(first, "same page");
-  const repeat = await engine.acceptToolOutput({
+  const { text: repeat } = await engine.acceptToolOutput({
     toolCallId: "again",
     toolName: "snapshot",
     input: { tabId: 1, call: 1 },
@@ -159,7 +159,7 @@ test("an identical read on an unchanged page returns a short reference", async (
     repeatable: true,
   });
   assert.match(repeat, /^Unchanged since art-/);
-  const changed = await engine.acceptToolOutput({
+  const { text: changed } = await engine.acceptToolOutput({
     toolCallId: "changed",
     toolName: "snapshot",
     input: { tabId: 1, call: 1 },
@@ -293,13 +293,15 @@ test("compaction summarizes the whole span, task first, within the helper's wind
       content: [
         {
           type: "text",
-          text: await engine.acceptToolOutput({
-            toolCallId: id,
-            toolName: "find",
-            input: { index },
-            text: `fact-${index}: ${"result text ".repeat(40)}`,
-            repeatable: false,
-          }),
+          text: (
+            await engine.acceptToolOutput({
+              toolCallId: id,
+              toolName: "find",
+              input: { index },
+              text: `fact-${index}: ${"result text ".repeat(40)}`,
+              repeatable: false,
+            })
+          ).text,
         },
       ],
       isError: false,
@@ -324,7 +326,7 @@ test("a repeated long snapshot of an unchanged page is a short reference", async
   const first = await turn(`viewport\n[stored as "${handle}"]`, { tabId: 1 });
   const again = await engine.storeText("snapshot of tab 1", full);
   assert.equal(again, handle);
-  const repeat = await engine.acceptToolOutput({
+  const { text: repeat } = await engine.acceptToolOutput({
     toolCallId: "again",
     toolName: "snapshot",
     input: { tabId: 1, call: 1 },

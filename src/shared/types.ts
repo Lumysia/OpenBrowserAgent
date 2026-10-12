@@ -268,8 +268,22 @@ export type ChatPart = {
     | (typeof CHAT_PART_STATE)["outputAvailable"]
     | (typeof CHAT_PART_STATE)["outputError"];
   input?: unknown;
+  // Structured details for the side panel.
   output?: unknown;
+  // What the model received for the call (see shared/tool-results).
+  result?: ToolModelResult;
+  // The model response that made the call; parallel calls share it.
+  step?: string;
   error?: string;
+};
+
+export type ToolModelResult = {
+  // The text of the result, as the model got it.
+  text: string;
+  // An image came with the text; images are not kept.
+  image?: boolean;
+  // Artifact handle of the full output, kept when the text is long.
+  artifact?: string;
 };
 
 export type { Chat, ChatContent, ChatMeta, ChatSummary } from "./chat-types";

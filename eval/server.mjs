@@ -14,6 +14,7 @@ import {
   blogPostPage,
   checkoutPage,
   issuesPage,
+  messengerPage,
   ordersPage,
   settingsPage,
   todosPage,
@@ -34,6 +35,7 @@ const PAGES = {
   "/orders": ordersPage,
   "/blog": blogIndexPage,
   "/todos": todosPage,
+  "/messenger": messengerPage,
 };
 
 // One local server for fixture pages, their form endpoints, and a recording

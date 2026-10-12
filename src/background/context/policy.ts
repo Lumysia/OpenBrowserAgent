@@ -23,6 +23,12 @@ export const CONTEXT_POLICY = {
   summaryToolOutputChars: 2_000,
   // Masking skips outputs this small: the stub would save nothing.
   minMaskChars: 600,
+  // Tool outputs of earlier turns are replayed shortened to this size; a
+  // longer output keeps its full text as an artifact.
+  historyToolOutputTokens: 300,
+  // All replayed outputs of one earlier turn together; past this, its
+  // older outputs are replayed as one-line stubs.
+  historyTurnToolTokens: 4_000,
 } as const;
 
 export function windowShare(

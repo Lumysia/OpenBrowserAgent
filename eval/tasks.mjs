@@ -215,6 +215,44 @@ export const TASKS = [
     },
   },
   {
+    // The follow-up can only be answered from the first run's own tool
+    // calls: every element ref it used (the composer is re-rendered after
+    // sending, so a new snapshot shows other refs) and what the page showed
+    // after sending. A verified result must not be retracted.
+    id: "recall-earlier-steps",
+    tabs: ["/messenger"],
+    prompt:
+      'In this messenger, send the message "meow" to myself (my own "Message yourself" chat). Do not send it to anyone else or to any group.',
+    followUps: [
+      "What exactly did you do: which tools did you call, in order, on which element refs, and what did the page show after sending? Did it work?",
+    ],
+    check({ answer, runs, posts }) {
+      const sent = posts.filter((post) => post.path === "/api/message");
+      const delivered =
+        sent.length === 1 &&
+        sent[0].data.chat === "self" &&
+        /^meow$/i.test(sent[0].data.text);
+      const refs = [
+        ...new Set(JSON.stringify(runs[0].toolInputs).match(/\be\d+\b/g) || []),
+      ];
+      const recalledRefs = refs.filter((ref) =>
+        new RegExp(`\\b${ref}\\b`).test(answer),
+      );
+      const quotedResult = !!sent[0] && answer.includes(sent[0].code);
+      const retracted =
+        /(can(?:'|no)t|cannot|unable to|not able to|don'?t have)\s+(?:see|access|verify|view)|no (?:record|basis|visibility)|not visible to me|(?:made|called) no tool|(?:reply|claim|report) (?:was|wasn'?t) (?:wrong|unsupported|backed)/i.test(
+          answer,
+        );
+      return result(
+        delivered &&
+          recalledRefs.length === refs.length &&
+          quotedResult &&
+          !retracted,
+        { delivered, refs, recalledRefs, quotedResult, retracted },
+      );
+    },
+  },
+  {
     id: "live-wikipedia",
     live: true,
     informational: true,

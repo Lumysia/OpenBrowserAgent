@@ -52,7 +52,11 @@ export function retryStalledStream({
     sendMessagesRequest({
       chat,
       messageId: crypto.randomUUID(),
-      messages: [...chat.messages.slice(0, assistantIndex), retryInstruction],
+      // The stalled reply goes along, so its finished steps are not redone.
+      messages: [
+        ...chat.messages.slice(0, assistantIndex + 1),
+        retryInstruction,
+      ],
       preferences,
       agent,
       language,

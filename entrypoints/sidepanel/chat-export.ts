@@ -1,7 +1,13 @@
 import { describeRun } from "../../src/shared/run-description";
 import {
+  parseToolResultText,
+  toolModelResult,
+  toolResultText,
+  turnSteps,
+} from "../../src/shared/tool-results";
+import {
   CHAT_PART_STATE,
-  isToolPartType,
+  toolNameFromPartType,
   toolPartType,
 } from "../../src/shared/types";
 import type {
@@ -10,6 +16,7 @@ import type {
   Agent,
   ChatPart,
   RunMetrics,
+  ToolPartType,
 } from "../../src/shared/types";
 
 type OpenAiExportMessage =
@@ -17,6 +24,7 @@ type OpenAiExportMessage =
   | {
       role: "assistant";
       content?: string | null;
+      reasoning_content?: string;
       tool_calls?: OpenAiToolCall[];
     }
   | { role: "tool"; tool_call_id: string; content: string };
@@ -33,26 +41,19 @@ type OpenAiToolCall = {
 type OpenAiImportPayload = {
   messages?: Array<Record<string, unknown>>;
   sources?: unknown;
+  tool_errors?: unknown;
 };
 
 // The system prompt and tools are the ones a new run of the agent starts
-// with today, as the background builds them.
+// with today, as the background builds them. Tool messages hold the text the
+// model received for each call; calls whose result was an error are listed
+// in `tool_errors`, as the format has no field for it.
 export async function exportChatAsOpenAiJson(
   chat: Chat | undefined,
   agent: Agent,
 ) {
   if (!chat) return;
-  const run = await describeRun(agent.id);
-  const payload = {
-    messages: [
-      { role: "system" as const, content: run.system },
-      ...chat.messages.flatMap(toOpenAiMessages),
-    ],
-    tools: run.tools,
-    sources: chat.sources || [],
-    metrics: exportMetrics(chat),
-    parallel_tool_calls: true,
-  };
+  const payload = chatToOpenAiPayload(chat, await describeRun(agent.id));
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json;charset=utf-8",
   });
@@ -62,6 +63,35 @@ export async function exportChatAsOpenAiJson(
   anchor.download = `${safeFilename(chat.title || "chat")}.openai.json`;
   anchor.click();
   URL.revokeObjectURL(url);
+}
+
+export function chatToOpenAiPayload(
+  chat: Chat,
+  run: { system: string; tools: unknown[] },
+) {
+  return {
+    messages: [
+      { role: "system" as const, content: run.system },
+      ...chat.messages.flatMap(toOpenAiMessages),
+    ],
+    tool_errors: toolErrors(chat),
+    tools: run.tools,
+    sources: chat.sources || [],
+    metrics: exportMetrics(chat),
+    parallel_tool_calls: true,
+  };
+}
+
+function toolErrors(chat: Chat) {
+  return chat.messages.flatMap((message) =>
+    message.role === "assistant"
+      ? turnSteps(message.parts || []).flatMap((step) =>
+          step.calls
+            .filter((call) => toolModelResult(call).isError)
+            .map((call) => call.id),
+        )
+      : [],
+  );
 }
 
 function exportMetrics(chat: Chat) {
@@ -82,15 +112,17 @@ export async function importChatFromOpenAiJson(file: File): Promise<Chat> {
   const now = Date.now();
   const messages: ChatMessage[] = [];
   const toolParts = new Map<string, ChatPart>();
+  const errors = new Set(
+    Array.isArray(payload.tool_errors) ? payload.tool_errors.map(String) : [],
+  );
   for (const item of payload.messages) {
     const role = String(item.role || "");
     if (role === "system") continue;
     if (role === "tool") {
       const part = toolParts.get(String(item.tool_call_id || ""));
       if (!part) continue;
-      const output = parseJsonString(item.content);
-      part.output = output;
-      part.state = recordValue(output).error
+      part.result = parseToolResultText(stringValue(item.content));
+      part.state = errors.has(part.id)
         ? CHAT_PART_STATE.outputError
         : CHAT_PART_STATE.outputAvailable;
       continue;
@@ -98,6 +130,16 @@ export async function importChatFromOpenAiJson(file: File): Promise<Chat> {
     if (role !== "user" && role !== "assistant") continue;
 
     const content = stringValue(item.content);
+    const previous = messages[messages.length - 1];
+    // The responses of one assistant turn form one chat message.
+    if (role === "assistant" && previous?.role === "assistant") {
+      previous.content += content;
+      previous.parts = [
+        ...(previous.parts || []),
+        ...assistantImportParts(item, content, toolParts),
+      ];
+      continue;
+    }
     const message: ChatMessage = {
       id: crypto.randomUUID(),
       role,
@@ -131,9 +173,13 @@ function assistantImportParts(
   toolParts: Map<string, ChatPart>,
 ) {
   const parts: ChatPart[] = [];
+  const reasoning = stringValue(item.reasoning_content);
+  if (reasoning.trim())
+    parts.push({ id: crypto.randomUUID(), type: "reasoning", text: reasoning });
   if (content.trim())
     parts.push({ id: crypto.randomUUID(), type: "text", text: content });
   const toolCalls = Array.isArray(item.tool_calls) ? item.tool_calls : [];
+  const step = crypto.randomUUID();
   for (const call of toolCalls) {
     const record = recordValue(call);
     const fn = recordValue(record.function);
@@ -145,6 +191,7 @@ function assistantImportParts(
       toolName: name,
       state: CHAT_PART_STATE.inputAvailable,
       input: parseJsonString(fn.arguments),
+      step,
     };
     parts.push(part);
     toolParts.set(part.id, part);
@@ -162,54 +209,47 @@ function toOpenAiMessages(message: ChatMessage): OpenAiExportMessage[] {
   return [{ role: message.role, content: message.content }];
 }
 
+// One assistant message per model response, followed by the results of its
+// calls, as the model saw them.
 function assistantPartsToOpenAiMessages(
   message: ChatMessage,
 ): OpenAiExportMessage[] {
-  const messages: OpenAiExportMessage[] = [];
-  let text = "";
-  for (const part of message.parts || []) {
-    if (part.type === "text" || part.type === "reasoning") {
-      text += part.text || "";
-      continue;
-    }
-    if (!isToolPartType(part.type)) continue;
-    const toolCall = openAiToolCall(part);
-    if (!toolCall) continue;
-    messages.push({
-      role: "assistant",
-      content: text.trim() ? text : null,
-      tool_calls: [toolCall],
-    });
-    messages.push({
-      role: "tool",
-      tool_call_id: toolCall.id,
-      content: toolOutputContent(part),
-    });
-    text = "";
-  }
-  if (text.trim()) messages.push({ role: "assistant", content: text });
+  const messages = turnSteps(message.parts || []).flatMap(
+    (step): OpenAiExportMessage[] =>
+      !step.text.trim() && !step.calls.length
+        ? []
+        : [
+            {
+              role: "assistant",
+              content: step.text.trim() ? step.text : null,
+              ...(step.reasoning.trim()
+                ? { reasoning_content: step.reasoning }
+                : {}),
+              ...(step.calls.length
+                ? { tool_calls: step.calls.map(openAiToolCall) }
+                : {}),
+            },
+            ...step.calls.map((call): OpenAiExportMessage => ({
+              role: "tool",
+              tool_call_id: call.id,
+              content: toolResultText(toolModelResult(call)),
+            })),
+          ],
+  );
   if (!messages.length && message.content.trim())
     messages.push({ role: "assistant", content: message.content });
   return messages;
 }
 
-function openAiToolCall(part: ChatPart): OpenAiToolCall | null {
-  const name = part.toolName || part.type.replace(/^tool-/, "");
-  if (!name) return null;
+function openAiToolCall(part: ChatPart): OpenAiToolCall {
   return {
     id: part.id,
     type: "function",
     function: {
-      name,
+      name: part.toolName || toolNameFromPartType(part.type as ToolPartType),
       arguments: jsonString(part.input ?? {}),
     },
   };
-}
-
-function toolOutputContent(part: ChatPart) {
-  if (part.output !== undefined) return jsonString(part.output);
-  if (part.error) return jsonString({ error: part.error });
-  return "{}";
 }
 
 function jsonString(value: unknown) {

@@ -149,6 +149,7 @@ export function chatContentSnapshot(content: ChatContent) {
         stringFingerprint(part.text || ""),
         part.input === undefined ? "i0" : "i1",
         part.output === undefined ? "o0" : "o1",
+        part.result ? stringFingerprint(part.result.text) : "r0",
         part.error ? stringFingerprint(part.error) : "e0",
       );
     }
@@ -287,6 +288,8 @@ function reconcilePart(current: ChatPart, incoming: ChatPart): ChatPart {
     ...incoming,
     input: incoming.input === undefined ? current.input : incoming.input,
     output: incoming.output === undefined ? current.output : incoming.output,
+    result: incoming.result || current.result,
+    step: incoming.step || current.step,
     error: incoming.error || current.error,
     state:
       toolStateRank(current.state) > toolStateRank(incoming.state)
@@ -344,6 +347,7 @@ function partProgress(parts: ChatPart[] | undefined) {
       toolStateRank(part.state) +
       (part.input === undefined ? 0 : 1) +
       (part.output === undefined ? 0 : 2) +
+      (part.result ? 2 : 0) +
       (part.error ? 2 : 0),
     0,
   );
@@ -414,7 +418,21 @@ function normalizeChatPart(value: unknown): ChatPart | undefined {
       : undefined,
     input: part.input,
     output: part.output,
+    result: toolResultValue(part.result),
+    step: optionalString(part.step),
     error: optionalString(part.error),
+  };
+}
+
+function toolResultValue(value: unknown): ChatPart["result"] {
+  const result = objectValue(value);
+  if (typeof result.text !== "string") return undefined;
+  return {
+    text: result.text,
+    ...(result.image === true ? { image: true } : {}),
+    ...(optionalString(result.artifact)
+      ? { artifact: optionalString(result.artifact) }
+      : {}),
   };
 }
 
