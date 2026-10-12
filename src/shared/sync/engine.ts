@@ -155,102 +155,107 @@ async function round(
   // no request.
   if (reason === "edit" && !result.pending) return result;
 
-  for (let attempt = 1; ; attempt++) {
-    const sentEtag = state.remote?.etag;
-    const read = await transport.readRoot(sentEtag);
-    result.checked = true;
-    let remote: Root;
-    let etag: string | undefined;
-    if (read.status === "unchanged") {
-      remote = state.remote!.root;
-      etag = sentEtag;
-      // A refused If-Match on a root the server still calls unchanged: its
-      // ETags cannot be used for safe writes (an Apache "-gzip" ETag, say).
-      if (attempt > 1) {
-        result.warnings.push(SYNC_WARNINGS.unreliableEtags);
+  // Local data may already hold remote changes when a request fails: what
+  // this device's copy matches is saved whatever happens.
+  try {
+    for (let attempt = 1; ; attempt++) {
+      const sentEtag = state.remote?.etag;
+      const read = await transport.readRoot(sentEtag);
+      result.checked = true;
+      let remote: Root;
+      let etag: string | undefined;
+      if (read.status === "unchanged") {
+        remote = state.remote!.root;
+        etag = sentEtag;
+        // A refused If-Match on a root the server still calls unchanged: its
+        // ETags cannot be used for safe writes (an Apache "-gzip" ETag, say).
+        if (attempt > 1) {
+          result.warnings.push(SYNC_WARNINGS.unreliableEtags);
+          break;
+        }
+      } else if (read.status === "missing") {
+        remote = emptyRoot();
+      } else {
+        remote = read.root;
+        etag = read.etag;
+        if (
+          state.remote?.etag &&
+          etag !== state.remote.etag &&
+          canonicalJson(remote) === canonicalJson(state.remote.root)
+        )
+          result.warnings.push(SYNC_WARNINGS.unreliableEtags);
+      }
+      const remoteMax = maxRootClock(remote);
+      if (remoteMax) state.hlc = observeClock(state.hlc, remoteMax);
+
+      const outcome = await reconcile(
+        context,
+        collections,
+        state,
+        remote,
+        scan.local,
+        payloads,
+        options.massDelete,
+      );
+      result.warnings.push(...outcome.warnings);
+      if (outcome.massDelete) {
+        result.massDelete = outcome.massDelete;
         break;
       }
-    } else if (read.status === "missing") {
-      remote = emptyRoot();
-    } else {
-      remote = read.root;
-      etag = read.etag;
-      if (
-        state.remote?.etag &&
-        etag !== state.remote.etag &&
-        canonicalJson(remote) === canonicalJson(state.remote.root)
-      )
-        result.warnings.push(SYNC_WARNINGS.unreliableEtags);
-    }
-    const remoteMax = maxRootClock(remote);
-    if (remoteMax) state.hlc = observeClock(state.hlc, remoteMax);
-
-    const outcome = await reconcile(
-      context,
-      collections,
-      state,
-      remote,
-      scan.local,
-      payloads,
-      options.massDelete,
-    );
-    result.warnings.push(...outcome.warnings);
-    if (outcome.massDelete) {
-      result.massDelete = outcome.massDelete;
-      break;
-    }
-    const now = env.now();
-    await localPayloads(env, remote, outcome.pushes, payloads);
-    const next = nextRoot(remote, device, outcome.pushes, now);
-    const collected = dropExpiredGarbage(next, now);
-    if (!outcome.pushes.size && !collected.length) {
-      state.remote = { root: remote, etag };
-      break;
-    }
-    // Without a strong ETag an existing root cannot be replaced safely.
-    if (read.status !== "missing" && !etag) {
-      result.warnings.push(SYNC_WARNINGS.unreliableEtags);
-      state.remote = { root: remote, etag };
-      break;
-    }
-    await uploadBlobs(transport, remote, outcome.pushes, payloads);
-    const written = await transport.writeRoot(next, etag);
-    if (written.status === "ok") {
-      for (const [recordId, record] of outcome.pushes) {
-        state.synced[recordId] = await versionOf(record);
-        if (state.pending[recordId]?.clock === record.clock)
-          delete state.pending[recordId];
+      const now = env.now();
+      await localPayloads(env, remote, outcome.pushes, payloads);
+      const next = nextRoot(remote, device, outcome.pushes, now);
+      const collected = dropExpiredGarbage(next, now);
+      if (!outcome.pushes.size && !collected.length) {
+        state.remote = { root: remote, etag };
+        break;
       }
-      state.remote = { root: next, etag: written.etag };
-      result.wrote = true;
-      await deleteBlobs(transport, collected);
-      break;
+      // Without a strong ETag an existing root cannot be replaced safely.
+      if (read.status !== "missing" && !etag) {
+        result.warnings.push(SYNC_WARNINGS.unreliableEtags);
+        state.remote = { root: remote, etag };
+        break;
+      }
+      await uploadBlobs(transport, remote, outcome.pushes, payloads);
+      const written = await transport.writeRoot(next, etag);
+      if (written.status === "ok") {
+        for (const [recordId, record] of outcome.pushes) {
+          state.synced[recordId] = await versionOf(record);
+          if (state.pending[recordId]?.clock === record.clock)
+            delete state.pending[recordId];
+        }
+        state.remote = { root: next, etag: written.etag };
+        result.wrote = true;
+        await deleteBlobs(transport, collected);
+        break;
+      }
+      state.remote = { root: remote, etag };
+      if (attempt >= MAX_WRITE_ATTEMPTS)
+        throw new Error("Sync write conflict retries exhausted.");
+      await new Promise((resolve) =>
+        setTimeout(resolve, 100 + Math.random() * 400 * attempt),
+      );
     }
-    state.remote = { root: remote, etag };
-    if (attempt >= MAX_WRITE_ATTEMPTS)
-      throw new Error("Sync write conflict retries exhausted.");
-    await new Promise((resolve) =>
-      setTimeout(resolve, 100 + Math.random() * 400 * attempt),
-    );
+    if (
+      transport.kind === "webdav" &&
+      state.remote?.etag &&
+      !result.massDelete &&
+      env.now() - (state.lastSweepAt ??= env.now()) >= ORPHAN_SWEEP_INTERVAL_MS
+    ) {
+      const stored = await transport.listBlobs();
+      await sweepOrphans(transport, state.remote.root, stored, env.now());
+      await restoreLostBlobs(
+        env,
+        transport,
+        collections,
+        state.remote.root,
+        stored,
+      );
+      state.lastSweepAt = env.now();
+    }
+  } finally {
+    await saveSyncState(env.local, state);
   }
-  if (
-    transport.kind === "webdav" &&
-    state.remote?.etag &&
-    !result.massDelete &&
-    env.now() - (state.lastSweepAt ??= env.now()) >= ORPHAN_SWEEP_INTERVAL_MS
-  ) {
-    const stored = await transport.listBlobs();
-    await sweepOrphans(transport, state.remote.root, stored, env.now());
-    await restoreLostBlobs(
-      env,
-      transport,
-      collections,
-      state.remote.root,
-      stored,
-    );
-    state.lastSweepAt = env.now();
-  }
-  await saveSyncState(env.local, state);
   result.pending = Object.keys(state.pending).length;
   result.warnings = [...new Set(result.warnings)];
   return result;

@@ -183,6 +183,17 @@ const MUTATIONS = [
     to: `          true,`,
   },
   {
+    name: "sync state not saved when a round fails after applying changes",
+    file: "src/shared/sync/engine.ts",
+    from: `  } finally {
+    await saveSyncState(env.local, state);
+  }`,
+    to: `  } catch (error) {
+    throw error;
+  }
+  await saveSyncState(env.local, state);`,
+  },
+  {
     name: "kept records refer to content that is gone",
     file: "src/shared/sync/engine-merge.ts",
     from: "!stored.has(projection.blob)",

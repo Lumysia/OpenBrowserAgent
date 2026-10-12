@@ -287,3 +287,43 @@ test("chats whose content is gone everywhere are not kept without it", async () 
   assert.equal(live.length, 0);
   assert.deepEqual(b.get(CHATS), []);
 });
+
+test("a round that fails after applying remote changes does not send them back as its own", async () => {
+  const { clock, server, a } = setup();
+  let failWrite = false;
+  const base = memoryTransport(server);
+  const b = device(
+    "deviceB",
+    {
+      ...base,
+      writeRoot: (root, etag) =>
+        failWrite
+          ? Promise.reject(new TypeError("fetch failed"))
+          : base.writeRoot(root, etag),
+    },
+    clock,
+    ALL_ON,
+  );
+  await a.set(PROVIDERS, { p1: { apiKey: "v0" } });
+  await a.sync("edit");
+  await b.sync();
+  clock.now += 1000;
+  await a.set(PROVIDERS, { p1: { apiKey: "a1" } });
+  await a.sync("edit");
+  clock.now += 1000;
+  // b applies a1, then fails to upload its own change.
+  await b.set(STORAGE_KEYS.language, "fr-FR");
+  failWrite = true;
+  await assert.rejects(b.sync("edit"));
+  failWrite = false;
+  assert.equal(apiKey(b.get(PROVIDERS)), "a1");
+  clock.now += 60_000;
+  await a.set(PROVIDERS, { p1: { apiKey: "a2" } });
+  await a.sync("edit");
+  clock.now += 60_000;
+  await b.sync();
+  await a.sync();
+  assert.equal(apiKey(a.get(PROVIDERS)), "a2");
+  assert.equal(apiKey(b.get(PROVIDERS)), "a2");
+  assert.equal(a.get(STORAGE_KEYS.language), "fr-FR");
+});
