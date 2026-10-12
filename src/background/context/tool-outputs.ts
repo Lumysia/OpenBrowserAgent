@@ -1,5 +1,6 @@
 import { estimateTextTokens } from "@earendil-works/pi-ai/utils/estimate";
 import type { ArtifactStore } from "../../shared/artifacts";
+import { BROWSER_TOOL_NAME } from "../../shared/browser-tools";
 import { CONTEXT_POLICY, isRepeatGuarded } from "./policy";
 
 const CHARS_PER_TOKEN = 3.5;
@@ -68,7 +69,11 @@ export function createToolOutputs(chatId: string, store: ArtifactStore) {
           return `Unchanged since ${handle}: this call returned exactly the same output as the earlier identical call, so the page or data has not changed. Use read with handle "${handle}" to see it again.`;
         }
       }
-      if (estimateTextTokens(text) <= CONTEXT_POLICY.toolOutputCapTokens)
+      // `read` output is already bounded to one slice of a stored output.
+      if (
+        toolName === BROWSER_TOOL_NAME.read ||
+        estimateTextTokens(text) <= CONTEXT_POLICY.toolOutputCapTokens
+      )
         return text;
       const handle = await persist(toolCallId);
       const preview = text.slice(
