@@ -170,21 +170,27 @@ async function prepare(
   const settings = normalizeSmartBarSettings(preferences.smartBar);
   const host = siteHost(sender);
   const tabId = sender.tab?.id;
+  const actions = smartBarActions(settings, request.editable);
   const allowed =
-    settings.enabled && !!host && isSmartBarAllowedOnHost(settings, host);
+    settings.enabled &&
+    !!host &&
+    isSmartBarAllowedOnHost(settings, host) &&
+    [false, true].some(
+      (editable) => smartBarActions(settings, editable).length,
+    );
   const onSelection =
     allowed && settings.trigger === SMART_BAR_TRIGGER.selection;
   if (
     !host ||
     !allowed ||
+    !actions.length ||
     tabId === undefined ||
     (request.reason === "selection" && !onSelection)
   )
     return { onSelection };
   if (!request.uiLoaded) await injectUi(tabId, sender.frameId ?? 0);
   const config: SmartBarPageConfig = {
-    pageActions: smartBarActions(settings, false),
-    editActions: smartBarActions(settings, true),
+    actions,
     hideSite: smartBarHideSite(settings, host),
     messages: getMessages(language).smartBar,
     colorScheme: preferences.colorScheme || "system",

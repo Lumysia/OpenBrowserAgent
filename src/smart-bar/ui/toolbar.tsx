@@ -14,7 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../../ui/components";
-import { isEditableSnapshot, type SelectionSnapshot } from "../selection";
+import type { SelectionSnapshot } from "../selection";
 import { copyText } from "../writeback";
 import {
   hideOnThisSite,
@@ -37,9 +37,7 @@ export function SmartBarToolbar({
   autoFocus: boolean;
 }) {
   const t = config.messages;
-  const actions = isEditableSnapshot(snapshot)
-    ? config.editActions
-    : config.pageActions;
+  const { actions } = config;
   const [copied, setCopied] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
 

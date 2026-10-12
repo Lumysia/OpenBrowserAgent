@@ -7,7 +7,11 @@ import {
 } from "../shared/smart-bar-protocol";
 import { getBrowserApi } from "../shared/browser-api";
 import { claimSmartBarTrigger, getSmartBarUi, isSmartBarEvent } from "./bridge";
-import { readSelection, type SelectionSnapshot } from "./selection";
+import {
+  isEditableSnapshot,
+  readSelection,
+  type SelectionSnapshot,
+} from "./selection";
 
 // The always-loaded part of the smart bar: plain listeners, no UI. The
 // background decides per selection whether the bar may show (it may have been
@@ -51,6 +55,7 @@ export function installSmartBarTrigger() {
       type: SMART_BAR_MESSAGE.prepare,
       reason,
       uiLoaded: !!getSmartBarUi(),
+      editable: isEditableSnapshot(snapshot),
     };
     // Rejects once the extension was updated or removed.
     const response = (await Promise.resolve()

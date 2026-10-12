@@ -299,6 +299,25 @@ test("smart bar", { timeout: 240000 }, async (t) => {
       await poll(() => page.call(() => !dialog.open));
     });
 
+    await t.test("no bar where every action is turned off", async () => {
+      await updateSmartBar(options, {
+        disabledPageActions: [
+          "ask",
+          "explain",
+          "translate",
+          "summarize",
+          "copy",
+        ],
+      });
+      await selectText(page, "#text");
+      await delay(600);
+      assert.equal(await barState(page), "none");
+      // Text fields have their own actions.
+      await selectText(page, "#area");
+      await poll(async () => (await barState(page)) === "toolbar");
+      await updateSmartBar(options, { disabledPageActions: [] });
+    });
+
     await t.test("Hide on this site stops it", async () => {
       await selectText(page, "#text");
       await poll(async () => (await barState(page)) === "toolbar");

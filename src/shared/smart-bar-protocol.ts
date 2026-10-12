@@ -35,6 +35,9 @@ export type SmartBarPrepareRequest = {
   type: typeof SMART_BAR_MESSAGE.prepare;
   reason: SmartBarShowReason;
   uiLoaded: boolean;
+  // Whether the selection is in a field (it decides the actions), not what
+  // it says: nothing about the text leaves the page before an action.
+  editable: boolean;
 };
 
 export type SmartBarPrepareResult = {
@@ -55,8 +58,8 @@ export type SmartBarSettingsChangedMessage = {
 
 // What the page UI needs.
 export type SmartBarPageConfig = {
-  pageActions: SmartBarAction[];
-  editActions: SmartBarAction[];
+  // For the selection's context; never empty.
+  actions: SmartBarAction[];
   // What "Hide on this site" hides the bar on, for its label.
   hideSite: string;
   messages: SmartBarMessages;
