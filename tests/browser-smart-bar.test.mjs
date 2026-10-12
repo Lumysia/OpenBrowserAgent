@@ -455,6 +455,14 @@ async function replaceWithFix(page, selector) {
   await poll(async () => (await barState(page)) === "toolbar");
   await clickInBar(page, '[aria-label="Fix spelling & grammar"]');
   await poll(() => barHas(page, "button", "Replace"));
+  // Clicking the bar left the focus in the field.
+  assert.equal(
+    await page.call(
+      (selector) => document.activeElement === document.querySelector(selector),
+      selector,
+    ),
+    true,
+  );
   await clickInBar(page, "button", "Replace");
   await poll(async () => (await barState(page)) === "none");
 }
