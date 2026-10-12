@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 
@@ -8,8 +8,17 @@ export async function launchExtension({
   headed = true,
   args = [],
   extension = resolve(".output/chrome-mv3"),
+  // Browser preferences the profile starts with (Default/Preferences).
+  preferences,
 } = {}) {
   const profile = await mkdtemp(resolve(".output/pi-browser-profile-"));
+  if (preferences) {
+    await mkdir(resolve(profile, "Default"));
+    await writeFile(
+      resolve(profile, "Default/Preferences"),
+      JSON.stringify(preferences),
+    );
+  }
   // Credentials are passed only through CDP to the disposable extension storage.
   // They are neither Chromium command arguments nor inherited environment values.
   const env = Object.fromEntries(
@@ -154,8 +163,13 @@ async function connect(url) {
   });
   let id = 0;
   const pending = new Map();
+  const listeners = new Map();
   socket.addEventListener("message", ({ data }) => {
     const message = JSON.parse(String(data));
+    if (message.method)
+      listeners
+        .get(message.method)
+        ?.forEach((listener) => listener(message.params));
     const waiter = pending.get(message.id);
     if (!waiter) return;
     pending.delete(message.id);
@@ -175,6 +189,10 @@ async function connect(url) {
     });
   return {
     send,
+    // Listens to a CDP event, such as Fetch.requestPaused.
+    on(method, listener) {
+      listeners.set(method, [...(listeners.get(method) || []), listener]);
+    },
     async call(fn, argument) {
       const result = await send("Runtime.evaluate", {
         expression: `(${fn.toString()})(${JSON.stringify(argument) ?? "undefined"})`,
