@@ -19,6 +19,13 @@ import {
   settingsPage,
   todosPage,
 } from "./fixture-pages-apps.mjs";
+import {
+  catalogPage,
+  factCheckPage,
+  loadMorePage,
+  researchHubPage,
+  researchSourcePage,
+} from "./fixture-pages-skills.mjs";
 
 const PAGES = {
   "/article": articlePage,
@@ -36,6 +43,10 @@ const PAGES = {
   "/blog": blogIndexPage,
   "/todos": todosPage,
   "/messenger": messengerPage,
+  "/research": researchHubPage,
+  "/factcheck": factCheckPage,
+  "/catalog": catalogPage,
+  "/catalog-more": loadMorePage,
 };
 
 // One local server for fixture pages, their form endpoints, and a recording
@@ -58,7 +69,12 @@ export async function startServer({ upstream }) {
       return;
     }
     const post = url.pathname.match(/^\/blog\/post-(\d+)$/);
-    const html = post ? blogPostPage(Number(post[1])) : PAGES[url.pathname]?.();
+    const source = url.pathname.match(/^\/research\/(\w+)$/);
+    const html = post
+      ? blogPostPage(Number(post[1]))
+      : source
+        ? researchSourcePage(source[1])
+        : PAGES[url.pathname]?.(url);
     if (!html) {
       response.writeHead(404).end("Not found");
       return;
