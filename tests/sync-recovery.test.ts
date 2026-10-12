@@ -7,6 +7,7 @@ import {
   device,
   memoryServer,
   memoryTransport,
+  messageIds,
   saveChat,
   type Device,
 } from "./sync-fixtures";
@@ -79,4 +80,47 @@ test("each chat's change is stamped with that chat's latest edit", async () => {
   assert.equal(title(a, "X"), "X on b, day 6");
   assert.equal(title(b, "X"), "X on b, day 6");
   assert.equal(title(a, "Y"), "Y on b, day 1");
+});
+
+test("a chat change from a failed round merges with another device's change", async () => {
+  const { clock, server, a } = setup();
+  let down = false;
+  const base = memoryTransport(server);
+  const b = device(
+    "deviceB",
+    {
+      ...base,
+      readRoot: (etag) =>
+        down
+          ? Promise.reject(new TypeError("fetch failed"))
+          : base.readRoot(etag),
+    },
+    clock,
+    ALL_ON,
+  );
+  await saveChat(a, "X", [["m1", 1]]);
+  await a.sync("edit");
+  await b.sync();
+  await b.env.local.set({ [`${CHATS}/X`]: chat("X", [["m1", 1]]).content });
+  await b.sync();
+  clock.now += 1000;
+  down = true;
+  await saveChat(b, "X", [
+    ["m1", 1],
+    ["b2", 2],
+  ]);
+  await assert.rejects(b.sync("edit"));
+  down = false;
+  clock.now += 1000;
+  await saveChat(a, "X", [
+    ["m1", 1],
+    ["a3", 3],
+  ]);
+  await a.sync("edit");
+  clock.now += 60_000;
+  const result = await b.sync("poll");
+  assert.deepEqual(result.warnings, []);
+  await a.sync();
+  assert.deepEqual(messageIds(a, "X"), ["m1", "b2", "a3"]);
+  assert.deepEqual(messageIds(b, "X"), ["m1", "b2", "a3"]);
 });

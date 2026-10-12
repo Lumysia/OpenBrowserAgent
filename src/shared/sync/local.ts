@@ -98,7 +98,10 @@ export async function collectLocalChanges(
   for (const collection of collections) {
     const keys = Object.keys(dirty).filter((key) => ownsKey(collection, key));
     const full = state.rescan.includes(collection.name);
-    if (!keys.length && !full) continue;
+    // Changes stamped in a round that failed are compared again, so their
+    // bodies are at hand for uploads and merges.
+    const hasPending = idsWithPrefix(state.pending, collection).length > 0;
+    if (!keys.length && !full && !hasPending) continue;
     keys.forEach((key) => scan.processed.add(key));
     // When each record was last edited: the latest change of the keys that
     // hold it (the collection's own keys, and the record's key if it has
