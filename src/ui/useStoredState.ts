@@ -2,21 +2,19 @@ import { useEffect, useRef, useState, type MutableRefObject } from "react";
 
 type StorageItem<T> = {
   key?: string;
-  persistDebounceMs?: number | ((value: T) => number | undefined);
-  snapshot?: "hash" | ((value: T) => string | undefined);
-  reconcile?: (current: T | undefined, incoming: T) => T;
   get(): Promise<T>;
   set(value: T): Promise<void>;
+  update?(updater: (current: T) => T): Promise<T>;
   watch(callback: (newValue: T, oldValue: T) => void): () => void;
 };
 
-type StoredStateUpdateOptions = { persist?: "debounced" | "immediate" };
-type SnapshotOptions<T> = Pick<
-  StorageItem<T>,
-  "persistDebounceMs" | "snapshot"
->;
-
-export function useStoredState<T>(item: StorageItem<T>) {
+// `freshUpdates`: an updater function is stored by applying it to the
+// stored value (locked read-modify-write), not by writing the value it gave
+// for this page's copy, which may miss another context's latest write.
+export function useStoredState<T>(
+  item: StorageItem<T>,
+  { freshUpdates = false } = {},
+) {
   const [value, setValue] = useState<T | undefined>();
   const valueRef = useRef<T | undefined>(undefined);
   const initialLoadRef = useRef<Promise<void> | undefined>(undefined);
@@ -25,11 +23,19 @@ export function useStoredState<T>(item: StorageItem<T>) {
     order: [],
     values: new Set(),
   });
-  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-  const pendingPersistRef = useRef<T | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  // While this page's own writes are in flight, a value from elsewhere may
+  // predate them (e.g. sync bookkeeping re-storing what it read earlier).
+  // Showing it would undo the page's write on screen, so it waits; storage
+  // is read again once the writes are done.
+  const writesInFlightRef = useRef(0);
+  const missedUpdateRef = useRef(false);
+
+  function show(next: T, nextSnapshot = snapshot(next)) {
+    valueRef.current = next;
+    snapshotRef.current = nextSnapshot;
+    setValue(next);
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -39,7 +45,7 @@ export function useStoredState<T>(item: StorageItem<T>) {
       .then((next) => {
         if (!mounted || receivedUpdate) return;
         valueRef.current = next;
-        snapshotRef.current = snapshot(item, next);
+        snapshotRef.current = snapshot(next);
         setValue(next);
       })
       .catch((error) => {
@@ -50,31 +56,25 @@ export function useStoredState<T>(item: StorageItem<T>) {
       });
     const unwatch = item.watch((next) => {
       receivedUpdate = true;
-      const nextSnapshot = snapshot(item, next);
+      const nextSnapshot = snapshot(next);
       if (nextSnapshot && nextSnapshot === snapshotRef.current) return;
       if (consumeOwnWriteSnapshot(ownWriteSnapshotsRef, nextSnapshot)) {
         snapshotRef.current = nextSnapshot;
         return;
       }
-      const resolved =
-        next !== undefined && item.reconcile
-          ? item.reconcile(valueRef.current, next)
-          : next;
-      valueRef.current = resolved;
-      snapshotRef.current = snapshot(item, resolved);
-      setValue(resolved);
+      if (writesInFlightRef.current) {
+        missedUpdateRef.current = true;
+        return;
+      }
+      show(next, nextSnapshot);
     });
     return () => {
       mounted = false;
-      flushPendingPersist(item, persistTimerRef, pendingPersistRef);
       unwatch();
     };
   }, [item]);
 
-  async function update(
-    next: T | ((previous: T) => T),
-    options: StoredStateUpdateOptions = {},
-  ) {
+  async function update(next: T | ((previous: T) => T)) {
     // Controls can become usable before a slower storage item has loaded. Keep
     // the update pending so callers awaiting persistence cannot silently lose it.
     if (valueRef.current === undefined) await initialLoadRef.current;
@@ -85,93 +85,45 @@ export function useStoredState<T>(item: StorageItem<T>) {
       typeof next === "function"
         ? (next as (previous: T) => T)(previous)
         : next;
-    const deferSnapshot = shouldDeferUpdateSnapshot(item, options);
-    const resolvedSnapshot = deferSnapshot
-      ? undefined
-      : snapshot(item, resolved);
+    const resolvedSnapshot = snapshot(resolved);
     if (resolvedSnapshot && resolvedSnapshot === snapshotRef.current)
       return resolved;
-    valueRef.current = resolved;
-    if (!deferSnapshot) snapshotRef.current = resolvedSnapshot;
-    setValue(resolved);
-    await persistValue(
-      item,
-      resolved,
-      persistTimerRef,
-      pendingPersistRef,
-      ownWriteSnapshotsRef,
-      options,
+    show(resolved, resolvedSnapshot);
+    // Resolves once stored; a failed write is logged, the value stays shown.
+    const write =
+      freshUpdates && item.update && typeof next === "function"
+        ? () => item.update!(next as (previous: T) => T)
+        : () => item.set(resolved);
+    writesInFlightRef.current++;
+    await persistOwnWrite(write, resolved, ownWriteSnapshotsRef).catch(
+      (error) => console.warn("Failed to persist stored state", error),
     );
+    if (--writesInFlightRef.current === 0 && missedUpdateRef.current) {
+      missedUpdateRef.current = false;
+      const stored = await item.get().catch(() => undefined);
+      const storedSnapshot = snapshot(stored);
+      if (stored !== undefined && storedSnapshot !== snapshotRef.current)
+        show(stored, storedSnapshot);
+    }
     return resolved;
   }
 
   return [value, update, loading] as const;
 }
 
-function persistValue<T>(
-  item: StorageItem<T>,
-  value: T,
-  timerRef: MutableRefObject<ReturnType<typeof setTimeout> | undefined>,
-  pendingRef: MutableRefObject<T | undefined>,
-  ownWriteSnapshotsRef: MutableRefObject<OwnWriteSnapshots>,
-  options: StoredStateUpdateOptions,
-) {
-  if (options.persist === "immediate") {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = undefined;
-    pendingRef.current = undefined;
-    return persistOwnWrite(item, value, ownWriteSnapshotsRef).catch((error) => {
-      logPersistError(error);
-      throw error;
-    });
-  }
-  const delayMs = persistDelay(item, value);
-  if (!delayMs) {
-    item.set(value).catch(logPersistError);
-    return;
-  }
-  pendingRef.current = value;
-  if (timerRef.current) clearTimeout(timerRef.current);
-  timerRef.current = setTimeout(() => {
-    const pending = pendingRef.current;
-    pendingRef.current = undefined;
-    timerRef.current = undefined;
-    if (pending !== undefined)
-      persistOwnWrite(item, pending, ownWriteSnapshotsRef).catch(
-        logPersistError,
-      );
-  }, delayMs);
-}
-
-function flushPendingPersist<T>(
-  item: StorageItem<T>,
-  timerRef: MutableRefObject<ReturnType<typeof setTimeout> | undefined>,
-  pendingRef: MutableRefObject<T | undefined>,
-) {
-  if (timerRef.current) clearTimeout(timerRef.current);
-  timerRef.current = undefined;
-  const pending = pendingRef.current;
-  pendingRef.current = undefined;
-  if (pending !== undefined) item.set(pending).catch(logPersistError);
-}
-
 async function persistOwnWrite<T>(
-  item: StorageItem<T>,
+  write: () => Promise<unknown>,
   value: T,
   ownWriteSnapshotsRef: MutableRefObject<OwnWriteSnapshots>,
 ) {
-  const valueSnapshot = snapshot(item, value);
+  const valueSnapshot = snapshot(value);
   rememberOwnWriteSnapshot(ownWriteSnapshotsRef, valueSnapshot);
   try {
-    await item.set(value);
+    await write();
   } catch (error) {
     forgetOwnWriteSnapshot(ownWriteSnapshotsRef, valueSnapshot);
     throw error;
   }
-}
-
-function logPersistError(error: unknown) {
-  console.warn("Failed to persist stored state", error);
 }
 
 type OwnWriteSnapshots = { order: string[]; values: Set<string> };
@@ -211,37 +163,10 @@ function forgetOwnWriteSnapshot(
   );
 }
 
-function snapshot<T>(item: SnapshotOptions<T>, value: T) {
+function snapshot<T>(value: T) {
   try {
-    if (typeof item.snapshot === "function") return item.snapshot(value);
-    const serialized = JSON.stringify(value);
-    return item.snapshot === "hash" ? hashSnapshot(serialized) : serialized;
+    return JSON.stringify(value);
   } catch {
     return undefined;
   }
-}
-
-function persistDelay<T>(item: StorageItem<T>, value: T) {
-  const delay = item.persistDebounceMs;
-  return typeof delay === "function" ? delay(value) : delay;
-}
-
-function shouldDeferUpdateSnapshot<T>(
-  item: SnapshotOptions<T>,
-  options: StoredStateUpdateOptions,
-) {
-  return (
-    !!item.snapshot &&
-    !!item.persistDebounceMs &&
-    options.persist !== "immediate"
-  );
-}
-
-function hashSnapshot(value: string) {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return `${value.length}:${hash >>> 0}`;
 }

@@ -1,11 +1,5 @@
 import { Plus, Send, Square } from "lucide-react";
-import {
-  useRef,
-  type ClipboardEvent,
-  type Dispatch,
-  type RefObject,
-  type SetStateAction,
-} from "react";
+import { useRef, type ClipboardEvent, type RefObject } from "react";
 import { TOOLTIP_DELAY_MS } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import type { SyncWriteStatus } from "../../src/shared/storage";
@@ -14,6 +8,7 @@ import type {
   Agent,
   Chat,
   ChatMessage,
+  ChatSummary,
   ModelConfig,
   Preferences,
   PromptBreakdown,
@@ -60,12 +55,17 @@ import type {
 import { UploadFileInput } from "./uploaded-attachment-card";
 import type { QueuedMessage } from "./use-queued-messages";
 import { useDeferredPresence } from "./use-deferred-remove";
+import { ChatContentStatus } from "./chat-content-status";
+import type { SummariesUpdater } from "./use-chats";
+import type { CurrentChatStatus } from "./use-current-chat";
 
 export function SidepanelView({
   t,
   providersReady,
   modelCount,
+  activeChatId,
   currentChat,
+  currentChatStatus,
   chats,
   preferences,
   configuredModels,
@@ -102,6 +102,8 @@ export function SidepanelView({
   onSetSelectedElements,
   onSetSelectedSkills,
   onSetChats,
+  onLoadChat,
+  onRetryChat,
   onSetPreferences,
   onCreateChat,
   onImportChat,
@@ -129,8 +131,10 @@ export function SidepanelView({
   t: Messages;
   providersReady: boolean;
   modelCount: number;
+  activeChatId?: string;
   currentChat?: Chat;
-  chats: Chat[];
+  currentChatStatus: CurrentChatStatus;
+  chats: ChatSummary[];
   preferences?: Preferences;
   configuredModels: ModelConfig[];
   input: string;
@@ -165,7 +169,9 @@ export function SidepanelView({
   onSetShowHistory: (value: boolean) => void;
   onSetSelectedElements: (value: SelectedElement[]) => void;
   onSetSelectedSkills: (value: Skill[]) => void;
-  onSetChats: Dispatch<SetStateAction<Chat[]>>;
+  onSetChats: SummariesUpdater;
+  onLoadChat: (chatId: string) => Promise<Chat | undefined>;
+  onRetryChat: () => void;
   onSetPreferences: (
     value: Preferences | ((previous: Preferences) => Preferences),
   ) => void;
@@ -212,8 +218,11 @@ export function SidepanelView({
 
   if (modelCount === 0) return <ProvidersEmptyState t={t} />;
   const sidepanelClass = `sidepanel ${editingMessageId ? "editing-mode" : ""}`;
-  const parentChat = currentChat?.parentChatId
-    ? chats.find((chat) => chat.id === currentChat.parentChatId)
+  // The open chat's list entry stands in while its content loads.
+  const currentMeta =
+    currentChat ?? chats.find((chat) => chat.id === activeChatId);
+  const parentChat = currentMeta?.parentChatId
+    ? chats.find((chat) => chat.id === currentMeta.parentChatId)
     : undefined;
   const latestUserMessageId = [...(currentChat?.messages || [])]
     .reverse()
@@ -227,11 +236,12 @@ export function SidepanelView({
           <HistoryPanel
             t={t}
             chats={chats}
-            activeChatId={currentChat?.id}
+            activeChatId={currentMeta?.id}
             unreadCompletedChatIds={unreadCompletedChatIds}
             agent={activeAgent}
             preferences={preferences}
             onSetChats={onSetChats}
+            onLoadChat={onLoadChat}
             onImportChat={onImportChat}
             onBack={() => onSetShowHistory(false)}
             onSelect={(chatId) => {
@@ -249,7 +259,7 @@ export function SidepanelView({
       <div className={sidepanelClass} ref={sidepanelRef}>
         <SidepanelHeader
           t={t}
-          currentChat={currentChat}
+          currentChat={currentMeta}
           parentChat={parentChat}
           syncWriteStatus={syncWriteStatus}
           onCreateChat={onCreateChat}
@@ -262,14 +272,12 @@ export function SidepanelView({
         <div className="messages-shell">
           <div key={messagesKey} ref={messagesRef} className="messages">
             <div className="messages-content">
-              {!currentChat?.messages.length && (
-                <div className="empty">
-                  <div>
-                    <h2>{t.sidepanel.whatDoYouWant}</h2>
-                    <p className="muted">{t.sidepanel.emptyDescription}</p>
-                  </div>
-                </div>
-              )}
+              <ChatContentStatus
+                t={t}
+                status={currentChatStatus}
+                empty={!currentChat?.messages.length}
+                onRetry={onRetryChat}
+              />
               {currentChat?.messages.map((message) => (
                 <MessageBubble
                   key={message.id}

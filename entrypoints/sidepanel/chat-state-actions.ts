@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
-import type { Chat, ChatMessage } from "../../src/shared/types";
+import type { Chat, ChatMessage, ChatSummary } from "../../src/shared/types";
+import type { SummariesUpdater } from "./use-chats";
 
-type ChatSetter = Dispatch<SetStateAction<Chat[]>>;
 type ActiveChatSetter = Dispatch<SetStateAction<string | undefined>>;
 
 export function createChatDraft(title: string, agentId?: string): Chat {
@@ -16,60 +16,41 @@ export function createChatDraft(title: string, agentId?: string): Chat {
   };
 }
 
-export function createChatAction({
-  title,
-  persist = true,
-  setChats,
-  setActiveChatId,
-  agentId,
-}: {
-  title: string;
-  persist?: boolean;
-  agentId?: string;
-  setChats: ChatSetter;
-  setActiveChatId: ActiveChatSetter;
-}) {
-  const chat = createChatDraft(title, agentId);
-  if (persist) setChats((items) => [...pruneEmptyChats(items), chat]);
-  setActiveChatId(chat.id);
-  return chat;
-}
-
 export function selectChatAction({
   chatId,
-  setChats,
+  setSummaries,
   setActiveChatId,
 }: {
   chatId: string;
-  setChats: ChatSetter;
+  setSummaries: SummariesUpdater;
   setActiveChatId: ActiveChatSetter;
 }) {
-  setChats((items) => pruneEmptyChats(items));
+  void setSummaries(pruneEmptyChats);
   setActiveChatId(chatId);
 }
 
-export function pruneEmptyChats(chats: Chat[]) {
+export function pruneEmptyChats(chats: ChatSummary[]) {
   return chats.some(isEmptyChat)
     ? chats.filter((chat) => !isEmptyChat(chat))
     : chats;
 }
 
-export function updateChatList(chats: Chat[], chat: Chat) {
-  const pruned = pruneEmptyChats(chats);
-  const nextChat = pruneStaleChildLinks(chat, pruned);
-  const nextItems = removeStaleChildren(pruned, nextChat);
-  if (!nextItems.some((candidate) => candidate.id === nextChat.id))
-    return [...nextItems, nextChat];
-  return nextItems.map((candidate) =>
-    candidate.id === nextChat.id ? nextChat : candidate,
-  );
+// A chat about to be stored, and how the list changes around it: empty chats
+// and sub-agent chats the chat no longer links to leave.
+export function prepareChatForList(chat: Chat, chats: ChatSummary[]) {
+  const nextChat = pruneStaleChildLinks(chat, chats);
+  return {
+    chat: nextChat,
+    list: (items: ChatSummary[]) =>
+      removeStaleChildren(pruneEmptyChats(items), nextChat),
+  };
 }
 
-function isEmptyChat(chat: Chat) {
-  return chat.messages.length === 0;
+function isEmptyChat(chat: ChatSummary) {
+  return chat.messageCount === 0;
 }
 
-function pruneStaleChildLinks(chat: Chat, chats: Chat[]) {
+function pruneStaleChildLinks(chat: Chat, chats: ChatSummary[]) {
   const linkedChildIds = retainedChildChatIds(chat, chats);
   if (
     !chat.childChatIds?.length ||
@@ -82,14 +63,14 @@ function pruneStaleChildLinks(chat: Chat, chats: Chat[]) {
   };
 }
 
-function removeStaleChildren(chats: Chat[], parent: Chat) {
+function removeStaleChildren(chats: ChatSummary[], parent: Chat) {
   const linkedChildIds = new Set(parent.childChatIds || []);
   return chats.filter(
     (chat) => chat.parentChatId !== parent.id || linkedChildIds.has(chat.id),
   );
 }
 
-function retainedChildChatIds(parent: Chat, chats: Chat[]) {
+function retainedChildChatIds(parent: Chat, chats: ChatSummary[]) {
   const messageIds = new Set(parent.messages.map((message) => message.id));
   const toolCallIds = new Set<string>();
   const outputChildIds = new Set<string>();
@@ -116,19 +97,23 @@ function retainedChildChatIds(parent: Chat, chats: Chat[]) {
   );
 }
 
-export function forkChatAction({
+export async function forkChatAction({
   chat,
   message,
   partId,
   forkLabel,
-  setChats,
+  chats,
+  loadChat,
+  saveChats,
   setActiveChatId,
 }: {
   chat: Chat;
   message: ChatMessage;
   partId?: string;
   forkLabel: string;
-  setChats: ChatSetter;
+  chats: ChatSummary[];
+  loadChat: (chatId: string) => Promise<Chat | undefined>;
+  saveChats: (chats: Chat[]) => Promise<void>;
   setActiveChatId: ActiveChatSetter;
 }) {
   const messageIndex = chat.messages.findIndex(
@@ -141,47 +126,50 @@ export function forkChatAction({
     ? truncateMessageAtPart(message, partId)
     : message;
   const messages = [...chat.messages.slice(0, messageIndex), forkedMessage];
-  setChats((items) => {
-    const linked = forkLinkedChildren({
-      chats: items,
-      messages,
-      originalParentId: chat.id,
-      forkParentId: forkId,
-      now,
-    });
-    const fork: Chat = {
-      ...chat,
-      id: forkId,
-      title: forkTitle(chat.title, forkLabel, now),
-      kind: "normal",
-      parentChatId: undefined,
-      parentMessageId: undefined,
-      parentToolCallId: undefined,
-      childChatIds: linked.children.length
-        ? linked.children.map((child) => child.id)
-        : undefined,
-      messages: linked.messages,
-      createdAt: now,
-      updatedAt: now,
-    };
-    return [...items, fork, ...linked.children];
+  const linked = await forkLinkedChildren({
+    chats,
+    loadChat,
+    messages,
+    originalParentId: chat.id,
+    forkParentId: forkId,
+    now,
   });
+  const fork: Chat = {
+    ...chat,
+    id: forkId,
+    title: forkTitle(chat.title, forkLabel, now),
+    kind: "normal",
+    parentChatId: undefined,
+    parentMessageId: undefined,
+    parentToolCallId: undefined,
+    childChatIds: linked.children.length
+      ? linked.children.map((child) => child.id)
+      : undefined,
+    messages: linked.messages,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await saveChats([fork, ...linked.children]);
   setActiveChatId(forkId);
 }
 
-function forkLinkedChildren({
+// Sub-agent chats the forked messages link to are copied along (their
+// content is loaded for that).
+async function forkLinkedChildren({
   chats,
+  loadChat,
   messages,
   originalParentId,
   forkParentId,
   now,
 }: {
-  chats: Chat[];
+  chats: ChatSummary[];
+  loadChat: (chatId: string) => Promise<Chat | undefined>;
   messages: ChatMessage[];
   originalParentId: string;
   forkParentId: string;
   now: number;
-}): { messages: ChatMessage[]; children: Chat[] } {
+}): Promise<{ messages: ChatMessage[]; children: Chat[] }> {
   const childIdMap = new Map<string, string>();
   const nextMessages = messages.map((message) => ({
     ...message,
@@ -207,7 +195,7 @@ function forkLinkedChildren({
   }));
   const children: Chat[] = [];
   for (const [oldId, nextId] of childIdMap.entries()) {
-    const child = chats.find((chat) => chat.id === oldId);
+    const child = await loadChat(oldId);
     if (child)
       children.push({
         ...child,
@@ -260,22 +248,7 @@ function truncateMessageAtPart(message: ChatMessage, partId: string) {
   return { ...message, content, parts };
 }
 
-export function closeChatAction({
-  closedIds,
-  setChats,
-}: {
-  closedIds: ReadonlySet<string>;
-  setChats: ChatSetter;
-}) {
-  setChats((items) => {
-    return cleanupClosedChatRelationships(
-      items.filter((chat) => !closedIds.has(chat.id)),
-      closedIds,
-    );
-  });
-}
-
-export function closedChatIds(chats: Chat[], closedChatId: string) {
+export function closedChatIds(chats: ChatSummary[], closedChatId: string) {
   const ids = new Set([closedChatId]);
   let changed = true;
   while (changed) {
@@ -289,17 +262,4 @@ export function closedChatIds(chats: Chat[], closedChatId: string) {
     }
   }
   return ids;
-}
-
-function cleanupClosedChatRelationships(
-  chats: Chat[],
-  closedChatIds: ReadonlySet<string>,
-) {
-  return chats.map((chat) => {
-    if (!chat.childChatIds?.some((id) => closedChatIds.has(id))) return chat;
-    return {
-      ...chat,
-      childChatIds: chat.childChatIds.filter((id) => !closedChatIds.has(id)),
-    };
-  });
 }

@@ -123,7 +123,7 @@ test("persistent conflicts are bounded and a later operation still runs", async 
   // are concurrent and either replica may win the same-millisecond HLC tie.
   // Keep time frozen so retaining the edit depends on causality, not elapsed time.
   assert.equal(await backend.read("language"), "en");
-  await assert.rejects(backend.write("language", "fr"), /412/);
+  await assert.rejects(backend.write("language", "fr"), /conflict/);
   assert.equal(puts, 3);
   assert.equal(await backend.read("language"), "fr");
 });

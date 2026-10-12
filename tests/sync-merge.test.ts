@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
+import { base64ToBytes } from "../src/shared/binary";
 import {
-  base64ToBytes,
   decodeTinyBaseSyncValue,
   readTinyBaseSyncValue,
   writeTinyBaseSyncValue,
@@ -100,7 +100,7 @@ test("malformed remote data cannot replace a valid local document", async () => 
     ],
   ]) {
     const bytes = new TextEncoder().encode(
-      `OpenBrowserAgentTinyBaseSync:${JSON.stringify({ format: "openbrowseragent.tinybase-sync.v2", content })}`,
+      `OpenBrowserAgentTinyBaseSync:${JSON.stringify({ format: "openbrowseragent.tinybase-sync.v3", content })}`,
     );
     await assert.rejects(
       readTinyBaseSyncValue(key, bytes),

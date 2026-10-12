@@ -56,6 +56,13 @@ export const frFR: LocaleMessages = {
     exportChatOpenAi: "Exporter en JSON OpenAI",
     importChatOpenAi: "Importer un chat JSON OpenAI",
     clearAllChats: "Effacer toutes les discussions",
+    chatLoading: "Chargement de la discussion…",
+    chatLoadFailed:
+      "Impossible de charger cette discussion. Vérifiez la connexion de synchronisation et réessayez.",
+    retryLoadChat: "Réessayer",
+    chatUnavailable:
+      "Les messages de cette discussion ne sont pas disponibles sur cet appareil.",
+    exportChatFailed: "Impossible d'exporter cette discussion.",
     noChatsYet: "Aucune discussion",
     removeChat: "Supprimer la discussion",
     pinChat: "Épingler la discussion",

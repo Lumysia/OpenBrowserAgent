@@ -1,14 +1,29 @@
 import * as config from "./config";
-import { getBrowserApi } from "./browser-api";
-import { hasUnfinishedChatRun } from "./chats";
 import {
-  mergeSyncDataSettings,
   STORAGE_KEYS,
   SYNCABLE_DATA_ITEMS,
   SYNC_PREFERENCES,
   type SyncDataSettings,
-  type SyncPreferenceKey,
 } from "./storage-keys";
+import {
+  local,
+  publishFlushed,
+  readSyncCache,
+  readSyncDataSettings,
+  sameValue,
+  writePendingSyncValue,
+  type SyncLocalCache,
+  type SyncWriteStatus,
+} from "./storage-sync-cache";
+import {
+  hasUploadableItems,
+  isSplitStorageKey,
+  markSplitItemsPending,
+  materializeSplitItems,
+  publishSplitRefresh,
+  splitItemIds,
+  uploadSplitPending,
+} from "./storage-split";
 import {
   getActiveSyncBackend,
   getStoredActiveSyncBackendId,
@@ -16,114 +31,7 @@ import {
   type SyncBackend,
 } from "./sync-backends";
 
-// While a key is synced, the value the user sees is its local cache entry:
-// pending (no flushedAt) until the backend accepted it, then flushed. The plain
-// local key is kept as the device's own copy and is never deleted here.
-export type SyncLocalCache<T> = {
-  value: T;
-  updatedAt: number;
-  flushedAt?: number;
-};
-
-export type SyncWriteStatus = {
-  pendingCount: number;
-  activeCount?: number;
-  pendingItems?: Array<{
-    key: string;
-    operation: "write" | "remove";
-    backendName: string;
-    backendType: SyncBackend["config"]["type"];
-  }>;
-  lastUpdatedAt?: number;
-  lastFlushedAt?: number;
-  lastError?: string;
-};
-
-export const DEFAULT_SYNC_WRITE_STATUS: SyncWriteStatus = { pendingCount: 0 };
-
-export const local = () => getBrowserApi().storage.local;
-export const sameValue = (left: unknown, right: unknown) =>
-  JSON.stringify(left) === JSON.stringify(right);
-export const pendingCache = (value: unknown) => ({
-  value,
-  updatedAt: Date.now(),
-});
-export const flushedCache = (value: unknown) => ({
-  ...pendingCache(value),
-  flushedAt: Date.now(),
-});
-
-const lockQueues = new Map<string, Promise<unknown>>();
-
-// Web Locks serialize the extension pages and the background; the fallback
-// serializes callers within one context.
-export function withLock<T>(name: string, operation: () => Promise<T>) {
-  const lockName = `openbrowseragent:${name}`;
-  if (globalThis.navigator?.locks)
-    return navigator.locks.request(lockName, operation) as Promise<T>;
-  const next = (lockQueues.get(lockName) || Promise.resolve())
-    .catch(() => undefined)
-    .then(operation);
-  lockQueues.set(lockName, next);
-  return next;
-}
-
-export function syncLocalCacheKey(key: string) {
-  return `${key}:sync-local-cache`;
-}
-
-export async function readSyncCache<T>(key: string) {
-  const cacheKey = syncLocalCacheKey(key);
-  return (await local().get(cacheKey))[cacheKey] as
-    SyncLocalCache<T> | undefined;
-}
-
-export function writePendingSyncValue<T>(key: string, value: T) {
-  return withLock(syncLocalCacheKey(key), () =>
-    local().set({ [syncLocalCacheKey(key)]: pendingCache(value) }),
-  );
-}
-
-// Publish a backend result only if the cache entry is still the one the caller
-// read. A flush or refresh must never overwrite a newer pending edit.
-async function publishFlushed(
-  key: string,
-  value: unknown,
-  expected: SyncLocalCache<unknown> | undefined,
-) {
-  return withLock(syncLocalCacheKey(key), async () => {
-    const current = await readSyncCache(key);
-    if (!sameValue(current, expected)) return false;
-    if (value === undefined) await local().remove(syncLocalCacheKey(key));
-    else if (
-      current?.flushedAt === undefined ||
-      !sameValue(current.value, value)
-    )
-      await local().set({ [syncLocalCacheKey(key)]: flushedCache(value) });
-    return true;
-  });
-}
-
-// Synced value with the device's local copy as fallback.
-export async function readSyncedValue<T>(key: string) {
-  if (await isSyncBackendEnabled()) {
-    const cached = (await readSyncCache<T>(key))?.value;
-    if (cached !== undefined) return cached;
-  }
-  return (await local().get(key))[key] as T | undefined;
-}
-
-export async function readSyncDataSettings() {
-  return mergeSyncDataSettings(
-    await readSyncedValue<SyncDataSettings>(STORAGE_KEYS.syncDataSettings),
-  );
-}
-
-// `true` routes an always-synced key (language, preferences, settings).
-export async function isSyncRouted(preference: SyncPreferenceKey | true) {
-  if (!(await isSyncBackendEnabled())) return false;
-  return preference === true || (await readSyncDataSettings())[preference];
-}
+export * from "./storage-sync-cache";
 
 async function ownsSyncKey(backendId: string, key: string) {
   if ((await getStoredActiveSyncBackendId()) !== backendId) return false;
@@ -131,12 +39,19 @@ async function ownsSyncKey(backendId: string, key: string) {
   return !item || (await readSyncDataSettings())[item.preferenceKey];
 }
 
+// A pending value, or pending split content that is not held.
+const needsUpload = (key: string, cache: SyncLocalCache<unknown> | undefined) =>
+  !!cache && (cache.flushedAt === undefined || hasUploadableItems(key, cache));
+
 async function uploadPending(backend: SyncBackend, key: string) {
   if (!(await ownsSyncKey(backend.config.id, key))) return;
   const expected = await readSyncCache(key);
-  if (!expected || expected.flushedAt !== undefined) return;
-  if (key === STORAGE_KEYS.chats && hasUnfinishedChatRun(expected.value))
+  if (!expected || !needsUpload(key, expected)) return;
+  if (isSplitStorageKey(key)) {
+    if (await uploadSplitPending(backend, key, expected))
+      queueSyncWrite(backend, key);
     return;
+  }
   const merged = await backend.write(key, expected.value);
   await publishFlushed(key, merged ?? expected.value, expected);
 }
@@ -241,13 +156,15 @@ export function recordSyncError(error: unknown) {
 async function refreshSyncKey(backend: SyncBackend, key: string) {
   if (!(await ownsSyncKey(backend.config.id, key))) return;
   const expected = await readSyncCache(key);
-  if (expected && expected.flushedAt === undefined) {
+  if (needsUpload(key, expected)) {
     queueSyncWrite(backend, key, 0);
     return flushSyncWrite(key);
   }
   const remote = await backend.read(key);
   if (expected ? sameValue(expected.value, remote) : remote === undefined)
     return;
+  if (isSplitStorageKey(key))
+    return void (await publishSplitRefresh(key, remote, expected));
   const before = await readSyncDataSettings();
   if (!(await publishFlushed(key, remote, expected))) return;
   if (key === STORAGE_KEYS.syncDataSettings)
@@ -301,12 +218,17 @@ async function followRemoteSettings(
     if (before[preferenceKey] === after[preferenceKey]) continue;
     if (!after[preferenceKey]) {
       const value = (await readSyncCache(dataKey))?.value;
-      if (value !== undefined) await local().set({ [dataKey]: value });
+      if (value === undefined) continue;
+      if (isSplitStorageKey(dataKey))
+        await materializeSplitItems(backend, dataKey, value);
+      await local().set({ [dataKey]: value });
       continue;
     }
     const value = (await local().get(dataKey))[dataKey];
     if (value === undefined) continue;
     await writePendingSyncValue(dataKey, value);
+    if (isSplitStorageKey(dataKey))
+      await markSplitItemsPending(dataKey, splitItemIds(dataKey, value));
     queueSyncWrite(backend, dataKey);
   }
 }

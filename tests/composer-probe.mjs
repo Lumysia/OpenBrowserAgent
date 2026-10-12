@@ -17,7 +17,15 @@ export async function installComposerProbe(page, prompt) {
 
 async function initializeComposerProbe(prompt) {
   const parse = globalThis.marked.parse;
-  const { chats = [] } = await chrome.storage.local.get("chats");
+  // Stored chats: the list plus each chat's content under `chats/<id>`.
+  const storedChats = async () => {
+    const stored = await chrome.storage.local.get(null);
+    return (stored.chats || []).map((chat) => ({
+      ...chat,
+      ...stored[`chats/${chat.id}`],
+    }));
+  };
+  const chats = await storedChats();
   const baseline = new Set(
     chats.flatMap((chat) => chat.messages || []).map((message) => message.id),
   );
@@ -77,7 +85,7 @@ async function initializeComposerProbe(prompt) {
   }
   // Exposed only in this disposable test page, also used by negative controls.
   globalThis.__obaComposerProbe = async () => {
-    const { chats = [] } = await chrome.storage.local.get("chats");
+    const chats = await storedChats();
     const candidates = chats.flatMap((chat) =>
       (chat.messages || []).flatMap((message, index) =>
         message.role === "user" &&

@@ -5,7 +5,7 @@ import {
   DEFAULT_AGENT_ID,
 } from "../shared/agents";
 import type { Messages } from "../shared/i18n";
-import type { Agent, Chat } from "../shared/types";
+import type { Agent, ChatMeta } from "../shared/types";
 
 export function agentDisplayName(agent: Agent, t: Messages) {
   return agentDisplayNameById(agent.id, agent.name, t);
@@ -46,7 +46,7 @@ export function localizedAgentTitle({
   return displayName && body ? `${displayName}: ${body}` : body || displayName;
 }
 
-export function chatDisplayTitle(chat: Chat | undefined, t: Messages) {
+export function chatDisplayTitle(chat: ChatMeta | undefined, t: Messages) {
   if (!chat) return t.words.newChat;
   if (chat.kind !== "subagent") return chat.title || t.words.newChat;
   return localizedAgentTitle({

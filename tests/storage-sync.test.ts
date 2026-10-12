@@ -333,35 +333,6 @@ test("clearing local data removes every synced replica", async () => {
   assert.ok(!JSON.stringify(local.data).includes("p-key"));
 });
 
-test("a run abandoned mid-stream stops blocking chat sync", async () => {
-  await activeDevice({ syncChats: true });
-  const running = (updatedAt: number): Chat => ({
-    ...chat("c"),
-    updatedAt,
-    messages: [
-      {
-        id: "a",
-        role: "assistant",
-        content: "",
-        createdAt: updatedAt,
-        metadata: { runMetrics: { startedAt: updatedAt } },
-      },
-    ],
-  });
-  // A live run waits until it ends before uploading.
-  await storage.chats.set([running(Date.now())]);
-  await flushPendingSyncWrites();
-  assert.deepEqual(ids(await browserSync().read(STORAGE_KEYS.chats)), []);
-  // A run whose panel closed long ago never gets endedAt; it must not freeze
-  // chat sync for good.
-  await storage.chats.set([running(Date.now() - 60 * 60_000), chat("d")]);
-  await flushPendingSyncWrites();
-  assert.deepEqual(ids(await browserSync().read(STORAGE_KEYS.chats)), [
-    "c",
-    "d",
-  ]);
-});
-
 test("starting from cloud uploads sync settings the cloud is missing", async () => {
   const { local } = installBrowser();
   const backend = browserSync();

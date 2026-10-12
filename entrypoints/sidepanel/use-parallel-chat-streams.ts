@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Dispatch, SetStateAction } from "react";
+import type { Dispatch, RefObject, SetStateAction } from "react";
 import type {
   Agent,
   Chat,
+  ChatSummary,
   Preferences,
   RunMetrics,
   SendMessagesRequest,
@@ -15,6 +16,7 @@ import { createStreamHandlers } from "./stream-handlers";
 import type { ActiveStreamMap } from "./sidepanel-menu-state";
 import { useAutoRetryStream } from "./sidepanel-effects";
 import { closedChatIds } from "./chat-state-actions";
+import type { ChatUpdater } from "./use-chats";
 import {
   attachStreamAction,
   closeStreamPort,
@@ -24,23 +26,25 @@ import {
 export function useParallelChatStreams({
   activeChatId,
   currentChat,
-  chats,
+  summariesRef,
+  getChat,
   preferences,
   language,
   uploadedAttachments,
   agent,
-  setChats,
+  updateChat,
   setUnreadCompletedChats,
   onStreamChunk,
 }: {
   activeChatId?: string;
   currentChat?: Chat;
-  chats: Chat[] | undefined;
+  summariesRef: RefObject<ChatSummary[] | undefined>;
+  getChat: (chatId: string) => Chat | undefined;
   preferences?: Preferences;
   language: string | undefined;
   uploadedAttachments: UploadedAttachment[];
   agent: Agent;
-  setChats: Dispatch<SetStateAction<Chat[]>>;
+  updateChat: ChatUpdater;
   setUnreadCompletedChats: Dispatch<SetStateAction<Record<string, true>>>;
   onStreamChunk?: (event: {
     chatId: string;
@@ -50,7 +54,6 @@ export function useParallelChatStreams({
 }) {
   const [activeStreams, setActiveStreamsState] = useState<ActiveStreamMap>({});
   const portRefs = useRef<Record<string, chrome.runtime.Port | undefined>>({});
-  const chatsRef = useRef<Chat[]>([]);
   const activeChatIdRef = useRef<string | undefined>(undefined);
   const queuedMessageRemoverRef = useRef<(id: string, chatId: string) => void>(
     () => undefined,
@@ -58,8 +61,8 @@ export function useParallelChatStreams({
   const lastStreamActivityRef = useRef<Record<string, number>>({});
   const activeStreamsRef = useRef<ActiveStreamMap>({});
   const streamHandlers = useMemo(
-    () => createStreamHandlers(setChats),
-    [setChats],
+    () => createStreamHandlers(updateChat),
+    [updateChat],
   );
   const setActiveStreams: typeof setActiveStreamsState = useCallback(
     (value) => {
@@ -77,10 +80,6 @@ export function useParallelChatStreams({
     : undefined;
 
   useEffect(() => {
-    chatsRef.current = chats || [];
-  }, [chats]);
-
-  useEffect(() => {
     activeChatIdRef.current = activeChatId;
   }, [activeChatId]);
 
@@ -89,7 +88,7 @@ export function useParallelChatStreams({
     autoRetry: preferences?.autoRetry,
     activeStreamsRef,
     lastStreamActivityRef,
-    chatsRef,
+    getChat,
     preferences,
     language,
     uploadedAttachments,
@@ -187,7 +186,7 @@ export function useParallelChatStreams({
   }
 
   async function abortClosedChatStreams(chatId: string) {
-    const ids = closedChatIds(chatsRef.current, chatId);
+    const ids = closedChatIds(summariesRef.current || [], chatId);
     try {
       await abortChatStreams(ids);
     } finally {
@@ -254,6 +253,7 @@ export function useParallelChatStreams({
 
   return {
     streaming,
+    streamingChatIds: Object.keys(activeStreams),
     currentChatStreaming,
     currentAssistantMessageId,
     beginStream,

@@ -1,12 +1,5 @@
 import * as config from "./config";
-import {
-  base64ToBytes,
-  bytesToBase64,
-  mergeTinyBaseSyncValue,
-  readTinyBaseSyncValue,
-  removeLocalTinyBaseSyncDocument,
-  writeTinyBaseSyncValue,
-} from "./sync-tinybase-doc";
+import { base64ToBytes, bytesToBase64 } from "./binary";
 import { getBrowserApi } from "./browser-api";
 import type { SyncBackendConfig } from "./types";
 import {
@@ -14,54 +7,115 @@ import {
   SYNC_BACKEND_TYPES,
   type SyncBackend,
   type SyncBackendImpl,
-  type WebDavSyncBackendConfig,
+  type SyncItemRead,
 } from "./sync-backends";
+import {
+  documentScope,
+  readDocument,
+  removeDocument,
+  writeDocument,
+  type DocumentTransport,
+} from "./sync-documents";
+import { createSplitCollectionStore } from "./sync-split";
+import { splitCollection } from "./sync-split-format";
+import { valueCodec } from "./sync-tinybase-doc";
+import {
+  createWebDavTransport,
+  readWebDavObject,
+  removeWebDavObject,
+  writeWebDavObject,
+} from "./sync-webdav";
 
 export function createSyncBackend(
   backendConfig: SyncBackendConfig,
 ): SyncBackend {
-  return serializeSyncBackend(
+  const transport =
     backendConfig.type === SYNC_BACKEND_TYPES.webDav
-      ? createWebDavBackend(backendConfig)
-      : createBrowserSyncBackend(backendConfig),
-  );
-}
-
-function createBrowserSyncBackend(
-  backendConfig: SyncBackendConfig,
-): SyncBackend {
-  return {
+      ? createWebDavTransport(backendConfig)
+      : createBrowserSyncTransport(backendConfig);
+  // Values cross into callers that may mutate them; caches keep their own.
+  const copy = <T>(value: unknown) => structuredClone(value) as T | undefined;
+  const splitStore = (key: string) => {
+    const collection = splitCollection(key);
+    if (!collection?.lazy) throw new Error(`Not an item collection: ${key}`);
+    return createSplitCollectionStore(transport, collection);
+  };
+  return serializeSyncBackend({
     config: backendConfig,
     async read<T>(key: string) {
-      const result = await getBrowserApi().storage.sync.get(key);
-      const encoded = result[key] as string | undefined;
-      return readTinyBaseSyncValue<T>(
-        syncBackendCacheKey(backendConfig, key),
-        encoded ? base64ToBytes(encoded) : undefined,
-      );
+      const collection = splitCollection(key);
+      if (collection)
+        return copy<T>(
+          await createSplitCollectionStore(transport, collection).read(),
+        );
+      return copy<T>((await readDocument(transport, key, valueCodec)).value);
     },
     async write<T>(key: string, value: T) {
-      const stored = await getBrowserApi().storage.sync.get(key);
-      const encoded = stored[key] as string | undefined;
-      const result = await writeTinyBaseSyncValue(
-        syncBackendCacheKey(backendConfig, key),
-        value,
-        encoded ? base64ToBytes(encoded) : undefined,
+      const collection = splitCollection(key);
+      if (collection)
+        return copy<T>(
+          await createSplitCollectionStore(transport, collection).write(value),
+        );
+      return copy<T>(
+        (await writeDocument(transport, key, value as unknown, valueCodec))
+          .value,
       );
-      const nextValue = bytesToBase64(result.bytes);
-      assertBrowserSyncItemFits(key, nextValue);
-      if (nextValue !== encoded)
-        await getBrowserApi().storage.sync.set({ [key]: nextValue });
-      return result.value;
+    },
+    async writeItems<T>(
+      key: string,
+      value: T,
+      contents: Record<string, unknown>,
+    ) {
+      const result = await splitStore(key).writeItems(
+        value,
+        contents as Record<string, Record<string, unknown>>,
+      );
+      return copy<{
+        value?: T;
+        contents: Record<string, unknown>;
+        missing: string[];
+      }>(result)!;
+    },
+    async readItem(key, id, have) {
+      return copy<SyncItemRead>(await splitStore(key).readItem(id, have))!;
     },
     async remove(key) {
-      await getBrowserApi().storage.sync.remove(key);
-      await removeLocalTinyBaseSyncDocument(
-        syncBackendCacheKey(backendConfig, key),
-      );
+      const collection = splitCollection(key);
+      if (collection)
+        await createSplitCollectionStore(transport, collection).remove();
+      else await removeDocument(transport, key);
+    },
+    test: () => transport.test(),
+  });
+}
+
+// Browser sync keeps each document as one storage.sync item. Writes cannot
+// conflict there: the browser merges the sync area last-writer-wins.
+function createBrowserSyncTransport(
+  backendConfig: SyncBackendConfig,
+): DocumentTransport {
+  const area = () => getBrowserApi().storage.sync;
+  return {
+    config: backendConfig,
+    peek: () => undefined,
+    async get(name) {
+      const encoded = (await area().get(name))[name] as string | undefined;
+      return encoded ? { data: base64ToBytes(encoded) } : undefined;
+    },
+    async put(name, bytes) {
+      const encoded = bytesToBase64(bytes);
+      assertBrowserSyncItemFits(name, encoded);
+      await area().set({ [name]: encoded });
+      return { data: bytes };
+    },
+    remove: (name) => area().remove(name),
+    async removeFolder(key) {
+      const names = Object.keys(await area().get(null));
+      const items = names.filter((name) => name.startsWith(`${key}/`));
+      if (items.length) await area().remove(items);
     },
     async test() {
-      await getBrowserApi().storage.sync.get(null);
+      await area().get(null);
     },
   };
 }
@@ -83,25 +137,14 @@ registerSyncBackendImpl({
   removeWebDavObject,
 } satisfies SyncBackendImpl);
 
-// Per-document serialization
+// Per-key serialization
 const operations = new Map<string, Promise<unknown>>();
 
-export function syncBackendCacheKey(
-  backendConfig: SyncBackendConfig,
-  key: string,
-) {
-  const scope =
-    backendConfig.type === SYNC_BACKEND_TYPES.webDav
-      ? `${backendConfig.type}:${backendConfig.username || ""}:${backendConfig.url}`
-      : backendConfig.id;
-  return `${scope}:${key}`;
-}
-
 // All extension contexts reach these adapters through the background. Serialize
-// read/modify/write per document, including across freshly-created adapters.
+// read/modify/write per key, including across freshly-created adapters.
 function serializeSyncBackend(backend: SyncBackend): SyncBackend {
   function run<T>(key: string, operation: () => Promise<T>): Promise<T> {
-    const scope = syncBackendCacheKey(backend.config, key);
+    const scope = documentScope(backend.config, key);
     const previous = operations.get(scope) || Promise.resolve();
     const next = previous.catch(() => undefined).then(operation);
     operations.set(scope, next);
@@ -116,273 +159,10 @@ function serializeSyncBackend(backend: SyncBackend): SyncBackend {
     read: <T>(key: string) => run(key, () => backend.read<T>(key)),
     write: <T>(key: string, value: T) =>
       run(key, () => backend.write(key, value)),
+    writeItems: (key, value, contents) =>
+      run(key, () => backend.writeItems(key, value, contents)),
+    readItem: (key, id, have) =>
+      run(key, () => backend.readItem(key, id, have)),
     remove: (key) => run(key, () => backend.remove(key)),
   };
-}
-
-// WebDAV documents
-type RemoteDocument = {
-  data: Uint8Array;
-  etag?: string;
-  lastModified?: string;
-  decoded?: { value: unknown };
-};
-// One entry per synced document (a handful of keys per configured backend).
-const readCache = new Map<string, RemoteDocument>();
-const MAX_WRITE_ATTEMPTS = 3;
-
-function createWebDavBackend(config: WebDavSyncBackendConfig): SyncBackend {
-  return {
-    config,
-    async read<T>(key: string) {
-      const remote = await readDocument(config, key);
-      if (remote?.decoded) return structuredClone(remote.decoded.value) as T;
-      const value = await readTinyBaseSyncValue<T>(
-        syncBackendCacheKey(config, key),
-        remote?.data,
-      );
-      if (remote) remote.decoded = { value: structuredClone(value) };
-      return value;
-    },
-    async write<T>(key: string, value: T) {
-      const scope = syncBackendCacheKey(config, key);
-      let remote = await readDocument(config, key);
-      if (remote) delete remote.decoded;
-      // Stamp the user's changes once. Conflict retries only merge CRDT state.
-      let result: { bytes: Uint8Array; value: T | undefined } =
-        await writeTinyBaseSyncValue(scope, value, remote?.data);
-      for (let attempt = 0; attempt < MAX_WRITE_ATTEMPTS; attempt++) {
-        const response = await requestWebDav(config, objectUrl(config, key), {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/octet-stream",
-            ...writePrecondition(remote),
-          },
-          body: bytesToArrayBuffer(result.bytes),
-        });
-        if (response.status === 412 && attempt + 1 < MAX_WRITE_ATTEMPTS) {
-          remote = await readDocument(config, key, true);
-          if (remote)
-            result = await mergeTinyBaseSyncValue<T>(scope, remote.data);
-          continue;
-        }
-        if (!response.ok) await throwWebDavError(response, "write");
-        cacheDocument(scope, {
-          data: result.bytes,
-          decoded: { value: structuredClone(result.value) },
-          ...validators(response),
-        });
-        return result.value;
-      }
-      throw new Error("WebDAV write conflict retries exhausted.");
-    },
-    async remove(key) {
-      // Only "clear data" removes documents, and it wants them gone whatever
-      // another device wrote, so the delete is unconditional. A conditional
-      // delete also fails on servers that send only weak ETags.
-      const response = await requestWebDav(config, objectUrl(config, key), {
-        method: "DELETE",
-      });
-      if (!response.ok && response.status !== 404)
-        await throwWebDavError(response, "remove");
-      readCache.delete(syncBackendCacheKey(config, key));
-      await removeLocalTinyBaseSyncDocument(syncBackendCacheKey(config, key));
-    },
-    async test() {
-      const response = await requestWebDav(config, baseUrl(config), {
-        method: "PROPFIND",
-        headers: { Depth: "0" },
-      });
-      if (!response.ok && response.status !== 207)
-        await throwWebDavError(response, "test");
-    },
-  };
-}
-
-async function readDocument(
-  config: WebDavSyncBackendConfig,
-  key: string,
-  fresh = false,
-): Promise<RemoteDocument | undefined> {
-  const scope = syncBackendCacheKey(config, key);
-  // Validators are valid only with the exact response body they describe. Old
-  // persisted metadata alone cannot satisfy a 304 after a background restart.
-  const cached = fresh ? undefined : readCache.get(scope);
-  const headers: Record<string, string> = {};
-  if (cached?.etag) headers["If-None-Match"] = cached.etag;
-  else if (cached?.lastModified)
-    headers["If-Modified-Since"] = cached.lastModified;
-  const response = await requestWebDav(config, objectUrl(config, key), {
-    method: "GET",
-    headers,
-  });
-  if (response.status === 304 && cached) return cached;
-  if (response.status === 404) {
-    readCache.delete(scope);
-    return undefined;
-  }
-  if (!response.ok) await throwWebDavError(response, "read");
-  const remote = {
-    data: new Uint8Array(await response.arrayBuffer()),
-    ...validators(response),
-  };
-  cacheDocument(scope, remote);
-  return remote;
-}
-
-function validators(response: Response) {
-  return {
-    etag: response.headers.get("ETag") || undefined,
-    lastModified: response.headers.get("Last-Modified") || undefined,
-  };
-}
-
-function writePrecondition(
-  remote: RemoteDocument | undefined,
-): Record<string, string> {
-  if (!remote) return { "If-None-Match": "*" };
-  if (remote.etag && !remote.etag.startsWith("W/"))
-    return { "If-Match": remote.etag };
-  // HTTP dates only have second precision. Prefer a strong ETag whenever the
-  // server provides one; date-only servers retain HTTP's weaker guarantee.
-  if (remote.lastModified)
-    return { "If-Unmodified-Since": remote.lastModified };
-  throw new Error(
-    "WebDAV server must provide a strong ETag or Last-Modified to safely update an existing sync document.",
-  );
-}
-
-function cacheDocument(scope: string, remote: RemoteDocument) {
-  if (remote.etag || remote.lastModified) readCache.set(scope, remote);
-  else readCache.delete(scope);
-}
-
-// WebDAV transport and attachment objects
-export async function readWebDavObject(
-  backendConfig: WebDavSyncBackendConfig,
-  name: string,
-  signal?: AbortSignal,
-) {
-  signal?.throwIfAborted();
-  const response = await requestWebDav(
-    backendConfig,
-    rawObjectUrl(backendConfig, name),
-    { method: "GET", signal },
-  );
-  if (response.status === 404) return undefined;
-  if (!response.ok) await throwWebDavError(response, "read");
-  return new Uint8Array(await response.arrayBuffer());
-}
-
-export async function writeWebDavObject(
-  backendConfig: WebDavSyncBackendConfig,
-  name: string,
-  bytes: Uint8Array,
-  contentType = "application/octet-stream",
-  signal?: AbortSignal,
-) {
-  signal?.throwIfAborted();
-  await ensureWebDavCollections(backendConfig, name, signal);
-  signal?.throwIfAborted();
-  const response = await requestWebDav(
-    backendConfig,
-    rawObjectUrl(backendConfig, name),
-    {
-      method: "PUT",
-      signal,
-      headers: { "Content-Type": contentType },
-      body: bytesToArrayBuffer(bytes),
-    },
-  );
-  if (!response.ok) await throwWebDavError(response, "write");
-}
-
-export async function removeWebDavObject(
-  backendConfig: WebDavSyncBackendConfig,
-  name: string,
-) {
-  const response = await requestWebDav(
-    backendConfig,
-    rawObjectUrl(backendConfig, name),
-    { method: "DELETE" },
-  );
-  if (!response.ok && response.status !== 404)
-    await throwWebDavError(response, "remove");
-}
-
-async function ensureWebDavCollections(
-  backendConfig: WebDavSyncBackendConfig,
-  name: string,
-  signal?: AbortSignal,
-) {
-  const parts = name.split("/").filter(Boolean);
-  if (parts.length <= 1) return;
-  let currentPath = "";
-  for (const part of parts.slice(0, -1)) {
-    signal?.throwIfAborted();
-    currentPath = currentPath ? `${currentPath}/${part}` : part;
-    const response = await requestWebDav(
-      backendConfig,
-      rawObjectUrl(backendConfig, currentPath),
-      { method: "MKCOL", signal },
-    );
-    if (!response.ok && response.status !== 405)
-      await throwWebDavError(response, "create folder");
-  }
-}
-
-function bytesToArrayBuffer(bytes: Uint8Array) {
-  return bytes.buffer.slice(
-    bytes.byteOffset,
-    bytes.byteOffset + bytes.byteLength,
-  ) as ArrayBuffer;
-}
-
-function objectUrl(backendConfig: WebDavSyncBackendConfig, key: string) {
-  return new URL(
-    `${encodeURIComponent(key)}.tinybase`,
-    baseUrl(backendConfig),
-  ).toString();
-}
-
-function rawObjectUrl(backendConfig: WebDavSyncBackendConfig, name: string) {
-  const encodedPath = name
-    .split("/")
-    .filter(Boolean)
-    .map(encodeURIComponent)
-    .join("/");
-  return new URL(encodedPath, baseUrl(backendConfig)).toString();
-}
-
-function baseUrl(backendConfig: WebDavSyncBackendConfig) {
-  return backendConfig.url.endsWith("/")
-    ? backendConfig.url
-    : `${backendConfig.url}/`;
-}
-
-async function requestWebDav(
-  backendConfig: WebDavSyncBackendConfig,
-  url: string,
-  init: RequestInit,
-) {
-  const headers = new Headers(init.headers);
-  headers.set("Cache-Control", "no-cache");
-  if (backendConfig.username || backendConfig.password) {
-    const credentials = `${backendConfig.username || ""}:${backendConfig.password || ""}`;
-    headers.set(
-      "Authorization",
-      `Basic ${btoa(String.fromCharCode(...new TextEncoder().encode(credentials)))}`,
-    );
-  }
-  return fetch(url, { ...init, cache: "no-store", headers });
-}
-
-async function throwWebDavError(
-  response: Response,
-  action: string,
-): Promise<never> {
-  const body = await response.text().catch(() => "");
-  throw new Error(
-    `WebDAV ${action} failed: ${response.status} ${response.statusText}${body ? ` - ${body.slice(0, 180)}` : ""}`,
-  );
 }

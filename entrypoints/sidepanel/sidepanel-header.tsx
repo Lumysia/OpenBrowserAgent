@@ -12,7 +12,7 @@ import { OPTIONS_HASH } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import type { SyncWriteStatus } from "../../src/shared/storage";
 import { openOrFocusOptions } from "../../src/shared/tab-navigation";
-import type { Chat } from "../../src/shared/types";
+import type { ChatMeta } from "../../src/shared/types";
 import { chatDisplayTitle } from "../../src/ui/agent-display";
 import { Button } from "../../src/ui/components";
 import { IconTooltip } from "./icon-tooltip";
@@ -27,8 +27,8 @@ export function SidepanelHeader({
   onSelectChat,
 }: {
   t: Messages;
-  currentChat?: Chat;
-  parentChat?: Chat;
+  currentChat?: ChatMeta;
+  parentChat?: ChatMeta;
   syncWriteStatus?: SyncWriteStatus;
   onCreateChat: () => void;
   onSetShowHistory: (value: boolean) => void;

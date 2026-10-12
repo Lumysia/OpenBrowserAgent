@@ -12,7 +12,7 @@ import type {
 import { useBuiltinSkills } from "../../src/ui/useBuiltinSkills";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { requestChatTitle } from "./ai-requests";
-import { createChatDraft, updateChatList } from "./chat-state-actions";
+import { createChatDraft } from "./chat-state-actions";
 import { pruneSentAttachmentPreviews } from "./edit-message";
 import { toggleSkill } from "./skill-context";
 import { assistantModelLabel } from "./model-label";
@@ -23,7 +23,6 @@ import {
 import {
   useAutoScroll,
   useActiveChatCleanup,
-  useChatListCleanup,
   useChatSelection,
   useSidepanelTheme,
 } from "./sidepanel-effects";
@@ -40,6 +39,8 @@ import {
 import { SidepanelView } from "./sidepanel-view";
 import { agentForChatRuntime } from "./sub-agent-runtime";
 import { useChatActions } from "./use-chat-actions";
+import { useChats } from "./use-chats";
+import { useCurrentChat, useRetainedChats } from "./use-current-chat";
 import { useComposerContext } from "./use-composer-context";
 import { useChatDraft } from "./use-chat-drafts";
 import { useConfiguredModels as useModels } from "./use-configured-models";
@@ -69,7 +70,8 @@ export function SidepanelApp() {
   const [language] = useStoredState(storage.language);
   const [skills, setSkills] = useStoredState(storage.skills);
   const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
-  const [chats, setChats] = useStoredState(storage.chats);
+  const chatState = useChats();
+  const chats = chatState.summaries;
   const t = getMessages(language);
   // The composer owns a draft chat before history loads, so text typed early
   // and an early send keep one chat ID.
@@ -89,10 +91,12 @@ export function SidepanelApp() {
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const initializedChatSelectionRef = useRef(false);
   const configuredModels = useModels(providers, ignoreSyncedBootstrap);
-  const storedCurrentChat = chats?.find((chat) => chat.id === activeChatId);
-  const currentChat =
-    storedCurrentChat ||
-    (draftChat?.id === activeChatId ? draftChat : undefined);
+  const { currentChat, currentChatStatus, retryCurrentChat } = useCurrentChat({
+    chats: chatState,
+    activeChatId,
+    draftChat,
+    setDraftChat,
+  });
   const { input, setInput, clearInput } = useChatDraft(activeChatId);
   const {
     unreadCompletedChats,
@@ -119,6 +123,7 @@ export function SidepanelApp() {
     clearUploadedAttachments,
   } = useUploadedAttachments(t);
   const {
+    streamingChatIds,
     currentChatStreaming,
     currentAssistantMessageId,
     beginStream,
@@ -132,12 +137,13 @@ export function SidepanelApp() {
   } = useParallelChatStreams({
     activeChatId,
     currentChat,
-    chats,
+    summariesRef: chatState.summariesRef,
+    getChat: chatState.getChat,
     preferences,
     language,
     uploadedAttachments,
     agent: runtimeAgent,
-    setChats,
+    updateChat: chatState.updateChat,
     setUnreadCompletedChats,
     onStreamChunk: (event) => subAgentLauncherRef.current?.(event),
   });
@@ -149,11 +155,12 @@ export function SidepanelApp() {
     skills,
     language,
     t,
-    setChats,
+    saveChats: chatState.saveChats,
     beginStream,
     startStream,
   });
   subAgentLauncherRef.current = handleSubAgentStreamChunk;
+  useRetainedChats(chatState, activeChatId, streamingChatIds);
   const {
     attachedTabs,
     availableTabs,
@@ -167,7 +174,7 @@ export function SidepanelApp() {
     showAllTabsPicker,
     toggleAttachedTab,
     removeAttachedTab,
-  } = useComposerContext(chats || []);
+  } = useComposerContext();
   const promptUsage = usePromptUsageEstimate({
     input,
     agent: runtimeAgent,
@@ -229,14 +236,6 @@ export function SidepanelApp() {
   );
 
   useBuiltinSkills(skills, setSkills);
-  useChatListCleanup({
-    chats,
-    setChats,
-    activeChatId,
-    draftChat,
-    storedCurrentChat,
-    setDraftChat,
-  });
 
   useSidepanelTheme(preferences?.accentColor, preferences?.colorScheme);
   useRemoteSyncRefresh(syncDataSettings);
@@ -244,9 +243,8 @@ export function SidepanelApp() {
   const { createChat, closeChat, selectChat, importChat, forkMessage } =
     useChatActions({
       t,
-      chats,
+      chats: chatState,
       syncDataSettings,
-      setChats,
       setDraftChat,
       setActiveChatId,
       setChatSelectionRequestId,
@@ -291,6 +289,7 @@ export function SidepanelApp() {
     const text = interpolateSkillVariables(content.trim());
     const sendChatId = currentChat?.id || activeChatId || "new";
     if (
+      currentChatStatus !== "ready" ||
       (!text && !uploadedAttachments.length) ||
       currentChatStreaming ||
       sendInFlightRef.current.has(sendChatId)
@@ -368,12 +367,11 @@ export function SidepanelApp() {
         attachments: sentAttachments,
       });
       beginStream(nextChat.id, assistantMessage.id);
-      const initialSnapshotPersist = setChats(
-        (items) => updateChatList(items, nextChat),
-        { persist: "immediate" },
-      ).catch((error) =>
-        console.warn("Failed to persist initial chat snapshot", error),
-      );
+      const initialSnapshotPersist = chatState
+        .storeChat(nextChat)
+        .catch((error) =>
+          console.warn("Failed to persist initial chat snapshot", error),
+        );
       if (!options.queued && !options.resendMessage) {
         clearInput();
         clearAttachedTabsAfterSend();
@@ -388,7 +386,7 @@ export function SidepanelApp() {
           chatId: nextChat.id,
           modelId: preferences?.selectedModelId,
           message: titleSource,
-          setChats,
+          setSummaries: chatState.setSummaries,
         });
       const request = sendMessagesRequest({
         chatId: nextChat.id,
@@ -417,7 +415,9 @@ export function SidepanelApp() {
       t={t}
       providersReady={!providersLoading}
       modelCount={configuredModels.length}
+      activeChatId={activeChatId}
       currentChat={currentChat}
+      currentChatStatus={currentChatStatus}
       chats={chats || []}
       preferences={preferences}
       configuredModels={configuredModels}
@@ -453,7 +453,9 @@ export function SidepanelApp() {
       onSetShowHistory={setShowHistory}
       onSetSelectedElements={setSelectedElements}
       onSetSelectedSkills={setSelectedSkills}
-      onSetChats={setChats}
+      onSetChats={chatState.setSummaries}
+      onLoadChat={chatState.loadChat}
+      onRetryChat={retryCurrentChat}
       onSetPreferences={setPreferences}
       onCreateChat={createChat}
       onImportChat={importChat}

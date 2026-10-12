@@ -22,6 +22,12 @@ import {
   syncLocalCacheKey,
 } from "./storage-sync";
 import {
+  isSplitStorageKey,
+  materializeSplitItems,
+  splitCacheItems,
+  uploadSplitCollection,
+} from "./storage-split";
+import {
   createSyncBackend,
   getActiveSyncBackend,
   getStoredSyncBackends,
@@ -50,7 +56,9 @@ async function uploadCurrent(
     const merged =
       value === undefined
         ? await backend.read(key)
-        : ((await backend.write(key, value)) ?? value);
+        : ((isSplitStorageKey(key)
+            ? await uploadSplitCollection(backend, key, value)
+            : await backend.write(key, value)) ?? value);
     if (attempt === 3 || sameValue(value, await read()))
       return { value, merged };
   }
@@ -58,6 +66,15 @@ async function uploadCurrent(
 
 const readLocal = (key: string) => async () =>
   (await local().get(key))[key] as unknown;
+
+// A split collection keeps only the contents this device opened; before it
+// stops syncing with `backend`, the others are downloaded where possible.
+async function materialize(backend: SyncBackend, keys: string[]) {
+  for (const key of keys.filter(isSplitStorageKey)) {
+    const value = (await readSyncCache(key))?.value;
+    if (value !== undefined) await materializeSplitItems(backend, key, value);
+  }
+}
 
 export async function setDataSync(
   key: keyof SyncDataSettings,
@@ -78,9 +95,15 @@ export async function setDataSync(
   const staleCaches: string[] = [];
   // Re-enabling a synced category must not upload the older local copy.
   const changed = settings[key] !== enabled;
-  for (const { dataKey } of SYNCABLE_DATA_ITEMS.filter(
+  const items = SYNCABLE_DATA_ITEMS.filter(
     (item) => changed && item.preferenceKey === key,
-  )) {
+  );
+  if (!enabled)
+    await materialize(
+      backend,
+      items.map((item) => item.dataKey),
+    );
+  for (const { dataKey } of items) {
     if (!enabled) {
       // Disabling never uploads: what the user sees becomes the local copy.
       const value = (await readSyncCache(dataKey))?.value;
@@ -98,11 +121,17 @@ export async function setDataSync(
       throw error;
     });
     if (merged === undefined) staleCaches.push(syncLocalCacheKey(dataKey));
-    else values[syncLocalCacheKey(dataKey)] = flushedCache(merged);
+    else
+      values[syncLocalCacheKey(dataKey)] = {
+        ...flushedCache(merged),
+        ...splitCacheItems(dataKey, merged),
+      };
   }
   if (staleCaches.length) await local().remove(staleCaches);
   await local().set(values);
   queueSyncWrite(backend, STORAGE_KEYS.syncDataSettings);
+  for (const { dataKey } of items)
+    if (enabled && isSplitStorageKey(dataKey)) queueSyncWrite(backend, dataKey);
 }
 
 export async function setActiveSyncBackend(backendId: string) {
@@ -120,7 +149,11 @@ async function deactivateSyncBackend() {
   const synced = SYNCABLE_DATA_ITEMS.filter(
     (item) => settings[item.preferenceKey],
   );
-  if (await isSyncBackendEnabled())
+  if (await isSyncBackendEnabled()) {
+    await materialize(
+      await getActiveSyncBackend(),
+      synced.map((item) => item.dataKey),
+    );
     for (const key of [
       STORAGE_KEYS.language,
       STORAGE_KEYS.preferences,
@@ -129,11 +162,22 @@ async function deactivateSyncBackend() {
       const value = (await readSyncCache(key))?.value;
       if (value !== undefined) values[key] = value;
     }
+  }
   await local().set(values);
 }
 
 async function activateSyncBackend(backendId: string) {
   const backend = await syncBackendForId(backendId);
+  // Contents only the previous backend has move along.
+  if (await isSyncBackendEnabled()) {
+    const settings = await readSyncDataSettings();
+    await materialize(
+      await getActiveSyncBackend(),
+      SYNCABLE_DATA_ITEMS.filter((item) => settings[item.preferenceKey]).map(
+        (item) => item.dataKey,
+      ),
+    );
+  }
   const remoteSettings = await backend.read<SyncDataSettings>(
     STORAGE_KEYS.syncDataSettings,
   );
@@ -142,7 +186,8 @@ async function activateSyncBackend(backendId: string) {
   );
   const values: Record<string, unknown> = {};
   const staleCaches: string[] = [];
-  const failed: string[] = [];
+  // Failed uploads, and split collections whose contents are checked next.
+  const queued: string[] = [];
   // Start from what the user sees now, including another backend's caches.
   const current =
     (key: string, preference: SyncPreferenceKey | true, fallback?: unknown) =>
@@ -156,13 +201,21 @@ async function activateSyncBackend(backendId: string) {
     try {
       const { value, merged } = await uploadCurrent(backend, key, read);
       if (merged === undefined) staleCaches.push(syncLocalCacheKey(key));
-      else values[syncLocalCacheKey(key)] = flushedCache(merged);
+      else
+        values[syncLocalCacheKey(key)] = {
+          ...flushedCache(merged),
+          ...splitCacheItems(key, merged),
+        };
+      if (isSplitStorageKey(key)) queued.push(key);
       return value;
     } catch (error) {
       const value = await read();
       if (value === undefined) throw error;
-      values[syncLocalCacheKey(key)] = pendingCache(value);
-      failed.push(key);
+      values[syncLocalCacheKey(key)] = {
+        ...pendingCache(value),
+        ...splitCacheItems(key, value),
+      };
+      queued.push(key);
       await recordSyncError(error);
       return value;
     }
@@ -201,7 +254,7 @@ async function activateSyncBackend(backendId: string) {
   values[STORAGE_KEYS.activeSyncBackendId] = backendId;
   if (staleCaches.length) await local().remove(staleCaches);
   await local().set(values);
-  for (const key of failed) queueSyncWrite(backend, key);
+  for (const key of queued) queueSyncWrite(backend, key);
 }
 
 export async function restoreSyncBackendFromCloud({

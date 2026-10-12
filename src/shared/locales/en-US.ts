@@ -59,6 +59,12 @@ export const enUS = {
     exportChatOpenAi: "Export chat as OpenAI JSON",
     importChatOpenAi: "Import OpenAI JSON chat",
     clearAllChats: "Clear all chats",
+    chatLoading: "Loading chat…",
+    chatLoadFailed:
+      "This chat could not be loaded. Check the sync connection and try again.",
+    retryLoadChat: "Try again",
+    chatUnavailable: "This chat's messages are not available on this device.",
+    exportChatFailed: "This chat could not be exported.",
     noChatsYet: "No chats yet",
     removeChat: "Remove chat",
     pinChat: "Pin chat",

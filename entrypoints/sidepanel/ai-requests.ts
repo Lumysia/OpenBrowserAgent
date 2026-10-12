@@ -2,12 +2,8 @@ import {
   AI_STREAM_PORT_NAME,
   AI_STREAM_REQUEST_TYPE,
 } from "../../src/shared/types";
-import type { Dispatch, SetStateAction } from "react";
-import type {
-  AiStreamRequest,
-  AiStreamResponse,
-  Chat,
-} from "../../src/shared/types";
+import type { AiStreamRequest, AiStreamResponse } from "../../src/shared/types";
+import type { SummariesUpdater } from "./use-chats";
 
 function requestGeneratedTitle({
   modelId,
@@ -43,18 +39,18 @@ export function requestChatTitle({
   chatId,
   modelId,
   message,
-  setChats,
+  setSummaries,
 }: {
   chatId: string;
   modelId?: string;
   message: string;
-  setChats: Dispatch<SetStateAction<Chat[]>>;
+  setSummaries: SummariesUpdater;
 }) {
   requestGeneratedTitle({
     modelId,
     message,
     onTitle: (title) =>
-      setChats((items) =>
+      void setSummaries((items) =>
         items.map((chat) => (chat.id === chatId ? { ...chat, title } : chat)),
       ),
   });

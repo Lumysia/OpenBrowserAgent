@@ -2,6 +2,7 @@ import { BROWSER_TOOL_NAME } from "../shared/browser-tools";
 import { resolveAgent } from "../shared/agents";
 import { areCdpToolsAvailable } from "../shared/runtime-capabilities";
 import { readFileFromUrl } from "./file-url";
+import { readChat } from "../shared/chat-storage";
 import { storage } from "../shared/storage";
 import {
   type AgentCapabilities,
@@ -226,8 +227,7 @@ function isPendingSubAgentState(state: unknown) {
 }
 
 async function inspectSubAgentTask(taskId: string) {
-  const chats = await storage.chats.get();
-  const chat = chats.find((item) => item.id === taskId);
+  const chat = await readChat(taskId);
   if (!chat) return { state: "missing", error: "Sub-agent task not found" };
   const assistant = [...chat.messages]
     .reverse()

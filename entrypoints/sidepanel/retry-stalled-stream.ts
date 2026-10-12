@@ -13,7 +13,7 @@ import { agentWithoutNestedSubAgents } from "./sub-agent-runtime";
 
 export function retryStalledStream({
   active,
-  chats,
+  chat,
   preferences,
   language,
   uploadedAttachments,
@@ -22,7 +22,7 @@ export function retryStalledStream({
   startStream,
 }: {
   active: ActiveStream;
-  chats: Chat[];
+  chat: Chat | undefined;
   preferences?: Preferences;
   language: string;
   uploadedAttachments: UploadedAttachment[];
@@ -34,7 +34,6 @@ export function retryStalledStream({
   ) => void;
   startStream: (request: SendMessagesRequest, targetMessageId: string) => void;
 }) {
-  const chat = chats.find((candidate) => candidate.id === active.chatId);
   const assistantIndex = chat?.messages.findIndex(
     (message) => message.id === active.assistantMessageId,
   );

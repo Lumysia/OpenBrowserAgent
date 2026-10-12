@@ -1,10 +1,10 @@
 import { createMergeableStore } from "tinybase";
-import type { Cell, Tables } from "tinybase";
+import type { Cell, Row, Table, Tables } from "tinybase";
+import { base64ToBytes, bytesToBase64 } from "./binary";
 import { getBrowserApi } from "./browser-api";
-import { STORAGE_KEYS } from "./storage-keys";
 
 const TINYBASE_SYNC_DOCUMENT_PREFIX = "OpenBrowserAgentTinyBaseSync:";
-const TINYBASE_SYNC_DOCUMENT_FORMAT = "openbrowseragent.tinybase-sync.v2";
+const TINYBASE_SYNC_DOCUMENT_FORMAT = "openbrowseragent.tinybase-sync.v3";
 const ORDER_CELL = "__openBrowserAgentSyncOrder";
 
 type TinyBaseSyncDocument = {
@@ -13,7 +13,21 @@ type TinyBaseSyncDocument = {
   undefinedPaths?: Array<Array<string | number>>;
 };
 
-type SyncStore = ReturnType<typeof createMergeableStore>;
+export type SyncStore = ReturnType<typeof createMergeableStore>;
+
+// Maps an app value onto a document's TinyBase tables and back. `keepUnseen`
+// keeps rows the value doesn't mention (a fresh replica never saw them).
+export type SyncDocCodec<T> = {
+  set(store: SyncStore, value: T, keepUnseen: boolean): void;
+  get(store: SyncStore): T | undefined;
+};
+
+export type SyncDocResult<T> = {
+  bytes: Uint8Array;
+  value: T | undefined;
+  // Identity of `bytes`' content; equal content has an equal rev.
+  rev: string;
+};
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -21,92 +35,98 @@ const decoder = new TextDecoder();
 export async function readTinyBaseSyncValue<T>(
   key: string,
   remoteBytes: Uint8Array | undefined,
+  codec: SyncDocCodec<T> = valueCodec as SyncDocCodec<T>,
 ) {
   if (!remoteBytes) {
     await removeLocalTinyBaseSyncDocument(key);
     return undefined;
   }
-
-  return (await mergeTinyBaseSyncValue<T>(key, remoteBytes)).value;
+  return (await mergeTinyBaseSyncValue(key, remoteBytes, codec)).value;
 }
 
-// Merge an already-stamped local edit on a transport retry. Applying the user's
-// snapshot again would give stale fields new timestamps and undo remote edits.
+// Merge a remote document into the local replica. Also used on a transport
+// retry: applying the user's snapshot again would give stale fields new
+// timestamps and undo remote edits.
 export async function mergeTinyBaseSyncValue<T>(
   key: string,
   remoteBytes: Uint8Array,
-) {
+  codec: SyncDocCodec<T> = valueCodec as SyncDocCodec<T>,
+): Promise<SyncDocResult<T> & { remoteRev: string }> {
   const localBytes = await readLocalTinyBaseSyncBytes(key);
   const remoteStore = decodeStore(key, remoteBytes);
-  if (localBytes && sameBytes(localBytes, remoteBytes))
-    return { bytes: remoteBytes, value: valueFromStore<T>(key, remoteStore) };
-
-  const store = localBytes
-    ? decodeStore(key, localBytes).merge(remoteStore)
-    : remoteStore;
-  const bytes = localBytes ? encodeStore(store) : remoteBytes;
-  if (!localBytes || !sameBytes(localBytes, bytes))
+  const remoteRev = storeRev(remoteStore);
+  if (!localBytes || sameBytes(localBytes, remoteBytes)) {
+    if (!localBytes) await writeLocalTinyBaseSyncBytes(key, remoteBytes);
+    const value = codec.get(remoteStore);
+    return { bytes: remoteBytes, value, rev: remoteRev, remoteRev };
+  }
+  const store = decodeStore(key, localBytes).merge(remoteStore);
+  const bytes = encodeStore(store);
+  if (!sameBytes(localBytes, bytes))
     await writeLocalTinyBaseSyncBytes(key, bytes);
-  return { bytes, value: valueFromStore<T>(key, store) };
+  return { bytes, value: codec.get(store), rev: storeRev(store), remoteRev };
 }
 
-export function decodeTinyBaseSyncValue<T>(key: string, bytes: Uint8Array) {
-  return valueFromStore<T>(key, decodeStore(key, bytes));
+export function decodeTinyBaseSyncValue<T>(
+  key: string,
+  bytes: Uint8Array,
+  codec: SyncDocCodec<T> = valueCodec as SyncDocCodec<T>,
+) {
+  return codec.get(decodeStore(key, bytes));
+}
+
+// The value of the local replica alone, without any remote request.
+export async function readLocalTinyBaseSyncValue<T>(
+  key: string,
+  codec: SyncDocCodec<T>,
+) {
+  const bytes = await readLocalTinyBaseSyncBytes(key);
+  return bytes ? { value: codec.get(decodeStore(key, bytes)) } : undefined;
 }
 
 export async function writeTinyBaseSyncValue<T>(
   key: string,
   value: T,
   remoteBytes: Uint8Array | undefined,
-) {
+  codec: SyncDocCodec<T> = valueCodec as SyncDocCodec<T>,
+): Promise<SyncDocResult<T>> {
   const localBytes = await readLocalTinyBaseSyncBytes(key);
+  let store: SyncStore;
   if (!localBytes && remoteBytes) {
     // A fresh replica first takes in the remote document so its clock is past
     // every remote stamp; otherwise a device with a fast clock would win over
     // this edit. Rows and cells the edit doesn't mention stay, since this
     // device never saw them and must not delete them.
-    const store = decodeStore(key, remoteBytes);
-    setStoreValue(store, key, value, { keepUnseen: true });
-    const bytes = encodeStore(store);
-    await writeLocalTinyBaseSyncBytes(key, bytes);
-    return { bytes, value: valueFromStore<T>(key, store) };
+    store = decodeStore(key, remoteBytes);
+    codec.set(store, value, true);
+  } else {
+    store = localBytes ? decodeStore(key, localBytes) : createMergeableStore();
+    codec.set(store, value, false);
+    if (remoteBytes) store.merge(decodeStore(key, remoteBytes));
   }
-  const store = localBytes
-    ? decodeStore(key, localBytes)
-    : createMergeableStore();
-  setStoreValue(store, key, value);
-  if (remoteBytes) store.merge(decodeStore(key, remoteBytes));
   const bytes = encodeStore(store);
   if (!localBytes || !sameBytes(localBytes, bytes))
     await writeLocalTinyBaseSyncBytes(key, bytes);
-  return { bytes, value: valueFromStore<T>(key, store) };
+  return { bytes, value: codec.get(store), rev: storeRev(store) };
 }
 
 export async function removeLocalTinyBaseSyncDocument(key: string) {
   await getBrowserApi().storage.local.remove(tinybaseSyncLocalCacheKey(key));
 }
 
-export function bytesToBase64(bytes: Uint8Array) {
-  let binary = "";
-  for (let index = 0; index < bytes.length; index += 0x8000) {
-    binary += String.fromCharCode(...bytes.slice(index, index + 0x8000));
+export function sameBytes(left: Uint8Array, right: Uint8Array) {
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index++) {
+    if (left[index] !== right[index]) return false;
   }
-  return btoa(binary);
-}
-
-export function base64ToBytes(value: string) {
-  const binary = atob(value);
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1)
-    bytes[index] = binary.charCodeAt(index);
-  return bytes;
+  return true;
 }
 
 async function readLocalTinyBaseSyncBytes(key: string) {
-  const result = await getBrowserApi().storage.local.get(
-    tinybaseSyncLocalCacheKey(key),
-  );
-  const encoded = result[tinybaseSyncLocalCacheKey(key)] as string | undefined;
+  const cacheKey = tinybaseSyncLocalCacheKey(key);
+  const encoded = (await getBrowserApi().storage.local.get(cacheKey))[
+    cacheKey
+  ] as string | undefined;
   return encoded ? base64ToBytes(encoded) : undefined;
 }
 
@@ -116,12 +136,11 @@ async function writeLocalTinyBaseSyncBytes(key: string, bytes: Uint8Array) {
   });
 }
 
-function sameBytes(left: Uint8Array, right: Uint8Array) {
-  if (left.length !== right.length) return false;
-  for (let index = 0; index < left.length; index++) {
-    if (left[index] !== right[index]) return false;
-  }
-  return true;
+function storeRev(store: SyncStore) {
+  return store
+    .getMergeableContentHashes()
+    .map((hash) => hash.toString(36))
+    .join(".");
 }
 
 function encodeStore(store: SyncStore) {
@@ -154,131 +173,92 @@ function decodeStore(key: string, bytes: Uint8Array) {
   );
 }
 
-function setStoreValue<T>(
-  store: SyncStore,
-  key: string,
-  value: T,
-  { keepUnseen = false } = {},
-) {
-  const chats = key === STORAGE_KEYS.chats && Array.isArray(value);
-  const tables = chats
-    ? tablesFromChats(value as Array<Record<string, unknown>>)
-    : tablesFromValue(value);
-  if (tables && keepUnseen)
-    for (const [tableId, rows] of Object.entries(store.getTables())) {
-      const table = (tables[tableId] ||= {});
-      for (const [rowId, row] of Object.entries(rows))
-        table[rowId] = { ...row, ...table[rowId] };
+// Plain values: a scalar, an array of `{ id }` items, or a record.
+export const valueCodec: SyncDocCodec<unknown> = {
+  set(store, value, keepUnseen) {
+    const tables = tablesFromValue(value);
+    if (tables && keepUnseen)
+      for (const [tableId, rows] of Object.entries(store.getTables())) {
+        const table = (tables[tableId] ||= {});
+        for (const [rowId, row] of Object.entries(rows))
+          table[rowId] = { ...row, ...table[rowId] };
+      }
+    // An empty entry can later gain fields through a merge. Its presence cell
+    // remains part of that retained row's identity; dropping it on an
+    // unrelated rewrite would defeat a concurrent clear. Do not retain it for
+    // rows absent from the requested snapshot.
+    if (tables && !Array.isArray(value)) {
+      for (const [id, row] of Object.entries(tables.items)) {
+        const presence = store.getCell("items", id, ORDER_CELL);
+        if (presence !== undefined) row[ORDER_CELL] = presence;
+      }
     }
-  // An empty entry can later gain fields through a merge. Its presence cell
-  // remains part of that retained row's identity; dropping it on an unrelated
-  // rewrite would defeat a concurrent clear. Do not retain it for rows absent
-  // from the requested snapshot.
-  if (tables && !Array.isArray(value)) {
-    for (const [id, row] of Object.entries(tables.items)) {
-      const presence = store.getCell("items", id, ORDER_CELL);
-      if (presence !== undefined) row[ORDER_CELL] = presence;
-    }
-  }
-  // setTables rejects a snapshot with no cells, leaving old rows intact.
-  // Omit empty tables so setContent uses TinyBase's deletion operation when
-  // the snapshot is empty, preserving tombstones and unchanged-cell stamps.
-  store.setContent([
-    Object.fromEntries(
-      Object.entries(tables || {}).filter(
-        ([, table]) => Object.keys(table).length,
+    // setTables rejects a snapshot with no cells, leaving old rows intact.
+    // Omit empty tables so setContent uses TinyBase's deletion operation when
+    // the snapshot is empty, preserving tombstones and unchanged-cell stamps.
+    store.setContent([
+      Object.fromEntries(
+        Object.entries(tables || {}).filter(
+          ([, table]) => Object.keys(table).length,
+        ),
       ),
-    ),
-    tables
-      ? { kind: chats ? "chats" : Array.isArray(value) ? "array" : "record" }
-      : { kind: "scalar", value: toCellValue(value) },
-  ]);
+      tables
+        ? { kind: Array.isArray(value) ? "array" : "record" }
+        : { kind: "scalar", value: toCellValue(value) },
+    ]);
+  },
+  get(store) {
+    const kind = store.getValue("kind");
+    if (kind === "array") return itemsFromTable(store.getTable("items"), "id");
+    if (kind === "record") return recordFromTable(store.getTable("items"));
+    return store.getValue("value");
+  },
+};
+
+// Replace one table with keyed rows in array order. Unchanged cells keep their
+// stamps; an empty snapshot deletes the table (setTable rejects no cells).
+export function setOrderedTable(
+  store: SyncStore,
+  tableId: string,
+  items: unknown,
+  keyField: string,
+  keepUnseen: boolean,
+) {
+  const rows = rowsFromItems(items, keyField);
+  if (keepUnseen)
+    for (const [rowId, row] of Object.entries(store.getTable(tableId)))
+      rows[rowId] = { ...row, ...rows[rowId] };
+  if (Object.keys(rows).length) store.setTable(tableId, rows);
+  else store.delTable(tableId);
 }
 
-function valueFromStore<T>(key: string, store: SyncStore) {
-  const kind = store.getValue("kind");
-  if (key === STORAGE_KEYS.chats && kind === "chats")
-    return chatsFromTables(store.getTables()) as T;
-  if (kind === "array") return arrayFromTable(store.getTable("items")) as T;
-  if (kind === "record") return recordFromTable(store.getTable("items")) as T;
-  return store.getValue("value") as T | undefined;
+// Rows in their stored order, with the row id restored as `keyField`.
+export function itemsFromTable(table: Table | undefined, keyField: string) {
+  // Rows added concurrently on two devices can share an order; createdAt and
+  // then the row id break the tie, so every device lists them the same way.
+  return Object.entries(table || {})
+    .sort(
+      ([leftId, left], [rightId, right]) =>
+        compareByOrderThenCreatedAt(left, right) ||
+        (leftId < rightId ? -1 : leftId > rightId ? 1 : 0),
+    )
+    .map(([rowId, row]) => ({ [keyField]: rowId, ...stripInternalCells(row) }));
 }
 
 function tablesFromValue(value: unknown): Tables | undefined {
-  if (Array.isArray(value) && value.every(hasStringId)) {
-    return { items: rowsFromItems(value) };
-  }
-  if (isPlainRecord(value)) {
-    return { items: rowsFromRecord(value) };
-  }
+  if (Array.isArray(value) && value.every((item) => hasStringKey(item, "id")))
+    return { items: rowsFromItems(value, "id") };
+  if (isPlainRecord(value)) return { items: rowsFromRecord(value) };
   return undefined;
 }
 
-function tablesFromChats(chats: Array<Record<string, unknown>>): Tables {
-  const tables: Tables = { items: {}, messages: {}, sources: {}, jobs: {} };
-  for (const [index, chat] of chats.entries()) {
-    if (!hasStringId(chat)) continue;
-    const { messages, sources, imageGenerationJobs, ...metadata } = chat;
-    tables.items[chat.id] = withOrder(rowFromRecord(metadata), index);
-    rowsFromNestedItems(tables.messages, chat.id, messages);
-    rowsFromNestedItems(tables.sources, chat.id, sources);
-    rowsFromNestedItems(tables.jobs, chat.id, imageGenerationJobs);
-  }
-  return tables;
-}
-
-function chatsFromTables(tables: Tables) {
-  return Object.entries(tables.items || {})
-    .sort(([, left], [, right]) => compareByOrderThenCreatedAt(left, right))
-    .map(([id, row]) => {
-      const chat = { id, ...stripInternalCells(row) };
-      const messages = nestedItemsFromTable(tables.messages, id);
-      const sources = nestedItemsFromTable(tables.sources, id);
-      const imageGenerationJobs = nestedItemsFromTable(tables.jobs, id);
-      return {
-        ...chat,
-        messages,
-        ...(sources.length ? { sources } : {}),
-        ...(imageGenerationJobs.length ? { imageGenerationJobs } : {}),
-      };
-    });
-}
-
-function rowsFromNestedItems(
-  table: Record<string, Record<string, Cell>>,
-  parentId: string,
-  value: unknown,
-) {
-  if (!Array.isArray(value)) return;
-  for (const [index, item] of value.entries()) {
-    if (!hasStringId(item)) continue;
-    table[`${parentId}:${item.id}`] = withOrder(
-      { parentId, ...rowFromRecord(item) },
-      index,
-    );
-  }
-}
-
-function nestedItemsFromTable(
-  tables: Tables[string] | undefined,
-  parentId: string,
-) {
-  return Object.entries(tables || {})
-    .filter(([, row]) => row.parentId === parentId)
-    .sort(([, left], [, right]) => compareByOrderThenCreatedAt(left, right))
-    .map(([, row]) => {
-      const { parentId: _parentId, ...item } = row;
-      return stripInternalCells(item);
-    });
-}
-
-function rowsFromItems(items: Array<Record<string, unknown>>) {
-  return Object.fromEntries(
-    items.map((item, index) => [
-      item.id,
-      withOrder(rowFromRecord(item), index),
-    ]),
-  );
+function rowsFromItems(items: unknown, keyField: string) {
+  const rows: Record<string, Row> = {};
+  if (!Array.isArray(items)) return rows;
+  for (const [index, item] of items.entries())
+    if (hasStringKey(item, keyField))
+      rows[item[keyField] as string] = withOrder(rowFromRecord(item), index);
+  return rows;
 }
 
 function rowsFromRecord(value: Record<string, unknown>) {
@@ -292,13 +272,7 @@ function rowsFromRecord(value: Record<string, unknown>) {
   );
 }
 
-function arrayFromTable(table: Tables[string]) {
-  return Object.entries(table || {})
-    .sort(([, left], [, right]) => compareByOrderThenCreatedAt(left, right))
-    .map(([id, row]) => ({ id, ...stripInternalCells(row) }));
-}
-
-function recordFromTable(table: Tables[string]) {
+function recordFromTable(table: Table) {
   return Object.fromEntries(
     Object.entries(table || {}).map(([id, row]) => {
       const cleanRow = stripInternalCells(row);
@@ -334,10 +308,11 @@ function stripInternalCells(row: Record<string, unknown>) {
   return rest;
 }
 
-function hasStringId(value: unknown): value is Record<string, unknown> & {
-  id: string;
-} {
-  return isPlainRecord(value) && typeof value.id === "string";
+export function hasStringKey(
+  value: unknown,
+  keyField: string,
+): value is Record<string, unknown> {
+  return isPlainRecord(value) && typeof value[keyField] === "string";
 }
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
@@ -362,6 +337,14 @@ const TINYBASE_SYNC_CACHE_PREFIX = "tinybase-sync-doc";
 
 export function tinybaseSyncLocalCacheKey(key: string) {
   return `${TINYBASE_SYNC_CACHE_PREFIX}:${key}`;
+}
+
+// Local sync state is keyed `tinybase-sync-doc:<scope>:<document>`, where a
+// document is `<dataKey>`, `<dataKey>/<item>` or `<dataKey>#<state>`.
+// Document names never contain ":" (item ids are URI-encoded).
+export function syncLocalDataKey(storedKey: string) {
+  if (!storedKey.startsWith(tinybaseSyncLocalCacheKey(""))) return undefined;
+  return storedKey.slice(storedKey.lastIndexOf(":") + 1).split(/[/#]/)[0];
 }
 
 type JsonPath = Array<string | number>;

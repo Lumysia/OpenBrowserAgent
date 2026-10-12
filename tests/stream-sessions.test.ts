@@ -101,14 +101,15 @@ test("a running session keeps the service worker alive until its run ends", () =
 });
 
 test("a queued turn's assistant message stores its replay position", () => {
-  const [chat] = appendQueuedMessages({
-    chats: [{ id: "c", title: "", messages: [], createdAt: 0, updatedAt: 0 }],
-    chatId: "c",
-    messages: [{ id: "q", content: "next", createdAt: 1 }],
-    assistantMessageId: "a2",
-    createdAt: 1,
-    sequence: 42,
-  });
+  const chat = appendQueuedMessages(
+    { id: "c", title: "", messages: [], createdAt: 0, updatedAt: 0 },
+    {
+      messages: [{ id: "q", content: "next", createdAt: 1 }],
+      assistantMessageId: "a2",
+      createdAt: 1,
+      sequence: 42,
+    },
+  );
   const metrics = chat.messages.at(-1)?.metadata?.runMetrics as RunMetrics;
   // Without it, reopening the panel replays turn 1 into this message.
   assert.equal(metrics.streamEventIndex, 42);
