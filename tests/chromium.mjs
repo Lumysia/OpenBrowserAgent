@@ -4,9 +4,12 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 
-export async function launchExtension({ headed = true } = {}) {
+export async function launchExtension({
+  headed = true,
+  args = [],
+  extension = resolve(".output/chrome-mv3"),
+} = {}) {
   const profile = await mkdtemp(resolve(".output/pi-browser-profile-"));
-  const extension = resolve(".output/chrome-mv3");
   // Credentials are passed only through CDP to the disposable extension storage.
   // They are neither Chromium command arguments nor inherited environment values.
   const env = Object.fromEntries(
@@ -26,6 +29,7 @@ export async function launchExtension({ headed = true } = {}) {
       `--disable-extensions-except=${extension}`,
       `--load-extension=${extension}`,
       "--remote-debugging-port=0",
+      ...args,
       "about:blank",
     ],
     {
@@ -85,8 +89,12 @@ export async function launchExtension({ headed = true } = {}) {
     const id = new URL(worker.url).host;
     const browser = await connect(ws);
     connections.push(browser);
-    const open = async (url) => {
-      const { targetId } = await browser.send("Target.createTarget", { url });
+    // `options` are extra Target.createTarget parameters such as background.
+    const open = async (url, options = {}) => {
+      const { targetId } = await browser.send("Target.createTarget", {
+        ...options,
+        url,
+      });
       const target = await poll(async () =>
         (await targets()).find((item) => item.id === targetId),
       );
@@ -105,7 +113,18 @@ export async function launchExtension({ headed = true } = {}) {
       );
       return page;
     };
-    return { id, browser, open, close, profile };
+    // Connect to an existing page target, e.g. a tab the extension opened.
+    const attach = async (matches) => {
+      const target = await poll(async () =>
+        (await targets()).find(
+          (item) => item.type === "page" && matches(item.url),
+        ),
+      );
+      const page = await connect(target.webSocketDebuggerUrl);
+      connections.push(page);
+      return page;
+    };
+    return { id, browser, open, attach, targets, close, profile };
   } catch (error) {
     await close();
     throw error;
