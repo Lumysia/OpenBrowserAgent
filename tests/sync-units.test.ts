@@ -8,7 +8,7 @@ import {
   SyncNotReadyError,
   SyncQuotaError,
 } from "../src/shared/sync/browser-sync";
-import { hashJson } from "../src/shared/sync/codec";
+import { hashJson, sha256Hex } from "../src/shared/sync/codec";
 import {
   compareClocks,
   formatClock,
@@ -363,6 +363,10 @@ test("browser sync: records split into items under 8 KB, quotas enforced", async
   const read = await transport.readRoot();
   assert.equal(read.status, "ok");
   assert.deepEqual(read.status === "ok" && read.root.records, root.records);
+  // Writing the same records again changes nothing.
+  const stored = structuredClone(area.data);
+  await transport.writeRoot(root, undefined);
+  assert.deepEqual(area.data, stored);
   // Unchanged: same version.
   const again = await transport.readRoot(read.status === "ok" ? read.etag : "");
   assert.equal(again.status, "unchanged");
@@ -394,6 +398,24 @@ test("browser sync: records split into items under 8 KB, quotas enforced", async
     "r:preferences/theme",
     "r:skills/s1",
   ]);
+});
+
+test("browser sync: parts of a write that never landed go after a day", async () => {
+  const area = memoryArea();
+  const time = { now: 1_000_000 };
+  const transport = createBrowserSyncTransport(area, () => time.now);
+  const payload = new TextEncoder().encode("skill files");
+  const hash = await sha256Hex(payload);
+  // The blob was uploaded, then the root write failed (write quota).
+  await transport.putBlob(hash, payload);
+  const root = emptyRoot("a");
+  root.records["preferences/theme"] = { clock: clock(1), data: "dark" };
+  await transport.writeRoot(root, undefined);
+  // Another device's write may still be arriving: kept for now.
+  assert.ok(`p:${hash}` in area.data);
+  time.now += 25 * 60 * 60_000;
+  await transport.writeRoot(root, undefined);
+  assert.deepEqual(Object.keys(area.data), ["r:preferences/theme"]);
 });
 
 test("WebDAV blobs are checked against their hash before use", async () => {

@@ -194,6 +194,12 @@ const MUTATIONS = [
   await saveSyncState(env.local, state);`,
   },
   {
+    name: "browser sync keeps parts of failed writes forever",
+    file: "src/shared/sync/browser-sync.ts",
+    from: "now() - header.at < UNREFERENCED_PARTS_MS",
+    to: "true",
+  },
+  {
     name: "kept records refer to content that is gone",
     file: "src/shared/sync/engine-merge.ts",
     from: "!stored.has(projection.blob)",
