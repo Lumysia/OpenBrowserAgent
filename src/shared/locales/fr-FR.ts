@@ -118,6 +118,9 @@ export const frFR: LocaleMessages = {
     contextSummaryTitle: "Résumé du contexte",
     contextSummaryDescription:
       "L'ancien contexte de conversation a été compacté pour cette requête.",
+    contextSummaryFailedTitle: "Échec du compactage du contexte",
+    contextSummaryFailedDescription:
+      "L'ancien contexte n'a pas pu être résumé ; l'exécution continue avec le contexte complet et réessaiera plus tard.",
     willBeSentToAi: "Sera envoyé à l'IA",
     willBeSentAsPageContext: "Sera envoyé comme contexte de page",
     currentPage: "Page actuelle",

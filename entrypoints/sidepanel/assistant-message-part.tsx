@@ -30,29 +30,33 @@ import { useThrottledText } from "./use-throttled-text";
 
 export const NO_SOURCES: ChatSource[] = [];
 
-function AssistantSummaryCard({
-  t,
-  summary,
-}: {
-  t: Messages;
-  summary: string;
-}) {
+// A compaction summary, or a compaction that failed.
+function AssistantSummaryCard({ t, part }: { t: Messages; part: ChatPart }) {
+  const failed = !!part.error;
   return (
-    <div className="tool-card done context-summary-card">
+    <div
+      className={`tool-card ${failed ? "error" : "done"} context-summary-card`}
+    >
       <div className="tool-title">
         <span className="tool-icon">
           <Brain />
         </span>
         <strong className="tool-title-text">
-          {t.sidepanel.contextSummaryTitle}
+          {failed
+            ? t.sidepanel.contextSummaryFailedTitle
+            : t.sidepanel.contextSummaryTitle}
         </strong>
       </div>
       <div className="tool-detail">
         <div className="tool-detail-content">
           <div className="tool-description context-summary-description">
-            {t.sidepanel.contextSummaryDescription}
+            {failed
+              ? t.sidepanel.contextSummaryFailedDescription
+              : t.sidepanel.contextSummaryDescription}
           </div>
-          <pre className="context-summary-text">{summary}</pre>
+          <pre className="context-summary-text">
+            {(part.error || part.text || "").trim()}
+          </pre>
         </div>
       </div>
     </div>
@@ -99,8 +103,8 @@ export function AssistantPart({
     );
   if (part.type === "reasoning" && part.text?.trim())
     return <AssistantReasoning t={t} text={part.text} />;
-  if (part.type === "summary" && part.text?.trim())
-    return <AssistantSummaryCard t={t} summary={part.text.trim()} />;
+  if (part.type === "summary" && (part.text?.trim() || part.error))
+    return <AssistantSummaryCard t={t} part={part} />;
   if (part.type === "text" && part.text?.trim())
     return (
       <AssistantText
@@ -132,7 +136,7 @@ function hasRenderedActivity(part: ChatPart) {
     part.type === "reasoning" ||
     part.type === "summary"
   )
-    return !!part.text?.trim();
+    return !!part.text?.trim() || !!part.error;
   return isToolPartType(part.type);
 }
 

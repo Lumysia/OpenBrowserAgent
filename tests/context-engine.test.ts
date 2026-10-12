@@ -253,3 +253,83 @@ test("old editPage arguments shrink with the masking batch, newer ones stay", as
   assert.equal(view.split(translation).length - 1, 1);
   assert.match(view, /chars, already applied/);
 });
+
+test("compaction summarizes the whole span, task first, within the helper's window", async () => {
+  const prompts: string[] = [];
+  const failures: string[] = [];
+  let fail = true;
+  const engine = createContextEngine({
+    chatId: "chat",
+    store: memoryArtifacts(),
+    contextWindow: 32_000,
+    summarizerWindow: 16_000,
+    async summarize(_system, prompt) {
+      if (fail) {
+        fail = false;
+        throw new Error("helper overloaded");
+      }
+      prompts.push(prompt);
+      return "summary";
+    },
+    onCompactionFailed: (error) => failures.push(error),
+  });
+  const messages: AgentMessage[] = [
+    { role: "system", content: "Prompt", timestamp: 0 },
+    { role: "user", content: "Task: FIND-THE-PRICE", timestamp: 0 },
+  ];
+  for (let index = 0; index < 400 && !prompts.length; index++) {
+    const id = `call-${index}`;
+    messages.push({
+      ...assistantMessage(model),
+      content: [
+        { type: "text", text: "Checking the next item." },
+        { type: "toolCall", id, name: "find", arguments: { index } },
+      ],
+    });
+    messages.push({
+      role: "toolResult",
+      toolCallId: id,
+      toolName: "find",
+      content: [
+        {
+          type: "text",
+          text: await engine.acceptToolOutput({
+            toolCallId: id,
+            toolName: "find",
+            input: { index },
+            text: `fact-${index}: ${"result text ".repeat(40)}`,
+            repeatable: false,
+          }),
+        },
+      ],
+      isError: false,
+      timestamp: 0,
+    });
+    await engine.transform(messages);
+  }
+  assert.deepEqual(failures, ["helper overloaded"]);
+  const [prompt] = prompts;
+  assert.ok(prompt, "compacted");
+  assert.ok(prompt.length < 16_000 * 0.6 * 3.5 + 2_000);
+  // Older outputs reach it masked (by handle); every call is there.
+  const task = prompt.indexOf("FIND-THE-PRICE");
+  assert.ok(task > 0 && task < prompt.indexOf('calls find] {"index":0}'));
+  assert.ok(!/entries omitted/.test(prompt));
+});
+
+test("a repeated long snapshot of an unchanged page is a short reference", async () => {
+  const { engine, turn } = run();
+  const full = page(1, 30_000);
+  const handle = await engine.storeText("snapshot of tab 1", full);
+  const first = await turn(`viewport\n[stored as "${handle}"]`, { tabId: 1 });
+  const again = await engine.storeText("snapshot of tab 1", full);
+  assert.equal(again, handle);
+  const repeat = await engine.acceptToolOutput({
+    toolCallId: "again",
+    toolName: "snapshot",
+    input: { tabId: 1, call: 1 },
+    text: first,
+    repeatable: true,
+  });
+  assert.match(repeat, /^Unchanged since art-/);
+});

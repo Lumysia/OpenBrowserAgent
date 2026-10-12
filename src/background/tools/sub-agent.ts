@@ -19,7 +19,7 @@ export const subAgentTool: ToolDefinition = {
   available: (run) => run.depth === 0,
   summary: "Delegate a self-contained task to a sub-agent",
   description:
-    "Give a self-contained task to a sub-agent that works in its own chat (with its own context) and returns its answer. Write the task with all details it needs; it cannot see this chat. Several sub-agents run in parallel when called in the same turn.",
+    "Give a self-contained task to a sub-agent that works in its own chat (with its own context) and returns its answer. Write the task with all details it needs; it cannot see this chat, but it can read stored outputs (art-…) you name. Several sub-agents run in parallel when called in the same turn.",
   parameters: schema(
     {
       task: { type: "string" },
@@ -70,6 +70,7 @@ export const subAgentTool: ToolDefinition = {
         progress({ ...details, childChatId, progress: items }),
       signal,
     });
+    if (result.usage) run.addUsage(result.usage);
     signal?.throwIfAborted();
     const finished = {
       ...details,

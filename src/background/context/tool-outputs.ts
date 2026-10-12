@@ -22,9 +22,19 @@ export function createToolOutputs(chatId: string, store: ArtifactStore) {
   const outputs = new Map<string, Output>();
   const repeats = new Map<string, { text: string; toolCallId: string }>();
 
-  async function storeText(label: string, text: string) {
-    const handle = `art-${crypto.randomUUID().slice(0, 8)}`;
-    await store.put({ chatId, handle, label, text, createdAt: Date.now() });
+  // The same text is stored once per run and keeps its handle, so a
+  // repeated long snapshot of an unchanged page reads the same.
+  const stored = new Map<string, Promise<string>>();
+  function storeText(label: string, text: string) {
+    let handle = stored.get(text);
+    if (!handle) {
+      const name = `art-${crypto.randomUUID().slice(0, 8)}`;
+      handle = store
+        .put({ chatId, handle: name, label, text, createdAt: Date.now() })
+        .then(() => name);
+      stored.set(text, handle);
+      handle.catch(() => stored.delete(text));
+    }
     return handle;
   }
 

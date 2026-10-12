@@ -1,5 +1,4 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
-import { deleteChatArtifacts } from "../../src/shared/artifacts";
 import { withoutChats } from "../../src/shared/chats";
 import type { Messages } from "../../src/shared/i18n";
 import { removeSyncedChatAttachments } from "../../src/shared/sync-chat-attachments";
@@ -62,9 +61,6 @@ export function useChatActions({
         list.filter((chat) => !ids.has(chat.id)),
       ).catch((error) =>
         console.warn("Failed to remove synced chat attachments", error),
-      );
-      deleteChatArtifacts([...ids]).catch((error) =>
-        console.warn("Failed to remove chat artifacts", error),
       );
       store.drop(ids);
       void setSummaries((items) => withoutChats(items, ids));

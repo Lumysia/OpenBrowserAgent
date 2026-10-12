@@ -15,7 +15,6 @@ const tabIdParam = {
   description: "Tab id. Defaults to the active tab.",
 };
 const FIND_LIMIT = 30;
-const EXTRACT_MAX_CHARS = 150_000;
 
 export function pageHeader(tab: { id: number; title: string; url: string }) {
   return `Tab ${tab.id}: ${tab.title || "(untitled)"} | ${tab.url}`;
@@ -159,15 +158,20 @@ export const extractTool: ToolDefinition = {
       {},
       signal,
     );
-    const text = value.text.slice(0, EXTRACT_MAX_CHARS);
+    // The helper model reads at most what fits its window.
+    const text = value.text.slice(0, run.helperInputChars);
     const answer = await run.askHelper(
       EXTRACT_SYSTEM,
       `Page: ${title}\nURL: ${url}\n\n<page>\n${text}\n</page>\n\nQuestion: ${question}`,
       signal,
     );
     const current = { ...tab, title, url };
+    const cut =
+      text.length < value.text.length
+        ? `\n[Answered from the first ${text.length} of ${value.text.length} characters of the page; use find or read for the rest.]`
+        : "";
     return {
-      text: `${pageHeader(current)}\n${answer.trim()}`,
+      text: `${pageHeader(current)}\n${answer.trim()}${cut}`,
       details: { tabId: tab.id, title, url, question },
       sources: [pageSource(current)],
     };

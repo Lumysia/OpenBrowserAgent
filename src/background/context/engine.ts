@@ -8,13 +8,15 @@ import {
   renderTranscript,
   summaryMessage,
 } from "./compaction";
-import { CONTEXT_POLICY, windowShare } from "./policy";
+import { CONTEXT_POLICY, tokenChars, windowShare } from "./policy";
 import { createToolOutputs } from "./tool-outputs";
 
 export type ContextEngineOptions = {
   chatId: string;
   store: ArtifactStore;
   contextWindow?: number;
+  // Window of the model that summarizes (the helper model).
+  summarizerWindow?: number;
   // One plain-text model request; the runtime picks the helper model.
   summarize: (
     system: string,
@@ -22,6 +24,7 @@ export type ContextEngineOptions = {
     signal?: AbortSignal,
   ) => Promise<string>;
   onCompacted?: (summary: string) => void;
+  onCompactionFailed?: (error: string) => void;
   // Tools whose long arguments (such as translated text) shrink once old.
   compactArgs?: (toolName: string) => boolean;
 };
@@ -36,6 +39,10 @@ const DROPPED_IMAGE =
 export function createContextEngine(options: ContextEngineOptions) {
   const { chatId, store } = options;
   const window = options.contextWindow || CONTEXT_POLICY.defaultContextWindow;
+  const transcriptChars = tokenChars(
+    Math.min(window, options.summarizerWindow || window) *
+      CONTEXT_POLICY.helperInputRatio,
+  );
   const outputs = createToolOutputs(chatId, store);
   const masks = new Map<string, string>();
   type ToolCallArguments = Extract<
@@ -173,7 +180,7 @@ export function createContextEngine(options: ContextEngineOptions) {
       await options.summarize(
         COMPACTION_SYSTEM_PROMPT,
         buildCompactionPrompt(
-          renderTranscript(region, Math.floor(window * 0.5 * 3.5)),
+          renderTranscript(region, transcriptChars),
           compaction?.summary,
         ),
         signal,
@@ -200,6 +207,9 @@ export function createContextEngine(options: ContextEngineOptions) {
           next = view(messages);
         } catch (error) {
           if (signal?.aborted) throw error;
+          options.onCompactionFailed?.(
+            error instanceof Error ? error.message : String(error),
+          );
           // Retry once the transcript has grown noticeably.
           retryCompactionAbove =
             tokens + windowShare(window, CONTEXT_POLICY.keepRecentTokens);

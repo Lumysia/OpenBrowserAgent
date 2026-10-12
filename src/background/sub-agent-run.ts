@@ -13,6 +13,7 @@ import type {
   ChatMessage,
 } from "../shared/types";
 import { runChat } from "./run-chat";
+import type { UsageMetrics } from "./run-usage";
 import * as sessions from "./stream-sessions";
 
 const PERSIST_INTERVAL_MS = 2_000;
@@ -69,6 +70,7 @@ export async function runSubAgentChat(options: {
   const session = sessions.createStreamSession(chat.id);
   let dirty = false;
   const progress: SubAgentProgress[] = [];
+  let usage: UsageMetrics | undefined;
   const timer = setInterval(() => {
     if (!dirty) return;
     dirty = false;
@@ -92,6 +94,7 @@ export async function runSubAgentChat(options: {
       }
       dirty = true;
     } else if (event.type === "metrics") {
+      usage = event.metrics;
       chat = updateAssistantRunMetrics(chat, assistantId, event.metrics);
       dirty = true;
     }
@@ -107,6 +110,7 @@ export async function runSubAgentChat(options: {
       messages: [user],
       messageId: assistantId,
       depth: 1,
+      parentChatId: parent.chatId,
     });
     sessions.postToSession(session, { type: "end" });
   } catch (cause) {
@@ -127,7 +131,7 @@ export async function runSubAgentChat(options: {
     chat.messages
       .find((message) => message.id === assistantId)
       ?.content.trim() || "";
-  return { chatId: chat.id, answer, error };
+  return { chatId: chat.id, answer, error, usage };
 }
 
 // Stores the chat's content and its list entry; a new chat is also linked

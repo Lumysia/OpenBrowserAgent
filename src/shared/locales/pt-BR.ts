@@ -117,6 +117,9 @@ export const ptBR: LocaleMessages = {
     contextSummaryTitle: "Resumo de contexto",
     contextSummaryDescription:
       "O contexto antigo da conversa foi compactado para esta solicitação.",
+    contextSummaryFailedTitle: "Falha ao compactar o contexto",
+    contextSummaryFailedDescription:
+      "Não foi possível resumir o contexto antigo; a execução continua com o contexto completo e tentará novamente mais tarde.",
     willBeSentToAi: "Será enviado para a IA",
     willBeSentAsPageContext: "Será enviado como contexto da página",
     currentPage: "Página atual",

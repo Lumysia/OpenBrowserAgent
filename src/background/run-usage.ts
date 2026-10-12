@@ -15,6 +15,18 @@ export function createUsageMeter() {
     reset() {
       metrics = {};
     },
+    // Totals of a run made for this one (a sub-agent's).
+    add(other: UsageMetrics): UsageMetrics {
+      metrics = {
+        usage: addTokenUsage(metrics.usage, other.usage),
+        modelCalls: (metrics.modelCalls || 0) + (other.modelCalls || 0),
+        largestInputTokens: Math.max(
+          metrics.largestInputTokens || 0,
+          other.largestInputTokens || 0,
+        ),
+      };
+      return metrics;
+    },
     record(usage: Usage): UsageMetrics {
       const input = usage.input + usage.cacheRead + usage.cacheWrite;
       metrics = {

@@ -119,6 +119,9 @@ export const enUS = {
     contextSummaryTitle: "Context summary",
     contextSummaryDescription:
       "Older conversation context was compacted for this request.",
+    contextSummaryFailedTitle: "Context compaction failed",
+    contextSummaryFailedDescription:
+      "Older context could not be summarized; the run continues with the full context and tries again later.",
     willBeSentToAi: "Will be sent to the AI",
     willBeSentAsPageContext: "Will be sent as page context",
     currentPage: "Current page",

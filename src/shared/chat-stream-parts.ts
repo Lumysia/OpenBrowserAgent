@@ -89,6 +89,7 @@ export function streamPartFromChunk(chunk: unknown): {
         id: maybe.id || crypto.randomUUID(),
         type: "summary",
         text: maybe.text || "",
+        ...(maybe.error ? { error: maybe.error } : {}),
         state: CHAT_PART_STATE.done,
       },
     };

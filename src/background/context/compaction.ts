@@ -50,8 +50,12 @@ ${summary}
   };
 }
 
-// Plain-text transcript for the summarizer. Tool outputs are shortened; the
-// newest entries are kept when the whole text would not fit `maxChars`.
+const MIN_ENTRY_CHARS = 80;
+
+// Plain-text transcript for the summarizer, within `maxChars`. Every entry
+// is kept: the longest ones are shortened first, and only when even short
+// entries cannot all fit are the oldest left out. The task (the first user
+// message) is kept whole up to a quarter of the budget.
 export function renderTranscript(messages: AgentMessage[], maxChars: number) {
   const entries = messages.flatMap((message): string[] => {
     if (message.role === "user") return [`[user]\n${text(message)}`];
@@ -70,17 +74,42 @@ export function renderTranscript(messages: AgentMessage[], maxChars: number) {
       return [];
     });
   });
-  const kept: string[] = [];
-  let length = 0;
-  for (const entry of entries.reverse()) {
-    if (length + entry.length > maxChars) {
-      kept.push("[earlier entries omitted]");
-      break;
-    }
-    kept.push(entry);
-    length += entry.length + 2;
+  const taskIndex = entries.findIndex((entry) => entry.startsWith("[user]"));
+  const task =
+    taskIndex >= 0 ? clip(entries[taskIndex], Math.floor(maxChars / 4)) : "";
+  let rest = entries.filter((_, index) => index !== taskIndex);
+  const budget = maxChars - task.length - (entries.length + 1) * 2;
+  const floor = (items: string[]) =>
+    items.reduce(
+      (sum, entry) => sum + Math.min(entry.length, MIN_ENTRY_CHARS),
+      0,
+    );
+  let omitted = 0;
+  while (rest.length && floor(rest) > budget) {
+    rest = rest.slice(1);
+    omitted++;
   }
-  return kept.reverse().join("\n\n");
+  const cap = entryCap(
+    rest.map((entry) => entry.length),
+    budget,
+  );
+  return [
+    ...(task ? [task] : []),
+    ...(omitted ? [`[${omitted} earlier entries omitted]`] : []),
+    ...rest.map((entry) => clip(entry, cap)),
+  ].join("\n\n");
+}
+
+// The largest per-entry length at which all entries fit `budget`.
+function entryCap(lengths: number[], budget: number) {
+  const sorted = [...lengths].sort((a, b) => a - b);
+  let remaining = budget;
+  for (const [index, length] of sorted.entries()) {
+    const share = Math.floor(remaining / (sorted.length - index));
+    if (length > share) return Math.max(MIN_ENTRY_CHARS, share);
+    remaining -= length;
+  }
+  return Infinity;
 }
 
 function text(message: Extract<Message, { role: "user" | "toolResult" }>) {
@@ -90,8 +119,9 @@ function text(message: Extract<Message, { role: "user" | "toolResult" }>) {
     .join("\n");
 }
 
+// At most `max` characters, the mark included.
 function clip(value: string, max: number) {
-  return value.length > max
-    ? `${value.slice(0, max)}... [${value.length - max} more characters]`
-    : value;
+  if (value.length <= max) return value;
+  const mark = `... [${value.length} characters]`;
+  return `${value.slice(0, Math.max(0, max - mark.length))}${mark}`;
 }

@@ -111,6 +111,9 @@ export const zhCN: LocaleMessages = {
     },
     contextSummaryTitle: "上下文摘要",
     contextSummaryDescription: "较早的对话上下文已为本次请求压缩整理。",
+    contextSummaryFailedTitle: "上下文压缩失败",
+    contextSummaryFailedDescription:
+      "无法总结较早的上下文；本次运行将继续使用完整上下文，并稍后重试。",
     willBeSentToAi: "将发送给 AI",
     willBeSentAsPageContext: "将作为页面上下文发送",
     currentPage: "当前页面",

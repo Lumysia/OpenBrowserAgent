@@ -16,6 +16,9 @@ export const CONTEXT_POLICY = {
   compactAtRatio: 0.75,
   // Compaction keeps the most recent turns verbatim, up to this budget.
   keepRecentTokens: { ratio: 0.2, max: 20_000 },
+  // Share of the summarizing (helper) model's window a compaction
+  // transcript or an extract page may fill.
+  helperInputRatio: 0.6,
   // Tool outputs are shortened to this many characters for the summarizer.
   summaryToolOutputChars: 2_000,
   // Masking skips outputs this small: the stub would save nothing.

@@ -31,7 +31,8 @@ import {
 } from "./pi-provider";
 import { indexedDbArtifacts, type ArtifactStore } from "../shared/artifacts";
 import { createContextEngine } from "./context/engine";
-import { createUsageMeter } from "./run-usage";
+import { CONTEXT_POLICY, tokenChars } from "./context/policy";
+import { createUsageMeter, type UsageMetrics } from "./run-usage";
 import { createToolSet } from "./tools/registry";
 import { runTool } from "./tools/run-tool";
 import type { RunContext } from "./tools/types";
@@ -46,7 +47,13 @@ import {
 // artifacts, helper model) to make the tools' RunContext.
 export type RunSetup = Omit<
   RunContext,
-  "chatId" | "session" | "storeArtifact" | "readArtifact" | "askHelper"
+  | "chatId"
+  | "session"
+  | "storeArtifact"
+  | "readArtifact"
+  | "askHelper"
+  | "addUsage"
+  | "helperInputChars"
 >;
 
 // Declared tools are never removed during a run. Past the step limit, calls
@@ -118,14 +125,25 @@ export async function runPiAgent(options: {
     chatId,
     session,
     askHelper,
+    addUsage: events.addUsage,
+    helperInputChars: tokenChars(
+      (helperModel.contextLength || CONTEXT_POLICY.defaultContextWindow) *
+        CONTEXT_POLICY.helperInputRatio,
+    ),
     storeArtifact: (label, text) => context.storeText(label, text),
-    readArtifact: (handle) => store.get(chatId, handle),
+    // A sub-agent may read the handles its parent passed on.
+    readArtifact: async (handle) =>
+      (await store.get(chatId, handle)) ||
+      (setup.parentChatId
+        ? await store.get(setup.parentChatId, handle)
+        : undefined),
   };
   const toolSet = createToolSet(run, loadedTools(messages));
   const context = createContextEngine({
     chatId,
     store,
     contextWindow: model.contextLength,
+    summarizerWindow: helperModel.contextLength,
     summarize: askHelper,
     compactArgs: (name) => !!toolSet.find(name)?.compactArgs,
     onCompacted: (summary) =>
@@ -135,6 +153,15 @@ export async function runPiAgent(options: {
           type: AI_TEXT_CHUNK_TYPE.contextSummary,
           id: crypto.randomUUID(),
           text: summary,
+        },
+      }),
+    onCompactionFailed: (error) =>
+      post({
+        type: "chunk",
+        chunk: {
+          type: AI_TEXT_CHUNK_TYPE.contextSummary,
+          id: crypto.randomUUID(),
+          error,
         },
       }),
   });
@@ -346,6 +373,8 @@ function createEventHandler(
   const meter = createUsageMeter();
   const recordUsage = (usage: Usage) =>
     post({ type: "metrics", metrics: meter.record(usage) });
+  const addUsage = (metrics: UsageMetrics) =>
+    post({ type: "metrics", metrics: meter.add(metrics) });
   const openParts = new Map<string, string>();
   const announcedCalls = new Set<string>();
   const consumed: QueuedUserMessage[] = [];
@@ -356,6 +385,7 @@ function createEventHandler(
       return assistantId;
     },
     recordUsage,
+    addUsage,
     acknowledgeConsumedMessages() {
       if (!consumed.length) return;
       const createdAt = Date.now();

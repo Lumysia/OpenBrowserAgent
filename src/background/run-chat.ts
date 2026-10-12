@@ -19,6 +19,7 @@ export type RunRequest = {
   attachments?: UploadedAttachment[];
   // 0 for chats, 1 for sub-agents (which cannot start sub-agents).
   depth?: number;
+  parentChatId?: string;
 };
 
 // What a run of an agent is set up with, resolved from storage: the side
@@ -58,6 +59,7 @@ async function runSetup(request: RunRequest, store: boolean) {
     mcpServers: hasToolGroup(agent, "mcp") ? mcpServers : [],
     preferences,
     depth,
+    parentChatId: request.parentChatId,
   };
   const tested = normalizeLocalExecutionBridges(bridges).filter(
     (bridge) => !!bridge.lastTestedAt && !bridge.lastTestError,
@@ -119,6 +121,8 @@ export async function describeRun(agentId: string | undefined) {
     storeArtifact: unused,
     readArtifact: unused,
     askHelper: unused,
+    addUsage: unused,
+    helperInputChars: 0,
   });
   const schema = (tool: ToolDefinition) => ({
     type: "function",

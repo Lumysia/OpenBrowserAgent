@@ -111,6 +111,9 @@ export const zhTW: LocaleMessages = {
     },
     contextSummaryTitle: "上下文摘要",
     contextSummaryDescription: "較早的對話上下文已為本次請求壓縮整理。",
+    contextSummaryFailedTitle: "上下文壓縮失敗",
+    contextSummaryFailedDescription:
+      "無法摘要較早的上下文；本次執行將繼續使用完整上下文，並稍後重試。",
     willBeSentToAi: "將傳送給 AI",
     willBeSentAsPageContext: "將作為頁面上下文傳送",
     currentPage: "目前頁面",

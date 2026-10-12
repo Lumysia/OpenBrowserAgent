@@ -116,6 +116,9 @@ export const ko: LocaleMessages = {
     contextSummaryTitle: "컨텍스트 요약",
     contextSummaryDescription:
       "이전 대화 컨텍스트가 이번 요청을 위해 압축되었습니다.",
+    contextSummaryFailedTitle: "컨텍스트 압축 실패",
+    contextSummaryFailedDescription:
+      "이전 컨텍스트를 요약하지 못했습니다. 전체 컨텍스트로 계속 진행하고 나중에 다시 시도합니다.",
     willBeSentToAi: "AI로 전송됩니다",
     willBeSentAsPageContext: "페이지 컨텍스트로 전송됩니다",
     currentPage: "현재 페이지",

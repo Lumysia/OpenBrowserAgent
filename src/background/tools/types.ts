@@ -8,6 +8,7 @@ import type {
   Skill,
   UploadedAttachment,
 } from "../../shared/types";
+import type { UsageMetrics } from "../run-usage";
 import type { StreamSession } from "../stream-sessions";
 
 export type VisionImage = { dataUrl: string; type?: string };
@@ -36,10 +37,16 @@ export type RunContext = {
   session: StreamSession;
   // Sub-agent depth: a sub-agent cannot start another one.
   depth: number;
+  // The chat that started this sub-agent run.
+  parentChatId?: string;
   storeArtifact(label: string, text: string): Promise<string>;
   readArtifact(
     handle: string,
   ): Promise<{ label: string; text: string } | undefined>;
+  // Adds the usage of a run made for this one (a sub-agent's).
+  addUsage(metrics: UsageMetrics): void;
+  // How much text one helper request may carry.
+  helperInputChars: number;
   // One plain-text request to the helper model.
   askHelper(
     system: string,

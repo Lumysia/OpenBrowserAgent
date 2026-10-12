@@ -117,6 +117,9 @@ export const esES: LocaleMessages = {
     contextSummaryTitle: "Resumen de contexto",
     contextSummaryDescription:
       "El contexto anterior de la conversación se compactó para esta solicitud.",
+    contextSummaryFailedTitle: "Falló la compactación del contexto",
+    contextSummaryFailedDescription:
+      "No se pudo resumir el contexto anterior; la ejecución sigue con el contexto completo y lo reintentará más tarde.",
     willBeSentToAi: "Se enviará a la IA",
     willBeSentAsPageContext: "Se enviará como contexto de página",
     currentPage: "Página actual",

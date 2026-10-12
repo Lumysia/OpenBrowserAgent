@@ -118,6 +118,9 @@ export const jaJP: LocaleMessages = {
     contextSummaryTitle: "コンテキスト要約",
     contextSummaryDescription:
       "以前の会話コンテキストはこのリクエスト用に圧縮されました。",
+    contextSummaryFailedTitle: "コンテキストの圧縮に失敗しました",
+    contextSummaryFailedDescription:
+      "以前のコンテキストを要約できませんでした。完全なコンテキストのまま続行し、後で再試行します。",
     willBeSentToAi: "AIに送信されます",
     willBeSentAsPageContext: "ページコンテキストとして送信されます",
     currentPage: "現在のページ",

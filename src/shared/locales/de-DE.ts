@@ -119,6 +119,9 @@ export const deDE: LocaleMessages = {
     contextSummaryTitle: "Kontextzusammenfassung",
     contextSummaryDescription:
       "Älterer Gesprächskontext wurde für diese Anfrage komprimiert.",
+    contextSummaryFailedTitle: "Kontextkomprimierung fehlgeschlagen",
+    contextSummaryFailedDescription:
+      "Älterer Kontext konnte nicht zusammengefasst werden; der Lauf geht mit dem vollen Kontext weiter und versucht es später erneut.",
     willBeSentToAi: "Wird an die KI gesendet",
     willBeSentAsPageContext: "Wird als Seitenkontext gesendet",
     currentPage: "Aktuelle Seite",
