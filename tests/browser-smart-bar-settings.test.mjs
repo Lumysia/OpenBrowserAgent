@@ -225,18 +225,27 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
       assert.equal(await barState(listed), "none");
       // The page script knows; it doesn't ask the background on mouseup.
       assert.equal(await session.prepares(), prepares);
-      // What the background sends for the keyboard command.
-      await options.call(async (url) => {
-        const [tab] = await chrome.tabs.query({ url });
-        await chrome.tabs.sendMessage(tab.id, {
-          type: "smart-bar:show-for-selection",
-        });
-      }, listedUrl);
+      await showForSelection(options, listedUrl);
       await poll(async () => (await barState(listed)) === "toolbar");
       assert.equal(
         await inSmartBar(listed, (root) => root.activeElement?.ariaLabel),
         "Ask",
       );
+      // In a field, Esc hands the keyboard user's focus and selection back.
+      await pressKey(listed, "Escape", "Escape", 27);
+      await selectText(listed, "#area");
+      const field = () =>
+        listed.call(() => {
+          const area = document.getElementById("area");
+          return [document.activeElement === area, area.selectionEnd > 0];
+        });
+      assert.deepEqual(await field(), [true, true]);
+      await showForSelection(options, listedUrl);
+      await poll(async () => (await barState(listed)) === "toolbar");
+      assert.deepEqual(await field(), [false, true]);
+      await pressKey(listed, "Escape", "Escape", 27);
+      await poll(async () => (await barState(listed)) === "none");
+      assert.deepEqual(await field(), [true, true]);
     });
 
     await t.test("turned off from the bar, open tabs go quiet", async () => {
@@ -264,3 +273,13 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
     await session.close();
   }
 });
+
+// What the background sends for the keyboard command.
+function showForSelection(options, url) {
+  return options.call(async (url) => {
+    const [tab] = await chrome.tabs.query({ url });
+    await chrome.tabs.sendMessage(tab.id, {
+      type: "smart-bar:show-for-selection",
+    });
+  }, url);
+}

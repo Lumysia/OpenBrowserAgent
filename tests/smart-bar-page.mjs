@@ -283,8 +283,16 @@ export async function clickAway(page) {
 export async function selectText(page, selector) {
   await clickAway(page);
   const rect = await page.call((selector) => {
-    const box = document.querySelector(selector).getBoundingClientRect();
-    return { left: box.left, right: box.right, top: box.top };
+    const element = document.querySelector(selector);
+    // Its start in view, also when the viewport is narrower than it (the
+    // side panel is open).
+    element.scrollIntoView({ block: "nearest", inline: "start" });
+    const box = element.getBoundingClientRect();
+    return {
+      left: box.left,
+      right: Math.min(box.right, document.documentElement.clientWidth),
+      top: box.top,
+    };
   }, selector);
   const y = rect.top + 10;
   const mouse = (type, x, buttons) =>
