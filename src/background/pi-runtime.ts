@@ -1,13 +1,7 @@
 import type { AgentEvent, AgentTool } from "@earendil-works/pi-agent-core";
 import { toToolDeclaration } from "@earendil-works/pi-ai/utils/transcript";
 import { TOOL_NAME } from "../shared/tool-names";
-import type {
-  Api,
-  ImageContent,
-  Message,
-  Model,
-  Usage,
-} from "@earendil-works/pi-ai";
+import type { Usage } from "@earendil-works/pi-ai";
 import {
   AI_TEXT_CHUNK_TYPE,
   CHAT_PART_STATE,
@@ -15,15 +9,9 @@ import {
   type AiStreamResponse,
   type ChatMessage,
   type ChatSource,
-  type UploadedAttachment,
+  type ToolModelResult,
 } from "../shared/types";
 import {
-  base64FromDataUrl,
-  isVisionImageMimeType,
-} from "../shared/attachments";
-import { getUploadedAttachments, renderMessageText } from "./message-helpers";
-import {
-  assistantMessage,
   createProviderStream,
   piModel,
   requestText,
@@ -31,6 +19,7 @@ import {
 } from "./pi-provider";
 import { indexedDbArtifacts, type ArtifactStore } from "../shared/artifacts";
 import { createContextEngine } from "./context/engine";
+import { historyMessages, imageContent } from "./context/history";
 import { CONTEXT_POLICY, tokenChars } from "./context/policy";
 import { createUsageMeter, type UsageMetrics } from "./run-usage";
 import { createToolSet } from "./tools/registry";
@@ -184,6 +173,7 @@ export async function runPiAgent(options: {
             const postPart = (
               state: (typeof CHAT_PART_STATE)[keyof typeof CHAT_PART_STATE],
               output?: Record<string, unknown>,
+              result?: ToolModelResult,
             ) =>
               post({
                 type: "chunk",
@@ -194,6 +184,7 @@ export async function runPiAgent(options: {
                   state,
                   input,
                   output,
+                  result,
                 },
               });
             postPart(CHAT_PART_STATE.inputAvailable);
@@ -211,13 +202,7 @@ export async function runPiAgent(options: {
               sources,
             );
             toolSignal?.throwIfAborted();
-            postPart(
-              outcome.isError
-                ? CHAT_PART_STATE.outputError
-                : CHAT_PART_STATE.outputAvailable,
-              outcome.output,
-            );
-            const text = await context.acceptToolOutput({
+            const { text, artifact } = await context.acceptToolOutput({
               toolCallId,
               toolName: tool.name,
               input,
@@ -228,6 +213,17 @@ export async function runPiAgent(options: {
                 tool.name !== TOOL_NAME.read,
             });
             const image = outcome.image;
+            postPart(
+              outcome.isError
+                ? CHAT_PART_STATE.outputError
+                : CHAT_PART_STATE.outputAvailable,
+              outcome.output,
+              {
+                text,
+                ...(image ? { image: true } : {}),
+                ...(artifact ? { artifact } : {}),
+              },
+            );
             return {
               content: [
                 { type: "text" as const, text },
@@ -279,7 +275,14 @@ export async function runPiAgent(options: {
   const abort = () => agent.abort();
   signal.addEventListener("abort", abort, { once: true });
   try {
-    await agent.prompt(piMessages(resolved, messages, setup.attachments));
+    await agent.prompt(
+      historyMessages(messages, {
+        model: resolved,
+        attachments: setup.attachments,
+        tools: agent.state.tools.length > 0,
+        compactArgs: (name) => !!toolSet.find(name)?.compactArgs,
+      }),
+    );
     signal.throwIfAborted();
     if (agent.state.errorMessage) throw new Error(agent.state.errorMessage);
   } finally {
@@ -305,48 +308,6 @@ function getMessageSources(messages: ChatMessage[]): ChatSource[] {
   return Array.isArray(latest?.metadata?.sources)
     ? (latest.metadata.sources as ChatSource[])
     : [];
-}
-
-function piMessages(
-  model: Model<Api>,
-  messages: ChatMessage[],
-  attachments: UploadedAttachment[],
-): Message[] {
-  return messages.map((message, index): Message => {
-    const latest = index === messages.length - 1;
-    const text = renderMessageText(message, latest, latest ? attachments : []);
-    if (message.role === "assistant")
-      return {
-        ...assistantMessage(model),
-        content: [{ type: "text", text }],
-        timestamp: message.createdAt,
-      };
-    const images = (
-      latest && attachments.length
-        ? attachments
-        : getUploadedAttachments(message)
-    )
-      .filter(
-        (item) =>
-          item.kind === "image" &&
-          item.dataUrl &&
-          isVisionImageMimeType(item.type),
-      )
-      .map((item) => imageContent(item.dataUrl!, item.type));
-    return {
-      role: "user",
-      timestamp: message.createdAt,
-      content: [{ type: "text", text }, ...images],
-    };
-  });
-}
-
-function imageContent(dataUrl: string, mimeType?: string): ImageContent {
-  return {
-    type: "image",
-    data: base64FromDataUrl(dataUrl),
-    mimeType: mimeType || dataUrl.match(/^data:([^;]+)/)?.[1] || "image/png",
-  };
 }
 
 const TEXT_CHUNKS = {
@@ -423,6 +384,7 @@ function createEventHandler(
             toolCallId: call.id,
             toolName: call.name,
             state: CHAT_PART_STATE.inputStreaming,
+            step: turnId,
           });
           return;
         }
@@ -449,16 +411,16 @@ function createEventHandler(
         !event.result.details?.output
       ) {
         // Pi validation and unknown-tool errors never reach execute().
+        const error = (event.result.content || [])
+          .map((part: { text?: string }) => part.text || "")
+          .join("\n");
         chunk({
           type: toolPartType(event.toolName),
           toolCallId: event.toolCallId,
           toolName: event.toolName,
           state: CHAT_PART_STATE.outputError,
-          output: {
-            error: event.result.content
-              ?.map((part: { text?: string }) => part.text || "")
-              .join("\n"),
-          },
+          output: { error },
+          result: { text: error },
         });
       }
       if (event.type === "message_end" && event.message.role === "assistant") {

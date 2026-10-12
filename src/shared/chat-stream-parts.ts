@@ -80,6 +80,8 @@ export function streamPartFromChunk(chunk: unknown): {
       | (typeof CHAT_PART_STATE)["outputError"];
     input?: unknown;
     output?: unknown;
+    result?: ChatPart["result"];
+    step?: string;
     error?: string;
     text?: string;
   };
@@ -141,6 +143,8 @@ export function streamPartFromChunk(chunk: unknown): {
         state: maybe.state || CHAT_PART_STATE.inputAvailable,
         input: maybe.input,
         output: maybe.output,
+        result: maybe.result,
+        step: maybe.step,
         error: maybe.error,
       },
     };

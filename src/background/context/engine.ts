@@ -29,7 +29,7 @@ export type ContextEngineOptions = {
   compactArgs?: (toolName: string) => boolean;
 };
 
-const DROPPED_IMAGE =
+export const DROPPED_IMAGE =
   "[An earlier image was removed to save context; take a new screenshot if you need it.]";
 
 // Owns what the model sees of one run. The agent transcript itself stays
@@ -137,6 +137,8 @@ export function createContextEngine(options: ContextEngineOptions) {
       recent += tokens;
       if (index > latestBatch || recent <= protect) continue;
       if (index < (compaction?.covered || 0)) break;
+      // Results of earlier turns arrive shortened (see history.ts).
+      if (!outputs.has(message.toolCallId)) continue;
       oldCalls.add(message.toolCallId);
       if (masks.has(message.toolCallId)) continue;
       if (contentChars(message) < CONTEXT_POLICY.minMaskChars) continue;
@@ -236,7 +238,7 @@ function contentChars(message: Extract<AgentMessage, { role: "toolResult" }>) {
 
 // Long strings of an old call's arguments, replaced by their length: the
 // call already ran and its effect is on the page.
-function shrinkArguments(value: unknown): unknown {
+export function shrinkArguments(value: unknown): unknown {
   if (typeof value === "string")
     return value.length > 120
       ? `${value.slice(0, 40)}… [${value.length} chars, already applied]`
