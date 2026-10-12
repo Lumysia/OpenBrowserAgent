@@ -7,6 +7,8 @@ import type { SelectionSnapshot } from "./selection";
 // The page script and the lazily loaded UI script share the extension's
 // isolated world in a frame; the UI registers itself here once mounted.
 export type SmartBarUi = {
+  // The element holding the bar's closed shadow root.
+  host: HTMLElement;
   show(
     snapshot: SelectionSnapshot,
     config: SmartBarPageConfig,
@@ -19,8 +21,6 @@ export type SmartBarUi = {
   selectionChanged(): void;
   frameBlurred(): void;
 };
-
-export const SMART_BAR_HOST_TAG = "oba-smart-bar";
 
 const UI_KEY = "__obaSmartBarUi";
 const TRIGGER_KEY = "__obaSmartBarTrigger";
@@ -44,12 +44,8 @@ export function setSmartBarUi(ui: SmartBarUi | undefined) {
   (globalThis as Globals)[UI_KEY] = ui;
 }
 
+// By identity: elements the page makes can't count as the bar.
 export function isSmartBarEvent(event: Event) {
-  return event
-    .composedPath()
-    .some(
-      (node) =>
-        node instanceof Element &&
-        node.tagName.toLowerCase() === SMART_BAR_HOST_TAG,
-    );
+  const host = getSmartBarUi()?.host;
+  return !!host && event.composedPath().includes(host);
 }

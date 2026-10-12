@@ -3,7 +3,6 @@ import { defineContentScript } from "wxt/utils/define-content-script";
 import {
   getSmartBarUi,
   setSmartBarUi,
-  SMART_BAR_HOST_TAG,
   type SmartBarUi,
 } from "../../src/smart-bar/bridge";
 import type { SelectionSnapshot } from "../../src/smart-bar/selection";
@@ -36,8 +35,8 @@ export default defineContentScript({
   noScriptStartedPostMessage: true,
   main() {
     if (getSmartBarUi()) return;
-    const store = createSmartBarStore();
     const { host, container } = createHost();
+    const store = createSmartBarStore(host);
     createRoot(container).render(<SmartBarApp store={store} />);
     setSmartBarUi({
       ...store.ui,
@@ -50,8 +49,11 @@ export default defineContentScript({
 });
 
 // Closed: page scripts can't reach the bar's buttons or read its results.
+// A plain div, never a custom element: custom elements belong to the
+// document, so a page defining the bar's tag would run its own code on this
+// element and get the closed root through ElementInternals.
 function createHost() {
-  const host = document.createElement(SMART_BAR_HOST_TAG);
+  const host = document.createElement("div");
   const shadow = host.attachShadow({ mode: "closed" });
   const html = document.createElement("html");
   const head = document.createElement("head");

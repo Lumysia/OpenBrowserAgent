@@ -6,7 +6,6 @@ import { providerFixture } from "./provider-fixtures.mjs";
 // root, out of reach of page scripts; tests reach it through CDP (a DevTools
 // DOM snapshot pierces closed roots) and press it with real CDP input, which
 // the page sees as trusted user input.
-const HOST = "OBA-SMART-BAR";
 
 // The production build (`npm run build:chrome`) in Chromium, with one fixture
 // server for the test pages and the model. `pages[path]`: HTML, or
@@ -167,10 +166,15 @@ function value(result) {
   return result.result?.value;
 }
 
-// The page's own bar; frames have their own.
+// The page's own bar (frames have their own): a closed root holding a whole
+// html document. The host's tag says nothing; pages could imitate it.
 function findShadowRoot(node) {
-  if (node.nodeName === HOST && node.shadowRoots?.length)
-    return node.shadowRoots[0];
+  const bar = node.shadowRoots?.find(
+    (root) =>
+      root.shadowRootType === "closed" &&
+      root.children?.[0]?.nodeName === "HTML",
+  );
+  if (bar) return bar;
   for (const child of [...(node.children || []), ...(node.shadowRoots || [])]) {
     const found = findShadowRoot(child);
     if (found) return found;

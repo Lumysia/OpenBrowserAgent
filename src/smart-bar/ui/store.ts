@@ -10,7 +10,7 @@ import {
   type SmartBarShowReason,
   type SmartBarStreamEvent,
 } from "../../shared/smart-bar-protocol";
-import { SMART_BAR_HOST_TAG, type SmartBarUi } from "../bridge";
+import type { SmartBarUi } from "../bridge";
 import { restoreSelection, type SelectionSnapshot } from "../selection";
 
 export type SmartBarResult = {
@@ -32,8 +32,9 @@ export type SmartBarState = {
 
 // State of the bar in this frame, outside React so the page script can show
 // it before the first render. A run streams over its own port; closing the
-// port (stop, hide, new run) aborts the request in the background.
-export function createSmartBarStore() {
+// port (stop, hide, new run) aborts the request in the background. `host`
+// holds the bar's shadow root.
+export function createSmartBarStore(host: HTMLElement) {
   let state: SmartBarState = { id: 0 };
   let port: chrome.runtime.Port | undefined;
   const listeners = new Set<() => void>();
@@ -57,8 +58,7 @@ export function createSmartBarStore() {
     if (!state.snapshot) return;
     stop();
     // Keyboard users return to what they had selected.
-    const focusInBar =
-      document.activeElement?.tagName.toLowerCase() === SMART_BAR_HOST_TAG;
+    const focusInBar = document.activeElement === host;
     const { snapshot, reason } = state;
     set({ snapshot: undefined, config: undefined, result: undefined });
     if (reason === "shortcut" && focusInBar) restoreSelection(snapshot);
@@ -105,6 +105,7 @@ export function createSmartBarStore() {
   };
 
   const ui: SmartBarUi = {
+    host,
     show(snapshot, config, reason) {
       stop();
       set({ id: state.id + 1, snapshot, config, reason, result: undefined });

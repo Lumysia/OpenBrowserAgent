@@ -31,8 +31,9 @@ const PAGE = `<!doctype html><title>Smart bar</title>
   });
 </script>`;
 
+// The bar's host is added next to <head> and <body>.
 const FRAME = `<!doctype html><p id="framed" style="font:16px sans-serif">Text in an embedded frame.</p>
-<script>setInterval(() => parent.postMessage({ bar: !!document.querySelector("oba-smart-bar") }, "*"), 100);</script>`;
+<script>setInterval(() => parent.postMessage({ bar: document.documentElement.childElementCount > 2 }, "*"), 100);</script>`;
 
 test("smart bar settings", { timeout: 240000 }, async (t) => {
   const session = await startSmartBar({

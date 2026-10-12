@@ -4,6 +4,8 @@ import { poll } from "./chromium.mjs";
 import {
   barState,
   clickAway,
+  clickInBar,
+  resultText,
   selectText,
   startSmartBar,
 } from "./smart-bar-page.mjs";
@@ -19,6 +21,24 @@ const PAGE = `<!doctype html><title>Smart bar</title>
   addEventListener("message", (event) => {
     if (event.source === window) window.extensionMessages++;
   });
+  // Custom elements belong to the document, not to a script world: one named
+  // like the bar would run the page's code on the extension's element and
+  // hand the page its closed root through ElementInternals.
+  window.customElementLog = [];
+  customElements.define("oba-smart-bar", class extends HTMLElement {
+    constructor() {
+      super();
+      window.customElementLog.push("constructed");
+      window.internals = this.attachInternals();
+    }
+  });
+  window.readBar = () =>
+    window.internals?.shadowRoot?.querySelector(".smart-bar-result-text")
+      ?.textContent ?? null;
+  // Every shadow root the page can reach.
+  window.reachableRoots = () =>
+    [...document.querySelectorAll("*")].filter((element) => element.shadowRoot)
+      .length;
 </script>`;
 
 test("smart bar security", { timeout: 240000 }, async (t) => {
@@ -58,23 +78,27 @@ test("smart bar security", { timeout: 240000 }, async (t) => {
             new MouseEvent("mouseup", { bubbles: true, button: 0 }),
           );
           await wait(600);
-          return document.querySelector("oba-smart-bar")?.shadowRoot || null;
+          return window.reachableRoots();
         }, browser.id);
-        assert.equal(reached, null);
+        assert.equal(reached, 0);
         assert.equal(await barState(page), "none");
         // The user's own selection still works, and the page can't reach in.
         await selectText(page, "#text");
         await poll(async () => (await barState(page)) === "toolbar");
-        assert.equal(
-          await page.call(
-            () => document.querySelector("oba-smart-bar").shadowRoot,
-          ),
-          null,
-        );
+        assert.equal(await page.call(() => window.reachableRoots()), 0);
         assert.equal(fixture.requests.length, requests);
         assert.equal(await page.call(() => window.extensionMessages), 0);
       },
     );
+
+    await t.test("a page's custom element can't read the results", async () => {
+      await clickInBar(page, '[aria-label="Explain"]');
+      await poll(async () =>
+        (await resultText(page)).includes("SECRET_MODEL_OUTPUT"),
+      );
+      assert.equal(await page.call(() => window.readBar()), null);
+      assert.deepEqual(await page.call(() => window.customElementLog), []);
+    });
   } finally {
     await session.close();
   }
