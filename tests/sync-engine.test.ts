@@ -407,3 +407,18 @@ test("on a server that ignores If-Match, a lost write is sent again", async () =
   assert.deepEqual(ids(a), ["c2", "c3"]);
   assert.equal(a.get(STORAGE_KEYS.language), "de-DE");
 });
+
+test("the weekly sweep removes old blobs no record names", async () => {
+  const { clock, a, server } = setup();
+  await a.set(STORAGE_KEYS.skills, [
+    { id: "s", name: "S", files: [{ path: "a", content: "1" }] },
+  ]);
+  await a.sync("edit");
+  const used = [...server.blobs.keys()];
+  // Left by a round that uploaded and then failed.
+  server.blobs.set("f".repeat(64), new Uint8Array([1]));
+  clock.now += 8 * 24 * 60 * 60_000;
+  await a.sync();
+  assert.deepEqual([...server.blobs.keys()], used);
+  assert.ok(server.requests.includes("DELETE blob"));
+});
