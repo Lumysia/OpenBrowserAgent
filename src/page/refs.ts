@@ -27,10 +27,6 @@ export function refFor(element: Element) {
   return ref;
 }
 
-export function existingRef(element: Element) {
-  return byElement.get(element);
-}
-
 export function resolveRef(value: unknown): Element {
   const ref = String(value ?? "").trim();
   if (!ref)

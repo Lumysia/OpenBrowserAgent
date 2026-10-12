@@ -72,7 +72,7 @@ async function runSetup(request: RunRequest, store: boolean) {
   };
 }
 
-export async function prepareRun(request: RunRequest) {
+async function prepareRun(request: RunRequest) {
   const prepared = await runSetup(request, true);
   const model = await resolveModel(prepared.agent.modelId, request.modelId);
   const helperModel = await resolveHelperModel(

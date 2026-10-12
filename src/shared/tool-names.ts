@@ -25,8 +25,6 @@ export const TOOL_NAME = {
   devtools: "devtools",
 } as const;
 
-export type ToolName = (typeof TOOL_NAME)[keyof typeof TOOL_NAME];
-
 export const MCP_TOOL_PREFIX = "mcp__";
 
 export function isMcpToolName(name: string) {

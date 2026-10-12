@@ -15,12 +15,6 @@ export function idLabel(label: string, value: unknown) {
   return text ? `${label} ${text}` : "";
 }
 
-export function arrayLabel(label: string, value: unknown) {
-  const items = Array.isArray(value) ? value : value ? [value] : [];
-  const text = items.map(String).filter(Boolean).join(", ");
-  return text ? `${label} ${text}` : "";
-}
-
 export function compactJoin(values: Array<string | undefined>) {
   return values.filter(Boolean).join(" · ");
 }

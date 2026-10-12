@@ -70,7 +70,7 @@ function unreadable(tabId: number, url?: string) {
   return `Tab ${tabId} shows ${url || "a browser page"}, which extensions cannot read. Switch to or open a web page.`;
 }
 
-export function blockedMessage(tabId: number) {
+function blockedMessage(tabId: number) {
   return `Tab ${tabId} is not responding: a JavaScript dialog (alert, confirm or prompt) is probably open, or the page is busy. Answer a dialog with act steps [{action:"dialog", value:"accept"}] or "dismiss", or ask the user to close it.`;
 }
 
