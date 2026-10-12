@@ -12,7 +12,9 @@ type Task = {
     "id" | "name" | "hostName" | "hostAddress" | "bridgeKey"
   >;
   state: "running" | "done" | "error" | "canceled";
+  // The tail of the output, and how many characters arrived in total.
   output: string;
+  received: number;
   error?: string;
   result?: unknown;
   events: Record<string, unknown>[];
@@ -73,6 +75,7 @@ async function startTask(
     },
     state: "running",
     output: "",
+    received: 0,
     events: [],
     startedAt: Date.now(),
     updatedAt: Date.now(),
@@ -145,6 +148,7 @@ async function startTask(
 
 const DEFAULT_COMMAND_TIMEOUT_MS = 10 * 60_000;
 const MAX_COMMAND_TIMEOUT_MS = 30 * 60_000;
+const START_SETTLE_MS = 1_000;
 
 // Runs one command and resolves when it finishes, fails, times out or the
 // run is stopped (which cancels it).
@@ -179,6 +183,31 @@ export async function runLocalCommand(
   return status(task.taskId);
 }
 
+// Starts a command that keeps running after the call returns (a dev server,
+// a long job). Stopping the chat does not cancel it; cancel does.
+export async function startLocalCommand(
+  input: Record<string, unknown>,
+  context: { chatId?: string; messageId?: string; toolCallId?: string },
+  workspace?: AgentWorkspace,
+) {
+  const started = await startTask(input, context, workspace);
+  const task = tasks.get(String((started as { taskId?: string }).taskId || ""));
+  // A command that fails at once (bad key, unknown shell) says so now.
+  if (task?.state === "running")
+    await new Promise((resolve) => setTimeout(resolve, START_SETTLE_MS));
+  return task ? status(task.taskId) : started;
+}
+
+export function localCommandStatus(taskId: string) {
+  return status(taskId);
+}
+
+export function cancelLocalCommand(taskId: string) {
+  const task = tasks.get(taskId);
+  if (task) cancelTask(task);
+  return status(taskId);
+}
+
 // Disconnecting closes the host's stdin; the host then kills every task's
 // process group, so there is no acknowledgement to wait for.
 function cancelTask(task: Task) {
@@ -204,10 +233,11 @@ function receiveMessage(task: Task, value: unknown) {
     ["stdout", "stderr", "message_delta", "text"].includes(
       text(event.event || event.type),
     )
-  )
-    task.output = (task.output + String(event.data ?? event.text ?? "")).slice(
-      -OUTPUT_LIMIT,
-    );
+  ) {
+    const chunk = String(event.data ?? event.text ?? "");
+    task.output = (task.output + chunk).slice(-OUTPUT_LIMIT);
+    task.received += chunk.length;
+  }
   if (event.result !== undefined) task.result = event.result;
   if (event.error !== undefined) task.error = text(event.error);
   const type = text(event.type || event.event);
@@ -239,6 +269,7 @@ function status(taskId: string) {
     state: task.state,
     bridge: task.bridge,
     output: task.output,
+    received: task.received,
     result: task.result,
     ...(task.error ? { error: task.error } : {}),
     progress: task.events.slice(-8),

@@ -8,6 +8,7 @@ import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { storage } from "../src/shared/storage";
 import { runLocalCommand } from "../src/background/local-execution-bridge-tasks";
+import { localCommandTool } from "../src/background/tools/local";
 import { toolBrowser, eventListeners } from "./tool-fixtures";
 
 afterEach(() => mock.restoreAll());
@@ -247,4 +248,31 @@ test("stopping the run cancels the command, disconnects and ignores late message
   assert.equal(port.disconnected, true);
   port.onMessage.emit({ type: "command.error", taskId, error: "late" });
   await assert.rejects(running, { name: "AbortError" });
+});
+
+test("a background command keeps running, reports new output and can be cancelled", async () => {
+  const fixture = extensionFixture();
+  const call = (input: Record<string, unknown>) =>
+    localCommandTool.execute(input, {
+      run: { chatId: "chat" },
+      toolCallId: "call",
+      progress: () => {},
+    } as never);
+  const started = await call({ action: "start", command: "fixture" });
+  const { taskId } = started.details as { taskId: string };
+  assert.match(
+    started.text,
+    /: running[\s\S]*Still running: status with taskId and offset=0/,
+  );
+  const port = fixture.ports[0];
+  port.onMessage.emit({ type: "stdout", taskId, data: "server ready\n" });
+  const first = await call({ action: "status", taskId });
+  assert.match(first.text, /server ready[\s\S]*offset=13/);
+  port.onMessage.emit({ type: "stdout", taskId, data: "GET /\n" });
+  const next = await call({ action: "status", taskId, offset: 13 });
+  assert.ok(next.text.includes("GET /") && !next.text.includes("server ready"));
+  const cancelled = await call({ action: "cancel", taskId });
+  assert.match(cancelled.text, /: canceled/);
+  assert.equal(cancelled.isError, false);
+  assert.equal(fixture.sent.at(-1).type, "command.cancel");
 });

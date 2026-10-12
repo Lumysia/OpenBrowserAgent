@@ -1,61 +1,112 @@
 import { TOOL_NAME } from "../../shared/tool-names";
-import { runLocalCommand } from "../local-execution-bridge-tasks";
+import {
+  cancelLocalCommand,
+  localCommandStatus,
+  runLocalCommand,
+  startLocalCommand,
+} from "../local-execution-bridge-tasks";
 import { runLocalBridgesAction } from "../local-execution-bridge-tools";
-import { fail, json, schema, stringArg, type ToolDefinition } from "./types";
+import {
+  fail,
+  json,
+  schema,
+  stringArg,
+  type ToolDefinition,
+  type ToolResult,
+} from "./types";
+
+const OUTPUT_SHOWN = 4_000;
 
 export const localCommandTool: ToolDefinition = {
   name: TOOL_NAME.localCommand,
   group: "localExecution",
   onDemand: true,
-  summary: "Run a shell command on the user's computer through a local bridge",
+  summary: "Run shell commands on the user's computer through a local bridge",
   description:
-    "Run one shell command on the user's computer through a configured, tested local execution bridge and wait for it to finish (stopping the chat cancels it). Returns the output and result.",
-  parameters: schema(
-    {
-      command: { type: "string", description: "Exact shell command line." },
-      bridge: {
-        type: "string",
-        description: "Bridge id or name. Defaults to the first bridge.",
-      },
-      cwd: { type: "string" },
-      shell: { type: "string" },
-      timeoutMs: {
-        type: "number",
-        description: "Defaults to 10 minutes, at most 30.",
-      },
+    "Run shell commands on the user's computer through a configured, tested local execution bridge. run (default): wait for the command to finish (stopping the chat cancels it). start: run it in the background (dev servers, long jobs) and get a taskId; it keeps running until it ends or is cancelled. status (taskId, offset): state and the output that arrived after offset. cancel (taskId).",
+  parameters: schema({
+    action: { type: "string", enum: ["run", "start", "status", "cancel"] },
+    command: { type: "string", description: "Exact shell command line." },
+    taskId: { type: "string" },
+    offset: {
+      type: "number",
+      description: "status: output characters already read.",
     },
-    ["command"],
-  ),
+    bridge: {
+      type: "string",
+      description: "Bridge id or name. Defaults to the first bridge.",
+    },
+    cwd: { type: "string" },
+    shell: { type: "string" },
+    timeoutMs: {
+      type: "number",
+      description: "run: defaults to 10 minutes, at most 30.",
+    },
+  }),
   async execute(input, { run, toolCallId, messageId, signal }) {
+    const action = stringArg(input.action) || "run";
+    const taskId = stringArg(input.taskId);
+    if (action === "status" || action === "cancel") {
+      if (!taskId) return fail(`taskId is required to ${action}.`);
+      const record =
+        action === "status"
+          ? localCommandStatus(taskId)
+          : cancelLocalCommand(taskId);
+      const result = taskResult(record, Number(input.offset) || 0);
+      return action === "cancel" && record.state === "canceled"
+        ? { ...result, isError: false }
+        : result;
+    }
     if (!stringArg(input.command)) return fail("command is required.");
     const bridge = stringArg(input.bridge);
-    const result = await runLocalCommand(
-      { ...input, bridgeId: bridge, bridgeName: bridge },
-      { chatId: run.chatId, messageId, toolCallId },
-      run.workspace,
-      signal,
-    );
-    const record = result as Record<string, unknown>;
-    const output = String(record.output ?? "");
-    const lines = [
-      `State: ${record.state}${record.error ? ` (${record.error})` : ""}`,
-      output ? `Output:\n${output}` : "No output.",
-      record.result !== undefined
-        ? `Result: ${JSON.stringify(record.result)}`
-        : "",
-    ].filter(Boolean);
-    return {
-      text: lines.join("\n"),
-      details: {
-        state: record.state,
-        error: record.error,
-        bridge: (record.bridge as { name?: string })?.name,
-        output: output.slice(-4000),
-      },
-      isError: record.success === false,
-    };
+    const request = { ...input, bridgeId: bridge, bridgeName: bridge };
+    const context = { chatId: run.chatId, messageId, toolCallId };
+    const record =
+      action === "start"
+        ? await startLocalCommand(request, context, run.workspace)
+        : await runLocalCommand(request, context, run.workspace, signal);
+    return taskResult(record, 0);
   },
 };
+
+// A task's state and its output after `offset` (characters received so
+// far), at most the last OUTPUT_SHOWN of them.
+function taskResult(value: unknown, offset: number): ToolResult {
+  const record = value as Record<string, unknown>;
+  if (record.state === "missing" && !record.taskId)
+    return fail(String(record.error || "The command could not start."));
+  if (record.state === "missing")
+    return fail(`No local command task "${record.taskId}".`);
+  const output = String(record.output ?? "");
+  const received = Number(record.received) || output.length;
+  const unread = output.slice(
+    Math.max(0, output.length - Math.max(0, received - offset)),
+  );
+  const shown = unread.slice(-OUTPUT_SHOWN);
+  const lines = [
+    `Task ${record.taskId}: ${record.state}${record.error ? ` (${record.error})` : ""}`,
+    shown
+      ? `Output${shown.length < unread.length ? ` (last ${shown.length} of ${unread.length} new characters)` : ""}:\n${shown}`
+      : "No new output.",
+    record.result !== undefined
+      ? `Result: ${JSON.stringify(record.result)}`
+      : "",
+    record.state === "running"
+      ? `[Still running: status with taskId and offset=${received} for more output, or cancel.]`
+      : "",
+  ].filter(Boolean);
+  return {
+    text: lines.join("\n"),
+    details: {
+      taskId: record.taskId,
+      state: record.state,
+      error: record.error,
+      bridge: (record.bridge as { name?: string })?.name,
+      output: shown,
+    },
+    isError: record.success === false,
+  };
+}
 
 export const localBridgesTool: ToolDefinition = {
   name: TOOL_NAME.localBridges,
