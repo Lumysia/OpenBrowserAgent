@@ -111,9 +111,10 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
         await poll(async () => (await barState(page)) === "toolbar");
         await clickInBar(page, '[aria-label="Fix spelling & grammar"]');
         await poll(() => barHas(page, "button", "Replace"));
-        // The field kept focus: the user types before the selection.
+        // The field kept focus: the user types before the selection, the
+        // same text even, so the old place holds the selected text again.
         await pressKey(page, "Home", "Home", 36);
-        await page.send("Input.insertText", { text: "XX " });
+        await page.send("Input.insertText", { text: before });
         await clickInBar(page, "button", "Replace");
         await poll(() =>
           barHas(
@@ -122,7 +123,7 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
             "The selected text changed. Copy the result instead.",
           ),
         );
-        assert.equal(await fieldValue(page, selector), `XX ${before}`);
+        assert.equal(await fieldValue(page, selector), before + before);
         assert.equal(await barHas(page, "button", "Replace"), false);
         await pressKey(page, "Escape", "Escape", 27);
         await page.call(

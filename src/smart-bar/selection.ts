@@ -5,7 +5,14 @@ export type TextControl = HTMLInputElement | HTMLTextAreaElement;
 
 export type SelectionTarget =
   | { kind: "page"; range: Range }
-  | { kind: "control"; element: TextControl; start: number; end: number }
+  | {
+      kind: "control";
+      element: TextControl;
+      start: number;
+      end: number;
+      // The whole field, to tell whether anything was edited since.
+      value: string;
+    }
   | {
       kind: "editable";
       element: HTMLElement;
@@ -49,10 +56,14 @@ export function readSelection(
     if (target instanceof Node && !active.contains(target)) return undefined;
     const { selectionStart: start, selectionEnd: end } = active;
     if (start === null || end === null || start === end) return undefined;
-    const text = active.value.slice(start, end);
+    const { value } = active;
+    const text = value.slice(start, end);
     if (!text.trim()) return undefined;
     return withPoint(
-      { text, target: { kind: "control", element: active, start, end } },
+      {
+        text,
+        target: { kind: "control", element: active, start, end, value },
+      },
       point,
     );
   }
@@ -113,15 +124,14 @@ export function selectionRect(snapshot: SelectionSnapshot): Rect | undefined {
 
 // Whether the field still holds the snapshot's text where it was selected.
 // The user can keep typing while a result shows; writing at the old place
-// would then overwrite their text.
+// would then overwrite their text. Text fields must be unchanged as a whole:
+// the old offsets can hold the same text again after an edit before them.
+// A contenteditable's live range moves with such edits.
 export function selectionIntact(snapshot: SelectionSnapshot) {
   const { target } = snapshot;
   if (target.kind === "page") return false;
   if (!target.element.isConnected) return false;
-  if (target.kind === "control")
-    return (
-      target.element.value.slice(target.start, target.end) === snapshot.text
-    );
+  if (target.kind === "control") return target.element.value === target.value;
   return target.range.toString() === target.rangeText;
 }
 
