@@ -106,7 +106,7 @@ export async function collectLocalChanges(
         .filter((id) => id !== undefined),
     );
     const seen = keys.length
-      ? Math.min(...keys.map((key) => dirty[key]))
+      ? Math.min(...keys.map((key) => dirty[key].at))
       : env.now();
     const entries = await collection.read(
       env,

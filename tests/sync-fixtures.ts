@@ -12,7 +12,7 @@ import type {
   SyncEnv,
 } from "../src/shared/sync/env";
 import { decodeRoot, encodeRoot } from "../src/shared/sync/root";
-import { loadSyncState } from "../src/shared/sync/state";
+import { loadSyncState, markDirty } from "../src/shared/sync/state";
 import {
   BlobIntegrityError,
   type Transport,
@@ -173,25 +173,17 @@ export function device(
     context,
     async set(key: string, value: unknown) {
       await env.local.set({ [key]: value });
-      await markDirty(env, key, clock.now);
+      await markDirty(env, [key]);
     },
     async remove(key: string) {
       await env.local.remove(key);
-      await markDirty(env, key, clock.now);
+      await markDirty(env, [key]);
     },
     get: <T = unknown>(key: string) => env.local.data[key] as T,
     sync: (reason: RoundReason = "poll", options = {}) =>
       runSyncRound(context, reason, options),
     state: () => loadSyncState(env.local, "test"),
   };
-}
-
-async function markDirty(env: SyncEnv, key: string, now: number) {
-  const dirty = ((await env.local.get(STORAGE_KEYS.syncDirty))[
-    STORAGE_KEYS.syncDirty
-  ] ?? {}) as Record<string, number>;
-  dirty[key] ??= now;
-  await env.local.set({ [STORAGE_KEYS.syncDirty]: dirty });
 }
 
 export const ALL_ON: Partial<SyncDataSettings> = {

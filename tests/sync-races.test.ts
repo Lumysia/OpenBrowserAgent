@@ -123,3 +123,32 @@ test("a chat saved by the app while the engine writes that chat is not overwritt
   await a.sync();
   assert.ok(messageIds(a, "X").includes("b3"));
 });
+
+test("an edit made while a round reads local data is uploaded by the next round", async () => {
+  const { clock, a, b } = setup();
+  const PROVIDERS = STORAGE_KEYS.provider;
+  await b.set(PROVIDERS, { p1: { apiKey: "k1" } });
+  await b.sync("edit");
+  await a.sync();
+  clock.now += 1000;
+  await b.set(PROVIDERS, { p1: { apiKey: "k2" } });
+  // The user edits again just after the round read the providers.
+  const get = b.env.local.get.bind(b.env.local);
+  let edited = false;
+  b.env.local.get = async (keys) => {
+    const result = await get(keys);
+    if (!edited && keys === PROVIDERS) {
+      edited = true;
+      await b.set(PROVIDERS, { p1: { apiKey: "k3" } });
+    }
+    return result;
+  };
+  await b.sync("edit");
+  b.env.local.get = get;
+  assert.ok(edited);
+  clock.now += 1000;
+  await b.sync("edit");
+  await a.sync();
+  assert.deepEqual(a.get(PROVIDERS), { p1: { apiKey: "k3" } });
+  assert.deepEqual(b.get(PROVIDERS), { p1: { apiKey: "k3" } });
+});

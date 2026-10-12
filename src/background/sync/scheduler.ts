@@ -1,5 +1,4 @@
 import { getBrowserApi } from "../../shared/browser-api";
-import { storageLockName } from "../../shared/locks";
 import {
   mergeSyncDataSettings,
   STORAGE_KEYS,
@@ -15,8 +14,8 @@ import {
 import { ownsKey } from "../../shared/sync/collection";
 import { SYNC_COLLECTIONS } from "../../shared/sync/collections";
 import {
-  loadDirty,
   loadSyncState,
+  markDirty as markDirtyKeys,
   loadSyncStatus,
   saveSyncState,
   SYNC_WARNINGS,
@@ -94,18 +93,7 @@ export function setupSync() {
       SYNC_COLLECTIONS.some((collection) => ownsKey(collection, key)),
     );
     if (!owned.length) return;
-    const added = await env.lock(
-      storageLockName(STORAGE_KEYS.syncDirty),
-      async () => {
-        const dirty = await loadDirty(env.local);
-        const fresh = owned.filter((key) => dirty[key] === undefined);
-        if (!fresh.length) return false;
-        const now = env.now();
-        for (const key of fresh) dirty[key] = now;
-        await env.local.set({ [STORAGE_KEYS.syncDirty]: dirty });
-        return true;
-      },
-    );
+    const added = await markDirtyKeys(env, owned);
     const context = added ? await syncContext(env) : undefined;
     if (context)
       await updateSyncStatus(env.local, {

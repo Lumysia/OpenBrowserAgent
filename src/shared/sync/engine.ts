@@ -1,6 +1,5 @@
-import { storageLockName, SYNC_LOCK } from "../locks";
+import { SYNC_LOCK } from "../locks";
 import {
-  STORAGE_KEYS,
   SYNC_DATA_SETTING_KEYS,
   SYNC_PREFERENCES,
   type SyncDataSettings,
@@ -44,6 +43,7 @@ import {
   type SyncRecord,
 } from "./root";
 import {
+  clearDirty,
   loadDirty,
   loadSyncState,
   saveSyncState,
@@ -128,7 +128,11 @@ async function round(
     (name) => !collections.some((collection) => collection.name === name),
   );
   await saveSyncState(env.local, state);
-  await clearDirty(env, dirty, scan);
+  await clearDirty(
+    env,
+    dirty,
+    [...scan.processed].filter((key) => !scan.held.has(key)),
+  );
   const result: RoundResult = {
     pending: Object.keys(state.pending).length,
     held: scan.held.size,
@@ -276,22 +280,6 @@ async function localPayloads(
       record.blob !== state.synced[recordId]?.blob
     )
       pushes.delete(recordId);
-}
-
-// Remove the dirty keys this round compared, unless they changed again
-// meanwhile or their change is held back.
-async function clearDirty(
-  env: SyncEnv,
-  seen: Record<string, number>,
-  scan: { processed: Set<string>; held: Set<string> },
-) {
-  const keys = [...scan.processed].filter((key) => !scan.held.has(key));
-  if (!keys.length) return;
-  await env.lock(storageLockName(STORAGE_KEYS.syncDirty), async () => {
-    const current = await loadDirty(env.local);
-    for (const key of keys) if (current[key] === seen[key]) delete current[key];
-    await env.local.set({ [STORAGE_KEYS.syncDirty]: current });
-  });
 }
 
 type Outcome = {

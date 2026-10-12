@@ -1,5 +1,6 @@
 import { STORAGE_KEYS } from "../storage-keys";
-import { readKey, type StorageArea } from "./env";
+import { storageLockName } from "../locks";
+import { readKey, type StorageArea, type SyncEnv } from "./env";
 import { INITIAL_HLC, type HlcState } from "./hlc";
 import type { SyncedEntry } from "./plan";
 import type { Root, SyncRecord } from "./root";
@@ -96,10 +97,45 @@ export async function updateSyncStatus(
   return next;
 }
 
-// Storage keys changed since the last round, with the time each change was
-// first seen (the wall time of the change's clock).
-export type DirtyKeys = Record<string, number>;
+// Storage keys changed since a round last compared them: how many changes
+// were seen, so a round clears a key only if no change came in while it
+// ran, and when the latest change was seen.
+export type DirtyKey = { changes: number; at: number };
+export type DirtyKeys = Record<string, DirtyKey>;
 
-export async function loadDirty(local: StorageArea) {
+const DIRTY_LOCK = storageLockName(STORAGE_KEYS.syncDirty);
+
+export async function loadDirty(local: StorageArea): Promise<DirtyKeys> {
   return (await readKey<DirtyKeys>(local, STORAGE_KEYS.syncDirty)) ?? {};
+}
+
+// Record changes of local keys. Resolves whether a key became dirty.
+export function markDirty(env: SyncEnv, keys: string[]) {
+  return env.lock(DIRTY_LOCK, async () => {
+    const dirty = await loadDirty(env.local);
+    const now = env.now();
+    const fresh = keys.some((key) => !dirty[key]);
+    for (const key of keys)
+      dirty[key] = {
+        changes: (dirty[key]?.changes ?? 0) + 1,
+        at: Math.max(now, dirty[key]?.at ?? 0),
+      };
+    await env.local.set({ [STORAGE_KEYS.syncDirty]: dirty });
+    return fresh;
+  });
+}
+
+// Remove keys a round compared, unless they changed again meanwhile.
+export async function clearDirty(
+  env: SyncEnv,
+  seen: DirtyKeys,
+  keys: string[],
+) {
+  if (!keys.length) return;
+  await env.lock(DIRTY_LOCK, async () => {
+    const current = await loadDirty(env.local);
+    for (const key of keys)
+      if (current[key]?.changes === seen[key]?.changes) delete current[key];
+    await env.local.set({ [STORAGE_KEYS.syncDirty]: current });
+  });
 }
