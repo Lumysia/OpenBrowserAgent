@@ -98,10 +98,10 @@ function upsertSelectedElement(
   elements: SelectedElement[],
   element: SelectedElement,
 ) {
-  const key = element.aiId || `${element.tagName}:${element.outerHTML}`;
+  const key = element.ref || `${element.tagName}:${element.outerHTML}`;
   return [
     ...elements.filter(
-      (item) => (item.aiId || `${item.tagName}:${item.outerHTML}`) !== key,
+      (item) => (item.ref || `${item.tagName}:${item.outerHTML}`) !== key,
     ),
     element,
   ];

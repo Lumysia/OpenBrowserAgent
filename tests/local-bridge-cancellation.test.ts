@@ -7,10 +7,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { storage } from "../src/shared/storage";
-import {
-  startLocalExecutionBridge,
-  getLocalExecutionBridgeStatus,
-} from "../src/background/local-execution-bridge-tasks";
+import { runLocalCommand } from "../src/background/local-execution-bridge-tasks";
 import { toolBrowser, eventListeners } from "./tool-fixtures";
 
 afterEach(() => mock.restoreAll());
@@ -210,45 +207,44 @@ function extensionFixture() {
   return { sent, ports };
 }
 
-test("extension runs a bridge command without a ping or storage write", async () => {
+test("a bridge command runs without a ping or storage write and keeps only the output tail", async () => {
   const fixture = extensionFixture();
   const set = mock.method(storage.localExecutionBridges, "set", async () => {});
-  await startLocalExecutionBridge({ command: "fixture" });
+  const running = runLocalCommand({ command: "fixture" }, {});
+  await delay(0);
   assert.deepEqual(
     fixture.sent.map((message) => message.type),
     ["command.run"],
   );
-  assert.equal(set.mock.callCount(), 0);
-});
-
-test("extension keeps only the tail of long bridge output", async () => {
-  const fixture = extensionFixture();
-  const { taskId } = await startLocalExecutionBridge({ command: "fixture" });
+  const { taskId } = fixture.sent[0];
   const port = fixture.ports[0];
   for (let i = 0; i < 100; i++)
     port.onMessage.emit({ type: "stdout", taskId, data: "x".repeat(1024) });
   port.onMessage.emit({ type: "stdout", taskId, data: "end" });
-  const { output } = await getLocalExecutionBridgeStatus({ taskId });
-  assert.equal(output!.length, 64 * 1024);
-  assert.ok(output!.endsWith("end"));
+  port.onMessage.emit({ type: "command.done", taskId });
+  const result = (await running) as { state: string; output: string };
+  assert.equal(result.state, "done");
+  assert.equal(result.output.length, 64 * 1024);
+  assert.ok(result.output.endsWith("end"));
+  assert.equal(set.mock.callCount(), 0);
 });
 
-test("extension stream abort sends cancel, disconnects, and ignores late messages", async () => {
+test("stopping the run cancels the command, disconnects and ignores late messages", async () => {
   const fixture = extensionFixture();
   const controller = new AbortController();
-  const { taskId } = await startLocalExecutionBridge(
+  const running = runLocalCommand(
     { command: "fixture" },
     {},
     undefined,
     controller.signal,
   );
+  await delay(0);
+  const { taskId } = fixture.sent[0];
   const port = fixture.ports[0];
   port.onMessage.emit({ type: "stdout", taskId, data: "line one\n" });
   controller.abort();
   assert.equal(fixture.sent.at(-1).type, "command.cancel");
   assert.equal(port.disconnected, true);
   port.onMessage.emit({ type: "command.error", taskId, error: "late" });
-  const status = await getLocalExecutionBridgeStatus({ taskId });
-  assert.equal(status.state, "canceled");
-  assert.equal(status.output, "line one\n");
+  await assert.rejects(running, { name: "AbortError" });
 });

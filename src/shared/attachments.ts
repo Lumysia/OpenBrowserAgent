@@ -12,40 +12,6 @@ export type UploadedAttachmentKind =
 
 export const ATTACHMENT_CONTEXT_TAG = "available_attachments";
 
-export const ATTACHMENT_TOOL_ERROR = {
-  notFound: "Uploaded attachment not found",
-} as const;
-
-export const ATTACHMENT_READ_NOTE = {
-  text: "Use readUploadedAttachment with this id to read the file text.",
-  image:
-    "Use readUploadedAttachment with this id to inspect the image data if needed.",
-  media:
-    "Audio and video can be read as base64 or hex slices only; ask for a transcript if semantic analysis is needed.",
-  document:
-    "Document binaries can be read as base64 or hex slices only unless the file was uploaded as plain text.",
-  binary: "Binary content can be read as base64 or hex slices, not plain text.",
-} as const;
-
-export const ATTACHMENT_OUTPUT_NOTE = {
-  media:
-    "Audio and video files are available as base64 or hex slices only; ask the user for a transcript or text export if content analysis is needed.",
-  document:
-    "Document binaries such as PDF, Word, Excel, and PowerPoint are available as base64 or hex slices only unless pasted/exported as text.",
-  binary: "Binary file content is available as base64 or hex slices only.",
-} as const;
-
-export const ATTACHMENT_TOOL_DESCRIPTION = {
-  readUploadedAttachment:
-    "Read a chat attachment by ID, including user-uploaded files and generated image/tool attachments. Use offset and limit to read only the needed slice and avoid oversized outputs.",
-  attachmentId:
-    "The attachment ID from available_attachments or a tool output such as imageAttachmentId",
-  offset: "Zero-based character offset for text, base64, or hex output",
-  limit: "Maximum characters to return for this read",
-  format:
-    "Read format. Use text for text files, base64 for binary data, or hex for binary data previews.",
-} as const;
-
 export const ATTACHMENT_MIME_PREFIX = {
   audio: "audio/",
   image: "image/",

@@ -9,7 +9,6 @@ import {
   Wrench,
 } from "lucide-react";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
-import { normalizeProviderState } from "../../src/shared/provider-instances";
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { languageLabels } from "../../src/shared/types";
@@ -20,7 +19,6 @@ import {
   CardHeader,
   CardTitle,
   Input,
-  Label,
   Select,
   SelectContent,
   SelectItem,
@@ -35,24 +33,12 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "../../src/ui/components";
+import { ModelSelect } from "./model-select";
 import { useStoredState } from "../../src/ui/useStoredState";
-
-// Select value for "use the chat's own model"; stored as an empty id.
-const CHAT_MODEL = "chat-model";
 
 export function GeneralPage() {
   const [language, setLanguage] = useStoredState(storage.language);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
-  const [providers] = useStoredState(storage.provider);
-  const models = Object.values(normalizeProviderState(providers || {})).flatMap(
-    (provider) =>
-      (provider.models || []).map((model) => ({
-        id: model.id,
-        label: [model.displayName || model.name, provider.label]
-          .filter(Boolean)
-          .join(" · "),
-      })),
-  );
   const t = getMessages(language);
   const accentOptions = [
     { id: "pink", label: t.options.pinkTheme },
@@ -190,29 +176,14 @@ export function GeneralPage() {
           <CardDescription>{t.options.helperModelDescription}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Select
-            value={preferences.helperModelId || CHAT_MODEL}
-            onValueChange={(value) =>
-              setPreferences((previous) => ({
-                ...previous,
-                helperModelId: value === CHAT_MODEL ? "" : value,
-              }))
+          <ModelSelect
+            value={preferences.helperModelId}
+            label={t.options.helperModel}
+            defaultLabel={t.options.helperModelSameAsChat}
+            onChange={(helperModelId) =>
+              setPreferences((previous) => ({ ...previous, helperModelId }))
             }
-          >
-            <SelectTrigger aria-label={t.options.helperModel}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={CHAT_MODEL}>
-                {t.options.helperModelSameAsChat}
-              </SelectItem>
-              {models.map((model) => (
-                <SelectItem key={model.id} value={model.id}>
-                  {model.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
         </CardContent>
       </Card>
       <Card>

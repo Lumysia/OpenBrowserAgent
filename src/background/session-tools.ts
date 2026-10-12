@@ -11,12 +11,12 @@ const CHAT_READ_MESSAGE_LIMIT = 80;
 const CHAT_CONTENT_PREVIEW_CHARS = 280;
 const CHAT_READ_CONTENT_CHARS = 4000;
 
-export function manageChatHistory(input: Record<string, unknown>) {
-  const operation = String(input.operation || "search");
-  if (operation === "search") return searchChatHistory(input);
-  if (operation === "read") return readChatThread(input);
-  if (operation === "delete") return deleteChatThread(input);
-  return { error: "Unknown chat history operation", operation };
+export function chatHistory(input: Record<string, unknown>) {
+  const action = String(input.action || "search");
+  if (action === "search") return searchChatHistory(input);
+  if (action === "read") return readChatThread(input);
+  if (action === "delete") return deleteChatThread(input);
+  return { error: "Unknown chat history action", action };
 }
 
 export async function searchChatHistory(input: Record<string, unknown>) {

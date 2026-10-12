@@ -9,12 +9,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Messages } from "../../src/shared/i18n";
-import type {
-  Agent,
-  Chat,
-  ChatSummary,
-  Preferences,
-} from "../../src/shared/types";
+import type { Agent, Chat, ChatSummary } from "../../src/shared/types";
 import { chatDisplayTitle } from "../../src/ui/agent-display";
 import {
   Badge,
@@ -43,7 +38,6 @@ export function HistoryPanel({
   activeChatId,
   unreadCompletedChatIds,
   agent,
-  preferences,
   onSetChats,
   onLoadChat,
   onImportChat,
@@ -56,7 +50,6 @@ export function HistoryPanel({
   activeChatId?: string;
   unreadCompletedChatIds: Record<string, true>;
   agent: Agent;
-  preferences?: Preferences;
   onSetChats: SummariesUpdater;
   onLoadChat: (chatId: string) => Promise<Chat | undefined>;
   onImportChat: (chat: Chat) => void;
@@ -134,7 +127,10 @@ export function HistoryPanel({
   async function exportChat(chatId: string) {
     setExportFailed(false);
     const chat = await onLoadChat(chatId).catch(() => undefined);
-    if (chat) exportChatAsOpenAiJson(chat, agent, preferences);
+    if (chat)
+      exportChatAsOpenAiJson(chat, agent).catch((error) =>
+        console.warn("Failed to export chat", error),
+      );
     else setExportFailed(true);
   }
 

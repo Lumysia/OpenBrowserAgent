@@ -75,14 +75,6 @@ export const enUS = {
     openSubAgentChat: "Open sub-agent chat",
     subAgentRunning: "Running",
     subAgentCompleted: "Completed",
-    subAgentMissing: "Missing",
-    localExecutionBridgeStates: {
-      running: "Running",
-      done: "Done",
-      error: "Error",
-      missing: "Missing",
-      canceled: "Canceled",
-    },
     questionWaiting: "Waiting for your answer",
     questionSubmit: "Submit answers",
     questionCustomPlaceholder: "Type your own answer...",
@@ -178,36 +170,6 @@ export const enUS = {
     running: "Running",
     done: "Done",
     error: "Error",
-    toolErrors: {
-      NO_ACTIVE_WEB_TAB_FOUND:
-        "No active web page tab was found. Open or focus a normal http(s) tab, or use a known tab ID.",
-      ACTIVE_TAB_NOT_WEB_PAGE:
-        "The active tab is not a readable web page. Open an http(s) page first.",
-      NO_TAB_IDS_PROVIDED: "No tab IDs were provided.",
-      TAB_NOT_FOUND: "The requested tab was not found.",
-      NO_GROUPABLE_NORMAL_TABS: "No normal browser-window tabs can be grouped.",
-      UNKNOWN_TOOL: "Unknown tool: {tool}.",
-      MISSING_URL: "A URL is required.",
-      UNKNOWN_NAVIGATION_TYPE: "Unknown navigation type: {type}.",
-      TAB_HAS_NO_WINDOW: "The tab is not attached to a browser window.",
-      NO_TEXT_PROVIDED: "No text was provided.",
-      TIMED_OUT_WAITING_FOR_TEXT: "Timed out waiting for the requested text.",
-      TIMED_OUT_WAITING_FOR_SELECTOR:
-        "Timed out waiting for the requested selector.",
-      TIMED_OUT_WAITING_FOR_CONDITION:
-        "Timed out waiting for the requested page condition.",
-      ELEMENT_NOT_TEXT_INPUT:
-        "The target element is not an input, textarea, or editable area.",
-      TARGET_ID_CANNOT_BE_FOCUSED:
-        "This CDP target cannot be focused as a browser tab.",
-      CLOSE_BY_TARGET_ID_UNSUPPORTED:
-        "Closing by CDP target ID is not supported here.",
-      RESIZE_BY_TARGET_ID_UNSUPPORTED:
-        "Resizing by CDP target ID is not supported here.",
-      ELEMENT_NOT_FOUND: "The target element was not found.",
-      ELEMENT_HAS_NO_CLICKABLE_BOX: "The target element has no clickable area.",
-      MISSING_CODE: "JavaScript code is required.",
-    },
     generatedImage: "Generated image",
     capturedTabImage: "Captured tab screenshot",
     mermaidPreview: "Mermaid diagram preview",
@@ -219,105 +181,43 @@ export const enUS = {
     copyImage: "Copy image",
     copyPrompt: "Copy prompt",
     tool: {
-      manageTabs: {
-        running: "Managing tabs",
-        done: "Managed tabs",
-        found: "Found {count} open tabs",
+      tabs: { running: "Managing tabs", done: "Managed tabs" },
+      snapshot: {
+        running: "Reading page structure",
+        done: "Read page structure",
       },
-      cdpInput: { running: "Sending CDP input", done: "Sent CDP input" },
-      cdpPage: { running: "Controlling CDP page", done: "Controlled CDP page" },
-      cdpDiagnostics: {
-        running: "Reading CDP diagnostics",
-        done: "Read CDP diagnostics",
-      },
-      wait: { running: "Waiting", done: "Waited" },
-      getCurrentTime: { running: "Checking time", done: "Checked time" },
-      getCurrentTab: {
-        running: "Getting current tab",
-        done: "Got current tab",
-      },
-      captureVisibleTab: { running: "Capturing tab", done: "Captured tab" },
-      downloadAllImagesInTab: {
-        running: "Downloading images",
-        done: "Downloaded images",
-      },
-      question: { running: "Asking a question", done: "Answered question" },
-      loadTools: {
-        running: "Loading tools",
-        done: "Loaded tools",
-        found: "Loaded {count} tools",
-      },
-      manageSkills: {
-        running: "Managing skills",
-        done: "Managed skills",
-        found: "Found {count} skills",
-      },
-      workspaceFiles: {
-        running: "Using workspace files",
-        done: "Updated workspace files",
-      },
-      manageMemory: { running: "Managing memory", done: "Managed memory" },
-      manageChatHistory: {
+      find: { running: "Searching page", done: "Searched page" },
+      read: { running: "Reading", done: "Read" },
+      extract: { running: "Extracting answer", done: "Extracted answer" },
+      act: { running: "Acting on page", done: "Acted on page" },
+      editPage: { running: "Editing page", done: "Edited page" },
+      webSearch: { running: "Searching the web", done: "Searched the web" },
+      screenshot: { running: "Taking screenshot", done: "Took screenshot" },
+      ask: { running: "Asking a question", done: "Answered question" },
+      toolSearch: { running: "Loading tools", done: "Loaded tools" },
+      export: { running: "Exporting", done: "Exported" },
+      skills: { running: "Updating skills", done: "Updated skills" },
+      workspace: { running: "Updating workspace", done: "Updated workspace" },
+      chatHistory: {
         running: "Reading chat history",
         done: "Read chat history",
       },
-      manageMcpServers: {
+      subAgent: { running: "Running sub-agent", done: "Sub-agent finished" },
+      mcpServers: {
         running: "Managing MCP servers",
         done: "Managed MCP servers",
       },
-      manageLocalExecutionBridges: {
+      localCommand: {
+        running: "Running local command",
+        done: "Ran local command",
+      },
+      localBridges: {
         running: "Managing execution bridges",
         done: "Managed execution bridges",
-        found: "Found {count} execution bridges",
-      },
-      inspectPage: {
-        running: "Inspecting page",
-        done: "Inspected page",
-        found: "Found {count} elements",
-      },
-      mutatePage: { running: "Updating page", done: "Updated page" },
-      downloadTabToMarkdown: {
-        running: "Downloading markdown",
-        done: "Downloaded markdown",
       },
       generateImage: { running: "Generating image", done: "Generated image" },
-      read: { running: "Reading stored output", done: "Read stored output" },
-      readUploadedAttachment: {
-        running: "Reading attachment",
-        done: "Read attachment",
-      },
-      readFileFromUrl: {
-        running: "Reading file",
-        done: "Read file",
-      },
-      cdpExecuteArbitraryJavaScript: {
-        running: "Running custom script",
-        done: "Ran custom script",
-      },
-      cdpTakeScreenshot: {
-        running: "Taking screenshot",
-        done: "Took screenshot",
-      },
-      startSubAgent: {
-        running: "Starting sub-agent",
-        done: "Started sub-agent",
-      },
-      getSubAgentStatus: {
-        running: "Checking sub-agent",
-        done: "Checked sub-agent",
-      },
-      startLocalExecutionBridge: {
-        running: "Starting local command",
-        done: "Finished local command",
-      },
-      getLocalExecutionBridgeStatus: {
-        running: "Checking local command",
-        done: "Checked local command",
-      },
-      cancelLocalExecutionBridge: {
-        running: "Canceling local command",
-        done: "Canceled local command",
-      },
+      runScript: { running: "Running script", done: "Ran script" },
+      devtools: { running: "Running diagnostics", done: "Ran diagnostics" },
     },
   },
   options: {
@@ -351,44 +251,52 @@ export const enUS = {
       wrench: "Tools",
       fileText: "Document",
     },
-    agentCapabilities: "Agent capabilities",
-    agentCapabilitiesDescription:
-      "Choose which tools and context this agent can use.",
-    builtinAgentCapabilitiesDescription:
-      "Built-in agent capabilities are shown for reference and cannot be edited.",
-    agentCapabilityGroups: {
-      browser: "Browser",
-      builtinTools: "Built-in tools and context",
-      skillsAndMcp: "Skills and MCP",
-      workspaceAndMemory: "Workspace and memory",
-      chatHistory: "Chat history",
+    agentPrompt: "Instructions",
+    agentPromptPlaceholder:
+      "How this agent should behave, what it is for, what to avoid.",
+    agentModel: "Model",
+    agentModelDefault: "Model selected in the chat",
+    agentTools: "Tools",
+    agentToolsDescription:
+      "Choose what this agent can use. Extra tools load only when needed.",
+    builtinAgentToolsDescription:
+      "Built-in agent tools are shown for reference and cannot be edited.",
+    agentWorkspaceToggle: "Private workspace",
+    agentWorkspaceToggleDescription:
+      "Files and memory that persist across chats.",
+    agentToolGroups: {
+      pages: "Read pages",
+      browser: "Operate the browser",
+      web: "Web search",
+      images: "Generate images",
+      skills: "Skills",
+      workspace: "Workspace and memory",
+      history: "Chat history",
+      subAgents: "Sub-agents",
+      mcp: "MCP",
+      localExecution: "Local commands",
+      scripts: "Page JavaScript",
+      devtools: "Developer diagnostics",
     },
-    agentCapabilityLabels: {
-      browserAutomation: "Operate browser",
-      browserTools: "Use built-in tools",
-      subAgents: "Start sub-agents",
-      localExecutionBridges: "Use local execution bridges",
-      deferredBrowserTools: "Load advanced browser actions",
-      cdpTools: "CDP tools",
-      javascriptExecution: "Run page JavaScript",
-      mcpTools: "MCP tools",
-      mcpManagement: "MCP management",
-      skillTools: "Skill tools",
-      skillCreation: "Skill creation",
-      workspaceRead: "Workspace read",
-      workspaceWrite: "Workspace write",
-      memoryRead: "Memory read",
-      memoryWrite: "Memory write",
-      chatHistoryRead: "Chat history read",
-      chatHistoryWrite: "Chat history write",
-      imageGeneration: "Generate images",
-      currentTime: "Read current time",
-      fileUrlRead: "Read URL and file links",
+    agentToolGroupDescriptions: {
+      pages: "Snapshot, find, read and extract page content; screenshots.",
+      browser: "Manage tabs, click, type and edit pages, export files.",
+      web: "Search the web with the default search engine.",
+      images: "Create and edit images (when enabled in Providers).",
+      skills: "Use enabled skills and create or improve them.",
+      workspace: "Edit its private files and memory (needs a workspace).",
+      history: "Search, read and delete saved chats.",
+      subAgents: "Delegate tasks to agents that run in their own chats.",
+      mcp: "Use and manage MCP servers and their tools.",
+      localExecution:
+        "Run commands on this computer through an execution bridge.",
+      scripts: "Run custom JavaScript in pages. Off by default.",
+      devtools: "Network resources and device emulation.",
     },
     deleteAgent: "Delete agent",
     agentWorkspace: "Agent workspace",
     agentWorkspaceDescription:
-      "Private text files for this agent. SOUL.md defines behavior, AGENTS.md defines workspace rules, MEMORY.md and USER.md are frozen context, and NOTES.md stays available on demand.",
+      "Private text files for this agent. MEMORY.md and USER.md are shown to the agent in every chat; other files are read when needed.",
     agentWorkspaceNewFile: "New workspace file",
     agentWorkspaceConflict:
       "This file changed while you were editing. Reopen it to review the latest version before saving.",
@@ -621,18 +529,10 @@ export const enUS = {
       "Enable temporary console logs for stream, tool, and assistant ordering diagnostics.",
     debugLoggingEnabled: "Enable diagnostic console logs",
     debugToolsTitle: "Registered tools",
-    debugToolsDescription: "Current browser tool registry ({count} tools).",
-    debugToolAvailable: "Available",
-    debugToolUnavailable: "Unavailable",
+    debugToolsDescription: "Tools of the selected agent ({count}).",
+    debugToolCore: "Always loaded",
+    debugToolOnDemand: "Loaded on demand",
     debugToolRequired: "Required",
-    debugToolCapabilityEnabled: "Controlled by Agent capability: {capability}.",
-    debugToolCapabilityDisabled: "Enable Agent capability: {capability}.",
-    debugToolImageGenerationDisabled: "Enable image generation in Providers.",
-    debugToolSkillsDisabled:
-      "Needs enabled Skills and the required Agent capability.",
-    debugToolAttachmentsRequired:
-      "Requires uploaded attachments in the current message.",
-    debugToolStepsDisabled: "Max Tool Steps is 0.",
   },
 };
 

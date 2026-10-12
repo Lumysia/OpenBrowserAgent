@@ -55,16 +55,16 @@
 }
 .debug-tool-details p {
   margin: 0;
+  white-space: pre-wrap;
   color: var(--muted-foreground);
   font-size: 13px;
   line-height: 1.45;
 }
-.debug-tool-details small,
-.debug-tool-status {
+.debug-tool-details small {
   color: var(--muted-foreground);
   font-size: 12px;
 }
-.debug-tool-disabled {
+.debug-tool-on-demand {
   color: var(--muted-foreground);
   background: var(--secondary);
 }

@@ -1,0 +1,483 @@
+import {
+  centerOf,
+  clip,
+  compact,
+  isHidden,
+  isInteractive,
+  nameOf,
+  roleOf,
+} from "./dom";
+import { RefError, resolveRef } from "./refs";
+import { snapshotLines } from "./snapshot";
+
+// One `act` step, run in the page. The background drives the batch: it
+// stops at the first failure, waits between steps, and handles navigation.
+
+export type ActStep = {
+  action: string;
+  ref?: string;
+  text?: string;
+  key?: string;
+  value?: string;
+  to?: string;
+  direction?: string;
+  clear?: boolean;
+  submit?: boolean;
+};
+
+export type StepResult = {
+  ok: boolean;
+  error?: string;
+  note?: string;
+  // Typing that the page rejected; the background retries with trusted input.
+  trusted?: boolean;
+};
+
+const ok = (note?: string): StepResult => ({
+  ok: true,
+  ...(note ? { note } : {}),
+});
+const failed = (error: string): StepResult => ({ ok: false, error });
+
+export function runStep(step: ActStep): StepResult {
+  try {
+    switch (step.action) {
+      case "click":
+        return click(resolveRef(step.ref));
+      case "type":
+        return type(
+          resolveRef(step.ref),
+          step.text ?? "",
+          step.clear !== false,
+          step.submit === true,
+        );
+      case "press":
+        return press(
+          step.ref ? resolveRef(step.ref) : focused(),
+          step.key || "Enter",
+        );
+      case "select":
+        return select(resolveRef(step.ref), step.value ?? step.text ?? "");
+      case "hover":
+        return hover(resolveRef(step.ref));
+      case "scroll":
+        return scroll(
+          step.ref ? resolveRef(step.ref) : undefined,
+          step.direction,
+        );
+      case "drag":
+        return drag(resolveRef(step.ref), resolveRef(step.to));
+      default:
+        return failed(
+          `Unknown action "${step.action}". Use click, type, press, select, hover, scroll, drag or wait.`,
+        );
+    }
+  } catch (error) {
+    if (error instanceof RefError) return failed(error.message);
+    return failed(error instanceof Error ? error.message : String(error));
+  }
+}
+
+function focused() {
+  const active = document.activeElement;
+  return active instanceof HTMLElement ? active : document.body;
+}
+
+function describe(element: Element) {
+  const role = roleOf(element) || element.localName;
+  const name = clip(nameOf(element, role), 60);
+  return `${role}${name ? ` "${name}"` : ""}`;
+}
+
+function reveal(element: Element) {
+  element.scrollIntoView({
+    block: "center",
+    inline: "center",
+    behavior: "instant",
+  });
+}
+
+function mouseInit(element: Element) {
+  const { x, y } = centerOf(element);
+  return {
+    bubbles: true,
+    cancelable: true,
+    composed: true,
+    view: window,
+    clientX: x,
+    clientY: y,
+    button: 0,
+  };
+}
+
+function pointer(element: Element, type: string, init: MouseEventInit) {
+  element.dispatchEvent(
+    new PointerEvent(type, {
+      ...init,
+      pointerId: 1,
+      pointerType: "mouse",
+      isPrimary: true,
+    }),
+  );
+}
+
+function click(element: Element): StepResult {
+  if ((element as HTMLButtonElement).disabled)
+    return failed(
+      `${describe(element)} is disabled. Complete the required fields first, or snapshot to see why.`,
+    );
+  reveal(element);
+  const init = mouseInit(element);
+  const hit = document.elementFromPoint(init.clientX, init.clientY);
+  const covered =
+    hit && hit !== element && !element.contains(hit) && !hit.contains(element)
+      ? `covered by ${describe(hit)}; clicked it anyway`
+      : undefined;
+  if (element instanceof HTMLElement) element.focus({ preventScroll: true });
+  pointer(element, "pointerover", init);
+  pointer(element, "pointerdown", { ...init, buttons: 1 });
+  element.dispatchEvent(new MouseEvent("mousedown", { ...init, buttons: 1 }));
+  pointer(element, "pointerup", init);
+  element.dispatchEvent(new MouseEvent("mouseup", init));
+  element.dispatchEvent(new MouseEvent("click", init));
+  return ok(covered);
+}
+
+function hover(element: Element): StepResult {
+  reveal(element);
+  const init = mouseInit(element);
+  pointer(element, "pointerover", init);
+  pointer(element, "pointerenter", { ...init, bubbles: false });
+  element.dispatchEvent(new MouseEvent("mouseover", init));
+  element.dispatchEvent(
+    new MouseEvent("mouseenter", { ...init, bubbles: false }),
+  );
+  element.dispatchEvent(new MouseEvent("mousemove", init));
+  return ok();
+}
+
+function setNativeValue(
+  element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
+  value: string,
+) {
+  // The prototype setter keeps React's value tracker in sync, so the input
+  // event that follows is not swallowed as a no-op.
+  Object.getOwnPropertyDescriptor(
+    Object.getPrototypeOf(element),
+    "value",
+  )!.set!.call(element, value);
+  element.dispatchEvent(
+    new InputEvent("input", {
+      bubbles: true,
+      composed: true,
+      data: value,
+      inputType: "insertText",
+    }),
+  );
+  element.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+const RICH_EDITOR =
+  "[data-slate-editor],[data-lexical-editor],.ProseMirror,[data-slate-node],[data-lexical-text]";
+
+function type(
+  element: Element,
+  text: string,
+  clear: boolean,
+  submit: boolean,
+): StepResult {
+  reveal(element);
+  if (element instanceof HTMLSelectElement)
+    return failed(
+      `${describe(element)} is a select. Use action "select" with the option text.`,
+    );
+  if (
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLTextAreaElement
+  ) {
+    if (element.disabled || element.readOnly)
+      return failed(`${describe(element)} is not editable.`);
+    element.focus({ preventScroll: true });
+    const next = clear ? text : element.value + text;
+    setNativeValue(element, next);
+    if (element.value !== next && element.type !== "number")
+      return failed(
+        `${describe(element)} did not accept the text (value is now "${clip(element.value, 60)}").`,
+      );
+    return submit ? press(element, "Enter") : ok();
+  }
+  const host = editingHost(element);
+  if (!host)
+    return failed(
+      `${describe(element)} is not a text field. Use the ref of a textbox (snapshot or find shows them).`,
+    );
+  host.focus({ preventScroll: true });
+  const selection = getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(host);
+  if (!clear) range.collapse(false);
+  selection?.removeAllRanges();
+  selection?.addRange(range);
+  if (host.matches(RICH_EDITOR) || host.querySelector(RICH_EDITOR))
+    return { ok: false, trusted: true };
+  const inserted = document.execCommand("insertText", false, text);
+  if (!inserted || !compact(host.innerText).includes(compact(text)))
+    return { ok: false, trusted: true };
+  return submit ? press(host, "Enter") : ok();
+}
+
+function editingHost(element: Element) {
+  let host: HTMLElement | null =
+    element instanceof HTMLElement && element.isContentEditable
+      ? element
+      : null;
+  while (host?.parentElement?.isContentEditable) host = host.parentElement;
+  return host;
+}
+
+// Focuses an element and selects its text so trusted input replaces it.
+export function prepareTrustedInput(ref: string, clear: boolean) {
+  const element = resolveRef(ref);
+  reveal(element);
+  const host = editingHost(element) || (element as HTMLElement);
+  host.focus({ preventScroll: true });
+  const range = document.createRange();
+  range.selectNodeContents(host);
+  if (!clear) range.collapse(false);
+  getSelection()?.removeAllRanges();
+  getSelection()?.addRange(range);
+}
+
+export function editableText(ref: string) {
+  const element = resolveRef(ref);
+  const host = editingHost(element) || element;
+  return compact((host as HTMLElement).innerText);
+}
+
+const KEY_CODES: Record<string, string> = {
+  Enter: "Enter",
+  Escape: "Escape",
+  Tab: "Tab",
+  " ": "Space",
+  Backspace: "Backspace",
+  ArrowDown: "ArrowDown",
+  ArrowUp: "ArrowUp",
+  ArrowLeft: "ArrowLeft",
+  ArrowRight: "ArrowRight",
+};
+
+function press(element: Element, combo: string): StepResult {
+  const parts = combo.split("+");
+  const key = parts.pop() || "Enter";
+  const mods = new Set(parts.map((part) => part.toLowerCase()));
+  const init = {
+    key: key === "Space" ? " " : key,
+    code:
+      KEY_CODES[key] || (key.length === 1 ? `Key${key.toUpperCase()}` : key),
+    bubbles: true,
+    cancelable: true,
+    composed: true,
+    ctrlKey: mods.has("control") || mods.has("ctrl"),
+    shiftKey: mods.has("shift"),
+    altKey: mods.has("alt"),
+    metaKey: mods.has("meta") || mods.has("cmd"),
+  };
+  if (element instanceof HTMLElement) element.focus({ preventScroll: true });
+  const down = new KeyboardEvent("keydown", init);
+  element.dispatchEvent(down);
+  if (init.key.length === 1 || init.key === "Enter")
+    element.dispatchEvent(new KeyboardEvent("keypress", init));
+  element.dispatchEvent(
+    new KeyboardEvent("keyup", { ...init, cancelable: false }),
+  );
+  if (down.defaultPrevented) return ok();
+  // Default actions synthetic events do not trigger.
+  const modifier = init.ctrlKey || init.metaKey;
+  if (
+    modifier &&
+    key.toLowerCase() === "a" &&
+    (element instanceof HTMLInputElement ||
+      element instanceof HTMLTextAreaElement)
+  )
+    element.select();
+  else if (
+    init.key === "Enter" &&
+    element instanceof HTMLInputElement &&
+    element.form
+  )
+    element.form.requestSubmit();
+  else if (
+    (init.key === "Enter" || init.key === " ") &&
+    (element instanceof HTMLButtonElement ||
+      element instanceof HTMLAnchorElement ||
+      element.localName === "summary")
+  )
+    (element as HTMLElement).click();
+  else if (
+    init.key === " " &&
+    element instanceof HTMLInputElement &&
+    ["checkbox", "radio"].includes(element.type)
+  )
+    element.click();
+  return ok();
+}
+
+function select(element: Element, wanted: string): StepResult {
+  if (!(element instanceof HTMLSelectElement))
+    return failed(
+      `${describe(element)} is not a native select. Click it to open it, then click the option (find gives its ref).`,
+    );
+  const target = compact(wanted).toLowerCase();
+  const options = Array.from(element.options);
+  const option =
+    options.find((item) => item.value === wanted) ||
+    options.find((item) => compact(item.text).toLowerCase() === target) ||
+    options.find((item) => compact(item.text).toLowerCase().includes(target));
+  if (!option)
+    return failed(
+      `No option matching "${wanted}" in ${describe(element)}. Use find with part of the option text to see the options.`,
+    );
+  reveal(element);
+  element.focus({ preventScroll: true });
+  setNativeValue(element, option.value);
+  return ok(`selected "${compact(option.text)}"`);
+}
+
+function scroll(element: Element | undefined, requested?: string): StepResult {
+  const by = (sign: number) => sign * Math.round(innerHeight * 0.8);
+  if (element && !requested) {
+    reveal(element);
+    return ok();
+  }
+  const direction = requested || "down";
+  const target: Element | Window = element || window;
+  if (direction === "top") target.scrollTo({ top: 0, behavior: "instant" });
+  else if (direction === "bottom")
+    target.scrollTo({
+      top: element
+        ? element.scrollHeight
+        : document.documentElement.scrollHeight,
+      behavior: "instant",
+    });
+  else if (direction === "up")
+    target.scrollBy({ top: by(-1), behavior: "instant" });
+  else if (direction === "down")
+    target.scrollBy({ top: by(1), behavior: "instant" });
+  else if (element) reveal(element);
+  else
+    return failed(
+      `Unknown scroll direction "${direction}". Use up, down, top or bottom.`,
+    );
+  return ok(
+    `scrollY=${Math.round(scrollY)} of ${document.documentElement.scrollHeight}`,
+  );
+}
+
+function drag(source: Element, target: Element): StepResult {
+  reveal(source);
+  const from = mouseInit(source);
+  const to = mouseInit(target);
+  const data = new DataTransfer();
+  pointer(source, "pointerdown", { ...from, buttons: 1 });
+  source.dispatchEvent(new MouseEvent("mousedown", { ...from, buttons: 1 }));
+  source.dispatchEvent(
+    new DragEvent("dragstart", { ...from, dataTransfer: data }),
+  );
+  target.dispatchEvent(
+    new DragEvent("dragenter", { ...to, dataTransfer: data }),
+  );
+  target.dispatchEvent(
+    new DragEvent("dragover", { ...to, dataTransfer: data }),
+  );
+  pointer(target, "pointermove", { ...to, buttons: 1 });
+  target.dispatchEvent(new MouseEvent("mousemove", { ...to, buttons: 1 }));
+  target.dispatchEvent(new DragEvent("drop", { ...to, dataTransfer: data }));
+  source.dispatchEvent(new DragEvent("dragend", { ...to, dataTransfer: data }));
+  pointer(target, "pointerup", to);
+  target.dispatchEvent(new MouseEvent("mouseup", to));
+  return ok();
+}
+
+export function hasText(text: string) {
+  return (document.body?.innerText || "")
+    .toLowerCase()
+    .includes(text.toLowerCase());
+}
+
+// What changed on the page during a batch: interactive elements that
+// appeared or went away in the viewport, dialogs, and the focused control.
+let baseline: { controls: Set<Element>; dialogs: Set<Element> } | undefined;
+
+const CANDIDATES =
+  "a[href],button,input,select,textarea,summary,[role],[contenteditable],[tabindex],[onclick]";
+const DIALOGS =
+  "dialog[open],[role=dialog],[role=alertdialog],[aria-modal=true]";
+
+function visibleControls() {
+  return new Set(
+    Array.from(document.querySelectorAll(CANDIDATES)).filter((element) => {
+      if (!isInteractive(element) || isHidden(element)) return false;
+      const rect = element.getBoundingClientRect();
+      return rect.bottom >= 0 && rect.top <= innerHeight;
+    }),
+  );
+}
+
+function openDialogs() {
+  return new Set(
+    Array.from(document.querySelectorAll(DIALOGS)).filter(
+      (element) => !isHidden(element),
+    ),
+  );
+}
+
+export function beginChanges() {
+  baseline = { controls: visibleControls(), dialogs: openDialogs() };
+}
+
+export function collectChanges(limit = 15) {
+  // No baseline: the document was replaced since the batch began.
+  if (!baseline) return { lines: [] as string[], fresh: true };
+  const before = baseline;
+  baseline = undefined;
+  const lines: string[] = [];
+  for (const dialog of openDialogs())
+    if (!before.dialogs.has(dialog)) {
+      const { lines: dialogLines } = snapshotLines(dialog, {
+        mode: "page",
+        itemCap: 20,
+        maxChars: 2_000,
+      });
+      lines.push(
+        "Dialog opened:",
+        ...dialogLines.map((line) => `${"  ".repeat(line.depth)}${line.text}`),
+      );
+    }
+  const now = visibleControls();
+  const added = [...now].filter((element) => !before.controls.has(element));
+  const removed = [...before.controls].filter(
+    (element) =>
+      !now.has(element) && (!element.isConnected || isHidden(element)),
+  );
+  if (added.length) {
+    lines.push(`New in view (${added.length}):`);
+    for (const element of added.slice(0, limit))
+      lines.push(
+        ...snapshotLines(element, { mode: "page", maxChars: 300 })
+          .lines.slice(0, 1)
+          .map((line) => line.text),
+      );
+    if (added.length > limit)
+      lines.push(`- … ${added.length - limit} more (take a snapshot)`);
+  }
+  if (removed.length)
+    lines.push(
+      `Gone (${removed.length}): ${removed.slice(0, 5).map(describe).join(", ")}${removed.length > 5 ? ", …" : ""}`,
+    );
+  const active = document.activeElement;
+  if (active && active !== document.body && isInteractive(active))
+    lines.push(
+      `Focused: ${snapshotLines(active, { mode: "page", maxChars: 300 }).lines[0]?.text.slice(2) || describe(active)}`,
+    );
+  return { lines, fresh: false };
+}

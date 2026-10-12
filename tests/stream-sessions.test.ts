@@ -3,7 +3,7 @@ import { afterEach, mock, test } from "node:test";
 import * as sessions from "../src/background/stream-sessions";
 import { ABORT_CHAT_STREAMS } from "../src/shared/chat-stream-control";
 import type { AiStreamResponse, RunMetrics } from "../src/shared/types";
-import { appendQueuedMessages } from "../entrypoints/sidepanel/chat-updates";
+import { appendQueuedMessages } from "../src/shared/chat-updates";
 
 afterEach(() => mock.restoreAll());
 

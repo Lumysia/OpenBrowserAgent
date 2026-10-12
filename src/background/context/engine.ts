@@ -9,7 +9,7 @@ import {
   summaryMessage,
 } from "./compaction";
 import { CONTEXT_POLICY, windowShare } from "./policy";
-import { createToolOutputs, readArtifact } from "./tool-outputs";
+import { createToolOutputs } from "./tool-outputs";
 
 export type ContextEngineOptions = {
   chatId: string;
@@ -22,7 +22,12 @@ export type ContextEngineOptions = {
     signal?: AbortSignal,
   ) => Promise<string>;
   onCompacted?: (summary: string) => void;
+  // Tools whose long arguments (such as translated text) shrink once old.
+  compactArgs?: (toolName: string) => boolean;
 };
+
+const DROPPED_IMAGE =
+  "[An earlier image was removed to save context; take a new screenshot if you need it.]";
 
 // Owns what the model sees of one run. The agent transcript itself stays
 // complete; `transform` derives each request from it. Every step is sticky
@@ -33,18 +38,51 @@ export function createContextEngine(options: ContextEngineOptions) {
   const window = options.contextWindow || CONTEXT_POLICY.defaultContextWindow;
   const outputs = createToolOutputs(chatId, store);
   const masks = new Map<string, string>();
+  type ToolCallArguments = Extract<
+    Extract<AgentMessage, { role: "assistant" }>["content"][number],
+    { type: "toolCall" }
+  >["arguments"];
+  const argMasks = new Map<string, ToolCallArguments>();
   let compaction: { summary: string; covered: number } | undefined;
   let retryCompactionAbove = 0;
 
   function view(messages: AgentMessage[]): AgentMessage[] {
-    const masked = messages.map((message) => {
-      const stub =
-        message.role === "toolResult"
-          ? masks.get(message.toolCallId)
-          : undefined;
-      return stub
-        ? { ...message, content: [{ type: "text" as const, text: stub }] }
-        : message;
+    // Only the newest image a tool returned stays; older ones are dropped.
+    const newestImage = messages.findLastIndex(
+      (message) =>
+        message.role === "toolResult" &&
+        message.content.some((part) => part.type === "image"),
+    );
+    const masked = messages.map((message, index): AgentMessage => {
+      if (message.role === "assistant" && argMasks.size)
+        return message.content.some(
+          (part) => part.type === "toolCall" && argMasks.has(part.id),
+        )
+          ? {
+              ...message,
+              content: message.content.map((part) =>
+                part.type === "toolCall" && argMasks.has(part.id)
+                  ? { ...part, arguments: argMasks.get(part.id)! }
+                  : part,
+              ),
+            }
+          : message;
+      if (message.role !== "toolResult") return message;
+      const stub = masks.get(message.toolCallId);
+      if (stub)
+        return { ...message, content: [{ type: "text" as const, text: stub }] };
+      if (
+        index < newestImage &&
+        message.content.some((part) => part.type === "image")
+      )
+        return {
+          ...message,
+          content: [
+            ...message.content.filter((part) => part.type !== "image"),
+            { type: "text" as const, text: DROPPED_IMAGE },
+          ],
+        };
+      return message;
     });
     if (!compaction) return masked;
     const covered = masked.slice(0, compaction.covered);
@@ -69,21 +107,40 @@ export function createContextEngine(options: ContextEngineOptions) {
       (message) => message.role === "assistant",
     );
     const candidates: Extract<AgentMessage, { role: "toolResult" }>[] = [];
+    const oldCalls = new Set<string>();
+    const argCandidates: Array<{ id: string; args: ToolCallArguments }> = [];
     let recent = 0;
     let maskable = 0;
     for (let index = messages.length - 1; index >= 0; index--) {
       const message = messages[index];
+      if (message.role === "assistant" && index < latestBatch)
+        for (const part of message.content) {
+          if (
+            part.type !== "toolCall" ||
+            !oldCalls.has(part.id) ||
+            argMasks.has(part.id) ||
+            !options.compactArgs?.(part.name)
+          )
+            continue;
+          const chars = JSON.stringify(part.arguments).length;
+          if (chars < CONTEXT_POLICY.minMaskChars) continue;
+          argCandidates.push({ id: part.id, args: part.arguments });
+          maskable += Math.ceil(chars / 4);
+        }
       if (message.role !== "toolResult") continue;
       const tokens = estimateMessageTokens(message);
       recent += tokens;
       if (index > latestBatch || recent <= protect) continue;
       if (index < (compaction?.covered || 0)) break;
+      oldCalls.add(message.toolCallId);
       if (masks.has(message.toolCallId)) continue;
       if (contentChars(message) < CONTEXT_POLICY.minMaskChars) continue;
       candidates.push(message);
       maskable += tokens;
     }
     if (maskable < batch) return;
+    for (const { id, args } of argCandidates)
+      argMasks.set(id, shrinkArguments(args) as ToolCallArguments);
     for (const message of candidates) {
       const handle = await outputs.persist(message.toolCallId);
       if (!handle) continue;
@@ -131,8 +188,7 @@ export function createContextEngine(options: ContextEngineOptions) {
 
   return {
     acceptToolOutput: outputs.accept,
-    read: (input: Record<string, unknown>) =>
-      readArtifact(store, chatId, input),
+    storeText: outputs.store,
     async transform(messages: AgentMessage[], signal?: AbortSignal) {
       await mask(messages);
       let next = view(messages);
@@ -168,4 +224,19 @@ function contentChars(message: Extract<AgentMessage, { role: "toolResult" }>) {
     (sum, part) => sum + (part.type === "text" ? part.text.length : 4_800),
     0,
   );
+}
+
+// Long strings of an old call's arguments, replaced by their length: the
+// call already ran and its effect is on the page.
+function shrinkArguments(value: unknown): unknown {
+  if (typeof value === "string")
+    return value.length > 120
+      ? `${value.slice(0, 40)}… [${value.length} chars, already applied]`
+      : value;
+  if (Array.isArray(value)) return value.map(shrinkArguments);
+  if (value && typeof value === "object")
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, shrinkArguments(item)]),
+    );
+  return value;
 }

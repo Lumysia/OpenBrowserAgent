@@ -39,8 +39,8 @@ test(
           calls: [
             {
               id: "tabs",
-              name: "manageTabs",
-              args: { operation: "list" },
+              name: "tabs",
+              args: { action: "list" },
             },
           ],
         });

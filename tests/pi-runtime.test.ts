@@ -1,24 +1,19 @@
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 import { runPiAgent } from "../src/background/pi-runtime";
-import { streamPartFromChunk } from "../entrypoints/sidepanel/stream-parts";
+import { streamPartFromChunk } from "../src/shared/chat-stream-parts";
 import { storage } from "../src/shared/storage";
 import { DEFAULT_PREFERENCES } from "../src/shared/default-preferences";
-import type { AgentCapabilities, AiStreamResponse } from "../src/shared/types";
+import type { AiStreamResponse } from "../src/shared/types";
 import * as sessions from "../src/background/stream-sessions";
 import { installPiRuntimeBrowser, setupPiRuntime } from "./pi-runtime-helpers";
 import { providerFixture, reply, toolResults } from "./provider-fixtures.mjs";
 
 installPiRuntimeBrowser();
 
-function setup(
-  baseUrl: string,
-  maxToolSteps = 2,
-  capabilities: Partial<AgentCapabilities> = {},
-) {
+function setup(baseUrl: string, maxToolSteps = 2) {
   const run = setupPiRuntime(baseUrl);
   run.options.maxToolSteps = maxToolSteps;
-  Object.assign(run.options.capabilities, capabilities);
   return run;
 }
 
@@ -33,8 +28,8 @@ test("Pi executes real extension tools, bounds tool turns, and keeps usage", asy
             calls: [
               {
                 id: `call_${requests.length}`,
-                name: "manageTabs",
-                args: { operation: "list" },
+                name: "tabs",
+                args: { action: "list" },
               },
             ],
           }
@@ -80,7 +75,7 @@ test("Pi executes real extension tools, bounds tool turns, and keeps usage", asy
       );
     assert.deepEqual(states("call_1").slice(0, 2), [
       ["input-streaming", undefined],
-      ["input-available", { operation: "list" }],
+      ["input-available", { action: "list" }],
     ]);
     assert.equal(states("call_1")[2][0], "output-available");
     assert.equal(run.session.agent.state.isStreaming, false);
@@ -91,7 +86,7 @@ test("Pi executes real extension tools, bounds tool turns, and keeps usage", asy
   }
 });
 
-test("deferred tools become executable and advertised on Pi's next turn", async () => {
+test("toolSearch appends on-demand tools for Pi's next turn", async () => {
   mock.method(storage.mcpServers, "get", async () => []);
   const fixture = await providerFixture((request, response, requests) =>
     reply(
@@ -102,8 +97,8 @@ test("deferred tools become executable and advertised on Pi's next turn", async 
             calls: [
               {
                 id: "load",
-                name: "loadTools",
-                args: { names: ["manageMcpServers"] },
+                name: "toolSearch",
+                args: { names: ["mcpServers"] },
               },
             ],
           }
@@ -112,37 +107,32 @@ test("deferred tools become executable and advertised on Pi's next turn", async 
               calls: [
                 {
                   id: "list",
-                  name: "manageMcpServers",
-                  args: { operation: "list" },
+                  name: "mcpServers",
+                  args: { action: "list" },
                 },
               ],
             }
           : { text: "Done" },
     ),
   );
-  const run = setup(fixture.baseUrl, 3, {
-    deferredBrowserTools: true,
-    mcpManagement: true,
-  });
+  const run = setup(fixture.baseUrl, 3);
   try {
     await runPiAgent(run.options);
     assert.equal(
       fixture.requests[0].body.tools.some(
-        (tool) => tool.function.name === "manageMcpServers",
+        (tool) => tool.function.name === "mcpServers",
       ),
       false,
     );
     assert.equal(
       fixture.requests[1].body.tools.some(
-        (tool) => tool.function.name === "manageMcpServers",
+        (tool) => tool.function.name === "mcpServers",
       ),
       true,
     );
     assert.match(JSON.stringify(toolResults(fixture.requests[2])), /servers/);
     assert.equal(
-      run.session.agent.state.tools.some(
-        (tool) => tool.name === "manageMcpServers",
-      ),
+      run.session.agent.state.tools.some((tool) => tool.name === "mcpServers"),
       true,
     );
   } finally {
@@ -186,7 +176,7 @@ test("question wait survives a panel reconnect, accepts an answer and can be abo
             calls: [
               {
                 id: "ask",
-                name: "question",
+                name: "ask",
                 args: {
                   questions: [{ question: "Pick", options: [{ label: "A" }] }],
                 },

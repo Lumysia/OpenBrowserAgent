@@ -37,7 +37,6 @@ import {
   type ComposerMenu,
 } from "./sidepanel-menu-state";
 import { SidepanelView } from "./sidepanel-view";
-import { agentForChatRuntime } from "./sub-agent-runtime";
 import { useChatActions } from "./use-chat-actions";
 import { useChats } from "./use-chats";
 import { useCurrentChat, useRetainedChats } from "./use-current-chat";
@@ -49,10 +48,6 @@ import { useMessageEdit } from "./use-message-edit";
 import { useParallelChatStreams } from "./use-parallel-chat-streams";
 import { useQueuedMessages } from "./use-queued-messages";
 import { useRemoteSyncRefresh } from "../../src/ui/useRemoteSyncRefresh";
-import {
-  type SubAgentHandler,
-  useSubAgentLauncher,
-} from "./use-sub-agent-launcher";
 import { useSyncedChatAttachments } from "./use-synced-chat-attachments";
 import { useUnreadCompletedChats } from "./use-unread-completed-chats";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
@@ -107,8 +102,6 @@ export function SidepanelApp() {
     agents,
     currentChat?.kind === "subagent" ? currentChat.agentId : selectedAgent.id,
   );
-  const runtimeAgent = agentForChatRuntime(activeAgent, currentChat);
-  const subAgentLauncherRef = useRef<SubAgentHandler | undefined>(undefined);
   const { selectElement } = useElementSelector(t);
   const {
     uploadedAttachments,
@@ -141,24 +134,10 @@ export function SidepanelApp() {
     preferences,
     language,
     uploadedAttachments,
-    agent: runtimeAgent,
+    agent: activeAgent,
     updateChat: chatState.updateChat,
     setUnreadCompletedChats,
-    onStreamChunk: (event) => subAgentLauncherRef.current?.(event),
   });
-  const handleSubAgentStreamChunk = useSubAgentLauncher({
-    chats,
-    agents,
-    preferences,
-    configuredModels,
-    skills,
-    language,
-    t,
-    saveChats: chatState.saveChats,
-    beginStream,
-    startStream,
-  });
-  subAgentLauncherRef.current = handleSubAgentStreamChunk;
   useRetainedChats(chatState, activeChatId, streamingChatIds);
   const {
     attachedTabs,
@@ -289,9 +268,6 @@ export function SidepanelApp() {
     }
     sendInFlightRef.current.add(sendChatId);
     try {
-      const availableSkills = runtimeAgent.capabilities.skillTools
-        ? (skills || []).filter(isSkillEnabled)
-        : [];
       const chat = currentChat || createChat();
       const {
         activeEdit,
@@ -376,20 +352,13 @@ export function SidepanelApp() {
           setSummaries: chatState.setSummaries,
         });
       const request = sendMessagesRequest({
-        chatId: nextChat.id,
+        chat: nextChat,
         messageId: assistantMessage.id,
         messages: [...baseChat.messages, userMessage],
         preferences,
-        agent: runtimeAgent,
+        agent: activeAgent,
         language,
-        context: {
-          tabs: sentTabs,
-          selectedElements: sentElements,
-          text: context,
-          uploadedAttachments: activeAttachments,
-          availableSkills,
-          sources: baseChat.sources || [],
-        },
+        uploadedAttachments: activeAttachments,
       });
       startStream(request, assistantMessage.id);
     } finally {
@@ -409,7 +378,7 @@ export function SidepanelApp() {
       preferences={preferences}
       configuredModels={configuredModels}
       input={input}
-      activeAgent={runtimeAgent}
+      activeAgent={activeAgent}
       syncWriteStatus={syncWriteStatus}
       attachedTabs={attachedTabs}
       pendingAttachments={pendingAttachments}

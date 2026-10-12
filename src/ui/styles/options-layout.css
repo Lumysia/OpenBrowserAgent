@@ -161,30 +161,15 @@
   align-items: center;
   gap: 10px;
 }
-.agent-capability-accordion .ui-accordion-item {
+.agent-tools-accordion .ui-accordion-item {
   box-shadow: none;
 }
-.agent-capability-groups {
-  display: grid;
-  gap: 16px;
-}
-.agent-capability-group {
-  display: grid;
-  gap: 10px;
-}
-.agent-capability-group h3 {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-.agent-capability-grid {
+.agent-tools-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
-.agent-capability-row {
+.agent-tool-row {
   min-width: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -201,16 +186,23 @@
     box-shadow 0.16s ease,
     transform 0.16s ease;
 }
-.agent-capability-row:hover {
+.agent-tool-row:hover {
   border-color: color-mix(in srgb, var(--accent-strong) 18%, var(--border));
   background: color-mix(in srgb, var(--card) 82%, var(--accent-softer));
   box-shadow: 0 8px 20px color-mix(in srgb, var(--shadow) 42%, transparent);
   transform: translateY(-1px);
 }
-.agent-capability-label {
+.agent-tool-label {
   min-width: 0;
+  display: grid;
+  gap: 2px;
   overflow-wrap: anywhere;
   line-height: 1.35;
+}
+.agent-tool-label small {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 400;
 }
 .agent-icon-picker {
   display: grid;
@@ -224,7 +216,7 @@
   filter: drop-shadow(0 2px 5px var(--accent-shadow));
 }
 @media (max-width: 720px) {
-  .agent-capability-grid {
+  .agent-tools-grid {
     grid-template-columns: 1fr;
   }
 }

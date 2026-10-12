@@ -1,4 +1,5 @@
 import type { AgentEvent, AgentTool } from "@earendil-works/pi-agent-core";
+import { TOOL_NAME } from "../shared/tool-names";
 import type {
   Api,
   ImageContent,
@@ -10,21 +11,16 @@ import {
   AI_TEXT_CHUNK_TYPE,
   CHAT_PART_STATE,
   toolPartType,
-  type AgentCapabilities,
-  type AgentWorkspace,
   type AiStreamResponse,
   type ChatMessage,
-  type McpServerConfig,
-  type Skill,
+  type ChatSource,
   type UploadedAttachment,
 } from "../shared/types";
 import {
   base64FromDataUrl,
   isVisionImageMimeType,
 } from "../shared/attachments";
-import { storage } from "../shared/storage";
-import { renderMessageText } from "./attachment-messages";
-import { getUploadedAttachments } from "./message-helpers";
+import { getUploadedAttachments, renderMessageText } from "./message-helpers";
 import {
   assistantMessage,
   createProviderStream,
@@ -34,18 +30,23 @@ import {
 } from "./pi-provider";
 import { indexedDbArtifacts, type ArtifactStore } from "../shared/artifacts";
 import { createContextEngine } from "./context/engine";
-import { runsInParallel } from "./context/policy";
 import { createUsageMeter } from "./run-usage";
-import { createToolResolver } from "./provider-tools";
-import { runProviderTool } from "./provider-tool-runner";
-import { getMessageSources, latestUserMessageText } from "./provider-output";
-import { isToolError } from "./tool-utils";
+import { createToolSet } from "./tools/registry";
+import { runTool } from "./tools/run-tool";
+import type { RunContext } from "./tools/types";
 import {
   isQueuedMessage,
   postToSession,
   type QueuedUserMessage,
   type StreamSession,
 } from "./stream-sessions";
+
+// What a run is set up with; the runtime adds what it owns (session,
+// artifacts, helper model) to make the tools' RunContext.
+export type RunSetup = Omit<
+  RunContext,
+  "chatId" | "session" | "storeArtifact" | "readArtifact" | "askHelper"
+>;
 
 // Tools stay declared for the whole run so the cached prefix never changes.
 // Past the step limit, calls are answered with this instead of running.
@@ -58,14 +59,10 @@ export async function runPiAgent(options: {
   helperModel: ProviderModel;
   system: string;
   messages: ChatMessage[];
-  capabilities: AgentCapabilities;
+  setup: RunSetup;
   maxToolSteps: number;
   messageId?: string;
   attachmentRetryNotice?: string;
-  uploadedAttachments: UploadedAttachment[];
-  availableSkills: Skill[];
-  mcpServers: McpServerConfig[];
-  workspace?: AgentWorkspace;
   artifacts?: ArtifactStore;
 }) {
   const {
@@ -74,24 +71,18 @@ export async function runPiAgent(options: {
     helperModel,
     system,
     messages,
-    capabilities,
+    setup,
     maxToolSteps,
     attachmentRetryNotice,
-    uploadedAttachments,
-    availableSkills,
-    mcpServers,
-    workspace,
   } = options;
   const { agent, chatId } = session;
   const signal = session.abortController.signal;
   const post = (message: AiStreamResponse) => postToSession(session, message);
-  const preferences = await storage.preferences.get();
-  signal.throwIfAborted();
   const events = createEventHandler(post, options.messageId);
   const resolved = piModel(model);
   const stream = createProviderStream(
     model,
-    preferences.reasoningEffort,
+    setup.preferences.reasoningEffort,
     () => {
       if (!attachmentRetryNotice) return;
       const id = crypto.randomUUID();
@@ -107,19 +98,35 @@ export async function runPiAgent(options: {
       post({ type: "chunk", chunk: { type: "text-end", id } });
     },
   );
+  const askHelper = async (
+    helperSystem: string,
+    prompt: string,
+    abortSignal?: AbortSignal,
+  ) => {
+    const result = await requestText(
+      helperModel,
+      { system: helperSystem, prompt },
+      abortSignal,
+    );
+    events.recordUsage(result.usage);
+    return result.text;
+  };
+  const store = options.artifacts || indexedDbArtifacts;
+  const run: RunContext = {
+    ...setup,
+    chatId,
+    session,
+    askHelper,
+    storeArtifact: (label, text) => context.storeText(label, text),
+    readArtifact: (handle) => store.get(chatId, handle),
+  };
+  const toolSet = createToolSet(run);
   const context = createContextEngine({
     chatId,
-    store: options.artifacts || indexedDbArtifacts,
+    store,
     contextWindow: model.contextLength,
-    async summarize(system, prompt, abortSignal) {
-      const result = await requestText(
-        helperModel,
-        { system, prompt },
-        abortSignal,
-      );
-      events.recordUsage(result.usage);
-      return result.text;
-    },
+    summarize: askHelper,
+    compactArgs: (name) => !!toolSet.find(name)?.compactArgs,
     onCompacted: (summary) =>
       post({
         type: "chunk",
@@ -130,15 +137,6 @@ export async function runPiAgent(options: {
         },
       }),
   });
-  const resolver = createToolResolver({
-    capabilities,
-    uploadedAttachments,
-    availableSkills,
-    preferences,
-    latestUserText: latestUserMessageText(messages),
-    mcpServers,
-    workspace,
-  });
   // Read and written synchronously around each tool's await, so parallel
   // calls never assign the same source id twice.
   const sources = { current: getMessageSources(messages) };
@@ -146,48 +144,66 @@ export async function runPiAgent(options: {
   const tools = (): AgentTool[] =>
     maxToolSteps <= 0
       ? []
-      : resolver.availableTools().map((tool) => ({
-          name: tool.function.name,
-          label: tool.function.name,
-          description: tool.function.description || "",
-          parameters: tool.function.parameters as AgentTool["parameters"],
-          executionMode: runsInParallel(tool.function.name)
-            ? "parallel"
-            : "sequential",
+      : toolSet.declared().map((tool) => ({
+          name: tool.name,
+          label: tool.name,
+          description: tool.description,
+          parameters: tool.parameters as AgentTool["parameters"],
+          executionMode:
+            tool.readOnly || tool.parallel ? "parallel" : "sequential",
           async execute(toolCallId, params, toolSignal) {
-            const input = params as Record<string, unknown>;
-            const result = await runProviderTool({
-              toolName: tool.function.name,
-              toolCallId,
+            const input = (params || {}) as Record<string, unknown>;
+            const postPart = (
+              state: (typeof CHAT_PART_STATE)[keyof typeof CHAT_PART_STATE],
+              output?: Record<string, unknown>,
+            ) =>
+              post({
+                type: "chunk",
+                chunk: {
+                  type: toolPartType(tool.name),
+                  toolCallId,
+                  toolName: tool.name,
+                  state,
+                  input,
+                  output,
+                },
+              });
+            postPart(CHAT_PART_STATE.inputAvailable);
+            const outcome = await runTool(
+              tool,
               input,
-              session,
-              messageId: events.messageId,
-              uploadedAttachments,
-              availableSkills,
-              capabilities,
-              workspace,
+              {
+                run,
+                toolCallId,
+                messageId: events.messageId,
+                signal: toolSignal,
+                progress: (details) =>
+                  postPart(CHAT_PART_STATE.inputAvailable, details),
+              },
               sources,
-              loadedToolNames: resolver.loadedToolNames,
-              readArtifact: context.read,
-              signal: toolSignal,
-            });
-            const image = result.visionImage;
+            );
+            toolSignal?.throwIfAborted();
+            postPart(
+              outcome.isError
+                ? CHAT_PART_STATE.outputError
+                : CHAT_PART_STATE.outputAvailable,
+              outcome.output,
+            );
             const text = await context.acceptToolOutput({
               toolCallId,
-              toolName: tool.function.name,
+              toolName: tool.name,
               input,
-              text:
-                typeof result.modelOutput === "string"
-                  ? result.modelOutput
-                  : (JSON.stringify(result.modelOutput) ?? "null"),
+              text: outcome.text,
+              repeatable: !!tool.readOnly && tool.name !== TOOL_NAME.read,
             });
+            const image = outcome.image;
             return {
               content: [
                 { type: "text" as const, text },
                 ...(image ? [imageContent(image.dataUrl, image.type)] : []),
               ],
-              details: { output: result.output },
-              isError: isToolError(result.output),
+              details: { output: outcome.output },
+              isError: outcome.isError,
             };
           },
         }));
@@ -213,7 +229,7 @@ export async function runPiAgent(options: {
     if (steps > maxToolSteps + 1) return { action: "end" };
   };
   agent.prepareNextTurnWithContext = ({ context: next }) => {
-    // Loaded deferred tools are appended; nothing is ever removed mid-run.
+    // Loaded on-demand tools are appended; nothing is removed mid-run.
     const nextTools = tools();
     agent.state.tools = nextTools;
     return { context: { ...next, tools: nextTools } };
@@ -223,15 +239,7 @@ export async function runPiAgent(options: {
   const abort = () => agent.abort();
   signal.addEventListener("abort", abort, { once: true });
   try {
-    await agent.prompt(
-      piMessages(
-        resolved,
-        messages,
-        uploadedAttachments,
-        availableSkills,
-        workspace,
-      ),
-    );
+    await agent.prompt(piMessages(resolved, messages, setup.attachments));
     signal.throwIfAborted();
     if (agent.state.errorMessage) throw new Error(agent.state.errorMessage);
   } finally {
@@ -240,22 +248,21 @@ export async function runPiAgent(options: {
   }
 }
 
+function getMessageSources(messages: ChatMessage[]): ChatSource[] {
+  const latest = messages[messages.length - 1];
+  return Array.isArray(latest?.metadata?.sources)
+    ? (latest.metadata.sources as ChatSource[])
+    : [];
+}
+
 function piMessages(
   model: Model<Api>,
   messages: ChatMessage[],
   attachments: UploadedAttachment[],
-  skills: Skill[],
-  workspace?: AgentWorkspace,
 ): Message[] {
   return messages.map((message, index): Message => {
     const latest = index === messages.length - 1;
-    const text = renderMessageText(
-      message,
-      latest,
-      latest ? attachments : [],
-      latest ? skills : [],
-      latest ? workspace : undefined,
-    );
+    const text = renderMessageText(message, latest, latest ? attachments : []);
     if (message.role === "assistant")
       return {
         ...assistantMessage(model),

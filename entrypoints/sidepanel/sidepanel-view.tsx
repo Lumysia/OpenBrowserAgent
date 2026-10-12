@@ -235,7 +235,6 @@ export function SidepanelView({
             activeChatId={currentMeta?.id}
             unreadCompletedChatIds={unreadCompletedChatIds}
             agent={activeAgent}
-            preferences={preferences}
             onSetChats={onSetChats}
             onLoadChat={onLoadChat}
             onImportChat={onImportChat}

@@ -74,14 +74,6 @@ export const deDE: LocaleMessages = {
     openSubAgentChat: "Subagent-Chat öffnen",
     subAgentRunning: "Läuft",
     subAgentCompleted: "Abgeschlossen",
-    subAgentMissing: "Fehlt",
-    localExecutionBridgeStates: {
-      running: "Läuft",
-      done: "Fertig",
-      error: "Fehler",
-      missing: "Fehlt",
-      canceled: "Abgebrochen",
-    },
     questionWaiting: "Warten auf deine Antwort",
     questionSubmit: "Antworten senden",
     questionCustomPlaceholder: "Eigene Antwort eingeben...",
@@ -179,39 +171,6 @@ export const deDE: LocaleMessages = {
     running: "Läuft",
     done: "Fertig",
     error: "Fehler",
-    toolErrors: {
-      NO_ACTIVE_WEB_TAB_FOUND:
-        "Kein aktiver Webseiten-Tab gefunden. Öffnen oder fokussieren Sie einen normalen http(s)-Tab oder verwenden Sie eine bekannte Tab-ID.",
-      ACTIVE_TAB_NOT_WEB_PAGE:
-        "Der aktive Tab ist keine lesbare Webseite. Öffnen Sie zuerst eine http(s)-Seite.",
-      NO_TAB_IDS_PROVIDED: "Keine Tab-IDs angegeben.",
-      TAB_NOT_FOUND: "Der angeforderte Tab wurde nicht gefunden.",
-      NO_GROUPABLE_NORMAL_TABS:
-        "Keine Tabs in normalen Browserfenstern können gruppiert werden.",
-      UNKNOWN_TOOL: "Unbekanntes Tool: {tool}.",
-      MISSING_URL: "Eine URL ist erforderlich.",
-      UNKNOWN_NAVIGATION_TYPE: "Unbekannter Navigationstyp: {type}.",
-      TAB_HAS_NO_WINDOW: "Der Tab gehört zu keinem Browserfenster.",
-      NO_TEXT_PROVIDED: "Kein Text angegeben.",
-      TIMED_OUT_WAITING_FOR_TEXT:
-        "Zeitüberschreitung beim Warten auf den Text.",
-      TIMED_OUT_WAITING_FOR_SELECTOR:
-        "Zeitüberschreitung beim Warten auf den Selektor.",
-      TIMED_OUT_WAITING_FOR_CONDITION:
-        "Zeitüberschreitung beim Warten auf die Seitenbedingung.",
-      ELEMENT_NOT_TEXT_INPUT:
-        "Das Zielelement ist kein Eingabefeld, Textbereich oder bearbeitbarer Bereich.",
-      TARGET_ID_CANNOT_BE_FOCUSED:
-        "Dieses CDP-Ziel kann nicht als Browser-Tab fokussiert werden.",
-      CLOSE_BY_TARGET_ID_UNSUPPORTED:
-        "Schließen per CDP-Ziel-ID wird hier nicht unterstützt.",
-      RESIZE_BY_TARGET_ID_UNSUPPORTED:
-        "Größenänderung per CDP-Ziel-ID wird hier nicht unterstützt.",
-      ELEMENT_NOT_FOUND: "Das Zielelement wurde nicht gefunden.",
-      ELEMENT_HAS_NO_CLICKABLE_BOX:
-        "Das Zielelement hat keinen anklickbaren Bereich.",
-      MISSING_CODE: "JavaScript-Code ist erforderlich.",
-    },
     generatedImage: "Generiertes Bild",
     capturedTabImage: "Tab-Screenshot",
     mermaidPreview: "Mermaid-Diagrammvorschau",
@@ -223,114 +182,55 @@ export const deDE: LocaleMessages = {
     copyImage: "Bild kopieren",
     copyPrompt: "Anweisung kopieren",
     tool: {
-      manageTabs: {
-        running: "Tabs werden verwaltet",
-        done: "Tabs verwaltet",
-        found: "{count} offene Tabs gefunden",
+      tabs: { running: "Tabs werden verwaltet", done: "Tabs verwaltet" },
+      snapshot: {
+        running: "Seitenstruktur wird gelesen",
+        done: "Seitenstruktur gelesen",
       },
-      cdpInput: {
-        running: "CDP-Eingabe wird gesendet",
-        done: "CDP-Eingabe gesendet",
+      find: { running: "Seite wird durchsucht", done: "Seite durchsucht" },
+      read: { running: "Wird gelesen", done: "Gelesen" },
+      extract: {
+        running: "Antwort wird extrahiert",
+        done: "Antwort extrahiert",
       },
-      cdpPage: {
-        running: "CDP-Seite wird gesteuert",
-        done: "CDP-Seite gesteuert",
-      },
-      cdpDiagnostics: {
-        running: "CDP-Diagnose wird gelesen",
-        done: "CDP-Diagnose gelesen",
-      },
-      wait: { running: "Warten", done: "Gewartet" },
-      getCurrentTime: { running: "Zeit wird geprüft", done: "Zeit geprüft" },
-      getCurrentTab: {
-        running: "Aktueller Tab wird gelesen",
-        done: "Aktueller Tab gelesen",
-      },
-      captureVisibleTab: { running: "Tab wird erfasst", done: "Tab erfasst" },
-      downloadAllImagesInTab: {
-        running: "Bilder werden heruntergeladen",
-        done: "Bilder heruntergeladen",
-      },
-      question: { running: "Frage wird gestellt", done: "Frage beantwortet" },
-      loadTools: {
-        running: "Tools werden geladen",
-        done: "Tools geladen",
-        found: "{count} Tools geladen",
-      },
-      manageSkills: {
-        running: "Skills werden verwaltet",
-        done: "Skills verwaltet",
-        found: "{count} Skills gefunden",
-      },
-      workspaceFiles: {
-        running: "Workspace-Dateien werden bearbeitet",
-        done: "Workspace-Dateien bearbeitet",
-      },
-      manageMemory: {
-        running: "Speicher wird verwaltet",
-        done: "Speicher verwaltet",
-      },
-      manageChatHistory: {
-        running: "Chatverlauf wird gelesen",
-        done: "Chatverlauf gelesen",
-      },
-      manageMcpServers: {
-        running: "MCP-Server werden verwaltet",
-        done: "MCP-Server verwaltet",
-      },
-      manageLocalExecutionBridges: {
-        running: "Execution Bridges werden verwaltet",
-        done: "Execution Bridges verwaltet",
-        found: "{count} Execution Bridges gefunden",
-      },
-      inspectPage: {
-        running: "Seite wird geprüft",
-        done: "Seite geprüft",
-        found: "{count} Elemente gefunden",
-      },
-      mutatePage: { running: "Seite wird geändert", done: "Seite geändert" },
-      downloadTabToMarkdown: {
-        running: "Markdown wird heruntergeladen",
-        done: "Markdown heruntergeladen",
-      },
-      generateImage: { running: "Bild wird generiert", done: "Bild generiert" },
-      readFileFromUrl: { running: "Datei wird gelesen", done: "Datei gelesen" },
-      read: {
-        running: "Gespeicherte Ausgabe wird gelesen",
-        done: "Gespeicherte Ausgabe gelesen",
-      },
-      readUploadedAttachment: {
-        running: "Anhang wird gelesen",
-        done: "Anhang gelesen",
-      },
-      cdpExecuteArbitraryJavaScript: {
-        running: "Benutzerdefiniertes Skript wird ausgeführt",
-        done: "Benutzerdefiniertes Skript ausgeführt",
-      },
-      cdpTakeScreenshot: {
+      act: { running: "Seite wird bedient", done: "Seite bedient" },
+      editPage: { running: "Seite wird bearbeitet", done: "Seite bearbeitet" },
+      webSearch: { running: "Websuche läuft", done: "Websuche abgeschlossen" },
+      screenshot: {
         running: "Screenshot wird erstellt",
         done: "Screenshot erstellt",
       },
-      startSubAgent: {
-        running: "Subagent wird gestartet",
-        done: "Subagent gestartet",
+      ask: { running: "Frage wird gestellt", done: "Frage beantwortet" },
+      toolSearch: { running: "Tools werden geladen", done: "Tools geladen" },
+      export: { running: "Wird exportiert", done: "Exportiert" },
+      skills: {
+        running: "Skills werden aktualisiert",
+        done: "Skills aktualisiert",
       },
-      getSubAgentStatus: {
-        running: "Subagent wird geprüft",
-        done: "Subagent geprüft",
+      workspace: {
+        running: "Arbeitsbereich wird aktualisiert",
+        done: "Arbeitsbereich aktualisiert",
       },
-      startLocalExecutionBridge: {
-        running: "Lokaler Befehl wird gestartet",
-        done: "Lokaler Befehl beendet",
+      chatHistory: {
+        running: "Chatverlauf wird gelesen",
+        done: "Chatverlauf gelesen",
       },
-      getLocalExecutionBridgeStatus: {
-        running: "Lokaler Befehl wird geprüft",
-        done: "Lokaler Befehl geprüft",
+      subAgent: { running: "Sub-Agent läuft", done: "Sub-Agent fertig" },
+      mcpServers: {
+        running: "MCP-Server werden verwaltet",
+        done: "MCP-Server verwaltet",
       },
-      cancelLocalExecutionBridge: {
-        running: "Lokaler Befehl wird abgebrochen",
-        done: "Lokaler Befehl abgebrochen",
+      localCommand: {
+        running: "Lokaler Befehl läuft",
+        done: "Lokaler Befehl ausgeführt",
       },
+      localBridges: {
+        running: "Ausführungsbrücken werden verwaltet",
+        done: "Ausführungsbrücken verwaltet",
+      },
+      generateImage: { running: "Bild wird erzeugt", done: "Bild erzeugt" },
+      runScript: { running: "Skript läuft", done: "Skript ausgeführt" },
+      devtools: { running: "Diagnose läuft", done: "Diagnose abgeschlossen" },
     },
   },
   options: {
@@ -365,44 +265,54 @@ export const deDE: LocaleMessages = {
       wrench: "Tools",
       fileText: "Dokument",
     },
-    agentCapabilities: "Agentenfähigkeiten",
-    agentCapabilitiesDescription:
-      "Wähle aus, welche Tools und welchen Kontext dieser Agent verwenden darf.",
-    builtinAgentCapabilitiesDescription:
-      "Die Fähigkeiten integrierter Agenten werden nur angezeigt und können nicht bearbeitet werden.",
-    agentCapabilityGroups: {
-      browser: "Browser",
-      builtinTools: "Integrierte Tools und Kontext",
-      skillsAndMcp: "Skills und MCP",
-      workspaceAndMemory: "Arbeitsbereich und Speicher",
-      chatHistory: "Chatverlauf",
+    agentPrompt: "Anweisungen",
+    agentPromptPlaceholder:
+      "Wie sich dieser Agent verhalten soll, wofür er da ist, was er meiden soll.",
+    agentModel: "Modell",
+    agentModelDefault: "Im Chat gewähltes Modell",
+    agentTools: "Tools",
+    agentToolsDescription:
+      "Wählen Sie, was dieser Agent nutzen darf. Zusätzliche Tools werden nur bei Bedarf geladen.",
+    builtinAgentToolsDescription:
+      "Die Tools integrierter Agenten werden nur angezeigt und sind nicht bearbeitbar.",
+    agentWorkspaceToggle: "Privater Arbeitsbereich",
+    agentWorkspaceToggleDescription:
+      "Dateien und Gedächtnis, die über Chats hinweg bleiben.",
+    agentToolGroups: {
+      pages: "Seiten lesen",
+      browser: "Browser bedienen",
+      web: "Websuche",
+      images: "Bilder erzeugen",
+      skills: "Skills",
+      workspace: "Arbeitsbereich und Gedächtnis",
+      history: "Chatverlauf",
+      subAgents: "Sub-Agents",
+      mcp: "MCP",
+      localExecution: "Lokale Befehle",
+      scripts: "Seiten-JavaScript",
+      devtools: "Entwicklerdiagnose",
     },
-    agentCapabilityLabels: {
-      browserAutomation: "Browser bedienen",
-      browserTools: "Integrierte Tools verwenden",
-      subAgents: "Subagenten starten",
-      localExecutionBridges: "Lokale Ausführungs-Bridges verwenden",
-      deferredBrowserTools: "Erweiterte Browseraktionen laden",
-      cdpTools: "CDP-Tools",
-      javascriptExecution: "Seiten-JavaScript ausführen",
-      mcpTools: "MCP-Tools",
-      mcpManagement: "MCP-Verwaltung",
-      skillTools: "Skill-Tools",
-      skillCreation: "Skill-Erstellung",
-      workspaceRead: "Arbeitsbereich lesen",
-      workspaceWrite: "Arbeitsbereich schreiben",
-      memoryRead: "Speicher lesen",
-      memoryWrite: "Speicher schreiben",
-      chatHistoryRead: "Chatverlauf lesen",
-      chatHistoryWrite: "Chatverlauf schreiben",
-      imageGeneration: "Bilder erzeugen",
-      currentTime: "Aktuelle Zeit lesen",
-      fileUrlRead: "URL- und Dateilinks lesen",
+    agentToolGroupDescriptions: {
+      pages: "Seitenstruktur, Suche, Lesen und Extrahieren; Screenshots.",
+      browser:
+        "Tabs verwalten, klicken, tippen, Seiten bearbeiten, Dateien exportieren.",
+      web: "Mit der Standardsuchmaschine im Web suchen.",
+      images: "Bilder erstellen und bearbeiten (wenn in Anbietern aktiviert).",
+      skills: "Aktivierte Skills nutzen, erstellen und verbessern.",
+      workspace:
+        "Eigene Dateien und Gedächtnis bearbeiten (Arbeitsbereich nötig).",
+      history: "Gespeicherte Chats suchen, lesen und löschen.",
+      subAgents: "Aufgaben an Agenten in eigenen Chats delegieren.",
+      mcp: "MCP-Server und ihre Tools nutzen und verwalten.",
+      localExecution:
+        "Befehle über eine Ausführungsbrücke auf diesem Computer ausführen.",
+      scripts: "Eigenes JavaScript in Seiten ausführen. Standardmäßig aus.",
+      devtools: "Netzwerkressourcen und Geräteemulation.",
     },
     deleteAgent: "Agent löschen",
     agentWorkspace: "Agenten-Arbeitsbereich",
     agentWorkspaceDescription:
-      "Private Textdateien dieses Agenten. SOUL.md definiert das Verhalten, AGENTS.md die Arbeitsbereichsregeln, MEMORY.md und USER.md werden als eingefrorener Kontext eingefügt, und NOTES.md bleibt bei Bedarf verfügbar.",
+      "Private Textdateien dieses Agenten. MEMORY.md und USER.md sieht der Agent in jedem Chat; andere Dateien liest er bei Bedarf.",
     agentWorkspaceNewFile: "Neue Arbeitsbereichsdatei",
     agentWorkspaceConflict:
       "Diese Datei wurde während der Bearbeitung geändert. Öffnen Sie sie erneut, um vor dem Speichern die aktuelle Version zu prüfen.",
@@ -642,18 +552,9 @@ export const deDE: LocaleMessages = {
       "Aktiviert temporäre Konsolenlogs für Stream-, Tool- und Assistant-Reihenfolge-Diagnosen.",
     debugLoggingEnabled: "Diagnose-Konsolenlogs aktivieren",
     debugToolsTitle: "Registrierte Tools",
-    debugToolsDescription: "Aktuelle Browser-Tool-Registry ({count} Tools).",
-    debugToolAvailable: "Verfügbar",
-    debugToolUnavailable: "Nicht verfügbar",
+    debugToolsDescription: "Tools des gewählten Agenten ({count}).",
+    debugToolCore: "Immer geladen",
+    debugToolOnDemand: "Bei Bedarf geladen",
     debugToolRequired: "Erforderlich",
-    debugToolCapabilityEnabled:
-      "Gesteuert durch Agentenfähigkeit: {capability}.",
-    debugToolCapabilityDisabled: "Agentenfähigkeit aktivieren: {capability}.",
-    debugToolImageGenerationDisabled: "Bilderzeugung bei Anbietern aktivieren.",
-    debugToolSkillsDisabled:
-      "Benötigt aktivierte Fähigkeiten und die erforderliche Agentenfähigkeit.",
-    debugToolAttachmentsRequired:
-      "Benötigt hochgeladene Anhänge in der aktuellen Nachricht.",
-    debugToolStepsDisabled: "Max Tool Steps ist 0.",
   },
 };

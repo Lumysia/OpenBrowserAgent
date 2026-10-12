@@ -20,6 +20,8 @@ export type StreamSession = {
   events: AiStreamResponse[];
   nextSequence: number;
   ports: Set<chrome.runtime.Port>;
+  // In-process listeners, such as the background owner of a sub-agent chat.
+  observers: Set<(event: AiStreamResponse) => void>;
   answers: Map<string, (answers: unknown) => void>;
   // Created with the session so messages queued before the run starts are
   // kept. runPiAgent installs the real model and stream function.
@@ -40,6 +42,7 @@ export function createStreamSession(chatId: string) {
     events: [],
     nextSequence: 1,
     ports: new Set(),
+    observers: new Set(),
     answers: new Map(),
     agent: new Agent({
       streamFn: () => {
@@ -232,6 +235,7 @@ function releaseSession(session: StreamSession) {
   session.ports.forEach((port) => portSessions.delete(port));
   session.ports.clear();
   session.answers.clear();
+  session.observers.clear();
   session.events.length = 0;
   session.agent.clearAllQueues();
   updateKeepalive();
@@ -247,6 +251,7 @@ export function postToSession(
   const event = { ...message, sequence: session.nextSequence++ };
   session.events.push(event);
   session.ports.forEach((port) => post(port, event));
+  session.observers.forEach((observe) => observe(event));
 }
 
 export function post(port: chrome.runtime.Port, message: AiStreamResponse) {

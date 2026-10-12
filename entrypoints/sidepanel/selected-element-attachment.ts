@@ -18,7 +18,7 @@ function selectedElementImageAttachment(
   if (!element?.imageDataUrl) return undefined;
   const type = element.imageDataUrl.match(/^data:([^;,]+)/)?.[1] || "image/png";
   return {
-    id: `selected-element-image-${element.aiId || crypto.randomUUID()}`,
+    id: `selected-element-image-${element.ref || crypto.randomUUID()}`,
     name: element.imageAlt || element.tagName || "selected-image",
     type,
     size: dataUrlSize(element.imageDataUrl),

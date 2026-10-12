@@ -1,84 +1,61 @@
-import {
-  ATTACHMENT_CONTEXT_TAG,
-  ATTACHMENT_KIND,
-  ATTACHMENT_READ_NOTE,
-} from "../shared/attachments";
-import {
-  type AgentWorkspace,
-  type ChatMessage,
-  type ChatSource,
-  type Skill,
-  type UploadedAttachment,
-} from "../shared/types";
-import { getSkillInstruction } from "../shared/skills";
+import { ATTACHMENT_CONTEXT_TAG, ATTACHMENT_KIND } from "../shared/attachments";
 import { renderSourcesForPrompt } from "../shared/chat-sources";
-import { renderWorkspaceManifest } from "../shared/workspace";
+import { getSkillInstruction } from "../shared/skills";
+import type {
+  ChatMessage,
+  ChatSource,
+  Skill,
+  UploadedAttachment,
+} from "../shared/types";
 
-export function renderUserMessageWithContext(
+// Earlier turns are replayed as plain text; the latest user message also
+// carries its context: skills the user picked, selected tabs and elements,
+// attachments, and sources that can be cited again.
+export function renderMessageText(
   message: ChatMessage,
-  requestAttachments: UploadedAttachment[] = [],
-  availableSkills: Skill[] = [],
-  workspace?: AgentWorkspace,
+  isLatest: boolean,
+  requestAttachments: UploadedAttachment[],
 ) {
-  if (message.metadata?.internalRetry) {
-    return `<internal_instruction>
-${message.content}
-</internal_instruction>`;
-  }
+  if (isLatest && message.role === "user")
+    return renderLatestUserMessage(message, requestAttachments);
+  const attachments = renderAttachmentContext(getUploadedAttachments(message));
+  return attachments ? `${message.content}\n\n${attachments}` : message.content;
+}
 
-  const context =
+function renderLatestUserMessage(
+  message: ChatMessage,
+  requestAttachments: UploadedAttachment[],
+) {
+  if (message.metadata?.internalRetry)
+    return `<internal_instruction>\n${message.content}\n</internal_instruction>`;
+  const skills = Array.isArray(message.metadata?.skills)
+    ? (message.metadata.skills as Skill[])
+    : [];
+  const sources = Array.isArray(message.metadata?.sources)
+    ? (message.metadata.sources as ChatSource[])
+    : [];
+  const context = [
     typeof message.metadata?.context === "string"
       ? message.metadata.context
-      : "";
-  const skills = messageSkills(message.metadata);
-  const attachments = requestAttachments.length
-    ? requestAttachments
-    : getUploadedAttachments(message);
-  return `${
+      : "",
+    renderAttachmentContext(
+      requestAttachments.length
+        ? requestAttachments
+        : getUploadedAttachments(message),
+    ),
+    renderSourcesForPrompt(sources),
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+  return [
     skills.length
-      ? `<instruction>
-${skills.map((skill) => getSkillInstruction(skill)).join("\n\n")}
-</instruction>
-
-`
-      : ""
-  }<message_context>
-
-${context}
-
-${renderAttachmentContext(attachments)}
-
-${renderSkillToolHint(availableSkills)}
-
-${renderWorkspaceToolHint(workspace)}
-
-${renderSourcesForPrompt(getMessageSources(message))}
-
-</message_context>
-
-<message>
-${message.content}
-</message>`;
-}
-
-function messageSkills(metadata: Record<string, unknown> | undefined) {
-  return Array.isArray(metadata?.skills) ? (metadata.skills as Skill[]) : [];
-}
-
-export function renderSkillToolHint(skills: Skill[]) {
-  if (!skills.length) return "";
-  return `<skill_tools>
-Skills hold instructions for specialized workflows. When a task may need one, load manageSkills and call it with operation="list". Use manageSkills create/updateFile/patchFile only for broadly reusable improvements; never store secrets or one-off task details.
-</skill_tools>`;
-}
-
-export function renderWorkspaceToolHint(workspace: AgentWorkspace | undefined) {
-  const manifest = renderWorkspaceManifest(workspace);
-  if (!manifest) return "";
-  return `${manifest}
-<workspace_tools>
-Use workspace tools to read, search, update, or delete these private agent files when they are relevant. Store stable task notes or agent state here, not secrets.
-</workspace_tools>`;
+      ? `<instruction>\n${skills.map(getSkillInstruction).join("\n\n")}\n</instruction>`
+      : "",
+    context ? `<message_context>\n${context}\n</message_context>` : "",
+    `<message>\n${message.content}\n</message>`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 export function getUploadedAttachments(message: ChatMessage) {
@@ -87,31 +64,14 @@ export function getUploadedAttachments(message: ChatMessage) {
     : [];
 }
 
-function getMessageSources(message: ChatMessage): ChatSource[] {
-  return Array.isArray(message.metadata?.sources)
-    ? (message.metadata.sources as ChatSource[])
-    : [];
-}
-
-export function renderAttachmentContext(attachments: UploadedAttachment[]) {
+function renderAttachmentContext(attachments: UploadedAttachment[]) {
   if (!attachments.length) return "";
-  return `<${ATTACHMENT_CONTEXT_TAG}>
-${attachments
-  .map((attachment) => {
-    const header = `- id: ${attachment.id}\n  name: ${attachment.name}\n  type: ${attachment.type || "unknown"}\n  size: ${attachment.size} bytes\n  kind: ${attachment.kind}`;
-    if (attachment.kind === ATTACHMENT_KIND.text && attachment.text)
-      return `${header}\n  note: ${ATTACHMENT_READ_NOTE.text}`;
-    if (attachment.kind === ATTACHMENT_KIND.image)
-      return `${header}\n  note: ${ATTACHMENT_READ_NOTE.image}`;
-    if (
-      attachment.kind === ATTACHMENT_KIND.audio ||
-      attachment.kind === ATTACHMENT_KIND.video
-    )
-      return `${header}\n  note: ${ATTACHMENT_READ_NOTE.media}`;
-    if (attachment.kind === ATTACHMENT_KIND.document)
-      return `${header}\n  note: ${ATTACHMENT_READ_NOTE.document}`;
-    return `${header}\n  note: ${ATTACHMENT_READ_NOTE.binary}`;
-  })
-  .join("\n\n")}
-</${ATTACHMENT_CONTEXT_TAG}>`;
+  return `<${ATTACHMENT_CONTEXT_TAG}>\n${attachments
+    .map((attachment) => {
+      const readable =
+        attachment.kind === ATTACHMENT_KIND.text ||
+        attachment.kind === ATTACHMENT_KIND.image;
+      return `- attachment:${attachment.id} ${attachment.name} (${attachment.type || "unknown"}, ${attachment.size} bytes)${readable ? "" : " — not readable as text"}`;
+    })
+    .join("\n")}\n</${ATTACHMENT_CONTEXT_TAG}>`;
 }

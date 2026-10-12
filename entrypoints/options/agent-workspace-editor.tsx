@@ -4,7 +4,6 @@ import type { Messages } from "../../src/shared/i18n";
 import type { AgentWorkspace } from "../../src/shared/types";
 import {
   deleteWorkspaceFile,
-  isWorkspaceUserEditableFile,
   normalizeWorkspacePath,
   upsertWorkspaceFile,
   workspaceTotalChars,
@@ -52,7 +51,7 @@ export function AgentWorkspaceEditor({
 
   function startEdit(path: string) {
     const content = fileContent(workspace.files, path);
-    if (content === undefined || !isWorkspaceUserEditableFile(path)) return;
+    if (content === undefined) return;
     setDraft(
       draft?.originalPath === path
         ? undefined
@@ -85,7 +84,6 @@ export function AgentWorkspaceEditor({
   async function createFile() {
     const path = normalizeWorkspacePath(newPath);
     if (!path.ok) return setError(path.error);
-    if (!isWorkspaceUserEditableFile(path.path)) return;
     setNewPath("");
     // An existing path opens that file rather than replacing it with "".
     if (fileContent(workspace.files, path.path) !== undefined) {
@@ -111,7 +109,6 @@ export function AgentWorkspaceEditor({
     if (!submitted) return;
     const path = normalizeWorkspacePath(submitted.path);
     if (!path.ok) return setError(path.error);
-    if (!isWorkspaceUserEditableFile(path.path)) return;
     const saved = await save((current) => {
       if (
         fileContent(current.files, submitted.originalPath) !==
@@ -141,7 +138,6 @@ export function AgentWorkspaceEditor({
   }
 
   async function deleteFile(path: string) {
-    if (!isWorkspaceUserEditableFile(path)) return;
     const shown = fileContent(workspace.files, path);
     const deleted = await save((current) =>
       fileContent(current.files, path) === shown
@@ -196,22 +192,18 @@ export function AgentWorkspaceEditor({
                         </small>
                       </span>
                       <div className="option-file-actions">
-                        {isWorkspaceUserEditableFile(file.path) ? (
-                          <>
-                            <SkillFileActionButton
-                              label={t.common.edit}
-                              onClick={() => startEdit(file.path)}
-                            >
-                              <Pencil size={14} />
-                            </SkillFileActionButton>
-                            <SkillFileActionButton
-                              label={t.common.delete}
-                              onClick={() => deleteFile(file.path)}
-                            >
-                              <Trash2 size={14} />
-                            </SkillFileActionButton>
-                          </>
-                        ) : null}
+                        <SkillFileActionButton
+                          label={t.common.edit}
+                          onClick={() => startEdit(file.path)}
+                        >
+                          <Pencil size={14} />
+                        </SkillFileActionButton>
+                        <SkillFileActionButton
+                          label={t.common.delete}
+                          onClick={() => deleteFile(file.path)}
+                        >
+                          <Trash2 size={14} />
+                        </SkillFileActionButton>
                       </div>
                     </div>
                     {draft?.originalPath === file.path ? (

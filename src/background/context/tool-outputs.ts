@@ -1,17 +1,14 @@
 import { estimateTextTokens } from "@earendil-works/pi-ai/utils/estimate";
 import type { ArtifactStore } from "../../shared/artifacts";
-import { BROWSER_TOOL_NAME } from "../../shared/browser-tools";
-import { CONTEXT_POLICY, isRepeatGuarded } from "./policy";
+import { CONTEXT_POLICY, tokenChars } from "./policy";
 
-const CHARS_PER_TOKEN = 3.5;
 const LABEL_KEYS = [
-  "operation",
+  "action",
   "tabId",
+  "ref",
   "url",
   "query",
-  "selector",
-  "handle",
-  "attachmentId",
+  "source",
   "path",
   "name",
 ];
@@ -25,24 +22,22 @@ export function createToolOutputs(chatId: string, store: ArtifactStore) {
   const outputs = new Map<string, Output>();
   const repeats = new Map<string, { text: string; toolCallId: string }>();
 
+  async function storeText(label: string, text: string) {
+    const handle = `art-${crypto.randomUUID().slice(0, 8)}`;
+    await store.put({ chatId, handle, label, text, createdAt: Date.now() });
+    return handle;
+  }
+
   async function persist(toolCallId: string) {
     const output = outputs.get(toolCallId);
     if (!output) return undefined;
-    if (output.handle) return output.handle;
-    const handle = `art-${crypto.randomUUID().slice(0, 8)}`;
-    await store.put({
-      chatId,
-      handle,
-      label: output.label,
-      text: output.text,
-      createdAt: Date.now(),
-    });
-    output.handle = handle;
-    return handle;
+    output.handle ||= await storeText(output.label, output.text);
+    return output.handle;
   }
 
   return {
     persist,
+    store: storeText,
     label: (toolCallId: string) => outputs.get(toolCallId)?.label,
     // What the model receives for a finished call.
     async accept({
@@ -50,70 +45,41 @@ export function createToolOutputs(chatId: string, store: ArtifactStore) {
       toolName,
       input,
       text,
+      repeatable,
     }: {
       toolCallId: string;
       toolName: string;
       input: Record<string, unknown>;
       text: string;
+      // Read-only calls: an identical repeat with identical output is
+      // answered with a reference to the earlier output.
+      repeatable: boolean;
     }) {
       outputs.set(toolCallId, {
         label: outputLabel(toolName, input, text),
         text,
       });
-      if (isRepeatGuarded(toolName, input)) {
+      if (repeatable) {
         const key = `${toolName}:${stableJson(input)}`;
         const previous = repeats.get(key);
         repeats.set(key, { text, toolCallId });
         if (previous?.text === text) {
           const handle = await persist(previous.toolCallId);
-          return `Unchanged since ${handle}: this call returned exactly the same output as the earlier identical call, so the page or data has not changed. Use read with handle "${handle}" to see it again.`;
+          return `Unchanged since ${handle}: this call returned exactly the same output as the earlier identical call, so the page or data has not changed. Use read with source "${handle}" to see it again.`;
         }
       }
-      // `read` output is already bounded to one slice of a stored output.
-      if (
-        toolName === BROWSER_TOOL_NAME.read ||
-        estimateTextTokens(text) <= CONTEXT_POLICY.toolOutputCapTokens
-      )
+      if (estimateTextTokens(text) <= CONTEXT_POLICY.toolOutputCapTokens)
         return text;
       const handle = await persist(toolCallId);
-      const preview = text.slice(
+      // Cut at a line end so no line (and no ref) is shown half.
+      const cut = text.slice(0, tokenChars(CONTEXT_POLICY.toolOutputCapTokens));
+      const preview = cut.slice(
         0,
-        capChars(CONTEXT_POLICY.toolOutputCapTokens),
+        Math.max(cut.lastIndexOf("\n"), cut.length / 2),
       );
-      return `${preview}\n[Output truncated: showed ${preview.length} of ${text.length} characters. The full output is stored as "${handle}". Continue with read handle="${handle}" offset=${preview.length}, or make a narrower request.]`;
+      return `${preview}\n[Output truncated: showed ${preview.length} of ${text.length} characters. The full output is stored as "${handle}": continue with read source="${handle}" offset=${preview.length}, or make a narrower request (find, a ref, or a smaller range).]`;
     },
   };
-}
-
-export async function readArtifact(
-  store: ArtifactStore,
-  chatId: string,
-  input: Record<string, unknown>,
-) {
-  const handle = String(input.handle || "").trim();
-  const artifact = handle ? await store.get(chatId, handle) : undefined;
-  if (!artifact)
-    return {
-      error: `No stored output "${handle}" in this chat. Use a handle from a truncated, masked or unchanged tool result.`,
-    };
-  const total = artifact.text.length;
-  const offset = Math.min(
-    total,
-    Math.max(0, Math.trunc(Number(input.offset) || 0)),
-  );
-  const maxChars = capChars(CONTEXT_POLICY.readMaxTokens);
-  const limit = Math.min(
-    maxChars,
-    Math.max(1, Math.trunc(Number(input.limit) || maxChars)),
-  );
-  const end = Math.min(total, offset + limit);
-  const position =
-    end < total ? `continue with offset=${end}` : "end of output";
-  return `[${handle}: ${artifact.label} | characters ${offset}-${end} of ${total}; ${position}]\n${artifact.text.slice(offset, end)}`;
-}
-
-function capChars(tokens: number) {
-  return Math.floor(tokens * CHARS_PER_TOKEN);
 }
 
 // Tool name plus the arguments and output fields that identify the source.
@@ -131,13 +97,16 @@ function outputLabel(
   return [toolName, ...args, ...source].join(" ").slice(0, 300);
 }
 
+// Page tools start with "Tab 12: Title | URL"; JSON results may carry a
+// title and URL.
 function outputSource(text: string) {
+  const header = text.match(/^Tab \d+: .*$/m)?.[0];
+  if (header) return [short(header)];
   try {
     const value = JSON.parse(text);
-    const page = Array.isArray(value?.pages) ? value.pages[0] : value;
     return ["title", "url"].flatMap((key) =>
-      typeof page?.[key] === "string" && page[key]
-        ? [`${key}=${short(page[key])}`]
+      typeof value?.[key] === "string" && value[key]
+        ? [`${key}=${short(value[key])}`]
         : [],
     );
   } catch {

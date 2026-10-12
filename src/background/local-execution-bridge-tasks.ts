@@ -1,4 +1,3 @@
-import { delay } from "../shared/cancellation";
 import { resolveLocalExecutionBridge } from "../shared/local-execution-bridges";
 import { storage } from "../shared/storage";
 import type {
@@ -21,6 +20,7 @@ type Task = {
   updatedAt: number;
   port?: chrome.runtime.Port;
   cleanup?: () => void;
+  settled?: () => void;
 };
 const tasks = new Map<string, Task>();
 const EVENT_LIMIT = 80;
@@ -34,7 +34,7 @@ export function bridgeTaskCounts() {
   return { activeTaskCount: taskStates.running || 0, taskStates };
 }
 
-export async function startLocalExecutionBridge(
+async function startTask(
   input: Record<string, unknown>,
   context?: { chatId?: string; messageId?: string; toolCallId?: string },
   workspace?: AgentWorkspace,
@@ -143,33 +143,40 @@ export async function startLocalExecutionBridge(
   return status(task.taskId);
 }
 
-export async function getLocalExecutionBridgeStatus(
+const DEFAULT_COMMAND_TIMEOUT_MS = 10 * 60_000;
+const MAX_COMMAND_TIMEOUT_MS = 30 * 60_000;
+
+// Runs one command and resolves when it finishes, fails, times out or the
+// run is stopped (which cancels it).
+export async function runLocalCommand(
   input: Record<string, unknown>,
+  context: { chatId?: string; messageId?: string; toolCallId?: string },
+  workspace?: AgentWorkspace,
   signal?: AbortSignal,
 ) {
-  const taskId = text(input.taskId);
-  const timeout = Number(input.timeoutMs);
-  const until =
-    Date.now() +
-    (Number.isFinite(timeout)
-      ? Math.min(30 * 60_000, Math.max(0, timeout))
-      : 60_000);
-  while (
-    input.wait === true &&
-    tasks.get(taskId)?.state === "running" &&
-    Date.now() < until
-  )
-    await delay(Math.min(500, until - Date.now()), signal);
-  return status(taskId);
-}
-
-export async function cancelLocalExecutionBridge(
-  input: Record<string, unknown>,
-) {
-  const taskId = text(input.taskId);
-  const task = tasks.get(taskId);
-  if (task) cancelTask(task);
-  return status(taskId);
+  const started = await startTask(input, context, workspace, signal);
+  const task = tasks.get(String((started as { taskId?: string }).taskId || ""));
+  if (!task) return started;
+  const requested = Number(input.timeoutMs);
+  const timeout = Math.min(
+    MAX_COMMAND_TIMEOUT_MS,
+    Number.isFinite(requested) && requested > 0
+      ? requested
+      : DEFAULT_COMMAND_TIMEOUT_MS,
+  );
+  await new Promise<void>((resolve) => {
+    if (task.state !== "running") return resolve();
+    const timer = setTimeout(() => {
+      cancelTask(task);
+      task.error = `Timed out after ${Math.round(timeout / 1000)} s.`;
+    }, timeout);
+    task.settled = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+  });
+  signal?.throwIfAborted();
+  return status(task.taskId);
 }
 
 // Disconnecting closes the host's stdin; the host then kills every task's
@@ -220,6 +227,7 @@ function finish(task: Task, state: Task["state"], error?: string) {
   task.updatedAt = Date.now();
   task.cleanup?.();
   task.cleanup = undefined;
+  task.settled?.();
 }
 
 function status(taskId: string) {

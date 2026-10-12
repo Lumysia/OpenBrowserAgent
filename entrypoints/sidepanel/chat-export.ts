@@ -1,7 +1,4 @@
-import { browserToolsForPrompt } from "../../src/background/tool-prompt-selection";
-import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
-import { usesWorkspaceCapabilities } from "../../src/shared/agents";
-import { createSystemPrompt } from "../../src/shared/system-prompt";
+import { describeRun } from "../../src/shared/run-description";
 import {
   CHAT_PART_STATE,
   isToolPartType,
@@ -12,7 +9,6 @@ import type {
   ChatMessage,
   Agent,
   ChatPart,
-  Preferences,
   RunMetrics,
 } from "../../src/shared/types";
 
@@ -39,32 +35,20 @@ type OpenAiImportPayload = {
   sources?: unknown;
 };
 
-export function exportChatAsOpenAiJson(
+// The system prompt and tools are the ones a new run of the agent starts
+// with today, as the background builds them.
+export async function exportChatAsOpenAiJson(
   chat: Chat | undefined,
   agent: Agent,
-  preferences?: Preferences,
 ) {
   if (!chat) return;
-  const imageGenerationEnabled = !!preferences?.imageGenerationEnabled;
-  const hasWorkspace = usesWorkspaceCapabilities(agent.capabilities);
+  const run = await describeRun(agent.id);
   const payload = {
     messages: [
-      {
-        role: "system" as const,
-        content: createSystemPrompt({
-          capabilities: agent.capabilities,
-          imageGenerationEnabled,
-          agent,
-        }),
-      },
+      { role: "system" as const, content: run.system },
       ...chat.messages.flatMap(toOpenAiMessages),
     ],
-    tools: browserToolsForPrompt({
-      capabilities: agent.capabilities,
-      hasSkills: true,
-      hasWorkspace,
-      imageGenerationEnabled,
-    }),
+    tools: run.tools,
     sources: chat.sources || [],
     metrics: exportMetrics(chat),
     parallel_tool_calls: true,
@@ -153,7 +137,8 @@ function assistantImportParts(
   for (const call of toolCalls) {
     const record = recordValue(call);
     const fn = recordValue(record.function);
-    const name = stringValue(fn.name) || BROWSER_TOOL_NAME.manageTabs;
+    const name = stringValue(fn.name);
+    if (!name) continue;
     const part: ChatPart = {
       id: stringValue(record.id) || crypto.randomUUID(),
       type: toolPartType(name),

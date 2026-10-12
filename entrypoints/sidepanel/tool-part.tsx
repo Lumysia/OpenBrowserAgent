@@ -1,6 +1,6 @@
 import React from "react";
 import { CornerDownRight } from "lucide-react";
-import { BROWSER_TOOL_NAME } from "../../src/shared/browser-tools";
+import { TOOL_NAME } from "../../src/shared/tool-names";
 import type { Messages } from "../../src/shared/i18n";
 import { openOrFocusUrl } from "../../src/shared/tab-navigation";
 import {
@@ -57,18 +57,12 @@ export function ToolPart({
     t,
     runEnded,
   );
-  const output = (part.output || {}) as Record<string, unknown>;
-  const subAgentRunning = isSubAgentTool(name) && output.state === "running";
-  const localExecutionBridgeRunning =
-    isLocalExecutionBridgeTool(name) && output.state === "running";
   const questionPending =
-    name === BROWSER_TOOL_NAME.question && !runEnded && isQuestionPending(part);
+    name === TOOL_NAME.ask && !runEnded && isQuestionPending(part);
   const loading =
     questionPending ||
     (!runEnded &&
-      (subAgentRunning ||
-        localExecutionBridgeRunning ||
-        part.state === CHAT_PART_STATE.streaming ||
+      (part.state === CHAT_PART_STATE.streaming ||
         part.state === CHAT_PART_STATE.inputStreaming ||
         part.state === CHAT_PART_STATE.inputAvailable));
   const isError = part.state === CHAT_PART_STATE.outputError;
@@ -106,20 +100,20 @@ export function ToolPart({
       </Popover>
       <div className="tool-detail">
         <div className="tool-detail-content">
-          {name === BROWSER_TOOL_NAME.generateImage && (
+          {name === TOOL_NAME.generateImage && (
             <GeneratedImage
               output={(part.output || {}) as Record<string, unknown>}
               loading={loading}
               t={t}
             />
           )}
-          {name === BROWSER_TOOL_NAME.captureVisibleTab && (
+          {name === TOOL_NAME.screenshot && (
             <CapturedTabImage
               output={(part.output || {}) as Record<string, unknown>}
               t={t}
             />
           )}
-          {name === BROWSER_TOOL_NAME.question && (
+          {name === TOOL_NAME.ask && (
             <QuestionToolForm
               t={t}
               part={part}
@@ -127,7 +121,7 @@ export function ToolPart({
               onSubmit={(answers) => onAnswerQuestion?.(part.id, answers)}
             />
           )}
-          {description && name !== BROWSER_TOOL_NAME.question && (
+          {description && name !== TOOL_NAME.ask && (
             <div className="tool-description">{description}</div>
           )}
           {isSubAgentTool(name) && (
@@ -393,27 +387,13 @@ function questionToolSubmittedAnswers(output: unknown): QuestionToolAnswer[] {
 }
 
 function isSubAgentTool(name: string) {
-  return (
-    name === BROWSER_TOOL_NAME.startSubAgent ||
-    name === BROWSER_TOOL_NAME.getSubAgentStatus
-  );
-}
-
-function isLocalExecutionBridgeTool(name: string) {
-  return (
-    name === BROWSER_TOOL_NAME.startLocalExecutionBridge ||
-    name === BROWSER_TOOL_NAME.getLocalExecutionBridgeStatus ||
-    name === BROWSER_TOOL_NAME.cancelLocalExecutionBridge
-  );
+  return name === TOOL_NAME.subAgent;
 }
 
 function subAgentChildChatId(name: string, part: ChatPart) {
   if (!isSubAgentTool(name)) return undefined;
   const output = part.output as Record<string, unknown> | undefined;
-  if (output?.state === "missing") return undefined;
-  const childChatId = String(
-    output?.childChatId || output?.taskId || "",
-  ).trim();
+  const childChatId = String(output?.childChatId || "").trim();
   return childChatId || undefined;
 }
 

@@ -73,14 +73,6 @@ export const ptBR: LocaleMessages = {
     openSubAgentChat: "Abrir chat do subagente",
     subAgentRunning: "Em execução",
     subAgentCompleted: "Concluído",
-    subAgentMissing: "Ausente",
-    localExecutionBridgeStates: {
-      running: "Em execução",
-      done: "Concluído",
-      error: "Erro",
-      missing: "Ausente",
-      canceled: "Cancelado",
-    },
     questionWaiting: "Aguardando sua resposta",
     questionSubmit: "Enviar respostas",
     questionCustomPlaceholder: "Digite sua própria resposta...",
@@ -177,39 +169,6 @@ export const ptBR: LocaleMessages = {
     running: "Executando",
     done: "Concluído",
     error: "Erro",
-    toolErrors: {
-      NO_ACTIVE_WEB_TAB_FOUND:
-        "Nenhuma aba de página web ativa foi encontrada. Abra ou foque uma aba http(s) normal, ou use um ID de aba conhecido.",
-      ACTIVE_TAB_NOT_WEB_PAGE:
-        "A aba ativa não é uma página web legível. Abra uma página http(s) primeiro.",
-      NO_TAB_IDS_PROVIDED: "Nenhum ID de aba foi informado.",
-      TAB_NOT_FOUND: "A aba solicitada não foi encontrada.",
-      NO_GROUPABLE_NORMAL_TABS:
-        "Nenhuma aba em janela normal do navegador pode ser agrupada.",
-      UNKNOWN_TOOL: "Ferramenta desconhecida: {tool}.",
-      MISSING_URL: "Uma URL é obrigatória.",
-      UNKNOWN_NAVIGATION_TYPE: "Tipo de navegação desconhecido: {type}.",
-      TAB_HAS_NO_WINDOW: "A aba não está vinculada a uma janela do navegador.",
-      NO_TEXT_PROVIDED: "Nenhum texto foi informado.",
-      TIMED_OUT_WAITING_FOR_TEXT:
-        "Tempo esgotado aguardando o texto solicitado.",
-      TIMED_OUT_WAITING_FOR_SELECTOR:
-        "Tempo esgotado aguardando o seletor solicitado.",
-      TIMED_OUT_WAITING_FOR_CONDITION:
-        "Tempo esgotado aguardando a condição de página solicitada.",
-      ELEMENT_NOT_TEXT_INPUT:
-        "O elemento de destino não é um campo, textarea ou área editável.",
-      TARGET_ID_CANNOT_BE_FOCUSED:
-        "Este destino CDP não pode ser focado como uma aba do navegador.",
-      CLOSE_BY_TARGET_ID_UNSUPPORTED:
-        "Fechar por ID de destino CDP não é compatível aqui.",
-      RESIZE_BY_TARGET_ID_UNSUPPORTED:
-        "Redimensionar por ID de destino CDP não é compatível aqui.",
-      ELEMENT_NOT_FOUND: "O elemento de destino não foi encontrado.",
-      ELEMENT_HAS_NO_CLICKABLE_BOX:
-        "O elemento de destino não tem área clicável.",
-      MISSING_CODE: "Código JavaScript é obrigatório.",
-    },
     generatedImage: "Imagem gerada",
     capturedTabImage: "Captura da aba",
     mermaidPreview: "Prévia do diagrama Mermaid",
@@ -221,104 +180,57 @@ export const ptBR: LocaleMessages = {
     copyImage: "Copiar imagem",
     copyPrompt: "Copiar instruções",
     tool: {
-      loadTools: {
+      tabs: { running: "Gerenciando abas", done: "Abas gerenciadas" },
+      snapshot: {
+        running: "Lendo a estrutura da página",
+        done: "Estrutura da página lida",
+      },
+      find: { running: "Buscando na página", done: "Página pesquisada" },
+      read: { running: "Lendo", done: "Lido" },
+      extract: { running: "Extraindo resposta", done: "Resposta extraída" },
+      act: { running: "Agindo na página", done: "Ação realizada" },
+      editPage: { running: "Editando a página", done: "Página editada" },
+      webSearch: {
+        running: "Pesquisando na web",
+        done: "Pesquisa na web concluída",
+      },
+      screenshot: { running: "Capturando tela", done: "Tela capturada" },
+      ask: { running: "Fazendo uma pergunta", done: "Pergunta respondida" },
+      toolSearch: {
         running: "Carregando ferramentas",
         done: "Ferramentas carregadas",
-        found: "Carregadas {count} ferramentas",
       },
-      manageSkills: {
-        running: "Gerenciando habilidades",
-        done: "Habilidades gerenciadas",
-        found: "Encontradas {count} habilidades",
+      export: { running: "Exportando", done: "Exportado" },
+      skills: {
+        running: "Atualizando habilidades",
+        done: "Habilidades atualizadas",
       },
-      workspaceFiles: {
-        running: "Using workspace files",
-        done: "Updated workspace files",
+      workspace: {
+        running: "Atualizando o espaço de trabalho",
+        done: "Espaço de trabalho atualizado",
       },
-      manageMemory: { running: "Managing memory", done: "Managed memory" },
-      manageChatHistory: {
-        running: "Reading chat history",
-        done: "Read chat history",
+      chatHistory: { running: "Lendo o histórico", done: "Histórico lido" },
+      subAgent: {
+        running: "Subagente em execução",
+        done: "Subagente concluído",
       },
-      manageMcpServers: {
-        running: "Managing MCP servers",
-        done: "Managed MCP servers",
+      mcpServers: {
+        running: "Gerenciando servidores MCP",
+        done: "Servidores MCP gerenciados",
       },
-      manageLocalExecutionBridges: {
+      localCommand: {
+        running: "Executando comando local",
+        done: "Comando local executado",
+      },
+      localBridges: {
         running: "Gerenciando pontes de execução",
         done: "Pontes de execução gerenciadas",
-        found: "Encontradas {count} pontes de execução",
-      },
-      manageTabs: {
-        running: "Gerenciando abas",
-        done: "Abas gerenciadas",
-        found: "Encontradas {count} abas abertas",
-      },
-      cdpInput: {
-        running: "Enviando entrada CDP",
-        done: "Entrada CDP enviada",
-      },
-      cdpPage: {
-        running: "Controlando página CDP",
-        done: "Página CDP controlada",
-      },
-      cdpDiagnostics: {
-        running: "Lendo diagnósticos CDP",
-        done: "Diagnósticos CDP lidos",
-      },
-      wait: { running: "Aguardando", done: "Aguardou" },
-      getCurrentTime: { running: "Verificando hora", done: "Hora verificada" },
-      getCurrentTab: { running: "Obtendo aba atual", done: "Aba atual obtida" },
-      captureVisibleTab: { running: "Capturando aba", done: "Aba capturada" },
-      downloadAllImagesInTab: {
-        running: "Baixando imagens",
-        done: "Imagens baixadas",
-      },
-      question: {
-        running: "Fazendo uma pergunta",
-        done: "Pergunta respondida",
-      },
-      inspectPage: {
-        running: "Inspecionando página",
-        done: "Página inspecionada",
-        found: "Encontrados {count} elementos",
-      },
-      mutatePage: { running: "Atualizando página", done: "Página atualizada" },
-      downloadTabToMarkdown: {
-        running: "Baixando Markdown",
-        done: "Markdown baixado",
       },
       generateImage: { running: "Gerando imagem", done: "Imagem gerada" },
-      readFileFromUrl: { running: "Lendo arquivo", done: "Arquivo lido" },
-      read: { running: "Lendo saída salva", done: "Saída salva lida" },
-      readUploadedAttachment: {
-        running: "Lendo anexo",
-        done: "Anexo lido",
-      },
-      cdpExecuteArbitraryJavaScript: {
-        running: "Executando script personalizado",
-        done: "Script personalizado executado",
-      },
-      cdpTakeScreenshot: { running: "Capturando tela", done: "Tela capturada" },
-      startSubAgent: {
-        running: "Iniciando subagente",
-        done: "Subagente iniciado",
-      },
-      getSubAgentStatus: {
-        running: "Verificando subagente",
-        done: "Subagente verificado",
-      },
-      startLocalExecutionBridge: {
-        running: "Iniciando comando local",
-        done: "Comando local finalizado",
-      },
-      getLocalExecutionBridgeStatus: {
-        running: "Verificando comando local",
-        done: "Comando local verificado",
-      },
-      cancelLocalExecutionBridge: {
-        running: "Cancelando comando local",
-        done: "Comando local cancelado",
+      runScript: { running: "Executando script", done: "Script executado" },
+      devtools: {
+        running: "Executando diagnóstico",
+        done: "Diagnóstico concluído",
       },
     },
   },
@@ -354,44 +266,53 @@ export const ptBR: LocaleMessages = {
       wrench: "Ferramentas",
       fileText: "Documento",
     },
-    agentCapabilities: "Capacidades do agente",
-    agentCapabilitiesDescription:
-      "Escolha quais ferramentas e contexto este agente pode usar.",
-    builtinAgentCapabilitiesDescription:
-      "As capacidades dos agentes integrados são exibidas apenas para referência e não podem ser editadas.",
-    agentCapabilityGroups: {
-      browser: "Navegador",
-      builtinTools: "Ferramentas integradas e contexto",
-      skillsAndMcp: "Habilidades e MCP",
-      workspaceAndMemory: "Workspace e memória",
-      chatHistory: "Histórico de chat",
+    agentPrompt: "Instruções",
+    agentPromptPlaceholder:
+      "Como este agente deve agir, para que serve e o que evitar.",
+    agentModel: "Modelo",
+    agentModelDefault: "Modelo escolhido na conversa",
+    agentTools: "Ferramentas",
+    agentToolsDescription:
+      "Escolha o que este agente pode usar. Ferramentas extras carregam só quando necessário.",
+    builtinAgentToolsDescription:
+      "As ferramentas dos agentes integrados são exibidas para referência e não podem ser editadas.",
+    agentWorkspaceToggle: "Espaço de trabalho privado",
+    agentWorkspaceToggleDescription:
+      "Arquivos e memória que persistem entre conversas.",
+    agentToolGroups: {
+      pages: "Ler páginas",
+      browser: "Operar o navegador",
+      web: "Pesquisa na web",
+      images: "Gerar imagens",
+      skills: "Habilidades",
+      workspace: "Espaço e memória",
+      history: "Histórico",
+      subAgents: "Subagentes",
+      mcp: "MCP",
+      localExecution: "Comandos locais",
+      scripts: "JavaScript da página",
+      devtools: "Diagnóstico de desenvolvedor",
     },
-    agentCapabilityLabels: {
-      browserAutomation: "Operar o navegador",
-      browserTools: "Usar ferramentas integradas",
-      subAgents: "Iniciar subagentes",
-      localExecutionBridges: "Usar pontes de execução locais",
-      deferredBrowserTools: "Carregar ações avançadas do navegador",
-      cdpTools: "Ferramentas CDP",
-      javascriptExecution: "Executar JavaScript da página",
-      mcpTools: "Ferramentas MCP",
-      mcpManagement: "Gerenciamento MCP",
-      skillTools: "Ferramentas de habilidades",
-      skillCreation: "Criação de habilidades",
-      workspaceRead: "Ler espaço de trabalho",
-      workspaceWrite: "Escrever no espaço de trabalho",
-      memoryRead: "Ler memória",
-      memoryWrite: "Escrever memória",
-      chatHistoryRead: "Ler histórico de chat",
-      chatHistoryWrite: "Escrever histórico de chat",
-      imageGeneration: "Gerar imagens",
-      currentTime: "Ler hora atual",
-      fileUrlRead: "Ler links de URL e arquivos",
+    agentToolGroupDescriptions: {
+      pages:
+        "Estrutura, busca, leitura e extração de páginas; capturas de tela.",
+      browser: "Abas, cliques, digitação, edição de páginas, exportação.",
+      web: "Pesquisar com o mecanismo padrão.",
+      images: "Criar e editar imagens (se ativado em Provedores).",
+      skills: "Usar, criar e melhorar habilidades.",
+      workspace: "Editar arquivos privados e memória (requer espaço).",
+      history: "Pesquisar, ler e excluir conversas salvas.",
+      subAgents: "Delegar tarefas a agentes em conversas próprias.",
+      mcp: "Usar e gerenciar servidores MCP e suas ferramentas.",
+      localExecution:
+        "Executar comandos neste computador por uma ponte de execução.",
+      scripts: "Executar JavaScript nas páginas. Desativado por padrão.",
+      devtools: "Recursos de rede e emulação de dispositivos.",
     },
     deleteAgent: "Excluir agente",
     agentWorkspace: "Workspace do agente",
     agentWorkspaceDescription:
-      "Arquivos de texto privados deste agente. SOUL.md define o comportamento, AGENTS.md as regras do workspace, MEMORY.md e USER.md são injetados como contexto congelado, e NOTES.md fica disponível sob demanda.",
+      "Arquivos de texto privados deste agente. MEMORY.md e USER.md são mostrados a ele em toda conversa; os demais são lidos quando necessário.",
     agentWorkspaceNewFile: "Novo arquivo de workspace",
     agentWorkspaceConflict:
       "Este arquivo mudou durante a edição. Abra-o novamente para revisar a versão mais recente antes de salvar.",
@@ -627,19 +548,9 @@ export const ptBR: LocaleMessages = {
       "Ativa logs temporários no console para diagnosticar a ordem de streaming, ferramentas e assistente.",
     debugLoggingEnabled: "Ativar logs de diagnóstico no console",
     debugToolsTitle: "Ferramentas registradas",
-    debugToolsDescription:
-      "Registro atual de ferramentas do navegador ({count} ferramentas).",
-    debugToolAvailable: "Disponível",
-    debugToolUnavailable: "Indisponível",
+    debugToolsDescription: "Ferramentas do agente selecionado ({count}).",
+    debugToolCore: "Sempre carregada",
+    debugToolOnDemand: "Carregada sob demanda",
     debugToolRequired: "Obrigatório",
-    debugToolCapabilityEnabled:
-      "Controlado pela capacidade do agente: {capability}.",
-    debugToolCapabilityDisabled: "Ative a capacidade do agente: {capability}.",
-    debugToolImageGenerationDisabled:
-      "Ative a geração de imagens em Provedores.",
-    debugToolSkillsDisabled:
-      "Requer habilidades ativadas e a capacidade de agente necessária.",
-    debugToolAttachmentsRequired: "Requer anexos enviados na mensagem atual.",
-    debugToolStepsDisabled: "Max Tool Steps é 0.",
   },
 };

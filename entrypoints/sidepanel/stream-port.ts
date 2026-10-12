@@ -84,11 +84,6 @@ type StreamPortOptions = {
     chunk: unknown,
     metrics?: Partial<RunMetrics>,
   ) => void;
-  onStreamChunk?: (event: {
-    chatId: string;
-    messageId: string;
-    chunk: unknown;
-  }) => void;
   appendToAssistant: (
     chatId: string,
     messageId: string,
@@ -119,7 +114,6 @@ function connectStreamPort({
   setActiveStreams,
   onStreamFinished,
   appendStreamChunk,
-  onStreamChunk,
   appendToAssistant,
   flushMessageText,
   updateRunMetrics,
@@ -224,11 +218,6 @@ function connectStreamPort({
         message.chunk,
         sequenceMetrics,
       );
-      onStreamChunk?.({
-        chatId,
-        messageId: activeMessageId,
-        chunk: message.chunk,
-      });
       return;
     }
     if (message.type === "metrics") {

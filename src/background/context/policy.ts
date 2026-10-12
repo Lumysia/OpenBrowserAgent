@@ -1,5 +1,3 @@
-import { BROWSER_TOOL_NAME } from "../../shared/browser-tools";
-
 // Context engine limits, in estimated tokens. Window-relative limits are
 // clamped so small windows still leave room and large ones stay cache-friendly.
 export const CONTEXT_POLICY = {
@@ -7,7 +5,7 @@ export const CONTEXT_POLICY = {
   // Any single tool output above this goes to the artifact store; the model
   // gets a head preview of this size plus a handle.
   toolOutputCapTokens: 5_000,
-  // `read` pages through artifacts in slices of at most this size.
+  // `read` returns slices of at most this size.
   readMaxTokens: 5_000,
   // The newest tool outputs, up to this budget, are never masked.
   protectRecentToolTokens: { ratio: 0.3, max: 40_000 },
@@ -31,35 +29,9 @@ export function windowShare(
   return Math.min(limit.max, Math.floor(window * limit.ratio));
 }
 
-const always = () => true;
+// Characters per estimated token, for turning token limits into slices.
+const CHARS_PER_TOKEN = 3.5;
 
-// Calls that only observe state. They may run in parallel with each other,
-// and an identical repeat with identical output is answered with a stub.
-// Tools absent here run sequentially in the model's order.
-const READ_ONLY_TOOLS: Record<
-  string,
-  (input: Record<string, unknown>) => boolean
-> = {
-  [BROWSER_TOOL_NAME.read]: always,
-  [BROWSER_TOOL_NAME.inspectPage]: always,
-  [BROWSER_TOOL_NAME.getCurrentTab]: always,
-  [BROWSER_TOOL_NAME.getCurrentTime]: always,
-  [BROWSER_TOOL_NAME.readFileFromUrl]: always,
-  [BROWSER_TOOL_NAME.readUploadedAttachment]: always,
-  [BROWSER_TOOL_NAME.manageTabs]: (input) => input.operation === "list",
-};
-
-export function runsInParallel(toolName: string) {
-  return READ_ONLY_TOOLS[toolName] === always;
-}
-
-export function isRepeatGuarded(
-  toolName: string,
-  input: Record<string, unknown>,
-) {
-  return (
-    toolName !== BROWSER_TOOL_NAME.read &&
-    toolName !== BROWSER_TOOL_NAME.getCurrentTime &&
-    !!READ_ONLY_TOOLS[toolName]?.(input)
-  );
+export function tokenChars(tokens: number) {
+  return Math.floor(tokens * CHARS_PER_TOKEN);
 }

@@ -1,12 +1,11 @@
 import JSZip from "jszip";
-import { AGENT_CAPABILITY_KEYS } from "../../src/shared/agents";
+import { TOOL_GROUPS } from "../../src/shared/agents";
 import type {
   Agent,
   AgentWorkspace,
   WorkspaceFile,
 } from "../../src/shared/types";
 import {
-  isWorkspaceUserEditableFile,
   normalizeWorkspaceFiles,
   normalizeWorkspacePath,
   workspaceFileKind,
@@ -39,7 +38,7 @@ type AgentZipImport = {
 
 type AgentZipManifest = Pick<
   Agent,
-  "name" | "description" | "icon" | "capabilities"
+  "name" | "description" | "icon" | "prompt" | "toolGroups" | "workspace"
 >;
 
 export async function importAgentZip(
@@ -52,7 +51,7 @@ export async function importAgentZip(
   const manifest = JSON.parse(
     await manifestEntry.async("string"),
   ) as Partial<AgentZipManifest>;
-  if (!manifest.name || !isAgentCapabilities(manifest.capabilities))
+  if (!manifest.name || !isToolGroupList(manifest.toolGroups))
     throw new Error(messages.invalidManifest);
   const now = Date.now();
   const agentId = crypto.randomUUID();
@@ -66,9 +65,7 @@ export async function importAgentZip(
   const files = await Promise.all(
     entries.map((entry) => readWorkspaceZipFile(entry, AGENT_WORKSPACE_ROOT)),
   );
-  const nextFiles = normalizeWorkspaceFiles(
-    files.filter((item) => isWorkspaceUserEditableFile(item.path)),
-  );
+  const nextFiles = normalizeWorkspaceFiles(files);
   if (workspaceTotalChars(nextFiles) > WORKSPACE_TOTAL_MAX_CHARS)
     throw new Error(
       `Workspace content must be ${WORKSPACE_TOTAL_MAX_CHARS} characters or less`,
@@ -79,7 +76,9 @@ export async function importAgentZip(
       name: manifest.name,
       description: manifest.description || "",
       icon: manifest.icon,
-      capabilities: manifest.capabilities,
+      prompt: typeof manifest.prompt === "string" ? manifest.prompt : "",
+      toolGroups: manifest.toolGroups,
+      workspace: manifest.workspace !== false,
       createdAt: now,
       updatedAt: now,
     },
@@ -101,7 +100,9 @@ export async function downloadAgentZip(
     name: agent.name,
     description: agent.description,
     icon: agent.icon,
-    capabilities: agent.capabilities,
+    prompt: agent.prompt,
+    toolGroups: agent.toolGroups,
+    workspace: agent.workspace,
   };
   zip.file(AGENT_MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`);
   for (const file of normalizeWorkspaceFiles(workspace.files))
@@ -155,10 +156,10 @@ function safeZipName(value: string) {
   );
 }
 
-function isAgentCapabilities(value: unknown): value is Agent["capabilities"] {
-  if (!value || typeof value !== "object") return false;
-  return AGENT_CAPABILITY_KEYS.every(
-    (key) => typeof (value as Record<string, unknown>)[key] === "boolean",
+function isToolGroupList(value: unknown): value is Agent["toolGroups"] {
+  return (
+    Array.isArray(value) &&
+    value.every((group) => (TOOL_GROUPS as readonly unknown[]).includes(group))
   );
 }
 
