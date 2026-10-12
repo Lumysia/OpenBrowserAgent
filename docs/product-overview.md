@@ -45,8 +45,8 @@ It turns the browser into an AI working surface: users can chat with a selected 
 
 Every agent starts with a small set of core tools; the rest load on demand through a tool search, so each request stays small.
 
-- Core: `tabs` (list, open, switch, close, navigate), `snapshot` (the page as compact lines with element refs), `find` (search the whole page), `read` (page text, stored outputs, attachments, URLs, skills and workspace files in ranges), `extract` (answer a question about a page with the helper model), `act` (click, type, select, press keys, scroll, wait, drag in one batch), `editPage` (batched in-place edits such as translation), `webSearch`, `screenshot`, and `ask` (questions to the user).
-- On demand: export to Markdown or image zip, skills editing, workspace and memory, chat history, sub-agents, MCP servers and their tools, local commands and bridges, image generation, page JavaScript (off by default), and developer diagnostics.
+- Core: `tabs` (list or search, open, switch, close, navigate, group), `snapshot` (the page as compact lines with element refs), `find` (search the whole page), `read` (page text, stored outputs, attachments, URLs, skills and workspace files in ranges; PDF and Office documents as text), `extract` (answer a question about a page with the helper model), `act` (click, double-click, type, select, press keys, scroll, wait, drag and answer JavaScript dialogs in one batch, with real debugger input where pages ignore synthetic events), `editPage` (batched in-place edits such as translation; never script), `webSearch`, `screenshot` (visible part or full page), and `ask` (questions to the user).
+- On demand: export to Markdown or image zip, skills editing, workspace and memory, chat history, sub-agents, MCP tools, MCP server management, local commands (waiting or in the background) and bridges, image generation, page JavaScript (off by default), and developer diagnostics.
 
 Tool runs are shown as visible cards with status, summaries, references, generated media, and JSON detail popovers.
 

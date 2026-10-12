@@ -1,8 +1,10 @@
 import {
   ATTACHMENT_KIND,
+  base64FromDataUrl,
   isVisionImageMimeType,
 } from "../../shared/attachments";
-import { bytesToBase64 } from "../../shared/binary";
+import { base64ToBytes, bytesToBase64 } from "../../shared/binary";
+import { documentText } from "../file-text";
 import { hasToolGroup } from "../../shared/agents";
 import { BUILTIN_SKILLS } from "../../shared/builtin-skills";
 import { SKILL_ENTRY_PATH } from "../../shared/skills";
@@ -17,6 +19,7 @@ import {
   schema,
   stringArg,
   type RunContext,
+  type SourceInput,
   type ToolDefinition,
   type ToolResult,
 } from "./types";
@@ -71,11 +74,16 @@ export const readTool: ToolDefinition = {
   timeoutMs: 60_000,
   summary: "Read text in ranges",
   description:
-    'Read one source in character ranges: "tab" or "tab:ID" (page text as Markdown; default: active tab), a stored output handle "art-…", a URL, "attachment:ID", "skill:NAME" or "skill:NAME/PATH", "workspace:PATH". Continue with the offset it reports. Images come back as images.',
+    'Read one source in character ranges: "tab" or "tab:ID" (page text as Markdown; default: active tab), a stored output handle "art-…", a URL, "attachment:ID", "skill:NAME" or "skill:NAME/PATH", "workspace:PATH". Continue with the offset it reports. Images come back as images; PDF, Word, Excel, PowerPoint and OpenDocument files as their text.',
   parameters: schema({
     source: { type: "string", description: 'What to read. Defaults to "tab".' },
     offset: { type: "number" },
     limit: { type: "number", description: "Characters to return." },
+    encoding: {
+      type: "string",
+      enum: ["text", "base64"],
+      description: "base64: the raw bytes of a file or URL.",
+    },
   }),
   async execute(input, context) {
     const source = parseSource(stringArg(input.source));
@@ -212,10 +220,36 @@ async function readAttachment(
       sources,
       image: { dataUrl: attachment.dataUrl, type: attachment.type },
     };
-  return fail(
-    `${attachment.name} (${attachment.type || "unknown type"}, ${attachment.size} bytes) is not text, so it cannot be read here. Ask the user for a text export if its content matters.`,
-    details,
-  );
+  if (!attachment.dataUrl)
+    return fail(
+      `${attachment.name} (${attachment.type || "unknown type"}) has no stored content.`,
+      details,
+    );
+  const bytes = base64ToBytes(base64FromDataUrl(attachment.dataUrl));
+  return binaryResult(attachment.name, bytes, input, details, sources);
+}
+
+// A binary file: its text when it is a document (PDF, Office,
+// OpenDocument), or its bytes as base64 when asked for.
+async function binaryResult(
+  label: string,
+  bytes: Uint8Array,
+  input: Record<string, unknown>,
+  details: Record<string, unknown>,
+  sources: SourceInput[],
+): Promise<ToolResult> {
+  if (input.encoding === "base64")
+    return {
+      text: textSlice(`${label} as base64`, bytesToBase64(bytes), input),
+      details: { ...details, encoding: "base64" },
+    };
+  const text = await documentText(bytes);
+  if (text === undefined)
+    return fail(
+      `${label} (${bytes.length} bytes) has no text that can be extracted (only PDF, Word, Excel, PowerPoint and OpenDocument files do, and scanned pages have none). Read it with encoding "base64" to pass its bytes on.`,
+      details,
+    );
+  return { text: textSlice(label, text, input), details, sources };
 }
 
 const TEXT_TYPE = /^text\/|json|xml|yaml|csv|markdown|javascript/;
@@ -262,8 +296,11 @@ async function readUrl(
       image: { dataUrl: `data:${type};base64,${bytesToBase64(bytes)}`, type },
     };
   }
-  return fail(
-    `${url} is ${type} (${blob.size} bytes), which cannot be read as text.`,
+  return binaryResult(
+    url,
+    new Uint8Array(await blob.arrayBuffer()),
+    input,
     details,
+    [{ kind: "file", title: url, url }],
   );
 }

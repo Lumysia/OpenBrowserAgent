@@ -74,10 +74,11 @@ export function base64FromDataUrl(dataUrl: string) {
   return dataUrl.includes(",") ? dataUrl.split(",", 2)[1] || "" : dataUrl;
 }
 
+// Attachments the model cannot read as text or see as an image (documents
+// are read as their text).
 export function isMetadataOnlyAttachment(kind: UploadedAttachmentKind) {
   return (
     kind === ATTACHMENT_KIND.audio ||
-    kind === ATTACHMENT_KIND.document ||
     kind === ATTACHMENT_KIND.file ||
     kind === ATTACHMENT_KIND.video
   );

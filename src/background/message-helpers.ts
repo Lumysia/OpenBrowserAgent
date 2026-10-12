@@ -1,4 +1,7 @@
-import { ATTACHMENT_CONTEXT_TAG, ATTACHMENT_KIND } from "../shared/attachments";
+import {
+  ATTACHMENT_CONTEXT_TAG,
+  isMetadataOnlyAttachment,
+} from "../shared/attachments";
 import { renderSourcesForPrompt } from "../shared/chat-sources";
 import { getSkillInstruction } from "../shared/skills";
 import type {
@@ -67,11 +70,9 @@ export function getUploadedAttachments(message: ChatMessage) {
 function renderAttachmentContext(attachments: UploadedAttachment[]) {
   if (!attachments.length) return "";
   return `<${ATTACHMENT_CONTEXT_TAG}>\n${attachments
-    .map((attachment) => {
-      const readable =
-        attachment.kind === ATTACHMENT_KIND.text ||
-        attachment.kind === ATTACHMENT_KIND.image;
-      return `- attachment:${attachment.id} ${attachment.name} (${attachment.type || "unknown"}, ${attachment.size} bytes)${readable ? "" : " — not readable as text"}`;
-    })
+    .map(
+      (attachment) =>
+        `- attachment:${attachment.id} ${attachment.name} (${attachment.type || "unknown"}, ${attachment.size} bytes)${isMetadataOnlyAttachment(attachment.kind) ? " — binary; read with encoding base64 for its bytes" : ""}`,
+    )
     .join("\n")}\n</${ATTACHMENT_CONTEXT_TAG}>`;
 }
