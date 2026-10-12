@@ -16,6 +16,8 @@ export const STORAGE_KEYS = {
   syncStatus: "sync-status",
   syncState: "sync-state",
   syncDirty: "sync-dirty",
+  // storage.session: extension pages and whether they are visible.
+  syncVisiblePages: "sync-visible-pages",
   syncBackends: "sync-backends",
   activeSyncBackendId: "active-sync-backend-id",
   syncDeviceId: "sync-device-id",

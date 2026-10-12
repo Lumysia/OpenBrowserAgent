@@ -56,7 +56,7 @@ const POLL_PERIOD_MINUTES = 1;
 const EDIT_DEBOUNCE_MS = 8_000;
 const REMOTE_DEBOUNCE_MS = 2_000;
 const OPEN_CHECK_MIN_MS = 15_000;
-const PAGES_KEY = "sync-visible-pages";
+const PAGES_KEY = STORAGE_KEYS.syncVisiblePages;
 const RECENT_CHECK_MS = 60_000;
 
 type PageStates = Record<string, { visible: boolean; at: number }>;
