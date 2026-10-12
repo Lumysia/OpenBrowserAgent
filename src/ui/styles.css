@@ -12,6 +12,7 @@
 @import "./styles/sidepanel-messages.css";
 @import "./styles/sidepanel-composer.css";
 @import "./styles/markdown.css";
+@import "./styles/markdown-media.css";
 @import "./styles/assistant.css";
 @import "./styles/tools.css";
 @import "./styles/responsive.css";

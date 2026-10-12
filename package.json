@@ -44,12 +44,16 @@
     "dompurify": "^3.4.16",
     "highlight.js": "^11.11.1",
     "jszip": "^3.10.1",
-    "katex": "^0.18.2",
+    "katex": "0.18.10",
     "lucide-react": "latest",
-    "marked": "latest",
+    "marked": "18.1.1",
+    "marked-cjk-friendly": "0.1.2",
+    "marked-footnote": "1.4.0",
+    "marked-katex-extension": "5.1.13",
     "nanoid": "^5.1.16",
     "react": "latest",
     "react-dom": "latest",
+    "remend": "1.4.0",
     "tinybase": "^8.4.1"
   },
   "devDependencies": {

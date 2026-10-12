@@ -9,34 +9,36 @@ import typescript from "highlight.js/lib/languages/typescript";
 import xml from "highlight.js/lib/languages/xml";
 import DOMPurify from "dompurify";
 import "katex/dist/katex.min.css";
-import { Marked, Renderer } from "marked";
+import { Renderer, type Token } from "marked";
 import type { Messages } from "../../src/shared/i18n";
-import type { ChatSource } from "../../src/shared/types";
 import {
   applyStreamingTextRenderer,
   escapeHtml,
-  markdownParserOptions,
-} from "./markdown-extensions";
+  renderMarkdownTokens,
+  type MarkdownConfig,
+} from "./markdown-engine";
+import { renderMarkdownImage } from "./markdown-images";
+
+// DOMPurify's default URI policy plus blob: for images the extension made.
+// A blob: URL only resolves in the origin that created it, so a model cannot
+// point one at outside data. Set once, without hooks: a config per call or a
+// hook makes every sanitize call copy DOMPurify's allow lists.
+const SAFE_URI =
+  /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|matrix|blob):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i;
 
 const markdownSanitizer = DOMPurify();
-// Only generated image sources can retain blob URLs. All other attributes use
-// DOMPurify's normal URI policy; raw model HTML is escaped before this boundary.
-markdownSanitizer.addHook("uponSanitizeAttribute", (node, attribute) => {
-  if (
-    node.nodeName === "IMG" &&
-    attribute.attrName === "src" &&
-    /^blob:/i.test(attribute.attrValue) &&
-    safeImageUrl(attribute.attrValue)
-  )
-    attribute.forceKeepAttr = true;
+markdownSanitizer.setConfig({
+  ALLOWED_URI_REGEXP: SAFE_URI,
+  FORBID_TAGS: [
+    "style",
+    "form",
+    "textarea",
+    "select",
+    "iframe",
+    "object",
+    "embed",
+  ],
 });
-
-type MarkdownSegment = {
-  key: string;
-  text: string;
-  start: number;
-  end: number;
-};
 
 hljs.registerLanguage("bash", bash);
 hljs.registerLanguage("sh", bash);
@@ -55,27 +57,30 @@ hljs.registerLanguage("tsx", typescript);
 hljs.registerLanguage("html", xml);
 hljs.registerLanguage("xml", xml);
 
-export function renderMarkdown(
-  text: string,
+export type MarkdownRenderOptions = {
+  copiedCodeId: string | null;
+  loadedImages: readonly string[];
+  animatedFromChar?: number;
+  mermaidPreview?: boolean;
+  syntaxHighlight?: boolean;
+};
+
+export function renderMarkdownBlock(
+  config: MarkdownConfig,
+  tokens: Token[],
   t: Messages,
-  copiedCodeId: string | null,
-  sources: ChatSource[] = [],
-  options: {
-    animatedFromChar?: number;
-    mermaidPreview?: boolean;
-    syntaxHighlight?: boolean;
-  } = {},
+  options: MarkdownRenderOptions,
 ) {
   const codeBlocks: string[] = [];
   const renderer = new Renderer();
   if (options.animatedFromChar !== undefined)
     applyStreamingTextRenderer(renderer, options.animatedFromChar);
   renderer.image = ({ href, title, text }) =>
-    renderMarkdownImage(href, title, text);
+    renderMarkdownImage(href, title, text, t, options.loadedImages);
   renderer.code = ({ text: code, lang }) => {
     const codeIndex = codeBlocks.push(code) - 1;
     const codeId = `code-${codeIndex}`;
-    const copied = copiedCodeId === codeId;
+    const copied = options.copiedCodeId === codeId;
     const language = lang?.split(/\s+/)[0] || "";
     const highlighted = options.syntaxHighlight
       ? highlightCode(code, language)
@@ -92,119 +97,10 @@ export function renderMarkdown(
     const copyLabel = copied ? t.common.copied : t.common.copy;
     return `<div class="markdown-code-block${copied ? " copied" : ""}"><div class="markdown-code-header"><span>${displayLanguage}</span><button type="button" class="code-copy" data-tooltip="${escapeHtml(copyLabel)}" data-code-index="${codeIndex}" data-code-id="${codeId}" aria-label="${escapeHtml(copyLabel)}"><svg class="code-copy-icon code-copy-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="code-copy-icon code-copy-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></button></div>${preview}${source}</div>`;
   };
-  const parser = new Marked({ renderer, ...markdownParserOptions(sources) });
   const html = markdownSanitizer.sanitize(
-    parser.parse(text, { async: false }),
-    {
-      FORBID_TAGS: [
-        "style",
-        "form",
-        "textarea",
-        "select",
-        "iframe",
-        "object",
-        "embed",
-      ],
-    },
+    renderMarkdownTokens(config, tokens, renderer),
   );
-  return {
-    html,
-    codeBlocks,
-  };
-}
-
-export function splitStreamingMarkdown(text: string, streaming: boolean) {
-  if (!streaming) return [markdownSegment("full", text, 0, text.length)];
-  const boundaries = stableMarkdownBoundaries(text);
-  const segments: MarkdownSegment[] = [];
-  let start = 0;
-  for (const boundary of boundaries) {
-    if (boundary <= start || boundary > text.length) continue;
-    segments.push(
-      markdownSegment(`stable:${start}:${boundary}`, text, start, boundary),
-    );
-    start = boundary;
-  }
-  if (start < text.length)
-    segments.push(markdownSegment("live", text, start, text.length));
-  return segments.length
-    ? segments
-    : [markdownSegment("live", text, 0, text.length)];
-}
-
-function markdownSegment(
-  key: string,
-  text: string,
-  start: number,
-  end: number,
-) {
-  return {
-    key,
-    text: text.slice(start, end),
-    start,
-    end,
-  } satisfies MarkdownSegment;
-}
-
-function stableMarkdownBoundaries(text: string) {
-  const boundaries: number[] = [];
-  let lineStart = 0;
-  let inFence: { marker: "`" | "~"; length: number } | undefined;
-  let inDisplayMath = false;
-
-  while (lineStart < text.length) {
-    const newlineIndex = text.indexOf("\n", lineStart);
-    const lineEnd = newlineIndex === -1 ? text.length : newlineIndex;
-    const nextLineStart = newlineIndex === -1 ? text.length : newlineIndex + 1;
-    const line = text.slice(lineStart, lineEnd);
-    const fence = line.match(/^\s*(`{3,}|~{3,})/);
-
-    if (fence) {
-      const marker = fence[1][0] as "`" | "~";
-      if (!inFence) {
-        inFence = { marker, length: fence[1].length };
-      } else if (
-        inFence.marker === marker &&
-        fence[1].length >= inFence.length
-      ) {
-        inFence = undefined;
-        if (nextLineStart < text.length) boundaries.push(nextLineStart);
-      }
-    } else if (!inFence) {
-      if (hasOddDisplayMathDelimiterCount(line)) inDisplayMath = !inDisplayMath;
-      if (!inDisplayMath && /^\s*$/.test(line)) boundaries.push(nextLineStart);
-    }
-
-    lineStart = nextLineStart;
-  }
-
-  return boundaries.filter(
-    (boundary, index) => boundary > 0 && boundaries.indexOf(boundary) === index,
-  );
-}
-
-function hasOddDisplayMathDelimiterCount(line: string) {
-  let count = 0;
-  for (let index = 0; index < line.length - 1; index += 1) {
-    if (line[index] !== "$" || line[index + 1] !== "$") continue;
-    if (index > 0 && line[index - 1] === "\\") continue;
-    count += 1;
-    index += 1;
-  }
-  return count % 2 === 1;
-}
-
-function renderMarkdownImage(href: string, title: string | null, text: string) {
-  const url = safeImageUrl(href);
-  const alt = escapeHtml(text || title || "");
-  if (!url) return `<span class="markdown-image-invalid">${alt}</span>`;
-  return `<figure class="markdown-image-card"><img src="${escapeHtml(url)}" alt="${alt}" title="${escapeHtml(title || "")}" loading="lazy" referrerpolicy="no-referrer" /><figcaption>${alt}</figcaption></figure>`;
-}
-
-function safeImageUrl(href: string) {
-  const value = href.trim();
-  if (/^(https?:|data:image\/|blob:)/i.test(value)) return value;
-  return "";
+  return { html, codeBlocks };
 }
 
 function mermaidPreview(code: string, language: string, t: Messages) {

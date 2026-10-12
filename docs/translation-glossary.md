@@ -44,6 +44,8 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | built-in                       | 内置               | 內建               | 組み込み             | 내장             |
 | customize (a built-in skill)   | 自定义             | 自訂               | カスタマイズ         | 사용자 지정      |
 | skill use: Auto / Manual / Off | 自动 / 手动 / 关闭 | 自動 / 手動 / 關閉 | 自動 / 手動 / オフ   | 자동 / 수동 / 끔 |
+| footnote                       | 脚注               | 註腳               | 脚注                 | 각주             |
+| load (an image from an answer) | 加载               | 載入               | 読み込む             | 불러오기         |
 
 | English                        | Français                     | Deutsch                     | Español                           | Português (Brasil)               |
 | ------------------------------ | ---------------------------- | --------------------------- | --------------------------------- | -------------------------------- |
@@ -72,6 +74,8 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | built-in                       | intégré                      | integriert                  | integrado                         | integrado                        |
 | customize (a built-in skill)   | personnaliser                | anpassen                    | personalizar                      | personalizar                     |
 | skill use: Auto / Manual / Off | Auto / Manuelle / Désactivée | Automatisch / Manuell / Aus | Automático / Manual / Desactivada | Automático / Manual / Desativada |
+| footnote                       | note de bas de page          | Fußnote                     | nota al pie                       | nota de rodapé                   |
+| load (an image from an answer) | charger                      | laden                       | cargar                            | carregar                         |
 
 ## Notes per language
 

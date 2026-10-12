@@ -175,6 +175,12 @@ export const jaJP: LocaleMessages = {
     openMermaidPreview: "Mermaid プレビューを開く",
     downloadMermaidSvg: "SVG をダウンロード",
     downloadMermaidPng: "PNG をダウンロード",
+    loadImage: "画像を読み込む",
+    openImage: "画像を開く",
+    remoteImageNotLoaded:
+      "この画像は外部サイトのものです。選択したときだけ読み込まれます。",
+    footnotes: "脚注",
+    footnoteBackReference: "参照 {label} に戻る",
     downloadGeneratedImage: "画像をダウンロード",
     downloadCapturedTabImage: "スクリーンショットをダウンロード",
     copyImage: "画像をコピー",

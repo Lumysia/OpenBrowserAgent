@@ -175,6 +175,12 @@ export const enUS = {
     openMermaidPreview: "Open Mermaid preview",
     downloadMermaidSvg: "Download SVG",
     downloadMermaidPng: "Download PNG",
+    loadImage: "Load image",
+    openImage: "Open image",
+    remoteImageNotLoaded:
+      "This image is from another site. It loads only when you choose.",
+    footnotes: "Footnotes",
+    footnoteBackReference: "Back to reference {label}",
     downloadGeneratedImage: "Download image",
     downloadCapturedTabImage: "Download screenshot",
     copyImage: "Copy image",

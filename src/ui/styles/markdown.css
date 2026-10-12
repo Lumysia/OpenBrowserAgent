@@ -84,54 +84,6 @@
   display: inline-block;
   min-width: max-content;
 }
-.markdown-image-card {
-  max-width: min(100%, 520px);
-  margin: 10px 0 18px;
-  padding: 8px;
-  border: 1px solid color-mix(in srgb, var(--accent-soft) 48%, var(--border));
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--card) 92%, var(--accent-softer));
-  box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow) 48%, transparent);
-}
-.markdown-image-card img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin: 0 auto;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--secondary) 70%, var(--card));
-}
-.markdown-image-card.is-broken {
-  display: grid;
-  place-items: center;
-  min-height: 92px;
-  color: var(--muted-foreground);
-}
-.markdown-image-card.is-broken::before {
-  content: attr(data-alt);
-  padding: 12px;
-  font-size: 13px;
-  line-height: 1.4;
-  text-align: center;
-}
-.markdown-image-card.is-broken img,
-.markdown-image-card.is-broken figcaption {
-  display: none;
-}
-.markdown-image-card figcaption {
-  margin-top: 7px;
-  color: var(--muted-foreground);
-  font-size: 12px;
-  line-height: 1.35;
-  text-align: center;
-}
-.markdown-image-card figcaption:empty {
-  display: none;
-}
-.markdown-image-invalid {
-  color: var(--muted-foreground);
-  font-style: italic;
-}
 .markdown th,
 .markdown td {
   min-width: 88px;
@@ -469,4 +421,27 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.markdown sup a[href^="#"] {
+  padding: 0 1px;
+  color: var(--accent-strong);
+  font-size: 0.85em;
+  text-decoration: none;
+}
+.markdown .footnotes {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.markdown .footnotes ol {
+  margin-bottom: 0;
+}
+.markdown .footnotes p {
+  margin-bottom: 6px;
+}
+.markdown .footnotes a[href^="#"] {
+  color: var(--accent-strong);
+  text-decoration: none;
 }

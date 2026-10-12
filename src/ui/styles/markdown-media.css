@@ -1,0 +1,89 @@
+.markdown-image-card {
+  max-width: min(100%, 520px);
+  margin: 10px 0 18px;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--accent-soft) 48%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card) 92%, var(--accent-softer));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow) 48%, transparent);
+}
+.markdown-image-card img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--secondary) 70%, var(--card));
+}
+.markdown-image-card.is-broken {
+  display: grid;
+  place-items: center;
+  min-height: 92px;
+  color: var(--muted-foreground);
+}
+.markdown-image-card.is-broken::before {
+  content: attr(data-alt);
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+.markdown-image-card.is-broken img,
+.markdown-image-card.is-broken figcaption {
+  display: none;
+}
+.markdown-image-card figcaption {
+  margin-top: 7px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: center;
+}
+.markdown-image-card figcaption:empty {
+  display: none;
+}
+.markdown-image-invalid {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+.markdown-image-blocked {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  max-width: min(100%, 520px);
+  margin: 10px 0 18px;
+  padding: 8px 8px 8px 12px;
+  border: 1px dashed color-mix(in srgb, var(--accent-soft) 48%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card) 92%, var(--accent-softer));
+}
+.markdown-image-blocked-text {
+  display: grid;
+  min-width: 0;
+  flex: 1 1 140px;
+  line-height: 1.35;
+}
+.markdown-image-blocked-alt,
+.markdown-image-blocked-host {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.markdown-image-blocked-alt {
+  font-size: 13px;
+  font-weight: 600;
+}
+.markdown-image-blocked-host {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.markdown-image-blocked-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+}
+.markdown .markdown-image-blocked-actions a {
+  text-decoration: none;
+}
