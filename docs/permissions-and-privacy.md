@@ -46,7 +46,7 @@ The current required declaration is intentionally conservative because OpenBrows
 Depending on user action and the selected agent's tool groups, requests may include:
 
 - User messages.
-- Chat history.
+- Chat history, including the tool calls of earlier turns and their shortened results.
 - Selected agent instructions, tool definitions, and (for agents with a workspace) MEMORY.md and USER.md.
 - Selected skills.
 - Attached tab metadata, URLs, titles, and extracted page text.
@@ -78,7 +78,7 @@ Stored data includes:
 - Skills and skill files.
 - MCP server definitions and headers.
 - Local execution bridge configurations and secrets.
-- Chats and chat tabs.
+- Chats and chat tabs. A chat keeps, for each tool call, the text the model received (page snapshots and extracted text included, up to the tool output size limit), so later turns and chat exports can show what the agent saw. Longer outputs are also kept in local IndexedDB under artifact handles; those are never synced.
 - Sync write status and local sync cache entries.
 
 Sync is disabled until a backend is selected. Language and lightweight preferences then use that backend. The provider sync option is enabled by default. Agents, skills, MCP servers, local execution bridges, chats, and chat attachments remain local unless the user enables their sync options.
