@@ -1,6 +1,6 @@
 import { describe } from "./actions";
 import { isHidden, isInteractive } from "./dom";
-import { snapshotLines } from "./snapshot";
+import { renderLines, snapshotLines } from "./snapshot";
 
 // What changed on the page during a batch: interactive elements that
 // appeared or went away in the viewport, dialogs, and the focused control.
@@ -51,14 +51,11 @@ export function collectChanges(limit = 15) {
   const lines: string[] = [];
   for (const dialog of openDialogs())
     if (!before.dialogs.has(dialog)) {
-      const { lines: dialogLines } = snapshotLines(dialog, {
-        mode: "page",
-        itemCap: 20,
-        maxChars: 2_000,
-      });
       lines.push(
         "Dialog opened:",
-        ...dialogLines.map((line) => `${"  ".repeat(line.depth)}${line.text}`),
+        renderLines(
+          snapshotLines(dialog, { mode: "page", itemCap: 20, maxChars: 2_000 }),
+        ),
       );
     }
   const height = document.documentElement.scrollHeight;

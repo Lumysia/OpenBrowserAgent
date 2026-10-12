@@ -99,6 +99,8 @@ export async function runSubAgentChat(options: {
   });
   const abort = () => sessions.abortSession(chat.id);
   options.signal?.addEventListener("abort", abort, { once: true });
+  // A stop that landed while the chat was being created fires no event.
+  if (options.signal?.aborted) abort();
   let error: string | undefined;
   try {
     await runChat(session, {

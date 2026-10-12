@@ -25,37 +25,23 @@ function snapshot(args: Args) {
   const capChars = Number(args.capChars) || 17_500;
   const urls = args.urls === true;
   const scope = String(args.scope || "auto");
-  if (args.ref) {
-    const root = resolveRef(args.ref);
-    const { lines } = snapshotLines(root, {
-      mode: "page",
-      urls,
-      maxChars: FULL_PAGE_MAX_CHARS,
-    });
-    return { scope: "ref", text: renderLines(lines) };
-  }
+  const page = (root: Element, itemCap?: number) =>
+    renderLines(
+      snapshotLines(root, {
+        mode: "page",
+        urls,
+        itemCap,
+        maxChars: FULL_PAGE_MAX_CHARS,
+      }),
+    );
+  if (args.ref) return { scope: "ref", text: page(resolveRef(args.ref)) };
   const body = document.body || document.documentElement;
   if (scope === "viewport") return { scope, text: viewport(body, urls) };
   // The whole page when it fits; otherwise `page` caps long lists and
   // tables, and auto shows the viewport plus the whole page for read and find.
-  const full = renderLines(
-    snapshotLines(body, { mode: "page", urls, maxChars: FULL_PAGE_MAX_CHARS })
-      .lines,
-  );
+  const full = page(body);
   if (scope === "page" && full.length > capChars)
-    return {
-      scope,
-      text:
-        scrollNote() +
-        renderLines(
-          snapshotLines(body, {
-            mode: "page",
-            itemCap: PAGE_ITEM_CAP,
-            urls,
-            maxChars: FULL_PAGE_MAX_CHARS,
-          }).lines,
-        ),
-    };
+    return { scope, text: scrollNote() + page(body, PAGE_ITEM_CAP) };
   if (full.length <= capChars)
     return { scope: "page", text: `${scrollNote()}${full}` };
   return { scope: "viewport", text: viewport(body, urls), full };
@@ -74,8 +60,7 @@ function viewport(body: Element, urls: boolean) {
   const height = document.documentElement.scrollHeight;
   const top = Math.round(scrollY);
   const header = `[Viewport y=${top}-${top + innerHeight} of ${height}px; content outside it is not shown. Scroll with act, or use find.]`;
-  const { lines } = snapshotLines(body, { mode: "viewport", urls });
-  return `${header}\n${renderLines(lines)}`;
+  return `${header}\n${renderLines(snapshotLines(body, { mode: "viewport", urls }))}`;
 }
 
 const methods: Record<string, (args: Args) => unknown> = {

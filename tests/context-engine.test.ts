@@ -190,18 +190,47 @@ test("compaction keeps tool declarations and recent turns and folds earlier summ
   assert.equal(resultText(view.at(-1)), page(29, 1_500));
 });
 
+const imageCount = (view: AgentMessage[]) =>
+  view.flatMap((message) =>
+    message.role === "toolResult"
+      ? message.content.filter((part) => part.type === "image")
+      : [],
+  ).length;
+
 test("only the newest screenshot stays; older ones become a note", async () => {
   const { engine, messages, turn } = run();
   await turn("first", {}, "", "screenshot", true);
   await turn("second", {}, "", "screenshot", true);
   const view = await engine.transform(messages);
-  const images = view.flatMap((message) =>
-    message.role === "toolResult"
-      ? message.content.filter((part) => part.type === "image")
-      : [],
-  );
-  assert.equal(images.length, 1);
+  assert.equal(imageCount(view), 1);
   assert.match(JSON.stringify(view), /earlier image was removed/);
+});
+
+test("every screenshot of the latest parallel batch reaches the model", async () => {
+  const { engine, messages, turn } = run();
+  await turn("older", {}, "", "screenshot", true);
+  messages.push({
+    ...assistantMessage(model),
+    content: [1, 2].map((tabId) => ({
+      type: "toolCall" as const,
+      id: `shot-${tabId}`,
+      name: "screenshot",
+      arguments: { tabId },
+    })),
+  });
+  for (const tabId of [1, 2])
+    messages.push({
+      role: "toolResult",
+      toolCallId: `shot-${tabId}`,
+      toolName: "screenshot",
+      content: [
+        { type: "text", text: `Tab ${tabId}` },
+        { type: "image", data: "AA==", mimeType: "image/png" },
+      ],
+      isError: false,
+      timestamp: 0,
+    });
+  assert.equal(imageCount(await engine.transform(messages)), 2);
 });
 
 test("old editPage arguments shrink with the masking batch, newer ones stay", async () => {

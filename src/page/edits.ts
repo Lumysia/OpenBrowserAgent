@@ -2,8 +2,45 @@ import { compact } from "./dom";
 import { refFor, resolveRef } from "./refs";
 
 // `editPage` operations, run in the page in order; the batch stops at the
-// first failure. Markup never carries script: page JavaScript is a separate,
-// default-off tool group.
+// first failure. Edits never run or load script or frames: page JavaScript
+// is a separate, default-off tool group. Every path (insert, html, attribute
+// changes) goes through the same allowlist of tags and attributes.
+
+const SAFE_TAGS = new Set(
+  `a abbr address article aside b bdi bdo blockquote br button caption cite code col colgroup data dd del details dfn div dl dt em figcaption figure footer h1 h2 h3 h4 h5 h6 header hr i img input ins kbd label legend li main mark nav ol option p pre q rp rt ruby s samp section select small span strong sub summary sup table tbody td textarea tfoot th thead time tr u ul var wbr`.split(
+    " ",
+  ),
+);
+const SAFE_ATTRIBUTES = new Set(
+  `alt checked cite class colspan datetime dir disabled for headers height hidden href id lang loading name open placeholder readonly rel reversed role rowspan scope selected span src srcset start style tabindex target title type value width`.split(
+    " ",
+  ),
+);
+const URL_ATTRIBUTES = new Set(["href", "src", "srcset", "cite"]);
+
+function checkTag(tag: string) {
+  if (!SAFE_TAGS.has(tag.toLowerCase()))
+    throw new Error(
+      `<${tag}> is not allowed in edits (no script, frames, embedded objects or custom elements). Use plain HTML such as div, p, span, a, img, table or list elements.`,
+    );
+}
+
+function checkAttribute(name: string, value: string) {
+  const key = name.toLowerCase();
+  if (!SAFE_ATTRIBUTES.has(key) && !/^(aria|data)-[a-z0-9-]+$/.test(key))
+    throw new Error(
+      `Attribute ${name} is not allowed in edits (no event handlers or script).`,
+    );
+  const plain = value.replace(/[\s\u0000-\u001f]/g, "").toLowerCase();
+  if (/(java|vb|live)script:/.test(plain))
+    throw new Error(`Attribute ${name} cannot hold a script URL.`);
+  if (
+    URL_ATTRIBUTES.has(key) &&
+    plain.includes("data:") &&
+    !/^data:image\//.test(plain)
+  )
+    throw new Error(`Attribute ${name} cannot hold a data URL.`);
+}
 
 export type EditOp = {
   op: string;
@@ -54,10 +91,9 @@ function apply(op: EditOp): string | undefined {
     case "setAttribute": {
       const name = (op.name || "").trim();
       if (!name) throw new Error("name is required.");
-      if (unsafeAttribute(name, op.value ?? ""))
-        throw new Error(
-          `Attribute ${name} is not allowed (no script in edits).`,
-        );
+      checkAttribute(name, op.value ?? "");
+      // A URL on a frame, script or object element would load it.
+      if (URL_ATTRIBUTES.has(name.toLowerCase())) checkTag(element.localName);
       element.setAttribute(name, op.value ?? "");
       return;
     }
@@ -119,21 +155,22 @@ function insert(element: Element, op: EditOp) {
   if (op.html) {
     const template = document.createElement("template");
     template.innerHTML = op.html;
-    const content = sanitize(template.content);
-    const wrapper = document.createElement(op.tag || "div");
-    // Clone after stripping: an isolated-world parse may already have bound
-    // handlers of removed on* attributes.
-    wrapper.append(document.importNode(content, true));
+    checkMarkup(template.content);
+    const tag = op.tag || "div";
+    checkTag(tag);
+    const wrapper = document.createElement(tag);
+    wrapper.append(document.importNode(template.content, true));
     node =
       wrapper.childElementCount === 1 && !compact(textOutside(wrapper))
         ? wrapper.firstElementChild!
         : wrapper;
   } else {
-    const tag = /^[a-z][a-z0-9-]*$/i.test(op.tag || "")
-      ? op.tag!
-      : sibling
+    const tag =
+      op.tag ||
+      (sibling && SAFE_TAGS.has(element.localName)
         ? element.localName
-        : "span";
+        : "span");
+    checkTag(tag);
     node = document.createElement(tag);
     if (sibling && tag === element.localName && element.className)
       node.className = element.className;
@@ -158,21 +195,16 @@ function textOutside(wrapper: Element) {
     .join("");
 }
 
-function unsafeAttribute(name: string, value: string) {
-  return (
-    /^on/i.test(name) ||
-    name.toLowerCase() === "srcdoc" ||
-    /^(javascript|vbscript):/i.test(value.replace(/[\s\u0000-\u001f]/g, ""))
-  );
-}
-
-function sanitize(root: DocumentFragment) {
+// Markup the model wrote is refused as a whole if any part is not allowed,
+// so nothing is silently dropped.
+function checkMarkup(root: DocumentFragment) {
   for (const element of Array.from(root.querySelectorAll("*"))) {
-    if (["script", "iframe", "object", "embed"].includes(element.localName))
-      element.remove();
-    if (element instanceof HTMLTemplateElement) sanitize(element.content);
+    if (element.namespaceURI !== "http://www.w3.org/1999/xhtml")
+      throw new Error(
+        `<${element.localName}> is not allowed in edits (no SVG or MathML markup).`,
+      );
+    checkTag(element.localName);
     for (const { name, value } of Array.from(element.attributes))
-      if (unsafeAttribute(name, value)) element.removeAttribute(name);
+      checkAttribute(name, value);
   }
-  return root;
 }

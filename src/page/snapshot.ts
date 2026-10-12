@@ -56,8 +56,9 @@ export function snapshotLines(root: Element, options: SnapshotOptions) {
   const lines: Line[] = [];
   let chars = 0;
   const limit = options.maxChars ?? Infinity;
+  const full = () => chars > limit;
   const push = (depth: number, text: string) => {
-    if (chars > limit) return;
+    if (full()) return;
     lines.push({ depth, text });
     chars += text.length + depth * 2 + 3;
   };
@@ -78,6 +79,7 @@ export function snapshotLines(root: Element, options: SnapshotOptions) {
       run = [];
     };
     for (const child of children(parent)) {
+      if (full()) return;
       if (child.nodeType === Node.TEXT_NODE) {
         run.push(child);
         continue;
@@ -95,7 +97,7 @@ export function snapshotLines(root: Element, options: SnapshotOptions) {
   }
 
   function visit(element: Element, depth: number) {
-    if (!visible(element)) return;
+    if (full() || !visible(element)) return;
     const role = roleOf(element);
     if (isInteractive(element, role) && role !== "listbox") {
       push(depth, controlLine(element, role, options));
@@ -206,13 +208,22 @@ export function snapshotLines(root: Element, options: SnapshotOptions) {
   }
 
   visit(root, 0);
-  return { lines, truncated: chars > limit };
+  return { lines, truncated: full() };
 }
 
-export function renderLines(lines: Line[]) {
-  return lines
+export function renderLines({
+  lines,
+  truncated,
+}: {
+  lines: Line[];
+  truncated?: boolean;
+}) {
+  const text = lines
     .map((line) => `${"  ".repeat(line.depth)}${line.text}`)
     .join("\n");
+  return truncated
+    ? `${text}\n[Snapshot cut at ${text.length} characters: the rest is missing. Use find, or snapshot ref= on a later part.]`
+    : text;
 }
 
 function controlLine(element: Element, role: string, options: SnapshotOptions) {

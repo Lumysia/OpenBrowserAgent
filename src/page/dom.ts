@@ -11,7 +11,6 @@ const SKIPPED_TAGS = new Set([
   "link",
   "title",
   "base",
-  "slot",
 ]);
 
 const IMPLICIT_ROLE: Record<string, string> = {
@@ -142,13 +141,20 @@ export function isHidden(element: Element) {
       checkVisibility?: (options: object) => boolean;
     }
   ).checkVisibility;
-  if (check)
-    return !check.call(element, {
+  if (!check) {
+    const style = getComputedStyle(element);
+    return style.display === "none" || style.visibility === "hidden";
+  }
+  if (
+    check.call(element, {
       visibilityProperty: true,
       contentVisibilityAuto: false,
-    });
-  const style = getComputedStyle(element);
-  return style.display === "none" || style.visibility === "hidden";
+    })
+  )
+    return false;
+  // Elements without a box of their own (slots, display: contents) show
+  // their children.
+  return getComputedStyle(element).display !== "contents";
 }
 
 export function roleOf(element: Element): string {

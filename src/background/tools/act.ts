@@ -300,7 +300,7 @@ export const editPageTool: ToolDefinition = {
   compactArgs: true,
   summary: "Change page content and style",
   description:
-    "Edit the page in place by snapshot ref, in one batch: setText (text; keep links by writing them as [label](e12) like the snapshot), insert (text or html at position before/after/prepend/append; tag optional; returns the new ref), remove, setAttribute / removeAttribute (name, value), style (inline CSS in value), css (stylesheet text in value, no ref). For translation, replace each block's text with setText. Stops at the first failing edit.",
+    "Edit the page in place by snapshot ref, in one batch: setText (text; keep links by writing them as [label](e12) like the snapshot), insert (text or plain html at position before/after/prepend/append; tag optional; returns the new ref; no script, frames, SVG or event handlers), remove, setAttribute / removeAttribute (name, value), style (inline CSS in value), css (stylesheet text in value, no ref). For translation, replace each block's text with setText. Stops at the first failing edit.",
   parameters: schema(
     {
       tabId: { type: "number", description: "Defaults to the active tab." },

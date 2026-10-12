@@ -21,6 +21,18 @@ const BIG = `<title>Big</title><ul>${Array.from(
   (_, index) => `<li>Row ${index} with some filler text to make it long</li>`,
 ).join("")}</ul>`;
 
+const SHADOW = `<title>Shadow</title><h1>Shadow</h1>
+<my-card><span>Slotted words</span><button>Slotted button</button></my-card>
+<script>customElements.define("my-card", class extends HTMLElement {
+  constructor() { super(); this.attachShadow({ mode: "open" }).innerHTML = "<h2>Card title</h2><slot></slot>"; }
+});</script>`;
+
+const HUGE = `<title>Huge</title>${Array.from(
+  { length: 9000 },
+  (_, index) =>
+    `<p>Paragraph ${index} with enough filler text to make the page very long indeed.</p>`,
+).join("")}`;
+
 // The ref written right after `label` in a snapshot line.
 const ref = (text, label) => {
   const line = text.split("\n").find((item) => item.includes(label));
@@ -37,6 +49,8 @@ test(
         "/page": PAGE,
         "/big": BIG,
         "/other": "<title>Other</title><p>Other page</p>",
+        "/shadow": SHADOW,
+        "/huge": HUGE,
       };
       if (!pages[request.url]) return false;
       response
@@ -74,43 +88,25 @@ test(
     try {
       const tabId = await open("/page");
 
-      await t.test(
-        "only the core tools are declared; removed tools are gone",
-        async () => {
-          await fixture.run([]);
-          const names = fixture.requests[0].tools
-            .map((tool) => tool.function.name)
-            .sort();
-          assert.deepEqual(names, [
-            "act",
-            "ask",
-            "editPage",
-            "extract",
-            "find",
-            "read",
-            "screenshot",
-            "snapshot",
-            "tabs",
-            "toolSearch",
-            "webSearch",
-          ]);
-          const schemas = JSON.stringify(fixture.requests[0].tools);
-          for (const removed of [
-            "inspectPage",
-            "mutatePage",
-            "cdpInput",
-            "getCurrentTime",
-            "getCurrentTab",
-            "captureVisibleTab",
-            "readFileFromUrl",
-            "readUploadedAttachment",
-            "manageMemory",
-            "loadTools",
-            '"reason"',
-          ])
-            assert.ok(!schemas.includes(removed), removed);
-        },
-      );
+      await t.test("only the core tools are declared", async () => {
+        await fixture.run([]);
+        const names = fixture.requests[0].tools
+          .map((tool) => tool.function.name)
+          .sort();
+        assert.deepEqual(names, [
+          "act",
+          "ask",
+          "editPage",
+          "extract",
+          "find",
+          "read",
+          "screenshot",
+          "snapshot",
+          "tabs",
+          "toolSearch",
+          "webSearch",
+        ]);
+      });
 
       await t.test(
         "refs stay stable and a stale ref fails clearly",
@@ -211,7 +207,7 @@ test(
       );
 
       await t.test(
-        "editPage keeps marked links and inserts without script",
+        "editPage keeps marked links and never runs or loads script",
         async () => {
           const [snapshot] = await fixture.run([
             { name: "snapshot", args: { tabId } },
@@ -219,34 +215,67 @@ test(
           const intro = ref(snapshot, "paragraph");
           const link = snapshot.match(/\[documentation\]\((e\d+)\)/)[1];
           const note = snapshot.match(/\[\[1\]\]\((e\d+)\)/)[1];
-          const [edited] = await fixture.run([
-            {
-              name: "editPage",
-              args: {
-                tabId,
-                edits: [
-                  {
-                    op: "setText",
-                    ref: intro,
-                    text: `Lisez la [documentation](${link}) avant de commencer.[[1]](${note})`,
-                  },
-                  {
-                    op: "insert",
-                    ref: intro,
-                    position: "after",
-                    html: '<img src="x" onerror="window.xss=1"><b>ajouté</b>',
-                  },
-                ],
+          const edit = (edits) => ({
+            name: "editPage",
+            args: { tabId, edits },
+          });
+          const results = await fixture.run([
+            edit([
+              {
+                op: "setText",
+                ref: intro,
+                text: `Lisez la [documentation](${link}) avant de commencer.[[1]](${note})`,
               },
-            },
+              {
+                op: "insert",
+                ref: intro,
+                position: "after",
+                html: '<b>ajouté</b> <img src="data:image/png;base64,AA==" alt="">',
+              },
+            ]),
+            edit([{ op: "insert", ref: intro, tag: "script", text: "" }]),
+            edit([
+              { op: "insert", ref: intro, tag: "script", html: "<b>x</b>" },
+            ]),
+            edit([
+              {
+                op: "insert",
+                ref: intro,
+                html: '<img src="x" onerror="window.xss=1">',
+              },
+            ]),
+            edit([
+              {
+                op: "insert",
+                ref: intro,
+                html: '<svg><a><animate attributeName="href" values="javascript:window.xss=1"/></a></svg>',
+              },
+            ]),
+            edit([
+              {
+                op: "setAttribute",
+                ref: link,
+                name: "href",
+                value: " java\tscript:window.xss=1",
+              },
+            ]),
+            edit([
+              { op: "setAttribute", ref: link, name: "onclick", value: "1" },
+            ]),
           ]);
+          const [edited, ...refused] = results;
           assert.match(edited, /Applied 2 of 2 edits/);
           assert.match(edited, /Inserted: e\d+/);
+          for (const text of refused)
+            assert.match(
+              text,
+              /Applied 0 of 1 edits[\s\S]*(is not allowed|cannot hold a script URL)/,
+            );
           await new Promise((resolve) => setTimeout(resolve, 300));
           assert.deepEqual(
             await evaluate(
               tabId,
-              "[document.querySelector('#intro').textContent, document.querySelector('#intro a').getAttribute('href'), document.querySelectorAll('#intro a').length, window.xss ?? null, !!document.querySelector('[data-oba-inserted] b, b[data-oba-inserted]')]",
+              "[document.querySelector('#intro').textContent, document.querySelector('#intro a').getAttribute('href'), document.querySelectorAll('#intro a').length, window.xss ?? null, !!document.querySelector('[data-oba-inserted] b, b[data-oba-inserted]'), document.querySelectorAll('script, svg').length]",
             ),
             [
               "Lisez la documentation avant de commencer.[1]",
@@ -254,6 +283,7 @@ test(
               2,
               null,
               true,
+              0,
             ],
           );
         },
@@ -339,6 +369,54 @@ test(
           );
           assert.match(read, /characters 150000-/);
           await page.call((id) => chrome.tabs.remove(id), big);
+        },
+      );
+
+      await t.test(
+        "slotted content shows, and a cut full snapshot says so",
+        async () => {
+          const shadow = await open("/shadow");
+          const [snapshot, found] = await fixture.run([
+            { name: "snapshot", args: { tabId: shadow } },
+            { name: "find", args: { tabId: shadow, query: "Slotted" } },
+          ]);
+          assert.match(
+            snapshot,
+            /Slotted words \[button "Slotted button" e\d+\]/,
+          );
+          assert.match(found, /1 matches for "Slotted"/);
+          const huge = await open("/huge");
+          const [, end] = await fixture.run((body) => {
+            const results = body.messages.filter(
+              (message) => message.role === "tool",
+            );
+            if (!results.length)
+              return {
+                calls: [
+                  { id: "full", name: "snapshot", args: { tabId: huge } },
+                ],
+              };
+            if (results.length === 1) {
+              const [, chars, handle] = results[0].content.match(
+                /\((\d+) chars\) is stored as "(art-[0-9a-f]+)"/,
+              );
+              return {
+                calls: [
+                  {
+                    id: "end",
+                    name: "read",
+                    args: { source: handle, offset: Number(chars) - 300 },
+                  },
+                ],
+              };
+            }
+            return { text: "done" };
+          });
+          assert.match(
+            end,
+            /\[Snapshot cut at \d+ characters: the rest is missing/,
+          );
+          await page.call((ids) => chrome.tabs.remove(ids), [shadow, huge]);
         },
       );
 

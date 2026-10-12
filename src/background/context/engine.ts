@@ -47,11 +47,9 @@ export function createContextEngine(options: ContextEngineOptions) {
   let retryCompactionAbove = 0;
 
   function view(messages: AgentMessage[]): AgentMessage[] {
-    // Only the newest image a tool returned stays; older ones are dropped.
-    const newestImage = messages.findLastIndex(
-      (message) =>
-        message.role === "toolResult" &&
-        message.content.some((part) => part.type === "image"),
+    // Images of the latest tool batch stay; older ones are dropped.
+    const latestBatch = messages.findLastIndex(
+      (message) => message.role === "assistant",
     );
     const masked = messages.map((message, index): AgentMessage => {
       if (message.role === "assistant" && argMasks.size)
@@ -72,7 +70,7 @@ export function createContextEngine(options: ContextEngineOptions) {
       if (stub)
         return { ...message, content: [{ type: "text" as const, text: stub }] };
       if (
-        index < newestImage &&
+        index < latestBatch &&
         message.content.some((part) => part.type === "image")
       )
         return {
