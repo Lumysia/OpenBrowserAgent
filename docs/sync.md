@@ -40,7 +40,7 @@ If the server answers "too many requests" (HTTP 429) or "temporarily unavailable
 - When two devices add messages to the same chat at the same time, both keep all messages, in time order.
 - When two devices edit the same skill or workspace file, the newer edit keeps the file name and the other is kept next to it as `name.conflict-<device>-<date>.ext`.
 - Chats are downloaded on a device only when you open them there. Attachments are downloaded when a chat shows them.
-- If a sync would delete more than half of a list with more than five items (for example, most of your chats), it pauses and asks on the Sync page whether to delete them on this device or keep them and upload them again.
+- If a sync would delete more than half of a list with more than five items (for example, most of your chats), it pauses and asks on the Sync page whether to delete them on this device or keep them and upload them again. Keeping uploads exactly those items again, as new changes; an item whose content is neither on this device nor on the server any more (a chat never opened here, deleted elsewhere more than a day ago) cannot come back and is deleted.
 - A device that joins an existing sync keeps its own chats and other items, which are uploaded. Where it and the account hold different values, the newer change wins; a value this device never changed since change tracking started counts as older than the account's. If joining would delete most of a list here, it asks first, as above.
 - Each backend keeps its own sync state on the device, so switching to another backend and back continues where it left off. Spellings of one WebDAV folder (http or https, host name case, a trailing slash) count as the same folder.
 
