@@ -3,7 +3,7 @@ import type { Messages } from "../../src/shared/i18n";
 import type {
   AttachmentTab,
   SelectedElement,
-  Skill,
+  PickedSkill,
   UploadedAttachment,
 } from "../../src/shared/types";
 import { getSkillDisplayName } from "../../src/shared/skills";
@@ -27,7 +27,7 @@ export function ComposerAttachments({
   t: Messages;
   attachedTabs: AttachmentTab[];
   pendingAttachments: UploadedAttachment[];
-  selectedSkills: Skill[];
+  selectedSkills: PickedSkill[];
   selectedElements: SelectedElement[];
   attachmentNotice: string;
   onRemoveAttachedTab: (tabId: number) => void;
@@ -110,7 +110,7 @@ function SkillContextCard({
   onRemove,
 }: {
   t: Messages;
-  skill: Skill;
+  skill: PickedSkill;
   onRemove: () => void;
 }) {
   const { removing, remove } = useDeferredRemove(onRemove);

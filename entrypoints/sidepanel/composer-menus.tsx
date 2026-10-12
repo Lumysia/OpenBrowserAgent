@@ -16,10 +16,9 @@ import type {
   AttachmentTab,
   Agent,
   ModelConfig,
+  PickedSkill,
   Preferences,
-  Skill,
 } from "../../src/shared/types";
-import { getSkillDisplayName } from "../../src/shared/skills";
 import {
   Button,
   IconTooltip,
@@ -34,6 +33,7 @@ import {
 } from "../../src/ui/agent-display";
 import { useDeferredRemove } from "./use-deferred-remove";
 import { COMPOSER_MENU, type ComposerMenu } from "./sidepanel-menu-state";
+import { SkillPickerList } from "./skill-picker";
 
 export function AddContextMenu({
   t,
@@ -54,13 +54,13 @@ export function AddContextMenu({
   t: Messages;
   view: "menu" | "tabs" | "skills";
   tabs: AttachmentTab[];
-  skills: Skill[];
+  skills: PickedSkill[];
   selectedSkillIds: string[];
   selectedTabIds: number[];
   activeTabAttachable: boolean;
   onShowTabs: () => void;
   onShowSkills: () => void;
-  onSkill: (skill: Skill) => void;
+  onSkill: (skill: PickedSkill) => void;
   onUploadFiles: () => void;
   onToggleTab: (tab: AttachmentTab) => void;
   onAttachTab: () => void;
@@ -146,24 +146,12 @@ export function AddContextMenu({
           <div className="action-list-item muted">
             <FileText size={17} /> {t.options.skills} ({skills.length})
           </div>
-          <div>
-            {skills.map((skill) => (
-              <Button
-                key={skill.id}
-                variant="ghost"
-                className={`action-list-item ${selectedSkillIds.includes(skill.id) ? "active" : ""}`}
-                onClick={() => onSkill(skill)}
-              >
-                <FileText size={20} />
-                <span>
-                  {getSkillDisplayName(skill, t.options.untitledSkill)}
-                </span>
-                {selectedSkillIds.includes(skill.id) && (
-                  <Check className="menu-check" size={14} />
-                )}
-              </Button>
-            ))}
-          </div>
+          <SkillPickerList
+            t={t}
+            skills={skills}
+            selectedIds={selectedSkillIds}
+            onPick={onSkill}
+          />
         </div>
       );
 

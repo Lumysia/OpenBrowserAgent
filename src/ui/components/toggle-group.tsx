@@ -4,11 +4,17 @@ import { cn } from "../utils";
 
 const ToggleGroup = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root>
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> & {
+    size?: "default" | "sm";
+  }
+>(({ className, size = "default", ...props }, ref) => (
   <ToggleGroupPrimitive.Root
     ref={ref}
-    className={cn("ui-toggle-group", className)}
+    className={cn(
+      "ui-toggle-group",
+      size === "sm" && "ui-toggle-group-sm",
+      className,
+    )}
     {...props}
   />
 ));

@@ -3,37 +3,57 @@ import {
   isMetadataOnlyAttachment,
 } from "../shared/attachments";
 import { renderSourcesForPrompt } from "../shared/chat-sources";
-import { getSkillInstruction } from "../shared/skills";
+import { findSkill } from "../shared/skill-catalog";
+import {
+  getSkillBody,
+  interpolateSkillVariables,
+  pickedSkillsFromMetadata,
+  SKILL_ENTRY_PATH,
+} from "../shared/skills";
 import type {
   ChatMessage,
   ChatSource,
+  PickedSkill,
   Skill,
   UploadedAttachment,
 } from "../shared/types";
 
-// Earlier turns are replayed as plain text; the latest user message also
-// carries its context: skills the user picked, selected tabs and elements,
-// attachments, and sources that can be cited again.
+// Earlier turns are replayed as plain text, noting the skills the user
+// picked; the latest user message also carries its context: the picked
+// skills' instructions, selected tabs and elements, attachments, and sources
+// that can be cited again.
 export function renderMessageText(
   message: ChatMessage,
-  isLatest: boolean,
-  requestAttachments: UploadedAttachment[],
+  options: {
+    latest: boolean;
+    attachments: UploadedAttachment[];
+    // The skills the run can use, to resolve picked ones.
+    skills: Skill[];
+  },
 ) {
-  if (isLatest && message.role === "user")
-    return renderLatestUserMessage(message, requestAttachments);
-  const attachments = renderAttachmentContext(getUploadedAttachments(message));
-  return attachments ? `${message.content}\n\n${attachments}` : message.content;
+  if (options.latest && message.role === "user")
+    return renderLatestUserMessage(message, options);
+  const picked = pickedSkillsFromMetadata(message.metadata)
+    .map((skill) => `skill:${skill.name}`)
+    .join(", ");
+  return [
+    picked && `[The user picked ${picked} for this message.]`,
+    message.content,
+    renderAttachmentContext(getUploadedAttachments(message)),
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 function renderLatestUserMessage(
   message: ChatMessage,
-  requestAttachments: UploadedAttachment[],
+  {
+    attachments: requestAttachments,
+    skills,
+  }: { attachments: UploadedAttachment[]; skills: Skill[] },
 ) {
   if (message.metadata?.internalRetry)
     return `<internal_instruction>\n${message.content}\n</internal_instruction>`;
-  const skills = Array.isArray(message.metadata?.skills)
-    ? (message.metadata.skills as Skill[])
-    : [];
   const sources = Array.isArray(message.metadata?.sources)
     ? (message.metadata.sources as ChatSource[])
     : [];
@@ -51,14 +71,31 @@ function renderLatestUserMessage(
     .filter(Boolean)
     .join("\n\n");
   return [
-    skills.length
-      ? `<instruction>\n${skills.map(getSkillInstruction).join("\n\n")}\n</instruction>`
-      : "",
+    ...pickedSkillsFromMetadata(message.metadata).map((picked) =>
+      renderPickedSkill(picked, skills),
+    ),
     context ? `<message_context>\n${context}\n</message_context>` : "",
     `<message>\n${message.content}\n</message>`,
   ]
     .filter(Boolean)
     .join("\n\n");
+}
+
+// A picked skill means "use this skill for this request": its instructions
+// come with the message instead of waiting for the model to read them.
+function renderPickedSkill(picked: PickedSkill, skills: Skill[]) {
+  const skill =
+    findSkill(skills, picked.id) || findSkill(skills, picked.name || "");
+  if (!skill)
+    return `<skill name="${picked.name}">\nThe user picked this skill, but it is no longer available. Do the request without it.\n</skill>`;
+  const others = skill.files
+    .map((file) => file.path)
+    .filter((path) => path !== SKILL_ENTRY_PATH);
+  return `<skill name="${skill.name}">
+The user picked this skill for this request: follow its instructions.${others.length ? ` Its other files, read with read "skill:${skill.name}/PATH" when it says so: ${others.join(", ")}.` : ""}
+
+${interpolateSkillVariables(getSkillBody(skill))}
+</skill>`;
 }
 
 export function getUploadedAttachments(message: ChatMessage) {

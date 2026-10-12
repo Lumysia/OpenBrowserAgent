@@ -126,6 +126,8 @@ export const zhTW: LocaleMessages = {
     attachmentsUnsupportedRetry:
       "目前模型拒絕了某種非文字內容格式，已自動改用文字和檔案資訊重試。",
     attachmentOnlyMessage: "請查看附件內容。",
+    skillOnlyMessage: "使用所選技能。",
+    noSkillsFound: "沒有符合的技能",
     fileMetadataOnly: "僅傳送檔案資訊",
     replaceUnavailableAttachments: "替換不可用檔案",
     replaceUnavailableAttachmentsDescription:
@@ -323,9 +325,6 @@ export const zhTW: LocaleMessages = {
     resetDefaultMcpServers: "重設預設 MCP 伺服器",
     resetDefaultMcpServersDescription:
       "用內建預設項目取代目前的 MCP 伺服器。自訂伺服器和測試結果會被移除。",
-    resetDefaultSkills: "重設預設技能",
-    resetDefaultSkillsDescription:
-      "用內建預設項目取代目前技能。自訂技能和修改會被移除。",
     selectModel: "選擇模型",
     selectModelDescription:
       "選擇主要對話模型。智慧體最好使用支援工具呼叫的模型。",
@@ -368,8 +367,6 @@ export const zhTW: LocaleMessages = {
     importingSkillZip: "匯入中…",
     importSkillZipError: "技能匯入失敗",
     importSkillPackageMissingEntry: "匯入的壓縮檔中找不到 SKILL.md。",
-    noSkillsTitle: "尚無技能",
-    noSkillsDescription: "建立第一個技能，一鍵重複使用瀏覽器工作流程。",
     untitledSkill: "未命名技能",
     title: "標題",
     description: "描述",
@@ -379,7 +376,6 @@ export const zhTW: LocaleMessages = {
     downloadFile: "下載檔案",
     downloadSkillPackage: "下載 .skill",
     duplicateSkill: "建立副本",
-    disabled: "已停用",
     addFile: "新增檔案",
     uploadFile: "上傳檔案",
     editFile: "編輯檔案",
@@ -394,6 +390,20 @@ export const zhTW: LocaleMessages = {
     skillCheckDescription: "已填寫描述",
     skillCheckDescriptionMissing: "缺少描述",
     deleteSkill: "刪除技能",
+    builtinSkillBadge: "內建",
+    overrideSkillBadge: "已自訂的內建技能",
+    customizeSkill: "自訂",
+    revertSkillToBuiltin: "還原為內建版本",
+    viewFile: "檢視檔案",
+    skillInvokeMode: "使用方式",
+    skillInvokeAuto: "自動",
+    skillInvokeManual: "手動",
+    skillInvokeOff: "關閉",
+    skillInvokeHint:
+      "自動：請求符合時，智慧體會使用該技能。手動：僅在側邊欄中以 / 或 + 選擇時使用。關閉：一律不使用。內建技能為唯讀；點選「自訂」即可編輯你自己的副本。",
+    skillListOverBudget: "技能清單過長",
+    skillListOverBudgetDescription:
+      "「自動」技能的描述在每次請求中佔用 {chars} 個字元（上限為 {limit}）。請將不常用的技能設為「手動」，或縮短其描述。",
     languageDescription: "選擇擴充功能介面使用的語言。",
     colorScheme: "配色方案",
     colorSchemeDescription: "選擇按鈕、分頁和高亮使用的柔和主色。",

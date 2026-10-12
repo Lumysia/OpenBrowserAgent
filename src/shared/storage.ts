@@ -1,10 +1,10 @@
 import { normalizeAgents } from "./agents";
 import { getBrowserApi } from "./browser-api";
 import { normalizeChatSummaries } from "./chats";
-import { BUILTIN_SKILLS } from "./builtin-skills";
 import { DEFAULT_PREFERENCES, mergePreferences } from "./default-preferences";
 import { normalizeLocalExecutionBridges } from "./local-execution-bridges";
 import { normalizeMcpServers } from "./mcp";
+import { normalizeSkillSettings } from "./skill-catalog";
 import { normalizeSkills } from "./skills";
 import {
   DEFAULT_SYNC_DATA_SETTINGS,
@@ -49,6 +49,7 @@ import type {
   Preferences,
   ProviderState,
   Skill,
+  SkillSettings,
   McpServerConfig,
   LocalExecutionBridgeConfig,
   SyncBackendConfig,
@@ -197,10 +198,16 @@ export const storage = {
     () => [],
     { sync: SYNC_PREFERENCES.agents, normalize: normalizeWorkspaces },
   ),
-  skills: createItem<Skill[]>(STORAGE_KEYS.skills, () => BUILTIN_SKILLS, {
+  // The user's own skills; built-ins come from the code (skill-catalog).
+  skills: createItem<Skill[]>(STORAGE_KEYS.skills, () => [], {
     sync: SYNC_PREFERENCES.skills,
     normalize: normalizeSkills,
   }),
+  skillSettings: createItem<SkillSettings>(
+    STORAGE_KEYS.skillSettings,
+    () => ({}),
+    { sync: SYNC_PREFERENCES.skills, normalize: normalizeSkillSettings },
+  ),
   mcpServers: createItem<McpServerConfig[]>(STORAGE_KEYS.mcpServers, () => [], {
     sync: SYNC_PREFERENCES.mcpServers,
     normalize: normalizeMcpServers,

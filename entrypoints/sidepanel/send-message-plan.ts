@@ -5,11 +5,10 @@ import type {
   Chat,
   ChatMessage,
   ChatSource,
+  PickedSkill,
   SelectedElement,
-  Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
-import { isSkillEnabled } from "../../src/shared/skills";
 import {
   AI_STREAM_REQUEST_TYPE,
   type Agent,
@@ -21,11 +20,7 @@ import {
   type EditMessageDraft,
 } from "./edit-message";
 import { selectedElementImageAttachments } from "./selected-element-attachment";
-import {
-  generateLocalTitle,
-  interpolateSkillVariables,
-} from "./sidepanel-context";
-import { interpolateSkillPackage } from "./skill-context";
+import { generateLocalTitle } from "./sidepanel-context";
 
 export function createSendMessagePlan({
   chat,
@@ -38,7 +33,6 @@ export function createSendMessagePlan({
   sources,
   assistantModel,
   skills,
-  autoSelectedSkill,
 }: {
   chat: Chat;
   text: string;
@@ -49,14 +43,17 @@ export function createSendMessagePlan({
   context: string;
   sources?: ChatSource[];
   assistantModel?: { provider: string; name: string };
-  skills?: Skill[];
-  autoSelectedSkill?: boolean;
+  skills?: PickedSkill[];
 }) {
   const selectedSkills = skills?.filter(Boolean) || [];
   const userMessage: ChatMessage = {
     id: crypto.randomUUID(),
     role: "user",
-    content: text || t.sidepanel.attachmentOnlyMessage,
+    content:
+      text ||
+      (selectedSkills.length
+        ? t.sidepanel.skillOnlyMessage
+        : t.sidepanel.attachmentOnlyMessage),
     createdAt: Date.now(),
     metadata: {
       ...(context ? { context } : {}),
@@ -68,12 +65,7 @@ export function createSendMessagePlan({
       ...(sentAttachments.length
         ? { uploadedAttachments: sentAttachments.map(toAttachmentMetadata) }
         : {}),
-      ...(selectedSkills.length
-        ? {
-            skills: selectedSkills,
-            autoSelectedSkill,
-          }
-        : {}),
+      ...(selectedSkills.length ? { skills: selectedSkills } : {}),
     },
   };
   const assistantMessage: ChatMessage = {
@@ -88,7 +80,8 @@ export function createSendMessagePlan({
     },
   };
   const shouldGenerateTitle = chat.messages.length === 0;
-  const titleSource = text || sentAttachments[0]?.name || "";
+  const titleSource =
+    text || sentAttachments[0]?.name || selectedSkills[0]?.name || "";
   const nextChat = {
     ...chat,
     title: shouldGenerateTitle
@@ -131,7 +124,7 @@ export function pickSendInputs({
   resendMessage?: ChatMessage;
   attachedTabs: AttachmentTab[];
   selectedElements: SelectedElement[];
-  selectedSkills: Skill[];
+  selectedSkills: PickedSkill[];
   resendAttachments?: UploadedAttachment[];
   pendingAttachments: UploadedAttachment[];
   uploadedAttachments: UploadedAttachment[];
@@ -153,9 +146,7 @@ export function pickSendInputs({
     : edit
       ? edit.selectedElements
       : selectedElements;
-  const sentSkills = (queued ? [] : edit ? edit.skills : selectedSkills)
-    .filter(isSkillEnabled)
-    .map((skill) => interpolateSkillPackage(skill, interpolateSkillVariables));
+  const sentSkills = queued ? [] : edit ? edit.skills : selectedSkills;
   const imageAttachments = selectedElementImageAttachments(sentElements);
   return {
     activeEdit: edit,

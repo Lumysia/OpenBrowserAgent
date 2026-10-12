@@ -38,8 +38,10 @@ It turns the browser into an AI working surface: users can chat with a selected 
 ### Skills
 
 - Skills are reusable instruction packages with a required `SKILL.md`.
-- Built-in skills cover local execution bridge setup and skill creation. Agents see each skill's name and description and read the full skill only when it fits the task.
-- Skills support import/export, duplication, editing, validation, enable/disable, and reset to built-ins.
+- Built-in skills ship with the extension and update with it; they are read-only. Customizing one saves the user's own copy under the same name, which replaces the built-in until it is deleted.
+- Each skill is Auto (agents see its name and description and read the full skill when a request fits), Manual (used only when the user picks it) or Off.
+- In the side panel, typing `/` at the start of the message or opening "+" → Skills picks a skill for that message: the agent follows it for the request typed after it.
+- Skills support import/export, duplication, editing and validation. The Options page warns when the Auto skills' descriptions get long.
 
 ### Browser Tools
 
@@ -52,7 +54,7 @@ Tool runs are shown as visible cards with status, summaries, references, generat
 
 ### Context Attachments
 
-Users can attach current tabs, choose open tabs, upload/paste files, add skills, and select page elements. Sent messages preserve metadata for attached tabs, selected elements, uploaded attachments, and selected skills.
+Users can attach current tabs, choose open tabs, upload/paste files, pick skills (with "+" or by typing `/`), and select page elements. Sent messages preserve metadata for attached tabs, selected elements, uploaded attachments, and selected skills.
 
 ### Markdown and Rich Output
 

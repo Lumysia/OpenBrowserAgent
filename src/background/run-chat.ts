@@ -2,7 +2,11 @@ import { hasToolGroup, resolveAgent } from "../shared/agents";
 import { clampMaxToolSteps } from "../shared/config";
 import { getMessages } from "../shared/i18n";
 import { normalizeLocalExecutionBridges } from "../shared/local-execution-bridges";
-import { isSkillEnabled } from "../shared/skills";
+import {
+  availableSkills,
+  listedSkills,
+  resolveSkillCatalog,
+} from "../shared/skill-catalog";
 import { storage } from "../shared/storage";
 import type { Agent, ChatMessage, UploadedAttachment } from "../shared/types";
 import { createWorkspace, ensureWorkspaceDefaults } from "../shared/workspace";
@@ -26,11 +30,12 @@ export type RunRequest = {
 // panel only names the agent, so chats and background sub-agents are set up
 // the same way. A description (`store: false`) writes nothing.
 async function runSetup(request: RunRequest, store: boolean) {
-  const [agents, preferences, allSkills, mcpServers, bridges] =
+  const [agents, preferences, userSkills, skillSettings, mcpServers, bridges] =
     await Promise.all([
       storage.agents.get(),
       storage.preferences.get(),
       storage.skills.get(),
+      storage.skillSettings.get(),
       storage.mcpServers.get(),
       storage.localExecutionBridges.get(),
     ]);
@@ -45,9 +50,12 @@ async function runSetup(request: RunRequest, store: boolean) {
           ),
         }
       : resolved;
-  const skills = hasToolGroup(agent, "skills")
-    ? allSkills.filter(isSkillEnabled)
-    : [];
+  // Every agent can read the skills that are not off (the prompt, tools and
+  // the user's picks point to them); only agents with the skills group get
+  // the list of auto ones.
+  const catalog = resolveSkillCatalog(userSkills, skillSettings);
+  const skills = availableSkills(catalog);
+  const listed = hasToolGroup(agent, "skills") ? listedSkills(catalog) : [];
   const workspace = agent.workspace
     ? await workspaceForAgent(agent, store)
     : undefined;
@@ -67,7 +75,12 @@ async function runSetup(request: RunRequest, store: boolean) {
   return {
     agent,
     setup,
-    system: createSystemPrompt({ agent, skills, workspace, bridges: tested }),
+    system: createSystemPrompt({
+      agent,
+      skills: listed,
+      workspace,
+      bridges: tested,
+    }),
     maxToolSteps: clampMaxToolSteps(preferences.maxToolSteps),
   };
 }

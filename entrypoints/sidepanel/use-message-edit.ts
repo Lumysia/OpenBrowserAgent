@@ -3,8 +3,8 @@ import type {
   AttachmentTab,
   Chat,
   ChatMessage,
+  PickedSkill,
   SelectedElement,
-  Skill,
   UploadedAttachment,
 } from "../../src/shared/types";
 import { createEditMessageDraft, type EditMessageDraft } from "./edit-message";
@@ -29,11 +29,11 @@ export function useMessageEdit({
   pendingAttachments: UploadedAttachment[];
   attachedTabs: AttachmentTab[];
   selectedElements: SelectedElement[];
-  selectedSkills: Skill[];
+  selectedSkills: PickedSkill[];
   setInput: (value: string) => void;
   setAttachedTabs: (tabs: AttachmentTab[]) => void;
   setSelectedElements: (elements: SelectedElement[]) => void;
-  setSelectedSkills: (skills: Skill[]) => void;
+  setSelectedSkills: (skills: PickedSkill[]) => void;
   stageUploadedAttachments: (attachments: UploadedAttachment[]) => void;
 }) {
   const [editingMessage, setEditingMessage] = useState<EditMessageDraft | null>(

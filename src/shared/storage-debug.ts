@@ -22,7 +22,7 @@ const STORAGE_KEY_GROUPS = {
   ],
   providers: [STORAGE_KEYS.provider],
   agents: [STORAGE_KEYS.agents, STORAGE_KEYS.agentWorkspaces],
-  skills: [STORAGE_KEYS.skills],
+  skills: [STORAGE_KEYS.skills, STORAGE_KEYS.skillSettings],
   mcpServers: [STORAGE_KEYS.mcpServers],
   localExecutionBridges: [STORAGE_KEYS.localExecutionBridges],
   chats: [STORAGE_KEYS.chats, STORAGE_KEYS.chatTabs],

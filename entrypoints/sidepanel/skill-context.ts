@@ -1,23 +1,52 @@
-import { getSkillInstruction, normalizeSkill } from "../../src/shared/skills";
-import type { Skill } from "../../src/shared/types";
+import { normalizeSkillName, toPickedSkill } from "../../src/shared/skills";
+import type { PickedSkill } from "../../src/shared/types";
 
-export function interpolateSkillPackage(
-  skill: Skill,
-  interpolate: (value: string) => string,
-) {
-  const normalized = normalizeSkill(skill);
-  return {
-    ...normalized,
-    files: normalized.files.map((file) =>
-      file.path === "SKILL.md"
-        ? { ...file, content: interpolate(getSkillInstruction(normalized)) }
-        : file,
-    ),
-  };
-}
-
-export function toggleSkill(skills: Skill[], skill: Skill) {
+export function toggleSkill(skills: PickedSkill[], skill: PickedSkill) {
   return skills.some((item) => item.id === skill.id)
     ? skills.filter((item) => item.id !== skill.id)
-    : [...skills, skill];
+    : [...skills, toPickedSkill(skill)];
+}
+
+export function addSkill(skills: PickedSkill[], skill: PickedSkill) {
+  return skills.some((item) => item.id === skill.id)
+    ? skills
+    : [...skills, toPickedSkill(skill)];
+}
+
+// While the composer holds only "/" and a partial name, the slash picker
+// filters skills by it.
+export function slashSkillQuery(input: string) {
+  return input.match(/^\/([^\s/]*)$/)?.[1];
+}
+
+export function filterSkills<T extends PickedSkill>(
+  skills: T[],
+  query: string,
+) {
+  const wanted = query.toLowerCase();
+  if (!wanted) return skills;
+  const rank = (skill: T) => {
+    const name = skill.name.toLowerCase();
+    if (name.startsWith(wanted)) return 0;
+    if (name.includes(wanted)) return 1;
+    return skill.description.toLowerCase().includes(wanted) ? 2 : -1;
+  };
+  return skills
+    .map((skill) => ({ skill, rank: rank(skill) }))
+    .filter((item) => item.rank >= 0)
+    .sort((a, b) => a.rank - b.rank)
+    .map((item) => item.skill);
+}
+
+// "/name request" typed out in full: the named skill is picked and the rest
+// is the request.
+export function takeSlashSkill<T extends PickedSkill>(
+  input: string,
+  skills: T[],
+) {
+  const match = input.match(/^\/([^\s/]+)(?:\s+([\s\S]*))?$/);
+  if (!match) return undefined;
+  const name = normalizeSkillName(match[1]);
+  const skill = skills.find((item) => normalizeSkillName(item.name) === name);
+  return skill ? { skill, rest: (match[2] || "").trim() } : undefined;
 }

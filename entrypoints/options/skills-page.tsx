@@ -1,33 +1,31 @@
 import { useRef, useState } from "react";
+import { AlertCircle, FileArchive, FileText, Plus } from "lucide-react";
 import {
-  AlertCircle,
-  Check,
-  Copy,
-  Download,
-  FileArchive,
-  FileText,
-  Plus,
-  RotateCcw,
-  Trash2,
-} from "lucide-react";
-import { QUICK_FEEDBACK_MS } from "../../src/shared/config";
-import { BUILTIN_SKILLS } from "../../src/shared/builtin-skills";
-import { getMessages } from "../../src/shared/i18n";
+  QUICK_FEEDBACK_MS,
+  SKILL_LISTING_MAX_CHARS,
+} from "../../src/shared/config";
+import { getMessages, type Messages } from "../../src/shared/i18n";
+import {
+  customizeBuiltinSkill,
+  forgetSkillSettings,
+  inheritSkillSettings,
+  listedSkills,
+  setSkillInvokeMode,
+  SKILL_INVOKE_MODES,
+  skillListingSize,
+  type SkillEntry,
+} from "../../src/shared/skill-catalog";
 import {
   createSkillPackage,
   duplicateSkill,
-  getSkillBody,
   getSkillDisplayName,
   normalizeSkill,
   normalizeSkillName,
-  parseSkillFrontmatter,
-  replaceSkillEntryFile,
-  SKILL_ENTRY_PATH,
   skillPackageBytes,
   validateSkill,
 } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
-import type { Skill, SkillFile } from "../../src/shared/types";
+import type { Skill, SkillInvokeMode } from "../../src/shared/types";
 import {
   Accordion,
   AccordionContent,
@@ -37,45 +35,36 @@ import {
   Badge,
   Button,
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  Input,
-  Label,
-  Switch,
+  ToggleGroup,
+  ToggleGroupItem,
 } from "../../src/ui/components";
-import { useBuiltinSkills } from "../../src/ui/useBuiltinSkills";
+import { useSkillCatalog } from "../../src/ui/useSkillCatalog";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { SkillFileList, formatSkillBytes } from "./skill-options-components";
-import { downloadSkillZip, importSkillZip } from "./skill-import";
+import { BuiltinSkillDetail, SkillEditor } from "./skill-editor";
+import { importSkillZip } from "./skill-import";
+import { formatSkillBytes } from "./skill-options-components";
 
 export function SkillsPage() {
   const [language] = useStoredState(storage.language);
-  const [skills, setSkills] = useStoredState(storage.skills);
+  const { entries, setSkills, setSettings } = useSkillCatalog();
   const [selectedId, setSelectedId] = useState("");
   const [drafts, setDrafts] = useState<Record<string, Skill>>({});
   const [savedId, setSavedId] = useState<string>();
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string>();
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useBuiltinSkills(skills, setSkills);
-
-  if (!skills) return null;
-  const skillList = skills ?? [];
+  if (!entries) return null;
   const t = getMessages(language);
-  function createSkill() {
-    const now = Date.now();
-    const next = createSkillPackage({
-      name: normalizeSkillName(t.options.untitledSkill) || "skill",
-      createdAt: now,
-      updatedAt: now,
-    });
-    setSkills((items) => [...items, next]);
-    setDrafts((items) => ({ ...items, [next.id]: next }));
-    setSelectedId(next.id);
+  const listing = skillListingSize(listedSkills(entries));
+
+  function addSkill(skill: Skill) {
+    setSkills((items) => [...items, skill]);
+    setDrafts((items) => ({ ...items, [skill.id]: skill }));
+    setSelectedId(skill.id);
   }
 
   async function importZip(files: FileList | null) {
@@ -84,11 +73,11 @@ export function SkillsPage() {
     setImporting(true);
     setImportError("");
     try {
-      const skill = await importSkillZip(file, {
-        missingEntry: t.options.importSkillPackageMissingEntry,
-      });
-      setSkills((items) => [...items, skill]);
-      setSelectedId(skill.id);
+      addSkill(
+        await importSkillZip(file, {
+          missingEntry: t.options.importSkillPackageMissingEntry,
+        }),
+      );
     } catch (error) {
       setImportError(error instanceof Error ? error.message : String(error));
     } finally {
@@ -99,90 +88,6 @@ export function SkillsPage() {
 
   function draftFor(skill: Skill) {
     return drafts[skill.id] || normalizeSkill(skill);
-  }
-
-  function updateDraft(skill: Skill, patch: Partial<Skill>) {
-    setDrafts((items) => ({
-      ...items,
-      [skill.id]: { ...draftFor(skill), ...patch, updatedAt: Date.now() },
-    }));
-  }
-
-  function updateSkillName(skill: Skill, value: string) {
-    const draft = draftFor(skill);
-    const name = normalizeSkillName(value);
-    updateDraft(skill, {
-      name,
-      files: replaceSkillEntryFile(
-        draft,
-        name,
-        draft.description,
-        getSkillBody(draft),
-      ),
-    });
-  }
-
-  function updateSkillEnabled(skill: Skill, enabled: boolean) {
-    updateDraft(skill, { enabled });
-    setSkills((items) =>
-      items.map((item) =>
-        item.id === skill.id
-          ? { ...draftFor(skill), enabled, updatedAt: Date.now() }
-          : item,
-      ),
-    );
-  }
-
-  function updateSkillDescription(skill: Skill, description: string) {
-    const draft = draftFor(skill);
-    updateDraft(skill, {
-      description,
-      files: replaceSkillEntryFile(
-        draft,
-        draft.name,
-        description,
-        getSkillBody(draft),
-      ),
-    });
-  }
-
-  function addSkillFile(skill: Skill, file: SkillFile) {
-    const draft = draftFor(skill);
-    if (!file.path || draft.files.some((item) => item.path === file.path))
-      return;
-    updateDraft(skill, { files: [...draft.files, file] });
-  }
-
-  function replaceSkillFile(
-    skill: Skill,
-    file: SkillFile,
-    previousPath = file.path,
-  ) {
-    const draft = draftFor(skill);
-    if (
-      previousPath !== file.path &&
-      draft.files.some((item) => item.path === file.path)
-    )
-      return;
-    const files = draft.files.map((item) =>
-      item.path === previousPath ? file : item,
-    );
-    const metadata =
-      file.path === SKILL_ENTRY_PATH
-        ? parseSkillFrontmatter(file.content)
-        : null;
-    updateDraft(skill, {
-      ...(metadata?.name ? { name: normalizeSkillName(metadata.name) } : {}),
-      ...(metadata?.description ? { description: metadata.description } : {}),
-      files,
-    });
-  }
-
-  function deleteSkillFile(skill: Skill, path: string) {
-    if (path === SKILL_ENTRY_PATH) return;
-    updateDraft(skill, {
-      files: draftFor(skill).files.filter((file) => file.path !== path),
-    });
   }
 
   function saveSkill(skill: Skill) {
@@ -197,51 +102,25 @@ export function SkillsPage() {
     );
   }
 
-  function duplicateCurrentSkill(skill: Skill) {
-    const copy = duplicateSkill(
-      draftFor(skill),
-      skillList.map((item) => normalizeSkill(item).name),
+  function customize(builtin: Skill) {
+    const skill = customizeBuiltinSkill(builtin);
+    addSkill(skill);
+    setSettings((settings) =>
+      inheritSkillSettings(settings, builtin.id, skill.id),
     );
-    setSkills((items) => [...items, copy]);
-    setDrafts((items) => ({ ...items, [copy.id]: copy }));
-    setSelectedId(copy.id);
   }
 
-  function deleteSkill(skill: Skill) {
-    if (deleteConfirmId !== skill.id) {
-      setDeleteConfirmId(skill.id);
-      return;
-    }
+  // Deleting a user's copy of a built-in brings the built-in back.
+  function deleteSkill(entry: SkillEntry) {
+    const { skill } = entry;
     setSkills((items) => items.filter((item) => item.id !== skill.id));
+    setSettings((settings) => forgetSkillSettings(settings, skill.id));
     setDrafts((items) => {
       const next = { ...items };
       delete next[skill.id];
       return next;
     });
-    setDeleteConfirmId(undefined);
-    if (selectedId === skill.id) setSelectedId("");
-  }
-
-  function resetDefaultSkills() {
-    setSkills(cloneDefault(BUILTIN_SKILLS));
-    setDrafts({});
     setSelectedId("");
-    setDeleteConfirmId(undefined);
-  }
-
-  function resetBuiltinSkills() {
-    const builtinIds = new Set(BUILTIN_SKILLS.map((skill) => skill.id));
-    setSkills((items) => [
-      ...cloneDefault(BUILTIN_SKILLS),
-      ...items.filter((skill) => !builtinIds.has(skill.id) && !skill.builtin),
-    ]);
-    setDrafts((items) =>
-      Object.fromEntries(
-        Object.entries(items).filter(([id]) => !builtinIds.has(id)),
-      ),
-    );
-    if (selectedId && builtinIds.has(selectedId)) setSelectedId("");
-    setDeleteConfirmId(undefined);
   }
 
   return (
@@ -252,6 +131,7 @@ export function SkillsPage() {
             <FileText size={24} /> {t.options.skills}
           </h1>
           <p className="muted">{t.options.skillsDescription}</p>
+          <p className="muted">{t.options.skillInvokeHint}</p>
         </div>
         <div className="settings-page-actions">
           <input
@@ -269,30 +149,32 @@ export function SkillsPage() {
             <FileArchive size={16} />
             {importing ? t.options.importingSkillZip : t.options.importSkillZip}
           </Button>
-          <Button onClick={createSkill}>
+          <Button
+            onClick={() =>
+              addSkill(
+                createSkillPackage({
+                  name: normalizeSkillName(t.options.untitledSkill) || "skill",
+                }),
+              )
+            }
+          >
             <Plus size={16} /> {t.options.newSkill}
           </Button>
         </div>
       </div>
-      {importError && (
-        <Card className="empty">
-          <CardHeader>
-            <CardTitle className="settings-section-title">
-              <AlertCircle size={18} /> {t.options.importSkillZipError}
-            </CardTitle>
-            <CardDescription>{importError}</CardDescription>
-          </CardHeader>
-        </Card>
+      {listing.overBudget && (
+        <Notice
+          title={t.options.skillListOverBudget}
+          description={t.options.skillListOverBudgetDescription
+            .replace("{chars}", String(listing.chars))
+            .replace("{limit}", String(SKILL_LISTING_MAX_CHARS))}
+        />
       )}
-      {!skillList.length && (
-        <Card className="empty">
-          <CardHeader>
-            <CardTitle className="settings-section-title">
-              <FileText size={18} /> {t.options.noSkillsTitle}
-            </CardTitle>
-            <CardDescription>{t.options.noSkillsDescription}</CardDescription>
-          </CardHeader>
-        </Card>
+      {importError && (
+        <Notice
+          title={t.options.importSkillZipError}
+          description={importError}
+        />
       )}
       <Accordion
         type="single"
@@ -301,177 +183,163 @@ export function SkillsPage() {
         onValueChange={setSelectedId}
         className="stack"
       >
-        {skillList.map((skill) => {
-          const draft = draftFor(skill);
-          const normalized = normalizeSkill(draft);
-          const checks = validateSkill(normalized);
+        {entries.map((entry) => {
+          const { skill, source } = entry;
           return (
             <AccordionItem value={skill.id} key={skill.id}>
-              <AccordionHeader className="ui-accordion-header-with-actions">
-                <AccordionTriggerButton hideChevron>
-                  <span className="skill-trigger-summary">
-                    <span className="skill-trigger-title-row">
-                      <span className="skill-trigger-label">
-                        <FileText size={18} />
-                        {getSkillDisplayName(skill, t.options.untitledSkill)}
-                        {normalized.enabled === false && (
-                          <span className="muted">{t.options.disabled}</span>
-                        )}
-                      </span>
-                      <span className="skill-trigger-badges">
-                        <Badge>
-                          {t.options.updatedAt}:{" "}
-                          {formatSkillDate(normalized.updatedAt)}
-                        </Badge>
-                        <Badge>
-                          {t.options.skillSize}:{" "}
-                          {formatSkillBytes(skillPackageBytes(normalized))}
-                        </Badge>
-                        <Badge>{skill.id}</Badge>
-                      </span>
-                    </span>
-                    <small className="skill-checks skill-trigger-checks">
-                      {checks.map((check) => (
-                        <span
-                          className={check.ok ? "ok" : "warn"}
-                          key={check.id}
-                        >
-                          {check.ok ? "✓" : "!"}{" "}
-                          {skillCheckLabel(t, check.id, check.ok)}
-                        </span>
-                      ))}
-                    </small>
-                  </span>
-                </AccordionTriggerButton>
-                <span className="accordion-trigger-actions">
-                  <Switch
-                    aria-label={getSkillDisplayName(
-                      skill,
-                      t.options.untitledSkill,
-                    )}
-                    checked={normalizeSkill(skill).enabled !== false}
-                    onCheckedChange={(enabled) =>
-                      updateSkillEnabled(skill, enabled)
-                    }
-                  />
-                </span>
-                <AccordionTriggerButton
-                  className="accordion-chevron-trigger"
-                  aria-label={getSkillDisplayName(
-                    skill,
-                    t.options.untitledSkill,
-                  )}
-                />
-              </AccordionHeader>
+              <SkillItemHeader
+                t={t}
+                entry={entry}
+                draft={draftFor(skill)}
+                onInvoke={(mode) =>
+                  setSettings((settings) =>
+                    setSkillInvokeMode(settings, skill.id, mode),
+                  )
+                }
+              />
               <AccordionContent>
-                <div className="skill-detail stack">
-                  <div className="skill-identity-panel stack">
-                    <Label>
-                      {t.options.title}
-                      <Input
-                        value={draftFor(skill).name}
-                        onChange={(event) =>
-                          updateSkillName(skill, event.target.value)
-                        }
-                      />
-                    </Label>
-                    <Label>
-                      {t.options.description}
-                      <Input
-                        value={draftFor(skill).description || ""}
-                        onChange={(event) =>
-                          updateSkillDescription(skill, event.target.value)
-                        }
-                      />
-                    </Label>
-                  </div>
-                  <SkillFileList
-                    skill={draftFor(skill)}
-                    onAddFile={(file) => addSkillFile(skill, file)}
-                    onReplaceFile={(file, previousPath) =>
-                      replaceSkillFile(skill, file, previousPath)
-                    }
-                    onDeleteFile={(path) => deleteSkillFile(skill, path)}
+                {source === "builtin" ? (
+                  <BuiltinSkillDetail
+                    t={t}
+                    skill={skill}
+                    onCustomize={() => customize(skill)}
                   />
-                  <div className="row">
-                    <Button
-                      onClick={() => saveSkill(skill)}
-                      disabled={
-                        JSON.stringify(draftFor(skill)) ===
-                        JSON.stringify(skill)
-                      }
-                    >
-                      {savedId === skill.id ? <Check size={16} /> : null}
-                      {savedId === skill.id ? t.common.saved : t.common.save}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => duplicateCurrentSkill(skill)}
-                    >
-                      <Copy size={16} /> {t.options.duplicateSkill}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => downloadSkillZip(draftFor(skill), "skill")}
-                    >
-                      <Download size={16} /> {t.options.downloadSkillPackage}
-                    </Button>
-                    <Button
-                      variant="destructiveOutline"
-                      disabled={!!skill.builtin}
-                      onClick={() => deleteSkill(skill)}
-                    >
-                      <Trash2 size={16} />{" "}
-                      {deleteConfirmId === skill.id
-                        ? t.common.confirm
-                        : t.options.deleteSkill}
-                    </Button>
-                    {deleteConfirmId === skill.id && (
-                      <Button
-                        variant="secondary"
-                        onClick={() => setDeleteConfirmId(undefined)}
-                      >
-                        {t.common.cancel}
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                ) : (
+                  <SkillEditor
+                    t={t}
+                    skill={skill}
+                    draft={draftFor(skill)}
+                    override={source === "override"}
+                    saved={savedId === skill.id}
+                    onDraft={(draft) =>
+                      setDrafts((items) => ({ ...items, [skill.id]: draft }))
+                    }
+                    onSave={() => saveSkill(skill)}
+                    onDuplicate={() =>
+                      addSkill(
+                        duplicateSkill(
+                          draftFor(skill),
+                          entries.map((item) => item.skill.name),
+                        ),
+                      )
+                    }
+                    onDelete={() => deleteSkill(entry)}
+                  />
+                )}
               </AccordionContent>
             </AccordionItem>
           );
         })}
       </Accordion>
-      <Card>
-        <CardContent>
-          <div className="setting-switch-row">
-            <div>
-              <CardTitle className="settings-section-title">
-                <RotateCcw size={18} /> {t.options.resetDefaultSkills}
-              </CardTitle>
-              <CardDescription>
-                {t.options.resetDefaultSkillsDescription}
-              </CardDescription>
-            </div>
-            <div className="row">
-              <Button variant="outline" onClick={resetBuiltinSkills}>
-                {t.options.resetBuiltins}
-              </Button>
-              <Button variant="outline" onClick={resetDefaultSkills}>
-                {t.options.resetDefaults}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
 
-function skillCheckLabel(
-  t: ReturnType<typeof getMessages>,
-  id: string,
-  ok: boolean,
-) {
+function SkillItemHeader({
+  t,
+  entry,
+  draft,
+  onInvoke,
+}: {
+  t: Messages;
+  entry: SkillEntry;
+  draft: Skill;
+  onInvoke: (mode: SkillInvokeMode) => void;
+}) {
+  const { skill, source, invoke } = entry;
+  const name = getSkillDisplayName(skill, t.options.untitledSkill);
+  const checks = source === "builtin" ? [] : validateSkill(draft);
+  return (
+    <AccordionHeader className="ui-accordion-header-with-actions">
+      <AccordionTriggerButton hideChevron>
+        <span className="skill-trigger-summary">
+          <span className="skill-trigger-title-row">
+            <span className="skill-trigger-label">
+              <FileText size={18} />
+              {name}
+            </span>
+            <span className="skill-trigger-badges">
+              {source !== "user" && (
+                <Badge>
+                  {source === "builtin"
+                    ? t.options.builtinSkillBadge
+                    : t.options.overrideSkillBadge}
+                </Badge>
+              )}
+              {source !== "builtin" && (
+                <Badge>
+                  {t.options.updatedAt}: {formatSkillDate(draft.updatedAt)}
+                </Badge>
+              )}
+              <Badge>
+                {t.options.skillSize}:{" "}
+                {formatSkillBytes(skillPackageBytes(draft))}
+              </Badge>
+            </span>
+          </span>
+          {!!checks.length && (
+            <small className="skill-checks skill-trigger-checks">
+              {checks.map((check) => (
+                <span className={check.ok ? "ok" : "warn"} key={check.id}>
+                  {check.ok ? "✓" : "!"}{" "}
+                  {skillCheckLabel(t, check.id, check.ok)}
+                </span>
+              ))}
+            </small>
+          )}
+        </span>
+      </AccordionTriggerButton>
+      <span className="accordion-trigger-actions">
+        <ToggleGroup
+          type="single"
+          size="sm"
+          aria-label={`${name}: ${t.options.skillInvokeMode}`}
+          value={invoke}
+          onValueChange={(mode) => mode && onInvoke(mode as SkillInvokeMode)}
+        >
+          {SKILL_INVOKE_MODES.map((mode) => (
+            <ToggleGroupItem key={mode} value={mode}>
+              {skillInvokeLabel(t, mode)}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </span>
+      <AccordionTriggerButton
+        className="accordion-chevron-trigger"
+        aria-label={name}
+      />
+    </AccordionHeader>
+  );
+}
+
+function Notice({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <Card className="empty">
+      <CardHeader>
+        <CardTitle className="settings-section-title">
+          <AlertCircle size={18} /> {title}
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+    </Card>
+  );
+}
+
+function skillInvokeLabel(t: Messages, mode: SkillInvokeMode) {
+  return {
+    auto: t.options.skillInvokeAuto,
+    manual: t.options.skillInvokeManual,
+    off: t.options.skillInvokeOff,
+  }[mode];
+}
+
+function skillCheckLabel(t: Messages, id: string, ok: boolean) {
   const labels: Record<string, string> = {
     entry: ok ? t.options.skillCheckEntry : t.options.skillCheckEntryMissing,
     name: ok ? t.options.skillCheckName : t.options.skillCheckNameInvalid,
@@ -485,8 +353,4 @@ function skillCheckLabel(
 function formatSkillDate(value?: number) {
   if (!value) return "-";
   return new Date(value).toLocaleString();
-}
-
-function cloneDefault<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
 }

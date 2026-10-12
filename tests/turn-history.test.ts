@@ -114,6 +114,7 @@ const render = (messages = chat(), tools = true) =>
     attachments: [],
     tools,
     compactArgs: () => false,
+    skills: [],
   });
 
 const texts = (message: Message) =>

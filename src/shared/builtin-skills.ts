@@ -10,7 +10,6 @@ export const BUILTIN_SKILLS: Skill[] = [
     description:
       "Set up, test, update and remove OpenBrowserAgent local execution bridges. Use before localBridges add, update, test or delete, and whenever the user wants to run something on their computer but no tested bridge exists.",
     builtin: true,
-    enabled: true,
     createdAt: 0,
     updatedAt: 0,
     files: [
@@ -84,7 +83,6 @@ If the user wants a specific shell, add \`--shell <shell>\`. If the user is work
     description:
       "Create or improve OpenBrowserAgent skills. Use when the user asks to make a skill, turn a workflow from this chat into a reusable skill, edit a SKILL.md, or fix a skill that is not picked up.",
     builtin: true,
-    enabled: true,
     createdAt: 0,
     updatedAt: 0,
     files: [
@@ -156,9 +154,3 @@ What the final answer, file or page change looks like.
     ],
   },
 ];
-
-export function mergeBuiltinSkills(skills: Skill[]) {
-  const existing = new Set(skills.map((skill) => skill.id));
-  const missing = BUILTIN_SKILLS.filter((skill) => !existing.has(skill.id));
-  return missing.length ? [...missing, ...skills] : skills;
-}

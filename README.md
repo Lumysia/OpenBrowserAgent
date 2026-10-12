@@ -41,7 +41,7 @@ It turns your browser into an AI working surface: bring page context into chat, 
 - **Agents** built from instructions, tool groups, a model and an optional workspace; Browse and Ask are presets, and sub-agents run in the background.
 - **Tab and page context** including current tab metadata, page content, selected elements, and source-aware outputs.
 - **Remote MCP tools** with a built-in web search preset, JSON import, connection testing, per-tool controls, and citation extraction from MCP results.
-- **Reusable skills** with skill import/export, editable skill files, a skill index the agent reads on demand, and reset-to-default controls.
+- **Reusable skills** that you pick with `/` or "+", or that the agent uses on its own when a request fits; built-in skills update with the extension, and you can customize them, import/export skill packages and edit skill files.
 - **Source citations** that keep final answers tied to pages, files, skills, generated outputs, and MCP-provided web results.
 - **Comprehensive settings** for providers, models, appearance, language, sync, agents, skills, MCP servers, and local execution bridges.
 - **Theme-aware UI** with light/dark/system modes, accent colors, compact density, subtle motion, and localized interface text.
