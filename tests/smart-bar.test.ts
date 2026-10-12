@@ -7,10 +7,13 @@ import {
   isSmartBarAllowedOnHost,
   normalizeHost,
   normalizeSmartBarSettings,
+  SMART_BAR_MAX_TEXT_CHARS,
   smartBarActions,
   smartBarMatchPatterns,
   smartBarPatternsCover,
+  smartBarTextTooLong,
 } from "../src/shared/smart-bar";
+import { smartBarPrompt } from "../src/background/smart-bar/prompts";
 import { placeSmartBar } from "../src/smart-bar/placement";
 
 test("the smart bar is off by default and stored settings are cleaned", () => {
@@ -104,5 +107,16 @@ test("the bar goes below the selection, flips above and stays in view", () => {
       viewport,
     }).offscreen,
     true,
+  );
+});
+
+test("long selections are refused, never cut", () => {
+  const limit = "x".repeat(SMART_BAR_MAX_TEXT_CHARS);
+  assert.equal(smartBarTextTooLong(limit), false);
+  assert.equal(smartBarTextTooLong(`${limit}TAIL`), true);
+  // What the model gets is the whole selection, so Replace is safe.
+  assert.match(
+    smartBarPrompt("improve", `${limit}TAIL`, "en-US").prompt,
+    /TAIL\n<\/text>$/,
   );
 });

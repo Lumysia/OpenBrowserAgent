@@ -1,5 +1,8 @@
 import { getBrowserApi } from "../../shared/browser-api";
-import type { SmartBarGenerateAction } from "../../shared/smart-bar";
+import {
+  smartBarTextTooLong,
+  type SmartBarGenerateAction,
+} from "../../shared/smart-bar";
 import {
   SMART_BAR_STREAM_PORT,
   type SmartBarPageConfig,
@@ -13,7 +16,8 @@ import { restoreSelection, type SelectionSnapshot } from "../selection";
 export type SmartBarResult = {
   action: SmartBarGenerateAction;
   text: string;
-  status: "streaming" | "done" | "error";
+  // tooLong: refused before anything was sent.
+  status: "streaming" | "done" | "error" | "tooLong";
   error?: string;
 };
 
@@ -64,6 +68,8 @@ export function createSmartBarStore() {
     const { snapshot } = state;
     if (!snapshot) return;
     stop();
+    if (smartBarTextTooLong(snapshot.text))
+      return set({ result: { action, text: "", status: "tooLong" } });
     set({ result: { action, text: "", status: "streaming" } });
     const current = getBrowserApi().runtime.connect({
       name: SMART_BAR_STREAM_PORT,

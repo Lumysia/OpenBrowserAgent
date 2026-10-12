@@ -25,6 +25,7 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
   emptyResult: "Das Modell hat keinen Text geliefert.",
   selectionChanged:
     "Der markierte Text hat sich geändert. Kopieren Sie stattdessen das Ergebnis.",
+  selectionTooLong: "Die Auswahl ist zu lang (über {max} Zeichen). Fahren Sie stattdessen im Seitenbereich fort.",
   settingsTitle: "Smart Bar",
   settingsDescription:
     "Eine kleine Leiste neben markiertem Text mit schnellen KI-Aktionen. Es wird nichts gesendet, bevor Sie eine Aktion wählen.",

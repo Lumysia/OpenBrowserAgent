@@ -47,6 +47,14 @@ export const SMART_BAR_EDIT_ACTIONS = [
   SMART_BAR_ACTION.ask,
 ] as const satisfies readonly SmartBarAction[];
 
+// Longest selection the generate actions take. Longer ones are refused, not
+// cut: Replace must never overwrite text the model didn't see.
+export const SMART_BAR_MAX_TEXT_CHARS = 20_000;
+
+export function smartBarTextTooLong(text: string) {
+  return text.length > SMART_BAR_MAX_TEXT_CHARS;
+}
+
 export type SmartBarGenerateAction = Exclude<
   SmartBarAction,
   typeof SMART_BAR_ACTION.ask | typeof SMART_BAR_ACTION.copy

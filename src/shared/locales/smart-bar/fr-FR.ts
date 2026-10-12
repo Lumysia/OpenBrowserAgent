@@ -24,6 +24,7 @@ export const smartBarFrFR: SmartBarLocaleMessages = {
   writing: "Rédaction…",
   emptyResult: "Le modèle n’a renvoyé aucun texte.",
   selectionChanged: "Le texte sélectionné a changé. Copiez plutôt le résultat.",
+  selectionTooLong: "La sélection est trop longue (plus de {max} caractères). Continuez plutôt dans le panneau latéral.",
   settingsTitle: "Barre intelligente",
   settingsDescription:
     "Une petite barre d’outils près du texte sélectionné, avec des actions IA rapides. Rien n’est envoyé avant que vous choisissiez une action.",

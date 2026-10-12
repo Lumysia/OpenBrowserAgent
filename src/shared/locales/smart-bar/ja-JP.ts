@@ -25,6 +25,7 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
   emptyResult: "モデルからテキストが返されませんでした。",
   selectionChanged:
     "選択したテキストが変更されました。代わりに結果をコピーしてください。",
+  selectionTooLong: "選択範囲が長すぎます（{max} 文字超）。代わりにサイドパネルで続けてください。",
   settingsTitle: "スマートバー",
   settingsDescription:
     "選択したテキストの近くに表示される小さなツールバーで、AI のクイック操作を提供します。操作を選ぶまで何も送信されません。",

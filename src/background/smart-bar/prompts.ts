@@ -3,9 +3,6 @@ import {
   type SmartBarGenerateAction,
 } from "../../shared/smart-bar";
 
-// Longer selections are cut; the bar is for passages, not whole documents.
-export const SMART_BAR_MAX_TEXT_CHARS = 20_000;
-
 const SYSTEM =
   "You are a reading and writing assistant inside a browser toolbar. Return only the requested output: no preamble, no quotes around it, no follow-up questions. Use plain text; short '-' lists are fine, but no Markdown headings, tables or bold.";
 
@@ -32,7 +29,7 @@ export function smartBarPrompt(
   };
   return {
     system: SYSTEM,
-    prompt: `${instructions[action]}\n\n<text>\n${text.slice(0, SMART_BAR_MAX_TEXT_CHARS)}\n</text>`,
+    prompt: `${instructions[action]}\n\n<text>\n${text}\n</text>`,
   };
 }
 

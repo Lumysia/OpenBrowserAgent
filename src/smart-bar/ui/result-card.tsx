@@ -10,7 +10,11 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { COPY_FEEDBACK_MS } from "../../shared/config";
-import type { SmartBarPageConfig } from "../../shared/smart-bar-protocol";
+import { SMART_BAR_MAX_TEXT_CHARS } from "../../shared/smart-bar";
+import type {
+  SmartBarMessages,
+  SmartBarPageConfig,
+} from "../../shared/smart-bar-protocol";
 import { Button, IconTooltip } from "../../ui/components";
 import { isEditableSnapshot, type SelectionSnapshot } from "../selection";
 import { copyText, writeIntoSelection, type WriteMode } from "../writeback";
@@ -79,9 +83,7 @@ export function SmartBarResultCard({
         aria-live="polite"
         aria-busy={streaming}
       >
-        {result.status === "error"
-          ? result.error || t.emptyResult
-          : result.text || (streaming ? t.writing : t.emptyResult)}
+        {resultMessage(result, t)}
         {streaming && result.text && (
           <span className="smart-bar-caret" aria-hidden="true" />
         )}
@@ -157,4 +159,20 @@ export function SmartBarResultCard({
       </div>
     </div>
   );
+}
+
+function resultMessage(result: SmartBarResult, t: SmartBarMessages) {
+  switch (result.status) {
+    case "error":
+      return result.error || t.emptyResult;
+    case "tooLong":
+      return t.selectionTooLong.replace(
+        "{max}",
+        SMART_BAR_MAX_TEXT_CHARS.toLocaleString(),
+      );
+    case "streaming":
+      return result.text || t.writing;
+    default:
+      return result.text || t.emptyResult;
+  }
 }
