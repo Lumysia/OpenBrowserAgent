@@ -5,6 +5,7 @@ import {
 } from "../../shared/attachments";
 import { base64ToBytes, bytesToBase64 } from "../../shared/binary";
 import { documentText } from "../file-text";
+import { fetchedHtmlMarkdown } from "../html-markdown";
 import { hasToolGroup } from "../../shared/agents";
 import { BUILTIN_SKILLS } from "../../shared/builtin-skills";
 import { SKILL_ENTRY_PATH } from "../../shared/skills";
@@ -74,7 +75,7 @@ export const readTool: ToolDefinition = {
   timeoutMs: 60_000,
   summary: "Read text in ranges",
   description:
-    'Read one source in character ranges: "tab" or "tab:ID" (page text as Markdown; default: active tab), a stored output handle "art-…", a URL, "attachment:ID", "skill:NAME" or "skill:NAME/PATH", "workspace:PATH". Continue with the offset it reports. Images come back as images; PDF, Word, Excel, PowerPoint and OpenDocument files as their text.',
+    'Read one source in character ranges: "tab" or "tab:ID" (page text as Markdown; default: active tab), a stored output handle "art-…", a URL (web pages as Markdown of their HTML, fetched with the browser\'s cookies for the site, without running scripts), "attachment:ID", "skill:NAME" or "skill:NAME/PATH", "workspace:PATH". Continue with the offset it reports. Images come back as images; PDF, Word, Excel, PowerPoint and OpenDocument files as their text.',
   parameters: schema({
     source: { type: "string", description: 'What to read. Defaults to "tab".' },
     offset: { type: "number" },
@@ -125,7 +126,7 @@ export const readTool: ToolDefinition = {
         details: { source: source.handle, label: artifact.label },
       };
     }
-    if (source.kind === "url") return readUrl(source.url, input, signal);
+    if (source.kind === "url") return readUrl(source.url, input, run, signal);
     if (source.kind === "skill")
       return readSkill(run, source.name, source.path, input);
     if (source.kind === "workspace") {
@@ -253,15 +254,22 @@ async function binaryResult(
 }
 
 const TEXT_TYPE = /^text\/|json|xml|yaml|csv|markdown|javascript/;
+const HTML_TYPE = /^(text\/html|application\/xhtml\+xml)/;
+// Fetched HTML with less text than this is likely a shell that needs
+// JavaScript, a login or a bot check.
+const THIN_PAGE_CHARS = 200;
 
+// Sent with the browser's cookies for the site, as a tab's first request
+// would be, so a page behind the user's login reads the same.
 async function readUrl(
   url: string,
   input: Record<string, unknown>,
+  run: RunContext,
   signal?: AbortSignal,
 ): Promise<ToolResult> {
   let response: Response;
   try {
-    response = await fetch(url, { signal });
+    response = await fetch(url, { credentials: "include", signal });
   } catch (error) {
     signal?.throwIfAborted();
     return fail(
@@ -273,10 +281,16 @@ async function readUrl(
   const blob = await response.blob();
   const type = blob.type || "application/octet-stream";
   const details = { source: url, type, size: blob.size };
-  if (type.startsWith("text/html"))
-    return fail(
-      `${url} is a web page. Open it with tabs (action open) and use snapshot or read "tab:ID".`,
+  if (HTML_TYPE.test(type))
+    return readHtml(
+      response.url || url,
+      decodeHtml(
+        new Uint8Array(await blob.arrayBuffer()),
+        response.headers.get("content-type") || type,
+      ),
+      input,
       details,
+      hasToolGroup(run.agent, "browser"),
     );
   if (
     TEXT_TYPE.test(type) ||
@@ -303,4 +317,39 @@ async function readUrl(
     details,
     [{ kind: "file", title: url, url }],
   );
+}
+
+async function readHtml(
+  url: string,
+  html: string,
+  input: Record<string, unknown>,
+  details: Record<string, unknown>,
+  canOpenTabs: boolean,
+): Promise<ToolResult> {
+  const page = await fetchedHtmlMarkdown(html, url);
+  const title = page.title || url;
+  // Link targets are not text a reader sees.
+  const visible = page.text.replace(/\]\([^)]*\)/g, "]").replace(/\s+/g, "");
+  const thin =
+    visible.length < THIN_PAGE_CHARS
+      ? `\n[Only ${visible.length} characters of text in the fetched HTML: the page may need JavaScript, a login or a bot check.${canOpenTabs ? " Open it with tabs (action open) to read it as the browser shows it." : ""}]`
+      : "";
+  return {
+    text: `${textSlice(`${title} | ${url}`, page.text, input)}${thin}`,
+    details: { ...details, title, chars: page.text.length },
+    sources: [{ kind: "page", title, url }],
+  };
+}
+
+// HTML in the charset its Content-Type or its first <meta> names.
+function decodeHtml(bytes: Uint8Array, type: string) {
+  const head = new TextDecoder("latin1").decode(bytes.subarray(0, 2048));
+  const charset =
+    type.match(/charset=["']?([\w-]+)/i)?.[1] ||
+    head.match(/<meta[^>]+charset=["']?([\w-]+)/i)?.[1];
+  try {
+    return new TextDecoder(charset || "utf-8").decode(bytes);
+  } catch {
+    return new TextDecoder().decode(bytes);
+  }
 }

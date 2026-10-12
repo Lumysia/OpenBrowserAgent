@@ -130,12 +130,22 @@ export function isSkipped(element: Element) {
   return SKIPPED_TAGS.has(element.localName);
 }
 
+// A parsed document that is not rendered (DOMParser) has no layout and no
+// computed styles: visibility and block structure come from markup alone.
+function isRendered(element: Element) {
+  return !!element.ownerDocument.defaultView;
+}
+
 export function isHidden(element: Element) {
   if (isSkipped(element)) return true;
   if (element.getAttribute("aria-hidden") === "true") return true;
   if (element instanceof HTMLElement && element.hidden) return true;
   if (element instanceof HTMLInputElement && element.type === "hidden")
     return true;
+  if (!isRendered(element)) {
+    const style = (element as HTMLElement).style;
+    return style?.display === "none" || style?.visibility === "hidden";
+  }
   const check = (
     element as Element & {
       checkVisibility?: (options: object) => boolean;
@@ -291,7 +301,67 @@ const BLOCK_DISPLAYS = new Set([
   "flow-root",
 ]);
 
+// Elements the default style sheet renders as blocks, for unrendered
+// documents.
+const BLOCK_TAGS = new Set([
+  "address",
+  "article",
+  "aside",
+  "blockquote",
+  "body",
+  "caption",
+  "center",
+  "dd",
+  "details",
+  "dialog",
+  "div",
+  "dl",
+  "dt",
+  "fieldset",
+  "figcaption",
+  "figure",
+  "footer",
+  "form",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "header",
+  "hgroup",
+  "hr",
+  "html",
+  "li",
+  "main",
+  "menu",
+  "nav",
+  "ol",
+  "p",
+  "pre",
+  "section",
+  "summary",
+  "table",
+  "tbody",
+  "td",
+  "tfoot",
+  "th",
+  "thead",
+  "tr",
+  "ul",
+]);
+
+const BLOCK_SELECTOR = [...BLOCK_TAGS].join(",");
+
 export function isBlock(element: Element) {
+  // Custom elements usually wrap blocks with a display set by script or
+  // style sheet; without either, holding a block makes them one.
+  if (!isRendered(element))
+    return (
+      BLOCK_TAGS.has(element.localName) ||
+      (element.localName.includes("-") &&
+        !!element.querySelector(BLOCK_SELECTOR))
+    );
   return BLOCK_DISPLAYS.has(getComputedStyle(element).display);
 }
 

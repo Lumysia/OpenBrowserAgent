@@ -18,9 +18,12 @@ const SKIPPED_ROLES = new Set([
   "search",
 ]);
 
-export function pageMarkdown(root: Element = document.body) {
+// `origin`: links on it are written as paths.
+export function pageMarkdown(
+  root: Element = document.body,
+  origin = location.origin,
+) {
   const blocks: string[] = [];
-  const origin = location.origin;
 
   const link = (element: HTMLAnchorElement, text: string) => {
     if (!text) return "";
