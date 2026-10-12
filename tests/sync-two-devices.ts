@@ -8,6 +8,7 @@
 // devices by accident. The optional pair goes through a proxy that strips
 // ETags.
 import assert from "node:assert/strict";
+import { loadContent, resetSync } from "../src/background/sync/service";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import { SYNC_WARNINGS } from "../src/shared/sync/state";
 import { createWebDavTransport } from "../src/shared/sync/webdav";
@@ -278,6 +279,67 @@ const cases: Record<string, () => Promise<void>> = {
       "light",
     );
     assert.deepEqual(ids(a), []);
+  },
+
+  async "opening a chat while a round updates it"() {
+    const { a, b } = await pair("open-during-round");
+    await saveChat(a, "c1", [["m1", 1]]);
+    await a.sync("edit");
+    await b.sync();
+    await tick();
+    await saveChat(a, "c1", [
+      ["m1", 1],
+      ["a2", 2],
+    ]);
+    await a.sync("edit");
+    await tick();
+    // An "open" round runs while the chat's content downloads.
+    const base = b.context.transport;
+    let hooked = false;
+    b.context.transport = {
+      ...base,
+      async getBlob(hash) {
+        if (!hooked) {
+          hooked = true;
+          await b.sync("open");
+        }
+        return base.getBlob(hash);
+      },
+    };
+    assert.equal(await loadContent(b.context, "chats", "c1"), true);
+    b.context.transport = base;
+    await b.set(`${CHATS}/c1`, b.get(`${CHATS}/c1`));
+    await b.sync("edit");
+    await tick();
+    await a.sync();
+    assert.deepEqual(messages(a, "c1"), ["m1", "a2"]);
+    assert.deepEqual(messages(b, "c1"), ["m1", "a2"]);
+  },
+
+  async "clearing local chats while a round runs"() {
+    const { a, b } = await pair("clear-during-round");
+    for (const id of ["c1", "c2", "c3"]) await saveChat(b, id, [[id, 1]]);
+    await b.sync("edit");
+    await a.sync();
+    await tick();
+    const base = b.context.transport;
+    let reset: Promise<void> | undefined;
+    b.context.transport = {
+      ...base,
+      async readRoot(etag) {
+        reset ??= resetSync(b.env, b.context, false, [CHATS]);
+        return base.readRoot(etag);
+      },
+    };
+    await b.sync("poll");
+    await reset;
+    b.context.transport = base;
+    await b.remove(CHATS);
+    await b.sync("manual");
+    await tick();
+    await a.sync();
+    assert.deepEqual(ids(a), ["c1", "c2", "c3"]);
+    assert.deepEqual(ids(b), ["c1", "c2", "c3"]);
   },
 };
 
