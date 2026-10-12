@@ -273,7 +273,7 @@ async function runAction(
   const model = await resolveModel(settings.modelId, agent.modelId);
   await requestText(
     model,
-    smartBarPrompt(request.action, request.text, language),
+    smartBarPrompt(request.action, request.text, language, request.context),
     signal,
     (text) => post({ type: "delta", text }),
   );

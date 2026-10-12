@@ -73,6 +73,8 @@ export type SmartBarRunRequest = {
   type: "run";
   action: SmartBarGenerateAction;
   text: string;
+  // Text around the selection and the page title, to understand it by.
+  context?: { before: string; after: string; pageTitle?: string };
 };
 
 export type SmartBarStreamEvent =

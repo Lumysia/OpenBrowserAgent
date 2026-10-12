@@ -11,7 +11,11 @@ import {
   type SmartBarStreamEvent,
 } from "../../shared/smart-bar-protocol";
 import type { SmartBarUi } from "../bridge";
-import { restoreSelection, type SelectionSnapshot } from "../selection";
+import {
+  restoreSelection,
+  selectionContext,
+  type SelectionSnapshot,
+} from "../selection";
 
 export type SmartBarResult = {
   action: SmartBarGenerateAction;
@@ -114,6 +118,7 @@ export function createSmartBarStore(host: HTMLElement) {
       type: "run",
       action,
       text: snapshot.text,
+      context: selectionContext(snapshot),
     };
     current.postMessage(request);
   };

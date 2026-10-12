@@ -139,3 +139,36 @@ test("text is read aloud in sentence-sized pieces, all of it", () => {
   assert.equal(chunks.join("").replace(/ /g, ""), `${long}.End.`);
   assert.deepEqual(speechChunks("   "), []);
 });
+
+test("context helps read the selection but is never the task", () => {
+  const { prompt } = smartBarPrompt("explain", "Top st", "en-US", {
+    before: "News ",
+    after: "ories > Local",
+    pageTitle: "Google News",
+  });
+  assert.match(
+    prompt,
+    /Page title: Google News\nNews \[\[SELECTION\]\]ories > Local/,
+  );
+  // The selected text stays last and alone in its own block.
+  assert.match(prompt, /<\/context>\n\n<text>\nTop st\n<\/text>$/);
+  assert.match(prompt, /read it as the whole word/);
+  // Edits replace the selection: they must not complete the cut-off word.
+  const fix = smartBarPrompt("fixGrammar", "Top st", "en-US", {
+    before: "",
+    after: "ories",
+  }).prompt;
+  assert.match(fix, /replaces exactly the selected text/);
+  assert.doesNotMatch(fix, /read it as the whole word/);
+  // Nothing to add, no context block.
+  assert.doesNotMatch(
+    smartBarPrompt("explain", "x", "en-US", { before: " ", after: "" }).prompt,
+    /<context>/,
+  );
+  // Whatever a message claims, context is bounded.
+  const long = smartBarPrompt("explain", "x", "en-US", {
+    before: "b".repeat(5000),
+    after: "a".repeat(5000),
+  }).prompt;
+  assert.ok(long.length < 2000);
+});

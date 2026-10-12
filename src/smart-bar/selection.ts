@@ -24,6 +24,14 @@ export type SelectionTarget =
 
 export type Point = { x: number; y: number };
 
+// Text around the selection, so an action can tell what a cut-off word or a
+// short phrase means. Read when an action runs, and sent only with it.
+export type SelectionContext = {
+  before: string;
+  after: string;
+  pageTitle?: string;
+};
+
 export type SelectionSnapshot = {
   text: string;
   target: SelectionTarget;
@@ -94,6 +102,89 @@ export function readSelection(
     },
     point,
   );
+}
+
+// Characters of context on each side of the selection.
+export const CONTEXT_CHARS = 500;
+
+// Text the user can't see on the page. A textarea's text node is its default
+// value, not what it holds now.
+const NOT_TEXT =
+  "script, style, noscript, template, textarea, [hidden], [aria-hidden='true']";
+
+export function selectionContext({
+  target,
+}: SelectionSnapshot): SelectionContext {
+  if (target.kind === "control") {
+    const { value, start, end } = target;
+    return pageContext(
+      value.slice(Math.max(0, start - CONTEXT_CHARS), start),
+      value.slice(end, end + CONTEXT_CHARS),
+    );
+  }
+  const { range } = target;
+  return pageContext(
+    textBeside(range.startContainer, range.startOffset, true),
+    textBeside(range.endContainer, range.endOffset, false),
+  );
+}
+
+// Up to CONTEXT_CHARS of the page's text before (or after) a point, walking
+// text nodes outward from it.
+function textBeside(node: Node, offset: number, before: boolean) {
+  const root = document.body || document.documentElement;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: (text) =>
+      text.parentElement?.closest(NOT_TEXT)
+        ? NodeFilter.FILTER_REJECT
+        : NodeFilter.FILTER_ACCEPT,
+  });
+  const parts: string[] = [];
+  let length = 0;
+  const add = (text: string) => {
+    parts.push(text);
+    length += text.length;
+  };
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.textContent || "";
+    add(before ? text.slice(0, offset) : text.slice(offset));
+    walker.currentNode = node;
+  } else {
+    // A point between children: start from the child next to it.
+    const child = node.childNodes[before ? offset - 1 : offset];
+    if (child) {
+      walker.currentNode = child;
+      if (before) {
+        // The last text inside that child comes first.
+        let last: Node | null = child;
+        while (last?.lastChild) last = last.lastChild;
+        walker.currentNode = last || child;
+        if (walker.currentNode.nodeType === Node.TEXT_NODE)
+          add(walker.currentNode.textContent || "");
+      } else {
+        walker.currentNode = child;
+        if (child.nodeType === Node.TEXT_NODE) add(child.textContent || "");
+      }
+    } else walker.currentNode = node;
+  }
+  while (length < CONTEXT_CHARS) {
+    const next = before ? walker.previousNode() : walker.nextNode();
+    if (!next) break;
+    if (next.nodeType === Node.TEXT_NODE) add(next.textContent || "");
+  }
+  const text = (before ? parts.reverse() : parts).join("");
+  return before ? text.slice(-CONTEXT_CHARS) : text.slice(0, CONTEXT_CHARS);
+}
+
+// Runs of spaces are squeezed but kept at the edges: whether the selection
+// starts or ends inside a word is the point.
+function pageContext(before: string, after: string): SelectionContext {
+  const squeeze = (text: string) => text.replace(/\s+/g, " ");
+  return {
+    before: squeeze(before),
+    after: squeeze(after),
+    pageTitle: document.title.trim().slice(0, 200) || undefined,
+  };
 }
 
 // The page's language for the selected text (its nearest lang attribute),

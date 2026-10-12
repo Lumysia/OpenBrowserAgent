@@ -24,6 +24,7 @@ const PAGE = `<!doctype html><html lang="en"><title>Smart bar</title>
 <input id="controlled" value="recieve">
 <input id="password" type="password" value="secretpassword">
 <input id="suggest" value="hello wrold">
+<h2 id="heading">Top stories <span>&gt;</span></h2>
 <ul id="suggestions" hidden><li>hello world</li></ul>
 <dialog id="dialog"><p id="dialog-text">Text in a modal dialog.</p></dialog>
 <script>
@@ -253,6 +254,41 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
       );
       assert.equal(event.type, "error");
       assert.equal(fixture.requests.length, requests);
+    });
+
+    await t.test("a cut-off selection is sent with its context", async () => {
+      await session.options.call(() =>
+        chrome.storage.local.set({ language: "en-US" }),
+      );
+      // "Top st" of "Top stories", as a quick drag leaves it.
+      await page.call(() => {
+        document.activeElement?.blur();
+        const text = document.getElementById("heading").firstChild;
+        const range = document.createRange();
+        range.setStart(text, 0);
+        range.setEnd(text, 6);
+        getSelection().removeAllRanges();
+        getSelection().addRange(range);
+      });
+      await session.options.call(async (url) => {
+        const [tab] = await chrome.tabs.query({ url });
+        await chrome.tabs.sendMessage(tab.id, {
+          type: "smart-bar:show-for-selection",
+        });
+      }, url("/page"));
+      await poll(async () => (await barState(page)) === "toolbar");
+      const requests = fixture.requests.length;
+      await clickInBar(page, '[aria-label="Explain"]');
+      await poll(() => fixture.requests.length > requests);
+      const body = JSON.stringify(fixture.requests[requests].body);
+      assert.match(body, /<text>\\nTop st\\n<\/text>/);
+      assert.match(body, /Page title: Smart bar/);
+      // The rest of the word right after the selection, page text around it.
+      assert.match(body, /\[\[SELECTION\]\]ories > /);
+      assert.match(body, /lazy dog/);
+      // Not field values or script text.
+      assert.doesNotMatch(body, /secretpassword|hello wrold|inputEvents/);
+      await pressKey(page, "Escape", "Escape", 27);
     });
 
     await t.test("replies use the extension's language setting", async () => {
