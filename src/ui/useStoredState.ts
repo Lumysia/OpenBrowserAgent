@@ -4,10 +4,17 @@ type StorageItem<T> = {
   key?: string;
   get(): Promise<T>;
   set(value: T): Promise<void>;
+  update?(updater: (current: T) => T): Promise<T>;
   watch(callback: (newValue: T, oldValue: T) => void): () => void;
 };
 
-export function useStoredState<T>(item: StorageItem<T>) {
+// `freshUpdates`: an updater function is stored by applying it to the
+// stored value (locked read-modify-write), not by writing the value it gave
+// for this page's copy, which may miss another context's latest write.
+export function useStoredState<T>(
+  item: StorageItem<T>,
+  { freshUpdates = false } = {},
+) {
   const [value, setValue] = useState<T | undefined>();
   const valueRef = useRef<T | undefined>(undefined);
   const initialLoadRef = useRef<Promise<void> | undefined>(undefined);
@@ -71,8 +78,12 @@ export function useStoredState<T>(item: StorageItem<T>) {
     snapshotRef.current = resolvedSnapshot;
     setValue(resolved);
     // Resolves once stored; a failed write is logged, the value stays shown.
-    await persistOwnWrite(item, resolved, ownWriteSnapshotsRef).catch((error) =>
-      console.warn("Failed to persist stored state", error),
+    const write =
+      freshUpdates && item.update && typeof next === "function"
+        ? () => item.update!(next as (previous: T) => T)
+        : () => item.set(resolved);
+    await persistOwnWrite(write, resolved, ownWriteSnapshotsRef).catch(
+      (error) => console.warn("Failed to persist stored state", error),
     );
     return resolved;
   }
@@ -81,14 +92,14 @@ export function useStoredState<T>(item: StorageItem<T>) {
 }
 
 async function persistOwnWrite<T>(
-  item: StorageItem<T>,
+  write: () => Promise<unknown>,
   value: T,
   ownWriteSnapshotsRef: MutableRefObject<OwnWriteSnapshots>,
 ) {
   const valueSnapshot = snapshot(value);
   rememberOwnWriteSnapshot(ownWriteSnapshotsRef, valueSnapshot);
   try {
-    await item.set(value);
+    await write();
   } catch (error) {
     forgetOwnWriteSnapshot(ownWriteSnapshotsRef, valueSnapshot);
     throw error;

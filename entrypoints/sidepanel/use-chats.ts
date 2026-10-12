@@ -38,7 +38,9 @@ export type SummariesUpdater = (
 // chat's content loads when it is opened; updates to one chat re-render only
 // that chat's subscribers, and the list only when its entries change.
 export function useChats() {
-  const [summaries, setStoredSummaries] = useStoredState(storage.chats);
+  const [summaries, setStoredSummaries] = useStoredState(storage.chats, {
+    freshUpdates: true,
+  });
   const summariesRef = useRef(summaries);
   summariesRef.current = summaries;
   const setSummariesRef = useRef(setStoredSummaries);

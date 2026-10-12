@@ -60,6 +60,9 @@ export const frFR: LocaleMessages = {
     chatLoadFailed:
       "Impossible de charger cette discussion. Vérifiez la connexion de synchronisation et réessayez.",
     retryLoadChat: "Réessayer",
+    chatUnavailable:
+      "Les messages de cette discussion ne sont pas disponibles sur cet appareil.",
+    exportChatFailed: "Impossible d'exporter cette discussion.",
     noChatsYet: "Aucune discussion",
     removeChat: "Supprimer la discussion",
     pinChat: "Épingler la discussion",

@@ -60,6 +60,8 @@ export const ko: LocaleMessages = {
     chatLoadFailed:
       "이 채팅을 불러올 수 없습니다. 동기화 연결을 확인한 후 다시 시도하세요.",
     retryLoadChat: "다시 시도",
+    chatUnavailable: "이 채팅의 메시지는 이 기기에서 사용할 수 없습니다.",
+    exportChatFailed: "이 채팅을 내보낼 수 없습니다.",
     noChatsYet: "아직 채팅이 없습니다",
     removeChat: "채팅 제거",
     pinChat: "채팅 고정",

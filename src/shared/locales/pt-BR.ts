@@ -60,6 +60,9 @@ export const ptBR: LocaleMessages = {
     chatLoadFailed:
       "Não foi possível carregar este chat. Verifique a conexão de sincronização e tente novamente.",
     retryLoadChat: "Tentar novamente",
+    chatUnavailable:
+      "As mensagens deste chat não estão disponíveis neste dispositivo.",
+    exportChatFailed: "Não foi possível exportar este chat.",
     noChatsYet: "Ainda não há chats",
     removeChat: "Remover chat",
     pinChat: "Fixar chat",

@@ -77,10 +77,12 @@ export async function saveChatContent(chatId: string, value: ChatContent) {
     await markSplitItemsPending(CHATS, [chatId]);
     queueSyncWrite(await getActiveSyncBackend(), CHATS);
   }
-  return {
-    content,
-    facts: chatFacts(content, [...chatAttachmentIds(content)].sort()),
-  };
+  return { content, facts: contentFacts(content) };
+}
+
+// The list facts that describe a chat's content.
+export function contentFacts(content: ChatContent) {
+  return chatFacts(content, [...chatAttachmentIds(content)].sort());
 }
 
 // Removing a chat from the list also removes its content.

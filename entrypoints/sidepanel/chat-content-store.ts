@@ -1,5 +1,6 @@
 import {
   chatContentKey,
+  contentFacts,
   loadChatContent,
   refreshChatContent,
   saveChatContent,
@@ -14,11 +15,13 @@ import {
   CHAT_STREAM_WRITE_DEBOUNCE_MS,
   CHAT_WRITE_DEBOUNCE_MS,
 } from "../../src/shared/config";
+import { SplitItemUnavailableError } from "../../src/shared/storage-split";
 import type { ChatContent } from "../../src/shared/types";
 
 export type ChatContentEntry =
   | { status: "loading" }
-  | { status: "error"; error: string }
+  // `unavailable`: the content is on neither this device nor the cloud.
+  | { status: "error"; unavailable: boolean }
   | { status: "ready"; content: ChatContent };
 
 type Facts = ReturnType<typeof chatFacts>;
@@ -103,10 +106,11 @@ export function createChatContentStore(
       );
       return;
     }
-    setEntry(chatId, {
-      status: "ready",
-      content: reconcileChatContent(content(chatId), incoming),
-    });
+    const next = reconcileChatContent(content(chatId), incoming);
+    setEntry(chatId, { status: "ready", content: next });
+    // Merged content (e.g. from another device) can change the list facts,
+    // such as the attachments a chat uses.
+    onFacts(chatId, contentFacts(next));
   }
 
   const onStorageChanged = (
@@ -147,7 +151,7 @@ export function createChatContentStore(
         if (entries.get(chatId)?.status === "loading")
           setEntry(chatId, {
             status: "error",
-            error: error instanceof Error ? error.message : String(error),
+            unavailable: error instanceof SplitItemUnavailableError,
           });
         return undefined;
       }

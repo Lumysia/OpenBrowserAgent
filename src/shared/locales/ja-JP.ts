@@ -61,6 +61,9 @@ export const jaJP: LocaleMessages = {
     chatLoadFailed:
       "このチャットを読み込めませんでした。同期の接続を確認して、もう一度お試しください。",
     retryLoadChat: "再試行",
+    chatUnavailable:
+      "このチャットのメッセージはこのデバイスでは利用できません。",
+    exportChatFailed: "このチャットをエクスポートできませんでした。",
     noChatsYet: "チャットはまだありません",
     removeChat: "チャットを削除",
     pinChat: "チャットをピン留め",

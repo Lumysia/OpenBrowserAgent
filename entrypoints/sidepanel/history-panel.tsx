@@ -16,7 +16,13 @@ import type {
   Preferences,
 } from "../../src/shared/types";
 import { chatDisplayTitle } from "../../src/ui/agent-display";
-import { Badge, Button, Input, ScrollArea } from "../../src/ui/components";
+import {
+  Badge,
+  Button,
+  Feedback,
+  Input,
+  ScrollArea,
+} from "../../src/ui/components";
 import {
   exportChatAsOpenAiJson,
   importChatFromOpenAiJson,
@@ -62,6 +68,7 @@ export function HistoryPanel({
   const removeTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [editingChatId, setEditingChatId] = useState<string>();
   const [draftTitle, setDraftTitle] = useState("");
+  const [exportFailed, setExportFailed] = useState(false);
   const [removingChatIds, setRemovingChatIds] = useState<Record<string, true>>(
     {},
   );
@@ -125,12 +132,10 @@ export function HistoryPanel({
 
   // Exporting needs the chat's content, loaded on demand.
   async function exportChat(chatId: string) {
-    try {
-      const chat = await onLoadChat(chatId);
-      if (chat) exportChatAsOpenAiJson(chat, agent, preferences);
-    } catch (error) {
-      console.warn("Failed to export chat", error);
-    }
+    setExportFailed(false);
+    const chat = await onLoadChat(chatId).catch(() => undefined);
+    if (chat) exportChatAsOpenAiJson(chat, agent, preferences);
+    else setExportFailed(true);
   }
 
   function closeWithExit(chatId: string) {
@@ -207,6 +212,11 @@ export function HistoryPanel({
         </div>
       </div>
       <ScrollArea className="history-panel">
+        {exportFailed && (
+          <Feedback error className="history-feedback">
+            {t.sidepanel.exportChatFailed}
+          </Feedback>
+        )}
         {!chats.length && (
           <div className="history-empty">{t.sidepanel.noChatsYet}</div>
         )}

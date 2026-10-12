@@ -56,6 +56,8 @@ export const zhCN: LocaleMessages = {
     chatLoading: "正在加载对话…",
     chatLoadFailed: "无法加载此对话。请检查同步连接后重试。",
     retryLoadChat: "重试",
+    chatUnavailable: "此对话的消息在此设备上不可用。",
+    exportChatFailed: "无法导出此对话。",
     noChatsYet: "暂无对话",
     removeChat: "移除对话",
     pinChat: "置顶对话",

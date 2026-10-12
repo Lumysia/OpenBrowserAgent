@@ -56,6 +56,8 @@ export const zhTW: LocaleMessages = {
     chatLoading: "正在載入對話…",
     chatLoadFailed: "無法載入此對話。請檢查同步連線後再試一次。",
     retryLoadChat: "重試",
+    chatUnavailable: "此對話的訊息在此裝置上無法使用。",
+    exportChatFailed: "無法匯出此對話。",
     noChatsYet: "尚無對話",
     removeChat: "移除對話",
     pinChat: "置頂對話",

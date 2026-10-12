@@ -24,10 +24,14 @@ export function ChatContentStatus({
         </div>
       </div>
     ) : null;
-  if (status === "error")
+  if (status === "error" || status === "unavailable")
     return (
       <div className="chat-content-status">
-        <Feedback error>{t.sidepanel.chatLoadFailed}</Feedback>
+        <Feedback error>
+          {status === "error"
+            ? t.sidepanel.chatLoadFailed
+            : t.sidepanel.chatUnavailable}
+        </Feedback>
         <Button variant="secondary" size="sm" onClick={onRetry}>
           {t.sidepanel.retryLoadChat}
         </Button>
