@@ -1,11 +1,131 @@
 import { setTimeout as delay } from "node:timers/promises";
-import { poll } from "./chromium.mjs";
+import { launchExtension, poll } from "./chromium.mjs";
+import { providerFixture } from "./provider-fixtures.mjs";
 
 // Test helpers for the smart bar on a page. The bar lives in a closed shadow
 // root, out of reach of page scripts; tests reach it through CDP (a DevTools
 // DOM snapshot pierces closed roots) and press it with real CDP input, which
 // the page sees as trusted user input.
 const HOST = "OBA-SMART-BAR";
+
+// The production build (`npm run build:chrome`) in Chromium, with one fixture
+// server for the test pages and the model. `pages[path]`: HTML, or
+// `{ html, headers }`. The model streams what `answer(prompt, write)` writes.
+// `smartBar`: stored smart bar settings; none means the defaults (off).
+export async function startSmartBar({ pages, answer, smartBar }) {
+  const fixture = await providerFixture(async (request, response) => {
+    if (!request.url.startsWith("/v1/")) {
+      const page = pages[new URL(request.url, "http://host").pathname] ?? "";
+      const { html, headers } =
+        typeof page === "string" ? { html: page } : page;
+      response
+        .writeHead(200, { "Content-Type": "text/html", ...headers })
+        .end(html);
+      return;
+    }
+    response.writeHead(200, { "Content-Type": "text/event-stream" });
+    const send = (delta, finish = null) =>
+      response.write(
+        `data: ${JSON.stringify({
+          id: "fixture",
+          object: "chat.completion.chunk",
+          choices: [{ index: 0, delta, finish_reason: finish }],
+        })}\n\n`,
+      );
+    await answer(JSON.stringify(request.body.messages), (content) =>
+      send({ content }),
+    );
+    send({}, "stop");
+    response.end("data: [DONE]\n\n");
+  });
+  const browser = await launchExtension({
+    headed: process.env.OBA_HEADLESS !== "1",
+  }).catch(async (error) => {
+    await fixture.close();
+    throw error;
+  });
+  const close = async () => {
+    await browser.close();
+    await fixture.close();
+  };
+  const extensionUrl = (path) => `chrome-extension://${browser.id}/${path}`;
+  try {
+    const options = await browser.open(extensionUrl("options.html"));
+    await options.call(
+      async ({ baseUrl, smartBar }) => {
+        await chrome.storage.local.set({
+          provider: {
+            fixture: {
+              id: "fixture",
+              type: "openai",
+              baseUrl: `${baseUrl}/v1`,
+              models: [{ id: "fixture", name: "fixture" }],
+            },
+          },
+          language: "en-US",
+          preferences: { selectedModelId: "fixture", smartBar },
+        });
+      },
+      { baseUrl: fixture.baseUrl, smartBar },
+    );
+    if (smartBar?.enabled)
+      await poll(() =>
+        options.call(
+          async () =>
+            (await chrome.scripting.getRegisteredContentScripts()).length > 0,
+        ),
+      );
+    // Counts the page scripts' requests to the background.
+    const worker = await browser.attach(
+      (url) => url === extensionUrl("background.js"),
+      "service_worker",
+    );
+    await worker.call(() => {
+      self.prepares = 0;
+      chrome.runtime.onMessage.addListener((message) => {
+        if (message?.type === "smart-bar:prepare") self.prepares++;
+      });
+    });
+    return {
+      browser,
+      fixture,
+      options,
+      extensionUrl,
+      close,
+      // A test page; another host name makes it another site.
+      url: (path, host = "127.0.0.1") =>
+        fixture.baseUrl.replace("127.0.0.1", host) + path,
+      prepares: () => worker.call(() => self.prepares),
+      updateSmartBar: (change) =>
+        options.call(async (change) => {
+          const { preferences } = await chrome.storage.local.get("preferences");
+          await chrome.storage.local.set({
+            preferences: {
+              ...preferences,
+              smartBar: { ...preferences.smartBar, ...change },
+            },
+          });
+        }, change),
+      smartBarSettings: () =>
+        options.call(
+          async () =>
+            (await chrome.storage.local.get("preferences")).preferences
+              .smartBar,
+        ),
+    };
+  } catch (error) {
+    await close();
+    throw error;
+  }
+}
+
+// The text of a field, as the page sees it.
+export function fieldValue(page, selector) {
+  return page.call((selector) => {
+    const element = document.querySelector(selector);
+    return "value" in element ? element.value : element.textContent;
+  }, selector);
+}
 
 // Runs `fn(root, argument)` in the page with the bar's shadow root, or null
 // when the page has no bar.

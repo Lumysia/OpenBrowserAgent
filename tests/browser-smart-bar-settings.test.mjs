@@ -1,0 +1,223 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { setTimeout as delay } from "node:timers/promises";
+import { poll } from "./chromium.mjs";
+import {
+  barState,
+  click,
+  clickInBar,
+  inSmartBar,
+  resultText,
+  selectInFrame,
+  selectText,
+  startSmartBar,
+} from "./smart-bar-page.mjs";
+
+// When the bar shows: off by default, turned on in the options page, site
+// rules, trigger modes, the × menu and the hand-off to the side panel.
+const PAGE = `<!doctype html><title>Smart bar</title>
+<style>body{font:16px/1.4 sans-serif;margin:20px}p,textarea{display:block;width:420px;margin:0 0 24px}</style>
+<p id="text">The quick brown fox jumps over the lazy dog.</p>
+<textarea id="area" rows="2">hello wrold</textarea>
+<iframe id="frame" style="height:60px"></iframe>
+<script>
+  // A cross-origin embed; it reports whether the bar's UI was let in.
+  window.frameBar = false;
+  frame.src = location.href.replace("127.0.0.1", "localhost") + "/frame";
+  addEventListener("message", (event) => {
+    if (!event.data || !("bar" in event.data)) return;
+    window.frameReady = true;
+    window.frameBar = event.data.bar;
+  });
+</script>`;
+
+const FRAME = `<!doctype html><p id="framed" style="font:16px sans-serif">Text in an embedded frame.</p>
+<script>setInterval(() => parent.postMessage({ bar: !!document.querySelector("oba-smart-bar") }, "*"), 100);</script>`;
+
+test("smart bar settings", { timeout: 240000 }, async (t) => {
+  const session = await startSmartBar({
+    pages: { "/page": PAGE, "/page/frame": FRAME },
+    answer: async (_prompt, write) => write("Streamed explanation finished."),
+  });
+  const { browser, options, extensionUrl, url, updateSmartBar } = session;
+  const listedUrl = url("/page", "localhost");
+  let listed;
+  try {
+    const page = await browser.open(url("/page"));
+
+    await t.test("off by default: no bar on selection", async () => {
+      await selectText(page, "#text");
+      await delay(600);
+      assert.equal(await barState(page), "none");
+      // Zero cost while off: no page script is registered at all.
+      assert.deepEqual(
+        await options.call(() =>
+          chrome.scripting.getRegisteredContentScripts(),
+        ),
+        [],
+      );
+    });
+
+    await t.test("turned on in the options page, the bar shows", async () => {
+      await options.send("Page.navigate", {
+        url: extensionUrl("options.html#/smart-bar"),
+      });
+      const enable = await poll(() =>
+        options.call(() => {
+          const label = [...document.querySelectorAll("label")].find(
+            (item) => item.textContent === "Show the smart bar",
+          );
+          const button = label && document.getElementById(label.htmlFor);
+          if (!button) return undefined;
+          const rect = button.getBoundingClientRect();
+          return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+        }),
+      );
+      await click(options, enable);
+      // The page was open before: the background injects the page script.
+      await poll(async () => {
+        await selectText(page, "#text");
+        return (await barState(page)) === "toolbar";
+      });
+    });
+
+    await t.test("no bar where every action is turned off", async () => {
+      await updateSmartBar({
+        disabledPageActions: [
+          "ask",
+          "explain",
+          "translate",
+          "summarize",
+          "copy",
+        ],
+      });
+      await selectText(page, "#text");
+      await delay(600);
+      assert.equal(await barState(page), "none");
+      // Text fields have their own actions.
+      await selectText(page, "#area");
+      await poll(async () => (await barState(page)) === "toolbar");
+      await updateSmartBar({ disabledPageActions: [] });
+    });
+
+    await t.test("Hide on this site stops it", async () => {
+      await selectText(page, "#text");
+      await poll(async () => (await barState(page)) === "toolbar");
+      await clickInBar(page, '[aria-label="Smart bar options"]');
+      await clickInBar(page, ".smart-bar-menu-item");
+      await poll(async () => (await barState(page)) === "none");
+      await poll(
+        async () =>
+          (await session.smartBarSettings()).blockedHosts.join() ===
+          "docs.google.com,127.0.0.1",
+      );
+      await selectText(page, "#text");
+      await delay(600);
+      assert.equal(await barState(page), "none");
+    });
+
+    await t.test("a blocked site's embeds get no bar", async () => {
+      await page.send("Page.reload");
+      await poll(() => page.call(() => window.frameReady));
+      await selectInFrame(page, "#frame");
+      await delay(1000);
+      assert.equal(await page.call(() => window.frameBar), false);
+    });
+
+    await t.test("allow-list mode shows only on listed sites", async () => {
+      await updateSmartBar({
+        siteMode: "allowList",
+        allowedHosts: ["localhost"],
+      });
+      listed = await browser.open(listedUrl);
+      await poll(async () => {
+        await selectText(listed, "#text");
+        return (await barState(listed)) === "toolbar";
+      });
+      // Frames of a listed site get the bar too.
+      await poll(() => listed.call(() => window.frameReady));
+      await selectInFrame(listed, "#frame");
+      await poll(() => listed.call(() => window.frameBar));
+      await page.send("Page.reload");
+      await poll(() => page.call(() => document.readyState === "complete"));
+      await selectText(page, "#text");
+      await delay(600);
+      assert.equal(await barState(page), "none");
+    });
+
+    await t.test("Ask and Continue hand off to the side panel", async () => {
+      await selectText(listed, "#text");
+      await clickInBar(listed, '[aria-label="Ask"]');
+      // The click's user gesture opens the window's real side panel.
+      const panel = await browser.attach(
+        (url) => url === extensionUrl("sidepanel.html"),
+      );
+      await poll(() =>
+        panel.call(() =>
+          document
+            .querySelector(".composer-box textarea")
+            ?.value.startsWith(
+              "> The quick brown fox jumps over the lazy dog.",
+            ),
+        ),
+      );
+      await selectText(listed, "#text");
+      await clickInBar(listed, '[aria-label="Explain"]');
+      await poll(async () => (await resultText(listed)).includes("finished."));
+      await clickInBar(listed, '[aria-label="Continue in side panel"]');
+      await poll(() =>
+        panel.call(() =>
+          document
+            .querySelector(".messages-content")
+            ?.textContent?.includes("Streamed explanation finished."),
+        ),
+      );
+    });
+
+    await t.test("shortcut mode shows the bar only on command", async () => {
+      await updateSmartBar({ trigger: "shortcut" });
+      const prepares = await session.prepares();
+      await selectText(listed, "#text");
+      await delay(600);
+      assert.equal(await barState(listed), "none");
+      // The page script knows; it doesn't ask the background on mouseup.
+      assert.equal(await session.prepares(), prepares);
+      // What the background sends for the keyboard command.
+      await options.call(async (url) => {
+        const [tab] = await chrome.tabs.query({ url });
+        await chrome.tabs.sendMessage(tab.id, {
+          type: "smart-bar:show-for-selection",
+        });
+      }, listedUrl);
+      await poll(async () => (await barState(listed)) === "toolbar");
+      assert.equal(
+        await inSmartBar(listed, (root) => root.activeElement?.ariaLabel),
+        "Ask",
+      );
+    });
+
+    await t.test("turned off from the bar, open tabs go quiet", async () => {
+      await updateSmartBar({ trigger: "selection" });
+      await poll(async () => {
+        await selectText(listed, "#text");
+        return (await barState(listed)) === "toolbar";
+      });
+      await clickInBar(listed, '[aria-label="Smart bar options"]');
+      await clickInBar(listed, ".smart-bar-menu-item", "Turn off smart bar");
+      await poll(
+        async () => (await session.smartBarSettings()).enabled === false,
+      );
+      await delay(300);
+      const prepares = await session.prepares();
+      assert.ok(prepares > 0);
+      for (let i = 0; i < 2; i++) {
+        await selectText(listed, "#text");
+        await delay(300);
+        assert.equal(await barState(listed), "none");
+      }
+      assert.equal(await session.prepares(), prepares);
+    });
+  } finally {
+    await session.close();
+  }
+});
