@@ -45,7 +45,10 @@ If the server answers "too many requests" (HTTP 429) or "temporarily unavailable
 
 ## Server requirements
 
-WebDAV writes the root file only if it is still the version the device read (`If-Match` with the file's ETag). If two devices write at once, the later one reads the new version, merges, and tries again. This needs a server that sends strong ETags and honours `If-Match`. When connecting, OpenBrowserAgent checks this with a small test file that it deletes again. If the server's file versions are unreliable (missing or weak ETags, or a server that rejects its own ETags), this device stops uploading and the Sync page says so; it keeps downloading changes from other devices.
+WebDAV writes the root file only if it is still the version the device read (`If-Match` with the file's ETag). If two devices write at once, the later one reads the new version, merges, and tries again. This needs a server that sends strong ETags. When connecting, OpenBrowserAgent checks the server with a small test file that it deletes again:
+
+- If the server's file versions are unreliable (missing or weak ETags, or a server that rejects its own ETags), this device stops uploading and the Sync page says so; it keeps downloading changes from other devices.
+- If the server accepts uploads whatever `If-Match` says (Koofr did in October 2026), two devices saving at the same moment can overwrite each other's root file. The Sync page warns about it. Nothing is lost: the device whose change was overwritten notices at its next check that the server is behind and uploads the change again.
 
 ## Status
 
