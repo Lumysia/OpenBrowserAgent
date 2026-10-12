@@ -98,7 +98,7 @@ export const findTool: ToolDefinition = {
   readOnly: true,
   summary: "Search the current page",
   description:
-    "Search the whole page (not only the viewport) for text, including option lists, and return the matching snapshot lines with refs. Plain text is case-insensitive; /regex/flags is a regular expression.",
+    "Search the whole page (not only the viewport) for text, including option lists, and return the matching snapshot lines with refs and an exact match count (for example, table rows with a given status). Plain text is case-insensitive; /regex/flags is a regular expression.",
   parameters: schema(
     {
       query: { type: "string", description: "Text or /regex/." },

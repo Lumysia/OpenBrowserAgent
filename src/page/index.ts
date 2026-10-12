@@ -36,7 +36,13 @@ function snapshot(args: Args) {
   }
   const body = document.body || document.documentElement;
   if (scope === "viewport") return { scope, text: viewport(body, urls) };
-  if (scope === "page")
+  // The whole page when it fits; otherwise `page` caps long lists and
+  // tables, and auto shows the viewport plus the whole page for read and find.
+  const full = renderLines(
+    snapshotLines(body, { mode: "page", urls, maxChars: FULL_PAGE_MAX_CHARS })
+      .lines,
+  );
+  if (scope === "page" && full.length > capChars)
     return {
       scope,
       text:
@@ -50,12 +56,6 @@ function snapshot(args: Args) {
           }).lines,
         ),
     };
-  // Auto: the whole page when it fits, else the viewport plus the whole
-  // page for read and find.
-  const full = renderLines(
-    snapshotLines(body, { mode: "page", urls, maxChars: FULL_PAGE_MAX_CHARS })
-      .lines,
-  );
   if (full.length <= capChars)
     return { scope: "page", text: `${scrollNote()}${full}` };
   return { scope: "viewport", text: viewport(body, urls), full };
