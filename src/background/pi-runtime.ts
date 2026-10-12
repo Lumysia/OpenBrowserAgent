@@ -1,4 +1,5 @@
 import type { AgentEvent, AgentTool } from "@earendil-works/pi-agent-core";
+import { toToolDeclaration } from "@earendil-works/pi-ai/utils/transcript";
 import { TOOL_NAME } from "../shared/tool-names";
 import type {
   Api,
@@ -48,8 +49,8 @@ export type RunSetup = Omit<
   "chatId" | "session" | "storeArtifact" | "readArtifact" | "askHelper"
 >;
 
-// Tools stay declared for the whole run so the cached prefix never changes.
-// Past the step limit, calls are answered with this instead of running.
+// Declared tools are never removed during a run. Past the step limit, calls
+// are answered with this instead of running.
 const TOOL_LIMIT_NOTICE =
   "Not executed: the tool step limit for this run is reached. Do not call more tools. Answer now with what you know, say what remains uncertain, and suggest the best next step.";
 
@@ -120,7 +121,7 @@ export async function runPiAgent(options: {
     storeArtifact: (label, text) => context.storeText(label, text),
     readArtifact: (handle) => store.get(chatId, handle),
   };
-  const toolSet = createToolSet(run);
+  const toolSet = createToolSet(run, loadedTools(messages));
   const context = createContextEngine({
     chatId,
     store,
@@ -212,8 +213,17 @@ export async function runPiAgent(options: {
         }));
   agent.state.model = resolved;
   agent.state.tools = tools();
+  // The prompt declares the tools every run starts with; tools loaded in
+  // earlier turns follow as a declaration of their own (see createToolSet).
   agent.state.messages = [
-    { role: "system", content: system, timestamp: Date.now() },
+    {
+      role: "system",
+      content: system,
+      ...(maxToolSteps > 0
+        ? { toolsAdded: toolSet.base().map(toToolDeclaration) }
+        : {}),
+      timestamp: Date.now(),
+    },
   ];
   agent.streamFunction = stream;
   agent.sessionId = chatId;
@@ -249,6 +259,18 @@ export async function runPiAgent(options: {
     signal.removeEventListener("abort", abort);
     unsubscribe();
   }
+}
+
+// On-demand tools that toolSearch loaded in earlier turns of the chat.
+function loadedTools(messages: ChatMessage[]) {
+  return messages.flatMap((message) =>
+    (message.parts || []).flatMap((part) => {
+      const loaded = (part.output as { loaded?: unknown } | undefined)?.loaded;
+      return part.toolName === TOOL_NAME.toolSearch && Array.isArray(loaded)
+        ? loaded.map(String)
+        : [];
+    }),
+  );
 }
 
 function getMessageSources(messages: ChatMessage[]): ChatSource[] {

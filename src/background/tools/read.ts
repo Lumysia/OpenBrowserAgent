@@ -4,6 +4,7 @@ import {
 } from "../../shared/attachments";
 import { bytesToBase64 } from "../../shared/binary";
 import { hasToolGroup } from "../../shared/agents";
+import { BUILTIN_SKILLS } from "../../shared/builtin-skills";
 import { SKILL_ENTRY_PATH } from "../../shared/skills";
 import { readSyncedChatAttachment } from "../../shared/sync-chat-attachments";
 import { TOOL_NAME } from "../../shared/tool-names";
@@ -144,7 +145,9 @@ function readSkill(
   input: Record<string, unknown>,
 ): ToolResult {
   const wanted = name.trim().toLowerCase();
-  const skill = run.skills.find(
+  // Built-in skills stay readable for agents without the skills group: the
+  // prompt and tools point to them.
+  const skill = [...run.skills, ...BUILTIN_SKILLS].find(
     (item) => item.name.toLowerCase() === wanted || item.id === name,
   );
   if (!skill)

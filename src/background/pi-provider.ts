@@ -53,6 +53,17 @@ export function piModel(model: ProviderModel): Model<Api> {
     contextWindow: model.contextLength || 128_000,
     maxTokens: 8192,
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    // Tools loaded mid-run are declared in a system message after the cached
+    // prefix instead of changing the tool list. Models without this support
+    // reject such a request; createProviderStream then falls back.
+    ...(api === "anthropic-messages"
+      ? {
+          compat: {
+            supportsMidConvoSystemMessages: true,
+            supportsMidConvoToolChanges: true,
+          },
+        }
+      : {}),
     ...(api === "openai-completions"
       ? {
           compat: {
@@ -91,17 +102,26 @@ export function assistantMessage(model: Model<Api>): AssistantMessage {
 // retried with backoff by Pi's provider wrapper (Retry-After honoured).
 const PROVIDER_RETRIES = 3;
 
+// Models that rejected mid-conversation tool declarations, for the life of
+// the service worker.
+const withoutInlineTools = new Set<string>();
+
 // Pi owns parsing and streaming. This adapter supplies extension configuration,
-// retries, and the product's single text-only retry when a model rejects image
-// content. Prompt caching uses Pi's defaults: Anthropic breakpoints on tools,
-// system prompt and the latest message; automatic caching elsewhere.
+// retries, and the product's single retries without what a model rejects:
+// image content, or mid-conversation tool declarations (the tool list then
+// carries every loaded tool). Prompt caching uses Pi's defaults: Anthropic
+// breakpoints on tools, system prompt and the latest message; automatic
+// caching elsewhere.
 export function createProviderStream(
   configuration: ProviderModel,
   effort?: ReasoningEffort,
   onImageRejected?: () => void,
 ): StreamFn {
   let textOnly = false;
-  return (model, context, options) => {
+  const modelKey = `${configuration.baseUrl}|${configuration.modelName}`;
+  let inlineTools = !withoutInlineTools.has(modelKey);
+  return (requested, context, options) => {
+    let model = inlineTools ? requested : { ...requested, compat: undefined };
     const output = new AssistantMessageEventStream();
     const stream =
       model.api === "anthropic-messages"
@@ -168,6 +188,19 @@ export function createProviderStream(
           onImageRejected?.();
           return run(withoutImages(messages), false);
         }
+        if (
+          event.type === "error" &&
+          inlineTools &&
+          model.compat &&
+          !started &&
+          event.reason !== "aborted" &&
+          rejectsInlineTools(event.error.errorMessage || "")
+        ) {
+          inlineTools = false;
+          withoutInlineTools.add(modelKey);
+          model = { ...model, compat: undefined };
+          return run(messages, canRetry);
+        }
 
         // Delay only the empty start, not content. A rejected request must not
         // append a phantom assistant to Pi's transcript before its retry.
@@ -221,6 +254,12 @@ function anthropicFetch(baseUrl: string): typeof fetch {
       init,
     );
   };
+}
+
+function rejectsInlineTools(error: string) {
+  return /tool_addition|tool_removal|inline-tools|\bsystem\b.{0,40}(role|message)|(role|message).{0,40}\bsystem\b/i.test(
+    error,
+  );
 }
 
 function rejectsImages(error: string) {

@@ -305,8 +305,14 @@ export function SidepanelApp() {
         t,
         context,
         sources: baseChat.sources,
+        // The agent's own model runs when it still exists (as in the
+        // background's resolveModel).
         assistantModel: assistantModelLabel({
-          modelId: preferences?.selectedModelId,
+          modelId: configuredModels.some(
+            (model) => model.id === activeAgent.modelId,
+          )
+            ? activeAgent.modelId
+            : preferences?.selectedModelId,
           models: configuredModels,
         }),
         sentTabs,

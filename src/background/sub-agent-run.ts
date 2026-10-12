@@ -26,7 +26,6 @@ export async function runSubAgentChat(options: {
   agent: Agent;
   task: string;
   title: string;
-  modelId?: string;
   parent: { chatId: string; messageId?: string; toolCallId: string };
   onStart(chatId: string): void;
   onProgress(progress: SubAgentProgress[]): void;
@@ -105,7 +104,6 @@ export async function runSubAgentChat(options: {
   try {
     await runChat(session, {
       agentId: agent.id,
-      modelId: options.modelId,
       messages: [user],
       messageId: assistantId,
       depth: 1,

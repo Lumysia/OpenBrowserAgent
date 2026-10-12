@@ -21,9 +21,10 @@ export type RunRequest = {
   depth?: number;
 };
 
-// Everything a run needs, resolved from storage: the side panel only names
-// the agent, so chats and background sub-agents are set up the same way.
-export async function prepareRun(request: RunRequest) {
+// What a run of an agent is set up with, resolved from storage: the side
+// panel only names the agent, so chats and background sub-agents are set up
+// the same way. A description (`store: false`) writes nothing.
+async function runSetup(request: RunRequest, store: boolean) {
   const [agents, preferences, allSkills, mcpServers, bridges] =
     await Promise.all([
       storage.agents.get(),
@@ -43,16 +44,11 @@ export async function prepareRun(request: RunRequest) {
           ),
         }
       : resolved;
-  const model = await resolveModel(agent.modelId || request.modelId);
-  const helperModel = await resolveHelperModel(
-    preferences.helperModelId,
-    model,
-  );
   const skills = hasToolGroup(agent, "skills")
     ? allSkills.filter(isSkillEnabled)
     : [];
   const workspace = agent.workspace
-    ? await workspaceForAgent(agent)
+    ? await workspaceForAgent(agent, store)
     : undefined;
   const setup: RunSetup = {
     agent,
@@ -68,12 +64,20 @@ export async function prepareRun(request: RunRequest) {
   ).length;
   return {
     agent,
-    model,
-    helperModel,
     setup,
     system: createSystemPrompt({ agent, skills, workspace, bridges: tested }),
     maxToolSteps: clampMaxToolSteps(preferences.maxToolSteps),
   };
+}
+
+export async function prepareRun(request: RunRequest) {
+  const prepared = await runSetup(request, true);
+  const model = await resolveModel(prepared.agent.modelId, request.modelId);
+  const helperModel = await resolveHelperModel(
+    prepared.setup.preferences.helperModelId,
+    model,
+  );
+  return { ...prepared, model, helperModel };
 }
 
 export async function runChat(
@@ -104,7 +108,7 @@ export async function runChat(
 // The system prompt and the tools a run of this agent starts with, for
 // chat export.
 export async function describeRun(agentId: string | undefined) {
-  const prepared = await prepareRun({ agentId });
+  const prepared = await runSetup({ agentId }, false);
   const unused = () => {
     throw new Error("Not available in a run description.");
   };
@@ -131,7 +135,16 @@ export async function describeRun(agentId: string | undefined) {
   };
 }
 
-async function workspaceForAgent(agent: Agent) {
+async function workspaceForAgent(agent: Agent, store: boolean) {
+  if (!store) {
+    const existing = (await storage.agentWorkspaces.get()).find(
+      (workspace) => workspace.agentId === agent.id,
+    );
+    return ensureWorkspaceDefaults(
+      existing || createWorkspace(agent.id),
+      agent,
+    );
+  }
   const workspaces = await storage.agentWorkspaces.update((current) => {
     const existing = current.find(
       (workspace) => workspace.agentId === agent.id,

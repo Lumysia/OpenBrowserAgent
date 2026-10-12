@@ -2,17 +2,18 @@ import { DEFAULT_AGENT_ICON_ID } from "./agent-icon-registry";
 import type { Agent } from "./types";
 
 // What an agent may use. Each tool belongs to one group (or to none when
-// every agent needs it); an agent lists the groups it gets.
+// every agent needs it); an agent lists the groups it gets. The workspace
+// tool follows the agent's workspace switch instead.
 export const TOOL_GROUPS = [
   "pages",
   "browser",
   "web",
   "images",
   "skills",
-  "workspace",
   "history",
   "subAgents",
   "mcp",
+  "mcpServers",
   "localExecution",
   "scripts",
   "devtools",
@@ -40,6 +41,7 @@ export const DEFAULT_AGENT: Agent = {
     "skills",
     "subAgents",
     "mcp",
+    "mcpServers",
     "localExecution",
     "devtools",
   ],

@@ -18,7 +18,6 @@ const ACTIONS = ["list", "write", "append", "replace", "delete", "search"];
 // lessons) and USER.md (the user's preferences) appear in the system prompt.
 export const workspaceTool: ToolDefinition = {
   name: TOOL_NAME.workspace,
-  group: "workspace",
   onDemand: true,
   available: (run) => !!run.workspace,
   summary: "Edit the agent's files and memory (MEMORY.md, USER.md, notes)",

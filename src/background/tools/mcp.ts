@@ -12,7 +12,7 @@ import { json, schema, type ToolDefinition } from "./types";
 
 export const mcpServersTool: ToolDefinition = {
   name: TOOL_NAME.mcpServers,
-  group: "mcp",
+  group: "mcpServers",
   onDemand: true,
   summary: "Add, test and manage MCP servers",
   description:

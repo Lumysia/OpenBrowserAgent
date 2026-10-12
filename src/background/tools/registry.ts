@@ -41,39 +41,34 @@ export const BUILTIN_TOOLS: ToolDefinition[] = [
   devtoolsTool,
 ];
 
-// The tools of one run: core tools are declared from the first request;
-// on-demand tools are declared once toolSearch loads them. Declarations are
-// only ever appended, so the cached request prefix stays valid.
-export function createToolSet(run: RunContext) {
+// The tools of one run. Core tools are declared from the first request;
+// on-demand tools once toolSearch loads them, and they stay loaded for the
+// rest of the chat (`loaded` names the ones earlier turns loaded). Where
+// the provider supports it (see piModel), a loaded tool is declared in a
+// message after the cached prefix; elsewhere the tool list grows, which costs
+// one cache miss per load.
+export function createToolSet(run: RunContext, loaded: string[] = []) {
   const allowed = [...BUILTIN_TOOLS, ...mcpToolDefinitions(run.mcpServers)]
     .filter((tool) => !tool.group || hasToolGroup(run.agent, tool.group))
     .filter((tool) => tool.available?.(run) ?? true);
   const core = allowed.filter((tool) => !tool.onDemand);
   const onDemand = allowed.filter((tool) => tool.onDemand);
-  const loaded: ToolDefinition[] = [];
+  const added: ToolDefinition[] = [];
 
   function load(names: string[], query: string) {
-    const terms = query
-      .toLowerCase()
-      .split(/\W+/)
-      .filter((term) => term.length > 2);
     const matches = onDemand.filter(
-      (tool) =>
-        names.includes(tool.name) ||
-        (!names.length &&
-          terms.some((term) =>
-            `${tool.name} ${tool.summary}`.toLowerCase().includes(term),
-          )),
+      (tool) => names.includes(tool.name) || matchesQuery(tool, query),
     );
-    for (const tool of matches) if (!loaded.includes(tool)) loaded.push(tool);
+    for (const tool of matches) if (!added.includes(tool)) added.push(tool);
     return matches;
   }
+  load(loaded, "");
 
   const toolSearch: ToolDefinition = {
     name: TOOL_NAME.toolSearch,
     readOnly: true,
     summary: "Load more tools",
-    description: `Load more tools by name (or by a search query), then call them in your next step. Available:\n${onDemand
+    description: `Load more tools by name and/or a search query, then call them in your next step. Available:\n${onDemand
       .map((tool) => `- ${tool.name}: ${tool.summary}`)
       .join("\n")}`,
     parameters: schema({
@@ -99,12 +94,38 @@ export function createToolSet(run: RunContext) {
 
   const base = onDemand.length ? [...core, toolSearch] : core;
   return {
-    declared: () => [...base, ...loaded],
+    // Declared from the first request of every run.
+    base: () => base,
+    declared: () => [...base, ...added],
     find: (name: string) =>
       base.find((tool) => tool.name === name) ||
-      loaded.find((tool) => tool.name === name),
+      added.find((tool) => tool.name === name),
     onDemand,
   };
 }
 
-export type ToolSet = ReturnType<typeof createToolSet>;
+// Query words (any script) found in a tool's name, summary or description.
+// Scripts without spaces between words (Chinese, Japanese) also match on
+// any two-character part of the query.
+function matchesQuery(tool: ToolDefinition, query: string) {
+  const text = `${tool.name} ${tool.summary} ${tool.description}`.toLowerCase();
+  return query
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}_-]+/u)
+    .flatMap((word) =>
+      /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(word) &&
+      word.length > 2
+        ? [
+            word,
+            ...Array.from(word.slice(1), (_, index) =>
+              word.slice(index, index + 2),
+            ),
+          ]
+        : [word],
+    )
+    .some(
+      (term) =>
+        (term.length > 2 || (term.length === 2 && /[^\x00-\x7f]/.test(term))) &&
+        text.includes(term),
+    );
+}
