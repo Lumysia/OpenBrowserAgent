@@ -14,6 +14,7 @@ import {
   refreshSplitItem,
   setSplitItem,
   splitItemKey,
+  SplitItemUnavailableError,
 } from "./storage-split";
 import { getActiveSyncBackend } from "./sync-backends";
 import {
@@ -41,7 +42,17 @@ export async function readLocalChatContent(chatId: string) {
 // neither on this device nor reachable.
 export async function loadChatContent(chatId: string) {
   const content = await loadSplitItem<ChatContent>(CHATS, chatId);
-  return content === undefined ? undefined : normalizeChatContent(content);
+  if (content !== undefined) return normalizeChatContent(content);
+  // Listed with messages, but its content is on neither this device nor the
+  // cloud (e.g. sync was turned off while the cloud was unreachable).
+  const summary = (await storage.chats.get()).find(
+    (chat) => chat.id === chatId,
+  );
+  if (summary?.messageCount)
+    throw new SplitItemUnavailableError(
+      `Content of chat ${chatId} is not available.`,
+    );
+  return undefined;
 }
 
 // Check this device's copy against the cloud; a newer one is stored.

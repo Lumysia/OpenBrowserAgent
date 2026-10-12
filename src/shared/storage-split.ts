@@ -1,5 +1,4 @@
-import { isChatRunActive } from "./chats";
-import { STORAGE_KEYS, SYNCABLE_DATA_ITEMS } from "./storage-keys";
+import { SYNCABLE_DATA_ITEMS } from "./storage-keys";
 import {
   flushedCache,
   isSyncRouted,
@@ -12,42 +11,21 @@ import {
   withLock,
   type SyncLocalCache,
 } from "./storage-sync-cache";
-import {
-  getActiveSyncBackend,
-  type SyncBackend,
-  type SyncItemRead,
-} from "./sync-backends";
+import { getActiveSyncBackend, type SyncBackend } from "./sync-backends";
+import { splitCollection, type Item } from "./sync-split-format";
 import { rebaseRecord, rebaseRows } from "./sync-rebase";
-import type { ChatSummary } from "./types";
 
-// Split collections are stored as a list plus one content entry per item, so
-// content is loaded only when needed. The list lives under the key like any
-// stored value; each item's content under `<key>/<id>`, one copy whether
-// synced or not. While synced, ids whose content is not uploaded yet are kept
-// in the list's sync cache entry (`items`) and uploaded with it.
+// Lazy split collections (see sync-split-format) are stored as a list plus
+// one content entry per item, so content is loaded only when needed. The list
+// lives under the key like any stored value; each item's content under
+// `<key>/<id>`, one copy whether synced or not. While synced, ids whose
+// content is not uploaded yet are kept in the list's sync cache entry
+// (`items`) and uploaded with it.
 
-type Item = Record<string, unknown>;
-
-export const SPLIT_ITEMS: Record<
-  string,
-  {
-    idField: string;
-    // Content fields: arrays keyed by the given field.
-    content: Record<string, string>;
-    // Content that must not upload yet; it stays pending.
-    hold?: (item: Item) => boolean;
-  }
-> = {
-  [STORAGE_KEYS.chats]: {
-    idField: "id",
-    content: { messages: "id", sources: "id", imageGenerationJobs: "id" },
-    // A streaming reply uploads once it has finished.
-    hold: (item) => isChatRunActive(item as ChatSummary),
-  },
-};
+const collectionOf = (key: string) => splitCollection(key)!;
 
 export function isSplitStorageKey(key: string) {
-  return Object.hasOwn(SPLIT_ITEMS, key);
+  return !!splitCollection(key)?.lazy;
 }
 
 export function splitItemKey(key: string, id: string) {
@@ -55,10 +33,10 @@ export function splitItemKey(key: string, id: string) {
 }
 
 const itemLock = (key: string, id: string) => `item:${splitItemKey(key, id)}`;
+const listOf = (value: unknown) =>
+  Array.isArray(value) ? (value as Item[]) : [];
 export const splitItemIds = (key: string, value: unknown) =>
-  (Array.isArray(value) ? (value as Item[]) : []).map((item) =>
-    String(item[SPLIT_ITEMS[key].idField]),
-  );
+  listOf(value).map((item) => String(item[collectionOf(key).idField]));
 
 export async function readSplitItem<T>(key: string, id: string) {
   const name = splitItemKey(key, id);
@@ -95,128 +73,155 @@ export function markSplitItemsPending(key: string, ids: string[]) {
   });
 }
 
+// Every item's content is checked against the cloud by the next flush
+// (sync turned on), so content the cloud lacks or that changed meanwhile is
+// uploaded.
+export const splitCacheItems = (key: string, value: unknown) =>
+  isSplitStorageKey(key) ? { items: splitItemIds(key, value) } : {};
+
+function heldIds(key: string, value: unknown) {
+  const { hold } = collectionOf(key);
+  return new Set(hold ? splitItemIds(key, listOf(value).filter(hold)) : []);
+}
+
+// Pending content that may upload now (its item is not held).
+export function hasUploadableItems(
+  key: string,
+  cache: SyncLocalCache<unknown>,
+) {
+  if (!pendingItems(cache).length) return false;
+  const held = heldIds(key, cache.value);
+  return pendingItems(cache).some((id) => !held.has(id));
+}
+
+export class SplitItemUnavailableError extends Error {}
+
 // An item's content, brought up to date from the cloud when synced and this
 // device's copy is not pending upload. Throws when it is neither local nor
 // available from the cloud.
 export async function loadSplitItem<T>(key: string, id: string) {
-  const have = await readSplitItem<T>(key, id);
-  const newer = await fetchNewerItem(key, id, have !== undefined).catch(
-    (error) => {
-      if (have === undefined) throw error;
-    },
-  );
+  const have = await readSplitItem<Item>(key, id);
+  const newer = await fetchNewerItem(key, id, have).catch((error) => {
+    if (have === undefined) throw error;
+  });
   if (newer?.value !== undefined) return newer.value as T;
   if (have === undefined && newer)
-    throw new Error(`Content of ${splitItemKey(key, id)} is not available.`);
-  return have;
+    throw new SplitItemUnavailableError(
+      `Content of ${splitItemKey(key, id)} is not available.`,
+    );
+  return have as T | undefined;
 }
 
 // Bring a local copy up to date with the cloud; a newer copy is stored.
 export async function refreshSplitItem(key: string, id: string) {
-  await fetchNewerItem(key, id, true);
+  const have = await readSplitItem<Item>(key, id);
+  if (have !== undefined) await fetchNewerItem(key, id, have);
 }
 
 // Undefined: nothing to check (not synced, or the local copy is pending).
-async function fetchNewerItem(
+async function fetchNewerItem(key: string, id: string, have: Item | undefined) {
+  if (!(await isSplitSyncRouted(key))) return undefined;
+  // Local edits upload (and merge) first; the replica stays behind them.
+  if (have !== undefined && pendingItems(await readSyncCache(key)).includes(id))
+    return undefined;
+  const backend = await getActiveSyncBackend();
+  const result = await backend.readItem(key, id, have !== undefined);
+  if (result.value === undefined) return result;
+  return { value: await advanceItem(key, id, have, result.value as Item) };
+}
+
+// The sync replica of an item moved from `base` to `next`; the local copy
+// follows, keeping what changed locally since `base`. Every path that
+// advances the replica goes through here: an upload sets the local copy over
+// the replica, so a local copy left behind would undo the other changes.
+async function advanceItem(
   key: string,
   id: string,
-  have: boolean,
-): Promise<SyncItemRead | undefined> {
-  if (!(await isSplitSyncRouted(key))) return undefined;
-  if (pendingItems(await readSyncCache(key)).includes(id)) return undefined;
-  const result = await (await getActiveSyncBackend()).readItem(key, id, have);
-  if (result.value === undefined) return result;
+  base: Item | undefined,
+  next: Item,
+) {
   return withLock(itemLock(key, id), async () => {
-    // Edited meanwhile: the local copy uploads and merges next.
-    if (pendingItems(await readSyncCache(key)).includes(id))
-      return { unchanged: true };
-    await local().set({ [splitItemKey(key, id)]: result.value });
-    return result;
+    const current = await readSplitItem<Item>(key, id);
+    // Removed meanwhile.
+    if (current === undefined && base !== undefined) return undefined;
+    const value = sameValue(current, base)
+      ? next
+      : rebaseRecord(base, current!, next, collectionOf(key).body);
+    if (!sameValue(current, value))
+      await local().set({ [splitItemKey(key, id)]: value });
+    return value;
   });
 }
 
+// Send the list with the given ids' local contents; each local copy follows
+// the merged result.
+async function sendItems(
+  backend: SyncBackend,
+  key: string,
+  value: unknown,
+  ids: Iterable<string>,
+) {
+  const contents: Record<string, Item> = {};
+  for (const id of ids) {
+    const content = await readSplitItem<Item>(key, id);
+    if (content !== undefined) contents[id] = content;
+  }
+  const result = await backend.writeItems(key, value, contents);
+  for (const [id, content] of Object.entries(contents))
+    if (result.contents[id] !== undefined)
+      await advanceItem(key, id, content, result.contents[id] as Item);
+  return result;
+}
+
 // Flush of a split collection: the list plus every pending content that is
-// not held. The merged result is applied to what changed locally meanwhile.
+// not held. Returns whether content is left to upload (edited meanwhile, or
+// missing from the cloud).
 export async function uploadSplitPending(
   backend: SyncBackend,
   key: string,
   expected: SyncLocalCache<unknown>,
 ) {
-  const { hold } = SPLIT_ITEMS[key];
-  const list = (expected.value ?? []) as Item[];
-  const held = new Set(
-    hold
-      ? splitItemIds(
-          key,
-          list.filter((item) => hold(item)),
-        )
-      : [],
-  );
-  const contents: Record<string, unknown> = {};
-  for (const id of pendingItems(expected)) {
-    if (held.has(id)) continue;
-    const content = await readSplitItem(key, id);
-    if (content !== undefined) contents[id] = content;
-  }
-  const result = await backend.writeItems(key, expected.value, contents);
-  const changed = await applyMergedItems(key, contents, result.contents);
-  await withLock(syncLocalCacheKey(key), async () => {
+  const held = heldIds(key, expected.value);
+  const sent = pendingItems(expected).filter((id) => !held.has(id));
+  const result = await sendItems(backend, key, expected.value, sent);
+  return withLock(syncLocalCacheKey(key), async () => {
     const current = await readSyncCache(key);
-    if (!current) return;
-    const value = sameValue(current.value, expected.value)
+    if (!current) return false;
+    const unchanged = sameValue(current.value, expected.value);
+    const value = unchanged
       ? result.value
       : rebaseRows(
-          list,
-          current.value as Item[],
-          result.value as Item[],
-          SPLIT_ITEMS[key].idField,
+          listOf(expected.value),
+          listOf(current.value),
+          listOf(result.value),
+          collectionOf(key).idField,
         );
-    const sent = new Set(pendingItems(expected));
-    const items = pendingItems(current).filter(
-      (id) => held.has(id) || changed.has(id) || !sent.has(id),
-    );
-    const flushed =
-      sameValue(current.value, expected.value) &&
-      items.every((id) => held.has(id));
+    const listed = new Set(splitItemIds(key, value));
+    // Pending stays what is held, was not sent, or differs locally from
+    // what the cloud has now.
+    const items: string[] = [];
+    for (const id of new Set([...pendingItems(current), ...result.missing])) {
+      if (!listed.has(id)) continue;
+      if (held.has(id)) items.push(id);
+      else if (
+        sent.includes(id)
+          ? !sameValue(await readSplitItem(key, id), result.contents[id])
+          : (await readSplitItem(key, id)) !== undefined
+      )
+        items.push(id);
+    }
+    const flushed = unchanged && items.every((id) => held.has(id));
     await local().set({
       [syncLocalCacheKey(key)]: {
-        ...(flushed ? flushedCache(value) : { ...current, value }),
+        ...(flushed
+          ? flushedCache(value)
+          : { value, updatedAt: current.updatedAt }),
         ...(items.length ? { items } : {}),
       },
     });
     await removeSplitItems(key, removedIds(key, current.value, value));
+    return items.some((id) => !held.has(id));
   });
-}
-
-// Write merged contents back; returns ids edited meanwhile (still pending).
-async function applyMergedItems(
-  key: string,
-  sent: Record<string, unknown>,
-  merged: Record<string, unknown>,
-) {
-  const changed = new Set<string>();
-  for (const [id, content] of Object.entries(sent)) {
-    const next = merged[id];
-    await withLock(itemLock(key, id), async () => {
-      const current = await readSplitItem<Item>(key, id);
-      if (current === undefined || next === undefined) return;
-      if (sameValue(current, content)) {
-        if (!sameValue(current, next))
-          await local().set({ [splitItemKey(key, id)]: next });
-        return;
-      }
-      changed.add(id);
-      await local().set({
-        [splitItemKey(key, id)]: rebaseRecord(
-          content as Item,
-          current,
-          next as Item,
-          SPLIT_ITEMS[key].content,
-        ),
-      });
-    });
-  }
-  return changed;
 }
 
 // A refreshed list replaces the cache entry; contents of removed items go.
@@ -241,18 +246,13 @@ export async function uploadSplitCollection(
   key: string,
   value: unknown,
 ) {
-  const contents: Record<string, unknown> = {};
-  for (const id of splitItemIds(key, value)) {
-    const content = await readSplitItem(key, id);
-    if (content !== undefined) contents[id] = content;
-  }
-  const result = await backend.writeItems(key, value, contents);
-  await applyMergedItems(key, contents, result.contents);
-  return result.value;
+  return (await sendItems(backend, key, value, splitItemIds(key, value))).value;
 }
 
 // Download every content this device does not have yet (sync turned off or
 // moved to another backend), so the list stays complete without the cloud.
+// Best effort: once the cloud cannot be reached, the remaining items stay
+// listed and their content shows as not available.
 export async function materializeSplitItems(
   backend: SyncBackend,
   key: string,
@@ -260,7 +260,8 @@ export async function materializeSplitItems(
 ) {
   for (const id of splitItemIds(key, value)) {
     if ((await readSplitItem(key, id)) !== undefined) continue;
-    const result = await backend.readItem(key, id, false);
+    const result = await backend.readItem(key, id, false).catch(() => {});
+    if (!result) return;
     if (result.value !== undefined) await setSplitItem(key, id, result.value);
   }
 }

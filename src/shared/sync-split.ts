@@ -1,6 +1,5 @@
 import { getBrowserApi } from "./browser-api";
-import { STORAGE_KEYS } from "./storage-keys";
-import { SPLIT_ITEMS } from "./storage-split";
+import type { SyncItemRead } from "./sync-backends";
 import {
   documentScope,
   readDocument,
@@ -14,7 +13,6 @@ import {
   hashBody,
   indexCodec,
   mapLimit,
-  revKey,
   sameRevs,
   syncDeviceId,
   type Body,
@@ -29,41 +27,13 @@ import {
   tinybaseSyncLocalCacheKey,
 } from "./sync-tinybase-doc";
 
-// A collection whose items carry large content. Its cloud form is a small
-// index document (each item's other fields plus the revs of its content) and
-// one content document per item, so a change uploads and downloads only the
-// items it touched.
-const SPLIT_COLLECTIONS: SplitCollection[] = [
-  {
-    key: STORAGE_KEYS.chats,
-    idField: "id",
-    body: SPLIT_ITEMS[STORAGE_KEYS.chats].content,
-    omitEmpty: ["sources", "imageGenerationJobs"],
-    lazy: true,
-  },
-  { key: STORAGE_KEYS.skills, idField: "id", body: { files: "path" } },
-  {
-    key: STORAGE_KEYS.agentWorkspaces,
-    idField: "agentId",
-    body: { files: "path" },
-  },
-];
-
-export function splitCollection(key: string) {
-  return SPLIT_COLLECTIONS.find((collection) => collection.key === key);
-}
-
-// `value` absent and not `unchanged`: the item or its content is missing.
-export type ItemRead = { value?: Item; unchanged?: boolean };
 // What this device last synced per item: the revs its local content matches
 // and a hash of that content, so unchanged items are neither uploaded nor
 // downloaded.
 type SyncedItems = Record<string, { rev: Revs; body: string }>;
 
-// Decoded content of unchanged items, so a refresh decodes each stored
-// replica at most once per background lifetime.
-const bodyCache = new Map<string, { rev: string; body: Body | undefined }>();
-
+// Cloud form of a split collection (see sync-split-format): an index document
+// plus one content document per item.
 export function createSplitCollectionStore(
   transport: DocumentTransport,
   collection: SplitCollection,
@@ -72,12 +42,12 @@ export function createSplitCollectionStore(
   const index = indexCodec(collection);
   const bodies = bodyCodec(collection);
   const itemName = (id: string) => `${key}/${encodeURIComponent(id)}`;
-  const itemScope = (id: string) =>
-    documentScope(transport.config, itemName(id));
   const stateKey = tinybaseSyncLocalCacheKey(
     `${documentScope(transport.config, key)}#items`,
   );
   const idOf = (item: Item) => item[idField] as string;
+  const idsOf = (value: Index | undefined) =>
+    new Set(value?.items.map(idOf) ?? []);
 
   function split(item: Item) {
     const meta: Item = {};
@@ -113,28 +83,33 @@ export function createSplitCollectionStore(
   }
 
   async function forget(id: string, removeRemote: boolean) {
-    bodyCache.delete(itemScope(id));
     if (removeRemote) await removeDocument(transport, itemName(id));
-    else await removeLocalTinyBaseSyncDocument(itemScope(id));
+    else
+      await removeLocalTinyBaseSyncDocument(
+        documentScope(transport.config, itemName(id)),
+      );
+  }
+
+  // Items no longer indexed (removed elsewhere) leave this device's replicas.
+  async function forgetUnindexed(value: Index, state: SyncedItems) {
+    const ids = idsOf(value);
+    const removed = Object.keys(state).filter((id) => !ids.has(id));
+    for (const id of removed) await forget(id, false);
+    return removed;
   }
 
   // This device's replica of an item, without a request.
-  async function localBody(id: string, rev: Revs) {
-    const cached = bodyCache.get(itemScope(id));
-    if (cached?.rev === revKey(rev)) return cached.body;
-    const body = (await readLocalDocument(transport, itemName(id), bodies))
-      ?.value;
-    bodyCache.set(itemScope(id), { rev: revKey(rev), body });
-    return body;
+  async function localBody(id: string) {
+    return (await readLocalDocument(transport, itemName(id), bodies))?.value;
   }
 
   // Fetch an item's content. It is synced with the index row only when the
   // document is one the row names; a document not yet stored (or, with browser
   // sync, not yet delivered) is fetched again next time.
-  async function fetchBody(id: string, row: Revs, base: Revs | undefined) {
+  async function fetchBody(id: string, row: Revs) {
     const { value, rev } = await readDocument(transport, itemName(id), bodies);
     if (value === undefined)
-      return { body: await localBody(id, base ?? {}), synced: false };
+      return { body: await localBody(id), synced: false };
     return { body: value, synced: !!rev && Object.values(row).includes(rev) };
   }
 
@@ -146,41 +121,38 @@ export function createSplitCollectionStore(
     state: SyncedItems,
     local: Map<string, Body>,
     expected: Record<string, Revs>,
-    removable: Set<string>,
   ) {
-    const ids = new Set(items.map(idOf));
     const next: SyncedItems = {};
     const values = await mapLimit(items, async (meta) => {
       const id = idOf(meta);
       const row = revs[id] ?? {};
       const base = expected[id] ?? state[id]?.rev;
-      const have = async () =>
-        local.get(id) ?? (await localBody(id, base ?? {}));
       let body: Body | undefined;
       let synced = true;
-      if (base && sameRevs(row, base)) body = await have();
+      if (base && sameRevs(row, base))
+        body = local.get(id) ?? (await localBody(id));
       else if (!Object.keys(row).length) {
         // Indexed without stored content (cloud data was cleared meanwhile).
-        body = await have();
+        body = local.get(id) ?? (await localBody(id));
         synced = false;
-      } else ({ body, synced } = await fetchBody(id, row, base));
-      if (synced) bodyCache.set(itemScope(id), { rev: revKey(row), body });
+      } else ({ body, synced } = await fetchBody(id, row));
       next[id] = { rev: synced ? row : (base ?? {}), body: hashBody(body) };
       return join(meta, body);
     });
-    for (const id of Object.keys(state))
-      if (!ids.has(id)) await forget(id, removable.has(id));
     if (JSON.stringify(next) !== JSON.stringify(state)) await writeState(next);
     return values;
   }
 
-  // Store the given contents, then the index; returns the merged index and
-  // what this device now has. Entries without a body keep their content.
+  // Store the given contents, then the index. Returns the merged index, what
+  // this device now has, and the items whose content the cloud lacks but
+  // this write was not given (`missing`). Content of items that this write
+  // removed, or that are no longer indexed, leaves the cloud.
   async function store(
     entries: Array<{ id: string; meta: Item; body?: Body }>,
   ) {
     const state = await readState();
     const device = await syncDeviceId();
+    const before = (await readLocalDocument(transport, key, index))?.value;
     const local = new Map<string, Body>();
     for (const { id, body } of entries) if (body) local.set(id, body);
     const stored = new Set<string>();
@@ -214,36 +186,34 @@ export function createSplitCollectionStore(
       written,
     );
     let merged = first.value!;
-    // Content is stored again where the index names no rev for it, or the
-    // index itself was gone (cloud data was cleared meanwhile).
-    const lost = entries.filter(
-      ({ id }) => !stored.has(id) && (first.created || !(id in merged.revs)),
-    );
-    if (lost.length) {
+    // Content is missing where the index names no rev for it, or everywhere
+    // when the index this device knew was gone (cloud data was cleared, maybe
+    // after this write stored its content).
+    const cleared =
+      first.created && (!!before || Object.keys(state).length > 0);
+    const missing = entries
+      .map(({ id }) => id)
+      .filter((id) => cleared || !(id in merged.revs));
+    const resend = missing.filter((id) => local.has(id));
+    if (resend.length) {
       current = merged.revs;
       for (const id of Object.keys(written)) delete written[id];
-      await mapLimit(lost, async ({ id }) => {
-        const body =
-          local.get(id) ?? (await localBody(id, state[id]?.rev ?? {}));
-        if (body) await upload(id, body, true);
-      });
+      await mapLimit(resend, (id) => upload(id, local.get(id)!, true));
       merged = (await writeIndex(merged.items, written)).value!;
     }
-    // Content of items this device synced but that are no longer indexed
-    // (deleted here or elsewhere) is removed from the cloud as well.
-    const removable = new Set([...Object.keys(state), ...stored]);
-    return { merged, state, local, stored, expected, removable };
-  }
-
-  async function forgetRemoved(
-    { items }: Index,
-    state: SyncedItems,
-    removable: Set<string>,
-  ) {
-    const ids = new Set(items.map(idOf));
-    const removed = Object.keys(state).filter((id) => !ids.has(id));
-    for (const id of removed) await forget(id, removable.has(id));
-    return removed;
+    const indexed = idsOf(merged);
+    const removed = [
+      ...new Set([...Object.keys(state), ...stored, ...idsOf(before)]),
+    ].filter((id) => !indexed.has(id));
+    for (const id of removed) await forget(id, true);
+    return {
+      merged,
+      state,
+      local,
+      stored,
+      expected,
+      missing: missing.filter((id) => !local.has(id)),
+    };
   }
 
   async function readIndex() {
@@ -270,9 +240,8 @@ export function createSplitCollectionStore(
     async read() {
       const { value, state } = await readIndex();
       if (!value) return undefined;
-      if (!collection.lazy)
-        return reconcile(value, state, new Map(), {}, new Set());
-      const removed = await forgetRemoved(value, state, new Set());
+      const removed = await forgetUnindexed(value, state);
+      if (!collection.lazy) return reconcile(value, state, new Map(), {});
       if (removed.length) {
         for (const id of removed) delete state[id];
         await writeState(state);
@@ -282,10 +251,8 @@ export function createSplitCollectionStore(
 
     async write(value: unknown) {
       if (collection.lazy) return (await writeItems(value, {})).value;
-      const { merged, state, local, expected, removable } = await store(
-        entriesOf(value),
-      );
-      return reconcile(merged, state, local, expected, removable);
+      const { merged, state, local, expected } = await store(entriesOf(value));
+      return reconcile(merged, state, local, expected);
     },
 
     writeItems,
@@ -294,33 +261,29 @@ export function createSplitCollectionStore(
   };
 
   // Lazy collections: write the items' other fields and the given items'
-  // content; returns the merged items and the merged given contents.
+  // content; returns the merged items, the merged given contents, and the
+  // items whose content the cloud lacks (to be sent by the caller).
   async function writeItems(value: unknown, contents: Record<string, Item>) {
     const entries = entriesOf(value).map(({ id, meta }) => ({
       id,
       meta,
       body: id in contents ? split(contents[id]).body : undefined,
     }));
-    const { merged, state, local, stored, expected, removable } =
+    const { merged, state, local, stored, expected, missing } =
       await store(entries);
-    const next = { ...state };
-    for (const id of await forgetRemoved(merged, state, removable))
-      delete next[id];
+    const ids = idsOf(merged);
+    const next: SyncedItems = Object.fromEntries(
+      Object.entries(state).filter(([id]) => ids.has(id)),
+    );
     for (const id of stored) {
+      if (!ids.has(id)) continue;
       const row = merged.revs[id] ?? {};
-      const synced = sameRevs(row, expected[id]);
       next[id] = {
-        rev: synced ? row : expected[id],
+        rev: sameRevs(row, expected[id]) ? row : expected[id],
         body: hashBody(local.get(id)),
       };
-      if (synced)
-        bodyCache.set(itemScope(id), {
-          rev: revKey(row),
-          body: local.get(id),
-        });
     }
     if (JSON.stringify(next) !== JSON.stringify(state)) await writeState(next);
-    const ids = new Set(merged.items.map(idOf));
     return {
       value: merged.items,
       contents: Object.fromEntries(
@@ -328,12 +291,13 @@ export function createSplitCollectionStore(
           .filter((id) => ids.has(id) && local.has(id))
           .map((id) => [id, join({}, local.get(id))]),
       ),
+      missing,
     };
   }
 
   // One item's content, fetched only when its revs differ from the content
   // this device has (`have`). `unchanged`: the device's copy is current.
-  async function readItem(id: string, have: boolean): Promise<ItemRead> {
+  async function readItem(id: string, have: boolean): Promise<SyncItemRead> {
     const state = await readState();
     const current =
       (await readLocalDocument(transport, key, index))?.value ??
@@ -341,19 +305,15 @@ export function createSplitCollectionStore(
     if (!current?.items.some((item) => idOf(item) === id)) return {};
     const row = current.revs[id] ?? {};
     const base = state[id]?.rev;
-    if (base && sameRevs(row, base)) {
+    // Unchanged, or not in the cloud: this device's copy is the best there is.
+    if ((base && sameRevs(row, base)) || !Object.keys(row).length) {
       if (have) return { unchanged: true };
-      const body = await localBody(id, row);
-      if (body) return { value: join({}, body) };
+      const body = await localBody(id);
+      if (body || !Object.keys(row).length)
+        return body ? { value: join({}, body) } : {};
     }
-    if (!Object.keys(row).length) {
-      if (have) return { unchanged: true };
-      const body = await localBody(id, base ?? {});
-      return body ? { value: join({}, body) } : {};
-    }
-    const { body, synced } = await fetchBody(id, row, base);
+    const { body, synced } = await fetchBody(id, row);
     if (!body) return have ? { unchanged: true } : {};
-    if (synced) bodyCache.set(itemScope(id), { rev: revKey(row), body });
     await writeState({
       ...state,
       [id]: { rev: synced ? row : (base ?? {}), body: hashBody(body) },

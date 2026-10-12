@@ -16,7 +16,8 @@ import {
   writeDocument,
   type DocumentTransport,
 } from "./sync-documents";
-import { createSplitCollectionStore, splitCollection } from "./sync-split";
+import { createSplitCollectionStore } from "./sync-split";
+import { splitCollection } from "./sync-split-format";
 import { valueCodec } from "./sync-tinybase-doc";
 import {
   createWebDavTransport,
@@ -69,7 +70,11 @@ export function createSyncBackend(
         value,
         contents as Record<string, Record<string, unknown>>,
       );
-      return copy<{ value?: T; contents: Record<string, unknown> }>(result)!;
+      return copy<{
+        value?: T;
+        contents: Record<string, unknown>;
+        missing: string[];
+      }>(result)!;
     },
     async readItem(key, id, have) {
       return copy<SyncItemRead>(await splitStore(key).readItem(id, have))!;

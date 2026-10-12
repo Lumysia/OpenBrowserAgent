@@ -12,9 +12,11 @@ import {
   readSyncDataSettings,
   sameValue,
   writePendingSyncValue,
+  type SyncLocalCache,
   type SyncWriteStatus,
 } from "./storage-sync-cache";
 import {
+  hasUploadableItems,
   isSplitStorageKey,
   markSplitItemsPending,
   materializeSplitItems,
@@ -37,11 +39,19 @@ async function ownsSyncKey(backendId: string, key: string) {
   return !item || (await readSyncDataSettings())[item.preferenceKey];
 }
 
+// A pending value, or pending split content that is not held.
+const needsUpload = (key: string, cache: SyncLocalCache<unknown> | undefined) =>
+  !!cache && (cache.flushedAt === undefined || hasUploadableItems(key, cache));
+
 async function uploadPending(backend: SyncBackend, key: string) {
   if (!(await ownsSyncKey(backend.config.id, key))) return;
   const expected = await readSyncCache(key);
-  if (!expected || expected.flushedAt !== undefined) return;
-  if (isSplitStorageKey(key)) return uploadSplitPending(backend, key, expected);
+  if (!expected || !needsUpload(key, expected)) return;
+  if (isSplitStorageKey(key)) {
+    if (await uploadSplitPending(backend, key, expected))
+      queueSyncWrite(backend, key);
+    return;
+  }
   const merged = await backend.write(key, expected.value);
   await publishFlushed(key, merged ?? expected.value, expected);
 }
@@ -146,7 +156,7 @@ export function recordSyncError(error: unknown) {
 async function refreshSyncKey(backend: SyncBackend, key: string) {
   if (!(await ownsSyncKey(backend.config.id, key))) return;
   const expected = await readSyncCache(key);
-  if (expected && expected.flushedAt === undefined) {
+  if (needsUpload(key, expected)) {
     queueSyncWrite(backend, key, 0);
     return flushSyncWrite(key);
   }

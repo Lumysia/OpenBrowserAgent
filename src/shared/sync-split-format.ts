@@ -1,10 +1,12 @@
 import { getBrowserApi } from "./browser-api";
+import { isChatRunActive } from "./chats";
 import { STORAGE_KEYS } from "./storage-keys";
 import {
   itemsFromTable,
   setOrderedTable,
   type SyncDocCodec,
 } from "./sync-tinybase-doc";
+import type { ChatSummary } from "./types";
 
 // Document format of split collections (see sync-split): the index codec,
 // the per-item content codec, content revs and hashes.
@@ -17,11 +19,40 @@ export type SplitCollection = {
   body: Record<string, string>;
   // Content fields left out of an item while empty.
   omitEmpty?: string[];
-  // Content is read per item on demand (see storage-split).
+  // Stored as a list plus one content entry per item, locally too; content
+  // is read per item on demand (see storage-split).
   lazy?: boolean;
+  // Content that must not upload yet; it stays pending.
+  hold?: (item: Item) => boolean;
 };
 
 export type Item = Record<string, unknown>;
+
+// A collection whose items carry large content. Its cloud form is a small
+// index document (each item's other fields plus the revs of its content) and
+// one content document per item, so a change uploads and downloads only the
+// items it touched.
+const SPLIT_COLLECTIONS: SplitCollection[] = [
+  {
+    key: STORAGE_KEYS.chats,
+    idField: "id",
+    body: { messages: "id", sources: "id", imageGenerationJobs: "id" },
+    omitEmpty: ["sources", "imageGenerationJobs"],
+    lazy: true,
+    // A streaming reply uploads once it has finished.
+    hold: (item) => isChatRunActive(item as ChatSummary),
+  },
+  { key: STORAGE_KEYS.skills, idField: "id", body: { files: "path" } },
+  {
+    key: STORAGE_KEYS.agentWorkspaces,
+    idField: "agentId",
+    body: { files: "path" },
+  },
+];
+
+export function splitCollection(key: string) {
+  return SPLIT_COLLECTIONS.find((collection) => collection.key === key);
+}
 export type Body = Record<string, unknown[]>;
 // An item's content rev: each device writes only its own cell (the rev of the
 // content document it stored), so concurrent writers never overwrite each

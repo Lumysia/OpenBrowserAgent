@@ -135,14 +135,19 @@ export type SyncBackend = {
   config: SyncBackendConfig;
   // Split collections (storage-split) read and write their list only;
   // contents go through writeItems (list plus given contents, returns both
-  // merged) and readItem (fetched only when newer than this copy, `have`).
+  // merged and the ids whose content the cloud lacks) and readItem (fetched
+  // only when newer than this copy, `have`).
   read<T>(key: string): Promise<T | undefined>;
   write<T>(key: string, value: T): Promise<T | undefined>;
   writeItems<T>(
     key: string,
     value: T,
     contents: Record<string, unknown>,
-  ): Promise<{ value?: T; contents: Record<string, unknown> }>;
+  ): Promise<{
+    value?: T;
+    contents: Record<string, unknown>;
+    missing: string[];
+  }>;
   readItem(key: string, id: string, have: boolean): Promise<SyncItemRead>;
   remove(key: string): Promise<void>;
   test(): Promise<void>;

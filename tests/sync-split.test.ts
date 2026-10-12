@@ -256,7 +256,7 @@ test("overlapping edits to different chats and messages merge", async () => {
     ]);
 });
 
-test("content survives a clear that another device has not seen yet", async () => {
+test("content survives a clear that overlaps another device's write", async () => {
   const server = webDavServer();
   const a = device();
   const b = device();
@@ -264,12 +264,19 @@ test("content survives a clear that another device has not seen yet", async () =
   await a.writeChats(chats, ["one", "two"]);
   await b.read("chats");
   await b.openChat("one");
+  // B stores its edit of one; A clears the cloud before B's index write.
+  const indexWrite = server.pause("PUT chats.tinybase");
+  const edited = chat("one", message("m1", "hello"), message("m2", "more"));
+  const write = b.writeChats([edited, chats[1]], ["one"]);
+  await indexWrite.reached;
   await a.remove("chats");
-  // B only renames a chat; the content it has must reach the cloud again.
-  await b.writeChats([chats[0], { ...chats[1], title: "renamed" }]);
-  assert.ok(server.files.has("chats/one.tinybase"));
-  await a.read("chats");
-  assert.deepEqual(texts(await a.openChat("one")), ["hello"]);
+  indexWrite.release();
+  // Content B was given is stored again; the rest is reported for the
+  // caller to send.
+  assert.deepEqual((await write).missing, ["two"]);
+  const fresh = device();
+  await fresh.read("chats");
+  assert.deepEqual(texts(await fresh.openChat("one")), ["hello", "more"]);
 });
 
 test("a deleted chat stays deleted and its document leaves the cloud", async () => {
@@ -277,21 +284,27 @@ test("a deleted chat stays deleted and its document leaves the cloud", async () 
   const a = device();
   const b = device();
   await a.writeChats(
-    [chat("keep"), chat("drop", message("m", "x"))],
-    ["keep", "drop"],
+    [chat("keep"), chat("drop", message("m", "x")), chat("unopened")],
+    ["keep", "drop", "unopened"],
   );
   await b.read("chats");
   await b.openChat("drop");
-  await a.writeChats([chat("keep")]);
+  await a.writeChats([chat("keep"), chat("unopened")]);
   assert.equal(server.files.has("chats/drop.tinybase"), false);
-  assert.deepEqual(await b.read("chats"), [summary(chat("keep"))]);
+  assert.deepEqual(await b.read("chats"), [
+    summary(chat("keep")),
+    summary(chat("unopened")),
+  ]);
   assert.ok(
     !Object.keys(b.storage.data).some((key) => key.includes("chats/drop")),
     "the local replica is gone too",
   );
-  // A list written by the other device without it does not bring it back.
+  // A device that never opened a chat removes its document as well.
   await b.writeChats([chat("keep")]);
-  assert.deepEqual(await a.read("chats"), [summary(chat("keep"))]);
+  assert.equal(server.files.has("chats/unopened.tinybase"), false);
+  // A list written by the other device without them does not bring them back.
+  await a.writeChats([chat("keep")]);
+  assert.deepEqual(await b.read("chats"), [summary(chat("keep"))]);
 
   await a.remove("chats");
   assert.deepEqual([...server.files.keys()], []);
