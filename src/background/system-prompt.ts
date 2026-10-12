@@ -49,6 +49,7 @@ const PAGE_RULES = `
 
 const BROWSER_RULES = `
 - Put several steps in one act or editPage call. Check what act reports; success means the step was dispatched, not that the task is done. If an action changes nothing, do not repeat it: look again or change approach.
+- Content may appear only after scrolling, "more" buttons or pagination; reveal it before concluding something is not on the page.
 - Before an irreversible or public action (submit, buy, send, delete), check that the target meets every constraint the user gave; ask when unsure.
 - Reuse open tabs. Close tabs you opened once they are no longer useful; keep tabs with results.`;
 

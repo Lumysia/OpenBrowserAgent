@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
 import { once } from "node:events";
+import { appendFile } from "node:fs/promises";
 import {
   articlePage,
   faqPage,
@@ -103,6 +104,9 @@ async function proxy({ request, response, body, url, upstream, state }) {
     status: 0,
   };
   state.calls.push(call);
+  // OBA_EVAL_DUMP=file appends every model request, to read transcripts.
+  if (process.env.OBA_EVAL_DUMP && !call.aux)
+    await appendFile(process.env.OBA_EVAL_DUMP, `${JSON.stringify(parsed)}\n`);
   const headers = { ...request.headers };
   delete headers.host;
   delete headers["content-length"];

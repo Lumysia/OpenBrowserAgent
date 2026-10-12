@@ -252,7 +252,10 @@ export const actTool: ToolDefinition = {
       lines.push(`Opened new ${tabLine(current).slice(2)}`);
     }
     lines.push(...changes);
-    if (!failure && !changes.length && !fresh && !opened.length)
+    const moved = steps.some((step) =>
+      ["scroll", "wait"].includes(step.action),
+    );
+    if (!failure && !changes.length && !fresh && !opened.length && !moved)
       lines.push(
         "No visible change in the viewport. Check with snapshot or find if you expected one.",
       );

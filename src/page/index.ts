@@ -1,6 +1,5 @@
+import { beginChanges, collectChanges } from "./changes";
 import {
-  beginChanges,
-  collectChanges,
   editableText,
   hasText,
   prepareTrustedInput,
@@ -40,14 +39,16 @@ function snapshot(args: Args) {
   if (scope === "page")
     return {
       scope,
-      text: renderLines(
-        snapshotLines(body, {
-          mode: "page",
-          itemCap: PAGE_ITEM_CAP,
-          urls,
-          maxChars: FULL_PAGE_MAX_CHARS,
-        }).lines,
-      ),
+      text:
+        scrollNote() +
+        renderLines(
+          snapshotLines(body, {
+            mode: "page",
+            itemCap: PAGE_ITEM_CAP,
+            urls,
+            maxChars: FULL_PAGE_MAX_CHARS,
+          }).lines,
+        ),
     };
   // Auto: the whole page when it fits, else the viewport plus the whole
   // page for read and find.
@@ -55,8 +56,18 @@ function snapshot(args: Args) {
     snapshotLines(body, { mode: "page", urls, maxChars: FULL_PAGE_MAX_CHARS })
       .lines,
   );
-  if (full.length <= capChars) return { scope: "page", text: full };
+  if (full.length <= capChars)
+    return { scope: "page", text: `${scrollNote()}${full}` };
   return { scope: "viewport", text: viewport(body, urls), full };
+}
+
+// Where the page is scrolled, when it can scroll: content that loads on
+// scroll only exists after scrolling.
+function scrollNote() {
+  const height = document.documentElement.scrollHeight;
+  if (height <= innerHeight * 1.2) return "";
+  const top = Math.round(scrollY);
+  return `[Scrolled to y=${top}-${top + innerHeight} of ${height}px.]\n`;
 }
 
 function viewport(body: Element, urls: boolean) {
