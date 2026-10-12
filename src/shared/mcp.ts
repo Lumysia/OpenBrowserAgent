@@ -21,19 +21,52 @@ export type McpToolConfig = {
   enabled: boolean;
 };
 
+// Hosted search servers that work without an API key (the same backends
+// OpenCode uses for its web search). Off until the user turns one on, since
+// each sends queries to a third party. A key raises the free rate limit.
 export const BUILTIN_MCP_SERVERS: McpServerConfig[] = [
-  {
-    id: "builtin_exa",
-    name: "exa",
-    description: "Web search and webpage content extraction.",
-    url: "https://mcp.exa.ai/mcp",
+  builtinMcpServer(
+    "exa",
+    "https://mcp.exa.ai/mcp",
+    "Web search and webpage content extraction.",
+  ),
+  builtinMcpServer(
+    "parallel",
+    "https://search.parallel.ai/mcp",
+    "Web search with excerpts, and webpage fetching.",
+  ),
+  builtinMcpServer(
+    "tinyfish",
+    "https://agent.tinyfish.ai/mcp",
+    "Web and news search.",
+    // Without a key, the server needs this header to allow keyless use.
+    { "X-TinyFish-Access-Mode": "keyless" },
+  ),
+  builtinMcpServer(
+    "firecrawl",
+    "https://mcp.firecrawl.dev/v2/mcp",
+    "Web search, webpage scraping and document parsing. Low free rate limit.",
+  ),
+];
+
+function builtinMcpServer(
+  name: string,
+  url: string,
+  description: string,
+  headers: Record<string, string> = {},
+): McpServerConfig {
+  return {
+    id: `builtin_${name}`,
+    name,
+    description,
+    url,
     enabled: false,
-    headers: {},
+    headers,
     tools: [],
     createdAt: 0,
     updatedAt: 0,
-  },
-];
+  };
+}
 
 export function createMcpServerDraft(name = "MCP Server"): McpServerConfig {
   const now = Date.now();
