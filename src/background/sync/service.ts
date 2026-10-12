@@ -29,6 +29,7 @@ import {
 } from "../../shared/sync/collections";
 import { readKey, type SyncEnv } from "../../shared/sync/env";
 import {
+  enabledCollections,
   runSyncRound,
   type RoundReason,
   type SyncContext,
@@ -121,6 +122,20 @@ export async function syncContext(
   };
 }
 
+// Changes waiting to upload: stamped records plus changed keys of the
+// collections that sync with this backend, not yet compared.
+export async function countPending(env: SyncEnv, context: SyncContext) {
+  const state = await loadSyncState(env.local, context.scope);
+  const collections = enabledCollections(
+    context.settings,
+    context.transport.kind,
+  );
+  const dirty = Object.keys(await loadDirty(env.local)).filter((key) =>
+    collections.some((collection) => ownsKey(collection, key)),
+  );
+  return Object.keys(state.pending).length + dirty.length;
+}
+
 export type RoundRequest = { reason: RoundReason; allowMassDelete?: boolean };
 
 export function createSyncRunner(
@@ -152,14 +167,13 @@ export function createSyncRunner(
           KEPT.includes(warning) ||
           (!result.wrote && KEPT_UNTIL_WRITE.includes(warning)),
       );
-      const dirty = Object.keys(await loadDirty(env.local)).length;
       await updateSyncStatus(env.local, {
         running: undefined,
         ...(result.checked ? { lastCheckAt: env.now() } : {}),
         ...(result.checked && !result.massDelete
           ? { lastSyncAt: env.now() }
           : {}),
-        pendingCount: result.pending + Math.max(dirty, result.held),
+        pendingCount: await countPending(env, context),
         error: undefined,
         pausedUntil: undefined,
         pauseStatus: undefined,

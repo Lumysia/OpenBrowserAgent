@@ -25,6 +25,7 @@ import {
 import {
   browserSyncEnv,
   checkBackend,
+  countPending,
   resetSync,
   createSyncRunner,
   loadContent,
@@ -105,12 +106,11 @@ export function setupSync() {
         return true;
       },
     );
-    if (added) {
-      const status = await loadSyncStatus(env.local);
+    const context = added ? await syncContext(env) : undefined;
+    if (context)
       await updateSyncStatus(env.local, {
-        pendingCount: status.pendingCount + 1,
+        pendingCount: await countPending(env, context),
       });
-    }
     scheduleEdit();
   }
 
