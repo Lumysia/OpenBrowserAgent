@@ -31,6 +31,11 @@ const PAGE = `<!doctype html><title>Smart bar</title>
 <script>
   // Like a framework-controlled input: state follows input events only.
   window.inputEvents = 0;
+  // The page's own Esc handling, like a form or menu would have.
+  window.escapes = 0;
+  addEventListener("keydown", (event) => {
+    if (event.key === "Escape") window.escapes++;
+  });
   window.controlledState = "recieve";
   document.getElementById("controlled").addEventListener("input", (event) => {
     window.inputEvents++;
@@ -291,12 +296,15 @@ test("smart bar", { timeout: 240000 }, async (t) => {
       await page.call(() => document.getElementById("dialog").showModal());
       await selectText(page, "#dialog-text");
       await poll(async () => (await barState(page)) === "toolbar");
+      const escapes = await page.call(() => window.escapes);
       await pressKey(page, "Escape", "Escape", 27);
       await poll(async () => (await barState(page)) === "none");
       assert.equal(await page.call(() => dialog.open), true);
+      assert.equal(await page.call(() => window.escapes), escapes);
       // With no bar, Esc is the page's again.
       await pressKey(page, "Escape", "Escape", 27);
       await poll(() => page.call(() => !dialog.open));
+      assert.equal(await page.call(() => window.escapes), escapes + 1);
     });
 
     await t.test("no bar where every action is turned off", async () => {
