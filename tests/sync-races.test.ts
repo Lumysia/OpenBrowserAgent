@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { loadContent } from "../src/background/sync/service";
+import { loadContent, resetSync } from "../src/background/sync/service";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import {
   ALL_ON,
@@ -16,6 +16,7 @@ import {
 // the app saving) and rounds that overlap across devices.
 
 const CHATS = STORAGE_KEYS.chats;
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function setup() {
   const clock = { now: 1_000_000 };
@@ -49,4 +50,32 @@ test("opening a chat while a round updates it stores the chat's current content"
   await a.sync();
   assert.deepEqual(messageIds(a, "X"), ["m1", "a2"]);
   assert.deepEqual(messageIds(b, "X"), ["m1", "a2"]);
+});
+
+test("clearing local chats while a round runs downloads them again and deletes nothing", async () => {
+  const { clock, a, b, hooks } = setup();
+  for (const id of ["c1", "c2", "c3"]) await saveChat(b, id, [[id, 1]]);
+  await b.sync("edit");
+  await a.sync();
+  clock.now += 1000;
+  // The user clears local chats (debug page) while a poll round runs.
+  let reset: Promise<void> | undefined;
+  hooks.readRoot = async () => {
+    reset = resetSync(b.env, b.context, false, [CHATS]);
+    await Promise.race([reset, sleep(20)]);
+  };
+  await b.sync("poll");
+  await reset;
+  // The background sees the removed keys as changes.
+  await b.remove(CHATS);
+  for (const reason of ["manual", "edit"] as const) {
+    clock.now += 1000;
+    await b.sync(reason);
+  }
+  await a.sync();
+  assert.deepEqual(
+    a.get<Array<{ id: string }>>(CHATS).map((chat) => chat.id),
+    ["c1", "c2", "c3"],
+  );
+  assert.equal(b.get<unknown[]>(CHATS)?.length, 3);
 });

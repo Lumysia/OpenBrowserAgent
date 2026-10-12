@@ -195,7 +195,6 @@ export function setupSync() {
         return result;
       }
       case SYNC_MESSAGE.reset:
-        await runner.idle();
         await resetSync(
           env,
           await syncContext(env),

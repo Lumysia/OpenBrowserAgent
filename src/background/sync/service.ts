@@ -240,7 +240,7 @@ export function createSyncRunner(
     return running;
   }
 
-  return { request, idle: () => running ?? Promise.resolve() };
+  return { request };
 }
 
 // Content this device has not held: download its blob now (a chat opened
@@ -304,8 +304,17 @@ async function storeContent(
 // its next round, as any other device's would be), and remove local keys
 // (chat contents with the chat list) after forgetting what was synced for
 // them, so the cleared data comes back from the server instead of being
-// deleted there. Runs between rounds.
-export async function resetSync(
+// deleted there. Holds the sync lock, so it runs between rounds.
+export function resetSync(
+  env: SyncEnv,
+  context: SyncContext | undefined,
+  remote: boolean,
+  keys: string[],
+) {
+  return env.lock(SYNC_LOCK, () => reset(env, context, remote, keys));
+}
+
+async function reset(
   env: SyncEnv,
   context: SyncContext | undefined,
   remote: boolean,
