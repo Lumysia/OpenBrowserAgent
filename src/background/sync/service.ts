@@ -141,6 +141,9 @@ export type RoundRequest = { reason: RoundReason; allowMassDelete?: boolean };
 export function createSyncRunner(
   env: SyncEnv,
   onPaused: (until: number) => void,
+  resolveContext: (
+    env: SyncEnv,
+  ) => Promise<SyncContext | undefined> = syncContext,
 ) {
   let running: Promise<void> | undefined;
   let queued: RoundRequest | undefined;
@@ -149,7 +152,7 @@ export function createSyncRunner(
     const status = await loadSyncStatus(env.local);
     const now = env.now();
     if (status.pausedUntil && status.pausedUntil > now) return;
-    const context = await syncContext(env);
+    const context = await resolveContext(env);
     if (!context) {
       await updateSyncStatus(env.local, {
         running: undefined,
@@ -240,13 +243,13 @@ export function createSyncRunner(
 // Content this device has not held: download its blob now (a chat opened
 // for the first time here, an attachment shown).
 export async function loadContent(
-  env: SyncEnv,
+  context: SyncContext | undefined,
   collectionName: string,
   id: string,
 ) {
   const collection = syncCollection(collectionName);
-  const context = await syncContext(env);
   if (!collection?.lazy || !context) return false;
+  const { env } = context;
   const status = await loadSyncStatus(env.local);
   if (status.pausedUntil && status.pausedUntil > env.now()) return false;
   const state = await loadSyncState(env.local, context.scope);
@@ -271,8 +274,12 @@ export async function loadContent(
 // (chat contents with the chat list) after forgetting what was synced for
 // them, so the cleared data comes back from the server instead of being
 // deleted there. Runs between rounds.
-export async function resetSync(env: SyncEnv, remote: boolean, keys: string[]) {
-  const context = await syncContext(env);
+export async function resetSync(
+  env: SyncEnv,
+  context: SyncContext | undefined,
+  remote: boolean,
+  keys: string[],
+) {
   if (context && remote) {
     await context.transport.clear();
     await saveSyncState(env.local, newSyncState(context.scope));

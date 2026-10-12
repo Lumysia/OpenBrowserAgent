@@ -169,7 +169,11 @@ export function setupSync() {
         await request({ reason: "manual" });
         return loadSyncStatus(env.local);
       case SYNC_MESSAGE.load:
-        return loadContent(env, message.collection, message.id);
+        return loadContent(
+          await syncContext(env),
+          message.collection,
+          message.id,
+        );
       case SYNC_MESSAGE.resolveDeletes: {
         const collections =
           (await loadSyncStatus(env.local)).massDelete?.map(
@@ -192,7 +196,12 @@ export function setupSync() {
       }
       case SYNC_MESSAGE.reset:
         await runner.idle();
-        await resetSync(env, message.remote, message.keys);
+        await resetSync(
+          env,
+          await syncContext(env),
+          message.remote,
+          message.keys,
+        );
         return request({ reason: "manual" });
     }
   }
