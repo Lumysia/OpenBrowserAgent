@@ -13,7 +13,7 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
   },
   copied: "コピーしました",
   closeMenu: "スマートバーのオプション",
-  hideOnSite: "このサイトで非表示",
+  hideOnSite: "{site} で非表示",
   turnOff: "スマートバーをオフにする",
   close: "閉じる",
   stop: "停止",
@@ -25,7 +25,8 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
   emptyResult: "モデルからテキストが返されませんでした。",
   selectionChanged:
     "選択したテキストが変更されました。代わりに結果をコピーしてください。",
-  selectionTooLong: "選択範囲が長すぎます（{max} 文字超）。代わりにサイドパネルで続けてください。",
+  selectionTooLong:
+    "選択範囲が長すぎます（{max} 文字超）。代わりにサイドパネルで続けてください。",
   settingsTitle: "スマートバー",
   settingsDescription:
     "選択したテキストの近くに表示される小さなツールバーで、AI のクイック操作を提供します。操作を選ぶまで何も送信されません。",

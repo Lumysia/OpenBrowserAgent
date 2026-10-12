@@ -13,7 +13,7 @@ export const smartBarPtBR: SmartBarLocaleMessages = {
   },
   copied: "Copiado",
   closeMenu: "Opções da barra inteligente",
-  hideOnSite: "Ocultar neste site",
+  hideOnSite: "Ocultar em {site}",
   turnOff: "Desativar a barra inteligente",
   close: "Fechar",
   stop: "Parar",
@@ -24,7 +24,8 @@ export const smartBarPtBR: SmartBarLocaleMessages = {
   writing: "Escrevendo…",
   emptyResult: "O modelo não retornou texto.",
   selectionChanged: "O texto selecionado mudou. Copie o resultado.",
-  selectionTooLong: "A seleção é longa demais (mais de {max} caracteres). Continue no painel lateral.",
+  selectionTooLong:
+    "A seleção é longa demais (mais de {max} caracteres). Continue no painel lateral.",
   settingsTitle: "Barra inteligente",
   settingsDescription:
     "Uma pequena barra ao lado do texto selecionado com ações rápidas de IA. Nada é enviado até você escolher uma ação.",

@@ -6,6 +6,7 @@ import {
   normalizeSmartBarSettings,
   SMART_BAR_TRIGGER,
   smartBarActions,
+  smartBarHideSite,
   smartBarTextTooLong,
   type SmartBarSettings,
 } from "../../shared/smart-bar";
@@ -70,7 +71,7 @@ export function handleSmartBarMessage(
     case SMART_BAR_MESSAGE.hideOnSite:
       respond(
         updateSettings((settings) => {
-          const host = senderHost(sender);
+          const host = siteHost(sender);
           return host ? hideSmartBarOnHost(settings, host) : settings;
         }),
         sendResponse,
@@ -120,9 +121,12 @@ function updateSettings(
   }));
 }
 
-// A frame's own host; about:blank frames use their tab's.
-function senderHost(sender: Sender) {
-  return pageHost(sender.url) || pageHost(sender.tab?.url);
+// Site rules follow the site the user is looking at: the tab's top-level
+// host, also for selections in its frames. A blocked site's embeds get no bar,
+// and "Hide on this site" in an embed hides it on that site, not on every site
+// using the embed.
+function siteHost(sender: Sender) {
+  return pageHost(sender.tab?.url);
 }
 
 // Whether this frame may show the bar now, and what it shows. Loads the bar's
@@ -136,7 +140,7 @@ async function prepare(
     storage.language.get(),
   ]);
   const settings = normalizeSmartBarSettings(preferences.smartBar);
-  const host = senderHost(sender);
+  const host = siteHost(sender);
   const tabId = sender.tab?.id;
   if (
     !settings.enabled ||
@@ -151,6 +155,7 @@ async function prepare(
   return {
     pageActions: smartBarActions(settings, false),
     editActions: smartBarActions(settings, true),
+    hideSite: smartBarHideSite(settings, host),
     messages: getMessages(language).smartBar,
     colorScheme: preferences.colorScheme || "system",
     accentColor: preferences.accentColor || "pink",

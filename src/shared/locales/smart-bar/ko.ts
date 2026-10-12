@@ -13,7 +13,7 @@ export const smartBarKo: SmartBarLocaleMessages = {
   },
   copied: "복사됨",
   closeMenu: "스마트 바 옵션",
-  hideOnSite: "이 사이트에서 숨기기",
+  hideOnSite: "{site}에서 숨기기",
   turnOff: "스마트 바 끄기",
   close: "닫기",
   stop: "중지",
@@ -24,7 +24,8 @@ export const smartBarKo: SmartBarLocaleMessages = {
   writing: "작성 중…",
   emptyResult: "모델이 텍스트를 반환하지 않았습니다.",
   selectionChanged: "선택한 텍스트가 변경되었습니다. 대신 결과를 복사하세요.",
-  selectionTooLong: "선택 영역이 너무 깁니다({max}자 초과). 대신 사이드 패널에서 계속하세요.",
+  selectionTooLong:
+    "선택 영역이 너무 깁니다({max}자 초과). 대신 사이드 패널에서 계속하세요.",
   settingsTitle: "스마트 바",
   settingsDescription:
     "선택한 텍스트 옆에 빠른 AI 작업을 보여 주는 작은 도구 모음입니다. 작업을 선택하기 전에는 아무것도 전송되지 않습니다.",

@@ -13,7 +13,7 @@ export const smartBarZhTW: SmartBarLocaleMessages = {
   },
   copied: "已複製",
   closeMenu: "智慧工具列選項",
-  hideOnSite: "在此網站隱藏",
+  hideOnSite: "在 {site} 上隱藏",
   turnOff: "關閉智慧工具列",
   close: "關閉",
   stop: "停止",

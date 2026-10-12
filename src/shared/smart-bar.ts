@@ -155,7 +155,8 @@ export function isSmartBarAllowedOnHost(
 }
 
 // "Hide on this site": block the host, or in allow-list mode drop every
-// allowed entry that covers it.
+// allowed entry that covers it. The bar names the site this affects (see
+// smartBarHideSite), since in allow-list mode that is the whole listed domain.
 export function hideSmartBarOnHost(
   settings: SmartBarSettings,
   host: string,
@@ -170,6 +171,16 @@ export function hideSmartBarOnHost(
   return settings.blockedHosts.includes(host)
     ? settings
     : { ...settings, blockedHosts: [...settings.blockedHosts, host] };
+}
+
+// The site "Hide on this site" hides the bar on: the host itself, or in
+// allow-list mode the broadest allowed entry covering it.
+export function smartBarHideSite(settings: SmartBarSettings, host: string) {
+  if (settings.siteMode !== SMART_BAR_SITE_MODE.allowList) return host;
+  const covering = settings.allowedHosts.filter((entry) =>
+    hostMatches(host, entry),
+  );
+  return covering.sort((a, b) => a.length - b.length)[0] ?? host;
 }
 
 const ALL_PAGES = ["http://*/*", "https://*/*"];

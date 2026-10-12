@@ -13,7 +13,7 @@ export const smartBarEsES: SmartBarLocaleMessages = {
   },
   copied: "Copiado",
   closeMenu: "Opciones de la barra inteligente",
-  hideOnSite: "Ocultar en este sitio",
+  hideOnSite: "Ocultar en {site}",
   turnOff: "Desactivar la barra inteligente",
   close: "Cerrar",
   stop: "Detener",
@@ -25,7 +25,8 @@ export const smartBarEsES: SmartBarLocaleMessages = {
   emptyResult: "El modelo no devolvió texto.",
   selectionChanged:
     "El texto seleccionado ha cambiado. Copia el resultado en su lugar.",
-  selectionTooLong: "La selección es demasiado larga (más de {max} caracteres). Continúa en el panel lateral.",
+  selectionTooLong:
+    "La selección es demasiado larga (más de {max} caracteres). Continúa en el panel lateral.",
   settingsTitle: "Barra inteligente",
   settingsDescription:
     "Una pequeña barra junto al texto seleccionado con acciones rápidas de IA. No se envía nada hasta que eliges una acción.",

@@ -47,14 +47,11 @@ function value(result) {
   return result.result?.value;
 }
 
+// The page's own bar; frames have their own.
 function findShadowRoot(node) {
   if (node.nodeName === HOST && node.shadowRoots?.length)
     return node.shadowRoots[0];
-  for (const child of [
-    ...(node.children || []),
-    ...(node.shadowRoots || []),
-    ...(node.contentDocument ? [node.contentDocument] : []),
-  ]) {
+  for (const child of [...(node.children || []), ...(node.shadowRoots || [])]) {
     const found = findShadowRoot(child);
     if (found) return found;
   }
@@ -171,4 +168,27 @@ export async function selectText(page, selector) {
   await mouse("mouseMoved", rect.right - 2, 1);
   await mouse("mouseReleased", rect.right - 2, 0);
   await delay(300);
+}
+
+// A real mouse drag across the first line of a frame's text (body and
+// paragraph margins at their defaults).
+export async function selectInFrame(page, selector) {
+  const box = await page.call((selector) => {
+    const rect = document.querySelector(selector).getBoundingClientRect();
+    return { x: rect.left + 10, y: rect.top + 30 };
+  }, selector);
+  await clickAway(page);
+  for (const [type, x, buttons] of [
+    ["mousePressed", box.x, 1],
+    ["mouseMoved", box.x + 200, 1],
+    ["mouseReleased", box.x + 200, 0],
+  ])
+    await page.send("Input.dispatchMouseEvent", {
+      type,
+      x,
+      y: box.y,
+      button: "left",
+      buttons,
+      clickCount: 1,
+    });
 }

@@ -60,6 +60,7 @@
 .smart-bar-menu {
   display: flex;
   min-width: 180px;
+  max-width: min(320px, calc(100vw - 16px));
   flex-direction: column;
   padding: 4px;
 }
@@ -68,6 +69,14 @@
   justify-content: flex-start;
   width: 100%;
   font-weight: 500;
+}
+
+/* Long site names end in an ellipsis rather than widening the menu. */
+.smart-bar-menu-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .smart-bar-result {

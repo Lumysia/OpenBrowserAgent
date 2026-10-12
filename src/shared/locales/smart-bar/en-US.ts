@@ -11,7 +11,7 @@ export const smartBarEnUS = {
   },
   copied: "Copied",
   closeMenu: "Smart bar options",
-  hideOnSite: "Hide on this site",
+  hideOnSite: "Hide on {site}",
   turnOff: "Turn off smart bar",
   close: "Close",
   stop: "Stop",
@@ -22,7 +22,8 @@ export const smartBarEnUS = {
   writing: "Writing…",
   emptyResult: "The model returned no text.",
   selectionChanged: "The selected text changed. Copy the result instead.",
-  selectionTooLong: "The selection is too long (over {max} characters). Continue in the side panel instead.",
+  selectionTooLong:
+    "The selection is too long (over {max} characters). Continue in the side panel instead.",
   settingsTitle: "Smart bar",
   settingsDescription:
     "A small toolbar next to selected text with quick AI actions. Nothing is sent until you pick an action.",

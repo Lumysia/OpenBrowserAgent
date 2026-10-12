@@ -12,6 +12,7 @@ import {
   inSmartBar,
   pressKey,
   resultText,
+  selectInFrame,
   selectText,
 } from "./smart-bar-page.mjs";
 
@@ -26,6 +27,7 @@ const PAGE = `<!doctype html><title>Smart bar</title>
 <input id="controlled" value="recieve">
 <input id="password" type="password" value="secretpassword">
 <dialog id="dialog"><p id="dialog-text">Text in a modal dialog.</p></dialog>
+<iframe id="frame" style="height:60px"></iframe>
 <script>
   // Like a framework-controlled input: state follows input events only.
   window.inputEvents = 0;
@@ -34,10 +36,23 @@ const PAGE = `<!doctype html><title>Smart bar</title>
     window.inputEvents++;
     window.controlledState = event.target.value;
   });
-  // Anything the extension announces to the page.
+  // A cross-origin embed; it reports whether the bar's UI was let in.
+  window.frameBar = false;
+  frame.src = location.href.replace("127.0.0.1", "localhost") + "/frame";
+  addEventListener("message", (event) => {
+    if (!event.data || !("bar" in event.data)) return;
+    window.frameReady = true;
+    window.frameBar = event.data.bar;
+  });
+  // Anything the extension announces to the page (posted to the window).
   window.extensionMessages = 0;
-  addEventListener("message", () => window.extensionMessages++);
+  addEventListener("message", (event) => {
+    if (event.source === window) window.extensionMessages++;
+  });
 </script>`;
+
+const FRAME = `<!doctype html><p id="framed" style="font:16px sans-serif">Text in an embedded frame.</p>
+<script>setInterval(() => parent.postMessage({ bar: !!document.querySelector("oba-smart-bar") }, "*"), 100);</script>`;
 
 const FIXES = {
   "hello wrold": "hello world",
@@ -50,7 +65,9 @@ test("smart bar", { timeout: 240000 }, async (t) => {
   const released = new Promise((resolve) => (release = resolve));
   const fixture = await providerFixture(async (request, response) => {
     if (!request.url.startsWith("/v1/")) {
-      response.writeHead(200, { "Content-Type": "text/html" }).end(PAGE);
+      response
+        .writeHead(200, { "Content-Type": "text/html" })
+        .end(request.url.endsWith("/frame") ? FRAME : PAGE);
       return;
     }
     const prompt = JSON.stringify(request.body.messages);
@@ -291,6 +308,14 @@ test("smart bar", { timeout: 240000 }, async (t) => {
       assert.equal(await barState(page), "none");
     });
 
+    await t.test("a blocked site's embeds get no bar", async () => {
+      await page.send("Page.reload");
+      await poll(() => page.call(() => window.frameReady));
+      await selectInFrame(page, "#frame");
+      await delay(1000);
+      assert.equal(await page.call(() => window.frameBar), false);
+    });
+
     await t.test("allow-list mode shows only on listed sites", async () => {
       await options.call(async () => {
         const { preferences } = await chrome.storage.local.get("preferences");
@@ -310,6 +335,10 @@ test("smart bar", { timeout: 240000 }, async (t) => {
         await selectText(listed, "#text");
         return (await barState(listed)) === "toolbar";
       });
+      // Frames of a listed site get the bar too.
+      await poll(() => listed.call(() => window.frameReady));
+      await selectInFrame(listed, "#frame");
+      await poll(() => listed.call(() => window.frameBar));
       await page.send("Page.reload");
       await poll(() => page.call(() => document.readyState === "complete"));
       await selectText(page, "#text");

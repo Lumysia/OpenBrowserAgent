@@ -138,7 +138,10 @@ function CloseMenu({
           className="smart-bar-menu-item"
           onClick={onTrusted(() => choose(hideOnThisSite))}
         >
-          <EyeOff size={15} /> {t.hideOnSite}
+          <EyeOff size={15} />
+          <span className="smart-bar-menu-label">
+            {t.hideOnSite.replace("{site}", config.hideSite)}
+          </span>
         </Button>
         <Button
           variant="ghost"
@@ -146,7 +149,8 @@ function CloseMenu({
           className="smart-bar-menu-item"
           onClick={onTrusted(() => choose(turnOffSmartBar))}
         >
-          <Power size={15} /> {t.turnOff}
+          <Power size={15} />
+          <span className="smart-bar-menu-label">{t.turnOff}</span>
         </Button>
       </PopoverContent>
     </Popover>

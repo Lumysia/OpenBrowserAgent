@@ -9,6 +9,7 @@ import {
   normalizeSmartBarSettings,
   SMART_BAR_MAX_TEXT_CHARS,
   smartBarActions,
+  smartBarHideSite,
   smartBarMatchPatterns,
   smartBarPatternsCover,
   smartBarTextTooLong,
@@ -53,6 +54,9 @@ test("site rules: a listed site covers subdomains; both lists survive a mode swi
   assert.equal(isSmartBarAllowedOnHost(allow, "google.com"), false);
   const hiddenInAllow = hideSmartBarOnHost(allow, "www.example.org");
   assert.deepEqual(hiddenInAllow.allowedHosts, []);
+  // The bar's menu names what that hides: the whole listed domain.
+  assert.equal(smartBarHideSite(allow, "www.example.org"), "example.org");
+  assert.equal(smartBarHideSite(hidden, "www.example.org"), "www.example.org");
   assert.deepEqual(hiddenInAllow.blockedHosts, hidden.blockedHosts);
 });
 

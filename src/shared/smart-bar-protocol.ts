@@ -40,6 +40,8 @@ export type SmartBarPrepareRequest = {
 export type SmartBarPageConfig = {
   pageActions: SmartBarAction[];
   editActions: SmartBarAction[];
+  // What "Hide on this site" hides the bar on, for its label.
+  hideSite: string;
   messages: SmartBarMessages;
   colorScheme: NonNullable<Preferences["colorScheme"]>;
   accentColor: NonNullable<Preferences["accentColor"]>;
