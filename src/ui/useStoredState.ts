@@ -24,6 +24,18 @@ export function useStoredState<T>(
     values: new Set(),
   });
   const [loading, setLoading] = useState(true);
+  // While this page's own writes are in flight, a value from elsewhere may
+  // predate them (e.g. sync bookkeeping re-storing what it read earlier).
+  // Showing it would undo the page's write on screen, so it waits; storage
+  // is read again once the writes are done.
+  const writesInFlightRef = useRef(0);
+  const missedUpdateRef = useRef(false);
+
+  function show(next: T, nextSnapshot = snapshot(next)) {
+    valueRef.current = next;
+    snapshotRef.current = nextSnapshot;
+    setValue(next);
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -50,9 +62,11 @@ export function useStoredState<T>(
         snapshotRef.current = nextSnapshot;
         return;
       }
-      valueRef.current = next;
-      snapshotRef.current = nextSnapshot;
-      setValue(next);
+      if (writesInFlightRef.current) {
+        missedUpdateRef.current = true;
+        return;
+      }
+      show(next, nextSnapshot);
     });
     return () => {
       mounted = false;
@@ -74,17 +88,23 @@ export function useStoredState<T>(
     const resolvedSnapshot = snapshot(resolved);
     if (resolvedSnapshot && resolvedSnapshot === snapshotRef.current)
       return resolved;
-    valueRef.current = resolved;
-    snapshotRef.current = resolvedSnapshot;
-    setValue(resolved);
+    show(resolved, resolvedSnapshot);
     // Resolves once stored; a failed write is logged, the value stays shown.
     const write =
       freshUpdates && item.update && typeof next === "function"
         ? () => item.update!(next as (previous: T) => T)
         : () => item.set(resolved);
+    writesInFlightRef.current++;
     await persistOwnWrite(write, resolved, ownWriteSnapshotsRef).catch(
       (error) => console.warn("Failed to persist stored state", error),
     );
+    if (--writesInFlightRef.current === 0 && missedUpdateRef.current) {
+      missedUpdateRef.current = false;
+      const stored = await item.get().catch(() => undefined);
+      const storedSnapshot = snapshot(stored);
+      if (stored !== undefined && storedSnapshot !== snapshotRef.current)
+        show(stored, storedSnapshot);
+    }
     return resolved;
   }
 
