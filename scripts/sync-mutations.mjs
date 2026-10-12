@@ -9,7 +9,9 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 
 const [davA, davB] = process.argv.slice(2);
-const dirty = execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" });
+const dirty = execFileSync("git", ["status", "--porcelain"], {
+  encoding: "utf8",
+});
 if (dirty.trim()) {
   console.error("Refusing to run: the working tree has uncommitted changes.");
   process.exit(2);
@@ -71,7 +73,6 @@ const MUTATIONS = [
     file: "src/shared/sync/webdav.ts",
     from: "if ((await sha256Hex(payload)) !== hash)",
     to: "if (false)",
-    needsServer: true,
   },
   {
     name: "missing remote record read as a delete",
@@ -84,10 +85,18 @@ const MUTATIONS = [
 function runTests() {
   const unit = spawnSync(
     "node",
-    ["--import", "tsx", "--test", "tests/sync-units.test.ts", "tests/sync-engine.test.ts"],
+    [
+      "--import",
+      "tsx",
+      "--test",
+      "tests/sync-units.test.ts",
+      "tests/sync-engine.test.ts",
+    ],
     { encoding: "utf8" },
   );
-  const failed = [...unit.stdout.matchAll(/^✖ (.+?) \(\d/gm)].map((match) => match[1]);
+  const failed = [...unit.stdout.matchAll(/^✖ (.+?) \(\d/gm)].map(
+    (match) => match[1],
+  );
   if (davA && davB) {
     const devices = spawnSync(
       "node",
@@ -108,7 +117,9 @@ for (const mutation of MUTATIONS) {
   }
   const source = readFileSync(mutation.file, "utf8");
   if (!source.includes(mutation.from))
-    throw new Error(`Mutation "${mutation.name}" no longer matches ${mutation.file}`);
+    throw new Error(
+      `Mutation "${mutation.name}" no longer matches ${mutation.file}`,
+    );
   writeFileSync(mutation.file, source.replace(mutation.from, mutation.to));
   try {
     results.push({ ...mutation, failed: runTests() });
@@ -126,7 +137,10 @@ for (const result of results) {
   const caught = result.failed.length > 0;
   if (!caught) survivors++;
   console.log(`${caught ? "CAUGHT  " : "SURVIVED"} ${result.name}`);
-  for (const name of result.failed.slice(0, 4)) console.log(`           - ${name}`);
+  for (const name of result.failed.slice(0, 4))
+    console.log(`           - ${name}`);
 }
-console.log(`\n${survivors} survivor(s) of ${results.filter((r) => !r.skipped).length}`);
+console.log(
+  `\n${survivors} survivor(s) of ${results.filter((r) => !r.skipped).length}`,
+);
 process.exitCode = survivors ? 1 : 0;

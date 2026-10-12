@@ -369,3 +369,26 @@ test("browser sync: records split into items under 8 KB, quotas enforced", async
     "r:skills/s1",
   ]);
 });
+
+test("WebDAV blobs are checked against their hash before use", async () => {
+  const { gzip, sha256Hex } = await import("../src/shared/sync/codec");
+  const { createWebDavTransport } = await import("../src/shared/sync/webdav");
+  const { BlobIntegrityError } = await import("../src/shared/sync/transport");
+  const good = new TextEncoder().encode("expected");
+  const hash = await sha256Hex(good);
+  const served = await gzip(new TextEncoder().encode("tampered"));
+  const transport = createWebDavTransport(
+    { url: "https://dav.test/x/" },
+    (async () =>
+      new Response(served.slice().buffer, { status: 200 })) as typeof fetch,
+  );
+  await assert.rejects(transport.getBlob(hash), BlobIntegrityError);
+  const honest = createWebDavTransport(
+    { url: "https://dav.test/x/" },
+    (async () =>
+      new Response((await gzip(good)).slice().buffer, {
+        status: 200,
+      })) as typeof fetch,
+  );
+  assert.deepEqual(await honest.getBlob(hash), good);
+});
