@@ -32,6 +32,8 @@ export function SmartBarResultCard({
   const t = config.messages;
   const cardRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
+  // The user changed the selected text meanwhile: Copy only.
+  const [changed, setChanged] = useState(false);
   const streaming = result.status === "streaming";
   const text = result.text.trim();
   const ready = result.status === "done" && !!text;
@@ -45,6 +47,7 @@ export function SmartBarResultCard({
 
   const write = (mode: WriteMode) => {
     if (writeIntoSelection(snapshot, text, mode)) store.hide();
+    else setChanged(true);
   };
 
   return (
@@ -83,6 +86,11 @@ export function SmartBarResultCard({
           <span className="smart-bar-caret" aria-hidden="true" />
         )}
       </div>
+      {changed && (
+        <p className="smart-bar-result-notice" role="status">
+          {t.selectionChanged}
+        </p>
+      )}
       <div className="smart-bar-result-actions">
         {streaming && (
           <Button variant="outline" size="sm" onClick={onTrusted(store.stop)}>
@@ -98,7 +106,7 @@ export function SmartBarResultCard({
             <RotateCcw size={13} /> {t.retry}
           </Button>
         )}
-        {ready && isEditableSnapshot(snapshot) && (
+        {ready && isEditableSnapshot(snapshot) && !changed && (
           <>
             <Button size="sm" onClick={onTrusted(() => write("replace"))}>
               <Replace size={13} /> {t.replace}

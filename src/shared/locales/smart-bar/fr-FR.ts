@@ -23,6 +23,7 @@ export const smartBarFrFR: SmartBarLocaleMessages = {
   continueInSidePanel: "Continuer dans le panneau latéral",
   writing: "Rédaction…",
   emptyResult: "Le modèle n’a renvoyé aucun texte.",
+  selectionChanged: "Le texte sélectionné a changé. Copiez plutôt le résultat.",
   settingsTitle: "Barre intelligente",
   settingsDescription:
     "Une petite barre d’outils près du texte sélectionné, avec des actions IA rapides. Rien n’est envoyé avant que vous choisissiez une action.",

@@ -21,6 +21,7 @@ export const smartBarEnUS = {
   continueInSidePanel: "Continue in side panel",
   writing: "Writing…",
   emptyResult: "The model returned no text.",
+  selectionChanged: "The selected text changed. Copy the result instead.",
   settingsTitle: "Smart bar",
   settingsDescription:
     "A small toolbar next to selected text with quick AI actions. Nothing is sent until you pick an action.",

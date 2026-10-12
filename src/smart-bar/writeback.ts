@@ -1,17 +1,22 @@
-import { restoreSelection, type SelectionSnapshot } from "./selection";
+import {
+  restoreSelection,
+  selectionIntact,
+  type SelectionSnapshot,
+} from "./selection";
 
 export type WriteMode = "replace" | "insertBelow";
 
 // Writes into the field the snapshot came from as if the user typed it:
 // `insertText` keeps the browser's undo (Ctrl+Z) and fires the input events
-// that framework-controlled fields and rich editors listen to.
+// that framework-controlled fields and rich editors listen to. False, with
+// nothing written, when the selected text is no longer where it was.
 export function writeIntoSelection(
   snapshot: SelectionSnapshot,
   text: string,
   mode: WriteMode,
 ) {
   const { target } = snapshot;
-  if (target.kind === "page" || !target.element.isConnected) return false;
+  if (target.kind === "page" || !selectionIntact(snapshot)) return false;
   restoreSelection(snapshot);
   if (target.kind === "control") {
     const { element } = target;

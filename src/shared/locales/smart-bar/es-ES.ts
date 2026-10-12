@@ -23,6 +23,8 @@ export const smartBarEsES: SmartBarLocaleMessages = {
   continueInSidePanel: "Continuar en el panel lateral",
   writing: "Escribiendo…",
   emptyResult: "El modelo no devolvió texto.",
+  selectionChanged:
+    "El texto seleccionado ha cambiado. Copia el resultado en su lugar.",
   settingsTitle: "Barra inteligente",
   settingsDescription:
     "Una pequeña barra junto al texto seleccionado con acciones rápidas de IA. No se envía nada hasta que eliges una acción.",

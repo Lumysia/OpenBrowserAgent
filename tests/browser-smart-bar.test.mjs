@@ -210,6 +210,40 @@ test("smart bar", { timeout: 240000 }, async (t) => {
         await poll(async () => (await fieldValue(page, selector)) === before);
       });
 
+    for (const [selector, kind] of [
+      ["#area", "textarea"],
+      ["#editor", "contenteditable"],
+    ])
+      await t.test(`no Replace in a ${kind} edited meanwhile`, async () => {
+        const before = await fieldValue(page, selector);
+        await selectText(page, selector);
+        await poll(async () => (await barState(page)) === "toolbar");
+        await clickInBar(page, '[aria-label="Fix spelling & grammar"]');
+        await poll(() => barHas(page, "button", "Replace"));
+        // The field kept focus: the user types before the selection.
+        await pressKey(page, "Home", "Home", 36);
+        await page.send("Input.insertText", { text: "XX " });
+        await clickInBar(page, "button", "Replace");
+        await poll(() =>
+          barHas(
+            page,
+            ".smart-bar-result-notice",
+            "The selected text changed. Copy the result instead.",
+          ),
+        );
+        assert.equal(await fieldValue(page, selector), `XX ${before}`);
+        assert.equal(await barHas(page, "button", "Replace"), false);
+        await pressKey(page, "Escape", "Escape", 27);
+        await page.call(
+          ({ selector, before }) => {
+            const element = document.querySelector(selector);
+            if ("value" in element) element.value = before;
+            else element.textContent = before;
+          },
+          { selector, before },
+        );
+      });
+
     await t.test("a controlled input gets an input event", async () => {
       await replaceWithFix(page, "#controlled");
       assert.deepEqual(

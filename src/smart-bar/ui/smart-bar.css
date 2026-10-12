@@ -123,6 +123,13 @@
   animation: pulse-dot 1s ease-in-out infinite;
 }
 
+.smart-bar-result-notice {
+  margin: 0;
+  padding: 0 12px 8px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
 .smart-bar-result-actions {
   display: flex;
   flex-wrap: wrap;

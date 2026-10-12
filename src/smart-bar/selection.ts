@@ -6,7 +6,14 @@ export type TextControl = HTMLInputElement | HTMLTextAreaElement;
 export type SelectionTarget =
   | { kind: "page"; range: Range }
   | { kind: "control"; element: TextControl; start: number; end: number }
-  | { kind: "editable"; element: HTMLElement; range: Range };
+  | {
+      kind: "editable";
+      element: HTMLElement;
+      range: Range;
+      // The range's own text, which can differ from the selection's (line
+      // breaks between blocks).
+      rangeText: string;
+    };
 
 export type Point = { x: number; y: number };
 
@@ -66,7 +73,12 @@ export function readSelection(
     {
       text,
       target: host
-        ? { kind: "editable", element: host, range }
+        ? {
+            kind: "editable",
+            element: host,
+            range,
+            rangeText: range.toString(),
+          }
         : { kind: "page", range },
     },
     point,
@@ -97,6 +109,20 @@ export function selectionRect(snapshot: SelectionSnapshot): Rect | undefined {
   const element =
     container instanceof Element ? container : container.parentElement;
   return element?.isConnected ? element.getBoundingClientRect() : undefined;
+}
+
+// Whether the field still holds the snapshot's text where it was selected.
+// The user can keep typing while a result shows; writing at the old place
+// would then overwrite their text.
+export function selectionIntact(snapshot: SelectionSnapshot) {
+  const { target } = snapshot;
+  if (target.kind === "page") return false;
+  if (!target.element.isConnected) return false;
+  if (target.kind === "control")
+    return (
+      target.element.value.slice(target.start, target.end) === snapshot.text
+    );
+  return target.range.toString() === target.rangeText;
 }
 
 // Makes the snapshot the live selection again (focus included), e.g. before

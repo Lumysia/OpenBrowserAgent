@@ -23,6 +23,8 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
   continueInSidePanel: "サイドパネルで続ける",
   writing: "生成中…",
   emptyResult: "モデルからテキストが返されませんでした。",
+  selectionChanged:
+    "選択したテキストが変更されました。代わりに結果をコピーしてください。",
   settingsTitle: "スマートバー",
   settingsDescription:
     "選択したテキストの近くに表示される小さなツールバーで、AI のクイック操作を提供します。操作を選ぶまで何も送信されません。",

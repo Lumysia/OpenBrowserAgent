@@ -23,6 +23,7 @@ export const smartBarZhTW: SmartBarLocaleMessages = {
   continueInSidePanel: "在側邊欄繼續",
   writing: "正在產生…",
   emptyResult: "模型沒有傳回文字。",
+  selectionChanged: "所選文字已變更，請改為複製結果。",
   settingsTitle: "智慧工具列",
   settingsDescription:
     "選取文字時在旁邊顯示的小工具列，提供快速 AI 操作。在你選擇操作之前不會傳送任何內容。",

@@ -23,6 +23,8 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
   continueInSidePanel: "In der Seitenleiste fortfahren",
   writing: "Wird geschrieben…",
   emptyResult: "Das Modell hat keinen Text geliefert.",
+  selectionChanged:
+    "Der markierte Text hat sich geändert. Kopieren Sie stattdessen das Ergebnis.",
   settingsTitle: "Smart Bar",
   settingsDescription:
     "Eine kleine Leiste neben markiertem Text mit schnellen KI-Aktionen. Es wird nichts gesendet, bevor Sie eine Aktion wählen.",

@@ -23,6 +23,7 @@ export const smartBarZhCN: SmartBarLocaleMessages = {
   continueInSidePanel: "在侧边栏继续",
   writing: "正在生成…",
   emptyResult: "模型没有返回文本。",
+  selectionChanged: "所选文本已更改，请改为复制结果。",
   settingsTitle: "智能工具栏",
   settingsDescription:
     "选中文本时在旁边显示的小工具栏，提供快捷 AI 操作。在你选择操作之前不会发送任何内容。",
