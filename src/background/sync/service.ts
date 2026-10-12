@@ -55,11 +55,11 @@ import type { SyncBackendConfig } from "../../shared/types";
 
 const BACKOFF_START_MS = 60_000;
 const BACKOFF_MAX_MS = 60 * 60_000;
-// Warnings about the server that stay until a write proves otherwise.
-const STICKY_WARNINGS: SyncWarning[] = [
-  SYNC_WARNINGS.unreliableEtags,
-  SYNC_WARNINGS.ignoresPreconditions,
-];
+// Warnings about the server that outlive a round: missing ETags until a
+// write succeeds, ignored preconditions until the backend changes (a
+// successful write does not show that If-Match is honoured).
+const KEPT_UNTIL_WRITE: SyncWarning[] = [SYNC_WARNINGS.unreliableEtags];
+const KEPT: SyncWarning[] = [SYNC_WARNINGS.ignoresPreconditions];
 
 // The pause after the `level`-th rate limit in a row: 1 min doubling to
 // 1 h, or longer when the server's Retry-After says so.
@@ -145,11 +145,13 @@ export function createSyncRunner(
     await updateSyncStatus(env.local, { running: true });
     try {
       const result = await runSyncRound(context, reason, { allowMassDelete });
-      const sticky = result.wrote
-        ? []
-        : status.warnings.filter((warning) =>
-            STICKY_WARNINGS.includes(warning),
-          );
+      // Read again: the server check may have added warnings meanwhile.
+      const latest = await loadSyncStatus(env.local);
+      const sticky = latest.warnings.filter(
+        (warning) =>
+          KEPT.includes(warning) ||
+          (!result.wrote && KEPT_UNTIL_WRITE.includes(warning)),
+      );
       const dirty = Object.keys(await loadDirty(env.local)).length;
       await updateSyncStatus(env.local, {
         running: undefined,

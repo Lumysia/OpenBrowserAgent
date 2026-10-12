@@ -68,6 +68,8 @@ export function setupSync() {
   );
   const session = api.storage.session ?? api.storage.local;
   let editTimer: ReturnType<typeof setTimeout> | undefined;
+  // Backend changes arrive as several storage events; checks run in order.
+  let verifying = Promise.resolve();
   let lastCheck: { scope: string; at: number; result: ServerCheck } | undefined;
   let remoteTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -240,7 +242,7 @@ export function setupSync() {
       changes[STORAGE_KEYS.activeSyncBackendId] ||
       changes[STORAGE_KEYS.syncBackends]
     ) {
-      void verifyServer();
+      verifying = verifying.then(verifyServer).catch(() => undefined);
       void updatePolling();
       void request({ reason: "startup" });
     }
