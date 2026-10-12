@@ -209,6 +209,9 @@ export function snapshotLines(root: Element, options: SnapshotOptions) {
         depth + 1,
         `- … ${rows.length - shown.length} more rows (snapshot ref=${refFor(element)} shows all, or use find)`,
       );
+    if (options.mode !== "viewport")
+      for (const line of columnCounts(element as HTMLTableElement))
+        push(depth + 1, line);
   }
 
   visit(root, 0);
@@ -375,6 +378,49 @@ function hasBlockContent(element: Element): boolean {
     if (!isInteractive(child, role) && hasBlockContent(child)) return true;
   }
   return false;
+}
+
+const COUNTED_MIN_ROWS = 20;
+const COUNTED_MAX_VALUES = 8;
+
+// How often each value occurs in columns of few distinct values (a status,
+// a category) of a long table: counting rows by eye is error-prone.
+function columnCounts(table: HTMLTableElement) {
+  const rows = Array.from(table.rows).filter((row) => !isHidden(row));
+  const head = rows.findIndex(
+    (row) =>
+      row.cells.length &&
+      Array.from(row.cells).every((cell) => cell.localName === "th"),
+  );
+  const names =
+    head >= 0
+      ? Array.from(rows[head].cells).map((cell) => compact(cell.textContent))
+      : [];
+  const body = rows.filter((row, index) => index !== head && row.cells.length);
+  if (body.length < COUNTED_MIN_ROWS) return [];
+  const lines: string[] = [];
+  const columns = Math.max(...body.map((row) => row.cells.length));
+  for (let column = 0; column < columns; column++) {
+    const counts = new Map<string, number>();
+    for (const row of body) {
+      const value = compact(row.cells[column]?.textContent);
+      if (value) counts.set(value, (counts.get(value) || 0) + 1);
+    }
+    if (
+      counts.size < 2 ||
+      counts.size > COUNTED_MAX_VALUES ||
+      counts.size > body.length / 4
+    )
+      continue;
+    const name = names[column] || `column ${column + 1}`;
+    lines.push(
+      `- counts of ${clip(name, NAME_MAX)} (${body.length} rows): ${[...counts]
+        .sort((a, b) => b[1] - a[1])
+        .map(([value, count]) => `${clip(value, CELL_TEXT_MAX)} ${count}`)
+        .join(", ")}`,
+    );
+  }
+  return lines;
 }
 
 // Layout tables (cells holding tables or block structure) are walked as

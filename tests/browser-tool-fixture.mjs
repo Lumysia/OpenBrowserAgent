@@ -1,7 +1,15 @@
 import { createServer } from "node:http";
 import { once } from "node:events";
+import assert from "node:assert/strict";
 import { launchExtension, poll } from "./chromium.mjs";
 import { reply } from "./provider-fixtures.mjs";
+
+// The ref written right after `label` in a snapshot line.
+export const ref = (text, label) => {
+  const line = text.split("\n").find((item) => item.includes(label));
+  assert.ok(line, `no line with ${label} in:\n${text}`);
+  return line.slice(line.indexOf(label)).match(/\b(e\d+)\b/)?.[1];
+};
 
 const ALL_GROUPS = [
   "pages",
@@ -150,10 +158,40 @@ export async function browserToolFixture(handleRequest) {
             ? message.content
             : message.content.map((part) => part.text || "").join(""),
         );
+    // Opens a fixture page in a new active tab and waits for it to load.
+    const open = async (path) => {
+      const tab = await page.call(
+        (url) => chrome.tabs.create({ url, active: true }),
+        `${baseUrl}${path}`,
+      );
+      await poll(() =>
+        page.call(
+          async (id) => (await chrome.tabs.get(id)).status === "complete",
+          tab.id,
+        ),
+      );
+      return tab.id;
+    };
+    // Evaluates code in a tab's own JavaScript world.
+    const evaluate = (tabId, code) =>
+      page.call(
+        async ({ tabId, code }) =>
+          (
+            await chrome.scripting.executeScript({
+              target: { tabId },
+              world: "MAIN",
+              func: (source) => (0, eval)(source),
+              args: [code],
+            })
+          )[0].result,
+        { tabId, code },
+      );
     return {
       browser,
       page,
       baseUrl,
+      open,
+      evaluate,
       requests,
       start,
       toolTexts,

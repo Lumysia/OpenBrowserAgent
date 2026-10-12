@@ -169,10 +169,10 @@ test("toolSearch honours names and query together and matches any script", async
   const toolSearch = toolSet.find("toolSearch")!;
   const loaded = async (input: Record<string, unknown>) =>
     (await toolSearch.execute(input, {} as never)).details?.loaded;
-  assert.deepEqual(
-    await loaded({ names: ["workspace"], query: "delegate" }),
-    ["workspace", "subAgent"],
-  );
+  assert.deepEqual(await loaded({ names: ["workspace"], query: "delegate" }), [
+    "workspace",
+    "subAgent",
+  ]);
   assert.deepEqual(await loaded({ query: "笔记" }), [
     "mcp__Notes__search_notes",
   ]);
