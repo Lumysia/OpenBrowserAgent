@@ -13,6 +13,8 @@ export type SmartBarUi = {
     reason: SmartBarShowReason,
   ): void;
   hide(): void;
+  // Whether the toolbar or a result shows.
+  isShown(): boolean;
   // The toolbar goes with its selection; a result stays until dismissed.
   selectionChanged(): void;
   frameBlurred(): void;

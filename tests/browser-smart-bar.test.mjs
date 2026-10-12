@@ -25,6 +25,7 @@ const PAGE = `<!doctype html><title>Smart bar</title>
 <div id="editor" contenteditable="true">teh draft</div>
 <input id="controlled" value="recieve">
 <input id="password" type="password" value="secretpassword">
+<dialog id="dialog"><p id="dialog-text">Text in a modal dialog.</p></dialog>
 <script>
   // Like a framework-controlled input: state follows input events only.
   window.inputEvents = 0;
@@ -256,6 +257,18 @@ test("smart bar", { timeout: 240000 }, async (t) => {
       await selectText(page, "#password");
       await delay(600);
       assert.equal(await barState(page), "none");
+    });
+
+    await t.test("Esc hides the bar, not the page's dialog", async () => {
+      await page.call(() => document.getElementById("dialog").showModal());
+      await selectText(page, "#dialog-text");
+      await poll(async () => (await barState(page)) === "toolbar");
+      await pressKey(page, "Escape", "Escape", 27);
+      await poll(async () => (await barState(page)) === "none");
+      assert.equal(await page.call(() => dialog.open), true);
+      // With no bar, Esc is the page's again.
+      await pressKey(page, "Escape", "Escape", 27);
+      await poll(() => page.call(() => !dialog.open));
     });
 
     await t.test("Hide on this site stops it", async () => {

@@ -110,6 +110,7 @@ export function createSmartBarStore() {
       set({ id: state.id + 1, snapshot, config, reason, result: undefined });
     },
     hide,
+    isShown: () => !!state.snapshot,
     selectionChanged() {
       const { snapshot, result } = state;
       if (!snapshot || result) return;
