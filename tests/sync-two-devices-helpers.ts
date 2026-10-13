@@ -12,21 +12,28 @@ export const sleep = (ms: number) =>
 // WsgiDAV's ETag has one-second resolution: space writes of a case apart.
 export const tick = () => sleep(1100);
 
-export function loggingFetch(
-  name: string,
-  fail?: { next: (method: string) => boolean },
-) {
+// `next`: whether a request fails before reaching the server; `loseAnswer`:
+// whether it reaches the server and its answer is lost (a timeout).
+export type FailingFetch = {
+  next?: (method: string) => boolean;
+  loseAnswer?: (method: string, path: string) => boolean;
+};
+
+export function loggingFetch(name: string, fail?: FailingFetch) {
   return async (input: RequestInfo | URL, init?: RequestInit) => {
     const method = init?.method ?? "GET";
     const url = new URL(String(input));
-    if (fail?.next(method)) {
+    if (fail?.next?.(method)) {
       log.push(`${name} ${method} ${url.pathname} -> (network error)`);
       throw new TypeError("fetch failed");
     }
     const response = await fetch(input, init);
-    log.push(
-      `${name} ${method} ${url.pathname.replace(/.*\/case-[^/]+\//, "")} ${response.status}`,
-    );
+    const path = url.pathname.replace(/.*\/case-[^/]+\//, "");
+    log.push(`${name} ${method} ${path} ${response.status}`);
+    if (fail?.loseAnswer?.(method, path)) {
+      log.push(`${name} ${method} ${path} -> (answer lost)`);
+      throw new DOMException("The operation timed out.", "TimeoutError");
+    }
     return response;
   };
 }
@@ -44,7 +51,7 @@ export async function folder(base: string, name: string) {
 export function pair(
   name: string,
   urls: string[],
-  failA?: { next: (method: string) => boolean },
+  failA?: FailingFetch,
   wrapB: (transport: Transport) => Transport = (transport) => transport,
 ) {
   const clock = {

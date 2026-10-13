@@ -66,6 +66,9 @@ export async function decide(input: DecisionInput): Promise<Decision> {
   if (input.changedHere && includes(remote, local.clock)) return apply(remote);
   const mineNewer = compareClocks(local.clock, remote.clock) > 0;
   if (!input.changedHere) return mineNewer ? push(local) : apply(remote);
+  // This change was made on top of the remote version (one this device
+  // pushed, say, whose answer was lost): nothing to merge.
+  if (includes(local, remote.clock)) return push(local);
   if (mineNewer && input.base?.clock === remote.clock) return push(local);
   return conflict(input, local, remote, input.base, mineNewer);
 }

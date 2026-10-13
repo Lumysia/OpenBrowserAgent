@@ -21,6 +21,7 @@ import { SYNC_WARNINGS } from "../src/shared/sync/state";
 import type { Transport } from "../src/shared/sync/transport";
 import { createWebDavTransport } from "../src/shared/sync/webdav";
 import { chat, hookedTransport } from "./sync-fixtures";
+import { lostAnswerCases } from "./sync-two-devices-lost";
 import {
   CHATS,
   ids,
@@ -30,17 +31,15 @@ import {
   pair as pairOn,
   saveChat,
   tick,
+  type FailingFetch,
 } from "./sync-two-devices-helpers";
 
 const [baseA, baseB, plainA, plainB, ignoringA, ignoringB] =
   process.argv.slice(2);
 if (!baseA || !baseB)
   throw new Error("usage: sync-two-devices.ts <urlA> <urlB>");
-const pair = (
-  name: string,
-  urls = [baseA, baseB],
-  failA?: { next: (method: string) => boolean },
-) => pairOn(name, urls, failA);
+const pair = (name: string, urls = [baseA, baseB], failA?: FailingFetch) =>
+  pairOn(name, urls, failA);
 
 const cases: Record<string, () => Promise<void>> = {
   async "request counts: first upload, idle check, one-chat edit, lazy open"() {
@@ -325,6 +324,8 @@ const cases: Record<string, () => Promise<void>> = {
     }
   },
 };
+
+Object.assign(cases, lostAnswerCases(baseA, baseB));
 
 if (plainA && plainB)
   cases["a server that strips ETags: reads work, writes stop with a warning"] =

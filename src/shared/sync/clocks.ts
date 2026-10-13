@@ -41,7 +41,9 @@ export type ClockEntry = Version & {
   base?: Version;
   // The version of this change (or of one it was made on top of) that this
   // device's last root write pushed, until a root read shows whether the
-  // remote record includes it: then it is the base of what is left.
+  // remote record includes it: then it is the base of what is left. It is
+  // recorded before the write, since the write may land while its answer is
+  // lost (a timeout, the browser closed meanwhile).
   sent?: Version;
   // The list order an order record's version holds.
   order?: string[];
@@ -212,7 +214,9 @@ export async function confirmedEntry(
 }
 
 // The entry once its change is pushed in `record` (the same version, or one
-// it was made on top of); not yet a confirmation.
+// it was made on top of); not yet a confirmation. Recorded before the root
+// write: one that lands while its answer is lost is still the version later
+// changes here were made on top of.
 export async function sentEntry(
   _id: string,
   current: ClockEntry,

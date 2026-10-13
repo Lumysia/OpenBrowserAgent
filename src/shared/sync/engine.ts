@@ -205,9 +205,9 @@ async function round(
         outcome.pushes,
         payloads,
       );
+      await updateEntries(env, outcome.pushes, snapshot, sentEntry, payloads);
       const written = await transport.writeRoot(next, etag);
       if (written.status === "ok") {
-        await updateEntries(env, outcome.pushes, snapshot, sentEntry, payloads);
         state.remote = { root: next, etag: written.etag };
         for (const hash of uploaded)
           if (seen.has(hash)) (state.uploads ??= {})[hash] = now;
