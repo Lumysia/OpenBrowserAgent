@@ -239,3 +239,21 @@ test("opening a chat does not wait for a round that waits for the server", async
   assert.equal(opened, true);
   assert.deepEqual(messageIds(b, "X"), ["m1"]);
 });
+
+test("opening a chat stores its content without counting as an edit", async () => {
+  const { server, a, b } = setup();
+  await saveChat(a, "X", [["m1", 1]]);
+  await a.sync("edit");
+  await b.sync();
+  const before = (await decodeRoot(server.root!)).records["chats/X"].clock;
+  assert.equal(await loadContent(b.context, "chats", "X"), true);
+  await b.settle();
+  const result = await b.sync("edit");
+  assert.equal(result.pending, 0);
+  assert.equal(result.checked, false);
+  await b.sync("manual");
+  assert.equal(
+    (await decodeRoot(server.root!)).records["chats/X"].clock,
+    before,
+  );
+});
