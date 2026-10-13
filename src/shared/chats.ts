@@ -1,3 +1,4 @@
+import { readId } from "./read-ids";
 import {
   CHAT_PART_STATE,
   isToolPartType,
@@ -16,10 +17,10 @@ const CHAT_PART_STATES = new Set<string>(Object.values(CHAT_PART_STATE));
 
 export function normalizeChatSummaries(value: unknown): ChatSummary[] {
   if (!Array.isArray(value)) return [];
-  return value.map((item) => {
+  return value.map((item, index) => {
     const summary = objectValue(item);
     return {
-      ...chatMeta(normalizeChat(summary)),
+      ...chatMeta(normalizeChat(item, index)),
       messageCount: numberValue(summary.messageCount, 0),
       running: summary.running === true || undefined,
       attachmentIds: stringArray(summary.attachmentIds),
@@ -353,14 +354,15 @@ function toolStateRank(state: ChatPart["state"]) {
   return 0;
 }
 
-function normalizeChat(value: unknown): Chat {
+// `index`: its place in a stored list, which names it when it has no id.
+function normalizeChat(value: unknown, index = 0): Chat {
   const chat = objectValue(value);
   const now = Date.now();
   return {
-    id: stringValue(chat.id) || crypto.randomUUID(),
+    id: readId(value, index),
     title: stringValue(chat.title),
     messages: Array.isArray(chat.messages)
-      ? chat.messages.map(normalizeChatMessage)
+      ? chat.messages.map((message, at) => normalizeChatMessage(message, at))
       : [],
     agentId: optionalString(chat.agentId),
     kind: chat.kind === "subagent" ? "subagent" : "normal",
@@ -378,29 +380,34 @@ function normalizeChat(value: unknown): Chat {
   };
 }
 
-function normalizeChatMessage(value: unknown): ChatMessage {
+function normalizeChatMessage(value: unknown, index: number): ChatMessage {
   const message = objectValue(value);
   return {
-    id: stringValue(message.id) || crypto.randomUUID(),
+    id: readId(value, index),
     role: CHAT_MESSAGE_ROLES.has(stringValue(message.role))
       ? (message.role as ChatMessage["role"])
       : "user",
     content: stringValue(message.content),
     createdAt: numberValue(message.createdAt, Date.now()),
     parts: Array.isArray(message.parts)
-      ? message.parts.map(normalizeChatPart).filter(isChatPart)
+      ? message.parts
+          .map((part, at) => normalizeChatPart(part, at))
+          .filter(isChatPart)
       : undefined,
     metadata: plainRecord(message.metadata),
   };
 }
 
-function normalizeChatPart(value: unknown): ChatPart | undefined {
+function normalizeChatPart(
+  value: unknown,
+  index: number,
+): ChatPart | undefined {
   const part = objectValue(value);
   const type = stringValue(part.type);
   if (!TEXT_PART_TYPES.has(type) && !isToolPartType(type)) return undefined;
   const state = stringValue(part.state);
   return {
-    id: stringValue(part.id) || crypto.randomUUID(),
+    id: readId(value, index),
     type: type as ChatPart["type"],
     text: optionalString(part.text),
     // Only a streamed delta carries it: a stored part without it must stay

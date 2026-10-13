@@ -5,6 +5,7 @@ import {
   WORKSPACE_SEARCH_RESULT_MAX_CHARS,
   WORKSPACE_TOTAL_MAX_CHARS,
 } from "./config";
+import { readPath } from "./read-ids";
 import type {
   Agent,
   AgentWorkspace,
@@ -135,10 +136,7 @@ export function normalizeWorkspaceFiles(files: WorkspaceFile[]) {
 export function normalizeWorkspacePath(
   value: unknown,
 ): { ok: true; path: string } | { ok: false; error: string } {
-  const raw = String(value || "")
-    .trim()
-    .replace(/\\+/g, "/");
-  const path = raw.split("/").filter(Boolean).join("/");
+  const path = readPath(value);
   if (!path) return { ok: false, error: "Path is required" };
   if (path.length > WORKSPACE_PATH_MAX_LENGTH)
     return {

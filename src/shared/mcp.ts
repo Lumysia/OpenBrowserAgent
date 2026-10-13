@@ -1,4 +1,5 @@
 import { nanoid } from "nanoid";
+import { readId } from "./read-ids";
 
 export type McpServerConfig = {
   id: string;
@@ -85,16 +86,24 @@ export function createMcpServerDraft(name = "MCP Server"): McpServerConfig {
 export function normalizeMcpServers(value: unknown): McpServerConfig[] {
   const normalized = Array.isArray(value)
     ? value
-        .map((item) => normalizeMcpServer(item))
+        .map((item, index) => normalizeMcpServer(item, index))
         .filter((item): item is McpServerConfig => !!item)
     : [];
   return mergeBuiltinMcpServers(normalized);
 }
 
-export function normalizeMcpServer(value: unknown): McpServerConfig | null {
+// `index`: its place in the stored list, which names it when it has no id;
+// without one, a server with no id gets a new one.
+export function normalizeMcpServer(
+  value: unknown,
+  index?: number,
+): McpServerConfig | null {
   if (!value || typeof value !== "object") return null;
   const item = value as Record<string, unknown>;
-  const id = stringValue(item.id) || `mcp_${nanoid(8)}`;
+  const id =
+    index === undefined
+      ? stringValue(item.id) || `mcp_${nanoid(8)}`
+      : readId(value, index);
   const now = Date.now();
   return {
     id,
