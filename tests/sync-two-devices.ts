@@ -8,8 +8,13 @@
 // devices by accident. The optional pair goes through a proxy that strips
 // ETags.
 import assert from "node:assert/strict";
-import { loadContent, resetSync } from "../src/background/sync/service";
+import {
+  createSyncRunner,
+  loadContent,
+  resetSync,
+} from "../src/background/sync/service";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
+import { loadClocks } from "../src/shared/sync/clocks";
 import { SYNC_WARNINGS } from "../src/shared/sync/state";
 import { createWebDavTransport } from "../src/shared/sync/webdav";
 import { ALL_ON, chat, device, type Device } from "./sync-fixtures";
@@ -214,7 +219,7 @@ const cases: Record<string, () => Promise<void>> = {
     });
     await saveChat(a, "c1", [["m1", 1]]);
     await assert.rejects(a.sync("edit"));
-    assert.equal((await a.state()).pending["chats/c1"] !== undefined, true);
+    assert.equal((await loadClocks(a.env.local, "chats")).c1?.local, true);
     await a.sync("poll");
     await b.sync();
     assert.deepEqual(ids(b), ["c1"]);
@@ -256,7 +261,7 @@ const cases: Record<string, () => Promise<void>> = {
     assert.deepEqual(messages(a, "c1"), ["m1", "m2"]);
     // Back on, the change still uploads.
     await a.sync("poll");
-    assert.equal((await a.state()).pending["chats/c1"], undefined);
+    assert.equal((await loadClocks(a.env.local, "chats")).c1?.local, undefined);
   },
 
   async "a device restored from an old backup"() {
@@ -340,6 +345,45 @@ const cases: Record<string, () => Promise<void>> = {
     await a.sync();
     assert.deepEqual(ids(a), ["c1", "c2", "c3"]);
     assert.deepEqual(ids(b), ["c1", "c2", "c3"]);
+  },
+
+  // The second review's C3: the round runner has a round running and one
+  // queued when the debug page clears local chats (and the cloud).
+  async "clearing chats while the runner has rounds queued"() {
+    for (const remote of [false, true]) {
+      const { a, b } = await pair(`clear-queued-${remote}`);
+      const runner = createSyncRunner(
+        b.env,
+        () => undefined,
+        async () => b.context,
+      );
+      for (const id of ["c1", "c2", "c3"]) await saveChat(b, id, [[id, 1]]);
+      // a holds every chat's content too, so a cloud clear loses nothing.
+      for (const id of ["c1", "c2", "c3"]) await saveChat(a, id, [[id, 1]]);
+      await runner.request({ reason: "edit" });
+      await tick();
+      await a.sync();
+      await tick();
+      void runner.request({ reason: "poll" });
+      void runner.request({ reason: "poll" });
+      await resetSync(b.env, b.context, remote, [CHATS, STORAGE_KEYS.chatTabs]);
+      await b.settle();
+      await runner.request({ reason: "manual" });
+      for (let i = 0; i < 2; i++) {
+        await tick();
+        await a.sync();
+        await tick();
+        await runner.request({ reason: "poll" });
+      }
+      const read = await a.context.transport.readRoot();
+      assert.equal(read.status, "ok");
+      const deleted = Object.entries(
+        read.status === "ok" ? read.root.records : {},
+      ).filter(([id, record]) => id.startsWith("chats/") && record.deleted);
+      assert.deepEqual(deleted, [], `remote=${remote}`);
+      assert.deepEqual(ids(a), ["c1", "c2", "c3"], `remote=${remote}`);
+      assert.deepEqual(ids(b), ["c1", "c2", "c3"], `remote=${remote}`);
+    }
   },
 };
 
