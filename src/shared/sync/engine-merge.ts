@@ -8,7 +8,7 @@ import {
   saveHlc,
   tickNow,
 } from "./clocks";
-import { isOrderId, type Collection } from "./collection";
+import { isOrderId, ORDER_ID, type Collection } from "./collection";
 import { recordIdOf, splitRecordId } from "./collections";
 import type { SyncContext } from "./engine";
 import type { SyncEnv } from "./env";
@@ -241,18 +241,23 @@ export async function keepLocalCopies(
 }
 
 // The user keeps what deletions made here would remove everywhere: those
-// records come back from the remote copy.
+// records come back from the remote copy, in the remote order.
 export function restoreRemoteCopies(
   collections: Collection[],
   remote: Root,
   decisions: Map<string, Decision>,
 ) {
-  for (const collection of collections)
-    for (const id of decisionsIn(decisions, collection, pushesDelete)) {
+  for (const collection of collections) {
+    const restored = decisionsIn(decisions, collection, pushesDelete);
+    const order = recordIdOf(collection, ORDER_ID);
+    if (restored.length && remote.records[order] && decisions.has(order))
+      restored.push(ORDER_ID);
+    for (const id of restored) {
       const recordId = recordIdOf(collection, id);
       decisions.set(recordId, {
         kind: "apply",
         record: remote.records[recordId],
       });
     }
+  }
 }
