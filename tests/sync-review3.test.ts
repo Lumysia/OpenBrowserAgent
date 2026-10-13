@@ -8,6 +8,7 @@ import { runSyncRound } from "../src/shared/sync/engine";
 import {
   ALL_ON,
   device,
+  hookedTransport,
   memoryServer,
   memoryTransport,
   messageIds,
@@ -292,4 +293,31 @@ test("review3 P1: clearing local chats before a push is confirmed deletes nothin
       ["X"],
       on.name,
     );
+});
+
+test("review3: a cloud clear waits for a round, so no root refers to content it deleted", async () => {
+  const clock = { now: 1_000_000_000 };
+  const server = memoryServer();
+  const hooked = hookedTransport(
+    memoryTransport(server, { ignoreIfMatch: true }),
+  );
+  const a = device("deviceA", hooked.transport, clock, ALL_ON);
+  const b = device("deviceB", memoryTransport(server), clock, ALL_ON);
+  await saveChat(a, "X", [["m1", 1]]);
+  let cleared: Promise<unknown> | undefined;
+  // The clear is asked for while a's round uploads, before its root write.
+  hooked.hooks.writeRoot = async () => {
+    cleared = resetSync(a.env, a.context, true, []);
+    await wait(10);
+  };
+  await a.sync("edit");
+  await cleared;
+  for (let i = 0; i < 2; i++) {
+    clock.now += 60_000;
+    await a.sync();
+    await b.sync();
+  }
+  assert.equal(await loadContent(b.context, "chats", "X"), true);
+  await b.settle();
+  assert.deepEqual(messageIds(b, "X"), ["m1"]);
 });
