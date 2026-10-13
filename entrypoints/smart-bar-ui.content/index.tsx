@@ -12,6 +12,8 @@ import smartBarCss from "../../src/smart-bar/ui/smart-bar.css?inline";
 import baseCss from "../../src/ui/styles/base.css?inline";
 import componentsCoreCss from "../../src/ui/styles/components-core.css?inline";
 import componentsOverlaysCss from "../../src/ui/styles/components-overlays.css?inline";
+import componentsScrollAreaCss from "../../src/ui/styles/components-scroll-area.css?inline";
+import componentsTooltipCss from "../../src/ui/styles/components-tooltip.css?inline";
 import themeCss from "../../src/ui/styles/theme.css?inline";
 
 const CSS = [
@@ -21,6 +23,8 @@ const CSS = [
   baseCss,
   componentsCoreCss,
   componentsOverlaysCss,
+  componentsTooltipCss,
+  componentsScrollAreaCss,
   smartBarCss,
 ].join("\n");
 

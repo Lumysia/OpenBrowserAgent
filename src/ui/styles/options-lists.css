@@ -29,3 +29,47 @@
   flex: none;
   border-radius: 999px;
 }
+.settings-summary {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.settings-summary-title {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-weight: 600;
+}
+.settings-summary-title svg {
+  flex-shrink: 0;
+}
+.settings-summary-name,
+.settings-summary-title > .ui-badge {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-summary-title > .ui-badge {
+  display: inline-block;
+  max-width: 18rem;
+}
+.agent-builtin-badge {
+  margin-left: 2px;
+  padding: 3px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.settings-summary small {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
