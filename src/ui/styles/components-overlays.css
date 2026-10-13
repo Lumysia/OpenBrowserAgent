@@ -341,35 +341,6 @@
 .tooltip-button-wrapper {
   display: inline-flex;
 }
-.ui-info-tip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  margin-inline-start: 4px;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--muted-foreground);
-  vertical-align: -3px;
-  cursor: help;
-  transition: color 0.16s ease;
-}
-.ui-info-tip:hover,
-.ui-info-tip:focus-visible {
-  color: var(--foreground);
-}
-.ui-info-tip:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--ring);
-}
-.ui-tooltip-content.ui-info-tip-content {
-  max-width: min(300px, calc(100vw - 24px));
-  font-weight: 400;
-  line-height: 1.4;
-}
 .ui-popover-content {
   z-index: 60;
   overflow: hidden;
