@@ -5,6 +5,7 @@
 import { REVIEW5_MUTATIONS } from "./sync-mutation-list-review5.mjs";
 import { REVIEW6_MUTATIONS } from "./sync-mutation-list-review6.mjs";
 import { FIX7_MUTATIONS } from "./sync-mutation-list-fix7.mjs";
+import { FIX8_MUTATIONS } from "./sync-mutation-list-fix8.mjs";
 
 export const MUTATIONS = [
   {
@@ -406,7 +407,7 @@ export const MUTATIONS = [
   {
     name: "chat saves store the side panel's copy as is",
     file: "src/shared/chat-storage.ts",
-    from: "    if (base && stored && !sameJson(stored, normalizeChatContent(base)))",
+    from: "    if (from && stored && !sameJson(stored, from))",
     to: "    if (false)",
   },
   {
@@ -436,4 +437,5 @@ export const MUTATIONS = [
   ...REVIEW5_MUTATIONS,
   ...REVIEW6_MUTATIONS,
   ...FIX7_MUTATIONS,
+  ...FIX8_MUTATIONS,
 ];

@@ -16,6 +16,12 @@ test("a list never stored: a change stores only what it added", () => {
   assert.deepEqual(keepStoredForm(undefined, shown, next), [item("new")]);
 });
 
+test("a list field never stored: a change stores only what it added", () => {
+  const shown = { list: read() };
+  const next = { list: [...shown.list, item("new")] };
+  assert.deepEqual(keepStoredForm({}, shown, next), { list: [item("new")] });
+});
+
 test("an item filled in on read and left alone is not stored; one the change edited is", () => {
   const stored = [item("a")];
   const shown = read(stored);

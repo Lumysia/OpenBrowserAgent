@@ -64,13 +64,13 @@ export const FIX7_MUTATIONS = [
   {
     name: "guard: a chat save stores the loaded (normalized) form of every message",
     file: "src/shared/chat-storage.ts",
-    from: "    content = keepStoredForm(raw, stored ?? content, content);",
-    to: "",
+    from: "    const write = keepStoredForm(raw, stored ?? content, content);",
+    to: "    const write = content;",
   },
   {
     name: "guard: defaults filled in on read are stored with a changed item",
     file: "src/shared/stored-form.ts",
-    from: "      if (key in shown && sameJson(shown[key], value)) continue;",
+    from: "      if (sameJson(shown[key], value)) continue;",
     to: "",
   },
   {
