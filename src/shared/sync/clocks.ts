@@ -4,8 +4,10 @@ import { hashJson, sameJson } from "./codec";
 import { isOrderId } from "./collection";
 import { readKey, type StorageArea, type SyncEnv } from "./env";
 import {
+  compareClocks,
   INITIAL_HLC,
   observeClock,
+  parseClock,
   tickClock,
   type Clock,
   type HlcState,
@@ -26,13 +28,20 @@ export type Version = {
   // The data itself, kept only as a change's base: a three-way merge takes
   // each field from the side that changed it.
   data?: unknown;
+  // Other devices' changes the version includes (SyncRecord.seen).
+  seen?: Clock[];
 };
 
 export type ClockEntry = Version & {
-  // A change made here that no backend has confirmed yet...
+  // A change made here that no backend has confirmed yet (`seen`: what it
+  // includes besides itself)...
   local?: true;
   // ...made from this version, which three-way merges compare against.
   base?: Version;
+  // The version of this change (or of one it was made on top of) that this
+  // device's last root write pushed, until a root read shows whether the
+  // remote record includes it: then it is the base of what is left.
+  sent?: Version;
   // The list order an order record's version holds.
   order?: string[];
 };
@@ -73,12 +82,50 @@ export function observeRemote(env: SyncEnv, clock: Clock | undefined) {
   });
 }
 
+// Whether a version holds the change made at `clock`: that change, or a
+// later one of the same device, is the version's own or one it includes.
+export function includes(
+  version: { clock: Clock; seen?: Clock[] },
+  clock: Clock,
+) {
+  const device = parseClock(clock)?.device;
+  return [version.clock, ...(version.seen ?? [])].some(
+    (held) =>
+      parseClock(held)?.device === device && compareClocks(held, clock) >= 0,
+  );
+}
+
+// What a version made at `clock` from (or merging) `versions` includes
+// besides itself: per other device, its newest change they hold.
+export function seenFrom(
+  clock: Clock,
+  versions: Array<{ clock: Clock; seen?: Clock[] } | undefined>,
+) {
+  const own = parseClock(clock)?.device;
+  const newest = new Map<string, Clock>();
+  for (const version of versions)
+    for (const held of version
+      ? [version.clock, ...(version.seen ?? [])]
+      : []) {
+      const parsed = parseClock(held);
+      // Data of unknown age (wall 0) holds no change.
+      if (!parsed?.wall || parsed.device === own) continue;
+      if (compareClocks(held, newest.get(parsed.device)) > 0)
+        newest.set(parsed.device, held);
+    }
+  return newest.size ? [...newest.values()].sort() : undefined;
+}
+
+const withSeen = (seen: Clock[] | undefined) => (seen ? { seen } : {});
+
 export async function versionOf(record: SyncRecord): Promise<Version> {
-  if (record.deleted) return { clock: record.clock, deleted: true };
+  if (record.deleted)
+    return { clock: record.clock, deleted: true, ...withSeen(record.seen) };
   return {
     clock: record.clock,
     dataHash: await hashJson(record.data),
     ...(record.blob ? { blob: record.blob } : {}),
+    ...withSeen(record.seen),
   };
 }
 
@@ -101,6 +148,7 @@ const sharedVersion = (entry: ClockEntry): Version => ({
   ...(entry.deleted ? { deleted: true } : {}),
   ...(entry.dataHash ? { dataHash: entry.dataHash } : {}),
   ...(entry.blob ? { blob: entry.blob } : {}),
+  ...withSeen(entry.seen),
 });
 
 // What a local copy is, for comparing it with its clock entry.
@@ -127,7 +175,14 @@ export async function changedEntry(
     (await hashJson(before.data)) === base.dataHash
   )
     base.data = before.data;
-  const entry: ClockEntry = { clock, local: true, ...(base ? { base } : {}) };
+  const seen = previous?.local ? previous.seen : seenFrom(clock, [previous]);
+  const entry: ClockEntry = {
+    clock,
+    local: true,
+    ...(base ? { base } : {}),
+    ...(previous?.local && previous.sent ? { sent: previous.sent } : {}),
+    ...withSeen(seen),
+  };
   if (!copy) return { ...entry, deleted: true };
   entry.dataHash = await hashJson(copy.data);
   if (copy.blob) entry.blob = copy.blob;
@@ -145,7 +200,23 @@ export async function confirmedEntry(
 ): Promise<ClockEntry> {
   if (current.clock === record.clock) return entryOf(id, record);
   if (!current.local) return current;
-  return { ...current, base: await baseOf(record) };
+  return { ...unsent(current), base: await baseOf(record) };
+}
+
+// The entry once its change is pushed in `record` (the same version, or one
+// it was made on top of); not yet a confirmation.
+export async function sentEntry(
+  _id: string,
+  current: ClockEntry,
+  record: SyncRecord,
+) {
+  return current.local ? { ...current, sent: await baseOf(record) } : current;
+}
+
+// The entry once a root read shows its push was replaced without it.
+export function unsent(current: ClockEntry): ClockEntry {
+  const { sent: _sent, ...rest } = current;
+  return rest;
 }
 
 // Whether a local copy differs from the version its clock entry records.

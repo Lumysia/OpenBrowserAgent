@@ -18,8 +18,11 @@ import {
 import {
   clocksKey,
   confirmedEntry,
+  includes,
   loadClocks,
   observeRemote,
+  sentEntry,
+  type ClockEntry,
   type Clocks,
 } from "./clocks";
 import { canonicalJson } from "./codec";
@@ -150,7 +153,7 @@ async function round(
           result.warnings.push(SYNC_WARNINGS.unreliableEtags);
       }
       await observeRemote(env, maxRootClock(remote));
-      await settleSent(env, state, remote, snapshot);
+      await settleSent(env, remote, snapshot);
 
       const outcome = await reconcile(
         context,
@@ -161,7 +164,7 @@ async function round(
         [options.massDelete ?? []].flat(),
       );
       result.warnings.push(...outcome.warnings);
-      await confirm(env, outcome.accepted, snapshot);
+      await updateEntries(env, outcome.accepted, snapshot, confirmedEntry);
       if (outcome.massDelete) {
         result.massDelete = outcome.massDelete;
         state.remote = { root: remote, etag };
@@ -169,8 +172,7 @@ async function round(
       }
       const now = env.now();
       await localPayloads(env, remote, outcome.pushes, payloads);
-      const write = crypto.randomUUID();
-      const next = nextRoot(remote, device, outcome.pushes, now, write);
+      const next = nextRoot(remote, device, outcome.pushes, now);
       const collected = dropExpiredGarbage(next, now);
       if (!outcome.pushes.size && !collected.length) {
         state.remote = { root: remote, etag };
@@ -190,7 +192,7 @@ async function round(
       );
       const written = await transport.writeRoot(next, etag);
       if (written.status === "ok") {
-        state.sent = { write, records: Object.fromEntries(outcome.pushes) };
+        await updateEntries(env, outcome.pushes, snapshot, sentEntry);
         state.remote = { root: next, etag: written.etag };
         for (const hash of uploaded)
           if (seen.has(hash)) (state.uploads ??= {})[hash] = now;
@@ -258,29 +260,34 @@ export function countWaiting(
   return count;
 }
 
-// This device's last write, once a root read shows whether it still holds
-// it: confirmed when the root descends from the write. A write another
-// device's replaced (a server that ignores If-Match) confirms nothing: its
-// changes stay changes made here, from their old base, so they merge with
-// the version that replaced them.
-async function settleSent(
-  env: SyncEnv,
-  state: SyncState,
-  remote: Root,
-  snapshot: Snapshot,
-) {
-  const sent = state.sent;
-  if (!sent) return;
-  state.sent = undefined;
-  if (remote.history?.includes(sent.write))
-    await confirm(env, new Map(Object.entries(sent.records)), snapshot);
+// Changes this device's root writes pushed, once a root read shows what
+// became of them: a push the remote record includes (the same version, or
+// one made from it) is confirmed, and what was changed here since is a
+// change made from it. One another device's write replaced without it (a
+// server that ignores If-Match) confirms nothing: the change stays a change
+// from its old base and merges with the version that replaced it.
+async function settleSent(env: SyncEnv, remote: Root, snapshot: Snapshot) {
+  const held = new Map<string, SyncRecord>();
+  for (const [recordId, entry] of snapshot.clocks) {
+    const now = remote.records[recordId];
+    // The pushed version as a record (its data kept with it).
+    if (entry.sent && now && includes(now, entry.sent.clock))
+      held.set(recordId, entry.sent as SyncRecord);
+  }
+  await updateEntries(env, held, snapshot, confirmedEntry);
 }
 
-// Records whose versions a backend holds: their clock entries say so.
-async function confirm(
+// Clock entries of records a round pushed or found confirmed: `change`
+// gives each one's new entry, also in the snapshot the round goes on with.
+async function updateEntries(
   env: SyncEnv,
   records: Map<string, SyncRecord>,
   snapshot: Snapshot,
+  change: (
+    id: string,
+    entry: ClockEntry,
+    record: SyncRecord,
+  ) => Promise<ClockEntry>,
 ) {
   const byCollection = new Map<string, Array<[string, SyncRecord]>>();
   for (const [recordId, record] of records) {
@@ -294,14 +301,11 @@ async function confirm(
     await env.lock(CLOCK_LOCK, async () => {
       const clocks: Clocks = await loadClocks(env.local, collection);
       for (const [id, record] of list) {
-        // Cleared here meanwhile: nothing to confirm.
-        if (clocks[id])
-          clocks[id] = await confirmedEntry(id, clocks[id], record);
-        // The round goes on with the entries it read, confirmed too.
+        // Cleared here meanwhile: nothing to update.
+        if (clocks[id]) clocks[id] = await change(id, clocks[id], record);
         const recordId = `${collection}/${id}`;
         const read = snapshot.clocks.get(recordId);
-        if (read)
-          snapshot.clocks.set(recordId, await confirmedEntry(id, read, record));
+        if (read) snapshot.clocks.set(recordId, await change(id, read, record));
       }
       await env.local.set({ [clocksKey(collection)]: clocks });
     });

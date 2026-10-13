@@ -3,12 +3,7 @@ import type { Collection } from "./collection";
 import { recordIdOf } from "./collections";
 import type { SyncEnv } from "./env";
 import { bodyBytes, idsWithPrefix, type Payloads } from "./local";
-import {
-  referencedBlobs,
-  ROOT_HISTORY_LENGTH,
-  type Root,
-  type SyncRecord,
-} from "./root";
+import { referencedBlobs, type Root, type SyncRecord } from "./root";
 import type { SyncState } from "./state";
 import type { StoredBlob, Transport } from "./transport";
 
@@ -50,7 +45,6 @@ export function nextRoot(
   writer: string,
   pushes: Map<string, SyncRecord>,
   now: number,
-  write: string,
 ): Root {
   const records = { ...base.records };
   const garbage = new Map(base.garbage.map((entry) => [entry.blob, entry]));
@@ -65,7 +59,6 @@ export function nextRoot(
     writer,
     records,
     garbage: [],
-    history: [...(base.history ?? []), write].slice(-ROOT_HISTORY_LENGTH),
   };
   const used = referencedBlobs(root);
   root.garbage = [...garbage.values()].filter((entry) => !used.has(entry.blob));

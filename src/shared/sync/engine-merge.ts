@@ -6,6 +6,7 @@ import {
   loadClocks,
   loadHlc,
   saveHlc,
+  seenFrom,
   tickNow,
 } from "./clocks";
 import { isOrderId, ORDER_ID, type Collection } from "./collection";
@@ -121,11 +122,14 @@ export async function mergeRecord(
     if (body !== undefined)
       data = collection.finalizeData?.(data, body) ?? data;
   }
+  const clock = await tickNow(env, device);
+  const seen = seenFrom(clock, decision.versions);
   const record: SyncRecord = {
-    clock: await tickNow(env, device),
+    clock,
     data,
     ...(blob ? { blob } : {}),
     ...(size !== undefined ? { size } : {}),
+    ...(seen ? { seen } : {}),
   };
   return { record, body };
 }
@@ -229,6 +233,7 @@ export async function keepLocalCopies(
             data: projection.data,
             ...(projection.blob ? { blob: projection.blob } : {}),
             ...(projection.size !== undefined ? { size: projection.size } : {}),
+            ...(clocks[id].seen ? { seen: clocks[id].seen } : {}),
           },
         });
       }

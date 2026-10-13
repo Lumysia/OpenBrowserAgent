@@ -175,6 +175,7 @@ test("joining an account: a value with no clock loses, a newer change wins, secr
       blob: undefined,
       size: undefined,
       newer: "mine",
+      versions: [emptied.local, account],
     },
   );
   // Once both shared a version, emptying the key is a change like any other.

@@ -17,6 +17,11 @@ export type SyncRecord = {
   blob?: string;
   // Payload bytes of the blob.
   size?: number;
+  // Per other device, the clock of its newest change this version includes
+  // (it was made from, or merged with, a version holding it). A device
+  // knows the record holds a change it pushed when the record's clock or
+  // one of these is that change's clock or a later one of the same device.
+  seen?: Clock[];
 };
 
 // Blobs a writer stopped referring to; any device deletes them a day later.
@@ -27,13 +32,7 @@ export type Root = {
   writer: string;
   records: Record<string, SyncRecord>;
   garbage: GarbageEntry[];
-  // Ids of the last writes this root descends from, its own last. A device
-  // whose write is listed knows the root holds its changes; on a server
-  // that ignores If-Match, a write made from an older root drops it.
-  history?: string[];
 };
-
-export const ROOT_HISTORY_LENGTH = 32;
 
 export class SyncFormatError extends Error {
   constructor(
@@ -80,12 +79,6 @@ export function validateRoot(value: unknown): Root {
   }
   if (!Array.isArray(value.garbage))
     throw new SyncFormatError("Sync root has no garbage list.");
-  if (
-    value.history !== undefined &&
-    (!Array.isArray(value.history) ||
-      value.history.some((id) => typeof id !== "string"))
-  )
-    throw new SyncFormatError("Sync root has an invalid history.");
   for (const entry of value.garbage)
     if (
       !isObject(entry) ||
@@ -101,6 +94,11 @@ function recordProblem(id: string, record: unknown) {
   if (!isRecordId(id)) return "invalid id";
   if (!isObject(record)) return "not an object";
   if (!isClock(record.clock)) return "invalid clock";
+  if (
+    record.seen !== undefined &&
+    (!Array.isArray(record.seen) || !record.seen.every(isClock))
+  )
+    return "invalid seen clocks";
   if (record.deleted !== undefined) {
     if (record.deleted !== true) return "invalid deleted flag";
     if ("data" in record || "blob" in record) return "tombstone with content";

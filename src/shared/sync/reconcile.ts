@@ -62,10 +62,11 @@ function localSide(
     return copy
       ? { local: content(unknownAgeClock(device)), untracked: true }
       : {};
+  const version = entry.deleted
+    ? { clock: entry.clock, deleted: true as const }
+    : content(entry.clock);
   return {
-    local: entry.deleted
-      ? { clock: entry.clock, deleted: true }
-      : content(entry.clock),
+    local: version && entry.seen ? { ...version, seen: entry.seen } : version,
     changedHere: !!entry.local,
     base: entry.base,
   };

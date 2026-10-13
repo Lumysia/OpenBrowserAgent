@@ -1,4 +1,4 @@
-import type { Version } from "./clocks";
+import { includes, type Version } from "./clocks";
 import { sameJson } from "./codec";
 import { compareClocks } from "./hlc";
 import { mergeChanges } from "./merge-content";
@@ -26,6 +26,8 @@ export type Decision =
       blob?: string | BlobMerge;
       size?: number;
       newer: Side;
+      // The two versions merged, which the merged one includes.
+      versions: SyncRecord[];
     };
 
 export type DecisionInput = {
@@ -59,6 +61,9 @@ export async function decide(input: DecisionInput): Promise<Decision> {
   if (input.untracked) return conflict(input, local, remote, undefined, false);
   if (local.clock === remote.clock)
     return input.changedHere ? { kind: "accept" } : NONE;
+  // The remote version was made from (or merged) this change: nothing of it
+  // is left to send, and its base would undo what was done since.
+  if (input.changedHere && includes(remote, local.clock)) return apply(remote);
   const mineNewer = compareClocks(local.clock, remote.clock) > 0;
   if (!input.changedHere) return mineNewer ? push(local) : apply(remote);
   if (mineNewer && input.base?.clock === remote.clock) return push(local);
@@ -117,6 +122,7 @@ async function conflict(
     blob,
     size,
     newer: mineNewer ? "mine" : "theirs",
+    versions: [mine, theirs],
   };
 }
 
