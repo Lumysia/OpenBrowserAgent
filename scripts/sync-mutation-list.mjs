@@ -411,6 +411,18 @@ export const MUTATIONS = [
     ],
   },
   {
+    name: "seen: copies kept against deletions do not say what they include",
+    file: "src/shared/sync/engine-merge.ts",
+    from: "            ...(clocks[id].seen ? { seen: clocks[id].seen } : {}),",
+    to: "",
+  },
+  {
+    name: "merge: an id list always takes the preferred side's order",
+    file: "src/shared/sync/merge-content.ts",
+    from: "  const otherReordered =\n    sameJson(order(preferred), order(base)) &&",
+    to: "  const otherReordered =\n    false &&",
+  },
+  {
     name: "S1: fields two devices changed merge one level deep",
     file: "src/shared/sync/plan.ts",
     from: `  const merged = mineNewer

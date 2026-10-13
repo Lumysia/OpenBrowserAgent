@@ -14,6 +14,7 @@ import {
   tickClock,
 } from "../src/shared/sync/hlc";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
+import { mergeChanges } from "../src/shared/sync/merge-content";
 import { decodeRoot } from "../src/shared/sync/root";
 import { loadSyncStatus, SYNC_WARNINGS } from "../src/shared/sync/state";
 import {
@@ -356,6 +357,68 @@ test("review5 R2: clocks carry a nonce per change and still order by time", () =
   assert.ok(compareClocks(formatClock(1000, 0, "a"), first) < 0);
   assert.equal(includes({ clock: second, seen: [first] }, first), true);
   assert.equal(includes({ clock: second }, first), false);
+});
+
+// Records uploaded again after a "keep" answer say what they include, so a
+// device whose push they hold counts it as confirmed.
+test("review5 seen: copies kept against deletions confirm the push they hold", async () => {
+  const clock = { now: 1_000_000_000 };
+  const server = memoryServer();
+  const [a, b, c] = ["deviceA", "deviceB", "deviceC"].map((name) =>
+    device(name, memoryTransport(server), clock, ALL_ON),
+  );
+  const providers = (model: string) =>
+    Object.fromEntries(
+      [1, 2, 3, 4, 5, 6].map((id) => [
+        `p${id}`,
+        { apiKey: "k", model: id === 1 ? model : "m" },
+      ]),
+    );
+  await a.set(PROVIDERS, providers("m"));
+  await a.sync("edit");
+  await b.sync();
+  await c.sync();
+  clock.now += 60_000;
+  await c.set(PROVIDERS, providers("m1"));
+  await c.sync("edit");
+  clock.now += 60_000;
+  await a.sync();
+  // c puts the model back before its next round.
+  clock.now += 60_000;
+  await c.set(PROVIDERS, providers("m"));
+  clock.now += 60_000;
+  await b.set(PROVIDERS, {});
+  await b.confirmDeletes(["providers"]);
+  clock.now += 60_000;
+  await a.sync("poll", {
+    massDelete: { collections: ["providers"], keep: true },
+  });
+  clock.now += 60_000;
+  await c.sync("edit");
+  await a.sync();
+  await b.sync();
+  for (const on of [a, b, c])
+    assert.equal(on.get<Providers>(PROVIDERS).p1?.model, "m", on.name);
+});
+
+test("review5 merge: a list reordered on one side keeps that order", () => {
+  const item = (id: string, name = id) => ({ id, name });
+  const base = { list: [item("a"), item("b"), item("c")] };
+  const added = { list: [item("a"), item("b", "B"), item("c"), item("d")] };
+  const moved = { list: [item("c"), item("a"), item("b")] };
+  const ids = (value: { list: Array<{ id: string }> }) =>
+    value.list.map((entry) => entry.id);
+  for (const [preferred, other] of [
+    [added, moved],
+    [moved, added],
+  ]) {
+    const merged = mergeChanges(base, preferred, other);
+    assert.deepEqual(ids(merged), ["c", "a", "b", "d"]);
+    assert.equal(merged.list[2].name, "B");
+  }
+  // Both reordered: the preferred side's order.
+  const swapped = { list: [item("b"), item("a"), item("c")] };
+  assert.deepEqual(ids(mergeChanges(base, swapped, moved)), ["b", "a", "c"]);
 });
 
 // Every clock write keeps the bodies its unconfirmed changes need: none
