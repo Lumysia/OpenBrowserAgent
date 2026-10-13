@@ -1,5 +1,7 @@
+import { plural } from "../plural";
 import { smartBarJaJP } from "./smart-bar/ja-JP";
 import { syncJaJP } from "./sync/ja-JP";
+import { themesJaJP } from "./themes/ja-JP";
 import type { LocaleMessages } from "./en-US";
 
 export const jaJP: LocaleMessages = {
@@ -78,7 +80,7 @@ export const jaJP: LocaleMessages = {
     questionCustomPlaceholder: "自由に回答を入力…",
     questionNoAnswer: "回答なし",
     forkTitleSuffix: "分岐",
-    messageCount: "{count}件のメッセージ",
+    messageCount: plural({ other: "{count}件のメッセージ" }),
     relativeMinutesAgo: "{count}分前",
     relativeHoursAgo: "{count}時間前",
     relativeDaysAgo: "{count}日前",
@@ -145,7 +147,7 @@ export const jaJP: LocaleMessages = {
     resendWithoutMissingFiles: "見つからないファイルを除いて再送信",
     resendMessage: "再送信",
     forkChat: "チャットを分岐",
-    showMoreSources: "残り{count}件のソースを表示",
+    showMoreSources: plural({ other: "残り{count}件のソースを表示" }),
     showFewerSources: "ソースを折りたたむ",
     unavailableAttachments: "{count}件利用不可",
     allOpenTabs: "開いているすべてのタブ",
@@ -371,17 +373,20 @@ export const jaJP: LocaleMessages = {
     mcpServerEnabled: "有効",
     mcpEnableRequiresTest:
       "有効にする前にこの MCP サーバーをテストしてください。",
-    mcpEnableTooltipTested:
-      "テストに成功しました。{count}個のツールが見つかりました。",
+    mcpEnableTooltipTested: plural({
+      other: "テストに成功しました。{count}個のツールが見つかりました。",
+    }),
     mcpImportJson: "MCP JSON 設定を貼り付け",
     mcpImportButton: "MCP JSON をインポート",
-    mcpImportSuccess: "{count}件の MCP サーバーをインポートしました。",
+    mcpImportSuccess: plural({
+      other: "{count}件の MCP サーバーをインポートしました。",
+    }),
     mcpImportNone:
       "貼り付けた JSON にリモート HTTP MCP サーバーが見つかりませんでした。",
     mcpImportError: "MCP インポートに失敗しました",
     mcpTestServer: "サーバーをテスト",
     mcpTesting: "テスト中…",
-    mcpTestSuccess: "{count}個のツールが見つかりました。",
+    mcpTestSuccess: plural({ other: "{count}個のツールが見つかりました。" }),
     mcpTools: "利用可能なツール",
     deleteMcpServer: "MCP サーバーを削除",
     resetDefaults: "既定にリセット",
@@ -481,11 +486,6 @@ export const jaJP: LocaleMessages = {
     appearance: "外観",
     appearanceDescription:
       "ライト、ダーク、またはシステム設定に従うかを選択します。",
-    greenTheme: "ソフトグリーン",
-    blueTheme: "ミストブルー",
-    pinkTheme: "ブラッシュピンク",
-    purpleTheme: "ラベンダー",
-    amberTheme: "ウォームアンバー",
     systemTheme: "システム",
     lightTheme: "ライト",
     darkTheme: "ダーク",
@@ -569,4 +569,5 @@ export const jaJP: LocaleMessages = {
   },
   smartBar: smartBarJaJP,
   sync: syncJaJP,
+  themes: themesJaJP,
 };

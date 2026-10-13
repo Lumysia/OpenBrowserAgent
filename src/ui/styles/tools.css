@@ -1,60 +1,45 @@
-﻿.tool-card {
+﻿/* Tool steps in a reply: a rail, an icon that thinks and then settles, a
+   title whose text swaps as the step progresses, and details that unfold. */
+.tool-card {
+  --enter-y: 10px;
+  --enter-scale: 0.99;
   position: relative;
   min-width: 0;
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 8px;
-  color: var(--muted-foreground);
-  animation: tool-card-enter 0.72s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  transition:
-    background-color 0.16s ease,
-    border-color 0.16s ease,
-    box-shadow 0.16s ease,
-    transform 0.16s ease;
+  gap: var(--space-1);
+  padding: var(--space-2);
   overflow: hidden;
+  border-radius: var(--radius-md);
+  color: var(--muted-foreground);
+  animation: enter var(--duration-emphasis) var(--ease-out) backwards;
+  transition: var(--transition-interactive);
 }
 .tool-card::before {
   content: "";
   position: absolute;
   inset: 4px auto 4px 0;
   width: 2px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent-strong) 42%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--accent-strong) 42%, transparent);
   opacity: 0.72;
-  transform: scaleY(1);
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease,
-    background-color 0.18s ease;
+  transition: var(--transition-interactive);
 }
-.tool-card.loading::before,
-.tool-card.done::before,
-.tool-card.error::before {
+.tool-card:is(.loading, .done, .error)::before {
   opacity: 1;
 }
-@keyframes tool-card-enter {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.99);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
 .tool-card.loading {
-  background: color-mix(in srgb, var(--accent-softer) 28%, transparent);
+  background: color-mix(in oklab, var(--accent-softer) 28%, transparent);
 }
-.tool-card.loading .tool-icon {
-  animation: tool-icon-thinking 1.35s ease-in-out infinite;
-}
-.tool-card.done .tool-icon {
-  animation: tool-icon-done 0.34s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+.tool-card.loading::before {
+  background: var(--accent-strong);
 }
 .tool-card.error::before {
-  background: color-mix(in srgb, var(--destructive) 72%, transparent);
+  background: color-mix(in oklab, var(--destructive) 72%, transparent);
+}
+.tool-card.error .tool-description {
+  color: var(--destructive);
 }
 .tool-title {
   min-width: 0;
@@ -62,8 +47,17 @@
   align-items: center;
   gap: 5px;
   color: var(--muted-foreground);
-  font-size: 14px;
+  font-size: var(--text-md);
   font-weight: 600;
+}
+.tool-title strong {
+  min-width: 0;
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+/* Dark backgrounds need the step titles a shade brighter to read. */
+[data-scheme="dark"] .tool-title {
+  color: color-mix(in oklab, var(--foreground) 76%, var(--muted-foreground));
 }
 .tool-title-button {
   width: fit-content;
@@ -71,25 +65,52 @@
   min-height: 28px;
   padding: 3px 6px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: transparent;
-  cursor: pointer;
   text-align: left;
-  transition:
-    background-color 0.14s ease,
-    transform 0.14s ease;
+  cursor: pointer;
+  transition: var(--transition-interactive);
 }
 .tool-title-button:hover {
-  background: color-mix(in srgb, var(--accent-softer) 36%, transparent);
+  background: color-mix(in oklab, var(--accent-softer) 40%, transparent);
 }
-.tool-title-button:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--ring);
+.tool-title-button:active {
+  scale: 0.98;
 }
-.tool-title strong {
-  min-width: 0;
-  font-size: 14px;
-  font-weight: 600;
+.tool-title-text {
+  --enter-y: 3px;
+  --enter-blur: 2px;
+  animation: enter var(--duration-base) var(--ease-standard) backwards;
+}
+.tool-icon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 22%, transparent);
+  border-radius: 7px;
+  background: color-mix(in oklab, var(--accent-softer) 34%, transparent);
+  color: var(--accent-strong);
+}
+.tool-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.tool-card.loading .tool-icon {
+  --pulse-rest-opacity: 0.72;
+  --pulse-peak-scale: 1.08;
+  --pulse-peak-y: -1px;
+  animation: pulse 1.35s var(--ease-in-out) infinite;
+}
+.tool-card.done .tool-icon {
+  --pop-opacity: 1;
+  --pop-scale: 0.9;
+  --pop-rotate: -4deg;
+  --pop-peak-scale: 1.08;
+  --pop-peak-rotate: 2deg;
+  animation: pop var(--duration-slow) var(--ease-out) backwards;
 }
 .tool-json-popover {
   width: min(520px, calc(100vw - 24px));
@@ -99,71 +120,69 @@
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--accent-softer) 36%, transparent),
+      color-mix(in oklab, var(--accent-softer) 36%, transparent),
       transparent 54%
     ),
     var(--popover);
 }
-.tool-title-text {
-  animation: tool-text-swap 0.22s ease backwards;
-}
-.tool-icon {
-  width: 24px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 24px;
-  border: 1px solid color-mix(in srgb, var(--accent-strong) 22%, transparent);
-  border-radius: 7px;
-  background: color-mix(in srgb, var(--accent-softer) 34%, transparent);
-  color: var(--accent-strong);
-}
-.tool-icon svg {
-  width: 16px;
-  height: 16px;
-}
+
+/* Details hang off a rail that takes the accent while the step runs. */
 .tool-detail {
   min-width: 0;
   max-width: 100%;
   min-height: 16px;
   margin-left: 6px;
-  padding-left: 12px;
-  padding-right: 10px;
+  padding-inline: 12px 10px;
   border-left: 1px solid var(--border);
   color: var(--muted-foreground);
-  transition:
-    border-color 0.2s ease,
-    color 0.2s ease;
+  transition: var(--transition-colors);
 }
 .tool-card.loading .tool-detail {
   border-left-color: color-mix(
-    in srgb,
-    var(--accent-strong) 28%,
+    in oklab,
+    var(--accent-strong) 30%,
     var(--border)
   );
 }
 .tool-card.done .tool-detail {
   border-left-color: color-mix(
-    in srgb,
+    in oklab,
     var(--accent-strong) 18%,
     var(--border)
   );
 }
-.tool-detail-content {
-  animation: tool-detail-swap 0.42s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+.tool-detail-content,
+.tool-detail-slot-content,
+.generated-image-result {
+  --enter-y: 4px;
+  animation: enter 420ms var(--ease-out) backwards;
+}
+.tool-detail-slot {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-base) var(--ease-out);
+}
+.tool-detail-slot.visible {
+  grid-template-rows: 1fr;
+}
+.tool-detail-slot-content {
+  min-height: 0;
+  overflow: hidden;
+}
+.tool-detail-slot.visible .tool-detail-slot-content {
+  margin-top: var(--space-2);
 }
 .tool-description {
   max-width: 100%;
-  margin-top: 8px;
-  font-size: 14px;
-  line-height: 1.45;
+  margin-top: var(--space-2);
   display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
   overflow: hidden;
+  font-size: var(--text-md);
+  line-height: 1.45;
   overflow-wrap: anywhere;
   word-break: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 .context-summary-description {
   -webkit-line-clamp: unset;
@@ -173,43 +192,21 @@
   margin: 8px 0 0;
   padding: 10px;
   overflow: auto;
-  border: 1px solid color-mix(in srgb, var(--accent-strong) 10%, var(--border));
-  border-radius: calc(var(--radius) - 4px);
-  background: color-mix(in srgb, var(--card) 88%, var(--background));
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 10%, var(--border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--card) 88%, var(--background));
   color: var(--foreground);
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--text-sm);
   line-height: 1.45;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.tool-detail-slot {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.tool-detail-slot.visible {
-  grid-template-rows: 1fr;
-}
-.tool-detail-slot-content {
-  min-height: 0;
-  overflow: hidden;
-  animation: tool-detail-swap 0.42s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-}
-.tool-detail-slot.visible .tool-detail-slot-content {
-  margin-top: 8px;
-}
-.tool-references {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
 .tool-subagent-link {
   width: fit-content;
   max-width: 100%;
-  margin-top: 10px;
   gap: 5px;
+  margin-top: 10px;
 }
 .tool-subagent-link span {
   min-width: 0;
@@ -217,6 +214,93 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Results as label/value rows. */
+.tool-result-list {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: 10px;
+}
+.tool-result-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(90px, 0.36fr) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3);
+  padding: 10px 12px;
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 9%, transparent);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--accent-softer) 28%, transparent),
+      transparent 68%
+    ),
+    color-mix(in oklab, var(--card) 86%, var(--accent-softer));
+}
+.tool-result-label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tool-result-value {
+  min-width: 0;
+  color: var(--muted-foreground);
+  font-size: var(--text-base);
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+/* Pages a step read or opened; they pop in one after another. */
+.tool-references {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}
+.tool-references button {
+  --enter-y: 4px;
+  --enter-scale: 0.98;
+  min-width: 0;
+  max-width: min(280px, calc(100% - 10px));
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px 5px 8px;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 24%, var(--border));
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--accent-soft) 64%, var(--card));
+  color: var(--accent-text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  animation: enter var(--duration-slow) var(--ease-out) backwards;
+  animation-delay: calc(var(--tool-reference-index, 0) * 38ms);
+  transition: var(--transition-interactive);
+}
+.tool-references button:hover {
+  background: color-mix(in oklab, var(--accent-hover) 80%, var(--card));
+  translate: 0 -1px;
+}
+.tool-references button svg {
+  flex: 0 0 auto;
+}
+.tool-references button span {
+  min-width: 0;
+  padding-right: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Questions the agent asks (the ask tool). */
 .tool-question-stack {
   display: grid;
   gap: 10px;
@@ -224,19 +308,18 @@
 }
 .tool-question-card {
   min-width: 0;
-  border: 1px solid color-mix(in srgb, var(--accent-strong) 16%, var(--border));
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--card) 74%, var(--accent-softer));
-  box-shadow: none;
   overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 16%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--card) 74%, var(--accent-softer));
+  box-shadow: none;
 }
 .tool-question-card:hover {
-  border-color: color-mix(in srgb, var(--accent-strong) 22%, var(--border));
-  box-shadow: none;
+  border-color: color-mix(in oklab, var(--accent-strong) 22%, var(--border));
 }
 .tool-question-title {
   color: var(--foreground);
-  font-size: 14px;
+  font-size: var(--text-md);
   line-height: 1.35;
 }
 .tool-question-card-content {
@@ -245,18 +328,17 @@
   padding: 11px;
 }
 .tool-question-card .ui-toggle-group {
+  width: 100%;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr));
-  width: 100%;
-  gap: 8px;
+  gap: var(--space-2);
   overflow: visible;
   border: 0;
   background: transparent;
   box-shadow: none;
 }
-.tool-question-card .ui-input,
-.tool-question-card .ui-textarea {
-  font-size: 13px;
+.tool-question-card :is(.ui-input, .ui-textarea) {
+  font-size: var(--text-base);
   line-height: 1.35;
 }
 .tool-question-option {
@@ -266,203 +348,64 @@
   display: grid;
   justify-items: start;
   align-content: center;
-  gap: 4px;
+  gap: var(--space-1);
   padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--accent-strong) 12%, var(--border));
-  border-radius: 10px;
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 12%, var(--border));
+  border-radius: var(--radius-md);
   text-align: left;
   white-space: normal;
 }
+.tool-question-option:first-child,
+.tool-question-option[data-state="on"],
+.tool-question-option[data-state="on"] + .tool-question-option {
+  border-left-color: color-mix(
+    in oklab,
+    var(--accent-strong) 12%,
+    var(--border)
+  );
+}
 .tool-question-option span {
-  font-size: 14px;
+  font-size: var(--text-md);
   font-weight: 600;
   line-height: 1.25;
 }
-.tool-question-option:first-child {
-  border-left: 1px solid
-    color-mix(in srgb, var(--accent-strong) 12%, var(--border));
-}
 .tool-question-option small {
   color: var(--muted-foreground);
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 500;
   line-height: 1.35;
 }
-.tool-result-list {
-  display: grid;
-  gap: 8px;
-  margin-top: 10px;
-}
-.tool-result-row {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: minmax(90px, 0.36fr) minmax(0, 1fr);
-  align-items: start;
-  gap: 12px;
-  padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--accent-strong) 9%, transparent);
-  border-radius: 12px;
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--accent-softer) 28%, transparent),
-      transparent 68%
-    ),
-    color-mix(in srgb, var(--card) 86%, var(--accent-softer));
-}
-.tool-result-label {
-  min-width: 0;
-  color: var(--foreground);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.35;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.tool-result-value {
-  min-width: 0;
-  color: var(--muted-foreground);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-.tool-references button {
-  max-width: min(280px, calc(100% - 10px));
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 12px 5px 8px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent-strong) 24%, transparent);
-  background: color-mix(in srgb, var(--accent-soft) 72%, var(--card));
-  color: var(--accent-strong);
-  font-size: 12px;
-  font-weight: 600;
-  overflow: hidden;
-  white-space: nowrap;
-  transition:
-    background-color 0.14s ease,
-    border-color 0.14s ease,
-    transform 0.14s ease;
-  animation: tool-reference-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  animation-delay: calc(var(--tool-reference-index, 0) * 38ms);
-}
-.tool-references button svg {
-  flex: 0 0 auto;
-}
-.tool-references button span {
-  min-width: 0;
-  overflow: hidden;
-  padding-right: 2px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.tool-references button:hover {
-  background: var(--accent-hover);
-}
-.tool-card.error .tool-description {
-  color: var(--destructive);
-}
-@keyframes tool-icon-thinking {
-  0%,
-  100% {
-    opacity: 0.72;
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-1px) scale(1.08);
-  }
-}
-@keyframes tool-icon-done {
-  0% {
-    transform: scale(0.9) rotate(-4deg);
-  }
-  70% {
-    transform: scale(1.08) rotate(2deg);
-  }
-  100% {
-    transform: scale(1) rotate(0);
-  }
-}
-@keyframes tool-text-swap {
-  from {
-    opacity: 0;
-    filter: blur(2px);
-    transform: translateY(3px);
-  }
-  to {
-    opacity: 1;
-    filter: blur(0);
-    transform: translateY(0);
-  }
-}
-@keyframes tool-detail-swap {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-@keyframes tool-reference-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
+
+/* Generated images. */
 .generated-image-result {
   min-width: 0;
   max-width: 100%;
   display: grid;
   gap: 10px;
   overflow: hidden;
-  animation: tool-detail-swap 0.32s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-duration: 320ms;
 }
 .generated-image-result img {
   width: 100%;
   min-width: 0;
   max-width: 100%;
   max-height: 320px;
-  border-radius: 12px;
-  object-fit: contain;
+  border-radius: var(--radius);
   background: var(--secondary);
-  transition:
-    box-shadow 0.16s ease,
-    transform 0.16s ease;
+  object-fit: contain;
+  transition: var(--transition-interactive);
 }
 .generated-image-result img:hover {
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--shadow) 58%, transparent);
+  box-shadow: var(--elevation-2);
+  translate: 0 -1px;
 }
 .generated-image-skeleton {
   width: 100%;
   min-height: 220px;
-  border-radius: 12px;
+  border-radius: var(--radius);
 }
-.generated-image-download {
-  color: var(--accent-strong);
-  text-decoration: none;
-}
+.generated-image-download,
 .generated-image-download:hover {
   color: var(--accent-strong);
   text-decoration: none;
-}
-
-:root[data-theme="dark"] .tool-references button {
-  border-color: color-mix(in srgb, var(--accent-strong) 26%, var(--border));
-  background: color-mix(in srgb, var(--accent-soft) 42%, var(--background));
-  color: color-mix(in srgb, var(--accent-strong) 86%, var(--foreground));
-}
-
-:root[data-theme="dark"] .tool-references button:hover {
-  background: color-mix(in srgb, var(--accent-hover) 58%, var(--background));
 }

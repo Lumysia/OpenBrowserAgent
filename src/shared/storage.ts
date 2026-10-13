@@ -242,6 +242,7 @@ export const storage = {
     afterSet: removeContentOfRemovedChats,
   }),
   chatTabs: createItem<ChatTab[]>(STORAGE_KEYS.chatTabs, () => []),
+  holidayBurstDay: createItem<string>(STORAGE_KEYS.holidayBurstDay, () => ""),
   syncStatus: createItem<SyncStatus>(
     STORAGE_KEYS.syncStatus,
     () => DEFAULT_SYNC_STATUS,

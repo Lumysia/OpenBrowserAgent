@@ -1,4 +1,6 @@
 import { getBrowserApi, storage } from "./storage";
+import { normalizeColorScheme } from "./theme/themes";
+import { themeTokens } from "./theme/tokens";
 import type { AttachmentTab } from "./types";
 
 export async function getActiveTab(): Promise<chrome.tabs.Tab | undefined> {
@@ -70,9 +72,13 @@ export async function injectElementSelector(tabId: number, prompt: string) {
     .sendMessage(tabId, { type: "cancelElementSelector" })
     .catch(() => undefined);
   const { colorScheme, accentColor } = await storage.preferences.get();
+  const accent = {
+    light: themeTokens(accentColor, "light")["accent-solid"],
+    dark: themeTokens(accentColor, "dark")["accent-strong"],
+  };
   await api.scripting.executeScript({
     target: { tabId },
-    args: [prompt, { colorScheme, accentColor }],
+    args: [prompt, { colorScheme: normalizeColorScheme(colorScheme), accent }],
     func: (selectorPrompt, preferences) => {
       Object.assign(window, {
         __obaElementSelectorPrompt: selectorPrompt,

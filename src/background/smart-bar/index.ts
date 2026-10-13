@@ -25,6 +25,10 @@ import {
 } from "../../shared/smart-bar-protocol";
 import { smartBarHandoffStorage } from "../../shared/smart-bar-handoff";
 import { getBrowserApi, storage } from "../../shared/storage";
+import {
+  normalizeColorScheme,
+  normalizeTheme,
+} from "../../shared/theme/themes";
 import { openSidePanel } from "../action-surface";
 import { resolveModel } from "../model-resolver";
 import { requestText } from "../pi-provider";
@@ -194,8 +198,8 @@ async function prepare(
     hideSite: smartBarHideSite(settings, host),
     messages: getMessages(language).smartBar,
     language: resolveLanguage(language),
-    colorScheme: preferences.colorScheme || "system",
-    accentColor: preferences.accentColor || "pink",
+    colorScheme: normalizeColorScheme(preferences.colorScheme),
+    accentColor: normalizeTheme(preferences.accentColor),
   };
   return { onSelection, config };
 }

@@ -1,9 +1,9 @@
-/* Smart bar, inside its shadow root. Theme variables come from theme.css with
-   :root mapped to .smart-bar-theme. */
+/* Smart bar, inside its shadow root. Tokens come from tokens.css with :root
+   mapped to .smart-bar-theme, colors from applyTheme() on that element. */
 .smart-bar-theme {
   --smart-bar-layer: 2147483647;
   color: var(--foreground);
-  font-size: 14px;
+  font-size: var(--text-md);
   line-height: 1.4;
   text-align: left;
 }
@@ -18,23 +18,39 @@
   top: 0;
   left: 0;
   z-index: var(--smart-bar-layer);
-  animation: fade-in 0.12s ease backwards;
+}
+
+/* The card grows out of the selection: from above it when it sits below,
+   and the other way round (use-placement sets data-side and --origin-x).
+   The card moves, not the frame, so placement measures the frame as laid
+   out. A result unfolds from the toolbar the same way. */
+.smart-bar-frame > * {
+  --enter-y: -6px;
+  --enter-scale: 0.92;
+  --enter-blur: 1px;
+  transform-origin: var(--origin-x, 50%) top;
+  animation: enter var(--duration-base) var(--ease-out) backwards;
+}
+.smart-bar-frame[data-side="above"] > * {
+  --enter-y: 6px;
+  transform-origin: var(--origin-x, 50%) bottom;
 }
 
 .smart-bar-toolbar,
 .smart-bar-result {
-  border: 1px solid color-mix(in srgb, var(--accent-strong) 12%, var(--border));
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 14%, var(--border));
   border-radius: var(--radius);
-  background: var(--popover);
-  color: var(--popover-foreground);
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--shadow) 160%, transparent);
+  background:
+    linear-gradient(180deg, var(--highlight), transparent 40%), var(--popover);
+  color: var(--foreground);
+  box-shadow: var(--elevation-4);
 }
 
 .smart-bar-toolbar {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 4px;
+  padding: var(--space-1);
 }
 
 .smart-bar-icon-button.ui-button-icon {
@@ -43,11 +59,13 @@
   flex: none;
   color: var(--muted-foreground);
 }
-
-.smart-bar-icon-button:hover:not(:disabled),
-.smart-bar-icon-button:focus-visible {
-  background: var(--accent);
-  color: var(--accent-foreground);
+.smart-bar-icon-button.ui-button-icon:is(:hover, :focus-visible):not(
+    :disabled
+  ) {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  translate: 0 -1px;
 }
 
 .smart-bar-divider {
@@ -58,19 +76,17 @@
 }
 
 .smart-bar-menu {
-  display: flex;
   min-width: 180px;
   max-width: min(320px, calc(100vw - 16px));
+  display: flex;
   flex-direction: column;
-  padding: 4px;
+  padding: var(--space-1);
 }
-
 .smart-bar-menu-item.ui-button {
-  justify-content: flex-start;
   width: 100%;
+  justify-content: flex-start;
   font-weight: 500;
 }
-
 /* Long site names end in an ellipsis rather than widening the menu. */
 .smart-bar-menu-label {
   min-width: 0;
@@ -82,67 +98,62 @@
 /* As wide as its text (it grows while the answer streams), up to a
    readable line length. */
 .smart-bar-result {
-  display: flex;
   width: fit-content;
   min-width: min(240px, calc(100vw - 16px));
   max-width: min(380px, calc(100vw - 16px));
+  display: flex;
   flex-direction: column;
 }
-
 .smart-bar-result-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 4px 4px 0 12px;
 }
-
 .smart-bar-result-title {
-  display: inline-flex;
   min-width: 0;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   overflow: hidden;
-  color: var(--accent-foreground);
-  font-size: 13px;
+  color: var(--accent-text);
+  font-size: var(--text-base);
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .smart-bar-result-text {
   max-height: min(260px, 45vh);
-  overflow: auto;
   padding: 4px 12px 10px;
-  font-size: 13px;
+  overflow: auto;
+  font-size: var(--text-base);
   line-height: 1.55;
   overflow-wrap: anywhere;
   user-select: text;
   white-space: pre-wrap;
 }
-
 .smart-bar-result-text[data-status="error"] {
   color: var(--destructive);
 }
-
 .smart-bar-caret {
-  display: inline-block;
+  --pulse-rest-opacity: 0.32;
+  --pulse-rest-scale: 0.8;
   width: 6px;
   height: 1em;
+  display: inline-block;
   margin-left: 2px;
   border-radius: 2px;
   background: var(--accent-solid);
   vertical-align: text-bottom;
-  animation: pulse-dot 1s ease-in-out infinite;
+  animation: pulse 1s var(--ease-in-out) infinite;
 }
-
 .smart-bar-result-notice {
   margin: 0;
   padding: 0 12px 8px;
   color: var(--muted-foreground);
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
-
 .smart-bar-result-actions {
   display: flex;
   flex-wrap: wrap;
@@ -151,7 +162,6 @@
   padding: 6px 8px 8px;
   border-top: 1px solid var(--border);
 }
-
 .smart-bar-spacer {
   flex: 1;
 }

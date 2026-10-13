@@ -2,6 +2,7 @@ import {
   Languages,
   MonitorCog,
   Palette,
+  PartyPopper,
   RefreshCw,
   ScrollText,
   SlidersHorizontal,
@@ -24,27 +25,16 @@ import {
   SelectTrigger,
   SelectValue,
   SettingSwitchCard,
-  RadioGroup,
-  RadioGroupItem,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
   ToggleGroup,
   ToggleGroupItem,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { ThemePicker } from "./theme-picker";
 
 export function GeneralPage() {
   const [language, setLanguage] = useStoredState(storage.language);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const t = getMessages(language);
-  const accentOptions = [
-    { id: "pink", label: t.options.pinkTheme },
-    { id: "green", label: t.options.greenTheme },
-    { id: "blue", label: t.options.blueTheme },
-    { id: "purple", label: t.options.purpleTheme },
-    { id: "amber", label: t.options.amberTheme },
-  ] as const;
 
   if (!preferences) return null;
 
@@ -86,34 +76,14 @@ export function GeneralPage() {
           <CardDescription>{t.options.colorSchemeDescription}</CardDescription>
         </CardHeader>
         <CardContent>
-          <RadioGroup
-            className="accent-picker"
-            aria-label={t.options.colorScheme}
-            value={preferences.accentColor || "pink"}
-            onValueChange={(value) =>
-              setPreferences((previous) => ({
-                ...previous,
-                accentColor: value as typeof preferences.accentColor,
-              }))
+          <ThemePicker
+            t={t}
+            value={preferences.accentColor}
+            colorScheme={preferences.colorScheme}
+            onChange={(accentColor) =>
+              setPreferences((previous) => ({ ...previous, accentColor }))
             }
-          >
-            {accentOptions.map((option) => {
-              return (
-                <Tooltip key={option.id}>
-                  <TooltipTrigger asChild>
-                    <RadioGroupItem
-                      value={option.id}
-                      className={`accent-dot accent-dot-${option.id}`}
-                      aria-label={option.label}
-                    >
-                      <span />
-                    </RadioGroupItem>
-                  </TooltipTrigger>
-                  <TooltipContent>{option.label}</TooltipContent>
-                </Tooltip>
-              );
-            })}
-          </RadioGroup>
+          />
         </CardContent>
       </Card>
       <Card>
@@ -148,6 +118,18 @@ export function GeneralPage() {
           </ToggleGroup>
         </CardContent>
       </Card>
+      <SettingSwitchCard
+        icon={<PartyPopper size={18} />}
+        title={t.themes.holidayTouches}
+        description={t.themes.holidayTouchesDescription}
+        checked={preferences.holidayTouches !== false}
+        onChange={(checked) =>
+          setPreferences((previous) => ({
+            ...previous,
+            holidayTouches: checked,
+          }))
+        }
+      />
       <SettingSwitchCard
         icon={<ScrollText size={18} />}
         title={t.options.autoScroll}

@@ -48,9 +48,7 @@ export function UploadedAttachmentCard({
     : t.sidepanel.willBeSentToAi;
 
   return (
-    <div
-      className={`context-card attachment-card ${removing ? "is-removing" : ""}`}
-    >
+    <div className={`context-card ${removing ? "is-removing" : ""}`}>
       <AttachmentPreview attachment={attachment} />
       <ContextCardLabel
         title={attachment.name}

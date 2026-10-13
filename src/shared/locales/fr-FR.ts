@@ -1,5 +1,7 @@
+import { plural } from "../plural";
 import { smartBarFrFR } from "./smart-bar/fr-FR";
 import { syncFrFR } from "./sync/fr-FR";
+import { themesFrFR } from "./themes/fr-FR";
 import type { LocaleMessages } from "./en-US";
 
 export const frFR: LocaleMessages = {
@@ -77,7 +79,10 @@ export const frFR: LocaleMessages = {
     questionCustomPlaceholder: "Saisissez votre propre réponse…",
     questionNoAnswer: "Aucune réponse",
     forkTitleSuffix: "Branche",
-    messageCount: "{count} messages",
+    messageCount: plural({
+      one: "{count} message",
+      other: "{count} messages",
+    }),
     relativeMinutesAgo: "il y a {count} min",
     relativeHoursAgo: "il y a {count} h",
     relativeDaysAgo: "il y a {count} j",
@@ -145,7 +150,10 @@ export const frFR: LocaleMessages = {
     resendWithoutMissingFiles: "Renvoyer sans les fichiers manquants",
     resendMessage: "Renvoyer",
     forkChat: "Créer une branche de la discussion",
-    showMoreSources: "Afficher {count} sources de plus",
+    showMoreSources: plural({
+      one: "Afficher {count} source de plus",
+      other: "Afficher {count} sources de plus",
+    }),
     showFewerSources: "Afficher moins de sources",
     unavailableAttachments: "{count} indisponibles",
     allOpenTabs: "Tous les onglets ouverts",
@@ -379,15 +387,24 @@ export const frFR: LocaleMessages = {
       "Ce navigateur ne peut pas retirer l’en-tête Origin : un serveur qui refuse les requêtes des navigateurs ne fonctionnera pas ici.",
     mcpServerEnabled: "Activé",
     mcpEnableRequiresTest: "Testez ce serveur MCP avant de l’activer.",
-    mcpEnableTooltipTested: "Test réussi. {count} outils trouvés.",
+    mcpEnableTooltipTested: plural({
+      one: "Test réussi. {count} outil trouvé.",
+      other: "Test réussi. {count} outils trouvés.",
+    }),
     mcpImportJson: "Coller la configuration JSON MCP",
     mcpImportButton: "Importer le JSON MCP",
-    mcpImportSuccess: "{count} serveurs MCP importés.",
+    mcpImportSuccess: plural({
+      one: "{count} serveur MCP importé.",
+      other: "{count} serveurs MCP importés.",
+    }),
     mcpImportNone: "Aucun serveur MCP HTTP distant trouvé dans le JSON collé.",
     mcpImportError: "Échec de l’importation MCP",
     mcpTestServer: "Tester le serveur",
     mcpTesting: "Test en cours…",
-    mcpTestSuccess: "{count} outils trouvés.",
+    mcpTestSuccess: plural({
+      one: "{count} outil trouvé.",
+      other: "{count} outils trouvés.",
+    }),
     mcpTools: "Outils disponibles",
     deleteMcpServer: "Supprimer le serveur MCP",
     resetDefaults: "Réinitialiser",
@@ -488,11 +505,6 @@ export const frFR: LocaleMessages = {
     appearance: "Apparence",
     appearanceDescription:
       "Choisissez le thème clair ou sombre, ou suivez le réglage du système.",
-    greenTheme: "Vert doux",
-    blueTheme: "Bleu brume",
-    pinkTheme: "Rose poudré",
-    purpleTheme: "Lavande",
-    amberTheme: "Ambre chaud",
     systemTheme: "Système",
     lightTheme: "Clair",
     darkTheme: "Sombre",
@@ -577,4 +589,5 @@ export const frFR: LocaleMessages = {
   },
   smartBar: smartBarFrFR,
   sync: syncFrFR,
+  themes: themesFrFR,
 };

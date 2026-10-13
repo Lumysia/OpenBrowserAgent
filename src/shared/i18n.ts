@@ -1,3 +1,4 @@
+import type { Plural } from "./plural";
 import { enUS, type LocaleMessages } from "./locales/en-US";
 import { deDE } from "./locales/de-DE";
 import { esES } from "./locales/es-ES";
@@ -42,3 +43,9 @@ export function resolveLanguage(language?: string) {
 }
 
 export type Messages = LocaleMessages;
+
+// Fills `{count}` into the plural form the active language uses for it.
+export function formatCount(message: Plural, count: number) {
+  const form = new Intl.PluralRules(resolveLanguage()).select(count);
+  return (message[form] ?? message.other).replaceAll("{count}", String(count));
+}

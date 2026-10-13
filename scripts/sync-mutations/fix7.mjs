@@ -1,6 +1,5 @@
-// The seventh fix's guards against background rewrites (see
-// sync-mutation-list.mjs for the format).
-export const FIX7_MUTATIONS = [
+// The seventh fix's guards against background rewrites.
+export default [
   {
     name: "P1: the background answers an attach to a missing run with an end",
     file: "src/background/stream-sessions.ts",

@@ -12,6 +12,8 @@ import type {
 } from "../../src/shared/types";
 import { useSkillCatalog } from "../../src/ui/useSkillCatalog";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { useTheme } from "../../src/ui/theme";
+import { celebrateSend } from "./holiday-touches";
 import { requestChatTitle } from "./ai-requests";
 import { createChatDraft } from "./chat-state-actions";
 import { pruneSentAttachmentPreviews } from "./edit-message";
@@ -22,7 +24,6 @@ import {
   useAutoScroll,
   useActiveChatCleanup,
   useChatSelection,
-  useSidepanelTheme,
 } from "./sidepanel-effects";
 import {
   createSendMessagePlan,
@@ -201,7 +202,7 @@ export function SidepanelApp() {
     [currentChatStreaming],
   );
 
-  useSidepanelTheme(preferences?.accentColor, preferences?.colorScheme);
+  useTheme(document.documentElement, preferences ?? {});
   useSyncPageState();
 
   const { createChat, closeChat, selectChat, importChat, forkMessage } =
@@ -280,6 +281,7 @@ export function SidepanelApp() {
       return;
     }
     sendInFlightRef.current.add(sendChatId);
+    void celebrateSend(preferences).catch(console.warn);
     try {
       const chat = currentChat || createChat();
       const {

@@ -10,21 +10,20 @@ import { SmartBarApp } from "../../src/smart-bar/ui/smart-bar-app";
 import { createSmartBarStore } from "../../src/smart-bar/ui/store";
 import smartBarCss from "../../src/smart-bar/ui/smart-bar.css?inline";
 import baseCss from "../../src/ui/styles/base.css?inline";
-import componentsCoreCss from "../../src/ui/styles/components-core.css?inline";
-import componentsOverlaysCss from "../../src/ui/styles/components-overlays.css?inline";
-import componentsScrollAreaCss from "../../src/ui/styles/components-scroll-area.css?inline";
-import componentsTooltipCss from "../../src/ui/styles/components-tooltip.css?inline";
-import themeCss from "../../src/ui/styles/theme.css?inline";
+import componentsCss from "../../src/ui/styles/components.css?inline";
+import motionCss from "../../src/ui/styles/motion.css?inline";
+import overlaysCss from "../../src/ui/styles/overlays.css?inline";
+import tokensCss from "../../src/ui/styles/tokens.css?inline";
 
 const CSS = [
   // The page's styles stop at the host.
   ":host { all: initial !important; }",
-  themeCss.replaceAll(":root", ".smart-bar-theme"),
-  baseCss,
-  componentsCoreCss,
-  componentsOverlaysCss,
-  componentsTooltipCss,
-  componentsScrollAreaCss,
+  // The shadow root's own root element stands in for :root.
+  ...[tokensCss, motionCss, baseCss].map((css) =>
+    css.replaceAll(":root", ".smart-bar-theme"),
+  ),
+  componentsCss,
+  overlaysCss,
   smartBarCss,
 ].join("\n");
 

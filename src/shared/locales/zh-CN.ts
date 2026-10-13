@@ -1,5 +1,7 @@
+import { plural } from "../plural";
 import { smartBarZhCN } from "./smart-bar/zh-CN";
 import { syncZhCN } from "./sync/zh-CN";
+import { themesZhCN } from "./themes/zh-CN";
 import type { LocaleMessages } from "./en-US";
 
 export const zhCN: LocaleMessages = {
@@ -72,7 +74,7 @@ export const zhCN: LocaleMessages = {
     questionCustomPlaceholder: "输入你自己的回答…",
     questionNoAnswer: "未回答",
     forkTitleSuffix: "分叉",
-    messageCount: "{count} 条消息",
+    messageCount: plural({ other: "{count} 条消息" }),
     relativeMinutesAgo: "{count} 分钟前",
     relativeHoursAgo: "{count} 小时前",
     relativeDaysAgo: "{count} 天前",
@@ -137,7 +139,7 @@ export const zhCN: LocaleMessages = {
     resendWithoutMissingFiles: "不带缺失文件重发",
     resendMessage: "重发",
     forkChat: "分叉对话",
-    showMoreSources: "展开剩余 {count} 个来源",
+    showMoreSources: plural({ other: "展开剩余 {count} 个来源" }),
     showFewerSources: "收起来源",
     unavailableAttachments: "{count} 个不可用",
     allOpenTabs: "所有打开的标签页",
@@ -321,15 +323,17 @@ export const zhCN: LocaleMessages = {
       "此浏览器无法移除 Origin 请求头，拒绝浏览器请求的服务器在这里无法使用。",
     mcpServerEnabled: "已启用",
     mcpEnableRequiresTest: "请先测试此 MCP 服务器，然后才能启用。",
-    mcpEnableTooltipTested: "测试已通过，发现 {count} 个工具。",
+    mcpEnableTooltipTested: plural({
+      other: "测试已通过，发现 {count} 个工具。",
+    }),
     mcpImportJson: "粘贴 MCP JSON 配置",
     mcpImportButton: "导入 MCP JSON",
-    mcpImportSuccess: "已导入 {count} 个 MCP 服务器。",
+    mcpImportSuccess: plural({ other: "已导入 {count} 个 MCP 服务器。" }),
     mcpImportNone: "粘贴的 JSON 中没有找到远程 HTTP MCP 服务器。",
     mcpImportError: "MCP 导入失败",
     mcpTestServer: "测试服务器",
     mcpTesting: "正在测试…",
-    mcpTestSuccess: "找到 {count} 个工具。",
+    mcpTestSuccess: plural({ other: "找到 {count} 个工具。" }),
     mcpTools: "可用工具",
     deleteMcpServer: "删除 MCP 服务器",
     resetDefaults: "重置默认值",
@@ -423,11 +427,6 @@ export const zhCN: LocaleMessages = {
     colorSchemeDescription: "选择按钮、标签和高亮使用的柔和主色。",
     appearance: "外观模式",
     appearanceDescription: "选择浅色、深色，或跟随系统设置。",
-    greenTheme: "柔和绿色",
-    blueTheme: "雾蓝色",
-    pinkTheme: "淡粉色",
-    purpleTheme: "薰衣草紫",
-    amberTheme: "暖琥珀",
     systemTheme: "跟随系统",
     lightTheme: "浅色",
     darkTheme: "深色",
@@ -503,4 +502,5 @@ export const zhCN: LocaleMessages = {
   },
   smartBar: smartBarZhCN,
   sync: syncZhCN,
+  themes: themesZhCN,
 };

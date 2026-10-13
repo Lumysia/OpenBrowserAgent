@@ -1,0 +1,481 @@
+/* Settings page: shell, navigation and page headers. */
+.app-shell {
+  height: 100vh;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+  background: var(--background);
+}
+.settings-sidebar {
+  width: 256px;
+  height: 100vh;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--wash-1) 40%, transparent),
+      color-mix(in oklab, var(--wash-2) 28%, transparent) 55%,
+      color-mix(in oklab, var(--wash-3) 40%, transparent)
+    ),
+    var(--card);
+}
+.settings-sidebar > div:first-child {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+.settings-sidebar nav {
+  padding: var(--space-3);
+}
+.settings-sidebar-version {
+  margin-top: auto;
+  padding: var(--space-3);
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+/* A wash in the theme's colors behind the page. */
+.settings-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  background:
+    radial-gradient(
+      ellipse 48rem 28rem at 18% -8%,
+      color-mix(in oklab, var(--wash-1) 80%, transparent),
+      color-mix(in oklab, var(--wash-1) 30%, transparent) 42%,
+      transparent 76%
+    ),
+    radial-gradient(
+      ellipse 42rem 30rem at 100% 16%,
+      color-mix(in oklab, var(--wash-2) 70%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 52rem 26rem at 40% 108%,
+      color-mix(in oklab, var(--wash-3) 70%, transparent),
+      transparent 72%
+    ),
+    var(--background);
+}
+/* The viewport clips, so the page padding lives inside it and leaves room
+   for card shadows and focus rings. */
+.settings-main > .ui-scroll-area-viewport {
+  padding: 28px var(--space-8);
+}
+.settings-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding-bottom: 28px;
+}
+.brand {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  color: var(--foreground);
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition-interactive);
+}
+.nav-link:hover {
+  background: color-mix(in oklab, var(--accent-soft) 26%, var(--card));
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklab, var(--accent-strong) 12%, transparent);
+  color: var(--accent-text);
+  translate: 2px 0;
+}
+.nav-link.active {
+  background: var(--accent-fill);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--accent-strong) 26%, var(--border)),
+    var(--glow);
+  color: var(--accent-text);
+  translate: 0 0;
+}
+.settings-page-header {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: var(--space-4);
+}
+.settings-page-actions {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.settings-page-title,
+.settings-section-title,
+.debug-section-title {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.settings-page-title {
+  margin: 0;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+.settings-section-title,
+.debug-section-title {
+  font-weight: 600;
+  line-height: 1.25;
+}
+:is(.settings-page-title, .settings-section-title, .debug-section-title) svg {
+  flex-shrink: 0;
+}
+.settings-section-title.danger-title {
+  color: var(--destructive);
+}
+.settings-field-heading {
+  color: var(--foreground);
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.25;
+}
+.setting-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.settings-popover-content {
+  width: min(360px, calc(100vw - 24px));
+  padding: 0;
+}
+.settings-popover-menu {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+.settings-nested-accordion {
+  display: grid;
+  gap: 10px;
+}
+.settings-nested-accordion .ui-accordion-item,
+.agent-tools-accordion .ui-accordion-item {
+  box-shadow: none;
+}
+.settings-nested-accordion .ui-accordion-trigger {
+  padding: 12px 14px;
+}
+
+/* Tiles: the soft rows used across settings lists. */
+.settings-toggle-row,
+.agent-tool-row,
+.option-file-item,
+.model-row {
+  min-width: 0;
+  border: 1px solid color-mix(in oklab, var(--accent-soft) 34%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--card) 88%, var(--accent-softer));
+  transition: var(--transition-interactive);
+}
+:is(.agent-tool-row, .option-file-item, .model-row):hover {
+  border-color: color-mix(in oklab, var(--accent-strong) 22%, var(--border));
+  background: color-mix(in oklab, var(--card) 80%, var(--accent-softer));
+  box-shadow: var(--elevation-1);
+}
+.settings-toggle-list {
+  display: grid;
+  gap: var(--space-2);
+}
+.settings-toggle-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 12px;
+}
+.settings-toggle-row > div {
+  min-width: 0;
+}
+
+/* Action lists: menu rows in popovers and composer menus. */
+.action-list-item {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 12px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--foreground);
+  font-weight: 400;
+  text-align: left;
+  transition: var(--transition-interactive);
+}
+.action-list-item:hover {
+  border-color: color-mix(in oklab, var(--accent-strong) 10%, transparent);
+  background: color-mix(in oklab, var(--secondary) 78%, var(--accent-softer));
+}
+.action-list-item:active:not(.muted) {
+  scale: 0.99;
+}
+.action-list-item.active {
+  border-color: color-mix(in oklab, var(--accent-strong) 22%, var(--border));
+  background: color-mix(in oklab, var(--accent-soft) 64%, var(--card));
+  color: var(--accent-text);
+}
+.action-list-item.active:hover {
+  background: color-mix(in oklab, var(--accent-hover) 60%, var(--card));
+}
+.action-list-item.muted,
+.action-list-item.muted:not(button):hover {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted-foreground);
+}
+.action-list-item:focus-visible {
+  outline-offset: -2px;
+}
+.action-list-item span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.action-list-item strong {
+  font-weight: 600;
+}
+.action-list-item small {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  font-weight: 400;
+}
+.action-list-item strong,
+.action-list-item small,
+.action-list-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.action-list-item img {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+/* Agents. */
+.agent-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.agent-tool-row {
+  --enter-y: 10px;
+  --enter-scale: 0.985;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  animation: enter var(--duration-base) var(--ease-standard) backwards;
+}
+.agent-tool-label {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.agent-tool-label small {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  font-weight: 400;
+}
+.agent-icon-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(42px, 1fr));
+}
+.agent-icon-picker .ui-toggle-group-item {
+  min-width: 0;
+  padding: 0;
+}
+.agent-icon-picker .ui-toggle-group-item[data-state="on"] svg {
+  filter: drop-shadow(0 2px 5px var(--accent-shadow));
+}
+.agent-builtin-badge {
+  margin-left: 2px;
+  padding: 3px 7px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Summaries in accordion headers. */
+.settings-summary {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+.settings-summary-title {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-weight: 600;
+}
+.settings-summary-title svg {
+  flex-shrink: 0;
+}
+.settings-summary-name,
+.settings-summary-title > .ui-badge {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-summary-title > .ui-badge {
+  display: inline-block;
+  max-width: 18rem;
+}
+.settings-summary small {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Host lists and chips. */
+.settings-host-list {
+  display: grid;
+  gap: var(--space-2);
+}
+.settings-inline-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: var(--space-2);
+}
+.settings-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.settings-chip.ui-badge {
+  max-width: 100%;
+  gap: 2px;
+  padding: 2px 2px 2px 10px;
+}
+.settings-chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-chip-remove.ui-button-icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: var(--radius-pill);
+}
+
+/* Sync status. */
+.sync-status-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.sync-status-dot {
+  --dot: var(--accent-strong);
+  --enter-scale: 0.72;
+  --enter-y: 0;
+  --pulse-peak-scale: 0.82;
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-pill);
+  background: var(--dot);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--dot) 14%, transparent);
+  animation: enter var(--duration-slow) var(--ease-out) backwards;
+  transition: var(--transition-colors);
+}
+.sync-status-dot:is(.pending, .syncing) {
+  --dot: color-mix(in oklab, var(--muted-foreground) 72%, var(--accent-strong));
+  animation: pulse 1.4s var(--ease-in-out) infinite;
+}
+.sync-status-dot:is(.attention, .paused) {
+  --dot: var(--warning);
+}
+.sync-status-dot.error {
+  --dot: var(--destructive);
+}
+.sync-status-dot:is(.off, .idle) {
+  --dot: var(--muted-foreground);
+}
+.sync-status-summary {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: grid;
+  gap: var(--space-1);
+}
+.sync-status-error {
+  overflow-wrap: anywhere;
+}
+.sync-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .settings-sidebar {
+    width: 100%;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+  }
+  .settings-main {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+  .settings-main > .ui-scroll-area-viewport {
+    padding: 18px;
+  }
+  .settings-content .split {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .settings-page-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .settings-page-actions {
+    justify-content: flex-start;
+  }
+  .agent-tools-grid {
+    grid-template-columns: 1fr;
+  }
+}

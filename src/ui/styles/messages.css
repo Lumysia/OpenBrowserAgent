@@ -1,0 +1,401 @@
+/* The message list, the user's bubbles and attached context. */
+.messages-shell {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+.messages {
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 18px 18px 28px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overflow-anchor: none;
+}
+.messages-content {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.message {
+  --enter-y: 10px;
+  --enter-scale: 0.99;
+  position: relative;
+  min-width: 0;
+  max-width: 94%;
+  color: var(--foreground);
+  font-size: var(--text-lg);
+  line-height: 1.75;
+  animation: enter var(--duration-enter) var(--ease-out) backwards;
+}
+.message.user {
+  align-self: flex-end;
+  max-width: 78%;
+  display: grid;
+  justify-items: end;
+}
+.message.user.editing {
+  opacity: 0.58;
+}
+.message.assistant:has(.assistant-actions)
+  + .message.assistant:has(.tool-card) {
+  margin-top: -12px;
+}
+
+/* The bubble blends the theme's two bubble hues. Sending lifts it from the
+   composer with a small overshoot. */
+.user-bubble {
+  max-width: 100%;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 14%, var(--border));
+  border-radius: 13px;
+  background:
+    linear-gradient(180deg, var(--highlight), transparent 62%),
+    linear-gradient(135deg, var(--bubble), var(--bubble-2));
+  color: var(--accent-text);
+  font-weight: 500;
+  line-height: 1.45;
+  box-shadow: var(--inner-highlight), var(--glow);
+}
+.message.user.editing .user-bubble {
+  background: color-mix(
+    in oklab,
+    var(--muted-foreground) 22%,
+    var(--secondary)
+  );
+  color: var(--foreground);
+  box-shadow: none;
+}
+.message.user.latest-user .user-bubble {
+  --pop-y: 86px;
+  --pop-blur: 1.5px;
+  --pop-peak-y: -2px;
+  --pop-peak-scale: 1.01;
+  transform-origin: right bottom;
+  animation: pop var(--duration-emphasis) var(--ease-out) backwards;
+}
+
+.message-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--muted-foreground);
+  font-size: var(--text-xs);
+  opacity: 0.62;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+.message:hover .message-actions,
+.message-actions:focus-within {
+  opacity: 1;
+}
+.user-message-actions {
+  justify-content: flex-end;
+  margin-top: 5px;
+}
+.assistant-action-buttons {
+  justify-content: flex-start;
+}
+
+/* Jump to the previous/next message. */
+.message-jump-controls {
+  --enter-x: 6px;
+  --enter-y: 8px;
+  --enter-scale: 0.96;
+  --enter-blur: 1px;
+  --exit-x: 6px;
+  --exit-y: 6px;
+  --exit-scale: 0.96;
+  position: absolute;
+  top: 52%;
+  right: 12px;
+  z-index: 2;
+  display: grid;
+  gap: 18px;
+  color: var(--accent-strong);
+  transform: translateY(-50%);
+  transform-origin: right center;
+  animation: enter var(--duration-base) var(--ease-out) backwards;
+}
+.message-jump-controls.is-removing {
+  pointer-events: none;
+  animation: exit var(--duration-fast) var(--ease-standard) both;
+}
+.message-jump-button.ui-button-icon {
+  width: 28px;
+  height: 28px;
+  border-color: color-mix(in oklab, var(--accent-strong) 12%, var(--border));
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--card) 78%, transparent);
+  color: var(--accent-strong);
+  box-shadow: var(--elevation-1);
+  opacity: 0.82;
+  backdrop-filter: blur(10px);
+}
+.message-jump-button.ui-button-icon:is(:hover, :focus-visible) {
+  border-color: color-mix(in oklab, var(--accent-strong) 20%, var(--border));
+  background: color-mix(in oklab, var(--accent-softer) 64%, var(--card));
+  box-shadow: var(--elevation-2);
+  opacity: 1;
+  translate: 0 -1px;
+}
+
+/* Context chips and cards: tabs, files and elements sent or about to be. */
+.sent-context-row {
+  max-width: min(220px, 72vw);
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+  overflow-x: hidden;
+}
+.sent-context-row::-webkit-scrollbar {
+  display: none;
+}
+.sent-tabs-chip,
+.sent-tab-chip,
+.context-card,
+.queued-message {
+  --enter-x: 12px;
+  --enter-y: 0;
+  --enter-scale: 0.97;
+  --enter-blur: 1px;
+  --exit-y: 6px;
+  --exit-scale: 0.96;
+  animation: enter var(--duration-slow) var(--ease-out) backwards;
+  transition: var(--transition-interactive);
+}
+:is(.context-card, .queued-message).is-removing {
+  pointer-events: none;
+  animation: exit 200ms var(--ease-standard) both;
+}
+.sent-tabs-chip,
+.sent-tab-chip {
+  width: min(168px, 68vw);
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px;
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 10%, var(--border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--card) 82%, var(--secondary));
+  color: var(--muted-foreground);
+  text-align: left;
+  box-shadow: var(--elevation-1);
+}
+:is(.sent-tabs-chip, .sent-tab-chip, .context-card):hover {
+  border-color: color-mix(in oklab, var(--accent-strong) 18%, var(--border));
+  background: color-mix(in oklab, var(--card) 80%, var(--accent-softer));
+}
+.sent-tabs-icons {
+  position: relative;
+  width: 28px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+}
+.sent-tabs-icons :is(img, svg),
+.sent-tab-chip > svg {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-xs);
+  background: white;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px var(--shadow-contact);
+}
+.sent-tabs-icons :is(img, svg) + :is(img, svg) {
+  margin-left: -11px;
+}
+:is(.sent-tabs-chip, .sent-tab-chip) span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+:is(.sent-tabs-chip, .sent-tab-chip) :is(strong, small) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:is(.sent-tabs-chip, .sent-tab-chip) strong {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+.sent-tabs-chip strong em {
+  flex: 0 0 auto;
+  font-style: normal;
+  font-weight: 500;
+  opacity: 0.76;
+}
+.sent-tabs-chip small {
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  opacity: 0.76;
+}
+
+.context-strip {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+.context-strip > * {
+  --enter-y: 5px;
+  animation: enter var(--duration-slow) var(--ease-out) backwards;
+}
+.context-chip-row,
+.context-file-row {
+  display: flex;
+  gap: var(--space-2);
+}
+.context-chip-scroll,
+.context-file-scroll {
+  min-width: 0;
+}
+.attachment-notice {
+  padding: 2px 4px 0;
+  color: var(--destructive);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+}
+.context-card {
+  position: relative;
+  min-height: 62px;
+  flex: 0 0 min(334px, 82vw);
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 10%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--card) 88%, var(--secondary));
+  color: var(--foreground);
+  box-shadow: var(--elevation-1);
+}
+.context-card img,
+.context-card > svg {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+}
+.context-card img {
+  background: white;
+  object-fit: cover;
+}
+.context-card > svg {
+  padding: 7px;
+  background: var(--accent-softer);
+  color: var(--accent-strong);
+}
+.context-card span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.context-card :is(strong, small) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.context-card strong {
+  font-size: var(--text-md);
+  font-weight: 500;
+}
+.context-card small {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  font-weight: 400;
+}
+.context-close {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--foreground) 12%, var(--card));
+  color: var(--muted-foreground);
+  transition: var(--transition-interactive);
+}
+.context-close:hover {
+  background: color-mix(in oklab, var(--accent-hover) 68%, var(--card));
+  color: var(--accent-strong);
+  scale: 1.08;
+  rotate: 90deg;
+}
+
+/* Replacing an attachment whose file changed. */
+.attachment-replace-popover {
+  width: min(340px, calc(100vw - 24px));
+  display: grid;
+  gap: 10px;
+  padding: var(--space-3);
+}
+.attachment-replace-popover > strong {
+  color: var(--foreground);
+  font-size: var(--text-md);
+  line-height: 1.15;
+}
+.attachment-replace-popover > small {
+  margin-top: -5px;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+.attachment-replace-row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 8px 8px 9px;
+  border: 1px solid color-mix(in oklab, var(--accent-soft) 45%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--card) 82%, var(--accent-softer));
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  box-shadow: var(--inner-highlight);
+}
+.attachment-replace-row > svg {
+  width: 30px;
+  height: 30px;
+  padding: 6px;
+  border-radius: 9px;
+  background: color-mix(in oklab, var(--accent-soft) 58%, var(--card));
+  color: var(--accent-strong);
+}
+.attachment-replace-row span {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+.attachment-replace-row span :is(strong, small) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.attachment-replace-row span strong {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.attachment-replace-row span small {
+  color: var(--muted-foreground);
+  font-size: var(--text-2xs);
+  font-weight: 550;
+}
+.attachment-replace-row label {
+  height: 28px;
+  padding: 0 9px;
+  cursor: pointer;
+}
+.attachment-replace-row input {
+  display: none;
+}
+.attachment-replace-popover > .ui-button {
+  height: 34px;
+  margin-top: 1px;
+  border-radius: var(--radius);
+}

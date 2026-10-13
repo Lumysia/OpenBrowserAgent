@@ -3,6 +3,7 @@ import type { AgentIconId } from "./agent-icon-registry";
 import type { ToolGroup } from "./agents";
 import type { ReasoningEffort } from "./reasoning";
 import type { SmartBarSettings } from "./smart-bar";
+import type { ColorScheme, ThemeId } from "./theme/themes";
 
 export type ProviderId =
   | "gemini"
@@ -44,9 +45,12 @@ export type Preferences = {
   selectedImageModelId?: string;
   imageGenerationEnabled?: boolean;
   imageGenerationSize?: string;
-  colorScheme?: "system" | "light" | "dark";
-  accentColor?: "green" | "blue" | "pink" | "purple" | "amber";
+  colorScheme?: ColorScheme;
+  // A theme id (see theme/themes.ts); unknown values show the default.
+  accentColor?: ThemeId;
   autoScroll?: boolean;
+  // Seasonal details on well-known days (see holidays.ts).
+  holidayTouches?: boolean;
   autoRetry?: boolean;
   maxToolSteps?: number;
   reasoningEffort?: ReasoningEffort;

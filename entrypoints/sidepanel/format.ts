@@ -1,5 +1,5 @@
 import { RELATIVE_TIME_MINUTE_MS } from "../../src/shared/config";
-import type { Messages } from "../../src/shared/i18n";
+import { formatCount, type Messages } from "../../src/shared/i18n";
 import type { ChatMeta } from "../../src/shared/types";
 
 export function sortChatsNewestFirst<T extends ChatMeta>(chats: T[]) {
@@ -12,7 +12,7 @@ export function sortChatsNewestFirst<T extends ChatMeta>(chats: T[]) {
 }
 
 export function formatMessageCount(t: Messages, count: number) {
-  return formatToolMessage(t.sidepanel.messageCount, { count });
+  return formatCount(t.sidepanel.messageCount, count);
 }
 
 export function formatRelativeTime(t: Messages, value: number) {

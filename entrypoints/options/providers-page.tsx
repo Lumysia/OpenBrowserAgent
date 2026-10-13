@@ -136,7 +136,7 @@ export function ProvidersPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button className="ui-button-soft-accent" onClick={addProvider}>
+              <Button onClick={addProvider}>
                 <Plus size={16} /> {t.sidepanel.addProvider}
               </Button>
             </div>

@@ -1,30 +1,21 @@
-﻿.markdown p {
-  margin: 0 0 16px;
-}
+﻿/* Rendered Markdown in assistant replies. */
 .markdown {
   min-width: 0;
   max-width: 100%;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
-.markdown h1,
-.markdown h2,
-.markdown h3,
-.markdown h4,
-.markdown h5,
-.markdown h6 {
+.markdown p {
+  margin: 0 0 var(--space-4);
+}
+.markdown :is(h1, h2, h3, h4, h5, h6) {
   margin: 18px 0 10px;
   color: var(--foreground);
   font-weight: 800;
-  line-height: 1.28;
   letter-spacing: -0.02em;
+  line-height: 1.28;
 }
-.markdown h1:first-child,
-.markdown h2:first-child,
-.markdown h3:first-child,
-.markdown h4:first-child,
-.markdown h5:first-child,
-.markdown h6:first-child {
+.markdown :is(h1, h2, h3, h4, h5, h6):first-child {
   margin-top: 0;
 }
 .markdown h1 {
@@ -36,28 +27,90 @@
 .markdown h3 {
   font-size: clamp(18px, 1.18em, 22px);
 }
-.markdown h4,
-.markdown h5,
-.markdown h6 {
+.markdown :is(h4, h5, h6) {
   font-size: 1.05em;
 }
-.markdown ul,
-.markdown ol {
-  margin: 0 0 16px;
+.markdown :is(ul, ol) {
+  margin: 0 0 var(--space-4);
   padding-left: 1.35em;
 }
 .markdown li + li {
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 .markdown table {
   width: 100%;
   max-width: 100%;
   display: block;
+  margin: 12px 0 16px;
   overflow-x: auto;
   border-collapse: collapse;
-  margin: 12px 0 16px;
   font-size: 0.92em;
   line-height: 1.55;
+}
+.markdown :is(th, td) {
+  min-width: 88px;
+  padding: 7px 9px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.markdown th {
+  background: color-mix(in oklab, var(--accent-softer) 38%, transparent);
+  color: var(--foreground);
+  font-weight: 600;
+  text-align: left;
+}
+.markdown td {
+  color: var(--foreground);
+}
+.markdown :not(pre) > code {
+  max-width: 100%;
+  padding: 2px 5px;
+  border: 1px solid color-mix(in oklab, var(--accent-soft) 68%, var(--border));
+  border-radius: var(--radius-xs);
+  background: color-mix(in oklab, var(--accent-softer) 56%, var(--card));
+  color: var(--accent-text);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.markdown sup a[href^="#"] {
+  padding: 0 1px;
+  color: var(--accent-strong);
+  font-size: 0.85em;
+  text-decoration: none;
+}
+.markdown .footnotes {
+  margin-top: var(--space-1);
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: var(--text-base);
+}
+.markdown .footnotes ol {
+  margin-bottom: 0;
+}
+.markdown .footnotes p {
+  margin-bottom: 6px;
+}
+.markdown .footnotes a[href^="#"] {
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+/* Raised blocks: math, code, diagrams and images share one card look. */
+.markdown .katex-display,
+.markdown-code-block,
+.markdown-image-card {
+  border: 1px solid color-mix(in oklab, var(--accent-soft) 50%, var(--border));
+  border-radius: var(--radius);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--accent-softer) 32%, transparent),
+      transparent 58%
+    ),
+    color-mix(in oklab, var(--card) 90%, var(--accent-softer));
+  box-shadow: var(--elevation-1);
 }
 .markdown .katex {
   color: var(--foreground);
@@ -69,159 +122,84 @@
   padding: 12px 14px;
   overflow-x: auto;
   overflow-y: hidden;
-  border: 1px solid color-mix(in srgb, var(--accent-soft) 46%, var(--border));
-  border-radius: 12px;
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--accent-softer) 32%, transparent),
-      transparent 58%
-    ),
-    color-mix(in srgb, var(--card) 90%, transparent);
-  box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow) 44%, transparent);
 }
 .markdown .katex-display > .katex {
-  display: inline-block;
   min-width: max-content;
+  display: inline-block;
 }
-.markdown th,
-.markdown td {
-  min-width: 88px;
-  padding: 7px 9px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
-}
-.markdown th {
-  color: var(--foreground);
-  font-weight: 600;
-  text-align: left;
-  background: color-mix(in srgb, var(--accent-softer) 38%, transparent);
-}
-.markdown td {
-  color: color-mix(in srgb, var(--foreground) 88%, var(--muted-foreground));
-}
-.markdown :not(pre) > code {
-  max-width: 100%;
-  padding: 2px 5px;
-  border: 1px solid color-mix(in srgb, var(--accent-soft) 68%, var(--border));
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--accent-softer) 56%, var(--card));
-  color: var(--accent-strong);
-  font-size: 0.92em;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
+
 .markdown-code-block {
   position: relative;
   margin: 14px 0 18px;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--accent-soft) 54%, var(--border));
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--card) 90%, var(--accent-softer));
-  box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow) 76%, transparent);
+  background: color-mix(in oklab, var(--card) 90%, var(--accent-softer));
+}
+[data-scheme="dark"] .markdown-code-block {
+  background: color-mix(in oklab, var(--card) 70%, var(--background));
 }
 .markdown-code-header {
   min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
   padding: 7px 8px 7px 13px;
   border-bottom: 1px solid
-    color-mix(in srgb, var(--accent-soft) 54%, var(--border));
-  background: color-mix(in srgb, var(--accent-softer) 42%, var(--card));
+    color-mix(in oklab, var(--accent-soft) 54%, var(--border));
+  background: color-mix(in oklab, var(--accent-softer) 42%, var(--card));
 }
 .markdown-code-header span {
   min-width: 0;
   color: var(--muted-foreground);
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
-.mermaid-preview-panel {
-  margin: 12px;
-  padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--accent-soft) 48%, var(--border));
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--card) 90%, var(--accent-softer));
-  overflow: auto;
-}
-.mermaid-preview {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 180px;
-  padding: 12px;
-  box-sizing: border-box;
-  border-radius: 10px;
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--accent-softer) 26%, transparent),
-      transparent 58%
-    ),
-    color-mix(in srgb, var(--card) 94%, var(--background));
-  transition: transform 0.16s ease;
-}
-.mermaid-preview img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin: 0 auto;
-  border-radius: 8px;
-}
-.mermaid-preview-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
 .markdown pre {
-  overflow: auto;
   margin: 0;
   padding: 14px 15px 16px;
+  overflow: auto;
   background: transparent;
   color: var(--foreground);
-  font-size: 14px;
+  font-size: var(--text-md);
   line-height: 1.62;
 }
 .markdown pre code {
   color: inherit;
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-family: var(--font-mono);
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
-.markdown .hljs-keyword,
-.markdown .hljs-selector-tag,
-.markdown .hljs-built_in,
-.markdown .hljs-name,
-.markdown .hljs-tag {
-  color: #8b5fbf;
+.markdown
+  :is(
+    .hljs-keyword,
+    .hljs-selector-tag,
+    .hljs-built_in,
+    .hljs-name,
+    .hljs-tag
+  ) {
+  color: var(--code-keyword);
 }
-.markdown .hljs-string,
-.markdown .hljs-title,
-.markdown .hljs-section,
-.markdown .hljs-attribute,
-.markdown .hljs-literal,
-.markdown .hljs-template-tag,
-.markdown .hljs-template-variable,
-.markdown .hljs-type,
-.markdown .hljs-addition {
-  color: #8a681f;
+.markdown
+  :is(
+    .hljs-string,
+    .hljs-title,
+    .hljs-section,
+    .hljs-attribute,
+    .hljs-literal,
+    .hljs-template-tag,
+    .hljs-template-variable,
+    .hljs-type,
+    .hljs-addition
+  ) {
+  color: var(--code-string);
 }
-.markdown .hljs-number,
-.markdown .hljs-symbol,
-.markdown .hljs-bullet,
-.markdown .hljs-variable,
-.markdown .hljs-params {
-  color: #9a5a36;
+.markdown
+  :is(.hljs-number, .hljs-symbol, .hljs-bullet, .hljs-variable, .hljs-params) {
+  color: var(--code-number);
 }
-.markdown .hljs-comment,
-.markdown .hljs-quote,
-.markdown .hljs-deletion,
-.markdown .hljs-meta {
+.markdown :is(.hljs-comment, .hljs-quote, .hljs-deletion, .hljs-meta) {
   color: var(--muted-foreground);
   font-style: italic;
 }
@@ -231,6 +209,8 @@
 .markdown .hljs-strong {
   font-weight: 600;
 }
+
+/* Copy button with its own small tooltip (the code is static HTML). */
 .code-copy {
   position: relative;
   width: 28px;
@@ -239,54 +219,53 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--accent-soft) 62%, var(--border));
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--card) 82%, transparent);
+  border: 1px solid color-mix(in oklab, var(--accent-soft) 62%, var(--border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--card) 82%, transparent);
   color: var(--muted-foreground);
-  transition:
-    background-color 0.14s ease,
-    border-color 0.14s ease,
-    color 0.14s ease,
-    transform 0.14s ease;
+  transition: var(--transition-interactive);
 }
 .code-copy:hover {
-  border-color: color-mix(in srgb, var(--accent-strong) 28%, var(--border));
+  border-color: color-mix(in oklab, var(--accent-strong) 28%, var(--border));
   background: var(--accent-soft);
-  color: var(--accent-strong);
-  transform: translateY(-1px);
+  color: var(--accent-text);
+  translate: 0 -1px;
+}
+.code-copy:active {
+  translate: 0 0;
+  scale: 0.96;
 }
 .code-copy::after {
   content: attr(data-tooltip);
   position: absolute;
   right: 0;
   bottom: calc(100% + 8px);
-  z-index: 40;
+  z-index: var(--z-floating-text);
   width: max-content;
   max-width: 220px;
   padding: 7px 9px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--popover);
-  color: var(--popover-foreground);
-  box-shadow: 0 8px 24px var(--shadow);
-  font-size: 12px;
+  color: var(--foreground);
+  font-size: var(--text-sm);
   font-weight: 500;
   line-height: 1;
+  box-shadow: var(--elevation-3);
   opacity: 0;
   pointer-events: none;
-  transform: translateY(2px) scale(0.98);
+  translate: 0 2px;
+  scale: 0.98;
   transform-origin: bottom right;
   transition:
-    opacity 0.12s ease,
-    transform 0.12s ease;
+    opacity var(--duration-instant) var(--ease-standard),
+    translate var(--duration-instant) var(--ease-out),
+    scale var(--duration-instant) var(--ease-out);
 }
-.code-copy:hover::after,
-.code-copy:focus-visible::after {
+.code-copy:is(:hover, :focus-visible)::after {
   opacity: 1;
-  transform: translateY(0) scale(1);
-}
-.code-copy:active {
-  transform: scale(0.96);
+  translate: 0 0;
+  scale: 1;
 }
 .code-copy-icon {
   width: 15px;
@@ -297,92 +276,147 @@
   stroke-linejoin: round;
   stroke-width: 2;
 }
-.code-copy-check {
-  display: none;
-}
-.markdown-code-block.copied .code-copy {
-  color: var(--accent-strong);
-}
+.code-copy-check,
 .markdown-code-block.copied .code-copy-copy {
   display: none;
 }
 .markdown-code-block.copied .code-copy-check {
   display: block;
 }
-
-:root[data-theme="dark"] .markdown-code-block {
-  background: color-mix(in srgb, var(--card) 82%, #0f1115);
+.markdown-code-block.copied .code-copy {
+  color: var(--accent-strong);
 }
 
-:root[data-theme="dark"] .markdown-code-header {
-  background: color-mix(in srgb, var(--accent-softer) 44%, var(--card));
+/* Mermaid diagrams. */
+.mermaid-preview-panel {
+  margin: var(--space-3);
+  padding: var(--space-3);
+  overflow: auto;
+  border: 1px solid color-mix(in oklab, var(--accent-soft) 48%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--card) 90%, var(--accent-softer));
+}
+.mermaid-preview {
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--accent-softer) 26%, transparent),
+      transparent 58%
+    ),
+    color-mix(in oklab, var(--card) 94%, var(--background));
+  transition: var(--transition-interactive);
+}
+.mermaid-preview:hover {
+  box-shadow: var(--elevation-1);
+  translate: 0 -1px;
+}
+.mermaid-preview img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border-radius: var(--radius-sm);
+}
+.mermaid-preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: var(--space-3);
 }
 
-:root[data-theme="dark"] .markdown .hljs-keyword,
-:root[data-theme="dark"] .markdown .hljs-selector-tag,
-:root[data-theme="dark"] .markdown .hljs-built_in,
-:root[data-theme="dark"] .markdown .hljs-name,
-:root[data-theme="dark"] .markdown .hljs-tag {
-  color: #c7a8ff;
+/* Images: shown in a card, or held back until the user loads them. */
+.markdown-image-card {
+  max-width: min(100%, 520px);
+  margin: 10px 0 18px;
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+}
+.markdown-image-card img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--secondary) 70%, var(--card));
+}
+.markdown-image-card.is-broken {
+  min-height: 92px;
+  display: grid;
+  place-items: center;
+  color: var(--muted-foreground);
+}
+.markdown-image-card.is-broken::before {
+  content: attr(data-alt);
+  padding: var(--space-3);
+  font-size: var(--text-base);
+  line-height: 1.4;
+  text-align: center;
+}
+.markdown-image-card.is-broken :is(img, figcaption),
+.markdown-image-card figcaption:empty {
+  display: none;
+}
+.markdown-image-card figcaption {
+  margin-top: 7px;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  text-align: center;
+}
+.markdown-image-invalid {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+.markdown-image-blocked {
+  max-width: min(100%, 520px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 10px 0 18px;
+  padding: 8px 8px 8px 12px;
+  border: 1px dashed color-mix(in oklab, var(--accent-soft) 48%, var(--border));
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklab, var(--card) 92%, var(--accent-softer));
+}
+.markdown-image-blocked-text {
+  min-width: 0;
+  flex: 1 1 140px;
+  display: grid;
+  line-height: 1.35;
+}
+.markdown-image-blocked-alt,
+.markdown-image-blocked-host {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.markdown-image-blocked-alt {
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+.markdown-image-blocked-host {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+.markdown-image-blocked-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: var(--space-1);
+}
+.markdown .markdown-image-blocked-actions a {
+  text-decoration: none;
 }
 
-:root[data-theme="dark"] .markdown .hljs-string,
-:root[data-theme="dark"] .markdown .hljs-title,
-:root[data-theme="dark"] .markdown .hljs-section,
-:root[data-theme="dark"] .markdown .hljs-attribute,
-:root[data-theme="dark"] .markdown .hljs-literal,
-:root[data-theme="dark"] .markdown .hljs-template-tag,
-:root[data-theme="dark"] .markdown .hljs-template-variable,
-:root[data-theme="dark"] .markdown .hljs-type,
-:root[data-theme="dark"] .markdown .hljs-addition {
-  color: #e5c07b;
-}
-
-:root[data-theme="dark"] .markdown .hljs-number,
-:root[data-theme="dark"] .markdown .hljs-symbol,
-:root[data-theme="dark"] .markdown .hljs-bullet,
-:root[data-theme="dark"] .markdown .hljs-variable,
-:root[data-theme="dark"] .markdown .hljs-params {
-  color: #ef9f76;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="system"] .markdown-code-block {
-    background: color-mix(in srgb, var(--card) 82%, #0f1115);
-  }
-
-  :root[data-theme="system"] .markdown-code-header {
-    background: color-mix(in srgb, var(--accent-softer) 44%, var(--card));
-  }
-
-  :root[data-theme="system"] .markdown .hljs-keyword,
-  :root[data-theme="system"] .markdown .hljs-selector-tag,
-  :root[data-theme="system"] .markdown .hljs-built_in,
-  :root[data-theme="system"] .markdown .hljs-name,
-  :root[data-theme="system"] .markdown .hljs-tag {
-    color: #c7a8ff;
-  }
-
-  :root[data-theme="system"] .markdown .hljs-string,
-  :root[data-theme="system"] .markdown .hljs-title,
-  :root[data-theme="system"] .markdown .hljs-section,
-  :root[data-theme="system"] .markdown .hljs-attribute,
-  :root[data-theme="system"] .markdown .hljs-literal,
-  :root[data-theme="system"] .markdown .hljs-template-tag,
-  :root[data-theme="system"] .markdown .hljs-template-variable,
-  :root[data-theme="system"] .markdown .hljs-type,
-  :root[data-theme="system"] .markdown .hljs-addition {
-    color: #e5c07b;
-  }
-
-  :root[data-theme="system"] .markdown .hljs-number,
-  :root[data-theme="system"] .markdown .hljs-symbol,
-  :root[data-theme="system"] .markdown .hljs-bullet,
-  :root[data-theme="system"] .markdown .hljs-variable,
-  :root[data-theme="system"] .markdown .hljs-params {
-    color: #ef9f76;
-  }
-}
+/* A label above a message, e.g. the skill it used. */
 .message-label {
   max-width: min(240px, 100%);
   display: inline-flex;
@@ -390,24 +424,20 @@
   gap: 5px;
   margin-bottom: 7px;
   padding: 4px 8px;
-  border: 1px solid color-mix(in srgb, var(--accent-strong) 20%, var(--border));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent-soft) 72%, var(--card));
-  color: var(--accent-strong);
-  font-size: 12px;
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 20%, var(--border));
+  border-radius: var(--radius-pill);
+  background: var(--accent-fill);
+  color: var(--accent-text);
+  font-size: var(--text-sm);
   font-weight: 600;
   line-height: 1.2;
-  box-shadow: 0 4px 12px
-    color-mix(in srgb, var(--accent-shadow) 18%, transparent);
-  animation: fade-in 0.2s ease backwards;
-  transition:
-    background-color 0.16s ease,
-    border-color 0.16s ease,
-    transform 0.16s ease;
+  box-shadow: var(--glow);
+  animation: enter var(--duration-base) var(--ease-standard) backwards;
+  transition: var(--transition-interactive);
 }
 .message-label:hover {
-  border-color: color-mix(in srgb, var(--accent-strong) 28%, var(--border));
-  background: color-mix(in srgb, var(--accent-hover) 66%, var(--card));
+  border-color: color-mix(in oklab, var(--accent-strong) 28%, var(--border));
+  background: color-mix(in oklab, var(--accent-hover) 66%, var(--card));
 }
 .message-label svg {
   flex: 0 0 auto;
@@ -417,27 +447,4 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.markdown sup a[href^="#"] {
-  padding: 0 1px;
-  color: var(--accent-strong);
-  font-size: 0.85em;
-  text-decoration: none;
-}
-.markdown .footnotes {
-  margin-top: 4px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-  color: var(--muted-foreground);
-  font-size: 13px;
-}
-.markdown .footnotes ol {
-  margin-bottom: 0;
-}
-.markdown .footnotes p {
-  margin-bottom: 6px;
-}
-.markdown .footnotes a[href^="#"] {
-  color: var(--accent-strong);
-  text-decoration: none;
 }

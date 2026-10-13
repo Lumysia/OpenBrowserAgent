@@ -28,6 +28,7 @@ import { ProvidersEmptyState } from "./providers-empty-state";
 import { QueuedMessages } from "./queued-messages";
 import { SidepanelHeader } from "./sidepanel-header";
 import { TypingIndicator } from "./typing-indicator";
+import { HolidayBurst } from "./holiday-touches";
 import type { AddMenuView, ComposerMenu } from "./sidepanel-menu-state";
 import { addSkill } from "./skill-context";
 import type {
@@ -296,6 +297,7 @@ export function SidepanelView({
             inputRef={fileInputRef}
             onAttachFiles={onAttachFiles}
           />
+          <HolidayBurst />
           <div className="skill-create-row">
             {typingPresence.mounted && (
               <TypingIndicator t={t} removing={typingPresence.removing} />

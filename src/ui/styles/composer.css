@@ -1,0 +1,462 @@
+/* The composer bar, its menus, the queue, the empty state and setup. */
+.composer {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--z-composer);
+  display: grid;
+  gap: 10px;
+  padding: 10px 10px 12px;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--background) 76%, transparent),
+    var(--panel) 34%
+  );
+}
+.composer-box {
+  position: relative;
+  display: grid;
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 14%, var(--border));
+  border-radius: 13px;
+  background: var(--field);
+  box-shadow: var(--elevation-2);
+  transition: var(--transition-colors);
+}
+.composer-box:focus-within {
+  border-color: var(--ring);
+  box-shadow:
+    0 0 0 3px var(--accent-shadow),
+    var(--elevation-2);
+}
+.composer textarea {
+  min-height: 104px;
+  max-height: 180px;
+  padding-top: 18px;
+  overflow-y: auto;
+  border: 0;
+  border-radius: 13px 13px 0 0;
+  background: transparent;
+  box-shadow: none;
+  resize: none;
+}
+.composer textarea:focus {
+  box-shadow: none;
+}
+.composer textarea:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+.composer-controls {
+  position: relative;
+  min-width: 0;
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px 10px 16px;
+}
+.composer-left {
+  position: relative;
+}
+/* Shared by the composer's small controls: they lift, tilt and press. */
+.composer-icon-button,
+.composer-trigger,
+.send-button {
+  transition: var(--transition-interactive);
+}
+:is(.composer-icon-button, .composer-trigger, .send-button):disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+.composer-icon-button {
+  width: 40px;
+  height: 40px;
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 14%, var(--border));
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--field) 82%, transparent);
+  color: var(--accent-text);
+  box-shadow: var(--inner-highlight);
+}
+.composer-icon-button:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--accent-softer) 54%, var(--field));
+  translate: 0 -1px;
+  rotate: 4deg;
+}
+.composer-icon-button:active:not(:disabled) {
+  scale: 0.96;
+  rotate: 0deg;
+}
+.composer-selectors {
+  min-width: 0;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  justify-self: end;
+  color: var(--accent-text);
+}
+.selector-anchor {
+  position: relative;
+  min-width: 0;
+  display: inline-flex;
+}
+.model-anchor {
+  max-width: 148px;
+  flex: 1 1 auto;
+}
+.agent-anchor {
+  position: static;
+  flex: 0 0 auto;
+}
+.reasoning-anchor {
+  flex: 0 0 auto;
+}
+.composer-trigger {
+  min-width: 0;
+  max-width: 148px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 8px;
+  border-color: transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1;
+}
+.composer-trigger:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--accent-softer) 58%, transparent);
+}
+.composer-trigger:active:not(:disabled) {
+  scale: 0.97;
+}
+.composer-model-trigger {
+  width: 100%;
+  overflow: hidden;
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.composer-agent-trigger {
+  width: 44px;
+  flex: 0 0 auto;
+  padding: 0;
+}
+.composer-reasoning-trigger {
+  width: 34px;
+  flex: 0 0 auto;
+  padding: 0;
+}
+.send-button {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 20%, var(--border));
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, var(--highlight), transparent 58%),
+    linear-gradient(135deg, var(--bubble), var(--bubble-2));
+  color: var(--accent-text);
+  box-shadow: var(--inner-highlight), var(--glow);
+}
+.send-button:hover:not(:disabled) {
+  filter: saturate(1.08) brightness(1.02);
+  box-shadow: var(--inner-highlight), var(--glow-strong);
+  translate: 0 -1px;
+}
+.send-button:active:not(:disabled) {
+  translate: 0 0;
+  scale: 0.97;
+}
+.stop-button {
+  background: var(--secondary);
+  color: var(--foreground);
+  box-shadow: none;
+}
+
+/* The floating new chat button and the typing indicator share a row above
+   the composer. */
+.skill-create-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: -34px;
+  margin-bottom: var(--space-2);
+  pointer-events: none;
+}
+.skill-create-row .typing-indicator {
+  min-width: 0;
+}
+.skill-create {
+  height: 42px;
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 0 var(--space-4);
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 18%, transparent);
+  border-radius: var(--radius-pill);
+  background:
+    linear-gradient(180deg, var(--highlight), transparent 60%),
+    var(--accent-fill);
+  color: var(--accent-text);
+  font-size: var(--text-lg);
+  box-shadow: var(--inner-highlight), var(--elevation-1);
+  pointer-events: auto;
+}
+.skill-create:hover:not(:disabled) {
+  background:
+    linear-gradient(180deg, var(--highlight), transparent 60%),
+    color-mix(in oklab, var(--accent-hover) 78%, var(--card));
+  translate: 0 -1px;
+}
+
+/* Messages waiting for the current run. */
+.queued-messages {
+  --enter-y: 5px;
+  display: grid;
+  gap: var(--space-2);
+  padding: 10px;
+  border: 1px solid color-mix(in oklab, var(--accent-soft) 58%, var(--border));
+  border-radius: 13px;
+  background: color-mix(in oklab, var(--accent-softer) 42%, var(--card));
+  animation: enter var(--duration-slow) var(--ease-out) backwards;
+}
+.queued-messages-header {
+  display: grid;
+  gap: 2px;
+}
+.queued-messages-header strong {
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+.queued-messages-header small {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+.queued-message {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 8px 8px 10px;
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--card) 78%, var(--accent-softer));
+}
+.queued-message:hover {
+  background: color-mix(in oklab, var(--card) 70%, var(--accent-soft));
+}
+.queued-message-text {
+  min-width: 0;
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: var(--text-base);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.queued-message-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.queued-message-actions .ui-button-icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* Composer popovers and menus. */
+:is(
+  .add-context-popover-content,
+  .model-popover-content,
+  .reasoning-popover-content,
+  .agent-popover-content
+) {
+  max-width: calc(100vw - 24px);
+  overflow: hidden;
+  padding: 0;
+}
+.reasoning-popover-content {
+  width: min(260px, calc(100vw - 24px));
+}
+.reasoning-effort-menu {
+  width: 100%;
+}
+.reasoning-effort-icon {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-strong);
+}
+.reasoning-effort-bars {
+  position: absolute;
+  right: 0;
+  bottom: 1px;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 1px;
+}
+.reasoning-effort-bars span {
+  width: 2px;
+  height: calc(2px + 2px * var(--bar, 1));
+  border-radius: var(--radius-pill);
+  background: var(--accent-strong);
+  opacity: 0.24;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+.reasoning-effort-bars span:nth-child(2) {
+  --bar: 2;
+}
+.reasoning-effort-bars span:nth-child(3) {
+  --bar: 3;
+}
+.reasoning-effort-icon[data-effort="low"] span:nth-child(1),
+.reasoning-effort-icon[data-effort="medium"] span:nth-child(-n + 2),
+.reasoning-effort-icon[data-effort="high"] span {
+  opacity: 0.95;
+}
+/* The add context popover slides between its menu and its lists. */
+.add-context-panel-shell {
+  position: relative;
+  width: min(440px, calc(100vw - 24px));
+  max-width: 100%;
+  overflow: hidden;
+  transition: width var(--duration-fast) var(--ease-standard);
+}
+.add-context-panel-shell[data-view="menu"],
+.add-context-menu-compact {
+  width: max-content;
+  min-width: 180px;
+  max-width: min(240px, calc(100vw - 24px));
+}
+.add-context-panel {
+  min-width: 0;
+}
+.add-context-panel.is-entering {
+  --enter-x: 10px;
+  --enter-y: 0;
+  --enter-scale: 0.985;
+  --enter-blur: 1px;
+  animation: enter var(--duration-base) var(--ease-out) backwards;
+}
+.add-context-panel.is-leaving {
+  --exit-x: -8px;
+  --exit-y: 0;
+  --exit-scale: 0.985;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: exit var(--duration-fast) var(--ease-standard) both;
+}
+.add-context-menu {
+  width: min(440px, calc(100vw - 24px));
+  max-width: 100%;
+  max-height: 232px;
+  display: grid;
+  gap: 6px;
+  padding: var(--space-2);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.add-context-menu > div {
+  min-width: 0;
+}
+.add-context-menu-compact {
+  max-height: none;
+}
+.add-context-menu .action-list-item,
+.add-context-menu .action-list-item strong {
+  font-size: var(--text-md);
+}
+.add-context-menu .action-list-item strong,
+.add-context-menu .action-list-item.muted > span {
+  font-weight: 600;
+}
+.add-context-menu .action-list-item:is(:disabled, [aria-disabled="true"]) {
+  color: var(--muted-foreground);
+  opacity: 0.7;
+}
+.model-menu,
+.agent-menu {
+  width: min(222px, calc(100vw - 24px));
+  padding: 6px;
+}
+.model-menu {
+  max-width: 100%;
+  max-height: 240px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.model-menu-item,
+.agent-menu-item {
+  min-height: 50px;
+  gap: 9px;
+  padding: 9px 10px;
+}
+.model-menu-item > span:not(.model-provider-mark),
+.agent-menu-item > span {
+  flex: 1 1 auto;
+}
+:is(.model-menu-item, .agent-menu-item) strong {
+  font-size: var(--text-md);
+  font-weight: 500;
+}
+:is(.model-menu-item, .agent-menu-item) small {
+  font-size: var(--text-xs);
+}
+.agent-menu-item small {
+  display: -webkit-box;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.model-provider-mark {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: var(--secondary);
+  color: var(--foreground);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+}
+.menu-check {
+  --pop-opacity: 1;
+  --pop-scale: 0.6;
+  --pop-peak-scale: 1.15;
+  flex-shrink: 0;
+  color: var(--accent-strong);
+  animation: pop var(--duration-slow) var(--ease-out) backwards;
+}
+.composer-menu-empty {
+  padding: 14px;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .composer-controls {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    gap: var(--space-2);
+    padding-right: 10px;
+    padding-left: var(--space-3);
+  }
+  .composer-selectors {
+    gap: var(--space-2);
+  }
+  .agent-menu {
+    width: auto;
+  }
+}

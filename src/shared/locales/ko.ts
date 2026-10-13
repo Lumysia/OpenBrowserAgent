@@ -1,5 +1,7 @@
+import { plural } from "../plural";
 import { smartBarKo } from "./smart-bar/ko";
 import { syncKo } from "./sync/ko";
+import { themesKo } from "./themes/ko";
 import type { LocaleMessages } from "./en-US";
 
 export const ko: LocaleMessages = {
@@ -76,7 +78,7 @@ export const ko: LocaleMessages = {
     questionCustomPlaceholder: "직접 답변 입력…",
     questionNoAnswer: "답변 없음",
     forkTitleSuffix: "분기",
-    messageCount: "{count}개 메시지",
+    messageCount: plural({ other: "{count}개 메시지" }),
     relativeMinutesAgo: "{count}분 전",
     relativeHoursAgo: "{count}시간 전",
     relativeDaysAgo: "{count}일 전",
@@ -142,7 +144,7 @@ export const ko: LocaleMessages = {
     resendWithoutMissingFiles: "누락된 파일 없이 다시 보내기",
     resendMessage: "다시 보내기",
     forkChat: "채팅 분기",
-    showMoreSources: "출처 {count}개 더 보기",
+    showMoreSources: plural({ other: "출처 {count}개 더 보기" }),
     showFewerSources: "출처 접기",
     unavailableAttachments: "{count}개 사용 불가",
     allOpenTabs: "열린 모든 탭",
@@ -342,15 +344,17 @@ export const ko: LocaleMessages = {
       "이 브라우저에서는 Origin 헤더를 제거할 수 없어, 브라우저 요청을 거부하는 서버는 여기서 사용할 수 없습니다.",
     mcpServerEnabled: "활성화",
     mcpEnableRequiresTest: "사용하기 전에 이 MCP 서버를 먼저 테스트하세요.",
-    mcpEnableTooltipTested: "테스트를 통과했고 도구 {count}개를 찾았습니다.",
+    mcpEnableTooltipTested: plural({
+      other: "테스트를 통과했고 도구 {count}개를 찾았습니다.",
+    }),
     mcpImportJson: "MCP JSON 구성 붙여넣기",
     mcpImportButton: "MCP JSON 가져오기",
-    mcpImportSuccess: "MCP 서버 {count}개를 가져왔습니다.",
+    mcpImportSuccess: plural({ other: "MCP 서버 {count}개를 가져왔습니다." }),
     mcpImportNone: "붙여넣은 JSON에서 원격 HTTP MCP 서버를 찾지 못했습니다.",
     mcpImportError: "MCP 가져오기 실패",
     mcpTestServer: "서버 테스트",
     mcpTesting: "테스트 중…",
-    mcpTestSuccess: "도구 {count}개를 찾았습니다.",
+    mcpTestSuccess: plural({ other: "도구 {count}개를 찾았습니다." }),
     mcpTools: "사용 가능한 도구",
     deleteMcpServer: "MCP 서버 삭제",
     resetDefaults: "기본값 재설정",
@@ -449,11 +453,6 @@ export const ko: LocaleMessages = {
     appearance: "모양",
     appearanceDescription:
       "라이트, 다크 또는 시스템 설정 따르기 중에서 선택하세요.",
-    greenTheme: "소프트 그린",
-    blueTheme: "미스트 블루",
-    pinkTheme: "블러시 핑크",
-    purpleTheme: "라벤더",
-    amberTheme: "웜 앰버",
     systemTheme: "시스템",
     lightTheme: "라이트",
     darkTheme: "다크",
@@ -535,4 +534,5 @@ export const ko: LocaleMessages = {
   },
   smartBar: smartBarKo,
   sync: syncKo,
+  themes: themesKo,
 };

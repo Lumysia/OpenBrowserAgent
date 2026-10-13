@@ -1,4 +1,8 @@
 // Breaks each sync safety guard on purpose and checks that a test fails.
+// The guards live in scripts/sync-mutations/*.mjs, one default-exported list
+// per file: each replaces `from` with `to` in `file` (and every `also`
+// pair), and some test must then fail. `needsServer`: only the two-device
+// WebDAV script notices it.
 //
 //   node scripts/sync-mutations.mjs [<davUrlA> <davUrlB>]
 //
@@ -7,7 +11,16 @@
 // undone with `git checkout`.
 import { execFileSync, spawnSync } from "node:child_process";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { MUTATIONS } from "./sync-mutation-list.mjs";
+
+const MUTATION_DIR = new URL("./sync-mutations/", import.meta.url);
+const MUTATIONS = (
+  await Promise.all(
+    readdirSync(MUTATION_DIR)
+      .filter((name) => name.endsWith(".mjs"))
+      .sort()
+      .map(async (name) => (await import(new URL(name, MUTATION_DIR))).default),
+  )
+).flat();
 
 const [davA, davB] = process.argv.slice(2);
 const dirty = execFileSync("git", ["status", "--porcelain"], {

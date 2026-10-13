@@ -1,7 +1,6 @@
 // The eighth fix's guards: list items filled in on read, the read form as
-// a chat save's base, and default workspaces (see sync-mutation-list.mjs
-// for the format).
-export const FIX8_MUTATIONS = [
+// a chat save's base, and default workspaces.
+export default [
   {
     name: "B1: list items filled in on read are stored with a change",
     file: "src/shared/stored-form.ts",

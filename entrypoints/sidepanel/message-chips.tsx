@@ -12,7 +12,7 @@ import {
   SENT_ATTACHMENTS_PREVIEW_COUNT,
   SENT_TABS_PREVIEW_COUNT,
 } from "../../src/shared/config";
-import type { Messages } from "../../src/shared/i18n";
+import { formatCount, type Messages } from "../../src/shared/i18n";
 import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
 import type {
   AttachmentTab,
@@ -67,10 +67,7 @@ export function SourceChips({
         >
           {expanded
             ? t.sidepanel.showFewerSources
-            : t.sidepanel.showMoreSources.replace(
-                "{count}",
-                String(hiddenCount),
-              )}
+            : formatCount(t.sidepanel.showMoreSources, hiddenCount)}
         </Button>
       )}
     </div>

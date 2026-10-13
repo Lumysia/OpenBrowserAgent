@@ -1,5 +1,5 @@
-// The sixth review's guards (see sync-mutation-list.mjs for the format).
-export const REVIEW6_MUTATIONS = [
+// The sixth review's guards.
+export default [
   {
     name: "L1: a push is recorded only once its root write answers",
     file: "src/shared/sync/engine.ts",
