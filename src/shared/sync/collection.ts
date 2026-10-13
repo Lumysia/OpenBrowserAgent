@@ -25,6 +25,22 @@ export type Commit = (
   written: Set<string>,
 ) => Promise<void>;
 
+// Runs a write's checks and its commit as one step, inside the collection's
+// item locks. The engine's step holds the clock lock, so the clocks its
+// checks compare are the ones its commit stores the data with.
+export type WriteStep = <T>(run: () => Promise<T>) => Promise<T>;
+
+export type Verify = (
+  id: string,
+  current: LocalEntry | undefined,
+) => Promise<boolean>;
+
+export type WriteHooks = {
+  verify: Verify;
+  commit?: Commit;
+  step?: WriteStep;
+};
+
 // The entries one stored key holds. `complete`: a record missing from it is
 // gone (a key that holds one chat's content is not).
 export type KeyEntries = {
@@ -60,8 +76,7 @@ export type Collection = {
   write(
     env: SyncEnv,
     changes: Change[],
-    verify: (id: string, current: LocalEntry | undefined) => Promise<boolean>,
-    commit?: Commit,
+    hooks: WriteHooks,
   ): Promise<Set<string>>;
   // An entry that must not upload yet (a reply still streaming).
   hold?(entry: LocalEntry): boolean;
@@ -77,11 +92,14 @@ export type Collection = {
   finalizeData?(data: unknown, body: unknown): unknown;
 };
 
-// Without an engine commit, a write is a plain storage write.
-export const plainCommit =
-  (env: SyncEnv): Commit =>
-  (items) =>
-    env.local.set(items);
+// Without engine hooks, a write is a plain storage write.
+export function writeHooks(env: SyncEnv, hooks: WriteHooks) {
+  return {
+    verify: hooks.verify,
+    commit: hooks.commit ?? ((items) => env.local.set(items)),
+    step: hooks.step ?? ((run) => run()),
+  } satisfies Required<WriteHooks>;
+}
 
 export const ORDER_ID = "~order";
 
@@ -150,7 +168,7 @@ export function orderItems<T>(
 export async function applyVerified(
   current: Map<string, LocalEntry>,
   changes: Change[],
-  verify: (id: string, current: LocalEntry | undefined) => Promise<boolean>,
+  verify: Verify,
 ) {
   const written = new Set<string>();
   for (const { id, entry } of changes) {

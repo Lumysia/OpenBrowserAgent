@@ -1,4 +1,5 @@
 import { CLOCK_LOCK } from "../locks";
+import { STORAGE_KEYS } from "../storage-keys";
 import { sameJson } from "./codec";
 import {
   changedEntry,
@@ -100,4 +101,48 @@ export async function recordLocalChanges(
     });
   }
   return recorded;
+}
+
+// How long a round waits for the edit listener before storing remote
+// changes anyway (the listener is not running: a page's environment).
+const SETTLE_TIMEOUT_MS = 5_000;
+const MARKER = STORAGE_KEYS.syncEditMarker;
+
+// The background's edit listener. Change events arrive after the write
+// resolves, so a round could read an edit before the edit has a clock and
+// store a remote value over it. Events are recorded in arrival order, and
+// `settle` writes a marker and waits until the listener has passed it: every
+// edit made before then has its clock, which the round's commit checks.
+export function createEditListener(
+  env: SyncEnv,
+  device: () => Promise<string>,
+) {
+  let chain: Promise<unknown> = Promise.resolve();
+  const waiting = new Map<string, () => void>();
+  function onChanged(changes: StorageChanges) {
+    const job = chain.then(async () =>
+      recordLocalChanges(env, await device(), changes),
+    );
+    chain = job.catch(() => undefined);
+    const marker = changes[MARKER]?.newValue;
+    if (typeof marker === "string")
+      void chain.then(() => waiting.get(marker)?.());
+    return job;
+  }
+  async function settle() {
+    const marker = crypto.randomUUID();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const passed = new Promise<void>((resolve) => {
+      waiting.set(marker, resolve);
+      timer = setTimeout(resolve, SETTLE_TIMEOUT_MS);
+    });
+    try {
+      await env.local.set({ [MARKER]: marker });
+      await passed;
+    } finally {
+      clearTimeout(timer);
+      waiting.delete(marker);
+    }
+  }
+  return { onChanged, settle };
 }

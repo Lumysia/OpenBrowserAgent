@@ -19,6 +19,8 @@ export const STORAGE_KEYS = {
   // One per synced collection: `sync-clocks:<collection>`.
   syncClocks: "sync-clocks",
   syncHlc: "sync-hlc",
+  // Written by a round to wait for the edit listener (see sync/track.ts).
+  syncEditMarker: "sync-edit-marker",
   // Browser sync parts no record refers to, by when this device saw them.
   syncPartsSeen: "sync-parts-seen",
   // storage.session: extension pages and whether they are visible.

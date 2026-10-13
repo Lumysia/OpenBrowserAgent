@@ -1,5 +1,5 @@
 import { CLOCK_LOCK } from "../locks";
-import { hashJson, jsonBytes, sha256Hex } from "./codec";
+import { hashJson, jsonBytes, sameJson, sha256Hex } from "./codec";
 import {
   changedEntry,
   clocksKey,
@@ -14,7 +14,7 @@ import {
 import type { Collection, LocalEntry } from "./collection";
 import { recordIdOf } from "./collections";
 import type { SyncEnv } from "./env";
-import { tickClock } from "./hlc";
+import { tickClock, type HlcState } from "./hlc";
 import type { SyncRecord } from "./root";
 
 // The local side of a round: what local data holds now (with changes the
@@ -123,11 +123,16 @@ export type LocalWrite = {
 };
 
 // Write remote (or merged) records into local data with their clock
-// entries, in one storage call. A record whose local copy changed since the
-// snapshot is skipped and compared again next round. Returns the record ids
-// written; the snapshot follows them.
+// entries, in one storage call. Under the clock lock, a record is written
+// only while its clock entry is still the one the snapshot holds (a change
+// recorded since, even a first one, wins) and its copy is still the one the
+// round compared. A copy that differs from its unchanged clock entry is a
+// change no edit event recorded (a chat body saved as the background
+// stopped): it is recorded now. Skipped records are compared again next
+// round. Returns the record ids written; the snapshot follows them.
 export async function applyToLocal(
   env: SyncEnv,
+  device: string,
   collection: Collection,
   writes: LocalWrite[],
   snapshot: Snapshot,
@@ -138,6 +143,22 @@ export async function applyToLocal(
       write,
     ]),
   );
+  let clocks: Clocks = {};
+  const missed = new Map<string, Projection | null>();
+  let hlc: HlcState | undefined;
+  const recordMissed = async (id: string, copy: Projection | null) => {
+    hlc ??= await loadHlc(env.local);
+    const [clock, next] = tickClock(hlc, device, env.now());
+    hlc = next;
+    clocks[id] = await changedEntry(id, copy, clocks[id], clock);
+    missed.set(id, copy);
+  };
+  const stored = (items: Record<string, unknown> = {}) => ({
+    ...items,
+    [clocksKey(collection.name)]: clocks,
+    ...(hlc ? saveHlc(hlc) : {}),
+  });
+  let committed = false;
   const written = await collection.write(
     env,
     [...byId].map(([id, write]) => ({
@@ -146,41 +167,46 @@ export async function applyToLocal(
         ? null
         : { data: write.record.data, body: write.body },
     })),
-    async (id, current) => {
-      const recordId = recordIdOf(collection, id);
-      const expected = snapshot.copies.get(recordId) ?? null;
-      if (!current) return !expected;
-      if (!expected) return false;
-      const now = await project(
-        collection,
-        current,
-        snapshot.clocks.get(recordId),
-      );
-      if (
-        now.blob !== expected.blob ||
-        (await hashJson(now.data)) !== (await hashJson(expected.data))
-      )
-        return false;
-      // Content stored here meanwhile (a chat opened) that is not the new
-      // version: the record is written with its content next round.
-      const write = byId.get(id)!;
-      return !(
-        write.body === undefined &&
-        !write.record.deleted &&
-        current.body !== undefined &&
-        now.blob !== write.record.blob
-      );
-    },
-    (items, ids) =>
-      env.lock(CLOCK_LOCK, async () => {
-        const clocks: Clocks = await loadClocks(env.local, collection.name);
+    {
+      step: (run) =>
+        env.lock(CLOCK_LOCK, async () => {
+          clocks = await loadClocks(env.local, collection.name);
+          const result = await run();
+          if (missed.size && !committed) await env.local.set(stored());
+          return result;
+        }),
+      async verify(id, current) {
+        const recordId = recordIdOf(collection, id);
+        const known = snapshot.clocks.get(recordId);
+        if (!sameJson(clocks[id], known)) return false;
+        const expected = snapshot.copies.get(recordId) ?? null;
+        const now = current ? await project(collection, current, known) : null;
+        if (!(await sameCopy(now, expected))) {
+          if (known && (await differs(now, known))) await recordMissed(id, now);
+          return false;
+        }
+        // Content stored here meanwhile (a chat opened) that is not the new
+        // version: the record is written with its content next round.
+        const write = byId.get(id)!;
+        return !(
+          write.body === undefined &&
+          !write.record.deleted &&
+          current?.body !== undefined &&
+          now?.blob !== write.record.blob
+        );
+      },
+      async commit(items, ids) {
         for (const id of ids) clocks[id] = byId.get(id)!.entry;
-        await env.local.set({
-          ...items,
-          [clocksKey(collection.name)]: clocks,
-        });
-      }),
+        committed = true;
+        await env.local.set(stored(items));
+      },
+    },
   );
+  for (const [id, copy] of missed) {
+    const recordId = recordIdOf(collection, id);
+    snapshot.clocks.set(recordId, clocks[id]);
+    snapshot.copies.set(recordId, copy);
+  }
   const result = new Set<string>();
   for (const id of written) {
     const write = byId.get(id)!;
@@ -198,4 +224,12 @@ export async function applyToLocal(
     );
   }
   return result;
+}
+
+async function sameCopy(left: Projection | null, right: Projection | null) {
+  if (!left || !right) return left === right;
+  return (
+    left.blob === right.blob &&
+    (await hashJson(left.data)) === (await hashJson(right.data))
+  );
 }

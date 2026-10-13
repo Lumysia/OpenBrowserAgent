@@ -31,6 +31,9 @@ export type SyncEnv = {
   lock<T>(name: string, run: () => Promise<T>): Promise<T>;
   // Removes what belongs to deleted chats outside storage (tool outputs).
   removeChatArtifacts?(chatIds: string[]): Promise<void>;
+  // Resolves once the edit listener recorded every storage change made
+  // before the call (see track.ts).
+  settleEdits?(): Promise<void>;
 };
 
 export async function readKey<T>(area: StorageArea, key: string) {

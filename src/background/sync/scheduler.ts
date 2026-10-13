@@ -14,7 +14,7 @@ import {
   updateSyncStatus,
 } from "../../shared/sync/state";
 import {
-  recordLocalChanges,
+  createEditListener,
   type StorageChanges,
 } from "../../shared/sync/track";
 import {
@@ -61,6 +61,8 @@ type PageStates = Record<string, { visible: boolean; at: number }>;
 export function setupSync() {
   const api = getBrowserApi();
   const env = browserSyncEnv();
+  const edits = createEditListener(env, () => syncDeviceId(env));
+  env.settleEdits = edits.settle;
   const runner = createSyncRunner(env, (until) =>
     api.alarms?.create(ALARMS.resume, { when: until }),
   );
@@ -89,11 +91,7 @@ export function setupSync() {
   // Local edits get their clocks (with sync off too, so turning it on
   // later knows what changed when); a round follows.
   async function recordEdits(changes: StorageChanges) {
-    const recorded = await recordLocalChanges(
-      env,
-      await syncDeviceId(env),
-      changes,
-    );
+    const recorded = await edits.onChanged(changes);
     if (!recorded) return;
     const context = await syncContext(env);
     if (!context) return;

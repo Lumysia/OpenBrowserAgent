@@ -196,8 +196,11 @@ export async function reconcile(
     }
   }
 
+  // Edits made before this point have their clocks before anything is
+  // stored over them.
+  if (writes.size) await env.settleEdits?.();
   for (const [collection, list] of writes) {
-    const written = await applyToLocal(env, collection, list, snapshot);
+    const written = await applyToLocal(env, device, collection, list, snapshot);
     for (const write of list)
       if (merged.has(write.recordId) && written.has(write.recordId))
         outcome.pushes.set(write.recordId, write.record);

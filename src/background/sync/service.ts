@@ -316,13 +316,16 @@ async function storeContent(
   const written = await collection.write(
     env,
     [{ id, entry: { data: current.data, body } }],
-    async (_id, now) => {
-      if (!now || now.body !== undefined) return false;
-      if ((await loadClocks(env.local, collection.name))[id]?.blob !== blob) {
-        movedOn = true;
-        return false;
-      }
-      return (await hashJson(now.data)) === dataHash;
+    {
+      step: (run) => env.lock(CLOCK_LOCK, run),
+      async verify(_id, now) {
+        if (!now || now.body !== undefined) return false;
+        if ((await loadClocks(env.local, collection.name))[id]?.blob !== blob) {
+          movedOn = true;
+          return false;
+        }
+        return (await hashJson(now.data)) === dataHash;
+      },
     },
   );
   if (movedOn) return undefined;

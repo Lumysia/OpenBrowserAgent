@@ -10,7 +10,7 @@ import {
   listEntries,
   orderItems,
   ORDER_ID,
-  plainCommit,
+  writeHooks,
   type Change,
   type Collection,
   type CollectionGate,
@@ -63,15 +63,18 @@ function storedCollection({
       return toEntries(await readKey(env.local, key));
     },
     entriesOf: (_key, value) => ({ entries: toEntries(value), complete: true }),
-    write(env: SyncEnv, changes: Change[], verify, commit = plainCommit(env)) {
-      return env.lock(storageLockName(key), async () => {
-        const previous = await readKey(env.local, key);
-        const entries = toEntries(previous);
-        const written = await applyVerified(entries, changes, verify);
-        if (written.size)
-          await commit({ [key]: fromEntries(entries, previous) }, written);
-        return written;
-      });
+    write(env: SyncEnv, changes: Change[], hooks) {
+      const { verify, commit, step } = writeHooks(env, hooks);
+      return env.lock(storageLockName(key), () =>
+        step(async () => {
+          const previous = await readKey(env.local, key);
+          const entries = toEntries(previous);
+          const written = await applyVerified(entries, changes, verify);
+          if (written.size)
+            await commit({ [key]: fromEntries(entries, previous) }, written);
+          return written;
+        }),
+      );
     },
   };
 }

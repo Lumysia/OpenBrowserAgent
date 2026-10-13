@@ -14,7 +14,7 @@ import type {
 import { decodeRoot, encodeRoot } from "../src/shared/sync/root";
 import { loadSyncState } from "../src/shared/sync/state";
 import {
-  recordLocalChanges,
+  createEditListener,
   type StorageChanges,
 } from "../src/shared/sync/track";
 import {
@@ -201,8 +201,10 @@ export function device(
     settings: { ...DEFAULT_SYNC_DATA_SETTINGS, ...settings },
   };
   const listening = new Set<Promise<unknown>>();
+  const edits = createEditListener(env, async () => name);
+  env.settleEdits = edits.settle;
   env.local.listeners.push((changes) => {
-    const job = recordLocalChanges(env, name, changes);
+    const job = edits.onChanged(changes);
     listening.add(job);
     void job.finally(() => listening.delete(job));
   });

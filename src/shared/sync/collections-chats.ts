@@ -6,7 +6,7 @@ import { STORAGE_KEYS, SYNC_PREFERENCES } from "../storage-keys";
 import type { ChatContent, ChatSummary } from "../types";
 import {
   idOfKey,
-  plainCommit,
+  writeHooks,
   type Change,
   type Collection,
   type LocalEntry,
@@ -69,44 +69,48 @@ export const chatsCollection: Collection = {
   },
   // Under the locks of the list and of each content key written, the ones
   // the app saves with.
-  write(env, changes, verify, commit = plainCommit(env)) {
+  write(env, changes, hooks) {
+    const { verify, commit, step } = writeHooks(env, hooks);
     const locks = [CHATS, ...changes.map((change) => contentKey(change.id))];
     return withLocks(env.lock, locks.map(storageLockName), async () => {
-      const summaries = summariesOf(await readKey(env.local, CHATS));
-      const contents = await readContents(
-        env,
-        changes.map((change) => change.id),
-      );
-      const byId = new Map(summaries.map((chat) => [chat.id, chat]));
-      const written = new Set<string>();
       const removed: string[] = [];
-      const bodies: Record<string, unknown> = {};
-      for (const { id, entry } of changes) {
-        const summary = byId.get(id);
-        const current = summary
-          ? { data: summary, body: contents[contentKey(id)] }
-          : undefined;
-        if (!(await verify(id, current))) continue;
-        written.add(id);
-        if (!entry) {
-          byId.delete(id);
-          removed.push(id);
-          continue;
+      const written = await step(async () => {
+        const summaries = summariesOf(await readKey(env.local, CHATS));
+        const contents = await readContents(
+          env,
+          changes.map((change) => change.id),
+        );
+        const byId = new Map(summaries.map((chat) => [chat.id, chat]));
+        const written = new Set<string>();
+        const bodies: Record<string, unknown> = {};
+        for (const { id, entry } of changes) {
+          const summary = byId.get(id);
+          const current = summary
+            ? { data: summary, body: contents[contentKey(id)] }
+            : undefined;
+          if (!(await verify(id, current))) continue;
+          written.add(id);
+          if (!entry) {
+            byId.delete(id);
+            removed.push(id);
+            continue;
+          }
+          byId.set(id, entry.data as ChatSummary);
+          if (entry.body !== undefined) bodies[contentKey(id)] = entry.body;
         }
-        byId.set(id, entry.data as ChatSummary);
-        if (entry.body !== undefined) bodies[contentKey(id)] = entry.body;
-      }
-      if (!written.size) return written;
-      // Unchanged chats keep their place; new ones follow.
-      const next = [
-        ...summaries
-          .filter((chat) => byId.has(chat.id))
-          .map((chat) => byId.get(chat.id)!),
-        ...[...byId.values()].filter(
-          (chat) => !summaries.some((existing) => existing.id === chat.id),
-        ),
-      ];
-      await commit({ [CHATS]: next, ...bodies }, written);
+        if (!written.size) return written;
+        // Unchanged chats keep their place; new ones follow.
+        const next = [
+          ...summaries
+            .filter((chat) => byId.has(chat.id))
+            .map((chat) => byId.get(chat.id)!),
+          ...[...byId.values()].filter(
+            (chat) => !summaries.some((existing) => existing.id === chat.id),
+          ),
+        ];
+        await commit({ [CHATS]: next, ...bodies }, written);
+        return written;
+      });
       if (removed.length) {
         await env.local.remove(removed.map(contentKey));
         await env.removeChatArtifacts?.(removed).catch(() => undefined);
@@ -166,31 +170,37 @@ export const attachmentsCollection: Collection = {
     ),
     complete: true,
   }),
-  write(env, changes: Change[], verify, commit = plainCommit(env)) {
-    return env.lock(storageLockName(INDEX), async () => {
-      const index = indexOf(await readKey(env.local, INDEX));
-      const written = new Set<string>();
-      for (const { id, entry } of changes) {
-        const current = index[id]
-          ? { data: index[id], body: (await env.attachments.get(id))?.content }
-          : undefined;
-        if (!(await verify(id, current))) continue;
-        written.add(id);
-        if (!entry) {
-          delete index[id];
-          await env.attachments.delete(id);
-          continue;
+  write(env, changes: Change[], hooks) {
+    const { verify, commit, step } = writeHooks(env, hooks);
+    return env.lock(storageLockName(INDEX), () =>
+      step(async () => {
+        const index = indexOf(await readKey(env.local, INDEX));
+        const written = new Set<string>();
+        for (const { id, entry } of changes) {
+          const current = index[id]
+            ? {
+                data: index[id],
+                body: (await env.attachments.get(id))?.content,
+              }
+            : undefined;
+          if (!(await verify(id, current))) continue;
+          written.add(id);
+          if (!entry) {
+            delete index[id];
+            await env.attachments.delete(id);
+            continue;
+          }
+          index[id] = entry.data as Record<string, unknown>;
+          if (entry.body instanceof Uint8Array)
+            await env.attachments.put({
+              id,
+              metadata: index[id],
+              content: entry.body,
+            });
         }
-        index[id] = entry.data as Record<string, unknown>;
-        if (entry.body instanceof Uint8Array)
-          await env.attachments.put({
-            id,
-            metadata: index[id],
-            content: entry.body,
-          });
-      }
-      if (written.size) await commit({ [INDEX]: index }, written);
-      return written;
-    });
+        if (written.size) await commit({ [INDEX]: index }, written);
+        return written;
+      }),
+    );
   },
 };
