@@ -20,6 +20,7 @@ import {
   createBrowserSyncTransport,
   SyncNotReadyError,
   SyncQuotaError,
+  type PartsSeen,
 } from "../../shared/sync/browser-sync";
 import { clocksKey, loadClocks } from "../../shared/sync/clocks";
 import { ownsKey, type Collection } from "../../shared/sync/collection";
@@ -29,7 +30,7 @@ import {
   SYNC_COLLECTIONS,
   syncCollection,
 } from "../../shared/sync/collections";
-import { readKey, type SyncEnv } from "../../shared/sync/env";
+import { readKey, type StorageArea, type SyncEnv } from "../../shared/sync/env";
 import {
   countWaiting,
   enabledCollections,
@@ -99,8 +100,17 @@ export function transportFor(
 ): Transport {
   return backend.type === SYNC_BACKEND_TYPES.webDav
     ? createWebDavTransport(backend, env.fetch)
-    : createBrowserSyncTransport(env.sync);
+    : createBrowserSyncTransport(env.sync, env.now, storedPartsSeen(env.local));
 }
+
+const storedPartsSeen = (local: StorageArea): PartsSeen => ({
+  load: async () =>
+    (await readKey<Record<string, number>>(
+      local,
+      STORAGE_KEYS.syncPartsSeen,
+    )) ?? {},
+  save: (seen) => local.set({ [STORAGE_KEYS.syncPartsSeen]: seen }),
+});
 
 export async function syncDeviceId(env: SyncEnv) {
   const stored = await readKey<string>(env.local, STORAGE_KEYS.syncDeviceId);

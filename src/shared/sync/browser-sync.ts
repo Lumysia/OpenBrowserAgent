@@ -15,7 +15,7 @@ import { BlobIntegrityError, SyncHttpError, type Transport } from "./transport";
 // The browser account's sync storage holds the same records as WebDAV, one
 // item per record (`r:<id>`). Content that does not fit an item (a large
 // record, a blob) is stored gzip+base64 in parts (`p:<hash>` holds the part
-// count and when they were written, `p:<hash>:<n>` the parts). The browser merges items last-writer-
+// count, `p:<hash>:<n>` the parts). The browser merges items last-writer-
 // wins and reports changes through storage.onChanged, so nothing polls.
 
 export const BROWSER_SYNC_LIMITS = {
@@ -31,11 +31,28 @@ const PART = "p:";
 
 type Items = Record<string, unknown>;
 type RecordRef = { clock: string; ref: string };
-type PartsHeader = { parts: number; at: number };
+type PartsHeader = { parts: number };
 
-// Parts no record refers to yet are kept this long: another device's write
-// may still be arriving. Older ones are left by a write that never landed.
+// Parts no record refers to yet are kept this long after this device first
+// saw them, by its own clock (another device's clock may be a day off):
+// that device's write may still be arriving. Older ones are left by a write
+// that never landed.
 const UNREFERENCED_PARTS_MS = GARBAGE_GRACE_MS;
+
+// When this device first saw unreferenced parts, by hash. Losing it only
+// starts the wait again.
+export type PartsSeen = {
+  load(): Promise<Record<string, number>>;
+  save(seen: Record<string, number>): Promise<void>;
+};
+
+export function memoryPartsSeen(): PartsSeen {
+  let seen: Record<string, number> = {};
+  return {
+    load: async () => ({ ...seen }),
+    save: async (next) => void (seen = { ...next }),
+  };
+}
 
 export class SyncQuotaError extends Error {}
 
@@ -46,11 +63,7 @@ const itemSize = (key: string, value: unknown) =>
   new TextEncoder().encode(key).length +
   new TextEncoder().encode(JSON.stringify(value)).length;
 
-async function partsOf(
-  hash: string,
-  payload: Uint8Array,
-  at: number,
-): Promise<Items> {
+async function partsOf(hash: string, payload: Uint8Array): Promise<Items> {
   const encoded = bytesToBase64(await gzip(payload));
   const items: Items = {};
   let count = 0;
@@ -63,7 +76,7 @@ async function partsOf(
       offset,
       offset + BROWSER_SYNC_LIMITS.partChars,
     );
-  items[`${PART}${hash}`] = { parts: count, at } satisfies PartsHeader;
+  items[`${PART}${hash}`] = { parts: count } satisfies PartsHeader;
   return items;
 }
 
@@ -86,6 +99,7 @@ async function readParts(items: Items, hash: string) {
 export function createBrowserSyncTransport(
   area: StorageArea,
   now: () => number = Date.now,
+  partsSeen: PartsSeen = memoryPartsSeen(),
 ): Transport {
   // Records as stored items: inline when they fit, else a part reference.
   async function recordItems(records: Record<string, SyncRecord>) {
@@ -99,7 +113,7 @@ export function createBrowserSyncTransport(
       const payload = jsonBytes(record);
       const hash = await sha256Hex(payload);
       items[key] = { clock: record.clock, ref: hash } satisfies RecordRef;
-      Object.assign(items, await partsOf(hash, payload, now()));
+      Object.assign(items, await partsOf(hash, payload));
     }
     return items;
   }
@@ -149,18 +163,16 @@ export function createBrowserSyncTransport(
       for (const record of Object.values(root.records))
         if (record.blob) referenced.add(record.blob);
       const replaced = partHashes(current);
+      const seen = await partsSeen.load();
+      const stillSeen: Record<string, number> = {};
       const keep = (key: string) => {
         if (key in next || key.startsWith(RECORD)) return key in next;
         if (!key.startsWith(PART)) return false;
         const hash = key.slice(PART.length).split(":")[0];
         if (referenced.has(hash)) return true;
         if (replaced.has(hash)) return false;
-        const header = current[`${PART}${hash}`] as
-          Partial<PartsHeader> | undefined;
-        return (
-          typeof header?.at !== "number" ||
-          now() - header.at < UNREFERENCED_PARTS_MS
-        );
+        stillSeen[hash] = seen[hash] ?? now();
+        return now() - stillSeen[hash] < UNREFERENCED_PARTS_MS;
       };
       const proposed: Items = {};
       for (const [key, value] of Object.entries(current))
@@ -180,6 +192,13 @@ export function createBrowserSyncTransport(
         if (Object.keys(changed).length) await area.set(changed);
         if (stale.length) await area.remove(stale);
       });
+      await partsSeen.save(
+        Object.fromEntries(
+          Object.entries(stillSeen).filter(
+            ([, at]) => now() - at < UNREFERENCED_PARTS_MS,
+          ),
+        ),
+      );
       return {
         status: "ok",
         etag: await sha256Hex(
@@ -194,10 +213,14 @@ export function createBrowserSyncTransport(
       return `${PART}${hash}` in (await area.get(`${PART}${hash}`));
     },
     async putBlob(hash, payload) {
-      const parts = await partsOf(hash, payload, now());
+      const parts = await partsOf(hash, payload);
       const current = await readAll();
       checkQuota({ ...current, ...parts });
       await guard(() => area.set(parts));
+      // Parts this device wrote count as seen now (their record follows).
+      const seen = await partsSeen.load();
+      seen[hash] ??= now();
+      await partsSeen.save(seen);
     },
     async deleteBlob(hash) {
       const keys = Object.keys(await readAll()).filter(
