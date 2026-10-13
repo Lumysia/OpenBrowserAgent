@@ -97,10 +97,10 @@ const MUTATIONS = [
   {
     name: "a round writes a chat without its content over content opened meanwhile",
     file: "src/shared/sync/local.ts",
-    from: `      return !(
-        write.body === undefined &&`,
-    to: `      return true || !(
-        write.body === undefined &&`,
+    from: `        return !(
+          write.body === undefined &&`,
+    to: `        return true || !(
+          write.body === undefined &&`,
   },
   {
     name: "clearing sync data without the sync lock",
@@ -123,7 +123,7 @@ const MUTATIONS = [
   {
     name: "clock diff: a record that has a clock gets a new one on any change of its key",
     file: "src/shared/sync/track.ts",
-    from: "const edited = known\n          ? await differs(copy, known)",
+    from: "const edited = known\n          ? await differs(copy, known, collection.defaultData?.(id))",
     to: "const edited = known\n          ? true",
   },
   {
@@ -226,6 +226,107 @@ const MUTATIONS = [
     file: "src/shared/sync/browser-sync.ts",
     from: "stillSeen[hash] = seen[hash] ?? now();",
     to: "stillSeen[hash] = seen[hash] ?? 0;",
+  },
+  {
+    name: "remote changes stored over a clock entry recorded since the snapshot",
+    file: "src/shared/sync/local.ts",
+    from: "        if (!sameJson(clocks[id], known)) return false;",
+    to: "",
+  },
+  {
+    name: "remote changes stored before the edit listener caught up",
+    file: "src/shared/sync/reconcile.ts",
+    from: "  if (writes.size) await env.settleEdits?.();",
+    to: "",
+  },
+  {
+    name: "a missed body change found by the commit is not recorded",
+    file: "src/shared/sync/local.ts",
+    from: "            await recordMissed(id, now);",
+    to: "            void recordMissed;",
+  },
+  {
+    name: "a push confirmed when the server accepts the write",
+    file: "src/shared/sync/engine.ts",
+    from: "        state.sent = { write, records: Object.fromEntries(outcome.pushes) };",
+    to: "        await confirm(env, outcome.pushes, snapshot);",
+  },
+  {
+    name: "a push confirmed by a root that does not descend from it",
+    file: "src/shared/sync/engine.ts",
+    from: "  if (remote.history?.includes(sent.write))",
+    to: "  if (remote.history)",
+  },
+  {
+    name: "roots do not carry the history of the writes they descend from",
+    file: "src/shared/sync/blobs.ts",
+    from: "    history: [...(base.history ?? []), write].slice(-ROOT_HISTORY_LENGTH),",
+    to: "    history: [write].slice(-ROOT_HISTORY_LENGTH),",
+  },
+  {
+    name: "a confirmation recreates the clock of a record cleared meanwhile",
+    file: "src/shared/sync/engine.ts",
+    from: `        if (clocks[id])
+          clocks[id] = await confirmedEntry(id, clocks[id], record);`,
+    to: `        clocks[id] = await confirmedEntry(
+          id,
+          clocks[id] ?? { clock: record.clock },
+          record,
+        );`,
+  },
+  {
+    name: "fields both sides changed in one record: the newer record wins whole",
+    file: "src/shared/sync/plan.ts",
+    from: "    data = mergeFields(base.data, mine.data, theirs.data, mineNewer) ?? data;",
+    to: "    data = data;",
+  },
+  {
+    name: "a change's base keeps no data from the edit event",
+    file: "src/shared/sync/clocks.ts",
+    from: "    base.data = before.data;",
+    to: "",
+  },
+  {
+    name: "clearing local data without the cleared keys' locks",
+    file: "src/background/sync/service.ts",
+    from: "  await withLocks(env.lock, removed.map(storageLockName), () =>",
+    to: "  await withLocks(env.lock, [], () =>",
+  },
+  {
+    name: "page saves store their whole copy",
+    file: "src/shared/rebase.ts",
+    from: "    ? item.update((current) => rebaseEdit(base, edited, current))",
+    to: "    ? item.set(edited)",
+  },
+  {
+    name: "chat saves store the side panel's copy as is",
+    file: "src/shared/chat-storage.ts",
+    from: "    if (base && stored && !sameJson(stored, normalizeChatContent(base)))",
+    to: "    if (false)",
+  },
+  {
+    name: "a removed setting stored again as its default counts as a change",
+    file: "src/shared/sync/clocks.ts",
+    from: "    return defaultData === undefined || !sameJson(copy.data, defaultData);",
+    to: "    return true;",
+  },
+  {
+    name: "a mass-delete answer applies to both kinds of prompt",
+    file: "src/shared/sync/reconcile.ts",
+    from: "        (answer.local === undefined || answer.local === !!entry.local),",
+    to: "        true,",
+  },
+  {
+    name: "a prompt asked again forgets its answer",
+    file: "src/background/sync/service.ts",
+    from: "  return answered?.some((entry) => entry.keep === undefined) ? answered : asked;",
+    to: "  return asked;",
+  },
+  {
+    name: "items restored after a local mass delete keep the shortened order",
+    file: "src/shared/sync/engine-merge.ts",
+    from: "      restored.push(ORDER_ID);",
+    to: "",
   },
 ];
 
