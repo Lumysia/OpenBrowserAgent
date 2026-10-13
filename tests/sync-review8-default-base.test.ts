@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { syncCollection } from "../src/shared/sync/collections";
-import { createWorkspace } from "../src/shared/workspace";
+import { createWorkspace, normalizeWorkspaces } from "../src/shared/workspace";
 
 // Workspaces two devices changed without a shared base merge from the
 // default files, except where the side holding a default file's text is
@@ -52,4 +52,9 @@ test("review8 W1: default files a new workspace holds were never edited: any rea
   const real = [file("MEMORY.md", FACTS, 3)];
   assert.deepEqual(merge(real, created, "theirs"), [["MEMORY.md", FACTS]]);
   assert.deepEqual(merge(created, real, "mine"), [["MEMORY.md", FACTS]]);
+});
+
+test("review8 W1: reading a new workspace keeps its default files never edited", () => {
+  const read = normalizeWorkspaces([createWorkspace("ag", 50)]);
+  assert.ok(read[0].files.every((entry) => entry.updatedAt === 0));
 });

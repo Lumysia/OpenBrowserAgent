@@ -279,3 +279,58 @@ test("review8 K2: deleting a message without id keeps the ids of those after it"
     [[before.messages[1].id, "first answer"]],
   );
 });
+
+test("review8 K1: a stored item reading cannot name (a file without a path) stays with an edit", () => {
+  const noPath = { content: "kept", kind: "markdown", updatedAt: 1 };
+  const stored = [
+    {
+      agentId: "ag",
+      files: [noPath, workspaceFile("notes/a.md", "old")],
+      createdAt: 1,
+      updatedAt: 1,
+    },
+  ];
+  const written = update(stored, readWorkspaces, editA) as Array<{
+    files: unknown[];
+  }>;
+  assert.deepEqual(written[0].files[0], noPath);
+  assert.equal(contentOfA(written), "new");
+});
+
+test("review8 K1: a list reading shows nothing of keeps its stored items when one is added", () => {
+  const copy = { ...idlessSkills[0], id: "b", builtin: true };
+  const written = update([copy], normalizeSkills, (list) => [
+    ...list,
+    { ...normalizeSkills([idlessSkills[0]])[0], id: "new" },
+  ]) as Array<{ id: string }>;
+  assert.deepEqual(
+    written.map((skill) => skill.id),
+    ["b", "new"],
+  );
+});
+
+test("review8 K1: editing a skill file whose stored path reading normalizes keeps one file", () => {
+  const stored = [
+    {
+      ...idlessSkills[0],
+      files: [skillFile, { path: "scripts\\run.py", content: "old" }],
+    },
+  ];
+  const written = normalizeSkills(
+    update(stored, normalizeSkills, (list) =>
+      list.map((skill) => ({
+        ...skill,
+        files: skill.files.map((f) =>
+          f.path === "scripts/run.py" ? { ...f, content: "new" } : f,
+        ),
+      })),
+    ),
+  );
+  assert.deepEqual(
+    written[0].files.map((f) => [f.path, f.content]),
+    [
+      ["SKILL.md", skillFile.content],
+      ["scripts/run.py", "new"],
+    ],
+  );
+});
