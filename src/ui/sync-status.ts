@@ -1,8 +1,15 @@
 import type { Messages } from "../shared/i18n";
-import type { SyncStatus } from "../shared/sync/state";
+import { SYNC_NOTES, type SyncStatus } from "../shared/sync/state";
 
 export type SyncTone =
-  "off" | "idle" | "synced" | "syncing" | "pending" | "paused" | "error";
+  | "off"
+  | "idle"
+  | "synced"
+  | "syncing"
+  | "pending"
+  | "paused"
+  | "attention"
+  | "error";
 
 // One reading of the sync status for every place that shows it (the side
 // panel's cloud button, the Sync settings page).
@@ -13,8 +20,12 @@ export function describeSyncStatus(
   now = Date.now(),
 ): { tone: SyncTone; label: string } {
   if (!enabled) return { tone: "off", label: t.sync.stateOff };
-  if (status?.massDelete?.length || status?.warnings.length)
-    return { tone: "error", label: t.sync.stateAttention };
+  // Notes only say what sync handles on its own; they don't need the user.
+  const needsUser = status?.warnings.some(
+    (warning) => !SYNC_NOTES.includes(warning),
+  );
+  if (status?.massDelete?.length || needsUser)
+    return { tone: "attention", label: t.sync.stateAttention };
   if (status?.pausedUntil && status.pausedUntil > now)
     return {
       tone: "paused",

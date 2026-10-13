@@ -16,6 +16,7 @@
   --accent-foreground: var(--accent-strong);
   --destructive: #b3261e;
   --destructive-foreground: #ffffff;
+  --warning: #b7791f;
   --border: #e4e4e4;
   --input: #e4e4e4;
   --ring: rgba(49, 58, 139, 0.28);
@@ -137,6 +138,7 @@
 }
 
 :root[data-theme="dark"] {
+  --warning: #e0a43a;
   color-scheme: dark;
   --background: #171612;
   --foreground: #eee9df;

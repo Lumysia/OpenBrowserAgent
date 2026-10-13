@@ -141,8 +141,11 @@
 .cloud-sync-button.pending {
   color: color-mix(in srgb, var(--accent-strong) 70%, var(--foreground));
 }
-.cloud-sync-button.error,
+.cloud-sync-button.attention,
 .cloud-sync-button.paused {
+  color: var(--warning);
+}
+.cloud-sync-button.error {
   color: var(--destructive);
 }
 .cloud-sync-button.syncing svg {

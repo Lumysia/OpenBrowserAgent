@@ -28,8 +28,12 @@
     color-mix(in srgb, var(--muted-foreground) 14%, transparent);
   animation: sync-dot-pending 1.4s ease-in-out infinite;
 }
-.sync-status-dot.error,
+.sync-status-dot.attention,
 .sync-status-dot.paused {
+  background: var(--warning);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--warning) 16%, transparent);
+}
+.sync-status-dot.error {
   background: var(--destructive);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--destructive) 14%, transparent);
 }
