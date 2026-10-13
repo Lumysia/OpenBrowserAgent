@@ -8,6 +8,8 @@ const permissions = [
   "storage",
   "downloads",
   "unlimitedStorage",
+  // Sync checks once a minute while an extension page is visible.
+  "alarms",
 ] as const;
 const chromiumAndFirefoxPermissions = ["nativeMessaging", "search"] as const;
 const sourcemap = process.env.WXT_SOURCEMAP === "true";

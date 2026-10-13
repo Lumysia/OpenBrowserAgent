@@ -5,25 +5,21 @@ import {
   type ChatSource,
 } from "./types";
 
+// Sources new to the chat are added; one it already has stays as it is (its
+// id is what the replies cite), so finding a page again changes nothing.
 export function mergeChatSources(
   current: ChatSource[] = [],
   next: ChatSource[],
 ) {
   const merged = [...current];
+  const known = new Set(merged.map(sourceKey));
   for (const source of next) {
     const key = sourceKey(source);
-    const existingIndex = merged.findIndex((item) => sourceKey(item) === key);
-    if (existingIndex >= 0) {
-      merged[existingIndex] = {
-        ...merged[existingIndex],
-        ...source,
-        id: merged[existingIndex].id,
-      };
-    } else {
-      merged.push({ ...source, id: `source_${merged.length + 1}` });
-    }
+    if (known.has(key)) continue;
+    known.add(key);
+    merged.push({ ...source, id: `source_${merged.length + 1}` });
   }
-  return merged;
+  return merged.length === current.length ? current : merged;
 }
 
 export function assignChatSources(

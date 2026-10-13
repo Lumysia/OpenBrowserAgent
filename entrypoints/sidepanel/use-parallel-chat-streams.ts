@@ -17,6 +17,7 @@ import type { ActiveStreamMap } from "./sidepanel-menu-state";
 import { useAutoRetryStream } from "./sidepanel-effects";
 import { closedChatIds } from "./chat-state-actions";
 import type { ChatUpdater } from "./use-chats";
+import { resumableAssistantMessage, type StoppedRuns } from "./run-state";
 import {
   attachStreamAction,
   closeStreamPort,
@@ -47,6 +48,9 @@ export function useParallelChatStreams({
   setUnreadCompletedChats: Dispatch<SetStateAction<Record<string, true>>>;
 }) {
   const [activeStreams, setActiveStreamsState] = useState<ActiveStreamMap>({});
+  const [stoppedRuns, setStoppedRuns] = useState<StoppedRuns>(
+    () => new Set<string>(),
+  );
   const portRefs = useRef<Record<string, chrome.runtime.Port | undefined>>({});
   const activeChatIdRef = useRef<string | undefined>(undefined);
   const queuedMessageRemoverRef = useRef<(id: string, chatId: string) => void>(
@@ -93,7 +97,7 @@ export function useParallelChatStreams({
 
   useEffect(() => {
     if (!currentChat || activeStreams[currentChat.id]) return;
-    const message = resumableAssistantMessage(currentChat);
+    const message = resumableAssistantMessage(currentChat, stoppedRuns);
     if (!message) return;
     setActiveStreams((items) => ({
       ...items,
@@ -106,7 +110,7 @@ export function useParallelChatStreams({
     }));
     const metrics = message.metadata?.runMetrics as RunMetrics | undefined;
     attachStream(currentChat.id, message.id, metrics?.streamEventIndex);
-  }, [activeStreams, currentChat, setActiveStreams]);
+  }, [activeStreams, currentChat, setActiveStreams, stoppedRuns]);
 
   function startStream(request: SendMessagesRequest, targetMessageId: string) {
     startStreamAction({
@@ -117,6 +121,7 @@ export function useParallelChatStreams({
       lastStreamActivityRef,
       setActiveStreams,
       onStreamFinished: markStreamFinished,
+      onRunStopped: markRunStopped,
       appendStreamChunk: streamHandlers.appendStreamChunk,
       appendToAssistant: streamHandlers.appendToAssistant,
       flushMessageText: streamHandlers.flushMessageText,
@@ -142,6 +147,7 @@ export function useParallelChatStreams({
       lastStreamActivityRef,
       setActiveStreams,
       onStreamFinished: markStreamFinished,
+      onRunStopped: markRunStopped,
       appendStreamChunk: streamHandlers.appendStreamChunk,
       appendToAssistant: streamHandlers.appendToAssistant,
       flushMessageText: streamHandlers.flushMessageText,
@@ -238,6 +244,10 @@ export function useParallelChatStreams({
     queuedMessageRemoverRef.current = remover;
   }
 
+  function markRunStopped(_chatId: string, messageId: string) {
+    setStoppedRuns((items) => new Set(items).add(messageId));
+  }
+
   function markStreamFinished(chatId: string) {
     if (activeChatIdRef.current === chatId) return;
     setUnreadCompletedChats((items) => ({ ...items, [chatId]: true }));
@@ -246,6 +256,7 @@ export function useParallelChatStreams({
   return {
     streaming,
     streamingChatIds: Object.keys(activeStreams),
+    stoppedRuns,
     currentChatStreaming,
     currentAssistantMessageId,
     beginStream,
@@ -258,16 +269,4 @@ export function useParallelChatStreams({
     answerQuestion,
     setQueuedMessageRemover,
   };
-}
-
-function resumableAssistantMessage(chat: Chat) {
-  return [...chat.messages].reverse().find((message) => {
-    const metrics = message.metadata?.runMetrics as
-      { startedAt?: unknown; endedAt?: unknown } | undefined;
-    return (
-      message.role === "assistant" &&
-      metrics?.startedAt !== undefined &&
-      metrics.endedAt === undefined
-    );
-  });
 }

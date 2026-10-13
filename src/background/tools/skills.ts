@@ -3,7 +3,7 @@ import {
   inheritSkillSettings,
   resolveSkillCatalog,
 } from "../../shared/skill-catalog";
-import { storage } from "../../shared/storage";
+import { storage, updateById } from "../../shared/storage";
 import {
   SKILL_ENTRY_PATH,
   createSkillPackage,
@@ -55,7 +55,7 @@ export const skillsTool: ToolDefinition = {
         description: stringArg(input.description),
         instruction: content,
       });
-      await storage.skills.set([...all, skill]);
+      await storage.skills.update((skills) => [...skills, skill]);
       run.skills.push(skill);
       return ok(`Created skill ${name}.`, { action, name });
     }
@@ -89,12 +89,14 @@ export const skillsTool: ToolDefinition = {
     const meta = parseSkillFrontmatter(
       path === SKILL_ENTRY_PATH ? content : "",
     );
-    const next: Skill = {
-      ...existing,
+    // Applied to the skill as stored when written: files and fields changed
+    // elsewhere since it was read stay.
+    const edit = (skill: Skill): Skill => ({
+      ...skill,
       ...(meta.name ? { name: normalizeSkillName(meta.name) } : {}),
       ...(meta.description ? { description: meta.description } : {}),
       files: [
-        ...existing.files.filter((item) => item.path !== path),
+        ...skill.files.filter((item) => item.path !== path),
         {
           path,
           kind: file?.kind || skillFileKind(path),
@@ -104,12 +106,12 @@ export const skillsTool: ToolDefinition = {
         },
       ],
       updatedAt: now,
-    };
-    await storage.skills.set(
-      customized
-        ? [...all, next]
-        : all.map((skill) => (skill.id === existing.id ? next : skill)),
-    );
+    });
+    const next = customized
+      ? edit(customized)
+      : await updateById(storage.skills, existing.id, edit);
+    if (!next) return fail(`Skill ${name} was deleted meanwhile.`);
+    if (customized) await storage.skills.update((skills) => [...skills, next]);
     if (customized)
       await storage.skillSettings.update((current) =>
         inheritSkillSettings(current, entry.skill.id, customized.id),

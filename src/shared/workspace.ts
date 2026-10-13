@@ -5,6 +5,7 @@ import {
   WORKSPACE_SEARCH_RESULT_MAX_CHARS,
   WORKSPACE_TOTAL_MAX_CHARS,
 } from "./config";
+import { readPath } from "./read-ids";
 import type {
   Agent,
   AgentWorkspace,
@@ -37,31 +38,24 @@ export function createWorkspace(
 ): AgentWorkspace {
   return {
     agentId,
-    files: createDefaultWorkspaceFiles(now),
+    files: createDefaultWorkspaceFiles(),
     createdAt: now,
     updatedAt: now,
   };
 }
 
+// The workspaces with one for each agent that has none. Default files come
+// only with a new workspace: the user may delete them from an existing one.
 export function ensureAgentWorkspaces(
   agents: Agent[],
-  workspaces: AgentWorkspace[] | undefined,
+  workspaces: AgentWorkspace[],
 ) {
-  const byAgent = new Map(
-    normalizeWorkspaces(workspaces).map((workspace) => [
-      workspace.agentId,
-      workspace,
-    ]),
+  const missing = agents.filter(
+    (agent) => !workspaces.some((workspace) => workspace.agentId === agent.id),
   );
-  let changed = false;
-  const next = agents.map((agent) => {
-    const workspace = byAgent.get(agent.id);
-    const ensured = ensureWorkspaceDefaults(workspace, agent);
-    if (!workspace || workspace.files.length !== ensured.files.length)
-      changed = true;
-    return ensured;
-  });
-  return { changed, workspaces: next };
+  return missing.length
+    ? [...workspaces, ...missing.map((agent) => createWorkspace(agent.id))]
+    : workspaces;
 }
 
 export function normalizeWorkspaces(value: AgentWorkspace[] | undefined) {
@@ -110,32 +104,15 @@ export function normalizeWorkspace(
   };
 }
 
-export function ensureWorkspaceDefaults(
-  workspace: AgentWorkspace | undefined,
-  agent?: Agent,
-  now = Date.now(),
-) {
-  if (!workspace?.agentId) return createWorkspace(agent?.id || "", now);
-  const normalized = normalizeWorkspace(workspace, now);
-  const existingPaths = new Set(normalized.files.map((file) => file.path));
-  const missingFiles = createDefaultWorkspaceFiles(now).filter(
-    (file) => !existingPaths.has(file.path),
-  );
-  if (!missingFiles.length) return normalized;
-  return {
-    ...normalized,
-    files: normalizeWorkspaceFiles([...normalized.files, ...missingFiles]),
-    updatedAt: now,
-  };
-}
-
-function createDefaultWorkspaceFiles(now: number) {
+// Never edited (time 0): a workspace merge without a base tells them from a
+// file the user set back to its default text.
+function createDefaultWorkspaceFiles() {
   return Object.entries(DEFAULT_WORKSPACE_FILE_CONTENT).map(
     ([path, content]) => ({
       path,
       content,
       kind: workspaceFileKind(path),
-      updatedAt: now,
+      updatedAt: 0,
     }),
   );
 }
@@ -150,7 +127,7 @@ export function normalizeWorkspaceFiles(files: WorkspaceFile[]) {
       path: pathResult.path,
       content: content.slice(0, WORKSPACE_FILE_MAX_CHARS),
       kind: workspaceFileKind(pathResult.path),
-      updatedAt: file.updatedAt || Date.now(),
+      updatedAt: Number.isFinite(file.updatedAt) ? file.updatedAt : Date.now(),
     });
   }
   return [...byPath.values()].sort((left, right) =>
@@ -161,10 +138,7 @@ export function normalizeWorkspaceFiles(files: WorkspaceFile[]) {
 export function normalizeWorkspacePath(
   value: unknown,
 ): { ok: true; path: string } | { ok: false; error: string } {
-  const raw = String(value || "")
-    .trim()
-    .replace(/\\+/g, "/");
-  const path = raw.split("/").filter(Boolean).join("/");
+  const path = readPath(value);
   if (!path) return { ok: false, error: "Path is required" };
   if (path.length > WORKSPACE_PATH_MAX_LENGTH)
     return {

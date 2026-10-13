@@ -27,7 +27,7 @@ const file = (workspace: AgentWorkspace, path: string) =>
 test("replace writes replacement text literally", async () => {
   installBrowser();
   const workspace = createWorkspace("fixture");
-  await storage.agentWorkspaces.set([workspace]);
+  await storage.agentWorkspaces.replace([workspace]);
   const result = await call(workspace, {
     action: "replace",
     path: "NOTES.md",
@@ -49,7 +49,10 @@ test("a write applies to the current workspace and keeps newer unrelated files",
     "MEMORY.md",
     "# Memory\n\n- newer\n",
   );
-  await storage.agentWorkspaces.set([current, createWorkspace("other-agent")]);
+  await storage.agentWorkspaces.replace([
+    current,
+    createWorkspace("other-agent"),
+  ]);
   const result = await call(run, {
     action: "write",
     path: "NOTES.md",
@@ -67,7 +70,7 @@ test("replace rejects a file changed since the run read it, and refreshes the ru
   installBrowser();
   const run = createWorkspace("fixture");
   const current = edited(run, "NOTES.md", "# Notes\n\nnewer content");
-  await storage.agentWorkspaces.set([current]);
+  await storage.agentWorkspaces.replace([current]);
   const result = await call(run, {
     action: "replace",
     path: "NOTES.md",
@@ -83,7 +86,7 @@ test("replace rejects a file changed since the run read it, and refreshes the ru
 test("memory appends from two runs and a settings draft keep each other's changes", async () => {
   installBrowser();
   const original = createWorkspace("fixture");
-  await storage.agentWorkspaces.set([original]);
+  await storage.agentWorkspaces.replace([original]);
   const results = await Promise.all([
     call(structuredClone(original), {
       action: "append",
@@ -127,7 +130,7 @@ test("a settings rename validates the draft's original file before changing any 
     "edited",
   );
   const current = edited(original, "custom.md", "newer content");
-  await storage.agentWorkspaces.set([current]);
+  await storage.agentWorkspaces.replace([current]);
   const result = await saveWorkspaceChanges(original, draft);
   assert.ok(!result.ok);
   assert.deepEqual((await storage.agentWorkspaces.get())[0], current);

@@ -1,4 +1,5 @@
 import { ISO_DATE_LENGTH, SKILL_NAME_MAX_LENGTH } from "./config";
+import { readId, readPath } from "./read-ids";
 import type { PickedSkill, Skill, SkillFile, SkillFileKind } from "./types";
 
 export const SKILL_ENTRY_PATH = "SKILL.md";
@@ -121,16 +122,24 @@ export function interpolateSkillVariables(value: string, now = new Date()) {
 // built-in copies are dropped.
 export function normalizeSkills(value: unknown): Skill[] {
   if (!Array.isArray(value)) return [];
-  return value
-    .filter((skill) => !(skill as Partial<Skill> | null)?.builtin)
-    .map((skill) => normalizeSkill(skill));
+  return value.flatMap((skill, index) =>
+    (skill as Partial<Skill> | null)?.builtin
+      ? []
+      : [normalizeSkill(skill, index)],
+  );
 }
 
+// `index`: its place in the stored list, which names it when it has no id;
+// without one, a skill with no id gets a new one.
 export function normalizeSkill(
   skill: Partial<Skill> | null | undefined,
+  index?: number,
 ): Skill {
   const source = skill || {};
-  const id = stringValue(source.id) || crypto.randomUUID();
+  const id =
+    index === undefined
+      ? stringValue(source.id) || crypto.randomUUID()
+      : readId(skill, index);
   const name = normalizeSkillName(stringValue(source.name)) || "skill";
   const description = stringValue(source.description).trim();
   const files = Array.isArray(source.files)
@@ -160,7 +169,7 @@ export function normalizeSkill(
 }
 
 function normalizeSkillFile(file: Partial<SkillFile>): SkillFile | undefined {
-  const path = stringValue(file?.path).trim();
+  const path = readPath(file?.path);
   const content = stringValue(file?.content);
   if (!path) return undefined;
   return {

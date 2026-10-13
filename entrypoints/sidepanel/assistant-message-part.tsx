@@ -72,6 +72,7 @@ export function AssistantPart({
   onSelectChat,
   chatExists,
   onAnswerQuestion,
+  runEnded,
 }: {
   t: Messages;
   part: ChatPart;
@@ -86,6 +87,7 @@ export function AssistantPart({
     toolCallId: string,
     answers: QuestionToolAnswer[],
   ) => void;
+  runEnded: boolean;
 }) {
   const stalePendingTool = isStalePendingTool(message, part, partIndex);
   if (isToolPartType(part.type))
@@ -93,7 +95,7 @@ export function AssistantPart({
       <ToolPart
         t={t}
         part={part}
-        runEnded={messageRunEnded(message) || stalePendingTool}
+        runEnded={runEnded || stalePendingTool}
         onSelectChat={onSelectChat}
         chatExists={chatExists}
         onAnswerQuestion={onAnswerQuestion}
@@ -112,7 +114,7 @@ export function AssistantPart({
         onFork={onFork}
         message={message}
         chatMessages={chatMessages}
-        hideActions={!messageRunEnded(message)}
+        hideActions={!runEnded}
       />
     );
   return null;
@@ -136,14 +138,6 @@ function hasRenderedActivity(part: ChatPart) {
   )
     return !!part.text?.trim() || !!part.error;
   return isToolPartType(part.type);
-}
-
-function messageRunEnded(message: ChatMessage) {
-  const metrics = message.metadata?.runMetrics as { endedAt?: unknown };
-  return (
-    !!metrics?.endedAt ||
-    !!message.parts?.some((part) => part.state === CHAT_PART_STATE.outputError)
-  );
 }
 
 function AssistantReasoning({ t, text }: { t: Messages; text: string }) {

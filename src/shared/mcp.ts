@@ -1,4 +1,5 @@
 import { nanoid } from "nanoid";
+import { readId } from "./read-ids";
 
 export type McpServerConfig = {
   id: string;
@@ -85,16 +86,24 @@ export function createMcpServerDraft(name = "MCP Server"): McpServerConfig {
 export function normalizeMcpServers(value: unknown): McpServerConfig[] {
   const normalized = Array.isArray(value)
     ? value
-        .map((item) => normalizeMcpServer(item))
+        .map((item, index) => normalizeMcpServer(item, index))
         .filter((item): item is McpServerConfig => !!item)
     : [];
   return mergeBuiltinMcpServers(normalized);
 }
 
-export function normalizeMcpServer(value: unknown): McpServerConfig | null {
+// `index`: its place in the stored list, which names it when it has no id;
+// without one, a server with no id gets a new one.
+export function normalizeMcpServer(
+  value: unknown,
+  index?: number,
+): McpServerConfig | null {
   if (!value || typeof value !== "object") return null;
   const item = value as Record<string, unknown>;
-  const id = stringValue(item.id) || `mcp_${nanoid(8)}`;
+  const id =
+    index === undefined
+      ? stringValue(item.id) || `mcp_${nanoid(8)}`
+      : readId(value, index);
   const now = Date.now();
   return {
     id,
@@ -210,12 +219,30 @@ function normalizeImportedMcpServer(name: string | undefined, value: unknown) {
   });
 }
 
+// As reading them gives them: a save that leaves one alone does not change it.
+const BUILTINS = BUILTIN_MCP_SERVERS.map((server) =>
+  normalizeMcpServer(server)!,
+);
+
+// A built-in the list lacks goes after the built-in before it (else before
+// the first stored built-in, else first), so a list that stores only some of
+// them reads back in the order it was shown in. Saves leave built-ins the
+// user did not change unstored (see keepStoredForm).
 function mergeBuiltinMcpServers(servers: McpServerConfig[]) {
-  const existingIds = new Set(servers.map((server) => server.id));
-  return [
-    ...servers,
-    ...BUILTIN_MCP_SERVERS.filter((server) => !existingIds.has(server.id)),
-  ];
+  const result = [...servers];
+  let index = -1;
+  for (const builtin of BUILTINS) {
+    const at = result.findIndex((server) => server.id === builtin.id);
+    if (at >= 0) index = at;
+    else if (index >= 0) result.splice(++index, 0, builtin);
+  }
+  const ids = new Set(result.map((server) => server.id));
+  const leading = BUILTINS.filter((builtin) => !ids.has(builtin.id));
+  const first = result.findIndex((server) =>
+    BUILTIN_MCP_SERVERS.some((builtin) => builtin.id === server.id),
+  );
+  result.splice(Math.max(first, 0), 0, ...leading);
+  return result;
 }
 
 function objectEntries(value: Record<string, unknown>) {

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { getMessages } from "../../src/shared/i18n";
 import {
   NO_SYNC_BACKEND_ID,
-  syncBackendSupportsChatAttachments,
+  syncBackendSupportsChats,
 } from "../../src/shared/sync-backends";
 import { createSyncConfigCode } from "../../src/shared/sync-config-code";
 import type { SyncDataSettings } from "../../src/shared/storage-keys";
@@ -21,7 +21,7 @@ import {
   AccordionTriggerButton,
   Button,
   CardDescription,
-  Input,
+  CommitInput,
   Label,
   SettingToggleRow,
   Switch,
@@ -39,8 +39,8 @@ export type SyncDataToggle = {
   title: string;
   description: string;
   value: boolean;
-  pending: boolean;
-  attachmentBackendOnly?: boolean;
+  // Chats and attachments: WebDAV only.
+  webDavOnly?: boolean;
   onChange: (value: boolean) => void;
 };
 
@@ -190,39 +190,31 @@ export function SyncBackendCard({
           <div className="stack">
             <Label>
               {t.options.syncBackendName}
-              <Input
+              <CommitInput
                 value={webDavDraft.name}
-                onChange={(event) =>
-                  updateWebDavBackend({ name: event.target.value })
-                }
+                onCommit={(name) => updateWebDavBackend({ name })}
               />
             </Label>
             <Label>
               {t.options.syncBackendWebDavUrl}
-              <Input
+              <CommitInput
                 value={webDavDraft.url}
-                onChange={(event) =>
-                  updateWebDavBackend({ url: event.target.value })
-                }
+                onCommit={(url) => updateWebDavBackend({ url: url.trim() })}
               />
             </Label>
             <Label>
               {t.options.syncBackendUsername}
-              <Input
+              <CommitInput
                 value={webDavDraft.username || ""}
-                onChange={(event) =>
-                  updateWebDavBackend({ username: event.target.value })
-                }
+                onCommit={(username) => updateWebDavBackend({ username })}
               />
             </Label>
             <Label>
               {t.options.syncBackendPassword}
-              <Input
+              <CommitInput
                 type="password"
                 value={webDavDraft.password || ""}
-                onChange={(event) =>
-                  updateWebDavBackend({ password: event.target.value })
-                }
+                onCommit={(password) => updateWebDavBackend({ password })}
               />
             </Label>
             <BackendDataTogglePanel
@@ -315,6 +307,7 @@ function BackendDataTogglePanel({
         toggles={toggles}
         disabled={!active}
         backendType={backendType}
+        t={t}
       />
     </div>
   );
@@ -324,34 +317,30 @@ function SyncDataToggleList({
   toggles,
   disabled,
   backendType,
+  t,
 }: {
   toggles: SyncDataToggle[];
   disabled?: boolean;
   backendType: SyncBackendConfig["type"];
+  t: Messages;
 }) {
   return (
     <div className="settings-toggle-list">
-      {toggles.map((toggle) => (
-        <SettingToggleRow
-          key={toggle.key}
-          icon={toggle.icon}
-          title={toggle.title}
-          description={toggle.description}
-          value={
-            toggle.attachmentBackendOnly &&
-            !syncBackendSupportsChatAttachments(backendType)
-              ? false
-              : toggle.value
-          }
-          disabled={
-            disabled ||
-            toggle.pending ||
-            (toggle.attachmentBackendOnly &&
-              !syncBackendSupportsChatAttachments(backendType))
-          }
-          onChange={toggle.onChange}
-        />
-      ))}
+      {toggles.map((toggle) => {
+        const unsupported =
+          toggle.webDavOnly && !syncBackendSupportsChats(backendType);
+        return (
+          <SettingToggleRow
+            key={toggle.key}
+            icon={toggle.icon}
+            title={toggle.title}
+            description={unsupported ? t.sync.webDavOnly : toggle.description}
+            value={unsupported ? false : toggle.value}
+            disabled={disabled || unsupported}
+            onChange={toggle.onChange}
+          />
+        );
+      })}
     </div>
   );
 }

@@ -5,4 +5,5 @@ Documentation for using, configuring, and developing OpenBrowserAgent.
 - [Product Overview](./product-overview.md)
 - [Installation and Packaging](./installation-and-packaging.md)
 - [Permissions and Privacy](./permissions-and-privacy.md)
+- [Sync](./sync.md)
 - [Translation Glossary](./translation-glossary.md)

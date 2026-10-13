@@ -7,7 +7,6 @@ import { runTool } from "../src/background/tools/run-tool";
 import type { ToolContext } from "../src/background/tools/types";
 import { imageModelFixture } from "./image-fixture";
 import { generateImage } from "../src/background/image-generation";
-import { writeWebDavObject } from "../src/shared/sync-webdav";
 
 afterEach(() => mock.restoreAll());
 
@@ -136,41 +135,4 @@ test("late image response after abort cannot start attachment persistence", asyn
   response.resolve(Response.json({ data: [{ b64_json: "AA==" }] }));
   await assert.rejects(running, { name: "AbortError" });
   assert.equal(opened, 0);
-});
-
-test("attachment upload cancellation stops collection creation and prevents later PUTs", async () => {
-  const started = deferred();
-  const controller = new AbortController();
-  const methods: string[] = [];
-  mock.method(
-    globalThis,
-    "fetch",
-    async (_url: unknown, init?: RequestInit) => {
-      methods.push(String(init?.method));
-      started.resolve();
-      return new Promise<Response>((_resolve, reject) =>
-        init?.signal?.addEventListener(
-          "abort",
-          () => reject(init.signal!.reason),
-          { once: true },
-        ),
-      );
-    },
-  );
-  const running = writeWebDavObject(
-    {
-      id: "fixture",
-      name: "fixture",
-      type: "webdav",
-      url: "https://example.test/",
-    },
-    "attachments/month/image.png",
-    new Uint8Array([1]),
-    "image/png",
-    controller.signal,
-  );
-  await started.promise;
-  controller.abort();
-  await assert.rejects(running, { name: "AbortError" });
-  assert.deepEqual(methods, ["MKCOL"]);
 });

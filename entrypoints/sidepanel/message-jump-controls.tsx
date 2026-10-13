@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
 import type { Chat } from "../../src/shared/types";
 import { Button, IconTooltip } from "../../src/ui/components";
+import { hasUnfinishedAssistantRun, type StoppedRuns } from "./run-state";
 import { useDeferredPresence } from "./use-deferred-remove";
 
 const SCROLL_EDGE_THRESHOLD_PX = 24;
@@ -13,17 +14,19 @@ export function MessageJumpControls({
   currentChat,
   editingMessageId,
   messagesRef,
+  stoppedRuns,
 }: {
   t: Messages;
   currentChat?: Chat;
   editingMessageId?: string;
   messagesRef: RefObject<HTMLDivElement | null>;
+  stoppedRuns: StoppedRuns;
 }) {
   const [showScrollJumps, setShowScrollJumps] = useState(false);
   const visible =
     showScrollJumps &&
     !editingMessageId &&
-    !hasUnfinishedAssistantRun(currentChat);
+    !hasUnfinishedAssistantRun(currentChat, stoppedRuns);
   const presence = useDeferredPresence(visible);
 
   useEffect(() => {
@@ -117,13 +120,4 @@ export function MessageJumpControls({
       </IconTooltip>
     </div>
   );
-}
-
-function hasUnfinishedAssistantRun(chat: Chat | undefined) {
-  return chat?.messages.some((message) => {
-    if (message.role !== "assistant") return false;
-    const metrics = message.metadata?.runMetrics as
-      { startedAt?: unknown; endedAt?: unknown } | undefined;
-    return metrics?.startedAt !== undefined && metrics.endedAt === undefined;
-  });
 }

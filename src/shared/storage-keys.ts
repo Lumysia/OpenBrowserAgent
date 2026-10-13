@@ -12,7 +12,23 @@ export const STORAGE_KEYS = {
   shouldShowUpdateToast: "should-show-update-toast",
   chats: "chats",
   chatTabs: "chat-tabs",
-  syncWriteStatus: "sync-write-status",
+  chatAttachments: "chat-attachments",
+  syncStatus: "sync-status",
+  // One per backend scope: `sync-state:<scope>`.
+  syncState: "sync-state",
+  // One per synced collection: `sync-clocks:<collection>`.
+  syncClocks: "sync-clocks",
+  syncHlc: "sync-hlc",
+  // Per collection that merges bodies: `sync-bases:<collection>` lists the
+  // blobs whose bodies unconfirmed changes merge from, each body under
+  // `sync-bases:<collection>:<blob>` (see sync/bases.ts).
+  syncBases: "sync-bases",
+  // Written by a round to wait for the edit listener (see sync/track.ts).
+  syncEditMarker: "sync-edit-marker",
+  // Browser sync parts no record refers to, by when this device saw them.
+  syncPartsSeen: "sync-parts-seen",
+  // storage.session: extension pages and whether they are visible.
+  syncVisiblePages: "sync-visible-pages",
   syncBackends: "sync-backends",
   activeSyncBackendId: "active-sync-backend-id",
   syncDeviceId: "sync-device-id",

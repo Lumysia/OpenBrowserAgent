@@ -1,4 +1,5 @@
 import { smartBarFrFR } from "./smart-bar/fr-FR";
+import { syncFrFR } from "./sync/fr-FR";
 import type { LocaleMessages } from "./en-US";
 
 export const frFR: LocaleMessages = {
@@ -520,13 +521,6 @@ export const frFR: LocaleMessages = {
     syncChatAttachments: "Synchroniser les pièces jointes des discussions",
     syncChatAttachmentsDescription:
       "Synchronisez les fichiers importés dans les discussions avec le backend sélectionné, s’il prend en charge les pièces jointes. La synchronisation du compte navigateur est désactivée pour les pièces jointes à cause des quotas du navigateur.",
-    syncWritePending: "Écritures de synchronisation en attente",
-    syncWriteSyncing: "Synchronisation avec le cloud",
-    syncWritePendingDetail: "{count} élément(s) en attente de synchronisation",
-    syncWriteOperationWrite: "écriture",
-    syncWriteOperationRemove: "suppression",
-    syncWriteIdle: "Écritures de synchronisation à jour",
-    syncWriteError: "Dernière écriture de synchronisation échouée",
     autoScroll: "Défilement automatique",
     autoScrollDescription:
       "Garder automatiquement la dernière réponse de l’IA visible pendant la génération des messages.",
@@ -574,4 +568,5 @@ export const frFR: LocaleMessages = {
     debugToolRequired: "Paramètres requis",
   },
   smartBar: smartBarFrFR,
+  sync: syncFrFR,
 };

@@ -1,4 +1,5 @@
 import { smartBarDeDE } from "./smart-bar/de-DE";
+import { syncDeDE } from "./sync/de-DE";
 import type { LocaleMessages } from "./en-US";
 
 export const deDE: LocaleMessages = {
@@ -518,13 +519,6 @@ export const deDE: LocaleMessages = {
     syncChatAttachments: "Chatanhänge synchronisieren",
     syncChatAttachmentsDescription:
       "Synchronisiert hochgeladene Chatdateien über das ausgewählte Backend, sofern es Anhänge unterstützt. Die Synchronisierung über das Browserkonto ist für Anhänge wegen der Speicherkontingente des Browsers deaktiviert.",
-    syncWritePending: "Sync-Schreibvorgänge warten",
-    syncWriteSyncing: "Synchronisierung mit der Cloud läuft",
-    syncWritePendingDetail: "{count} Element(e) warten auf Synchronisierung",
-    syncWriteOperationWrite: "schreiben",
-    syncWriteOperationRemove: "entfernen",
-    syncWriteIdle: "Sync-Schreibvorgänge sind aktuell",
-    syncWriteError: "Letzter Sync-Schreibvorgang fehlgeschlagen",
     autoScroll: "Automatisch scrollen",
     autoScrollDescription:
       "Die neueste KI-Ausgabe während des Streamings automatisch sichtbar halten.",
@@ -572,4 +566,5 @@ export const deDE: LocaleMessages = {
     debugToolRequired: "Erforderliche Parameter",
   },
   smartBar: smartBarDeDE,
+  sync: syncDeDE,
 };

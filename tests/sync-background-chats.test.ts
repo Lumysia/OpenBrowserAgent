@@ -1,0 +1,322 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import {
+  abortSession,
+  createStreamSession,
+  scheduleSessionCleanup,
+} from "../src/background/stream-sessions";
+import { browserSyncEnv } from "../src/background/sync/service";
+import {
+  readLocalChatContent,
+  saveChatContent,
+} from "../src/shared/chat-storage";
+import { appendAssistantPart } from "../src/shared/chat-updates";
+import { chatContent, joinChat } from "../src/shared/chats";
+import { storage } from "../src/shared/storage";
+import { STORAGE_KEYS } from "../src/shared/storage-keys";
+import {
+  CHAT_PART_STATE,
+  toolPartType,
+  type ChatContent,
+  type ChatSource,
+  type ChatSummary,
+} from "../src/shared/types";
+import {
+  onDevice,
+  openChatContent,
+  reattachToRun,
+  reply,
+  storeChat,
+  userMessage,
+} from "./sync-app-fixture";
+import {
+  ALL_ON,
+  device,
+  memoryServer,
+  memoryTransport,
+  messageIds,
+} from "./sync-fixtures";
+
+// Background rewrites of chats (the seventh fix): app paths that store a
+// chat although the user changed nothing in it. Sync counts such a write as
+// an edit made here, so a message deleted on another device comes back
+// (an edit wins over a delete) or an older copy replaces a newer one.
+
+const CHATS = STORAGE_KEYS.chats;
+
+function pair() {
+  const clock = { now: 1_000_000_000 };
+  const server = memoryServer();
+  const a = device("deviceA", memoryTransport(server), clock, ALL_ON);
+  const b = device("deviceB", memoryTransport(server), clock, ALL_ON);
+  return { clock, a, b };
+}
+
+const listed = (on: ReturnType<typeof device>) =>
+  (on.get<ChatSummary[]>(CHATS) ?? []).map((chat) => chat.id);
+const contentOf = (on: ReturnType<typeof device>, id: string) =>
+  on.get<ChatContent>(`${CHATS}/${id}`);
+// Longer than the 15 minutes after which a running chat used to upload.
+const LONG_RUN_MS = 16 * 60_000;
+// A run that started this long ago, its list entry untouched since.
+const startedAgo = (ms: number) => ({ updatedAt: Date.now() - ms });
+
+test("fix7 P1: opening a chat whose run died stores nothing, so the reply deleted elsewhere stays deleted", async () => {
+  const { clock, a, b } = pair();
+  // A's run died (the browser closed mid-reply) a while ago.
+  await storeChat(
+    a,
+    "X",
+    { messages: [userMessage("u1", 1), reply("a1", 2, "Hel")] },
+    startedAgo(LONG_RUN_MS),
+  );
+  await a.sync("edit");
+  await b.sync();
+  assert.deepEqual(messageIds(b, "X"), []);
+  assert.deepEqual((await openChatContent(b, "X"))?.messages.length, 2);
+  // On A the user sends the message again: the dead reply is replaced.
+  clock.now += 60_000;
+  await storeChat(a, "X", {
+    messages: [userMessage("u1", 1), reply("a2", 3, "Hello", 4)],
+  });
+  await a.sync("edit");
+  // B opens the chat before its next sync: the panel reattaches to the run.
+  clock.now += 60_000;
+  const stopped = await reattachToRun(b, "X", "a1");
+  await b.sync();
+  await a.sync();
+  for (const on of [a, b])
+    assert.deepEqual(messageIds(on, "X"), ["u1", "a2"], on.name);
+  assert.deepEqual(stopped, ["a1"], "the panel knows the run is over");
+});
+
+test("fix7 P2: a reply streaming for longer than the stale time is not uploaded while it runs", async () => {
+  const { clock, a, b } = pair();
+  a.env.runActive = (id) => id === "X";
+  await storeChat(
+    a,
+    "X",
+    { messages: [userMessage("u1", 1), reply("a1", 2, "Hel")] },
+    startedAgo(LONG_RUN_MS),
+  );
+  await a.sync("edit");
+  await b.sync();
+  assert.deepEqual(listed(b), [], "nothing of the running chat uploaded");
+  // The reply finishes.
+  clock.now += 60_000;
+  a.env.runActive = () => false;
+  await storeChat(a, "X", {
+    messages: [userMessage("u1", 1), reply("a1", 2, "Hello world", 3)],
+  });
+  await a.sync("edit");
+  await b.sync();
+  assert.equal(
+    (await openChatContent(b, "X"))?.messages[1].content,
+    "Hello world",
+  );
+});
+
+test("fix7 P2: a chat whose run is not running here uploads at once", async () => {
+  const { a, b } = pair();
+  a.env.runActive = () => false;
+  await storeChat(
+    a,
+    "X",
+    { messages: [userMessage("u1", 1), reply("a1", 2, "Hel")] },
+    startedAgo(1000),
+  );
+  await a.sync("edit");
+  await b.sync();
+  assert.deepEqual(listed(b), ["X"]);
+});
+
+// The lost answer: the partial copy of a long reply reached B, B's panel
+// ended that run when the chat was opened, after A's reply had finished.
+// B's change is newer, so the partial copy replaced the answer everywhere.
+test("fix7 P1+P2: a long reply is never replaced by a partial copy closed on another device", async () => {
+  const { clock, a, b } = pair();
+  a.env.runActive = (id) => id === "X";
+  await storeChat(
+    a,
+    "X",
+    { messages: [userMessage("u1", 1), reply("a1", 2, "Hel")] },
+    startedAgo(LONG_RUN_MS),
+  );
+  await a.sync("edit");
+  await b.sync();
+  await openChatContent(b, "X");
+  clock.now += 60_000;
+  a.env.runActive = () => false;
+  await storeChat(a, "X", {
+    messages: [userMessage("u1", 1), reply("a1", 2, "Hello world", 3)],
+  });
+  await a.sync("edit");
+  clock.now += 60_000;
+  if (contentOf(b, "X")) await reattachToRun(b, "X", "a1");
+  await b.sync();
+  await a.sync();
+  await openChatContent(b, "X");
+  for (const on of [a, b])
+    assert.equal(
+      contentOf(on, "X").messages[1].content,
+      "Hello world",
+      on.name,
+    );
+});
+
+test("fix7 P2: the background's sync holds exactly the chats with a run in progress", () => {
+  const previous = globalThis.chrome;
+  globalThis.chrome = {
+    storage: { local: {}, sync: {} },
+    runtime: { getPlatformInfo: async () => ({}) },
+  } as never;
+  try {
+    const env = browserSyncEnv();
+    const session = createStreamSession("X");
+    assert.equal(env.runActive?.("X"), true);
+    assert.equal(env.runActive?.("Y"), false);
+    // Finished: kept a while for a panel to replay, no longer running.
+    scheduleSessionCleanup(session);
+    assert.equal(env.runActive?.("X"), false);
+  } finally {
+    // Its timers would keep the test process alive.
+    abortSession("X");
+    globalThis.chrome = previous;
+  }
+});
+
+const source = (id: string, url: string, snippet: string): ChatSource => ({
+  id,
+  kind: "page",
+  title: url,
+  url,
+  snippet,
+  createdAt: 1,
+});
+
+test("fix7 P3: a reply that finds a known source again leaves it as it is", async () => {
+  const { clock, a, b } = pair();
+  const s1 = source("source_1", "https://example.com/a", "first");
+  await storeChat(a, "X", {
+    messages: [userMessage("u1", 1), reply("a1", 2, "[[cite:source_1]]", 3)],
+    sources: [s1],
+  });
+  await a.sync("edit");
+  await b.sync();
+  await openChatContent(b, "X");
+  // On A the user edits the message: the reply and its source go.
+  clock.now += 60_000;
+  await storeChat(a, "X", {
+    messages: [userMessage("u1b", 4), reply("a2", 5, "Other", 6)],
+  });
+  await a.sync("edit");
+  // On B, before it syncs, a reply's tool reads the same page again.
+  const readAgain = {
+    id: "p1",
+    type: toolPartType("read_page"),
+    state: CHAT_PART_STATE.outputAvailable,
+    output: { _sources: [source("source_1", s1.url!, "second")] },
+  };
+  clock.now += 60_000;
+  // B's reply is stored with the source list it merged into.
+  await onDevice(b, async () => {
+    const base = (await readLocalChatContent("X"))!;
+    const summary = (await storage.chats.get()).find(
+      (chat) => chat.id === "X",
+    )!;
+    const chat = joinChat(summary, base);
+    const next = appendAssistantPart(
+      { ...chat, messages: [...chat.messages, reply("b1", 7, "Again", 8)] },
+      { messageId: "b1", part: readAgain },
+    );
+    await saveChatContent("X", chatContent(next), base);
+  });
+  await b.sync("edit");
+  await a.sync();
+  for (const on of [a, b]) {
+    assert.deepEqual(messageIds(on, "X"), ["u1b", "a2", "b1"], on.name);
+    assert.equal(contentOf(on, "X").sources, undefined, on.name);
+  }
+});
+
+test("fix7 guard: saving a chat keeps the stored form of the messages it did not change", async () => {
+  const { clock, a, b } = pair();
+  // Stored by an earlier version: no parts list, an empty tool text.
+  const legacy = {
+    messages: [
+      { id: "u1", role: "user", content: "u1", createdAt: 1, extra: 1 },
+      {
+        id: "a1",
+        role: "assistant",
+        content: "A",
+        createdAt: 2,
+        parts: [{ id: "p", type: "text", text: "" }],
+      },
+    ],
+  };
+  await a.set(CHATS, [
+    { id: "X", title: "X", createdAt: 1, updatedAt: 1, messageCount: 2 },
+  ]);
+  await a.set(`${CHATS}/X`, legacy);
+  await a.sync("edit");
+  await b.sync();
+  await openChatContent(b, "X");
+  // A deletes the reply.
+  clock.now += 60_000;
+  await a.set(`${CHATS}/X`, { messages: [legacy.messages[0]] });
+  await a.sync("edit");
+  // B's panel edits the first message of its loaded (normalized) copy,
+  // adds one and saves it.
+  clock.now += 60_000;
+  await onDevice(b, async () => {
+    const base = (await readLocalChatContent("X"))!;
+    const [first, ...others] = base.messages;
+    await saveChatContent(
+      "X",
+      {
+        ...base,
+        messages: [
+          { ...first, content: "u1!" },
+          ...others,
+          userMessage("u2", 3),
+        ],
+      },
+      base,
+    );
+  });
+  await b.sync("edit");
+  await a.sync();
+  for (const on of [a, b]) {
+    assert.deepEqual(messageIds(on, "X"), ["u1", "u2"], on.name);
+    // What loading dropped of the edited message stays.
+    assert.deepEqual(
+      contentOf(on, "X").messages[0],
+      { ...legacy.messages[0], content: "u1!" },
+      on.name,
+    );
+  }
+});
+
+test("fix7 guard: a list save keeps the stored form of the chats it did not change", async () => {
+  const { clock, a, b } = pair();
+  // Y's entry was stored by an earlier version (no kind).
+  await a.set(CHATS, [
+    { id: "X", title: "X", kind: "normal", createdAt: 1, updatedAt: 1 },
+    { id: "Y", title: "Y", createdAt: 2, updatedAt: 2 },
+  ]);
+  await a.sync("edit");
+  await b.sync();
+  clock.now += 60_000;
+  await a.set(CHATS, [a.get<ChatSummary[]>(CHATS)[0]]);
+  await a.sync("edit");
+  // B renames X.
+  clock.now += 60_000;
+  await onDevice(b, () =>
+    storage.chats.update((chats) =>
+      chats.map((chat) => (chat.id === "X" ? { ...chat, title: "X2" } : chat)),
+    ),
+  );
+  await b.sync("edit");
+  await a.sync();
+  for (const on of [a, b]) assert.deepEqual(listed(on), ["X"], on.name);
+});

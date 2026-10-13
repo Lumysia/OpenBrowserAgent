@@ -78,6 +78,9 @@ type StreamPortOptions = {
   lastStreamActivityRef: MutableRefObject<Record<string, number>>;
   setActiveStreams: Dispatch<SetStateAction<ActiveStreamMap>>;
   onStreamFinished: (chatId: string) => void;
+  // The background has no run of this reply: the panel shows it as over
+  // and stores nothing, since nothing about the reply changed.
+  onRunStopped: (chatId: string, messageId: string) => void;
   appendStreamChunk: (
     chatId: string,
     messageId: string,
@@ -113,6 +116,7 @@ function connectStreamPort({
   lastStreamActivityRef,
   setActiveStreams,
   onStreamFinished,
+  onRunStopped,
   appendStreamChunk,
   appendToAssistant,
   flushMessageText,
@@ -189,6 +193,11 @@ function connectStreamPort({
     const sequenceMetrics = message.sequence
       ? { streamEventIndex: message.sequence }
       : undefined;
+    if (message.type === "notRunning") {
+      clearActiveStream();
+      onRunStopped(chatId, activeMessageId);
+      return;
+    }
     if (message.type === "queuedMessages") {
       flushSequenceMetrics();
       flushMessageText(chatId, activeMessageId);

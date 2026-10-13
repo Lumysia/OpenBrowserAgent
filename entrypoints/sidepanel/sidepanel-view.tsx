@@ -2,7 +2,7 @@ import { Plus } from "lucide-react";
 import { useRef, type ClipboardEvent, type RefObject } from "react";
 import { TOOLTIP_DELAY_MS } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
-import type { SyncWriteStatus } from "../../src/shared/storage";
+import type { SyncStatus } from "../../src/shared/storage";
 import type {
   AttachmentTab,
   Agent,
@@ -22,6 +22,7 @@ import { ComposerBox } from "./composer-box";
 import { EditModeOverlay } from "./edit-mode-overlay";
 import { HistoryPanel } from "./history-panel";
 import { MessageJumpControls } from "./message-jump-controls";
+import type { StoppedRuns } from "./run-state";
 import { MessageBubble } from "./message-bubble";
 import { ProvidersEmptyState } from "./providers-empty-state";
 import { QueuedMessages } from "./queued-messages";
@@ -53,7 +54,7 @@ export function SidepanelView({
   configuredModels,
   input,
   activeAgent,
-  syncWriteStatus,
+  syncStatus,
   attachedTabs,
   pendingAttachments,
   selectedSkills,
@@ -66,6 +67,7 @@ export function SidepanelView({
   selectedElements,
   streaming,
   activeAssistantMessageId,
+  stoppedRuns,
   unreadCompletedChatIds,
   skills,
   agents,
@@ -121,7 +123,7 @@ export function SidepanelView({
   configuredModels: ModelConfig[];
   input: string;
   activeAgent: Agent;
-  syncWriteStatus?: SyncWriteStatus;
+  syncStatus?: SyncStatus;
   attachedTabs: AttachmentTab[];
   pendingAttachments: UploadedAttachment[];
   selectedSkills: PickedSkill[];
@@ -134,6 +136,7 @@ export function SidepanelView({
   selectedElements: SelectedElement[];
   streaming: boolean;
   activeAssistantMessageId?: string;
+  stoppedRuns: StoppedRuns;
   unreadCompletedChatIds: Record<string, true>;
   skills: PickedSkill[];
   agents: Agent[];
@@ -238,7 +241,7 @@ export function SidepanelView({
           t={t}
           currentChat={currentMeta}
           parentChat={parentChat}
-          syncWriteStatus={syncWriteStatus}
+          syncStatus={syncStatus}
           onCreateChat={onCreateChat}
           onSetShowHistory={onSetShowHistory}
           onSelectChat={onSelectChat}
@@ -266,6 +269,7 @@ export function SidepanelView({
                   chats={chats}
                   chatMessages={currentChat.messages}
                   outputActive={message.id === activeAssistantMessageId}
+                  runStopped={stoppedRuns.has(message.id)}
                   sentAttachments={sentAttachmentPreviews[message.id] || []}
                   activeAttachments={uploadedAttachments}
                   onReplaceAttachment={onReplaceUploadedAttachment}
@@ -284,6 +288,7 @@ export function SidepanelView({
             currentChat={currentChat}
             editingMessageId={editingMessageId}
             messagesRef={messagesRef}
+            stoppedRuns={stoppedRuns}
           />
         </div>
         <footer className="composer">

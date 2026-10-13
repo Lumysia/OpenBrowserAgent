@@ -60,6 +60,12 @@ export function createStreamSession(chatId: string) {
   return session;
 }
 
+// A run of this chat is in progress (not one kept only for replay).
+export function isChatRunning(chatId: string) {
+  const session = activeStreamSessions.get(chatId);
+  return !!session && !session.cleanupTimeout;
+}
+
 export function getStreamSession(chatId: string) {
   return activeStreamSessions.get(chatId);
 }
@@ -78,6 +84,17 @@ export function attachPortToSession(
   session.events
     .filter((event) => !afterSequence || (event.sequence || 0) > afterSequence)
     .forEach((event) => post(port, event));
+}
+
+// A panel reattaching to the run of a chat it found unfinished.
+export function attachStream(
+  port: chrome.runtime.Port,
+  chatId: string,
+  afterSequence: number | undefined,
+) {
+  const session = activeStreamSessions.get(chatId);
+  if (!session) return post(port, { type: "notRunning" });
+  attachPortToSession(port, session, afterSequence);
 }
 
 export function detachPort(port: chrome.runtime.Port) {

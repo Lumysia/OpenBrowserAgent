@@ -9,7 +9,7 @@ import {
 } from "../shared/skill-catalog";
 import { storage } from "../shared/storage";
 import type { Agent, ChatMessage, UploadedAttachment } from "../shared/types";
-import { createWorkspace, ensureWorkspaceDefaults } from "../shared/workspace";
+import { workspaceForAgent } from "../shared/workspace-storage";
 import { resolveHelperModel, resolveModel } from "./model-resolver";
 import { runPiAgent, type RunSetup } from "./pi-runtime";
 import type { StreamSession } from "./stream-sessions";
@@ -150,29 +150,4 @@ export async function describeRun(agentId: string | undefined) {
     tools: toolSet.declared().map(schema),
     onDemandTools: toolSet.onDemand.map(schema),
   };
-}
-
-async function workspaceForAgent(agent: Agent, store: boolean) {
-  if (!store) {
-    const existing = (await storage.agentWorkspaces.get()).find(
-      (workspace) => workspace.agentId === agent.id,
-    );
-    return ensureWorkspaceDefaults(
-      existing || createWorkspace(agent.id),
-      agent,
-    );
-  }
-  const workspaces = await storage.agentWorkspaces.update((current) => {
-    const existing = current.find(
-      (workspace) => workspace.agentId === agent.id,
-    );
-    const workspace = ensureWorkspaceDefaults(
-      existing || createWorkspace(agent.id),
-      agent,
-    );
-    return !existing || existing.files.length !== workspace.files.length
-      ? current.filter((item) => item.agentId !== agent.id).concat(workspace)
-      : current;
-  });
-  return workspaces.find((workspace) => workspace.agentId === agent.id)!;
 }

@@ -34,6 +34,7 @@ import {
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { FetchedModelPicker, ModelList } from "./provider-controls";
+import { modelWithProviderLabel, renameProviderDraft } from "./provider-drafts";
 import { loadProviderModels } from "./provider-models";
 import { testProviderModel } from "./test-provider-model";
 
@@ -138,8 +139,7 @@ export function ProviderAccordion({
   }
 
   function saveProvider() {
-    const savedDraft = syncModelDisplayNames(draft);
-    onChange(savedDraft);
+    onChange(draft);
     models
       .filter(
         (model) =>
@@ -326,27 +326,6 @@ export function ProviderAccordion({
       </AccordionContent>
     </AccordionItem>
   );
-}
-
-function renameProviderDraft(value: ProviderConfig, label: string) {
-  return syncModelDisplayNames({ ...value, label });
-}
-
-function syncModelDisplayNames(value: ProviderConfig) {
-  return {
-    ...value,
-    models: value.models?.map((model) => modelWithProviderLabel(model, value)),
-  };
-}
-
-function modelWithProviderLabel(model: ModelConfig, provider: ProviderConfig) {
-  const providerName =
-    provider.label || providerLabels[provider.type || "openai"];
-  const modelLabel = model.displayName?.split("/").slice(1).join("/").trim();
-  return {
-    ...model,
-    displayName: `${providerName} / ${modelLabel || model.name}`,
-  };
 }
 
 function ProviderBaseUrl({

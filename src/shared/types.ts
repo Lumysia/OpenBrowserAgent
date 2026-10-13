@@ -397,6 +397,9 @@ export type AiStreamResponse = (
       createdAt: number;
     }
   | { type: "end" }
+  // Answer to attachStream: the background has no run of that chat (it died,
+  // or it runs on another device).
+  | { type: "notRunning" }
   | { type: "error"; error: string }
   | { type: "title"; title: string }
 ) & { sequence?: number };

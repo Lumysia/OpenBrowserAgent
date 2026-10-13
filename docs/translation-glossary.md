@@ -12,40 +12,44 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 - **Agents, not "the assistant".** Settings text that talks about the AI acting in the browser calls it the agent. "AI" is fine in marketing text such as the extension description, and "assistant" stays where it means the assistant's messages in a chat (as in the debug logging option).
 - **Keep placeholders.** `{count}`, `{name}`, `{max}` and the like stay exactly as they are.
 - **Use the ellipsis character** `…`, never three dots.
-- **Leave these untranslated:** OpenBrowserAgent, MCP, Streamable HTTP, JSON, OpenAI, WebDAV, SKILL.md, agent.json, example.com, and the `RESET` confirmation word (the code compares what people type against it).
+- **Leave these untranslated:** OpenBrowserAgent, MCP, Streamable HTTP, JSON, OpenAI, WebDAV, ETag, HTTP, SKILL.md, agent.json, example.com, and the `RESET` confirmation word (the code compares what people type against it).
 - **English titles and buttons use sentence case** ("Chat history", not "Chat History").
 
 ## Core terms
 
-| English                        | 简体中文           | 繁體中文           | 日本語               | 한국어           |
-| ------------------------------ | ------------------ | ------------------ | -------------------- | ---------------- |
-| chat                           | 对话               | 對話               | チャット             | 채팅             |
-| chat history                   | 对话历史           | 對話紀錄           | チャット履歴         | 채팅 기록        |
-| agent                          | 智能体             | 智慧體             | エージェント         | 에이전트         |
-| sub-agent                      | 子智能体           | 子智慧體           | サブエージェント     | 하위 에이전트    |
-| Browse / Ask (built-in agents) | 浏览 / 询问        | 瀏覽 / 詢問        | ブラウズ / 質問      | 탐색 / 질문      |
-| side panel                     | 侧边栏             | 側邊欄             | サイドパネル         | 사이드 패널      |
-| smart bar                      | 智能工具栏         | 智慧工具列         | スマートバー         | 스마트 바        |
-| model                          | 模型               | 模型               | モデル               | 모델             |
-| helper model                   | 辅助模型           | 輔助模型           | 補助モデル           | 보조 모델        |
-| provider                       | 提供商             | 提供者             | プロバイダー         | 제공업체         |
-| API key                        | API Key            | API Key            | API キー             | API 키           |
-| base URL                       | Base URL           | Base URL           | ベース URL           | Base URL         |
-| skill                          | 技能               | 技能               | スキル               | 스킬             |
-| tool                           | 工具               | 工具               | ツール               | 도구             |
-| MCP server                     | MCP 服务器         | MCP 伺服器         | MCP サーバー         | MCP 서버         |
-| local execution bridge         | 本地执行桥         | 本機執行橋         | ローカル実行ブリッジ | 로컬 실행 브리지 |
-| workspace                      | 工作区             | 工作區             | ワークスペース       | 워크스페이스     |
-| memory                         | 记忆               | 記憶               | メモリ               | 메모리           |
-| sync                           | 同步               | 同步               | 同期                 | 동기화           |
-| attachment                     | 附件               | 附件               | 添付ファイル         | 첨부 파일        |
-| screenshot                     | 截图               | 截圖               | スクリーンショット   | 스크린샷         |
-| fork (a chat)                  | 分叉               | 分叉               | 分岐                 | 분기             |
-| built-in                       | 内置               | 內建               | 組み込み             | 내장             |
-| customize (a built-in skill)   | 自定义             | 自訂               | カスタマイズ         | 사용자 지정      |
-| skill use: Auto / Manual / Off | 自动 / 手动 / 关闭 | 自動 / 手動 / 關閉 | 自動 / 手動 / オフ   | 자동 / 수동 / 끔 |
-| footnote                       | 脚注               | 註腳               | 脚注                 | 각주             |
-| load (an image from an answer) | 加载               | 載入               | 読み込む             | 불러오기         |
+| English                        | 简体中文           | 繁體中文           | 日本語                  | 한국어           |
+| ------------------------------ | ------------------ | ------------------ | ----------------------- | ---------------- |
+| chat                           | 对话               | 對話               | チャット                | 채팅             |
+| chat history                   | 对话历史           | 對話紀錄           | チャット履歴            | 채팅 기록        |
+| agent                          | 智能体             | 智慧體             | エージェント            | 에이전트         |
+| sub-agent                      | 子智能体           | 子智慧體           | サブエージェント        | 하위 에이전트    |
+| Browse / Ask (built-in agents) | 浏览 / 询问        | 瀏覽 / 詢問        | ブラウズ / 質問         | 탐색 / 질문      |
+| side panel                     | 侧边栏             | 側邊欄             | サイドパネル            | 사이드 패널      |
+| smart bar                      | 智能工具栏         | 智慧工具列         | スマートバー            | 스마트 바        |
+| model                          | 模型               | 模型               | モデル                  | 모델             |
+| helper model                   | 辅助模型           | 輔助模型           | 補助モデル              | 보조 모델        |
+| provider                       | 提供商             | 提供者             | プロバイダー            | 제공업체         |
+| API key                        | API Key            | API Key            | API キー                | API 키           |
+| base URL                       | Base URL           | Base URL           | ベース URL              | Base URL         |
+| skill                          | 技能               | 技能               | スキル                  | 스킬             |
+| tool                           | 工具               | 工具               | ツール                  | 도구             |
+| MCP server                     | MCP 服务器         | MCP 伺服器         | MCP サーバー            | MCP 서버         |
+| local execution bridge         | 本地执行桥         | 本機執行橋         | ローカル実行ブリッジ    | 로컬 실행 브리지 |
+| workspace                      | 工作区             | 工作區             | ワークスペース          | 워크스페이스     |
+| memory                         | 记忆               | 記憶               | メモリ                  | 메모리           |
+| sync                           | 同步               | 同步               | 同期                    | 동기화           |
+| attachment                     | 附件               | 附件               | 添付ファイル            | 첨부 파일        |
+| device (a synced browser)      | 设备               | 裝置               | デバイス                | 기기             |
+| screenshot                     | 截图               | 截圖               | スクリーンショット      | 스크린샷         |
+| fork (a chat)                  | 分叉               | 分叉               | 分岐                    | 분기             |
+| built-in                       | 内置               | 內建               | 組み込み                | 내장             |
+| customize (a built-in skill)   | 自定义             | 自訂               | カスタマイズ            | 사용자 지정      |
+| skill use: Auto / Manual / Off | 自动 / 手动 / 关闭 | 自動 / 手動 / 關閉 | 自動 / 手動 / オフ      | 자동 / 수동 / 끔 |
+| footnote                       | 脚注               | 註腳               | 脚注                    | 각주             |
+| load (an image from an answer) | 加载               | 載入               | 読み込む                | 불러오기         |
+| restore (deleted synced items) | 恢复               | 還原               | 復元                    | 복원             |
+| merge (synced changes)         | 合并               | 合併               | 統合                    | 병합             |
+| browser profile                | 浏览器配置文件     | 瀏覽器設定檔       | ブラウザー プロファイル | 브라우저 프로필  |
 
 | English                        | Français                     | Deutsch                     | Español                           | Português (Brasil)               |
 | ------------------------------ | ---------------------------- | --------------------------- | --------------------------------- | -------------------------------- |
@@ -69,6 +73,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | memory                         | mémoire                      | Gedächtnis                  | memoria                           | memória                          |
 | sync                           | synchronisation              | Synchronisierung            | sincronización                    | sincronização                    |
 | attachment                     | pièce jointe                 | Anhang                      | adjunto                           | anexo                            |
+| device (a synced browser)      | appareil                     | Gerät                       | dispositivo                       | dispositivo                      |
 | screenshot                     | capture d’écran              | Screenshot                  | captura de pantalla               | captura de tela                  |
 | fork (a chat)                  | créer une branche            | verzweigen                  | bifurcar                          | ramificar                        |
 | built-in                       | intégré                      | integriert                  | integrado                         | integrado                        |
@@ -76,6 +81,9 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | skill use: Auto / Manual / Off | Auto / Manuelle / Désactivée | Automatisch / Manuell / Aus | Automático / Manual / Desactivada | Automático / Manual / Desativada |
 | footnote                       | note de bas de page          | Fußnote                     | nota al pie                       | nota de rodapé                   |
 | load (an image from an answer) | charger                      | laden                       | cargar                            | carregar                         |
+| restore (deleted synced items) | restaurer                    | wiederherstellen            | restaurar                         | restaurar                        |
+| merge (synced changes)         | fusionner                    | zusammenführen              | combinar                          | mesclar                          |
+| browser profile                | profil de navigateur         | Browserprofil               | perfil de navegador               | perfil de navegador              |
 
 ## Notes per language
 

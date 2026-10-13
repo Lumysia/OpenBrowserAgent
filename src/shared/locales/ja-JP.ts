@@ -1,4 +1,5 @@
 import { smartBarJaJP } from "./smart-bar/ja-JP";
+import { syncJaJP } from "./sync/ja-JP";
 import type { LocaleMessages } from "./en-US";
 
 export const jaJP: LocaleMessages = {
@@ -512,13 +513,6 @@ export const jaJP: LocaleMessages = {
     syncChatAttachments: "チャットの添付ファイルを同期",
     syncChatAttachmentsDescription:
       "選択中の添付対応バックエンドで、チャットにアップロードしたファイルを同期します。ブラウザー標準の同期は容量制限のため、添付ファイルには使用できません。",
-    syncWritePending: "同期の書き込みを待機中",
-    syncWriteSyncing: "クラウドに同期中",
-    syncWritePendingDetail: "{count}件が同期待ちです",
-    syncWriteOperationWrite: "書き込み",
-    syncWriteOperationRemove: "削除",
-    syncWriteIdle: "同期の書き込みは最新です",
-    syncWriteError: "前回の同期の書き込みに失敗しました",
     autoScroll: "自動スクロール",
     autoScrollDescription:
       "メッセージのストリーミング中、最新の AI 出力を自動的に表示し続けます。",
@@ -566,4 +560,5 @@ export const jaJP: LocaleMessages = {
     debugToolRequired: "必須パラメーター",
   },
   smartBar: smartBarJaJP,
+  sync: syncJaJP,
 };

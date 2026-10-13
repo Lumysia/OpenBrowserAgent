@@ -6,7 +6,8 @@ import {
   normalizeMcpServer,
 } from "../shared/mcp";
 import { callMcpServerTool, listMcpServerTools } from "../shared/mcp-client";
-import { storage } from "../shared/storage";
+import { removeById, storage, updateById } from "../shared/storage";
+import { sameJson } from "../shared/sync/codec";
 
 export async function executeMcpTool(
   toolName: string,
@@ -125,7 +126,7 @@ export async function addMcpServer(input: Record<string, unknown>) {
       lastTestError: "",
       updatedAt: Date.now(),
     };
-    await storage.mcpServers.set([...(await storage.mcpServers.get()), next]);
+    await storage.mcpServers.update((servers) => [...servers, next]);
     return { success: true, server: safeMcpServer(next) };
   } catch (error) {
     return {
@@ -140,44 +141,33 @@ export async function updateMcpServer(
 ): Promise<unknown> {
   const serverId = stringInput(input.serverId || input.id);
   if (!serverId) return { success: false, error: "Missing MCP server ID" };
-  let updated: ReturnType<typeof safeMcpServer> | undefined;
-  await storage.mcpServers.set(
-    (await storage.mcpServers.get()).map((server) => {
-      if (server.id !== serverId) return server;
-      const baseNext = {
-        ...server,
-        ...(input.name !== undefined ? { name: stringInput(input.name) } : {}),
-        ...(input.description !== undefined
-          ? { description: stringInput(input.description) }
-          : {}),
-        ...(input.url !== undefined ? { url: stringInput(input.url) } : {}),
-        ...(input.headers !== undefined
-          ? { headers: normalizeHeaders(input.headers) }
-          : {}),
-        updatedAt: Date.now(),
-      };
-      const needsRetest =
-        input.url !== undefined || input.headers !== undefined;
-      const canKeepEnabled = !needsRetest && isMcpServerTested(baseNext);
-      const next = {
-        ...baseNext,
-        ...(needsRetest
-          ? {
-              enabled: false,
-              testedAt: undefined,
-              tools: [],
-              lastTestError: "",
-            }
-          : {}),
-        ...(input.enabled !== undefined
-          ? { enabled: input.enabled === true && canKeepEnabled }
-          : {}),
-      };
-      updated = safeMcpServer(next);
-      return next;
-    }),
-  );
-  if (!updated) return { success: false, error: "MCP server not found" };
+  const next = await updateById(storage.mcpServers, serverId, (server) => {
+    const baseNext = {
+      ...server,
+      ...(input.name !== undefined ? { name: stringInput(input.name) } : {}),
+      ...(input.description !== undefined
+        ? { description: stringInput(input.description) }
+        : {}),
+      ...(input.url !== undefined ? { url: stringInput(input.url) } : {}),
+      ...(input.headers !== undefined
+        ? { headers: normalizeHeaders(input.headers) }
+        : {}),
+      updatedAt: Date.now(),
+    };
+    const needsRetest = input.url !== undefined || input.headers !== undefined;
+    const canKeepEnabled = !needsRetest && isMcpServerTested(baseNext);
+    return {
+      ...baseNext,
+      ...(needsRetest
+        ? { enabled: false, testedAt: undefined, tools: [], lastTestError: "" }
+        : {}),
+      ...(input.enabled !== undefined
+        ? { enabled: input.enabled === true && canKeepEnabled }
+        : {}),
+    };
+  });
+  if (!next) return { success: false, error: "MCP server not found" };
+  const updated = safeMcpServer(next);
   if (input.enabled === true && !updated.enabled) {
     const tested = await testMcpServer({ serverId });
     return tested.success
@@ -187,45 +177,53 @@ export async function updateMcpServer(
   return { success: true, server: updated };
 }
 
+const sameEndpoint = (left: McpServerConfig, right: McpServerConfig) =>
+  left.url === right.url && sameJson(left.headers, right.headers);
+
+// The server is asked first; its answer is stored on the server as stored
+// then, unless its address or headers changed meanwhile.
 export async function testMcpServer(input: Record<string, unknown>) {
   const serverId = stringInput(input.serverId || input.id);
   if (!serverId) return { success: false, error: "Missing MCP server ID" };
-  let result: ReturnType<typeof safeMcpServer> | undefined;
-  let errorMessage = "";
-  const servers = await storage.mcpServers.get();
-  await storage.mcpServers.set(
-    await Promise.all(
-      servers.map(async (server) => {
-        if (server.id !== serverId) return server;
-        try {
-          const tools = await listMcpServerTools(server);
-          const next = {
-            ...server,
-            enabled: true,
-            tools: mergeMcpTools(server.tools || [], tools),
-            testedAt: Date.now(),
-            lastTestError: "",
-            updatedAt: Date.now(),
-          };
-          result = safeMcpServer(next);
-          return next;
-        } catch (error) {
-          errorMessage = error instanceof Error ? error.message : String(error);
-          const next = {
-            ...server,
-            enabled: false,
-            tools: [],
-            testedAt: undefined,
-            lastTestError: errorMessage,
-            updatedAt: Date.now(),
-          };
-          result = safeMcpServer(next);
-          return next;
-        }
-      }),
-    ),
+  const server = (await storage.mcpServers.get()).find(
+    (item) => item.id === serverId,
   );
-  if (!result) return { success: false, error: "MCP server not found" };
+  if (!server) return { success: false, error: "MCP server not found" };
+  let tools: Awaited<ReturnType<typeof listMcpServerTools>> | undefined;
+  let errorMessage = "";
+  try {
+    tools = await listMcpServerTools(server);
+  } catch (error) {
+    errorMessage = error instanceof Error ? error.message : String(error);
+  }
+  const next = await updateById(storage.mcpServers, serverId, (current) => {
+    if (!sameEndpoint(current, server)) return current;
+    return tools
+      ? {
+          ...current,
+          enabled: true,
+          tools: mergeMcpTools(current.tools || [], tools),
+          testedAt: Date.now(),
+          lastTestError: "",
+          updatedAt: Date.now(),
+        }
+      : {
+          ...current,
+          enabled: false,
+          tools: [],
+          testedAt: undefined,
+          lastTestError: errorMessage,
+          updatedAt: Date.now(),
+        };
+  });
+  if (!next) return { success: false, error: "MCP server not found" };
+  if (!sameEndpoint(next, server))
+    return {
+      success: false,
+      error: "The MCP server's address or headers changed during the test",
+      server: safeMcpServer(next),
+    };
+  const result = safeMcpServer(next);
   return errorMessage
     ? { success: false, error: errorMessage, server: result }
     : { success: true, server: result };
@@ -233,10 +231,8 @@ export async function testMcpServer(input: Record<string, unknown>) {
 
 export async function deleteMcpServer(input: Record<string, unknown>) {
   const serverId = stringInput(input.serverId || input.id);
-  const servers = await storage.mcpServers.get();
-  const next = servers.filter((server) => server.id !== serverId);
-  await storage.mcpServers.set(next);
-  return { success: next.length !== servers.length, serverId };
+  const success = await removeById(storage.mcpServers, serverId);
+  return { success, serverId };
 }
 
 function safeMcpServer(server: {

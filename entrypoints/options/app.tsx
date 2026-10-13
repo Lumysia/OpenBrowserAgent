@@ -20,7 +20,7 @@ import {
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { ScrollArea, TooltipProvider } from "../../src/ui/components";
-import { useRemoteSyncRefresh } from "../../src/ui/useRemoteSyncRefresh";
+import { useSyncPageState } from "../../src/ui/useSyncPageState";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { DebugPage } from "./debug-page";
 import { AgentsPage } from "./agents-page";
@@ -37,11 +37,10 @@ export function OptionsApp() {
   const route = useHashRoute();
   const [language, , languageLoading] = useStoredState(storage.language);
   const [preferences] = useStoredState(storage.preferences);
-  const [syncDataSettings] = useStoredState(storage.syncDataSettings);
   const version = chrome.runtime.getManifest().version;
   const t = getMessages(language);
 
-  useRemoteSyncRefresh(syncDataSettings);
+  useSyncPageState();
 
   useLayoutEffect(() => {
     document.documentElement.dataset.accent =

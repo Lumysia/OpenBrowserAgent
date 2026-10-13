@@ -6,7 +6,7 @@ import {
   LOCAL_EXECUTION_BRIDGE_RUNTIME_MESSAGE_TYPE,
   type LocalExecutionBridgeRuntimeResponse,
 } from "../shared/local-execution-bridge-runtime";
-import { storage } from "../shared/storage";
+import { removeById, storage, updateById } from "../shared/storage";
 import type { LocalExecutionBridgeConfig } from "../shared/types";
 import { bridgeTaskCounts } from "./local-execution-bridge-tasks";
 import { testLocalExecutionBridge } from "./bridge-connection";
@@ -74,10 +74,7 @@ async function addBridge(input: Record<string, unknown>) {
       updatedAt: now,
     },
   ]);
-  await storage.localExecutionBridges.set([
-    ...(await storage.localExecutionBridges.get()),
-    bridge,
-  ]);
+  await storage.localExecutionBridges.update((bridges) => [...bridges, bridge]);
   // A generated secret is shown once so the user can copy it to the host.
   return finish(bridge.id, input.test === true, !secret);
 }
@@ -91,15 +88,18 @@ const EDITABLE = [
   "defaultCwd",
   "secret",
 ] as const;
-const CONNECTION = new Set(["hostName", "hostAddress", "bridgeKey", "secret"]);
+const CONNECTION_KEYS = [
+  "hostName",
+  "hostAddress",
+  "bridgeKey",
+  "secret",
+] as const;
+const CONNECTION = new Set<string>(CONNECTION_KEYS);
 
 async function updateBridge(input: Record<string, unknown>) {
   const bridgeId = text(input.bridgeId || input.id);
   if (!bridgeId)
     return { success: false, error: "Missing execution bridge ID" };
-  const bridges = await loadBridges();
-  const current = bridges.find((bridge) => bridge.id === bridgeId);
-  if (!current) return { success: false, error: "Execution bridge not found" };
   const rotate = input.regenerateSecret === true;
   const patch: Partial<Bridge> = { updatedAt: Date.now() };
   for (const key of EDITABLE)
@@ -109,13 +109,12 @@ async function updateBridge(input: Record<string, unknown>) {
   // A changed connection invalidates the previous test result.
   if (rotate || EDITABLE.some((key) => CONNECTION.has(key) && key in patch))
     Object.assign(patch, { lastTestedAt: undefined, lastTestError: "" });
-  await storage.localExecutionBridges.set(
-    normalizeLocalExecutionBridges(
-      bridges.map((bridge) =>
-        bridge.id === bridgeId ? { ...bridge, ...patch } : bridge,
-      ),
-    ),
+  const updated = await updateById(
+    storage.localExecutionBridges,
+    bridgeId,
+    (bridge) => ({ ...bridge, ...patch }),
   );
+  if (!updated) return { success: false, error: "Execution bridge not found" };
   return finish(bridgeId, input.test === true, rotate);
 }
 
@@ -132,8 +131,7 @@ async function finish(bridgeId: string, test: boolean, showSecret: boolean) {
 async function testBridge(bridgeId: string): Promise<Record<string, unknown>> {
   if (!bridgeId)
     return { success: false, error: "Missing execution bridge ID" };
-  const bridges = await loadBridges();
-  const bridge = bridges.find((item) => item.id === bridgeId);
+  const bridge = (await loadBridges()).find((item) => item.id === bridgeId);
   if (!bridge) return { success: false, error: "Execution bridge not found" };
   let result: Record<string, unknown>;
   let lastTestError = "";
@@ -147,24 +145,32 @@ async function testBridge(bridgeId: string): Promise<Record<string, unknown>> {
       ...diagnose(bridge, lastTestError),
     };
   }
-  const tested = {
-    ...bridge,
-    lastTestedAt: lastTestError ? undefined : Date.now(),
-    lastTestError,
-    updatedAt: Date.now(),
-  };
-  await storage.localExecutionBridges.set(
-    bridges.map((item) => (item.id === bridgeId ? tested : item)),
+  // Stored on the bridge as stored now, unless its connection changed
+  // during the test.
+  const tested = await updateById(
+    storage.localExecutionBridges,
+    bridgeId,
+    (current) =>
+      sameConnection(current, bridge)
+        ? {
+            ...current,
+            lastTestedAt: lastTestError ? undefined : Date.now(),
+            lastTestError,
+            updatedAt: Date.now(),
+          }
+        : current,
   );
+  if (!tested) return { success: false, error: "Execution bridge not found" };
   return { ...result, bridge: safeBridge(tested) };
 }
 
+const sameConnection = (left: Bridge, right: Bridge) =>
+  CONNECTION_KEYS.every((key) => left[key] === right[key]);
+
 async function deleteBridge(input: Record<string, unknown>) {
   const bridgeId = text(input.bridgeId || input.id);
-  const bridges = await storage.localExecutionBridges.get();
-  const next = bridges.filter((bridge) => bridge.id !== bridgeId);
-  await storage.localExecutionBridges.set(next);
-  return { success: next.length !== bridges.length, bridgeId };
+  const success = await removeById(storage.localExecutionBridges, bridgeId);
+  return { success, bridgeId };
 }
 
 export function handleLocalExecutionBridgeRuntimeMessage(
