@@ -11,6 +11,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   colorScheme: DEFAULT_COLOR_SCHEME,
   accentColor: DEFAULT_THEME,
   autoScroll: true,
+  holidayTouches: true,
   autoRetry: true,
   imageGenerationEnabled: false,
   imageGenerationSize: "1024x1024",

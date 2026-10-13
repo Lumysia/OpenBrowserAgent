@@ -49,6 +49,8 @@ export type Preferences = {
   // A theme id (see theme/themes.ts); unknown values show the default.
   accentColor?: ThemeId;
   autoScroll?: boolean;
+  // Seasonal details on well-known days (see holidays.ts).
+  holidayTouches?: boolean;
   autoRetry?: boolean;
   maxToolSteps?: number;
   reasoningEffort?: ReasoningEffort;

@@ -34,6 +34,8 @@ export const STORAGE_KEYS = {
   syncDeviceId: "sync-device-id",
   syncDataSettings: "sync-data-settings",
   debugLoggingEnabled: "debug-logging-enabled",
+  // The local day a holiday burst last played (see holidays.ts).
+  holidayBurstDay: "holiday-burst-day",
   ignoreSyncedProvidersForBootstrap: "ignore-synced-providers-for-bootstrap",
 } as const;
 

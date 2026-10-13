@@ -13,6 +13,7 @@ import type {
 import { useSkillCatalog } from "../../src/ui/useSkillCatalog";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { useTheme } from "../../src/ui/theme";
+import { celebrateSend } from "./holiday-touches";
 import { requestChatTitle } from "./ai-requests";
 import { createChatDraft } from "./chat-state-actions";
 import { pruneSentAttachmentPreviews } from "./edit-message";
@@ -280,6 +281,7 @@ export function SidepanelApp() {
       return;
     }
     sendInFlightRef.current.add(sendChatId);
+    void celebrateSend(preferences).catch(console.warn);
     try {
       const chat = currentChat || createChat();
       const {

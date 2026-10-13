@@ -2,6 +2,7 @@ import {
   Languages,
   MonitorCog,
   Palette,
+  PartyPopper,
   RefreshCw,
   ScrollText,
   SlidersHorizontal,
@@ -117,6 +118,18 @@ export function GeneralPage() {
           </ToggleGroup>
         </CardContent>
       </Card>
+      <SettingSwitchCard
+        icon={<PartyPopper size={18} />}
+        title={t.themes.holidayTouches}
+        description={t.themes.holidayTouchesDescription}
+        checked={preferences.holidayTouches !== false}
+        onChange={(checked) =>
+          setPreferences((previous) => ({
+            ...previous,
+            holidayTouches: checked,
+          }))
+        }
+      />
       <SettingSwitchCard
         icon={<ScrollText size={18} />}
         title={t.options.autoScroll}
