@@ -41,23 +41,34 @@ function mergeValues(base: unknown, preferred: unknown, other: unknown) {
   return preferred;
 }
 
-// `preferred`'s order; items only the other side added follow. An item
-// removed on one side stays removed unless the other side changed it.
+// `preferred`'s order, unless only the other side reordered the items all
+// three hold; items only one side has follow. An item removed on one side
+// stays removed unless the other side changed it.
 function mergeList(base: Keyed[], preferred: Keyed[], other: Keyed[]) {
   const originals = new Map(base.map((item) => [item.id, item]));
+  const preferreds = new Map(preferred.map((item) => [item.id, item]));
   const others = new Map(other.map((item) => [item.id, item]));
-  const preferredIds = new Set(preferred.map((item) => item.id));
+  const order = (list: Keyed[]) =>
+    list
+      .map((item) => item.id)
+      .filter(
+        (id) => originals.has(id) && preferreds.has(id) && others.has(id),
+      );
+  const otherReordered =
+    sameJson(order(preferred), order(base)) &&
+    !sameJson(order(other), order(base));
   const result: unknown[] = [];
-  for (const item of preferred) {
+  const placed = new Set<unknown>();
+  for (const item of otherReordered
+    ? [...other, ...preferred]
+    : [...preferred, ...other]) {
+    if (placed.has(item.id)) continue;
+    placed.add(item.id);
     const original = originals.get(item.id);
-    const otherItem = others.get(item.id);
-    if (otherItem) result.push(mergeValues(original, item, otherItem));
+    const mine = preferreds.get(item.id);
+    const theirs = others.get(item.id);
+    if (mine && theirs) result.push(mergeValues(original, mine, theirs));
     else if (!original || !sameJson(item, original)) result.push(item);
-  }
-  for (const [id, item] of others) {
-    if (preferredIds.has(id)) continue;
-    const original = originals.get(id);
-    if (!original || !sameJson(item, original)) result.push(item);
   }
   return result;
 }
