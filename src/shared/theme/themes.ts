@@ -45,9 +45,9 @@ export type ThemeDefinition = {
   tint?: string;
   // Stripes for the settings swatch, top to bottom.
   flag?: string[];
-  // Roles that read better with other seeds on dark backgrounds, where
-  // some hues (yellows) turn muddy as large areas.
-  dark?: Pick<ThemeDefinition, "bubble" | "wash">;
+  // Seeds for dark backgrounds, where some hues (yellows) turn muddy as
+  // large areas and the accent has to follow the page it sits on.
+  dark?: Partial<Pick<ThemeDefinition, "accent" | "bubble" | "wash">>;
 };
 
 export const THEMES: Record<ThemeId, ThemeDefinition> = {
@@ -74,9 +74,9 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     tint: "#5bcefa",
     flag: ["#5bcefa", "#f5a9b8", "#ffffff", "#f5a9b8", "#5bcefa"],
   },
-  // The orange to pink range: terracotta accents on peach.
+  // The orange to pink range: orange accents on peach, a bubble to pink.
   lesbian: {
-    accent: "#d55a3a",
+    accent: "#ff9a56",
     bubble: ["#ff9a56", "#d362a4"],
     wash: ["#d52d00", null, "#d362a4"],
     tint: "#ef7627",
@@ -90,12 +90,14 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     flag: ["#d60270", "#d60270", "#9b4f96", "#0038a8", "#0038a8"],
   },
   // Pink accents with the warm top of the page; yellow and blue live in
-  // the bubble and the wash.
+  // the bubble and the wash. In dark the yellow wash reads as olive, so
+  // the accents turn gold to match it.
   pan: {
     accent: "#ff218c",
     bubble: ["#ffd800", "#ff218c"],
     wash: ["#ff218c", "#ffd800", "#21b1ff"],
     flag: ["#ff218c", "#ffd800", "#21b1ff"],
+    dark: { accent: "#ffd800" },
   },
   nonbinary: {
     accent: "#9c59d1",
