@@ -38,7 +38,7 @@ export function createWorkspace(
 ): AgentWorkspace {
   return {
     agentId,
-    files: createDefaultWorkspaceFiles(now),
+    files: createDefaultWorkspaceFiles(),
     createdAt: now,
     updatedAt: now,
   };
@@ -104,13 +104,15 @@ export function normalizeWorkspace(
   };
 }
 
-function createDefaultWorkspaceFiles(now: number) {
+// Never edited (time 0): a workspace merge without a base tells them from a
+// file the user set back to its default text.
+function createDefaultWorkspaceFiles() {
   return Object.entries(DEFAULT_WORKSPACE_FILE_CONTENT).map(
     ([path, content]) => ({
       path,
       content,
       kind: workspaceFileKind(path),
-      updatedAt: now,
+      updatedAt: 0,
     }),
   );
 }
@@ -125,7 +127,7 @@ export function normalizeWorkspaceFiles(files: WorkspaceFile[]) {
       path: pathResult.path,
       content: content.slice(0, WORKSPACE_FILE_MAX_CHARS),
       kind: workspaceFileKind(pathResult.path),
-      updatedAt: file.updatedAt || Date.now(),
+      updatedAt: Number.isFinite(file.updatedAt) ? file.updatedAt : Date.now(),
     });
   }
   return [...byPath.values()].sort((left, right) =>

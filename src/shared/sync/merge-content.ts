@@ -228,6 +228,30 @@ export function mergeFiles<T extends FileEntry>(
   return ordered;
 }
 
+// The base of a merge of files that never had one, from the files any
+// device starts with (never edited: time 0): an untouched default file then
+// never replaces an edit. Not where the side holding the default text made
+// the newer edit of that file: it set the file back, and that is an edit too.
+export function defaultsBase<T extends FileEntry>(
+  defaults: T[],
+  mine: T[],
+  theirs: T[],
+) {
+  const time = (entry: FileEntry) =>
+    typeof entry.updatedAt === "number" ? entry.updatedAt : 0;
+  return defaults.filter((file) => {
+    const mineFile = mine.find((entry) => entry.path === file.path);
+    const theirsFile = theirs.find((entry) => entry.path === file.path);
+    if (!mineFile || !theirsFile) return true;
+    const mineDefault = sameFile(mineFile, file);
+    if (mineDefault === sameFile(theirsFile, file)) return true;
+    const [reset, other] = mineDefault
+      ? [mineFile, theirsFile]
+      : [theirsFile, mineFile];
+    return time(reset) <= time(other);
+  });
+}
+
 const sameFile = (left: FileEntry, right: FileEntry) =>
   sameJson({ ...left, updatedAt: 0 }, { ...right, updatedAt: 0 });
 

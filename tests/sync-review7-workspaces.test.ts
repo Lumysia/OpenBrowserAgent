@@ -182,18 +182,19 @@ test("two workspaces that never agreed merge from the default files", () => {
     md("MEMORY.md", "# Memory\n\ntea\n", 1),
     md("USER.md", "# User\n\n", 1),
   ];
+  // Untouched defaults were never edited (time 0), whichever record is newer.
   const merged = workspaces.mergeBodies!(
     undefined,
     real,
-    defaults(9),
+    defaults(0),
     "theirs",
     "x",
   );
-  // The untouched defaults (newer) lose to the real edits; NOTES.md, which
-  // the real workspace removed, stays removed.
+  // They lose to the real edits; NOTES.md, which the real workspace
+  // removed, stays removed.
   assert.deepEqual(merged, [
     md("MEMORY.md", "# Memory\n\ntea\n", 1),
-    md("USER.md", "# User\n\n", 9),
+    md("USER.md", "# User\n\n", 0),
   ]);
   // Other collections keep every file without a base.
   const skills = syncCollection("skills")!;

@@ -17,11 +17,12 @@ import {
   type LocalEntry,
 } from "./collection";
 import { readKey, type SyncEnv } from "./env";
-import { mergeFiles } from "./merge-content";
+import { defaultsBase, mergeFiles } from "./merge-content";
 import { createWorkspace } from "../workspace";
 import { attachmentsCollection, chatsCollection } from "./collections-chats";
 
 type Item = Record<string, unknown>;
+type FileItem = Item & { path: string };
 
 // One stored value holding the whole collection.
 function storedCollection({
@@ -111,7 +112,7 @@ const createdAt = (item: Item) =>
 // A list of items keyed by `idField`; `bodyField` (if any) is the large part.
 // `newBody`: the body any device gives an item it creates without user
 // input, the base of a merge where the devices never agreed on one (so
-// untouched defaults count as unchanged).
+// untouched defaults count as unchanged; see defaultsBase).
 function list({
   name,
   gate,
@@ -163,10 +164,16 @@ function list({
     mergeBodies: bodyField
       ? (base, mine, theirs, newer, label) =>
           mergeFiles(
-            (Array.isArray(base) ? base : newBody?.()) as
-              Array<Item & { path: string }> | undefined,
-            mine as Array<Item & { path: string }>,
-            theirs as Array<Item & { path: string }>,
+            Array.isArray(base)
+              ? (base as FileItem[])
+              : newBody &&
+                  defaultsBase(
+                    newBody() as FileItem[],
+                    mine as FileItem[],
+                    theirs as FileItem[],
+                  ),
+            mine as FileItem[],
+            theirs as FileItem[],
             newer,
             label,
           )
