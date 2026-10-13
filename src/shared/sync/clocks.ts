@@ -1,6 +1,6 @@
 import { CLOCK_LOCK } from "../locks";
 import { STORAGE_KEYS } from "../storage-keys";
-import { hashJson } from "./codec";
+import { hashJson, sameJson } from "./codec";
 import { isOrderId } from "./collection";
 import { readKey, type StorageArea, type SyncEnv } from "./env";
 import {
@@ -149,9 +149,16 @@ export async function confirmedEntry(
 }
 
 // Whether a local copy differs from the version its clock entry records.
-export async function differs(copy: Copy | null, entry: ClockEntry) {
+// A removed record whose copy holds its default (`defaultData`: settings
+// stored again after their key was removed) is unchanged.
+export async function differs(
+  copy: Copy | null,
+  entry: ClockEntry,
+  defaultData?: unknown,
+) {
   if (!copy) return !entry.deleted;
-  if (entry.deleted) return true;
+  if (entry.deleted)
+    return defaultData === undefined || !sameJson(copy.data, defaultData);
   if (entry.order && keepsOrder(copy.data, entry.order)) return false;
   return (
     copy.blob !== entry.blob || (await hashJson(copy.data)) !== entry.dataHash

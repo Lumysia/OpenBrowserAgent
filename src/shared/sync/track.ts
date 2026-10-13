@@ -87,7 +87,7 @@ export async function recordLocalChanges(
           : null;
         const known = clocks[id];
         const edited = known
-          ? await differs(copy, known)
+          ? await differs(copy, known, collection.defaultData?.(id))
           : copy
             ? !removed
             : removed;

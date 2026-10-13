@@ -97,7 +97,10 @@ export async function readLocal(
           : null;
         snapshot.copies.set(recordId, copy);
         if (entry && collection.hold?.(entry)) snapshot.held.add(recordId);
-        else if (clocks[id] && (await differs(copy, clocks[id]))) {
+        else if (
+          clocks[id] &&
+          (await differs(copy, clocks[id], collection.defaultData?.(id)))
+        ) {
           const [clock, next] = tickClock(hlc, device, env.now());
           hlc = next;
           clocks[id] = await changedEntry(id, copy, clocks[id], clock);
@@ -182,7 +185,11 @@ export async function applyToLocal(
         const expected = snapshot.copies.get(recordId) ?? null;
         const now = current ? await project(collection, current, known) : null;
         if (!(await sameCopy(now, expected))) {
-          if (known && (await differs(now, known))) await recordMissed(id, now);
+          if (
+            known &&
+            (await differs(now, known, collection.defaultData?.(id)))
+          )
+            await recordMissed(id, now);
           return false;
         }
         // Content stored here meanwhile (a chat opened) that is not the new
