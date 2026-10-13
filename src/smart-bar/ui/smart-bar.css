@@ -13,20 +13,25 @@
   z-index: var(--smart-bar-layer) !important;
 }
 
-/* It grows out of the selection: from above it when it sits below, and the
-   other way round (use-placement sets data-side and --origin-x). */
 .smart-bar-frame {
-  --enter-y: -6px;
-  --enter-scale: 0.92;
-  --enter-blur: 1px;
   position: fixed;
   top: 0;
   left: 0;
   z-index: var(--smart-bar-layer);
+}
+
+/* The card grows out of the selection: from above it when it sits below,
+   and the other way round (use-placement sets data-side and --origin-x).
+   The card moves, not the frame, so placement measures the frame as laid
+   out. A result unfolds from the toolbar the same way. */
+.smart-bar-frame > * {
+  --enter-y: -6px;
+  --enter-scale: 0.92;
+  --enter-blur: 1px;
   transform-origin: var(--origin-x, 50%) top;
   animation: enter var(--duration-base) var(--ease-out) backwards;
 }
-.smart-bar-frame[data-side="above"] {
+.smart-bar-frame[data-side="above"] > * {
   --enter-y: 6px;
   transform-origin: var(--origin-x, 50%) bottom;
 }
@@ -91,17 +96,13 @@
 }
 
 /* As wide as its text (it grows while the answer streams), up to a
-   readable line length. It unfolds from the toolbar. */
+   readable line length. */
 .smart-bar-result {
-  --enter-y: 0;
-  --enter-scale: 0.97;
   width: fit-content;
   min-width: min(240px, calc(100vw - 16px));
   max-width: min(380px, calc(100vw - 16px));
   display: flex;
   flex-direction: column;
-  transform-origin: inherit;
-  animation: enter var(--duration-base) var(--ease-out) backwards;
 }
 .smart-bar-result-header {
   display: flex;
