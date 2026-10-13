@@ -5,7 +5,13 @@ import {
 } from "../../shared/attachment-db";
 import { deleteChatArtifacts } from "../../shared/artifacts";
 import { getBrowserApi } from "../../shared/browser-api";
-import { CLOCK_LOCK, SYNC_LOCK, withLock } from "../../shared/locks";
+import {
+  CLOCK_LOCK,
+  storageLockName,
+  SYNC_LOCK,
+  withLock,
+  withLocks,
+} from "../../shared/locks";
 import {
   mergeSyncDataSettings,
   STORAGE_KEYS,
@@ -361,17 +367,22 @@ async function reset(
   const cleared = SYNC_COLLECTIONS.filter((collection) =>
     keys.some((key) => ownsKey(collection, key)),
   );
-  await env.lock(CLOCK_LOCK, async () => {
-    const stored = Object.keys(await env.local.get(null));
-    const contents = keys.includes(STORAGE_KEYS.chats)
-      ? stored.filter((key) => key.startsWith(`${STORAGE_KEYS.chats}/`))
-      : [];
-    await env.local.remove([
-      ...keys,
-      ...contents,
-      ...cleared.map((collection) => clocksKey(collection.name)),
-    ]);
-  });
+  const contents = keys.includes(STORAGE_KEYS.chats)
+    ? Object.keys(await env.local.get(null)).filter((key) =>
+        key.startsWith(`${STORAGE_KEYS.chats}/`),
+      )
+    : [];
+  // Under the keys' own locks too, so an app read-modify-write that read
+  // them before the clear does not store their old values after it.
+  const removed = [...keys, ...contents];
+  await withLocks(env.lock, removed.map(storageLockName), () =>
+    env.lock(CLOCK_LOCK, () =>
+      env.local.remove([
+        ...removed,
+        ...cleared.map((collection) => clocksKey(collection.name)),
+      ]),
+    ),
+  );
 }
 
 export async function checkBackend(env: SyncEnv, backend: SyncBackendConfig) {
