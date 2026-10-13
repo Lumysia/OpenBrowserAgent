@@ -1,8 +1,22 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { STORAGE_KEYS } from "../src/shared/storage-keys";
-import { type ChatContent, type ChatSummary } from "../src/shared/types";
 import {
+  readLocalChatContent,
+  saveChatContent,
+} from "../src/shared/chat-storage";
+import { appendAssistantPart } from "../src/shared/chat-updates";
+import { chatContent, joinChat } from "../src/shared/chats";
+import { storage } from "../src/shared/storage";
+import { STORAGE_KEYS } from "../src/shared/storage-keys";
+import {
+  CHAT_PART_STATE,
+  toolPartType,
+  type ChatContent,
+  type ChatSource,
+  type ChatSummary,
+} from "../src/shared/types";
+import {
+  onDevice,
   openChatContent,
   reattachToRun,
   reply,
@@ -142,4 +156,58 @@ test("fix7 P1+P2: a long reply is never replaced by a partial copy closed on ano
       "Hello world",
       on.name,
     );
+});
+
+const source = (id: string, url: string, snippet: string): ChatSource => ({
+  id,
+  kind: "page",
+  title: url,
+  url,
+  snippet,
+  createdAt: 1,
+});
+
+test("fix7 P3: a reply that finds a known source again leaves it as it is", async () => {
+  const { clock, a, b } = pair();
+  const s1 = source("source_1", "https://example.com/a", "first");
+  await storeChat(a, "X", {
+    messages: [userMessage("u1", 1), reply("a1", 2, "[[cite:source_1]]", 3)],
+    sources: [s1],
+  });
+  await a.sync("edit");
+  await b.sync();
+  await openChatContent(b, "X");
+  // On A the user edits the message: the reply and its source go.
+  clock.now += 60_000;
+  await storeChat(a, "X", {
+    messages: [userMessage("u1b", 4), reply("a2", 5, "Other", 6)],
+  });
+  await a.sync("edit");
+  // On B, before it syncs, a reply's tool reads the same page again.
+  const readAgain = {
+    id: "p1",
+    type: toolPartType("read_page"),
+    state: CHAT_PART_STATE.outputAvailable,
+    output: { _sources: [source("source_1", s1.url!, "second")] },
+  };
+  clock.now += 60_000;
+  // B's reply is stored with the source list it merged into.
+  await onDevice(b, async () => {
+    const base = (await readLocalChatContent("X"))!;
+    const summary = (await storage.chats.get()).find(
+      (chat) => chat.id === "X",
+    )!;
+    const chat = joinChat(summary, base);
+    const next = appendAssistantPart(
+      { ...chat, messages: [...chat.messages, reply("b1", 7, "Again", 8)] },
+      { messageId: "b1", part: readAgain },
+    );
+    await saveChatContent("X", chatContent(next), base);
+  });
+  await b.sync("edit");
+  await a.sync();
+  for (const on of [a, b]) {
+    assert.deepEqual(messageIds(on, "X"), ["u1b", "a2", "b1"], on.name);
+    assert.equal(contentOf(on, "X").sources, undefined, on.name);
+  }
 });
