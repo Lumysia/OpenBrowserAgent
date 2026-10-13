@@ -79,7 +79,7 @@ test("a user copy overrides the built-in; deleting it brings the built-in back",
     description: "My way of writing skills",
     instruction: "Custom instructions",
   });
-  await storage.skills.set([copy]);
+  await storage.skills.replace([copy]);
   const entries = await catalog();
   const entry = entries.find((item) => item.skill.name === "skill-creator")!;
   assert.equal(entry.source, "override");
@@ -94,7 +94,7 @@ test("a user copy overrides the built-in; deleting it brings the built-in back",
   );
   assert.match(read.text, /Custom instructions/);
 
-  await storage.skills.set([]);
+  await storage.skills.replace([]);
   const restored = (await catalog()).find(
     (item) => item.skill.name === "skill-creator",
   )!;
@@ -103,7 +103,9 @@ test("a user copy overrides the built-in; deleting it brings the built-in back",
 });
 
 test("changing a built-in with the skills tool saves an override, never the built-in", async () => {
-  await storage.skillSettings.set(setSkillInvokeMode({}, creator.id, "manual"));
+  await storage.skillSettings.replace(
+    setSkillInvokeMode({}, creator.id, "manual"),
+  );
   const context = run(availableSkills(await catalog()));
   const result = await skillsTool.execute(
     {

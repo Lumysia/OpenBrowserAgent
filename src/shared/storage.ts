@@ -110,6 +110,19 @@ function createItem<T>(
   };
 }
 
+// A synced value: a sync round may store another device's change in it at
+// any time, so a whole value computed from an earlier read would undo that
+// change. It is changed with `update` (by id, from what is stored then);
+// `replace` is only for values meant to replace everything there.
+function createSyncedItem<T>(
+  key: string,
+  init: () => T,
+  options: ItemOptions<T> = {},
+) {
+  const { set, ...item } = createItem(key, init, options);
+  return { ...item, replace: set };
+}
+
 type Updatable<T> = { update(updater: (current: T) => T): Promise<T> };
 
 // Change the item `id` of a synced list, from what is stored while the
@@ -157,39 +170,43 @@ async function removeContentOfRemovedChats(
 export type StorageItem<T> = ReturnType<typeof createItem<T>>;
 
 export const storage = {
-  language: createItem<string>(
+  language: createSyncedItem<string>(
     STORAGE_KEYS.language,
     () => getBrowserApi().i18n?.getUILanguage?.() || "en-US",
   ),
-  preferences: createItem<Preferences>(
+  preferences: createSyncedItem<Preferences>(
     STORAGE_KEYS.preferences,
     () => DEFAULT_PREFERENCES,
     { normalize: mergePreferences },
   ),
-  provider: createItem<ProviderState>(STORAGE_KEYS.provider, () => ({})),
-  agents: createItem<Agent[]>(
+  provider: createSyncedItem<ProviderState>(STORAGE_KEYS.provider, () => ({})),
+  agents: createSyncedItem<Agent[]>(
     STORAGE_KEYS.agents,
     () => normalizeAgents(undefined),
     { normalize: normalizeAgents },
   ),
-  agentWorkspaces: createItem<AgentWorkspace[]>(
+  agentWorkspaces: createSyncedItem<AgentWorkspace[]>(
     STORAGE_KEYS.agentWorkspaces,
     () => [],
     { normalize: normalizeWorkspaces },
   ),
   // The user's own skills; built-ins come from the code (skill-catalog).
-  skills: createItem<Skill[]>(STORAGE_KEYS.skills, () => [], {
+  skills: createSyncedItem<Skill[]>(STORAGE_KEYS.skills, () => [], {
     normalize: normalizeSkills,
   }),
-  skillSettings: createItem<SkillSettings>(
+  skillSettings: createSyncedItem<SkillSettings>(
     STORAGE_KEYS.skillSettings,
     () => ({}),
     { normalize: normalizeSkillSettings },
   ),
-  mcpServers: createItem<McpServerConfig[]>(STORAGE_KEYS.mcpServers, () => [], {
-    normalize: normalizeMcpServers,
-  }),
-  localExecutionBridges: createItem<LocalExecutionBridgeConfig[]>(
+  mcpServers: createSyncedItem<McpServerConfig[]>(
+    STORAGE_KEYS.mcpServers,
+    () => [],
+    {
+      normalize: normalizeMcpServers,
+    },
+  ),
+  localExecutionBridges: createSyncedItem<LocalExecutionBridgeConfig[]>(
     STORAGE_KEYS.localExecutionBridges,
     () => [],
     {
@@ -202,7 +219,7 @@ export const storage = {
   ),
   // Chat list; each chat's content is stored apart (see chat-storage), and
   // leaves with its list entry.
-  chats: createItem<ChatSummary[]>(STORAGE_KEYS.chats, () => [], {
+  chats: createSyncedItem<ChatSummary[]>(STORAGE_KEYS.chats, () => [], {
     normalize: normalizeChatSummaries,
     afterSet: removeContentOfRemovedChats,
   }),
@@ -221,7 +238,7 @@ export const storage = {
     STORAGE_KEYS.activeSyncBackendId,
     () => NO_SYNC_BACKEND_ID,
   ),
-  syncDataSettings: createItem<SyncDataSettings>(
+  syncDataSettings: createSyncedItem<SyncDataSettings>(
     STORAGE_KEYS.syncDataSettings,
     () => DEFAULT_SYNC_DATA_SETTINGS,
     { normalize: mergeSyncDataSettings },

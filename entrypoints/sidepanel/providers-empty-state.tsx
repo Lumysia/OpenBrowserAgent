@@ -146,7 +146,8 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
       await checkSyncBackend(backend);
       setSyncAction("confirm");
       await storage.syncBackends.set(backends);
-      if (codeSettings) await storage.syncDataSettings.set(codeSettings);
+      // The setup code's settings replace this device's on purpose.
+      if (codeSettings) await storage.syncDataSettings.replace(codeSettings);
       await storage.activeSyncBackendId.set(backend.id);
       const status = await syncNow();
       if (status.error) throw new Error(status.error);

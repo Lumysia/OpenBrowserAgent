@@ -108,8 +108,9 @@ export function AgentsPage() {
         updatedAt: now,
       })),
     );
+    // Resetting replaces every workspace on purpose.
     storage.agentWorkspaces
-      .set(BUILTIN_AGENTS.map((agent) => createWorkspace(agent.id, now)))
+      .replace(BUILTIN_AGENTS.map((agent) => createWorkspace(agent.id, now)))
       .catch(console.warn);
     setPreferences((current) => ({
       ...current,
