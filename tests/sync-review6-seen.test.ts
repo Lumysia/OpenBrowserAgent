@@ -2,14 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { loadContent } from "../src/background/sync/service";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
-import { seenFrom } from "../src/shared/sync/clocks";
-import { INITIAL_HLC, tickClock } from "../src/shared/sync/hlc";
-import { decodeRoot } from "../src/shared/sync/root";
+import { createBrowserSyncTransport } from "../src/shared/sync/browser-sync";
+import { SEEN_KEEP_MS, seenFrom } from "../src/shared/sync/clocks";
+import { formatClock, INITIAL_HLC, tickClock } from "../src/shared/sync/hlc";
+import { decodeRoot, emptyRoot } from "../src/shared/sync/root";
 import { SYNC_WARNINGS } from "../src/shared/sync/state";
 import {
   ALL_ON,
   copyOf,
   device,
+  memoryArea,
   memoryServer,
   memoryTransport,
   messageIds,
@@ -18,10 +20,12 @@ import {
 } from "./sync-fixtures";
 
 // Review 6, C1: `seen` kept one clock per device id, so a copied profile's
-// change pushed the original's out of later versions.
+// change pushed the original's out of later versions. Also S1 (the size of
+// `seen` for browser account sync).
 
 const PREFS = STORAGE_KEYS.preferences;
 const PROVIDERS = STORAGE_KEYS.provider;
+const DAY = 24 * 60 * 60_000;
 type Providers = Record<string, { apiKey: string; model: string }>;
 
 async function longestSeen(server: MemoryServer) {
@@ -159,4 +163,44 @@ test("review6 seen: one device's edits name at most its waiting push, two device
   }
   assert.ok(Math.max(...lengths) <= 3, `seen lengths ${lengths}`);
   assert.deepEqual(a.get(PREFS), b.get(PREFS));
+});
+
+test("review6 S1: versions stop naming changes older than SEEN_KEEP_MS", () => {
+  const now = 1_800_000_000_000;
+  const [made] = tickClock(INITIAL_HLC, "a", now);
+  const old = formatClock(now - SEEN_KEEP_MS - 1, 0, "gone");
+  const recent = formatClock(now - SEEN_KEEP_MS + DAY, 0, "away");
+  assert.deepEqual(
+    seenFrom(made, [{ clock: recent, seen: [old] }], undefined),
+    [recent],
+  );
+});
+
+// Every install that changed a record adds about 70 bytes to it. Forty
+// small settings records reach the browser account quota at about thirty
+// installs, and installs only add up over the years (new browsers,
+// reinstalls, copied profiles): versions keep only recent ones.
+test("review6 S1: names of changes take a bounded share of browser account sync", async () => {
+  const bytesWith = async (installs: number) => {
+    const area = memoryArea();
+    const root = emptyRoot("a");
+    const ids = Array.from({ length: installs }, () => crypto.randomUUID());
+    for (let index = 0; index < 40; index++) {
+      const seen = ids.map((id) => tickClock(INITIAL_HLC, id, 1e12)[0]).sort();
+      root.records[`providers/p${index}`] = {
+        clock: tickClock(INITIAL_HLC, crypto.randomUUID(), 1e12)[0],
+        data: { label: `Provider ${index}`, apiKey: "k".repeat(40) },
+        ...(seen.length ? { seen } : {}),
+      };
+    }
+    await createBrowserSyncTransport(area).writeRoot(root, undefined);
+    return Object.entries(area.data).reduce(
+      (total, [key, value]) =>
+        total + key.length + JSON.stringify(value).length,
+      0,
+    );
+  };
+  const perInstall = ((await bytesWith(10)) - (await bytesWith(0))) / 10;
+  assert.ok(perInstall > 2_500 && perInstall < 3_000, `${perInstall}`);
+  assert.equal(SEEN_KEEP_MS, 90 * DAY);
 });

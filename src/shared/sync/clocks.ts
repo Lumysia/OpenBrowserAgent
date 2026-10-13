@@ -161,9 +161,17 @@ function settled(from: ClockEntry | undefined) {
   return (from?.own ?? []).filter((clock) => !keep.includes(clock));
 }
 
+// How long a version keeps naming the changes it includes. An install asks
+// about its change until its next sync after pushing it; one that comes
+// back later than this merges it again from the version it was made from.
+// The bound keeps records small for browser account sync, whose quota the
+// clocks of every install that ever changed a record would fill over time.
+export const SEEN_KEEP_MS = 90 * 24 * 60 * 60_000;
+
 // What a version made at `clock` from (or merging) `versions` includes
 // besides itself: every change they hold, except those of this install it
-// no longer asks about (`from`: its entry). Clocks of one device id are never pruned against each
+// no longer asks about (`from`: its entry) and those older than
+// SEEN_KEEP_MS. Clocks of one device id are never pruned against each
 // other: two installs may share an id (a copied profile), and a version
 // that holds one install's change must name it for that install to see it.
 export function seenFrom(
@@ -172,12 +180,14 @@ export function seenFrom(
   from: ClockEntry | undefined,
 ) {
   const left = new Set(settled(from));
+  const oldest = (parseClock(clock)?.wall ?? 0) - SEEN_KEEP_MS;
   const seen = new Set<Clock>();
   for (const version of versions)
     for (const held of version ? heldBy(version) : []) {
       const wall = parseClock(held)?.wall;
       // Data of unknown age (wall 0) holds no change.
-      if (wall && held !== clock && !left.has(held)) seen.add(held);
+      if (wall && wall >= oldest && held !== clock && !left.has(held))
+        seen.add(held);
     }
   return seen.size ? [...seen].sort() : undefined;
 }
