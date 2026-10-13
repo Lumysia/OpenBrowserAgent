@@ -20,7 +20,7 @@ export const syncKo: SyncMessages = {
     "unreliable-etags":
       "이 서버의 파일 버전 정보를 믿을 수 없어 이 기기의 변경 사항을 업로드하지 않아요. 강한 ETag를 보내는 WebDAV 서버를 사용하세요.",
     "ignores-preconditions":
-      "이 서버는 업로드할 때 버전 확인을 무시해요. 두 기기에서 동시에 저장하면 덮어쓴 변경 사항은 해당 기기의 다음 확인 때 다시 업로드돼요.",
+      "이 서버는 버전 확인을 지원하지 않아 더 느린 안전한 방식으로 동기화해요. 두 기기에서 동시에 저장하면 한쪽 변경 사항은 다음 동기화 때 반영되며, 사라지지 않아요.",
     "newer-format":
       "다른 기기가 더 새로운 동기화 형식을 사용하고 있어요. 계속 동기화하려면 이 기기의 OpenBrowserAgent를 업데이트하세요.",
     "missing-content":

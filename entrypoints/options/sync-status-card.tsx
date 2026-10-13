@@ -4,6 +4,7 @@ import type { Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { NO_SYNC_BACKEND_ID } from "../../src/shared/sync-backends";
 import { resolveMassDelete, syncNow } from "../../src/shared/sync/client";
+import { SYNC_WARNINGS } from "../../src/shared/sync/state";
 import {
   Button,
   Card,
@@ -76,7 +77,11 @@ export function SyncStatusCard({ t }: { t: Messages }) {
         </div>
         {enabled &&
           status?.warnings.map((warning) => (
-            <Feedback key={warning} error>
+            // Ignored preconditions are handled by re-uploading; only a note.
+            <Feedback
+              key={warning}
+              error={warning !== SYNC_WARNINGS.ignoresPreconditions}
+            >
               {t.sync.warnings[warning]}
             </Feedback>
           ))}
