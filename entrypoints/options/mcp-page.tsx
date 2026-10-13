@@ -44,6 +44,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  SettingsSummary,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 
@@ -228,18 +229,16 @@ export function McpPage() {
           <AccordionItem key={server.id} value={server.id}>
             <AccordionHeader className="ui-accordion-header-with-actions">
               <AccordionTriggerButton hideChevron>
-                <span className="settings-summary">
-                  <span className="settings-summary-title">
-                    <Plug size={18} />
-                    <span>{server.name || t.options.newMcpServer}</span>
-                    <Badge>{server.id}</Badge>
-                  </span>
-                  <small>
-                    {server.description ||
-                      server.url ||
-                      t.options.mcpServerUrlPlaceholder}
-                  </small>
-                </span>
+                <SettingsSummary
+                  icon={<Plug size={18} />}
+                  title={server.name || t.options.newMcpServer}
+                  badges={<Badge title={server.id}>{server.id}</Badge>}
+                  description={
+                    server.description ||
+                    server.url ||
+                    t.options.mcpServerUrlPlaceholder
+                  }
+                />
               </AccordionTriggerButton>
               <span
                 className="accordion-trigger-actions"

@@ -25,6 +25,7 @@ import {
   Input,
   Label,
   Textarea,
+  SettingsSummary,
 } from "../../src/ui/components";
 import { AgentToolsEditor } from "./agent-tools-editor";
 import { ModelSelect } from "./model-select";
@@ -195,19 +196,16 @@ export function AgentsPage() {
           return (
             <AccordionItem key={agent.id} value={agent.id}>
               <AccordionTrigger>
-                <span className="settings-summary">
-                  <span className="settings-summary-title">
-                    <AgentIcon agent={agent} size={18} />
-                    <span>{agentDisplayName(agent, t)}</span>
-                    <Badge>{agent.id}</Badge>
-                  </span>
-                  <small>
-                    {description}
-                    {builtin
+                <SettingsSummary
+                  icon={<AgentIcon agent={agent} size={18} />}
+                  title={agentDisplayName(agent, t)}
+                  badges={<Badge title={agent.id}>{agent.id}</Badge>}
+                  description={`${description}${
+                    builtin
                       ? `${description ? " · " : ""}${t.options.builtinAgentBadge}`
-                      : ""}
-                  </small>
-                </span>
+                      : ""
+                  }`}
+                />
               </AccordionTrigger>
               <AccordionContent>
                 <div className="stack">

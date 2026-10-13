@@ -33,6 +33,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  SettingsSummary,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 
@@ -136,19 +137,21 @@ export function LocalExecutionBridgesPage() {
           <AccordionItem key={bridge.id} value={bridge.id}>
             <AccordionHeader className="ui-accordion-header-with-actions">
               <AccordionTriggerButton hideChevron>
-                <span className="settings-summary">
-                  <span className="settings-summary-title">
-                    <TerminalSquare size={18} />
-                    <span>{bridge.name}</span>
-                    <Badge>{bridge.id.slice(0, 8)}</Badge>
-                    {bridge.lastTestError ? (
-                      <Badge className="status-error-badge">
-                        {t.options.localExecutionBridgeTestError}
-                      </Badge>
-                    ) : null}
-                  </span>
-                  <small>{bridge.description || bridge.hostName}</small>
-                </span>
+                <SettingsSummary
+                  icon={<TerminalSquare size={18} />}
+                  title={bridge.name}
+                  badges={
+                    <>
+                      <Badge title={bridge.id}>{bridge.id.slice(0, 8)}</Badge>
+                      {bridge.lastTestError ? (
+                        <Badge className="status-error-badge">
+                          {t.options.localExecutionBridgeTestError}
+                        </Badge>
+                      ) : null}
+                    </>
+                  }
+                  description={bridge.description || bridge.hostName}
+                />
               </AccordionTriggerButton>
               <span
                 className="accordion-trigger-actions"

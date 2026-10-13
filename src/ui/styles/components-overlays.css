@@ -99,6 +99,12 @@
 .ui-accordion-trigger:hover {
   background: var(--secondary);
 }
+/* Inset, so the ring stays inside the item's rounded border. */
+.ui-accordion-trigger:focus-visible {
+  outline: none;
+  border-radius: calc(var(--radius) - 1px);
+  box-shadow: inset 0 0 0 3px var(--ring);
+}
 .provider-summary {
   margin-left: auto;
   display: flex;
@@ -124,11 +130,27 @@
   gap: 4px;
 }
 .settings-summary-title {
-  display: inline-flex;
+  min-width: 0;
+  display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 4px 10px;
   font-weight: 600;
+}
+.settings-summary-title svg {
+  flex-shrink: 0;
+}
+.settings-summary-name,
+.settings-summary-title > .ui-badge {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-summary-title > .ui-badge {
+  display: inline-block;
+  max-width: 18rem;
 }
 .agent-builtin-badge {
   margin-left: 2px;
@@ -138,11 +160,13 @@
   white-space: nowrap;
 }
 .settings-summary small {
+  display: -webkit-box;
   overflow: hidden;
   color: var(--muted-foreground);
   font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 .ui-accordion-chevron {
   transition: transform 0.2s ease;
@@ -306,7 +330,6 @@
   background: color-mix(in srgb, var(--accent-hover) 86%, var(--popover));
   color: var(--accent-strong);
   filter: saturate(1.03) brightness(1.01);
-  transform: translateX(1px);
 }
 .ui-select-item[data-state="checked"] {
   color: var(--accent-strong);
@@ -413,7 +436,6 @@
   box-shadow:
     0 6px 14px color-mix(in srgb, var(--accent-shadow) 34%, transparent),
     inset 0 0 0 1px color-mix(in srgb, var(--accent-strong) 12%, transparent);
-  transform: translateY(-1px);
 }
 .ui-tabs-trigger:focus-visible {
   outline: none;
@@ -512,7 +534,6 @@
   background: color-mix(in srgb, var(--accent-hover) 86%, var(--popover));
   color: var(--accent-strong);
   filter: saturate(1.03) brightness(1.01);
-  transform: translateX(1px);
 }
 .ui-command-item span {
   min-width: 0;
@@ -541,6 +562,12 @@
 }
 .ui-scroll-area-viewport[data-orientation="both"] {
   overflow: auto;
+}
+.ui-scroll-area-inset {
+  margin: calc(-1 * var(--scroll-inset));
+}
+.ui-scroll-area-inset > .ui-scroll-area-viewport {
+  padding: var(--scroll-inset);
 }
 .ui-scroll-area-viewport::-webkit-scrollbar {
   width: 10px;

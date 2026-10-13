@@ -255,7 +255,9 @@ function SkillItemHeader({
           <span className="skill-trigger-title-row">
             <span className="skill-trigger-label">
               <FileText size={18} />
-              {name}
+              <span className="settings-summary-name" title={name}>
+                {name}
+              </span>
             </span>
             <span className="skill-trigger-badges">
               {source !== "user" && (

@@ -7,6 +7,7 @@ import {
 import type { Messages } from "../../src/shared/i18n";
 import type { UploadedAttachment } from "../../src/shared/types";
 import { Button, IconTooltip } from "../../src/ui/components";
+import { ContextCardLabel } from "./context-card-label";
 import { formatAttachmentSize } from "./file-attachments";
 import { useDeferredRemove } from "./use-deferred-remove";
 
@@ -51,12 +52,10 @@ export function UploadedAttachmentCard({
       className={`context-card attachment-card ${removing ? "is-removing" : ""}`}
     >
       <AttachmentPreview attachment={attachment} />
-      <span>
-        <strong>{attachment.name}</strong>
-        <small>
-          {status} · {formatAttachmentSize(attachment.size)}
-        </small>
-      </span>
+      <ContextCardLabel
+        title={attachment.name}
+        detail={`${status} · ${formatAttachmentSize(attachment.size)}`}
+      />
       <IconTooltip label={t.sidepanel.removeAttachment}>
         <Button
           variant="ghost"

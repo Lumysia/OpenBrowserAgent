@@ -22,6 +22,7 @@ import {
   CardDescription,
   Input,
   Textarea,
+  SettingsSummary,
 } from "../../src/ui/components";
 import { Feedback } from "../../src/ui/components/feedback";
 import { SkillFileActionButton } from "./skill-options-components";
@@ -151,16 +152,11 @@ export function AgentWorkspaceEditor({
     <Accordion type="single" collapsible>
       <AccordionItem value="workspace">
         <AccordionTrigger>
-          <span className="settings-summary">
-            <span className="settings-summary-title">
-              <FileText size={15} />
-              <span>{t.options.agentWorkspace}</span>
-            </span>
-            <small>
-              {workspace.files.length} files ·{" "}
-              {workspaceTotalChars(workspace.files)} chars
-            </small>
-          </span>
+          <SettingsSummary
+            icon={<FileText size={15} />}
+            title={t.options.agentWorkspace}
+            description={`${workspace.files.length} files · ${workspaceTotalChars(workspace.files)} chars`}
+          />
         </AccordionTrigger>
         <AccordionContent>
           <div className="stack">

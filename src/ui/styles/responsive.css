@@ -248,6 +248,8 @@
   .settings-main {
     flex: 0 0 auto;
     overflow: visible;
+  }
+  .settings-main > .ui-scroll-area-viewport {
     padding: 18px;
   }
   .split {

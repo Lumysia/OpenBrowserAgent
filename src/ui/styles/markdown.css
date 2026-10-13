@@ -164,9 +164,6 @@
     color-mix(in srgb, var(--card) 94%, var(--background));
   transition: transform 0.16s ease;
 }
-.mermaid-preview:hover {
-  transform: translateY(-1px);
-}
 .mermaid-preview img {
   display: block;
   max-width: 100%;
@@ -411,7 +408,6 @@
 .message-label:hover {
   border-color: color-mix(in srgb, var(--accent-strong) 28%, var(--border));
   background: color-mix(in srgb, var(--accent-hover) 66%, var(--card));
-  transform: translateY(-1px);
 }
 .message-label svg {
   flex: 0 0 auto;

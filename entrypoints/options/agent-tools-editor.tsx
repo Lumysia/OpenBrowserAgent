@@ -14,6 +14,7 @@ import {
   AccordionTrigger,
   Label,
   Switch,
+  SettingsSummary,
 } from "../../src/ui/components";
 
 // The tool groups an agent may use, plus its private workspace.
@@ -57,17 +58,15 @@ export function AgentToolsEditor({
     <Accordion type="single" collapsible className="agent-tools-accordion">
       <AccordionItem value="tools">
         <AccordionTrigger>
-          <span className="settings-summary">
-            <span className="settings-summary-title">
-              <SlidersHorizontal size={15} />
-              <span>{t.options.agentTools}</span>
-            </span>
-            <small>
-              {readOnly
+          <SettingsSummary
+            icon={<SlidersHorizontal size={15} />}
+            title={t.options.agentTools}
+            description={
+              readOnly
                 ? t.options.builtinAgentToolsDescription
-                : t.options.agentToolsDescription}
-            </small>
-          </span>
+                : t.options.agentToolsDescription
+            }
+          />
         </AccordionTrigger>
         <AccordionContent>
           <div className="agent-tools-grid">
