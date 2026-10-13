@@ -435,17 +435,20 @@ export const enUS = {
     builtinSkillBadge: "Built-in",
     overrideSkillBadge: "Customized built-in",
     customizeSkill: "Customize",
+    customizeSkillHint:
+      "Built-in skills are read-only. Customize to edit your own copy.",
     revertSkillToBuiltin: "Revert to built-in",
     viewFile: "View file",
     skillInvokeMode: "When to use",
     skillInvokeAuto: "Auto",
     skillInvokeManual: "Manual",
     skillInvokeOff: "Off",
-    skillInvokeHint:
-      "Auto: the agent uses a skill when your request fits it. Manual: only when you pick it with / or + in the side panel. Off: never. Built-in skills are read-only; customize one to edit your own copy.",
+    skillInvokeAutoHint: "Used when a request fits",
+    skillInvokeManualHint: "Only when picked with / or +",
+    skillInvokeOffHint: "Never used",
     skillListOverBudget: "The skill list is long",
     skillListOverBudgetDescription:
-      "Descriptions of Auto skills take {chars} characters of every request (the budget is {limit}). Set skills you rarely need to Manual or shorten their descriptions.",
+      "Auto skill descriptions take {chars} of {limit} characters. Set rarely used skills to Manual or shorten them.",
     languageDescription: "Choose the language used by the extension UI.",
     colorScheme: "Color scheme",
     colorSchemeDescription:

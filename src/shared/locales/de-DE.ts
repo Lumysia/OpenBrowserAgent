@@ -460,17 +460,20 @@ export const deDE: LocaleMessages = {
     builtinSkillBadge: "Integriert",
     overrideSkillBadge: "Angepasster integrierter Skill",
     customizeSkill: "Anpassen",
+    customizeSkillHint:
+      "Integrierte Skills sind schreibgeschützt. Passen Sie einen an, um Ihre eigene Kopie zu bearbeiten.",
     revertSkillToBuiltin: "Auf integrierte Version zurücksetzen",
     viewFile: "Datei anzeigen",
     skillInvokeMode: "Verwendung",
     skillInvokeAuto: "Automatisch",
     skillInvokeManual: "Manuell",
     skillInvokeOff: "Aus",
-    skillInvokeHint:
-      "Automatisch: Der Agent verwendet den Skill, wenn Ihre Anfrage dazu passt. Manuell: nur, wenn Sie ihn in der Seitenleiste mit / oder + auswählen. Aus: nie. Integrierte Skills sind schreibgeschützt; passen Sie einen an, um Ihre eigene Kopie zu bearbeiten.",
+    skillInvokeAutoHint: "Wird verwendet, wenn Ihre Anfrage passt",
+    skillInvokeManualHint: "Nur, wenn Sie ihn mit / oder + auswählen",
+    skillInvokeOffHint: "Wird nie verwendet",
     skillListOverBudget: "Die Skill-Liste ist lang",
     skillListOverBudgetDescription:
-      "Die Beschreibungen automatischer Skills belegen bei jeder Anfrage {chars} Zeichen (Grenze: {limit}). Stellen Sie selten benötigte Skills auf „Manuell“ oder kürzen Sie ihre Beschreibungen.",
+      "Beschreibungen automatischer Skills belegen {chars} von {limit} Zeichen. Stellen Sie selten genutzte Skills auf „Manuell“ oder kürzen Sie sie.",
     languageDescription: "Wählen Sie die Sprache der Erweiterungsoberfläche.",
     colorScheme: "Farbschema",
     colorSchemeDescription:

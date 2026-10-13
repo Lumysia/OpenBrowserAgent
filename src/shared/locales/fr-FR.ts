@@ -462,17 +462,20 @@ export const frFR: LocaleMessages = {
     builtinSkillBadge: "Intégrée",
     overrideSkillBadge: "Compétence intégrée personnalisée",
     customizeSkill: "Personnaliser",
+    customizeSkillHint:
+      "Les compétences intégrées sont en lecture seule. Personnalisez-en une pour modifier votre propre copie.",
     revertSkillToBuiltin: "Revenir à la version intégrée",
     viewFile: "Afficher le fichier",
     skillInvokeMode: "Utilisation",
     skillInvokeAuto: "Auto",
     skillInvokeManual: "Manuelle",
     skillInvokeOff: "Désactivée",
-    skillInvokeHint:
-      "Auto : l’agent utilise la compétence quand votre demande s’y prête. Manuelle : uniquement quand vous la choisissez avec / ou + dans le panneau latéral. Désactivée : jamais. Les compétences intégrées sont en lecture seule ; personnalisez-en une pour modifier votre propre copie.",
+    skillInvokeAutoHint: "Utilisée quand votre demande s’y prête",
+    skillInvokeManualHint: "Uniquement quand vous la choisissez avec / ou +",
+    skillInvokeOffHint: "Jamais utilisée",
     skillListOverBudget: "La liste des compétences est longue",
     skillListOverBudgetDescription:
-      "Les descriptions des compétences en mode Auto occupent {chars} caractères de chaque requête (la limite est de {limit}). Passez les compétences rarement utiles en Manuelle ou raccourcissez leur description.",
+      "Les descriptions des compétences Auto occupent {chars} caractères sur {limit}. Passez les moins utiles en Manuelle ou raccourcissez-les.",
     languageDescription: "Choisissez la langue de l’interface de l’extension.",
     colorScheme: "Palette de couleurs",
     colorSchemeDescription:

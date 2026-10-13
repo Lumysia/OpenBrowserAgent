@@ -423,17 +423,20 @@ export const ko: LocaleMessages = {
     builtinSkillBadge: "내장",
     overrideSkillBadge: "사용자 지정된 내장 스킬",
     customizeSkill: "사용자 지정",
+    customizeSkillHint:
+      "내장 스킬은 읽기 전용입니다. 사용자 지정을 누르면 편집할 수 있는 사본이 만들어집니다.",
     revertSkillToBuiltin: "내장 버전으로 되돌리기",
     viewFile: "파일 보기",
     skillInvokeMode: "사용 시점",
     skillInvokeAuto: "자동",
     skillInvokeManual: "수동",
     skillInvokeOff: "끔",
-    skillInvokeHint:
-      "자동: 요청에 맞으면 에이전트가 스킬을 사용합니다. 수동: 사이드 패널에서 / 또는 +로 선택할 때만 사용합니다. 끔: 사용하지 않습니다. 내장 스킬은 읽기 전용이며, 사용자 지정을 누르면 편집할 수 있는 사본이 만들어집니다.",
+    skillInvokeAutoHint: "요청에 맞으면 사용합니다",
+    skillInvokeManualHint: "/ 또는 +로 선택할 때만 사용합니다",
+    skillInvokeOffHint: "사용하지 않습니다",
     skillListOverBudget: "스킬 목록이 너무 깁니다",
     skillListOverBudgetDescription:
-      "자동 스킬의 설명이 매 요청마다 {chars}자를 차지합니다(한도 {limit}자). 자주 쓰지 않는 스킬은 수동으로 바꾸거나 설명을 줄이세요.",
+      "자동 스킬 설명이 {chars}/{limit}자를 차지합니다. 자주 쓰지 않는 스킬은 수동으로 바꾸거나 설명을 줄이세요.",
     languageDescription: "확장 프로그램 UI에 사용할 언어를 선택하세요.",
     colorScheme: "색상 구성",
     colorSchemeDescription:

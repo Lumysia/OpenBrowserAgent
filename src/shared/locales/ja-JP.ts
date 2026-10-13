@@ -455,17 +455,20 @@ export const jaJP: LocaleMessages = {
     builtinSkillBadge: "組み込み",
     overrideSkillBadge: "カスタマイズ済みの組み込み",
     customizeSkill: "カスタマイズ",
+    customizeSkillHint:
+      "組み込みスキルは読み取り専用です。「カスタマイズ」で編集できる自分用のコピーを作成します。",
     revertSkillToBuiltin: "組み込みに戻す",
     viewFile: "ファイルを表示",
     skillInvokeMode: "使用タイミング",
     skillInvokeAuto: "自動",
     skillInvokeManual: "手動",
     skillInvokeOff: "オフ",
-    skillInvokeHint:
-      "自動：リクエストに合うときにエージェントがスキルを使います。手動：サイドパネルで / または + から選んだときだけ使います。オフ：使いません。組み込みスキルは読み取り専用です。編集するには「カスタマイズ」で自分用のコピーを作成します。",
+    skillInvokeAutoHint: "リクエストに合うときに使います",
+    skillInvokeManualHint: "/ または + で選んだときだけ使います",
+    skillInvokeOffHint: "使いません",
     skillListOverBudget: "スキル一覧が長すぎます",
     skillListOverBudgetDescription:
-      "「自動」スキルの説明が、毎回のリクエストで {chars} 文字を使っています（上限は {limit} 文字）。あまり使わないスキルを「手動」にするか、説明を短くしてください。",
+      "「自動」スキルの説明が {chars}/{limit} 文字を使っています。あまり使わないスキルを「手動」にするか、説明を短くしてください。",
     languageDescription: "拡張機能の UI で使用する言語を選択します。",
     colorScheme: "配色",
     colorSchemeDescription:

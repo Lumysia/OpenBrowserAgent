@@ -471,17 +471,20 @@ export const esES: LocaleMessages = {
     builtinSkillBadge: "Integrada",
     overrideSkillBadge: "Habilidad integrada personalizada",
     customizeSkill: "Personalizar",
+    customizeSkillHint:
+      "Las habilidades integradas son de solo lectura. Personaliza una para editar tu propia copia.",
     revertSkillToBuiltin: "Volver a la versión integrada",
     viewFile: "Ver archivo",
     skillInvokeMode: "Uso",
     skillInvokeAuto: "Automático",
     skillInvokeManual: "Manual",
     skillInvokeOff: "Desactivada",
-    skillInvokeHint:
-      "Automático: el agente usa la habilidad cuando tu petición encaja con ella. Manual: solo cuando la eliges con / o + en el panel lateral. Desactivada: nunca. Las habilidades integradas son de solo lectura; personaliza una para editar tu propia copia.",
+    skillInvokeAutoHint: "Se usa cuando tu petición encaja",
+    skillInvokeManualHint: "Solo cuando la eliges con / o +",
+    skillInvokeOffHint: "No se usa nunca",
     skillListOverBudget: "La lista de habilidades es larga",
     skillListOverBudgetDescription:
-      "Las descripciones de las habilidades en modo Automático ocupan {chars} caracteres de cada petición (el límite es {limit}). Pon en Manual las que uses poco o acorta sus descripciones.",
+      "Las descripciones de las habilidades en Automático ocupan {chars} de {limit} caracteres. Pon en Manual las que uses poco o acórtalas.",
     languageDescription: "Elige el idioma de la interfaz de la extensión.",
     colorScheme: "Esquema de color",
     colorSchemeDescription:
