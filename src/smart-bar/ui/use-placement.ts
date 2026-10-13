@@ -42,6 +42,9 @@ export function usePlacement(
       if (placement.offscreen && offscreen) return offscreen();
       element.style.left = `${placement.left - origin.left}px`;
       element.style.top = `${placement.top - origin.top}px`;
+      // The entrance grows from the selection.
+      element.dataset.side = placement.side;
+      element.style.setProperty("--origin-x", `${placement.originX}px`);
     };
     update();
     let frame = 0;

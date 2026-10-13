@@ -110,7 +110,7 @@ export function SyncBootstrapStep({
         </CardDescription>
       ) : null}
       <Button
-        className={`ui-button-soft-accent bootstrap-cloud-action ${syncing ? "is-loading" : ""}`}
+        className={`bootstrap-cloud-action ${syncing ? "is-loading" : ""}`}
         onClick={handleCloudAction}
         disabled={!canPull || syncing || hasActiveSyncBackend}
       >

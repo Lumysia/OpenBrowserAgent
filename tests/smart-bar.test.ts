@@ -98,13 +98,26 @@ test("the bar goes below the selection, flips above and stays in view", () => {
     size,
     viewport,
   });
-  assert.deepEqual(below, { left: 50, top: 128, offscreen: false });
+  // It grows from the selection: below it, from the mouse's x.
+  assert.deepEqual(below, {
+    left: 50,
+    top: 128,
+    side: "below",
+    originX: 100,
+    offscreen: false,
+  });
   const above = placeSmartBar({
     anchor: { left: 700, right: 790, top: 560, bottom: 580 },
     size,
     viewport,
   });
-  assert.deepEqual(above, { left: 592, top: 512, offscreen: false });
+  assert.deepEqual(above, {
+    left: 592,
+    top: 512,
+    side: "above",
+    originX: 153,
+    offscreen: false,
+  });
   assert.equal(
     placeSmartBar({
       anchor: { left: 0, right: 10, top: -80, bottom: -60 },

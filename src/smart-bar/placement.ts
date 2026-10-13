@@ -3,7 +3,15 @@ import type { Rect } from "./selection";
 export const SMART_BAR_GAP = 8;
 export const SMART_BAR_MARGIN = 8;
 
-export type Placement = { left: number; top: number; offscreen: boolean };
+export type Placement = {
+  left: number;
+  top: number;
+  // Which side of the anchor the bar is on.
+  side: "below" | "above";
+  // Where the anchor's centre is, from the bar's left edge.
+  originX: number;
+  offscreen: boolean;
+};
 
 // Below the anchor at `x` (else centred), above it when there is no room
 // below, always kept inside the viewport. `offscreen`: the anchor itself
@@ -26,13 +34,14 @@ export function placeSmartBar({
   const below = anchor.bottom + SMART_BAR_GAP;
   const above = anchor.top - SMART_BAR_GAP - size.height;
   const fitsBelow = below + size.height <= viewport.height - SMART_BAR_MARGIN;
+  const side = fitsBelow || above < SMART_BAR_MARGIN ? "below" : "above";
   const top =
-    fitsBelow || above < SMART_BAR_MARGIN
-      ? clamp(below, viewport.height - size.height)
-      : above;
+    side === "below" ? clamp(below, viewport.height - size.height) : above;
   return {
     left,
     top,
+    side,
+    originX: Math.max(0, Math.min(size.width, centre - left)),
     offscreen: anchor.bottom < 0 || anchor.top > viewport.height,
   };
 }

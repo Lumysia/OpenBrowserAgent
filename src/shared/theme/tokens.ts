@@ -26,6 +26,9 @@ export const TOKEN_NAMES = [
   "muted-foreground",
   "border",
   "input",
+  "panel",
+  "field",
+  "highlight",
   "accent-strong",
   "accent-text",
   "accent-solid",
@@ -175,7 +178,14 @@ export function themeTokens(
       ? role(seed, roles.wash)
       : mix(neutrals.background, neutrals.card, 0.5),
   );
+  // Bars (header, composer) and fields sit a step off the page in dark.
+  const panel = dark ? neutrals.background : neutrals.card;
+  const field = dark
+    ? mix(neutrals.background, neutrals.card, 0.86)
+    : neutrals.card;
   const pageBackgrounds = [
+    panel,
+    field,
     neutrals.background,
     neutrals.card,
     neutrals.popover,
@@ -196,6 +206,9 @@ export function themeTokens(
   const destructiveSolid = dark ? "#b8372f" : "#b3261e";
   return {
     ...neutrals,
+    panel,
+    field,
+    highlight: dark ? "rgb(255 255 255 / 6%)" : "rgb(255 255 255 / 42%)",
     "muted-foreground": ensureAll(
       neutrals["muted-foreground"],
       pageBackgrounds,
@@ -233,6 +246,8 @@ export function themeTokens(
 // must read at 4.5:1 or more in every theme and scheme.
 export function textPairs(tokens: ThemeTokens) {
   const page = [
+    "panel",
+    "field",
     "background",
     "card",
     "popover",

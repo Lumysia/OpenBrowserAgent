@@ -1,0 +1,377 @@
+/* Settings sections: providers, models, skills and workspace files, debug
+   tools, and the theme picker. */
+
+/* Providers. */
+.provider-top-stack {
+  display: grid;
+  gap: 10px;
+}
+.provider-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.provider-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 18px;
+}
+.provider-credentials-panel,
+.provider-models-panel {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 13px;
+}
+.provider-models-panel {
+  padding-left: 18px;
+  border-left: 1px solid var(--border);
+}
+.provider-models-panel p {
+  margin: 4px 0 0;
+}
+.provider-model-actions {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.provider-fetched-model-actions .ui-combobox-trigger {
+  flex: 1 1 min(280px, 100%);
+}
+.provider-add-selected-button {
+  margin-left: auto;
+}
+.provider-image-fields {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(150px, 220px);
+  align-items: end;
+  gap: var(--space-3);
+}
+.provider-image-model-field {
+  min-width: 0;
+}
+.provider-size-field {
+  margin-left: auto;
+}
+.provider-add-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+.provider-error-text {
+  margin: 0;
+  color: var(--destructive);
+}
+.provider-success-text {
+  margin: 0;
+  color: var(--accent-strong);
+}
+.provider-form-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+/* Models of a provider: accordion rows. */
+.model-table {
+  display: grid;
+  gap: var(--space-2);
+}
+.model-row {
+  --accordion-radius: var(--radius);
+  position: relative;
+  overflow: hidden;
+  box-shadow: none;
+  animation: enter var(--duration-fast) var(--ease-standard) backwards;
+}
+.model-row-header {
+  padding-left: var(--space-3);
+}
+.model-row-trigger.ui-accordion-trigger {
+  padding: 10px 0;
+}
+.model-row-header .accordion-chevron-trigger.ui-accordion-trigger {
+  padding-block: 10px;
+}
+.model-row-summary {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
+.model-row-title {
+  color: var(--foreground);
+  font-size: 15px;
+  font-weight: 600;
+}
+.model-row-title,
+.model-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.model-row-main {
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+}
+.model-row-content.ui-accordion-content-inner {
+  padding: 12px 18px 14px;
+  border-top: 1px solid
+    color-mix(in oklab, var(--accent-soft) 24%, var(--border));
+}
+.model-display-input {
+  height: 38px;
+}
+.model-api-name {
+  padding-inline: 2px;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  line-height: 1.2;
+}
+.model-row-actions {
+  min-height: 38px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+.model-row-actions .ui-button-sm {
+  height: 34px;
+  min-width: 58px;
+}
+.model-row-actions .ui-button-icon {
+  width: 34px;
+  height: 34px;
+}
+
+/* Skills and workspace files. */
+.skill-detail
+  :is(
+    .ui-label,
+    .skill-identity-panel,
+    .option-file-section,
+    .option-file-list,
+    .option-add-file-row,
+    .option-file-editor
+  ) {
+  width: 100%;
+}
+.skills-page {
+  min-width: 0;
+}
+.skill-trigger-label {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+.skill-trigger-label svg {
+  flex-shrink: 0;
+}
+.skill-trigger-summary {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: grid;
+  gap: 6px;
+}
+.skill-trigger-title-row {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.skill-trigger-badges,
+.skill-trigger-checks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.skill-trigger-badges {
+  color: var(--muted-foreground);
+}
+.skill-trigger-checks {
+  padding-left: 28px;
+  font-weight: 400;
+}
+.skill-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+.skill-checks .warn {
+  color: var(--destructive);
+}
+.option-file-list,
+.option-file-block {
+  display: grid;
+  gap: 6px;
+}
+.option-file-item {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+}
+.option-file-item svg {
+  color: var(--muted-foreground);
+}
+.option-file-item span {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+.option-file-name,
+.option-file-item small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.option-file-name {
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+.option-file-item small {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+.option-file-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.option-add-file-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+.option-file-editor {
+  --enter-y: -4px;
+  padding: 8px 0 2px;
+  animation: enter var(--duration-fast) var(--ease-standard) backwards;
+}
+.option-file-editor-textarea {
+  min-height: 220px;
+  max-height: 280px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+/* Debug tools. */
+.debug-tool-list {
+  display: grid;
+  gap: var(--space-2);
+}
+.debug-tools-trigger {
+  font-weight: 600;
+}
+.debug-section-heading {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+.debug-section-title span {
+  min-width: 0;
+}
+.debug-section-heading small {
+  color: var(--muted-foreground);
+  font-weight: 400;
+  line-height: 1.45;
+}
+.debug-tool-item {
+  background: color-mix(in oklab, var(--card) 72%, var(--background));
+  box-shadow: none;
+}
+.debug-tool-trigger {
+  min-height: 48px;
+  gap: 10px;
+  padding: 10px 12px;
+}
+.debug-tool-trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.debug-tool-trigger .ui-badge {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.debug-tool-details {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px 12px;
+}
+.debug-tool-details p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: var(--text-base);
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+.debug-tool-details small {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+.debug-tool-on-demand {
+  background: var(--secondary);
+  color: var(--muted-foreground);
+}
+
+@media (max-width: 900px) {
+  .provider-image-fields,
+  .provider-editor-grid {
+    grid-template-columns: 1fr;
+  }
+  .provider-size-field {
+    margin-left: 0;
+  }
+  .provider-models-panel {
+    padding-top: var(--space-4);
+    padding-left: 0;
+    border-top: 1px solid var(--border);
+    border-left: 0;
+  }
+}
+@media (max-width: 720px) {
+  .option-add-file-row {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+  .provider-add-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .provider-add-row .ui-button {
+    justify-self: start;
+  }
+  .model-row-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    padding: 10px 8px 10px 12px;
+  }
+  .model-row-actions {
+    grid-column: 1;
+    grid-row: 2;
+    justify-content: flex-start;
+  }
+  .model-row-header .accordion-chevron-trigger.ui-accordion-trigger {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}

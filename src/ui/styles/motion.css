@@ -1,0 +1,139 @@
+/* Keyframes, parameterized by custom properties on the animated element.
+   They move the individual `translate`, `scale` and `rotate` properties, so
+   an element's own `transform` (and hover lifts) still apply. Keyframes
+   without an end state animate to the element's resting style. */
+
+/* Arrives: --enter-opacity, --enter-x, --enter-y, --enter-scale,
+   --enter-blur. */
+@keyframes enter {
+  from {
+    opacity: var(--enter-opacity, 0);
+    translate: var(--enter-x, 0) var(--enter-y, 6px);
+    scale: var(--enter-scale, 1);
+    filter: blur(var(--enter-blur, 0));
+  }
+}
+
+/* Leaves (run with `both`): --exit-x, --exit-y, --exit-scale, --exit-blur. */
+@keyframes exit {
+  to {
+    opacity: 0;
+    translate: var(--exit-x, 0) var(--exit-y, 4px);
+    scale: var(--exit-scale, 0.97);
+    filter: blur(var(--exit-blur, 1px));
+  }
+}
+
+/* Arrives with an overshoot: --pop-* is where it starts, --pop-peak-* the
+   overshoot before it settles. */
+@keyframes pop {
+  0% {
+    opacity: var(--pop-opacity, 0);
+    translate: var(--pop-x, 0) var(--pop-y, 0);
+    scale: var(--pop-scale, 0.96);
+    rotate: var(--pop-rotate, 0deg);
+    filter: blur(var(--pop-blur, 0));
+  }
+  60% {
+    opacity: 1;
+    translate: 0 var(--pop-peak-y, 0);
+    scale: var(--pop-peak-scale, 1.02);
+    rotate: var(--pop-peak-rotate, 0deg);
+    filter: blur(0);
+  }
+}
+
+/* Breathes between a rest and a peak state, for activity indicators. */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: var(--pulse-rest-opacity, 1);
+    translate: 0 0;
+    scale: var(--pulse-rest-scale, 1);
+    rotate: var(--pulse-rest-rotate, 0deg);
+  }
+  50% {
+    opacity: var(--pulse-peak-opacity, 1);
+    translate: 0 var(--pulse-peak-y, 0);
+    scale: var(--pulse-peak-scale, 1);
+    rotate: var(--pulse-peak-rotate, 0deg);
+  }
+}
+
+/* A border and shadow that brighten and fade: --glow-border, --glow-shadow. */
+@keyframes glow {
+  50% {
+    border-color: var(--glow-border);
+    box-shadow: var(--glow-shadow);
+  }
+}
+
+/* A highlight moving across a background image. */
+@keyframes shimmer {
+  from {
+    background-position: var(--shimmer-from, 120%) 0;
+  }
+  to {
+    background-position: var(--shimmer-to, -120%) 0;
+  }
+}
+
+/* A line of text that slides in from below, stays, and slides out above. */
+@keyframes phrase {
+  0% {
+    opacity: 0;
+    translate: 0 60%;
+  }
+  14%,
+  84% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -60%;
+  }
+}
+
+/* Radix accordions; closing runs it in reverse. */
+@keyframes accordion {
+  from {
+    height: 0;
+    opacity: 0.4;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+}
+
+/* A row that leaves and gives its space back (run with `both`). */
+@keyframes collapse {
+  to {
+    max-height: 0;
+    margin-block: 0;
+    opacity: 0;
+    translate: 0 -4px;
+    scale: 0.98;
+  }
+}
+
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* Short and finite everywhere; looping indicators rest; text that cycles
+   stays put. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
