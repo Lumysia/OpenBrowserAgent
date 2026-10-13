@@ -253,7 +253,11 @@ test("files edited on two devices keep the newer and a conflict copy", () => {
 
 test("root validation rejects anything that is not a complete root", async () => {
   const good = emptyRoot("a");
-  good.records["chats/x"] = { clock: clock(1), data: { id: "x" } };
+  good.records["chats/x"] = {
+    clock: clock(2),
+    data: { id: "x" },
+    seen: [clock(1, "b")],
+  };
   assert.deepEqual(await decodeRoot(await encodeRoot(good)), good);
   const bad: unknown[] = [
     null,
@@ -266,6 +270,10 @@ test("root validation rejects anything that is not a complete root", async () =>
     },
     { ...good, records: { "chats/x": { clock: clock(1), blob: "abc" } } },
     { ...good, records: { "../x": { clock: clock(1), data: 1 } } },
+    {
+      ...good,
+      records: { "chats/x": { clock: clock(1), data: 1, seen: ["nope"] } },
+    },
     { ...good, garbage: [{ blob: "x", since: 1 }] },
     { ...good, garbage: undefined },
   ];

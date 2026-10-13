@@ -248,31 +248,141 @@ const MUTATIONS = [
   {
     name: "a push confirmed when the server accepts the write",
     file: "src/shared/sync/engine.ts",
-    from: "        state.sent = { write, records: Object.fromEntries(outcome.pushes) };",
-    to: "        await confirm(env, outcome.pushes, snapshot);",
+    from: "        await updateEntries(env, outcome.pushes, snapshot, sentEntry);",
+    to: "        await updateEntries(env, outcome.pushes, snapshot, confirmedEntry);",
   },
   {
-    name: "a push confirmed by a root that does not descend from it",
+    name: "a push confirmed by a remote record that does not include it",
     file: "src/shared/sync/engine.ts",
-    from: "  if (remote.history?.includes(sent.write))",
-    to: "  if (remote.history)",
+    from: "    if (entry.sent && now && includes(now, entry.sent.clock))",
+    to: "    if (entry.sent && now)",
   },
   {
-    name: "roots do not carry the history of the writes they descend from",
-    file: "src/shared/sync/blobs.ts",
-    from: "    history: [...(base.history ?? []), write].slice(-ROOT_HISTORY_LENGTH),",
-    to: "    history: [write].slice(-ROOT_HISTORY_LENGTH),",
+    name: "H1: pushes are not recorded, so a later change keeps its old base",
+    file: "src/shared/sync/engine.ts",
+    from: "        await updateEntries(env, outcome.pushes, snapshot, sentEntry);",
+    to: "",
+  },
+  {
+    name: "H1: a change made after a push forgets the push",
+    file: "src/shared/sync/clocks.ts",
+    from: "    ...(previous?.local && previous.sent ? { sent: previous.sent } : {}),",
+    to: "",
+  },
+  {
+    name: "H1: a remote version made from this change merges from the stale base",
+    file: "src/shared/sync/plan.ts",
+    from: "  if (input.changedHere && includes(remote, local.clock)) return apply(remote);",
+    to: "",
+  },
+  {
+    name: "H1: a change does not include the version it was made from",
+    file: "src/shared/sync/clocks.ts",
+    from: "  const seen = previous?.local ? previous.seen : seenFrom(clock, [previous]);",
+    to: "  const seen = previous?.local ? previous.seen : undefined;",
+  },
+  {
+    name: "H1: a merged version does not include the versions it merged",
+    file: "src/shared/sync/engine-merge.ts",
+    from: "  const seen = seenFrom(clock, decision.versions);",
+    to: "  const seen = undefined;",
+  },
+  {
+    name: "H1: pushed records do not say what they include",
+    file: "src/shared/sync/reconcile.ts",
+    from: "    local: version && entry.seen ? { ...version, seen: entry.seen } : version,",
+    to: "    local: version,",
+  },
+  {
+    name: "H1: a later clock of any device counts as including a change",
+    file: "src/shared/sync/clocks.ts",
+    from: "      parseClock(held)?.device === device && compareClocks(held, clock) >= 0,",
+    to: "      compareClocks(held, clock) >= 0,",
+  },
+  {
+    name: "H1: roots with invalid seen clocks are applied",
+    file: "src/shared/sync/root.ts",
+    from: '    return "invalid seen clocks";',
+    to: '    return "";',
+  },
+  {
+    name: "S2: the body a change was made from is not kept",
+    file: "src/shared/sync/track.ts",
+    from: "      const bases = await keepBases(env, collection, clocks, recordedBefore);",
+    to: "      const bases = {};",
+  },
+  {
+    name: "S2: the pushed version's body is not kept for a change made on top of it",
+    file: "src/shared/sync/bases.ts",
+    from: "  (clocks[id].base?.blob === blob || clocks[id].sent?.blob === blob);",
+    to: "  clocks[id].base?.blob === blob;",
+  },
+  {
+    name: "S2: a merge whose base was collected does not use the kept body",
+    file: "src/shared/sync/engine-merge.ts",
+    from: "        )) ?? (await keptBase(env, collection, id, merge.base)))",
+    to: "        )))",
+  },
+  {
+    name: "S2: kept bodies are never dropped",
+    file: "src/shared/sync/engine.ts",
+    from: "    await pruneBases(env, collections);",
+    to: "",
+  },
+  {
+    name: "S1: fields two devices changed merge one level deep",
+    file: "src/shared/sync/plan.ts",
+    from: `  const merged = mineNewer
+    ? mergeChanges(base, mine, theirs)
+    : mergeChanges(base, theirs, mine);`,
+    to: "  const merged = mineNewer ? { ...theirs, ...mine } : { ...mine, ...theirs };",
+  },
+  {
+    name: "B1: synced storage items keep a blind set",
+    file: "src/shared/storage.ts",
+    from: "  return { ...item, replace: set };",
+    to: "  return { ...item, set, replace: set };",
+  },
+  {
+    name: "B1: an MCP test stores the list it read before the test",
+    file: "src/background/mcp-tools.ts",
+    from: "  const server = (await storage.mcpServers.get()).find(",
+    to: "  const read = await storage.mcpServers.get();\n  const server = read.find(",
+    also: [
+      {
+        from: "  const next = await updateById(storage.mcpServers, serverId, (current) => {",
+        to: "  const next = await updateById({ update: async (change: (list: typeof read) => typeof read) => { const value = change(read); await storage.mcpServers.replace(value); return value; } }, serverId, (current) => {",
+      },
+    ],
+  },
+  {
+    name: "B1: a bridge test stores the list it read before the test",
+    file: "src/background/local-execution-bridge-tools.ts",
+    from: `  const bridge = (await loadBridges()).find((item) => item.id === bridgeId);
+  if (!bridge) return { success: false, error: "Execution bridge not found" };
+  let result`,
+    to: `  const read = await loadBridges();
+  const bridge = read.find((item) => item.id === bridgeId);
+  if (!bridge) return { success: false, error: "Execution bridge not found" };
+  let result`,
+    also: [
+      {
+        from: "  const tested = await updateById(\n    storage.localExecutionBridges,",
+        to: "  const tested = await updateById(\n    { update: async (change: (list: typeof read) => typeof read) => { const value = change(read); await storage.localExecutionBridges.replace(value); return value; } },",
+      },
+    ],
+  },
+  {
+    name: "B1: a skill edit stores the list it read first",
+    file: "src/background/tools/skills.ts",
+    from: "      : await updateById(storage.skills, existing.id, edit);",
+    to: "      : await updateById({ update: async (change: (list: typeof all) => typeof all) => { const value = change(all); await storage.skills.replace(value); return value; } }, existing.id, edit);",
   },
   {
     name: "a confirmation recreates the clock of a record cleared meanwhile",
     file: "src/shared/sync/engine.ts",
-    from: `        if (clocks[id])
-          clocks[id] = await confirmedEntry(id, clocks[id], record);`,
-    to: `        clocks[id] = await confirmedEntry(
-          id,
-          clocks[id] ?? { clock: record.clock },
-          record,
-        );`,
+    from: "        if (clocks[id]) clocks[id] = await change(id, clocks[id], record);",
+    to: "        clocks[id] = await change(id, clocks[id] ?? { clock: record.clock }, record);",
   },
   {
     name: "fields both sides changed in one record: the newer record wins whole",
@@ -295,8 +405,8 @@ const MUTATIONS = [
   {
     name: "page saves store their whole copy",
     file: "src/shared/rebase.ts",
-    from: "    ? item.update((current) => rebaseEdit(base, edited, current))",
-    to: "    ? item.set(edited)",
+    from: "  return item.update((current) => rebaseEdit(base, edited, current));",
+    to: "  return item.update(() => edited);",
   },
   {
     name: "chat saves store the side panel's copy as is",
@@ -369,12 +479,16 @@ for (const mutation of MUTATIONS) {
     results.push({ ...mutation, skipped: true });
     continue;
   }
-  const source = readFileSync(mutation.file, "utf8");
-  if (!source.includes(mutation.from))
-    throw new Error(
-      `Mutation "${mutation.name}" no longer matches ${mutation.file}`,
-    );
-  writeFileSync(mutation.file, source.replace(mutation.from, mutation.to));
+  let source = readFileSync(mutation.file, "utf8");
+  // Some mutations change more than one place of the file.
+  for (const { from, to } of [mutation, ...(mutation.also ?? [])]) {
+    if (!source.includes(from))
+      throw new Error(
+        `Mutation "${mutation.name}" no longer matches ${mutation.file}`,
+      );
+    source = source.replace(from, to);
+  }
+  writeFileSync(mutation.file, source);
   try {
     results.push({ ...mutation, failed: runTests() });
   } finally {
