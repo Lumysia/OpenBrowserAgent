@@ -21,6 +21,7 @@ import { SYNC_WARNINGS } from "../src/shared/sync/state";
 import type { Transport } from "../src/shared/sync/transport";
 import { createWebDavTransport } from "../src/shared/sync/webdav";
 import { chat, hookedTransport } from "./sync-fixtures";
+import { backgroundWriteCases } from "./sync-two-devices-background";
 import { lostAnswerCases } from "./sync-two-devices-lost";
 import {
   CHATS,
@@ -326,6 +327,7 @@ const cases: Record<string, () => Promise<void>> = {
 };
 
 Object.assign(cases, lostAnswerCases(baseA, baseB));
+Object.assign(cases, backgroundWriteCases(baseA, baseB));
 
 if (plainA && plainB)
   cases["a server that strips ETags: reads work, writes stop with a warning"] =

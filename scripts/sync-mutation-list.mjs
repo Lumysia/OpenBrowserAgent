@@ -4,6 +4,7 @@
 // WebDAV script notices it.
 import { REVIEW5_MUTATIONS } from "./sync-mutation-list-review5.mjs";
 import { REVIEW6_MUTATIONS } from "./sync-mutation-list-review6.mjs";
+import { FIX7_MUTATIONS } from "./sync-mutation-list-fix7.mjs";
 
 export const MUTATIONS = [
   {
@@ -434,4 +435,5 @@ export const MUTATIONS = [
   },
   ...REVIEW5_MUTATIONS,
   ...REVIEW6_MUTATIONS,
+  ...FIX7_MUTATIONS,
 ];

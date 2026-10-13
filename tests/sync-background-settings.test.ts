@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DEFAULT_AGENT_ID, resolveAgent } from "../src/shared/agents";
+import { normalizeProviderState } from "../src/shared/provider-instances";
 import { storeEdit } from "../src/shared/rebase";
 import { storage } from "../src/shared/storage";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
@@ -104,10 +105,11 @@ async function saveProviderForm(
   edit: (draft: ProviderConfig) => ProviderConfig,
 ) {
   await onDevice(on, async () => {
+    // The form edits the provider as the page lists it (normalized).
     const shown = await storage.provider.get();
     await storeEdit(storage.provider, shown, {
       ...shown,
-      [providerId]: edit(shown[providerId]),
+      [providerId]: edit(normalizeProviderState(shown)[providerId]),
     });
   });
 }
@@ -152,6 +154,8 @@ test("fix7 P5: saving a provider leaves the models the user did not change as th
     const provider = on.get<ProviderState>(PROVIDERS).openai;
     assert.equal(provider.apiKey, "k2", on.name);
     assert.equal(provider.models![0].displayName, "Work / Team / m3", on.name);
+    // Defaults the page shows are not stored.
+    assert.equal("baseUrl" in provider || "imageModels" in provider, false);
   }
 });
 
@@ -162,15 +166,23 @@ test("fix7 P5: renaming a provider still renames its models", async () => {
       id: "openai",
       type: "openai",
       label: "Work",
-      models: [{ id: "openai:m1", name: "m1", displayName: "Work / Fast" }],
+      models: [
+        { id: "openai:m1", name: "m1", displayName: "Work / Fast" },
+        { id: "openai:m2", name: "m2", displayName: "Own name" },
+      ],
     },
   });
   await saveProviderForm(a, "openai", (draft) =>
+    renameProviderDraft(draft, "Work / Home"),
+  );
+  await saveProviderForm(a, "openai", (draft) =>
     renameProviderDraft(draft, "Home"),
   );
-  assert.equal(
-    a.get<ProviderState>(PROVIDERS).openai.models![0].displayName,
-    "Home / Fast",
+  assert.deepEqual(
+    a
+      .get<ProviderState>(PROVIDERS)
+      .openai.models!.map((model) => model.displayName),
+    ["Home / Fast", "Own name"],
   );
 });
 
@@ -222,9 +234,12 @@ test("fix7 guard: a store that changes nothing writes nothing", async () => {
       workspaces.map((workspace) => ({ ...workspace })),
     );
     await storage.preferences.update((preferences) => ({ ...preferences }));
+    // Never stored: its defaults stay unstored.
+    await storage.skillSettings.update((settings) => ({ ...settings }));
   });
   for (const [key, value] of Object.entries(stored))
     assert.deepEqual(a.get(key), value, key);
+  assert.equal(STORAGE_KEYS.skillSettings in a.env.local.data, false);
 });
 
 test("fix7 guard: a list save keeps the stored form of the agents it did not change", async () => {

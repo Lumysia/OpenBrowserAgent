@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  abortSession,
+  createStreamSession,
+  scheduleSessionCleanup,
+} from "../src/background/stream-sessions";
+import { browserSyncEnv } from "../src/background/sync/service";
+import {
   readLocalChatContent,
   saveChatContent,
 } from "../src/shared/chat-storage";
@@ -158,6 +164,27 @@ test("fix7 P1+P2: a long reply is never replaced by a partial copy closed on ano
     );
 });
 
+test("fix7 P2: the background's sync holds exactly the chats with a run in progress", () => {
+  const previous = globalThis.chrome;
+  globalThis.chrome = {
+    storage: { local: {}, sync: {} },
+    runtime: { getPlatformInfo: async () => ({}) },
+  } as never;
+  try {
+    const env = browserSyncEnv();
+    const session = createStreamSession("X");
+    assert.equal(env.runActive?.("X"), true);
+    assert.equal(env.runActive?.("Y"), false);
+    // Finished: kept a while for a panel to replay, no longer running.
+    scheduleSessionCleanup(session);
+    assert.equal(env.runActive?.("X"), false);
+  } finally {
+    // Its timers would keep the test process alive.
+    abortSession("X");
+    globalThis.chrome = previous;
+  }
+});
+
 const source = (id: string, url: string, snippet: string): ChatSource => ({
   id,
   kind: "page",
@@ -238,21 +265,36 @@ test("fix7 guard: saving a chat keeps the stored form of the messages it did not
   clock.now += 60_000;
   await a.set(`${CHATS}/X`, { messages: [legacy.messages[0]] });
   await a.sync("edit");
-  // B's panel adds a message to its loaded (normalized) copy and saves it.
+  // B's panel edits the first message of its loaded (normalized) copy,
+  // adds one and saves it.
   clock.now += 60_000;
   await onDevice(b, async () => {
     const base = (await readLocalChatContent("X"))!;
+    const [first, ...others] = base.messages;
     await saveChatContent(
       "X",
-      { ...base, messages: [...base.messages, userMessage("u2", 3)] },
+      {
+        ...base,
+        messages: [
+          { ...first, content: "u1!" },
+          ...others,
+          userMessage("u2", 3),
+        ],
+      },
       base,
     );
   });
   await b.sync("edit");
   await a.sync();
-  for (const on of [a, b])
+  for (const on of [a, b]) {
     assert.deepEqual(messageIds(on, "X"), ["u1", "u2"], on.name);
-  assert.deepEqual(contentOf(b, "X").messages[0], legacy.messages[0]);
+    // What loading dropped of the edited message stays.
+    assert.deepEqual(
+      contentOf(on, "X").messages[0],
+      { ...legacy.messages[0], content: "u1!" },
+      on.name,
+    );
+  }
 });
 
 test("fix7 guard: a list save keeps the stored form of the chats it did not change", async () => {
