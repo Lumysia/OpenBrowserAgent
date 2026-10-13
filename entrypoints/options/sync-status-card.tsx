@@ -50,10 +50,10 @@ export function SyncStatusCard({ t }: { t: Messages }) {
     <Card>
       <CardContent className="stack">
         <div className="sync-status-row">
-          <span className={`sync-status-dot ${tone}`} />
           <div className="sync-status-summary">
             <CardTitle className="settings-section-title">
               <Activity size={18} /> {t.sync.statusTitle}
+              <span className={`sync-status-dot ${tone}`} aria-hidden />
             </CardTitle>
             <CardDescription>{label}</CardDescription>
             {details.map((detail) => (

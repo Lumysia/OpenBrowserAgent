@@ -4,12 +4,12 @@
   gap: 12px;
 }
 .sync-status-dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   flex: 0 0 auto;
   border-radius: 999px;
   background: var(--accent-strong);
-  box-shadow: 0 0 0 4px
+  box-shadow: 0 0 0 3px
     color-mix(in srgb, var(--accent-strong) 12%, transparent);
   animation: sync-dot-ready 0.28s ease backwards;
   transition:
@@ -24,24 +24,24 @@
     var(--muted-foreground) 72%,
     var(--accent-strong)
   );
-  box-shadow: 0 0 0 4px
+  box-shadow: 0 0 0 3px
     color-mix(in srgb, var(--muted-foreground) 14%, transparent);
   animation: sync-dot-pending 1.4s ease-in-out infinite;
 }
 .sync-status-dot.attention,
 .sync-status-dot.paused {
   background: var(--warning);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--warning) 16%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 16%, transparent);
 }
 .sync-status-dot.error {
   background: var(--destructive);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--destructive) 14%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive) 14%, transparent);
 }
 
 .sync-status-dot.off,
 .sync-status-dot.idle {
   background: var(--muted-foreground);
-  box-shadow: 0 0 0 4px
+  box-shadow: 0 0 0 3px
     color-mix(in srgb, var(--muted-foreground) 14%, transparent);
 }
 
