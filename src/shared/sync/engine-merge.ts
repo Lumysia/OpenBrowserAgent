@@ -8,6 +8,7 @@ import {
   saveHlc,
   seenFrom,
   tickNow,
+  type ClockEntry,
 } from "./clocks";
 import { isOrderId, ORDER_ID, type Collection } from "./collection";
 import { recordIdOf, splitRecordId } from "./collections";
@@ -82,6 +83,8 @@ export async function mergeRecord(
   id: string,
   decision: Extract<Decision, { kind: "merge" }>,
   payloads: Payloads,
+  // This device's clock entry of the record.
+  from: ClockEntry | undefined,
 ) {
   const { transport, device, env } = context;
   let data = decision.data;
@@ -126,7 +129,7 @@ export async function mergeRecord(
       data = collection.finalizeData?.(data, body) ?? data;
   }
   const clock = await tickNow(env, device);
-  const seen = seenFrom(clock, decision.versions);
+  const seen = seenFrom(clock, decision.versions, from);
   const record: SyncRecord = {
     clock,
     data,

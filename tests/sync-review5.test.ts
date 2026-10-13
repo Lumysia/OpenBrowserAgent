@@ -248,13 +248,15 @@ test("review5 R2: two installs sharing a device id keep each other's concurrent 
 });
 
 // a and b are two installs with the same id; a's change is older than a
-// later change of another record on a, so no clock tells the copy apart.
+// later change of another record on a, and a waits for no push it made, so
+// nothing tells the copy apart.
 test("review5 R2: a change of the other install is merged even when its clock is not newer than this one's", async () => {
   const clock = { now: 1_000_000_000 };
   const server = memoryServer();
   const a = device("deviceA", memoryTransport(server), clock, ALL_ON);
   await a.set(PROVIDERS, { openai: { apiKey: "k", model: "m0" } });
   await a.sync("edit");
+  await a.sync();
   const b = copyOf(a, memoryTransport(server), clock, ALL_ON);
   clock.now += 60_000;
   await a.set(PROVIDERS, { openai: { apiKey: "k2", model: "m0" } });

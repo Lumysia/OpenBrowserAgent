@@ -19,6 +19,7 @@ import {
 import {
   confirmedEntry,
   includes,
+  issuedClocks,
   loadClocks,
   observeRemote,
   sentEntry,
@@ -157,7 +158,8 @@ async function round(
       }
       // Another install stamps changes with this id (a copied profile, a
       // restored backup): this one goes on under a new id.
-      if (await observeRemote(env, remote, device)) {
+      const issued = issuedClocks(snapshot.clocks.values());
+      if (await observeRemote(env, remote, device, issued)) {
         device = await rotateDeviceId(env);
         context = { ...context, device };
         result.warnings.push(SYNC_WARNINGS.clonedDevice);

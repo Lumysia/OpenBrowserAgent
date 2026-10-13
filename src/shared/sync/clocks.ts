@@ -45,6 +45,11 @@ export type ClockEntry = Version & {
   // recorded before the write, since the write may land while its answer is
   // lost (a timeout, the browser closed meanwhile).
   sent?: Version;
+  // Clocks this install issued for the record that the version held here
+  // still holds (its own changes and merges, pushed or not). Only the
+  // install that made a change ever asks whether a version includes it, so
+  // a version it makes leaves out those it no longer asks about.
+  own?: Clock[];
   // The list order an order record's version holds.
   order?: string[];
 };
@@ -74,17 +79,47 @@ export function tickNow(env: SyncEnv, device: string) {
   });
 }
 
+// What this install knows of the clocks it issued, from its clock entries:
+// those its versions hold, and the oldest one pushed and not yet confirmed.
+export type IssuedClocks = { known: Set<Clock>; oldestSent?: Clock };
+
+export function issuedClocks(entries: Iterable<ClockEntry>): IssuedClocks {
+  const known = new Set<Clock>();
+  let oldestSent: Clock | undefined;
+  for (const entry of entries) {
+    for (const clock of [...asked(entry), ...(entry.own ?? [])])
+      known.add(clock);
+    if (entry.sent && (!oldestSent || entry.sent.clock < oldestSent))
+      oldestSent = entry.sent.clock;
+  }
+  return { known, oldestSent };
+}
+
 // Take in the newest clock of a remote root, so later local changes order
 // after everything already seen. Returns whether the root holds a change
 // stamped with this device's id that this device never made: another
-// install uses the same id.
-export function observeRemote(env: SyncEnv, remote: Root, device: string) {
+// install uses the same id. Such a clock is newer than every clock this
+// install issued, or (when the other install's time runs behind) one it
+// does not know that is newer than a push it is still waiting to confirm.
+export function observeRemote(
+  env: SyncEnv,
+  remote: Root,
+  device: string,
+  issued: IssuedClocks,
+) {
   return env.lock(CLOCK_LOCK, async () => {
     const hlc = await loadHlc(env.local);
+    const { known, oldestSent } = issued;
     let foreign = false;
     for (const record of Object.values(remote.records))
       for (const held of [record.clock, ...(record.seen ?? [])])
-        if (parseClock(held)?.device === device && afterState(hlc, held))
+        if (
+          parseClock(held)?.device === device &&
+          (afterState(hlc, held) ||
+            (!!oldestSent &&
+              !known.has(held) &&
+              compareClocks(held, oldestSent) > 0))
+        )
           foreign = true;
     const newest = maxRootClock(remote);
     const next = newest ? observeClock(hlc, newest) : hlc;
@@ -104,26 +139,66 @@ export function includes(
   return version.clock === clock || !!version.seen?.includes(clock);
 }
 
+type Held = { clock: Clock; seen?: Clock[] };
+
+const heldBy = (version: Held) => [version.clock, ...(version.seen ?? [])];
+
+// The clocks of its own an entry's install still asks about: its change no
+// backend confirmed yet, and its push waiting for confirmation. A copied
+// profile asks about them too, so versions keep naming them.
+export function asked(entry: ClockEntry | undefined): Clock[] {
+  if (!entry) return [];
+  return [
+    ...(entry.local ? [entry.clock] : []),
+    ...(entry.sent ? [entry.sent.clock] : []),
+  ];
+}
+
+// The clocks this install issued that `from` (the entry a new version is
+// made from) holds and no longer asks about: no install asks about them.
+function settled(from: ClockEntry | undefined) {
+  const keep = asked(from);
+  return (from?.own ?? []).filter((clock) => !keep.includes(clock));
+}
+
 // What a version made at `clock` from (or merging) `versions` includes
-// besides itself: per device, its newest change they hold. The device
-// making it is no exception: another install may share its id, and only
-// these clocks show that the version holds that install's change.
+// besides itself: every change they hold, except those of this install it
+// no longer asks about (`from`: its entry). Clocks of one device id are never pruned against each
+// other: two installs may share an id (a copied profile), and a version
+// that holds one install's change must name it for that install to see it.
 export function seenFrom(
   clock: Clock,
-  versions: Array<{ clock: Clock; seen?: Clock[] } | undefined>,
+  versions: Array<Held | undefined>,
+  from: ClockEntry | undefined,
 ) {
-  const newest = new Map<string, Clock>();
+  const left = new Set(settled(from));
+  const seen = new Set<Clock>();
   for (const version of versions)
-    for (const held of version
-      ? [version.clock, ...(version.seen ?? [])]
-      : []) {
-      const parsed = parseClock(held);
+    for (const held of version ? heldBy(version) : []) {
+      const wall = parseClock(held)?.wall;
       // Data of unknown age (wall 0) holds no change.
-      if (!parsed?.wall || held === clock) continue;
-      if (compareClocks(held, newest.get(parsed.device)) > 0)
-        newest.set(parsed.device, held);
+      if (wall && held !== clock && !left.has(held)) seen.add(held);
     }
-  return newest.size ? [...newest.values()].sort() : undefined;
+  return seen.size ? [...seen].sort() : undefined;
+}
+
+// The versions an entry holds or names: its own, the one its change was made
+// from and the one it pushed (both may be on the server).
+const versionsOf = (entry: ClockEntry): Held[] =>
+  [entry, entry.base, entry.sent].filter((held): held is Held => !!held);
+
+// The `own` clocks of an entry made at `clock` (a change or merge made
+// here; undefined: a version from elsewhere) from `from`, whose versions
+// `held` it holds.
+export function ownFrom(
+  from: ClockEntry | undefined,
+  held: Held[],
+  clock?: Clock,
+) {
+  const holds = new Set(held.flatMap(heldBy));
+  const own = (from?.own ?? []).filter((issued) => holds.has(issued));
+  if (clock) own.push(clock);
+  return own.length ? { own } : {};
 }
 
 const withSeen = (seen: Clock[] | undefined) => (seen ? { seen } : {});
@@ -145,9 +220,17 @@ export async function baseOf(record: SyncRecord): Promise<Version> {
   return record.deleted ? version : { ...version, data: record.data };
 }
 
-// The entry of a record version held here as stored (applied or confirmed).
-export async function entryOf(id: string, record: SyncRecord) {
-  const entry: ClockEntry = await versionOf(record);
+// The entry of a record version held here as stored (applied or confirmed),
+// in place of `previous`.
+export async function entryOf(
+  id: string,
+  record: SyncRecord,
+  previous?: ClockEntry,
+) {
+  const entry: ClockEntry = {
+    ...(await versionOf(record)),
+    ...ownFrom(previous, [record]),
+  };
   if (isOrderId(id) && Array.isArray(record.data))
     entry.order = record.data as string[];
   return entry;
@@ -185,13 +268,14 @@ export async function changedEntry(
     (await hashJson(before.data)) === base.dataHash
   )
     base.data = before.data;
-  const seen = seenFrom(clock, [previous]);
+  const seen = seenFrom(clock, [previous], previous);
   const entry: ClockEntry = {
     clock,
     local: true,
     ...(base ? { base } : {}),
     ...(previous?.local && previous.sent ? { sent: previous.sent } : {}),
     ...withSeen(seen),
+    ...ownFrom(previous, previous ? versionsOf(previous) : [], clock),
   };
   if (!copy) return { ...entry, deleted: true };
   entry.dataHash = await hashJson(copy.data);
@@ -208,7 +292,7 @@ export async function confirmedEntry(
   current: ClockEntry,
   record: SyncRecord,
 ): Promise<ClockEntry> {
-  if (current.clock === record.clock) return entryOf(id, record);
+  if (current.clock === record.clock) return entryOf(id, record, current);
   if (!current.local) return current;
   return { ...unsent(current), base: await baseOf(record) };
 }

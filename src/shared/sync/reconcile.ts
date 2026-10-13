@@ -1,5 +1,5 @@
 import { bodyFor } from "./blobs";
-import { baseOf, entryOf, keepsOrder } from "./clocks";
+import { baseOf, entryOf, keepsOrder, ownFrom } from "./clocks";
 import { hashJson } from "./codec";
 import { isOrderId, type Collection } from "./collection";
 import { recordIdOf, splitRecordId, syncCollection } from "./collections";
@@ -176,15 +176,17 @@ export async function reconcile(
         recordId,
         record,
         body,
-        entry: await entryOf(id, record),
+        entry: await entryOf(id, record, snapshot.clocks.get(recordId)),
       });
     } else if (decision.kind === "merge") {
+      const from = snapshot.clocks.get(recordId);
       const result = await mergeRecord(
         context,
         collection,
         id,
         decision,
         payloads,
+        from,
       );
       if (!result) {
         outcome.warnings.push(SYNC_WARNINGS.missingContent);
@@ -200,6 +202,7 @@ export async function reconcile(
           ...(await entryOf(id, result.record)),
           local: true,
           base: await baseOf(remote.records[recordId]),
+          ...ownFrom(from, decision.versions, result.record.clock),
         },
       });
     }
