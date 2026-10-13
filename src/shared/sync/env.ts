@@ -29,6 +29,8 @@ export type SyncEnv = {
   now(): number;
   // Serializes read-modify-write of a storage key with the extension pages.
   lock<T>(name: string, run: () => Promise<T>): Promise<T>;
+  // Whether a reply of this chat is streaming in this background now.
+  runActive?(chatId: string): boolean;
   // Removes what belongs to deleted chats outside storage (tool outputs).
   removeChatArtifacts?(chatIds: string[]): Promise<void>;
   // Resolves once the edit listener recorded every storage change made

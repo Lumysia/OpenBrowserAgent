@@ -60,6 +60,12 @@ export function createStreamSession(chatId: string) {
   return session;
 }
 
+// A run of this chat is in progress (not one kept only for replay).
+export function isChatRunning(chatId: string) {
+  const session = activeStreamSessions.get(chatId);
+  return !!session && !session.cleanupTimeout;
+}
+
 export function getStreamSession(chatId: string) {
   return activeStreamSessions.get(chatId);
 }

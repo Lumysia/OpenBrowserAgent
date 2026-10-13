@@ -6,7 +6,6 @@ import {
   streamPartFromChunk,
 } from "../src/shared/chat-stream-parts";
 import { normalizeChatContent } from "../src/shared/chats";
-import { CHAT_RUN_STALE_MS } from "../src/shared/config";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import { createBrowserSyncTransport } from "../src/shared/sync/browser-sync";
 import { SEEN_KEEP_MS, seenFrom } from "../src/shared/sync/clocks";
@@ -154,10 +153,8 @@ test("review6 C1: everyday rounds never take this install for a copy", async () 
   await run(a);
   // A reply streams in Z while a setting changes and its upload is
   // confirmed; Z uploads afterwards with its older clock.
-  const { summary, content } = chat("Z", [["z1", 1]], {
-    running: true,
-    updatedAt: Date.now() - CHAT_RUN_STALE_MS + 1500,
-  });
+  a.env.runActive = (id) => id === "Z";
+  const { summary, content } = chat("Z", [["z1", 1]], { running: true });
   await a.set(STORAGE_KEYS.chats, [
     ...a.get<object[]>(STORAGE_KEYS.chats),
     summary,
@@ -167,7 +164,7 @@ test("review6 C1: everyday rounds never take this install for a copy", async () 
   await a.set(PREFS, { fontSize: 13 });
   await run(a, "edit");
   await run(a);
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  a.env.runActive = undefined;
   await run(a, "edit");
   await run(a);
   await run(b);

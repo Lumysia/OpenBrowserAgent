@@ -96,7 +96,7 @@ export async function readLocal(
           ? await project(collection, entry, clocks[id], payloads)
           : null;
         snapshot.copies.set(recordId, copy);
-        if (entry && collection.hold?.(entry)) snapshot.held.add(recordId);
+        if (entry && collection.hold?.(id, env)) snapshot.held.add(recordId);
         else if (
           clocks[id] &&
           (await differs(copy, clocks[id], collection.defaultData?.(id)))

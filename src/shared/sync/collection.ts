@@ -79,7 +79,7 @@ export type Collection = {
     hooks: WriteHooks,
   ): Promise<Set<string>>;
   // An entry that must not upload yet (a reply still streaming).
-  hold?(entry: LocalEntry): boolean;
+  hold?(id: string, env: SyncEnv): boolean;
   // Both devices changed the body: merge without losing either side.
   mergeBodies?(
     base: unknown,

@@ -1,7 +1,7 @@
 import { storageLockName, withLocks } from "../locks";
 import { chatAttachmentIds } from "../chat-attachment-ids";
 import { chatContentKey } from "../chat-keys";
-import { chatFacts, chatMeta, isChatRunActive } from "../chats";
+import { chatFacts, chatMeta } from "../chats";
 import { STORAGE_KEYS, SYNC_PREFERENCES } from "../storage-keys";
 import type { ChatContent, ChatSummary } from "../types";
 import {
@@ -118,8 +118,9 @@ export const chatsCollection: Collection = {
       return written;
     });
   },
-  // A reply still streaming uploads once it has finished.
-  hold: (entry) => isChatRunActive(entry.data as ChatSummary),
+  // A reply still streaming here uploads once it has finished, however long
+  // it takes. One whose run died (or ran elsewhere) is not held.
+  hold: (id, env) => !!env.runActive?.(id),
   mergeBodies: (base, mine, theirs, newer) =>
     mergeChatBodies(
       base as ChatContent | undefined,

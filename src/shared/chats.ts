@@ -9,7 +9,6 @@ import {
   type ChatPart,
   type RunMetrics,
 } from "./types";
-import { CHAT_RUN_STALE_MS } from "./config";
 
 const CHAT_MESSAGE_ROLES = new Set(["user", "assistant", "system", "tool"]);
 const TEXT_PART_TYPES = new Set(["text", "reasoning", "summary"]);
@@ -155,13 +154,6 @@ export function chatContentSnapshot(content: ChatContent) {
     }
   }
   return tokens.join("\u001f");
-}
-
-// A reply is streaming in this chat and has not gone stale.
-export function isChatRunActive(summary: ChatSummary, now = Date.now()) {
-  return (
-    !!summary.running && now - (summary.updatedAt || 0) < CHAT_RUN_STALE_MS
-  );
 }
 
 function reconcileChatSnapshot(current: ChatContent, incoming: ChatContent) {

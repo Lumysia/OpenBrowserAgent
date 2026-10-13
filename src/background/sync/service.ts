@@ -4,6 +4,7 @@ import {
   putAttachment,
 } from "../../shared/attachment-db";
 import { deleteChatArtifacts } from "../../shared/artifacts";
+import { isChatRunning } from "../stream-sessions";
 import { getBrowserApi } from "../../shared/browser-api";
 import {
   CLOCK_LOCK,
@@ -118,6 +119,7 @@ export function browserSyncEnv(): SyncEnv {
     fetch: (input, init) => fetch(input, init),
     now: () => Date.now(),
     lock: withLock,
+    runActive: isChatRunning,
     removeChatArtifacts: deleteChatArtifacts,
   };
 }

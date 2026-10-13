@@ -69,3 +69,77 @@ test("fix7 P1: opening a chat whose run died stores nothing, so the reply delete
     assert.deepEqual(messageIds(on, "X"), ["u1", "a2"], on.name);
   assert.deepEqual(stopped, ["a1"], "the panel knows the run is over");
 });
+
+test("fix7 P2: a reply streaming for longer than the stale time is not uploaded while it runs", async () => {
+  const { clock, a, b } = pair();
+  a.env.runActive = (id) => id === "X";
+  await storeChat(
+    a,
+    "X",
+    { messages: [userMessage("u1", 1), reply("a1", 2, "Hel")] },
+    startedAgo(LONG_RUN_MS),
+  );
+  await a.sync("edit");
+  await b.sync();
+  assert.deepEqual(listed(b), [], "nothing of the running chat uploaded");
+  // The reply finishes.
+  clock.now += 60_000;
+  a.env.runActive = () => false;
+  await storeChat(a, "X", {
+    messages: [userMessage("u1", 1), reply("a1", 2, "Hello world", 3)],
+  });
+  await a.sync("edit");
+  await b.sync();
+  assert.equal(
+    (await openChatContent(b, "X"))?.messages[1].content,
+    "Hello world",
+  );
+});
+
+test("fix7 P2: a chat whose run is not running here uploads at once", async () => {
+  const { a, b } = pair();
+  a.env.runActive = () => false;
+  await storeChat(
+    a,
+    "X",
+    { messages: [userMessage("u1", 1), reply("a1", 2, "Hel")] },
+    startedAgo(1000),
+  );
+  await a.sync("edit");
+  await b.sync();
+  assert.deepEqual(listed(b), ["X"]);
+});
+
+// The lost answer: the partial copy of a long reply reached B, B's panel
+// ended that run when the chat was opened, after A's reply had finished.
+// B's change is newer, so the partial copy replaced the answer everywhere.
+test("fix7 P1+P2: a long reply is never replaced by a partial copy closed on another device", async () => {
+  const { clock, a, b } = pair();
+  a.env.runActive = (id) => id === "X";
+  await storeChat(
+    a,
+    "X",
+    { messages: [userMessage("u1", 1), reply("a1", 2, "Hel")] },
+    startedAgo(LONG_RUN_MS),
+  );
+  await a.sync("edit");
+  await b.sync();
+  await openChatContent(b, "X");
+  clock.now += 60_000;
+  a.env.runActive = () => false;
+  await storeChat(a, "X", {
+    messages: [userMessage("u1", 1), reply("a1", 2, "Hello world", 3)],
+  });
+  await a.sync("edit");
+  clock.now += 60_000;
+  if (contentOf(b, "X")) await reattachToRun(b, "X", "a1");
+  await b.sync();
+  await a.sync();
+  await openChatContent(b, "X");
+  for (const on of [a, b])
+    assert.equal(
+      contentOf(on, "X").messages[1].content,
+      "Hello world",
+      on.name,
+    );
+});
