@@ -86,12 +86,11 @@ export default defineBackground(() => {
       }
 
       if (request.type === AI_STREAM_REQUEST_TYPE.attachStream) {
-        const target = streamSessions.getStreamSession(request.chatId);
-        if (!target) {
-          streamSessions.post(port, { type: "end" });
-          return;
-        }
-        streamSessions.attachPortToSession(port, target, request.afterSequence);
+        streamSessions.attachStream(
+          port,
+          request.chatId,
+          request.afterSequence,
+        );
         return;
       }
 

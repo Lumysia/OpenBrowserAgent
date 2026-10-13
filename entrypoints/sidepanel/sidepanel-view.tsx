@@ -22,6 +22,7 @@ import { ComposerBox } from "./composer-box";
 import { EditModeOverlay } from "./edit-mode-overlay";
 import { HistoryPanel } from "./history-panel";
 import { MessageJumpControls } from "./message-jump-controls";
+import type { StoppedRuns } from "./run-state";
 import { MessageBubble } from "./message-bubble";
 import { ProvidersEmptyState } from "./providers-empty-state";
 import { QueuedMessages } from "./queued-messages";
@@ -66,6 +67,7 @@ export function SidepanelView({
   selectedElements,
   streaming,
   activeAssistantMessageId,
+  stoppedRuns,
   unreadCompletedChatIds,
   skills,
   agents,
@@ -134,6 +136,7 @@ export function SidepanelView({
   selectedElements: SelectedElement[];
   streaming: boolean;
   activeAssistantMessageId?: string;
+  stoppedRuns: StoppedRuns;
   unreadCompletedChatIds: Record<string, true>;
   skills: PickedSkill[];
   agents: Agent[];
@@ -266,6 +269,7 @@ export function SidepanelView({
                   chats={chats}
                   chatMessages={currentChat.messages}
                   outputActive={message.id === activeAssistantMessageId}
+                  runStopped={stoppedRuns.has(message.id)}
                   sentAttachments={sentAttachmentPreviews[message.id] || []}
                   activeAttachments={uploadedAttachments}
                   onReplaceAttachment={onReplaceUploadedAttachment}
@@ -284,6 +288,7 @@ export function SidepanelView({
             currentChat={currentChat}
             editingMessageId={editingMessageId}
             messagesRef={messagesRef}
+            stoppedRuns={stoppedRuns}
           />
         </div>
         <footer className="composer">

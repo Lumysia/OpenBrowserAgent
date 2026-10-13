@@ -118,6 +118,7 @@ export function SidepanelApp() {
     streamingChatIds,
     currentChatStreaming,
     currentAssistantMessageId,
+    stoppedRuns,
     beginStream,
     startStream,
     abortClosedChatStreams,
@@ -408,6 +409,7 @@ export function SidepanelApp() {
       selectedElements={selectedElements}
       streaming={currentChatStreaming}
       activeAssistantMessageId={currentAssistantMessageId}
+      stoppedRuns={stoppedRuns}
       unreadCompletedChatIds={unreadCompletedChats}
       skills={skills}
       agents={agents || []}

@@ -18,6 +18,7 @@ import type {
   UploadedAttachment,
 } from "../../src/shared/types";
 import { CHAT_PART_STATE, isToolPartType } from "../../src/shared/types";
+import { messageRunEnded } from "./run-state";
 import { formatMessageTime } from "./format";
 import {
   AssistantPart,
@@ -50,6 +51,7 @@ export function MessageBubble({
   chatMessages,
   latestUserMessage = false,
   outputActive = false,
+  runStopped = false,
 }: {
   message: ChatMessage;
   t: Messages;
@@ -71,6 +73,8 @@ export function MessageBubble({
   resendDisabled?: boolean;
   latestUserMessage?: boolean;
   outputActive?: boolean;
+  // The background has no run of this reply (see run-state).
+  runStopped?: boolean;
 }) {
   const messageSkills = pickedSkillsFromMetadata(message.metadata);
   const sentTabs = Array.isArray(message.metadata?.attachedTabs)
@@ -82,7 +86,10 @@ export function MessageBubble({
   const hasParts = !!message.parts?.length;
   const assistantText = assistantMessageText(message);
   const assistantContentFallback = assistantMessageContentFallback(message);
-  const displaySources = sourcesForAssistantMessage(message, sources);
+  const runEnded = messageRunEnded(message, runStopped);
+  const displaySources = runEnded
+    ? sourcesForAssistantMessage(message, sources)
+    : [];
   const metadataAttachments = Array.isArray(
     message.metadata?.uploadedAttachments,
   )
@@ -105,9 +112,9 @@ export function MessageBubble({
   const modelLabel = assistantModel
     ? [assistantModel.provider, assistantModel.name].filter(Boolean).join(" · ")
     : undefined;
-  const showRunInfo = message.role === "assistant" && messageRunEnded(message);
+  const showRunInfo = message.role === "assistant" && runEnded;
   const assistantEnded =
-    message.role === "assistant" && messageRunEnded(message) && !outputActive;
+    message.role === "assistant" && runEnded && !outputActive;
   const chatExists = (chatId: string) =>
     chats.some((chat) => chat.id === chatId);
   const assistantPartEntries = chronologicalAssistantPartEntries(
@@ -172,6 +179,7 @@ export function MessageBubble({
               onSelectChat={onSelectChat}
               chatExists={chatExists}
               onAnswerQuestion={onAnswerQuestion}
+              runEnded={runEnded}
             />
           ))}
         </>
@@ -346,7 +354,7 @@ function sourcesForAssistantMessage(
   sources: ChatSource[],
 ) {
   const text = assistantMessageText(message);
-  if (!text || !sources.length || !messageRunEnded(message)) return [];
+  if (!text || !sources.length) return [];
   const citedIds = Array.from(
     text.matchAll(/\[\[cite:([\w-]+)\]\]/g),
     (match) => match[1],
@@ -354,12 +362,4 @@ function sourcesForAssistantMessage(
   if (!citedIds.length) return sources;
   const citedSet = new Set(citedIds);
   return sources.filter((source) => citedSet.has(source.id));
-}
-
-function messageRunEnded(message: ChatMessage) {
-  const metrics = message.metadata?.runMetrics as { endedAt?: unknown };
-  return (
-    !!metrics?.endedAt ||
-    !!message.parts?.some((part) => part.state === CHAT_PART_STATE.outputError)
-  );
 }

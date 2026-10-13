@@ -80,6 +80,17 @@ export function attachPortToSession(
     .forEach((event) => post(port, event));
 }
 
+// A panel reattaching to the run of a chat it found unfinished.
+export function attachStream(
+  port: chrome.runtime.Port,
+  chatId: string,
+  afterSequence: number | undefined,
+) {
+  const session = activeStreamSessions.get(chatId);
+  if (!session) return post(port, { type: "notRunning" });
+  attachPortToSession(port, session, afterSequence);
+}
+
 export function detachPort(port: chrome.runtime.Port) {
   portSessions.get(port)?.ports.delete(port);
   portSessions.delete(port);
