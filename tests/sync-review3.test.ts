@@ -270,3 +270,26 @@ test("review3 S1: an app update that read the chat list before a local clear bri
       on.name,
     );
 });
+
+test("review3 P1: clearing local chats before a push is confirmed deletes nothing", async () => {
+  const clock = { now: 1_000_000_000 };
+  const server = memoryServer();
+  const a = device("deviceA", memoryTransport(server), clock, ALL_ON);
+  const b = device("deviceB", memoryTransport(server), clock, ALL_ON);
+  await saveChat(a, "X", [["m1", 1]]);
+  await a.sync("edit");
+  // a's push waits for a read to confirm it; a's chats are cleared first.
+  await resetSync(a.env, a.context, false, [CHATS]);
+  await a.settle();
+  for (let i = 0; i < 2; i++) {
+    clock.now += 60_000;
+    await a.sync();
+    await b.sync();
+  }
+  for (const on of [a, b])
+    assert.deepEqual(
+      (on.get<Array<{ id: string }>>(CHATS) ?? []).map((chat) => chat.id),
+      ["X"],
+      on.name,
+    );
+});
