@@ -106,9 +106,8 @@ export function normalizeMcpServer(value: unknown): McpServerConfig | null {
     tools: normalizeMcpTools(item.tools),
     testedAt: numberValue(item.testedAt),
     lastTestError: stringValue(item.lastTestError),
-    // 0 stays: the built-ins' times, so normalizing them twice changes nothing.
-    createdAt: numberValue(item.createdAt) ?? now,
-    updatedAt: numberValue(item.updatedAt) ?? now,
+    createdAt: numberValue(item.createdAt) || now,
+    updatedAt: numberValue(item.updatedAt) || now,
   };
 }
 

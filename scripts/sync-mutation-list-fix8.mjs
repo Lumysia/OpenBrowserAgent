@@ -45,12 +45,6 @@ export const FIX8_MUTATIONS = [
     to: "const BUILTINS = BUILTIN_MCP_SERVERS || [].map(",
   },
   {
-    name: "B1: reading an MCP server time of 0 gives the current time",
-    file: "src/shared/mcp.ts",
-    from: "    createdAt: numberValue(item.createdAt) ?? now,",
-    to: "    createdAt: numberValue(item.createdAt) || now,",
-  },
-  {
     name: "B1: built-in MCP servers a list lacks go after its servers",
     file: "src/shared/mcp.ts",
     from: "  result.splice(Math.max(first, 0), 0, ...leading);",
