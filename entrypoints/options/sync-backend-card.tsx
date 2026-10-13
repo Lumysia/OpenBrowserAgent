@@ -21,7 +21,7 @@ import {
   AccordionTriggerButton,
   Button,
   CardDescription,
-  Input,
+  CommitInput,
   Label,
   SettingToggleRow,
   Switch,
@@ -190,39 +190,31 @@ export function SyncBackendCard({
           <div className="stack">
             <Label>
               {t.options.syncBackendName}
-              <Input
+              <CommitInput
                 value={webDavDraft.name}
-                onChange={(event) =>
-                  updateWebDavBackend({ name: event.target.value })
-                }
+                onCommit={(name) => updateWebDavBackend({ name })}
               />
             </Label>
             <Label>
               {t.options.syncBackendWebDavUrl}
-              <Input
+              <CommitInput
                 value={webDavDraft.url}
-                onChange={(event) =>
-                  updateWebDavBackend({ url: event.target.value })
-                }
+                onCommit={(url) => updateWebDavBackend({ url: url.trim() })}
               />
             </Label>
             <Label>
               {t.options.syncBackendUsername}
-              <Input
+              <CommitInput
                 value={webDavDraft.username || ""}
-                onChange={(event) =>
-                  updateWebDavBackend({ username: event.target.value })
-                }
+                onCommit={(username) => updateWebDavBackend({ username })}
               />
             </Label>
             <Label>
               {t.options.syncBackendPassword}
-              <Input
+              <CommitInput
                 type="password"
                 value={webDavDraft.password || ""}
-                onChange={(event) =>
-                  updateWebDavBackend({ password: event.target.value })
-                }
+                onCommit={(password) => updateWebDavBackend({ password })}
               />
             </Label>
             <BackendDataTogglePanel
