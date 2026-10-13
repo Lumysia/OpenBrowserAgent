@@ -132,6 +132,11 @@ export function normalizeMcpServer(
   };
 }
 
+// Built-ins can be turned off but not deleted: settings always add them back.
+export function isBuiltinMcpServer(id: string) {
+  return BUILTIN_MCP_SERVERS.some((server) => server.id === id);
+}
+
 // A built-in stored before the field existed keeps the built-in's setting.
 function builtinOmitOrigin(id: string) {
   return BUILTIN_MCP_SERVERS.some(
@@ -257,9 +262,7 @@ function mergeBuiltinMcpServers(servers: McpServerConfig[]) {
   }
   const ids = new Set(result.map((server) => server.id));
   const leading = BUILTINS.filter((builtin) => !ids.has(builtin.id));
-  const first = result.findIndex((server) =>
-    BUILTIN_MCP_SERVERS.some((builtin) => builtin.id === server.id),
-  );
+  const first = result.findIndex((server) => isBuiltinMcpServer(server.id));
   result.splice(Math.max(first, 0), 0, ...leading);
   return result;
 }

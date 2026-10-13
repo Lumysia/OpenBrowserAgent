@@ -13,6 +13,7 @@ import { formatCount, getMessages } from "../../src/shared/i18n";
 import {
   createMcpServerDraft,
   BUILTIN_MCP_SERVERS,
+  isBuiltinMcpServer,
   importMcpServersFromJson,
   isMcpServerTested,
   parseHeadersJson,
@@ -306,14 +307,16 @@ export function McpPage() {
                 {server.lastTestError && (
                   <CardDescription>{server.lastTestError}</CardDescription>
                 )}
-                <div className="row">
-                  <Button
-                    variant="destructiveOutline"
-                    onClick={() => deleteServer(server.id)}
-                  >
-                    <Trash2 size={15} /> {t.options.deleteMcpServer}
-                  </Button>
-                </div>
+                {!isBuiltinMcpServer(server.id) && (
+                  <div className="row">
+                    <Button
+                      variant="destructiveOutline"
+                      onClick={() => deleteServer(server.id)}
+                    >
+                      <Trash2 size={15} /> {t.options.deleteMcpServer}
+                    </Button>
+                  </div>
+                )}
               </div>
             </AccordionContent>
           </AccordionItem>

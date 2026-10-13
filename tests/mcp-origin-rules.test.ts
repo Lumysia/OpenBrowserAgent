@@ -3,6 +3,7 @@ import { afterEach, test } from "node:test";
 import {
   BUILTIN_MCP_SERVERS,
   createMcpServerDraft,
+  isBuiltinMcpServer,
   normalizeMcpServer,
   normalizeMcpServers,
   type McpServerConfig,
@@ -221,4 +222,18 @@ test("a request to a server with the option on fails clearly without the API", a
     McpOriginRulesUnsupportedError,
   );
   await prepareMcpRequest(server("b", "https://b.example/mcp", false));
+});
+
+test("built-in MCP servers come back after removal, so only custom ones are deletable", () => {
+  const custom = {
+    id: "mcp_custom",
+    name: "Mine",
+    url: "https://example.com/mcp",
+  };
+  const read = normalizeMcpServers([custom]);
+  for (const builtin of BUILTIN_MCP_SERVERS) {
+    assert.ok(read.some((server) => server.id === builtin.id));
+    assert.equal(isBuiltinMcpServer(builtin.id), true);
+  }
+  assert.equal(isBuiltinMcpServer("mcp_custom"), false);
 });
