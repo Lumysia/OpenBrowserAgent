@@ -1,8 +1,8 @@
 import {
   ArrowLeft,
   Cloud,
+  CloudAlert,
   CloudCheck,
-  CloudOff,
   CloudUpload,
   History,
   MessageCirclePlus,
@@ -128,8 +128,9 @@ const CLOUD_ICONS: Record<SyncTone, typeof Cloud> = {
   synced: CloudCheck,
   syncing: CloudUpload,
   pending: CloudUpload,
-  paused: CloudOff,
-  error: CloudOff,
+  paused: Cloud,
+  attention: CloudAlert,
+  error: CloudAlert,
 };
 
 function cloudSyncStatus(
