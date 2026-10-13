@@ -193,19 +193,23 @@ export function seenFrom(
 }
 
 // The versions an entry holds or names: its own, the one its change was made
-// from and the one it pushed (both may be on the server).
-const versionsOf = (entry: ClockEntry): Held[] =>
-  [entry, entry.base, entry.sent].filter((held): held is Held => !!held);
+// from and the one it pushed.
+const versionsOf = (entry: ClockEntry | undefined): Held[] =>
+  entry
+    ? [entry, entry.base, entry.sent].filter((held): held is Held => !!held)
+    : [];
 
 // The `own` clocks of an entry made at `clock` (a change or merge made
-// here; undefined: a version from elsewhere) from `from`, whose versions
-// `held` it holds.
+// here; undefined: a version from elsewhere) in place of `from`, holding the
+// versions `held`. Own clocks that the versions `from` knew hold are kept
+// too: another device may still build on those versions and bring them back
+// in a merge, and this install must keep leaving them out.
 export function ownFrom(
   from: ClockEntry | undefined,
   held: Held[],
   clock?: Clock,
 ) {
-  const holds = new Set(held.flatMap(heldBy));
+  const holds = new Set([...held, ...versionsOf(from)].flatMap(heldBy));
   const own = (from?.own ?? []).filter((issued) => holds.has(issued));
   if (clock) own.push(clock);
   return own.length ? { own } : {};
@@ -285,7 +289,7 @@ export async function changedEntry(
     ...(base ? { base } : {}),
     ...(previous?.local && previous.sent ? { sent: previous.sent } : {}),
     ...withSeen(seen),
-    ...ownFrom(previous, previous ? versionsOf(previous) : [], clock),
+    ...ownFrom(previous, [], clock),
   };
   if (!copy) return { ...entry, deleted: true };
   entry.dataHash = await hashJson(copy.data);

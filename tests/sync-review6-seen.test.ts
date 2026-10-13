@@ -6,6 +6,7 @@ import {
   streamPartFromChunk,
 } from "../src/shared/chat-stream-parts";
 import { normalizeChatContent } from "../src/shared/chats";
+import { CHAT_RUN_STALE_MS } from "../src/shared/config";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import { createBrowserSyncTransport } from "../src/shared/sync/browser-sync";
 import { SEEN_KEEP_MS, seenFrom } from "../src/shared/sync/clocks";
@@ -16,6 +17,7 @@ import { SYNC_WARNINGS } from "../src/shared/sync/state";
 import { AI_TEXT_CHUNK_TYPE, type ChatPart } from "../src/shared/types";
 import {
   ALL_ON,
+  chat,
   copyOf,
   device,
   memoryArea,
@@ -125,6 +127,54 @@ test("review6 C1: a copy whose clocks are behind is found by a push still waitin
     );
 });
 
+// Own clocks this install no longer names stay known while a version on the
+// server may hold them, so they never pass for another install's.
+test("review6 C1: everyday rounds never take this install for a copy", async () => {
+  const clock = { now: 1_000_000_000 };
+  const server = memoryServer();
+  const a = device("deviceA", memoryTransport(server), clock, ALL_ON);
+  const b = device("deviceB", memoryTransport(server), clock, ALL_ON);
+  const warnings: string[] = [];
+  const run = async (on: typeof a, reason?: "edit") =>
+    warnings.push(...(await on.sync(reason)).warnings);
+  // Two chats, each saved in two writes, changed again before the round
+  // that confirms their first upload.
+  await saveChat(a, "X", [["x1", 1]]);
+  await saveChat(a, "Y", [["y1", 1]]);
+  await run(a, "edit");
+  await run(b);
+  clock.now += 1000;
+  for (const id of ["X", "Y"])
+    await saveChat(a, id, [
+      [`${id}1`, 1],
+      [`${id}2`, 2],
+    ]);
+  await run(a, "edit");
+  await run(b);
+  await run(a);
+  // A reply streams in Z while a setting changes and its upload is
+  // confirmed; Z uploads afterwards with its older clock.
+  const { summary, content } = chat("Z", [["z1", 1]], {
+    running: true,
+    updatedAt: Date.now() - CHAT_RUN_STALE_MS + 1500,
+  });
+  await a.set(STORAGE_KEYS.chats, [
+    ...a.get<object[]>(STORAGE_KEYS.chats),
+    summary,
+  ]);
+  await a.set(`${STORAGE_KEYS.chats}/Z`, content);
+  clock.now += 60_000;
+  await a.set(PREFS, { fontSize: 13 });
+  await run(a, "edit");
+  await run(a);
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await run(a, "edit");
+  await run(a);
+  await run(b);
+  assert.deepEqual(warnings, []);
+  assert.deepEqual(a.get(PREFS), b.get(PREFS));
+});
+
 test("review6 C1: clocks of one device id are never pruned against each other", () => {
   const [older] = tickClock(INITIAL_HLC, "shared", 1_000);
   const [newer] = tickClock(INITIAL_HLC, "shared", 2_000);
@@ -157,20 +207,29 @@ test("review6 seen: one device's edits name at most its waiting push, two device
   assert.equal(await longestSeen(server), 0);
   await b.sync();
   const lengths: number[] = [];
+  const edit = async (on: typeof a, field: string, value: string) =>
+    on.set(PROVIDERS, {
+      p: { ...on.get<Providers>(PROVIDERS)?.p, [field]: value },
+    });
   for (let i = 0; i < 12; i++) {
     clock.now += 60_000;
-    await a.set(PREFS, { ...a.get<object>(PREFS), theme: `t${i}` });
-    // Every third round both change it before syncing: b merges.
-    if (i % 3 === 0) await b.set(PREFS, { ...b.get<object>(PREFS), n: i });
-    else await a.sync("edit");
+    await edit(a, "model", `m${i}`);
+    await a.sync("edit");
     clock.now += 60_000;
-    await b.set(PREFS, { ...b.get<object>(PREFS), fontSize: 20 + i });
+    // Every third round b changes it before reading a's change: b merges.
+    if (i % 3) await b.sync();
+    await edit(b, "apiKey", `k${i}`);
     await b.sync("edit");
     await a.sync();
     lengths.push(await longestSeen(server));
   }
   assert.ok(Math.max(...lengths) <= 3, `seen lengths ${lengths}`);
-  assert.deepEqual(a.get(PREFS), b.get(PREFS));
+  await b.sync();
+  assert.deepEqual(a.get(PROVIDERS), b.get(PROVIDERS));
+  assert.deepEqual(a.get<Providers>(PROVIDERS).p, {
+    model: "m11",
+    apiKey: "k11",
+  });
 });
 
 test("review6 S1: versions stop naming changes older than SEEN_KEEP_MS", () => {
