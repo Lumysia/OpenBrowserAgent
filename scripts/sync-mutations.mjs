@@ -169,11 +169,9 @@ const MUTATIONS = [
   {
     name: "garbage deleted before the root without it is written",
     file: "src/shared/sync/engine.ts",
-    from: `    await uploadBlobs(transport, remote, outcome.pushes, payloads);
-    const written`,
-    to: `    await uploadBlobs(transport, remote, outcome.pushes, payloads);
-    await deleteBlobs(transport, collected);
-    const written`,
+    from: `await uploadBlobs(transport, remote, outcome.pushes, payloads);`,
+    to: `await uploadBlobs(transport, remote, outcome.pushes, payloads);
+      await deleteBlobs(transport, collected);`,
   },
   {
     name: "keeping after a mass delete re-uploads every record",
