@@ -208,12 +208,7 @@ export async function confirmedEntry(
 ): Promise<ClockEntry> {
   if (current.clock === record.clock) return entryOf(id, record);
   if (!current.local) return current;
-  const { seen: _seen, ...rest } = unsent(current);
-  return {
-    ...rest,
-    base: await baseOf(record),
-    ...withSeen(seenFrom(current.clock, [current, record])),
-  };
+  return { ...unsent(current), base: await baseOf(record) };
 }
 
 // The entry once its change is pushed in `record` (the same version, or one

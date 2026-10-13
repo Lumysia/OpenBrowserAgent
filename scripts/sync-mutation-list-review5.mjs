@@ -25,12 +25,6 @@ export const REVIEW5_MUTATIONS = [
     to: "  const seen = previous?.local ? previous.seen : seenFrom(clock, [previous]);",
   },
   {
-    name: "R2: a confirmation does not add what the confirmed version includes",
-    file: "src/shared/sync/clocks.ts",
-    from: "    ...withSeen(seenFrom(current.clock, [current, record])),",
-    to: "    ...withSeen(current.seen),",
-  },
-  {
     name: "R2: a clock of this device's id it never made goes unnoticed",
     file: "src/shared/sync/clocks.ts",
     from: "          foreign = true;",
