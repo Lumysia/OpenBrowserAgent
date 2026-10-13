@@ -16,7 +16,7 @@ export const mcpServersTool: ToolDefinition = {
   onDemand: true,
   summary: "Add, test and manage MCP servers",
   description:
-    "Manage Streamable HTTP MCP servers: list, add (name, url, headers), update, test (discovers its tools), delete. Tools of tested, enabled servers become loadable with toolSearch in the next chat.",
+    "Manage Streamable HTTP MCP servers: list, add (name, url, headers, omitOrigin), update, test (discovers its tools), delete. Tools of tested, enabled servers become loadable with toolSearch in the next chat.",
   parameters: schema(
     {
       action: {
@@ -29,6 +29,11 @@ export const mcpServersTool: ToolDefinition = {
       url: { type: "string" },
       enabled: { type: "boolean" },
       headers: { type: "object" },
+      omitOrigin: {
+        type: "boolean",
+        description:
+          "Send requests without the browser Origin header, for servers that reject browser requests.",
+      },
     },
     ["action"],
   ),

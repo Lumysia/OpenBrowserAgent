@@ -1,4 +1,5 @@
 import type { McpServerConfig, McpToolConfig } from "./mcp";
+import { prepareMcpRequest } from "./mcp-origin-rules";
 
 const MCP_PROTOCOL_VERSION = "2025-06-18";
 const SUPPORTED_PROTOCOL_VERSIONS = [
@@ -52,6 +53,7 @@ async function withMcpSession<T>(
     if ("error" in body) throw new Error(formatMcpError(body.error));
     return body.result;
   }
+  await prepareMcpRequest(server);
   try {
     const initializedResult = (await request("initialize", {
       protocolVersion: MCP_PROTOCOL_VERSION,

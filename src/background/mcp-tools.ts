@@ -114,6 +114,7 @@ export async function addMcpServer(input: Record<string, unknown>) {
     url: input.url,
     enabled: false,
     headers: input.headers,
+    omitOrigin: input.omitOrigin === true,
   });
   if (!server?.url) return { success: false, error: "Missing MCP server URL" };
   try {
@@ -152,9 +153,15 @@ export async function updateMcpServer(
       ...(input.headers !== undefined
         ? { headers: normalizeHeaders(input.headers) }
         : {}),
+      ...(input.omitOrigin !== undefined
+        ? { omitOrigin: input.omitOrigin === true }
+        : {}),
       updatedAt: Date.now(),
     };
-    const needsRetest = input.url !== undefined || input.headers !== undefined;
+    const needsRetest =
+      input.url !== undefined ||
+      input.headers !== undefined ||
+      input.omitOrigin !== undefined;
     const canKeepEnabled = !needsRetest && isMcpServerTested(baseNext);
     return {
       ...baseNext,
@@ -178,7 +185,9 @@ export async function updateMcpServer(
 }
 
 const sameEndpoint = (left: McpServerConfig, right: McpServerConfig) =>
-  left.url === right.url && sameJson(left.headers, right.headers);
+  left.url === right.url &&
+  left.omitOrigin === right.omitOrigin &&
+  sameJson(left.headers, right.headers);
 
 // The server is asked first; its answer is stored on the server as stored
 // then, unless its address or headers changed meanwhile.
@@ -242,6 +251,7 @@ function safeMcpServer(server: {
   url: string;
   enabled: boolean;
   headers?: Record<string, string>;
+  omitOrigin?: boolean;
   tools?: Array<{ name: string; description?: string; enabled: boolean }>;
   testedAt?: number;
   lastTestError?: string;
@@ -252,6 +262,7 @@ function safeMcpServer(server: {
     description: server.description,
     url: server.url,
     enabled: server.enabled,
+    omitOrigin: server.omitOrigin === true,
     tested: isMcpServerTested(server),
     tools: server.tools || [],
     lastTestError: server.lastTestError,

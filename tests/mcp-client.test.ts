@@ -11,6 +11,7 @@ const server = {
   name: "Fixture",
   url: "https://mcp.example.test/",
   enabled: true,
+  omitOrigin: false,
   createdAt: 1,
   updatedAt: 1,
 } satisfies McpServerConfig;
