@@ -5,25 +5,25 @@ export const FIX8_MUTATIONS = [
   {
     name: "B1: list items filled in on read are stored with a change",
     file: "src/shared/stored-form.ts",
-    from: "      if (reordered || !sameJson(before, item)) result.push(item);",
-    to: "      result.push(item);",
+    from: "      if (reordered || !sameJson(before, item)) keep(item, id);",
+    to: "      keep(item, id);",
   },
   {
     name: "B1: a reorder leaves the items filled in on read unstored",
     file: "src/shared/stored-form.ts",
-    from: "      if (reordered || !sameJson(before, item)) result.push(item);",
-    to: "      if (!sameJson(before, item)) result.push(item);",
+    from: "      if (reordered || !sameJson(before, item)) keep(item, id);",
+    to: "      if (!sameJson(before, item)) keep(item, id);",
   },
   {
     name: "B1: stored items dropped on read are lost with a change",
     file: "src/shared/stored-form.ts",
-    from: "    if (!shownIds.has(id) && !nextIds.has(id)) result.splice(index++, 0, item);",
-    to: "    if (false) result.splice(index++, 0, item);",
+    from: "    if (id === undefined || (!shownIds.has(id) && !nextIds.has(id)))",
+    to: "    if (false)",
   },
   {
     name: "B1: stored items dropped on read move to the start",
     file: "src/shared/stored-form.ts",
-    from: "      if (at >= 0) index = at + 1;",
+    from: "      if (found >= 0) index = found + 1;",
     to: "",
   },
   {

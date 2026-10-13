@@ -6,6 +6,7 @@ import { REVIEW5_MUTATIONS } from "./sync-mutation-list-review5.mjs";
 import { REVIEW6_MUTATIONS } from "./sync-mutation-list-review6.mjs";
 import { FIX7_MUTATIONS } from "./sync-mutation-list-fix7.mjs";
 import { FIX8_MUTATIONS } from "./sync-mutation-list-fix8.mjs";
+import { FIX9_MUTATIONS } from "./sync-mutation-list-fix9.mjs";
 
 export const MUTATIONS = [
   {
@@ -438,4 +439,5 @@ export const MUTATIONS = [
   ...REVIEW6_MUTATIONS,
   ...FIX7_MUTATIONS,
   ...FIX8_MUTATIONS,
+  ...FIX9_MUTATIONS,
 ];
