@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { loadContent } from "../src/background/sync/service";
+import { loadContent, resetSync } from "../src/background/sync/service";
+import { storageLockName } from "../src/shared/locks";
 import { mergePreferences } from "../src/shared/default-preferences";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import { runSyncRound } from "../src/shared/sync/engine";
@@ -228,4 +229,44 @@ test("review3 P1 control: a message deleted on another device right after it was
   }
   for (const on of [a, b])
     assert.deepEqual(messageIds(on, "X"), ["m1"], on.name);
+});
+
+test("review3 S1: an app update that read the chat list before a local clear brings nothing back", async () => {
+  const clock = { now: 1_000_000_000 };
+  const server = memoryServer();
+  const a = device("deviceA", memoryTransport(server), clock, ALL_ON);
+  const b = device("deviceB", memoryTransport(server), clock, ALL_ON);
+  await saveChat(a, "X", [["m1", 1]]);
+  await saveChat(a, "Y", [["m2", 2]]);
+  await a.sync("edit");
+  await b.sync();
+  clock.now += 1000;
+  await a.set(
+    CHATS,
+    a.get<Array<{ id: string }>>(CHATS).filter((chat) => chat.id !== "Y"),
+  );
+  await a.sync("edit");
+  clock.now += 1000;
+  // The side panel updates the list (read, then write) while b's chats
+  // are cleared.
+  let cleared: Promise<unknown> | undefined;
+  await b.env.lock(storageLockName(CHATS), async () => {
+    const list = (await b.env.local.get(CHATS))[CHATS] as Array<{ id: string }>;
+    cleared = resetSync(b.env, b.context, false, [CHATS]);
+    await wait(10);
+    await b.env.local.set({ [CHATS]: list.map((chat) => ({ ...chat })) });
+  });
+  await cleared;
+  await b.settle();
+  for (let i = 0; i < 2; i++) {
+    clock.now += 60_000;
+    await b.sync();
+    await a.sync();
+  }
+  for (const on of [a, b])
+    assert.deepEqual(
+      on.get<Array<{ id: string }>>(CHATS).map((chat) => chat.id),
+      ["X"],
+      on.name,
+    );
 });
