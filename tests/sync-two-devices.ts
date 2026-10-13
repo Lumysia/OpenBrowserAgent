@@ -22,6 +22,7 @@ import type { Transport } from "../src/shared/sync/transport";
 import { createWebDavTransport } from "../src/shared/sync/webdav";
 import { chat, hookedTransport } from "./sync-fixtures";
 import { backgroundWriteCases } from "./sync-two-devices-background";
+import { dayOfUseCases } from "./sync-two-devices-day";
 import { lostAnswerCases } from "./sync-two-devices-lost";
 import {
   CHATS,
@@ -410,6 +411,14 @@ if (ignoringA && ignoringB)
         );
       }
     };
+
+// On the server that ignores If-Match, where there is one.
+Object.assign(
+  cases,
+  ignoringA && ignoringB
+    ? dayOfUseCases(ignoringA, ignoringB)
+    : dayOfUseCases(baseA, baseB),
+);
 
 let failed = 0;
 for (const [name, body] of Object.entries(cases)) {
