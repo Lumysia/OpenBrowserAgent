@@ -11,14 +11,24 @@ const TooltipTrigger = TooltipPrimitive.Trigger;
 const TooltipContent = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
->(({ className, sideOffset = 8, ...props }, ref) => (
+>(({ className, sideOffset = 8, children, ...props }, ref) => (
   <TooltipPrimitive.Portal container={usePortalContainer()}>
     <TooltipPrimitive.Content
       ref={ref}
       sideOffset={sideOffset}
       className={cn("ui-tooltip-content", className)}
       {...props}
-    />
+    >
+      {children}
+      {/* Points at the trigger, so a tooltip near other controls is not
+          read as theirs. */}
+      <TooltipPrimitive.Arrow asChild width={12} height={6}>
+        <svg className="ui-tooltip-arrow" viewBox="0 0 12 6" aria-hidden>
+          <path d="M0 0 L6 6 L12 0 Z" />
+          <path d="M0 0 L6 6 L12 0" fill="none" />
+        </svg>
+      </TooltipPrimitive.Arrow>
+    </TooltipPrimitive.Content>
   </TooltipPrimitive.Portal>
 ));
 TooltipContent.displayName = "TooltipContent";

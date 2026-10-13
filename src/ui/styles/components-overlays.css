@@ -318,10 +318,16 @@
   align-items: center;
 }
 .ui-tooltip-content {
+  --tooltip-surface: color-mix(
+    in srgb,
+    var(--popover) 92%,
+    var(--accent-softer)
+  );
+  --tooltip-border: color-mix(in srgb, var(--accent-strong) 12%, var(--border));
   z-index: 100;
   max-width: min(220px, calc(100vw - 24px));
   padding: 8px 12px;
-  border: 1px solid color-mix(in srgb, var(--accent-strong) 12%, var(--border));
+  border: 1px solid var(--tooltip-border);
   border-radius: 9px;
   background:
     linear-gradient(
@@ -329,7 +335,7 @@
       color-mix(in srgb, var(--accent-softer) 32%, transparent),
       transparent 72%
     ),
-    color-mix(in srgb, var(--popover) 92%, var(--accent-softer));
+    var(--tooltip-surface);
   color: color-mix(in srgb, var(--accent-strong) 64%, var(--foreground));
   font-size: 13px;
   font-weight: 500;
@@ -337,6 +343,18 @@
   white-space: pre-line;
   box-shadow: 0 10px 24px color-mix(in srgb, var(--shadow) 76%, transparent);
   animation: pop-in 0.14s ease backwards;
+}
+/* Overlaps the content border by 1px so the arrow joins the box. */
+.ui-tooltip-arrow {
+  display: block;
+  margin-top: -1px;
+  overflow: visible;
+}
+.ui-tooltip-arrow path:first-child {
+  fill: var(--tooltip-surface);
+}
+.ui-tooltip-arrow path:last-child {
+  stroke: var(--tooltip-border);
 }
 .tooltip-button-wrapper {
   display: inline-flex;
