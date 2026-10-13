@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Messages } from "../../src/shared/i18n";
+import { formatCount, type Messages } from "../../src/shared/i18n";
 import { stringifyHeaders } from "../../src/shared/mcp";
 import { mcpOriginRulesSupported } from "../../src/shared/mcp-origin-rules";
 import type { McpServerConfig } from "../../src/shared/types";
@@ -107,12 +107,7 @@ function McpToolList({
             <CardTitle className="settings-section-title">
               {t.options.mcpTools}
             </CardTitle>
-            <small>
-              {t.options.mcpTestSuccess.replace(
-                "{count}",
-                String(tools.length),
-              )}
-            </small>
+            <small>{formatCount(t.options.mcpTestSuccess, tools.length)}</small>
           </span>
         </AccordionTriggerButton>
         <AccordionContent className="stack">

@@ -1,3 +1,4 @@
+import { plural } from "../plural";
 import { smartBarDeDE } from "./smart-bar/de-DE";
 import { syncDeDE } from "./sync/de-DE";
 import { themesDeDE } from "./themes/de-DE";
@@ -79,7 +80,10 @@ export const deDE: LocaleMessages = {
     questionCustomPlaceholder: "Eigene Antwort eingeben…",
     questionNoAnswer: "Keine Antwort",
     forkTitleSuffix: "Verzweigung",
-    messageCount: "{count} Nachrichten",
+    messageCount: plural({
+      one: "{count} Nachricht",
+      other: "{count} Nachrichten",
+    }),
     relativeMinutesAgo: "vor {count} Min.",
     relativeHoursAgo: "vor {count} Std.",
     relativeDaysAgo: "vor {count} Tg.",
@@ -146,7 +150,10 @@ export const deDE: LocaleMessages = {
     resendWithoutMissingFiles: "Ohne fehlende Dateien erneut senden",
     resendMessage: "Erneut senden",
     forkChat: "Chat verzweigen",
-    showMoreSources: "{count} weitere Quellen anzeigen",
+    showMoreSources: plural({
+      one: "{count} weitere Quelle anzeigen",
+      other: "{count} weitere Quellen anzeigen",
+    }),
     showFewerSources: "Weniger Quellen anzeigen",
     unavailableAttachments: "{count} nicht verfügbar",
     allOpenTabs: "Alle geöffneten Tabs",
@@ -377,16 +384,25 @@ export const deDE: LocaleMessages = {
     mcpServerEnabled: "Aktiviert",
     mcpEnableRequiresTest:
       "Testen Sie diesen MCP-Server, bevor Sie ihn aktivieren.",
-    mcpEnableTooltipTested: "Test bestanden. {count} Tools gefunden.",
+    mcpEnableTooltipTested: plural({
+      one: "Test bestanden. {count} Tool gefunden.",
+      other: "Test bestanden. {count} Tools gefunden.",
+    }),
     mcpImportJson: "MCP-JSON-Konfiguration einfügen",
     mcpImportButton: "MCP-JSON importieren",
-    mcpImportSuccess: "{count} MCP-Server importiert.",
+    mcpImportSuccess: plural({
+      one: "{count} MCP-Server importiert.",
+      other: "{count} MCP-Server importiert.",
+    }),
     mcpImportNone:
       "Keine entfernten HTTP-MCP-Server im eingefügten JSON gefunden.",
     mcpImportError: "MCP-Import fehlgeschlagen",
     mcpTestServer: "Server testen",
     mcpTesting: "Wird getestet…",
-    mcpTestSuccess: "{count} Tools gefunden.",
+    mcpTestSuccess: plural({
+      one: "{count} Tool gefunden.",
+      other: "{count} Tools gefunden.",
+    }),
     mcpTools: "Verfügbare Tools",
     deleteMcpServer: "MCP-Server löschen",
     resetDefaults: "Auf Standard zurücksetzen",

@@ -9,7 +9,7 @@ import {
   Upload,
 } from "lucide-react";
 import { useState } from "react";
-import { getMessages } from "../../src/shared/i18n";
+import { formatCount, getMessages } from "../../src/shared/i18n";
 import {
   createMcpServerDraft,
   BUILTIN_MCP_SERVERS,
@@ -126,10 +126,7 @@ export function McpPage() {
       setImportDraft("");
       setImportMenuOpen(false);
       setImportMessage(
-        t.options.mcpImportSuccess.replace(
-          "{count}",
-          String(result.servers.length),
-        ),
+        formatCount(t.options.mcpImportSuccess, result.servers.length),
       );
     } catch (error) {
       setImportMessage(
@@ -285,9 +282,9 @@ export function McpPage() {
                   </TooltipTrigger>
                   <TooltipContent>
                     {isMcpServerTested(server)
-                      ? t.options.mcpEnableTooltipTested.replace(
-                          "{count}",
-                          String(server.tools?.length || 0),
+                      ? formatCount(
+                          t.options.mcpEnableTooltipTested,
+                          server.tools?.length || 0,
                         )
                       : t.options.mcpEnableRequiresTest}
                   </TooltipContent>

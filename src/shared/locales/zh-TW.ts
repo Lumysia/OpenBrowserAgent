@@ -1,3 +1,4 @@
+import { plural } from "../plural";
 import { smartBarZhTW } from "./smart-bar/zh-TW";
 import { syncZhTW } from "./sync/zh-TW";
 import { themesZhTW } from "./themes/zh-TW";
@@ -73,7 +74,7 @@ export const zhTW: LocaleMessages = {
     questionCustomPlaceholder: "輸入你自己的回答…",
     questionNoAnswer: "未回答",
     forkTitleSuffix: "分叉",
-    messageCount: "{count} 則訊息",
+    messageCount: plural({ other: "{count} 則訊息" }),
     relativeMinutesAgo: "{count} 分鐘前",
     relativeHoursAgo: "{count} 小時前",
     relativeDaysAgo: "{count} 天前",
@@ -138,7 +139,7 @@ export const zhTW: LocaleMessages = {
     resendWithoutMissingFiles: "不含遺失的檔案重新傳送",
     resendMessage: "重新傳送",
     forkChat: "分叉對話",
-    showMoreSources: "展開剩餘 {count} 個來源",
+    showMoreSources: plural({ other: "展開剩餘 {count} 個來源" }),
     showFewerSources: "收起來源",
     unavailableAttachments: "{count} 個不可用",
     allOpenTabs: "所有開啟的分頁",
@@ -322,15 +323,17 @@ export const zhTW: LocaleMessages = {
       "此瀏覽器無法移除 Origin 請求標頭，拒絕瀏覽器請求的伺服器在這裡無法使用。",
     mcpServerEnabled: "已啟用",
     mcpEnableRequiresTest: "請先測試此 MCP 伺服器，然後才能啟用。",
-    mcpEnableTooltipTested: "測試已通過，找到 {count} 個工具。",
+    mcpEnableTooltipTested: plural({
+      other: "測試已通過，找到 {count} 個工具。",
+    }),
     mcpImportJson: "貼上 MCP JSON 設定",
     mcpImportButton: "匯入 MCP JSON",
-    mcpImportSuccess: "已匯入 {count} 個 MCP 伺服器。",
+    mcpImportSuccess: plural({ other: "已匯入 {count} 個 MCP 伺服器。" }),
     mcpImportNone: "貼上的 JSON 中找不到遠端 HTTP MCP 伺服器。",
     mcpImportError: "MCP 匯入失敗",
     mcpTestServer: "測試伺服器",
     mcpTesting: "正在測試…",
-    mcpTestSuccess: "找到 {count} 個工具。",
+    mcpTestSuccess: plural({ other: "找到 {count} 個工具。" }),
     mcpTools: "可用工具",
     deleteMcpServer: "刪除 MCP 伺服器",
     resetDefaults: "重設預設值",

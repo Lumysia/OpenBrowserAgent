@@ -1,3 +1,4 @@
+import { plural } from "../plural";
 import { smartBarEnUS } from "./smart-bar/en-US";
 import { syncEnUS } from "./sync/en-US";
 import { themesEnUS } from "./themes/en-US";
@@ -80,7 +81,10 @@ export const enUS = {
     questionCustomPlaceholder: "Type your own answer…",
     questionNoAnswer: "No answer",
     forkTitleSuffix: "Fork",
-    messageCount: "{count} messages",
+    messageCount: plural({
+      one: "{count} message",
+      other: "{count} messages",
+    }),
     relativeMinutesAgo: "{count}m ago",
     relativeHoursAgo: "{count}h ago",
     relativeDaysAgo: "{count}d ago",
@@ -146,7 +150,10 @@ export const enUS = {
     resendWithoutMissingFiles: "Resend without missing files",
     resendMessage: "Resend",
     forkChat: "Fork chat",
-    showMoreSources: "Show {count} more sources",
+    showMoreSources: plural({
+      one: "Show {count} more source",
+      other: "Show {count} more sources",
+    }),
     showFewerSources: "Show fewer sources",
     unavailableAttachments: "{count} unavailable",
     allOpenTabs: "All open tabs",
@@ -355,15 +362,24 @@ export const enUS = {
       "This browser can't remove the Origin header, so a server that rejects browser requests won't work here.",
     mcpServerEnabled: "Enabled",
     mcpEnableRequiresTest: "Test this MCP server before enabling it.",
-    mcpEnableTooltipTested: "Test passed. {count} tools were found.",
+    mcpEnableTooltipTested: plural({
+      one: "Test passed. {count} tool was found.",
+      other: "Test passed. {count} tools were found.",
+    }),
     mcpImportJson: "Paste MCP JSON configuration",
     mcpImportButton: "Import MCP JSON",
-    mcpImportSuccess: "Imported {count} MCP servers.",
+    mcpImportSuccess: plural({
+      one: "Imported {count} MCP server.",
+      other: "Imported {count} MCP servers.",
+    }),
     mcpImportNone: "No remote HTTP MCP servers found in the pasted JSON.",
     mcpImportError: "MCP import failed",
     mcpTestServer: "Test server",
     mcpTesting: "Testing…",
-    mcpTestSuccess: "Found {count} tools.",
+    mcpTestSuccess: plural({
+      one: "Found {count} tool.",
+      other: "Found {count} tools.",
+    }),
     mcpTools: "Available tools",
     deleteMcpServer: "Delete MCP server",
     resetDefaults: "Reset defaults",
