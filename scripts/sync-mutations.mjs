@@ -33,34 +33,36 @@ const MUTATIONS = [
   },
   {
     name: "treat a missing blob as deleted",
-    file: "src/shared/sync/engine.ts",
+    file: "src/shared/sync/reconcile.ts",
     from: `        if (!fetched) {
           outcome.warnings.push(SYNC_WARNINGS.missingContent);
           continue;
-        }
-        body = fetched.body;`,
+        }`,
     to: `        if (!fetched) {
-          addWrite(collection, {
-            recordId,
-            record: { clock: record.clock, deleted: true },
-          });
+          const deleted = { clock: record.clock, deleted: true as const };
+          addWrite(collection, { recordId, record: deleted, entry: deleted });
           continue;
-        }
-        body = fetched.body;`,
+        }`,
   },
   {
     name: "ignore tombstone clocks (a delete always wins)",
     file: "src/shared/sync/plan.ts",
-    from: `  if (pending.deleted || remote.deleted)
-    return mineNewer ? push(pending) : { kind: "apply", record: remote };`,
-    to: `  if (pending.deleted || remote.deleted)
-    return remote.deleted ? { kind: "apply", record: remote } : push(pending);`,
+    from: `  if (mine.deleted || theirs.deleted)
+    return mineNewer ? push(mine) : apply(theirs);`,
+    to: `  if (mine.deleted || theirs.deleted)
+    return theirs.deleted ? apply(theirs) : push(mine);`,
   },
   {
-    name: "drop the mass-delete guard",
-    file: "src/shared/sync/engine.ts",
-    from: "massDelete.some((entry) => !answer?.collections.includes(entry.collection))",
-    to: "false",
+    name: "drop the guard for remote mass deletions",
+    file: "src/shared/sync/engine-merge.ts",
+    from: "guard(collection, here, appliesDelete, false);",
+    to: "",
+  },
+  {
+    name: "drop the guard for mass deletions made here",
+    file: "src/shared/sync/engine-merge.ts",
+    from: "guard(collection, there, pushesDelete, true);",
+    to: "",
   },
   {
     name: "apply an unvalidated root",
@@ -77,20 +79,28 @@ const MUTATIONS = [
   {
     name: "missing remote record read as a delete",
     file: "src/shared/sync/plan.ts",
-    from: "(!remote || compareClocks(remote.clock, synced.clock) < 0)",
-    to: "remote && compareClocks(remote.clock, synced.clock) < 0",
+    from: "if (!remote) return local.deleted ? NONE : push(local);",
+    to: "if (!remote) return apply({ clock: local.clock, deleted: true });",
   },
   {
-    name: "a lost delete is not sent again (server ignored If-Match)",
+    name: "a version newer than the remote one is not sent (lost write, other backend)",
     file: "src/shared/sync/plan.ts",
-    from: "if (remoteBehind && synced.deleted && remote)",
-    to: "if (false)",
+    from: "if (!input.changedHere) return mineNewer ? push(local) : apply(remote);",
+    to: "if (!input.changedHere) return mineNewer ? NONE : apply(remote);",
   },
   {
-    name: "content downloads stored without re-checking the synced version",
+    name: "content downloads stored without re-checking the record's version",
     file: "src/background/sync/service.ts",
-    from: "if (latest.synced[recordId]?.blob !== blob) return undefined;",
-    to: "",
+    from: "if ((await loadClocks(env.local, collection.name))[id]?.blob !== blob) {",
+    to: "if (false) {",
+  },
+  {
+    name: "a round writes a chat without its content over content opened meanwhile",
+    file: "src/shared/sync/local.ts",
+    from: `      return !(
+        write.body === undefined &&`,
+    to: `      return true || !(
+        write.body === undefined &&`,
   },
   {
     name: "clearing sync data without the sync lock",
@@ -105,103 +115,117 @@ const MUTATIONS = [
     to: "const locks = [CHATS];",
   },
   {
-    name: "dirty keys cleared even when they changed during the round",
-    file: "src/shared/sync/state.ts",
-    from: "if (current[key]?.changes === seen[key]?.changes) delete current[key];",
-    to: "delete current[key];",
+    name: "clock diff: every record of a changed key counts as changed",
+    file: "src/shared/sync/track.ts",
+    from: "if (sameJson(old, next) || (!next && !after.complete)) continue;",
+    to: "if (!next && !after.complete) continue;",
   },
   {
-    name: "changes stamped with the first edit's time",
-    file: "src/shared/sync/state.ts",
-    from: "at: Math.max(now, dirty[key]?.at ?? 0),",
-    to: "at: dirty[key]?.at ?? now,",
+    name: "clock diff: a record that has a clock gets a new one on any change of its key",
+    file: "src/shared/sync/track.ts",
+    from: "const edited = known\n          ? await differs(copy, known)",
+    to: "const edited = known\n          ? true",
   },
   {
-    name: "chat changes stamped with the oldest edit of the collection",
+    name: "clock diff: a field never stored is not compared with its default",
+    file: "src/shared/sync/track.ts",
+    from: "(side.complete && collection.defaultData?.(id) !== undefined",
+    to: "(false",
+  },
+  {
+    name: "remote changes stored without their clocks",
     file: "src/shared/sync/local.ts",
-    from: "Math.max(listEditedAt, editedAt.get(id) ?? 0);",
-    to: "Math.min(...[listEditedAt, ...editedAt.values()].filter(Boolean));",
+    from: "for (const id of ids) clocks[id] = byId.get(id)!.entry;",
+    to: "",
   },
   {
-    name: "collections with pending changes skipped when nothing is dirty",
-    file: "src/shared/sync/local.ts",
-    from: "if (!keys.length && !full && !hasPending) continue;",
-    to: "if (!keys.length && !full) continue;",
+    name: "the edit listener records writes made together with their clocks",
+    file: "src/shared/sync/track.ts",
+    from: "if (clocksKey(collection.name) in changes) continue;",
+    to: "",
+  },
+  {
+    name: "clearing local data keeps the cleared records' clocks",
+    file: "src/background/sync/service.ts",
+    from: "...cleared.map((collection) => clocksKey(collection.name)),",
+    to: "",
+  },
+  {
+    name: "a value with no clock competes as if it were new",
+    file: "src/shared/sync/plan.ts",
+    from: "if (input.untracked) return conflict(input, local, remote, undefined, false);",
+    to: "if (input.untracked) return push(local);",
+  },
+  {
+    name: "an empty secret replaces the account's on a join",
+    file: "src/shared/sync/plan.ts",
+    from: `  if (!base)
+    data = keepSecrets(data, mineWins ? theirs.data : mine.data, secrets);`,
+    to: "",
   },
   {
     name: "pushes refer to content nobody can download",
     file: "src/shared/sync/engine.ts",
-    from: "if (!payloads.has(record.blob!)) pushes.delete(recordId);",
+    from: "if (!payload) pushes.delete(recordId);",
     to: "if (false) pushes.delete(recordId);",
   },
   {
     name: "blobs the server lost are not uploaded again",
     file: "src/shared/sync/blobs.ts",
-    from: "await transport.putBlob(blob, bytes);",
-    to: "",
-  },
-  {
-    name: "one sync state for every backend",
-    file: "src/shared/sync/state.ts",
-    from: "const stateKey = (scope: string) => `${STORAGE_KEYS.syncState}:${scope}`;",
-    to: "const stateKey = (_scope: string) => STORAGE_KEYS.syncState;",
-  },
-  {
-    name: "local data not compared again after another backend was active",
-    file: "src/shared/sync/engine.ts",
-    from: `  if (lastScope !== context.scope)
-    state.rescan = `,
-    to: `  if (false)
-    state.rescan = `,
-  },
-  {
-    name: "local data of unknown age counts as new when joining",
-    file: "src/shared/sync/local.ts",
-    from: "if (!at && !synced) return unknownAgeClock(device);",
-    to: "",
-  },
-  {
-    name: "joined items left out of the mass-delete guard",
-    file: "src/shared/sync/engine-merge.ts",
-    from: "return synced ? !synced.deleted : !!local.get(recordId);",
-    to: "return !!synced && !synced.deleted;",
+    from: "for (const [blob, bytes] of held) await transport.putBlob(blob, bytes);",
+    to: "for (const [blob, bytes] of held) void [blob, bytes];",
   },
   {
     name: "garbage deleted before the root without it is written",
     file: "src/shared/sync/engine.ts",
-    from: `await uploadBlobs(transport, remote, outcome.pushes, payloads);`,
-    to: `await uploadBlobs(transport, remote, outcome.pushes, payloads);
-      await deleteBlobs(transport, collected);`,
+    from: "      const written = await transport.writeRoot(next, etag);",
+    to: `      await deleteBlobs(transport, collected);
+      const written = await transport.writeRoot(next, etag);`,
+  },
+  {
+    name: "F8 heal: an upload another device may have collected is not checked again",
+    file: "src/shared/sync/engine.ts",
+    from: "if (seen.has(hash)) (state.uploads ??= {})[hash] = now;",
+    to: "if (false) (state.uploads ??= {})[hash] = now;",
+  },
+  {
+    name: "F8 heal: a checked upload found missing is not uploaded again",
+    file: "src/shared/sync/blobs.ts",
+    from: `    await transport.putBlob(hash, bytes);
+    uploads[hash] = now;`,
+    to: `    uploads[hash] = now;`,
+  },
+  {
+    name: "WebDAV requests without a timeout",
+    file: "src/shared/sync/webdav.ts",
+    from: `      signal: AbortSignal.timeout(
+        Math.ceil(timeoutMs + bytes / UPLOAD_BYTES_PER_MS),
+      ),`,
+    to: "",
   },
   {
     name: "keeping after a mass delete re-uploads every record",
     file: "src/shared/sync/engine-merge.ts",
-    from: `          decision.kind === "apply" &&
-          decision.record.deleted,`,
-    to: `          true,`,
-  },
-  {
-    name: "sync state not saved when a round fails after applying changes",
-    file: "src/shared/sync/engine.ts",
-    from: `  } finally {
-    await saveSyncState(env.local, state);
-  }`,
-    to: `  } catch (error) {
-    throw error;
-  }
-  await saveSyncState(env.local, state);`,
-  },
-  {
-    name: "browser sync keeps parts of failed writes forever",
-    file: "src/shared/sync/browser-sync.ts",
-    from: "now() - header.at < UNREFERENCED_PARTS_MS",
-    to: "true",
+    from: "const wanted = new Set(decisionsIn(decisions, collection, appliesDelete));",
+    to: "const wanted = new Set(decisionsIn(decisions, collection, () => true));",
   },
   {
     name: "kept records refer to content that is gone",
     file: "src/shared/sync/engine-merge.ts",
     from: "!stored.has(projection.blob)",
     to: "false",
+  },
+  {
+    name: "browser sync keeps parts of failed writes forever",
+    file: "src/shared/sync/browser-sync.ts",
+    from: "return now() - stillSeen[hash] < UNREFERENCED_PARTS_MS;",
+    to: "return true;",
+  },
+  {
+    name: "browser sync ages parts from a fixed time, not from when this device saw them",
+    file: "src/shared/sync/browser-sync.ts",
+    from: "stillSeen[hash] = seen[hash] ?? now();",
+    to: "stillSeen[hash] = seen[hash] ?? 0;",
   },
 ];
 
@@ -212,10 +236,16 @@ function runTests() {
       "--import",
       "tsx",
       "--test",
+      // A mutation that deadlocks fails its test instead of hanging.
+      "--test-timeout=30000",
       "tests/sync-units.test.ts",
       "tests/sync-engine.test.ts",
       "tests/sync-races.test.ts",
       "tests/sync-recovery.test.ts",
+      "tests/sync-review.test.ts",
+      "tests/sync-review2.test.ts",
+      "tests/sync-scenarios.test.ts",
+      "tests/sync-transports.test.ts",
     ],
     { encoding: "utf8" },
   );

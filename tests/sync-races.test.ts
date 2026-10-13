@@ -55,6 +55,41 @@ test("opening a chat while a round updates it stores the chat's current content"
   assert.deepEqual(messageIds(b, "X"), ["m1", "a2"]);
 });
 
+test("a chat opened while a round updates it gets the round's version, not the one it opened", async () => {
+  const { clock, a, b, hooks } = setup();
+  await saveChat(a, "X", [["m1", 1]]);
+  await saveChat(a, "Y", [["y1", 1]]);
+  await a.sync("edit");
+  await b.sync();
+  await b.env.local.set({ [`${CHATS}/Y`]: chat("Y", [["y1", 1]]).content });
+  clock.now += 1000;
+  await saveChat(a, "X", [
+    ["m1", 1],
+    ["a2", 2],
+  ]);
+  await saveChat(a, "Y", [
+    ["y1", 1],
+    ["y2", 2],
+  ]);
+  await a.sync("edit");
+  // The user opens X while b's round downloads Y: X's previous version is
+  // stored just before the round writes X's new summary.
+  hooks.getBlob = async () =>
+    assert.equal(await loadContent(b.context, "chats", "X"), true);
+  await b.sync("poll");
+  await b.sync("poll");
+  assert.deepEqual(messageIds(b, "X"), ["m1", "a2"]);
+  clock.now += 1000;
+  await saveChat(b, "X", [
+    ["m1", 1],
+    ["a2", 2],
+    ["b3", 3],
+  ]);
+  await b.sync("edit");
+  await a.sync();
+  assert.deepEqual(messageIds(a, "X"), ["m1", "a2", "b3"]);
+});
+
 test("clearing local chats while a round runs downloads them again and deletes nothing", async () => {
   const { clock, a, b, hooks } = setup();
   for (const id of ["c1", "c2", "c3"]) await saveChat(b, id, [[id, 1]]);
