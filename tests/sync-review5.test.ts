@@ -17,12 +17,12 @@ import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import { mergeChanges } from "../src/shared/sync/merge-content";
 import { decodeRoot } from "../src/shared/sync/root";
 import { loadSyncStatus, SYNC_WARNINGS } from "../src/shared/sync/state";
+import type { Transport } from "../src/shared/sync/transport";
 import {
   ALL_ON,
   chat,
   copyOf,
   device,
-  hookedTransport,
   memoryServer,
   memoryTransport,
   messageIds,
@@ -36,6 +36,24 @@ const PROVIDERS = STORAGE_KEYS.provider;
 const BASES = `${STORAGE_KEYS.syncBases}:chats`;
 type Providers = Record<string, { apiKey: string; model: string }>;
 
+// A transport whose next root read comes without a usable ETag: the round
+// merges what it read and stops before uploading anything (as with a
+// server whose ETags turned unreliable, or a round cut off before its
+// upload).
+function stopsBeforeUpload(base: Transport) {
+  const state = { armed: false };
+  const transport: Transport = {
+    ...base,
+    async readRoot(etag) {
+      const read = await base.readRoot(etag);
+      if (!state.armed || read.status !== "ok") return read;
+      state.armed = false;
+      return { ...read, etag: undefined };
+    },
+  };
+  return { transport, state };
+}
+
 // b keeps writing until the server collected what no record refers to.
 async function collect(b: Device, clock: { now: number }) {
   clock.now += 2 * DAY;
@@ -46,11 +64,11 @@ async function collect(b: Device, clock: { now: number }) {
   }
 }
 
-test("review5 R1: a merge whose root write failed keeps its base after the server collected it", async () => {
+test("review5 R1: a merge never uploaded keeps its base after the server collected it", async () => {
   const clock = { now: 1_000_000_000 };
   const server = memoryServer();
-  const hooked = hookedTransport(memoryTransport(server));
-  const a = device("deviceA", hooked.transport, clock, ALL_ON);
+  const stopping = stopsBeforeUpload(memoryTransport(server));
+  const a = device("deviceA", stopping.transport, clock, ALL_ON);
   const b = device("deviceB", memoryTransport(server), clock, ALL_ON);
   const t = clock.now;
   await saveChat(a, "X", [
@@ -76,11 +94,9 @@ test("review5 R1: a merge whose root write failed keeps its base after the serve
   await b.sync("edit");
   const theirs = (await decodeRoot(server.root!)).records["chats/X"].blob!;
   clock.now += 60_000;
-  // a merges both, but its root write never arrives (offline).
-  hooked.hooks.writeRoot = async () => {
-    throw new Error("offline");
-  };
-  await a.sync("edit").catch(() => undefined);
+  // a merges both, but uploads nothing.
+  stopping.state.armed = true;
+  await a.sync("edit");
   assert.deepEqual(messageIds(a, "X").sort(), ["a1", "b1", "m0", "m1"]);
   assert.ok(a.get<string[]>(BASES).includes(theirs));
   // b deletes m1; the server collects b's earlier version.
@@ -107,8 +123,8 @@ test("review5 R1: a merge whose root write failed keeps its base after the serve
 test("review5 R1: copies kept against remote deletions keep their base, also for an edit no event recorded", async () => {
   const clock = { now: 1_000_000_000 };
   const server = memoryServer();
-  const hooked = hookedTransport(memoryTransport(server));
-  const a = device("deviceA", hooked.transport, clock, ALL_ON);
+  const stopping = stopsBeforeUpload(memoryTransport(server));
+  const a = device("deviceA", stopping.transport, clock, ALL_ON);
   const b = device("deviceB", memoryTransport(server), clock, ALL_ON);
   const c = device("deviceC", memoryTransport(server), clock, ALL_ON);
   const t = clock.now;
@@ -124,16 +140,14 @@ test("review5 R1: copies kept against remote deletions keep their base, also for
   for (const id of ids) await loadContent(c.context, "chats", id);
   await c.settle();
   const shared = (await decodeRoot(server.root!)).records["chats/X0"].blob!;
-  // b deletes every chat; a and c keep theirs, a's upload never arrives.
+  // b deletes every chat; a and c keep theirs, a uploads nothing.
   clock.now += 60_000;
   await b.set(STORAGE_KEYS.chats, []);
   await b.confirmDeletes(["chats"]);
   clock.now += 60_000;
-  hooked.hooks.writeRoot = async () => {
-    throw new Error("offline");
-  };
+  stopping.state.armed = true;
   const keep = { massDelete: { collections: ["chats"], keep: true } };
-  await a.sync("poll", keep).catch(() => undefined);
+  await a.sync("poll", keep);
   assert.ok(a.get<string[]>(BASES).includes(shared));
   clock.now += 60_000;
   await c.sync("poll", keep);
@@ -164,7 +178,9 @@ test("review5 R1: copies kept against remote deletions keep their base, also for
     assert.deepEqual(messageIds(on, "X0").sort(), ["X0a1", "X0m0"], on.name);
 });
 
-test("review5 R1: an edit made between a root write and marking it sent keeps the pushed version", async () => {
+// The edit lands while the root write runs, and no event records it (the
+// background stopped): only the push itself keeps the pushed version.
+test("review5 R1: an edit no event recorded, made while a push runs, keeps the pushed version", async () => {
   const clock = { now: 1_000_000_000 };
   const server = memoryServer();
   const base = memoryTransport(server);
@@ -195,12 +211,14 @@ test("review5 R1: an edit made between a root write and marking it sent keeps th
     ["m1", clock.now],
   ]);
   const later = clock.now + 30_000;
-  gap = () =>
-    saveChat(a, "X", [
+  gap = async () => {
+    const { content } = chat("X", [
       ["m0", t],
       ["m1", later - 30_000],
       ["a2", later],
     ]);
+    a.seed(`${STORAGE_KEYS.chats}/X`, content);
+  };
   await a.sync("edit");
   const pushed = (await decodeRoot(server.root!)).records["chats/X"].blob!;
   assert.ok(a.get<string[]>(BASES).includes(pushed));
