@@ -332,7 +332,6 @@ export const frFR: LocaleMessages = {
     agentWorkspaceConflict:
       "Ce fichier a changé pendant votre modification. Rouvrez-le pour consulter la dernière version avant d’enregistrer.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
-    agentWorkspaceEmpty: "Aucun fichier d’espace de travail pour le moment.",
     resetDefaultAgents: "Réinitialiser les agents par défaut",
     resetDefaultAgentsDescription:
       "Remplace les agents actuels par l’agent intégré par défaut. Les agents personnalisés et les espaces de travail seront supprimés.",
@@ -342,8 +341,7 @@ export const frFR: LocaleMessages = {
     localExecutionBridges: "Ponts d’exécution locaux",
     localExecutionBridgesDescription:
       "Configurez des ponts d’exécution locaux ou distants, synchronisables. L’extension envoie des commandes shell au pont, qui les exécute sur l’hôte.",
-    localExecutionBridgesEmpty:
-      "Aucun pont d’exécution local n’est encore configuré.",
+    localExecutionBridgesEmpty: "Aucun pont d’exécution pour le moment",
     newLocalExecutionBridge: "Nouveau pont d’exécution",
     localExecutionBridgeName: "Nom du pont d’exécution",
     localExecutionBridgeDescription: "Description",
@@ -367,6 +365,7 @@ export const frFR: LocaleMessages = {
       "Utilisez votre propre clé API et connectez OpenBrowserAgent à vos fournisseurs d’IA préférés.",
     mcpServersDescription:
       "Configurez les serveurs MCP Streamable HTTP distants que les agents peuvent utiliser.",
+    mcpServersEmpty: "Aucun serveur MCP pour le moment",
     newMcpServer: "Nouveau serveur MCP",
     mcpServerName: "Nom du serveur",
     mcpServerDescription: "Description",

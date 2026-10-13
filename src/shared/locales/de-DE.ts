@@ -328,7 +328,6 @@ export const deDE: LocaleMessages = {
     agentWorkspaceConflict:
       "Diese Datei wurde während der Bearbeitung geändert. Öffnen Sie sie erneut, um vor dem Speichern die aktuelle Version zu prüfen.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
-    agentWorkspaceEmpty: "Noch keine Arbeitsbereichsdateien.",
     resetDefaultAgents: "Standard-Agenten zurücksetzen",
     resetDefaultAgentsDescription:
       "Ersetzt die aktuellen Agenten durch den integrierten Standard-Agenten. Benutzerdefinierte Agenten und Arbeitsbereiche werden entfernt.",
@@ -338,8 +337,7 @@ export const deDE: LocaleMessages = {
     localExecutionBridges: "Lokale Ausführungs-Bridges",
     localExecutionBridgesDescription:
       "Konfigurieren Sie synchronisierbare lokale oder entfernte Ausführungs-Bridges. Die Erweiterung sendet Shell-Befehle an die Bridge, und die Bridge führt sie auf dem Host aus.",
-    localExecutionBridgesEmpty:
-      "Noch keine lokalen Ausführungs-Bridges konfiguriert.",
+    localExecutionBridgesEmpty: "Noch keine Ausführungs-Bridges",
     newLocalExecutionBridge: "Neue Ausführungs-Bridge",
     localExecutionBridgeName: "Name der Ausführungs-Bridge",
     localExecutionBridgeDescription: "Beschreibung",
@@ -363,6 +361,7 @@ export const deDE: LocaleMessages = {
       "Verbinden Sie OpenBrowserAgent mit Ihren bevorzugten KI-Anbietern über Ihren eigenen Schlüssel.",
     mcpServersDescription:
       "Konfigurieren Sie entfernte Streamable-HTTP-MCP-Server, die Agenten nutzen können.",
+    mcpServersEmpty: "Noch keine MCP-Server",
     newMcpServer: "Neuer MCP-Server",
     mcpServerName: "Servername",
     mcpServerDescription: "Beschreibung",

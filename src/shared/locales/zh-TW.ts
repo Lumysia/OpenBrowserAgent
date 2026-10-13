@@ -274,7 +274,6 @@ export const zhTW: LocaleMessages = {
     agentWorkspaceConflict:
       "此檔案在編輯期間發生了變更。請重新開啟並檢視最新版本後再儲存。",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
-    agentWorkspaceEmpty: "尚無工作區檔案。",
     resetDefaultAgents: "重設預設智慧體",
     resetDefaultAgentsDescription:
       "用內建預設智慧體取代目前智慧體。自訂智慧體和工作區會被移除。",
@@ -284,7 +283,7 @@ export const zhTW: LocaleMessages = {
     localExecutionBridges: "本機執行橋",
     localExecutionBridgesDescription:
       "設定可同步的本機或遠端執行橋。擴充功能將 shell 命令傳送給執行橋，由執行橋在主機上執行。",
-    localExecutionBridgesEmpty: "尚未設定本機執行橋。",
+    localExecutionBridgesEmpty: "尚無執行橋",
     newLocalExecutionBridge: "新增執行橋",
     localExecutionBridgeName: "執行橋名稱",
     localExecutionBridgeDescription: "描述",
@@ -308,6 +307,7 @@ export const zhTW: LocaleMessages = {
       "使用自己的金鑰，將 OpenBrowserAgent 連線到你常用的 AI 提供者。",
     mcpServersDescription:
       "設定智慧體可使用的遠端 Streamable HTTP MCP 伺服器。",
+    mcpServersEmpty: "尚無 MCP 伺服器",
     newMcpServer: "新增 MCP 伺服器",
     mcpServerName: "伺服器名稱",
     mcpServerDescription: "描述",

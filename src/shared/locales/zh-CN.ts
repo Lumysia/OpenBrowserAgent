@@ -274,7 +274,6 @@ export const zhCN: LocaleMessages = {
     agentWorkspaceConflict:
       "此文件在编辑期间发生了更改。请重新打开并查看最新版本后再保存。",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
-    agentWorkspaceEmpty: "还没有工作区文件。",
     resetDefaultAgents: "重置默认智能体",
     resetDefaultAgentsDescription:
       "用内置默认智能体替换当前智能体。自定义智能体和工作区会被移除。",
@@ -284,7 +283,7 @@ export const zhCN: LocaleMessages = {
     localExecutionBridges: "本地执行桥",
     localExecutionBridgesDescription:
       "配置可同步的本地或远程执行桥。扩展将 shell 命令发送给执行桥，由执行桥在主机上运行。",
-    localExecutionBridgesEmpty: "还没有配置本地执行桥。",
+    localExecutionBridgesEmpty: "还没有执行桥",
     newLocalExecutionBridge: "新建执行桥",
     localExecutionBridgeName: "执行桥名称",
     localExecutionBridgeDescription: "描述",
@@ -308,6 +307,7 @@ export const zhCN: LocaleMessages = {
       "使用自己的密钥，将 OpenBrowserAgent 连接到你常用的 AI 提供商。",
     mcpServersDescription:
       "配置智能体可使用的远程 Streamable HTTP MCP 服务器。",
+    mcpServersEmpty: "还没有 MCP 服务器",
     newMcpServer: "新建 MCP 服务器",
     mcpServerName: "服务器名称",
     mcpServerDescription: "描述",

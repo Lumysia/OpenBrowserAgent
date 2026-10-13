@@ -32,6 +32,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  EmptyState,
   CardTitle,
   Input,
   Label,
@@ -209,6 +210,17 @@ export function McpPage() {
           </Tooltip>
         </div>
       </div>
+      {!items.length ? (
+        <EmptyState
+          icon={<Plug size={28} />}
+          title={t.options.mcpServersEmpty}
+          action={
+            <Button variant="outline" onClick={addServer}>
+              <Plus size={15} /> {t.options.newMcpServer}
+            </Button>
+          }
+        />
+      ) : null}
       <Accordion type="multiple" className="stack">
         {items.map((server) => (
           <AccordionItem key={server.id} value={server.id}>

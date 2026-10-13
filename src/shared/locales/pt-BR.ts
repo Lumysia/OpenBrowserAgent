@@ -336,7 +336,6 @@ export const ptBR: LocaleMessages = {
     agentWorkspaceConflict:
       "Este arquivo mudou durante a edição. Abra-o novamente para revisar a versão mais recente antes de salvar.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
-    agentWorkspaceEmpty: "Ainda não há arquivos no espaço de trabalho.",
     resetDefaultAgents: "Redefinir agentes padrão",
     resetDefaultAgentsDescription:
       "Substitui os agentes atuais pelo agente padrão integrado. Agentes personalizados e espaços de trabalho serão removidos.",
@@ -346,8 +345,7 @@ export const ptBR: LocaleMessages = {
     localExecutionBridges: "Pontes de execução locais",
     localExecutionBridgesDescription:
       "Configure pontes de execução locais ou remotas, que podem ser sincronizadas. A extensão envia comandos de shell para a ponte, e a ponte os executa no host.",
-    localExecutionBridgesEmpty:
-      "Nenhuma ponte de execução local configurada ainda.",
+    localExecutionBridgesEmpty: "Ainda não há pontes de execução",
     newLocalExecutionBridge: "Nova ponte de execução",
     localExecutionBridgeName: "Nome da ponte de execução",
     localExecutionBridgeDescription: "Descrição",
@@ -371,6 +369,7 @@ export const ptBR: LocaleMessages = {
       "Use sua própria chave e conecte o OpenBrowserAgent aos seus provedores de IA favoritos.",
     mcpServersDescription:
       "Configure servidores MCP remotos (Streamable HTTP) que os agentes podem usar.",
+    mcpServersEmpty: "Ainda não há servidores MCP",
     newMcpServer: "Novo servidor MCP",
     mcpServerName: "Nome do servidor",
     mcpServerDescription: "Descrição",

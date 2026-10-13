@@ -307,7 +307,6 @@ export const enUS = {
     agentWorkspaceConflict:
       "This file changed while you were editing. Reopen it to review the latest version before saving.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
-    agentWorkspaceEmpty: "No workspace files yet.",
     resetDefaultAgents: "Reset default agents",
     resetDefaultAgentsDescription:
       "Replace current agents with the built-in defaults. Custom agents and workspaces will be removed.",
@@ -317,7 +316,7 @@ export const enUS = {
     localExecutionBridges: "Local execution bridges",
     localExecutionBridgesDescription:
       "Configure syncable local or remote execution bridges. The extension sends shell commands to the bridge, and the bridge runs them on the host.",
-    localExecutionBridgesEmpty: "No local execution bridges configured yet.",
+    localExecutionBridgesEmpty: "No execution bridges yet",
     newLocalExecutionBridge: "New execution bridge",
     localExecutionBridgeName: "Execution bridge name",
     localExecutionBridgeDescription: "Description",
@@ -341,6 +340,7 @@ export const enUS = {
       "Bring your own key and connect OpenBrowserAgent to your favorite AI providers.",
     mcpServersDescription:
       "Configure remote Streamable HTTP MCP servers that agents can use.",
+    mcpServersEmpty: "No MCP servers yet",
     newMcpServer: "New MCP server",
     mcpServerName: "Server name",
     mcpServerDescription: "Description",

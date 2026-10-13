@@ -26,6 +26,7 @@ import {
   Badge,
   Button,
   CardDescription,
+  EmptyState,
   Input,
   Label,
   Textarea,
@@ -118,9 +119,15 @@ export function LocalExecutionBridgesPage() {
         </div>
       </div>
       {!items.length ? (
-        <CardDescription>
-          {t.options.localExecutionBridgesEmpty}
-        </CardDescription>
+        <EmptyState
+          icon={<TerminalSquare size={28} />}
+          title={t.options.localExecutionBridgesEmpty}
+          action={
+            <Button variant="outline" onClick={addBridge}>
+              <Plus size={15} /> {t.options.newLocalExecutionBridge}
+            </Button>
+          }
+        />
       ) : null}
       <Accordion type="multiple" className="stack">
         {items.map((bridge) => (

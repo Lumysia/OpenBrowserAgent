@@ -360,3 +360,23 @@
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
+.ui-empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 36px 16px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--muted-foreground);
+  text-align: center;
+  animation: subtle-rise-in 0.24s ease backwards;
+}
+.ui-empty-state-icon {
+  display: inline-flex;
+  color: color-mix(in srgb, var(--accent-strong) 48%, var(--muted-foreground));
+}
+.ui-empty-state-title {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}

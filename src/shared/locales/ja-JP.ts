@@ -323,7 +323,6 @@ export const jaJP: LocaleMessages = {
     agentWorkspaceConflict:
       "編集中にこのファイルが変更されました。保存する前に開き直して最新の内容を確認してください。",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
-    agentWorkspaceEmpty: "ワークスペースファイルはまだありません。",
     resetDefaultAgents: "既定のエージェントにリセット",
     resetDefaultAgentsDescription:
       "現在のエージェントを組み込みの既定エージェントに置き換えます。カスタムエージェントとワークスペースは削除されます。",
@@ -333,8 +332,7 @@ export const jaJP: LocaleMessages = {
     localExecutionBridges: "ローカル実行ブリッジ",
     localExecutionBridgesDescription:
       "同期可能なローカルまたはリモートの実行ブリッジを設定します。拡張機能はシェルコマンドをブリッジに送り、ブリッジがホスト上で実行します。",
-    localExecutionBridgesEmpty:
-      "ローカル実行ブリッジはまだ設定されていません。",
+    localExecutionBridgesEmpty: "実行ブリッジはまだありません",
     newLocalExecutionBridge: "新しい実行ブリッジ",
     localExecutionBridgeName: "実行ブリッジ名",
     localExecutionBridgeDescription: "説明",
@@ -358,6 +356,7 @@ export const jaJP: LocaleMessages = {
       "自分の API キーを使って、OpenBrowserAgent をお気に入りの AI プロバイダーに接続します。",
     mcpServersDescription:
       "エージェントが使用できるリモート Streamable HTTP MCP サーバーを設定します。",
+    mcpServersEmpty: "MCP サーバーはまだありません",
     newMcpServer: "新しい MCP サーバー",
     mcpServerName: "サーバー名",
     mcpServerDescription: "説明",

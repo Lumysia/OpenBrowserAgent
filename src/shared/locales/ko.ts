@@ -295,7 +295,6 @@ export const ko: LocaleMessages = {
     agentWorkspaceConflict:
       "편집 중에 이 파일이 변경되었습니다. 저장하기 전에 다시 열어 최신 내용을 확인하세요.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
-    agentWorkspaceEmpty: "아직 워크스페이스 파일이 없습니다.",
     resetDefaultAgents: "기본 에이전트 재설정",
     resetDefaultAgentsDescription:
       "현재 에이전트를 내장 기본값으로 바꿉니다. 사용자 지정 에이전트와 워크스페이스는 제거됩니다.",
@@ -305,7 +304,7 @@ export const ko: LocaleMessages = {
     localExecutionBridges: "로컬 실행 브리지",
     localExecutionBridgesDescription:
       "동기화할 수 있는 로컬 또는 원격 실행 브리지를 구성합니다. 확장 프로그램은 셸 명령을 브리지로 보내고, 브리지는 호스트에서 실행합니다.",
-    localExecutionBridgesEmpty: "아직 구성된 로컬 실행 브리지가 없습니다.",
+    localExecutionBridgesEmpty: "아직 실행 브리지가 없습니다",
     newLocalExecutionBridge: "새 실행 브리지",
     localExecutionBridgeName: "실행 브리지 이름",
     localExecutionBridgeDescription: "설명",
@@ -329,6 +328,7 @@ export const ko: LocaleMessages = {
       "자신의 API 키로 OpenBrowserAgent를 원하는 AI 제공업체에 연결하세요.",
     mcpServersDescription:
       "에이전트가 사용할 원격 Streamable HTTP MCP 서버를 구성합니다.",
+    mcpServersEmpty: "아직 MCP 서버가 없습니다",
     newMcpServer: "새 MCP 서버",
     mcpServerName: "서버 이름",
     mcpServerDescription: "설명",

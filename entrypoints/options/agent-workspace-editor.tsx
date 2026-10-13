@@ -238,9 +238,7 @@ export function AgentWorkspaceEditor({
                   </div>
                 ))}
               </div>
-            ) : (
-              <CardDescription>{t.options.agentWorkspaceEmpty}</CardDescription>
-            )}
+            ) : null}
             {error ? <Feedback error>{error}</Feedback> : null}
           </div>
         </AccordionContent>
