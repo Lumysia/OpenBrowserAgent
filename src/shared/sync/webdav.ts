@@ -59,7 +59,9 @@ export function createWebDavTransport(
       ...init,
       cache: "no-store",
       headers,
-      signal: AbortSignal.timeout(timeoutMs + bytes / UPLOAD_BYTES_PER_MS),
+      signal: AbortSignal.timeout(
+        Math.ceil(timeoutMs + bytes / UPLOAD_BYTES_PER_MS),
+      ),
     });
   }
 

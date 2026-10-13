@@ -31,14 +31,14 @@ test("WebDAV requests to a server that never answers time out", async () => {
     Promise.race([
       promise.then(
         () => "answered",
-        () => "failed",
+        (error: Error) => error.name,
       ),
       new Promise((resolve) => setTimeout(() => resolve("hung"), 2000)),
     ]);
-  assert.equal(await outcome(transport.readRoot()), "failed");
+  assert.equal(await outcome(transport.readRoot()), "TimeoutError");
   assert.equal(
     await outcome(transport.putBlob("0".repeat(64), new Uint8Array(10))),
-    "failed",
+    "TimeoutError",
   );
 });
 
