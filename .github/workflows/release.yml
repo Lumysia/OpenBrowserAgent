@@ -55,3 +55,18 @@ jobs:
             --title "$GITHUB_REF_NAME" \
             --generate-notes \
             .output/*.zip
+
+      # Submits the Chrome package for review with the Chrome Web Store API v2.
+      # Skipped for pre-releases, and until the store is configured: repository
+      # variables CHROME_EXTENSION_ID, CHROME_PUBLISHER_ID and
+      # CHROME_SERVICE_ACCOUNT_EMAIL, and the secret CHROME_SERVICE_ACCOUNT_KEY
+      # (the service account's private key).
+      - name: Submit to the Chrome Web Store
+        if: ${{ !contains(github.ref_name, '-') && vars.CHROME_EXTENSION_ID != '' }}
+        env:
+          CHROME_API_VERSION: v2
+          CHROME_EXTENSION_ID: ${{ vars.CHROME_EXTENSION_ID }}
+          CHROME_PUBLISHER_ID: ${{ vars.CHROME_PUBLISHER_ID }}
+          CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ vars.CHROME_SERVICE_ACCOUNT_EMAIL }}
+          CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_KEY }}
+        run: npx wxt submit --chrome-zip .output/*-chrome.zip
