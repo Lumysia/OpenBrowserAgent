@@ -1,14 +1,15 @@
 import { DEFAULT_MAX_TOOL_STEPS } from "./config";
 import type { Preferences } from "./types";
 import { REASONING_EFFORT } from "./reasoning";
+import { DEFAULT_COLOR_SCHEME, DEFAULT_THEME } from "./theme/themes";
 import {
   DEFAULT_SMART_BAR_SETTINGS,
   normalizeSmartBarSettings,
 } from "./smart-bar";
 
 export const DEFAULT_PREFERENCES: Preferences = {
-  colorScheme: "system",
-  accentColor: "pink",
+  colorScheme: DEFAULT_COLOR_SCHEME,
+  accentColor: DEFAULT_THEME,
   autoScroll: true,
   autoRetry: true,
   imageGenerationEnabled: false,

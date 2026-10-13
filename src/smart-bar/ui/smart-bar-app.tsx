@@ -2,6 +2,7 @@ import { useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
 import { TOOLTIP_DELAY_MS } from "../../shared/config";
 import type { SmartBarPageConfig } from "../../shared/smart-bar-protocol";
 import { PortalContainerProvider, TooltipProvider } from "../../ui/components";
+import { useTheme } from "../../ui/theme";
 import type { SelectionSnapshot } from "../selection";
 import { SmartBarResultCard } from "./result-card";
 import type { SmartBarStore } from "./store";
@@ -12,14 +13,10 @@ export function SmartBarApp({ store }: { store: SmartBarStore }) {
   const state = useSyncExternalStore(store.subscribe, store.getState);
   const [theme, setTheme] = useState<HTMLDivElement | null>(null);
   const { snapshot, config } = state;
+  useTheme(theme, config ?? {});
   if (!snapshot || !config) return null;
   return (
-    <div
-      ref={setTheme}
-      className="smart-bar-theme"
-      data-theme={config.colorScheme}
-      data-accent={config.accentColor}
-    >
+    <div ref={setTheme} className="smart-bar-theme">
       <PortalContainerProvider container={theme || undefined}>
         <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
           <SmartBarFrame

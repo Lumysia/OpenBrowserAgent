@@ -1,4 +1,3 @@
-import { useLayoutEffect } from "react";
 import type { ReactNode } from "react";
 import {
   Bug,
@@ -20,6 +19,7 @@ import {
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { ScrollArea, TooltipProvider } from "../../src/ui/components";
+import { useTheme } from "../../src/ui/theme";
 import { useSyncPageState } from "../../src/ui/useSyncPageState";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { DebugPage } from "./debug-page";
@@ -42,12 +42,7 @@ export function OptionsApp() {
 
   useSyncPageState();
 
-  useLayoutEffect(() => {
-    document.documentElement.dataset.accent =
-      preferences?.accentColor || "pink";
-    document.documentElement.dataset.theme =
-      preferences?.colorScheme || "system";
-  }, [preferences?.accentColor, preferences?.colorScheme]);
+  useTheme(document.documentElement, preferences ?? {});
 
   return languageLoading ? null : (
     <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>

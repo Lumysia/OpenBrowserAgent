@@ -6,16 +6,10 @@
   const MESSAGE_CANCELLED = "elementSelectorCancelled";
   const Z_INDEX = "2147483647";
   const DIM_OPACITY = 0.42;
-  const ACCENT_COLORS = {
-    amber: "#f59e0b",
-    blue: "#3b82f6",
-    green: "#22c55e",
-    pink: "#ec4899",
-    purple: "#8b5cf6",
-  };
+  // The theme's accent per scheme, resolved by the extension.
   const DEFAULT_PREFERENCES = {
     colorScheme: "system",
-    accentColor: "amber",
+    accent: { light: "#b96d8b", dark: "#dda1b7" },
   };
   const DEFAULT_SELECTOR_PROMPT = "Select element - Esc to cancel";
 
@@ -73,12 +67,12 @@
   updateOverlay(null);
 
   function applyTheme(preferences) {
-    const accent =
-      ACCENT_COLORS[preferences?.accentColor] || ACCENT_COLORS.amber;
     const dark =
       preferences?.colorScheme === "dark" ||
       (preferences?.colorScheme !== "light" &&
         matchMedia("(prefers-color-scheme: dark)").matches);
+    const accents = preferences?.accent || DEFAULT_PREFERENCES.accent;
+    const accent = dark ? accents.dark : accents.light;
     root.style.setProperty("--oba-selector-accent", accent);
     root.style.setProperty(
       "--oba-selector-surface",

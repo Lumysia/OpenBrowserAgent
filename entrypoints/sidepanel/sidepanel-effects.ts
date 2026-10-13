@@ -21,16 +21,6 @@ import { retryStalledStream } from "./retry-stalled-stream";
 import type { ActiveStreamMap, ComposerMenu } from "./sidepanel-menu-state";
 import type { SendMessagesRequest } from "../../src/shared/types";
 
-export function useSidepanelTheme(
-  accentColor: string | undefined,
-  colorScheme: string | undefined,
-) {
-  useLayoutEffect(() => {
-    document.documentElement.dataset.accent = accentColor || "pink";
-    document.documentElement.dataset.theme = colorScheme || "system";
-  }, [accentColor, colorScheme]);
-}
-
 export function useAutoScroll(
   messagesRef: RefObject<HTMLDivElement | null>,
   messages: Chat["messages"] | undefined,
