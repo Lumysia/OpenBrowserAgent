@@ -33,4 +33,9 @@ export const syncDeDE: SyncMessages = {
     "Die letzte Synchronisierung würde auf diesem Gerät {count} von {total} Elementen in {collection} löschen.",
   massDeleteApply: "Auf diesem Gerät löschen",
   massDeleteKeep: "Behalten und erneut hochladen",
+  massDeleteLocalTitle: "Löschungen auf diesem Gerät bestätigen",
+  massDeleteLocalDescription:
+    "{count} von {total} Elementen in {collection} fehlen auf diesem Gerät. Die Synchronisierung würde sie auf allen Geräten löschen.",
+  massDeleteLocalApply: "Auf allen Geräten löschen",
+  massDeleteLocalKeep: "Auf diesem Gerät wiederherstellen",
 };

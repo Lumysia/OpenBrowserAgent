@@ -30,4 +30,9 @@ export const syncZhTW: SyncMessages = {
     "最新的同步會在本裝置上刪除{collection}中 {total} 項裡的 {count} 項。",
   massDeleteApply: "在本裝置上刪除",
   massDeleteKeep: "保留並重新上傳",
+  massDeleteLocalTitle: "確認本裝置上的刪除",
+  massDeleteLocalDescription:
+    "本裝置上{collection}中 {total} 項裡有 {count} 項已不在。同步會在所有裝置上刪除它們。",
+  massDeleteLocalApply: "在所有裝置上刪除",
+  massDeleteLocalKeep: "在本裝置上還原",
 };

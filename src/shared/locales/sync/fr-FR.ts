@@ -33,4 +33,9 @@ export const syncFrFR: SyncMessages = {
     "La dernière synchronisation supprimerait {count} éléments sur {total} dans {collection} sur cet appareil.",
   massDeleteApply: "Supprimer sur cet appareil",
   massDeleteKeep: "Conserver et renvoyer",
+  massDeleteLocalTitle: "Confirmer les suppressions sur cet appareil",
+  massDeleteLocalDescription:
+    "{count} éléments sur {total} dans {collection} ont disparu de cet appareil. La synchronisation les supprimerait sur tous les appareils.",
+  massDeleteLocalApply: "Supprimer sur tous les appareils",
+  massDeleteLocalKeep: "Restaurer sur cet appareil",
 };

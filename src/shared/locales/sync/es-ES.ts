@@ -33,4 +33,9 @@ export const syncEsES: SyncMessages = {
     "La última sincronización eliminaría {count} de {total} elementos de {collection} en este dispositivo.",
   massDeleteApply: "Eliminar en este dispositivo",
   massDeleteKeep: "Conservar y volver a subir",
+  massDeleteLocalTitle: "Confirma eliminaciones en este dispositivo",
+  massDeleteLocalDescription:
+    "Faltan {count} de {total} elementos de {collection} en este dispositivo. La sincronización los eliminaría en todos los dispositivos.",
+  massDeleteLocalApply: "Eliminar en todos los dispositivos",
+  massDeleteLocalKeep: "Restaurar en este dispositivo",
 };

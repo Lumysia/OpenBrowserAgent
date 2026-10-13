@@ -47,6 +47,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | skill use: Auto / Manual / Off | 自动 / 手动 / 关闭 | 自動 / 手動 / 關閉 | 自動 / 手動 / オフ   | 자동 / 수동 / 끔 |
 | footnote                       | 脚注               | 註腳               | 脚注                 | 각주             |
 | load (an image from an answer) | 加载               | 載入               | 読み込む             | 불러오기         |
+| restore (deleted synced items) | 恢复               | 還原               | 復元                 | 복원             |
 
 | English                        | Français                     | Deutsch                     | Español                           | Português (Brasil)               |
 | ------------------------------ | ---------------------------- | --------------------------- | --------------------------------- | -------------------------------- |
@@ -78,6 +79,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | skill use: Auto / Manual / Off | Auto / Manuelle / Désactivée | Automatisch / Manuell / Aus | Automático / Manual / Desactivada | Automático / Manual / Desativada |
 | footnote                       | note de bas de page          | Fußnote                     | nota al pie                       | nota de rodapé                   |
 | load (an image from an answer) | charger                      | laden                       | cargar                            | carregar                         |
+| restore (deleted synced items) | restaurer                    | wiederherstellen            | restaurar                         | restaurar                        |
 
 ## Notes per language
 

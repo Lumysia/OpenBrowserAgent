@@ -31,5 +31,10 @@ export const syncEnUS = {
     "The latest sync would delete {count} of {total} items in {collection} on this device.",
   massDeleteApply: "Delete on this device",
   massDeleteKeep: "Keep and upload again",
+  massDeleteLocalTitle: "Confirm deletions on this device",
+  massDeleteLocalDescription:
+    "{count} of {total} items in {collection} are gone from this device. Syncing would delete them on every device.",
+  massDeleteLocalApply: "Delete on every device",
+  massDeleteLocalKeep: "Restore on this device",
 };
 export type SyncMessages = typeof syncEnUS;

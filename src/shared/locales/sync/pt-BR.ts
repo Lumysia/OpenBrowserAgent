@@ -33,4 +33,9 @@ export const syncPtBR: SyncMessages = {
     "A última sincronização excluiria {count} de {total} itens em {collection} neste dispositivo.",
   massDeleteApply: "Excluir neste dispositivo",
   massDeleteKeep: "Manter e enviar novamente",
+  massDeleteLocalTitle: "Confirmar exclusões neste dispositivo",
+  massDeleteLocalDescription:
+    "{count} de {total} itens em {collection} sumiram deste dispositivo. A sincronização os excluiria em todos os dispositivos.",
+  massDeleteLocalApply: "Excluir em todos os dispositivos",
+  massDeleteLocalKeep: "Restaurar neste dispositivo",
 };

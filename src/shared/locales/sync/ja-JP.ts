@@ -33,4 +33,9 @@ export const syncJaJP: SyncMessages = {
     "最新の同期を適用すると、このデバイスの{collection}にある {total} 件のうち {count} 件が削除されます。",
   massDeleteApply: "このデバイスで削除",
   massDeleteKeep: "残して再アップロード",
+  massDeleteLocalTitle: "このデバイスでの削除を確認",
+  massDeleteLocalDescription:
+    "このデバイスの{collection}から {total} 件のうち {count} 件がなくなっています。同期すると、すべてのデバイスで削除されます。",
+  massDeleteLocalApply: "すべてのデバイスで削除",
+  massDeleteLocalKeep: "このデバイスに復元",
 };

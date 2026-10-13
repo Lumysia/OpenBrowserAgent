@@ -33,4 +33,9 @@ export const syncKo: SyncMessages = {
     "최신 동기화를 적용하면 이 기기의 {collection} 항목 {total}개 중 {count}개가 삭제돼요.",
   massDeleteApply: "이 기기에서 삭제",
   massDeleteKeep: "유지하고 다시 업로드",
+  massDeleteLocalTitle: "이 기기의 삭제 확인",
+  massDeleteLocalDescription:
+    "이 기기의 {collection} 항목 {total}개 중 {count}개가 사라졌어요. 동기화하면 모든 기기에서 삭제돼요.",
+  massDeleteLocalApply: "모든 기기에서 삭제",
+  massDeleteLocalKeep: "이 기기에 복원",
 };

@@ -80,40 +80,61 @@ export function SyncStatusCard({ t }: { t: Messages }) {
               {t.sync.warnings[warning]}
             </Feedback>
           ))}
-        {enabled && status?.massDelete?.length ? (
-          <div className="stack sync-status-confirm">
-            <CardTitle className="settings-section-title">
-              {t.sync.massDeleteTitle}
-            </CardTitle>
-            {status.massDelete.map((entry) => (
-              <CardDescription key={entry.collection}>
-                {t.sync.massDeleteDescription
-                  .replace("{count}", String(entry.count))
-                  .replace("{total}", String(entry.total))
-                  .replace(
-                    "{collection}",
-                    collectionLabels[entry.collection] ?? entry.collection,
-                  )}
-              </CardDescription>
-            ))}
-            <div className="sync-status-actions">
-              <Button
-                variant="destructive"
-                disabled={busy}
-                onClick={() => run(() => resolveMassDelete(true))}
-              >
-                {t.sync.massDeleteApply}
-              </Button>
-              <Button
-                variant="outline"
-                disabled={busy}
-                onClick={() => run(() => resolveMassDelete(false))}
-              >
-                {t.sync.massDeleteKeep}
-              </Button>
-            </div>
-          </div>
-        ) : null}
+        {enabled &&
+          [false, true].map((local) => {
+            // Prompts already answered wait for the other kind's answer.
+            const entries = (status?.massDelete ?? []).filter(
+              (entry) => !!entry.local === local && entry.keep === undefined,
+            );
+            if (!entries.length) return null;
+            const text = local
+              ? {
+                  title: t.sync.massDeleteLocalTitle,
+                  description: t.sync.massDeleteLocalDescription,
+                  apply: t.sync.massDeleteLocalApply,
+                  keep: t.sync.massDeleteLocalKeep,
+                }
+              : {
+                  title: t.sync.massDeleteTitle,
+                  description: t.sync.massDeleteDescription,
+                  apply: t.sync.massDeleteApply,
+                  keep: t.sync.massDeleteKeep,
+                };
+            return (
+              <div key={String(local)} className="stack sync-status-confirm">
+                <CardTitle className="settings-section-title">
+                  {text.title}
+                </CardTitle>
+                {entries.map((entry) => (
+                  <CardDescription key={entry.collection}>
+                    {text.description
+                      .replace("{count}", String(entry.count))
+                      .replace("{total}", String(entry.total))
+                      .replace(
+                        "{collection}",
+                        collectionLabels[entry.collection] ?? entry.collection,
+                      )}
+                  </CardDescription>
+                ))}
+                <div className="sync-status-actions">
+                  <Button
+                    variant="destructive"
+                    disabled={busy}
+                    onClick={() => run(() => resolveMassDelete(true, local))}
+                  >
+                    {text.apply}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled={busy}
+                    onClick={() => run(() => resolveMassDelete(false, local))}
+                  >
+                    {text.keep}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
       </CardContent>
     </Card>
   );
