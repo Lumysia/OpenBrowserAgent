@@ -255,6 +255,20 @@ export function device(
   };
 }
 
+// Another browser started from a copy of `source`'s storage (a copied
+// profile, a backup restored on another computer): the same device id.
+export function copyOf(
+  source: Device,
+  transport: Transport,
+  clock: { now: number },
+  settings: Partial<SyncDataSettings> = {},
+) {
+  const copy = device(source.name, transport, clock, settings);
+  for (const [key, value] of Object.entries(source.env.local.data))
+    copy.env.local.data[key] = structuredClone(value);
+  return copy;
+}
+
 export const ALL_ON: Partial<SyncDataSettings> = {
   syncProviders: true,
   syncAgents: true,

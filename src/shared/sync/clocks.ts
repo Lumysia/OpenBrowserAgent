@@ -29,7 +29,7 @@ export type Version = {
   // The data itself, kept only as a change's base: a three-way merge takes
   // each field from the side that changed it.
   data?: unknown;
-  // Other devices' changes the version includes (SyncRecord.seen).
+  // Changes the version includes besides its own (SyncRecord.seen).
   seen?: Clock[];
 };
 
@@ -103,12 +103,13 @@ export function includes(
 }
 
 // What a version made at `clock` from (or merging) `versions` includes
-// besides itself: per other device, its newest change they hold.
+// besides itself: per device, its newest change they hold. The device
+// making it is no exception: another install may share its id, and only
+// these clocks show that the version holds that install's change.
 export function seenFrom(
   clock: Clock,
   versions: Array<{ clock: Clock; seen?: Clock[] } | undefined>,
 ) {
-  const own = parseClock(clock)?.device;
   const newest = new Map<string, Clock>();
   for (const version of versions)
     for (const held of version
@@ -116,7 +117,7 @@ export function seenFrom(
       : []) {
       const parsed = parseClock(held);
       // Data of unknown age (wall 0) holds no change.
-      if (!parsed?.wall || parsed.device === own) continue;
+      if (!parsed?.wall || held === clock) continue;
       if (compareClocks(held, newest.get(parsed.device)) > 0)
         newest.set(parsed.device, held);
     }
@@ -182,7 +183,7 @@ export async function changedEntry(
     (await hashJson(before.data)) === base.dataHash
   )
     base.data = before.data;
-  const seen = previous?.local ? previous.seen : seenFrom(clock, [previous]);
+  const seen = seenFrom(clock, [previous]);
   const entry: ClockEntry = {
     clock,
     local: true,
@@ -207,7 +208,12 @@ export async function confirmedEntry(
 ): Promise<ClockEntry> {
   if (current.clock === record.clock) return entryOf(id, record);
   if (!current.local) return current;
-  return { ...unsent(current), base: await baseOf(record) };
+  const { seen: _seen, ...rest } = unsent(current);
+  return {
+    ...rest,
+    base: await baseOf(record),
+    ...withSeen(seenFrom(current.clock, [current, record])),
+  };
 }
 
 // The entry once its change is pushed in `record` (the same version, or one

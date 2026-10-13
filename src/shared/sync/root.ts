@@ -17,10 +17,10 @@ export type SyncRecord = {
   blob?: string;
   // Payload bytes of the blob.
   size?: number;
-  // Per other device, the clock of its newest change this version includes
-  // (it was made from, or merged with, a version holding it). A device
-  // knows the record holds a change it pushed when the record's clock or
-  // one of these is that change's clock or a later one of the same device.
+  // Per device id, the clock of its newest change this version includes
+  // besides its own (it was made from, or merged with, a version holding
+  // it). A device knows the record holds a change it pushed when the
+  // record's clock or one of these is exactly that change's clock.
   seen?: Clock[];
 };
 
