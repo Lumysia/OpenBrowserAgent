@@ -1,6 +1,4 @@
-import { chatContentKey } from "./chat-keys";
-import { getBrowserApi, storage, STORAGE_KEYS } from "./storage";
-import { isSyncBackendEnabled } from "./sync-backends";
+import { storage, STORAGE_KEYS } from "./storage";
 import { resetSync } from "./sync/client";
 
 const STORAGE_KEY_GROUPS = {
@@ -41,19 +39,10 @@ export async function clearAppStorage({
     (target) => STORAGE_KEY_GROUPS[target],
   );
   const localKeys = scope === "sync" ? [] : selectedKeys;
-  // While syncing, the background clears between rounds, so cleared local
-  // data is downloaded again rather than deleted on other devices.
-  if (await isSyncBackendEnabled())
-    await resetSync(scope !== "local", localKeys);
-  else if (localKeys.length) {
-    const stored = Object.keys(await getBrowserApi().storage.local.get(null));
-    await getBrowserApi().storage.local.remove([
-      ...localKeys,
-      ...(localKeys.includes(STORAGE_KEYS.chats)
-        ? stored.filter((key) => key.startsWith(chatContentKey("")))
-        : []),
-    ]);
-  }
+  // The background clears, between sync rounds and with sync off too, and
+  // forgets when the cleared data changed: it is downloaded again rather
+  // than deleted on other devices.
+  await resetSync(scope !== "local", localKeys);
 
   if (scope === "local" && targets.includes("all"))
     await resetLocalBootstrapState();
