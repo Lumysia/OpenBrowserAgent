@@ -20,7 +20,7 @@ export const syncPtBR: SyncMessages = {
     "unreliable-etags":
       "As versões de arquivo deste servidor não são confiáveis, então as alterações deste dispositivo não são enviadas. Use um servidor WebDAV que envie ETags fortes.",
     "ignores-preconditions":
-      "Este servidor não oferece suporte a verificações de versão, então a sincronização usa um modo seguro mais lento: se dois dispositivos salvarem ao mesmo tempo, uma alteração chega na sincronização seguinte. Nada é perdido.",
+      "Este servidor não oferece suporte a verificações de versão, então, se dois dispositivos salvarem ao mesmo tempo, um envio pode substituir o outro. Cada dispositivo mantém suas alterações até vê-las no servidor e as mescla de novo na sincronização seguinte. Se os dois mudaram o mesmo valor, a alteração mais recente é mantida.",
     "newer-format":
       "Outro dispositivo usa um formato de sincronização mais novo. Atualize o OpenBrowserAgent neste dispositivo para continuar sincronizando.",
     "missing-content":

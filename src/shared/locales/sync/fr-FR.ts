@@ -20,7 +20,7 @@ export const syncFrFR: SyncMessages = {
     "unreliable-etags":
       "Les versions de fichiers de ce serveur ne sont pas fiables : les modifications de cet appareil ne sont donc pas envoyées. Utilisez un serveur WebDAV qui fournit des ETag forts.",
     "ignores-preconditions":
-      "Ce serveur ne prend pas en charge les contrôles de version : la synchronisation passe par un mode sûr plus lent. Si deux appareils enregistrent au même moment, une modification arrive à la synchronisation suivante. Rien n’est perdu.",
+      "Ce serveur ne prend pas en charge les contrôles de version : si deux appareils enregistrent au même moment, un envoi peut écraser l’autre. Chaque appareil conserve ses modifications jusqu’à les voir sur le serveur et les fusionne de nouveau à la synchronisation suivante. Si les deux ont modifié la même valeur, la modification la plus récente est conservée.",
     "newer-format":
       "Un autre appareil utilise un format de synchronisation plus récent. Mettez à jour OpenBrowserAgent sur cet appareil pour continuer à synchroniser.",
     "missing-content":

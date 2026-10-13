@@ -18,7 +18,7 @@ export const syncZhCN: SyncMessages = {
     "unreliable-etags":
       "此服务器的文件版本信息不可靠，因此本设备的更改不会上传。请使用提供强 ETag 的 WebDAV 服务器。",
     "ignores-preconditions":
-      "此服务器不支持版本检查，已改用较慢的安全方式同步：两台设备同时保存时，其中一处更改会晚一轮同步，不会丢失。",
+      "此服务器不支持版本检查，两台设备同时保存时，一方上传的内容可能覆盖另一方。每台设备会保留自己的更改，直到在服务器上看到它们，并在下次同步时重新合并。如果双方改了同一个值，保留较新的更改。",
     "newer-format":
       "另一台设备使用了更新的同步格式。请在本设备上更新 OpenBrowserAgent 以继续同步。",
     "missing-content":

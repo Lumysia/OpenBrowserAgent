@@ -18,7 +18,7 @@ export const syncEnUS = {
     "unreliable-etags":
       "This server's file versions are unreliable, so changes from this device are not uploaded. Use a WebDAV server that sends strong ETags.",
     "ignores-preconditions":
-      "This server doesn't support version checks, so sync uses a slower safe mode: if two devices save at the same moment, one change arrives a sync later. Nothing is lost.",
+      "This server doesn't support version checks, so when two devices save at the same moment, one upload can overwrite the other. Each device keeps its changes until it sees them on the server and merges them again on its next sync. If both changed the same value, the newer change is kept.",
     "newer-format":
       "Another device uses a newer sync format. Update OpenBrowserAgent on this device to keep syncing.",
     "missing-content":

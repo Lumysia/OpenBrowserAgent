@@ -18,7 +18,7 @@ export const syncZhTW: SyncMessages = {
     "unreliable-etags":
       "這個伺服器的檔案版本資訊不可靠，因此本裝置的變更不會上傳。請使用提供強 ETag 的 WebDAV 伺服器。",
     "ignores-preconditions":
-      "這個伺服器不支援版本檢查，已改用較慢的安全方式同步：兩台裝置同時儲存時，其中一處變更會晚一輪同步，不會遺失。",
+      "這個伺服器不支援版本檢查，兩台裝置同時儲存時，一方上傳的內容可能覆寫另一方。每台裝置會保留自己的變更，直到在伺服器上看到它們，並在下次同步時重新合併。如果雙方改了同一個值，會保留較新的變更。",
     "newer-format":
       "另一台裝置使用了較新的同步格式。請在本裝置上更新 OpenBrowserAgent 以繼續同步。",
     "missing-content":

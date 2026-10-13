@@ -20,7 +20,7 @@ export const syncDeDE: SyncMessages = {
     "unreliable-etags":
       "Die Dateiversionen dieses Servers sind unzuverlässig, daher werden Änderungen dieses Geräts nicht hochgeladen. Verwenden Sie einen WebDAV-Server, der starke ETags sendet.",
     "ignores-preconditions":
-      "Dieser Server unterstützt keine Versionsprüfungen, daher synchronisiert OpenBrowserAgent in einem langsameren sicheren Modus: Speichern zwei Geräte gleichzeitig, kommt eine Änderung eine Synchronisierung später an. Es geht nichts verloren.",
+      "Dieser Server unterstützt keine Versionsprüfungen. Speichern zwei Geräte gleichzeitig, kann ein Upload den anderen überschreiben. Jedes Gerät behält seine Änderungen, bis es sie auf dem Server sieht, und führt sie bei der nächsten Synchronisierung erneut zusammen. Haben beide denselben Wert geändert, bleibt die neuere Änderung erhalten.",
     "newer-format":
       "Ein anderes Gerät verwendet ein neueres Synchronisierungsformat. Aktualisieren Sie OpenBrowserAgent auf diesem Gerät, um weiter zu synchronisieren.",
     "missing-content":

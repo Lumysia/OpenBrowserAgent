@@ -48,6 +48,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | footnote                       | 脚注               | 註腳               | 脚注                 | 각주             |
 | load (an image from an answer) | 加载               | 載入               | 読み込む             | 불러오기         |
 | restore (deleted synced items) | 恢复               | 還原               | 復元                 | 복원             |
+| merge (synced changes)         | 合并               | 合併               | 統合                 | 병합             |
 
 | English                        | Français                     | Deutsch                     | Español                           | Português (Brasil)               |
 | ------------------------------ | ---------------------------- | --------------------------- | --------------------------------- | -------------------------------- |
@@ -80,6 +81,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | footnote                       | note de bas de page          | Fußnote                     | nota al pie                       | nota de rodapé                   |
 | load (an image from an answer) | charger                      | laden                       | cargar                            | carregar                         |
 | restore (deleted synced items) | restaurer                    | wiederherstellen            | restaurar                         | restaurar                        |
+| merge (synced changes)         | fusionner                    | zusammenführen              | combinar                          | mesclar                          |
 
 ## Notes per language
 
