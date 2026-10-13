@@ -1,5 +1,5 @@
-// The fifth review's guards (see sync-mutation-list.mjs for the format).
-export const REVIEW5_MUTATIONS = [
+// The fifth review's guards.
+export default [
   {
     name: "R2: a later clock of the same device id counts as including a change",
     file: "src/shared/sync/clocks.ts",

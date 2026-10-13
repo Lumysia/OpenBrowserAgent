@@ -1,7 +1,6 @@
 // The ninth fix's guards: stored items named the same way when reading and
-// saving, and resets to default workspace files (see sync-mutation-list.mjs
-// for the format).
-export const FIX9_MUTATIONS = [
+// saving, and resets to default workspace files.
+export default [
   {
     name: "K2: ids made up on read change on every read",
     file: "src/shared/read-ids.ts",

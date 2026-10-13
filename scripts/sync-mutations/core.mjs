@@ -1,14 +1,5 @@
-// The sync safety guards that scripts/sync-mutations.mjs breaks one at a
-// time: each replaces `from` with `to` in `file` (and every `also`
-// pair), and some test must then fail. `needsServer`: only the two-device
-// WebDAV script notices it.
-import { REVIEW5_MUTATIONS } from "./sync-mutation-list-review5.mjs";
-import { REVIEW6_MUTATIONS } from "./sync-mutation-list-review6.mjs";
-import { FIX7_MUTATIONS } from "./sync-mutation-list-fix7.mjs";
-import { FIX8_MUTATIONS } from "./sync-mutation-list-fix8.mjs";
-import { FIX9_MUTATIONS } from "./sync-mutation-list-fix9.mjs";
-
-export const MUTATIONS = [
+// The first guards, from the reviews before the fifth.
+export default [
   {
     name: "skip If-Match on root writes",
     file: "src/shared/sync/webdav.ts",
@@ -435,9 +426,4 @@ export const MUTATIONS = [
     from: "      restored.push(ORDER_ID);",
     to: "",
   },
-  ...REVIEW5_MUTATIONS,
-  ...REVIEW6_MUTATIONS,
-  ...FIX7_MUTATIONS,
-  ...FIX8_MUTATIONS,
-  ...FIX9_MUTATIONS,
 ];
