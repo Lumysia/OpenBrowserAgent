@@ -13,6 +13,7 @@ import {
   SYNC_WARNINGS,
   updateSyncStatus,
 } from "../../shared/sync/state";
+import { loadDeviceId } from "../../shared/sync/device";
 import {
   createEditListener,
   type StorageChanges,
@@ -25,7 +26,6 @@ import {
   createSyncRunner,
   loadContent,
   syncContext,
-  syncDeviceId,
   type RoundRequest,
 } from "./service";
 import {
@@ -61,7 +61,7 @@ type PageStates = Record<string, { visible: boolean; at: number }>;
 export function setupSync() {
   const api = getBrowserApi();
   const env = browserSyncEnv();
-  const edits = createEditListener(env, () => syncDeviceId(env));
+  const edits = createEditListener(env, () => loadDeviceId(env));
   env.settleEdits = edits.settle;
   const runner = createSyncRunner(env, (until) =>
     api.alarms?.create(ALARMS.resume, { when: until }),
@@ -255,6 +255,7 @@ export function setupSync() {
   async function verifyServer() {
     await updateSyncStatus(env.local, {
       warnings: [],
+      warningsAt: undefined,
       error: undefined,
       massDelete: undefined,
       pausedUntil: undefined,

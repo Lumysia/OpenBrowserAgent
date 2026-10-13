@@ -24,6 +24,8 @@ export const syncZhCN: SyncMessages = {
     "missing-content":
       "服务器上缺少部分同步内容。本设备会保留自己的副本，直到其他设备重新上传。",
     quota: "浏览器账号同步存储已满。请关闭部分同步项目或改用 WebDAV。",
+    "cloned-device":
+      "另一个浏览器曾以本设备的身份同步（例如复制的浏览器配置文件，或在另一台电脑上恢复的备份）。本设备现在作为新设备同步，两边所做的更改都会保留。",
   },
   massDeleteTitle: "确认来自其他设备的删除",
   massDeleteDescription:

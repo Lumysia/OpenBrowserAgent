@@ -27,6 +27,8 @@ export const syncPtBR: SyncMessages = {
       "Parte do conteúdo sincronizado está faltando no servidor. Este dispositivo mantém a cópia dele até que outro dispositivo a envie novamente.",
     quota:
       "O armazenamento de sincronização da conta do navegador está cheio. Desative alguns itens ou use WebDAV.",
+    "cloned-device":
+      "Outro navegador estava sincronizando como este dispositivo (um perfil de navegador copiado ou um backup restaurado em outro computador). Este dispositivo agora sincroniza como um novo dispositivo, e as alterações feitas em ambos são mantidas.",
   },
   massDeleteTitle: "Confirmar exclusões vindas de outro dispositivo",
   massDeleteDescription:

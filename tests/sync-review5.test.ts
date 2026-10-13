@@ -2,9 +2,20 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
-import { loadContent } from "../src/background/sync/service";
+import { createSyncRunner, loadContent } from "../src/background/sync/service";
+import { includes } from "../src/shared/sync/clocks";
+import { loadDeviceId } from "../src/shared/sync/device";
+import {
+  compareClocks,
+  formatClock,
+  INITIAL_HLC,
+  isClock,
+  parseClock,
+  tickClock,
+} from "../src/shared/sync/hlc";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import { decodeRoot } from "../src/shared/sync/root";
+import { loadSyncStatus, SYNC_WARNINGS } from "../src/shared/sync/state";
 import {
   ALL_ON,
   chat,
@@ -19,7 +30,9 @@ import {
 
 const DAY = 24 * 60 * 60_000;
 const PREFS = STORAGE_KEYS.preferences;
+const PROVIDERS = STORAGE_KEYS.provider;
 const BASES = `${STORAGE_KEYS.syncBases}:chats`;
+type Providers = Record<string, { apiKey: string; model: string }>;
 
 // b keeps writing until the server collected what no record refers to.
 async function collect(b: Device, clock: { now: number }) {
@@ -207,6 +220,144 @@ test("review5 R1: an edit made between a root write and marking it sent keeps th
   await b.settle();
   for (const on of [a, b])
     assert.deepEqual(messageIds(on, "X").sort(), ["a2", "m0"], on.name);
+});
+
+test("review5 R2: two installs sharing a device id keep each other's concurrent edits", async () => {
+  const clock = { now: 1_000_000_000 };
+  const server = memoryServer();
+  const a = device("deviceA", memoryTransport(server), clock, ALL_ON);
+  const b = device("deviceA", memoryTransport(server), clock, ALL_ON);
+  await a.set(PROVIDERS, { openai: { apiKey: "k", model: "m0" } });
+  await a.sync("edit");
+  await b.sync();
+  clock.now += 60_000;
+  await a.set(PROVIDERS, { openai: { apiKey: "k2", model: "m0" } });
+  clock.now += 60_000;
+  await b.set(PROVIDERS, { openai: { apiKey: "k", model: "m1" } });
+  await b.sync("edit");
+  clock.now += 60_000;
+  await a.sync("edit");
+  await b.sync();
+  for (const on of [a, b])
+    assert.deepEqual(
+      on.get<Providers>(PROVIDERS).openai,
+      { apiKey: "k2", model: "m1" },
+      on.name,
+    );
+});
+
+// a and b are two installs with the same id; a's change is older than a
+// later change of another record on a, so no clock tells the copy apart.
+test("review5 R2: a change of the other install is merged even when its clock is not newer than this one's", async () => {
+  const clock = { now: 1_000_000_000 };
+  const server = memoryServer();
+  const a = device("deviceA", memoryTransport(server), clock, ALL_ON);
+  const b = device("deviceA", memoryTransport(server), clock, ALL_ON);
+  await a.set(PROVIDERS, { openai: { apiKey: "k", model: "m0" } });
+  await a.sync("edit");
+  await b.sync();
+  clock.now += 60_000;
+  await a.set(PROVIDERS, { openai: { apiKey: "k2", model: "m0" } });
+  clock.now += 60_000;
+  await b.set(PROVIDERS, { openai: { apiKey: "k", model: "m1" } });
+  await b.sync("edit");
+  clock.now += 60_000;
+  await a.set(PREFS, { fontSize: 12 });
+  clock.now += 60_000;
+  const result = await a.sync("edit");
+  assert.equal(result.warnings.includes(SYNC_WARNINGS.clonedDevice), false);
+  await b.sync();
+  for (const on of [a, b])
+    assert.deepEqual(
+      on.get<Providers>(PROVIDERS).openai,
+      { apiKey: "k2", model: "m1" },
+      on.name,
+    );
+});
+
+// Both installs took in a clock from a device whose time runs ahead: their
+// next changes get the same wall time and counter.
+test("review5 R2: two installs with the same id never stamp two changes with one clock", async () => {
+  const clock = { now: 1_000_000_000 };
+  const server = memoryServer();
+  const a = device("deviceA", memoryTransport(server), clock, ALL_ON);
+  const b = device("deviceA", memoryTransport(server), clock, ALL_ON);
+  const ahead = device("deviceZ", memoryTransport(server), clock, ALL_ON);
+  clock.now += 10 * 60_000;
+  await ahead.set(PROVIDERS, { openai: { apiKey: "k", model: "m0" } });
+  await ahead.sync("edit");
+  clock.now -= 10 * 60_000;
+  await a.sync();
+  await b.sync();
+  await a.set(PROVIDERS, { openai: { apiKey: "k2", model: "m0" } });
+  await b.set(PROVIDERS, { openai: { apiKey: "k", model: "m1" } });
+  const clocks = `${STORAGE_KEYS.syncClocks}:providers`;
+  const stamp = (on: Device) =>
+    on.get<Record<string, { clock: string }>>(clocks).openai.clock;
+  assert.equal(stamp(a).slice(0, 20), stamp(b).slice(0, 20));
+  assert.notEqual(stamp(a), stamp(b));
+  await b.sync("edit");
+  await a.sync("edit");
+  await b.sync();
+  for (const on of [a, b])
+    assert.deepEqual(
+      on.get<Providers>(PROVIDERS).openai,
+      { apiKey: "k2", model: "m1" },
+      on.name,
+    );
+});
+
+test("review5 R2: an install that finds its id used elsewhere takes a new one and says so for a day", async () => {
+  const clock = { now: 1_000_000_000 };
+  const server = memoryServer();
+  const a = device("deviceA", memoryTransport(server), clock, ALL_ON);
+  const b = device("deviceA", memoryTransport(server), clock, ALL_ON);
+  const runner = createSyncRunner(
+    a.env,
+    () => undefined,
+    async () => ({ ...a.context, device: await loadDeviceId(a.env) }),
+  );
+  await a.set(PREFS, { fontSize: 12 });
+  await runner.request({ reason: "edit" });
+  await a.settle();
+  const status = () => loadSyncStatus(a.env.local);
+  assert.deepEqual((await status()).warnings, []);
+  clock.now += 60_000;
+  await b.set(PREFS, { fontSize: 14 });
+  await b.sync("edit");
+  clock.now += 60_000;
+  await runner.request({ reason: "poll" });
+  await a.settle();
+  const renamed = a.get<string>(STORAGE_KEYS.syncDeviceId);
+  assert.notEqual(renamed, "deviceA");
+  assert.deepEqual((await status()).warnings, [SYNC_WARNINGS.clonedDevice]);
+  // Changes made here from now on carry the new id.
+  clock.now += 60_000;
+  await a.set(PREFS, { fontSize: 16 });
+  await runner.request({ reason: "edit" });
+  await a.settle();
+  const { records } = await decodeRoot(server.root!);
+  assert.ok(
+    Object.values(records).some((record) => record.clock.includes(renamed)),
+  );
+  assert.deepEqual((await status()).warnings, [SYNC_WARNINGS.clonedDevice]);
+  assert.equal(a.get<string>(STORAGE_KEYS.syncDeviceId), renamed);
+  clock.now += DAY;
+  await runner.request({ reason: "poll" });
+  assert.deepEqual((await status()).warnings, []);
+});
+
+test("review5 R2: clocks carry a nonce per change and still order by time", () => {
+  const [first, state] = tickClock(INITIAL_HLC, "a", 1000);
+  const [again] = tickClock(INITIAL_HLC, "a", 1000);
+  assert.notEqual(first, again);
+  assert.ok(isClock(first) && isClock(formatClock(1000, 0, "a")));
+  assert.equal(parseClock(first)?.device, "a");
+  const [second] = tickClock(state, "a", 999);
+  assert.ok(compareClocks(first, second) < 0);
+  assert.ok(compareClocks(formatClock(1000, 0, "a"), first) < 0);
+  assert.equal(includes({ clock: second, seen: [first] }, first), true);
+  assert.equal(includes({ clock: second }, first), false);
 });
 
 // Every clock write keeps the bodies its unconfirmed changes need: none

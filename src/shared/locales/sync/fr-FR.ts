@@ -27,6 +27,8 @@ export const syncFrFR: SyncMessages = {
       "Une partie du contenu synchronisé manque sur le serveur. Cet appareil garde sa copie jusqu’à ce qu’un autre appareil l’envoie à nouveau.",
     quota:
       "Le stockage de synchronisation du compte du navigateur est plein. Désactivez certains éléments ou utilisez WebDAV.",
+    "cloned-device":
+      "Un autre navigateur se synchronisait en tant que cet appareil (un profil de navigateur copié ou une sauvegarde restaurée sur un autre ordinateur). Cet appareil se synchronise désormais comme un nouvel appareil, et les modifications faites des deux côtés sont conservées.",
   },
   massDeleteTitle: "Confirmer les suppressions venant d’un autre appareil",
   massDeleteDescription:

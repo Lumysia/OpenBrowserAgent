@@ -27,6 +27,8 @@ export const syncDeDE: SyncMessages = {
       "Ein Teil der synchronisierten Inhalte fehlt auf dem Server. Dieses Gerät behält seine Kopie, bis ein anderes Gerät sie erneut hochlädt.",
     quota:
       "Der Sync-Speicher des Browserkontos ist voll. Schalten Sie einige Sync-Elemente aus oder verwenden Sie WebDAV.",
+    "cloned-device":
+      "Ein anderer Browser hat als dieses Gerät synchronisiert (ein kopiertes Browserprofil oder eine auf einem anderen Computer wiederhergestellte Sicherung). Dieses Gerät synchronisiert jetzt als neues Gerät; die Änderungen auf beiden bleiben erhalten.",
   },
   massDeleteTitle: "Löschungen von einem anderen Gerät bestätigen",
   massDeleteDescription:

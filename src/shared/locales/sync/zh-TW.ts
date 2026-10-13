@@ -24,6 +24,8 @@ export const syncZhTW: SyncMessages = {
     "missing-content":
       "伺服器上缺少部分同步內容。本裝置會保留自己的副本，直到其他裝置重新上傳。",
     quota: "瀏覽器帳號同步儲存空間已滿。請關閉部分同步項目或改用 WebDAV。",
+    "cloned-device":
+      "另一個瀏覽器曾以本裝置的身分同步（例如複製的瀏覽器設定檔，或在另一台電腦上還原的備份）。本裝置現在會以新裝置的身分同步，兩邊所做的變更都會保留。",
   },
   massDeleteTitle: "確認來自其他裝置的刪除",
   massDeleteDescription:

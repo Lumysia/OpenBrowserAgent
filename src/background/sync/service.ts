@@ -29,6 +29,7 @@ import {
   type PartsSeen,
 } from "../../shared/sync/browser-sync";
 import { clockKeys } from "../../shared/sync/bases";
+import { loadDeviceId } from "../../shared/sync/device";
 import { loadClocks } from "../../shared/sync/clocks";
 import { ownsKey, type Collection } from "../../shared/sync/collection";
 import { hashJson } from "../../shared/sync/codec";
@@ -77,6 +78,25 @@ const BACKOFF_MAX_MS = 60 * 60_000;
 // successful write does not show that If-Match is honoured).
 const KEPT_UNTIL_WRITE: SyncWarning[] = [SYNC_WARNINGS.unreliableEtags];
 const KEPT: SyncWarning[] = [SYNC_WARNINGS.ignoresPreconditions];
+// Notes about something a round did once, shown for a while after it.
+const KEPT_FOR_MS: Partial<Record<SyncWarning, number>> = {
+  [SYNC_WARNINGS.clonedDevice]: 24 * 60 * 60_000,
+};
+
+// When each timed note was last raised, without the expired ones.
+function timedNotes(
+  shownAt: SyncStatus["warningsAt"],
+  raised: SyncWarning[],
+  now: number,
+) {
+  const next: NonNullable<SyncStatus["warningsAt"]> = { ...shownAt };
+  for (const warning of raised) if (KEPT_FOR_MS[warning]) next[warning] = now;
+  for (const [warning, at] of Object.entries(next) as Array<
+    [SyncWarning, number]
+  >)
+    if (!(now - at < (KEPT_FOR_MS[warning] ?? 0))) delete next[warning];
+  return Object.keys(next).length ? next : undefined;
+}
 
 // The pause after the `level`-th rate limit in a row: 1 min doubling to
 // 1 h, or longer when the server's Retry-After says so.
@@ -120,14 +140,6 @@ const storedPartsSeen = (local: StorageArea): PartsSeen => ({
   save: (seen) => local.set({ [STORAGE_KEYS.syncPartsSeen]: seen }),
 });
 
-export async function syncDeviceId(env: SyncEnv) {
-  const stored = await readKey<string>(env.local, STORAGE_KEYS.syncDeviceId);
-  if (stored && /^[A-Za-z0-9_-]{1,64}$/.test(stored)) return stored;
-  const id = crypto.randomUUID();
-  await env.local.set({ [STORAGE_KEYS.syncDeviceId]: id });
-  return id;
-}
-
 export async function syncContext(
   env: SyncEnv,
 ): Promise<SyncContext | undefined> {
@@ -137,7 +149,7 @@ export async function syncContext(
     env,
     transport: transportFor(env, backend),
     scope: syncBackendScope(backend),
-    device: await syncDeviceId(env),
+    device: await loadDeviceId(env),
     settings: mergeSyncDataSettings(
       await readKey<Partial<SyncDataSettings>>(
         env.local,
@@ -193,9 +205,15 @@ export function createSyncRunner(
       const result = await runSyncRound(context, reason, options);
       // Read again: the server check may have added warnings meanwhile.
       const latest = await loadSyncStatus(env.local);
+      const warningsAt = timedNotes(
+        latest.warningsAt,
+        result.warnings,
+        env.now(),
+      );
       const sticky = latest.warnings.filter(
         (warning) =>
           KEPT.includes(warning) ||
+          !!warningsAt?.[warning] ||
           (!result.wrote && KEPT_UNTIL_WRITE.includes(warning)),
       );
       await updateSyncStatus(env.local, {
@@ -210,6 +228,7 @@ export function createSyncRunner(
         pauseStatus: undefined,
         backoffLevel: undefined,
         warnings: [...new Set([...sticky, ...result.warnings])],
+        warningsAt,
         massDelete: keepAnswers(result.massDelete, latest.massDelete),
       });
     } catch (error) {

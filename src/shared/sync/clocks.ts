@@ -4,6 +4,7 @@ import { hashJson, sameJson } from "./codec";
 import { isOrderId } from "./collection";
 import { readKey, type StorageArea, type SyncEnv } from "./env";
 import {
+  afterState,
   compareClocks,
   INITIAL_HLC,
   observeClock,
@@ -12,7 +13,7 @@ import {
   type Clock,
   type HlcState,
 } from "./hlc";
-import type { SyncRecord } from "./root";
+import { maxRootClock, type Root, type SyncRecord } from "./root";
 
 // Per record, on this device and independent of any backend: the clock of
 // its last change (made here, or a remote change stored here) and what the
@@ -72,27 +73,33 @@ export function tickNow(env: SyncEnv, device: string) {
 }
 
 // Take in the newest clock of a remote root, so later local changes order
-// after everything already seen.
-export function observeRemote(env: SyncEnv, clock: Clock | undefined) {
-  if (!clock) return Promise.resolve();
+// after everything already seen. Returns whether the root holds a change
+// stamped with this device's id that this device never made: another
+// install uses the same id.
+export function observeRemote(env: SyncEnv, remote: Root, device: string) {
   return env.lock(CLOCK_LOCK, async () => {
     const hlc = await loadHlc(env.local);
-    const next = observeClock(hlc, clock);
+    let foreign = false;
+    for (const record of Object.values(remote.records))
+      for (const held of [record.clock, ...(record.seen ?? [])])
+        if (parseClock(held)?.device === device && afterState(hlc, held))
+          foreign = true;
+    const newest = maxRootClock(remote);
+    const next = newest ? observeClock(hlc, newest) : hlc;
     if (next !== hlc) await env.local.set(saveHlc(next));
+    return foreign;
   });
 }
 
-// Whether a version holds the change made at `clock`: that change, or a
-// later one of the same device, is the version's own or one it includes.
+// Whether a version holds the change made at `clock`: it is the version's
+// own clock or one the version includes. Only that exact clock proves it
+// (clocks are unique per change): a later clock of the same device id may
+// be another install's.
 export function includes(
   version: { clock: Clock; seen?: Clock[] },
   clock: Clock,
 ) {
-  const device = parseClock(clock)?.device;
-  return [version.clock, ...(version.seen ?? [])].some(
-    (held) =>
-      parseClock(held)?.device === device && compareClocks(held, clock) >= 0,
-  );
+  return version.clock === clock || !!version.seen?.includes(clock);
 }
 
 // What a version made at `clock` from (or merging) `versions` includes

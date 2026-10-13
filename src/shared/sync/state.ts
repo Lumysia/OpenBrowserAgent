@@ -29,9 +29,17 @@ export const SYNC_WARNINGS = {
   missingContent: "missing-content",
   // The browser account's sync storage is full.
   quota: "quota",
+  // Another install used this device's id; this one got a new id.
+  clonedDevice: "cloned-device",
 } as const;
 
 export type SyncWarning = (typeof SYNC_WARNINGS)[keyof typeof SYNC_WARNINGS];
+
+// Warnings that only note what sync handles on its own.
+export const SYNC_NOTES: SyncWarning[] = [
+  SYNC_WARNINGS.ignoresPreconditions,
+  SYNC_WARNINGS.clonedDevice,
+];
 
 // A round that would delete most of a collection: remote deletions applied
 // here, or (`local`) deletions made here sent to every device.
@@ -64,6 +72,8 @@ export type SyncStatus = {
   pendingCount: number;
   error?: string;
   warnings: SyncWarning[];
+  // When notes shown for a while (a new device id) were raised.
+  warningsAt?: Partial<Record<SyncWarning, number>>;
   // Deletions waiting for the user's answer.
   massDelete?: MassDelete[];
   // Consecutive rate-limit pauses, for the doubling backoff.

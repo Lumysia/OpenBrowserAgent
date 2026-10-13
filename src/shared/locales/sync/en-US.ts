@@ -25,6 +25,8 @@ export const syncEnUS = {
       "Some synced content is missing on the server. This device keeps its copy until another device uploads it again.",
     quota:
       "Browser account sync storage is full. Turn off some sync items or use WebDAV.",
+    "cloned-device":
+      "Another browser was syncing as this device (a copied browser profile or a backup restored on another computer). This device now syncs as a new device, and changes made on both are kept.",
   },
   massDeleteTitle: "Confirm deletions from another device",
   massDeleteDescription:

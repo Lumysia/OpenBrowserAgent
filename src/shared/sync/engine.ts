@@ -27,12 +27,13 @@ import {
 } from "./clocks";
 import { canonicalJson } from "./codec";
 import type { Collection } from "./collection";
+import { rotateDeviceId } from "./device";
 import { SYNC_COLLECTIONS, splitRecordId, syncCollection } from "./collections";
 import type { SyncEnv } from "./env";
 import { compareClocks } from "./hlc";
 import { project, readLocal, type Payloads, type Snapshot } from "./local";
 import { reconcile } from "./reconcile";
-import { emptyRoot, maxRootClock, type Root, type SyncRecord } from "./root";
+import { emptyRoot, type Root, type SyncRecord } from "./root";
 import {
   loadSyncState,
   saveSyncState,
@@ -101,11 +102,13 @@ export function runSyncRound(
 }
 
 async function round(
-  context: SyncContext,
+  given: SyncContext,
   reason: RoundReason,
   options: RoundOptions,
 ): Promise<RoundResult> {
-  const { env, transport, device } = context;
+  let context = given;
+  const { env, transport } = context;
+  let { device } = context;
   const collections = enabledCollections(context.settings, transport.kind);
   const state = await loadSyncState(env.local, context.scope);
   const payloads: Payloads = new Map();
@@ -152,7 +155,13 @@ async function round(
         )
           result.warnings.push(SYNC_WARNINGS.unreliableEtags);
       }
-      await observeRemote(env, maxRootClock(remote));
+      // Another install stamps changes with this id (a copied profile, a
+      // restored backup): this one goes on under a new id.
+      if (await observeRemote(env, remote, device)) {
+        device = await rotateDeviceId(env);
+        context = { ...context, device };
+        result.warnings.push(SYNC_WARNINGS.clonedDevice);
+      }
       await settleSent(env, remote, snapshot, payloads);
 
       const outcome = await reconcile(

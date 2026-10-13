@@ -27,6 +27,8 @@ export const syncEsES: SyncMessages = {
       "Falta parte del contenido sincronizado en el servidor. Este dispositivo conserva su copia hasta que otro dispositivo la vuelva a subir.",
     quota:
       "El almacenamiento de sincronización de la cuenta del navegador está lleno. Desactiva algunos elementos o usa WebDAV.",
+    "cloned-device":
+      "Otro navegador se estaba sincronizando como este dispositivo (un perfil de navegador copiado o una copia de seguridad restaurada en otro equipo). Este dispositivo ahora se sincroniza como un dispositivo nuevo y se conservan los cambios hechos en ambos.",
   },
   massDeleteTitle: "Confirma eliminaciones desde otro dispositivo",
   massDeleteDescription:

@@ -4,6 +4,7 @@ import {
 } from "../src/shared/storage-keys";
 import type { SyncDataSettings } from "../src/shared/storage-keys";
 import { gunzip, gzip, sameJson, sha256Hex } from "../src/shared/sync/codec";
+import { loadDeviceId } from "../src/shared/sync/device";
 import { runSyncRound, type RoundReason } from "../src/shared/sync/engine";
 import type {
   AttachmentStore,
@@ -193,6 +194,7 @@ export function device(
   settings: Partial<SyncDataSettings> = {},
 ) {
   const env = testEnv(clock);
+  env.local.data[STORAGE_KEYS.syncDeviceId] = name;
   const context = {
     env,
     transport,
@@ -201,7 +203,7 @@ export function device(
     settings: { ...DEFAULT_SYNC_DATA_SETTINGS, ...settings },
   };
   const listening = new Set<Promise<unknown>>();
-  const edits = createEditListener(env, async () => name);
+  const edits = createEditListener(env, () => loadDeviceId(env));
   env.settleEdits = edits.settle;
   env.local.listeners.push((changes) => {
     const job = edits.onChanged(changes);
@@ -243,6 +245,8 @@ export function device(
     get: <T = unknown>(key: string) => env.local.data[key] as T,
     async sync(reason: RoundReason = "poll", options = {}) {
       await settle();
+      // A round that found another install with this id gave it a new one.
+      context.device = await loadDeviceId(env);
       const result = await runSyncRound(context, reason, options);
       await settle();
       return result;
