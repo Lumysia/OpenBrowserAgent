@@ -4,6 +4,7 @@ import {
 } from "./chat-attachments";
 import { chatContentKey } from "./chat-keys";
 import {
+  chatContent,
   chatFacts,
   joinChat,
   normalizeChatContent,
@@ -12,6 +13,8 @@ import {
 import { storageLockName, withLock } from "./locks";
 import { getBrowserApi, storage } from "./storage";
 import { loadSyncedContent } from "./sync/client";
+import { sameJson } from "./sync/codec";
+import { mergeChatBodies } from "./sync/merge-content";
 import type { Chat, ChatContent } from "./types";
 
 export { chatContentKey };
@@ -58,11 +61,25 @@ export async function readChat(chatId: string): Promise<Chat | undefined> {
 }
 
 // Store one chat's content. Returns what was stored and the list facts that
-// describe it.
-export async function saveChatContent(chatId: string, value: ChatContent) {
-  const content = await offloadChatInlineAttachments(chatId, value);
+// describe it. `base`: the stored content the value was made from; content
+// stored since (a sync download the page has not merged) is merged in, so
+// a page's copy never undoes it.
+export async function saveChatContent(
+  chatId: string,
+  value: ChatContent,
+  base?: ChatContent,
+) {
+  let content = await offloadChatInlineAttachments(chatId, value);
   const key = chatContentKey(chatId);
-  await withLock(storageLockName(key), () => local().set({ [key]: content }));
+  await withLock(storageLockName(key), async () => {
+    const raw = (await local().get(key))[key];
+    const stored = raw === undefined ? undefined : normalizeChatContent(raw);
+    if (base && stored && !sameJson(stored, normalizeChatContent(base)))
+      content = chatContent(
+        mergeChatBodies(base, content, stored, "mine") as ChatContent,
+      );
+    await local().set({ [key]: content });
+  });
   return { content, facts: contentFacts(content) };
 }
 

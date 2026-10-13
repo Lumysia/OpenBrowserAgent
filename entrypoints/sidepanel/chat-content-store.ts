@@ -38,6 +38,9 @@ export function createChatContentStore(
   const listeners = new Map<string, Set<() => void>>();
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
   const ownWrites = new Map<string, string[]>();
+  // Per chat, the stored content this page's copy was made from (loaded or
+  // last saved here): a save merges in what was stored since.
+  const bases = new Map<string, ChatContent>();
 
   function notify(chatId: string) {
     listeners.get(chatId)?.forEach((listener) => listener());
@@ -65,7 +68,8 @@ export function createChatContentStore(
       chatContentSnapshot(current),
     ];
     ownWrites.set(chatId, snapshots.slice(-OWN_WRITE_LIMIT));
-    const saved = await saveChatContent(chatId, current);
+    const saved = await saveChatContent(chatId, current, bases.get(chatId));
+    bases.set(chatId, saved.content);
     onFacts(chatId, saved.facts);
   }
 
@@ -92,6 +96,7 @@ export function createChatContentStore(
     if (!entry) return;
     if (value === undefined) {
       entries.delete(chatId);
+      bases.delete(chatId);
       notify(chatId);
       return;
     }
@@ -144,6 +149,7 @@ export function createChatContentStore(
         const loaded = (await loadChatContent(chatId)) ?? { messages: [] };
         // Set meanwhile (e.g. a new chat) or dropped: keep that.
         if (entries.get(chatId)?.status !== "loading") return content(chatId);
+        bases.set(chatId, loaded);
         setEntry(chatId, { status: "ready", content: loaded });
         return loaded;
       } catch (error) {
@@ -168,8 +174,10 @@ export function createChatContentStore(
         (pending ? persist(chatId) : Promise.resolve())
           .catch((error) => console.warn("Failed to persist chat", error))
           .finally(() => {
-            if (!chatIds.has(chatId) && !timers.has(chatId))
+            if (!chatIds.has(chatId) && !timers.has(chatId)) {
               entries.delete(chatId);
+              bases.delete(chatId);
+            }
           });
       }
     },
@@ -178,6 +186,7 @@ export function createChatContentStore(
         clearTimeout(timers.get(chatId));
         timers.delete(chatId);
         entries.delete(chatId);
+        bases.delete(chatId);
         notify(chatId);
       }
     },

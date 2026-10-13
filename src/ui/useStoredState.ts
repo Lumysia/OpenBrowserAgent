@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { storeEdit } from "../shared/rebase";
 
 type StorageItem<T> = {
   key?: string;
@@ -90,10 +91,12 @@ export function useStoredState<T>(
       return resolved;
     show(resolved, resolvedSnapshot);
     // Resolves once stored; a failed write is logged, the value stays shown.
+    // Stored over what storage holds then, keeping changes made elsewhere
+    // that this page has not shown yet.
     const write =
       freshUpdates && item.update && typeof next === "function"
         ? () => item.update!(next as (previous: T) => T)
-        : () => item.set(resolved);
+        : () => storeEdit(item, previous, resolved);
     writesInFlightRef.current++;
     await persistOwnWrite(write, resolved, ownWriteSnapshotsRef).catch(
       (error) => console.warn("Failed to persist stored state", error),
