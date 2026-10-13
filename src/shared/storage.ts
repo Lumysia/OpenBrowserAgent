@@ -19,6 +19,8 @@ import {
   type SyncPreferenceKey,
 } from "./storage-keys";
 import { storageLockName, withLock } from "./locks";
+import { keepStoredForm } from "./stored-form";
+import { sameJson } from "./sync/codec";
 import { NO_SYNC_BACKEND_ID, normalizeSyncBackends } from "./sync-backends";
 import { DEFAULT_SYNC_STATUS, type SyncStatus } from "./sync/state";
 import { normalizeWorkspaces } from "./workspace";
@@ -67,8 +69,13 @@ function createItem<T>(
   const lock = <R>(run: () => Promise<R>) =>
     withLock(storageLockName(key), run);
 
+  async function read() {
+    const stored = (await local().get(key))[key] as T | undefined;
+    return { stored, value: resolve(stored) };
+  }
+
   async function get() {
-    return resolve((await local().get(key))[key] as T | undefined);
+    return (await read()).value;
   }
 
   async function write(value: T) {
@@ -83,12 +90,20 @@ function createItem<T>(
     get,
     set: (value: T) => lock(() => write(value)),
     // Read-modify-write across extension contexts: agent tools in the
-    // background and the options editor both edit workspaces.
+    // background and the options editor both edit workspaces. Stores only
+    // what the updater changed (see keepStoredForm); nothing when it changed
+    // nothing.
     update(updater: (current: T) => T) {
       return lock(async () => {
-        const current = await get();
+        const { stored, value: current } = await read();
         const next = updater(current);
-        if (next !== current) await write(next);
+        if (next === current) return next;
+        const normalized = normalize(next);
+        if (sameJson(normalized, current)) return next;
+        await local().set({
+          [key]: keepStoredForm(stored, current, normalized),
+        });
+        if (afterSet) await afterSet(current, normalized);
         return next;
       });
     },

@@ -211,3 +211,70 @@ test("fix7 P3: a reply that finds a known source again leaves it as it is", asyn
     assert.equal(contentOf(on, "X").sources, undefined, on.name);
   }
 });
+
+test("fix7 guard: saving a chat keeps the stored form of the messages it did not change", async () => {
+  const { clock, a, b } = pair();
+  // Stored by an earlier version: no parts list, an empty tool text.
+  const legacy = {
+    messages: [
+      { id: "u1", role: "user", content: "u1", createdAt: 1, extra: 1 },
+      {
+        id: "a1",
+        role: "assistant",
+        content: "A",
+        createdAt: 2,
+        parts: [{ id: "p", type: "text", text: "" }],
+      },
+    ],
+  };
+  await a.set(CHATS, [
+    { id: "X", title: "X", createdAt: 1, updatedAt: 1, messageCount: 2 },
+  ]);
+  await a.set(`${CHATS}/X`, legacy);
+  await a.sync("edit");
+  await b.sync();
+  await openChatContent(b, "X");
+  // A deletes the reply.
+  clock.now += 60_000;
+  await a.set(`${CHATS}/X`, { messages: [legacy.messages[0]] });
+  await a.sync("edit");
+  // B's panel adds a message to its loaded (normalized) copy and saves it.
+  clock.now += 60_000;
+  await onDevice(b, async () => {
+    const base = (await readLocalChatContent("X"))!;
+    await saveChatContent(
+      "X",
+      { ...base, messages: [...base.messages, userMessage("u2", 3)] },
+      base,
+    );
+  });
+  await b.sync("edit");
+  await a.sync();
+  for (const on of [a, b])
+    assert.deepEqual(messageIds(on, "X"), ["u1", "u2"], on.name);
+  assert.deepEqual(contentOf(b, "X").messages[0], legacy.messages[0]);
+});
+
+test("fix7 guard: a list save keeps the stored form of the chats it did not change", async () => {
+  const { clock, a, b } = pair();
+  // Y's entry was stored by an earlier version (no kind).
+  await a.set(CHATS, [
+    { id: "X", title: "X", kind: "normal", createdAt: 1, updatedAt: 1 },
+    { id: "Y", title: "Y", createdAt: 2, updatedAt: 2 },
+  ]);
+  await a.sync("edit");
+  await b.sync();
+  clock.now += 60_000;
+  await a.set(CHATS, [a.get<ChatSummary[]>(CHATS)[0]]);
+  await a.sync("edit");
+  // B renames X.
+  clock.now += 60_000;
+  await onDevice(b, () =>
+    storage.chats.update((chats) =>
+      chats.map((chat) => (chat.id === "X" ? { ...chat, title: "X2" } : chat)),
+    ),
+  );
+  await b.sync("edit");
+  await a.sync();
+  for (const on of [a, b]) assert.deepEqual(listed(on), ["X"], on.name);
+});

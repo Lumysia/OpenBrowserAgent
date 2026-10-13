@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DEFAULT_AGENT_ID, resolveAgent } from "../src/shared/agents";
+import { storeEdit } from "../src/shared/rebase";
 import { storage } from "../src/shared/storage";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import type { Agent, AgentWorkspace } from "../src/shared/types";
@@ -87,4 +88,68 @@ test("fix7 P4: an agent without a workspace still gets one with the default file
     workspaceForAgent({ ...agent(), id: "other" }, false),
   );
   assert.equal(run.files.length, 3);
+});
+
+test("fix7 guard: a store that changes nothing writes nothing", async () => {
+  const { a } = pair();
+  // Stored by an earlier version: normalizing on read changes them.
+  const stored = {
+    [STORAGE_KEYS.agents]: [{ id: "custom", name: " Mine " }],
+    [WORKSPACES]: [
+      {
+        agentId: "custom",
+        files: [
+          { path: "b.md", content: "b" },
+          { path: "a.md", content: "a" },
+        ],
+      },
+    ],
+    [STORAGE_KEYS.preferences]: { autoScroll: false },
+  };
+  for (const [key, value] of Object.entries(stored)) a.seed(key, value);
+  await onDevice(a, async () => {
+    await storage.agents.update((agents) => [...agents]);
+    await storage.agentWorkspaces.update((workspaces) =>
+      workspaces.map((workspace) => ({ ...workspace })),
+    );
+    await storage.preferences.update((preferences) => ({ ...preferences }));
+  });
+  for (const [key, value] of Object.entries(stored))
+    assert.deepEqual(a.get(key), value, key);
+});
+
+test("fix7 guard: a list save keeps the stored form of the agents it did not change", async () => {
+  const { clock, a, b } = pair();
+  await a.set(STORAGE_KEYS.agents, [
+    { id: "one", name: "One", prompt: "", toolGroups: [], createdAt: 1 },
+    { id: "two", name: " Two ", createdAt: 2 },
+  ]);
+  await a.sync("edit");
+  await b.sync();
+  clock.now += 60_000;
+  await a.set(STORAGE_KEYS.agents, [a.get<Agent[]>(STORAGE_KEYS.agents)[0]]);
+  await a.sync("edit");
+  // B renames agent one on its agents page.
+  clock.now += 60_000;
+  await onDevice(b, async () => {
+    const shown = await storage.agents.get();
+    await storeEdit(
+      storage.agents,
+      shown,
+      shown.map((item) =>
+        item.id === "one" ? { ...item, name: "Uno" } : item,
+      ),
+    );
+  });
+  await b.sync("edit");
+  await a.sync();
+  for (const on of [a, b]) {
+    const agents = on.get<Agent[]>(STORAGE_KEYS.agents);
+    assert.equal(agents.find((item) => item.id === "one")?.name, "Uno");
+    assert.equal(
+      agents.some((item) => item.id === "two"),
+      false,
+      on.name,
+    );
+  }
 });

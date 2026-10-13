@@ -12,6 +12,7 @@ import {
 } from "./chats";
 import { storageLockName, withLock } from "./locks";
 import { getBrowserApi, storage } from "./storage";
+import { keepStoredForm } from "./stored-form";
 import { loadSyncedContent } from "./sync/client";
 import { sameJson } from "./sync/codec";
 import { mergeChatBodies } from "./sync/merge-content";
@@ -78,6 +79,10 @@ export async function saveChatContent(
       content = chatContent(
         mergeChatBodies(base, content, stored, "mine") as ChatContent,
       );
+    // Messages this save left alone stay as stored, whatever loading them
+    // normalized.
+    content = keepStoredForm(raw, stored ?? content, content);
+    if (raw !== undefined && sameJson(content, raw)) return;
     await local().set({ [key]: content });
   });
   return { content, facts: contentFacts(content) };
