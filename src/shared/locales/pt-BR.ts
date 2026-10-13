@@ -133,7 +133,7 @@ export const ptBR: LocaleMessages = {
     attachmentTooLarge:
       "Alguns arquivos eram grandes demais para anexar: {names}",
     attachmentsUnsupportedRetry:
-      "O modelo selecionado rejeitou um formato de conteúdo não textual, então a mensagem foi reenviada apenas com o texto e os detalhes dos arquivos.",
+      "O modelo não conseguiu receber esses anexos diretamente, então recebeu apenas o texto e os detalhes dos arquivos.",
     attachmentOnlyMessage: "Revise os arquivos anexados.",
     skillOnlyMessage: "Use a habilidade selecionada.",
     noSkillsFound: "Nenhuma habilidade encontrada",
@@ -331,20 +331,20 @@ export const ptBR: LocaleMessages = {
     deleteAgent: "Excluir agente",
     agentWorkspace: "Espaço de trabalho do agente",
     agentWorkspaceDescription:
-      "Arquivos de texto privados deste agente. MEMORY.md e USER.md são mostrados ao agente em toda conversa; os outros arquivos são lidos quando necessário.",
+      "Arquivos privados deste agente. Ele sempre vê MEMORY.md e USER.md e lê os outros quando necessário.",
     agentWorkspaceNewFile: "Novo arquivo do espaço de trabalho",
     agentWorkspaceConflict:
       "Este arquivo mudou durante a edição. Abra-o novamente para revisar a versão mais recente antes de salvar.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     resetDefaultAgents: "Redefinir agentes padrão",
     resetDefaultAgentsDescription:
-      "Substitui os agentes atuais pelo agente padrão integrado. Agentes personalizados e espaços de trabalho serão removidos.",
+      "Restaura os agentes integrados e remove os agentes personalizados e seus espaços de trabalho.",
     sync: "Sincronização",
     providers: "Provedores",
     mcpServers: "Servidores MCP",
     localExecutionBridges: "Pontes de execução locais",
     localExecutionBridgesDescription:
-      "Configure pontes de execução locais ou remotas, que podem ser sincronizadas. A extensão envia comandos de shell para a ponte, e a ponte os executa no host.",
+      "Permite que agentes executem comandos de shell neste computador ou em um host remoto por meio de uma ponte.",
     localExecutionBridgesEmpty: "Ainda não há pontes de execução",
     newLocalExecutionBridge: "Nova ponte de execução",
     localExecutionBridgeName: "Nome da ponte de execução",
@@ -393,7 +393,7 @@ export const ptBR: LocaleMessages = {
     resetBuiltins: "Redefinir integrados",
     resetDefaultMcpServers: "Redefinir servidores MCP padrão",
     resetDefaultMcpServersDescription:
-      "Substitui os servidores MCP atuais pelos padrões integrados. Servidores personalizados e resultados de teste serão removidos.",
+      "Restaura os servidores MCP integrados e remove os personalizados.",
     selectModel: "Selecionar modelo",
     selectModelDescription:
       "Escolha o modelo principal das conversas. Os agentes funcionam melhor com modelos compatíveis com chamadas de ferramentas.",
@@ -519,13 +519,13 @@ export const ptBR: LocaleMessages = {
       "Sincronize a configuração dos servidores MCP (Streamable HTTP) pelo backend de sincronização atual.",
     syncLocalExecutionBridges: "Sincronizar pontes de execução locais",
     syncLocalExecutionBridgesDescription:
-      "Sincronize configurações de pontes de execução, nomes de host nativos, endereços de host de execução, segredos da ponte, IDs da configuração de shell e diretórios padrão pelo backend de sincronização atual.",
+      "Sincronize as configurações das pontes, incluindo segredos, pelo backend de sincronização atual.",
     syncChats: "Sincronizar conversas",
     syncChatsDescription:
       "Sincronize o histórico de conversas pelo backend de sincronização atual. Deixe desativado para manter as conversas somente locais.",
     syncChatAttachments: "Sincronizar anexos das conversas",
     syncChatAttachmentsDescription:
-      "Sincronize os arquivos enviados nas conversas pelo backend selecionado, se ele suportar anexos. A sincronização da conta do navegador fica desativada para anexos por causa dos limites de cota do navegador.",
+      "Sincronize os arquivos enviados nas conversas pelo backend de sincronização atual.",
     autoScroll: "Rolagem automática",
     autoScrollDescription:
       "Mantém automaticamente a saída mais recente da IA visível enquanto as mensagens são transmitidas.",
@@ -537,14 +537,14 @@ export const ptBR: LocaleMessages = {
       "Define quantas etapas de ferramentas o agente pode executar. Use 0 para desativar as chamadas de ferramentas.",
     helperModel: "Modelo auxiliar",
     helperModelDescription:
-      "Modelo para solicitações em segundo plano, como resumir tarefas longas. Por padrão, usa o modelo da própria conversa.",
+      "Usado em tarefas em segundo plano, como resumos. Por padrão, o modelo da conversa.",
     modelSameAsChat: "Igual ao modelo da conversa",
     debug: "Depuração",
     debugDescription:
       "Ferramentas de desenvolvedor para redefinir dados do OpenBrowserAgent.",
     debugResetTitle: "Limpar dados do OpenBrowserAgent",
     debugResetDescription:
-      "Exclui o armazenamento local, o armazenamento da sincronização do navegador, conversas, provedores, habilidades, preferências e caches de sincronização do app gravados pelo OpenBrowserAgent.",
+      "Exclui permanentemente os dados do OpenBrowserAgent selecionados abaixo. Não é possível desfazer.",
     debugResetConfirmLabel: "Digite {phrase} para confirmar.",
     debugResetConfirmPhrase: "RESET",
     debugResetScope: "Local de armazenamento",

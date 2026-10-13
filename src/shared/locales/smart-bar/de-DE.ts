@@ -32,7 +32,7 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
     "Die Auswahl ist zu lang (über {max} Zeichen). Fahren Sie stattdessen in der Seitenleiste fort.",
   settingsTitle: "Smart Bar",
   settingsDescription:
-    "Eine kleine Leiste neben markiertem Text mit schnellen KI-Aktionen. Es wird nichts gesendet, bevor Sie eine Aktion wählen.",
+    "Schnelle KI-Aktionen neben markiertem Text. Es wird nichts gesendet, bevor Sie eine wählen.",
   enable: "Smart Bar anzeigen",
   enableDescription:
     "Standardmäßig aus. Wenn aktiviert, beobachtet OpenBrowserAgent auf erlaubten Seiten, welcher Text markiert wird.",

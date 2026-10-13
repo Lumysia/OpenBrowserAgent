@@ -126,7 +126,7 @@ export const zhCN: LocaleMessages = {
     removeTab: "移除标签页",
     attachmentTooLarge: "部分文件过大，无法添加：{names}",
     attachmentsUnsupportedRetry:
-      "当前模型拒绝了某种非文本内容格式，已自动改用文字和文件信息重试。",
+      "模型无法直接读取这些附件，已改为只发送文字和文件信息。",
     attachmentOnlyMessage: "请查看附件内容。",
     skillOnlyMessage: "使用所选技能。",
     noSkillsFound: "没有匹配的技能",
@@ -269,20 +269,20 @@ export const zhCN: LocaleMessages = {
     deleteAgent: "删除智能体",
     agentWorkspace: "智能体工作区",
     agentWorkspaceDescription:
-      "此智能体的私有文本文件。MEMORY.md 和 USER.md 会在每次对话中提供给智能体；其他文件按需读取。",
+      "此智能体的私有文件。智能体始终能看到 MEMORY.md 和 USER.md，其他文件按需读取。",
     agentWorkspaceNewFile: "新建工作区文件",
     agentWorkspaceConflict:
       "此文件在编辑期间发生了更改。请重新打开并查看最新版本后再保存。",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     resetDefaultAgents: "重置默认智能体",
     resetDefaultAgentsDescription:
-      "用内置默认智能体替换当前智能体。自定义智能体和工作区会被移除。",
+      "恢复内置智能体，并移除自定义智能体及其工作区。",
     sync: "同步",
     providers: "提供商",
     mcpServers: "MCP 服务器",
     localExecutionBridges: "本地执行桥",
     localExecutionBridgesDescription:
-      "配置可同步的本地或远程执行桥。扩展将 shell 命令发送给执行桥，由执行桥在主机上运行。",
+      "让智能体通过执行桥在本机或远程主机上运行 shell 命令。",
     localExecutionBridgesEmpty: "还没有执行桥",
     newLocalExecutionBridge: "新建执行桥",
     localExecutionBridgeName: "执行桥名称",
@@ -331,7 +331,7 @@ export const zhCN: LocaleMessages = {
     resetBuiltins: "重置内置项",
     resetDefaultMcpServers: "重置默认 MCP 服务器",
     resetDefaultMcpServersDescription:
-      "用内置默认项替换当前 MCP 服务器。自定义服务器和测试结果会被移除。",
+      "恢复内置 MCP 服务器，并移除自定义服务器。",
     selectModel: "选择模型",
     selectModelDescription:
       "选择主对话模型。智能体最好使用支持工具调用的模型。",
@@ -448,13 +448,12 @@ export const zhCN: LocaleMessages = {
       "通过当前同步后端同步 Streamable HTTP MCP 服务器配置。",
     syncLocalExecutionBridges: "同步本地执行桥",
     syncLocalExecutionBridgesDescription:
-      "通过当前同步后端同步执行桥配置、原生消息主机名、执行主机地址、执行桥密钥、Shell 配置 ID 和默认工作目录。",
+      "通过当前同步后端同步执行桥配置，包括执行桥密钥。",
     syncChats: "同步对话",
     syncChatsDescription:
       "通过当前同步后端同步对话历史。关闭时对话只保存在本机。",
     syncChatAttachments: "同步对话附件",
-    syncChatAttachmentsDescription:
-      "通过当前支持附件的同步后端同步对话中上传的文件。“内置浏览器账号同步”受浏览器配额限制，不支持附件。",
+    syncChatAttachmentsDescription: "通过当前同步后端同步对话中上传的文件。",
     autoScroll: "自动滚动",
     autoScrollDescription: "AI 输出时自动保持最新内容可见。",
     autoRetry: "自动重试",
@@ -463,14 +462,13 @@ export const zhCN: LocaleMessages = {
     maxToolStepsDescription:
       "设置智能体最多可执行多少步工具调用；填 0 表示禁用工具调用。",
     helperModel: "辅助模型",
-    helperModelDescription:
-      "用于后台请求（如总结长任务）的模型。默认使用当前对话的模型。",
+    helperModelDescription: "用于总结等后台任务。默认使用当前对话的模型。",
     modelSameAsChat: "与对话模型相同",
     debug: "调试",
     debugDescription: "用于重置 OpenBrowserAgent 数据的开发工具。",
     debugResetTitle: "清除 OpenBrowserAgent 数据",
     debugResetDescription:
-      "删除 OpenBrowserAgent 写入的本地存储、浏览器同步存储、对话、提供商、技能、偏好设置和应用同步缓存。",
+      "永久删除下方所选的 OpenBrowserAgent 数据，且无法撤销。",
     debugResetConfirmLabel: "输入 {phrase} 以确认。",
     debugResetConfirmPhrase: "RESET",
     debugResetScope: "存储位置",

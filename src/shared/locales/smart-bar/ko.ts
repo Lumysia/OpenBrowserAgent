@@ -31,7 +31,7 @@ export const smartBarKo: SmartBarLocaleMessages = {
     "선택 영역이 너무 깁니다({max}자 초과). 대신 사이드 패널에서 계속하세요.",
   settingsTitle: "스마트 바",
   settingsDescription:
-    "선택한 텍스트 옆에 빠른 AI 작업을 보여 주는 작은 도구 모음입니다. 작업을 선택하기 전에는 아무것도 전송되지 않습니다.",
+    "선택한 텍스트 옆에 빠른 AI 작업을 보여 줍니다. 작업을 선택하기 전에는 아무것도 전송되지 않습니다.",
   enable: "스마트 바 표시",
   enableDescription:
     "기본값은 꺼짐입니다. 켜면 OpenBrowserAgent가 허용된 페이지에서 텍스트 선택을 감지합니다.",

@@ -134,7 +134,7 @@ export const frFR: LocaleMessages = {
     attachmentTooLarge:
       "Certains fichiers étaient trop volumineux pour être joints : {names}",
     attachmentsUnsupportedRetry:
-      "Le modèle sélectionné a rejeté un format de contenu non textuel. Le message a donc été renvoyé avec uniquement le texte et les détails des fichiers.",
+      "Le modèle n’a pas pu prendre ces pièces jointes directement : il n’a reçu que le texte et les détails des fichiers.",
     attachmentOnlyMessage: "Veuillez examiner les fichiers joints.",
     skillOnlyMessage: "Utilisez la compétence sélectionnée.",
     noSkillsFound: "Aucune compétence correspondante",
@@ -327,20 +327,20 @@ export const frFR: LocaleMessages = {
     deleteAgent: "Supprimer l’agent",
     agentWorkspace: "Espace de travail de l’agent",
     agentWorkspaceDescription:
-      "Fichiers texte privés de cet agent. MEMORY.md et USER.md sont fournis à l’agent dans chaque discussion ; les autres fichiers sont lus au besoin.",
+      "Fichiers privés de cet agent. Il voit toujours MEMORY.md et USER.md et lit les autres au besoin.",
     agentWorkspaceNewFile: "Nouveau fichier d’espace de travail",
     agentWorkspaceConflict:
       "Ce fichier a changé pendant votre modification. Rouvrez-le pour consulter la dernière version avant d’enregistrer.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     resetDefaultAgents: "Réinitialiser les agents par défaut",
     resetDefaultAgentsDescription:
-      "Remplace les agents actuels par l’agent intégré par défaut. Les agents personnalisés et les espaces de travail seront supprimés.",
+      "Rétablit les agents intégrés et supprime les agents personnalisés et leurs espaces de travail.",
     sync: "Synchronisation",
     providers: "Fournisseurs",
     mcpServers: "Serveurs MCP",
     localExecutionBridges: "Ponts d’exécution locaux",
     localExecutionBridgesDescription:
-      "Configurez des ponts d’exécution locaux ou distants, synchronisables. L’extension envoie des commandes shell au pont, qui les exécute sur l’hôte.",
+      "Permettez aux agents d’exécuter des commandes shell sur cet ordinateur ou un hôte distant via un pont.",
     localExecutionBridgesEmpty: "Aucun pont d’exécution pour le moment",
     newLocalExecutionBridge: "Nouveau pont d’exécution",
     localExecutionBridgeName: "Nom du pont d’exécution",
@@ -389,7 +389,7 @@ export const frFR: LocaleMessages = {
     resetBuiltins: "Réinitialiser les éléments intégrés",
     resetDefaultMcpServers: "Réinitialiser les serveurs MCP par défaut",
     resetDefaultMcpServersDescription:
-      "Remplace les serveurs MCP actuels par les valeurs intégrées par défaut. Les serveurs personnalisés et les résultats de test seront supprimés.",
+      "Rétablit les serveurs MCP intégrés et supprime les serveurs personnalisés.",
     selectModel: "Sélectionner un modèle",
     selectModelDescription:
       "Choisissez le modèle principal des discussions. Les agents fonctionnent mieux avec les modèles prenant en charge les appels d’outils.",
@@ -517,13 +517,13 @@ export const frFR: LocaleMessages = {
       "Synchronisez la configuration des serveurs MCP Streamable HTTP via le backend de synchronisation actuel.",
     syncLocalExecutionBridges: "Synchroniser les ponts d’exécution locaux",
     syncLocalExecutionBridgesDescription:
-      "Synchronisez les paramètres des ponts d’exécution, les noms d’hôte de messagerie native, les adresses d’hôte d’exécution, les secrets de pont, les ID de configuration du shell et les répertoires de travail par défaut via le backend de synchronisation actuel.",
+      "Synchronisez les paramètres des ponts, y compris les secrets, via le backend de synchronisation actuel.",
     syncChats: "Synchroniser les discussions",
     syncChatsDescription:
       "Synchronisez l’historique des discussions via le backend de synchronisation actuel. Laissez désactivé pour garder les discussions en local uniquement.",
     syncChatAttachments: "Synchroniser les pièces jointes des discussions",
     syncChatAttachmentsDescription:
-      "Synchronisez les fichiers importés dans les discussions avec le backend sélectionné, s’il prend en charge les pièces jointes. La synchronisation du compte navigateur est désactivée pour les pièces jointes à cause des quotas du navigateur.",
+      "Synchronisez les fichiers importés dans les discussions via le backend de synchronisation actuel.",
     autoScroll: "Défilement automatique",
     autoScrollDescription:
       "Garder automatiquement la dernière réponse de l’IA visible pendant la génération des messages.",
@@ -535,14 +535,14 @@ export const frFR: LocaleMessages = {
       "Définit combien d’étapes d’outils l’agent peut exécuter. Utilisez 0 pour désactiver les appels d’outils.",
     helperModel: "Modèle auxiliaire",
     helperModelDescription:
-      "Modèle pour les requêtes en arrière-plan, comme le résumé des longues tâches. Par défaut, le modèle de la discussion est utilisé.",
+      "Sert aux tâches en arrière-plan comme les résumés. Par défaut, le modèle de la discussion.",
     modelSameAsChat: "Identique au modèle de la discussion",
     debug: "Débogage",
     debugDescription:
       "Outils développeur pour réinitialiser les données d’OpenBrowserAgent.",
     debugResetTitle: "Effacer les données OpenBrowserAgent",
     debugResetDescription:
-      "Supprime le stockage local, le stockage de synchronisation du navigateur, les discussions, fournisseurs, compétences, préférences et caches de synchronisation de l’application écrits par OpenBrowserAgent.",
+      "Supprime définitivement les données OpenBrowserAgent sélectionnées ci-dessous. Action irréversible.",
     debugResetConfirmLabel: "Saisissez {phrase} pour confirmer.",
     debugResetConfirmPhrase: "RESET",
     debugResetScope: "Emplacement de stockage",

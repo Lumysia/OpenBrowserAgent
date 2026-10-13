@@ -134,7 +134,7 @@ export const enUS = {
     removeTab: "Remove tab",
     attachmentTooLarge: "Some files were too large to attach: {names}",
     attachmentsUnsupportedRetry:
-      "The selected model rejected a non-text content format, so the message was retried with text and file details only.",
+      "The model couldn't take these attachments directly, so it received text and file details only.",
     attachmentOnlyMessage: "Please review the attached files.",
     skillOnlyMessage: "Use the selected skill.",
     noSkillsFound: "No matching skills",
@@ -302,20 +302,20 @@ export const enUS = {
     deleteAgent: "Delete agent",
     agentWorkspace: "Agent workspace",
     agentWorkspaceDescription:
-      "Private text files for this agent. MEMORY.md and USER.md are shown to the agent in every chat; other files are read when needed.",
+      "Private files for this agent. It always sees MEMORY.md and USER.md and reads others when needed.",
     agentWorkspaceNewFile: "New workspace file",
     agentWorkspaceConflict:
       "This file changed while you were editing. Reopen it to review the latest version before saving.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     resetDefaultAgents: "Reset default agents",
     resetDefaultAgentsDescription:
-      "Replace current agents with the built-in defaults. Custom agents and workspaces will be removed.",
+      "Restores the built-in agents and removes custom agents and their workspaces.",
     sync: "Sync",
     providers: "Providers",
     mcpServers: "MCP servers",
     localExecutionBridges: "Local execution bridges",
     localExecutionBridgesDescription:
-      "Configure syncable local or remote execution bridges. The extension sends shell commands to the bridge, and the bridge runs them on the host.",
+      "Let agents run shell commands on this computer or a remote host through a bridge.",
     localExecutionBridgesEmpty: "No execution bridges yet",
     newLocalExecutionBridge: "New execution bridge",
     localExecutionBridgeName: "Execution bridge name",
@@ -364,7 +364,7 @@ export const enUS = {
     resetBuiltins: "Reset built-ins",
     resetDefaultMcpServers: "Reset default MCP servers",
     resetDefaultMcpServersDescription:
-      "Replace current MCP servers with the built-in defaults. Custom servers and test results will be removed.",
+      "Restores the built-in MCP servers and removes custom ones.",
     selectModel: "Select model",
     selectModelDescription:
       "Choose the main chat model. Agents work best with models that support tool calls.",
@@ -488,13 +488,13 @@ export const enUS = {
       "Sync Streamable HTTP MCP server configuration through the current sync backend.",
     syncLocalExecutionBridges: "Sync local execution bridges",
     syncLocalExecutionBridgesDescription:
-      "Sync execution bridge settings, native messaging host names, execution host addresses, bridge secrets, shell config IDs, and default working directories through the current sync backend.",
+      "Sync bridge settings, including secrets, through the current sync backend.",
     syncChats: "Sync chats",
     syncChatsDescription:
       "Sync chat history through the current sync backend. Keep this off for local-only conversations.",
     syncChatAttachments: "Sync chat attachments",
     syncChatAttachmentsDescription:
-      "Sync uploaded chat files with the selected attachment-capable backend. Built-in browser account sync can't store attachments because of browser quota limits.",
+      "Sync files uploaded in chats through the current sync backend.",
     autoScroll: "Auto scroll",
     autoScrollDescription:
       "Automatically keep the latest AI output visible while messages stream.",
@@ -506,13 +506,13 @@ export const enUS = {
       "Set how many tool steps the agent may run. Use 0 to disable tool calls.",
     helperModel: "Helper model",
     helperModelDescription:
-      "Model for background requests such as summarizing long tasks. By default the chat's own model is used.",
+      "Used for background tasks such as summaries. Defaults to the chat's model.",
     modelSameAsChat: "Same as chat model",
     debug: "Debug",
     debugDescription: "Developer tools for resetting OpenBrowserAgent data.",
     debugResetTitle: "Clear OpenBrowserAgent data",
     debugResetDescription:
-      "Deletes local storage, browser sync storage, chats, providers, skills, preferences, and app sync caches written by OpenBrowserAgent.",
+      "Permanently deletes the OpenBrowserAgent data selected below. This can't be undone.",
     debugResetConfirmLabel: "Type {phrase} to confirm.",
     debugResetConfirmPhrase: "RESET",
     debugResetScope: "Storage location",
