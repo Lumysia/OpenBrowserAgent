@@ -54,10 +54,27 @@ test("review8 K1: a stored MCP server without id survives an unrelated save", ()
   assert.deepEqual(result[1], stored[1], "left alone: stored as it was");
 });
 
-const skillFile = { path: "SKILL.md", content: "---\nname: x\n---\nbody" };
+const skillFile = {
+  path: "SKILL.md",
+  content: "---\nname: x\n---\nbody",
+  updatedAt: 1,
+};
 const idlessSkills = [
-  { id: "s1", name: "one", description: "d", files: [skillFile], createdAt: 1 },
-  { name: "two", description: "d", files: [skillFile], createdAt: 1 },
+  {
+    id: "s1",
+    name: "one",
+    description: "d",
+    files: [skillFile],
+    createdAt: 1,
+    updatedAt: 1,
+  },
+  {
+    name: "two",
+    description: "d",
+    files: [skillFile],
+    createdAt: 1,
+    updatedAt: 1,
+  },
 ];
 
 test("review8 K1: a stored skill without id survives an unrelated save", () => {
