@@ -68,7 +68,7 @@ test("only Translate on a short selection asks for a dictionary entry", () => {
     after: " home.",
   });
   assert.match(word.system, /JSON object/);
-  assert.match(word.prompt, /dictionary entry .* in Chinese \(China\)/);
+  assert.match(word.prompt, /entry language is Chinese \(China\)/);
   assert.match(word.prompt, /"contextMeaning"/);
   assert.match(word.prompt, /She \[\[SELECTION\]\] home\./);
   const sentence = smartBarPrompt("translate", "She ran home.", "zh-CN");
