@@ -43,25 +43,18 @@ export function createWorkspace(
   };
 }
 
+// The workspaces with one for each agent that has none. Default files come
+// only with a new workspace: the user may delete them from an existing one.
 export function ensureAgentWorkspaces(
   agents: Agent[],
-  workspaces: AgentWorkspace[] | undefined,
+  workspaces: AgentWorkspace[],
 ) {
-  const byAgent = new Map(
-    normalizeWorkspaces(workspaces).map((workspace) => [
-      workspace.agentId,
-      workspace,
-    ]),
+  const missing = agents.filter(
+    (agent) => !workspaces.some((workspace) => workspace.agentId === agent.id),
   );
-  let changed = false;
-  const next = agents.map((agent) => {
-    const workspace = byAgent.get(agent.id);
-    const ensured = ensureWorkspaceDefaults(workspace, agent);
-    if (!workspace || workspace.files.length !== ensured.files.length)
-      changed = true;
-    return ensured;
-  });
-  return { changed, workspaces: next };
+  return missing.length
+    ? [...workspaces, ...missing.map((agent) => createWorkspace(agent.id))]
+    : workspaces;
 }
 
 export function normalizeWorkspaces(value: AgentWorkspace[] | undefined) {
@@ -107,25 +100,6 @@ export function normalizeWorkspace(
         0,
       ) ||
       now,
-  };
-}
-
-export function ensureWorkspaceDefaults(
-  workspace: AgentWorkspace | undefined,
-  agent?: Agent,
-  now = Date.now(),
-) {
-  if (!workspace?.agentId) return createWorkspace(agent?.id || "", now);
-  const normalized = normalizeWorkspace(workspace, now);
-  const existingPaths = new Set(normalized.files.map((file) => file.path));
-  const missingFiles = createDefaultWorkspaceFiles(now).filter(
-    (file) => !existingPaths.has(file.path),
-  );
-  if (!missingFiles.length) return normalized;
-  return {
-    ...normalized,
-    files: normalizeWorkspaceFiles([...normalized.files, ...missingFiles]),
-    updatedAt: now,
   };
 }
 

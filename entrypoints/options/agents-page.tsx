@@ -9,10 +9,8 @@ import {
 import { getMessages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import type { Agent } from "../../src/shared/types";
-import {
-  createWorkspace,
-  ensureAgentWorkspaces,
-} from "../../src/shared/workspace";
+import { createWorkspace } from "../../src/shared/workspace";
+import { storeAgentWorkspaces } from "../../src/shared/workspace-storage";
 import {
   Button,
   Card,
@@ -53,20 +51,7 @@ export function AgentsPage() {
 
   useEffect(() => {
     if (!agents) return;
-    storage.agentWorkspaces
-      .update((current) => {
-        const ensured = ensureAgentWorkspaces(agents, current);
-        return ensured.changed
-          ? [
-              ...ensured.workspaces,
-              ...current.filter(
-                (workspace) =>
-                  !agents.some((agent) => agent.id === workspace.agentId),
-              ),
-            ]
-          : current;
-      })
-      .catch(console.warn);
+    storeAgentWorkspaces(agents).catch(console.warn);
   }, [agents, workspaces]);
 
   function updateAgent(agentId: string, patch: Partial<Agent>) {

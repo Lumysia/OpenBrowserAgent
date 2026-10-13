@@ -1,10 +1,27 @@
 import { storage } from "./storage";
-import type { AgentWorkspace } from "./types";
+import type { Agent, AgentWorkspace } from "./types";
 import {
   deleteWorkspaceFile,
+  ensureAgentWorkspaces,
   upsertWorkspaceFile,
   type WorkspaceMutationResult,
 } from "./workspace";
+
+// The workspace a run of `agent` uses, created if it has none; `store`:
+// kept for its tools.
+export async function workspaceForAgent(agent: Agent, store: boolean) {
+  const workspaces = store
+    ? await storeAgentWorkspaces([agent])
+    : ensureAgentWorkspaces([agent], await storage.agentWorkspaces.get());
+  return workspaces.find((workspace) => workspace.agentId === agent.id)!;
+}
+
+// Every one of `agents` has a stored workspace.
+export function storeAgentWorkspaces(agents: Agent[]) {
+  return storage.agentWorkspaces.update((current) =>
+    ensureAgentWorkspaces(agents, current),
+  );
+}
 
 // All file/memory tools apply an operation to the latest persisted workspace
 // inside storage's shared mutation lock, including independent runs/contexts.
