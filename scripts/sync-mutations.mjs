@@ -6,7 +6,7 @@
 // script runs too. Refuses to run on a dirty tree, since every mutation is
 // undone with `git checkout`.
 import { execFileSync, spawnSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const [davA, davB] = process.argv.slice(2);
 const dirty = execFileSync("git", ["status", "--porcelain"], {
@@ -330,6 +330,11 @@ const MUTATIONS = [
   },
 ];
 
+const SYNC_TESTS = readdirSync("tests")
+  .filter((name) => /^sync-.*\.test\.ts$/.test(name))
+  .sort()
+  .map((name) => `tests/${name}`);
+
 function runTests() {
   const unit = spawnSync(
     "node",
@@ -339,14 +344,7 @@ function runTests() {
       "--test",
       // A mutation that deadlocks fails its test instead of hanging.
       "--test-timeout=30000",
-      "tests/sync-units.test.ts",
-      "tests/sync-engine.test.ts",
-      "tests/sync-races.test.ts",
-      "tests/sync-recovery.test.ts",
-      "tests/sync-review.test.ts",
-      "tests/sync-review2.test.ts",
-      "tests/sync-scenarios.test.ts",
-      "tests/sync-transports.test.ts",
+      ...SYNC_TESTS,
     ],
     { encoding: "utf8" },
   );
