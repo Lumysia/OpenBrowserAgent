@@ -17,6 +17,7 @@ export const ko: LocaleMessages = {
     help: "도움말",
     language: "언어",
     confirm: "확인",
+    moreInfo: "자세히",
   },
   words: { newChat: "새 채팅", agent: "탐색", ask: "질문" },
   sidepanel: {

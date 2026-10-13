@@ -17,6 +17,7 @@ export const jaJP: LocaleMessages = {
     help: "ヘルプ",
     language: "言語",
     confirm: "確認",
+    moreInfo: "詳細",
   },
   words: { newChat: "新しいチャット", agent: "ブラウズ", ask: "質問" },
   sidepanel: {

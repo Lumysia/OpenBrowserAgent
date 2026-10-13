@@ -17,6 +17,7 @@ export const zhTW: LocaleMessages = {
     help: "說明",
     language: "語言",
     confirm: "確認",
+    moreInfo: "更多資訊",
   },
   words: { newChat: "新對話", agent: "瀏覽", ask: "詢問" },
   sidepanel: {

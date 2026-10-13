@@ -17,6 +17,7 @@ export const frFR: LocaleMessages = {
     help: "Aide",
     language: "Langue",
     confirm: "Confirmer",
+    moreInfo: "Plus d’infos",
   },
   words: { newChat: "Nouvelle discussion", agent: "Naviguer", ask: "Demander" },
   sidepanel: {

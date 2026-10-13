@@ -4,7 +4,7 @@ import type { Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { NO_SYNC_BACKEND_ID } from "../../src/shared/sync-backends";
 import { resolveMassDelete, syncNow } from "../../src/shared/sync/client";
-import { SYNC_NOTES } from "../../src/shared/sync/state";
+import { SYNC_NOTES, type SyncWarning } from "../../src/shared/sync/state";
 import {
   Button,
   Card,
@@ -12,6 +12,7 @@ import {
   CardDescription,
   CardTitle,
   Feedback,
+  InfoTip,
 } from "../../src/ui/components";
 import { describeSyncStatus, formatTime } from "../../src/ui/sync-status";
 import { useStoredState } from "../../src/ui/useStoredState";
@@ -79,6 +80,7 @@ export function SyncStatusCard({ t }: { t: Messages }) {
           status?.warnings.map((warning) => (
             <Feedback key={warning} error={!SYNC_NOTES.includes(warning)}>
               {t.sync.warnings[warning]}
+              <WarningDetail t={t} warning={warning} />
             </Feedback>
           ))}
         {enabled &&
@@ -139,6 +141,13 @@ export function SyncStatusCard({ t }: { t: Messages }) {
       </CardContent>
     </Card>
   );
+}
+
+// Only some warnings have more to say than their one line.
+function WarningDetail({ t, warning }: { t: Messages; warning: SyncWarning }) {
+  const details: Partial<Record<SyncWarning, string>> = t.sync.warningDetails;
+  const detail = details[warning];
+  return detail ? <InfoTip label={t.common.moreInfo}>{detail}</InfoTip> : null;
 }
 
 function syncCollectionLabels(t: Messages): Record<string, string> {

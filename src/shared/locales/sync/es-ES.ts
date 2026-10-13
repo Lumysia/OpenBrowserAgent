@@ -15,20 +15,29 @@ export const syncEsES: SyncMessages = {
     "El servidor ha pedido reducir las peticiones (HTTP {status}). La sincronización se reanudará sola.",
   syncNow: "Sincronizar ahora",
   webDavOnly:
-    "Los chats y los adjuntos solo se sincronizan por WebDAV. El almacenamiento de sincronización de la cuenta del navegador es demasiado pequeño para ellos.",
+    "Solo con WebDAV: el almacenamiento de sincronización de la cuenta del navegador es demasiado pequeño.",
   warnings: {
     "unreliable-etags":
-      "Las versiones de archivo de este servidor no son fiables, así que los cambios de este dispositivo no se suben. Usa un servidor WebDAV que envíe ETag fuertes.",
+      "No se puede escribir en este servidor de forma segura. Usa un servidor WebDAV que envíe ETag fuertes.",
     "ignores-preconditions":
-      "Este servidor no admite comprobaciones de versión, así que si dos dispositivos guardan a la vez, una subida puede sobrescribir la otra. Cada dispositivo conserva sus cambios hasta verlos en el servidor y los vuelve a combinar en la siguiente sincronización. Si ambos cambiaron el mismo valor, se conserva el cambio más reciente.",
+      "Este servidor no admite comprobaciones de versión; la sincronización lo resuelve sola.",
     "newer-format":
-      "Otro dispositivo usa un formato de sincronización más reciente. Actualiza OpenBrowserAgent en este dispositivo para seguir sincronizando.",
-    "missing-content":
-      "Falta parte del contenido sincronizado en el servidor. Este dispositivo conserva su copia hasta que otro dispositivo la vuelva a subir.",
+      "Otro dispositivo usa un formato de sincronización más reciente. Actualiza OpenBrowserAgent para seguir sincronizando.",
+    "missing-content": "Falta parte del contenido sincronizado en el servidor.",
     quota:
       "El almacenamiento de sincronización de la cuenta del navegador está lleno. Desactiva algunos elementos o usa WebDAV.",
     "cloned-device":
-      "Otro navegador se estaba sincronizando como este dispositivo (un perfil de navegador copiado o una copia de seguridad restaurada en otro equipo). Este dispositivo ahora se sincroniza como un dispositivo nuevo y se conservan los cambios hechos en ambos.",
+      "Este navegador ahora se sincroniza como un dispositivo nuevo. Se conservan los cambios de ambos.",
+  },
+  warningDetails: {
+    "unreliable-etags":
+      "Las versiones de archivo de este servidor no son fiables, así que este dispositivo no sube sus cambios. Sigue descargando los cambios de otros dispositivos.",
+    "ignores-preconditions":
+      "Si dos dispositivos guardan a la vez, una subida puede sobrescribir la otra. Cada dispositivo conserva sus cambios y los vuelve a combinar en la siguiente sincronización. Si ambos cambiaron el mismo valor, se conserva el cambio más reciente.",
+    "missing-content":
+      "Este dispositivo conserva su copia hasta que otro dispositivo la vuelva a subir.",
+    "cloned-device":
+      "Otro navegador se estaba sincronizando como este dispositivo, por ejemplo un perfil de navegador copiado o una copia de seguridad restaurada en otro equipo.",
   },
   massDeleteTitle: "Confirma eliminaciones desde otro dispositivo",
   massDeleteDescription:

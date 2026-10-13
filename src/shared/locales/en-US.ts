@@ -17,6 +17,7 @@ export const enUS = {
     help: "Help",
     language: "Language",
     confirm: "Confirm",
+    moreInfo: "More info",
   },
   words: {
     newChat: "New Chat",

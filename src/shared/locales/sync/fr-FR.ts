@@ -15,20 +15,30 @@ export const syncFrFR: SyncMessages = {
     "Le serveur a demandé de ralentir (HTTP {status}). La synchronisation reprendra d’elle-même.",
   syncNow: "Synchroniser maintenant",
   webDavOnly:
-    "Les discussions et les pièces jointes se synchronisent uniquement via WebDAV. Le stockage de synchronisation du compte du navigateur est trop petit pour elles.",
+    "WebDAV uniquement : le stockage de synchronisation du compte du navigateur est trop petit.",
   warnings: {
     "unreliable-etags":
-      "Les versions de fichiers de ce serveur ne sont pas fiables : les modifications de cet appareil ne sont donc pas envoyées. Utilisez un serveur WebDAV qui fournit des ETag forts.",
+      "Impossible d’écrire sur ce serveur en toute sécurité. Utilisez un serveur WebDAV qui fournit des ETag forts.",
     "ignores-preconditions":
-      "Ce serveur ne prend pas en charge les contrôles de version : si deux appareils enregistrent au même moment, un envoi peut écraser l’autre. Chaque appareil conserve ses modifications jusqu’à les voir sur le serveur et les fusionne de nouveau à la synchronisation suivante. Si les deux ont modifié la même valeur, la modification la plus récente est conservée.",
+      "Ce serveur ne prend pas en charge les contrôles de version ; la synchronisation s’en charge.",
     "newer-format":
-      "Un autre appareil utilise un format de synchronisation plus récent. Mettez à jour OpenBrowserAgent sur cet appareil pour continuer à synchroniser.",
+      "Un autre appareil utilise un format de synchronisation plus récent. Mettez à jour OpenBrowserAgent pour continuer à synchroniser.",
     "missing-content":
-      "Une partie du contenu synchronisé manque sur le serveur. Cet appareil garde sa copie jusqu’à ce qu’un autre appareil l’envoie à nouveau.",
+      "Une partie du contenu synchronisé manque sur le serveur.",
     quota:
       "Le stockage de synchronisation du compte du navigateur est plein. Désactivez certains éléments ou utilisez WebDAV.",
     "cloned-device":
-      "Un autre navigateur se synchronisait en tant que cet appareil (un profil de navigateur copié ou une sauvegarde restaurée sur un autre ordinateur). Cet appareil se synchronise désormais comme un nouvel appareil, et les modifications faites des deux côtés sont conservées.",
+      "Ce navigateur se synchronise désormais comme un nouvel appareil. Les modifications des deux côtés sont conservées.",
+  },
+  warningDetails: {
+    "unreliable-etags":
+      "Les versions de fichiers de ce serveur ne sont pas fiables : cet appareil n’envoie donc pas ses modifications, mais reçoit toujours celles des autres appareils.",
+    "ignores-preconditions":
+      "Si deux appareils enregistrent au même moment, un envoi peut écraser l’autre. Chaque appareil conserve ses modifications et les fusionne de nouveau à la synchronisation suivante. Si les deux ont modifié la même valeur, la modification la plus récente est conservée.",
+    "missing-content":
+      "Cet appareil garde sa copie jusqu’à ce qu’un autre appareil l’envoie à nouveau.",
+    "cloned-device":
+      "Un autre navigateur se synchronisait en tant que cet appareil, par exemple un profil de navigateur copié ou une sauvegarde restaurée sur un autre ordinateur.",
   },
   massDeleteTitle: "Confirmer les suppressions venant d’un autre appareil",
   massDeleteDescription:

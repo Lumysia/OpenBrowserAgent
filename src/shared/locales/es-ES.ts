@@ -17,6 +17,7 @@ export const esES: LocaleMessages = {
     help: "Ayuda",
     language: "Idioma",
     confirm: "Confirmar",
+    moreInfo: "Más información",
   },
   words: { newChat: "Nuevo chat", agent: "Navegar", ask: "Preguntar" },
   sidepanel: {

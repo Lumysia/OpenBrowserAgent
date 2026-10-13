@@ -17,6 +17,7 @@ export const deDE: LocaleMessages = {
     help: "Hilfe",
     language: "Sprache",
     confirm: "Bestätigen",
+    moreInfo: "Mehr Infos",
   },
   words: { newChat: "Neuer Chat", agent: "Browsen", ask: "Fragen" },
   sidepanel: {

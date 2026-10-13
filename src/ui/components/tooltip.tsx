@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+import { Info } from "lucide-react";
 import { cn } from "../utils";
 import { usePortalContainer } from "./portal-container";
 
@@ -40,8 +41,34 @@ function IconTooltip({
   );
 }
 
+// Detail behind an info icon, for text only needed on demand. The icon is a
+// focusable button so keyboard users can reach the tooltip.
+function InfoTip({
+  label,
+  side = "top",
+  children,
+}: {
+  label: string;
+  side?: "top" | "right" | "bottom" | "left";
+  children: React.ReactNode;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button type="button" className="ui-info-tip" aria-label={label}>
+          <Info size={14} aria-hidden />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side={side} className="ui-info-tip-content">
+        {children}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 export {
   IconTooltip,
+  InfoTip,
   Tooltip,
   TooltipContent,
   TooltipProvider,

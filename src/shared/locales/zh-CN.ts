@@ -17,6 +17,7 @@ export const zhCN: LocaleMessages = {
     help: "帮助",
     language: "语言",
     confirm: "确认",
+    moreInfo: "更多信息",
   },
   words: { newChat: "新对话", agent: "浏览", ask: "询问" },
   sidepanel: {

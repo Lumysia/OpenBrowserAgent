@@ -15,20 +15,30 @@ export const syncDeDE: SyncMessages = {
     "Der Server hat um weniger Anfragen gebeten (HTTP {status}). Die Synchronisierung läuft von selbst weiter.",
   syncNow: "Jetzt synchronisieren",
   webDavOnly:
-    "Chats und Anhänge werden nur über WebDAV synchronisiert. Der Sync-Speicher des Browserkontos ist dafür zu klein.",
+    "Nur über WebDAV: Der Sync-Speicher des Browserkontos ist zu klein.",
   warnings: {
     "unreliable-etags":
-      "Die Dateiversionen dieses Servers sind unzuverlässig, daher werden Änderungen dieses Geräts nicht hochgeladen. Verwenden Sie einen WebDAV-Server, der starke ETags sendet.",
+      "Auf diesen Server kann nicht sicher geschrieben werden. Verwenden Sie einen WebDAV-Server, der starke ETags sendet.",
     "ignores-preconditions":
-      "Dieser Server unterstützt keine Versionsprüfungen. Speichern zwei Geräte gleichzeitig, kann ein Upload den anderen überschreiben. Jedes Gerät behält seine Änderungen, bis es sie auf dem Server sieht, und führt sie bei der nächsten Synchronisierung erneut zusammen. Haben beide denselben Wert geändert, bleibt die neuere Änderung erhalten.",
+      "Dieser Server unterstützt keine Versionsprüfungen; die Synchronisierung gleicht das aus.",
     "newer-format":
-      "Ein anderes Gerät verwendet ein neueres Synchronisierungsformat. Aktualisieren Sie OpenBrowserAgent auf diesem Gerät, um weiter zu synchronisieren.",
+      "Ein anderes Gerät verwendet ein neueres Synchronisierungsformat. Aktualisieren Sie OpenBrowserAgent, um weiter zu synchronisieren.",
     "missing-content":
-      "Ein Teil der synchronisierten Inhalte fehlt auf dem Server. Dieses Gerät behält seine Kopie, bis ein anderes Gerät sie erneut hochlädt.",
+      "Ein Teil der synchronisierten Inhalte fehlt auf dem Server.",
     quota:
       "Der Sync-Speicher des Browserkontos ist voll. Schalten Sie einige Sync-Elemente aus oder verwenden Sie WebDAV.",
     "cloned-device":
-      "Ein anderer Browser hat als dieses Gerät synchronisiert (ein kopiertes Browserprofil oder eine auf einem anderen Computer wiederhergestellte Sicherung). Dieses Gerät synchronisiert jetzt als neues Gerät; die Änderungen auf beiden bleiben erhalten.",
+      "Dieser Browser synchronisiert jetzt als neues Gerät. Änderungen auf beiden bleiben erhalten.",
+  },
+  warningDetails: {
+    "unreliable-etags":
+      "Die Dateiversionen dieses Servers sind unzuverlässig, daher lädt dieses Gerät keine Änderungen hoch. Änderungen anderer Geräte werden weiterhin heruntergeladen.",
+    "ignores-preconditions":
+      "Speichern zwei Geräte gleichzeitig, kann ein Upload den anderen überschreiben. Jedes Gerät behält seine Änderungen und führt sie bei der nächsten Synchronisierung erneut zusammen. Haben beide denselben Wert geändert, bleibt die neuere Änderung erhalten.",
+    "missing-content":
+      "Dieses Gerät behält seine Kopie, bis ein anderes Gerät sie erneut hochlädt.",
+    "cloned-device":
+      "Ein anderer Browser hat als dieses Gerät synchronisiert, etwa ein kopiertes Browserprofil oder eine auf einem anderen Computer wiederhergestellte Sicherung.",
   },
   massDeleteTitle: "Löschungen von einem anderen Gerät bestätigen",
   massDeleteDescription:

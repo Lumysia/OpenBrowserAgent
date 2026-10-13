@@ -17,6 +17,7 @@ export const ptBR: LocaleMessages = {
     help: "Ajuda",
     language: "Idioma",
     confirm: "Confirmar",
+    moreInfo: "Mais informações",
   },
   words: { newChat: "Nova conversa", agent: "Navegar", ask: "Perguntar" },
   sidepanel: {
