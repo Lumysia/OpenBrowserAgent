@@ -3,6 +3,7 @@
 // pair), and some test must then fail. `needsServer`: only the two-device
 // WebDAV script notices it.
 import { REVIEW5_MUTATIONS } from "./sync-mutation-list-review5.mjs";
+import { REVIEW6_MUTATIONS } from "./sync-mutation-list-review6.mjs";
 
 export const MUTATIONS = [
   {
@@ -235,8 +236,8 @@ export const MUTATIONS = [
   {
     name: "a push confirmed when the server accepts the write",
     file: "src/shared/sync/engine.ts",
-    from: "        await updateEntries(env, outcome.pushes, snapshot, sentEntry, payloads);",
-    to: "        await updateEntries(env, outcome.pushes, snapshot, confirmedEntry, payloads);",
+    from: "      await updateEntries(env, outcome.pushes, snapshot, sentEntry, payloads);",
+    to: "      await updateEntries(env, outcome.pushes, snapshot, confirmedEntry, payloads);",
   },
   {
     name: "a push confirmed by a remote record that does not include it",
@@ -247,7 +248,7 @@ export const MUTATIONS = [
   {
     name: "H1: pushes are not recorded, so a later change keeps its old base",
     file: "src/shared/sync/engine.ts",
-    from: "        await updateEntries(env, outcome.pushes, snapshot, sentEntry, payloads);",
+    from: "      await updateEntries(env, outcome.pushes, snapshot, sentEntry, payloads);",
     to: "",
   },
   {
@@ -265,13 +266,13 @@ export const MUTATIONS = [
   {
     name: "H1: a change does not include the version it was made from",
     file: "src/shared/sync/clocks.ts",
-    from: "  const seen = seenFrom(clock, [previous]);",
-    to: "  const seen = previous?.local ? seenFrom(clock, [previous]) : undefined;",
+    from: "  const seen = seenFrom(clock, [previous], previous);",
+    to: "  const seen = previous?.local ? seenFrom(clock, [previous], previous) : undefined;",
   },
   {
     name: "H1: a merged version does not include the versions it merged",
     file: "src/shared/sync/engine-merge.ts",
-    from: "  const seen = seenFrom(clock, decision.versions);",
+    from: "  const seen = seenFrom(clock, decision.versions, from);",
     to: "  const seen = undefined;",
   },
   {
@@ -432,4 +433,5 @@ export const MUTATIONS = [
     to: "",
   },
   ...REVIEW5_MUTATIONS,
+  ...REVIEW6_MUTATIONS,
 ];

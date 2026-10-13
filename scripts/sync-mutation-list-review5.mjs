@@ -15,14 +15,14 @@ export const REVIEW5_MUTATIONS = [
   {
     name: "R2: a version leaves out the clocks of its own device id",
     file: "src/shared/sync/clocks.ts",
-    from: "      if (!parsed?.wall || held === clock) continue;",
-    to: "      if (!parsed?.wall || parsed.device === parseClock(clock)?.device) continue;",
+    from: "      if (wall && wall >= oldest && held !== clock && !left.has(held))",
+    to: "      if (wall && wall >= oldest && held !== clock && !left.has(held) && parseClock(held)?.device !== parseClock(clock)?.device)",
   },
   {
     name: "R2: a change on top of an unconfirmed one does not include it",
     file: "src/shared/sync/clocks.ts",
-    from: "  const seen = seenFrom(clock, [previous]);",
-    to: "  const seen = previous?.local ? previous.seen : seenFrom(clock, [previous]);",
+    from: "  const seen = seenFrom(clock, [previous], previous);",
+    to: "  const seen = previous?.local ? previous.seen : seenFrom(clock, [previous], previous);",
   },
   {
     name: "R2: a clock of this device's id it never made goes unnoticed",
