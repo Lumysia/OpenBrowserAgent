@@ -8,7 +8,12 @@ import { compareClocks, isClock, type Clock } from "./hlc";
 // "deleted".
 
 export const ROOT_FORMAT = "openbrowseragent.sync.v2";
-const ROOT_FORMAT_PREFIX = "openbrowseragent.sync.";
+const ROOT_FORMAT_VERSION = /^openbrowseragent\.sync\.v(\d+)$/;
+
+const formatVersion = (format: unknown) =>
+  typeof format === "string"
+    ? Number(ROOT_FORMAT_VERSION.exec(format)?.[1] ?? NaN)
+    : NaN;
 
 export type SyncRecord = {
   clock: Clock;
@@ -60,10 +65,7 @@ export function validateRoot(value: unknown): Root {
   if (!isObject(value))
     throw new SyncFormatError("Sync root is not an object.");
   if (value.format !== ROOT_FORMAT) {
-    const newer =
-      typeof value.format === "string" &&
-      value.format.startsWith(ROOT_FORMAT_PREFIX) &&
-      value.format > ROOT_FORMAT;
+    const newer = formatVersion(value.format) > formatVersion(ROOT_FORMAT);
     throw new SyncFormatError(
       `Unsupported sync root format: ${String(value.format)}`,
       newer,

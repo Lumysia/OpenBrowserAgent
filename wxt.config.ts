@@ -40,6 +40,8 @@ export default defineConfig({
     name: "__MSG_extName__",
     description: "__MSG_extDescription__",
     version: "0.1.0",
+    // Shown in the browser's extension list; the store needs a plain number.
+    version_name: "0.1.0 beta 1",
     default_locale: "en",
     permissions:
       browser === "safari"
