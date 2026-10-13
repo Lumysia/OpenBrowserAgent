@@ -8,7 +8,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getMessages } from "../../src/shared/i18n";
 import {
   createMcpServerDraft,
@@ -16,9 +16,9 @@ import {
   importMcpServersFromJson,
   isMcpServerTested,
   parseHeadersJson,
-  stringifyHeaders,
 } from "../../src/shared/mcp";
 import { listMcpServerTools } from "../../src/shared/mcp-client";
+import { McpServerFields, untestedPatch } from "./mcp-server-fields";
 import { storage } from "../../src/shared/storage";
 import type { McpServerConfig } from "../../src/shared/types";
 import {
@@ -32,9 +32,8 @@ import {
   Card,
   CardContent,
   CardDescription,
+  EmptyState,
   CardTitle,
-  Input,
-  Label,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -43,6 +42,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  SettingsSummary,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 
@@ -166,9 +166,11 @@ export function McpPage() {
           <p className="muted">{t.options.mcpServersDescription}</p>
         </div>
         <div className="settings-page-actions">
-          <Button onClick={addServer}>
-            <Plus size={15} /> {t.options.newMcpServer}
-          </Button>
+          {items.length ? (
+            <Button onClick={addServer}>
+              <Plus size={15} /> {t.options.newMcpServer}
+            </Button>
+          ) : null}
           <Tooltip>
             <Popover open={importMenuOpen} onOpenChange={setImportMenuOpen}>
               <TooltipTrigger asChild>
@@ -209,23 +211,32 @@ export function McpPage() {
           </Tooltip>
         </div>
       </div>
+      {!items.length ? (
+        <EmptyState
+          icon={<Plug size={28} />}
+          title={t.options.mcpServersEmpty}
+          action={
+            <Button onClick={addServer}>
+              <Plus size={15} /> {t.options.newMcpServer}
+            </Button>
+          }
+        />
+      ) : null}
       <Accordion type="multiple" className="stack">
         {items.map((server) => (
           <AccordionItem key={server.id} value={server.id}>
             <AccordionHeader className="ui-accordion-header-with-actions">
               <AccordionTriggerButton hideChevron>
-                <span className="settings-summary">
-                  <span className="settings-summary-title">
-                    <Plug size={18} />
-                    <span>{server.name || t.options.newMcpServer}</span>
-                    <Badge>{server.id}</Badge>
-                  </span>
-                  <small>
-                    {server.description ||
-                      server.url ||
-                      t.options.mcpServerUrlPlaceholder}
-                  </small>
-                </span>
+                <SettingsSummary
+                  icon={<Plug size={18} />}
+                  title={server.name || t.options.newMcpServer}
+                  badges={<Badge title={server.id}>{server.id}</Badge>}
+                  description={
+                    server.description ||
+                    server.url ||
+                    t.options.mcpServerUrlPlaceholder
+                  }
+                />
               </AccordionTriggerButton>
               <span
                 className="accordion-trigger-actions"
@@ -289,100 +300,12 @@ export function McpPage() {
             </AccordionHeader>
             <AccordionContent>
               <div className="stack">
-                <Label>
-                  {t.options.mcpServerName}
-                  <Input
-                    value={server.name}
-                    onChange={(event) =>
-                      updateServer(server.id, {
-                        name: event.currentTarget.value,
-                      })
-                    }
-                  />
-                </Label>
-                <Label>
-                  {t.options.mcpServerDescription}
-                  <Textarea
-                    value={server.description || ""}
-                    onChange={(event) =>
-                      updateServer(server.id, {
-                        description: event.currentTarget.value,
-                      })
-                    }
-                  />
-                </Label>
-                <Label>
-                  {t.options.mcpServerUrl}
-                  <Input
-                    value={server.url}
-                    placeholder={t.options.mcpServerUrlPlaceholder}
-                    onChange={(event) =>
-                      updateServer(server.id, {
-                        url: event.currentTarget.value,
-                        ...untestedPatch(),
-                      })
-                    }
-                  />
-                </Label>
-                <McpHeadersField
-                  label={t.options.mcpServerHeaders}
-                  value={server.headers}
-                  onChange={(value) => updateHeaders(server.id, value)}
+                <McpServerFields
+                  t={t}
+                  server={server}
+                  onUpdate={(patch) => updateServer(server.id, patch)}
+                  onHeadersChange={(value) => updateHeaders(server.id, value)}
                 />
-                {!!server.tools?.length && (
-                  <Accordion
-                    type="single"
-                    collapsible
-                    className="settings-nested-accordion"
-                  >
-                    <AccordionItem value="tools">
-                      <AccordionTriggerButton>
-                        <span className="settings-summary">
-                          <CardTitle className="settings-section-title">
-                            {t.options.mcpTools}
-                          </CardTitle>
-                          <small>
-                            {t.options.mcpTestSuccess.replace(
-                              "{count}",
-                              String(server.tools.length),
-                            )}
-                          </small>
-                        </span>
-                      </AccordionTriggerButton>
-                      <AccordionContent className="stack">
-                        {server.tools.map((tool) => (
-                          <div
-                            className="setting-switch-row compact"
-                            key={tool.name}
-                          >
-                            <div>
-                              <CardTitle className="settings-section-title">
-                                {tool.name}
-                              </CardTitle>
-                              {tool.description && (
-                                <CardDescription>
-                                  {tool.description}
-                                </CardDescription>
-                              )}
-                            </div>
-                            <Switch
-                              checked={tool.enabled}
-                              onCheckedChange={(enabled) =>
-                                updateServer(server.id, {
-                                  tools: (server.tools || []).map((item) =>
-                                    item.name === tool.name
-                                      ? { ...item, enabled }
-                                      : item,
-                                  ),
-                                })
-                              }
-                            />
-                          </div>
-                        ))}
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                )}
                 {server.lastTestError && (
                   <CardDescription>{server.lastTestError}</CardDescription>
                 )}
@@ -429,15 +352,6 @@ function cloneDefault<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function untestedPatch() {
-  return {
-    enabled: false,
-    tools: [],
-    testedAt: undefined,
-    lastTestError: "",
-  } satisfies Partial<McpServerConfig>;
-}
-
 function mergeToolSelections(
   existing: McpServerConfig["tools"],
   next: NonNullable<McpServerConfig["tools"]>,
@@ -449,33 +363,4 @@ function mergeToolSelections(
     ...tool,
     enabled: enabledByName.get(tool.name) ?? tool.enabled,
   }));
-}
-
-function McpHeadersField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: Record<string, string> | undefined;
-  onChange: (value: string) => void;
-}) {
-  const [draft, setDraft] = useState(() => stringifyHeaders(value));
-
-  useEffect(() => setDraft(stringifyHeaders(value)), [value]);
-
-  return (
-    <Label>
-      {label}
-      <Textarea
-        value={draft}
-        placeholder={'{\n  "Authorization": "Bearer ..."\n}'}
-        onChange={(event) => {
-          const next = event.currentTarget.value;
-          setDraft(next);
-          onChange(next);
-        }}
-      />
-    </Label>
-  );
 }

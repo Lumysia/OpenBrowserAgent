@@ -17,6 +17,7 @@ export const ko: LocaleMessages = {
     help: "도움말",
     language: "언어",
     confirm: "확인",
+    moreInfo: "자세히",
   },
   words: { newChat: "새 채팅", agent: "탐색", ask: "질문" },
   sidepanel: {
@@ -130,7 +131,7 @@ export const ko: LocaleMessages = {
     removeTab: "탭 제거",
     attachmentTooLarge: "일부 파일이 너무 커서 첨부할 수 없습니다: {names}",
     attachmentsUnsupportedRetry:
-      "선택한 모델이 비텍스트 콘텐츠 형식을 거부하여 텍스트와 파일 정보만으로 다시 시도했습니다.",
+      "모델이 첨부 파일을 직접 받지 못해 텍스트와 파일 정보만 보냈습니다.",
     attachmentOnlyMessage: "첨부 파일을 확인해 주세요.",
     skillOnlyMessage: "선택한 스킬을 사용해 주세요.",
     noSkillsFound: "일치하는 스킬이 없습니다",
@@ -289,22 +290,21 @@ export const ko: LocaleMessages = {
     deleteAgent: "에이전트 삭제",
     agentWorkspace: "에이전트 워크스페이스",
     agentWorkspaceDescription:
-      "이 에이전트 전용 텍스트 파일입니다. MEMORY.md와 USER.md는 매 채팅마다 에이전트에게 제공되고, 다른 파일은 필요할 때 읽습니다.",
+      "이 에이전트 전용 파일입니다. MEMORY.md와 USER.md는 항상 제공되고, 다른 파일은 필요할 때 읽습니다.",
     agentWorkspaceNewFile: "새 워크스페이스 파일",
     agentWorkspaceConflict:
       "편집 중에 이 파일이 변경되었습니다. 저장하기 전에 다시 열어 최신 내용을 확인하세요.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
-    agentWorkspaceEmpty: "아직 워크스페이스 파일이 없습니다.",
     resetDefaultAgents: "기본 에이전트 재설정",
     resetDefaultAgentsDescription:
-      "현재 에이전트를 내장 기본값으로 바꿉니다. 사용자 지정 에이전트와 워크스페이스는 제거됩니다.",
+      "내장 에이전트로 되돌리고 사용자 지정 에이전트와 워크스페이스를 제거합니다.",
     sync: "동기화",
     providers: "제공업체",
     mcpServers: "MCP 서버",
     localExecutionBridges: "로컬 실행 브리지",
     localExecutionBridgesDescription:
-      "동기화할 수 있는 로컬 또는 원격 실행 브리지를 구성합니다. 확장 프로그램은 셸 명령을 브리지로 보내고, 브리지는 호스트에서 실행합니다.",
-    localExecutionBridgesEmpty: "아직 구성된 로컬 실행 브리지가 없습니다.",
+      "에이전트가 브리지를 통해 이 컴퓨터나 원격 호스트에서 셸 명령을 실행합니다.",
+    localExecutionBridgesEmpty: "아직 실행 브리지가 없습니다",
     newLocalExecutionBridge: "새 실행 브리지",
     localExecutionBridgeName: "실행 브리지 이름",
     localExecutionBridgeDescription: "설명",
@@ -328,12 +328,18 @@ export const ko: LocaleMessages = {
       "자신의 API 키로 OpenBrowserAgent를 원하는 AI 제공업체에 연결하세요.",
     mcpServersDescription:
       "에이전트가 사용할 원격 Streamable HTTP MCP 서버를 구성합니다.",
+    mcpServersEmpty: "아직 MCP 서버가 없습니다",
     newMcpServer: "새 MCP 서버",
     mcpServerName: "서버 이름",
     mcpServerDescription: "설명",
     mcpServerUrl: "엔드포인트 URL",
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "헤더 JSON",
+    mcpOmitOrigin: "브라우저 Origin 없이 보내기",
+    mcpOmitOriginHint:
+      "서버가 브라우저 요청을 거부할 때 켜세요(예: “Browser-origin requests are not allowed.”). 켜면 이 서버로 보내는 요청에서 브라우저가 붙이는 Origin 헤더를 제거합니다.",
+    mcpOmitOriginUnsupported:
+      "이 브라우저에서는 Origin 헤더를 제거할 수 없어, 브라우저 요청을 거부하는 서버는 여기서 사용할 수 없습니다.",
     mcpServerEnabled: "활성화",
     mcpEnableRequiresTest: "사용하기 전에 이 MCP 서버를 먼저 테스트하세요.",
     mcpEnableTooltipTested: "테스트를 통과했고 도구 {count}개를 찾았습니다.",
@@ -351,7 +357,7 @@ export const ko: LocaleMessages = {
     resetBuiltins: "내장 항목 재설정",
     resetDefaultMcpServers: "기본 MCP 서버 재설정",
     resetDefaultMcpServersDescription:
-      "현재 MCP 서버를 내장 기본값으로 바꿉니다. 사용자 지정 서버와 테스트 결과가 제거됩니다.",
+      "내장 MCP 서버로 되돌리고 사용자 지정 서버를 제거합니다.",
     selectModel: "모델 선택",
     selectModelDescription:
       "주 채팅 모델을 선택하세요. 에이전트는 도구 호출을 지원하는 모델에서 가장 잘 작동합니다.",
@@ -422,17 +428,20 @@ export const ko: LocaleMessages = {
     builtinSkillBadge: "내장",
     overrideSkillBadge: "사용자 지정된 내장 스킬",
     customizeSkill: "사용자 지정",
+    customizeSkillHint:
+      "내장 스킬은 읽기 전용입니다. 사용자 지정을 누르면 편집할 수 있는 사본이 만들어집니다.",
     revertSkillToBuiltin: "내장 버전으로 되돌리기",
     viewFile: "파일 보기",
     skillInvokeMode: "사용 시점",
     skillInvokeAuto: "자동",
     skillInvokeManual: "수동",
     skillInvokeOff: "끔",
-    skillInvokeHint:
-      "자동: 요청에 맞으면 에이전트가 스킬을 사용합니다. 수동: 사이드 패널에서 / 또는 +로 선택할 때만 사용합니다. 끔: 사용하지 않습니다. 내장 스킬은 읽기 전용이며, 사용자 지정을 누르면 편집할 수 있는 사본이 만들어집니다.",
+    skillInvokeAutoHint: "요청에 맞으면 사용합니다",
+    skillInvokeManualHint: "/ 또는 +로 선택할 때만 사용합니다",
+    skillInvokeOffHint: "사용하지 않습니다",
     skillListOverBudget: "스킬 목록이 너무 깁니다",
     skillListOverBudgetDescription:
-      "자동 스킬의 설명이 매 요청마다 {chars}자를 차지합니다(한도 {limit}자). 자주 쓰지 않는 스킬은 수동으로 바꾸거나 설명을 줄이세요.",
+      "자동 스킬 설명이 {chars}/{limit}자를 차지합니다. 자주 쓰지 않는 스킬은 수동으로 바꾸거나 설명을 줄이세요.",
     languageDescription: "확장 프로그램 UI에 사용할 언어를 선택하세요.",
     colorScheme: "색상 구성",
     colorSchemeDescription:
@@ -472,13 +481,13 @@ export const ko: LocaleMessages = {
       "Streamable HTTP MCP 서버 구성을 현재 동기화 백엔드로 동기화합니다.",
     syncLocalExecutionBridges: "로컬 실행 브리지 동기화",
     syncLocalExecutionBridgesDescription:
-      "실행 브리지 설정, 네이티브 호스트 이름, 실행 호스트 주소, 브리지 시크릿, 셸 구성 ID, 기본 작업 디렉터리를 현재 동기화 백엔드로 동기화합니다.",
+      "브리지 시크릿을 포함한 실행 브리지 설정을 현재 동기화 백엔드로 동기화합니다.",
     syncChats: "채팅 동기화",
     syncChatsDescription:
       "채팅 기록을 현재 동기화 백엔드로 동기화합니다. 대화를 이 기기에만 보관하려면 끄세요.",
     syncChatAttachments: "채팅 첨부 파일 동기화",
     syncChatAttachmentsDescription:
-      "선택한 첨부 파일 지원 동기화 백엔드로 채팅에 업로드한 파일을 동기화합니다. 브라우저 계정 동기화는 브라우저 할당량 제한 때문에 첨부 파일에 사용할 수 없습니다.",
+      "채팅에 업로드한 파일을 현재 동기화 백엔드로 동기화합니다.",
     autoScroll: "자동 스크롤",
     autoScrollDescription:
       "메시지가 스트리밍되는 동안 최신 AI 출력을 자동으로 보이게 유지합니다.",
@@ -490,13 +499,13 @@ export const ko: LocaleMessages = {
       "에이전트가 실행할 수 있는 도구 단계 수를 설정합니다. 0으로 설정하면 도구 호출을 사용하지 않습니다.",
     helperModel: "보조 모델",
     helperModelDescription:
-      "긴 작업 요약 같은 백그라운드 요청에 사용할 모델입니다. 기본적으로 해당 채팅의 모델을 사용합니다.",
+      "요약 같은 백그라운드 작업에 사용합니다. 기본값은 해당 채팅의 모델입니다.",
     modelSameAsChat: "채팅 모델과 동일",
     debug: "디버그",
     debugDescription: "OpenBrowserAgent 데이터를 초기화하는 개발자 도구입니다.",
     debugResetTitle: "OpenBrowserAgent 데이터 지우기",
     debugResetDescription:
-      "OpenBrowserAgent가 쓴 로컬 저장소, 브라우저 동기화 저장소, 채팅, 제공업체, 스킬, 환경설정, 앱 동기화 캐시를 삭제합니다.",
+      "아래에서 선택한 OpenBrowserAgent 데이터를 영구 삭제합니다. 되돌릴 수 없습니다.",
     debugResetConfirmLabel: "확인하려면 {phrase}을(를) 입력하세요.",
     debugResetConfirmPhrase: "RESET",
     debugResetScope: "저장 위치",

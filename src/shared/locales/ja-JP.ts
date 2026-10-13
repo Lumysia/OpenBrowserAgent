@@ -17,6 +17,7 @@ export const jaJP: LocaleMessages = {
     help: "ヘルプ",
     language: "言語",
     confirm: "確認",
+    moreInfo: "詳細",
   },
   words: { newChat: "新しいチャット", agent: "ブラウズ", ask: "質問" },
   sidepanel: {
@@ -133,7 +134,7 @@ export const jaJP: LocaleMessages = {
     attachmentTooLarge:
       "サイズが大きすぎて添付できなかったファイルがあります: {names}",
     attachmentsUnsupportedRetry:
-      "選択したモデルが非テキスト形式のコンテンツを拒否したため、テキストとファイル情報のみで再試行しました。",
+      "モデルがこれらの添付ファイルを直接扱えなかったため、テキストとファイル情報のみを送りました。",
     attachmentOnlyMessage: "添付ファイルを確認してください。",
     skillOnlyMessage: "選択したスキルを使ってください。",
     noSkillsFound: "一致するスキルはありません",
@@ -317,23 +318,21 @@ export const jaJP: LocaleMessages = {
     deleteAgent: "エージェントを削除",
     agentWorkspace: "エージェントワークスペース",
     agentWorkspaceDescription:
-      "このエージェント専用のテキストファイル。MEMORY.md と USER.md は毎回のチャットでエージェントに渡され、ほかのファイルは必要なときに読み込まれます。",
+      "このエージェント専用のファイル。MEMORY.md と USER.md は常に渡され、ほかのファイルは必要なときに読み込まれます。",
     agentWorkspaceNewFile: "新しいワークスペースファイル",
     agentWorkspaceConflict:
       "編集中にこのファイルが変更されました。保存する前に開き直して最新の内容を確認してください。",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
-    agentWorkspaceEmpty: "ワークスペースファイルはまだありません。",
     resetDefaultAgents: "既定のエージェントにリセット",
     resetDefaultAgentsDescription:
-      "現在のエージェントを組み込みの既定エージェントに置き換えます。カスタムエージェントとワークスペースは削除されます。",
+      "組み込みのエージェントに戻し、カスタムエージェントとそのワークスペースを削除します。",
     sync: "同期",
     providers: "プロバイダー",
     mcpServers: "MCP サーバー",
     localExecutionBridges: "ローカル実行ブリッジ",
     localExecutionBridgesDescription:
-      "同期可能なローカルまたはリモートの実行ブリッジを設定します。拡張機能はシェルコマンドをブリッジに送り、ブリッジがホスト上で実行します。",
-    localExecutionBridgesEmpty:
-      "ローカル実行ブリッジはまだ設定されていません。",
+      "ブリッジ経由で、このコンピューターやリモートホスト上のシェルコマンドをエージェントが実行できます。",
+    localExecutionBridgesEmpty: "実行ブリッジはまだありません",
     newLocalExecutionBridge: "新しい実行ブリッジ",
     localExecutionBridgeName: "実行ブリッジ名",
     localExecutionBridgeDescription: "説明",
@@ -357,12 +356,18 @@ export const jaJP: LocaleMessages = {
       "自分の API キーを使って、OpenBrowserAgent をお気に入りの AI プロバイダーに接続します。",
     mcpServersDescription:
       "エージェントが使用できるリモート Streamable HTTP MCP サーバーを設定します。",
+    mcpServersEmpty: "MCP サーバーはまだありません",
     newMcpServer: "新しい MCP サーバー",
     mcpServerName: "サーバー名",
     mcpServerDescription: "説明",
     mcpServerUrl: "エンドポイント URL",
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "ヘッダー（JSON）",
+    mcpOmitOrigin: "ブラウザーの Origin を送らない",
+    mcpOmitOriginHint:
+      "サーバーがブラウザーからのリクエストを拒否する場合（例:「Browser-origin requests are not allowed.」）にオンにします。オンにすると、このサーバーへのリクエストからブラウザーが付ける Origin ヘッダーを外します。",
+    mcpOmitOriginUnsupported:
+      "このブラウザーでは Origin ヘッダーを外せないため、ブラウザーからのリクエストを拒否するサーバーはここでは使えません。",
     mcpServerEnabled: "有効",
     mcpEnableRequiresTest:
       "有効にする前にこの MCP サーバーをテストしてください。",
@@ -383,7 +388,7 @@ export const jaJP: LocaleMessages = {
     resetBuiltins: "組み込み項目をリセット",
     resetDefaultMcpServers: "既定の MCP サーバーにリセット",
     resetDefaultMcpServersDescription:
-      "現在の MCP サーバーを組み込みの既定値に置き換えます。カスタムサーバーとテスト結果は削除されます。",
+      "組み込みの MCP サーバーに戻し、カスタムサーバーを削除します。",
     selectModel: "モデルを選択",
     selectModelDescription:
       "メインのチャットモデルを選択します。エージェントにはツール呼び出しに対応したモデルがおすすめです。",
@@ -455,17 +460,20 @@ export const jaJP: LocaleMessages = {
     builtinSkillBadge: "組み込み",
     overrideSkillBadge: "カスタマイズ済みの組み込み",
     customizeSkill: "カスタマイズ",
+    customizeSkillHint:
+      "組み込みスキルは読み取り専用です。「カスタマイズ」で編集できる自分用のコピーを作成します。",
     revertSkillToBuiltin: "組み込みに戻す",
     viewFile: "ファイルを表示",
     skillInvokeMode: "使用タイミング",
     skillInvokeAuto: "自動",
     skillInvokeManual: "手動",
     skillInvokeOff: "オフ",
-    skillInvokeHint:
-      "自動：リクエストに合うときにエージェントがスキルを使います。手動：サイドパネルで / または + から選んだときだけ使います。オフ：使いません。組み込みスキルは読み取り専用です。編集するには「カスタマイズ」で自分用のコピーを作成します。",
+    skillInvokeAutoHint: "リクエストに合うときに使います",
+    skillInvokeManualHint: "/ または + で選んだときだけ使います",
+    skillInvokeOffHint: "使いません",
     skillListOverBudget: "スキル一覧が長すぎます",
     skillListOverBudgetDescription:
-      "「自動」スキルの説明が、毎回のリクエストで {chars} 文字を使っています（上限は {limit} 文字）。あまり使わないスキルを「手動」にするか、説明を短くしてください。",
+      "「自動」スキルの説明が {chars}/{limit} 文字を使っています。あまり使わないスキルを「手動」にするか、説明を短くしてください。",
     languageDescription: "拡張機能の UI で使用する言語を選択します。",
     colorScheme: "配色",
     colorSchemeDescription:
@@ -506,13 +514,13 @@ export const jaJP: LocaleMessages = {
       "Streamable HTTP MCP サーバーの設定を現在の同期バックエンドで同期します。",
     syncLocalExecutionBridges: "ローカル実行ブリッジを同期",
     syncLocalExecutionBridgesDescription:
-      "実行ブリッジ設定、ネイティブメッセージングホスト名、実行ホストアドレス、ブリッジシークレット、シェル設定 ID、既定の作業ディレクトリを現在の同期バックエンドで同期します。",
+      "ブリッジシークレットを含む実行ブリッジ設定を、現在の同期バックエンドで同期します。",
     syncChats: "チャットを同期",
     syncChatsDescription:
       "チャット履歴を現在の同期バックエンドで同期します。ローカルのみの会話にする場合はオフにします。",
     syncChatAttachments: "チャットの添付ファイルを同期",
     syncChatAttachmentsDescription:
-      "選択中の添付対応バックエンドで、チャットにアップロードしたファイルを同期します。ブラウザー標準の同期は容量制限のため、添付ファイルには使用できません。",
+      "チャットにアップロードしたファイルを、現在の同期バックエンドで同期します。",
     autoScroll: "自動スクロール",
     autoScrollDescription:
       "メッセージのストリーミング中、最新の AI 出力を自動的に表示し続けます。",
@@ -524,14 +532,14 @@ export const jaJP: LocaleMessages = {
       "エージェントが実行できるツールのステップ数を設定します。0 にするとツール呼び出しを無効にします。",
     helperModel: "補助モデル",
     helperModelDescription:
-      "長いタスクの要約などバックグラウンド処理に使うモデル。既定ではチャットのモデルを使います。",
+      "要約などのバックグラウンド処理に使います。既定ではチャットのモデルを使います。",
     modelSameAsChat: "チャットのモデルと同じ",
     debug: "デバッグ",
     debugDescription:
       "OpenBrowserAgent のデータをリセットする開発者向けツールです。",
     debugResetTitle: "OpenBrowserAgent のデータを消去",
     debugResetDescription:
-      "OpenBrowserAgent が書き込んだローカルストレージ、ブラウザー同期ストレージ、チャット、プロバイダー、スキル、設定、アプリ同期キャッシュを削除します。",
+      "以下で選択した OpenBrowserAgent のデータを完全に削除します。元に戻せません。",
     debugResetConfirmLabel: "確認するには {phrase} と入力してください。",
     debugResetConfirmPhrase: "RESET",
     debugResetScope: "保存場所",

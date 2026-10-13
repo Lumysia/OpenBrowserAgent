@@ -17,6 +17,7 @@ import { resolveModel } from "../src/background/model-resolver";
 import { handleLocalExecutionBridgeRuntimeMessage } from "../src/background/local-execution-bridge-tools";
 import { requestText } from "../src/background/pi-provider";
 import { setupSync } from "../src/background/sync/scheduler";
+import { setupMcpOriginRules } from "../src/shared/mcp-origin-rules";
 import * as streamSessions from "../src/background/stream-sessions";
 import { openActionSurface } from "../src/background/action-surface";
 import {
@@ -39,6 +40,7 @@ export default defineBackground(() => {
 
   setupSmartBar();
   setupSync();
+  setupMcpOriginRules();
 
   chrome.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === "update")

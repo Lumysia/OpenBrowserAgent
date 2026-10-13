@@ -30,7 +30,7 @@ export const smartBarZhTW: SmartBarLocaleMessages = {
   selectionTooLong: "所選內容過長（超過 {max} 個字元），請改在側邊欄中繼續。",
   settingsTitle: "智慧工具列",
   settingsDescription:
-    "選取文字時在旁邊顯示的小工具列，提供快速 AI 操作。在你選擇操作之前不會傳送任何內容。",
+    "在選取的文字旁提供快速 AI 操作。在你選擇操作之前不會傳送任何內容。",
   enable: "顯示智慧工具列",
   enableDescription:
     "預設關閉。開啟後，OpenBrowserAgent 會在允許的頁面上回應文字選取。",

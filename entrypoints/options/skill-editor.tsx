@@ -9,7 +9,14 @@ import {
   SKILL_ENTRY_PATH,
 } from "../../src/shared/skills";
 import type { Skill, SkillFile } from "../../src/shared/types";
-import { Button, Input, Label } from "../../src/ui/components";
+import {
+  Button,
+  Input,
+  Label,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "../../src/ui/components";
 import { downloadSkillZip } from "./skill-import";
 import { SkillFileList } from "./skill-options-components";
 
@@ -163,9 +170,14 @@ export function BuiltinSkillDetail({
       <p className="muted">{skill.description}</p>
       <SkillFileList skill={skill} />
       <div className="row">
-        <Button onClick={onCustomize}>
-          <Copy size={16} /> {t.options.customizeSkill}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button onClick={onCustomize}>
+              <Copy size={16} /> {t.options.customizeSkill}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t.options.customizeSkillHint}</TooltipContent>
+        </Tooltip>
         <Button
           variant="outline"
           onClick={() => downloadSkillZip(skill, "skill")}

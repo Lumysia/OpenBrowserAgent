@@ -165,7 +165,6 @@
 .ui-select-trigger:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--ring);
-  transform: translateY(-1px);
 }
 .ui-input::placeholder,
 .ui-textarea::placeholder {
@@ -180,7 +179,6 @@
   color: var(--muted-foreground);
   opacity: 0.58;
   box-shadow: none;
-  transform: none;
 }
 .ui-switch {
   position: relative;
@@ -277,7 +275,6 @@
 .ui-card:hover {
   border-color: color-mix(in srgb, var(--accent-soft) 58%, var(--border));
   box-shadow: 0 12px 32px var(--shadow);
-  transform: translateY(-1px);
 }
 .ui-card-header {
   padding: 17px 17px 0;
@@ -359,4 +356,57 @@
 .ui-radio-item:has(:focus-visible) {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+.ui-user-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ui-empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 36px 16px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--muted-foreground);
+  text-align: center;
+  animation: subtle-rise-in 0.24s ease backwards;
+}
+.ui-empty-state-icon {
+  display: inline-flex;
+  color: color-mix(in srgb, var(--accent-strong) 48%, var(--muted-foreground));
+}
+.ui-empty-state-title {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.ui-info-tip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-inline-start: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted-foreground);
+  vertical-align: -3px;
+  cursor: help;
+  transition: color 0.16s ease;
+}
+.ui-info-tip:hover,
+.ui-info-tip:focus-visible {
+  color: var(--foreground);
+}
+.ui-info-tip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.ui-tooltip-content.ui-info-tip-content {
+  max-width: min(300px, calc(100vw - 24px));
+  font-weight: 400;
+  line-height: 1.4;
 }

@@ -36,7 +36,6 @@
 }
 .history-item:hover {
   background: color-mix(in srgb, var(--secondary) 72%, transparent);
-  transform: translateY(-1px);
 }
 .history-thread {
   min-width: 0;

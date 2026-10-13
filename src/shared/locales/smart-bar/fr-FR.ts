@@ -31,7 +31,7 @@ export const smartBarFrFR: SmartBarLocaleMessages = {
     "La sélection est trop longue (plus de {max} caractères). Continuez plutôt dans le panneau latéral.",
   settingsTitle: "Barre intelligente",
   settingsDescription:
-    "Une petite barre d’outils près du texte sélectionné, avec des actions IA rapides. Rien n’est envoyé avant que vous choisissiez une action.",
+    "Des actions IA rapides près du texte sélectionné. Rien n’est envoyé avant que vous en choisissiez une.",
   enable: "Afficher la barre intelligente",
   enableDescription:
     "Désactivée par défaut. Une fois activée, OpenBrowserAgent surveille la sélection de texte sur les pages autorisées.",

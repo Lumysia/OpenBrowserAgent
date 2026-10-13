@@ -52,6 +52,14 @@ Every agent starts with a small set of core tools; the rest load on demand throu
 
 Tool runs are shown as visible cards with status, summaries, references, generated media, and JSON detail popovers.
 
+### MCP Servers
+
+Remote Streamable HTTP MCP servers add tools such as search and fetch. A server must pass **Test** (which discovers its tools) before it can be enabled, and each of its tools can be turned off. Built-in presets (Exa, Parallel, TinyFish, Firecrawl) start off; servers can also be added by URL or imported from JSON.
+
+**Send without browser Origin** is a per-server option for servers that reject browser requests. Browsers add an `Origin` header to every request an extension makes, and some servers refuse any request that carries one (TinyFish answers `Browser-origin requests are not allowed.`). With the option on, a `declarativeNetRequest` rule removes the header from this extension's own requests to that server's exact URL. The rules follow the stored servers: they are rebuilt when the browser starts and whenever a server changes, and a request to a server with the option checks its rule first. The TinyFish preset has the option on. Turning it on or off needs a new test.
+
+Where the browser lacks `declarativeNetRequest`, the setting says so and requests to such a server fail with a clear error instead of being sent with an `Origin` the server rejects. `npm run test:browser:mcp-origin` checks the option against TinyFish's keyless endpoint (three requests).
+
 ### Context Attachments
 
 Users can attach current tabs, choose open tabs, upload/paste files, pick skills (with "+" or by typing `/`), and select page elements. Sent messages preserve metadata for attached tabs, selected elements, uploaded attachments, and selected skills.

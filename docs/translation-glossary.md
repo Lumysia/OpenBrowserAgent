@@ -12,7 +12,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 - **Agents, not "the assistant".** Settings text that talks about the AI acting in the browser calls it the agent. "AI" is fine in marketing text such as the extension description, and "assistant" stays where it means the assistant's messages in a chat (as in the debug logging option).
 - **Keep placeholders.** `{count}`, `{name}`, `{max}` and the like stay exactly as they are.
 - **Use the ellipsis character** `…`, never three dots.
-- **Leave these untranslated:** OpenBrowserAgent, MCP, Streamable HTTP, JSON, OpenAI, WebDAV, ETag, HTTP, SKILL.md, agent.json, example.com, and the `RESET` confirmation word (the code compares what people type against it).
+- **Leave these untranslated:** OpenBrowserAgent, MCP, Streamable HTTP, JSON, OpenAI, WebDAV, ETag, HTTP, the Origin header name, SKILL.md, agent.json, example.com, and the `RESET` confirmation word (the code compares what people type against it).
 - **English titles and buttons use sentence case** ("Chat history", not "Chat History").
 
 ## Core terms
@@ -34,6 +34,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | skill                          | 技能               | 技能               | スキル                  | 스킬             |
 | tool                           | 工具               | 工具               | ツール                  | 도구             |
 | MCP server                     | MCP 服务器         | MCP 伺服器         | MCP サーバー            | MCP 서버         |
+| request header                 | 请求头             | 請求標頭           | ヘッダー                | 헤더             |
 | local execution bridge         | 本地执行桥         | 本機執行橋         | ローカル実行ブリッジ    | 로컬 실행 브리지 |
 | workspace                      | 工作区             | 工作區             | ワークスペース          | 워크스페이스     |
 | memory                         | 记忆               | 記憶               | メモリ                  | 메모리           |
@@ -68,6 +69,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | skill                          | compétence                   | Skill                       | habilidad                         | habilidade                       |
 | tool                           | outil                        | Tool                        | herramienta                       | ferramenta                       |
 | MCP server                     | serveur MCP                  | MCP-Server                  | servidor MCP                      | servidor MCP                     |
+| request header                 | en-tête                      | Header                      | cabecera                          | cabeçalho                        |
 | local execution bridge         | pont d’exécution local       | lokale Ausführungs-Bridge   | puente de ejecución local         | ponte de execução local          |
 | workspace                      | espace de travail            | Arbeitsbereich              | espacio de trabajo                | espaço de trabalho               |
 | memory                         | mémoire                      | Gedächtnis                  | memoria                           | memória                          |

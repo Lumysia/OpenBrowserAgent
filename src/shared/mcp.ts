@@ -8,6 +8,9 @@ export type McpServerConfig = {
   url: string;
   enabled: boolean;
   headers?: Record<string, string>;
+  // Send requests without the browser's Origin header, for servers that
+  // reject browser requests (see mcp-origin-rules).
+  omitOrigin: boolean;
   tools?: McpToolConfig[];
   testedAt?: number;
   lastTestError?: string;
@@ -42,6 +45,8 @@ export const BUILTIN_MCP_SERVERS: McpServerConfig[] = [
     "Web and news search.",
     // Without a key, the server needs this header to allow keyless use.
     { "X-TinyFish-Access-Mode": "keyless" },
+    // It rejects any request that carries an Origin header.
+    { omitOrigin: true },
   ),
   builtinMcpServer(
     "firecrawl",
@@ -55,6 +60,7 @@ function builtinMcpServer(
   url: string,
   description: string,
   headers: Record<string, string> = {},
+  options: { omitOrigin?: boolean } = {},
 ): McpServerConfig {
   return {
     id: `builtin_${name}`,
@@ -63,6 +69,7 @@ function builtinMcpServer(
     url,
     enabled: false,
     headers,
+    omitOrigin: options.omitOrigin === true,
     tools: [],
     createdAt: 0,
     updatedAt: 0,
@@ -77,6 +84,7 @@ export function createMcpServerDraft(name = "MCP Server"): McpServerConfig {
     url: "",
     enabled: false,
     headers: {},
+    omitOrigin: false,
     tools: [],
     createdAt: now,
     updatedAt: now,
@@ -112,12 +120,23 @@ export function normalizeMcpServer(
     url: stringValue(item.url),
     enabled: item.enabled === true && isMcpServerTested(item),
     headers: normalizeHeaders(item.headers),
+    omitOrigin:
+      typeof item.omitOrigin === "boolean"
+        ? item.omitOrigin
+        : builtinOmitOrigin(id),
     tools: normalizeMcpTools(item.tools),
     testedAt: numberValue(item.testedAt),
     lastTestError: stringValue(item.lastTestError),
     createdAt: numberValue(item.createdAt) || now,
     updatedAt: numberValue(item.updatedAt) || now,
   };
+}
+
+// A built-in stored before the field existed keeps the built-in's setting.
+function builtinOmitOrigin(id: string) {
+  return BUILTIN_MCP_SERVERS.some(
+    (server) => server.id === id && server.omitOrigin,
+  );
 }
 
 export function isMcpServerTested(value: unknown) {

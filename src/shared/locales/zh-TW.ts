@@ -17,6 +17,7 @@ export const zhTW: LocaleMessages = {
     help: "說明",
     language: "語言",
     confirm: "確認",
+    moreInfo: "更多資訊",
   },
   words: { newChat: "新對話", agent: "瀏覽", ask: "詢問" },
   sidepanel: {
@@ -125,7 +126,7 @@ export const zhTW: LocaleMessages = {
     removeTab: "移除分頁",
     attachmentTooLarge: "部分檔案過大，無法加入：{names}",
     attachmentsUnsupportedRetry:
-      "目前模型拒絕了某種非文字內容格式，已自動改用文字和檔案資訊重試。",
+      "模型無法直接讀取這些附件，已改為只傳送文字和檔案資訊。",
     attachmentOnlyMessage: "請查看附件內容。",
     skillOnlyMessage: "使用所選技能。",
     noSkillsFound: "沒有符合的技能",
@@ -268,22 +269,21 @@ export const zhTW: LocaleMessages = {
     deleteAgent: "刪除智慧體",
     agentWorkspace: "智慧體工作區",
     agentWorkspaceDescription:
-      "此智慧體的私人文字檔。MEMORY.md 與 USER.md 會在每次對話中提供給智慧體；其他檔案依需要讀取。",
+      "此智慧體的私人檔案。智慧體一律看得到 MEMORY.md 與 USER.md，其他檔案依需要讀取。",
     agentWorkspaceNewFile: "新增工作區檔案",
     agentWorkspaceConflict:
       "此檔案在編輯期間發生了變更。請重新開啟並檢視最新版本後再儲存。",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
-    agentWorkspaceEmpty: "尚無工作區檔案。",
     resetDefaultAgents: "重設預設智慧體",
     resetDefaultAgentsDescription:
-      "用內建預設智慧體取代目前智慧體。自訂智慧體和工作區會被移除。",
+      "還原內建智慧體，並移除自訂智慧體及其工作區。",
     sync: "同步",
     providers: "提供者",
     mcpServers: "MCP 伺服器",
     localExecutionBridges: "本機執行橋",
     localExecutionBridgesDescription:
-      "設定可同步的本機或遠端執行橋。擴充功能將 shell 命令傳送給執行橋，由執行橋在主機上執行。",
-    localExecutionBridgesEmpty: "尚未設定本機執行橋。",
+      "讓智慧體透過執行橋在本機或遠端主機上執行 shell 命令。",
+    localExecutionBridgesEmpty: "尚無執行橋",
     newLocalExecutionBridge: "新增執行橋",
     localExecutionBridgeName: "執行橋名稱",
     localExecutionBridgeDescription: "描述",
@@ -307,12 +307,18 @@ export const zhTW: LocaleMessages = {
       "使用自己的金鑰，將 OpenBrowserAgent 連線到你常用的 AI 提供者。",
     mcpServersDescription:
       "設定智慧體可使用的遠端 Streamable HTTP MCP 伺服器。",
+    mcpServersEmpty: "尚無 MCP 伺服器",
     newMcpServer: "新增 MCP 伺服器",
     mcpServerName: "伺服器名稱",
     mcpServerDescription: "描述",
     mcpServerUrl: "端點 URL",
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "請求標頭 JSON",
+    mcpOmitOrigin: "傳送時不帶瀏覽器 Origin",
+    mcpOmitOriginHint:
+      "伺服器拒絕瀏覽器發出的請求時開啟，例如顯示「Browser-origin requests are not allowed.」。開啟後，傳往此伺服器的請求不再帶瀏覽器加入的 Origin 請求標頭。",
+    mcpOmitOriginUnsupported:
+      "此瀏覽器無法移除 Origin 請求標頭，拒絕瀏覽器請求的伺服器在這裡無法使用。",
     mcpServerEnabled: "已啟用",
     mcpEnableRequiresTest: "請先測試此 MCP 伺服器，然後才能啟用。",
     mcpEnableTooltipTested: "測試已通過，找到 {count} 個工具。",
@@ -330,7 +336,7 @@ export const zhTW: LocaleMessages = {
     resetBuiltins: "重設內建項目",
     resetDefaultMcpServers: "重設預設 MCP 伺服器",
     resetDefaultMcpServersDescription:
-      "用內建預設項目取代目前的 MCP 伺服器。自訂伺服器和測試結果會被移除。",
+      "還原內建 MCP 伺服器，並移除自訂伺服器。",
     selectModel: "選擇模型",
     selectModelDescription:
       "選擇主要對話模型。智慧體最好使用支援工具呼叫的模型。",
@@ -399,17 +405,19 @@ export const zhTW: LocaleMessages = {
     builtinSkillBadge: "內建",
     overrideSkillBadge: "已自訂的內建技能",
     customizeSkill: "自訂",
+    customizeSkillHint: "內建技能為唯讀。點選「自訂」即可編輯你自己的副本。",
     revertSkillToBuiltin: "還原為內建版本",
     viewFile: "檢視檔案",
     skillInvokeMode: "使用方式",
     skillInvokeAuto: "自動",
     skillInvokeManual: "手動",
     skillInvokeOff: "關閉",
-    skillInvokeHint:
-      "自動：請求符合時，智慧體會使用該技能。手動：僅在側邊欄中以 / 或 + 選擇時使用。關閉：一律不使用。內建技能為唯讀；點選「自訂」即可編輯你自己的副本。",
+    skillInvokeAutoHint: "請求符合時使用",
+    skillInvokeManualHint: "僅在以 / 或 + 選擇時使用",
+    skillInvokeOffHint: "一律不使用",
     skillListOverBudget: "技能清單過長",
     skillListOverBudgetDescription:
-      "「自動」技能的描述在每次請求中佔用 {chars} 個字元（上限為 {limit}）。請將不常用的技能設為「手動」，或縮短其描述。",
+      "「自動」技能的描述佔用 {chars}/{limit} 個字元。請將不常用的技能設為「手動」，或縮短描述。",
     languageDescription: "選擇擴充功能介面使用的語言。",
     colorScheme: "配色方案",
     colorSchemeDescription: "選擇按鈕、分頁和高亮使用的柔和主色。",
@@ -445,13 +453,12 @@ export const zhTW: LocaleMessages = {
       "透過目前同步後端同步 Streamable HTTP MCP 伺服器設定。",
     syncLocalExecutionBridges: "同步本機執行橋",
     syncLocalExecutionBridgesDescription:
-      "透過目前同步後端同步執行橋設定、原生訊息主機名稱、執行主機位址、執行橋金鑰、Shell 設定 ID 和預設工作目錄。",
+      "透過目前同步後端同步執行橋設定，包括執行橋金鑰。",
     syncChats: "同步對話",
     syncChatsDescription:
       "透過目前同步後端同步對話紀錄。關閉時對話只儲存在本機。",
     syncChatAttachments: "同步對話附件",
-    syncChatAttachmentsDescription:
-      "透過目前支援附件的同步後端同步對話中上傳的檔案。「內建瀏覽器帳號同步」受瀏覽器配額限制，不支援附件。",
+    syncChatAttachmentsDescription: "透過目前同步後端同步對話中上傳的檔案。",
     autoScroll: "自動捲動",
     autoScrollDescription: "AI 輸出時自動保持最新內容可見。",
     autoRetry: "自動重試",
@@ -460,14 +467,13 @@ export const zhTW: LocaleMessages = {
     maxToolStepsDescription:
       "設定智慧體最多可執行多少步工具呼叫；填 0 表示停用工具呼叫。",
     helperModel: "輔助模型",
-    helperModelDescription:
-      "用於背景請求（如摘要長任務）的模型。預設使用目前對話的模型。",
+    helperModelDescription: "用於摘要等背景工作。預設使用目前對話的模型。",
     modelSameAsChat: "與對話模型相同",
     debug: "偵錯",
     debugDescription: "用於重設 OpenBrowserAgent 資料的開發工具。",
     debugResetTitle: "清除 OpenBrowserAgent 資料",
     debugResetDescription:
-      "刪除 OpenBrowserAgent 寫入的本機儲存、瀏覽器同步儲存、對話、提供者、技能、偏好設定和應用程式同步快取。",
+      "永久刪除下方所選的 OpenBrowserAgent 資料，且無法復原。",
     debugResetConfirmLabel: "輸入 {phrase} 以確認。",
     debugResetConfirmPhrase: "RESET",
     debugResetScope: "儲存位置",

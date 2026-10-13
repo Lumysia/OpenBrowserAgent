@@ -12,21 +12,29 @@ export const syncEnUS = {
   pausedRateLimit:
     "The server asked to slow down (HTTP {status}). Sync resumes on its own.",
   syncNow: "Sync now",
-  webDavOnly:
-    "Chats and attachments sync through WebDAV only. Browser account sync storage is too small for them.",
+  webDavOnly: "WebDAV only: browser account sync storage is too small.",
   warnings: {
     "unreliable-etags":
-      "This server's file versions are unreliable, so changes from this device are not uploaded. Use a WebDAV server that sends strong ETags.",
+      "This server can't be written to safely. Use a WebDAV server that sends strong ETags.",
     "ignores-preconditions":
-      "This server doesn't support version checks, so when two devices save at the same moment, one upload can overwrite the other. Each device keeps its changes until it sees them on the server and merges them again on its next sync. If both changed the same value, the newer change is kept.",
+      "This server doesn't support version checks; sync works around it.",
     "newer-format":
-      "Another device uses a newer sync format. Update OpenBrowserAgent on this device to keep syncing.",
-    "missing-content":
-      "Some synced content is missing on the server. This device keeps its copy until another device uploads it again.",
+      "Another device uses a newer sync format. Update OpenBrowserAgent to keep syncing.",
+    "missing-content": "Some synced content is missing on the server.",
     quota:
       "Browser account sync storage is full. Turn off some sync items or use WebDAV.",
     "cloned-device":
-      "Another browser was syncing as this device (a copied browser profile or a backup restored on another computer). This device now syncs as a new device, and changes made on both are kept.",
+      "This browser now syncs as a new device. Changes on both are kept.",
+  },
+  warningDetails: {
+    "unreliable-etags":
+      "Its file versions are unreliable, so this device doesn't upload changes. It still downloads changes from other devices.",
+    "ignores-preconditions":
+      "When two devices save at the same moment, one upload can overwrite the other. Each device keeps its changes and merges them again on its next sync. If both changed the same value, the newer change is kept.",
+    "missing-content":
+      "This device keeps its copy until another device uploads it again.",
+    "cloned-device":
+      "Another browser was syncing as this device, for example a copied browser profile or a backup restored on another computer.",
   },
   massDeleteTitle: "Confirm deletions from another device",
   massDeleteDescription:

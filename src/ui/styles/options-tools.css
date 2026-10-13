@@ -131,9 +131,9 @@
   gap: 8px;
 }
 .model-row {
+  --accordion-radius: 12px;
   position: relative;
   overflow: hidden;
-  border-radius: 12px;
   border: 1px solid color-mix(in srgb, var(--accent-soft) 32%, var(--border));
   background: color-mix(in srgb, var(--card) 92%, var(--accent-softer));
   animation: fade-in 0.16s ease backwards;

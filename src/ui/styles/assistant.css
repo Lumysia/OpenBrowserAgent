@@ -51,12 +51,10 @@
 .citation-chip:hover {
   background: var(--accent-hover);
   box-shadow: 0 3px 10px var(--accent-shadow);
-  transform: translateY(-1px) scale(1.04);
 }
 .citation-chip:active {
   background: var(--accent-active);
   box-shadow: none;
-  transform: scale(0.94);
 }
 .citation-chip:focus-visible {
   outline: 2px solid var(--accent-focus);
@@ -155,16 +153,18 @@
   background: color-mix(in srgb, var(--muted-foreground) 42%, transparent);
 }
 .assistant-reasoning {
+  --reasoning-radius: 14px;
   max-width: min(100%, 520px);
   margin: 2px 0 8px;
   border: 1px solid color-mix(in srgb, var(--accent-soft) 48%, var(--border));
-  border-radius: 14px;
+  border-radius: var(--reasoning-radius);
   background: color-mix(in srgb, var(--card) 90%, var(--accent-softer));
   box-shadow: 0 8px 22px color-mix(in srgb, var(--shadow) 48%, transparent);
   overflow: hidden;
 }
 .assistant-reasoning .ui-accordion-item {
-  border: 0;
+  --accordion-radius: calc(var(--reasoning-radius) - 1px);
+  --accordion-border-width: 0px;
 }
 .assistant-reasoning-trigger.ui-accordion-trigger {
   min-height: 34px;

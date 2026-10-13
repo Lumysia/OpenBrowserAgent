@@ -15,20 +15,30 @@ export const syncPtBR: SyncMessages = {
     "O servidor pediu menos requisições (HTTP {status}). A sincronização volta sozinha.",
   syncNow: "Sincronizar agora",
   webDavOnly:
-    "Conversas e anexos são sincronizados apenas por WebDAV. O armazenamento de sincronização da conta do navegador é pequeno demais para eles.",
+    "Somente por WebDAV: o armazenamento de sincronização da conta do navegador é pequeno demais.",
   warnings: {
     "unreliable-etags":
-      "As versões de arquivo deste servidor não são confiáveis, então as alterações deste dispositivo não são enviadas. Use um servidor WebDAV que envie ETags fortes.",
+      "Não é possível gravar neste servidor com segurança. Use um servidor WebDAV que envie ETags fortes.",
     "ignores-preconditions":
-      "Este servidor não oferece suporte a verificações de versão, então, se dois dispositivos salvarem ao mesmo tempo, um envio pode substituir o outro. Cada dispositivo mantém suas alterações até vê-las no servidor e as mescla de novo na sincronização seguinte. Se os dois mudaram o mesmo valor, a alteração mais recente é mantida.",
+      "Este servidor não oferece suporte a verificações de versão; a sincronização contorna isso.",
     "newer-format":
-      "Outro dispositivo usa um formato de sincronização mais novo. Atualize o OpenBrowserAgent neste dispositivo para continuar sincronizando.",
+      "Outro dispositivo usa um formato de sincronização mais novo. Atualize o OpenBrowserAgent para continuar sincronizando.",
     "missing-content":
-      "Parte do conteúdo sincronizado está faltando no servidor. Este dispositivo mantém a cópia dele até que outro dispositivo a envie novamente.",
+      "Parte do conteúdo sincronizado está faltando no servidor.",
     quota:
       "O armazenamento de sincronização da conta do navegador está cheio. Desative alguns itens ou use WebDAV.",
     "cloned-device":
-      "Outro navegador estava sincronizando como este dispositivo (um perfil de navegador copiado ou um backup restaurado em outro computador). Este dispositivo agora sincroniza como um novo dispositivo, e as alterações feitas em ambos são mantidas.",
+      "Este navegador agora sincroniza como um novo dispositivo. As alterações de ambos são mantidas.",
+  },
+  warningDetails: {
+    "unreliable-etags":
+      "As versões de arquivo deste servidor não são confiáveis, então este dispositivo não envia suas alterações. Ele continua baixando as alterações de outros dispositivos.",
+    "ignores-preconditions":
+      "Se dois dispositivos salvarem ao mesmo tempo, um envio pode substituir o outro. Cada dispositivo mantém suas alterações e as mescla de novo na sincronização seguinte. Se os dois mudaram o mesmo valor, a alteração mais recente é mantida.",
+    "missing-content":
+      "Este dispositivo mantém a cópia dele até que outro dispositivo a envie novamente.",
+    "cloned-device":
+      "Outro navegador estava sincronizando como este dispositivo, por exemplo um perfil de navegador copiado ou um backup restaurado em outro computador.",
   },
   massDeleteTitle: "Confirmar exclusões vindas de outro dispositivo",
   massDeleteDescription:

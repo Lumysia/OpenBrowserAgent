@@ -18,6 +18,7 @@ import type {
   UploadedAttachment,
 } from "../../src/shared/types";
 import { CHAT_PART_STATE, isToolPartType } from "../../src/shared/types";
+import { UserText } from "../../src/ui/components";
 import { messageRunEnded } from "./run-state";
 import { formatMessageTime } from "./format";
 import {
@@ -152,7 +153,9 @@ export function MessageBubble({
         </div>
       )}
       {message.role === "user" ? (
-        <div className="user-bubble">{message.content}</div>
+        <div className="user-bubble">
+          <UserText text={message.content} />
+        </div>
       ) : hasParts ? (
         <>
           {assistantContentFallback && (

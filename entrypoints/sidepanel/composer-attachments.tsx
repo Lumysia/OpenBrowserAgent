@@ -9,6 +9,7 @@ import type {
 import { getSkillDisplayName } from "../../src/shared/skills";
 import { Button, IconTooltip, ScrollArea } from "../../src/ui/components";
 import { AttachedTabCard } from "./composer-menus";
+import { ContextCardLabel } from "./context-card-label";
 import { UploadedAttachmentCard } from "./uploaded-attachment-card";
 import { useDeferredRemove } from "./use-deferred-remove";
 
@@ -42,7 +43,11 @@ export function ComposerAttachments({
   return (
     <div className="context-strip">
       {hasSkillChips && (
-        <ScrollArea className="context-chip-scroll" orientation="horizontal">
+        <ScrollArea
+          className="context-chip-scroll"
+          orientation="horizontal"
+          inset
+        >
           <div className="context-chip-row">
             {selectedSkills.map((skill) => (
               <SkillContextCard
@@ -56,7 +61,11 @@ export function ComposerAttachments({
         </ScrollArea>
       )}
       {hasPageContextChips && (
-        <ScrollArea className="context-chip-scroll" orientation="horizontal">
+        <ScrollArea
+          className="context-chip-scroll"
+          orientation="horizontal"
+          inset
+        >
           <div className="context-chip-row">
             {attachedTabs.map((tab) => (
               <AttachedTabCard
@@ -84,7 +93,11 @@ export function ComposerAttachments({
         </ScrollArea>
       )}
       {!!pendingAttachments.length && (
-        <ScrollArea className="context-file-scroll" orientation="horizontal">
+        <ScrollArea
+          className="context-file-scroll"
+          orientation="horizontal"
+          inset
+        >
           <div className="context-file-row">
             {pendingAttachments.map((attachment) => (
               <UploadedAttachmentCard
@@ -117,10 +130,10 @@ function SkillContextCard({
   return (
     <div className={`context-card ${removing ? "is-removing" : ""}`}>
       <FileText size={18} />
-      <span>
-        <strong>{getSkillDisplayName(skill)}</strong>
-        <small>{skill.description || t.options.skills}</small>
-      </span>
+      <ContextCardLabel
+        title={getSkillDisplayName(skill)}
+        detail={skill.description || t.options.skills}
+      />
       <IconTooltip label={t.common.cancel}>
         <Button
           variant="ghost"
@@ -149,10 +162,10 @@ function SelectedElementContextCard({
   return (
     <div className={`context-card ${removing ? "is-removing" : ""}`}>
       <MousePointerClick size={18} />
-      <span>
-        <strong>{element.tagName || t.sidepanel.elementSelected}</strong>
-        <small>{t.sidepanel.willBeSentAsPageContext}</small>
-      </span>
+      <ContextCardLabel
+        title={element.tagName || t.sidepanel.elementSelected}
+        detail={t.sidepanel.willBeSentAsPageContext}
+      />
       <IconTooltip label={t.common.cancel}>
         <Button
           variant="ghost"

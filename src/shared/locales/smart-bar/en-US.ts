@@ -29,7 +29,7 @@ export const smartBarEnUS = {
     "The selection is too long (over {max} characters). Continue in the side panel instead.",
   settingsTitle: "Smart bar",
   settingsDescription:
-    "A small toolbar next to selected text with quick AI actions. Nothing is sent until you pick an action.",
+    "Quick AI actions next to selected text. Nothing is sent until you pick one.",
   enable: "Show the smart bar",
   enableDescription:
     "Off by default. When on, OpenBrowserAgent watches text selection on allowed pages.",

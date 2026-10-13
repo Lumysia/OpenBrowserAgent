@@ -17,6 +17,7 @@ export const esES: LocaleMessages = {
     help: "Ayuda",
     language: "Idioma",
     confirm: "Confirmar",
+    moreInfo: "Más información",
   },
   words: { newChat: "Nuevo chat", agent: "Navegar", ask: "Preguntar" },
   sidepanel: {
@@ -132,7 +133,7 @@ export const esES: LocaleMessages = {
     attachmentTooLarge:
       "Algunos archivos eran demasiado grandes para adjuntarlos: {names}",
     attachmentsUnsupportedRetry:
-      "El modelo seleccionado ha rechazado un formato de contenido no textual, así que el mensaje se ha reenviado solo con el texto y los detalles de los archivos.",
+      "El modelo no ha podido recibir estos adjuntos directamente, así que solo ha recibido el texto y los detalles de los archivos.",
     attachmentOnlyMessage: "Revisa los archivos adjuntos.",
     skillOnlyMessage: "Usa la habilidad seleccionada.",
     noSkillsFound: "No hay habilidades que coincidan",
@@ -334,23 +335,21 @@ export const esES: LocaleMessages = {
     deleteAgent: "Eliminar agente",
     agentWorkspace: "Espacio de trabajo del agente",
     agentWorkspaceDescription:
-      "Archivos de texto privados de este agente. MEMORY.md y USER.md se le muestran en cada chat; los demás archivos se leen cuando hace falta.",
+      "Archivos privados de este agente. Siempre ve MEMORY.md y USER.md; los demás los lee cuando hace falta.",
     agentWorkspaceNewFile: "Nuevo archivo del espacio de trabajo",
     agentWorkspaceConflict:
       "Este archivo ha cambiado mientras lo editabas. Vuelve a abrirlo para revisar la última versión antes de guardar.",
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
-    agentWorkspaceEmpty: "Aún no hay archivos en el espacio de trabajo.",
     resetDefaultAgents: "Restablecer agentes predeterminados",
     resetDefaultAgentsDescription:
-      "Reemplaza los agentes actuales por el agente predeterminado integrado. Se eliminarán los agentes personalizados y los espacios de trabajo.",
+      "Restaura los agentes integrados y elimina los agentes personalizados y sus espacios de trabajo.",
     sync: "Sincronización",
     providers: "Proveedores",
     mcpServers: "Servidores MCP",
     localExecutionBridges: "Puentes de ejecución locales",
     localExecutionBridgesDescription:
-      "Configura puentes de ejecución locales o remotos sincronizables. La extensión envía comandos de shell al puente y el puente los ejecuta en el host.",
-    localExecutionBridgesEmpty:
-      "Todavía no hay puentes de ejecución locales configurados.",
+      "Permite que los agentes ejecuten comandos de shell en este equipo o en un host remoto mediante un puente.",
+    localExecutionBridgesEmpty: "Aún no hay puentes de ejecución",
     newLocalExecutionBridge: "Nuevo puente de ejecución",
     localExecutionBridgeName: "Nombre del puente de ejecución",
     localExecutionBridgeDescription: "Descripción",
@@ -374,12 +373,18 @@ export const esES: LocaleMessages = {
       "Usa tu propia clave y conecta OpenBrowserAgent con tus proveedores de IA favoritos.",
     mcpServersDescription:
       "Configura servidores MCP Streamable HTTP remotos que los agentes pueden usar.",
+    mcpServersEmpty: "Aún no hay servidores MCP",
     newMcpServer: "Nuevo servidor MCP",
     mcpServerName: "Nombre del servidor",
     mcpServerDescription: "Descripción",
     mcpServerUrl: "URL del endpoint",
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "Cabeceras (JSON)",
+    mcpOmitOrigin: "Enviar sin el Origin del navegador",
+    mcpOmitOriginHint:
+      "Actívalo si el servidor rechaza las solicitudes de navegadores, por ejemplo con «Browser-origin requests are not allowed.». Las solicitudes a este servidor se envían entonces sin la cabecera Origin que añade el navegador.",
+    mcpOmitOriginUnsupported:
+      "Este navegador no puede quitar la cabecera Origin, así que un servidor que rechaza las solicitudes de navegadores no funcionará aquí.",
     mcpServerEnabled: "Activado",
     mcpEnableRequiresTest: "Prueba este servidor MCP antes de activarlo.",
     mcpEnableTooltipTested:
@@ -399,7 +404,7 @@ export const esES: LocaleMessages = {
     resetBuiltins: "Restablecer integrados",
     resetDefaultMcpServers: "Restablecer servidores MCP predeterminados",
     resetDefaultMcpServersDescription:
-      "Reemplaza los servidores MCP actuales por los servidores predeterminados integrados. Se eliminarán los servidores personalizados y los resultados de prueba.",
+      "Restaura los servidores MCP integrados y elimina los personalizados.",
     selectModel: "Seleccionar modelo",
     selectModelDescription:
       "Elige el modelo de chat principal. Los agentes funcionan mejor con modelos compatibles con llamadas a herramientas.",
@@ -471,17 +476,20 @@ export const esES: LocaleMessages = {
     builtinSkillBadge: "Integrada",
     overrideSkillBadge: "Habilidad integrada personalizada",
     customizeSkill: "Personalizar",
+    customizeSkillHint:
+      "Las habilidades integradas son de solo lectura. Personaliza una para editar tu propia copia.",
     revertSkillToBuiltin: "Volver a la versión integrada",
     viewFile: "Ver archivo",
     skillInvokeMode: "Uso",
     skillInvokeAuto: "Automático",
     skillInvokeManual: "Manual",
     skillInvokeOff: "Desactivada",
-    skillInvokeHint:
-      "Automático: el agente usa la habilidad cuando tu petición encaja con ella. Manual: solo cuando la eliges con / o + en el panel lateral. Desactivada: nunca. Las habilidades integradas son de solo lectura; personaliza una para editar tu propia copia.",
+    skillInvokeAutoHint: "Se usa cuando tu petición encaja",
+    skillInvokeManualHint: "Solo cuando la eliges con / o +",
+    skillInvokeOffHint: "No se usa nunca",
     skillListOverBudget: "La lista de habilidades es larga",
     skillListOverBudgetDescription:
-      "Las descripciones de las habilidades en modo Automático ocupan {chars} caracteres de cada petición (el límite es {limit}). Pon en Manual las que uses poco o acorta sus descripciones.",
+      "Las descripciones de las habilidades en Automático ocupan {chars} de {limit} caracteres. Pon en Manual las que uses poco o acórtalas.",
     languageDescription: "Elige el idioma de la interfaz de la extensión.",
     colorScheme: "Esquema de color",
     colorSchemeDescription:
@@ -522,13 +530,13 @@ export const esES: LocaleMessages = {
       "Sincroniza la configuración de servidores MCP Streamable HTTP con el backend de sincronización actual.",
     syncLocalExecutionBridges: "Sincronizar puentes de ejecución locales",
     syncLocalExecutionBridgesDescription:
-      "Sincroniza ajustes de puentes de ejecución, nombres de host de mensajería nativa, direcciones de host de ejecución, secretos del puente, ID de configuración de shell y directorios de trabajo predeterminados con el backend de sincronización actual.",
+      "Sincroniza los ajustes de los puentes, incluidos los secretos, con el backend de sincronización actual.",
     syncChats: "Sincronizar chats",
     syncChatsDescription:
       "Sincroniza el historial de chats con el backend de sincronización actual. Desactívalo para conversaciones solo locales.",
     syncChatAttachments: "Sincronizar adjuntos de chat",
     syncChatAttachmentsDescription:
-      "Sincroniza los archivos subidos al chat con el backend seleccionado que admite adjuntos. La sincronización de la cuenta del navegador está desactivada para los adjuntos por los límites de cuota del navegador.",
+      "Sincroniza los archivos subidos a los chats con el backend de sincronización actual.",
     autoScroll: "Desplazamiento automático",
     autoScrollDescription:
       "Mantiene visible automáticamente la última respuesta de la IA mientras se generan los mensajes.",
@@ -540,14 +548,14 @@ export const esES: LocaleMessages = {
       "Define cuántos pasos de herramientas puede ejecutar el agente. Usa 0 para desactivar las llamadas a herramientas.",
     helperModel: "Modelo auxiliar",
     helperModelDescription:
-      "Modelo para solicitudes en segundo plano, como resumir tareas largas. De forma predeterminada se usa el modelo del chat.",
+      "Se usa para tareas en segundo plano, como resúmenes. De forma predeterminada, el modelo del chat.",
     modelSameAsChat: "Igual que el modelo del chat",
     debug: "Depuración",
     debugDescription:
       "Herramientas para desarrolladores para restablecer los datos de OpenBrowserAgent.",
     debugResetTitle: "Borrar datos de OpenBrowserAgent",
     debugResetDescription:
-      "Elimina el almacenamiento local, el almacenamiento de sincronización del navegador, los chats, proveedores, habilidades, preferencias y cachés de sincronización de la aplicación escritos por OpenBrowserAgent.",
+      "Elimina de forma permanente los datos de OpenBrowserAgent seleccionados abajo. No se puede deshacer.",
     debugResetConfirmLabel: "Escribe {phrase} para confirmar.",
     debugResetConfirmPhrase: "RESET",
     debugResetScope: "Ubicación de almacenamiento",

@@ -131,7 +131,6 @@ export function SkillsPage() {
             <FileText size={24} /> {t.options.skills}
           </h1>
           <p className="muted">{t.options.skillsDescription}</p>
-          <p className="muted">{t.options.skillInvokeHint}</p>
         </div>
         <div className="settings-page-actions">
           <input
@@ -256,7 +255,9 @@ function SkillItemHeader({
           <span className="skill-trigger-title-row">
             <span className="skill-trigger-label">
               <FileText size={18} />
-              {name}
+              <span className="settings-summary-name" title={name}>
+                {name}
+              </span>
             </span>
             <span className="skill-trigger-badges">
               {source !== "user" && (
@@ -298,7 +299,11 @@ function SkillItemHeader({
           onValueChange={(mode) => mode && onInvoke(mode as SkillInvokeMode)}
         >
           {SKILL_INVOKE_MODES.map((mode) => (
-            <ToggleGroupItem key={mode} value={mode}>
+            <ToggleGroupItem
+              key={mode}
+              value={mode}
+              tooltip={skillInvokeHint(t, mode)}
+            >
               {skillInvokeLabel(t, mode)}
             </ToggleGroupItem>
           ))}
@@ -336,6 +341,14 @@ function skillInvokeLabel(t: Messages, mode: SkillInvokeMode) {
     auto: t.options.skillInvokeAuto,
     manual: t.options.skillInvokeManual,
     off: t.options.skillInvokeOff,
+  }[mode];
+}
+
+function skillInvokeHint(t: Messages, mode: SkillInvokeMode) {
+  return {
+    auto: t.options.skillInvokeAutoHint,
+    manual: t.options.skillInvokeManualHint,
+    off: t.options.skillInvokeOffHint,
   }[mode];
 }
 

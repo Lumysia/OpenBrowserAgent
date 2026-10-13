@@ -28,6 +28,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  SettingsSummary,
 } from "../../src/ui/components";
 import { useState } from "react";
 
@@ -151,13 +152,11 @@ export function SyncBackendCard({
       <AccordionItem value={WEBDAV_SYNC_BACKEND_ID}>
         <AccordionHeader className="ui-accordion-header-with-actions">
           <AccordionTriggerButton hideChevron>
-            <span className="settings-summary">
-              <span className="settings-summary-title">
-                <FolderSync size={18} />
-                <span>{backendDisplayName(webDavDraft, t)}</span>
-              </span>
-              <small>{backendDescription(webDavDraft, t)}</small>
-            </span>
+            <SettingsSummary
+              icon={<FolderSync size={18} />}
+              title={backendDisplayName(webDavDraft, t)}
+              description={backendDescription(webDavDraft, t)}
+            />
           </AccordionTriggerButton>
           <span
             className="accordion-trigger-actions"
@@ -253,13 +252,11 @@ function SyncBackendHeaderItem({
     <AccordionItem value={backend.id}>
       <AccordionHeader className="ui-accordion-header-with-actions">
         <AccordionTriggerButton hideChevron>
-          <span className="settings-summary">
-            <span className="settings-summary-title">
-              <FolderSync size={18} />
-              <span>{backendDisplayName(backend, t)}</span>
-            </span>
-            <small>{backendDescription(backend, t)}</small>
-          </span>
+          <SettingsSummary
+            icon={<FolderSync size={18} />}
+            title={backendDisplayName(backend, t)}
+            description={backendDescription(backend, t)}
+          />
         </AccordionTriggerButton>
         <span
           className="accordion-trigger-actions"

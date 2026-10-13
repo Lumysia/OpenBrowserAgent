@@ -10,6 +10,9 @@ const permissions = [
   "unlimitedStorage",
   // Sync checks once a minute while an extension page is visible.
   "alarms",
+  // Removes the Origin header from requests to MCP servers that reject
+  // browser requests (mcp-origin-rules); host access comes from <all_urls>.
+  "declarativeNetRequestWithHostAccess",
 ] as const;
 const chromiumAndFirefoxPermissions = ["nativeMessaging", "search"] as const;
 const sourcemap = process.env.WXT_SOURCEMAP === "true";

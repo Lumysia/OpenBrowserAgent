@@ -13,19 +13,25 @@ export const syncZhCN: SyncMessages = {
   lastSync: "上次同步：{time}",
   pausedRateLimit: "服务器要求降低请求频率（HTTP {status}）。同步会自动恢复。",
   syncNow: "立即同步",
-  webDavOnly: "对话和附件只能通过 WebDAV 同步，浏览器账号同步的存储空间太小。",
+  webDavOnly: "仅支持 WebDAV：浏览器账号同步的存储空间太小。",
   warnings: {
     "unreliable-etags":
-      "此服务器的文件版本信息不可靠，因此本设备的更改不会上传。请使用提供强 ETag 的 WebDAV 服务器。",
-    "ignores-preconditions":
-      "此服务器不支持版本检查，两台设备同时保存时，一方上传的内容可能覆盖另一方。每台设备会保留自己的更改，直到在服务器上看到它们，并在下次同步时重新合并。如果双方改了同一个值，保留较新的更改。",
+      "无法安全写入此服务器。请使用提供强 ETag 的 WebDAV 服务器。",
+    "ignores-preconditions": "此服务器不支持版本检查，同步会自动处理。",
     "newer-format":
-      "另一台设备使用了更新的同步格式。请在本设备上更新 OpenBrowserAgent 以继续同步。",
-    "missing-content":
-      "服务器上缺少部分同步内容。本设备会保留自己的副本，直到其他设备重新上传。",
+      "另一台设备使用了更新的同步格式。请更新 OpenBrowserAgent 以继续同步。",
+    "missing-content": "服务器上缺少部分同步内容。",
     quota: "浏览器账号同步存储已满。请关闭部分同步项目或改用 WebDAV。",
+    "cloned-device": "此浏览器现在作为新设备同步，两边的更改都会保留。",
+  },
+  warningDetails: {
+    "unreliable-etags":
+      "此服务器的文件版本信息不可靠，因此本设备不会上传更改，但仍会下载其他设备的更改。",
+    "ignores-preconditions":
+      "两台设备同时保存时，一方上传的内容可能覆盖另一方。每台设备会保留自己的更改，并在下次同步时重新合并。如果双方改了同一个值，保留较新的更改。",
+    "missing-content": "本设备会保留自己的副本，直到其他设备重新上传。",
     "cloned-device":
-      "另一个浏览器曾以本设备的身份同步（例如复制的浏览器配置文件，或在另一台电脑上恢复的备份）。本设备现在作为新设备同步，两边所做的更改都会保留。",
+      "另一个浏览器曾以本设备的身份同步，例如复制的浏览器配置文件，或在另一台电脑上恢复的备份。",
   },
   massDeleteTitle: "确认来自其他设备的删除",
   massDeleteDescription:

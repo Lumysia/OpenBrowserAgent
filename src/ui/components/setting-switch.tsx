@@ -5,7 +5,11 @@ import { Switch } from "./switch";
 type Props = {
   icon?: ReactNode;
   title: string;
-  description: string;
+  description?: string;
+  // Shown after the title, e.g. an InfoTip with when to use the setting.
+  info?: ReactNode;
+  // "field": a row among form fields, titled like their labels.
+  variant?: "card" | "field";
   checked: boolean;
   onChange: (checked: boolean) => void;
 };
@@ -14,24 +18,38 @@ export function SettingSwitch({
   icon,
   title,
   description,
+  info,
+  variant = "card",
   checked,
   onChange,
 }: Props) {
   const id = useId();
+  const heading = (
+    <>
+      {icon}
+      <label htmlFor={id}>{title}</label>
+      {info}
+    </>
+  );
   return (
     <div className="setting-switch-row">
       <div>
-        <CardTitle className="settings-section-title">
-          {icon}
-          <label htmlFor={id}>{title}</label>
-        </CardTitle>
-        <CardDescription id={`${id}-description`}>
-          {description}
-        </CardDescription>
+        {variant === "field" ? (
+          <div className="settings-section-title settings-field-heading">
+            {heading}
+          </div>
+        ) : (
+          <CardTitle className="settings-section-title">{heading}</CardTitle>
+        )}
+        {description && (
+          <CardDescription id={`${id}-description`}>
+            {description}
+          </CardDescription>
+        )}
       </div>
       <Switch
         id={id}
-        aria-describedby={`${id}-description`}
+        aria-describedby={description ? `${id}-description` : undefined}
         checked={checked}
         onCheckedChange={onChange}
       />

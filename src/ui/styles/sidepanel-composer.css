@@ -231,19 +231,19 @@
 }
 .queued-message:hover {
   background: color-mix(in srgb, var(--card) 70%, var(--accent-soft));
-  transform: translateY(-1px);
 }
 .queued-message.is-removing {
   pointer-events: none;
   animation: context-chip-remove 0.2s ease both;
 }
-.queued-message span {
+.queued-message-text {
+  display: -webkit-box;
   min-width: 0;
   overflow: hidden;
   color: var(--foreground);
   font-size: 13px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 .queued-message-actions {
   display: inline-flex;
@@ -423,23 +423,19 @@
   flex: 1 1 auto;
 }
 .model-menu-item strong {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-size: 14px;
   font-weight: 500;
-}
-.add-context-menu .action-list-item strong,
-.add-context-menu .action-list-item > span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .model-menu-item small,
 .agent-menu-item small {
   font-size: 11px;
+}
+.agent-menu-item small {
+  display: -webkit-box;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 .model-provider-mark {
   width: 18px;

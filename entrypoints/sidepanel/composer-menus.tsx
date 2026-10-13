@@ -32,6 +32,7 @@ import {
   agentDisplayName,
 } from "../../src/ui/agent-display";
 import { useDeferredRemove } from "./use-deferred-remove";
+import { ContextCardLabel } from "./context-card-label";
 import { COMPOSER_MENU, type ComposerMenu } from "./sidepanel-menu-state";
 import { SkillPickerList } from "./skill-picker";
 
@@ -192,7 +193,14 @@ export function AddContextMenu({
               ) : (
                 <ExternalLink size={20} />
               )}
-              <span>{tab.title || tab.url || `Tab ${tab.id}`}</span>
+              <span>
+                <span
+                  className="action-list-label"
+                  title={tab.title || tab.url || `Tab ${tab.id}`}
+                >
+                  {tab.title || tab.url || `Tab ${tab.id}`}
+                </span>
+              </span>
             </Button>
           ))}
         </div>
@@ -240,12 +248,10 @@ export function AttachedTabCard({
       ) : (
         <ExternalLink size={18} />
       )}
-      <span>
-        <strong>{tab.title || t.sidepanel.currentPage}</strong>
-        <small>
-          {tab.url || `Tab ${tab.id}`} · {t.sidepanel.willBeSentToAi}
-        </small>
-      </span>
+      <ContextCardLabel
+        title={tab.title || t.sidepanel.currentPage}
+        detail={`${tab.url || `Tab ${tab.id}`} · ${t.sidepanel.willBeSentToAi}`}
+      />
       <IconTooltip label={t.sidepanel.removeTab}>
         <Button
           variant="ghost"
@@ -291,7 +297,9 @@ export function ModelMenu({
           </span>
           <span>
             <small>{providerName(model)}</small>
-            <strong>{modelDisplayName(model)}</strong>
+            <strong title={modelDisplayName(model)}>
+              {modelDisplayName(model)}
+            </strong>
           </span>
           {selectedModelId === model.id && (
             <Check className="menu-check" size={14} />
@@ -326,8 +334,12 @@ function AgentMenu({
           >
             <AgentIcon agent={agent} />
             <span>
-              <strong>{agentDisplayName(agent, t)}</strong>
-              <small>{agentDisplayDescription(agent, t)}</small>
+              <strong title={agentDisplayName(agent, t)}>
+                {agentDisplayName(agent, t)}
+              </strong>
+              <small title={agentDisplayDescription(agent, t)}>
+                {agentDisplayDescription(agent, t)}
+              </small>
             </span>
             {selected && <Check className="menu-check" size={14} />}
           </Button>

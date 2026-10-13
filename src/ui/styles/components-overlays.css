@@ -31,9 +31,16 @@
   color: var(--destructive);
 }
 
+/* Variants set --accordion-radius / --accordion-border-width; the header
+   background follows the inner radius so it never paints over the border. */
 .ui-accordion-item {
+  --accordion-radius: var(--radius);
+  --accordion-border-width: 1px;
+  --accordion-inner-radius: calc(
+    var(--accordion-radius) - var(--accordion-border-width)
+  );
   position: relative;
-  border: 1px solid var(--border);
+  border: var(--accordion-border-width) solid var(--border);
   background:
     linear-gradient(
       135deg,
@@ -41,7 +48,7 @@
       transparent 58%
     ),
     color-mix(in srgb, var(--accent-softer) 10%, var(--card));
-  border-radius: var(--radius);
+  border-radius: var(--accordion-radius);
   box-shadow: 0 10px 24px var(--shadow);
   animation: fade-in 0.22s ease backwards;
   transition:
@@ -66,6 +73,11 @@
 }
 .ui-accordion-header {
   margin: 0;
+  border-radius: var(--accordion-inner-radius);
+}
+.ui-accordion-item[data-state="open"] > .ui-accordion-header {
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
 }
 .ui-accordion-header-with-actions {
   display: flex;
@@ -94,10 +106,16 @@
   color: var(--foreground);
   font-weight: 600;
   text-align: left;
+  border-radius: inherit;
   transition: background-color 0.16s ease;
 }
 .ui-accordion-trigger:hover {
   background: var(--secondary);
+}
+/* Inset, so the ring stays inside the item's rounded border. */
+.ui-accordion-trigger:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 3px var(--ring);
 }
 .provider-summary {
   margin-left: auto;
@@ -117,32 +135,6 @@
   flex: 0 0 48px;
   justify-content: center;
   padding: 14px 16px;
-}
-.settings-summary {
-  min-width: 0;
-  display: grid;
-  gap: 4px;
-}
-.settings-summary-title {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  font-weight: 600;
-}
-.agent-builtin-badge {
-  margin-left: 2px;
-  padding: 3px 7px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.settings-summary small {
-  overflow: hidden;
-  color: var(--muted-foreground);
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .ui-accordion-chevron {
   transition: transform 0.2s ease;
@@ -306,7 +298,6 @@
   background: color-mix(in srgb, var(--accent-hover) 86%, var(--popover));
   color: var(--accent-strong);
   filter: saturate(1.03) brightness(1.01);
-  transform: translateX(1px);
 }
 .ui-select-item[data-state="checked"] {
   color: var(--accent-strong);
@@ -316,30 +307,6 @@
   left: 8px;
   display: flex;
   align-items: center;
-}
-.ui-tooltip-content {
-  z-index: 100;
-  max-width: min(220px, calc(100vw - 24px));
-  padding: 8px 12px;
-  border: 1px solid color-mix(in srgb, var(--accent-strong) 12%, var(--border));
-  border-radius: 9px;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--accent-softer) 32%, transparent),
-      transparent 72%
-    ),
-    color-mix(in srgb, var(--popover) 92%, var(--accent-softer));
-  color: color-mix(in srgb, var(--accent-strong) 64%, var(--foreground));
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.25;
-  white-space: pre-line;
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--shadow) 76%, transparent);
-  animation: pop-in 0.14s ease backwards;
-}
-.tooltip-button-wrapper {
-  display: inline-flex;
 }
 .ui-popover-content {
   z-index: 60;
@@ -395,7 +362,6 @@
   box-shadow:
     0 6px 14px color-mix(in srgb, var(--accent-shadow) 34%, transparent),
     inset 0 0 0 1px color-mix(in srgb, var(--accent-strong) 12%, transparent);
-  transform: translateY(-1px);
 }
 .ui-tabs-trigger:focus-visible {
   outline: none;
@@ -494,50 +460,10 @@
   background: color-mix(in srgb, var(--accent-hover) 86%, var(--popover));
   color: var(--accent-strong);
   filter: saturate(1.03) brightness(1.01);
-  transform: translateX(1px);
 }
 .ui-command-item span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.ui-scroll-area {
-  position: relative;
-  overflow: hidden;
-}
-.ui-scroll-area-viewport {
-  width: 100%;
-  height: 100%;
-  border-radius: inherit;
-  scrollbar-color: var(--scrollbar-thumb) transparent;
-  scrollbar-width: thin;
-}
-.ui-scroll-area-viewport[data-orientation="vertical"] {
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-.ui-scroll-area-viewport[data-orientation="horizontal"] {
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-.ui-scroll-area-viewport[data-orientation="both"] {
-  overflow: auto;
-}
-.ui-scroll-area-viewport::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-.ui-scroll-area-viewport::-webkit-scrollbar-thumb {
-  border: 2px solid transparent;
-  border-radius: 999px;
-  background: var(--scrollbar-thumb);
-  background-clip: content-box;
-}
-.ui-scroll-area-viewport::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
-  background-clip: content-box;
-}
-.ui-scroll-area-viewport::-webkit-scrollbar-track {
-  background: transparent;
 }

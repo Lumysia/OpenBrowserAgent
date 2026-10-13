@@ -32,7 +32,7 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
     "選択範囲が長すぎます（{max} 文字超）。代わりにサイドパネルで続けてください。",
   settingsTitle: "スマートバー",
   settingsDescription:
-    "選択したテキストの横に表示される小さなツールバーで、AI のクイック操作を使えます。操作を選ぶまで何も送信されません。",
+    "選択したテキストの横に AI のクイック操作を表示します。操作を選ぶまで何も送信されません。",
   enable: "スマートバーを表示",
   enableDescription:
     "既定ではオフです。オンにすると、OpenBrowserAgent は許可されたページでテキストの選択に反応します。",

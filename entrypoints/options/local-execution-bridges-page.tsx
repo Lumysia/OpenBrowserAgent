@@ -26,12 +26,14 @@ import {
   Badge,
   Button,
   CardDescription,
+  EmptyState,
   Input,
   Label,
   Textarea,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  SettingsSummary,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 
@@ -111,35 +113,45 @@ export function LocalExecutionBridgesPage() {
           </h1>
           <p className="muted">{t.options.localExecutionBridgesDescription}</p>
         </div>
-        <div className="settings-page-actions">
-          <Button onClick={addBridge}>
-            <Plus size={15} /> {t.options.newLocalExecutionBridge}
-          </Button>
-        </div>
+        {items.length ? (
+          <div className="settings-page-actions">
+            <Button onClick={addBridge}>
+              <Plus size={15} /> {t.options.newLocalExecutionBridge}
+            </Button>
+          </div>
+        ) : null}
       </div>
       {!items.length ? (
-        <CardDescription>
-          {t.options.localExecutionBridgesEmpty}
-        </CardDescription>
+        <EmptyState
+          icon={<TerminalSquare size={28} />}
+          title={t.options.localExecutionBridgesEmpty}
+          action={
+            <Button onClick={addBridge}>
+              <Plus size={15} /> {t.options.newLocalExecutionBridge}
+            </Button>
+          }
+        />
       ) : null}
       <Accordion type="multiple" className="stack">
         {items.map((bridge) => (
           <AccordionItem key={bridge.id} value={bridge.id}>
             <AccordionHeader className="ui-accordion-header-with-actions">
               <AccordionTriggerButton hideChevron>
-                <span className="settings-summary">
-                  <span className="settings-summary-title">
-                    <TerminalSquare size={18} />
-                    <span>{bridge.name}</span>
-                    <Badge>{bridge.id.slice(0, 8)}</Badge>
-                    {bridge.lastTestError ? (
-                      <Badge className="status-error-badge">
-                        {t.options.localExecutionBridgeTestError}
-                      </Badge>
-                    ) : null}
-                  </span>
-                  <small>{bridge.description || bridge.hostName}</small>
-                </span>
+                <SettingsSummary
+                  icon={<TerminalSquare size={18} />}
+                  title={bridge.name}
+                  badges={
+                    <>
+                      <Badge title={bridge.id}>{bridge.id.slice(0, 8)}</Badge>
+                      {bridge.lastTestError ? (
+                        <Badge className="status-error-badge">
+                          {t.options.localExecutionBridgeTestError}
+                        </Badge>
+                      ) : null}
+                    </>
+                  }
+                  description={bridge.description || bridge.hostName}
+                />
               </AccordionTriggerButton>
               <span
                 className="accordion-trigger-actions"

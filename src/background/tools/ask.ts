@@ -10,7 +10,7 @@ export const askTool: ToolDefinition = {
   name: TOOL_NAME.ask,
   summary: "Ask the user",
   description:
-    "Ask the user 1-6 questions with choices when you need a decision or missing information. Do not guess preferences.",
+    "Ask the user 1-6 questions with choices, before doing the work, when a missing detail would change what you do or recommend. Offer the likely answers as options. Not for minor preferences: pick a default and say so.",
   parameters: schema(
     {
       questions: {

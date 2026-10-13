@@ -104,7 +104,8 @@ async function checkSyncedSend() {
 
 // A Markdown answer streamed in small chunks renders in the real side panel
 // under the extension CSP: CJK bold, math, footnotes, and a remote image that
-// waits for a click instead of loading.
+// waits for a click instead of loading. The multi-line prompt keeps its line
+// breaks in the user bubble, without the surrounding blank lines.
 async function checkStreamedMarkdown() {
   let imageRequests = 0;
   const answer = [
@@ -149,7 +150,7 @@ async function checkStreamedMarkdown() {
       apiKey: "test-key",
     });
     await delay(1000);
-    await submitComposer(page, "Render Markdown");
+    await submitComposer(page, "\nRender Markdown\n\nas a list\n");
     await poll(
       () =>
         page.call(
@@ -171,6 +172,7 @@ async function checkStreamedMarkdown() {
         ".markdown button[data-image-src]",
       ),
       images: document.querySelectorAll(".markdown img").length,
+      userText: document.querySelector(".user-bubble")?.innerText,
       errors: globalThis.__smokeErrors,
     }));
     assert.deepEqual(rendered, {
@@ -181,6 +183,7 @@ async function checkStreamedMarkdown() {
       code: true,
       blockedImage: true,
       images: 0,
+      userText: "Render Markdown\n\nas a list",
       errors: [],
     });
     assert.equal(imageRequests, 0);

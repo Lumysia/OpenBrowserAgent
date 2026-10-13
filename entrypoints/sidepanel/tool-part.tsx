@@ -25,6 +25,7 @@ import {
   Textarea,
   ToggleGroup,
   ToggleGroupItem,
+  UserText,
 } from "../../src/ui/components";
 import { toolDisplay, toolJsonDetail } from "./tool-part-detail";
 import { toolIcon } from "./tool-icons";
@@ -196,11 +197,14 @@ function QuestionToolForm({
         {submittedAnswers.map((answer, index) => (
           <div className="tool-result-row" key={`${answer.question}-${index}`}>
             <span className="tool-result-label">{answer.question}</span>
-            <span className="tool-result-value">
-              {[...answer.answers, answer.customAnswer]
-                .filter(Boolean)
-                .join(", ") || t.sidepanel.questionNoAnswer}
-            </span>
+            <UserText
+              className="tool-result-value"
+              text={
+                [...answer.answers, answer.customAnswer]
+                  .filter(Boolean)
+                  .join(", ") || t.sidepanel.questionNoAnswer
+              }
+            />
           </div>
         ))}
       </div>
