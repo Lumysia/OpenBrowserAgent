@@ -179,7 +179,13 @@ export async function reconcile(
         entry: await entryOf(id, record),
       });
     } else if (decision.kind === "merge") {
-      const result = await mergeRecord(context, collection, decision, payloads);
+      const result = await mergeRecord(
+        context,
+        collection,
+        id,
+        decision,
+        payloads,
+      );
       if (!result) {
         outcome.warnings.push(SYNC_WARNINGS.missingContent);
         continue;

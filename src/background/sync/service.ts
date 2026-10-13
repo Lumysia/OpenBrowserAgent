@@ -28,6 +28,7 @@ import {
   SyncQuotaError,
   type PartsSeen,
 } from "../../shared/sync/browser-sync";
+import { basesKey } from "../../shared/sync/bases";
 import { clocksKey, loadClocks } from "../../shared/sync/clocks";
 import { ownsKey, type Collection } from "../../shared/sync/collection";
 import { hashJson } from "../../shared/sync/codec";
@@ -381,6 +382,7 @@ async function reset(
       env.local.remove([
         ...removed,
         ...cleared.map((collection) => clocksKey(collection.name)),
+        ...cleared.map((collection) => basesKey(collection.name)),
       ]),
     ),
   );

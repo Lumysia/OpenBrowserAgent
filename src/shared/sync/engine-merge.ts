@@ -1,4 +1,5 @@
 import { CLOCK_LOCK } from "../locks";
+import { keptBase } from "./bases";
 import { bodyFor, storedBlobs } from "./blobs";
 import {
   changedEntry,
@@ -79,6 +80,7 @@ export async function localBodies(
 export async function mergeRecord(
   context: SyncContext,
   collection: Collection,
+  id: string,
   decision: Extract<Decision, { kind: "merge" }>,
   payloads: Payloads,
 ) {
@@ -92,10 +94,12 @@ export async function mergeRecord(
     const mine = await bodyFor(transport, collection, merge.mine, payloads);
     const theirs = await bodyFor(transport, collection, merge.theirs, payloads);
     if (!mine || !theirs) return undefined;
+    // The version the change was made from: on the server, else kept here
+    // (collected on the server meanwhile).
     const base = merge.base
-      ? await bodyFor(transport, collection, merge.base, payloads).catch(
+      ? ((await bodyFor(transport, collection, merge.base, payloads).catch(
           () => undefined,
-        )
+        )) ?? (await keptBase(env, collection, id, merge.base)))
       : undefined;
     body = collection.mergeBodies!(
       base?.body,

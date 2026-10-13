@@ -19,6 +19,9 @@ export const STORAGE_KEYS = {
   // One per synced collection: `sync-clocks:<collection>`.
   syncClocks: "sync-clocks",
   syncHlc: "sync-hlc",
+  // Per collection that merges bodies: `sync-bases:<collection>`, the
+  // bodies unconfirmed changes were made from (see sync/bases.ts).
+  syncBases: "sync-bases",
   // Written by a round to wait for the edit listener (see sync/track.ts).
   syncEditMarker: "sync-edit-marker",
   // Browser sync parts no record refers to, by when this device saw them.

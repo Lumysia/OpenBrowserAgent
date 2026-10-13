@@ -4,6 +4,7 @@ import {
   SYNC_PREFERENCES,
   type SyncDataSettings,
 } from "../storage-keys";
+import { pruneBases } from "./bases";
 import {
   checkUploads,
   deleteBlobs,
@@ -208,6 +209,7 @@ async function round(
         setTimeout(resolve, 100 + Math.random() * 400 * attempt),
       );
     }
+    await pruneBases(env, collections);
     if (state.remote?.etag && !result.massDelete) {
       await checkUploads(env, transport, collections, state);
       if (
