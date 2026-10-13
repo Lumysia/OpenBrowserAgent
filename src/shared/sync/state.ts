@@ -1,6 +1,6 @@
 import { STORAGE_KEYS } from "../storage-keys";
 import { readKey, type StorageArea } from "./env";
-import type { Root } from "./root";
+import type { Root, SyncRecord } from "./root";
 
 // What a device keeps per backend between rounds, in storage.local. Only
 // caches: what local data holds and when it changed is recorded per record
@@ -15,6 +15,11 @@ export type SyncState = {
   // checked in later rounds and uploaded again if they went missing.
   uploads?: Record<string, number>;
   lastSweepAt?: number;
+  // The last root write this device made, until a later read shows whether
+  // the root still descends from it: its id and the records it pushed. A
+  // write the server accepted is not yet a confirmation (a server that
+  // ignores If-Match lets another device's write replace it).
+  sent?: { write: string; records: Record<string, SyncRecord> };
 };
 
 export const SYNC_WARNINGS = {

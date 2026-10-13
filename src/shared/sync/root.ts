@@ -27,7 +27,13 @@ export type Root = {
   writer: string;
   records: Record<string, SyncRecord>;
   garbage: GarbageEntry[];
+  // Ids of the last writes this root descends from, its own last. A device
+  // whose write is listed knows the root holds its changes; on a server
+  // that ignores If-Match, a write made from an older root drops it.
+  history?: string[];
 };
+
+export const ROOT_HISTORY_LENGTH = 32;
 
 export class SyncFormatError extends Error {
   constructor(
@@ -74,6 +80,12 @@ export function validateRoot(value: unknown): Root {
   }
   if (!Array.isArray(value.garbage))
     throw new SyncFormatError("Sync root has no garbage list.");
+  if (
+    value.history !== undefined &&
+    (!Array.isArray(value.history) ||
+      value.history.some((id) => typeof id !== "string"))
+  )
+    throw new SyncFormatError("Sync root has an invalid history.");
   for (const entry of value.garbage)
     if (
       !isObject(entry) ||

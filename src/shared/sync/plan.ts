@@ -1,4 +1,5 @@
 import type { Version } from "./clocks";
+import { sameJson } from "./codec";
 import { compareClocks } from "./hlc";
 import type { SyncRecord } from "./root";
 
@@ -89,6 +90,8 @@ async function conflict(
   let data = mineWins ? mine.data : theirs.data;
   if (!base)
     data = keepSecrets(data, mineWins ? theirs.data : mine.data, secrets);
+  else if (mineDataChanged && theirsDataChanged)
+    data = mergeFields(base.data, mine.data, theirs.data, mineNewer) ?? data;
 
   const mineBlobChanged = mine.blob !== base?.blob;
   const theirsBlobChanged = theirs.blob !== base?.blob;
@@ -114,6 +117,32 @@ async function conflict(
     size,
     newer: mineNewer ? "mine" : "theirs",
   };
+}
+
+// Both sides changed an object's fields since `base`: each field from the
+// side that changed it, the newer side's where both did. Undefined when the
+// base data is unknown or the values are not objects.
+export function mergeFields(
+  base: unknown,
+  mine: unknown,
+  theirs: unknown,
+  mineNewer: boolean,
+) {
+  if (!isRecord(base) || !isRecord(mine) || !isRecord(theirs)) return;
+  const merged: Record<string, unknown> = {};
+  for (const field of new Set([...Object.keys(mine), ...Object.keys(theirs)])) {
+    const mineChanged = !sameJson(mine[field], base[field]);
+    const theirsChanged = !sameJson(theirs[field], base[field]);
+    const value =
+      mineChanged && (!theirsChanged || mineNewer)
+        ? mine[field]
+        : theirs[field];
+    if (value !== undefined) merged[field] = value;
+  }
+  // Same as one side: that side's object, so the decision stays simple.
+  if (sameJson(merged, theirs)) return theirs;
+  if (sameJson(merged, mine)) return mine;
+  return merged;
 }
 
 const isEmpty = (value: unknown) =>

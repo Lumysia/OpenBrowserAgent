@@ -28,7 +28,8 @@ export type StorageChanges = Record<
   { oldValue?: unknown; newValue?: unknown }
 >;
 
-type Touched = { removed: boolean };
+// `before`: the record's value before the change.
+type Touched = { removed: boolean; before?: LocalEntry };
 
 // Records a storage change altered, by id. A record missing from a value
 // that holds the whole collection has the collection's default, if any.
@@ -53,7 +54,11 @@ function touched(collection: Collection, changes: StorageChanges) {
       // messages) leaves the record in place.
       if (sameJson(old, next) || (!next && !after.complete)) continue;
       const removed = after.complete && !next;
-      result.set(id, { removed: removed || !!result.get(id)?.removed });
+      const earlier = result.get(id);
+      result.set(id, {
+        removed: removed || !!earlier?.removed,
+        before: earlier ? earlier.before : old,
+      });
     }
   }
   return result;
@@ -75,7 +80,7 @@ export async function recordLocalChanges(
       const entries = await collection.read(env, (id) => records.has(id));
       let hlc = await loadHlc(env.local);
       let changed = false;
-      for (const [id, { removed }] of records) {
+      for (const [id, { removed, before }] of records) {
         const entry = entries.get(id);
         const copy = entry
           ? await project(collection, entry, clocks[id])
@@ -89,7 +94,7 @@ export async function recordLocalChanges(
         if (!edited) continue;
         const [clock, next] = tickClock(hlc, device, env.now());
         hlc = next;
-        clocks[id] = await changedEntry(id, copy, known, clock);
+        clocks[id] = await changedEntry(id, copy, known, clock, before);
         changed = true;
         recorded++;
       }

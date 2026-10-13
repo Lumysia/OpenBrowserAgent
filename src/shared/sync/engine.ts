@@ -34,6 +34,7 @@ import {
   loadSyncState,
   saveSyncState,
   SYNC_WARNINGS,
+  type SyncState,
   type MassDelete,
   type MassDeleteAnswer,
   type SyncWarning,
@@ -149,6 +150,7 @@ async function round(
           result.warnings.push(SYNC_WARNINGS.unreliableEtags);
       }
       await observeRemote(env, maxRootClock(remote));
+      await settleSent(env, state, remote, snapshot);
 
       const outcome = await reconcile(
         context,
@@ -159,7 +161,7 @@ async function round(
         [options.massDelete ?? []].flat(),
       );
       result.warnings.push(...outcome.warnings);
-      await confirm(env, outcome.accepted);
+      await confirm(env, outcome.accepted, snapshot);
       if (outcome.massDelete) {
         result.massDelete = outcome.massDelete;
         state.remote = { root: remote, etag };
@@ -167,7 +169,8 @@ async function round(
       }
       const now = env.now();
       await localPayloads(env, remote, outcome.pushes, payloads);
-      const next = nextRoot(remote, device, outcome.pushes, now);
+      const write = crypto.randomUUID();
+      const next = nextRoot(remote, device, outcome.pushes, now, write);
       const collected = dropExpiredGarbage(next, now);
       if (!outcome.pushes.size && !collected.length) {
         state.remote = { root: remote, etag };
@@ -187,7 +190,7 @@ async function round(
       );
       const written = await transport.writeRoot(next, etag);
       if (written.status === "ok") {
-        await confirm(env, outcome.pushes);
+        state.sent = { write, records: Object.fromEntries(outcome.pushes) };
         state.remote = { root: next, etag: written.etag };
         for (const hash of uploaded)
           if (seen.has(hash)) (state.uploads ??= {})[hash] = now;
@@ -255,8 +258,30 @@ export function countWaiting(
   return count;
 }
 
-// Records whose versions a backend now holds: their clock entries say so.
-async function confirm(env: SyncEnv, records: Map<string, SyncRecord>) {
+// This device's last write, once a root read shows whether it still holds
+// it: confirmed when the root descends from the write. A write another
+// device's replaced (a server that ignores If-Match) confirms nothing: its
+// changes stay changes made here, from their old base, so they merge with
+// the version that replaced them.
+async function settleSent(
+  env: SyncEnv,
+  state: SyncState,
+  remote: Root,
+  snapshot: Snapshot,
+) {
+  const sent = state.sent;
+  if (!sent) return;
+  state.sent = undefined;
+  if (remote.history?.includes(sent.write))
+    await confirm(env, new Map(Object.entries(sent.records)), snapshot);
+}
+
+// Records whose versions a backend holds: their clock entries say so.
+async function confirm(
+  env: SyncEnv,
+  records: Map<string, SyncRecord>,
+  snapshot: Snapshot,
+) {
   const byCollection = new Map<string, Array<[string, SyncRecord]>>();
   for (const [recordId, record] of records) {
     const { collection, id } = splitRecordId(recordId);
@@ -268,8 +293,16 @@ async function confirm(env: SyncEnv, records: Map<string, SyncRecord>) {
   for (const [collection, list] of byCollection)
     await env.lock(CLOCK_LOCK, async () => {
       const clocks: Clocks = await loadClocks(env.local, collection);
-      for (const [id, record] of list)
-        clocks[id] = await confirmedEntry(id, clocks[id], record);
+      for (const [id, record] of list) {
+        // Cleared here meanwhile: nothing to confirm.
+        if (clocks[id])
+          clocks[id] = await confirmedEntry(id, clocks[id], record);
+        // The round goes on with the entries it read, confirmed too.
+        const recordId = `${collection}/${id}`;
+        const read = snapshot.clocks.get(recordId);
+        if (read)
+          snapshot.clocks.set(recordId, await confirmedEntry(id, read, record));
+      }
       await env.local.set({ [clocksKey(collection)]: clocks });
     });
 }

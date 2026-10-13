@@ -23,6 +23,9 @@ export type Version = {
   deleted?: true;
   dataHash?: string;
   blob?: string;
+  // The data itself, kept only as a change's base: a three-way merge takes
+  // each field from the side that changed it.
+  data?: unknown;
 };
 
 export type ClockEntry = Version & {
@@ -79,6 +82,12 @@ export async function versionOf(record: SyncRecord): Promise<Version> {
   };
 }
 
+// A record version as the base of a change made here.
+export async function baseOf(record: SyncRecord): Promise<Version> {
+  const version = await versionOf(record);
+  return record.deleted ? version : { ...version, data: record.data };
+}
+
 // The entry of a record version held here as stored (applied or confirmed).
 export async function entryOf(id: string, record: SyncRecord) {
   const entry: ClockEntry = await versionOf(record);
@@ -98,15 +107,26 @@ const sharedVersion = (entry: ClockEntry): Version => ({
 export type Copy = { data: unknown; blob?: string; size?: number };
 
 // The entry of a change made here: `copy` (null: removed), from `previous`.
+// `before`: the data the copy held before the change, if known (an edit
+// event's old value), kept with the base when it is that version's.
 export async function changedEntry(
   id: string,
   copy: Copy | null,
   previous: ClockEntry | undefined,
   clock: Clock,
+  before?: { data: unknown },
 ): Promise<ClockEntry> {
   const base = previous?.local
     ? previous.base
     : previous && sharedVersion(previous);
+  if (
+    base &&
+    !previous?.local &&
+    before &&
+    !base.deleted &&
+    (await hashJson(before.data)) === base.dataHash
+  )
+    base.data = before.data;
   const entry: ClockEntry = { clock, local: true, ...(base ? { base } : {}) };
   if (!copy) return { ...entry, deleted: true };
   entry.dataHash = await hashJson(copy.data);
@@ -120,12 +140,12 @@ export async function changedEntry(
 // keeps waiting, now made from that version.
 export async function confirmedEntry(
   id: string,
-  current: ClockEntry | undefined,
+  current: ClockEntry,
   record: SyncRecord,
 ): Promise<ClockEntry> {
-  if (!current || current.clock === record.clock) return entryOf(id, record);
+  if (current.clock === record.clock) return entryOf(id, record);
   if (!current.local) return current;
-  return { ...current, base: await versionOf(record) };
+  return { ...current, base: await baseOf(record) };
 }
 
 // Whether a local copy differs from the version its clock entry records.

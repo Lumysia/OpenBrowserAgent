@@ -1,5 +1,5 @@
 import { bodyFor } from "./blobs";
-import { entryOf, keepsOrder, versionOf } from "./clocks";
+import { baseOf, entryOf, keepsOrder } from "./clocks";
 import { hashJson } from "./codec";
 import { isOrderId, type Collection } from "./collection";
 import { recordIdOf, splitRecordId, syncCollection } from "./collections";
@@ -190,7 +190,7 @@ export async function reconcile(
         entry: {
           ...(await entryOf(id, result.record)),
           local: true,
-          base: await versionOf(remote.records[recordId]),
+          base: await baseOf(remote.records[recordId]),
         },
       });
     }
