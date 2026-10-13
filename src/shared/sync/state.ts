@@ -51,8 +51,13 @@ export type MassDelete = {
 
 // The user's answer for collections the guard stopped at: apply the
 // deletions, or keep the items (this device's copies upload again; items
-// deleted here come back from the remote copy).
-export type MassDeleteAnswer = { collections: string[]; keep: boolean };
+// deleted here come back from the remote copy). `local`: the answer is for
+// that kind of prompt only (unset: for both).
+export type MassDeleteAnswer = {
+  collections: string[];
+  keep: boolean;
+  local?: boolean;
+};
 
 export type SyncStatus = {
   running?: boolean;

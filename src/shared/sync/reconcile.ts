@@ -112,18 +112,20 @@ export async function reconcile(
   }
 
   const massDelete = massDeletes(collections, snapshot, remote, decisions);
-  const answerOf = (name: string) =>
-    answers.find((answer) => answer.collections.includes(name));
-  if (massDelete.some((entry) => !answerOf(entry.collection))) {
+  const answerOf = (entry: MassDelete) =>
+    answers.find(
+      (answer) =>
+        answer.collections.includes(entry.collection) &&
+        (answer.local === undefined || answer.local === !!entry.local),
+    );
+  if (massDelete.some((entry) => !answerOf(entry))) {
     outcome.massDelete = massDelete;
     return outcome;
   }
   // Kept: copies here upload again, items deleted here come back.
   const kept = (local: boolean) =>
     massDelete
-      .filter(
-        (entry) => !!entry.local === local && answerOf(entry.collection)!.keep,
-      )
+      .filter((entry) => !!entry.local === local && answerOf(entry)!.keep)
       .map((entry) => syncCollection(entry.collection)!);
   await keepLocalCopies(
     context,

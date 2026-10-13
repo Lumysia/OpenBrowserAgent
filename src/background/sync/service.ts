@@ -54,6 +54,7 @@ import {
   saveSyncState,
   SYNC_WARNINGS,
   updateSyncStatus,
+  type MassDelete,
   type SyncStatus,
   type SyncWarning,
 } from "../../shared/sync/state";
@@ -208,7 +209,7 @@ export function createSyncRunner(
         pauseStatus: undefined,
         backoffLevel: undefined,
         warnings: [...new Set([...sticky, ...result.warnings])],
-        massDelete: result.massDelete,
+        massDelete: keepAnswers(result.massDelete, latest.massDelete),
       });
     } catch (error) {
       await recordFailure(error, status);
@@ -383,6 +384,24 @@ async function reset(
       ]),
     ),
   );
+}
+
+// Prompts asked again by a round keep the answers already given to them
+// while another prompt is still open.
+export function keepAnswers(
+  asked: MassDelete[] | undefined,
+  previous: MassDelete[] | undefined,
+) {
+  const answered = asked?.map((entry) => {
+    const earlier = previous?.find(
+      (other) =>
+        other.collection === entry.collection &&
+        !!other.local === !!entry.local &&
+        other.keep !== undefined,
+    );
+    return earlier ? { ...entry, keep: earlier.keep } : entry;
+  });
+  return answered?.some((entry) => entry.keep === undefined) ? answered : asked;
 }
 
 export async function checkBackend(env: SyncEnv, backend: SyncBackendConfig) {

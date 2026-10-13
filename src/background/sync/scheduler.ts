@@ -177,11 +177,10 @@ export function setupSync() {
         if (open) return loadSyncStatus(env.local);
         await request({
           reason: "manual",
-          massDelete: [true, false].map((keep) => ({
-            collections: asked
-              .filter((entry) => entry.keep === keep)
-              .map((entry) => entry.collection),
-            keep,
+          massDelete: asked.map((entry) => ({
+            collections: [entry.collection],
+            keep: !!entry.keep,
+            local: !!entry.local,
           })),
         });
         return loadSyncStatus(env.local);
