@@ -36,13 +36,17 @@ If the server answers "too many requests" (HTTP 429) or "temporarily unavailable
 ## Changes on several devices
 
 - Each item carries a timestamp from a hybrid clock. When two devices change the same item, the newer change wins. A browser restored from an old backup cannot overwrite newer data with its old copy.
+- The device keeps that timestamp for every item it has, whichever backend is on and with sync off too: an edit gets the time it was made, one item at a time (changing one provider does not touch the others' times), and a change downloaded from another device keeps that device's time. Switching to another backend and back, joining an existing sync, or turning sync on again after a while is therefore no special case: for each item, the newer change wins, wherever it was made.
+- An item this device never changed (a default value, data from before an update that started keeping these times) counts as older than any change made anywhere, so a new browser where you changed a few settings before turning sync on keeps exactly those changes and takes the account's other settings. An empty API key or secret on a device that never saw the account's value (a provider form opened before joining) never replaces the account's.
 - Deletions are recorded as deletions. A file missing on the server never deletes anything on your devices; if the server lost data, the devices that still have it upload it again.
 - When two devices add messages to the same chat at the same time, both keep all messages, in time order.
 - When two devices edit the same skill or workspace file, the newer edit keeps the file name and the other is kept next to it as `name.conflict-<device>-<date>.ext`.
-- Chats are downloaded on a device only when you open them there. Attachments are downloaded when a chat shows them.
-- If a sync would delete more than half of a list with more than five items (for example, most of your chats), it pauses and asks on the Sync page whether to delete them on this device or keep them and upload them again. Keeping uploads exactly those items again, as new changes; an item whose content is neither on this device nor on the server any more (a chat never opened here, deleted elsewhere more than a day ago) cannot come back and is deleted.
-- A device that joins an existing sync keeps its own chats and other items, which are uploaded. Where it and the account hold different values, the newer change wins; a value this device never changed since change tracking started counts as older than the account's. If joining would delete most of a list here, it asks first, as above.
-- Each backend keeps its own sync state on the device, so switching to another backend and back continues where it left off. Spellings of one WebDAV folder (http or https, host name case, a trailing slash) count as the same folder.
+- Chats are downloaded on a device only when you open them there. Attachments are downloaded when a chat shows them. Opening a chat does not wait for a sync in progress.
+- If a sync would delete more than half of a list with more than five items, it pauses and asks on the Sync page:
+  - deletions from another device (for example, most of your chats): delete them on this device, or keep them and upload them again. Keeping uploads exactly those items again, as new changes; an item whose content is neither on this device nor on the server any more (a chat never opened here, deleted elsewhere more than a day ago) cannot come back and is deleted.
+  - deletions made on this device: delete them on every device, or restore them here from the synced copy.
+- Clearing local data on the Debug page (with sync on or off) also forgets the timestamps of what it cleared, so the data is downloaded again instead of being deleted on your other devices. Clearing cloud data deletes the folder's content; every device uploads its data again.
+- Each backend keeps a small cache on the device (the last file list it read), so switching to another backend and back needs no full download. Spellings of one WebDAV folder (http or https, host name case, a trailing slash) count as the same folder. The WebDAV address and user name are saved when you leave the field or press Enter.
 
 ## Server requirements
 
@@ -51,10 +55,14 @@ WebDAV writes the root file only if it is still the version the device read (`If
 - If the server's file versions are unreliable (missing or weak ETags, or a server that rejects its own ETags), this device stops uploading and the Sync page says so; it keeps downloading changes from other devices.
 - If the server accepts uploads whatever `If-Match` says (Koofr did in October 2026), two devices saving at the same moment can overwrite each other's root file. The Sync page warns about it. Nothing is lost: the device whose change was overwritten notices at its next check that the server is behind and uploads the change again.
 
+A request that gets no answer within 30 seconds (longer for large uploads) fails, and the sync tries again later.
+
+Content that no item refers to any more is deleted from `blobs/` a day later, after a root file without it was written. If another device starts using the same content again at that moment, it notices in its next sync that the file is gone and uploads it again.
+
 ## Status
 
 The Sync settings page shows the last successful sync, the number of changes waiting to upload, a pause with its reason, and warnings about the server. **Sync now** runs a check at once.
 
 ## Testing
 
-`npm test` covers the merge rules, clocks, root validation, the mass-delete guard and browser sync item limits. Against a real WebDAV server (for example WsgiDAV), `npm run test:sync:webdav -- <urlA> <urlB>` runs two simulated devices through the cases that matter most; the two URLs should reach the same folder through different host names. `node scripts/sync-mutations.mjs` breaks each safety guard on purpose and checks that a test fails.
+`npm test` covers the merge rules, clocks, root validation, the mass-delete guards, browser sync item limits, every data-loss case found in reviews (`tests/sync-review*.test.ts`) and everyday scenarios such as setting up a new browser or trying browser sync for a week (`tests/sync-scenarios.test.ts`). Against a real WebDAV server (for example WsgiDAV), `npm run test:sync:webdav -- <urlA> <urlB>` runs two simulated devices through the cases that matter most; the two URLs should reach the same folder through different host names. `node scripts/sync-mutations.mjs` breaks each safety guard on purpose and checks that a test fails.
