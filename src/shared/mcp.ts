@@ -106,8 +106,9 @@ export function normalizeMcpServer(value: unknown): McpServerConfig | null {
     tools: normalizeMcpTools(item.tools),
     testedAt: numberValue(item.testedAt),
     lastTestError: stringValue(item.lastTestError),
-    createdAt: numberValue(item.createdAt) || now,
-    updatedAt: numberValue(item.updatedAt) || now,
+    // 0 stays: the built-ins' times, so normalizing them twice changes nothing.
+    createdAt: numberValue(item.createdAt) ?? now,
+    updatedAt: numberValue(item.updatedAt) ?? now,
   };
 }
 
@@ -210,12 +211,30 @@ function normalizeImportedMcpServer(name: string | undefined, value: unknown) {
   });
 }
 
+// As reading them gives them: a save that leaves one alone does not change it.
+const BUILTINS = BUILTIN_MCP_SERVERS.map((server) =>
+  normalizeMcpServer(server)!,
+);
+
+// A built-in the list lacks goes after the built-in before it (else before
+// the first stored built-in, else first), so a list that stores only some of
+// them reads back in the order it was shown in. Saves leave built-ins the
+// user did not change unstored (see keepStoredForm).
 function mergeBuiltinMcpServers(servers: McpServerConfig[]) {
-  const existingIds = new Set(servers.map((server) => server.id));
-  return [
-    ...servers,
-    ...BUILTIN_MCP_SERVERS.filter((server) => !existingIds.has(server.id)),
-  ];
+  const result = [...servers];
+  let index = -1;
+  for (const builtin of BUILTINS) {
+    const at = result.findIndex((server) => server.id === builtin.id);
+    if (at >= 0) index = at;
+    else if (index >= 0) result.splice(++index, 0, builtin);
+  }
+  const ids = new Set(result.map((server) => server.id));
+  const leading = BUILTINS.filter((builtin) => !ids.has(builtin.id));
+  const first = result.findIndex((server) =>
+    BUILTIN_MCP_SERVERS.some((builtin) => builtin.id === server.id),
+  );
+  result.splice(Math.max(first, 0), 0, ...leading);
+  return result;
 }
 
 function objectEntries(value: Record<string, unknown>) {
