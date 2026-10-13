@@ -152,8 +152,9 @@ export function themeTokens(
   themeId: unknown,
   scheme: ResolvedScheme,
 ): ThemeTokens {
-  const theme: ThemeDefinition = THEMES[normalizeTheme(themeId)];
+  const base: ThemeDefinition = THEMES[normalizeTheme(themeId)];
   const dark = scheme === "dark";
+  const theme: ThemeDefinition = dark ? { ...base, ...base.dark } : base;
   const roles = ROLE[scheme];
   const surface = theme.surface ?? theme.primary;
   const [bubbleFrom, bubbleTo] = theme.bubble ?? [surface, surface];

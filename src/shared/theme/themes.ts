@@ -43,6 +43,9 @@ export type ThemeDefinition = {
   tint?: string;
   // Stripes for the settings swatch, top to bottom.
   flag?: string[];
+  // Roles that read better with other seeds on dark backgrounds, where
+  // some hues (yellows) turn muddy as large areas.
+  dark?: Pick<ThemeDefinition, "surface" | "bubble" | "wash">;
 };
 
 export const THEMES: Record<ThemeId, ThemeDefinition> = {
@@ -59,6 +62,7 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     bubble: ["#ff8c00", "#e40303"],
     wash: ["#e40303", "#ffed00", "#008026"],
     flag: ["#e40303", "#ff8c00", "#ffed00", "#008026", "#004cff", "#732982"],
+    dark: { wash: ["#e40303", "#732982", "#004cff"] },
   },
   // Pink actions on soft blue, the bubble runs blue to pink, white between.
   trans: {
@@ -100,6 +104,7 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     wash: ["#fcf434", null, "#9c59d1"],
     tint: "#9c59d1",
     flag: ["#fcf434", "#ffffff", "#9c59d1", "#2c2c2c"],
+    dark: { surface: "#9c59d1", wash: ["#9c59d1", null, "#fcf434"] },
   },
   // Purple on cool greys, black to white in the wash.
   ace: {
