@@ -63,6 +63,11 @@ OpenBrowserAgent is a WXT/Vite/React/TypeScript browser extension for AI-assiste
 - If a tool needs a Chrome permission, update `wxt.config.ts` explicitly.
 - Do not silently remove existing tool names; sidepanel and background protocol compatibility matters.
 
+## Releases
+
+- Releases are published by `.github/workflows/release.yml` when a `v*` tag is pushed. Don't upload release files by hand. Set the version in `package.json` (and `wxt.config.ts` `manifest.version`) through a PR first, then tag the merged commit as `v<version>`. A tag with a suffix (`v0.2.0-beta.1`) becomes a pre-release.
+- The release title is the tag alone, for example `v0.1.0`.
+
 ## Verification
 
 Run after meaningful changes:
