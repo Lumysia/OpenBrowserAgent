@@ -26,9 +26,16 @@ export const strongEtag = (value: string | null) =>
 
 const blobPath = (hash: string) => `${BLOBS}/${hash[0]}/${hash}.gz`;
 
+// A request that gets no complete answer in time fails, so a server that
+// hangs never holds up sync (or the work queued behind a round). Uploads
+// get extra time per byte for slow connections.
+const REQUEST_TIMEOUT_MS = 30_000;
+const UPLOAD_BYTES_PER_MS = 25;
+
 export function createWebDavTransport(
   config: Pick<WebDavSyncBackendConfig, "url" | "username" | "password">,
   fetchImpl: typeof fetch = fetch,
+  { timeoutMs = REQUEST_TIMEOUT_MS }: { timeoutMs?: number } = {},
 ): Transport {
   const base = config.url.endsWith("/") ? config.url : `${config.url}/`;
   const url = (path: string) => new URL(path, base).toString();
@@ -47,7 +54,13 @@ export function createWebDavTransport(
           ),
         )}`,
       );
-    return fetchImpl(url(path), { ...init, cache: "no-store", headers });
+    const bytes = init.body instanceof ArrayBuffer ? init.body.byteLength : 0;
+    return fetchImpl(url(path), {
+      ...init,
+      cache: "no-store",
+      headers,
+      signal: AbortSignal.timeout(timeoutMs + bytes / UPLOAD_BYTES_PER_MS),
+    });
   }
 
   async function fail(response: Response, action: string): Promise<never> {
