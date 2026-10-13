@@ -1,0 +1,37 @@
+OpenBrowserAgent bringt einen KI-Agenten in die Seitenleiste Ihres Browsers. Stellen Sie Fragen zur aktuellen Seite, recherchieren Sie im ganzen Web oder übergeben Sie eine Aufgabe im Browser. Der Agent liest Seiten, klickt, tippt und wechselt zwischen Tabs – und Sie verfolgen jeden Schritt mit.
+
+Das Modell wählen Sie selbst. OpenBrowserAgent hat kein Konto und keinen eigenen Server: Ihre Nachrichten gehen ausschließlich an die Modellanbieter, MCP-Server und den Sync-Speicher, die Sie selbst einrichten.
+
+WAS SIE DAMIT TUN KÖNNEN
+
+• Fragen zur aktuellen Seite oder zu mehreren Tabs stellen: Zusammenfassungen, Vergleiche, Erklärungen, Übersetzungen.
+• Eine Frage im ganzen Web recherchieren lassen und eine Antwort mit anklickbaren Quellen erhalten.
+• Browserarbeit an den Agenten abgeben: Formulare ausfüllen, Produkte vergleichen, Informationen von mehreren Seiten sammeln, Tabs aufräumen und gruppieren.
+• Eine Seite direkt bearbeiten, etwa um sie zu übersetzen, sowie Screenshots aufnehmen oder Dateien herunterladen.
+• Auf jeder Seite Text markieren und Schnellaktionen nutzen (erklären, übersetzen, Formulierung verbessern, vorlesen). Diese Funktion ist aus, bis Sie sie einschalten, und lässt sich auf die Websites Ihrer Wahl beschränken.
+
+AGENTEN UND SKILLS
+
+• Die Agenten „Browsen“ und „Fragen“ sind bereits enthalten. Eigene Agenten erstellen Sie mit individuellen Anweisungen, Tools, Modell und privaten Notizen.
+• Agenten können Arbeit an Subagenten übergeben, die im Hintergrund laufen.
+• Skills sind wiederverwendbare Anweisungen. Integrierte Skills helfen beim Ausfüllen von Formularen, beim Aufräumen von Tabs, bei Fragen zur Erweiterung und beim Schreiben neuer Skills. Wählen Sie einen Skill mit „/“ aus oder lassen Sie den Agenten einen verwenden, wenn er zur Anfrage passt. Skills lassen sich importieren und exportieren.
+
+IHRE MODELLE, IHRE TOOLS
+
+• Verbinden Sie OpenAI-kompatible und Anthropic-kompatible Anbieter, Gemini, OpenRouter, DeepSeek, Ollama und weitere Anbieter mit Ihren eigenen API-Schlüsseln und Basis-URLs.
+• Nutzen Sie für das Lesen langer Seiten ein günstigeres Hilfsmodell.
+• Verbinden Sie entfernte MCP-Server (Streamable HTTP) für zusätzliche Tools. Server für die Websuche ohne API-Schlüssel sind enthalten; jeder bleibt aus, bis Sie ihn einschalten.
+• Optionale lokale Ausführungs-Bridge: Damit kann ein Agent Befehle auf Ihrem Computer ausführen – aber erst, nachdem Sie sie installiert und aktiviert haben.
+
+SYNCHRONISIERUNG ÜBER GERÄTE HINWEG
+
+• Synchronisieren Sie Einstellungen, Agenten, Skills und auf Wunsch auch Chats und Anhänge – über Ihr Browserkonto oder Ihren eigenen WebDAV-Speicher.
+• Änderungen werden Eintrag für Eintrag zusammengeführt, sodass sich Bearbeitungen auf zwei Geräten nicht gegenseitig überschreiben. Vor umfangreichen Löschungen fragt die Erweiterung zuerst nach.
+
+SIE BEHALTEN DIE KONTROLLE
+
+• Jeder Tool-Schritt wird angezeigt, während er läuft, und seine Details lassen sich aufrufen.
+• Ist sich der Agent unsicher, fragt er nach, bevor er etwas absendet, kauft, verschickt oder löscht.
+• Oberfläche auf English, Deutsch, Español, Français, 日本語, 한국어, Português (Brasil), 简体中文 und 繁體中文, mit hellem und dunklem Design.
+
+OpenBrowserAgent ist Open Source. Quellcode, Dokumentation und Issue-Tracker: https://github.com/Lumysia/OpenBrowserAgent

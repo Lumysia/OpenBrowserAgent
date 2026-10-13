@@ -1,0 +1,37 @@
+OpenBrowserAgent intègre un agent IA dans le panneau latéral de votre navigateur. Posez des questions sur la page affichée, lancez une recherche sur le Web ou confiez-lui une tâche dans le navigateur. L’agent lit les pages, clique, saisit du texte et passe d’un onglet à l’autre, et vous suivez chaque étape.
+
+Vous choisissez votre propre modèle. OpenBrowserAgent ne demande aucun compte et n’a pas de serveur à lui : vos messages sont envoyés uniquement aux fournisseurs de modèles, aux serveurs MCP et au stockage de synchronisation que vous avez configurés.
+
+CE QUE VOUS POUVEZ FAIRE
+
+• Poser des questions sur la page actuelle ou sur plusieurs onglets : résumés, comparaisons, explications, traductions.
+• Faire une recherche sur le Web et obtenir une réponse accompagnée de sources cliquables.
+• Confier le travail de navigation à l’agent : remplir des formulaires, comparer des produits, rassembler des informations sur plusieurs pages, ranger et regrouper vos onglets.
+• Modifier une page directement, par exemple pour la traduire, et prendre des captures d’écran ou télécharger des fichiers.
+• Sélectionner du texte sur n’importe quelle page pour lancer des actions rapides (expliquer, traduire, améliorer la formulation, lire à voix haute). Cette fonction reste désactivée tant que vous ne l’activez pas, et vous pouvez la limiter aux sites de votre choix.
+
+AGENTS ET COMPÉTENCES
+
+• Les agents Naviguer et Demander sont inclus. Vous pouvez créer les vôtres, avec leurs propres instructions, outils, modèle et notes privées.
+• Les agents peuvent confier une partie du travail à des sous-agents qui s’exécutent en arrière-plan.
+• Les compétences sont des instructions réutilisables. Les compétences intégrées couvrent le remplissage de formulaires, le rangement des onglets, l’aide sur l’extension et la rédaction de nouvelles compétences. Choisissez une compétence avec « / », ou laissez l’agent en utiliser une lorsqu’elle correspond à la demande. Les compétences peuvent être importées et exportées.
+
+VOS MODÈLES, VOS OUTILS
+
+• Connectez des fournisseurs compatibles OpenAI ou Anthropic, Gemini, OpenRouter, DeepSeek, Ollama et d’autres encore, avec vos propres clés API et URL de base.
+• Utilisez un modèle auxiliaire moins coûteux pour lire les pages longues.
+• Connectez des serveurs MCP distants (Streamable HTTP) pour disposer d’outils supplémentaires. Des serveurs de recherche Web sans clé API sont inclus, et chacun reste désactivé tant que vous ne l’activez pas.
+• Pont d’exécution local facultatif : il permet à un agent d’exécuter des commandes sur votre ordinateur, uniquement après que vous l’avez installé et activé.
+
+SYNCHRONISATION ENTRE APPAREILS
+
+• Synchronisez vos paramètres, agents et compétences, et si vous le souhaitez vos discussions et pièces jointes, via le compte de votre navigateur ou votre propre stockage WebDAV.
+• Les modifications sont fusionnées élément par élément : les changements faits sur deux appareils ne s’écrasent pas, et les suppressions importantes vous sont d’abord soumises pour confirmation.
+
+VOUS GARDEZ LE CONTRÔLE
+
+• Chaque étape d’outil s’affiche pendant son exécution, avec ses détails consultables.
+• En cas de doute, l’agent vous demande avant de soumettre, d’acheter, d’envoyer ou de supprimer quoi que ce soit.
+• Interface disponible en English, Deutsch, Español, Français, 日本語, 한국어, Português (Brasil), 简体中文 et 繁體中文, avec thèmes clair et sombre.
+
+OpenBrowserAgent est open source. Code source, documentation et suivi des problèmes : https://github.com/Lumysia/OpenBrowserAgent

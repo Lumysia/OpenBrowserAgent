@@ -1,0 +1,74 @@
+{
+  "article": {
+    "title": "Index incrémental",
+    "nav": ["Articles", "Plateforme", "Recrutement", "À propos"],
+    "tag": "Infrastructure",
+    "heading": "Comment nous avons rendu notre index de recherche incrémental",
+    "role": "Ingénieure principale",
+    "meta": "4 mars · 9 min de lecture",
+    "lead": "Pendant trois ans, chaque modification de notre catalogue déclenchait une reconstruction complète de l’index de recherche. Quand le catalogue a atteint 40 millions d’annonces, ce traitement nocturne dépassait six heures. Voici comment nous sommes passés à l’indexation incrémentale, et ce que cela nous a coûté.",
+    "whyHeading": "Pourquoi les reconstructions complètes ne suffisaient plus",
+    "why": "Une reconstruction complète était simple et toujours cohérente, mais un prix modifié à 9 h n’apparaissait dans la recherche que le lendemain matin. Les vendeurs l’ont remarqué : les tickets de support sur des annonces « introuvables » ont triplé en deux trimestres.",
+    "bars": [
+      "Reconstruction complète",
+      "Incrémental",
+      "Modification → recherche"
+    ],
+    "values": ["6 h 12 min", "24 min", "< 90 s"],
+    "figcaption": "Durée médiane d’indexation par jour, avant et après la migration.",
+    "approachHeading": "Notre approche",
+    "approach": "Nous avons découpé l’index en 512 shards selon l’identifiant d’annonce, et le journal des modifications du catalogue alimente une file d’attente en continu. Chaque worker applique les mises à jour par petits lots et publie un nouveau segment toutes les 30 secondes.",
+    "points": [
+      "Les écritures sont idempotentes : les rejouer après un plantage ne pose aucun problème.",
+      "Chaque nuit, un job `compact` fusionne les petits segments pour garder des requêtes rapides.",
+      "Un index fantôme a tourné six semaines avant que nous basculions le trafic."
+    ],
+    "costHeading": "Ce que cela nous a coûté",
+    "cost": "Le stockage a augmenté d’environ 18 % à cause des segments non fusionnés, et les astreintes ont été plus chargées le premier mois, le temps d’ajuster la taille des lots."
+  },
+  "ask": {
+    "prompt": "Qu’a coûté cette migration ?",
+    "chatTitle": "Coût de l’indexation incrémentale",
+    "answer": "Les modifications arrivent maintenant dans la recherche en **moins de 90 secondes**, et l’indexation quotidienne est passée de **6 h 12 min à 24 min** {cite}.\n\n- **Stockage :** environ 18 % de plus, à cause des segments non fusionnés {cite}\n- **Astreintes :** plus chargées le premier mois {cite}"
+  },
+  "booking": {
+    "title": "Réserver une table",
+    "tagline": "De saison · Bord de mer · Depuis 2011",
+    "nav": ["Carte", "Privatisation", "Cartes cadeaux", "Réserver"],
+    "heading": "Réserver une table",
+    "intro": "Les tables sont gardées 15 minutes. Au-delà de 8 personnes, voir la privatisation.",
+    "name": "Nom et prénom",
+    "email": "E-mail",
+    "date": "Date",
+    "chooseDate": "Choisir une date",
+    "party": "Couverts",
+    "choosePartySize": "Nombre de personnes",
+    "partyOptions": [
+      "1 personne",
+      "2 personnes",
+      "3 personnes",
+      "4 personnes",
+      "5 personnes",
+      "6 personnes"
+    ],
+    "time": "Heure",
+    "requests": "Demandes particulières",
+    "optional": "(facultatif)",
+    "placeholder": "Allergies, occasion spéciale, préférence de table",
+    "note": "Aucun paiement maintenant.",
+    "submit": "Demander une réservation",
+    "footer": "14 Wharf Row · Du mardi au dimanche, de 17 h à 22 h"
+  },
+  "agent": {
+    "name": "Camille Laurent",
+    "email": "camille.laurent@larkmail.net",
+    "prompt": "Réserve vendredi à {time} pour 2. {name}, {email}. N’envoie pas le formulaire.",
+    "chatTitle": "Table au Saltmarsh vendredi",
+    "answer": "C’est rempli : **{party}**, **{date} à {time}**, au nom de {name}. Rien n’est encore envoyé : vérifiez, puis cliquez sur **Demander une réservation**."
+  },
+  "research": {
+    "name": "Recherche",
+    "description": "Compare les sources et rédige des synthèses courtes et sourcées",
+    "prompt": "Recherche la question dans plusieurs sources. Privilégie les sources primaires, comme la documentation officielle, les articles de recherche et les journaux des modifications, plutôt que les résumés.\n\nSignale les points de désaccord entre les sources, et pourquoi.\n\nTermine par une synthèse courte : d’abord les conclusions principales, puis les questions ouvertes. Source chaque affirmation."
+  }
+}

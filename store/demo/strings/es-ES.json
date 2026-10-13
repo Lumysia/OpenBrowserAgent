@@ -1,0 +1,70 @@
+{
+  "article": {
+    "title": "Búsqueda incremental",
+    "nav": ["Artículos", "Plataforma", "Empleo", "Quiénes somos"],
+    "tag": "Infraestructura",
+    "heading": "Cómo hicimos incremental nuestro índice de búsqueda",
+    "role": "Ingeniera principal",
+    "meta": "4 de marzo · 9 min de lectura",
+    "lead": "Durante tres años, cada cambio en nuestro catálogo de productos provocaba una reconstrucción completa del índice de búsqueda. Cuando el catálogo llegó a 40 millones de anuncios, ese proceso nocturno superaba las seis horas. Así pasamos a la indexación incremental, y esto es lo que nos costó.",
+    "whyHeading": "Por qué dejaron de servir las reconstrucciones completas",
+    "why": "Reconstruir todo era sencillo y siempre coherente, pero un cambio de precio hecho a las 9 de la mañana no aparecía en las búsquedas hasta el día siguiente. Los vendedores se dieron cuenta: las incidencias por anuncios «desaparecidos» se triplicaron en dos trimestres.",
+    "bars": ["Reconstrucción completa", "Incremental", "Cambio → búsqueda"],
+    "values": ["6 h 12 min", "24 min", "< 90 s"],
+    "figcaption": "Mediana del tiempo de indexación por día, antes y después de la migración.",
+    "approachHeading": "Cómo lo hicimos",
+    "approach": "Dividimos el índice en 512 shards por ID de anuncio y enviamos los cambios del registro del catálogo a una cola. Cada worker aplica las actualizaciones en lotes pequeños y publica un segmento nuevo cada 30 segundos.",
+    "points": [
+      "Las escrituras son idempotentes, así que repetirlas tras un fallo es seguro.",
+      "Cada noche, un proceso `compact` fusiona los segmentos pequeños para que las consultas sigan siendo rápidas.",
+      "Un índice en la sombra funcionó durante seis semanas antes de pasarle el tráfico."
+    ],
+    "costHeading": "Lo que nos costó",
+    "cost": "El almacenamiento creció cerca de un 18 % por los segmentos sin fusionar, y las guardias fueron más duras el primer mes, mientras ajustábamos el tamaño de los lotes."
+  },
+  "ask": {
+    "prompt": "¿Qué costó esta migración?",
+    "chatTitle": "Costes de la indexación incremental",
+    "answer": "Los cambios llegan ahora a la búsqueda en **menos de 90 segundos**, y la indexación diaria bajó de **6 h 12 min a 24 min** {cite}.\n\n- **Almacenamiento:** cerca de un 18 % más, por segmentos sin fusionar {cite}\n- **Guardias:** más carga durante el primer mes {cite}"
+  },
+  "booking": {
+    "title": "Reservar mesa",
+    "tagline": "De temporada · De la costa · Desde 2011",
+    "nav": ["Carta", "Eventos privados", "Tarjetas regalo", "Reservar"],
+    "heading": "Reserva una mesa",
+    "intro": "Guardamos la mesa 15 minutos. Para grupos de más de 8, consulta los eventos privados.",
+    "name": "Nombre y apellidos",
+    "email": "Correo electrónico",
+    "date": "Fecha",
+    "chooseDate": "Elige una fecha",
+    "party": "Comensales",
+    "choosePartySize": "Personas",
+    "partyOptions": [
+      "1 persona",
+      "2 personas",
+      "3 personas",
+      "4 personas",
+      "5 personas",
+      "6 personas"
+    ],
+    "time": "Hora",
+    "requests": "Peticiones especiales",
+    "optional": "(opcional)",
+    "placeholder": "Alergias, celebraciones, preferencias de mesa",
+    "note": "No se te cobrará nada ahora.",
+    "submit": "Solicitar reserva",
+    "footer": "14 Wharf Row · De martes a domingo, 17:00–22:00"
+  },
+  "agent": {
+    "name": "Lucía Moreno",
+    "email": "lucia.moreno@larkmail.net",
+    "prompt": "Resérvame mesa para 2 el viernes a las {time}. {name}, {email}. No la envíes.",
+    "chatTitle": "Mesa en Saltmarsh el viernes",
+    "answer": "He rellenado **{party}**, **{date} a las {time}**, a nombre de {name}. Aún no se ha enviado: revísala y pulsa **Solicitar reserva**."
+  },
+  "research": {
+    "name": "Investigación",
+    "description": "Compara fuentes y redacta informes breves con citas",
+    "prompt": "Investiga la pregunta en varias fuentes. Prioriza las fuentes primarias, como documentación oficial, artículos y registros de cambios, frente a los resúmenes.\n\nIndica dónde no coinciden las fuentes y por qué.\n\nTermina con un informe breve: primero las conclusiones clave y después las preguntas abiertas. Cita cada afirmación."
+  }
+}
