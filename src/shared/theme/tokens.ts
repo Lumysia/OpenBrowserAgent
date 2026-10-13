@@ -34,6 +34,7 @@ export const TOKEN_NAMES = [
   "accent-solid",
   "accent-soft",
   "accent-softer",
+  "accent-fill",
   "accent-hover",
   "accent-active",
   "accent-shadow",
@@ -120,8 +121,9 @@ const ROLE = {
   },
 } as const;
 
-// Chroma caps keep loud flag colors pleasant as large areas.
-const MAX_CHROMA = { strong: 0.15, tint: 0.055 } as const;
+// Chroma caps keep loud flag colors pleasant: accent text stays as calm as
+// the classic accents, large areas stay soft.
+const MAX_CHROMA = { strong: 0.12, tint: 0.055 } as const;
 
 function role(
   seed: string | null,
@@ -156,9 +158,9 @@ export function themeTokens(
   const dark = scheme === "dark";
   const theme: ThemeDefinition = dark ? { ...base, ...base.dark } : base;
   const roles = ROLE[scheme];
-  const surface = theme.surface ?? theme.primary;
-  const [bubbleFrom, bubbleTo] = theme.bubble ?? [surface, surface];
-  const wash = theme.wash ?? [surface, surface, surface];
+  const accent = theme.accent;
+  const [bubbleFrom, bubbleTo] = theme.bubble ?? [accent, accent];
+  const wash = theme.wash ?? [accent, accent, accent];
   const neutrals = Object.fromEntries(
     Object.entries(NEUTRALS[scheme]).map(([name, value]) => [
       name,
@@ -168,10 +170,10 @@ export function themeTokens(
     ]),
   ) as (typeof NEUTRALS)[ResolvedScheme];
 
-  const soft = role(surface, roles.soft);
-  const softer = role(surface, roles.softer);
-  const hover = role(surface, roles.hover);
-  const active = role(surface, roles.active);
+  const soft = role(accent, roles.soft);
+  const softer = role(accent, roles.softer);
+  const hover = role(accent, roles.hover);
+  const active = role(accent, roles.active);
   const bubble = role(bubbleFrom, roles.bubble);
   const bubble2 = role(bubbleTo, roles.bubble);
   const washes = wash.map((seed) =>
@@ -193,17 +195,21 @@ export function themeTokens(
     neutrals.secondary,
     ...washes,
   ];
-  const accentSurfaces = [soft, softer, hover, active, bubble, bubble2];
+  // Pills, chips, the default button and the selected nav row.
+  const fill = mix(soft, neutrals.card, 0.72);
+  const accentSurfaces = [soft, softer, fill, hover, active, bubble, bubble2];
 
-  const strong = ensureAll(
-    role(theme.primary, roles.strong, MAX_CHROMA.strong),
-    [...pageBackgrounds, softer, soft],
-  );
+  const strong = ensureAll(role(accent, roles.strong, MAX_CHROMA.strong), [
+    ...pageBackgrounds,
+    softer,
+    soft,
+    fill,
+  ]);
   const accentText = ensureAll(mix(strong, neutrals.foreground, 0.8), [
     ...pageBackgrounds,
     ...accentSurfaces,
   ]);
-  const solid = role(theme.primary, roles.solid, MAX_CHROMA.strong);
+  const solid = role(accent, roles.solid, MAX_CHROMA.strong);
   const destructiveSolid = dark ? "#b8372f" : "#b3261e";
   return {
     ...neutrals,
@@ -219,6 +225,7 @@ export function themeTokens(
     "accent-solid": solid,
     "accent-soft": soft,
     "accent-softer": softer,
+    "accent-fill": fill,
     "accent-hover": hover,
     "accent-active": active,
     "accent-shadow": alpha(strong, 0.18),
@@ -260,6 +267,7 @@ export function textPairs(tokens: ThemeTokens) {
   const accent = [
     "accent-soft",
     "accent-softer",
+    "accent-fill",
     "accent-hover",
     "accent-active",
     "bubble",
@@ -279,6 +287,7 @@ export function textPairs(tokens: ThemeTokens) {
   pairs.push(
     ["accent-strong", "accent-soft"],
     ["accent-strong", "accent-softer"],
+    ["accent-strong", "accent-fill"],
     ["destructive-foreground", "destructive-solid"],
   );
   return pairs.map(([text, background]) => ({

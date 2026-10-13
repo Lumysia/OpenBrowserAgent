@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { mergePreferences } from "../src/shared/default-preferences";
-import { contrast } from "../src/shared/theme/color";
+import { contrast, toOklch } from "../src/shared/theme/color";
 import {
   ACCENT_THEMES,
   DEFAULT_THEME,
@@ -59,6 +59,29 @@ test("pride themes keep their flag's hues in the large areas", () => {
     trans["accent-soft"],
     themeTokens("pink", "light")["accent-soft"],
   );
+  assert.notEqual(trans.bubble, trans["bubble-2"]);
+});
+
+// Accent text, icons and pills take a hue the page itself shows, so a
+// label never fights the surface it sits on (no pink on a blue page).
+test("accents share a hue with the page wash in every theme and scheme", () => {
+  const distance = (a: number, b: number) =>
+    Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
+  const failures: string[] = [];
+  for (const theme of ALL_THEMES)
+    for (const scheme of SCHEMES) {
+      const tokens = themeTokens(theme, scheme);
+      const accent = toOklch(tokens["accent-strong"]).h;
+      const fill = toOklch(tokens["accent-fill"]).h;
+      const page = (["wash-1", "wash-2", "wash-3"] as const)
+        .map((name) => toOklch(tokens[name]))
+        .filter((color) => color.c > 0.01)
+        .map((color) => color.h);
+      const nearest = Math.min(...page.map((hue) => distance(hue, accent)));
+      if (nearest > 30 || distance(accent, fill) > 15)
+        failures.push(`${theme}/${scheme}: accent ${accent.toFixed(0)}`);
+    }
+  assert.deepEqual(failures, []);
 });
 
 test("an unknown stored theme shows pink and stays stored as it is", () => {

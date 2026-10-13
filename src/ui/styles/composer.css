@@ -203,7 +203,7 @@
   border-radius: var(--radius-pill);
   background:
     linear-gradient(180deg, var(--highlight), transparent 60%),
-    color-mix(in oklab, var(--accent-soft) 72%, var(--card));
+    var(--accent-fill);
   color: var(--accent-text);
   font-size: var(--text-lg);
   box-shadow: var(--inner-highlight), var(--elevation-1);

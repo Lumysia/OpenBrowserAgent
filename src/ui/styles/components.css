@@ -23,7 +23,7 @@
 }
 .ui-button-default {
   border-color: color-mix(in oklab, var(--accent-strong) 24%, var(--border));
-  background: color-mix(in oklab, var(--accent-soft) 72%, var(--card));
+  background: var(--accent-fill);
   color: var(--accent-text);
   box-shadow: var(--glow);
 }
@@ -174,7 +174,7 @@
 }
 .ui-switch.checked {
   border-color: color-mix(in oklab, var(--accent-strong) 30%, var(--border));
-  background: color-mix(in oklab, var(--accent-soft) 74%, var(--card));
+  background: var(--accent-fill);
 }
 .ui-switch.checked span {
   translate: 20px 0;

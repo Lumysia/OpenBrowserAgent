@@ -29,15 +29,17 @@ export type ThemeId = AccentTheme | PrideTheme;
 export const DEFAULT_THEME: ThemeId = "pink";
 
 export type ThemeDefinition = {
-  // Buttons, links, icons, focus rings and the streaming caret.
-  primary: string;
-  // Soft fills: selected rows, hovers, chips, inline code. Default: primary.
-  surface?: string;
+  // The accent family: text, icons, links, controls, focus rings and the
+  // soft fills behind them (selected rows, hovers, chips, pills). One hue,
+  // so a label and the fill it sits on always belong together. Pick it from
+  // the page colors (wash, tint) of the same scheme so accents never fight
+  // the surface they sit on.
+  accent: string;
   // The user's message bubble and the send button, as a gradient.
-  // Default: the surface hue.
+  // Default: the accent hue.
   bubble?: [string, string];
   // The page wash from top to bottom (side panel, settings). `null` is a
-  // white stripe. Default: the surface hue.
+  // white stripe. Default: the accent hue.
   wash?: [string | null, string | null, string | null];
   // A hue the neutral surfaces lean towards; none keeps them warm grey.
   tint?: string;
@@ -45,71 +47,67 @@ export type ThemeDefinition = {
   flag?: string[];
   // Roles that read better with other seeds on dark backgrounds, where
   // some hues (yellows) turn muddy as large areas.
-  dark?: Pick<ThemeDefinition, "surface" | "bubble" | "wash">;
+  dark?: Pick<ThemeDefinition, "bubble" | "wash">;
 };
 
 export const THEMES: Record<ThemeId, ThemeDefinition> = {
-  pink: { primary: "#a35b76" },
-  green: { primary: "#6f7f24" },
-  blue: { primary: "#3b6f91" },
-  purple: { primary: "#7565a6" },
-  amber: { primary: "#9a7028" },
-  // Six stripes spread over the roles: violet actions on blue surfaces, a
-  // warm bubble, and the page washes from red to green.
+  pink: { accent: "#a35b76" },
+  green: { accent: "#6f7f24" },
+  blue: { accent: "#3b6f91" },
+  purple: { accent: "#7565a6" },
+  amber: { accent: "#9a7028" },
+  // Six stripes spread over the roles: the page washes run through the
+  // flag, the bubble and the accents stay warm like the top of the page.
   rainbow: {
-    primary: "#732982",
-    surface: "#004cff",
+    accent: "#e40303",
     bubble: ["#ff8c00", "#e40303"],
     wash: ["#e40303", "#ffed00", "#008026"],
     flag: ["#e40303", "#ff8c00", "#ffed00", "#008026", "#004cff", "#732982"],
     dark: { wash: ["#e40303", "#732982", "#004cff"] },
   },
-  // Pink actions on soft blue, the bubble runs blue to pink, white between.
+  // Soft blue surfaces and accents, the bubble runs blue to pink, white
+  // between the washes.
   trans: {
-    primary: "#d4708a",
-    surface: "#5bcefa",
+    accent: "#5bcefa",
     bubble: ["#5bcefa", "#f5a9b8"],
     wash: ["#5bcefa", "#f5a9b8", "#5bcefa"],
     tint: "#5bcefa",
     flag: ["#5bcefa", "#f5a9b8", "#ffffff", "#f5a9b8", "#5bcefa"],
   },
-  // The orange to pink range: rose actions on peach.
+  // The orange to pink range: terracotta accents on peach.
   lesbian: {
-    primary: "#a30262",
-    surface: "#ff9a56",
+    accent: "#d55a3a",
     bubble: ["#ff9a56", "#d362a4"],
     wash: ["#d52d00", null, "#d362a4"],
     tint: "#ef7627",
     flag: ["#d52d00", "#ff9a56", "#ffffff", "#d362a4", "#a30262"],
   },
   bi: {
-    primary: "#9b4f96",
-    surface: "#0038a8",
+    accent: "#9b4f96",
     bubble: ["#d60270", "#9b4f96"],
     wash: ["#d60270", "#9b4f96", "#0038a8"],
     tint: "#9b4f96",
     flag: ["#d60270", "#d60270", "#9b4f96", "#0038a8", "#0038a8"],
   },
+  // Pink accents with the warm top of the page; yellow and blue live in
+  // the bubble and the wash.
   pan: {
-    primary: "#e0187a",
-    surface: "#21b1ff",
+    accent: "#ff218c",
     bubble: ["#ffd800", "#ff218c"],
     wash: ["#ff218c", "#ffd800", "#21b1ff"],
     flag: ["#ff218c", "#ffd800", "#21b1ff"],
   },
   nonbinary: {
-    primary: "#9c59d1",
-    surface: "#fcf434",
+    accent: "#9c59d1",
     bubble: ["#fcf434", "#9c59d1"],
     wash: ["#fcf434", null, "#9c59d1"],
     tint: "#9c59d1",
     flag: ["#fcf434", "#ffffff", "#9c59d1", "#2c2c2c"],
-    dark: { surface: "#9c59d1", wash: ["#9c59d1", null, "#fcf434"] },
+    dark: { wash: ["#9c59d1", null, "#fcf434"] },
   },
-  // Purple on cool greys, black to white in the wash.
+  // Muted purple on cool greys, black to white in the wash.
   ace: {
-    primary: "#800080",
-    surface: "#a3a3a3",
+    accent: "#76508a",
     bubble: ["#a3a3a3", "#800080"],
     wash: ["#a3a3a3", null, "#800080"],
     tint: "#800080",

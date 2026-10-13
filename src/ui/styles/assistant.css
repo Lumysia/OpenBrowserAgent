@@ -50,7 +50,7 @@
   margin-left: var(--space-1);
   padding: 0 6px;
   border-radius: var(--radius-pill);
-  background: color-mix(in oklab, var(--accent-soft) 72%, var(--card));
+  background: var(--accent-fill);
   color: var(--accent-text);
   font-size: var(--text-xs);
   font-weight: 600;
@@ -387,7 +387,7 @@
   display: inline-grid;
   place-items: center;
   border-radius: var(--radius-pill);
-  background: color-mix(in oklab, var(--accent-soft) 72%, var(--card));
+  background: var(--accent-fill);
   color: var(--accent-strong);
   animation: pulse 1.7s var(--ease-in-out) infinite;
 }

@@ -426,7 +426,7 @@
   padding: 4px 8px;
   border: 1px solid color-mix(in oklab, var(--accent-strong) 20%, var(--border));
   border-radius: var(--radius-pill);
-  background: color-mix(in oklab, var(--accent-soft) 72%, var(--card));
+  background: var(--accent-fill);
   color: var(--accent-text);
   font-size: var(--text-sm);
   font-weight: 600;
