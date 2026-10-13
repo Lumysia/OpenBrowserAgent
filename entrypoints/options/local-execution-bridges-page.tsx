@@ -112,18 +112,20 @@ export function LocalExecutionBridgesPage() {
           </h1>
           <p className="muted">{t.options.localExecutionBridgesDescription}</p>
         </div>
-        <div className="settings-page-actions">
-          <Button onClick={addBridge}>
-            <Plus size={15} /> {t.options.newLocalExecutionBridge}
-          </Button>
-        </div>
+        {items.length ? (
+          <div className="settings-page-actions">
+            <Button onClick={addBridge}>
+              <Plus size={15} /> {t.options.newLocalExecutionBridge}
+            </Button>
+          </div>
+        ) : null}
       </div>
       {!items.length ? (
         <EmptyState
           icon={<TerminalSquare size={28} />}
           title={t.options.localExecutionBridgesEmpty}
           action={
-            <Button variant="outline" onClick={addBridge}>
+            <Button onClick={addBridge}>
               <Plus size={15} /> {t.options.newLocalExecutionBridge}
             </Button>
           }

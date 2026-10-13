@@ -167,9 +167,11 @@ export function McpPage() {
           <p className="muted">{t.options.mcpServersDescription}</p>
         </div>
         <div className="settings-page-actions">
-          <Button onClick={addServer}>
-            <Plus size={15} /> {t.options.newMcpServer}
-          </Button>
+          {items.length ? (
+            <Button onClick={addServer}>
+              <Plus size={15} /> {t.options.newMcpServer}
+            </Button>
+          ) : null}
           <Tooltip>
             <Popover open={importMenuOpen} onOpenChange={setImportMenuOpen}>
               <TooltipTrigger asChild>
@@ -215,7 +217,7 @@ export function McpPage() {
           icon={<Plug size={28} />}
           title={t.options.mcpServersEmpty}
           action={
-            <Button variant="outline" onClick={addServer}>
+            <Button onClick={addServer}>
               <Plus size={15} /> {t.options.newMcpServer}
             </Button>
           }
