@@ -246,7 +246,7 @@ test("review4 S2: the kept version is used once the shared one is collected, and
     ["a1", clock.now],
   ]);
   const BASES = `${STORAGE_KEYS.syncBases}:chats`;
-  assert.equal(a.get<Record<string, { blob: string }>>(BASES).X.blob, base);
+  assert.ok(a.get<string[]>(BASES).includes(base));
   clock.now += 60_000;
   await saveChat(b, "X", [
     ["m0", t],

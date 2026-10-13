@@ -1,5 +1,6 @@
 import { CLOCK_LOCK } from "../locks";
 import { STORAGE_KEYS } from "../storage-keys";
+import { saveClocks } from "./bases";
 import { sameJson } from "./codec";
 import {
   changedEntry,
@@ -9,12 +10,11 @@ import {
   loadHlc,
   saveHlc,
 } from "./clocks";
-import { keepBases } from "./bases";
 import { ownsKey, type Collection, type LocalEntry } from "./collection";
 import { SYNC_COLLECTIONS } from "./collections";
 import type { SyncEnv } from "./env";
 import { tickClock } from "./hlc";
-import { project } from "./local";
+import { project, type Payloads } from "./local";
 
 // Recording local edits: the background's storage.onChanged listener passes
 // every change of local data here. Each record the change touched gets a new
@@ -81,8 +81,12 @@ export async function recordLocalChanges(
       const entries = await collection.read(env, (id) => records.has(id));
       let hlc = await loadHlc(env.local);
       let changed = false;
-      const recordedBefore = new Map<string, LocalEntry | undefined>();
+      // The old values: one may be the version a change was made from (also
+      // a change recorded before its body's event, a chat's list entry).
+      const bodies: Payloads = new Map();
       for (const [id, { removed, before }] of records) {
+        if (collection.mergeBodies && before?.body !== undefined)
+          await project(collection, before, undefined, bodies);
         const entry = entries.get(id);
         const copy = entry
           ? await project(collection, entry, clocks[id])
@@ -100,18 +104,11 @@ export async function recordLocalChanges(
         changed = true;
         recorded++;
       }
-      // A change recorded before its body's (a chat's list entry first)
-      // keeps its base from the body's event.
-      for (const [id, { before }] of records)
-        if (clocks[id]?.local) recordedBefore.set(id, before);
-      const bases = await keepBases(env, collection, clocks, recordedBefore);
-      if (changed || Object.keys(bases).length)
-        await env.local.set({
-          ...(changed
-            ? { [clocksKey(collection.name)]: clocks, ...saveHlc(hlc) }
-            : {}),
-          ...bases,
-        });
+      await saveClocks(env, collection, clocks, {
+        changed,
+        items: changed ? saveHlc(hlc) : {},
+        bodies,
+      });
     });
   }
   return recorded;

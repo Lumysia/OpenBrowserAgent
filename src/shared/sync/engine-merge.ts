@@ -1,9 +1,8 @@
 import { CLOCK_LOCK } from "../locks";
-import { keptBase } from "./bases";
+import { keptBase, saveClocks } from "./bases";
 import { bodyFor, storedBlobs } from "./blobs";
 import {
   changedEntry,
-  clocksKey,
   loadClocks,
   loadHlc,
   saveHlc,
@@ -99,7 +98,7 @@ export async function mergeRecord(
     const base = merge.base
       ? ((await bodyFor(transport, collection, merge.base, payloads).catch(
           () => undefined,
-        )) ?? (await keptBase(env, collection, id, merge.base)))
+        )) ?? (await keptBase(env, collection, merge.base)))
       : undefined;
     body = collection.mergeBodies!(
       base?.body,
@@ -241,9 +240,9 @@ export async function keepLocalCopies(
           },
         });
       }
-      await env.local.set({
-        [clocksKey(collection.name)]: clocks,
-        ...saveHlc(hlc),
+      await saveClocks(env, collection, clocks, {
+        items: saveHlc(hlc),
+        bodies: payloads,
       });
     });
   }

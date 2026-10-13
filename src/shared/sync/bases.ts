@@ -1,87 +1,103 @@
-import { CLOCK_LOCK } from "../locks";
 import { STORAGE_KEYS } from "../storage-keys";
-import { loadClocks, type Clocks } from "./clocks";
-import type { Collection, LocalEntry } from "./collection";
+import { parseBody } from "./blobs";
+import { clocksKey, type Clocks } from "./clocks";
+import type { Collection } from "./collection";
 import { readKey, type SyncEnv } from "./env";
-import { project } from "./local";
+import type { Payloads } from "./local";
 
-// Bodies of the versions this device's unconfirmed changes were made from,
-// for collections that merge bodies (chats, skill and workspace files). A
-// merge needs that version, but the server collects a blob a day after no
-// record refers to it: a change made offline for longer would otherwise
-// merge without it and bring back what the other device removed. A body is
-// kept from the edit event that changed it, while its record's change waits
-// for a confirmation.
+// Writing clock entries, and the bodies their unconfirmed changes need.
+// A change of a collection that merges bodies (chats, skill and workspace
+// files) merges from the version it was made from (`base`), or from its
+// pushed version (`sent`) once that is confirmed. The server collects a blob
+// a day after no record refers to it, so a change waiting longer would merge
+// without it and bring back what the other device removed. Every clock
+// write goes through `saveClocks`, which keeps (in the same storage call)
+// the body of each such version the writer had and drops the bodies no
+// unconfirmed change needs any more.
 
-type Bases = Record<string, { blob: string; body: unknown }>;
-
+// `sync-bases:<collection>`: the blobs kept, each body under its own key.
 export const basesKey = (collection: string) =>
   `${STORAGE_KEYS.syncBases}:${collection}`;
+const bodyKey = (collection: string, blob: string) =>
+  `${basesKey(collection)}:${blob}`;
 
-const loadBases = async (env: SyncEnv, collection: string) =>
-  (await readKey<Bases>(env.local, basesKey(collection))) ?? {};
+async function keptBlobs(env: SyncEnv, collection: string) {
+  const index = await readKey<unknown>(env.local, basesKey(collection));
+  return Array.isArray(index) ? (index as string[]) : [];
+}
 
-// Whether the record's change may still be merged from `blob`: the version
-// it was made from, or its pushed version (the base once confirmed).
-const needed = (clocks: Clocks, id: string, blob: string) =>
-  !!clocks[id]?.local &&
-  (clocks[id].base?.blob === blob || clocks[id].sent?.blob === blob);
+// Blobs unconfirmed changes may still merge from.
+function neededBlobs(clocks: Clocks) {
+  const needed = new Set<string>();
+  for (const entry of Object.values(clocks)) {
+    if (!entry.local) continue;
+    if (entry.base?.blob) needed.add(entry.base.blob);
+    if (entry.sent?.blob) needed.add(entry.sent.blob);
+  }
+  return needed;
+}
 
-// Storage items to write with `clocks` (under the clock lock): the bodies
-// changes just recorded were made from, when the edit event's old value is
-// such a version. Empty when nothing new is kept.
-export async function keepBases(
+export type ClockWrite = {
+  // The clocks differ from the stored ones (else only bodies are kept).
+  changed?: boolean;
+  // Written in the same storage call (the data, the HLC state).
+  items?: Record<string, unknown>;
+  // Bodies the writer has, by blob: those of needed versions are kept.
+  bodies?: Payloads;
+};
+
+// Store a collection's clock entries; the caller holds the clock lock.
+export async function saveClocks(
   env: SyncEnv,
   collection: Collection,
   clocks: Clocks,
-  before: Map<string, LocalEntry | undefined>,
-): Promise<Record<string, Bases>> {
-  if (!collection.mergeBodies) return {};
-  const wanted: Array<[string, string, unknown]> = [];
-  for (const [id, entry] of before) {
-    if (entry?.body === undefined) continue;
-    const { blob } = await project(collection, entry, undefined);
-    if (blob && needed(clocks, id, blob)) wanted.push([id, blob, entry.body]);
+  { changed = true, items = {}, bodies }: ClockWrite = {},
+) {
+  const write: Record<string, unknown> = {
+    ...items,
+    ...(changed ? { [clocksKey(collection.name)]: clocks } : {}),
+  };
+  let stale: string[] = [];
+  if (collection.mergeBodies) {
+    const needed = neededBlobs(clocks);
+    const kept = await keptBlobs(env, collection.name);
+    const next = kept.filter((blob) => needed.has(blob));
+    stale = kept.filter((blob) => !needed.has(blob));
+    for (const blob of needed) {
+      const payload = bodies?.get(blob);
+      if (next.includes(blob) || !payload) continue;
+      write[bodyKey(collection.name, blob)] = parseBody(collection, payload);
+      next.push(blob);
+    }
+    stale = stale.map((blob) => bodyKey(collection.name, blob));
+    if (!next.length && kept.length) stale.push(basesKey(collection.name));
+    else if (next.length !== kept.length || stale.length)
+      write[basesKey(collection.name)] = next;
   }
-  if (!wanted.length) return {};
-  const bases = await loadBases(env, collection.name);
-  let changed = false;
-  for (const [id, blob, body] of wanted) {
-    if (bases[id]?.blob === blob) continue;
-    bases[id] = { blob, body };
-    changed = true;
-  }
-  return changed ? { [basesKey(collection.name)]: bases } : {};
+  if (Object.keys(write).length) await env.local.set(write);
+  if (stale.length) await env.local.remove(stale);
 }
 
-// The kept body of `blob`, the base of the record's change.
+// The kept body of `blob`, a version an unconfirmed change merges from.
 export async function keptBase(
   env: SyncEnv,
   collection: Collection,
-  id: string,
   blob: string,
 ) {
-  const kept = (await loadBases(env, collection.name))[id];
-  return kept?.blob === blob ? { body: kept.body } : undefined;
+  if (!(await keptBlobs(env, collection.name)).includes(blob)) return;
+  const key = bodyKey(collection.name, blob);
+  const body = (await env.local.get(key))[key];
+  return body === undefined ? undefined : { body };
 }
 
-// Drop bodies no unconfirmed change needs any more.
-export async function pruneBases(env: SyncEnv, collections: Collection[]) {
-  for (const collection of collections) {
-    if (!collection.mergeBodies) continue;
-    await env.lock(CLOCK_LOCK, async () => {
-      const bases = await loadBases(env, collection.name);
-      const ids = Object.keys(bases);
-      if (!ids.length) return;
-      const clocks = await loadClocks(env.local, collection.name);
-      const kept = ids.filter((id) => needed(clocks, id, bases[id].blob));
-      if (kept.length === ids.length) return;
-      if (!kept.length) return env.local.remove(basesKey(collection.name));
-      await env.local.set({
-        [basesKey(collection.name)]: Object.fromEntries(
-          kept.map((id) => [id, bases[id]]),
-        ),
-      });
-    });
-  }
+// Storage keys of a collection's clocks and kept bodies, to remove with
+// its data.
+export async function clockKeys(env: SyncEnv, collection: string) {
+  return [
+    clocksKey(collection),
+    basesKey(collection),
+    ...(await keptBlobs(env, collection)).map((blob) =>
+      bodyKey(collection, blob),
+    ),
+  ];
 }

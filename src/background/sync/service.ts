@@ -28,8 +28,8 @@ import {
   SyncQuotaError,
   type PartsSeen,
 } from "../../shared/sync/browser-sync";
-import { basesKey } from "../../shared/sync/bases";
-import { clocksKey, loadClocks } from "../../shared/sync/clocks";
+import { clockKeys } from "../../shared/sync/bases";
+import { loadClocks } from "../../shared/sync/clocks";
 import { ownsKey, type Collection } from "../../shared/sync/collection";
 import { hashJson } from "../../shared/sync/codec";
 import {
@@ -378,13 +378,12 @@ async function reset(
   // them before the clear does not store their old values after it.
   const removed = [...keys, ...contents];
   await withLocks(env.lock, removed.map(storageLockName), () =>
-    env.lock(CLOCK_LOCK, () =>
-      env.local.remove([
-        ...removed,
-        ...cleared.map((collection) => clocksKey(collection.name)),
-        ...cleared.map((collection) => basesKey(collection.name)),
-      ]),
-    ),
+    env.lock(CLOCK_LOCK, async () => {
+      const clockData = await Promise.all(
+        cleared.map((collection) => clockKeys(env, collection.name)),
+      );
+      await env.local.remove([...removed, ...clockData.flat()]);
+    }),
   );
 }
 

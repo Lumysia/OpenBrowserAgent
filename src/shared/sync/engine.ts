@@ -4,7 +4,7 @@ import {
   SYNC_PREFERENCES,
   type SyncDataSettings,
 } from "../storage-keys";
-import { pruneBases } from "./bases";
+import { saveClocks } from "./bases";
 import {
   checkUploads,
   deleteBlobs,
@@ -17,7 +17,6 @@ import {
   uploadBlobs,
 } from "./blobs";
 import {
-  clocksKey,
   confirmedEntry,
   includes,
   loadClocks,
@@ -154,7 +153,7 @@ async function round(
           result.warnings.push(SYNC_WARNINGS.unreliableEtags);
       }
       await observeRemote(env, maxRootClock(remote));
-      await settleSent(env, remote, snapshot);
+      await settleSent(env, remote, snapshot, payloads);
 
       const outcome = await reconcile(
         context,
@@ -165,7 +164,13 @@ async function round(
         [options.massDelete ?? []].flat(),
       );
       result.warnings.push(...outcome.warnings);
-      await updateEntries(env, outcome.accepted, snapshot, confirmedEntry);
+      await updateEntries(
+        env,
+        outcome.accepted,
+        snapshot,
+        confirmedEntry,
+        payloads,
+      );
       if (outcome.massDelete) {
         result.massDelete = outcome.massDelete;
         state.remote = { root: remote, etag };
@@ -193,7 +198,7 @@ async function round(
       );
       const written = await transport.writeRoot(next, etag);
       if (written.status === "ok") {
-        await updateEntries(env, outcome.pushes, snapshot, sentEntry);
+        await updateEntries(env, outcome.pushes, snapshot, sentEntry, payloads);
         state.remote = { root: next, etag: written.etag };
         for (const hash of uploaded)
           if (seen.has(hash)) (state.uploads ??= {})[hash] = now;
@@ -209,7 +214,6 @@ async function round(
         setTimeout(resolve, 100 + Math.random() * 400 * attempt),
       );
     }
-    await pruneBases(env, collections);
     if (state.remote?.etag && !result.massDelete) {
       await checkUploads(env, transport, collections, state);
       if (
@@ -268,7 +272,12 @@ export function countWaiting(
 // change made from it. One another device's write replaced without it (a
 // server that ignores If-Match) confirms nothing: the change stays a change
 // from its old base and merges with the version that replaced it.
-async function settleSent(env: SyncEnv, remote: Root, snapshot: Snapshot) {
+async function settleSent(
+  env: SyncEnv,
+  remote: Root,
+  snapshot: Snapshot,
+  bodies: Payloads,
+) {
   const held = new Map<string, SyncRecord>();
   for (const [recordId, entry] of snapshot.clocks) {
     const now = remote.records[recordId];
@@ -276,11 +285,12 @@ async function settleSent(env: SyncEnv, remote: Root, snapshot: Snapshot) {
     if (entry.sent && now && includes(now, entry.sent.clock))
       held.set(recordId, entry.sent as SyncRecord);
   }
-  await updateEntries(env, held, snapshot, confirmedEntry);
+  await updateEntries(env, held, snapshot, confirmedEntry, bodies);
 }
 
 // Clock entries of records a round pushed or found confirmed: `change`
 // gives each one's new entry, also in the snapshot the round goes on with.
+// `bodies`: the round's bodies (a pushed version's is kept with its entry).
 async function updateEntries(
   env: SyncEnv,
   records: Map<string, SyncRecord>,
@@ -290,6 +300,7 @@ async function updateEntries(
     entry: ClockEntry,
     record: SyncRecord,
   ) => Promise<ClockEntry>,
+  bodies: Payloads,
 ) {
   const byCollection = new Map<string, Array<[string, SyncRecord]>>();
   for (const [recordId, record] of records) {
@@ -309,7 +320,7 @@ async function updateEntries(
         const read = snapshot.clocks.get(recordId);
         if (read) snapshot.clocks.set(recordId, await change(id, read, record));
       }
-      await env.local.set({ [clocksKey(collection)]: clocks });
+      await saveClocks(env, syncCollection(collection)!, clocks, { bodies });
     });
 }
 

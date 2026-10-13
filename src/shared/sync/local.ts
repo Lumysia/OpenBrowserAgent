@@ -1,8 +1,8 @@
 import { CLOCK_LOCK } from "../locks";
+import { saveClocks } from "./bases";
 import { hashJson, jsonBytes, sameJson, sha256Hex } from "./codec";
 import {
   changedEntry,
-  clocksKey,
   differs,
   loadClocks,
   loadHlc,
@@ -109,9 +109,9 @@ export async function readLocal(
         if (clocks[id]) snapshot.clocks.set(recordId, clocks[id]);
       }
       if (changed)
-        await env.local.set({
-          [clocksKey(collection.name)]: clocks,
-          ...saveHlc(hlc),
+        await saveClocks(env, collection, clocks, {
+          items: saveHlc(hlc),
+          bodies: payloads,
         });
     });
   return snapshot;
@@ -133,12 +133,14 @@ export type LocalWrite = {
 // change no edit event recorded (a chat body saved as the background
 // stopped): it is recorded now. Skipped records are compared again next
 // round. Returns the record ids written; the snapshot follows them.
+// `bodies`: the bodies the round read, kept for the merged changes.
 export async function applyToLocal(
   env: SyncEnv,
   device: string,
   collection: Collection,
   writes: LocalWrite[],
   snapshot: Snapshot,
+  bodies: Payloads,
 ) {
   const byId = new Map(
     writes.map((write) => [
@@ -156,11 +158,11 @@ export async function applyToLocal(
     clocks[id] = await changedEntry(id, copy, clocks[id], clock);
     missed.set(id, copy);
   };
-  const stored = (items: Record<string, unknown> = {}) => ({
-    ...items,
-    [clocksKey(collection.name)]: clocks,
-    ...(hlc ? saveHlc(hlc) : {}),
-  });
+  const store = (items: Record<string, unknown> = {}) =>
+    saveClocks(env, collection, clocks, {
+      items: { ...items, ...(hlc ? saveHlc(hlc) : {}) },
+      bodies,
+    });
   let committed = false;
   const written = await collection.write(
     env,
@@ -175,7 +177,7 @@ export async function applyToLocal(
         env.lock(CLOCK_LOCK, async () => {
           clocks = await loadClocks(env.local, collection.name);
           const result = await run();
-          if (missed.size && !committed) await env.local.set(stored());
+          if (missed.size && !committed) await store();
           return result;
         }),
       async verify(id, current) {
@@ -205,7 +207,7 @@ export async function applyToLocal(
       async commit(items, ids) {
         for (const id of ids) clocks[id] = byId.get(id)!.entry;
         committed = true;
-        await env.local.set(stored(items));
+        await store(items);
       },
     },
   );
