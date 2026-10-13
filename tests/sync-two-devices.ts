@@ -1,12 +1,14 @@
 // Two devices against a real WebDAV server, covering the cases that once
 // lost or hid data. Each case gets its own folder.
 //
-//   node --import tsx tests/sync-two-devices.ts <urlA> <urlB> [<noEtagUrlA> <noEtagUrlB>]
+//   node --import tsx tests/sync-two-devices.ts <urlA> <urlB> \
+//     [<noEtagUrlA> <noEtagUrlB> [<ignoringUrlA> <ignoringUrlB>]]
 //
 // urlA and urlB must reach the same folder through different hosts (for
 // example 127.0.0.1 and localhost), so no cache can be shared between the
-// devices by accident. The optional pair goes through a proxy that strips
-// ETags.
+// devices by accident. The optional pairs go through a proxy that strips
+// ETags, and one that drops If-Match and If-None-Match (a server that
+// ignores version checks).
 import assert from "node:assert/strict";
 import {
   createSyncRunner,
@@ -16,94 +18,29 @@ import {
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import { loadClocks } from "../src/shared/sync/clocks";
 import { SYNC_WARNINGS } from "../src/shared/sync/state";
+import type { Transport } from "../src/shared/sync/transport";
 import { createWebDavTransport } from "../src/shared/sync/webdav";
-import { ALL_ON, chat, device, type Device } from "./sync-fixtures";
+import { chat, hookedTransport } from "./sync-fixtures";
+import {
+  CHATS,
+  ids,
+  log,
+  loggingFetch,
+  messages,
+  pair as pairOn,
+  saveChat,
+  tick,
+} from "./sync-two-devices-helpers";
 
-const [baseA, baseB, plainA, plainB] = process.argv.slice(2);
+const [baseA, baseB, plainA, plainB, ignoringA, ignoringB] =
+  process.argv.slice(2);
 if (!baseA || !baseB)
   throw new Error("usage: sync-two-devices.ts <urlA> <urlB>");
-const CHATS = STORAGE_KEYS.chats;
-const run = Date.now().toString(36);
-const log: string[] = [];
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-// WsgiDAV's ETag has one-second resolution: space writes of a case apart.
-const tick = () => sleep(1100);
-
-function loggingFetch(
-  name: string,
-  fail?: { next: (method: string) => boolean },
-) {
-  return async (input: RequestInfo | URL, init?: RequestInit) => {
-    const method = init?.method ?? "GET";
-    const url = new URL(String(input));
-    if (fail?.next(method)) {
-      log.push(`${name} ${method} ${url.pathname} -> (network error)`);
-      throw new TypeError("fetch failed");
-    }
-    const response = await fetch(input, init);
-    log.push(
-      `${name} ${method} ${url.pathname.replace(/.*\/case-[^/]+\//, "")} ${response.status}`,
-    );
-    return response;
-  };
-}
-
-async function folder(base: string, name: string) {
-  const url = `${base.replace(/\/?$/, "/")}case-${run}-${name}/`;
-  const response = await fetch(url, { method: "MKCOL" });
-  if (!response.ok && response.status !== 405)
-    throw new Error(`MKCOL ${response.status}`);
-  return url;
-}
-
-function pair(
+const pair = (
   name: string,
   urls = [baseA, baseB],
   failA?: { next: (method: string) => boolean },
-) {
-  const clock = {
-    get now() {
-      return Date.now();
-    },
-  };
-  // One after the other: parallel MKCOLs of one folder fail on WsgiDAV.
-  return folder(urls[0], name)
-    .then(async (urlA) => [urlA, await folder(urls[1], name)])
-    .then(([urlA, urlB]) => ({
-      a: device(
-        "deviceA",
-        createWebDavTransport({ url: urlA }, loggingFetch("A", failA)),
-        clock,
-        ALL_ON,
-      ),
-      b: device(
-        "deviceB",
-        createWebDavTransport({ url: urlB }, loggingFetch("B")),
-        clock,
-        ALL_ON,
-      ),
-    }));
-}
-
-async function saveChat(
-  on: Device,
-  id: string,
-  messages: Array<[string, number]>,
-) {
-  const { summary, content } = chat(id, messages);
-  const list = (on.get<Array<{ id: string }>>(CHATS) ?? []).filter(
-    (item) => item.id !== id,
-  );
-  await on.set(CHATS, [...list, summary]);
-  await on.set(`${CHATS}/${id}`, content);
-}
-
-const ids = (on: Device) =>
-  (on.get<Array<{ id: string }>>(CHATS) ?? []).map((item) => item.id).sort();
-const messages = (on: Device, id: string) =>
-  on
-    .get<{ messages: Array<{ id: string }> }>(`${CHATS}/${id}`)
-    ?.messages.map((m) => m.id);
+) => pairOn(name, urls, failA);
 
 const cases: Record<string, () => Promise<void>> = {
   async "request counts: first upload, idle check, one-chat edit, lazy open"() {
@@ -259,7 +196,9 @@ const cases: Record<string, () => Promise<void>> = {
     await assert.rejects(runSyncRound(offline, "edit"));
     // Sync off: nothing to do; the device keeps everything it has.
     assert.deepEqual(messages(a, "c1"), ["m1", "m2"]);
-    // Back on, the change still uploads.
+    // Back on, the change still uploads; the next read confirms it.
+    await a.sync("poll");
+    await tick();
     await a.sync("poll");
     assert.equal((await loadClocks(a.env.local, "chats")).c1?.local, undefined);
   },
@@ -404,6 +343,69 @@ if (plainA && plainB)
       assert.equal(b.get(STORAGE_KEYS.language), "fr-FR");
       await a.sync();
       assert.equal(a.get(STORAGE_KEYS.language), "de-DE");
+    };
+
+if (ignoringA && ignoringB)
+  cases["one chat and one provider changed at once, server ignores If-Match"] =
+    async () => {
+      const PROVIDERS = STORAGE_KEYS.provider;
+      let hooks: ReturnType<typeof hookedTransport>["hooks"] = {};
+      const { a, b } = await pairOn(
+        "ignoring",
+        [ignoringA, ignoringB],
+        undefined,
+        (transport) => {
+          const hooked = hookedTransport(transport);
+          hooks = hooked.hooks;
+          return hooked.transport;
+        },
+      );
+      await saveChat(a, "X", [["m1", 1]]);
+      await a.set(PROVIDERS, { p: { apiKey: "k0", model: "m0" } });
+      await a.sync("edit");
+      await tick();
+      await b.sync();
+      assert.equal(await loadContent(b.context, "chats", "X"), true);
+      await b.settle();
+      await tick();
+      await saveChat(a, "X", [
+        ["m1", 1],
+        ["a1", 2],
+      ]);
+      await a.set(PROVIDERS, { p: { apiKey: "k-a", model: "m0" } });
+      await saveChat(b, "X", [
+        ["m1", 1],
+        ["b1", 3],
+      ]);
+      await b.set(PROVIDERS, { p: { apiKey: "k0", model: "m-b" } });
+      // b read the root before a's write and writes right after it.
+      hooks.writeRoot = async () => {
+        await a.sync("edit");
+        await tick();
+      };
+      await b.sync("edit");
+      const read = await (a.context.transport as Transport).readRoot();
+      assert.equal(read.status, "ok");
+      if (read.status === "ok")
+        assert.deepEqual(
+          read.root.records["providers/p"]?.data,
+          { apiKey: "k0", model: "m-b" },
+          "b's write replaced a's",
+        );
+      for (let i = 0; i < 2; i++) {
+        await tick();
+        await a.sync();
+        await tick();
+        await b.sync();
+      }
+      for (const on of [a, b]) {
+        assert.deepEqual(messages(on, "X"), ["m1", "a1", "b1"], on.name);
+        assert.deepEqual(
+          on.get<Record<string, unknown>>(PROVIDERS).p,
+          { apiKey: "k-a", model: "m-b" },
+          on.name,
+        );
+      }
     };
 
 let failed = 0;
