@@ -1,0 +1,37 @@
+OpenBrowserAgent puts an AI agent in your browser's side panel. Ask about the page you're on, research across the web, or hand over a browser task. The agent reads pages, clicks, types and moves between tabs while you watch every step.
+
+You bring your own model. OpenBrowserAgent has no account and no server of its own: your messages go only to the model providers, MCP servers and sync storage that you set up.
+
+WHAT YOU CAN DO
+
+• Ask about the current page or several tabs: summaries, comparisons, explanations, translations.
+• Research a question across the web and get an answer with clickable sources.
+• Let the agent do browser work: fill in forms, compare products, collect information from several pages, tidy and group your tabs.
+• Edit a page in place, for example to translate it, and take screenshots or download files.
+• Select text on any page for quick actions (explain, translate, improve wording, read aloud). This is off until you turn it on, and you can limit it to the sites you choose.
+
+AGENTS AND SKILLS
+
+• Browse and Ask agents are included. You can create your own with their instructions, tools, model and private notes.
+• Agents can hand work to sub-agents that run in the background.
+• Skills are reusable instructions. Built-in skills cover filling forms, tidying tabs, help with the extension, and writing new skills. Pick a skill with "/", or let the agent use one when a request fits. Skills can be imported and exported.
+
+YOUR MODELS, YOUR TOOLS
+
+• Connect OpenAI-compatible, Anthropic-compatible, Gemini, OpenRouter, DeepSeek, Ollama and other providers with your own API keys and base URLs.
+• Use a cheaper helper model for reading long pages.
+• Connect remote MCP servers (Streamable HTTP) for extra tools. Keyless web search servers are included, and each stays off until you turn it on.
+• Optional local execution bridge: lets an agent run commands on your computer, only after you install and enable it.
+
+SYNC ACROSS DEVICES
+
+• Sync settings, agents, skills and, if you choose, chats and attachments, through your browser account or your own WebDAV storage.
+• Changes merge item by item, so edits on two devices don't overwrite each other, and large deletions ask you first.
+
+YOU STAY IN CONTROL
+
+• Every tool step is shown as it runs, with its details available.
+• The agent asks before submitting, buying, sending or deleting when it's unsure.
+• Interface in English, Deutsch, Español, Français, 日本語, 한국어, Português (Brasil), 简体中文 and 繁體中文, with light and dark themes.
+
+OpenBrowserAgent is open source. Source code, documentation and issue tracker: https://github.com/Lumysia/OpenBrowserAgent

@@ -1,0 +1,70 @@
+{
+  "article": {
+    "title": "Busca incremental",
+    "nav": ["Artigos", "Plataforma", "Carreiras", "Sobre"],
+    "tag": "Infraestrutura",
+    "heading": "Como tornamos nosso índice de busca incremental",
+    "role": "Staff Engineer",
+    "meta": "4 de março · 9 min de leitura",
+    "lead": "Durante três anos, cada alteração no nosso catálogo de produtos disparava uma reconstrução completa do índice de busca. Quando o catálogo chegou a 40 milhões de anúncios, esse processo noturno passou de seis horas. Veja como migramos para a indexação incremental e quanto isso nos custou.",
+    "whyHeading": "Por que a reconstrução completa deixou de funcionar",
+    "why": "Reconstruir tudo era simples e sempre consistente, mas uma mudança de preço feita às 9h só aparecia na busca na manhã seguinte. Os vendedores perceberam: os chamados sobre anúncios “sumidos” triplicaram em dois trimestres.",
+    "bars": ["Reconstrução completa", "Incremental", "Alteração → busca"],
+    "values": ["6 h 12 min", "24 min", "< 90 s"],
+    "figcaption": "Tempo mediano de indexação por dia, antes e depois da migração.",
+    "approachHeading": "Nossa abordagem",
+    "approach": "Dividimos o índice em 512 shards por ID do anúncio e enviamos as mudanças do log de alterações do catálogo para uma fila. Cada worker aplica as atualizações em lotes pequenos e publica um novo segmento a cada 30 segundos.",
+    "points": [
+      "As gravações são idempotentes, então reprocessar depois de uma falha é seguro.",
+      "Um job noturno de `compact` junta os segmentos pequenos para manter as consultas rápidas.",
+      "Um índice sombra rodou por seis semanas antes de virarmos o tráfego."
+    ],
+    "costHeading": "Quanto isso custou",
+    "cost": "O armazenamento cresceu cerca de 18% por causa dos segmentos não mesclados, e o plantão ficou mais pesado no primeiro mês, enquanto ajustávamos o tamanho dos lotes."
+  },
+  "ask": {
+    "prompt": "Quanto custou essa migração?",
+    "chatTitle": "Custos da indexação incremental",
+    "answer": "As alterações agora chegam à busca em **menos de 90 segundos**, e a indexação diária caiu de **6 h 12 min para 24 min** {cite}.\n\n- **Armazenamento:** cerca de 18% a mais, por segmentos não mesclados {cite}\n- **Plantão:** mais pesado no primeiro mês {cite}"
+  },
+  "booking": {
+    "title": "Reservar mesa",
+    "tagline": "Sazonal · Litoral · Desde 2011",
+    "nav": ["Cardápio", "Eventos", "Vale-presente", "Reservar"],
+    "heading": "Reserve uma mesa",
+    "intro": "A mesa fica reservada por 15 minutos. Para grupos com mais de 8 pessoas, veja Eventos.",
+    "name": "Nome completo",
+    "email": "E-mail",
+    "date": "Data",
+    "chooseDate": "Escolha uma data",
+    "party": "Pessoas",
+    "choosePartySize": "Quantidade",
+    "partyOptions": [
+      "1 pessoa",
+      "2 pessoas",
+      "3 pessoas",
+      "4 pessoas",
+      "5 pessoas",
+      "6 pessoas"
+    ],
+    "time": "Horário",
+    "requests": "Pedidos especiais",
+    "optional": "(opcional)",
+    "placeholder": "Alergias, comemorações, preferência de lugar",
+    "note": "Nada será cobrado agora.",
+    "submit": "Solicitar reserva",
+    "footer": "14 Wharf Row · Ter. a dom., das 17h às 22h"
+  },
+  "agent": {
+    "name": "Ana Souza",
+    "email": "ana.souza@larkmail.net",
+    "prompt": "Reserve sexta às {time} para 2. {name}, {email}. Não envie.",
+    "chatTitle": "Mesa no Saltmarsh na sexta",
+    "answer": "Preenchi **{party}**, **{date} às {time}**, em nome de {name}. Ainda não enviei: confira e clique em **Solicitar reserva**."
+  },
+  "research": {
+    "name": "Pesquisa",
+    "description": "Compara fontes e escreve resumos curtos com citações",
+    "prompt": "Pesquise a pergunta em várias fontes. Prefira fontes primárias, como documentação oficial, artigos e changelogs, a resumos.\n\nAponte onde as fontes discordam e por quê.\n\nTermine com um resumo curto: primeiro as principais conclusões, depois as perguntas em aberto. Cite a fonte de cada afirmação."
+  }
+}

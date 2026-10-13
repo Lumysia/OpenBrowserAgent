@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="{{lang}}">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{booking.title}}</title>
+    <style>
+      :root {
+        --ink: #1f2420;
+        --muted: #68706a;
+        --line: #e3e6e1;
+        --brand: #2e6b4f;
+        --soft: #f6f7f3;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      :lang(ko) {
+        word-break: keep-all;
+      }
+      body {
+        margin: 0;
+        font:
+          15px/1.55 "Inter",
+          system-ui,
+          sans-serif;
+        color: var(--ink);
+        background: var(--soft);
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 16px 44px;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+      }
+      .logo {
+        font:
+          600 19px/1 Georgia,
+          serif;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+      }
+      .logo small {
+        display: block;
+        font:
+          500 10px/1.6 "Inter",
+          system-ui,
+          sans-serif;
+        letter-spacing: 0.18em;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-top: 3px;
+      }
+      nav {
+        display: flex;
+        gap: 20px;
+        white-space: nowrap;
+      }
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 14px;
+      }
+      main {
+        max-width: 720px;
+        margin: 40px auto;
+        padding: 0 24px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 28px 30px 26px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+      }
+      h1 {
+        font:
+          600 26px/1.2 Georgia,
+          serif;
+        margin: 0 0 6px;
+      }
+      .sub {
+        color: var(--muted);
+        margin: 0 0 22px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px 18px;
+      }
+      .full {
+        grid-column: 1 / -1;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      label span {
+        font-weight: 400;
+        color: var(--muted);
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        font: inherit;
+        color: var(--ink);
+        padding: 10px 12px;
+        border: 1px solid #d5d9d3;
+        border-radius: 9px;
+        background: #fff;
+        outline: none;
+      }
+      textarea {
+        height: 74px;
+        resize: none;
+      }
+      .slots {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .slot {
+        border: 1px solid #d5d9d3;
+        background: #fff;
+        border-radius: 999px;
+        padding: 7px 14px;
+        font: inherit;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .slot[aria-pressed="true"] {
+        background: var(--brand);
+        color: #fff;
+        border-color: var(--brand);
+      }
+      .slot:disabled {
+        color: #b3b8b2;
+        text-decoration: line-through;
+        cursor: default;
+      }
+      .actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 22px;
+      }
+      .note {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .primary {
+        background: var(--brand);
+        color: #fff;
+        border: 0;
+        border-radius: 10px;
+        padding: 11px 20px;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      footer {
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+        margin: 22px 0 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="logo">
+        Saltmarsh Kitchen<small>{{booking.tagline}}</small>
+      </div>
+      <nav>
+        <a href="#">{{booking.nav.0}}</a><a href="#">{{booking.nav.1}}</a
+        ><a href="#">{{booking.nav.2}}</a><a href="#">{{booking.nav.3}}</a>
+      </nav>
+    </header>
+    <main>
+      <form class="card" onsubmit="event.preventDefault()">
+        <h1>{{booking.heading}}</h1>
+        <p class="sub">{{booking.intro}}</p>
+        <div class="grid">
+          <div>
+            <label for="name">{{booking.name}}</label>
+            <input id="name" autocomplete="off" />
+          </div>
+          <div>
+            <label for="email">{{booking.email}}</label>
+            <input id="email" type="email" autocomplete="off" />
+          </div>
+          <div>
+            <label for="date">{{booking.date}}</label>
+            <select id="date">
+              <option value="">{{booking.chooseDate}}</option>
+              <option>{{booking.dates.0}}</option>
+              <option>{{booking.dates.1}}</option>
+              <option>{{booking.dates.2}}</option>
+              <option>{{booking.dates.3}}</option>
+            </select>
+          </div>
+          <div>
+            <label for="party">{{booking.party}}</label>
+            <select id="party">
+              <option value="">{{booking.choosePartySize}}</option>
+              <option>{{booking.partyOptions.0}}</option>
+              <option>{{booking.partyOptions.1}}</option>
+              <option>{{booking.partyOptions.2}}</option>
+              <option>{{booking.partyOptions.3}}</option>
+              <option>{{booking.partyOptions.4}}</option>
+              <option>{{booking.partyOptions.5}}</option>
+            </select>
+          </div>
+          <div class="full">
+            <label id="time">{{booking.time}}</label>
+            <div class="slots" role="group" aria-labelledby="time">
+              <button type="button" class="slot" disabled>
+                {{booking.times.0}}
+              </button>
+              <button type="button" class="slot" aria-pressed="false">
+                {{booking.times.1}}
+              </button>
+              <button type="button" class="slot" aria-pressed="false">
+                {{booking.times.2}}
+              </button>
+              <button type="button" class="slot" aria-pressed="false">
+                {{booking.times.3}}
+              </button>
+              <button type="button" class="slot" disabled>
+                {{booking.times.4}}
+              </button>
+              <button type="button" class="slot" aria-pressed="false">
+                {{booking.times.5}}
+              </button>
+            </div>
+          </div>
+          <div class="full">
+            <label for="notes"
+              >{{booking.requests}} <span>{{booking.optional}}</span></label
+            >
+            <textarea
+              id="notes"
+              placeholder="{{booking.placeholder}}"
+            ></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <span class="note">{{booking.note}}</span>
+          <button class="primary" type="submit">{{booking.submit}}</button>
+        </div>
+      </form>
+      <footer>{{booking.footer}}</footer>
+    </main>
+    <script>
+      for (const slot of document.querySelectorAll(".slot:enabled"))
+        slot.addEventListener("click", () => {
+          for (const other of document.querySelectorAll(".slot"))
+            other.setAttribute("aria-pressed", String(other === slot));
+        });
+    </script>
+  </body>
+</html>

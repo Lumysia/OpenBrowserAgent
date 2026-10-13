@@ -68,6 +68,7 @@ OpenBrowserAgent is a WXT/Vite/React/TypeScript browser extension for AI-assiste
 - Releases are published by `.github/workflows/release.yml` when a `v*` tag is pushed. Don't upload release files by hand. Set the version in `package.json` (and `wxt.config.ts` `manifest.version`) through a PR first, then tag the merged commit as `v<version>`. A tag with a suffix (`v0.2.0-beta.1`) becomes a pre-release.
 - The release title is the tag alone, for example `v0.1.0`.
 - The same workflow submits the Chrome package to the Chrome Web Store for review (API v2, `wxt submit`), except for pre-releases. It needs repository variables `CHROME_EXTENSION_ID`, `CHROME_PUBLISHER_ID`, `CHROME_SERVICE_ACCOUNT_EMAIL` and the secret `CHROME_SERVICE_ACCOUNT_KEY`, and is skipped until `CHROME_EXTENSION_ID` is set. The store only accepts a version higher than the one it has.
+- Store listing assets live in `store/` (see `store/README.md`). When a release changes permissions, UI text or visible features, update `store/privacy-practices.txt` and `store/listing/`, and regenerate the screenshots with `npm run store:screenshots`.
 
 ## Verification
 

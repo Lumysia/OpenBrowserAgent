@@ -1,0 +1,70 @@
+{
+  "article": {
+    "title": "Inkrementeller Index",
+    "nav": ["Artikel", "Plattform", "Karriere", "Über uns"],
+    "tag": "Infrastruktur",
+    "heading": "Wie wir unseren Suchindex inkrementell gemacht haben",
+    "role": "Staff Engineer",
+    "meta": "4. März · 9 Min. Lesezeit",
+    "lead": "Drei Jahre lang hat jede Änderung an unserem Produktkatalog einen kompletten Neuaufbau des Suchindex ausgelöst. Als der Katalog auf 40 Millionen Angebote wuchs, lief der nächtliche Job über sechs Stunden. So sind wir auf inkrementelle Indexierung umgestiegen – und das hat es uns gekostet.",
+    "whyHeading": "Warum der Komplettaufbau nicht mehr reichte",
+    "why": "Ein kompletter Neuaufbau war einfach und immer konsistent. Aber eine Preisänderung um 9 Uhr war erst am nächsten Morgen auffindbar. Das fiel den Händlern auf: Supportanfragen zu „verschwundenen“ Angeboten haben sich in zwei Quartalen verdreifacht.",
+    "bars": ["Komplettaufbau", "Inkrementell", "Änderung → Suche"],
+    "values": ["6 h 12 min", "24 min", "< 90 s"],
+    "figcaption": "Mittlere Indexierungsdauer pro Tag, vor und nach der Umstellung.",
+    "approachHeading": "Unser Ansatz",
+    "approach": "Wir haben den Index nach Angebots-ID in 512 Shards aufgeteilt und streamen die Änderungen aus dem Änderungsprotokoll des Katalogs in eine Queue. Jeder Shard-Worker verarbeitet Updates in kleinen Batches und veröffentlicht alle 30 Sekunden ein neues Segment.",
+    "points": [
+      "Schreibvorgänge sind idempotent, Wiederholungen nach einem Absturz sind also sicher.",
+      "Ein nächtlicher `compact`-Job führt kleine Segmente zusammen, damit Abfragen schnell bleiben.",
+      "Ein Schattenindex lief sechs Wochen mit, bevor wir den Traffic umgestellt haben."
+    ],
+    "costHeading": "Was es gekostet hat",
+    "cost": "Der Speicherbedarf stieg durch nicht zusammengeführte Segmente um etwa 18 %, und die Rufbereitschaft war im ersten Monat stärker belastet, während wir die Batchgrößen abgestimmt haben."
+  },
+  "ask": {
+    "prompt": "Was hat diese Umstellung gekostet?",
+    "chatTitle": "Kosten des inkrementellen Suchindex",
+    "answer": "Änderungen sind jetzt in **unter 90 Sekunden** auffindbar, und die tägliche Indexierung sank von **6 h 12 min auf 24 min** {cite}.\n\n- **Speicher:** etwa 18 % mehr durch nicht zusammengeführte Segmente {cite}\n- **Rufbereitschaft:** im ersten Monat stärker belastet {cite}"
+  },
+  "booking": {
+    "title": "Tisch reservieren",
+    "tagline": "Saisonal · Von der Küste · Seit 2011",
+    "nav": ["Speisekarte", "Private Dining", "Gutscheine", "Reservieren"],
+    "heading": "Tisch reservieren",
+    "intro": "Tische werden 15 Minuten lang freigehalten. Für Gruppen ab 9 Personen siehe Private Dining.",
+    "name": "Vor- und Nachname",
+    "email": "E-Mail",
+    "date": "Datum",
+    "chooseDate": "Datum wählen",
+    "party": "Personen",
+    "choosePartySize": "Anzahl wählen",
+    "partyOptions": [
+      "1 Person",
+      "2 Personen",
+      "3 Personen",
+      "4 Personen",
+      "5 Personen",
+      "6 Personen"
+    ],
+    "time": "Uhrzeit",
+    "requests": "Besondere Wünsche",
+    "optional": "(optional)",
+    "placeholder": "Allergien, Anlässe, Sitzplatzwünsche",
+    "note": "Es wird jetzt nichts berechnet.",
+    "submit": "Reservierung anfragen",
+    "footer": "14 Wharf Row · Di–So 17–22 Uhr"
+  },
+  "agent": {
+    "name": "Lena Fischer",
+    "email": "lena.fischer@larkmail.net",
+    "prompt": "Tisch für 2 am Freitag um {time} Uhr. {name}, {email}. Noch nicht absenden.",
+    "chatTitle": "Tisch im Saltmarsh am Freitag",
+    "answer": "Ausgefüllt: **{party}**, **{date} um {time} Uhr**, auf {name}. Noch nicht abgeschickt – bitte prüfen und dann auf **Reservierung anfragen** klicken."
+  },
+  "research": {
+    "name": "Recherche",
+    "description": "Vergleicht Quellen und schreibt kurze Berichte mit Belegen",
+    "prompt": "Recherchiere die Frage in mehreren Quellen. Bevorzuge Primärquellen wie offizielle Dokumentation, Paper und Changelogs gegenüber Zusammenfassungen.\n\nHalte fest, wo sich Quellen widersprechen und warum.\n\nSchließe mit einem kurzen Bericht: zuerst die wichtigsten Erkenntnisse, dann offene Fragen. Belege jede Aussage."
+  }
+}

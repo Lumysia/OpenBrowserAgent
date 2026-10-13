@@ -1,0 +1,70 @@
+{
+  "article": {
+    "title": "Incremental indexing",
+    "nav": ["Articles", "Platform", "Careers", "About"],
+    "tag": "Infrastructure",
+    "heading": "How we made our search index incremental",
+    "role": "Staff Engineer",
+    "meta": "March 4 · 9 min read",
+    "lead": "For three years, every change to our product catalog triggered a full rebuild of the search index. As the catalog grew to 40 million listings, that nightly job stretched past six hours. Here is how we moved to incremental indexing, and what it cost us.",
+    "whyHeading": "Why full rebuilds stopped working",
+    "why": "A full rebuild was simple and always consistent, but it meant that a price change made at 9 a.m. would not be searchable until the next morning. Sellers noticed. Support tickets about “missing” listings tripled over two quarters.",
+    "bars": ["Full rebuild", "Incremental", "Change → search"],
+    "values": ["6h 12m", "24m", "< 90s"],
+    "figcaption": "Median indexing time per day, before and after the migration.",
+    "approachHeading": "The approach",
+    "approach": "We split the index into 512 shards keyed by listing ID and stream changes from the catalog’s change log into a queue. Each shard worker applies updates in small batches and publishes a new segment every 30 seconds.",
+    "points": [
+      "Writes are idempotent, so replays after a crash are safe.",
+      "A nightly `compact` job merges small segments to keep queries fast.",
+      "A shadow index ran for six weeks before we switched traffic."
+    ],
+    "costHeading": "What it cost",
+    "cost": "Storage grew by about 18% because of unmerged segments, and on-call load went up for the first month while we tuned batch sizes."
+  },
+  "ask": {
+    "prompt": "What did this migration cost?",
+    "chatTitle": "Incremental search index tradeoffs",
+    "answer": "Edits now reach search in **under 90 seconds**, and daily indexing dropped from **6h 12m to 24m** {cite}.\n\n- **Storage:** about 18% more, from unmerged segments {cite}\n- **On-call:** heavier for the first month {cite}"
+  },
+  "booking": {
+    "title": "Reserve a table",
+    "tagline": "Seasonal · Coastal · Since 2011",
+    "nav": ["Menu", "Private dining", "Gift cards", "Reserve"],
+    "heading": "Reserve a table",
+    "intro": "Tables are held for 15 minutes. For groups over 8, see private dining.",
+    "name": "Full name",
+    "email": "Email",
+    "date": "Date",
+    "chooseDate": "Choose a date",
+    "party": "Party size",
+    "choosePartySize": "Guests",
+    "partyOptions": [
+      "1 guest",
+      "2 guests",
+      "3 guests",
+      "4 guests",
+      "5 guests",
+      "6 guests"
+    ],
+    "time": "Time",
+    "requests": "Special requests",
+    "optional": "(optional)",
+    "placeholder": "Allergies, celebrations, seating preferences",
+    "note": "You won’t be charged now.",
+    "submit": "Request booking",
+    "footer": "14 Wharf Row · Open Tue–Sun, 5–10 PM"
+  },
+  "agent": {
+    "name": "Alex Morgan",
+    "email": "alex.morgan@larkmail.net",
+    "prompt": "Book Friday {time} for 2. {name}, {email}. Don't submit.",
+    "chatTitle": "Saltmarsh table for Friday",
+    "answer": "Filled in **{party}**, **{date} at {time}**, for {name}. Not submitted yet: review it, then press **Request booking**."
+  },
+  "research": {
+    "name": "Research",
+    "description": "Compares sources and writes short, cited briefs",
+    "prompt": "Research the question across several sources. Prefer primary sources such as official docs, papers and changelogs over summaries.\n\nNote where sources disagree and why.\n\nFinish with a short brief: key findings first, then open questions. Cite every claim."
+  }
+}

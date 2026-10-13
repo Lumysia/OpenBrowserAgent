@@ -1,0 +1,37 @@
+O OpenBrowserAgent coloca um agente de IA no painel lateral do seu navegador. Pergunte sobre a página que você está vendo, pesquise na web ou entregue uma tarefa no navegador. O agente lê páginas, clica, digita e passa de uma aba para outra enquanto você acompanha cada passo.
+
+Você escolhe o seu próprio modelo. O OpenBrowserAgent não tem conta nem servidor próprio: suas mensagens vão apenas para os provedores de modelos, servidores MCP e armazenamento de sincronização que você configurar.
+
+O QUE VOCÊ PODE FAZER
+
+• Perguntar sobre a página atual ou sobre várias abas: resumos, comparações, explicações, traduções.
+• Pesquisar uma pergunta na web e receber uma resposta com fontes clicáveis.
+• Deixar o trabalho no navegador com o agente: preencher formulários, comparar produtos, reunir informações de várias páginas, organizar e agrupar suas abas.
+• Editar uma página ali mesmo, por exemplo para traduzi-la, e fazer capturas de tela ou baixar arquivos.
+• Selecionar texto em qualquer página para usar ações rápidas (explicar, traduzir, melhorar a redação, ler em voz alta). Esse recurso fica desativado até você ativá-lo, e você pode limitá-lo aos sites que escolher.
+
+AGENTES E HABILIDADES
+
+• Os agentes Navegar e Perguntar já vêm incluídos. Você pode criar os seus, com instruções, ferramentas, modelo e notas privadas próprios.
+• Os agentes podem passar trabalho para subagentes que rodam em segundo plano.
+• Habilidades são instruções reutilizáveis. As habilidades integradas cobrem preenchimento de formulários, organização de abas, ajuda com a extensão e criação de novas habilidades. Escolha uma habilidade com "/" ou deixe o agente usar uma quando ela combinar com o pedido. As habilidades podem ser importadas e exportadas.
+
+SEUS MODELOS, SUAS FERRAMENTAS
+
+• Conecte provedores compatíveis com OpenAI ou Anthropic, Gemini, OpenRouter, DeepSeek, Ollama e outros, com suas próprias chaves de API e URLs base.
+• Use um modelo auxiliar mais barato para ler páginas longas.
+• Conecte servidores MCP remotos (Streamable HTTP) para ter ferramentas extras. Servidores de busca na web que não precisam de chave de API estão incluídos, e cada um fica desativado até você ativá-lo.
+• Ponte de execução local opcional: permite que um agente execute comandos no seu computador, somente depois que você a instalar e ativar.
+
+SINCRONIZAÇÃO ENTRE DISPOSITIVOS
+
+• Sincronize configurações, agentes, habilidades e, se quiser, conversas e anexos, pela conta do seu navegador ou pelo seu próprio armazenamento WebDAV.
+• As alterações são mescladas item por item, então edições feitas em dois dispositivos não se sobrescrevem, e exclusões grandes pedem sua confirmação antes.
+
+VOCÊ NO CONTROLE
+
+• Cada etapa de ferramenta aparece enquanto é executada, com os detalhes disponíveis.
+• Quando não tem certeza, o agente pergunta antes de enviar um formulário, comprar, mandar uma mensagem ou excluir algo.
+• Interface em English, Deutsch, Español, Français, 日本語, 한국어, Português (Brasil), 简体中文 e 繁體中文, com temas claro e escuro.
+
+O OpenBrowserAgent é open source. Código-fonte, documentação e rastreador de issues: https://github.com/Lumysia/OpenBrowserAgent
