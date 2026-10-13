@@ -7,6 +7,69 @@ type Keyed = Record<string, unknown>;
 
 type Side = "mine" | "theirs";
 
+// Two values both changed from `base`: each part takes the side that
+// changed it, `preferred`'s where both changed the same value. Objects merge
+// key by key and lists of items with ids item by item, so edits of
+// different keys, items or nested fields all stay. Page saves (the page's
+// edit preferred) and records two devices changed (the newer preferred)
+// merge alike.
+export function mergeChanges<T>(base: unknown, preferred: T, other: T): T {
+  return mergeValues(base, preferred, other) as T;
+}
+
+function mergeValues(base: unknown, preferred: unknown, other: unknown) {
+  if (sameJson(other, base)) return preferred;
+  if (sameJson(preferred, base)) return other;
+  if (isRecord(preferred) && isRecord(other)) {
+    const original = isRecord(base) ? base : {};
+    const result: Keyed = {};
+    for (const key of new Set([
+      ...Object.keys(preferred),
+      ...Object.keys(other),
+    ])) {
+      const value = mergeValues(original[key], preferred[key], other[key]);
+      if (value !== undefined) result[key] = value;
+    }
+    return result;
+  }
+  if (
+    isList(preferred) &&
+    isList(other) &&
+    (base === undefined || isList(base))
+  )
+    return mergeList(base ?? [], preferred, other);
+  return preferred;
+}
+
+// `preferred`'s order; items only the other side added follow. An item
+// removed on one side stays removed unless the other side changed it.
+function mergeList(base: Keyed[], preferred: Keyed[], other: Keyed[]) {
+  const originals = new Map(base.map((item) => [item.id, item]));
+  const others = new Map(other.map((item) => [item.id, item]));
+  const preferredIds = new Set(preferred.map((item) => item.id));
+  const result: unknown[] = [];
+  for (const item of preferred) {
+    const original = originals.get(item.id);
+    const otherItem = others.get(item.id);
+    if (otherItem) result.push(mergeValues(original, item, otherItem));
+    else if (!original || !sameJson(item, original)) result.push(item);
+  }
+  for (const [id, item] of others) {
+    if (preferredIds.has(id)) continue;
+    const original = originals.get(id);
+    if (!original || !sameJson(item, original)) result.push(item);
+  }
+  return result;
+}
+
+const isRecord = (value: unknown): value is Keyed =>
+  !!value && typeof value === "object" && !Array.isArray(value);
+
+// A list of objects with string ids (agents, servers, models).
+const isList = (value: unknown): value is Keyed[] =>
+  Array.isArray(value) &&
+  value.every((item) => isRecord(item) && typeof item.id === "string");
+
 // Three-way merge of keyed entries. An entry changed on one side takes that
 // change; changed on both, the newer side's copy wins and `onLoser` sees the
 // other. Removed on one side and unchanged on the other: removed. Without a

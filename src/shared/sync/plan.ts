@@ -1,6 +1,7 @@
 import type { Version } from "./clocks";
 import { sameJson } from "./codec";
 import { compareClocks } from "./hlc";
+import { mergeChanges } from "./merge-content";
 import type { SyncRecord } from "./root";
 
 // Deciding one record: this device's copy with its clock against the
@@ -119,9 +120,10 @@ async function conflict(
   };
 }
 
-// Both sides changed an object's fields since `base`: each field from the
-// side that changed it, the newer side's where both did. Undefined when the
-// base data is unknown or the values are not objects.
+// Both sides changed an object's fields since `base`: each part from the
+// side that changed it, the newer side's where both changed the same value
+// (nested objects and lists of items with ids merge too, as page saves do).
+// Undefined when the base data is unknown or the values are not objects.
 export function mergeFields(
   base: unknown,
   mine: unknown,
@@ -129,16 +131,9 @@ export function mergeFields(
   mineNewer: boolean,
 ) {
   if (!isRecord(base) || !isRecord(mine) || !isRecord(theirs)) return;
-  const merged: Record<string, unknown> = {};
-  for (const field of new Set([...Object.keys(mine), ...Object.keys(theirs)])) {
-    const mineChanged = !sameJson(mine[field], base[field]);
-    const theirsChanged = !sameJson(theirs[field], base[field]);
-    const value =
-      mineChanged && (!theirsChanged || mineNewer)
-        ? mine[field]
-        : theirs[field];
-    if (value !== undefined) merged[field] = value;
-  }
+  const merged = mineNewer
+    ? mergeChanges(base, mine, theirs)
+    : mergeChanges(base, theirs, mine);
   // Same as one side: that side's object, so the decision stays simple.
   if (sameJson(merged, theirs)) return theirs;
   if (sameJson(merged, mine)) return mine;
