@@ -13,6 +13,7 @@ All builds declare:
 - `storage`: persist settings, providers, agents, skills, MCP servers, chats, workspaces, language, and sync status.
 - `unlimitedStorage`: allow local chat and attachment storage to grow beyond normal extension storage quotas; browser-sync quotas still apply.
 - `alarms`: check for sync changes once a minute while an extension page is visible.
+- `declarativeNetRequestWithHostAccess`: remove the `Origin` header from the extension's own requests to MCP servers that have **Send without browser Origin** turned on (see [MCP servers](product-overview.md#mcp-servers)). Each rule matches only that server's exact URL and requests this extension makes; other requests and pages are untouched.
 - `downloads`: save Markdown exports, image ZIPs, Mermaid downloads, generated images, and fetched files.
 - `<all_urls>` host access: allow extension tools to work across arbitrary pages, provider endpoints, MCP servers, and remote image/file URLs. Manifest V3 lists this under `host_permissions`; Manifest V2 includes it in `permissions`.
 
