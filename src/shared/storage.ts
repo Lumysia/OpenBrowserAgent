@@ -110,6 +110,37 @@ function createItem<T>(
   };
 }
 
+type Updatable<T> = { update(updater: (current: T) => T): Promise<T> };
+
+// Change the item `id` of a synced list, from what is stored while the
+// key's lock is held. Returns the changed item; undefined when it is gone.
+export async function updateById<T extends { id: string }>(
+  item: Updatable<T[]>,
+  id: string,
+  change: (current: T) => T,
+) {
+  const next = await item.update((list) =>
+    list.some((entry) => entry.id === id)
+      ? list.map((entry) => (entry.id === id ? change(entry) : entry))
+      : list,
+  );
+  return next.find((entry) => entry.id === id);
+}
+
+// Remove the item `id` of a synced list. Returns whether it was there.
+export async function removeById<T extends { id: string }>(
+  item: Updatable<T[]>,
+  id: string,
+) {
+  let removed = false;
+  await item.update((list) => {
+    const next = list.filter((entry) => entry.id !== id);
+    removed = next.length !== list.length;
+    return removed ? next : list;
+  });
+  return removed;
+}
+
 async function removeContentOfRemovedChats(
   previous: ChatSummary[],
   next: ChatSummary[],

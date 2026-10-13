@@ -181,7 +181,7 @@ function extensionFixture() {
     updatedAt: 1,
   };
   mock.method(storage.localExecutionBridges, "get", async () => [bridge]);
-  mock.method(storage.localExecutionBridges, "set", async () => {});
+  mock.method(storage.localExecutionBridges, "update", async () => []);
   const sent: any[] = [];
   const ports: any[] = [];
   Object.assign(chrome, {
@@ -210,7 +210,11 @@ function extensionFixture() {
 
 test("a bridge command runs without a ping or storage write and keeps only the output tail", async () => {
   const fixture = extensionFixture();
-  const set = mock.method(storage.localExecutionBridges, "set", async () => {});
+  const update = mock.method(
+    storage.localExecutionBridges,
+    "update",
+    async () => [],
+  );
   const running = runLocalCommand({ command: "fixture" }, {});
   await delay(0);
   assert.deepEqual(
@@ -227,7 +231,7 @@ test("a bridge command runs without a ping or storage write and keeps only the o
   assert.equal(result.state, "done");
   assert.equal(result.output.length, 64 * 1024);
   assert.ok(result.output.endsWith("end"));
-  assert.equal(set.mock.callCount(), 0);
+  assert.equal(update.mock.callCount(), 0);
 });
 
 test("stopping the run cancels the command, disconnects and ignores late messages", async () => {
