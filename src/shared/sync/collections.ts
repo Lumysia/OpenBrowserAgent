@@ -18,6 +18,7 @@ import {
 } from "./collection";
 import { readKey, type SyncEnv } from "./env";
 import { mergeFiles } from "./merge-content";
+import { createWorkspace } from "../workspace";
 import { attachmentsCollection, chatsCollection } from "./collections-chats";
 
 type Item = Record<string, unknown>;
@@ -108,12 +109,16 @@ const createdAt = (item: Item) =>
   typeof item.createdAt === "number" ? item.createdAt : 0;
 
 // A list of items keyed by `idField`; `bodyField` (if any) is the large part.
+// `newBody`: the body any device gives an item it creates without user
+// input, the base of a merge where the devices never agreed on one (so
+// untouched defaults count as unchanged).
 function list({
   name,
   gate,
   key,
   idField = "id",
   bodyField,
+  newBody,
   ordered = true,
   secrets,
 }: {
@@ -122,6 +127,7 @@ function list({
   key: string;
   idField?: string;
   bodyField?: string;
+  newBody?: () => unknown[];
   ordered?: boolean;
   secrets?: string[];
 }): Collection {
@@ -157,7 +163,8 @@ function list({
     mergeBodies: bodyField
       ? (base, mine, theirs, newer, label) =>
           mergeFiles(
-            Array.isArray(base) ? base : undefined,
+            (Array.isArray(base) ? base : newBody?.()) as
+              Array<Item & { path: string }> | undefined,
             mine as Array<Item & { path: string }>,
             theirs as Array<Item & { path: string }>,
             newer,
@@ -202,6 +209,7 @@ export const SYNC_COLLECTIONS: Collection[] = [
     key: STORAGE_KEYS.agentWorkspaces,
     idField: "agentId",
     bodyField: "files",
+    newBody: () => createWorkspace("").files,
     ordered: false,
   }),
   list({

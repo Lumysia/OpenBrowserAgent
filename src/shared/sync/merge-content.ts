@@ -84,7 +84,8 @@ const isList = (value: unknown): value is Keyed[] =>
 // Three-way merge of keyed entries. An entry changed on one side takes that
 // change; changed on both, the newer side's copy wins and `onLoser` sees the
 // other. Removed on one side and unchanged on the other: removed. Without a
-// base every entry either side has is kept.
+// base every entry either side has is kept. `same`: entries that hold the
+// same value (equal ones are unchanged, and never conflict).
 export function mergeKeyed<T extends Keyed>(
   key: (entry: T) => string,
   base: T[] | undefined,
@@ -92,6 +93,7 @@ export function mergeKeyed<T extends Keyed>(
   theirs: T[],
   newer: Side,
   onLoser?: (loser: T, winner: T) => void,
+  same: (left: T, right: T) => boolean = sameJson,
 ) {
   const baseMap = new Map(base?.map((entry) => [key(entry), entry]));
   const mineMap = new Map(mine.map((entry) => [key(entry), entry]));
@@ -101,29 +103,25 @@ export function mergeKeyed<T extends Keyed>(
     const original = baseMap.get(id);
     const mineEntry = mineMap.get(id);
     const theirsEntry = theirsMap.get(id);
-    const mineChanged =
-      !original || !mineEntry || !sameJson(mineEntry, original);
+    const mineChanged = !original || !mineEntry || !same(mineEntry, original);
     const theirsChanged =
-      !original || !theirsEntry || !sameJson(theirsEntry, original);
+      !original || !theirsEntry || !same(theirsEntry, original);
     if (!mineEntry || !theirsEntry) {
       const present = (mineEntry ?? theirsEntry)!;
       // Removed on the other side: stays removed unless changed here since.
-      if (original && sameJson(present, original)) continue;
+      if (original && same(present, original)) continue;
       result.set(id, present);
       continue;
     }
-    if (sameJson(mineEntry, theirsEntry) || !theirsChanged) {
-      result.set(id, mineEntry);
-      continue;
-    }
-    if (!mineChanged) {
-      result.set(id, theirsEntry);
-      continue;
-    }
-    const [winner, loser] =
+    const [newerEntry, olderEntry] =
       newer === "mine" ? [mineEntry, theirsEntry] : [theirsEntry, mineEntry];
-    result.set(id, winner);
-    onLoser?.(loser, winner);
+    if (same(mineEntry, theirsEntry)) result.set(id, newerEntry);
+    else if (!theirsChanged) result.set(id, mineEntry);
+    else if (!mineChanged) result.set(id, theirsEntry);
+    else {
+      result.set(id, newerEntry);
+      onLoser?.(olderEntry, newerEntry);
+    }
   }
   return result;
 }
@@ -192,7 +190,9 @@ export function mergeChatBodies(
 type FileEntry = Keyed & { path: string };
 
 // Skill or workspace files both devices edited: the newer edit keeps the
-// path and the other is kept beside it as a conflict copy.
+// path and the other is kept beside it as a conflict copy. Files are equal
+// when all but their edit time is: saving the same text again, or creating
+// the same default file, changes nothing.
 export function mergeFiles<T extends FileEntry>(
   base: T[] | undefined,
   mine: T[],
@@ -208,6 +208,7 @@ export function mergeFiles<T extends FileEntry>(
     theirs,
     newer,
     (loser) => copies.push(loser),
+    sameFile,
   );
   const [primary, secondary] =
     newer === "mine" ? [mine, theirs] : [theirs, mine];
@@ -226,6 +227,9 @@ export function mergeFiles<T extends FileEntry>(
   }
   return ordered;
 }
+
+const sameFile = (left: FileEntry, right: FileEntry) =>
+  sameJson({ ...left, updatedAt: 0 }, { ...right, updatedAt: 0 });
 
 export function conflictCopyPath(
   path: string,
