@@ -30,6 +30,15 @@ export const smartBarEsES: SmartBarLocaleMessages = {
     "El texto seleccionado ha cambiado. Copia el resultado en vez de reemplazarlo.",
   selectionTooLong:
     "La selección es demasiado larga (más de {max} caracteres). Continúa en el panel lateral.",
+  dictionary: {
+    pronunciation: "Pronunciación",
+    inContext: "En este contexto",
+    examples: "Ejemplos",
+    synonyms: "Sinónimos",
+    collocations: "Colocaciones",
+    translation: "Traducción",
+    entry: "Entrada de diccionario",
+  },
   settingsTitle: "Barra inteligente",
   settingsDescription:
     "Acciones rápidas de IA junto al texto seleccionado. No se envía nada hasta que eliges una.",

@@ -28,6 +28,15 @@ export const smartBarZhTW: SmartBarLocaleMessages = {
   emptyResult: "模型沒有傳回文字。",
   selectionChanged: "所選文字已變更，請改為複製結果。",
   selectionTooLong: "所選內容過長（超過 {max} 個字元），請改在側邊欄中繼續。",
+  dictionary: {
+    pronunciation: "發音",
+    inContext: "在此語境中",
+    examples: "例句",
+    synonyms: "同義詞",
+    collocations: "常用搭配",
+    translation: "翻譯",
+    entry: "辭典釋義",
+  },
   settingsTitle: "智慧工具列",
   settingsDescription:
     "在選取的文字旁提供快速 AI 操作。在你選擇操作之前不會傳送任何內容。",

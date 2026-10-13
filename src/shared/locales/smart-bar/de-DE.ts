@@ -30,6 +30,15 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
     "Der markierte Text hat sich geändert. Kopieren Sie stattdessen das Ergebnis.",
   selectionTooLong:
     "Die Auswahl ist zu lang (über {max} Zeichen). Fahren Sie stattdessen in der Seitenleiste fort.",
+  dictionary: {
+    pronunciation: "Aussprache",
+    inContext: "In diesem Kontext",
+    examples: "Beispiele",
+    synonyms: "Synonyme",
+    collocations: "Kollokationen",
+    translation: "Übersetzung",
+    entry: "Wörterbucheintrag",
+  },
   settingsTitle: "Smart Bar",
   settingsDescription:
     "Schnelle KI-Aktionen neben markiertem Text. Es wird nichts gesendet, bevor Sie eine wählen.",

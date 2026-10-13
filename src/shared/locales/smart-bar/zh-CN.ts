@@ -28,6 +28,15 @@ export const smartBarZhCN: SmartBarLocaleMessages = {
   emptyResult: "模型没有返回文本。",
   selectionChanged: "所选文本已更改，请改为复制结果。",
   selectionTooLong: "所选内容过长（超过 {max} 个字符），请改在侧边栏中继续。",
+  dictionary: {
+    pronunciation: "发音",
+    inContext: "在此语境中",
+    examples: "例句",
+    synonyms: "同义词",
+    collocations: "常用搭配",
+    translation: "翻译",
+    entry: "词典释义",
+  },
   settingsTitle: "智能工具栏",
   settingsDescription:
     "在选中文本旁提供快捷 AI 操作。在你选择操作之前不会发送任何内容。",

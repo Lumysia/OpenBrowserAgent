@@ -10,7 +10,7 @@ import {
   Volume2,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { COPY_FEEDBACK_MS } from "../../shared/config";
 import {
   SMART_BAR_ACTION,
@@ -25,7 +25,9 @@ import {
 } from "../selection";
 import { speak } from "../speech";
 import { copyText, writeIntoSelection, type WriteMode } from "../writeback";
+import { SmartBarDictionaryCard } from "./dictionary-card";
 import { openInSidePanel, SMART_BAR_ICONS } from "./page-actions";
+import { smartBarOutput } from "./result-output";
 import type { SmartBarResult, SmartBarStore } from "./store";
 import { onTrusted } from "./trusted";
 
@@ -45,8 +47,11 @@ export function SmartBarResultCard({
   // The user changed the selected text meanwhile: Copy only.
   const [changed, setChanged] = useState(false);
   const streaming = result.status === "streaming";
-  const text = result.text.trim();
-  const ready = result.status === "done" && !!text;
+  const output = useMemo(
+    () => smartBarOutput(result, t.dictionary),
+    [result, t.dictionary],
+  );
+  const ready = result.status === "done" && !!output.copy;
   const Icon = SMART_BAR_ICONS[result.action];
   const [reading, setReading] = useState<"source" | "result">();
   const stopReading = useRef<() => void>(undefined);
@@ -64,7 +69,7 @@ export function SmartBarResultCard({
     if (reading === which) return stopReading.current?.();
     setReading(which);
     stopReading.current = speak(
-      which === "source" ? snapshot.text : text,
+      which === "source" ? snapshot.text : output.write,
       which === "source" ? sourceLanguage : resultLanguage,
       () => setReading((now) => (now === which ? undefined : now)),
     );
@@ -101,7 +106,7 @@ export function SmartBarResultCard({
   }, [copied]);
 
   const write = (mode: WriteMode) => {
-    if (writeIntoSelection(snapshot, text, mode)) store.hide();
+    if (writeIntoSelection(snapshot, output.write, mode)) store.hide();
     else setChanged(true);
   };
 
@@ -130,11 +135,20 @@ export function SmartBarResultCard({
       <div
         className="smart-bar-result-text"
         data-status={result.status}
+        data-format={output.entry ? result.format : undefined}
         aria-live="polite"
         aria-busy={streaming}
       >
-        {resultMessage(result, config)}
-        {streaming && result.text && (
+        {output.entry ? (
+          <SmartBarDictionaryCard
+            entry={output.entry}
+            labels={t.dictionary}
+            sourceLanguage={sourceLanguage}
+          />
+        ) : (
+          resultMessage(result, output.shown, config)
+        )}
+        {streaming && (output.entry || output.shown) && (
           <span className="smart-bar-caret" aria-hidden="true" />
         )}
       </div>
@@ -158,7 +172,7 @@ export function SmartBarResultCard({
             <RotateCcw size={13} /> {t.retry}
           </Button>
         )}
-        {ready && isEditableSnapshot(snapshot) && !changed && (
+        {ready && output.write && isEditableSnapshot(snapshot) && !changed && (
           <>
             <Button size="sm" onClick={onTrusted(() => write("replace"))}>
               <Replace size={13} /> {t.replace}
@@ -174,7 +188,7 @@ export function SmartBarResultCard({
         )}
         <span className="smart-bar-spacer" />
         {readButton("source")}
-        {ready && readButton("result")}
+        {ready && output.write && readButton("result")}
         {ready && (
           <IconTooltip label={copied ? t.copied : t.actions.copy} side="top">
             <Button
@@ -182,7 +196,9 @@ export function SmartBarResultCard({
               size="icon"
               className="smart-bar-icon-button"
               aria-label={copied ? t.copied : t.actions.copy}
-              onClick={onTrusted(() => void copyText(text).then(setCopied))}
+              onClick={onTrusted(
+                () => void copyText(output.copy).then(setCopied),
+              )}
             >
               {copied ? <Check size={15} /> : <Copy size={15} />}
             </Button>
@@ -198,7 +214,9 @@ export function SmartBarResultCard({
             onClick={onTrusted(() => {
               void openInSidePanel(
                 snapshot.text,
-                text ? { action: result.action, text } : undefined,
+                output.copy
+                  ? { action: result.action, text: output.copy }
+                  : undefined,
               );
               store.hide();
             })}
@@ -213,6 +231,7 @@ export function SmartBarResultCard({
 
 function resultMessage(
   result: SmartBarResult,
+  text: string,
   { messages: t, language }: SmartBarPageConfig,
 ) {
   switch (result.status) {
@@ -224,8 +243,8 @@ function resultMessage(
         new Intl.NumberFormat(language).format(SMART_BAR_MAX_TEXT_CHARS),
       );
     case "streaming":
-      return result.text || t.writing;
+      return text || t.writing;
     default:
-      return result.text || t.emptyResult;
+      return text || t.emptyResult;
   }
 }

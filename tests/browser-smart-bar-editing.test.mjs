@@ -306,7 +306,7 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
             port.postMessage({
               type: "run",
               action: "translate",
-              text: "Good morning",
+              text: "Good morning! How are you today?",
             });
           }),
       );
