@@ -1,5 +1,6 @@
 import { smartBarEsES } from "./smart-bar/es-ES";
 import { syncEsES } from "./sync/es-ES";
+import { themesEsES } from "./themes/es-ES";
 import type { LocaleMessages } from "./en-US";
 
 export const esES: LocaleMessages = {
@@ -496,11 +497,6 @@ export const esES: LocaleMessages = {
       "Elige un color de acento suave para botones, pestañas y resaltados.",
     appearance: "Apariencia",
     appearanceDescription: "Elige claro, oscuro o seguir el sistema.",
-    greenTheme: "Verde suave",
-    blueTheme: "Azul niebla",
-    pinkTheme: "Rosa empolvado",
-    purpleTheme: "Lavanda",
-    amberTheme: "Ámbar cálido",
     systemTheme: "Sistema",
     lightTheme: "Claro",
     darkTheme: "Oscuro",
@@ -585,4 +581,5 @@ export const esES: LocaleMessages = {
   },
   smartBar: smartBarEsES,
   sync: syncEsES,
+  themes: themesEsES,
 };

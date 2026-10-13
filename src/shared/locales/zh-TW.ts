@@ -1,5 +1,6 @@
 import { smartBarZhTW } from "./smart-bar/zh-TW";
 import { syncZhTW } from "./sync/zh-TW";
+import { themesZhTW } from "./themes/zh-TW";
 import type { LocaleMessages } from "./en-US";
 
 export const zhTW: LocaleMessages = {
@@ -423,11 +424,6 @@ export const zhTW: LocaleMessages = {
     colorSchemeDescription: "選擇按鈕、分頁和高亮使用的柔和主色。",
     appearance: "外觀模式",
     appearanceDescription: "選擇淺色、深色，或跟隨系統設定。",
-    greenTheme: "柔和綠色",
-    blueTheme: "霧藍色",
-    pinkTheme: "淡粉色",
-    purpleTheme: "薰衣草紫",
-    amberTheme: "暖琥珀",
     systemTheme: "跟隨系統",
     lightTheme: "淺色",
     darkTheme: "深色",
@@ -503,4 +499,5 @@ export const zhTW: LocaleMessages = {
   },
   smartBar: smartBarZhTW,
   sync: syncZhTW,
+  themes: themesZhTW,
 };

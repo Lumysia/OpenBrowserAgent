@@ -87,6 +87,24 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | merge (synced changes)         | fusionner                    | zusammenführen              | combinar                          | mesclar                          |
 | browser profile                | profil de navigateur         | Browserprofil               | perfil de navegador               | perfil de navegador              |
 
+## Themes and holiday touches
+
+The theme picker in General settings has two groups: the color themes and the pride flags. Flags are named the way each community names them in that language ("Transgender flag", not a color name). Holiday names are the day's usual greeting or name; their status lines follow the style of the regular typing phrases (short, ending in `…`).
+
+| English         | 简体中文 | 繁體中文 | 日本語     | 한국어        |
+| --------------- | -------- | -------- | ---------- | ------------- |
+| Colors (group)  | 颜色     | 顏色     | カラー     | 색상          |
+| Pride (group)   | 骄傲     | 驕傲     | プライド   | 프라이드      |
+| … flag          | …旗      | …旗      | …フラッグ  | … 깃발        |
+| holiday touches | 节日点缀 | 節日點綴 | 季節の演出 | 기념일 꾸미기 |
+
+| English         | Français         | Deutsch         | Español         | Português (Brasil) |
+| --------------- | ---------------- | --------------- | --------------- | ------------------ |
+| Colors (group)  | Couleurs         | Farben          | Colores         | Cores              |
+| Pride (group)   | Fiertés          | Pride           | Orgullo         | Orgulho            |
+| … flag          | Drapeau …        | …-Flagge        | Bandera …       | Bandeira …         |
+| holiday touches | touches festives | Festtagsdetails | toques festivos | toques festivos    |
+
 ## Notes per language
 
 **Simplified Chinese.** Use 对话, never 聊天. A single bridge is a 执行桥; avoid 桥接器 and 桥接. Write 内置, not 内建. API Key and Base URL stay in English, as Chinese developer tools usually show them; Traditional Chinese does the same.

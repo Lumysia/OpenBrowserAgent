@@ -1,5 +1,6 @@
 import { smartBarPtBR } from "./smart-bar/pt-BR";
 import { syncPtBR } from "./sync/pt-BR";
+import { themesPtBR } from "./themes/pt-BR";
 import type { LocaleMessages } from "./en-US";
 
 export const ptBR: LocaleMessages = {
@@ -491,11 +492,6 @@ export const ptBR: LocaleMessages = {
     appearance: "Aparência",
     appearanceDescription:
       "Escolha claro, escuro ou seguir a configuração do sistema.",
-    greenTheme: "Verde suave",
-    blueTheme: "Azul névoa",
-    pinkTheme: "Rosa suave",
-    purpleTheme: "Lavanda",
-    amberTheme: "Âmbar quente",
     systemTheme: "Sistema",
     lightTheme: "Claro",
     darkTheme: "Escuro",
@@ -579,4 +575,5 @@ export const ptBR: LocaleMessages = {
   },
   smartBar: smartBarPtBR,
   sync: syncPtBR,
+  themes: themesPtBR,
 };

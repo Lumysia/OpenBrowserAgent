@@ -1,5 +1,6 @@
 import { smartBarEnUS } from "./smart-bar/en-US";
 import { syncEnUS } from "./sync/en-US";
+import { themesEnUS } from "./themes/en-US";
 export const enUS = {
   app: {
     tagline: "Your AI agent in the browser",
@@ -460,11 +461,6 @@ export const enUS = {
       "Choose a soft accent color for buttons, tabs, and highlights.",
     appearance: "Appearance",
     appearanceDescription: "Choose light, dark, or follow your system setting.",
-    greenTheme: "Soft Green",
-    blueTheme: "Mist Blue",
-    pinkTheme: "Blush Pink",
-    purpleTheme: "Lavender",
-    amberTheme: "Warm Amber",
     systemTheme: "System",
     lightTheme: "Light",
     darkTheme: "Dark",
@@ -547,6 +543,7 @@ export const enUS = {
   },
   smartBar: smartBarEnUS,
   sync: syncEnUS,
+  themes: themesEnUS,
 };
 
 export type LocaleMessages = typeof enUS;

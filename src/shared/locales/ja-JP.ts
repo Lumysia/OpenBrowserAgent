@@ -1,5 +1,6 @@
 import { smartBarJaJP } from "./smart-bar/ja-JP";
 import { syncJaJP } from "./sync/ja-JP";
+import { themesJaJP } from "./themes/ja-JP";
 import type { LocaleMessages } from "./en-US";
 
 export const jaJP: LocaleMessages = {
@@ -481,11 +482,6 @@ export const jaJP: LocaleMessages = {
     appearance: "外観",
     appearanceDescription:
       "ライト、ダーク、またはシステム設定に従うかを選択します。",
-    greenTheme: "ソフトグリーン",
-    blueTheme: "ミストブルー",
-    pinkTheme: "ブラッシュピンク",
-    purpleTheme: "ラベンダー",
-    amberTheme: "ウォームアンバー",
     systemTheme: "システム",
     lightTheme: "ライト",
     darkTheme: "ダーク",
@@ -569,4 +565,5 @@ export const jaJP: LocaleMessages = {
   },
   smartBar: smartBarJaJP,
   sync: syncJaJP,
+  themes: themesJaJP,
 };

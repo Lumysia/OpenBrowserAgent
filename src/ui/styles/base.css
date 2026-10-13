@@ -52,6 +52,13 @@ a {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
+/* Containers that take focus only to hold it (dialogs, popovers, scroll
+   regions) are not controls. */
+[tabindex="-1"]:focus-visible,
+[role="dialog"]:focus-visible,
+[role="tooltip"]:focus-visible {
+  outline: none;
+}
 
 *::-webkit-scrollbar {
   width: 10px;

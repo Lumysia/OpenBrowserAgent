@@ -23,9 +23,9 @@
     ),
     linear-gradient(
       180deg,
-      color-mix(in oklab, var(--wash-1) 34%, var(--background)) 0%,
-      color-mix(in oklab, var(--wash-2) 30%, var(--background)) 58%,
-      color-mix(in oklab, var(--wash-3) 70%, var(--background)) 100%
+      color-mix(in oklab, var(--wash-1) 55%, var(--background)) 0%,
+      color-mix(in oklab, var(--wash-2) 42%, var(--background)) 58%,
+      color-mix(in oklab, var(--wash-3) 85%, var(--background)) 100%
     );
 }
 .sidepanel.history-mode,

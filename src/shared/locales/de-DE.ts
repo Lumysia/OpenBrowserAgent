@@ -1,5 +1,6 @@
 import { smartBarDeDE } from "./smart-bar/de-DE";
 import { syncDeDE } from "./sync/de-DE";
+import { themesDeDE } from "./themes/de-DE";
 import type { LocaleMessages } from "./en-US";
 
 export const deDE: LocaleMessages = {
@@ -485,11 +486,6 @@ export const deDE: LocaleMessages = {
       "Wählen Sie eine sanfte Akzentfarbe für Schaltflächen, Tabs und Hervorhebungen.",
     appearance: "Darstellung",
     appearanceDescription: "Hell, dunkel oder Systemeinstellung verwenden.",
-    greenTheme: "Sanftes Grün",
-    blueTheme: "Nebelblau",
-    pinkTheme: "Zartrosa",
-    purpleTheme: "Lavendel",
-    amberTheme: "Warmes Bernstein",
     systemTheme: "System",
     lightTheme: "Hell",
     darkTheme: "Dunkel",
@@ -575,4 +571,5 @@ export const deDE: LocaleMessages = {
   },
   smartBar: smartBarDeDE,
   sync: syncDeDE,
+  themes: themesDeDE,
 };

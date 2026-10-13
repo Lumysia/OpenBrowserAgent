@@ -1,8 +1,10 @@
-import type { CSSProperties } from "react";
+import { useId, type CSSProperties, type ReactNode } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import {
   ACCENT_THEMES,
   normalizeTheme,
+  PRIDE_THEMES,
+  THEMES,
   type ThemeId,
 } from "../../src/shared/theme/themes";
 import { themeTokens } from "../../src/shared/theme/tokens";
@@ -15,6 +17,7 @@ import {
 } from "../../src/ui/components";
 import { resolveScheme } from "../../src/ui/theme";
 
+// The color themes, then the pride flags, as one choice.
 export function ThemePicker({
   t,
   value,
@@ -27,13 +30,20 @@ export function ThemePicker({
   onChange: (theme: ThemeId) => void;
 }) {
   const scheme = resolveScheme(colorScheme);
-  const labels: Record<(typeof ACCENT_THEMES)[number], string> = {
-    pink: t.options.pinkTheme,
-    green: t.options.greenTheme,
-    blue: t.options.blueTheme,
-    purple: t.options.purpleTheme,
-    amber: t.options.amberTheme,
-  };
+  const groups = [
+    {
+      label: t.themes.colorsGroup,
+      ids: ACCENT_THEMES,
+      fill: (id: ThemeId) => themeTokens(id, scheme)["accent-solid"],
+      flag: false,
+    },
+    {
+      label: t.themes.prideGroup,
+      ids: PRIDE_THEMES,
+      fill: (id: ThemeId) => flagGradient(THEMES[id].flag ?? []),
+      flag: true,
+    },
+  ];
   return (
     <RadioGroup
       className="theme-picker"
@@ -41,17 +51,47 @@ export function ThemePicker({
       value={normalizeTheme(value)}
       onValueChange={(next) => onChange(normalizeTheme(next))}
     >
-      <div className="theme-picker-swatches">
-        {ACCENT_THEMES.map((id) => (
-          <Swatch
-            key={id}
-            id={id}
-            label={labels[id]}
-            fill={themeTokens(id, scheme)["accent-solid"]}
-          />
-        ))}
-      </div>
+      {groups.map((group) => (
+        <SwatchGroup key={group.label} label={group.label}>
+          {group.ids.map((id) => (
+            <Swatch
+              key={id}
+              id={id}
+              label={t.themes.names[id]}
+              fill={group.fill(id)}
+              flag={group.flag}
+            />
+          ))}
+        </SwatchGroup>
+      ))}
     </RadioGroup>
+  );
+}
+
+// Horizontal stripes of equal height, as on the flag.
+function flagGradient(stripes: string[]) {
+  const step = 100 / stripes.length;
+  const stops = stripes.map(
+    (color, index) => `${color} ${index * step}% ${(index + 1) * step}%`,
+  );
+  return `linear-gradient(180deg, ${stops.join(", ")})`;
+}
+
+function SwatchGroup({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  const id = useId();
+  return (
+    <div className="theme-picker-group" role="group" aria-labelledby={id}>
+      <span id={id} className="theme-picker-label">
+        {label}
+      </span>
+      <div className="theme-picker-swatches">{children}</div>
+    </div>
   );
 }
 
@@ -59,12 +99,12 @@ function Swatch({
   id,
   label,
   fill,
-  flag = false,
+  flag,
 }: {
   id: ThemeId;
   label: string;
   fill: string;
-  flag?: boolean;
+  flag: boolean;
 }) {
   return (
     <Tooltip>

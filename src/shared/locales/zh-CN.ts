@@ -1,5 +1,6 @@
 import { smartBarZhCN } from "./smart-bar/zh-CN";
 import { syncZhCN } from "./sync/zh-CN";
+import { themesZhCN } from "./themes/zh-CN";
 import type { LocaleMessages } from "./en-US";
 
 export const zhCN: LocaleMessages = {
@@ -423,11 +424,6 @@ export const zhCN: LocaleMessages = {
     colorSchemeDescription: "选择按钮、标签和高亮使用的柔和主色。",
     appearance: "外观模式",
     appearanceDescription: "选择浅色、深色，或跟随系统设置。",
-    greenTheme: "柔和绿色",
-    blueTheme: "雾蓝色",
-    pinkTheme: "淡粉色",
-    purpleTheme: "薰衣草紫",
-    amberTheme: "暖琥珀",
     systemTheme: "跟随系统",
     lightTheme: "浅色",
     darkTheme: "深色",
@@ -503,4 +499,5 @@ export const zhCN: LocaleMessages = {
   },
   smartBar: smartBarZhCN,
   sync: syncZhCN,
+  themes: themesZhCN,
 };

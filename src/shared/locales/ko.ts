@@ -1,5 +1,6 @@
 import { smartBarKo } from "./smart-bar/ko";
 import { syncKo } from "./sync/ko";
+import { themesKo } from "./themes/ko";
 import type { LocaleMessages } from "./en-US";
 
 export const ko: LocaleMessages = {
@@ -449,11 +450,6 @@ export const ko: LocaleMessages = {
     appearance: "모양",
     appearanceDescription:
       "라이트, 다크 또는 시스템 설정 따르기 중에서 선택하세요.",
-    greenTheme: "소프트 그린",
-    blueTheme: "미스트 블루",
-    pinkTheme: "블러시 핑크",
-    purpleTheme: "라벤더",
-    amberTheme: "웜 앰버",
     systemTheme: "시스템",
     lightTheme: "라이트",
     darkTheme: "다크",
@@ -535,4 +531,5 @@ export const ko: LocaleMessages = {
   },
   smartBar: smartBarKo,
   sync: syncKo,
+  themes: themesKo,
 };
