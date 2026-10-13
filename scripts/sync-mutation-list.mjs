@@ -132,8 +132,8 @@ export const MUTATIONS = [
   {
     name: "clearing local data keeps the cleared records' clocks",
     file: "src/background/sync/service.ts",
-    from: "...cleared.map((collection) => clocksKey(collection.name)),",
-    to: "",
+    from: "      await env.local.remove([...removed, ...clockData.flat()]);",
+    to: "      await env.local.remove(removed);",
   },
   {
     name: "a value with no clock competes as if it were new",
@@ -233,8 +233,8 @@ export const MUTATIONS = [
   {
     name: "a push confirmed when the server accepts the write",
     file: "src/shared/sync/engine.ts",
-    from: "        await updateEntries(env, outcome.pushes, snapshot, sentEntry);",
-    to: "        await updateEntries(env, outcome.pushes, snapshot, confirmedEntry);",
+    from: "        await updateEntries(env, outcome.pushes, snapshot, sentEntry, payloads);",
+    to: "        await updateEntries(env, outcome.pushes, snapshot, confirmedEntry, payloads);",
   },
   {
     name: "a push confirmed by a remote record that does not include it",
@@ -245,7 +245,7 @@ export const MUTATIONS = [
   {
     name: "H1: pushes are not recorded, so a later change keeps its old base",
     file: "src/shared/sync/engine.ts",
-    from: "        await updateEntries(env, outcome.pushes, snapshot, sentEntry);",
+    from: "        await updateEntries(env, outcome.pushes, snapshot, sentEntry, payloads);",
     to: "",
   },
   {
@@ -263,8 +263,8 @@ export const MUTATIONS = [
   {
     name: "H1: a change does not include the version it was made from",
     file: "src/shared/sync/clocks.ts",
-    from: "  const seen = previous?.local ? previous.seen : seenFrom(clock, [previous]);",
-    to: "  const seen = previous?.local ? previous.seen : undefined;",
+    from: "  const seen = seenFrom(clock, [previous]);",
+    to: "  const seen = previous?.local ? seenFrom(clock, [previous]) : undefined;",
   },
   {
     name: "H1: a merged version does not include the versions it merged",
@@ -281,8 +281,68 @@ export const MUTATIONS = [
   {
     name: "H1: a later clock of any device counts as including a change",
     file: "src/shared/sync/clocks.ts",
-    from: "      parseClock(held)?.device === device && compareClocks(held, clock) >= 0,",
-    to: "      compareClocks(held, clock) >= 0,",
+    from: "  return version.clock === clock || !!version.seen?.includes(clock);",
+    to: "  return [version.clock, ...(version.seen ?? [])].some((held) => compareClocks(held, clock) >= 0);",
+  },
+  {
+    name: "R2: a later clock of the same device id counts as including a change",
+    file: "src/shared/sync/clocks.ts",
+    from: "  return version.clock === clock || !!version.seen?.includes(clock);",
+    to: "  return [version.clock, ...(version.seen ?? [])].some((held) => parseClock(held)?.device === parseClock(clock)?.device && compareClocks(held, clock) >= 0);",
+  },
+  {
+    name: "R2: clocks carry no nonce",
+    file: "src/shared/sync/hlc.ts",
+    from: "  return [formatClock(next.wall, next.counter, device, newNonce()), next];",
+    to: "  return [formatClock(next.wall, next.counter, device), next];",
+  },
+  {
+    name: "R2: a version leaves out the clocks of its own device id",
+    file: "src/shared/sync/clocks.ts",
+    from: "      if (!parsed?.wall || held === clock) continue;",
+    to: "      if (!parsed?.wall || parsed.device === parseClock(clock)?.device) continue;",
+  },
+  {
+    name: "R2: a change on top of an unconfirmed one does not include it",
+    file: "src/shared/sync/clocks.ts",
+    from: "  const seen = seenFrom(clock, [previous]);",
+    to: "  const seen = previous?.local ? previous.seen : seenFrom(clock, [previous]);",
+  },
+  {
+    name: "R2: a confirmation does not add what the confirmed version includes",
+    file: "src/shared/sync/clocks.ts",
+    from: "    ...withSeen(seenFrom(current.clock, [current, record])),",
+    to: "    ...withSeen(current.seen),",
+  },
+  {
+    name: "R2: a clock of this device's id it never made goes unnoticed",
+    file: "src/shared/sync/clocks.ts",
+    from: "          foreign = true;",
+    to: "          foreign = false;",
+  },
+  {
+    name: "R2: a copied install keeps its device id",
+    file: "src/shared/sync/engine.ts",
+    from: "        device = await rotateDeviceId(env);",
+    to: "        await Promise.resolve();",
+  },
+  {
+    name: "R2: the round that renamed the device goes on under the old id",
+    file: "src/shared/sync/engine.ts",
+    from: "        context = { ...context, device };",
+    to: "",
+  },
+  {
+    name: "R2: the new-id note is gone after the next round",
+    file: "src/background/sync/service.ts",
+    from: "  [SYNC_WARNINGS.clonedDevice]: 24 * 60 * 60_000,",
+    to: "  [SYNC_WARNINGS.clonedDevice]: 0,",
+  },
+  {
+    name: "R2: the new-id note never expires",
+    file: "src/background/sync/service.ts",
+    from: "    if (!(now - at < (KEPT_FOR_MS[warning] ?? 0))) delete next[warning];",
+    to: "    void at;",
   },
   {
     name: "H1: roots with invalid seen clocks are applied",
@@ -293,26 +353,62 @@ export const MUTATIONS = [
   {
     name: "S2: the body a change was made from is not kept",
     file: "src/shared/sync/track.ts",
-    from: "      const bases = await keepBases(env, collection, clocks, recordedBefore);",
-    to: "      const bases = {};",
+    from: "          await project(collection, before, undefined, bodies);",
+    to: "          void before;",
   },
   {
-    name: "S2: the pushed version's body is not kept for a change made on top of it",
+    name: "S2: the pushed version's body is not kept",
     file: "src/shared/sync/bases.ts",
-    from: "  (clocks[id].base?.blob === blob || clocks[id].sent?.blob === blob);",
-    to: "  clocks[id].base?.blob === blob;",
+    from: "    if (entry.sent?.blob) needed.add(entry.sent.blob);",
+    to: "",
   },
   {
     name: "S2: a merge whose base was collected does not use the kept body",
     file: "src/shared/sync/engine-merge.ts",
-    from: "        )) ?? (await keptBase(env, collection, id, merge.base)))",
+    from: "        )) ?? (await keptBase(env, collection, merge.base)))",
     to: "        )))",
   },
   {
     name: "S2: kept bodies are never dropped",
+    file: "src/shared/sync/bases.ts",
+    from: "    const next = kept.filter((blob) => needed.has(blob));",
+    to: "    const next = [...kept];",
+    also: [
+      {
+        from: "    stale = kept.filter((blob) => !needed.has(blob));",
+        to: "    stale = [];",
+      },
+    ],
+  },
+  {
+    name: "R1: a merged change does not keep the version it was made from",
+    file: "src/shared/sync/local.ts",
+    from: "      items: { ...items, ...(hlc ? saveHlc(hlc) : {}) },\n      bodies,",
+    to: "      items: { ...items, ...(hlc ? saveHlc(hlc) : {}) },",
+  },
+  {
+    name: "R1: copies kept against remote deletions do not keep their base",
+    file: "src/shared/sync/engine-merge.ts",
+    from: "        items: saveHlc(hlc),\n        bodies: payloads,",
+    to: "        items: saveHlc(hlc),",
+  },
+  {
+    name: "R1: a push or confirmation does not keep the pushed body",
     file: "src/shared/sync/engine.ts",
-    from: "    await pruneBases(env, collections);",
-    to: "",
+    from: "      await saveClocks(env, syncCollection(collection)!, clocks, { bodies });",
+    to: "      await saveClocks(env, syncCollection(collection)!, clocks, {});",
+  },
+  {
+    name: "R1: a writer stores clock entries itself",
+    file: "src/shared/sync/local.ts",
+    from: "        await saveClocks(env, collection, clocks, {\n          items: saveHlc(hlc),",
+    to: "        await env.local.set({ [clocksKey(collection.name)]: clocks });\n        void ({\n          items: saveHlc(hlc),",
+    also: [
+      {
+        from: "import {\n  changedEntry,",
+        to: "import {\n  clocksKey,\n  changedEntry,",
+      },
+    ],
   },
   {
     name: "S1: fields two devices changed merge one level deep",
