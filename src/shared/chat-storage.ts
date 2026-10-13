@@ -61,10 +61,11 @@ export async function readChat(chatId: string): Promise<Chat | undefined> {
   return joinChat(summary, (await loadChatContent(chatId)) ?? { messages: [] });
 }
 
-// Store one chat's content. Returns what was stored and the list facts that
-// describe it. `base`: the stored content the value was made from; content
-// stored since (a sync download the page has not merged) is merged in, so
-// a page's copy never undoes it.
+// Store one chat's content. Returns the content as reading it back gives it
+// (the form pages work with, so it can be the next save's `base`) and the
+// list facts that describe it. `base`: the content the value was made from;
+// content stored since (a sync download the page has not merged) is merged
+// in, so a page's copy never undoes it.
 export async function saveChatContent(
   chatId: string,
   value: ChatContent,
@@ -75,15 +76,17 @@ export async function saveChatContent(
   await withLock(storageLockName(key), async () => {
     const raw = (await local().get(key))[key];
     const stored = raw === undefined ? undefined : normalizeChatContent(raw);
-    if (base && stored && !sameJson(stored, normalizeChatContent(base)))
+    const from = base && normalizeChatContent(base);
+    if (from && stored && !sameJson(stored, from))
       content = chatContent(
-        mergeChatBodies(base, content, stored, "mine") as ChatContent,
+        mergeChatBodies(from, content, stored, "mine") as ChatContent,
       );
     // Messages this save left alone stay as stored, whatever loading them
     // normalized.
-    content = keepStoredForm(raw, stored ?? content, content);
-    if (raw !== undefined && sameJson(content, raw)) return;
-    await local().set({ [key]: content });
+    const write = keepStoredForm(raw, stored ?? content, content);
+    content = normalizeChatContent(write);
+    if (raw !== undefined && sameJson(write, raw)) return;
+    await local().set({ [key]: write });
   });
   return { content, facts: contentFacts(content) };
 }
