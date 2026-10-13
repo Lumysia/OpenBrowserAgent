@@ -372,6 +372,11 @@ export const frFR: LocaleMessages = {
     mcpServerUrl: "URL du point de terminaison",
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "En-têtes (JSON)",
+    mcpOmitOrigin: "Envoyer sans l’Origin du navigateur",
+    mcpOmitOriginHint:
+      "À activer si le serveur refuse les requêtes venant d’un navigateur, par exemple avec « Browser-origin requests are not allowed. ». Les requêtes vers ce serveur partent alors sans l’en-tête Origin que le navigateur ajoute.",
+    mcpOmitOriginUnsupported:
+      "Ce navigateur ne peut pas retirer l’en-tête Origin : un serveur qui refuse les requêtes des navigateurs ne fonctionnera pas ici.",
     mcpServerEnabled: "Activé",
     mcpEnableRequiresTest: "Testez ce serveur MCP avant de l’activer.",
     mcpEnableTooltipTested: "Test réussi. {count} outils trouvés.",

@@ -363,6 +363,11 @@ export const jaJP: LocaleMessages = {
     mcpServerUrl: "エンドポイント URL",
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "ヘッダー（JSON）",
+    mcpOmitOrigin: "ブラウザーの Origin を送らない",
+    mcpOmitOriginHint:
+      "サーバーがブラウザーからのリクエストを拒否する場合（例:「Browser-origin requests are not allowed.」）にオンにします。オンにすると、このサーバーへのリクエストからブラウザーが付ける Origin ヘッダーを外します。",
+    mcpOmitOriginUnsupported:
+      "このブラウザーでは Origin ヘッダーを外せないため、ブラウザーからのリクエストを拒否するサーバーはここでは使えません。",
     mcpServerEnabled: "有効",
     mcpEnableRequiresTest:
       "有効にする前にこの MCP サーバーをテストしてください。",

@@ -335,6 +335,11 @@ export const ko: LocaleMessages = {
     mcpServerUrl: "엔드포인트 URL",
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "헤더 JSON",
+    mcpOmitOrigin: "브라우저 Origin 없이 보내기",
+    mcpOmitOriginHint:
+      "서버가 브라우저 요청을 거부할 때 켜세요(예: “Browser-origin requests are not allowed.”). 켜면 이 서버로 보내는 요청에서 브라우저가 붙이는 Origin 헤더를 제거합니다.",
+    mcpOmitOriginUnsupported:
+      "이 브라우저에서는 Origin 헤더를 제거할 수 없어, 브라우저 요청을 거부하는 서버는 여기서 사용할 수 없습니다.",
     mcpServerEnabled: "활성화",
     mcpEnableRequiresTest: "사용하기 전에 이 MCP 서버를 먼저 테스트하세요.",
     mcpEnableTooltipTested: "테스트를 통과했고 도구 {count}개를 찾았습니다.",

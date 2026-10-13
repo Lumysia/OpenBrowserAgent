@@ -347,6 +347,11 @@ export const enUS = {
     mcpServerUrl: "Endpoint URL",
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "Headers JSON",
+    mcpOmitOrigin: "Send without browser Origin",
+    mcpOmitOriginHint:
+      "Turn this on if the server rejects requests from browsers, for example with “Browser-origin requests are not allowed.” Requests to this server then leave out the Origin header the browser adds.",
+    mcpOmitOriginUnsupported:
+      "This browser can't remove the Origin header, so a server that rejects browser requests won't work here.",
     mcpServerEnabled: "Enabled",
     mcpEnableRequiresTest: "Test this MCP server before enabling it.",
     mcpEnableTooltipTested: "Test passed. {count} tools were found.",

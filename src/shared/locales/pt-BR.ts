@@ -376,6 +376,11 @@ export const ptBR: LocaleMessages = {
     mcpServerUrl: "URL do endpoint",
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "Cabeçalhos (JSON)",
+    mcpOmitOrigin: "Enviar sem o Origin do navegador",
+    mcpOmitOriginHint:
+      "Ative se o servidor recusar solicitações de navegadores, por exemplo com “Browser-origin requests are not allowed.”. As solicitações para este servidor passam a ir sem o cabeçalho Origin que o navegador adiciona.",
+    mcpOmitOriginUnsupported:
+      "Este navegador não consegue remover o cabeçalho Origin, então um servidor que recusa solicitações de navegadores não funciona aqui.",
     mcpServerEnabled: "Ativado",
     mcpEnableRequiresTest: "Teste este servidor MCP antes de ativá-lo.",
     mcpEnableTooltipTested: "Teste aprovado. {count} ferramentas encontradas.",

@@ -368,6 +368,11 @@ export const deDE: LocaleMessages = {
     mcpServerUrl: "Endpunkt-URL",
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "Header (JSON)",
+    mcpOmitOrigin: "Ohne Browser-Origin senden",
+    mcpOmitOriginHint:
+      "Aktivieren Sie dies, wenn der Server Anfragen aus Browsern ablehnt, etwa mit „Browser-origin requests are not allowed.“. Anfragen an diesen Server gehen dann ohne den Origin-Header, den der Browser hinzufügt.",
+    mcpOmitOriginUnsupported:
+      "Dieser Browser kann den Origin-Header nicht entfernen; ein Server, der Browser-Anfragen ablehnt, funktioniert hier nicht.",
     mcpServerEnabled: "Aktiviert",
     mcpEnableRequiresTest:
       "Testen Sie diesen MCP-Server, bevor Sie ihn aktivieren.",

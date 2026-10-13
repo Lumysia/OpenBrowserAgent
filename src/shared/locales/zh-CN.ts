@@ -314,6 +314,11 @@ export const zhCN: LocaleMessages = {
     mcpServerUrl: "端点 URL",
     mcpServerUrlPlaceholder: "https://example.com/mcp",
     mcpServerHeaders: "请求头 JSON",
+    mcpOmitOrigin: "发送时不带浏览器 Origin",
+    mcpOmitOriginHint:
+      "服务器拒绝浏览器发出的请求时开启，例如提示 “Browser-origin requests are not allowed.”。开启后，发往此服务器的请求不再带浏览器添加的 Origin 请求头。",
+    mcpOmitOriginUnsupported:
+      "此浏览器无法移除 Origin 请求头，拒绝浏览器请求的服务器在这里无法使用。",
     mcpServerEnabled: "已启用",
     mcpEnableRequiresTest: "请先测试此 MCP 服务器，然后才能启用。",
     mcpEnableTooltipTested: "测试已通过，发现 {count} 个工具。",
