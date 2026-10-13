@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/assets/brand/icon.svg" alt="" width="96" height="96"></p>
+
 # OpenBrowserAgent
 
 OpenBrowserAgent is an AI browser side panel for understanding pages, researching the web, and completing browser tasks with you in control.
@@ -59,6 +61,7 @@ It turns your browser into an AI working surface: bring page context into chat, 
 - [Product overview](docs/product-overview.md)
 - [Installation and packaging](docs/installation-and-packaging.md)
 - [Permissions and privacy](docs/permissions-and-privacy.md)
+- [Privacy policy](PRIVACY.md)
 
 ## Development
 
