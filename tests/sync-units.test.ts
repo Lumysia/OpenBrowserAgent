@@ -279,10 +279,19 @@ test("root validation rejects anything that is not a complete root", async () =>
   ];
   for (const value of bad)
     assert.throws(() => validateRoot(value), SyncFormatError);
-  assert.throws(
-    () => validateRoot({ ...good, format: "openbrowseragent.sync.v9" }),
-    (error: SyncFormatError) => error.newerFormat,
-  );
+  for (const format of [
+    "openbrowseragent.sync.v9",
+    "openbrowseragent.sync.v10",
+  ])
+    assert.throws(
+      () => validateRoot({ ...good, format }),
+      (error: SyncFormatError) => error.newerFormat,
+    );
+  for (const format of ["openbrowseragent.sync.v1", "openbrowseragent.sync.vx"])
+    assert.throws(
+      () => validateRoot({ ...good, format }),
+      (error: SyncFormatError) => !error.newerFormat,
+    );
   await assert.rejects(
     decodeRoot(new TextEncoder().encode("{}")),
     SyncFormatError,
