@@ -6,6 +6,7 @@ import { normalizeChatSummaries } from "./chats";
 import { DEFAULT_PREFERENCES, mergePreferences } from "./default-preferences";
 import { normalizeLocalExecutionBridges } from "./local-execution-bridges";
 import { normalizeMcpServers } from "./mcp";
+import { normalizeProviderState } from "./provider-instances";
 import { normalizeSkillSettings } from "./skill-catalog";
 import { normalizeSkills } from "./skills";
 import {
@@ -194,7 +195,9 @@ export const storage = {
     () => DEFAULT_PREFERENCES,
     { normalize: mergePreferences },
   ),
-  provider: createSyncedItem<ProviderState>(STORAGE_KEYS.provider, () => ({})),
+  provider: createSyncedItem<ProviderState>(STORAGE_KEYS.provider, () => ({}), {
+    normalize: normalizeProviderState,
+  }),
   agents: createSyncedItem<Agent[]>(
     STORAGE_KEYS.agents,
     () => normalizeAgents(undefined),

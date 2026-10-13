@@ -4,13 +4,19 @@ import { DEFAULT_AGENT_ID, resolveAgent } from "../src/shared/agents";
 import { storeEdit } from "../src/shared/rebase";
 import { storage } from "../src/shared/storage";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
-import type { Agent, AgentWorkspace } from "../src/shared/types";
+import type {
+  Agent,
+  AgentWorkspace,
+  ProviderConfig,
+  ProviderState,
+} from "../src/shared/types";
 import { WORKSPACE_FILE_PATH } from "../src/shared/workspace";
 import {
   saveWorkspaceChanges,
   storeAgentWorkspaces,
   workspaceForAgent,
 } from "../src/shared/workspace-storage";
+import { renameProviderDraft } from "../entrypoints/options/provider-drafts";
 import { onDevice } from "./sync-app-fixture";
 import {
   ALL_ON,
@@ -88,6 +94,109 @@ test("fix7 P4: an agent without a workspace still gets one with the default file
     workspaceForAgent({ ...agent(), id: "other" }, false),
   );
   assert.equal(run.files.length, 3);
+});
+
+// Saves the provider form of `providerId` with `edit` applied, the way the
+// providers page stores it.
+async function saveProviderForm(
+  on: Device,
+  providerId: string,
+  edit: (draft: ProviderConfig) => ProviderConfig,
+) {
+  await onDevice(on, async () => {
+    const shown = await storage.provider.get();
+    await storeEdit(storage.provider, shown, {
+      ...shown,
+      [providerId]: edit(shown[providerId]),
+    });
+  });
+}
+
+const modelIds = (on: Device, providerId: string) =>
+  on
+    .get<ProviderState>(PROVIDERS)
+    [providerId]?.models?.map((model) => model.id);
+
+test("fix7 P5: saving a provider leaves the models the user did not change as they are", async () => {
+  const { clock, a, b } = pair();
+  // Models stored before display names were kept, and one with its own.
+  await a.set(PROVIDERS, {
+    openai: {
+      id: "openai",
+      type: "openai",
+      label: "Work / Team",
+      apiKey: "k1",
+      models: [
+        { id: "openai:m1", name: "m1" },
+        { id: "openai:m2", name: "m2", displayName: "Fast" },
+        { id: "openai:m3", name: "m3", displayName: "Work / Team / m3" },
+      ],
+    },
+  });
+  await a.sync("edit");
+  await b.sync();
+  // A deletes two models.
+  clock.now += 60_000;
+  await saveProviderForm(a, "openai", (draft) => ({
+    ...draft,
+    models: draft.models!.filter((model) => model.id === "openai:m3"),
+  }));
+  await a.sync("edit");
+  // B changes the API key before it syncs.
+  clock.now += 60_000;
+  await saveProviderForm(b, "openai", (draft) => ({ ...draft, apiKey: "k2" }));
+  await b.sync("edit");
+  await a.sync();
+  for (const on of [a, b]) {
+    assert.deepEqual(modelIds(on, "openai"), ["openai:m3"], on.name);
+    const provider = on.get<ProviderState>(PROVIDERS).openai;
+    assert.equal(provider.apiKey, "k2", on.name);
+    assert.equal(provider.models![0].displayName, "Work / Team / m3", on.name);
+  }
+});
+
+test("fix7 P5: renaming a provider still renames its models", async () => {
+  const { a } = pair();
+  await a.set(PROVIDERS, {
+    openai: {
+      id: "openai",
+      type: "openai",
+      label: "Work",
+      models: [{ id: "openai:m1", name: "m1", displayName: "Work / Fast" }],
+    },
+  });
+  await saveProviderForm(a, "openai", (draft) =>
+    renameProviderDraft(draft, "Home"),
+  );
+  assert.equal(
+    a.get<ProviderState>(PROVIDERS).openai.models![0].displayName,
+    "Home / Fast",
+  );
+});
+
+test("fix7 P5: saving one provider leaves the other providers as stored", async () => {
+  const { clock, a, b } = pair();
+  // `openrouter` was stored by an earlier version: no id, type or label.
+  await a.set(PROVIDERS, {
+    openai: { id: "openai", type: "openai", label: "OpenAI", models: [] },
+    openrouter: { apiKey: "r1", models: [] },
+  });
+  await a.sync("edit");
+  await b.sync();
+  clock.now += 60_000;
+  const { openrouter: _gone, ...kept } = a.get<ProviderState>(PROVIDERS);
+  await a.set(PROVIDERS, kept);
+  await a.sync("edit");
+  clock.now += 60_000;
+  await saveProviderForm(b, "openai", (draft) => ({ ...draft, apiKey: "k" }));
+  await b.sync("edit");
+  await a.sync();
+  for (const on of [a, b])
+    assert.deepEqual(
+      Object.keys(on.get<ProviderState>(PROVIDERS)),
+      ["openai"],
+      on.name,
+    );
 });
 
 test("fix7 guard: a store that changes nothing writes nothing", async () => {

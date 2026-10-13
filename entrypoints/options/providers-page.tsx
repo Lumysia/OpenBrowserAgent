@@ -59,19 +59,13 @@ export function ProvidersPage() {
   if (!providerState || !preferences) return null;
 
   function updateProvider(providerId: string, next: ProviderConfig) {
-    setProviderState((previous) => ({
-      ...normalizeProviderState(previous || {}),
-      [providerId]: next,
-    }));
+    setProviderState((previous) => ({ ...previous, [providerId]: next }));
   }
 
   function addProvider() {
     const provider = createProviderConfig(providerType, normalizedProviders);
     const providerId = provider.id!;
-    setProviderState((previous) => ({
-      [providerId]: provider,
-      ...normalizeProviderState(previous || {}),
-    }));
+    setProviderState((previous) => ({ [providerId]: provider, ...previous }));
     setOpenProviders((items) =>
       items.includes(providerId) ? items : [providerId, ...items],
     );
@@ -80,9 +74,7 @@ export function ProvidersPage() {
   function deleteProvider(providerId: string) {
     const removed = normalizedProviders[providerId];
     setProviderState((previous) => {
-      const { [providerId]: _removed, ...next } = normalizeProviderState(
-        previous || {},
-      );
+      const { [providerId]: _removed, ...next } = previous;
       return next;
     });
     if (removed?.models?.length)
