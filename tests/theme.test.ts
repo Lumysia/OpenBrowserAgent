@@ -84,6 +84,15 @@ test("accents share a hue with the page wash in every theme and scheme", () => {
   assert.deepEqual(failures, []);
 });
 
+test("menus and popovers float a step above the page in dark", () => {
+  for (const theme of ALL_THEMES) {
+    const tokens = themeTokens(theme, "dark");
+    const popover = toOklch(tokens.popover).l;
+    for (const name of ["background", "card", "panel", "field"] as const)
+      assert.ok(popover - toOklch(tokens[name]).l >= 0.05, `${theme} ${name}`);
+  }
+});
+
 test("an unknown stored theme shows pink and stays stored as it is", () => {
   assert.equal(DEFAULT_THEME, "pink");
   for (const value of ["sparkle", "", null, undefined, 3, "PINK"])

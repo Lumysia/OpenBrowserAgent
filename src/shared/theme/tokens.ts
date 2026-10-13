@@ -87,7 +87,8 @@ const NEUTRALS: Record<
     background: "#171612",
     foreground: "#eee9df",
     card: "#211f1a",
-    popover: "#24221d",
+    // Menus and popovers float a clear step above the (washed) page.
+    popover: "#312e28",
     secondary: "#2b2923",
     muted: "#25231e",
     "muted-foreground": "#aaa397",
@@ -169,6 +170,14 @@ export function themeTokens(
         : tinted(value, theme.tint, dark ? 0.32 : 0.22),
     ]),
   ) as (typeof NEUTRALS)[ResolvedScheme];
+  // In dark, menus lean towards the theme so they belong to the page they
+  // float over, while staying lighter than it.
+  if (dark)
+    neutrals.popover = fromOklch({
+      l: toOklch(NEUTRALS.dark.popover).l,
+      c: 0.016,
+      h: toOklch(theme.tint ?? accent).h,
+    });
 
   const soft = role(accent, roles.soft);
   const softer = role(accent, roles.softer);
