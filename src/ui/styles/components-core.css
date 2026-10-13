@@ -357,6 +357,10 @@
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
+.ui-user-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .ui-empty-state {
   display: grid;
   justify-items: center;

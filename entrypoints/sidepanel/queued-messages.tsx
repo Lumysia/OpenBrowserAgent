@@ -1,6 +1,6 @@
 import { Pencil, Trash2 } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
-import { Button, IconTooltip } from "../../src/ui/components";
+import { Button, IconTooltip, UserText } from "../../src/ui/components";
 import type { QueuedMessage } from "./use-queued-messages";
 import { useDeferredRemove } from "./use-deferred-remove";
 
@@ -55,7 +55,7 @@ function QueuedMessageRow({
   const { removing, remove } = useDeferredRemove(onDelete);
   return (
     <div className={`queued-message ${removing ? "is-removing" : ""}`}>
-      <span>{message.content}</span>
+      <UserText className="queued-message-text" text={message.content} />
       <div className="queued-message-actions">
         <IconTooltip label={t.common.edit}>
           <Button

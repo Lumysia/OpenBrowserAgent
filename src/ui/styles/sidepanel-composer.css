@@ -236,13 +236,14 @@
   pointer-events: none;
   animation: context-chip-remove 0.2s ease both;
 }
-.queued-message span {
+.queued-message-text {
+  display: -webkit-box;
   min-width: 0;
   overflow: hidden;
   color: var(--foreground);
   font-size: 13px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 .queued-message-actions {
   display: inline-flex;
