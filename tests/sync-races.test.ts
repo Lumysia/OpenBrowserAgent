@@ -140,7 +140,7 @@ test("an edit made while a round reads local data is uploaded by the next round"
     const result = await get(keys);
     if (!edited && keys === PROVIDERS) {
       edited = true;
-      await b.set(PROVIDERS, { p1: { apiKey: "k3" } });
+      await b.env.local.set({ [PROVIDERS]: { p1: { apiKey: "k3" } } });
     }
     return result;
   };

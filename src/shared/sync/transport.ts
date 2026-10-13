@@ -28,6 +28,7 @@ export type Transport = {
   writeRoot(root: Root, etag: string | undefined): Promise<RootWrite>;
   // A blob's payload, checked against its hash; undefined when missing.
   getBlob(hash: string): Promise<Uint8Array | undefined>;
+  hasBlob(hash: string): Promise<boolean>;
   putBlob(hash: string, payload: Uint8Array): Promise<void>;
   deleteBlob(hash: string): Promise<void>;
   listBlobs(): Promise<StoredBlob[]>;

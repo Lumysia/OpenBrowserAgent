@@ -17,6 +17,21 @@ export type NeedsBody = (id: string) => boolean;
 
 export type Change = { id: string; entry: LocalEntry | null };
 
+// Stores a write's items in one storage call. The engine stores the clocks
+// of the records written with them, so a remote change never looks like a
+// local edit.
+export type Commit = (
+  items: Record<string, unknown>,
+  written: Set<string>,
+) => Promise<void>;
+
+// The entries one stored key holds. `complete`: a record missing from it is
+// gone (a key that holds one chat's content is not).
+export type KeyEntries = {
+  entries: Map<string, LocalEntry>;
+  complete: boolean;
+};
+
 export type Collection = {
   name: string;
   gate: CollectionGate;
@@ -32,6 +47,13 @@ export type Collection = {
   // Entries in a list order: an `ORDER_ID` entry lists the ids.
   ordered?: boolean;
   read(env: SyncEnv, needsBody: NeedsBody): Promise<Map<string, LocalEntry>>;
+  // Splits one stored value, to tell which records a storage change touched.
+  entriesOf(key: string, value: unknown): KeyEntries;
+  // A record's value while it was never stored (a preference's default).
+  defaultData?(id: string): unknown;
+  // Data fields holding secrets: a device that never saw the other side's
+  // value does not replace a secret with an empty one.
+  secrets?: string[];
   // Writes the changes whose ids pass `verify` (re-checked under the storage
   // lock, so a local edit made meanwhile is never overwritten). Returns the
   // ids written.
@@ -39,6 +61,7 @@ export type Collection = {
     env: SyncEnv,
     changes: Change[],
     verify: (id: string, current: LocalEntry | undefined) => Promise<boolean>,
+    commit?: Commit,
   ): Promise<Set<string>>;
   // An entry that must not upload yet (a reply still streaming).
   hold?(entry: LocalEntry): boolean;
@@ -53,6 +76,12 @@ export type Collection = {
   // Data derived from the body (a chat's message count) after a merge.
   finalizeData?(data: unknown, body: unknown): unknown;
 };
+
+// Without an engine commit, a write is a plain storage write.
+export const plainCommit =
+  (env: SyncEnv): Commit =>
+  (items) =>
+    env.local.set(items);
 
 export const ORDER_ID = "~order";
 

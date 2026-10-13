@@ -20,7 +20,12 @@ export type SyncRequest =
   | { type: typeof SYNC_MESSAGE.page; visible: boolean; focused: boolean }
   | { type: typeof SYNC_MESSAGE.now }
   | { type: typeof SYNC_MESSAGE.load; collection: string; id: string }
-  | { type: typeof SYNC_MESSAGE.resolveDeletes; apply: boolean }
+  | {
+      type: typeof SYNC_MESSAGE.resolveDeletes;
+      apply: boolean;
+      // Answers the prompt about deletions made on this device.
+      local?: boolean;
+    }
   | { type: typeof SYNC_MESSAGE.check; backend: SyncBackendConfig }
   | {
       type: typeof SYNC_MESSAGE.reset;
@@ -69,8 +74,8 @@ export const syncNow = () => send<SyncStatus>({ type: SYNC_MESSAGE.now });
 export const loadSyncedContent = (collection: string, id: string) =>
   send<boolean>({ type: SYNC_MESSAGE.load, collection, id });
 
-export const resolveMassDelete = (apply: boolean) =>
-  send<SyncStatus>({ type: SYNC_MESSAGE.resolveDeletes, apply });
+export const resolveMassDelete = (apply: boolean, local = false) =>
+  send<SyncStatus>({ type: SYNC_MESSAGE.resolveDeletes, apply, local });
 
 export const checkSyncBackend = (backend: SyncBackendConfig) =>
   send<ServerCheck>({ type: SYNC_MESSAGE.check, backend });

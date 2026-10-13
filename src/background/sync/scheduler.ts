@@ -1,9 +1,5 @@
 import { getBrowserApi } from "../../shared/browser-api";
-import {
-  mergeSyncDataSettings,
-  STORAGE_KEYS,
-  type SyncDataSettings,
-} from "../../shared/storage-keys";
+import { STORAGE_KEYS } from "../../shared/storage-keys";
 import {
   isSyncRequest,
   registerSyncHandler,
@@ -11,15 +7,16 @@ import {
   type SyncRequest,
   type SyncResponse,
 } from "../../shared/sync/client";
-import { ownsKey } from "../../shared/sync/collection";
-import { SYNC_COLLECTIONS } from "../../shared/sync/collections";
 import {
-  markDirty as markDirtyKeys,
   pruneSyncStates,
   loadSyncStatus,
   SYNC_WARNINGS,
   updateSyncStatus,
 } from "../../shared/sync/state";
+import {
+  recordLocalChanges,
+  type StorageChanges,
+} from "../../shared/sync/track";
 import {
   browserSyncEnv,
   checkBackend,
@@ -28,6 +25,7 @@ import {
   createSyncRunner,
   loadContent,
   syncContext,
+  syncDeviceId,
   type RoundRequest,
 } from "./service";
 import {
@@ -88,17 +86,20 @@ export function setupSync() {
     });
   }
 
-  async function markDirty(keys: string[]) {
-    const owned = keys.filter((key) =>
-      SYNC_COLLECTIONS.some((collection) => ownsKey(collection, key)),
+  // Local edits get their clocks (with sync off too, so turning it on
+  // later knows what changed when); a round follows.
+  async function recordEdits(changes: StorageChanges) {
+    const recorded = await recordLocalChanges(
+      env,
+      await syncDeviceId(env),
+      changes,
     );
-    if (!owned.length) return;
-    const added = await markDirtyKeys(env, owned);
-    const context = added ? await syncContext(env) : undefined;
-    if (context)
-      await updateSyncStatus(env.local, {
-        pendingCount: await countPending(env, context),
-      });
+    if (!recorded) return;
+    const context = await syncContext(env);
+    if (!context) return;
+    await updateSyncStatus(env.local, {
+      pendingCount: await countPending(env, context),
+    });
     scheduleEdit();
   }
 
@@ -163,14 +164,27 @@ export function setupSync() {
           message.id,
         );
       case SYNC_MESSAGE.resolveDeletes: {
-        const collections =
-          (await loadSyncStatus(env.local)).massDelete?.map(
-            (entry) => entry.collection,
-          ) ?? [];
-        await updateSyncStatus(env.local, { massDelete: undefined });
+        // Prompts of both kinds at once are answered one by one; the round
+        // runs once every one has its answer.
+        const asked = ((await loadSyncStatus(env.local)).massDelete ?? []).map(
+          (entry) =>
+            !!entry.local === !!message.local
+              ? { ...entry, keep: !message.apply }
+              : entry,
+        );
+        const open = asked.some((entry) => entry.keep === undefined);
+        await updateSyncStatus(env.local, {
+          massDelete: open ? asked : undefined,
+        });
+        if (open) return loadSyncStatus(env.local);
         await request({
           reason: "manual",
-          massDelete: { collections, keep: !message.apply },
+          massDelete: [true, false].map((keep) => ({
+            collections: asked
+              .filter((entry) => entry.keep === keep)
+              .map((entry) => entry.collection),
+            keep,
+          })),
         });
         return loadSyncStatus(env.local);
       }
@@ -220,7 +234,9 @@ export function setupSync() {
       return;
     }
     if (area !== "local") return;
-    void markDirty(Object.keys(changes));
+    void recordEdits(changes).catch((error) =>
+      console.warn("Recording local changes failed", error),
+    );
     if (
       changes[STORAGE_KEYS.activeSyncBackendId] ||
       changes[STORAGE_KEYS.syncBackends]
@@ -230,9 +246,6 @@ export function setupSync() {
       void updatePolling();
       void request({ reason: "startup" });
     }
-    const settings = changes[STORAGE_KEYS.syncDataSettings];
-    if (settings)
-      void followEnabledCategories(settings.oldValue, settings.newValue);
   });
 
   // States of backends no longer configured are dropped.
@@ -267,24 +280,6 @@ export function setupSync() {
         : [SYNC_WARNINGS.ignoresPreconditions]),
     ];
     if (warnings.length) await updateSyncStatus(env.local, { warnings });
-  }
-
-  // A data category turned on: its local data is compared in full next round.
-  async function followEnabledCategories(before: unknown, after: unknown) {
-    const old = mergeSyncDataSettings(before as Partial<SyncDataSettings>);
-    const next = mergeSyncDataSettings(after as Partial<SyncDataSettings>);
-    const enabled = SYNC_COLLECTIONS.filter((collection) => {
-      const gate = collection.gate;
-      if (gate === "always") return false;
-      const key = gate === "attachments" ? "syncChatAttachments" : gate;
-      return !old[key] && next[key];
-    });
-    if (!enabled.length) return;
-    await markDirty(
-      enabled.flatMap((collection) =>
-        collection.keys.filter((key) => !key.endsWith("/")),
-      ),
-    );
   }
 
   api.alarms?.onAlarm.addListener(async (alarm) => {

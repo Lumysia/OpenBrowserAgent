@@ -1,10 +1,16 @@
 import { storageLockName } from "../locks";
-import { STORAGE_KEYS, SYNC_PREFERENCES } from "../storage-keys";
+import { DEFAULT_PREFERENCES } from "../default-preferences";
+import {
+  DEFAULT_SYNC_DATA_SETTINGS,
+  STORAGE_KEYS,
+  SYNC_PREFERENCES,
+} from "../storage-keys";
 import {
   applyVerified,
   listEntries,
   orderItems,
   ORDER_ID,
+  plainCommit,
   type Change,
   type Collection,
   type CollectionGate,
@@ -27,6 +33,8 @@ function storedCollection({
   fromEntries,
   ordered,
   mergeBodies,
+  defaults,
+  secrets,
 }: {
   name: string;
   gate: CollectionGate;
@@ -37,6 +45,9 @@ function storedCollection({
   fromEntries(entries: Map<string, LocalEntry>, previous: unknown): unknown;
   ordered?: boolean;
   mergeBodies?: Collection["mergeBodies"];
+  // Values the app uses while a field was never stored.
+  defaults?: Record<string, unknown>;
+  secrets?: string[];
 }): Collection {
   return {
     name,
@@ -46,16 +57,19 @@ function storedCollection({
     body,
     ordered,
     mergeBodies,
+    secrets,
+    defaultData: defaults && ((id) => defaults[id]),
     async read(env) {
       return toEntries(await readKey(env.local, key));
     },
-    write(env: SyncEnv, changes: Change[], verify) {
+    entriesOf: (_key, value) => ({ entries: toEntries(value), complete: true }),
+    write(env: SyncEnv, changes: Change[], verify, commit = plainCommit(env)) {
       return env.lock(storageLockName(key), async () => {
         const previous = await readKey(env.local, key);
         const entries = toEntries(previous);
         const written = await applyVerified(entries, changes, verify);
         if (written.size)
-          await env.local.set({ [key]: fromEntries(entries, previous) });
+          await commit({ [key]: fromEntries(entries, previous) }, written);
         return written;
       });
     },
@@ -69,11 +83,14 @@ const recordMap = (
   name: string,
   gate: CollectionGate,
   key: string,
+  options: { defaults?: object; secrets?: string[] } = {},
 ): Collection =>
   storedCollection({
     name,
     gate,
     key,
+    defaults: options.defaults as Record<string, unknown> | undefined,
+    secrets: options.secrets,
     toEntries: (value) =>
       new Map(
         Object.entries(isRecord(value) ? value : {})
@@ -95,6 +112,7 @@ function list({
   idField = "id",
   bodyField,
   ordered = true,
+  secrets,
 }: {
   name: string;
   gate: CollectionGate;
@@ -102,6 +120,7 @@ function list({
   idField?: string;
   bodyField?: string;
   ordered?: boolean;
+  secrets?: string[];
 }): Collection {
   const split = (item: Item): LocalEntry => {
     if (!bodyField) return { data: item };
@@ -118,6 +137,7 @@ function list({
     key,
     body: bodyField ? "json" : undefined,
     ordered,
+    secrets,
     toEntries: (value) =>
       listEntries(
         (Array.isArray(value) ? value : []).filter(isRecord),
@@ -159,9 +179,15 @@ export const SYNC_COLLECTIONS: Collection[] = [
       entries.get(LANGUAGE_ID)?.data ?? previous,
   }),
   // Preferences and sync settings: one record per field.
-  recordMap("preferences", "always", STORAGE_KEYS.preferences),
-  recordMap("sync-data", "always", STORAGE_KEYS.syncDataSettings),
-  recordMap("providers", SYNC_PREFERENCES.providers, STORAGE_KEYS.provider),
+  recordMap("preferences", "always", STORAGE_KEYS.preferences, {
+    defaults: DEFAULT_PREFERENCES,
+  }),
+  recordMap("sync-data", "always", STORAGE_KEYS.syncDataSettings, {
+    defaults: DEFAULT_SYNC_DATA_SETTINGS,
+  }),
+  recordMap("providers", SYNC_PREFERENCES.providers, STORAGE_KEYS.provider, {
+    secrets: ["apiKey"],
+  }),
   list({
     name: "agents",
     gate: SYNC_PREFERENCES.agents,
@@ -190,11 +216,13 @@ export const SYNC_COLLECTIONS: Collection[] = [
     name: "mcp-servers",
     gate: SYNC_PREFERENCES.mcpServers,
     key: STORAGE_KEYS.mcpServers,
+    secrets: ["headers"],
   }),
   list({
     name: "bridges",
     gate: SYNC_PREFERENCES.localExecutionBridges,
     key: STORAGE_KEYS.localExecutionBridges,
+    secrets: ["secret", "bridgeKey"],
   }),
   chatsCollection,
   attachmentsCollection,

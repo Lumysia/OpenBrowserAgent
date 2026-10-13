@@ -1,25 +1,19 @@
 import { STORAGE_KEYS } from "../storage-keys";
-import { storageLockName } from "../locks";
-import { readKey, type StorageArea, type SyncEnv } from "./env";
-import { INITIAL_HLC, type HlcState } from "./hlc";
-import type { SyncedEntry } from "./plan";
-import type { Root, SyncRecord } from "./root";
-import { SYNC_COLLECTIONS } from "./collections";
+import { readKey, type StorageArea } from "./env";
+import type { Root } from "./root";
 
-// What a device keeps between rounds, in storage.local so a background
-// restart neither downloads everything again nor forgets local changes.
+// What a device keeps per backend between rounds, in storage.local. Only
+// caches: what local data holds and when it changed is recorded per record
+// (clocks.ts), so losing this state never deletes or re-sends anything.
 export type SyncState = {
-  // The backend this state belongs to; another backend starts over.
+  // The backend this state belongs to.
   scope: string;
   // The last root read or written, with its validator.
   remote?: { root: Root; etag?: string };
-  // Per record: the version this device's copy matches.
-  synced: Record<string, SyncedEntry>;
-  // Local changes stamped but not yet in the remote root.
-  pending: Record<string, SyncRecord>;
-  hlc: HlcState;
-  // Collections to compare in full next round (sync just turned on).
-  rescan: string[];
+  // Blobs this device uploaded that another device may have been collecting
+  // at that moment (they were garbage in a root seen before), with when:
+  // checked in later rounds and uploaded again if they went missing.
+  uploads?: Record<string, number>;
   lastSweepAt?: number;
 };
 
@@ -39,10 +33,20 @@ export const SYNC_WARNINGS = {
 
 export type SyncWarning = (typeof SYNC_WARNINGS)[keyof typeof SYNC_WARNINGS];
 
-export type MassDelete = { collection: string; count: number; total: number };
+// A round that would delete most of a collection: remote deletions applied
+// here, or (`local`) deletions made here sent to every device.
+export type MassDelete = {
+  collection: string;
+  count: number;
+  total: number;
+  local?: true;
+  // The user's answer, while a prompt of the other kind is still open.
+  keep?: boolean;
+};
 
 // The user's answer for collections the guard stopped at: apply the
-// deletions here, or keep this device's copies and upload them again.
+// deletions, or keep the items (this device's copies upload again; items
+// deleted here come back from the remote copy).
 export type MassDeleteAnswer = { collections: string[]; keep: boolean };
 
 export type SyncStatus = {
@@ -66,17 +70,8 @@ export const DEFAULT_SYNC_STATUS: SyncStatus = {
   warnings: [],
 };
 
-export const newSyncState = (scope: string): SyncState => ({
-  scope,
-  synced: {},
-  pending: {},
-  hlc: INITIAL_HLC,
-  // A new backend compares everything.
-  rescan: SYNC_COLLECTIONS.map((collection) => collection.name),
-});
+export const newSyncState = (scope: string): SyncState => ({ scope });
 
-// Each backend keeps its own state, so switching to another backend and
-// back resumes where this device left off instead of joining anew.
 const stateKey = (scope: string) => `${STORAGE_KEYS.syncState}:${scope}`;
 
 export async function loadSyncState(local: StorageArea, scope: string) {
@@ -87,7 +82,7 @@ export async function loadSyncState(local: StorageArea, scope: string) {
 export const saveSyncState = (local: StorageArea, state: SyncState) =>
   local.set({ [stateKey(state.scope)]: state });
 
-// Forget the states of backends no longer configured.
+// Forget the caches of backends no longer configured.
 export async function pruneSyncStates(local: StorageArea, keep: string[]) {
   const kept = new Set(keep.map(stateKey));
   const stale = Object.keys(await local.get(null)).filter(
@@ -112,47 +107,4 @@ export async function updateSyncStatus(
     if (value === undefined) delete next[key as keyof SyncStatus];
   await local.set({ [STORAGE_KEYS.syncStatus]: next });
   return next;
-}
-
-// Storage keys changed since a round last compared them: how many changes
-// were seen, so a round clears a key only if no change came in while it
-// ran, and when the latest change was seen.
-export type DirtyKey = { changes: number; at: number };
-export type DirtyKeys = Record<string, DirtyKey>;
-
-const DIRTY_LOCK = storageLockName(STORAGE_KEYS.syncDirty);
-
-export async function loadDirty(local: StorageArea): Promise<DirtyKeys> {
-  return (await readKey<DirtyKeys>(local, STORAGE_KEYS.syncDirty)) ?? {};
-}
-
-// Record changes of local keys. Resolves whether a key became dirty.
-export function markDirty(env: SyncEnv, keys: string[]) {
-  return env.lock(DIRTY_LOCK, async () => {
-    const dirty = await loadDirty(env.local);
-    const now = env.now();
-    const fresh = keys.some((key) => !dirty[key]);
-    for (const key of keys)
-      dirty[key] = {
-        changes: (dirty[key]?.changes ?? 0) + 1,
-        at: Math.max(now, dirty[key]?.at ?? 0),
-      };
-    await env.local.set({ [STORAGE_KEYS.syncDirty]: dirty });
-    return fresh;
-  });
-}
-
-// Remove keys a round compared, unless they changed again meanwhile.
-export async function clearDirty(
-  env: SyncEnv,
-  seen: DirtyKeys,
-  keys: string[],
-) {
-  if (!keys.length) return;
-  await env.lock(DIRTY_LOCK, async () => {
-    const current = await loadDirty(env.local);
-    for (const key of keys)
-      if (current[key]?.changes === seen[key]?.changes) delete current[key];
-    await env.local.set({ [STORAGE_KEYS.syncDirty]: current });
-  });
 }

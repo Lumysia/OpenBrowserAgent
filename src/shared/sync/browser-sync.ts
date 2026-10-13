@@ -190,6 +190,9 @@ export function createBrowserSyncTransport(
     async getBlob(hash) {
       return readParts(await readAll(), hash);
     },
+    async hasBlob(hash) {
+      return `${PART}${hash}` in (await area.get(`${PART}${hash}`));
+    },
     async putBlob(hash, payload) {
       const parts = await partsOf(hash, payload, now());
       const current = await readAll();

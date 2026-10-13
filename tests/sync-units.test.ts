@@ -18,7 +18,7 @@ import {
   unknownAgeClock,
 } from "../src/shared/sync/hlc";
 import { mergeChatBodies, mergeFiles } from "../src/shared/sync/merge-content";
-import { decide } from "../src/shared/sync/plan";
+import { decide, type DecisionInput } from "../src/shared/sync/plan";
 import {
   decodeRoot,
   emptyRoot,
@@ -51,101 +51,63 @@ test("HLC clocks order by wall time, then counter, then device", () => {
 
 const clock = (wall: number, device = "a") => formatClock(wall, 0, device);
 
+const decideFor = (input: Omit<DecisionInput, "mergesContent" | "dataHash">) =>
+  decide({ ...input, mergesContent: false, dataHash: hashJson });
+
 test("record merge: newer clock wins, untouched fields follow the other side", async () => {
-  const base = {
-    clock: clock(1),
-    dataHash: await hashJson({ v: 1 }),
-    blob: undefined,
-  };
+  const base = { clock: clock(1), dataHash: await hashJson({ v: 1 }) };
+  const synced = { clock: clock(1), data: { v: 1 } };
   // Only the remote changed: apply.
-  assert.deepEqual(
-    await decide({
-      synced: base,
-      remote: { clock: clock(2, "b"), data: { v: 2 } },
-      mergesContent: false,
-      dataHash: hashJson,
-    }),
-    { kind: "apply", record: { clock: clock(2, "b"), data: { v: 2 } } },
-  );
+  const remote = { clock: clock(2, "b"), data: { v: 2 } };
+  assert.deepEqual(await decideFor({ local: synced, remote }), {
+    kind: "apply",
+    record: remote,
+  });
   // Only this device changed: push.
-  const pending = { clock: clock(3), data: { v: 3 } };
-  assert.equal(
-    (
-      await decide({
-        synced: base,
-        pending,
-        remote: { clock: clock(1), data: { v: 1 } },
-        mergesContent: false,
-        dataHash: hashJson,
-      })
-    ).kind,
-    "push",
-  );
+  const mine = { clock: clock(3), data: { v: 3 } };
+  const changed = { local: mine, changedHere: true, base };
+  assert.equal((await decideFor({ ...changed, remote: synced })).kind, "push");
   // Both changed: the newer clock wins either way round.
   const remoteOlder = { clock: clock(2, "b"), data: { v: 2 } };
   assert.equal(
-    (
-      await decide({
-        synced: base,
-        pending,
-        remote: remoteOlder,
-        mergesContent: false,
-        dataHash: hashJson,
-      })
-    ).kind,
+    (await decideFor({ ...changed, remote: remoteOlder })).kind,
     "push",
   );
   const remoteNewer = { clock: clock(4, "b"), data: { v: 4 } };
-  assert.deepEqual(
-    await decide({
-      synced: base,
-      pending,
-      remote: remoteNewer,
-      mergesContent: false,
-      dataHash: hashJson,
-    }),
-    { kind: "apply", record: remoteNewer },
-  );
+  assert.deepEqual(await decideFor({ ...changed, remote: remoteNewer }), {
+    kind: "apply",
+    record: remoteNewer,
+  });
   // The remote already holds this device's change.
+  assert.equal((await decideFor({ ...changed, remote: mine })).kind, "accept");
+  // A version stored here from elsewhere (another backend) that is newer.
   assert.equal(
-    (
-      await decide({
-        synced: base,
-        pending,
-        remote: pending,
-        mergesContent: false,
-        dataHash: hashJson,
-      })
-    ).kind,
-    "accept",
+    (await decideFor({ local: mine, remote: remoteOlder })).kind,
+    "push",
   );
 });
 
 test("tombstones: a delete wins only when newer than the edit", async () => {
   const base = { clock: clock(1), dataHash: await hashJson("x") };
-  const edit = { clock: clock(5), data: "y" };
-  const olderDelete = { clock: clock(3, "b"), deleted: true as const };
-  const newerDelete = { clock: clock(7, "b"), deleted: true as const };
+  const edit = {
+    local: { clock: clock(5), data: "y" },
+    changedHere: true,
+    base,
+  };
   assert.equal(
     (
-      await decide({
-        synced: base,
-        pending: edit,
-        remote: olderDelete,
-        mergesContent: false,
-        dataHash: hashJson,
+      await decideFor({
+        ...edit,
+        remote: { clock: clock(3, "b"), deleted: true },
       })
     ).kind,
     "push",
   );
   assert.equal(
     (
-      await decide({
-        synced: base,
-        pending: edit,
-        remote: newerDelete,
-        mergesContent: false,
-        dataHash: hashJson,
+      await decideFor({
+        ...edit,
+        remote: { clock: clock(7, "b"), deleted: true },
       })
     ).kind,
     "apply",
@@ -153,52 +115,79 @@ test("tombstones: a delete wins only when newer than the edit", async () => {
   // A local delete against a newer remote edit loses.
   assert.equal(
     (
-      await decide({
-        synced: base,
-        pending: { clock: clock(2), deleted: true },
+      await decideFor({
+        local: { clock: clock(2), deleted: true },
+        changedHere: true,
+        base,
         remote: { clock: clock(4, "b"), data: "z" },
-        mergesContent: false,
-        dataHash: hashJson,
       })
     ).kind,
     "apply",
   );
+  // A delete the remote never had needs no record.
+  assert.equal(
+    (await decideFor({ local: { clock: clock(2), deleted: true } })).kind,
+    "none",
+  );
 });
 
 test("a missing or older remote record is uploaded again, never deleted", async () => {
-  const synced = { clock: clock(5), dataHash: await hashJson("x") };
   const local = { clock: clock(5), data: "x" };
+  assert.deepEqual(await decideFor({ local }), { kind: "push", record: local });
   assert.deepEqual(
-    await decide({ synced, local, mergesContent: false, dataHash: hashJson }),
-    { kind: "push", record: local },
-  );
-  assert.deepEqual(
-    await decide({
-      synced,
-      local,
-      remote: { clock: clock(2), data: "old" },
-      mergesContent: false,
-      dataHash: hashJson,
-    }),
+    await decideFor({ local, remote: { clock: clock(2), data: "old" } }),
     { kind: "push", record: local },
   );
 });
 
-test("joining an account: the newer value wins, one of unknown age loses", async () => {
-  const join = (pending: { clock: string; data: string }) =>
-    decide({
-      pending,
-      remote: { clock: clock(5, "b"), data: "account value" },
-      mergesContent: false,
-      dataHash: hashJson,
-    });
+test("joining an account: a value with no clock loses, a newer change wins, secrets stay", async () => {
+  const remote = { clock: clock(5, "b"), data: "account value" };
   const unknownAge = { clock: unknownAgeClock("a"), data: "device value" };
-  assert.equal((await join(unknownAge)).kind, "apply");
-  assert.equal((await join({ clock: clock(3), data: "older" })).kind, "apply");
-  assert.equal((await join({ clock: clock(9), data: "newer" })).kind, "push");
   assert.equal(
-    (await join({ clock: clock(9), data: "account value" })).kind,
+    (await decideFor({ local: unknownAge, untracked: true, remote })).kind,
     "apply",
+  );
+  // Changes made here without knowing the account's version.
+  const made = (wall: number, data: string) => ({
+    local: { clock: clock(wall), data },
+    changedHere: true,
+  });
+  assert.equal(
+    (await decideFor({ ...made(3, "older"), remote })).kind,
+    "apply",
+  );
+  assert.equal((await decideFor({ ...made(9, "newer"), remote })).kind, "push");
+  assert.equal(
+    (await decideFor({ ...made(9, "account value"), remote })).kind,
+    "apply",
+  );
+  // An empty API key never replaces the account's.
+  const account = { clock: clock(5, "b"), data: { apiKey: "sk", model: "m" } };
+  const emptied = {
+    local: { clock: clock(9), data: { apiKey: "", model: "n" } },
+    changedHere: true,
+  };
+  assert.deepEqual(
+    await decideFor({ ...emptied, remote: account, secrets: ["apiKey"] }),
+    {
+      kind: "merge",
+      data: { apiKey: "sk", model: "n" },
+      blob: undefined,
+      size: undefined,
+      newer: "mine",
+    },
+  );
+  // Once both shared a version, emptying the key is a change like any other.
+  assert.equal(
+    (
+      await decideFor({
+        ...emptied,
+        base: { clock: account.clock, dataHash: await hashJson(account.data) },
+        remote: account,
+        secrets: ["apiKey"],
+      })
+    ).kind,
+    "push",
   );
 });
 

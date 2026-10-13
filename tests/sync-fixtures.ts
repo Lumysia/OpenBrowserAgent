@@ -3,7 +3,7 @@ import {
   STORAGE_KEYS,
 } from "../src/shared/storage-keys";
 import type { SyncDataSettings } from "../src/shared/storage-keys";
-import { gunzip, gzip, sha256Hex } from "../src/shared/sync/codec";
+import { gunzip, gzip, sameJson, sha256Hex } from "../src/shared/sync/codec";
 import { runSyncRound, type RoundReason } from "../src/shared/sync/engine";
 import type {
   AttachmentStore,
@@ -12,7 +12,11 @@ import type {
   SyncEnv,
 } from "../src/shared/sync/env";
 import { decodeRoot, encodeRoot } from "../src/shared/sync/root";
-import { loadSyncState, markDirty } from "../src/shared/sync/state";
+import { loadSyncState } from "../src/shared/sync/state";
+import {
+  recordLocalChanges,
+  type StorageChanges,
+} from "../src/shared/sync/track";
 import {
   BlobIntegrityError,
   type Transport,
@@ -21,10 +25,22 @@ import {
 // In-memory stand-ins for one device's storage and for a server that keeps
 // a root with ETags (compare-and-swap) and blobs.
 
-export function memoryArea(): StorageArea & { data: Record<string, unknown> } {
+// A storage area that reports each set or remove as one change event, after
+// the call resolves (as storage.onChanged does).
+export function memoryArea(): StorageArea & {
+  data: Record<string, unknown>;
+  listeners: Array<(changes: StorageChanges) => void>;
+} {
   const data: Record<string, unknown> = {};
+  const listeners: Array<(changes: StorageChanges) => void> = [];
+  const emit = (changes: StorageChanges) => {
+    if (!Object.keys(changes).length) return;
+    const copy = structuredClone(changes);
+    queueMicrotask(() => listeners.forEach((listener) => listener(copy)));
+  };
   return {
     data,
+    listeners,
     async get(keys) {
       if (keys === null) return structuredClone(data);
       const list = Array.isArray(keys) ? keys : [keys];
@@ -35,10 +51,22 @@ export function memoryArea(): StorageArea & { data: Record<string, unknown> } {
       );
     },
     async set(items) {
-      Object.assign(data, structuredClone(items));
+      const changes: StorageChanges = {};
+      for (const [key, value] of Object.entries(structuredClone(items))) {
+        if (!(key in data) || !sameJson(data[key], value))
+          changes[key] = { oldValue: data[key], newValue: value };
+        data[key] = value;
+      }
+      emit(changes);
     },
     async remove(keys) {
-      for (const key of Array.isArray(keys) ? keys : [keys]) delete data[key];
+      const changes: StorageChanges = {};
+      for (const key of Array.isArray(keys) ? keys : [keys])
+        if (key in data) {
+          changes[key] = { oldValue: data[key] };
+          delete data[key];
+        }
+      emit(changes);
     },
   };
 }
@@ -109,6 +137,10 @@ export function memoryTransport(
         throw new BlobIntegrityError(hash);
       return payload;
     },
+    async hasBlob(hash) {
+      server.requests.push("HEAD blob");
+      return server.blobs.has(hash);
+    },
     async putBlob(hash, payload) {
       server.requests.push("PUT blob");
       server.blobs.set(hash, await gzip(payload));
@@ -152,7 +184,8 @@ export function testEnv(clock: { now: number }): SyncEnv & {
 export type Device = ReturnType<typeof device>;
 
 // A device: its storage, a transport to `server`, and helpers that edit
-// local data the way the app does (the background marks the key dirty).
+// local data the way the app does. As in the background, every change of
+// local storage goes to the edit listener; the helpers wait for it.
 export function device(
   name: string,
   transport: Transport,
@@ -167,21 +200,51 @@ export function device(
     device: name,
     settings: { ...DEFAULT_SYNC_DATA_SETTINGS, ...settings },
   };
+  const listening = new Set<Promise<unknown>>();
+  env.local.listeners.push((changes) => {
+    const job = recordLocalChanges(env, name, changes);
+    listening.add(job);
+    void job.finally(() => listening.delete(job));
+  });
+  const settle = async () => {
+    // Events fire after a microtask; later ones may follow from writes.
+    for (let i = 0; i < 3; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      while (listening.size) await Promise.all([...listening]);
+    }
+  };
   return {
     name,
     env,
     context,
+    settle,
     async set(key: string, value: unknown) {
       await env.local.set({ [key]: value });
-      await markDirty(env, [key]);
+      await settle();
     },
     async remove(key: string) {
       await env.local.remove(key);
-      await markDirty(env, [key]);
+      await settle();
+    },
+    // Data stored before changes were recorded (an earlier version): no
+    // change event, so no clock.
+    seed(key: string, value: unknown) {
+      env.local.data[key] = structuredClone(value);
+    },
+    // Deleting most of a list asks first on the device that deletes; the
+    // user confirms.
+    confirmDeletes(collections: string[]) {
+      return this.sync("manual", {
+        massDelete: { collections, keep: false },
+      });
     },
     get: <T = unknown>(key: string) => env.local.data[key] as T,
-    sync: (reason: RoundReason = "poll", options = {}) =>
-      runSyncRound(context, reason, options),
+    async sync(reason: RoundReason = "poll", options = {}) {
+      await settle();
+      const result = await runSyncRound(context, reason, options);
+      await settle();
+      return result;
+    },
     state: () => loadSyncState(env.local, "test"),
   };
 }
@@ -263,6 +326,10 @@ export function hookedTransport(base: Transport) {
     async getBlob(hash) {
       await once("getBlob");
       return base.getBlob(hash);
+    },
+    async hasBlob(hash) {
+      await once("hasBlob");
+      return base.hasBlob(hash);
     },
     async deleteBlob(hash) {
       await once("deleteBlob");

@@ -1,21 +1,53 @@
+import { CLOCK_LOCK } from "../locks";
 import { bodyFor, storedBlobs } from "./blobs";
+import {
+  changedEntry,
+  clocksKey,
+  loadClocks,
+  loadHlc,
+  saveHlc,
+  tickNow,
+} from "./clocks";
 import { isOrderId, type Collection } from "./collection";
 import { recordIdOf, splitRecordId } from "./collections";
 import type { SyncContext } from "./engine";
 import type { SyncEnv } from "./env";
-import { compareClocks, tickClock } from "./hlc";
-import { project, type Payloads, type Projection } from "./local";
+import { tickClock } from "./hlc";
+import {
+  project,
+  type Payloads,
+  type Projection,
+  type Snapshot,
+} from "./local";
 import type { BlobMerge, Decision } from "./plan";
 import type { Root, SyncRecord } from "./root";
-import type { MassDelete, SyncState } from "./state";
+import type { MassDelete } from "./state";
 
 // Parts of a round's reconciliation: which lazy bodies to keep current,
-// merging records both sides changed, and the mass-delete guard.
+// merging records both sides changed, and the mass-delete guards.
 
 // Deleting more than this share of a collection with more than
 // MASS_DELETE_MIN_ITEMS items waits for the user.
 const MASS_DELETE_SHARE = 0.5;
 const MASS_DELETE_MIN_ITEMS = 5;
+
+const decisionsIn = (
+  decisions: Map<string, Decision>,
+  collection: Collection,
+  match: (decision: Decision) => boolean,
+) =>
+  [...decisions]
+    .filter(
+      ([recordId, decision]) =>
+        splitRecordId(recordId).collection === collection.name &&
+        match(decision),
+    )
+    .map(([recordId]) => splitRecordId(recordId).id);
+
+const appliesDelete = (decision: Decision) =>
+  decision.kind === "apply" && !!decision.record.deleted;
+const pushesDelete = (decision: Decision) =>
+  decision.kind === "push" && !!decision.record.deleted;
 
 // Lazy records whose body this device holds: their new content is
 // downloaded with them, so the local copy never lags behind its record.
@@ -28,13 +60,11 @@ export async function localBodies(
   for (const collection of collections) {
     if (!collection.lazy) continue;
     const ids = new Set(
-      [...decisions]
-        .filter(
-          ([recordId, decision]) =>
-            decision.kind === "apply" &&
-            splitRecordId(recordId).collection === collection.name,
-        )
-        .map(([recordId]) => splitRecordId(recordId).id),
+      decisionsIn(
+        decisions,
+        collection,
+        (decision) => decision.kind === "apply",
+      ),
     );
     if (!ids.size) continue;
     const entries = await collection.read(env, (id) => ids.has(id));
@@ -48,15 +78,10 @@ export async function localBodies(
 export async function mergeRecord(
   context: SyncContext,
   collection: Collection,
-  state: SyncState,
-  recordId: string,
   decision: Extract<Decision, { kind: "merge" }>,
   payloads: Payloads,
-  theirsClock: string | undefined,
 ) {
   const { transport, device, env } = context;
-  const [clock, hlc] = tickClock(state.hlc, device, env.now());
-  state.hlc = hlc;
   let data = decision.data;
   let body: unknown;
   let blob: string | undefined;
@@ -71,16 +96,11 @@ export async function mergeRecord(
           () => undefined,
         )
       : undefined;
-    const pending = state.pending[recordId];
-    const newer =
-      pending && compareClocks(pending.clock, theirsClock) > 0
-        ? "mine"
-        : "theirs";
     body = collection.mergeBodies!(
       base?.body,
       mine.body,
       theirs.body,
-      newer,
+      decision.newer,
       `${device.slice(0, 8)}-${new Date(env.now()).toISOString().slice(0, 10)}`,
     );
     data = collection.finalizeData?.(data, body) ?? data;
@@ -102,7 +122,7 @@ export async function mergeRecord(
       data = collection.finalizeData?.(data, body) ?? data;
   }
   const record: SyncRecord = {
-    clock,
+    clock: await tickNow(env, device),
     data,
     ...(blob ? { blob } : {}),
     ...(size !== undefined ? { size } : {}),
@@ -110,94 +130,129 @@ export async function mergeRecord(
   return { record, body };
 }
 
-// Collections where applying the remote root would delete most items this
-// device has: synced ones, and on joining an account its own ones.
+// Collections where the round would delete most items: remote deletions
+// of items this device has, or deletions made here of items the remote has.
 export function massDeletes(
   collections: Collection[],
-  state: SyncState,
+  snapshot: Snapshot,
+  remote: Root,
   decisions: Map<string, Decision>,
-  local: Map<string, Projection | null>,
 ) {
   const result: MassDelete[] = [];
-  const heldHere = (recordId: string) => {
-    const synced = state.synced[recordId];
-    return synced ? !synced.deleted : !!local.get(recordId);
-  };
-  for (const collection of collections) {
-    const prefix = `${collection.name}/`;
-    const items = [
-      ...new Set([...Object.keys(state.synced), ...local.keys()]),
-    ].filter(
-      (recordId) =>
-        recordId.startsWith(prefix) &&
-        !isOrderId(recordId.slice(prefix.length)) &&
-        heldHere(recordId),
-    );
-    const total = items.length;
-    const count = items.filter((recordId) => {
+  const guard = (
+    collection: Collection,
+    items: string[],
+    deleting: (decision: Decision) => boolean,
+    local: boolean,
+  ) => {
+    const ids = items.filter((recordId) => {
+      const { collection: name, id } = splitRecordId(recordId);
+      return name === collection.name && !isOrderId(id);
+    });
+    const count = ids.filter((recordId) => {
       const decision = decisions.get(recordId);
-      return decision?.kind === "apply" && decision.record.deleted;
+      return !!decision && deleting(decision);
     }).length;
+    const total = ids.length;
     if (total > MASS_DELETE_MIN_ITEMS && count > total * MASS_DELETE_SHARE)
-      result.push({ collection: collection.name, count, total });
+      result.push({
+        collection: collection.name,
+        count,
+        total,
+        ...(local ? { local: true as const } : {}),
+      });
+  };
+  const here = [...snapshot.copies]
+    .filter(([, copy]) => copy)
+    .map(([recordId]) => recordId);
+  const there = Object.entries(remote.records)
+    .filter(([, record]) => !record.deleted)
+    .map(([recordId]) => recordId);
+  for (const collection of collections) {
+    guard(collection, here, appliesDelete, false);
+    guard(collection, there, pushesDelete, true);
   }
   return result;
 }
 
-// The user keeps what the remote deletions would remove: this device's
-// copies of exactly those records are uploaded again as new changes. A copy
-// whose content is neither here nor on the server any more (a chat never
-// opened here, deleted elsewhere over a day ago) cannot come back; its
-// deletion is applied.
+// The user keeps what remote deletions would remove: this device's copies
+// of exactly those records are uploaded again as new changes. A copy whose
+// content is neither here nor on the server any more (a chat never opened
+// here, deleted elsewhere over a day ago) cannot come back; its deletion is
+// applied.
 export async function keepLocalCopies(
   context: SyncContext,
   collections: Collection[],
-  state: SyncState,
+  snapshot: Snapshot,
   remote: Root,
   decisions: Map<string, Decision>,
-  local: Map<string, Projection | null>,
   payloads: Payloads,
 ) {
   const { env, device } = context;
   const stored = storedBlobs(remote);
   for (const collection of collections) {
-    const deleted = [...decisions]
-      .filter(
-        ([recordId, decision]) =>
-          splitRecordId(recordId).collection === collection.name &&
-          decision.kind === "apply" &&
-          decision.record.deleted,
-      )
-      .map(([recordId]) => splitRecordId(recordId).id);
-    const wanted = new Set(deleted);
+    const wanted = new Set(decisionsIn(decisions, collection, appliesDelete));
     const entries = await collection.read(env, (id) => wanted.has(id));
-    for (const id of deleted) {
-      const recordId = recordIdOf(collection, id);
+    const kept: Array<[string, Projection]> = [];
+    for (const id of wanted) {
       const entry = entries.get(id);
       if (!entry) continue;
       const projection = await project(
         collection,
         entry,
-        state.synced[recordId],
+        snapshot.clocks.get(recordIdOf(collection, id)),
         payloads,
       );
-      local.set(recordId, projection);
       if (
         projection.blob &&
         !payloads.has(projection.blob) &&
         !stored.has(projection.blob)
       )
         continue;
-      const [clock, hlc] = tickClock(state.hlc, device, env.now());
-      state.hlc = hlc;
-      const record: SyncRecord = {
-        clock,
-        data: projection.data,
-        ...(projection.blob ? { blob: projection.blob } : {}),
-        ...(projection.size !== undefined ? { size: projection.size } : {}),
-      };
-      state.pending[recordId] = record;
-      decisions.set(recordId, { kind: "push", record });
+      kept.push([id, projection]);
     }
+    if (!kept.length) continue;
+    await env.lock(CLOCK_LOCK, async () => {
+      const clocks = await loadClocks(env.local, collection.name);
+      let hlc = await loadHlc(env.local);
+      for (const [id, projection] of kept) {
+        const recordId = recordIdOf(collection, id);
+        const [clock, next] = tickClock(hlc, device, env.now());
+        hlc = next;
+        clocks[id] = await changedEntry(id, projection, clocks[id], clock);
+        snapshot.clocks.set(recordId, clocks[id]);
+        snapshot.copies.set(recordId, projection);
+        decisions.set(recordId, {
+          kind: "push",
+          record: {
+            clock,
+            data: projection.data,
+            ...(projection.blob ? { blob: projection.blob } : {}),
+            ...(projection.size !== undefined ? { size: projection.size } : {}),
+          },
+        });
+      }
+      await env.local.set({
+        [clocksKey(collection.name)]: clocks,
+        ...saveHlc(hlc),
+      });
+    });
   }
+}
+
+// The user keeps what deletions made here would remove everywhere: those
+// records come back from the remote copy.
+export function restoreRemoteCopies(
+  collections: Collection[],
+  remote: Root,
+  decisions: Map<string, Decision>,
+) {
+  for (const collection of collections)
+    for (const id of decisionsIn(decisions, collection, pushesDelete)) {
+      const recordId = recordIdOf(collection, id);
+      decisions.set(recordId, {
+        kind: "apply",
+        record: remote.records[recordId],
+      });
+    }
 }

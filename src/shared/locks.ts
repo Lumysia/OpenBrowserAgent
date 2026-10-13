@@ -35,3 +35,8 @@ export const storageLockName = (key: string) => `item:${key}`;
 // storing downloaded content, clearing sync data) holds this lock, so none
 // saves a state another job changed meanwhile.
 export const SYNC_LOCK = "sync";
+
+// The per-record clocks of local data: every reader that compares local data
+// with them and every writer of them (recording local edits, storing remote
+// changes, clearing) holds this lock, taken after any item lock.
+export const CLOCK_LOCK = "sync-clocks";

@@ -85,7 +85,7 @@ test("a device joining an account keeps its own chats and takes settings it neve
   await a.sync("edit");
   clock.now += 1000;
   // Stored before changes were recorded: older than the account's.
-  await b.env.local.set({ [STORAGE_KEYS.language]: "en-US" });
+  b.seed(STORAGE_KEYS.language, "en-US");
   await addChat(b, "c2", [["n1", 2]]);
   await b.sync("startup");
   await a.sync();
@@ -281,7 +281,11 @@ test("mass deletions from another device wait for the user", async () => {
   await b.sync();
   assert.equal(ids(b).length, 8);
   await a.set(CHATS, a.get<unknown[]>(CHATS).slice(0, 2));
-  await a.sync("edit");
+  // The deleting device asks too.
+  assert.deepEqual((await a.sync("edit")).massDelete, [
+    { collection: "chats", count: 6, total: 8, local: true },
+  ]);
+  await a.confirmDeletes(["chats"]);
   const result = await b.sync();
   assert.deepEqual(result.massDelete, [
     { collection: "chats", count: 6, total: 8 },

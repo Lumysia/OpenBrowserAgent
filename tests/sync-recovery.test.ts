@@ -141,7 +141,7 @@ test("after a cloud clear, a chat's content comes back from the device that has 
   await a.sync();
   await b.sync();
   await c.sync();
-  const blob = (await c.state()).synced["chats/X"]?.blob;
+  const blob = (await decodeRoot(server.root!)).records["chats/X"]?.blob;
   assert.ok(blob && server.blobs.has(blob));
 });
 
@@ -155,7 +155,7 @@ test("content the server lost is uploaded again by the weekly check of a device 
   clock.now += 8 * 24 * HOUR;
   await b.sync();
   await a.sync();
-  const blob = (await a.state()).synced["chats/X"].blob!;
+  const blob = (await decodeRoot(server.root!)).records["chats/X"].blob!;
   assert.ok(server.blobs.has(blob));
 });
 
@@ -196,7 +196,7 @@ test("a device joining an account where most of its chats were deleted asks firs
   await b.sync();
   clock.now += 1000;
   await a.set(CHATS, []);
-  await a.sync("edit");
+  await a.confirmDeletes(["chats"]);
   // b joins this account anew (another folder URL for the same server).
   const joined = await runSyncRound({ ...b.context, scope: "new" }, "startup");
   assert.deepEqual(joined.massDelete, [
@@ -215,7 +215,7 @@ test("on joining an account, the newer of two differing values wins", async () =
   // b changed p1 after the account did; its language is older than change
   // tracking (stored without a change being recorded).
   await b.set(PROVIDERS, { p1: { apiKey: "typed on b" } });
-  await b.env.local.set({ [LANGUAGE]: "fr-FR" });
+  b.seed(LANGUAGE, "fr-FR");
   await b.sync("startup");
   await a.sync();
   for (const on of [a, b]) {
@@ -242,7 +242,7 @@ test("keeping local copies after a mass delete reverts no other device's edits",
   clock.now += 1000;
   // a deletes six agents and renames one it keeps.
   await a.set(AGENTS, [{ ...agents[6], name: "renamed on a" }, agents[7]]);
-  await a.sync("edit");
+  await a.confirmDeletes(["agents"]);
   assert.ok((await b.sync()).massDelete);
   clock.now += 1000;
   await b.sync("manual", keep("agents"));
@@ -262,7 +262,7 @@ async function deleteChatsElsewhere(waitHours: number) {
   await b.sync(); // b holds the chat list only
   clock.now += 1000;
   await a.set(CHATS, []);
-  await a.sync("edit");
+  await a.confirmDeletes(["chats"]);
   assert.ok((await b.sync()).massDelete);
   clock.now += waitHours * HOUR;
   await a.sync(); // collects garbage older than a day

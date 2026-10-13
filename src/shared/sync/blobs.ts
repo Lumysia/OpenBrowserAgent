@@ -4,6 +4,7 @@ import { recordIdOf } from "./collections";
 import type { SyncEnv } from "./env";
 import { bodyBytes, idsWithPrefix, type Payloads } from "./local";
 import { referencedBlobs, type Root, type SyncRecord } from "./root";
+import type { SyncState } from "./state";
 import type { StoredBlob, Transport } from "./transport";
 
 // Blob handling of a round: reading bodies, building the next root with its
@@ -11,6 +12,9 @@ import type { StoredBlob, Transport } from "./transport";
 
 export const GARBAGE_GRACE_MS = 24 * 60 * 60_000;
 export const ORPHAN_SWEEP_INTERVAL_MS = 7 * 24 * 60 * 60_000;
+// How long a device keeps checking a blob it uploaded while another device
+// may have been collecting it: far longer than a round's deletions take.
+export const UPLOAD_CHECK_MS = 10 * 60_000;
 
 export function parseBody(collection: Collection, payload: Uint8Array) {
   return collection.body === "bytes" ? payload : JSON.parse(bytesText(payload));
@@ -67,6 +71,7 @@ export function storedBlobs(root: Root) {
 
 // Upload the blobs the pushes need that the server does not hold. Pushes
 // never refer to a blob this device cannot provide (see the engine).
+// Returns the blobs uploaded.
 export async function uploadBlobs(
   transport: Transport,
   remote: Root,
@@ -80,7 +85,7 @@ export async function uploadBlobs(
       uploads.add(record.blob);
   for (const hash of uploads)
     await transport.putBlob(hash, payloads.get(hash)!);
-  return uploads.size;
+  return uploads;
 }
 
 // Drop garbage older than the grace period (nobody refers to it any more)
@@ -128,6 +133,33 @@ export async function sweepOrphans(
   return removed;
 }
 
+// Bodies this device holds of blobs the root refers to, by hash.
+async function heldBodies(
+  env: SyncEnv,
+  collections: Collection[],
+  root: Root,
+  hashes: Set<string>,
+) {
+  const held = new Map<string, Uint8Array>();
+  for (const collection of collections) {
+    if (!collection.body) continue;
+    const wanted = new Map<string, string>();
+    for (const id of idsWithPrefix(root.records, collection)) {
+      const blob = root.records[recordIdOf(collection, id)].blob;
+      if (blob && hashes.has(blob) && !held.has(blob)) wanted.set(id, blob);
+    }
+    if (!wanted.size) continue;
+    const entries = await collection.read(env, (id) => wanted.has(id));
+    for (const [id, blob] of wanted) {
+      const entry = entries.get(id);
+      if (entry?.body === undefined) continue;
+      const bytes = bodyBytes(collection, entry.body);
+      if ((await sha256Hex(bytes)) === blob) held.set(blob, bytes);
+    }
+  }
+  return held;
+}
+
 // Blobs the root refers to that the server lost (a folder restored without
 // its blobs, files removed by hand): this device uploads the ones it holds.
 export async function restoreLostBlobs(
@@ -138,25 +170,43 @@ export async function restoreLostBlobs(
   stored: StoredBlob[],
 ) {
   const present = new Set(stored.map((blob) => blob.hash));
-  let restored = 0;
-  for (const collection of collections) {
-    if (!collection.body) continue;
-    const lost = new Map<string, string>();
-    for (const id of idsWithPrefix(root.records, collection)) {
-      const blob = root.records[recordIdOf(collection, id)].blob;
-      if (blob && !present.has(blob)) lost.set(id, blob);
-    }
-    if (!lost.size) continue;
-    const entries = await collection.read(env, (id) => lost.has(id));
-    for (const [id, blob] of lost) {
-      const entry = entries.get(id);
-      if (entry?.body === undefined) continue;
-      const bytes = bodyBytes(collection, entry.body);
-      if ((await sha256Hex(bytes)) !== blob) continue;
-      await transport.putBlob(blob, bytes);
-      present.add(blob);
-      restored++;
-    }
+  const lost = new Set(
+    [...referencedBlobs(root)].filter((blob) => !present.has(blob)),
+  );
+  const held = await heldBodies(env, collections, root, lost);
+  for (const [blob, bytes] of held) await transport.putBlob(blob, bytes);
+  return held.size;
+}
+
+// Blobs this device uploaded while another device may have been collecting
+// them (deleting a blob right after writing a root without it): the
+// collection can land after this device's upload. Each later round checks
+// that they are still there and uploads them again from local content.
+export async function checkUploads(
+  env: SyncEnv,
+  transport: Transport,
+  collections: Collection[],
+  state: SyncState,
+) {
+  const uploads = state.uploads;
+  if (!uploads || !state.remote) return;
+  const referenced = referencedBlobs(state.remote.root);
+  const now = env.now();
+  const lost = new Set<string>();
+  for (const [hash, at] of Object.entries(uploads)) {
+    if (!referenced.has(hash)) delete uploads[hash];
+    else if (!(await transport.hasBlob(hash))) lost.add(hash);
+    else if (now - at >= UPLOAD_CHECK_MS) delete uploads[hash];
   }
-  return restored;
+  const held = await heldBodies(env, collections, state.remote.root, lost);
+  for (const hash of lost) {
+    const bytes = held.get(hash);
+    if (!bytes) {
+      delete uploads[hash];
+      continue;
+    }
+    await transport.putBlob(hash, bytes);
+    uploads[hash] = now;
+  }
+  if (!Object.keys(uploads).length) delete state.uploads;
 }

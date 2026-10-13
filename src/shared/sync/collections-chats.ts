@@ -4,7 +4,13 @@ import { chatContentKey } from "../chat-keys";
 import { chatFacts, chatMeta, isChatRunActive } from "../chats";
 import { STORAGE_KEYS, SYNC_PREFERENCES } from "../storage-keys";
 import type { ChatContent, ChatSummary } from "../types";
-import type { Change, Collection, LocalEntry } from "./collection";
+import {
+  idOfKey,
+  plainCommit,
+  type Change,
+  type Collection,
+  type LocalEntry,
+} from "./collection";
 import { readKey, type SyncEnv } from "./env";
 import { mergeChatBodies } from "./merge-content";
 
@@ -45,9 +51,25 @@ export const chatsCollection: Collection = {
       ]),
     );
   },
+  entriesOf(key, value) {
+    const id = idOfKey(chatsCollection, key);
+    if (id !== undefined)
+      return {
+        entries: new Map(
+          value === undefined ? [] : [[id, { data: undefined, body: value }]],
+        ),
+        complete: false,
+      };
+    return {
+      entries: new Map(
+        summariesOf(value).map((chat) => [chat.id, { data: chat }]),
+      ),
+      complete: true,
+    };
+  },
   // Under the locks of the list and of each content key written, the ones
   // the app saves with.
-  write(env, changes, verify) {
+  write(env, changes, verify, commit = plainCommit(env)) {
     const locks = [CHATS, ...changes.map((change) => contentKey(change.id))];
     return withLocks(env.lock, locks.map(storageLockName), async () => {
       const summaries = summariesOf(await readKey(env.local, CHATS));
@@ -84,7 +106,7 @@ export const chatsCollection: Collection = {
           (chat) => !summaries.some((existing) => existing.id === chat.id),
         ),
       ];
-      await env.local.set({ [CHATS]: next, ...bodies });
+      await commit({ [CHATS]: next, ...bodies }, written);
       if (removed.length) {
         await env.local.remove(removed.map(contentKey));
         await env.removeChatArtifacts?.(removed).catch(() => undefined);
@@ -138,7 +160,13 @@ export const attachmentsCollection: Collection = {
       });
     return entries;
   },
-  write(env, changes: Change[], verify) {
+  entriesOf: (_key, value) => ({
+    entries: new Map(
+      Object.entries(indexOf(value)).map(([id, data]) => [id, { data }]),
+    ),
+    complete: true,
+  }),
+  write(env, changes: Change[], verify, commit = plainCommit(env)) {
     return env.lock(storageLockName(INDEX), async () => {
       const index = indexOf(await readKey(env.local, INDEX));
       const written = new Set<string>();
@@ -161,7 +189,7 @@ export const attachmentsCollection: Collection = {
             content: entry.body,
           });
       }
-      if (written.size) await env.local.set({ [INDEX]: index });
+      if (written.size) await commit({ [INDEX]: index }, written);
       return written;
     });
   },

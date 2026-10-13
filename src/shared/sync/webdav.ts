@@ -165,6 +165,12 @@ export function createWebDavTransport(
         );
       return payload;
     },
+    async hasBlob(hash) {
+      const response = await request(blobPath(hash), { method: "HEAD" });
+      if (response.status === 404) return false;
+      if (!response.ok) await fail(response, "read");
+      return true;
+    },
     async putBlob(hash, payload) {
       const response = await put(blobPath(hash), await gzip(payload), {});
       if (!response.ok) await fail(response, "write");

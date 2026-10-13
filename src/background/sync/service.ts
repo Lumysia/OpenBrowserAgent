@@ -5,7 +5,7 @@ import {
 } from "../../shared/attachment-db";
 import { deleteChatArtifacts } from "../../shared/artifacts";
 import { getBrowserApi } from "../../shared/browser-api";
-import { SYNC_LOCK, withLock } from "../../shared/locks";
+import { CLOCK_LOCK, SYNC_LOCK, withLock } from "../../shared/locks";
 import {
   mergeSyncDataSettings,
   STORAGE_KEYS,
@@ -21,6 +21,7 @@ import {
   SyncNotReadyError,
   SyncQuotaError,
 } from "../../shared/sync/browser-sync";
+import { clocksKey, loadClocks } from "../../shared/sync/clocks";
 import { ownsKey, type Collection } from "../../shared/sync/collection";
 import { hashJson } from "../../shared/sync/codec";
 import {
@@ -30,6 +31,7 @@ import {
 } from "../../shared/sync/collections";
 import { readKey, type SyncEnv } from "../../shared/sync/env";
 import {
+  countWaiting,
   enabledCollections,
   runSyncRound,
   type RoundOptions,
@@ -39,7 +41,6 @@ import {
 import { parseBody } from "../../shared/sync/blobs";
 import { SyncFormatError } from "../../shared/sync/root";
 import {
-  loadDirty,
   loadSyncState,
   loadSyncStatus,
   newSyncState,
@@ -57,8 +58,10 @@ import type { SyncBackendConfig } from "../../shared/types";
 // during a round runs once after it, and 429/503 pause everything.
 
 const BACKOFF_START_MS = 60_000;
-// Downloads of content whose version moved on while it downloaded.
-const LOAD_ATTEMPTS = 3;
+// Opening content keeps downloading newer versions while another device
+// changes it, for this long and at most this often.
+const LOAD_DEADLINE_MS = 60_000;
+const LOAD_ATTEMPTS = 10;
 const BACKOFF_MAX_MS = 60 * 60_000;
 // Warnings about the server that outlive a round: missing ETags until a
 // write succeeds, ignored preconditions until the backend changes (a
@@ -126,18 +129,21 @@ export async function syncContext(
   };
 }
 
-// Changes waiting to upload: stamped records plus changed keys of the
-// collections that sync with this backend, not yet compared.
+// Changes waiting to upload in the collections this backend syncs: records
+// whose clock is newer than the last root seen.
 export async function countPending(env: SyncEnv, context: SyncContext) {
-  const state = await loadSyncState(env.local, context.scope);
+  const root = (await loadSyncState(env.local, context.scope)).remote?.root;
   const collections = enabledCollections(
     context.settings,
     context.transport.kind,
   );
-  const dirty = Object.keys(await loadDirty(env.local)).filter((key) =>
-    collections.some((collection) => ownsKey(collection, key)),
-  );
-  return Object.keys(state.pending).length + dirty.length;
+  const clocks = new Map();
+  for (const collection of collections)
+    for (const [id, entry] of Object.entries(
+      await loadClocks(env.local, collection.name),
+    ))
+      clocks.set(recordIdOf(collection, id), entry);
+  return countWaiting({ copies: new Map(), clocks }, root);
 }
 
 export type RoundRequest = { reason: RoundReason } & RoundOptions;
@@ -245,9 +251,9 @@ export function createSyncRunner(
 }
 
 // Content this device has not held: download its blob now (a chat opened
-// for the first time here, an attachment shown). The download runs outside
-// the sync lock; the content is stored only if it is still the version this
-// device's copy is synced to, since a round may have moved on meanwhile.
+// for the first time here, an attachment shown). Rounds are not waited for:
+// the content is stored only if it is still the version the local copy's
+// clock records, so a round that moved on meanwhile is never undone.
 export async function loadContent(
   context: SyncContext | undefined,
   collectionName: string,
@@ -256,33 +262,39 @@ export async function loadContent(
   const collection = syncCollection(collectionName);
   if (!collection?.lazy || !context) return false;
   const { env } = context;
-  const recordId = recordIdOf(collection, id);
+  const start = env.now();
+  let previous: string | undefined;
   for (let attempt = 0; attempt < LOAD_ATTEMPTS; attempt++) {
     const status = await loadSyncStatus(env.local);
     if (status.pausedUntil && status.pausedUntil > env.now()) return false;
-    const state = await loadSyncState(env.local, context.scope);
-    const blob = state.synced[recordId]?.blob;
-    if (!blob) return false;
+    const blob = (await loadClocks(env.local, collection.name))[id]?.blob;
+    // No newer version arrived since the last try, or out of time.
+    if (!blob || blob === previous || env.now() - start > LOAD_DEADLINE_MS)
+      return false;
+    previous = blob;
     const payload = await context.transport.getBlob(blob);
     if (!payload) return false;
-    const body = parseBody(collection, payload);
-    const stored = await env.lock(SYNC_LOCK, async () => {
-      const latest = await loadSyncState(env.local, context.scope);
-      if (latest.synced[recordId]?.blob !== blob) return undefined;
-      return storeContent(env, collection, id, body);
-    });
+    const stored = await storeContent(
+      env,
+      collection,
+      id,
+      parseBody(collection, payload),
+      blob,
+    );
     if (stored !== undefined) return stored;
   }
   return false;
 }
 
 // Store a body under the chat or file it belongs to, unless the local copy
-// changed meanwhile. Resolves whether a body is stored now.
+// changed meanwhile. Resolves whether a body is stored now; undefined when
+// the record moved on to another version.
 async function storeContent(
   env: SyncEnv,
   collection: Collection,
   id: string,
   body: unknown,
+  blob: string,
 ) {
   const read = async () =>
     (await collection.read(env, (other) => other === id)).get(id);
@@ -290,22 +302,29 @@ async function storeContent(
   if (!current) return false;
   if (current.body !== undefined) return true;
   const dataHash = await hashJson(current.data);
+  let movedOn = false;
   const written = await collection.write(
     env,
     [{ id, entry: { data: current.data, body } }],
-    async (_id, now) =>
-      !!now &&
-      now.body === undefined &&
-      (await hashJson(now.data)) === dataHash,
+    async (_id, now) => {
+      if (!now || now.body !== undefined) return false;
+      if ((await loadClocks(env.local, collection.name))[id]?.blob !== blob) {
+        movedOn = true;
+        return false;
+      }
+      return (await hashJson(now.data)) === dataHash;
+    },
   );
+  if (movedOn) return undefined;
   return written.has(id) || (await read())?.body !== undefined;
 }
 
-// Delete everything on the server (this device's data is uploaded again on
-// its next round, as any other device's would be), and remove local keys
-// (chat contents with the chat list) after forgetting what was synced for
-// them, so the cleared data comes back from the server instead of being
-// deleted there. Holds the sync lock, so it runs between rounds.
+// Delete everything on the server (every device's data is uploaded again
+// by its next round), and remove local keys (chat contents with the chat
+// list) together with the clocks of what they held, in one storage call:
+// the cleared data counts as never changed here, so it is downloaded again
+// instead of deleted everywhere. Holds the sync lock, so it runs between
+// rounds; works with sync off too.
 export function resetSync(
   env: SyncEnv,
   context: SyncContext | undefined,
@@ -326,22 +345,20 @@ async function reset(
     await saveSyncState(env.local, newSyncState(context.scope));
   }
   if (!keys.length) return;
-  const prefixes = SYNC_COLLECTIONS.filter((collection) =>
+  const cleared = SYNC_COLLECTIONS.filter((collection) =>
     keys.some((key) => ownsKey(collection, key)),
-  ).map((collection) => `${collection.name}/`);
-  if (context && prefixes.length) {
-    const state = await loadSyncState(env.local, context.scope);
-    for (const map of [state.synced, state.pending])
-      for (const recordId of Object.keys(map))
-        if (prefixes.some((prefix) => recordId.startsWith(prefix)))
-          delete map[recordId];
-    await saveSyncState(env.local, state);
-  }
-  const stored = Object.keys(await env.local.get(null));
-  const contents = keys.includes(STORAGE_KEYS.chats)
-    ? stored.filter((key) => key.startsWith(`${STORAGE_KEYS.chats}/`))
-    : [];
-  await env.local.remove([...keys, ...contents]);
+  );
+  await env.lock(CLOCK_LOCK, async () => {
+    const stored = Object.keys(await env.local.get(null));
+    const contents = keys.includes(STORAGE_KEYS.chats)
+      ? stored.filter((key) => key.startsWith(`${STORAGE_KEYS.chats}/`))
+      : [];
+    await env.local.remove([
+      ...keys,
+      ...contents,
+      ...cleared.map((collection) => clocksKey(collection.name)),
+    ]);
+  });
 }
 
 export async function checkBackend(env: SyncEnv, backend: SyncBackendConfig) {
