@@ -1,12 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { loadContent } from "../src/background/sync/service";
+import {
+  applyPart,
+  streamPartFromChunk,
+} from "../src/shared/chat-stream-parts";
+import { normalizeChatContent } from "../src/shared/chats";
 import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import { createBrowserSyncTransport } from "../src/shared/sync/browser-sync";
 import { SEEN_KEEP_MS, seenFrom } from "../src/shared/sync/clocks";
+import { canonicalJson } from "../src/shared/sync/codec";
 import { formatClock, INITIAL_HLC, tickClock } from "../src/shared/sync/hlc";
 import { decodeRoot, emptyRoot } from "../src/shared/sync/root";
 import { SYNC_WARNINGS } from "../src/shared/sync/state";
+import { AI_TEXT_CHUNK_TYPE, type ChatPart } from "../src/shared/types";
 import {
   ALL_ON,
   copyOf,
@@ -21,7 +28,8 @@ import {
 
 // Review 6, C1: `seen` kept one clock per device id, so a copied profile's
 // change pushed the original's out of later versions. Also S1 (the size of
-// `seen` for browser account sync).
+// `seen` for browser account sync) and S2 (content rewritten without an
+// edit).
 
 const PREFS = STORAGE_KEYS.preferences;
 const PROVIDERS = STORAGE_KEYS.provider;
@@ -203,4 +211,38 @@ test("review6 S1: names of changes take a bounded share of browser account sync"
   const perInstall = ((await bytesWith(10)) - (await bytesWith(0))) / 10;
   assert.ok(perInstall > 2_500 && perInstall < 3_000, `${perInstall}`);
   assert.equal(SEEN_KEEP_MS, 90 * DAY);
+});
+
+// S2: streamed replies are stored as they streamed. Loading and saving a
+// chat again must not change its earlier messages, or a message deleted on
+// another device comes back as "edited here".
+test("review6 S2: a streamed reply is stored in the form loading gives it", () => {
+  let parts: ChatPart[] = [];
+  for (const chunk of [
+    { type: AI_TEXT_CHUNK_TYPE.textNoteStart, id: "r" },
+    { type: AI_TEXT_CHUNK_TYPE.textNoteDelta, id: "r", delta: "think" },
+    { type: AI_TEXT_CHUNK_TYPE.textStart, id: "t" },
+    { type: AI_TEXT_CHUNK_TYPE.textDelta, id: "t", delta: "hello" },
+    { type: "tool-web_search", toolCallId: "c", input: { q: "x" } },
+    {
+      type: "tool-web_search",
+      toolCallId: "c",
+      result: { text: "found" },
+      state: "output-available",
+    },
+    { type: AI_TEXT_CHUNK_TYPE.contextSummary, id: "s", text: "summary" },
+  ]) {
+    const { part } = streamPartFromChunk(chunk);
+    if (part) parts = applyPart(parts, part);
+  }
+  const stored = {
+    messages: [
+      { id: "u", role: "user", content: "hi", createdAt: 1 },
+      { id: "m", role: "assistant", content: "hello", createdAt: 2, parts },
+    ],
+  };
+  assert.equal(
+    canonicalJson(normalizeChatContent(stored)),
+    canonicalJson(stored),
+  );
 });

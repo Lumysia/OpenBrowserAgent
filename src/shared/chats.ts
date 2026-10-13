@@ -411,7 +411,9 @@ function normalizeChatPart(value: unknown): ChatPart | undefined {
     id: stringValue(part.id) || crypto.randomUUID(),
     type: type as ChatPart["type"],
     text: optionalString(part.text),
-    append: part.append === true,
+    // Only a streamed delta carries it: a stored part without it must stay
+    // the same, or every load would rewrite the chat's earlier messages.
+    append: part.append === true || undefined,
     toolName: optionalString(part.toolName),
     state: CHAT_PART_STATES.has(state)
       ? (state as ChatPart["state"])
