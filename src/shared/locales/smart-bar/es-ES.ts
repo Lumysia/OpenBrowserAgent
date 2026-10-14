@@ -24,6 +24,7 @@ export const smartBarEsES: SmartBarLocaleMessages = {
   readSource: "Leer el original en voz alta",
   readResult: "Leer el resultado en voz alta",
   stopReading: "Detener la lectura",
+  noVoice: "No hay ninguna voz instalada para {language}.",
   writing: "Escribiendo…",
   emptyResult: "El modelo no ha devuelto texto.",
   selectionChanged:

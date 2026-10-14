@@ -17,6 +17,7 @@ import {
   SMART_BAR_ACTION,
   SMART_BAR_MAX_TEXT_CHARS,
 } from "../../shared/smart-bar";
+import { languageDetect } from "../../shared/language-detector";
 import type { SmartBarPageConfig } from "../../shared/smart-bar-protocol";
 import { Button, IconTooltip } from "../../ui/components";
 import {
@@ -28,9 +29,13 @@ import { speak } from "../speech";
 import { copyText, writeIntoSelection, type WriteMode } from "../writeback";
 import { SmartBarDictionaryCard } from "./dictionary-card";
 import { openInSidePanel, SMART_BAR_ICONS } from "./page-actions";
+import { readResultPieces, readSourcePieces } from "./read-aloud";
 import { smartBarOutput } from "./result-output";
 import type { SmartBarResult, SmartBarStore } from "./store";
 import { onTrusted } from "./trusted";
+
+// One detector for the frame, created when first needed.
+const detectLanguage = languageDetect();
 
 export function SmartBarResultCard({
   store,
@@ -55,24 +60,35 @@ export function SmartBarResultCard({
   const ready = result.status === "done" && !!output.copy;
   const Icon = SMART_BAR_ICONS[result.action];
   const [reading, setReading] = useState<"source" | "result">();
+  // Languages the last read found no voice for.
+  const [noVoice, setNoVoice] = useState<string[]>();
   const stopReading = useRef<() => void>(undefined);
   // Reading stops with the card.
   useEffect(() => () => stopReading.current?.(), []);
-  const sourceLanguage = selectionLanguage(snapshot);
-  // Edits keep the text's language; the other actions reply in the
-  // extension's language.
-  const resultLanguage =
-    result.action === SMART_BAR_ACTION.improve ||
-    result.action === SMART_BAR_ACTION.fixGrammar
-      ? sourceLanguage
-      : config.language;
+  const pageLanguage = selectionLanguage(snapshot);
   const read = (which: "source" | "result") => {
     if (reading === which) return stopReading.current?.();
     setReading(which);
+    setNoVoice(undefined);
+    const input = {
+      action: result.action,
+      source: snapshot.text,
+      output,
+      languages: {
+        page: pageLanguage,
+        reply: config.replyLanguage,
+        ui: config.language,
+      },
+    };
     stopReading.current = speak(
-      which === "source" ? snapshot.text : output.write,
-      which === "source" ? sourceLanguage : resultLanguage,
-      () => setReading((now) => (now === which ? undefined : now)),
+      () =>
+        which === "source"
+          ? readSourcePieces(input, detectLanguage)
+          : readResultPieces(input, detectLanguage),
+      {
+        onEnd: () => setReading((now) => (now === which ? undefined : now)),
+        onMissingVoices: setNoVoice,
+      },
     );
   };
   const readButton = (which: "source" | "result") => {
@@ -144,7 +160,7 @@ export function SmartBarResultCard({
           <SmartBarDictionaryCard
             entry={output.entry}
             labels={t.dictionary}
-            sourceLanguage={sourceLanguage}
+            sourceLanguage={pageLanguage}
           />
         ) : (
           resultMessage(result, output.shown, config)
@@ -156,6 +172,14 @@ export function SmartBarResultCard({
       {changed && (
         <p className="smart-bar-result-notice" role="status">
           {t.selectionChanged}
+        </p>
+      )}
+      {noVoice && (
+        <p className="smart-bar-result-notice" role="status">
+          {t.noVoice.replace(
+            "{language}",
+            languageNames(noVoice, config.language),
+          )}
         </p>
       )}
       <div className="smart-bar-result-actions">
@@ -189,7 +213,7 @@ export function SmartBarResultCard({
         )}
         <span className="smart-bar-spacer" />
         {readButton("source")}
-        {ready && output.write && readButton("result")}
+        {ready && (output.write || output.entry) && readButton("result")}
         {ready && (
           <IconTooltip label={copied ? t.copied : t.actions.copy} side="top">
             <Button
@@ -231,6 +255,27 @@ export function SmartBarResultCard({
       </div>
     </div>
   );
+}
+
+// "Japanese and Korean", in the UI language.
+function languageNames(languages: string[], uiLanguage: string) {
+  const names = languages.map((language) => {
+    try {
+      return (
+        new Intl.DisplayNames(uiLanguage, { type: "language" }).of(language) ||
+        language
+      );
+    } catch {
+      return language;
+    }
+  });
+  try {
+    return new Intl.ListFormat(uiLanguage, { type: "conjunction" }).format(
+      names,
+    );
+  } catch {
+    return names.join(", ");
+  }
 }
 
 function resultMessage(

@@ -64,6 +64,9 @@ export type SmartBarPageConfig = {
   messages: SmartBarMessages;
   // The language of `messages`, for numbers in them.
   language: string;
+  // The language results are written in (the extension's language setting,
+  // which `language` may only approximate).
+  replyLanguage: string;
   colorScheme: NonNullable<Preferences["colorScheme"]>;
   accentColor: NonNullable<Preferences["accentColor"]>;
 };

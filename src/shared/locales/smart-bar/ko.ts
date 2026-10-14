@@ -24,6 +24,7 @@ export const smartBarKo: SmartBarLocaleMessages = {
   readSource: "원문 읽어 주기",
   readResult: "결과 읽어 주기",
   stopReading: "읽기 중지",
+  noVoice: "{language} 음성이 설치되어 있지 않습니다.",
   writing: "작성 중…",
   emptyResult: "모델이 텍스트를 반환하지 않았습니다.",
   selectionChanged: "선택한 텍스트가 변경되었습니다. 대신 결과를 복사하세요.",

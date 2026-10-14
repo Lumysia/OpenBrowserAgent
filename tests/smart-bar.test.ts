@@ -16,7 +16,7 @@ import {
 } from "../src/shared/smart-bar";
 import { smartBarPrompt } from "../src/background/smart-bar/prompts";
 import { placeSmartBar } from "../src/smart-bar/placement";
-import { speechChunks } from "../src/smart-bar/speech";
+import { speechChunks } from "../src/shared/speech-language";
 
 test("the smart bar is off by default and stored settings are cleaned", () => {
   assert.equal(mergePreferences({}).smartBar?.enabled, false);

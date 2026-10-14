@@ -4,6 +4,7 @@
 // the page scripts import this module.
 import { parseJsonPrefix } from "./json-prefix";
 import { SMART_BAR_ACTION, type SmartBarGenerateAction } from "./smart-bar";
+import type { SpeechSegment } from "./speech-language";
 
 export const SMART_BAR_RESULT_FORMAT = {
   text: "text",
@@ -152,6 +153,33 @@ function stringList(value: unknown) {
         .map((item) => item.trim())
         .filter(Boolean)
     : [];
+}
+
+// The entry as it is read aloud: the card's parts in its order, each with the
+// hints for its language. The headword, examples, synonyms and collocations
+// are in the selected text's language; the rest in the entry language. The
+// pronunciation is notation (IPA, pinyin), not words to read.
+export function dictionarySpeech(
+  entry: DictionaryEntry,
+  hints: { source: SpeechSegment["hints"]; entry: SpeechSegment["hints"] },
+): SpeechSegment[] {
+  const source = (text: string) => ({ text, hints: hints.source });
+  const own = (text: string) => ({ text, hints: hints.entry });
+  const list = (items: string[]) => (items.length ? [items.join(", ")] : []);
+  return [
+    source(entry.headword),
+    ...[
+      entry.partOfSpeech,
+      entry.contextMeaning,
+      ...entry.otherMeanings,
+    ].flatMap((text) => (text ? [own(text)] : [])),
+    ...entry.examples.flatMap(({ text, translation }) => [
+      source(text),
+      ...(translation ? [own(translation)] : []),
+    ]),
+    ...list(entry.synonyms).map(source),
+    ...list(entry.collocations).map(source),
+  ];
 }
 
 export type DictionaryLabels = {

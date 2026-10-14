@@ -24,6 +24,7 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
   readSource: "Original vorlesen",
   readResult: "Ergebnis vorlesen",
   stopReading: "Vorlesen beenden",
+  noVoice: "Keine Stimme für {language} installiert.",
   writing: "Wird geschrieben…",
   emptyResult: "Das Modell hat keinen Text geliefert.",
   selectionChanged:

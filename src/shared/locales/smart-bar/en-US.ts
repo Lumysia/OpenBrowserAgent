@@ -22,6 +22,7 @@ export const smartBarEnUS = {
   readSource: "Read original aloud",
   readResult: "Read result aloud",
   stopReading: "Stop reading",
+  noVoice: "No voice installed for {language}.",
   writing: "Writing…",
   emptyResult: "The model returned no text.",
   selectionChanged: "The selected text changed. Copy the result instead.",

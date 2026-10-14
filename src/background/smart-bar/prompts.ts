@@ -1,5 +1,7 @@
 import {
+  isSmartBarTranslationFallback,
   SMART_BAR_ACTION,
+  SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE,
   type SmartBarGenerateAction,
 } from "../../shared/smart-bar";
 import {
@@ -24,18 +26,22 @@ export function smartBarPrompt(
   context?: SmartBarRunRequest["context"],
 ) {
   const language = languageName(replyLanguage);
+  const fallback = isSmartBarTranslationFallback(replyLanguage)
+    ? undefined
+    : languageName(SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE);
   const format = smartBarResultFormat(action, text);
   if (format === SMART_BAR_RESULT_FORMAT.dictionary)
     return {
       system: DICTIONARY_SYSTEM,
-      prompt: `${dictionaryInstructions(language)}${contextBlock(context, false)}\n\n<text>\n${text}\n</text>`,
+      prompt: `${dictionaryInstructions(language, fallback)}${contextBlock(context, false)}\n\n<text>\n${text}\n</text>`,
     };
   const instructions: Record<SmartBarGenerateAction, string> = {
     [SMART_BAR_ACTION.explain]: `Explain the text below in ${language} so that a non-expert understands it. Be brief: one short paragraph, or a few short points.`,
-    [SMART_BAR_ACTION.translate]: `Translate the text below into ${language}.${englishFallback(
-      language,
-      "translate it into English instead",
-    )} Keep the meaning, tone and line breaks. Return only the translation.`,
+    [SMART_BAR_ACTION.translate]: `Translate the text below into ${language}.${
+      fallback
+        ? ` If it is already in ${language}, translate it into ${fallback} instead.`
+        : ""
+    } Keep the meaning, tone and line breaks. Return only the translation.`,
     [SMART_BAR_ACTION.improve]:
       "Improve the writing of the text below: make it clearer and more fluent and fix mistakes, keeping its meaning, language, tone, approximate length and line breaks. Return only the improved text.",
     [SMART_BAR_ACTION.fixGrammar]:
@@ -47,21 +53,15 @@ export function smartBarPrompt(
   };
 }
 
-function englishFallback(language: string, instead: string) {
-  return /English/.test(language)
-    ? ""
-    : ` If it is already in ${language}, ${instead}.`;
-}
-
 const DICTIONARY_SYSTEM =
   "You are a dictionary inside a browser toolbar. Reply with one JSON object only: no code fence, no text before or after it, no Markdown inside it.";
 
 // Keys in the order the card shows them, so a streaming answer fills the
 // card from the top. Read by readDictionaryAnswer.
-function dictionaryInstructions(language: string) {
-  const entry = /English/.test(language)
-    ? `${language}`
-    : `${language}, unless the selected text itself is written in ${language}: then English`;
+function dictionaryInstructions(language: string, fallback?: string) {
+  const entry = fallback
+    ? `${language}, unless the selected text itself is written in ${language}: then ${fallback}`
+    : language;
   return [
     `The text below is a word or short phrase (a term, expression, idiom or name) selected on a web page. Write a short dictionary entry for it.`,
     `The entry language is ${entry}. Write every explanation (part of speech, meanings, example translations, translation) in the entry language, whatever language the page or the selected text is in. Only "headword", "examples[].text", "synonyms" and "collocations" stay in the selected text's own language.`,

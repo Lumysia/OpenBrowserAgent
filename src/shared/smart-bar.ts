@@ -1,5 +1,6 @@
 // Smart bar settings and site rules. Dependency-free: the page scripts import
 // this module, so it must stay small.
+import { primaryLanguage } from "./language-tags";
 
 export const SMART_BAR_TRIGGER = {
   selection: "selection",
@@ -47,6 +48,27 @@ export const SMART_BAR_EDIT_ACTIONS = [
   SMART_BAR_ACTION.translate,
   SMART_BAR_ACTION.ask,
 ] as const satisfies readonly SmartBarAction[];
+
+// Translate answers in the reply language, or in this one when the text
+// already is in the reply language. The prompts ask for it; reading aloud
+// expects it.
+export const SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE = "en";
+
+export function smartBarTranslationLanguage(
+  replyLanguage: string,
+  sourceLanguage: string | undefined,
+) {
+  return sourceLanguage &&
+    primaryLanguage(sourceLanguage) === primaryLanguage(replyLanguage)
+    ? SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE
+    : replyLanguage;
+}
+
+export function isSmartBarTranslationFallback(replyLanguage: string) {
+  return (
+    primaryLanguage(replyLanguage) === SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE
+  );
+}
 
 // Longest selection the generate actions take. Longer ones are refused, not
 // cut: Replace must never overwrite text the model didn't see.
