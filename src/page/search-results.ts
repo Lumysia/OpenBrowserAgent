@@ -1,4 +1,6 @@
-import { clip, compact, isBlock, isHidden, roleOf } from "./dom";
+import { HEADING_SELECTOR } from "../shared/dom-vocabulary";
+import { compact } from "../shared/text";
+import { clip, isBlock, isHidden, roleOf } from "./dom";
 
 // Organic results of a search engine page, read from page structure rather
 // than per-engine selectors. Results are the repeated sibling blocks of one
@@ -20,7 +22,6 @@ const LANDMARKS = new Set([
   "search",
   "dialog",
 ]);
-const HEADING_SELECTOR = "h1, h2, h3, h4, h5, h6, [role=heading]";
 // Words that mark sponsored blocks in class names, ids and attribute names.
 const AD_WORDS = new Set([
   "ad",

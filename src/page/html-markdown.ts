@@ -1,4 +1,4 @@
-import { compact } from "./dom";
+import { compact } from "../shared/text";
 import { pageMarkdown } from "./markdown";
 
 export type HtmlMarkdown = { title: string; text: string };

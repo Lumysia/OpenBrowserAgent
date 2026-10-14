@@ -1,5 +1,6 @@
 // Reads what the user selected, at the moment the bar opens. Actions use this
 // snapshot rather than the live selection, which clicks and focus can change.
+import { editingHost } from "../shared/dom-vocabulary";
 
 export type TextControl = HTMLInputElement | HTMLTextAreaElement;
 
@@ -105,7 +106,7 @@ export function readSelection(
 }
 
 // Characters of context on each side of the selection.
-export const CONTEXT_CHARS = 500;
+const CONTEXT_CHARS = 500;
 
 // Text the user can't see on the page. A textarea's text node is its default
 // value, not what it holds now.
@@ -264,13 +265,4 @@ function isTextControl(element: Element | null): element is TextControl {
     element instanceof HTMLInputElement &&
     TEXT_INPUT_TYPES.has(element.type || "text")
   );
-}
-
-function editingHost(node: Node) {
-  const start = node instanceof Element ? node : node.parentElement;
-  if (!(start instanceof HTMLElement) || !start.isContentEditable)
-    return undefined;
-  let host: HTMLElement = start;
-  while (host.parentElement?.isContentEditable) host = host.parentElement;
-  return host;
 }

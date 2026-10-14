@@ -1,4 +1,4 @@
-import { compact } from "./dom";
+import { compact } from "../shared/text";
 import { snapshotLines } from "./snapshot";
 
 const LINE_WINDOW = 300;
