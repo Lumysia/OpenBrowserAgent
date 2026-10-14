@@ -1,5 +1,7 @@
 import { getBrowserApi } from "../../shared/storage";
 import { TOOL_NAME } from "../../shared/tool-names";
+import { RUN_TAB_ID_PARAM } from "../run-tab";
+import { pageHeader } from "./page";
 import { callPage, pageTab } from "../page-agent";
 import { errorMessage, fail, schema, type ToolDefinition } from "./types";
 
@@ -26,7 +28,7 @@ export const editPageTool: ToolDefinition = {
     "Edit the page in place by snapshot ref, in one batch: setText (text; keep links by writing them as [label](e12) like the snapshot), insert (text or plain html at position before/after/prepend/append; tag optional; returns the new ref; no script, frames, SVG or event handlers), remove, setAttribute / removeAttribute (name, value), style (inline CSS in value), css (stylesheet text in value, no ref). For translation, replace each block's text with setText. Stops at the first failing edit.",
   parameters: schema(
     {
-      tabId: { type: "number", description: "Defaults to the active tab." },
+      tabId: RUN_TAB_ID_PARAM,
       edits: {
         type: "array",
         minItems: 1,
@@ -50,7 +52,7 @@ export const editPageTool: ToolDefinition = {
     },
     ["edits"],
   ),
-  async execute(input, { signal }) {
+  async execute(input, { run, signal }) {
     const edits = (Array.isArray(input.edits) ? input.edits : []).filter(
       (edit): edit is Edit =>
         !!edit &&
@@ -63,7 +65,7 @@ export const editPageTool: ToolDefinition = {
       );
     if (edits.length > MAX_EDITS)
       return fail(`At most ${MAX_EDITS} edits per call; split the batch.`);
-    const tab = await pageTab(input.tabId);
+    const tab = await pageTab(run.tab, input.tabId);
     let applied = 0;
     const inserted: string[] = [];
     let error = "";
@@ -102,7 +104,8 @@ export const editPageTool: ToolDefinition = {
       start = end;
     }
     const lines = [
-      `Applied ${applied} of ${edits.length} edits on tab ${tab.id}.`,
+      pageHeader(tab),
+      `Applied ${applied} of ${edits.length} edits.`,
     ];
     if (inserted.length) lines.push(`Inserted: ${inserted.join(", ")}`);
     if (error) lines.push(`${error} Later edits were not applied.`);
@@ -110,6 +113,7 @@ export const editPageTool: ToolDefinition = {
       text: lines.join("\n"),
       details: {
         tabId: tab.id,
+        title: tab.title,
         edits: edits.length,
         applied,
         ...(error ? { error } : {}),

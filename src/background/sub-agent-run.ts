@@ -29,7 +29,13 @@ export async function runSubAgentChat(options: {
   agent: Agent;
   task: string;
   title: string;
-  parent: { chatId: string; messageId?: string; toolCallId: string };
+  parent: {
+    chatId: string;
+    messageId?: string;
+    toolCallId: string;
+    // The parent's tab, where the sub-agent starts.
+    tabId?: number;
+  };
   onStart(chatId: string): void;
   onProgress(progress: SubAgentProgress[]): void;
   signal?: AbortSignal;
@@ -113,6 +119,7 @@ export async function runSubAgentChat(options: {
       messageId: assistantId,
       depth: 1,
       parentChatId: parent.chatId,
+      tabId: parent.tabId,
     });
     sessions.postToSession(session, { type: "end" });
   } catch (cause) {

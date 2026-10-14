@@ -7,6 +7,7 @@ import {
   startedDownloadLines,
 } from "../downloads/page-downloads";
 import { callPage, pageTab, PageError } from "../page-agent";
+import { RUN_TAB_ID_PARAM } from "../run-tab";
 import {
   dialogLines,
   endDialogs,
@@ -47,7 +48,7 @@ export const actTool: ToolDefinition = {
     "Run steps on a page in order, by snapshot ref: click (double for a double-click; or x,y viewport pixels from a screenshot), type (text; clear defaults to true; submit presses Enter), press (key like Enter or Control+A; ref optional), select (value or option text of a select), hover, scroll (ref, or direction up/down/top/bottom), wait (ms, or text to wait for), drag (ref to ref 'to'), dialog (value accept or dismiss, text for a prompt: how JavaScript dialogs opened by later steps are answered; without it they are dismissed and reported). trusted: true sends real mouse or keyboard input for click, hover and press when the page ignores the normal ones. Stops at the first failing step. Returns what changed (navigation, new or gone controls, dialogs), not a full snapshot.",
   parameters: schema(
     {
-      tabId: { type: "number", description: "Defaults to the active tab." },
+      tabId: RUN_TAB_ID_PARAM,
       steps: {
         type: "array",
         minItems: 1,
@@ -91,7 +92,7 @@ export const actTool: ToolDefinition = {
     if (steps.length > MAX_STEPS)
       return fail(`At most ${MAX_STEPS} steps per call.`);
     const api = getBrowserApi();
-    const tab = await pageTab(input.tabId);
+    const tab = await pageTab(run.tab, input.tabId);
     const opened: chrome.tabs.Tab[] = [];
     const onCreated = (created: chrome.tabs.Tab) => {
       if (created.openerTabId === tab.id) opened.push(created);

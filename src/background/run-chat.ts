@@ -12,6 +12,13 @@ import type { Agent, ChatMessage, UploadedAttachment } from "../shared/types";
 import { workspaceForAgent } from "../shared/workspace-storage";
 import { resolveHelperModel, resolveModel } from "./model-resolver";
 import { runPiAgent, type RunSetup } from "./pi-runtime";
+import {
+  createRunTab,
+  startRunTab,
+  withWorkingTab,
+  workingTabNote,
+  type RunTab,
+} from "./run-tab";
 import type { StreamSession } from "./stream-sessions";
 import { createSystemPrompt } from "./system-prompt";
 import { createToolSet } from "./tools/registry";
@@ -24,12 +31,14 @@ export type RunRequest = {
   // 0 for chats, 1 for sub-agents (which cannot start sub-agents).
   depth?: number;
   parentChatId?: string;
+  // The tab a parent run hands to its sub-agent.
+  tabId?: number;
 };
 
 // What a run of an agent is set up with, resolved from storage: the side
 // panel only names the agent, so chats and background sub-agents are set up
 // the same way. A description (`store: false`) writes nothing.
-async function runSetup(request: RunRequest, store: boolean) {
+async function runSetup(request: RunRequest, store: boolean, tab: RunTab) {
   const [agents, preferences, userSkills, skillSettings, mcpServers, bridges] =
     await Promise.all([
       storage.agents.get(),
@@ -68,6 +77,7 @@ async function runSetup(request: RunRequest, store: boolean) {
     preferences,
     depth,
     parentChatId: request.parentChatId,
+    tab,
   };
   const tested = normalizeLocalExecutionBridges(bridges).filter(
     (bridge) => !!bridge.lastTestedAt && !bridge.lastTestError,
@@ -85,8 +95,8 @@ async function runSetup(request: RunRequest, store: boolean) {
   };
 }
 
-async function prepareRun(request: RunRequest) {
-  const prepared = await runSetup(request, true);
+async function prepareRun(request: RunRequest, tab: RunTab) {
+  const prepared = await runSetup(request, true, tab);
   const model = await resolveModel(prepared.agent.modelId, request.modelId);
   const helperModel = await resolveHelperModel(
     prepared.setup.preferences.helperModelId,
@@ -103,14 +113,26 @@ export async function runChat(
     language?: string;
   },
 ) {
-  const prepared = await prepareRun(request);
+  // Chosen before anything slow, while the user is still on the tab they
+  // sent the message from.
+  const { tab, start, earlier } = await startRunTab(
+    session.chatId,
+    request.messages.at(-1),
+    request.tabId,
+  );
+  const prepared = await prepareRun(request, tab);
   session.abortController.signal.throwIfAborted();
+  const usesPages =
+    hasToolGroup(prepared.agent, "pages") ||
+    hasToolGroup(prepared.agent, "browser");
   await runPiAgent({
     session,
     model: prepared.model,
     helperModel: prepared.helperModel,
     system: prepared.system,
-    messages: request.messages,
+    messages: usesPages
+      ? withWorkingTab(request.messages, workingTabNote(start, earlier))
+      : request.messages,
     setup: prepared.setup,
     maxToolSteps: prepared.maxToolSteps,
     messageId: request.messageId,
@@ -123,7 +145,7 @@ export async function runChat(
 // The system prompt and the tools a run of this agent starts with, for
 // chat export.
 export async function describeRun(agentId: string | undefined) {
-  const prepared = await runSetup({ agentId }, false);
+  const prepared = await runSetup({ agentId }, false, createRunTab(""));
   const unused = () => {
     throw new Error("Not available in a run description.");
   };

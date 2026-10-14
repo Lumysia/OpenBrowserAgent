@@ -21,17 +21,6 @@ export async function getActiveTab(): Promise<chrome.tabs.Tab | undefined> {
   return undefined;
 }
 
-export async function resolveBrowserTabId(value: unknown) {
-  const tabId = Number(value);
-  if (Number.isFinite(tabId) && tabId > 0) return tabId;
-  const activeTab = await getActiveTab();
-  if (!activeTab?.id)
-    throw new Error(
-      "No active tab was found. Use tabs (action list) and pass a tabId.",
-    );
-  return activeTab.id;
-}
-
 export async function getAllTabs(): Promise<AttachmentTab[]> {
   const activeTab = await getActiveTab();
   const tabs = await getBrowserApi().tabs.query(

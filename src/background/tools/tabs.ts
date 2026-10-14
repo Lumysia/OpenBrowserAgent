@@ -1,19 +1,11 @@
-import {
-  getActiveTab,
-  isScriptableUrl,
-  resolveBrowserTabId,
-} from "../../shared/browser";
+import { isScriptableUrl } from "../../shared/browser";
 import { delay } from "../../shared/cancellation";
-import {
-  DEFAULT_SCREENSHOT_QUALITY,
-  TAB_LOAD_WAIT_TIMEOUT_MS,
-} from "../../shared/config";
+import { TAB_LOAD_WAIT_TIMEOUT_MS } from "../../shared/config";
 import { getBrowserApi } from "../../shared/storage";
 import { TOOL_NAME } from "../../shared/tool-names";
-import { areCdpAvailable } from "../../shared/runtime-capabilities";
 import { adoptAgentTab, agentTabIds, openAgentTab } from "../agent-tabs";
-import { withCdp } from "../cdp";
 import { callPage } from "../page-agent";
+import { RUN_TAB_ID_PARAM } from "../run-tab";
 import {
   fail,
   ok,
@@ -21,7 +13,6 @@ import {
   stringArg,
   type RunContext,
   type ToolDefinition,
-  type ToolResult,
 } from "./types";
 
 const SEARCH_RESULT_LIMIT = 8;
@@ -73,17 +64,21 @@ export async function waitTabComplete(tabId: number, signal?: AbortSignal) {
 
 export function tabLine(
   tab: chrome.tabs.Tab,
-  options: { group?: string; mine?: boolean } = {},
+  options: { group?: string; mine?: boolean; working?: boolean } = {},
 ) {
-  const marks = [tab.active && "active", options.mine && "opened by you"]
+  const marks = [
+    tab.active && "active",
+    options.working && "working tab",
+    options.mine && "opened by you",
+  ]
     .filter(Boolean)
     .join(", ");
   return `- tab ${tab.id}${marks ? ` (${marks})` : ""}${options.group ? ` [group: ${options.group}]` : ""}: ${tab.title || "(untitled)"} | ${tab.url || ""}`;
 }
 
 // Open tabs, optionally only those whose title or URL holds every word of
-// `query`, with the names of their tab groups and which ones this chat
-// opened.
+// `query`, with the names of their tab groups, the run's working tab and
+// which ones this chat opened.
 async function listTabs(query: string, run: RunContext) {
   const api = getBrowserApi();
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
@@ -102,6 +97,7 @@ async function listTabs(query: string, run: RunContext) {
     tabLine(tab, {
       group: groups.get(tab.groupId ?? -1),
       mine: mine.has(tab.id ?? -1),
+      working: tab.id !== undefined && tab.id === run.tab.id,
     }),
   );
   return ok(
@@ -169,6 +165,7 @@ function tabIdList(input: Record<string, unknown>) {
     : [Number(input.tabId)].filter((id) => Number.isFinite(id) && id > 0);
 }
 
+// Brings a tab to the front, only when the user asked to see it.
 async function focusTab(tabId: number) {
   const api = getBrowserApi();
   const tab = await api.tabs.update(tabId, { active: true });
@@ -194,14 +191,11 @@ export const tabsTool: ToolDefinition = {
   group: "browser",
   summary: "List, open, switch, close and navigate tabs",
   description:
-    "Manage browser tabs: list (query: only tabs whose title or URL has these words; marks the tabs opened by you), open (url; the tab joins this chat's tab group), switch (tabId), close (tabId or tabIds), navigate (tabId, url), back, forward, reload, group (tabIds, title, color), ungroup (tabIds). Opening and navigating wait for the page to load. Check list before opening a page that may already be open.",
+    "Manage browser tabs: list (query: only tabs whose title or URL has these words; marks your working tab and the tabs opened by you), open (url; opens in the background and joins this chat's tab group; show: true only when the user wants to see it), switch (tabId; brings the tab to the front: only when the user asks), close (tabId or tabIds), navigate (tabId, url), back, forward, reload, group (tabIds, title, color), ungroup (tabIds). The tab you open, navigate or switch to becomes the tab you work on. Opening and navigating wait for the page to load. Check list before opening a page that may already be open.",
   parameters: schema(
     {
       action: { type: "string", enum: TAB_ACTIONS },
-      tabId: {
-        type: "number",
-        description: "Tab to act on. Defaults to the active tab.",
-      },
+      tabId: RUN_TAB_ID_PARAM,
       tabIds: {
         type: "array",
         items: { type: "number" },
@@ -211,9 +205,10 @@ export const tabsTool: ToolDefinition = {
       query: { type: "string" },
       title: { type: "string", description: "Group name." },
       color: { type: "string", enum: GROUP_COLORS },
-      background: {
+      show: {
         type: "boolean",
-        description: "open: do not switch to the new tab.",
+        description:
+          "open: bring the new tab to the front. Only when the user wants to see the page.",
       },
     },
     ["action"],
@@ -229,8 +224,9 @@ export const tabsTool: ToolDefinition = {
       if (!url) return fail("url is required to open a tab.");
       const { tab: created, group } = await openAgentTab(run, {
         url,
-        active: input.background !== true,
+        active: input.show === true,
       });
+      run.tab.use(created);
       if (created.id !== undefined) await waitTabComplete(created.id, signal);
       const tab =
         created.id !== undefined ? await api.tabs.get(created.id) : created;
@@ -259,7 +255,7 @@ export const tabsTool: ToolDefinition = {
       await api.tabs.remove(ids);
       return ok(`Closed tab ${ids.join(", ")}.`, { action, tabIds: ids });
     }
-    const tabId = await resolveBrowserTabId(input.tabId);
+    const tabId = (await run.tab.target(input.tabId)).id;
     signal?.throwIfAborted();
     if (action === "switch") {
       await focusTab(tabId);
@@ -375,74 +371,3 @@ export const webSearchTool: ToolDefinition = {
     }
   },
 };
-
-// Longest edge of a full-page screenshot; vision models scale larger images
-// down anyway.
-const FULL_PAGE_MAX_EDGE = 8_000;
-
-export const screenshotTool: ToolDefinition = {
-  name: TOOL_NAME.screenshot,
-  group: "pages",
-  summary: "Image of a tab",
-  description:
-    "See a tab as an image: the visible part (brings the tab to the front), or fullPage: true for the whole page through the Chrome debugger. Use it only when the layout or visuals matter; snapshot is cheaper for text and controls.",
-  parameters: schema({
-    tabId: { type: "number", description: "Defaults to the active tab." },
-    fullPage: { type: "boolean" },
-  }),
-  async execute(input, { signal }) {
-    const api = getBrowserApi();
-    const tabId =
-      input.tabId === undefined
-        ? (await getActiveTab())?.id
-        : Number(input.tabId);
-    if (!tabId) return fail("No tab to capture. Give a tabId from tabs list.");
-    if (input.fullPage === true) return fullPageShot(tabId, signal);
-    await focusTab(tabId);
-    signal?.throwIfAborted();
-    const tab = await api.tabs.get(tabId);
-    const image = await api.tabs.captureVisibleTab(tab.windowId!, {
-      format: "jpeg",
-      quality: DEFAULT_SCREENSHOT_QUALITY,
-    });
-    return {
-      text: `Screenshot of tab ${tabId} (${tab.title || tab.url}) attached.`,
-      details: { tabId, title: tab.title, url: tab.url, image, format: "jpeg" },
-      image: { dataUrl: image, type: "image/jpeg" },
-    };
-  },
-};
-
-async function fullPageShot(
-  tabId: number,
-  signal?: AbortSignal,
-): Promise<ToolResult> {
-  if (!areCdpAvailable())
-    return fail(
-      "Full-page screenshots need the Chrome debugger, which this browser lacks. Take the visible part and scroll.",
-    );
-  const tab = await getBrowserApi().tabs.get(tabId);
-  const { image, width, height, scale } = await withCdp(
-    { tabId },
-    async (send) => {
-      const metrics = await send("Page.getLayoutMetrics");
-      const size = metrics.cssContentSize || metrics.contentSize;
-      const width = Math.ceil(size.width);
-      const height = Math.ceil(size.height);
-      const scale = Math.min(1, FULL_PAGE_MAX_EDGE / Math.max(width, height));
-      const { data } = await send("Page.captureScreenshot", {
-        format: "jpeg",
-        quality: DEFAULT_SCREENSHOT_QUALITY,
-        captureBeyondViewport: true,
-        clip: { x: 0, y: 0, width, height, scale },
-      });
-      return { image: `data:image/jpeg;base64,${data}`, width, height, scale };
-    },
-    signal,
-  );
-  return {
-    text: `Full-page screenshot of tab ${tabId} (${tab.title || tab.url}, ${width}x${height} px${scale < 1 ? `, scaled to ${Math.round(scale * 100)}%` : ""}) attached.`,
-    details: { tabId, title: tab.title, url: tab.url, image, format: "jpeg" },
-    image: { dataUrl: image, type: "image/jpeg" },
-  };
-}

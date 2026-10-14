@@ -2,6 +2,8 @@ import { areCdpAvailable } from "../../shared/runtime-capabilities";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { cdpEvaluate, releaseCdp, withCdp, type CdpSend } from "../cdp";
 import { pageTab } from "../page-agent";
+import { RUN_TAB_ID_PARAM } from "../run-tab";
+import { pageHeader } from "./page";
 import { textSlice } from "./read";
 import { fail, ok, schema, stringArg, type ToolDefinition } from "./types";
 
@@ -26,15 +28,15 @@ export const runScriptTool: ToolDefinition = {
         type: "string",
         description: "An expression or async IIFE; its value is returned.",
       },
-      tabId: { type: "number", description: "Defaults to the active tab." },
+      tabId: RUN_TAB_ID_PARAM,
       world: { type: "string", enum: ["MAIN", "ISOLATED"] },
       offset: { type: "number" },
     },
     ["code"],
   ),
-  async execute(input, { signal }) {
+  async execute(input, { run, signal }) {
     if (!stringArg(input.code)) return fail("code is required.");
-    const tab = await pageTab(input.tabId);
+    const tab = await pageTab(run.tab, input.tabId);
     const result = (await withCdp(
       { tabId: tab.id },
       (send) => evaluate(send, input),
@@ -45,8 +47,9 @@ export const runScriptTool: ToolDefinition = {
       typeof result.value === "string"
         ? result.value
         : (JSON.stringify(result.value) ?? "undefined");
-    return ok(textSlice(`runScript on tab ${tab.id}`, text, input), {
+    return ok(textSlice(`runScript on ${pageHeader(tab)}`, text, input), {
       tabId: tab.id,
+      title: tab.title,
       chars: text.length,
     });
   },
@@ -63,15 +66,15 @@ export const devtoolsTool: ToolDefinition = {
   parameters: schema(
     {
       action: { type: "string", enum: ["resources", "emulate", "reset"] },
-      tabId: { type: "number", description: "Defaults to the active tab." },
+      tabId: RUN_TAB_ID_PARAM,
       viewport: { type: "string" },
       userAgent: { type: "string" },
       colorScheme: { type: "string", enum: ["dark", "light", "auto"] },
     },
     ["action"],
   ),
-  async execute(input, { signal }) {
-    const tab = await pageTab(input.tabId);
+  async execute(input, { run, signal }) {
+    const tab = await pageTab(run.tab, input.tabId);
     const action = stringArg(input.action);
     const target = { tabId: tab.id };
     if (action === "reset") {
@@ -109,7 +112,7 @@ export const devtoolsTool: ToolDefinition = {
     if (result.exception) return fail(result.exception);
     const lines = Array.isArray(result.value) ? (result.value as string[]) : [];
     return ok(
-      `${lines.length} resources (type ms bytes url):\n${lines.slice(0, 200).join("\n")}`,
+      `${pageHeader(tab)}\n${lines.length} resources (type ms bytes url):\n${lines.slice(0, 200).join("\n")}`,
       { action, tabId: tab.id, count: lines.length },
     );
   },

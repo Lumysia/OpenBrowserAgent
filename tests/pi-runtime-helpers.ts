@@ -6,6 +6,7 @@ import { DEFAULT_AGENT } from "../src/shared/agents";
 import { DEFAULT_PREFERENCES } from "../src/shared/default-preferences";
 import { storage } from "../src/shared/storage";
 import { runPiAgent } from "../src/background/pi-runtime";
+import { createRunTab } from "../src/background/run-tab";
 import * as sessions from "../src/background/stream-sessions";
 import { installBrowser } from "./helpers";
 
@@ -51,6 +52,7 @@ export function setupPiRuntime(
       mcpServers: [],
       preferences: DEFAULT_PREFERENCES,
       depth: 0,
+      tab: createRunTab(chatId, { id: 42, title: "Fixture tab" }),
     },
     maxToolSteps: 3,
     messageId: "answer",
