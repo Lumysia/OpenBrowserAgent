@@ -2,12 +2,32 @@ import { plural } from "../../plural";
 import type { DownloadsLocaleMessages } from "./en-US";
 
 export const downloadsFrFR: DownloadsLocaleMessages = {
+  titles: {
+    downloaded: "Téléchargement terminé",
+    saved: "Enregistrement terminé",
+    failed: "Échec du téléchargement",
+    downloading: "Téléchargement en cours",
+    paused: "Téléchargement en pause",
+    waiting: "En attente de votre action",
+    canceled: "Téléchargement annulé",
+    listed: "Liste des téléchargements",
+    noneStarted: "Aucun téléchargement lancé",
+  },
+  running: {
+    download: "Téléchargement en cours",
+    save: "Enregistrement en cours",
+    images: "Enregistrement des images",
+    list: "Consultation des téléchargements",
+    wait: "Attente d’un téléchargement",
+    cancel: "Annulation du téléchargement",
+    retry: "Nouvelle tentative de téléchargement",
+  },
   status: {
-    completed: "{name} enregistré · {size}",
-    failed: "Impossible de télécharger {name} : {reason}",
-    canceled: "{name} annulé",
-    in_progress: "Téléchargement de {name} · {progress}",
-    paused: "{name} en pause · {progress}",
+    completed: "{name} · {size}",
+    failed: "{name} : {reason}",
+    canceled: "{name}",
+    in_progress: "{name} · {progress}",
+    paused: "{name} · {progress}",
     needs_confirmation:
       "Le navigateur retient {name} : conservez-le dans la liste des téléchargements du navigateur",
     choosing_location:

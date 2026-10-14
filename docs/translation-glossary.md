@@ -170,6 +170,8 @@ An error the user sees starts with what failed in the UI language, then the reas
 
 The agent's downloads tool saves files to the browser's own Downloads folder. Step lines name the browser's places the way the browser does: the list of downloads it keeps (where the user keeps a flagged file) and the Save dialog it opens when it asks where to save. "Saved" means the file is on disk; a download the browser holds back is "kept" by the user, using the word the browser's own button uses.
 
+A downloads step's title says what happened, not the tool's name: "Downloaded", "Saved", "Download failed", "Downloading", "Download paused", "Waiting for you" (the Save dialog is open or the browser holds a flagged file), "Canceled", "Listed downloads", "No download started"; while it runs, what it is doing ("Saving", "Waiting for a download"). Titles follow the language's tool titles (Chinese 已下载 / 正在下载, Japanese …しました / …中, Korean …됨 / … 중); French, Spanish and Portuguese name the download so no participle needs a gender ("Téléchargement terminé", "Descarga completada", "Download concluído"). The line under it carries only the file and the facts (name, size, progress, reason), since the title already has the verb. A failed download is styled like any failed step.
+
 | English                      | 简体中文         | 繁體中文           | 日本語                         | 한국어                   |
 | ---------------------------- | ---------------- | ------------------ | ------------------------------ | ------------------------ |
 | download (noun)              | 下载             | 下載               | ダウンロード                   | 다운로드                 |

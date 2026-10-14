@@ -52,12 +52,8 @@ export function ToolPart({
 }) {
   if (!isToolPartType(part.type)) return null;
   const name = part.toolName || toolNameFromPartType(part.type);
-  const { title, description, references, subAgentProgress } = toolDisplay(
-    name,
-    part,
-    t,
-    runEnded,
-  );
+  const { title, failed, description, references, subAgentProgress } =
+    toolDisplay(name, part, t, runEnded);
   const questionPending =
     name === TOOL_NAME.ask && !runEnded && isQuestionPending(part);
   const loading =
@@ -66,14 +62,13 @@ export function ToolPart({
       (part.state === CHAT_PART_STATE.streaming ||
         part.state === CHAT_PART_STATE.inputStreaming ||
         part.state === CHAT_PART_STATE.inputAvailable));
-  const isError = part.state === CHAT_PART_STATE.outputError;
   const isDone =
     part.state === CHAT_PART_STATE.outputAvailable ||
     part.state === CHAT_PART_STATE.done ||
     (runEnded && part.state === CHAT_PART_STATE.inputAvailable);
   const status = loading
     ? "loading"
-    : isError
+    : failed
       ? "error"
       : isDone
         ? "done"

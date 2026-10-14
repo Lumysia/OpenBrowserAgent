@@ -2,12 +2,32 @@ import { plural } from "../../plural";
 import type { DownloadsLocaleMessages } from "./en-US";
 
 export const downloadsKo: DownloadsLocaleMessages = {
+  titles: {
+    downloaded: "다운로드됨",
+    saved: "저장됨",
+    failed: "다운로드 실패",
+    downloading: "다운로드 중",
+    paused: "다운로드 일시 중지됨",
+    waiting: "확인을 기다리는 중",
+    canceled: "취소됨",
+    listed: "다운로드 목록 확인함",
+    noneStarted: "시작된 다운로드 없음",
+  },
+  running: {
+    download: "다운로드 중",
+    save: "저장 중",
+    images: "이미지 저장 중",
+    list: "다운로드 확인 중",
+    wait: "다운로드 기다리는 중",
+    cancel: "다운로드 취소 중",
+    retry: "다운로드 다시 시도 중",
+  },
   status: {
-    completed: "{name} 저장됨 · {size}",
-    failed: "{name} 다운로드 실패: {reason}",
-    canceled: "{name} 취소됨",
-    in_progress: "{name} 다운로드 중 · {progress}",
-    paused: "{name} 일시 중지됨 · {progress}",
+    completed: "{name} · {size}",
+    failed: "{name}: {reason}",
+    canceled: "{name}",
+    in_progress: "{name} · {progress}",
+    paused: "{name} · {progress}",
     needs_confirmation:
       "브라우저가 {name}을(를) 보류했습니다: 브라우저의 다운로드 목록에서 유지를 선택하세요",
     choosing_location:

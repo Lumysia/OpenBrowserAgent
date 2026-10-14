@@ -2,12 +2,32 @@ import { plural } from "../../plural";
 import type { DownloadsLocaleMessages } from "./en-US";
 
 export const downloadsDeDE: DownloadsLocaleMessages = {
+  titles: {
+    downloaded: "Heruntergeladen",
+    saved: "Gespeichert",
+    failed: "Download fehlgeschlagen",
+    downloading: "Wird heruntergeladen",
+    paused: "Download pausiert",
+    waiting: "Wartet auf Sie",
+    canceled: "Download abgebrochen",
+    listed: "Downloads aufgelistet",
+    noneStarted: "Kein Download gestartet",
+  },
+  running: {
+    download: "Wird heruntergeladen",
+    save: "Wird gespeichert",
+    images: "Bilder werden gespeichert",
+    list: "Downloads werden geprüft",
+    wait: "Wartet auf einen Download",
+    cancel: "Download wird abgebrochen",
+    retry: "Download wird wiederholt",
+  },
   status: {
-    completed: "{name} gespeichert · {size}",
-    failed: "{name} konnte nicht heruntergeladen werden: {reason}",
-    canceled: "{name} abgebrochen",
-    in_progress: "{name} wird heruntergeladen · {progress}",
-    paused: "{name} pausiert · {progress}",
+    completed: "{name} · {size}",
+    failed: "{name}: {reason}",
+    canceled: "{name}",
+    in_progress: "{name} · {progress}",
+    paused: "{name} · {progress}",
     needs_confirmation:
       "Der Browser hält {name} zurück: in der Downloadliste des Browsers behalten",
     choosing_location:

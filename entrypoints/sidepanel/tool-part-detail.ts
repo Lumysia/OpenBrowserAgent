@@ -8,8 +8,11 @@ import {
   knownLabel,
   shortValue,
   stringValue,
+  type ToolRecord,
+  type ToolStepState,
+  type ToolStepOutcome,
 } from "./tool-detail-format";
-import { downloadsDetail } from "./download-tool-display";
+import { downloadsDetail, downloadsOutcome } from "./download-tool-display";
 import { subAgentProgressDetail } from "./sub-agent-tool-display";
 import { toolReferences } from "./tool-references";
 import { actStepsSummary } from "./tool-step-summary";
@@ -17,8 +20,6 @@ import { actStepsSummary } from "./tool-step-summary";
 const TITLE_MAX_LENGTH = 54;
 const URL_MAX_LENGTH = 42;
 const DESCRIPTION_MAX_LENGTH = 118;
-
-type ToolRecord = Record<string, unknown>;
 
 export function toolJsonDetail(name: string, part: ChatPart) {
   return JSON.stringify(
@@ -134,6 +135,20 @@ const DETAILS: Record<
   [TOOL_NAME.devtools]: (input, output, t) => actionLabel(input.action, t),
 };
 
+// Tools whose title says what came of the step; the others show their
+// name (toolLabel) and the line from DETAILS.
+const OUTCOMES: Record<
+  string,
+  (
+    input: ToolRecord,
+    output: ToolRecord,
+    t: Messages,
+    state: ToolStepState,
+  ) => ToolStepOutcome | undefined
+> = {
+  [TOOL_NAME.downloads]: downloadsOutcome,
+};
+
 export function toolDisplay(
   name: string,
   part: ChatPart,
@@ -148,18 +163,25 @@ export function toolDisplay(
     (runEnded && part.state === CHAT_PART_STATE.inputAvailable);
   const awaitingAnswer =
     name === TOOL_NAME.ask && !Array.isArray(output.answers);
-  const title = toolLabel(name, t, done && !awaitingAnswer);
+  const errored =
+    typeof output.error === "string" ||
+    part.state === CHAT_PART_STATE.outputError;
+  const state: ToolStepState =
+    !done || awaitingAnswer ? "running" : errored ? "failed" : "done";
+  const outcome = OUTCOMES[name]?.(input, output, t, state);
+  const title = outcome?.title || toolLabel(name, t, state !== "running");
   // A failed step's error is English text for the model; the line says it
   // failed and the JSON details keep the text.
   const detail =
-    typeof output.error === "string" ||
-    part.state === CHAT_PART_STATE.outputError
+    outcome?.description ??
+    (errored
       ? t.display.toolSteps.failed
       : isMcpToolName(name)
         ? mcpToolDetail(input, output, t)
-        : DETAILS[name]?.(input, output, t) || "";
+        : DETAILS[name]?.(input, output, t) || "");
   return {
     title,
+    failed: errored || !!outcome?.failed,
     description: shortValue(detail, DESCRIPTION_MAX_LENGTH),
     references: toolReferences(name, output),
     subAgentProgress:

@@ -2,6 +2,18 @@ import type { Messages } from "../../src/shared/i18n";
 
 // Small label helpers shared by the tool detail lines.
 
+export type ToolRecord = Record<string, unknown>;
+
+export type ToolStepState = "running" | "done" | "failed";
+
+// What came of a step, for tools whose title says so rather than the tool's
+// name. `description` replaces the step line when given.
+export type ToolStepOutcome = {
+  title: string;
+  failed?: boolean;
+  description?: string;
+};
+
 export function shortValue(value: unknown, maxLength = 140) {
   const text = typeof value === "string" ? value : JSON.stringify(value);
   return text.length > maxLength ? `${text.slice(0, maxLength - 3)}...` : text;

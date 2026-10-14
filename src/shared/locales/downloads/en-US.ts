@@ -2,12 +2,34 @@ import { plural } from "../../plural";
 
 // The downloads tool's step lines in the side panel.
 export const downloadsEnUS = {
+  // The step title: what came of the download(s), once the step is done.
+  titles: {
+    downloaded: "Downloaded",
+    saved: "Saved",
+    failed: "Download failed",
+    downloading: "Downloading",
+    paused: "Download paused",
+    waiting: "Waiting for you",
+    canceled: "Canceled",
+    listed: "Listed downloads",
+    noneStarted: "No download started",
+  },
+  // The step title while it runs, by action.
+  running: {
+    download: "Downloading",
+    save: "Saving",
+    images: "Saving images",
+    list: "Checking downloads",
+    wait: "Waiting for a download",
+    cancel: "Canceling download",
+    retry: "Retrying download",
+  },
   status: {
-    completed: "Saved {name} · {size}",
-    failed: "Couldn't download {name}: {reason}",
-    canceled: "Canceled {name}",
-    in_progress: "Downloading {name} · {progress}",
-    paused: "Paused {name} · {progress}",
+    completed: "{name} · {size}",
+    failed: "{name}: {reason}",
+    canceled: "{name}",
+    in_progress: "{name} · {progress}",
+    paused: "{name} · {progress}",
     needs_confirmation:
       "The browser is holding {name}: keep it in the browser's downloads list",
     choosing_location:

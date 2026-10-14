@@ -369,11 +369,22 @@ test(
               ),
             30000,
           );
+          const tabId = await open("/page");
+          const [snapshot] = await run([{ name: "snapshot", args: { tabId } }]);
           fixture.script(
             stepper([
               LOAD,
               downloads("save", { content: CSV, filename: "totals.csv" }),
               download({ url: `${baseUrl}/missing.zip` }),
+              {
+                name: "act",
+                args: {
+                  tabId,
+                  steps: [
+                    { action: "click", ref: ref(snapshot, "Get invoice") },
+                  ],
+                },
+              },
             ]),
           );
           await typeComposer(panel, "Save the totals");
@@ -393,21 +404,21 @@ test(
             ),
           );
           const lines = await panel.call(() =>
-            [...document.querySelectorAll(".tool-card")].map((card) =>
-              card.innerText.replace(/\s+/g, " ").trim(),
+            // A failed step is styled like any failed step.
+            [...document.querySelectorAll(".tool-card")].map(
+              (card) =>
+                `${card.classList.contains("error") ? "[failed] " : ""}${card.innerText.replace(/\s+/g, " ").trim()}`,
             ),
           );
           assert.ok(
             lines.some((line) =>
-              /^Managed downloads Saved totals\.csv · 14 B totals\.csv$/.test(
-                line,
-              ),
+              /^Saved totals\.csv · 14 bytes totals\.csv$/.test(line),
             ),
             lines.join("\n"),
           );
           assert.ok(
             lines.some((line) =>
-              /Couldn't download missing\.zip: the file isn't on the server/.test(
+              /^\[failed\] Download failed missing\.zip: the file isn't on the server$/.test(
                 line,
               ),
             ),
@@ -423,6 +434,19 @@ test(
             return item?.filename;
           }, button);
           assert.match(shown, /\/totals\.csv$/);
+          // The act step names what it did and links the file its click
+          // downloaded.
+          const actCard = await poll(() =>
+            panel.call(() => {
+              const card = [...document.querySelectorAll(".tool-card")].find(
+                (item) =>
+                  item.querySelector('button[aria-label^="Show invoice-7"]'),
+              );
+              return card?.innerText.replace(/\s+/g, " ").trim();
+            }),
+          );
+          assert.match(actCard, /Clicked 1 element/i);
+          assert.doesNotMatch(actCard, /\bclick\b|Tab \d/);
           await delay(100);
         },
       );

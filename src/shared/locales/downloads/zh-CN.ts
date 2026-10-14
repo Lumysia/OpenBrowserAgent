@@ -2,12 +2,32 @@ import { plural } from "../../plural";
 import type { DownloadsLocaleMessages } from "./en-US";
 
 export const downloadsZhCN: DownloadsLocaleMessages = {
+  titles: {
+    downloaded: "已下载",
+    saved: "已保存",
+    failed: "下载失败",
+    downloading: "正在下载",
+    paused: "下载已暂停",
+    waiting: "等待你操作",
+    canceled: "已取消",
+    listed: "已列出下载",
+    noneStarted: "没有开始下载",
+  },
+  running: {
+    download: "正在下载",
+    save: "正在保存",
+    images: "正在保存图片",
+    list: "正在查看下载",
+    wait: "正在等待下载",
+    cancel: "正在取消下载",
+    retry: "正在重试下载",
+  },
   status: {
-    completed: "已保存 {name} · {size}",
-    failed: "无法下载 {name}：{reason}",
-    canceled: "已取消 {name}",
-    in_progress: "正在下载 {name} · {progress}",
-    paused: "已暂停 {name} · {progress}",
+    completed: "{name} · {size}",
+    failed: "{name}：{reason}",
+    canceled: "{name}",
+    in_progress: "{name} · {progress}",
+    paused: "{name} · {progress}",
     needs_confirmation: "浏览器拦下了 {name}：请在浏览器的下载列表中选择保留",
     choosing_location: "请在浏览器的“另存为”对话框中选择 {name} 的保存位置",
   },

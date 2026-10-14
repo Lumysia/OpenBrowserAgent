@@ -2,12 +2,32 @@ import { plural } from "../../plural";
 import type { DownloadsLocaleMessages } from "./en-US";
 
 export const downloadsPtBR: DownloadsLocaleMessages = {
+  titles: {
+    downloaded: "Download concluído",
+    saved: "Arquivo salvo",
+    failed: "Falha no download",
+    downloading: "Baixando",
+    paused: "Download pausado",
+    waiting: "Aguardando você",
+    canceled: "Download cancelado",
+    listed: "Downloads listados",
+    noneStarted: "Nenhum download iniciado",
+  },
+  running: {
+    download: "Baixando",
+    save: "Salvando",
+    images: "Salvando imagens",
+    list: "Consultando downloads",
+    wait: "Aguardando um download",
+    cancel: "Cancelando o download",
+    retry: "Tentando baixar de novo",
+  },
   status: {
-    completed: "{name} salvo · {size}",
-    failed: "Não foi possível baixar {name}: {reason}",
-    canceled: "{name} cancelado",
-    in_progress: "Baixando {name} · {progress}",
-    paused: "{name} pausado · {progress}",
+    completed: "{name} · {size}",
+    failed: "{name}: {reason}",
+    canceled: "{name}",
+    in_progress: "{name} · {progress}",
+    paused: "{name} · {progress}",
     needs_confirmation:
       "O navegador reteve {name}: mantenha-o na lista de downloads do navegador",
     choosing_location:

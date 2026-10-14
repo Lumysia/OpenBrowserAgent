@@ -14,6 +14,9 @@ import {
 import { DOWNLOAD_STATUS } from "../src/shared/downloads";
 import { getMessages } from "../src/shared/i18n";
 import { downloadsDetail } from "../entrypoints/sidepanel/download-tool-display";
+import { toolDisplay } from "../entrypoints/sidepanel/tool-part-detail";
+import { TOOL_NAME } from "../src/shared/tool-names";
+import { CHAT_PART_STATE, type ChatPart } from "../src/shared/types";
 import { downloadItem as item } from "./download-fixtures";
 
 test("file names stay inside the Downloads folder and are valid everywhere", () => {
@@ -216,18 +219,18 @@ test("the side panel line says what became of each download", () => {
   });
   const line = (output: Record<string, unknown>, input = {}) =>
     downloadsDetail(input, output, t);
-  assert.equal(line({ downloads: [record({})] }), "Saved report.pdf · 2.3 MB");
+  assert.equal(line({ downloads: [record({})] }), "report.pdf · 2.3 MB");
   assert.equal(
     line({
       downloads: [record({ status: "failed", error: "SERVER_BAD_CONTENT" })],
     }),
-    "Couldn't download report.pdf: the file isn't on the server",
+    "report.pdf: the file isn't on the server",
   );
   assert.equal(
     line({
       downloads: [record({ status: "failed", error: "NETWORK_TIMEOUT" })],
     }),
-    "Couldn't download report.pdf: network error",
+    "report.pdf: network error",
   );
   assert.equal(
     line({
@@ -235,7 +238,7 @@ test("the side panel line says what became of each download", () => {
         record({ status: "in_progress", bytes: 25, totalBytes: 100 }),
       ],
     }),
-    "Downloading report.pdf · 25%",
+    "report.pdf · 25%",
   );
   assert.equal(
     line({ downloads: [record({ warning: "html_page" })] }),
@@ -252,6 +255,98 @@ test("the side panel line says what became of each download", () => {
   );
   assert.equal(
     downloadsDetail({}, { downloads: [record({})] }, getMessages("zh-CN")),
-    "已保存 report.pdf · 2.3 MB",
+    "report.pdf · 2.3 MB",
+  );
+});
+
+test("the step title says what happened, and a failed download looks failed", () => {
+  const record = (values: Record<string, unknown>) => ({
+    id: 1,
+    name: "report.pdf",
+    status: "completed",
+    bytes: 2_400_000,
+    ...values,
+  });
+  const step = (
+    input: Record<string, unknown>,
+    output?: Record<string, unknown>,
+    state: string = CHAT_PART_STATE.outputAvailable,
+    language = "en-US",
+  ) => {
+    const t = getMessages(language);
+    try {
+      const { title, description, failed } = toolDisplay(
+        TOOL_NAME.downloads,
+        { id: "p", type: "tool", state, input, output } as ChatPart,
+        t,
+      );
+      return [title, description, failed];
+    } finally {
+      getMessages("en-US");
+    }
+  };
+  const download = { action: "download", url: "https://x.test/report.pdf" };
+  const done = (input: Record<string, unknown>, ...records: unknown[]) =>
+    step(input, { action: input.action, downloads: records });
+  assert.deepEqual(done(download, record({})), [
+    "Downloaded",
+    "report.pdf · 2.3 MB",
+    false,
+  ]);
+  assert.deepEqual(done({ action: "save", filename: "a.csv" }, record({})), [
+    "Saved",
+    "report.pdf · 2.3 MB",
+    false,
+  ]);
+  assert.deepEqual(
+    done(download, record({ status: "failed", error: "NETWORK_FAILED" })),
+    ["Download failed", "report.pdf: network error", true],
+  );
+  assert.deepEqual(
+    done(download, record({ status: "in_progress", bytes: 1, totalBytes: 4 })),
+    ["Downloading", "report.pdf · 25%", false],
+  );
+  assert.equal(
+    done(download, record({ status: "choosing_location" }))[0],
+    "Waiting for you",
+  );
+  assert.equal(
+    done(download, record({ status: "needs_confirmation" }))[0],
+    "Waiting for you",
+  );
+  assert.equal(
+    done({ action: "cancel", id: 1 }, record({ status: "canceled" }))[0],
+    "Canceled",
+  );
+  // The download that needs the user most names the step.
+  assert.equal(
+    done(download, record({}), record({ id: 2, status: "failed" }))[0],
+    "Download failed",
+  );
+  assert.deepEqual(done({ action: "list" }, record({})), [
+    "Listed downloads",
+    "1 download",
+    false,
+  ]);
+  assert.equal(done({ action: "wait" })[0], "No download started");
+  assert.deepEqual(step(download, undefined, CHAT_PART_STATE.inputAvailable), [
+    "Downloading",
+    "https://x.test/report.pdf",
+    false,
+  ]);
+  // A tool error: the title says what failed; the model's text stays in
+  // the details.
+  assert.deepEqual(
+    step(download, { error: "url must be an http or https URL of the file." }),
+    ["Download failed", "https://x.test/report.pdf", true],
+  );
+  assert.deepEqual(
+    step(
+      download,
+      { action: "download", downloads: [record({})] },
+      CHAT_PART_STATE.outputAvailable,
+      "zh-CN",
+    ),
+    ["已下载", "report.pdf · 2.3 MB", false],
   );
 });

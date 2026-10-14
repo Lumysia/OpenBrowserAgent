@@ -6,13 +6,22 @@ import {
   DOWNLOAD_STATUS,
   downloadRecords,
   type DownloadRecord,
+  type DownloadStatus,
 } from "../../src/shared/downloads";
 import { formatBytes } from "../../src/shared/format";
 import { formatCount, type Messages } from "../../src/shared/i18n";
-import { actionLabel, compactJoin, stringValue } from "./tool-detail-format";
+import { formatToolMessage } from "./format";
+import {
+  actionLabel,
+  compactJoin,
+  knownLabel,
+  stringValue,
+  type ToolRecord,
+  type ToolStepState,
+  type ToolStepOutcome,
+} from "./tool-detail-format";
 import { ToolReferenceButton, type ToolReference } from "./tool-references";
 
-type ToolRecord = Record<string, unknown>;
 type Reason = keyof Messages["downloads"]["reasons"];
 
 const REASONS: Array<[RegExp, Reason]> = [
@@ -27,13 +36,6 @@ const REASONS: Array<[RegExp, Reason]> = [
   [/^FILE_/, "disk"],
 ];
 
-function fill(template: string, values: Record<string, string>) {
-  return Object.entries(values).reduce(
-    (text, [key, value]) => text.replaceAll(`{${key}}`, value),
-    template,
-  );
-}
-
 function progress(record: DownloadRecord) {
   if (!record.totalBytes) return formatBytes(record.bytes || 0);
   return `${Math.floor(((record.bytes || 0) / record.totalBytes) * 100)}%`;
@@ -44,18 +46,76 @@ export function downloadSummary(record: DownloadRecord, t: Messages) {
   const messages = t.downloads;
   const name = record.name;
   if (record.status === DOWNLOAD_STATUS.completed && record.exists === false)
-    return fill(messages.moved, { name });
+    return formatToolMessage(messages.moved, { name });
   if (record.status === DOWNLOAD_STATUS.completed && record.warning)
-    return fill(messages.htmlPage, { name });
+    return formatToolMessage(messages.htmlPage, { name });
   const reason =
     REASONS.find(([pattern]) => pattern.test(record.error || ""))?.[1] ||
     "other";
-  return fill(messages.status[record.status] || "", {
+  return formatToolMessage(messages.status[record.status] || "", {
     name,
     size: formatBytes(record.bytes || 0),
     progress: progress(record),
     reason: messages.reasons[reason],
   });
+}
+
+type Title = keyof Messages["downloads"]["titles"];
+
+// The status a step's title names when it handled several downloads: the
+// one the user most needs to know about first.
+const TITLE_BY_STATUS: Array<[DownloadStatus, Title]> = [
+  [DOWNLOAD_STATUS.failed, "failed"],
+  [DOWNLOAD_STATUS.needsConfirmation, "waiting"],
+  [DOWNLOAD_STATUS.choosingLocation, "waiting"],
+  [DOWNLOAD_STATUS.inProgress, "downloading"],
+  [DOWNLOAD_STATUS.paused, "paused"],
+  [DOWNLOAD_STATUS.canceled, "canceled"],
+];
+
+// The downloads tool's step title: what happened ("Downloaded", "Download
+// failed", "Waiting for you"), not the tool's name.
+export function downloadsOutcome(
+  input: ToolRecord,
+  output: ToolRecord,
+  t: Messages,
+  state: ToolStepState,
+): ToolStepOutcome | undefined {
+  const titles = t.downloads.titles;
+  const action = stringValue(input.action);
+  const target = downloadTarget(input);
+  if (state === "running") {
+    const title = knownLabel(t.downloads.running, action);
+    return title ? { title, description: target } : undefined;
+  }
+  if (state === "failed")
+    return action === DOWNLOAD_ACTION.list || action === DOWNLOAD_ACTION.cancel
+      ? undefined
+      : { title: titles.failed, failed: true, description: target };
+  // The output's action: a run that ended before the tool returned has none.
+  if (output.action === DOWNLOAD_ACTION.list) return { title: titles.listed };
+  const records = downloadRecords(output);
+  if (!records.length)
+    return output.action === DOWNLOAD_ACTION.wait
+      ? { title: titles.noneStarted }
+      : undefined;
+  const key =
+    TITLE_BY_STATUS.find(([status]) =>
+      records.some((record) => record.status === status),
+    )?.[1] ||
+    (action === DOWNLOAD_ACTION.save || action === DOWNLOAD_ACTION.images
+      ? "saved"
+      : "downloaded");
+  return { title: titles[key], failed: key === "failed" };
+}
+
+// The file or address a step works on, before its outcome is known.
+function downloadTarget(input: ToolRecord) {
+  return (
+    stringValue(input.filename) ||
+    stringValue(input.url) ||
+    stringValue(input.source)
+  );
 }
 
 // The downloads tool's step line.
@@ -71,12 +131,7 @@ export function downloadsDetail(
       : t.downloads.none;
   if (records.length)
     return records.map((record) => downloadSummary(record, t)).join(" · ");
-  return compactJoin([
-    actionLabel(input.action, t),
-    stringValue(input.filename) ||
-      stringValue(input.url) ||
-      stringValue(input.source),
-  ]);
+  return compactJoin([actionLabel(input.action, t), downloadTarget(input)]);
 }
 
 // Records whose file is on this device: the same download id with the same
@@ -159,7 +214,9 @@ function showInFolder(record: DownloadRecord, t: Messages): ToolReference {
   return {
     title: record.name,
     icon: <FolderOpen size={14} />,
-    label: fill(t.downloads.showFileInFolder, { name: record.name }),
+    label: formatToolMessage(t.downloads.showFileInFolder, {
+      name: record.name,
+    }),
     action: () => getBrowserApi().downloads.show(record.id),
   };
 }

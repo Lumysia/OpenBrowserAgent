@@ -2,12 +2,32 @@ import { plural } from "../../plural";
 import type { DownloadsLocaleMessages } from "./en-US";
 
 export const downloadsJaJP: DownloadsLocaleMessages = {
+  titles: {
+    downloaded: "ダウンロードしました",
+    saved: "保存しました",
+    failed: "ダウンロードに失敗しました",
+    downloading: "ダウンロード中",
+    paused: "ダウンロードを一時停止中",
+    waiting: "操作を待っています",
+    canceled: "キャンセルしました",
+    listed: "ダウンロード一覧を確認しました",
+    noneStarted: "ダウンロードは開始されませんでした",
+  },
+  running: {
+    download: "ダウンロード中",
+    save: "保存中",
+    images: "画像を保存中",
+    list: "ダウンロードを確認中",
+    wait: "ダウンロードを待機中",
+    cancel: "ダウンロードをキャンセル中",
+    retry: "ダウンロードを再試行中",
+  },
   status: {
-    completed: "{name} を保存しました · {size}",
-    failed: "{name} をダウンロードできませんでした: {reason}",
-    canceled: "{name} をキャンセルしました",
-    in_progress: "{name} をダウンロード中 · {progress}",
-    paused: "{name} を一時停止中 · {progress}",
+    completed: "{name} · {size}",
+    failed: "{name}: {reason}",
+    canceled: "{name}",
+    in_progress: "{name} · {progress}",
+    paused: "{name} · {progress}",
     needs_confirmation:
       "ブラウザーが {name} を保留しています: ブラウザーのダウンロード一覧で保存を選んでください",
     choosing_location:
