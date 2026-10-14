@@ -248,15 +248,14 @@ export function SidepanelApp() {
     createChat,
   );
 
-  useActiveChatCleanup(
-    activeChatId,
-    clearUploadedAttachments,
-    setEditingMessage,
-    setSentAttachmentPreviews,
-    clearComposerContext,
-    setSelectedSkills,
-    setOpenMenu,
-  );
+  useActiveChatCleanup(activeChatId, () => {
+    clearUploadedAttachments();
+    setEditingMessage(null);
+    setSentAttachmentPreviews({});
+    clearComposerContext();
+    setSelectedSkills([]);
+    setOpenMenu(null);
+  });
 
   useAutoScroll(
     messagesRef,

@@ -16,7 +16,7 @@ import {
 import { checkSyncBackend, syncNow } from "../../src/shared/sync/client";
 import { openOrFocusOptions } from "../../src/shared/tab-navigation";
 import type { SyncBackendConfig } from "../../src/shared/types";
-import { languageLabels } from "../../src/shared/i18n";
+import { DEFAULT_LANGUAGE, languageLabels } from "../../src/shared/i18n";
 import {
   Badge,
   Button,
@@ -249,7 +249,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                   >
                     <div className="bootstrap-actions">
                       <Select
-                        value={language || "en-US"}
+                        value={language || DEFAULT_LANGUAGE}
                         onValueChange={setLanguage}
                       >
                         <SelectTrigger>

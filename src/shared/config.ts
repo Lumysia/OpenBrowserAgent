@@ -25,6 +25,10 @@ export const STREAM_REVEAL_STEP_TINY = 2;
 export const STREAM_REVEAL_MAX_PENDING_CHARS = 600;
 // How close to the bottom counts as "at the bottom" for following output.
 export const AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 48;
+// Closer than this is exactly at the bottom (scroll positions round).
+export const AUTO_SCROLL_AT_BOTTOM_PX = 2;
+// A scroll up by less than this is rounding, not the reader moving.
+export const AUTO_SCROLL_SUBPIXEL_PX = 1;
 export const AUTO_SCROLL_STREAM_THROTTLE_MS = 180;
 export const ESTIMATED_CHARS_PER_TOKEN = 4;
 

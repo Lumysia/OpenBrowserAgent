@@ -6,6 +6,7 @@ import type {
   ChatSummary,
   Preferences,
   RunMetrics,
+  SendMessagesBody,
   SendMessagesRequest,
   QuestionToolAnswer,
   UploadedAttachment,
@@ -16,6 +17,7 @@ import { RUN_STOP_REASON } from "../../src/shared/run-stop";
 import { createStreamHandlers } from "./stream-handlers";
 import type { ActiveStreamMap } from "./sidepanel-menu-state";
 import { useAutoRetryStream } from "./sidepanel-effects";
+import { sendMessagesBody } from "./send-message-plan";
 import { closedChatIds } from "./chat-state-actions";
 import type { ChatUpdater } from "./use-chats";
 import { resumableAssistantMessage, type StoppedRuns } from "./run-state";
@@ -60,6 +62,7 @@ export function useParallelChatStreams({
   );
   const lastStreamActivityRef = useRef<Record<string, number>>({});
   const activeStreamsRef = useRef<ActiveStreamMap>({});
+  const streamBodiesRef = useRef<Record<string, SendMessagesBody>>({});
   const streamHandlers = useMemo(
     () => createStreamHandlers(updateChat),
     [updateChat],
@@ -89,10 +92,16 @@ export function useParallelChatStreams({
     activeStreamsRef,
     lastStreamActivityRef,
     getChat,
-    preferences,
-    language,
-    uploadedAttachments,
-    agent,
+    // A run this panel started is sent again as it was; one it attached to
+    // (started before the panel opened) with the panel's current choices.
+    bodyFor: (chatId) =>
+      streamBodiesRef.current[chatId] ??
+      sendMessagesBody(getChat(chatId), {
+        preferences,
+        agent,
+        language,
+        uploadedAttachments,
+      }),
     appendToAssistant: streamHandlers.appendToAssistant,
     startStream,
   });
@@ -115,6 +124,7 @@ export function useParallelChatStreams({
   }, [activeStreams, currentChat, setActiveStreams, stoppedRuns]);
 
   function startStream(request: SendMessagesRequest, targetMessageId: string) {
+    streamBodiesRef.current[request.chatId] = request.body;
     startStreamAction({
       request,
       targetMessageId,
@@ -251,6 +261,7 @@ export function useParallelChatStreams({
   }
 
   function markStreamFinished(chatId: string) {
+    delete streamBodiesRef.current[chatId];
     if (activeChatIdRef.current === chatId) return;
     setUnreadCompletedChats((items) => ({ ...items, [chatId]: true }));
   }

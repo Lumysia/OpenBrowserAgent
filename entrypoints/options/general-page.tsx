@@ -9,7 +9,11 @@ import {
   Wrench,
 } from "lucide-react";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
-import { getMessages, languageLabels } from "../../src/shared/i18n";
+import {
+  DEFAULT_LANGUAGE,
+  getMessages,
+  languageLabels,
+} from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import {
   Card,
@@ -53,7 +57,10 @@ export function GeneralPage() {
           <CardDescription>{t.options.languageDescription}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Select value={language || "en-US"} onValueChange={setLanguage}>
+          <Select
+            value={language || DEFAULT_LANGUAGE}
+            onValueChange={setLanguage}
+          >
             <SelectTrigger aria-label={t.common.language}>
               <SelectValue />
             </SelectTrigger>
