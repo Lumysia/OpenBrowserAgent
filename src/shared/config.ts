@@ -67,6 +67,9 @@ export const BINARY_STRING_CHUNK_SIZE = 0x8000;
 
 export const SELECTED_ELEMENT_HTML_MAX_CHARS = 4_000;
 export const TAB_CONTENT_MAX_CHARS = 12_000;
+// What a chat keeps of a source a tool found.
+export const SOURCE_TITLE_MAX_CHARS = 160;
+export const SOURCE_SNIPPET_MAX_CHARS = 800;
 
 export const COPY_FEEDBACK_MS = 1_800;
 export const QUICK_FEEDBACK_MS = 1_200;

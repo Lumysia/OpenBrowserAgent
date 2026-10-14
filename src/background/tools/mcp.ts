@@ -1,4 +1,4 @@
-import { mcpResultSources } from "../../shared/chat-sources";
+import { mcpResultSources } from "../../shared/mcp-sources";
 import { isMcpServerTested } from "../../shared/mcp";
 import { TOOL_NAME } from "../../shared/tool-names";
 import type { McpServerConfig } from "../../shared/types";
