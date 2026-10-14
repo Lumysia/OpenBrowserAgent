@@ -6,12 +6,12 @@
 // user's own pointer and clicks count: page events are never trusted.
 import { getBrowserApi } from "../shared/browser-api";
 import { isExtensionContextValid } from "../shared/extension-context";
-import type { PageToastTheme } from "../shared/page-toast";
+import { STORAGE_KEYS } from "../shared/storage-keys";
 import {
   MIN_VIDEO_SIZE,
   VIDEO_SUBTITLES_MESSAGE,
   videoSubtitlesShared,
-  type VideoButtonLabels,
+  type VideoButtonConfig,
 } from "../shared/video-subtitles/protocol";
 import { iconSvg } from "../page-toast/icons";
 import { applyTheme } from "../ui/apply-theme";
@@ -41,7 +41,7 @@ export function installVideoButton() {
   let host: HTMLElement | undefined;
   let root: HTMLElement | undefined;
   let button: HTMLButtonElement | undefined;
-  let labels: VideoButtonLabels | undefined;
+  let config: VideoButtonConfig | undefined;
   let current: HTMLVideoElement | undefined;
   let idleTimer: number | undefined;
   let frame: number | undefined;
@@ -89,11 +89,13 @@ export function installVideoButton() {
       button.addEventListener(type, (event) => event.stopPropagation());
     root.append(button);
     shadow.append(style, root);
-    void send({ type: VIDEO_SUBTITLES_MESSAGE.labels }).then((reply) => {
-      const value = reply as
-        { labels?: VideoButtonLabels; theme?: PageToastTheme } | undefined;
-      if (value?.theme && root) applyTheme(root, value.theme);
-      labels = value?.labels;
+  }
+
+  // The settings it follows, again when they change.
+  function configure() {
+    void send({ type: VIDEO_SUBTITLES_MESSAGE.config }).then((reply) => {
+      config = reply as VideoButtonConfig | undefined;
+      if (config && root) applyTheme(root, config.theme);
       update();
     });
   }
@@ -109,6 +111,7 @@ export function installVideoButton() {
     if (!button) return;
     const video = current;
     const rect = video?.getBoundingClientRect();
+    const labels = config?.enabled ? config.labels : undefined;
     if (!video?.isConnected || !rect || !labels) {
       button.hidden = true;
       return;
@@ -147,7 +150,10 @@ export function installVideoButton() {
       return;
     }
     current = video;
-    if (!host) create();
+    if (!host) {
+      create();
+      configure();
+    }
     update();
     clearTimeout(idleTimer);
     idleTimer = window.setTimeout(() => {
@@ -177,4 +183,11 @@ export function installVideoButton() {
   document.addEventListener("fullscreenchange", () => update());
   // The subtitle script says when a video starts or stops.
   shared.listeners.add(update);
+  getBrowserApi().storage.onChanged.addListener((changes) => {
+    if (
+      host &&
+      (changes[STORAGE_KEYS.preferences] || changes[STORAGE_KEYS.language])
+    )
+      configure();
+  });
 }

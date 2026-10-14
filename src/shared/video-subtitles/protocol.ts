@@ -20,8 +20,9 @@ export const VIDEO_SUBTITLES_MESSAGE = {
   stopAll: "video-subtitles:stop-all",
   // Button -> background: the user pressed the button on a video.
   button: "video-subtitles:button",
-  // Button -> background: the button's labels, in the extension's language.
-  labels: "video-subtitles:labels",
+  // Button -> background: whether the button is on, its labels in the
+  // extension's language and its theme. Answers VideoButtonConfig.
+  config: "video-subtitles:button-config",
   // Page -> background: watch the caption files the page loads from now on
   // (see main-world.ts). Answers `{ ok: boolean }`.
   observe: "video-subtitles:observe",
@@ -56,7 +57,11 @@ export type VideoSubtitlesObserveMessage = {
   event: string;
 };
 
-export type VideoButtonLabels = { start: string; stop: string };
+export type VideoButtonConfig = {
+  enabled: boolean;
+  labels: { start: string; stop: string };
+  theme: PageToastTheme;
+};
 
 // Shared between the extension's scripts in a frame (they share the
 // isolated world; page scripts can't reach it): the video the user last

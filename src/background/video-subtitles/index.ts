@@ -10,7 +10,7 @@ import {
   MIN_VIDEO_SIZE,
   VIDEO_SUBTITLES_MESSAGE,
   VIDEO_SUBTITLES_SCRIPT,
-  type VideoButtonLabels,
+  type VideoButtonConfig,
   type VideoSubtitlesNotes,
   type VideoSubtitlesObserveMessage,
   type VideoSubtitlesStartAllMessage,
@@ -63,8 +63,8 @@ export function handleVideoSubtitlesMessage(
         );
       else sendResponse({ ok: false });
       return true;
-    case VIDEO_SUBTITLES_MESSAGE.labels:
-      void buttonLabels().then(sendResponse);
+    case VIDEO_SUBTITLES_MESSAGE.config:
+      void buttonConfig().then(sendResponse);
       return true;
     case VIDEO_SUBTITLES_MESSAGE.observe: {
       const event = (message as Partial<VideoSubtitlesObserveMessage>).event;
@@ -194,15 +194,17 @@ async function pageNotes(): Promise<VideoSubtitlesNotes> {
   };
 }
 
-async function buttonLabels() {
+async function buttonConfig() {
   const [preferences, language] = await Promise.all([
     storage.preferences.get(),
     storage.language.get(),
   ]);
   const { start, stop } = getPageTranslateMessages(language).subtitles;
-  const labels: VideoButtonLabels = { start, stop };
-  return {
-    labels,
+  const config: VideoButtonConfig = {
+    enabled: normalizePageTranslateSettings(preferences.pageTranslate)
+      .videoButton,
+    labels: { start, stop },
     theme: pageToastTheme(preferences.colorScheme, preferences.accentColor),
   };
+  return config;
 }

@@ -129,6 +129,12 @@ test(
           assert.equal(pressed.label, "Hide translated subtitles");
           await click(page, pressed);
           await poll(async () => (await subtitles(page)) === null);
+          await poll(async () => (await videoButton(page))?.pressed === false);
+          // Turned off in the settings, it goes from the open page at once.
+          await session.setPreferences({ videoButton: false });
+          await pointAtVideo(page);
+          await poll(async () => (await videoButton(page)) === null);
+          await session.setPreferences({ videoButton: true });
           await page.send("Page.close");
         },
       );
