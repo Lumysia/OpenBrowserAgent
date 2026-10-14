@@ -10,37 +10,47 @@ import {
 } from "./page-translate-fixture.mjs";
 
 // Translations keep the page's layout (tests/fixtures/page-translate/
-// layout.html): boxes that the page sizes stay as they were, menus and
-// buttons are left alone unless the user asks for them, and translation-
-// only display changes the text, not the elements.
+// layout.html): the page may grow taller with the translations, but boxes
+// that the page sizes keep their size, nothing sticks out of its box or
+// scrolls the page sideways, menus and buttons are left alone unless the
+// user asks for them, and translation-only display changes the text, not
+// the elements.
 
-// Boxes the page designed: their size, and their place where nothing above
-// them is translated.
+// Boxes the page designed, and what of them stays: `place` (where and how
+// big: nothing above them is translated), `size` (how big; they may move
+// down) or `width` (they may grow taller).
 const FIXED = {
-  header: { selector: "#site-header", place: true },
-  tabs: { selector: "#tabs", place: true },
-  activeTab: { selector: "#tabs [aria-selected=true]", place: true },
-  titlebar: { selector: "#titlebar", place: true },
-  share: { selector: "#share", place: true },
-  infobox: { selector: "#infobox", width: true },
-  cardTitle: { selector: "#card-title" },
-  badge: { selector: "#badge" },
-  chips: { selector: "#chips" },
-  choices: { selector: "#choices" },
-  climateBox: { selector: "#climate-box", width: true },
-  sister: { selector: "#sisters li" },
-  more: { selector: "#more" },
-  stories: { selector: "#stories", width: true },
-  meta1: { selector: "#meta-1" },
-  meta2: { selector: "#meta-2" },
-  meta3: { selector: "#meta-3" },
-  thumb1: { selector: "#thumb-1" },
-  thumb2: { selector: "#thumb-2" },
-  thumb3: { selector: "#thumb-3" },
-  clampedHeadline: { selector: "#headline-3" },
-  navbox: { selector: "#navbox" },
-  refs: { selector: "#refs", width: true },
-  footer: { selector: "#site-footer" },
+  header: { selector: "#site-header", keep: "place" },
+  tabs: { selector: "#tabs", keep: "place" },
+  activeTab: { selector: "#tabs [aria-selected=true]", keep: "place" },
+  titlebar: { selector: "#titlebar", keep: "width" },
+  share: { selector: "#share", keep: "size" },
+  infobox: { selector: "#infobox", keep: "width" },
+  cardTitle: { selector: "#card-title", keep: "size" },
+  badge: { selector: "#badge", keep: "size" },
+  chips: { selector: "#chips", keep: "width" },
+  choices: { selector: "#choices", keep: "size" },
+  climateBox: { selector: "#climate-box", keep: "width" },
+  sister: { selector: "#sisters li", keep: "size" },
+  more: { selector: "#more", keep: "size" },
+  panelTop: { selector: "#panel-top", keep: "width" },
+  panelPicks: { selector: "#panel-picks", keep: "width" },
+  stories: { selector: "#stories", keep: "width" },
+  meta1: { selector: "#meta-1", keep: "size" },
+  meta2: { selector: "#meta-2", keep: "size" },
+  meta3: { selector: "#meta-3", keep: "size" },
+  thumb1: { selector: "#thumb-1", keep: "size" },
+  thumb2: { selector: "#thumb-2", keep: "size" },
+  thumb3: { selector: "#thumb-3", keep: "size" },
+  clampedHeadline: { selector: "#headline-3", keep: "size" },
+  navbox: { selector: "#navbox", keep: "size" },
+  refs: { selector: "#refs", keep: "width" },
+  footer: { selector: "#site-footer", keep: "size" },
+};
+const KEYS = {
+  place: ["x", "y", "width", "height"],
+  size: ["x", "width", "height"],
+  width: ["x", "width"],
 };
 const TOLERANCE_PX = 2;
 // Text that only menus, buttons, tabs, navigation and the footer have.
@@ -73,15 +83,15 @@ function layoutOf(page) {
   }, FIXED);
 }
 
-// The boxes that moved or changed size, with how.
+// The boxes that moved or changed size where they shouldn't, with how.
 function changes(before, after) {
   const moved = {};
-  for (const [name, rule] of Object.entries(FIXED)) {
+  for (const [name, { keep }] of Object.entries(FIXED)) {
     const a = before.boxes[name];
     const b = after.boxes[name];
-    const keys = rule.width ? ["x", "width"] : ["x", "width", "height"];
-    if (rule.place) keys.push("y");
-    const diff = keys.filter((key) => Math.abs(a[key] - b[key]) > TOLERANCE_PX);
+    const diff = KEYS[keep].filter(
+      (key) => Math.abs(a[key] - b[key]) > TOLERANCE_PX,
+    );
     if (diff.length)
       moved[name] = Object.fromEntries(
         diff.map((key) => [key, b[key] - a[key]]),
@@ -90,14 +100,70 @@ function changes(before, after) {
   return moved;
 }
 
-// Translated, or shown as a tooltip, in the element `selector`.
+// Translations that stick out of the element they are in (the rule before
+// a translation sits in the margin, outside its text's edge).
+function overflowing(page) {
+  return page.call(() =>
+    [...document.querySelectorAll("oba-translation")].flatMap((element) => {
+      const box = element.getBoundingClientRect();
+      const room = element.parentElement.getBoundingClientRect();
+      const mark = -parseFloat(getComputedStyle(element).marginInlineStart);
+      return box.right > room.right + 1 ||
+        box.bottom > room.bottom + 1 ||
+        box.left < room.left - 1 - Math.max(0, mark)
+        ? [element.textContent.slice(0, 30)]
+        : [];
+    }),
+  );
+}
+
+// The translation of the element `selector`: shown in it or right after
+// it, or as a tooltip of it or of an element around it or in it.
 function shownIn(page, selector) {
   return page.call((selector) => {
     const element = document.querySelector(selector);
-    const translation = element.querySelector("oba-translation");
+    const after = element.nextElementSibling;
+    const translation =
+      element.querySelector("oba-translation") ??
+      (after?.matches("oba-translation") ? after : null);
     if (translation) return translation.textContent;
-    const titled = element.closest("[title]");
+    const titled =
+      element.closest("[title]") ?? element.querySelector("[title]");
     return titled?.title.startsWith("FR:") ? titled.title : undefined;
+  }, selector);
+}
+
+// How the translation right after the element `selector` sits next to its
+// source text, and how it looks.
+function besideSource(page, selector) {
+  return page.call((selector) => {
+    const source = document.querySelector(selector);
+    const translation = source.nextElementSibling;
+    if (!translation?.matches("oba-translation")) return undefined;
+    const range = document.createRange();
+    const text = [...source.childNodes].find(
+      (node) => node.nodeType === 3 && node.data.trim(),
+    );
+    range.selectNodeContents(text);
+    const from = range.getClientRects()[0];
+    range.selectNodeContents(translation);
+    const to = range.getClientRects()[0];
+    const style = getComputedStyle(translation);
+    const sourceStyle = getComputedStyle(source);
+    return {
+      text: translation.textContent.slice(0, 15),
+      offset: Math.round(to.left - from.left),
+      below: to.top >= from.bottom - 1,
+      sameLook:
+        style.color === sourceStyle.color &&
+        style.fontWeight === sourceStyle.fontWeight &&
+        style.fontSize === sourceStyle.fontSize,
+      link: !!(translation.closest("a") || translation.querySelector("a")),
+      icons: translation.querySelectorAll("i, svg, img").length,
+      clamp: style.webkitLineClamp,
+      title: translation.title,
+      mark: translation.hasAttribute("data-oba-mark"),
+    };
   }, selector);
 }
 
@@ -144,44 +210,96 @@ test(
           assert.deepEqual(changes(before, after), {});
           assert.equal(after.scrollWidth, before.scrollWidth);
           assert.ok(after.climateFits, "the table stays in its box");
-          // Room to spare: under the paragraph. None: on hover.
-          assert.match(
-            await page.call(
-              () =>
-                document.querySelector("#intro > oba-translation")?.textContent,
-            ),
-            /^FR: Read the field guide/,
-          );
-          assert.match(
-            await page.call(() => document.querySelector("#card-title").title),
-            /^FR: A very long card title/,
-          );
-          // The badge is a box of its own between blocks: on hover.
-          assert.match(await shownIn(page, "#badge"), /^FR: Recommended/);
-          // A headline link: its translation is in it, at the source text's
-          // edge, without the icon after it. A clamped one: on hover, in
-          // full.
-          const headline = await page.call(() => {
-            const link = document.querySelector("#headline-1");
-            const translation = link.querySelector("oba-translation");
+          assert.deepEqual(await overflowing(page), []);
+          // Room to spare: under the paragraph, at its text's edge. The page's
+          // 16px margin is too narrow for the rule.
+          const intro = await page.call(() => {
+            const translation = document.querySelector(
+              "#intro > oba-translation",
+            );
             const range = document.createRange();
-            range.selectNodeContents(link.firstChild);
-            const source = range.getClientRects()[0];
+            range.selectNodeContents(
+              document.querySelector("#intro").firstChild,
+            );
+            const from = range.getClientRects()[0];
             range.selectNodeContents(translation);
             return {
-              text: translation.textContent,
-              icons: translation.querySelectorAll("i, svg, img").length,
-              offset: Math.round(range.getClientRects()[0].left - source.left),
+              text: translation.textContent.slice(0, 24),
+              offset: Math.round(range.getClientRects()[0].left - from.left),
+              mark: translation.hasAttribute("data-oba-mark"),
             };
           });
-          assert.deepEqual(
-            { ...headline, text: headline.text.slice(0, 15) },
-            { text: "FR: Snow closes", icons: 0, offset: 0 },
-          );
-          assert.match(
-            await shownIn(page, "#headline-3"),
-            /^FR: A long walk.* dogs$/,
-          );
+          assert.deepEqual(intro, {
+            text: "FR: Read the field guide",
+            offset: 0,
+            mark: false,
+          });
+          // A clamped title: its translation after it, clamped the same way,
+          // whole on hover.
+          const cardTitle = await besideSource(page, "#card-title");
+          assert.equal(cardTitle.clamp, "2");
+          assert.match(cardTitle.title, /^FR: A very long card title.* deep$/);
+          // A box of its own between blocks (a badge): after it.
+          assert.match(await shownIn(page, "#badge"), /^FR: Recommended/);
+          // A headline link: its translation right after it, at the source
+          // text's edge, in its colour, not a second link, without the icon
+          // after it, and without the rule inside a card.
+          assert.deepEqual(await besideSource(page, "#headline-1"), {
+            text: "FR: Snow closes",
+            offset: 0,
+            below: true,
+            sameLook: true,
+            link: false,
+            icons: 0,
+            clamp: "none",
+            title: "",
+            mark: false,
+          });
+          // A clamped headline: shown too, clamped the same way.
+          const clamped = await besideSource(page, "#headline-3");
+          assert.equal(clamped.clamp, "2");
+          assert.match(clamped.title, /^FR: A long walk.* dogs$/);
+          // Sibling section headings look alike: under the source, in its
+          // font and colour, above the heading's rule.
+          for (const selector of ["#head-link", "#head-flex"]) {
+            const heading = await page.call((selector) => {
+              const source = document.querySelector(selector);
+              const translation =
+                source.querySelector("oba-translation") ??
+                source.nextElementSibling;
+              const range = document.createRange();
+              range.selectNodeContents(source.firstChild);
+              const from = range.getClientRects()[0];
+              const to = translation.getBoundingClientRect();
+              const head = source
+                .closest(".panel-head")
+                .getBoundingClientRect();
+              const look = (element) => {
+                const style = getComputedStyle(element);
+                return `${style.color} ${style.fontWeight} ${style.fontSize}`;
+              };
+              return {
+                text: translation.textContent.slice(0, 4),
+                offset: Math.round(to.left - from.left),
+                below: to.top >= from.bottom - 1,
+                inHead: to.bottom <= head.bottom,
+                sameLook: look(translation) === look(source),
+                link: !!translation.querySelector("a"),
+              };
+            }, selector);
+            assert.deepEqual(
+              heading,
+              {
+                text: "FR: ",
+                offset: 0,
+                below: true,
+                inHead: true,
+                sameLook: true,
+                link: false,
+              },
+              selector,
+            );
+          }
           assert.equal(await shownIn(page, "#more"), undefined);
           assert.doesNotMatch(sent(), LABEL_TEXT);
           // The skip link is hidden: nothing is added for it.
@@ -216,12 +334,14 @@ test(
           await delay(300);
           assert.match(sent(), /Trail maps/);
           const after = await layoutOf(page);
-          // The navigation box is a list of links in running text: it may
-          // take another line.
-          const { navbox, ...moved } = changes(before, after);
+          // The navigation box (links in running text) and the footer (a
+          // grid of links) may grow taller.
+          const { navbox, footer, ...moved } = changes(before, after);
           assert.deepEqual(moved, {});
-          assert.deepEqual(Object.keys(navbox || {}), navbox ? ["height"] : []);
+          for (const box of [navbox, footer])
+            assert.deepEqual(Object.keys(box || {}), box ? ["height"] : []);
           assert.equal(after.scrollWidth, before.scrollWidth);
+          assert.deepEqual(await overflowing(page), []);
         },
       );
 

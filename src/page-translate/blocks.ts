@@ -25,6 +25,11 @@ export type Paragraph = {
   // line.
   inline: boolean;
   source: Serialized;
+  // The element around all of the text and nothing else (a headline link,
+  // a link alone in a list item): `parent` is inside it. The translation
+  // goes after it, not into it: it isn't a second link, isn't cut by the
+  // element's box and takes no part in its layout.
+  wrapper?: Element;
 };
 
 // Short text in other blocks than headings and paragraphs reads inline.
@@ -90,6 +95,7 @@ function makeParagraph(
   parent: Element,
   root: Element | ShadowRoot,
   nodes: Node[],
+  wrapper?: Element,
 ): Paragraph | undefined {
   if (!nodes.length) return undefined;
   // Inside a shadow root the translation goes after the nodes, in the root.
@@ -103,12 +109,11 @@ function makeParagraph(
         node.nodeType === 8,
     );
   const trimmed = trimRun(nodes);
-  // A lone inline element between blocks (a headline link in a card) is
-  // laid out as a box of its own: its translation goes inside it, after its
-  // text, and stays part of it.
+  // One element holding all of the text (a headline link, a link alone in
+  // a list item or between blocks): the paragraph is its content, and the
+  // outermost such element is the paragraph's wrapper.
   const [lone] = trimmed;
   if (
-    !whole &&
     trimmed.length === 1 &&
     lone.nodeType === 1 &&
     !isSkipped(lone as Element) &&
@@ -118,15 +123,20 @@ function makeParagraph(
       lone as Element,
       lone as Element,
       Array.from(lone.childNodes),
+      wrapper ?? (lone as Element),
     );
   const source = serializeNodes(trimmed);
   if (!isTranslatableText(source.plain)) return undefined;
+  // The element the translation goes into.
+  const host = wrapper?.parentElement ?? parent;
   // Dates, numbers, names and bylines stay; headings are always text, and
   // so are the labels of menus and buttons (when they are translated):
   // "Home" there is a word, not a name.
   const language = parent.closest("[lang]")?.getAttribute("lang");
   const metadata =
-    !isHeading(parent) && metadataOf(source.plain, language || undefined);
+    !isHeading(parent) &&
+    !isHeading(host) &&
+    metadataOf(source.plain, language || undefined);
   if (metadata && (metadata !== "name" || !isInsideChrome(parent)))
     return undefined;
   return {
@@ -134,8 +144,9 @@ function makeParagraph(
     nodes: trimmed,
     whole,
     inline:
-      whole && !isTextBlock(parent) && source.plain.length <= INLINE_MAX_CHARS,
+      whole && !isTextBlock(host) && source.plain.length <= INLINE_MAX_CHARS,
     source,
+    wrapper,
   };
 }
 

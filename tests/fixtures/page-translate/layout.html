@@ -10,7 +10,10 @@
          references in columns, fixed-height list items and a footer.
          A news-style part: a pill link, a grid of story cards with a
          source line, a headline with an icon after it, a clamped headline,
-         a meta row of a time and an ellipsized byline, and thumbnails. -->
+         a meta row of a time and an ellipsized byline, and thumbnails.
+         Section headings of two panels: a heading whose text is a flex
+         link (text and an arrow icon), and a heading that is itself a
+         flex row in a one-item row. -->
     <style>
       body {
         font: 16px/1.5 sans-serif;
@@ -249,6 +252,41 @@
         border-radius: 8px;
         background: #ccd;
       }
+      .panels {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 16px;
+      }
+      .panel {
+        padding: 12px;
+        border-radius: 12px;
+        background: #f6f6f8;
+      }
+      .panel-head {
+        display: flex;
+        padding-bottom: 8px;
+        margin-bottom: 8px;
+        border-bottom: 1px solid #ccc;
+      }
+      .panel-row {
+        display: flex;
+      }
+      .panel h3 {
+        margin: 0;
+        font-size: 20px;
+      }
+      .panel-link {
+        display: flex;
+        align-items: center;
+        color: #1a5fc8;
+        font-weight: 400;
+        text-decoration: none;
+      }
+      .panel-title {
+        display: flex;
+        color: #5b2fd0;
+        font-weight: 400;
+      }
       #site-footer ul {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -380,6 +418,32 @@
             ><svg width="16" height="16" aria-hidden="true"></svg
             ><span>See more walks</span></a
           >
+          <div class="panels">
+            <div class="panel" id="panel-top">
+              <div class="panel-head" id="panel-top-head">
+                <div class="panel-row">
+                  <h3>
+                    <a class="panel-link" id="head-link" href="/top"
+                      >Top walks this week<svg
+                        width="16"
+                        height="16"
+                        aria-hidden="true"
+                      ></svg
+                    ></a>
+                  </h3>
+                </div>
+              </div>
+              <p>Three walks for the first cold days of the season.</p>
+            </div>
+            <div class="panel" id="panel-picks">
+              <div class="panel-head" id="panel-picks-head">
+                <div class="panel-row">
+                  <h3 class="panel-title" id="head-flex">Picked for walkers</h3>
+                </div>
+              </div>
+              <p>Walks near the places you saved.</p>
+            </div>
+          </div>
           <div id="stories">
             <div class="story" id="story-1">
               <div class="story-text">

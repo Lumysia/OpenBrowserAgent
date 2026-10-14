@@ -47,7 +47,8 @@ export function createPresenter({
   translateMenus,
 }: PresenterOptions) {
   const dirty = new Set<Unit>();
-  // Areas a translation broke: everything in them shows as a tooltip.
+  // Tables and rows a translation made too wide: everything in them shows
+  // as a tooltip.
   const compact = new WeakSet<Element>();
   // The form of each kind of unit: the tightest any of its units needed.
   const kinds = new Map<string, Form>();
@@ -57,7 +58,6 @@ export function createPresenter({
 
   const elementForm = (form?: Form): ElementForm | undefined =>
     form === "block" || form === "inline" ? form : undefined;
-  const areaOf = (unit: Unit) => unit.placement?.area ?? unit.paragraph.parent;
 
   function schedule() {
     if (frame !== undefined) return;
@@ -65,16 +65,23 @@ export function createPresenter({
     timer = window.setTimeout(paint, FRAME_FALLBACK_MS);
   }
 
+  // Units whose inline translation filled the line of a row item and
+  // wrapped: they keep a line of their own where their kind continues the
+  // line, also when they are placed again.
+  const ownLines = new WeakSet<Unit>();
+  const ownLineOf = (unit: Unit, form: Form): Form =>
+    ownLines.has(unit) && form === "inline" ? "block" : form;
+
   // Gives the unit its kind's form, or its kind a tighter form. Returns
   // the kind when it got tighter.
   function shareForm(unit: Unit) {
     const placement = unit.placement;
     if (!placement?.kind || !SHARED_FORMS.has(placement.form)) return;
     const known = kinds.get(placement.kind);
-    const form = known ? tighter(placement.form, known) : placement.form;
-    placement.form = form;
-    if (form === known) return;
-    kinds.set(placement.kind, form);
+    const shared = known ? tighter(placement.form, known) : placement.form;
+    placement.form = ownLineOf(unit, shared);
+    if (shared === known) return;
+    kinds.set(placement.kind, shared);
     return known && placement.kind;
   }
 
@@ -86,7 +93,10 @@ export function createPresenter({
       const placement = unit.placement;
       if (!placement?.kind || !changed.has(placement.kind)) continue;
       if (!SHARED_FORMS.has(placement.form)) continue;
-      placement.form = tighter(placement.form, kinds.get(placement.kind)!);
+      placement.form = ownLineOf(
+        unit,
+        tighter(placement.form, kinds.get(placement.kind)!),
+      );
       found.add(unit);
     }
     return found;
@@ -128,21 +138,26 @@ export function createPresenter({
     if (!checked.length) return;
     // Read: what the new translations did to the page.
     const pageGrew = page.scrollWidth > width + 1;
-    const broken = checked.filter(
-      (unit) =>
+    const areas = new Set<Element>();
+    const lines = new Set<Unit>();
+    const broken = checked.filter((unit) => {
+      const breakage =
         unit.element &&
-        breaksLayout(
-          unit.element,
-          unit.paragraph,
-          unit.placement!,
-          before,
-          pageGrew,
-        ),
-    );
-    if (!broken.length) return;
-    // Write: the compact form for the areas and the kinds they broke, also
-    // for the translations already there.
-    const areas = new Set(broken.map(areaOf));
+        breaksLayout(unit.element, unit.placement!, before, pageGrew);
+      if (breakage === "area") areas.add(unit.placement!.area!);
+      if (breakage !== "line") return !!breakage;
+      ownLines.add(unit);
+      unit.placement!.form = "block";
+      lines.add(unit);
+      return false;
+    });
+    if (!broken.length) {
+      if (lines.size) mute(() => lines.forEach(apply));
+      return;
+    }
+    // Write: the compact form for the kinds they broke (in their container)
+    // and for the tables and rows they made too wide, also for the
+    // translations already there.
     for (const area of areas) compact.add(area);
     const brokenKinds = new Set<string>();
     for (const { placement } of broken)
@@ -152,10 +167,13 @@ export function createPresenter({
       }
     const fallback = unitsOfKinds(brokenKinds);
     for (const unit of broken) fallback.add(unit);
-    for (const unit of units())
-      if (unit.placement && areas.has(areaOf(unit))) fallback.add(unit);
+    for (const unit of units()) {
+      const area = unit.placement?.area;
+      if (area && areas.has(area)) fallback.add(unit);
+    }
     for (const unit of fallback)
       if (elementForm(unit.placement?.form)) unit.placement!.form = "tooltip";
+    for (const unit of lines) fallback.add(unit);
     mute(() => fallback.forEach(apply));
   }
 
@@ -178,8 +196,9 @@ export function createPresenter({
     unit.swap = undefined;
     const flowForm = elementForm(form);
     const inFlow: Look | undefined = flowForm && {
+      mark: false,
+      ...unit.placement?.look,
       form: flowForm,
-      rule: unit.placement?.rule ?? true,
     };
     if (translation !== undefined && form === "tooltip") {
       removeTranslation(unit.element);

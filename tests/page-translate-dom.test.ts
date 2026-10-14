@@ -26,6 +26,9 @@ const summary = (paragraph: Paragraph) => ({
   text: paragraph.source.text,
   whole: paragraph.whole,
   inline: paragraph.inline,
+  ...(paragraph.wrapper && {
+    wrapper: paragraph.wrapper.id || paragraph.wrapper.tagName.toLowerCase(),
+  }),
 });
 
 test("paragraphs: deepest blocks of text, runs next to blocks", () => {
@@ -65,9 +68,54 @@ test("paragraphs: deepest blocks of text, runs next to blocks", () => {
     { parent: "mixed", text: "and a tail", whole: false, inline: false },
     { parent: "item", text: "First item", whole: false, inline: false },
     { parent: "nested", text: "Nested item", whole: true, inline: false },
-    { parent: "nav", text: "<b1>Home</b1>", whole: true, inline: true },
+    { parent: "a", text: "Home", whole: true, inline: true, wrapper: "a" },
     { parent: "card-title", text: "A card title", whole: true, inline: true },
     { parent: "button", text: "Sign in", whole: true, inline: true },
+  ]);
+});
+
+test("paragraphs: text held by one element is that element's content", () => {
+  const { found } = paragraphsOf(`
+    <h3 id="heading"><a id="heading-link" href="/top">Top stories</a></h3>
+    <div id="card">
+      <span id="outer"><a id="headline" href="/s">A headline about the pass</a></span>
+      <div>More about the pass</div>
+    </div>
+    <ul><li id="item"><a id="item-link" href="/i">Linked item</a></li></ul>
+    <td-like id="cell"><br>Second line<br></td-like>
+    <p id="meta">Native words<link rel="category" href="/c"> in a sentence</p>`);
+  assert.deepEqual(found.map(summary), [
+    {
+      parent: "heading-link",
+      text: "Top stories",
+      whole: true,
+      inline: false,
+      wrapper: "heading-link",
+    },
+    {
+      parent: "headline",
+      text: "A headline about the pass",
+      whole: true,
+      inline: false,
+      wrapper: "outer",
+    },
+    { parent: "div", text: "More about the pass", whole: true, inline: true },
+    {
+      parent: "item-link",
+      text: "Linked item",
+      whole: true,
+      inline: false,
+      wrapper: "item-link",
+    },
+    // Line breaks at a paragraph's edges aren't part of it.
+    { parent: "cell", text: "Second line", whole: true, inline: true },
+    // Page metadata inside the text doesn't split it.
+    {
+      parent: "meta",
+      text: "Native words in a sentence",
+      whole: true,
+      inline: false,
+    },
   ]);
 });
 
