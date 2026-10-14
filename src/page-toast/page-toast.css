@@ -13,7 +13,7 @@
 .page-toast-frame {
   position: fixed;
   right: 0;
-  bottom: var(--space-6);
+  bottom: var(--space-8);
   left: 0;
   z-index: 2147483647;
   display: flex;
