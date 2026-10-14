@@ -1,9 +1,11 @@
 import type { PageTranslateContext } from "../../../shared/page-translate/context";
 import type { TermExample } from "../term-memory";
-import type {
-  PageTranslateBatchLimits,
-  PageTranslateErrorKind,
-  PageTranslateItem,
+import {
+  PAGE_TRANSLATE_CONTENT,
+  type PageTranslateBatchLimits,
+  type PageTranslateContent,
+  type PageTranslateErrorKind,
+  type PageTranslateItem,
 } from "../../../shared/page-translate/protocol";
 
 export type EngineRequest = {
@@ -13,6 +15,9 @@ export type EngineRequest = {
   // The page's declared language, a hint at best.
   pageLanguage?: string;
   pageTitle?: string;
+  // What the items are: the page's text when unset, or a video's
+  // subtitles. Engines that translate texts one by one ignore it.
+  content?: PageTranslateContent;
   // The page's description, and where the batch is on the page (see
   // context.ts). Reference for engines that read context, like terms.
   pageDescription?: string;
@@ -37,6 +42,9 @@ export type TranslationEngine = {
   // Identifies what produced a translation, for the cache: the engine and
   // its model or prompt version.
   cacheKey: string;
+  // Its own cache key for content it translates differently from page text
+  // (the AI model's subtitle prompt).
+  contentCacheKeys?: Partial<Record<PageTranslateContent, string>>;
   limits: PageTranslateBatchLimits;
   translate: (request: EngineRequest) => Promise<void>;
 };
@@ -53,4 +61,12 @@ export class EngineError extends Error {
     super(message);
     this.name = "EngineError";
   }
+}
+
+// The cache key for what `engine` translates for `content`.
+export function engineCacheKey(
+  engine: TranslationEngine,
+  content: PageTranslateContent = PAGE_TRANSLATE_CONTENT.page,
+) {
+  return engine.contentCacheKeys?.[content] ?? engine.cacheKey;
 }

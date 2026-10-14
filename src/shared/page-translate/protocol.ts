@@ -66,6 +66,16 @@ export type PageTranslateBatchLimits = {
   firstItems: number;
 };
 
+// What a session translates: the page's text, or a video's subtitles (see
+// src/video-subtitles). The AI model reads subtitles as spoken lines.
+export const PAGE_TRANSLATE_CONTENT = {
+  page: "page",
+  subtitles: "subtitles",
+} as const;
+
+export type PageTranslateContent =
+  (typeof PAGE_TRANSLATE_CONTENT)[keyof typeof PAGE_TRANSLATE_CONTENT];
+
 export type PageTranslateItem = {
   id: number;
   // Placeholder text (see placeholders.ts).
@@ -84,12 +94,15 @@ export type PageTranslateRequest =
       // The engine the page's last session ended up with, after a switch to
       // the other free service; the new session keeps it.
       engine?: PageTranslateEngine;
+      // The page's text when unset.
+      content?: PageTranslateContent;
     }
   | {
       type: "translate";
       batch: number;
       items: PageTranslateItem[];
-      // Where the batch's first item is on the page (see context.ts).
+      // Where the batch's first item is on the page (see context.ts); for
+      // subtitles, the lines said just before.
       context?: PageTranslateContext;
     };
 

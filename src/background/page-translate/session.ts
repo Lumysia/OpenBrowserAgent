@@ -12,7 +12,9 @@ import {
   type PageTranslateContext,
 } from "../../shared/page-translate/context";
 import {
+  PAGE_TRANSLATE_CONTENT,
   PAGE_TRANSLATE_ERROR,
+  type PageTranslateContent,
   type PageTranslateEvent,
   type PageTranslateItem,
   type PageTranslateRequest,
@@ -31,7 +33,11 @@ import {
   translateItems,
   type EngineChain,
 } from "./engine-chain";
-import { resolveEngine, type TranslationEngine } from "./engines";
+import {
+  engineCacheKey,
+  resolveEngine,
+  type TranslationEngine,
+} from "./engines";
 import { errorEvent, switchMessage } from "./notes";
 import { createTermMemory, type TermMemory } from "./term-memory";
 
@@ -50,6 +56,7 @@ type Session = {
   pageLanguage?: string;
   pageTitle?: string;
   pageDescription?: string;
+  content?: PageTranslateContent;
   terms: TermMemory;
 };
 
@@ -165,6 +172,10 @@ async function startSession(
               PAGE_TRANSLATE_CONTEXT_LIMITS.description,
             )
           : undefined,
+      content:
+        request.content === PAGE_TRANSLATE_CONTENT.subtitles
+          ? request.content
+          : undefined,
       terms: createTermMemory(),
     };
   } catch (error) {
@@ -190,9 +201,9 @@ async function runBatch(
   post: Post,
   signal: AbortSignal,
 ) {
-  const { chain, target } = session;
+  const { chain, target, content } = session;
   const cacheKey = (engine: TranslationEngine, text: string) =>
-    translationCacheKey(engine.cacheKey, target, text);
+    translationCacheKey(engineCacheKey(engine, content), target, text);
   const keys = new Map<number, string>();
   const engine = chain.current.engine;
   await Promise.all(
@@ -234,6 +245,7 @@ async function runBatch(
       pageLanguage: session.pageLanguage,
       pageTitle: session.pageTitle,
       pageDescription: session.pageDescription,
+      content,
       context,
       terms: session.terms.examples(batchItems.map((item) => item.text)),
       signal,
