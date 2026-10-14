@@ -169,47 +169,40 @@ test("page translation with the AI model", { timeout: 240000 }, async (t) => {
       const before = await pageHtml(page);
       await session.setPreferences({ display: "translation" });
       await clickMenu(pageUrl);
-      // Each block shows a copy of itself with the translation; the original
-      // is hidden. Blocks with other content keep both.
+      // The page's own text is replaced: its elements stay, none is added.
       const view = await poll(() =>
         page.call(() => {
-          const mirror = document.querySelector("#title + h1");
-          const shown = (selector) =>
-            [...document.querySelectorAll(selector)]
-              .filter((item) => getComputedStyle(item).display !== "none")
-              .map((item) => item.textContent);
-          if (!mirror?.hasAttribute("data-oba-translation")) return null;
-          if (
-            shown("#list > li")[1] !== "FR: Tell someone where you are going."
-          )
-            return null;
-          const style = (selector) =>
-            getComputedStyle(document.querySelector(selector));
+          const list = [...document.querySelectorAll("#list > li")].map(
+            (item) => item.textContent,
+          );
+          if (list[1] !== "FR: Tell someone where you are going.") return null;
           return {
-            only: document.documentElement.hasAttribute(
-              "data-oba-translation-only",
-            ),
-            title: shown("h1"),
-            sameSize:
-              style("#title + h1").fontSize === style("#title").fontSize,
-            list: shown("#list > li"),
-            sameMargin: style("#p1 + p").marginTop === style("#skip").marginTop,
+            added: document.querySelectorAll("oba-translation").length,
+            title: document.querySelector("#title").textContent,
+            intro: document.querySelector("#intro").innerHTML,
+            list,
           };
         }),
       );
       assert.deepEqual(view, {
-        only: true,
-        title: ["FR: Notes from the field"],
-        sameSize: true,
+        added: 0,
+        title: "FR: Notes from the field",
+        intro:
+          'FR: Read the <a id="intro-link" href="/guide">field guide</a> before you <strong>leave the trail</strong>, and run <code>check-gear</code> first.',
         list: [
           "FR: Bring enough water for the day.",
           "FR: Tell someone where you are going.",
         ],
-        sameMargin: true,
       });
       // Back to both, at once, without asking for translations again.
       await session.setPreferences({ display: "bilingual" });
-      await poll(() => page.call(() => !document.querySelector("#title + h1")));
+      await poll(() =>
+        page.call(
+          () =>
+            document.querySelector("#title").firstChild.data ===
+            "Notes from the field",
+        ),
+      );
       assert.equal(
         await translationIn(page, "#title"),
         "FR: Notes from the field",

@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Trail almanac</title>
+    <!-- Layout patterns that broke when translations were added: a hidden
+         skip link, a fixed-height header and horizontal tabs, a title bar
+         row, a line-clamped card title, a fixed-height badge, an icon-only
+         button, chips in a flex row, a radio grid, an infobox, a data table
+         with short header cells, a navigation box with inline list items,
+         references in columns, fixed-height list items and a footer. -->
+    <style>
+      body {
+        font: 16px/1.5 sans-serif;
+        margin: 0;
+        color: #1d1d1f;
+        background: #fff;
+      }
+      .skip {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(1px, 1px, 1px, 1px);
+      }
+      #site-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        height: 56px;
+        padding: 0 16px;
+        border-bottom: 1px solid #ccc;
+      }
+      #site-header ul {
+        display: flex;
+        gap: 12px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      #site-header li {
+        white-space: nowrap;
+      }
+      #search {
+        height: 32px;
+      }
+      #page {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 0 16px;
+      }
+      #tabs {
+        display: flex;
+        gap: 4px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border-bottom: 1px solid #ccc;
+      }
+      #tabs [role="tab"] {
+        white-space: nowrap;
+        padding: 4px 12px;
+      }
+      #titlebar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      #titlebar h1 {
+        margin: 8px 0;
+        font-size: 28px;
+      }
+      .icon-button {
+        width: 32px;
+        height: 32px;
+        overflow: hidden;
+        padding: 0;
+      }
+      .icon-button span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(1px, 1px, 1px, 1px);
+      }
+      #card {
+        width: 240px;
+        border: 1px solid #ccc;
+        padding: 8px;
+      }
+      #card-title {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        margin: 0;
+        font-size: 16px;
+      }
+      #badge {
+        display: inline-block;
+        height: 22px;
+        padding: 0 8px;
+        overflow: hidden;
+        border-radius: 11px;
+        background: #eee;
+        font-size: 13px;
+        line-height: 22px;
+      }
+      #chips {
+        display: flex;
+        gap: 8px;
+      }
+      #chips span {
+        padding: 2px 8px;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+      }
+      #choices {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 4px 8px;
+        width: 260px;
+      }
+      #infobox {
+        float: right;
+        width: 260px;
+        margin: 0 0 8px 16px;
+        border: 1px solid #ccc;
+        border-collapse: collapse;
+      }
+      #infobox th,
+      #infobox td {
+        padding: 2px 6px;
+        text-align: left;
+        vertical-align: top;
+      }
+      #climate-box {
+        width: 640px;
+      }
+      #climate {
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      #climate th,
+      #climate td {
+        border: 1px solid #ccc;
+        padding: 2px 4px;
+      }
+      #sisters {
+        width: 300px;
+        padding: 0;
+        list-style: none;
+      }
+      #sisters li {
+        height: 24px;
+        overflow: visible;
+      }
+      #navbox {
+        border: 1px solid #ccc;
+        padding: 4px;
+        clear: both;
+      }
+      #navbox ul {
+        margin: 0;
+        padding: 0;
+      }
+      #navbox li {
+        display: inline;
+      }
+      #navbox li + li::before {
+        content: " · ";
+      }
+      #refs {
+        column-width: 220px;
+        font-size: 14px;
+      }
+      #site-footer ul {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        margin: 0;
+        padding: 16px;
+        list-style: none;
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#article">Jump to the article</a>
+    <header id="site-header">
+      <a id="logo" href="/">Trail almanac</a>
+      <nav id="site-nav">
+        <ul>
+          <li><a href="/maps">Trail maps</a></li>
+          <li><a href="/weather">Mountain weather</a></li>
+          <li><a href="/login">Sign in to your account</a></li>
+        </ul>
+      </nav>
+      <button id="search">Search the almanac</button>
+    </header>
+    <div id="page">
+      <main>
+        <ul id="tabs" role="tablist">
+          <li role="tab" aria-selected="true">Article</li>
+          <li role="tab">Discussion page</li>
+          <li role="tab">Edit history</li>
+        </ul>
+        <article id="article">
+          <div id="titlebar">
+            <h1 id="title">Walking the high passes</h1>
+            <button id="share" class="icon-button" type="button">
+              ☆<span>Share this article</span>
+            </button>
+          </div>
+
+          <p id="intro">
+            Read the <a id="intro-link" href="/guide">field guide</a> before you
+            <strong>leave the trail</strong>, because the weather turns quickly
+            above the tree line and the paths are not always marked.
+          </p>
+          <div id="card">
+            <h2 id="card-title">
+              A very long card title about crossing the northern pass in early
+              spring when the snow is still deep
+            </h2>
+            <span id="badge">Recommended for experienced walkers</span>
+          </div>
+          <div id="chips">
+            <span>Snow</span><span>Rock</span><span>Glacier walking</span>
+          </div>
+          <div id="choices">
+            <input id="choice-a" type="radio" name="season" /><label
+              for="choice-a"
+              >Summer season</label
+            >
+            <input id="choice-b" type="radio" name="season" /><label
+              for="choice-b"
+              >Winter season</label
+            >
+          </div>
+          <p id="p2">
+            The pass is open from June to October. Walkers should carry warm
+            clothes, enough water and a map, and tell someone where they are
+            going before they start.
+          </p>
+          <div id="climate-box">
+            <table id="climate">
+              <tr>
+                <th>Month</th>
+                <th>Jan</th>
+                <th>Feb</th>
+                <th>Mar</th>
+                <th>Apr</th>
+                <th>May</th>
+                <th>Jun</th>
+                <th>Jul</th>
+                <th>Aug</th>
+                <th>Sep</th>
+                <th>Oct</th>
+                <th>Nov</th>
+                <th>Dec</th>
+              </tr>
+              <tr>
+                <th>Mean low</th>
+                <td>−36</td>
+                <td>−35</td>
+                <td>−32</td>
+                <td>−31</td>
+                <td>−25</td>
+                <td>−20</td>
+                <td>−18</td>
+                <td>−18</td>
+                <td>−21</td>
+                <td>−27</td>
+                <td>−30</td>
+                <td>−34</td>
+              </tr>
+            </table>
+          </div>
+          <ul id="sisters">
+            <li><a href="/photos">Photos of the pass</a></li>
+            <li><a href="/stories">Stories from walkers</a></li>
+          </ul>
+          <table id="infobox">
+            <tr>
+              <th colspan="2">High pass</th>
+            </tr>
+            <tr>
+              <th>Elevation</th>
+              <td>4,200 metres above the sea</td>
+            </tr>
+            <tr>
+              <th>Range</th>
+              <td>Northern ridge of the valley</td>
+            </tr>
+            <tr>
+              <th>First crossing</th>
+              <td>By shepherds long ago</td>
+            </tr>
+          </table>
+          <p id="p3">
+            Most walkers cross the pass in one long day, starting before sunrise
+            so that they reach the top before the afternoon clouds come in from
+            the valley.
+          </p>
+          <div id="navbox" role="navigation">
+            <ul>
+              <li><a href="/north">Northern passes</a></li>
+              <li><a href="/south">Southern passes</a></li>
+              <li><a href="/east">Eastern passes</a></li>
+            </ul>
+          </div>
+          <ol id="refs">
+            <li>A guide to the northern passes, second edition.</li>
+            <li>Notes from a season of walking in the high valleys.</li>
+            <li>Weather records of the mountain station.</li>
+            <li id="last">
+              Letters of the first shepherds who crossed the pass.
+            </li>
+          </ol>
+        </article>
+      </main>
+    </div>
+    <footer id="site-footer">
+      <ul>
+        <li><a href="/privacy">Privacy policy</a></li>
+        <li><a href="/about">About the almanac</a></li>
+        <li><a href="/contact">Contact the editors</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>
