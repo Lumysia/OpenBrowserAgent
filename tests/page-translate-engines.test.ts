@@ -437,3 +437,56 @@ test("built-in translator: detects the source, one translator per pair", async (
     delete scope.LanguageDetector;
   }
 });
+
+test("built-in translator: a text it refuses doesn't take the batch's others with it", async () => {
+  const scope = globalThis as Record<string, unknown>;
+  // Refuses texts by its own rules: filtered output, then an unknown error.
+  let refuse = (text: string): DOMException | undefined =>
+    text === "Second"
+      ? new DOMException("filtered", "NotReadableError")
+      : undefined;
+  scope.Translator = {
+    availability: async () => "available",
+    create: async () => ({
+      translate: async (text: string) => {
+        const error = refuse(text);
+        if (error) throw error;
+        return `[fr] ${text}`;
+      },
+    }),
+  };
+  try {
+    const engine = browserEngine();
+    const translate = async (texts: string[]) => {
+      const results: Array<[number, string]> = [];
+      await engine.translate({
+        items: texts.map((text, index) => ({ id: index + 1, text })),
+        target: "fr",
+        pageLanguage: "en",
+        signal: new AbortController().signal,
+        onItem: (id, text) => results.push([id, text]),
+      });
+      return results;
+    };
+    assert.deepEqual(await translate(["First", "Second", "Third", "Fourth"]), [
+      [1, "[fr] First"],
+      [3, "[fr] Third"],
+      [4, "[fr] Fourth"],
+    ]);
+    // Nothing translated: the batch fails with the translator's error.
+    refuse = () => new DOMException("unknown", "UnknownError");
+    await assert.rejects(translate(["First", "Second"]), {
+      name: "UnknownError",
+    });
+    // A translator that is turned off fails the batch at once.
+    refuse = (text) =>
+      text === "Second"
+        ? new DOMException("disabled", "NotAllowedError")
+        : undefined;
+    await assert.rejects(translate(["First", "Second", "Third"]), {
+      name: "NotAllowedError",
+    });
+  } finally {
+    delete scope.Translator;
+  }
+});

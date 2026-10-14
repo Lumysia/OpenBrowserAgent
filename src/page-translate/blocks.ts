@@ -11,10 +11,11 @@ import {
   isSkipped,
   isTextBlock,
 } from "./dom-rules";
+import { compact } from "../shared/text";
 import { labelsOf } from "./labels";
-import { originalText } from "./originals";
+import { originalContent, originalText } from "./originals";
 import { serializeNodes, type Serialized } from "./serialize";
-import { isCodeView } from "./styles";
+import { isCodeView, isVisuallyHidden } from "./styles";
 
 export type Paragraph = {
   // The nodes are consecutive children of `parent`.
@@ -112,7 +113,7 @@ function makeParagraph(
         node.nodeName === "BR" ||
         node.nodeType === 8,
     );
-  const trimmed = trimRun(nodes);
+  const trimmed = withoutHiddenCopy(trimRun(nodes));
   // One element holding all of the text (a headline link, a link alone in
   // a list item or between blocks): the paragraph is its content, and the
   // outermost such element is the paragraph's wrapper.
@@ -178,6 +179,27 @@ function trimRun(nodes: Node[]) {
   while (start < end && blank(nodes[start])) start++;
   while (end > start && blank(nodes[end - 1])) end--;
   return nodes.slice(start, end);
+}
+
+// A copy of the text for screen readers next to the text as it shows (a
+// heading animated word by word, with the sentence whole in a visually
+// hidden element): the paragraph is the text as it shows, not both. Only an
+// element holding half of the run's text is measured.
+function withoutHiddenCopy(nodes: Node[]) {
+  if (nodes.length < 2) return nodes;
+  const contents = nodes.map((node) => originalContent(node));
+  const total = compact(contents.join("")).length;
+  for (const [index, node] of nodes.entries()) {
+    if (node.nodeType !== 1) continue;
+    const copy = compact(contents[index]);
+    if (!copy || Math.abs(copy.length * 2 - total) > 2) continue;
+    const rest = compact(
+      contents.filter((_, other) => other !== index).join(""),
+    );
+    if (copy === rest && isVisuallyHidden(node as Element))
+      return nodes.filter((other) => other !== node);
+  }
+  return nodes;
 }
 
 // At least two letters, and more than an address or a number.

@@ -63,11 +63,15 @@ export function breaksLayout(
   const style = view.getComputedStyle(element);
   const start = -Math.min(0, parseFloat(style.marginInlineStart) || 0);
   const rtl = style.direction === "rtl";
-  const outside = (limit: DOMRect) =>
-    box.bottom > limit.bottom + SUBPIXEL_PX ||
+  const outside = (limit: DOMRect, below = 0) =>
+    box.bottom > limit.bottom + below + SUBPIXEL_PX ||
     box.right > limit.right + SUBPIXEL_PX + (rtl ? start : 0) ||
     box.left < limit.left - SUBPIXEL_PX - (rtl ? 0 : start);
-  if (placement.host && outside(placement.host.getBoundingClientRect()))
+  // The page's own text may already reach below its box (see overhang).
+  if (
+    placement.host &&
+    outside(placement.host.getBoundingClientRect(), placement.overhang)
+  )
     return "self";
   if (placement.clip && outside(placement.clip.getBoundingClientRect()))
     return "self";

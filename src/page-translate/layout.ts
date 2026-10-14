@@ -18,11 +18,13 @@ import {
 } from "./look";
 import { originalText } from "./originals";
 import {
+  boxOf,
   clipsOverflow,
   hasBackground,
   HIDDEN_BOX_PX,
   isHorizontalFlex,
   isRow,
+  isVisuallyHidden,
   lineHeightOf,
 } from "./styles";
 
@@ -52,6 +54,10 @@ export type Placement = {
   kind?: string;
   // The host's height before the translation went in.
   height?: number;
+  // How far the host's own content reaches below its box before the
+  // translation goes in: text set with trimmed leading (negative margins
+  // around the lines) does, and the translation at its end reaches as far.
+  overhang?: number;
   look?: LookDetails;
 };
 
@@ -113,12 +119,14 @@ export function choosePlacement(
   compact: WeakSet<Element>,
   translateMenus: boolean,
 ): Placement | undefined {
-  const block = paragraph.parent;
+  // The paragraph's box: its element's, or the one its content is laid out
+  // in when the element has none (`display: contents`).
+  const block = boxOf(paragraph.parent);
   if (!block.getClientRects().length) return undefined;
   const view = block.ownerDocument.defaultView!;
   // A control's size and look are designed around its label: its
   // translation never goes into it (a tooltip when menus are translated).
-  if (controlOf(block) || isDrawnControl(paragraph, view))
+  if (controlOf(paragraph.parent) || isDrawnControl(paragraph, view))
     return { form: translateMenus ? "tooltip" : "skip" };
   // A note laid over the page (cookie and newsletter prompts) is chrome.
   if (!translateMenus && isOverlay(block, view)) return { form: "skip" };
@@ -145,7 +153,7 @@ export function choosePlacement(
   // from it, or be cut off.
   if (own.placed || (own.boxed && !anchor?.contains(own.boxed)))
     form = tighter(form, "tooltip");
-  const host = anchor?.parentElement ?? block;
+  const host = anchor?.parentElement ? boxOf(anchor.parentElement) : block;
   const hostStyle = view.getComputedStyle(host);
   const limits = anchor ? limitsOf(host, view) : own;
   if (anchor && (limits.cut || limits.boxed || limits.placed))
@@ -193,6 +201,7 @@ export function choosePlacement(
     form,
     host,
     height: host.getBoundingClientRect().height,
+    overhang: Math.max(0, host.scrollHeight - host.clientHeight),
     row: isRow(hostStyle) ? host : inRow ? parent! : undefined,
     kind: kindOf(paragraph, host),
     look: {
@@ -302,8 +311,7 @@ function ownForm(host: Element, style: CSSStyleDeclaration): Form {
   if (/grid/.test(style.display)) return "tooltip";
   // A table header: one line.
   if (host.tagName.toUpperCase() === "TH") return "inline";
-  if (/^inline/.test(style.display) || style.display === "contents")
-    return "inline";
+  if (/^inline/.test(style.display)) return "inline";
   // Our element would be a new item next to the paragraph's text.
   if (isHorizontalFlex(style)) return "inline";
   return "block";
@@ -389,20 +397,7 @@ function insideTinyBox(node: Text, block: Element) {
   ) {
     // No boxes: `display: contents`, nothing to measure.
     if (!element.getClientRects().length) continue;
-    const box = element.getBoundingClientRect();
-    if (box.width < HIDDEN_BOX_PX || box.height < HIDDEN_BOX_PX) return true;
-    if (isScreenReaderOnly(element)) return true;
+    if (isVisuallyHidden(element)) return true;
   }
   return false;
-}
-
-// Text for screen readers laid over the page and not painted (an alternative
-// text for star icons, a spoken price): fully transparent or clipped to
-// nothing. Text in the flow that is transparent may be about to fade in.
-function isScreenReaderOnly(element: Element) {
-  const style = element.ownerDocument.defaultView!.getComputedStyle(element);
-  if (style.position !== "absolute" && style.position !== "fixed") return false;
-  return (
-    style.opacity === "0" || /^(circle\(0(px)?|inset\(50%)/.test(style.clipPath)
-  );
 }

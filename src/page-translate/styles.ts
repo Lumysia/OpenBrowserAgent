@@ -13,6 +13,17 @@ const NORMAL_LINE_HEIGHT = 1.2;
 const styleOf = (element: Element) =>
   element.ownerDocument.defaultView!.getComputedStyle(element);
 
+// The element whose box holds the element's content: the element itself, or
+// for one without a box of its own (`display: contents`, a wrapper a
+// framework renders) the nearest one around it that has one. Boxes are
+// measured and watched there.
+export function boxOf(element: Element) {
+  let current = element;
+  while (current.parentElement && styleOf(current).display === "contents")
+    current = current.parentElement;
+  return current;
+}
+
 // The box cuts off what overflows it, in either direction.
 export function clipsOverflow(style: CSSStyleDeclaration) {
   return /hidden|clip/.test(`${style.overflowX} ${style.overflowY}`);
@@ -73,4 +84,19 @@ const LIGATURES = /"liga"(?!\s+(0|off))/;
 
 export function isLigatureIcon(element: Element) {
   return LIGATURES.test(styleOf(element).fontFeatureSettings);
+}
+
+// A box that doesn't show its text: 1px or less (visually hidden labels,
+// icon-only buttons), or text for screen readers laid over the page and not
+// painted (an alternative text for star icons, a spoken price): fully
+// transparent or clipped to nothing. Text in the flow that is transparent
+// may be about to fade in. Only for elements that have boxes.
+export function isVisuallyHidden(element: Element) {
+  const box = element.getBoundingClientRect();
+  if (box.width < HIDDEN_BOX_PX || box.height < HIDDEN_BOX_PX) return true;
+  const style = styleOf(element);
+  if (style.position !== "absolute" && style.position !== "fixed") return false;
+  return (
+    style.opacity === "0" || /^(circle\(0(px)?|inset\(50%)/.test(style.clipPath)
+  );
 }

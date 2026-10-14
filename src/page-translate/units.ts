@@ -6,6 +6,7 @@ import { isInline, isOwn, TRANSLATION_ATTRIBUTE } from "./dom-rules";
 import type { Placement } from "./layout";
 import { forgetSwapped } from "./originals";
 import type { Tooltip } from "./render";
+import { boxOf } from "./styles";
 import type { Swap } from "./swap";
 import { yieldToMain } from "./yield";
 
@@ -17,7 +18,7 @@ export type UnitState =
 export type Unit = {
   id: number;
   paragraph: Paragraph;
-  // What the observers watch for this paragraph.
+  // What the observers watch for this paragraph (an element with a box).
   target: Element;
   // The translation, and the text so far while it is written.
   translation?: string;
@@ -62,9 +63,9 @@ export function createUnits(events: UnitEvents, options: WalkOptions) {
     const unit: Unit = {
       id: nextId++,
       paragraph,
-      target: paragraph.whole
-        ? paragraph.parent
-        : firstElement || paragraph.parent,
+      target: boxOf(
+        paragraph.whole ? paragraph.parent : firstElement || paragraph.parent,
+      ),
       state: "idle",
       near: false,
       visible: false,
