@@ -15,7 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../../src/ui/components";
-import { resolveScheme } from "../../src/ui/theme";
+import { resolveScheme } from "../../src/ui/apply-theme";
 
 // The color themes, then the pride flags, as one choice.
 export function ThemePicker({
