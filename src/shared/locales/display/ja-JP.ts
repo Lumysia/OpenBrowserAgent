@@ -50,7 +50,6 @@ export const displayJaJP: DisplayMessages = {
   errors: {
     noModel:
       "モデルが設定されていません。「設定」→「AI プロバイダー」でプロバイダーを追加してください。",
-    subAgentStopped: "サブエージェントを停止しました。",
     baseUrlRequired: "ベース URL を入力してください。",
   },
   toolSteps: {

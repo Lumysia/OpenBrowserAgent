@@ -14,6 +14,7 @@ import {
   type SendMessagesRequest,
 } from "../src/shared/types";
 import { DESCRIBE_RUN } from "../src/shared/run-description";
+import { RUN_STOP_REASON } from "../src/shared/run-stop";
 import { describeRun, runChat } from "../src/background/run-chat";
 import { resolveModel } from "../src/background/model-resolver";
 import { handleLocalExecutionBridgeRuntimeMessage } from "../src/background/local-execution-bridge-tools";
@@ -111,7 +112,11 @@ export default defineBackground(() => {
         streamSessions.attachPortToSession(port, next, undefined);
         streamAssistantResponse(next, request)
           .catch((error) => {
-            if (error?.name === "AbortError") return;
+            if (next.abortController.signal.aborted)
+              return streamSessions.postToSession(next, {
+                type: "end",
+                stopReason: RUN_STOP_REASON.aborted,
+              });
             streamSessions.postToSession(next, {
               type: "error",
               error: userErrorText(error, getMessages(request.body.language)),

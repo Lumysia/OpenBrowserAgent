@@ -145,7 +145,7 @@ export async function reattachToRun(
       onStreamFinished: ignore,
       onRunStopped: (_chatId: string, id: string) => stopped.push(id),
       appendStreamChunk: ignore,
-      appendToAssistant: ignore,
+      endRun: ignore,
       flushMessageText: ignore,
       appendQueuedMessages: ignore,
       removeQueuedMessage: ignore,

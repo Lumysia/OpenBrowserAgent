@@ -1,5 +1,8 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
-import { STREAM_RENDER_THROTTLE_MS } from "../../src/shared/config";
+import {
+  STREAM_RENDER_THROTTLE_MS,
+  STREAM_STOP_SETTLE_MS,
+} from "../../src/shared/config";
 import {
   AI_STREAM_PORT_NAME,
   AI_STREAM_REQUEST_TYPE,
@@ -9,6 +12,11 @@ import {
   type SendMessagesRequest,
 } from "../../src/shared/types";
 import type { ActiveStreamMap } from "./sidepanel-menu-state";
+import type { RunEnd } from "./stream-handlers";
+
+// Ports of runs the user stopped. Each keeps listening until its run
+// settles, for the usage of the run's last request.
+const stoppingPorts = new WeakMap<chrome.runtime.Port, () => void>();
 
 export function closeStreamPort(
   portRefs: MutableRefObject<Record<string, chrome.runtime.Port | undefined>>,
@@ -31,6 +39,26 @@ export function closeStreamPort(
   } catch {
     return;
   }
+}
+
+// Stops the chat's run. Its port no longer serves the chat, but stays open
+// until the run reports its end.
+export function stopStreamPort(
+  portRefs: MutableRefObject<Record<string, chrome.runtime.Port | undefined>>,
+  chatId: string,
+) {
+  const port = portRefs.current[chatId];
+  const settle = port && stoppingPorts.get(port);
+  if (!settle) return closeStreamPort(portRefs, chatId, true);
+  delete portRefs.current[chatId];
+  try {
+    port.postMessage({
+      type: AI_STREAM_REQUEST_TYPE.abort,
+    } satisfies AiStreamRequest);
+  } catch {
+    // The port is already closed; settle() disconnects it.
+  }
+  settle();
 }
 
 export function startStreamAction({
@@ -87,11 +115,7 @@ type StreamPortOptions = {
     chunk: unknown,
     metrics?: Partial<RunMetrics>,
   ) => void;
-  appendToAssistant: (
-    chatId: string,
-    messageId: string,
-    content: string,
-  ) => void;
+  endRun: (chatId: string, messageId: string, end: RunEnd) => void;
   flushMessageText: (chatId: string, messageId: string) => void;
   updateRunMetrics: (
     messageId: string,
@@ -118,7 +142,7 @@ function connectStreamPort({
   onStreamFinished,
   onRunStopped,
   appendStreamChunk,
-  appendToAssistant,
+  endRun,
   flushMessageText,
   updateRunMetrics,
   appendQueuedMessages,
@@ -132,6 +156,25 @@ function connectStreamPort({
   let pendingSequenceMetrics:
     { messageId: string; metrics: Partial<RunMetrics> } | undefined;
   let sequenceMetricsTimeout: number | undefined;
+  let stopping = false;
+  let stopTimeout: number | undefined;
+
+  function finishStopping() {
+    settled = true;
+    window.clearTimeout(stopTimeout);
+    try {
+      port.disconnect();
+    } catch {
+      // Already closed.
+    }
+  }
+
+  stoppingPorts.set(port, () => {
+    flushSequenceMetrics();
+    flushMessageText(chatId, activeMessageId);
+    stopping = true;
+    stopTimeout = window.setTimeout(finishStopping, STREAM_STOP_SETTLE_MS);
+  });
 
   function updateActiveStream(
     updater: (stream: ActiveStreamMap[string]) => ActiveStreamMap[string],
@@ -171,6 +214,7 @@ function connectStreamPort({
   }
 
   port.onDisconnect.addListener(() => {
+    window.clearTimeout(stopTimeout);
     flushSequenceMetrics();
     if (portRefs.current[chatId] !== port) return;
     flushMessageText(chatId, activeMessageId);
@@ -188,7 +232,16 @@ function connectStreamPort({
   }
 
   port.onMessage.addListener((message: AiStreamResponse) => {
-    if (settled || portRefs.current[chatId] !== port) return;
+    if (settled) return;
+    if (stopping) {
+      // The reply stays as the user stopped it; only its usage still counts.
+      if (message.type === "metrics") {
+        const { stopReason: _stopReason, ...usage } = message.metrics;
+        updateRunMetrics(activeMessageId, usage);
+      } else if (message.type !== "chunk") finishStopping();
+      return;
+    }
+    if (portRefs.current[chatId] !== port) return;
     lastStreamActivityRef.current[chatId] = Date.now();
     const sequenceMetrics = message.sequence
       ? { streamEventIndex: message.sequence }
@@ -233,23 +286,16 @@ function connectStreamPort({
       scheduleSequenceMetrics(sequenceMetrics);
       updateRunMetrics(activeMessageId, message.metrics);
     }
-    if (message.type === "error") {
+    if (message.type === "error" || message.type === "end") {
       flushSequenceMetrics();
-      flushMessageText(chatId, activeMessageId);
-      updateRunMetrics(activeMessageId, {
+      endRun(chatId, activeMessageId, {
         endedAt: Date.now(),
         ...sequenceMetrics,
-      });
-      appendToAssistant(chatId, activeMessageId, `\n\n${message.error}`);
-      clearActiveStream();
-      onStreamFinished(chatId);
-    }
-    if (message.type === "end") {
-      flushSequenceMetrics();
-      flushMessageText(chatId, activeMessageId);
-      updateRunMetrics(activeMessageId, {
-        endedAt: Date.now(),
-        ...sequenceMetrics,
+        ...(message.type === "error"
+          ? { error: message.error }
+          : message.stopReason
+            ? { stopReason: message.stopReason }
+            : {}),
       });
       clearActiveStream();
       onStreamFinished(chatId);

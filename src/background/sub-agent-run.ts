@@ -3,9 +3,11 @@ import { saveChatContent } from "../shared/chat-storage";
 import { streamPartFromChunk } from "../shared/chat-stream-parts";
 import {
   appendAssistantPart,
+  endAssistantRun,
   updateAssistantRunMetrics,
 } from "../shared/chat-updates";
 import { getMessages } from "../shared/i18n";
+import { RUN_STOP_REASON, type RunStopReason } from "../shared/run-stop";
 import { storage } from "../shared/storage";
 import { userErrorText } from "../shared/user-errors";
 import type {
@@ -112,6 +114,7 @@ export async function runSubAgentChat(options: {
   // A stop that landed while the chat was being created fires no event.
   if (options.signal?.aborted) abort();
   let error: string | undefined;
+  let end: { stopReason?: RunStopReason; error?: string } = {};
   try {
     await runChat(session, {
       agentId: agent.id,
@@ -131,19 +134,21 @@ export async function runSubAgentChat(options: {
       : cause instanceof Error
         ? cause.message
         : String(cause);
-    const t = getMessages(await storage.language.get());
-    sessions.postToSession(session, {
-      type: "error",
-      error: stopped
-        ? t.display.errors.subAgentStopped
-        : userErrorText(cause, t),
-    });
+    if (stopped) {
+      end = { stopReason: RUN_STOP_REASON.aborted };
+      sessions.postToSession(session, { type: "end", ...end });
+    } else {
+      end = {
+        error: userErrorText(cause, getMessages(await storage.language.get())),
+      };
+      sessions.postToSession(session, { type: "error", error: end.error! });
+    }
   } finally {
     clearInterval(timer);
     options.signal?.removeEventListener("abort", abort);
     sessions.scheduleSessionCleanup(session);
   }
-  chat = updateAssistantRunMetrics(chat, assistantId, { endedAt: Date.now() });
+  chat = endAssistantRun(chat, assistantId, { endedAt: Date.now(), ...end });
   await persist(chat);
   const answer =
     chat.messages

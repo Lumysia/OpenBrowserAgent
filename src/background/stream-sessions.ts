@@ -27,6 +27,10 @@ export type StreamSession = {
   // kept. runPiAgent installs the real model and stream function.
   agent: Agent;
   cleanupTimeout?: ReturnType<typeof setTimeout>;
+  // Aborted and no longer the chat's run, but still settling: its last
+  // events (the usage of its last request, how it ended) still reach the
+  // ports and observers it has.
+  stopping?: boolean;
 };
 
 const activeStreamSessions = new Map<string, StreamSession>();
@@ -102,11 +106,17 @@ export function detachPort(port: chrome.runtime.Port) {
   portSessions.delete(port);
 }
 
+// The run settles on its own and then calls scheduleSessionCleanup, which
+// releases a stopping session at once.
 export function abortSession(chatId: string) {
   const session = activeStreamSessions.get(chatId);
   if (!session) return;
+  if (session.cleanupTimeout) return releaseSession(session);
+  session.stopping = true;
+  activeStreamSessions.delete(chatId);
+  session.agent.clearAllQueues();
   session.abortController.abort();
-  releaseSession(session);
+  updateKeepalive();
 }
 
 export function handleChatStreamControlMessage(
@@ -215,6 +225,7 @@ function replaceQueue(agent: Agent, messages: AgentMessage[]) {
 }
 
 export function scheduleSessionCleanup(session: StreamSession) {
+  if (session.stopping) return releaseSession(session);
   if (
     activeStreamSessions.get(session.chatId) !== session ||
     session.cleanupTimeout
@@ -246,6 +257,7 @@ function updateKeepalive() {
 }
 
 function releaseSession(session: StreamSession) {
+  session.stopping = false;
   if (session.cleanupTimeout) clearTimeout(session.cleanupTimeout);
   if (activeStreamSessions.get(session.chatId) === session)
     activeStreamSessions.delete(session.chatId);
@@ -258,13 +270,15 @@ function releaseSession(session: StreamSession) {
   updateKeepalive();
 }
 
-// Only the current session of a chat may publish, so an aborted run's tail
-// events never leak into its replacement's replay buffer.
+// Only the current session of a chat, or one still stopping, may publish.
+// Each has its own replay buffer and ports, so an aborted run's last events
+// never reach its replacement.
 export function postToSession(
   session: StreamSession,
   message: AiStreamResponse,
 ) {
-  if (activeStreamSessions.get(session.chatId) !== session) return;
+  if (activeStreamSessions.get(session.chatId) !== session && !session.stopping)
+    return;
   const event = { ...message, sequence: session.nextSequence++ };
   session.events.push(event);
   session.ports.forEach((port) => post(port, event));
