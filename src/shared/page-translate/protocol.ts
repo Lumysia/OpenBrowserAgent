@@ -12,6 +12,9 @@ export const PAGE_TRANSLATE_SCRIPT = "content-scripts/page-translate.js";
 export const PAGE_TRANSLATE_MESSAGE = {
   // Background -> page: translate the page, or show the original.
   toggle: "page-translate:toggle",
+  // Background -> page: translate the page unless it is already (a later
+  // page in a tab the user translated). Answers like query.
+  start: "page-translate:start",
   // Page -> background: the page is translated now, or not (also after a
   // back/forward navigation restored a translated page).
   state: "page-translate:state",
@@ -28,6 +31,10 @@ export const PAGE_TRANSLATE_PORT = "page-translate";
 
 export type PageTranslateToggleMessage = {
   type: typeof PAGE_TRANSLATE_MESSAGE.toggle;
+};
+
+export type PageTranslateStartMessage = {
+  type: typeof PAGE_TRANSLATE_MESSAGE.start;
 };
 
 export type PageTranslateQueryMessage = {

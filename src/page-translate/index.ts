@@ -35,6 +35,7 @@ export function installPageTranslate() {
     (message, _sender, sendResponse) => {
       const type = (message as { type?: string } | undefined)?.type;
       if (type === PAGE_TRANSLATE_MESSAGE.toggle) controller.toggle();
+      else if (type === PAGE_TRANSLATE_MESSAGE.start) controller.start();
       else if (type !== PAGE_TRANSLATE_MESSAGE.query) return false;
       sendResponse({ translated: controller.active });
       return false;
