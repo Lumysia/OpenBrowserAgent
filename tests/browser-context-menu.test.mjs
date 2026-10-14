@@ -27,6 +27,7 @@ const MENU = {
   parent: "oba-menu",
   ask: "oba-ask",
   summarizePage: "oba-summarize-page",
+  translatePage: "oba-translate-page",
   searchPage: "oba-search-page",
   searchSelection: "oba-search-selection",
   summarizeLink: "oba-summarize-link",
@@ -102,9 +103,9 @@ test("context menu", { timeout: 240000 }, async (t) => {
 
     await t.test("items, titles and contexts", async () => {
       await setMenu({ enabled: true, disabledItems: ["copyMarkdown"] });
-      await poll(async () => (await menuItems()).length === 6);
-      await setMenu({ enabled: true, disabledItems: [] });
       await poll(async () => (await menuItems()).length === 7);
+      await setMenu({ enabled: true, disabledItems: [] });
+      await poll(async () => (await menuItems()).length === 8);
       const items = await menuItems();
       assert.deepEqual(
         items.map(({ id, parentId, title, contexts, error }) => ({
@@ -118,6 +119,7 @@ test("context menu", { timeout: 240000 }, async (t) => {
           [MENU.parent, undefined, "OpenBrowserAgent", ["all", "tab"]],
           [MENU.ask, "Ask or act on this page", ["all", "tab"]],
           [MENU.summarizePage, "Summarize this page", ["all", "tab"]],
+          [MENU.translatePage, "Translate this page", ["all", "tab"]],
           [
             MENU.searchPage,
             "Search the web about this page",
@@ -171,7 +173,7 @@ test("context menu", { timeout: 240000 }, async (t) => {
       await setMenu({ enabled: false, disabledItems: [] });
       await poll(async () => (await menuItems()).length === 0);
       await setMenu({ enabled: true, disabledItems: [] });
-      await poll(async () => (await menuItems()).length === 7);
+      await poll(async () => (await menuItems()).length === 8);
     });
 
     let panel;
