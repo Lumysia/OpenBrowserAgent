@@ -21,6 +21,7 @@ import {
 import { baseUrlKey } from "../shared/provider-urls";
 import type { ThinkingSwitch } from "../shared/thinking-switch";
 import type { ProviderId } from "../shared/types";
+import { knownOutputLimit } from "./model-catalog";
 import { quickThinking, thinkingFieldNames } from "./quick-reasoning";
 import {
   FIELD_REJECTION_STATUSES,
@@ -37,6 +38,8 @@ export type ProviderModel = {
   contextLength?: number;
   thinkingSwitch?: ThinkingSwitch;
 };
+
+const FALLBACK_OUTPUT_LIMIT = 8192;
 
 export function piModel(model: ProviderModel): Model<Api> {
   const api =
@@ -62,7 +65,11 @@ export function piModel(model: ProviderModel): Model<Api> {
     thinkingLevelMap: { off: null },
     input: ["text", "image"],
     contextWindow: model.contextLength || 128_000,
-    maxTokens: 8192,
+    // Requests send only a known limit (see createProviderStream); the
+    // Anthropic API requires one and falls back to this value.
+    maxTokens:
+      knownOutputLimit(model.provider, model.modelName) ||
+      FALLBACK_OUTPUT_LIMIT,
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
     // Tools loaded mid-run are declared in a system message after the cached
     // prefix instead of changing the tool list. Models without this support
@@ -146,6 +153,10 @@ export function createProviderStream(
   const modelKey = `${baseUrlKey(configuration.baseUrl)}|${configuration.modelName}`;
   let inlineTools = !withoutInlineTools.has(modelKey);
   const quick = reasoning === QUICK_TASK_REASONING;
+  const outputLimit = knownOutputLimit(
+    configuration.provider,
+    configuration.modelName,
+  );
   return (requested, context, options) => {
     let model = inlineTools ? requested : { ...requested, compat: undefined };
     const output = new AssistantMessageEventStream();
@@ -166,6 +177,7 @@ export function createProviderStream(
       );
       const providerOptions = {
         ...options,
+        maxTokens: options?.maxTokens ?? outputLimit,
         apiKey: configuration.apiKey || "local-no-key",
         headers: configuration.apiKey
           ? undefined
