@@ -20,11 +20,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Formatting
+        run: npx prettier --check .
 
       - name: Type check
         run: npm run compile
@@ -34,3 +37,36 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  browser:
+    name: Browser tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Chrome for Testing: branded Chrome no longer loads unpacked
+      # extensions from the command line.
+      - name: Install Chrome for Testing
+        id: chrome
+        uses: browser-actions/setup-chrome@v2
+
+      - name: Build the Chrome extension
+        run: npm run build:chrome
+
+      - name: Browser tests
+        env:
+          CHROMIUM: ${{ steps.chrome.outputs.chrome-path }}
+          OBA_HEADLESS: "1"
+        run: npm run test:browser:all
