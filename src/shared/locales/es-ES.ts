@@ -278,6 +278,7 @@ export const esES: LocaleMessages = {
         done: "Puentes de ejecución gestionados",
       },
       generateImage: { running: "Generando imagen", done: "Imagen generada" },
+      runCode: { running: "Ejecutando código", done: "Código ejecutado" },
       runScript: { running: "Ejecutando script", done: "Script ejecutado" },
       devtools: {
         running: "Ejecutando diagnóstico",

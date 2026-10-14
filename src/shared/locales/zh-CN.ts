@@ -216,6 +216,7 @@ export const zhCN: LocaleMessages = {
       localCommand: { running: "运行本地命令中", done: "本地命令已运行" },
       localBridges: { running: "管理执行桥中", done: "执行桥已管理" },
       generateImage: { running: "生成图片中", done: "图片已生成" },
+      runCode: { running: "运行代码中", done: "代码已运行" },
       runScript: { running: "运行脚本中", done: "脚本已运行" },
       devtools: { running: "运行诊断中", done: "诊断已完成" },
     },

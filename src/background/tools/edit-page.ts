@@ -3,7 +3,8 @@ import { TOOL_NAME } from "../../shared/tool-names";
 import { RUN_TAB_ID_PARAM } from "../run-tab";
 import { pageHeader } from "./page";
 import { callPage, pageTab } from "../page-agent";
-import { errorMessage, fail, schema, type ToolDefinition } from "./types";
+import { errorMessage } from "../../shared/error-message";
+import { fail, schema, type ToolDefinition } from "./types";
 
 const MAX_EDITS = 100;
 

@@ -216,6 +216,7 @@ export const zhTW: LocaleMessages = {
       localCommand: { running: "執行本機命令中", done: "本機命令已執行" },
       localBridges: { running: "管理執行橋中", done: "執行橋已管理" },
       generateImage: { running: "產生圖片中", done: "圖片已產生" },
+      runCode: { running: "執行程式碼中", done: "程式碼已執行" },
       runScript: { running: "執行指令碼中", done: "指令碼已執行" },
       devtools: { running: "執行診斷中", done: "診斷已完成" },
     },

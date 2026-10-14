@@ -51,7 +51,7 @@ The extension's whole interface (chat, agent steps, composer) lives in the brows
 Attached only for the duration of specific actions: trusted mouse and keyboard input on pages that ignore synthetic events (rich text editors, canvas apps), answering a JavaScript dialog that blocks the page, screenshots of a tab without bringing it to the front, full-page screenshots, and developer diagnostics. It is detached right after the call.
 
 == offscreen justification ==
-Converts fetched web page HTML into Markdown text with the browser's DOM parser, which the background service worker lacks. The offscreen document only parses HTML; it shows nothing and loads no remote code.
+Does DOM work the background service worker cannot: converts fetched web page HTML into Markdown with the browser's DOM parser, holds the files the agent saves to the user's downloads, and hosts the extension's sandboxed page (code-sandbox.html) in which the agent's code tool runs a bundled JavaScript interpreter in a Worker. The offscreen document shows nothing and loads nothing from servers.
 
 == Host permission justification ==
 The user can ask the agent to read or act on any site they visit, translate any page, and connect any model provider, MCP server or WebDAV sync server by URL. These cannot be known in advance, so access to all URLs is needed. The extension acts on a page only when the user starts a task, attaches the page or translates it.
@@ -59,8 +59,8 @@ The user can ask the agent to read or act on any site they visit, translate any 
 
 REMOTE CODE
 -----------
-Answer: No, I am not using remote code.
-All JavaScript is bundled in the package. The extension does not load or eval scripts from any server.
+Answer: Yes, I am using remote code.
+Justification: The optional code tool runs JavaScript that the user's own AI model writes during a task (to calculate, parse a table or reshape data). It runs only in QuickJS, a JavaScript interpreter compiled to WebAssembly that is bundled in the package, inside a Worker created by a sandboxed extension page (manifest sandbox.pages: opaque origin, no extension APIs; its CSP is default-src 'none', so it has no network access). The code sees only the text the agent passes in and returns text. All of the extension's own JavaScript and WebAssembly is in the package; no script or module is ever downloaded, and nothing uses eval or new Function.
 (Note: the agent's optional "run page JavaScript" tool is off by default. When the user enables it, it runs model-written snippets in the web page, not in the extension.)
 
 

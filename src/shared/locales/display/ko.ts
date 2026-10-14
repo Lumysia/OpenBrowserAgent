@@ -66,6 +66,7 @@ export const displayKo: DisplayMessages = {
     results: plural({ other: "결과 {count}개" }),
     items: plural({ other: "항목 {count}개" }),
     tools: plural({ other: "도구 {count}개" }),
+    filesSaved: plural({ other: "파일 {count}개 저장됨" }),
     editsApplied: plural({ other: "편집 {count}개 중 {applied}개 적용됨" }),
     actions: {
       open: "열었어요",

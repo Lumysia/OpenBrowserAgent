@@ -19,9 +19,11 @@ async function ensureOffscreen() {
       reasons: [
         chrome.offscreen.Reason.DOM_PARSER,
         chrome.offscreen.Reason.BLOBS,
+        chrome.offscreen.Reason.IFRAME_SCRIPTING,
+        chrome.offscreen.Reason.WORKERS,
       ],
       justification:
-        "Read the text of fetched web pages, and hold files the agent saves to the user's downloads.",
+        "Read the text of fetched web pages, hold files the agent saves to the user's downloads, and host the sandboxed page that runs the agent's code tool.",
     })
     .finally(() => {
       creating = undefined;

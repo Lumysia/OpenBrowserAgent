@@ -80,6 +80,10 @@ export const displayEsES: DisplayMessages = {
       one: "{count} herramienta",
       other: "{count} herramientas",
     }),
+    filesSaved: plural({
+      one: "{count} archivo guardado",
+      other: "{count} archivos guardados",
+    }),
     editsApplied: plural({
       one: "{applied} de {count} cambio aplicado",
       other: "{applied} de {count} cambios aplicados",

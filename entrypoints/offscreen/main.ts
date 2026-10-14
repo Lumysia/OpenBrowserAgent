@@ -1,11 +1,16 @@
 import { htmlMarkdown } from "../../src/page/html-markdown";
 import { base64ToBytes } from "../../src/shared/binary";
 import {
+  cancelSandboxRun,
+  codeSandbox,
+} from "../../src/shared/code-sandbox/host";
+import { errorMessage } from "../../src/shared/error-message";
+import {
   OFFSCREEN_MESSAGE,
   type OffscreenRequest,
 } from "../../src/shared/offscreen";
 
-function handle(message: OffscreenRequest) {
+async function handle(message: OffscreenRequest) {
   switch (message.type) {
     case OFFSCREEN_MESSAGE.htmlMarkdown:
       return htmlMarkdown(message.html, message.url);
@@ -16,22 +21,30 @@ function handle(message: OffscreenRequest) {
     case OFFSCREEN_MESSAGE.revokeBlobUrl:
       URL.revokeObjectURL(message.url);
       return true;
+    case OFFSCREEN_MESSAGE.runCode:
+      return codeSandbox(message.sandboxPage).run(message.request);
+    case OFFSCREEN_MESSAGE.cancelCode:
+      cancelSandboxRun(message.id);
+      return true;
   }
 }
 
 const TYPES = new Set<string>(Object.values(OFFSCREEN_MESSAGE));
 
 chrome.runtime.onMessage.addListener(
-  (message: OffscreenRequest, _sender, sendResponse) => {
+  (message: OffscreenRequest, sender, sendResponse) => {
+    // Only the extension's own pages and service worker, never content
+    // scripts in web pages, may ask.
     if (!TYPES.has(message?.type)) return false;
-    try {
-      sendResponse({ ok: true, value: handle(message) });
-    } catch (error) {
-      sendResponse({
-        ok: false,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-    return false;
+    if (sender.id !== chrome.runtime.id || sender.tab) return false;
+    handle(message).then(
+      (value) => sendResponse({ ok: true, value }),
+      (error) =>
+        sendResponse({
+          ok: false,
+          error: errorMessage(error),
+        }),
+    );
+    return true;
   },
 );

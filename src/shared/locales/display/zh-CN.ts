@@ -62,6 +62,7 @@ export const displayZhCN: DisplayMessages = {
     results: plural({ other: "{count} 条结果" }),
     items: plural({ other: "{count} 项" }),
     tools: plural({ other: "{count} 个工具" }),
+    filesSaved: plural({ other: "已保存 {count} 个文件" }),
     editsApplied: plural({ other: "已应用 {applied}/{count} 处修改" }),
     actions: {
       open: "已打开",

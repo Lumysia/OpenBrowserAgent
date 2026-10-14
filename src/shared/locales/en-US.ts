@@ -252,6 +252,7 @@ export const enUS = {
         done: "Managed execution bridges",
       },
       generateImage: { running: "Generating image", done: "Generated image" },
+      runCode: { running: "Running code", done: "Ran code" },
       runScript: { running: "Running script", done: "Ran script" },
       devtools: { running: "Running diagnostics", done: "Ran diagnostics" },
     },

@@ -66,6 +66,7 @@ export const displayJaJP: DisplayMessages = {
     results: plural({ other: "{count}件の結果" }),
     items: plural({ other: "{count}件" }),
     tools: plural({ other: "{count}個のツール" }),
+    filesSaved: plural({ other: "{count}件のファイルを保存" }),
     editsApplied: plural({ other: "{count}件中{applied}件の編集を適用" }),
     actions: {
       open: "開きました",

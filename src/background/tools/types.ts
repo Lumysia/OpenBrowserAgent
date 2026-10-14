@@ -129,10 +129,6 @@ export function schema(
   return { type: "object", properties, required };
 }
 
-export function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : String(error);
-}
-
 export function stringArg(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }

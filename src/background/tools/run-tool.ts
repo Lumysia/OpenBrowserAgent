@@ -2,8 +2,8 @@ import { assignChatSources } from "../../shared/chat-sources";
 import { withCancellationTimeout, type Pause } from "../../shared/cancellation";
 import { BROWSER_TOOL_TIMEOUT_MS } from "../../shared/config";
 import type { ChatSource } from "../../shared/types";
+import { errorMessage } from "../../shared/error-message";
 import {
-  errorMessage,
   type RunContext,
   type ToolContext,
   type ToolDefinition,

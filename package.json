@@ -24,7 +24,7 @@
     "test:sync:webdav": "node --import tsx tests/sync-two-devices.ts",
     "test:browser": "node tests/browser-smoke.mjs",
     "test:browser:pi": "node tests/browser-pi.mjs",
-    "test:browser:tools": "node --test tests/browser-tools.test.mjs tests/browser-input.test.mjs tests/browser-agent-tabs.test.mjs tests/browser-serp.test.mjs tests/browser-downloads.test.mjs",
+    "test:browser:tools": "node --test tests/browser-tools.test.mjs tests/browser-input.test.mjs tests/browser-agent-tabs.test.mjs tests/browser-serp.test.mjs tests/browser-downloads.test.mjs tests/browser-run-code.test.mjs",
     "test:browser:mcp-origin": "node tests/browser-mcp-origin-live.mjs",
     "test:page-translate:live": "node --import tsx scripts/page-translate-live-check.ts",
     "test:browser:all": "node --test tests/browser-*.test.mjs && node tests/browser-smoke.mjs && node tests/browser-pi.mjs",
@@ -34,6 +34,7 @@
   "dependencies": {
     "@earendil-works/pi-agent-core": "1.1.0",
     "@earendil-works/pi-ai": "1.1.0",
+    "@jitl/quickjs-ng-wasmfile-release-sync": "0.32.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-scroll-area": "^1.2.10",
@@ -55,6 +56,7 @@
     "marked-footnote": "1.4.0",
     "marked-katex-extension": "5.1.13",
     "nanoid": "^5.1.16",
+    "quickjs-emscripten-core": "0.32.0",
     "react": "latest",
     "react-dom": "latest",
     "remend": "1.4.0"

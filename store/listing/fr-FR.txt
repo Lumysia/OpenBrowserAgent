@@ -23,6 +23,7 @@ VOS MODÈLES, VOS OUTILS
 • Connectez des fournisseurs compatibles OpenAI ou Anthropic, Gemini, OpenRouter, DeepSeek, Ollama et d’autres encore, avec vos propres clés API et URL de base.
 • Utilisez un modèle auxiliaire moins coûteux pour lire les pages longues.
 • Connectez des serveurs MCP distants (Streamable HTTP) pour disposer d’outils supplémentaires. Des serveurs de recherche Web sans clé API sont inclus, et chacun reste désactivé tant que vous ne l’activez pas.
+• Des chiffres exacts : l’agent peut exécuter le code JavaScript qu’il écrit dans un bac à sable sur votre appareil, sans accès à Internet, pour calculer, analyser des tableaux et transformer des données.
 • Pont d’exécution local facultatif : il permet à un agent d’exécuter des commandes sur votre ordinateur, uniquement après que vous l’avez installé et activé.
 
 SYNCHRONISATION ENTRE APPAREILS

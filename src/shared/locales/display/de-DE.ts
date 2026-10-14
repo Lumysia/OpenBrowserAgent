@@ -74,6 +74,10 @@ export const displayDeDE: DisplayMessages = {
     results: plural({ one: "{count} Ergebnis", other: "{count} Ergebnisse" }),
     items: plural({ one: "{count} Eintrag", other: "{count} Einträge" }),
     tools: plural({ one: "{count} Tool", other: "{count} Tools" }),
+    filesSaved: plural({
+      one: "{count} Datei gespeichert",
+      other: "{count} Dateien gespeichert",
+    }),
     editsApplied: plural({
       one: "{applied} von {count} Änderung übernommen",
       other: "{applied} von {count} Änderungen übernommen",

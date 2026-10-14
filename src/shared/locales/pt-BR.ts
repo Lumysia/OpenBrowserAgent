@@ -275,6 +275,7 @@ export const ptBR: LocaleMessages = {
         done: "Pontes de execução gerenciadas",
       },
       generateImage: { running: "Gerando imagem", done: "Imagem gerada" },
+      runCode: { running: "Executando código", done: "Código executado" },
       runScript: { running: "Executando script", done: "Script executado" },
       devtools: {
         running: "Executando diagnóstico",
