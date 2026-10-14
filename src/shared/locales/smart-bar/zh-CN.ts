@@ -26,6 +26,7 @@ export const smartBarZhCN: SmartBarLocaleMessages = {
   stopReading: "停止朗读",
   noVoice: "未安装{language}语音。",
   writing: "正在生成…",
+  thinking: "正在思考…",
   emptyResult: "模型没有返回文本。",
   connectionLost: "与 OpenBrowserAgent 的连接已断开，请重试。",
   selectionChanged: "所选文本已更改，请改为复制结果。",

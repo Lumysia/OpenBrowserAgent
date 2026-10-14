@@ -84,6 +84,8 @@ export type SmartBarRunRequest = {
 
 export type SmartBarStreamEvent =
   | { type: "delta"; text: string }
+  // The model is thinking before it answers.
+  | { type: "thinking" }
   | { type: "done" }
   | { type: "error"; error: string }
   // Nothing was sent: the provider needs the user's permission first.

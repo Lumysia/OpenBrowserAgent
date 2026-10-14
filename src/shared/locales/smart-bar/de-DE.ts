@@ -26,6 +26,7 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
   stopReading: "Vorlesen beenden",
   noVoice: "Keine Stimme für {language} installiert.",
   writing: "Wird geschrieben…",
+  thinking: "Denkt nach…",
   emptyResult: "Das Modell hat keinen Text geliefert.",
   connectionLost:
     "Die Verbindung zu OpenBrowserAgent wurde unterbrochen. Versuchen Sie es erneut.",

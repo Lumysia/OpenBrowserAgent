@@ -135,6 +135,8 @@ Translate on a word or short phrase shows a dictionary entry instead of a plain 
 | synonyms         | synonymes              | Synonyme          | sinónimos              | sinônimos             |
 | collocations     | collocations           | Kollokationen     | colocaciones           | colocações            |
 
+While a model thinks before it answers, the bar says so instead of "Writing…": Thinking… / 正在思考… / 正在思考… / 考え中… / 생각 중… / Réflexion… / Denkt nach… / Pensando… / Pensando…. This is the model's reasoning, the same idea run info calls "Reasoning"; the status line uses the everyday verb.
+
 ## Context menu and web search
 
 The context menu is the browser's right-click menu; OpenBrowserAgent adds a submenu there. Its titles follow each platform's menu style: short imperative phrases, no final period. `%s` in a title is the selected text, quoted the way the language quotes (“%s” in Simplified Chinese, 「%s」 in Traditional Chinese and Japanese, „%s“ in German, « %s » in French, «%s» in Spanish). "Search the web" means the agent searches and answers with sources; the smart bar's button for it is "AI search". Text the user selected and hands to the side panel is the "selected text": it shows as a card above the composer and a chip on the sent message, named with the same words as in the menu titles.
