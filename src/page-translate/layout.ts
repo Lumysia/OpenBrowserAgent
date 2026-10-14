@@ -381,8 +381,20 @@ function insideTinyBox(node: Text, block: Element) {
     if (!element.getClientRects().length) continue;
     const box = element.getBoundingClientRect();
     if (box.width < 2 || box.height < 2) return true;
+    if (isScreenReaderOnly(element)) return true;
   }
   return false;
+}
+
+// Text for screen readers laid over the page and not painted (an alternative
+// text for star icons, a spoken price): fully transparent or clipped to
+// nothing. Text in the flow that is transparent may be about to fade in.
+function isScreenReaderOnly(element: Element) {
+  const style = element.ownerDocument.defaultView!.getComputedStyle(element);
+  if (style.position !== "absolute" && style.position !== "fixed") return false;
+  return (
+    style.opacity === "0" || /^(circle\(0(px)?|inset\(50%)/.test(style.clipPath)
+  );
 }
 
 // Rows with more items than this aren't checked item by item.

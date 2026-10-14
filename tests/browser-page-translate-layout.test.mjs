@@ -301,6 +301,9 @@ test(
             );
           }
           assert.equal(await shownIn(page, "#more"), undefined);
+          // Words only screen readers get (transparent, laid over the page)
+          // next to a price: nothing shows.
+          assert.equal(await shownIn(page, "#price"), undefined);
           assert.doesNotMatch(sent(), LABEL_TEXT);
           // The skip link is hidden: nothing is added for it.
           assert.equal(
