@@ -98,6 +98,10 @@ const INLINE_TAGS = new Set([
   "IFRAME",
   "OBJECT",
   "EMBED",
+  // Not rendered: page metadata written inside the text (wikis add category
+  // links in the middle of a sentence).
+  "LINK",
+  "META",
 ]);
 
 // Inline elements that are translated as a paragraph of their own: copying
@@ -201,8 +205,11 @@ export function isCopiedInTranslation(element: Element) {
 }
 
 // Media and icons: they decorate the text but aren't part of it, so they
-// are neither sent for translation nor shown again in the translation.
+// are neither sent for translation nor shown again in the translation. The
+// same for page metadata inside the text, which doesn't show.
 const DECORATIVE_TAGS = new Set([
+  "LINK",
+  "META",
   "IMG",
   "PICTURE",
   "SVG",

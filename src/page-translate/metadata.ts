@@ -109,9 +109,12 @@ export function metadataOf(
   if (!trimmed) return undefined;
   if (isDate(trimmed, language)) return "date";
   if (isNumber(trimmed)) return "number";
-  if (isNameList(trimmed)) return "name";
+  if (isNameList(trimmed) || SITE_NAME.test(trimmed)) return "name";
   return undefined;
 }
+
+// A site's name written as its address ("11Alive.com", "news.example.org").
+const SITE_NAME = /^[\p{L}\d-]+(\.[\p{L}\d-]+)*\.\p{L}{2,}$/u;
 
 function isNumber(trimmed: string) {
   // A number with units or symbols only.

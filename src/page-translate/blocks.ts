@@ -139,10 +139,15 @@ function makeParagraph(
   };
 }
 
-// Leading and trailing blank text nodes aren't part of the paragraph.
+// Leading and trailing blank text, line breaks and elements that don't show
+// (page metadata) aren't part of the paragraph.
+const EDGE_TAGS = new Set(["BR", "LINK", "META"]);
+
 function trimRun(nodes: Node[]) {
   const blank = (node: Node) =>
-    node.nodeType === 3 && !originalText(node as Text).trim();
+    node.nodeType === 3
+      ? !originalText(node as Text).trim()
+      : EDGE_TAGS.has((node as Element).tagName?.toUpperCase());
   let start = 0;
   let end = nodes.length;
   while (start < end && blank(nodes[start])) start++;
