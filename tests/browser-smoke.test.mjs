@@ -1,16 +1,19 @@
 import assert from "node:assert/strict";
-import { setTimeout as delay } from "node:timers/promises";
-import { launchExtension, poll } from "./chromium.mjs";
+import { test } from "node:test";
+import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
 import { configureComposer, submitComposer } from "./browser-composer.mjs";
-import { providerFixture, reply } from "./provider-fixtures.ts";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
+import { launchExtension, poll, settled } from "./chromium.mjs";
+import {
+  pieces,
+  providerFixture,
+  reply,
+  streamText,
+} from "./provider-fixtures.ts";
 
-// Opt-in UI smoke (npm run test:browser): needs `npm run build:chrome` and
-// Chromium (CHROMIUM or /usr/bin/chromium). It catches what unit tests cannot:
-// manifest, bundling and module-init crashes in the real extension pages.
-// Set OBA_HEADLESS=0 to watch it run.
-const browser = await launchExtension({
-  headed: process.env.OBA_HEADLESS === "0",
-});
+// UI smoke (npm run test:browser): needs `npm run build:chrome` and
+// Chromium. It catches what unit tests cannot: manifest, bundling and
+// module-init crashes in the real extension pages.
 
 // Installed before page scripts run: records uncaught errors, rejections and
 // console.error calls.
@@ -29,7 +32,7 @@ function recordErrors() {
   };
 }
 
-async function checkPage(path, readySelector) {
+async function checkPage(browser, path, readySelector) {
   const page = await browser.open(`chrome-extension://${browser.id}/${path}`);
   // The init script only applies after Page.enable.
   await page.send("Page.enable");
@@ -47,15 +50,14 @@ async function checkPage(path, readySelector) {
     20000,
   );
   // Let storage loads and other effects settle before reading errors.
-  await delay(1000);
+  await settled(page);
   assert.deepEqual(await page.call(() => globalThis.__smokeErrors), []);
-  console.log(`ok ${path}`);
 }
 
 // With chat sync on, the first message of a new chat opens that chat. Sync
 // bookkeeping once re-stored an older chat list mid-send, and the panel fell
 // back to the empty start page.
-async function checkSyncedSend() {
+async function checkSyncedSend(browser) {
   const fixture = await providerFixture((request, response) =>
     reply(response, request.protocol, { text: "Synced reply." }),
   );
@@ -63,11 +65,16 @@ async function checkSyncedSend() {
     const page = await browser.open(
       `chrome-extension://${browser.id}/sidepanel.html`,
     );
-    await page.call(() =>
-      chrome.storage.local.set({
-        "active-sync-backend-id": "browser-sync",
-        "sync-data-settings": { syncChats: true },
-      }),
+    await page.call(
+      ({ backend, settings }) =>
+        chrome.storage.local.set({
+          [backend]: "browser-sync",
+          [settings]: { syncChats: true },
+        }),
+      {
+        backend: STORAGE_KEYS.activeSyncBackendId,
+        settings: STORAGE_KEYS.syncDataSettings,
+      },
     );
     await configureComposer(page, {
       provider: "openai",
@@ -75,7 +82,16 @@ async function checkSyncedSend() {
       baseUrl: `${fixture.baseUrl}/v1`,
       apiKey: "test-key",
     });
-    await delay(1000);
+    // Sync is running: a round stored its state.
+    await poll(() =>
+      page.call(
+        async (prefix) =>
+          Object.keys(await chrome.storage.local.get(null)).some((key) =>
+            key.startsWith(prefix),
+          ),
+        `${STORAGE_KEYS.syncState}:`,
+      ),
+    );
     await submitComposer(page, "First synced message");
     await poll(
       () =>
@@ -96,7 +112,6 @@ async function checkSyncedSend() {
       );
       throw error;
     });
-    console.log("ok a synced new chat shows its first message");
   } finally {
     await fixture.close();
   }
@@ -106,7 +121,7 @@ async function checkSyncedSend() {
 // under the extension CSP: CJK bold, math, footnotes, and a remote image that
 // waits for a click instead of loading. The multi-line prompt keeps its line
 // breaks in the user bubble, without the surrounding blank lines.
-async function checkStreamedMarkdown() {
+async function checkStreamedMarkdown(browser) {
   let imageRequests = 0;
   const answer = [
     "**你好：**文字 costs $5 and $10, and $x^2$ holds.[^1]",
@@ -121,19 +136,11 @@ async function checkStreamedMarkdown() {
       response.writeHead(404).end();
       return;
     }
-    response.writeHead(200, { "Content-Type": "text/event-stream" });
-    const text = answer.replace("BASE", fixture.baseUrl);
-    for (let index = 0; index < text.length; index += 7) {
-      const content = text.slice(index, index + 7);
-      response.write(
-        `data: ${JSON.stringify({ choices: [{ index: 0, delta: { content } }] })}\n\n`,
-      );
-      await delay(10);
-    }
-    response.write(
-      `data: ${JSON.stringify({ choices: [{ index: 0, delta: {}, finish_reason: "stop" }] })}\n\ndata: [DONE]\n\n`,
+    await streamText(
+      response,
+      pieces(answer.replace("BASE", fixture.baseUrl), 7),
+      { delayMs: 10 },
     );
-    response.end();
   });
   try {
     const page = await browser.open(
@@ -149,7 +156,7 @@ async function checkStreamedMarkdown() {
       baseUrl: `${fixture.baseUrl}/v1`,
       apiKey: "test-key",
     });
-    await delay(1000);
+    await settled(page);
     await submitComposer(page, "\nRender Markdown\n\nas a list\n");
     await poll(
       () =>
@@ -187,18 +194,29 @@ async function checkStreamedMarkdown() {
       errors: [],
     });
     assert.equal(imageRequests, 0);
-    console.log("ok a streamed Markdown answer renders");
   } finally {
     await fixture.close();
   }
 }
 
-try {
-  // A fresh profile has no provider, so the side panel shows its setup screen.
-  await checkPage("sidepanel.html", "#root button");
-  await checkPage("options.html", "#root .nav-link");
-  await checkSyncedSend();
-  await checkStreamedMarkdown();
-} finally {
-  await browser.close();
-}
+test("browser smoke", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
+  const browser = await launchExtension();
+  try {
+    // A fresh profile has no provider, so the side panel shows its setup
+    // screen.
+    await t.test("the side panel renders without errors", () =>
+      checkPage(browser, "sidepanel.html", "#root button"),
+    );
+    await t.test("the options page renders without errors", () =>
+      checkPage(browser, "options.html", "#root .nav-link"),
+    );
+    await t.test("a synced new chat shows its first message", () =>
+      checkSyncedSend(browser),
+    );
+    await t.test("a streamed Markdown answer renders", () =>
+      checkStreamedMarkdown(browser),
+    );
+  } finally {
+    await browser.close();
+  }
+});

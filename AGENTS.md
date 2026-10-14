@@ -84,6 +84,7 @@ npm run build
 ```
 
 - Always run `npm run build` after UI changes before telling the user to review or reload the extension.
+- Browser tests (`npm run test:browser:all`, also in CI) run the Chrome build: run `npm run build:chrome` first. They use `CHROMIUM` or a Chromium on `PATH`, headed unless `OBA_HEADLESS=1`. Build them on the shared harness (`tests/browser-harness.mjs`, `tests/cdp-input.mjs`), import product constants instead of copying them, and wait for a signal the product gives rather than a fixed delay.
 - If a production/minified issue cannot be located confidently, create a sourcemap-enabled build or add temporary diagnostics, then ask for a new trace/repro. Do not commit temporary diagnostics or sourcemap-only config unless explicitly requested.
 
 Search for unintended third-party branding before final release work:

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { setTimeout as delay } from "node:timers/promises";
 import { poll } from "./chromium.mjs";
 import {
+  barAfterSelection,
   barHas,
   barState,
   clickInBar,
@@ -13,6 +13,7 @@ import {
   selectText,
   startSmartBar,
 } from "./smart-bar-page.mjs";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // Results: streaming into the card, written back into fields, and the keys
 // the bar takes from the page while it shows.
@@ -61,7 +62,7 @@ const FIXES = {
   recieve: "receive",
 };
 
-test("smart bar editing", { timeout: 240000 }, async (t) => {
+test("smart bar editing", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
   let release;
   const released = new Promise((resolve) => (release = resolve));
   const session = await startSmartBar({
@@ -139,7 +140,7 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
         const before = await fieldValue(page, selector);
         await replaceWithFix(page, selector);
         assert.equal(await fieldValue(page, selector), FIXES[before]);
-        await pressKey(page, "z", "KeyZ", 90, 2, ["undo"]);
+        await pressKey(page, "z", { modifiers: 2, commands: ["undo"] });
         await poll(async () => (await fieldValue(page, selector)) === before);
       });
 
@@ -155,7 +156,7 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
         await poll(() => barHas(page, "button", "Replace"));
         // The field kept focus: the user types before the selection, the
         // same text even, so the old place holds the selected text again.
-        await pressKey(page, "Home", "Home", 36);
+        await pressKey(page, "Home");
         await page.send("Input.insertText", { text: before });
         await clickInBar(page, "button", "Replace");
         await poll(() =>
@@ -167,7 +168,7 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
         );
         assert.equal(await fieldValue(page, selector), before + before);
         assert.equal(await barHas(page, "button", "Replace"), false);
-        await pressKey(page, "Escape", "Escape", 27);
+        await pressKey(page, "Escape");
         await page.call(
           ({ selector, before }) => {
             const element = document.querySelector(selector);
@@ -187,9 +188,7 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
     });
 
     await t.test("no bar in password fields", async () => {
-      await selectText(page, "#password");
-      await delay(600);
-      assert.equal(await barState(page), "none");
+      assert.equal(await barAfterSelection(session, page, "#password"), "none");
     });
 
     await t.test(
@@ -205,12 +204,12 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
       await selectText(page, "#dialog-text");
       await poll(async () => (await barState(page)) === "toolbar");
       const escapes = await page.call(() => window.escapes);
-      await pressKey(page, "Escape", "Escape", 27);
+      await pressKey(page, "Escape");
       await poll(async () => (await barState(page)) === "none");
       assert.equal(await page.call(() => dialog.open), true);
       assert.equal(await page.call(() => window.escapes), escapes);
       // With no bar, Esc is the page's again.
-      await pressKey(page, "Escape", "Escape", 27);
+      await pressKey(page, "Escape");
       await poll(() => page.call(() => !dialog.open));
       assert.equal(await page.call(() => window.escapes), escapes + 1);
     });
@@ -288,7 +287,7 @@ test("smart bar editing", { timeout: 240000 }, async (t) => {
       assert.match(body, /lazy dog/);
       // Not field values or script text.
       assert.doesNotMatch(body, /secretpassword|hello wrold|inputEvents/);
-      await pressKey(page, "Escape", "Escape", 27);
+      await pressKey(page, "Escape");
     });
 
     await t.test("replies use the extension's language setting", async () => {

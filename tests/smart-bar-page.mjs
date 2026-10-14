@@ -1,6 +1,18 @@
 import { setTimeout as delay } from "node:timers/promises";
-import { launchExtension, poll } from "./chromium.mjs";
-import { providerFixture } from "./provider-fixtures.ts";
+import { SMART_BAR_MESSAGE } from "../src/shared/smart-bar-protocol.ts";
+import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
+import {
+  contentScriptsRegistered,
+  fixtureProvider,
+  servePages,
+  setPreferences,
+  startExtension,
+} from "./browser-harness.mjs";
+import { click, drag } from "./cdp-input.mjs";
+import { nextFrames, poll } from "./chromium.mjs";
+import { streamText } from "./provider-fixtures.ts";
+
+export { click } from "./cdp-input.mjs";
 
 // Test helpers for the smart bar on a page. The bar lives in a closed shadow
 // root, out of reach of page scripts; tests reach it through CDP (a DevTools
@@ -20,112 +32,90 @@ export async function startSmartBar({
   launch = {},
   args,
 }) {
-  const fixture = await providerFixture(async (request, response) => {
-    if (!request.url.startsWith("/v1/")) {
-      const page = pages[new URL(request.url, "http://host").pathname] ?? "";
-      const { html, headers } =
-        typeof page === "string" ? { html: page } : page;
-      response
-        .writeHead(200, { "Content-Type": "text/html", ...headers })
-        .end(html);
-      return;
-    }
-    response.writeHead(200, { "Content-Type": "text/event-stream" });
-    const send = (delta, finish = null) =>
-      response.write(
-        `data: ${JSON.stringify({
-          id: "fixture",
-          object: "chat.completion.chunk",
-          choices: [{ index: 0, delta, finish_reason: finish }],
-        })}\n\n`,
-      );
-    await answer(JSON.stringify(request.body.messages), (content) =>
-      send({ content }),
-    );
-    send({}, "stop");
-    response.end("data: [DONE]\n\n");
+  const session = await startExtension({
+    handle: async (request, response) => {
+      if (request.url.startsWith("/v1/"))
+        return streamText(response, (write) =>
+          answer(JSON.stringify(request.body.messages), write),
+        );
+      // Pages not listed are blank.
+      if (!servePages(pages, request, response))
+        response.writeHead(200, { "Content-Type": "text/html" }).end("");
+    },
+    storage: (baseUrl) => ({
+      provider: { fixture: fixtureProvider(baseUrl) },
+      language: "en-US",
+      preferences: { selectedModelId: "fixture", smartBar },
+    }),
+    launch,
+    args,
   });
-  const browser = await launchExtension({
-    headed: process.env.OBA_HEADLESS !== "1",
-    ...launch,
-    ...(args ? { args: [...(launch.args || []), ...args] } : {}),
-  }).catch(async (error) => {
-    await fixture.close();
-    throw error;
-  });
-  const close = async () => {
-    await browser.close();
-    await fixture.close();
-  };
-  const extensionUrl = (path) => `chrome-extension://${browser.id}/${path}`;
+  const { options, close } = session;
   try {
-    const options = await browser.open(extensionUrl("options.html"));
-    await options.call(
-      async ({ baseUrl, smartBar }) => {
-        await chrome.storage.local.set({
-          provider: {
-            fixture: {
-              id: "fixture",
-              type: "openai",
-              baseUrl: `${baseUrl}/v1`,
-              models: [{ id: "fixture", name: "fixture" }],
-            },
-          },
-          language: "en-US",
-          preferences: { selectedModelId: "fixture", smartBar },
-        });
-      },
-      { baseUrl: fixture.baseUrl, smartBar },
-    );
-    if (smartBar?.enabled)
-      await poll(() =>
-        options.call(
-          async () =>
-            (await chrome.scripting.getRegisteredContentScripts()).length > 0,
-        ),
-      );
+    if (smartBar?.enabled) await contentScriptsRegistered(options);
     // Counts the page scripts' requests to the background.
-    const worker = await browser.attach(
-      (url) => url === extensionUrl("background.js"),
-      "service_worker",
-    );
-    await worker.call(() => {
+    const worker = await session.worker();
+    await worker.call((prepare) => {
       self.prepares = 0;
       chrome.runtime.onMessage.addListener((message) => {
-        if (message?.type === "smart-bar:prepare") self.prepares++;
+        if (message?.type === prepare) self.prepares++;
       });
-    });
+    }, SMART_BAR_MESSAGE.prepare);
     return {
-      browser,
-      fixture,
-      options,
-      extensionUrl,
-      close,
-      // A test page; another host name makes it another site.
-      url: (path, host = "127.0.0.1") =>
-        fixture.baseUrl.replace("127.0.0.1", host) + path,
+      ...session,
       prepares: () => worker.call(() => self.prepares),
-      updateSmartBar: (change) =>
-        options.call(async (change) => {
-          const { preferences } = await chrome.storage.local.get("preferences");
-          await chrome.storage.local.set({
-            preferences: {
-              ...preferences,
-              smartBar: { ...preferences.smartBar, ...change },
-            },
-          });
-        }, change),
-      smartBarSettings: () =>
-        options.call(
-          async () =>
-            (await chrome.storage.local.get("preferences")).preferences
-              .smartBar,
-        ),
+      updateSmartBar: async (change) =>
+        setPreferences(options, {
+          smartBar: { ...(await smartBarSettings(options)), ...change },
+        }),
+      smartBarSettings: () => smartBarSettings(options),
     };
   } catch (error) {
     await close();
     throw error;
   }
+}
+
+function smartBarSettings(options) {
+  return options.call(
+    async (key) => (await chrome.storage.local.get(key))[key].smartBar,
+    STORAGE_KEYS.preferences,
+  );
+}
+
+// How long the page may take to apply the background's answer to a
+// selection. The answer leaves no other trace when it says "no bar".
+export const ANSWER_QUIET_MS = 250;
+
+// After a selection: waits until the page script read it (it does so in the
+// next frame) and, when it asked the background, until the ask arrived and
+// its answer had ANSWER_QUIET_MS to apply. `before` is `prepares()` from
+// before the selection. Resolves with whether the page asked.
+export async function selectionHandled(session, page, before) {
+  await nextFrames(page);
+  const asked = await poll(
+    async () => (await session.prepares()) > before,
+    ANSWER_QUIET_MS,
+  ).then(
+    () => true,
+    () => false,
+  );
+  if (asked) await delay(ANSWER_QUIET_MS);
+  return asked;
+}
+
+// Selects `selector` (with `select`) and returns the bar's state once the
+// page handled the selection.
+export async function barAfterSelection(
+  session,
+  page,
+  selector,
+  select = selectText,
+) {
+  const before = await session.prepares();
+  await select(page, selector);
+  await selectionHandled(session, page, before);
+  return barState(page);
 }
 
 // The text of a field, as the page sees it.
@@ -227,17 +217,6 @@ export function resultText(page) {
   );
 }
 
-export async function click(page, { x, y }) {
-  for (const type of ["mousePressed", "mouseReleased"])
-    await page.send("Input.dispatchMouseEvent", {
-      type,
-      x,
-      y,
-      button: "left",
-      clickCount: 1,
-    });
-}
-
 // Clicks once the element stops moving (the page can resize, e.g. when the
 // side panel opens, and the bar follows).
 export async function clickInBar(page, selector, text) {
@@ -264,29 +243,14 @@ export async function clickInBar(page, selector, text) {
   await click(page, point);
 }
 
-// `commands`: editing commands the key runs (CDP sends none by itself).
-export async function pressKey(
-  page,
-  key,
-  code,
-  keyCode,
-  modifiers = 0,
-  commands = [],
-) {
-  const event = { key, code, windowsVirtualKeyCode: keyCode, modifiers };
-  await page.send("Input.dispatchKeyEvent", {
-    ...event,
-    type: "rawKeyDown",
-    commands,
-  });
-  await page.send("Input.dispatchKeyEvent", { ...event, type: "keyUp" });
-}
+export { pressKey } from "./cdp-input.mjs";
 
 // A click on an empty spot, so a shown bar hides like after a user's click.
 export async function clickAway(page) {
   await page.send("Page.bringToFront");
+  await poll(() => page.call(() => !document.hidden));
   await click(page, { x: 600, y: 560 });
-  await delay(100);
+  await nextFrames(page);
 }
 
 // A real mouse drag across the element's first line.
@@ -305,20 +269,9 @@ export async function selectText(page, selector) {
     };
   }, selector);
   const y = rect.top + 10;
-  const mouse = (type, x, buttons) =>
-    page.send("Input.dispatchMouseEvent", {
-      type,
-      x,
-      y,
-      button: "left",
-      buttons,
-      clickCount: 1,
-    });
-  await mouse("mousePressed", rect.left + 2, 1);
-  await mouse("mouseMoved", (rect.left + rect.right) / 2, 1);
-  await mouse("mouseMoved", rect.right - 2, 1);
-  await mouse("mouseReleased", rect.right - 2, 0);
-  await delay(300);
+  await drag(page, { x: rect.left + 2, y }, { x: rect.right - 2, y });
+  // The page script reads the selection in the next frame.
+  await nextFrames(page);
 }
 
 // A real mouse drag across the first line of a frame's text (body and
@@ -329,17 +282,5 @@ export async function selectInFrame(page, selector) {
     return { x: rect.left + 10, y: rect.top + 30 };
   }, selector);
   await clickAway(page);
-  for (const [type, x, buttons] of [
-    ["mousePressed", box.x, 1],
-    ["mouseMoved", box.x + 200, 1],
-    ["mouseReleased", box.x + 200, 0],
-  ])
-    await page.send("Input.dispatchMouseEvent", {
-      type,
-      x,
-      y: box.y,
-      button: "left",
-      buttons,
-      clickCount: 1,
-    });
+  await drag(page, box, { x: box.x + 200, y: box.y });
 }

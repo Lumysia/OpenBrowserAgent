@@ -10,6 +10,7 @@ import {
   selectText,
   startSmartBar,
 } from "./smart-bar-page.mjs";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // What a page's own scripts can do to the bar: never open it, press its
 // buttons or read what it shows.
@@ -69,7 +70,7 @@ const COPY_PAGE = {
 </script>`,
 };
 
-test("smart bar security", { timeout: 240000 }, async (t) => {
+test("smart bar security", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
   const session = await startSmartBar({
     pages: { "/page": PAGE, "/copy": COPY_PAGE },
     smartBar: { enabled: true },

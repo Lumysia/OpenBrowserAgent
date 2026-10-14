@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { browserToolFixture, ref } from "./browser-tool-fixture.mjs";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // read fetches web pages without opening tabs; tabs the agent opens land in
 // the chat's tab group and the user's own tabs stay as they are.
@@ -21,7 +22,7 @@ const APP = `<!doctype html><html><head><title>App</title></head>
 
 test(
   "read and agent tabs: URL pages as text, one group per chat, user tabs untouched",
-  { timeout: 180000 },
+  { timeout: BROWSER_TEST_TIMEOUT },
   async (t) => {
     const hits = [];
     const fixture = await browserToolFixture((request, response) => {

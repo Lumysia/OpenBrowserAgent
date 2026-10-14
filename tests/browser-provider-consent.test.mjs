@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { setTimeout as delay } from "node:timers/promises";
+import { providerConsentEnUS as TEXT } from "../src/shared/locales/provider-consent/en-US.ts";
 import { sendComposer, typeComposer } from "./browser-composer.mjs";
+import { BROWSER_TEST_TIMEOUT, unchangedFor } from "./browser-harness.mjs";
+import { typeText } from "./cdp-input.mjs";
 import { poll } from "./chromium.mjs";
 import {
   barState,
@@ -20,14 +22,15 @@ const PAGE = `<!doctype html><title>Consent</title>
 <style>body{font:16px/1.4 sans-serif;margin:20px}p{width:420px}</style>
 <p id="text">The quick brown fox jumps over the lazy dog.</p>`;
 
-test("provider consent", { timeout: 240000 }, async (t) => {
+test("provider consent", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
   const session = await startSmartBar({
     pages: { "/page": PAGE },
     answer: async (_prompt, write) => write("Fixture answer."),
     smartBar: { enabled: true },
     args: [`--host-resolver-rules=MAP ${REMOTE} 127.0.0.1`],
   });
-  const { browser, fixture, options, extensionUrl, url } = session;
+  const { browser, fixture, options, extensionUrl, url, setPreferences } =
+    session;
   const port = new URL(fixture.baseUrl).port;
   const host = `${REMOTE}:${port}`;
   const remote = (extra = {}) => ({
@@ -39,14 +42,13 @@ test("provider consent", { timeout: 240000 }, async (t) => {
   });
   const modelRequests = () =>
     fixture.requests.filter((request) => request.url.startsWith("/v1/")).length;
-  const setProviders = (provider) =>
-    options.call(async (provider) => {
-      const { preferences } = await chrome.storage.local.get("preferences");
-      await chrome.storage.local.set({
-        provider,
-        preferences: { ...preferences, selectedModelId: "remote:m" },
-      });
-    }, provider);
+  const setProviders = async (provider) => {
+    await options.call(
+      (provider) => chrome.storage.local.set({ provider }),
+      provider,
+    );
+    await setPreferences({ selectedModelId: "remote:m" });
+  };
   const storedProvider = (id) =>
     options.call(
       async (id) => (await chrome.storage.local.get("provider")).provider[id],
@@ -63,16 +65,18 @@ test("provider consent", { timeout: 240000 }, async (t) => {
       );
       // The provider from an older version asks for permission.
       assert.ok(
-        await options.call(() =>
-          document
-            .querySelector(".ui-accordion-trigger")
-            .textContent.includes("Needs permission"),
+        await options.call(
+          (text) =>
+            document
+              .querySelector(".ui-accordion-trigger")
+              .textContent.includes(text),
+          TEXT.needsPermission,
         ),
       );
       await options.call(() =>
         document.querySelector(".ui-accordion-trigger").click(),
       );
-      const agreement = `I agree that content I share in chats (messages, page text, screenshots and files) is sent to ${host}.`;
+      const agreement = TEXT.agreement.replace("{host}", host);
       assert.equal(
         await poll(() =>
           options.call(
@@ -89,17 +93,15 @@ test("provider consent", { timeout: 240000 }, async (t) => {
           return save && !save.disabled;
         });
       // An edit alone cannot be saved.
-      await options.call(() =>
-        document
-          .querySelector('input[placeholder="OpenAI-compatible"]')
-          .focus(),
+      await typeText(
+        options,
+        " edited",
+        'input[placeholder="OpenAI-compatible"]',
       );
-      await options.send("Input.insertText", { text: " edited" });
       await poll(() =>
-        options.call(() =>
-          document.body.textContent.includes(
-            "Tick the box above to save this provider.",
-          ),
+        options.call(
+          (text) => document.body.textContent.includes(text),
+          TEXT.requiredToSave,
         ),
       );
       assert.equal(await saveState(), false);
@@ -117,19 +119,23 @@ test("provider consent", { timeout: 240000 }, async (t) => {
       );
       assert.equal(saved.host, host);
       await poll(() =>
-        options.call(() =>
-          document
-            .querySelector(".provider-consent-status")
-            ?.textContent.includes("Allowed to receive your content"),
+        options.call(
+          (text) =>
+            document
+              .querySelector(".provider-consent-status")
+              ?.textContent.includes(text),
+          TEXT.allowed,
         ),
       );
     });
 
     await t.test("settings: withdrawing asks again", async () => {
-      await options.call(() =>
-        [...document.querySelectorAll(".provider-consent-status button")]
-          .find((button) => button.textContent === "Withdraw permission")
-          .click(),
+      await options.call(
+        (label) =>
+          [...document.querySelectorAll(".provider-consent-status button")]
+            .find((button) => button.textContent === label)
+            .click(),
+        TEXT.withdraw,
       );
       await poll(async () => !(await storedProvider("remote")).consent);
       await poll(() =>
@@ -171,12 +177,18 @@ test("provider consent", { timeout: 240000 }, async (t) => {
           )
         ).includes(`is sent to ${host}.`),
       );
-      await delay(500);
-      assert.equal(modelRequests(), before, "nothing is sent while asking");
+      assert.equal(
+        await unchangedFor(modelRequests),
+        before,
+        "nothing is sent while asking",
+      );
       await answer("Not now");
       await poll(async () => !(await promptShown()));
-      await delay(500);
-      assert.equal(modelRequests(), before, "nothing is sent when declined");
+      assert.equal(
+        await unchangedFor(modelRequests),
+        before,
+        "nothing is sent when declined",
+      );
       assert.equal(await composerText(), "Hello there");
       assert.equal((await storedProvider("remote")).consent, undefined);
 
@@ -212,8 +224,7 @@ test("provider consent", { timeout: 240000 }, async (t) => {
       await sendComposer(panel);
       await poll(promptShown);
       await answer("Not now");
-      await delay(300);
-      assert.equal(modelRequests(), before);
+      assert.equal(await unchangedFor(modelRequests), before);
     });
 
     await t.test("side panel: a local provider never asks", async () => {

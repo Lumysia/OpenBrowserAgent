@@ -1,4 +1,11 @@
 import { setTimeout as delay } from "node:timers/promises";
+import {
+  clickElement,
+  movePointer,
+  pointerScale,
+  pressKey,
+  typeText,
+} from "../../tests/cdp-input.mjs";
 import { launchExtension, poll } from "../../tests/chromium.mjs";
 import { useFonts } from "./fonts.mjs";
 
@@ -142,72 +149,22 @@ export function waitForText(page, text, timeout = 60000) {
 }
 
 // A real mouse click on the first element that matches `selector` and, if
-// given, contains `text`. A probe move first measures how CDP coordinates map
-// to client pixels, which differ under browser zoom.
+// given, contains `text`, at the page's zoom.
 export async function click(page, selector, text) {
-  await page.call(() => {
-    window.__probe = null;
-    addEventListener(
-      "mousemove",
-      (event) => (window.__probe ??= event.clientX),
-      {
-        once: true,
-      },
-    );
+  await clickElement(page, selector, {
+    text,
+    scale: await pointerScale(page),
   });
-  await page.send("Input.dispatchMouseEvent", {
-    type: "mouseMoved",
-    x: 100,
-    y: 1,
-  });
-  const ratio = (await poll(() => page.call(() => window.__probe))) / 100;
-  const point = await poll(() =>
-    page.call(
-      ({ selector, text }) => {
-        const element = [...document.querySelectorAll(selector)].find(
-          (item) => !text || item.textContent.includes(text),
-        );
-        if (!element || element.disabled) return null;
-        element.scrollIntoView({ block: "nearest" });
-        const rect = element.getBoundingClientRect();
-        return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
-      },
-      { selector, text },
-    ),
-  );
-  for (const type of ["mouseMoved", "mousePressed", "mouseReleased"])
-    await page.send("Input.dispatchMouseEvent", {
-      type,
-      x: point.x / ratio,
-      y: point.y / ratio,
-      button: "left",
-      clickCount: 1,
-    });
 }
 
-export async function type(page, selector, text) {
-  await page.call((value) => document.querySelector(value).focus(), selector);
-  await page.send("Input.insertText", { text });
-}
+export const type = (page, selector, text) => typeText(page, text, selector);
 
-export async function enter(page) {
-  for (const eventType of ["keyDown", "keyUp"])
-    await page.send("Input.dispatchKeyEvent", {
-      type: eventType,
-      key: "Enter",
-      code: "Enter",
-      windowsVirtualKeyCode: 13,
-    });
-}
+export const enter = (page) => pressKey(page, "Enter");
 
 // Moves the pointer off the UI and passes focus through the composer and
 // out, which closes focus tooltips, then lets transitions finish.
 export async function settle(page) {
-  await page.send("Input.dispatchMouseEvent", {
-    type: "mouseMoved",
-    x: 1,
-    y: FRAME.height - 1,
-  });
+  await movePointer(page, { x: 1, y: FRAME.height - 1 });
   await page.call(() => {
     document.activeElement?.blur();
     document.querySelector(".composer-box textarea")?.focus();

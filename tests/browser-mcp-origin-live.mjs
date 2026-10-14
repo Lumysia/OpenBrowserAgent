@@ -53,9 +53,7 @@ const hasRule = (filter) =>
       rules.some((rule) => rule.condition.regexFilter === filter),
     );
 
-const browser = await launchExtension({
-  headed: process.env.OBA_HEADLESS !== "1",
-});
+const browser = await launchExtension();
 try {
   const page = await browser.open(
     `chrome-extension://${browser.id}/options.html`,

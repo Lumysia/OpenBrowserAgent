@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { CONTEXT_MENU_ID } from "../src/shared/context-menu.ts";
 import { submitComposer } from "./browser-composer.mjs";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
+import { click as clickAt, hoverTooltip } from "./cdp-input.mjs";
 import { poll } from "./chromium.mjs";
 import {
   barState,
@@ -23,18 +26,9 @@ const PAGE = `<!doctype html><html lang="en"><title>Menu page</title>
   <p>Read the <a href="/linked">full story</a> for <strong>details</strong>.</p>
 </main>`;
 
-const MENU = {
-  parent: "oba-menu",
-  ask: "oba-ask",
-  summarizePage: "oba-summarize-page",
-  translatePage: "oba-translate-page",
-  searchPage: "oba-search-page",
-  searchSelection: "oba-search-selection",
-  summarizeLink: "oba-summarize-link",
-  copyMarkdown: "oba-copy-markdown",
-};
+const MENU = CONTEXT_MENU_ID;
 
-test("context menu", { timeout: 240000 }, async (t) => {
+test("context menu", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
   const prompts = [];
   const session = await startSmartBar({
     pages: { "/page": PAGE, "/linked": "<p>Linked</p>" },
@@ -44,12 +38,9 @@ test("context menu", { timeout: 240000 }, async (t) => {
     },
     smartBar: { enabled: true },
   });
-  const { browser, options, extensionUrl, url } = session;
+  const { browser, options, extensionUrl, url, setPreferences } = session;
   const pageUrl = url("/page");
-  const worker = await browser.attach(
-    (item) => item === extensionUrl("background.js"),
-    "service_worker",
-  );
+  const worker = await session.worker();
   // Records what the background creates from now on.
   await worker.call(() => {
     const menus = chrome.contextMenus;
@@ -68,13 +59,7 @@ test("context menu", { timeout: 240000 }, async (t) => {
     };
   });
   const menuItems = () => worker.call(() => self.menuItems);
-  const setMenu = (contextMenu) =>
-    options.call(async (contextMenu) => {
-      const { preferences } = await chrome.storage.local.get("preferences");
-      await chrome.storage.local.set({
-        preferences: { ...preferences, contextMenu },
-      });
-    }, contextMenu);
+  const setMenu = (contextMenu) => setPreferences({ contextMenu });
   // Agent runs only: chat titles are asked for too.
   const agentPrompts = () =>
     prompts.filter((prompt) => prompt.includes("<message>"));
@@ -340,14 +325,7 @@ test("context menu", { timeout: 240000 }, async (t) => {
         });
         await page.send("Page.bringToFront");
         // The right-click the menu came from.
-        for (const type of ["mousePressed", "mouseReleased"])
-          await page.send("Input.dispatchMouseEvent", {
-            type,
-            x: 30,
-            y: 200,
-            button: "right",
-            clickCount: 1,
-          });
+        await clickAt(page, { x: 30, y: 200 }, { button: "right" });
         await click({
           menuItemId: MENU.copyMarkdown,
           parentMenuItemId: MENU.parent,
@@ -378,19 +356,26 @@ test("context menu", { timeout: 240000 }, async (t) => {
         async () =>
           (await chrome.tabs.query({ url: "chrome://version/" }))[0].id,
       );
-      await worker.call(async (tabId) => {
-        const tab = await chrome.tabs.get(tabId);
-        chrome.contextMenus.onClicked.dispatch(
-          {
-            menuItemId: "oba-copy-markdown",
-            parentMenuItemId: "oba-menu",
-            editable: false,
-            frameId: 0,
-            pageUrl: tab.url,
-          },
-          tab,
-        );
-      }, otherId);
+      await worker.call(
+        async ({ tabId, menuItemId, parentMenuItemId }) => {
+          const tab = await chrome.tabs.get(tabId);
+          chrome.contextMenus.onClicked.dispatch(
+            {
+              menuItemId,
+              parentMenuItemId,
+              editable: false,
+              frameId: 0,
+              pageUrl: tab.url,
+            },
+            tab,
+          );
+        },
+        {
+          tabId: otherId,
+          menuItemId: MENU.copyMarkdown,
+          parentMenuItemId: MENU.parent,
+        },
+      );
       await poll(() =>
         worker.call(
           async (tabId) =>
@@ -419,18 +404,5 @@ async function sentChipTooltip(panel) {
     const rect = label.getBoundingClientRect();
     return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
   });
-  await panel.send("Input.dispatchMouseEvent", {
-    type: "mouseMoved",
-    x: 1,
-    y: 1,
-  });
-  for (const dx of [-4, 0])
-    await panel.send("Input.dispatchMouseEvent", {
-      type: "mouseMoved",
-      x: point.x + dx,
-      y: point.y,
-    });
-  return poll(() =>
-    panel.call(() => document.querySelector('[role="tooltip"]')?.textContent),
-  );
+  return hoverTooltip(panel, point, { timeoutMs: 15000 });
 }

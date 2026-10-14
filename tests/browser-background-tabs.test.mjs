@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import { setTimeout as delay } from "node:timers/promises";
 import { test } from "node:test";
 import { poll } from "./chromium.mjs";
 import { browserToolFixture, ref } from "./browser-tool-fixture.mjs";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // A run works on the tab it started on while the user switches tabs: the
 // actions land there, the user's tabs are untouched and stay in front, and
@@ -31,7 +31,7 @@ const toolTextAt = (body, index) =>
 
 test(
   "a run stays on its tab while the user switches tabs",
-  { timeout: 180000 },
+  { timeout: BROWSER_TEST_TIMEOUT },
   async () => {
     const pages = {
       "/agent": AGENT_PAGE,
@@ -46,7 +46,7 @@ test(
       response.end(pages[request.url]);
       return true;
     });
-    const { page, baseUrl, requests } = fixture;
+    const { page, baseUrl } = fixture;
     try {
       const userTab = await fixture.open("/user");
       const otherTab = await fixture.open("/other");
@@ -121,14 +121,25 @@ test(
       });
       // The user switches tabs during the act batch, and again while the
       // script runs.
-      await poll(() => requests.length >= 2);
-      await delay(400);
+      // A tool runs once its validated input is announced.
+      const running = (toolName) =>
+        poll(() =>
+          page.call(
+            (toolName) =>
+              toolRun.events.some(
+                (event) =>
+                  event.chunk?.toolName === toolName &&
+                  event.chunk.state === "input-available",
+              ),
+            toolName,
+          ),
+        );
+      await running("act");
       await page.call(
         (id) => chrome.tabs.update(id, { active: true }),
         userTab,
       );
-      await poll(() => requests.length >= 4);
-      await delay(400);
+      await running("runScript");
       await page.call(
         (id) => chrome.tabs.update(id, { active: true }),
         otherTab,

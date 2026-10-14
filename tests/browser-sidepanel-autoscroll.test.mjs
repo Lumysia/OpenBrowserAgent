@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { sendComposer, typeComposer } from "./browser-composer.mjs";
-import { poll } from "./chromium.mjs";
+import { nextFrames, poll, settled } from "./chromium.mjs";
 import { startSmartBar } from "./smart-bar-page.mjs";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // The chat follows a streaming answer only while the reader stays at the
 // bottom: a small scroll up stops it, also when the answer ends.
@@ -12,7 +13,7 @@ const LINES = 120;
 test(
   "side panel auto-scroll leaves a reader who scrolled up",
   {
-    timeout: 120000,
+    timeout: BROWSER_TEST_TIMEOUT,
   },
   async () => {
     let release;
@@ -30,14 +31,9 @@ test(
         }
       },
     });
-    const { browser, options, extensionUrl } = session;
+    const { browser, extensionUrl } = session;
     try {
-      await options.call(async () => {
-        const { preferences } = await chrome.storage.local.get("preferences");
-        await chrome.storage.local.set({
-          preferences: { ...preferences, autoScroll: true },
-        });
-      });
+      await session.setPreferences({ autoScroll: true });
       const panel = await browser.open(extensionUrl("sidepanel.html"));
       await poll(() =>
         panel.call(() => !!document.querySelector(".composer-box textarea")),
@@ -61,7 +57,8 @@ test(
         const list = document.querySelector(".messages");
         list.scrollTop -= 80;
       });
-      await delay(100);
+      // Scroll events fire with the next frame.
+      await nextFrames(panel);
       const held = (await position()).top;
       release();
       await poll(() =>
@@ -73,7 +70,7 @@ test(
       await poll(() =>
         panel.call(() => !document.querySelector(".typing-indicator")),
       );
-      await delay(600);
+      await settled(panel);
       const after = await position();
       assert.ok(
         Math.abs(after.top - held) <= 2,

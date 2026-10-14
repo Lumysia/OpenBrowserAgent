@@ -11,9 +11,11 @@ export type FixtureProtocol =
   "openai" | "openai-responses" | "anthropic" | "gemini";
 
 export interface FixtureRequest {
+  method: string;
   url: string;
-  // The JSON the extension sent, typed as JSON.parse returns it: tests read
-  // whatever provider-specific fields they check.
+  // The JSON the extension sent (or the raw text of a body that is not
+  // JSON), typed as JSON.parse returns it: tests read whatever
+  // provider-specific fields they check.
   body: ReturnType<typeof JSON.parse>;
   protocol: FixtureProtocol;
   headers: IncomingHttpHeaders;
@@ -45,6 +47,14 @@ export interface FixtureReply {
   end?: boolean;
 }
 
+function parseBody(text: string): ReturnType<typeof JSON.parse> {
+  try {
+    return JSON.parse(text || "{}");
+  } catch {
+    return text;
+  }
+}
+
 // Controlled HTTP protocol fixtures. These are not evidence of a real model run.
 export async function providerFixture(
   handle: FixtureHandler,
@@ -54,7 +64,7 @@ export async function providerFixture(
     try {
       const chunks: Buffer[] = [];
       for await (const chunk of request) chunks.push(chunk);
-      const body = JSON.parse(Buffer.concat(chunks).toString() || "{}");
+      const body = parseBody(Buffer.concat(chunks).toString());
       const url = request.url ?? "/";
       const pathname = new URL(url, "http://localhost").pathname;
       const protocol: FixtureProtocol = pathname.includes(
@@ -67,6 +77,7 @@ export async function providerFixture(
             ? "anthropic"
             : "openai";
       const item: FixtureRequest = {
+        method: request.method ?? "GET",
         url,
         body,
         protocol,

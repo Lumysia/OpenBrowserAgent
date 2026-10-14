@@ -9,6 +9,7 @@ import {
   size,
   useLocale,
 } from "./browser.mjs";
+import { movePointer } from "../../tests/cdp-input.mjs";
 import { seedOptions } from "./seed.mjs";
 
 // Space kept between the frame edges and the content that must show whole.
@@ -104,11 +105,7 @@ export async function optionsShots(demo) {
       await click(page, ".ui-accordion-trigger", item.expand);
       await delay(1000);
       const warnings = await fitFrame(page, item.fit);
-      await page.send("Input.dispatchMouseEvent", {
-        type: "mouseMoved",
-        x: FRAME.width - 1,
-        y: FRAME.height - 1,
-      });
+      await movePointer(page, { x: FRAME.width - 1, y: FRAME.height - 1 });
       await page.call(() => document.activeElement?.blur());
       await delay(800);
       shots.push({ name: item.name, png: await capture(page), warnings });

@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
-import { poll } from "./chromium.mjs";
+import { poll, settled } from "./chromium.mjs";
 import {
+  barAfterSelection,
   barHas,
   barState,
   click,
@@ -14,6 +15,7 @@ import {
   selectText,
   startSmartBar,
 } from "./smart-bar-page.mjs";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // When the bar shows: off by default, turned on in the options page, site
 // rules, trigger modes, the × menu and the hand-off to the side panel.
@@ -47,7 +49,7 @@ const PAGE = `<!doctype html><title>Smart bar</title>
 const FRAME = `<!doctype html><p id="framed" style="font:16px sans-serif">Text in an embedded frame.</p>
 <script>setInterval(() => parent.postMessage({ bar: document.documentElement.childElementCount > 2 }, "*"), 100);</script>`;
 
-test("smart bar settings", { timeout: 240000 }, async (t) => {
+test("smart bar settings", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
   const session = await startSmartBar({
     pages: { "/page": PAGE, "/page/frame": FRAME, "/away": "<p>Away</p>" },
     answer: async (_prompt, write) => write("Streamed explanation finished."),
@@ -59,9 +61,7 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
     const page = await browser.open(url("/page"));
 
     await t.test("off by default: no bar on selection", async () => {
-      await selectText(page, "#text");
-      await delay(600);
-      assert.equal(await barState(page), "none");
+      assert.equal(await barAfterSelection(session, page, "#text"), "none");
       // Zero cost while off: no page script is registered at all.
       assert.deepEqual(
         await options.call(() =>
@@ -88,19 +88,17 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
       );
       await click(options, enable);
       // The page was open before: the background injects the page script.
-      await poll(async () => {
-        await selectText(page, "#text");
-        return (await barState(page)) === "toolbar";
-      });
+      await poll(
+        async () =>
+          (await barAfterSelection(session, page, "#text")) === "toolbar",
+      );
     });
 
     await t.test("no bar where every action is turned off", async () => {
       await updateSmartBar({
         disabledPageActions: ["ask", "explain", "translate", "search", "copy"],
       });
-      await selectText(page, "#text");
-      await delay(600);
-      assert.equal(await barState(page), "none");
+      assert.equal(await barAfterSelection(session, page, "#text"), "none");
       // Text fields have their own actions.
       await selectText(page, "#area");
       await poll(async () => (await barState(page)) === "toolbar");
@@ -112,9 +110,7 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
       async () => {
         // Shortcut mode: the page script learns not to ask on mouseup.
         await updateSmartBar({ trigger: "shortcut" });
-        await selectText(page, "#text");
-        await delay(600);
-        assert.equal(await barState(page), "none");
+        assert.equal(await barAfterSelection(session, page, "#text"), "none");
         await page.call(() => (window.kept = true));
         await page.send("Page.navigate", { url: url("/away") });
         await poll(() => page.call(() => location.pathname === "/away"));
@@ -140,10 +136,10 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
       await poll(async () => (await barState(page)) === "toolbar");
       await clickInBar(page, '[aria-label="Smart bar options"]');
       await poll(menuOpen);
-      await pressKey(page, "Escape", "Escape", 27);
+      await pressKey(page, "Escape");
       await poll(async () => !(await menuOpen()));
       assert.equal(await barState(page), "toolbar");
-      await pressKey(page, "Escape", "Escape", 27);
+      await pressKey(page, "Escape");
       await poll(async () => (await barState(page)) === "none");
     });
 
@@ -179,7 +175,7 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
         await poll(() =>
           barHas(page, ".smart-bar-menu-item", "Turn off smart bar"),
         );
-        await delay(200);
+        await settled(page);
         const [first, second] = await highlighted();
         assert.equal(first, second, "no item is highlighted on open");
         const plain = first;
@@ -195,13 +191,13 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
           return a !== plain && b === plain;
         });
 
-        await pressKey(page, "ArrowDown", "ArrowDown", 40);
+        await pressKey(page, "ArrowDown");
         await poll(async () => {
           const [a, b] = await highlighted();
           return a === plain && b !== plain;
         });
-        await pressKey(page, "Escape", "Escape", 27);
-        await pressKey(page, "Escape", "Escape", 27);
+        await pressKey(page, "Escape");
+        await pressKey(page, "Escape");
         await poll(async () => (await barState(page)) === "none");
       },
     );
@@ -227,16 +223,16 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
           (await session.smartBarSettings()).blockedHosts.join() ===
           "127.0.0.1",
       );
-      await selectText(page, "#text");
-      await delay(600);
-      assert.equal(await barState(page), "none");
+      assert.equal(await barAfterSelection(session, page, "#text"), "none");
     });
 
     await t.test("a blocked site's embeds get no bar", async () => {
       await page.send("Page.reload");
       await poll(() => page.call(() => window.frameReady));
-      await selectInFrame(page, "#frame");
-      await delay(1000);
+      await barAfterSelection(session, page, "#frame", selectInFrame);
+      // A report the frame sent after it handled the selection.
+      await page.call(() => (window.frameReady = false));
+      await poll(() => page.call(() => window.frameReady));
       assert.equal(await page.call(() => window.frameBar), false);
     });
 
@@ -246,19 +242,17 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
         allowedHosts: ["localhost"],
       });
       listed = await browser.open(listedUrl);
-      await poll(async () => {
-        await selectText(listed, "#text");
-        return (await barState(listed)) === "toolbar";
-      });
+      await poll(
+        async () =>
+          (await barAfterSelection(session, listed, "#text")) === "toolbar",
+      );
       // Frames of a listed site get the bar too.
       await poll(() => listed.call(() => window.frameReady));
       await selectInFrame(listed, "#frame");
       await poll(() => listed.call(() => window.frameBar));
       await page.send("Page.reload");
       await poll(() => page.call(() => document.readyState === "complete"));
-      await selectText(page, "#text");
-      await delay(600);
-      assert.equal(await barState(page), "none");
+      assert.equal(await barAfterSelection(session, page, "#text"), "none");
     });
 
     await t.test("Ask and Continue hand off to the side panel", async () => {
@@ -300,9 +294,7 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
     await t.test("shortcut mode shows the bar only on command", async () => {
       await updateSmartBar({ trigger: "shortcut" });
       const prepares = await session.prepares();
-      await selectText(listed, "#text");
-      await delay(600);
-      assert.equal(await barState(listed), "none");
+      assert.equal(await barAfterSelection(session, listed, "#text"), "none");
       // The page script knows; it doesn't ask the background on mouseup.
       assert.equal(await session.prepares(), prepares);
       await showForSelection(options, listedUrl);
@@ -312,7 +304,7 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
         "Ask in side panel",
       );
       // In a field, Esc hands the keyboard user's focus and selection back.
-      await pressKey(listed, "Escape", "Escape", 27);
+      await pressKey(listed, "Escape");
       await selectText(listed, "#area");
       const field = () =>
         listed.call(() => {
@@ -323,17 +315,17 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
       await showForSelection(options, listedUrl);
       await poll(async () => (await barState(listed)) === "toolbar");
       assert.deepEqual(await field(), [false, true]);
-      await pressKey(listed, "Escape", "Escape", 27);
+      await pressKey(listed, "Escape");
       await poll(async () => (await barState(listed)) === "none");
       assert.deepEqual(await field(), [true, true]);
     });
 
     await t.test("turned off from the bar, open tabs go quiet", async () => {
       await updateSmartBar({ trigger: "selection" });
-      await poll(async () => {
-        await selectText(listed, "#text");
-        return (await barState(listed)) === "toolbar";
-      });
+      await poll(
+        async () =>
+          (await barAfterSelection(session, listed, "#text")) === "toolbar",
+      );
       await clickInBar(listed, '[aria-label="Smart bar options"]');
       await clickInBar(listed, ".smart-bar-menu-item", "Turn off smart bar");
       await poll(
@@ -342,11 +334,8 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
       await delay(300);
       const prepares = await session.prepares();
       assert.ok(prepares > 0);
-      for (let i = 0; i < 2; i++) {
-        await selectText(listed, "#text");
-        await delay(300);
-        assert.equal(await barState(listed), "none");
-      }
+      for (let i = 0; i < 2; i++)
+        assert.equal(await barAfterSelection(session, listed, "#text"), "none");
       assert.equal(await session.prepares(), prepares);
     });
 
@@ -354,7 +343,17 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
       const pickers = (route) =>
         options
           .send("Page.navigate", { url: extensionUrl(`options.html#${route}`) })
-          .then(() => delay(800))
+          .then(() =>
+            poll(() =>
+              options.call(
+                (hash) =>
+                  location.hash === hash &&
+                  !!document.querySelector("#root .nav-link"),
+                `#${route}`,
+              ),
+            ),
+          )
+          .then(() => settled(options))
           .then(() =>
             options.call(() =>
               [...document.querySelectorAll("[aria-label]")]

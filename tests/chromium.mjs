@@ -1,17 +1,48 @@
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { once } from "node:events";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 
+// Headed unless OBA_HEADLESS=1 (CI and containers without a display).
+export const HEADED = process.env.OBA_HEADLESS !== "1";
+
+const CHROMIUM_NAMES = [
+  "chromium",
+  "chromium-browser",
+  "google-chrome",
+  "google-chrome-stable",
+];
+
+// CHROMIUM, or the first Chromium on PATH.
+function chromiumPath() {
+  if (process.env.CHROMIUM) return process.env.CHROMIUM;
+  for (const name of CHROMIUM_NAMES)
+    try {
+      return execFileSync("which", [name], { encoding: "utf8" }).trim();
+    } catch {
+      // Not installed under this name.
+    }
+  throw new Error(
+    `No Chromium found: set CHROMIUM or install one of ${CHROMIUM_NAMES.join(", ")}.`,
+  );
+}
+
+// The production build (`npm run build:chrome`) in a disposable profile.
 export async function launchExtension({
-  headed = true,
+  headed = HEADED,
   args = [],
   extension = resolve(".output/chrome-mv3"),
   // Browser preferences the profile starts with (Default/Preferences).
   preferences,
+  // How long one CDP call may take.
+  cdpTimeoutMs = 180000,
 } = {}) {
-  const profile = await mkdtemp(resolve(".output/pi-browser-profile-"));
+  const executable = chromiumPath();
+  const profile = await mkdtemp(
+    join(process.env.OBA_PROFILE_DIR || tmpdir(), "oba-profile-"),
+  );
   if (preferences) {
     await mkdir(resolve(profile, "Default"));
     await writeFile(
@@ -25,7 +56,7 @@ export async function launchExtension({
     Object.entries(process.env).filter(([key]) => !key.startsWith("OBA_")),
   );
   const child = spawn(
-    process.env.CHROMIUM || "/usr/bin/chromium",
+    executable,
     [
       ...(headed ? [] : ["--headless=new"]),
       "--no-sandbox",
@@ -96,7 +127,8 @@ export async function launchExtension({
       ),
     );
     const id = new URL(worker.url).host;
-    const browser = await connect(ws);
+    const connectTo = (url) => connect(url, cdpTimeoutMs);
+    const browser = await connectTo(ws);
     connections.push(browser);
     // `options` are extra Target.createTarget parameters such as background.
     const open = async (url, options = {}) => {
@@ -107,7 +139,7 @@ export async function launchExtension({
       const target = await poll(async () =>
         (await targets()).find((item) => item.id === targetId),
       );
-      const page = await connect(target.webSocketDebuggerUrl);
+      const page = await connectTo(target.webSocketDebuggerUrl);
       connections.push(page);
       await poll(() =>
         page.call((requestedUrl) => {
@@ -130,7 +162,7 @@ export async function launchExtension({
           (item) => item.type === type && matches(item.url),
         ),
       );
-      const page = await connect(target.webSocketDebuggerUrl);
+      const page = await connectTo(target.webSocketDebuggerUrl);
       connections.push(page);
       return page;
     };
@@ -151,7 +183,41 @@ export async function poll(getValue, timeoutMs = 15000) {
   throw new Error("Browser check timed out");
 }
 
-async function connect(url) {
+// Waits until the page is visually at rest: fonts loaded, no finite
+// animation or transition running, and two frames drawn after that (when
+// the page is visible).
+export async function settled(page, timeoutMs = 15000) {
+  await poll(
+    () =>
+      page.call(async () => {
+        await document.fonts.ready;
+        // Hidden pages (background tabs) advance no animations.
+        if (document.hidden) return true;
+        return document
+          .getAnimations()
+          .every(
+            (animation) =>
+              animation.playState !== "running" ||
+              animation.effect?.getTiming().iterations === Infinity,
+          );
+      }),
+    timeoutMs,
+  );
+  await nextFrames(page);
+}
+
+// Two frames of a visible page have run (hidden pages draw none).
+export function nextFrames(page) {
+  return page.call(
+    () =>
+      document.hidden ||
+      new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))),
+      ),
+  );
+}
+
+async function connect(url, timeoutMs) {
   const socket = new WebSocket(url);
   await new Promise((resolve, reject) => {
     socket.addEventListener("open", resolve, { once: true });
@@ -183,7 +249,7 @@ async function connect(url) {
       const timer = setTimeout(() => {
         pending.delete(current);
         reject(new Error(`CDP ${method} timed out`));
-      }, 180000);
+      }, timeoutMs);
       pending.set(current, { resolve, reject, timer, method });
       socket.send(JSON.stringify({ id: current, method, params }));
     });
