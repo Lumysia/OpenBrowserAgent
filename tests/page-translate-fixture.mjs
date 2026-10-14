@@ -63,8 +63,9 @@ export async function startPageTranslate({
   answer,
   preferences,
   launch,
+  smartBar,
 }) {
-  const session = await startSmartBar({ pages, answer, launch });
+  const session = await startSmartBar({ pages, answer, launch, smartBar });
   const { browser, options, extensionUrl } = session;
   if (preferences)
     await options.call(async (change) => {
