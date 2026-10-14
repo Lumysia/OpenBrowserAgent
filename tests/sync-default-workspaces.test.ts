@@ -11,7 +11,7 @@ import { syncCollection } from "../src/shared/sync/collections";
 import { mergeFiles } from "../src/shared/sync/merge-content";
 import { decodeRoot } from "../src/shared/sync/root";
 import type { Agent, AgentWorkspace } from "../src/shared/types";
-import { upsertWorkspaceFile } from "../src/shared/workspace";
+import { isPromptFile, upsertWorkspaceFile } from "../src/shared/workspace";
 import {
   mutateWorkspace,
   storeAgentWorkspaces,
@@ -182,22 +182,38 @@ test("two workspaces that never agreed merge from the default files", () => {
     md("MEMORY.md", "# Memory\n\ntea\n", 1),
     md("USER.md", "# User\n\n", 1),
   ];
+  // MEMORY.md and USER.md sync with the settings, the other files apart.
+  const prompt = (files: Array<{ path: string }>) =>
+    files.filter((entry) => isPromptFile(entry.path));
+  const other = (files: Array<{ path: string }>) =>
+    files.filter((entry) => !isPromptFile(entry.path));
   // Untouched defaults were never edited (time 0), whichever record is newer.
   const merged = workspaces.mergeBodies!(
     undefined,
-    real,
-    defaults(0),
+    prompt(real),
+    prompt(defaults(0)),
     "theirs",
     "x",
   );
-  // They lose to the real edits; NOTES.md, which the real workspace
-  // removed, stays removed.
+  // They lose to the real edits.
   assert.deepEqual(merged, [
     md("MEMORY.md", "# Memory\n\ntea\n", 1),
     md("USER.md", "# User\n\n", 0),
   ]);
+  // NOTES.md, which the real workspace removed, stays removed.
+  const files = syncCollection("workspace-files")!;
+  assert.deepEqual(
+    files.mergeBodies!(
+      undefined,
+      other(real),
+      other(defaults(0)),
+      "theirs",
+      "x",
+    ),
+    [],
+  );
   // Other collections keep every file without a base.
-  const skills = syncCollection("skills")!;
+  const skills = syncCollection("skill-files")!;
   assert.equal(
     (skills.mergeBodies!(undefined, real, defaults(9), "theirs", "x") as [])
       .length,

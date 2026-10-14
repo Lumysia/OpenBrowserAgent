@@ -1,9 +1,5 @@
 import { CLOCK_LOCK, SYNC_LOCK } from "../locks";
-import {
-  SYNC_DATA_SETTING_KEYS,
-  SYNC_PREFERENCES,
-  type SyncDataSettings,
-} from "../storage-keys";
+import { SYNC_GROUPS, type SyncGroupSettings } from "../storage-keys";
 import { saveClocks } from "./bases";
 import {
   checkUploads,
@@ -29,9 +25,21 @@ import {
 import { canonicalJson } from "./codec";
 import type { Collection } from "./collection";
 import { rotateDeviceId } from "./device";
-import { SYNC_COLLECTIONS, splitRecordId, syncCollection } from "./collections";
+import {
+  enabledCollections,
+  splitRecordId,
+  syncCollection,
+} from "./collections";
 import type { SyncEnv } from "./env";
 import { compareClocks } from "./hlc";
+import {
+  keysOn,
+  openRoot,
+  removeLocalKeyring,
+  roundKeys,
+  sealRoot,
+  type RoundKeys,
+} from "./keys";
 import { project, readLocal, type Payloads, type Snapshot } from "./local";
 import { reconcile } from "./reconcile";
 import { emptyRoot, type Root, type SyncRecord } from "./root";
@@ -52,7 +60,7 @@ export type SyncContext = {
   // Identifies the backend (type, URL, user), whose caches the round uses.
   scope: string;
   device: string;
-  settings: SyncDataSettings;
+  settings: SyncGroupSettings;
 };
 
 export type RoundReason =
@@ -67,25 +75,15 @@ export type RoundResult = {
   wrote: boolean;
   warnings: SyncWarning[];
   massDelete?: MassDelete[];
+  // The keys group as the last root read showed it.
+  keys?: KeysStatus;
 };
 
-const MAX_WRITE_ATTEMPTS = 4;
+export type KeysStatus = { onServer: boolean; unlocked: boolean };
 
-export function enabledCollections(
-  settings: SyncDataSettings,
-  kind: Transport["kind"],
-): Collection[] {
-  return SYNC_COLLECTIONS.filter((collection) => {
-    if (kind === "browser-sync" && !collection.browserSync) return false;
-    if (collection.gate === "always") return true;
-    if (collection.gate === "attachments")
-      return (
-        settings[SYNC_PREFERENCES.chats] &&
-        settings[SYNC_DATA_SETTING_KEYS.chatAttachments]
-      );
-    return settings[collection.gate];
-  });
-}
+const MAX_WRITE_ATTEMPTS = 4;
+const WRITE_RETRY_BASE_MS = 100;
+const WRITE_RETRY_JITTER_MS = 400;
 
 // One sync round: read local data with its clocks, read the root (one
 // conditional GET), apply what others changed, upload new blobs and write the
@@ -110,7 +108,10 @@ async function round(
   let context = given;
   const { env, transport } = context;
   let { device } = context;
-  const collections = enabledCollections(context.settings, transport.kind);
+  const collections = enabledCollections(
+    context.settings,
+    transport.capabilities,
+  );
   const state = await loadSyncState(env.local, context.scope);
   const payloads: Payloads = new Map();
   const snapshot = await readLocal(env, device, collections, payloads);
@@ -133,10 +134,12 @@ async function round(
       const sentEtag = state.remote?.etag;
       const read = await transport.readRoot(sentEtag);
       result.checked = true;
-      let remote: Root;
+      // The root as stored (sealed keys), and its validator.
+      let raw: Root;
       let etag: string | undefined;
+      let damaged = false;
       if (read.status === "unchanged") {
-        remote = state.remote!.root;
+        raw = state.remote!.root;
         etag = sentEtag;
         // A refused If-Match on a root the server still calls unchanged: its
         // ETags cannot be used for safe writes (an Apache "-gzip" ETag, say).
@@ -145,17 +148,30 @@ async function round(
           break;
         }
       } else if (read.status === "missing") {
-        remote = emptyRoot();
+        raw = emptyRoot();
+      } else if (read.status === "damaged") {
+        // Rebuilt from the copy of the root it replaced, if that is good,
+        // and from what this device holds; the write below repairs it.
+        raw = read.previous ?? emptyRoot();
+        etag = read.etag;
+        damaged = true;
+        if (read.reason === "unreadable")
+          result.warnings.push(SYNC_WARNINGS.recoveredRoot);
       } else {
-        remote = read.root;
+        raw = read.root;
         etag = read.etag;
         if (
           state.remote?.etag &&
           etag !== state.remote.etag &&
-          canonicalJson(remote) === canonicalJson(state.remote.root)
+          canonicalJson(raw) === canonicalJson(state.remote.root)
         )
           result.warnings.push(SYNC_WARNINGS.unreliableEtags);
       }
+      const keys = await roundKeys(env.local, context.scope, raw.keyring);
+      const remote = await openRoot(raw, keys);
+      const compared = keys.unlocked
+        ? collections
+        : collections.filter((collection) => !collection.encrypted);
       // Another install stamps changes with this id (a copied profile, a
       // restored backup): this one goes on under a new id.
       const issued = issuedClocks(snapshot.clocks.values());
@@ -168,7 +184,7 @@ async function round(
 
       const outcome = await reconcile(
         context,
-        collections,
+        compared,
         snapshot,
         remote,
         payloads,
@@ -182,23 +198,33 @@ async function round(
         confirmedEntry,
         payloads,
       );
+      result.keys = keysStatus(raw, keys, context.settings);
       if (outcome.massDelete) {
         result.massDelete = outcome.massDelete;
-        state.remote = { root: remote, etag };
+        state.remote = damaged ? undefined : { root: raw, etag };
         break;
       }
       const now = env.now();
       await localPayloads(env, remote, outcome.pushes, payloads);
-      const next = nextRoot(remote, device, outcome.pushes, now);
-      const collected = dropExpiredGarbage(next, now);
-      if (!outcome.pushes.size && !collected.length) {
-        state.remote = { root: remote, etag };
+      const merged = nextRoot(remote, device, outcome.pushes, now);
+      const collected = dropExpiredGarbage(merged, now);
+      const sealed = await sealRoot(merged, raw, keys);
+      const next = sealed.root;
+      if (!keysOn(next)) await removeLocalKeyring(env.local, context.scope);
+      if (
+        !outcome.pushes.size &&
+        !collected.length &&
+        !sealed.changed &&
+        !damaged
+      ) {
+        state.remote = { root: raw, etag };
         break;
       }
-      // Without a strong ETag an existing root cannot be replaced safely.
-      if (read.status !== "missing" && !etag) {
+      // Without a strong ETag an existing root cannot be replaced safely
+      // (a damaged one has nothing left to lose).
+      if (read.status !== "missing" && !etag && !damaged) {
         result.warnings.push(SYNC_WARNINGS.unreliableEtags);
-        state.remote = { root: remote, etag };
+        state.remote = { root: raw, etag };
         break;
       }
       const uploaded = await uploadBlobs(
@@ -208,27 +234,34 @@ async function round(
         payloads,
       );
       await updateEntries(env, outcome.pushes, snapshot, sentEntry, payloads);
-      const written = await transport.writeRoot(next, etag);
+      const written = await transport.writeRoot(next, etag, {
+        previous: damaged || read.status === "missing" ? undefined : raw,
+        replace: damaged,
+      });
       if (written.status === "ok") {
         state.remote = { root: next, etag: written.etag };
+        result.keys = keysStatus(next, keys, context.settings);
         for (const hash of uploaded)
           if (seen.has(hash)) (state.uploads ??= {})[hash] = now;
         result.wrote = true;
         await deleteBlobs(transport, collected);
         break;
       }
-      state.remote = { root: remote, etag };
-      for (const hash of storedBlobs(remote)) seen.add(hash);
+      state.remote = damaged ? undefined : { root: raw, etag };
+      for (const hash of storedBlobs(raw)) seen.add(hash);
       if (attempt >= MAX_WRITE_ATTEMPTS)
         throw new Error("Sync write conflict retries exhausted.");
       await new Promise((resolve) =>
-        setTimeout(resolve, 100 + Math.random() * 400 * attempt),
+        setTimeout(
+          resolve,
+          WRITE_RETRY_BASE_MS + Math.random() * WRITE_RETRY_JITTER_MS * attempt,
+        ),
       );
     }
     if (state.remote?.etag && !result.massDelete) {
       await checkUploads(env, transport, collections, state);
       if (
-        transport.kind === "webdav" &&
+        transport.capabilities.listsBlobs &&
         env.now() - (state.lastSweepAt ??= env.now()) >=
           ORPHAN_SWEEP_INTERVAL_MS
       ) {
@@ -251,6 +284,15 @@ async function round(
   result.pending = countWaiting(snapshot, state.remote?.root);
   result.warnings = [...new Set(result.warnings)];
   return result;
+}
+
+function keysStatus(
+  root: Root,
+  keys: RoundKeys,
+  settings: SyncGroupSettings,
+): KeysStatus | undefined {
+  if (!settings[SYNC_GROUPS.keys] && !root.keyring) return undefined;
+  return { onServer: !!root.keyring, unlocked: keys.unlocked };
 }
 
 // Records this device has to upload: changes newer than the remote copy,

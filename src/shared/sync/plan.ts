@@ -44,7 +44,6 @@ export type DecisionInput = {
   remote?: SyncRecord;
   // The collection merges concurrent blob changes instead of picking one.
   mergesContent: boolean;
-  secrets?: string[];
   dataHash: (data: unknown) => Promise<string>;
 };
 
@@ -76,7 +75,7 @@ export async function decide(input: DecisionInput): Promise<Decision> {
 // Both sides changed the record since `base` (undefined: they never shared
 // a version, so every difference is a change on both sides).
 async function conflict(
-  { mergesContent, dataHash, secrets }: DecisionInput,
+  { mergesContent, dataHash }: DecisionInput,
   mine: SyncRecord,
   theirs: SyncRecord,
   base: Version | undefined,
@@ -97,9 +96,7 @@ async function conflict(
   const theirsDataChanged = theirsData !== base?.dataHash;
   const mineWins = mineDataChanged && (!theirsDataChanged || mineNewer);
   let data = mineWins ? mine.data : theirs.data;
-  if (!base)
-    data = keepSecrets(data, mineWins ? theirs.data : mine.data, secrets);
-  else if (mineDataChanged && theirsDataChanged)
+  if (base && mineDataChanged && theirsDataChanged)
     data = mergeFields(base.data, mine.data, theirs.data, mineNewer) ?? data;
 
   const mineBlobChanged = mine.blob !== base?.blob;
@@ -147,30 +144,6 @@ export function mergeFields(
   if (sameJson(merged, theirs)) return theirs;
   if (sameJson(merged, mine)) return mine;
   return merged;
-}
-
-const isEmpty = (value: unknown) =>
-  value === undefined ||
-  value === null ||
-  value === "" ||
-  (typeof value === "object" && !Object.keys(value).length);
-
-// Secrets of the losing side fill the winner's empty ones (a provider form
-// opened on a new device before joining stores an empty API key).
-export function keepSecrets(
-  winner: unknown,
-  loser: unknown,
-  secrets: string[] | undefined,
-) {
-  if (!secrets?.length || !isRecord(winner) || !isRecord(loser)) return winner;
-  const kept = secrets.filter(
-    (field) => isEmpty(winner[field]) && !isEmpty(loser[field]),
-  );
-  if (!kept.length) return winner;
-  return {
-    ...winner,
-    ...Object.fromEntries(kept.map((field) => [field, loser[field]])),
-  };
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

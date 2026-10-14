@@ -142,6 +142,7 @@ export async function mergeRecord(
 
 // Collections where the round would delete most items: remote deletions
 // of items this device has, or deletions made here of items the remote has.
+// Parts of items follow the answer for their items.
 export function massDeletes(
   collections: Collection[],
   snapshot: Snapshot,
@@ -179,6 +180,7 @@ export function massDeletes(
     .filter(([, record]) => !record.deleted)
     .map(([recordId]) => recordId);
   for (const collection of collections) {
+    if (collection.partOf) continue;
     guard(collection, here, appliesDelete, false);
     guard(collection, there, pushesDelete, true);
   }

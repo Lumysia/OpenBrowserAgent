@@ -1,5 +1,6 @@
 import { getBrowserApi } from "../../shared/browser-api";
-import { STORAGE_KEYS } from "../../shared/storage-keys";
+import { storage } from "../../shared/storage";
+import { STORAGE_KEYS, SYNC_GROUPS } from "../../shared/storage-keys";
 import {
   isSyncRequest,
   registerSyncHandler,
@@ -14,6 +15,7 @@ import {
   updateSyncStatus,
 } from "../../shared/sync/state";
 import { loadDeviceId } from "../../shared/sync/device";
+import { cleanUpOldSyncData } from "../../shared/sync/obsolete";
 import {
   createEditListener,
   type StorageChanges,
@@ -28,10 +30,11 @@ import {
   syncContext,
   type RoundRequest,
 } from "./service";
+import { setPassphrase } from "./passphrase";
 import {
   getActiveSyncBackendConfig,
   getStoredSyncBackends,
-  SYNC_BACKEND_TYPES,
+  syncBackendCapabilities,
   syncBackendScope,
 } from "../../shared/sync-backends";
 import type { ServerCheck } from "../../shared/sync/transport";
@@ -40,9 +43,10 @@ import type { ServerCheck } from "../../shared/sync/transport";
 // - browser start, and an extension page opening or getting focus (at most
 //   every OPEN_CHECK_MIN_MS);
 // - EDIT_DEBOUNCE_MS after a local edit;
-// - every minute while an extension page is visible (chrome.alarms);
-// - WebDAV only: nothing while no extension page is visible; browser sync
-//   learns of other devices' changes from storage.onChanged instead.
+// - every minute while an extension page is visible (chrome.alarms), for
+//   backends that do not announce changes;
+// - nothing while no extension page is visible; a backend that announces
+//   changes (browser sync, through storage.onChanged) is never polled.
 
 const ALARMS = {
   poll: "sync-poll",
@@ -73,8 +77,14 @@ export function setupSync() {
   let lastCheck: { scope: string; at: number; result: ServerCheck } | undefined;
   let remoteTimer: ReturnType<typeof setTimeout> | undefined;
 
+  // Rounds wait until data of an earlier sync format is cleaned up.
+  const cleaned = cleanUpOldSyncData(env.local).catch((error) =>
+    console.warn("Cleaning up old sync data failed", error),
+  );
   const request = (next: RoundRequest) =>
-    runner.request(next).catch((error) => console.warn("Sync failed", error));
+    cleaned
+      .then(() => runner.request(next))
+      .catch((error) => console.warn("Sync failed", error));
 
   function scheduleEdit() {
     clearTimeout(editTimer);
@@ -124,7 +134,9 @@ export function setupSync() {
   async function updatePolling() {
     const backend = await getActiveSyncBackendConfig();
     const poll =
-      backend?.type === SYNC_BACKEND_TYPES.webDav && (await visiblePages()) > 0;
+      !!backend &&
+      !syncBackendCapabilities(backend.type).announcesChanges &&
+      (await visiblePages()) > 0;
     if (!poll) return api.alarms?.clear(ALARMS.poll);
     const existing = await api.alarms?.get(ALARMS.poll);
     if (!existing)
@@ -194,6 +206,18 @@ export function setupSync() {
         };
         return result;
       }
+      case SYNC_MESSAGE.passphrase: {
+        const context = await syncContext(env);
+        if (!context) throw new Error("Sync is off.");
+        const result = await setPassphrase(context, message.passphrase, () =>
+          storage.syncGroups.update((groups) => ({
+            ...groups,
+            [SYNC_GROUPS.keys]: true,
+          })),
+        );
+        if (result === "set") void request({ reason: "manual" });
+        return result;
+      }
       case SYNC_MESSAGE.reset:
         await resetSync(
           env,
@@ -225,7 +249,7 @@ export function setupSync() {
       clearTimeout(remoteTimer);
       remoteTimer = setTimeout(async () => {
         const backend = await getActiveSyncBackendConfig();
-        if (backend?.type === SYNC_BACKEND_TYPES.browserSync)
+        if (backend && syncBackendCapabilities(backend.type).announcesChanges)
           void request({ reason: "remote" });
       }, REMOTE_DEBOUNCE_MS);
       return;

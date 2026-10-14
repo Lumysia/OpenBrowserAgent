@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
-import { runLocalBridgesAction } from "../src/background/local-execution-bridge-tools";
 import { testMcpServer } from "../src/background/mcp-tools";
 import { skillsTool } from "../src/background/tools/skills";
 import type { ToolContext } from "../src/background/tools/types";
@@ -113,50 +112,6 @@ test("review4 B1: an MCP server added on another device survives an agent's MCP 
     "connection refused",
   );
   await keptEverywhere(clock, a, b, MCP, "s3");
-});
-
-const bridge = (id: string) => ({
-  id,
-  name: id,
-  hostName: "openbrowseragent.local_execution_bridge",
-  bridgeKey: id,
-  secret: "disposable-fixture",
-  createdAt: 1,
-  updatedAt: 1,
-});
-
-test("review4 B1: a bridge added on another device survives an agent's bridge test on this one", async (t) => {
-  const BRIDGES = STORAGE_KEYS.localExecutionBridges;
-  const { clock, a, b } = await addedElsewhere(
-    BRIDGES,
-    [bridge("b1")],
-    bridge("b2"),
-  );
-  let downloaded = false;
-  // The native host never answers; meanwhile a's poll downloads b2.
-  const connectNative = () => {
-    const disconnects: Array<() => void> = [];
-    return {
-      onMessage: { addListener() {}, removeListener() {} },
-      onDisconnect: {
-        addListener: (listener: () => void) => disconnects.push(listener),
-        removeListener() {},
-      },
-      disconnect() {},
-      postMessage() {
-        void (async () => {
-          clock.now += 1000;
-          downloaded = await downloads(a, BRIDGES, "b2");
-          for (const listener of disconnects) listener();
-        })();
-      },
-    };
-  };
-  useDevice(t, a, { runtime: { connectNative } });
-  const result = await runLocalBridgesAction({ action: "test", id: "b1" });
-  assert.equal(downloaded, true);
-  assert.equal((result as { success: boolean }).success, false);
-  await keptEverywhere(clock, a, b, BRIDGES, "b2");
 });
 
 // The download lands right after the tool read the list.

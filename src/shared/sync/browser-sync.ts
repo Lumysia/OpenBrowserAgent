@@ -9,11 +9,24 @@ import {
 import type { StorageArea } from "./env";
 import { bytesToBase64, base64ToBytes } from "../binary";
 import { GARBAGE_GRACE_MS } from "./blobs";
-import { emptyRoot, validateRoot, type SyncRecord } from "./root";
-import { BlobIntegrityError, SyncHttpError, type Transport } from "./transport";
+import { syncBackendCapabilities } from "../sync-backends";
+import {
+  emptyRoot,
+  validateRoot,
+  type Keyring,
+  type Root,
+  type SyncRecord,
+} from "./root";
+import {
+  BlobIntegrityError,
+  damagedRoot,
+  SyncHttpError,
+  type Transport,
+} from "./transport";
 
 // The browser account's sync storage holds the same records as WebDAV, one
-// item per record (`r:<id>`). Content that does not fit an item (a large
+// item per record (`r:<id>`), with the root's format and keyring in `m`.
+// Content that does not fit an item (a large
 // record, a blob) is stored gzip+base64 in parts (`p:<hash>` holds the part
 // count, `p:<hash>:<n>` the parts). The browser merges items last-writer-
 // wins and reports changes through storage.onChanged, so nothing polls.
@@ -28,6 +41,18 @@ export const BROWSER_SYNC_LIMITS = {
 
 const RECORD = "r:";
 const PART = "p:";
+const META = "m";
+
+type Meta = { format: string; keyring?: Keyring };
+
+const metaOf = (root: Root): Meta => ({
+  format: root.format,
+  ...(root.keyring ? { keyring: root.keyring } : {}),
+});
+
+// The version of what is stored, compared like an ETag.
+const versionOf = (records: Record<string, SyncRecord>, meta: unknown) =>
+  sha256Hex(new TextEncoder().encode(canonicalJson({ records, meta })));
 
 type Items = Record<string, unknown>;
 type RecordRef = { clock: string; ref: string };
@@ -123,7 +148,7 @@ export function createBrowserSyncTransport(
   }
 
   return {
-    kind: "browser-sync",
+    capabilities: syncBackendCapabilities("browser-sync"),
     async readRoot(etag) {
       const items = await readAll();
       const records: Record<string, SyncRecord> = {};
@@ -139,18 +164,27 @@ export function createBrowserSyncTransport(
           throw new SyncNotReadyError("Synced items still arriving.");
         records[key.slice(RECORD.length)] = JSON.parse(bytesText(payload));
       }
-      const root = validateRoot({ ...emptyRoot(), records });
-      const version = await sha256Hex(
-        new TextEncoder().encode(canonicalJson(records)),
-      );
+      const meta = items[META] as Partial<Meta> | undefined;
+      const version = await versionOf(records, meta);
       if (etag === version) return { status: "unchanged" };
-      return Object.keys(records).length
-        ? { status: "ok", root, etag: version }
-        : { status: "missing" };
+      if (!meta && !Object.keys(records).length) return { status: "missing" };
+      try {
+        // Items stored before the format was recorded are an older format.
+        const root = validateRoot({
+          ...emptyRoot(),
+          ...(meta?.keyring ? { keyring: meta.keyring } : {}),
+          format: meta ? meta.format : "openbrowseragent.sync.v0",
+          records,
+        });
+        return { status: "ok", root, etag: version };
+      } catch (error) {
+        return damagedRoot(error, version);
+      }
     },
     async writeRoot(root) {
       const current = await readAll();
       const next = await recordItems(root.records);
+      next[META] = metaOf(root);
       // Parts already stored keep their header (content-addressed, so they
       // are the same), so unchanged records cost no writes.
       for (const key of Object.keys(next))
@@ -199,12 +233,7 @@ export function createBrowserSyncTransport(
           ),
         ),
       );
-      return {
-        status: "ok",
-        etag: await sha256Hex(
-          new TextEncoder().encode(canonicalJson(root.records)),
-        ),
-      };
+      return { status: "ok", etag: await versionOf(root.records, next[META]) };
     },
     async getBlob(hash) {
       return readParts(await readAll(), hash);
@@ -269,15 +298,18 @@ function checkQuota(items: Items) {
     );
 }
 
-// The browser's write-rate quotas surface as errors; they pause sync like a
-// server's 429.
+// The browser's write-rate quotas surface as errors (named after the quota
+// properties of chrome.storage.sync); they pause sync like a server's 429,
+// for the minute the quota counts.
+const WRITE_QUOTA_PAUSE_MS = 60_000;
+
 async function guard(write: () => Promise<void>) {
   try {
     await write();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (/MAX_WRITE_OPERATIONS/i.test(message))
-      throw new SyncHttpError(message, 429, 60_000);
+      throw new SyncHttpError(message, 429, WRITE_QUOTA_PAUSE_MS);
     if (/QUOTA_BYTES/i.test(message)) throw new SyncQuotaError(message);
     throw error;
   }

@@ -31,6 +31,9 @@ export const SYNC_WARNINGS = {
   quota: "quota",
   // Another install used this device's id; this one got a new id.
   clonedDevice: "cloned-device",
+  // The root on the server could not be read (an upload stopped halfway):
+  // it was rebuilt from its previous copy and this device's data.
+  recoveredRoot: "recovered-root",
 } as const;
 
 export type SyncWarning = (typeof SYNC_WARNINGS)[keyof typeof SYNC_WARNINGS];
@@ -39,6 +42,7 @@ export type SyncWarning = (typeof SYNC_WARNINGS)[keyof typeof SYNC_WARNINGS];
 export const SYNC_NOTES: SyncWarning[] = [
   SYNC_WARNINGS.ignoresPreconditions,
   SYNC_WARNINGS.clonedDevice,
+  SYNC_WARNINGS.recoveredRoot,
 ];
 
 // A round that would delete most of a collection: remote deletions applied
@@ -76,6 +80,9 @@ export type SyncStatus = {
   warningsAt?: Partial<Record<SyncWarning, number>>;
   // Deletions waiting for the user's answer.
   massDelete?: MassDelete[];
+  // The keys group: whether the server has a passphrase set, and whether
+  // this device has its key (undefined: keys are not synced).
+  keys?: { onServer: boolean; unlocked: boolean };
   // Consecutive rate-limit pauses, for the doubling backoff.
   backoffLevel?: number;
 };

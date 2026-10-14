@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { syncCollection } from "../src/shared/sync/collections";
-import { createWorkspace, normalizeWorkspaces } from "../src/shared/workspace";
+import {
+  createWorkspace,
+  isPromptFile,
+  normalizeWorkspaces,
+} from "../src/shared/workspace";
 
 // Workspaces two devices changed without a shared base merge from the
 // default files, except where the side holding a default file's text is
@@ -47,7 +51,10 @@ test("review8 W1: no base, an older clear loses to the newer text", () => {
 });
 
 test("review8 W1: default files a new workspace holds were never edited: any real edit wins", () => {
-  const created = createWorkspace("ag", 50).files;
+  // MEMORY.md and USER.md sync with the settings, the other files apart.
+  const created = createWorkspace("ag", 50).files.filter((entry) =>
+    isPromptFile(entry.path),
+  );
   assert.ok(created.every((entry) => entry.updatedAt === 0));
   const real = [file("MEMORY.md", FACTS, 3)];
   assert.deepEqual(merge(real, created, "theirs"), [["MEMORY.md", FACTS]]);

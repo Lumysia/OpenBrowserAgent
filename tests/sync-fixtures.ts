@@ -1,11 +1,14 @@
 import {
-  DEFAULT_SYNC_DATA_SETTINGS,
+  DEFAULT_SYNC_GROUP_SETTINGS,
   STORAGE_KEYS,
+  SYNC_GROUPS,
 } from "../src/shared/storage-keys";
-import type { SyncDataSettings } from "../src/shared/storage-keys";
+import type { SyncGroupSettings } from "../src/shared/storage-keys";
+import { syncBackendCapabilities } from "../src/shared/sync-backends";
 import { gunzip, gzip, sha256Hex } from "../src/shared/sync/codec";
 import { loadDeviceId } from "../src/shared/sync/device";
 import { runSyncRound, type RoundReason } from "../src/shared/sync/engine";
+import type { LocalKeyring } from "../src/shared/sync/keys";
 import type {
   AttachmentStore,
   StoredAttachment,
@@ -16,6 +19,7 @@ import { loadSyncState } from "../src/shared/sync/state";
 import { createEditListener } from "../src/shared/sync/track";
 import {
   BlobIntegrityError,
+  damagedRoot,
   type Transport,
 } from "../src/shared/sync/transport";
 import { memoryArea } from "./fake-chrome";
@@ -37,6 +41,8 @@ export function memoryAttachments(): AttachmentStore & {
 
 export type MemoryServer = {
   root?: Uint8Array;
+  // The copy of the root the last write replaced (root.prev.json.gz).
+  previous?: Uint8Array;
   etag?: string;
   version: number;
   blobs: Map<string, Uint8Array>;
@@ -58,24 +64,35 @@ export function memoryTransport(
   } = {},
 ): Transport {
   return {
-    kind: "webdav",
+    capabilities: syncBackendCapabilities("webdav"),
     async readRoot(etag) {
       server.requests.push("GET root");
       if (!server.root) return { status: "missing" };
       if (etag && etag === server.etag) return { status: "unchanged" };
-      return {
-        status: "ok",
-        root: await decodeRoot(server.root),
-        etag: server.etag,
-      };
+      try {
+        return {
+          status: "ok",
+          root: await decodeRoot(server.root),
+          etag: server.etag,
+        };
+      } catch (error) {
+        const previous = server.previous
+          ? await decodeRoot(server.previous).catch(() => undefined)
+          : undefined;
+        return damagedRoot(error, server.etag, previous);
+      }
     },
-    async writeRoot(root, etag) {
+    async writeRoot(root, etag, { previous, replace } = {}) {
       server.requests.push("PUT root");
       const hook = hooks.beforeWrite;
       hooks.beforeWrite = undefined;
       await hook?.();
-      if (!hooks.ignoreIfMatch && (etag ? etag !== server.etag : !!server.root))
+      if (
+        !hooks.ignoreIfMatch &&
+        (etag ? etag !== server.etag : !!server.root && !replace)
+      )
         return { status: "conflict" };
+      if (previous) server.previous = await encodeRoot(previous);
       server.root = await encodeRoot(root);
       server.etag = `"v${++server.version}"`;
       return { status: "ok", etag: server.etag };
@@ -105,6 +122,7 @@ export function memoryTransport(
       [...server.blobs.keys()].map((hash) => ({ hash, modifiedAt: 1 })),
     async clear() {
       server.root = undefined;
+      server.previous = undefined;
       server.etag = undefined;
       server.blobs.clear();
     },
@@ -135,6 +153,20 @@ export function testEnv(clock: { now: number }): SyncEnv & {
 
 export type Device = ReturnType<typeof device>;
 
+export const TEST_SCOPE = "test";
+export const TEST_PASSPHRASE = "test passphrase";
+
+// createKeyring(TEST_PASSPHRASE, 1000), made once (deriving is slow).
+export const TEST_KEYRING: LocalKeyring = {
+  keyring: {
+    salt: "PMKE7OcEh0M4yAdsULrBig==",
+    iterations: 1000,
+    check:
+      "L5oqQMNwzN/X/MNJ1oPxwWwz0LqJnTVWkvVuxsd5j8xZUF+ghgZy8Y7vTVyZBs6s5yUY8N2K",
+  },
+  key: "f8P+c1RYitVwYHP47xsmPv7mwOsN+qz4G+5ClLET0mw=",
+};
+
 // A device: its storage, a transport to `server`, and helpers that edit
 // local data the way the app does. As in the background, every change of
 // local storage goes to the edit listener; the helpers wait for it.
@@ -142,17 +174,24 @@ export function device(
   name: string,
   transport: Transport,
   clock: { now: number },
-  settings: Partial<SyncDataSettings> = {},
+  settings: Partial<SyncGroupSettings> = {},
 ) {
   const env = testEnv(clock);
   env.local.data[STORAGE_KEYS.syncDeviceId] = name;
   const context = {
     env,
     transport,
-    scope: "test",
+    scope: TEST_SCOPE,
     device: name,
-    settings: { ...DEFAULT_SYNC_DATA_SETTINGS, ...settings },
+    settings: { ...DEFAULT_SYNC_GROUP_SETTINGS, ...settings },
   };
+  // Key sync on: the switch as stored, and the key of the shared test
+  // passphrase (as if entered on every device).
+  if (context.settings[SYNC_GROUPS.keys]) {
+    env.local.data[STORAGE_KEYS.syncGroups] = { [SYNC_GROUPS.keys]: true };
+    env.local.data[`${STORAGE_KEYS.syncKeyring}:${TEST_SCOPE}`] =
+      structuredClone(TEST_KEYRING);
+  }
   const listening = new Set<Promise<unknown>>();
   const edits = createEditListener(env, () => loadDeviceId(env));
   env.settleEdits = edits.settle;
@@ -202,7 +241,7 @@ export function device(
       await settle();
       return result;
     },
-    state: () => loadSyncState(env.local, "test"),
+    state: () => loadSyncState(env.local, TEST_SCOPE),
   };
 }
 
@@ -212,7 +251,7 @@ export function copyOf(
   source: Device,
   transport: Transport,
   clock: { now: number },
-  settings: Partial<SyncDataSettings> = {},
+  settings: Partial<SyncGroupSettings> = {},
 ) {
   const copy = device(source.name, transport, clock, settings);
   for (const [key, value] of Object.entries(source.env.local.data))
@@ -220,14 +259,10 @@ export function copyOf(
   return copy;
 }
 
-export const ALL_ON: Partial<SyncDataSettings> = {
-  syncProviders: true,
-  syncAgents: true,
-  syncSkills: true,
-  syncMcpServers: true,
-  syncLocalExecutionBridges: true,
-  syncChats: true,
-  syncChatAttachments: true,
+export const ALL_ON: Partial<SyncGroupSettings> = {
+  [SYNC_GROUPS.keys]: true,
+  [SYNC_GROUPS.chats]: true,
+  [SYNC_GROUPS.files]: true,
 };
 
 export function chat(
@@ -290,9 +325,9 @@ export function hookedTransport(base: Transport) {
       await once("readRoot");
       return base.readRoot(etag);
     },
-    async writeRoot(root, etag) {
+    async writeRoot(root, etag, options) {
       await once("writeRoot");
-      return base.writeRoot(root, etag);
+      return base.writeRoot(root, etag, options);
     },
     async getBlob(hash) {
       await once("getBlob");

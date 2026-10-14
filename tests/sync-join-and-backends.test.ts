@@ -1,9 +1,10 @@
+import { syncBackendCapabilities } from "../src/shared/sync-backends";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { loadContent, resetSync } from "../src/background/sync/service";
 import { mergePreferences } from "../src/shared/default-preferences";
 import {
-  mergeSyncDataSettings,
+  mergeSyncGroupSettings,
   STORAGE_KEYS,
 } from "../src/shared/storage-keys";
 import { runSyncRound } from "../src/shared/sync/engine";
@@ -26,7 +27,7 @@ import {
 
 const CHATS = STORAGE_KEYS.chats;
 const PREFS = STORAGE_KEYS.preferences;
-const SYNC_DATA = STORAGE_KEYS.syncDataSettings;
+const SYNC_DATA = STORAGE_KEYS.syncGroups;
 const PROVIDERS = STORAGE_KEYS.provider;
 const HOUR = 60 * 60_000;
 type Providers = Record<string, { apiKey: string }>;
@@ -44,7 +45,10 @@ function elsewhere(on: Device, server = memoryServer()) {
   return {
     ...on.context,
     scope: "browser-sync",
-    transport: { ...memoryTransport(server), kind: "browser-sync" as const },
+    transport: {
+      ...memoryTransport(server),
+      capabilities: syncBackendCapabilities("browser-sync"),
+    },
   };
 }
 
@@ -85,18 +89,18 @@ test("review N1: joining with one changed preference keeps the account's others"
 
 test("review N1b: joining with one sync category toggled keeps the account's categories", async () => {
   const { clock, server, a } = setup();
-  await a.set(SYNC_DATA, mergeSyncDataSettings({ ...ALL_ON }));
+  await a.set(SYNC_DATA, mergeSyncGroupSettings({ ...ALL_ON }));
   await a.sync("edit");
   clock.now += 72 * HOUR;
   const b = device("deviceB", memoryTransport(server), clock);
-  await b.set(SYNC_DATA, mergeSyncDataSettings({ syncChats: true }));
+  await b.set(SYNC_DATA, mergeSyncGroupSettings({ syncFiles: false }));
   clock.now += 60_000;
   await b.sync("startup");
   await a.sync();
   const onA = a.get<Record<string, boolean>>(SYNC_DATA);
-  assert.equal(onA.syncAgents, true);
-  assert.equal(onA.syncSkills, true);
+  assert.equal(onA.syncKeys, true);
   assert.equal(onA.syncChats, true);
+  assert.equal(onA.syncFiles, false);
 });
 
 test("review N1c: a provider stored empty on a new device keeps the account's API key", async () => {
@@ -174,7 +178,10 @@ test("review N4/W1: trying browser sync and switching back pushes no old values 
   const browserServer = memoryServer();
   const c = device(
     "deviceC",
-    { ...memoryTransport(browserServer), kind: "browser-sync" },
+    {
+      ...memoryTransport(browserServer),
+      capabilities: syncBackendCapabilities("browser-sync"),
+    },
     clock,
     ALL_ON,
   );

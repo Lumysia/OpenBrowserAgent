@@ -5,9 +5,10 @@ import { compareClocks, isClock, type Clock } from "./hlc";
 // every synced record. Small values live inline (`data`); large ones live in
 // immutable blobs named by the SHA-256 of their content (`blob`). Deletions
 // are records too (`deleted`), so a missing record or blob never means
-// "deleted".
+// "deleted". Records of encrypted collections hold `sealed` instead of
+// `data`, readable with the key of the root's `keyring` (keys.ts).
 
-export const ROOT_FORMAT = "openbrowseragent.sync.v2";
+export const ROOT_FORMAT = "openbrowseragent.sync.v3";
 const ROOT_FORMAT_VERSION = /^openbrowseragent\.sync\.v(\d+)$/;
 
 const formatVersion = (format: unknown) =>
@@ -19,6 +20,8 @@ export type SyncRecord = {
   clock: Clock;
   deleted?: true;
   data?: unknown;
+  // `data` encrypted (base64 of IV and AES-GCM ciphertext).
+  sealed?: string;
   blob?: string;
   // Payload bytes of the blob.
   size?: number;
@@ -32,17 +35,27 @@ export type SyncRecord = {
 // Blobs a writer stopped referring to; any device deletes them a day later.
 export type GarbageEntry = { blob: string; since: number };
 
+// What a device needs, with the sync passphrase, to read sealed records:
+// the PBKDF2 salt and iterations, and a known text sealed with the key, so a
+// wrong passphrase is told apart from a right one.
+export type Keyring = { salt: string; iterations: number; check: string };
+
 export type Root = {
   format: typeof ROOT_FORMAT;
   writer: string;
   records: Record<string, SyncRecord>;
   garbage: GarbageEntry[];
+  keyring?: Keyring;
 };
 
+// A root this version cannot use. A newer format stops sync until this
+// device is updated; anything else (an older format, a damaged file) is
+// replaced by the next write (see the engine).
 export class SyncFormatError extends Error {
   constructor(
     message: string,
     readonly newerFormat = false,
+    readonly olderFormat = false,
   ) {
     super(message);
   }
@@ -65,10 +78,12 @@ export function validateRoot(value: unknown): Root {
   if (!isObject(value))
     throw new SyncFormatError("Sync root is not an object.");
   if (value.format !== ROOT_FORMAT) {
-    const newer = formatVersion(value.format) > formatVersion(ROOT_FORMAT);
+    const version = formatVersion(value.format);
+    const current = formatVersion(ROOT_FORMAT);
     throw new SyncFormatError(
       `Unsupported sync root format: ${String(value.format)}`,
-      newer,
+      version > current,
+      version < current,
     );
   }
   if (typeof value.writer !== "string")
@@ -89,6 +104,8 @@ export function validateRoot(value: unknown): Root {
       !Number.isFinite(entry.since)
     )
       throw new SyncFormatError("Sync root has an invalid garbage entry.");
+  if (value.keyring !== undefined && !isKeyring(value.keyring))
+    throw new SyncFormatError("Sync root has an invalid keyring.");
   return value as Root;
 }
 
@@ -103,10 +120,14 @@ function recordProblem(id: string, record: unknown) {
     return "invalid seen clocks";
   if (record.deleted !== undefined) {
     if (record.deleted !== true) return "invalid deleted flag";
-    if ("data" in record || "blob" in record) return "tombstone with content";
+    if ("data" in record || "blob" in record || "sealed" in record)
+      return "tombstone with content";
     return "";
   }
-  if (!("data" in record) && !("blob" in record)) return "no content";
+  if (!("data" in record) && !("blob" in record) && !("sealed" in record))
+    return "no content";
+  if (record.sealed !== undefined && typeof record.sealed !== "string")
+    return "invalid sealed data";
   if (record.blob !== undefined && !isBlobHash(record.blob))
     return "invalid blob hash";
   if (
@@ -145,6 +166,17 @@ export function referencedBlobs(root: Root) {
   for (const record of Object.values(root.records))
     if (record.blob) blobs.add(record.blob);
   return blobs;
+}
+
+function isKeyring(value: unknown) {
+  return (
+    isObject(value) &&
+    typeof value.salt === "string" &&
+    typeof value.check === "string" &&
+    typeof value.iterations === "number" &&
+    Number.isInteger(value.iterations) &&
+    value.iterations > 0
+  );
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {

@@ -1,4 +1,5 @@
-import type { Root } from "./root";
+import type { SyncCapabilities } from "../sync-backends";
+import { SyncFormatError, type Root } from "./root";
 
 // Where records are stored: a WebDAV folder, or the browser account's sync
 // storage. The engine talks to both through this interface.
@@ -6,7 +7,23 @@ import type { Root } from "./root";
 export type RootRead =
   | { status: "unchanged" }
   | { status: "missing" }
-  | { status: "ok"; root: Root; etag?: string };
+  | { status: "ok"; root: Root; etag?: string }
+  // The root cannot be read (an interrupted upload left it empty or cut
+  // off, or it is in an older format): the next write replaces it, from
+  // `previous` (the root it replaced, if that copy is good) and local data.
+  | {
+      status: "damaged";
+      reason: "unreadable" | "older-format";
+      etag?: string;
+      previous?: Root;
+    };
+
+export type RootWriteOptions = {
+  // The good root being replaced, kept as a copy until the write is done.
+  previous?: Root;
+  // Replace a damaged root that has no validator.
+  replace?: boolean;
+};
 
 export type RootWrite =
   { status: "ok"; etag?: string } | { status: "conflict" };
@@ -21,11 +38,16 @@ export type ServerCheck = {
 };
 
 export type Transport = {
-  kind: "webdav" | "browser-sync";
+  capabilities: SyncCapabilities;
   // Conditional when `etag` is given; "unchanged" means it still matches.
   readRoot(etag?: string): Promise<RootRead>;
-  // Replace the root only if it is still `etag` (undefined: still missing).
-  writeRoot(root: Root, etag: string | undefined): Promise<RootWrite>;
+  // Replace the root only if it is still `etag` (undefined: still missing,
+  // unless `replace`).
+  writeRoot(
+    root: Root,
+    etag: string | undefined,
+    options?: RootWriteOptions,
+  ): Promise<RootWrite>;
   // A blob's payload, checked against its hash; undefined when missing.
   getBlob(hash: string): Promise<Uint8Array | undefined>;
   hasBlob(hash: string): Promise<boolean>;
@@ -49,6 +71,22 @@ export class SyncHttpError extends Error {
 }
 
 export class BlobIntegrityError extends Error {}
+
+// How a root that could not be decoded is read: a newer format stops sync,
+// anything else is a damaged root the next write replaces.
+export function damagedRoot(
+  error: unknown,
+  etag: string | undefined,
+  previous?: Root,
+): RootRead {
+  if (!(error instanceof SyncFormatError) || error.newerFormat) throw error;
+  return {
+    status: "damaged",
+    reason: error.olderFormat ? "older-format" : "unreadable",
+    etag,
+    previous,
+  };
+}
 
 const RETRY_AFTER_MIN_MS = 1_000;
 const RETRY_AFTER_MAX_MS = 60 * 60_000;

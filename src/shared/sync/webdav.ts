@@ -1,8 +1,10 @@
 import type { WebDavSyncBackendConfig } from "../types";
 import { gunzip, gzip, sha256Hex, toArrayBuffer } from "./codec";
-import { decodeRoot, encodeRoot } from "./root";
+import { syncBackendCapabilities } from "../sync-backends";
+import { decodeRoot, encodeRoot, SyncFormatError } from "./root";
 import {
   BlobIntegrityError,
+  damagedRoot,
   parseRetryAfter,
   SyncHttpError,
   type StoredBlob,
@@ -11,11 +13,15 @@ import {
 
 // WebDAV layout under the configured folder:
 //   root.json.gz             the only file ever overwritten (If-Match)
+//   root.prev.json.gz        the root it replaced, written just before it:
+//                            an upload that stops halfway (some servers
+//                            store an empty file first) loses nothing
 //   blobs/<h>/<hash>.gz      immutable content, named by SHA-256
 // One hex character of sharding keeps folders small while a full listing
 // (the weekly orphan sweep) stays at 17 requests.
 
 const ROOT_NAME = "root.json.gz";
+const PREVIOUS_ROOT_NAME = "root.prev.json.gz";
 const BLOBS = "blobs";
 const PROBE_NAME = ".openbrowseragent-probe";
 // RFC 9110 entity-tag without the weak prefix.
@@ -137,8 +143,20 @@ export function createWebDavTransport(
     return parseMultistatus(await response.text(), url(path));
   }
 
+  // The copy of the previous root, if it is there and good.
+  async function readPrevious() {
+    const response = await request(PREVIOUS_ROOT_NAME);
+    if (!response.ok) {
+      await response.arrayBuffer().catch(() => undefined);
+      return undefined;
+    }
+    return decodeRoot(new Uint8Array(await response.arrayBuffer())).catch(
+      () => undefined,
+    );
+  }
+
   return {
-    kind: "webdav",
+    capabilities: syncBackendCapabilities("webdav"),
     async readRoot(etag) {
       const response = await request(ROOT_NAME, {
         headers: etag ? { "If-None-Match": etag } : {},
@@ -146,20 +164,37 @@ export function createWebDavTransport(
       if (response.status === 304 && etag) return { status: "unchanged" };
       if (response.status === 404) return { status: "missing" };
       if (!response.ok) await fail(response, "read");
-      const root = await decodeRoot(
-        new Uint8Array(await response.arrayBuffer()),
-      );
-      return {
-        status: "ok",
-        root,
-        etag: strongEtag(response.headers.get("ETag")),
-      };
+      const tag = strongEtag(response.headers.get("ETag"));
+      try {
+        const root = await decodeRoot(
+          new Uint8Array(await response.arrayBuffer()),
+        );
+        return { status: "ok", root, etag: tag };
+      } catch (error) {
+        const unreadable =
+          error instanceof SyncFormatError &&
+          !error.newerFormat &&
+          !error.olderFormat;
+        return damagedRoot(
+          error,
+          tag,
+          unreadable ? await readPrevious() : undefined,
+        );
+      }
     },
-    async writeRoot(root, etag) {
+    async writeRoot(root, etag, { previous, replace } = {}) {
+      if (previous) {
+        const copied = await put(
+          PREVIOUS_ROOT_NAME,
+          await encodeRoot(previous),
+          {},
+        );
+        if (!copied.ok) await fail(copied, "write");
+      }
       const response = await put(
         ROOT_NAME,
         await encodeRoot(root),
-        etag ? { "If-Match": etag } : { "If-None-Match": "*" },
+        etag ? { "If-Match": etag } : replace ? {} : { "If-None-Match": "*" },
       );
       if (response.status === 412) return { status: "conflict" };
       if (!response.ok) await fail(response, "write");
@@ -205,6 +240,7 @@ export function createWebDavTransport(
     },
     async clear() {
       await remove(ROOT_NAME);
+      await remove(PREVIOUS_ROOT_NAME);
       await remove(`${BLOBS}/`);
     },
     // Connection test plus what writes rely on: strong ETags and a refused

@@ -6,13 +6,8 @@ export const MS_PER_SECOND = 1_000;
 export const MAX_AUTO_RETRIES = 1;
 export const BROWSER_TOOL_TIMEOUT_MS = 25_000;
 export const TAB_LOAD_WAIT_TIMEOUT_MS = 15_000;
-export const SYNC_WRITE_DEBOUNCE_MS = 1_000;
-export const CHAT_SYNC_WRITE_DEBOUNCE_MS = 5_000;
-export const SYNC_SETTINGS_REFRESH_INTERVAL_MS = 5_000;
-export const SYNC_REMOTE_REFRESH_INTERVAL_MS = 30_000;
 export const CHAT_WRITE_DEBOUNCE_MS = 300;
 export const CHAT_STREAM_WRITE_DEBOUNCE_MS = 1_500;
-export const SYNC_MAX_BYTES_PER_ITEM = 7_500;
 
 export const STREAM_RENDER_THROTTLE_MS = 80;
 // How long a stopped run may take to report its last usage to the panel.
@@ -43,6 +38,10 @@ export const SKILL_LISTING_MAX_CHARS = 6_000;
 export const WORKSPACE_PATH_MAX_LENGTH = 160;
 export const WORKSPACE_FILE_MAX_CHARS = 48_000;
 export const WORKSPACE_TOTAL_MAX_CHARS = 96_000;
+// The shortest sync passphrase (it encrypts synced API keys).
+export const SYNC_PASSPHRASE_MIN_LENGTH = 8;
+// A skill's files together, held to the same size as a workspace's.
+export const SKILL_MAX_CHARS = WORKSPACE_TOTAL_MAX_CHARS;
 export const WORKSPACE_SEARCH_RESULT_MAX_CHARS = 12_000;
 export const WORKSPACE_SEARCH_PREVIEW_MAX_CHARS = 300;
 export const WORKSPACE_MEMORY_MAX_CHARS = 2_200;

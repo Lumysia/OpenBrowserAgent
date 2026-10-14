@@ -1,4 +1,4 @@
-import type { SyncPreferenceKey } from "../storage-keys";
+import type { SyncGroup } from "../storage-keys";
 import type { SyncEnv } from "./env";
 
 // A collection maps one kind of local data to records `<name>/<id>`. Small
@@ -7,10 +7,6 @@ import type { SyncEnv } from "./env";
 // `body` undefined: the collection has no body, or (lazy collections) this
 // device does not hold it.
 export type LocalEntry = { data: unknown; body?: unknown };
-
-// Which setting turns a collection on: always, a data category, or chat
-// attachments (WebDAV only).
-export type CollectionGate = "always" | "attachments" | SyncPreferenceKey;
 
 // Lazy collections read only the bodies that may have changed.
 export type NeedsBody = (id: string) => boolean;
@@ -50,9 +46,15 @@ export type KeyEntries = {
 
 export type Collection = {
   name: string;
-  gate: CollectionGate;
-  // Allowed on the browser-sync backend (chats and attachments are not).
-  browserSync: boolean;
+  // The sync groups that must all be on (none: always synced).
+  groups: readonly SyncGroup[];
+  // Needs a backend that holds large content (chats, files).
+  largeContent?: true;
+  // Records are end-to-end encrypted with the sync passphrase (keys.ts).
+  encrypted?: true;
+  // Syncs a part of another collection's items: the mass-delete guard and
+  // its answers are that collection's.
+  partOf?: string;
   // Local storage keys holding this collection; a change marks it dirty.
   // A key ending in "/" is a prefix (one key per item).
   keys: string[];
@@ -67,9 +69,6 @@ export type Collection = {
   entriesOf(key: string, value: unknown): KeyEntries;
   // A record's value while it was never stored (a preference's default).
   defaultData?(id: string): unknown;
-  // Data fields holding secrets: a device that never saw the other side's
-  // value does not replace a secret with an empty one.
-  secrets?: string[];
   // Writes the changes whose ids pass `verify` (re-checked under the storage
   // lock, so a local edit made meanwhile is never overwritten). Returns the
   // ids written.

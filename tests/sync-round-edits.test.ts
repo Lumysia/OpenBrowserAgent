@@ -8,6 +8,7 @@ import {
   ALL_ON,
   chat,
   device,
+  TEST_SCOPE,
   hookedTransport,
   memoryServer,
   memoryTransport,
@@ -235,7 +236,9 @@ test("review C8b: unsynced local edits survive a sync-state restart", async () =
   await b.sync();
   clock.now += 1000;
   await b.set(PROVIDERS, { p1: { apiKey: "new-key-typed-on-b", model: "m" } });
-  await runSyncRound({ ...b.context, scope: "test-after-switch" }, "startup");
+  // The backend's cached state is gone (the keys stay with the backend).
+  await b.env.local.remove(`${STORAGE_KEYS.syncState}:${TEST_SCOPE}`);
+  await runSyncRound(b.context, "startup");
   await a.sync();
   assert.equal(apiKey(b), "new-key-typed-on-b");
   assert.equal(apiKey(a), "new-key-typed-on-b");

@@ -21,6 +21,14 @@ export const WORKSPACE_FILE_PATH = {
   notes: "NOTES.md",
 } as const;
 
+const PROMPT_FILES = new Set<string>([
+  WORKSPACE_FILE_PATH.memory,
+  WORKSPACE_FILE_PATH.user,
+]);
+
+// The files shown in the system prompt (small, synced with the settings).
+export const isPromptFile = (path: string) => PROMPT_FILES.has(path);
+
 const DEFAULT_WORKSPACE_FILE_CONTENT: Record<string, string> = {
   [WORKSPACE_FILE_PATH.memory]: "# Memory\n\n",
   [WORKSPACE_FILE_PATH.user]: "# User\n\n",
