@@ -129,7 +129,16 @@ export default [
   {
     name: "D2: workspaces that never agreed merge without a base",
     file: "src/shared/sync/collections.ts",
-    from: '    newBody: () => createWorkspace("").files,',
+    from: `    body: "json",
+    newBody: () =>
+      createWorkspace("").files.filter((file) => isPromptFile(file.path)),`,
+    to: '    body: "json",',
+  },
+  {
+    name: "D2: workspace files that never agreed merge without a base",
+    file: "src/shared/sync/collections.ts",
+    from: `    newBody: () =>
+      createWorkspace("").files.filter((file) => !isPromptFile(file.path)),`,
     to: "",
   },
   {
