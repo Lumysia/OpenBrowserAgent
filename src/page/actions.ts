@@ -33,6 +33,11 @@ const ok = (note?: string): StepResult => ({
 });
 const failed = (error: string): StepResult => ({ ok: false, error });
 
+// Characters of an element's name or a field's value quoted in a result.
+const QUOTE_MAX_CHARS = 60;
+// A scroll by page moves this share of the window's height.
+const SCROLL_PAGE_SHARE = 0.8;
+
 export function runStep(step: ActStep): StepResult | Promise<StepResult> {
   try {
     switch (step.action) {
@@ -79,7 +84,7 @@ function focused() {
 
 export function describe(element: Element) {
   const role = roleOf(element) || element.localName;
-  const name = clip(nameOf(element, role), 60);
+  const name = clip(nameOf(element, role), QUOTE_MAX_CHARS);
   return `${role}${name ? ` "${name}"` : ""}`;
 }
 
@@ -206,7 +211,7 @@ function type(
         : element.value !== next;
     if (rejected)
       return failed(
-        `${describe(element)} did not accept the text (value is now "${clip(element.value, 60)}").`,
+        `${describe(element)} did not accept the text (value is now "${clip(element.value, QUOTE_MAX_CHARS)}").`,
       );
     return submit ? press(element, "Enter") : ok();
   }
@@ -389,7 +394,8 @@ function select(element: Element, wanted: string): StepResult {
 }
 
 function scroll(element: Element | undefined, requested?: string): StepResult {
-  const by = (sign: number) => sign * Math.round(innerHeight * 0.8);
+  const by = (sign: number) =>
+    sign * Math.round(innerHeight * SCROLL_PAGE_SHARE);
   if (element && !requested) {
     reveal(element);
     return ok();
