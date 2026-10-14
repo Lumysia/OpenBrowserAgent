@@ -128,6 +128,9 @@ function CloseMenu({
     store.subscribe,
     () => store.getState().popoverOpen,
   );
+  // Opened with the pointer, the menu holds focus itself so no item looks
+  // chosen; opened from the keyboard, the first item takes focus.
+  const byPointer = useRef(false);
   const choose = (action: () => Promise<unknown>) => {
     void action();
     store.hide();
@@ -141,16 +144,33 @@ function CloseMenu({
             size="icon"
             className="smart-bar-icon-button"
             aria-label={t.closeMenu}
+            aria-haspopup="menu"
+            onPointerDown={() => (byPointer.current = true)}
+            onKeyDown={() => (byPointer.current = false)}
           >
             <X size={16} />
           </Button>
         </PopoverTrigger>
       </IconTooltip>
-      <PopoverContent className="smart-bar-menu" side="bottom" align="end">
+      <PopoverContent
+        className="smart-bar-menu"
+        side="bottom"
+        align="end"
+        role="menu"
+        onOpenAutoFocus={(event) => {
+          if (!byPointer.current) return;
+          event.preventDefault();
+          (event.currentTarget as HTMLElement | null)?.focus();
+        }}
+        onKeyDown={moveMenuFocus}
+      >
         <Button
           variant="ghost"
           size="sm"
           className="smart-bar-menu-item"
+          role="menuitem"
+          onPointerMove={focusMenuItem}
+          onPointerLeave={blurMenuItem}
           onClick={onTrusted(() => choose(hideOnThisSite))}
         >
           <EyeOff size={15} />
@@ -162,6 +182,9 @@ function CloseMenu({
           variant="ghost"
           size="sm"
           className="smart-bar-menu-item"
+          role="menuitem"
+          onPointerMove={focusMenuItem}
+          onPointerLeave={blurMenuItem}
           onClick={onTrusted(() => choose(turnOffSmartBar))}
         >
           <Power size={15} />
@@ -170,4 +193,33 @@ function CloseMenu({
       </PopoverContent>
     </Popover>
   );
+}
+
+// The highlight follows the pointer, as in native menus: one item at a time,
+// none once the pointer leaves.
+function focusMenuItem(event: { currentTarget: HTMLElement }) {
+  if (event.currentTarget !== activeElementOf(event.currentTarget))
+    event.currentTarget.focus();
+}
+
+function blurMenuItem(event: { currentTarget: HTMLElement }) {
+  event.currentTarget.closest<HTMLElement>('[role="menu"]')?.focus();
+}
+
+function moveMenuFocus(event: KeyboardEvent<HTMLDivElement>) {
+  const step = { ArrowDown: 1, ArrowUp: -1 }[event.key];
+  if (!step) return;
+  event.preventDefault();
+  const items = [
+    ...event.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+  ];
+  const index = items.indexOf(
+    activeElementOf(event.currentTarget) as HTMLElement,
+  );
+  items[(index + step + items.length) % items.length]?.focus();
+}
+
+// The bar lives in a shadow root, where document.activeElement is the host.
+function activeElementOf(node: Node) {
+  return (node.getRootNode() as Document | ShadowRoot).activeElement;
 }
