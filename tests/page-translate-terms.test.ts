@@ -6,7 +6,7 @@ import {
   TERM_MEMORY_NAMES,
 } from "../src/background/page-translate/term-memory";
 import { modelPrompt } from "../src/background/page-translate/engines/model";
-import { metadataOf } from "../src/page-translate/metadata";
+import { addsLittle, metadataOf } from "../src/page-translate/metadata";
 import {
   isNameLike,
   isNameList,
@@ -72,6 +72,33 @@ test("metadata: dates, relative times, numbers and names, in the page's language
   ]);
   // Not a language the browser knows: English formats.
   assert.equal(metadataOf("2 days ago", "not a tag"), "date");
+});
+
+test("metadata: a label with a number, and numbers with footnote marks", () => {
+  assert.deepEqual(
+    [
+      "Coordinates: 27°59′18″N 86°55′31″E / 27.98833°N 86.92528°E",
+      "8,848.86 m (29,031.7 ft)[note 2]",
+      "Updated: Oct 7, 2026",
+      "Ranked 1st",
+      "Note: the pass closes in winter",
+      "Chapter 5: Into the valley",
+    ].map((text) => metadataOf(text) ?? null),
+    ["number", "number", "number", null, null, null],
+  );
+});
+
+test("adds little: only the labels of copied values translated", () => {
+  assert.equal(addsLittle("Nepali: सगरमाथा", "尼泊尔语：सगरमाथा"), true);
+  assert.equal(
+    addsLittle("Standard Tibetan: ཇོ་མོ་གླང་མ", "标准藏语：ཇོ་མོ་གླང་མ"),
+    true,
+  );
+  assert.equal(addsLittle("सगरमाथा (Nepali)", "सगरमाथा（尼泊尔语）"), true);
+  // Names kept inside a real translation.
+  assert.equal(addsLittle("Paris Agreement", "Accord de Paris"), false);
+  assert.equal(addsLittle("Note: see Paris", "Remarque : voir Paris"), false);
+  assert.equal(addsLittle("Nepali: Sagarmatha", "尼泊尔语：萨加玛塔"), false);
 });
 
 test("term memory: earlier translations with the same names go with later batches", () => {

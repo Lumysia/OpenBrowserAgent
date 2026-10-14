@@ -64,8 +64,9 @@ export function serializeNodes(nodes: Node[]): Serialized {
       elements.set(id, [element]);
       marked += atomTag(id);
       tokens.push({ type: "atom", id });
-      // Line breaks read as spaces.
+      // Line breaks read as spaces; marks are read as they are.
       if (element.tagName.toUpperCase() === "BR") plain += " ";
+      else if (!isAtom(element)) plain += text;
       return;
     }
     // An element holding only a space (a non-breaking space between links)

@@ -105,13 +105,41 @@ export function metadataOf(
   text: string,
   language = "en",
 ): Metadata | undefined {
-  const trimmed = text.replace(/\s+/g, " ").trim();
+  const trimmed = text.replace(NOTE_MARK, " ").replace(/\s+/g, " ").trim();
   if (!trimmed) return undefined;
   if (isDate(trimmed, language)) return "date";
   if (isNumber(trimmed)) return "number";
   if (isNameList(trimmed) || SITE_NAME.test(trimmed)) return "name";
+  // A label for a value of that kind ("Coordinates: 27°59′N 86°55′E"): the
+  // label alone adds little and the value stays as it is.
+  const labeled = LABELED.exec(trimmed);
+  if (labeled && (isNumber(labeled[1]) || isDate(labeled[1], language)))
+    return "number";
   return undefined;
 }
+
+// Footnote marks ("[2]", "[note 2]", "[a]") aren't part of what the text is.
+const NOTE_MARK = /\[[^\][\s][^\][]{0,10}\]/gu;
+// "Label: value", the label at most three words.
+const LABELED = /^[^\s:：]+(?: [^\s:：]+){0,2} ?[:：] ?(.+)$/u;
+
+// Whether a translation only changed the labels of the source's values and
+// copied the values ("Nepali: सगरमाथा" -> "尼泊尔语：सगरमाथा"): it repeats the
+// source and adds little. Labels are "Label:" (at most three words) and
+// "(Label)"; every other word of the source is in the translation as it is.
+export function addsLittle(source: string, translation: string) {
+  const left: string[] = [];
+  let copied = 0;
+  for (const word of source.split(/\s+/).filter(Boolean)) {
+    const core = word.replace(/^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu, "");
+    if (/\p{L}/u.test(core) && translation.includes(core)) copied++;
+    else left.push(word);
+  }
+  return !!copied && LABELS_ONLY.test(left.join(" "));
+}
+
+const LABELS_ONLY =
+  /^(?: ?(?:[^\s:：()（）]+(?: [^\s:：()（）]+){0,2} ?[:：]|[(（][^()（）]{1,30}[)）]))+$/u;
 
 // A site's name written as its address ("11Alive.com", "news.example.org").
 const SITE_NAME = /^[\p{L}\d-]+(\.[\p{L}\d-]+)*\.\p{L}{2,}$/u;

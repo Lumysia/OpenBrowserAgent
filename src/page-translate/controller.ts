@@ -14,6 +14,7 @@ import {
   type PageTranslateEngine,
 } from "../shared/page-translate/settings";
 import { getBrowserApi } from "../shared/browser-api";
+import { addsLittle } from "./metadata";
 import { createPresenter } from "./presenter";
 import { createQueue, PRIORITY } from "./queue";
 import { removeAll } from "./render";
@@ -264,9 +265,10 @@ function startSession(onFatal: () => void) {
 
   function show(unit: Unit, translation: string) {
     unit.state = "done";
-    const same =
-      translation.replace(/\s+/g, " ").trim() === unit.paragraph.source.text;
-    if (same) {
+    // A translation that repeats its source adds nothing to show.
+    const plain = translation.replace(/\s+/g, " ").trim();
+    const source = unit.paragraph.source;
+    if (plain === source.text || addsLittle(source.plain, plain)) {
       clear(unit);
       return;
     }

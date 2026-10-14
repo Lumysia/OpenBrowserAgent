@@ -83,7 +83,9 @@ test("paragraphs: text held by one element is that element's content", () => {
     </div>
     <ul><li id="item"><a id="item-link" href="/i">Linked item</a></li></ul>
     <td-like id="cell"><br>Second line<br></td-like>
-    <p id="meta">Native words<link rel="category" href="/c"> in a sentence</p>`);
+    <p id="meta">Native words<link rel="category" href="/c"> in a sentence</p>
+    <td-like id="lines">First value<br> <a id="line-link" href="/l">Linked line</a></td-like>
+    <p id="verse">A line of verse<br>and the next</p>`);
   assert.deepEqual(found.map(summary), [
     {
       parent: "heading-link",
@@ -113,6 +115,22 @@ test("paragraphs: text held by one element is that element's content", () => {
     {
       parent: "meta",
       text: "Native words in a sentence",
+      whole: true,
+      inline: false,
+    },
+    // Lines in a box of values are paragraphs of their own; in running
+    // text a line break is part of the text.
+    { parent: "lines", text: "First value", whole: false, inline: false },
+    {
+      parent: "line-link",
+      text: "Linked line",
+      whole: true,
+      inline: true,
+      wrapper: "line-link",
+    },
+    {
+      parent: "verse",
+      text: "A line of verse{1}and the next",
       whole: true,
       inline: false,
     },

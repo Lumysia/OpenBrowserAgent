@@ -190,8 +190,20 @@ function place(paragraph: Paragraph, element: HTMLElement, look: Look) {
   else if (paragraph.whole) paragraph.parent.appendChild(element);
   else {
     const last = paragraph.nodes[paragraph.nodes.length - 1];
-    last.parentNode?.insertBefore(element, last.nextSibling);
+    const end = look.form === "block" ? lineBreakAfter(last) : undefined;
+    const before = end ?? last;
+    before.parentNode?.insertBefore(element, before.nextSibling);
   }
+}
+
+// The line break that ends the line the node is on, if only blank text is
+// between them: a line of its own goes after it (before it, the break would
+// add an empty line under the translation).
+function lineBreakAfter(node: Node) {
+  let next = node.nextSibling;
+  while (next?.nodeType === 3 && !next.textContent?.trim())
+    next = next.nextSibling;
+  return next?.nodeName === "BR" ? next : undefined;
 }
 
 // The rows wrapped for our elements.

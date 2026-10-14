@@ -74,6 +74,7 @@ function* walk(
     else {
       const element = child as Element;
       if (!options.translateMenus && isChrome(element)) yield* flush();
+      else if (splitsLines(parent, element)) yield* flush();
       else if (isSkipped(element)) {
         // Inline code and images stay part of the sentence around them.
         if (isInline(element)) run.push(element);
@@ -106,6 +107,7 @@ function makeParagraph(
         nodes.includes(node) ||
         isOwn(node) ||
         (node.nodeType === 3 && !originalText(node as Text).trim()) ||
+        node.nodeName === "BR" ||
         node.nodeType === 8,
     );
   const trimmed = trimRun(nodes);
@@ -148,6 +150,14 @@ function makeParagraph(
     source,
     wrapper,
   };
+}
+
+// Lines set apart by line breaks outside running text (table cells, boxes
+// of values) are paragraphs of their own: each line's translation follows
+// it. In paragraphs, headings and list items a break is part of the text
+// (verse, an address) and the text is translated whole.
+function splitsLines(parent: Element, element: Element) {
+  return element.tagName.toUpperCase() === "BR" && !isTextBlock(parent);
 }
 
 // Leading and trailing blank text, line breaks and elements that don't show
