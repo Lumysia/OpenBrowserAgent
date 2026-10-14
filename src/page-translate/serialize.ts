@@ -7,7 +7,7 @@ import {
   hasMarkerSyntax,
   openTag,
   parsePlaceholders,
-  stripPlaceholders,
+  tokenizePlaceholders,
   type PlaceholderTree,
 } from "../shared/page-translate/placeholders";
 import { isAtom, isOwn, isPlainWrapper } from "./dom-rules";
@@ -62,6 +62,22 @@ export function serializeNodes(nodes: Node[]): Serialized {
   return { text: tidyMarkers(collapse(marked)), plain, elements };
 }
 
+// A translation whose markers don't match the source's (an engine dropped,
+// invented or crossed some): plain text, with the source's atoms (code,
+// images) where the translation has them, each once.
+function looseTree(source: string, translation: string): PlaceholderTree {
+  const atoms = new Set(
+    tokenizePlaceholders(source).flatMap((token) =>
+      token.type === "atom" ? [token.id] : [],
+    ),
+  );
+  const tree: PlaceholderTree = [];
+  for (const token of tokenizePlaceholders(translation))
+    if (token.type === "text") tree.push(token);
+    else if (token.type === "atom" && atoms.delete(token.id)) tree.push(token);
+  return tree;
+}
+
 // Spaces just inside a pair move outside it.
 function tidyMarkers(text: string) {
   return text
@@ -79,15 +95,9 @@ export function buildTranslation(
   translation: string,
 ): DocumentFragment {
   const fragment = document.createDocumentFragment();
-  const tree = parsePlaceholders(source.text, translation);
-  if (!tree) {
-    fragment.append(
-      document.createTextNode(
-        stripPlaceholders(translation).replace(/\s+/g, " ").trim(),
-      ),
-    );
-    return fragment;
-  }
+  const tree =
+    parsePlaceholders(source.text, translation) ??
+    looseTree(source.text, translation);
   appendTree(document, fragment, tree, source.elements);
   return fragment;
 }

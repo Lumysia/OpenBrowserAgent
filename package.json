@@ -63,6 +63,7 @@
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@wxt-dev/module-react": "^1.2.2",
+    "linkedom": "^0.18.12",
     "prettier": "3.9.9",
     "tsx": "4.23.15",
     "typescript": "latest",

@@ -1,0 +1,1 @@
+[3,"API key not valid. Please pass a valid API key.",[["type.googleapis.com/google.rpc.ErrorInfo",["API_KEY_INVALID","googleapis.com",[["service","translate-pa.googleapis.com"]]]],["type.googleapis.com/google.rpc.LocalizedMessage",["en-US","API key not valid. Please pass a valid API key."]]]]
