@@ -2,26 +2,12 @@ import { isScriptableUrl } from "../../shared/browser";
 import { COPY_FEEDBACK_MS } from "../../shared/config";
 import { getMessages } from "../../shared/i18n";
 import { getBrowserApi, storage } from "../../shared/storage";
-import { normalizeColorScheme } from "../../shared/theme/themes";
-import { themeTokens } from "../../shared/theme/tokens";
+import type { PageToastTheme } from "../../shared/page-toast";
+import { pageToastTheme } from "../page-toast";
 import { callPage } from "../page-agent";
 
 // How long the toolbar badge says a page can't be copied.
 const BADGE_MS = 4_000;
-
-type ToastTheme = {
-  scheme: "light" | "dark" | "system";
-  light: ToastColors;
-  dark: ToastColors;
-};
-type ToastColors = {
-  background: string;
-  foreground: string;
-  border: string;
-  accent: string;
-  error: string;
-  shadow: string;
-};
 
 // "Copy as Markdown": the page's main content as Markdown, written to the
 // clipboard by the page itself (the click's user activation is there, and
@@ -48,7 +34,7 @@ export async function copyPageMarkdown(tab: chrome.tabs.Tab | undefined) {
     args: [
       markdown,
       { copied: t.copied, failed: t.copyFailed },
-      toastTheme(preferences.colorScheme, preferences.accentColor),
+      pageToastTheme(preferences.colorScheme, preferences.accentColor),
       COPY_FEEDBACK_MS,
     ],
   });
@@ -65,26 +51,8 @@ export function pageDocument(title: string, url: string, text: string) {
   return [heading, `<${url}>`, body].filter(Boolean).join("\n\n");
 }
 
-function toastTheme(colorScheme: unknown, accent: unknown): ToastTheme {
-  const colors = (scheme: "light" | "dark"): ToastColors => {
-    const tokens = themeTokens(accent, scheme);
-    return {
-      background: tokens.popover,
-      foreground: tokens.foreground,
-      border: tokens.border,
-      accent: tokens["accent-solid"],
-      error: tokens["destructive-solid"],
-      shadow: tokens["shadow-ambient"],
-    };
-  };
-  return {
-    scheme: normalizeColorScheme(colorScheme),
-    light: colors("light"),
-    dark: colors("dark"),
-  };
-}
-
-async function flashBadge(tabId: number, title: string) {
+// A short note on the toolbar button, for pages that can't be scripted.
+export async function flashBadge(tabId: number, title: string) {
   const api = getBrowserApi();
   const action = api.action ?? (api as typeof chrome).browserAction;
   if (!action) return;
@@ -104,7 +72,7 @@ async function flashBadge(tabId: number, title: string) {
 async function writeClipboard(
   text: string,
   labels: { copied: string; failed: string },
-  theme: ToastTheme,
+  theme: PageToastTheme,
   durationMs: number,
 ) {
   let copied = false;
