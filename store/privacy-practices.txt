@@ -78,6 +78,8 @@ OpenBrowserAgent has no server of its own, but it does send these kinds of data 
 [ ] User activity: left unticked; the extension doesn't monitor the user's clicks or keystrokes (the agent's own actions are not user activity)
 [x] Website content: page text, screenshots and selected elements sent to the user's AI provider; the text of pages the user translates, sent to the translation engine they selected (their AI provider by default, or Google's or Microsoft's free translation service if they pick one; when the picked one fails on a page, the other one translates the rest of that page)
 
+Consent: before content goes to an AI provider on another server for the first time, the extension names the provider's host (for example api.openai.com) and asks the user to agree, in the provider form or before the first message. Nothing is sent until they agree; the permission can be withdrawn in Settings > Providers. Local providers (localhost, private network) need none.
+
 Certify all three:
 [x] I do not sell or transfer user data to third parties, outside of the approved use cases
 [x] I do not use or transfer user data for purposes that are unrelated to my item's single purpose

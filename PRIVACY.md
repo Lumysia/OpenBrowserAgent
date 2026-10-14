@@ -24,7 +24,7 @@ The extension stores this data in your browser's local extension storage.
 
 It sends data only to services you configure and turn on:
 
-- **Model providers** (for example OpenAI, Anthropic, Google, OpenRouter, or a local Ollama server). They receive your messages, chat history, and the page content and tool results needed to answer. Their own privacy policies apply.
+- **Model providers** (for example OpenAI, Anthropic, Google, OpenRouter, or a local Ollama server). They receive your messages, chat history, and the page content and tool results needed to answer. Their own privacy policies apply. Before a provider on another server receives any of your content for the first time, the extension names the server it would go to (for example api.openai.com) and asks for your permission: when you add the provider, or before your first message to it. Nothing is sent to it until you agree. The permission is stored with the provider (and synced with it if you sync providers) and applies only to that server; if you change the provider's address to another server, you are asked again. Providers on your own device or local network (such as localhost or a private network address) need no permission.
 - **MCP servers** you add or turn on, including the built-in web search servers, which are off until you turn them on. They receive the tool requests the agent sends them, such as search queries.
 - **Sync storage**, if you turn sync on: your browser account's sync storage, or a WebDAV server you choose. It receives the items you chose to sync.
 - **Your browser's default search engine**, when the agent searches the web through it.
@@ -57,6 +57,7 @@ The use of information received from Google APIs complies with the [Chrome Web S
 
 - Delete chats, agents, skills, and settings in the extension at any time. Uninstalling the extension removes its local storage.
 - Sync is off until you choose a sync backend, and you choose what to sync.
+- Withdraw a provider's permission in Settings → Providers; it then sends nothing until you agree again.
 - Remove a provider, MCP server, or sync backend to stop sending data to it.
 
 More detail on each browser permission and on what is sent where: [Permissions and Privacy](docs/permissions-and-privacy.md) and [Sync](docs/sync.md).

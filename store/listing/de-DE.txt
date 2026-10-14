@@ -1,6 +1,6 @@
 OpenBrowserAgent bringt einen KI-Agenten in die Seitenleiste Ihres Browsers. Stellen Sie Fragen zur aktuellen Seite, recherchieren Sie im ganzen Web oder übergeben Sie eine Aufgabe im Browser. Der Agent liest Seiten, klickt, tippt und wechselt zwischen Tabs – und Sie verfolgen jeden Schritt mit.
 
-Das Modell wählen Sie selbst. OpenBrowserAgent hat kein Konto und keinen eigenen Server: Ihre Nachrichten gehen ausschließlich an die Modellanbieter, MCP-Server und den Sync-Speicher, die Sie selbst einrichten.
+Das Modell wählen Sie selbst. OpenBrowserAgent hat kein Konto und keinen eigenen Server: Ihre Nachrichten gehen ausschließlich an die Modellanbieter, MCP-Server und den Sync-Speicher, die Sie selbst einrichten. Bevor ein Anbieter auf einem anderen Server zum ersten Mal Ihre Inhalte erhält, stimmen Sie dem für diesen Anbieter zu; lokale Modelle brauchen keine Erlaubnis.
 
 WAS SIE DAMIT TUN KÖNNEN
 
