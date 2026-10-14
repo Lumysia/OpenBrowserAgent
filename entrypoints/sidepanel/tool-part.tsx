@@ -96,7 +96,9 @@ export function ToolPart({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="tool-json-popover" align="start">
-          <pre className="ui-code-surface">{toolJsonDetail(name, part)}</pre>
+          <pre className="ui-code-surface ui-selectable">
+            {toolJsonDetail(name, part)}
+          </pre>
         </PopoverContent>
       </Popover>
       <div className="tool-detail">
@@ -123,7 +125,7 @@ export function ToolPart({
             />
           )}
           {description && name !== TOOL_NAME.ask && (
-            <div className="tool-description">{description}</div>
+            <div className="tool-description ui-selectable">{description}</div>
           )}
           {isSubAgentTool(name) && (
             <div
@@ -131,7 +133,7 @@ export function ToolPart({
               aria-hidden={!subAgentProgress}
             >
               <div
-                className="tool-description tool-detail-slot-content"
+                className="tool-description tool-detail-slot-content ui-selectable"
                 key={subAgentProgress}
               >
                 {subAgentProgress}
@@ -193,7 +195,7 @@ function QuestionToolForm({
   if (!questions.length) return null;
   if (submittedAnswers.length)
     return (
-      <div className="tool-result-list tool-question-answers">
+      <div className="tool-result-list tool-question-answers ui-selectable">
         {submittedAnswers.map((answer, index) => (
           <div className="tool-result-row" key={`${answer.question}-${index}`}>
             <span className="tool-result-label">{answer.question}</span>

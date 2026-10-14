@@ -143,7 +143,7 @@ export function DebugPage() {
                           : t.options.debugToolCore}
                       </Badge>
                     </AccordionTrigger>
-                    <AccordionContent className="debug-tool-details">
+                    <AccordionContent className="debug-tool-details ui-selectable">
                       <p>{tool.description}</p>
                       {!!required.length && (
                         <small>

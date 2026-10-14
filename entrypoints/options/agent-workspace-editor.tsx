@@ -182,7 +182,9 @@ export function AgentWorkspaceEditor({
                     <div className="option-file-item">
                       <FileText size={18} />
                       <span>
-                        <span className="option-file-name">{file.path}</span>
+                        <span className="option-file-name ui-selectable">
+                          {file.path}
+                        </span>
                         <small>
                           {file.kind} · utf-8 · {file.content.length} chars
                         </small>

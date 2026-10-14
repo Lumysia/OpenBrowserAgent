@@ -130,6 +130,16 @@ test("smart bar dictionary", { timeout: 240000 }, async (t) => {
       assert.equal(await card(), undefined);
       assert.equal((await resultText(page)).trim(), "A happy accident.");
       assert.doesNotMatch(JSON.stringify(lastRequest().body), /dictionary/);
+      // The answer can be selected; the buttons around it cannot.
+      assert.deepEqual(
+        await inSmartBar(page, (root) =>
+          [".smart-bar-result-text", ".smart-bar-result button"].map(
+            (selector) =>
+              getComputedStyle(root.querySelector(selector)).userSelect,
+          ),
+        ),
+        ["text", "none"],
+      );
     });
 
     await t.test("Translate on a sentence is unchanged", async () => {

@@ -129,7 +129,6 @@
   font-size: var(--text-base);
   line-height: 1.55;
   overflow-wrap: anywhere;
-  user-select: text;
   white-space: pre-wrap;
 }
 /* An entry is taller than most answers. */

@@ -10,6 +10,7 @@
   border: 1px solid transparent;
   border-radius: calc(var(--radius) - 3px);
   font-weight: 600;
+  -webkit-user-select: none;
   user-select: none;
   white-space: nowrap;
   transition: var(--transition-interactive);

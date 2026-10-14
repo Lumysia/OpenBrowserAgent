@@ -17,6 +17,7 @@ import {
   CardContent,
   CardDescription,
   CardTitle,
+  Feedback,
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -186,9 +187,7 @@ export function AgentsPage() {
           </Button>
         </div>
       </div>
-      {importAgentError ? (
-        <CardDescription>{importAgentError}</CardDescription>
-      ) : null}
+      {importAgentError ? <Feedback error>{importAgentError}</Feedback> : null}
       <Accordion type="multiple" className="stack">
         {items.map((agent) => {
           const description = agentDisplayDescription(agent, t);

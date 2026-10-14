@@ -10,7 +10,7 @@ export function UserText({
   className?: string;
 }) {
   return (
-    <span className={cn("ui-user-text", className)}>
+    <span className={cn("ui-user-text ui-selectable", className)}>
       {trimBlankLines(text)}
     </span>
   );
