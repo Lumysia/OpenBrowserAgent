@@ -117,7 +117,7 @@ export function SentTabsChip({ tabs }: { tabs: AttachmentTab[] }) {
       </div>
       <span>
         <strong>
-          {title}
+          <span className="sent-chip-title">{title}</span>
           {extraCount > 0 ? <em>+ {extraCount}</em> : null}
         </strong>
         <small>{urls}</small>
@@ -170,7 +170,7 @@ export function SentAttachmentsChip({
       </div>
       <span>
         <strong>
-          {title}
+          <span className="sent-chip-title">{title}</span>
           {extraCount > 0 ? <em>+ {extraCount}</em> : null}
         </strong>
         <small>
