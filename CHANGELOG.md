@@ -4,6 +4,9 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- The side panel has one background from top to bottom; the line and the separate band behind the message box are gone.
+- The send button no longer flickers when the pointer moves over it.
+
 ## 0.2.0-beta.8 - 2026-10-14
 
 An eighth pre-release of 0.2.0.

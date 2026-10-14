@@ -6,12 +6,6 @@
   display: grid;
   gap: 10px;
   padding: 10px 10px 12px;
-  border-top: 1px solid var(--border);
-  background: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--background) 76%, transparent),
-    var(--panel) 34%
-  );
 }
 .composer-box {
   position: relative;
@@ -153,20 +147,27 @@
   flex: 0 0 auto;
   padding: 0;
 }
+/* The send button keeps its own fill in every state: the shared button's
+   hover swaps the background for a flat colour, and a gradient can't fade
+   into one, so the button flashed on hover. Hover only lifts and brightens. */
 .send-button {
   width: 42px;
   height: 42px;
   padding: 0;
   border: 1px solid color-mix(in oklab, var(--accent-strong) 20%, var(--border));
   border-radius: var(--radius);
-  background:
-    linear-gradient(180deg, var(--highlight), transparent 58%),
-    linear-gradient(135deg, var(--bubble), var(--bubble-2));
   color: var(--accent-text);
   box-shadow: var(--inner-highlight), var(--glow);
 }
+.send-button:not(.stop-button),
+.send-button:not(.stop-button):is(:hover, :active):not(:disabled) {
+  border-color: color-mix(in oklab, var(--accent-strong) 20%, var(--border));
+  background:
+    linear-gradient(180deg, var(--highlight), transparent 58%),
+    linear-gradient(135deg, var(--bubble), var(--bubble-2));
+}
 .send-button:hover:not(:disabled) {
-  filter: saturate(1.08) brightness(1.02);
+  filter: saturate(1.08) brightness(1.04);
   box-shadow: var(--inner-highlight), var(--glow-strong);
   translate: 0 -1px;
 }
