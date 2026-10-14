@@ -152,6 +152,13 @@ export const zhTW: LocaleMessages = {
     resendWithoutMissingFiles: "不含遺失的檔案重新傳送",
     resendMessage: "重新傳送",
     forkChat: "分叉對話",
+    runStop: {
+      length: "回覆被截斷：已達輸出上限",
+      aborted: "已停止",
+      error: "回覆因發生錯誤而結束",
+      continue: "繼續",
+      continueMessage: "請從回覆中斷的地方繼續。",
+    },
     showMoreSources: plural({ other: "展開剩餘 {count} 個來源" }),
     showFewerSources: "收起來源",
     unavailableAttachments: plural({ other: "{count} 個不可用" }),

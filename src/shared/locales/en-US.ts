@@ -164,6 +164,14 @@ export const enUS = {
     resendWithoutMissingFiles: "Resend without missing files",
     resendMessage: "Resend",
     forkChat: "Fork chat",
+    // Under a response that ended early (see run-stop.ts).
+    runStop: {
+      length: "The response was cut off: output limit",
+      aborted: "Stopped",
+      error: "The response ended with an error",
+      continue: "Continue",
+      continueMessage: "Please continue from where the response stopped.",
+    },
     showMoreSources: plural({
       one: "Show {count} more source",
       other: "Show {count} more sources",

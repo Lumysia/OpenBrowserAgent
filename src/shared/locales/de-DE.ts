@@ -163,6 +163,14 @@ export const deDE: LocaleMessages = {
     resendWithoutMissingFiles: "Ohne fehlende Dateien erneut senden",
     resendMessage: "Erneut senden",
     forkChat: "Chat verzweigen",
+    runStop: {
+      length: "Die Antwort wurde abgeschnitten: Ausgabelimit",
+      aborted: "Gestoppt",
+      error: "Die Antwort wurde durch einen Fehler beendet",
+      continue: "Fortsetzen",
+      continueMessage:
+        "Bitte dort weitermachen, wo die Antwort abgebrochen ist.",
+    },
     showMoreSources: plural({
       one: "{count} weitere Quelle anzeigen",
       other: "{count} weitere Quellen anzeigen",

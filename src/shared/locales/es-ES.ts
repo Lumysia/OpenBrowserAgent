@@ -162,6 +162,14 @@ export const esES: LocaleMessages = {
     resendWithoutMissingFiles: "Reenviar sin archivos faltantes",
     resendMessage: "Reenviar",
     forkChat: "Bifurcar chat",
+    runStop: {
+      length: "La respuesta se cortó: límite de salida",
+      aborted: "Detenida",
+      error: "La respuesta terminó con un error",
+      continue: "Continuar",
+      continueMessage:
+        "Por favor, continúa desde donde se interrumpió la respuesta.",
+    },
     showMoreSources: plural({
       one: "Mostrar {count} fuente más",
       other: "Mostrar {count} fuentes más",

@@ -15,7 +15,6 @@ import { useTheme } from "../../src/ui/theme";
 import { celebrateSend } from "./holiday-touches";
 import { requestChatTitle } from "./ai-requests";
 import { createChatDraft } from "./chat-state-actions";
-import { pruneSentAttachmentPreviews } from "./edit-message";
 import { addSkill, messageToSend, toggleSkill } from "./skill-context";
 import { chatModelLabel } from "./model-label";
 import { buildSidepanelContext } from "./sidepanel-context";
@@ -359,19 +358,11 @@ export function SidepanelApp() {
         instruction:
           sendRequest?.instruction ?? messageInstruction(options.resendMessage),
       });
-      if (sentAttachments.length || activeEdit)
-        setSentAttachmentPreviews((items) => {
-          const kept = activeEdit
-            ? pruneSentAttachmentPreviews(items, activeEdit.keptMessageIds)
-            : items;
-          return sentAttachments.length
-            ? { ...kept, [userMessage.id]: sentAttachments }
-            : kept;
-        });
       storeSentAttachments({
         chatId: nextChat.id,
         messageId: userMessage.id,
         attachments: sentAttachments,
+        keptMessageIds: activeEdit?.keptMessageIds,
       });
       beginStream(nextChat.id, assistantMessage.id);
       const initialSnapshotPersist = chatState
@@ -464,6 +455,9 @@ export function SidepanelApp() {
       onSend={send}
       consentPrompt={consent.prompt}
       onStop={stopCurrentStream}
+      onContinue={() =>
+        send(t.sidepanel.runStop.continueMessage, undefined, { queued: true })
+      }
       onDeleteQueuedMessage={deleteQueuedMessage}
       onEditQueuedMessage={editQueuedMessage}
       onAnswerQuestion={(toolCallId, answers) =>

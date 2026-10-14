@@ -59,6 +59,8 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | voice (reading aloud)          | 语音               | 語音               | 音声                    | 음성             |
 | code (the agent runs)          | 代码               | 程式碼             | コード                  | 코드             |
 | sandbox (where code runs)      | 沙盒               | 沙盒               | サンドボックス          | 샌드박스         |
+| output limit (of a model)      | 输出上限           | 輸出上限           | 出力の上限              | 출력 한도        |
+| Continue (a cut-off response)  | 继续               | 繼續               | 続ける                  | 계속하기         |
 
 | English                        | Français                     | Deutsch                     | Español                           | Português (Brasil)               |
 | ------------------------------ | ---------------------------- | --------------------------- | --------------------------------- | -------------------------------- |
@@ -98,6 +100,8 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | voice (reading aloud)          | voix                         | Stimme                      | voz                               | voz                              |
 | code (the agent runs)          | code                         | Code                        | código                            | código                           |
 | sandbox (where code runs)      | bac à sable                  | Sandbox                     | entorno aislado                   | sandbox                          |
+| output limit (of a model)      | limite de sortie             | Ausgabelimit                | límite de salida                  | limite de saída                  |
+| Continue (a cut-off response)  | Continuer                    | Fortsetzen                  | Continuar                         | Continuar                        |
 
 The AI provider form's **thinking switch** chooses how the smart bar and page translation ask models to skip thinking: 思考开关 / 思考開關 / 思考スイッチ / 생각 스위치 / Interrupteur de réflexion / Denkschalter / Interruptor de pensamiento / Chave de pensamento. "Thinking" here is the same idea as the smart bar's "Thinking…" status. Its options keep the request field in parentheses untranslated (`enable_thinking`, `reasoning_effort`), and "Reasoning effort" uses the composer's term.
 
@@ -192,6 +196,8 @@ Built-in skills show a translated name and a short description of what they do f
 The other tools start their line with one shared action word (`display.toolSteps.actions`: "Created", "Searched", "Reset emulation"), written the way the language reports a finished step: an English past tense, a German participle ("Erstellt"), a French, Spanish or Portuguese action noun ("Création", "Búsqueda", "Pesquisa") so no noun gender is assumed (a participle is fine when it agrees with a noun the label names: "Texte remplacé"; tab actions agree with the tab), Chinese 已…, Japanese …しました, Korean …했어요. Local command lines show the task state ("Running", "Finished"), and loaded tools show as a count ("2 tools"); raw action names and tool ids never appear. Find counts the snapshot lines that match and, in parentheses, the occurrences in them ("1 matching line (2 occurrences)", Chinese "1 行匹配（2 处）"); a match is never a line and an occurrence at once. A failed step shows only "Failed" (`display.toolSteps.failed`); its error text is written for the model and stays in the step's details. A runCode step ("Ran code") shows how long the code ran and how many workspace files it saved ("120 ms · 2 files saved"). "Code" is what the agent writes and runs in its own sandbox; it is not a page "script" (runScript, which runs in the web page): Chinese 代码 vs 脚本, Traditional Chinese 程式碼 vs 指令碼.
 
 ## Errors and default names
+
+A response that ended early shows one line under it: cut off at the model's **output limit**, "Stopped" (the user pressed Stop; the adjective agrees with the response: _Arrêtée_, _Detenida_, _Interrompida_), or the error it ended with. A response is 回复 / 回覆 / 応答 / 응답 / réponse / Antwort / respuesta / resposta, as in the queued-message text. The Continue button sends a short message asking the model to go on from where the response stopped.
 
 An error the user sees starts with what failed in the UI language, then the reason (`common.errorDetail`: "Couldn’t load models: HTTP 401"; French puts a space before the colon, Chinese and Japanese use the full-width `：`). Reasons the extension knows are translated (`display.errors`); a server's or the browser's own text is shown as it came. Default names stored in English when something is created (a provider's type such as "OpenAI-compatible"; every type that names another company's API reads "…-compatible": OpenAI, OpenAI Responses, Anthropic, Gemini, Ollama; older default names without it show the same way, a bridge saved without a name, a built-in MCP server's description) show in the UI language while they are unchanged; a name the user typed shows as typed, and stored data is never rewritten.
 

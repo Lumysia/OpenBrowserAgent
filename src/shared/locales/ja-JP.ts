@@ -160,6 +160,13 @@ export const jaJP: LocaleMessages = {
     resendWithoutMissingFiles: "見つからないファイルを除いて再送信",
     resendMessage: "再送信",
     forkChat: "チャットを分岐",
+    runStop: {
+      length: "応答が途中で切れました：出力の上限",
+      aborted: "停止しました",
+      error: "エラーで応答が終了しました",
+      continue: "続ける",
+      continueMessage: "応答が途切れたところから続けてください。",
+    },
     showMoreSources: plural({ other: "残り{count}件のソースを表示" }),
     showFewerSources: "ソースを折りたたむ",
     unavailableAttachments: plural({ other: "{count}件利用不可" }),

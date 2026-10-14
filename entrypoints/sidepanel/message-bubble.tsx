@@ -26,6 +26,8 @@ import {
   NO_SOURCES,
 } from "./assistant-message-part";
 import { MessageRunInfo } from "./message-run-info";
+import { RunStopNotice } from "./run-stop-notice";
+import { replyCutOff } from "../../src/shared/run-stop";
 import { UserMessageActions } from "./user-message-actions";
 import {
   SentAttachmentsChip,
@@ -55,6 +57,7 @@ export function MessageBubble({
   latestUserMessage = false,
   outputActive = false,
   runStopped = false,
+  onContinue,
 }: {
   message: ChatMessage;
   t: Messages;
@@ -78,6 +81,8 @@ export function MessageBubble({
   outputActive?: boolean;
   // The background has no run of this reply (see run-state).
   runStopped?: boolean;
+  // Asks the model to go on after this reply, if it ended early.
+  onContinue?: () => void;
 }) {
   const skillNames = pickedSkillsFromMetadata(message.metadata)
     .map((skill) => skillDisplay(skill, t).name)
@@ -127,6 +132,7 @@ export function MessageBubble({
   const showRunInfo = message.role === "assistant" && runEnded;
   const assistantEnded =
     message.role === "assistant" && runEnded && !outputActive;
+  const cut = assistantEnded ? replyCutOff(message) : undefined;
   const chatExists = (chatId: string) =>
     chats.some((chat) => chat.id === chatId);
   const assistantPartEntries = chronologicalAssistantPartEntries(
@@ -208,6 +214,7 @@ export function MessageBubble({
         !!displaySources.length && (
           <SourceChips t={t} sources={displaySources} />
         )}
+      {cut && <RunStopNotice t={t} cut={cut} onContinue={onContinue} />}
       {message.role === "assistant" &&
         hasParts &&
         assistantEnded &&
