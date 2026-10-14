@@ -21,6 +21,8 @@ export function createTextTrackSource(
   let cues: Cue[] = [];
   let count = -1;
   let first: VTTCue | TextTrackCue | undefined;
+  // Changes are reported from when the source is set up.
+  let ready = false;
 
   const tracks = () =>
     [...video.textTracks].filter(
@@ -75,7 +77,7 @@ export function createTextTrackSource(
         next.push({ start: cue.startTime, end: cue.endTime, text });
     }
     cues = next.sort((a, b) => a.start - b.start);
-    onChange();
+    if (ready) onChange();
   }
 
   // The viewer picked another track in the player's own menu.
@@ -90,6 +92,7 @@ export function createTextTrackSource(
   video.textTracks.addEventListener("change", changed);
   const timer = window.setInterval(read, POLL_MS);
   select(choose());
+  ready = true;
 
   return {
     get cues() {
