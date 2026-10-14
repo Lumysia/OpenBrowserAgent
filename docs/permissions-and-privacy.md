@@ -14,7 +14,7 @@ All builds declare:
 - `unlimitedStorage`: allow local chat and attachment storage to grow beyond normal extension storage quotas; browser-sync quotas still apply.
 - `alarms`: check for sync changes once a minute while an extension page is visible.
 - `declarativeNetRequestWithHostAccess`: remove the `Origin` header from the extension's own requests to MCP servers that have **Send without browser Origin** turned on (see [MCP servers](product-overview.md#mcp-servers)). Each rule matches only that server's exact URL and requests this extension makes; other requests and pages are untouched.
-- `contextMenus`: the OpenBrowserAgent submenu in the right-click menu (ask about or summarize the page, search the web, summarize a linked page, copy the page as Markdown). It can be turned off in Settings → Context menu. Safari shows it on macOS only.
+- `contextMenus`: the OpenBrowserAgent submenu in the right-click menu (ask about or summarize the page, translate the page, search the web, summarize a linked page, copy the page as Markdown). It can be turned off in Settings → Context menu. Safari shows it on macOS only.
 - `downloads`: save Markdown exports, image ZIPs, Mermaid downloads, generated images, and fetched files.
 - `<all_urls>` host access: allow extension tools to work across arbitrary pages, provider endpoints, MCP servers, and remote image/file URLs. Manifest V3 lists this under `host_permissions`; Manifest V2 includes it in `permissions`.
 
@@ -41,7 +41,7 @@ The current required declaration is intentionally conservative because OpenBrows
 
 - `browsingActivity`: tab URLs, titles, and browser task context may be included in model/tool requests.
 - `searchTerms`: the web search tool runs searches through the browser's configured default search engine in a background tab and reads the results.
-- `websiteContent`: attached pages, selected elements, extracted text, images, and tool results may be sent to configured providers or MCP servers.
+- `websiteContent`: attached pages, selected elements, extracted text, images, and tool results may be sent to configured providers or MCP servers, and the text of pages the user translates is sent to the translation engine they selected.
 - `websiteActivity`: browser automation tools can navigate tabs, read pages, and interact with page state when the selected agent has those tool groups.
 
 ## Data Sent to Model Providers
@@ -59,6 +59,20 @@ Depending on user action and the selected agent's tool groups, requests may incl
 - Tool results and MCP results, including page text and the helper model's requests when it is used for page extraction, sub-agent summaries, or context compaction.
 - Generated image prompts and optional reference attachments.
 
+## Page Translation
+
+"Translate this page" in the right-click menu translates the page with the engine selected in Settings → Page translation. The page script is injected into that tab only when the item is clicked. It reads the page's paragraphs and sends them, a few at a time as they come near the screen, to the background, which sends them to the engine:
+
+- **AI model** (default): paragraph text (with numbered markers in place of links, emphasis and code) and the page title go to the configured model provider.
+- **Built-in translator**: Chrome's on-device Translator and LanguageDetector APIs. No text leaves the browser. The first translation into a language may download that language pack.
+- **Google Translate (free)**: paragraph text goes to `https://translate-pa.googleapis.com/v1/translateHtml` with the key of Google's retired website translation widget (a readable constant in `src/background/page-translate/engines/free-config.ts`), or, when that key is refused, to `https://translate.googleapis.com/translate_a/t`.
+- **Microsoft Translator (free)**: paragraph text goes to `https://edge.microsoft.com/translate/translatetext`.
+- When the selected free engine rate-limits (429, 503 or an HTML page instead of JSON), refuses (401/403), fails, or cannot be reached twice in a row, the rest of that page is translated with the other free engine, and the page shows a note saying so. If that one fails too, translating stops with a note. Choosing Google or Microsoft can therefore send a page's text to both.
+
+The free engines are unofficial web endpoints, not documented APIs, and can rate-limit or stop working. Requests come from the extension's background with `credentials: "omit"`: they carry no page address, cookies or account data. Rate limits and refusals are reported on the page. Host access for these calls comes from `<all_urls>`; the services also allow cross-origin requests.
+
+Translations are cached locally in IndexedDB (keyed by a hash of the engine, model, target language and text) for 30 days; Settings → Page translation clears them. Settings stay in the synced preferences like other preferences.
+
 ## External Network Calls
 
 OpenBrowserAgent sends data to endpoints configured by the user in Providers and MCP settings. It can also make these external calls:
@@ -71,6 +85,7 @@ OpenBrowserAgent sends data to endpoints configured by the user in Providers and
 - Image URLs from an answer, only after the user chooses to load them.
 - Page image/file download URLs when a download tool is used.
 - WebDAV URLs configured as a sync backend (see [Sync](sync.md)), including chat attachments when attachment sync is enabled.
+- The free Google or Microsoft translation endpoints, only when the user selected one of them and translates a page (the other one only when the selected one fails on that page) (see [Page Translation](#page-translation)).
 
 ## Storage and Sync
 
@@ -83,6 +98,7 @@ Stored data includes:
 - MCP server definitions and headers.
 - Local execution bridge configurations and secrets.
 - Chats and chat tabs. A chat keeps, for each tool call, the text the model received (page snapshots and extracted text included, up to the tool output size limit), so later turns and chat exports can show what the agent saw. Longer outputs are also kept in local IndexedDB under artifact handles; those are never synced.
+- Page translations (IndexedDB, 30 days).
 - Sync status and sync bookkeeping: what this device last synced, changes waiting to upload, and a copy of the last sync root file.
 
 Sync is disabled until a backend is selected. Language and lightweight preferences then use that backend. The provider sync option is enabled by default. Agents, skills, MCP servers, local execution bridges, chats, and chat attachments remain local unless the user enables their sync options.

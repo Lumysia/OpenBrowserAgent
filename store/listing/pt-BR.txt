@@ -10,6 +10,7 @@ O QUE VOCÊ PODE FAZER
 • Editar uma página ali mesmo, por exemplo para traduzi-la, e fazer capturas de tela ou baixar arquivos.
 • Selecionar texto em qualquer página para usar ações rápidas (explicar, traduzir, melhorar a redação, ler em voz alta). Esse recurso fica desativado até você ativá-lo, e você pode limitá-lo aos sites que escolher.
 • Clicar com o botão direito em uma página, link ou texto selecionado para perguntar, resumir, pesquisar na web ou copiar a página como Markdown. Você pode desativar o menu ou cada um dos itens.
+• Traduzir uma página inteira pelo menu de contexto, com a tradução abaixo de cada parágrafo, e voltar com “Mostrar original”. Use seu modelo de IA, o tradutor integrado do navegador (quando houver) ou a tradução gratuita do Google ou da Microsoft (o texto da página é então enviado a eles).
 
 AGENTES E HABILIDADES
 

@@ -4,6 +4,7 @@
 export const CONTEXT_MENU_ITEM = {
   ask: "ask",
   summarizePage: "summarizePage",
+  translatePage: "translatePage",
   searchWeb: "searchWeb",
   summarizeLink: "summarizeLink",
   copyMarkdown: "copyMarkdown",
@@ -44,6 +45,7 @@ export const CONTEXT_MENU_ID = {
   parent: "oba-menu",
   ask: "oba-ask",
   summarizePage: "oba-summarize-page",
+  translatePage: "oba-translate-page",
   searchPage: "oba-search-page",
   searchSelection: "oba-search-selection",
   summarizeLink: "oba-summarize-link",
@@ -57,6 +59,9 @@ export type ContextMenuTitles = {
   parent: string;
   ask: string;
   summarizePage: string;
+  // "Translate this page", or "Show original" where the active tab is
+  // translated.
+  translatePage: string;
   searchPage: string;
   // `%s` stands for the selected text.
   searchSelection: string;
@@ -109,6 +114,14 @@ export function contextMenuEntries(
     ...(on(CONTEXT_MENU_ITEM.summarizePage)
       ? [
           child(CONTEXT_MENU_ID.summarizePage, titles.summarizePage, [
+            ...ANYWHERE,
+            ...tab,
+          ]),
+        ]
+      : []),
+    ...(on(CONTEXT_MENU_ITEM.translatePage)
+      ? [
+          child(CONTEXT_MENU_ID.translatePage, titles.translatePage, [
             ...ANYWHERE,
             ...tab,
           ]),

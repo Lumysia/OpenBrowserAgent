@@ -7,6 +7,10 @@ import {
   normalizeContextMenuSettings,
 } from "./context-menu";
 import {
+  DEFAULT_PAGE_TRANSLATE_SETTINGS,
+  normalizePageTranslateSettings,
+} from "./page-translate/settings";
+import {
   DEFAULT_SMART_BAR_SETTINGS,
   normalizeSmartBarSettings,
 } from "./smart-bar";
@@ -25,6 +29,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   helperModelId: "",
   smartBar: DEFAULT_SMART_BAR_SETTINGS,
   contextMenu: DEFAULT_CONTEXT_MENU_SETTINGS,
+  pageTranslate: DEFAULT_PAGE_TRANSLATE_SETTINGS,
 };
 
 export function mergePreferences(value: Partial<Preferences>): Preferences {
@@ -33,5 +38,6 @@ export function mergePreferences(value: Partial<Preferences>): Preferences {
     ...value,
     smartBar: normalizeSmartBarSettings(value.smartBar),
     contextMenu: normalizeContextMenuSettings(value.contextMenu),
+    pageTranslate: normalizePageTranslateSettings(value.pageTranslate),
   };
 }

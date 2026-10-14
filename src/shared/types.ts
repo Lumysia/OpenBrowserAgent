@@ -2,6 +2,7 @@ import type { UploadedAttachmentKind } from "./attachments";
 import type { AgentIconId } from "./agent-icon-registry";
 import type { ToolGroup } from "./agents";
 import type { ContextMenuSettings } from "./context-menu";
+import type { PageTranslateSettings } from "./page-translate/settings";
 import type { ReasoningEffort } from "./reasoning";
 import type { SmartBarSettings } from "./smart-bar";
 import type { ColorScheme, ThemeId } from "./theme/themes";
@@ -60,6 +61,7 @@ export type Preferences = {
   helperModelId?: string;
   smartBar?: SmartBarSettings;
   contextMenu?: ContextMenuSettings;
+  pageTranslate?: PageTranslateSettings;
 };
 
 export type SyncBackendType = "browser-sync" | "webdav";

@@ -79,6 +79,7 @@ export const OPTIONS_ROUTE = {
   skills: "/skills",
   smartBar: "/smart-bar",
   contextMenu: "/context-menu",
+  pageTranslate: "/page-translation",
   debug: "/debug",
 } as const;
 
@@ -92,8 +93,13 @@ export const OPTIONS_HASH = {
   skills: "#/skills",
   smartBar: "#/smart-bar",
   contextMenu: "#/context-menu",
+  pageTranslate: "#/page-translation",
   debug: "#/debug",
 } as const;
+
+// The privacy policy's part on translation engines.
+export const PRIVACY_POLICY_TRANSLATION_URL =
+  "https://github.com/Lumysia/OpenBrowserAgent/blob/main/PRIVACY.md#translation-engines";
 
 export function clampMaxToolSteps(value: number | undefined) {
   if (!Number.isFinite(value)) return DEFAULT_MAX_TOOL_STEPS;

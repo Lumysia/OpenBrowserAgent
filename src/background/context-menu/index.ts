@@ -7,6 +7,7 @@ import {
 import { getMessages } from "../../shared/i18n";
 import { SIDE_PANEL_TASK } from "../../shared/side-panel-handoff";
 import { getBrowserApi, storage } from "../../shared/storage";
+import { togglePageTranslation, translateMenuTitle } from "../page-translate";
 import { handOffToSidePanel } from "../side-panel-handoff";
 import { copyPageMarkdown } from "./copy-markdown";
 
@@ -60,7 +61,11 @@ async function menuEntries(menus: Menus) {
   const name = getBrowserApi().i18n?.getMessage?.("extName");
   return contextMenuEntries(
     normalizeContextMenuSettings(preferences.contextMenu),
-    { ...t, parent: name || "OpenBrowserAgent" },
+    {
+      ...t,
+      translatePage: await translateMenuTitle(language),
+      parent: name || "OpenBrowserAgent",
+    },
     // The tab strip's menu: Firefox, Safari 18 and Chrome 150 have it.
     { tabContext: Object.values(menus.ContextType ?? {}).includes("tab") },
   );
@@ -98,6 +103,8 @@ function handleClick(
         });
       case CONTEXT_MENU_ID.summarizePage:
         return handOffToSidePanel(tab, { task: SIDE_PANEL_TASK.summarizePage });
+      case CONTEXT_MENU_ID.translatePage:
+        return togglePageTranslation(tab);
       case CONTEXT_MENU_ID.searchPage:
         return handOffToSidePanel(tab, { task: SIDE_PANEL_TASK.searchWeb });
       case CONTEXT_MENU_ID.searchSelection:

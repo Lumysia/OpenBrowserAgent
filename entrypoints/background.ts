@@ -24,6 +24,10 @@ import * as streamSessions from "../src/background/stream-sessions";
 import { openActionSurface } from "../src/background/action-surface";
 import { setupContextMenu } from "../src/background/context-menu";
 import {
+  handlePageTranslateMessage,
+  setupPageTranslate,
+} from "../src/background/page-translate";
+import {
   handleSmartBarMessage,
   setupSmartBar,
 } from "../src/background/smart-bar";
@@ -43,6 +47,7 @@ export default defineBackground(() => {
 
   setupSmartBar();
   setupContextMenu();
+  setupPageTranslate();
   setupSync();
   setupMcpOriginRules();
 
@@ -54,6 +59,7 @@ export default defineBackground(() => {
   chrome.runtime.onMessage.addListener(
     (message, sender, sendResponse) =>
       handleSmartBarMessage(message, sender, sendResponse) ||
+      handlePageTranslateMessage(message, sender, sendResponse) ||
       streamSessions.handleChatStreamControlMessage(message, sendResponse) ||
       handleLocalExecutionBridgeRuntimeMessage(message, sendResponse) ||
       handleDescribeRunMessage(message, sendResponse),

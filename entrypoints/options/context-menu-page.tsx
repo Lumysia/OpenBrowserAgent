@@ -5,6 +5,7 @@ import {
   type ContextMenuSettings,
 } from "../../src/shared/context-menu";
 import { getMessages } from "../../src/shared/i18n";
+import { getPageTranslateMessages } from "../../src/shared/page-translate/messages";
 import { storage } from "../../src/shared/storage";
 import {
   Card,
@@ -21,6 +22,10 @@ export function ContextMenuPage() {
   const [language] = useStoredState(storage.language);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const s = getMessages(language).contextMenu;
+  const itemLabels = {
+    ...s.itemLabels,
+    translatePage: getPageTranslateMessages(language).menuItemLabel,
+  };
   if (!preferences) return null;
   const settings = normalizeContextMenuSettings(preferences.contextMenu);
   const update = (change: Partial<ContextMenuSettings>) =>
@@ -59,7 +64,7 @@ export function ContextMenuPage() {
             {CONTEXT_MENU_ITEMS.map((item) => (
               <SettingToggleRow
                 key={item}
-                title={s.itemLabels[item]}
+                title={itemLabels[item]}
                 value={!settings.disabledItems.includes(item)}
                 disabled={!settings.enabled}
                 onChange={(on) =>
