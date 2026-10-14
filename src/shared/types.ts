@@ -35,7 +35,12 @@ export type ProviderConfig = {
   baseUrl?: string;
   models?: ModelConfig[];
   imageModels?: ModelConfig[];
+  // The user's permission to send their content to the endpoint at `host`
+  // (see provider-consent.ts); valid only while the endpoint stays there.
+  consent?: ProviderConsent;
 };
+
+export type ProviderConsent = { host: string; grantedAt: number };
 
 export type ProviderState = Record<string, ProviderConfig>;
 

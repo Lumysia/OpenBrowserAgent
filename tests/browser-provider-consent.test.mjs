@@ -1,0 +1,252 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { setTimeout as delay } from "node:timers/promises";
+import { sendComposer, typeComposer } from "./browser-composer.mjs";
+import { poll } from "./chromium.mjs";
+import {
+  barState,
+  clickInBar,
+  resultText,
+  selectText,
+  startSmartBar,
+} from "./smart-bar-page.mjs";
+
+// Permission before a provider receives the user's content: the provider
+// form's required checkbox, the side panel's question before a send, the
+// smart bar's, and local endpoints that never ask. A host name the browser
+// resolves to the fixture stands in for a remote provider.
+const REMOTE = "ai.consent.test";
+const PAGE = `<!doctype html><title>Consent</title>
+<style>body{font:16px/1.4 sans-serif;margin:20px}p{width:420px}</style>
+<p id="text">The quick brown fox jumps over the lazy dog.</p>`;
+
+test("provider consent", { timeout: 240000 }, async (t) => {
+  const session = await startSmartBar({
+    pages: { "/page": PAGE },
+    answer: async (_prompt, write) => write("Fixture answer."),
+    smartBar: { enabled: true },
+    args: [`--host-resolver-rules=MAP ${REMOTE} 127.0.0.1`],
+  });
+  const { browser, fixture, options, extensionUrl, url } = session;
+  const port = new URL(fixture.baseUrl).port;
+  const host = `${REMOTE}:${port}`;
+  const remote = (extra = {}) => ({
+    id: "remote",
+    type: "openai",
+    baseUrl: `http://${host}/v1`,
+    models: [{ id: "remote:m", name: "m" }],
+    ...extra,
+  });
+  const modelRequests = () =>
+    fixture.requests.filter((request) => request.url.startsWith("/v1/")).length;
+  const setProviders = (provider) =>
+    options.call(async (provider) => {
+      const { preferences } = await chrome.storage.local.get("preferences");
+      await chrome.storage.local.set({
+        provider,
+        preferences: { ...preferences, selectedModelId: "remote:m" },
+      });
+    }, provider);
+  const storedProvider = (id) =>
+    options.call(
+      async (id) => (await chrome.storage.local.get("provider")).provider[id],
+      id,
+    );
+  try {
+    await t.test("settings: no save without the checkbox", async () => {
+      await setProviders({ remote: remote() });
+      await options.send("Page.navigate", {
+        url: extensionUrl("options.html#/providers"),
+      });
+      await poll(() =>
+        options.call(() => !!document.querySelector(".ui-accordion-trigger")),
+      );
+      // The provider from an older version asks for permission.
+      assert.ok(
+        await options.call(() =>
+          document
+            .querySelector(".ui-accordion-trigger")
+            .textContent.includes("Needs permission"),
+        ),
+      );
+      await options.call(() =>
+        document.querySelector(".ui-accordion-trigger").click(),
+      );
+      const agreement = `I agree that content I share in chats (messages, page text, screenshots and files) is sent to ${host}.`;
+      assert.equal(
+        await poll(() =>
+          options.call(
+            () => document.querySelector(".ui-checkbox")?.textContent,
+          ),
+        ),
+        agreement,
+      );
+      const saveState = () =>
+        options.call(() => {
+          const save = [
+            ...document.querySelectorAll(".provider-form-actions button"),
+          ].find((button) => button.textContent === "Save");
+          return save && !save.disabled;
+        });
+      // An edit alone cannot be saved.
+      await options.call(() =>
+        document
+          .querySelector('input[placeholder="OpenAI-compatible"]')
+          .focus(),
+      );
+      await options.send("Input.insertText", { text: " edited" });
+      await poll(() =>
+        options.call(() =>
+          document.body.textContent.includes(
+            "Tick the box above to save this provider.",
+          ),
+        ),
+      );
+      assert.equal(await saveState(), false);
+      await options.call(() =>
+        document.querySelector(".ui-checkbox input").click(),
+      );
+      await poll(saveState);
+      await options.call(() =>
+        [...document.querySelectorAll(".provider-form-actions button")]
+          .find((button) => button.textContent === "Save")
+          .click(),
+      );
+      const saved = await poll(
+        async () => (await storedProvider("remote"))?.consent,
+      );
+      assert.equal(saved.host, host);
+      await poll(() =>
+        options.call(() =>
+          document
+            .querySelector(".provider-consent-status")
+            ?.textContent.includes("Allowed to receive your content"),
+        ),
+      );
+    });
+
+    await t.test("settings: withdrawing asks again", async () => {
+      await options.call(() =>
+        [...document.querySelectorAll(".provider-consent-status button")]
+          .find((button) => button.textContent === "Withdraw permission")
+          .click(),
+      );
+      await poll(async () => !(await storedProvider("remote")).consent);
+      await poll(() =>
+        options.call(() => !!document.querySelector(".ui-checkbox input")),
+      );
+    });
+
+    const panel = await browser.open(extensionUrl("sidepanel.html"));
+    const promptShown = () =>
+      panel.call(() => !!document.querySelector(".provider-consent-prompt"));
+    const answer = (label) =>
+      panel.call(
+        (label) =>
+          [...document.querySelectorAll(".provider-consent-prompt button")]
+            .find((button) => button.textContent === label)
+            .click(),
+        label,
+      );
+    const composerText = () =>
+      panel.call(() => document.querySelector(".composer-box textarea").value);
+    const ready = () =>
+      poll(() =>
+        panel.call(() => !!document.querySelector(".composer-box textarea")),
+      );
+
+    await t.test("side panel: asks before the first send", async () => {
+      await setProviders({ remote: remote() });
+      await panel.send("Page.reload");
+      await ready();
+      const before = modelRequests();
+      await typeComposer(panel, "Hello there");
+      await sendComposer(panel);
+      await poll(promptShown);
+      assert.ok(
+        (
+          await panel.call(
+            () =>
+              document.querySelector(".provider-consent-prompt").textContent,
+          )
+        ).includes(`is sent to ${host}.`),
+      );
+      await delay(500);
+      assert.equal(modelRequests(), before, "nothing is sent while asking");
+      await answer("Not now");
+      await poll(async () => !(await promptShown()));
+      await delay(500);
+      assert.equal(modelRequests(), before, "nothing is sent when declined");
+      assert.equal(await composerText(), "Hello there");
+      assert.equal((await storedProvider("remote")).consent, undefined);
+
+      await sendComposer(panel);
+      await poll(promptShown);
+      await answer("Agree");
+      await poll(() => modelRequests() > before);
+      assert.equal((await storedProvider("remote")).consent.host, host);
+      await poll(() =>
+        panel.call(() => document.body.textContent.includes("Fixture answer.")),
+      );
+    });
+
+    await t.test("side panel: no question once allowed", async () => {
+      await poll(() =>
+        panel.call(() => !document.querySelector(".typing-indicator")),
+      );
+      const before = modelRequests();
+      await typeComposer(panel, "Again");
+      await sendComposer(panel);
+      await poll(() => modelRequests() > before);
+      assert.equal(await promptShown(), false);
+    });
+
+    await t.test("side panel: withdrawn permission asks again", async () => {
+      await setProviders({
+        remote: { ...(await storedProvider("remote")), consent: undefined },
+      });
+      await panel.send("Page.reload");
+      await ready();
+      const before = modelRequests();
+      await typeComposer(panel, "Third");
+      await sendComposer(panel);
+      await poll(promptShown);
+      await answer("Not now");
+      await delay(300);
+      assert.equal(modelRequests(), before);
+    });
+
+    await t.test("side panel: a local provider never asks", async () => {
+      await setProviders({
+        remote: remote({ baseUrl: `${fixture.baseUrl}/v1` }),
+      });
+      await panel.send("Page.reload");
+      await ready();
+      const before = modelRequests();
+      await typeComposer(panel, "Local");
+      await sendComposer(panel);
+      await poll(() => modelRequests() > before);
+      assert.equal(await promptShown(), false);
+    });
+
+    await t.test("smart bar: asks in the bar, then runs", async () => {
+      await setProviders({ remote: remote() });
+      const page = await browser.open(url("/page"));
+      const before = modelRequests();
+      await selectText(page, "#text");
+      await poll(async () => (await barState(page)) === "toolbar");
+      await clickInBar(page, '[aria-label="Explain"]');
+      await poll(async () =>
+        (await resultText(page)).includes(`is sent to ${host}.`),
+      );
+      assert.equal(modelRequests(), before);
+      await clickInBar(page, "button", "Agree");
+      await poll(async () =>
+        (await resultText(page)).includes("Fixture answer."),
+      );
+      assert.equal((await storedProvider("remote")).consent.host, host);
+    });
+  } finally {
+    await session.close();
+  }
+});

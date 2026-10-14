@@ -17,7 +17,7 @@ import { requestChatTitle } from "./ai-requests";
 import { createChatDraft } from "./chat-state-actions";
 import { pruneSentAttachmentPreviews } from "./edit-message";
 import { addSkill, messageToSend, toggleSkill } from "./skill-context";
-import { assistantModelLabel } from "./model-label";
+import { chatModelLabel } from "./model-label";
 import { buildSidepanelContext } from "./sidepanel-context";
 import {
   useAutoScroll,
@@ -45,6 +45,7 @@ import { useChatDraft } from "./use-chat-drafts";
 import { useConfiguredModels as useModels } from "./use-configured-models";
 import { useElementSelector } from "./use-element-selector";
 import { useMessageEdit } from "./use-message-edit";
+import { useProviderConsent } from "./provider-consent-prompt";
 import { useParallelChatStreams } from "./use-parallel-chat-streams";
 import { useQueuedMessages } from "./use-queued-messages";
 import { useSyncPageState } from "../../src/ui/useSyncPageState";
@@ -105,6 +106,7 @@ export function SidepanelApp() {
     currentChat?.kind === "subagent" ? currentChat.agentId : selectedAgent.id,
   );
   const { selectElement } = useElementSelector(t);
+  const consent = useProviderConsent(t, providers, preferences, activeAgent);
   const {
     uploadedAttachments,
     pendingAttachments,
@@ -298,6 +300,8 @@ export function SidepanelApp() {
       }
       return;
     }
+    // Asks first when a provider it uses lacks the user's permission.
+    if (!(await consent.confirmSend(!currentChat?.messages.length))) return;
     sendInFlightRef.current.add(sendChatId);
     void celebrateSend(preferences).catch(console.warn);
     try {
@@ -342,16 +346,11 @@ export function SidepanelApp() {
         t,
         context,
         sources: baseChat.sources,
-        // The agent's own model runs when it still exists (as in the
-        // background's resolveModel).
-        assistantModel: assistantModelLabel({
-          modelId: configuredModels.some(
-            (model) => model.id === activeAgent.modelId,
-          )
-            ? activeAgent.modelId
-            : preferences?.selectedModelId,
-          models: configuredModels,
-        }),
+        assistantModel: chatModelLabel(
+          activeAgent,
+          preferences,
+          configuredModels,
+        ),
         sentTabs,
         sentElements,
         sentTexts,
@@ -463,6 +462,7 @@ export function SidepanelApp() {
       onImportChat={importChat}
       onCloseChat={closeChat}
       onSend={send}
+      consentPrompt={consent.prompt}
       onStop={stopCurrentStream}
       onDeleteQueuedMessage={deleteQueuedMessage}
       onEditQueuedMessage={editQueuedMessage}

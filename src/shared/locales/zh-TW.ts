@@ -1,5 +1,6 @@
 import { plural } from "../plural";
 import { contextMenuZhTW } from "./context-menu/zh-TW";
+import { providerConsentZhTW } from "./provider-consent/zh-TW";
 import { displayZhTW } from "./display/zh-TW";
 import { downloadsZhTW } from "./downloads/zh-TW";
 import { smartBarZhTW } from "./smart-bar/zh-TW";
@@ -533,6 +534,7 @@ export const zhTW: LocaleMessages = {
   smartBar: smartBarZhTW,
   contextMenu: contextMenuZhTW,
   downloads: downloadsZhTW,
+  providerConsent: providerConsentZhTW,
   sync: syncZhTW,
   themes: themesZhTW,
   display: displayZhTW,

@@ -11,6 +11,7 @@ export const SMART_BAR_MESSAGE = {
   hideOnSite: "smart-bar:hide-on-site",
   turnOff: "smart-bar:turn-off",
   openSidePanel: "smart-bar:open-side-panel",
+  allowProvider: "smart-bar:allow-provider",
   // Background -> page scripts.
   showForSelection: "smart-bar:show-for-selection",
   settingsChanged: "smart-bar:settings-changed",
@@ -62,6 +63,8 @@ export type SmartBarPageConfig = {
   // What "Hide on this site" hides the bar on, for its label.
   hideSite: string;
   messages: SmartBarMessages;
+  // The question before a provider first receives the user's content.
+  providerConsent: LocaleMessages["providerConsent"];
   // The language of `messages`, for numbers in them.
   language: string;
   // The language results are written in (the extension's language setting,
@@ -82,7 +85,9 @@ export type SmartBarRunRequest = {
 export type SmartBarStreamEvent =
   | { type: "delta"; text: string }
   | { type: "done" }
-  | { type: "error"; error: string };
+  | { type: "error"; error: string }
+  // Nothing was sent: the provider needs the user's permission first.
+  | { type: "consent"; providerId: string; host: string };
 
 // What the bar's side panel actions hand over: the selection to ask about,
 // to search the web about, or with a result to continue.
@@ -90,6 +95,14 @@ export type SmartBarSidePanelRequest = Extract<
   SidePanelHandoffRequest,
   { task: "ask" | "searchWeb" | "continue" }
 >;
+
+// The user agreed in the bar that the provider may receive their content
+// at `host` (the host they were shown).
+export type SmartBarAllowProviderRequest = {
+  type: typeof SMART_BAR_MESSAGE.allowProvider;
+  providerId: string;
+  host: string;
+};
 
 export type SmartBarOpenSidePanelRequest = {
   type: typeof SMART_BAR_MESSAGE.openSidePanel;

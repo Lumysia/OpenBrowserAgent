@@ -1,5 +1,6 @@
 import { plural } from "../plural";
 import { contextMenuEsES } from "./context-menu/es-ES";
+import { providerConsentEsES } from "./provider-consent/es-ES";
 import { displayEsES } from "./display/es-ES";
 import { downloadsEsES } from "./downloads/es-ES";
 import { smartBarEsES } from "./smart-bar/es-ES";
@@ -636,6 +637,7 @@ export const esES: LocaleMessages = {
   smartBar: smartBarEsES,
   contextMenu: contextMenuEsES,
   downloads: downloadsEsES,
+  providerConsent: providerConsentEsES,
   sync: syncEsES,
   themes: themesEsES,
   display: displayEsES,

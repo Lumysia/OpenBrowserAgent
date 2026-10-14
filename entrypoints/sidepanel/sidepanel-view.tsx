@@ -1,5 +1,10 @@
 import { Plus } from "lucide-react";
-import { useRef, type ClipboardEvent, type RefObject } from "react";
+import {
+  useRef,
+  type ClipboardEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { TOOLTIP_DELAY_MS } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import type { SyncStatus } from "../../src/shared/storage";
@@ -96,6 +101,7 @@ export function SidepanelView({
   onImportChat,
   onCloseChat,
   onSend,
+  consentPrompt,
   onStop,
   onDeleteQueuedMessage,
   onEditQueuedMessage,
@@ -169,6 +175,8 @@ export function SidepanelView({
   onImportChat: (chat: Chat) => void;
   onCloseChat: (chatId: string) => void;
   onSend: () => void;
+  // The question before a send, above the composer.
+  consentPrompt?: ReactNode;
   onStop: () => void;
   onDeleteQueuedMessage: (id: string) => void;
   onEditQueuedMessage: (message: QueuedMessage) => void;
@@ -341,6 +349,7 @@ export function SidepanelView({
             onDelete={onDeleteQueuedMessage}
             onEdit={onEditQueuedMessage}
           />
+          {consentPrompt}
           <ComposerBox
             t={t}
             input={input}

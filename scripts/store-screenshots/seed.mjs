@@ -20,6 +20,7 @@ const PROVIDERS = {
     label: "OpenAI",
     baseUrl: "https://api.openai.com/v1",
     apiKey: "sk-demo-0000000000000000000000000000",
+    consent: { host: "api.openai.com", grantedAt: 1767225600000 },
     models: [
       model("openai", "OpenAI", "gpt-5"),
       model("openai", "OpenAI", "gpt-5-mini"),
@@ -31,6 +32,7 @@ const PROVIDERS = {
     label: "Anthropic",
     baseUrl: "https://api.anthropic.com/v1",
     apiKey: "sk-ant-demo-000000000000000000000000",
+    consent: { host: "api.anthropic.com", grantedAt: 1767225600000 },
     models: [
       model("anthropic", "Anthropic", "claude-sonnet-4-5"),
       model("anthropic", "Anthropic", "claude-opus-4-1"),

@@ -81,3 +81,5 @@ Assistant output supports Markdown, syntax-highlighted code blocks with copy but
 The options UI includes General, Agents, Sync, Providers, MCP Servers, Local Execution Bridges, Skills, Smart bar, Context menu, Page translation, Debug, and Help pages.
 
 Users can configure language, theme, accent color, chat behavior, context limits, providers, models, agents, sync, MCP servers, local execution bridges, and reusable skills.
+
+A provider on another server receives the user's content only after the user agrees for that provider's host, in the provider form or when the side panel or smart bar first asks; see [Permissions and Privacy](permissions-and-privacy.md#permission-before-content-is-sent).

@@ -1,6 +1,6 @@
 OpenBrowserAgent intègre un agent IA dans le panneau latéral de votre navigateur. Posez des questions sur la page affichée, lancez une recherche sur le Web ou confiez-lui une tâche dans le navigateur. L’agent lit les pages, clique, saisit du texte et passe d’un onglet à l’autre, et vous suivez chaque étape.
 
-Vous choisissez votre propre modèle. OpenBrowserAgent ne demande aucun compte et n’a pas de serveur à lui : vos messages sont envoyés uniquement aux fournisseurs de modèles, aux serveurs MCP et au stockage de synchronisation que vous avez configurés.
+Vous choisissez votre propre modèle. OpenBrowserAgent ne demande aucun compte et n’a pas de serveur à lui : vos messages sont envoyés uniquement aux fournisseurs de modèles, aux serveurs MCP et au stockage de synchronisation que vous avez configurés. Avant qu’un fournisseur sur un autre serveur reçoive votre contenu pour la première fois, vous l’acceptez pour ce fournisseur ; les modèles locaux n’ont pas besoin d’autorisation.
 
 CE QUE VOUS POUVEZ FAIRE
 

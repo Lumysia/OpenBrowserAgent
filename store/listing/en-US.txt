@@ -1,6 +1,6 @@
 OpenBrowserAgent puts an AI agent in your browser's side panel. Ask about the page you're on, research across the web, or hand over a browser task. The agent reads pages, clicks, types and moves between tabs while you watch every step.
 
-You bring your own model. OpenBrowserAgent has no account and no server of its own: your messages go only to the model providers, MCP servers and sync storage that you set up.
+You bring your own model. OpenBrowserAgent has no account and no server of its own: your messages go only to the model providers, MCP servers and sync storage that you set up. Before a provider on another server first receives your content, you agree to it for that provider; local models need no permission.
 
 WHAT YOU CAN DO
 

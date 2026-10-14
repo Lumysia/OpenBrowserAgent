@@ -3,6 +3,10 @@ import { Cpu, Loader2, Plus, Server, Trash2 } from "lucide-react";
 import { QUICK_FEEDBACK_MS } from "../../src/shared/config";
 import { formatCount, getMessages } from "../../src/shared/i18n";
 import { MANUAL_MODEL_PROVIDER_TYPES } from "../../src/shared/provider-instances";
+import {
+  providerHasConsent,
+  withProviderConsent,
+} from "../../src/shared/provider-consent";
 import { storage } from "../../src/shared/storage";
 import {
   providerDefaultBaseUrls,
@@ -36,6 +40,7 @@ import {
   providerTypeLabel,
 } from "../../src/ui/provider-display";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { ProviderConsentField } from "./provider-consent-field";
 import { FetchedModelPicker, ModelList } from "./provider-controls";
 import { modelWithProviderLabel, renameProviderDraft } from "./provider-drafts";
 import { loadProviderModels } from "./provider-models";
@@ -80,6 +85,7 @@ export function ProviderAccordion({
   const provider = draft.type || "openai";
   const t = getMessages(language);
   const dirty = JSON.stringify(draft) !== JSON.stringify(value);
+  const consentMissing = !providerHasConsent(draft);
   const canAddManualModel = MANUAL_MODEL_PROVIDER_TYPES.includes(provider);
   const selectableFetchedModels = fetchedModels
     .filter((model) => !models.some((candidate) => candidate.id === model.id))
@@ -143,6 +149,7 @@ export function ProviderAccordion({
   }
 
   function saveProvider() {
+    if (consentMissing) return;
     onChange(draft);
     models
       .filter(
@@ -187,6 +194,11 @@ export function ProviderAccordion({
         <span className="provider-summary">
           <Badge>{providerTypeLabel(provider, t)}</Badge>
           <Badge>{formatCount(t.display.counts.models, models.length)}</Badge>
+          {!providerHasConsent(value) && (
+            <Badge className="status-error-badge">
+              {t.providerConsent.needsPermission}
+            </Badge>
+          )}
         </span>
       </AccordionTrigger>
       <AccordionContent>
@@ -224,6 +236,14 @@ export function ProviderAccordion({
               provider={provider}
               value={draft}
               onChange={setDraft}
+            />
+            <ProviderConsentField
+              t={t}
+              saved={value}
+              draft={draft}
+              dirty={dirty}
+              onDraftChange={setDraft}
+              onWithdraw={() => onChange(withProviderConsent(value, false))}
             />
           </div>
           <div className="provider-models-panel">
@@ -324,7 +344,7 @@ export function ProviderAccordion({
           <Button variant="destructiveOutline" size="sm" onClick={onDelete}>
             <Trash2 size={16} /> {t.options.deleteProvider}
           </Button>
-          <Button onClick={saveProvider} disabled={!dirty}>
+          <Button onClick={saveProvider} disabled={!dirty || consentMissing}>
             {saved ? t.common.saved : t.common.save}
           </Button>
         </div>

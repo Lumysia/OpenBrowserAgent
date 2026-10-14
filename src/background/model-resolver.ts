@@ -1,32 +1,43 @@
 import type { ProviderModel } from "./pi-provider";
-import { normalizeProviderState } from "../shared/provider-instances";
+import {
+  chooseChatModel,
+  chooseHelperModel,
+  chooseImageModel,
+  type ModelChoice,
+} from "../shared/model-choice";
+import { assertProviderConsent } from "../shared/provider-consent";
 import { providerDefaultBaseUrls } from "../shared/types";
 import { storage } from "../shared/storage";
 import { USER_ERROR_CODE, UserError } from "../shared/user-errors";
 
+// Every model request gets its endpoint here, so this is where a provider
+// without the user's permission to receive their content is stopped
+// (ProviderConsentError) before anything is sent.
+function providerModel({
+  providerId,
+  provider: config,
+  model,
+}: ModelChoice): ProviderModel {
+  assertProviderConsent(providerId, config);
+  const provider = config.type || "openai";
+  return {
+    provider,
+    apiKey: config.apiKey || "",
+    baseUrl: config.baseUrl || providerDefaultBaseUrls[provider] || "",
+    modelName: model.name || model.id,
+    contextLength: model.contextLength,
+  };
+}
+
 // The first of `modelIds` that is configured (an agent's own model, then
 // the composer's), else the stored selection, else the first model.
 export async function resolveModel(...modelIds: Array<string | undefined>) {
-  const providers = normalizeProviderState(await storage.provider.get());
-  const preferences = await storage.preferences.get();
-  for (const modelId of [...modelIds, preferences.selectedModelId]) {
-    const model = modelId && findModel(providers, modelId);
-    if (model) return model;
-  }
-  const fallbackProvider = Object.entries(providers)[0];
-  const fallbackModel = fallbackProvider?.[1].models?.[0];
-  if (fallbackProvider && fallbackModel) {
-    const provider = fallbackProvider[1].type || "openai";
-    return {
-      provider,
-      apiKey: fallbackProvider[1].apiKey || "",
-      baseUrl:
-        fallbackProvider[1].baseUrl || providerDefaultBaseUrls[provider] || "",
-      modelName: fallbackModel.name || fallbackModel.id,
-      contextLength: fallbackModel.contextLength,
-    };
-  }
-
+  const [providers, preferences] = await Promise.all([
+    storage.provider.get(),
+    storage.preferences.get(),
+  ]);
+  const choice = chooseChatModel(providers, preferences, ...modelIds);
+  if (choice) return providerModel(choice);
   throw new UserError(
     USER_ERROR_CODE.noModel,
     "No model configured. Add an AI provider in Settings.",
@@ -40,56 +51,16 @@ export async function resolveHelperModel(
   chatModel: ProviderModel,
 ): Promise<ProviderModel> {
   if (!helperModelId) return chatModel;
-  const providers = normalizeProviderState(await storage.provider.get());
-  return findModel(providers, helperModelId) || chatModel;
-}
-
-function findModel(
-  providers: ReturnType<typeof normalizeProviderState>,
-  modelId: string | undefined,
-): ProviderModel | undefined {
-  for (const config of Object.values(providers)) {
-    const provider = config.type || "openai";
-    const model = config.models?.find(
-      (candidate) => candidate.id === modelId || candidate.name === modelId,
-    );
-    if (model)
-      return {
-        provider,
-        apiKey: config.apiKey || "",
-        baseUrl: config.baseUrl || providerDefaultBaseUrls[provider] || "",
-        modelName: model.name || model.id,
-        contextLength: model.contextLength,
-      };
-  }
-  return undefined;
+  const choice = chooseHelperModel(await storage.provider.get(), helperModelId);
+  return choice ? providerModel(choice) : chatModel;
 }
 
 export async function resolveImageModel(modelId?: string) {
-  const providers = normalizeProviderState(await storage.provider.get());
-  const preferences = await storage.preferences.get();
-  const selectedModelId = modelId || preferences.selectedImageModelId;
-
-  for (const [, config] of Object.entries(providers)) {
-    const provider = config.type || "openai";
-    const availableModels = [
-      ...(config.imageModels || []),
-      ...(config.models || []),
-    ];
-    const model = availableModels.find(
-      (candidate) =>
-        candidate.id === selectedModelId || candidate.name === selectedModelId,
-    );
-    if (model) {
-      return {
-        provider,
-        apiKey: config.apiKey || "",
-        baseUrl: config.baseUrl || providerDefaultBaseUrls[provider] || "",
-        modelName: model.name || model.id,
-        contextLength: model.contextLength,
-      };
-    }
-  }
-
+  const [providers, preferences] = await Promise.all([
+    storage.provider.get(),
+    storage.preferences.get(),
+  ]);
+  const choice = chooseImageModel(providers, preferences, modelId);
+  if (choice) return providerModel(choice);
   throw new Error("No image model configured. Select a model in Settings.");
 }

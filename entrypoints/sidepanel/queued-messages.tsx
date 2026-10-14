@@ -18,8 +18,8 @@ export function QueuedMessages({
   if (!messages.length) return null;
 
   return (
-    <div className="queued-messages" aria-live="polite">
-      <div className="queued-messages-header">
+    <div className="composer-card" aria-live="polite">
+      <div className="composer-card-header">
         <strong>{t.sidepanel.queuedMessages}</strong>
         <small>
           {formatCount(t.sidepanel.queuedMessagesDescription, messages.length)}

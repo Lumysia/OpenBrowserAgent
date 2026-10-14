@@ -1,5 +1,6 @@
 import { plural } from "../plural";
 import { contextMenuPtBR } from "./context-menu/pt-BR";
+import { providerConsentPtBR } from "./provider-consent/pt-BR";
 import { displayPtBR } from "./display/pt-BR";
 import { downloadsPtBR } from "./downloads/pt-BR";
 import { smartBarPtBR } from "./smart-bar/pt-BR";
@@ -631,6 +632,7 @@ export const ptBR: LocaleMessages = {
   smartBar: smartBarPtBR,
   contextMenu: contextMenuPtBR,
   downloads: downloadsPtBR,
+  providerConsent: providerConsentPtBR,
   sync: syncPtBR,
   themes: themesPtBR,
   display: displayPtBR,
