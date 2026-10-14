@@ -196,12 +196,19 @@ function place(paragraph: Paragraph, element: HTMLElement, look: Look) {
   }
 }
 
-// The line break that ends the line the node is on, if only blank text is
-// between them: a line of its own goes after it (before it, the break would
-// add an empty line under the translation).
+// The line break that ends the line the node is on, if only blank text and
+// elements that don't show are between them: a line of its own goes after
+// it (before it, the break would add an empty line under the translation).
+const UNSHOWN_TAGS = new Set(["LINK", "META", "STYLE", "SCRIPT", "TEMPLATE"]);
+
 function lineBreakAfter(node: Node) {
   let next = node.nextSibling;
-  while (next?.nodeType === 3 && !next.textContent?.trim())
+  while (
+    next &&
+    (next.nodeType === 3
+      ? !next.textContent?.trim()
+      : next.nodeType !== 1 || UNSHOWN_TAGS.has(next.nodeName))
+  )
     next = next.nextSibling;
   return next?.nodeName === "BR" ? next : undefined;
 }
