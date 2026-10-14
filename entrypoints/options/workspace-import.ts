@@ -12,6 +12,7 @@ import {
   workspaceTotalChars,
 } from "../../src/shared/workspace";
 import { WORKSPACE_TOTAL_MAX_CHARS } from "../../src/shared/config";
+import { downloadBlob } from "../../src/ui/download";
 
 const TEXT_FILE_EXTENSIONS = new Set([
   ".md",
@@ -163,13 +164,4 @@ function isToolGroupList(value: unknown): value is Agent["toolGroups"] {
     Array.isArray(value) &&
     value.every((group) => (TOOL_GROUPS as readonly unknown[]).includes(group))
   );
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
 }

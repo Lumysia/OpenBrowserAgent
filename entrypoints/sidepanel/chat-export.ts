@@ -24,6 +24,7 @@ import {
   RUN_STOP_REASON,
   type CutReason,
 } from "../../src/shared/run-stop";
+import { downloadBlob } from "../../src/ui/download";
 
 type OpenAiExportMessage =
   | { role: "system" | "user"; content: string }
@@ -67,12 +68,7 @@ export async function exportChatAsOpenAiJson(
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json;charset=utf-8",
   });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `${safeFilename(chat.title || "chat")}.openai.json`;
-  anchor.click();
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, `${safeFilename(chat.title || "chat")}.openai.json`);
 }
 
 export function chatToOpenAiPayload(

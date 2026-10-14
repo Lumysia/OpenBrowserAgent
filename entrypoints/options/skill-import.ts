@@ -8,6 +8,7 @@ import {
   skillTooLarge,
 } from "../../src/shared/skills";
 import type { Skill, SkillFile } from "../../src/shared/types";
+import { downloadBlob } from "../../src/ui/download";
 
 const TEXT_FILE_EXTENSIONS = new Set([
   ".md",
@@ -161,15 +162,6 @@ function bytesToBase64(bytes: Uint8Array) {
 function base64ToBytes(value: string) {
   const binary = atob(value);
   return Uint8Array.from(binary, (char) => char.charCodeAt(0));
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
 }
 
 function sortSkillFiles(files: SkillFile[]) {
