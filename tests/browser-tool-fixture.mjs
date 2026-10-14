@@ -106,7 +106,9 @@ export async function browserToolFixture(handleRequest, launch = {}) {
       },
       { baseUrl, groups: ALL_GROUPS },
     );
-    const start = async (toolSteps, uploadedAttachments = []) => {
+    // Sets what the model answers, for runs started here or in the side
+    // panel.
+    const script = (toolSteps) => {
       if (typeof toolSteps === "function") {
         respond = toolSteps;
         steps = [];
@@ -116,6 +118,9 @@ export async function browserToolFixture(handleRequest, launch = {}) {
       }
       calls = 0;
       requests.length = 0;
+    };
+    const start = async (toolSteps, uploadedAttachments = []) => {
+      script(toolSteps);
       await page.call(
         ({ uploadedAttachments }) => {
           const chatId = crypto.randomUUID();
@@ -195,6 +200,7 @@ export async function browserToolFixture(handleRequest, launch = {}) {
       open,
       evaluate,
       requests,
+      script,
       start,
       toolTexts,
       async run(steps) {
