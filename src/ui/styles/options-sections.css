@@ -70,6 +70,39 @@
   margin: 0;
   color: var(--accent-strong);
 }
+.provider-consent-field {
+  display: grid;
+  gap: 6px;
+}
+.provider-consent-note {
+  margin: 0;
+}
+.provider-consent-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--accent-strong);
+}
+.provider-consent-summary {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--foreground);
+  font-size: var(--text-sm);
+}
+.provider-consent-summary .ui-badge {
+  min-width: 0;
+  max-width: 100%;
+}
+.provider-consent-host {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .provider-form-actions {
   display: flex;
   justify-content: space-between;

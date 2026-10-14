@@ -7,6 +7,7 @@ export * from "./input";
 export * from "./label";
 export * from "./select";
 export * from "./switch";
+export * from "./checkbox";
 export * from "./popover";
 export * from "./progress";
 export * from "./scroll-area";

@@ -27,3 +27,12 @@ export function modelNameDisplay(displayName: string, t: Messages) {
     ? [providerNameDisplay(provider.trim(), t), ...rest].join(" / ")
     : displayName;
 }
+
+// The sentence the user agrees to before a provider receives their content,
+// the same in the provider form and the prompts before a request.
+export function providerConsentAgreement(
+  host: string,
+  messages: Messages["providerConsent"],
+) {
+  return messages.agreement.replace("{host}", host);
+}
