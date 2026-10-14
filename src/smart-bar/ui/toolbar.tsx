@@ -31,6 +31,8 @@ import {
 } from "./page-actions";
 import type { SmartBarStore } from "./store";
 import { onTrusted } from "./trusted";
+import { ICON_SIZE } from "./icon-sizes";
+import { formatMessage } from "../../shared/text";
 
 export function SmartBarToolbar({
   store,
@@ -94,7 +96,7 @@ export function SmartBarToolbar({
               aria-label={label}
               onClick={onTrusted(() => run(action))}
             >
-              <Icon size={16} />
+              <Icon size={ICON_SIZE.action} />
             </Button>
           </IconTooltip>
         );
@@ -148,7 +150,7 @@ function CloseMenu({
             onPointerDown={() => (byPointer.current = true)}
             onKeyDown={() => (byPointer.current = false)}
           >
-            <X size={16} />
+            <X size={ICON_SIZE.action} />
           </Button>
         </PopoverTrigger>
       </IconTooltip>
@@ -173,9 +175,9 @@ function CloseMenu({
           onPointerLeave={blurMenuItem}
           onClick={onTrusted(() => choose(hideOnThisSite))}
         >
-          <EyeOff size={15} />
+          <EyeOff size={ICON_SIZE.control} />
           <span className="smart-bar-menu-label">
-            {t.hideOnSite.replace("{site}", config.hideSite)}
+            {formatMessage(t.hideOnSite, { site: config.hideSite })}
           </span>
         </Button>
         <Button
@@ -187,7 +189,7 @@ function CloseMenu({
           onPointerLeave={blurMenuItem}
           onClick={onTrusted(() => choose(turnOffSmartBar))}
         >
-          <Power size={15} />
+          <Power size={ICON_SIZE.control} />
           <span className="smart-bar-menu-label">{t.turnOff}</span>
         </Button>
       </PopoverContent>

@@ -19,3 +19,13 @@ export function wordCount(text: string) {
   for (const segment of words.segment(text)) if (segment.isWordLike) count++;
   return count;
 }
+
+// A message with its `{name}` placeholders filled in.
+export function formatMessage(
+  template: string,
+  values: Record<string, string | number>,
+) {
+  return template.replace(/\{(\w+)\}/g, (placeholder, name: string) =>
+    name in values ? String(values[name]) : placeholder,
+  );
+}

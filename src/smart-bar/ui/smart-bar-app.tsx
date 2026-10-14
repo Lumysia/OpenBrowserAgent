@@ -1,6 +1,13 @@
-import { useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
+import {
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type MouseEvent,
+} from "react";
 import { TOOLTIP_DELAY_MS } from "../../shared/config";
 import type { SmartBarPageConfig } from "../../shared/smart-bar-protocol";
+import { SMART_BAR_MARGIN } from "../placement";
 import { PortalContainerProvider, TooltipProvider } from "../../ui/components";
 import { useTheme } from "../../ui/theme";
 import type { SelectionSnapshot } from "../selection";
@@ -9,6 +16,11 @@ import type { SmartBarStore } from "./store";
 import { SmartBarToolbar } from "./toolbar";
 import { usePlacement } from "./use-placement";
 
+// The room the bar keeps from the window's edges, for the style sheet.
+const THEME_STYLE = {
+  "--smart-bar-margin": `${SMART_BAR_MARGIN}px`,
+} as CSSProperties;
+
 export function SmartBarApp({ store }: { store: SmartBarStore }) {
   const state = useSyncExternalStore(store.subscribe, store.getState);
   const [theme, setTheme] = useState<HTMLDivElement | null>(null);
@@ -16,7 +28,7 @@ export function SmartBarApp({ store }: { store: SmartBarStore }) {
   useTheme(theme, config ?? {});
   if (!snapshot || !config) return null;
   return (
-    <div ref={setTheme} className="smart-bar-theme">
+    <div ref={setTheme} className="smart-bar-theme" style={THEME_STYLE}>
       <PortalContainerProvider container={theme || undefined}>
         <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
           <SmartBarFrame

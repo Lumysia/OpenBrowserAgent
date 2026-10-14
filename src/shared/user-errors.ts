@@ -1,4 +1,5 @@
 import type { Messages } from "./i18n";
+import { formatMessage } from "./text";
 
 // Errors whose cause the extension knows, so the background can tell the
 // user in the UI language; the English message stays for logs.
@@ -41,6 +42,6 @@ export function userErrorText(error: unknown, t: Messages) {
   if (!(error instanceof UserError))
     return (error as Error | undefined)?.message || String(error);
   if (error instanceof ProviderConsentError)
-    return t.providerConsent.required.replace("{host}", error.host);
+    return formatMessage(t.providerConsent.required, { host: error.host });
   return t.display.errors[error.code as keyof Messages["display"]["errors"]];
 }

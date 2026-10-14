@@ -1,7 +1,8 @@
 /* Smart bar, inside its shadow root. Tokens come from tokens.css with :root
    mapped to .smart-bar-theme, colors from applyTheme() on that element. */
 .smart-bar-theme {
-  --smart-bar-layer: 2147483647;
+  /* --smart-bar-margin is set from placement.ts. */
+  --smart-bar-room: calc(100vw - 2 * var(--smart-bar-margin));
   color: var(--foreground);
   font-size: var(--text-md);
   line-height: 1.4;
@@ -10,14 +11,14 @@
 
 /* Radix positions overlays in wrappers with its own z-index; above the page. */
 .smart-bar-theme [data-radix-popper-content-wrapper] {
-  z-index: var(--smart-bar-layer) !important;
+  z-index: var(--page-layer-top) !important;
 }
 
 .smart-bar-frame {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: var(--smart-bar-layer);
+  z-index: var(--page-layer-top);
 }
 
 /* The card grows out of the selection: from above it when it sits below,
@@ -66,7 +67,7 @@
 
 .smart-bar-menu {
   min-width: 180px;
-  max-width: min(320px, calc(100vw - 16px));
+  max-width: min(320px, var(--smart-bar-room));
   display: flex;
   flex-direction: column;
   padding: var(--space-1);
@@ -104,8 +105,8 @@
    readable line length. */
 .smart-bar-result {
   width: fit-content;
-  min-width: min(240px, calc(100vw - 16px));
-  max-width: min(380px, calc(100vw - 16px));
+  min-width: min(240px, var(--smart-bar-room));
+  max-width: min(380px, var(--smart-bar-room));
   display: flex;
   flex-direction: column;
 }

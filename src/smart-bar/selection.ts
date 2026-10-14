@@ -107,6 +107,8 @@ export function readSelection(
 
 // Characters of context on each side of the selection.
 const CONTEXT_CHARS = 500;
+// Characters of the page's title sent along.
+const PAGE_TITLE_MAX_CHARS = 200;
 
 // Text the user can't see on the page. A textarea's text node is its default
 // value, not what it holds now.
@@ -184,7 +186,8 @@ function pageContext(before: string, after: string): SelectionContext {
   return {
     before: squeeze(before),
     after: squeeze(after),
-    pageTitle: document.title.trim().slice(0, 200) || undefined,
+    pageTitle:
+      document.title.trim().slice(0, PAGE_TITLE_MAX_CHARS) || undefined,
   };
 }
 
