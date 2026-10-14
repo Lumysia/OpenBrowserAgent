@@ -34,7 +34,6 @@ export const smartBarZhCN: SmartBarLocaleMessages = {
     examples: "例句",
     synonyms: "同义词",
     collocations: "常用搭配",
-    translation: "翻译",
     entry: "词典释义",
   },
   settingsTitle: "智能工具栏",

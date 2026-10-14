@@ -33,7 +33,6 @@ export const smartBarEnUS = {
     examples: "Examples",
     synonyms: "Synonyms",
     collocations: "Collocations",
-    translation: "Translation",
     entry: "Dictionary entry",
   },
   settingsTitle: "Smart bar",

@@ -212,7 +212,6 @@ test("a dictionary entry copies as plain text", () => {
       examples: "例句",
       synonyms: "同义词",
       collocations: "常用搭配",
-      translation: "翻译",
     }),
     [
       "run  /rʌn/  动词",
@@ -222,8 +221,6 @@ test("a dictionary entry copies as plain text", () => {
       "例句:",
       "- She runs every morning. (她每天早上跑步。)",
       "同义词: sprint",
-      "",
-      "翻译: 跑",
     ].join("\n"),
   );
 });

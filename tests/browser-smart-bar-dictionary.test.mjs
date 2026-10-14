@@ -11,7 +11,7 @@ import {
   startSmartBar,
 } from "./smart-bar-page.mjs";
 
-// Translate on a word answers with a dictionary entry above the translation;
+// Translate on a word answers with a dictionary entry;
 // sentences and the other actions keep their plain results.
 const PAGE = `<!doctype html><html lang="en"><title>Smart bar</title>
 <style>body{font:16px/1.4 sans-serif;margin:20px}p{width:420px;margin:0 0 24px}</style>
@@ -92,9 +92,8 @@ test("smart bar dictionary", { timeout: 240000 }, async (t) => {
         senses: text(".smart-bar-dictionary-senses > li"),
         inContext: text("li[data-in-context]").length,
         examples: text(".smart-bar-dictionary-example"),
-        translation: text(".smart-bar-dictionary-translation")[0],
-        translationLast:
-          children.at(-1)?.className === "smart-bar-dictionary-translation",
+        // The entry alone: no second translation under it.
+        plainTranslation: /happy accident$/.test(entry.textContent.trim()),
       };
     });
   let page;
@@ -113,8 +112,7 @@ test("smart bar dictionary", { timeout: 240000 }, async (t) => {
       assert.deepEqual(shown.examples, [
         "Finding that café was pure serendipity.",
       ]);
-      assert.match(shown.translation, /happy accident$/);
-      assert.equal(shown.translationLast, true);
+      assert.equal(shown.plainTranslation, false);
       const request = lastRequest();
       assert.match(JSON.stringify(request.body), /dictionary entry/);
       // The page around the word went along, for the meaning in context.

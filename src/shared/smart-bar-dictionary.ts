@@ -159,7 +159,6 @@ export type DictionaryLabels = {
   examples: string;
   synonyms: string;
   collocations: string;
-  translation: string;
 };
 
 // The entry as plain text, for Copy and the side panel.
@@ -192,8 +191,5 @@ export function dictionaryPlainText(
     ...examples,
     ...list(labels.synonyms, entry.synonyms),
     ...list(labels.collocations, entry.collocations),
-    ...(entry.translation
-      ? ["", `${labels.translation}: ${entry.translation}`]
-      : []),
   ].join("\n");
 }

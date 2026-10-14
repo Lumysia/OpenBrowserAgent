@@ -2,7 +2,7 @@ import type { DictionaryEntry } from "../../shared/smart-bar-dictionary";
 import type { SmartBarMessages } from "../../shared/smart-bar-protocol";
 import { Badge } from "../../ui/components";
 
-// A dictionary entry for a short selection, then its translation. The
+// A dictionary entry for a short selection. The
 // headword and examples are in the selection's language (`sourceLanguage`).
 export function SmartBarDictionaryCard({
   entry,
@@ -87,12 +87,6 @@ export function SmartBarDictionaryCard({
           <span lang={sourceLanguage}>{items.join(" · ")}</span>
         </p>
       ))}
-      {entry.translation && (
-        <p className="smart-bar-dictionary-translation">
-          <span className="visually-hidden">{labels.translation}: </span>
-          {entry.translation}
-        </p>
-      )}
     </div>
   );
 }

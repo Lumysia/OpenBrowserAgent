@@ -36,7 +36,6 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
     examples: "Beispiele",
     synonyms: "Synonyme",
     collocations: "Kollokationen",
-    translation: "Übersetzung",
     entry: "Wörterbucheintrag",
   },
   settingsTitle: "Smart Bar",

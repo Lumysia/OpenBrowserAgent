@@ -133,8 +133,7 @@
   user-select: text;
   white-space: pre-wrap;
 }
-/* An entry is taller than most answers; its translation should show
-   without scrolling. */
+/* An entry is taller than most answers. */
 .smart-bar-result-text[data-format="dictionary"] {
   max-height: min(420px, 60vh);
 }
@@ -171,8 +170,7 @@
   flex: 1;
 }
 
-/* Translate on a word or short phrase: a dictionary entry, then the
-   translation. */
+/* Translate on a word or short phrase: a dictionary entry. */
 .smart-bar-dictionary {
   display: flex;
   flex-direction: column;
@@ -266,9 +264,4 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: 2px 8px;
-}
-.smart-bar-dictionary-translation {
-  margin-top: 2px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
 }

@@ -36,7 +36,6 @@ export const smartBarEsES: SmartBarLocaleMessages = {
     examples: "Ejemplos",
     synonyms: "Sinónimos",
     collocations: "Colocaciones",
-    translation: "Traducción",
     entry: "Entrada de diccionario",
   },
   settingsTitle: "Barra inteligente",

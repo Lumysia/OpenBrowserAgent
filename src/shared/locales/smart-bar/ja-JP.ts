@@ -36,7 +36,6 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
     examples: "例文",
     synonyms: "類義語",
     collocations: "コロケーション",
-    translation: "翻訳",
     entry: "辞書の項目",
   },
   settingsTitle: "スマートバー",

@@ -107,7 +107,7 @@ The theme picker in General settings has two groups: the color themes and the pr
 
 ## Smart bar dictionary entries
 
-Translate on a word or short phrase shows a dictionary entry above the translation. The labels are the ones dictionaries in each language use; "In this context" marks the meaning that fits the page.
+Translate on a word or short phrase shows a dictionary entry instead of a plain translation. The labels are the ones dictionaries in each language use; "In this context" marks the meaning that fits the page.
 
 | English          | 简体中文   | 繁體中文   | 日本語         | 한국어      |
 | ---------------- | ---------- | ---------- | -------------- | ----------- |
@@ -117,7 +117,6 @@ Translate on a word or short phrase shows a dictionary entry above the translati
 | examples         | 例句       | 例句       | 例文           | 예문        |
 | synonyms         | 同义词     | 同義詞     | 類義語         | 유의어      |
 | collocations     | 常用搭配   | 常用搭配   | コロケーション | 연어        |
-| translation      | 翻译       | 翻譯       | 翻訳           | 번역        |
 
 | English          | Français               | Deutsch           | Español                | Português (Brasil)    |
 | ---------------- | ---------------------- | ----------------- | ---------------------- | --------------------- |
@@ -127,7 +126,6 @@ Translate on a word or short phrase shows a dictionary entry above the translati
 | examples         | exemples               | Beispiele         | ejemplos               | exemplos              |
 | synonyms         | synonymes              | Synonyme          | sinónimos              | sinônimos             |
 | collocations     | collocations           | Kollokationen     | colocaciones           | colocações            |
-| translation      | traduction             | Übersetzung       | traducción             | tradução              |
 
 ## Notes per language
 

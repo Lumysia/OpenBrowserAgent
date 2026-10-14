@@ -35,7 +35,6 @@ export const smartBarKo: SmartBarLocaleMessages = {
     examples: "예문",
     synonyms: "유의어",
     collocations: "연어",
-    translation: "번역",
     entry: "사전 항목",
   },
   settingsTitle: "스마트 바",
