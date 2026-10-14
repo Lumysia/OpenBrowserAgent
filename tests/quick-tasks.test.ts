@@ -13,7 +13,7 @@ import {
   type ThinkingSwitch,
 } from "../src/shared/thinking-switch";
 import type { ProviderId } from "../src/shared/types";
-import { providerFixture, reply } from "./provider-fixtures.mjs";
+import { providerFixture, reply } from "./provider-fixtures";
 
 type Body = Record<string, any>;
 type Handler = Parameters<typeof providerFixture>[0];

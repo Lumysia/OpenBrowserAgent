@@ -155,14 +155,18 @@ test("a runCode step shows its duration and saved files", () => {
   const en = getMessages("en-US");
   const english = toolDisplay(
     TOOL_NAME.runCode,
-    part({ code: "1" }, output),
+    part(TOOL_NAME.runCode, { code: "1" }, output),
     en,
   );
   assert.equal(english.title, "Ran code");
   assert.equal(english.description, "120 ms · 1 file saved");
   const t = getMessages("zh-CN");
   try {
-    const chinese = toolDisplay(TOOL_NAME.runCode, part({}, output), t);
+    const chinese = toolDisplay(
+      TOOL_NAME.runCode,
+      part(TOOL_NAME.runCode, {}, output),
+      t,
+    );
     assert.equal(chinese.title, "代码已运行");
     assert.equal(chinese.description, "120毫秒 · 已保存 1 个文件");
   } finally {
