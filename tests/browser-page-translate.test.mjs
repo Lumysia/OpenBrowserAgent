@@ -15,9 +15,10 @@ import {
 // and "Show original".
 test("page translation with the AI model", { timeout: 240000 }, async (t) => {
   const batches = [];
+  const prompts = [];
   const session = await startPageTranslate({
     pages: { "/article": articlePage({ paragraphs: 120 }) },
-    answer: fixtureTranslator(batches),
+    answer: fixtureTranslator(batches, prompts),
   });
   const { browser, url, clickMenu, menuTitles } = session;
   const pageUrl = url("/article");
@@ -65,6 +66,30 @@ test("page translation with the AI model", { timeout: 240000 }, async (t) => {
         /^FR: Paragraph number 120 /,
       );
       await poll(async () => (await menuTitles()).at(-1) === "Show original");
+    });
+
+    await t.test("the model reads where the items are", async () => {
+      // Reference before the items: the page's description and the roles.
+      assert.match(
+        prompts[0],
+        /^Page title: Field notes\nPage description: A hiker's notes from the mountains\.\n/,
+      );
+      const titleItem = prompts
+        .join("\n")
+        .match(/\[\[(\d+)\]\]\nNotes from the field\n/)[1];
+      assert.match(
+        prompts.find((prompt) => prompt.includes("\nNotes from the field\n")),
+        new RegExp(`^Roles: .*item ${titleItem} is a heading`, "m"),
+      );
+      // A batch further down: its section and the paragraph just before it.
+      const later = prompts.find((prompt) =>
+        prompt.includes("Paragraph number 120 "),
+      );
+      assert.match(later, /^Section: Notes from the field$/m);
+      assert.match(
+        later,
+        /^Just before the items: Paragraph number \d+ talks about the weather in the mountains\.$/m,
+      );
     });
 
     await t.test("links, emphasis and code are kept", async () => {

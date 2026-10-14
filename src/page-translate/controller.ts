@@ -5,6 +5,7 @@ import {
   PAGE_TRANSLATE_ERROR,
   PAGE_TRANSLATE_PORT,
   type PageTranslateEvent,
+  type PageTranslateItem,
   type PageTranslateRequest,
   type PageTranslateSessionConfig,
   type PageTranslateView,
@@ -16,6 +17,7 @@ import {
 import { getBrowserApi } from "../shared/browser-api";
 import { plainText } from "../shared/page-translate/placeholders";
 import { compact } from "../shared/text";
+import { batchContext, pageDescription, roleOf } from "./context";
 import { addsLittle } from "./metadata";
 import { createPresenter } from "./presenter";
 import { createQueue, PRIORITY } from "./queue";
@@ -239,7 +241,8 @@ function startSession(onFatal: () => void) {
       const items = queue.take(config.limits, first);
       first = false;
       const texts = new Map<number, string>();
-      const request: Array<{ id: number; text: string }> = [];
+      const request: PageTranslateItem[] = [];
+      const sending: Unit[] = [];
       for (const item of items) {
         const unit = units.units.get(item.id);
         if (!unit) continue;
@@ -259,12 +262,20 @@ function startSession(onFatal: () => void) {
         }
         sent.set(item.text, new Set([unit]));
         texts.set(unit.id, item.text);
-        request.push({ id: unit.id, text: item.text });
+        const role = roleOf(unit.paragraph);
+        request.push({ id: unit.id, text: item.text, ...(role && { role }) });
+        sending.push(unit);
       }
       if (!request.length) continue;
       const batch = nextBatch++;
       batches.set(batch, texts);
-      post({ type: "translate", batch, items: request });
+      const context = batchContext(sending, units.units.values());
+      post({
+        type: "translate",
+        batch,
+        items: request,
+        ...(context && { context }),
+      });
     }
   }
 
@@ -407,6 +418,7 @@ function startSession(onFatal: () => void) {
     type: "start",
     pageLanguage: document.documentElement.lang || undefined,
     title: document.title,
+    description: pageDescription(document),
     engine,
   });
 
