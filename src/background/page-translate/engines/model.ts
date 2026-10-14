@@ -58,7 +58,7 @@ async function translateWithModel(
 
 // Byte-stable for a language, so providers can cache the system prompt.
 export function modelPrompt(
-  request: Pick<EngineRequest, "items" | "target" | "pageTitle">,
+  request: Pick<EngineRequest, "items" | "target" | "pageTitle" | "terms">,
 ) {
   const language = languageName(request.target);
   const system = [
@@ -75,8 +75,18 @@ export function modelPrompt(
     "- Translate naturally, as a native speaker would write it, in the tone of the page.",
   ].join("\n");
   const title = request.pageTitle?.trim();
+  const terms = request.terms?.length
+    ? [
+        "Earlier translations on this page. Write the names in them the same way:",
+        ...request.terms.map(
+          ({ source, translation }) => `- ${source}\n  ${translation}`,
+        ),
+        "",
+      ]
+    : [];
   const prompt = [
     ...(title ? [`Page title: ${title}`, ""] : []),
+    ...terms,
     markItems(request.items),
   ].join("\n");
   return { system, prompt };
