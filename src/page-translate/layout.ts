@@ -23,6 +23,7 @@ import {
   HIDDEN_BOX_PX,
   isHorizontalFlex,
   isRow,
+  isVisuallyHidden,
   lineHeightOf,
 } from "./styles";
 
@@ -394,20 +395,7 @@ function insideTinyBox(node: Text, block: Element) {
   ) {
     // No boxes: `display: contents`, nothing to measure.
     if (!element.getClientRects().length) continue;
-    const box = element.getBoundingClientRect();
-    if (box.width < HIDDEN_BOX_PX || box.height < HIDDEN_BOX_PX) return true;
-    if (isScreenReaderOnly(element)) return true;
+    if (isVisuallyHidden(element)) return true;
   }
   return false;
-}
-
-// Text for screen readers laid over the page and not painted (an alternative
-// text for star icons, a spoken price): fully transparent or clipped to
-// nothing. Text in the flow that is transparent may be about to fade in.
-function isScreenReaderOnly(element: Element) {
-  const style = element.ownerDocument.defaultView!.getComputedStyle(element);
-  if (style.position !== "absolute" && style.position !== "fixed") return false;
-  return (
-    style.opacity === "0" || /^(circle\(0(px)?|inset\(50%)/.test(style.clipPath)
-  );
 }

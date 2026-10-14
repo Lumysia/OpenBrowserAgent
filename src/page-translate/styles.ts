@@ -74,3 +74,18 @@ const LIGATURES = /"liga"(?!\s+(0|off))/;
 export function isLigatureIcon(element: Element) {
   return LIGATURES.test(styleOf(element).fontFeatureSettings);
 }
+
+// A box that doesn't show its text: 1px or less (visually hidden labels,
+// icon-only buttons), or text for screen readers laid over the page and not
+// painted (an alternative text for star icons, a spoken price): fully
+// transparent or clipped to nothing. Text in the flow that is transparent
+// may be about to fade in. Only for elements that have boxes.
+export function isVisuallyHidden(element: Element) {
+  const box = element.getBoundingClientRect();
+  if (box.width < HIDDEN_BOX_PX || box.height < HIDDEN_BOX_PX) return true;
+  const style = styleOf(element);
+  if (style.position !== "absolute" && style.position !== "fixed") return false;
+  return (
+    style.opacity === "0" || /^(circle\(0(px)?|inset\(50%)/.test(style.clipPath)
+  );
+}
