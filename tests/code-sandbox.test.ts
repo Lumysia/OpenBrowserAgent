@@ -5,10 +5,16 @@ import {
   newQuickJSWASMModuleFromVariant,
   type QuickJSWASMModule,
 } from "quickjs-emscripten-core";
+import { runCodeText } from "../src/background/tools/run-code-text";
 import { runJavaScript } from "../src/shared/code-sandbox/engine";
 import {
-  CODE_LANGUAGE,
   CODE_RUN_LIMITS,
+  WORKSPACE_FILE_MAX_CHARS,
+  WORKSPACE_TOTAL_MAX_CHARS,
+} from "../src/shared/config";
+import { WORKSPACE_ERROR_TEXT } from "../src/shared/workspace-errors";
+import {
+  CODE_LANGUAGE,
   CODE_SANDBOX_MESSAGE,
   codeRunTimeout,
   type CodeRunRequest,
@@ -31,7 +37,6 @@ const request = (
   language: CODE_LANGUAGE.javascript,
   code,
   files: {},
-  canWrite: false,
   timeoutMs: 2_000,
   ...extra,
 });
@@ -77,7 +82,7 @@ test("readFile reads only the files passed in", () => {
 test("writeFile returns files to the host, only with a workspace", () => {
   const written = run(
     `writeFile("out/a.txt", "one"); writeFile("out/a.txt", 2); writeFile("b.json", JSON.stringify([1]))`,
-    { canWrite: true },
+    { workspaceFiles: {} },
   );
   assert.equal(written.error, undefined);
   assert.deepEqual(written.files, [
@@ -118,6 +123,57 @@ test("output is capped", () => {
   );
   assert.equal(result.outputTruncated, true);
   assert.equal(result.output.length, CODE_RUN_LIMITS.outputMaxChars);
+});
+
+test("the result and the error share the output budget", () => {
+  const value = run(`"x".repeat(5_000_000)`);
+  assert.equal(value.outputTruncated, true);
+  assert.equal(value.value?.length, CODE_RUN_LIMITS.outputMaxChars);
+  const thrown = run(`throw "y".repeat(5_000_000)`);
+  assert.equal(thrown.outputTruncated, true);
+  assert.ok(thrown.error?.startsWith("Uncaught yyy"));
+  assert.equal(thrown.error?.length, CODE_RUN_LIMITS.outputMaxChars);
+  // Printing used the budget up: the error still shows its head.
+  const after = run(
+    `const line = "x".repeat(100000); for (let i = 0; i < 12; i++) console.log(line); throw new Error("z".repeat(5000))`,
+  );
+  assert.equal(after.output.length, CODE_RUN_LIMITS.outputMaxChars);
+  assert.equal(after.error?.length, CODE_RUN_LIMITS.reportMinChars);
+  assert.match(after.error || "", /^Error: zzz/);
+});
+
+test("a timed-out run still reports its error", () => {
+  const result = run(`try { while (true) {} } finally { }`, { timeoutMs: 200 });
+  assert.equal(result.stopped, "timeout");
+  assert.match(result.error || "", /^InternalError: interrupted/);
+});
+
+test("writeFile is held to the workspace limits during the run", () => {
+  const tooBig = run(
+    `try { writeFile("a.txt", "x".repeat(${WORKSPACE_FILE_MAX_CHARS + 1})) } catch (error) { error.message }`,
+    { workspaceFiles: {} },
+  );
+  assert.equal(tooBig.value, JSON.stringify(WORKSPACE_ERROR_TEXT.fileTooLarge));
+  assert.deepEqual(tooBig.files, []);
+  const half = WORKSPACE_TOTAL_MAX_CHARS / 2;
+  const full = run(
+    `writeFile("b.txt", "x".repeat(${half})); try { writeFile("c.txt", "x") } catch (error) { error.message }`,
+    { workspaceFiles: { "a.txt": half } },
+  );
+  assert.equal(
+    full.value,
+    JSON.stringify(WORKSPACE_ERROR_TEXT.workspaceTooLarge),
+  );
+  assert.deepEqual(
+    full.files.map((file) => file.path),
+    ["b.txt"],
+  );
+  // Replacing a file counts its new size only.
+  const replaced = run(`writeFile("/a.txt", "x".repeat(${half})); 1`, {
+    workspaceFiles: { "a.txt": half, "b.txt": half },
+  });
+  assert.equal(replaced.error, undefined);
+  assert.equal(replaced.files[0].content.length, half);
 });
 
 test("timeouts are clamped", () => {
@@ -192,4 +248,25 @@ test("cancel and Worker errors end the run", async () => {
   const crashed = await crashing.instance.run(request("0"));
   assert.equal(crashed.stopped, "killed");
   assert.match(crashed.error || "", /The sandbox failed: boom/);
+});
+
+test("the model is told where the output was cut, with the real limit", () => {
+  const text = runCodeText(
+    {
+      output: "x".repeat(10),
+      outputTruncated: true,
+      value: '"y"',
+      files: [],
+      durationMs: 5,
+    },
+    { written: [{ path: "out/a.txt", chars: 3 }], failed: [] },
+  );
+  assert.ok(
+    text.startsWith(
+      `[The code ran in 5 ms]\n[Output cut: a run returns at most ${CODE_RUN_LIMITS.outputMaxChars} characters`,
+    ),
+  );
+  assert.match(text, /\nOutput:\nx{10}\nResult: "y"/);
+  assert.ok(!text.includes("${"));
+  assert.match(text, /Wrote workspace:out\/a\.txt \(3 chars\)\./);
 });

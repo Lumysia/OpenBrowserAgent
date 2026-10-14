@@ -1,21 +1,17 @@
+import { CODE_RUN_LIMITS } from "../config";
 import {
-  CODE_RUN_LIMITS,
   CODE_RUN_STOP,
   CODE_SANDBOX_MESSAGE,
   stoppedResult,
-  type CodeRunRequest,
   type CodeRunResult,
   type CodeWorkerRun,
 } from "./protocol";
-
-export type CodeRunner = {
-  run(request: CodeRunRequest): Promise<CodeRunResult>;
-  cancel(id: string): void;
-};
+import type { CodeRunner } from "./run-queue";
 
 // Runs each request in a new Worker, which ends with the run: no state
 // carries over, and a run that ignores its deadline is killed with
-// terminate(). `module` is the compiled interpreter.
+// terminate(). `module` is the compiled interpreter. The host's run queue
+// limits how many run at once and keeps run ids unique.
 export function createWorkerRunner(
   createWorker: () => Worker,
   module: WebAssembly.Module,

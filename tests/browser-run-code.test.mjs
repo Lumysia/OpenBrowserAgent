@@ -101,6 +101,30 @@ writeFile("out/total.txt", "total=" + total);
         "memory",
       );
     });
+
+    await t.test(
+      "a huge result and a too-large file are cut inside the run",
+      async () => {
+        const [, big, file] = await fixture.run([
+          { name: "toolSearch", args: { names: ["runCode"] } },
+          { name: "runCode", args: { code: `"x".repeat(50_000_000)` } },
+          {
+            name: "runCode",
+            args: {
+              code: `try { writeFile("big.txt", "y".repeat(200_000)) } catch (error) { "refused: " + error.message }`,
+            },
+          },
+        ]);
+        assert.match(
+          big,
+          /\[Output cut: a run returns at most 1000000 characters/,
+        );
+        assert.match(
+          file,
+          /Result: "refused: File content must be 48000 characters or less"/,
+        );
+      },
+    );
   } finally {
     await fixture.close();
   }

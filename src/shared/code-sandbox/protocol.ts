@@ -1,7 +1,10 @@
+import { CODE_RUN_LIMITS } from "../config";
+
 // The code sandbox runs model-written code in a QuickJS interpreter inside a
 // Worker. The same messages travel from the background to the host (the
 // offscreen document, a background page), from the host into the sandbox
-// page, and from there to the Worker.
+// page, and from there to the Worker. Limits live in CODE_RUN_LIMITS
+// (src/shared/config.ts).
 
 // JavaScript only for now; the protocol names the language so another
 // interpreter (Python) can join behind the same messages.
@@ -11,23 +14,6 @@ export const CODE_LANGUAGE = {
 
 export type CodeLanguage = (typeof CODE_LANGUAGE)[keyof typeof CODE_LANGUAGE];
 
-export const CODE_RUN_LIMITS = {
-  defaultTimeoutMs: 10_000,
-  maxTimeoutMs: 30_000,
-  minTimeoutMs: 100,
-  memoryBytes: 128 * 1024 * 1024,
-  // The interpreter's own stack runs on the browser's, which is about 1 MB in
-  // a Worker; deeper limits crash the Worker instead of raising RangeError.
-  stackBytes: 256 * 1024,
-  // What one run may print and write before the rest is dropped; the model
-  // sees less (the run's tool output cap).
-  outputMaxChars: 1_000_000,
-  filesMaxChars: 1_000_000,
-  // The host kills the Worker this long after the interpreter's deadline,
-  // when an interrupt did not stop the code.
-  watchdogGraceMs: 2_000,
-} as const;
-
 export type CodeRunRequest = {
   id: string;
   language: CodeLanguage;
@@ -36,8 +22,10 @@ export type CodeRunRequest = {
   input?: unknown;
   // Text files `readFile` returns, by path.
   files: Record<string, string>;
-  // Whether `writeFile` may be called (the agent has a workspace).
-  canWrite: boolean;
+  // The agent workspace `writeFile` saves to, as the size of each file in it
+  // now: writes are held to the workspace's limits during the run. Absent:
+  // the agent has no workspace and `writeFile` fails.
+  workspaceFiles?: Record<string, number>;
   timeoutMs: number;
 };
 
@@ -68,6 +56,7 @@ export type CodeIsolation =
 export type CodeRunResult = {
   // console output, in order.
   output: string;
+  // Output, result or error was cut at CODE_RUN_LIMITS.outputMaxChars.
   outputTruncated: boolean;
   // The last expression's value as JSON (or its string form).
   value?: string;

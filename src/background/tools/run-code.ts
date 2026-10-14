@@ -1,19 +1,21 @@
 import {
   CODE_LANGUAGE,
-  CODE_RUN_LIMITS,
   codeRunTimeout,
   type CodeRunFile,
-  type CodeRunResult,
 } from "../../shared/code-sandbox/protocol";
+import {
+  BYTES_PER_MIB,
+  CODE_RUN_LIMITS,
+  MS_PER_SECOND,
+} from "../../shared/config";
 import { TOOL_NAME } from "../../shared/tool-names";
 import type { AgentWorkspace } from "../../shared/types";
-import {
-  normalizeWorkspacePath,
-  upsertWorkspaceFile,
-} from "../../shared/workspace";
+import { upsertWorkspaceFile } from "../../shared/workspace";
 import { mutateWorkspace } from "../../shared/workspace-storage";
 import { runSandboxedCode } from "../code-sandbox";
+import { runCodeText, type SavedFiles } from "./run-code-text";
 import { fail, ok, schema, type ToolDefinition } from "./types";
+import { findWorkspaceFile } from "./workspace-source";
 
 // Model-written JavaScript in the bundled QuickJS interpreter: no network,
 // no DOM, no extension APIs; workspace files go in and out as text.
@@ -22,7 +24,7 @@ export const runCodeTool: ToolDefinition = {
   onDemand: true,
   summary:
     "Run JavaScript in a sandbox to compute, parse CSV/JSON or transform data",
-  description: `Run JavaScript (ES2023) in an isolated interpreter and get its console output and the value of the last expression (as JSON). Use it for exact arithmetic and statistics, parsing and reshaping CSV/JSON/text, counting, sorting, dates, and checking numbers instead of estimating them. Globals: console.log/error, input (the JSON value you pass), readFile(path) and writeFile(path, text) for agent workspace files (list the files to read in files; written files are saved to the workspace). It cannot reach the network, web pages, the DOM, timers or npm packages: pass data in input or files, and get page content with the page tools first. Each call starts fresh. Limits: ${CODE_RUN_LIMITS.defaultTimeoutMs / 1000} s by default (timeoutMs up to ${CODE_RUN_LIMITS.maxTimeoutMs}), ${CODE_RUN_LIMITS.memoryBytes / 1024 / 1024} MB memory.`,
+  description: `Run JavaScript (ES2023) in an isolated interpreter and get its console output and the value of the last expression (as JSON). Use it for exact arithmetic and statistics, parsing and reshaping CSV/JSON/text, counting, sorting, dates, and checking numbers instead of estimating them. Globals: console.log/error, input (the JSON value you pass), readFile(path) and writeFile(path, text) for agent workspace files (list the files to read in files; written files are saved to the workspace). It cannot reach the network, web pages, the DOM, timers or npm packages: pass data in input or files, and get page content with the page tools first. Each call starts fresh. Limits: ${CODE_RUN_LIMITS.defaultTimeoutMs / MS_PER_SECOND} s by default (timeoutMs up to ${CODE_RUN_LIMITS.maxTimeoutMs}), ${CODE_RUN_LIMITS.memoryBytes / BYTES_PER_MIB} MB memory; written files follow the workspace limits.`,
   parameters: schema(
     {
       code: {
@@ -36,7 +38,10 @@ export const runCodeTool: ToolDefinition = {
         items: { type: "string" },
         description: "Workspace file paths readFile may read.",
       },
-      timeoutMs: { type: "number" },
+      timeoutMs: {
+        type: "number",
+        description: `Time limit in ms: ${CODE_RUN_LIMITS.defaultTimeoutMs} by default, at most ${CODE_RUN_LIMITS.maxTimeoutMs}.`,
+      },
     },
     ["code"],
   ),
@@ -52,14 +57,23 @@ export const runCodeTool: ToolDefinition = {
         code,
         input: input.input,
         files: files.files,
-        canWrite: !!run.workspace,
+        ...(run.workspace
+          ? {
+              workspaceFiles: Object.fromEntries(
+                run.workspace.files.map((file) => [
+                  file.path,
+                  file.content.length,
+                ]),
+              ),
+            }
+          : {}),
         timeoutMs: codeRunTimeout(input.timeoutMs),
       },
       signal,
     );
     signal?.throwIfAborted();
     const saved = await saveFiles(run.workspace, result.files);
-    const text = resultText(result, saved);
+    const text = runCodeText(result, saved);
     const details = {
       language: CODE_LANGUAGE.javascript,
       durationMs: result.durationMs,
@@ -84,26 +98,13 @@ function readFiles(workspace: AgentWorkspace | undefined, value: unknown) {
         "This agent has no workspace to read files from; pass the data in input instead.",
     };
   for (const item of paths) {
-    const normalized = normalizeWorkspacePath(item.replace(/^workspace:/, ""));
-    const file = normalized.ok
-      ? workspace?.files.find((entry) => entry.path === normalized.path)
-      : undefined;
-    if (!normalized.ok || !file)
-      return {
-        ok: false as const,
-        error: `No workspace file "${item}". Files: ${
-          workspace?.files.map((entry) => entry.path).join(", ") || "none"
-        }.`,
-      };
-    files[file.path] = file.content;
+    if (!workspace) break;
+    const found = findWorkspaceFile(workspace, item);
+    if (!found.ok) return found;
+    files[found.file.path] = found.file.content;
   }
   return { ok: true as const, files };
 }
-
-type SavedFiles = {
-  written: Array<{ path: string; chars: number }>;
-  failed: Array<{ path: string; error: string }>;
-};
 
 // Files the code wrote, saved together in one workspace change. A file that
 // cannot be saved (bad path, too large) is reported; the others still are.
@@ -137,30 +138,4 @@ async function saveFiles(
       failed: files.map((file) => ({ path: file.path, error: result.error })),
     };
   return saved;
-}
-
-function resultText(result: CodeRunResult, saved: SavedFiles) {
-  const head = result.error
-    ? `[The code failed after ${result.durationMs} ms]`
-    : `[The code ran in ${result.durationMs} ms]`;
-  return [
-    head,
-    result.output &&
-      `Output:\n${result.output}${result.outputTruncated ? "\n[Output cut: a run prints at most ${CODE_RUN_LIMITS.outputMaxChars} characters.]" : ""}`,
-    result.value !== undefined && `Result: ${result.value}`,
-    result.error && `Error: ${result.error}`,
-    ...saved.written.map(
-      (file) => `Wrote workspace:${file.path} (${file.chars} chars).`,
-    ),
-    ...saved.failed.map(
-      (file) => `Could not save ${file.path}: ${file.error}.`,
-    ),
-    !result.output &&
-      result.value === undefined &&
-      !result.error &&
-      !saved.written.length &&
-      "No output: print with console.log or end with an expression.",
-  ]
-    .filter(Boolean)
-    .join("\n");
 }

@@ -34,6 +34,9 @@ export type OffscreenRevokeBlobUrlRequest = {
 export type OffscreenRunCodeRequest = {
   type: typeof OFFSCREEN_MESSAGE.runCode;
   request: CodeRunRequest;
+  // The manifest lists the sandboxed page (the offscreen document cannot
+  // read the manifest).
+  sandboxPage: boolean;
 };
 
 export type OffscreenCancelCodeRequest = {

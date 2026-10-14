@@ -1,10 +1,9 @@
 // Package files of the code sandbox. Imported by wxt.config.ts, so this
 // module uses no browser APIs.
 export const CODE_SANDBOX_PATH = {
-  // The sandboxed page (opaque origin) that hosts the Worker on Chrome and
-  // Firefox; generated at build time, see wxt.config.ts.
+  // The sandboxed page (opaque origin) that hosts the Worker where the
+  // browser supports sandboxed pages: public/code-sandbox.html.
   page: "code-sandbox.html",
-  pageScript: "code-sandbox-frame.js",
   worker: "code-sandbox-worker.js",
   wasm: "code-sandbox/quickjs.wasm",
 } as const;
@@ -14,13 +13,9 @@ export const CODE_SANDBOX_PATH = {
 export const CODE_SANDBOX_CSP =
   "sandbox allow-scripts; default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src blob:";
 
-export const CODE_SANDBOX_PAGE_HTML = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>OpenBrowserAgent</title>
-    <script src="/${CODE_SANDBOX_PATH.pageScript}"></script>
-  </head>
-  <body></body>
-</html>
-`;
+// Whether a manifest lists the sandboxed page (Safari's has none).
+export function hasCodeSandboxPage(manifest: {
+  sandbox?: { pages?: string[] };
+}) {
+  return !!manifest.sandbox?.pages?.includes(CODE_SANDBOX_PATH.page);
+}

@@ -3,6 +3,7 @@ import {
   newQuickJSWASMModuleFromVariant,
   newVariant,
 } from "quickjs-emscripten-core";
+import { errorMessage } from "../src/shared/error-message";
 import { runJavaScript } from "../src/shared/code-sandbox/engine";
 import {
   CODE_RUN_STOP,
@@ -27,7 +28,7 @@ export default defineUnlistedScript(() => {
       scope.postMessage(
         stoppedResult(
           CODE_RUN_STOP.killed,
-          `The sandbox could not start: ${error instanceof Error ? error.message : String(error)}`,
+          `The sandbox could not start: ${errorMessage(error)}`,
         ),
       );
     }

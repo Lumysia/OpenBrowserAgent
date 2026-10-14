@@ -65,6 +65,36 @@ export const LOCAL_SETUP_FEEDBACK_MS = 3_600;
 export const TOOLTIP_DELAY_MS = 250;
 export const BYTES_PER_KIB = 1024;
 export const BYTES_PER_MIB = BYTES_PER_KIB * BYTES_PER_KIB;
+
+// The code sandbox (runCode tool).
+export const CODE_RUN_LIMITS = {
+  defaultTimeoutMs: 10_000,
+  maxTimeoutMs: 30_000,
+  minTimeoutMs: 100,
+  memoryBytes: 128 * BYTES_PER_MIB,
+  // The interpreter's own stack runs on the browser's, which is about 1 MB in
+  // a Worker; deeper limits crash the Worker instead of raising RangeError.
+  stackBytes: 256 * BYTES_PER_KIB,
+  // What one run may hand back as console output, result and error together;
+  // the model sees less (the run's tool output cap).
+  outputMaxChars: 1_000_000,
+  // The result and the error still show this much when console output used
+  // the budget up.
+  reportMinChars: 1_000,
+  // Time the interpreter gets after the code's deadline to turn the result
+  // or the error into text.
+  reportMs: 500,
+  // The host kills the Worker this long after the interpreter's deadline,
+  // when an interrupt did not stop the code.
+  watchdogGraceMs: 2_000,
+  // How long the sandboxed page may take to load and compile the interpreter.
+  frameReadyTimeoutMs: 15_000,
+  // Extra time the host waits for the sandboxed page beyond the Worker's own
+  // watchdog before it treats the page as dead.
+  frameReplyGraceMs: 3_000,
+  // Runs at once; more wait their turn (each has its own interpreter heap).
+  maxConcurrent: 2,
+} as const;
 export const ISO_DATE_LENGTH = 10;
 export const RELATIVE_TIME_MINUTE_MS = 60_000;
 export const SENT_TABS_PREVIEW_COUNT = 2;
