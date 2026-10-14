@@ -143,6 +143,65 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
       await poll(async () => (await barState(page)) === "none");
     });
 
+    await t.test(
+      "The close menu highlights only what the pointer is on",
+      async () => {
+        // Each item's highlight state, read from what the user sees.
+        const highlighted = () =>
+          inSmartBar(page, (root) =>
+            [...root.querySelectorAll(".smart-bar-menu-item")].map(
+              (item) => getComputedStyle(item).backgroundColor,
+            ),
+          );
+        const itemPoint = (index) =>
+          inSmartBar(
+            page,
+            (root, index) => {
+              const rect = root
+                .querySelectorAll(".smart-bar-menu-item")
+                [index].getBoundingClientRect();
+              return {
+                x: rect.x + rect.width / 2,
+                y: rect.y + rect.height / 2,
+              };
+            },
+            index,
+          );
+        const move = async ({ x, y }) =>
+          page.send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+        await selectText(page, "#text");
+        await poll(async () => (await barState(page)) === "toolbar");
+        await clickInBar(page, '[aria-label="Smart bar options"]');
+        await poll(() =>
+          barHas(page, ".smart-bar-menu-item", "Turn off smart bar"),
+        );
+        await delay(200);
+        const [first, second] = await highlighted();
+        assert.equal(first, second, "no item is highlighted on open");
+        const plain = first;
+
+        await move(await itemPoint(1));
+        await poll(async () => {
+          const [a, b] = await highlighted();
+          return a === plain && b !== plain;
+        });
+        await move(await itemPoint(0));
+        await poll(async () => {
+          const [a, b] = await highlighted();
+          return a !== plain && b === plain;
+        });
+
+        await pressKey(page, "ArrowDown", "ArrowDown", 40);
+        await poll(async () => {
+          const [a, b] = await highlighted();
+          return a === plain && b !== plain;
+        });
+        await pressKey(page, "Escape", "Escape", 27);
+        await pressKey(page, "Escape", "Escape", 27);
+        await poll(async () => (await barState(page)) === "none");
+      },
+    );
+
     await t.test("Hide on this site stops it", async () => {
       await selectText(page, "#text");
       await poll(async () => (await barState(page)) === "toolbar");
