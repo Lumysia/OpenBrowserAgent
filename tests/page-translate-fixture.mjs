@@ -164,6 +164,19 @@ export async function startPageTranslate({
       const [after] = await workers();
       return after && after.id !== before.id;
     });
+    // Evaluating in the new worker while it still starts can make its
+    // registration fail ("Service worker registration failed. Status code:
+    // 10"), which leaves the extension without a background. An extension
+    // page sees when it is active without touching it.
+    const page = await browser.open(extensionUrl("options.html"));
+    await poll(() =>
+      page.call(
+        async () =>
+          (await navigator.serviceWorker.getRegistration())?.active?.state ===
+          "activated",
+      ),
+    );
+    await page.send("Page.close");
     return attachWorker();
   };
   // Merges `change` into the page translation settings.
