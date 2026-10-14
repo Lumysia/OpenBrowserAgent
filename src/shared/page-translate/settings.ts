@@ -57,8 +57,10 @@ export type PageTranslateSettings = {
   translateMenus: boolean;
 };
 
+// The browser's translator by default: where the browser has none, pages
+// fall back to the AI model (PAGE_TRANSLATE_FALLBACK).
 export const DEFAULT_PAGE_TRANSLATE_SETTINGS: PageTranslateSettings = {
-  engine: PAGE_TRANSLATE_ENGINE.model,
+  engine: PAGE_TRANSLATE_ENGINE.browser,
   modelId: "",
   targetLanguage: "",
   display: PAGE_TRANSLATE_DISPLAY.bilingual,

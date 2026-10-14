@@ -76,7 +76,7 @@ OpenBrowserAgent has no server of its own, but it does send these kinds of data 
 [ ] Location
 [x] Web history: titles and URLs of tabs the user attaches or the agent works in
 [ ] User activity: left unticked; the extension doesn't monitor the user's clicks or keystrokes (the agent's own actions are not user activity)
-[x] Website content: page text, screenshots and selected elements sent to the user's AI provider; the text of pages the user translates, sent to the translation engine they selected (their AI provider by default, or Google's or Microsoft's free translation service if they pick one; when the picked one fails on a page, the other one translates the rest of that page)
+[x] Website content: page text, screenshots and selected elements sent to the user's AI provider; the text of pages the user translates, sent to the translation engine they selected (by default the browser's on-device translator, which sends nothing, and their AI provider where the browser can't translate the page; their AI provider if they pick it; or Google's or Microsoft's free translation service if they pick one; when the picked one fails on a page, the other one translates the rest of that page)
 
 Consent: before content goes to an AI provider on another server for the first time, the extension names the provider's host (for example api.openai.com) and asks the user to agree, in the provider form or before the first message. Nothing is sent until they agree; the permission can be withdrawn in Settings > AI providers. Local providers (localhost, private network) need none.
 
