@@ -2,6 +2,7 @@ import type { ProviderModel } from "./pi-provider";
 import { normalizeProviderState } from "../shared/provider-instances";
 import { providerDefaultBaseUrls } from "../shared/types";
 import { storage } from "../shared/storage";
+import { USER_ERROR_CODE, UserError } from "../shared/user-errors";
 
 // The first of `modelIds` that is configured (an agent's own model, then
 // the composer's), else the stored selection, else the first model.
@@ -26,7 +27,10 @@ export async function resolveModel(...modelIds: Array<string | undefined>) {
     };
   }
 
-  throw new Error("No model configured. Add an AI provider in Settings.");
+  throw new UserError(
+    USER_ERROR_CODE.noModel,
+    "No model configured. Add an AI provider in Settings.",
+  );
 }
 
 // The helper model (compaction, later extraction and sub-agent summaries)

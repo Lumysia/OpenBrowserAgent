@@ -30,20 +30,26 @@ export function textSlice(
   label: string,
   text: string,
   input: Record<string, unknown>,
+  max = tokenChars(CONTEXT_POLICY.readMaxTokens),
 ) {
   const total = text.length;
+  const { offset, end } = sliceRange(text, input, max);
+  const position = end < total ? `continue with offset=${end}` : "end";
+  return `[${label} | characters ${offset}-${end} of ${total}; ${position}]\n${text.slice(offset, end)}`;
+}
+
+// The range textSlice returns: from `offset`, at most `limit` and `max`
+// characters.
+function sliceRange(text: string, input: Record<string, unknown>, max: number) {
   const offset = Math.min(
-    total,
+    text.length,
     Math.max(0, Math.trunc(Number(input.offset) || 0)),
   );
-  const max = tokenChars(CONTEXT_POLICY.readMaxTokens);
   const limit = Math.min(
     max,
     Math.max(1, Math.trunc(Number(input.limit) || max)),
   );
-  const end = Math.min(total, offset + limit);
-  const position = end < total ? `continue with offset=${end}` : "end";
-  return `[${label} | characters ${offset}-${end} of ${total}; ${position}]\n${text.slice(offset, end)}`;
+  return { offset, end: Math.min(text.length, offset + limit) };
 }
 
 type Source =
@@ -72,6 +78,7 @@ function parseSource(value: string): Source {
 export const readTool: ToolDefinition = {
   name: TOOL_NAME.read,
   readOnly: true,
+  boundedOutput: true,
   timeoutMs: 60_000,
   summary: "Read text in ranges",
   description:
@@ -172,10 +179,26 @@ function readSkill(
           .map((item) => `skill:${skill.name}/${item.path}`)
           .join(", ")}]`
       : "";
+  // Read whole up to a higher limit than other sources; a cut says so at
+  // the end, where the reader stops. A skill is instructions, not a source
+  // to cite, so it adds none.
+  const source = `skill:${skill.name}/${file.path}`;
+  const max = tokenChars(CONTEXT_POLICY.skillReadMaxTokens);
+  const { offset, end } = sliceRange(file.content, input, max);
+  const total = file.content.length;
+  const truncated = end < total;
+  const note = truncated
+    ? `\n[Truncated: showed characters ${offset}-${end} of ${total} of ${source}. The rest is not shown: continue with read source="${source}" offset=${end}.]`
+    : "";
   return {
-    text: `${textSlice(`skill:${skill.name}/${file.path}`, file.content, input)}${others}`,
-    details: { source: `skill:${skill.name}/${file.path}`, name: skill.name },
-    sources: [{ kind: "skill", title: `${skill.name} / ${file.path}` }],
+    text: `${textSlice(source, file.content, input, max)}${note}${others}`,
+    details: {
+      source,
+      name: skill.name,
+      chars: total,
+      shown: end - offset,
+      truncated,
+    },
   };
 }
 

@@ -177,3 +177,40 @@ test("toolSearch honours names and query together and matches any script", async
     "mcp__Notes__search_notes",
   ]);
 });
+
+test("toolSearch lists only tools not loaded yet and says what each load did", async () => {
+  const setup = setupPiRuntime("http://127.0.0.1:9", "openai");
+  setup.close();
+  const run = {
+    ...setup.options.setup,
+    agent: { ...setup.options.setup.agent, workspace: true },
+    workspace: { agentId: "a", files: [] },
+  } as never;
+  // `workspace` was loaded in an earlier turn of the chat.
+  const toolSet = createToolSet(run, ["workspace"]);
+  const toolSearch = toolSet.find("toolSearch")!;
+  assert.doesNotMatch(toolSearch.description, /- workspace:/);
+  assert.match(toolSearch.description, /- subAgent:/);
+  assert.ok(toolSet.declared().some((tool) => tool.name === "workspace"));
+
+  const result = await toolSearch.execute(
+    { names: ["workspace", "subAgent", "tabs", "nope"] },
+    {} as never,
+  );
+  assert.equal(result.isError, undefined);
+  assert.deepEqual(result.details, {
+    loaded: ["workspace", "subAgent"],
+    newlyLoaded: ["subAgent"],
+    alreadyAvailable: ["tabs", "workspace"],
+    notFound: ["nope"],
+  });
+  assert.equal(
+    result.text,
+    "Newly loaded: subAgent. Already available: tabs, workspace. Not found: nope. Call tools directly by these exact names.",
+  );
+
+  // Loading it again in the same run: already available, nothing new.
+  const again = await toolSearch.execute({ names: ["subAgent"] }, {} as never);
+  assert.deepEqual(again.details?.newlyLoaded, []);
+  assert.deepEqual(again.details?.alreadyAvailable, ["subAgent"]);
+});

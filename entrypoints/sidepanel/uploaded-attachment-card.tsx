@@ -6,8 +6,8 @@ import {
 } from "../../src/shared/attachments";
 import type { Messages } from "../../src/shared/i18n";
 import type { UploadedAttachment } from "../../src/shared/types";
+import { formatBytes } from "../../src/shared/format";
 import { ContextCard } from "./context-card";
-import { formatAttachmentSize } from "./file-attachments";
 
 export function UploadFileInput({
   inputRef,
@@ -48,7 +48,7 @@ export function UploadedAttachmentCard({
     <ContextCard
       icon={<AttachmentPreview attachment={attachment} />}
       title={attachment.name}
-      detail={`${status} · ${formatAttachmentSize(attachment.size)}`}
+      detail={`${status} · ${formatBytes(attachment.size)}`}
       removeLabel={t.sidepanel.removeAttachment}
       onRemove={onRemove}
     />

@@ -52,7 +52,9 @@ export function OptionsApp() {
         <aside className="settings-sidebar">
           <div>
             <div className="brand">{t.common.settings}</div>
-            <p className="muted">OpenBrowserAgent - {t.app.tagline}</p>
+            <p className="muted">
+              {t.app.brandLine.replace("{tagline}", t.app.tagline)}
+            </p>
           </div>
           <nav className="stack">
             <OptionsLink

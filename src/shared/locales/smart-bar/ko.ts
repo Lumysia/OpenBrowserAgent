@@ -27,6 +27,7 @@ export const smartBarKo: SmartBarLocaleMessages = {
   noVoice: "{language} 음성이 설치되어 있지 않습니다.",
   writing: "작성 중…",
   emptyResult: "모델이 텍스트를 반환하지 않았습니다.",
+  connectionLost: "OpenBrowserAgent와의 연결이 끊어졌어요. 다시 시도하세요.",
   selectionChanged: "선택한 텍스트가 변경되었습니다. 대신 결과를 복사하세요.",
   selectionTooLong:
     "선택 영역이 너무 깁니다({max}자 초과). 대신 사이드 패널에서 계속하세요.",

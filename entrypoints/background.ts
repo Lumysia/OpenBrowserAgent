@@ -1,3 +1,5 @@
+import { userErrorText } from "../src/shared/user-errors";
+import { getMessages } from "../src/shared/i18n";
 import { getBrowserApi, storage } from "../src/shared/storage";
 import {
   GENERATED_TITLE_MAX_CJK_CHARS,
@@ -106,7 +108,7 @@ export default defineBackground(() => {
             if (error?.name === "AbortError") return;
             streamSessions.postToSession(next, {
               type: "error",
-              error: error?.message || String(error),
+              error: userErrorText(error, getMessages(request.body.language)),
             });
           })
           .finally(() => streamSessions.scheduleSessionCleanup(next));
@@ -116,9 +118,7 @@ export default defineBackground(() => {
       if (request.type === AI_STREAM_REQUEST_TYPE.generateTitle) {
         generateTitle(request)
           .then((title) => streamSessions.post(port, { type: "title", title }))
-          .catch(() =>
-            streamSessions.post(port, { type: "title", title: "New Chat" }),
-          );
+          .catch(() => streamSessions.post(port, { type: "title", title: "" }));
       }
     });
 
@@ -166,7 +166,8 @@ function handleDescribeRunMessage(
 }
 
 async function generateTitle(request: GenerateTitleRequest) {
-  const fallback = compactTitle(request.message) || "New Chat";
+  // An empty title keeps the chat's own, localized one.
+  const fallback = compactTitle(request.message);
   try {
     const model = await resolveModel(request.modelId);
     const { text: raw } = await requestText(model, {

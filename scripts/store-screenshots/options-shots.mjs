@@ -15,14 +15,15 @@ import { seedOptions } from "./seed.mjs";
 const MARGIN = 16;
 
 // Each settings shot opens a route and expands one card with a real click.
-// Cards are found by text that is the same in every locale: agent ids,
-// provider and skill names. `fit` is the content that must end inside the
+// Cards are found by text that is the same in every locale (agent ids,
+// provider names) or, without text, the first card: built-in skill names
+// are translated, and Fill form comes first. `fit` is the content that must end inside the
 // frame: the last card on the page, or the last control of the expanded card
 // when the page goes on below it.
 export const OPTIONS_SHOTS = [
   { name: "agents", route: "agents", expand: "general-agent", fit: "page" },
   { name: "providers", route: "providers", expand: "OpenAI", fit: "card" },
-  { name: "skills", route: "skills", expand: "fill-form", fit: "page" },
+  { name: "skills", route: "skills", expand: "", fit: "page" },
 ];
 
 // Scrolls as far as the page heading allows for the `fit` content to end

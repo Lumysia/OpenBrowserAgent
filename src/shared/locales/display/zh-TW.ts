@@ -1,0 +1,117 @@
+import { plural } from "../../plural";
+import type { DisplayMessages } from "./en-US";
+
+export const displayZhTW: DisplayMessages = {
+  counts: {
+    models: plural({ other: "{count} 個模型" }),
+    files: plural({ other: "{count} 個檔案" }),
+    characters: plural({ other: "{count} 個字元" }),
+  },
+  providerTypes: {
+    openai: "OpenAI 相容",
+    "openai-responses": "OpenAI Responses",
+    anthropic: "Anthropic 相容",
+  },
+  builtinMcpServers: {
+    exa: "網頁搜尋和網頁內容擷取。",
+    parallel: "附摘錄的網頁搜尋和網頁擷取。",
+    tinyfish: "網頁和新聞搜尋。",
+    firecrawl: "網頁搜尋、網頁擷取和文件解析。免費請求額度較低。",
+  },
+  builtinSkills: {
+    "fill-form": {
+      name: "填寫表單",
+      description:
+        "根據你提供的資訊或檔案填寫網頁表單，逐項檢查，只在你明確要求時送出。",
+    },
+    "tidy-tabs": {
+      name: "整理分頁",
+      description: "關閉重複的分頁，將相關分頁分組，並找出不再需要的分頁。",
+    },
+    "openbrowseragent-help": {
+      name: "OpenBrowserAgent 說明",
+      description: "解答有關使用與設定 OpenBrowserAgent 的問題。",
+    },
+    "skill-creator": {
+      name: "技能建立工具",
+      description: "建立、儲存或改進技能，例如把剛完成的任務儲存為技能。",
+    },
+    "local-execution-bridge-setup": {
+      name: "設定本機執行橋",
+      description:
+        "設定、測試、更新或移除本機執行橋，讓智慧體可以在你的電腦上執行指令。",
+    },
+  },
+  errors: {
+    noModel: "尚未設定模型。請在「設定」→「提供者」中新增提供者。",
+    subAgentStopped: "子智慧體已停止。",
+    baseUrlRequired: "請輸入 Base URL。",
+  },
+  toolSteps: {
+    failed: "失敗",
+    page: "頁面",
+    tabs: plural({ other: "{count} 個分頁" }),
+    lines: plural({ other: "{count} 行" }),
+    matchingLines: plural({ other: "{count} 行相符" }),
+    matchingLinesWithOccurrences: plural({
+      other: "{count} 行相符（{occurrences}）",
+    }),
+    occurrences: plural({ other: "{count} 處" }),
+    results: plural({ other: "{count} 筆結果" }),
+    items: plural({ other: "{count} 項" }),
+    tools: plural({ other: "{count} 個工具" }),
+    editsApplied: plural({ other: "已套用 {applied}/{count} 處修改" }),
+    actions: {
+      open: "已開啟",
+      switch: "已切換到",
+      close: "已關閉",
+      navigate: "已前往",
+      back: "已返回上一頁",
+      forward: "已前往下一頁",
+      reload: "已重新載入",
+      group: "已分組",
+      ungroup: "已取消分組",
+      list: "已列出",
+      search: "已搜尋",
+      read: "已讀取",
+      write: "已寫入",
+      append: "已附加",
+      replace: "已取代文字",
+      delete: "已刪除",
+      create: "已建立",
+      patch: "已編輯",
+      add: "已新增",
+      update: "已更新",
+      test: "已測試",
+      status: "已查詢狀態",
+      resources: "已列出網路資源",
+      emulate: "已模擬裝置",
+      reset: "已重設模擬",
+      markdown: "已匯出為 Markdown",
+      images: "已儲存圖片",
+      run: "已執行",
+      start: "已啟動",
+      cancel: "已取消",
+    },
+    commandStates: {
+      running: "執行中",
+      done: "已完成",
+      error: "失敗",
+      canceled: "已取消",
+      missing: "找不到工作",
+    },
+    actStepSeparator: "，",
+    actSteps: {
+      click: plural({ other: "點選了 {count} 個元素" }),
+      type: plural({ other: "填寫了 {count} 個欄位" }),
+      press: plural({ other: "按下了 {count} 個按鍵" }),
+      select: plural({ other: "選取了 {count} 個選項" }),
+      hover: plural({ other: "將游標移到 {count} 個元素上" }),
+      scroll: plural({ other: "捲動了 {count} 次" }),
+      wait: plural({ other: "等待了 {count} 次" }),
+      drag: plural({ other: "拖曳了 {count} 個元素" }),
+      dialog: plural({ other: "處理了 {count} 個對話方塊" }),
+      other: plural({ other: "執行了其他 {count} 個步驟" }),
+    },
+  },
+};

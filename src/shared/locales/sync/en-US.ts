@@ -1,10 +1,14 @@
+import { plural } from "../../plural";
 export const syncEnUS = {
   statusTitle: "Sync status",
   stateOff: "Sync is off",
   stateNeverSynced: "Not synced yet",
   stateSynced: "Up to date",
   stateSyncing: "Syncing…",
-  statePending: "{count} change(s) waiting to sync",
+  statePending: plural({
+    one: "{count} change waiting to sync",
+    other: "{count} changes waiting to sync",
+  }),
   statePaused: "Paused until {time}",
   stateError: "Last sync failed",
   stateAttention: "Sync needs your attention",

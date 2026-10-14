@@ -7,8 +7,8 @@ import type {
   PickedSkill,
   UploadedAttachment,
 } from "../../src/shared/types";
-import { getSkillDisplayName } from "../../src/shared/skills";
 import { ScrollArea } from "../../src/ui/components";
+import { skillDisplay } from "../../src/ui/skill-display";
 import { AttachedTabCard } from "./composer-menus";
 import { ContextCard } from "./context-card";
 import { selectedTextExcerpt } from "./selected-text";
@@ -56,16 +56,19 @@ export function ComposerAttachments({
           inset
         >
           <div className="context-chip-row">
-            {selectedSkills.map((skill) => (
-              <ContextCard
-                key={skill.id}
-                icon={<FileText size={18} />}
-                title={getSkillDisplayName(skill)}
-                detail={skill.description || t.options.skills}
-                removeLabel={t.common.cancel}
-                onRemove={() => onRemoveSkill(skill.id)}
-              />
-            ))}
+            {selectedSkills.map((skill) => {
+              const { name, description } = skillDisplay(skill, t);
+              return (
+                <ContextCard
+                  key={skill.id}
+                  icon={<FileText size={18} />}
+                  title={name}
+                  detail={description || t.options.skills}
+                  removeLabel={t.common.cancel}
+                  onRemove={() => onRemoveSkill(skill.id)}
+                />
+              );
+            })}
           </div>
         </ScrollArea>
       )}

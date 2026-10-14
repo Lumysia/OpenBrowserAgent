@@ -4,6 +4,7 @@ import {
   ESTIMATED_CHARS_PER_TOKEN,
   MS_PER_SECOND,
 } from "../../src/shared/config";
+import { formatDuration, formatNumber } from "../../src/shared/format";
 import type { Messages } from "../../src/shared/i18n";
 import type {
   ChatMessage,
@@ -294,10 +295,17 @@ function formatTps(metrics: RunMetrics, t: Messages) {
   const outputTokens = metrics.usage?.outputTokens;
   if (!duration) return t.sidepanel.runInfo.unavailable;
   if (outputTokens)
-    return `${(outputTokens / (duration / MS_PER_SECOND)).toFixed(1)}/s`;
+    return formatRate(outputTokens / (duration / MS_PER_SECOND), t);
   const estimatedTokens = estimateTokens(metrics.outputCharacters);
   if (!estimatedTokens) return t.sidepanel.runInfo.unavailable;
-  return `${(estimatedTokens / (duration / MS_PER_SECOND)).toFixed(1)}/s ${t.sidepanel.runInfo.estimated}`;
+  return `${formatRate(estimatedTokens / (duration / MS_PER_SECOND), t)} ${t.sidepanel.runInfo.estimated}`;
+}
+
+function formatRate(value: number, t: Messages) {
+  return t.sidepanel.runInfo.perSecond.replace(
+    "{value}",
+    formatNumber(value, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+  );
 }
 
 function estimateTokens(characters: number | undefined) {
@@ -307,9 +315,7 @@ function estimateTokens(characters: number | undefined) {
 
 function formatMs(value: number | undefined, t: Messages) {
   if (value === undefined) return t.sidepanel.runInfo.unavailable;
-  return value < MS_PER_SECOND
-    ? `${Math.round(value)} ms`
-    : `${(value / MS_PER_SECOND).toFixed(2)} s`;
+  return formatDuration(value);
 }
 
 function formatTokenCount(value: number | undefined, t: Messages) {

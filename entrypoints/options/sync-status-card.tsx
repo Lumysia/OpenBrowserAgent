@@ -1,6 +1,6 @@
 import { Activity, RefreshCw } from "lucide-react";
 import { useState } from "react";
-import type { Messages } from "../../src/shared/i18n";
+import { formatCount, type Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { NO_SYNC_BACKEND_ID } from "../../src/shared/sync-backends";
 import { resolveMassDelete, syncNow } from "../../src/shared/sync/client";
@@ -42,7 +42,7 @@ export function SyncStatusCard({ t }: { t: Messages }) {
       ? t.sync.pausedRateLimit.replace("{status}", String(status.pauseStatus))
       : "",
     status?.pendingCount && tone !== "pending"
-      ? t.sync.statePending.replace("{count}", String(status.pendingCount))
+      ? formatCount(t.sync.statePending, status.pendingCount)
       : "",
   ].filter(Boolean);
 

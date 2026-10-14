@@ -14,7 +14,7 @@ import {
   TooltipTrigger,
 } from "../../src/ui/components";
 import { FileIcon } from "./attachment-file-icon";
-import { formatAttachmentSize } from "./file-attachments";
+import { formatBytes } from "../../src/shared/format";
 import { formatMessageTime } from "./format";
 
 export function UserMessageActions({
@@ -138,7 +138,7 @@ export function UserMessageActions({
                 <TooltipTrigger asChild>
                   <span>
                     <strong>{attachment.name}</strong>
-                    <small>{formatAttachmentSize(attachment.size)}</small>
+                    <small>{formatBytes(attachment.size)}</small>
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>{attachment.name}</TooltipContent>

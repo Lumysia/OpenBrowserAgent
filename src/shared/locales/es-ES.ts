@@ -1,12 +1,16 @@
 import { plural } from "../plural";
 import { contextMenuEsES } from "./context-menu/es-ES";
+import { displayEsES } from "./display/es-ES";
 import { smartBarEsES } from "./smart-bar/es-ES";
 import { syncEsES } from "./sync/es-ES";
 import { themesEsES } from "./themes/es-ES";
 import type { LocaleMessages } from "./en-US";
 
 export const esES: LocaleMessages = {
-  app: { tagline: "Tu agente de IA en el navegador" },
+  app: {
+    tagline: "Tu agente de IA en el navegador",
+    brandLine: "OpenBrowserAgent – {tagline}",
+  },
   common: {
     add: "Añadir",
     cancel: "Cancelar",
@@ -14,6 +18,8 @@ export const esES: LocaleMessages = {
     save: "Guardar",
     saved: "Guardado",
     settings: "Configuración",
+    plainText: "Texto",
+    errorDetail: "{message}: {detail}",
     copy: "Copiar",
     copied: "Copiado",
     edit: "Editar",
@@ -114,6 +120,7 @@ export const esES: LocaleMessages = {
       reasoning: "Razonamiento",
       estimated: "aprox.",
       tokenUnit: "tok.",
+      perSecond: "{value}/s",
       modelCalls: "Llamadas al modelo",
       largestRequest: "Solicitud más grande",
       cachedShare: "{percent} % de la entrada desde caché",
@@ -158,9 +165,13 @@ export const esES: LocaleMessages = {
       other: "Mostrar {count} fuentes más",
     }),
     showFewerSources: "Mostrar menos fuentes",
-    unavailableAttachments: "{count} no disponibles",
+    unavailableAttachments: plural({
+      one: "{count} no disponible",
+      other: "{count} no disponibles",
+    }),
     allOpenTabs: "Todas las pestañas abiertas",
     selectElement: "Seleccionar elemento",
+    selectElementPrompt: "Selecciona un elemento · Esc para cancelar",
     selectModel: "Seleccionar modelo",
     reasoningEffort: "Esfuerzo de razonamiento",
     reasoningEffortDescription:
@@ -174,8 +185,11 @@ export const esES: LocaleMessages = {
     send: "Enviar",
     queueMessage: "Poner en cola",
     queuedMessages: "Mensajes en cola",
-    queuedMessagesDescription:
-      "{count} en espera. Se enviarán después de la respuesta actual.",
+    queuedMessagesDescription: plural({
+      one: "{count} mensaje en espera. Se enviará después de la respuesta actual.",
+      other:
+        "{count} mensajes en espera. Se enviarán después de la respuesta actual.",
+    }),
     editingMessage: "Editando mensaje",
     editingMessageDescription:
       "Solo el cuadro de mensaje está activo. Pulsa Esc o Cancelar para dejar de editar.",
@@ -349,8 +363,20 @@ export const esES: LocaleMessages = {
     agentWorkspaceDescription:
       "Archivos privados de este agente. Siempre ve MEMORY.md y USER.md; los demás los lee cuando hace falta.",
     agentWorkspaceNewFile: "Nuevo archivo del espacio de trabajo",
-    agentWorkspaceConflict:
-      "Este archivo ha cambiado mientras lo editabas. Vuelve a abrirlo para revisar la última versión antes de guardar.",
+    agentWorkspaceErrors: {
+      pathRequired: "Escribe una ruta de archivo.",
+      pathTooLong:
+        "Una ruta de archivo puede tener como máximo {limit} caracteres.",
+      relativePath: "Una ruta de archivo no puede contener segmentos . o ..",
+      fileTooLarge: "Un archivo puede contener como máximo {limit} caracteres.",
+      workspaceTooLarge:
+        "El espacio de trabajo puede contener como máximo {limit} caracteres en total.",
+      fileNotFound: "Este archivo ya no existe.",
+      findNotFound: "No se ha encontrado el texto que hay que reemplazar.",
+      workspaceNotFound: "El espacio de trabajo de este agente ya no existe.",
+      conflict:
+        "Este archivo ha cambiado mientras lo editabas. Vuelve a abrirlo para revisar la última versión antes de guardar.",
+    },
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     resetDefaultAgents: "Restablecer agentes predeterminados",
     resetDefaultAgentsDescription:
@@ -363,6 +389,7 @@ export const esES: LocaleMessages = {
       "Permite que los agentes ejecuten comandos de shell en este equipo o en un host remoto mediante un puente.",
     localExecutionBridgesEmpty: "Aún no hay puentes de ejecución",
     newLocalExecutionBridge: "Nuevo puente de ejecución",
+    localExecutionBridgeUntitled: "Puente de ejecución",
     localExecutionBridgeName: "Nombre del puente de ejecución",
     localExecutionBridgeDescription: "Descripción",
     localExecutionBridgeHostName: "Nombre del host de mensajería nativa",
@@ -412,6 +439,7 @@ export const esES: LocaleMessages = {
     mcpImportNone:
       "No se encontraron servidores MCP HTTP remotos en el JSON pegado.",
     mcpImportError: "Error al importar MCP",
+    mcpTestError: "La prueba del servidor falló",
     mcpTestServer: "Probar servidor",
     mcpTesting: "Probando…",
     mcpTestSuccess: plural({
@@ -455,6 +483,7 @@ export const esES: LocaleMessages = {
     testingModel: "Probando",
     testModelSuccess: "El modelo ha respondido correctamente.",
     testModelError: "Ha fallado la prueba del modelo",
+    fetchModelsError: "No se pudieron cargar los modelos",
     configuredModels: "Modelos configurados",
     modelDisplayName: "Nombre visible",
     modelContextLength: "Longitud de contexto",
@@ -468,6 +497,7 @@ export const esES: LocaleMessages = {
     importSkillZip: "Importar paquete",
     importingSkillZip: "Importando…",
     importSkillZipError: "Error al importar la habilidad",
+    importAgentError: "No se pudo importar el agente",
     importSkillPackageMissingEntry:
       "No se ha encontrado SKILL.md en el paquete importado.",
     untitledSkill: "Habilidad sin título",
@@ -589,6 +619,7 @@ export const esES: LocaleMessages = {
     debugResetButton: "Borrar todos los datos de la aplicación",
     debugResetting: "Borrando…",
     debugResetSuccess: "Se han borrado los datos de OpenBrowserAgent.",
+    debugResetError: "No se pudieron borrar los datos",
     debugLoggingTitle: "Registros de diagnóstico",
     debugLoggingDescription:
       "Activa registros temporales en la consola para diagnosticar el orden del flujo de respuesta, las herramientas y el asistente.",
@@ -602,4 +633,5 @@ export const esES: LocaleMessages = {
   contextMenu: contextMenuEsES,
   sync: syncEsES,
   themes: themesEsES,
+  display: displayEsES,
 };

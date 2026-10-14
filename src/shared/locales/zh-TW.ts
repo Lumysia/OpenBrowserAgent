@@ -1,12 +1,16 @@
 import { plural } from "../plural";
 import { contextMenuZhTW } from "./context-menu/zh-TW";
+import { displayZhTW } from "./display/zh-TW";
 import { smartBarZhTW } from "./smart-bar/zh-TW";
 import { syncZhTW } from "./sync/zh-TW";
 import { themesZhTW } from "./themes/zh-TW";
 import type { LocaleMessages } from "./en-US";
 
 export const zhTW: LocaleMessages = {
-  app: { tagline: "瀏覽器中的 AI 智慧體" },
+  app: {
+    tagline: "瀏覽器中的 AI 智慧體",
+    brandLine: "OpenBrowserAgent——{tagline}",
+  },
   common: {
     add: "新增",
     cancel: "取消",
@@ -14,6 +18,8 @@ export const zhTW: LocaleMessages = {
     save: "儲存",
     saved: "已儲存",
     settings: "設定",
+    plainText: "文字",
+    errorDetail: "{message}：{detail}",
     copy: "複製",
     copied: "已複製",
     edit: "編輯",
@@ -106,6 +112,7 @@ export const zhTW: LocaleMessages = {
       reasoning: "推理",
       estimated: "估算",
       tokenUnit: "tok.",
+      perSecond: "{value}/秒",
       modelCalls: "模型呼叫",
       largestRequest: "最大請求",
       cachedShare: "{percent}% 輸入命中快取",
@@ -145,9 +152,10 @@ export const zhTW: LocaleMessages = {
     forkChat: "分叉對話",
     showMoreSources: plural({ other: "展開剩餘 {count} 個來源" }),
     showFewerSources: "收起來源",
-    unavailableAttachments: "{count} 個不可用",
+    unavailableAttachments: plural({ other: "{count} 個不可用" }),
     allOpenTabs: "所有開啟的分頁",
     selectElement: "選擇元素",
+    selectElementPrompt: "選擇元素（按 Esc 取消）",
     selectModel: "選擇模型",
     reasoningEffort: "推理強度",
     reasoningEffortDescription: "僅對支援推理的模型生效。",
@@ -160,7 +168,9 @@ export const zhTW: LocaleMessages = {
     send: "傳送",
     queueMessage: "加入佇列",
     queuedMessages: "佇列中的訊息",
-    queuedMessagesDescription: "{count} 則等待中，會在目前回覆結束後傳送。",
+    queuedMessagesDescription: plural({
+      other: "{count} 則等待中，會在目前回覆結束後傳送。",
+    }),
     editingMessage: "正在編輯訊息",
     editingMessageDescription:
       "只有輸入區可操作。按 Esc 或點選「取消」停止編輯。",
@@ -277,8 +287,18 @@ export const zhTW: LocaleMessages = {
     agentWorkspaceDescription:
       "此智慧體的私人檔案。智慧體一律看得到 MEMORY.md 與 USER.md，其他檔案依需要讀取。",
     agentWorkspaceNewFile: "新增工作區檔案",
-    agentWorkspaceConflict:
-      "此檔案在編輯期間發生了變更。請重新開啟並檢視最新版本後再儲存。",
+    agentWorkspaceErrors: {
+      pathRequired: "請輸入檔案路徑。",
+      pathTooLong: "檔案路徑最多 {limit} 個字元。",
+      relativePath: "檔案路徑不能包含 . 或 .. 區段。",
+      fileTooLarge: "單一檔案最多 {limit} 個字元。",
+      workspaceTooLarge: "工作區總共最多 {limit} 個字元。",
+      fileNotFound: "此檔案已不存在。",
+      findNotFound: "找不到要取代的文字。",
+      workspaceNotFound: "此智慧體的工作區已不存在。",
+      conflict:
+        "此檔案在編輯期間發生了變更。請重新開啟並檢視最新版本後再儲存。",
+    },
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     resetDefaultAgents: "重設預設智慧體",
     resetDefaultAgentsDescription:
@@ -291,6 +311,7 @@ export const zhTW: LocaleMessages = {
       "讓智慧體透過執行橋在本機或遠端主機上執行 shell 命令。",
     localExecutionBridgesEmpty: "尚無執行橋",
     newLocalExecutionBridge: "新增執行橋",
+    localExecutionBridgeUntitled: "執行橋",
     localExecutionBridgeName: "執行橋名稱",
     localExecutionBridgeDescription: "描述",
     localExecutionBridgeHostName: "原生訊息主機名稱",
@@ -335,6 +356,7 @@ export const zhTW: LocaleMessages = {
     mcpImportSuccess: plural({ other: "已匯入 {count} 個 MCP 伺服器。" }),
     mcpImportNone: "貼上的 JSON 中找不到遠端 HTTP MCP 伺服器。",
     mcpImportError: "MCP 匯入失敗",
+    mcpTestError: "伺服器測試失敗",
     mcpTestServer: "測試伺服器",
     mcpTesting: "正在測試…",
     mcpTestSuccess: plural({ other: "找到 {count} 個工具。" }),
@@ -373,6 +395,7 @@ export const zhTW: LocaleMessages = {
     testingModel: "測試中",
     testModelSuccess: "模型已成功回應。",
     testModelError: "模型測試失敗",
+    fetchModelsError: "無法載入模型",
     configuredModels: "已設定模型",
     modelDisplayName: "顯示名稱",
     modelContextLength: "上下文長度",
@@ -386,6 +409,7 @@ export const zhTW: LocaleMessages = {
     importSkillZip: "匯入壓縮檔",
     importingSkillZip: "匯入中…",
     importSkillZipError: "技能匯入失敗",
+    importAgentError: "智慧體匯入失敗",
     importSkillPackageMissingEntry: "匯入的壓縮檔中找不到 SKILL.md。",
     untitledSkill: "未命名技能",
     title: "標題",
@@ -495,6 +519,7 @@ export const zhTW: LocaleMessages = {
     debugResetButton: "清除全部應用程式資料",
     debugResetting: "正在清除…",
     debugResetSuccess: "OpenBrowserAgent 資料已清除。",
+    debugResetError: "無法清除資料",
     debugLoggingTitle: "診斷記錄",
     debugLoggingDescription:
       "啟用用於串流輸出、工具和助理順序診斷的暫時性主控台記錄。",
@@ -508,4 +533,5 @@ export const zhTW: LocaleMessages = {
   contextMenu: contextMenuZhTW,
   sync: syncZhTW,
   themes: themesZhTW,
+  display: displayZhTW,
 };

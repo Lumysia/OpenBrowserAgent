@@ -3,6 +3,10 @@ import type { LocalExecutionBridgeConfig } from "./types";
 export const LOCAL_EXECUTION_BRIDGE_DEFAULT_TIMEOUT_MS = 120_000;
 export const LOCAL_EXECUTION_BRIDGE_MAX_TIMEOUT_MS = 30 * 60_000;
 
+// Stored for a bridge saved without a name; the settings show it in the UI
+// language.
+export const LOCAL_EXECUTION_BRIDGE_FALLBACK_NAME = "Execution Bridge";
+
 export const DEFAULT_LOCAL_EXECUTION_BRIDGES: LocalExecutionBridgeConfig[] = [];
 
 export function generateLocalExecutionBridgeSecret() {
@@ -44,7 +48,7 @@ export function normalizeLocalExecutionBridges(
       delete rest.enabled;
       return {
         ...rest,
-        name: bridge.name.trim() || "Execution Bridge",
+        name: bridge.name.trim() || LOCAL_EXECUTION_BRIDGE_FALLBACK_NAME,
         description: bridge.description || "",
         hostName: bridge.hostName.trim(),
         hostAddress: bridge.hostAddress?.trim() || "",

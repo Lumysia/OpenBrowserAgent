@@ -11,7 +11,7 @@
     colorScheme: "system",
     accent: { light: "#b96d8b", dark: "#dda1b7" },
   };
-  const DEFAULT_SELECTOR_PROMPT = "Select element - Esc to cancel";
+  const DEFAULT_SELECTOR_PROMPT = "Select an element — press Esc to cancel";
 
   let hovered = null;
   let currentRect = null;

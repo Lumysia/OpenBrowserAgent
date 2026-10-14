@@ -24,3 +24,52 @@ test("the system prompt asks with choices when a missing detail changes the resu
     /don't end a reply with a question ask could have offered/,
   );
 });
+
+test("the system prompt says to extract a few facts before reading a long page", () => {
+  const system = createSystemPrompt({
+    agent: DEFAULT_AGENT,
+    skills: [],
+    bridges: 0,
+  });
+  const line = system
+    .split("\n")
+    .find((item) => item.includes("call extract first"));
+  assert.ok(line, "the extract rule is in the prompt");
+  assert.match(
+    line,
+    /only a few facts from a long page, call extract first instead of reading or snapshotting it, since every page read fills the context/,
+  );
+  assert.match(
+    line,
+    /Trust its answer and quoted evidence instead of reading the same page again/,
+  );
+  assert.match(
+    line,
+    /read or snapshot it afterwards only if extract says the page does not answer, or you need the layout or to interact/,
+  );
+  assert.match(line, /Write the extract question in the user's language/);
+});
+
+test("agents without page tools get no extract rule", () => {
+  const system = createSystemPrompt({
+    agent: { ...DEFAULT_AGENT, toolGroups: [] },
+    skills: [],
+    bridges: 0,
+  });
+  assert.doesNotMatch(system, /call extract first/);
+});
+
+test("the system prompt cites only ids given after Cite as", () => {
+  const system = createSystemPrompt({
+    agent: DEFAULT_AGENT,
+    skills: [],
+    bridges: 0,
+  });
+  const line = system
+    .split("\n")
+    .find((item) => item.includes("[[cite:source_id]]"));
+  assert.equal(
+    line,
+    "- Never invent URLs or facts. Cite facts from sources as [[cite:source_id]], using only ids a tool result gave after \"Cite as:\" (or listed in <sources>); never make up an id. Workspace files, skills and the user's own messages are not sources: don't cite them.",
+  );
+});

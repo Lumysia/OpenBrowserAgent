@@ -1,12 +1,16 @@
 import { plural } from "../plural";
 import { contextMenuDeDE } from "./context-menu/de-DE";
+import { displayDeDE } from "./display/de-DE";
 import { smartBarDeDE } from "./smart-bar/de-DE";
 import { syncDeDE } from "./sync/de-DE";
 import { themesDeDE } from "./themes/de-DE";
 import type { LocaleMessages } from "./en-US";
 
 export const deDE: LocaleMessages = {
-  app: { tagline: "Ihr KI-Agent im Browser" },
+  app: {
+    tagline: "Ihr KI-Agent im Browser",
+    brandLine: "OpenBrowserAgent – {tagline}",
+  },
   common: {
     add: "Hinzufügen",
     cancel: "Abbrechen",
@@ -14,6 +18,8 @@ export const deDE: LocaleMessages = {
     save: "Speichern",
     saved: "Gespeichert",
     settings: "Einstellungen",
+    plainText: "Text",
+    errorDetail: "{message}: {detail}",
     copy: "Kopieren",
     copied: "Kopiert",
     edit: "Bearbeiten",
@@ -22,7 +28,7 @@ export const deDE: LocaleMessages = {
     confirm: "Bestätigen",
     moreInfo: "Mehr Infos",
   },
-  words: { newChat: "Neuer Chat", agent: "Browsen", ask: "Fragen" },
+  words: { newChat: "Neuer Chat", agent: "Browsen", ask: "Fragen stellen" },
   sidepanel: {
     connectProviderTitle: "OpenBrowserAgent einrichten",
     connectProviderDescription:
@@ -116,6 +122,7 @@ export const deDE: LocaleMessages = {
       reasoning: "Reasoning",
       estimated: "ca.",
       tokenUnit: "tok.",
+      perSecond: "{value}/s",
       modelCalls: "Modellaufrufe",
       largestRequest: "Größte Anfrage",
       cachedShare: "{percent} % der Eingabe aus dem Cache",
@@ -159,9 +166,13 @@ export const deDE: LocaleMessages = {
       other: "{count} weitere Quellen anzeigen",
     }),
     showFewerSources: "Weniger Quellen anzeigen",
-    unavailableAttachments: "{count} nicht verfügbar",
+    unavailableAttachments: plural({
+      one: "{count} nicht verfügbar",
+      other: "{count} nicht verfügbar",
+    }),
     allOpenTabs: "Alle geöffneten Tabs",
     selectElement: "Element auswählen",
+    selectElementPrompt: "Element auswählen – Esc zum Abbrechen",
     selectModel: "Modell auswählen",
     reasoningEffort: "Reasoning-Aufwand",
     reasoningEffortDescription: "Nur für unterstützte Reasoning-Modelle.",
@@ -174,8 +185,11 @@ export const deDE: LocaleMessages = {
     send: "Senden",
     queueMessage: "Nachricht einreihen",
     queuedMessages: "Eingereihte Nachrichten",
-    queuedMessagesDescription:
-      "{count} warten. Sie werden nach der aktuellen Antwort gesendet.",
+    queuedMessagesDescription: plural({
+      one: "{count} Nachricht wartet. Sie wird nach der aktuellen Antwort gesendet.",
+      other:
+        "{count} Nachrichten warten. Sie werden nach der aktuellen Antwort gesendet.",
+    }),
     editingMessage: "Nachricht wird bearbeitet",
     editingMessageDescription:
       "Nur das Eingabefeld ist aktiv. Drücken Sie Esc oder „Abbrechen“, um die Bearbeitung zu beenden.",
@@ -211,7 +225,10 @@ export const deDE: LocaleMessages = {
         running: "Antwort wird extrahiert",
         done: "Antwort extrahiert",
       },
-      act: { running: "Seite wird bedient", done: "Seite bedient" },
+      act: {
+        running: "Interagiert mit der Seite",
+        done: "Mit der Seite interagiert",
+      },
       editPage: { running: "Seite wird bearbeitet", done: "Seite bearbeitet" },
       webSearch: { running: "Websuche läuft", done: "Websuche abgeschlossen" },
       screenshot: {
@@ -337,8 +354,20 @@ export const deDE: LocaleMessages = {
     agentWorkspaceDescription:
       "Private Dateien dieses Agenten. MEMORY.md und USER.md sieht er immer, andere liest er bei Bedarf.",
     agentWorkspaceNewFile: "Neue Arbeitsbereichsdatei",
-    agentWorkspaceConflict:
-      "Diese Datei wurde während der Bearbeitung geändert. Öffnen Sie sie erneut, um vor dem Speichern die aktuelle Version zu prüfen.",
+    agentWorkspaceErrors: {
+      pathRequired: "Geben Sie einen Dateipfad ein.",
+      pathTooLong: "Ein Dateipfad darf höchstens {limit} Zeichen lang sein.",
+      relativePath: "Ein Dateipfad darf keine Abschnitte . oder .. enthalten.",
+      fileTooLarge: "Eine Datei darf höchstens {limit} Zeichen enthalten.",
+      workspaceTooLarge:
+        "Der Arbeitsbereich darf insgesamt höchstens {limit} Zeichen enthalten.",
+      fileNotFound: "Diese Datei existiert nicht mehr.",
+      findNotFound: "Der zu ersetzende Text wurde nicht gefunden.",
+      workspaceNotFound:
+        "Der Arbeitsbereich dieses Agenten existiert nicht mehr.",
+      conflict:
+        "Diese Datei wurde während der Bearbeitung geändert. Öffnen Sie sie erneut, um vor dem Speichern die aktuelle Version zu prüfen.",
+    },
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     resetDefaultAgents: "Standard-Agenten zurücksetzen",
     resetDefaultAgentsDescription:
@@ -351,6 +380,7 @@ export const deDE: LocaleMessages = {
       "Agenten führen über eine Bridge Shell-Befehle auf diesem Computer oder einem entfernten Host aus.",
     localExecutionBridgesEmpty: "Noch keine Ausführungs-Bridges",
     newLocalExecutionBridge: "Neue Ausführungs-Bridge",
+    localExecutionBridgeUntitled: "Ausführungs-Bridge",
     localExecutionBridgeName: "Name der Ausführungs-Bridge",
     localExecutionBridgeDescription: "Beschreibung",
     localExecutionBridgeHostName: "Name des Native-Messaging-Hosts",
@@ -401,6 +431,7 @@ export const deDE: LocaleMessages = {
     mcpImportNone:
       "Keine entfernten HTTP-MCP-Server im eingefügten JSON gefunden.",
     mcpImportError: "MCP-Import fehlgeschlagen",
+    mcpTestError: "Servertest fehlgeschlagen",
     mcpTestServer: "Server testen",
     mcpTesting: "Wird getestet…",
     mcpTestSuccess: plural({
@@ -409,8 +440,8 @@ export const deDE: LocaleMessages = {
     }),
     mcpTools: "Verfügbare Tools",
     deleteMcpServer: "MCP-Server löschen",
-    resetDefaults: "Auf Standard zurücksetzen",
-    resetBuiltins: "Integrierte zurücksetzen",
+    resetDefaults: "Alle zurücksetzen",
+    resetBuiltins: "Nur integrierte zurücksetzen",
     resetDefaultMcpServers: "Standard-MCP-Server zurücksetzen",
     resetDefaultMcpServersDescription:
       "Stellt die integrierten MCP-Server wieder her und entfernt benutzerdefinierte.",
@@ -445,6 +476,7 @@ export const deDE: LocaleMessages = {
     testingModel: "Wird getestet",
     testModelSuccess: "Modell hat erfolgreich geantwortet.",
     testModelError: "Modelltest fehlgeschlagen",
+    fetchModelsError: "Modelle konnten nicht geladen werden",
     configuredModels: "Konfigurierte Modelle",
     modelDisplayName: "Anzeigename",
     modelContextLength: "Kontextlänge",
@@ -458,6 +490,7 @@ export const deDE: LocaleMessages = {
     importSkillZip: "Archiv importieren",
     importingSkillZip: "Wird importiert…",
     importSkillZipError: "Skill-Import fehlgeschlagen",
+    importAgentError: "Agent-Import fehlgeschlagen",
     importSkillPackageMissingEntry:
       "SKILL.md wurde im importierten Archiv nicht gefunden.",
     untitledSkill: "Unbenannter Skill",
@@ -580,6 +613,7 @@ export const deDE: LocaleMessages = {
     debugResetButton: "Alle App-Daten löschen",
     debugResetting: "Wird gelöscht…",
     debugResetSuccess: "OpenBrowserAgent-Daten wurden gelöscht.",
+    debugResetError: "Daten konnten nicht gelöscht werden",
     debugLoggingTitle: "Diagnoseprotokolle",
     debugLoggingDescription:
       "Aktiviert temporäre Konsolenprotokolle zur Diagnose der Reihenfolge von Stream-, Tool- und Assistentenereignissen.",
@@ -593,4 +627,5 @@ export const deDE: LocaleMessages = {
   contextMenu: contextMenuDeDE,
   sync: syncDeDE,
   themes: themesDeDE,
+  display: displayDeDE,
 };

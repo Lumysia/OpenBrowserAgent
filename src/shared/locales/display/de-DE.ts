@@ -1,0 +1,162 @@
+import { plural } from "../../plural";
+import type { DisplayMessages } from "./en-US";
+
+export const displayDeDE: DisplayMessages = {
+  counts: {
+    models: plural({ one: "{count} Modell", other: "{count} Modelle" }),
+    files: plural({ one: "{count} Datei", other: "{count} Dateien" }),
+    characters: plural({ one: "{count} Zeichen", other: "{count} Zeichen" }),
+  },
+  providerTypes: {
+    openai: "OpenAI-kompatibel",
+    "openai-responses": "OpenAI Responses",
+    anthropic: "Anthropic-kompatibel",
+  },
+  builtinMcpServers: {
+    exa: "Websuche und Extraktion von Webseiteninhalten.",
+    parallel: "Websuche mit Auszügen und Abruf von Webseiten.",
+    tinyfish: "Web- und Nachrichtensuche.",
+    firecrawl:
+      "Websuche, Auslesen von Webseiten und Dokumentanalyse. Niedriges kostenloses Anfragelimit.",
+  },
+  builtinSkills: {
+    "fill-form": {
+      name: "Formular ausfüllen",
+      description:
+        "Füllt Webformulare mit Ihren Angaben oder aus einer Datei aus, prüft jedes Feld und sendet nur ab, wenn Sie es sagen.",
+    },
+    "tidy-tabs": {
+      name: "Tabs aufräumen",
+      description:
+        "Schließt doppelte Tabs, gruppiert zusammengehörige und findet Tabs, die Sie nicht mehr brauchen.",
+    },
+    "openbrowseragent-help": {
+      name: "OpenBrowserAgent-Hilfe",
+      description:
+        "Beantwortet Fragen zur Nutzung und Einrichtung von OpenBrowserAgent.",
+    },
+    "skill-creator": {
+      name: "Skill-Ersteller",
+      description:
+        "Erstellt, speichert oder verbessert Skills, zum Beispiel aus einer Aufgabe, die Sie gerade erledigt haben.",
+    },
+    "local-execution-bridge-setup": {
+      name: "Lokale Ausführungs-Bridge einrichten",
+      description:
+        "Richtet eine lokale Ausführungs-Bridge ein, testet, aktualisiert oder entfernt sie, damit Agenten Befehle auf Ihrem Computer ausführen können.",
+    },
+  },
+  errors: {
+    noModel:
+      "Es ist kein Modell eingerichtet. Fügen Sie unter „Einstellungen“ → „Anbieter“ einen Anbieter hinzu.",
+    subAgentStopped: "Der Subagent wurde gestoppt.",
+    baseUrlRequired: "Geben Sie eine Basis-URL ein.",
+  },
+  toolSteps: {
+    failed: "Fehlgeschlagen",
+    page: "Seite",
+    tabs: plural({ one: "{count} Tab", other: "{count} Tabs" }),
+    lines: plural({ one: "{count} Zeile", other: "{count} Zeilen" }),
+    matchingLines: plural({
+      one: "{count} passende Zeile",
+      other: "{count} passende Zeilen",
+    }),
+    matchingLinesWithOccurrences: plural({
+      one: "{count} passende Zeile ({occurrences})",
+      other: "{count} passende Zeilen ({occurrences})",
+    }),
+    occurrences: plural({
+      one: "{count} Vorkommen",
+      other: "{count} Vorkommen",
+    }),
+    results: plural({ one: "{count} Ergebnis", other: "{count} Ergebnisse" }),
+    items: plural({ one: "{count} Eintrag", other: "{count} Einträge" }),
+    tools: plural({ one: "{count} Tool", other: "{count} Tools" }),
+    editsApplied: plural({
+      one: "{applied} von {count} Änderung übernommen",
+      other: "{applied} von {count} Änderungen übernommen",
+    }),
+    actions: {
+      open: "Geöffnet",
+      switch: "Gewechselt zu",
+      close: "Geschlossen",
+      navigate: "Aufgerufen",
+      back: "Zurückgegangen",
+      forward: "Vorwärtsgegangen",
+      reload: "Neu geladen",
+      group: "Gruppiert",
+      ungroup: "Gruppierung aufgehoben",
+      list: "Aufgelistet",
+      search: "Gesucht",
+      read: "Gelesen",
+      write: "Geschrieben",
+      append: "Angehängt",
+      replace: "Text ersetzt",
+      delete: "Gelöscht",
+      create: "Erstellt",
+      patch: "Bearbeitet",
+      add: "Hinzugefügt",
+      update: "Aktualisiert",
+      test: "Getestet",
+      status: "Status abgefragt",
+      resources: "Netzwerkressourcen aufgelistet",
+      emulate: "Gerät emuliert",
+      reset: "Emulation zurückgesetzt",
+      markdown: "Als Markdown exportiert",
+      images: "Bilder gespeichert",
+      run: "Ausgeführt",
+      start: "Gestartet",
+      cancel: "Abgebrochen",
+    },
+    commandStates: {
+      running: "Läuft",
+      done: "Fertig",
+      error: "Fehlgeschlagen",
+      canceled: "Abgebrochen",
+      missing: "Aufgabe nicht gefunden",
+    },
+    actStepSeparator: ", ",
+    actSteps: {
+      click: plural({
+        one: "{count} Element angeklickt",
+        other: "{count} Elemente angeklickt",
+      }),
+      type: plural({
+        one: "{count} Feld ausgefüllt",
+        other: "{count} Felder ausgefüllt",
+      }),
+      press: plural({
+        one: "{count} Taste gedrückt",
+        other: "{count} Tasten gedrückt",
+      }),
+      select: plural({
+        one: "{count} Option ausgewählt",
+        other: "{count} Optionen ausgewählt",
+      }),
+      hover: plural({
+        one: "auf {count} Element gezeigt",
+        other: "auf {count} Elemente gezeigt",
+      }),
+      scroll: plural({
+        one: "{count}-mal gescrollt",
+        other: "{count}-mal gescrollt",
+      }),
+      wait: plural({
+        one: "{count}-mal gewartet",
+        other: "{count}-mal gewartet",
+      }),
+      drag: plural({
+        one: "{count} Element gezogen",
+        other: "{count} Elemente gezogen",
+      }),
+      dialog: plural({
+        one: "{count} Dialog beantwortet",
+        other: "{count} Dialoge beantwortet",
+      }),
+      other: plural({
+        one: "{count} weiteren Schritt ausgeführt",
+        other: "{count} weitere Schritte ausgeführt",
+      }),
+    },
+  },
+};

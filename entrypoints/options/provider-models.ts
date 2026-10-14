@@ -7,6 +7,7 @@ import {
   type ProviderId,
 } from "../../src/shared/types";
 import { loadOllamaModels } from "./ollama-models";
+import { USER_ERROR_CODE, UserError } from "../../src/shared/user-errors";
 
 export async function loadProviderModels(
   providerId: string,
@@ -58,7 +59,11 @@ async function loadOpenAICompatibleModels(
     providerDefaultBaseUrls[provider] ||
     ""
   ).replace(/\/$/, "");
-  if (!baseUrl) throw new Error("Base URL is required");
+  if (!baseUrl)
+    throw new UserError(
+      USER_ERROR_CODE.baseUrlRequired,
+      "Base URL is required",
+    );
   const response = await fetch(`${baseUrl}/models`, {
     headers: config.apiKey
       ? { Authorization: `Bearer ${config.apiKey}` }
@@ -91,7 +96,11 @@ async function loadAnthropicModels(
     providerDefaultBaseUrls[provider] ||
     ""
   ).replace(/\/$/, "");
-  if (!baseUrl) throw new Error("Base URL is required");
+  if (!baseUrl)
+    throw new UserError(
+      USER_ERROR_CODE.baseUrlRequired,
+      "Base URL is required",
+    );
   const response = await fetch(`${baseUrl}/models`, {
     headers: {
       "anthropic-version": "2023-06-01",

@@ -44,8 +44,22 @@ export function resolveLanguage(language?: string) {
 
 export type Messages = LocaleMessages;
 
-// Fills `{count}` into the plural form the active language uses for it.
-export function formatCount(message: Plural, count: number) {
-  const form = new Intl.PluralRules(resolveLanguage()).select(count);
-  return (message[form] ?? message.other).replaceAll("{count}", String(count));
+// Fills `{count}` into the plural form the active language uses for it,
+// and any other `{name}` placeholders from `values`.
+export function formatCount(
+  message: Plural,
+  count: number,
+  values: Record<string, string | number> = {},
+) {
+  const language = resolveLanguage();
+  const form = new Intl.PluralRules(language).select(count);
+  const number = new Intl.NumberFormat(language);
+  return Object.entries({ ...values, count }).reduce(
+    (text, [key, value]) =>
+      text.replaceAll(
+        `{${key}}`,
+        typeof value === "number" ? number.format(value) : value,
+      ),
+    message[form] ?? message.other,
+  );
 }

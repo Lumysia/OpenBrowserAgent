@@ -1,12 +1,16 @@
 import { plural } from "../plural";
 import { contextMenuZhCN } from "./context-menu/zh-CN";
+import { displayZhCN } from "./display/zh-CN";
 import { smartBarZhCN } from "./smart-bar/zh-CN";
 import { syncZhCN } from "./sync/zh-CN";
 import { themesZhCN } from "./themes/zh-CN";
 import type { LocaleMessages } from "./en-US";
 
 export const zhCN: LocaleMessages = {
-  app: { tagline: "浏览器中的 AI 智能体" },
+  app: {
+    tagline: "浏览器中的 AI 智能体",
+    brandLine: "OpenBrowserAgent——{tagline}",
+  },
   common: {
     add: "添加",
     cancel: "取消",
@@ -14,6 +18,8 @@ export const zhCN: LocaleMessages = {
     save: "保存",
     saved: "已保存",
     settings: "设置",
+    plainText: "文本",
+    errorDetail: "{message}：{detail}",
     copy: "复制",
     copied: "已复制",
     edit: "编辑",
@@ -106,6 +112,7 @@ export const zhCN: LocaleMessages = {
       reasoning: "推理",
       estimated: "估算",
       tokenUnit: "tok.",
+      perSecond: "{value}/秒",
       modelCalls: "模型调用",
       largestRequest: "最大请求",
       cachedShare: "{percent}% 输入命中缓存",
@@ -145,9 +152,10 @@ export const zhCN: LocaleMessages = {
     forkChat: "分叉对话",
     showMoreSources: plural({ other: "展开剩余 {count} 个来源" }),
     showFewerSources: "收起来源",
-    unavailableAttachments: "{count} 个不可用",
+    unavailableAttachments: plural({ other: "{count} 个不可用" }),
     allOpenTabs: "所有打开的标签页",
     selectElement: "选择元素",
+    selectElementPrompt: "选择元素（按 Esc 取消）",
     selectModel: "选择模型",
     reasoningEffort: "推理强度",
     reasoningEffortDescription: "仅对支持推理的模型生效。",
@@ -160,7 +168,9 @@ export const zhCN: LocaleMessages = {
     send: "发送",
     queueMessage: "加入队列",
     queuedMessages: "排队中的消息",
-    queuedMessagesDescription: "{count} 条等待中，会在当前回复结束后发送。",
+    queuedMessagesDescription: plural({
+      other: "{count} 条等待中，会在当前回复结束后发送。",
+    }),
     editingMessage: "正在编辑消息",
     editingMessageDescription:
       "只有输入区可操作。按 Esc 或点击“取消”停止编辑。",
@@ -277,8 +287,18 @@ export const zhCN: LocaleMessages = {
     agentWorkspaceDescription:
       "此智能体的私有文件。智能体始终能看到 MEMORY.md 和 USER.md，其他文件按需读取。",
     agentWorkspaceNewFile: "新建工作区文件",
-    agentWorkspaceConflict:
-      "此文件在编辑期间发生了更改。请重新打开并查看最新版本后再保存。",
+    agentWorkspaceErrors: {
+      pathRequired: "请输入文件路径。",
+      pathTooLong: "文件路径最多 {limit} 个字符。",
+      relativePath: "文件路径不能包含 . 或 .. 段。",
+      fileTooLarge: "单个文件最多 {limit} 个字符。",
+      workspaceTooLarge: "工作区总共最多 {limit} 个字符。",
+      fileNotFound: "此文件已不存在。",
+      findNotFound: "未找到要替换的文本。",
+      workspaceNotFound: "此智能体的工作区已不存在。",
+      conflict:
+        "此文件在编辑期间发生了更改。请重新打开并查看最新版本后再保存。",
+    },
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     resetDefaultAgents: "重置默认智能体",
     resetDefaultAgentsDescription:
@@ -291,6 +311,7 @@ export const zhCN: LocaleMessages = {
       "让智能体通过执行桥在本机或远程主机上运行 shell 命令。",
     localExecutionBridgesEmpty: "还没有执行桥",
     newLocalExecutionBridge: "新建执行桥",
+    localExecutionBridgeUntitled: "执行桥",
     localExecutionBridgeName: "执行桥名称",
     localExecutionBridgeDescription: "描述",
     localExecutionBridgeHostName: "原生消息主机名",
@@ -335,6 +356,7 @@ export const zhCN: LocaleMessages = {
     mcpImportSuccess: plural({ other: "已导入 {count} 个 MCP 服务器。" }),
     mcpImportNone: "粘贴的 JSON 中没有找到远程 HTTP MCP 服务器。",
     mcpImportError: "MCP 导入失败",
+    mcpTestError: "服务器测试失败",
     mcpTestServer: "测试服务器",
     mcpTesting: "正在测试…",
     mcpTestSuccess: plural({ other: "找到 {count} 个工具。" }),
@@ -373,6 +395,7 @@ export const zhCN: LocaleMessages = {
     testingModel: "测试中",
     testModelSuccess: "模型已成功响应。",
     testModelError: "模型测试失败",
+    fetchModelsError: "无法加载模型",
     configuredModels: "已配置模型",
     modelDisplayName: "显示名称",
     modelContextLength: "上下文长度",
@@ -386,6 +409,7 @@ export const zhCN: LocaleMessages = {
     importSkillZip: "导入压缩包",
     importingSkillZip: "导入中…",
     importSkillZipError: "技能导入失败",
+    importAgentError: "智能体导入失败",
     importSkillPackageMissingEntry: "导入的压缩包中未找到 SKILL.md。",
     untitledSkill: "未命名技能",
     title: "标题",
@@ -495,6 +519,7 @@ export const zhCN: LocaleMessages = {
     debugResetButton: "清除全部应用数据",
     debugResetting: "正在清除…",
     debugResetSuccess: "OpenBrowserAgent 数据已清除。",
+    debugResetError: "无法清除数据",
     debugLoggingTitle: "诊断日志",
     debugLoggingDescription:
       "启用用于流式输出、工具和助手顺序诊断的临时控制台日志。",
@@ -508,4 +533,5 @@ export const zhCN: LocaleMessages = {
   contextMenu: contextMenuZhCN,
   sync: syncZhCN,
   themes: themesZhCN,
+  display: displayZhCN,
 };

@@ -218,22 +218,20 @@
 }
 :is(.sent-tabs-chip, .sent-tab-chip) strong {
   min-width: 0;
-  display: block;
+  display: flex;
   align-items: center;
   gap: var(--space-1);
   font-size: var(--text-xs);
   font-weight: 500;
 }
-/* The title shortens with an ellipsis; the tab count after it stays whole. */
-.sent-tabs-chip strong {
-  display: flex;
-}
+/* The title shortens with an ellipsis; the count after it stays whole. */
 .sent-chip-title {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.sent-tabs-chip strong em {
+:is(.sent-tabs-chip, .sent-tab-chip) strong em {
   flex: 0 0 auto;
   font-style: normal;
   font-weight: 500;

@@ -285,7 +285,7 @@ function resultMessage(
 ) {
   switch (result.status) {
     case "error":
-      return result.error || t.emptyResult;
+      return result.error || t.connectionLost;
     case "tooLong":
       return t.selectionTooLong.replace(
         "{max}",

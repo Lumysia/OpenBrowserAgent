@@ -1,5 +1,5 @@
 import { Pencil, Trash2 } from "lucide-react";
-import type { Messages } from "../../src/shared/i18n";
+import { formatCount, type Messages } from "../../src/shared/i18n";
 import { Button, IconTooltip, UserText } from "../../src/ui/components";
 import type { QueuedMessage } from "./use-queued-messages";
 import { useDeferredRemove } from "./use-deferred-remove";
@@ -22,10 +22,7 @@ export function QueuedMessages({
       <div className="queued-messages-header">
         <strong>{t.sidepanel.queuedMessages}</strong>
         <small>
-          {t.sidepanel.queuedMessagesDescription.replace(
-            "{count}",
-            String(messages.length),
-          )}
+          {formatCount(t.sidepanel.queuedMessagesDescription, messages.length)}
         </small>
       </div>
       {messages.map((message) => (

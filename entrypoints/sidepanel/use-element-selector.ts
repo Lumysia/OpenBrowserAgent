@@ -45,7 +45,7 @@ export function useElementSelector(t: Messages) {
     setSelectingElement(true);
     const injected = await injectElementSelector(
       tab.id,
-      `${t.sidepanel.selectElement} - Esc ${t.common.cancel}`,
+      t.sidepanel.selectElementPrompt,
     ).catch(() => false);
     if (!injected) setSelectingElement(false);
   }

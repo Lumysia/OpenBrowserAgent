@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { Cpu, Loader2, Plus, Server, Trash2 } from "lucide-react";
 import { QUICK_FEEDBACK_MS } from "../../src/shared/config";
-import { getMessages } from "../../src/shared/i18n";
+import { formatCount, getMessages } from "../../src/shared/i18n";
 import { MANUAL_MODEL_PROVIDER_TYPES } from "../../src/shared/provider-instances";
 import { storage } from "../../src/shared/storage";
 import {
   providerDefaultBaseUrls,
-  providerLabels,
   type ModelConfig,
   type ProviderConfig,
   type ProviderId,
@@ -32,11 +31,16 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../../src/ui/components";
+import {
+  providerNameDisplay,
+  providerTypeLabel,
+} from "../../src/ui/provider-display";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { FetchedModelPicker, ModelList } from "./provider-controls";
 import { modelWithProviderLabel, renameProviderDraft } from "./provider-drafts";
 import { loadProviderModels } from "./provider-models";
 import { testProviderModel } from "./test-provider-model";
+import { errorWithDetail } from "../../src/ui/error-text";
 
 const baseUrlOptions: Partial<Record<ProviderId, string[]>> = {
   glm: ["https://api.z.ai/api/paas/v4", "https://open.bigmodel.cn/api/paas/v4"],
@@ -118,7 +122,7 @@ export function ProviderAccordion({
       );
       setSelectedFetchedModelId(firstAvailable?.id || "");
     } catch (error) {
-      setError(error instanceof Error ? error.message : String(error));
+      setError(errorWithDetail(t.options.fetchModelsError, error, t));
     } finally {
       setFetching(false);
     }
@@ -164,7 +168,7 @@ export function ProviderAccordion({
       setTestResult({
         modelId: model.id,
         ok: false,
-        message: `${t.options.testModelError}: ${error instanceof Error ? error.message : String(error)}`,
+        message: errorWithDetail(t.options.testModelError, error, t),
       });
     } finally {
       setTestingModelId("");
@@ -175,13 +179,14 @@ export function ProviderAccordion({
     <AccordionItem value={providerId}>
       <AccordionTrigger>
         <span className="settings-section-title provider-trigger-title">
-          <Server size={18} /> {value.label || providerLabels[provider]}
+          <Server size={18} />{" "}
+          {value.label
+            ? providerNameDisplay(value.label, t)
+            : providerTypeLabel(provider, t)}
         </span>
         <span className="provider-summary">
-          <Badge>{providerLabels[provider]}</Badge>
-          <Badge>
-            {models.length} {t.options.models}
-          </Badge>
+          <Badge>{providerTypeLabel(provider, t)}</Badge>
+          <Badge>{formatCount(t.display.counts.models, models.length)}</Badge>
         </span>
       </AccordionTrigger>
       <AccordionContent>
@@ -197,7 +202,7 @@ export function ProviderAccordion({
               {t.options.providerName}
               <Input
                 value={draft.label ?? ""}
-                placeholder={providerLabels[provider]}
+                placeholder={providerTypeLabel(provider, t)}
                 onChange={(event) =>
                   setDraft(renameProviderDraft(draft, event.target.value))
                 }

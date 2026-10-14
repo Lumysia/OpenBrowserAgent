@@ -171,7 +171,7 @@ test(
           ]);
           assert.match(
             found,
-            /1 matches for "pelican":\n- text \[e\d+\]: Far below: the secret word is pelican\./,
+            /1 matching line \(1 occurrence\) for "pelican":\n- text \[e\d+\]: Far below: the secret word is pelican\./,
           );
           assert.match(missing, /No match/);
         },
@@ -355,7 +355,10 @@ test(
             snapshot,
             /Slotted words \[button "Slotted button" e\d+\]/,
           );
-          assert.match(found, /1 matches for "Slotted"/);
+          assert.match(
+            found,
+            /1 matching line \(2 occurrences\) for "Slotted"/,
+          );
           const table = await open("/table");
           const [counted] = await fixture.run([
             { name: "snapshot", args: { tabId: table } },
@@ -408,7 +411,10 @@ test(
           const [loaded] = await fixture.run([
             { name: "toolSearch", args: { names: ["runScript"] } },
           ]);
-          assert.equal(loaded, "Loaded runScript. Call them directly now.");
+          assert.equal(
+            loaded,
+            "Newly loaded: runScript. Call tools directly by these exact names.",
+          );
           const before = fixture.requests[0].tools.map(
             (tool) => tool.function.name,
           );

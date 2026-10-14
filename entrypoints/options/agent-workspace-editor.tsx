@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Check, FileText, Pencil, Plus, Trash2 } from "lucide-react";
-import type { Messages } from "../../src/shared/i18n";
+import { formatCount, type Messages } from "../../src/shared/i18n";
 import type { AgentWorkspace } from "../../src/shared/types";
 import {
   deleteWorkspaceFile,
@@ -9,10 +9,8 @@ import {
   workspaceTotalChars,
   type WorkspaceMutationResult,
 } from "../../src/shared/workspace";
-import {
-  mutateWorkspace,
-  WORKSPACE_FILE_CONFLICT,
-} from "../../src/shared/workspace-storage";
+import { workspaceFailure } from "../../src/shared/workspace-errors";
+import { mutateWorkspace } from "../../src/shared/workspace-storage";
 import {
   Accordion,
   AccordionItem,
@@ -26,6 +24,7 @@ import {
 } from "../../src/ui/components";
 import { Feedback } from "../../src/ui/components/feedback";
 import { SkillFileActionButton } from "./skill-options-components";
+import { workspaceErrorText } from "./workspace-error-text";
 
 type Draft = {
   originalPath: string;
@@ -68,13 +67,7 @@ export function AgentWorkspaceEditor({
   ) {
     try {
       const result = await mutateWorkspace({ ...workspace }, mutate);
-      setError(
-        result.ok
-          ? ""
-          : result.error === WORKSPACE_FILE_CONFLICT
-            ? t.options.agentWorkspaceConflict
-            : result.error,
-      );
+      setError(result.ok ? "" : workspaceErrorText(result.code, t));
       return result.ok;
     } catch (error) {
       setError(error instanceof Error ? error.message : String(error));
@@ -84,7 +77,7 @@ export function AgentWorkspaceEditor({
 
   async function createFile() {
     const path = normalizeWorkspacePath(newPath);
-    if (!path.ok) return setError(path.error);
+    if (!path.ok) return setError(workspaceErrorText(path.code, t));
     setNewPath("");
     // An existing path opens that file rather than replacing it with "".
     if (fileContent(workspace.files, path.path) !== undefined) {
@@ -109,13 +102,13 @@ export function AgentWorkspaceEditor({
     const submitted = draft;
     if (!submitted) return;
     const path = normalizeWorkspacePath(submitted.path);
-    if (!path.ok) return setError(path.error);
+    if (!path.ok) return setError(workspaceErrorText(path.code, t));
     const saved = await save((current) => {
       if (
         fileContent(current.files, submitted.originalPath) !==
         submitted.baseContent
       )
-        return { ok: false, error: WORKSPACE_FILE_CONFLICT };
+        return workspaceFailure("conflict");
       if (path.path !== submitted.originalPath) {
         const deleted = deleteWorkspaceFile(current, submitted.originalPath);
         if (!deleted.ok) return deleted;
@@ -143,7 +136,7 @@ export function AgentWorkspaceEditor({
     const deleted = await save((current) =>
       fileContent(current.files, path) === shown
         ? deleteWorkspaceFile(current, path)
-        : { ok: false, error: WORKSPACE_FILE_CONFLICT },
+        : workspaceFailure("conflict"),
     );
     if (deleted && draft?.originalPath === path) setDraft(undefined);
   }
@@ -155,7 +148,7 @@ export function AgentWorkspaceEditor({
           <SettingsSummary
             icon={<FileText size={15} />}
             title={t.options.agentWorkspace}
-            description={`${workspace.files.length} files · ${workspaceTotalChars(workspace.files)} chars`}
+            description={`${formatCount(t.display.counts.files, workspace.files.length)} · ${formatCount(t.display.counts.characters, workspaceTotalChars(workspace.files))}`}
           />
         </AccordionTrigger>
         <AccordionContent>
@@ -186,7 +179,11 @@ export function AgentWorkspaceEditor({
                           {file.path}
                         </span>
                         <small>
-                          {file.kind} · utf-8 · {file.content.length} chars
+                          {file.kind} · utf-8 ·{" "}
+                          {formatCount(
+                            t.display.counts.characters,
+                            file.content.length,
+                          )}
                         </small>
                       </span>
                       <div className="option-file-actions">

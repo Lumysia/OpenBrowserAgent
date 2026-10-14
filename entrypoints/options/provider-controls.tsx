@@ -6,7 +6,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
-import { getMessages } from "../../src/shared/i18n";
+import { getMessages, type Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import {
   providerLabels,
@@ -40,6 +40,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../../src/ui/components";
+import { modelNameDisplay } from "../../src/ui/provider-display";
 import { useStoredState } from "../../src/ui/useStoredState";
 
 export function FetchedModelPicker({
@@ -126,6 +127,7 @@ function fetchedModelLabel(model: ModelConfig) {
 }
 
 export function ModelSelect({
+  t,
   label,
   value,
   models,
@@ -133,6 +135,7 @@ export function ModelSelect({
   disabled,
   onChange,
 }: {
+  t: Messages;
   label: string;
   value?: string;
   models: ModelConfig[];
@@ -157,7 +160,9 @@ export function ModelSelect({
           <SelectItem value="none">{emptyLabel}</SelectItem>
           {models.map((model) => (
             <SelectItem key={model.id} value={model.id}>
-              {model.displayName || model.name}
+              {model.displayName
+                ? modelNameDisplay(model.displayName, t)
+                : model.name}
             </SelectItem>
           ))}
         </SelectContent>

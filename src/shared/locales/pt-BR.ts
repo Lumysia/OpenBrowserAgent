@@ -1,12 +1,16 @@
 import { plural } from "../plural";
 import { contextMenuPtBR } from "./context-menu/pt-BR";
+import { displayPtBR } from "./display/pt-BR";
 import { smartBarPtBR } from "./smart-bar/pt-BR";
 import { syncPtBR } from "./sync/pt-BR";
 import { themesPtBR } from "./themes/pt-BR";
 import type { LocaleMessages } from "./en-US";
 
 export const ptBR: LocaleMessages = {
-  app: { tagline: "Seu agente de IA no navegador" },
+  app: {
+    tagline: "Seu agente de IA no navegador",
+    brandLine: "OpenBrowserAgent — {tagline}",
+  },
   common: {
     add: "Adicionar",
     cancel: "Cancelar",
@@ -14,6 +18,8 @@ export const ptBR: LocaleMessages = {
     save: "Salvar",
     saved: "Salvo",
     settings: "Configurações",
+    plainText: "Texto",
+    errorDetail: "{message}: {detail}",
     copy: "Copiar",
     copied: "Copiado",
     edit: "Editar",
@@ -114,6 +120,7 @@ export const ptBR: LocaleMessages = {
       reasoning: "Raciocínio",
       estimated: "aprox.",
       tokenUnit: "tok.",
+      perSecond: "{value}/s",
       modelCalls: "Chamadas ao modelo",
       largestRequest: "Maior solicitação",
       cachedShare: "{percent}% da entrada veio do cache",
@@ -158,9 +165,13 @@ export const ptBR: LocaleMessages = {
       other: "Mostrar mais {count} fontes",
     }),
     showFewerSources: "Mostrar menos fontes",
-    unavailableAttachments: "{count} indisponíveis",
+    unavailableAttachments: plural({
+      one: "{count} indisponível",
+      other: "{count} indisponíveis",
+    }),
     allOpenTabs: "Todas as abas abertas",
     selectElement: "Selecionar elemento",
+    selectElementPrompt: "Selecione um elemento — Esc para cancelar",
     selectModel: "Selecionar modelo",
     reasoningEffort: "Esforço de raciocínio",
     reasoningEffortDescription:
@@ -174,8 +185,11 @@ export const ptBR: LocaleMessages = {
     send: "Enviar",
     queueMessage: "Colocar mensagem na fila",
     queuedMessages: "Mensagens na fila",
-    queuedMessagesDescription:
-      "{count} aguardando. Serão enviadas após a resposta atual.",
+    queuedMessagesDescription: plural({
+      one: "{count} mensagem aguardando. Será enviada após a resposta atual.",
+      other:
+        "{count} mensagens aguardando. Serão enviadas após a resposta atual.",
+    }),
     editingMessage: "Editando mensagem",
     editingMessageDescription:
       "Só o campo de mensagem está ativo. Pressione Esc ou Cancelar para parar de editar.",
@@ -345,8 +359,20 @@ export const ptBR: LocaleMessages = {
     agentWorkspaceDescription:
       "Arquivos privados deste agente. Ele sempre vê MEMORY.md e USER.md e lê os outros quando necessário.",
     agentWorkspaceNewFile: "Novo arquivo do espaço de trabalho",
-    agentWorkspaceConflict:
-      "Este arquivo mudou durante a edição. Abra-o novamente para revisar a versão mais recente antes de salvar.",
+    agentWorkspaceErrors: {
+      pathRequired: "Informe um caminho de arquivo.",
+      pathTooLong:
+        "Um caminho de arquivo pode ter no máximo {limit} caracteres.",
+      relativePath: "Um caminho de arquivo não pode conter segmentos . ou ..",
+      fileTooLarge: "Um arquivo pode ter no máximo {limit} caracteres.",
+      workspaceTooLarge:
+        "O espaço de trabalho pode ter no máximo {limit} caracteres no total.",
+      fileNotFound: "Este arquivo não existe mais.",
+      findNotFound: "O texto a substituir não foi encontrado.",
+      workspaceNotFound: "O espaço de trabalho deste agente não existe mais.",
+      conflict:
+        "Este arquivo mudou durante a edição. Abra-o novamente para revisar a versão mais recente antes de salvar.",
+    },
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     resetDefaultAgents: "Redefinir agentes padrão",
     resetDefaultAgentsDescription:
@@ -359,6 +385,7 @@ export const ptBR: LocaleMessages = {
       "Permite que agentes executem comandos de shell neste computador ou em um host remoto por meio de uma ponte.",
     localExecutionBridgesEmpty: "Ainda não há pontes de execução",
     newLocalExecutionBridge: "Nova ponte de execução",
+    localExecutionBridgeUntitled: "Ponte de execução",
     localExecutionBridgeName: "Nome da ponte de execução",
     localExecutionBridgeDescription: "Descrição",
     localExecutionBridgeHostName: "Nome do host de mensagens nativas",
@@ -407,6 +434,7 @@ export const ptBR: LocaleMessages = {
     }),
     mcpImportNone: "Nenhum servidor MCP HTTP remoto encontrado no JSON colado.",
     mcpImportError: "Falha ao importar MCP",
+    mcpTestError: "Falha no teste do servidor",
     mcpTestServer: "Testar servidor",
     mcpTesting: "Testando…",
     mcpTestSuccess: plural({
@@ -450,6 +478,7 @@ export const ptBR: LocaleMessages = {
     testingModel: "Testando",
     testModelSuccess: "O modelo respondeu com sucesso.",
     testModelError: "Falha no teste do modelo",
+    fetchModelsError: "Não foi possível carregar os modelos",
     configuredModels: "Modelos configurados",
     modelDisplayName: "Nome exibido",
     modelContextLength: "Comprimento de contexto",
@@ -463,6 +492,7 @@ export const ptBR: LocaleMessages = {
     importSkillZip: "Importar pacote",
     importingSkillZip: "Importando…",
     importSkillZipError: "Falha ao importar habilidade",
+    importAgentError: "Falha ao importar o agente",
     importSkillPackageMissingEntry:
       "SKILL.md não foi encontrado no pacote importado.",
     untitledSkill: "Habilidade sem título",
@@ -584,6 +614,7 @@ export const ptBR: LocaleMessages = {
     debugResetButton: "Limpar todos os dados do app",
     debugResetting: "Limpando…",
     debugResetSuccess: "Os dados do OpenBrowserAgent foram limpos.",
+    debugResetError: "Não foi possível limpar os dados",
     debugLoggingTitle: "Logs de diagnóstico",
     debugLoggingDescription:
       "Ativa logs temporários no console para diagnosticar a ordem do streaming, das ferramentas e das respostas do assistente.",
@@ -597,4 +628,5 @@ export const ptBR: LocaleMessages = {
   contextMenu: contextMenuPtBR,
   sync: syncPtBR,
   themes: themesPtBR,
+  display: displayPtBR,
 };

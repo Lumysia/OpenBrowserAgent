@@ -25,6 +25,7 @@ export const smartBarEnUS = {
   noVoice: "No voice installed for {language}.",
   writing: "Writing…",
   emptyResult: "The model returned no text.",
+  connectionLost: "Lost the connection to OpenBrowserAgent. Try again.",
   selectionChanged: "The selected text changed. Copy the result instead.",
   selectionTooLong:
     "The selection is too long (over {max} characters). Continue in the side panel instead.",

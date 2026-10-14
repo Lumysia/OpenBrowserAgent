@@ -5,9 +5,6 @@
   "extDescription": {
     "message": "OpenBrowserAgent lleva agentes de IA a tu navegador para ayudarte a automatizar tareas de forma inteligente."
   },
-  "selectorPrompt": {
-    "message": "Selecciona un elemento · Esc para cancelar"
-  },
   "smartBarCommand": {
     "message": "Mostrar la barra inteligente para el texto seleccionado"
   }

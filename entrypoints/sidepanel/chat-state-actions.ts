@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
+import { formatDateTime } from "../../src/shared/format";
 import type { Chat, ChatMessage, ChatSummary } from "../../src/shared/types";
 import type { SummariesUpdater } from "./use-chats";
 
@@ -226,13 +227,13 @@ function relinkChildMetadata(
 }
 
 function forkTitle(title: string, forkLabel: string, now: number) {
-  const time = new Intl.DateTimeFormat(undefined, {
+  const time = formatDateTime(now, {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-  }).format(now);
+  });
   return `${title} · ${forkLabel} ${time}`;
 }
 

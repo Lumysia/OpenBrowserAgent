@@ -1,12 +1,16 @@
 import { plural } from "../plural";
 import { contextMenuFrFR } from "./context-menu/fr-FR";
+import { displayFrFR } from "./display/fr-FR";
 import { smartBarFrFR } from "./smart-bar/fr-FR";
 import { syncFrFR } from "./sync/fr-FR";
 import { themesFrFR } from "./themes/fr-FR";
 import type { LocaleMessages } from "./en-US";
 
 export const frFR: LocaleMessages = {
-  app: { tagline: "Votre agent IA dans le navigateur" },
+  app: {
+    tagline: "Votre agent IA dans le navigateur",
+    brandLine: "OpenBrowserAgent – {tagline}",
+  },
   common: {
     add: "Ajouter",
     cancel: "Annuler",
@@ -14,6 +18,8 @@ export const frFR: LocaleMessages = {
     save: "Enregistrer",
     saved: "Enregistré",
     settings: "Paramètres",
+    plainText: "Texte",
+    errorDetail: "{message} : {detail}",
     copy: "Copier",
     copied: "Copié",
     edit: "Modifier",
@@ -115,6 +121,7 @@ export const frFR: LocaleMessages = {
       reasoning: "Raisonnement",
       estimated: "env.",
       tokenUnit: "tok.",
+      perSecond: "{value}/s",
       modelCalls: "Appels au modèle",
       largestRequest: "Plus grande requête",
       cachedShare: "{percent} % de l’entrée depuis le cache",
@@ -159,9 +166,13 @@ export const frFR: LocaleMessages = {
       other: "Afficher {count} sources de plus",
     }),
     showFewerSources: "Afficher moins de sources",
-    unavailableAttachments: "{count} indisponibles",
+    unavailableAttachments: plural({
+      one: "{count} indisponible",
+      other: "{count} indisponibles",
+    }),
     allOpenTabs: "Tous les onglets ouverts",
     selectElement: "Sélectionner un élément",
+    selectElementPrompt: "Sélectionnez un élément – Échap pour annuler",
     selectModel: "Sélectionner un modèle",
     reasoningEffort: "Effort de raisonnement",
     reasoningEffortDescription:
@@ -175,8 +186,11 @@ export const frFR: LocaleMessages = {
     send: "Envoyer",
     queueMessage: "Mettre en file d’attente",
     queuedMessages: "Messages en file d’attente",
-    queuedMessagesDescription:
-      "{count} en attente. Ils seront envoyés après la réponse en cours.",
+    queuedMessagesDescription: plural({
+      one: "{count} message en attente. Il sera envoyé après la réponse en cours.",
+      other:
+        "{count} messages en attente. Ils seront envoyés après la réponse en cours.",
+    }),
     editingMessage: "Modification du message",
     editingMessageDescription:
       "Seule la zone de saisie est active. Appuyez sur Échap ou Annuler pour arrêter la modification.",
@@ -341,8 +355,21 @@ export const frFR: LocaleMessages = {
     agentWorkspaceDescription:
       "Fichiers privés de cet agent. Il voit toujours MEMORY.md et USER.md et lit les autres au besoin.",
     agentWorkspaceNewFile: "Nouveau fichier d’espace de travail",
-    agentWorkspaceConflict:
-      "Ce fichier a changé pendant votre modification. Rouvrez-le pour consulter la dernière version avant d’enregistrer.",
+    agentWorkspaceErrors: {
+      pathRequired: "Saisissez un chemin de fichier.",
+      pathTooLong:
+        "Un chemin de fichier peut compter au plus {limit} caractères.",
+      relativePath:
+        "Un chemin de fichier ne peut pas contenir de segments . ou ..",
+      fileTooLarge: "Un fichier peut contenir au plus {limit} caractères.",
+      workspaceTooLarge:
+        "L’espace de travail peut contenir au plus {limit} caractères au total.",
+      fileNotFound: "Ce fichier n’existe plus.",
+      findNotFound: "Le texte à remplacer est introuvable.",
+      workspaceNotFound: "L’espace de travail de cet agent n’existe plus.",
+      conflict:
+        "Ce fichier a changé pendant votre modification. Rouvrez-le pour consulter la dernière version avant d’enregistrer.",
+    },
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     resetDefaultAgents: "Réinitialiser les agents par défaut",
     resetDefaultAgentsDescription:
@@ -355,6 +382,7 @@ export const frFR: LocaleMessages = {
       "Permettez aux agents d’exécuter des commandes shell sur cet ordinateur ou un hôte distant via un pont.",
     localExecutionBridgesEmpty: "Aucun pont d’exécution pour le moment",
     newLocalExecutionBridge: "Nouveau pont d’exécution",
+    localExecutionBridgeUntitled: "Pont d’exécution",
     localExecutionBridgeName: "Nom du pont d’exécution",
     localExecutionBridgeDescription: "Description",
     localExecutionBridgeHostName: "Nom de l’hôte de messagerie native",
@@ -403,6 +431,7 @@ export const frFR: LocaleMessages = {
     }),
     mcpImportNone: "Aucun serveur MCP HTTP distant trouvé dans le JSON collé.",
     mcpImportError: "Échec de l’importation MCP",
+    mcpTestError: "Échec du test du serveur",
     mcpTestServer: "Tester le serveur",
     mcpTesting: "Test en cours…",
     mcpTestSuccess: plural({
@@ -446,6 +475,7 @@ export const frFR: LocaleMessages = {
     testingModel: "Test en cours…",
     testModelSuccess: "Le modèle a répondu correctement.",
     testModelError: "Échec du test du modèle",
+    fetchModelsError: "Impossible de charger les modèles",
     configuredModels: "Modèles configurés",
     modelDisplayName: "Nom affiché",
     modelContextLength: "Longueur de contexte",
@@ -459,6 +489,7 @@ export const frFR: LocaleMessages = {
     importSkillZip: "Importer une archive",
     importingSkillZip: "Importation…",
     importSkillZipError: "Échec de l’importation de la compétence",
+    importAgentError: "Échec de l’importation de l’agent",
     importSkillPackageMissingEntry:
       "SKILL.md est introuvable dans l’archive importée.",
     untitledSkill: "Compétence sans titre",
@@ -582,6 +613,7 @@ export const frFR: LocaleMessages = {
     debugResetButton: "Effacer toutes les données de l’application",
     debugResetting: "Effacement…",
     debugResetSuccess: "Les données OpenBrowserAgent ont été effacées.",
+    debugResetError: "Impossible d’effacer les données",
     debugLoggingTitle: "Journaux de diagnostic",
     debugLoggingDescription:
       "Active des journaux de console temporaires pour diagnostiquer l’ordre du flux, des outils et de l’assistant.",
@@ -595,4 +627,5 @@ export const frFR: LocaleMessages = {
   contextMenu: contextMenuFrFR,
   sync: syncFrFR,
   themes: themesFrFR,
+  display: displayFrFR,
 };

@@ -1,12 +1,16 @@
 import { plural } from "../plural";
 import { contextMenuJaJP } from "./context-menu/ja-JP";
+import { displayJaJP } from "./display/ja-JP";
 import { smartBarJaJP } from "./smart-bar/ja-JP";
 import { syncJaJP } from "./sync/ja-JP";
 import { themesJaJP } from "./themes/ja-JP";
 import type { LocaleMessages } from "./en-US";
 
 export const jaJP: LocaleMessages = {
-  app: { tagline: "ブラウザーの中の AI エージェント" },
+  app: {
+    tagline: "ブラウザーの中の AI エージェント",
+    brandLine: "OpenBrowserAgent — {tagline}",
+  },
   common: {
     add: "追加",
     cancel: "キャンセル",
@@ -14,6 +18,8 @@ export const jaJP: LocaleMessages = {
     save: "保存",
     saved: "保存済み",
     settings: "設定",
+    plainText: "テキスト",
+    errorDetail: "{message}：{detail}",
     copy: "コピー",
     copied: "コピーしました",
     edit: "編集",
@@ -112,6 +118,7 @@ export const jaJP: LocaleMessages = {
       reasoning: "推論",
       estimated: "（推定）",
       tokenUnit: "トークン",
+      perSecond: "{value}/秒",
       modelCalls: "モデル呼び出し",
       largestRequest: "最大リクエスト",
       cachedShare: "入力の {percent}% をキャッシュから取得",
@@ -153,9 +160,10 @@ export const jaJP: LocaleMessages = {
     forkChat: "チャットを分岐",
     showMoreSources: plural({ other: "残り{count}件のソースを表示" }),
     showFewerSources: "ソースを折りたたむ",
-    unavailableAttachments: "{count}件利用不可",
+    unavailableAttachments: plural({ other: "{count}件利用不可" }),
     allOpenTabs: "開いているすべてのタブ",
     selectElement: "要素を選択",
+    selectElementPrompt: "要素を選択（Esc でキャンセル）",
     selectModel: "モデルを選択",
     reasoningEffort: "推論強度",
     reasoningEffortDescription: "推論対応モデルでのみ有効です。",
@@ -168,8 +176,9 @@ export const jaJP: LocaleMessages = {
     send: "送信",
     queueMessage: "キューに追加",
     queuedMessages: "キュー内のメッセージ",
-    queuedMessagesDescription:
-      "{count}件待機中です。現在の応答が終わると送信されます。",
+    queuedMessagesDescription: plural({
+      other: "{count}件待機中です。現在の応答が終わると送信されます。",
+    }),
     editingMessage: "メッセージを編集中",
     editingMessageDescription:
       "入力欄のみ操作できます。Esc キーまたは「キャンセル」で編集を終了します。",
@@ -326,8 +335,19 @@ export const jaJP: LocaleMessages = {
     agentWorkspaceDescription:
       "このエージェント専用のファイル。MEMORY.md と USER.md は常に渡され、ほかのファイルは必要なときに読み込まれます。",
     agentWorkspaceNewFile: "新しいワークスペースファイル",
-    agentWorkspaceConflict:
-      "編集中にこのファイルが変更されました。保存する前に開き直して最新の内容を確認してください。",
+    agentWorkspaceErrors: {
+      pathRequired: "ファイルパスを入力してください。",
+      pathTooLong: "ファイルパスは{limit}文字以内にしてください。",
+      relativePath: "ファイルパスに . や .. は使えません。",
+      fileTooLarge: "1つのファイルに保存できるのは{limit}文字までです。",
+      workspaceTooLarge:
+        "ワークスペース全体で保存できるのは{limit}文字までです。",
+      fileNotFound: "このファイルはもう存在しません。",
+      findNotFound: "置換するテキストが見つかりませんでした。",
+      workspaceNotFound: "このエージェントのワークスペースはもう存在しません。",
+      conflict:
+        "編集中にこのファイルが変更されました。保存する前に開き直して最新の内容を確認してください。",
+    },
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     resetDefaultAgents: "既定のエージェントにリセット",
     resetDefaultAgentsDescription:
@@ -340,6 +360,7 @@ export const jaJP: LocaleMessages = {
       "ブリッジ経由で、このコンピューターやリモートホスト上のシェルコマンドをエージェントが実行できます。",
     localExecutionBridgesEmpty: "実行ブリッジはまだありません",
     newLocalExecutionBridge: "新しい実行ブリッジ",
+    localExecutionBridgeUntitled: "実行ブリッジ",
     localExecutionBridgeName: "実行ブリッジ名",
     localExecutionBridgeDescription: "説明",
     localExecutionBridgeHostName: "ネイティブメッセージングホスト名",
@@ -388,6 +409,7 @@ export const jaJP: LocaleMessages = {
     mcpImportNone:
       "貼り付けた JSON にリモート HTTP MCP サーバーが見つかりませんでした。",
     mcpImportError: "MCP インポートに失敗しました",
+    mcpTestError: "サーバーのテストに失敗しました",
     mcpTestServer: "サーバーをテスト",
     mcpTesting: "テスト中…",
     mcpTestSuccess: plural({ other: "{count}個のツールが見つかりました。" }),
@@ -428,6 +450,7 @@ export const jaJP: LocaleMessages = {
     testingModel: "テスト中",
     testModelSuccess: "モデルが正常に応答しました。",
     testModelError: "モデルテストに失敗しました",
+    fetchModelsError: "モデルを読み込めませんでした",
     configuredModels: "設定済みモデル",
     modelDisplayName: "表示名",
     modelContextLength: "コンテキスト長",
@@ -441,6 +464,7 @@ export const jaJP: LocaleMessages = {
     importSkillZip: "アーカイブをインポート",
     importingSkillZip: "インポート中…",
     importSkillZipError: "スキルのインポートに失敗しました",
+    importAgentError: "エージェントのインポートに失敗しました",
     importSkillPackageMissingEntry:
       "インポートしたアーカイブに SKILL.md が見つかりません。",
     untitledSkill: "無題のスキル",
@@ -562,6 +586,7 @@ export const jaJP: LocaleMessages = {
     debugResetButton: "すべてのアプリデータを消去",
     debugResetting: "消去中…",
     debugResetSuccess: "OpenBrowserAgent のデータを消去しました。",
+    debugResetError: "データを消去できませんでした",
     debugLoggingTitle: "診断ログ",
     debugLoggingDescription:
       "ストリーム、ツール、アシスタントの順序診断用の一時的なコンソールログを有効にします。",
@@ -575,4 +600,5 @@ export const jaJP: LocaleMessages = {
   contextMenu: contextMenuJaJP,
   sync: syncJaJP,
   themes: themesJaJP,
+  display: displayJaJP,
 };

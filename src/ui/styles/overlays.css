@@ -125,6 +125,7 @@
   font-weight: 500;
   line-height: 1.25;
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 .ui-tooltip-content.ui-info-tip-content {
   max-width: min(300px, calc(100vw - 24px));

@@ -27,6 +27,8 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
   noVoice: "Keine Stimme für {language} installiert.",
   writing: "Wird geschrieben…",
   emptyResult: "Das Modell hat keinen Text geliefert.",
+  connectionLost:
+    "Die Verbindung zu OpenBrowserAgent wurde unterbrochen. Versuchen Sie es erneut.",
   selectionChanged:
     "Der markierte Text hat sich geändert. Kopieren Sie stattdessen das Ergebnis.",
   selectionTooLong:

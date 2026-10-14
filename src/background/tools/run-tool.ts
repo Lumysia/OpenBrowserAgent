@@ -81,7 +81,11 @@ export async function runTool(
   // No await between reading and updating `sources`, so parallel calls never
   // assign the same id twice.
   const now = Date.now();
-  const { sources: merged, added } = assignChatSources(
+  const {
+    sources: merged,
+    added,
+    cited,
+  } = assignChatSources(
     sources.current,
     (result.sources || []).map((source) => ({
       ...source,
@@ -90,8 +94,10 @@ export async function runTool(
     })),
   );
   sources.current = merged;
-  const cite = added.length
-    ? `\nCite as: ${added.map((source) => `[[cite:${source.id}]] ${source.title}`).join("; ")}`
+  // Sources the chat already had keep their ids and are named again, so the
+  // model need not remember them.
+  const cite = cited.length
+    ? `\nCite as: ${cited.map((source) => `[[cite:${source.id}]] ${source.title}`).join("; ")}`
     : "";
   return {
     text: `${result.text}${cite}`,

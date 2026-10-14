@@ -51,13 +51,14 @@ test(
       await typeComposer(page, "/");
       await poll(async () => (await options()).length >= 2);
       await page.send("Input.insertText", { text: "bridge" });
-      // Names match before descriptions.
+      // Names match before descriptions; built-in skills show a name in
+      // the UI language.
       await poll(async () => {
         const shown = await options();
         return (
           shown.length >= 1 &&
           shown.length < 5 &&
-          shown[0].name === "local-execution-bridge-setup"
+          shown[0].name === "Local execution bridge setup"
         );
       });
       await page.call(() => {
@@ -96,7 +97,8 @@ test(
       await typeComposer(page, "Help me with this.");
       await sendComposer(page);
       const sent = await chatRequest(fixture);
-      assert.match(sent, new RegExp(`<skill name=\\\\"${picked}\\\\">`));
+      // The model gets the skill under its own name, not the shown one.
+      assert.match(sent, /<skill name=\\"[a-z0-9-]+\\">/);
       assert.match(sent, /picked this skill for this request/);
       assert.match(sent, /Help me with this\./);
       // The chip is gone after sending and the message shows the skill.

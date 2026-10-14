@@ -1,4 +1,5 @@
 import { RELATIVE_TIME_MINUTE_MS } from "../../src/shared/config";
+import { formatDateTime, formatNumber } from "../../src/shared/format";
 import { formatCount, type Messages } from "../../src/shared/i18n";
 import type { ChatMeta } from "../../src/shared/types";
 
@@ -44,34 +45,29 @@ export function formatToolMessage(
 }
 
 export function formatMessageTime(value: number) {
-  return new Intl.DateTimeFormat(undefined, {
+  return formatDateTime(value, {
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  }).format(value);
+  });
 }
 
 function formatHistoryDate(value: number) {
   const date = new Date(value);
   const sameYear = date.getFullYear() === new Date().getFullYear();
-  return new Intl.DateTimeFormat(undefined, {
+  return formatDateTime(value, {
     year: sameYear ? undefined : "numeric",
     month: "short",
     day: "numeric",
-  }).format(value);
+  });
 }
 
 export function formatCompactNumber(value: number) {
-  if (Math.abs(value) >= 1_000_000_000)
-    return `${trimCompact(value / 1_000_000_000)}B`;
-  if (Math.abs(value) >= 1_000_000) return `${trimCompact(value / 1_000_000)}M`;
-  if (Math.abs(value) >= 10_000) return `${trimCompact(value / 1_000)}K`;
-  return value.toLocaleString();
-}
-
-function trimCompact(value: number) {
-  return value
-    .toFixed(value >= 100 ? 0 : value >= 10 ? 1 : 2)
-    .replace(/\.0+$/, "");
+  return Math.abs(value) >= 10_000
+    ? formatNumber(value, {
+        notation: "compact",
+        maximumSignificantDigits: 3,
+      })
+    : formatNumber(value);
 }

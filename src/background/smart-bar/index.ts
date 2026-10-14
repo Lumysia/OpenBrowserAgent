@@ -1,5 +1,6 @@
 import { resolveAgent } from "../../shared/agents";
 import { getMessages, resolveLanguage } from "../../shared/i18n";
+import { userErrorText } from "../../shared/user-errors";
 import {
   hideSmartBarOnHost,
   isSmartBarAllowedOnHost,
@@ -251,11 +252,12 @@ function handleStreamPort(port: chrome.runtime.Port) {
     if (request.type !== "run") return;
     runAction(request, controller.signal, post)
       .then(() => post({ type: "done" }))
-      .catch((error) => {
+      .catch(async (error) => {
+        const language = await storage.language.get();
         if (controller.signal.aborted) return;
         post({
           type: "error",
-          error: error instanceof Error ? error.message : String(error),
+          error: userErrorText(error, getMessages(language)),
         });
       });
   });

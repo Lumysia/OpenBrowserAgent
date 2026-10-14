@@ -218,12 +218,11 @@ test("context menu", { timeout: 240000 }, async (t) => {
             const message = [...document.querySelectorAll(".message.user")].at(
               -1,
             );
-            const chip = message?.querySelector(".sent-tab-chip[title]");
+            const chip = message?.querySelector(".sent-tab-chip");
             return (
               chip && {
                 bubble: message.querySelector(".user-bubble").textContent,
                 chip: chip.textContent,
-                full: chip.getAttribute("title"),
               }
             );
           }),
@@ -231,8 +230,11 @@ test("context menu", { timeout: 240000 }, async (t) => {
         {
           bubble: "Search the web about the selected text",
           chip: "The quick brown fox jumps over the lazy dog.Selected text",
-          full: "The quick brown fox jumps over the lazy dog.",
         },
+      );
+      assert.equal(
+        await sentChipTooltip(panel),
+        "The quick brown fox jumps over the lazy dog.",
       );
     });
 
@@ -309,12 +311,13 @@ test("context menu", { timeout: 240000 }, async (t) => {
         await poll(() =>
           panel.call(
             () =>
-              [...document.querySelectorAll(".message.user")]
+              !![...document.querySelectorAll(".message.user")]
                 .at(-1)
-                ?.querySelector(".sent-tab-chip[title]")
-                ?.getAttribute("title") === "brown fox",
+                ?.querySelector(".sent-tab-chip")
+                ?.textContent.startsWith("brown fox"),
           ),
         );
+        assert.equal(await sentChipTooltip(panel), "brown fox");
         assert.equal(
           await panel.call(
             () =>
@@ -402,3 +405,30 @@ test("context menu", { timeout: 240000 }, async (t) => {
     await session.close();
   }
 });
+
+// The full text of the last sent chip, from the tooltip its label opens on
+// hover.
+async function sentChipTooltip(panel) {
+  const point = await panel.call(() => {
+    const label = [...document.querySelectorAll(".message.user")]
+      .at(-1)
+      .querySelector(".sent-tab-chip .sent-chip-label");
+    label.scrollIntoView({ block: "center" });
+    const rect = label.getBoundingClientRect();
+    return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+  });
+  await panel.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x: 1,
+    y: 1,
+  });
+  for (const dx of [-4, 0])
+    await panel.send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: point.x + dx,
+      y: point.y,
+    });
+  return poll(() =>
+    panel.call(() => document.querySelector('[role="tooltip"]')?.textContent),
+  );
+}

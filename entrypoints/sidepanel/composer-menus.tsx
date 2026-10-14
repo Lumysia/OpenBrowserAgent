@@ -26,6 +26,10 @@ import {
 } from "../../src/ui/components";
 import { AgentIcon } from "../../src/ui/agent-icons";
 import {
+  providerNameDisplay,
+  providerTypeLabel,
+} from "../../src/ui/provider-display";
+import {
   agentDisplayDescription,
   agentDisplayName,
 } from "../../src/ui/agent-display";
@@ -280,10 +284,10 @@ export function ModelMenu({
           onClick={() => onSelect(model.id)}
         >
           <span className="model-provider-mark">
-            {providerName(model).slice(0, 1).toUpperCase()}
+            {providerName(model, t).slice(0, 1).toUpperCase()}
           </span>
           <span>
-            <small>{providerName(model)}</small>
+            <small>{providerName(model, t)}</small>
             <strong title={modelDisplayName(model)}>
               {modelDisplayName(model)}
             </strong>
@@ -407,11 +411,13 @@ export function selectedModelLabel(
       : t.sidepanel.selectModel;
 }
 
-function providerName(model: ModelConfig) {
+function providerName(model: ModelConfig, t: Messages) {
   const fromDisplay = model.displayName?.split("/")[0]?.trim();
-  if (fromDisplay) return fromDisplay;
+  if (fromDisplay) return providerNameDisplay(fromDisplay, t);
   const provider = model.id.split(":")[0] as keyof typeof providerLabels;
-  return providerLabels[provider] || provider;
+  return Object.hasOwn(providerLabels, provider)
+    ? providerTypeLabel(provider, t)
+    : provider;
 }
 
 function modelDisplayName(model: ModelConfig) {
