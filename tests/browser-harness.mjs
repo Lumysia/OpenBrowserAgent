@@ -107,13 +107,33 @@ export async function startExtension({
 }
 
 // Answers fixture page requests from `pages[path]`: HTML, or
-// `{ html, headers }`. Returns false for other paths.
+// `{ html, headers }` (`html` may be any text or a Buffer, such as a video,
+// which is served in the ranges a media element asks for). Returns false
+// for other paths.
 export function servePages(pages, request, response) {
   const page = pages[new URL(request.url, "http://host").pathname];
   if (page === undefined) return false;
   const { html, headers } = typeof page === "string" ? { html: page } : page;
+  const range = /^bytes=(\d+)-(\d*)$/.exec(request.headers?.range || "");
+  if (Buffer.isBuffer(html) && range) {
+    const start = Number(range[1]);
+    const end = range[2] ? Number(range[2]) : html.length - 1;
+    response
+      .writeHead(206, {
+        "Content-Type": "text/html",
+        ...headers,
+        "Accept-Ranges": "bytes",
+        "Content-Range": `bytes ${start}-${end}/${html.length}`,
+      })
+      .end(html.subarray(start, end + 1));
+    return true;
+  }
   response
-    .writeHead(200, { "Content-Type": "text/html", ...headers })
+    .writeHead(200, {
+      "Content-Type": "text/html",
+      ...(Buffer.isBuffer(html) && { "Accept-Ranges": "bytes" }),
+      ...headers,
+    })
     .end(html);
   return true;
 }

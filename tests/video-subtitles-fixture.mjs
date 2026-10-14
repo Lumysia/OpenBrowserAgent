@@ -1,0 +1,209 @@
+import { readFile } from "node:fs/promises";
+import { CONTEXT_MENU_ID } from "../src/shared/context-menu.ts";
+import { poll } from "./chromium.mjs";
+import { elementCenter } from "./cdp-input.mjs";
+import { startPageTranslate } from "./page-translate-fixture.mjs";
+import { hasClass, inShadowRoot } from "./shadow-roots.mjs";
+
+// Test helpers for translated video subtitles: pages with the kinds of
+// players the feature reads (a <track>, cues a player adds over time,
+// captions drawn as page text, a player that loads its own json3 file), all
+// on our own made-up lines. The video is a silent black clip made with
+// `ffmpeg -f lavfi -i color=c=black:s=160x90:r=1 -t 200 -c:v libvpx -b:v 1k
+// -g 200 blank.webm`, long enough to seek in.
+
+export const VIDEO_SECONDS = 200;
+const video = await readFile(
+  new URL("fixtures/video/blank.webm", import.meta.url),
+);
+
+const VIDEO_TAG = `<video id="video" src="/blank.webm" muted playsinline preload="auto" style="display:block;width:640px;height:360px"`;
+const STYLE = `<style>body{margin:16px;font:16px system-ui}</style>`;
+
+// A line every five seconds, said for four.
+export const lineAt = (seconds) => `Line at ${seconds} seconds.`;
+const times = Array.from({ length: VIDEO_SECONDS / 5 }, (_, i) => i * 5);
+const clock = (seconds) =>
+  `00:${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}.000`;
+
+const vtt = [
+  "WEBVTT",
+  "",
+  ...times.flatMap((t) => [`${clock(t)} --> ${clock(t + 4)}`, lineAt(t), ""]),
+].join("\n");
+
+const json3 = JSON.stringify({
+  events: times.map((t) => ({
+    tStartMs: t * 1000,
+    dDurationMs: 4000,
+    segs: [{ utf8: `Stub line at ${t} seconds.` }],
+  })),
+});
+
+export const PAGES = {
+  "/blank.webm": { html: video, headers: { "Content-Type": "video/webm" } },
+  "/captions.vtt": { html: vtt, headers: { "Content-Type": "text/vtt" } },
+  // Served as plain text, as such players often get it.
+  "/api/captions": {
+    html: json3,
+    headers: { "Content-Type": "application/json" },
+  },
+  // A <track> the browser reads.
+  "/track": `<!doctype html><html lang="en"><head><title>A track video</title>${STYLE}</head><body>
+${VIDEO_TAG}><track id="track" kind="subtitles" srclang="en" label="English" src="/captions.vtt" default></video>
+</body></html>`,
+  // A player that adds its cues while the video plays, like HLS players.
+  "/streamed": `<!doctype html><html lang="en"><head><title>Streamed cues</title>${STYLE}</head><body>
+${VIDEO_TAG}></video>
+<script>
+const track = document.getElementById("video").addTextTrack("subtitles", "English", "en");
+track.mode = "showing";
+let next = 0;
+const add = () => { track.addCue(new VTTCue(next * 5, next * 5 + 4, "Streamed line " + next + ".")); next++; };
+add(); add();
+const timer = setInterval(() => { add(); if (next >= 40) clearInterval(timer); }, 150);
+</script>
+</body></html>`,
+  // A player that draws its captions as page text over the video, with a
+  // time display and a control that must not count as captions.
+  "/drawn": `<!doctype html><html lang="en"><head><title>Drawn captions</title>${STYLE}</head><body>
+<div id="player" style="position:relative;width:640px;height:360px">
+${VIDEO_TAG.replace('style="', 'autoplay loop style="')}></video>
+<div id="captions" style="position:absolute;left:0;right:0;bottom:40px;text-align:center"><span id="caption-line" style="background:#000;color:#fff"></span></div>
+<div style="position:absolute;left:8px;bottom:8px;color:#fff"><span id="time">0:00</span> <button id="pause">Pause</button></div>
+</div>
+<script>
+const video = document.getElementById("video");
+const lines = ["The river was high that spring.", "We waited two days to cross.", "Then the water went down."];
+let index = 0;
+setInterval(() => {
+  document.getElementById("time").textContent = "0:" + String(Math.floor(video.currentTime)).padStart(2, "0");
+  if (!video.paused) document.getElementById("caption-line").textContent = lines[index++ % lines.length];
+}, 700);
+</script>
+</body></html>`,
+  // A player that loads its own caption file when its CC button is pressed
+  // (after the user started translating), and draws nothing we can read.
+  "/stub-later": `<!doctype html><html lang="en"><head><title>Stub player</title>${STYLE}</head><body>
+${VIDEO_TAG}></video>
+<button id="cc" onclick="const r = new XMLHttpRequest(); r.open('GET', '/api/captions?fmt=json3&lang=en'); r.onload = () => { window.loaded = JSON.parse(r.responseText).events.length; }; r.send();">CC</button>
+</body></html>`,
+  // The same player that loaded its file before the user started.
+  "/stub-earlier": `<!doctype html><html lang="en"><head><title>Stub player</title>${STYLE}</head><body>
+${VIDEO_TAG}></video>
+<script>fetch("/api/captions?fmt=json3&lang=en").then((r) => r.json()).then((d) => { window.loaded = d.events.length; });</script>
+</body></html>`,
+};
+
+// The extension with the fixture model translating (every line comes back
+// as "FR: <line>"); `batches` gets each request's lines.
+export async function startSubtitles({ answer, preferences } = {}) {
+  const session = await startPageTranslate({
+    pages: PAGES,
+    answer,
+    preferences,
+  });
+  const { worker } = session;
+  return {
+    ...session,
+    // A right-click menu item clicked on the tab showing `url`.
+    clickMenuItem: async (menuItemId, url, extra = {}) => {
+      const tabId = await poll(() =>
+        worker.call(
+          async (url) => (await chrome.tabs.query({ url }))[0]?.id,
+          url,
+        ),
+      );
+      await worker.call(
+        async ({ tabId, menuItemId, parentMenuItemId, extra }) => {
+          const tab = await chrome.tabs.get(tabId);
+          chrome.contextMenus.onClicked.dispatch(
+            {
+              menuItemId,
+              parentMenuItemId,
+              editable: false,
+              frameId: 0,
+              pageUrl: tab.url,
+              ...extra,
+            },
+            tab,
+          );
+        },
+        { tabId, menuItemId, parentMenuItemId: CONTEXT_MENU_ID.parent, extra },
+      );
+    },
+  };
+}
+
+// The subtitle layer's lines: `{ original, translation }`, or null where
+// none shows.
+export function subtitles(page) {
+  return inShadowRoot(page, isLayerRoot, (root) => {
+    const layer = root?.querySelector(".layer");
+    if (!layer || layer.hidden) return null;
+    return {
+      original: layer.querySelector(".original").textContent,
+      translation: layer.querySelector(".translation").textContent,
+    };
+  });
+}
+
+// The subtitle layer's shadow root (a CDP DOM node).
+export function isLayerRoot(root) {
+  return (
+    root.shadowRootType === "closed" &&
+    root.children?.some((child) => hasClass(child, "layer"))
+  );
+}
+
+// Waits until the layer shows `original` with its translation.
+export function shownLine(page, original) {
+  return poll(async () => {
+    const shown = await subtitles(page);
+    return shown?.original === original && shown.translation ? shown : null;
+  });
+}
+
+// The corner button over the video: its center and state, or null.
+export function videoButton(page) {
+  return inShadowRoot(
+    page,
+    (root) =>
+      root.shadowRootType === "closed" &&
+      root.children?.some((child) => hasClass(child, "video-button-theme")),
+    (root) => {
+      const button = root?.querySelector(".video-button");
+      if (!button || button.hidden) return null;
+      const rect = button.getBoundingClientRect();
+      return {
+        x: rect.x + rect.width / 2,
+        y: rect.y + rect.height / 2,
+        label: button.getAttribute("aria-label"),
+        pressed: button.getAttribute("aria-pressed") === "true",
+      };
+    },
+  );
+}
+
+// Moves the mouse over the video, as a user pointing at it.
+export async function pointAtVideo(page) {
+  const center = await elementCenter(page, "#video");
+  for (const dx of [0, 10])
+    await page.send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: center.x + dx,
+      y: center.y,
+    });
+}
+
+export function seek(page, seconds) {
+  return page.call(
+    (seconds) =>
+      new Promise((resolve) => {
+        const video = document.getElementById("video");
+        video.addEventListener("seeked", () => resolve(true), { once: true });
+        video.currentTime = seconds;
+      }),
+    seconds,
+  );
+}
