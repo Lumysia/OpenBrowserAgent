@@ -2,7 +2,7 @@
 
 OpenBrowserAgent ships its interface in nine languages. This page records the words each language uses for the product's main ideas, so that new strings match what is already there. If you add or change a user-facing string, check this page first; if you introduce a new concept, add it here in the same change.
 
-Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-bar/` (the smart bar), `src/shared/locales/context-menu/` (the right-click menu) and `public/_locales/` (the extension name, description and shortcut). English (`en-US`) is the source; every other language must have every key.
+Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-bar/` (the smart bar), `src/shared/locales/context-menu/` (the right-click menu), `src/shared/locales/downloads/` (the downloads tool's step lines) and `public/_locales/` (the extension name, description and shortcut). English (`en-US`) is the source; every other language must have every key.
 
 ## General rules
 
@@ -165,6 +165,30 @@ The other tools start their line with one shared action word (`display.toolSteps
 ## Errors and default names
 
 An error the user sees starts with what failed in the UI language, then the reason (`common.errorDetail`: "Couldn’t load models: HTTP 401"; French puts a space before the colon, Chinese and Japanese use the full-width `：`). Reasons the extension knows are translated (`display.errors`); a server's or the browser's own text is shown as it came. Default names stored in English when something is created (a provider's type such as "OpenAI-compatible", a bridge saved without a name, a built-in MCP server's description) show in the UI language while they are unchanged; a name the user typed shows as typed, and stored data is never rewritten.
+
+## Downloads
+
+The agent's downloads tool saves files to the browser's own Downloads folder. Step lines name the browser's places the way the browser does: the list of downloads it keeps (where the user keeps a flagged file) and the Save dialog it opens when it asks where to save. "Saved" means the file is on disk; a download the browser holds back is "kept" by the user, using the word the browser's own button uses.
+
+A downloads step's title says what happened, not the tool's name: "Downloaded", "Saved", "Download failed", "Downloading", "Download paused", "Waiting for you" (the Save dialog is open or the browser holds a flagged file), "Canceled", "Listed downloads", "No download started"; while it runs, what it is doing ("Saving", "Waiting for a download"). Titles follow the language's tool titles (Chinese 已下载 / 正在下载, Japanese …しました / …中, Korean …됨 / … 중); French, Spanish and Portuguese name the download so no participle needs a gender ("Téléchargement terminé", "Descarga completada", "Download concluído"). The line under it carries only the file and the facts (name, size, progress, reason), since the title already has the verb. A failed download is styled like any failed step.
+
+| English                      | 简体中文         | 繁體中文           | 日本語                         | 한국어                   |
+| ---------------------------- | ---------------- | ------------------ | ------------------------------ | ------------------------ |
+| download (noun)              | 下载             | 下載               | ダウンロード                   | 다운로드                 |
+| Downloads folder             | 下载文件夹       | 下載資料夾         | ダウンロード フォルダー        | 다운로드 폴더            |
+| the browser's downloads list | 浏览器的下载列表 | 瀏覽器的下載清單   | ブラウザーのダウンロード一覧   | 브라우저의 다운로드 목록 |
+| Save dialog                  | “另存为”对话框   | 「另存新檔」對話框 | 「名前を付けて保存」ダイアログ | 저장 대화상자            |
+| keep (a flagged file)        | 保留             | 保留               | 保存                           | 유지                     |
+| show in folder               | 在文件夹中显示   | 在資料夾中顯示     | フォルダーに表示               | 폴더에서 보기            |
+
+| English                      | Français                                | Deutsch                    | Español                          | Português (Brasil)              |
+| ---------------------------- | --------------------------------------- | -------------------------- | -------------------------------- | ------------------------------- |
+| download (noun)              | téléchargement                          | Download                   | descarga                         | download                        |
+| Downloads folder             | dossier Téléchargements                 | Downloadordner             | carpeta Descargas                | pasta Downloads                 |
+| the browser's downloads list | liste des téléchargements du navigateur | Downloadliste des Browsers | lista de descargas del navegador | lista de downloads do navegador |
+| Save dialog                  | boîte de dialogue d’enregistrement      | Speichern-Dialog           | cuadro de diálogo Guardar        | caixa de diálogo Salvar         |
+| keep (a flagged file)        | conserver                               | behalten                   | conservar                        | manter                          |
+| show in folder               | afficher dans le dossier                | im Ordner anzeigen         | mostrar en la carpeta            | mostrar na pasta                |
 
 ## Notes per language
 

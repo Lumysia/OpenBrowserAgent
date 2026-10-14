@@ -2,7 +2,17 @@ import { formatCount, type Messages } from "../../src/shared/i18n";
 import type { Plural } from "../../src/shared/plural";
 import { isMcpToolName, TOOL_NAME } from "../../src/shared/tool-names";
 import { CHAT_PART_STATE, type ChatPart } from "../../src/shared/types";
-import { compactJoin, shortValue, stringValue } from "./tool-detail-format";
+import {
+  actionLabel,
+  compactJoin,
+  knownLabel,
+  shortValue,
+  stringValue,
+  type ToolRecord,
+  type ToolStepState,
+  type ToolStepOutcome,
+} from "./tool-detail-format";
+import { downloadsDetail, downloadsOutcome } from "./download-tool-display";
 import { subAgentProgressDetail } from "./sub-agent-tool-display";
 import { toolReferences } from "./tool-references";
 import { actStepsSummary } from "./tool-step-summary";
@@ -10,8 +20,6 @@ import { actStepsSummary } from "./tool-step-summary";
 const TITLE_MAX_LENGTH = 54;
 const URL_MAX_LENGTH = 42;
 const DESCRIPTION_MAX_LENGTH = 118;
-
-type ToolRecord = Record<string, unknown>;
 
 export function toolJsonDetail(name: string, part: ChatPart) {
   return JSON.stringify(
@@ -82,8 +90,7 @@ const DETAILS: Record<
       : Array.isArray(input.names)
         ? formatCount(t.display.toolSteps.tools, input.names.length)
         : stringValue(input.query),
-  [TOOL_NAME.export]: (input, output, t) =>
-    stringValue(output.filename) || actionLabel(input.action, t),
+  [TOOL_NAME.downloads]: downloadsDetail,
   [TOOL_NAME.skills]: (input, output, t) =>
     compactJoin([
       actionLabel(input.action, t),
@@ -128,6 +135,20 @@ const DETAILS: Record<
   [TOOL_NAME.devtools]: (input, output, t) => actionLabel(input.action, t),
 };
 
+// Tools whose title says what came of the step; the others show their
+// name (toolLabel) and the line from DETAILS.
+const OUTCOMES: Record<
+  string,
+  (
+    input: ToolRecord,
+    output: ToolRecord,
+    t: Messages,
+    state: ToolStepState,
+  ) => ToolStepOutcome | undefined
+> = {
+  [TOOL_NAME.downloads]: downloadsOutcome,
+};
+
 export function toolDisplay(
   name: string,
   part: ChatPart,
@@ -142,18 +163,25 @@ export function toolDisplay(
     (runEnded && part.state === CHAT_PART_STATE.inputAvailable);
   const awaitingAnswer =
     name === TOOL_NAME.ask && !Array.isArray(output.answers);
-  const title = toolLabel(name, t, done && !awaitingAnswer);
+  const errored =
+    typeof output.error === "string" ||
+    part.state === CHAT_PART_STATE.outputError;
+  const state: ToolStepState =
+    !done || awaitingAnswer ? "running" : errored ? "failed" : "done";
+  const outcome = OUTCOMES[name]?.(input, output, t, state);
+  const title = outcome?.title || toolLabel(name, t, state !== "running");
   // A failed step's error is English text for the model; the line says it
   // failed and the JSON details keep the text.
   const detail =
-    typeof output.error === "string" ||
-    part.state === CHAT_PART_STATE.outputError
+    outcome?.description ??
+    (errored
       ? t.display.toolSteps.failed
       : isMcpToolName(name)
         ? mcpToolDetail(input, output, t)
-        : DETAILS[name]?.(input, output, t) || "";
+        : DETAILS[name]?.(input, output, t) || "");
   return {
     title,
+    failed: errored || !!outcome?.failed,
     description: shortValue(detail, DESCRIPTION_MAX_LENGTH),
     references: toolReferences(name, output),
     subAgentProgress:
@@ -186,17 +214,6 @@ function findCounts(output: ToolRecord, t: Messages) {
         occurrences: formatCount(steps.occurrences, output.occurrences),
       })
     : formatCount(steps.matchingLines, lines);
-}
-
-// The localized word for a tool's `action` argument. An unknown one (from
-// a newer version, say) shows nothing rather than the raw English name.
-function actionLabel(action: unknown, t: Messages) {
-  return knownLabel(t.display.toolSteps.actions, action);
-}
-
-function knownLabel(labels: Record<string, string>, key: unknown) {
-  const name = stringValue(key);
-  return Object.hasOwn(labels, name) ? labels[name] : "";
 }
 
 function subAgentState(output: ToolRecord, t: Messages) {

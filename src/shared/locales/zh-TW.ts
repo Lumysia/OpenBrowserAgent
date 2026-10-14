@@ -1,6 +1,7 @@
 import { plural } from "../plural";
 import { contextMenuZhTW } from "./context-menu/zh-TW";
 import { displayZhTW } from "./display/zh-TW";
+import { downloadsZhTW } from "./downloads/zh-TW";
 import { smartBarZhTW } from "./smart-bar/zh-TW";
 import { syncZhTW } from "./sync/zh-TW";
 import { themesZhTW } from "./themes/zh-TW";
@@ -205,7 +206,7 @@ export const zhTW: LocaleMessages = {
       screenshot: { running: "截圖中", done: "截圖已完成" },
       ask: { running: "正在提問", done: "已回答問題" },
       toolSearch: { running: "載入工具中", done: "工具已載入" },
-      export: { running: "匯出中", done: "已匯出" },
+      downloads: { running: "正在處理下載", done: "已處理下載" },
       skills: { running: "更新技能中", done: "技能已更新" },
       workspace: { running: "更新工作區中", done: "工作區已更新" },
       chatHistory: { running: "讀取對話紀錄中", done: "對話紀錄已讀取" },
@@ -531,6 +532,7 @@ export const zhTW: LocaleMessages = {
   },
   smartBar: smartBarZhTW,
   contextMenu: contextMenuZhTW,
+  downloads: downloadsZhTW,
   sync: syncZhTW,
   themes: themesZhTW,
   display: displayZhTW,

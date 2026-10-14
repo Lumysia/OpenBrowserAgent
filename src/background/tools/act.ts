@@ -2,6 +2,10 @@ import { delay } from "../../shared/cancellation";
 import { getBrowserApi } from "../../shared/storage";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { adoptAgentTab } from "../agent-tabs";
+import {
+  downloadsStartedSince,
+  startedDownloadLines,
+} from "../downloads/page-downloads";
 import { callPage, pageTab, PageError } from "../page-agent";
 import {
   dialogLines,
@@ -110,6 +114,7 @@ export const actTool: ToolDefinition = {
       await watchDialogs(tab.id, signal);
     };
     let first = 0;
+    const since = Date.now();
     try {
       await begin();
     } catch (error) {
@@ -200,6 +205,8 @@ export const actTool: ToolDefinition = {
       lines.push(`Opened new ${tabLine(current, { mine: true }).slice(2)}`);
     }
     lines.push(...changes);
+    const downloads = await downloadsStartedSince(run, since, signal);
+    lines.push(...startedDownloadLines(downloads));
     const moved = steps.some((step) =>
       ["scroll", "wait", "dialog"].includes(step.action),
     );
@@ -209,6 +216,7 @@ export const actTool: ToolDefinition = {
       !dialogs.length &&
       !fresh &&
       !opened.length &&
+      !downloads.length &&
       !moved
     )
       lines.push(
@@ -220,6 +228,7 @@ export const actTool: ToolDefinition = {
         tabId: tab.id,
         steps: steps.length,
         done: done.length,
+        ...(downloads.length ? { downloads } : {}),
         ...(failure ? { error: failure } : {}),
       },
       isError: !!failure,

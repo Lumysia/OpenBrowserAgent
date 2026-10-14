@@ -1,6 +1,7 @@
 import { plural } from "../plural";
 import { contextMenuEsES } from "./context-menu/es-ES";
 import { displayEsES } from "./display/es-ES";
+import { downloadsEsES } from "./downloads/es-ES";
 import { smartBarEsES } from "./smart-bar/es-ES";
 import { syncEsES } from "./sync/es-ES";
 import { themesEsES } from "./themes/es-ES";
@@ -243,7 +244,10 @@ export const esES: LocaleMessages = {
         running: "Cargando herramientas",
         done: "Herramientas cargadas",
       },
-      export: { running: "Exportando", done: "Exportado" },
+      downloads: {
+        running: "Gestionando descargas",
+        done: "Descargas gestionadas",
+      },
       skills: {
         running: "Actualizando habilidades",
         done: "Habilidades actualizadas",
@@ -631,6 +635,7 @@ export const esES: LocaleMessages = {
   },
   smartBar: smartBarEsES,
   contextMenu: contextMenuEsES,
+  downloads: downloadsEsES,
   sync: syncEsES,
   themes: themesEsES,
   display: displayEsES,

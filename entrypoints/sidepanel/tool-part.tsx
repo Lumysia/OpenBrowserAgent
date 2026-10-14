@@ -2,7 +2,6 @@ import React from "react";
 import { CornerDownRight } from "lucide-react";
 import { TOOL_NAME } from "../../src/shared/tool-names";
 import type { Messages } from "../../src/shared/i18n";
-import { openOrFocusUrl } from "../../src/shared/tab-navigation";
 import {
   CHAT_PART_STATE,
   isToolPartType,
@@ -30,7 +29,8 @@ import {
 import { toolDisplay, toolJsonDetail } from "./tool-part-detail";
 import { toolIcon } from "./tool-icons";
 import { CapturedTabImage, GeneratedImage } from "./tool-media";
-import type { ToolReference } from "./tool-references";
+import { DownloadReferences } from "./download-tool-display";
+import { ToolReferenceButton } from "./tool-references";
 
 export function ToolPart({
   t,
@@ -52,12 +52,8 @@ export function ToolPart({
 }) {
   if (!isToolPartType(part.type)) return null;
   const name = part.toolName || toolNameFromPartType(part.type);
-  const { title, description, references, subAgentProgress } = toolDisplay(
-    name,
-    part,
-    t,
-    runEnded,
-  );
+  const { title, failed, description, references, subAgentProgress } =
+    toolDisplay(name, part, t, runEnded);
   const questionPending =
     name === TOOL_NAME.ask && !runEnded && isQuestionPending(part);
   const loading =
@@ -66,14 +62,13 @@ export function ToolPart({
       (part.state === CHAT_PART_STATE.streaming ||
         part.state === CHAT_PART_STATE.inputStreaming ||
         part.state === CHAT_PART_STATE.inputAvailable));
-  const isError = part.state === CHAT_PART_STATE.outputError;
   const isDone =
     part.state === CHAT_PART_STATE.outputAvailable ||
     part.state === CHAT_PART_STATE.done ||
     (runEnded && part.state === CHAT_PART_STATE.inputAvailable);
   const status = loading
     ? "loading"
-    : isError
+    : failed
       ? "error"
       : isDone
         ? "done"
@@ -154,6 +149,7 @@ export function ToolPart({
               <span>{t.sidepanel.openSubAgentChat}</span>
             </Button>
           )}
+          <DownloadReferences output={part.output} t={t} />
           {!!references.length && (
             <div className="tool-references">
               {references.map((reference, index) => (
@@ -401,24 +397,4 @@ function subAgentChildChatId(name: string, part: ChatPart) {
   const output = part.output as Record<string, unknown> | undefined;
   const childChatId = String(output?.childChatId || "").trim();
   return childChatId || undefined;
-}
-
-function ToolReferenceButton({
-  reference,
-  index,
-}: {
-  reference: ToolReference;
-  index: number;
-}) {
-  const url = reference.url;
-  return (
-    <Button
-      variant="ghost"
-      onClick={url ? () => openOrFocusUrl(url).catch(console.warn) : undefined}
-      style={{ "--tool-reference-index": index } as React.CSSProperties}
-    >
-      {reference.icon}
-      <span>{reference.title}</span>
-    </Button>
-  );
 }

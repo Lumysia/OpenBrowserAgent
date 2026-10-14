@@ -28,6 +28,14 @@ export function formatBytes(value: number, maxUnit: "kb" | "mb" = "mb") {
   });
 }
 
+// A size in text the model reads, which stays English whatever the UI
+// language ("850 B", "2.3 MB").
+export function formatBytesForModel(value: number) {
+  if (value < BYTES_PER_KIB) return `${value} B`;
+  if (value < BYTES_PER_MIB) return `${(value / BYTES_PER_KIB).toFixed(1)} KB`;
+  return `${(value / BYTES_PER_MIB).toFixed(1)} MB`;
+}
+
 // "850 ms" under a second, else seconds with two decimals ("1,25 s").
 export function formatDuration(milliseconds: number) {
   return milliseconds < MS_PER_SECOND

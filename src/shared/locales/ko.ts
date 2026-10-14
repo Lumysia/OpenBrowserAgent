@@ -1,6 +1,7 @@
 import { plural } from "../plural";
 import { contextMenuKo } from "./context-menu/ko";
 import { displayKo } from "./display/ko";
+import { downloadsKo } from "./downloads/ko";
 import { smartBarKo } from "./smart-bar/ko";
 import { syncKo } from "./sync/ko";
 import { themesKo } from "./themes/ko";
@@ -210,7 +211,7 @@ export const ko: LocaleMessages = {
       screenshot: { running: "스크린샷 찍는 중", done: "스크린샷 찍음" },
       ask: { running: "질문하는 중", done: "질문에 답변받음" },
       toolSearch: { running: "도구 불러오는 중", done: "도구 불러옴" },
-      export: { running: "내보내는 중", done: "내보냄" },
+      downloads: { running: "다운로드 처리 중", done: "다운로드 처리함" },
       skills: { running: "스킬 업데이트 중", done: "스킬 업데이트됨" },
       workspace: {
         running: "워크스페이스 업데이트 중",
@@ -563,6 +564,7 @@ export const ko: LocaleMessages = {
   },
   smartBar: smartBarKo,
   contextMenu: contextMenuKo,
+  downloads: downloadsKo,
   sync: syncKo,
   themes: themesKo,
   display: displayKo,
