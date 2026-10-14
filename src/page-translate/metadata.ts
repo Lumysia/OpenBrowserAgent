@@ -109,13 +109,33 @@ export function metadataOf(
   if (!trimmed) return undefined;
   if (isDate(trimmed, language)) return "date";
   if (isNumber(trimmed)) return "number";
-  if (isNameList(trimmed) || SITE_NAME.test(trimmed)) return "name";
+  if (isNameList(trimmed) || SITE_NAME.test(trimmed) || isLabelRow(trimmed))
+    return "name";
   // A label for a value of that kind ("Coordinates: 27°59′N 86°55′E"): the
   // label alone adds little and the value stays as it is.
   const labeled = LABELED.exec(trimmed);
   if (labeled && (isNumber(labeled[1]) || isDate(labeled[1], language)))
     return "number";
   return undefined;
+}
+
+// Short labels between separators: a menu or meta row written as text
+// ("new | past | comments", "126 points by ann | hide | 29 comments",
+// breadcrumbs "Home › News").
+const ROW_SEPARATOR = /\s[|·•›»]\s/u;
+// Words in a label on average, and in the longest (a byline with a time).
+const ROW_LABEL_WORDS = 4;
+const ROW_LONGEST_WORDS = 8;
+
+function isLabelRow(trimmed: string) {
+  const parts = trimmed.split(ROW_SEPARATOR);
+  const words = parts.map((part) => part.split(" ").length);
+  return (
+    parts.length > 1 &&
+    Math.max(...words) <= ROW_LONGEST_WORDS &&
+    words.reduce((sum, count) => sum + count, 0) / parts.length <=
+      ROW_LABEL_WORDS
+  );
 }
 
 // Footnote marks ("[2]", "[note 2]", "[a]") aren't part of what the text is.

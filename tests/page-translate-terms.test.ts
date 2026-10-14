@@ -74,7 +74,7 @@ test("metadata: dates, relative times, numbers and names, in the page's language
   assert.equal(metadataOf("2 days ago", "not a tag"), "date");
 });
 
-test("metadata: a label with a number, and numbers with footnote marks", () => {
+test("metadata: a label with a number, numbers with footnote marks, rows of labels", () => {
   assert.deepEqual(
     [
       "Coordinates: 27°59′18″N 86°55′31″E / 27.98833°N 86.92528°E",
@@ -83,8 +83,23 @@ test("metadata: a label with a number, and numbers with footnote marks", () => {
       "Ranked 1st",
       "Note: the pass closes in winter",
       "Chapter 5: Into the valley",
+      "new | past | comments | ask",
+      "126 points by ann 1 hour ago | hide | 29 comments",
+      "Home › News › World",
+      "A long headline about the storm on the coast | Exclusive",
     ].map((text) => metadataOf(text) ?? null),
-    ["number", "number", "number", null, null, null],
+    [
+      "number",
+      "number",
+      "number",
+      null,
+      null,
+      null,
+      "name",
+      "name",
+      "name",
+      null,
+    ],
   );
 });
 
