@@ -1,4 +1,5 @@
 import { isLocalEndpoint } from "../shared/provider-consent";
+import { baseUrlKey } from "../shared/provider-urls";
 import { QUICK_TASK_REASONING } from "../shared/reasoning";
 import {
   requestText,
@@ -35,10 +36,6 @@ type Queue = { active: number; waiting: Array<() => void> };
 
 const queues = new Map<string, Queue>();
 
-function endpointKey(model: Pick<ProviderModel, "baseUrl">) {
-  return model.baseUrl.trim().replace(/\/+$/, "").toLowerCase();
-}
-
 // Runs `run` in its turn on the model's endpoint. Interactive requests start
 // at once; background ones wait while the endpoint is at its concurrency,
 // counting the interactive requests that run.
@@ -48,7 +45,7 @@ export async function withQuickTaskTurn<T>(
   signal: AbortSignal | undefined,
   run: () => Promise<T>,
 ): Promise<T> {
-  const key = endpointKey(model);
+  const key = baseUrlKey(model.baseUrl);
   let queue = queues.get(key);
   if (!queue) queues.set(key, (queue = { active: 0, waiting: [] }));
   const limit = quickTaskConcurrency(model);

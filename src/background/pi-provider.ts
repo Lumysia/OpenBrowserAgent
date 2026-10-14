@@ -6,10 +6,10 @@ import type {
   AssistantMessage,
   AssistantMessageEvent,
 } from "@earendil-works/pi-ai";
-import { stream as chatStream } from "@earendil-works/pi-ai/api/openai-completions";
-import { stream as responsesStream } from "@earendil-works/pi-ai/api/openai-responses";
-import { stream as anthropicStream } from "@earendil-works/pi-ai/api/anthropic-messages";
-import { stream as googleStream } from "@earendil-works/pi-ai/api/google-generative-ai";
+import * as chatApi from "@earendil-works/pi-ai/api/openai-completions";
+import * as responsesApi from "@earendil-works/pi-ai/api/openai-responses";
+import * as anthropicApi from "@earendil-works/pi-ai/api/anthropic-messages";
+import * as googleApi from "@earendil-works/pi-ai/api/google-generative-ai";
 import type { Usage } from "@earendil-works/pi-ai";
 import { AssistantMessageEventStream } from "@earendil-works/pi-ai/utils/event-stream";
 import { normalizeContext } from "@earendil-works/pi-ai/utils/transcript";
@@ -18,8 +18,16 @@ import {
   reasoningRequestParams,
   type RequestReasoning,
 } from "../shared/reasoning";
+import { baseUrlKey } from "../shared/provider-urls";
+import type { ThinkingSwitch } from "../shared/thinking-switch";
 import type { ProviderId } from "../shared/types";
-import { quickReasoningPatch, rejectsQuickReasoning } from "./quick-reasoning";
+import { quickThinking, thinkingFieldNames } from "./quick-reasoning";
+import {
+  FIELD_REJECTION_STATUSES,
+  rejectsField,
+  requestRejection,
+  statusRecorder,
+} from "./request-rejection";
 
 export type ProviderModel = {
   provider: ProviderId;
@@ -27,6 +35,7 @@ export type ProviderModel = {
   baseUrl: string;
   modelName: string;
   contextLength?: number;
+  thinkingSwitch?: ThinkingSwitch;
 };
 
 export function piModel(model: ProviderModel): Model<Api> {
@@ -100,6 +109,18 @@ export function assistantMessage(model: Model<Api>): AssistantMessage {
   };
 }
 
+// Pi's adapter for each API the provider types use.
+const APIS = {
+  "openai-completions": chatApi,
+  "openai-responses": responsesApi,
+  "anthropic-messages": anthropicApi,
+  "google-generative-ai": googleApi,
+} as const;
+
+function apiOf(model: Model<Api>) {
+  return APIS[model.api as keyof typeof APIS] || chatApi;
+}
+
 // Transient failures (429, 5xx, network) before the response starts are
 // retried with backoff by Pi's provider wrapper (Retry-After honoured).
 const PROVIDER_RETRIES = 3;
@@ -107,13 +128,13 @@ const PROVIDER_RETRIES = 3;
 // Models that rejected mid-conversation tool declarations, for the life of
 // the service worker.
 const withoutInlineTools = new Set<string>();
-// Models that rejected the quick-task reasoning fields, likewise.
+// Models that rejected the quick-task thinking fields, likewise.
 const withoutQuickReasoning = new Set<string>();
 
 // Pi owns parsing and streaming. This adapter supplies extension configuration,
 // retries, and the product's single retries without what a model rejects:
 // image content, mid-conversation tool declarations (the tool list then
-// carries every loaded tool), or the quick-task reasoning fields. Prompt
+// carries every loaded tool), or the quick-task thinking fields. Prompt
 // caching uses Pi's defaults: Anthropic breakpoints on tools, system prompt
 // and the latest message; automatic caching elsewhere.
 export function createProviderStream(
@@ -122,28 +143,27 @@ export function createProviderStream(
   onImageRejected?: () => void,
 ): StreamFn {
   let textOnly = false;
-  const modelKey = `${configuration.baseUrl}|${configuration.modelName}`;
+  const modelKey = `${baseUrlKey(configuration.baseUrl)}|${configuration.modelName}`;
   let inlineTools = !withoutInlineTools.has(modelKey);
   const quick = reasoning === QUICK_TASK_REASONING;
   return (requested, context, options) => {
     let model = inlineTools ? requested : { ...requested, compat: undefined };
     const output = new AssistantMessageEventStream();
-    const stream =
-      model.api === "anthropic-messages"
-        ? anthropicStream
-        : model.api === "google-generative-ai"
-          ? googleStream
-          : model.api === "openai-responses"
-            ? responsesStream
-            : chatStream;
     const run = async (
       messages: Message[],
       canRetry: boolean,
     ): Promise<void> => {
-      const quickPatch =
+      const quickRequest =
         quick && !withoutQuickReasoning.has(modelKey)
-          ? quickReasoningPatch(configuration)
+          ? quickThinking(configuration, model)
           : undefined;
+      // The thinking fields Pi wrote for the quick level.
+      let quickFields: string[] = [];
+      const responses = statusRecorder(
+        model.api === "anthropic-messages"
+          ? anthropicFetch(configuration.baseUrl)
+          : undefined,
+      );
       const providerOptions = {
         ...options,
         apiKey: configuration.apiKey || "local-no-key",
@@ -155,58 +175,74 @@ export function createProviderStream(
               "x-goog-api-key": null,
             },
         maxRetries: PROVIDER_RETRIES,
+        // The Gemini SDK takes no fetch function.
         fetch:
-          model.api === "anthropic-messages"
-            ? anthropicFetch(configuration.baseUrl)
-            : undefined,
-        onPayload: (payload: unknown) =>
-          quickPatch
-            ? quickPatch(payload as Record<string, unknown>)
-            : withEffort(payload, model.api, configuration.provider, reasoning),
+          model.api === "google-generative-ai" ? undefined : responses.fetch,
+        onPayload: (payload: unknown) => {
+          if (!quickRequest)
+            return withEffort(
+              payload,
+              model.api,
+              configuration.provider,
+              reasoning,
+            );
+          quickFields = thinkingFieldNames(model.api, payload);
+          return payload;
+        },
       };
       let started = false;
       let pendingStart:
         Extract<AssistantMessageEvent, { type: "start" }> | undefined;
-      const events = stream(
-        model as never,
-        normalizeContext({ messages }),
-        providerOptions,
-      );
+      const events = quickRequest
+        ? apiOf(model).streamSimple(
+            quickRequest.model as never,
+            normalizeContext({ messages }),
+            { ...providerOptions, reasoning: quickRequest.level },
+          )
+        : apiOf(model).stream(
+            model as never,
+            normalizeContext({ messages }),
+            providerOptions,
+          );
       for await (const event of events) {
         if (event.type === "start") {
           pendingStart = event;
           continue;
         }
+        const rejection =
+          event.type === "error" && !started && event.reason !== "aborted"
+            ? requestRejection(
+                model.api,
+                event.error.errorMessage || "",
+                responses.status(),
+              )
+            : undefined;
         if (
-          event.type === "error" &&
+          rejection &&
           canRetry &&
-          !started &&
-          event.reason !== "aborted" &&
-          rejectsImages(event.error.errorMessage || "")
+          rejectsField(rejection, [IMAGE_REJECTION])
         ) {
           textOnly = true;
           onImageRejected?.();
           return run(withoutImages(messages), false);
         }
         if (
-          event.type === "error" &&
+          rejection &&
           inlineTools &&
           model.compat &&
-          !started &&
-          event.reason !== "aborted" &&
-          rejectsInlineTools(event.error.errorMessage || "")
+          rejectsField(rejection, [INLINE_TOOLS_REJECTION])
         ) {
           inlineTools = false;
           withoutInlineTools.add(modelKey);
           model = { ...model, compat: undefined };
           return run(messages, canRetry);
         }
+        // Only a refusal that names a field the quick level added: the
+        // same request is then sent without them.
         if (
-          event.type === "error" &&
-          quickPatch &&
-          !started &&
-          event.reason !== "aborted" &&
-          rejectsQuickReasoning(event.error.errorMessage || "")
+          rejection &&
+          quickRequest &&
+          rejectsField(rejection, quickFields, FIELD_REJECTION_STATUSES)
         ) {
           withoutQuickReasoning.add(modelKey);
           return run(messages, canRetry);
@@ -288,17 +324,13 @@ function anthropicFetch(baseUrl: string): typeof fetch {
   };
 }
 
-function rejectsInlineTools(error: string) {
-  return /tool_addition|tool_removal|inline-tools|\bsystem\b.{0,40}(role|message)|(role|message).{0,40}\bsystem\b/i.test(
-    error,
-  );
-}
+// Endpoints word these refusals in their own ways; the patterns cover the
+// wordings seen from the supported servers.
+const INLINE_TOOLS_REJECTION =
+  /tool_addition|tool_removal|inline-tools|\bsystem\b.{0,40}(role|message)|(role|message).{0,40}\bsystem\b/i;
 
-function rejectsImages(error: string) {
-  return /(?:image|non-text|multimodal|image_url|input_image).*?(?:unsupported|not support|unknown|invalid)|(?:unsupported|not support|unknown variant|invalid).*?(?:image|non-text|multimodal)|expected [`']?text/i.test(
-    error,
-  );
-}
+const IMAGE_REJECTION =
+  /(?:image|non-text|multimodal|image_url|input_image).*?(?:unsupported|not support|unknown|invalid)|(?:unsupported|not support|unknown variant|invalid).*?(?:image|non-text|multimodal)|expected [`']?text/i;
 
 function withoutImages(messages: Message[]): Message[] {
   return [

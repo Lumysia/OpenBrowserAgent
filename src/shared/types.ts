@@ -6,6 +6,7 @@ import type { PageTranslateSettings } from "./page-translate/settings";
 import type { ReasoningEffort } from "./reasoning";
 import type { SmartBarSettings } from "./smart-bar";
 import type { ColorScheme, ThemeId } from "./theme/themes";
+import type { ThinkingSwitch } from "./thinking-switch";
 
 export type ProviderId =
   | "gemini"
@@ -38,6 +39,8 @@ export type ProviderConfig = {
   // The user's permission to send their content to the endpoint at `host`
   // (see provider-consent.ts); valid only while the endpoint stays there.
   consent?: ProviderConsent;
+  // How quick tasks turn thinking down on this endpoint (thinking-switch.ts).
+  thinkingSwitch?: ThinkingSwitch;
 };
 
 export type ProviderConsent = { host: string; grantedAt: number };
