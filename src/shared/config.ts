@@ -52,6 +52,10 @@ export const MARKDOWN_FILENAME_MAX_LENGTH = 30;
 export const IMAGE_FILENAME_MAX_LABEL_LENGTH = 40;
 export const IMAGE_ALT_MAX_LENGTH = 50;
 export const MAX_IMAGES_PER_DOWNLOAD = 80;
+// Drawn Mermaid diagrams kept for re-renders and theme switches back.
+export const MERMAID_RENDER_CACHE_SIZE = 40;
+// A downloaded diagram PNG, in pixels per SVG unit.
+export const MERMAID_PNG_SCALE = 2;
 export const DEFAULT_SCREENSHOT_QUALITY = 35;
 export const MAX_UPLOAD_FILE_BYTES = 50_000_000;
 export const MAX_UPLOAD_TOTAL_BYTES = 200_000_000;

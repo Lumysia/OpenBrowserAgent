@@ -195,7 +195,7 @@ export const ko: LocaleMessages = {
     generatedImage: "생성된 이미지",
     capturedTabImage: "캡처한 탭 스크린샷",
     mermaidPreview: "Mermaid 다이어그램 미리보기",
-    openMermaidPreview: "Mermaid 미리보기 열기",
+    mermaidRenderFailed: "이 다이어그램을 그릴 수 없어 소스를 표시합니다.",
     downloadMermaidSvg: "SVG 다운로드",
     downloadMermaidPng: "PNG 다운로드",
     loadImage: "이미지 불러오기",

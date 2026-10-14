@@ -190,7 +190,7 @@ export const zhCN: LocaleMessages = {
     generatedImage: "生成的图片",
     capturedTabImage: "标签页截图",
     mermaidPreview: "Mermaid 图表预览",
-    openMermaidPreview: "打开 Mermaid 预览",
+    mermaidRenderFailed: "无法绘制此图表，下面显示其源代码。",
     downloadMermaidSvg: "下载 SVG",
     downloadMermaidPng: "下载 PNG",
     loadImage: "加载图片",

@@ -310,11 +310,6 @@
       transparent 58%
     ),
     color-mix(in oklab, var(--card) 94%, var(--background));
-  transition: var(--transition-interactive);
-}
-.mermaid-preview:hover {
-  box-shadow: var(--elevation-1);
-  translate: 0 -1px;
 }
 .mermaid-preview img {
   max-width: 100%;
@@ -327,7 +322,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 6px;
+  gap: var(--space-2);
   margin-top: var(--space-3);
 }
 

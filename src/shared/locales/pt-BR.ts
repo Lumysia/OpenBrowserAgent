@@ -209,7 +209,8 @@ export const ptBR: LocaleMessages = {
     generatedImage: "Imagem gerada",
     capturedTabImage: "Captura de tela da aba",
     mermaidPreview: "Prévia do diagrama Mermaid",
-    openMermaidPreview: "Abrir prévia Mermaid",
+    mermaidRenderFailed:
+      "Não foi possível desenhar este diagrama — veja o código-fonte.",
     downloadMermaidSvg: "Baixar SVG",
     downloadMermaidPng: "Baixar PNG",
     loadImage: "Carregar imagem",

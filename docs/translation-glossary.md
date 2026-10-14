@@ -64,6 +64,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | sandbox (where code runs)      | 沙盒               | 沙盒               | サンドボックス          | 샌드박스         |
 | output limit (of a model)      | 输出上限           | 輸出上限           | 出力の上限              | 출력 한도        |
 | Continue (a cut-off response)  | 继续               | 繼續               | 続ける                  | 계속하기         |
+| diagram (Mermaid)              | 图表               | 圖表               | 図                      | 다이어그램       |
 
 | English                        | Français                          | Deutsch                     | Español                               | Português (Brasil)               |
 | ------------------------------ | --------------------------------- | --------------------------- | ------------------------------------- | -------------------------------- |
@@ -108,6 +109,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | sandbox (where code runs)      | bac à sable                       | Sandbox                     | entorno aislado                       | sandbox                          |
 | output limit (of a model)      | limite de sortie                  | Ausgabelimit                | límite de salida                      | limite de saída                  |
 | Continue (a cut-off response)  | Continuer                         | Fortsetzen                  | Continuar                             | Continuar                        |
+| diagram (Mermaid)              | diagramme                         | Diagramm                    | diagrama                              | diagrama                         |
 
 The AI provider form's **thinking switch** chooses how the smart bar and page translation ask models to skip thinking: 思考开关 / 思考開關 / 思考スイッチ / 생각 스위치 / Interrupteur de réflexion / Denkschalter / Interruptor de pensamiento / Chave de pensamento. "Thinking" here is the same idea as the smart bar's "Thinking…" status. Its options keep the request field in parentheses untranslated (`enable_thinking`, `reasoning_effort`), and "Reasoning effort" uses the composer's term.
 

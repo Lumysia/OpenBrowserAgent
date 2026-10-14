@@ -89,7 +89,7 @@ export function renderMarkdownBlock(
       language || highlighted.language || t.common.plainText,
     );
     const preview = options.mermaidPreview
-      ? mermaidPreview(code, language, t)
+      ? mermaidSlot(codeIndex, language)
       : "";
     const source = preview
       ? ""
@@ -103,65 +103,14 @@ export function renderMarkdownBlock(
   return { html, codeBlocks };
 }
 
-function mermaidPreview(code: string, language: string, t: Messages) {
-  if (!isMermaidLanguage(language)) return "";
-  const encoded = encodeMermaidState(code);
-  const imageUrl = `https://mermaid.ink/svg/${encoded}?bgColor=transparent`;
-  const pngUrl = `https://mermaid.ink/img/${encoded}?type=png&bgColor=transparent`;
-  const viewUrl = `https://mermaid.live/view#base64:${encoded}`;
-  return `<div class="mermaid-preview-panel"><a class="mermaid-preview ui-skeleton" href="${escapeHtml(viewUrl)}" title="${escapeHtml(t.sidepanel.openMermaidPreview)}"><img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(t.sidepanel.mermaidPreview)}" loading="lazy" /></a><div class="mermaid-preview-actions"><button type="button" class="ui-button ui-button-secondary ui-button-sm" data-mermaid-download-url="${escapeHtml(imageUrl)}" data-mermaid-download-filename="mermaid-diagram.svg">${escapeHtml(t.sidepanel.downloadMermaidSvg)}</button><button type="button" class="ui-button ui-button-secondary ui-button-sm" data-mermaid-download-url="${escapeHtml(pngUrl)}" data-mermaid-download-filename="mermaid-diagram.png">${escapeHtml(t.sidepanel.downloadMermaidPng)}</button></div></div>`;
+// A settled Mermaid block becomes a slot the side panel draws the diagram
+// into (mermaid-preview.tsx); the source shows only if drawing fails.
+function mermaidSlot(codeIndex: number, language: string) {
+  if (!MERMAID_LANGUAGES.has(language.toLowerCase())) return "";
+  return `<div class="mermaid-preview-panel" data-mermaid-index="${codeIndex}"></div>`;
 }
 
-function isMermaidLanguage(language: string) {
-  return ["mermaid", "mmd"].includes(language.toLowerCase());
-}
-
-function encodeMermaidState(code: string) {
-  const state = JSON.stringify({
-    code,
-    mermaid: {
-      theme: "base",
-      themeVariables: mermaidThemeVariables(),
-    },
-  });
-  const bytes = new TextEncoder().encode(state);
-  let binary = "";
-  for (let index = 0; index < bytes.length; index += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
-  }
-  return btoa(binary)
-    .replaceAll("+", "-")
-    .replaceAll("/", "_")
-    .replace(/=+$/, "");
-}
-
-function mermaidThemeVariables() {
-  const style = getComputedStyle(document.documentElement);
-  const color = (name: string, fallback: string) =>
-    style.getPropertyValue(name).trim() || fallback;
-  const background = color("--card", "#ffffff");
-  const text = color("--foreground", "#161512");
-  const muted = color("--muted-foreground", "#706d65");
-  const accent = color("--accent-soft", "#f7e2ea");
-  const accentStrong = color("--accent-strong", "#a35b76");
-  const border = color("--border", "#e2e0d8");
-  return {
-    background,
-    mainBkg: background,
-    primaryColor: accent,
-    primaryTextColor: text,
-    primaryBorderColor: accentStrong,
-    secondaryColor: color("--secondary", background),
-    tertiaryColor: color("--accent-softer", background),
-    lineColor: muted,
-    textColor: text,
-    nodeBorder: accentStrong,
-    clusterBkg: background,
-    clusterBorder: border,
-    edgeLabelBackground: background,
-    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-  };
-}
+const MERMAID_LANGUAGES = new Set(["mermaid", "mmd"]);
 
 function highlightCode(code: string, language: string) {
   try {

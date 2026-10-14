@@ -198,7 +198,8 @@ export const jaJP: LocaleMessages = {
     generatedImage: "生成画像",
     capturedTabImage: "タブのスクリーンショット",
     mermaidPreview: "Mermaid 図のプレビュー",
-    openMermaidPreview: "Mermaid プレビューを開く",
+    mermaidRenderFailed:
+      "この図を描画できなかったため、ソースを表示しています。",
     downloadMermaidSvg: "SVG をダウンロード",
     downloadMermaidPng: "PNG をダウンロード",
     loadImage: "画像を読み込む",

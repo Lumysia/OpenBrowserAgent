@@ -211,7 +211,7 @@ export const enUS = {
     generatedImage: "Generated image",
     capturedTabImage: "Captured tab screenshot",
     mermaidPreview: "Mermaid diagram preview",
-    openMermaidPreview: "Open Mermaid preview",
+    mermaidRenderFailed: "Couldn’t draw this diagram, so its source is shown.",
     downloadMermaidSvg: "Download SVG",
     downloadMermaidPng: "Download PNG",
     loadImage: "Load image",

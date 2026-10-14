@@ -210,7 +210,8 @@ export const frFR: LocaleMessages = {
     generatedImage: "Image générée",
     capturedTabImage: "Capture d’écran de l’onglet",
     mermaidPreview: "Aperçu du diagramme Mermaid",
-    openMermaidPreview: "Ouvrir l’aperçu Mermaid",
+    mermaidRenderFailed:
+      "Impossible de dessiner ce diagramme : voici sa source.",
     downloadMermaidSvg: "Télécharger le SVG",
     downloadMermaidPng: "Télécharger le PNG",
     loadImage: "Charger l’image",

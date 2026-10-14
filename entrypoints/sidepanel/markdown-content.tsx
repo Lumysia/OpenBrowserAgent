@@ -1,7 +1,14 @@
-import React, { useEffect, useId, useMemo, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
 import { COPY_FEEDBACK_MS } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
-import { getBrowserApi } from "../../src/shared/storage";
 import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
 import type { ChatSource } from "../../src/shared/types";
 import { renderMarkdownBlock } from "./markdown";
@@ -11,6 +18,7 @@ import {
   type MarkdownBlocks,
 } from "./markdown-blocks";
 import type { MarkdownConfig } from "./markdown-engine";
+import { MermaidPreview } from "./mermaid-preview";
 
 // Renders an answer as Marked's top-level blocks. While it streams, only the
 // last block changes; finished blocks keep their object and skip rendering.
@@ -117,6 +125,7 @@ const MarkdownSegment = React.memo(function MarkdownSegment({
   animatedFromChar?: number;
   settled: boolean;
 }) {
+  const segment = useRef<HTMLDivElement>(null);
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const [loadedImages, setLoadedImages] = useState<string[]>([]);
   const { html, codeBlocks } = useMemo(
@@ -131,6 +140,11 @@ const MarkdownSegment = React.memo(function MarkdownSegment({
     [animatedFromChar, block, config, copiedCodeId, loadedImages, settled, t],
   );
 
+  // One object per HTML string: React sets innerHTML again whenever this
+  // object changes, which would drop the diagrams drawn into the slots.
+  const innerHtml = useMemo(() => ({ __html: html }), [html]);
+  const diagrams = useMermaidSlots(segment, html, codeBlocks);
+
   useEffect(() => {
     if (!copiedCodeId) return undefined;
     const timeout = window.setTimeout(
@@ -143,22 +157,14 @@ const MarkdownSegment = React.memo(function MarkdownSegment({
   async function handleClick(event: React.MouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
     const citation = target.closest<HTMLElement>("button[data-source-id]");
-    const download = target.closest<HTMLElement>(
-      "button[data-mermaid-download-url]",
-    );
     const copy = target.closest<HTMLElement>("button[data-code-index]");
     const image = target.closest<HTMLElement>("button[data-image-src]");
     const link = target.closest<HTMLAnchorElement>("a[href]");
-    if (!citation && !download && !copy && !image && !link?.href) return;
+    if (!citation && !copy && !image && !link?.href) return;
     event.preventDefault();
     event.stopPropagation();
     if (citation)
       openCitationSource(citation.dataset.sourceId || "", config.sources);
-    else if (download)
-      await downloadUrlAsFile(
-        download.dataset.mermaidDownloadUrl || "",
-        download.dataset.mermaidDownloadFilename || "mermaid-diagram.svg",
-      );
     else if (copy) {
       const code = codeBlocks[Number(copy.dataset.codeIndex)];
       if (!code) return;
@@ -179,23 +185,44 @@ const MarkdownSegment = React.memo(function MarkdownSegment({
   }
 
   return (
-    <div
-      className="markdown-segment"
-      onClick={handleClick}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <>
+      <div
+        ref={segment}
+        className="markdown-segment"
+        onClick={handleClick}
+        dangerouslySetInnerHTML={innerHtml}
+      />
+      {diagrams.map(({ slot, code }, index) =>
+        createPortal(<MermaidPreview t={t} code={code} />, slot, index),
+      )}
+    </>
   );
 });
 
-async function downloadUrlAsFile(url: string, filename: string) {
-  const response = await fetch(url, { credentials: "omit" });
-  if (!response.ok) throw new Error("Unable to download file");
-  const objectUrl = URL.createObjectURL(await response.blob());
-  try {
-    await getBrowserApi().downloads.download({ url: objectUrl, filename });
-  } finally {
-    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
-  }
+type MermaidSlot = { slot: HTMLElement; code: string };
+
+// The Mermaid slots in the segment's HTML (markdown.ts), found again each
+// time the HTML is replaced, so the diagrams are drawn into the new ones.
+function useMermaidSlots(
+  segment: React.RefObject<HTMLDivElement | null>,
+  html: string,
+  codeBlocks: string[],
+) {
+  const [slots, setSlots] = useState<MermaidSlot[]>([]);
+  useLayoutEffect(() => {
+    const found = [
+      ...(segment.current?.querySelectorAll<HTMLElement>(
+        "[data-mermaid-index]",
+      ) ?? []),
+    ].map((slot) => ({
+      slot,
+      code: codeBlocks[Number(slot.dataset.mermaidIndex)] ?? "",
+    }));
+    setSlots((current) =>
+      current.length === 0 && found.length === 0 ? current : found,
+    );
+  }, [segment, html, codeBlocks]);
+  return slots;
 }
 
 function openCitationSource(sourceId: string, sources: ChatSource[]) {
