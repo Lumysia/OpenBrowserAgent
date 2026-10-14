@@ -13,8 +13,10 @@ export const displayEnUS = {
   },
   providerTypes: {
     openai: "OpenAI-compatible",
-    "openai-responses": "OpenAI Responses",
+    "openai-responses": "OpenAI Responses-compatible",
     anthropic: "Anthropic-compatible",
+    gemini: "Gemini-compatible",
+    ollama: "Ollama-compatible",
   },
   // Built-in MCP servers, by name: what each offers.
   builtinMcpServers: {

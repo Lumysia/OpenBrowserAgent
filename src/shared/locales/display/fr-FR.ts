@@ -12,8 +12,10 @@ export const displayFrFR: DisplayMessages = {
   },
   providerTypes: {
     openai: "Compatible OpenAI",
-    "openai-responses": "OpenAI Responses",
+    "openai-responses": "Compatible OpenAI Responses",
     anthropic: "Compatible Anthropic",
+    gemini: "Compatible Gemini",
+    ollama: "Compatible Ollama",
   },
   builtinMcpServers: {
     exa: "Recherche web et extraction du contenu des pages.",

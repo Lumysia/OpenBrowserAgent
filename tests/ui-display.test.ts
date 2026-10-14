@@ -22,6 +22,13 @@ test("default provider names show in the UI language, chosen ones as typed", () 
   assert.equal(providerNameDisplay("OpenAI-compatible", zh), "OpenAI 兼容");
   assert.equal(providerNameDisplay("My OpenAI", zh), "My OpenAI");
   assert.equal(providerNameDisplay("OpenRouter", zh), "OpenRouter");
+  assert.equal(providerNameDisplay("Gemini-compatible", zh), "Gemini 兼容");
+  // Default names stored by older versions follow the new wording too.
+  assert.equal(providerNameDisplay("Ollama", zh), "Ollama 兼容");
+  assert.equal(
+    providerNameDisplay("OpenAI Responses", zh),
+    "OpenAI Responses 兼容",
+  );
   assert.equal(
     modelNameDisplay("Anthropic-compatible / claude / v2", zh),
     "Anthropic 兼容 / claude / v2",

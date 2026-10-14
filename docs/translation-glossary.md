@@ -185,7 +185,7 @@ The other tools start their line with one shared action word (`display.toolSteps
 
 ## Errors and default names
 
-An error the user sees starts with what failed in the UI language, then the reason (`common.errorDetail`: "Couldn’t load models: HTTP 401"; French puts a space before the colon, Chinese and Japanese use the full-width `：`). Reasons the extension knows are translated (`display.errors`); a server's or the browser's own text is shown as it came. Default names stored in English when something is created (a provider's type such as "OpenAI-compatible", a bridge saved without a name, a built-in MCP server's description) show in the UI language while they are unchanged; a name the user typed shows as typed, and stored data is never rewritten.
+An error the user sees starts with what failed in the UI language, then the reason (`common.errorDetail`: "Couldn’t load models: HTTP 401"; French puts a space before the colon, Chinese and Japanese use the full-width `：`). Reasons the extension knows are translated (`display.errors`); a server's or the browser's own text is shown as it came. Default names stored in English when something is created (a provider's type such as "OpenAI-compatible"; every type that names another company's API reads "…-compatible": OpenAI, OpenAI Responses, Anthropic, Gemini, Ollama; older default names without it show the same way, a bridge saved without a name, a built-in MCP server's description) show in the UI language while they are unchanged; a name the user typed shows as typed, and stored data is never rewritten.
 
 ## Downloads
 

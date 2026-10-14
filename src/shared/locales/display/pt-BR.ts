@@ -12,8 +12,10 @@ export const displayPtBR: DisplayMessages = {
   },
   providerTypes: {
     openai: "Compatível com OpenAI",
-    "openai-responses": "OpenAI Responses",
+    "openai-responses": "Compatível com OpenAI Responses",
     anthropic: "Compatível com Anthropic",
+    gemini: "Compatível com Gemini",
+    ollama: "Compatível com Ollama",
   },
   builtinMcpServers: {
     exa: "Pesquisa na web e extração do conteúdo de páginas.",

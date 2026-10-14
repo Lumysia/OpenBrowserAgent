@@ -1,5 +1,9 @@
 import type { Messages } from "../shared/i18n";
-import { providerLabels, type ProviderId } from "../shared/types";
+import {
+  legacyProviderLabels,
+  providerLabels,
+  type ProviderId,
+} from "../shared/types";
 
 // The kind of API a provider speaks, in the UI language. Brand names stay
 // as they are; only words like "compatible" are translated.
@@ -14,7 +18,7 @@ export function providerTypeLabel(type: ProviderId, t: Messages) {
 // not changed.
 export function providerNameDisplay(name: string, t: Messages) {
   const type = (Object.keys(providerLabels) as ProviderId[]).find(
-    (id) => providerLabels[id] === name,
+    (id) => providerLabels[id] === name || legacyProviderLabels[id] === name,
   );
   return type ? providerTypeLabel(type, t) : name;
 }
