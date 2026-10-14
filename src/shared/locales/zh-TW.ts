@@ -1,12 +1,16 @@
 import { plural } from "../plural";
 import { contextMenuZhTW } from "./context-menu/zh-TW";
+import { displayZhTW } from "./display/zh-TW";
 import { smartBarZhTW } from "./smart-bar/zh-TW";
 import { syncZhTW } from "./sync/zh-TW";
 import { themesZhTW } from "./themes/zh-TW";
 import type { LocaleMessages } from "./en-US";
 
 export const zhTW: LocaleMessages = {
-  app: { tagline: "瀏覽器中的 AI 智慧體" },
+  app: {
+    tagline: "瀏覽器中的 AI 智慧體",
+    brandLine: "OpenBrowserAgent——{tagline}",
+  },
   common: {
     add: "新增",
     cancel: "取消",
@@ -145,9 +149,10 @@ export const zhTW: LocaleMessages = {
     forkChat: "分叉對話",
     showMoreSources: plural({ other: "展開剩餘 {count} 個來源" }),
     showFewerSources: "收起來源",
-    unavailableAttachments: "{count} 個不可用",
+    unavailableAttachments: plural({ other: "{count} 個不可用" }),
     allOpenTabs: "所有開啟的分頁",
     selectElement: "選擇元素",
+    selectElementPrompt: "選擇元素（按 Esc 取消）",
     selectModel: "選擇模型",
     reasoningEffort: "推理強度",
     reasoningEffortDescription: "僅對支援推理的模型生效。",
@@ -160,7 +165,9 @@ export const zhTW: LocaleMessages = {
     send: "傳送",
     queueMessage: "加入佇列",
     queuedMessages: "佇列中的訊息",
-    queuedMessagesDescription: "{count} 則等待中，會在目前回覆結束後傳送。",
+    queuedMessagesDescription: plural({
+      other: "{count} 則等待中，會在目前回覆結束後傳送。",
+    }),
     editingMessage: "正在編輯訊息",
     editingMessageDescription:
       "只有輸入區可操作。按 Esc 或點選「取消」停止編輯。",
@@ -508,4 +515,5 @@ export const zhTW: LocaleMessages = {
   contextMenu: contextMenuZhTW,
   sync: syncZhTW,
   themes: themesZhTW,
+  display: displayZhTW,
 };

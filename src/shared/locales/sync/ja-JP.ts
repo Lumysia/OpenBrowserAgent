@@ -1,3 +1,4 @@
+import { plural } from "../../plural";
 import type { SyncMessages } from "./en-US";
 
 export const syncJaJP: SyncMessages = {
@@ -6,7 +7,7 @@ export const syncJaJP: SyncMessages = {
   stateNeverSynced: "まだ同期していません",
   stateSynced: "最新の状態です",
   stateSyncing: "同期中…",
-  statePending: "{count}件の変更が同期を待っています",
+  statePending: plural({ other: "{count}件の変更が同期を待っています" }),
   statePaused: "{time} まで一時停止中",
   stateError: "前回の同期に失敗しました",
   stateAttention: "同期の確認が必要です",

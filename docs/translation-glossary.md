@@ -12,6 +12,9 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 - **Agents, not "the assistant".** Settings text that talks about the AI acting in the browser calls it the agent. "AI" is fine in marketing text such as the extension description, and "assistant" stays where it means the assistant's messages in a chat (as in the debug logging option).
 - **Keep placeholders.** `{count}`, `{name}`, `{max}` and the like stay exactly as they are.
 - **Use the ellipsis character** `…`, never three dots.
+- **Dashes, not hyphens, between phrases.** English and Brazilian Portuguese use a spaced em dash (`—`), German, French and Spanish a spaced en dash (`–`), Japanese and Korean a spaced em dash, and Chinese the double dash `——` with no spaces. A spaced ASCII hyphen (`-`) is never a separator.
+- **Chinese uses full-width punctuation** next to Chinese text: `？`, `！`, `：`, `，`, `（）`.
+- **Counts go through plural messages.** Any text with `{count}` is a `plural({...})` message with the forms the language needs, and Chinese, Japanese and Korean put the measure word in it (`{count} 个模型`, `{count}個のモデル`, `모델 {count}개`).
 - **Leave these untranslated:** OpenBrowserAgent, MCP, Streamable HTTP, JSON, OpenAI, WebDAV, ETag, HTTP, the Origin header name, SKILL.md, agent.json, example.com, and the `RESET` confirmation word (the code compares what people type against it).
 - **English titles and buttons use sentence case** ("Chat history", not "Chat History").
 
@@ -24,6 +27,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | agent                          | 智能体             | 智慧體             | エージェント            | 에이전트         |
 | sub-agent                      | 子智能体           | 子智慧體           | サブエージェント        | 하위 에이전트    |
 | Browse / Ask (built-in agents) | 浏览 / 询问        | 瀏覽 / 詢問        | ブラウズ / 質問         | 탐색 / 질문      |
+| …-compatible (provider type)   | … 兼容             | … 相容             | … 互換                  | … 호환           |
 | side panel                     | 侧边栏             | 側邊欄             | サイドパネル            | 사이드 패널      |
 | smart bar                      | 智能工具栏         | 智慧工具列         | スマートバー            | 스마트 바        |
 | model                          | 模型               | 模型               | モデル                  | 모델             |
@@ -59,7 +63,8 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | chat history                   | historique des discussions   | Chatverlauf                 | historial de chats                | histórico de conversas           |
 | agent                          | agent                        | Agent                       | agente                            | agente                           |
 | sub-agent                      | sous-agent                   | Subagent                    | subagente                         | subagente                        |
-| Browse / Ask (built-in agents) | Naviguer / Demander          | Browsen / Fragen            | Navegar / Preguntar               | Navegar / Perguntar              |
+| Browse / Ask (built-in agents) | Naviguer / Demander          | Browsen / Fragen stellen    | Navegar / Preguntar               | Navegar / Perguntar              |
+| …-compatible (provider type)   | Compatible …                 | …-kompatibel                | Compatible con …                  | Compatível com …                 |
 | side panel                     | panneau latéral              | Seitenleiste                | panel lateral                     | painel lateral                   |
 | smart bar                      | barre intelligente           | Smart Bar                   | barra inteligente                 | barra inteligente                |
 | model                          | modèle                       | Modell                      | modelo                            | modelo                           |
@@ -151,6 +156,10 @@ The context menu is the browser's right-click menu; OpenBrowserAgent adds a subm
 | Copy as Markdown      | Copier en Markdown    | Als Markdown kopieren | Copiar como Markdown | Copiar como Markdown |
 | selected text         | texte sélectionné     | ausgewählter Text     | texto seleccionado   | texto selecionado    |
 
+## Built-in skills and tool steps
+
+Built-in skills show a translated name and a short description of what they do for the person (the instructions sent to the model stay in English). Tool steps in a chat show a one-line summary: act steps are counted per kind ("Typed in 2 fields, selected 2 options, clicked 1 element"), each kind a plural message, joined with the locale's list separator (`, `, Japanese `、`, Chinese `，`). Tab ids never appear in these lines.
+
 ## Notes per language
 
 **Simplified Chinese.** Use 对话, never 聊天. A single bridge is a 执行桥; avoid 桥接器 and 桥接. Write 内置, not 内建. API Key and Base URL stay in English, as Chinese developer tools usually show them; Traditional Chinese does the same.
@@ -163,7 +172,7 @@ The context menu is the browser's right-click menu; OpenBrowserAgent adds a subm
 
 **French.** Address people as _vous_. Use the typographic apostrophe ’ and a regular space before `: ; ? !`, as the rest of the file does. "Prompt" stays as _prompt_; _Instructions_ is the label for an agent's own instructions.
 
-**German.** Always _Sie_, never _du_. Skill and Tool stay in English, matching the English UI and the SKILL.md file. Compounds take a hyphen when one part is English or an acronym (MCP-Server, Smart-Bar-Modell, Sync-Backend).
+**German.** Always _Sie_, never _du_. The Ask agent is _Fragen stellen_, so it does not read as the noun "questions"; the act tool step is _Mit der Seite interagiert_. Skill and Tool stay in English, matching the English UI and the SKILL.md file. Compounds take a hyphen when one part is English or an acronym (MCP-Server, Smart-Bar-Modell, Sync-Backend).
 
 **Spanish.** Spain Spanish with _tú_. Use _añadir_ (not _agregar_), _eliminar_ for delete, _quitar_ for removing an item from a message or list, and the present perfect for things that just happened (_ha fallado_). A zip archive is a _paquete_, so it is not confused with _archivo_ (file).
 

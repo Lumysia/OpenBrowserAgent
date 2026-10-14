@@ -13,6 +13,8 @@ type BuiltinSkillText = {
   references?: Record<string, string>;
 };
 
+export const BUILTIN_SKILL_ID_PREFIX = "builtin-";
+
 // Skills that ship with the extension. They are read from here every time
 // (see skill-catalog), so a change reaches every profile with the update.
 function builtinSkill({
@@ -22,7 +24,7 @@ function builtinSkill({
   references = {},
 }: BuiltinSkillText): Skill {
   return {
-    id: `builtin-${name}`,
+    id: `${BUILTIN_SKILL_ID_PREFIX}${name}`,
     name,
     description,
     builtin: true,

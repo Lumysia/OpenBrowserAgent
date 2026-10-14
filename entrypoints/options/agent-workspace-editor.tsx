@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Check, FileText, Pencil, Plus, Trash2 } from "lucide-react";
-import type { Messages } from "../../src/shared/i18n";
+import { formatCount, type Messages } from "../../src/shared/i18n";
 import type { AgentWorkspace } from "../../src/shared/types";
 import {
   deleteWorkspaceFile,
@@ -155,7 +155,7 @@ export function AgentWorkspaceEditor({
           <SettingsSummary
             icon={<FileText size={15} />}
             title={t.options.agentWorkspace}
-            description={`${workspace.files.length} files · ${workspaceTotalChars(workspace.files)} chars`}
+            description={`${formatCount(t.display.counts.files, workspace.files.length)} · ${formatCount(t.display.counts.characters, workspaceTotalChars(workspace.files))}`}
           />
         </AccordionTrigger>
         <AccordionContent>
@@ -186,7 +186,11 @@ export function AgentWorkspaceEditor({
                           {file.path}
                         </span>
                         <small>
-                          {file.kind} · utf-8 · {file.content.length} chars
+                          {file.kind} · utf-8 ·{" "}
+                          {formatCount(
+                            t.display.counts.characters,
+                            file.content.length,
+                          )}
                         </small>
                       </span>
                       <div className="option-file-actions">

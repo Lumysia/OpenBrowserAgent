@@ -9,12 +9,6 @@ export function stringValue(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : "";
 }
 
-export function idLabel(label: string, value: unknown) {
-  const text =
-    stringValue(value) || (Number.isFinite(Number(value)) ? String(value) : "");
-  return text ? `${label} ${text}` : "";
-}
-
 export function compactJoin(values: Array<string | undefined>) {
   return values.filter(Boolean).join(" · ");
 }

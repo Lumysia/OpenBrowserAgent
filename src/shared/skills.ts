@@ -76,10 +76,6 @@ export function replaceSkillEntryFile(
   return [entry, ...files];
 }
 
-export function getSkillDisplayName(skill: PickedSkill, fallback = "Skill") {
-  return skill.name || fallback;
-}
-
 export function getSkillEntryFile(skill: Skill) {
   return skill.files?.find((file) => file.path === SKILL_ENTRY_PATH);
 }

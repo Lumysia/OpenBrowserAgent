@@ -1,12 +1,16 @@
 import { plural } from "../plural";
 import { contextMenuJaJP } from "./context-menu/ja-JP";
+import { displayJaJP } from "./display/ja-JP";
 import { smartBarJaJP } from "./smart-bar/ja-JP";
 import { syncJaJP } from "./sync/ja-JP";
 import { themesJaJP } from "./themes/ja-JP";
 import type { LocaleMessages } from "./en-US";
 
 export const jaJP: LocaleMessages = {
-  app: { tagline: "ブラウザーの中の AI エージェント" },
+  app: {
+    tagline: "ブラウザーの中の AI エージェント",
+    brandLine: "OpenBrowserAgent — {tagline}",
+  },
   common: {
     add: "追加",
     cancel: "キャンセル",
@@ -153,9 +157,10 @@ export const jaJP: LocaleMessages = {
     forkChat: "チャットを分岐",
     showMoreSources: plural({ other: "残り{count}件のソースを表示" }),
     showFewerSources: "ソースを折りたたむ",
-    unavailableAttachments: "{count}件利用不可",
+    unavailableAttachments: plural({ other: "{count}件利用不可" }),
     allOpenTabs: "開いているすべてのタブ",
     selectElement: "要素を選択",
+    selectElementPrompt: "要素を選択（Esc でキャンセル）",
     selectModel: "モデルを選択",
     reasoningEffort: "推論強度",
     reasoningEffortDescription: "推論対応モデルでのみ有効です。",
@@ -168,8 +173,9 @@ export const jaJP: LocaleMessages = {
     send: "送信",
     queueMessage: "キューに追加",
     queuedMessages: "キュー内のメッセージ",
-    queuedMessagesDescription:
-      "{count}件待機中です。現在の応答が終わると送信されます。",
+    queuedMessagesDescription: plural({
+      other: "{count}件待機中です。現在の応答が終わると送信されます。",
+    }),
     editingMessage: "メッセージを編集中",
     editingMessageDescription:
       "入力欄のみ操作できます。Esc キーまたは「キャンセル」で編集を終了します。",
@@ -575,4 +581,5 @@ export const jaJP: LocaleMessages = {
   contextMenu: contextMenuJaJP,
   sync: syncJaJP,
   themes: themesJaJP,
+  display: displayJaJP,
 };

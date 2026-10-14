@@ -17,6 +17,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../../src/ui/components";
+import { skillDisplay } from "../../src/ui/skill-display";
 import { downloadSkillZip } from "./skill-import";
 import { SkillFileList } from "./skill-options-components";
 
@@ -167,7 +168,7 @@ export function BuiltinSkillDetail({
 }) {
   return (
     <div className="skill-detail stack">
-      <p className="muted">{skill.description}</p>
+      <p className="muted">{skillDisplay(skill, t).description}</p>
       <SkillFileList skill={skill} />
       <div className="row">
         <Tooltip>

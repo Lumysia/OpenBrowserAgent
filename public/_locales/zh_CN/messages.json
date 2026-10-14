@@ -5,9 +5,6 @@
   "extDescription": {
     "message": "OpenBrowserAgent 将 AI 智能体带入你的浏览器，帮助你智能地自动化任务。"
   },
-  "selectorPrompt": {
-    "message": "选择元素 - 按 Esc 取消"
-  },
   "smartBarCommand": {
     "message": "为选中的文本显示智能工具栏"
   }

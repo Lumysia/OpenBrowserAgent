@@ -1,12 +1,16 @@
 import { plural } from "../plural";
 import { contextMenuKo } from "./context-menu/ko";
+import { displayKo } from "./display/ko";
 import { smartBarKo } from "./smart-bar/ko";
 import { syncKo } from "./sync/ko";
 import { themesKo } from "./themes/ko";
 import type { LocaleMessages } from "./en-US";
 
 export const ko: LocaleMessages = {
-  app: { tagline: "브라우저 안의 AI 에이전트" },
+  app: {
+    tagline: "브라우저 안의 AI 에이전트",
+    brandLine: "OpenBrowserAgent — {tagline}",
+  },
   common: {
     add: "추가",
     cancel: "취소",
@@ -150,9 +154,10 @@ export const ko: LocaleMessages = {
     forkChat: "채팅 분기",
     showMoreSources: plural({ other: "출처 {count}개 더 보기" }),
     showFewerSources: "출처 접기",
-    unavailableAttachments: "{count}개 사용 불가",
+    unavailableAttachments: plural({ other: "{count}개 사용 불가" }),
     allOpenTabs: "열린 모든 탭",
     selectElement: "요소 선택",
+    selectElementPrompt: "요소를 선택하세요(Esc로 취소)",
     selectModel: "모델 선택",
     reasoningEffort: "추론 강도",
     reasoningEffortDescription: "추론을 지원하는 모델에만 적용됩니다.",
@@ -165,8 +170,9 @@ export const ko: LocaleMessages = {
     send: "보내기",
     queueMessage: "대기열에 추가",
     queuedMessages: "대기 중인 메시지",
-    queuedMessagesDescription:
-      "{count}개가 대기 중이며 현재 응답 후 전송됩니다.",
+    queuedMessagesDescription: plural({
+      other: "{count}개가 대기 중이며 현재 응답 후 전송됩니다.",
+    }),
     editingMessage: "메시지 편집 중",
     editingMessageDescription:
       "입력창만 사용할 수 있습니다. 편집을 중지하려면 Esc 키나 취소를 누르세요.",
@@ -540,4 +546,5 @@ export const ko: LocaleMessages = {
   contextMenu: contextMenuKo,
   sync: syncKo,
   themes: themesKo,
+  display: displayKo,
 };

@@ -9,7 +9,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { formatBytes } from "../../src/shared/format";
+import { formatBytes, formatDateTime } from "../../src/shared/format";
 import { getMessages } from "../../src/shared/i18n";
 import { normalizeSkill, SKILL_ENTRY_PATH } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
@@ -162,7 +162,7 @@ export function SkillFileList({
                         </span>
                         <small>
                           {file.kind} · {file.encoding || "utf-8"} ·{" "}
-                          {file.content.length} bytes ·{" "}
+                          {formatBytes(file.content.length, "kb")} ·{" "}
                           {formatDate(file.updatedAt)}
                         </small>
                       </span>
@@ -267,10 +267,5 @@ export function SkillFileActionButton({
 }
 
 function formatDate(value?: number) {
-  if (!value) return "-";
-  return new Date(value).toLocaleString();
-}
-
-export function formatSkillBytes(value: number) {
-  return formatBytes(value, "kb");
+  return value ? formatDateTime(value) : "-";
 }

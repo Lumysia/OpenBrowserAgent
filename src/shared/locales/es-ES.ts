@@ -1,12 +1,16 @@
 import { plural } from "../plural";
 import { contextMenuEsES } from "./context-menu/es-ES";
+import { displayEsES } from "./display/es-ES";
 import { smartBarEsES } from "./smart-bar/es-ES";
 import { syncEsES } from "./sync/es-ES";
 import { themesEsES } from "./themes/es-ES";
 import type { LocaleMessages } from "./en-US";
 
 export const esES: LocaleMessages = {
-  app: { tagline: "Tu agente de IA en el navegador" },
+  app: {
+    tagline: "Tu agente de IA en el navegador",
+    brandLine: "OpenBrowserAgent – {tagline}",
+  },
   common: {
     add: "Añadir",
     cancel: "Cancelar",
@@ -158,9 +162,13 @@ export const esES: LocaleMessages = {
       other: "Mostrar {count} fuentes más",
     }),
     showFewerSources: "Mostrar menos fuentes",
-    unavailableAttachments: "{count} no disponibles",
+    unavailableAttachments: plural({
+      one: "{count} no disponible",
+      other: "{count} no disponibles",
+    }),
     allOpenTabs: "Todas las pestañas abiertas",
     selectElement: "Seleccionar elemento",
+    selectElementPrompt: "Selecciona un elemento · Esc para cancelar",
     selectModel: "Seleccionar modelo",
     reasoningEffort: "Esfuerzo de razonamiento",
     reasoningEffortDescription:
@@ -174,8 +182,11 @@ export const esES: LocaleMessages = {
     send: "Enviar",
     queueMessage: "Poner en cola",
     queuedMessages: "Mensajes en cola",
-    queuedMessagesDescription:
-      "{count} en espera. Se enviarán después de la respuesta actual.",
+    queuedMessagesDescription: plural({
+      one: "{count} mensaje en espera. Se enviará después de la respuesta actual.",
+      other:
+        "{count} mensajes en espera. Se enviarán después de la respuesta actual.",
+    }),
     editingMessage: "Editando mensaje",
     editingMessageDescription:
       "Solo el cuadro de mensaje está activo. Pulsa Esc o Cancelar para dejar de editar.",
@@ -602,4 +613,5 @@ export const esES: LocaleMessages = {
   contextMenu: contextMenuEsES,
   sync: syncEsES,
   themes: themesEsES,
+  display: displayEsES,
 };

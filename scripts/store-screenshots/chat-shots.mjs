@@ -127,15 +127,11 @@ async function chatShot({ demo, agentId, page, prompt, waitFor, handle }) {
   }
 }
 
-// Page titles in sent-context chips are clipped without an ellipsis, so the
-// demo titles must fit; report any that do not.
+// Page titles in sent-context chips end in an ellipsis when they are too
+// long; the demo titles should still fit, so report any that do not.
 function chipWarnings(panel) {
   return panel.call(() =>
-    [
-      ...document.querySelectorAll(
-        ".sent-tabs-chip strong, .sent-tab-chip strong",
-      ),
-    ]
+    [...document.querySelectorAll(".sent-chip-title")]
       .filter((label) => label.scrollWidth > label.clientWidth + 1)
       .map((label) => `page title clipped in chip: ${label.textContent}`),
   );

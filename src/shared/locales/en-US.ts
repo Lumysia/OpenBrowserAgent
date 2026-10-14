@@ -1,11 +1,13 @@
 import { plural } from "../plural";
 import { contextMenuEnUS } from "./context-menu/en-US";
+import { displayEnUS } from "./display/en-US";
 import { smartBarEnUS } from "./smart-bar/en-US";
 import { syncEnUS } from "./sync/en-US";
 import { themesEnUS } from "./themes/en-US";
 export const enUS = {
   app: {
     tagline: "Your AI agent in the browser",
+    brandLine: "OpenBrowserAgent — {tagline}",
   },
   common: {
     add: "Add",
@@ -159,9 +161,13 @@ export const enUS = {
       other: "Show {count} more sources",
     }),
     showFewerSources: "Show fewer sources",
-    unavailableAttachments: "{count} unavailable",
+    unavailableAttachments: plural({
+      one: "{count} unavailable",
+      other: "{count} unavailable",
+    }),
     allOpenTabs: "All open tabs",
     selectElement: "Select element",
+    selectElementPrompt: "Select an element — press Esc to cancel",
     selectModel: "Select model",
     reasoningEffort: "Reasoning effort",
     reasoningEffortDescription: "For supported reasoning models only.",
@@ -174,8 +180,11 @@ export const enUS = {
     send: "Send",
     queueMessage: "Queue message",
     queuedMessages: "Queued messages",
-    queuedMessagesDescription:
-      "{count} waiting. They will send after the current response.",
+    queuedMessagesDescription: plural({
+      one: "{count} message waiting. It will send after the current response.",
+      other:
+        "{count} messages waiting. They will send after the current response.",
+    }),
     editingMessage: "Editing message",
     editingMessageDescription:
       "Only the composer is active. Press Esc or Cancel to stop editing.",
@@ -565,6 +574,7 @@ export const enUS = {
   contextMenu: contextMenuEnUS,
   sync: syncEnUS,
   themes: themesEnUS,
+  display: displayEnUS,
 };
 
 export type LocaleMessages = typeof enUS;

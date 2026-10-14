@@ -1,13 +1,10 @@
-import { FileText, MousePointerClick } from "lucide-react";
+import { FileText } from "lucide-react";
 import {
   debugLog,
   isDebugLoggingEnabled,
 } from "../../src/shared/debug-logging";
 import type { Messages } from "../../src/shared/i18n";
-import {
-  getSkillDisplayName,
-  pickedSkillsFromMetadata,
-} from "../../src/shared/skills";
+import { pickedSkillsFromMetadata } from "../../src/shared/skills";
 import type {
   AttachmentTab,
   ChatSummary,
@@ -19,6 +16,7 @@ import type {
 } from "../../src/shared/types";
 import { CHAT_PART_STATE, isToolPartType } from "../../src/shared/types";
 import { UserText } from "../../src/ui/components";
+import { skillDisplay } from "../../src/ui/skill-display";
 import { messageRunEnded } from "./run-state";
 import { formatMessageTime } from "./format";
 import {
@@ -31,6 +29,7 @@ import { UserMessageActions } from "./user-message-actions";
 import {
   SentAttachmentsChip,
   SentSelectedTextChip,
+  SentElementsChip,
   SentTabsChip,
   SourceChips,
 } from "./message-chips";
@@ -79,7 +78,9 @@ export function MessageBubble({
   // The background has no run of this reply (see run-state).
   runStopped?: boolean;
 }) {
-  const messageSkills = pickedSkillsFromMetadata(message.metadata);
+  const skillNames = pickedSkillsFromMetadata(message.metadata)
+    .map((skill) => skillDisplay(skill, t).name)
+    .join(", ");
   const sentTabs = Array.isArray(message.metadata?.attachedTabs)
     ? (message.metadata.attachedTabs as AttachmentTab[])
     : [];
@@ -140,19 +141,10 @@ export function MessageBubble({
     <div
       className={`message ${message.role === "user" ? "user" : ""} ${latestUserMessage ? "latest-user" : ""} ${editing ? "editing" : ""}`}
     >
-      {!!messageSkills.length && (
-        <div
-          className="message-label"
-          title={messageSkills
-            .map((skill) => getSkillDisplayName(skill))
-            .join(", ")}
-        >
+      {!!skillNames && (
+        <div className="message-label" title={skillNames}>
           <FileText size={13} />
-          <span>
-            {messageSkills
-              .map((skill) => getSkillDisplayName(skill))
-              .join(", ")}
-          </span>
+          <span>{skillNames}</span>
         </div>
       )}
       {message.role === "user" ? (
@@ -232,7 +224,7 @@ export function MessageBubble({
         )}
       {message.role === "user" && !!sentTabs.length && (
         <div className="sent-context-row">
-          <SentTabsChip tabs={sentTabs} />
+          <SentTabsChip t={t} tabs={sentTabs} />
         </div>
       )}
       {message.role === "user" && !!displayAttachments.length && (
@@ -246,16 +238,7 @@ export function MessageBubble({
       )}
       {message.role === "user" && !!sentElements.length && (
         <div className="sent-context-row">
-          <div className="sent-tab-chip">
-            <MousePointerClick size={22} />
-            <span>
-              <strong>
-                {sentElements.length === 1
-                  ? sentElements[0].tagName || t.sidepanel.elementSelected
-                  : `${t.sidepanel.elementSelected} x${sentElements.length}`}
-              </strong>
-            </span>
-          </div>
+          <SentElementsChip t={t} elements={sentElements} />
         </div>
       )}
       {message.role === "user" &&

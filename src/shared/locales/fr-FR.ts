@@ -1,12 +1,16 @@
 import { plural } from "../plural";
 import { contextMenuFrFR } from "./context-menu/fr-FR";
+import { displayFrFR } from "./display/fr-FR";
 import { smartBarFrFR } from "./smart-bar/fr-FR";
 import { syncFrFR } from "./sync/fr-FR";
 import { themesFrFR } from "./themes/fr-FR";
 import type { LocaleMessages } from "./en-US";
 
 export const frFR: LocaleMessages = {
-  app: { tagline: "Votre agent IA dans le navigateur" },
+  app: {
+    tagline: "Votre agent IA dans le navigateur",
+    brandLine: "OpenBrowserAgent – {tagline}",
+  },
   common: {
     add: "Ajouter",
     cancel: "Annuler",
@@ -159,9 +163,13 @@ export const frFR: LocaleMessages = {
       other: "Afficher {count} sources de plus",
     }),
     showFewerSources: "Afficher moins de sources",
-    unavailableAttachments: "{count} indisponibles",
+    unavailableAttachments: plural({
+      one: "{count} indisponible",
+      other: "{count} indisponibles",
+    }),
     allOpenTabs: "Tous les onglets ouverts",
     selectElement: "Sélectionner un élément",
+    selectElementPrompt: "Sélectionnez un élément – Échap pour annuler",
     selectModel: "Sélectionner un modèle",
     reasoningEffort: "Effort de raisonnement",
     reasoningEffortDescription:
@@ -175,8 +183,11 @@ export const frFR: LocaleMessages = {
     send: "Envoyer",
     queueMessage: "Mettre en file d’attente",
     queuedMessages: "Messages en file d’attente",
-    queuedMessagesDescription:
-      "{count} en attente. Ils seront envoyés après la réponse en cours.",
+    queuedMessagesDescription: plural({
+      one: "{count} message en attente. Il sera envoyé après la réponse en cours.",
+      other:
+        "{count} messages en attente. Ils seront envoyés après la réponse en cours.",
+    }),
     editingMessage: "Modification du message",
     editingMessageDescription:
       "Seule la zone de saisie est active. Appuyez sur Échap ou Annuler pour arrêter la modification.",
@@ -595,4 +606,5 @@ export const frFR: LocaleMessages = {
   contextMenu: contextMenuFrFR,
   sync: syncFrFR,
   themes: themesFrFR,
+  display: displayFrFR,
 };

@@ -18,12 +18,12 @@ import {
 import {
   createSkillPackage,
   duplicateSkill,
-  getSkillDisplayName,
   normalizeSkill,
   normalizeSkillName,
   skillPackageBytes,
   validateSkill,
 } from "../../src/shared/skills";
+import { formatBytes, formatDateTime } from "../../src/shared/format";
 import { storage } from "../../src/shared/storage";
 import type { Skill, SkillInvokeMode } from "../../src/shared/types";
 import {
@@ -41,11 +41,11 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "../../src/ui/components";
+import { skillDisplay } from "../../src/ui/skill-display";
 import { useSkillCatalog } from "../../src/ui/useSkillCatalog";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { BuiltinSkillDetail, SkillEditor } from "./skill-editor";
 import { importSkillZip } from "./skill-import";
-import { formatSkillBytes } from "./skill-options-components";
 
 export function SkillsPage() {
   const [language] = useStoredState(storage.language);
@@ -246,7 +246,7 @@ function SkillItemHeader({
   onInvoke: (mode: SkillInvokeMode) => void;
 }) {
   const { skill, source, invoke } = entry;
-  const name = getSkillDisplayName(skill, t.options.untitledSkill);
+  const { name } = skillDisplay(skill, t);
   const checks = source === "builtin" ? [] : validateSkill(draft);
   return (
     <AccordionHeader className="ui-accordion-header-with-actions">
@@ -274,7 +274,7 @@ function SkillItemHeader({
               )}
               <Badge>
                 {t.options.skillSize}:{" "}
-                {formatSkillBytes(skillPackageBytes(draft))}
+                {formatBytes(skillPackageBytes(draft), "kb")}
               </Badge>
             </span>
           </span>
@@ -364,6 +364,5 @@ function skillCheckLabel(t: Messages, id: string, ok: boolean) {
 }
 
 function formatSkillDate(value?: number) {
-  if (!value) return "-";
-  return new Date(value).toLocaleString();
+  return value ? formatDateTime(value) : "-";
 }

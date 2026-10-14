@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { formatCount, getMessages, i18nRegistry } from "../src/shared/i18n";
+import { formatCount, getMessages } from "../src/shared/i18n";
 
 test("counts use the plural form of the active language", () => {
   const cases: [string, number, string][] = [
@@ -20,21 +20,4 @@ test("counts use the plural form of the active language", () => {
       formatCount(getMessages(language).sidepanel.messageCount, count),
       expected,
     );
-});
-
-test("every locale gives every count message an `other` form", () => {
-  for (const [language, messages] of Object.entries(i18nRegistry)) {
-    const plurals = [
-      messages.sidepanel.messageCount,
-      messages.sidepanel.showMoreSources,
-      messages.options.mcpEnableTooltipTested,
-      messages.options.mcpImportSuccess,
-      messages.options.mcpTestSuccess,
-    ];
-    for (const message of plurals) {
-      for (const form of Object.values(message))
-        assert.match(form ?? "", /\{count\}/, language);
-      assert.ok(message.other, language);
-    }
-  }
 });

@@ -1,3 +1,4 @@
+import { plural } from "../../plural";
 import type { SyncMessages } from "./en-US";
 
 export const syncKo: SyncMessages = {
@@ -6,7 +7,7 @@ export const syncKo: SyncMessages = {
   stateNeverSynced: "아직 동기화하지 않았어요",
   stateSynced: "최신 상태예요",
   stateSyncing: "동기화 중…",
-  statePending: "변경 {count}개가 동기화를 기다리고 있어요",
+  statePending: plural({ other: "변경 {count}개가 동기화를 기다리고 있어요" }),
   statePaused: "{time}까지 일시 중지됨",
   stateError: "마지막 동기화에 실패했어요",
   stateAttention: "동기화를 확인해야 해요",

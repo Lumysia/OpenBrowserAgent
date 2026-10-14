@@ -1,9 +1,9 @@
 import { Check, FileText } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import type { Messages } from "../../src/shared/i18n";
-import { getSkillDisplayName } from "../../src/shared/skills";
 import type { PickedSkill } from "../../src/shared/types";
 import { Button } from "../../src/ui/components";
+import { skillDisplay } from "../../src/ui/skill-display";
 import { filterSkills, slashSkillQuery } from "./skill-context";
 
 // The skill list of the "+" menu and the "/" picker.
@@ -45,6 +45,7 @@ export function SkillPickerList({
     >
       {skills.map((skill, index) => {
         const selected = selectedIds.includes(skill.id);
+        const { name, description } = skillDisplay(skill, t);
         return (
           <Button
             key={skill.id}
@@ -63,10 +64,8 @@ export function SkillPickerList({
           >
             <FileText size={18} />
             <span>
-              <strong>
-                {getSkillDisplayName(skill, t.options.untitledSkill)}
-              </strong>
-              {skill.description && <small>{skill.description}</small>}
+              <strong>{name}</strong>
+              {description && <small>{description}</small>}
             </span>
             {selected && <Check className="menu-check" size={14} />}
           </Button>
@@ -79,10 +78,12 @@ export function SkillPickerList({
 // "/" at the start of the composer lists the skills matching what follows
 // it; arrows move, Enter or Tab picks, Escape closes.
 export function useSlashSkillPicker({
+  t,
   input,
   skills,
   onPick,
 }: {
+  t: Messages;
   input: string;
   skills: PickedSkill[];
   onPick: (skill: PickedSkill) => void;
@@ -90,7 +91,10 @@ export function useSlashSkillPicker({
   const [activeIndex, setActiveIndex] = useState(0);
   const [dismissedInput, setDismissedInput] = useState<string>();
   const query = slashSkillQuery(input);
-  const matches = query === undefined ? [] : filterSkills(skills, query);
+  const matches =
+    query === undefined
+      ? []
+      : filterSkills(skills, query, (skill) => skillDisplay(skill, t));
   const open =
     query !== undefined && !!skills.length && dismissedInput !== input;
   const active = Math.min(activeIndex, Math.max(matches.length - 1, 0));

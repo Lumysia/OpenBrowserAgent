@@ -13,7 +13,7 @@ WAS SIE DAMIT TUN KÖNNEN
 
 AGENTEN UND SKILLS
 
-• Die Agenten „Browsen“ und „Fragen“ sind bereits enthalten. Eigene Agenten erstellen Sie mit individuellen Anweisungen, Tools, Modell und privaten Notizen.
+• Die Agenten „Browsen“ und „Fragen stellen“ sind bereits enthalten. Eigene Agenten erstellen Sie mit individuellen Anweisungen, Tools, Modell und privaten Notizen.
 • Agenten können Arbeit an Subagenten übergeben, die im Hintergrund laufen.
 • Skills sind wiederverwendbare Anweisungen. Integrierte Skills helfen beim Ausfüllen von Formularen, beim Aufräumen von Tabs, bei Fragen zur Erweiterung und beim Schreiben neuer Skills. Wählen Sie einen Skill mit „/“ aus oder lassen Sie den Agenten einen verwenden, wenn er zur Anfrage passt. Skills lassen sich importieren und exportieren.
 

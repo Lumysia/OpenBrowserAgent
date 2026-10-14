@@ -23,17 +23,26 @@ export function slashSkillQuery(input: string) {
   return input.match(/^\/([^\s/]*)$/)?.[1];
 }
 
+// `display` gives the name and description shown for a skill, so a
+// translated built-in is found by what the person sees as well.
 export function filterSkills<T extends PickedSkill>(
   skills: T[],
   query: string,
+  display: (skill: T) => Pick<PickedSkill, "name" | "description"> = (skill) =>
+    skill,
 ) {
   const wanted = query.toLowerCase();
   if (!wanted) return skills;
   const rank = (skill: T) => {
-    const name = skill.name.toLowerCase();
-    if (name.startsWith(wanted)) return 0;
-    if (name.includes(wanted)) return 1;
-    return skill.description.toLowerCase().includes(wanted) ? 2 : -1;
+    const shown = display(skill);
+    const names = [skill.name, shown.name].map((name) => name.toLowerCase());
+    if (names.some((name) => name.startsWith(wanted))) return 0;
+    if (names.some((name) => name.includes(wanted))) return 1;
+    return [skill.description, shown.description].some((text) =>
+      text.toLowerCase().includes(wanted),
+    )
+      ? 2
+      : -1;
   };
   return skills
     .map((skill) => ({ skill, rank: rank(skill) }))

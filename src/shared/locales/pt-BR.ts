@@ -1,12 +1,16 @@
 import { plural } from "../plural";
 import { contextMenuPtBR } from "./context-menu/pt-BR";
+import { displayPtBR } from "./display/pt-BR";
 import { smartBarPtBR } from "./smart-bar/pt-BR";
 import { syncPtBR } from "./sync/pt-BR";
 import { themesPtBR } from "./themes/pt-BR";
 import type { LocaleMessages } from "./en-US";
 
 export const ptBR: LocaleMessages = {
-  app: { tagline: "Seu agente de IA no navegador" },
+  app: {
+    tagline: "Seu agente de IA no navegador",
+    brandLine: "OpenBrowserAgent — {tagline}",
+  },
   common: {
     add: "Adicionar",
     cancel: "Cancelar",
@@ -158,9 +162,13 @@ export const ptBR: LocaleMessages = {
       other: "Mostrar mais {count} fontes",
     }),
     showFewerSources: "Mostrar menos fontes",
-    unavailableAttachments: "{count} indisponíveis",
+    unavailableAttachments: plural({
+      one: "{count} indisponível",
+      other: "{count} indisponíveis",
+    }),
     allOpenTabs: "Todas as abas abertas",
     selectElement: "Selecionar elemento",
+    selectElementPrompt: "Selecione um elemento — Esc para cancelar",
     selectModel: "Selecionar modelo",
     reasoningEffort: "Esforço de raciocínio",
     reasoningEffortDescription:
@@ -174,8 +182,11 @@ export const ptBR: LocaleMessages = {
     send: "Enviar",
     queueMessage: "Colocar mensagem na fila",
     queuedMessages: "Mensagens na fila",
-    queuedMessagesDescription:
-      "{count} aguardando. Serão enviadas após a resposta atual.",
+    queuedMessagesDescription: plural({
+      one: "{count} mensagem aguardando. Será enviada após a resposta atual.",
+      other:
+        "{count} mensagens aguardando. Serão enviadas após a resposta atual.",
+    }),
     editingMessage: "Editando mensagem",
     editingMessageDescription:
       "Só o campo de mensagem está ativo. Pressione Esc ou Cancelar para parar de editar.",
@@ -597,4 +608,5 @@ export const ptBR: LocaleMessages = {
   contextMenu: contextMenuPtBR,
   sync: syncPtBR,
   themes: themesPtBR,
+  display: displayPtBR,
 };

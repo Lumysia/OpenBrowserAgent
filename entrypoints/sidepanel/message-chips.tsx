@@ -6,6 +6,7 @@ import {
   FileVideo,
   Image,
   TextQuote,
+  MousePointerClick,
 } from "lucide-react";
 import { useState } from "react";
 import { ATTACHMENT_KIND } from "../../src/shared/attachments";
@@ -19,6 +20,7 @@ import type {
   AttachmentTab,
   ChatSource,
   SelectedText,
+  SelectedElement,
   UploadedAttachment,
 } from "../../src/shared/types";
 import {
@@ -85,18 +87,19 @@ function openSource(source: ChatSource) {
   if (source.tabId) focusTab(source.tabId).catch(console.warn);
 }
 
-export function SentTabsChip({ tabs }: { tabs: AttachmentTab[] }) {
+export function SentTabsChip({
+  t,
+  tabs,
+}: {
+  t: Messages;
+  tabs: AttachmentTab[];
+}) {
   const visibleTabs = tabs.slice(0, SENT_TABS_PREVIEW_COUNT);
-  const title = tabs
-    .slice(0, SENT_TABS_PREVIEW_COUNT)
-    .map((tab) => tab.title || "Current page")
-    .join(", ");
-  const urls = tabs
-    .slice(0, SENT_TABS_PREVIEW_COUNT)
+  const titleOf = (tab: AttachmentTab) => tab.title || t.sidepanel.currentPage;
+  const urls = visibleTabs
     .map((tab) => tab.url?.replace(/^https?:\/\//, "").replace(/^www\./, ""))
     .filter(Boolean)
     .join(", ");
-  const extraCount = tabs.length - visibleTabs.length;
   return (
     <div className="sent-tabs-chip">
       <div className="sent-tabs-icons">
@@ -115,13 +118,11 @@ export function SentTabsChip({ tabs }: { tabs: AttachmentTab[] }) {
           ),
         )}
       </div>
-      <span>
-        <strong>
-          <span className="sent-chip-title">{title}</span>
-          {extraCount > 0 ? <em>+ {extraCount}</em> : null}
-        </strong>
-        <small>{urls}</small>
-      </span>
+      <SentChipLabel
+        titles={tabs.map(titleOf)}
+        visibleCount={visibleTabs.length}
+        detail={urls}
+      />
     </div>
   );
 }
@@ -139,8 +140,6 @@ export function SentAttachmentsChip({
     0,
     SENT_ATTACHMENTS_PREVIEW_COUNT,
   );
-  const extraCount = attachments.length - visibleAttachments.length;
-  const title = visibleAttachments.map((item) => item.name).join(", ");
   return (
     <div className="sent-tabs-chip">
       <div className="sent-tabs-icons">
@@ -168,25 +167,19 @@ export function SentAttachmentsChip({
           ),
         )}
       </div>
-      <span>
-        <strong>
-          <span className="sent-chip-title">{title}</span>
-          {extraCount > 0 ? <em>+ {extraCount}</em> : null}
-        </strong>
-        <small>
-          {unavailableCount
-            ? t.sidepanel.unavailableAttachments.replace(
-                "{count}",
-                String(unavailableCount),
-              )
-            : t.sidepanel.willBeSentToAi}
-        </small>
-      </span>
+      <SentChipLabel
+        titles={attachments.map((item) => item.name)}
+        visibleCount={visibleAttachments.length}
+        detail={
+          unavailableCount
+            ? formatCount(t.sidepanel.unavailableAttachments, unavailableCount)
+            : t.sidepanel.willBeSentToAi
+        }
+      />
     </div>
   );
 }
 
-// The full text shows on hover, like a context card's title.
 export function SentSelectedTextChip({
   selection,
   t,
@@ -195,12 +188,67 @@ export function SentSelectedTextChip({
   t: Messages;
 }) {
   return (
-    <div className="sent-tab-chip" title={selection.text}>
+    <div className="sent-tab-chip">
       <TextQuote size={22} />
-      <span>
-        <strong>{selectedTextExcerpt(selection.text)}</strong>
-        <small>{t.sidepanel.selectedText}</small>
-      </span>
+      <SentChipLabel
+        titles={[selectedTextExcerpt(selection.text)]}
+        visibleCount={1}
+        detail={t.sidepanel.selectedText}
+        tooltip={selection.text}
+      />
     </div>
+  );
+}
+
+export function SentElementsChip({
+  t,
+  elements,
+}: {
+  t: Messages;
+  elements: SelectedElement[];
+}) {
+  return (
+    <div className="sent-tab-chip">
+      <MousePointerClick size={22} />
+      <SentChipLabel
+        titles={elements.map(
+          (element) => element.tagName || t.sidepanel.elementSelected,
+        )}
+        visibleCount={1}
+      />
+    </div>
+  );
+}
+
+// The names in a sent-context chip: the first few, cut with an ellipsis
+// when they do not fit, and every name (or the given full text) in the
+// tooltip.
+function SentChipLabel({
+  titles,
+  visibleCount,
+  detail,
+  tooltip,
+}: {
+  titles: string[];
+  visibleCount: number;
+  detail?: string;
+  tooltip?: string;
+}) {
+  const extraCount = titles.length - visibleCount;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="sent-chip-label">
+          <strong>
+            <span className="sent-chip-title">
+              {titles.slice(0, visibleCount).join(", ")}
+            </span>
+            {extraCount > 0 ? <em>+ {extraCount}</em> : null}
+          </strong>
+          {detail && <small>{detail}</small>}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{tooltip ?? titles.join("\n")}</TooltipContent>
+    </Tooltip>
   );
 }

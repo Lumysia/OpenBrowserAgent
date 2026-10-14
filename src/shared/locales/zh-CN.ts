@@ -1,12 +1,16 @@
 import { plural } from "../plural";
 import { contextMenuZhCN } from "./context-menu/zh-CN";
+import { displayZhCN } from "./display/zh-CN";
 import { smartBarZhCN } from "./smart-bar/zh-CN";
 import { syncZhCN } from "./sync/zh-CN";
 import { themesZhCN } from "./themes/zh-CN";
 import type { LocaleMessages } from "./en-US";
 
 export const zhCN: LocaleMessages = {
-  app: { tagline: "浏览器中的 AI 智能体" },
+  app: {
+    tagline: "浏览器中的 AI 智能体",
+    brandLine: "OpenBrowserAgent——{tagline}",
+  },
   common: {
     add: "添加",
     cancel: "取消",
@@ -145,9 +149,10 @@ export const zhCN: LocaleMessages = {
     forkChat: "分叉对话",
     showMoreSources: plural({ other: "展开剩余 {count} 个来源" }),
     showFewerSources: "收起来源",
-    unavailableAttachments: "{count} 个不可用",
+    unavailableAttachments: plural({ other: "{count} 个不可用" }),
     allOpenTabs: "所有打开的标签页",
     selectElement: "选择元素",
+    selectElementPrompt: "选择元素（按 Esc 取消）",
     selectModel: "选择模型",
     reasoningEffort: "推理强度",
     reasoningEffortDescription: "仅对支持推理的模型生效。",
@@ -160,7 +165,9 @@ export const zhCN: LocaleMessages = {
     send: "发送",
     queueMessage: "加入队列",
     queuedMessages: "排队中的消息",
-    queuedMessagesDescription: "{count} 条等待中，会在当前回复结束后发送。",
+    queuedMessagesDescription: plural({
+      other: "{count} 条等待中，会在当前回复结束后发送。",
+    }),
     editingMessage: "正在编辑消息",
     editingMessageDescription:
       "只有输入区可操作。按 Esc 或点击“取消”停止编辑。",
@@ -508,4 +515,5 @@ export const zhCN: LocaleMessages = {
   contextMenu: contextMenuZhCN,
   sync: syncZhCN,
   themes: themesZhCN,
+  display: displayZhCN,
 };

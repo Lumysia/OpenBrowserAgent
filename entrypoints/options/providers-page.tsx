@@ -9,7 +9,6 @@ import {
 import { normalizeSmartBarSettings } from "../../src/shared/smart-bar";
 import { storage } from "../../src/shared/storage";
 import {
-  providerLabels,
   type ModelConfig,
   type ProviderConfig,
   type ProviderId,
@@ -31,6 +30,7 @@ import {
   SelectValue,
   SettingSwitch,
 } from "../../src/ui/components";
+import { providerTypeLabel } from "../../src/ui/provider-display";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { ModelSelect as DefaultableModelSelect } from "./model-select";
 import { ModelSelect } from "./provider-controls";
@@ -131,7 +131,7 @@ export function ProvidersPage() {
                 <SelectContent>
                   {ADD_PROVIDER_TYPES.map((type) => (
                     <SelectItem key={type} value={type}>
-                      {providerLabels[type]}
+                      {providerTypeLabel(type, t)}
                     </SelectItem>
                   ))}
                 </SelectContent>

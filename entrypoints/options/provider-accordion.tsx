@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { Cpu, Loader2, Plus, Server, Trash2 } from "lucide-react";
 import { QUICK_FEEDBACK_MS } from "../../src/shared/config";
-import { getMessages } from "../../src/shared/i18n";
+import { formatCount, getMessages } from "../../src/shared/i18n";
 import { MANUAL_MODEL_PROVIDER_TYPES } from "../../src/shared/provider-instances";
 import { storage } from "../../src/shared/storage";
 import {
   providerDefaultBaseUrls,
-  providerLabels,
   type ModelConfig,
   type ProviderConfig,
   type ProviderId,
@@ -32,6 +31,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../../src/ui/components";
+import { providerTypeLabel } from "../../src/ui/provider-display";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { FetchedModelPicker, ModelList } from "./provider-controls";
 import { modelWithProviderLabel, renameProviderDraft } from "./provider-drafts";
@@ -175,13 +175,11 @@ export function ProviderAccordion({
     <AccordionItem value={providerId}>
       <AccordionTrigger>
         <span className="settings-section-title provider-trigger-title">
-          <Server size={18} /> {value.label || providerLabels[provider]}
+          <Server size={18} /> {value.label || providerTypeLabel(provider, t)}
         </span>
         <span className="provider-summary">
-          <Badge>{providerLabels[provider]}</Badge>
-          <Badge>
-            {models.length} {t.options.models}
-          </Badge>
+          <Badge>{providerTypeLabel(provider, t)}</Badge>
+          <Badge>{formatCount(t.display.counts.models, models.length)}</Badge>
         </span>
       </AccordionTrigger>
       <AccordionContent>
@@ -197,7 +195,7 @@ export function ProviderAccordion({
               {t.options.providerName}
               <Input
                 value={draft.label ?? ""}
-                placeholder={providerLabels[provider]}
+                placeholder={providerTypeLabel(provider, t)}
                 onChange={(event) =>
                   setDraft(renameProviderDraft(draft, event.target.value))
                 }

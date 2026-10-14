@@ -1,3 +1,4 @@
+import { plural } from "../../plural";
 import type { SyncMessages } from "./en-US";
 
 export const syncPtBR: SyncMessages = {
@@ -6,7 +7,10 @@ export const syncPtBR: SyncMessages = {
   stateNeverSynced: "Ainda não sincronizado",
   stateSynced: "Atualizado",
   stateSyncing: "Sincronizando…",
-  statePending: "{count} alteração(ões) aguardando sincronização",
+  statePending: plural({
+    one: "{count} alteração aguardando sincronização",
+    other: "{count} alterações aguardando sincronização",
+  }),
   statePaused: "Pausado até {time}",
   stateError: "A última sincronização falhou",
   stateAttention: "A sincronização precisa da sua atenção",

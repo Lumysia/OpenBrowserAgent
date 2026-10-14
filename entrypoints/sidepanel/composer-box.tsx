@@ -101,6 +101,7 @@ export function ComposerBox({
   ) => void;
 }) {
   const slash = useSlashSkillPicker({
+    t,
     input,
     skills,
     onPick: (skill) => {

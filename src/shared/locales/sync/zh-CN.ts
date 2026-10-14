@@ -1,3 +1,4 @@
+import { plural } from "../../plural";
 import type { SyncMessages } from "./en-US";
 
 export const syncZhCN: SyncMessages = {
@@ -6,7 +7,7 @@ export const syncZhCN: SyncMessages = {
   stateNeverSynced: "尚未同步",
   stateSynced: "已是最新",
   stateSyncing: "正在同步…",
-  statePending: "{count} 项更改等待同步",
+  statePending: plural({ other: "{count} 项更改等待同步" }),
   statePaused: "已暂停，直到 {time}",
   stateError: "上次同步失败",
   stateAttention: "同步需要你处理",
