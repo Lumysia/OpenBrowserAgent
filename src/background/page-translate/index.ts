@@ -15,6 +15,7 @@ import { normalizePageTranslateSettings } from "../../shared/page-translate/sett
 import { getBrowserApi, storage } from "../../shared/storage";
 import { flashBadge, showPageNote } from "../page-feedback";
 import { pageToastTheme } from "../page-toast";
+import { startVideoSubtitles, stopVideoSubtitles } from "../video-subtitles";
 import { createPageSession } from "./session";
 import { setTabTranslated, watchTabs } from "./tab-state";
 import { watchTranslateMode, type TranslateMode } from "./translate-mode";
@@ -78,7 +79,11 @@ export async function togglePageTranslation(tab: chrome.tabs.Tab | undefined) {
   };
   const { injected, translated } = await messagePage(tabId, message);
   if (translated !== undefined) {
-    await translateMode?.set(tabId, translated);
+    // The page's videos follow: their subtitles are translated too.
+    await Promise.all([
+      translateMode?.set(tabId, translated),
+      translated ? startVideoSubtitles(tabId) : stopVideoSubtitles(tabId),
+    ]);
     return;
   }
   const [language, preferences] = await Promise.all([

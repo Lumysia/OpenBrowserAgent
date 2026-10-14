@@ -90,4 +90,17 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     "Die Übersetzung dieser Seite konnte nicht gestartet werden. Laden Sie die Seite neu und versuchen Sie es erneut.",
   unavailablePage:
     "Diese Seite kann nicht übersetzt werden: Der Browser lässt Erweiterungen sie nicht ändern.",
+  subtitles: {
+    menu: "Untertitel übersetzen",
+    menuItemLabel: "Untertitel übersetzen / ausblenden (bei Videos)",
+    start: "Untertitel übersetzen",
+    stop: "Übersetzte Untertitel ausblenden",
+    noCaptions:
+      "Für dieses Video wurden noch keine Untertitel gefunden. Schalten Sie die Untertitel im Player ein – sie werden übersetzt, sobald sie erscheinen.",
+    noVideo:
+      "Hier gibt es kein Video, dessen Untertitel übersetzt werden können.",
+    videoButton: "Untertitel-Schaltfläche auf Videos",
+    videoButtonDescription:
+      "Zeigt eine Schaltfläche in der Ecke eines Videos, wenn Sie darauf zeigen, um seine Untertitel zu übersetzen. „Diese Seite übersetzen“ übersetzt auch die Untertitel der Videos auf der Seite.",
+  },
 };

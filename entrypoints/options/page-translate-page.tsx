@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Bot,
+  Captions,
   Cpu,
   Database,
   ExternalLink,
@@ -239,6 +240,13 @@ export function PageTranslatePage() {
         description={p.translateMenusDescription}
         checked={settings.translateMenus}
         onChange={(translateMenus) => update({ translateMenus })}
+      />
+      <SettingSwitchCard
+        icon={<Captions size={18} />}
+        title={p.subtitles.videoButton}
+        description={p.subtitles.videoButtonDescription}
+        checked={settings.videoButton}
+        onChange={(videoButton) => update({ videoButton })}
       />
       <Card>
         <CardHeader>

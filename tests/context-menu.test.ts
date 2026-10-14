@@ -30,6 +30,7 @@ const TITLES = {
   parent: "OpenBrowserAgent",
   ...getMessages("en-US").contextMenu.items,
   translatePage: "Translate this page",
+  translateSubtitles: "Translate subtitles",
 };
 
 test("the context menu is on by default; stored settings are cleaned", () => {
@@ -63,6 +64,7 @@ test("menu entries: one parent, children with their own contexts", () => {
       [CONTEXT_MENU_ID.ask, CONTEXT_MENU_ID.parent, ["all"]],
       [CONTEXT_MENU_ID.summarizePage, CONTEXT_MENU_ID.parent, ["all"]],
       [CONTEXT_MENU_ID.translatePage, CONTEXT_MENU_ID.parent, ["all"]],
+      [CONTEXT_MENU_ID.translateSubtitles, CONTEXT_MENU_ID.parent, ["video"]],
       [
         CONTEXT_MENU_ID.searchPage,
         CONTEXT_MENU_ID.parent,
@@ -73,7 +75,7 @@ test("menu entries: one parent, children with their own contexts", () => {
       [CONTEXT_MENU_ID.copyMarkdown, CONTEXT_MENU_ID.parent, ["all"]],
     ],
   );
-  assert.equal(entries[5].title, 'Search the web for "%s"');
+  assert.equal(entries[6].title, 'Search the web for "%s"');
   // The tab strip's menu where the browser has it, never for selections or
   // links.
   const withTabs = contextMenuEntries(DEFAULT_CONTEXT_MENU_SETTINGS, TITLES, {
@@ -112,6 +114,7 @@ test("menu entries follow the settings; & is not an access key", () => {
       "ask",
       "summarizePage",
       "translatePage",
+      "translateSubtitles",
       "searchWeb",
       "summarizeLink",
       "copyMarkdown",

@@ -32,6 +32,10 @@ import {
   handleSmartBarMessage,
   setupSmartBar,
 } from "../src/background/smart-bar";
+import {
+  handleVideoSubtitlesMessage,
+  setupVideoSubtitles,
+} from "../src/background/video-subtitles";
 
 const SIDE_PANEL_OPENED = "side_panel_opened";
 
@@ -49,6 +53,7 @@ export default defineBackground(() => {
   setupSmartBar();
   setupContextMenu();
   setupPageTranslate();
+  setupVideoSubtitles();
   setupSync();
   setupMcpOriginRules();
 
@@ -61,6 +66,7 @@ export default defineBackground(() => {
     (message, sender, sendResponse) =>
       handleSmartBarMessage(message, sender, sendResponse) ||
       handlePageTranslateMessage(message, sender, sendResponse) ||
+      handleVideoSubtitlesMessage(message, sender, sendResponse) ||
       streamSessions.handleChatStreamControlMessage(message, sendResponse) ||
       handleLocalExecutionBridgeRuntimeMessage(message, sendResponse) ||
       handleDescribeRunMessage(message, sendResponse),

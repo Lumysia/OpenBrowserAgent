@@ -1,0 +1,46 @@
+/* The subtitle button on a video's corner, inside its shadow root. Tokens
+   come from tokens.css with :root mapped to .video-button-theme, colors from
+   applyTheme() on it, the card from .page-surface like the smart bar. */
+.video-button-theme {
+  --video-button-size: 32px;
+  --video-button-inset: var(--space-2);
+}
+
+.video-button {
+  position: fixed;
+  z-index: var(--page-layer-top);
+  display: grid;
+  place-items: center;
+  width: var(--video-button-size);
+  height: var(--video-button-size);
+  padding: 0;
+  cursor: pointer;
+  color: var(--foreground);
+  font: inherit;
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.video-button[hidden] {
+  display: none;
+}
+
+.video-button:hover {
+  color: var(--accent-text);
+}
+
+.video-button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.video-button[aria-pressed="true"] {
+  color: var(--accent-text);
+  background: var(--accent-soft);
+}
+
+.video-button svg {
+  width: 18px;
+  height: 18px;
+}

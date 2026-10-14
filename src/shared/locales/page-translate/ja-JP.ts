@@ -90,4 +90,16 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
     "このページの翻訳を開始できませんでした。ページを再読み込みして、もう一度お試しください。",
   unavailablePage:
     "このページは翻訳できません。ブラウザーが拡張機能による変更を許可していません。",
+  subtitles: {
+    menu: "字幕を翻訳",
+    menuItemLabel: "字幕を翻訳 / 翻訳を非表示（動画上）",
+    start: "字幕を翻訳",
+    stop: "字幕の翻訳を非表示",
+    noCaptions:
+      "この動画の字幕がまだ見つかりません。プレーヤーで字幕をオンにしてください。表示されしだい翻訳します。",
+    noVideo: "ここには字幕を翻訳できる動画がありません。",
+    videoButton: "動画の字幕ボタン",
+    videoButtonDescription:
+      "動画にポインターを合わせると隅にボタンを表示し、字幕を翻訳できます。「このページを翻訳」でもページ上の動画の字幕を翻訳します。",
+  },
 };

@@ -90,4 +90,16 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
     "No se ha podido empezar a traducir esta página. Vuelve a cargar la página e inténtalo de nuevo.",
   unavailablePage:
     "No se puede traducir esta página: el navegador no permite que las extensiones la modifiquen.",
+  subtitles: {
+    menu: "Traducir subtítulos",
+    menuItemLabel: "Traducir subtítulos / Ocultarlos (en vídeos)",
+    start: "Traducir subtítulos",
+    stop: "Ocultar subtítulos traducidos",
+    noCaptions:
+      "Aún no se han encontrado subtítulos para este vídeo. Activa los subtítulos en el reproductor: se traducen en cuanto aparecen.",
+    noVideo: "Aquí no hay ningún vídeo cuyos subtítulos traducir.",
+    videoButton: "Botón de subtítulos en los vídeos",
+    videoButtonDescription:
+      "Muestra un botón en la esquina de un vídeo al pasar el puntero por encima, para traducir sus subtítulos. «Traducir esta página» también traduce los subtítulos de los vídeos de la página.",
+  },
 };

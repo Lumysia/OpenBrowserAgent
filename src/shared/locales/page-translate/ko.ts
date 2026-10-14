@@ -88,4 +88,16 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
     "이 페이지의 번역을 시작하지 못했습니다. 페이지를 새로고침한 후 다시 시도하세요.",
   unavailablePage:
     "이 페이지는 번역할 수 없습니다. 브라우저가 확장 프로그램의 변경을 허용하지 않습니다.",
+  subtitles: {
+    menu: "자막 번역",
+    menuItemLabel: "자막 번역 / 번역 숨기기(동영상에서)",
+    start: "자막 번역",
+    stop: "자막 번역 숨기기",
+    noCaptions:
+      "이 동영상의 자막을 아직 찾지 못했습니다. 플레이어에서 자막을 켜세요. 자막이 표시되는 즉시 번역합니다.",
+    noVideo: "여기에는 자막을 번역할 동영상이 없습니다.",
+    videoButton: "동영상 자막 버튼",
+    videoButtonDescription:
+      '동영상을 가리키면 모서리에 버튼을 표시해 자막을 번역할 수 있습니다. "이 페이지 번역"도 페이지에 있는 동영상의 자막을 번역합니다.',
+  },
 };

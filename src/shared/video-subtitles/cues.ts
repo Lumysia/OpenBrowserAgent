@@ -1,5 +1,6 @@
 // Subtitle cues as every caption format becomes them. Dependency-free: the
 // page script imports this module.
+import { CAPTION_RESPONSE_MAX_CHARS } from "./protocol";
 
 // A word with its own time, from formats that time each word (automatic
 // captions).
@@ -22,7 +23,7 @@ export type Cue = {
 // from the page.
 export const CAPTION_FILE_LIMITS = {
   // Characters of the file's text.
-  maxChars: 5_000_000,
+  maxChars: CAPTION_RESPONSE_MAX_CHARS,
   maxCues: 20_000,
 } as const;
 

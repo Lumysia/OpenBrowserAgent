@@ -76,4 +76,16 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
   browserMissing: "此瀏覽器沒有內建翻譯器，頁面會由下方的 AI 模型翻譯。",
   notStarted: "無法開始翻譯此頁面。請重新載入頁面後再試。",
   unavailablePage: "無法翻譯此頁面：瀏覽器不允許擴充功能修改它。",
+  subtitles: {
+    menu: "翻譯字幕",
+    menuItemLabel: "翻譯字幕 / 隱藏譯文（影片上）",
+    start: "翻譯字幕",
+    stop: "隱藏字幕譯文",
+    noCaptions:
+      "尚未找到此影片的字幕。請在播放器中開啟字幕，字幕一出現就會翻譯。",
+    noVideo: "這裡沒有可翻譯字幕的影片。",
+    videoButton: "影片上的字幕按鈕",
+    videoButtonDescription:
+      "指向影片時在其角落顯示一個按鈕，用來翻譯字幕。「翻譯此頁面」也會翻譯頁面上影片的字幕。",
+  },
 };
