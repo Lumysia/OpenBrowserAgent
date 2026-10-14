@@ -1,6 +1,7 @@
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { Message } from "@earendil-works/pi-ai";
 import { estimateMessageTokens } from "@earendil-works/pi-ai/utils/estimate";
+import { ESTIMATED_IMAGE_CHARS } from "../../shared/config";
 import type { ArtifactStore } from "../../shared/artifacts";
 import {
   buildCompactionPrompt,
@@ -231,7 +232,8 @@ function estimateTokens(messages: AgentMessage[]) {
 
 function contentChars(message: Extract<AgentMessage, { role: "toolResult" }>) {
   return message.content.reduce(
-    (sum, part) => sum + (part.type === "text" ? part.text.length : 4_800),
+    (sum, part) =>
+      sum + (part.type === "text" ? part.text.length : ESTIMATED_IMAGE_CHARS),
     0,
   );
 }

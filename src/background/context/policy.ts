@@ -1,7 +1,12 @@
+import { ESTIMATED_CHARS_PER_TOKEN } from "../../shared/config";
+
 // Context engine limits, in estimated tokens. Window-relative limits are
 // clamped so small windows still leave room and large ones stay cache-friendly.
 export const CONTEXT_POLICY = {
+  // A model's window and output limit when neither the user nor Pi's
+  // catalog gives one.
   defaultContextWindow: 128_000,
+  fallbackOutputTokens: 8_192,
   // Any single tool output above this goes to the artifact store; the model
   // gets a head preview of this size plus a handle.
   toolOutputCapTokens: 5_000,
@@ -41,9 +46,7 @@ export function windowShare(
   return Math.min(limit.max, Math.floor(window * limit.ratio));
 }
 
-// Characters per estimated token, for turning token limits into slices.
-const CHARS_PER_TOKEN = 3.5;
-
+// Token limits as characters, for slicing text.
 export function tokenChars(tokens: number) {
-  return Math.floor(tokens * CHARS_PER_TOKEN);
+  return Math.floor(tokens * ESTIMATED_CHARS_PER_TOKEN);
 }

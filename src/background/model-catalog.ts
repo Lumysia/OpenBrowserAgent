@@ -6,7 +6,7 @@ import { MINIMAX_MODELS } from "@earendil-works/pi-ai/providers/minimax.models";
 import { OPENAI_MODELS } from "@earendil-works/pi-ai/providers/openai.models";
 import { OPENROUTER_MODELS } from "@earendil-works/pi-ai/providers/openrouter.models";
 import { ZAI_MODELS } from "@earendil-works/pi-ai/providers/zai.models";
-import type { ProviderId } from "../shared/types";
+import type { ProviderId } from "../shared/providers";
 
 // Pi's model catalog for the services a provider type stands for: what each
 // model supports (thinking levels among it). Provider types that take any

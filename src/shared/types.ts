@@ -9,18 +9,7 @@ import type { SmartBarSettings } from "./smart-bar";
 import type { ColorScheme, ThemeId } from "./theme/themes";
 import type { ThinkingSwitch } from "./thinking-switch";
 
-export type ProviderId =
-  | "gemini"
-  | "ollama"
-  | "openai"
-  | "openai-responses"
-  | "anthropic"
-  | "openrouter"
-  | "aihubmix"
-  | "deepseek"
-  | "glm"
-  | "aigateway"
-  | "minimax";
+import type { ProviderId } from "./providers";
 
 export type ModelConfig = {
   id: string;
@@ -450,39 +439,4 @@ export type QuestionToolAnswer = {
   question: string;
   answers: string[];
   customAnswer?: string;
-};
-
-export const providerLabels: Record<ProviderId, string> = {
-  gemini: "Gemini-compatible",
-  ollama: "Ollama-compatible",
-  openai: "OpenAI-compatible",
-  "openai-responses": "OpenAI Responses-compatible",
-  anthropic: "Anthropic-compatible",
-  openrouter: "OpenRouter",
-  aihubmix: "AIHubMix",
-  deepseek: "DeepSeek",
-  glm: "Z.ai (Zhipu)",
-  aigateway: "Vercel AI Gateway",
-  minimax: "Minimax",
-};
-
-// Default names older versions stored for new providers. They still show in
-// the UI language, like the current defaults.
-export const legacyProviderLabels: Partial<Record<ProviderId, string>> = {
-  gemini: "Gemini",
-  ollama: "Ollama",
-  "openai-responses": "OpenAI Responses",
-};
-
-export const providerDefaultBaseUrls: Partial<Record<ProviderId, string>> = {
-  openai: "https://api.openai.com/v1",
-  "openai-responses": "https://api.openai.com/v1",
-  anthropic: "https://api.anthropic.com/v1",
-  openrouter: "https://openrouter.ai/api/v1",
-  aihubmix: "https://aihubmix.com/v1",
-  deepseek: "https://api.deepseek.com/v1",
-  glm: "https://api.z.ai/api/paas/v4",
-  aigateway: "https://api.ai-gateway.workers.dev/v1",
-  minimax: "https://api.minimax.io/v1",
-  ollama: "http://localhost:11434",
 };

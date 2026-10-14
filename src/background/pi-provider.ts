@@ -18,10 +18,17 @@ import {
   reasoningRequestParams,
   type RequestReasoning,
 } from "../shared/reasoning";
-import { baseUrlKey } from "../shared/provider-urls";
+import { errorMessage } from "../shared/error-message";
+import { providerType } from "../shared/providers";
+import {
+  baseUrlKey,
+  normalizeBaseUrl,
+  providerApiBase,
+} from "../shared/provider-urls";
 import type { ThinkingSwitch } from "../shared/thinking-switch";
-import type { ProviderId } from "../shared/types";
-import { knownOutputLimit } from "./model-catalog";
+import type { ProviderId } from "../shared/providers";
+import { CONTEXT_POLICY } from "./context/policy";
+import { catalogModel, knownOutputLimit } from "./model-catalog";
 import { quickThinking, thinkingFieldNames } from "./quick-reasoning";
 import {
   FIELD_REJECTION_STATUSES,
@@ -39,37 +46,28 @@ export type ProviderModel = {
   thinkingSwitch?: ThinkingSwitch;
 };
 
-const FALLBACK_OUTPUT_LIMIT = 8192;
-
 export function piModel(model: ProviderModel): Model<Api> {
-  const api =
-    model.provider === "anthropic"
-      ? "anthropic-messages"
-      : model.provider === "gemini"
-        ? "google-generative-ai"
-        : model.provider === "openai-responses"
-          ? "openai-responses"
-          : "openai-completions";
-  let baseUrl = model.baseUrl.replace(/\/$/, "");
-  // The Anthropic SDK itself appends /v1/messages. The stored URL includes /v1.
-  if (api === "anthropic-messages") baseUrl = baseUrl.replace(/\/v1$/, "");
-  if (model.provider === "ollama") baseUrl += "/v1";
+  const { api } = providerType(model.provider);
+  // What Pi's catalog knows of the model; an unknown one is assumed to take
+  // images and reasoning, and createProviderStream falls back when it
+  // refuses them.
+  const known = catalogModel(model.provider, model.modelName);
   return {
     id: model.modelName,
     name: model.modelName,
     api,
     provider: model.provider,
-    baseUrl,
-    reasoning: true,
+    // The Anthropic SDK appends /v1/messages to this; anthropicFetch sends
+    // the request to the stored URL's /messages instead.
+    baseUrl: providerApiBase(model.provider, model.baseUrl),
+    reasoning: known?.reasoning ?? true,
     // "default" means let the endpoint choose; Pi otherwise sends effort=none.
     thinkingLevelMap: { off: null },
-    input: ["text", "image"],
-    contextWindow: model.contextLength || 128_000,
+    input: known?.input ?? ["text", "image"],
+    contextWindow: model.contextLength || CONTEXT_POLICY.defaultContextWindow,
     // Requests send only a known limit (see createProviderStream); the
     // Anthropic API requires one and falls back to this value.
-    maxTokens:
-      knownOutputLimit(model.provider, model.modelName) ||
-      FALLBACK_OUTPUT_LIMIT,
+    maxTokens: known?.maxTokens || CONTEXT_POLICY.fallbackOutputTokens,
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
     // Tools loaded mid-run are declared in a system message after the cached
     // prefix instead of changing the tool list. Models without this support
@@ -277,8 +275,7 @@ export function createProviderStream(
     void run(messages, !textOnly && hasImages(messages)).catch((error) => {
       const message = assistantMessage(model);
       message.stopReason = options?.signal?.aborted ? "aborted" : "error";
-      message.errorMessage =
-        error instanceof Error ? error.message : String(error);
+      message.errorMessage = errorMessage(error);
       output.push({
         type: "error",
         reason: message.stopReason,
@@ -327,7 +324,7 @@ function anthropicFetch(baseUrl: string): typeof fetch {
     const original = new URL(
       input instanceof Request ? input.url : String(input),
     );
-    const endpoint = new URL(`${baseUrl.replace(/\/$/, "")}/messages`);
+    const endpoint = new URL(`${normalizeBaseUrl(baseUrl)}/messages`);
     endpoint.search = original.search;
     return fetch(
       input instanceof Request ? new Request(endpoint, input) : endpoint,
@@ -337,7 +334,8 @@ function anthropicFetch(baseUrl: string): typeof fetch {
 }
 
 // Endpoints word these refusals in their own ways; the patterns cover the
-// wordings seen from the supported servers.
+// wordings seen from the supported servers. They are not limited to 4xx
+// statuses: proxies also report them inside a 200 event stream.
 const INLINE_TOOLS_REJECTION =
   /tool_addition|tool_removal|inline-tools|\bsystem\b.{0,40}(role|message)|(role|message).{0,40}\bsystem\b/i;
 

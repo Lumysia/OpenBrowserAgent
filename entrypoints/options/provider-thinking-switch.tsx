@@ -5,7 +5,8 @@ import {
   THINKING_SWITCH_OPTIONS,
   type ThinkingSwitch,
 } from "../../src/shared/thinking-switch";
-import type { ProviderConfig, ProviderId } from "../../src/shared/types";
+import type { ProviderConfig } from "../../src/shared/types";
+import type { ProviderId } from "../../src/shared/providers";
 import {
   Label,
   Select,

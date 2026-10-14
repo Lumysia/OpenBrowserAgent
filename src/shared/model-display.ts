@@ -1,5 +1,6 @@
 import type { ModelChoice } from "./model-choice";
-import { providerLabels, type ModelConfig, type ProviderConfig } from "./types";
+import { providerType } from "./providers";
+import type { ModelConfig, ProviderConfig } from "./types";
 
 // A model's stored display name is "<provider> / <model>". With the
 // provider's name known, that prefix is removed; otherwise the first
@@ -55,7 +56,7 @@ export function modelIdParts(modelId: string) {
 
 // The name a provider's models are labelled with.
 export function providerDisplayName(provider: ProviderConfig) {
-  return provider.label || providerLabels[provider.type || "openai"];
+  return provider.label || providerType(provider.type).label;
 }
 
 // The provider and model names of a chosen model, as stored with an answer.

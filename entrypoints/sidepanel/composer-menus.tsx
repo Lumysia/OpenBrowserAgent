@@ -14,7 +14,7 @@ import {
   modelIdParts,
   parseModelDisplayName,
 } from "../../src/shared/model-display";
-import { providerLabels, type ProviderId } from "../../src/shared/types";
+import { isProviderId } from "../../src/shared/providers";
 import type {
   AttachmentTab,
   Agent,
@@ -410,8 +410,8 @@ function providerName(model: ModelConfig, t: Messages) {
   const { provider } = parseModelDisplayName(model);
   if (provider) return providerNameDisplay(provider, t);
   const { providerKey } = modelIdParts(model.id);
-  return Object.hasOwn(providerLabels, providerKey)
-    ? providerTypeLabel(providerKey as ProviderId, t)
+  return isProviderId(providerKey)
+    ? providerTypeLabel(providerKey, t)
     : providerKey;
 }
 

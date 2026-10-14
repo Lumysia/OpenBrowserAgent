@@ -7,7 +7,7 @@ import {
 } from "../shared/model-choice";
 import { assertProviderConsent } from "../shared/provider-consent";
 import { providerThinkingSwitch } from "../shared/thinking-switch";
-import { providerDefaultBaseUrls } from "../shared/types";
+import { providerType } from "../shared/providers";
 import { storage } from "../shared/storage";
 import { USER_ERROR_CODE, UserError } from "../shared/user-errors";
 
@@ -24,7 +24,7 @@ export function providerModel({
   return {
     provider,
     apiKey: config.apiKey || "",
-    baseUrl: config.baseUrl || providerDefaultBaseUrls[provider] || "",
+    baseUrl: config.baseUrl || providerType(provider).defaultBaseUrl || "",
     modelName: model.name || model.id,
     contextLength: model.contextLength,
     thinkingSwitch: providerThinkingSwitch(provider, config),

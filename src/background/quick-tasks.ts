@@ -1,4 +1,6 @@
+import { QUICK_TASK_CONCURRENCY } from "../shared/config";
 import { isLocalEndpoint } from "../shared/provider-consent";
+import { providerType } from "../shared/providers";
 import { baseUrlKey } from "../shared/provider-urls";
 import { QUICK_TASK_REASONING } from "../shared/reasoning";
 import {
@@ -29,7 +31,9 @@ export function quickTaskConcurrency(
   model: Pick<ProviderModel, "provider" | "baseUrl">,
 ) {
   if (isLocalEndpoint(model.baseUrl)) return 1;
-  return model.provider === "ollama" ? 2 : 4;
+  return (
+    providerType(model.provider).quickTaskConcurrency ?? QUICK_TASK_CONCURRENCY
+  );
 }
 
 type Queue = { active: number; waiting: Array<() => void> };

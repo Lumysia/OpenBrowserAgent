@@ -30,7 +30,15 @@ export const AUTO_SCROLL_AT_BOTTOM_PX = 2;
 // A scroll up by less than this is rounding, not the reader moving.
 export const AUTO_SCROLL_SUBPIXEL_PX = 1;
 export const AUTO_SCROLL_STREAM_THROTTLE_MS = 180;
-export const ESTIMATED_CHARS_PER_TOKEN = 4;
+// Token estimates where no tokenizer runs, as Pi estimates them
+// (pi-ai utils/estimate, whose constants are private): characters per
+// token, and the characters an image counts as.
+export const ESTIMATED_CHARS_PER_TOKEN = 3.5;
+export const ESTIMATED_IMAGE_CHARS = 4_800;
+
+// Page translation batches at once on one cloud endpoint (a provider type
+// can set its own, see providers.ts).
+export const QUICK_TASK_CONCURRENCY = 4;
 
 export const LOCAL_CHAT_TITLE_MAX_LENGTH = 42;
 export const GENERATED_TITLE_MAX_LENGTH = 48;

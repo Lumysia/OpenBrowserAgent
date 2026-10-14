@@ -2,17 +2,16 @@ import { useMemo, useState } from "react";
 import { Bot, Highlighter, Image, Plus, Server } from "lucide-react";
 import { getMessages } from "../../src/shared/i18n";
 import {
-  ADD_PROVIDER_TYPES,
   createProviderConfig,
   normalizeProviderState,
 } from "../../src/shared/provider-instances";
 import { normalizeSmartBarSettings } from "../../src/shared/smart-bar";
 import { storage } from "../../src/shared/storage";
+import { type ModelConfig, type ProviderConfig } from "../../src/shared/types";
 import {
-  type ModelConfig,
-  type ProviderConfig,
+  ADD_PROVIDER_TYPES,
   type ProviderId,
-} from "../../src/shared/types";
+} from "../../src/shared/providers";
 import {
   Accordion,
   Button,
