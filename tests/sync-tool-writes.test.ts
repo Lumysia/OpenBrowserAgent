@@ -15,6 +15,7 @@ import {
   memoryTransport,
   type Device,
 } from "./sync-fixtures";
+import { swapChrome } from "./fake-chrome";
 
 // Background agent tools edit synced lists. A sync round that stores
 // another device's change while a tool waits (on an MCP server, a native
@@ -46,11 +47,7 @@ async function addedElsewhere(key: string, items: Item[], added: Item) {
 
 // The tool runs against a's storage.
 function useDevice(t: TestContext, on: Device, extra: object = {}) {
-  const previous = globalThis.chrome;
-  t.after(() => {
-    globalThis.chrome = previous;
-  });
-  globalThis.chrome = { storage: { local: on.env.local }, ...extra } as never;
+  t.after(swapChrome({ storage: { local: on.env.local }, ...extra }));
 }
 
 // a's poll downloads b's addition; then both devices keep it.

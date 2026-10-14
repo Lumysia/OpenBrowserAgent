@@ -3,17 +3,14 @@ import { test } from "node:test";
 import { togglePageTranslation } from "../src/background/page-translate";
 import { PAGE_TOAST_SCRIPT } from "../src/shared/page-toast";
 import { PAGE_TRANSLATE_SCRIPT } from "../src/shared/page-translate/protocol";
-import { installBrowser } from "./helpers";
+import { installChrome } from "./fake-chrome";
 
 // A tab whose page never answers; `scriptable`: whether the browser lets the
 // extension run scripts there.
 function installTab(scriptable: boolean) {
-  installBrowser();
   const injected: unknown[] = [];
   const badges: string[] = [];
-  const chrome = (globalThis as unknown as { chrome: Record<string, unknown> })
-    .chrome;
-  Object.assign(chrome, {
+  installChrome({
     runtime: { getManifest: () => ({}) },
     tabs: { sendMessage: async () => Promise.reject(new Error("No receiver")) },
     scripting: {

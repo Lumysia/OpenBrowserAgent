@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { poll } from "./chromium.mjs";
 import { startPageTranslate } from "./page-translate-fixture.mjs";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // A model that answers late and in another script, as real ones do: the
 // paragraphs on screen go first even when the page lists them last, they
@@ -68,7 +69,7 @@ function translationOf(browserPage, selector) {
 
 test(
   "page translation with a slow model writing CJK",
-  { timeout: 120000 },
+  { timeout: BROWSER_TEST_TIMEOUT },
   async () => {
     const requests = [];
     const session = await startPageTranslate({

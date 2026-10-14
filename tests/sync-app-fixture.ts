@@ -23,26 +23,22 @@ import {
   type RunMetrics,
 } from "../src/shared/types";
 import { attachStreamAction } from "../entrypoints/sidepanel/stream-port";
+import { eventListeners, fakePortPair, swapChrome } from "./fake-chrome";
 import type { Device } from "./sync-fixtures";
 
 // The app's own code (storage items, the side panel's stream handling, the
 // settings pages' helpers) run against one test device's storage.
 
 export async function onDevice<T>(on: Device, run: () => Promise<T>) {
-  const previous = globalThis.chrome;
-  const listeners = {
-    addListener: () => undefined,
-    removeListener: () => undefined,
-  };
-  globalThis.chrome = {
-    storage: { local: on.env.local, onChanged: listeners },
-  } as never;
+  const restore = swapChrome({
+    storage: { local: on.env.local, onChanged: eventListeners() },
+  });
   try {
     const result = await run();
     await on.settle();
     return result;
   } finally {
-    globalThis.chrome = previous;
+    restore();
   }
 }
 
@@ -131,17 +127,13 @@ export async function reattachToRun(
         })(),
       );
     };
-    const background = fakePort();
-    const panel = fakePort();
-    panel.peer = background;
-    background.peer = panel;
-    background.listen((request: AiStreamRequest) => {
+    const [panel, background] = fakePortPair();
+    background.onMessage.addListener((message) => {
+      const request = message as AiStreamRequest;
       if (request.type === AI_STREAM_REQUEST_TYPE.attachStream)
         attachStream(background.port, request.chatId, request.afterSequence);
     });
-    (globalThis.chrome as { runtime?: unknown }).runtime = {
-      connect: () => panel.port,
-    };
+    Object.assign(chrome, { runtime: { connect: () => panel.port } });
     const ignore = () => undefined;
     attachStreamAction({
       chatId,
@@ -163,31 +155,4 @@ export async function reattachToRun(
     await Promise.all(writes);
     return stopped;
   });
-}
-
-type FakePort = {
-  port: chrome.runtime.Port;
-  peer?: FakePort;
-  listeners: Array<(message: never) => void>;
-  listen(listener: (message: never) => void): void;
-};
-
-function fakePort(): FakePort {
-  const self: FakePort = {
-    listeners: [],
-    listen: (listener) => void self.listeners.push(listener),
-    port: {
-      name: "fake",
-      postMessage: (message: unknown) =>
-        queueMicrotask(() =>
-          self.peer?.listeners.forEach((listener) =>
-            listener(structuredClone(message) as never),
-          ),
-        ),
-      onMessage: { addListener: (listener: never) => self.listen(listener) },
-      onDisconnect: { addListener: () => undefined },
-      disconnect: () => undefined,
-    } as unknown as chrome.runtime.Port,
-  };
-  return self;
 }

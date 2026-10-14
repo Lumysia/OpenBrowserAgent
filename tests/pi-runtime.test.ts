@@ -7,9 +7,14 @@ import { DEFAULT_PREFERENCES } from "../src/shared/default-preferences";
 import type { AiStreamResponse } from "../src/shared/types";
 import * as sessions from "../src/background/stream-sessions";
 import { installPiRuntimeBrowser, setupPiRuntime } from "./pi-runtime-helpers";
-import { providerFixture, reply, toolResults } from "./provider-fixtures.mjs";
+import { providerFixture, reply, toolResults } from "./provider-fixtures";
 
 installPiRuntimeBrowser();
+
+// The tool-call fields of a stream chunk (typed `unknown` on the port).
+type ToolChunk = { toolCallId?: string; state?: string; input?: unknown };
+const toolChunk = (chunk: unknown) => chunk as ToolChunk;
+type OpenAiTool = { function: { name: string } };
 
 function setup(baseUrl: string, maxToolSteps = 2) {
   const run = setupPiRuntime(baseUrl);
@@ -69,8 +74,8 @@ test("Pi executes real extension tools, bounds tool turns, and keeps usage", asy
     // Each call is announced once without argument snapshots, then executed.
     const states = (id: string) =>
       run.session.events.flatMap((event) =>
-        event.type === "chunk" && event.chunk.toolCallId === id
-          ? [[event.chunk.state, event.chunk.input]]
+        event.type === "chunk" && toolChunk(event.chunk).toolCallId === id
+          ? [[toolChunk(event.chunk).state, toolChunk(event.chunk).input]]
           : [],
       );
     assert.deepEqual(states("call_1").slice(0, 2), [
@@ -120,13 +125,13 @@ test("toolSearch appends on-demand tools for Pi's next turn", async () => {
     await runPiAgent(run.options);
     assert.equal(
       fixture.requests[0].body.tools.some(
-        (tool) => tool.function.name === "mcpServers",
+        (tool: OpenAiTool) => tool.function.name === "mcpServers",
       ),
       false,
     );
     assert.equal(
       fixture.requests[1].body.tools.some(
-        (tool) => tool.function.name === "mcpServers",
+        (tool: OpenAiTool) => tool.function.name === "mcpServers",
       ),
       true,
     );
@@ -194,7 +199,7 @@ test("question wait survives a panel reconnect, accepts an answer and can be abo
       seen.push(event);
       if (
         event.type === "chunk" &&
-        event.chunk.state === "input-available" &&
+        toolChunk(event.chunk).state === "input-available" &&
         !answerScheduled
       ) {
         answerScheduled = true;

@@ -4,10 +4,12 @@ import type { ServerResponse } from "node:http";
 import type { AiStreamResponse } from "../src/shared/types";
 import { runPiAgent } from "../src/background/pi-runtime";
 import * as sessions from "../src/background/stream-sessions";
-import { providerFixture, reply } from "./provider-fixtures.mjs";
+import { providerFixture, reply } from "./provider-fixtures";
 import { installPiRuntimeBrowser, setupPiRuntime } from "./pi-runtime-helpers";
 
 installPiRuntimeBrowser();
+
+type OpenAiMessage = { role: string; content: unknown };
 
 test(
   `consumed edits/deletes are acknowledged and replayable before the delayed next response`,
@@ -88,9 +90,9 @@ test(
       const submitted = JSON.stringify(fixture.requests[1].body);
       assert.deepEqual(
         fixture.requests[1].body.messages
-          .filter((message) => message.role === "user")
+          .filter((message: OpenAiMessage) => message.role === "user")
           .slice(-2)
-          .map((message) => message.content),
+          .map((message: OpenAiMessage) => message.content),
         ["edited instruction", "second instruction"],
       );
       assert.doesNotMatch(submitted, /old draft|discard instruction/);

@@ -6,7 +6,7 @@ import { runPiAgent } from "../src/background/pi-runtime";
 import * as sessions from "../src/background/stream-sessions";
 import { runSubAgentChat } from "../src/background/sub-agent-run";
 import { installPiRuntimeBrowser, setupPiRuntime } from "./pi-runtime-helpers";
-import { providerFixture, reply } from "./provider-fixtures.mjs";
+import { providerFixture, reply } from "./provider-fixtures";
 
 installPiRuntimeBrowser();
 

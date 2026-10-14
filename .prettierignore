@@ -1,2 +1,2 @@
-# Search result pages kept exactly as the sites served them.
-tests/fixtures/serp/
+# Recorded pages and responses, kept exactly as they were served.
+tests/fixtures/

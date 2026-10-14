@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
@@ -47,6 +47,8 @@ jobs:
           npx wxt zip -b chrome
           npx wxt zip -b firefox
           npx wxt zip -b safari
+          # AMO needs the sources; WXT zips them for Firefox by default.
+          ls .output/*-sources.zip
 
       - name: Publish release
         env:

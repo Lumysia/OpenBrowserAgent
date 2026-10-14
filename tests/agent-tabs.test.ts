@@ -5,15 +5,14 @@ import {
   agentTabIds,
   openAgentTab,
 } from "../src/background/agent-tabs";
-import { browserStorage, installBrowser } from "./helpers";
+import { installChrome } from "./fake-chrome";
 
 // A browser with windows, tabs and tab groups, enough for the group logic.
 function groupBrowser({ tabGroups = true } = {}) {
-  installBrowser();
+  installChrome();
   const tabs = new Map<number, chrome.tabs.Tab>();
   const groups = new Map<number, chrome.tabGroups.TabGroup>();
   const state = { window: 1, nextTab: 1, nextGroup: 100, tabs, groups };
-  Object.assign(chrome.storage, { session: browserStorage().area });
   Object.assign(chrome, {
     tabs: {
       create: async (props: chrome.tabs.CreateProperties) => {

@@ -1,27 +1,17 @@
 import assert from "node:assert/strict";
-import { launchExtension, poll } from "./chromium.mjs";
+import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
+import { startExtension } from "./browser-harness.mjs";
+import { pressKey, typeText } from "./cdp-input.mjs";
+import { poll } from "./chromium.mjs";
 import { composerStatus, installComposerProbe } from "./composer-probe.mjs";
-import { providerFixture } from "./provider-fixtures.mjs";
 
 // Own the loopback provider and disposable browser together, including partial
 // setup failures. Tests can install pre-navigation barriers before configure().
 export async function composerFixture(handle) {
-  const fixture = await providerFixture(handle);
-  let browser;
-  const close = async () => {
-    try {
-      await browser?.close();
-    } finally {
-      await fixture.close();
-    }
-  };
+  const session = await startExtension({ handle });
+  const { browser, fixture, extensionUrl, close } = session;
   try {
-    browser = await launchExtension({
-      headed: process.env.OBA_HEADLESS !== "1",
-    });
-    const page = await browser.open(
-      `chrome-extension://${browser.id}/sidepanel.html`,
-    );
+    const page = await browser.open(extensionUrl("sidepanel.html"));
     const config = {
       provider: "openai",
       model: "fixture",
@@ -86,26 +76,29 @@ export async function checkComposer(page, config, verifyRendered) {
 }
 
 export async function configureComposer(page, config) {
-  await page.call(async (config) => {
-    await chrome.storage.local.set({
-      provider: {
-        acceptance: {
-          id: "acceptance",
-          type: config.provider,
-          baseUrl: config.baseUrl,
-          apiKey: config.apiKey,
-          models: [{ id: "acceptance-model", name: config.model }],
+  await page.call(
+    async ({ config, debugLogging }) => {
+      await chrome.storage.local.set({
+        provider: {
+          acceptance: {
+            id: "acceptance",
+            type: config.provider,
+            baseUrl: config.baseUrl,
+            apiKey: config.apiKey,
+            models: [{ id: "acceptance-model", name: config.model }],
+          },
         },
-      },
-      language: "en-US",
-      preferences: {
-        selectedModelId: "acceptance-model",
-        maxToolSteps: 3,
-        autoRetry: false,
-      },
-      "debug-logging-enabled": false,
-    });
-  }, config);
+        language: "en-US",
+        preferences: {
+          selectedModelId: "acceptance-model",
+          maxToolSteps: 3,
+          autoRetry: false,
+        },
+        [debugLogging]: false,
+      });
+    },
+    { config, debugLogging: STORAGE_KEYS.debugLoggingEnabled },
+  );
   await page.send("Page.reload");
   await page.send("Page.bringToFront");
   await poll(() =>
@@ -118,26 +111,10 @@ export async function submitComposer(page, prompt) {
   await sendComposer(page);
 }
 
-export async function typeComposer(page, prompt) {
-  await page.call(() =>
-    document.querySelector(".composer-box textarea").focus(),
-  );
-  await page.send("Input.insertText", {
-    text: prompt,
-  });
+export function typeComposer(page, prompt) {
+  return typeText(page, prompt, ".composer-box textarea");
 }
 
-export async function sendComposer(page) {
-  await page.send("Input.dispatchKeyEvent", {
-    type: "keyDown",
-    key: "Enter",
-    code: "Enter",
-    windowsVirtualKeyCode: 13,
-  });
-  await page.send("Input.dispatchKeyEvent", {
-    type: "keyUp",
-    key: "Enter",
-    code: "Enter",
-    windowsVirtualKeyCode: 13,
-  });
+export function sendComposer(page) {
+  return pressKey(page, "Enter");
 }

@@ -1,5 +1,4 @@
-import { browserStorage, installBrowser } from "./helpers";
-import { eventListeners } from "./tool-fixtures";
+import { eventListeners, installChrome } from "./fake-chrome";
 
 type Item = chrome.downloads.DownloadItem;
 
@@ -8,8 +7,7 @@ export const EXTENSION_ID = "oba-extension";
 // A downloads API over items in memory. `download` makes an in-progress
 // item; tests move it on with `update`, which fires onChanged.
 export function downloadsBrowser() {
-  installBrowser();
-  const session = browserStorage();
+  installChrome();
   const items = new Map<number, Item>();
   const onChanged =
     eventListeners<(delta: chrome.downloads.DownloadDelta) => void>();
@@ -95,7 +93,6 @@ export function downloadsBrowser() {
     downloads,
     runtime: { id: EXTENSION_ID },
   });
-  (chrome.storage as unknown as Record<string, unknown>).session = session.area;
   return { items, add, update, requests, canceled, resumed, downloads };
 }
 

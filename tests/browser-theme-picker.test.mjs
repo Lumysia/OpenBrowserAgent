@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { setTimeout as delay } from "node:timers/promises";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
+import { hoverTooltip } from "./cdp-input.mjs";
 import { launchExtension, poll } from "./chromium.mjs";
 
 // Every theme swatch shows its name when the pointer rests on it. The drawn
@@ -8,11 +9,9 @@ import { launchExtension, poll } from "./chromium.mjs";
 // from the input that carries the tooltip.
 test(
   "theme swatches show their tooltip on hover",
-  { timeout: 120000 },
+  { timeout: BROWSER_TEST_TIMEOUT },
   async () => {
-    const browser = await launchExtension({
-      headed: process.env.OBA_HEADLESS !== "1",
-    });
+    const browser = await launchExtension();
     try {
       const page = await browser.open(
         `chrome-extension://${browser.id}/options.html`,
@@ -40,28 +39,7 @@ test(
       assert.ok(swatches.length >= 10);
       const shown = [];
       for (const { label, x, y } of swatches) {
-        // Away first, so each tooltip opens from scratch.
-        await page.send("Input.dispatchMouseEvent", {
-          type: "mouseMoved",
-          x: 2,
-          y: 2,
-        });
-        await delay(200);
-        for (const dx of [-8, -4, 0])
-          await page.send("Input.dispatchMouseEvent", {
-            type: "mouseMoved",
-            x: x + dx,
-            y,
-          });
-        shown.push(
-          await poll(
-            () =>
-              page.call(
-                () => document.querySelector('[role="tooltip"]')?.textContent,
-              ),
-            5000,
-          ).catch(() => "none"),
-        );
+        shown.push(await hoverTooltip(page, { x, y }));
         assert.equal(shown.at(-1), label, `tooltip for ${label}`);
       }
     } finally {

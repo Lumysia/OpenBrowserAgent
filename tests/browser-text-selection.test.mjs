@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { MODIFIERS, pressKey, typeText } from "./cdp-input.mjs";
 import { poll } from "./chromium.mjs";
 import {
   composerFixture,
   sendComposer,
   typeComposer,
 } from "./browser-composer.mjs";
-import { reply } from "./provider-fixtures.mjs";
+import { reply } from "./provider-fixtures.ts";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // A field people type into, not a radio or switch.
 const FIELD = 'input:is([type="text"], [type="number"], :not([type]))';
@@ -29,7 +31,7 @@ function userSelect(page, selectors) {
 // Interface chrome is not selectable; chat content and fields are.
 test(
   "only content and fields are text-selectable",
-  { timeout: 120000 },
+  { timeout: BROWSER_TEST_TIMEOUT },
   async () => {
     const fixture = await composerFixture((request, response) =>
       reply(response, request.protocol, { text: ANSWER }),
@@ -88,12 +90,8 @@ test(
         document.activeElement?.blur();
         getSelection().removeAllRanges();
       });
-      await page.send("Input.dispatchKeyEvent", {
-        type: "keyDown",
-        key: "a",
-        code: "KeyA",
-        windowsVirtualKeyCode: 65,
-        modifiers: 2,
+      await pressKey(page, "a", {
+        modifiers: MODIFIERS.ctrl,
         commands: ["selectAll"],
       });
       const selected = await page.call(() => getSelection().toString());
@@ -134,7 +132,7 @@ test(
         input.focus();
         input.select();
       }, FIELD);
-      await options.send("Input.insertText", { text: "7" });
+      await typeText(options, "7");
       await poll(() =>
         options.call(
           (field) => document.querySelector(field).value === "7",

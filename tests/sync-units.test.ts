@@ -28,7 +28,7 @@ import {
 } from "../src/shared/sync/root";
 import { parseRetryAfter } from "../src/shared/sync/transport";
 import { parseMultistatus, strongEtag } from "../src/shared/sync/webdav";
-import { memoryArea } from "./sync-fixtures";
+import { memoryArea } from "./fake-chrome";
 
 test("HLC clocks order by wall time, then counter, then device", () => {
   const [first, state] = tickClock(INITIAL_HLC, "a", 1000);

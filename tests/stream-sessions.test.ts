@@ -4,17 +4,13 @@ import * as sessions from "../src/background/stream-sessions";
 import { ABORT_CHAT_STREAMS } from "../src/shared/chat-stream-control";
 import type { AiStreamResponse, RunMetrics } from "../src/shared/types";
 import { appendQueuedMessages } from "../src/shared/chat-updates";
+import { fakePort, swapChrome } from "./fake-chrome";
 
 afterEach(() => mock.restoreAll());
 
 function port() {
-  const events: AiStreamResponse[] = [];
-  return {
-    events,
-    port: {
-      postMessage: (event: AiStreamResponse) => events.push(event),
-    } as chrome.runtime.Port,
-  };
+  const { port, posted } = fakePort();
+  return { events: posted as AiStreamResponse[], port };
 }
 
 test("chat close acknowledges cancellation of detached and attached sessions only", () => {
@@ -85,8 +81,7 @@ test("reconnect replays only unseen streaming and tool events in order", () => {
 test("a running session keeps the service worker alive until its run ends", () => {
   mock.timers.enable({ apis: ["setInterval", "setTimeout"] });
   const getPlatformInfo = mock.fn(async () => ({}));
-  const previous = globalThis.chrome;
-  globalThis.chrome = { runtime: { getPlatformInfo } } as never;
+  const restore = swapChrome({ runtime: { getPlatformInfo } });
   try {
     const session = sessions.createStreamSession("keepalive");
     mock.timers.tick(60_000);
@@ -96,7 +91,7 @@ test("a running session keeps the service worker alive until its run ends", () =
     assert.equal(getPlatformInfo.mock.callCount(), 3);
     sessions.abortSession("keepalive");
   } finally {
-    globalThis.chrome = previous;
+    restore();
   }
 });
 

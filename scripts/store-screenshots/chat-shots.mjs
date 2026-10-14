@@ -2,7 +2,7 @@ import {
   providerFixture,
   reply,
   toolResults,
-} from "../../tests/provider-fixtures.mjs";
+} from "../../tests/provider-fixtures.ts";
 import {
   PAGE,
   PANEL,

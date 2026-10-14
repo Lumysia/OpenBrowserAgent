@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { browserToolFixture, ref } from "./browser-tool-fixture.mjs";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // Real Chromium is the only place where layout, hit-testing, form defaults
 // and inline handlers behave as they do for users.
@@ -53,7 +54,7 @@ const HUGE = `<title>Huge</title>${Array.from(
 
 test(
   "page tools: refs, batches, caps, edits and the tool set",
-  { timeout: 240000 },
+  { timeout: BROWSER_TEST_TIMEOUT },
   async (t) => {
     const fixture = await browserToolFixture((request, response) => {
       const pages = {
@@ -491,7 +492,7 @@ test(
 
 test(
   "a sub-agent runs in the background with no side panel open",
-  { timeout: 120000 },
+  { timeout: BROWSER_TEST_TIMEOUT },
   async () => {
     const fixture = await browserToolFixture();
     try {

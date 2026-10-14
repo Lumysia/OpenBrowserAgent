@@ -10,7 +10,16 @@
 // script runs too. Refuses to run on a dirty tree, since every mutation is
 // undone with `git checkout`.
 import { execFileSync, spawnSync } from "node:child_process";
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 
 const MUTATION_DIR = new URL("./sync-mutations/", import.meta.url);
 const MUTATIONS = (
@@ -36,30 +45,53 @@ const SYNC_TESTS = readdirSync("tests")
   .sort()
   .map((name) => `tests/${name}`);
 
+const REPORTER = new URL("./test-failures-reporter.mjs", import.meta.url);
+
+// Names of the failed tests. A run that exits non-zero without reporting a
+// failed test (for example a mutation that no longer parses) still counts as
+// caught, under a name that says so.
 function runTests() {
   const unit = spawnSync(
-    "node",
+    process.execPath,
     [
       "--import",
       "tsx",
       "--test",
+      `--test-reporter=${REPORTER.href}`,
       // A mutation that deadlocks fails its test instead of hanging.
       "--test-timeout=30000",
       ...SYNC_TESTS,
     ],
     { encoding: "utf8" },
   );
-  const failed = [...unit.stdout.matchAll(/^✖ (.+?) \(\d/gm)].map(
-    (match) => match[1],
-  );
+  const failed = unit.stdout
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line).name);
+  if (unit.status !== 0 && !failed.length)
+    failed.push(`unit tests crashed (exit ${unit.status ?? unit.signal})`);
   if (davA && davB) {
-    const devices = spawnSync(
-      "node",
-      ["--import", "tsx", "tests/sync-two-devices.ts", davA, davB],
-      { encoding: "utf8" },
+    const resultsFile = join(
+      mkdtempSync(join(tmpdir(), "oba-sync-mutations-")),
+      "results.json",
     );
-    for (const match of devices.stdout.matchAll(/^FAIL (.+)$/gm))
-      failed.push(`two devices: ${match[1]}`);
+    const devices = spawnSync(
+      process.execPath,
+      ["--import", "tsx", "tests/sync-two-devices.ts", davA, davB],
+      {
+        encoding: "utf8",
+        env: { ...process.env, SYNC_RESULTS: resultsFile },
+      },
+    );
+    const reported = existsSync(resultsFile)
+      ? JSON.parse(readFileSync(resultsFile, "utf8")).failed
+      : [];
+    rmSync(dirname(resultsFile), { recursive: true, force: true });
+    for (const name of reported) failed.push(`two devices: ${name}`);
+    if (devices.status !== 0 && !reported.length)
+      failed.push(
+        `two devices crashed (exit ${devices.status ?? devices.signal})`,
+      );
   }
   return [...new Set(failed)];
 }

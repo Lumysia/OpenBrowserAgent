@@ -1,3 +1,6 @@
+import { CONTEXT_MENU_ID } from "../src/shared/context-menu.ts";
+import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
+import { setPreferences } from "./browser-harness.mjs";
 import { poll } from "./chromium.mjs";
 import { startSmartBar } from "./smart-bar-page.mjs";
 
@@ -5,7 +8,7 @@ import { startSmartBar } from "./smart-bar-page.mjs";
 // a fixture server for pages and the model, the background's worker, and
 // right-click menu clicks dispatched to the background's own listener.
 
-export const MENU_ID = "oba-translate-page";
+export const MENU_ID = CONTEXT_MENU_ID.translatePage;
 
 // A long article: links, emphasis and code in its paragraphs, a list, a code
 // block, form fields, text marked not to translate, and a button that adds a
@@ -67,13 +70,7 @@ export async function startPageTranslate({
 }) {
   const session = await startSmartBar({ pages, answer, launch, smartBar });
   const { browser, options, extensionUrl } = session;
-  if (preferences)
-    await options.call(async (change) => {
-      const { preferences } = await chrome.storage.local.get("preferences");
-      await chrome.storage.local.set({
-        preferences: { ...preferences, ...change },
-      });
-    }, preferences);
+  if (preferences) await setPreferences(options, preferences);
   const attachWorker = async () => {
     const worker = await browser.attach(
       (item) => item === extensionUrl("background.js"),
@@ -82,24 +79,25 @@ export async function startPageTranslate({
     // The menu is built when the extension is installed.
     await poll(() =>
       worker.call(
-        () =>
+        (id) =>
           new Promise((resolve) =>
-            chrome.contextMenus.update("oba-translate-page", {}, () =>
+            chrome.contextMenus.update(id, {}, () =>
               resolve(!chrome.runtime.lastError),
             ),
           ),
+        MENU_ID,
       ),
     );
     // Records the titles the menu item gets.
-    await worker.call(() => {
+    await worker.call((menuId) => {
       const menus = chrome.contextMenus;
       const update = menus.update.bind(menus);
       self.menuTitles = [];
       menus.update = (id, properties, callback) => {
-        if (id === "oba-translate-page") self.menuTitles.push(properties.title);
+        if (id === menuId) self.menuTitles.push(properties.title);
         return update(id, properties, callback);
       };
-    });
+    }, MENU_ID);
     const tabIdOf = (url) =>
       poll(() =>
         worker.call(
@@ -113,12 +111,12 @@ export async function startPageTranslate({
       clickMenu: async (url) => {
         const tabId = await tabIdOf(url);
         await worker.call(
-          async ({ tabId, menuItemId }) => {
+          async ({ tabId, menuItemId, parentMenuItemId }) => {
             const tab = await chrome.tabs.get(tabId);
             chrome.contextMenus.onClicked.dispatch(
               {
                 menuItemId,
-                parentMenuItemId: "oba-menu",
+                parentMenuItemId,
                 editable: false,
                 frameId: 0,
                 pageUrl: tab.url,
@@ -126,7 +124,11 @@ export async function startPageTranslate({
               tab,
             );
           },
-          { tabId, menuItemId: MENU_ID },
+          {
+            tabId,
+            menuItemId: MENU_ID,
+            parentMenuItemId: CONTEXT_MENU_ID.parent,
+          },
         );
       },
       menuTitles: () => worker.call(() => self.menuTitles),
@@ -152,17 +154,22 @@ export async function startPageTranslate({
     });
     return attachWorker();
   };
-  const setPreferences = (change) =>
-    options.call(async (change) => {
-      const { preferences } = await chrome.storage.local.get("preferences");
-      await chrome.storage.local.set({
-        preferences: {
-          ...preferences,
-          pageTranslate: { ...preferences.pageTranslate, ...change },
-        },
-      });
-    }, change);
-  return { ...session, ...current, setPreferences, reloadExtension };
+  // Merges `change` into the page translation settings.
+  const setPageTranslate = async (change) => {
+    const { pageTranslate } = await options.call(
+      async (key) => (await chrome.storage.local.get(key))[key],
+      STORAGE_KEYS.preferences,
+    );
+    await setPreferences(options, {
+      pageTranslate: { ...pageTranslate, ...change },
+    });
+  };
+  return {
+    ...session,
+    ...current,
+    setPreferences: setPageTranslate,
+    reloadExtension,
+  };
 }
 
 // The translation shown in the block `selector`, or undefined.

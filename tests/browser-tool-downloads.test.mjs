@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
-import { resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { test } from "node:test";
+import { setPreferences } from "./browser-harness.mjs";
 import { browserToolFixture, ref } from "./browser-tool-fixture.mjs";
 import { poll } from "./chromium.mjs";
 import { sendComposer, typeComposer } from "./browser-composer.mjs";
@@ -154,7 +156,7 @@ test(
     const state = {};
     // The browser's own download folder: a CDP download override would put
     // every file at the top of its folder under a name of its own.
-    const folder = await mkdtemp(resolve(".output/downloads-"));
+    const folder = await mkdtemp(join(tmpdir(), "oba-downloads-"));
     const fixture = await browserToolFixture(serve(state), {
       preferences: {
         download: { default_directory: folder, prompt_for_download: false },
@@ -348,18 +350,13 @@ test(
           const panel = await fixture.browser.open(
             `chrome-extension://${fixture.browser.id}/sidepanel.html`,
           );
+          await setPreferences(panel, {
+            selectedModelId: "fixture",
+            selectedAgentId: "fixture-agent",
+            autoRetry: false,
+          });
           await panel.call(async () => {
-            const { preferences } =
-              await chrome.storage.local.get("preferences");
-            await chrome.storage.local.set({
-              language: "en-US",
-              preferences: {
-                ...preferences,
-                selectedModelId: "fixture",
-                selectedAgentId: "fixture-agent",
-                autoRetry: false,
-              },
-            });
+            await chrome.storage.local.set({ language: "en-US" });
           });
           await panel.send("Page.reload");
           await poll(
@@ -452,6 +449,7 @@ test(
       );
     } finally {
       await fixture.close();
+      await rm(folder, { recursive: true, force: true });
     }
   },
 );

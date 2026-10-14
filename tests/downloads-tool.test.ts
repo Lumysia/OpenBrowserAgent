@@ -8,7 +8,7 @@ import { runTool } from "../src/background/tools/run-tool";
 import type { ToolContext } from "../src/background/tools/types";
 import { DOWNLOAD_STATUS } from "../src/shared/downloads";
 import { downloadsBrowser, EXTENSION_ID } from "./download-fixtures";
-import { installBrowser } from "./helpers";
+import { installChrome } from "./fake-chrome";
 
 afterEach(() => mock.restoreAll());
 
@@ -241,7 +241,7 @@ test("saving needs content or a source, and the list marks the chat's own", asyn
 });
 
 test("without a downloads API every action says so instead of failing", async () => {
-  installBrowser();
+  installChrome();
   for (const action of ["download", "list", "wait"]) {
     const result = await tool({ action, url: "https://x.test/a.pdf" });
     assert.equal(result.isError, true);

@@ -36,6 +36,7 @@ import {
   memoryTransport,
   messageIds,
 } from "./sync-fixtures";
+import { swapChrome } from "./fake-chrome";
 
 // Background rewrites of chats (the seventh fix): app paths that store a
 // chat although the user changed nothing in it. Sync counts such a write as
@@ -165,11 +166,10 @@ test("fix7 P1+P2: a long reply is never replaced by a partial copy closed on ano
 });
 
 test("fix7 P2: the background's sync holds exactly the chats with a run in progress", () => {
-  const previous = globalThis.chrome;
-  globalThis.chrome = {
+  const restore = swapChrome({
     storage: { local: {}, sync: {} },
     runtime: { getPlatformInfo: async () => ({}) },
-  } as never;
+  });
   try {
     const env = browserSyncEnv();
     const session = createStreamSession("X");
@@ -181,7 +181,7 @@ test("fix7 P2: the background's sync holds exactly the chats with a run in progr
   } finally {
     // Its timers would keep the test process alive.
     abortSession("X");
-    globalThis.chrome = previous;
+    restore();
   }
 });
 

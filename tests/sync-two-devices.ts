@@ -8,8 +8,10 @@
 // example 127.0.0.1 and localhost), so no cache can be shared between the
 // devices by accident. The optional pairs go through a proxy that strips
 // ETags, and one that drops If-Match and If-None-Match (a server that
-// ignores version checks).
+// ignores version checks). With SYNC_RESULTS=<file> set, the names of the
+// failed cases are also written there as JSON.
 import assert from "node:assert/strict";
+import { writeFileSync } from "node:fs";
 import {
   createSyncRunner,
   loadContent,
@@ -420,14 +422,14 @@ Object.assign(
     : dayOfUseCases(baseA, baseB),
 );
 
-let failed = 0;
+const failed: string[] = [];
 for (const [name, body] of Object.entries(cases)) {
   const start = log.length;
   try {
     await body();
     console.log(`ok   ${name}`);
   } catch (error) {
-    failed++;
+    failed.push(name);
     console.log(
       `FAIL ${name}\n${error instanceof Error ? error.stack : error}`,
     );
@@ -439,4 +441,6 @@ for (const [name, body] of Object.entries(cases)) {
       .join("\n"),
   );
 }
-process.exitCode = failed ? 1 : 0;
+if (process.env.SYNC_RESULTS)
+  writeFileSync(process.env.SYNC_RESULTS, JSON.stringify({ failed }));
+process.exitCode = failed.length ? 1 : 0;

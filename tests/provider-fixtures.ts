@@ -1,24 +1,84 @@
-import { createServer } from "node:http";
 import { once } from "node:events";
+import {
+  createServer,
+  type IncomingHttpHeaders,
+  type ServerResponse,
+} from "node:http";
+import type { AddressInfo } from "node:net";
+import { setTimeout as delay } from "node:timers/promises";
+
+export type FixtureProtocol =
+  "openai" | "openai-responses" | "anthropic" | "gemini";
+
+export interface FixtureRequest {
+  method: string;
+  url: string;
+  // The JSON the extension sent (or the raw text of a body that is not
+  // JSON), typed as JSON.parse returns it: tests read whatever
+  // provider-specific fields they check.
+  body: ReturnType<typeof JSON.parse>;
+  protocol: FixtureProtocol;
+  headers: IncomingHttpHeaders;
+}
+
+export type FixtureHandler = (
+  request: FixtureRequest,
+  response: ServerResponse,
+  requests: FixtureRequest[],
+) => unknown;
+
+export interface ProviderFixture {
+  requests: FixtureRequest[];
+  baseUrl: string;
+  close(): Promise<void>;
+}
+
+export interface FixtureToolCall {
+  id: string;
+  name: string;
+  args: unknown;
+}
+
+export interface FixtureReply {
+  text?: string;
+  thinking?: string;
+  calls?: FixtureToolCall[];
+  // false leaves the stream open, like a model still writing.
+  end?: boolean;
+}
+
+function parseBody(text: string): ReturnType<typeof JSON.parse> {
+  try {
+    return JSON.parse(text || "{}");
+  } catch {
+    return text;
+  }
+}
 
 // Controlled HTTP protocol fixtures. These are not evidence of a real model run.
-export async function providerFixture(handle) {
-  const requests = [];
+export async function providerFixture(
+  handle: FixtureHandler,
+): Promise<ProviderFixture> {
+  const requests: FixtureRequest[] = [];
   const server = createServer(async (request, response) => {
     try {
-      const chunks = [];
+      const chunks: Buffer[] = [];
       for await (const chunk of request) chunks.push(chunk);
-      const body = JSON.parse(Buffer.concat(chunks).toString() || "{}");
-      const pathname = new URL(request.url, "http://localhost").pathname;
-      const protocol = pathname.includes("streamGenerateContent")
+      const body = parseBody(Buffer.concat(chunks).toString());
+      const url = request.url ?? "/";
+      const pathname = new URL(url, "http://localhost").pathname;
+      const protocol: FixtureProtocol = pathname.includes(
+        "streamGenerateContent",
+      )
         ? "gemini"
         : pathname.endsWith("/responses")
           ? "openai-responses"
           : pathname.endsWith("/messages")
             ? "anthropic"
             : "openai";
-      const item = {
-        url: request.url,
+      const item: FixtureRequest = {
+        method: request.method ?? "GET",
+        url,
         body,
         protocol,
         headers: request.headers,
@@ -33,7 +93,7 @@ export async function providerFixture(handle) {
   await once(server, "listening");
   return {
     requests,
-    baseUrl: `http://127.0.0.1:${server.address().port}`,
+    baseUrl: `http://127.0.0.1:${(server.address() as AddressInfo).port}`,
     async close() {
       server.closeAllConnections();
       await new Promise((resolve) => server.close(resolve));
@@ -41,18 +101,20 @@ export async function providerFixture(handle) {
   };
 }
 
+// Answers in one go, in the wire format of `protocol`.
 export function reply(
-  response,
-  protocol,
-  { text = "", thinking = "", calls = [], end = true } = {},
+  response: ServerResponse,
+  protocol: FixtureProtocol,
+  { text = "", thinking = "", calls = [], end = true }: FixtureReply = {},
 ) {
   response.writeHead(200, { "Content-Type": "text/event-stream" });
-  const send = (data, event) =>
+  const send = (data: object, event?: string) =>
     response.write(
       `${event ? `event: ${event}\n` : ""}data: ${JSON.stringify(data)}\n\n`,
     );
   if (protocol === "anthropic") {
-    const event = (type, rest = {}) => send({ type, ...rest }, type);
+    const event = (type: string, rest: object = {}) =>
+      send({ type, ...rest }, type);
     event("message_start", {
       message: {
         id: "msg_fixture",
@@ -144,13 +206,13 @@ export function reply(
     });
   } else if (protocol === "openai-responses") {
     let sequence_number = 0;
-    const event = (type, rest = {}) =>
+    const event = (type: string, rest: object = {}) =>
       send({ type, sequence_number: sequence_number++, ...rest }, type);
     event("response.created", {
       response: { id: "resp_fixture", status: "in_progress", output: [] },
     });
     let index = 0;
-    const output = [];
+    const output: object[] = [];
     if (thinking) {
       const item = {
         type: "reasoning",
@@ -232,12 +294,8 @@ export function reply(
         },
       });
   } else {
-    const delta = (value, finish_reason = null) =>
-      send({
-        id: "chat_fixture",
-        object: "chat.completion.chunk",
-        choices: [{ index: 0, delta: value, finish_reason }],
-      });
+    const delta = (value: object, finish_reason: string | null = null) =>
+      send(openAiChunk(value, finish_reason));
     if (thinking) delta({ reasoning_content: thinking });
     if (text) delta({ content: text });
     calls.forEach((call, index) => {
@@ -268,17 +326,64 @@ export function reply(
   if (end) response.end();
 }
 
-export function toolResults(request) {
+function openAiChunk(delta: object, finish_reason: string | null = null) {
+  return {
+    id: "chat_fixture",
+    object: "chat.completion.chunk",
+    choices: [{ index: 0, delta, finish_reason }],
+  };
+}
+
+export type TextProducer = (write: (text: string) => void) => unknown;
+
+// Streams an OpenAI chat completion text piece by piece: each string of
+// `chunks`, or each `write` of a producer, is one delta, `delayMs` apart.
+export async function streamText(
+  response: ServerResponse,
+  chunks: Iterable<string> | TextProducer,
+  { delayMs = 0 }: { delayMs?: number } = {},
+) {
+  response.writeHead(200, { "Content-Type": "text/event-stream" });
+  const write = (content: string) =>
+    response.write(`data: ${JSON.stringify(openAiChunk({ content }))}\n\n`);
+  if (typeof chunks === "function") await chunks(write);
+  else
+    for (const content of chunks) {
+      write(content);
+      if (delayMs) await delay(delayMs);
+    }
+  response.write(`data: ${JSON.stringify(openAiChunk({}, "stop"))}\n\n`);
+  response.end("data: [DONE]\n\n");
+}
+
+// `text` cut into pieces of `size` characters, for streamText.
+export function pieces(text: string, size: number) {
+  const result: string[] = [];
+  for (let index = 0; index < text.length; index += size)
+    result.push(text.slice(index, index + size));
+  return result;
+}
+
+// The tool results a request carries back to the model, in its protocol's
+// shape.
+export function toolResults(
+  request: FixtureRequest,
+): ReturnType<typeof JSON.parse>[] {
   const body = request.body;
+  type Item = ReturnType<typeof JSON.parse>;
   if (request.protocol === "openai-responses")
-    return body.input.filter((item) => item.type === "function_call_output");
+    return body.input.filter(
+      (item: Item) => item.type === "function_call_output",
+    );
   if (request.protocol === "gemini")
     return body.contents
-      .flatMap((item) => item.parts)
-      .filter((part) => part.functionResponse);
+      .flatMap((item: Item) => item.parts)
+      .filter((part: Item) => part.functionResponse);
   if (request.protocol === "anthropic")
     return body.messages
-      .flatMap((item) => (Array.isArray(item.content) ? item.content : []))
-      .filter((part) => part.type === "tool_result");
-  return body.messages.filter((item) => item.role === "tool");
+      .flatMap((item: Item) =>
+        Array.isArray(item.content) ? item.content : [],
+      )
+      .filter((part: Item) => part.type === "tool_result");
+  return body.messages.filter((item: Item) => item.role === "tool");
 }

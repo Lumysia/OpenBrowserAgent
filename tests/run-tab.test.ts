@@ -8,40 +8,20 @@ import {
 } from "../src/background/run-tab";
 import { pageTab } from "../src/background/page-agent";
 import type { ChatMessage } from "../src/shared/types";
-import { browserStorage, installBrowser } from "./helpers";
+import { fakeTabs, installChrome } from "./fake-chrome";
 
 // Tabs that exist, and which one is active now.
 function tabBrowser(ids: number[], active: number) {
-  installBrowser();
-  const session = browserStorage();
-  const tabs = new Map(
-    ids.map((id) => [
+  const tabs = fakeTabs(
+    ids.map((id) => ({
       id,
-      {
-        id,
-        windowId: 1,
-        title: `Tab ${id}`,
-        url: `https://example.test/${id}`,
-      } as chrome.tabs.Tab,
-    ]),
+      title: `Tab ${id}`,
+      url: `https://example.test/${id}`,
+    })),
+    active,
   );
-  const state = { active, tabs, session };
-  Object.assign(chrome.storage, { session: session.area });
-  Object.assign(chrome, {
-    tabs: {
-      get: async (id: number) => {
-        const tab = tabs.get(id);
-        if (!tab) throw new Error(`No tab with id: ${id}.`);
-        return { ...tab, active: id === state.active };
-      },
-      query: async () =>
-        tabs.has(state.active)
-          ? [{ ...tabs.get(state.active), active: true }]
-          : [],
-    },
-    windows: { getAll: async () => [] },
-  });
-  return state;
+  installChrome({ tabs: tabs.api, windows: { getAll: async () => [] } });
+  return tabs.state;
 }
 
 const message = (metadata?: Record<string, unknown>): ChatMessage => ({

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
+import { clickElement, pressKey } from "./cdp-input.mjs";
 import { poll } from "./chromium.mjs";
 import {
   articlePage,
@@ -8,6 +9,7 @@ import {
   startPageTranslate,
   translationIn,
 } from "./page-translate-fixture.mjs";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // The engine setting in Settings, and the free Google and Microsoft engines
 // against fake services: the background's requests to their hosts are
@@ -45,31 +47,10 @@ function serveEngines(worker, handle) {
 // What the fake services answer: every text prefixed with the service.
 const translated = (prefix, texts) => texts.map((text) => `${prefix} ${text}`);
 
-async function clickAt(page, selector, text) {
-  const point = await poll(() =>
-    page.call(
-      ({ selector, text }) => {
-        const element = [...document.querySelectorAll(selector)].find(
-          (item) => !text || item.textContent.trim() === text,
-        );
-        if (!element) return null;
-        element.scrollIntoView({ block: "nearest" });
-        const rect = element.getBoundingClientRect();
-        return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
-      },
-      { selector, text },
-    ),
-  );
-  for (const type of ["mousePressed", "mouseReleased"])
-    await page.send("Input.dispatchMouseEvent", {
-      type,
-      ...point,
-      button: "left",
-      clickCount: 1,
-    });
-}
+const clickAt = (page, selector, text) =>
+  clickElement(page, selector, { text, exact: true });
 
-test("translation engines", { timeout: 240000 }, async (t) => {
+test("translation engines", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
   const session = await startPageTranslate({
     pages: { "/article": articlePage({ paragraphs: 3 }) },
     answer: fixtureTranslator(),
@@ -168,13 +149,7 @@ test("translation engines", { timeout: 240000 }, async (t) => {
           return document.activeElement === option;
         }),
       );
-      for (const type of ["keyDown", "keyUp"])
-        await settings.send("Input.dispatchKeyEvent", {
-          type,
-          key: "Enter",
-          code: "Enter",
-          windowsVirtualKeyCode: 13,
-        });
+      await pressKey(settings, "Enter");
       await poll(() =>
         settings.call(async () => {
           const { preferences } = await chrome.storage.local.get("preferences");

@@ -1,10 +1,17 @@
-import { eventListeners, toolBrowser } from "./tool-fixtures";
+import { eventListeners } from "./fake-chrome";
+import { toolBrowser } from "./tool-fixtures";
 
 type Page = { id: string; tabId?: number; url?: string };
 
 // A fake chrome.debugger that tracks attachment per page, like Chrome does.
 export function cdpFixture(pages: Page[] = [{ id: "page-1", tabId: 501 }]) {
-  toolBrowser();
+  toolBrowser(
+    pages.flatMap((page) =>
+      page.tabId === undefined
+        ? []
+        : [{ id: page.tabId, ...(page.url ? { url: page.url } : {}) }],
+    ),
+  );
   const attached = new Set<Page>();
   const attaches: chrome.debugger.Debuggee[] = [];
   const detaches: chrome.debugger.Debuggee[] = [];

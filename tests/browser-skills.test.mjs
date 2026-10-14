@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { pressKey, typeText } from "./cdp-input.mjs";
 import { poll } from "./chromium.mjs";
 import {
   composerFixture,
   sendComposer,
   typeComposer,
 } from "./browser-composer.mjs";
-import { reply } from "./provider-fixtures.mjs";
+import { reply } from "./provider-fixtures.ts";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // The chat request, not the one for the chat title.
 async function chatRequest(fixture) {
@@ -23,20 +25,13 @@ async function chatRequest(fixture) {
 // instructions go to the model with the request typed after it.
 test(
   "the / picker picks a skill for the request",
-  { timeout: 120000 },
+  { timeout: BROWSER_TEST_TIMEOUT },
   async () => {
     const fixture = await composerFixture((request, response) =>
       reply(response, request.protocol, { text: "Done." }),
     );
     const { page } = fixture;
-    const key = (name, code = name) =>
-      ["keyDown", "keyUp"].reduce(
-        (sent, type) =>
-          sent.then(() =>
-            page.send("Input.dispatchKeyEvent", { type, key: name, code }),
-          ),
-        Promise.resolve(),
-      );
+    const key = (name) => pressKey(page, name);
     const options = () =>
       page.call(() =>
         [...document.querySelectorAll("#slash-skill-picker [role=option]")].map(
@@ -50,7 +45,7 @@ test(
       await fixture.configure();
       await typeComposer(page, "/");
       await poll(async () => (await options()).length >= 2);
-      await page.send("Input.insertText", { text: "bridge" });
+      await typeText(page, "bridge");
       // Names match before descriptions; built-in skills show a name in
       // the UI language.
       await poll(async () => {
@@ -122,7 +117,7 @@ test(
 
 test(
   "typing /name and a request picks the named skill",
-  { timeout: 120000 },
+  { timeout: BROWSER_TEST_TIMEOUT },
   async () => {
     const fixture = await composerFixture((request, response) =>
       reply(response, request.protocol, { text: "Done." }),

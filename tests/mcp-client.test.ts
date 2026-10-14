@@ -20,26 +20,30 @@ afterEach(() => mock.restoreAll());
 function mockServer(
   respond: (request: Record<string, any>, init: RequestInit) => Response,
 ) {
-  return mock.method(globalThis, "fetch", async (_url, init) => {
-    if (init?.method === "DELETE") return new Response(null, { status: 204 });
-    const request = JSON.parse(String(init?.body));
-    if (request.method === "initialize")
-      return Response.json(
-        {
-          jsonrpc: "2.0",
-          id: request.id,
-          result: { protocolVersion: "2025-06-18" },
-        },
-        { headers: { "Mcp-Session-Id": "fixture-session" } },
+  return mock.method(
+    globalThis,
+    "fetch",
+    async (_url: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.method === "DELETE") return new Response(null, { status: 204 });
+      const request = JSON.parse(String(init?.body));
+      if (request.method === "initialize")
+        return Response.json(
+          {
+            jsonrpc: "2.0",
+            id: request.id,
+            result: { protocolVersion: "2025-06-18" },
+          },
+          { headers: { "Mcp-Session-Id": "fixture-session" } },
+        );
+      if (request.method === "notifications/initialized")
+        return new Response(null, { status: 202 });
+      assert.equal(
+        new Headers(init?.headers).get("Mcp-Session-Id"),
+        "fixture-session",
       );
-    if (request.method === "notifications/initialized")
-      return new Response(null, { status: 202 });
-    assert.equal(
-      new Headers(init?.headers).get("Mcp-Session-Id"),
-      "fixture-session",
-    );
-    return respond(request, init!);
-  });
+      return respond(request, init!);
+    },
+  );
 }
 
 test("MCP SSE correlates responses after notifications and joins multiline data", async () => {

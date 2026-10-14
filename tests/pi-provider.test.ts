@@ -4,7 +4,7 @@ import { Agent } from "@earendil-works/pi-agent-core";
 import { createProviderStream, piModel } from "../src/background/pi-provider";
 import { normalizeContext } from "@earendil-works/pi-ai/utils/transcript";
 import type { ProviderId } from "../src/shared/types";
-import { providerFixture, reply, toolResults } from "./provider-fixtures.mjs";
+import { providerFixture, reply, toolResults } from "./provider-fixtures";
 
 for (const provider of [
   "openai",
@@ -50,7 +50,7 @@ for (const provider of [
               },
               execute: async (_id, args) => {
                 assert.equal(agent.state.isStreaming, true);
-                assert.equal(args.tabId, 42);
+                assert.equal((args as { tabId: number }).tabId, 42);
                 assert.equal(agent.state.pendingToolCalls.size, 1);
                 return {
                   content: [

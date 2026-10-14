@@ -10,6 +10,7 @@ import {
   selectText,
   startSmartBar,
 } from "./smart-bar-page.mjs";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // Translate on a word answers with a dictionary entry;
 // sentences and the other actions keep their plain results.
@@ -38,7 +39,7 @@ const ENTRY = {
 const selected = (prompt, text) =>
   prompt.includes(`<text>\\n${text}\\n</text>`);
 
-test("smart bar dictionary", { timeout: 240000 }, async (t) => {
+test("smart bar dictionary", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
   const session = await startSmartBar({
     pages: { "/page": PAGE },
     smartBar: { enabled: true },

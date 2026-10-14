@@ -4,7 +4,11 @@ import { toolDisplay } from "../entrypoints/sidepanel/tool-part-detail";
 import { BUILTIN_TOOLS } from "../src/background/tools/registry";
 import { getMessages, i18nRegistry } from "../src/shared/i18n";
 import { TOOL_NAME } from "../src/shared/tool-names";
-import { CHAT_PART_STATE, type ChatPart } from "../src/shared/types";
+import {
+  CHAT_PART_STATE,
+  toolPartType,
+  type ChatPart,
+} from "../src/shared/types";
 
 // Each supported language once (some tags share messages).
 const LANGUAGES = [
@@ -13,14 +17,18 @@ const LANGUAGES = [
   ).values(),
 ];
 
-function part(input: unknown, output: unknown = {}): ChatPart {
+function part(
+  toolName: string,
+  input: unknown,
+  output: unknown = {},
+): ChatPart {
   return {
     id: "part",
-    type: "tool",
+    type: toolPartType(toolName),
     state: CHAT_PART_STATE.outputAvailable,
     input,
     output,
-  } as ChatPart;
+  };
 }
 
 // Every `action` a built-in tool accepts, from its parameter schema. act
@@ -53,7 +61,7 @@ test("no tool step line shows a raw action name", () => {
       for (const [name, action] of toolActions) {
         const { description } = toolDisplay(
           name,
-          part({ action, path: "notes.md" }, { count: 2 }),
+          part(name, { action, path: "notes.md" }, { count: 2 }),
           t,
         );
         const where = `${name} ${action} in ${language}: ${description}`;
@@ -86,7 +94,7 @@ test("local command states and loaded tools are localized", () => {
     for (const state of ["running", "done", "error", "canceled", "missing"]) {
       const { description } = toolDisplay(
         TOOL_NAME.localCommand,
-        part({ action: "status" }, { state }),
+        part(TOOL_NAME.localCommand, { action: "status" }, { state }),
         t,
       );
       assert.equal(
@@ -97,14 +105,22 @@ test("local command states and loaded tools are localized", () => {
     assert.equal(
       toolDisplay(
         TOOL_NAME.toolSearch,
-        part({ names: ["workspace"] }, { loaded: ["workspace", "subAgent"] }),
+        part(
+          TOOL_NAME.toolSearch,
+          { names: ["workspace"] },
+          { loaded: ["workspace", "subAgent"] },
+        ),
         t,
       ).description,
       "2 个工具",
     );
     // An action this version does not know shows nothing, not English.
     assert.equal(
-      toolDisplay(TOOL_NAME.devtools, part({ action: "trace" }), t).description,
+      toolDisplay(
+        TOOL_NAME.devtools,
+        part(TOOL_NAME.devtools, { action: "trace" }),
+        t,
+      ).description,
       "",
     );
   } finally {
@@ -115,15 +131,16 @@ test("local command states and loaded tools are localized", () => {
 test("a failed step says so in the UI language, not the model's error text", () => {
   const t = getMessages("de-DE");
   try {
-    const failed = {
+    const failed: ChatPart = {
       ...part(
+        TOOL_NAME.workspace,
         { action: "write", path: "notes.md" },
         {
           error: "Workspace file changed since it was read.",
         },
       ),
       state: CHAT_PART_STATE.outputError,
-    } as ChatPart;
+    };
     assert.equal(
       toolDisplay(TOOL_NAME.workspace, failed, t).description,
       "Fehlgeschlagen",
@@ -138,14 +155,18 @@ test("a runCode step shows its duration and saved files", () => {
   const en = getMessages("en-US");
   const english = toolDisplay(
     TOOL_NAME.runCode,
-    part({ code: "1" }, output),
+    part(TOOL_NAME.runCode, { code: "1" }, output),
     en,
   );
   assert.equal(english.title, "Ran code");
   assert.equal(english.description, "120 ms · 1 file saved");
   const t = getMessages("zh-CN");
   try {
-    const chinese = toolDisplay(TOOL_NAME.runCode, part({}, output), t);
+    const chinese = toolDisplay(
+      TOOL_NAME.runCode,
+      part(TOOL_NAME.runCode, {}, output),
+      t,
+    );
     assert.equal(chinese.title, "代码已运行");
     assert.equal(chinese.description, "120毫秒 · 已保存 1 个文件");
   } finally {

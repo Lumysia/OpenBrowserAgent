@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { sendComposer, typeComposer } from "./browser-composer.mjs";
-import { poll } from "./chromium.mjs";
+import { poll, settled } from "./chromium.mjs";
 import { startSmartBar } from "./smart-bar-page.mjs";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // The chat follows a streaming answer only while the reader stays at the
 // bottom: a small scroll up stops it, also when the answer ends.
@@ -12,7 +13,7 @@ const LINES = 120;
 test(
   "side panel auto-scroll leaves a reader who scrolled up",
   {
-    timeout: 120000,
+    timeout: BROWSER_TEST_TIMEOUT,
   },
   async () => {
     let release;
@@ -30,14 +31,9 @@ test(
         }
       },
     });
-    const { browser, options, extensionUrl } = session;
+    const { browser, extensionUrl } = session;
     try {
-      await options.call(async () => {
-        const { preferences } = await chrome.storage.local.get("preferences");
-        await chrome.storage.local.set({
-          preferences: { ...preferences, autoScroll: true },
-        });
-      });
+      await session.setPreferences({ autoScroll: true });
       const panel = await browser.open(extensionUrl("sidepanel.html"));
       await poll(() =>
         panel.call(() => !!document.querySelector(".composer-box textarea")),
@@ -53,27 +49,52 @@ test(
             fromBottom: list.scrollHeight - list.scrollTop - list.clientHeight,
           };
         });
+      const shown = (line) =>
+        poll(() =>
+          panel.call(
+            (text) => document.body.textContent.includes(text),
+            `Line ${line} of a long answer.`,
+          ),
+        );
       // Following while at the bottom.
+      await shown(LINES / 2);
       await poll(async () => (await position()).fromBottom <= 2);
 
-      // A small move up, by the scrollbar (no wheel event).
-      await panel.call(() => {
-        const list = document.querySelector(".messages");
-        list.scrollTop -= 80;
-      });
-      await delay(100);
+      // A small move up, by the scrollbar (no wheel event). Made once the
+      // list has stayed put for two frames, so the panel's own scrolls have
+      // all delivered their scroll events: one in the same frame would merge
+      // with this move. Done again if the panel scrolled in the same frame.
+      const moveUp = () =>
+        panel.call(() => {
+          const list = document.querySelector(".messages");
+          const frame = () => new Promise(requestAnimationFrame);
+          const metrics = () => `${list.scrollTop}:${list.scrollHeight}`;
+          return (async () => {
+            let last = metrics();
+            for (let still = 0; still < 2;) {
+              await frame();
+              const current = metrics();
+              still = current === last ? still + 1 : 0;
+              last = current;
+            }
+            const scrolled = new Promise((resolve) =>
+              list.addEventListener("scroll", resolve, { once: true }),
+            );
+            list.scrollTop -= 80;
+            const top = list.scrollTop;
+            await scrolled;
+            await frame();
+            return list.scrollTop === top;
+          })();
+        });
+      await poll(moveUp);
       const held = (await position()).top;
       release();
-      await poll(() =>
-        panel.call(
-          (last) => document.body.textContent.includes(last),
-          `Line ${LINES} of`,
-        ),
-      );
+      await shown(LINES);
       await poll(() =>
         panel.call(() => !document.querySelector(".typing-indicator")),
       );
-      await delay(600);
+      await settled(panel);
       const after = await position();
       assert.ok(
         Math.abs(after.top - held) <= 2,

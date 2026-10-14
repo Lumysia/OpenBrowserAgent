@@ -1,8 +1,12 @@
-import { createServer } from "node:http";
-import { once } from "node:events";
 import assert from "node:assert/strict";
-import { launchExtension, poll } from "./chromium.mjs";
-import { reply } from "./provider-fixtures.mjs";
+import { TOOL_GROUPS } from "../src/shared/agents.ts";
+import {
+  AI_STREAM_PORT_NAME,
+  AI_STREAM_REQUEST_TYPE,
+} from "../src/shared/types.ts";
+import { fixtureProvider, startExtension } from "./browser-harness.mjs";
+import { poll } from "./chromium.mjs";
+import { reply } from "./provider-fixtures.ts";
 
 // The ref written right after `label` in a snapshot line.
 export const ref = (text, label) => {
@@ -11,101 +15,75 @@ export const ref = (text, label) => {
   return line.slice(line.indexOf(label)).match(/\b(e\d+)\b/)?.[1];
 };
 
-const ALL_GROUPS = [
-  "pages",
-  "browser",
-  "web",
-  "images",
-  "skills",
-  "history",
-  "subAgents",
-  "mcp",
-  "mcpServers",
-  "localExecution",
-  "scripts",
-  "devtools",
-];
-
 // Runs the production extension's Pi loop against an entirely local provider.
 // Tests supply tool calls, never import/inject a replacement tool implementation.
 // `respond(body, index)` may replace the step list to route by request content.
+// `handleRequest(request, response)` serves other paths (true when it did).
 // `launch` holds extra launchExtension options, such as browser preferences.
 export async function browserToolFixture(handleRequest, launch = {}) {
   let steps = [];
   let respond;
   let calls = 0;
+  // The model requests' bodies.
   const requests = [];
-  const server = createServer(async (request, response) => {
-    if (request.url !== "/v1/chat/completions") {
-      if (await handleRequest?.(request, response)) return;
-      response.writeHead(404).end();
-      return;
-    }
-    const chunks = [];
-    for await (const chunk of request) chunks.push(chunk);
-    const body = JSON.parse(Buffer.concat(chunks).toString());
-    requests.push(body);
-    if (respond) return reply(response, "openai", respond(body, calls++));
-    const step = steps[calls++];
-    reply(
-      response,
-      "openai",
-      step
-        ? { calls: [{ id: `tool-${calls}`, name: step.name, args: step.args }] }
-        : { text: "Fixture complete." },
-    );
+  const session = await startExtension({
+    handle: async (request, response) => {
+      if (request.url !== "/v1/chat/completions") {
+        if (await handleRequest?.(request, response)) return;
+        response.writeHead(404).end();
+        return;
+      }
+      requests.push(request.body);
+      if (respond)
+        return reply(response, "openai", respond(request.body, calls++));
+      const step = steps[calls++];
+      reply(
+        response,
+        "openai",
+        step
+          ? {
+              calls: [
+                { id: `tool-${calls}`, name: step.name, args: step.args },
+              ],
+            }
+          : { text: "Fixture complete." },
+      );
+    },
+    storage: (baseUrl) => ({
+      provider: {
+        fixture: fixtureProvider(baseUrl, {
+          models: [{ id: "fixture", name: "fixture", supportsImages: true }],
+          imageModels: [{ id: "fixture-image", name: "fixture-image" }],
+        }),
+      },
+      preferences: {
+        imageGenerationEnabled: true,
+        selectedImageModelId: "fixture-image",
+        maxToolSteps: 40,
+      },
+      agents: [
+        {
+          id: "fixture-agent",
+          name: "Fixture",
+          prompt: "",
+          toolGroups: [...TOOL_GROUPS],
+          workspace: false,
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      ],
+    }),
+    launch,
   });
-  server.listen(0, "127.0.0.1");
-  await once(server, "listening");
-  const baseUrl = `http://127.0.0.1:${server.address().port}`;
-  let browser;
+  const { browser, fixture, close } = session;
+  const baseUrl = fixture.baseUrl;
+  // Runs start from the options page: no side panel is open.
+  const page = session.options;
   try {
-    browser = await launchExtension({
-      headed: process.env.OBA_HEADLESS !== "1",
-      ...launch,
-    });
     await browser.browser.send("Browser.setDownloadBehavior", {
       behavior: "allow",
       downloadPath: browser.profile,
     });
-    // Runs start from the options page: no side panel is open.
-    const page = await browser.open(
-      `chrome-extension://${browser.id}/options.html`,
-    );
-    await page.call(
-      async ({ baseUrl, groups }) => {
-        await chrome.storage.local.set({
-          provider: {
-            fixture: {
-              id: "fixture",
-              type: "openai",
-              baseUrl: `${baseUrl}/v1`,
-              models: [
-                { id: "fixture", name: "fixture", supportsImages: true },
-              ],
-              imageModels: [{ id: "fixture-image", name: "fixture-image" }],
-            },
-          },
-          preferences: {
-            imageGenerationEnabled: true,
-            selectedImageModelId: "fixture-image",
-            maxToolSteps: 40,
-          },
-          agents: [
-            {
-              id: "fixture-agent",
-              name: "Fixture",
-              prompt: "",
-              toolGroups: groups,
-              workspace: false,
-              createdAt: 1,
-              updatedAt: 1,
-            },
-          ],
-        });
-      },
-      { baseUrl, groups: ALL_GROUPS },
-    );
     // Sets what the model answers, for runs started here or in the side
     // panel.
     const script = (toolSteps) => {
@@ -122,9 +100,9 @@ export async function browserToolFixture(handleRequest, launch = {}) {
     const start = async (toolSteps, uploadedAttachments = []) => {
       script(toolSteps);
       await page.call(
-        ({ uploadedAttachments }) => {
+        ({ uploadedAttachments, portName, sendMessages }) => {
           const chatId = crypto.randomUUID();
-          const port = chrome.runtime.connect({ name: "ai-stream" });
+          const port = chrome.runtime.connect({ name: portName });
           const run = { chatId, events: [], done: false, port };
           globalThis.toolRun = run;
           port.onMessage.addListener((event) => {
@@ -135,7 +113,7 @@ export async function browserToolFixture(handleRequest, launch = {}) {
             }
           });
           port.postMessage({
-            type: "sendMessages",
+            type: sendMessages,
             chatId,
             messageId: "answer",
             messages: [
@@ -153,7 +131,11 @@ export async function browserToolFixture(handleRequest, launch = {}) {
             },
           });
         },
-        { uploadedAttachments },
+        {
+          uploadedAttachments,
+          portName: AI_STREAM_PORT_NAME,
+          sendMessages: AI_STREAM_REQUEST_TYPE.sendMessages,
+        },
       );
     };
     // The text the model read for each tool call, in call order.
@@ -226,20 +208,14 @@ export async function browserToolFixture(handleRequest, launch = {}) {
         );
       },
       async abort() {
-        await page.call(() => {
-          toolRun.port.postMessage({ type: "abort" });
-        });
+        await page.call((type) => {
+          toolRun.port.postMessage({ type });
+        }, AI_STREAM_REQUEST_TYPE.abort);
       },
-      async close() {
-        await browser.close();
-        server.closeAllConnections();
-        await new Promise((resolve) => server.close(resolve));
-      },
+      close,
     };
   } catch (error) {
-    await browser?.close();
-    server.closeAllConnections();
-    await new Promise((resolve) => server.close(resolve));
+    await close();
     throw error;
   }
 }

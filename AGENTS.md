@@ -68,7 +68,7 @@ OpenBrowserAgent is a WXT/Vite/React/TypeScript browser extension for AI-assiste
 
 ## Releases
 
-- Releases are published by `.github/workflows/release.yml` when a `v*` tag is pushed. Don't upload release files by hand. Set the version in `package.json` (and `wxt.config.ts` `manifest.version`) through a PR first, then tag the merged commit as `v<version>`. A tag with a suffix (`v0.2.0-beta.1`) becomes a pre-release.
+- Releases are published by `.github/workflows/release.yml` when a `v*` tag is pushed. Don't upload release files by hand. The version lives only in `package.json`: bump it with `npm version <version> --no-git-tag-version` (updates `package.json` and `package-lock.json`) through a PR first, then tag the merged commit as `v<version>`. WXT derives the manifest `version` (`0.2.0`) and `version_name` (`0.2.0-beta.1`) from it; don't add them to `wxt.config.ts`. A tag with a suffix (`v0.2.0-beta.1`) becomes a pre-release.
 - The release title is the tag alone, for example `v0.1.0`.
 - Release notes come from `CHANGELOG.md`: user-visible changes go under `## Unreleased` in the PR that makes them, written for users (what changed for them, not how). The version bump PR renames that heading to `## <version> - <date>` and adds a fresh `## Unreleased` above it. The release workflow publishes that section followed by GitHub's list of merged PRs, and fails if the section is missing; a unit test checks the current `package.json` version has one.
 - The same workflow submits the Chrome package to the Chrome Web Store for review (API v2, `wxt submit`), except for pre-releases. It needs repository variables `CHROME_EXTENSION_ID`, `CHROME_PUBLISHER_ID`, `CHROME_SERVICE_ACCOUNT_EMAIL` and the secret `CHROME_SERVICE_ACCOUNT_KEY`, and is skipped until `CHROME_EXTENSION_ID` is set. The store only accepts a version higher than the one it has.
@@ -84,6 +84,7 @@ npm run build
 ```
 
 - Always run `npm run build` after UI changes before telling the user to review or reload the extension.
+- Browser tests (`npm run test:browser:all`, also in CI) run the Chrome build: run `npm run build:chrome` first. They use `CHROMIUM` or a Chromium on `PATH`, headed unless `OBA_HEADLESS=1`. Build them on the shared harness (`tests/browser-harness.mjs`, `tests/cdp-input.mjs`), import product constants instead of copying them, and wait for a signal the product gives rather than a fixed delay.
 - If a production/minified issue cannot be located confidently, create a sourcemap-enabled build or add temporary diagnostics, then ask for a new trace/repro. Do not commit temporary diagnostics or sourcemap-only config unless explicitly requested.
 
 Search for unintended third-party branding before final release work:

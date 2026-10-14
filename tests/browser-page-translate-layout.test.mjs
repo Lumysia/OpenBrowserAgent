@@ -8,6 +8,7 @@ import {
   pageHtml,
   startPageTranslate,
 } from "./page-translate-fixture.mjs";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // Translations keep the page's layout (tests/fixtures/page-translate/
 // layout.html): the page may grow taller with the translations, but boxes
@@ -169,7 +170,7 @@ function besideSource(page, selector) {
 
 test(
   "page translation keeps the page's layout",
-  { timeout: 180000 },
+  { timeout: BROWSER_TEST_TIMEOUT },
   async (t) => {
     const batches = [];
     const html = await readFile(
