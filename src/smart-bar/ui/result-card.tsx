@@ -14,10 +14,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { COPY_FEEDBACK_MS } from "../../shared/config";
 import { SIDE_PANEL_TASK } from "../../shared/side-panel-handoff";
-import {
-  SMART_BAR_ACTION,
-  SMART_BAR_MAX_TEXT_CHARS,
-} from "../../shared/smart-bar";
+import { SMART_BAR_MAX_TEXT_CHARS } from "../../shared/smart-bar";
 import { languageDetect } from "../../shared/language-detector";
 import type { SmartBarPageConfig } from "../../shared/smart-bar-protocol";
 import { Button, IconTooltip } from "../../ui/components";

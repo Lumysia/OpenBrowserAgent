@@ -402,6 +402,12 @@ test("paragraphs: labels are told by markup, in any script", () => {
       <div><div><a href="/u/ann">Ann</a></div> 以及 <div><a href="/u/bo">Bo</a></div></div>
       <div><a href="/a">第一篇很长的新闻标题讲述海岸上的风暴</a> <a href="/b">第二篇很长的新闻标题讲述山区的降雪</a></div>
       <div><a href="/t/rust">Rust</a> · <a href="/t/web">Web</a></div>
+      <div class="user"><img src="a.png" alt="" /><div><div>Kai Lee</div></div></div>
+      <div class="card">
+        <div><a>Valley Courier</a></div>
+        <a href="/story">Snow closes the northern pass for a second week</a>
+        <div><time datetime="2026-10-14">3 hours ago</time></div>
+      </div>
     </article>`);
   assert.deepEqual(
     found.map((paragraph) => paragraph.source.plain),
@@ -411,6 +417,7 @@ test("paragraphs: labels are told by markup, in any script", () => {
       // Two long headlines aren't a row of short labels: words are counted
       // in scripts written without spaces too.
       "第一篇很长的新闻标题讲述海岸上的风暴 第二篇很长的新闻标题讲述山区的降雪",
+      "Snow closes the northern pass for a second week",
     ],
   );
 });
