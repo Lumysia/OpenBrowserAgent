@@ -68,9 +68,15 @@ export async function togglePageTranslation(tab: chrome.tabs.Tab | undefined) {
   const message: PageTranslateToggleMessage = {
     type: PAGE_TRANSLATE_MESSAGE.toggle,
   };
+  // Only the page translation script answers with its state. Other scripts
+  // in the page (the smart bar) also receive the message and the browser
+  // then reports "delivered" with no answer, so an empty reply means the
+  // script isn't there yet.
   const send = () =>
     api.tabs.sendMessage(tabId, message, { frameId: 0 }).then(
-      () => true,
+      (reply: unknown) =>
+        typeof (reply as { translated?: unknown } | undefined)?.translated ===
+        "boolean",
       () => false,
     );
   if (await send()) return;
