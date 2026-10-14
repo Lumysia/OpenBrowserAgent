@@ -26,7 +26,8 @@ export const STREAM_REVEAL_STEP_MEDIUM = 6;
 export const STREAM_REVEAL_STEP_SMALL = 4;
 export const STREAM_REVEAL_STEP_TINY = 2;
 export const STREAM_REVEAL_MAX_PENDING_CHARS = 600;
-export const AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 140;
+// How close to the bottom counts as "at the bottom" for following output.
+export const AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 48;
 export const AUTO_SCROLL_STREAM_THROTTLE_MS = 180;
 export const ESTIMATED_CHARS_PER_TOKEN = 4;
 

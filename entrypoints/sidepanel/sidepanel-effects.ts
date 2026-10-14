@@ -37,18 +37,27 @@ export function useAutoScroll(
   const unbindElementRef = useRef<(() => void) | undefined>(undefined);
   const frameRef = useRef<number | undefined>(undefined);
   const lastStreamScrollAtRef = useRef(0);
+  const autoScrollRef = useRef(autoScroll);
+  autoScrollRef.current = autoScroll;
 
   function bindScrollElement(element: HTMLDivElement) {
     if (boundElementRef.current === element) return;
     unbindElementRef.current?.();
     boundElementRef.current = element;
 
+    // Follow new output only while the reader is at the bottom. Any move up
+    // (wheel, touchpad, scrollbar, keys) stops following; coming back down
+    // to the bottom starts again. Our own scrolls only ever go down.
+    let lastScrollTop = element.scrollTop;
     function updateStickToBottom() {
+      const top = element.scrollTop;
       const distanceFromBottom =
-        element.scrollHeight - element.scrollTop - element.clientHeight;
-      if (distanceFromBottom <= AUTO_SCROLL_BOTTOM_THRESHOLD_PX) {
+        element.scrollHeight - top - element.clientHeight;
+      if (top < lastScrollTop - 1 && distanceFromBottom > 2)
+        stickToBottomRef.current = false;
+      else if (distanceFromBottom <= AUTO_SCROLL_BOTTOM_THRESHOLD_PX)
         stickToBottomRef.current = true;
-      }
+      lastScrollTop = top;
     }
 
     function handleWheel(event: WheelEvent) {
@@ -86,7 +95,27 @@ export function useAutoScroll(
     element.addEventListener("pointerdown", handlePointerDown, {
       passive: true,
     });
+    // Text keeps growing after a message update (the reveal animation,
+    // images, code blocks), so follow the content's size, not only updates.
+    const resizeObserver = new ResizeObserver(() => {
+      if (autoScrollRef.current === false || !stickToBottomRef.current) return;
+      const distanceFromBottom =
+        element.scrollHeight - element.scrollTop - element.clientHeight;
+      if (distanceFromBottom > 2) {
+        element.scrollTop = element.scrollHeight;
+        lastScrollTop = element.scrollTop;
+      }
+    });
+    const observeContent = () => {
+      resizeObserver.disconnect();
+      for (const child of element.children) resizeObserver.observe(child);
+    };
+    observeContent();
+    const childObserver = new MutationObserver(observeContent);
+    childObserver.observe(element, { childList: true });
     unbindElementRef.current = () => {
+      resizeObserver.disconnect();
+      childObserver.disconnect();
       element.removeEventListener("scroll", updateStickToBottom);
       element.removeEventListener("wheel", handleWheel);
       element.removeEventListener("wheel", handleWheel, { capture: true });
@@ -140,9 +169,8 @@ export function useAutoScroll(
     )
       return;
 
-    if (streaming && !stickToBottomRef.current) {
-      return;
-    }
+    // Only opening a chat or sending a message pulls the reader down.
+    if (!stickToBottomRef.current) return;
     const now = performance.now();
     if (
       streaming &&
@@ -162,9 +190,7 @@ export function useAutoScroll(
       if (streaming && distanceFromBottom <= 2) {
         return;
       }
-      if (streaming && !stickToBottomRef.current) {
-        return;
-      }
+      if (!stickToBottomRef.current) return;
       messagesElement.scrollTo({
         top: messagesElement.scrollHeight,
         behavior:
