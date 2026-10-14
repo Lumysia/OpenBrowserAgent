@@ -40,7 +40,7 @@ export default defineConfig({
     name: "__MSG_extName__",
     description: "__MSG_extDescription__",
     version: "0.2.0",
-    version_name: "0.2.0 beta 2",
+    version_name: "0.2.0 beta 3",
     default_locale: "en",
     permissions:
       browser === "safari"
