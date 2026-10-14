@@ -229,9 +229,10 @@
   background: color-mix(in oklab, var(--accent-softer) 42%, var(--card));
   animation: enter var(--duration-slow) var(--ease-out) backwards;
 }
-.composer-card:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
+/* A question takes the focus only so screen readers announce it; its
+   buttons show the focus ring. */
+.composer-card:focus {
+  outline: none;
 }
 .composer-card-header {
   display: grid;

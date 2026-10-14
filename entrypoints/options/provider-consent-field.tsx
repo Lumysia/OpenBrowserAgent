@@ -7,7 +7,7 @@ import {
   withProviderConsent,
 } from "../../src/shared/provider-consent";
 import type { ProviderConfig } from "../../src/shared/types";
-import { Badge, Button, Checkbox, Feedback } from "../../src/ui/components";
+import { Button, Checkbox, Feedback } from "../../src/ui/components";
 import { providerConsentAgreement } from "../../src/ui/provider-display";
 
 // The user's permission for the provider to receive their content: a
@@ -41,11 +41,9 @@ export function ProviderConsentField({
         <ShieldCheck size={16} aria-hidden="true" />
         <span className="provider-consent-summary">
           <strong>{t.providerConsent.allowed}</strong>
-          <Badge title={host}>
-            <span className="provider-consent-host">{host}</span>
-          </Badge>
+          <small title={host}>{host}</small>
         </span>
-        <Button variant="outline" size="sm" onClick={onWithdraw}>
+        <Button variant="ghost" size="sm" onClick={onWithdraw}>
           {t.providerConsent.withdraw}
         </Button>
       </div>
