@@ -22,3 +22,5 @@ export * from "./empty-state";
 export * from "./settings-summary";
 export * from "./portal-container";
 export * from "./user-text";
+export * from "./settings-layout";
+export * from "./confirm-button";

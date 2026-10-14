@@ -21,8 +21,13 @@ const STORAGE_KEY_GROUPS = {
   chats: [STORAGE_KEYS.chats, STORAGE_KEYS.chatTabs],
 } as const;
 
-export type AppStorageClearScope = "all" | "local" | "sync";
+export const APP_STORAGE_CLEAR_SCOPES = ["all", "local", "sync"] as const;
+export type AppStorageClearScope = (typeof APP_STORAGE_CLEAR_SCOPES)[number];
 export type AppStorageClearTarget = "all" | keyof typeof STORAGE_KEY_GROUPS;
+export const APP_STORAGE_CLEAR_TARGETS = [
+  "all",
+  ...Object.keys(STORAGE_KEY_GROUPS),
+] as AppStorageClearTarget[];
 
 export async function clearAppStorage({
   scope = "all",

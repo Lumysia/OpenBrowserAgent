@@ -12,6 +12,7 @@ import type {
 import { useSkillCatalog } from "../../src/ui/useSkillCatalog";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { useTheme } from "../../src/ui/theme";
+import { useDocumentLanguage } from "../../src/ui/use-document-language";
 import { celebrateSend } from "./holiday-touches";
 import { requestChatTitle } from "./ai-requests";
 import { createChatDraft } from "./chat-state-actions";
@@ -212,6 +213,7 @@ export function SidepanelApp() {
   );
 
   useTheme(document.documentElement, preferences ?? {});
+  useDocumentLanguage(language);
   useSyncPageState();
 
   const { createChat, closeChat, selectChat, importChat, forkMessage } =

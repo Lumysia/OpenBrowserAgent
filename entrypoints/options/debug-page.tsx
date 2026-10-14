@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Bug, Wrench, Trash2 } from "lucide-react";
-import { getMessages } from "../../src/shared/i18n";
+import { getMessages, type Messages } from "../../src/shared/i18n";
 import { resolveAgent } from "../../src/shared/agents";
 import {
   describeRun,
   type RunDescription,
 } from "../../src/shared/run-description";
 import {
+  APP_STORAGE_CLEAR_SCOPES,
+  APP_STORAGE_CLEAR_TARGETS,
   clearAppStorage,
   type AppStorageClearScope,
   type AppStorageClearTarget,
@@ -19,17 +21,14 @@ import {
   AccordionTrigger,
   Badge,
   Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Input,
   Feedback,
   Label,
   SettingSwitchCard,
   ToggleGroup,
   ToggleGroupItem,
+  SettingsPageHeader,
+  SettingsSection,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { errorWithDetail } from "../../src/ui/error-text";
@@ -95,12 +94,11 @@ export function DebugPage() {
 
   return (
     <div className="stack">
-      <div>
-        <h1 className="settings-page-title">
-          <Bug size={24} /> {t.options.debug}
-        </h1>
-        <p className="muted">{t.options.debugDescription}</p>
-      </div>
+      <SettingsPageHeader
+        icon={<Bug />}
+        title={t.options.debug}
+        description={t.options.debugDescription}
+      />
       <SettingSwitchCard
         icon={<Bug size={18} />}
         title={t.options.debugLoggingTitle}
@@ -159,91 +157,84 @@ export function DebugPage() {
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-      <Card>
-        <CardHeader>
-          <CardTitle className="settings-section-title danger-title">
-            <AlertTriangle size={18} />
-            <span>{t.options.debugResetTitle}</span>
-          </CardTitle>
-          <CardDescription>{t.options.debugResetDescription}</CardDescription>
-        </CardHeader>
-        <CardContent className="stack">
-          <Label>
-            {t.options.debugResetScope}
-            <ToggleGroup
-              type="single"
-              value={scope}
-              onValueChange={(value) =>
-                value && setScope(value as AppStorageClearScope)
-              }
-            >
-              <ToggleGroupItem value="all">
-                {t.options.debugResetScopeAll}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="local">
-                {t.options.debugResetScopeLocal}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="sync">
-                {t.options.debugResetScopeSync}
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </Label>
-          <Label>
-            {t.options.debugResetTargets}
-            <ToggleGroup
-              type="multiple"
-              value={targets}
-              onValueChange={updateTargets}
-            >
-              <ToggleGroupItem value="all">
-                {t.options.debugResetTargetAll}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="settings">
-                {t.options.debugResetTargetSettings}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="providers">
-                {t.options.debugResetTargetProviders}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="agents">
-                {t.options.debugResetTargetAgents}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="skills">
-                {t.options.debugResetTargetSkills}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="mcpServers">
-                {t.options.debugResetTargetMcpServers}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="localExecutionBridges">
-                {t.options.debugResetTargetLocalExecutionBridges}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="chats">
-                {t.options.debugResetTargetChats}
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </Label>
-          <Label>
-            {t.options.debugResetConfirmLabel.replace(
-              "{phrase}",
-              t.options.debugResetConfirmPhrase,
-            )}
-            <Input
-              value={confirmText}
-              onChange={(event) => setConfirmText(event.target.value)}
-              placeholder={t.options.debugResetConfirmPhrase}
-            />
-          </Label>
-          <Button
-            variant="destructiveOutline"
-            disabled={!canClear || clearing}
-            onClick={clearData}
+      <SettingsSection
+        danger
+        icon={<AlertTriangle />}
+        title={t.options.debugResetTitle}
+        description={t.options.debugResetDescription}
+        contentClassName="stack"
+      >
+        <Label>
+          {t.options.debugResetScope}
+          <ToggleGroup
+            type="single"
+            value={scope}
+            onValueChange={(value) =>
+              value && setScope(value as AppStorageClearScope)
+            }
           >
-            <Trash2 size={16} />
-            {clearing ? t.options.debugResetting : t.options.debugResetButton}
-          </Button>
-          {cleared && <Feedback>{t.options.debugResetSuccess}</Feedback>}
-          {clearError && <Feedback error>{clearError}</Feedback>}
-        </CardContent>
-      </Card>
+            {APP_STORAGE_CLEAR_SCOPES.map((value) => (
+              <ToggleGroupItem key={value} value={value}>
+                {SCOPE_LABEL[value](t)}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </Label>
+        <Label>
+          {t.options.debugResetTargets}
+          <ToggleGroup
+            type="multiple"
+            value={targets}
+            onValueChange={updateTargets}
+          >
+            {APP_STORAGE_CLEAR_TARGETS.map((value) => (
+              <ToggleGroupItem key={value} value={value}>
+                {TARGET_LABEL[value](t)}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </Label>
+        <Label>
+          {t.options.debugResetConfirmLabel.replace(
+            "{phrase}",
+            t.options.debugResetConfirmPhrase,
+          )}
+          <Input
+            value={confirmText}
+            onChange={(event) => setConfirmText(event.target.value)}
+            placeholder={t.options.debugResetConfirmPhrase}
+          />
+        </Label>
+        <Button
+          variant="destructiveOutline"
+          disabled={!canClear || clearing}
+          onClick={clearData}
+        >
+          <Trash2 size={16} />
+          {clearing ? t.options.debugResetting : t.options.debugResetButton}
+        </Button>
+        {cleared && <Feedback>{t.options.debugResetSuccess}</Feedback>}
+        {clearError && <Feedback error>{clearError}</Feedback>}
+      </SettingsSection>
     </div>
   );
 }
+
+type Label = (t: Messages) => string;
+
+const SCOPE_LABEL: Record<AppStorageClearScope, Label> = {
+  all: (t) => t.options.debugResetScopeAll,
+  local: (t) => t.options.debugResetScopeLocal,
+  sync: (t) => t.options.debugResetScopeSync,
+};
+
+const TARGET_LABEL: Record<AppStorageClearTarget, Label> = {
+  all: (t) => t.options.debugResetTargetAll,
+  settings: (t) => t.options.debugResetTargetSettings,
+  providers: (t) => t.options.debugResetTargetProviders,
+  agents: (t) => t.options.debugResetTargetAgents,
+  skills: (t) => t.options.debugResetTargetSkills,
+  mcpServers: (t) => t.options.debugResetTargetMcpServers,
+  localExecutionBridges: (t) => t.options.debugResetTargetLocalExecutionBridges,
+  chats: (t) => t.options.debugResetTargetChats,
+};

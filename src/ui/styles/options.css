@@ -143,6 +143,14 @@
 :is(.settings-page-title, .settings-section-title, .debug-section-title) svg {
   flex-shrink: 0;
 }
+.settings-page-title > svg {
+  width: 24px;
+  height: 24px;
+}
+.settings-section-title > svg {
+  width: 18px;
+  height: 18px;
+}
 .settings-section-title.danger-title {
   color: var(--destructive);
 }
@@ -152,7 +160,8 @@
   font-weight: 600;
   line-height: 1.25;
 }
-.setting-switch-row {
+.setting-switch-row,
+.settings-action-row {
   display: flex;
   align-items: center;
   justify-content: space-between;

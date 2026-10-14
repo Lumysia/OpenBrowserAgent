@@ -1,3 +1,4 @@
+import { SettingsPageHeader } from "../../src/ui/components";
 import {
   Cloud,
   FileText,
@@ -86,12 +87,11 @@ export function SyncPage() {
 
   return (
     <div className="stack">
-      <div>
-        <h1 className="settings-page-title">
-          <Cloud size={24} /> {t.options.sync}
-        </h1>
-        <p className="muted">{t.options.syncSettingsDescription}</p>
-      </div>
+      <SettingsPageHeader
+        icon={<Cloud />}
+        title={t.options.sync}
+        description={t.options.syncSettingsDescription}
+      />
       <SyncBackendCard
         activeBackendId={activeSyncBackendId}
         backends={syncBackends}

@@ -36,6 +36,7 @@ import {
   TooltipContent,
   TooltipTrigger,
   SettingsSummary,
+  SettingsPageHeader,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { errorWithDetail } from "../../src/ui/error-text";
@@ -113,21 +114,20 @@ export function LocalExecutionBridgesPage() {
 
   return (
     <div className="stack">
-      <div className="settings-page-header">
-        <div>
-          <h1 className="settings-page-title">
-            <TerminalSquare size={24} /> {t.options.localExecutionBridges}
-          </h1>
-          <p className="muted">{t.options.localExecutionBridgesDescription}</p>
-        </div>
-        {items.length ? (
-          <div className="settings-page-actions">
-            <Button onClick={addBridge}>
-              <Plus size={15} /> {t.options.newLocalExecutionBridge}
-            </Button>
-          </div>
-        ) : null}
-      </div>
+      <SettingsPageHeader
+        icon={<TerminalSquare />}
+        title={t.options.localExecutionBridges}
+        description={t.options.localExecutionBridgesDescription}
+        actions={
+          items.length ? (
+            <>
+              <Button onClick={addBridge}>
+                <Plus size={15} /> {t.options.newLocalExecutionBridge}
+              </Button>
+            </>
+          ) : undefined
+        }
+      />
       {!items.length ? (
         <EmptyState
           icon={<TerminalSquare size={28} />}

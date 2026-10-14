@@ -4,7 +4,6 @@ import {
   Loader2,
   Plug,
   Plus,
-  RotateCcw,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -31,11 +30,8 @@ import {
   AccordionTriggerButton,
   Badge,
   Button,
-  Card,
-  CardContent,
   CardDescription,
   EmptyState,
-  CardTitle,
   Feedback,
   Popover,
   PopoverContent,
@@ -46,9 +42,11 @@ import {
   TooltipContent,
   TooltipTrigger,
   SettingsSummary,
+  SettingsPageHeader,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { errorWithDetail } from "../../src/ui/error-text";
+import { ResetDefaultsCard } from "./reset-defaults-card";
 
 export function McpPage() {
   const [language] = useStoredState(storage.language);
@@ -157,59 +155,61 @@ export function McpPage() {
 
   return (
     <div className="stack">
-      <div className="settings-page-header">
-        <div>
-          <h1 className="settings-page-title">
-            <Plug size={24} /> {t.options.mcpServers}
-          </h1>
-          <p className="muted">{t.options.mcpServersDescription}</p>
-        </div>
-        <div className="settings-page-actions">
-          {items.length ? (
-            <Button onClick={addServer}>
-              <Plus size={15} /> {t.options.newMcpServer}
-            </Button>
-          ) : null}
-          <Tooltip>
-            <Popover open={importMenuOpen} onOpenChange={setImportMenuOpen}>
-              <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <Button size="icon" aria-label={t.options.mcpImportButton}>
-                    <Upload size={15} />
-                  </Button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <PopoverContent className="settings-popover-content" align="end">
-                <div className="settings-popover-menu">
-                  <CardDescription>{t.options.mcpImportJson}</CardDescription>
-                  <Textarea
-                    className="scrollbar-hidden"
-                    value={importDraft}
-                    placeholder={
-                      '{\n  "mcpServers": {\n    "server": { "url": "https://example.com/mcp" }\n  }\n}'
-                    }
-                    onChange={(event) =>
-                      setImportDraft(event.currentTarget.value)
-                    }
-                  />
-                  <div className="row">
-                    <Button
-                      disabled={!importDraft.trim()}
-                      onClick={importServers}
-                    >
-                      <Plus size={15} /> {t.options.mcpImportButton}
+      <SettingsPageHeader
+        icon={<Plug />}
+        title={t.options.mcpServers}
+        description={t.options.mcpServersDescription}
+        actions={
+          <>
+            {items.length ? (
+              <Button onClick={addServer}>
+                <Plus size={15} /> {t.options.newMcpServer}
+              </Button>
+            ) : null}
+            <Tooltip>
+              <Popover open={importMenuOpen} onOpenChange={setImportMenuOpen}>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button size="icon" aria-label={t.options.mcpImportButton}>
+                      <Upload size={15} />
                     </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <PopoverContent
+                  className="settings-popover-content"
+                  align="end"
+                >
+                  <div className="settings-popover-menu">
+                    <CardDescription>{t.options.mcpImportJson}</CardDescription>
+                    <Textarea
+                      className="scrollbar-hidden"
+                      value={importDraft}
+                      placeholder={
+                        '{\n  "mcpServers": {\n    "server": { "url": "https://example.com/mcp" }\n  }\n}'
+                      }
+                      onChange={(event) =>
+                        setImportDraft(event.currentTarget.value)
+                      }
+                    />
+                    <div className="row">
+                      <Button
+                        disabled={!importDraft.trim()}
+                        onClick={importServers}
+                      >
+                        <Plus size={15} /> {t.options.mcpImportButton}
+                      </Button>
+                    </div>
+                    {importMessage && (
+                      <CardDescription>{importMessage}</CardDescription>
+                    )}
                   </div>
-                  {importMessage && (
-                    <CardDescription>{importMessage}</CardDescription>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-            <TooltipContent>{t.options.mcpImportButton}</TooltipContent>
-          </Tooltip>
-        </div>
-      </div>
+                </PopoverContent>
+              </Popover>
+              <TooltipContent>{t.options.mcpImportButton}</TooltipContent>
+            </Tooltip>
+          </>
+        }
+      />
       {!items.length ? (
         <EmptyState
           icon={<Plug size={28} />}
@@ -323,28 +323,13 @@ export function McpPage() {
           </AccordionItem>
         ))}
       </Accordion>
-      <Card>
-        <CardContent>
-          <div className="setting-switch-row">
-            <div>
-              <CardTitle className="settings-section-title">
-                <RotateCcw size={18} /> {t.options.resetDefaultMcpServers}
-              </CardTitle>
-              <CardDescription>
-                {t.options.resetDefaultMcpServersDescription}
-              </CardDescription>
-            </div>
-            <div className="row">
-              <Button variant="outline" onClick={resetBuiltinMcpServers}>
-                {t.options.resetBuiltins}
-              </Button>
-              <Button variant="outline" onClick={resetDefaultMcpServers}>
-                {t.options.resetDefaults}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <ResetDefaultsCard
+        t={t}
+        title={t.options.resetDefaultMcpServers}
+        description={t.options.resetDefaultMcpServersDescription}
+        onResetBuiltins={resetBuiltinMcpServers}
+        onResetAll={resetDefaultMcpServers}
+      />
     </div>
   );
 }

@@ -18,9 +18,7 @@ import {
   Button,
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
   Input,
   Label,
   Select,
@@ -29,6 +27,8 @@ import {
   SelectTrigger,
   SelectValue,
   SettingSwitch,
+  SettingsPageHeader,
+  SettingsSection,
 } from "../../src/ui/components";
 import { providerTypeLabel } from "../../src/ui/provider-display";
 import { useStoredState } from "../../src/ui/useStoredState";
@@ -96,132 +96,110 @@ export function ProvidersPage() {
 
   return (
     <div className="stack">
-      <div className="split">
-        <div>
-          <h1 className="settings-page-title">
-            <Server size={24} /> {t.options.modelProviders}
-          </h1>
-          <p className="muted">{t.options.providerDescription}</p>
-        </div>
-      </div>
+      <SettingsPageHeader
+        icon={<Server />}
+        title={t.options.modelProviders}
+        description={t.options.providerDescription}
+      />
       <div className="provider-top-stack">
-        <Card>
-          <CardHeader>
-            <CardTitle className="settings-section-title">
-              <Plus size={18} /> {t.sidepanel.addProvider}
-            </CardTitle>
-            <CardDescription>{t.options.providerDescription}</CardDescription>
-          </CardHeader>
-          <CardContent className="stack">
-            <div className="provider-add-row">
-              <Select
-                value={providerType}
-                onValueChange={(value) => setProviderType(value as ProviderId)}
-              >
-                <SelectTrigger aria-label={t.options.providers}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ADD_PROVIDER_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {providerTypeLabel(type, t)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={addProvider}>
-                <Plus size={16} /> {t.sidepanel.addProvider}
-              </Button>
-            </div>
-            <Accordion
-              type="multiple"
-              value={openProviders}
-              onValueChange={setOpenProviders}
-              className="stack"
+        <SettingsSection
+          icon={<Plus />}
+          title={t.sidepanel.addProvider}
+          description={t.options.providerDescription}
+          contentClassName="stack"
+        >
+          <div className="provider-add-row">
+            <Select
+              value={providerType}
+              onValueChange={(value) => setProviderType(value as ProviderId)}
             >
-              {providerEntries.map(([providerId, provider]) => (
-                <ProviderAccordion
-                  key={providerId}
-                  providerId={providerId}
-                  value={provider}
-                  onChange={(next) => updateProvider(providerId, next)}
-                  onDelete={() => deleteProvider(providerId)}
-                  onModelAdded={handleModelAdded}
-                />
-              ))}
-            </Accordion>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="settings-section-title">
-              <Bot size={18} /> {t.options.selectModel}
-            </CardTitle>
-            <CardDescription>
-              {t.options.selectModelDescription}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ModelSelect
-              t={t}
-              label={t.options.selectModel}
-              value={preferences.selectedModelId}
-              models={configuredModels}
-              noneLabel={t.options.selectModel}
-              onChange={(selectedModelId) =>
-                setPreferences((previous) => ({ ...previous, selectedModelId }))
-              }
-            />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="settings-section-title">
-              <Bot size={18} /> {t.options.helperModel}
-            </CardTitle>
-            <CardDescription>
-              {t.options.helperModelDescription}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ModelSelect
-              t={t}
-              models={configuredModels}
-              value={preferences.helperModelId}
-              label={t.options.helperModel}
-              noneLabel={t.options.modelSameAsChat}
-              onChange={(helperModelId) =>
-                setPreferences((previous) => ({ ...previous, helperModelId }))
-              }
-            />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="settings-section-title">
-              <Highlighter size={18} /> {t.smartBar.model}
-            </CardTitle>
-            <CardDescription>{t.smartBar.modelDescription}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ModelSelect
-              t={t}
-              models={configuredModels}
-              value={normalizeSmartBarSettings(preferences.smartBar).modelId}
-              label={t.smartBar.model}
-              noneLabel={t.options.modelSameAsChat}
-              onChange={(modelId = "") =>
-                setPreferences((previous) => ({
-                  ...previous,
-                  smartBar: {
-                    ...normalizeSmartBarSettings(previous.smartBar),
-                    modelId,
-                  },
-                }))
-              }
-            />
-          </CardContent>
-        </Card>
+              <SelectTrigger aria-label={t.options.providers}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ADD_PROVIDER_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {providerTypeLabel(type, t)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={addProvider}>
+              <Plus size={16} /> {t.sidepanel.addProvider}
+            </Button>
+          </div>
+          <Accordion
+            type="multiple"
+            value={openProviders}
+            onValueChange={setOpenProviders}
+            className="stack"
+          >
+            {providerEntries.map(([providerId, provider]) => (
+              <ProviderAccordion
+                key={providerId}
+                providerId={providerId}
+                value={provider}
+                onChange={(next) => updateProvider(providerId, next)}
+                onDelete={() => deleteProvider(providerId)}
+                onModelAdded={handleModelAdded}
+              />
+            ))}
+          </Accordion>
+        </SettingsSection>
+        <SettingsSection
+          icon={<Bot />}
+          title={t.options.selectModel}
+          description={t.options.selectModelDescription}
+        >
+          <ModelSelect
+            t={t}
+            label={t.options.selectModel}
+            value={preferences.selectedModelId}
+            models={configuredModels}
+            noneLabel={t.options.selectModel}
+            onChange={(selectedModelId) =>
+              setPreferences((previous) => ({ ...previous, selectedModelId }))
+            }
+          />
+        </SettingsSection>
+        <SettingsSection
+          icon={<Bot />}
+          title={t.options.helperModel}
+          description={t.options.helperModelDescription}
+        >
+          <ModelSelect
+            t={t}
+            models={configuredModels}
+            value={preferences.helperModelId}
+            label={t.options.helperModel}
+            noneLabel={t.options.modelSameAsChat}
+            onChange={(helperModelId) =>
+              setPreferences((previous) => ({ ...previous, helperModelId }))
+            }
+          />
+        </SettingsSection>
+        <SettingsSection
+          icon={<Highlighter />}
+          title={t.smartBar.model}
+          description={t.smartBar.modelDescription}
+        >
+          <ModelSelect
+            t={t}
+            models={configuredModels}
+            value={normalizeSmartBarSettings(preferences.smartBar).modelId}
+            label={t.smartBar.model}
+            noneLabel={t.options.modelSameAsChat}
+            onChange={(modelId = "") =>
+              setPreferences((previous) => ({
+                ...previous,
+                smartBar: {
+                  ...normalizeSmartBarSettings(previous.smartBar),
+                  modelId,
+                },
+              }))
+            }
+          />
+        </SettingsSection>
         <Card>
           <CardHeader>
             <SettingSwitch

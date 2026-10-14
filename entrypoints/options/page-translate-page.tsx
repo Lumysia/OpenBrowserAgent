@@ -32,11 +32,7 @@ import { storage } from "../../src/shared/storage";
 import { openOrFocusUrl } from "../../src/shared/tab-navigation";
 import {
   Button,
-  Card,
-  CardContent,
   CardDescription,
-  CardHeader,
-  CardTitle,
   Feedback,
   Select,
   SelectContent,
@@ -46,6 +42,8 @@ import {
   SettingSwitchCard,
   ToggleGroup,
   ToggleGroupItem,
+  SettingsPageHeader,
+  SettingsSection,
 } from "../../src/ui/components";
 import { errorWithDetail } from "../../src/ui/error-text";
 import { useStoredState } from "../../src/ui/useStoredState";
@@ -102,140 +100,122 @@ export function PageTranslatePage() {
 
   return (
     <div className="stack">
-      <div>
-        <h1 className="settings-page-title">
-          <Languages size={24} /> {p.settingsTitle}
-        </h1>
-        <p className="muted">{p.settingsDescription}</p>
-      </div>
-      <Card>
-        <CardHeader>
-          <CardTitle className="settings-section-title">
-            <Cpu size={18} /> {p.engine}
-          </CardTitle>
-          <CardDescription>{p.engineDescription}</CardDescription>
-        </CardHeader>
-        <CardContent className="stack">
-          <Select
-            value={settings.engine}
-            onValueChange={(engine) =>
-              update({ engine: engine as PageTranslateEngine })
-            }
-          >
-            <SelectTrigger aria-label={p.engine}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PAGE_TRANSLATE_ENGINES.map((engine) => (
-                <SelectItem key={engine} value={engine}>
-                  {p.engines[engine]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <CardDescription>
-            {browserMissing
-              ? p.browserMissing
-              : p.engineDetails[settings.engine]}
-          </CardDescription>
-          {cloud && (
-            <div className="split">
-              <Feedback>
-                <ShieldAlert size={14} aria-hidden /> {p.cloudNotice[cloud]}
-              </Feedback>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  void openOrFocusUrl(PRIVACY_POLICY_TRANSLATION_URL)
-                }
-              >
-                <ExternalLink size={14} />
-                {p.privacyLink}
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      {usesModel && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="settings-section-title">
-              <Bot size={18} /> {p.model}
-            </CardTitle>
-            <CardDescription>{p.modelDescription}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ModelSelect
-              t={t}
-              models={models}
-              value={settings.modelId}
-              noneLabel={p.defaultModel}
-              label={p.model}
-              onChange={(modelId = "") => update({ modelId })}
-            />
-          </CardContent>
-        </Card>
-      )}
-      <Card>
-        <CardHeader>
-          <CardTitle className="settings-section-title">
-            <Languages size={18} /> {p.targetLanguage}
-          </CardTitle>
-          <CardDescription>{p.targetLanguageDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Select
-            value={settings.targetLanguage || FOLLOW_INTERFACE}
-            onValueChange={(value) =>
-              update({
-                targetLanguage: value === FOLLOW_INTERFACE ? "" : value,
-              })
-            }
-          >
-            <SelectTrigger aria-label={p.targetLanguage}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={FOLLOW_INTERFACE}>
-                {p.followInterface.replace(
-                  "{language}",
-                  names(interfaceLanguage),
-                )}
+      <SettingsPageHeader
+        icon={<Languages />}
+        title={p.settingsTitle}
+        description={p.settingsDescription}
+      />
+      <SettingsSection
+        icon={<Cpu />}
+        title={p.engine}
+        description={p.engineDescription}
+        contentClassName="stack"
+      >
+        <Select
+          value={settings.engine}
+          onValueChange={(engine) =>
+            update({ engine: engine as PageTranslateEngine })
+          }
+        >
+          <SelectTrigger aria-label={p.engine}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PAGE_TRANSLATE_ENGINES.map((engine) => (
+              <SelectItem key={engine} value={engine}>
+                {p.engines[engine]}
               </SelectItem>
-              {PAGE_TRANSLATE_LANGUAGES.map(({ tag }) => (
-                <SelectItem key={tag} value={tag}>
-                  {names(tag)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="settings-section-title">
-            <PanelsTopLeft size={18} /> {p.display}
-          </CardTitle>
-          <CardDescription>{p.displayDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ToggleGroup
-            type="single"
-            aria-label={p.display}
-            value={settings.display}
-            onValueChange={(display) =>
-              display && update({ display: display as PageTranslateDisplay })
-            }
-          >
-            {Object.values(PAGE_TRANSLATE_DISPLAY).map((display) => (
-              <ToggleGroupItem key={display} value={display}>
-                {p.displayModes[display]}
-              </ToggleGroupItem>
             ))}
-          </ToggleGroup>
-        </CardContent>
-      </Card>
+          </SelectContent>
+        </Select>
+        <CardDescription>
+          {browserMissing ? p.browserMissing : p.engineDetails[settings.engine]}
+        </CardDescription>
+        {cloud && (
+          <div className="split">
+            <Feedback>
+              <ShieldAlert size={14} aria-hidden /> {p.cloudNotice[cloud]}
+            </Feedback>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                void openOrFocusUrl(PRIVACY_POLICY_TRANSLATION_URL)
+              }
+            >
+              <ExternalLink size={14} />
+              {p.privacyLink}
+            </Button>
+          </div>
+        )}
+      </SettingsSection>
+      {usesModel && (
+        <SettingsSection
+          icon={<Bot />}
+          title={p.model}
+          description={p.modelDescription}
+        >
+          <ModelSelect
+            t={t}
+            models={models}
+            value={settings.modelId}
+            noneLabel={p.defaultModel}
+            label={p.model}
+            onChange={(modelId = "") => update({ modelId })}
+          />
+        </SettingsSection>
+      )}
+      <SettingsSection
+        icon={<Languages />}
+        title={p.targetLanguage}
+        description={p.targetLanguageDescription}
+      >
+        <Select
+          value={settings.targetLanguage || FOLLOW_INTERFACE}
+          onValueChange={(value) =>
+            update({
+              targetLanguage: value === FOLLOW_INTERFACE ? "" : value,
+            })
+          }
+        >
+          <SelectTrigger aria-label={p.targetLanguage}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={FOLLOW_INTERFACE}>
+              {p.followInterface.replace(
+                "{language}",
+                names(interfaceLanguage),
+              )}
+            </SelectItem>
+            {PAGE_TRANSLATE_LANGUAGES.map(({ tag }) => (
+              <SelectItem key={tag} value={tag}>
+                {names(tag)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </SettingsSection>
+      <SettingsSection
+        icon={<PanelsTopLeft />}
+        title={p.display}
+        description={p.displayDescription}
+      >
+        <ToggleGroup
+          type="single"
+          aria-label={p.display}
+          value={settings.display}
+          onValueChange={(display) =>
+            display && update({ display: display as PageTranslateDisplay })
+          }
+        >
+          {Object.values(PAGE_TRANSLATE_DISPLAY).map((display) => (
+            <ToggleGroupItem key={display} value={display}>
+              {p.displayModes[display]}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </SettingsSection>
       <SettingSwitchCard
         icon={<Menu size={18} />}
         title={p.translateMenus}
@@ -250,28 +230,25 @@ export function PageTranslatePage() {
         checked={settings.videoButton}
         onChange={(videoButton) => update({ videoButton })}
       />
-      <Card>
-        <CardHeader>
-          <CardTitle className="settings-section-title">
-            <Database size={18} /> {p.cache}
-          </CardTitle>
-          <CardDescription>{p.cacheDescription}</CardDescription>
-        </CardHeader>
-        <CardContent className="stack">
-          <div>
-            <Button
-              variant="outline"
-              disabled={cacheState === "clearing"}
-              onClick={() => void clearCache()}
-            >
-              <Trash2 size={16} />
-              {p.clearCache}
-            </Button>
-          </div>
-          {cacheState === "cleared" && <Feedback>{p.cacheCleared}</Feedback>}
-          {cacheError && <Feedback error>{cacheError}</Feedback>}
-        </CardContent>
-      </Card>
+      <SettingsSection
+        icon={<Database />}
+        title={p.cache}
+        description={p.cacheDescription}
+        contentClassName="stack"
+      >
+        <div>
+          <Button
+            variant="outline"
+            disabled={cacheState === "clearing"}
+            onClick={() => void clearCache()}
+          >
+            <Trash2 size={16} />
+            {p.clearCache}
+          </Button>
+        </div>
+        {cacheState === "cleared" && <Feedback>{p.cacheCleared}</Feedback>}
+        {cacheError && <Feedback error>{cacheError}</Feedback>}
+      </SettingsSection>
     </div>
   );
 }

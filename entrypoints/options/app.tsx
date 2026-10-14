@@ -1,45 +1,19 @@
-import type { ReactNode } from "react";
-import {
-  Bug,
-  Bot,
-  CircleHelp,
-  Cloud,
-  FileText,
-  Highlighter,
-  Languages,
-  MousePointerClick,
-  Plug,
-  Server,
-  SlidersHorizontal,
-  TerminalSquare,
-} from "lucide-react";
-import {
-  OPTIONS_HASH,
-  OPTIONS_ROUTE,
-  TOOLTIP_DELAY_MS,
-} from "../../src/shared/config";
+import { CircleHelp } from "lucide-react";
+import { REPO_URL, TOOLTIP_DELAY_MS } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
-import { getPageTranslateMessages } from "../../src/shared/page-translate/messages";
 import { storage } from "../../src/shared/storage";
+import { openOrFocusUrl } from "../../src/shared/tab-navigation";
 import { ScrollArea, TooltipProvider } from "../../src/ui/components";
 import { useTheme } from "../../src/ui/theme";
+import { useDocumentLanguage } from "../../src/ui/use-document-language";
+import { cn } from "../../src/ui/utils";
 import { useSyncPageState } from "../../src/ui/useSyncPageState";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { DebugPage } from "./debug-page";
-import { AgentsPage } from "./agents-page";
-import { GeneralPage } from "./general-page";
-import { ProvidersPage } from "./providers-page";
-import { McpPage } from "./mcp-page";
-import { LocalExecutionBridgesPage } from "./local-execution-bridges-page";
-import { SkillsPage } from "./skills-page";
-import { SmartBarPage } from "./smart-bar-page";
-import { ContextMenuPage } from "./context-menu-page";
-import { PageTranslatePage } from "./page-translate-page";
+import { OPTIONS_PAGES, optionsPageFor } from "./pages";
 import { useHashRoute } from "./route";
-import { SyncPage } from "./sync-page";
 
 export function OptionsApp() {
-  const route = useHashRoute();
+  const page = optionsPageFor(useHashRoute());
   const [language, , languageLoading] = useStoredState(storage.language);
   const [preferences] = useStoredState(storage.preferences);
   const version = chrome.runtime.getManifest().version;
@@ -48,6 +22,7 @@ export function OptionsApp() {
   useSyncPageState();
 
   useTheme(document.documentElement, preferences ?? {});
+  useDocumentLanguage(language);
 
   return languageLoading ? null : (
     <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
@@ -60,99 +35,23 @@ export function OptionsApp() {
             </p>
           </div>
           <nav className="stack">
-            <OptionsLink
-              route={route}
-              target={OPTIONS_ROUTE.general}
-              href={OPTIONS_HASH.general}
-              icon={<SlidersHorizontal size={16} />}
-            >
-              {t.options.general}
-            </OptionsLink>
-            <OptionsLink
-              route={route}
-              target={OPTIONS_ROUTE.agents}
-              href={OPTIONS_HASH.agents}
-              icon={<Bot size={16} />}
-            >
-              {t.options.agents}
-            </OptionsLink>
-            <OptionsLink
-              route={route}
-              target={OPTIONS_ROUTE.sync}
-              href={OPTIONS_HASH.sync}
-              icon={<Cloud size={16} />}
-            >
-              {t.options.sync}
-            </OptionsLink>
-            <OptionsLink
-              route={route}
-              target={OPTIONS_ROUTE.providers}
-              href={OPTIONS_HASH.providers}
-              icon={<Server size={16} />}
-            >
-              {t.options.providers}
-            </OptionsLink>
-            <OptionsLink
-              route={route}
-              target={OPTIONS_ROUTE.mcp}
-              href={OPTIONS_HASH.mcp}
-              icon={<Plug size={16} />}
-            >
-              {t.options.mcpServers}
-            </OptionsLink>
-            <OptionsLink
-              route={route}
-              target={OPTIONS_ROUTE.localExecutionBridges}
-              href={OPTIONS_HASH.localExecutionBridges}
-              icon={<TerminalSquare size={16} />}
-            >
-              {t.options.localExecutionBridges}
-            </OptionsLink>
-            <OptionsLink
-              route={route}
-              target={OPTIONS_ROUTE.skills}
-              href={OPTIONS_HASH.skills}
-              icon={<FileText size={16} />}
-            >
-              {t.options.skills}
-            </OptionsLink>
-            <OptionsLink
-              route={route}
-              target={OPTIONS_ROUTE.smartBar}
-              href={OPTIONS_HASH.smartBar}
-              icon={<Highlighter size={16} />}
-            >
-              {t.smartBar.settingsTitle}
-            </OptionsLink>
-            <OptionsLink
-              route={route}
-              target={OPTIONS_ROUTE.contextMenu}
-              href={OPTIONS_HASH.contextMenu}
-              icon={<MousePointerClick size={16} />}
-            >
-              {t.contextMenu.settingsTitle}
-            </OptionsLink>
-            <OptionsLink
-              route={route}
-              target={OPTIONS_ROUTE.pageTranslate}
-              href={OPTIONS_HASH.pageTranslate}
-              icon={<Languages size={16} />}
-            >
-              {getPageTranslateMessages(language).settingsTitle}
-            </OptionsLink>
-            <OptionsLink
-              route={route}
-              target={OPTIONS_ROUTE.debug}
-              href={OPTIONS_HASH.debug}
-              icon={<Bug size={16} />}
-            >
-              {t.options.debug}
-            </OptionsLink>
+            {OPTIONS_PAGES.map(({ id, hash, icon: Icon, title }) => (
+              <a
+                key={id}
+                className={cn("nav-link", id === page.id && "active")}
+                href={hash}
+              >
+                <Icon size={16} />
+                {title(t, language)}
+              </a>
+            ))}
             <a
               className="nav-link"
-              href="https://github.com/Lumysia/OpenBrowserAgent"
-              target="_blank"
-              rel="noreferrer"
+              href={REPO_URL}
+              onClick={(event) => {
+                event.preventDefault();
+                openOrFocusUrl(REPO_URL).catch(console.warn);
+              }}
             >
               <CircleHelp size={16} />
               {t.common.help}
@@ -162,53 +61,10 @@ export function OptionsApp() {
         </aside>
         <ScrollArea className="settings-main">
           <div className="settings-content">
-            {route === OPTIONS_ROUTE.agents ? (
-              <AgentsPage />
-            ) : route === OPTIONS_ROUTE.providers ? (
-              <ProvidersPage />
-            ) : route === OPTIONS_ROUTE.mcp ? (
-              <McpPage />
-            ) : route === OPTIONS_ROUTE.localExecutionBridges ? (
-              <LocalExecutionBridgesPage />
-            ) : route === OPTIONS_ROUTE.sync ? (
-              <SyncPage />
-            ) : route === OPTIONS_ROUTE.skills ? (
-              <SkillsPage />
-            ) : route === OPTIONS_ROUTE.smartBar ? (
-              <SmartBarPage />
-            ) : route === OPTIONS_ROUTE.contextMenu ? (
-              <ContextMenuPage />
-            ) : route === OPTIONS_ROUTE.pageTranslate ? (
-              <PageTranslatePage />
-            ) : route === OPTIONS_ROUTE.debug ? (
-              <DebugPage />
-            ) : (
-              <GeneralPage />
-            )}
+            <page.Page />
           </div>
         </ScrollArea>
       </div>
     </TooltipProvider>
-  );
-}
-
-function OptionsLink({
-  route,
-  target,
-  href,
-  icon,
-  children,
-}: {
-  route: string;
-  target: string;
-  href: string;
-  icon: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <a className={`nav-link ${route === target ? "active" : ""}`} href={href}>
-      {icon}
-      {children}
-    </a>
   );
 }

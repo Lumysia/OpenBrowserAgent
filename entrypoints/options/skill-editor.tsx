@@ -1,5 +1,4 @@
 import { Check, Copy, Download, RotateCcw, Trash2 } from "lucide-react";
-import { useState } from "react";
 import { SKILL_FILES } from "../../src/shared/sync/collections";
 import { useNotSyncedHere } from "../../src/ui/useSyncedHere";
 import type { Messages } from "../../src/shared/i18n";
@@ -19,6 +18,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  ConfirmButton,
 } from "../../src/ui/components";
 import { skillDisplay } from "../../src/ui/skill-display";
 import { downloadSkillZip } from "./skill-import";
@@ -47,7 +47,6 @@ export function SkillEditor({
   onDuplicate: () => void;
   onDelete: () => void;
 }) {
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const filesNotSynced = useNotSyncedHere(SKILL_FILES);
   const update = (patch: Partial<Skill>) =>
     onDraft({ ...draft, ...patch, updatedAt: Date.now() });
@@ -136,26 +135,14 @@ export function SkillEditor({
         >
           <Download size={16} /> {t.options.downloadSkillPackage}
         </Button>
-        <Button
-          variant="destructiveOutline"
-          onClick={() => {
-            if (!confirmDelete) return setConfirmDelete(true);
-            setConfirmDelete(false);
-            onDelete();
-          }}
+        <ConfirmButton
+          confirmLabel={t.common.confirm}
+          cancelLabel={t.common.cancel}
+          onConfirm={onDelete}
         >
           {override ? <RotateCcw size={16} /> : <Trash2 size={16} />}{" "}
-          {confirmDelete
-            ? t.common.confirm
-            : override
-              ? t.options.revertSkillToBuiltin
-              : t.options.deleteSkill}
-        </Button>
-        {confirmDelete && (
-          <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
-            {t.common.cancel}
-          </Button>
-        )}
+          {override ? t.options.revertSkillToBuiltin : t.options.deleteSkill}
+        </ConfirmButton>
       </div>
     </div>
   );

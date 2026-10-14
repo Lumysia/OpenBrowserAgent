@@ -6,7 +6,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
-import { getMessages, type Messages } from "../../src/shared/i18n";
+import { getMessages } from "../../src/shared/i18n";
 import {
   editableModelLabel,
   modelDisplayName,
@@ -33,11 +33,6 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Tooltip,
   TooltipContent,
   TooltipTrigger,

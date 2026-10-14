@@ -123,23 +123,17 @@ export const OPTIONS_ROUTE = {
   debug: "/debug",
 } as const;
 
-export const OPTIONS_HASH = {
-  general: "#/",
-  agents: "#/agents",
-  sync: "#/sync",
-  providers: "#/providers",
-  mcp: "#/mcp",
-  localExecutionBridges: "#/local-execution-bridges",
-  skills: "#/skills",
-  smartBar: "#/smart-bar",
-  contextMenu: "#/context-menu",
-  pageTranslate: "#/page-translation",
-  debug: "#/debug",
-} as const;
+export const OPTIONS_HASH = Object.fromEntries(
+  Object.entries(OPTIONS_ROUTE).map(([page, route]) => [page, `#${route}`]),
+) as {
+  [Page in keyof typeof OPTIONS_ROUTE]: `#${(typeof OPTIONS_ROUTE)[Page]}`;
+};
+
+// The project's source repository (help, privacy policy).
+export const REPO_URL = "https://github.com/Lumysia/OpenBrowserAgent";
 
 // The privacy policy's part on translation engines.
-export const PRIVACY_POLICY_TRANSLATION_URL =
-  "https://github.com/Lumysia/OpenBrowserAgent/blob/main/PRIVACY.md#translation-engines";
+export const PRIVACY_POLICY_TRANSLATION_URL = `${REPO_URL}/blob/main/PRIVACY.md#translation-engines`;
 
 export function clampMaxToolSteps(value: number | undefined) {
   if (!Number.isFinite(value)) return DEFAULT_MAX_TOOL_STEPS;

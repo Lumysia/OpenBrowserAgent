@@ -8,13 +8,10 @@ import { getMessages } from "../../src/shared/i18n";
 import { getPageTranslateMessages } from "../../src/shared/page-translate/messages";
 import { storage } from "../../src/shared/storage";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   SettingSwitchCard,
   SettingToggleRow,
+  SettingsPageHeader,
+  SettingsSection,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 
@@ -41,12 +38,11 @@ export function ContextMenuPage() {
 
   return (
     <div className="stack">
-      <div>
-        <h1 className="settings-page-title">
-          <MousePointerClick size={24} /> {s.settingsTitle}
-        </h1>
-        <p className="muted">{s.settingsDescription}</p>
-      </div>
+      <SettingsPageHeader
+        icon={<MousePointerClick />}
+        title={s.settingsTitle}
+        description={s.settingsDescription}
+      />
       <SettingSwitchCard
         icon={<MousePointerClick size={18} />}
         title={s.enable}
@@ -54,33 +50,29 @@ export function ContextMenuPage() {
         checked={settings.enabled}
         onChange={(enabled) => update({ enabled })}
       />
-      <Card>
-        <CardHeader>
-          <CardTitle className="settings-section-title">
-            <ListChecks size={18} /> {s.itemsTitle}
-          </CardTitle>
-          <CardDescription>{s.itemsDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="settings-toggle-list">
-            {CONTEXT_MENU_ITEMS.map((item) => (
-              <SettingToggleRow
-                key={item}
-                title={itemLabels[item]}
-                value={!settings.disabledItems.includes(item)}
-                disabled={!settings.enabled}
-                onChange={(on) =>
-                  update({
-                    disabledItems: on
-                      ? settings.disabledItems.filter((other) => other !== item)
-                      : [...settings.disabledItems, item],
-                  })
-                }
-              />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <SettingsSection
+        icon={<ListChecks />}
+        title={s.itemsTitle}
+        description={s.itemsDescription}
+      >
+        <div className="settings-toggle-list">
+          {CONTEXT_MENU_ITEMS.map((item) => (
+            <SettingToggleRow
+              key={item}
+              title={itemLabels[item]}
+              value={!settings.disabledItems.includes(item)}
+              disabled={!settings.enabled}
+              onChange={(on) =>
+                update({
+                  disabledItems: on
+                    ? settings.disabledItems.filter((other) => other !== item)
+                    : [...settings.disabledItems, item],
+                })
+              }
+            />
+          ))}
+        </div>
+      </SettingsSection>
     </div>
   );
 }

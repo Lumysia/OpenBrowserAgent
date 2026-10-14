@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Download, Plus, RotateCcw, Trash2, Upload } from "lucide-react";
+import { Download, Plus, Trash2, Upload } from "lucide-react";
 import {
   BUILTIN_AGENTS,
   DEFAULT_AGENT_ID,
@@ -13,10 +13,6 @@ import { createWorkspace } from "../../src/shared/workspace";
 import { storeAgentWorkspaces } from "../../src/shared/workspace-storage";
 import {
   Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardTitle,
   Feedback,
   Accordion,
   AccordionContent,
@@ -27,8 +23,10 @@ import {
   Label,
   Textarea,
   SettingsSummary,
+  SettingsPageHeader,
 } from "../../src/ui/components";
 import { AgentToolsEditor } from "./agent-tools-editor";
+import { ResetDefaultsCard } from "./reset-defaults-card";
 import { ModelSelect, useConfiguredModels } from "./model-select";
 import { AgentIconPicker } from "./agent-icon-picker";
 import { useStoredState } from "../../src/ui/useStoredState";
@@ -172,25 +170,24 @@ export function AgentsPage() {
         hidden
         onChange={(event) => importAgentPackage(event.currentTarget.files?.[0])}
       />
-      <div className="settings-page-header">
-        <div>
-          <h1 className="settings-page-title">
-            <AgentIcon size={24} /> {t.options.agents}
-          </h1>
-          <p className="muted">{t.options.agentsDescription}</p>
-        </div>
-        <div className="settings-page-actions">
-          <Button
-            variant="outline"
-            onClick={() => importAgentInputRef.current?.click()}
-          >
-            <Upload size={15} /> {t.options.importAgentZip}
-          </Button>
-          <Button onClick={addAgent}>
-            <Plus size={15} /> {t.options.newAgent}
-          </Button>
-        </div>
-      </div>
+      <SettingsPageHeader
+        icon={<AgentIcon />}
+        title={t.options.agents}
+        description={t.options.agentsDescription}
+        actions={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => importAgentInputRef.current?.click()}
+            >
+              <Upload size={15} /> {t.options.importAgentZip}
+            </Button>
+            <Button onClick={addAgent}>
+              <Plus size={15} /> {t.options.newAgent}
+            </Button>
+          </>
+        }
+      />
       {importAgentError ? <Feedback error>{importAgentError}</Feedback> : null}
       <Accordion type="multiple" className="stack">
         {items.map((agent) => {
@@ -309,28 +306,13 @@ export function AgentsPage() {
           );
         })}
       </Accordion>
-      <Card>
-        <CardContent>
-          <div className="setting-switch-row">
-            <div>
-              <CardTitle className="settings-section-title">
-                <RotateCcw size={18} /> {t.options.resetDefaultAgents}
-              </CardTitle>
-              <CardDescription>
-                {t.options.resetDefaultAgentsDescription}
-              </CardDescription>
-            </div>
-            <div className="row">
-              <Button variant="outline" onClick={resetBuiltinAgents}>
-                {t.options.resetBuiltins}
-              </Button>
-              <Button variant="outline" onClick={resetDefaultAgents}>
-                {t.options.resetDefaults}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <ResetDefaultsCard
+        t={t}
+        title={t.options.resetDefaultAgents}
+        description={t.options.resetDefaultAgentsDescription}
+        onResetBuiltins={resetBuiltinAgents}
+        onResetAll={resetDefaultAgents}
+      />
     </div>
   );
 }

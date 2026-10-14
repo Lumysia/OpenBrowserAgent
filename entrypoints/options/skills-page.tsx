@@ -40,12 +40,10 @@ import {
   AccordionTriggerButton,
   Badge,
   Button,
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   ToggleGroup,
   ToggleGroupItem,
+  SettingsPageHeader,
+  SettingsSection,
 } from "../../src/ui/components";
 import { skillDisplay } from "../../src/ui/skill-display";
 import { SKILL_FILES } from "../../src/shared/sync/collections";
@@ -136,42 +134,44 @@ export function SkillsPage() {
 
   return (
     <div className="skills-page stack">
-      <div className="settings-page-header">
-        <div>
-          <h1 className="settings-page-title">
-            <FileText size={24} /> {t.options.skills}
-          </h1>
-          <p className="muted">{t.options.skillsDescription}</p>
-        </div>
-        <div className="settings-page-actions">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".zip,.skill,application/zip"
-            hidden
-            onChange={(event) => importZip(event.target.files)}
-          />
-          <Button
-            variant="outline"
-            disabled={importing}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <FileArchive size={16} />
-            {importing ? t.options.importingSkillZip : t.options.importSkillZip}
-          </Button>
-          <Button
-            onClick={() =>
-              addSkill(
-                createSkillPackage({
-                  name: normalizeSkillName(t.options.untitledSkill) || "skill",
-                }),
-              )
-            }
-          >
-            <Plus size={16} /> {t.options.newSkill}
-          </Button>
-        </div>
-      </div>
+      <SettingsPageHeader
+        icon={<FileText />}
+        title={t.options.skills}
+        description={t.options.skillsDescription}
+        actions={
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".zip,.skill,application/zip"
+              hidden
+              onChange={(event) => importZip(event.target.files)}
+            />
+            <Button
+              variant="outline"
+              disabled={importing}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <FileArchive size={16} />
+              {importing
+                ? t.options.importingSkillZip
+                : t.options.importSkillZip}
+            </Button>
+            <Button
+              onClick={() =>
+                addSkill(
+                  createSkillPackage({
+                    name:
+                      normalizeSkillName(t.options.untitledSkill) || "skill",
+                  }),
+                )
+              }
+            >
+              <Plus size={16} /> {t.options.newSkill}
+            </Button>
+          </>
+        }
+      />
       {listing.overBudget && (
         <Notice
           title={t.options.skillListOverBudget}
@@ -341,14 +341,12 @@ function Notice({
   description: string;
 }) {
   return (
-    <Card className="empty">
-      <CardHeader>
-        <CardTitle className="settings-section-title">
-          <AlertCircle size={18} /> {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-    </Card>
+    <SettingsSection
+      className="empty"
+      icon={<AlertCircle />}
+      title={title}
+      description={description}
+    />
   );
 }
 
