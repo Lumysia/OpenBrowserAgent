@@ -482,15 +482,3 @@ export const providerDefaultBaseUrls: Partial<Record<ProviderId, string>> = {
   minimax: "https://api.minimax.io/v1",
   ollama: "http://localhost:11434",
 };
-
-export const languageLabels: Record<string, string> = {
-  "en-US": "English",
-  "zh-CN": "简体中文",
-  "zh-TW": "繁體中文",
-  "ja-JP": "日本語",
-  ko: "한국어",
-  "fr-FR": "Français",
-  "de-DE": "Deutsch",
-  "es-ES": "Español",
-  "pt-BR": "Português (Brasil)",
-};
