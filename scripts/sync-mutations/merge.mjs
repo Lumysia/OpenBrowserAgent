@@ -53,11 +53,10 @@ export default [
     to: "if (input.untracked) return push(local);",
   },
   {
-    name: "an empty secret replaces the account's on a join",
-    file: "src/shared/sync/plan.ts",
-    from: `  if (!base)
-    data = keepSecrets(data, mineWins ? theirs.data : mine.data, secrets);`,
-    to: "",
+    name: "an empty API key is a record that replaces the account's",
+    file: "src/shared/sync/stored-collections.ts",
+    from: "return Object.values(data).every(isEmpty) ? undefined : { data };",
+    to: "return { data };",
   },
   {
     name: "keeping after a mass delete re-uploads every record",

@@ -20,23 +20,6 @@ export default [
     ],
   },
   {
-    name: "B1: a bridge test stores the list it read before the test",
-    file: "src/background/local-execution-bridge-tools.ts",
-    from: `  const bridge = (await loadBridges()).find((item) => item.id === bridgeId);
-  if (!bridge) return { success: false, error: "Execution bridge not found" };
-  let result`,
-    to: `  const read = await loadBridges();
-  const bridge = read.find((item) => item.id === bridgeId);
-  if (!bridge) return { success: false, error: "Execution bridge not found" };
-  let result`,
-    also: [
-      {
-        from: "  const tested = await updateById(\n    storage.localExecutionBridges,",
-        to: "  const tested = await updateById(\n    { update: async (change: (list: typeof read) => typeof read) => { const value = change(read); await storage.localExecutionBridges.replace(value); return value; } },",
-      },
-    ],
-  },
-  {
     name: "B1: a skill edit stores the list it read first",
     file: "src/background/tools/skills.ts",
     from: "      : await updateById(storage.skills, existing.id, edit);",
