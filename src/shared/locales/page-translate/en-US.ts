@@ -52,6 +52,9 @@ export const pageTranslateEnUS = {
     bilingual: "Original and translation",
     translation: "Translation only",
   },
+  translateMenus: "Also translate menus and buttons",
+  translateMenusDescription:
+    "When off, only the page's main content is translated; navigation, menus, buttons, tabs and footers stay as they are.",
   cache: "Saved translations",
   cacheDescription:
     "Translations are kept on this device for 30 days, so translated pages come back at once.",

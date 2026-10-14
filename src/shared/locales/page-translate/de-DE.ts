@@ -52,6 +52,9 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     bilingual: "Original und Übersetzung",
     translation: "Nur Übersetzung",
   },
+  translateMenus: "Auch Menüs und Schaltflächen übersetzen",
+  translateMenusDescription:
+    "Wenn aus, wird nur der Hauptinhalt der Seite übersetzt; Navigation, Menüs, Schaltflächen, Tabs und Fußzeilen bleiben unverändert.",
   cache: "Gespeicherte Übersetzungen",
   cacheDescription:
     "Übersetzungen bleiben 30 Tage auf diesem Gerät, damit übersetzte Seiten sofort wieder erscheinen.",

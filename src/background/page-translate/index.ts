@@ -8,6 +8,7 @@ import {
   type PageTranslateRequest,
   type PageTranslateStateMessage,
   type PageTranslateToggleMessage,
+  type PageTranslateView,
 } from "../../shared/page-translate/protocol";
 import { normalizePageTranslateSettings } from "../../shared/page-translate/settings";
 import { getBrowserApi, storage } from "../../shared/storage";
@@ -27,16 +28,19 @@ export function setupPageTranslate() {
   getBrowserApi().runtime.onConnect.addListener((port) => {
     if (port.name === PAGE_TRANSLATE_PORT) handlePort(port);
   });
-  // Translated pages follow the display setting at once. Every change is
+  // Translated pages follow the display settings at once. Every change is
   // sent: the first one after the worker starts has nothing to compare with.
   let announced: string | undefined;
   storage.preferences.watch((preferences) => {
-    const display = normalizePageTranslateSettings(
+    const { display, translateMenus } = normalizePageTranslateSettings(
       preferences.pageTranslate,
-    ).display;
-    if (display === announced) return;
-    announced = display;
-    for (const port of ports) port.postMessage({ type: "display", display });
+    );
+    const view: PageTranslateView = { display, translateMenus };
+    const key = JSON.stringify(view);
+    if (key === announced) return;
+    announced = key;
+    const event: PageTranslateEvent = { type: "view", view };
+    for (const port of ports) port.postMessage(event);
   });
 }
 

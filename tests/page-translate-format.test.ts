@@ -152,13 +152,21 @@ test("settings: defaults, cleaned values, the target language", () => {
       display: "both" as never,
       modelId: 3 as never,
       targetLanguage: "fr_FR",
+      translateMenus: "yes" as never,
     }),
     {
       engine: "model",
       modelId: "",
       targetLanguage: "fr-FR",
       display: "bilingual",
+      translateMenus: false,
     },
+  );
+  // Settings saved by the last release have no translateMenus.
+  assert.equal(
+    normalizePageTranslateSettings({ engine: "google", display: "translation" })
+      .translateMenus,
+    false,
   );
   const target = (targetLanguage: string, ui: string) =>
     pageTranslateTarget(

@@ -1,17 +1,21 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { parseHTML } from "linkedom";
-import { walkParagraphs, type Paragraph } from "../src/page-translate/blocks";
+import {
+  walkParagraphs,
+  type Paragraph,
+  type WalkOptions,
+} from "../src/page-translate/blocks";
 import {
   buildTranslation,
   serializeNodes,
 } from "../src/page-translate/serialize";
 
-function paragraphsOf(html: string) {
+function paragraphsOf(html: string, options?: WalkOptions) {
   const { document } = parseHTML(
     `<!doctype html><html><body>${html}</body></html>`,
   );
-  const found = [...walkParagraphs(document.body)].filter(
+  const found = [...walkParagraphs(document.body, options)].filter(
     (paragraph): paragraph is Paragraph => !!paragraph,
   );
   return { document, found };
@@ -22,10 +26,14 @@ const summary = (paragraph: Paragraph) => ({
   text: paragraph.source.text,
   whole: paragraph.whole,
   inline: paragraph.inline,
+  ...(paragraph.wrapper && {
+    wrapper: paragraph.wrapper.id || paragraph.wrapper.tagName.toLowerCase(),
+  }),
 });
 
 test("paragraphs: deepest blocks of text, runs next to blocks", () => {
-  const { found } = paragraphsOf(`
+  const { found } = paragraphsOf(
+    `
     <article id="article">
       <h1 id="title">Release notes</h1>
       <p id="intro">Read the <a href="/guide">guide</a> first.</p>
@@ -34,7 +42,9 @@ test("paragraphs: deepest blocks of text, runs next to blocks", () => {
       <nav id="nav"><a href="/">Home</a></nav>
       <a id="card" href="/card"><div id="card-title">A card title</div></a>
       <button id="button">Sign in</button>
-    </article>`);
+    </article>`,
+    { translateMenus: true },
+  );
   assert.deepEqual(found.map(summary), [
     { parent: "title", text: "Release notes", whole: true, inline: false },
     {
@@ -58,10 +68,138 @@ test("paragraphs: deepest blocks of text, runs next to blocks", () => {
     { parent: "mixed", text: "and a tail", whole: false, inline: false },
     { parent: "item", text: "First item", whole: false, inline: false },
     { parent: "nested", text: "Nested item", whole: true, inline: false },
-    { parent: "nav", text: "<b1>Home</b1>", whole: true, inline: true },
+    { parent: "a", text: "Home", whole: true, inline: true, wrapper: "a" },
     { parent: "card-title", text: "A card title", whole: true, inline: true },
     { parent: "button", text: "Sign in", whole: true, inline: true },
   ]);
+});
+
+test("paragraphs: text held by one element is that element's content", () => {
+  const { found } = paragraphsOf(`
+    <h3 id="heading"><a id="heading-link" href="/top">Top stories</a></h3>
+    <div id="card">
+      <span id="outer"><a id="headline" href="/s">A headline about the pass</a></span>
+      <div>More about the pass</div>
+    </div>
+    <ul><li id="item"><a id="item-link" href="/i">Linked item</a></li></ul>
+    <td-like id="cell"><br>Second line<br></td-like>
+    <p id="meta">Native words<link rel="category" href="/c"> in a sentence</p>
+    <td-like id="lines">First value<br> <a id="line-link" href="/l">Linked line</a></td-like>
+    <p id="verse">A line of verse<br>and the next</p>
+    <div id="tags"><a href="/t/a">build-tool</a> <a href="/t/b">dev server</a> · <a href="/t/c">hmr</a></div>
+    <li-like id="star"><a id="star-link" href="/login">Star this repo</a><span role="tooltip" aria-hidden="true">Sign in to star</span></li-like>`);
+  assert.deepEqual(found.map(summary), [
+    {
+      parent: "heading-link",
+      text: "Top stories",
+      whole: true,
+      inline: false,
+      wrapper: "heading-link",
+    },
+    {
+      parent: "headline",
+      text: "A headline about the pass",
+      whole: true,
+      inline: false,
+      wrapper: "outer",
+    },
+    { parent: "div", text: "More about the pass", whole: true, inline: true },
+    {
+      parent: "item-link",
+      text: "Linked item",
+      whole: true,
+      inline: false,
+      wrapper: "item-link",
+    },
+    // Line breaks at a paragraph's edges aren't part of it.
+    { parent: "cell", text: "Second line", whole: true, inline: true },
+    // Page metadata inside the text doesn't split it.
+    {
+      parent: "meta",
+      text: "Native words in a sentence",
+      whole: true,
+      inline: false,
+    },
+    // Lines in a box of values are paragraphs of their own; in running
+    // text a line break is part of the text.
+    { parent: "lines", text: "First value", whole: false, inline: false },
+    {
+      parent: "line-link",
+      text: "Linked line",
+      whole: true,
+      inline: true,
+      wrapper: "line-link",
+    },
+    {
+      parent: "verse",
+      text: "A line of verse{1}and the next",
+      whole: true,
+      inline: false,
+    },
+    // A row of short links is labels (none); a link before a hidden
+    // tooltip holds all of the text.
+    {
+      parent: "star-link",
+      text: "Star this repo",
+      whole: true,
+      inline: true,
+      wrapper: "star-link",
+    },
+  ]);
+});
+
+test("paragraphs: the main content only, unless menus are translated too", () => {
+  const page = `
+    <header id="site-header"><a href="/">Site name</a><p id="tagline">A tagline</p></header>
+    <nav><a href="/a">First section</a></nav>
+    <div role="navigation"><a href="/b">Second section</a></div>
+    <ul role="tablist"><li role="tab">Overview tab</li></ul>
+    <div role="toolbar"><span>Toolbar label</span></div>
+    <div id="cookie-banner"><p>We use cookies here.</p></div>
+    <div aria-label="Cookie consent"><p>Accept the cookies?</p></div>
+    <aside id="sidebar"><p>Sidebar text</p></aside>
+    <main>
+      <article>
+        <header><h1 id="title">Article title</h1></header>
+        <p id="body">The article's text, with a <button>Show more</button> button.</p>
+        <aside id="note"><p>An aside in the article</p></aside>
+        <div class="cookie-recipe"><p>Bake the cookies.</p></div>
+      </article>
+    </main>
+    <footer><p>Footer text</p></footer>`;
+  const texts = (options?: WalkOptions) =>
+    paragraphsOf(page, options).found.map(
+      (paragraph) => paragraph.source.plain,
+    );
+  assert.deepEqual(texts(), [
+    "Article title",
+    "The article's text, with a",
+    "button.",
+    "An aside in the article",
+    "Bake the cookies.",
+  ]);
+  assert.deepEqual(texts({ translateMenus: true }), [
+    "Site name",
+    "A tagline",
+    "First section",
+    "Second section",
+    "Overview tab",
+    "Toolbar label",
+    "We use cookies here.",
+    "Accept the cookies?",
+    "Sidebar text",
+    "Article title",
+    "The article's text, with a",
+    "Show more",
+    "button.",
+    "An aside in the article",
+    "Bake the cookies.",
+    "Footer text",
+  ]);
+  // A change inside the page's chrome finds nothing to translate there.
+  const { document } = paragraphsOf(page);
+  const nav = document.querySelector("nav a")!;
+  assert.equal([...walkParagraphs(nav)].filter(Boolean).length, 0);
 });
 
 test("paragraphs: code, fields, hidden and no-translate content are skipped", () => {
@@ -91,19 +229,19 @@ test("paragraphs: code, fields, hidden and no-translate content are skipped", ()
   );
 });
 
-test("paragraphs: inline code and images stay as atoms in the sentence", () => {
+test("paragraphs: inline code stays an atom in the sentence, images and icons are left out", () => {
   const { found } = paragraphsOf(
-    `<p id="p">Run <code>npm test</code> and see <img src="a.png" alt="chart"> the<br>result.</p>`,
+    `<p id="p">Run <code>npm test</code> and see <img src="a.png" alt="chart"> the<br>result<svg></svg>&nbsp;<i class="material-icons">chevron_right</i><span aria-hidden="true">›</span><span class="fa fa-star"></span>.</p>`,
   );
   assert.deepEqual(found.map(summary), [
     {
       parent: "p",
-      text: "Run {1} and see {2} the{3}result.",
+      text: "Run {1} and see the{2}result .",
       whole: true,
       inline: false,
     },
   ]);
-  assert.equal(found[0].source.plain, "Run and see the result.");
+  assert.equal(found[0].source.plain, "Run and see the result .");
 });
 
 test("serialize: nested formatting, plain spans and text that looks like markers", () => {
@@ -218,17 +356,27 @@ test("restore: form fields and images aren't copied into the translation", () =>
   const { document, found } = paragraphsOf(
     `<p><label>Your name <input value="x"></label> and <img src="a.png"> <kbd>Ctrl</kbd></p>`,
   );
-  assert.equal(found[0].source.text, "<b1>Your name {2}</b1> and {3} {4}");
+  assert.equal(found[0].source.text, "<b1>Your name {2}</b1> and {3}");
   const container = document.createElement("div");
   container.append(
     buildTranslation(
       document as unknown as Document,
       found[0].source,
-      "<b1>Votre nom {2}</b1> et {3} {4}",
+      "<b1>Votre nom {2}</b1> et {3}",
     ),
   );
   assert.equal(
     container.innerHTML,
-    "<label>Votre nom </label> et  <kbd>Ctrl</kbd>",
+    "<label>Votre nom </label> et <kbd>Ctrl</kbd>",
+  );
+});
+
+test("serialize: a space written as an element stays a space", () => {
+  const { found } = paragraphsOf(
+    `<p>See <a href="/a">one</a>,<span class="space">&nbsp;</span><a href="/b">two</a><span class="space">&nbsp;</span>and<span class="space">&nbsp;</span><a href="/c">three</a>.</p>`,
+  );
+  assert.equal(
+    found[0].source.text,
+    "See <b1>one</b1>, <b2>two</b2> and <b3>three</b3>.",
   );
 });

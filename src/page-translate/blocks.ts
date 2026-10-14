@@ -1,7 +1,18 @@
 // Finds the page's paragraphs: the deepest elements whose content is only
 // text and inline elements, and runs of text and inline elements next to
 // blocks in mixed content. The DOM is not changed.
-import { isInline, isOwn, isSkipped, isTextBlock } from "./dom-rules";
+import {
+  isChrome,
+  isDecorative,
+  isHeading,
+  isInline,
+  isInsideChrome,
+  isOwn,
+  isSkipped,
+  isTextBlock,
+} from "./dom-rules";
+import { metadataOf } from "./metadata";
+import { originalContent, originalText } from "./originals";
 import { serializeNodes, type Serialized } from "./serialize";
 
 export type Paragraph = {
@@ -15,16 +26,37 @@ export type Paragraph = {
   // line.
   inline: boolean;
   source: Serialized;
+  // The element around all of the text and nothing else (a headline link,
+  // a link alone in a list item): `parent` is inside it. The translation
+  // goes after it, not into it: it isn't a second link, isn't cut by the
+  // element's box and takes no part in its layout.
+  wrapper?: Element;
 };
 
 // Short text in other blocks than headings and paragraphs reads inline.
 const INLINE_MAX_CHARS = 24;
+
+export type WalkOptions = {
+  // Also the page's menus, buttons, navigation and footer (see isChrome).
+  translateMenus?: boolean;
+};
 
 // Walks `root` (an element or an open shadow root) in document order,
 // yielding each paragraph, and `undefined` after every element so the
 // caller can pause between them.
 export function* walkParagraphs(
   root: Element | ShadowRoot,
+  options: WalkOptions = {},
+): Generator<Paragraph | undefined> {
+  const host =
+    root.nodeType === 1 ? (root as Element) : (root as ShadowRoot).host;
+  if (!options.translateMenus && isInsideChrome(host)) return;
+  yield* walk(root, options);
+}
+
+function* walk(
+  root: Element | ShadowRoot,
+  options: WalkOptions,
 ): Generator<Paragraph | undefined> {
   if (root.nodeType === 1 && isSkipped(root as Element)) return;
   const parent =
@@ -42,20 +74,22 @@ export function* walkParagraphs(
     else if (isOwn(child)) yield* flush();
     else {
       const element = child as Element;
-      if (isSkipped(element)) {
+      if (!options.translateMenus && isChrome(element)) yield* flush();
+      else if (splitsLines(parent, element)) yield* flush();
+      else if (isSkipped(element)) {
         // Inline code and images stay part of the sentence around them.
         if (isInline(element)) run.push(element);
         else yield* flush();
       } else if (isInline(element) && !element.shadowRoot) run.push(element);
       else {
         yield* flush();
-        yield* walkParagraphs(element);
+        yield* walk(element, options);
       }
     }
   }
   yield* flush();
   if (root.nodeType === 1 && (root as Element).shadowRoot)
-    yield* walkParagraphs((root as Element).shadowRoot!);
+    yield* walk((root as Element).shadowRoot!, options);
   yield undefined;
 }
 
@@ -63,10 +97,9 @@ function makeParagraph(
   parent: Element,
   root: Element | ShadowRoot,
   nodes: Node[],
+  wrapper?: Element,
 ): Paragraph | undefined {
   if (!nodes.length) return undefined;
-  const source = serializeNodes(nodes);
-  if (!isTranslatableText(source.plain)) return undefined;
   // Inside a shadow root the translation goes after the nodes, in the root.
   const whole =
     root === parent &&
@@ -74,23 +107,101 @@ function makeParagraph(
       (node) =>
         nodes.includes(node) ||
         isOwn(node) ||
-        (node.nodeType === 3 && !(node as Text).data.trim()) ||
+        (node.nodeType === 3 && !originalText(node as Text).trim()) ||
+        node.nodeName === "BR" ||
         node.nodeType === 8,
     );
+  const trimmed = trimRun(nodes);
+  // One element holding all of the text (a headline link, a link alone in
+  // a list item or between blocks): the paragraph is its content, and the
+  // outermost such element is the paragraph's wrapper.
+  const [lone] = trimmed;
+  if (
+    trimmed.length === 1 &&
+    lone.nodeType === 1 &&
+    !isSkipped(lone as Element) &&
+    !(lone as Element).shadowRoot
+  )
+    return makeParagraph(
+      lone as Element,
+      lone as Element,
+      Array.from(lone.childNodes),
+      wrapper ?? (lone as Element),
+    );
+  const source = serializeNodes(trimmed);
+  if (!isTranslatableText(source.plain)) return undefined;
+  // The element the translation goes into.
+  const host = wrapper?.parentElement ?? parent;
+  // Dates, numbers, names and bylines stay; headings are always text, and
+  // so are the labels of menus and buttons (when they are translated):
+  // "Home" there is a word, not a name.
+  const language = parent.closest("[lang]")?.getAttribute("lang");
+  const metadata =
+    !isHeading(parent) &&
+    !isHeading(host) &&
+    metadataOf(source.plain, language || undefined);
+  // A row of short links (tags, a menu written as links) is labels too.
+  // So is a link that is one lowercase word ("reply", "login"): an action.
+  const action = wrapper?.matches("a[href]") && /^\p{Ll}+$/u.test(source.plain);
+  const labels = metadata || ((action || isLinkRow(trimmed)) && "name");
+  if (labels && (labels !== "name" || !isInsideChrome(parent)))
+    return undefined;
   return {
     parent,
-    nodes: trimRun(nodes),
+    nodes: trimmed,
     whole,
     inline:
-      whole && !isTextBlock(parent) && source.plain.length <= INLINE_MAX_CHARS,
+      whole && !isTextBlock(host) && source.plain.length <= INLINE_MAX_CHARS,
     source,
+    wrapper,
   };
 }
 
-// Leading and trailing blank text nodes aren't part of the paragraph.
+// Two or more links, each a short label, with nothing but spaces and
+// separators between them.
+const LINK_LABEL_WORDS = 4;
+
+function isLinkRow(nodes: Node[]) {
+  let links = 0;
+  for (const node of nodes) {
+    if (node.nodeType === 3) {
+      if (/[\p{L}\d]/u.test(originalText(node as Text))) return false;
+      continue;
+    }
+    if (node.nodeType !== 1) continue;
+    const element = node as Element;
+    if (isDecorative(element)) continue;
+    const link = element.matches("a[href]")
+      ? element
+      : element.querySelector("a[href]");
+    const text = originalContent(element).trim();
+    if (!link || originalContent(link).trim() !== text) return false;
+    if (text.split(/\s+/).length > LINK_LABEL_WORDS) return false;
+    links++;
+  }
+  return links > 1;
+}
+
+// Lines set apart by line breaks outside running text (table cells, boxes
+// of values) are paragraphs of their own: each line's translation follows
+// it. In paragraphs, headings and list items a break is part of the text
+// (verse, an address) and the text is translated whole.
+function splitsLines(parent: Element, element: Element) {
+  return element.tagName.toUpperCase() === "BR" && !isTextBlock(parent);
+}
+
+// Leading and trailing blank text, line breaks, elements that don't show
+// (page metadata) and decorative content (icons, a hidden tooltip after a
+// button) aren't part of the paragraph.
+const EDGE_TAGS = new Set(["BR", "LINK", "META"]);
+
 function trimRun(nodes: Node[]) {
   const blank = (node: Node) =>
-    node.nodeType === 3 && !(node as Text).data.trim();
+    node.nodeType === 3
+      ? !originalText(node as Text).trim()
+      : node.nodeType !== 1 ||
+        EDGE_TAGS.has((node as Element).tagName.toUpperCase()) ||
+        isDecorative(node as Element);
   let start = 0;
   let end = nodes.length;
   while (start < end && blank(nodes[start])) start++;

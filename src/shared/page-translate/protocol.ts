@@ -44,6 +44,8 @@ export type PageTranslateSessionConfig = {
   engine: PageTranslateEngine;
   targetLanguage: string;
   display: PageTranslateDisplay;
+  // Menus, buttons and other page chrome are translated too.
+  translateMenus: boolean;
   // Batches the page may have in flight at once, and their size.
   limits: PageTranslateBatchLimits;
 };
@@ -116,4 +118,10 @@ export type PageTranslateEvent =
       theme: PageToastTheme;
     }
   // The settings changed while the page is translated.
-  | { type: "display"; display: PageTranslateDisplay };
+  | { type: "view"; view: PageTranslateView };
+
+// The settings a translated page follows at once when they change.
+export type PageTranslateView = Pick<
+  PageTranslateSessionConfig,
+  "display" | "translateMenus"
+>;

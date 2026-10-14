@@ -1,3 +1,4 @@
+import type { TermExample } from "../term-memory";
 import type {
   PageTranslateBatchLimits,
   PageTranslateErrorKind,
@@ -11,6 +12,9 @@ export type EngineRequest = {
   // The page's declared language, a hint at best.
   pageLanguage?: string;
   pageTitle?: string;
+  // Earlier translations on the page with the same names (see
+  // term-memory.ts). Engines that translate texts one by one ignore them.
+  terms?: TermExample[];
   signal: AbortSignal;
   // A finished item, in placeholder text. Items never reported failed.
   onItem: (id: number, text: string) => void;

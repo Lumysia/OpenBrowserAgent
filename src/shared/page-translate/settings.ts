@@ -49,6 +49,9 @@ export type PageTranslateSettings = {
   // A language tag; empty follows the extension's language.
   targetLanguage: string;
   display: PageTranslateDisplay;
+  // Also translate the page's menus, buttons, tabs, navigation, sidebars
+  // and footer; off translates the main content only.
+  translateMenus: boolean;
 };
 
 export const DEFAULT_PAGE_TRANSLATE_SETTINGS: PageTranslateSettings = {
@@ -56,6 +59,7 @@ export const DEFAULT_PAGE_TRANSLATE_SETTINGS: PageTranslateSettings = {
   modelId: "",
   targetLanguage: "",
   display: PAGE_TRANSLATE_DISPLAY.bilingual,
+  translateMenus: false,
 };
 
 export function normalizePageTranslateSettings(
@@ -79,6 +83,10 @@ export function normalizePageTranslateSettings(
         normalizeLanguageTag(value.targetLanguage)) ||
       "",
     display,
+    translateMenus:
+      typeof value?.translateMenus === "boolean"
+        ? value.translateMenus
+        : DEFAULT_PAGE_TRANSLATE_SETTINGS.translateMenus,
   };
 }
 

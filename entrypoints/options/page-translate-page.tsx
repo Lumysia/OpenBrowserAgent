@@ -5,6 +5,7 @@ import {
   Database,
   ExternalLink,
   Languages,
+  Menu,
   PanelsTopLeft,
   ShieldAlert,
   Trash2,
@@ -40,6 +41,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SettingSwitchCard,
   ToggleGroup,
   ToggleGroupItem,
 } from "../../src/ui/components";
@@ -226,6 +228,13 @@ export function PageTranslatePage() {
           </ToggleGroup>
         </CardContent>
       </Card>
+      <SettingSwitchCard
+        icon={<Menu size={18} />}
+        title={p.translateMenus}
+        description={p.translateMenusDescription}
+        checked={settings.translateMenus}
+        onChange={(translateMenus) => update({ translateMenus })}
+      />
       <Card>
         <CardHeader>
           <CardTitle className="settings-section-title">

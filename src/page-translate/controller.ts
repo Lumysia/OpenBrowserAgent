@@ -7,24 +7,18 @@ import {
   type PageTranslateEvent,
   type PageTranslateRequest,
   type PageTranslateSessionConfig,
+  type PageTranslateView,
 } from "../shared/page-translate/protocol";
 import {
   PAGE_TRANSLATE_DISPLAY,
-  type PageTranslateDisplay,
   type PageTranslateEngine,
 } from "../shared/page-translate/settings";
 import { getBrowserApi } from "../shared/browser-api";
+import { stripPlaceholders } from "../shared/page-translate/placeholders";
+import { addsLittle } from "./metadata";
+import { createPresenter } from "./presenter";
 import { createQueue, PRIORITY } from "./queue";
-import {
-  removeAll,
-  removeMirror,
-  removeTranslation,
-  setTranslationOnly,
-  showMirror,
-  showPartial,
-  showPending,
-  showTranslation,
-} from "./render";
+import { removeAll } from "./render";
 import { hideToast, showToast } from "./toast";
 import { createUnits, type Unit } from "./units";
 
@@ -35,6 +29,10 @@ const SMALL_PAGE_CHARS = 5_000;
 // Translations kept for this page's session, by source text, so content the
 // page shows again (virtual lists, re-renders) is translated at once.
 const MEMORY_ENTRIES = 2_000;
+// How long sending waits for the observers to tell which new paragraphs are
+// on screen (they report each new one once, in the next frame; a page that
+// gets no frames doesn't wait longer).
+const VISIBILITY_WAIT_MS = 250;
 // A note for the same problem shows at most this often.
 const TOAST_INTERVAL_MS = 10_000;
 // Errors after which no more paragraphs are sent.
@@ -93,47 +91,63 @@ function startSession(onFatal: () => void) {
   let first = true;
   let halted = false;
   let smallPage = false;
-  let translationOnly = false;
+  let translateMenus = false;
   let flushTimer: number | undefined;
   const toasts = new Map<string, number>();
   const targets = new Map<Element, Set<Unit>>();
+  // Watched elements the visibility observer hasn't reported yet, and since
+  // when sending waits for them.
+  const unreported = new Set<Element>();
+  let waitingSince = 0;
 
   const language = () => config?.targetLanguage || "en";
+  const root = document.body || document.documentElement;
 
-  const units = createUnits({
-    added(unit) {
-      let set = targets.get(unit.target);
-      // A watched element reports no change for a new paragraph in it: the
-      // paragraph is where the others are.
-      const sibling = set?.values().next().value;
-      if (sibling) {
-        unit.near = sibling.near;
-        unit.visible = sibling.visible;
-      }
-      if (!set) {
-        set = new Set();
-        targets.set(unit.target, set);
-        near.observe(unit.target);
-        visible.observe(unit.target);
-      }
-      set.add(unit);
-      if (smallPage || unit.near) {
-        enqueue(unit);
-        scheduleFlush();
-      }
+  const units = createUnits(
+    {
+      added(unit) {
+        let set = targets.get(unit.target);
+        // A watched element reports no change for a new paragraph in it: the
+        // paragraph is where the others are.
+        const sibling = set?.values().next().value;
+        if (sibling) {
+          unit.near = sibling.near;
+          unit.visible = sibling.visible;
+        }
+        if (!set) {
+          set = new Set();
+          targets.set(unit.target, set);
+          unreported.add(unit.target);
+          near.observe(unit.target);
+          visible.observe(unit.target);
+        }
+        set.add(unit);
+        if (smallPage || unit.near) {
+          enqueue(unit);
+          scheduleFlush();
+        }
+      },
+      removed(unit) {
+        queue.delete(unit.id);
+        sent.get(unit.paragraph.source.text)?.delete(unit);
+        clear(unit);
+        const set = targets.get(unit.target);
+        set?.delete(unit);
+        if (set && !set.size) {
+          targets.delete(unit.target);
+          unreported.delete(unit.target);
+          near.unobserve(unit.target);
+          visible.unobserve(unit.target);
+        }
+      },
     },
-    removed(unit) {
-      queue.delete(unit.id);
-      sent.get(unit.paragraph.source.text)?.delete(unit);
-      clear(unit);
-      const set = targets.get(unit.target);
-      set?.delete(unit);
-      if (set && !set.size) {
-        targets.delete(unit.target);
-        near.unobserve(unit.target);
-        visible.unobserve(unit.target);
-      }
-    },
+    { translateMenus },
+  );
+  const presenter = createPresenter({
+    language,
+    units: () => units.units.values(),
+    mute: units.mute,
+    translateMenus: () => translateMenus,
   });
 
   const near = new IntersectionObserver(
@@ -141,6 +155,10 @@ function startSession(onFatal: () => void) {
       for (const entry of entries)
         for (const unit of targets.get(entry.target) || []) {
           unit.near = entry.isIntersecting;
+          // A translation for a paragraph that wasn't rendered (a collapsed
+          // section) shows when the paragraph does.
+          if (unit.translation !== undefined && !unit.placement)
+            presenter.request(unit);
           if (unit.near || smallPage) enqueue(unit);
           else if (unit.state === "queued") {
             // Out of reach before its turn: wait until it comes back.
@@ -153,11 +171,16 @@ function startSession(onFatal: () => void) {
     { rootMargin: NEAR_MARGIN },
   );
   const visible = new IntersectionObserver((entries) => {
-    for (const entry of entries)
+    for (const entry of entries) {
+      unreported.delete(entry.target);
       for (const unit of targets.get(entry.target) || []) {
         unit.visible = entry.isIntersecting;
         if (unit.state === "queued") enqueue(unit);
+        // Sent before it was known to be on screen: it shows as waiting.
+        else if (unit.visible && unit.state === "sent" && !unit.element)
+          presenter.request(unit);
       }
+    }
     scheduleFlush();
   });
 
@@ -198,6 +221,16 @@ function startSession(onFatal: () => void) {
     if (!port) connect();
     // Batches wait for the session's limits.
     if (!config) return;
+    // Paragraphs on screen go first, so sending waits until the observers
+    // have said which those are.
+    if (unreported.size) {
+      const now = performance.now();
+      waitingSince ||= now;
+      if (now - waitingSince < VISIBILITY_WAIT_MS) {
+        scheduleFlush();
+        return;
+      }
+    } else waitingSince = 0;
     while (batches.size < config.limits.concurrency && queue.size) {
       const items = queue.take(config.limits, first);
       first = false;
@@ -206,9 +239,15 @@ function startSession(onFatal: () => void) {
       for (const item of items) {
         const unit = units.units.get(item.id);
         if (!unit) continue;
+        // A control's label isn't sent unless menus and buttons are
+        // translated (styles tell some controls, such as a link drawn as a
+        // button).
+        if (presenter.place(unit)?.form === "skip") {
+          unit.state = "skipped";
+          continue;
+        }
         unit.state = "sent";
-        if (unit.visible)
-          unit.element = showPending(unit.paragraph, language(), unit.element);
+        if (unit.visible) presenter.request(unit);
         const waiting = sent.get(item.text);
         if (waiting) {
           waiting.add(unit);
@@ -227,47 +266,40 @@ function startSession(onFatal: () => void) {
 
   function show(unit: Unit, translation: string) {
     unit.state = "done";
-    const same =
-      translation.replace(/\s+/g, " ").trim() === unit.paragraph.source.text;
-    if (same) {
+    // A translation that repeats its source adds nothing to show.
+    const plain = translation.replace(/\s+/g, " ").trim();
+    const source = unit.paragraph.source;
+    if (
+      plain === source.text ||
+      addsLittle(source.plain, stripPlaceholders(plain))
+    ) {
       clear(unit);
       return;
     }
     unit.translation = translation;
-    unit.element = showTranslation(
-      unit.paragraph,
-      language(),
-      translation,
-      unit.element,
+    unit.partial = undefined;
+    presenter.request(unit);
+  }
+
+  function setView(view: PageTranslateView) {
+    presenter.setTranslationOnly(
+      view.display === PAGE_TRANSLATE_DISPLAY.translation,
     );
-    showDisplay(unit);
-  }
-
-  // Translation-only display adds a translated copy of the block.
-  function showDisplay(unit: Unit) {
-    if (unit.translation !== undefined && translationOnly)
-      unit.mirror = showMirror(
-        unit.paragraph,
-        language(),
-        unit.translation,
-        unit.mirror,
-      );
-    else {
-      removeMirror(unit.paragraph, unit.mirror);
-      unit.mirror = undefined;
-    }
-  }
-
-  function setDisplay(display: PageTranslateDisplay) {
-    translationOnly = display === PAGE_TRANSLATE_DISPLAY.translation;
-    setTranslationOnly(document, translationOnly);
-    for (const unit of units.units.values()) showDisplay(unit);
+    if (view.translateMenus === translateMenus) return;
+    translateMenus = view.translateMenus;
+    presenter.placeAll();
+    for (const unit of units.units.values())
+      if (unit.state === "skipped") {
+        unit.state = "idle";
+        if (unit.near || smallPage) enqueue(unit);
+      }
+    scheduleFlush();
+    void units.rescan(root, { translateMenus });
   }
 
   function clear(unit: Unit) {
-    removeTranslation(unit.paragraph, unit.element);
-    removeMirror(unit.paragraph, unit.mirror);
-    unit.element = unit.mirror = unit.translation = undefined;
+    presenter.forget(unit);
+    unit.translation = unit.partial = undefined;
   }
 
   function handle(event: PageTranslateEvent) {
@@ -275,14 +307,14 @@ function startSession(onFatal: () => void) {
       case "session":
         config = event.config;
         engine = config.engine;
-        setDisplay(config.display);
+        setView(config);
         // Waiting paragraphs translated before show at once.
         for (const unit of units.units.values())
           if (unit.state === "queued") enqueue(unit);
         flush();
         return;
-      case "display":
-        setDisplay(event.display);
+      case "view":
+        setView(event.view);
         return;
       case "switched":
         if (config)
@@ -293,13 +325,10 @@ function startSession(onFatal: () => void) {
         return;
       case "partial": {
         const unit = units.units.get(event.id);
-        if (unit?.state === "sent" && (unit.visible || unit.element))
-          unit.element = showPartial(
-            unit.paragraph,
-            language(),
-            event.text,
-            unit.element,
-          );
+        if (unit?.state === "sent" && (unit.visible || unit.element)) {
+          unit.partial = event.text;
+          presenter.request(unit);
+        }
         return;
       }
       case "item": {
@@ -387,7 +416,6 @@ function startSession(onFatal: () => void) {
   });
 
   connect();
-  const root = document.body || document.documentElement;
   void units.start(root).then(() => {
     const total = [...units.units.values()].reduce(
       (sum, unit) => sum + unit.paragraph.source.plain.length,
@@ -402,6 +430,7 @@ function startSession(onFatal: () => void) {
   return {
     stop() {
       for (const unit of units.units.values()) clear(unit);
+      presenter.stop();
       units.stop();
       near.disconnect();
       visible.disconnect();

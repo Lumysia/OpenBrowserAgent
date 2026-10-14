@@ -30,6 +30,7 @@ import {
   type EngineChain,
 } from "./engine-chain";
 import { EngineError, resolveEngine, type TranslationEngine } from "./engines";
+import { createTermMemory, type TermMemory } from "./term-memory";
 
 type Post = (event: PageTranslateEvent) => void;
 
@@ -43,6 +44,7 @@ type Session = {
   theme: PageToastTheme;
   pageLanguage?: string;
   pageTitle?: string;
+  terms: TermMemory;
 };
 
 let pruned = false;
@@ -128,6 +130,7 @@ async function startSession(
         engine: kind,
         targetLanguage: target,
         display: settings.display,
+        translateMenus: settings.translateMenus,
         limits: engine.limits,
       },
     });
@@ -142,6 +145,7 @@ async function startSession(
       theme,
       pageLanguage: request.pageLanguage,
       pageTitle: request.title,
+      terms: createTermMemory(),
     };
   } catch (error) {
     post(errorEvent(error, undefined, { language, target, theme, kind }));
@@ -173,7 +177,10 @@ async function runBatch(
   for (const item of items) {
     const text = cached.get(keys.get(item.id)!);
     if (text === undefined) pending.push(item);
-    else post({ type: "item", batch, id: item.id, text });
+    else {
+      session.terms.remember(item.text, text);
+      post({ type: "item", batch, id: item.id, text });
+    }
   }
   if (!pending.length) return;
   const sources = new Map(pending.map((item) => [item.id, item.text]));
@@ -188,6 +195,7 @@ async function runBatch(
     if (signal.aborted || delivered.has(id) || !text) return;
     delivered.add(id);
     fresh.push({ engine, source: sources.get(id)!, text });
+    session.terms.remember(sources.get(id)!, text);
     post({ type: "item", batch, id, text });
   };
   const run = (batchItems: PageTranslateItem[]) =>
@@ -195,6 +203,7 @@ async function runBatch(
       target,
       pageLanguage: session.pageLanguage,
       pageTitle: session.pageTitle,
+      terms: session.terms.examples(batchItems.map((item) => item.text)),
       signal,
       onItem: deliver,
       onPartial: (id, text) => post({ type: "partial", batch, id, text }),

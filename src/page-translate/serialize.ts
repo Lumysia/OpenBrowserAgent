@@ -13,9 +13,11 @@ import {
 import {
   isAtom,
   isCopiedInTranslation,
+  isDecorative,
   isOwn,
   isPlainWrapper,
 } from "./dom-rules";
+import { originalContent, originalText } from "./originals";
 
 export type Serialized = {
   // Placeholder text; plain text when the page's own text looks like
@@ -26,35 +28,56 @@ export type Serialized = {
   // Elements by marker number. A pair can stand for nested elements around
   // the same text (a link around bold text): outermost first.
   elements: Map<number, Element[]>;
+  // The text nodes and markers in order, to put a translation in place of
+  // the text (translation-only display).
+  tokens: SourceToken[];
 };
+
+export type SourceToken =
+  | { type: "text"; node: Text }
+  | { type: "open" | "close" | "atom"; id: number };
 
 const LETTER = /\p{L}/u;
 
 export function serializeNodes(nodes: Node[]): Serialized {
   const elements = new Map<number, Element[]>();
+  const tokens: SourceToken[] = [];
   let plain = "";
   let marked = "";
   const visit = (node: Node) => {
     if (node.nodeType === 3) {
-      const value = (node as Text).data;
+      const value = originalText(node as Text);
       plain += value;
       marked += value;
+      tokens.push({ type: "text", node: node as Text });
       return;
     }
     if (node.nodeType !== 1 || isOwn(node)) return;
     const element = node as Element;
-    const text = element.textContent || "";
+    // Icons and images aren't part of the text (see isDecorative).
+    if (isDecorative(element)) return;
+    const text = originalContent(element);
     // Code and images, and elements with nothing to translate in them
     // (footnote marks such as [1]), stay as they are.
     if (isAtom(element) || (text.trim() && !LETTER.test(text))) {
       const id = elements.size + 1;
       elements.set(id, [element]);
       marked += atomTag(id);
-      // Line breaks read as spaces.
+      tokens.push({ type: "atom", id });
+      // Line breaks read as spaces; marks are read as they are.
       if (element.tagName.toUpperCase() === "BR") plain += " ";
+      else if (!isAtom(element)) plain += text;
       return;
     }
-    if (!text.trim()) return;
+    // An element holding only a space (a non-breaking space between links)
+    // is a space in the sentence.
+    if (!text.trim()) {
+      if (text) {
+        plain += " ";
+        marked += " ";
+      }
+      return;
+    }
     const chain = wrappers(element);
     if (!chain.length) {
       element.childNodes.forEach(visit);
@@ -63,16 +86,23 @@ export function serializeNodes(nodes: Node[]): Serialized {
     const id = elements.size + 1;
     elements.set(id, chain);
     marked += openTag(id);
+    tokens.push({ type: "open", id });
     innermost(element).childNodes.forEach(visit);
     marked += closeTag(id);
+    tokens.push({ type: "close", id });
   };
   nodes.forEach(visit);
   const collapse = (text: string) => text.replace(/\s+/g, " ").trim();
   plain = collapse(plain);
   // Text that already reads as markers goes as plain text.
   if (hasMarkerSyntax(plain))
-    return { text: plain, plain, elements: new Map() };
-  return { text: tidyMarkers(collapse(marked)), plain, elements };
+    return {
+      text: plain,
+      plain,
+      elements: new Map(),
+      tokens: tokens.filter((token) => token.type === "text"),
+    };
+  return { text: tidyMarkers(collapse(marked)), plain, elements, tokens };
 }
 
 // An element and the elements nested in it around the same content, as one
@@ -84,7 +114,7 @@ function wrappers(element: Element) {
     if (!isPlainWrapper(current)) chain.push(current);
     const only = onlyChild(current);
     current =
-      only && !isAtom(only) && LETTER.test(only.textContent || "")
+      only && !isAtom(only) && LETTER.test(originalContent(only))
         ? only
         : undefined;
   }
@@ -95,7 +125,7 @@ function innermost(element: Element) {
   let current = element;
   for (
     let only = onlyChild(current);
-    only && !isAtom(only) && LETTER.test(only.textContent || "");
+    only && !isAtom(only) && LETTER.test(originalContent(only));
     only = onlyChild(current)
   )
     current = only;
@@ -106,7 +136,7 @@ function innermost(element: Element) {
 function onlyChild(element: Element) {
   let only: Element | undefined;
   for (const child of element.childNodes) {
-    if (child.nodeType === 3 && !(child as Text).data.trim()) continue;
+    if (child.nodeType === 3 && !originalText(child as Text).trim()) continue;
     if (child.nodeType === 8) continue;
     if (child.nodeType !== 1 || only || isOwn(child)) return undefined;
     only = child as Element;
