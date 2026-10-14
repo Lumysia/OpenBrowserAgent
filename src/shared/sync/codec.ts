@@ -1,5 +1,7 @@
 // Byte-level helpers shared by the sync engine and its transports.
 
+import { bytesToHex } from "../binary";
+
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
@@ -27,9 +29,7 @@ export const sameJson = (left: unknown, right: unknown) =>
 
 export async function sha256Hex(bytes: Uint8Array) {
   const digest = await crypto.subtle.digest("SHA-256", toArrayBuffer(bytes));
-  return Array.from(new Uint8Array(digest), (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
+  return bytesToHex(new Uint8Array(digest));
 }
 
 export const hashJson = (value: unknown) => sha256Hex(jsonBytes(value));
