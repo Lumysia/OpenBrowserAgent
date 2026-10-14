@@ -4,7 +4,12 @@ import {
   markItems,
 } from "../../../shared/page-translate/marked-stream";
 import { stripPlaceholders } from "../../../shared/page-translate/placeholders";
-import { requestText, type ProviderModel } from "../../pi-provider";
+import type { ProviderModel } from "../../pi-provider";
+import {
+  QUICK_TASK_PRIORITY,
+  quickTaskConcurrency,
+  requestQuickText,
+} from "../../quick-tasks";
 import type { EngineRequest, TranslationEngine } from "./types";
 
 // Changes when the prompt changes, so cached translations from an older
@@ -19,9 +24,8 @@ export function modelEngine(model: ProviderModel): TranslationEngine {
   return {
     id: `model:${identity}`,
     cacheKey: `model:${MODEL_PROMPT_VERSION}:${identity}`,
-    // Local servers run one request at a time anyway.
     limits: {
-      concurrency: model.provider === "ollama" ? 2 : 4,
+      concurrency: quickTaskConcurrency(model),
       maxItems: 8,
       maxChars: 1800,
       firstItems: 3,
@@ -49,10 +53,20 @@ async function translateWithModel(
     sentAt = now;
     request.onPartial(item.id, stripPlaceholders(item.text));
   };
-  await requestText(model, modelPrompt(request), request.signal, (delta) => {
-    emit(parser.push(delta));
-    partial();
-  });
+  // Placeholders keep waiting while a model thinks: only answer text
+  // reaches the parser.
+  await requestQuickText(
+    model,
+    modelPrompt(request),
+    QUICK_TASK_PRIORITY.background,
+    {
+      signal: request.signal,
+      onText: (delta) => {
+        emit(parser.push(delta));
+        partial();
+      },
+    },
+  );
   emit(parser.end());
 }
 

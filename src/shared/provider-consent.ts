@@ -29,7 +29,10 @@ function endpointUrl(provider: ProviderConfig) {
 }
 
 function parseEndpoint(provider: ProviderConfig) {
-  const url = endpointUrl(provider);
+  return parseUrl(endpointUrl(provider));
+}
+
+function parseUrl(url: string) {
   if (!url) return undefined;
   try {
     const parsed = new URL(url);
@@ -52,6 +55,12 @@ export function providerNeedsConsent(provider: ProviderConfig) {
   if (ON_DEVICE_PROVIDER_TYPES.has(provider.type || "")) return false;
   const endpoint = parseEndpoint(provider);
   return !!endpoint && !isLocalHost(endpoint.hostname);
+}
+
+// Whether an endpoint URL is on this device or the local network.
+export function isLocalEndpoint(url: string) {
+  const endpoint = parseUrl(url);
+  return !!endpoint && isLocalHost(endpoint.hostname);
 }
 
 // The provider may receive content now: it needs no permission, or the
