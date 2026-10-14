@@ -51,7 +51,7 @@ The current required declaration is intentionally conservative because OpenBrows
 
 A provider whose endpoint is on another server receives nothing until the user agrees, for that provider, that their content is sent to the endpoint's host:
 
-- The provider form (Settings → Providers, which the side panel's setup also opens) shows a required checkbox: "I agree that content I share in chats (messages, page text, screenshots and files) is sent to `<host>`." A provider that needs it cannot be saved without it. Once saved, the form shows "Allowed to receive your content" with the host and a **Withdraw permission** button; providers without permission show a "Needs permission" badge.
+- The provider form (Settings → AI providers, which the side panel's setup also opens) shows a required checkbox: "I agree that content I share in chats (messages, page text, screenshots and files) is sent to `<host>`." A provider that needs it cannot be saved without it. Once saved, the form shows "Allowed to receive your content" with the host and a **Withdraw permission** button; providers without permission show a "Needs permission" badge.
 - The host comes from the provider's base URL, or the provider type's default endpoint (for Gemini, `generativelanguage.googleapis.com`). It includes a non-default port. Changing the base URL to another host or port asks again.
 - The permission is stored with the provider as `consent: { host, grantedAt }` and synced with it, so a provider synced to another device does not ask again. Providers from earlier versions, imported or synced without it, ask before their first use.
 - Every model request (chats, sub-agents, the helper model for page extraction and context compaction, chat titles, the smart bar, image generation) gets its endpoint from one resolver, which stops a request to a provider without permission before anything is sent. The side panel asks above the composer before a send that would use such a provider; declining keeps the message in the composer and sends nothing. The smart bar asks in its result card and runs once the user agrees. Context menu actions open the side panel and ask there. A request with no one to ask, such as a sub-agent on another provider, fails with a message saying the provider needs permission.
@@ -88,7 +88,7 @@ Translations are cached locally in IndexedDB (keyed by a hash of the engine, mod
 
 ## External Network Calls
 
-OpenBrowserAgent sends data to endpoints configured by the user in Providers and MCP settings. It can also make these external calls:
+OpenBrowserAgent sends data to endpoints configured by the user in the AI providers and MCP servers settings. It can also make these external calls:
 
 - Provider APIs for chat, responses, image generation, and model fetching.
 - Ollama local endpoints when configured.

@@ -19,7 +19,7 @@ It turns your browser into an AI working surface: bring page context into chat, 
 <table>
   <tr>
     <td width="33.33%"><strong>Custom agents</strong><br><img src="docs/assets/screenshots/agents.webp" alt="Custom agent settings" width="100%"></td>
-    <td width="33.33%"><strong>Model providers</strong><br><img src="docs/assets/screenshots/providers.webp" alt="Model provider settings" width="100%"></td>
+    <td width="33.33%"><strong>AI providers</strong><br><img src="docs/assets/screenshots/providers.webp" alt="AI provider settings" width="100%"></td>
     <td width="33.33%"><strong>Skills</strong><br><img src="docs/assets/screenshots/skills.webp" alt="Reusable skill settings" width="100%"></td>
   </tr>
   <tr>

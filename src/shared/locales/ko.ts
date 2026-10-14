@@ -34,8 +34,8 @@ export const ko: LocaleMessages = {
   sidepanel: {
     connectProviderTitle: "OpenBrowserAgent 설정",
     connectProviderDescription:
-      "언어를 선택하고 필요하면 동기화를 켠 다음, 준비되면 제공업체와 모델을 추가하세요.",
-    addProvider: "제공업체 추가",
+      "언어를 선택하고 필요하면 동기화를 켠 다음, 준비되면 AI 제공업체와 모델을 추가하세요.",
+    addProvider: "AI 제공업체 추가",
     cloudSyncConnect: "연결 및 동기화",
     cloudSyncTesting: "연결 중…",
     cloudSyncPulling: "클라우드 동기화 확인 중…",
@@ -44,11 +44,11 @@ export const ko: LocaleMessages = {
     cloudSyncError:
       "클라우드 동기화 테스트에 실패했습니다. 백엔드를 확인하거나 로컬에서 시작하세요.",
     cloudSyncSynced:
-      "클라우드 동기화가 준비되었습니다. 다음으로 제공업체 설정을 추가하세요.",
+      "클라우드 동기화가 준비되었습니다. 다음으로 AI 제공업체 설정을 추가하세요.",
     cloudSyncSyncedButton: "동기화됨",
     startLocally: "로컬에서 시작",
     localSetupHint:
-      "설정이 열렸습니다. 설정에서 제공업체와 모델을 추가한 뒤 여기로 돌아와 계속하세요.",
+      "설정이 열렸습니다. 설정에서 AI 제공업체와 모델을 추가한 뒤 여기로 돌아와 계속하세요.",
     bootstrapStepSyncTitle: "동기화 백엔드(선택 사항)",
     syncConfigCodeTab: "코드 붙여넣기",
     syncManualTab: "수동 입력",
@@ -56,9 +56,9 @@ export const ko: LocaleMessages = {
     syncConfigCodeDescription: "다른 기기에서 복사한 코드를 붙여넣으세요.",
     syncConfigCodeInvalid:
       "동기화 구성 코드가 올바르지 않습니다. 코드를 확인한 뒤 다시 시도하세요.",
-    bootstrapStepProviderTitle: "제공업체와 모델 추가",
+    bootstrapStepProviderTitle: "AI 제공업체와 모델 추가",
     bootstrapStepProviderDescription:
-      "설정을 열어 제공업체와 모델을 추가하고 테스트하세요.",
+      "설정을 열어 AI 제공업체와 모델을 추가하고 테스트하세요.",
     bootstrapStepTaskTitle: "첫 작업 보내기",
     bootstrapStepTaskDescription:
       "모델이 정상 응답하면 여기로 돌아와 OpenBrowserAgent에 탐색이나 요약을 요청하세요.",
@@ -293,7 +293,7 @@ export const ko: LocaleMessages = {
       pages: "페이지 스냅샷, 찾기, 읽기, 콘텐츠 추출, 스크린샷.",
       browser: "탭 관리, 클릭, 입력, 페이지 편집, 파일 내보내기.",
       web: "기본 검색 엔진으로 웹을 검색합니다.",
-      images: "이미지 생성 및 편집(제공업체 설정에서 활성화한 경우).",
+      images: "이미지 생성 및 편집(AI 제공업체 설정에서 활성화한 경우).",
       skills: "활성화된 스킬을 사용하고 만들거나 개선합니다.",
       history: "저장된 채팅 검색, 읽기, 삭제.",
       subAgents: "별도 채팅에서 실행되는 에이전트에 작업을 위임합니다.",
@@ -327,7 +327,7 @@ export const ko: LocaleMessages = {
     resetDefaultAgentsDescription:
       "내장 에이전트로 되돌리고 사용자 지정 에이전트와 워크스페이스를 제거합니다.",
     sync: "동기화",
-    providers: "제공업체",
+    providers: "AI 제공업체",
     mcpServers: "MCP 서버",
     localExecutionBridges: "로컬 실행 브리지",
     localExecutionBridgesDescription:
@@ -352,7 +352,7 @@ export const ko: LocaleMessages = {
     localExecutionBridgeTestError: "브리지 테스트 실패",
     deleteLocalExecutionBridge: "실행 브리지 삭제",
     skills: "스킬",
-    modelProviders: "모델 제공업체",
+    modelProviders: "AI 제공업체",
     providerDescription:
       "자신의 API 키로 OpenBrowserAgent를 원하는 AI 제공업체에 연결하세요.",
     mcpServersDescription:
@@ -399,9 +399,9 @@ export const ko: LocaleMessages = {
       "에이전트가 이미지 생성 도구를 사용할 수 있게 합니다.",
     imageGenerationSize: "이미지 크기",
     providerConnection: "연결 정보",
-    providerConnectionHint: "제공업체 이름, API 키, Base URL을 구성합니다.",
-    providerName: "제공업체 이름",
-    deleteProvider: "제공업체 삭제",
+    providerConnectionHint: "이름, API 키, Base URL을 구성합니다.",
+    providerName: "이름",
+    deleteProvider: "AI 제공업체 삭제",
     apiKey: "API 키",
     baseUrl: "Base URL",
     models: "모델",
@@ -497,9 +497,9 @@ export const ko: LocaleMessages = {
     syncBackendPassword: "비밀번호 또는 앱 비밀번호",
     syncBackendCopyConfig: "구성 코드 복사",
     syncBackendCopiedConfig: "구성 코드 복사됨",
-    syncProviders: "제공업체 동기화",
+    syncProviders: "AI 제공업체 동기화",
     syncProvidersDescription:
-      "API 키를 포함한 제공업체 구성을 현재 동기화 백엔드로 동기화합니다.",
+      "API 키를 포함한 AI 제공업체 구성을 현재 동기화 백엔드로 동기화합니다.",
     syncAgents: "에이전트 동기화",
     syncAgentsDescription:
       "에이전트 프로필과 워크스페이스 파일을 현재 동기화 백엔드로 동기화합니다.",
@@ -544,7 +544,7 @@ export const ko: LocaleMessages = {
     debugResetTargets: "데이터 유형",
     debugResetTargetAll: "전체",
     debugResetTargetSettings: "설정",
-    debugResetTargetProviders: "제공업체",
+    debugResetTargetProviders: "AI 제공업체",
     debugResetTargetAgents: "에이전트",
     debugResetTargetSkills: "스킬",
     debugResetTargetMcpServers: "MCP 서버",

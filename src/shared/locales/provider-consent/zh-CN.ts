@@ -10,7 +10,7 @@ export const providerConsentZhCN: ProviderConsentLocaleMessages = {
   withdraw: "撤回许可",
   needsPermission: "需要你的许可",
   localEndpoint: "本地端点（{host}）——无需许可。",
-  requiredToSave: "勾选上方的选项后才能保存此提供商。",
+  requiredToSave: "勾选上方的选项后才能保存此 AI 提供商。",
   required:
-    "{host} 尚未获准接收你的内容。请在侧边栏发送消息时同意，或在“设置”→“提供商”中同意。",
+    "{host} 尚未获准接收你的内容。请在侧边栏发送消息时同意，或在“设置”→“AI 提供商”中同意。",
 };

@@ -48,7 +48,7 @@ export const displayDeDE: DisplayMessages = {
   },
   errors: {
     noModel:
-      "Es ist kein Modell eingerichtet. Fügen Sie unter „Einstellungen“ → „Anbieter“ einen Anbieter hinzu.",
+      "Es ist kein Modell eingerichtet. Fügen Sie unter „Einstellungen“ → „KI-Anbieter“ einen Anbieter hinzu.",
     subAgentStopped: "Der Subagent wurde gestoppt.",
     baseUrlRequired: "Geben Sie eine Basis-URL ein.",
   },

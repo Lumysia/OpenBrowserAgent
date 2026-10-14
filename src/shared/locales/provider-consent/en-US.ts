@@ -11,9 +11,9 @@ export const providerConsentEnUS = {
   withdraw: "Withdraw permission",
   needsPermission: "Needs permission",
   localEndpoint: "Local endpoint ({host}) — no permission needed.",
-  requiredToSave: "Tick the box above to save this provider.",
+  requiredToSave: "Tick the box above to save this AI provider.",
   required:
-    "{host} isn’t allowed to receive your content yet. Agree when you send a message in the side panel, or in Settings → Providers.",
+    "{host} isn’t allowed to receive your content yet. Agree when you send a message in the side panel, or in Settings → AI providers.",
 };
 
 export type ProviderConsentLocaleMessages = typeof providerConsentEnUS;

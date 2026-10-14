@@ -2,7 +2,7 @@
 
 OpenBrowserAgent ships its interface in nine languages. This page records the words each language uses for the product's main ideas, so that new strings match what is already there. If you add or change a user-facing string, check this page first; if you introduce a new concept, add it here in the same change.
 
-Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-bar/` (the smart bar), `src/shared/locales/context-menu/` (the right-click menu), `src/shared/locales/downloads/` (the downloads tool's step lines), `src/shared/locales/provider-consent/` (permission to send content to a provider) and `public/_locales/` (the extension name, description and shortcut). English (`en-US`) is the source; every other language must have every key.
+Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-bar/` (the smart bar), `src/shared/locales/context-menu/` (the right-click menu), `src/shared/locales/downloads/` (the downloads tool's step lines), `src/shared/locales/provider-consent/` (permission to send content to an AI provider) and `public/_locales/` (the extension name, description and shortcut). English (`en-US`) is the source; every other language must have every key.
 
 ## General rules
 
@@ -10,6 +10,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 - **Name controls by their real label.** When text tells people to press a button or open a page, use that button's or page's exact label. In Chinese, quote it with “” (Simplified) or 「」 (Traditional); in German with „“.
 - **Say where things happen.** A button that opens the side panel says so ("Ask in side panel", "Continue in side panel").
 - **Agents, not "the assistant".** Settings text that talks about the AI acting in the browser calls it the agent. "AI" is fine in marketing text such as the extension description, and "assistant" stays where it means the assistant's messages in a chat (as in the debug logging option).
+- **AI provider, not a bare "provider".** The service that runs the models is the AI provider in every language (the settings page, its buttons, onboarding, errors and permission text). A repeat in the same sentence or inside the provider form may drop "AI" when the full form reads heavy, and the form's fields use plain words ("Name"). Write "AI provider" rather than "model provider". Page translation engines are not providers, and other services (a search provider, a sync backend) keep their own names.
 - **Keep placeholders.** `{count}`, `{name}`, `{max}` and the like stay exactly as they are.
 - **Use the ellipsis character** `…`, never three dots.
 - **Dashes, not hyphens, between phrases.** English and Brazilian Portuguese use a spaced em dash (`—`), German, French and Spanish a spaced en dash (`–`), Japanese and Korean a spaced em dash, and Chinese the double dash `——` with no spaces. A spaced ASCII hyphen (`-`) is never a separator.
@@ -32,7 +33,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | smart bar                      | 智能工具栏         | 智慧工具列         | スマートバー            | 스마트 바        |
 | model                          | 模型               | 模型               | モデル                  | 모델             |
 | helper model                   | 辅助模型           | 輔助模型           | 補助モデル              | 보조 모델        |
-| provider                       | 提供商             | 提供者             | プロバイダー            | 제공업체         |
+| AI provider                    | AI 提供商          | AI 提供者          | AI プロバイダー         | AI 제공업체      |
 | API key                        | API Key            | API Key            | API キー                | API 키           |
 | base URL                       | Base URL           | Base URL           | ベース URL              | Base URL         |
 | skill                          | 技能               | 技能               | スキル                  | 스킬             |
@@ -69,7 +70,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | smart bar                      | barre intelligente           | Smart Bar                   | barra inteligente                 | barra inteligente                |
 | model                          | modèle                       | Modell                      | modelo                            | modelo                           |
 | helper model                   | modèle auxiliaire            | Hilfsmodell                 | modelo auxiliar                   | modelo auxiliar                  |
-| provider                       | fournisseur                  | Anbieter                    | proveedor                         | provedor                         |
+| AI provider                    | fournisseur d’IA             | KI-Anbieter                 | proveedor de IA                   | provedor de IA                   |
 | API key                        | clé API                      | API-Schlüssel               | clave API                         | chave de API                     |
 | base URL                       | URL de base                  | Basis-URL                   | URL base                          | URL base                         |
 | skill                          | compétence                   | Skill                       | habilidad                         | habilidade                       |
@@ -158,7 +159,7 @@ The context menu is the browser's right-click menu; OpenBrowserAgent adds a subm
 
 ## Provider permission
 
-Before content the user shares in chats (messages, page text, screenshots, files) goes to a provider's endpoint, the user agrees once for that endpoint's host (`providerConsent`). The agreement sentence is written in the first person ("I agree that…") because it is the label of a checkbox the user ticks; the same sentence shows in the prompt before the first message, so both read the same. `{host}` is a host name such as api.openai.com and stays as is. "Permission" is the user's consent, never a browser permission. Endpoints on the device or the local network are "local endpoints" and need none.
+Before content the user shares in chats (messages, page text, screenshots, files) goes to an AI provider's endpoint, the user agrees once for that endpoint's host (`providerConsent`). The agreement sentence is written in the first person ("I agree that…") because it is the label of a checkbox the user ticks; the same sentence shows in the prompt before the first message, so both read the same. `{host}` is a host name such as api.openai.com and stays as is. "Permission" is the user's consent, never a browser permission. Endpoints on the device or the local network are "local endpoints" and need none.
 
 | English              | 简体中文 | 繁體中文 | 日本語                   | 한국어          |
 | -------------------- | -------- | -------- | ------------------------ | --------------- |

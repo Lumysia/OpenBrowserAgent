@@ -47,7 +47,7 @@ export const displayKo: DisplayMessages = {
   },
   errors: {
     noModel:
-      "설정된 모델이 없어요. ‘설정’ → ‘제공업체’에서 제공업체를 추가하세요.",
+      "설정된 모델이 없어요. ‘설정’ → ‘AI 제공업체’에서 제공업체를 추가하세요.",
     subAgentStopped: "하위 에이전트를 중지했어요.",
     baseUrlRequired: "Base URL을 입력하세요.",
   },

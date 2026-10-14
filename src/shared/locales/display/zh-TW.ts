@@ -43,7 +43,7 @@ export const displayZhTW: DisplayMessages = {
     },
   },
   errors: {
-    noModel: "尚未設定模型。請在「設定」→「提供者」中新增提供者。",
+    noModel: "尚未設定模型。請在「設定」→「AI 提供者」中新增提供者。",
     subAgentStopped: "子智慧體已停止。",
     baseUrlRequired: "請輸入 Base URL。",
   },

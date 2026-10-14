@@ -34,8 +34,8 @@ export const deDE: LocaleMessages = {
   sidepanel: {
     connectProviderTitle: "OpenBrowserAgent einrichten",
     connectProviderDescription:
-      "Wählen Sie die Sprache, aktivieren Sie optional die Synchronisierung und fügen Sie dann, sobald Sie so weit sind, einen Anbieter und ein Modell hinzu.",
-    addProvider: "Anbieter hinzufügen",
+      "Wählen Sie die Sprache, aktivieren Sie optional die Synchronisierung und fügen Sie dann, sobald Sie so weit sind, einen KI-Anbieter und ein Modell hinzu.",
+    addProvider: "KI-Anbieter hinzufügen",
     cloudSyncConnect: "Verbinden und synchronisieren",
     cloudSyncTesting: "Verbindung wird hergestellt…",
     cloudSyncPulling: "Cloud-Synchronisierung wird geprüft…",
@@ -44,11 +44,11 @@ export const deDE: LocaleMessages = {
     cloudSyncError:
       "Test der Cloud-Synchronisierung fehlgeschlagen. Prüfen Sie das Backend oder starten Sie lokal.",
     cloudSyncSynced:
-      "Die Cloud-Synchronisierung ist bereit. Richten Sie als Nächstes einen Anbieter ein.",
+      "Die Cloud-Synchronisierung ist bereit. Richten Sie als Nächstes einen KI-Anbieter ein.",
     cloudSyncSyncedButton: "Synchronisiert",
     startLocally: "Lokal starten",
     localSetupHint:
-      "Die Einstellungen sind geöffnet. Fügen Sie dort Anbieter und Modell hinzu und kehren Sie dann hierher zurück.",
+      "Die Einstellungen sind geöffnet. Fügen Sie dort KI-Anbieter und Modell hinzu und kehren Sie dann hierher zurück.",
     bootstrapStepSyncTitle: "Sync-Backend (optional)",
     syncConfigCodeTab: "Code einfügen",
     syncManualTab: "Manuell einrichten",
@@ -57,9 +57,9 @@ export const deDE: LocaleMessages = {
       "Fügen Sie einen von einem anderen Gerät kopierten Code ein.",
     syncConfigCodeInvalid:
       "Ungültiger Sync-Konfigurationscode. Prüfen Sie den Code und versuchen Sie es erneut.",
-    bootstrapStepProviderTitle: "Anbieter und Modell hinzufügen",
+    bootstrapStepProviderTitle: "KI-Anbieter und Modell hinzufügen",
     bootstrapStepProviderDescription:
-      "Öffnen Sie die Einstellungen, um Anbieter und Modell hinzuzufügen und zu testen.",
+      "Öffnen Sie die Einstellungen, um KI-Anbieter und Modell hinzuzufügen und zu testen.",
     bootstrapStepTaskTitle: "Erste Aufgabe senden",
     bootstrapStepTaskDescription:
       "Sobald ein Modell erfolgreich antwortet, kehren Sie hierher zurück und bitten Sie OpenBrowserAgent, im Web zu browsen oder etwas zusammenzufassen.",
@@ -343,7 +343,7 @@ export const deDE: LocaleMessages = {
         "Tabs verwalten, klicken, Text eingeben, Seiten bearbeiten, Dateien exportieren.",
       web: "Mit der Standardsuchmaschine im Web suchen.",
       images:
-        "Bilder generieren und bearbeiten (wenn unter „Anbieter“ aktiviert).",
+        "Bilder generieren und bearbeiten (wenn unter „KI-Anbieter“ aktiviert).",
       skills: "Aktivierte Skills nutzen, erstellen und verbessern.",
       history: "Gespeicherte Chats suchen, lesen und löschen.",
       subAgents: "Aufgaben an Agenten in eigenen Chats delegieren.",
@@ -378,7 +378,7 @@ export const deDE: LocaleMessages = {
     resetDefaultAgentsDescription:
       "Stellt die integrierten Agenten wieder her und entfernt benutzerdefinierte Agenten samt Arbeitsbereichen.",
     sync: "Synchronisierung",
-    providers: "Anbieter",
+    providers: "KI-Anbieter",
     mcpServers: "MCP-Server",
     localExecutionBridges: "Lokale Ausführungs-Bridges",
     localExecutionBridgesDescription:
@@ -403,7 +403,7 @@ export const deDE: LocaleMessages = {
     localExecutionBridgeTestError: "Bridge-Test fehlgeschlagen",
     deleteLocalExecutionBridge: "Ausführungs-Bridge löschen",
     skills: "Skills",
-    modelProviders: "Modellanbieter",
+    modelProviders: "KI-Anbieter",
     providerDescription:
       "Verbinden Sie OpenBrowserAgent mit Ihren bevorzugten KI-Anbietern über Ihren eigenen Schlüssel.",
     mcpServersDescription:
@@ -459,10 +459,9 @@ export const deDE: LocaleMessages = {
       "Stellt Agenten das Tool zur Bildgenerierung bereit.",
     imageGenerationSize: "Bildgröße",
     providerConnection: "Verbindung",
-    providerConnectionHint:
-      "Anbietername, API-Schlüssel und Basis-URL konfigurieren.",
-    providerName: "Anbietername",
-    deleteProvider: "Anbieter löschen",
+    providerConnectionHint: "Name, API-Schlüssel und Basis-URL konfigurieren.",
+    providerName: "Name",
+    deleteProvider: "KI-Anbieter löschen",
     apiKey: "API-Schlüssel",
     baseUrl: "Basis-URL",
     models: "Modelle",
@@ -560,9 +559,9 @@ export const deDE: LocaleMessages = {
     syncBackendPassword: "Passwort oder App-Passwort",
     syncBackendCopyConfig: "Konfigurationscode kopieren",
     syncBackendCopiedConfig: "Konfigurationscode kopiert",
-    syncProviders: "Anbieter synchronisieren",
+    syncProviders: "KI-Anbieter synchronisieren",
     syncProvidersDescription:
-      "Anbieterkonfiguration einschließlich API-Schlüssel über das aktuelle Sync-Backend synchronisieren.",
+      "Konfiguration der KI-Anbieter einschließlich API-Schlüssel über das aktuelle Sync-Backend synchronisieren.",
     syncAgents: "Agenten synchronisieren",
     syncAgentsDescription:
       "Agentenprofile und Arbeitsbereichsdateien über das aktuelle Sync-Backend synchronisieren.",
@@ -609,7 +608,7 @@ export const deDE: LocaleMessages = {
     debugResetTargets: "Datentypen",
     debugResetTargetAll: "Alle",
     debugResetTargetSettings: "Einstellungen",
-    debugResetTargetProviders: "Anbieter",
+    debugResetTargetProviders: "KI-Anbieter",
     debugResetTargetAgents: "Agenten",
     debugResetTargetSkills: "Skills",
     debugResetTargetMcpServers: "MCP-Server",

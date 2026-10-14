@@ -34,8 +34,8 @@ export const ptBR: LocaleMessages = {
   sidepanel: {
     connectProviderTitle: "Configure o OpenBrowserAgent",
     connectProviderDescription:
-      "Escolha o idioma, ative a sincronização se quiser e depois adicione um provedor e um modelo.",
-    addProvider: "Adicionar provedor",
+      "Escolha o idioma, ative a sincronização se quiser e depois adicione um provedor de IA e um modelo.",
+    addProvider: "Adicionar provedor de IA",
     cloudSyncConnect: "Conectar e sincronizar",
     cloudSyncTesting: "Conectando…",
     cloudSyncPulling: "Verificando a sincronização na nuvem…",
@@ -44,11 +44,11 @@ export const ptBR: LocaleMessages = {
     cloudSyncError:
       "Falha no teste da sincronização na nuvem. Verifique o backend ou comece localmente.",
     cloudSyncSynced:
-      "A sincronização na nuvem está pronta. Agora configure um provedor.",
+      "A sincronização na nuvem está pronta. Agora configure um provedor de IA.",
     cloudSyncSyncedButton: "Sincronizado",
     startLocally: "Começar localmente",
     localSetupHint:
-      "As Configurações estão abertas. Adicione um provedor e um modelo lá, depois volte aqui para continuar.",
+      "As Configurações estão abertas. Adicione um provedor de IA e um modelo lá, depois volte aqui para continuar.",
     bootstrapStepSyncTitle: "Backend de sincronização (opcional)",
     syncConfigCodeTab: "Colar código",
     syncManualTab: "Configuração manual",
@@ -56,9 +56,9 @@ export const ptBR: LocaleMessages = {
     syncConfigCodeDescription: "Cole um código copiado de outro dispositivo.",
     syncConfigCodeInvalid:
       "Código de configuração da sincronização inválido. Verifique o código e tente novamente.",
-    bootstrapStepProviderTitle: "Adicione um provedor e um modelo",
+    bootstrapStepProviderTitle: "Adicione um provedor de IA e um modelo",
     bootstrapStepProviderDescription:
-      "Abra as Configurações para adicionar um provedor, adicionar um modelo e testá-lo.",
+      "Abra as Configurações para adicionar um provedor de IA, adicionar um modelo e testá-lo.",
     bootstrapStepTaskTitle: "Envie sua primeira tarefa",
     bootstrapStepTaskDescription:
       "Quando o modelo responder com sucesso, volte aqui e peça ao OpenBrowserAgent para navegar ou resumir.",
@@ -347,7 +347,7 @@ export const ptBR: LocaleMessages = {
       browser:
         "Gerenciar abas, clicar, digitar e editar páginas, exportar arquivos.",
       web: "Pesquisar na web com o mecanismo de busca padrão.",
-      images: "Criar e editar imagens (se ativado em Provedores).",
+      images: "Criar e editar imagens (se ativado em Provedores de IA).",
       skills: "Usar habilidades ativadas e criá-las ou melhorá-las.",
       history: "Pesquisar, ler e excluir conversas salvas.",
       subAgents: "Delegar tarefas a agentes em conversas próprias.",
@@ -383,7 +383,7 @@ export const ptBR: LocaleMessages = {
     resetDefaultAgentsDescription:
       "Restaura os agentes integrados e remove os agentes personalizados e seus espaços de trabalho.",
     sync: "Sincronização",
-    providers: "Provedores",
+    providers: "Provedores de IA",
     mcpServers: "Servidores MCP",
     localExecutionBridges: "Pontes de execução locais",
     localExecutionBridgesDescription:
@@ -408,7 +408,7 @@ export const ptBR: LocaleMessages = {
     localExecutionBridgeTestError: "Falha no teste da ponte",
     deleteLocalExecutionBridge: "Excluir ponte de execução",
     skills: "Habilidades",
-    modelProviders: "Provedores de modelos",
+    modelProviders: "Provedores de IA",
     providerDescription:
       "Use sua própria chave e conecte o OpenBrowserAgent aos seus provedores de IA favoritos.",
     mcpServersDescription:
@@ -462,10 +462,9 @@ export const ptBR: LocaleMessages = {
       "Disponibiliza a ferramenta de geração de imagens para os agentes.",
     imageGenerationSize: "Tamanho da imagem",
     providerConnection: "Conexão",
-    providerConnectionHint:
-      "Configure o nome do provedor, a chave de API e a URL base.",
-    providerName: "Nome do provedor",
-    deleteProvider: "Excluir provedor",
+    providerConnectionHint: "Configure o nome, a chave de API e a URL base.",
+    providerName: "Nome",
+    deleteProvider: "Excluir provedor de IA",
     apiKey: "Chave de API",
     baseUrl: "URL base",
     models: "Modelos",
@@ -561,9 +560,9 @@ export const ptBR: LocaleMessages = {
     syncBackendPassword: "Senha ou senha de app",
     syncBackendCopyConfig: "Copiar código de configuração",
     syncBackendCopiedConfig: "Código de configuração copiado",
-    syncProviders: "Sincronizar provedores",
+    syncProviders: "Sincronizar provedores de IA",
     syncProvidersDescription:
-      "Sincronize a configuração dos provedores, incluindo chaves de API, pelo backend de sincronização atual.",
+      "Sincronize a configuração dos provedores de IA, incluindo chaves de API, pelo backend de sincronização atual.",
     syncAgents: "Sincronizar agentes",
     syncAgentsDescription:
       "Sincronize perfis de agente e arquivos do espaço de trabalho pelo backend de sincronização atual.",
@@ -610,7 +609,7 @@ export const ptBR: LocaleMessages = {
     debugResetTargets: "Tipos de dados",
     debugResetTargetAll: "Tudo",
     debugResetTargetSettings: "Configurações",
-    debugResetTargetProviders: "Provedores",
+    debugResetTargetProviders: "Provedores de IA",
     debugResetTargetAgents: "Agentes",
     debugResetTargetSkills: "Habilidades",
     debugResetTargetMcpServers: "Servidores MCP",

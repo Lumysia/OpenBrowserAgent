@@ -78,7 +78,7 @@ Assistant output supports Markdown, syntax-highlighted code blocks with copy but
 
 ### Settings
 
-The options UI includes General, Agents, Sync, Providers, MCP Servers, Local Execution Bridges, Skills, Smart bar, Context menu, Page translation, Debug, and Help pages.
+The options UI includes General, Agents, Sync, AI providers, MCP Servers, Local Execution Bridges, Skills, Smart bar, Context menu, Page translation, Debug, and Help pages.
 
 Users can configure language, theme, accent color, chat behavior, context limits, providers, models, agents, sync, MCP servers, local execution bridges, and reusable skills.
 

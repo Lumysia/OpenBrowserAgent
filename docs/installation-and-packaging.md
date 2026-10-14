@@ -108,7 +108,7 @@ For manual testing, unzip the package and load it as an unpacked extension. For 
 
 ## Provider Setup
 
-Open the extension settings and select Providers.
+Open the extension settings and select AI providers.
 
 The UI supports these add-provider entries:
 
