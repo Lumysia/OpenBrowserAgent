@@ -2,6 +2,10 @@ import {
   SMART_BAR_ACTION,
   type SmartBarGenerateAction,
 } from "../../shared/smart-bar";
+import {
+  SMART_BAR_RESULT_FORMAT,
+  smartBarResultFormat,
+} from "../../shared/smart-bar-dictionary";
 import type { SmartBarRunRequest } from "../../shared/smart-bar-protocol";
 
 // The page script caps context too; this bounds what any message can add.
@@ -19,14 +23,19 @@ export function smartBarPrompt(
   context?: SmartBarRunRequest["context"],
 ) {
   const language = languageName(replyLanguage);
+  const format = smartBarResultFormat(action, text);
+  if (format === SMART_BAR_RESULT_FORMAT.dictionary)
+    return {
+      system: DICTIONARY_SYSTEM,
+      prompt: `${dictionaryInstructions(language)}${contextBlock(context, false)}\n\n<text>\n${text}\n</text>`,
+    };
   const instructions: Record<SmartBarGenerateAction, string> = {
     [SMART_BAR_ACTION.explain]: `Explain the text below in ${language} so that a non-expert understands it. Be brief: one short paragraph, or a few short points.`,
     [SMART_BAR_ACTION.summarize]: `Summarize the text below in ${language}: one sentence for a short text, otherwise a few short points.`,
-    [SMART_BAR_ACTION.translate]: `Translate the text below into ${language}.${
-      /English/.test(language)
-        ? ""
-        : ` If it is already in ${language}, translate it into English instead.`
-    } Keep the meaning, tone and line breaks. Return only the translation.`,
+    [SMART_BAR_ACTION.translate]: `Translate the text below into ${language}.${englishFallback(
+      language,
+      "translate it into English instead",
+    )} Keep the meaning, tone and line breaks. Return only the translation.`,
     [SMART_BAR_ACTION.improve]:
       "Improve the writing of the text below: make it clearer and more fluent and fix mistakes, keeping its meaning, language, tone, approximate length and line breaks. Return only the improved text.",
     [SMART_BAR_ACTION.fixGrammar]:
@@ -36,6 +45,39 @@ export function smartBarPrompt(
     system: SYSTEM,
     prompt: `${instructions[action]}${contextBlock(context, EDIT_ACTIONS.has(action))}\n\n<text>\n${text}\n</text>`,
   };
+}
+
+function englishFallback(language: string, instead: string) {
+  return /English/.test(language)
+    ? ""
+    : ` If it is already in ${language}, ${instead}.`;
+}
+
+const DICTIONARY_SYSTEM =
+  "You are a dictionary inside a browser toolbar. Reply with one JSON object only: no code fence, no text before or after it, no Markdown inside it.";
+
+// Keys in the order the card shows them, so a streaming answer fills the
+// card from the top. Read by readDictionaryAnswer.
+function dictionaryInstructions(language: string) {
+  const entry = /English/.test(language)
+    ? `${language}`
+    : `${language}, unless the selected text itself is written in ${language}: then English`;
+  return [
+    `The text below is a word or short phrase (a term, expression, idiom or name) selected on a web page. Write a short dictionary entry for it.`,
+    `The entry language is ${entry}. Write every explanation (part of speech, meanings, example translations, translation) in the entry language, whatever language the page or the selected text is in. Only "headword", "examples[].text", "synonyms" and "collocations" stay in the selected text's own language.`,
+    "Reply with a JSON object with these keys, in this order:",
+    '- "entryLanguage": the entry language you chose, in English (such as "Chinese (China)" or "English").',
+    '- "headword": the text in its dictionary form, in the original language and script (the base form if it is inflected, e.g. "ran" becomes "run"; names and fixed expressions stay as written).',
+    '- "pronunciation": the headword\'s pronunciation in the usual notation for its language: IPA between slashes for English and other Latin-script languages, pinyin with tone marks for Chinese, the kana reading for Japanese words written with kanji, romanization for Korean. Leave it out for names that are not well known, for Japanese written in kana only, and whenever you are not sure.',
+    '- "partOfSpeech": the part of speech, short, in the entry language (such as noun, verb, adjective, phrase, idiom). Leave it out for names.',
+    '- "contextMeaning": what the text means here, judged by the context, in the entry language: a short phrase or one sentence. For a name, say what or who it is.',
+    '- "otherMeanings": an array of up to 2 other common meanings, in the entry language; an empty array if there are none.',
+    '- "examples": an array of 1 or 2 short natural sentences in the original language that use the headword, each {"text": the sentence, "translation": the sentence in the entry language}. Prefer new sentences over repeating the page. Leave out "translation" when the original language is the entry language.',
+    '- "synonyms": optional array of up to 3 synonyms in the original language.',
+    '- "collocations": optional array of up to 3 common collocations in the original language.',
+    '- "translation": the selected text translated into the entry language, as a translator would give it: one short line. Leave it out when the original language is the entry language.',
+    "Never invent pronunciations, meanings or examples: leave out any key you are not sure about. Values are plain strings, with no Markdown.",
+  ].join("\n");
 }
 
 // Their output replaces the selection, so it must cover exactly that text.

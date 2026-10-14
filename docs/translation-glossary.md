@@ -105,6 +105,28 @@ The theme picker in General settings has two groups: the color themes and the pr
 | … flag          | Drapeau …        | …-Flagge        | Bandera …       | Bandeira …         |
 | holiday touches | touches festives | Festtagsdetails | toques festivos | toques festivos    |
 
+## Smart bar dictionary entries
+
+Translate on a word or short phrase shows a dictionary entry instead of a plain translation. The labels are the ones dictionaries in each language use; "In this context" marks the meaning that fits the page.
+
+| English          | 简体中文   | 繁體中文   | 日本語         | 한국어      |
+| ---------------- | ---------- | ---------- | -------------- | ----------- |
+| dictionary entry | 词典释义   | 辭典釋義   | 辞書の項目     | 사전 항목   |
+| pronunciation    | 发音       | 發音       | 発音           | 발음        |
+| In this context  | 在此语境中 | 在此語境中 | この文脈では   | 이 문맥에서 |
+| examples         | 例句       | 例句       | 例文           | 예문        |
+| synonyms         | 同义词     | 同義詞     | 類義語         | 유의어      |
+| collocations     | 常用搭配   | 常用搭配   | コロケーション | 연어        |
+
+| English          | Français               | Deutsch           | Español                | Português (Brasil)    |
+| ---------------- | ---------------------- | ----------------- | ---------------------- | --------------------- |
+| dictionary entry | entrée de dictionnaire | Wörterbucheintrag | entrada de diccionario | verbete de dicionário |
+| pronunciation    | prononciation          | Aussprache        | pronunciación          | pronúncia             |
+| In this context  | Dans ce contexte       | In diesem Kontext | En este contexto       | Neste contexto        |
+| examples         | exemples               | Beispiele         | ejemplos               | exemplos              |
+| synonyms         | synonymes              | Synonyme          | sinónimos              | sinônimos             |
+| collocations     | collocations           | Kollokationen     | colocaciones           | colocações            |
+
 ## Notes per language
 
 **Simplified Chinese.** Use 对话, never 聊天. A single bridge is a 执行桥; avoid 桥接器 and 桥接. Write 内置, not 内建. API Key and Base URL stay in English, as Chinese developer tools usually show them; Traditional Chinese does the same.

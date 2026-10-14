@@ -30,6 +30,14 @@ export const smartBarPtBR: SmartBarLocaleMessages = {
     "O texto selecionado mudou. Copie o resultado em vez disso.",
   selectionTooLong:
     "A seleção é longa demais (mais de {max} caracteres). Continue no painel lateral em vez disso.",
+  dictionary: {
+    pronunciation: "Pronúncia",
+    inContext: "Neste contexto",
+    examples: "Exemplos",
+    synonyms: "Sinônimos",
+    collocations: "Colocações",
+    entry: "Verbete de dicionário",
+  },
   settingsTitle: "Barra inteligente",
   settingsDescription:
     "Ações rápidas de IA ao lado do texto selecionado. Nada é enviado até você escolher uma.",

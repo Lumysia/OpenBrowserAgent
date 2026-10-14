@@ -29,6 +29,14 @@ export const smartBarKo: SmartBarLocaleMessages = {
   selectionChanged: "선택한 텍스트가 변경되었습니다. 대신 결과를 복사하세요.",
   selectionTooLong:
     "선택 영역이 너무 깁니다({max}자 초과). 대신 사이드 패널에서 계속하세요.",
+  dictionary: {
+    pronunciation: "발음",
+    inContext: "이 문맥에서",
+    examples: "예문",
+    synonyms: "유의어",
+    collocations: "연어",
+    entry: "사전 항목",
+  },
   settingsTitle: "스마트 바",
   settingsDescription:
     "선택한 텍스트 옆에 빠른 AI 작업을 보여 줍니다. 작업을 선택하기 전에는 아무것도 전송되지 않습니다.",

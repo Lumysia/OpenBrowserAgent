@@ -4,6 +4,10 @@ import {
   type SmartBarGenerateAction,
 } from "../../shared/smart-bar";
 import {
+  smartBarResultFormat,
+  type SmartBarResultFormat,
+} from "../../shared/smart-bar-dictionary";
+import {
   SMART_BAR_STREAM_PORT,
   type SmartBarPageConfig,
   type SmartBarRunRequest,
@@ -19,6 +23,8 @@ import {
 
 export type SmartBarResult = {
   action: SmartBarGenerateAction;
+  // How to read `text`; the background asks the model for the same.
+  format: SmartBarResultFormat;
   text: string;
   // tooLong: refused before anything was sent.
   status: "streaming" | "done" | "error" | "tooLong";
@@ -80,13 +86,14 @@ export function createSmartBarStore(host: HTMLElement) {
     const { snapshot } = state;
     if (!snapshot) return;
     stop();
+    const format = smartBarResultFormat(action, snapshot.text);
     if (smartBarTextTooLong(snapshot.text))
       return set({
-        result: { action, text: "", status: "tooLong" },
+        result: { action, format, text: "", status: "tooLong" },
         popoverOpen: false,
       });
     set({
-      result: { action, text: "", status: "streaming" },
+      result: { action, format, text: "", status: "streaming" },
       popoverOpen: false,
     });
     const current = getBrowserApi().runtime.connect({

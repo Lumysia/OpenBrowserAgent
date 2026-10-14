@@ -30,6 +30,14 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
     "選択したテキストが変更されました。代わりに結果をコピーしてください。",
   selectionTooLong:
     "選択範囲が長すぎます（{max} 文字超）。代わりにサイドパネルで続けてください。",
+  dictionary: {
+    pronunciation: "発音",
+    inContext: "この文脈では",
+    examples: "例文",
+    synonyms: "類義語",
+    collocations: "コロケーション",
+    entry: "辞書の項目",
+  },
   settingsTitle: "スマートバー",
   settingsDescription:
     "選択したテキストの横に AI のクイック操作を表示します。操作を選ぶまで何も送信されません。",

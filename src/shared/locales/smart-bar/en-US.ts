@@ -27,6 +27,14 @@ export const smartBarEnUS = {
   selectionChanged: "The selected text changed. Copy the result instead.",
   selectionTooLong:
     "The selection is too long (over {max} characters). Continue in the side panel instead.",
+  dictionary: {
+    pronunciation: "Pronunciation",
+    inContext: "In this context",
+    examples: "Examples",
+    synonyms: "Synonyms",
+    collocations: "Collocations",
+    entry: "Dictionary entry",
+  },
   settingsTitle: "Smart bar",
   settingsDescription:
     "Quick AI actions next to selected text. Nothing is sent until you pick one.",
