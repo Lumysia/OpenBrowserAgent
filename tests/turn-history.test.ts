@@ -268,6 +268,7 @@ test("export writes what the model saw, and import reads it back", async () => {
 
   const imported = await importChatFromOpenAiJson(
     new File([JSON.stringify(payload)], "Meow.openai.json"),
+    "New chat",
   );
   assert.deepEqual(
     imported.messages.map((message) => message.role),

@@ -43,7 +43,11 @@ type AgentZipManifest = Pick<
 
 export async function importAgentZip(
   file: File,
-  messages: { missingManifest: string; invalidManifest: string },
+  messages: {
+    missingManifest: string;
+    invalidManifest: string;
+    workspaceTooLarge: string;
+  },
 ): Promise<AgentZipImport> {
   const zip = await JSZip.loadAsync(file);
   const manifestEntry = zip.file(AGENT_MANIFEST_PATH);
@@ -67,9 +71,7 @@ export async function importAgentZip(
   );
   const nextFiles = normalizeWorkspaceFiles(files);
   if (workspaceTotalChars(nextFiles) > WORKSPACE_TOTAL_MAX_CHARS)
-    throw new Error(
-      `Workspace content must be ${WORKSPACE_TOTAL_MAX_CHARS} characters or less`,
-    );
+    throw new Error(messages.workspaceTooLarge);
   return {
     agent: {
       id: agentId,

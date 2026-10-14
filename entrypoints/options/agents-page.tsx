@@ -39,6 +39,8 @@ import {
 } from "../../src/ui/agent-display";
 import { AgentWorkspaceEditor } from "./agent-workspace-editor";
 import { downloadAgentZip, importAgentZip } from "./workspace-import";
+import { workspaceErrorText } from "./workspace-error-text";
+import { errorWithDetail } from "../../src/ui/error-text";
 
 export function AgentsPage() {
   const [language] = useStoredState(storage.language);
@@ -139,6 +141,7 @@ export function AgentsPage() {
       const imported = await importAgentZip(file, {
         missingManifest: t.options.importAgentPackageMissingManifest,
         invalidManifest: t.options.importAgentPackageInvalidManifest,
+        workspaceTooLarge: workspaceErrorText("workspaceTooLarge", t),
       });
       setAgents((current) => [...current, imported.agent]);
       await storage.agentWorkspaces.update((current) => [
@@ -152,7 +155,7 @@ export function AgentsPage() {
       setImportAgentError("");
     } catch (error) {
       setImportAgentError(
-        error instanceof Error ? error.message : String(error),
+        errorWithDetail(t.options.importAgentError, error, t),
       );
     } finally {
       if (importAgentInputRef.current) importAgentInputRef.current.value = "";
@@ -258,6 +261,7 @@ export function AgentsPage() {
                       <Label>
                         {t.options.agentModel}
                         <ModelSelect
+                          t={t}
                           value={agent.modelId}
                           label={t.options.agentModel}
                           defaultLabel={t.options.modelSameAsChat}

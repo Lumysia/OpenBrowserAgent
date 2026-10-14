@@ -12,6 +12,13 @@ export const displayKo: DisplayMessages = {
     "openai-responses": "OpenAI Responses",
     anthropic: "Anthropic 호환",
   },
+  builtinMcpServers: {
+    exa: "웹 검색과 웹페이지 내용 추출.",
+    parallel: "발췌문이 포함된 웹 검색과 웹페이지 가져오기.",
+    tinyfish: "웹 및 뉴스 검색.",
+    firecrawl:
+      "웹 검색, 웹페이지 스크래핑, 문서 분석. 무료 요청 한도가 낮아요.",
+  },
   builtinSkills: {
     "fill-form": {
       name: "양식 작성",
@@ -38,15 +45,27 @@ export const displayKo: DisplayMessages = {
         "로컬 실행 브리지를 설정, 테스트, 업데이트 또는 제거해서 에이전트가 이 컴퓨터에서 명령을 실행할 수 있게 해요.",
     },
   },
+  errors: {
+    noModel:
+      "설정된 모델이 없어요. ‘설정’ → ‘제공업체’에서 제공업체를 추가하세요.",
+    subAgentStopped: "하위 에이전트를 중지했어요.",
+    baseUrlRequired: "Base URL을 입력하세요.",
+  },
   toolSteps: {
+    failed: "실패",
     page: "페이지",
     tabs: plural({ other: "탭 {count}개" }),
     lines: plural({ other: "{count}줄" }),
-    matches: plural({ other: "일치 {count}개" }),
+    matchingLines: plural({ other: "일치하는 줄 {count}개" }),
+    matchingLinesWithOccurrences: plural({
+      other: "일치하는 줄 {count}개({occurrences})",
+    }),
+    occurrences: plural({ other: "{count}곳" }),
     results: plural({ other: "결과 {count}개" }),
     items: plural({ other: "항목 {count}개" }),
+    tools: plural({ other: "도구 {count}개" }),
     editsApplied: plural({ other: "편집 {count}개 중 {applied}개 적용됨" }),
-    tabActions: {
+    actions: {
       open: "열었어요",
       switch: "전환했어요",
       close: "닫았어요",
@@ -56,6 +75,34 @@ export const displayKo: DisplayMessages = {
       reload: "새로고침했어요",
       group: "그룹으로 묶었어요",
       ungroup: "그룹을 해제했어요",
+      list: "목록을 가져왔어요",
+      search: "검색했어요",
+      read: "읽었어요",
+      write: "작성했어요",
+      append: "덧붙였어요",
+      replace: "텍스트를 바꿨어요",
+      delete: "삭제했어요",
+      create: "만들었어요",
+      patch: "편집했어요",
+      add: "추가했어요",
+      update: "업데이트했어요",
+      test: "테스트했어요",
+      status: "상태를 확인했어요",
+      resources: "네트워크 리소스를 나열했어요",
+      emulate: "기기를 에뮬레이션했어요",
+      reset: "에뮬레이션을 초기화했어요",
+      markdown: "Markdown으로 내보냈어요",
+      images: "이미지를 저장했어요",
+      run: "실행했어요",
+      start: "시작했어요",
+      cancel: "취소했어요",
+    },
+    commandStates: {
+      running: "실행 중",
+      done: "완료",
+      error: "실패",
+      canceled: "취소됨",
+      missing: "작업을 찾을 수 없어요",
     },
     actStepSeparator: ", ",
     actSteps: {

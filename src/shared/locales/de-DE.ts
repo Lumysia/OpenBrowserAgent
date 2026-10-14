@@ -18,6 +18,8 @@ export const deDE: LocaleMessages = {
     save: "Speichern",
     saved: "Gespeichert",
     settings: "Einstellungen",
+    plainText: "Text",
+    errorDetail: "{message}: {detail}",
     copy: "Kopieren",
     copied: "Kopiert",
     edit: "Bearbeiten",
@@ -120,6 +122,7 @@ export const deDE: LocaleMessages = {
       reasoning: "Reasoning",
       estimated: "ca.",
       tokenUnit: "tok.",
+      perSecond: "{value}/s",
       modelCalls: "Modellaufrufe",
       largestRequest: "Größte Anfrage",
       cachedShare: "{percent} % der Eingabe aus dem Cache",
@@ -351,8 +354,20 @@ export const deDE: LocaleMessages = {
     agentWorkspaceDescription:
       "Private Dateien dieses Agenten. MEMORY.md und USER.md sieht er immer, andere liest er bei Bedarf.",
     agentWorkspaceNewFile: "Neue Arbeitsbereichsdatei",
-    agentWorkspaceConflict:
-      "Diese Datei wurde während der Bearbeitung geändert. Öffnen Sie sie erneut, um vor dem Speichern die aktuelle Version zu prüfen.",
+    agentWorkspaceErrors: {
+      pathRequired: "Geben Sie einen Dateipfad ein.",
+      pathTooLong: "Ein Dateipfad darf höchstens {limit} Zeichen lang sein.",
+      relativePath: "Ein Dateipfad darf keine Abschnitte . oder .. enthalten.",
+      fileTooLarge: "Eine Datei darf höchstens {limit} Zeichen enthalten.",
+      workspaceTooLarge:
+        "Der Arbeitsbereich darf insgesamt höchstens {limit} Zeichen enthalten.",
+      fileNotFound: "Diese Datei existiert nicht mehr.",
+      findNotFound: "Der zu ersetzende Text wurde nicht gefunden.",
+      workspaceNotFound:
+        "Der Arbeitsbereich dieses Agenten existiert nicht mehr.",
+      conflict:
+        "Diese Datei wurde während der Bearbeitung geändert. Öffnen Sie sie erneut, um vor dem Speichern die aktuelle Version zu prüfen.",
+    },
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     resetDefaultAgents: "Standard-Agenten zurücksetzen",
     resetDefaultAgentsDescription:
@@ -365,6 +380,7 @@ export const deDE: LocaleMessages = {
       "Agenten führen über eine Bridge Shell-Befehle auf diesem Computer oder einem entfernten Host aus.",
     localExecutionBridgesEmpty: "Noch keine Ausführungs-Bridges",
     newLocalExecutionBridge: "Neue Ausführungs-Bridge",
+    localExecutionBridgeUntitled: "Ausführungs-Bridge",
     localExecutionBridgeName: "Name der Ausführungs-Bridge",
     localExecutionBridgeDescription: "Beschreibung",
     localExecutionBridgeHostName: "Name des Native-Messaging-Hosts",
@@ -415,6 +431,7 @@ export const deDE: LocaleMessages = {
     mcpImportNone:
       "Keine entfernten HTTP-MCP-Server im eingefügten JSON gefunden.",
     mcpImportError: "MCP-Import fehlgeschlagen",
+    mcpTestError: "Servertest fehlgeschlagen",
     mcpTestServer: "Server testen",
     mcpTesting: "Wird getestet…",
     mcpTestSuccess: plural({
@@ -459,6 +476,7 @@ export const deDE: LocaleMessages = {
     testingModel: "Wird getestet",
     testModelSuccess: "Modell hat erfolgreich geantwortet.",
     testModelError: "Modelltest fehlgeschlagen",
+    fetchModelsError: "Modelle konnten nicht geladen werden",
     configuredModels: "Konfigurierte Modelle",
     modelDisplayName: "Anzeigename",
     modelContextLength: "Kontextlänge",
@@ -472,6 +490,7 @@ export const deDE: LocaleMessages = {
     importSkillZip: "Archiv importieren",
     importingSkillZip: "Wird importiert…",
     importSkillZipError: "Skill-Import fehlgeschlagen",
+    importAgentError: "Agent-Import fehlgeschlagen",
     importSkillPackageMissingEntry:
       "SKILL.md wurde im importierten Archiv nicht gefunden.",
     untitledSkill: "Unbenannter Skill",
@@ -594,6 +613,7 @@ export const deDE: LocaleMessages = {
     debugResetButton: "Alle App-Daten löschen",
     debugResetting: "Wird gelöscht…",
     debugResetSuccess: "OpenBrowserAgent-Daten wurden gelöscht.",
+    debugResetError: "Daten konnten nicht gelöscht werden",
     debugLoggingTitle: "Diagnoseprotokolle",
     debugLoggingDescription:
       "Aktiviert temporäre Konsolenprotokolle zur Diagnose der Reihenfolge von Stream-, Tool- und Assistentenereignissen.",

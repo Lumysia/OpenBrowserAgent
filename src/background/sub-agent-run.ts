@@ -5,7 +5,9 @@ import {
   appendAssistantPart,
   updateAssistantRunMetrics,
 } from "../shared/chat-updates";
+import { getMessages } from "../shared/i18n";
 import { storage } from "../shared/storage";
+import { userErrorText } from "../shared/user-errors";
 import type {
   Agent,
   AiStreamResponse,
@@ -114,12 +116,21 @@ export async function runSubAgentChat(options: {
     });
     sessions.postToSession(session, { type: "end" });
   } catch (cause) {
-    error = session.abortController.signal.aborted
+    const stopped = session.abortController.signal.aborted;
+    // The parent model gets `error`; the sub-agent's chat shows it in the UI
+    // language.
+    error = stopped
       ? "The sub-agent was stopped."
       : cause instanceof Error
         ? cause.message
         : String(cause);
-    sessions.postToSession(session, { type: "error", error });
+    const t = getMessages(await storage.language.get());
+    sessions.postToSession(session, {
+      type: "error",
+      error: stopped
+        ? t.display.errors.subAgentStopped
+        : userErrorText(cause, t),
+    });
   } finally {
     clearInterval(timer);
     options.signal?.removeEventListener("abort", abort);

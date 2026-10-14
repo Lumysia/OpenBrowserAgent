@@ -6,6 +6,7 @@ import {
   upsertWorkspaceFile,
   type WorkspaceMutationResult,
 } from "./workspace";
+import { workspaceFailure } from "./workspace-errors";
 
 // The workspace a run of `agent` uses, created if it has none; `store`:
 // kept for its tools.
@@ -29,10 +30,7 @@ export async function mutateWorkspace(
   snapshot: AgentWorkspace,
   mutate: (current: AgentWorkspace) => WorkspaceMutationResult,
 ): Promise<WorkspaceMutationResult> {
-  let result: WorkspaceMutationResult = {
-    ok: false,
-    error: "Workspace not found",
-  };
+  let result: WorkspaceMutationResult = workspaceFailure("workspaceNotFound");
   let current: AgentWorkspace | undefined;
   await storage.agentWorkspaces.update((workspaces) => {
     current = workspaces.find((item) => item.agentId === snapshot.agentId);
@@ -62,9 +60,6 @@ export function workspaceFileUnchanged(
   );
 }
 
-export const WORKSPACE_FILE_CONFLICT =
-  "Workspace file changed since it was read. Read the current file before editing it.";
-
 // The settings editor submits only its changed paths, retaining files/memory
 // saved by a running agent after the editor's draft was opened.
 export function saveWorkspaceChanges(
@@ -76,7 +71,7 @@ export function saveWorkspaceChanges(
   ].filter((path) => !workspaceFileUnchanged(snapshot, next, path));
   return mutateWorkspace(snapshot, (current) => {
     if (paths.some((path) => !workspaceFileUnchanged(snapshot, current, path)))
-      return { ok: false, error: WORKSPACE_FILE_CONFLICT };
+      return workspaceFailure("conflict");
     let result: WorkspaceMutationResult = { ok: true, workspace: current };
     for (const path of paths) {
       const file = next.files.find((item) => item.path === path);

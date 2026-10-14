@@ -32,6 +32,7 @@ import {
   ToggleGroupItem,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { errorWithDetail } from "../../src/ui/error-text";
 
 export function DebugPage() {
   const [language] = useStoredState(storage.language);
@@ -86,7 +87,7 @@ export function DebugPage() {
       setConfirmText("");
       setCleared(true);
     } catch (error) {
-      setClearError(error instanceof Error ? error.message : String(error));
+      setClearError(errorWithDetail(t.options.debugResetError, error, t));
     } finally {
       setClearing(false);
     }

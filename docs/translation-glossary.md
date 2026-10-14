@@ -160,6 +160,12 @@ The context menu is the browser's right-click menu; OpenBrowserAgent adds a subm
 
 Built-in skills show a translated name and a short description of what they do for the person (the instructions sent to the model stay in English). Tool steps in a chat show a one-line summary: act steps are counted per kind ("Typed in 2 fields, selected 2 options, clicked 1 element"), each kind a plural message, joined with the locale's list separator (`, `, Japanese `、`, Chinese `，`). Tab ids never appear in these lines.
 
+The other tools start their line with one shared action word (`display.toolSteps.actions`: "Created", "Searched", "Reset emulation"), written the way the language reports a finished step: an English past tense, a German participle ("Erstellt"), a French, Spanish or Portuguese action noun ("Création", "Búsqueda", "Pesquisa") so no noun gender is assumed (a participle is fine when it agrees with a noun the label names: "Texte remplacé"; tab actions agree with the tab), Chinese 已…, Japanese …しました, Korean …했어요. Local command lines show the task state ("Running", "Finished"), and loaded tools show as a count ("2 tools"); raw action names and tool ids never appear. Find counts the snapshot lines that match and, in parentheses, the occurrences in them ("1 matching line (2 occurrences)", Chinese "1 行匹配（2 处）"); a match is never a line and an occurrence at once. A failed step shows only "Failed" (`display.toolSteps.failed`); its error text is written for the model and stays in the step's details.
+
+## Errors and default names
+
+An error the user sees starts with what failed in the UI language, then the reason (`common.errorDetail`: "Couldn’t load models: HTTP 401"; French puts a space before the colon, Chinese and Japanese use the full-width `：`). Reasons the extension knows are translated (`display.errors`); a server's or the browser's own text is shown as it came. Default names stored in English when something is created (a provider's type such as "OpenAI-compatible", a bridge saved without a name, a built-in MCP server's description) show in the UI language while they are unchanged; a name the user typed shows as typed, and stored data is never rewritten.
+
 ## Notes per language
 
 **Simplified Chinese.** Use 对话, never 聊天. A single bridge is a 执行桥; avoid 桥接器 and 桥接. Write 内置, not 内建. API Key and Base URL stay in English, as Chinese developer tools usually show them; Traditional Chinese does the same.

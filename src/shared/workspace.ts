@@ -6,6 +6,7 @@ import {
   WORKSPACE_TOTAL_MAX_CHARS,
 } from "./config";
 import { readPath } from "./read-ids";
+import { workspaceFailure, type WorkspaceFailure } from "./workspace-errors";
 import type {
   Agent,
   AgentWorkspace,
@@ -30,7 +31,7 @@ export type WorkspacePatchOperation = "replace" | "append" | "prepend";
 
 export type WorkspaceMutationResult =
   | { ok: true; workspace: AgentWorkspace; file?: WorkspaceFile }
-  | { ok: false; error: string };
+  | WorkspaceFailure;
 
 export function createWorkspace(
   agentId: string,
@@ -137,16 +138,13 @@ export function normalizeWorkspaceFiles(files: WorkspaceFile[]) {
 
 export function normalizeWorkspacePath(
   value: unknown,
-): { ok: true; path: string } | { ok: false; error: string } {
+): { ok: true; path: string } | WorkspaceFailure {
   const path = readPath(value);
-  if (!path) return { ok: false, error: "Path is required" };
+  if (!path) return workspaceFailure("pathRequired");
   if (path.length > WORKSPACE_PATH_MAX_LENGTH)
-    return {
-      ok: false,
-      error: `Path must be ${WORKSPACE_PATH_MAX_LENGTH} characters or less`,
-    };
+    return workspaceFailure("pathTooLong");
   if (path.split("/").some((part) => part === "." || part === ".."))
-    return { ok: false, error: "Path cannot contain relative segments" };
+    return workspaceFailure("relativePath");
   return { ok: true, path };
 }
 
@@ -167,10 +165,7 @@ export function upsertWorkspaceFile(
   const pathResult = normalizeWorkspacePath(path);
   if (!pathResult.ok) return pathResult;
   if (content.length > WORKSPACE_FILE_MAX_CHARS)
-    return {
-      ok: false,
-      error: `File content must be ${WORKSPACE_FILE_MAX_CHARS} characters or less`,
-    };
+    return workspaceFailure("fileTooLarge");
   const existing = workspace.files.filter(
     (file) => file.path !== pathResult.path,
   );
@@ -181,10 +176,7 @@ export function upsertWorkspaceFile(
     updatedAt: now,
   } satisfies WorkspaceFile;
   if (workspaceTotalChars([...existing, file]) > WORKSPACE_TOTAL_MAX_CHARS)
-    return {
-      ok: false,
-      error: `Workspace content must be ${WORKSPACE_TOTAL_MAX_CHARS} characters or less`,
-    };
+    return workspaceFailure("workspaceTooLarge");
   return {
     ok: true,
     workspace: {
@@ -207,9 +199,9 @@ export function patchWorkspaceFile(
   const pathResult = normalizeWorkspacePath(path);
   if (!pathResult.ok) return pathResult;
   const file = workspace.files.find((item) => item.path === pathResult.path);
-  if (!file) return { ok: false as const, error: "Workspace file not found" };
+  if (!file) return workspaceFailure("fileNotFound");
   if (operation === "replace" && find && !file.content.includes(find))
-    return { ok: false as const, error: "Text to replace was not found" };
+    return workspaceFailure("findNotFound");
   const nextContent =
     operation === "append"
       ? `${file.content}${value}`
@@ -230,7 +222,7 @@ export function deleteWorkspaceFile(
   if (!pathResult.ok) return pathResult;
   const files = workspace.files.filter((file) => file.path !== pathResult.path);
   if (files.length === workspace.files.length)
-    return { ok: false, error: "Workspace file not found" };
+    return workspaceFailure("fileNotFound");
   return { ok: true, workspace: { ...workspace, files, updatedAt: now } };
 }
 

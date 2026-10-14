@@ -1,3 +1,4 @@
+import type { Messages } from "../../src/shared/i18n";
 import { normalizeProviderState } from "../../src/shared/provider-instances";
 import { storage } from "../../src/shared/storage";
 import {
@@ -7,6 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../src/ui/components";
+import {
+  modelNameDisplay,
+  providerNameDisplay,
+} from "../../src/ui/provider-display";
 import { useStoredState } from "../../src/ui/useStoredState";
 
 // Select value for "no model of its own"; stored as an empty id.
@@ -14,12 +19,14 @@ const DEFAULT_MODEL = "default-model";
 
 // A configured chat model, or the default named by `defaultLabel`.
 export function ModelSelect({
+  t,
   value,
   defaultLabel,
   label,
   disabled,
   onChange,
 }: {
+  t: Messages;
   value: string | undefined;
   defaultLabel: string;
   label: string;
@@ -31,7 +38,12 @@ export function ModelSelect({
     (provider) =>
       (provider.models || []).map((model) => ({
         id: model.id,
-        label: [model.displayName || model.name, provider.label]
+        label: [
+          model.displayName
+            ? modelNameDisplay(model.displayName, t)
+            : model.name,
+          provider.label && providerNameDisplay(provider.label, t),
+        ]
           .filter(Boolean)
           .join(" · "),
       })),

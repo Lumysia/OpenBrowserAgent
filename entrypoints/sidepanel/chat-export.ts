@@ -105,7 +105,11 @@ function exportMetrics(chat: Chat) {
   return messages.length ? { messages } : undefined;
 }
 
-export async function importChatFromOpenAiJson(file: File): Promise<Chat> {
+// `fallbackTitle` (in the UI language) names a chat whose file name is empty.
+export async function importChatFromOpenAiJson(
+  file: File,
+  fallbackTitle: string,
+): Promise<Chat> {
   const payload = JSON.parse(await file.text()) as OpenAiImportPayload;
   if (!Array.isArray(payload.messages)) throw new Error("Invalid chat JSON");
 
@@ -156,8 +160,7 @@ export async function importChatFromOpenAiJson(file: File): Promise<Chat> {
   return {
     id: crypto.randomUUID(),
     title:
-      safeFilename(file.name.replace(/\.openai\.json$/i, "")) ||
-      "Imported chat",
+      safeFilename(file.name.replace(/\.openai\.json$/i, "")) || fallbackTitle,
     messages,
     sources: Array.isArray(payload.sources)
       ? (payload.sources as Chat["sources"])

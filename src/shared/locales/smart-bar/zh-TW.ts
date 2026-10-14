@@ -27,6 +27,7 @@ export const smartBarZhTW: SmartBarLocaleMessages = {
   noVoice: "未安裝{language}語音。",
   writing: "正在產生…",
   emptyResult: "模型沒有傳回文字。",
+  connectionLost: "與 OpenBrowserAgent 的連線已中斷，請重試。",
   selectionChanged: "所選文字已變更，請改為複製結果。",
   selectionTooLong: "所選內容過長（超過 {max} 個字元），請改在側邊欄中繼續。",
   dictionary: {

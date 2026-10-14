@@ -12,9 +12,10 @@ import {
   createLocalExecutionBridgeDraft,
   generateLocalExecutionBridgeSecret,
   normalizeLocalExecutionBridges,
+  LOCAL_EXECUTION_BRIDGE_FALLBACK_NAME,
 } from "../../src/shared/local-execution-bridges";
 import { sendLocalExecutionBridgeRuntimeRequest } from "../../src/shared/local-execution-bridge-runtime";
-import { getMessages } from "../../src/shared/i18n";
+import { getMessages, type Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import type { LocalExecutionBridgeConfig } from "../../src/shared/types";
 import {
@@ -37,6 +38,7 @@ import {
   SettingsSummary,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { errorWithDetail } from "../../src/ui/error-text";
 
 export function LocalExecutionBridgesPage() {
   const [language] = useStoredState(storage.language);
@@ -97,7 +99,11 @@ export function LocalExecutionBridgesPage() {
     } catch (error) {
       updateBridge(bridgeId, {
         lastTestedAt: undefined,
-        lastTestError: `${t.options.localExecutionBridgeTestError}: ${error instanceof Error ? error.message : String(error)}`,
+        lastTestError: errorWithDetail(
+          t.options.localExecutionBridgeTestError,
+          error,
+          t,
+        ),
       });
       return false;
     } finally {
@@ -140,7 +146,7 @@ export function LocalExecutionBridgesPage() {
               <AccordionTriggerButton hideChevron>
                 <SettingsSummary
                   icon={<TerminalSquare size={18} />}
-                  title={bridge.name}
+                  title={bridgeName(bridge, t)}
                   badges={
                     <>
                       <Badge title={bridge.id}>{bridge.id.slice(0, 8)}</Badge>
@@ -193,7 +199,7 @@ export function LocalExecutionBridgesPage() {
               </span>
               <AccordionTriggerButton
                 className="accordion-chevron-trigger"
-                aria-label={bridge.name || t.options.newLocalExecutionBridge}
+                aria-label={bridgeName(bridge, t)}
               />
             </AccordionHeader>
             <AccordionContent>
@@ -340,6 +346,13 @@ export function LocalExecutionBridgesPage() {
       </Accordion>
     </div>
   );
+}
+
+function bridgeName(bridge: LocalExecutionBridgeConfig, t: Messages) {
+  if (!bridge.name) return t.options.newLocalExecutionBridge;
+  return bridge.name === LOCAL_EXECUTION_BRIDGE_FALLBACK_NAME
+    ? t.options.localExecutionBridgeUntitled
+    : bridge.name;
 }
 
 function isLocalExecutionBridgeTested(bridge: LocalExecutionBridgeConfig) {

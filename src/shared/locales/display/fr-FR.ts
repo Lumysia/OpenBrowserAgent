@@ -15,6 +15,13 @@ export const displayFrFR: DisplayMessages = {
     "openai-responses": "OpenAI Responses",
     anthropic: "Compatible Anthropic",
   },
+  builtinMcpServers: {
+    exa: "Recherche web et extraction du contenu des pages.",
+    parallel: "Recherche web avec extraits et récupération de pages.",
+    tinyfish: "Recherche web et d’actualités.",
+    firecrawl:
+      "Recherche web, extraction de pages et analyse de documents. Faible limite gratuite de requêtes.",
+  },
   builtinSkills: {
     "fill-form": {
       name: "Remplir un formulaire",
@@ -42,18 +49,37 @@ export const displayFrFR: DisplayMessages = {
         "Configure, teste, met à jour ou supprime un pont d’exécution local pour que les agents puissent lancer des commandes sur votre ordinateur.",
     },
   },
+  errors: {
+    noModel:
+      "Aucun modèle n’est configuré. Ajoutez un fournisseur dans « Paramètres » → « Fournisseurs ».",
+    subAgentStopped: "Le sous-agent a été arrêté.",
+    baseUrlRequired: "Saisissez une URL de base.",
+  },
   toolSteps: {
+    failed: "Échec",
     page: "Page",
     tabs: plural({ one: "{count} onglet", other: "{count} onglets" }),
     lines: plural({ one: "{count} ligne", other: "{count} lignes" }),
-    matches: plural({ one: "{count} résultat", other: "{count} résultats" }),
+    matchingLines: plural({
+      one: "{count} ligne correspondante",
+      other: "{count} lignes correspondantes",
+    }),
+    matchingLinesWithOccurrences: plural({
+      one: "{count} ligne correspondante ({occurrences})",
+      other: "{count} lignes correspondantes ({occurrences})",
+    }),
+    occurrences: plural({
+      one: "{count} occurrence",
+      other: "{count} occurrences",
+    }),
     results: plural({ one: "{count} résultat", other: "{count} résultats" }),
     items: plural({ one: "{count} élément", other: "{count} éléments" }),
+    tools: plural({ one: "{count} outil", other: "{count} outils" }),
     editsApplied: plural({
       one: "{applied} modification sur {count} appliquée",
       other: "{applied} modifications sur {count} appliquées",
     }),
-    tabActions: {
+    actions: {
       open: "Ouvert",
       switch: "Basculé vers",
       close: "Fermé",
@@ -63,6 +89,34 @@ export const displayFrFR: DisplayMessages = {
       reload: "Rechargé",
       group: "Regroupé",
       ungroup: "Dégroupé",
+      list: "Liste",
+      search: "Recherche",
+      read: "Lecture",
+      write: "Écriture",
+      append: "Ajout en fin de fichier",
+      replace: "Texte remplacé",
+      delete: "Suppression",
+      create: "Création",
+      patch: "Modification",
+      add: "Ajout",
+      update: "Mise à jour",
+      test: "Test",
+      status: "Vérification de l’état",
+      resources: "Ressources réseau listées",
+      emulate: "Émulation d’un appareil",
+      reset: "Émulation réinitialisée",
+      markdown: "Export en Markdown",
+      images: "Images enregistrées",
+      run: "Exécution",
+      start: "Démarrage",
+      cancel: "Annulation",
+    },
+    commandStates: {
+      running: "En cours",
+      done: "Terminé",
+      error: "Échec",
+      canceled: "Annulé",
+      missing: "Tâche introuvable",
     },
     actStepSeparator: ", ",
     actSteps: {

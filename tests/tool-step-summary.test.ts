@@ -119,14 +119,30 @@ test("tool step counts are localized", () => {
       part({ query: "价格" }, { matches: 2 }),
       t,
     );
-    assert.equal(find.description, '"价格" · 2 处匹配');
+    assert.equal(find.description, '"价格" · 2 行匹配');
     const counted = toolDisplay(
       TOOL_NAME.find,
       part({ query: "价格" }, { matchingLines: 1, occurrences: 3 }),
       t,
     );
-    assert.equal(counted.description, '"价格" · 3 处匹配');
+    assert.equal(counted.description, '"价格" · 1 行匹配（3 处）');
   } finally {
     getMessages("en-US");
   }
+});
+
+test("find shows matching lines with their occurrences", () => {
+  const t = getMessages("en-US");
+  const find = (output: unknown) =>
+    toolDisplay(TOOL_NAME.find, part({ query: "TEST_TOKEN" }, output), t)
+      .description;
+  assert.equal(
+    find({ matchingLines: 1, occurrences: 2 }),
+    '"TEST_TOKEN" · 1 matching line (2 occurrences)',
+  );
+  assert.equal(
+    find({ matchingLines: 3, occurrences: 5 }),
+    '"TEST_TOKEN" · 3 matching lines (5 occurrences)',
+  );
+  assert.equal(find({ matches: 2 }), '"TEST_TOKEN" · 2 matching lines');
 });

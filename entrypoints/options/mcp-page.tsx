@@ -19,6 +19,7 @@ import {
   parseHeadersJson,
 } from "../../src/shared/mcp";
 import { listMcpServerTools } from "../../src/shared/mcp-client";
+import { mcpServerDescription } from "../../src/ui/mcp-display";
 import { McpServerFields, untestedPatch } from "./mcp-server-fields";
 import { storage } from "../../src/shared/storage";
 import type { McpServerConfig } from "../../src/shared/types";
@@ -47,6 +48,7 @@ import {
   SettingsSummary,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { errorWithDetail } from "../../src/ui/error-text";
 
 export function McpPage() {
   const [language] = useStoredState(storage.language);
@@ -110,7 +112,7 @@ export function McpPage() {
     } catch (error) {
       updateServer(server.id, {
         enabled: false,
-        lastTestError: error instanceof Error ? error.message : String(error),
+        lastTestError: errorWithDetail(t.options.mcpTestError, error, t),
       });
     } finally {
       setTestingServerId(null);
@@ -131,9 +133,7 @@ export function McpPage() {
         formatCount(t.options.mcpImportSuccess, result.servers.length),
       );
     } catch (error) {
-      setImportMessage(
-        `${t.options.mcpImportError}: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      setImportMessage(errorWithDetail(t.options.mcpImportError, error, t));
     }
   }
 
@@ -231,7 +231,7 @@ export function McpPage() {
                   title={server.name || t.options.newMcpServer}
                   badges={<Badge title={server.id}>{server.id}</Badge>}
                   description={
-                    server.description ||
+                    mcpServerDescription(server, t) ||
                     server.url ||
                     t.options.mcpServerUrlPlaceholder
                   }

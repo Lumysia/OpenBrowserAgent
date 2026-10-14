@@ -115,11 +115,10 @@ export function createSmartBarStore(host: HTMLElement) {
     current.onDisconnect.addListener(() => {
       if (port !== current) return;
       port = undefined;
+      // The browser's reason is English; the card says the connection
+      // was lost.
       if (state.result?.status === "streaming")
-        updateResult({
-          status: "error",
-          error: getBrowserApi().runtime.lastError?.message,
-        });
+        updateResult({ status: "error", error: undefined });
     });
     const request: SmartBarRunRequest = {
       type: "run",

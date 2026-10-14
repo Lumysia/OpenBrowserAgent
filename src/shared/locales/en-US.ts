@@ -16,6 +16,10 @@ export const enUS = {
     save: "Save",
     saved: "Saved",
     settings: "Settings",
+    // Label of a code block with no language.
+    plainText: "Text",
+    // What failed, then why: {message} is ours, {detail} the reason as reported.
+    errorDetail: "{message}: {detail}",
     copy: "Copy",
     copied: "Copied",
     edit: "Edit",
@@ -118,6 +122,8 @@ export const enUS = {
       reasoning: "Reasoning",
       estimated: "est.",
       tokenUnit: "tok.",
+      // A rate per second; {value} is a number.
+      perSecond: "{value}/s",
       modelCalls: "Model calls",
       largestRequest: "Largest request",
       cachedShare: "{percent}% of input from cache",
@@ -325,8 +331,20 @@ export const enUS = {
     agentWorkspaceDescription:
       "Private files for this agent. It always sees MEMORY.md and USER.md and reads others when needed.",
     agentWorkspaceNewFile: "New workspace file",
-    agentWorkspaceConflict:
-      "This file changed while you were editing. Reopen it to review the latest version before saving.",
+    // Why a workspace file could not be saved; {limit} is a number.
+    agentWorkspaceErrors: {
+      pathRequired: "Enter a file path.",
+      pathTooLong: "A file path can have at most {limit} characters.",
+      relativePath: "A file path cannot contain . or .. segments.",
+      fileTooLarge: "A file can hold at most {limit} characters.",
+      workspaceTooLarge:
+        "The workspace can hold at most {limit} characters in total.",
+      fileNotFound: "This file no longer exists.",
+      findNotFound: "The text to replace was not found.",
+      workspaceNotFound: "This agent’s workspace no longer exists.",
+      conflict:
+        "This file changed while you were editing. Reopen it to review the latest version before saving.",
+    },
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     resetDefaultAgents: "Reset default agents",
     resetDefaultAgentsDescription:
@@ -339,6 +357,8 @@ export const enUS = {
       "Let agents run shell commands on this computer or a remote host through a bridge.",
     localExecutionBridgesEmpty: "No execution bridges yet",
     newLocalExecutionBridge: "New execution bridge",
+    // Shown for a bridge whose name was left empty.
+    localExecutionBridgeUntitled: "Execution bridge",
     localExecutionBridgeName: "Execution bridge name",
     localExecutionBridgeDescription: "Description",
     localExecutionBridgeHostName: "Native messaging host name",
@@ -387,6 +407,7 @@ export const enUS = {
     }),
     mcpImportNone: "No remote HTTP MCP servers found in the pasted JSON.",
     mcpImportError: "MCP import failed",
+    mcpTestError: "Server test failed",
     mcpTestServer: "Test server",
     mcpTesting: "Testing…",
     mcpTestSuccess: plural({
@@ -429,6 +450,7 @@ export const enUS = {
     testingModel: "Testing",
     testModelSuccess: "Model responded successfully.",
     testModelError: "Model test failed",
+    fetchModelsError: "Couldn’t load models",
     configuredModels: "Configured models",
     modelDisplayName: "Display name",
     modelContextLength: "Context length",
@@ -442,6 +464,7 @@ export const enUS = {
     importSkillZip: "Import archive",
     importingSkillZip: "Importing…",
     importSkillZipError: "Skill import failed",
+    importAgentError: "Agent import failed",
     importSkillPackageMissingEntry:
       "SKILL.md was not found in the imported archive.",
     untitledSkill: "Untitled skill",
@@ -561,6 +584,7 @@ export const enUS = {
     debugResetButton: "Clear all app data",
     debugResetting: "Clearing…",
     debugResetSuccess: "OpenBrowserAgent data was cleared.",
+    debugResetError: "Couldn’t clear the data",
     debugLoggingTitle: "Diagnostic logging",
     debugLoggingDescription:
       "Enable temporary console logs for stream, tool, and assistant ordering diagnostics.",

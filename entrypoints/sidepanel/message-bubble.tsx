@@ -16,6 +16,7 @@ import type {
 } from "../../src/shared/types";
 import { CHAT_PART_STATE, isToolPartType } from "../../src/shared/types";
 import { UserText } from "../../src/ui/components";
+import { providerNameDisplay } from "../../src/ui/provider-display";
 import { skillDisplay } from "../../src/ui/skill-display";
 import { messageRunEnded } from "./run-state";
 import { formatMessageTime } from "./format";
@@ -115,7 +116,13 @@ export function MessageBubble({
       !availableAttachments.some((item) => item.id === attachment.id),
   );
   const modelLabel = assistantModel
-    ? [assistantModel.provider, assistantModel.name].filter(Boolean).join(" · ")
+    ? [
+        assistantModel.provider &&
+          providerNameDisplay(assistantModel.provider, t),
+        assistantModel.name,
+      ]
+        .filter(Boolean)
+        .join(" · ")
     : undefined;
   const showRunInfo = message.role === "assistant" && runEnded;
   const assistantEnded =

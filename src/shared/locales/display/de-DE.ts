@@ -12,6 +12,13 @@ export const displayDeDE: DisplayMessages = {
     "openai-responses": "OpenAI Responses",
     anthropic: "Anthropic-kompatibel",
   },
+  builtinMcpServers: {
+    exa: "Websuche und Extraktion von Webseiteninhalten.",
+    parallel: "Websuche mit Auszügen und Abruf von Webseiten.",
+    tinyfish: "Web- und Nachrichtensuche.",
+    firecrawl:
+      "Websuche, Auslesen von Webseiten und Dokumentanalyse. Niedriges kostenloses Anfragelimit.",
+  },
   builtinSkills: {
     "fill-form": {
       name: "Formular ausfüllen",
@@ -39,18 +46,37 @@ export const displayDeDE: DisplayMessages = {
         "Richtet eine lokale Ausführungs-Bridge ein, testet, aktualisiert oder entfernt sie, damit Agenten Befehle auf Ihrem Computer ausführen können.",
     },
   },
+  errors: {
+    noModel:
+      "Es ist kein Modell eingerichtet. Fügen Sie unter „Einstellungen“ → „Anbieter“ einen Anbieter hinzu.",
+    subAgentStopped: "Der Subagent wurde gestoppt.",
+    baseUrlRequired: "Geben Sie eine Basis-URL ein.",
+  },
   toolSteps: {
+    failed: "Fehlgeschlagen",
     page: "Seite",
     tabs: plural({ one: "{count} Tab", other: "{count} Tabs" }),
     lines: plural({ one: "{count} Zeile", other: "{count} Zeilen" }),
-    matches: plural({ one: "{count} Treffer", other: "{count} Treffer" }),
+    matchingLines: plural({
+      one: "{count} passende Zeile",
+      other: "{count} passende Zeilen",
+    }),
+    matchingLinesWithOccurrences: plural({
+      one: "{count} passende Zeile ({occurrences})",
+      other: "{count} passende Zeilen ({occurrences})",
+    }),
+    occurrences: plural({
+      one: "{count} Vorkommen",
+      other: "{count} Vorkommen",
+    }),
     results: plural({ one: "{count} Ergebnis", other: "{count} Ergebnisse" }),
     items: plural({ one: "{count} Eintrag", other: "{count} Einträge" }),
+    tools: plural({ one: "{count} Tool", other: "{count} Tools" }),
     editsApplied: plural({
       one: "{applied} von {count} Änderung übernommen",
       other: "{applied} von {count} Änderungen übernommen",
     }),
-    tabActions: {
+    actions: {
       open: "Geöffnet",
       switch: "Gewechselt zu",
       close: "Geschlossen",
@@ -60,6 +86,34 @@ export const displayDeDE: DisplayMessages = {
       reload: "Neu geladen",
       group: "Gruppiert",
       ungroup: "Gruppierung aufgehoben",
+      list: "Aufgelistet",
+      search: "Gesucht",
+      read: "Gelesen",
+      write: "Geschrieben",
+      append: "Angehängt",
+      replace: "Text ersetzt",
+      delete: "Gelöscht",
+      create: "Erstellt",
+      patch: "Bearbeitet",
+      add: "Hinzugefügt",
+      update: "Aktualisiert",
+      test: "Getestet",
+      status: "Status abgefragt",
+      resources: "Netzwerkressourcen aufgelistet",
+      emulate: "Gerät emuliert",
+      reset: "Emulation zurückgesetzt",
+      markdown: "Als Markdown exportiert",
+      images: "Bilder gespeichert",
+      run: "Ausgeführt",
+      start: "Gestartet",
+      cancel: "Abgebrochen",
+    },
+    commandStates: {
+      running: "Läuft",
+      done: "Fertig",
+      error: "Fehlgeschlagen",
+      canceled: "Abgebrochen",
+      missing: "Aufgabe nicht gefunden",
     },
     actStepSeparator: ", ",
     actSteps: {

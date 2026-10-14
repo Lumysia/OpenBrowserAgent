@@ -1,4 +1,4 @@
-import { BYTES_PER_KIB, BYTES_PER_MIB } from "./config";
+import { BYTES_PER_KIB, BYTES_PER_MIB, MS_PER_SECOND } from "./config";
 import { resolveLanguage } from "./i18n";
 
 // Numbers, sizes and dates shown in the extension UI follow the UI language,
@@ -26,6 +26,23 @@ export function formatBytes(value: number, maxUnit: "kb" | "mb" = "mb") {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   });
+}
+
+// "850 ms" under a second, else seconds with two decimals ("1,25 s").
+export function formatDuration(milliseconds: number) {
+  return milliseconds < MS_PER_SECOND
+    ? formatNumber(Math.round(milliseconds), {
+        style: "unit",
+        unit: "millisecond",
+        unitDisplay: "short",
+      })
+    : formatNumber(milliseconds / MS_PER_SECOND, {
+        style: "unit",
+        unit: "second",
+        unitDisplay: "short",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
 }
 
 export function formatDateTime(

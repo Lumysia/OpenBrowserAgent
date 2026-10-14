@@ -16,6 +16,14 @@ export const displayEnUS = {
     "openai-responses": "OpenAI Responses",
     anthropic: "Anthropic-compatible",
   },
+  // Built-in MCP servers, by name: what each offers.
+  builtinMcpServers: {
+    exa: "Web search and webpage content extraction.",
+    parallel: "Web search with excerpts, and webpage fetching.",
+    tinyfish: "Web and news search.",
+    firecrawl:
+      "Web search, webpage scraping and document parsing. Low free rate limit.",
+  },
   builtinSkills: {
     "fill-form": {
       name: "Fill form",
@@ -43,18 +51,40 @@ export const displayEnUS = {
         "Sets up, tests, updates, or removes a local execution bridge so agents can run commands on your computer.",
     },
   },
+  errors: {
+    noModel: "No model is set up. Add a provider in Settings → Providers.",
+    subAgentStopped: "The sub-agent was stopped.",
+    baseUrlRequired: "Enter a base URL.",
+  },
   toolSteps: {
+    // A step that failed; the error text, written for the model, is in
+    // the step's details.
+    failed: "Failed",
     page: "Page",
     tabs: plural({ one: "{count} tab", other: "{count} tabs" }),
     lines: plural({ one: "{count} line", other: "{count} lines" }),
-    matches: plural({ one: "{count} match", other: "{count} matches" }),
+    matchingLines: plural({
+      one: "{count} matching line",
+      other: "{count} matching lines",
+    }),
+    matchingLinesWithOccurrences: plural({
+      one: "{count} matching line ({occurrences})",
+      other: "{count} matching lines ({occurrences})",
+    }),
+    occurrences: plural({
+      one: "{count} occurrence",
+      other: "{count} occurrences",
+    }),
     results: plural({ one: "{count} result", other: "{count} results" }),
     items: plural({ one: "{count} item", other: "{count} items" }),
+    tools: plural({ one: "{count} tool", other: "{count} tools" }),
     editsApplied: plural({
       one: "{applied} of {count} edit applied",
       other: "{applied} of {count} edits applied",
     }),
-    tabActions: {
+    // The action a tool step took, by its `action` argument; tabs, workspace,
+    // skills and the other tools share these words.
+    actions: {
       open: "Opened",
       switch: "Switched to",
       close: "Closed",
@@ -64,6 +94,34 @@ export const displayEnUS = {
       reload: "Reloaded",
       group: "Grouped",
       ungroup: "Ungrouped",
+      list: "Listed",
+      search: "Searched",
+      read: "Read",
+      write: "Wrote",
+      append: "Appended",
+      replace: "Replaced text",
+      delete: "Deleted",
+      create: "Created",
+      patch: "Edited",
+      add: "Added",
+      update: "Updated",
+      test: "Tested",
+      status: "Checked status",
+      resources: "Listed network resources",
+      emulate: "Emulated a device",
+      reset: "Reset emulation",
+      markdown: "Exported as Markdown",
+      images: "Saved images",
+      run: "Ran",
+      start: "Started",
+      cancel: "Canceled",
+    },
+    commandStates: {
+      running: "Running",
+      done: "Finished",
+      error: "Failed",
+      canceled: "Canceled",
+      missing: "Task not found",
     },
     // The act steps are joined into one line with actStepSeparator, e.g.
     // "Typed in 2 fields, selected 2 options, clicked 1 element".

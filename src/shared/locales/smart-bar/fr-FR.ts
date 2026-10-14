@@ -27,6 +27,7 @@ export const smartBarFrFR: SmartBarLocaleMessages = {
   noVoice: "Aucune voix installée pour : {language}.",
   writing: "Rédaction…",
   emptyResult: "Le modèle n’a renvoyé aucun texte.",
+  connectionLost: "La connexion à OpenBrowserAgent a été perdue. Réessayez.",
   selectionChanged: "Le texte sélectionné a changé. Copiez plutôt le résultat.",
   selectionTooLong:
     "La sélection est trop longue (plus de {max} caractères). Continuez plutôt dans le panneau latéral.",

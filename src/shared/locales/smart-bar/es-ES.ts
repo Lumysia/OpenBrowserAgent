@@ -27,6 +27,8 @@ export const smartBarEsES: SmartBarLocaleMessages = {
   noVoice: "No hay ninguna voz instalada para {language}.",
   writing: "Escribiendo…",
   emptyResult: "El modelo no ha devuelto texto.",
+  connectionLost:
+    "Se perdió la conexión con OpenBrowserAgent. Vuelve a intentarlo.",
   selectionChanged:
     "El texto seleccionado ha cambiado. Copia el resultado en vez de reemplazarlo.",
   selectionTooLong:

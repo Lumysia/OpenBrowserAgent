@@ -83,7 +83,7 @@ export function HistoryPanel({
   async function importChat(file: File | undefined) {
     if (!file) return;
     try {
-      onImportChat(await importChatFromOpenAiJson(file));
+      onImportChat(await importChatFromOpenAiJson(file, t.words.newChat));
     } catch (error) {
       console.warn("Failed to import chat", error);
     } finally {

@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   formatBytes,
   formatDateTime,
+  formatDuration,
   formatNumber,
 } from "../src/shared/format";
 import { formatCount, getMessages } from "../src/shared/i18n";
@@ -118,5 +119,20 @@ test("counts format the number and fill extra placeholders", () => {
       }),
     ),
     "2 of 3 edits applied",
+  );
+});
+
+test("durations use the units of the UI language", () => {
+  assert.equal(
+    inLanguage("en-US", () => formatDuration(850)),
+    "850 ms",
+  );
+  assert.equal(
+    inLanguage("de-DE", () => formatDuration(1250)),
+    "1,25 Sek.",
+  );
+  assert.equal(
+    inLanguage("zh-CN", () => formatDuration(1250)),
+    "1.25秒",
   );
 });

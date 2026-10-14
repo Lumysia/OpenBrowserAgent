@@ -86,7 +86,7 @@ export function renderMarkdownBlock(
       ? highlightCode(code, language)
       : { html: escapeHtml(code), language };
     const displayLanguage = escapeHtml(
-      language || highlighted.language || "text",
+      language || highlighted.language || t.common.plainText,
     );
     const preview = options.mermaidPreview
       ? mermaidPreview(code, language, t)

@@ -18,6 +18,8 @@ export const ko: LocaleMessages = {
     save: "저장",
     saved: "저장됨",
     settings: "설정",
+    plainText: "텍스트",
+    errorDetail: "{message}: {detail}",
     copy: "복사",
     copied: "복사됨",
     edit: "편집",
@@ -114,6 +116,7 @@ export const ko: LocaleMessages = {
       reasoning: "추론",
       estimated: "(추정)",
       tokenUnit: "토큰",
+      perSecond: "{value}/초",
       modelCalls: "모델 호출",
       largestRequest: "가장 큰 요청",
       cachedShare: "입력의 {percent}%를 캐시에서 가져옴",
@@ -304,8 +307,19 @@ export const ko: LocaleMessages = {
     agentWorkspaceDescription:
       "이 에이전트 전용 파일입니다. MEMORY.md와 USER.md는 항상 제공되고, 다른 파일은 필요할 때 읽습니다.",
     agentWorkspaceNewFile: "새 워크스페이스 파일",
-    agentWorkspaceConflict:
-      "편집 중에 이 파일이 변경되었습니다. 저장하기 전에 다시 열어 최신 내용을 확인하세요.",
+    agentWorkspaceErrors: {
+      pathRequired: "파일 경로를 입력하세요.",
+      pathTooLong: "파일 경로는 최대 {limit}자까지 쓸 수 있습니다.",
+      relativePath: "파일 경로에는 . 또는 .. 구간을 넣을 수 없습니다.",
+      fileTooLarge: "파일 하나에는 최대 {limit}자까지 저장할 수 있습니다.",
+      workspaceTooLarge:
+        "워크스페이스 전체에는 최대 {limit}자까지 저장할 수 있습니다.",
+      fileNotFound: "이 파일은 더 이상 없습니다.",
+      findNotFound: "바꿀 텍스트를 찾지 못했습니다.",
+      workspaceNotFound: "이 에이전트의 워크스페이스가 더 이상 없습니다.",
+      conflict:
+        "편집 중에 이 파일이 변경되었습니다. 저장하기 전에 다시 열어 최신 내용을 확인하세요.",
+    },
     agentWorkspaceNewFilePlaceholder: "NOTES.md",
     resetDefaultAgents: "기본 에이전트 재설정",
     resetDefaultAgentsDescription:
@@ -318,6 +332,7 @@ export const ko: LocaleMessages = {
       "에이전트가 브리지를 통해 이 컴퓨터나 원격 호스트에서 셸 명령을 실행합니다.",
     localExecutionBridgesEmpty: "아직 실행 브리지가 없습니다",
     newLocalExecutionBridge: "새 실행 브리지",
+    localExecutionBridgeUntitled: "실행 브리지",
     localExecutionBridgeName: "실행 브리지 이름",
     localExecutionBridgeDescription: "설명",
     localExecutionBridgeHostName: "네이티브 메시징 호스트 이름",
@@ -362,6 +377,7 @@ export const ko: LocaleMessages = {
     mcpImportSuccess: plural({ other: "MCP 서버 {count}개를 가져왔습니다." }),
     mcpImportNone: "붙여넣은 JSON에서 원격 HTTP MCP 서버를 찾지 못했습니다.",
     mcpImportError: "MCP 가져오기 실패",
+    mcpTestError: "서버 테스트에 실패했어요",
     mcpTestServer: "서버 테스트",
     mcpTesting: "테스트 중…",
     mcpTestSuccess: plural({ other: "도구 {count}개를 찾았습니다." }),
@@ -401,6 +417,7 @@ export const ko: LocaleMessages = {
     testingModel: "테스트 중",
     testModelSuccess: "모델이 정상적으로 응답했습니다.",
     testModelError: "모델 테스트 실패",
+    fetchModelsError: "모델을 불러오지 못했어요",
     configuredModels: "구성된 모델",
     modelDisplayName: "표시 이름",
     modelContextLength: "컨텍스트 길이",
@@ -414,6 +431,7 @@ export const ko: LocaleMessages = {
     importSkillZip: "압축 파일 가져오기",
     importingSkillZip: "가져오는 중…",
     importSkillZipError: "스킬 가져오기 실패",
+    importAgentError: "에이전트를 가져오지 못했어요",
     importSkillPackageMissingEntry:
       "가져온 압축 파일에서 SKILL.md를 찾을 수 없습니다.",
     untitledSkill: "제목 없는 스킬",
@@ -533,6 +551,7 @@ export const ko: LocaleMessages = {
     debugResetButton: "모든 앱 데이터 지우기",
     debugResetting: "지우는 중…",
     debugResetSuccess: "OpenBrowserAgent 데이터가 지워졌습니다.",
+    debugResetError: "데이터를 지우지 못했어요",
     debugLoggingTitle: "진단 로깅",
     debugLoggingDescription:
       "스트리밍, 도구, 어시스턴트 순서 진단을 위한 임시 콘솔 로그를 활성화합니다.",

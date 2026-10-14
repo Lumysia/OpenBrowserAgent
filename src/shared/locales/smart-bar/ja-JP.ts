@@ -27,6 +27,8 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
   noVoice: "{language}の音声がインストールされていません。",
   writing: "生成中…",
   emptyResult: "モデルからテキストが返されませんでした。",
+  connectionLost:
+    "OpenBrowserAgent との接続が切れました。もう一度お試しください。",
   selectionChanged:
     "選択したテキストが変更されました。代わりに結果をコピーしてください。",
   selectionTooLong:

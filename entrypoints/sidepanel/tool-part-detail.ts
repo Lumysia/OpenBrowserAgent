@@ -41,21 +41,14 @@ const DETAILS: Record<
   [TOOL_NAME.tabs]: (input, output, t) =>
     input.action === "list"
       ? countLabel(t.display.toolSteps.tabs, output.count)
-      : compactJoin([tabActionLabel(input.action, t), pageLabel(output)]),
+      : compactJoin([actionLabel(input.action, t), pageLabel(output)]),
   [TOOL_NAME.snapshot]: (input, output, t) =>
     compactJoin([
       pageLabel(output),
       countLabel(t.display.toolSteps.lines, output.lines),
     ]),
   [TOOL_NAME.find]: (input, output, t) =>
-    compactJoin([
-      `"${stringValue(input.query)}"`,
-      // Chats from before occurrences were counted stored `matches`.
-      countLabel(
-        t.display.toolSteps.matches,
-        output.occurrences ?? output.matches,
-      ),
-    ]),
+    compactJoin([`"${stringValue(input.query)}"`, findCounts(output, t)]),
   [TOOL_NAME.read]: (input, output, t) =>
     stringValue(output.title) ||
     stringValue(output.name) ||
@@ -82,28 +75,29 @@ const DETAILS: Record<
       countLabel(t.display.toolSteps.results, output.count),
     ]),
   [TOOL_NAME.screenshot]: (input, output) => pageLabel(output),
-  [TOOL_NAME.toolSearch]: (input, output) =>
+  // Tool ids are code names; the step shows how many, the JSON details which.
+  [TOOL_NAME.toolSearch]: (input, output, t) =>
     Array.isArray(output.loaded)
-      ? output.loaded.join(", ")
+      ? formatCount(t.display.toolSteps.tools, output.loaded.length)
       : Array.isArray(input.names)
-        ? input.names.join(", ")
+        ? formatCount(t.display.toolSteps.tools, input.names.length)
         : stringValue(input.query),
-  [TOOL_NAME.export]: (input, output) =>
-    stringValue(output.filename) || stringValue(input.action),
-  [TOOL_NAME.skills]: (input) =>
+  [TOOL_NAME.export]: (input, output, t) =>
+    stringValue(output.filename) || actionLabel(input.action, t),
+  [TOOL_NAME.skills]: (input, output, t) =>
     compactJoin([
-      stringValue(input.action),
+      actionLabel(input.action, t),
       stringValue(input.name),
       stringValue(input.path),
     ]),
-  [TOOL_NAME.workspace]: (input) =>
+  [TOOL_NAME.workspace]: (input, output, t) =>
     compactJoin([
-      stringValue(input.action),
+      actionLabel(input.action, t),
       stringValue(input.path) || stringValue(input.query),
     ]),
-  [TOOL_NAME.chatHistory]: (input) =>
+  [TOOL_NAME.chatHistory]: (input, output, t) =>
     compactJoin([
-      stringValue(input.action),
+      actionLabel(input.action, t),
       stringValue(input.query) || stringValue(input.chatId),
     ]),
   [TOOL_NAME.subAgent]: (input, output, t) =>
@@ -113,22 +107,25 @@ const DETAILS: Record<
         stringValue(input.title) ||
         stringValue(input.task),
     ]),
-  [TOOL_NAME.mcpServers]: (input) =>
+  [TOOL_NAME.mcpServers]: (input, output, t) =>
     compactJoin([
-      stringValue(input.action),
+      actionLabel(input.action, t),
       stringValue(input.name) || stringValue(input.serverId),
     ]),
-  [TOOL_NAME.localCommand]: (input, output) =>
-    compactJoin([stringValue(output.state), stringValue(input.command)]),
-  [TOOL_NAME.localBridges]: (input) =>
+  [TOOL_NAME.localCommand]: (input, output, t) =>
     compactJoin([
-      stringValue(input.action),
+      knownLabel(t.display.toolSteps.commandStates, output.state),
+      stringValue(input.command),
+    ]),
+  [TOOL_NAME.localBridges]: (input, output, t) =>
+    compactJoin([
+      actionLabel(input.action, t),
       stringValue(input.bridgeId) || stringValue(input.name),
     ]),
   [TOOL_NAME.generateImage]: (input, output) =>
     stringValue(output.revisedPrompt) || stringValue(input.prompt),
   [TOOL_NAME.runScript]: (input, output) => pageLabel(output),
-  [TOOL_NAME.devtools]: (input) => stringValue(input.action),
+  [TOOL_NAME.devtools]: (input, output, t) => actionLabel(input.action, t),
 };
 
 export function toolDisplay(
@@ -146,19 +143,18 @@ export function toolDisplay(
   const awaitingAnswer =
     name === TOOL_NAME.ask && !Array.isArray(output.answers);
   const title = toolLabel(name, t, done && !awaitingAnswer);
+  // A failed step's error is English text for the model; the line says it
+  // failed and the JSON details keep the text.
   const detail =
-    typeof output.error === "string"
-      ? output.error
+    typeof output.error === "string" ||
+    part.state === CHAT_PART_STATE.outputError
+      ? t.display.toolSteps.failed
       : isMcpToolName(name)
         ? mcpToolDetail(input, output, t)
         : DETAILS[name]?.(input, output, t) || "";
   return {
     title,
-    description: shortValue(
-      detail ||
-        (part.state === CHAT_PART_STATE.outputError ? t.sidepanel.error : ""),
-      DESCRIPTION_MAX_LENGTH,
-    ),
+    description: shortValue(detail, DESCRIPTION_MAX_LENGTH),
     references: toolReferences(name, output),
     subAgentProgress:
       name === TOOL_NAME.subAgent ? subAgentProgressDetail(output, t) : "",
@@ -179,10 +175,28 @@ function countLabel(message: Plural, value: unknown) {
   return typeof value === "number" ? formatCount(message, value) : "";
 }
 
-function tabActionLabel(action: unknown, t: Messages) {
-  const labels: Record<string, string> = t.display.toolSteps.tabActions;
-  const key = stringValue(action);
-  return Object.hasOwn(labels, key) ? labels[key] : key;
+// Chats from before occurrences were counted stored the matching lines as
+// `matches`.
+function findCounts(output: ToolRecord, t: Messages) {
+  const steps = t.display.toolSteps;
+  const lines = output.matchingLines ?? output.matches;
+  if (typeof lines !== "number") return "";
+  return typeof output.occurrences === "number"
+    ? formatCount(steps.matchingLinesWithOccurrences, lines, {
+        occurrences: formatCount(steps.occurrences, output.occurrences),
+      })
+    : formatCount(steps.matchingLines, lines);
+}
+
+// The localized word for a tool's `action` argument. An unknown one (from
+// a newer version, say) shows nothing rather than the raw English name.
+function actionLabel(action: unknown, t: Messages) {
+  return knownLabel(t.display.toolSteps.actions, action);
+}
+
+function knownLabel(labels: Record<string, string>, key: unknown) {
+  const name = stringValue(key);
+  return Object.hasOwn(labels, name) ? labels[name] : "";
 }
 
 function subAgentState(output: ToolRecord, t: Messages) {

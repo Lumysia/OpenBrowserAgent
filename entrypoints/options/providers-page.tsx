@@ -170,6 +170,7 @@ export function ProvidersPage() {
           </CardHeader>
           <CardContent>
             <ModelSelect
+              t={t}
               label={t.options.selectModel}
               value={preferences.selectedModelId}
               models={configuredModels}
@@ -191,6 +192,7 @@ export function ProvidersPage() {
           </CardHeader>
           <CardContent>
             <DefaultableModelSelect
+              t={t}
               value={preferences.helperModelId}
               label={t.options.helperModel}
               defaultLabel={t.options.modelSameAsChat}
@@ -209,6 +211,7 @@ export function ProvidersPage() {
           </CardHeader>
           <CardContent>
             <DefaultableModelSelect
+              t={t}
               value={normalizeSmartBarSettings(preferences.smartBar).modelId}
               label={t.smartBar.model}
               defaultLabel={t.options.modelSameAsChat}
@@ -243,6 +246,7 @@ export function ProvidersPage() {
             <div className="provider-image-fields">
               <div className="provider-image-model-field">
                 <ModelSelect
+                  t={t}
                   label={t.options.selectImageModel}
                   value={preferences.selectedImageModelId}
                   models={configuredModels}

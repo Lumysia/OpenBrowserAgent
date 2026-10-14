@@ -6,14 +6,15 @@ import {
   searchWorkspaceFiles,
   upsertWorkspaceFile,
 } from "../../shared/workspace";
+import { workspaceFailure } from "../../shared/workspace-errors";
 import {
   mutateWorkspace,
   workspaceFileUnchanged,
-  WORKSPACE_FILE_CONFLICT,
 } from "../../shared/workspace-storage";
 import { fail, ok, schema, stringArg, type ToolDefinition } from "./types";
 
-const ACTIONS = ["list", "write", "append", "replace", "delete", "search"];
+const WRITE_ACTIONS = ["write", "append", "replace", "delete"];
+const ACTIONS = ["list", ...WRITE_ACTIONS, "search"];
 
 // The agent's private files, memory included: MEMORY.md (lasting facts and
 // lessons) and USER.md (the user's preferences) appear in the system prompt.
@@ -57,6 +58,8 @@ export const workspaceTool: ToolDefinition = {
         { action, query, matches: results.length },
       );
     }
+    if (!WRITE_ACTIONS.includes(action))
+      return fail(`Unknown action "${action}". Use ${ACTIONS.join(", ")}.`);
     if (!path) return fail("path is required.");
     const find = String(input.find ?? "");
     const normalized = normalizeWorkspacePath(path);
@@ -75,12 +78,8 @@ export const workspaceTool: ToolDefinition = {
       if (action === "replace")
         return workspaceFileUnchanged(workspace, current, path)
           ? patchWorkspaceFile(current, path, "replace", content, find)
-          : { ok: false, error: WORKSPACE_FILE_CONFLICT };
-      if (action === "delete") return deleteWorkspaceFile(current, path);
-      return {
-        ok: false,
-        error: `Unknown action "${action}". Use ${ACTIONS.join(", ")}.`,
-      };
+          : workspaceFailure("conflict");
+      return deleteWorkspaceFile(current, path);
     });
     if (!result.ok) return fail(`${result.error} (${path})`, { action, path });
     const { text, details } = writeReceipt(

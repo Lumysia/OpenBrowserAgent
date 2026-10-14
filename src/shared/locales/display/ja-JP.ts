@@ -12,6 +12,13 @@ export const displayJaJP: DisplayMessages = {
     "openai-responses": "OpenAI Responses",
     anthropic: "Anthropic 互換",
   },
+  builtinMcpServers: {
+    exa: "ウェブ検索とページ内容の抽出。",
+    parallel: "抜粋付きのウェブ検索とページの取得。",
+    tinyfish: "ウェブとニュースの検索。",
+    firecrawl:
+      "ウェブ検索、ページのスクレイピング、ドキュメントの解析。無料のリクエスト上限は低めです。",
+  },
   builtinSkills: {
     "fill-form": {
       name: "フォーム入力",
@@ -38,15 +45,27 @@ export const displayJaJP: DisplayMessages = {
         "ローカル実行ブリッジを設定、テスト、更新、削除し、エージェントがこのコンピューターでコマンドを実行できるようにします。",
     },
   },
+  errors: {
+    noModel:
+      "モデルが設定されていません。「設定」→「プロバイダー」でプロバイダーを追加してください。",
+    subAgentStopped: "サブエージェントを停止しました。",
+    baseUrlRequired: "ベース URL を入力してください。",
+  },
   toolSteps: {
+    failed: "失敗",
     page: "ページ",
     tabs: plural({ other: "{count}個のタブ" }),
     lines: plural({ other: "{count}行" }),
-    matches: plural({ other: "{count}件一致" }),
+    matchingLines: plural({ other: "{count}行が一致" }),
+    matchingLinesWithOccurrences: plural({
+      other: "{count}行が一致（{occurrences}）",
+    }),
+    occurrences: plural({ other: "{count}箇所" }),
     results: plural({ other: "{count}件の結果" }),
     items: plural({ other: "{count}件" }),
+    tools: plural({ other: "{count}個のツール" }),
     editsApplied: plural({ other: "{count}件中{applied}件の編集を適用" }),
-    tabActions: {
+    actions: {
       open: "開きました",
       switch: "切り替えました",
       close: "閉じました",
@@ -56,6 +75,34 @@ export const displayJaJP: DisplayMessages = {
       reload: "再読み込みしました",
       group: "グループ化しました",
       ungroup: "グループを解除しました",
+      list: "一覧を取得しました",
+      search: "検索しました",
+      read: "読み込みました",
+      write: "書き込みました",
+      append: "追記しました",
+      replace: "テキストを置換しました",
+      delete: "削除しました",
+      create: "作成しました",
+      patch: "編集しました",
+      add: "追加しました",
+      update: "更新しました",
+      test: "テストしました",
+      status: "状態を確認しました",
+      resources: "ネットワークリソースを一覧表示しました",
+      emulate: "デバイスをエミュレートしました",
+      reset: "エミュレーションをリセットしました",
+      markdown: "Markdown としてエクスポートしました",
+      images: "画像を保存しました",
+      run: "実行しました",
+      start: "開始しました",
+      cancel: "キャンセルしました",
+    },
+    commandStates: {
+      running: "実行中",
+      done: "完了",
+      error: "失敗",
+      canceled: "キャンセル済み",
+      missing: "タスクが見つかりません",
     },
     actStepSeparator: "、",
     actSteps: {
