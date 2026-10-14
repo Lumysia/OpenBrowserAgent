@@ -27,6 +27,10 @@ const SMALL_PAGE_CHARS = 5_000;
 // Translations kept for this page's session, by source text, so content the
 // page shows again (virtual lists, re-renders) is translated at once.
 const MEMORY_ENTRIES = 2_000;
+// How long sending waits for the observers to tell which new paragraphs are
+// on screen (they report each new one once, in the next frame; a page that
+// gets no frames doesn't wait longer).
+const VISIBILITY_WAIT_MS = 250;
 // A note for the same problem shows at most this often.
 const TOAST_INTERVAL_MS = 10_000;
 // Errors after which no more paragraphs are sent.
@@ -89,6 +93,10 @@ function startSession(onFatal: () => void) {
   let flushTimer: number | undefined;
   const toasts = new Map<string, number>();
   const targets = new Map<Element, Set<Unit>>();
+  // Watched elements the visibility observer hasn't reported yet, and since
+  // when sending waits for them.
+  const unreported = new Set<Element>();
+  let waitingSince = 0;
 
   const language = () => config?.targetLanguage || "en";
   const root = document.body || document.documentElement;
@@ -107,6 +115,7 @@ function startSession(onFatal: () => void) {
         if (!set) {
           set = new Set();
           targets.set(unit.target, set);
+          unreported.add(unit.target);
           near.observe(unit.target);
           visible.observe(unit.target);
         }
@@ -124,6 +133,7 @@ function startSession(onFatal: () => void) {
         set?.delete(unit);
         if (set && !set.size) {
           targets.delete(unit.target);
+          unreported.delete(unit.target);
           near.unobserve(unit.target);
           visible.unobserve(unit.target);
         }
@@ -159,11 +169,16 @@ function startSession(onFatal: () => void) {
     { rootMargin: NEAR_MARGIN },
   );
   const visible = new IntersectionObserver((entries) => {
-    for (const entry of entries)
+    for (const entry of entries) {
+      unreported.delete(entry.target);
       for (const unit of targets.get(entry.target) || []) {
         unit.visible = entry.isIntersecting;
         if (unit.state === "queued") enqueue(unit);
+        // Sent before it was known to be on screen: it shows as waiting.
+        else if (unit.visible && unit.state === "sent" && !unit.element)
+          presenter.request(unit);
       }
+    }
     scheduleFlush();
   });
 
@@ -204,6 +219,16 @@ function startSession(onFatal: () => void) {
     if (!port) connect();
     // Batches wait for the session's limits.
     if (!config) return;
+    // Paragraphs on screen go first, so sending waits until the observers
+    // have said which those are.
+    if (unreported.size) {
+      const now = performance.now();
+      waitingSince ||= now;
+      if (now - waitingSince < VISIBILITY_WAIT_MS) {
+        scheduleFlush();
+        return;
+      }
+    } else waitingSince = 0;
     while (batches.size < config.limits.concurrency && queue.size) {
       const items = queue.take(config.limits, first);
       first = false;
