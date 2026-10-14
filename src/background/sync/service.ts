@@ -49,7 +49,7 @@ import {
   type SyncContext,
 } from "../../shared/sync/engine";
 import { parseBody } from "../../shared/sync/blobs";
-import { removeLocalKeyring } from "../../shared/sync/keys";
+import { loadLocalKeyring, removeLocalKeyring } from "../../shared/sync/keys";
 import { SyncFormatError } from "../../shared/sync/root";
 import {
   loadSyncState,
@@ -164,13 +164,15 @@ export async function syncContext(
 }
 
 // Changes waiting to upload in the collections this backend syncs: records
-// whose clock is newer than the last root seen.
+// whose clock is newer than the last root seen. Keys wait for the
+// passphrase, not for an upload.
 export async function countPending(env: SyncEnv, context: SyncContext) {
   const root = (await loadSyncState(env.local, context.scope)).remote?.root;
+  const unlocked = !!(await loadLocalKeyring(env.local, context.scope));
   const collections = enabledCollections(
     context.settings,
     context.transport.capabilities,
-  );
+  ).filter((collection) => unlocked || !collection.encrypted);
   const clocks = new Map();
   for (const collection of collections)
     for (const [id, entry] of Object.entries(

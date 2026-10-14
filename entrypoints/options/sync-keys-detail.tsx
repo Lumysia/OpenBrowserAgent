@@ -30,16 +30,19 @@ export function SyncKeysDetail({
   t: Messages;
 }) {
   const [changing, setChanging] = useState(false);
-  const locked = !!keys?.onServer && !keys.unlocked;
-  const mode: Mode | undefined = locked
-    ? asking || on
-      ? "enter"
-      : undefined
-    : changing
-      ? "change"
-      : asking
-        ? "create"
-        : undefined;
+  // Keys are on but this device has no key: the server's passphrase is
+  // entered, or (none there, the cloud was cleared) a new one is set.
+  const missingKey = on && !!keys && !keys.unlocked;
+  const mode: Mode | undefined =
+    keys?.onServer && !keys.unlocked
+      ? asking || on
+        ? "enter"
+        : undefined
+      : changing
+        ? "change"
+        : asking || missingKey
+          ? "create"
+          : undefined;
 
   if (mode)
     return (
@@ -52,7 +55,7 @@ export function SyncKeysDetail({
           onClose();
         }}
         onCancel={
-          mode === "enter" && on
+          missingKey
             ? undefined
             : () => {
                 setChanging(false);
