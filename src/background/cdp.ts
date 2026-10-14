@@ -101,8 +101,24 @@ export async function withCdp<T>(
   }
 }
 
-export async function releaseCdp(args: Record<string, unknown>) {
-  await release((await resolveTarget(args)).key);
+// Ends a retained session. `undo` runs on it first, to clear overrides
+// explicitly rather than rely on the detach alone. Returns whether a
+// session was there.
+export async function releaseCdp(
+  args: Record<string, unknown>,
+  undo?: (send: CdpSend) => Promise<unknown>,
+) {
+  const { key } = await resolveTarget(args);
+  const session = retained.get(key);
+  if (!session) return false;
+  if (undo)
+    await undo(
+      async (command, params) =>
+        ((await chrome.debugger.sendCommand(session.target, command, params)) ||
+          {}) as Record<string, any>,
+    ).catch(() => {});
+  await release(key);
+  return true;
 }
 
 export async function cdpEvaluate(send: CdpSend, expression: string) {

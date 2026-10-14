@@ -94,3 +94,74 @@ test("stopping the run stops a pending helper request", async () => {
   await assert.rejects(running, { name: "AbortError" });
   assert.equal(aborted, true);
 });
+
+test("Cite as names sources the chat already has, with their ids", async () => {
+  const tool: ToolDefinition = {
+    name: "fixtureRead",
+    summary: "",
+    description: "",
+    parameters: {},
+    async execute(input) {
+      return {
+        text: "Page text",
+        sources: (input.urls as string[]).map((url) => ({
+          kind: "page" as const,
+          title: `Read ${url}`,
+          url,
+        })),
+      };
+    },
+  };
+  // Found earlier by a search.
+  const sources = {
+    current: [
+      {
+        id: "source_1",
+        kind: "search" as const,
+        title: "Search result A",
+        url: "https://a.example/",
+        createdAt: 1,
+      },
+    ],
+  };
+  const context = {
+    run: {} as RunContext,
+    toolCallId: "call",
+    progress() {},
+  } as ToolContext;
+  const outcome = await runTool(
+    tool,
+    {
+      urls: ["https://a.example/", "https://b.example/", "https://a.example/"],
+    },
+    context,
+    sources,
+  );
+  assert.equal(
+    outcome.text,
+    "Page text\nCite as: [[cite:source_1]] Search result A; [[cite:source_2]] Read https://b.example/",
+  );
+  assert.deepEqual(
+    sources.current.map((source) => source.id),
+    ["source_1", "source_2"],
+  );
+  // Only the new source is stored with the step.
+  assert.deepEqual(
+    (outcome.output._sources as Array<{ id: string }>).map(
+      (source) => source.id,
+    ),
+    ["source_2"],
+  );
+
+  const again = await runTool(
+    tool,
+    { urls: ["https://a.example/"] },
+    context,
+    sources,
+  );
+  assert.equal(
+    again.text,
+    "Page text\nCite as: [[cite:source_1]] Search result A",
+  );
+  assert.equal(again.output._sources, undefined);
+});

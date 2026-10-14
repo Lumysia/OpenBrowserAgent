@@ -50,7 +50,11 @@ const DETAILS: Record<
   [TOOL_NAME.find]: (input, output, t) =>
     compactJoin([
       `"${stringValue(input.query)}"`,
-      countLabel(t.display.toolSteps.matches, output.matches),
+      // Chats from before occurrences were counted stored `matches`.
+      countLabel(
+        t.display.toolSteps.matches,
+        output.occurrences ?? output.matches,
+      ),
     ]),
   [TOOL_NAME.read]: (input, output, t) =>
     stringValue(output.title) ||

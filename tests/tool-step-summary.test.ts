@@ -120,6 +120,12 @@ test("tool step counts are localized", () => {
       t,
     );
     assert.equal(find.description, '"价格" · 2 处匹配');
+    const counted = toolDisplay(
+      TOOL_NAME.find,
+      part({ query: "价格" }, { matchingLines: 1, occurrences: 3 }),
+      t,
+    );
+    assert.equal(counted.description, '"价格" · 3 处匹配');
   } finally {
     getMessages("en-US");
   }

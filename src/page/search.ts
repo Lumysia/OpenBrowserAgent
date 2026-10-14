@@ -4,29 +4,57 @@ import { snapshotLines } from "./snapshot";
 const LINE_WINDOW = 300;
 
 // Lines of the whole page (no viewport, no item caps) that match `query`:
-// plain text (case-insensitive) or /regex/flags.
+// plain text (case-insensitive) or /regex/flags. `matchingLines` counts the
+// lines, `occurrences` every non-overlapping hit in them.
 export function findLines(query: string, limit: number) {
-  const matcher = toMatcher(query);
   const { lines } = snapshotLines(document.body, { mode: "all" });
-  const matches: string[] = [];
-  let total = 0;
-  for (const line of lines) {
-    const index = matcher(line.text);
-    if (index < 0) continue;
-    total++;
-    if (matches.length < limit) matches.push(window(line.text, index));
-  }
-  return { matches, total, scanned: lines.length };
+  return matchLines(
+    lines.map((line) => line.text),
+    query,
+    limit,
+  );
 }
 
-function toMatcher(query: string): (text: string) => number {
+export function matchLines(lines: string[], query: string, limit: number) {
+  const matcher = toMatcher(query);
+  const matches: string[] = [];
+  let matchingLines = 0;
+  let occurrences = 0;
+  for (const text of lines) {
+    const { index, count } = matcher(text);
+    if (index < 0) continue;
+    matchingLines++;
+    occurrences += count;
+    if (matches.length < limit) matches.push(window(text, index));
+  }
+  return { matches, matchingLines, occurrences, scanned: lines.length };
+}
+
+type Matcher = (text: string) => { index: number; count: number };
+
+function toMatcher(query: string): Matcher {
   const regex = query.match(/^\/(.+)\/([a-z]*)$/s);
   if (regex) {
-    const pattern = new RegExp(regex[1], regex[2].replace("g", ""));
-    return (text) => text.search(pattern);
+    const pattern = new RegExp(regex[1], `${regex[2].replace("g", "")}g`);
+    return (text) => {
+      const hits = [...text.matchAll(pattern)];
+      return { index: hits[0]?.index ?? -1, count: hits.length };
+    };
   }
   const needle = compact(query).toLowerCase();
-  return (text) => text.toLowerCase().indexOf(needle);
+  return (text) => {
+    const lower = text.toLowerCase();
+    const index = lower.indexOf(needle);
+    let count = 0;
+    if (needle)
+      for (
+        let at = index;
+        at >= 0;
+        at = lower.indexOf(needle, at + needle.length)
+      )
+        count++;
+    return { index, count: needle ? count : index < 0 ? 0 : 1 };
+  };
 }
 
 // Keeps the role/ref prefix and a window around the match.

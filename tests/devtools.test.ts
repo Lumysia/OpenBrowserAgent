@@ -113,3 +113,100 @@ test("abort during isolated-world creation prevents a late evaluation", async ()
     "Page.createIsolatedWorld",
   ]);
 });
+
+test("a mobile viewport also sets the screen size and touch, and reset undoes them", async () => {
+  const f = cdpFixture();
+  const result = await devtoolsTool.execute(
+    { action: "emulate", tabId: 501, viewport: "390x844x3,mobile" },
+    context(),
+  );
+  assert.deepEqual(
+    f.calls.map(({ method, params }) => [method, params]),
+    [
+      [
+        "Emulation.setDeviceMetricsOverride",
+        {
+          width: 390,
+          height: 844,
+          deviceScaleFactor: 3,
+          mobile: true,
+          screenWidth: 390,
+          screenHeight: 844,
+        },
+      ],
+      [
+        "Emulation.setTouchEmulationEnabled",
+        { enabled: true, maxTouchPoints: 5 },
+      ],
+    ],
+  );
+  assert.equal(
+    result.text,
+    'Emulating on tab 501: viewport 390x844 at device scale 3, mobile; screen size 390x844; touch on; user agent unchanged (pass userAgent to set one). This lasts until {"action":"reset"}, the debugger detaching, or the tab closing.',
+  );
+  assert.deepEqual(result.details?.screen, { width: 390, height: 844 });
+  assert.equal(result.details?.touch, true);
+  assert.doesNotMatch(result.text, /reset=true/);
+
+  f.calls.length = 0;
+  const reset = await devtoolsTool.execute(
+    { action: "reset", tabId: 501 },
+    context(),
+  );
+  assert.deepEqual(
+    f.calls.map(({ method, params }) => [method, params]),
+    [
+      ["Emulation.clearDeviceMetricsOverride", undefined],
+      ["Emulation.setTouchEmulationEnabled", { enabled: false }],
+      ["Emulation.setEmulatedMedia", { features: [] }],
+    ],
+  );
+  assert.equal(f.attached.size, 0);
+  assert.equal(reset.details?.reset, true);
+  const again = await devtoolsTool.execute(
+    { action: "reset", tabId: 501 },
+    context(),
+  );
+  assert.match(again.text, /Nothing was emulated on tab 501/);
+});
+
+test("a desktop viewport keeps the real screen and turns touch off; a user agent is listed", async () => {
+  const f = cdpFixture();
+  const result = await devtoolsTool.execute(
+    {
+      action: "emulate",
+      tabId: 501,
+      viewport: "1280x800",
+      userAgent: "Fixture/1.0",
+      colorScheme: "dark",
+    },
+    context(),
+  );
+  assert.deepEqual(
+    f.calls.map(({ method }) => method),
+    [
+      "Emulation.setDeviceMetricsOverride",
+      "Emulation.setTouchEmulationEnabled",
+      "Network.setUserAgentOverride",
+      "Emulation.setEmulatedMedia",
+    ],
+  );
+  assert.equal(f.calls[0].params.screenWidth, 0);
+  assert.deepEqual(f.calls[1].params, { enabled: false });
+  assert.match(
+    result.text,
+    /viewport 1280x800 at device scale 1, desktop; screen size not overridden; touch off; user agent "Fixture\/1\.0"; color scheme dark\./,
+  );
+  await devtoolsTool.execute({ action: "reset", tabId: 501 }, context());
+});
+
+test("devtools texts name the reset action as it is called", async () => {
+  cdpFixture();
+  await assert.rejects(
+    devtoolsTool.execute({ action: "emulate", tabId: 501 }, context()),
+    (error: Error) =>
+      error.message.includes('{"action":"reset"}') &&
+      !error.message.includes("reset=true"),
+  );
+  assert.doesNotMatch(devtoolsTool.description, /reset=true/);
+});

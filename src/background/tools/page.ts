@@ -97,7 +97,7 @@ export const findTool: ToolDefinition = {
   readOnly: true,
   summary: "Search the current page",
   description:
-    "Search the whole page (not only the viewport) for text, including option lists, and return the matching snapshot lines with refs and an exact match count (for example, table rows with a given status). Plain text is case-insensitive; /regex/flags is a regular expression.",
+    "Search the whole page (not only the viewport) for text, including option lists, and return the matching snapshot lines with refs, the exact number of matching lines (for example, table rows with a given status) and of occurrences of the query in them. Plain text is case-insensitive; /regex/flags is a regular expression.",
   parameters: schema(
     {
       query: { type: "string", description: "Text or /regex/." },
@@ -111,21 +111,30 @@ export const findTool: ToolDefinition = {
     const tab = await pageTab(input.tabId);
     const { value, title, url } = await callPage<{
       matches: string[];
-      total: number;
+      matchingLines: number;
+      occurrences: number;
     }>(tab.id, TOOL_NAME.find, { query, limit: FIND_LIMIT }, signal);
     const header = pageHeader({ ...tab, title, url });
-    const details = { tabId: tab.id, title, url, query, matches: value.total };
-    if (!value.total)
+    const { matchingLines, occurrences } = value;
+    const details = {
+      tabId: tab.id,
+      title,
+      url,
+      query,
+      matchingLines,
+      occurrences,
+    };
+    if (!matchingLines)
       return ok(
         `${header}\nNo match for "${query}". Try other words, a shorter text, or snapshot.`,
         details,
       );
-    const more =
-      value.total > value.matches.length
-        ? `\n[${value.total - value.matches.length} more matches; narrow the query.]`
-        : "";
+    const hidden = matchingLines - value.matches.length;
+    const more = hidden
+      ? `\n[${countOf(hidden, "more matching line")}; narrow the query.]`
+      : "";
     return ok(
-      `${header}\n${value.total} matches for "${query}":\n${value.matches.join("\n")}${more}`,
+      `${header}\n${countOf(matchingLines, "matching line")} (${countOf(occurrences, "occurrence")}) for "${query}":\n${value.matches.join("\n")}${more}`,
       details,
     );
   },
@@ -181,3 +190,8 @@ export const extractTool: ToolDefinition = {
     };
   },
 };
+
+// "1 matching line", "3 matching lines".
+function countOf(count: number, noun: string) {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}

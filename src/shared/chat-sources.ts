@@ -22,14 +22,21 @@ export function mergeChatSources(
   return merged.length === current.length ? current : merged;
 }
 
+// `added` are the sources new to the chat; `cited` every source of `next`
+// with its id in the chat, new or found again, once each and in order.
 export function assignChatSources(
   current: ChatSource[] = [],
   next: ChatSource[],
 ) {
   const merged = mergeChatSources(current, next);
+  const byKey = new Map(merged.map((source) => [sourceKey(source), source]));
+  const cited = [
+    ...new Set(next.map((source) => byKey.get(sourceKey(source))!)),
+  ];
   return {
     sources: merged,
     added: merged.slice(current.length),
+    cited,
   };
 }
 

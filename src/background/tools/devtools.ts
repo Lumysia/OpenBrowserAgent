@@ -59,7 +59,7 @@ export const devtoolsTool: ToolDefinition = {
   available,
   summary: "Network resources and device emulation",
   description:
-    "Developer diagnostics for a tab: resources (network resources the page loaded, with timing and size), emulate (viewport like 390x844x2,mobile; userAgent; colorScheme dark/light/auto; lasts until reset), reset.",
+    "Developer diagnostics for a tab: resources (network resources the page loaded, with timing and size), emulate (viewport like 390x844x2,mobile: a mobile viewport also sets the screen size and turns on touch; userAgent, which is unchanged unless given; colorScheme dark/light/auto; lasts until reset), reset (ends all emulation).",
   parameters: schema(
     {
       action: { type: "string", enum: ["resources", "emulate", "reset"] },
@@ -75,8 +75,13 @@ export const devtoolsTool: ToolDefinition = {
     const action = stringArg(input.action);
     const target = { tabId: tab.id };
     if (action === "reset") {
-      await releaseCdp(target);
-      return ok(`Emulation on tab ${tab.id} reset.`, { action, tabId: tab.id });
+      const active = await releaseCdp(target, resetEmulation);
+      return ok(
+        active
+          ? `Emulation on tab ${tab.id} reset: viewport, screen size, touch, user agent and color scheme are the browser's own again.`
+          : `Nothing was emulated on tab ${tab.id}; nothing to reset.`,
+        { action, tabId: tab.id, reset: active },
+      );
     }
     if (action === "emulate") {
       const result = await withCdp(
@@ -86,8 +91,8 @@ export const devtoolsTool: ToolDefinition = {
         true,
       );
       return ok(
-        `Emulating on tab ${tab.id}: ${JSON.stringify(result.viewport || {})}. ${result.note}`,
-        { action, tabId: tab.id },
+        `Emulating on tab ${tab.id}: ${result.changes.join("; ")}. ${EMULATION_NOTE}`,
+        { action, tabId: tab.id, ...result.details },
       );
     }
     if (action !== "resources")
@@ -151,24 +156,78 @@ async function emulate(send: CdpSend, args: Record<string, unknown>) {
   )
     throw new Error("Invalid color scheme.");
   if (!viewport && args.userAgent === undefined && colorScheme === undefined)
-    throw new Error("Provide viewport, userAgent, colorScheme, or reset=true.");
-  if (viewport) await send("Emulation.setDeviceMetricsOverride", viewport);
-  if (args.userAgent !== undefined)
-    await send("Network.setUserAgentOverride", {
-      userAgent: String(args.userAgent),
+    throw new Error(
+      'Provide viewport, userAgent or colorScheme; to end emulation use {"action":"reset"}.',
+    );
+  // What changed, in the order applied, for the receipt.
+  const changes: string[] = [];
+  if (viewport) {
+    // A phone's screen is its viewport; 0 keeps the real screen size.
+    const screen = viewport.mobile
+      ? { screenWidth: viewport.width, screenHeight: viewport.height }
+      : { screenWidth: 0, screenHeight: 0 };
+    await send("Emulation.setDeviceMetricsOverride", {
+      ...viewport,
+      ...screen,
     });
-  if (colorScheme !== undefined)
+    await send("Emulation.setTouchEmulationEnabled", {
+      enabled: viewport.mobile,
+      ...(viewport.mobile ? { maxTouchPoints: MOBILE_TOUCH_POINTS } : {}),
+    });
+    changes.push(
+      `viewport ${viewport.width}x${viewport.height} at device scale ${viewport.deviceScaleFactor}, ${viewport.mobile ? "mobile" : "desktop"}`,
+      viewport.mobile
+        ? `screen size ${viewport.width}x${viewport.height}`
+        : "screen size not overridden",
+      viewport.mobile ? "touch on" : "touch off",
+    );
+  }
+  const userAgent =
+    args.userAgent === undefined ? undefined : String(args.userAgent);
+  if (userAgent !== undefined) {
+    await send("Network.setUserAgentOverride", { userAgent });
+    changes.push(`user agent "${userAgent}"`);
+  } else changes.push("user agent unchanged (pass userAgent to set one)");
+  if (colorScheme !== undefined) {
     await send("Emulation.setEmulatedMedia", {
       features:
         colorScheme === "auto"
           ? []
           : [{ name: "prefers-color-scheme", value: colorScheme }],
     });
+    changes.push(
+      colorScheme === "auto"
+        ? "color scheme follows the system"
+        : `color scheme ${colorScheme}`,
+    );
+  }
   return {
-    success: true,
-    ...(viewport ? { viewport } : {}),
-    note: "Emulation remains active until reset=true, debugger detach, or tab closure.",
+    changes,
+    details: {
+      ...(viewport
+        ? {
+            viewport,
+            screen: viewport.mobile
+              ? { width: viewport.width, height: viewport.height }
+              : null,
+            touch: viewport.mobile,
+          }
+        : {}),
+      ...(userAgent !== undefined ? { userAgent } : {}),
+      ...(colorScheme !== undefined ? { colorScheme } : {}),
+    },
   };
+}
+
+const MOBILE_TOUCH_POINTS = 5;
+const EMULATION_NOTE =
+  'This lasts until {"action":"reset"}, the debugger detaching, or the tab closing.';
+
+// Clears what emulate may have set; the detach that follows ends the rest.
+async function resetEmulation(send: CdpSend) {
+  await send("Emulation.clearDeviceMetricsOverride");
+  await send("Emulation.setTouchEmulationEnabled", { enabled: false });
+  await send("Emulation.setEmulatedMedia", { features: [] });
 }
 
 async function evaluate(send: CdpSend, args: Record<string, unknown>) {

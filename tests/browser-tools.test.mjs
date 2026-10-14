@@ -171,7 +171,7 @@ test(
           ]);
           assert.match(
             found,
-            /1 matches for "pelican":\n- text \[e\d+\]: Far below: the secret word is pelican\./,
+            /1 matching line \(1 occurrence\) for "pelican":\n- text \[e\d+\]: Far below: the secret word is pelican\./,
           );
           assert.match(missing, /No match/);
         },
@@ -355,7 +355,10 @@ test(
             snapshot,
             /Slotted words \[button "Slotted button" e\d+\]/,
           );
-          assert.match(found, /1 matches for "Slotted"/);
+          assert.match(
+            found,
+            /1 matching line \(2 occurrences\) for "Slotted"/,
+          );
           const table = await open("/table");
           const [counted] = await fixture.run([
             { name: "snapshot", args: { tabId: table } },
