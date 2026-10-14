@@ -35,7 +35,10 @@ const mouse = (page, type, { x, y }, { scale = 1, ...rest } = {}) =>
 
 // The center of the first element matching `selector` (and containing
 // `text`, or with exactly that text when `exact`), scrolled into view;
-// waits until it exists and is enabled.
+// waits until it exists, is enabled, has stopped moving and is what a
+// click at its center would hit. An opening accordion, for one, moves
+// what it holds while it animates, and scrolling into view inside it
+// shifts the rows further, so a point taken then lands on another row.
 export function elementCenter(page, selector, { text, exact = false } = {}) {
   return poll(() =>
     page.call(
@@ -48,9 +51,23 @@ export function elementCenter(page, selector, { text, exact = false } = {}) {
               : item.textContent.includes(text)),
         );
         if (!element || element.disabled) return null;
+        const moving = document.getAnimations().some((animation) => {
+          const target = animation.effect?.target;
+          return (
+            animation.playState === "running" &&
+            animation.effect.getComputedTiming().endTime !== Infinity &&
+            target?.contains?.(element)
+          );
+        });
+        if (moving) return null;
         element.scrollIntoView({ block: "nearest" });
         const rect = element.getBoundingClientRect();
-        return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+        const point = {
+          x: rect.x + rect.width / 2,
+          y: rect.y + rect.height / 2,
+        };
+        const hit = document.elementFromPoint(point.x, point.y);
+        return hit && element.contains(hit) ? point : null;
       },
       { selector, text, exact },
     ),
