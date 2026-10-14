@@ -81,6 +81,9 @@ export const pageTranslateEnUS = {
   // {language}: the target language.
   browserUnsupported:
     "The built-in translator can't translate this page into {language}.",
+  // The page script was injected but didn't answer.
+  notStarted:
+    "Couldn't start translating this page. Reload the page and try again.",
   unavailablePage:
     "Can't translate this page: the browser doesn't let extensions change it.",
 };

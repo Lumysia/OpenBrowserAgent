@@ -237,3 +237,46 @@ test("page translation with the AI model", { timeout: 240000 }, async (t) => {
     await session.close();
   }
 });
+
+// An update or reload of the extension leaves the translated page's script
+// behind; translating again shows one translation per paragraph, and "Show
+// original" gives back the page.
+test(
+  "page translation after the extension reloads",
+  { timeout: 120000 },
+  async () => {
+    const session = await startPageTranslate({
+      pages: { "/article": articlePage({ paragraphs: 5 }) },
+      answer: fixtureTranslator(),
+      // Chromium turns off a command-line extension that reloads without it.
+      launch: { preferences: { extensions: { ui: { developer_mode: true } } } },
+    });
+    const { browser, url } = session;
+    const pageUrl = url("/article");
+    const translations = (page) =>
+      page.call(() =>
+        [...document.querySelectorAll("#intro > oba-translation")].map(
+          (item) => item.textContent,
+        ),
+      );
+    try {
+      const page = await browser.open(pageUrl);
+      const original = await pageHtml(page);
+      await session.clickMenu(pageUrl);
+      await poll(() => translationIn(page, "#intro"));
+
+      const reloaded = await session.reloadExtension();
+      await reloaded.clickMenu(pageUrl);
+      await poll(async () => (await translations(page)).length && page);
+      // The new copy's translations, without the old one's.
+      await delay(1000);
+      assert.deepEqual(await translations(page), [
+        "FR: Read the field guide before you leave the trail, and run check-gear first.",
+      ]);
+      await reloaded.clickMenu(pageUrl);
+      await poll(async () => (await pageHtml(page)) === original);
+    } finally {
+      await session.close();
+    }
+  },
+);

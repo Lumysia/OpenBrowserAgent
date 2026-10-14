@@ -79,6 +79,8 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
   },
   browserUnsupported:
     "El traductor integrado no puede traducir esta página a {language}.",
+  notStarted:
+    "No se ha podido empezar a traducir esta página. Vuelve a cargar la página e inténtalo de nuevo.",
   unavailablePage:
     "No se puede traducir esta página: el navegador no permite que las extensiones la modifiquen.",
 };
