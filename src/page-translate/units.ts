@@ -1,8 +1,12 @@
 // The page's paragraphs while it is translated, kept in step with the page:
 // new content is found, and paragraphs whose text changed are translated
 // again once the text has stopped changing.
-import { walkParagraphs, type Paragraph } from "./blocks";
+import { walkParagraphs, type Paragraph, type WalkOptions } from "./blocks";
 import { isInline, isOwn, TRANSLATION_ATTRIBUTE } from "./dom-rules";
+import type { Placement } from "./layout";
+import { forgetSwapped } from "./originals";
+import type { Tooltip } from "./render";
+import type { Swap } from "./swap";
 import { yieldToMain } from "./yield";
 
 export type UnitState = "idle" | "queued" | "sent" | "done" | "failed";
@@ -12,11 +16,15 @@ export type Unit = {
   paragraph: Paragraph;
   // What the observers watch for this paragraph.
   target: Element;
-  element?: HTMLElement;
-  // The translation shown, and its copy of the block in translation-only
-  // display.
+  // The translation, and the text so far while it is written.
   translation?: string;
-  mirror?: HTMLElement;
+  partial?: string;
+  // How it is shown: its form here (decided when it first shows), our
+  // element, the block's tooltip, or the text swapped in place.
+  placement?: Placement;
+  element?: HTMLElement;
+  tooltip?: Tooltip;
+  swap?: Swap;
   state: UnitState;
   near: boolean;
   visible: boolean;
@@ -34,7 +42,7 @@ export type UnitEvents = {
   removed: (unit: Unit) => void;
 };
 
-export function createUnits(events: UnitEvents) {
+export function createUnits(events: UnitEvents, options: WalkOptions) {
   const units = new Map<number, Unit>();
   let nextId = 1;
   let alive = true;
@@ -42,6 +50,8 @@ export function createUnits(events: UnitEvents) {
   const dirty = new Set<Element>();
   let timer: number | undefined;
   let firstDirtyAt = 0;
+  // The last walk of the whole page.
+  let walked: Promise<void> = Promise.resolve();
 
   const register = (paragraph: Paragraph) => {
     const firstElement = paragraph.nodes.find((node) => node.nodeType === 1) as
@@ -74,7 +84,7 @@ export function createUnits(events: UnitEvents) {
     }
     const kept = new Set<Unit>();
     let deadline = performance.now() + SLICE_MS;
-    for (const paragraph of walkParagraphs(root)) {
+    for (const paragraph of walkParagraphs(root, options)) {
       if (!alive) return;
       if (paragraph) {
         const match = byKey
@@ -119,6 +129,8 @@ export function createUnits(events: UnitEvents) {
   const onMutations = (records: MutationRecord[]) => {
     for (const record of records) {
       if (insideOwn(record.target)) continue;
+      // The page wrote over text we swapped in: its text is the original.
+      if (record.type === "characterData") forgetSwapped(record.target as Text);
       if (
         record.type === "childList" &&
         [...record.addedNodes, ...record.removedNodes].every(isOwn)
@@ -147,7 +159,23 @@ export function createUnits(events: UnitEvents) {
         subtree: true,
         characterData: true,
       });
-      await scan(root);
+      walked = scan(root);
+      await walked;
+    },
+    // Runs our own changes to the page's text; the observer doesn't report
+    // them as the page's.
+    mute(change: () => void) {
+      const pending = observer?.takeRecords();
+      if (pending?.length) onMutations(pending);
+      change();
+      observer?.takeRecords();
+    },
+    // Finds the paragraphs again with other options.
+    async rescan(root: Element, next: WalkOptions) {
+      await walked;
+      Object.assign(options, next);
+      walked = scan(root, [...units.values()]);
+      await walked;
     },
     stop() {
       alive = false;

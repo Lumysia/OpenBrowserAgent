@@ -52,6 +52,9 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
     bilingual: "原文と訳文",
     translation: "訳文のみ",
   },
+  translateMenus: "メニューとボタンも翻訳",
+  translateMenusDescription:
+    "オフのときはページの本文だけを翻訳し、ナビゲーション、メニュー、ボタン、タブ、フッターはそのままにします。",
   cache: "保存された翻訳",
   cacheDescription:
     "翻訳はこのデバイスに 30 日間保存され、翻訳済みのページはすぐに表示されます。",

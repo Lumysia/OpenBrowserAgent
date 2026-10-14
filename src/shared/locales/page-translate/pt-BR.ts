@@ -52,6 +52,9 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
     bilingual: "Original e tradução",
     translation: "Somente tradução",
   },
+  translateMenus: "Traduzir também menus e botões",
+  translateMenusDescription:
+    "Desativado, só o conteúdo principal da página é traduzido; navegação, menus, botões, abas e rodapés ficam como estão.",
   cache: "Traduções salvas",
   cacheDescription:
     "As traduções ficam 30 dias neste dispositivo, então páginas traduzidas voltam na hora.",

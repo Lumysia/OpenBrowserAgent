@@ -1,16 +1,15 @@
 // Translations in the page: one element per paragraph, inside the
-// paragraph's block (after its text), so flex and grid layouts get no new
-// items and frameworks that own the block's siblings aren't disturbed. The
-// page's own nodes are never changed; removing ours restores the page.
+// paragraph's block (after its text), in the form the space allows (see
+// layout.ts); in the tightest spots the translation is the block's tooltip
+// instead. The page's own nodes are left as they are (a tooltip's title is
+// put back as it was); removing ours restores the page.
+import { stripPlaceholders } from "../shared/page-translate/placeholders";
 import type { Paragraph } from "./blocks";
-import {
-  isTextBlock,
-  SOURCE_ATTRIBUTE,
-  TRANSLATION_ATTRIBUTE,
-  TRANSLATION_ONLY_ATTRIBUTE,
-  TRANSLATION_TAG,
-} from "./dom-rules";
+import { TRANSLATION_ATTRIBUTE, TRANSLATION_TAG } from "./dom-rules";
 import { buildTranslation, originalOf } from "./serialize";
+
+// The forms that add an element to the page.
+export type ElementForm = "block" | "inline";
 
 const PENDING = "data-oba-pending";
 const INLINE = "data-oba-inline";
@@ -34,10 +33,14 @@ ${TRANSLATION_TAG}[${TRANSLATION_ATTRIBUTE}] {
 }
 ${TRANSLATION_TAG}[${INLINE}] {
   display: inline;
-  margin: 0 0 0 0.4em;
+  margin: 0;
   padding: 0;
   border: 0;
+  white-space: inherit;
 }
+/* A space before it: the line may break there, so a table column or a row
+   gets no wider than its longest word. */
+${TRANSLATION_TAG}[${INLINE}]::before { content: " "; }
 ${TRANSLATION_TAG}[${PENDING}] { opacity: 0.6; }
 ${TRANSLATION_TAG}[${PENDING}]:empty::after {
   content: "";
@@ -53,9 +56,6 @@ ${TRANSLATION_TAG}[${PENDING}]:empty::after {
 @keyframes oba-translation-spin { to { transform: rotate(1turn); } }
 @media (prefers-reduced-motion: reduce) {
   ${TRANSLATION_TAG}[${PENDING}]:empty::after { animation: none; opacity: 0.5; }
-}
-:root[${TRANSLATION_ONLY_ATTRIBUTE}] [${SOURCE_ATTRIBUTE}] {
-  display: none !important;
 }
 `;
 
@@ -85,8 +85,18 @@ function createElement(paragraph: Paragraph, language: string) {
   element.setAttribute("translate", "no");
   element.className = "notranslate";
   element.lang = language;
-  if (paragraph.inline) element.setAttribute(INLINE, "");
   element.addEventListener("click", followCopiedLink);
+  return element;
+}
+
+function prepare(
+  paragraph: Paragraph,
+  language: string,
+  form: ElementForm,
+  current?: HTMLElement,
+) {
+  const element = current ?? createElement(paragraph, language);
+  element.toggleAttribute(INLINE, form === "inline");
   return element;
 }
 
@@ -105,9 +115,10 @@ function place(paragraph: Paragraph, element: HTMLElement) {
 export function showPending(
   paragraph: Paragraph,
   language: string,
+  form: ElementForm,
   current?: HTMLElement,
 ) {
-  const element = current ?? createElement(paragraph, language);
+  const element = prepare(paragraph, language, form, current);
   element.setAttribute(PENDING, "");
   if (!element.isConnected) place(paragraph, element);
   return element;
@@ -117,10 +128,11 @@ export function showPending(
 export function showPartial(
   paragraph: Paragraph,
   language: string,
+  form: ElementForm,
   text: string,
   current?: HTMLElement,
 ) {
-  const element = showPending(paragraph, language, current);
+  const element = showPending(paragraph, language, form, current);
   element.textContent = text;
   return element;
 }
@@ -128,10 +140,11 @@ export function showPartial(
 export function showTranslation(
   paragraph: Paragraph,
   language: string,
+  form: ElementForm,
   translation: string,
   current?: HTMLElement,
 ) {
-  const element = current ?? createElement(paragraph, language);
+  const element = prepare(paragraph, language, form, current);
   element.removeAttribute(PENDING);
   element.replaceChildren(
     buildTranslation(
@@ -144,66 +157,45 @@ export function showTranslation(
   return element;
 }
 
-// Translation-only display: a copy of the paragraph's block (same tag and
-// classes, so the page styles it the same) with the translation, after the
-// block, which is hidden. Only for headings, paragraphs and list items
-// whose content is this one paragraph; others keep both.
-export function showMirror(
-  paragraph: Paragraph,
-  language: string,
-  translation: string,
-  current?: HTMLElement,
-) {
-  const block = paragraph.parent;
-  if (!paragraph.whole || !isTextBlock(block) || block.tagName === "CAPTION")
-    return undefined;
-  const mirror = current ?? (paragraph.parent.cloneNode(false) as HTMLElement);
-  if (!current) {
-    mirror.removeAttribute("id");
-    mirror.setAttribute(TRANSLATION_ATTRIBUTE, "");
-    mirror.setAttribute("translate", "no");
-    mirror.lang = language;
-    mirror.addEventListener("click", followCopiedLink);
-  }
-  mirror.replaceChildren(
-    buildTranslation(
-      paragraph.parent.ownerDocument,
-      paragraph.source,
-      translation,
-    ),
-  );
-  if (!mirror.isConnected) {
-    ensureStyle(paragraph.parent);
-    paragraph.parent.after(mirror);
-    paragraph.parent.setAttribute(SOURCE_ATTRIBUTE, "");
-  }
-  return mirror;
-}
-
-export function removeMirror(paragraph: Paragraph, mirror?: HTMLElement) {
-  mirror?.remove();
-  if (mirror) paragraph.parent.removeAttribute(SOURCE_ATTRIBUTE);
-}
-
-export function removeTranslation(paragraph: Paragraph, element?: HTMLElement) {
+export function removeTranslation(element?: HTMLElement) {
   element?.remove();
 }
 
-export function setTranslationOnly(document: Document, on: boolean) {
-  document.documentElement.toggleAttribute(TRANSLATION_ONLY_ATTRIBUTE, on);
+export type Tooltip = {
+  element: Element;
+  text: string;
+  previous: string | null;
+};
+
+// The translation as the block's tooltip, before a title it has.
+export function showTooltip(
+  paragraph: Paragraph,
+  translation: string,
+  current?: Tooltip,
+): Tooltip {
+  const element = paragraph.parent;
+  const text = stripPlaceholders(translation).replace(/\s+/g, " ").trim();
+  const previous = current ? current.previous : element.getAttribute("title");
+  const title = previous ? `${text}\n${previous}` : text;
+  element.setAttribute("title", title);
+  return { element, text: title, previous };
+}
+
+// The block's own title again, unless the page has changed it since.
+export function removeTooltip(tooltip?: Tooltip) {
+  if (!tooltip || tooltip.element.getAttribute("title") !== tooltip.text)
+    return;
+  if (tooltip.previous === null) tooltip.element.removeAttribute("title");
+  else tooltip.element.setAttribute("title", tooltip.previous);
 }
 
 // Removes everything this script added to the page.
 export function removeAll(document: Document) {
-  setTranslationOnly(document, false);
   for (const style of styled) style.remove();
   styled.clear();
   document
     .querySelectorAll(`[${TRANSLATION_ATTRIBUTE}]`)
     .forEach((element) => element.remove());
-  document
-    .querySelectorAll(`[${SOURCE_ATTRIBUTE}]`)
-    .forEach((element) => element.removeAttribute(SOURCE_ATTRIBUTE));
 }
 
 // A copied link has the original's address but not the page's click

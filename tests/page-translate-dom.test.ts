@@ -1,17 +1,21 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { parseHTML } from "linkedom";
-import { walkParagraphs, type Paragraph } from "../src/page-translate/blocks";
+import {
+  walkParagraphs,
+  type Paragraph,
+  type WalkOptions,
+} from "../src/page-translate/blocks";
 import {
   buildTranslation,
   serializeNodes,
 } from "../src/page-translate/serialize";
 
-function paragraphsOf(html: string) {
+function paragraphsOf(html: string, options?: WalkOptions) {
   const { document } = parseHTML(
     `<!doctype html><html><body>${html}</body></html>`,
   );
-  const found = [...walkParagraphs(document.body)].filter(
+  const found = [...walkParagraphs(document.body, options)].filter(
     (paragraph): paragraph is Paragraph => !!paragraph,
   );
   return { document, found };
@@ -25,7 +29,8 @@ const summary = (paragraph: Paragraph) => ({
 });
 
 test("paragraphs: deepest blocks of text, runs next to blocks", () => {
-  const { found } = paragraphsOf(`
+  const { found } = paragraphsOf(
+    `
     <article id="article">
       <h1 id="title">Release notes</h1>
       <p id="intro">Read the <a href="/guide">guide</a> first.</p>
@@ -34,7 +39,9 @@ test("paragraphs: deepest blocks of text, runs next to blocks", () => {
       <nav id="nav"><a href="/">Home</a></nav>
       <a id="card" href="/card"><div id="card-title">A card title</div></a>
       <button id="button">Sign in</button>
-    </article>`);
+    </article>`,
+    { translateMenus: true },
+  );
   assert.deepEqual(found.map(summary), [
     { parent: "title", text: "Release notes", whole: true, inline: false },
     {
@@ -62,6 +69,60 @@ test("paragraphs: deepest blocks of text, runs next to blocks", () => {
     { parent: "card-title", text: "A card title", whole: true, inline: true },
     { parent: "button", text: "Sign in", whole: true, inline: true },
   ]);
+});
+
+test("paragraphs: the main content only, unless menus are translated too", () => {
+  const page = `
+    <header id="site-header"><a href="/">Site name</a><p id="tagline">A tagline</p></header>
+    <nav><a href="/a">First section</a></nav>
+    <div role="navigation"><a href="/b">Second section</a></div>
+    <ul role="tablist"><li role="tab">Overview tab</li></ul>
+    <div role="toolbar"><span>Toolbar label</span></div>
+    <div id="cookie-banner"><p>We use cookies here.</p></div>
+    <div aria-label="Cookie consent"><p>Accept the cookies?</p></div>
+    <aside id="sidebar"><p>Sidebar text</p></aside>
+    <main>
+      <article>
+        <header><h1 id="title">Article title</h1></header>
+        <p id="body">The article's text, with a <button>Show more</button> button.</p>
+        <aside id="note"><p>An aside in the article</p></aside>
+        <div class="cookie-recipe"><p>Bake the cookies.</p></div>
+      </article>
+    </main>
+    <footer><p>Footer text</p></footer>`;
+  const texts = (options?: WalkOptions) =>
+    paragraphsOf(page, options).found.map(
+      (paragraph) => paragraph.source.plain,
+    );
+  assert.deepEqual(texts(), [
+    "Article title",
+    "The article's text, with a",
+    "button.",
+    "An aside in the article",
+    "Bake the cookies.",
+  ]);
+  assert.deepEqual(texts({ translateMenus: true }), [
+    "Site name",
+    "A tagline",
+    "First section",
+    "Second section",
+    "Overview tab",
+    "Toolbar label",
+    "We use cookies here.",
+    "Accept the cookies?",
+    "Sidebar text",
+    "Article title",
+    "The article's text, with a",
+    "Show more",
+    "button.",
+    "An aside in the article",
+    "Bake the cookies.",
+    "Footer text",
+  ]);
+  // A change inside the page's chrome finds nothing to translate there.
+  const { document } = paragraphsOf(page);
+  const nav = document.querySelector("nav a")!;
+  assert.equal([...walkParagraphs(nav)].filter(Boolean).length, 0);
 });
 
 test("paragraphs: code, fields, hidden and no-translate content are skipped", () => {

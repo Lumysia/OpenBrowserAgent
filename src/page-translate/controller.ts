@@ -7,24 +7,16 @@ import {
   type PageTranslateEvent,
   type PageTranslateRequest,
   type PageTranslateSessionConfig,
+  type PageTranslateView,
 } from "../shared/page-translate/protocol";
 import {
   PAGE_TRANSLATE_DISPLAY,
-  type PageTranslateDisplay,
   type PageTranslateEngine,
 } from "../shared/page-translate/settings";
 import { getBrowserApi } from "../shared/browser-api";
+import { createPresenter } from "./presenter";
 import { createQueue, PRIORITY } from "./queue";
-import {
-  removeAll,
-  removeMirror,
-  removeTranslation,
-  setTranslationOnly,
-  showMirror,
-  showPartial,
-  showPending,
-  showTranslation,
-} from "./render";
+import { removeAll } from "./render";
 import { hideToast, showToast } from "./toast";
 import { createUnits, type Unit } from "./units";
 
@@ -93,47 +85,56 @@ function startSession(onFatal: () => void) {
   let first = true;
   let halted = false;
   let smallPage = false;
-  let translationOnly = false;
+  let translateMenus = false;
   let flushTimer: number | undefined;
   const toasts = new Map<string, number>();
   const targets = new Map<Element, Set<Unit>>();
 
   const language = () => config?.targetLanguage || "en";
+  const root = document.body || document.documentElement;
 
-  const units = createUnits({
-    added(unit) {
-      let set = targets.get(unit.target);
-      // A watched element reports no change for a new paragraph in it: the
-      // paragraph is where the others are.
-      const sibling = set?.values().next().value;
-      if (sibling) {
-        unit.near = sibling.near;
-        unit.visible = sibling.visible;
-      }
-      if (!set) {
-        set = new Set();
-        targets.set(unit.target, set);
-        near.observe(unit.target);
-        visible.observe(unit.target);
-      }
-      set.add(unit);
-      if (smallPage || unit.near) {
-        enqueue(unit);
-        scheduleFlush();
-      }
+  const units = createUnits(
+    {
+      added(unit) {
+        let set = targets.get(unit.target);
+        // A watched element reports no change for a new paragraph in it: the
+        // paragraph is where the others are.
+        const sibling = set?.values().next().value;
+        if (sibling) {
+          unit.near = sibling.near;
+          unit.visible = sibling.visible;
+        }
+        if (!set) {
+          set = new Set();
+          targets.set(unit.target, set);
+          near.observe(unit.target);
+          visible.observe(unit.target);
+        }
+        set.add(unit);
+        if (smallPage || unit.near) {
+          enqueue(unit);
+          scheduleFlush();
+        }
+      },
+      removed(unit) {
+        queue.delete(unit.id);
+        sent.get(unit.paragraph.source.text)?.delete(unit);
+        clear(unit);
+        const set = targets.get(unit.target);
+        set?.delete(unit);
+        if (set && !set.size) {
+          targets.delete(unit.target);
+          near.unobserve(unit.target);
+          visible.unobserve(unit.target);
+        }
+      },
     },
-    removed(unit) {
-      queue.delete(unit.id);
-      sent.get(unit.paragraph.source.text)?.delete(unit);
-      clear(unit);
-      const set = targets.get(unit.target);
-      set?.delete(unit);
-      if (set && !set.size) {
-        targets.delete(unit.target);
-        near.unobserve(unit.target);
-        visible.unobserve(unit.target);
-      }
-    },
+    { translateMenus },
+  );
+  const presenter = createPresenter({
+    language,
+    units: () => units.units.values(),
+    mute: units.mute,
   });
 
   const near = new IntersectionObserver(
@@ -141,6 +142,10 @@ function startSession(onFatal: () => void) {
       for (const entry of entries)
         for (const unit of targets.get(entry.target) || []) {
           unit.near = entry.isIntersecting;
+          // A translation for a paragraph that wasn't rendered (a collapsed
+          // section) shows when the paragraph does.
+          if (unit.translation !== undefined && !unit.placement)
+            presenter.request(unit);
           if (unit.near || smallPage) enqueue(unit);
           else if (unit.state === "queued") {
             // Out of reach before its turn: wait until it comes back.
@@ -207,8 +212,7 @@ function startSession(onFatal: () => void) {
         const unit = units.units.get(item.id);
         if (!unit) continue;
         unit.state = "sent";
-        if (unit.visible)
-          unit.element = showPending(unit.paragraph, language(), unit.element);
+        if (unit.visible) presenter.request(unit);
         const waiting = sent.get(item.text);
         if (waiting) {
           waiting.add(unit);
@@ -234,40 +238,22 @@ function startSession(onFatal: () => void) {
       return;
     }
     unit.translation = translation;
-    unit.element = showTranslation(
-      unit.paragraph,
-      language(),
-      translation,
-      unit.element,
+    unit.partial = undefined;
+    presenter.request(unit);
+  }
+
+  function setView(view: PageTranslateView) {
+    presenter.setTranslationOnly(
+      view.display === PAGE_TRANSLATE_DISPLAY.translation,
     );
-    showDisplay(unit);
-  }
-
-  // Translation-only display adds a translated copy of the block.
-  function showDisplay(unit: Unit) {
-    if (unit.translation !== undefined && translationOnly)
-      unit.mirror = showMirror(
-        unit.paragraph,
-        language(),
-        unit.translation,
-        unit.mirror,
-      );
-    else {
-      removeMirror(unit.paragraph, unit.mirror);
-      unit.mirror = undefined;
-    }
-  }
-
-  function setDisplay(display: PageTranslateDisplay) {
-    translationOnly = display === PAGE_TRANSLATE_DISPLAY.translation;
-    setTranslationOnly(document, translationOnly);
-    for (const unit of units.units.values()) showDisplay(unit);
+    if (view.translateMenus === translateMenus) return;
+    translateMenus = view.translateMenus;
+    void units.rescan(root, { translateMenus });
   }
 
   function clear(unit: Unit) {
-    removeTranslation(unit.paragraph, unit.element);
-    removeMirror(unit.paragraph, unit.mirror);
-    unit.element = unit.mirror = unit.translation = undefined;
+    presenter.forget(unit);
+    unit.translation = unit.partial = undefined;
   }
 
   function handle(event: PageTranslateEvent) {
@@ -275,14 +261,14 @@ function startSession(onFatal: () => void) {
       case "session":
         config = event.config;
         engine = config.engine;
-        setDisplay(config.display);
+        setView(config);
         // Waiting paragraphs translated before show at once.
         for (const unit of units.units.values())
           if (unit.state === "queued") enqueue(unit);
         flush();
         return;
-      case "display":
-        setDisplay(event.display);
+      case "view":
+        setView(event.view);
         return;
       case "switched":
         if (config)
@@ -293,13 +279,10 @@ function startSession(onFatal: () => void) {
         return;
       case "partial": {
         const unit = units.units.get(event.id);
-        if (unit?.state === "sent" && (unit.visible || unit.element))
-          unit.element = showPartial(
-            unit.paragraph,
-            language(),
-            event.text,
-            unit.element,
-          );
+        if (unit?.state === "sent" && (unit.visible || unit.element)) {
+          unit.partial = event.text;
+          presenter.request(unit);
+        }
         return;
       }
       case "item": {
@@ -387,7 +370,6 @@ function startSession(onFatal: () => void) {
   });
 
   connect();
-  const root = document.body || document.documentElement;
   void units.start(root).then(() => {
     const total = [...units.units.values()].reduce(
       (sum, unit) => sum + unit.paragraph.source.plain.length,
@@ -402,6 +384,7 @@ function startSession(onFatal: () => void) {
   return {
     stop() {
       for (const unit of units.units.values()) clear(unit);
+      presenter.stop();
       units.stop();
       near.disconnect();
       visible.disconnect();

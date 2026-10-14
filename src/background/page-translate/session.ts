@@ -128,6 +128,7 @@ async function startSession(
         engine: kind,
         targetLanguage: target,
         display: settings.display,
+        translateMenus: settings.translateMenus,
         limits: engine.limits,
       },
     });

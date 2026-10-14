@@ -1,7 +1,15 @@
 // Finds the page's paragraphs: the deepest elements whose content is only
 // text and inline elements, and runs of text and inline elements next to
 // blocks in mixed content. The DOM is not changed.
-import { isInline, isOwn, isSkipped, isTextBlock } from "./dom-rules";
+import {
+  isChrome,
+  isInline,
+  isInsideChrome,
+  isOwn,
+  isSkipped,
+  isTextBlock,
+} from "./dom-rules";
+import { originalText } from "./originals";
 import { serializeNodes, type Serialized } from "./serialize";
 
 export type Paragraph = {
@@ -20,11 +28,27 @@ export type Paragraph = {
 // Short text in other blocks than headings and paragraphs reads inline.
 const INLINE_MAX_CHARS = 24;
 
+export type WalkOptions = {
+  // Also the page's menus, buttons, navigation and footer (see isChrome).
+  translateMenus?: boolean;
+};
+
 // Walks `root` (an element or an open shadow root) in document order,
 // yielding each paragraph, and `undefined` after every element so the
 // caller can pause between them.
 export function* walkParagraphs(
   root: Element | ShadowRoot,
+  options: WalkOptions = {},
+): Generator<Paragraph | undefined> {
+  const host =
+    root.nodeType === 1 ? (root as Element) : (root as ShadowRoot).host;
+  if (!options.translateMenus && isInsideChrome(host)) return;
+  yield* walk(root, options);
+}
+
+function* walk(
+  root: Element | ShadowRoot,
+  options: WalkOptions,
 ): Generator<Paragraph | undefined> {
   if (root.nodeType === 1 && isSkipped(root as Element)) return;
   const parent =
@@ -42,20 +66,21 @@ export function* walkParagraphs(
     else if (isOwn(child)) yield* flush();
     else {
       const element = child as Element;
-      if (isSkipped(element)) {
+      if (!options.translateMenus && isChrome(element)) yield* flush();
+      else if (isSkipped(element)) {
         // Inline code and images stay part of the sentence around them.
         if (isInline(element)) run.push(element);
         else yield* flush();
       } else if (isInline(element) && !element.shadowRoot) run.push(element);
       else {
         yield* flush();
-        yield* walkParagraphs(element);
+        yield* walk(element, options);
       }
     }
   }
   yield* flush();
   if (root.nodeType === 1 && (root as Element).shadowRoot)
-    yield* walkParagraphs((root as Element).shadowRoot!);
+    yield* walk((root as Element).shadowRoot!, options);
   yield undefined;
 }
 
@@ -74,7 +99,7 @@ function makeParagraph(
       (node) =>
         nodes.includes(node) ||
         isOwn(node) ||
-        (node.nodeType === 3 && !(node as Text).data.trim()) ||
+        (node.nodeType === 3 && !originalText(node as Text).trim()) ||
         node.nodeType === 8,
     );
   return {
@@ -90,7 +115,7 @@ function makeParagraph(
 // Leading and trailing blank text nodes aren't part of the paragraph.
 function trimRun(nodes: Node[]) {
   const blank = (node: Node) =>
-    node.nodeType === 3 && !(node as Text).data.trim();
+    node.nodeType === 3 && !originalText(node as Text).trim();
   let start = 0;
   let end = nodes.length;
   while (start < end && blank(nodes[start])) start++;

@@ -51,6 +51,9 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
     bilingual: "원문과 번역",
     translation: "번역만",
   },
+  translateMenus: "메뉴와 버튼도 번역",
+  translateMenusDescription:
+    "끄면 페이지의 본문만 번역하고 탐색, 메뉴, 버튼, 탭, 바닥글은 그대로 둡니다.",
   cache: "저장된 번역",
   cacheDescription:
     "번역은 이 기기에 30일 동안 보관되어 번역한 페이지가 바로 표시됩니다.",

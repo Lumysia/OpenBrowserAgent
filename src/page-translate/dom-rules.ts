@@ -4,10 +4,6 @@
 
 // The attribute on our own elements: translations and the style sheet.
 export const TRANSLATION_ATTRIBUTE = "data-oba-translation";
-// On a block whose translation hides its original (translation-only).
-export const SOURCE_ATTRIBUTE = "data-oba-source";
-// On the root element while translation-only display is on.
-export const TRANSLATION_ONLY_ATTRIBUTE = "data-oba-translation-only";
 export const TRANSLATION_TAG = "oba-translation";
 
 // Never translated and never looked into.
@@ -247,6 +243,71 @@ export function isInline(element: Element) {
 
 export function isTextBlock(element: Element) {
   return TEXT_BLOCK_TAGS.has(element.tagName.toUpperCase());
+}
+
+// The page's own chrome, left as it is unless the user also translates
+// menus and buttons: navigation, menus, tabs, toolbars, buttons, search,
+// cookie notes, and the page's header, footer and sidebars (outside the
+// article: an article's own header holds its title).
+const CHROME_TAGS = new Set(["NAV", "MENU", "BUTTON", "SEARCH"]);
+const CHROME_ROLES = new Set([
+  "navigation",
+  "banner",
+  "contentinfo",
+  "menu",
+  "menubar",
+  "menuitem",
+  "menuitemcheckbox",
+  "menuitemradio",
+  "tablist",
+  "tab",
+  "toolbar",
+  "button",
+  "search",
+]);
+const PAGE_EDGE_TAGS = new Set(["HEADER", "FOOTER", "ASIDE"]);
+const ARTICLE_SELECTOR = "main, article, [role=main], [role=article]";
+// Cookie and consent notes, named so in their id, classes or label.
+const NOTICE_WORDS = /cookie|consent|gdpr/i;
+const NOTICE_KINDS =
+  /^(cookies?|consent|gdpr)$|banner|bar$|notice|dialog|popup|modal|wall|overlay|sdk|root|cmp|message/i;
+
+const NOTICE_LABEL = /banner|notice|dialog|consent|preferences|settings/i;
+
+export function isChrome(element: Element) {
+  const tag = element.tagName.toUpperCase();
+  if (CHROME_TAGS.has(tag)) return true;
+  const role = element.getAttribute("role");
+  if (role && CHROME_ROLES.has(role)) return true;
+  if (
+    (PAGE_EDGE_TAGS.has(tag) || role === "complementary") &&
+    !element.parentElement?.closest(ARTICLE_SELECTOR)
+  )
+    return true;
+  return isNotice(element);
+}
+
+function isNotice(element: Element) {
+  const label = element.getAttribute("aria-label");
+  if (label && NOTICE_WORDS.test(label) && NOTICE_LABEL.test(label))
+    return true;
+  const names = `${element.id} ${element.getAttribute("class") || ""}`;
+  if (!NOTICE_WORDS.test(names)) return false;
+  return names
+    .split(/\s+/)
+    .some((name) => NOTICE_WORDS.test(name) && NOTICE_KINDS.test(name));
+}
+
+// Whether the element or one around it is chrome (see isChrome); shadow
+// roots count as part of their host.
+export function isInsideChrome(element: Element) {
+  for (let current: Element | null = element; current;) {
+    if (isChrome(current)) return true;
+    current =
+      current.parentElement ??
+      ((current.parentNode as ShadowRoot | null)?.host || null);
+  }
+  return false;
 }
 
 // Inline elements without attributes add nothing to the translation.
