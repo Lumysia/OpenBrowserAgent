@@ -80,13 +80,39 @@ async function translateInBrowser(request: EngineRequest) {
     return;
   }
   const instance = await translatorFor(translator, source, target);
+  // The translator refuses some texts one by one (filtered output, too
+  // long, an unknown failure): the batch's other items still go through.
+  // A batch it translated none of fails with the first refusal.
+  let refusal: unknown;
+  let translated = false;
   for (const item of request.items) {
     if (request.signal.aborted) return;
-    const text = await instance.translate(item.text, {
-      signal: request.signal,
-    });
-    request.onItem(item.id, text.trim());
+    try {
+      const text = await instance.translate(item.text, {
+        signal: request.signal,
+      });
+      translated = true;
+      request.onItem(item.id, text.trim());
+    } catch (error) {
+      if (request.signal.aborted) return;
+      if (!isItemRefusal(error)) throw error;
+      refusal ??= error;
+    }
   }
+  if (refusal && !translated) throw refusal;
+}
+
+// Translator errors about the text it was given, not about the translator
+// (see the Translator API's errors): disabled by policy (`NotAllowedError`)
+// or ended (`AbortError`, `InvalidStateError`) applies to every text.
+const TRANSLATOR_ERRORS = new Set([
+  "NotAllowedError",
+  "AbortError",
+  "InvalidStateError",
+]);
+
+function isItemRefusal(error: unknown) {
+  return error instanceof DOMException && !TRANSLATOR_ERRORS.has(error.name);
 }
 
 async function detect(text: string) {
