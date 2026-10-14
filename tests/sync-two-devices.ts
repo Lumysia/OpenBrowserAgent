@@ -33,6 +33,7 @@ import {
   loggingFetch,
   messages,
   pair as pairOn,
+  run,
   saveChat,
   tick,
   type FailingFetch,
@@ -62,7 +63,7 @@ const cases: Record<string, () => Promise<void>> = {
     assert.equal(b.get(`${CHATS}/c1`), undefined);
     await tick();
     log.push(
-      "-- A edits one chat (expect GET root 304, PUT blob, PUT root; a new blob folder adds a MKCOL)",
+      "-- A edits one chat (expect GET root 304, PUT blob, PUT the previous root's copy, PUT root; a new blob folder adds a MKCOL)",
     );
     const edit = log.length;
     await saveChat(a, "c1", [
@@ -83,8 +84,36 @@ const cases: Record<string, () => Promise<void>> = {
     );
     assert.deepEqual(
       lines.filter((line) => !folderSetup.includes(line)),
-      ["A GET root.json.gz 304", "A PUT blob 201", "A PUT root.json.gz 204"],
+      [
+        "A GET root.json.gz 304",
+        "A PUT blob 201",
+        "A PUT root.prev.json.gz 201",
+        "A PUT root.json.gz 204",
+      ],
     );
+  },
+
+  async "an empty root after an interrupted upload: rebuilt, nothing lost"() {
+    const { a, b } = await pair("damaged");
+    await saveChat(a, "c1", [["m1", 1]]);
+    await a.sync("edit");
+    await tick();
+    await b.sync();
+    await saveChat(b, "c2", [["m2", 1]]);
+    await b.sync("edit");
+    await tick();
+    // The upload stopped after the server stored an empty file.
+    const root = `${baseA.replace(/\/?$/, "/")}case-${run}-damaged/root.json.gz`;
+    assert.ok((await fetch(root, { method: "PUT", body: "" })).ok);
+    await saveChat(a, "c3", [["m3", 1]]);
+    const result = await a.sync("edit");
+    assert.deepEqual(result.warnings, [SYNC_WARNINGS.recoveredRoot]);
+    await tick();
+    await b.sync();
+    await tick();
+    await a.sync();
+    for (const on of [a, b])
+      assert.deepEqual(ids(on).sort(), ["c1", "c2", "c3"], on.name);
   },
 
   async "overlapping saves of the same chat (both at once)"() {
@@ -378,7 +407,9 @@ if (ignoringA && ignoringB)
         ["m1", 1],
         ["a1", 2],
       ]);
-      await a.set(PROVIDERS, { p: { apiKey: "k-a", model: "m0" } });
+      await a.set(PROVIDERS, {
+        p: { apiKey: "k0", model: "m0", baseUrl: "https://a.test" },
+      });
       await saveChat(b, "X", [
         ["m1", 1],
         ["b1", 3],
@@ -395,7 +426,7 @@ if (ignoringA && ignoringB)
       if (read.status === "ok")
         assert.deepEqual(
           read.root.records["providers/p"]?.data,
-          { apiKey: "k0", model: "m-b" },
+          { model: "m-b" },
           "b's write replaced a's",
         );
       for (let i = 0; i < 2; i++) {
@@ -408,7 +439,7 @@ if (ignoringA && ignoringB)
         assert.deepEqual(messages(on, "X"), ["m1", "a1", "b1"], on.name);
         assert.deepEqual(
           on.get<Record<string, unknown>>(PROVIDERS).p,
-          { apiKey: "k-a", model: "m-b" },
+          { apiKey: "k0", model: "m-b", baseUrl: "https://a.test" },
           on.name,
         );
       }
