@@ -52,6 +52,10 @@ export type Placement = {
   kind?: string;
   // The host's height before the translation went in.
   height?: number;
+  // How far the host's own content reaches below its box before the
+  // translation goes in: text set with trimmed leading (negative margins
+  // around the lines) does, and the translation at its end reaches as far.
+  overhang?: number;
   look?: LookDetails;
 };
 
@@ -193,6 +197,7 @@ export function choosePlacement(
     form,
     host,
     height: host.getBoundingClientRect().height,
+    overhang: Math.max(0, host.scrollHeight - host.clientHeight),
     row: isRow(hostStyle) ? host : inRow ? parent! : undefined,
     kind: kindOf(paragraph, host),
     look: {
