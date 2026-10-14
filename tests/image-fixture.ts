@@ -12,6 +12,7 @@ export function imageModelFixture() {
       id: "fixture",
       type: "openai" as const,
       baseUrl: "https://example.test/v1",
+      consent: { host: "example.test", grantedAt: 1 },
       imageModels: [{ id: "fixture-image", name: "fixture-image" }],
     },
   }));

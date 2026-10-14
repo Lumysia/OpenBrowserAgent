@@ -1,5 +1,6 @@
 import { plural } from "../plural";
 import { contextMenuJaJP } from "./context-menu/ja-JP";
+import { providerConsentJaJP } from "./provider-consent/ja-JP";
 import { displayJaJP } from "./display/ja-JP";
 import { downloadsJaJP } from "./downloads/ja-JP";
 import { smartBarJaJP } from "./smart-bar/ja-JP";
@@ -603,6 +604,7 @@ export const jaJP: LocaleMessages = {
   smartBar: smartBarJaJP,
   contextMenu: contextMenuJaJP,
   downloads: downloadsJaJP,
+  providerConsent: providerConsentJaJP,
   sync: syncJaJP,
   themes: themesJaJP,
   display: displayJaJP,

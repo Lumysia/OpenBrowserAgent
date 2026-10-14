@@ -1,5 +1,6 @@
 import { plural } from "../plural";
 import { contextMenuEnUS } from "./context-menu/en-US";
+import { providerConsentEnUS } from "./provider-consent/en-US";
 import { displayEnUS } from "./display/en-US";
 import { downloadsEnUS } from "./downloads/en-US";
 import { smartBarEnUS } from "./smart-bar/en-US";
@@ -598,6 +599,7 @@ export const enUS = {
   smartBar: smartBarEnUS,
   contextMenu: contextMenuEnUS,
   downloads: downloadsEnUS,
+  providerConsent: providerConsentEnUS,
   sync: syncEnUS,
   themes: themesEnUS,
   display: displayEnUS,

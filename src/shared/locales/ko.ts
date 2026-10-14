@@ -1,5 +1,6 @@
 import { plural } from "../plural";
 import { contextMenuKo } from "./context-menu/ko";
+import { providerConsentKo } from "./provider-consent/ko";
 import { displayKo } from "./display/ko";
 import { downloadsKo } from "./downloads/ko";
 import { smartBarKo } from "./smart-bar/ko";
@@ -565,6 +566,7 @@ export const ko: LocaleMessages = {
   smartBar: smartBarKo,
   contextMenu: contextMenuKo,
   downloads: downloadsKo,
+  providerConsent: providerConsentKo,
   sync: syncKo,
   themes: themesKo,
   display: displayKo,

@@ -2,7 +2,7 @@
 
 OpenBrowserAgent ships its interface in nine languages. This page records the words each language uses for the product's main ideas, so that new strings match what is already there. If you add or change a user-facing string, check this page first; if you introduce a new concept, add it here in the same change.
 
-Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-bar/` (the smart bar), `src/shared/locales/context-menu/` (the right-click menu), `src/shared/locales/downloads/` (the downloads tool's step lines) and `public/_locales/` (the extension name, description and shortcut). English (`en-US`) is the source; every other language must have every key.
+Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-bar/` (the smart bar), `src/shared/locales/context-menu/` (the right-click menu), `src/shared/locales/downloads/` (the downloads tool's step lines), `src/shared/locales/provider-consent/` (permission to send content to a provider) and `public/_locales/` (the extension name, description and shortcut). English (`en-US`) is the source; every other language must have every key.
 
 ## General rules
 
@@ -155,6 +155,26 @@ The context menu is the browser's right-click menu; OpenBrowserAgent adds a subm
 | linked page           | page liée             | verlinkte Seite       | página enlazada      | página do link       |
 | Copy as Markdown      | Copier en Markdown    | Als Markdown kopieren | Copiar como Markdown | Copiar como Markdown |
 | selected text         | texte sélectionné     | ausgewählter Text     | texto seleccionado   | texto selecionado    |
+
+## Provider permission
+
+Before content the user shares in chats (messages, page text, screenshots, files) goes to a provider's endpoint, the user agrees once for that endpoint's host (`providerConsent`). The agreement sentence is written in the first person ("I agree that…") because it is the label of a checkbox the user ticks; the same sentence shows in the prompt before the first message, so both read the same. `{host}` is a host name such as api.openai.com and stays as is. "Permission" is the user's consent, never a browser permission. Endpoints on the device or the local network are "local endpoints" and need none.
+
+| English              | 简体中文 | 繁體中文 | 日本語                   | 한국어          |
+| -------------------- | -------- | -------- | ------------------------ | --------------- |
+| permission (consent) | 许可     | 許可     | 許可                     | 허용            |
+| Agree (button)       | 同意     | 同意     | 同意する                 | 동의            |
+| Not now (button)     | 暂不     | 暫不     | 今はしない               | 나중에          |
+| Withdraw permission  | 撤回许可 | 撤回許可 | 許可を取り消す           | 허용 철회       |
+| local endpoint       | 本地端点 | 本機端點 | ローカルのエンドポイント | 로컬 엔드포인트 |
+
+| English              | Français                   | Deutsch              | Español            | Português (Brasil) |
+| -------------------- | -------------------------- | -------------------- | ------------------ | ------------------ |
+| permission (consent) | autorisation               | Erlaubnis            | permiso            | permissão          |
+| Agree (button)       | Accepter                   | Zustimmen            | Aceptar            | Concordar          |
+| Not now (button)     | Pas maintenant             | Nicht jetzt          | Ahora no           | Agora não          |
+| Withdraw permission  | Retirer l’autorisation     | Erlaubnis widerrufen | Retirar el permiso | Retirar permissão  |
+| local endpoint       | point de terminaison local | lokaler Endpunkt     | endpoint local     | endpoint local     |
 
 ## Built-in skills and tool steps
 

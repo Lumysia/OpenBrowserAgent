@@ -1,5 +1,6 @@
 import { plural } from "../plural";
 import { contextMenuDeDE } from "./context-menu/de-DE";
+import { providerConsentDeDE } from "./provider-consent/de-DE";
 import { displayDeDE } from "./display/de-DE";
 import { downloadsDeDE } from "./downloads/de-DE";
 import { smartBarDeDE } from "./smart-bar/de-DE";
@@ -630,6 +631,7 @@ export const deDE: LocaleMessages = {
   smartBar: smartBarDeDE,
   contextMenu: contextMenuDeDE,
   downloads: downloadsDeDE,
+  providerConsent: providerConsentDeDE,
   sync: syncDeDE,
   themes: themesDeDE,
   display: displayDeDE,

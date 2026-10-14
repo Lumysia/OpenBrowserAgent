@@ -1,5 +1,6 @@
 import { plural } from "../plural";
 import { contextMenuFrFR } from "./context-menu/fr-FR";
+import { providerConsentFrFR } from "./provider-consent/fr-FR";
 import { displayFrFR } from "./display/fr-FR";
 import { downloadsFrFR } from "./downloads/fr-FR";
 import { smartBarFrFR } from "./smart-bar/fr-FR";
@@ -630,6 +631,7 @@ export const frFR: LocaleMessages = {
   smartBar: smartBarFrFR,
   contextMenu: contextMenuFrFR,
   downloads: downloadsFrFR,
+  providerConsent: providerConsentFrFR,
   sync: syncFrFR,
   themes: themesFrFR,
   display: displayFrFR,
