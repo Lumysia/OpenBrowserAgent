@@ -67,5 +67,6 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
     failed: "{engine} 暫時無法使用，此頁面已改用 {fallback} 翻譯。",
   },
   browserUnsupported: "內建翻譯器無法將此頁面翻譯為{language}。",
+  notStarted: "無法開始翻譯此頁面。請重新載入頁面後再試。",
   unavailablePage: "無法翻譯此頁面：瀏覽器不允許擴充功能修改它。",
 };

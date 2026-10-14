@@ -20,6 +20,9 @@ export const PAGE_TRANSLATE_MESSAGE = {
   query: "page-translate:query",
 } as const;
 
+// How long a note about a problem stays on the page.
+export const PAGE_TRANSLATE_TOAST_MS = 8_000;
+
 // One port per translated page; closing it cancels its requests.
 export const PAGE_TRANSLATE_PORT = "page-translate";
 

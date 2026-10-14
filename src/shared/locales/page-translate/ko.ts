@@ -77,6 +77,8 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
   },
   browserUnsupported:
     "내장 번역기는 이 페이지를 {language}(으)로 번역할 수 없습니다.",
+  notStarted:
+    "이 페이지의 번역을 시작하지 못했습니다. 페이지를 새로고침한 후 다시 시도하세요.",
   unavailablePage:
     "이 페이지는 번역할 수 없습니다. 브라우저가 확장 프로그램의 변경을 허용하지 않습니다.",
 };

@@ -1,0 +1,59 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { togglePageTranslation } from "../src/background/page-translate";
+import { PAGE_TRANSLATE_SCRIPT } from "../src/shared/page-translate/protocol";
+import { installBrowser } from "./helpers";
+
+// A tab whose page never answers; `scriptable`: whether the browser lets the
+// extension run scripts there.
+function installTab(scriptable: boolean) {
+  installBrowser();
+  const injected: unknown[] = [];
+  const badges: string[] = [];
+  const chrome = (globalThis as unknown as { chrome: Record<string, unknown> })
+    .chrome;
+  Object.assign(chrome, {
+    runtime: { getManifest: () => ({}) },
+    tabs: { sendMessage: async () => Promise.reject(new Error("No receiver")) },
+    scripting: {
+      executeScript: async (details: {
+        files?: string[];
+        args?: unknown[];
+      }) => {
+        if (!scriptable) throw new Error("Cannot access contents of the page");
+        injected.push(details.files ?? details.args);
+        return [{ frameId: 0 }];
+      },
+    },
+    action: {
+      setBadgeText: async ({ text }: { text: string }) => {
+        if (text) badges.push(text);
+      },
+      setTitle: async ({ title }: { title: string }) => badges.push(title),
+    },
+  });
+  return { injected, badges };
+}
+
+test("a page script that doesn't start says so on the page", async () => {
+  const { injected, badges } = installTab(true);
+  await togglePageTranslation({ id: 7 } as chrome.tabs.Tab);
+  assert.deepEqual(injected[0], [PAGE_TRANSLATE_SCRIPT]);
+  const [message, , options] = injected[1] as [string, unknown, unknown];
+  assert.equal(
+    message,
+    "Couldn't start translating this page. Reload the page and try again.",
+  );
+  assert.deepEqual(options, { tone: "error", durationMs: 8000 });
+  assert.deepEqual(badges, []);
+});
+
+test("a page that can't be scripted gets a note on the toolbar button", async () => {
+  const { injected, badges } = installTab(false);
+  await togglePageTranslation({ id: 7 } as chrome.tabs.Tab);
+  assert.deepEqual(injected, []);
+  assert.deepEqual(badges, [
+    "!",
+    "Can't translate this page: the browser doesn't let extensions change it.",
+  ]);
+});

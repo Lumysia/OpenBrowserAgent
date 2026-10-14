@@ -58,8 +58,13 @@ export function fixtureTranslator(log = []) {
   };
 }
 
-export async function startPageTranslate({ pages, answer, preferences }) {
-  const session = await startSmartBar({ pages, answer });
+export async function startPageTranslate({
+  pages,
+  answer,
+  preferences,
+  launch,
+}) {
+  const session = await startSmartBar({ pages, answer, launch });
   const { browser, options, extensionUrl } = session;
   if (preferences)
     await options.call(async (change) => {
@@ -68,46 +73,83 @@ export async function startPageTranslate({ pages, answer, preferences }) {
         preferences: { ...preferences, ...change },
       });
     }, preferences);
-  const worker = await browser.attach(
-    (item) => item === extensionUrl("background.js"),
-    "service_worker",
-  );
-  // Records the titles the menu item gets.
-  await worker.call(() => {
-    const menus = chrome.contextMenus;
-    const update = menus.update.bind(menus);
-    self.menuTitles = [];
-    menus.update = (id, properties, callback) => {
-      if (id === "oba-translate-page") self.menuTitles.push(properties.title);
-      return update(id, properties, callback);
-    };
-  });
-  const tabIdOf = (url) =>
-    poll(() =>
+  const attachWorker = async () => {
+    const worker = await browser.attach(
+      (item) => item === extensionUrl("background.js"),
+      "service_worker",
+    );
+    // The menu is built when the extension is installed.
+    await poll(() =>
       worker.call(
-        async (url) => (await chrome.tabs.query({ url }))[0]?.id,
-        url,
+        () =>
+          new Promise((resolve) =>
+            chrome.contextMenus.update("oba-translate-page", {}, () =>
+              resolve(!chrome.runtime.lastError),
+            ),
+          ),
       ),
     );
-  // The menu item clicked on the tab showing `url`.
-  const clickMenu = async (url) => {
-    const tabId = await tabIdOf(url);
-    await worker.call(
-      async ({ tabId, menuItemId }) => {
-        const tab = await chrome.tabs.get(tabId);
-        chrome.contextMenus.onClicked.dispatch(
-          {
-            menuItemId,
-            parentMenuItemId: "oba-menu",
-            editable: false,
-            frameId: 0,
-            pageUrl: tab.url,
+    // Records the titles the menu item gets.
+    await worker.call(() => {
+      const menus = chrome.contextMenus;
+      const update = menus.update.bind(menus);
+      self.menuTitles = [];
+      menus.update = (id, properties, callback) => {
+        if (id === "oba-translate-page") self.menuTitles.push(properties.title);
+        return update(id, properties, callback);
+      };
+    });
+    const tabIdOf = (url) =>
+      poll(() =>
+        worker.call(
+          async (url) => (await chrome.tabs.query({ url }))[0]?.id,
+          url,
+        ),
+      );
+    return {
+      worker,
+      // The menu item clicked on the tab showing `url`.
+      clickMenu: async (url) => {
+        const tabId = await tabIdOf(url);
+        await worker.call(
+          async ({ tabId, menuItemId }) => {
+            const tab = await chrome.tabs.get(tabId);
+            chrome.contextMenus.onClicked.dispatch(
+              {
+                menuItemId,
+                parentMenuItemId: "oba-menu",
+                editable: false,
+                frameId: 0,
+                pageUrl: tab.url,
+              },
+              tab,
+            );
           },
-          tab,
+          { tabId, menuItemId: MENU_ID },
         );
       },
-      { tabId, menuItemId: MENU_ID },
-    );
+      menuTitles: () => worker.call(() => self.menuTitles),
+    };
+  };
+  const current = await attachWorker();
+  // Reloads the extension as an update does; its pages close, tabs stay.
+  // Returns the new worker's helpers.
+  const reloadExtension = async () => {
+    const workers = async () =>
+      (await browser.targets()).filter(
+        (item) =>
+          item.type === "service_worker" &&
+          item.url === extensionUrl("background.js"),
+      );
+    const [before] = await workers();
+    await current.worker
+      .call(() => setTimeout(() => chrome.runtime.reload(), 50))
+      .catch(() => undefined);
+    await poll(async () => {
+      const [after] = await workers();
+      return after && after.id !== before.id;
+    });
+    return attachWorker();
   };
   const setPreferences = (change) =>
     options.call(async (change) => {
@@ -119,13 +161,7 @@ export async function startPageTranslate({ pages, answer, preferences }) {
         },
       });
     }, change);
-  return {
-    ...session,
-    worker,
-    clickMenu,
-    setPreferences,
-    menuTitles: () => worker.call(() => self.menuTitles),
-  };
+  return { ...session, ...current, setPreferences, reloadExtension };
 }
 
 // The translation shown in the block `selector`, or undefined.

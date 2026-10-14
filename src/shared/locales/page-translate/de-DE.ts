@@ -79,6 +79,8 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
   },
   browserUnsupported:
     "Der integrierte Übersetzer kann diese Seite nicht in {language} übersetzen.",
+  notStarted:
+    "Die Übersetzung dieser Seite konnte nicht gestartet werden. Laden Sie die Seite neu und versuchen Sie es erneut.",
   unavailablePage:
     "Diese Seite kann nicht übersetzt werden: Der Browser lässt Erweiterungen sie nicht ändern.",
 };

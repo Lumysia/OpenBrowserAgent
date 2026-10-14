@@ -3,17 +3,24 @@ import {
   type PageTranslateStateMessage,
 } from "../shared/page-translate/protocol";
 import { getBrowserApi } from "../shared/browser-api";
+import {
+  claimPageScript,
+  isExtensionContextValid,
+} from "../shared/extension-context";
 import { createController } from "./controller";
 
 const INSTALLED = Symbol.for("oba.pageTranslate");
 
 // Installed once per page (the background injects it again when it isn't
-// sure); answers the background's toggle and query messages.
+// sure); answers the background's toggle and query messages. A copy left
+// behind by an earlier version of the extension gives the page back its
+// original when this one starts.
 export function installPageTranslate() {
   const scope = globalThis as { [INSTALLED]?: boolean };
   if (scope[INSTALLED]) return;
   scope[INSTALLED] = true;
   const report = (translated: boolean) => {
+    if (!isExtensionContextValid()) return;
     const message: PageTranslateStateMessage = {
       type: PAGE_TRANSLATE_MESSAGE.state,
       translated,
@@ -23,6 +30,7 @@ export function installPageTranslate() {
       .catch(() => undefined);
   };
   const controller = createController(report);
+  claimPageScript("page-translate", () => controller.stop());
   getBrowserApi().runtime.onMessage.addListener(
     (message, _sender, sendResponse) => {
       const type = (message as { type?: string } | undefined)?.type;

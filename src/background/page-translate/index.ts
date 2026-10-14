@@ -1,9 +1,9 @@
-import { isScriptableUrl } from "../../shared/browser";
 import { getPageTranslateMessages } from "../../shared/page-translate/messages";
 import {
   PAGE_TRANSLATE_MESSAGE,
   PAGE_TRANSLATE_PORT,
   PAGE_TRANSLATE_SCRIPT,
+  PAGE_TRANSLATE_TOAST_MS,
   type PageTranslateEvent,
   type PageTranslateRequest,
   type PageTranslateStateMessage,
@@ -11,7 +11,8 @@ import {
 } from "../../shared/page-translate/protocol";
 import { normalizePageTranslateSettings } from "../../shared/page-translate/settings";
 import { getBrowserApi, storage } from "../../shared/storage";
-import { flashBadge } from "../context-menu/copy-markdown";
+import { flashBadge, showPageNote } from "../page-feedback";
+import { pageToastTheme } from "../page-toast";
 import { createPageSession } from "./session";
 import { setTabTranslated, watchTabs } from "./tab-state";
 
@@ -58,8 +59,8 @@ export function handlePageTranslateMessage(
 
 // "Translate this page" and "Show original": the page script knows which
 // one it is and tells the background (see handlePageTranslateMessage). It
-// is injected the first time; pages that can't be scripted get a note on
-// the toolbar button.
+// is injected the first time. When it can't be started the page says why,
+// or the toolbar button where the page can't be scripted.
 export async function togglePageTranslation(tab: chrome.tabs.Tab | undefined) {
   if (tab?.id === undefined) return;
   const tabId = tab.id;
@@ -72,21 +73,31 @@ export async function togglePageTranslation(tab: chrome.tabs.Tab | undefined) {
       () => true,
       () => false,
     );
-  if (isScriptableUrl(tab.url) && (await send())) return;
-  const injected =
-    isScriptableUrl(tab.url) &&
-    (await api.scripting
-      .executeScript({
-        target: { tabId, frameIds: [0] },
-        files: [PAGE_TRANSLATE_SCRIPT],
-      })
-      .then(
-        () => true,
-        () => false,
-      ));
+  if (await send()) return;
+  const injected = await api.scripting
+    .executeScript({
+      target: { tabId, frameIds: [0] },
+      files: [PAGE_TRANSLATE_SCRIPT],
+    })
+    .then(
+      () => true,
+      () => false,
+    );
   if (injected && (await send())) return;
-  const messages = getPageTranslateMessages(await storage.language.get());
-  await flashBadge(tabId, messages.unavailablePage);
+  const [language, preferences] = await Promise.all([
+    storage.language.get(),
+    storage.preferences.get(),
+  ]);
+  const messages = getPageTranslateMessages(language);
+  const noted =
+    injected &&
+    (await showPageNote(
+      tabId,
+      messages.notStarted,
+      pageToastTheme(preferences.colorScheme, preferences.accentColor),
+      { tone: "error", durationMs: PAGE_TRANSLATE_TOAST_MS },
+    ));
+  if (!noted) await flashBadge(tabId, messages.unavailablePage);
 }
 
 function handlePort(port: chrome.runtime.Port) {

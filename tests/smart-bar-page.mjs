@@ -11,7 +11,8 @@ import { providerFixture } from "./provider-fixtures.mjs";
 // server for the test pages and the model. `pages[path]`: HTML, or
 // `{ html, headers }`. The model streams what `answer(prompt, write)` writes.
 // `smartBar`: stored smart bar settings; none means the defaults (off).
-export async function startSmartBar({ pages, answer, smartBar }) {
+// `launch` holds extra launchExtension options, such as browser preferences.
+export async function startSmartBar({ pages, answer, smartBar, launch = {} }) {
   const fixture = await providerFixture(async (request, response) => {
     if (!request.url.startsWith("/v1/")) {
       const page = pages[new URL(request.url, "http://host").pathname] ?? "";
@@ -39,6 +40,7 @@ export async function startSmartBar({ pages, answer, smartBar }) {
   });
   const browser = await launchExtension({
     headed: process.env.OBA_HEADLESS !== "1",
+    ...launch,
   }).catch(async (error) => {
     await fixture.close();
     throw error;

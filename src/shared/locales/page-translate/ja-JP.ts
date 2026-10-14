@@ -79,6 +79,8 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
   },
   browserUnsupported:
     "組み込み翻訳では、このページを{language}に翻訳できません。",
+  notStarted:
+    "このページの翻訳を開始できませんでした。ページを再読み込みして、もう一度お試しください。",
   unavailablePage:
     "このページは翻訳できません。ブラウザーが拡張機能による変更を許可していません。",
 };
