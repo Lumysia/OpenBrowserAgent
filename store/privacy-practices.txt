@@ -18,7 +18,7 @@ The agent lists, opens, focuses, reloads, navigates and closes tabs when the use
 Saves the user's settings, model providers, agents, skills and chats on the device.
 
 == downloads justification ==
-Saves what the user asks for: chat exports as Markdown, generated images, diagrams, and files the agent fetched.
+Saves what the user asks for to the browser's Downloads folder: chat exports as Markdown, generated images, diagrams, files the agent downloads from a link, and text or files the agent prepared. The agent reads the state of downloads (finished, failed, where the file was saved) so it can tell the user where the file is, and can cancel or retry the downloads it started. It never opens downloaded files or deletes them.
 
 == unlimitedStorage justification ==
 Chats with image and file attachments can exceed the default extension storage quota. They are kept only on the user's device.
