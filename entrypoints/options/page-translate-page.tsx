@@ -240,6 +240,12 @@ export function PageTranslatePage() {
   );
 }
 
+// Chinese is named by its script ("Simplified Chinese"), as people choose it.
+const NAMED_BY_SCRIPT: Record<string, string> = {
+  "zh-CN": "zh-Hans",
+  "zh-TW": "zh-Hant",
+};
+
 // Language names in the extension's language.
 function displayNames(language: string | undefined) {
   let names: Intl.DisplayNames | undefined;
@@ -248,5 +254,5 @@ function displayNames(language: string | undefined) {
   } catch {
     names = undefined;
   }
-  return (tag: string) => names?.of(tag) || tag;
+  return (tag: string) => names?.of(NAMED_BY_SCRIPT[tag] ?? tag) || tag;
 }
