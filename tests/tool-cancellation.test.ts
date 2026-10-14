@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 import { setImmediate } from "node:timers/promises";
 import { toolBrowser, deferred } from "./tool-fixtures";
+import { createRunTab } from "../src/background/run-tab";
 import { BUILTIN_TOOLS } from "../src/background/tools/registry";
 import { runTool } from "../src/background/tools/run-tool";
 import type { ToolContext } from "../src/background/tools/types";
@@ -17,7 +18,7 @@ async function tool(
 ) {
   const definition = BUILTIN_TOOLS.find((item) => item.name === name)!;
   const context = {
-    run: { chatId: "fixture", attachments: [] },
+    run: { chatId: "fixture", attachments: [], tab: createRunTab("fixture") },
     toolCallId: "call",
     signal,
     progress() {},
