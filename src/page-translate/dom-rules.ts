@@ -200,12 +200,53 @@ export function isCopiedInTranslation(element: Element) {
   return !UNCOPIED_TAGS.has(element.tagName.toUpperCase());
 }
 
+// Media and icons: they decorate the text but aren't part of it, so they
+// are neither sent for translation nor shown again in the translation.
+const DECORATIVE_TAGS = new Set([
+  "IMG",
+  "PICTURE",
+  "SVG",
+  "CANVAS",
+  "VIDEO",
+  "AUDIO",
+  "IFRAME",
+  "OBJECT",
+  "EMBED",
+]);
+// Icon fonts: a class naming an icon set, or private-use characters.
+const ICON_CLASS =
+  /(^|[\s_-])(icons?|symbols?|glyph(icon)?s?|fa[srb]?)([\s_-]|$)/i;
+const PRIVATE_USE = /^[\uE000-\uF8FF\s]+$/u;
+
+export function isDecorative(element: Element) {
+  const tag = element.tagName.toUpperCase();
+  if (DECORATIVE_TAGS.has(tag)) return true;
+  if (element.getAttribute("aria-hidden") === "true") return true;
+  if (tag !== "I" && tag !== "SPAN") return false;
+  const text = element.textContent || "";
+  if (PRIVATE_USE.test(text) && text.trim()) return true;
+  return (
+    !/\s/.test(text.trim()) &&
+    ICON_CLASS.test(element.getAttribute("class") || "")
+  );
+}
+
+// Dates and times marked up as such: the page's own labels for them stay
+// (see metadata.ts).
+function isTime(element: Element) {
+  const tag = element.tagName.toUpperCase();
+  return (
+    tag === "TIME" || (tag.includes("-") && element.hasAttribute("datetime"))
+  );
+}
+
 // Inline elements kept as they are inside a translated paragraph: the
 // translation shows a copy of them in the same place (see
 // isCopiedInTranslation).
 export function isAtom(element: Element) {
   return (
     SKIP_TAGS.has(element.tagName.toUpperCase()) ||
+    isTime(element) ||
     isNoTranslate(element) ||
     element.namespaceURI !== "http://www.w3.org/1999/xhtml"
   );
@@ -245,26 +286,62 @@ export function isTextBlock(element: Element) {
   return TEXT_BLOCK_TAGS.has(element.tagName.toUpperCase());
 }
 
+const HEADING_TAGS = new Set(["H1", "H2", "H3", "H4", "H5", "H6"]);
+
+export function isHeading(element: Element) {
+  return (
+    HEADING_TAGS.has(element.tagName.toUpperCase()) ||
+    element.getAttribute("role") === "heading"
+  );
+}
+
 // The page's own chrome, left as it is unless the user also translates
 // menus and buttons: navigation, menus, tabs, toolbars, buttons, search,
 // cookie notes, and the page's header, footer and sidebars (outside the
 // article: an article's own header holds its title).
-const CHROME_TAGS = new Set(["NAV", "MENU", "BUTTON", "SEARCH"]);
+const CHROME_TAGS = new Set(["NAV", "MENU", "BUTTON", "SEARCH", "SUMMARY"]);
+// Roles of controls: their labels are part of the page's interface.
+const CONTROL_ROLES = new Set([
+  "button",
+  "tab",
+  "menuitem",
+  "menuitemcheckbox",
+  "menuitemradio",
+  "option",
+  "switch",
+  "checkbox",
+  "radio",
+]);
 const CHROME_ROLES = new Set([
+  ...CONTROL_ROLES,
   "navigation",
   "banner",
   "contentinfo",
   "menu",
   "menubar",
-  "menuitem",
-  "menuitemcheckbox",
-  "menuitemradio",
+  "listbox",
   "tablist",
-  "tab",
   "toolbar",
-  "button",
   "search",
 ]);
+const CONTROL_SELECTOR = [
+  "button",
+  "summary",
+  ...[...CONTROL_ROLES].map((role) => `[role=${role}]`),
+].join(",");
+// Lists of links that work as controls: menus, tab bars, toolbars.
+const CONTROL_LIST_SELECTOR =
+  "nav, menu, [role=navigation], [role=menu], [role=menubar], [role=tablist], [role=toolbar], [role=listbox]";
+
+// The control the element labels: a button, a tab, a menu item, or a link
+// in a menu, tab bar or toolbar.
+export function controlOf(element: Element) {
+  const control = element.closest(CONTROL_SELECTOR);
+  if (control) return control;
+  const link = element.closest("a[href]");
+  return link?.parentElement?.closest(CONTROL_LIST_SELECTOR) ? link : null;
+}
+
 const PAGE_EDGE_TAGS = new Set(["HEADER", "FOOTER", "ASIDE"]);
 const ARTICLE_SELECTOR = "main, article, [role=main], [role=article]";
 // Cookie and consent notes, named so in their id, classes or label.

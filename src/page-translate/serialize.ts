@@ -13,6 +13,7 @@ import {
 import {
   isAtom,
   isCopiedInTranslation,
+  isDecorative,
   isOwn,
   isPlainWrapper,
 } from "./dom-rules";
@@ -53,6 +54,8 @@ export function serializeNodes(nodes: Node[]): Serialized {
     }
     if (node.nodeType !== 1 || isOwn(node)) return;
     const element = node as Element;
+    // Icons and images aren't part of the text (see isDecorative).
+    if (isDecorative(element)) return;
     const text = originalContent(element);
     // Code and images, and elements with nothing to translate in them
     // (footnote marks such as [1]), stay as they are.

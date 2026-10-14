@@ -67,13 +67,13 @@ test("swap: markers in another order are plain text in the first text", () => {
 
 test("swap: text where the page had none joins the nearest text", () => {
   const { document, paragraphs } = pageOf(
-    `<div id="d"><a href="#content">Jump to content</a></div><p id="p"><img src="a.png">Caption</p>`,
+    `<div id="d"><a href="#content">Jump to content</a></div><p id="p"><kbd>Ctrl</kbd>pressed twice</p>`,
   );
   const original = document.body.innerHTML;
   const [link, caption] = paragraphs();
   const swaps = [
     swapIn(link.source, "FR: <b1>Aller au contenu</b1> !"),
-    swapIn(caption.source, "Image : {1} Légende"),
+    swapIn(caption.source, "Touche : {1} pressée deux fois"),
   ];
   assert.equal(
     document.getElementById("d")!.innerHTML,
@@ -81,7 +81,7 @@ test("swap: text where the page had none joins the nearest text", () => {
   );
   assert.equal(
     document.getElementById("p")!.innerHTML,
-    '<img src="a.png">Image : Légende',
+    "<kbd>Ctrl</kbd>Touche : pressée deux fois",
   );
   swaps.forEach(swapOut);
   assert.equal(document.body.innerHTML, original);

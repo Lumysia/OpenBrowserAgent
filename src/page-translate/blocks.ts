@@ -3,12 +3,14 @@
 // blocks in mixed content. The DOM is not changed.
 import {
   isChrome,
+  isHeading,
   isInline,
   isInsideChrome,
   isOwn,
   isSkipped,
   isTextBlock,
 } from "./dom-rules";
+import { metadataOf } from "./metadata";
 import { originalText } from "./originals";
 import { serializeNodes, type Serialized } from "./serialize";
 
@@ -90,8 +92,6 @@ function makeParagraph(
   nodes: Node[],
 ): Paragraph | undefined {
   if (!nodes.length) return undefined;
-  const source = serializeNodes(nodes);
-  if (!isTranslatableText(source.plain)) return undefined;
   // Inside a shadow root the translation goes after the nodes, in the root.
   const whole =
     root === parent &&
@@ -102,9 +102,36 @@ function makeParagraph(
         (node.nodeType === 3 && !originalText(node as Text).trim()) ||
         node.nodeType === 8,
     );
+  const trimmed = trimRun(nodes);
+  // A lone inline element between blocks (a headline link in a card) is
+  // laid out as a box of its own: its translation goes inside it, after its
+  // text, and stays part of it.
+  const [lone] = trimmed;
+  if (
+    !whole &&
+    trimmed.length === 1 &&
+    lone.nodeType === 1 &&
+    !isSkipped(lone as Element) &&
+    !(lone as Element).shadowRoot
+  )
+    return makeParagraph(
+      lone as Element,
+      lone as Element,
+      Array.from(lone.childNodes),
+    );
+  const source = serializeNodes(trimmed);
+  if (!isTranslatableText(source.plain)) return undefined;
+  // Dates, numbers, names and bylines stay; headings are always text, and
+  // so are the labels of menus and buttons (when they are translated):
+  // "Home" there is a word, not a name.
+  const language = parent.closest("[lang]")?.getAttribute("lang");
+  const metadata =
+    !isHeading(parent) && metadataOf(source.plain, language || undefined);
+  if (metadata && (metadata !== "name" || !isInsideChrome(parent)))
+    return undefined;
   return {
     parent,
-    nodes: trimRun(nodes),
+    nodes: trimmed,
     whole,
     inline:
       whole && !isTextBlock(parent) && source.plain.length <= INLINE_MAX_CHARS,

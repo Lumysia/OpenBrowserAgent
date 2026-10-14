@@ -152,19 +152,19 @@ test("paragraphs: code, fields, hidden and no-translate content are skipped", ()
   );
 });
 
-test("paragraphs: inline code and images stay as atoms in the sentence", () => {
+test("paragraphs: inline code stays an atom in the sentence, images and icons are left out", () => {
   const { found } = paragraphsOf(
-    `<p id="p">Run <code>npm test</code> and see <img src="a.png" alt="chart"> the<br>result.</p>`,
+    `<p id="p">Run <code>npm test</code> and see <img src="a.png" alt="chart"> the<br>result<svg></svg>&nbsp;<i class="material-icons">chevron_right</i><span aria-hidden="true">›</span><span class="fa fa-star"></span>.</p>`,
   );
   assert.deepEqual(found.map(summary), [
     {
       parent: "p",
-      text: "Run {1} and see {2} the{3}result.",
+      text: "Run {1} and see the{2}result .",
       whole: true,
       inline: false,
     },
   ]);
-  assert.equal(found[0].source.plain, "Run and see the result.");
+  assert.equal(found[0].source.plain, "Run and see the result .");
 });
 
 test("serialize: nested formatting, plain spans and text that looks like markers", () => {
@@ -279,18 +279,18 @@ test("restore: form fields and images aren't copied into the translation", () =>
   const { document, found } = paragraphsOf(
     `<p><label>Your name <input value="x"></label> and <img src="a.png"> <kbd>Ctrl</kbd></p>`,
   );
-  assert.equal(found[0].source.text, "<b1>Your name {2}</b1> and {3} {4}");
+  assert.equal(found[0].source.text, "<b1>Your name {2}</b1> and {3}");
   const container = document.createElement("div");
   container.append(
     buildTranslation(
       document as unknown as Document,
       found[0].source,
-      "<b1>Votre nom {2}</b1> et {3} {4}",
+      "<b1>Votre nom {2}</b1> et {3}",
     ),
   );
   assert.equal(
     container.innerHTML,
-    "<label>Votre nom </label> et  <kbd>Ctrl</kbd>",
+    "<label>Votre nom </label> et <kbd>Ctrl</kbd>",
   );
 });
 
