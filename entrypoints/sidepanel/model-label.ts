@@ -1,4 +1,24 @@
-import { providerLabels, type ModelConfig } from "../../src/shared/types";
+import {
+  providerLabels,
+  type Agent,
+  type ModelConfig,
+  type Preferences,
+} from "../../src/shared/types";
+
+// The model a chat message runs with: the agent's own while it still exists
+// (as in the background's resolveModel), else the selected one.
+export function chatModelLabel(
+  agent: Agent,
+  preferences: Preferences | undefined,
+  models: ModelConfig[],
+) {
+  return assistantModelLabel({
+    modelId: models.some((model) => model.id === agent.modelId)
+      ? agent.modelId
+      : preferences?.selectedModelId,
+    models,
+  });
+}
 
 export function assistantModelLabel({
   modelId,

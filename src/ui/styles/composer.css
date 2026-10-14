@@ -217,7 +217,9 @@
 }
 
 /* Messages waiting for the current run. */
-.queued-messages {
+/* Cards above the composer: queued messages, the provider permission
+   prompt. */
+.composer-card {
   --enter-y: 5px;
   display: grid;
   gap: var(--space-2);
@@ -227,17 +229,31 @@
   background: color-mix(in oklab, var(--accent-softer) 42%, var(--card));
   animation: enter var(--duration-slow) var(--ease-out) backwards;
 }
-.queued-messages-header {
+.composer-card:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.composer-card-header {
   display: grid;
   gap: 2px;
 }
-.queued-messages-header strong {
+.composer-card-header strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: var(--text-base);
   font-weight: 600;
 }
-.queued-messages-header small {
+.composer-card-header small {
   color: var(--muted-foreground);
   font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+.provider-consent-prompt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
 }
 .queued-message {
   display: grid;

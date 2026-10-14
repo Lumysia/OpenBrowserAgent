@@ -6,6 +6,7 @@ import {
   PanelRightOpen,
   Replace,
   RotateCcw,
+  ShieldCheck,
   Square,
   Volume2,
   X,
@@ -20,6 +21,7 @@ import {
 import { languageDetect } from "../../shared/language-detector";
 import type { SmartBarPageConfig } from "../../shared/smart-bar-protocol";
 import { Button, IconTooltip } from "../../ui/components";
+import { providerConsentAgreement } from "../../ui/provider-display";
 import {
   isEditableSnapshot,
   selectionLanguage,
@@ -188,6 +190,16 @@ export function SmartBarResultCard({
             <Square size={13} /> {t.stop}
           </Button>
         )}
+        {result.status === "consent" && (
+          <>
+            <Button size="sm" onClick={onTrusted(store.allowProvider)}>
+              <ShieldCheck size={13} /> {config.providerConsent.allow}
+            </Button>
+            <Button variant="outline" size="sm" onClick={onTrusted(store.hide)}>
+              {config.providerConsent.decline}
+            </Button>
+          </>
+        )}
         {result.status === "error" && (
           <Button
             variant="outline"
@@ -281,9 +293,14 @@ function languageNames(languages: string[], uiLanguage: string) {
 function resultMessage(
   result: SmartBarResult,
   text: string,
-  { messages: t, language }: SmartBarPageConfig,
+  { messages: t, language, providerConsent }: SmartBarPageConfig,
 ) {
   switch (result.status) {
+    case "consent":
+      return providerConsentAgreement(
+        result.consent?.host || "",
+        providerConsent,
+      );
     case "error":
       return result.error || t.connectionLost;
     case "tooLong":

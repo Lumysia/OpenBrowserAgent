@@ -1,6 +1,7 @@
 import { resolveAgent } from "../../shared/agents";
 import { getMessages, resolveLanguage } from "../../shared/i18n";
-import { userErrorText } from "../../shared/user-errors";
+import { grantProviderConsent } from "../../shared/provider-consent";
+import { ProviderConsentError, userErrorText } from "../../shared/user-errors";
 import {
   hideSmartBarOnHost,
   isSmartBarAllowedOnHost,
@@ -15,6 +16,7 @@ import {
   SMART_BAR_COMMAND,
   SMART_BAR_MESSAGE,
   SMART_BAR_STREAM_PORT,
+  type SmartBarAllowProviderRequest,
   type SmartBarOpenSidePanelRequest,
   type SmartBarPageConfig,
   type SmartBarPrepareRequest,
@@ -104,6 +106,14 @@ export function handleSmartBarMessage(
         sendResponse,
       );
       return true;
+    case SMART_BAR_MESSAGE.allowProvider: {
+      const { providerId, host } = request as SmartBarAllowProviderRequest;
+      respond(
+        grantProviderConsent(String(providerId), String(host)),
+        sendResponse,
+      );
+      return true;
+    }
     default:
       return false;
   }
@@ -198,6 +208,7 @@ async function prepare(
     actions,
     hideSite: smartBarHideSite(settings, host),
     messages: getMessages(language).smartBar,
+    providerConsent: getMessages(language).providerConsent,
     language: resolveLanguage(language),
     replyLanguage: language,
     colorScheme: normalizeColorScheme(preferences.colorScheme),
@@ -255,6 +266,12 @@ function handleStreamPort(port: chrome.runtime.Port) {
       .catch(async (error) => {
         const language = await storage.language.get();
         if (controller.signal.aborted) return;
+        if (error instanceof ProviderConsentError)
+          return post({
+            type: "consent",
+            providerId: error.providerId,
+            host: error.host,
+          });
         post({
           type: "error",
           error: userErrorText(error, getMessages(language)),

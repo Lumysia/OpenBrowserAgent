@@ -8,7 +8,9 @@ import {
   type SmartBarResultFormat,
 } from "../../shared/smart-bar-dictionary";
 import {
+  SMART_BAR_MESSAGE,
   SMART_BAR_STREAM_PORT,
+  type SmartBarAllowProviderRequest,
   type SmartBarPageConfig,
   type SmartBarRunRequest,
   type SmartBarShowReason,
@@ -26,9 +28,11 @@ export type SmartBarResult = {
   // How to read `text`; the background asks the model for the same.
   format: SmartBarResultFormat;
   text: string;
-  // tooLong: refused before anything was sent.
-  status: "streaming" | "done" | "error" | "tooLong";
+  // tooLong: refused before anything was sent; consent: nothing was sent,
+  // the provider needs the user's permission first.
+  status: "streaming" | "done" | "error" | "tooLong" | "consent";
   error?: string;
+  consent?: { providerId: string; host: string };
 };
 
 export type SmartBarState = {
@@ -106,6 +110,11 @@ export function createSmartBarStore(host: HTMLElement) {
         updateResult({ text: (state.result?.text || "") + event.text });
       else if (event.type === "error")
         updateResult({ status: "error", error: event.error });
+      else if (event.type === "consent")
+        updateResult({
+          status: "consent",
+          consent: { providerId: event.providerId, host: event.host },
+        });
       else updateResult({ status: "done" });
       if (event.type !== "delta") {
         current.disconnect();
@@ -127,6 +136,22 @@ export function createSmartBarStore(host: HTMLElement) {
       context: selectionContext(snapshot),
     };
     current.postMessage(request);
+  };
+
+  // The user agreed in the bar: store the permission, then run again.
+  const allowProvider = async () => {
+    const { result } = state;
+    if (result?.status !== "consent" || !result.consent) return;
+    const request: SmartBarAllowProviderRequest = {
+      type: SMART_BAR_MESSAGE.allowProvider,
+      ...result.consent,
+    };
+    const response = (await getBrowserApi()
+      .runtime.sendMessage(request)
+      .catch(() => undefined)) as { ok?: boolean } | undefined;
+    if (state.result !== result) return;
+    if (response?.ok) run(result.action);
+    else updateResult({ status: "error", error: undefined });
   };
 
   const ui: SmartBarUi = {
@@ -166,6 +191,7 @@ export function createSmartBarStore(host: HTMLElement) {
   return {
     ui,
     run,
+    allowProvider,
     stop,
     hide,
     setPopoverOpen: (popoverOpen: boolean) => set({ popoverOpen }),
