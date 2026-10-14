@@ -10,7 +10,7 @@ All builds declare:
 
 - `scripting`: inject scripts/CSS for page text extraction, element selection, DOM interaction, input, scrolling, and content capture.
 - `tabs`: read tab metadata, list tabs, open/close/reload/navigate tabs (in the background; a tab is brought to the front only when the user asks), and attach tab context to chats.
-- `webNavigation`: tell which tabs a page the agent works on opened (a link with a target, `window.open`), so the user's own tab goes back in front of them. Only the opener of new tabs is read during an `act` call; nothing is stored.
+- `webNavigation`: tell which tabs a page the agent works on opened (a link with a target, `window.open`), so the user's own tab goes back in front of them. Only the opener of new tabs is read during an `act` call. In a tab where the user translated a page, the main frame's navigations tell when to translate the next page and when a reload ends that; only the tab IDs are kept, in session storage.
 - `storage`: persist settings, providers, agents, skills, MCP servers, chats, workspaces, language, and sync status.
 - `unlimitedStorage`: allow local chat and attachment storage to grow beyond normal extension storage quotas; browser-sync quotas still apply.
 - `alarms`: check for sync changes once a minute while an extension page is visible.
@@ -93,7 +93,7 @@ Depending on user action and the selected agent's tool groups, requests may incl
 
 ## Page Translation
 
-"Translate this page" in the right-click menu translates the page with the engine selected in Settings → Page translation. The page script is injected into that tab only when the item is clicked. It reads the page's paragraphs and sends them, a few at a time as they come near the screen, to the background, which sends them to the engine:
+"Translate this page" in the right-click menu translates the page with the engine selected in Settings → Page translation. The page script is injected into that tab only when the item is clicked. The tab then stays in translate mode: every later page loaded in it (links, typed addresses, back/forward) is translated too, until the tab is reloaded, "Show original" is clicked or the tab closes; other tabs are not affected. It reads the page's paragraphs and sends them, a few at a time as they come near the screen, to the background, which sends them to the engine:
 
 - **AI model** (default): paragraph text (with numbered markers in place of links, emphasis and code) and the page title go to the configured model provider.
 - **Built-in translator**: Chrome's on-device Translator and LanguageDetector APIs. No text leaves the browser. The first translation into a language may download that language pack.

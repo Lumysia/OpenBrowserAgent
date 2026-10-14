@@ -33,7 +33,7 @@ Removes the Origin header from the extension's own requests to an MCP server, on
 Adds an OpenBrowserAgent submenu to the right-click menu (the user can turn it off): ask about or summarize the page, translate the page (and show the original again), search the web about it or the selected text, summarize a linked page, or copy the page as Markdown. Items only open the side panel, translate the page or copy to the clipboard when the user picks them.
 
 == webNavigation justification ==
-While the agent clicks on a page in the background, tells which tabs that page opened (a link that opens a new tab), so the extension can put the user's own tab back in front instead of leaving them on the new tab. Navigation events of other tabs are ignored and nothing is stored or sent.
+While the agent clicks on a page in the background, tells which tabs that page opened (a link that opens a new tab), so the extension can put the user's own tab back in front instead of leaving them on the new tab. After the user translates a page, tells when a new page loads in that same tab (to translate it too) and when the tab is reloaded (to stop). Navigation events of other tabs are ignored; only the IDs of tabs in translate mode are kept, in session memory, and nothing is sent.
 
 == nativeMessaging justification ==
 Optional local execution bridge: connects to a separately installed helper on the user's computer, only after the user installs it and enables it for an agent.
