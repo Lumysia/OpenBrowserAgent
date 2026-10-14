@@ -1,6 +1,14 @@
 import { execFileSync, spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { once } from "node:events";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -27,6 +35,22 @@ function chromiumPath() {
   throw new Error(
     `No Chromium found: set CHROMIUM or install one of ${CHROMIUM_NAMES.join(", ")}.`,
   );
+}
+
+// The ID Chromium gives an unpacked extension: from the manifest key when it
+// has one, otherwise from its absolute path, as 32 hex digits spelled a-p.
+// Other extensions can run service workers too (Chrome for Testing ships
+// component extensions), so the ID can't be taken from the first one seen.
+async function unpackedExtensionId(directory) {
+  const { key } = JSON.parse(
+    await readFile(join(directory, "manifest.json"), "utf8"),
+  );
+  const source = key ? Buffer.from(key, "base64") : await realpath(directory);
+  return createHash("sha256")
+    .update(source)
+    .digest("hex")
+    .slice(0, 32)
+    .replace(/./g, (digit) => String.fromCharCode(97 + parseInt(digit, 16)));
 }
 
 // The production build (`npm run build:chrome`) in a disposable profile.
@@ -62,6 +86,9 @@ export async function launchExtension({
       "--no-sandbox",
       "--no-first-run",
       "--no-default-browser-check",
+      // Chrome builds turn on field-trial features (e.g. one that serves the
+      // default search engine's pages past CDP Fetch); test plain defaults.
+      "--disable-field-trial-config",
       "--disable-background-networking",
       "--disable-component-update",
       "--disable-sync",
@@ -119,14 +146,15 @@ export async function launchExtension({
     });
     const targetsUrl = `http://${new URL(ws).host}/json/list`;
     const targets = async () => (await fetch(targetsUrl)).json();
-    const worker = await poll(async () =>
-      (await targets()).find(
+    const id = await unpackedExtensionId(extension);
+    // The extension has loaded once its service worker runs.
+    await poll(async () =>
+      (await targets()).some(
         (target) =>
           target.type === "service_worker" &&
-          target.url.startsWith("chrome-extension://"),
+          target.url.startsWith(`chrome-extension://${id}/`),
       ),
     );
-    const id = new URL(worker.url).host;
     const connectTo = (url) => connect(url, cdpTimeoutMs);
     const browser = await connectTo(ws);
     connections.push(browser);

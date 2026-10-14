@@ -253,23 +253,49 @@ export async function clickAway(page) {
   await nextFrames(page);
 }
 
-// A real mouse drag across the element's first line.
+// A real mouse drag across the element's first line, from its first
+// character to its last one in view.
 export async function selectText(page, selector) {
   await clickAway(page);
-  const rect = await page.call((selector) => {
+  const { from, to } = await page.call((selector) => {
     const element = document.querySelector(selector);
     // Its start in view, also when the viewport is narrower than it (the
     // side panel is open).
     element.scrollIntoView({ block: "nearest", inline: "start" });
+    const width = document.documentElement.clientWidth;
+    // Each end a quarter into its character: a fixed inset passes the middle
+    // of narrow glyphs (such as a final "l"), which leaves them unselected.
+    const glyphs = [];
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    for (let node; (node = walker.nextNode());)
+      for (let index = 0; index < node.length; index++) {
+        if (/\s/.test(node.data[index])) continue;
+        const range = document.createRange();
+        range.setStart(node, index);
+        range.setEnd(node, index + 1);
+        const box = range.getBoundingClientRect();
+        if (box.width && box.right <= width) glyphs.push(box);
+      }
+    const first = glyphs[0];
+    const line = glyphs.filter((box) => box.top === first?.top);
+    const last = line.at(-1);
+    if (first)
+      return {
+        from: {
+          x: first.left + first.width / 4,
+          y: first.top + first.height / 2,
+        },
+        to: { x: last.right - last.width / 4, y: first.top + first.height / 2 },
+      };
+    // Fields and other elements without text nodes.
     const box = element.getBoundingClientRect();
+    const y = box.top + 10;
     return {
-      left: box.left,
-      right: Math.min(box.right, document.documentElement.clientWidth),
-      top: box.top,
+      from: { x: box.left + 2, y },
+      to: { x: Math.min(box.right, width) - 2, y },
     };
   }, selector);
-  const y = rect.top + 10;
-  await drag(page, { x: rect.left + 2, y }, { x: rect.right - 2, y });
+  await drag(page, from, to);
   // The page script reads the selection in the next frame.
   await nextFrames(page);
 }
