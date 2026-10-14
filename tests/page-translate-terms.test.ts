@@ -87,18 +87,30 @@ test("metadata: a label with a number, numbers with footnote marks, rows of labe
       "126 points by ann 1 hour ago | hide | 29 comments",
       "Home › News › World",
       "A long headline about the storm on the coast | Exclusive",
+      "83.4k stars",
+      "+ 726 releases",
+      "and",
+      "Ten tips for the pass",
+      "Modified 1 month ago",
+      "Viewed 2.0m times",
     ].map((text) => metadataOf(text) ?? null),
     [
       "number",
       "number",
       "number",
-      null,
+      "number",
       null,
       null,
       "name",
       "name",
       "name",
       null,
+      "number",
+      "number",
+      "name",
+      null,
+      "number",
+      "number",
     ],
   );
 });
@@ -114,6 +126,11 @@ test("adds little: only the labels of copied values translated", () => {
   assert.equal(addsLittle("Paris Agreement", "Accord de Paris"), false);
   assert.equal(addsLittle("Note: see Paris", "Remarque : voir Paris"), false);
   assert.equal(addsLittle("Nepali: Sagarmatha", "尼泊尔语：萨加玛塔"), false);
+  // No word in the translation.
+  assert.equal(
+    addsLittle("-5% with 5 percent savings $24.69", "-5% $24.69"),
+    true,
+  );
 });
 
 test("term memory: earlier translations with the same names go with later batches", () => {

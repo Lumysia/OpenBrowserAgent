@@ -3,6 +3,7 @@
 // blocks in mixed content. The DOM is not changed.
 import {
   isChrome,
+  isDecorative,
   isHeading,
   isInline,
   isInsideChrome,
@@ -11,7 +12,7 @@ import {
   isTextBlock,
 } from "./dom-rules";
 import { metadataOf } from "./metadata";
-import { originalText } from "./originals";
+import { originalContent, originalText } from "./originals";
 import { serializeNodes, type Serialized } from "./serialize";
 
 export type Paragraph = {
@@ -139,7 +140,11 @@ function makeParagraph(
     !isHeading(parent) &&
     !isHeading(host) &&
     metadataOf(source.plain, language || undefined);
-  if (metadata && (metadata !== "name" || !isInsideChrome(parent)))
+  // A row of short links (tags, a menu written as links) is labels too.
+  // So is a link that is one lowercase word ("reply", "login"): an action.
+  const action = wrapper?.matches("a[href]") && /^\p{Ll}+$/u.test(source.plain);
+  const labels = metadata || ((action || isLinkRow(trimmed)) && "name");
+  if (labels && (labels !== "name" || !isInsideChrome(parent)))
     return undefined;
   return {
     parent,
@@ -152,6 +157,31 @@ function makeParagraph(
   };
 }
 
+// Two or more links, each a short label, with nothing but spaces and
+// separators between them.
+const LINK_LABEL_WORDS = 4;
+
+function isLinkRow(nodes: Node[]) {
+  let links = 0;
+  for (const node of nodes) {
+    if (node.nodeType === 3) {
+      if (/[\p{L}\d]/u.test(originalText(node as Text))) return false;
+      continue;
+    }
+    if (node.nodeType !== 1) continue;
+    const element = node as Element;
+    if (isDecorative(element)) continue;
+    const link = element.matches("a[href]")
+      ? element
+      : element.querySelector("a[href]");
+    const text = originalContent(element).trim();
+    if (!link || originalContent(link).trim() !== text) return false;
+    if (text.split(/\s+/).length > LINK_LABEL_WORDS) return false;
+    links++;
+  }
+  return links > 1;
+}
+
 // Lines set apart by line breaks outside running text (table cells, boxes
 // of values) are paragraphs of their own: each line's translation follows
 // it. In paragraphs, headings and list items a break is part of the text
@@ -160,15 +190,18 @@ function splitsLines(parent: Element, element: Element) {
   return element.tagName.toUpperCase() === "BR" && !isTextBlock(parent);
 }
 
-// Leading and trailing blank text, line breaks and elements that don't show
-// (page metadata) aren't part of the paragraph.
+// Leading and trailing blank text, line breaks, elements that don't show
+// (page metadata) and decorative content (icons, a hidden tooltip after a
+// button) aren't part of the paragraph.
 const EDGE_TAGS = new Set(["BR", "LINK", "META"]);
 
 function trimRun(nodes: Node[]) {
   const blank = (node: Node) =>
     node.nodeType === 3
       ? !originalText(node as Text).trim()
-      : EDGE_TAGS.has((node as Element).tagName?.toUpperCase());
+      : node.nodeType !== 1 ||
+        EDGE_TAGS.has((node as Element).tagName.toUpperCase()) ||
+        isDecorative(node as Element);
   let start = 0;
   let end = nodes.length;
   while (start < end && blank(nodes[start])) start++;

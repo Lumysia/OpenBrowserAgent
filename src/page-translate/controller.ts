@@ -14,6 +14,7 @@ import {
   type PageTranslateEngine,
 } from "../shared/page-translate/settings";
 import { getBrowserApi } from "../shared/browser-api";
+import { stripPlaceholders } from "../shared/page-translate/placeholders";
 import { addsLittle } from "./metadata";
 import { createPresenter } from "./presenter";
 import { createQueue, PRIORITY } from "./queue";
@@ -268,7 +269,10 @@ function startSession(onFatal: () => void) {
     // A translation that repeats its source adds nothing to show.
     const plain = translation.replace(/\s+/g, " ").trim();
     const source = unit.paragraph.source;
-    if (plain === source.text || addsLittle(source.plain, plain)) {
+    if (
+      plain === source.text ||
+      addsLittle(source.plain, stripPlaceholders(plain))
+    ) {
       clear(unit);
       return;
     }

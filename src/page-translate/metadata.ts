@@ -108,16 +108,26 @@ export function metadataOf(
   const trimmed = text.replace(NOTE_MARK, " ").replace(/\s+/g, " ").trim();
   if (!trimmed) return undefined;
   if (isDate(trimmed, language)) return "date";
-  if (isNumber(trimmed)) return "number";
+  if (isNumber(trimmed) || COUNT.test(trimmed)) return "number";
+  // A lone short lowercase word is a joint between labels ("and" between
+  // two names), not text of its own.
+  if (/^\p{Ll}{1,3}$/u.test(trimmed)) return "name";
   if (isNameList(trimmed) || SITE_NAME.test(trimmed) || isLabelRow(trimmed))
     return "name";
   // A label for a value of that kind ("Coordinates: 27°59′N 86°55′E"): the
   // label alone adds little and the value stays as it is.
-  const labeled = LABELED.exec(trimmed);
-  if (labeled && (isNumber(labeled[1]) || isDate(labeled[1], language)))
+  const labeled = LABELED.exec(trimmed) ?? WORD_LABELED.exec(trimmed);
+  const value = labeled?.[1];
+  if (
+    value &&
+    (isNumber(value) || COUNT.test(value) || isDate(value, language))
+  )
     return "number";
   return undefined;
 }
+
+// A count of something ("83.4k stars", "+ 726 releases", "1.8B views").
+const COUNT = /^[+~]? ?\d[\d.,]*[kmb]?\+? \p{L}+(?: \p{L}+)?$/iu;
 
 // Short labels between separators: a menu or meta row written as text
 // ("new | past | comments", "126 points by ann | hide | 29 comments",
@@ -140,14 +150,19 @@ function isLabelRow(trimmed: string) {
 
 // Footnote marks ("[2]", "[note 2]", "[a]") aren't part of what the text is.
 const NOTE_MARK = /\[[^\][\s][^\][]{0,10}\]/gu;
-// "Label: value", the label at most three words.
+// "Label: value", the label at most three words; or a one-word label
+// without the colon ("Modified 1 month ago", "Viewed 2.0m times").
+const WORD_LABELED = /^\p{L}+ (.+)$/u;
 const LABELED = /^[^\s:：]+(?: [^\s:：]+){0,2} ?[:：] ?(.+)$/u;
 
 // Whether a translation only changed the labels of the source's values and
 // copied the values ("Nepali: सगरमाथा" -> "尼泊尔语：सगरमाथा"): it repeats the
 // source and adds little. Labels are "Label:" (at most three words) and
 // "(Label)"; every other word of the source is in the translation as it is.
+// A translation without a word in it ("-5% $24.69" for a price with a
+// hidden label) adds nothing either. Both texts are plain (no markers).
 export function addsLittle(source: string, translation: string) {
+  if (!/\p{L}/u.test(translation)) return true;
   const left: string[] = [];
   let copied = 0;
   for (const word of source.split(/\s+/).filter(Boolean)) {

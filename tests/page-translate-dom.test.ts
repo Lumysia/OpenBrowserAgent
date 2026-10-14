@@ -85,7 +85,9 @@ test("paragraphs: text held by one element is that element's content", () => {
     <td-like id="cell"><br>Second line<br></td-like>
     <p id="meta">Native words<link rel="category" href="/c"> in a sentence</p>
     <td-like id="lines">First value<br> <a id="line-link" href="/l">Linked line</a></td-like>
-    <p id="verse">A line of verse<br>and the next</p>`);
+    <p id="verse">A line of verse<br>and the next</p>
+    <div id="tags"><a href="/t/a">build-tool</a> <a href="/t/b">dev server</a> · <a href="/t/c">hmr</a></div>
+    <li-like id="star"><a id="star-link" href="/login">Star this repo</a><span role="tooltip" aria-hidden="true">Sign in to star</span></li-like>`);
   assert.deepEqual(found.map(summary), [
     {
       parent: "heading-link",
@@ -133,6 +135,15 @@ test("paragraphs: text held by one element is that element's content", () => {
       text: "A line of verse{1}and the next",
       whole: true,
       inline: false,
+    },
+    // A row of short links is labels (none); a link before a hidden
+    // tooltip holds all of the text.
+    {
+      parent: "star-link",
+      text: "Star this repo",
+      whole: true,
+      inline: true,
+      wrapper: "star-link",
     },
   ]);
 });
