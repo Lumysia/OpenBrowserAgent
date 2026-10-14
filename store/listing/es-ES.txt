@@ -23,6 +23,7 @@ TUS MODELOS, TUS HERRAMIENTAS
 • Conecta proveedores compatibles con OpenAI o con Anthropic, Gemini, OpenRouter, DeepSeek, Ollama y otros, con tus propias claves API y URL base.
 • Usa un modelo auxiliar más económico para leer páginas largas.
 • Conecta servidores MCP remotos (Streamable HTTP) para tener herramientas adicionales. Incluye servidores de búsqueda web que no necesitan clave API, y cada uno permanece desactivado hasta que lo actives.
+• Cifras exactas: el agente puede ejecutar el código JavaScript que escribe en un entorno aislado de tu dispositivo, sin acceso a internet, para calcular, analizar tablas y transformar datos.
 • Puente de ejecución local opcional: permite que un agente ejecute comandos en tu ordenador, solo después de que lo instales y lo actives.
 
 SINCRONIZACIÓN ENTRE DISPOSITIVOS
