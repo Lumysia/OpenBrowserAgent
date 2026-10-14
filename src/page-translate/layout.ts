@@ -3,13 +3,15 @@
 // after, its box is checked, and an area it broke gets the compact form.
 // Only read here (styles and boxes); the caller batches reads before writes.
 import type { Paragraph } from "./blocks";
-import { isTextBlock } from "./dom-rules";
+import { controlOf, isTextBlock } from "./dom-rules";
 import { originalText } from "./originals";
 
 // `block`: on its own line under the paragraph. `inline`: on the same line,
 // after it. `tooltip`: shown on hover (the paragraph's title). `hidden`: the
 // paragraph isn't visible (a skip link, text for screen readers only).
-export type Form = "block" | "inline" | "tooltip" | "hidden";
+// `skip`: a control's label while menus and buttons aren't translated; it
+// keeps its text in both displays.
+export type Form = "block" | "inline" | "tooltip" | "hidden" | "skip";
 
 export type Placement = {
   form: Form;
@@ -22,6 +24,10 @@ export type Placement = {
   // block itself (our element is a new item) or the row the block is an
   // item of. The row keeps its height and its items their widths.
   row?: Element;
+  // The kind of unit (see kindOf).
+  kind?: string;
+  // The text starts at the block's start edge (see render's Look).
+  rule?: boolean;
 };
 
 export type AreaBox = {
@@ -42,26 +48,31 @@ const AREA_DEPTH = 6;
 // Growth that counts as breaking a box.
 const TOLERANCE_PX = 4;
 
-const ROLE_INLINE = new Set(["tab", "menuitem", "option", "link"]);
-
 const rank: Record<Form, number> = {
   block: 0,
   inline: 1,
   tooltip: 2,
   hidden: 3,
+  skip: 4,
 };
-const tighter = (a: Form, b: Form) => (rank[b] > rank[a] ? b : a);
+export const tighter = (a: Form, b: Form) => (rank[b] > rank[a] ? b : a);
 
 // The form for a paragraph, or undefined when it isn't rendered now (in a
 // collapsed section): it is placed when it shows.
 export function choosePlacement(
   paragraph: Paragraph,
   compact: WeakSet<Element>,
+  translateMenus: boolean,
 ): Placement | undefined {
   const block = paragraph.parent;
   if (!block.getClientRects().length) return undefined;
   const view = block.ownerDocument.defaultView!;
   const style = view.getComputedStyle(block);
+  // A control's size and look are designed around its label: its
+  // translation never goes into it (a tooltip when menus are translated).
+  const label = soleElement(paragraph) ?? block;
+  if (controlOf(label) || isDrawnControl(paragraph, view))
+    return { form: translateMenus ? "tooltip" : "skip" };
   const box = nodesBox(paragraph);
   // Visually hidden text (1px clip, off-screen skip links) stays as it is.
   if (box.width < 2 || box.height < 2) return { form: "hidden" };
@@ -120,6 +131,8 @@ export function choosePlacement(
   const placement: Placement = {
     form,
     row: isRow(style) ? block : inRow ? parent! : undefined,
+    kind: kindOf(paragraph),
+    rule: startAligned(style),
     ...areaOf(block, view),
   };
   if (placement.area && compact.has(placement.area))
@@ -128,22 +141,72 @@ export function choosePlacement(
   return placement;
 }
 
+// What kind of unit a paragraph is: its block's tag, role and classes and
+// those of the block's parent. Units of one kind (the headlines of a list of
+// cards, the cells of a table column) show their translations one way.
+function kindOf(paragraph: Paragraph) {
+  const name = (element: Element | null) =>
+    element
+      ? `${element.tagName}[${element.getAttribute("role") || ""}].${[...element.classList].sort().join(".")}`
+      : "";
+  const block = paragraph.parent;
+  return `${name(block.parentElement)}>${name(block)}${paragraph.whole ? "" : "~"}`;
+}
+
+function startAligned(style: CSSStyleDeclaration) {
+  const align = style.textAlign;
+  return (
+    /^(start|justify)$/.test(align) ||
+    align === (style.direction === "rtl" ? "right" : "left")
+  );
+}
+
 // What the block itself allows.
 function ownForm(block: Element, style: CSSStyleDeclaration): Form {
-  const tag = block.tagName.toUpperCase();
-  const role = block.getAttribute("role");
-  // A button's size is designed around its label.
-  if (tag === "BUTTON" || role === "button") return "tooltip";
   // Our element would be a new cell of the grid.
   if (/grid/.test(style.display)) return "tooltip";
-  // A table header, a tab, a menu item, a chip: one line.
-  if (tag === "TH" || (role && ROLE_INLINE.has(role))) return "inline";
+  // A table header: one line.
+  if (block.tagName.toUpperCase() === "TH") return "inline";
   if (/^inline/.test(style.display) || style.display === "contents")
     return "inline";
   // Our element would be a new item next to the paragraph's text.
   if (/flex/.test(style.display) && !style.flexDirection.startsWith("column"))
     return "inline";
   return "block";
+}
+
+// Words at most in a control's label.
+const LABEL_MAX_WORDS = 6;
+// A control is at most this many lines high.
+const CONTROL_MAX_LINES = 3;
+
+// A link drawn as a button (a pill, a chip): a short label in a small box
+// with its own background or border.
+function isDrawnControl(paragraph: Paragraph, view: Window) {
+  const link = (soleElement(paragraph) ?? paragraph.parent).closest("a[href]");
+  if (!link) return false;
+  const text = paragraph.source.plain;
+  if (text.split(" ").length > LABEL_MAX_WORDS || /[.!?:]$/.test(text))
+    return false;
+  const style = view.getComputedStyle(link);
+  const painted =
+    !/^(transparent|rgba\(.*,\s*0\))$/.test(style.backgroundColor) ||
+    style.backgroundImage !== "none" ||
+    (parseFloat(style.borderTopWidth) > 0 &&
+      style.borderTopStyle !== "none" &&
+      parseFloat(style.borderBottomWidth) > 0);
+  if (!painted) return false;
+  const line =
+    parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.2 || 20;
+  return link.getBoundingClientRect().height <= line * CONTROL_MAX_LINES;
+}
+
+// The paragraph's only node when it is an element (a link in a list item).
+function soleElement(paragraph: Paragraph) {
+  const [node] = paragraph.nodes;
+  return paragraph.nodes.length === 1 && node.nodeType === 1
+    ? (node as Element)
+    : undefined;
 }
 
 function isRow(style: CSSStyleDeclaration) {

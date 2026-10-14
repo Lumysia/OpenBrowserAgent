@@ -7,7 +7,10 @@
          row, a line-clamped card title, a fixed-height badge, an icon-only
          button, chips in a flex row, a radio grid, an infobox, a data table
          with short header cells, a navigation box with inline list items,
-         references in columns, fixed-height list items and a footer. -->
+         references in columns, fixed-height list items and a footer.
+         A news-style part: a pill link, a grid of story cards with a
+         source line, a headline with an icon after it, a clamped headline,
+         a meta row of a time and an ellipsized byline, and thumbnails. -->
     <style>
       body {
         font: 16px/1.5 sans-serif;
@@ -59,6 +62,9 @@
       #tabs [role="tab"] {
         white-space: nowrap;
         padding: 4px 12px;
+      }
+      #tabs [aria-selected="true"] {
+        border-bottom: 3px solid #1a73e8;
       }
       #titlebar {
         display: flex;
@@ -172,6 +178,76 @@
       #refs {
         column-width: 220px;
         font-size: 14px;
+      }
+      #more {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 36px;
+        padding: 0 16px;
+        border-radius: 18px;
+        background: #eef;
+        color: inherit;
+        text-decoration: none;
+      }
+      #stories {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin: 16px 0;
+      }
+      .story {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 12px;
+        border-radius: 12px;
+        background: #f6f6f8;
+      }
+      .story-text {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+        flex: 1;
+      }
+      .source {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+      }
+      .headline {
+        color: inherit;
+        text-decoration: none;
+      }
+      .headline.clamped {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+      }
+      .material-icons {
+        font-style: normal;
+        font-size: 0;
+      }
+      .meta {
+        display: flex;
+        gap: 6px;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      .byline {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .thumb {
+        width: 72px;
+        height: 72px;
+        flex: none;
+        border-radius: 8px;
+        background: #ccd;
       }
       #site-footer ul {
         display: grid;
@@ -300,6 +376,76 @@
             so that they reach the top before the afternoon clouds come in from
             the valley.
           </p>
+          <a id="more" href="/more"
+            ><svg width="16" height="16" aria-hidden="true"></svg
+            ><span>See more walks</span></a
+          >
+          <div id="stories">
+            <div class="story" id="story-1">
+              <div class="story-text">
+                <div class="source">
+                  <svg width="12" height="12" aria-hidden="true"></svg>Valley
+                  Courier
+                </div>
+                <a class="headline" id="headline-1" href="/story-1"
+                  >Snow closes the northern pass for a second week as crews wait
+                  for the wind to drop&nbsp;<i
+                    class="material-icons"
+                    aria-hidden="true"
+                    >chevron_right</i
+                  ></a
+                >
+                <div class="meta" id="meta-1">
+                  <time datetime="2026-10-14T08:00:00Z">3 hours ago</time>
+                  <span class="byline"
+                    >By Ann Lee, Bo Chan &amp; Cy Dee and Eve Park</span
+                  >
+                </div>
+              </div>
+              <img class="thumb" id="thumb-1" alt="" />
+            </div>
+            <div class="story" id="story-2">
+              <div class="story-text">
+                <div class="source">
+                  <svg width="12" height="12" aria-hidden="true"></svg>Ridge
+                  Weekly
+                </div>
+                <a class="headline" id="headline-2" href="/story-2"
+                  >Shepherds bring their flocks down early after the first
+                  frost&nbsp;<i class="material-icons" aria-hidden="true"
+                    >chevron_right</i
+                  ></a
+                >
+                <div class="meta" id="meta-2">
+                  <time datetime="2026-10-14T08:00:00Z">Yesterday</time>
+                  <span class="byline">By Dana Moss</span>
+                </div>
+              </div>
+              <img class="thumb" id="thumb-2" alt="" />
+            </div>
+            <div class="story" id="story-3">
+              <div class="story-text">
+                <div class="source">
+                  <svg width="12" height="12" aria-hidden="true"></svg>The Hill
+                  Post
+                </div>
+                <a class="headline clamped" id="headline-3" href="/story-3"
+                  >A long walk along the old salt road from the lakes to the
+                  market towns, told by those who still make it every autumn
+                  with their mules and dogs&nbsp;<i
+                    class="material-icons"
+                    aria-hidden="true"
+                    >chevron_right</i
+                  ></a
+                >
+                <div class="meta" id="meta-3">
+                  <time datetime="2026-10-14T08:00:00Z">Oct 12, 2026</time>
+                  <span class="byline">By Frank Ode</span>
+                </div>
+              </div>
+              <img class="thumb" id="thumb-3" alt="" />
+            </div>
+          </div>
           <div id="navbox" role="navigation">
             <ul>
               <li><a href="/north">Northern passes</a></li>

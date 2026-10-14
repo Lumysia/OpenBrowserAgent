@@ -7,6 +7,7 @@ import {
   breaksLayout,
   choosePlacement,
   measureArea,
+  tighter,
   type AreaBox,
   type Form,
 } from "./layout";
@@ -18,6 +19,7 @@ import {
   showTooltip,
   showTranslation,
   type ElementForm,
+  type Look,
 } from "./render";
 import { swapIn, swapOut } from "./swap";
 import type { Unit } from "./units";
@@ -30,12 +32,25 @@ type PresenterOptions = {
   units: () => Iterable<Unit>;
   // Runs our changes to the page's own text (see units.mute).
   mute: (change: () => void) => void;
+  // Whether controls' labels are translated too.
+  translateMenus: () => boolean;
 };
 
-export function createPresenter({ language, units, mute }: PresenterOptions) {
+// Forms that apply to every unit of a kind; hidden and skipped units are
+// decided one by one.
+const SHARED_FORMS = new Set<Form>(["block", "inline", "tooltip"]);
+
+export function createPresenter({
+  language,
+  units,
+  mute,
+  translateMenus,
+}: PresenterOptions) {
   const dirty = new Set<Unit>();
   // Areas a translation broke: everything in them shows as a tooltip.
   const compact = new WeakSet<Element>();
+  // The form of each kind of unit: the tightest any of its units needed.
+  const kinds = new Map<string, Form>();
   let translationOnly = false;
   let frame: number | undefined;
   let timer: number | undefined;
@@ -50,22 +65,57 @@ export function createPresenter({ language, units, mute }: PresenterOptions) {
     timer = window.setTimeout(paint, FRAME_FALLBACK_MS);
   }
 
+  // Gives the unit its kind's form, or its kind a tighter form. Returns
+  // the kind when it got tighter.
+  function shareForm(unit: Unit) {
+    const placement = unit.placement;
+    if (!placement?.kind || !SHARED_FORMS.has(placement.form)) return;
+    const known = kinds.get(placement.kind);
+    const form = known ? tighter(placement.form, known) : placement.form;
+    placement.form = form;
+    if (form === known) return;
+    kinds.set(placement.kind, form);
+    return known && placement.kind;
+  }
+
+  // Units of the kinds, shown in the kinds' forms now.
+  function unitsOfKinds(changed: Set<string>) {
+    const found = new Set<Unit>();
+    if (!changed.size) return found;
+    for (const unit of units()) {
+      const placement = unit.placement;
+      if (!placement?.kind || !changed.has(placement.kind)) continue;
+      if (!SHARED_FORMS.has(placement.form)) continue;
+      placement.form = tighter(placement.form, kinds.get(placement.kind)!);
+      found.add(unit);
+    }
+    return found;
+  }
+
   function paint() {
     cancelAnimationFrame(frame!);
     clearTimeout(timer);
     frame = timer = undefined;
-    const batch = [...dirty];
+    const batch = new Set(dirty);
     dirty.clear();
     // Read: the room around paragraphs that show for the first time, and
     // the areas new translations go into.
-    const inFlow = batch.filter(
-      (unit) => !translationOnly || unit.translation === undefined,
-    );
-    for (const unit of inFlow)
-      unit.placement ??= choosePlacement(unit.paragraph, compact);
-    const checked = inFlow.filter(
+    const tightened = new Set<string>();
+    for (const unit of batch) {
+      unit.placement ??= choosePlacement(
+        unit.paragraph,
+        compact,
+        translateMenus(),
+      );
+      const kind = shareForm(unit);
+      if (kind) tightened.add(kind);
+    }
+    for (const unit of unitsOfKinds(tightened)) batch.add(unit);
+    const checked = [...batch].filter(
       (unit) =>
-        unit.translation !== undefined && elementForm(unit.placement?.form),
+        !translationOnly &&
+        unit.translation !== undefined &&
+        elementForm(unit.placement?.form),
     );
     const before = new Map<Element, AreaBox>();
     for (const { placement } of checked)
@@ -90,11 +140,18 @@ export function createPresenter({ language, units, mute }: PresenterOptions) {
         ),
     );
     if (!broken.length) return;
-    // Write: the compact form for the areas they broke, also for the
-    // translations already there.
+    // Write: the compact form for the areas and the kinds they broke, also
+    // for the translations already there.
     const areas = new Set(broken.map(areaOf));
     for (const area of areas) compact.add(area);
-    const fallback = new Set(broken);
+    const brokenKinds = new Set<string>();
+    for (const { placement } of broken)
+      if (placement!.kind) {
+        kinds.set(placement!.kind, "tooltip");
+        brokenKinds.add(placement!.kind);
+      }
+    const fallback = unitsOfKinds(brokenKinds);
+    for (const unit of broken) fallback.add(unit);
     for (const unit of units())
       if (unit.placement && areas.has(areaOf(unit))) fallback.add(unit);
     for (const unit of fallback)
@@ -105,6 +162,13 @@ export function createPresenter({ language, units, mute }: PresenterOptions) {
   function apply(unit: Unit) {
     const { paragraph } = unit;
     const translation = unit.translation;
+    const form = unit.placement?.form;
+    if (form === "skip") {
+      removeShown(unit);
+      if (unit.swap) swapOut(unit.swap);
+      unit.swap = undefined;
+      return;
+    }
     if (translation !== undefined && translationOnly) {
       removeShown(unit);
       unit.swap ??= swapIn(paragraph.source, translation);
@@ -112,8 +176,11 @@ export function createPresenter({ language, units, mute }: PresenterOptions) {
     }
     if (unit.swap) swapOut(unit.swap);
     unit.swap = undefined;
-    const form = unit.placement?.form;
-    const inFlow = elementForm(form);
+    const flowForm = elementForm(form);
+    const inFlow: Look | undefined = flowForm && {
+      form: flowForm,
+      rule: unit.placement?.rule ?? true,
+    };
     if (translation !== undefined && form === "tooltip") {
       removeTranslation(unit.element);
       unit.element = undefined;
@@ -153,6 +220,15 @@ export function createPresenter({ language, units, mute }: PresenterOptions) {
   }
 
   return {
+    // The unit's place in the page, decided now if it wasn't yet.
+    place(unit: Unit) {
+      unit.placement ??= choosePlacement(
+        unit.paragraph,
+        compact,
+        translateMenus(),
+      );
+      return unit.placement;
+    },
     // Shows the unit's current state in the next frame.
     request(unit: Unit) {
       dirty.add(unit);
@@ -171,6 +247,15 @@ export function createPresenter({ language, units, mute }: PresenterOptions) {
       translationOnly = on;
       for (const unit of units())
         if (unit.translation !== undefined) dirty.add(unit);
+      schedule();
+    },
+    // Places every translation again (controls show or not).
+    placeAll() {
+      kinds.clear();
+      for (const unit of units()) {
+        unit.placement = undefined;
+        if (unit.translation !== undefined) dirty.add(unit);
+      }
       schedule();
     },
     stop() {

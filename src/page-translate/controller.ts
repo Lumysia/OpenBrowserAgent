@@ -135,6 +135,7 @@ function startSession(onFatal: () => void) {
     language,
     units: () => units.units.values(),
     mute: units.mute,
+    translateMenus: () => translateMenus,
   });
 
   const near = new IntersectionObserver(
@@ -211,6 +212,13 @@ function startSession(onFatal: () => void) {
       for (const item of items) {
         const unit = units.units.get(item.id);
         if (!unit) continue;
+        // A control's label isn't sent unless menus and buttons are
+        // translated (styles tell some controls, such as a link drawn as a
+        // button).
+        if (presenter.place(unit)?.form === "skip") {
+          unit.state = "skipped";
+          continue;
+        }
         unit.state = "sent";
         if (unit.visible) presenter.request(unit);
         const waiting = sent.get(item.text);
@@ -248,6 +256,13 @@ function startSession(onFatal: () => void) {
     );
     if (view.translateMenus === translateMenus) return;
     translateMenus = view.translateMenus;
+    presenter.placeAll();
+    for (const unit of units.units.values())
+      if (unit.state === "skipped") {
+        unit.state = "idle";
+        if (unit.near || smallPage) enqueue(unit);
+      }
+    scheduleFlush();
     void units.rescan(root, { translateMenus });
   }
 

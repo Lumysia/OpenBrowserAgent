@@ -19,6 +19,7 @@ import {
 const FIXED = {
   header: { selector: "#site-header", place: true },
   tabs: { selector: "#tabs", place: true },
+  activeTab: { selector: "#tabs [aria-selected=true]", place: true },
   titlebar: { selector: "#titlebar", place: true },
   share: { selector: "#share", place: true },
   infobox: { selector: "#infobox", width: true },
@@ -28,6 +29,15 @@ const FIXED = {
   choices: { selector: "#choices" },
   climateBox: { selector: "#climate-box", width: true },
   sister: { selector: "#sisters li" },
+  more: { selector: "#more" },
+  stories: { selector: "#stories", width: true },
+  meta1: { selector: "#meta-1" },
+  meta2: { selector: "#meta-2" },
+  meta3: { selector: "#meta-3" },
+  thumb1: { selector: "#thumb-1" },
+  thumb2: { selector: "#thumb-2" },
+  thumb3: { selector: "#thumb-3" },
+  clampedHeadline: { selector: "#headline-3" },
   navbox: { selector: "#navbox" },
   refs: { selector: "#refs", width: true },
   footer: { selector: "#site-footer" },
@@ -35,7 +45,11 @@ const FIXED = {
 const TOLERANCE_PX = 2;
 // Text that only menus, buttons, tabs, navigation and the footer have.
 const CHROME_TEXT =
-  /Trail maps|Mountain weather|Sign in|Search the almanac|Discussion page|Edit history|Share this|Northern passes|Privacy policy|Contact the editors/;
+  /Trail maps|Mountain weather|Sign in|Search the almanac|Discussion page|Edit history|Share this|Northern passes|Privacy policy|Contact the editors|See more walks/;
+// Labels that are kept as they are: times, dates, sources, bylines, names,
+// numbers, and the icons after headlines.
+const LABEL_TEXT =
+  /3 hours ago|Yesterday|Oct 12|Valley Courier|Ridge Weekly|The Hill Post|By Ann Lee|By Dana Moss|By Frank Ode|chevron_right|Elevation|Range/;
 
 function layoutOf(page) {
   return page.call((fixed) => {
@@ -142,8 +156,34 @@ test(
             await page.call(() => document.querySelector("#card-title").title),
             /^FR: A very long card title/,
           );
-          // The badge's text is a run in the card: under it, in the card.
-          assert.match(await shownIn(page, "#card"), /^FR: Recommended/);
+          // The badge is a box of its own between blocks: on hover.
+          assert.match(await shownIn(page, "#badge"), /^FR: Recommended/);
+          // A headline link: its translation is in it, at the source text's
+          // edge, without the icon after it. A clamped one: on hover, in
+          // full.
+          const headline = await page.call(() => {
+            const link = document.querySelector("#headline-1");
+            const translation = link.querySelector("oba-translation");
+            const range = document.createRange();
+            range.selectNodeContents(link.firstChild);
+            const source = range.getClientRects()[0];
+            range.selectNodeContents(translation);
+            return {
+              text: translation.textContent,
+              icons: translation.querySelectorAll("i, svg, img").length,
+              offset: Math.round(range.getClientRects()[0].left - source.left),
+            };
+          });
+          assert.deepEqual(
+            { ...headline, text: headline.text.slice(0, 15) },
+            { text: "FR: Snow closes", icons: 0, offset: 0 },
+          );
+          assert.match(
+            await shownIn(page, "#headline-3"),
+            /^FR: A long walk.* dogs$/,
+          );
+          assert.equal(await shownIn(page, "#more"), undefined);
+          assert.doesNotMatch(sent(), LABEL_TEXT);
           // The skip link is hidden: nothing is added for it.
           assert.equal(
             await page.call(
@@ -162,6 +202,17 @@ test(
           await poll(() => shownIn(page, "#site-nav li:last-child"));
           await poll(() => shownIn(page, "#tabs [role=tab]:last-child"));
           await poll(() => shownIn(page, "#site-footer li:last-child"));
+          // Controls show their translation on hover.
+          assert.match(
+            await poll(() => shownIn(page, "#more")),
+            /^FR: See more/,
+          );
+          assert.match(
+            await page.call(
+              () => document.querySelector("#tabs [aria-selected=true]").title,
+            ),
+            /^FR: Article/,
+          );
           await delay(300);
           assert.match(sent(), /Trail maps/);
           const after = await layoutOf(page);
@@ -206,6 +257,12 @@ test(
           sameLink: window.introLink === document.querySelector("#intro-link"),
           title: document.querySelector("#title").textContent.trim(),
           nav: document.querySelector("#site-nav").textContent.includes("FR:"),
+          headline: document
+            .querySelector("#headline-1")
+            .textContent.slice(0, 15),
+          labels: [...document.querySelectorAll("#more, .meta, .source")].some(
+            (element) => element.textContent.includes("FR:"),
+          ),
         }));
         assert.deepEqual(view, {
           added: 0,
@@ -214,11 +271,22 @@ test(
           sameLink: true,
           title: "FR: Walking the high passes",
           nav: false,
+          headline: "FR: Snow closes",
+          labels: false,
         });
         const after = await layoutOf(page);
         const moved = changes(before, after);
         // Longer text may take more lines; designed sizes stay.
-        for (const name of ["cardTitle", "badge", "sister", "choices"])
+        for (const name of [
+          "cardTitle",
+          "badge",
+          "sister",
+          "choices",
+          "more",
+          "meta1",
+          "thumb1",
+          "clampedHeadline",
+        ])
           assert.equal(moved[name], undefined, name);
         for (const name of [
           "header",

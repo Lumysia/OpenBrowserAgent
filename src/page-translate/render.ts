@@ -11,28 +11,46 @@ import { buildTranslation, originalOf } from "./serialize";
 // The forms that add an element to the page.
 export type ElementForm = "block" | "inline";
 
+// How our element shows: its form, and whether a block has the rule that
+// sets it apart (not for centred or end-aligned text, where a rule at the
+// start edge would stand apart from the text).
+export type Look = { form: ElementForm; rule: boolean };
+
 const PENDING = "data-oba-pending";
 const INLINE = "data-oba-inline";
+const PLAIN = "data-oba-plain";
 
-// The translation inherits the page's font, size and colour; a faint rule
-// in the text colour sets it apart in light and dark pages alike.
+// The translation inherits the page's font, size, colour and alignment and
+// starts at the same edge as the source text. A faint rule in the text
+// colour sets it apart in light and dark pages alike; it sits in the margin
+// before the text and takes no room.
 const CSS = `
 ${TRANSLATION_TAG}[${TRANSLATION_ATTRIBUTE}] {
   display: block;
+  position: relative;
   margin: 0.3em 0 0;
-  padding: 0 0 0 0.6em;
+  padding: 0;
   border: 0;
-  border-inline-start: 2px solid color-mix(in srgb, currentColor 24%, transparent);
   font: inherit;
   color: inherit;
-  text-align: start;
+  text-align: inherit;
   text-indent: 0;
   white-space: normal;
   overflow-wrap: break-word;
   user-select: text;
 }
+${TRANSLATION_TAG}[${TRANSLATION_ATTRIBUTE}]:not([${INLINE}], [${PLAIN}])::before {
+  content: "";
+  position: absolute;
+  inset-block: 0.2em;
+  inset-inline-start: -0.5em;
+  width: 2px;
+  background: color-mix(in srgb, currentColor 24%, transparent);
+  pointer-events: none;
+}
 ${TRANSLATION_TAG}[${INLINE}] {
   display: inline;
+  position: static;
   margin: 0;
   padding: 0;
   border: 0;
@@ -92,11 +110,12 @@ function createElement(paragraph: Paragraph, language: string) {
 function prepare(
   paragraph: Paragraph,
   language: string,
-  form: ElementForm,
+  look: Look,
   current?: HTMLElement,
 ) {
   const element = current ?? createElement(paragraph, language);
-  element.toggleAttribute(INLINE, form === "inline");
+  element.toggleAttribute(INLINE, look.form === "inline");
+  element.toggleAttribute(PLAIN, !look.rule);
   return element;
 }
 
@@ -115,10 +134,10 @@ function place(paragraph: Paragraph, element: HTMLElement) {
 export function showPending(
   paragraph: Paragraph,
   language: string,
-  form: ElementForm,
+  look: Look,
   current?: HTMLElement,
 ) {
-  const element = prepare(paragraph, language, form, current);
+  const element = prepare(paragraph, language, look, current);
   element.setAttribute(PENDING, "");
   if (!element.isConnected) place(paragraph, element);
   return element;
@@ -128,11 +147,11 @@ export function showPending(
 export function showPartial(
   paragraph: Paragraph,
   language: string,
-  form: ElementForm,
+  look: Look,
   text: string,
   current?: HTMLElement,
 ) {
-  const element = showPending(paragraph, language, form, current);
+  const element = showPending(paragraph, language, look, current);
   element.textContent = text;
   return element;
 }
@@ -140,11 +159,11 @@ export function showPartial(
 export function showTranslation(
   paragraph: Paragraph,
   language: string,
-  form: ElementForm,
+  look: Look,
   translation: string,
   current?: HTMLElement,
 ) {
-  const element = prepare(paragraph, language, form, current);
+  const element = prepare(paragraph, language, look, current);
   element.removeAttribute(PENDING);
   element.replaceChildren(
     buildTranslation(
@@ -161,13 +180,26 @@ export function removeTranslation(element?: HTMLElement) {
   element?.remove();
 }
 
-export type Tooltip = {
-  element: Element;
-  text: string;
+// The translations shown as an element's tooltip: one per paragraph in it,
+// before the title the page gave it.
+type Titled = {
   previous: string | null;
+  texts: Map<Tooltip, string>;
+  title: string;
 };
+const titled = new WeakMap<Element, Titled>();
 
-// The translation as the block's tooltip, before a title it has.
+export type Tooltip = { element: Element };
+
+function writeTitle(element: Element, entry: Titled) {
+  const title = [...entry.texts.values(), entry.previous]
+    .filter((text) => text)
+    .join("\n");
+  entry.title = title;
+  element.setAttribute("title", title);
+}
+
+// The translation as the block's tooltip.
 export function showTooltip(
   paragraph: Paragraph,
   translation: string,
@@ -175,18 +207,38 @@ export function showTooltip(
 ): Tooltip {
   const element = paragraph.parent;
   const text = stripPlaceholders(translation).replace(/\s+/g, " ").trim();
-  const previous = current ? current.previous : element.getAttribute("title");
-  const title = previous ? `${text}\n${previous}` : text;
-  element.setAttribute("title", title);
-  return { element, text: title, previous };
+  let entry = titled.get(element);
+  // The page changed the title since: it is the page's own again.
+  if (entry && element.getAttribute("title") !== entry.title) entry = undefined;
+  if (!entry) {
+    entry = {
+      previous: element.getAttribute("title"),
+      texts: new Map(),
+      title: "",
+    };
+    titled.set(element, entry);
+  }
+  const tooltip = current?.element === element ? current : { element };
+  entry.texts.set(tooltip, text);
+  writeTitle(element, entry);
+  return tooltip;
 }
 
-// The block's own title again, unless the page has changed it since.
+// The block's own title again once none of its paragraphs shows a tooltip,
+// unless the page has changed it since.
 export function removeTooltip(tooltip?: Tooltip) {
-  if (!tooltip || tooltip.element.getAttribute("title") !== tooltip.text)
+  if (!tooltip) return;
+  const { element } = tooltip;
+  const entry = titled.get(element);
+  if (!entry?.texts.delete(tooltip)) return;
+  if (element.getAttribute("title") !== entry.title) {
+    titled.delete(element);
     return;
-  if (tooltip.previous === null) tooltip.element.removeAttribute("title");
-  else tooltip.element.setAttribute("title", tooltip.previous);
+  }
+  if (entry.texts.size) return writeTitle(element, entry);
+  titled.delete(element);
+  if (entry.previous === null) element.removeAttribute("title");
+  else element.setAttribute("title", entry.previous);
 }
 
 // Removes everything this script added to the page.

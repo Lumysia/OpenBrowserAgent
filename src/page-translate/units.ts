@@ -9,7 +9,10 @@ import type { Tooltip } from "./render";
 import type { Swap } from "./swap";
 import { yieldToMain } from "./yield";
 
-export type UnitState = "idle" | "queued" | "sent" | "done" | "failed";
+// `skipped`: a control's label, not sent while menus and buttons aren't
+// translated.
+export type UnitState =
+  "idle" | "queued" | "sent" | "done" | "failed" | "skipped";
 
 export type Unit = {
   id: number;
