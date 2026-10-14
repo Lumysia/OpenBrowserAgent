@@ -28,7 +28,7 @@ SEUS MODELOS, SUAS FERRAMENTAS
 
 SINCRONIZAÇÃO ENTRE DISPOSITIVOS
 
-• Sincronize configurações, agentes, habilidades e, se quiser, conversas e anexos, pela conta do seu navegador ou pelo seu próprio armazenamento WebDAV.
+• Sincronize configurações, agentes e habilidades pela conta do seu navegador ou pelo seu próprio armazenamento WebDAV; se quiser, também chaves de API (criptografadas no seu dispositivo com sua própria frase secreta), conversas e arquivos.
 • As alterações são mescladas item por item, então edições feitas em dois dispositivos não se sobrescrevem, e exclusões grandes pedem sua confirmação antes.
 
 VOCÊ NO CONTROLE

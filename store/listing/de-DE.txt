@@ -28,7 +28,7 @@ IHRE MODELLE, IHRE TOOLS
 
 SYNCHRONISIERUNG ÜBER GERÄTE HINWEG
 
-• Synchronisieren Sie Einstellungen, Agenten, Skills und auf Wunsch auch Chats und Anhänge – über Ihr Browserkonto oder Ihren eigenen WebDAV-Speicher.
+• Synchronisieren Sie Einstellungen, Agenten und Skills über Ihr Browserkonto oder Ihren eigenen WebDAV-Speicher – auf Wunsch auch API-Schlüssel (auf Ihrem Gerät mit Ihrer eigenen Passphrase verschlüsselt), Chats und Dateien.
 • Änderungen werden Eintrag für Eintrag zusammengeführt, sodass sich Bearbeitungen auf zwei Geräten nicht gegenseitig überschreiben. Vor umfangreichen Löschungen fragt die Erweiterung zuerst nach.
 
 SIE BEHALTEN DIE KONTROLLE

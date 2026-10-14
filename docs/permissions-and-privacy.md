@@ -116,7 +116,7 @@ OpenBrowserAgent sends data to endpoints configured by the user in the AI provid
 - Mermaid preview image URLs through `mermaid.ink` and links to `mermaid.live`.
 - Image URLs from an answer, only after the user chooses to load them.
 - Page image/file download URLs when a download tool is used.
-- WebDAV URLs configured as a sync backend (see [Sync](sync.md)), including chat attachments when attachment sync is enabled.
+- WebDAV URLs configured as a sync backend (see [Sync](sync.md)), including chat attachments when chats and files sync.
 - The free Google or Microsoft translation endpoints, only when the user selected one of them and translates a page (the other one only when the selected one fails on that page) (see [Page Translation](#page-translation)).
 
 ## Storage and Sync
@@ -131,11 +131,9 @@ Stored data includes:
 - Local execution bridge configurations and secrets.
 - Chats and chat tabs. A chat keeps, for each tool call, the text the model received (page snapshots and extracted text included, up to the tool output size limit), so later turns and chat exports can show what the agent saw. Longer outputs are also kept in local IndexedDB under artifact handles; those are never synced.
 - Page translations (IndexedDB, 30 days).
-- Sync status and sync bookkeeping: what this device last synced, changes waiting to upload, and a copy of the last sync root file.
+- Sync status and sync bookkeeping: what this device last synced, changes waiting to upload, a copy of the last sync root file, and the key derived from the sync passphrase.
 
-Sync is disabled until a backend is selected. Language and lightweight preferences then use that backend. The provider sync option is enabled by default. Agents, skills, MCP servers, local execution bridges, chats, and chat attachments remain local unless the user enables their sync options.
-
-Important: provider sync is enabled by default, so provider configurations may sync through browser sync. Users should treat synced provider API keys as sensitive browser-synced data.
+Sync is disabled until a backend is selected. Settings then always sync: language, preferences, AI providers and MCP servers without their keys, agents with their `MEMORY.md` and `USER.md`, and skills without their files. Keys (API keys and MCP request headers) sync only when the user turns them on and sets a sync passphrase; they are encrypted on the device with a key derived from it, so the sync storage never sees them in the clear. Chats sync only when turned on; files (skill and workspace files, chat attachments) only on WebDAV and when turned on. Local execution bridges never sync.
 
 Attachments are saved on this device first and uploaded by the next sync. Attachments and chats synced from another device are downloaded when they are first shown here.
 

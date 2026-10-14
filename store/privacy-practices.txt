@@ -15,7 +15,7 @@ Injects the extension's own bundled scripts into the page the user is working on
 The agent lists, opens, reloads, navigates and closes tabs when the user asks it to work across pages (in the background, so the user keeps their own tab; it brings a tab to the front only when the user asks), and the user can attach open tabs (title and URL) to a chat as context.
 
 == storage justification ==
-Saves the user's settings, model providers, agents, skills and chats on the device.
+Saves the user's settings, model providers, agents, skills and chats on the device. With sync on, settings (without API keys) go to the user's own browser account sync or WebDAV storage; API keys and MCP headers only if the user turns that on, encrypted on the device with a passphrase the user sets; chats and files only if turned on. Local execution bridges are never synced.
 
 == downloads justification ==
 Saves what the user asks for to the browser's Downloads folder: chat exports as Markdown, generated images, diagrams, files the agent downloads from a link, and text or files the agent prepared. The agent reads the state of downloads (finished, failed, where the file was saved) so it can tell the user where the file is, and can cancel or retry the downloads it started. It never opens downloaded files or deletes them.
@@ -71,7 +71,7 @@ OpenBrowserAgent has no server of its own, but it does send these kinds of data 
 [ ] Personally identifiable information: left unticked; the extension never asks for it (only incidental if the user types it)
 [ ] Health information
 [ ] Financial and payment information
-[x] Authentication information: the user's API keys are sent to the provider they belong to
+[x] Authentication information: the user's API keys are sent to the provider they belong to; if the user turns on key sync, they are also stored in the user's own sync storage, encrypted on the device with the user's sync passphrase
 [x] Personal communications: the user's chat messages to the AI
 [ ] Location
 [x] Web history: titles and URLs of tabs the user attaches or the agent works in

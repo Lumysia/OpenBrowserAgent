@@ -28,7 +28,7 @@ YOUR MODELS, YOUR TOOLS
 
 SYNC ACROSS DEVICES
 
-• Sync settings, agents, skills and, if you choose, chats and attachments, through your browser account or your own WebDAV storage.
+• Sync settings, agents and skills through your browser account or your own WebDAV storage; if you choose, also API keys (encrypted on your device with your own passphrase), chats and files.
 • Changes merge item by item, so edits on two devices don't overwrite each other, and large deletions ask you first.
 
 YOU STAY IN CONTROL
