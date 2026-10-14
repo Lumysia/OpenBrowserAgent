@@ -16,6 +16,12 @@ import { CONTEXT_POLICY, tokenChars } from "../context/policy";
 import { callPage, pageTab } from "../page-agent";
 import { pageHeader, pageSource } from "./page";
 import {
+  WORKSPACE_SOURCE_PREFIX,
+  findWorkspaceFile,
+  workspaceSource,
+  workspaceSourcePath,
+} from "./workspace-source";
+import {
   fail,
   schema,
   stringArg,
@@ -70,8 +76,8 @@ export function parseSource(value: string): ReadSource {
     const [name, ...path] = value.slice(6).split("/");
     return { kind: "skill", name, path: path.join("/") || SKILL_ENTRY_PATH };
   }
-  if (value.startsWith("workspace:"))
-    return { kind: "workspace", path: value.slice(10) };
+  if (value.startsWith(WORKSPACE_SOURCE_PREFIX))
+    return { kind: "workspace", path: workspaceSourcePath(value) };
   return { kind: "attachment", id: value.replace(/^attachment:/, "") };
 }
 
@@ -137,17 +143,13 @@ export const readTool: ToolDefinition = {
     if (source.kind === "skill")
       return readSkill(run, source.name, source.path, input);
     if (source.kind === "workspace") {
-      const file = run.workspace?.files.find(
-        (item) => item.path === source.path,
-      );
       if (!run.workspace) return fail("This agent has no workspace.");
-      if (!file)
-        return fail(
-          `No workspace file "${source.path}". Files: ${run.workspace.files.map((item) => item.path).join(", ")}`,
-        );
+      const found = findWorkspaceFile(run.workspace, source.path);
+      if (!found.ok) return fail(found.error);
+      const { file } = found;
       return {
-        text: textSlice(`workspace:${file.path}`, file.content, input),
-        details: { source: `workspace:${file.path}` },
+        text: textSlice(workspaceSource(file.path), file.content, input),
+        details: { source: workspaceSource(file.path) },
       };
     }
     return readAttachment(run, source.id, input, signal);

@@ -2,7 +2,8 @@ import { delay } from "../../shared/cancellation";
 import { areCdpAvailable } from "../../shared/runtime-capabilities";
 import { withCdp, type CdpSend } from "../cdp";
 import { callMainWorld, callPage, PageError } from "../page-agent";
-import { errorMessage, stringArg } from "./types";
+import { errorMessage } from "../../shared/error-message";
+import { stringArg } from "./types";
 
 // The steps of `act`: page steps run in the page with synthetic events;
 // trusted steps (coordinates, `trusted: true`, editors that ignore page

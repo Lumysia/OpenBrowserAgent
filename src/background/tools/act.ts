@@ -21,7 +21,8 @@ import {
 } from "./act-steps";
 import { pageHeader } from "./page";
 import { tabLine, waitTabComplete } from "./tabs";
-import { errorMessage, fail, schema, type ToolDefinition } from "./types";
+import { errorMessage } from "../../shared/error-message";
+import { fail, schema, type ToolDefinition } from "./types";
 
 const BATCH_SETTLE_MS = 300;
 const MAX_STEPS = 30;
