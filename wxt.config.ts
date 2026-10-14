@@ -1,7 +1,11 @@
 import { defineConfig } from "wxt";
 import { createRequire } from "node:module";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { quickjsWasmUrl } from "./scripts/quickjs-wasm-plugin";
+import {
+  checkSandboxWorker,
+  quickjsWasmUrl,
+} from "./scripts/quickjs-wasm-plugin";
 import { SMART_BAR_COMMAND } from "./src/shared/smart-bar-protocol";
 import {
   CODE_SANDBOX_CSP,
@@ -82,6 +86,8 @@ export default defineConfig({
         if (page >= 0) files.splice(page, 1);
       }
     },
+    "build:done": (wxt) =>
+      checkSandboxWorker(join(wxt.config.outDir, CODE_SANDBOX_PATH.worker)),
   },
   vite: () => ({
     plugins: [quickjsWasmUrl()],
