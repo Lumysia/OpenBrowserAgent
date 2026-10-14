@@ -4,6 +4,7 @@
 // page's own nodes are never changed; removing ours restores the page.
 import type { Paragraph } from "./blocks";
 import {
+  isTextBlock,
   SOURCE_ATTRIBUTE,
   TRANSLATION_ATTRIBUTE,
   TRANSLATION_ONLY_ATTRIBUTE,
@@ -54,16 +55,7 @@ ${TRANSLATION_TAG}[${PENDING}]:empty::after {
   ${TRANSLATION_TAG}[${PENDING}]:empty::after { animation: none; opacity: 0.5; }
 }
 :root[${TRANSLATION_ONLY_ATTRIBUTE}] [${SOURCE_ATTRIBUTE}] {
-  font-size: 0 !important;
-}
-:root[${TRANSLATION_ONLY_ATTRIBUTE}] [${SOURCE_ATTRIBUTE}] > :not(${TRANSLATION_TAG}) {
   display: none !important;
-}
-:root[${TRANSLATION_ONLY_ATTRIBUTE}] [${SOURCE_ATTRIBUTE}] > ${TRANSLATION_TAG} {
-  font-size: var(--oba-font-size) !important;
-  margin: 0;
-  padding: 0;
-  border: 0;
 }
 `;
 
@@ -151,44 +143,55 @@ export function showTranslation(
     ),
   );
   if (!element.isConnected) place(paragraph, element);
-  // Translation-only display hides the rest of a block whose content is
-  // this one paragraph.
-  if (paragraph.whole && !paragraph.inline) {
-    if (
-      paragraph.parent.ownerDocument.documentElement.hasAttribute(
-        TRANSLATION_ONLY_ATTRIBUTE,
-      )
-    )
-      keepFontSize(paragraph, element);
-    paragraph.parent.setAttribute(SOURCE_ATTRIBUTE, "");
-  }
   return element;
 }
 
-// Translation-only display sets the block's own text to size 0; its
-// translation keeps the block's size. Read before that applies.
-function keepFontSize(paragraph: Paragraph, element: HTMLElement) {
-  if (element.style.getPropertyValue("--oba-font-size")) return;
-  const view = paragraph.parent.ownerDocument.defaultView;
-  const size = view?.getComputedStyle(paragraph.parent).fontSize;
-  if (size) element.style.setProperty("--oba-font-size", size);
+// Translation-only display: a copy of the paragraph's block (same tag and
+// classes, so the page styles it the same) with the translation, after the
+// block, which is hidden. Only for headings, paragraphs and list items
+// whose content is this one paragraph; others keep both.
+export function showMirror(
+  paragraph: Paragraph,
+  language: string,
+  translation: string,
+  current?: HTMLElement,
+) {
+  const block = paragraph.parent;
+  if (!paragraph.whole || !isTextBlock(block) || block.tagName === "CAPTION")
+    return undefined;
+  const mirror = current ?? (paragraph.parent.cloneNode(false) as HTMLElement);
+  if (!current) {
+    mirror.removeAttribute("id");
+    mirror.setAttribute(TRANSLATION_ATTRIBUTE, "");
+    mirror.setAttribute("translate", "no");
+    mirror.lang = language;
+    mirror.addEventListener("click", followCopiedLink);
+  }
+  mirror.replaceChildren(
+    buildTranslation(
+      paragraph.parent.ownerDocument,
+      paragraph.source,
+      translation,
+    ),
+  );
+  if (!mirror.isConnected) {
+    ensureStyle(paragraph.parent);
+    paragraph.parent.after(mirror);
+    paragraph.parent.setAttribute(SOURCE_ATTRIBUTE, "");
+  }
+  return mirror;
+}
+
+export function removeMirror(paragraph: Paragraph, mirror?: HTMLElement) {
+  mirror?.remove();
+  if (mirror) paragraph.parent.removeAttribute(SOURCE_ATTRIBUTE);
 }
 
 export function removeTranslation(paragraph: Paragraph, element?: HTMLElement) {
   element?.remove();
-  if (paragraph.whole) paragraph.parent.removeAttribute(SOURCE_ATTRIBUTE);
 }
 
-// `rendered`: the translations shown now.
-export function setTranslationOnly(
-  document: Document,
-  on: boolean,
-  rendered: Array<[Paragraph, HTMLElement]> = [],
-) {
-  if (on && !document.documentElement.hasAttribute(TRANSLATION_ONLY_ATTRIBUTE))
-    for (const [paragraph, element] of rendered)
-      if (paragraph.whole && !paragraph.inline)
-        keepFontSize(paragraph, element);
+export function setTranslationOnly(document: Document, on: boolean) {
   document.documentElement.toggleAttribute(TRANSLATION_ONLY_ATTRIBUTE, on);
 }
 
@@ -198,7 +201,7 @@ export function removeAll(document: Document) {
   for (const style of styled) style.remove();
   styled.clear();
   document
-    .querySelectorAll(`${TRANSLATION_TAG}[${TRANSLATION_ATTRIBUTE}]`)
+    .querySelectorAll(`[${TRANSLATION_ATTRIBUTE}]`)
     .forEach((element) => element.remove());
   document
     .querySelectorAll(`[${SOURCE_ATTRIBUTE}]`)

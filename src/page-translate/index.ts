@@ -2,6 +2,7 @@ import {
   PAGE_TRANSLATE_MESSAGE,
   type PageTranslateStateMessage,
 } from "../shared/page-translate/protocol";
+import { getBrowserApi } from "../shared/browser-api";
 import { createController } from "./controller";
 
 const INSTALLED = Symbol.for("oba.pageTranslate");
@@ -17,16 +18,20 @@ export function installPageTranslate() {
       type: PAGE_TRANSLATE_MESSAGE.state,
       translated,
     };
-    chrome.runtime.sendMessage(message).catch(() => undefined);
+    getBrowserApi()
+      .runtime.sendMessage(message)
+      .catch(() => undefined);
   };
   const controller = createController(report);
-  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    const type = (message as { type?: string } | undefined)?.type;
-    if (type === PAGE_TRANSLATE_MESSAGE.toggle) controller.toggle();
-    else if (type !== PAGE_TRANSLATE_MESSAGE.query) return false;
-    sendResponse({ translated: controller.active });
-    return false;
-  });
+  getBrowserApi().runtime.onMessage.addListener(
+    (message, _sender, sendResponse) => {
+      const type = (message as { type?: string } | undefined)?.type;
+      if (type === PAGE_TRANSLATE_MESSAGE.toggle) controller.toggle();
+      else if (type !== PAGE_TRANSLATE_MESSAGE.query) return false;
+      sendResponse({ translated: controller.active });
+      return false;
+    },
+  );
   // A translated page back from the back/forward cache is still translated.
   addEventListener("pageshow", (event) => {
     if (event.persisted && controller.active) report(true);

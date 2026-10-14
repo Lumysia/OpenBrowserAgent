@@ -8,12 +8,18 @@ import {
   type PageTranslateRequest,
   type PageTranslateSessionConfig,
 } from "../shared/page-translate/protocol";
-import { PAGE_TRANSLATE_DISPLAY } from "../shared/page-translate/settings";
+import {
+  PAGE_TRANSLATE_DISPLAY,
+  type PageTranslateDisplay,
+} from "../shared/page-translate/settings";
+import { getBrowserApi } from "../shared/browser-api";
 import { createQueue, PRIORITY } from "./queue";
 import {
   removeAll,
+  removeMirror,
   removeTranslation,
   setTranslationOnly,
+  showMirror,
   showPartial,
   showPending,
   showTranslation,
@@ -77,6 +83,7 @@ function startSession(onFatal: () => void) {
   let first = true;
   let halted = false;
   let smallPage = false;
+  let translationOnly = false;
   let flushTimer: number | undefined;
   const toasts = new Map<string, number>();
   const targets = new Map<Element, Set<Unit>>();
@@ -108,8 +115,7 @@ function startSession(onFatal: () => void) {
     removed(unit) {
       queue.delete(unit.id);
       sent.get(unit.paragraph.source.text)?.delete(unit);
-      removeTranslation(unit.paragraph, unit.element);
-      unit.element = undefined;
+      clear(unit);
       const set = targets.get(unit.target);
       set?.delete(unit);
       if (set && !set.size) {
@@ -214,37 +220,58 @@ function startSession(onFatal: () => void) {
     const same =
       translation.replace(/\s+/g, " ").trim() === unit.paragraph.source.text;
     if (same) {
-      removeTranslation(unit.paragraph, unit.element);
-      unit.element = undefined;
+      clear(unit);
       return;
     }
+    unit.translation = translation;
     unit.element = showTranslation(
       unit.paragraph,
       language(),
       translation,
       unit.element,
     );
+    showDisplay(unit);
+  }
+
+  // Translation-only display adds a translated copy of the block.
+  function showDisplay(unit: Unit) {
+    if (unit.translation !== undefined && translationOnly)
+      unit.mirror = showMirror(
+        unit.paragraph,
+        language(),
+        unit.translation,
+        unit.mirror,
+      );
+    else {
+      removeMirror(unit.paragraph, unit.mirror);
+      unit.mirror = undefined;
+    }
+  }
+
+  function setDisplay(display: PageTranslateDisplay) {
+    translationOnly = display === PAGE_TRANSLATE_DISPLAY.translation;
+    setTranslationOnly(document, translationOnly);
+    for (const unit of units.units.values()) showDisplay(unit);
+  }
+
+  function clear(unit: Unit) {
+    removeTranslation(unit.paragraph, unit.element);
+    removeMirror(unit.paragraph, unit.mirror);
+    unit.element = unit.mirror = unit.translation = undefined;
   }
 
   function handle(event: PageTranslateEvent) {
     switch (event.type) {
       case "session":
         config = event.config;
-        setTranslationOnly(
-          document,
-          config.display === PAGE_TRANSLATE_DISPLAY.translation,
-        );
+        setDisplay(config.display);
         // Waiting paragraphs translated before show at once.
         for (const unit of units.units.values())
           if (unit.state === "queued") enqueue(unit);
         flush();
         return;
       case "display":
-        setTranslationOnly(
-          document,
-          event.display === PAGE_TRANSLATE_DISPLAY.translation,
-          rendered(),
-        );
+        setDisplay(event.display);
         return;
       case "partial": {
         const unit = units.units.get(event.id);
@@ -309,12 +336,6 @@ function startSession(onFatal: () => void) {
     showToast(message, theme);
   }
 
-  function rendered() {
-    return [...units.units.values()].flatMap((unit) =>
-      unit.element ? [[unit.paragraph, unit.element] as const] : [],
-    ) as Array<[Unit["paragraph"], HTMLElement]>;
-  }
-
   function post(request: PageTranslateRequest) {
     port?.postMessage(request);
   }
@@ -322,7 +343,7 @@ function startSession(onFatal: () => void) {
   // The port closes when the background restarts or the page goes into the
   // back/forward cache; the next request opens a new one.
   function connect() {
-    port = chrome.runtime.connect({ name: PAGE_TRANSLATE_PORT });
+    port = getBrowserApi().runtime.connect({ name: PAGE_TRANSLATE_PORT });
     port.onMessage.addListener(handle);
     port.onDisconnect.addListener(() => {
       port = undefined;
@@ -366,6 +387,7 @@ function startSession(onFatal: () => void) {
 
   return {
     stop() {
+      for (const unit of units.units.values()) clear(unit);
       units.stop();
       near.disconnect();
       visible.disconnect();

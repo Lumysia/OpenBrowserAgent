@@ -13,6 +13,10 @@ export type Unit = {
   // What the observers watch for this paragraph.
   target: Element;
   element?: HTMLElement;
+  // The translation shown, and its copy of the block in translation-only
+  // display.
+  translation?: string;
+  mirror?: HTMLElement;
   state: UnitState;
   near: boolean;
   visible: boolean;

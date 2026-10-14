@@ -173,8 +173,34 @@ const CODE_SELECTOR = [
   ".notranslate",
 ].join(",");
 
+// Atoms the translation leaves out: a copy of a form field or of media would
+// be a second, dead one.
+const UNCOPIED_TAGS = new Set([
+  "INPUT",
+  "SELECT",
+  "TEXTAREA",
+  "OUTPUT",
+  "METER",
+  "PROGRESS",
+  "IMG",
+  "PICTURE",
+  "SVG",
+  "CANVAS",
+  "VIDEO",
+  "AUDIO",
+  "IFRAME",
+  "FRAME",
+  "OBJECT",
+  "EMBED",
+]);
+
+export function isCopiedInTranslation(element: Element) {
+  return !UNCOPIED_TAGS.has(element.tagName.toUpperCase());
+}
+
 // Inline elements kept as they are inside a translated paragraph: the
-// translation shows a copy of them in the same place.
+// translation shows a copy of them in the same place (see
+// isCopiedInTranslation).
 export function isAtom(element: Element) {
   return (
     SKIP_TAGS.has(element.tagName.toUpperCase()) ||

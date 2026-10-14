@@ -10,7 +10,12 @@ import {
   tokenizePlaceholders,
   type PlaceholderTree,
 } from "../shared/page-translate/placeholders";
-import { isAtom, isOwn, isPlainWrapper } from "./dom-rules";
+import {
+  isAtom,
+  isCopiedInTranslation,
+  isOwn,
+  isPlainWrapper,
+} from "./dom-rules";
 
 export type Serialized = {
   // Placeholder text; plain text when the page's own text looks like
@@ -162,6 +167,7 @@ function appendTree(
     }
     const chain = elements.get(node.id);
     if (!chain?.length) continue;
+    if (node.type === "atom" && !isCopiedInTranslation(chain[0])) continue;
     // Atoms are copied whole; pairs as empty copies around the translation.
     const made = chain.map((original) =>
       copyOf(original, node.type === "atom"),

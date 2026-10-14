@@ -213,3 +213,22 @@ test("serialize: footnote marks and other text without letters stay as they are"
     "Walking developed in Europe.{1} It is {2} and <b3><b4>more</b4> text</b3>.",
   );
 });
+
+test("restore: form fields and images aren't copied into the translation", () => {
+  const { document, found } = paragraphsOf(
+    `<p><label>Your name <input value="x"></label> and <img src="a.png"> <kbd>Ctrl</kbd></p>`,
+  );
+  assert.equal(found[0].source.text, "<b1>Your name {2}</b1> and {3} {4}");
+  const container = document.createElement("div");
+  container.append(
+    buildTranslation(
+      document as unknown as Document,
+      found[0].source,
+      "<b1>Votre nom {2}</b1> et {3} {4}",
+    ),
+  );
+  assert.equal(
+    container.innerHTML,
+    "<label>Votre nom </label> et  <kbd>Ctrl</kbd>",
+  );
+});

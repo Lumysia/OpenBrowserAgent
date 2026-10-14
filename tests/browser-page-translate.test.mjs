@@ -163,41 +163,56 @@ test("page translation with the AI model", { timeout: 240000 }, async (t) => {
     });
 
     await t.test("translation-only display", async () => {
+      const before = await pageHtml(page);
       await session.setPreferences({ display: "translation" });
       await clickMenu(pageUrl);
-      await poll(() => translationIn(page, "#title"));
-      await poll(() =>
-        page.call(() =>
-          document.documentElement.hasAttribute("data-oba-translation-only"),
-        ),
+      // Each block shows a copy of itself with the translation; the original
+      // is hidden. Blocks with other content keep both.
+      const view = await poll(() =>
+        page.call(() => {
+          const mirror = document.querySelector("#title + h1");
+          const shown = (selector) =>
+            [...document.querySelectorAll(selector)]
+              .filter((item) => getComputedStyle(item).display !== "none")
+              .map((item) => item.textContent);
+          if (!mirror?.hasAttribute("data-oba-translation")) return null;
+          if (
+            shown("#list > li")[1] !== "FR: Tell someone where you are going."
+          )
+            return null;
+          const style = (selector) =>
+            getComputedStyle(document.querySelector(selector));
+          return {
+            only: document.documentElement.hasAttribute(
+              "data-oba-translation-only",
+            ),
+            title: shown("h1"),
+            sameSize:
+              style("#title + h1").fontSize === style("#title").fontSize,
+            list: shown("#list > li"),
+            sameMargin: style("#p1 + p").marginTop === style("#skip").marginTop,
+          };
+        }),
       );
-      const view = await page.call(() => ({
-        only: document.documentElement.hasAttribute(
-          "data-oba-translation-only",
-        ),
-        height: document
-          .querySelector("#title > oba-translation")
-          .getBoundingClientRect().height,
-        fontSize: getComputedStyle(
-          document.querySelector("#title > oba-translation"),
-        ).fontSize,
-        titleSize: getComputedStyle(document.querySelector("#skip")).fontSize,
-      }));
-      assert.equal(view.only, true);
-      assert.ok(view.height > 0);
-      assert.notEqual(view.fontSize, "0px");
+      assert.deepEqual(view, {
+        only: true,
+        title: ["FR: Notes from the field"],
+        sameSize: true,
+        list: [
+          "FR: Bring enough water for the day.",
+          "FR: Tell someone where you are going.",
+        ],
+        sameMargin: true,
+      });
+      // Back to both, at once, without asking for translations again.
       await session.setPreferences({ display: "bilingual" });
-      await poll(() =>
-        page.call(
-          () =>
-            !document.documentElement.hasAttribute("data-oba-translation-only"),
-        ),
+      await poll(() => page.call(() => !document.querySelector("#title + h1")));
+      assert.equal(
+        await translationIn(page, "#title"),
+        "FR: Notes from the field",
       );
       await clickMenu(pageUrl);
-      await poll(
-        async () =>
-          (await pageHtml(page)).includes("oba-translation") === false,
-      );
+      await poll(async () => (await pageHtml(page)) === before);
     });
   } finally {
     await session.close();
