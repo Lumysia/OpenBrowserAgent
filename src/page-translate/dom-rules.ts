@@ -176,6 +176,12 @@ const CODE_SELECTOR = [
 // Atoms the translation leaves out: a copy of a form field or of media would
 // be a second, dead one.
 const UNCOPIED_TAGS = new Set([
+  "SCRIPT",
+  "STYLE",
+  "NOSCRIPT",
+  "TEMPLATE",
+  "LINK",
+  "META",
   "INPUT",
   "SELECT",
   "TEXTAREA",

@@ -54,7 +54,15 @@ export function serializeNodes(nodes: Node[]): Serialized {
       if (element.tagName.toUpperCase() === "BR") plain += " ";
       return;
     }
-    if (!text.trim()) return;
+    // An element holding only a space (a non-breaking space between links)
+    // is a space in the sentence.
+    if (!text.trim()) {
+      if (text) {
+        plain += " ";
+        marked += " ";
+      }
+      return;
+    }
     const chain = wrappers(element);
     if (!chain.length) {
       element.childNodes.forEach(visit);

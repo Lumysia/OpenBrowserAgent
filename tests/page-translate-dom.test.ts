@@ -232,3 +232,13 @@ test("restore: form fields and images aren't copied into the translation", () =>
     "<label>Votre nom </label> et  <kbd>Ctrl</kbd>",
   );
 });
+
+test("serialize: a space written as an element stays a space", () => {
+  const { found } = paragraphsOf(
+    `<p>See <a href="/a">one</a>,<span class="space">&nbsp;</span><a href="/b">two</a><span class="space">&nbsp;</span>and<span class="space">&nbsp;</span><a href="/c">three</a>.</p>`,
+  );
+  assert.equal(
+    found[0].source.text,
+    "See <b1>one</b1>, <b2>two</b2> and <b3>three</b3>.",
+  );
+});
