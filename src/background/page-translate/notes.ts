@@ -7,8 +7,11 @@ import {
 import type { PageTranslateEngine } from "../../shared/page-translate/settings";
 import type { PageToastTheme } from "../../shared/page-toast";
 import { formatMessage } from "../../shared/text";
-import { UserError, userErrorText } from "../../shared/user-errors";
-import { errorWithDetail } from "../../ui/error-text";
+import {
+  errorWithDetail,
+  UserError,
+  userErrorText,
+} from "../../shared/user-errors";
 import { EngineError } from "./engines/types";
 
 // The notes a page session shows: why translating failed, and which engine

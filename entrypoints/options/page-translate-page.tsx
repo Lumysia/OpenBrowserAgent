@@ -45,7 +45,7 @@ import {
   SettingsPageHeader,
   SettingsSection,
 } from "../../src/ui/components";
-import { errorWithDetail } from "../../src/ui/error-text";
+import { errorWithDetail } from "../../src/shared/user-errors";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { ModelSelect, useConfiguredModels } from "./model-select";
 import { useUiLanguage } from "../../src/ui/messages";

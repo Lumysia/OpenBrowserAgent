@@ -44,7 +44,7 @@ import { FetchedModelPicker, ModelList } from "./provider-controls";
 import { modelWithProviderLabel, renameProviderDraft } from "./provider-drafts";
 import { loadProviderModels } from "./provider-models";
 import { testProviderModel } from "../../src/shared/provider-test";
-import { errorWithDetail } from "../../src/ui/error-text";
+import { errorWithDetail } from "../../src/shared/user-errors";
 import { useTransient } from "../../src/ui/use-transient";
 import { useUiLanguage } from "../../src/ui/messages";
 

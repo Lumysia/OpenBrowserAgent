@@ -35,7 +35,7 @@ import {
 import { useTransient } from "../../src/ui/use-transient";
 import { errorMessage } from "../../src/shared/error-message";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { errorWithDetail } from "../../src/ui/error-text";
+import { errorWithDetail } from "../../src/shared/user-errors";
 import { useUiLanguage } from "../../src/ui/messages";
 
 export function LocalExecutionBridgesPage() {

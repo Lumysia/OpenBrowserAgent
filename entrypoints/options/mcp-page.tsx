@@ -36,7 +36,7 @@ import {
   TestButton,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { errorWithDetail } from "../../src/ui/error-text";
+import { errorWithDetail } from "../../src/shared/user-errors";
 import { ResetDefaultsCard } from "./reset-defaults-card";
 import { useTransient } from "../../src/ui/use-transient";
 import { errorMessage } from "../../src/shared/error-message";

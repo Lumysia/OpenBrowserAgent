@@ -31,7 +31,7 @@ import {
   SettingsSection,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { errorWithDetail } from "../../src/ui/error-text";
+import { errorWithDetail } from "../../src/shared/user-errors";
 import { useUiLanguage } from "../../src/ui/messages";
 
 export function DebugPage() {

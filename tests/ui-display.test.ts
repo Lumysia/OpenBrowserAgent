@@ -2,12 +2,15 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { getMessages } from "../src/shared/i18n";
 import { BUILTIN_MCP_SERVERS } from "../src/shared/mcp";
-import { USER_ERROR_CODE, UserError } from "../src/shared/user-errors";
+import {
+  errorWithDetail,
+  USER_ERROR_CODE,
+  UserError,
+} from "../src/shared/user-errors";
 import {
   WORKSPACE_ERROR_TEXT,
   type WorkspaceErrorCode,
 } from "../src/shared/workspace-errors";
-import { errorWithDetail } from "../src/ui/error-text";
 import { workspaceErrorText } from "../entrypoints/options/workspace-error-text";
 import { mcpServerDescription } from "../src/ui/mcp-display";
 import {
