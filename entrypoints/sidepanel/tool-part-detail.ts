@@ -1,3 +1,4 @@
+import { formatDuration } from "../../src/shared/format";
 import { formatCount, type Messages } from "../../src/shared/i18n";
 import type { Plural } from "../../src/shared/plural";
 import { isMcpToolName, TOOL_NAME } from "../../src/shared/tool-names";
@@ -132,6 +133,16 @@ const DETAILS: Record<
   [TOOL_NAME.generateImage]: (input, output) =>
     stringValue(output.revisedPrompt) || stringValue(input.prompt),
   [TOOL_NAME.runScript]: (input, output) => pageLabel(output),
+  // "120 ms · 2 files saved"
+  [TOOL_NAME.runCode]: (input, output, t) =>
+    compactJoin([
+      typeof output.durationMs === "number"
+        ? formatDuration(output.durationMs)
+        : "",
+      Array.isArray(output.files) && output.files.length
+        ? formatCount(t.display.toolSteps.filesSaved, output.files.length)
+        : "",
+    ]),
   [TOOL_NAME.devtools]: (input, output, t) => actionLabel(input.action, t),
 };
 

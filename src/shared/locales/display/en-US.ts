@@ -80,6 +80,11 @@ export const displayEnUS = {
     results: plural({ one: "{count} result", other: "{count} results" }),
     items: plural({ one: "{count} item", other: "{count} items" }),
     tools: plural({ one: "{count} tool", other: "{count} tools" }),
+    // Workspace files a runCode step saved.
+    filesSaved: plural({
+      one: "{count} file saved",
+      other: "{count} files saved",
+    }),
     editsApplied: plural({
       one: "{applied} of {count} edit applied",
       other: "{applied} of {count} edits applied",

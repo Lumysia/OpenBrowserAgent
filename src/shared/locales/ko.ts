@@ -230,6 +230,7 @@ export const ko: LocaleMessages = {
         done: "실행 브리지 관리됨",
       },
       generateImage: { running: "이미지 생성 중", done: "이미지 생성됨" },
+      runCode: { running: "코드 실행 중", done: "코드 실행됨" },
       runScript: { running: "스크립트 실행 중", done: "스크립트 실행됨" },
       devtools: { running: "진단 실행 중", done: "진단 완료" },
     },

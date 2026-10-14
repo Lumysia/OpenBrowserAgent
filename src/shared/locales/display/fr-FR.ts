@@ -77,6 +77,10 @@ export const displayFrFR: DisplayMessages = {
     results: plural({ one: "{count} résultat", other: "{count} résultats" }),
     items: plural({ one: "{count} élément", other: "{count} éléments" }),
     tools: plural({ one: "{count} outil", other: "{count} outils" }),
+    filesSaved: plural({
+      one: "{count} fichier enregistré",
+      other: "{count} fichiers enregistrés",
+    }),
     editsApplied: plural({
       one: "{applied} modification sur {count} appliquée",
       other: "{applied} modifications sur {count} appliquées",

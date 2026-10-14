@@ -132,3 +132,23 @@ test("a failed step says so in the UI language, not the model's error text", () 
     getMessages("en-US");
   }
 });
+
+test("a runCode step shows its duration and saved files", () => {
+  const output = { durationMs: 120, files: [{ path: "a.csv", chars: 9 }] };
+  const en = getMessages("en-US");
+  const english = toolDisplay(
+    TOOL_NAME.runCode,
+    part({ code: "1" }, output),
+    en,
+  );
+  assert.equal(english.title, "Ran code");
+  assert.equal(english.description, "120 ms · 1 file saved");
+  const t = getMessages("zh-CN");
+  try {
+    const chinese = toolDisplay(TOOL_NAME.runCode, part({}, output), t);
+    assert.equal(chinese.title, "代码已运行");
+    assert.equal(chinese.description, "120毫秒 · 已保存 1 个文件");
+  } finally {
+    getMessages("en-US");
+  }
+});

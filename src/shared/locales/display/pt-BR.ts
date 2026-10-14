@@ -77,6 +77,10 @@ export const displayPtBR: DisplayMessages = {
     results: plural({ one: "{count} resultado", other: "{count} resultados" }),
     items: plural({ one: "{count} item", other: "{count} itens" }),
     tools: plural({ one: "{count} ferramenta", other: "{count} ferramentas" }),
+    filesSaved: plural({
+      one: "{count} arquivo salvo",
+      other: "{count} arquivos salvos",
+    }),
     editsApplied: plural({
       one: "{applied} de {count} alteração aplicada",
       other: "{applied} de {count} alterações aplicadas",

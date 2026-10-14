@@ -62,6 +62,7 @@ export const displayZhTW: DisplayMessages = {
     results: plural({ other: "{count} 筆結果" }),
     items: plural({ other: "{count} 項" }),
     tools: plural({ other: "{count} 個工具" }),
+    filesSaved: plural({ other: "已儲存 {count} 個檔案" }),
     editsApplied: plural({ other: "已套用 {applied}/{count} 處修改" }),
     actions: {
       open: "已開啟",

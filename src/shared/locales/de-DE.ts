@@ -275,6 +275,7 @@ export const deDE: LocaleMessages = {
         running: "Bild wird generiert",
         done: "Bild generiert",
       },
+      runCode: { running: "Code läuft", done: "Code ausgeführt" },
       runScript: { running: "Skript läuft", done: "Skript ausgeführt" },
       devtools: { running: "Diagnose läuft", done: "Diagnose abgeschlossen" },
     },

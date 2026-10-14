@@ -1,5 +1,6 @@
 import {
   Bot,
+  Braces,
   Camera,
   Code2,
   Download,
@@ -49,6 +50,7 @@ const ICONS: Record<string, Icon> = {
   [TOOL_NAME.localBridges]: TerminalSquare,
   [TOOL_NAME.generateImage]: ImageIcon,
   [TOOL_NAME.runScript]: Code2,
+  [TOOL_NAME.runCode]: Braces,
   [TOOL_NAME.devtools]: Gauge,
 };
 

@@ -273,6 +273,7 @@ export const frFR: LocaleMessages = {
         done: "Ponts d’exécution gérés",
       },
       generateImage: { running: "Génération d’image", done: "Image générée" },
+      runCode: { running: "Exécution du code", done: "Code exécuté" },
       runScript: { running: "Exécution du script", done: "Script exécuté" },
       devtools: { running: "Diagnostic en cours", done: "Diagnostic effectué" },
     },

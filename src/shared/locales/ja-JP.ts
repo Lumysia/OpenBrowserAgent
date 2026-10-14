@@ -255,6 +255,7 @@ export const jaJP: LocaleMessages = {
         done: "実行ブリッジを管理しました",
       },
       generateImage: { running: "画像を生成中", done: "画像を生成しました" },
+      runCode: { running: "コードを実行中", done: "コードを実行しました" },
       runScript: {
         running: "スクリプトを実行中",
         done: "スクリプトを実行しました",
