@@ -544,6 +544,10 @@ export const jaJP: LocaleMessages = {
     syncBackendDescription: "同期する内容。",
     syncBackendBrowserSync: "ブラウザー標準のアカウント同期",
     syncBackendWebDavSync: "WebDAV 同期",
+    syncBackendBrowserSyncHint:
+      "このブラウザーにサインインしているアカウントで同期します。",
+    syncBackendWebDavSyncHint:
+      "選んだ WebDAV サーバーで同期します。チャットやファイルも同期できます。",
     syncBackendName: "バックエンド名",
     syncBackendWebDavUrl: "WebDAV URL",
     syncBackendUsername: "ユーザー名",

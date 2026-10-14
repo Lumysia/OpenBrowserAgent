@@ -572,6 +572,10 @@ export const deDE: LocaleMessages = {
     syncBackendBrowserSync:
       "Integrierte Synchronisierung über das Browserkonto",
     syncBackendWebDavSync: "WebDAV-Synchronisierung",
+    syncBackendBrowserSyncHint:
+      "Über das Konto, mit dem dieser Browser angemeldet ist.",
+    syncBackendWebDavSyncHint:
+      "Über einen WebDAV-Server Ihrer Wahl – er kann auch Chats und Dateien aufnehmen.",
     syncBackendName: "Backend-Name",
     syncBackendWebDavUrl: "WebDAV-URL",
     syncBackendUsername: "Benutzername",

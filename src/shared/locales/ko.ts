@@ -508,6 +508,9 @@ export const ko: LocaleMessages = {
     syncBackendDescription: "동기화할 항목.",
     syncBackendBrowserSync: "내장 브라우저 계정 동기화",
     syncBackendWebDavSync: "WebDAV 동기화",
+    syncBackendBrowserSyncHint: "이 브라우저에 로그인한 계정으로 동기화합니다.",
+    syncBackendWebDavSyncHint:
+      "선택한 WebDAV 서버로 동기화하며, 채팅과 파일도 동기화할 수 있습니다.",
     syncBackendName: "백엔드 이름",
     syncBackendWebDavUrl: "WebDAV URL",
     syncBackendUsername: "사용자 이름",

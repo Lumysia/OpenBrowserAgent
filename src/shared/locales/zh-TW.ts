@@ -482,6 +482,9 @@ export const zhTW: LocaleMessages = {
     syncBackendDescription: "同步的內容。",
     syncBackendBrowserSync: "內建瀏覽器帳號同步",
     syncBackendWebDavSync: "WebDAV 同步",
+    syncBackendBrowserSyncHint: "透過此瀏覽器登入的帳號同步。",
+    syncBackendWebDavSyncHint:
+      "透過你選擇的 WebDAV 伺服器同步，也可以同步對話和檔案。",
     syncBackendName: "後端名稱",
     syncBackendWebDavUrl: "WebDAV 位址",
     syncBackendUsername: "使用者名稱",

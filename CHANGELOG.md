@@ -21,6 +21,7 @@ What changed in each release. The release workflow publishes the section for the
 - Model names containing “/” (such as OpenRouter’s `vendor/model`) show whole in the model menus, every model picker in Settings shows models the same way, and the model named under an answer is the one that actually answered.
 - “Reset built-ins” and “Reset defaults” on the Agents and MCP servers pages ask for confirmation first, like deleting a skill.
 - Settings and the side panel tell the browser their language, so screen readers and hyphenation follow the UI language.
+- Sync backends on the Sync page show the name you gave a WebDAV backend and a line on what each kind of sync is, instead of the same title twice. First-run setup names the WebDAV option in your language and saves the server details only when you connect.
 - Mermaid diagrams in answers are drawn in the side panel instead of by mermaid.ink, so diagram text no longer leaves your device; they follow the theme, and a diagram that can't be drawn shows its source.
 
 ## 0.2.0-beta.8 - 2026-10-14

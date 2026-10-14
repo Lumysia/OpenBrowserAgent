@@ -541,6 +541,10 @@ export const enUS = {
     syncBackendDescription: "What syncs.",
     syncBackendBrowserSync: "Built-in browser account sync",
     syncBackendWebDavSync: "WebDAV sync",
+    syncBackendBrowserSyncHint:
+      "Through the account this browser is signed in to.",
+    syncBackendWebDavSyncHint:
+      "Through a WebDAV server you choose; it can also hold chats and files.",
     syncBackendName: "Backend name",
     syncBackendWebDavUrl: "WebDAV URL",
     syncBackendUsername: "Username",

@@ -573,6 +573,9 @@ export const ptBR: LocaleMessages = {
     syncBackendDescription: "O que sincronizar.",
     syncBackendBrowserSync: "Sincronização integrada da conta do navegador",
     syncBackendWebDavSync: "Sincronização WebDAV",
+    syncBackendBrowserSyncHint: "Pela conta conectada neste navegador.",
+    syncBackendWebDavSyncHint:
+      "Por um servidor WebDAV que você escolher — ele também pode guardar conversas e arquivos.",
     syncBackendName: "Nome do backend",
     syncBackendWebDavUrl: "URL WebDAV",
     syncBackendUsername: "Nome de usuário",

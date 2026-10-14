@@ -136,3 +136,52 @@ function folderOf(url: string) {
     return url.replace(/\/?$/, "/");
   }
 }
+
+// The WebDAV backend as stored, or an empty one to fill in.
+export function webDavBackendOf(
+  backends: SyncBackendConfig[],
+): WebDavSyncBackendConfig {
+  const stored = backends.find(
+    (backend): backend is WebDavSyncBackendConfig =>
+      backend.type === SYNC_BACKEND_TYPES.webDav,
+  );
+  return {
+    id: WEBDAV_SYNC_BACKEND_ID,
+    type: SYNC_BACKEND_TYPES.webDav,
+    name: stored?.name || syncBackendDefaultName(WEBDAV_SYNC_BACKEND_ID),
+    url: stored?.url || "",
+    username: stored?.username,
+    password: stored?.password,
+  };
+}
+
+// The backends with an edit of the WebDAV one: names and user names are
+// trimmed, and an empty name falls back to the default.
+export function withWebDavPatch(
+  backends: SyncBackendConfig[],
+  patch: Partial<
+    Pick<WebDavSyncBackendConfig, "name" | "url" | "username" | "password">
+  >,
+): SyncBackendConfig[] {
+  const current = webDavBackendOf(backends);
+  const next: WebDavSyncBackendConfig = {
+    ...current,
+    name:
+      patch.name === undefined
+        ? current.name
+        : patch.name.trim() || syncBackendDefaultName(WEBDAV_SYNC_BACKEND_ID),
+    url: patch.url === undefined ? current.url : patch.url.trim(),
+    username:
+      patch.username === undefined
+        ? current.username
+        : patch.username.trim() || undefined,
+    password:
+      patch.password === undefined
+        ? current.password
+        : patch.password || undefined,
+  };
+  return [
+    ...backends.filter((backend) => backend.type !== SYNC_BACKEND_TYPES.webDav),
+    next,
+  ];
+}
