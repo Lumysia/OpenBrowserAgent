@@ -326,3 +326,14 @@ test("a dictionary entry is read part by part, in card order", async () => {
     { text: "chance, fluke", lang: "en-GB" },
   ]);
 });
+
+test("kanji-only text follows a Japanese hint", async () => {
+  assert.deepEqual(
+    await speechPieces([{ text: "勉強", hints: ["ja-JP", "zh-CN"] }]),
+    [{ text: "勉強", lang: "ja-JP" }],
+  );
+  assert.deepEqual(
+    await speechPieces([{ text: "学习很重要", hints: ["zh-CN"] }]),
+    [{ text: "学习很重要", lang: "zh-CN" }],
+  );
+});

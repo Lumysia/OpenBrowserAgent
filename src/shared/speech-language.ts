@@ -21,6 +21,8 @@ type ScriptInfo = {
   codes: readonly string[];
   // The first one is read when no hint names another.
   languages: readonly string[];
+  // Languages that also write this script, but mainly another one.
+  alsoReadAs?: readonly string[];
   // Written without spaces: every character counts as a word.
   unspaced?: boolean;
 };
@@ -30,6 +32,9 @@ const SCRIPTS = {
     pattern: /\p{Script=Han}/u,
     codes: ["Hani", "Hans", "Hant"],
     languages: ["zh", "yue", "wuu"],
+    // Kanji-only Japanese (勉強) and hanja look like Chinese: a Japanese or
+    // Korean hint keeps them in that language.
+    alsoReadAs: ["ja", "ko"],
     unspaced: true,
   },
   kana: {
@@ -312,10 +317,11 @@ async function runLanguage(
 ) {
   if (!script) return hints[0] ?? LATIN_FALLBACK;
   if (script !== "latin") {
-    const { languages } = SCRIPTS[script];
+    const { languages, alsoReadAs = [] } = SCRIPTS[script] as ScriptInfo;
     return (
-      hints.find((hint) => languages.includes(primaryLanguage(hint))) ??
-      languages[0]
+      hints.find((hint) =>
+        [...languages, ...alsoReadAs].includes(primaryLanguage(hint)),
+      ) ?? languages[0]
     );
   }
   const detected = detect
