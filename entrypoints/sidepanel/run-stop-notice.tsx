@@ -36,7 +36,7 @@ export function RunStopNotice({
       </Feedback>
       {onContinue && (
         <Button variant="outline" size="sm" onClick={onContinue}>
-          <Play aria-hidden />
+          <Play size={14} aria-hidden />
           {labels.continue}
         </Button>
       )}

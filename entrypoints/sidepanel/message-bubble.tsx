@@ -27,6 +27,10 @@ import {
 } from "./assistant-message-part";
 import { MessageRunInfo } from "./message-run-info";
 import { RunStopNotice } from "./run-stop-notice";
+import {
+  assistantMessageContentFallback,
+  assistantMessageText,
+} from "./assistant-message-text";
 import { replyCutOff } from "../../src/shared/run-stop";
 import { UserMessageActions } from "./user-message-actions";
 import {
@@ -333,29 +337,6 @@ function debugAssistantPart(part: NonNullable<ChatMessage["parts"]>[number]) {
     state: part.state,
     textLength: part.text?.length || 0,
   };
-}
-
-function assistantMessageText(message: ChatMessage) {
-  if (message.role !== "assistant") return "";
-  const contentFallback = assistantMessageContentFallback(message);
-  const partText = assistantPartText(message);
-  return [contentFallback, partText].filter(Boolean).join("").trim();
-}
-
-function assistantMessageContentFallback(message: ChatMessage) {
-  const content = message.content.trim();
-  if (message.role !== "assistant" || !content || !message.parts?.length)
-    return !message.parts?.length ? content : "";
-  const partText = assistantPartText(message).trim();
-  return partText.includes(content) ? "" : content;
-}
-
-function assistantPartText(message: ChatMessage) {
-  return (message.parts || [])
-    .filter((part) => part.type === "text")
-    .map((part) => part.text || "")
-    .join("")
-    .trim();
 }
 
 function sourcesForAssistantMessage(
