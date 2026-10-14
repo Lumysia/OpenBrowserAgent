@@ -14,10 +14,12 @@ import type { Usage } from "@earendil-works/pi-ai";
 import { AssistantMessageEventStream } from "@earendil-works/pi-ai/utils/event-stream";
 import { normalizeContext } from "@earendil-works/pi-ai/utils/transcript";
 import {
+  QUICK_TASK_REASONING,
   reasoningRequestParams,
-  type ReasoningEffort,
+  type RequestReasoning,
 } from "../shared/reasoning";
 import type { ProviderId } from "../shared/types";
+import { quickReasoningPatch, rejectsQuickReasoning } from "./quick-reasoning";
 
 export type ProviderModel = {
   provider: ProviderId;
@@ -105,21 +107,24 @@ const PROVIDER_RETRIES = 3;
 // Models that rejected mid-conversation tool declarations, for the life of
 // the service worker.
 const withoutInlineTools = new Set<string>();
+// Models that rejected the quick-task reasoning fields, likewise.
+const withoutQuickReasoning = new Set<string>();
 
 // Pi owns parsing and streaming. This adapter supplies extension configuration,
 // retries, and the product's single retries without what a model rejects:
-// image content, or mid-conversation tool declarations (the tool list then
-// carries every loaded tool). Prompt caching uses Pi's defaults: Anthropic
-// breakpoints on tools, system prompt and the latest message; automatic
-// caching elsewhere.
+// image content, mid-conversation tool declarations (the tool list then
+// carries every loaded tool), or the quick-task reasoning fields. Prompt
+// caching uses Pi's defaults: Anthropic breakpoints on tools, system prompt
+// and the latest message; automatic caching elsewhere.
 export function createProviderStream(
   configuration: ProviderModel,
-  effort?: ReasoningEffort,
+  reasoning?: RequestReasoning,
   onImageRejected?: () => void,
 ): StreamFn {
   let textOnly = false;
   const modelKey = `${configuration.baseUrl}|${configuration.modelName}`;
   let inlineTools = !withoutInlineTools.has(modelKey);
+  const quick = reasoning === QUICK_TASK_REASONING;
   return (requested, context, options) => {
     let model = inlineTools ? requested : { ...requested, compat: undefined };
     const output = new AssistantMessageEventStream();
@@ -135,7 +140,10 @@ export function createProviderStream(
       messages: Message[],
       canRetry: boolean,
     ): Promise<void> => {
-      const reasoning = reasoningRequestParams(configuration.provider, effort);
+      const quickPatch =
+        quick && !withoutQuickReasoning.has(modelKey)
+          ? quickReasoningPatch(configuration)
+          : undefined;
       const providerOptions = {
         ...options,
         apiKey: configuration.apiKey || "local-no-key",
@@ -151,18 +159,10 @@ export function createProviderStream(
           model.api === "anthropic-messages"
             ? anthropicFetch(configuration.baseUrl)
             : undefined,
-        onPayload: (payload: unknown) => ({
-          ...(payload as object),
-          ...(model.api === "openai-responses" && reasoning.reasoning_effort
-            ? {
-                reasoning: {
-                  effort: reasoning.reasoning_effort,
-                  summary: "auto",
-                },
-                include: ["reasoning.encrypted_content"],
-              }
-            : reasoning),
-        }),
+        onPayload: (payload: unknown) =>
+          quickPatch
+            ? quickPatch(payload as Record<string, unknown>)
+            : withEffort(payload, model.api, configuration.provider, reasoning),
       };
       let started = false;
       let pendingStart:
@@ -201,6 +201,16 @@ export function createProviderStream(
           model = { ...model, compat: undefined };
           return run(messages, canRetry);
         }
+        if (
+          event.type === "error" &&
+          quickPatch &&
+          !started &&
+          event.reason !== "aborted" &&
+          rejectsQuickReasoning(event.error.errorMessage || "")
+        ) {
+          withoutQuickReasoning.add(modelKey);
+          return run(messages, canRetry);
+        }
 
         // Delay only the empty start, not content. A rejected request must not
         // append a phantom assistant to Pi's transcript before its retry.
@@ -229,6 +239,28 @@ export function createProviderStream(
       output.end();
     });
     return output;
+  };
+}
+
+// The user's reasoning effort, where the endpoint takes one.
+function withEffort(
+  payload: unknown,
+  api: Api,
+  provider: ProviderId,
+  reasoning: RequestReasoning | undefined,
+) {
+  const params = reasoningRequestParams(
+    provider,
+    reasoning === QUICK_TASK_REASONING ? undefined : reasoning,
+  );
+  return {
+    ...(payload as object),
+    ...(api === "openai-responses" && params.reasoning_effort
+      ? {
+          reasoning: { effort: params.reasoning_effort, summary: "auto" },
+          include: ["reasoning.encrypted_content"],
+        }
+      : params),
   };
 }
 
@@ -296,14 +328,21 @@ function withoutImages(messages: Message[]): Message[] {
 }
 
 // One plain-text request outside the agent loop (titles, compaction, smart
-// bar). `onText` receives the answer's text as it streams.
+// bar, page translation). `onText` receives the answer's text as it streams;
+// `onThinking` is called when the model reasons before answering.
+export type TextRequestOptions = {
+  signal?: AbortSignal;
+  reasoning?: RequestReasoning;
+  onText?: (delta: string) => void;
+  onThinking?: () => void;
+};
+
 export async function requestText(
   model: ProviderModel,
   request: { system?: string; prompt: string },
-  signal?: AbortSignal,
-  onText?: (delta: string) => void,
+  { signal, reasoning, onText, onThinking }: TextRequestOptions = {},
 ): Promise<{ text: string; usage: Usage }> {
-  const events = await createProviderStream(model)(
+  const events = await createProviderStream(model, reasoning)(
     piModel(model),
     normalizeContext({
       systemPrompt: request.system,
@@ -313,9 +352,11 @@ export async function requestText(
     }),
     { signal },
   );
-  if (onText)
-    for await (const event of events)
-      if (event.type === "text_delta") onText(event.delta);
+  if (onText || onThinking)
+    for await (const event of events) {
+      if (event.type === "text_delta") onText?.(event.delta);
+      else if (event.type === "thinking_delta") onThinking?.();
+    }
   const result = await events.result();
   if (result.stopReason === "error" || result.stopReason === "aborted")
     throw new Error(result.errorMessage || result.stopReason);
