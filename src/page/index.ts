@@ -17,7 +17,8 @@ import { renderLines, snapshotLines } from "./snapshot";
 
 // The in-page side of the page tools, installed once per document in the
 // extension's isolated world. Every method takes plain JSON and returns
-// plain JSON; `refFloor` keeps refs unique across documents and tabs.
+// plain JSON (or a promise of it); `refFloor` keeps refs unique across
+// documents and tabs.
 
 const PAGE_ITEM_CAP = 50;
 const FULL_PAGE_MAX_CHARS = 400_000;
@@ -93,15 +94,17 @@ export type PageAgentReply =
 
 export function installPageAgent() {
   const scope = globalThis as typeof globalThis & {
-    __obaPageAgent?: (method: string, args: Args) => PageAgentReply;
+    __obaPageAgent?: (method: string, args: Args) => Promise<PageAgentReply>;
   };
   if (scope.__obaPageAgent) return;
-  scope.__obaPageAgent = (method, args) => {
+  // Methods may answer later (typing waits for the editor to render);
+  // executeScript passes the promise's value back.
+  scope.__obaPageAgent = async (method, args) => {
     raiseFloor(args?.refFloor);
     try {
       const run = methods[method];
       if (!run) throw new Error(`Unknown page method ${method}`);
-      const value = run(args || {});
+      const value = await run(args || {});
       return {
         ok: true,
         value,

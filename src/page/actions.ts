@@ -1,4 +1,6 @@
-import { centerOf, clip, compact, nameOf, roleOf } from "./dom";
+import { editingHost } from "../shared/dom-vocabulary";
+import { compact } from "../shared/text";
+import { centerOf, clip, nameOf, roleOf } from "./dom";
 import { RefError, resolveRef } from "./refs";
 
 // One `act` step, run in the page. The background drives the batch: it
@@ -31,7 +33,7 @@ const ok = (note?: string): StepResult => ({
 });
 const failed = (error: string): StepResult => ({ ok: false, error });
 
-export function runStep(step: ActStep): StepResult {
+export function runStep(step: ActStep): StepResult | Promise<StepResult> {
   try {
     switch (step.action) {
       case "click":
@@ -176,15 +178,12 @@ function setNativeValue(
   element.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
-const RICH_EDITOR =
-  "[data-slate-editor],[data-lexical-editor],.ProseMirror,[data-slate-node],[data-lexical-text]";
-
 function type(
   element: Element,
   text: string,
   clear: boolean,
   submit: boolean,
-): StepResult {
+): StepResult | Promise<StepResult> {
   reveal(element);
   if (element instanceof HTMLSelectElement)
     return failed(
@@ -216,28 +215,63 @@ function type(
     return failed(
       `${describe(element)} is not a text field. Use the ref of a textbox (snapshot or find shows them).`,
     );
+  return typeInEditor(host, text, clear, submit);
+}
+
+// Editable content goes through the browser's input steps: the editor
+// first gets a cancelable `beforeinput`. Editors that keep their own model
+// of the text cancel it and insert the text themselves; otherwise the
+// browser's own insertion runs. The text must then show in the editor once
+// it has rendered, else trusted (debugger) input types it.
+async function typeInEditor(
+  host: HTMLElement,
+  text: string,
+  clear: boolean,
+  submit: boolean,
+): Promise<StepResult> {
   host.focus({ preventScroll: true });
-  const selection = getSelection();
+  selectContents(host, clear);
+  // Editors read the selection when the page reports it changed.
+  await nextTask();
+  const handled = !host.dispatchEvent(
+    new InputEvent("beforeinput", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      inputType: "insertText",
+      data: text,
+    }),
+  );
+  const inserted = handled || document.execCommand("insertText", false, text);
+  await nextTask();
+  if (inserted && compact(host.innerText).includes(compact(text)))
+    return submit ? press(host, "Enter") : ok();
+  // The editor took the text but doesn't show it: typing it again could
+  // add it twice, unless it replaces the editor's content.
+  if (handled && !clear)
+    return failed(
+      `${describe(host)} did not show the text. Take a snapshot to see what it holds.`,
+    );
+  return { ok: false, trusted: true };
+}
+
+function selectContents(host: HTMLElement, clear: boolean) {
   const range = document.createRange();
   range.selectNodeContents(host);
   if (!clear) range.collapse(false);
-  selection?.removeAllRanges();
-  selection?.addRange(range);
-  if (host.matches(RICH_EDITOR) || host.querySelector(RICH_EDITOR))
-    return { ok: false, trusted: true };
-  const inserted = document.execCommand("insertText", false, text);
-  if (!inserted || !compact(host.innerText).includes(compact(text)))
-    return { ok: false, trusted: true };
-  return submit ? press(host, "Enter") : ok();
+  getSelection()?.removeAllRanges();
+  getSelection()?.addRange(range);
 }
 
-function editingHost(element: Element) {
-  let host: HTMLElement | null =
-    element instanceof HTMLElement && element.isContentEditable
-      ? element
-      : null;
-  while (host?.parentElement?.isContentEditable) host = host.parentElement;
-  return host;
+// After the page's pending tasks (selection reports, renders scheduled by
+// the editor). A message task, unlike a timer, isn't throttled in
+// background tabs.
+function nextTask() {
+  return new Promise<void>((resolve) => {
+    const channel = new MessageChannel();
+    channel.port1.onmessage = () => resolve();
+    channel.port2.postMessage(undefined);
+  });
 }
 
 // Focuses an element and selects its text so trusted input replaces it.
@@ -246,11 +280,7 @@ export function prepareTrustedInput(ref: string, clear: boolean) {
   reveal(element);
   const host = editingHost(element) || (element as HTMLElement);
   host.focus({ preventScroll: true });
-  const range = document.createRange();
-  range.selectNodeContents(host);
-  if (!clear) range.collapse(false);
-  getSelection()?.removeAllRanges();
-  getSelection()?.addRange(range);
+  selectContents(host, clear);
 }
 
 // Where trusted (debugger) input should land for an element, in viewport
