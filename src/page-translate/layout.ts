@@ -18,6 +18,7 @@ import {
 } from "./look";
 import { originalText } from "./originals";
 import {
+  boxOf,
   clipsOverflow,
   hasBackground,
   HIDDEN_BOX_PX,
@@ -118,12 +119,14 @@ export function choosePlacement(
   compact: WeakSet<Element>,
   translateMenus: boolean,
 ): Placement | undefined {
-  const block = paragraph.parent;
+  // The paragraph's box: its element's, or the one its content is laid out
+  // in when the element has none (`display: contents`).
+  const block = boxOf(paragraph.parent);
   if (!block.getClientRects().length) return undefined;
   const view = block.ownerDocument.defaultView!;
   // A control's size and look are designed around its label: its
   // translation never goes into it (a tooltip when menus are translated).
-  if (controlOf(block) || isDrawnControl(paragraph, view))
+  if (controlOf(paragraph.parent) || isDrawnControl(paragraph, view))
     return { form: translateMenus ? "tooltip" : "skip" };
   // A note laid over the page (cookie and newsletter prompts) is chrome.
   if (!translateMenus && isOverlay(block, view)) return { form: "skip" };
@@ -150,7 +153,7 @@ export function choosePlacement(
   // from it, or be cut off.
   if (own.placed || (own.boxed && !anchor?.contains(own.boxed)))
     form = tighter(form, "tooltip");
-  const host = anchor?.parentElement ?? block;
+  const host = anchor?.parentElement ? boxOf(anchor.parentElement) : block;
   const hostStyle = view.getComputedStyle(host);
   const limits = anchor ? limitsOf(host, view) : own;
   if (anchor && (limits.cut || limits.boxed || limits.placed))
@@ -308,8 +311,7 @@ function ownForm(host: Element, style: CSSStyleDeclaration): Form {
   if (/grid/.test(style.display)) return "tooltip";
   // A table header: one line.
   if (host.tagName.toUpperCase() === "TH") return "inline";
-  if (/^inline/.test(style.display) || style.display === "contents")
-    return "inline";
+  if (/^inline/.test(style.display)) return "inline";
   // Our element would be a new item next to the paragraph's text.
   if (isHorizontalFlex(style)) return "inline";
   return "block";

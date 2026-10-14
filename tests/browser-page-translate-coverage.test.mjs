@@ -11,7 +11,16 @@ import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 // Text the page sets in ways that once kept it from showing its
 // translation: lines with trimmed leading (the text reaches below its box,
 // and so does the translation after it) and a heading animated word by
-// word next to a visually hidden copy of the whole sentence.
+// word next to a visually hidden copy of the whole sentence, and text in an
+// element without a box of its own (`display: contents`).
+// Enough text below for a large page: only paragraphs near the window are
+// sent, as each comes into view.
+const NOTES = Array.from(
+  { length: 48 },
+  (_, index) =>
+    `<p>Note ${index + 1}: the path past the old mill floods after heavy rain, so the upper trail is the safer way round.</p>`,
+).join("");
+
 const PAGE = `<!doctype html><html lang="en"><head><title>Walks</title>
 <style>
 body{font:17px/1.6 sans-serif;margin:24px auto;max-width:640px;padding:0 16px}
@@ -27,11 +36,16 @@ body{font:17px/1.6 sans-serif;margin:24px auto;max-width:640px;padding:0 16px}
 <h2 id="trimmed-title" class="trim">Trails worth the climb</h2>
 <p id="trimmed-text" class="trim">Each of these trails rewards an early start with a quiet summit and a view over the valley.</p>
 </section>
+<section>
+<h2 id="contents-title"><span style="display:contents">Gear for every season</span></h2>
+<p id="contents-text"><span style="display:contents">Pack light, but bring <a href="#gear">a warm layer</a> for the evening on the ridge.</span></p>
+</section>
 </main>
+<div>${NOTES}</div>
 </body></html>`;
 
 test(
-  "page translation: trimmed leading and animated headings",
+  "page translation: trimmed leading, animated headings, boxless text",
   {
     timeout: BROWSER_TEST_TIMEOUT,
   },
@@ -74,6 +88,17 @@ test(
           const texts = sent.flat().filter((text) => text.includes("walk"));
           assert.equal(texts.length, 1);
           assert.equal(texts[0].match(/home/g)?.length, 1);
+        },
+      );
+
+      await t.test(
+        "text in an element without a box of its own is translated",
+        async () => {
+          for (const selector of ["#contents-title", "#contents-text"])
+            assert.match(
+              await poll(() => translationIn(page, selector)),
+              /^FR: /,
+            );
         },
       );
     } finally {
