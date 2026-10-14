@@ -33,6 +33,8 @@ It sends data only to services you configure and turn on:
 
 The extension also fetches web pages, images, and link previews that you or the agent open as part of a task.
 
+When the agent runs code it wrote (for example, to add up a table), the code runs on your device in a sandboxed interpreter that ships with the extension. It cannot reach the internet, web pages, or the extension's data; it only gets the input and the agent workspace files the agent passes to it, and files it writes are saved to that agent's workspace. Its result goes to your model provider like any other tool result.
+
 ## Translation engines
 
 OpenBrowserAgent translates pages with the engine you select in Settings → Page translation. Nothing is translated until you choose "Translate this page".

@@ -24,6 +24,7 @@ Chrome/Chromium builds additionally declare:
 - `sidePanel`: provide the extension side panel.
 - `tabGroups`: name and color the tab groups the agent creates with `tabs` (group, ungroup), and show group names in tab lists.
 - `debugger`: real mouse and keyboard input where pages ignore synthetic events (rich text editors, `trusted` or coordinate `act` steps), answering a JavaScript dialog that opened outside an `act` batch, screenshots of a tab in the background, full-page screenshots, page JavaScript (`runScript`, off by default), and developer diagnostics (network resources, device emulation). The debugger attaches only for those calls.
+- `offscreen`: one hidden offscreen document does DOM work the service worker cannot: it turns fetched HTML into Markdown, holds the blob URLs of files the agent saves, and hosts the sandboxed page of the [code sandbox](#code-sandbox).
 
 Chromium and Firefox additionally declare:
 
@@ -32,7 +33,25 @@ Chromium and Firefox additionally declare:
 
 Firefox and Safari omit the Chrome-only `tabGroups`, `sidePanel` and `debugger` permissions. Firefox captures a background tab with `tabs.captureTab`; Safari can capture only the tab in front, so a screenshot shows the tab for a moment and then puts the user's tab back. Firefox uses `sidebar_action` for its sidebar. Safari also omits `search` and `nativeMessaging`; its action opens or focuses `sidepanel.html` as an extension tab.
 
+Chrome and Firefox builds also declare one sandboxed page, `code-sandbox.html` (`sandbox.pages`), with its own CSP: `sandbox allow-scripts; default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src blob:` (no `unsafe-eval`, no network). See [Code sandbox](#code-sandbox).
+
 The extension page CSP allows images from `self`, `data:`, `blob:`, `http:`, and `https:` so rendered Markdown images, generated images, and Mermaid previews can display. Images that an answer links from other sites do not load on their own: the answer shows a placeholder, and the image is fetched only after the user chooses Load image (or opens it in a tab). A prompt-injected page therefore cannot leak data through an image URL. Images the extension made itself (`data:` and `blob:` URLs) still show directly.
+
+## Code sandbox
+
+The on-demand `runCode` tool lets the agent run JavaScript it writes, for exact calculations, parsing CSV or JSON and reshaping data. The code runs on the user's device and never in the extension's own JavaScript engine:
+
+- **Interpreter.** QuickJS-ng compiled to WebAssembly (`quickjs-emscripten-core` with the `@jitl/quickjs-ng-wasmfile-release-sync` variant, MIT). The `.wasm` file ships in the package (`code-sandbox/quickjs.wasm`) and is never fetched from a server; nothing uses `eval` or `new Function`. The code sees only what the tool defines: captured `console` output, `input` (a JSON value the agent passes), `readFile` for the workspace files the call lists, and `writeFile`. There is no `fetch`, DOM, timers, `chrome`/`browser` APIs or module loading.
+- **Worker.** Each call starts a new Worker that is terminated when the call ends, so nothing carries over between calls.
+- **Sandboxed page.** On Chrome the Worker is created inside `code-sandbox.html`, a sandboxed page with an opaque origin and no extension APIs, embedded in the offscreen document. Its CSP has `default-src 'none'`, so neither the page nor its `blob:` Worker can make network requests. The embedding page sends it the Worker's source and the interpreter; results come back over a `MessageChannel`. Firefox 154 and later host the same page in the background page. Safari has no sandboxed pages, and Firefox before 154 ignores the key (the page then reports that it is not isolated and is not used): there the Worker runs from the background page and the interpreter is the boundary.
+- **Limits.** 10 s by default and at most 30 s (an interrupt stops the code at the deadline; if it does not stop, the Worker is terminated 2 s later), 128 MB of interpreter memory, a 256 KB interpreter stack, and 1,000,000 characters of output and of written files per call. The model sees the usual tool output cap; longer output is kept as a stored output it can read in ranges.
+- **Data.** Files the code writes are saved to the agent's workspace with the same checks as the `workspace` tool; agents without a workspace can read and write no files. The result text goes to the AI provider like any other tool result. The code itself comes from the model, so stores count it as remote code: see `store/privacy-practices.txt` for the Chrome Web Store answer.
+
+### Notes for Firefox add-on reviewers
+
+- Model-written JavaScript runs only inside the bundled QuickJS interpreter (WebAssembly), never through `eval`, `new Function`, `<script>` or `tabs.executeScript`. The only CSP keyword beyond `'self'` is `'wasm-unsafe-eval'`, which loads the interpreter.
+- The interpreter is the release build of `@jitl/quickjs-ng-wasmfile-release-sync` 0.32.0 from npm: `code-sandbox/quickjs.wasm` is `dist/emscripten-module.wasm` from that package, unchanged; `code-sandbox-worker.js` bundles its JavaScript glue with `quickjs-emscripten-core` 0.32.0 and `src/shared/code-sandbox/engine.ts`.
+- The code has no network access, no WebExtension APIs and no access to web pages; it only receives the text the agent passes in and returns text. On Firefox 154+ it also runs inside a sandboxed page (`sandbox.content_security_policy` without `unsafe-eval`, `default-src 'none'`). That page runs only the extension's own scripts and the interpreter, never the model's code as JavaScript, so it does not expose the extension to fingerprinting by untrusted scripts. Its `worker-src blob:` is needed because a page with an opaque origin cannot start a Worker from a `moz-extension:` URL; the `blob:` Worker is made from the packaged `code-sandbox-worker.js`, which the background page reads and hands over.
 
 ## Firefox Data Collection Declaration
 
