@@ -58,7 +58,10 @@ export function MarkdownContent({
   }
 
   return (
-    <div className="markdown" onErrorCapture={handleMarkdownImageError}>
+    <div
+      className="markdown ui-selectable"
+      onErrorCapture={handleMarkdownImageError}
+    >
       {blocks.map((block) => (
         <MarkdownSegment
           key={block.key}

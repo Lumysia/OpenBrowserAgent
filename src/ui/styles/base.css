@@ -46,6 +46,21 @@ a {
   color: inherit;
 }
 
+/* Extension pages are app chrome: nothing is selectable unless it is content
+   people read or copy, which opts back in with .ui-selectable. Inside the
+   smart bar shadow root there is no body, so the page's own rules apply. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+input,
+textarea,
+[contenteditable]:not([contenteditable="false"]),
+.ui-selectable {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* One focus ring for everything focusable; components only move it inside
    (negative offset) where a parent clips. */
 :focus-visible {

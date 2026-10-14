@@ -10,6 +10,7 @@ import type { SyncBackendConfig } from "../../src/shared/types";
 import {
   Button,
   CardDescription,
+  Feedback,
   Input,
   Label,
   Select,
@@ -102,12 +103,13 @@ export function SyncBootstrapStep({
         </TabsContent>
       </Tabs>
       {setupFeedbackMessage ? (
-        <CardDescription
+        <Feedback
           key={setupFeedbackMessage}
+          error={setupFeedbackError}
           className={`bootstrap-feedback-card ${setupFeedbackError ? "is-error" : ""}`}
         >
           {setupFeedbackMessage}
-        </CardDescription>
+        </Feedback>
       ) : null}
       <Button
         className={`bootstrap-cloud-action ${syncing ? "is-loading" : ""}`}

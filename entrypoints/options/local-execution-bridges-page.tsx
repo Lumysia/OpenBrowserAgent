@@ -27,6 +27,7 @@ import {
   Button,
   CardDescription,
   EmptyState,
+  Feedback,
   Input,
   Label,
   Textarea,
@@ -317,7 +318,7 @@ export function LocalExecutionBridgesPage() {
                   />
                 </Label>
                 {bridge.lastTestError ? (
-                  <CardDescription>{bridge.lastTestError}</CardDescription>
+                  <Feedback error>{bridge.lastTestError}</Feedback>
                 ) : null}
                 {isLocalExecutionBridgeTested(bridge) ? (
                   <CardDescription>

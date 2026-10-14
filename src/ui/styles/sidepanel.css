@@ -121,9 +121,12 @@
 /* Editing an earlier message: the rest of the chat steps back. */
 .sidepanel.editing-mode :is(.sidepanel-header, .messages) {
   pointer-events: none;
-  user-select: none;
   opacity: 0.38;
   filter: saturate(0.7);
+}
+.sidepanel.editing-mode :is(.sidepanel-header, .messages) .ui-selectable {
+  -webkit-user-select: none;
+  user-select: none;
 }
 .sidepanel.editing-mode .composer {
   z-index: var(--z-shield-content);

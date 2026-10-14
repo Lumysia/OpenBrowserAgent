@@ -35,6 +35,7 @@ import {
   CardDescription,
   EmptyState,
   CardTitle,
+  Feedback,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -305,7 +306,7 @@ export function McpPage() {
                   onHeadersChange={(value) => updateHeaders(server.id, value)}
                 />
                 {server.lastTestError && (
-                  <CardDescription>{server.lastTestError}</CardDescription>
+                  <Feedback error>{server.lastTestError}</Feedback>
                 )}
                 {!isBuiltinMcpServer(server.id) && (
                   <div className="row">

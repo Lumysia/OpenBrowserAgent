@@ -18,5 +18,8 @@ test("UserText renders multi-line text with the shared pre-wrap class", () => {
   const html = renderToStaticMarkup(
     createElement(UserText, { text: "\nfirst\nsecond\n", className: "extra" }),
   );
-  assert.equal(html, '<span class="ui-user-text extra">first\nsecond</span>');
+  assert.equal(
+    html,
+    '<span class="ui-user-text ui-selectable extra">first\nsecond</span>',
+  );
 });

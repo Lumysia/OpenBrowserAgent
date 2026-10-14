@@ -10,7 +10,7 @@ export function Feedback({
     <p
       {...props}
       role={error ? "alert" : "status"}
-      className={cn("ui-card-description", className)}
+      className={cn("ui-card-description", error && "ui-selectable", className)}
     />
   );
 }

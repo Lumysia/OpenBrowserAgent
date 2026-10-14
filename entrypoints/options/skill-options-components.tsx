@@ -157,7 +157,9 @@ export function SkillFileList({
                     <div className="option-file-item">
                       <FileArchive size={18} />
                       <span>
-                        <span className="option-file-name">{file.path}</span>
+                        <span className="option-file-name ui-selectable">
+                          {file.path}
+                        </span>
                         <small>
                           {file.kind} · {file.encoding || "utf-8"} ·{" "}
                           {file.content.length} bytes ·{" "}

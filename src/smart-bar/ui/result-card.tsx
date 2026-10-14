@@ -133,7 +133,7 @@ export function SmartBarResultCard({
         </IconTooltip>
       </div>
       <div
-        className="smart-bar-result-text"
+        className="smart-bar-result-text ui-selectable"
         data-status={result.status}
         data-format={output.entry ? result.format : undefined}
         aria-live="polite"

@@ -52,7 +52,7 @@ function AssistantSummaryCard({ t, part }: { t: Messages; part: ChatPart }) {
               ? t.sidepanel.contextSummaryFailedDescription
               : t.sidepanel.contextSummaryDescription}
           </div>
-          <pre className="context-summary-text">
+          <pre className="context-summary-text ui-selectable">
             {(part.error || part.text || "").trim()}
           </pre>
         </div>
@@ -157,7 +157,7 @@ function AssistantReasoning({ t, text }: { t: Messages; text: string }) {
         </AccordionTrigger>
         <AccordionContent>
           <div
-            className={`assistant-reasoning-body${streaming ? " streaming" : ""}`}
+            className={`assistant-reasoning-body ui-selectable${streaming ? " streaming" : ""}`}
           >
             {displayText}
           </div>
