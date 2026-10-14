@@ -6,6 +6,8 @@ export type DavFile = { body: Uint8Array; etag: string };
 
 export function memoryDav(base = "https://dav.test/sync/") {
   const files = new Map<string, DavFile>();
+  // Paths whose next PUTs answer 423, as while another client uploads them.
+  const locked = new Map<string, number>();
   let version = 0;
   const pathOf = (input: RequestInfo | URL) =>
     new URL(String(input instanceof Request ? input.url : input)).pathname;
@@ -24,6 +26,11 @@ export function memoryDav(base = "https://dav.test/sync/") {
       });
     }
     if (method === "PUT") {
+      const lockedFor = locked.get(path) ?? 0;
+      if (lockedFor > 0) {
+        locked.set(path, lockedFor - 1);
+        return new Response(null, { status: 423 });
+      }
       const ifMatch = headers.get("If-Match");
       if (ifMatch && ifMatch !== file?.etag)
         return new Response(null, { status: 412 });
@@ -55,6 +62,10 @@ export function memoryDav(base = "https://dav.test/sync/") {
     // Replaces a file's bytes the way an interrupted upload leaves it.
     set(name: string, body: Uint8Array) {
       files.set(at(name), { body, etag: `"v${++version}"` });
+    },
+    // The next `puts` uploads of a file answer 423 Locked.
+    lock(name: string, puts: number) {
+      locked.set(at(name), puts);
     },
   };
 }

@@ -130,6 +130,8 @@ async function round(
   // another device is collecting at that moment.
   const seen = storedBlobs(state.remote?.root ?? emptyRoot());
   try {
+    // The last write was refused for a stale If-Match.
+    let conflicted = false;
     for (let attempt = 1; ; attempt++) {
       const sentEtag = state.remote?.etag;
       const read = await transport.readRoot(sentEtag);
@@ -143,7 +145,7 @@ async function round(
         etag = sentEtag;
         // A refused If-Match on a root the server still calls unchanged: its
         // ETags cannot be used for safe writes (an Apache "-gzip" ETag, say).
-        if (attempt > 1) {
+        if (conflicted) {
           result.warnings.push(SYNC_WARNINGS.unreliableEtags);
           break;
         }
@@ -247,6 +249,7 @@ async function round(
         await deleteBlobs(transport, collected);
         break;
       }
+      conflicted = written.status === "conflict";
       state.remote = damaged ? undefined : { root: raw, etag };
       for (const hash of storedBlobs(raw)) seen.add(hash);
       if (attempt >= MAX_WRITE_ATTEMPTS)

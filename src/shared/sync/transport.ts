@@ -26,7 +26,11 @@ export type RootWriteOptions = {
 };
 
 export type RootWrite =
-  { status: "ok"; etag?: string } | { status: "conflict" };
+  | { status: "ok"; etag?: string }
+  // Another write got there first (a stale If-Match).
+  | { status: "conflict" }
+  // Another client is still writing the file; nothing changed yet.
+  | { status: "busy" };
 
 export type StoredBlob = { hash: string; modifiedAt: number };
 
@@ -42,7 +46,7 @@ export type Transport = {
   // Conditional when `etag` is given; "unchanged" means it still matches.
   readRoot(etag?: string): Promise<RootRead>;
   // Replace the root only if it is still `etag` (undefined: still missing,
-  // unless `replace`).
+  // unless `replace`). Either refusal: read again and retry.
   writeRoot(
     root: Root,
     etag: string | undefined,

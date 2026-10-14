@@ -23,6 +23,12 @@ import {
 const ROOT_NAME = "root.json.gz";
 const PREVIOUS_ROOT_NAME = "root.prev.json.gz";
 const BLOBS = "blobs";
+// Root writes that lost a race: a stale If-Match, or another client still
+// writing the file (Koofr answers overlapping PUTs with 423 Locked).
+const REFUSED_WRITES: Record<number, "conflict" | "busy"> = {
+  412: "conflict",
+  423: "busy",
+};
 const PROBE_NAME = ".openbrowseragent-probe";
 // RFC 9110 entity-tag without the weak prefix.
 const STRONG_ETAG = /^"[\x21\x23-\x7e\x80-\xff]*"$/;
@@ -189,6 +195,8 @@ export function createWebDavTransport(
           await encodeRoot(previous),
           {},
         );
+        if (REFUSED_WRITES[copied.status])
+          return { status: REFUSED_WRITES[copied.status] };
         if (!copied.ok) await fail(copied, "write");
       }
       const response = await put(
@@ -196,7 +204,8 @@ export function createWebDavTransport(
         await encodeRoot(root),
         etag ? { "If-Match": etag } : replace ? {} : { "If-None-Match": "*" },
       );
-      if (response.status === 412) return { status: "conflict" };
+      if (REFUSED_WRITES[response.status])
+        return { status: REFUSED_WRITES[response.status] };
       if (!response.ok) await fail(response, "write");
       return { status: "ok", etag: strongEtag(response.headers.get("ETag")) };
     },

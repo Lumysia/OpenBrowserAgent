@@ -115,6 +115,25 @@ test("a damaged root with a damaged previous copy is rebuilt from local data", a
   );
 });
 
+// Koofr answers 423 to a PUT of a file another client is still uploading.
+for (const name of [ROOT, PREVIOUS])
+  test(`${name} locked by another upload: the round reads again and retries`, async () => {
+    const { clock, dav, on } = setup();
+    const a = on("deviceA");
+    await a.set(PROVIDERS, { p1: { model: "a" } });
+    await a.sync("edit");
+    clock.now += 60_000;
+    await a.set(PROVIDERS, { p1: { model: "a2" } });
+    dav.lock(name, 2);
+    const result = await a.sync("edit");
+    assert.deepEqual(result.warnings, []);
+    const root = await decodeRoot(dav.get(ROOT)!);
+    assert.equal(
+      (root.records["providers/p1"].data as { model: string }).model,
+      "a2",
+    );
+  });
+
 test("a root in an older format is replaced quietly, local data kept", async () => {
   const { dav, on } = setup();
   const old = {

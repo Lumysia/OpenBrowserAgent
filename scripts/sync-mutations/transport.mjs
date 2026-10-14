@@ -9,6 +9,24 @@ export default [
     needsServer: true,
   },
   {
+    name: "a root another client is still uploading fails the round",
+    file: "src/shared/sync/webdav.ts",
+    from: '  423: "busy",\n',
+    to: "",
+  },
+  {
+    name: "a busy root counts as a refused If-Match",
+    file: "src/shared/sync/engine.ts",
+    from: '      conflicted = written.status === "conflict";',
+    to: "      conflicted = true;",
+  },
+  {
+    name: "a refused If-Match on an unchanged root is retried like a busy one",
+    file: "src/shared/sync/engine.ts",
+    from: '      conflicted = written.status === "conflict";',
+    to: "      conflicted = false;",
+  },
+  {
     name: "skip If-Match in the test server too",
     file: "tests/sync-fixtures.ts",
     from: `        !hooks.ignoreIfMatch &&
