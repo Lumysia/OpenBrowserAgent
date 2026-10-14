@@ -8,6 +8,7 @@ import {
 } from "../downloads/page-downloads";
 import { callPage, pageTab, PageError } from "../page-agent";
 import { RUN_TAB_ID_PARAM } from "../run-tab";
+import { watchOpenedTabs } from "../user-focus";
 import {
   dialogLines,
   endDialogs,
@@ -93,10 +94,7 @@ export const actTool: ToolDefinition = {
       return fail(`At most ${MAX_STEPS} steps per call.`);
     const api = getBrowserApi();
     const tab = await pageTab(run.tab, input.tabId);
-    const opened: chrome.tabs.Tab[] = [];
-    const onCreated = (created: chrome.tabs.Tab) => {
-      if (created.openerTabId === tab.id) opened.push(created);
-    };
+    let opened: number[] = [];
     const done: string[] = [];
     let failure = "";
     let navigated = false;
@@ -129,7 +127,7 @@ export const actTool: ToolDefinition = {
       await delay(STEP_SETTLE_MS, signal);
       await begin();
     }
-    api.tabs.onCreated.addListener(onCreated);
+    const watch = await watchOpenedTabs(tab.id);
     try {
       for (const [index, step] of steps.entries()) {
         if (index < first) continue;
@@ -168,7 +166,7 @@ export const actTool: ToolDefinition = {
       }
       await delay(BATCH_SETTLE_MS, signal);
     } finally {
-      api.tabs.onCreated.removeListener(onCreated);
+      opened = await watch.stop();
     }
     const dialogs = dialogLines(
       await endDialogs(tab.id),
@@ -200,10 +198,17 @@ export const actTool: ToolDefinition = {
       lines.push(
         `Now at: ${after.title || "(untitled)"} | ${after.url}${fresh ? ". This is a new page: take a snapshot for refs." : ""}`,
       );
-    for (const created of opened) {
-      const current = await api.tabs.get(created.id!).catch(() => created);
+    // A tab that turned into a download is gone by now.
+    const openTabs: chrome.tabs.Tab[] = [];
+    for (const id of opened) {
+      const current = await api.tabs.get(id).catch(() => undefined);
+      if (current) openTabs.push(current);
+    }
+    for (const current of openTabs) {
       await adoptAgentTab(run, current);
-      lines.push(`Opened new ${tabLine(current, { mine: true }).slice(2)}`);
+      lines.push(
+        `Opened new ${tabLine(current, { mine: true }).slice(2)}. Pass its tabId to work on it.`,
+      );
     }
     lines.push(...changes);
     const downloads = await downloadsStartedSince(run, since, signal);
@@ -216,7 +221,7 @@ export const actTool: ToolDefinition = {
       !changes.length &&
       !dialogs.length &&
       !fresh &&
-      !opened.length &&
+      !openTabs.length &&
       !downloads.length &&
       !moved
     )

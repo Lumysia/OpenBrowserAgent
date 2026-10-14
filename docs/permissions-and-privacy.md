@@ -9,7 +9,8 @@ Permissions differ by browser target.
 All builds declare:
 
 - `scripting`: inject scripts/CSS for page text extraction, element selection, DOM interaction, input, scrolling, and content capture.
-- `tabs`: read tab metadata, list tabs, focus tabs, open/close/reload/navigate tabs, and attach tab context to chats.
+- `tabs`: read tab metadata, list tabs, open/close/reload/navigate tabs (in the background; a tab is brought to the front only when the user asks), and attach tab context to chats.
+- `webNavigation`: tell which tabs a page the agent works on opened (a link with a target, `window.open`), so the user's own tab goes back in front of them. Only the opener of new tabs is read during an `act` call; nothing is stored.
 - `storage`: persist settings, providers, agents, skills, MCP servers, chats, workspaces, language, and sync status.
 - `unlimitedStorage`: allow local chat and attachment storage to grow beyond normal extension storage quotas; browser-sync quotas still apply.
 - `alarms`: check for sync changes once a minute while an extension page is visible.
@@ -22,14 +23,14 @@ Chrome/Chromium builds additionally declare:
 
 - `sidePanel`: provide the extension side panel.
 - `tabGroups`: name and color the tab groups the agent creates with `tabs` (group, ungroup), and show group names in tab lists.
-- `debugger`: real mouse and keyboard input where pages ignore synthetic events (rich text editors, `trusted` or coordinate `act` steps), answering a JavaScript dialog that opened outside an `act` batch, full-page screenshots, page JavaScript (`runScript`, off by default), and developer diagnostics (network resources, device emulation). The debugger attaches only for those calls.
+- `debugger`: real mouse and keyboard input where pages ignore synthetic events (rich text editors, `trusted` or coordinate `act` steps), answering a JavaScript dialog that opened outside an `act` batch, screenshots of a tab in the background, full-page screenshots, page JavaScript (`runScript`, off by default), and developer diagnostics (network resources, device emulation). The debugger attaches only for those calls.
 
 Chromium and Firefox additionally declare:
 
 - `search`: run web searches through the browser's configured default search engine.
 - `nativeMessaging`: connect to a separately installed local execution bridge, which can execute shell commands when enabled for the active agent.
 
-Firefox and Safari omit the Chrome-only `tabGroups`, `sidePanel` and `debugger` permissions. Firefox uses `sidebar_action` for its sidebar. Safari also omits `search` and `nativeMessaging`; its action opens or focuses `sidepanel.html` as an extension tab.
+Firefox and Safari omit the Chrome-only `tabGroups`, `sidePanel` and `debugger` permissions. Firefox captures a background tab with `tabs.captureTab`; Safari can capture only the tab in front, so a screenshot shows the tab for a moment and then puts the user's tab back. Firefox uses `sidebar_action` for its sidebar. Safari also omits `search` and `nativeMessaging`; its action opens or focuses `sidepanel.html` as an extension tab.
 
 The extension page CSP allows images from `self`, `data:`, `blob:`, `http:`, and `https:` so rendered Markdown images, generated images, and Mermaid previews can display. Images that an answer links from other sites do not load on their own: the answer shows a placeholder, and the image is fetched only after the user chooses Load image (or opens it in a tab). A prompt-injected page therefore cannot leak data through an image URL. Images the extension made itself (`data:` and `blob:` URLs) still show directly.
 

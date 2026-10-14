@@ -12,7 +12,7 @@ PERMISSION JUSTIFICATIONS (same order as the store page; each under 1000 charact
 Injects the extension's own bundled scripts into the page the user is working on, to read the page text, let the user pick an element, show a page translation the user asked for, and perform the clicks, typing and scrolling the agent's task requires. No code is fetched from a server.
 
 == tabs justification ==
-The agent lists, opens, focuses, reloads, navigates and closes tabs when the user asks it to work across pages, and the user can attach open tabs (title and URL) to a chat as context.
+The agent lists, opens, reloads, navigates and closes tabs when the user asks it to work across pages (in the background, so the user keeps their own tab; it brings a tab to the front only when the user asks), and the user can attach open tabs (title and URL) to a chat as context.
 
 == storage justification ==
 Saves the user's settings, model providers, agents, skills and chats on the device.
@@ -32,6 +32,9 @@ Removes the Origin header from the extension's own requests to an MCP server, on
 == contextMenus justification ==
 Adds an OpenBrowserAgent submenu to the right-click menu (the user can turn it off): ask about or summarize the page, translate the page (and show the original again), search the web about it or the selected text, summarize a linked page, or copy the page as Markdown. Items only open the side panel, translate the page or copy to the clipboard when the user picks them.
 
+== webNavigation justification ==
+While the agent clicks on a page in the background, tells which tabs that page opened (a link that opens a new tab), so the extension can put the user's own tab back in front instead of leaving them on the new tab. Navigation events of other tabs are ignored and nothing is stored or sent.
+
 == nativeMessaging justification ==
 Optional local execution bridge: connects to a separately installed helper on the user's computer, only after the user installs it and enables it for an agent.
 
@@ -45,7 +48,7 @@ When the user asks the agent to tidy tabs, it groups them and names and colors t
 The extension's whole interface (chat, agent steps, composer) lives in the browser side panel.
 
 == debugger justification ==
-Attached only for the duration of specific actions: trusted mouse and keyboard input on pages that ignore synthetic events (rich text editors, canvas apps), answering a JavaScript dialog that blocks the page, full-page screenshots, and developer diagnostics. It is detached right after the call.
+Attached only for the duration of specific actions: trusted mouse and keyboard input on pages that ignore synthetic events (rich text editors, canvas apps), answering a JavaScript dialog that blocks the page, screenshots of a tab without bringing it to the front, full-page screenshots, and developer diagnostics. It is detached right after the call.
 
 == offscreen justification ==
 Converts fetched web page HTML into Markdown text with the browser's DOM parser, which the background service worker lacks. The offscreen document only parses HTML; it shows nothing and loads no remote code.

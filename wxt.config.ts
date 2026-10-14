@@ -15,6 +15,9 @@ const permissions = [
   "declarativeNetRequestWithHostAccess",
   // The right-click menu (OpenBrowserAgent ▸ …); Safari has it on macOS.
   "contextMenus",
+  // Which page opened a tab, so tabs a page the agent works on opens do not
+  // take the user's tab (the browser names the active tab as the opener).
+  "webNavigation",
 ] as const;
 const chromiumAndFirefoxPermissions = ["nativeMessaging", "search"] as const;
 const sourcemap = process.env.WXT_SOURCEMAP === "true";
