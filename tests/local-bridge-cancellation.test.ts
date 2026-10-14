@@ -9,7 +9,8 @@ import { setTimeout as delay } from "node:timers/promises";
 import { storage } from "../src/shared/storage";
 import { runLocalCommand } from "../src/background/local-execution-bridge-tasks";
 import { localCommandTool } from "../src/background/tools/local";
-import { toolBrowser, eventListeners } from "./tool-fixtures";
+import { eventListeners } from "./fake-chrome";
+import { toolBrowser } from "./tool-fixtures";
 
 afterEach(() => mock.restoreAll());
 
@@ -227,8 +228,9 @@ test("a bridge command runs without a ping or storage write and keeps only the o
     port.onMessage.emit({ type: "stdout", taskId, data: "x".repeat(1024) });
   port.onMessage.emit({ type: "stdout", taskId, data: "end" });
   port.onMessage.emit({ type: "command.done", taskId });
-  const result = (await running) as { state: string; output: string };
+  const result = await running;
   assert.equal(result.state, "done");
+  assert.ok("output" in result && typeof result.output === "string");
   assert.equal(result.output.length, 64 * 1024);
   assert.ok(result.output.endsWith("end"));
   assert.equal(update.mock.callCount(), 0);

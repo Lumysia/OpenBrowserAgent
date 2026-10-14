@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
 import { launchExtension, poll } from "./chromium.mjs";
-import { providerFixture, reply, toolResults } from "./provider-fixtures.mjs";
+import { providerFixture, reply, toolResults } from "./provider-fixtures.ts";
 import { checkComposer } from "./browser-composer.mjs";
 
 // Headed by default. Build first. Real acceptance uses OBA_REAL_MODEL=1,

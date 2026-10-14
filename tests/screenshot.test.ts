@@ -3,34 +3,32 @@ import { test } from "node:test";
 import { createRunTab } from "../src/background/run-tab";
 import { screenshotTool } from "../src/background/tools/screenshot";
 import type { ToolContext } from "../src/background/tools/types";
-import { installBrowser } from "./helpers";
+import { fakeTabs, installChrome } from "./fake-chrome";
 
 // A browser without the debugger: tab 1 is the agent's, tab 2 the user's.
 function browser(captureTab?: (tabId: number) => Promise<string>) {
-  installBrowser();
-  const state = {
-    active: 2,
+  const tabs = fakeTabs(
+    [1, 2].map((id) => ({
+      id,
+      windowId: 7,
+      title: `Tab ${id}`,
+      url: `https://example.test/${id}`,
+    })),
+    2,
+  );
+  const state = Object.assign(tabs.state, {
     activated: [] as number[],
     captured: [] as number[],
-  };
-  const tab = (id: number) => ({
-    id,
-    windowId: 7,
-    title: `Tab ${id}`,
-    url: `https://example.test/${id}`,
-    active: id === state.active,
   });
-  Object.assign(chrome, {
+  installChrome({
     tabs: {
-      get: async (id: number) => tab(id),
-      query: async () => [tab(state.active)],
-      update: async (id: number) => {
-        state.active = id;
+      ...tabs.api,
+      update: async (id: number, props: chrome.tabs.UpdateProperties) => {
         state.activated.push(id);
-        return tab(id);
+        return tabs.api.update(id, props);
       },
       captureVisibleTab: async () => {
-        state.captured.push(state.active);
+        state.captured.push(state.active!);
         return "data:image/jpeg;base64,AA==";
       },
       ...(captureTab ? { captureTab } : {}),

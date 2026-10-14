@@ -3,74 +3,25 @@ import {
   STORAGE_KEYS,
 } from "../src/shared/storage-keys";
 import type { SyncDataSettings } from "../src/shared/storage-keys";
-import { gunzip, gzip, sameJson, sha256Hex } from "../src/shared/sync/codec";
+import { gunzip, gzip, sha256Hex } from "../src/shared/sync/codec";
 import { loadDeviceId } from "../src/shared/sync/device";
 import { runSyncRound, type RoundReason } from "../src/shared/sync/engine";
 import type {
   AttachmentStore,
-  StorageArea,
   StoredAttachment,
   SyncEnv,
 } from "../src/shared/sync/env";
 import { decodeRoot, encodeRoot } from "../src/shared/sync/root";
 import { loadSyncState } from "../src/shared/sync/state";
-import {
-  createEditListener,
-  type StorageChanges,
-} from "../src/shared/sync/track";
+import { createEditListener } from "../src/shared/sync/track";
 import {
   BlobIntegrityError,
   type Transport,
 } from "../src/shared/sync/transport";
+import { memoryArea } from "./fake-chrome";
 
 // In-memory stand-ins for one device's storage and for a server that keeps
 // a root with ETags (compare-and-swap) and blobs.
-
-// A storage area that reports each set or remove as one change event, after
-// the call resolves (as storage.onChanged does).
-export function memoryArea(): StorageArea & {
-  data: Record<string, unknown>;
-  listeners: Array<(changes: StorageChanges) => void>;
-} {
-  const data: Record<string, unknown> = {};
-  const listeners: Array<(changes: StorageChanges) => void> = [];
-  const emit = (changes: StorageChanges) => {
-    if (!Object.keys(changes).length) return;
-    const copy = structuredClone(changes);
-    queueMicrotask(() => listeners.forEach((listener) => listener(copy)));
-  };
-  return {
-    data,
-    listeners,
-    async get(keys) {
-      if (keys === null) return structuredClone(data);
-      const list = Array.isArray(keys) ? keys : [keys];
-      return structuredClone(
-        Object.fromEntries(
-          list.filter((key) => key in data).map((key) => [key, data[key]]),
-        ),
-      );
-    },
-    async set(items) {
-      const changes: StorageChanges = {};
-      for (const [key, value] of Object.entries(structuredClone(items))) {
-        if (!(key in data) || !sameJson(data[key], value))
-          changes[key] = { oldValue: data[key], newValue: value };
-        data[key] = value;
-      }
-      emit(changes);
-    },
-    async remove(keys) {
-      const changes: StorageChanges = {};
-      for (const key of Array.isArray(keys) ? keys : [keys])
-        if (key in data) {
-          changes[key] = { oldValue: data[key] };
-          delete data[key];
-        }
-      emit(changes);
-    },
-  };
-}
 
 export function memoryAttachments(): AttachmentStore & {
   data: Map<string, StoredAttachment>;

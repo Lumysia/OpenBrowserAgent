@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
+import type { JsonObject } from "@earendil-works/pi-ai";
 import { createContextEngine } from "../src/background/context/engine";
 import { assistantMessage, piModel } from "../src/background/pi-provider";
 import { textSlice } from "../src/background/tools/read";
@@ -46,7 +47,7 @@ function run(contextWindow = 20_000) {
   let calls = 0;
   async function turn(
     output: string,
-    input: Record<string, unknown> = {},
+    input: JsonObject = {},
     say = "",
     name = "snapshot",
     image = false,
@@ -56,7 +57,7 @@ function run(contextWindow = 20_000) {
       ...assistantMessage(model),
       content: [
         ...(say ? [{ type: "text" as const, text: say }] : []),
-        { type: "toolCall", id, name, arguments: input },
+        { type: "toolCall" as const, id, name, arguments: input },
       ],
     });
     const { text } = await engine.acceptToolOutput({

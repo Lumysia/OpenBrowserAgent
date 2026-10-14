@@ -6,7 +6,7 @@ import {
   sendComposer,
   typeComposer,
 } from "./browser-composer.mjs";
-import { reply } from "./provider-fixtures.mjs";
+import { reply } from "./provider-fixtures.ts";
 
 // The chat request, not the one for the chat title.
 async function chatRequest(fixture) {

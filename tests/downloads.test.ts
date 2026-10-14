@@ -16,7 +16,11 @@ import { getMessages } from "../src/shared/i18n";
 import { downloadsDetail } from "../entrypoints/sidepanel/download-tool-display";
 import { toolDisplay } from "../entrypoints/sidepanel/tool-part-detail";
 import { TOOL_NAME } from "../src/shared/tool-names";
-import { CHAT_PART_STATE, type ChatPart } from "../src/shared/types";
+import {
+  CHAT_PART_STATE,
+  toolPartType,
+  type ChatPart,
+} from "../src/shared/types";
 import { downloadItem as item } from "./download-fixtures";
 
 test("file names stay inside the Downloads folder and are valid everywhere", () => {
@@ -270,14 +274,20 @@ test("the step title says what happened, and a failed download looks failed", ()
   const step = (
     input: Record<string, unknown>,
     output?: Record<string, unknown>,
-    state: string = CHAT_PART_STATE.outputAvailable,
+    state: ChatPart["state"] = CHAT_PART_STATE.outputAvailable,
     language = "en-US",
   ) => {
     const t = getMessages(language);
     try {
       const { title, description, failed } = toolDisplay(
         TOOL_NAME.downloads,
-        { id: "p", type: "tool", state, input, output } as ChatPart,
+        {
+          id: "p",
+          type: toolPartType(TOOL_NAME.downloads),
+          state,
+          input,
+          output,
+        },
         t,
       );
       return [title, description, failed];

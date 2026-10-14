@@ -17,6 +17,7 @@ import {
   saveChat,
   type Device,
 } from "./sync-fixtures";
+import { swapChrome } from "./fake-chrome";
 
 // Pages save from their in-memory copy. A save that lands after a sync
 // download the page has not shown yet must not undo it (third review,
@@ -139,11 +140,7 @@ test("a chat save from a side panel that missed a sync download keeps the downlo
   await b.sync();
   assert.deepEqual(messageIds(b, "X"), ["m1", "a1"]);
   // The side panel saves its copy with the user's new message.
-  const previous = globalThis.chrome;
-  globalThis.chrome = { storage: { local: b.env.local } } as never;
-  t.after(() => {
-    globalThis.chrome = previous;
-  });
+  t.after(swapChrome({ storage: { local: b.env.local } }));
   const edited = chat("X", [
     ["m1", 1],
     ["b1", 3],

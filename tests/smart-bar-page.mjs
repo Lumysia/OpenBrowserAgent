@@ -1,6 +1,6 @@
 import { setTimeout as delay } from "node:timers/promises";
 import { launchExtension, poll } from "./chromium.mjs";
-import { providerFixture } from "./provider-fixtures.mjs";
+import { providerFixture } from "./provider-fixtures.ts";
 
 // Test helpers for the smart bar on a page. The bar lives in a closed shadow
 // root, out of reach of page scripts; tests reach it through CDP (a DevTools

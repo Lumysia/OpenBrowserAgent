@@ -4,7 +4,7 @@ import { workspaceTool } from "../src/background/tools/workspace";
 import type { ToolContext } from "../src/background/tools/types";
 import { createWorkspace, upsertWorkspaceFile } from "../src/shared/workspace";
 import { storage } from "../src/shared/storage";
-import { installBrowser } from "./helpers";
+import { installChrome } from "./fake-chrome";
 import type { AgentWorkspace } from "../src/shared/types";
 import { saveWorkspaceChanges } from "../src/shared/workspace-storage";
 
@@ -25,7 +25,7 @@ const file = (workspace: AgentWorkspace, path: string) =>
   workspace.files.find((item) => item.path === path)?.content;
 
 test("replace writes replacement text literally", async () => {
-  installBrowser();
+  installChrome();
   const workspace = createWorkspace("fixture");
   await storage.agentWorkspaces.replace([workspace]);
   const result = await call(workspace, {
@@ -42,7 +42,7 @@ test("replace writes replacement text literally", async () => {
 });
 
 test("a write applies to the current workspace and keeps newer unrelated files", async () => {
-  installBrowser();
+  installChrome();
   const run = createWorkspace("fixture");
   const current = edited(
     edited(run, "later.md", "new file"),
@@ -67,7 +67,7 @@ test("a write applies to the current workspace and keeps newer unrelated files",
 });
 
 test("replace rejects a file changed since the run read it, and refreshes the run", async () => {
-  installBrowser();
+  installChrome();
   const run = createWorkspace("fixture");
   const current = edited(run, "NOTES.md", "# Notes\n\nnewer content");
   await storage.agentWorkspaces.replace([current]);
@@ -84,7 +84,7 @@ test("replace rejects a file changed since the run read it, and refreshes the ru
 });
 
 test("memory appends from two runs and a settings draft keep each other's changes", async () => {
-  installBrowser();
+  installChrome();
   const original = createWorkspace("fixture");
   await storage.agentWorkspaces.replace([original]);
   const results = await Promise.all([
@@ -119,7 +119,7 @@ test("memory appends from two runs and a settings draft keep each other's change
 });
 
 test("a settings rename validates the draft's original file before changing any paths", async () => {
-  installBrowser();
+  installChrome();
   const original = edited(createWorkspace("fixture"), "custom.md", "original");
   const draft = edited(
     {
@@ -137,7 +137,7 @@ test("a settings rename validates the draft's original file before changing any 
 });
 
 test("write receipts say what changed", async () => {
-  installBrowser();
+  installChrome();
   const workspace = createWorkspace("fixture");
   await storage.agentWorkspaces.replace([workspace]);
 

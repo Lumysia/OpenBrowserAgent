@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { launchExtension, poll } from "./chromium.mjs";
 import { composerStatus, installComposerProbe } from "./composer-probe.mjs";
-import { providerFixture } from "./provider-fixtures.mjs";
+import { providerFixture } from "./provider-fixtures.ts";
 
 // Own the loopback provider and disposable browser together, including partial
 // setup failures. Tests can install pre-navigation barriers before configure().

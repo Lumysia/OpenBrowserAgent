@@ -17,7 +17,15 @@ import { getMessages } from "../src/shared/i18n";
 
 const t = getMessages("en-US");
 const config: MarkdownConfig = {
-  sources: [{ id: "source_1", title: "Pricing", url: "https://a.test/" }],
+  sources: [
+    {
+      id: "source_1",
+      kind: "page",
+      title: "Pricing",
+      url: "https://a.test/",
+      createdAt: 1,
+    },
+  ],
   footnoteIdPrefix: "fn-",
   footnoteHeading: "Footnotes",
   footnoteBackLabel: "Back to {0}",

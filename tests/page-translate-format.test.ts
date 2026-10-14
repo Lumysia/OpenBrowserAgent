@@ -81,7 +81,9 @@ test("[[n]] format: items marked by number", () => {
 test("[[n]] parser: items complete when the next header arrives", () => {
   const parser = createMarkedStreamParser();
   const seen: Array<{ id: number; text: string }> = [];
+  // Closures: an assertion on `seen` narrows its type at the call site.
   const push = (chunk: string) => seen.push(...parser.push(chunk));
+  const end = () => seen.push(...parser.end());
   push("Sure! Here is the translation:\n```\n[[2]]\nDeux");
   assert.deepEqual(seen, []);
   assert.deepEqual(parser.partial(), { id: 2, text: "Deux" });
@@ -91,7 +93,7 @@ test("[[n]] parser: items complete when the next header arrives", () => {
   push("1]]\nUn\n");
   assert.deepEqual(seen, [{ id: 2, text: "Deux lignes\nsur deux" }]);
   push("[[3]] Trois sur la même ligne\n[[end]]\n```\nAnything after.");
-  seen.push(...parser.end());
+  end();
   assert.deepEqual(seen, [
     { id: 2, text: "Deux lignes\nsur deux" },
     { id: 1, text: "Un" },

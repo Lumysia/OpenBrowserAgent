@@ -18,7 +18,7 @@ import {
   modelPrompt,
 } from "../src/background/page-translate/engines/model";
 import { EngineError } from "../src/background/page-translate/engines/types";
-import { providerFixture } from "./provider-fixtures.mjs";
+import { providerFixture } from "./provider-fixtures";
 
 // Responses recorded from the live services on 2026-10-14 for the requests
 // below (see tests/fixtures/page-translate/).

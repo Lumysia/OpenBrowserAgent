@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
 import { launchExtension, poll } from "./chromium.mjs";
 import { configureComposer, submitComposer } from "./browser-composer.mjs";
-import { providerFixture, reply } from "./provider-fixtures.mjs";
+import { providerFixture, reply } from "./provider-fixtures.ts";
 
 // Opt-in UI smoke (npm run test:browser): needs `npm run build:chrome` and
 // Chromium (CHROMIUM or /usr/bin/chromium). It catches what unit tests cannot:

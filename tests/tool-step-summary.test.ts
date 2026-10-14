@@ -7,7 +7,11 @@ import {
 import { actStepsSummary } from "../entrypoints/sidepanel/tool-step-summary";
 import { getMessages } from "../src/shared/i18n";
 import { TOOL_NAME } from "../src/shared/tool-names";
-import { CHAT_PART_STATE, type ChatPart } from "../src/shared/types";
+import {
+  CHAT_PART_STATE,
+  toolPartType,
+  type ChatPart,
+} from "../src/shared/types";
 
 const steps = ["type", "type", "select", "select", "click"].map((action) => ({
   action,
@@ -49,23 +53,27 @@ test("unknown act steps are counted together, last", () => {
   assert.equal(summary("en-US", []), "");
 });
 
-function part(input: unknown, output?: unknown): ChatPart {
+function part(toolName: string, input: unknown, output?: unknown): ChatPart {
   return {
     id: "part",
-    type: "tool",
+    type: toolPartType(toolName),
     state: output
       ? CHAT_PART_STATE.outputAvailable
       : CHAT_PART_STATE.inputAvailable,
     input,
     output,
-  } as ChatPart;
+  };
 }
 
 test("tool steps show no raw tab ids, and keep them in the details", () => {
   const t = getMessages("en-US");
   const act = toolDisplay(
     TOOL_NAME.act,
-    part({ tabId: 1928449456, steps }, { tabId: 1928449456, done: 5 }),
+    part(
+      TOOL_NAME.act,
+      { tabId: 1928449456, steps },
+      { tabId: 1928449456, done: 5 },
+    ),
     t,
   );
   assert.equal(
@@ -74,13 +82,17 @@ test("tool steps show no raw tab ids, and keep them in the details", () => {
   );
   const snapshot = toolDisplay(
     TOOL_NAME.snapshot,
-    part({}, { tabId: 1928449456, title: "Checkout", lines: 33 }),
+    part(
+      TOOL_NAME.snapshot,
+      {},
+      { tabId: 1928449456, title: "Checkout", lines: 33 },
+    ),
     t,
   );
   assert.equal(snapshot.description, "Checkout · 33 lines");
   const tabs = toolDisplay(
     TOOL_NAME.tabs,
-    part({ action: "open" }, { tabId: 7, title: "Docs" }),
+    part(TOOL_NAME.tabs, { action: "open" }, { tabId: 7, title: "Docs" }),
     t,
   );
   assert.equal(tabs.description, "Opened · Docs");
@@ -89,7 +101,7 @@ test("tool steps show no raw tab ids, and keep them in the details", () => {
   assert.match(
     toolJsonDetail(
       TOOL_NAME.act,
-      part({ steps }, { tabId: 1928449456, done: 5 }),
+      part(TOOL_NAME.act, { steps }, { tabId: 1928449456, done: 5 }),
     ),
     /"tabId": 1928449456/,
   );
@@ -99,7 +111,7 @@ test("only the act steps that ran are summarised", () => {
   const t = getMessages("en-US");
   const act = toolDisplay(
     TOOL_NAME.act,
-    part({ steps }, { tabId: 1, done: 3 }),
+    part(TOOL_NAME.act, { steps }, { tabId: 1, done: 3 }),
     t,
   );
   assert.equal(act.description, "Typed in 2 fields, selected 1 option");
@@ -110,19 +122,23 @@ test("tool step counts are localized", () => {
   try {
     const snapshot = toolDisplay(
       TOOL_NAME.snapshot,
-      part({}, { title: "结账", lines: 33 }),
+      part(TOOL_NAME.snapshot, {}, { title: "结账", lines: 33 }),
       t,
     );
     assert.equal(snapshot.description, "结账 · 33 行");
     const find = toolDisplay(
       TOOL_NAME.find,
-      part({ query: "价格" }, { matches: 2 }),
+      part(TOOL_NAME.find, { query: "价格" }, { matches: 2 }),
       t,
     );
     assert.equal(find.description, '"价格" · 2 行匹配');
     const counted = toolDisplay(
       TOOL_NAME.find,
-      part({ query: "价格" }, { matchingLines: 1, occurrences: 3 }),
+      part(
+        TOOL_NAME.find,
+        { query: "价格" },
+        { matchingLines: 1, occurrences: 3 },
+      ),
       t,
     );
     assert.equal(counted.description, '"价格" · 1 行匹配（3 处）');
@@ -134,8 +150,11 @@ test("tool step counts are localized", () => {
 test("find shows matching lines with their occurrences", () => {
   const t = getMessages("en-US");
   const find = (output: unknown) =>
-    toolDisplay(TOOL_NAME.find, part({ query: "TEST_TOKEN" }, output), t)
-      .description;
+    toolDisplay(
+      TOOL_NAME.find,
+      part(TOOL_NAME.find, { query: "TEST_TOKEN" }, output),
+      t,
+    ).description;
   assert.equal(
     find({ matchingLines: 1, occurrences: 2 }),
     '"TEST_TOKEN" · 1 matching line (2 occurrences)',

@@ -17,7 +17,9 @@ import {
   prepareMcpRequest,
   syncMcpOriginRules,
 } from "../src/shared/mcp-origin-rules";
+import { STORAGE_KEYS } from "../src/shared/storage-keys";
 import { keepStoredForm } from "../src/shared/stored-form";
+import { eventListeners, memoryArea, swapChrome } from "./fake-chrome";
 
 const host = "abcdefghijklmnopabcdefghijklmnop";
 const server = (
@@ -163,18 +165,15 @@ test("a save that leaves the option alone does not store the read default", () =
 });
 
 type Update = { removeRuleIds?: number[]; addRules?: unknown[] };
-const globals = globalThis as Record<string, unknown>;
-afterEach(() => {
-  delete globals.chrome;
-});
+let restoreChrome = () => {};
+afterEach(() => restoreChrome());
 
 function fakeBrowser(stored: unknown[], dnr: boolean, updates: Update[] = []) {
-  globals.chrome = {
+  const local = memoryArea();
+  local.data[STORAGE_KEYS.mcpServers] = stored;
+  restoreChrome = swapChrome({
     runtime: { getURL: (path: string) => `chrome-extension://${host}${path}` },
-    storage: {
-      local: { get: async () => ({ "mcp-servers": stored }) },
-      onChanged: { addListener() {}, removeListener() {} },
-    },
+    storage: { local, onChanged: eventListeners() },
     ...(dnr
       ? {
           declarativeNetRequest: {
@@ -184,7 +183,7 @@ function fakeBrowser(stored: unknown[], dnr: boolean, updates: Update[] = []) {
           },
         }
       : {}),
-  };
+  });
   return updates;
 }
 

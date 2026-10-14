@@ -6,7 +6,7 @@ import {
   sendComposer,
   typeComposer,
 } from "./browser-composer.mjs";
-import { reply } from "./provider-fixtures.mjs";
+import { reply } from "./provider-fixtures.ts";
 
 // A field people type into, not a radio or switch.
 const FIELD = 'input:is([type="text"], [type="number"], :not([type]))';

@@ -5,7 +5,7 @@ import { sha256Hex } from "../src/shared/sync/codec";
 import { formatClock } from "../src/shared/sync/hlc";
 import { emptyRoot } from "../src/shared/sync/root";
 import { createWebDavTransport } from "../src/shared/sync/webdav";
-import { memoryArea } from "./sync-fixtures";
+import { memoryArea } from "./fake-chrome";
 
 // What the transports do on bad days: a server that never answers, devices
 // whose clocks are a day off.

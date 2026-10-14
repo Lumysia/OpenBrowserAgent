@@ -14,12 +14,12 @@ import { formatClock, INITIAL_HLC, tickClock } from "../src/shared/sync/hlc";
 import { decodeRoot, emptyRoot } from "../src/shared/sync/root";
 import { SYNC_WARNINGS } from "../src/shared/sync/state";
 import { AI_TEXT_CHUNK_TYPE, type ChatPart } from "../src/shared/types";
+import { memoryArea } from "./fake-chrome";
 import {
   ALL_ON,
   chat,
   copyOf,
   device,
-  memoryArea,
   memoryServer,
   memoryTransport,
   messageIds,

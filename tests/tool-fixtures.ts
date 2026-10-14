@@ -1,4 +1,9 @@
-import { installBrowser } from "./helpers";
+import {
+  eventListeners,
+  fakeTabs,
+  installChrome,
+  type FakeTab,
+} from "./fake-chrome";
 
 export function deferred<T = void>() {
   let resolve!: (value: T) => void;
@@ -7,33 +12,20 @@ export function deferred<T = void>() {
   });
   return { promise, resolve };
 }
-export function eventListeners<T extends (...args: any[]) => void>() {
-  const listeners = new Set<T>();
-  return {
-    listeners,
-    addListener: (listener: T) => listeners.add(listener),
-    removeListener: (listener: T) => listeners.delete(listener),
-    emit: (...args: Parameters<T>) => {
-      for (const listener of [...listeners]) listener(...args);
-    },
-  };
-}
-export function toolBrowser() {
-  installBrowser();
-  const onUpdated = eventListeners();
+// The tools' browser: `tabs` exist (loaded), the first one active.
+export function toolBrowser(open: FakeTab[] = [{ id: 1 }]) {
+  const tabs = fakeTabs(
+    open.map((tab) => ({
+      title: "Fixture",
+      url: "https://example.test",
+      status: "complete",
+      ...tab,
+    })),
+  );
+  const onUpdated = tabs.api.onUpdated;
   const onChanged = eventListeners();
-  Object.assign(chrome, {
-    tabs: {
-      get: async () => ({
-        id: 1,
-        title: "Fixture",
-        url: "https://example.test",
-        status: "complete",
-        windowId: 1,
-      }),
-      query: async () => [{ id: 1 }],
-      onUpdated,
-    },
+  installChrome({
+    tabs: tabs.api,
     scripting: { executeScript: async () => [{ result: {} }] },
     downloads: {
       download: async () => 7,

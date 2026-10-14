@@ -31,13 +31,13 @@ import {
   slashSkillQuery,
   takeSlashSkill,
 } from "../entrypoints/sidepanel/skill-context";
-import { installBrowser } from "./helpers";
+import { installChrome } from "./fake-chrome";
 
 const creator = BUILTIN_SKILLS.find((skill) => skill.name === "skill-creator")!;
-let browser: ReturnType<typeof installBrowser>;
+let browser: ReturnType<typeof installChrome>;
 
 beforeEach(() => {
-  browser = installBrowser();
+  browser = installChrome();
 });
 
 async function catalog() {

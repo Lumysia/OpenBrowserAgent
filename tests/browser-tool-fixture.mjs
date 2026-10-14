@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { once } from "node:events";
 import assert from "node:assert/strict";
 import { launchExtension, poll } from "./chromium.mjs";
-import { reply } from "./provider-fixtures.mjs";
+import { reply } from "./provider-fixtures.ts";
 
 // The ref written right after `label` in a snapshot line.
 export const ref = (text, label) => {

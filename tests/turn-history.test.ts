@@ -16,7 +16,7 @@ import {
 import { TOOL_RESULT_NOTE } from "../src/shared/tool-results";
 import type { ChatMessage, ChatPart } from "../src/shared/types";
 import { installPiRuntimeBrowser, setupPiRuntime } from "./pi-runtime-helpers";
-import { providerFixture, reply, toolResults } from "./provider-fixtures.mjs";
+import { providerFixture, reply, toolResults } from "./provider-fixtures";
 
 installPiRuntimeBrowser();
 

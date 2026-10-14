@@ -4,7 +4,7 @@ import { runPiAgent } from "../src/background/pi-runtime";
 import { createToolSet } from "../src/background/tools/registry";
 import type { ChatMessage } from "../src/shared/types";
 import { installPiRuntimeBrowser, setupPiRuntime } from "./pi-runtime-helpers";
-import { providerFixture, reply } from "./provider-fixtures.mjs";
+import { providerFixture, reply } from "./provider-fixtures";
 
 installPiRuntimeBrowser();
 

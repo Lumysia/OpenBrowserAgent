@@ -8,18 +8,12 @@ import { storage } from "../src/shared/storage";
 import { runPiAgent } from "../src/background/pi-runtime";
 import { createRunTab } from "../src/background/run-tab";
 import * as sessions from "../src/background/stream-sessions";
-import { installBrowser } from "./helpers";
+import { fakeTabs, installChrome } from "./fake-chrome";
 
 export function installPiRuntimeBrowser() {
   beforeEach(() => {
-    installBrowser();
-    Object.assign(chrome.storage, {
-      onChanged: { addListener() {}, removeListener() {} },
-    });
-    Object.assign(chrome, {
-      tabs: {
-        query: async () => [{ id: 42, title: "Fixture tab", active: true }],
-      },
+    installChrome({
+      tabs: fakeTabs([{ id: 42, title: "Fixture tab" }]).api,
     });
     mock.method(storage.preferences, "get", async () => DEFAULT_PREFERENCES);
   });
