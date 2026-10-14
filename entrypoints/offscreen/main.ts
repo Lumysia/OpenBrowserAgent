@@ -1,11 +1,12 @@
 import { htmlMarkdown } from "../../src/page/html-markdown";
 import { base64ToBytes } from "../../src/shared/binary";
+import { codeHost } from "../../src/shared/code-sandbox/host";
 import {
   OFFSCREEN_MESSAGE,
   type OffscreenRequest,
 } from "../../src/shared/offscreen";
 
-function handle(message: OffscreenRequest) {
+async function handle(message: OffscreenRequest) {
   switch (message.type) {
     case OFFSCREEN_MESSAGE.htmlMarkdown:
       return htmlMarkdown(message.html, message.url);
@@ -16,6 +17,13 @@ function handle(message: OffscreenRequest) {
     case OFFSCREEN_MESSAGE.revokeBlobUrl:
       URL.revokeObjectURL(message.url);
       return true;
+    // Only Chrome has the offscreen document, and its manifest always lists
+    // the code sandbox page.
+    case OFFSCREEN_MESSAGE.runCode:
+      return (await codeHost(true)).run(message.request);
+    case OFFSCREEN_MESSAGE.cancelCode:
+      (await codeHost(true)).cancel(message.id);
+      return true;
   }
 }
 
@@ -24,14 +32,14 @@ const TYPES = new Set<string>(Object.values(OFFSCREEN_MESSAGE));
 chrome.runtime.onMessage.addListener(
   (message: OffscreenRequest, _sender, sendResponse) => {
     if (!TYPES.has(message?.type)) return false;
-    try {
-      sendResponse({ ok: true, value: handle(message) });
-    } catch (error) {
-      sendResponse({
-        ok: false,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-    return false;
+    handle(message).then(
+      (value) => sendResponse({ ok: true, value }),
+      (error) =>
+        sendResponse({
+          ok: false,
+          error: error instanceof Error ? error.message : String(error),
+        }),
+    );
+    return true;
   },
 );

@@ -11,6 +11,7 @@ import { localBridgesTool, localCommandTool } from "./local";
 import { mcpServersTool, mcpToolDefinitions } from "./mcp";
 import { extractTool, findTool, snapshotTool } from "./page";
 import { readTool } from "./read";
+import { runCodeTool } from "./run-code";
 import { skillsTool } from "./skills";
 import { subAgentTool } from "./sub-agent";
 import { screenshotTool } from "./screenshot";
@@ -32,6 +33,7 @@ export const BUILTIN_TOOLS: ToolDefinition[] = [
   downloadsTool,
   skillsTool,
   workspaceTool,
+  runCodeTool,
   chatHistoryTool,
   subAgentTool,
   mcpServersTool,

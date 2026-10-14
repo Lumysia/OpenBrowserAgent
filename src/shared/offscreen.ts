@@ -1,12 +1,17 @@
+import type { CodeRunRequest } from "./code-sandbox/protocol";
+
 // The offscreen document does DOM work for the Chrome service worker, which
-// has no DOM: it parses HTML and holds the blob URLs of files the agent
-// saves. Background pages (Firefox, Safari) do both themselves.
+// has no DOM: it parses HTML, holds the blob URLs of files the agent saves
+// and hosts the code sandbox page. Background pages (Firefox, Safari) do
+// these themselves.
 export const OFFSCREEN_PATH = "/offscreen.html";
 
 export const OFFSCREEN_MESSAGE = {
   htmlMarkdown: "offscreen:htmlMarkdown",
   createBlobUrl: "offscreen:createBlobUrl",
   revokeBlobUrl: "offscreen:revokeBlobUrl",
+  runCode: "offscreen:runCode",
+  cancelCode: "offscreen:cancelCode",
 } as const;
 
 export type OffscreenHtmlMarkdownRequest = {
@@ -26,10 +31,22 @@ export type OffscreenRevokeBlobUrlRequest = {
   url: string;
 };
 
+export type OffscreenRunCodeRequest = {
+  type: typeof OFFSCREEN_MESSAGE.runCode;
+  request: CodeRunRequest;
+};
+
+export type OffscreenCancelCodeRequest = {
+  type: typeof OFFSCREEN_MESSAGE.cancelCode;
+  id: string;
+};
+
 export type OffscreenRequest =
   | OffscreenHtmlMarkdownRequest
   | OffscreenCreateBlobUrlRequest
-  | OffscreenRevokeBlobUrlRequest;
+  | OffscreenRevokeBlobUrlRequest
+  | OffscreenRunCodeRequest
+  | OffscreenCancelCodeRequest;
 
 export type OffscreenReply<T> =
   { ok: true; value: T } | { ok: false; error: string };

@@ -1,6 +1,13 @@
 import { defineConfig } from "wxt";
+import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
+import { quickjsWasmUrl } from "./scripts/quickjs-wasm-plugin";
 import { SMART_BAR_COMMAND } from "./src/shared/smart-bar-protocol";
+import {
+  CODE_SANDBOX_CSP,
+  CODE_SANDBOX_PAGE_HTML,
+  CODE_SANDBOX_PATH,
+} from "./src/shared/code-sandbox/paths";
 
 const permissions = [
   "scripting",
@@ -21,6 +28,9 @@ const permissions = [
 ] as const;
 const chromiumAndFirefoxPermissions = ["nativeMessaging", "search"] as const;
 const sourcemap = process.env.WXT_SOURCEMAP === "true";
+const require = createRequire(import.meta.url);
+const extensionPagesCsp =
+  "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src 'self' data: blob: http: https:;";
 
 const chromiumOnlyPermissions = [
   "tabGroups",
@@ -31,7 +41,26 @@ const chromiumOnlyPermissions = [
 
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
+  hooks: {
+    // The code sandbox's interpreter ships in the package (never from a
+    // CDN). Its sandboxed page is plain HTML with a classic script, so it
+    // loads the same way from an opaque origin in Chrome and Firefox; Safari
+    // has no sandboxed pages and runs the Worker from the background page.
+    "build:publicAssets": (wxt, files) => {
+      files.push({
+        absoluteSrc:
+          require.resolve("@jitl/quickjs-ng-wasmfile-release-sync/wasm"),
+        relativeDest: CODE_SANDBOX_PATH.wasm,
+      });
+      if (wxt.config.browser !== "safari")
+        files.push({
+          contents: CODE_SANDBOX_PAGE_HTML,
+          relativeDest: CODE_SANDBOX_PATH.page,
+        });
+    },
+  },
   vite: () => ({
+    plugins: [quickjsWasmUrl()],
     build: {
       sourcemap,
     },
@@ -59,9 +88,21 @@ export default defineConfig({
             ],
     host_permissions: ["<all_urls>"],
     content_security_policy: {
-      extension_pages:
-        "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src 'self' data: blob: http: https:;",
+      extension_pages: extensionPagesCsp,
+      ...(browser === "chrome" ? { sandbox: CODE_SANDBOX_CSP } : {}),
     },
+    // Manifest V2 (Firefox) keeps the sandbox CSP inside `sandbox`; Firefox
+    // before 154 ignores the key and the host falls back to a plain Worker.
+    ...(browser === "chrome"
+      ? { sandbox: { pages: [CODE_SANDBOX_PATH.page] } }
+      : browser === "firefox"
+        ? {
+            sandbox: {
+              pages: [CODE_SANDBOX_PATH.page],
+              content_security_policy: CODE_SANDBOX_CSP,
+            },
+          }
+        : {}),
     icons: {
       16: "icons/16.png",
       32: "icons/32.png",

@@ -22,6 +22,7 @@ export const TOOL_NAME = {
   localBridges: "localBridges",
   generateImage: "generateImage",
   runScript: "runScript",
+  runCode: "runCode",
   devtools: "devtools",
 } as const;
 
