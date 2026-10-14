@@ -10,6 +10,7 @@ import {
   googleEngine,
   toGoogleHtml,
 } from "../src/background/page-translate/engines/google";
+import { browserEngine } from "../src/background/page-translate/engines/browser";
 import { classifyFailure } from "../src/background/page-translate/engines/http";
 import { microsoftEngine } from "../src/background/page-translate/engines/microsoft";
 import {
@@ -371,4 +372,68 @@ test("AI model prompt: stable per language, names the target language", () => {
   assert.match(prompt("ja"), /into Japanese\./);
   assert.match(prompt("zh-TW"), /into Chinese \(Taiwan\)\./);
   assert.match(prompt("ja"), /\[\[end\]\]/);
+});
+
+test("built-in translator: detects the source, one translator per pair", async () => {
+  const created: string[] = [];
+  const scope = globalThis as Record<string, unknown>;
+  scope.LanguageDetector = {
+    availability: async () => "available",
+    create: async () => ({
+      detect: async (text: string) => [
+        {
+          detectedLanguage: /Bonjour/.test(text) ? "fr" : "en",
+          confidence: 0.9,
+        },
+      ],
+    }),
+  };
+  scope.Translator = {
+    availability: async ({ targetLanguage }: { targetLanguage: string }) =>
+      targetLanguage === "zh-Hant" ? "available" : "downloadable",
+    create: async ({
+      sourceLanguage,
+      targetLanguage,
+    }: {
+      sourceLanguage: string;
+      targetLanguage: string;
+    }) => {
+      created.push(`${sourceLanguage}>${targetLanguage}`);
+      return {
+        translate: async (text: string) => `[${targetLanguage}] ${text}`,
+      };
+    },
+  };
+  try {
+    const engine = browserEngine();
+    const translate = async (
+      items: Array<{ id: number; text: string }>,
+      target: string,
+    ) => {
+      const results: string[] = [];
+      await engine.translate({
+        items,
+        target,
+        signal: new AbortController().signal,
+        onItem: (_id, text) => results.push(text),
+      });
+      return results;
+    };
+    assert.deepEqual(
+      await translate([{ id: 1, text: "Hello <b1>world</b1>" }], "zh-TW"),
+      ["[zh-Hant] Hello <b1>world</b1>"],
+    );
+    assert.deepEqual(
+      await translate([{ id: 2, text: "Good night" }], "zh-TW"),
+      ["[zh-Hant] Good night"],
+    );
+    // Already in the target language: returned as it is.
+    assert.deepEqual(await translate([{ id: 3, text: "Bonjour" }], "fr"), [
+      "Bonjour",
+    ]);
+    assert.deepEqual(created, ["en>zh-Hant"]);
+  } finally {
+    delete scope.Translator;
+    delete scope.LanguageDetector;
+  }
 });

@@ -25,7 +25,7 @@ import { EngineError, resolveEngine, type TranslationEngine } from "./engines";
 
 // Rate-limit pauses up to this long are waited out; longer ones are reported.
 const MAX_WAIT_MS = 30_000;
-const RATE_LIMIT_RETRIES = 2;
+const RATE_LIMIT_RETRIES = 1;
 
 type Post = (event: PageTranslateEvent) => void;
 
