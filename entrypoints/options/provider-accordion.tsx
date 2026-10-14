@@ -41,6 +41,7 @@ import {
 } from "../../src/ui/provider-display";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { ProviderConsentField } from "./provider-consent-field";
+import { ProviderThinkingSwitch } from "./provider-thinking-switch";
 import { FetchedModelPicker, ModelList } from "./provider-controls";
 import { modelWithProviderLabel, renameProviderDraft } from "./provider-drafts";
 import { loadProviderModels } from "./provider-models";
@@ -233,6 +234,12 @@ export function ProviderAccordion({
               </Label>
             )}
             <ProviderBaseUrl
+              provider={provider}
+              value={draft}
+              onChange={setDraft}
+            />
+            <ProviderThinkingSwitch
+              t={t}
               provider={provider}
               value={draft}
               onChange={setDraft}

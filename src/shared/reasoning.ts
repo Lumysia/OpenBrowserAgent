@@ -10,6 +10,13 @@ export const REASONING_EFFORT = {
 export type ReasoningEffort =
   (typeof REASONING_EFFORT)[keyof typeof REASONING_EFFORT];
 
+// Quick tasks (smart bar actions, page translation) ask for the least
+// thinking the endpoint allows, whatever the user's effort setting.
+export const QUICK_TASK_REASONING = "quick";
+
+// What a request asks of the model's reasoning.
+export type RequestReasoning = ReasoningEffort | typeof QUICK_TASK_REASONING;
+
 export const REASONING_EFFORT_OPTIONS: ReasoningEffort[] = [
   REASONING_EFFORT.default,
   REASONING_EFFORT.low,

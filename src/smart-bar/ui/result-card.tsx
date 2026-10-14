@@ -309,7 +309,7 @@ function resultMessage(
         new Intl.NumberFormat(language).format(SMART_BAR_MAX_TEXT_CHARS),
       );
     case "streaming":
-      return text || t.writing;
+      return text || (result.thinking ? t.thinking : t.writing);
     default:
       return text || t.emptyResult;
   }

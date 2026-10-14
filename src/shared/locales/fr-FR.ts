@@ -465,6 +465,13 @@ export const frFR: LocaleMessages = {
     deleteProvider: "Supprimer le fournisseur d’IA",
     apiKey: "Clé API",
     baseUrl: "URL de base",
+    thinkingSwitch: "Interrupteur de réflexion",
+    thinkingSwitchHint:
+      "Comment la barre intelligente et la traduction de page demandent aux modèles d’ici de ne pas réfléchir. « Automatique » choisit d’après ce qui est connu du modèle et du serveur.",
+    thinkingSwitchAuto: "Automatique",
+    thinkingSwitchChatTemplate: "Modèle de chat (enable_thinking)",
+    thinkingSwitchReasoningEffort: "Effort de raisonnement (reasoning_effort)",
+    thinkingSwitchNone: "Ne rien envoyer",
     models: "Modèles",
     modelHint: "Récupérez les modèles, puis sélectionnez-en un à ajouter",
     fetchModels: "Récupérer les modèles",

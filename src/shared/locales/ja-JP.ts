@@ -439,6 +439,13 @@ export const jaJP: LocaleMessages = {
     deleteProvider: "AI プロバイダーを削除",
     apiKey: "API キー",
     baseUrl: "ベース URL",
+    thinkingSwitch: "思考スイッチ",
+    thinkingSwitchHint:
+      "スマートバーとページ翻訳が、ここのモデルに思考を省かせる方法です。「自動」はモデルとサーバーについて分かっている情報で選びます。",
+    thinkingSwitchAuto: "自動",
+    thinkingSwitchChatTemplate: "チャットテンプレート（enable_thinking）",
+    thinkingSwitchReasoningEffort: "推論強度（reasoning_effort）",
+    thinkingSwitchNone: "送信しない",
     models: "モデル",
     modelHint: "モデルを取得してから追加するものを選択",
     fetchModels: "モデルを取得",

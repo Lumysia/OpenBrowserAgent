@@ -26,6 +26,7 @@ export const smartBarPtBR: SmartBarLocaleMessages = {
   stopReading: "Parar a leitura",
   noVoice: "Nenhuma voz instalada para {language}.",
   writing: "Escrevendo…",
+  thinking: "Pensando…",
   emptyResult: "O modelo não retornou texto.",
   connectionLost:
     "A conexão com o OpenBrowserAgent foi perdida. Tente novamente.",

@@ -382,6 +382,13 @@ export const zhCN: LocaleMessages = {
     deleteProvider: "删除 AI 提供商",
     apiKey: "API Key",
     baseUrl: "Base URL",
+    thinkingSwitch: "思考开关",
+    thinkingSwitchHint:
+      "智能工具栏和网页翻译如何让这里的模型跳过思考。“自动”根据已知的模型和服务器信息选择。",
+    thinkingSwitchAuto: "自动",
+    thinkingSwitchChatTemplate: "聊天模板（enable_thinking）",
+    thinkingSwitchReasoningEffort: "推理强度（reasoning_effort）",
+    thinkingSwitchNone: "不发送",
     models: "模型",
     modelHint: "先获取模型，再选择一个添加",
     fetchModels: "获取模型",

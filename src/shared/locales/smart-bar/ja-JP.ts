@@ -26,6 +26,7 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
   stopReading: "読み上げを停止",
   noVoice: "{language}の音声がインストールされていません。",
   writing: "生成中…",
+  thinking: "考え中…",
   emptyResult: "モデルからテキストが返されませんでした。",
   connectionLost:
     "OpenBrowserAgent との接続が切れました。もう一度お試しください。",

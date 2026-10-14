@@ -33,7 +33,7 @@ import {
   normalizeTheme,
 } from "../../shared/theme/themes";
 import { resolveModel } from "../model-resolver";
-import { requestText } from "../pi-provider";
+import { QUICK_TASK_PRIORITY, requestQuickText } from "../quick-tasks";
 import { handOffToSidePanel } from "../side-panel-handoff";
 import { smartBarPrompt } from "./prompts";
 import {
@@ -296,10 +296,24 @@ async function runAction(
   const settings = normalizeSmartBarSettings(preferences.smartBar);
   const agent = resolveAgent(agents, preferences.selectedAgentId);
   const model = await resolveModel(settings.modelId, agent.modelId);
-  await requestText(
+  let answering = false;
+  let thinking = false;
+  await requestQuickText(
     model,
     smartBarPrompt(request.action, request.text, language, request.context),
-    signal,
-    (text) => post({ type: "delta", text }),
+    QUICK_TASK_PRIORITY.interactive,
+    {
+      signal,
+      onText: (text) => {
+        answering = true;
+        post({ type: "delta", text });
+      },
+      // Once, until the answer starts.
+      onThinking: () => {
+        if (answering || thinking) return;
+        thinking = true;
+        post({ type: "thinking" });
+      },
+    },
   );
 }

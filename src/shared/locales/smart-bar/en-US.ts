@@ -24,6 +24,7 @@ export const smartBarEnUS = {
   stopReading: "Stop reading",
   noVoice: "No voice installed for {language}.",
   writing: "Writing…",
+  thinking: "Thinking…",
   emptyResult: "The model returned no text.",
   connectionLost: "Lost the connection to OpenBrowserAgent. Try again.",
   selectionChanged: "The selected text changed. Copy the result instead.",

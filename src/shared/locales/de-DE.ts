@@ -464,6 +464,13 @@ export const deDE: LocaleMessages = {
     deleteProvider: "KI-Anbieter löschen",
     apiKey: "API-Schlüssel",
     baseUrl: "Basis-URL",
+    thinkingSwitch: "Denkschalter",
+    thinkingSwitchHint:
+      "Wie Smart Bar und Seitenübersetzung die Modelle hier bitten, nicht nachzudenken. „Automatisch“ wählt nach dem, was über Modell und Server bekannt ist.",
+    thinkingSwitchAuto: "Automatisch",
+    thinkingSwitchChatTemplate: "Chat-Vorlage (enable_thinking)",
+    thinkingSwitchReasoningEffort: "Reasoning-Aufwand (reasoning_effort)",
+    thinkingSwitchNone: "Nichts senden",
     models: "Modelle",
     modelHint: "Modelle abrufen und dann eines zum Hinzufügen auswählen",
     fetchModels: "Modelle abrufen",

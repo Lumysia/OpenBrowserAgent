@@ -437,6 +437,13 @@ export const enUS = {
     deleteProvider: "Delete AI provider",
     apiKey: "API key",
     baseUrl: "Base URL",
+    thinkingSwitch: "Thinking switch",
+    thinkingSwitchHint:
+      "How the smart bar and page translation ask models here to skip thinking. Auto uses what is known about the model and the server.",
+    thinkingSwitchAuto: "Auto",
+    thinkingSwitchChatTemplate: "Chat template (enable_thinking)",
+    thinkingSwitchReasoningEffort: "Reasoning effort (reasoning_effort)",
+    thinkingSwitchNone: "Send nothing",
     models: "Models",
     modelHint: "Fetch models, then select one to add",
     fetchModels: "Fetch models",

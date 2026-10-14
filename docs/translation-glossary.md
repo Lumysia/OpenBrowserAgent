@@ -95,6 +95,8 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | browser profile                | profil de navigateur         | Browserprofil               | perfil de navegador               | perfil de navegador              |
 | voice (reading aloud)          | voix                         | Stimme                      | voz                               | voz                              |
 
+The AI provider form's **thinking switch** chooses how the smart bar and page translation ask models to skip thinking: 思考开关 / 思考開關 / 思考スイッチ / 생각 스위치 / Interrupteur de réflexion / Denkschalter / Interruptor de pensamiento / Chave de pensamento. "Thinking" here is the same idea as the smart bar's "Thinking…" status. Its options keep the request field in parentheses untranslated (`enable_thinking`, `reasoning_effort`), and "Reasoning effort" uses the composer's term.
+
 ## Themes and holiday touches
 
 The theme picker in General settings has two groups: the color themes and the pride flags. Flags are named the way each community names them in that language ("Transgender flag", not a color name). Holiday names are the day's usual greeting or name; their status lines follow the style of the regular typing phrases (short, ending in `…`).
@@ -134,6 +136,8 @@ Translate on a word or short phrase shows a dictionary entry instead of a plain 
 | examples         | exemples               | Beispiele         | ejemplos               | exemplos              |
 | synonyms         | synonymes              | Synonyme          | sinónimos              | sinônimos             |
 | collocations     | collocations           | Kollokationen     | colocaciones           | colocações            |
+
+While a model thinks before it answers, the bar says so instead of "Writing…": Thinking… / 正在思考… / 正在思考… / 考え中… / 생각 중… / Réflexion… / Denkt nach… / Pensando… / Pensando…. This is the model's reasoning, the same idea run info calls "Reasoning"; the status line uses the everyday verb.
 
 ## Context menu and web search
 

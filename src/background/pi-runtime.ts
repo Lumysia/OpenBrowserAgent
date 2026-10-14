@@ -103,7 +103,7 @@ export async function runPiAgent(options: {
     const result = await requestText(
       helperModel,
       { system: helperSystem, prompt },
-      abortSignal,
+      { signal: abortSignal },
     );
     events.recordUsage(result.usage);
     return result.text;

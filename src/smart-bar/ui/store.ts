@@ -31,6 +31,8 @@ export type SmartBarResult = {
   // tooLong: refused before anything was sent; consent: nothing was sent,
   // the provider needs the user's permission first.
   status: "streaming" | "done" | "error" | "tooLong" | "consent";
+  // The model is thinking and has not started its answer.
+  thinking?: boolean;
   error?: string;
   consent?: { providerId: string; host: string };
 };
@@ -107,7 +109,11 @@ export function createSmartBarStore(host: HTMLElement) {
     current.onMessage.addListener((event: SmartBarStreamEvent) => {
       if (port !== current) return;
       if (event.type === "delta")
-        updateResult({ text: (state.result?.text || "") + event.text });
+        updateResult({
+          text: (state.result?.text || "") + event.text,
+          thinking: false,
+        });
+      else if (event.type === "thinking") updateResult({ thinking: true });
       else if (event.type === "error")
         updateResult({ status: "error", error: event.error });
       else if (event.type === "consent")
@@ -116,7 +122,7 @@ export function createSmartBarStore(host: HTMLElement) {
           consent: { providerId: event.providerId, host: event.host },
         });
       else updateResult({ status: "done" });
-      if (event.type !== "delta") {
+      if (event.type !== "delta" && event.type !== "thinking") {
         current.disconnect();
         port = undefined;
       }
