@@ -1,4 +1,8 @@
-import { ISO_DATE_LENGTH, SKILL_NAME_MAX_LENGTH } from "./config";
+import {
+  ISO_DATE_LENGTH,
+  SKILL_MAX_CHARS,
+  SKILL_NAME_MAX_LENGTH,
+} from "./config";
 import { readId, readPath } from "./read-ids";
 import type { PickedSkill, Skill, SkillFile, SkillFileKind } from "./types";
 
@@ -216,6 +220,13 @@ export function copySkill(skill: Skill, name = skill.name): Skill {
   };
 }
 
+// Characters of a skill's files together (capped at SKILL_MAX_CHARS).
+export const skillChars = (skill: Skill) =>
+  skill.files.reduce((total, file) => total + file.content.length, 0);
+
+export const skillTooLarge = (skill: Skill) =>
+  skillChars(skill) > SKILL_MAX_CHARS;
+
 export function validateSkill(skill: Skill) {
   const normalized = normalizeSkill(skill);
   const entry = getSkillEntryFile(normalized);
@@ -231,6 +242,7 @@ export function validateSkill(skill: Skill) {
       id: "description",
       ok: !!metadata?.description || !!normalized.description,
     },
+    { id: "size", ok: !skillTooLarge(normalized) },
   ];
 }
 

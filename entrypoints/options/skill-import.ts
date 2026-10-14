@@ -5,6 +5,7 @@ import {
   parseSkillFrontmatter,
   SKILL_ENTRY_PATH,
   skillFileKind,
+  skillTooLarge,
 } from "../../src/shared/skills";
 import type { Skill, SkillFile } from "../../src/shared/types";
 
@@ -25,7 +26,7 @@ const TEXT_FILE_EXTENSIONS = new Set([
 
 export async function importSkillZip(
   file: File,
-  messages: { missingEntry: string },
+  messages: { missingEntry: string; tooLarge: string },
 ): Promise<Skill> {
   const zip = await JSZip.loadAsync(file);
   const entries = Object.values(zip.files).filter(
@@ -43,11 +44,13 @@ export async function importSkillZip(
   const fallbackName = normalizeSkillName(
     file.name.replace(/\.(zip|skill)$/i, ""),
   );
-  return createSkillPackageFromFiles({
+  const skill = createSkillPackageFromFiles({
     name: frontmatter.name || fallbackName || "skill",
     description: frontmatter.description,
     files: sortSkillFiles(files),
   });
+  if (skillTooLarge(skill)) throw new Error(messages.tooLarge);
+  return skill;
 }
 
 export async function readReplacementSkillFile(
