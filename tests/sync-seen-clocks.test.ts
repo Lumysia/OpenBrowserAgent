@@ -35,7 +35,7 @@ import {
 const PREFS = STORAGE_KEYS.preferences;
 const PROVIDERS = STORAGE_KEYS.provider;
 const DAY = 24 * 60 * 60_000;
-type Providers = Record<string, { apiKey: string; model: string }>;
+type Providers = Record<string, { baseUrl: string; model: string }>;
 
 async function longestSeen(server: MemoryServer) {
   const root = await decodeRoot(server.root!);
@@ -104,13 +104,13 @@ test("review6 C1: a copy whose clocks are behind is found by a push still waitin
   const clock = { now: 1_000_000_000 };
   const server = memoryServer();
   const a = device("deviceA", memoryTransport(server), clock, ALL_ON);
-  await a.set(PROVIDERS, { openai: { apiKey: "k", model: "m0" } });
+  await a.set(PROVIDERS, { openai: { baseUrl: "k", model: "m0" } });
   await a.sync("edit");
   const b = copyOf(a, memoryTransport(server), clock, ALL_ON);
   clock.now += 60_000;
-  await a.set(PROVIDERS, { openai: { apiKey: "k2", model: "m0" } });
+  await a.set(PROVIDERS, { openai: { baseUrl: "k2", model: "m0" } });
   clock.now += 60_000;
-  await b.set(PROVIDERS, { openai: { apiKey: "k", model: "m1" } });
+  await b.set(PROVIDERS, { openai: { baseUrl: "k", model: "m1" } });
   await b.sync("edit");
   clock.now += 60_000;
   await a.set(PREFS, { fontSize: 12 });
@@ -121,7 +121,7 @@ test("review6 C1: a copy whose clocks are behind is found by a push still waitin
   for (const on of [a, b])
     assert.deepEqual(
       on.get<Providers>(PROVIDERS).openai,
-      { apiKey: "k2", model: "m1" },
+      { baseUrl: "k2", model: "m1" },
       on.name,
     );
 });
@@ -215,7 +215,7 @@ test("review6 seen: one device's edits name at most its waiting push, two device
     clock.now += 60_000;
     // Every third round b changes it before reading a's change: b merges.
     if (i % 3) await b.sync();
-    await edit(b, "apiKey", `k${i}`);
+    await edit(b, "baseUrl", `k${i}`);
     await b.sync("edit");
     await a.sync();
     lengths.push(await longestSeen(server));
@@ -225,7 +225,7 @@ test("review6 seen: one device's edits name at most its waiting push, two device
   assert.deepEqual(a.get(PROVIDERS), b.get(PROVIDERS));
   assert.deepEqual(a.get<Providers>(PROVIDERS).p, {
     model: "m11",
-    apiKey: "k11",
+    baseUrl: "k11",
   });
 });
 
