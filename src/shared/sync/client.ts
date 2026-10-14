@@ -14,6 +14,7 @@ export const SYNC_MESSAGE = {
   resolveDeletes: "sync.resolve-deletes",
   check: "sync.check",
   reset: "sync.reset",
+  passphrase: "sync.passphrase",
 } as const;
 
 export type SyncRequest =
@@ -34,7 +35,14 @@ export type SyncRequest =
       // Local keys to remove. What was synced for them is forgotten too, so
       // the cleared data is downloaded again instead of deleted everywhere.
       keys: string[];
-    };
+    }
+  // Sets the sync passphrase (new, changed, or the one another device set)
+  // and turns key sync on.
+  | { type: typeof SYNC_MESSAGE.passphrase; passphrase: string };
+
+// What setting the passphrase did: "wrong" when the server has a passphrase
+// and this was not it.
+export type PassphraseResult = "set" | "wrong";
 
 export type SyncResponse =
   { ok: true; value?: unknown } | { ok: false; error: string };
@@ -83,6 +91,9 @@ export const checkSyncBackend = (backend: SyncBackendConfig) =>
 export const resetSync = (remote: boolean, keys: string[]) =>
   // Runs in the background, between sync rounds.
   send<void>({ type: SYNC_MESSAGE.reset, remote, keys });
+
+export const setSyncPassphrase = (passphrase: string) =>
+  send<PassphraseResult>({ type: SYNC_MESSAGE.passphrase, passphrase });
 
 export function reportPageState(visible: boolean, focused: boolean) {
   return send<void>({ type: SYNC_MESSAGE.page, visible, focused });

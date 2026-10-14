@@ -507,6 +507,8 @@ export const enUS = {
     skillCheckNameInvalid: "Metadata name must use kebab case",
     skillCheckDescription: "Description is present",
     skillCheckDescriptionMissing: "Description is missing",
+    skillCheckSize: "Size is within the limit",
+    skillCheckTooLarge: "Skill files may hold {max} characters together",
     deleteSkill: "Delete skill",
     builtinSkillBadge: "Built-in",
     overrideSkillBadge: "Customized built-in",
@@ -535,8 +537,8 @@ export const enUS = {
     lightTheme: "Light",
     darkTheme: "Dark",
     syncSettingsDescription:
-      "Language, appearance, the smart bar, the right-click menu, page translation and other settings always sync. Choose the backend, and below, what else to sync.",
-    syncBackendDescription: "Choose additional sync items.",
+      "Choose the backend, and below, what syncs. Settings always sync; keys, chats and files each have a switch.",
+    syncBackendDescription: "What syncs.",
     syncBackendBrowserSync: "Built-in browser account sync",
     syncBackendWebDavSync: "WebDAV sync",
     syncBackendName: "Backend name",
@@ -545,27 +547,6 @@ export const enUS = {
     syncBackendPassword: "Password or app password",
     syncBackendCopyConfig: "Copy config code",
     syncBackendCopiedConfig: "Config code copied",
-    syncProviders: "Sync AI providers",
-    syncProvidersDescription:
-      "Sync AI provider configuration, including API keys, through the current sync backend.",
-    syncAgents: "Sync agents",
-    syncAgentsDescription:
-      "Sync agent profiles and workspace files through the current sync backend.",
-    syncSkills: "Sync skills",
-    syncSkillsDescription:
-      "Sync skill templates through the current sync backend.",
-    syncMcpServers: "Sync MCP servers",
-    syncMcpServersDescription:
-      "Sync Streamable HTTP MCP server configuration through the current sync backend.",
-    syncLocalExecutionBridges: "Sync local execution bridges",
-    syncLocalExecutionBridgesDescription:
-      "Sync bridge settings, including secrets, through the current sync backend.",
-    syncChats: "Sync chats",
-    syncChatsDescription:
-      "Sync chat history through the current sync backend. Keep this off for local-only conversations.",
-    syncChatAttachments: "Sync chat attachments",
-    syncChatAttachmentsDescription:
-      "Sync files uploaded in chats through the current sync backend.",
     autoScroll: "Auto scroll",
     autoScrollDescription:
       "Automatically keep the latest AI output visible while messages stream.",

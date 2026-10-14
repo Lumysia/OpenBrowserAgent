@@ -19,7 +19,7 @@ const PREFS = STORAGE_KEYS.preferences;
 const PROVIDERS = STORAGE_KEYS.provider;
 const MCP = STORAGE_KEYS.mcpServers;
 const DAY = 24 * 60 * 60_000;
-type Providers = Record<string, { apiKey: string; model: string }>;
+type Providers = Record<string, { baseUrl: string; model: string }>;
 
 function pair() {
   const clock = { now: 1_000_000_000 };
@@ -45,19 +45,19 @@ const remoteRecord = async (server: MemoryServer, recordId: string) =>
 for (const writes of [5, 40]) {
   test(`review4 H1: a reverted provider field stays reverted after ${writes} writes by the other device`, async () => {
     const { clock, a, b } = pair();
-    await a.set(PROVIDERS, { openai: { apiKey: "k", model: "m0" } });
+    await a.set(PROVIDERS, { openai: { baseUrl: "k", model: "m0" } });
     await a.sync("edit");
     await b.sync();
     clock.now += 60_000;
     // a changes the model; its next round is far away (browser closed).
-    await a.set(PROVIDERS, { openai: { apiKey: "k", model: "m1" } });
+    await a.set(PROVIDERS, { openai: { baseUrl: "k", model: "m1" } });
     await a.sync("edit");
     clock.now += 60_000;
     await b.sync();
     assert.equal(b.get<Providers>(PROVIDERS).openai.model, "m1");
     // b puts the model back.
     clock.now += 60_000;
-    await b.set(PROVIDERS, { openai: { apiKey: "k", model: "m0" } });
+    await b.set(PROVIDERS, { openai: { baseUrl: "k", model: "m0" } });
     await b.sync("edit");
     await busy(b, clock, writes);
     clock.now += 60_000;
@@ -107,66 +107,66 @@ for (const writes of [5, 40]) {
   });
 }
 
-type Provider = { apiKey: string; model: string };
+type Provider = { baseUrl: string; model: string };
 const provider = (on: Device) =>
   on.get<Record<string, Provider>>(PROVIDERS).openai;
 
 // a pushed a change, then made another before any read confirmed the push.
 test("review4 H1: a change made after an unconfirmed push merges from the pushed version", async () => {
   const { clock, a, b } = pair();
-  await a.set(PROVIDERS, { openai: { apiKey: "k", model: "m0" } });
+  await a.set(PROVIDERS, { openai: { baseUrl: "k", model: "m0" } });
   await a.sync("edit");
   await b.sync();
   clock.now += 60_000;
-  await a.set(PROVIDERS, { openai: { apiKey: "k", model: "m1" } });
+  await a.set(PROVIDERS, { openai: { baseUrl: "k", model: "m1" } });
   await a.sync("edit");
   clock.now += 60_000;
-  await a.set(PROVIDERS, { openai: { apiKey: "k2", model: "m1" } });
+  await a.set(PROVIDERS, { openai: { baseUrl: "k2", model: "m1" } });
   await b.sync();
   clock.now += 60_000;
-  await b.set(PROVIDERS, { openai: { apiKey: "k", model: "m0" } });
+  await b.set(PROVIDERS, { openai: { baseUrl: "k", model: "m0" } });
   await b.sync("edit");
   await busy(b, clock, 40);
   clock.now += 60_000;
   await a.sync("startup");
   await b.sync();
   for (const on of [a, b])
-    assert.deepEqual(provider(on), { apiKey: "k2", model: "m0" }, on.name);
+    assert.deepEqual(provider(on), { baseUrl: "k2", model: "m0" }, on.name);
 });
 
 // b merged a's push with its own change, then undid a's part.
 test("review4 H1: a version merged from a push on the other device includes it", async () => {
   const { clock, a, b } = pair();
-  await a.set(PROVIDERS, { openai: { apiKey: "k", model: "m0" } });
+  await a.set(PROVIDERS, { openai: { baseUrl: "k", model: "m0" } });
   await a.sync("edit");
   await b.sync();
   clock.now += 60_000;
-  await a.set(PROVIDERS, { openai: { apiKey: "k", model: "m1" } });
+  await a.set(PROVIDERS, { openai: { baseUrl: "k", model: "m1" } });
   await a.sync("edit");
   clock.now += 60_000;
-  await b.set(PROVIDERS, { openai: { apiKey: "k2", model: "m0" } });
+  await b.set(PROVIDERS, { openai: { baseUrl: "k2", model: "m0" } });
   await b.sync("edit");
-  assert.deepEqual(provider(b), { apiKey: "k2", model: "m1" });
+  assert.deepEqual(provider(b), { baseUrl: "k2", model: "m1" });
   await b.sync();
   clock.now += 60_000;
-  await b.set(PROVIDERS, { openai: { apiKey: "k2", model: "m0" } });
+  await b.set(PROVIDERS, { openai: { baseUrl: "k2", model: "m0" } });
   await b.sync("edit");
   await busy(b, clock, 40);
   clock.now += 60_000;
   await a.sync("startup");
   await b.sync();
   for (const on of [a, b])
-    assert.deepEqual(provider(on), { apiKey: "k2", model: "m0" }, on.name);
+    assert.deepEqual(provider(on), { baseUrl: "k2", model: "m0" }, on.name);
 });
 
 // The background stopped between the root write and recording the push.
 test("review4 H1: a remote version made from this device's change is applied without its record of the push", async () => {
   const { clock, a, b } = pair();
-  await a.set(PROVIDERS, { openai: { apiKey: "k", model: "m0" } });
+  await a.set(PROVIDERS, { openai: { baseUrl: "k", model: "m0" } });
   await a.sync("edit");
   await b.sync();
   clock.now += 60_000;
-  await a.set(PROVIDERS, { openai: { apiKey: "k", model: "m1" } });
+  await a.set(PROVIDERS, { openai: { baseUrl: "k", model: "m1" } });
   await a.sync("edit");
   const clocks = a.get<Record<string, { sent?: unknown }>>(
     `${STORAGE_KEYS.syncClocks}:providers`,
@@ -176,7 +176,7 @@ test("review4 H1: a remote version made from this device's change is applied wit
   a.seed(`${STORAGE_KEYS.syncClocks}:providers`, clocks);
   await b.sync();
   clock.now += 60_000;
-  await b.set(PROVIDERS, { openai: { apiKey: "k", model: "m0" } });
+  await b.set(PROVIDERS, { openai: { baseUrl: "k", model: "m0" } });
   await b.sync("edit");
   clock.now += 60_000;
   await a.sync("startup");

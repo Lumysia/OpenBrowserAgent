@@ -1,3 +1,4 @@
+import { syncBackendCapabilities } from "../src/shared/sync-backends";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { loadContent, resetSync } from "../src/background/sync/service";
@@ -104,7 +105,7 @@ test("a week on browser sync, then back to WebDAV: the newest edit of each item 
     scope: "browser-sync",
     transport: {
       ...memoryTransport(memoryServer()),
-      kind: "browser-sync" as const,
+      capabilities: syncBackendCapabilities("browser-sync"),
     },
   };
   await runSyncRound(browserSync, "startup");

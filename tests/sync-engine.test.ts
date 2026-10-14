@@ -243,13 +243,15 @@ test("a missing blob is never read as a deletion", async () => {
   server.blobs.clear();
   const result = await b.sync();
   assert.deepEqual(result.warnings, [SYNC_WARNINGS.missingContent]);
-  assert.deepEqual(b.get(STORAGE_KEYS.skills) ?? [], []);
+  // The skill arrives with the settings; its files wait for their content.
+  assert.deepEqual(b.get(STORAGE_KEYS.skills), [{ id: "s", name: "S" }]);
   // Nothing on b counts as a change to upload.
-  await b.set(STORAGE_KEYS.skills, b.get(STORAGE_KEYS.skills) ?? []);
+  await b.set(STORAGE_KEYS.skills, b.get(STORAGE_KEYS.skills));
   assert.equal((await b.sync("edit")).pending, 0);
   // a still has it, and the record stays.
   const root = await decodeRoot(server.root!);
-  assert.ok(root.records["skills/s"] && !root.records["skills/s"].deleted);
+  const files = root.records["skill-files/s"];
+  assert.ok(files && !files.deleted);
 });
 
 test("cleared cloud data is uploaded again by devices that have it", async () => {
@@ -263,7 +265,10 @@ test("cleared cloud data is uploaded again by devices that have it", async () =>
   await b.sync();
   assert.deepEqual(ids(b), ["c1"]);
   // b never had c1's content, so it leaves c1 to a device that has it.
-  assert.equal(server.root, undefined);
+  assert.equal(
+    server.root && (await decodeRoot(server.root)).records["chats/c1"],
+    undefined,
+  );
   await a.sync();
   assert.deepEqual(ids(a), ["c1"]);
   assert.ok(a.get(`${CHATS}/c1`));
@@ -386,8 +391,18 @@ test("a root that fails validation is not applied", async () => {
   root.records["chats/c1"] = { clock: "zzzz", deleted: true } as never;
   server.root = await encodeRoot(root);
   server.etag = '"damaged"';
-  await assert.rejects(b.sync());
+  // Never applied: the root is rebuilt from b's data, with a note.
+  const result = await b.sync();
+  assert.deepEqual(result.warnings, [SYNC_WARNINGS.recoveredRoot]);
   assert.deepEqual(ids(b), ["c1"]);
+  // b never held c1's content: a, which has it, uploads it again.
+  assert.ok(!(await decodeRoot(server.root!)).records["chats/c1"]?.deleted);
+  await a.sync();
+  const repaired = await decodeRoot(server.root!);
+  assert.ok(
+    repaired.records["chats/c1"] && !repaired.records["chats/c1"].deleted,
+  );
+  assert.deepEqual(ids(a), ["c1"]);
 });
 
 test("on a server that ignores If-Match, a lost write is sent again", async () => {

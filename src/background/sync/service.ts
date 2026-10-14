@@ -14,9 +14,9 @@ import {
   withLocks,
 } from "../../shared/locks";
 import {
-  mergeSyncDataSettings,
+  mergeSyncGroupSettings,
   STORAGE_KEYS,
-  type SyncDataSettings,
+  type SyncGroupSettings,
 } from "../../shared/storage-keys";
 import {
   getActiveSyncBackendConfig,
@@ -35,6 +35,7 @@ import { loadClocks } from "../../shared/sync/clocks";
 import { ownsKey, type Collection } from "../../shared/sync/collection";
 import { hashJson } from "../../shared/sync/codec";
 import {
+  enabledCollections,
   recordIdOf,
   SYNC_COLLECTIONS,
   syncCollection,
@@ -42,13 +43,13 @@ import {
 import { readKey, type StorageArea, type SyncEnv } from "../../shared/sync/env";
 import {
   countWaiting,
-  enabledCollections,
   runSyncRound,
   type RoundOptions,
   type RoundReason,
   type SyncContext,
 } from "../../shared/sync/engine";
 import { parseBody } from "../../shared/sync/blobs";
+import { loadLocalKeyring, removeLocalKeyring } from "../../shared/sync/keys";
 import { SyncFormatError } from "../../shared/sync/root";
 import {
   loadSyncState,
@@ -82,6 +83,7 @@ const KEPT: SyncWarning[] = [SYNC_WARNINGS.ignoresPreconditions];
 // Notes about something a round did once, shown for a while after it.
 const KEPT_FOR_MS: Partial<Record<SyncWarning, number>> = {
   [SYNC_WARNINGS.clonedDevice]: 24 * 60 * 60_000,
+  [SYNC_WARNINGS.recoveredRoot]: 24 * 60 * 60_000,
 };
 
 // When each timed note was last raised, without the expired ones.
@@ -152,23 +154,25 @@ export async function syncContext(
     transport: transportFor(env, backend),
     scope: syncBackendScope(backend),
     device: await loadDeviceId(env),
-    settings: mergeSyncDataSettings(
-      await readKey<Partial<SyncDataSettings>>(
+    settings: mergeSyncGroupSettings(
+      await readKey<Partial<SyncGroupSettings>>(
         env.local,
-        STORAGE_KEYS.syncDataSettings,
+        STORAGE_KEYS.syncGroups,
       ),
     ),
   };
 }
 
 // Changes waiting to upload in the collections this backend syncs: records
-// whose clock is newer than the last root seen.
+// whose clock is newer than the last root seen. Keys wait for the
+// passphrase, not for an upload.
 export async function countPending(env: SyncEnv, context: SyncContext) {
   const root = (await loadSyncState(env.local, context.scope)).remote?.root;
+  const unlocked = !!(await loadLocalKeyring(env.local, context.scope));
   const collections = enabledCollections(
     context.settings,
-    context.transport.kind,
-  );
+    context.transport.capabilities,
+  ).filter((collection) => unlocked || !collection.encrypted);
   const clocks = new Map();
   for (const collection of collections)
     for (const [id, entry] of Object.entries(
@@ -232,6 +236,7 @@ export function createSyncRunner(
         warnings: [...new Set([...sticky, ...result.warnings])],
         warningsAt,
         massDelete: keepAnswers(result.massDelete, latest.massDelete),
+        keys: result.checked ? result.keys : latest.keys,
       });
     } catch (error) {
       await recordFailure(error, status);
@@ -385,6 +390,8 @@ async function reset(
   if (context && remote) {
     await context.transport.clear();
     await saveSyncState(env.local, newSyncState(context.scope));
+    // The passphrase went with the server's data: it is set again.
+    await removeLocalKeyring(env.local, context.scope);
   }
   if (!keys.length) return;
   const cleared = SYNC_COLLECTIONS.filter((collection) =>

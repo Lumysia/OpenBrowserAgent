@@ -32,76 +32,41 @@ export const STORAGE_KEYS = {
   syncBackends: "sync-backends",
   activeSyncBackendId: "active-sync-backend-id",
   syncDeviceId: "sync-device-id",
-  syncDataSettings: "sync-data-settings",
+  syncGroups: "sync-groups",
+  // Per backend scope: `sync-keyring:<scope>`, the key derived from the sync
+  // passphrase (see sync/keys.ts).
+  syncKeyring: "sync-keyring",
+  // The sync format local sync data was last cleaned up for.
+  syncFormat: "sync-format",
   debugLoggingEnabled: "debug-logging-enabled",
   // The local day a holiday burst last played (see holidays.ts).
   holidayBurstDay: "holiday-burst-day",
   ignoreSyncedProvidersForBootstrap: "ignore-synced-providers-for-bootstrap",
 } as const;
 
-export const SYNC_PREFERENCES = {
-  providers: "syncProviders",
-  agents: "syncAgents",
-  skills: "syncSkills",
-  mcpServers: "syncMcpServers",
-  localExecutionBridges: "syncLocalExecutionBridges",
+// What syncs besides settings, one switch per group: API keys and MCP
+// headers (encrypted with the sync passphrase), chats, and files (skill and
+// workspace files, chat attachments). Settings always sync.
+export const SYNC_GROUPS = {
+  keys: "syncKeys",
   chats: "syncChats",
+  files: "syncFiles",
 } as const;
 
-export const SYNCABLE_DATA_ITEMS = [
-  { preferenceKey: SYNC_PREFERENCES.providers, dataKey: STORAGE_KEYS.provider },
-  { preferenceKey: SYNC_PREFERENCES.agents, dataKey: STORAGE_KEYS.agents },
-  {
-    preferenceKey: SYNC_PREFERENCES.agents,
-    dataKey: STORAGE_KEYS.agentWorkspaces,
-  },
-  { preferenceKey: SYNC_PREFERENCES.skills, dataKey: STORAGE_KEYS.skills },
-  {
-    preferenceKey: SYNC_PREFERENCES.skills,
-    dataKey: STORAGE_KEYS.skillSettings,
-  },
-  {
-    preferenceKey: SYNC_PREFERENCES.mcpServers,
-    dataKey: STORAGE_KEYS.mcpServers,
-  },
-  {
-    preferenceKey: SYNC_PREFERENCES.localExecutionBridges,
-    dataKey: STORAGE_KEYS.localExecutionBridges,
-  },
-  { preferenceKey: SYNC_PREFERENCES.chats, dataKey: STORAGE_KEYS.chats },
-] as const;
+export type SyncGroup = (typeof SYNC_GROUPS)[keyof typeof SYNC_GROUPS];
 
-export type SyncPreferenceKey =
-  (typeof SYNCABLE_DATA_ITEMS)[number]["preferenceKey"];
+export type SyncGroupSettings = Record<SyncGroup, boolean>;
 
-export type SyncableDataKey = (typeof SYNCABLE_DATA_ITEMS)[number]["dataKey"];
-
-export const SYNC_PREFERENCE_KEYS = Array.from(
-  new Set(SYNCABLE_DATA_ITEMS.map((item) => item.preferenceKey)),
-) as SyncPreferenceKey[];
-
-export const SYNC_DATA_SETTING_KEYS = {
-  chatAttachments: "syncChatAttachments",
-} as const;
-
-export type SyncDataSettings = Record<SyncPreferenceKey, boolean> & {
-  [SYNC_DATA_SETTING_KEYS.chatAttachments]: boolean;
+export const DEFAULT_SYNC_GROUP_SETTINGS: SyncGroupSettings = {
+  [SYNC_GROUPS.keys]: false,
+  [SYNC_GROUPS.chats]: false,
+  [SYNC_GROUPS.files]: true,
 };
 
-export const DEFAULT_SYNC_DATA_SETTINGS: SyncDataSettings = {
-  [SYNC_PREFERENCES.providers]: true,
-  [SYNC_PREFERENCES.agents]: false,
-  [SYNC_PREFERENCES.skills]: false,
-  [SYNC_PREFERENCES.mcpServers]: false,
-  [SYNC_PREFERENCES.localExecutionBridges]: false,
-  [SYNC_PREFERENCES.chats]: false,
-  [SYNC_DATA_SETTING_KEYS.chatAttachments]: false,
-};
-
-export function mergeSyncDataSettings(
-  value: Partial<SyncDataSettings> | undefined,
-): SyncDataSettings {
-  return { ...DEFAULT_SYNC_DATA_SETTINGS, ...value };
+export function mergeSyncGroupSettings(
+  value: Partial<SyncGroupSettings> | undefined,
+): SyncGroupSettings {
+  return { ...DEFAULT_SYNC_GROUP_SETTINGS, ...value };
 }
 
 export const STORAGE_AREAS = {

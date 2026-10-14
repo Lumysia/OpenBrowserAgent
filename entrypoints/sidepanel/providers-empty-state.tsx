@@ -4,7 +4,7 @@ import { LOCAL_SETUP_FEEDBACK_MS, OPTIONS_HASH } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { completeLocalBootstrapState } from "../../src/shared/storage-debug";
-import type { SyncDataSettings } from "../../src/shared/storage-keys";
+import type { SyncGroupSettings } from "../../src/shared/storage-keys";
 import { parseSyncConfigCode } from "../../src/shared/sync-config-code";
 import {
   BROWSER_SYNC_BACKEND_ID,
@@ -38,7 +38,7 @@ import { SyncBootstrapStep } from "./sync-bootstrap-step";
 export function ProvidersEmptyState({ t }: { t: Messages }) {
   const [language, setLanguage] = useStoredState(storage.language);
   const [syncBackends, setSyncBackends] = useStoredState(storage.syncBackends);
-  const [syncDataSettings] = useStoredState(storage.syncDataSettings);
+  const [syncGroups] = useStoredState(storage.syncGroups);
   const [activeSyncBackendId] = useStoredState(storage.activeSyncBackendId);
   const [selectedBackendId, setSelectedBackendId] = useState<string>(
     activeSyncBackendId === WEBDAV_SYNC_BACKEND_ID
@@ -66,7 +66,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     setSyncStatus("synced");
   }, [activeSyncBackendId]);
 
-  if (!language || !syncBackends || !syncDataSettings || !activeSyncBackendId)
+  if (!language || !syncBackends || !syncGroups || !activeSyncBackendId)
     return null;
   const loadedSyncBackends = syncBackends;
   const hasActiveSyncBackend = activeSyncBackendId !== NO_SYNC_BACKEND_ID;
@@ -137,7 +137,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   }: {
     backend: SyncBackendConfig;
     backends: SyncBackendConfig[];
-    codeSettings?: SyncDataSettings;
+    codeSettings?: SyncGroupSettings;
   }) {
     setSyncing(true);
     setSyncAction("test");
@@ -147,7 +147,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
       setSyncAction("confirm");
       await storage.syncBackends.set(backends);
       // The setup code's settings replace this device's on purpose.
-      if (codeSettings) await storage.syncDataSettings.replace(codeSettings);
+      if (codeSettings) await storage.syncGroups.replace(codeSettings);
       await storage.activeSyncBackendId.set(backend.id);
       const status = await syncNow();
       if (status.error) throw new Error(status.error);
@@ -178,7 +178,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
       setSyncCodeInvalid(true);
       return;
     }
-    const { backend, syncDataSettings: codeSettings } = parsed;
+    const { backend, syncGroups: codeSettings } = parsed;
     setSelectedBackendId(backend.id);
     void connectCloud({
       backend,

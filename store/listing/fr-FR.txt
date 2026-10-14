@@ -28,7 +28,7 @@ VOS MODÈLES, VOS OUTILS
 
 SYNCHRONISATION ENTRE APPAREILS
 
-• Synchronisez vos paramètres, agents et compétences, et si vous le souhaitez vos discussions et pièces jointes, via le compte de votre navigateur ou votre propre stockage WebDAV.
+• Synchronisez vos paramètres, agents et compétences via le compte de votre navigateur ou votre propre stockage WebDAV ; si vous le souhaitez, aussi vos clés API (chiffrées sur votre appareil avec votre propre phrase secrète), vos discussions et vos fichiers.
 • Les modifications sont fusionnées élément par élément : les changements faits sur deux appareils ne s’écrasent pas, et les suppressions importantes vous sont d’abord soumises pour confirmation.
 
 VOUS GARDEZ LE CONTRÔLE

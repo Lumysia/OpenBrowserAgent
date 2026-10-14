@@ -4,15 +4,34 @@ export default [
   {
     name: "skip If-Match on root writes",
     file: "src/shared/sync/webdav.ts",
-    from: 'etag ? { "If-Match": etag } : { "If-None-Match": "*" }',
+    from: 'etag ? { "If-Match": etag } : replace ? {} : { "If-None-Match": "*" }',
     to: "{}",
     needsServer: true,
   },
   {
+    name: "a root another client is still uploading fails the round",
+    file: "src/shared/sync/webdav.ts",
+    from: '  423: "busy",\n',
+    to: "",
+  },
+  {
+    name: "a busy root counts as a refused If-Match",
+    file: "src/shared/sync/engine.ts",
+    from: '      conflicted = written.status === "conflict";',
+    to: "      conflicted = true;",
+  },
+  {
+    name: "a refused If-Match on an unchanged root is retried like a busy one",
+    file: "src/shared/sync/engine.ts",
+    from: '      conflicted = written.status === "conflict";',
+    to: "      conflicted = false;",
+  },
+  {
     name: "skip If-Match in the test server too",
     file: "tests/sync-fixtures.ts",
-    from: "if (!hooks.ignoreIfMatch && (etag ? etag !== server.etag : !!server.root))",
-    to: "if (false)",
+    from: `        !hooks.ignoreIfMatch &&
+        (etag ? etag !== server.etag : !!server.root && !replace)`,
+    to: "        false",
   },
   {
     name: "apply an unvalidated root",
@@ -55,9 +74,9 @@ export default [
   {
     name: "garbage deleted before the root without it is written",
     file: "src/shared/sync/engine.ts",
-    from: "      const written = await transport.writeRoot(next, etag);",
+    from: "      const written = await transport.writeRoot(next, etag, {",
     to: `      await deleteBlobs(transport, collected);
-      const written = await transport.writeRoot(next, etag);`,
+      const written = await transport.writeRoot(next, etag, {`,
   },
   {
     name: "F8 heal: an upload another device may have collected is not checked again",
@@ -173,7 +192,13 @@ export default [
   {
     name: "L1: a push is recorded only once its root write answers",
     file: "src/shared/sync/engine.ts",
-    from: '      await updateEntries(env, outcome.pushes, snapshot, sentEntry, payloads);\n      const written = await transport.writeRoot(next, etag);\n      if (written.status === "ok") {\n',
-    to: '      const written = await transport.writeRoot(next, etag);\n      if (written.status === "ok") {\n        await updateEntries(env, outcome.pushes, snapshot, sentEntry, payloads);\n',
+    from: "      await updateEntries(env, outcome.pushes, snapshot, sentEntry, payloads);\n      const written = await transport.writeRoot(next, etag, {",
+    to: "      const written = await transport.writeRoot(next, etag, {",
+    also: [
+      {
+        from: '      if (written.status === "ok") {\n        state.remote = { root: next, etag: written.etag };',
+        to: '      if (written.status === "ok") {\n        await updateEntries(env, outcome.pushes, snapshot, sentEntry, payloads);\n        state.remote = { root: next, etag: written.etag };',
+      },
+    ],
   },
 ];

@@ -473,6 +473,8 @@ export const ko: LocaleMessages = {
     skillCheckNameInvalid: "메타데이터 이름은 케밥 케이스여야 합니다",
     skillCheckDescription: "설명이 있습니다",
     skillCheckDescriptionMissing: "설명이 없습니다",
+    skillCheckSize: "크기가 제한 이내입니다",
+    skillCheckTooLarge: "스킬 파일은 합쳐서 {max}자까지 가능합니다",
     deleteSkill: "스킬 삭제",
     builtinSkillBadge: "내장",
     overrideSkillBadge: "사용자 지정된 내장 스킬",
@@ -502,8 +504,8 @@ export const ko: LocaleMessages = {
     lightTheme: "라이트",
     darkTheme: "다크",
     syncSettingsDescription:
-      "언어, 모양, 스마트 바, 오른쪽 클릭 메뉴, 페이지 번역 등의 설정은 항상 동기화됩니다. 여기서 동기화 백엔드를 고르고, 아래에서 추가로 동기화할 항목을 고르세요.",
-    syncBackendDescription: "추가 동기화 항목을 선택하세요.",
+      "백엔드를 고르고 아래에서 동기화할 항목을 고르세요. 설정은 항상 동기화되며 키, 채팅, 파일은 각각 스위치로 켜고 끕니다.",
+    syncBackendDescription: "동기화할 항목.",
     syncBackendBrowserSync: "내장 브라우저 계정 동기화",
     syncBackendWebDavSync: "WebDAV 동기화",
     syncBackendName: "백엔드 이름",
@@ -512,26 +514,6 @@ export const ko: LocaleMessages = {
     syncBackendPassword: "비밀번호 또는 앱 비밀번호",
     syncBackendCopyConfig: "구성 코드 복사",
     syncBackendCopiedConfig: "구성 코드 복사됨",
-    syncProviders: "AI 제공업체 동기화",
-    syncProvidersDescription:
-      "API 키를 포함한 AI 제공업체 구성을 현재 동기화 백엔드로 동기화합니다.",
-    syncAgents: "에이전트 동기화",
-    syncAgentsDescription:
-      "에이전트 프로필과 워크스페이스 파일을 현재 동기화 백엔드로 동기화합니다.",
-    syncSkills: "스킬 동기화",
-    syncSkillsDescription: "스킬 템플릿을 현재 동기화 백엔드로 동기화합니다.",
-    syncMcpServers: "MCP 서버 동기화",
-    syncMcpServersDescription:
-      "Streamable HTTP MCP 서버 구성을 현재 동기화 백엔드로 동기화합니다.",
-    syncLocalExecutionBridges: "로컬 실행 브리지 동기화",
-    syncLocalExecutionBridgesDescription:
-      "브리지 시크릿을 포함한 실행 브리지 설정을 현재 동기화 백엔드로 동기화합니다.",
-    syncChats: "채팅 동기화",
-    syncChatsDescription:
-      "채팅 기록을 현재 동기화 백엔드로 동기화합니다. 대화를 이 기기에만 보관하려면 끄세요.",
-    syncChatAttachments: "채팅 첨부 파일 동기화",
-    syncChatAttachmentsDescription:
-      "채팅에 업로드한 파일을 현재 동기화 백엔드로 동기화합니다.",
     autoScroll: "자동 스크롤",
     autoScrollDescription:
       "메시지가 스트리밍되는 동안 최신 AI 출력을 자동으로 보이게 유지합니다.",

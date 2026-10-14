@@ -10,14 +10,12 @@ import { normalizeProviderState } from "./provider-instances";
 import { normalizeSkillSettings } from "./skill-catalog";
 import { normalizeSkills } from "./skills";
 import {
-  DEFAULT_SYNC_DATA_SETTINGS,
-  mergeSyncDataSettings,
+  DEFAULT_SYNC_GROUP_SETTINGS,
+  mergeSyncGroupSettings,
   STORAGE_KEYS,
-  SYNCABLE_DATA_ITEMS,
-  SYNC_PREFERENCES,
-  SYNC_PREFERENCE_KEYS,
-  type SyncDataSettings,
-  type SyncPreferenceKey,
+  SYNC_GROUPS,
+  type SyncGroup,
+  type SyncGroupSettings,
 } from "./storage-keys";
 import { storageLockName, withLock } from "./locks";
 import { keepStoredForm } from "./stored-form";
@@ -39,14 +37,8 @@ import type {
   SyncBackendConfig,
 } from "./types";
 
-export {
-  DEFAULT_SYNC_DATA_SETTINGS,
-  STORAGE_KEYS,
-  SYNCABLE_DATA_ITEMS,
-  SYNC_PREFERENCES,
-  SYNC_PREFERENCE_KEYS,
-};
-export type { SyncDataSettings, SyncPreferenceKey, SyncStatus };
+export { DEFAULT_SYNC_GROUP_SETTINGS, STORAGE_KEYS, SYNC_GROUPS };
+export type { SyncGroup, SyncGroupSettings, SyncStatus };
 export { getBrowserApi };
 
 // Every value lives in storage.local. Sync runs in the background: it notices
@@ -257,10 +249,10 @@ export const storage = {
     STORAGE_KEYS.activeSyncBackendId,
     () => NO_SYNC_BACKEND_ID,
   ),
-  syncDataSettings: createSyncedItem<SyncDataSettings>(
-    STORAGE_KEYS.syncDataSettings,
-    () => DEFAULT_SYNC_DATA_SETTINGS,
-    { normalize: mergeSyncDataSettings },
+  syncGroups: createSyncedItem<SyncGroupSettings>(
+    STORAGE_KEYS.syncGroups,
+    () => DEFAULT_SYNC_GROUP_SETTINGS,
+    { normalize: mergeSyncGroupSettings },
   ),
   ignoreSyncedProvidersForBootstrap: createItem<boolean>(
     STORAGE_KEYS.ignoreSyncedProvidersForBootstrap,

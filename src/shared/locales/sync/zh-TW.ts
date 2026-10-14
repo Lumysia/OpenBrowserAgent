@@ -15,6 +15,33 @@ export const syncZhTW: SyncMessages = {
   pausedRateLimit: "伺服器要求降低請求頻率（HTTP {status}）。同步會自動恢復。",
   syncNow: "立即同步",
   webDavOnly: "僅支援 WebDAV：瀏覽器帳號同步的儲存空間太小。",
+  groupSettings: "設定",
+  groupSettingsDescription:
+    "一律同步：語言、偏好設定、不含金鑰的 AI 提供者和 MCP 伺服器、含 MEMORY.md 和 USER.md 的智慧體，以及不含檔案的技能。",
+  groupAlways: "一律",
+  groupKeys: "金鑰",
+  groupKeysDescription:
+    "API Key 和 MCP 請求標頭，在離開本裝置前以同步密語加密。",
+  groupChats: "對話",
+  groupChatsDescription: "不含附件的對話紀錄。只想在本機保留對話時請保持關閉。",
+  groupFiles: "檔案",
+  groupFilesDescription:
+    "技能檔案、MEMORY.md 和 USER.md 以外的智慧體工作區檔案，以及對話附件（需開啟對話同步）。",
+  passphrase: "同步密語",
+  passphraseRepeat: "再次輸入密語",
+  passphraseCreate:
+    "設定同步密語。每台同步金鑰的裝置都需要輸入一次。密語無法找回：忘記時請重新設定，各裝置上的金鑰都會保留。",
+  passphraseEnter:
+    "金鑰已用另一台裝置上設定的同步密語加密。輸入一次即可在這裡同步金鑰。",
+  passphraseChangeDescription: "設定新的同步密語。其他裝置會要求輸入一次。",
+  passphraseTooShort: "請至少使用 {min} 個字元。",
+  passphraseMismatch: "兩次輸入的密語不一致。",
+  passphraseWrong: "密語錯誤。請輸入在另一台裝置上設定的密語。",
+  passphraseSave: "儲存密語",
+  passphraseChange: "變更密語",
+  keysLocked: "輸入同步密語以在本裝置上同步金鑰。",
+  keysUnlocked: "金鑰使用同步密語加密後同步。",
+  filesNotSynced: "本裝置不同步檔案。其他裝置上的檔案保持不變。",
   warnings: {
     "unreliable-etags":
       "無法安全寫入這個伺服器。請使用提供強 ETag 的 WebDAV 伺服器。",
@@ -24,6 +51,8 @@ export const syncZhTW: SyncMessages = {
     "missing-content": "伺服器上缺少部分同步內容。",
     quota: "瀏覽器帳號同步儲存空間已滿。請關閉部分同步項目或改用 WebDAV。",
     "cloned-device": "這個瀏覽器現在會以新裝置的身分同步，兩邊的變更都會保留。",
+    "recovered-root":
+      "伺服器上的同步檔案已損壞，已根據其上一份副本和本裝置的資料重建。",
   },
   warningDetails: {
     "unreliable-etags":
@@ -33,6 +62,8 @@ export const syncZhTW: SyncMessages = {
     "missing-content": "本裝置會保留自己的副本，直到其他裝置重新上傳。",
     "cloned-device":
       "另一個瀏覽器曾以本裝置的身分同步，例如複製的瀏覽器設定檔，或在另一台電腦上還原的備份。",
+    "recovered-root":
+      "上傳中途停止時會發生這種情況。各裝置上的資料都沒有遺失，每台裝置都會重新上傳其變更。",
   },
   massDeleteTitle: "確認來自其他裝置的刪除",
   massDeleteDescription:

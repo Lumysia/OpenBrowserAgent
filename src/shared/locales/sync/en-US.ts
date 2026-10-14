@@ -17,6 +17,36 @@ export const syncEnUS = {
     "The server asked to slow down (HTTP {status}). Sync resumes on its own.",
   syncNow: "Sync now",
   webDavOnly: "WebDAV only: browser account sync storage is too small.",
+  groupSettings: "Settings",
+  groupSettingsDescription:
+    "Always synced: language, preferences, AI providers and MCP servers without their keys, agents with their MEMORY.md and USER.md, and skills without their files.",
+  groupAlways: "Always",
+  groupKeys: "Keys",
+  groupKeysDescription:
+    "API keys and MCP request headers, encrypted with your sync passphrase before they leave this device.",
+  groupChats: "Chats",
+  groupChatsDescription:
+    "Chat history, without attachments. Keep this off for local-only conversations.",
+  groupFiles: "Files",
+  groupFilesDescription:
+    "Skill files, agent workspace files other than MEMORY.md and USER.md, and chat attachments (with chats on).",
+  passphrase: "Sync passphrase",
+  passphraseRepeat: "Repeat the passphrase",
+  passphraseCreate:
+    "Set a sync passphrase. Every device that syncs keys asks for it once. It can’t be recovered: if you forget it, set a new one and your keys stay on each device.",
+  passphraseEnter:
+    "Keys are encrypted with a sync passphrase set on another device. Enter it once to sync keys here.",
+  passphraseChangeDescription:
+    "Set a new sync passphrase. Your other devices ask for it once.",
+  passphraseTooShort: "Use at least {min} characters.",
+  passphraseMismatch: "The passphrases don’t match.",
+  passphraseWrong: "Wrong passphrase. Enter the one set on your other device.",
+  passphraseSave: "Save passphrase",
+  passphraseChange: "Change passphrase",
+  keysLocked: "Enter the sync passphrase to sync keys on this device.",
+  keysUnlocked: "Keys sync encrypted with your sync passphrase.",
+  filesNotSynced:
+    "Files aren’t synced on this device. Your other devices keep them as they are.",
   warnings: {
     "unreliable-etags":
       "This server can't be written to safely. Use a WebDAV server that sends strong ETags.",
@@ -29,6 +59,8 @@ export const syncEnUS = {
       "Browser account sync storage is full. Turn off some sync items or use WebDAV.",
     "cloned-device":
       "This browser now syncs as a new device. Changes on both are kept.",
+    "recovered-root":
+      "The sync file on the server was damaged. It was rebuilt from its previous copy and this device’s data.",
   },
   warningDetails: {
     "unreliable-etags":
@@ -39,6 +71,8 @@ export const syncEnUS = {
       "This device keeps its copy until another device uploads it again.",
     "cloned-device":
       "Another browser was syncing as this device, for example a copied browser profile or a backup restored on another computer.",
+    "recovered-root":
+      "This happens when an upload stops halfway. Nothing on your devices was lost: each one uploads its changes again.",
   },
   massDeleteTitle: "Confirm deletions from another device",
   massDeleteDescription:

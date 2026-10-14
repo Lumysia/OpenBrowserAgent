@@ -105,7 +105,6 @@ export async function reconcile(
           ...localSide(device, snapshot, recordId),
           remote: remote.records[recordId],
           mergesContent: !!collection.mergeBodies,
-          secrets: collection.secrets,
           dataHash: hashJson,
         }),
       );
@@ -124,10 +123,14 @@ export async function reconcile(
     return outcome;
   }
   // Kept: copies here upload again, items deleted here come back.
-  const kept = (local: boolean) =>
-    massDelete
+  const kept = (local: boolean) => {
+    const names = massDelete
       .filter((entry) => !!entry.local === local && answerOf(entry)!.keep)
-      .map((entry) => syncCollection(entry.collection)!);
+      .map((entry) => entry.collection);
+    return collections.filter((collection) =>
+      names.includes(collection.partOf ?? collection.name),
+    );
+  };
   await keepLocalCopies(
     context,
     kept(false),

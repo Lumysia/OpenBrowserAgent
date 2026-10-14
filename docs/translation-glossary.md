@@ -46,6 +46,9 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | sync                           | 同步               | 同步               | 同期                    | 동기화           |
 | attachment                     | 附件               | 附件               | 添付ファイル            | 첨부 파일        |
 | device (a synced browser)      | 设备               | 裝置               | デバイス                | 기기             |
+| sync passphrase                | 同步口令           | 同步密語           | 同期パスフレーズ        | 동기화 암호 문구 |
+| Keys (sync group)              | 密钥               | 金鑰               | キー                    | 키               |
+| Files (sync group)             | 文件               | 檔案               | ファイル                | 파일             |
 | screenshot                     | 截图               | 截圖               | スクリーンショット      | 스크린샷         |
 | fork (a chat)                  | 分叉               | 分叉               | 分岐                    | 분기             |
 | built-in                       | 内置               | 內建               | 組み込み                | 내장             |
@@ -62,46 +65,49 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | output limit (of a model)      | 输出上限           | 輸出上限           | 出力の上限              | 출력 한도        |
 | Continue (a cut-off response)  | 继续               | 繼續               | 続ける                  | 계속하기         |
 
-| English                        | Français                     | Deutsch                     | Español                           | Português (Brasil)               |
-| ------------------------------ | ---------------------------- | --------------------------- | --------------------------------- | -------------------------------- |
-| chat                           | discussion                   | Chat                        | chat                              | conversa                         |
-| chat history                   | historique des discussions   | Chatverlauf                 | historial de chats                | histórico de conversas           |
-| agent                          | agent                        | Agent                       | agente                            | agente                           |
-| sub-agent                      | sous-agent                   | Subagent                    | subagente                         | subagente                        |
-| Browse / Ask (built-in agents) | Naviguer / Demander          | Browsen / Fragen stellen    | Navegar / Preguntar               | Navegar / Perguntar              |
-| …-compatible (provider type)   | Compatible …                 | …-kompatibel                | Compatible con …                  | Compatível com …                 |
-| side panel                     | panneau latéral              | Seitenleiste                | panel lateral                     | painel lateral                   |
-| smart bar                      | barre intelligente           | Smart Bar                   | barra inteligente                 | barra inteligente                |
-| model                          | modèle                       | Modell                      | modelo                            | modelo                           |
-| helper model                   | modèle auxiliaire            | Hilfsmodell                 | modelo auxiliar                   | modelo auxiliar                  |
-| AI provider                    | fournisseur d’IA             | KI-Anbieter                 | proveedor de IA                   | provedor de IA                   |
-| API key                        | clé API                      | API-Schlüssel               | clave API                         | chave de API                     |
-| base URL                       | URL de base                  | Basis-URL                   | URL base                          | URL base                         |
-| skill                          | compétence                   | Skill                       | habilidad                         | habilidade                       |
-| tool                           | outil                        | Tool                        | herramienta                       | ferramenta                       |
-| MCP server                     | serveur MCP                  | MCP-Server                  | servidor MCP                      | servidor MCP                     |
-| request header                 | en-tête                      | Header                      | cabecera                          | cabeçalho                        |
-| local execution bridge         | pont d’exécution local       | lokale Ausführungs-Bridge   | puente de ejecución local         | ponte de execução local          |
-| workspace                      | espace de travail            | Arbeitsbereich              | espacio de trabajo                | espaço de trabalho               |
-| memory                         | mémoire                      | Gedächtnis                  | memoria                           | memória                          |
-| sync                           | synchronisation              | Synchronisierung            | sincronización                    | sincronização                    |
-| attachment                     | pièce jointe                 | Anhang                      | adjunto                           | anexo                            |
-| device (a synced browser)      | appareil                     | Gerät                       | dispositivo                       | dispositivo                      |
-| screenshot                     | capture d’écran              | Screenshot                  | captura de pantalla               | captura de tela                  |
-| fork (a chat)                  | créer une branche            | verzweigen                  | bifurcar                          | ramificar                        |
-| built-in                       | intégré                      | integriert                  | integrado                         | integrado                        |
-| customize (a built-in skill)   | personnaliser                | anpassen                    | personalizar                      | personalizar                     |
-| skill use: Auto / Manual / Off | Auto / Manuelle / Désactivée | Automatisch / Manuell / Aus | Automático / Manual / Desactivada | Automático / Manual / Desativada |
-| footnote                       | note de bas de page          | Fußnote                     | nota al pie                       | nota de rodapé                   |
-| load (an image from an answer) | charger                      | laden                       | cargar                            | carregar                         |
-| restore (deleted synced items) | restaurer                    | wiederherstellen            | restaurar                         | restaurar                        |
-| merge (synced changes)         | fusionner                    | zusammenführen              | combinar                          | mesclar                          |
-| browser profile                | profil de navigateur         | Browserprofil               | perfil de navegador               | perfil de navegador              |
-| voice (reading aloud)          | voix                         | Stimme                      | voz                               | voz                              |
-| code (the agent runs)          | code                         | Code                        | código                            | código                           |
-| sandbox (where code runs)      | bac à sable                  | Sandbox                     | entorno aislado                   | sandbox                          |
-| output limit (of a model)      | limite de sortie             | Ausgabelimit                | límite de salida                  | limite de saída                  |
-| Continue (a cut-off response)  | Continuer                    | Fortsetzen                  | Continuar                         | Continuar                        |
+| English                        | Français                          | Deutsch                     | Español                               | Português (Brasil)               |
+| ------------------------------ | --------------------------------- | --------------------------- | ------------------------------------- | -------------------------------- |
+| chat                           | discussion                        | Chat                        | chat                                  | conversa                         |
+| chat history                   | historique des discussions        | Chatverlauf                 | historial de chats                    | histórico de conversas           |
+| agent                          | agent                             | Agent                       | agente                                | agente                           |
+| sub-agent                      | sous-agent                        | Subagent                    | subagente                             | subagente                        |
+| Browse / Ask (built-in agents) | Naviguer / Demander               | Browsen / Fragen stellen    | Navegar / Preguntar                   | Navegar / Perguntar              |
+| …-compatible (provider type)   | Compatible …                      | …-kompatibel                | Compatible con …                      | Compatível com …                 |
+| side panel                     | panneau latéral                   | Seitenleiste                | panel lateral                         | painel lateral                   |
+| smart bar                      | barre intelligente                | Smart Bar                   | barra inteligente                     | barra inteligente                |
+| model                          | modèle                            | Modell                      | modelo                                | modelo                           |
+| helper model                   | modèle auxiliaire                 | Hilfsmodell                 | modelo auxiliar                       | modelo auxiliar                  |
+| AI provider                    | fournisseur d’IA                  | KI-Anbieter                 | proveedor de IA                       | provedor de IA                   |
+| API key                        | clé API                           | API-Schlüssel               | clave API                             | chave de API                     |
+| base URL                       | URL de base                       | Basis-URL                   | URL base                              | URL base                         |
+| skill                          | compétence                        | Skill                       | habilidad                             | habilidade                       |
+| tool                           | outil                             | Tool                        | herramienta                           | ferramenta                       |
+| MCP server                     | serveur MCP                       | MCP-Server                  | servidor MCP                          | servidor MCP                     |
+| request header                 | en-tête                           | Header                      | cabecera                              | cabeçalho                        |
+| local execution bridge         | pont d’exécution local            | lokale Ausführungs-Bridge   | puente de ejecución local             | ponte de execução local          |
+| workspace                      | espace de travail                 | Arbeitsbereich              | espacio de trabajo                    | espaço de trabalho               |
+| memory                         | mémoire                           | Gedächtnis                  | memoria                               | memória                          |
+| sync                           | synchronisation                   | Synchronisierung            | sincronización                        | sincronização                    |
+| attachment                     | pièce jointe                      | Anhang                      | adjunto                               | anexo                            |
+| device (a synced browser)      | appareil                          | Gerät                       | dispositivo                           | dispositivo                      |
+| sync passphrase                | phrase secrète de synchronisation | Sync-Passphrase             | frase de contraseña de sincronización | frase secreta de sincronização   |
+| Keys (sync group)              | Clés                              | Schlüssel                   | Claves                                | Chaves                           |
+| Files (sync group)             | Fichiers                          | Dateien                     | Archivos                              | Arquivos                         |
+| screenshot                     | capture d’écran                   | Screenshot                  | captura de pantalla                   | captura de tela                  |
+| fork (a chat)                  | créer une branche                 | verzweigen                  | bifurcar                              | ramificar                        |
+| built-in                       | intégré                           | integriert                  | integrado                             | integrado                        |
+| customize (a built-in skill)   | personnaliser                     | anpassen                    | personalizar                          | personalizar                     |
+| skill use: Auto / Manual / Off | Auto / Manuelle / Désactivée      | Automatisch / Manuell / Aus | Automático / Manual / Desactivada     | Automático / Manual / Desativada |
+| footnote                       | note de bas de page               | Fußnote                     | nota al pie                           | nota de rodapé                   |
+| load (an image from an answer) | charger                           | laden                       | cargar                                | carregar                         |
+| restore (deleted synced items) | restaurer                         | wiederherstellen            | restaurar                             | restaurar                        |
+| merge (synced changes)         | fusionner                         | zusammenführen              | combinar                              | mesclar                          |
+| browser profile                | profil de navigateur              | Browserprofil               | perfil de navegador                   | perfil de navegador              |
+| voice (reading aloud)          | voix                              | Stimme                      | voz                                   | voz                              |
+| code (the agent runs)          | code                              | Code                        | código                                | código                           |
+| sandbox (where code runs)      | bac à sable                       | Sandbox                     | entorno aislado                       | sandbox                          |
+| output limit (of a model)      | limite de sortie                  | Ausgabelimit                | límite de salida                      | limite de saída                  |
+| Continue (a cut-off response)  | Continuer                         | Fortsetzen                  | Continuar                             | Continuar                        |
 
 The AI provider form's **thinking switch** chooses how the smart bar and page translation ask models to skip thinking: 思考开关 / 思考開關 / 思考スイッチ / 생각 스위치 / Interrupteur de réflexion / Denkschalter / Interruptor de pensamiento / Chave de pensamento. "Thinking" here is the same idea as the smart bar's "Thinking…" status. Its options keep the request field in parentheses untranslated (`enable_thinking`, `reasoning_effort`), and "Reasoning effort" uses the composer's term.
 

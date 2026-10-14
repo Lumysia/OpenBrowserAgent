@@ -67,21 +67,26 @@ export function SettingSwitchCard(props: Props) {
   );
 }
 
-// A switch row inside a settings card's list (`settings-toggle-list`).
+// A row inside a settings card's list (`settings-toggle-list`): a switch,
+// or `aside` for a setting without one. `children` show below the row.
 export function SettingToggleRow({
   icon,
   title,
   description,
-  value,
+  value = false,
   onChange,
   disabled,
+  aside,
+  children,
 }: {
   icon?: ReactNode;
   title: string;
   description?: string;
-  value: boolean;
+  value?: boolean;
   onChange?: (value: boolean) => void;
   disabled?: boolean;
+  aside?: ReactNode;
+  children?: ReactNode;
 }) {
   return (
     <div className="settings-toggle-row">
@@ -91,12 +96,15 @@ export function SettingToggleRow({
         </CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </div>
-      <Switch
-        checked={value}
-        disabled={disabled}
-        aria-label={title}
-        onCheckedChange={onChange}
-      />
+      {aside ?? (
+        <Switch
+          checked={value}
+          disabled={disabled}
+          aria-label={title}
+          onCheckedChange={onChange}
+        />
+      )}
+      {children && <div className="settings-toggle-row-detail">{children}</div>}
     </div>
   );
 }

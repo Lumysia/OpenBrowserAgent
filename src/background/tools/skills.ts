@@ -10,10 +10,14 @@ import {
   normalizeSkillName,
   parseSkillFrontmatter,
   skillFileKind,
+  skillTooLarge,
 } from "../../shared/skills";
+import { SKILL_MAX_CHARS } from "../../shared/config";
 import { TOOL_NAME } from "../../shared/tool-names";
 import type { Skill } from "../../shared/types";
 import { fail, ok, schema, stringArg, type ToolDefinition } from "./types";
+
+const TOO_LARGE = `A skill's files may hold ${SKILL_MAX_CHARS} characters together; this change would make it larger. Keep the skill shorter.`;
 
 // Creating and editing skills. Reading goes through read "skill:NAME".
 export const skillsTool: ToolDefinition = {
@@ -55,6 +59,7 @@ export const skillsTool: ToolDefinition = {
         description: stringArg(input.description),
         instruction: content,
       });
+      if (skillTooLarge(skill)) return fail(TOO_LARGE);
       await storage.skills.update((skills) => [...skills, skill]);
       run.skills.push(skill);
       return ok(`Created skill ${name}.`, { action, name });
@@ -107,6 +112,7 @@ export const skillsTool: ToolDefinition = {
       ],
       updatedAt: now,
     });
+    if (skillTooLarge(edit(existing))) return fail(TOO_LARGE);
     const next = customized
       ? edit(customized)
       : await updateById(storage.skills, existing.id, edit);

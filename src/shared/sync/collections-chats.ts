@@ -2,7 +2,7 @@ import { storageLockName, withLocks } from "../locks";
 import { chatAttachmentIds } from "../chat-attachment-ids";
 import { chatContentKey } from "../chat-keys";
 import { chatFacts, chatMeta } from "../chats";
-import { STORAGE_KEYS, SYNC_PREFERENCES } from "../storage-keys";
+import { STORAGE_KEYS, SYNC_GROUPS } from "../storage-keys";
 import type { ChatContent, ChatSummary } from "../types";
 import {
   idOfKey,
@@ -33,8 +33,8 @@ async function readContents(env: SyncEnv, ids: string[]) {
 
 export const chatsCollection: Collection = {
   name: "chats",
-  gate: SYNC_PREFERENCES.chats,
-  browserSync: false,
+  groups: [SYNC_GROUPS.chats],
+  largeContent: true,
   keys: [CHATS, `${CHATS}/`],
   body: "json",
   lazy: true,
@@ -148,8 +148,8 @@ const indexOf = (value: unknown) =>
 
 export const attachmentsCollection: Collection = {
   name: "attachments",
-  gate: "attachments",
-  browserSync: false,
+  groups: [SYNC_GROUPS.chats, SYNC_GROUPS.files],
+  largeContent: true,
   keys: [INDEX],
   body: "bytes",
   lazy: true,

@@ -508,6 +508,8 @@ export const jaJP: LocaleMessages = {
     skillCheckNameInvalid: "メタデータ名はケバブケースにしてください",
     skillCheckDescription: "説明があります",
     skillCheckDescriptionMissing: "説明がありません",
+    skillCheckSize: "サイズは上限内です",
+    skillCheckTooLarge: "スキルのファイルは合計 {max} 文字までです",
     deleteSkill: "スキルを削除",
     builtinSkillBadge: "組み込み",
     overrideSkillBadge: "カスタマイズ済みの組み込み",
@@ -537,8 +539,8 @@ export const jaJP: LocaleMessages = {
     lightTheme: "ライト",
     darkTheme: "ダーク",
     syncSettingsDescription:
-      "言語、外観、スマートバー、右クリックメニュー、ページ翻訳などの設定は常に同期されます。ここで同期先を選び、下でほかに同期する項目を選びます。",
-    syncBackendDescription: "追加の同期項目を選択します。",
+      "同期先を選び、下で同期する内容を選びます。設定は常に同期され、キー、チャット、ファイルはそれぞれスイッチで切り替えます。",
+    syncBackendDescription: "同期する内容。",
     syncBackendBrowserSync: "ブラウザー標準のアカウント同期",
     syncBackendWebDavSync: "WebDAV 同期",
     syncBackendName: "バックエンド名",
@@ -547,27 +549,6 @@ export const jaJP: LocaleMessages = {
     syncBackendPassword: "パスワードまたはアプリパスワード",
     syncBackendCopyConfig: "設定コードをコピー",
     syncBackendCopiedConfig: "設定コードをコピーしました",
-    syncProviders: "AI プロバイダーを同期",
-    syncProvidersDescription:
-      "API キーを含む AI プロバイダー設定を現在の同期バックエンドで同期します。",
-    syncAgents: "エージェントを同期",
-    syncAgentsDescription:
-      "エージェントプロファイルとワークスペースファイルを現在の同期バックエンドで同期します。",
-    syncSkills: "スキルを同期",
-    syncSkillsDescription:
-      "スキルのテンプレートを現在の同期バックエンドで同期します。",
-    syncMcpServers: "MCP サーバーを同期",
-    syncMcpServersDescription:
-      "Streamable HTTP MCP サーバーの設定を現在の同期バックエンドで同期します。",
-    syncLocalExecutionBridges: "ローカル実行ブリッジを同期",
-    syncLocalExecutionBridgesDescription:
-      "ブリッジシークレットを含む実行ブリッジ設定を、現在の同期バックエンドで同期します。",
-    syncChats: "チャットを同期",
-    syncChatsDescription:
-      "チャット履歴を現在の同期バックエンドで同期します。ローカルのみの会話にする場合はオフにします。",
-    syncChatAttachments: "チャットの添付ファイルを同期",
-    syncChatAttachmentsDescription:
-      "チャットにアップロードしたファイルを、現在の同期バックエンドで同期します。",
     autoScroll: "自動スクロール",
     autoScrollDescription:
       "メッセージのストリーミング中、最新の AI 出力を自動的に表示し続けます。",

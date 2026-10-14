@@ -535,6 +535,9 @@ export const frFR: LocaleMessages = {
       "Le nom dans les métadonnées doit être en kebab-case",
     skillCheckDescription: "La description est présente",
     skillCheckDescriptionMissing: "La description est manquante",
+    skillCheckSize: "La taille respecte la limite",
+    skillCheckTooLarge:
+      "Les fichiers d’une compétence peuvent contenir {max} caractères au total",
     deleteSkill: "Supprimer la compétence",
     builtinSkillBadge: "Intégrée",
     overrideSkillBadge: "Compétence intégrée personnalisée",
@@ -564,9 +567,8 @@ export const frFR: LocaleMessages = {
     lightTheme: "Clair",
     darkTheme: "Sombre",
     syncSettingsDescription:
-      "La langue, l'apparence, la barre intelligente, le menu contextuel, la traduction de page et les autres réglages sont toujours synchronisés. Choisissez ici le backend, et ci-dessous ce qui est synchronisé en plus.",
-    syncBackendDescription:
-      "Choisissez les éléments supplémentaires à synchroniser.",
+      "Choisissez le backend et, plus bas, ce qui est synchronisé. Les paramètres sont toujours synchronisés ; les clés, les discussions et les fichiers ont chacun un interrupteur.",
+    syncBackendDescription: "Ce qui est synchronisé.",
     syncBackendBrowserSync: "Synchronisation intégrée du compte navigateur",
     syncBackendWebDavSync: "Synchronisation WebDAV",
     syncBackendName: "Nom du backend",
@@ -575,27 +577,6 @@ export const frFR: LocaleMessages = {
     syncBackendPassword: "Mot de passe ou mot de passe d’application",
     syncBackendCopyConfig: "Copier le code de configuration",
     syncBackendCopiedConfig: "Code de configuration copié",
-    syncProviders: "Synchroniser les fournisseurs d’IA",
-    syncProvidersDescription:
-      "Synchronisez la configuration des fournisseurs d’IA, y compris les clés API, via le backend de synchronisation actuel.",
-    syncAgents: "Synchroniser les agents",
-    syncAgentsDescription:
-      "Synchronisez les profils d’agent et les fichiers d’espace de travail via le backend de synchronisation actuel.",
-    syncSkills: "Synchroniser les compétences",
-    syncSkillsDescription:
-      "Synchronisez les compétences via le backend de synchronisation actuel.",
-    syncMcpServers: "Synchroniser les serveurs MCP",
-    syncMcpServersDescription:
-      "Synchronisez la configuration des serveurs MCP Streamable HTTP via le backend de synchronisation actuel.",
-    syncLocalExecutionBridges: "Synchroniser les ponts d’exécution locaux",
-    syncLocalExecutionBridgesDescription:
-      "Synchronisez les paramètres des ponts, y compris les secrets, via le backend de synchronisation actuel.",
-    syncChats: "Synchroniser les discussions",
-    syncChatsDescription:
-      "Synchronisez l’historique des discussions via le backend de synchronisation actuel. Laissez désactivé pour garder les discussions en local uniquement.",
-    syncChatAttachments: "Synchroniser les pièces jointes des discussions",
-    syncChatAttachmentsDescription:
-      "Synchronisez les fichiers importés dans les discussions via le backend de synchronisation actuel.",
     autoScroll: "Défilement automatique",
     autoScrollDescription:
       "Garder automatiquement la dernière réponse de l’IA visible pendant la génération des messages.",

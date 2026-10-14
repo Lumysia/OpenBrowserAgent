@@ -1,14 +1,12 @@
 import { Check, Copy, FolderSync } from "lucide-react";
 import type { ReactNode } from "react";
 import { getMessages } from "../../src/shared/i18n";
+import { createSyncConfigCode } from "../../src/shared/sync-config-code";
+import type { SyncGroupSettings } from "../../src/shared/storage-keys";
 import {
   NO_SYNC_BACKEND_ID,
-  syncBackendSupportsChats,
-} from "../../src/shared/sync-backends";
-import { createSyncConfigCode } from "../../src/shared/sync-config-code";
-import type { SyncDataSettings } from "../../src/shared/storage-keys";
-import {
   SYNC_BACKEND_TYPES,
+  syncBackendCapabilities,
   syncBackendDefaultName,
   WEBDAV_SYNC_BACKEND_ID,
 } from "../../src/shared/sync-backends";
@@ -19,6 +17,7 @@ import {
   AccordionHeader,
   AccordionItem,
   AccordionTriggerButton,
+  Badge,
   Button,
   CardDescription,
   CommitInput,
@@ -34,22 +33,25 @@ import { useState } from "react";
 
 type Messages = ReturnType<typeof getMessages>;
 
+// One group of what syncs. Without `value` it always syncs (no switch).
 export type SyncDataToggle = {
   key: string;
   icon: ReactNode;
   title: string;
   description: string;
-  value: boolean;
-  // Chats and attachments: WebDAV only.
-  webDavOnly?: boolean;
-  onChange: (value: boolean) => void;
+  value?: boolean;
+  // Needs a backend that holds large content (chats, files).
+  needsLargeContent?: boolean;
+  onChange?: (value: boolean) => void;
+  // Shown under the row while its backend is active (the passphrase).
+  detail?: ReactNode;
 };
 
 export function SyncBackendCard({
   activeBackendId,
   backends,
   dataToggles,
-  syncDataSettings,
+  syncGroups,
   onActiveBackendChange,
   onBackendsChange,
   t,
@@ -57,7 +59,7 @@ export function SyncBackendCard({
   activeBackendId: string;
   backends: SyncBackendConfig[];
   dataToggles: SyncDataToggle[];
-  syncDataSettings: SyncDataSettings;
+  syncGroups: SyncGroupSettings;
   onActiveBackendChange: (backendId: string) => void;
   onBackendsChange: (backends: SyncBackendConfig[]) => void;
   t: Messages;
@@ -122,7 +124,7 @@ export function SyncBackendCard({
     setTestingBackendId(backend.id);
     try {
       await navigator.clipboard.writeText(
-        createSyncConfigCode({ backend, syncDataSettings }),
+        createSyncConfigCode({ backend, syncGroups }),
       );
       setCopiedBackendId(backend.id);
       window.setTimeout(() => setCopiedBackendId(undefined), 1_200);
@@ -325,7 +327,8 @@ function SyncDataToggleList({
     <div className="settings-toggle-list">
       {toggles.map((toggle) => {
         const unsupported =
-          toggle.webDavOnly && !syncBackendSupportsChats(backendType);
+          toggle.needsLargeContent &&
+          !syncBackendCapabilities(backendType).largeContent;
         return (
           <SettingToggleRow
             key={toggle.key}
@@ -335,7 +338,14 @@ function SyncDataToggleList({
             value={unsupported ? false : toggle.value}
             disabled={disabled || unsupported}
             onChange={toggle.onChange}
-          />
+            aside={
+              toggle.value === undefined ? (
+                <Badge>{t.sync.groupAlways}</Badge>
+              ) : undefined
+            }
+          >
+            {!disabled && !unsupported && toggle.detail}
+          </SettingToggleRow>
         );
       })}
     </div>

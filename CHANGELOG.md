@@ -4,6 +4,12 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- **Sync in groups**: settings always sync, including AI providers, agents (with their `MEMORY.md` and `USER.md`), MCP servers and skills. Keys, chats and files each have one switch. Files (skill files, other workspace files, chat attachments) sync on WebDAV only; where they don't sync, agents and skills say so instead of looking empty. Local execution bridges no longer sync.
+- **Encrypted API keys**: API keys and MCP request headers sync only when you turn on keys and set a sync passphrase. They are encrypted on your device; every other device asks for the passphrase once.
+- **Set sync up again after updating**: the sync format changed. The first sync replaces the old data on the server with this device's; check the Sync page to turn keys, chats and files on again. Your data on each device stays as it is. Update all devices: older versions stop syncing with the new format.
+- **Recovery from a broken sync file**: if an upload stops halfway and leaves the server's sync file empty or damaged, the next sync rebuilds it from the previous copy and your devices' data, and shows a note, instead of failing every time. Two devices saving at the same moment on a server that locks files during uploads (such as Koofr) no longer fail with "Locked".
+- Skills are limited to 96,000 characters of files, like an agent's workspace.
+
 - The side panel has one background from top to bottom; the line and the separate band behind the message box are gone.
 - The send button no longer flickers when the pointer moves over it.
 - After "Translate this page", the next pages you open in the same tab are translated too, on any site, until you reload the tab or choose "Show original".

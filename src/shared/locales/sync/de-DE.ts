@@ -20,6 +20,39 @@ export const syncDeDE: SyncMessages = {
   syncNow: "Jetzt synchronisieren",
   webDavOnly:
     "Nur über WebDAV: Der Sync-Speicher des Browserkontos ist zu klein.",
+  groupSettings: "Einstellungen",
+  groupSettingsDescription:
+    "Immer synchronisiert: Sprache, Einstellungen, KI-Anbieter und MCP-Server ohne ihre Schlüssel, Agenten mit MEMORY.md und USER.md sowie Skills ohne ihre Dateien.",
+  groupAlways: "Immer",
+  groupKeys: "Schlüssel",
+  groupKeysDescription:
+    "API-Schlüssel und MCP-Header, mit Ihrer Sync-Passphrase verschlüsselt, bevor sie dieses Gerät verlassen.",
+  groupChats: "Chats",
+  groupChatsDescription:
+    "Chatverlauf ohne Anhänge. Lassen Sie dies für rein lokale Chats aus.",
+  groupFiles: "Dateien",
+  groupFilesDescription:
+    "Skill-Dateien, Dateien im Arbeitsbereich von Agenten außer MEMORY.md und USER.md sowie Chat-Anhänge (wenn Chats synchronisiert werden).",
+  passphrase: "Sync-Passphrase",
+  passphraseRepeat: "Passphrase wiederholen",
+  passphraseCreate:
+    "Legen Sie eine Sync-Passphrase fest. Jedes Gerät, das Schlüssel synchronisiert, fragt einmal danach. Sie lässt sich nicht wiederherstellen: Wenn Sie sie vergessen, legen Sie eine neue fest – Ihre Schlüssel bleiben auf jedem Gerät.",
+  passphraseEnter:
+    "Schlüssel sind mit einer Sync-Passphrase verschlüsselt, die auf einem anderen Gerät festgelegt wurde. Geben Sie sie einmal ein, um Schlüssel hier zu synchronisieren.",
+  passphraseChangeDescription:
+    "Legen Sie eine neue Sync-Passphrase fest. Ihre anderen Geräte fragen einmal danach.",
+  passphraseTooShort: "Verwenden Sie mindestens {min} Zeichen.",
+  passphraseMismatch: "Die Passphrasen stimmen nicht überein.",
+  passphraseWrong:
+    "Falsche Passphrase. Geben Sie die auf Ihrem anderen Gerät festgelegte ein.",
+  passphraseSave: "Passphrase speichern",
+  passphraseChange: "Passphrase ändern",
+  keysLocked:
+    "Geben Sie die Sync-Passphrase ein, um Schlüssel auf diesem Gerät zu synchronisieren.",
+  keysUnlocked:
+    "Schlüssel werden mit Ihrer Sync-Passphrase verschlüsselt synchronisiert.",
+  filesNotSynced:
+    "Dateien werden auf diesem Gerät nicht synchronisiert. Auf Ihren anderen Geräten bleiben sie unverändert.",
   warnings: {
     "unreliable-etags":
       "Auf diesen Server kann nicht sicher geschrieben werden. Verwenden Sie einen WebDAV-Server, der starke ETags sendet.",
@@ -33,6 +66,8 @@ export const syncDeDE: SyncMessages = {
       "Der Sync-Speicher des Browserkontos ist voll. Schalten Sie einige Sync-Elemente aus oder verwenden Sie WebDAV.",
     "cloned-device":
       "Dieser Browser synchronisiert jetzt als neues Gerät. Änderungen auf beiden bleiben erhalten.",
+    "recovered-root":
+      "Die Synchronisierungsdatei auf dem Server war beschädigt. Sie wurde aus ihrer vorherigen Kopie und den Daten dieses Geräts neu erstellt.",
   },
   warningDetails: {
     "unreliable-etags":
@@ -43,6 +78,8 @@ export const syncDeDE: SyncMessages = {
       "Dieses Gerät behält seine Kopie, bis ein anderes Gerät sie erneut hochlädt.",
     "cloned-device":
       "Ein anderer Browser hat als dieses Gerät synchronisiert, etwa ein kopiertes Browserprofil oder eine auf einem anderen Computer wiederhergestellte Sicherung.",
+    "recovered-root":
+      "Das passiert, wenn ein Upload mittendrin abbricht. Auf Ihren Geräten ging nichts verloren: Jedes lädt seine Änderungen erneut hoch.",
   },
   massDeleteTitle: "Löschungen von einem anderen Gerät bestätigen",
   massDeleteDescription:

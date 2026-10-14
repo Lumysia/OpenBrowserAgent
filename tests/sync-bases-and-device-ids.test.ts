@@ -308,7 +308,9 @@ test("review5 R2: two installs with the same id never stamp two changes with one
   clock.now -= 10 * 60_000;
   await a.sync();
   const b = copyOf(a, memoryTransport(server), clock, ALL_ON);
-  await a.set(PROVIDERS, { openai: { apiKey: "k2", model: "m0" } });
+  await a.set(PROVIDERS, {
+    openai: { apiKey: "k", model: "m0", baseUrl: "https://a.test" },
+  });
   await b.set(PROVIDERS, { openai: { apiKey: "k", model: "m1" } });
   const clocks = `${STORAGE_KEYS.syncClocks}:providers`;
   const stamp = (on: Device) =>
@@ -321,7 +323,7 @@ test("review5 R2: two installs with the same id never stamp two changes with one
   for (const on of [a, b])
     assert.deepEqual(
       on.get<Providers>(PROVIDERS).openai,
-      { apiKey: "k2", model: "m1" },
+      { apiKey: "k", model: "m1", baseUrl: "https://a.test" },
       on.name,
     );
 });
@@ -342,7 +344,9 @@ test("review5 R2: an install that finds its id used elsewhere takes a new one an
   const status = () => loadSyncStatus(a.env.local);
   assert.deepEqual((await status()).warnings, []);
   clock.now += 60_000;
-  await a.set(PROVIDERS, { openai: { apiKey: "k2", model: "m0" } });
+  await a.set(PROVIDERS, {
+    openai: { apiKey: "k2", model: "m0", baseUrl: "https://a.test" },
+  });
   clock.now += 60_000;
   await b.set(PROVIDERS, { openai: { apiKey: "k", model: "m1" } });
   await b.sync("edit");
@@ -354,8 +358,14 @@ test("review5 R2: an install that finds its id used elsewhere takes a new one an
   assert.deepEqual((await status()).warnings, [SYNC_WARNINGS.clonedDevice]);
   // The merge made in that round already carries the new id.
   const merged = (await decodeRoot(server.root!)).records["providers/openai"];
-  assert.deepEqual(merged.data, { apiKey: "k2", model: "m1" });
+  assert.deepEqual(merged.data, { model: "m1", baseUrl: "https://a.test" });
   assert.equal(parseClock(merged.clock)?.device, renamed);
+  // The API key syncs apart, encrypted.
+  assert.deepEqual(a.get<Providers>(PROVIDERS).openai, {
+    apiKey: "k2",
+    model: "m1",
+    baseUrl: "https://a.test",
+  });
   // The note stays for a day.
   clock.now += 60_000;
   await runner.request({ reason: "poll" });

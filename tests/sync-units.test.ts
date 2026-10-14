@@ -161,35 +161,6 @@ test("joining an account: a value with no clock loses, a newer change wins, secr
     (await decideFor({ ...made(9, "account value"), remote })).kind,
     "apply",
   );
-  // An empty API key never replaces the account's.
-  const account = { clock: clock(5, "b"), data: { apiKey: "sk", model: "m" } };
-  const emptied = {
-    local: { clock: clock(9), data: { apiKey: "", model: "n" } },
-    changedHere: true,
-  };
-  assert.deepEqual(
-    await decideFor({ ...emptied, remote: account, secrets: ["apiKey"] }),
-    {
-      kind: "merge",
-      data: { apiKey: "sk", model: "n" },
-      blob: undefined,
-      size: undefined,
-      newer: "mine",
-      versions: [emptied.local, account],
-    },
-  );
-  // Once both shared a version, emptying the key is a change like any other.
-  assert.equal(
-    (
-      await decideFor({
-        ...emptied,
-        base: { clock: account.clock, dataHash: await hashJson(account.data) },
-        remote: account,
-        secrets: ["apiKey"],
-      })
-    ).kind,
-    "push",
-  );
 });
 
 test("chat message union keeps messages from both devices in time order", () => {
@@ -402,6 +373,7 @@ test("browser sync: records split into items under 8 KB, quotas enforced", async
   small.records["skills/s1"] = { clock: clock(4), deleted: true };
   await transport.writeRoot(small, undefined);
   assert.deepEqual(Object.keys(area.data).sort(), [
+    "m",
     "r:preferences/theme",
     "r:skills/s1",
   ]);
@@ -422,7 +394,7 @@ test("browser sync: parts of a write that never landed go after a day", async ()
   assert.ok(`p:${hash}` in area.data);
   time.now += 25 * 60 * 60_000;
   await transport.writeRoot(root, undefined);
-  assert.deepEqual(Object.keys(area.data), ["r:preferences/theme"]);
+  assert.deepEqual(Object.keys(area.data).sort(), ["m", "r:preferences/theme"]);
 });
 
 test("WebDAV blobs are checked against their hash before use", async () => {

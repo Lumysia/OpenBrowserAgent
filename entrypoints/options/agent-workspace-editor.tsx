@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { WORKSPACE_FILES } from "../../src/shared/sync/collections";
+import { useNotSyncedHere } from "../../src/ui/useSyncedHere";
 import { Check, FileText, Pencil, Plus, Trash2 } from "lucide-react";
 import { formatCount, type Messages } from "../../src/shared/i18n";
 import type { AgentWorkspace } from "../../src/shared/types";
@@ -43,6 +45,7 @@ export function AgentWorkspaceEditor({
   t: Messages;
 }) {
   const [newPath, setNewPath] = useState("");
+  const filesNotSynced = useNotSyncedHere(WORKSPACE_FILES);
   const [draft, setDraft] = useState<Draft>();
   const [error, setError] = useState("");
 
@@ -156,6 +159,7 @@ export function AgentWorkspaceEditor({
             <CardDescription>
               {t.options.agentWorkspaceDescription}
             </CardDescription>
+            {filesNotSynced && <Feedback>{t.sync.filesNotSynced}</Feedback>}
             <div className="option-add-file-row">
               <Input
                 value={newPath}

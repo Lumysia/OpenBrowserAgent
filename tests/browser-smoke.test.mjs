@@ -73,7 +73,7 @@ async function checkSyncedSend(browser) {
         }),
       {
         backend: STORAGE_KEYS.activeSyncBackendId,
-        settings: STORAGE_KEYS.syncDataSettings,
+        settings: STORAGE_KEYS.syncGroups,
       },
     );
     await configureComposer(page, {

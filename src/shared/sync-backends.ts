@@ -15,10 +15,21 @@ export const BROWSER_SYNC_BACKEND_ID = SYNC_BACKEND_TYPES.browserSync;
 export const WEBDAV_SYNC_BACKEND_ID = SYNC_BACKEND_TYPES.webDav;
 export const NO_SYNC_BACKEND_ID = "local";
 
+// What a backend can hold. Engine and settings read these, never the type.
+export type SyncCapabilities = {
+  // Room for large content: chats, files, attachments.
+  largeContent: boolean;
+  // Stored blobs can be listed, so orphans can be swept.
+  listsBlobs: boolean;
+  // Other devices' changes are announced (storage events), so nothing polls.
+  announcesChanges: boolean;
+};
+
 export type SyncBackendRegistryItem = {
   id: string;
   type: SyncBackendType;
   defaultName: string;
+  capabilities: SyncCapabilities;
 };
 
 export const SYNC_BACKEND_REGISTRY = [
@@ -26,11 +37,21 @@ export const SYNC_BACKEND_REGISTRY = [
     id: BROWSER_SYNC_BACKEND_ID,
     type: SYNC_BACKEND_TYPES.browserSync,
     defaultName: "Browser Sync",
+    capabilities: {
+      largeContent: false,
+      listsBlobs: false,
+      announcesChanges: true,
+    },
   },
   {
     id: WEBDAV_SYNC_BACKEND_ID,
     type: SYNC_BACKEND_TYPES.webDav,
     defaultName: "WebDAV",
+    capabilities: {
+      largeContent: true,
+      listsBlobs: true,
+      announcesChanges: false,
+    },
   },
 ] as const satisfies readonly SyncBackendRegistryItem[];
 
@@ -93,10 +114,10 @@ export async function isSyncBackendEnabled() {
   return (await getStoredActiveSyncBackendId()) !== NO_SYNC_BACKEND_ID;
 }
 
-// Chats and their attachments sync over WebDAV only; browser sync storage is
-// far too small for them.
-export function syncBackendSupportsChats(type: SyncBackendConfig["type"]) {
-  return type === SYNC_BACKEND_TYPES.webDav;
+export function syncBackendCapabilities(
+  type: SyncBackendType,
+): SyncCapabilities {
+  return SYNC_BACKEND_REGISTRY.find((item) => item.type === type)!.capabilities;
 }
 
 // What the sync state belongs to: another folder or account has its own.
