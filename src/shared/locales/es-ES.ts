@@ -34,8 +34,8 @@ export const esES: LocaleMessages = {
   sidepanel: {
     connectProviderTitle: "Configura OpenBrowserAgent",
     connectProviderDescription:
-      "Elige el idioma, activa la sincronización si quieres y luego añade un proveedor y un modelo cuando quieras.",
-    addProvider: "Añadir proveedor",
+      "Elige el idioma, activa la sincronización si quieres y luego añade un proveedor de IA y un modelo cuando quieras.",
+    addProvider: "Añadir proveedor de IA",
     cloudSyncConnect: "Conectar y sincronizar",
     cloudSyncTesting: "Conectando…",
     cloudSyncPulling: "Comprobando la sincronización en la nube…",
@@ -44,11 +44,11 @@ export const esES: LocaleMessages = {
     cloudSyncError:
       "Ha fallado la prueba de sincronización en la nube. Revisa el backend o empieza en local.",
     cloudSyncSynced:
-      "La sincronización en la nube está lista. Añade ahora la configuración del proveedor.",
+      "La sincronización en la nube está lista. Añade ahora la configuración del proveedor de IA.",
     cloudSyncSyncedButton: "Sincronizado",
     startLocally: "Empezar en local",
     localSetupHint:
-      "Se ha abierto Configuración. Añade allí un proveedor y un modelo, y luego vuelve aquí para continuar.",
+      "Se ha abierto Configuración. Añade allí un proveedor de IA y un modelo, y luego vuelve aquí para continuar.",
     bootstrapStepSyncTitle: "Backend de sincronización (opcional)",
     syncConfigCodeTab: "Pegar código",
     syncManualTab: "Configuración manual",
@@ -56,9 +56,9 @@ export const esES: LocaleMessages = {
     syncConfigCodeDescription: "Pega un código copiado desde otro dispositivo.",
     syncConfigCodeInvalid:
       "El código de configuración de sincronización no es válido. Revísalo e inténtalo de nuevo.",
-    bootstrapStepProviderTitle: "Añade un proveedor y un modelo",
+    bootstrapStepProviderTitle: "Añade un proveedor de IA y un modelo",
     bootstrapStepProviderDescription:
-      "Abre Configuración para añadir un proveedor, añadir un modelo y probarlo.",
+      "Abre Configuración para añadir un proveedor de IA, añadir un modelo y probarlo.",
     bootstrapStepTaskTitle: "Envía tu primera tarea",
     bootstrapStepTaskDescription:
       "Cuando el modelo responda correctamente, vuelve aquí y pide a OpenBrowserAgent que navegue o resuma.",
@@ -350,7 +350,8 @@ export const esES: LocaleMessages = {
       browser:
         "Gestionar pestañas, hacer clic, escribir y editar páginas, exportar archivos.",
       web: "Buscar en la web con el buscador predeterminado.",
-      images: "Crear y editar imágenes (si está activado en Proveedores).",
+      images:
+        "Crear y editar imágenes (si está activado en Proveedores de IA).",
       skills: "Usar las habilidades activadas y crearlas o mejorarlas.",
       history: "Buscar, leer y eliminar chats guardados.",
       subAgents:
@@ -387,7 +388,7 @@ export const esES: LocaleMessages = {
     resetDefaultAgentsDescription:
       "Restaura los agentes integrados y elimina los agentes personalizados y sus espacios de trabajo.",
     sync: "Sincronización",
-    providers: "Proveedores",
+    providers: "Proveedores de IA",
     mcpServers: "Servidores MCP",
     localExecutionBridges: "Puentes de ejecución locales",
     localExecutionBridgesDescription:
@@ -412,7 +413,7 @@ export const esES: LocaleMessages = {
     localExecutionBridgeTestError: "Ha fallado la prueba del puente",
     deleteLocalExecutionBridge: "Eliminar puente de ejecución",
     skills: "Habilidades",
-    modelProviders: "Proveedores de modelos",
+    modelProviders: "Proveedores de IA",
     providerDescription:
       "Usa tu propia clave y conecta OpenBrowserAgent con tus proveedores de IA favoritos.",
     mcpServersDescription:
@@ -467,10 +468,9 @@ export const esES: LocaleMessages = {
       "Pone la herramienta de generación de imágenes a disposición de los agentes.",
     imageGenerationSize: "Tamaño de imagen",
     providerConnection: "Conexión",
-    providerConnectionHint:
-      "Configura el nombre del proveedor, la clave API y la URL base.",
-    providerName: "Nombre del proveedor",
-    deleteProvider: "Eliminar proveedor",
+    providerConnectionHint: "Configura el nombre, la clave API y la URL base.",
+    providerName: "Nombre",
+    deleteProvider: "Eliminar proveedor de IA",
     apiKey: "Clave API",
     baseUrl: "URL base",
     models: "Modelos",
@@ -555,7 +555,7 @@ export const esES: LocaleMessages = {
     lightTheme: "Claro",
     darkTheme: "Oscuro",
     syncSettingsDescription:
-      "Elige el backend que sincroniza de forma predeterminada el idioma, la configuración de proveedores y las preferencias ligeras.",
+      "El idioma, la apariencia, la barra inteligente, el menú contextual, la traducción de páginas y otros ajustes se sincronizan siempre. Elige aquí el backend y, debajo, qué más sincronizar.",
     syncBackendDescription: "Elige elementos de sincronización adicionales.",
     syncBackendBrowserSync:
       "Sincronización integrada de la cuenta del navegador",
@@ -566,9 +566,9 @@ export const esES: LocaleMessages = {
     syncBackendPassword: "Contraseña o contraseña de aplicación",
     syncBackendCopyConfig: "Copiar código de configuración",
     syncBackendCopiedConfig: "Código de configuración copiado",
-    syncProviders: "Sincronizar proveedores",
+    syncProviders: "Sincronizar proveedores de IA",
     syncProvidersDescription:
-      "Sincroniza la configuración de proveedores, incluidas las claves API, con el backend de sincronización actual.",
+      "Sincroniza la configuración de proveedores de IA, incluidas las claves API, con el backend de sincronización actual.",
     syncAgents: "Sincronizar agentes",
     syncAgentsDescription:
       "Sincroniza perfiles de agente y archivos de espacio de trabajo con el backend de sincronización actual.",
@@ -615,7 +615,7 @@ export const esES: LocaleMessages = {
     debugResetTargets: "Tipos de datos",
     debugResetTargetAll: "Todo",
     debugResetTargetSettings: "Configuración",
-    debugResetTargetProviders: "Proveedores",
+    debugResetTargetProviders: "Proveedores de IA",
     debugResetTargetAgents: "Agentes",
     debugResetTargetSkills: "Habilidades",
     debugResetTargetMcpServers: "Servidores MCP",

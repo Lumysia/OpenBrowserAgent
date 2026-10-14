@@ -43,7 +43,7 @@ export const displayZhCN: DisplayMessages = {
     },
   },
   errors: {
-    noModel: "尚未配置模型。请在“设置”→“提供商”中添加提供商。",
+    noModel: "尚未配置模型。请在“设置”→“AI 提供商”中添加提供商。",
     subAgentStopped: "子智能体已停止。",
     baseUrlRequired: "请输入 Base URL。",
   },

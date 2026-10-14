@@ -51,7 +51,7 @@ export const displayEsES: DisplayMessages = {
   },
   errors: {
     noModel:
-      "No hay ningún modelo configurado. Añade un proveedor en «Configuración» → «Proveedores».",
+      "No hay ningún modelo configurado. Añade un proveedor en «Configuración» → «Proveedores de IA».",
     subAgentStopped: "Se detuvo el subagente.",
     baseUrlRequired: "Introduce una URL base.",
   },

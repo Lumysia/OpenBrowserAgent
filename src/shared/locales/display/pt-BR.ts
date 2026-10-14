@@ -51,7 +51,7 @@ export const displayPtBR: DisplayMessages = {
   },
   errors: {
     noModel:
-      "Nenhum modelo configurado. Adicione um provedor em “Configurações” → “Provedores”.",
+      "Nenhum modelo configurado. Adicione um provedor em “Configurações” → “Provedores de IA”.",
     subAgentStopped: "O subagente foi interrompido.",
     baseUrlRequired: "Informe uma URL base.",
   },

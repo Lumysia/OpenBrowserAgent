@@ -38,8 +38,8 @@ export const enUS = {
   sidepanel: {
     connectProviderTitle: "Set up OpenBrowserAgent",
     connectProviderDescription:
-      "Choose your language, optionally enable sync, then add a provider and model when ready.",
-    addProvider: "Add provider",
+      "Choose your language, optionally enable sync, then add an AI provider and model when ready.",
+    addProvider: "Add AI provider",
     cloudSyncConnect: "Connect and sync",
     cloudSyncTesting: "Connecting…",
     cloudSyncPulling: "Checking cloud sync…",
@@ -47,11 +47,11 @@ export const enUS = {
       "Use cloud sync to start from another device's setup or store this device's new setup in the cloud.",
     cloudSyncError:
       "Cloud sync test failed. Check the backend or start locally.",
-    cloudSyncSynced: "Cloud sync is ready. Add a provider and model next.",
+    cloudSyncSynced: "Cloud sync is ready. Add an AI provider and model next.",
     cloudSyncSyncedButton: "Synced",
     startLocally: "Start locally",
     localSetupHint:
-      "Settings is open. Add a provider and model there, then return here to continue.",
+      "Settings is open. Add an AI provider and model there, then return here to continue.",
     bootstrapStepSyncTitle: "Sync backend (optional)",
     syncConfigCodeTab: "Paste code",
     syncManualTab: "Manual setup",
@@ -59,9 +59,9 @@ export const enUS = {
     syncConfigCodeDescription: "Paste a code copied from another device.",
     syncConfigCodeInvalid:
       "Invalid sync config code. Check the code and try again.",
-    bootstrapStepProviderTitle: "Add a provider and model",
+    bootstrapStepProviderTitle: "Add an AI provider and model",
     bootstrapStepProviderDescription:
-      "Open Settings to add a provider, add a model, and test it.",
+      "Open Settings to add an AI provider, add a model, and test it.",
     bootstrapStepTaskTitle: "Send your first task",
     bootstrapStepTaskDescription:
       "After a model responds successfully, return here and ask OpenBrowserAgent to browse or summarize.",
@@ -317,7 +317,7 @@ export const enUS = {
       pages: "Snapshot, find, read and extract page content; screenshots.",
       browser: "Manage tabs, click, type and edit pages, export files.",
       web: "Search the web with the default search engine.",
-      images: "Create and edit images (when enabled in Providers).",
+      images: "Create and edit images (when enabled in AI providers).",
       skills: "Use enabled skills and create or improve them.",
       history: "Search, read and delete saved chats.",
       subAgents: "Delegate tasks to agents that run in their own chats.",
@@ -352,7 +352,7 @@ export const enUS = {
     resetDefaultAgentsDescription:
       "Restores the built-in agents and removes custom agents and their workspaces.",
     sync: "Sync",
-    providers: "Providers",
+    providers: "AI providers",
     mcpServers: "MCP servers",
     localExecutionBridges: "Local execution bridges",
     localExecutionBridgesDescription:
@@ -378,7 +378,7 @@ export const enUS = {
     localExecutionBridgeTestError: "Bridge test failed",
     deleteLocalExecutionBridge: "Delete execution bridge",
     skills: "Skills",
-    modelProviders: "Model providers",
+    modelProviders: "AI providers",
     providerDescription:
       "Bring your own key and connect OpenBrowserAgent to your favorite AI providers.",
     mcpServersDescription:
@@ -432,9 +432,9 @@ export const enUS = {
       "Make the image generation tool available to agents.",
     imageGenerationSize: "Image size",
     providerConnection: "Connection",
-    providerConnectionHint: "Set the provider name, API key, and base URL.",
-    providerName: "Provider name",
-    deleteProvider: "Delete provider",
+    providerConnectionHint: "Set the name, API key, and base URL.",
+    providerName: "Name",
+    deleteProvider: "Delete AI provider",
     apiKey: "API key",
     baseUrl: "Base URL",
     models: "Models",
@@ -519,7 +519,7 @@ export const enUS = {
     lightTheme: "Light",
     darkTheme: "Dark",
     syncSettingsDescription:
-      "Choose the backend that syncs language, provider setup, and lightweight preferences by default.",
+      "Language, appearance, the smart bar, the right-click menu, page translation and other settings always sync. Choose the backend, and below, what else to sync.",
     syncBackendDescription: "Choose additional sync items.",
     syncBackendBrowserSync: "Built-in browser account sync",
     syncBackendWebDavSync: "WebDAV sync",
@@ -529,9 +529,9 @@ export const enUS = {
     syncBackendPassword: "Password or app password",
     syncBackendCopyConfig: "Copy config code",
     syncBackendCopiedConfig: "Config code copied",
-    syncProviders: "Sync providers",
+    syncProviders: "Sync AI providers",
     syncProvidersDescription:
-      "Sync provider configuration, including API keys, through the current sync backend.",
+      "Sync AI provider configuration, including API keys, through the current sync backend.",
     syncAgents: "Sync agents",
     syncAgentsDescription:
       "Sync agent profiles and workspace files through the current sync backend.",
@@ -577,7 +577,7 @@ export const enUS = {
     debugResetTargets: "Data types",
     debugResetTargetAll: "All",
     debugResetTargetSettings: "Settings",
-    debugResetTargetProviders: "Providers",
+    debugResetTargetProviders: "AI providers",
     debugResetTargetAgents: "Agents",
     debugResetTargetSkills: "Skills",
     debugResetTargetMcpServers: "MCP servers",

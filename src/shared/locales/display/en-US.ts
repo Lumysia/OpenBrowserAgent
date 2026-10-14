@@ -52,7 +52,7 @@ export const displayEnUS = {
     },
   },
   errors: {
-    noModel: "No model is set up. Add a provider in Settings → Providers.",
+    noModel: "No model is set up. Add a provider in Settings → AI providers.",
     subAgentStopped: "The sub-agent was stopped.",
     baseUrlRequired: "Enter a base URL.",
   },

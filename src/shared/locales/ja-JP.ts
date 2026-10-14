@@ -34,8 +34,8 @@ export const jaJP: LocaleMessages = {
   sidepanel: {
     connectProviderTitle: "OpenBrowserAgent をセットアップ",
     connectProviderDescription:
-      "言語を選択し、必要に応じて同期を有効にしてから、準備ができたらプロバイダーとモデルを追加します。",
-    addProvider: "プロバイダーを追加",
+      "言語を選択し、必要に応じて同期を有効にしてから、準備ができたら AI プロバイダーとモデルを追加します。",
+    addProvider: "AI プロバイダーを追加",
     cloudSyncConnect: "接続して同期",
     cloudSyncTesting: "接続中…",
     cloudSyncPulling: "クラウド同期を確認中…",
@@ -44,11 +44,11 @@ export const jaJP: LocaleMessages = {
     cloudSyncError:
       "クラウド同期のテストに失敗しました。バックエンドを確認するか、ローカルで開始してください。",
     cloudSyncSynced:
-      "クラウド同期の準備ができました。次にプロバイダーを設定してください。",
+      "クラウド同期の準備ができました。次に AI プロバイダーを設定してください。",
     cloudSyncSyncedButton: "同期済み",
     startLocally: "ローカルで開始",
     localSetupHint:
-      "設定を開きました。そこでプロバイダーとモデルを追加し、ここに戻って続行してください。",
+      "設定を開きました。そこで AI プロバイダーとモデルを追加し、ここに戻って続行してください。",
     bootstrapStepSyncTitle: "同期バックエンド（任意）",
     syncConfigCodeTab: "コードを貼り付け",
     syncManualTab: "手動設定",
@@ -57,9 +57,9 @@ export const jaJP: LocaleMessages = {
       "別のデバイスからコピーしたコードを貼り付けます。",
     syncConfigCodeInvalid:
       "同期設定コードが無効です。確認してもう一度お試しください。",
-    bootstrapStepProviderTitle: "プロバイダーとモデルを追加",
+    bootstrapStepProviderTitle: "AI プロバイダーとモデルを追加",
     bootstrapStepProviderDescription:
-      "設定を開き、プロバイダーとモデルを追加してテストします。",
+      "設定を開き、AI プロバイダーとモデルを追加してテストします。",
     bootstrapStepTaskTitle: "最初のタスクを送信",
     bootstrapStepTaskDescription:
       "モデルが正常に応答したらここに戻り、OpenBrowserAgent にブラウズや要約を依頼します。",
@@ -324,7 +324,7 @@ export const jaJP: LocaleMessages = {
       browser:
         "タブの管理、クリック、入力、ページ編集、ファイルのエクスポート。",
       web: "既定の検索エンジンでウェブを検索します。",
-      images: "画像の作成と編集（「プロバイダー」で有効にした場合）。",
+      images: "画像の作成と編集（「AI プロバイダー」で有効にした場合）。",
       skills: "有効なスキルを使い、作成や改善を行います。",
       history: "保存済みチャットの検索、読み取り、削除。",
       subAgents: "別のチャットで動くエージェントにタスクを委任します。",
@@ -358,7 +358,7 @@ export const jaJP: LocaleMessages = {
     resetDefaultAgentsDescription:
       "組み込みのエージェントに戻し、カスタムエージェントとそのワークスペースを削除します。",
     sync: "同期",
-    providers: "プロバイダー",
+    providers: "AI プロバイダー",
     mcpServers: "MCP サーバー",
     localExecutionBridges: "ローカル実行ブリッジ",
     localExecutionBridgesDescription:
@@ -383,7 +383,7 @@ export const jaJP: LocaleMessages = {
     localExecutionBridgeTestError: "ブリッジテストに失敗しました",
     deleteLocalExecutionBridge: "実行ブリッジを削除",
     skills: "スキル",
-    modelProviders: "モデルプロバイダー",
+    modelProviders: "AI プロバイダー",
     providerDescription:
       "自分の API キーを使って、OpenBrowserAgent をお気に入りの AI プロバイダーに接続します。",
     mcpServersDescription:
@@ -434,10 +434,9 @@ export const jaJP: LocaleMessages = {
       "エージェントが画像生成ツールを使えるようにします。",
     imageGenerationSize: "画像サイズ",
     providerConnection: "接続情報",
-    providerConnectionHint:
-      "プロバイダー名、API キー、ベース URL を設定します。",
-    providerName: "プロバイダー名",
-    deleteProvider: "プロバイダーを削除",
+    providerConnectionHint: "名前、API キー、ベース URL を設定します。",
+    providerName: "名前",
+    deleteProvider: "AI プロバイダーを削除",
     apiKey: "API キー",
     baseUrl: "ベース URL",
     models: "モデル",
@@ -523,7 +522,7 @@ export const jaJP: LocaleMessages = {
     lightTheme: "ライト",
     darkTheme: "ダーク",
     syncSettingsDescription:
-      "言語、プロバイダー設定、軽量設定を既定で同期するバックエンドを選択します。",
+      "言語、外観、スマートバー、右クリックメニュー、ページ翻訳などの設定は常に同期されます。ここで同期先を選び、下でほかに同期する項目を選びます。",
     syncBackendDescription: "追加の同期項目を選択します。",
     syncBackendBrowserSync: "ブラウザー標準のアカウント同期",
     syncBackendWebDavSync: "WebDAV 同期",
@@ -533,9 +532,9 @@ export const jaJP: LocaleMessages = {
     syncBackendPassword: "パスワードまたはアプリパスワード",
     syncBackendCopyConfig: "設定コードをコピー",
     syncBackendCopiedConfig: "設定コードをコピーしました",
-    syncProviders: "プロバイダーを同期",
+    syncProviders: "AI プロバイダーを同期",
     syncProvidersDescription:
-      "API キーを含むプロバイダー設定を現在の同期バックエンドで同期します。",
+      "API キーを含む AI プロバイダー設定を現在の同期バックエンドで同期します。",
     syncAgents: "エージェントを同期",
     syncAgentsDescription:
       "エージェントプロファイルとワークスペースファイルを現在の同期バックエンドで同期します。",
@@ -582,7 +581,7 @@ export const jaJP: LocaleMessages = {
     debugResetTargets: "データ種別",
     debugResetTargetAll: "すべて",
     debugResetTargetSettings: "設定",
-    debugResetTargetProviders: "プロバイダー",
+    debugResetTargetProviders: "AI プロバイダー",
     debugResetTargetAgents: "エージェント",
     debugResetTargetSkills: "スキル",
     debugResetTargetMcpServers: "MCP サーバー",
