@@ -19,7 +19,7 @@ import { defaultsBase, mergeFiles } from "./merge-content";
 type Item = Record<string, unknown>;
 type FileItem = Item & { path: string };
 
-export const isRecord = (value: unknown): value is Item =>
+const isRecord = (value: unknown): value is Item =>
   !!value && typeof value === "object" && !Array.isArray(value);
 
 // One part of each stored item. The owner part holds what makes an item
