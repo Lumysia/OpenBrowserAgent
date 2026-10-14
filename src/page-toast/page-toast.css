@@ -1,0 +1,51 @@
+/* Page notes, inside their shadow root. Tokens come from tokens.css with
+   :root mapped to .page-toast-theme, colors from applyTheme() on it, the
+   card from .page-surface like the smart bar. */
+.page-toast-theme {
+  color: var(--foreground);
+  font-size: var(--text-base);
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* Centered at the bottom, away from the page's own bars and menus at the
+   top; clicks go through to the page. */
+.page-toast-frame {
+  position: fixed;
+  right: 0;
+  bottom: var(--space-6);
+  left: 0;
+  z-index: 2147483647;
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--space-4);
+  pointer-events: none;
+}
+
+.page-toast {
+  --enter-y: 8px;
+  --enter-scale: 0.96;
+  --enter-blur: 1px;
+  --exit-y: 6px;
+  max-width: min(420px, 100%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 16px 10px 12px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  animation: enter var(--duration-base) var(--ease-out) backwards;
+}
+.page-toast[data-leaving] {
+  animation: exit var(--duration-fast) var(--ease-standard) both;
+}
+
+.page-toast-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--accent-text);
+}
+.page-toast[data-tone="error"] .page-toast-icon {
+  color: var(--destructive);
+}

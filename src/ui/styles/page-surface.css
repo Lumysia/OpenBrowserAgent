@@ -1,0 +1,10 @@
+/* Our surfaces floating over web pages (the smart bar, page notes): a
+   popover lifted well off the page, with a faint accent edge. */
+.page-surface {
+  border: 1px solid color-mix(in oklab, var(--accent-strong) 14%, var(--border));
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, var(--highlight), transparent 40%), var(--popover);
+  color: var(--foreground);
+  box-shadow: var(--elevation-4);
+}

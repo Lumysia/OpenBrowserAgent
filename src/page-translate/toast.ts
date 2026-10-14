@@ -1,6 +1,7 @@
-// A short note at the top of the page when translating runs into a problem.
+// A short note on the page when translating runs into a problem.
 // One at a time; "Show original" takes it away with the translations.
-import { showPageToast, type PageToastTheme } from "../shared/page-toast";
+import { showPageToast } from "../page-toast";
+import type { PageToastTheme } from "../shared/page-toast";
 import { PAGE_TRANSLATE_TOAST_MS } from "../shared/page-translate/protocol";
 import { TRANSLATION_ATTRIBUTE } from "./dom-rules";
 

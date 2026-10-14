@@ -36,16 +36,6 @@
   transform-origin: var(--origin-x, 50%) bottom;
 }
 
-.smart-bar-toolbar,
-.smart-bar-result {
-  border: 1px solid color-mix(in oklab, var(--accent-strong) 14%, var(--border));
-  border-radius: var(--radius);
-  background:
-    linear-gradient(180deg, var(--highlight), transparent 40%), var(--popover);
-  color: var(--foreground);
-  box-shadow: var(--elevation-4);
-}
-
 .smart-bar-toolbar {
   display: flex;
   align-items: center;

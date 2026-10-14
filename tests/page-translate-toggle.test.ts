@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { togglePageTranslation } from "../src/background/page-translate";
+import { PAGE_TOAST_SCRIPT } from "../src/shared/page-toast";
 import { PAGE_TRANSLATE_SCRIPT } from "../src/shared/page-translate/protocol";
 import { installBrowser } from "./helpers";
 
@@ -22,7 +23,8 @@ function installTab(scriptable: boolean) {
       }) => {
         if (!scriptable) throw new Error("Cannot access contents of the page");
         injected.push(details.files ?? details.args);
-        return [{ frameId: 0 }];
+        // The page note's script answers that it showed the note.
+        return [{ frameId: 0, result: true }];
       },
     },
     action: {
@@ -39,11 +41,13 @@ test("a page script that doesn't start says so on the page", async () => {
   const { injected, badges } = installTab(true);
   await togglePageTranslation({ id: 7 } as chrome.tabs.Tab);
   assert.deepEqual(injected[0], [PAGE_TRANSLATE_SCRIPT]);
-  const [message, , options] = injected[1] as [string, unknown, unknown];
+  assert.deepEqual(injected[1], [PAGE_TOAST_SCRIPT]);
+  const [, message, theme, options] = injected[2] as unknown[];
   assert.equal(
     message,
     "Couldn't start translating this page. Reload the page and try again.",
   );
+  assert.deepEqual(theme, { colorScheme: "system", accentColor: "pink" });
   assert.deepEqual(options, { tone: "error", durationMs: 8000 });
   assert.deepEqual(badges, []);
 });

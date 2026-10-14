@@ -129,7 +129,7 @@ export function SmartBarResultCard({
 
   return (
     <div
-      className="smart-bar-result"
+      className="smart-bar-result page-surface"
       role="region"
       aria-label={t.actions[result.action]}
     >

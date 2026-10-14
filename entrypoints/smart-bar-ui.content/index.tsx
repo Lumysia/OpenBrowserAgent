@@ -9,23 +9,16 @@ import type { SelectionSnapshot } from "../../src/smart-bar/selection";
 import { SmartBarApp } from "../../src/smart-bar/ui/smart-bar-app";
 import { createSmartBarStore } from "../../src/smart-bar/ui/store";
 import smartBarCss from "../../src/smart-bar/ui/smart-bar.css?inline";
+import { pageShadowCss } from "../../src/ui/page-shadow";
 import baseCss from "../../src/ui/styles/base.css?inline";
 import componentsCss from "../../src/ui/styles/components.css?inline";
-import motionCss from "../../src/ui/styles/motion.css?inline";
 import overlaysCss from "../../src/ui/styles/overlays.css?inline";
-import tokensCss from "../../src/ui/styles/tokens.css?inline";
 
-const CSS = [
-  // The page's styles stop at the host.
-  ":host { all: initial !important; }",
-  // The shadow root's own root element stands in for :root.
-  ...[tokensCss, motionCss, baseCss].map((css) =>
-    css.replaceAll(":root", ".smart-bar-theme"),
-  ),
-  componentsCss,
-  overlaysCss,
-  smartBarCss,
-].join("\n");
+const CSS = pageShadowCss(
+  "smart-bar-theme",
+  [baseCss],
+  [componentsCss, overlaysCss, smartBarCss],
+);
 
 // The smart bar's UI. The background injects it into a frame the first time
 // the bar shows there (see src/smart-bar/trigger.ts); never in the manifest.

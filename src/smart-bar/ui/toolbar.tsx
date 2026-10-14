@@ -78,7 +78,7 @@ export function SmartBarToolbar({
       ref={toolbarRef}
       role="toolbar"
       aria-label={t.barLabel}
-      className="smart-bar-toolbar"
+      className="smart-bar-toolbar page-surface"
       onKeyDown={onTrusted(moveFocus)}
     >
       {actions.map((action) => {
