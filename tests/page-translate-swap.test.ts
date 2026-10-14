@@ -1,15 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { parseHTML } from "linkedom";
+import { parsePage } from "./linkedom-page";
 import { walkParagraphs, type Paragraph } from "../src/page-translate/blocks";
 import { swapIn, swapOut } from "../src/page-translate/swap";
 
 // Translation-only display puts the translation into the page's own text
 // nodes and gives back exactly what the page had.
 function pageOf(html: string) {
-  const { document } = parseHTML(
-    `<!doctype html><html><body>${html}</body></html>`,
-  );
+  const { document } = parsePage(html);
   const paragraphs = () =>
     [...walkParagraphs(document.body)].filter(
       (paragraph): paragraph is Paragraph => !!paragraph,

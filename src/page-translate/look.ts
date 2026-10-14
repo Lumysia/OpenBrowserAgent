@@ -2,8 +2,10 @@
 // font and colour when it can't inherit them, the source's line clamp,
 // and whether the rule that sets it apart has room in the margin. Only
 // reads styles and boxes (see layout.ts).
-import { isHeading } from "./dom-rules";
-import { TRANSLATION_GAP, type Look } from "./render";
+import { HEADING_SELECTOR } from "../shared/dom-vocabulary";
+import { wordCount } from "../shared/text";
+import { MARK_OFFSET_PX, TRANSLATION_GAP, type Look } from "./render";
+import { clipsOverflow, hasBackground } from "./styles";
 
 // What layout.ts decides about the look; the form is decided separately.
 export type LookDetails = Omit<Look, "form">;
@@ -69,25 +71,14 @@ const CONTENT_MIN_WORDS = 4;
 
 export function isContent(text: string, clamp: Look["clamp"], block: Element) {
   if (clamp !== "ellipsis") return true;
-  if (block.closest("h1, h2, h3, h4, h5, h6") || isHeading(block)) return true;
+  if (block.closest(HEADING_SELECTOR)) return true;
   return wordCount(text) >= CONTENT_MIN_WORDS;
-}
-
-function wordCount(text: string) {
-  if (typeof Intl.Segmenter !== "function")
-    return text.split(/\s+/).filter(Boolean).length;
-  let count = 0;
-  for (const segment of new Intl.Segmenter(undefined, {
-    granularity: "word",
-  }).segment(text))
-    if (segment.isWordLike) count++;
-  return count;
 }
 
 // The rule goes in open margins only: not inside a box drawn on the page
 // (a card, a table cell, a coloured panel), where it would read as part of
-// the box, and only with this much room before the text.
-const MARK_ROOM_PX = 20;
+// the box, and only with room for it and as much again before the text.
+const MARK_ROOM_PX = 2 * MARK_OFFSET_PX;
 // A drawn box at least this share of the window's width is the page's own
 // background, not a box on the page.
 const PAGE_WIDTH_SHARE = 0.9;
@@ -153,14 +144,7 @@ function isDrawnBox(style: CSSStyleDeclaration, rtl: boolean) {
     hasBackground(style) ||
     parseFloat(start) > 0 ||
     style.boxShadow !== "none" ||
-    /hidden|clip/.test(style.overflowX)
-  );
-}
-
-export function hasBackground(style: CSSStyleDeclaration) {
-  return (
-    !/^(transparent|rgba\(.*,\s*0\))$/.test(style.backgroundColor) ||
-    style.backgroundImage !== "none"
+    clipsOverflow(style)
   );
 }
 

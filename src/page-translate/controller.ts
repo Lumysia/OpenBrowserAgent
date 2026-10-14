@@ -14,7 +14,8 @@ import {
   type PageTranslateEngine,
 } from "../shared/page-translate/settings";
 import { getBrowserApi } from "../shared/browser-api";
-import { stripPlaceholders } from "../shared/page-translate/placeholders";
+import { plainText } from "../shared/page-translate/placeholders";
+import { compact } from "../shared/text";
 import { addsLittle } from "./metadata";
 import { createPresenter } from "./presenter";
 import { createQueue, PRIORITY } from "./queue";
@@ -33,6 +34,8 @@ const MEMORY_ENTRIES = 2_000;
 // on screen (they report each new one once, in the next frame; a page that
 // gets no frames doesn't wait longer).
 const VISIBILITY_WAIT_MS = 250;
+// One frame: how long sending waits for the observers' reports.
+const FRAME_MS = 16;
 // A note for the same problem shows at most this often.
 const TOAST_INTERVAL_MS = 10_000;
 // Errors after which no more paragraphs are sent.
@@ -100,7 +103,8 @@ function startSession(onFatal: () => void) {
   const unreported = new Set<Element>();
   let waitingSince = 0;
 
-  const language = () => config?.targetLanguage || "en";
+  // Unknown until the session's settings arrive (nothing shows before).
+  const language = () => config?.targetLanguage ?? "";
   const root = document.body || document.documentElement;
 
   const units = createUnits(
@@ -213,7 +217,7 @@ function startSession(onFatal: () => void) {
     flushTimer = window.setTimeout(() => {
       flushTimer = undefined;
       flush();
-    }, 16);
+    }, FRAME_MS);
   }
 
   function flush() {
@@ -267,11 +271,10 @@ function startSession(onFatal: () => void) {
   function show(unit: Unit, translation: string) {
     unit.state = "done";
     // A translation that repeats its source adds nothing to show.
-    const plain = translation.replace(/\s+/g, " ").trim();
     const source = unit.paragraph.source;
     if (
-      plain === source.text ||
-      addsLittle(source.plain, stripPlaceholders(plain))
+      compact(translation) === source.text ||
+      addsLittle(source.plain, plainText(translation))
     ) {
       clear(unit);
       return;
@@ -341,7 +344,7 @@ function startSession(onFatal: () => void) {
         return;
       }
       case "done":
-        finishBatch(event.batch);
+        endBatch(event.batch, "failed");
         scheduleFlush();
         return;
       case "error":
@@ -354,13 +357,14 @@ function startSession(onFatal: () => void) {
     }
   }
 
-  // Paragraphs the batch didn't translate failed; their spinners and
-  // unfinished text go.
-  function finishBatch(batch: number) {
+  // The batch is over: paragraphs it didn't translate failed (their
+  // spinners and unfinished text go), or, when the connection closed, wait
+  // to be asked for again.
+  function endBatch(batch: number, outcome: "failed" | "idle") {
     for (const text of batches.get(batch)?.values() || []) {
       for (const unit of sent.get(text) || []) {
-        unit.state = "failed";
-        clear(unit);
+        unit.state = outcome;
+        if (outcome === "failed") clear(unit);
       }
       sent.delete(text);
     }
@@ -390,22 +394,13 @@ function startSession(onFatal: () => void) {
     port.onDisconnect.addListener(() => {
       port = undefined;
       config = undefined;
-      for (const batch of [...batches.keys()]) {
-        for (const text of batches.get(batch)?.values() || [])
-          for (const unit of sent.get(text) || []) unit.state = "idle";
-        finishBatchQuietly(batch);
-      }
+      for (const batch of [...batches.keys()]) endBatch(batch, "idle");
       // Paragraphs still on or near the screen are asked for again.
       for (const unit of units.units.values())
         if (unit.state === "idle" && (unit.near || smallPage)) enqueue(unit);
       if (queue.size) scheduleFlush();
     });
     port.postMessage(startRequest());
-  }
-
-  function finishBatchQuietly(batch: number) {
-    for (const text of batches.get(batch)?.values() || []) sent.delete(text);
-    batches.delete(batch);
   }
 
   const startRequest = (): PageTranslateRequest => ({

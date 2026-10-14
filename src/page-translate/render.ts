@@ -5,7 +5,7 @@
 // tooltip instead. The page's own nodes are left as they are (a tooltip's
 // title and a row's wrap mark are put back as they were); removing ours
 // restores the page.
-import { stripPlaceholders } from "../shared/page-translate/placeholders";
+import { plainText } from "../shared/page-translate/placeholders";
 import type { Paragraph } from "./blocks";
 import { TRANSLATION_ATTRIBUTE, TRANSLATION_TAG } from "./dom-rules";
 import { buildTranslation, originalOf } from "./serialize";
@@ -44,6 +44,11 @@ export type Look = {
 
 // The space between the source and a translation under it.
 export const TRANSLATION_GAP = "0.3em";
+// The rule before a block translation: its width, and its distance from the
+// text; it sits in the margin, this far before the text.
+const MARK_WIDTH_PX = 2;
+const MARK_GAP_PX = 8;
+export const MARK_OFFSET_PX = MARK_WIDTH_PX + MARK_GAP_PX;
 
 const PENDING = "data-oba-pending";
 const INLINE = "data-oba-inline";
@@ -73,9 +78,9 @@ ${TRANSLATION_TAG}[${TRANSLATION_ATTRIBUTE}] {
   user-select: text;
 }
 ${TRANSLATION_TAG}[${MARK}]:not([${INLINE}]) {
-  margin-inline-start: -10px;
-  padding-inline-start: 8px;
-  border-inline-start: 2px solid color-mix(in srgb, currentColor 24%, transparent);
+  margin-inline-start: -${MARK_OFFSET_PX}px;
+  padding-inline-start: ${MARK_GAP_PX}px;
+  border-inline-start: ${MARK_WIDTH_PX}px solid color-mix(in srgb, currentColor 24%, transparent);
 }
 ${TRANSLATION_TAG}[${CLAMP}]:not([${INLINE}]) {
   display: -webkit-box;
@@ -282,9 +287,6 @@ export function removeTranslation(element?: HTMLElement) {
   setWrap(element);
   element.remove();
 }
-
-const plainText = (translation: string) =>
-  stripPlaceholders(translation).replace(/\s+/g, " ").trim();
 
 // The translations shown as an element's tooltip: one per paragraph in it,
 // before the title the page gave it.

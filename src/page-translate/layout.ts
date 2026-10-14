@@ -5,11 +5,11 @@
 // form. Growing taller is fine. Only read here (styles and boxes); the
 // caller batches reads before writes.
 import type { Paragraph } from "./blocks";
-import { controlOf, isOwn, isTextBlock } from "./dom-rules";
+import { wordCount } from "../shared/text";
+import { ARTICLE_SELECTOR, controlOf, isOwn, isTextBlock } from "./dom-rules";
 import {
   clampOf,
   copiedText,
-  hasBackground,
   hasMarkRoom,
   isContent,
   spacingAfter,
@@ -17,6 +17,14 @@ import {
   type LookDetails,
 } from "./look";
 import { originalText } from "./originals";
+import {
+  clipsOverflow,
+  hasBackground,
+  HIDDEN_BOX_PX,
+  isHorizontalFlex,
+  isRow,
+  lineHeightOf,
+} from "./styles";
 
 // `block`: on its own line under the source. `inline`: on the same line,
 // after it. `tooltip`: shown on hover (the source's title). `hidden`: the
@@ -47,23 +55,12 @@ export type Placement = {
   look?: LookDetails;
 };
 
-export type AreaBox = {
-  width: number;
-  height: number;
-  container: number;
-  overflow: number;
-  // The widths of the box's children (rows with a few items only).
-  items: number[];
-};
-
 // Ancestors whose box is about the paragraph's own: their limits are the
 // paragraph's limits.
 const CLOSE_DEPTH = 3;
 const CLOSE_SLACK_PX = 8;
 // How far up the area and the clipping box are looked for.
 const AREA_DEPTH = 6;
-// Growth that counts as pushing a box.
-const TOLERANCE_PX = 4;
 
 const rank: Record<Form, number> = {
   block: 0,
@@ -104,8 +101,7 @@ function limitsOf(start: Element, view: Window): Limits {
     if (style.maxHeight !== "none") limits.boxed = element;
     if (/absolute|fixed/.test(style.position)) limits.placed = true;
     if (/^(nowrap|pre)$/.test(style.whiteSpace)) limits.nowrap = true;
-    if (/hidden|clip/.test(style.overflowX + style.overflowY))
-      limits.clips = true;
+    if (clipsOverflow(style)) limits.clips = true;
   }
   return limits;
 }
@@ -124,9 +120,12 @@ export function choosePlacement(
   // translation never goes into it (a tooltip when menus are translated).
   if (controlOf(block) || isDrawnControl(paragraph, view))
     return { form: translateMenus ? "tooltip" : "skip" };
+  // A note laid over the page (cookie and newsletter prompts) is chrome.
+  if (!translateMenus && isOverlay(block, view)) return { form: "skip" };
   const box = nodesBox(paragraph);
   // Visually hidden text (1px clip, off-screen skip links) stays as it is.
-  if (box.width < 2 || box.height < 2) return { form: "hidden" };
+  if (box.width < HIDDEN_BOX_PX || box.height < HIDDEN_BOX_PX)
+    return { form: "hidden" };
   let form: Form = paragraph.inline ? "inline" : "block";
   const own = limitsOf(block, view);
   // A clamped headline keeps its clamp; its translation goes after the
@@ -220,6 +219,29 @@ export function choosePlacement(
   return placement;
 }
 
+// A box fixed over the page, outside the article and covering part of the
+// window only: a whole-window box is the page's own frame (apps that scroll
+// their content in a fixed box).
+const OVERLAY_MAX_SHARE = 0.5;
+
+function isOverlay(block: Element, view: Window) {
+  const body = block.ownerDocument.body;
+  for (
+    let element: Element | null = block;
+    element && element !== body;
+    element = element.parentElement
+  ) {
+    if (element.matches(ARTICLE_SELECTOR)) return false;
+    if (view.getComputedStyle(element).position !== "fixed") continue;
+    const box = element.getBoundingClientRect();
+    return (
+      box.width * box.height <
+      view.innerWidth * view.innerHeight * OVERLAY_MAX_SHARE
+    );
+  }
+  return false;
+}
+
 // The source's link, when the translation is outside it: clicking the
 // translation follows it, without the translation being a second link.
 function linkOf(block: Element, anchor: Element) {
@@ -236,8 +258,7 @@ function wrapsAlone(
   style: CSSStyleDeclaration,
   anchor: Element | undefined,
 ) {
-  if (!/flex/.test(style.display) || style.flexDirection.startsWith("column"))
-    return false;
+  if (!isHorizontalFlex(style)) return false;
   const source = new Set<Node>(anchor ? [anchor] : paragraph.nodes);
   const items = Array.from(host.childNodes).filter(
     (node) =>
@@ -284,8 +305,7 @@ function ownForm(host: Element, style: CSSStyleDeclaration): Form {
   if (/^inline/.test(style.display) || style.display === "contents")
     return "inline";
   // Our element would be a new item next to the paragraph's text.
-  if (/flex/.test(style.display) && !style.flexDirection.startsWith("column"))
-    return "inline";
+  if (isHorizontalFlex(style)) return "inline";
   return "block";
 }
 
@@ -300,8 +320,7 @@ function isDrawnControl(paragraph: Paragraph, view: Window) {
   const link = paragraph.parent.closest("a[href]");
   if (!link) return false;
   const text = paragraph.source.plain;
-  if (text.split(" ").length > LABEL_MAX_WORDS || /[.!?:]$/.test(text))
-    return false;
+  if (wordCount(text) > LABEL_MAX_WORDS || /[.!?:]$/.test(text)) return false;
   const style = view.getComputedStyle(link);
   const painted =
     hasBackground(style) ||
@@ -309,17 +328,9 @@ function isDrawnControl(paragraph: Paragraph, view: Window) {
       style.borderTopStyle !== "none" &&
       parseFloat(style.borderBottomWidth) > 0);
   if (!painted) return false;
-  const line =
-    parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.2 || 20;
-  return link.getBoundingClientRect().height <= line * CONTROL_MAX_LINES;
-}
-
-function isRow(style: CSSStyleDeclaration) {
-  if (/flex/.test(style.display))
-    return !style.flexDirection.startsWith("column");
   return (
-    /grid/.test(style.display) &&
-    style.gridTemplateColumns.trim().split(/\s+/).length > 1
+    link.getBoundingClientRect().height <=
+    lineHeightOf(style) * CONTROL_MAX_LINES
   );
 }
 
@@ -339,8 +350,7 @@ function areaOf(start: Element, view: Window) {
       !/table-/.test(style.display)
     )
       area = element;
-    if (!clip && /hidden|clip/.test(style.overflowX + style.overflowY))
-      clip = element;
+    if (!clip && clipsOverflow(style)) clip = element;
   }
   return { area, clip };
 }
@@ -380,7 +390,7 @@ function insideTinyBox(node: Text, block: Element) {
     // No boxes: `display: contents`, nothing to measure.
     if (!element.getClientRects().length) continue;
     const box = element.getBoundingClientRect();
-    if (box.width < 2 || box.height < 2) return true;
+    if (box.width < HIDDEN_BOX_PX || box.height < HIDDEN_BOX_PX) return true;
     if (isScreenReaderOnly(element)) return true;
   }
   return false;
@@ -395,97 +405,4 @@ function isScreenReaderOnly(element: Element) {
   return (
     style.opacity === "0" || /^(circle\(0(px)?|inset\(50%)/.test(style.clipPath)
   );
-}
-
-// Rows with more items than this aren't checked item by item.
-const MAX_ITEMS = 24;
-
-export function measureArea(area: Element): AreaBox {
-  const box = area.getBoundingClientRect();
-  // Our own elements aren't items of the page's row.
-  const children = Array.from(area.children).filter((child) => !isOwn(child));
-  return {
-    width: box.width,
-    height: box.height,
-    container: area.parentElement?.clientWidth ?? Infinity,
-    overflow: area.scrollWidth - area.clientWidth,
-    items:
-      children.length > MAX_ITEMS
-        ? []
-        : children.map((child) => child.getBoundingClientRect().width),
-  };
-}
-
-// The boxes a placement is checked against.
-export function boxesOf(placement: Placement) {
-  return [placement.area, placement.row].filter(
-    (element): element is Element => !!element,
-  );
-}
-
-// How a translation broke the page: `self` (it sticks out of the element it
-// is in or of a box that cuts it off, pushed the other items of its row, or
-// scrolls the page sideways), `area` (its table or row got wider than the
-// room it has) or `line` (an inline translation in a row item wrapped onto
-// more lines: it reads better on a line of its own). Growing taller isn't
-// breaking.
-export type Breakage = "self" | "area" | "line" | undefined;
-
-export function breaksLayout(
-  element: Element,
-  placement: Placement,
-  before: Map<Element, AreaBox>,
-  pageGrew: boolean,
-): Breakage {
-  const box = element.getBoundingClientRect();
-  if (!box.width && !box.height) return undefined;
-  // The rule sits in the margin, outside the text's edge.
-  const view = element.ownerDocument.defaultView!;
-  const style = view.getComputedStyle(element);
-  const start = -Math.min(0, parseFloat(style.marginInlineStart) || 0);
-  const rtl = style.direction === "rtl";
-  const outside = (limit: DOMRect) =>
-    box.bottom > limit.bottom + 1 ||
-    box.right > limit.right + 1 + (rtl ? start : 0) ||
-    box.left < limit.left - 1 - (rtl ? 0 : start);
-  if (placement.host && outside(placement.host.getBoundingClientRect()))
-    return "self";
-  if (placement.clip && outside(placement.clip.getBoundingClientRect()))
-    return "self";
-  const row = placement.row && before.get(placement.row);
-  if (row) {
-    if (
-      placement.form === "inline" &&
-      placement.host &&
-      placement.host.getBoundingClientRect().height >
-        (placement.height ?? Infinity) + TOLERANCE_PX
-    )
-      return "line";
-    const now = measureArea(placement.row!);
-    const own = Array.from(placement.row!.children)
-      .filter((child) => !isOwn(child))
-      .findIndex((child) => child.contains(element));
-    if (
-      row.items.some(
-        (width, index) =>
-          index !== own &&
-          Math.abs((now.items[index] ?? width) - width) > TOLERANCE_PX,
-      )
-    )
-      return "self";
-  }
-  const area = placement.area && before.get(placement.area);
-  if (area) {
-    // Wider than the room it has now: a box that grows with its content
-    // (a shrink-to-fit heading row) isn't overflowing.
-    const now = measureArea(placement.area!);
-    if (
-      (now.width > area.width + TOLERANCE_PX &&
-        now.width > now.container + 1) ||
-      now.overflow > area.overflow + TOLERANCE_PX
-    )
-      return "area";
-  }
-  const page = element.ownerDocument.documentElement;
-  return pageGrew && box.right > page.clientWidth + 1 ? "self" : undefined;
 }

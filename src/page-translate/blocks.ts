@@ -11,9 +11,11 @@ import {
   isSkipped,
   isTextBlock,
 } from "./dom-rules";
+import { wordCount } from "../shared/text";
 import { metadataOf } from "./metadata";
 import { originalContent, originalText } from "./originals";
 import { serializeNodes, type Serialized } from "./serialize";
+import { isCodeView } from "./styles";
 
 export type Paragraph = {
   // The nodes are consecutive children of `parent`.
@@ -130,22 +132,18 @@ function makeParagraph(
     );
   const source = serializeNodes(trimmed);
   if (!isTranslatableText(source.plain)) return undefined;
+  // Code views drawn without code elements.
+  if (isCodeView(parent)) return undefined;
   // The element the translation goes into.
   const host = wrapper?.parentElement ?? parent;
-  // Dates, numbers, names and bylines stay; headings are always text, and
-  // so are the labels of menus and buttons (when they are translated):
-  // "Home" there is a word, not a name.
-  const language = parent.closest("[lang]")?.getAttribute("lang");
-  const metadata =
-    !isHeading(parent) &&
-    !isHeading(host) &&
-    metadataOf(source.plain, language || undefined);
-  // A row of short links (tags, a menu written as links) is labels too.
-  // So is a link that is one lowercase word ("reply", "login"): an action.
-  const action = wrapper?.matches("a[href]") && /^\p{Ll}+$/u.test(source.plain);
-  const labels = metadata || ((action || isLinkRow(trimmed)) && "name");
-  if (labels && (labels !== "name" || !isInsideChrome(parent)))
-    return undefined;
+  if (!isHeading(parent) && !isHeading(host)) {
+    const labels = labelsOf(parent, trimmed, source.plain, wrapper);
+    // Dates, numbers, names and bylines stay; so do labels of menus and
+    // buttons, unless those are translated: "Home" there is a word, not a
+    // name. Headings are always text.
+    if (labels && (labels !== "name" || !isInsideChrome(parent)))
+      return undefined;
+  }
   return {
     parent,
     nodes: trimmed,
@@ -155,6 +153,94 @@ function makeParagraph(
     source,
     wrapper,
   };
+}
+
+// What kind of label the paragraph is, if it is one (see metadata.ts): the
+// page's markup says whether the text is set apart as a label.
+function labelsOf(
+  parent: Element,
+  nodes: Node[],
+  text: string,
+  wrapper: Element | undefined,
+) {
+  const metadata = metadataOf(text, {
+    language: parent.closest("[lang]")?.getAttribute("lang") || undefined,
+    label:
+      !!(wrapper ?? parent).closest("a[href]") ||
+      mostlyLinks(nodes) ||
+      !!parent.closest(CITATION_SELECTOR) ||
+      inDateRow(parent),
+  });
+  if (metadata) return metadata;
+  // A link that is one lowercase word ("reply", "login") is an action; a
+  // row of short links (tags, a menu written as links) is labels, and so is
+  // a short word joining links ("and" between two authors).
+  const action = !!wrapper?.matches("a[href]") && /^\p{Ll}+$/u.test(text);
+  if (action || isLinkRow(nodes) || isJoint(nodes, wrapper, text))
+    return "name";
+  return undefined;
+}
+
+// Most of the letters are link text ("By <a>Ann Lee</a> and <a>Bo Chan</a>").
+function mostlyLinks(nodes: Node[]) {
+  let linked = 0;
+  let all = 0;
+  const letters = (node: Node) =>
+    originalContent(node).match(/\p{L}/gu)?.length ?? 0;
+  for (const node of nodes) {
+    const count = letters(node);
+    all += count;
+    if (node.nodeType !== 1) continue;
+    const element = node as Element;
+    if (element.matches("a[href]")) linked += count;
+    else
+      element
+        .querySelectorAll("a[href]")
+        .forEach((link) => (linked += letters(link)));
+  }
+  return all > 0 && linked * 2 >= all;
+}
+
+// Elements that name a work, its author or contact.
+const CITATION_SELECTOR = "address, cite, [rel~=author], [itemprop~=author]";
+// A short line holding a date (a byline, a source and a time): at most this
+// many words in all, and this many levels up from the text.
+const DATE_ROW_MAX_WORDS = 12;
+const DATE_ROW_DEPTH = 3;
+
+function inDateRow(parent: Element) {
+  let row: Element | null = parent;
+  for (let depth = 0; row && depth < DATE_ROW_DEPTH; depth++) {
+    if (row.querySelector("time, [datetime]"))
+      return wordCount(originalContent(row)) <= DATE_ROW_MAX_WORDS;
+    row = row.parentElement;
+  }
+  return false;
+}
+
+// A joining word: a word of up to this many letters between two links.
+const JOINT_MAX_LETTERS = 3;
+
+function isJoint(nodes: Node[], wrapper: Element | undefined, text: string) {
+  if (wordCount(text) !== 1 || text.length > JOINT_MAX_LETTERS) return false;
+  const linked = (node: Node | null) =>
+    node?.nodeType === 1 &&
+    ((node as Element).matches("a[href]") ||
+      !!(node as Element).querySelector("a[href]"));
+  const first = wrapper ?? nodes[0];
+  const last = wrapper ?? nodes[nodes.length - 1];
+  return (
+    linked(siblingOf(first, "previousSibling")) &&
+    linked(siblingOf(last, "nextSibling"))
+  );
+}
+
+// The nearest sibling that isn't blank text.
+function siblingOf(node: Node, side: "previousSibling" | "nextSibling") {
+  let sibling = node[side];
+  while (sibling?.nodeType === 3 && !originalText(sibling as Text).trim())
+    sibling = sibling[side];
+  return sibling;
 }
 
 // Two or more links, each a short label, with nothing but spaces and
@@ -176,7 +262,7 @@ function isLinkRow(nodes: Node[]) {
       : element.querySelector("a[href]");
     const text = originalContent(element).trim();
     if (!link || originalContent(link).trim() !== text) return false;
-    if (text.split(/\s+/).length > LINK_LABEL_WORDS) return false;
+    if (wordCount(text) > LINK_LABEL_WORDS) return false;
     links++;
   }
   return links > 1;
@@ -187,20 +273,19 @@ function isLinkRow(nodes: Node[]) {
 // it. In paragraphs, headings and list items a break is part of the text
 // (verse, an address) and the text is translated whole.
 function splitsLines(parent: Element, element: Element) {
-  return element.tagName.toUpperCase() === "BR" && !isTextBlock(parent);
+  return element.localName === "br" && !isTextBlock(parent);
 }
 
 // Leading and trailing blank text, line breaks, elements that don't show
 // (page metadata) and decorative content (icons, a hidden tooltip after a
 // button) aren't part of the paragraph.
-const EDGE_TAGS = new Set(["BR", "LINK", "META"]);
 
 function trimRun(nodes: Node[]) {
   const blank = (node: Node) =>
     node.nodeType === 3
       ? !originalText(node as Text).trim()
       : node.nodeType !== 1 ||
-        EDGE_TAGS.has((node as Element).tagName.toUpperCase()) ||
+        (node as Element).localName === "br" ||
         isDecorative(node as Element);
   let start = 0;
   let end = nodes.length;

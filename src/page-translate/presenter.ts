@@ -2,15 +2,8 @@
 // setting and the room the page gives it. Changes wait for the next frame
 // and go in together: the page's layout is read once before them and once
 // after, never between two changes.
-import {
-  boxesOf,
-  breaksLayout,
-  choosePlacement,
-  measureArea,
-  tighter,
-  type AreaBox,
-  type Form,
-} from "./layout";
+import { boxesOf, breaksLayout, measureArea, type AreaBox } from "./breakage";
+import { choosePlacement, tighter, type Form } from "./layout";
 import {
   removeTooltip,
   removeTranslation,

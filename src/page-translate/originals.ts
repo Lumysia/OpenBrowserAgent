@@ -27,12 +27,6 @@ export function forgetSwapped(node: Text) {
   if (swapped.delete(node)) count--;
 }
 
-// Whether the node holds our text (not text the page wrote since).
-export function isSwapped(node: Node) {
-  const entry = swapped.get(node as Text);
-  return !!entry && (node as Text).data === entry.ours;
-}
-
 // The text the page has in the node.
 export function originalText(node: Text) {
   if (!count) return node.data;
