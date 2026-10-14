@@ -1,4 +1,5 @@
 import { storage } from "../src/shared/storage";
+import { runStorageMigrations } from "../src/shared/storage-migrations";
 import { handleDescribeRunMessage } from "../src/background/run-chat";
 import { handleProviderTestMessage } from "../src/background/provider-test";
 import { handleLocalExecutionBridgeRuntimeMessage } from "../src/background/local-execution-bridge-tools";
@@ -41,6 +42,8 @@ export default defineBackground(() => {
   chrome.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === "update")
       storage.shouldShowUpdateToast.set(true).catch(console.warn);
+    if (reason === "install" || reason === "update")
+      runStorageMigrations(reason === "install").catch(console.warn);
   });
 
   chrome.runtime.onMessage.addListener(

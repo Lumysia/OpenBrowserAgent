@@ -432,9 +432,10 @@ export const enUS = {
     deleteMcpServer: "Delete MCP server",
     resetDefaults: "Reset defaults",
     resetBuiltins: "Reset built-ins",
-    resetDefaultMcpServers: "Reset default MCP servers",
-    resetDefaultMcpServersDescription:
-      "Restores the built-in MCP servers and removes custom ones.",
+    mcpPresets: "Recommended servers",
+    mcpPresetsDescription:
+      "Hosted search servers that work without an API key. Each sends your searches to its own service. An added server stays off until you test it.",
+    mcpPresetAdd: "Add",
     selectModel: "Select model",
     selectModelDescription:
       "Choose the main chat model. Agents work best with models that support tool calls.",

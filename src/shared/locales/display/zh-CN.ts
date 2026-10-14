@@ -14,7 +14,7 @@ export const displayZhCN: DisplayMessages = {
     gemini: "Gemini 兼容",
     ollama: "Ollama 兼容",
   },
-  builtinMcpServers: {
+  mcpServerPresets: {
     exa: "网页搜索和网页内容提取。",
     parallel: "带摘录的网页搜索和网页抓取。",
     tinyfish: "网页和新闻搜索。",

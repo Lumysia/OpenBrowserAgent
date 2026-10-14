@@ -42,8 +42,8 @@ function keepFields(stored: Fields, shown: Fields, next: Fields) {
 
 const ID_FIELDS = Object.keys(READ_KEYS);
 
-// The same rules item by item: an item filled in on read (a built-in MCP
-// server or agent) that the change left alone is not stored, and an item
+// The same rules item by item: an item filled in on read (a built-in
+// agent) that the change left alone is not stored, and an item
 // dropped on read (a kind a newer version added) stays. Where the change
 // reordered the items it was shown, the order is its edit: every item it
 // holds is stored. A stored item is the shown item reading named as it did

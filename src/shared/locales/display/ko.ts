@@ -14,7 +14,7 @@ export const displayKo: DisplayMessages = {
     gemini: "Gemini 호환",
     ollama: "Ollama 호환",
   },
-  builtinMcpServers: {
+  mcpServerPresets: {
     exa: "웹 검색과 웹페이지 내용 추출.",
     parallel: "발췌문이 포함된 웹 검색과 웹페이지 가져오기.",
     tinyfish: "웹 및 뉴스 검색.",

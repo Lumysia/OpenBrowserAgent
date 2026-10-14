@@ -1,5 +1,7 @@
 import { nanoid } from "nanoid";
+import { findMcpServerPreset } from "./mcp-presets";
 import { readId } from "./read-ids";
+import { finiteNumber, isRecord, trimmedString } from "./values";
 
 export type McpServerConfig = {
   id: string;
@@ -25,58 +27,12 @@ export type McpToolConfig = {
   enabled: boolean;
 };
 
-// Hosted search servers that work without an API key (the same backends
-// OpenCode uses for its web search). Off until the user turns one on, since
-// each sends queries to a third party. A key raises the free rate limit.
-export const BUILTIN_MCP_SERVERS: McpServerConfig[] = [
-  builtinMcpServer(
-    "exa",
-    "https://mcp.exa.ai/mcp",
-    "Web search and webpage content extraction.",
-  ),
-  builtinMcpServer(
-    "parallel",
-    "https://search.parallel.ai/mcp",
-    "Web search with excerpts, and webpage fetching.",
-  ),
-  builtinMcpServer(
-    "tinyfish",
-    "https://agent.tinyfish.ai/mcp",
-    "Web and news search.",
-    // Without a key, the server needs this header to allow keyless use.
-    { "X-TinyFish-Access-Mode": "keyless" },
-    // It rejects any request that carries an Origin header.
-    { omitOrigin: true },
-  ),
-  builtinMcpServer(
-    "firecrawl",
-    "https://mcp.firecrawl.dev/v2/mcp",
-    "Web search, webpage scraping and document parsing. Low free rate limit.",
-  ),
-];
+// Stored for a server saved without a name.
+export const MCP_SERVER_FALLBACK_NAME = "MCP Server";
 
-function builtinMcpServer(
-  name: string,
-  url: string,
-  description: string,
-  headers: Record<string, string> = {},
-  options: { omitOrigin?: boolean } = {},
+export function createMcpServerDraft(
+  name = MCP_SERVER_FALLBACK_NAME,
 ): McpServerConfig {
-  return {
-    id: `builtin_${name}`,
-    name,
-    description,
-    url,
-    enabled: false,
-    headers,
-    omitOrigin: options.omitOrigin === true,
-    tools: [],
-    createdAt: 0,
-    updatedAt: 0,
-  };
-}
-
-export function createMcpServerDraft(name = "MCP Server"): McpServerConfig {
   const now = Date.now();
   return {
     id: `mcp_${nanoid(8)}`,
@@ -92,12 +48,11 @@ export function createMcpServerDraft(name = "MCP Server"): McpServerConfig {
 }
 
 export function normalizeMcpServers(value: unknown): McpServerConfig[] {
-  const normalized = Array.isArray(value)
+  return Array.isArray(value)
     ? value
         .map((item, index) => normalizeMcpServer(item, index))
         .filter((item): item is McpServerConfig => !!item)
     : [];
-  return mergeBuiltinMcpServers(normalized);
 }
 
 // `index`: its place in the stored list, which names it when it has no id;
@@ -106,50 +61,79 @@ export function normalizeMcpServer(
   value: unknown,
   index?: number,
 ): McpServerConfig | null {
-  if (!value || typeof value !== "object") return null;
-  const item = value as Record<string, unknown>;
+  if (!isRecord(value)) return null;
+  const item = value;
   const id =
     index === undefined
-      ? stringValue(item.id) || `mcp_${nanoid(8)}`
+      ? trimmedString(item.id) || `mcp_${nanoid(8)}`
       : readId(value, index);
-  const now = Date.now();
+  const createdAt = finiteNumber(item.createdAt, 0);
   return {
     id,
-    name: stringValue(item.name) || "MCP Server",
-    description: stringValue(item.description),
-    url: stringValue(item.url),
+    name: trimmedString(item.name) || MCP_SERVER_FALLBACK_NAME,
+    description: trimmedString(item.description),
+    url: trimmedString(item.url),
     enabled: item.enabled === true && isMcpServerTested(item),
     headers: normalizeHeaders(item.headers),
+    // A preset stored before the field existed keeps the preset's setting.
     omitOrigin:
       typeof item.omitOrigin === "boolean"
         ? item.omitOrigin
-        : builtinOmitOrigin(id),
+        : findMcpServerPreset(id)?.omitOrigin === true,
     tools: normalizeMcpTools(item.tools),
-    testedAt: numberValue(item.testedAt),
-    lastTestError: stringValue(item.lastTestError),
-    createdAt: numberValue(item.createdAt) || now,
-    updatedAt: numberValue(item.updatedAt) || now,
+    testedAt: finiteNumber(item.testedAt),
+    lastTestError: trimmedString(item.lastTestError),
+    createdAt,
+    updatedAt: finiteNumber(item.updatedAt, createdAt),
   };
 }
 
-// Built-ins can be turned off but not deleted: settings always add them back.
-export function isBuiltinMcpServer(id: string) {
-  return BUILTIN_MCP_SERVERS.some((server) => server.id === id);
-}
-
-// A built-in stored before the field existed keeps the built-in's setting.
-function builtinOmitOrigin(id: string) {
-  return BUILTIN_MCP_SERVERS.some(
-    (server) => server.id === id && server.omitOrigin,
-  );
-}
-
 export function isMcpServerTested(value: unknown) {
-  if (!value || typeof value !== "object") return false;
-  const item = value as Record<string, unknown>;
+  if (!isRecord(value)) return false;
   return (
-    !!numberValue(item.testedAt) && normalizeMcpTools(item.tools).length > 0
+    !!finiteNumber(value.testedAt) && normalizeMcpTools(value.tools).length > 0
   );
+}
+
+// What decides how the server is reached; changing any needs a new test.
+const MCP_CONNECTION_KEYS = ["url", "headers", "omitOrigin"] as const;
+
+export function mcpNeedsRetest(patch: Partial<McpServerConfig>) {
+  return MCP_CONNECTION_KEYS.some((key) => key in patch);
+}
+
+// A server that has to be tested (again) before it can be turned on.
+export function mcpUntestedPatch(lastTestError = "") {
+  return {
+    enabled: false,
+    tools: [],
+    testedAt: undefined,
+    lastTestError,
+  } satisfies Partial<McpServerConfig>;
+}
+
+// A server whose test listed `tools`: on, with each tool's earlier choice.
+export function mcpTestedPatch(
+  server: Pick<McpServerConfig, "tools">,
+  tools: McpToolConfig[],
+) {
+  return {
+    enabled: true,
+    tools: mergeMcpTools(server.tools || [], tools),
+    testedAt: Date.now(),
+    lastTestError: "",
+  } satisfies Partial<McpServerConfig>;
+}
+
+// Newly listed tools, keeping whether the user had each one on.
+function mergeMcpTools(existing: McpToolConfig[], next: McpToolConfig[]) {
+  const enabledByName = new Map(
+    existing.map((tool) => [tool.name, tool.enabled]),
+  );
+  return next.map((tool) => ({
+    ...tool,
+    enabled: enabledByName.get(tool.name) ?? tool.enabled,
+  }));
 }
 
 export function normalizeMcpTools(value: unknown): McpToolConfig[] {
@@ -157,11 +141,11 @@ export function normalizeMcpTools(value: unknown): McpToolConfig[] {
   const tools: McpToolConfig[] = [];
   for (const item of value) {
     if (!isRecord(item)) continue;
-    const name = stringValue(item.name);
+    const name = trimmedString(item.name);
     if (!name) continue;
     tools.push({
       name,
-      description: stringValue(item.description),
+      description: trimmedString(item.description),
       inputSchema: isRecord(item.inputSchema) ? item.inputSchema : undefined,
       enabled: item.enabled !== false,
     });
@@ -170,10 +154,10 @@ export function normalizeMcpTools(value: unknown): McpToolConfig[] {
 }
 
 export function normalizeHeaders(value: unknown): Record<string, string> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  if (!isRecord(value)) return {};
   return Object.fromEntries(
-    Object.entries(value as Record<string, unknown>)
-      .map(([key, headerValue]) => [key.trim(), stringValue(headerValue)])
+    Object.entries(value)
+      .map(([key, headerValue]) => [key.trim(), trimmedString(headerValue)])
       .filter(([key, headerValue]) => key && headerValue),
   );
 }
@@ -213,20 +197,22 @@ function collectMcpServerCandidates(value: unknown): Array<{
     return objectEntries(object.context_servers);
   if (Array.isArray(object.remotes))
     return object.remotes.map((item) => ({
-      name: stringValue(object.title || object.name),
+      name: trimmedString(object.title || object.name),
       value: item,
     }));
   if (object.url)
-    return [{ name: stringValue(object.name || object.title), value: object }];
+    return [
+      { name: trimmedString(object.name || object.title), value: object },
+    ];
   return objectEntries(object).filter(({ value: item }) => isRecord(item));
 }
 
 function normalizeImportedMcpServer(name: string | undefined, value: unknown) {
   if (!isRecord(value)) return null;
-  const type = stringValue(value.type || value.transport).toLowerCase();
+  const type = trimmedString(value.type || value.transport).toLowerCase();
   if (type && !["http", "streamable-http", "streamablehttp"].includes(type))
     return null;
-  const url = stringValue(value.url);
+  const url = trimmedString(value.url);
   if (!/^https?:\/\//i.test(url)) return null;
   const headers = normalizeHeaders(
     value.headers ||
@@ -240,39 +226,12 @@ function normalizeImportedMcpServer(name: string | undefined, value: unknown) {
     url,
     enabled: value.disabled === true ? false : value.enabled,
     headers,
+    createdAt: Date.now(),
   });
-}
-
-// As reading them gives them: a save that leaves one alone does not change it.
-const BUILTINS = BUILTIN_MCP_SERVERS.map((server) =>
-  normalizeMcpServer(server)!,
-);
-
-// A built-in the list lacks goes after the built-in before it (else before
-// the first stored built-in, else first), so a list that stores only some of
-// them reads back in the order it was shown in. Saves leave built-ins the
-// user did not change unstored (see keepStoredForm).
-function mergeBuiltinMcpServers(servers: McpServerConfig[]) {
-  const result = [...servers];
-  let index = -1;
-  for (const builtin of BUILTINS) {
-    const at = result.findIndex((server) => server.id === builtin.id);
-    if (at >= 0) index = at;
-    else if (index >= 0) result.splice(++index, 0, builtin);
-  }
-  const ids = new Set(result.map((server) => server.id));
-  const leading = BUILTINS.filter((builtin) => !ids.has(builtin.id));
-  const first = result.findIndex((server) => isBuiltinMcpServer(server.id));
-  result.splice(Math.max(first, 0), 0, ...leading);
-  return result;
 }
 
 function objectEntries(value: Record<string, unknown>) {
   return Object.entries(value).map(([name, item]) => ({ name, value: item }));
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
 function stripJsonComments(value: string) {
@@ -280,13 +239,4 @@ function stripJsonComments(value: string) {
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .replace(/^\s*\/\/.*$/gm, "")
     .replace(/,\s*([}\]])/g, "$1");
-}
-
-function stringValue(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function numberValue(value: unknown) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : undefined;
 }

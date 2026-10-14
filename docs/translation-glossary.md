@@ -21,50 +21,52 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 
 ## Core terms
 
-| English                        | 简体中文           | 繁體中文           | 日本語                  | 한국어           |
-| ------------------------------ | ------------------ | ------------------ | ----------------------- | ---------------- |
-| chat                           | 对话               | 對話               | チャット                | 채팅             |
-| chat history                   | 对话历史           | 對話紀錄           | チャット履歴            | 채팅 기록        |
-| agent                          | 智能体             | 智慧體             | エージェント            | 에이전트         |
-| sub-agent                      | 子智能体           | 子智慧體           | サブエージェント        | 하위 에이전트    |
-| Browse / Ask (built-in agents) | 浏览 / 询问        | 瀏覽 / 詢問        | ブラウズ / 質問         | 탐색 / 질문      |
-| …-compatible (provider type)   | … 兼容             | … 相容             | … 互換                  | … 호환           |
-| side panel                     | 侧边栏             | 側邊欄             | サイドパネル            | 사이드 패널      |
-| smart bar                      | 智能工具栏         | 智慧工具列         | スマートバー            | 스마트 바        |
-| model                          | 模型               | 模型               | モデル                  | 모델             |
-| helper model                   | 辅助模型           | 輔助模型           | 補助モデル              | 보조 모델        |
-| AI provider                    | AI 提供商          | AI 提供者          | AI プロバイダー         | AI 제공업체      |
-| API key                        | API Key            | API Key            | API キー                | API 키           |
-| base URL                       | Base URL           | Base URL           | ベース URL              | Base URL         |
-| skill                          | 技能               | 技能               | スキル                  | 스킬             |
-| tool                           | 工具               | 工具               | ツール                  | 도구             |
-| MCP server                     | MCP 服务器         | MCP 伺服器         | MCP サーバー            | MCP 서버         |
-| request header                 | 请求头             | 請求標頭           | ヘッダー                | 헤더             |
-| local execution bridge         | 本地执行桥         | 本機執行橋         | ローカル実行ブリッジ    | 로컬 실행 브리지 |
-| workspace                      | 工作区             | 工作區             | ワークスペース          | 워크스페이스     |
-| memory                         | 记忆               | 記憶               | メモリ                  | 메모리           |
-| sync                           | 同步               | 同步               | 同期                    | 동기화           |
-| attachment                     | 附件               | 附件               | 添付ファイル            | 첨부 파일        |
-| device (a synced browser)      | 设备               | 裝置               | デバイス                | 기기             |
-| sync passphrase                | 同步口令           | 同步密語           | 同期パスフレーズ        | 동기화 암호 문구 |
-| Keys (sync group)              | 密钥               | 金鑰               | キー                    | 키               |
-| Files (sync group)             | 文件               | 檔案               | ファイル                | 파일             |
-| screenshot                     | 截图               | 截圖               | スクリーンショット      | 스크린샷         |
-| fork (a chat)                  | 分叉               | 分叉               | 分岐                    | 분기             |
-| built-in                       | 内置               | 內建               | 組み込み                | 내장             |
-| customize (a built-in skill)   | 自定义             | 自訂               | カスタマイズ            | 사용자 지정      |
-| skill use: Auto / Manual / Off | 自动 / 手动 / 关闭 | 自動 / 手動 / 關閉 | 自動 / 手動 / オフ      | 자동 / 수동 / 끔 |
-| footnote                       | 脚注               | 註腳               | 脚注                    | 각주             |
-| load (an image from an answer) | 加载               | 載入               | 読み込む                | 불러오기         |
-| restore (deleted synced items) | 恢复               | 還原               | 復元                    | 복원             |
-| merge (synced changes)         | 合并               | 合併               | 統合                    | 병합             |
-| browser profile                | 浏览器配置文件     | 瀏覽器設定檔       | ブラウザー プロファイル | 브라우저 프로필  |
-| voice (reading aloud)          | 语音               | 語音               | 音声                    | 음성             |
-| code (the agent runs)          | 代码               | 程式碼             | コード                  | 코드             |
-| sandbox (where code runs)      | 沙盒               | 沙盒               | サンドボックス          | 샌드박스         |
-| output limit (of a model)      | 输出上限           | 輸出上限           | 出力の上限              | 출력 한도        |
-| Continue (a cut-off response)  | 继续               | 繼續               | 続ける                  | 계속하기         |
-| diagram (Mermaid)              | 图表               | 圖表               | 図                      | 다이어그램       |
+| English                        | 简体中文           | 繁體中文           | 日本語                         | 한국어                 |
+| ------------------------------ | ------------------ | ------------------ | ------------------------------ | ---------------------- |
+| chat                           | 对话               | 對話               | チャット                       | 채팅                   |
+| chat history                   | 对话历史           | 對話紀錄           | チャット履歴                   | 채팅 기록              |
+| agent                          | 智能体             | 智慧體             | エージェント                   | 에이전트               |
+| sub-agent                      | 子智能体           | 子智慧體           | サブエージェント               | 하위 에이전트          |
+| Browse / Ask (built-in agents) | 浏览 / 询问        | 瀏覽 / 詢問        | ブラウズ / 質問                | 탐색 / 질문            |
+| …-compatible (provider type)   | … 兼容             | … 相容             | … 互換                         | … 호환                 |
+| side panel                     | 侧边栏             | 側邊欄             | サイドパネル                   | 사이드 패널            |
+| smart bar                      | 智能工具栏         | 智慧工具列         | スマートバー                   | 스마트 바              |
+| model                          | 模型               | 模型               | モデル                         | 모델                   |
+| helper model                   | 辅助模型           | 輔助模型           | 補助モデル                     | 보조 모델              |
+| AI provider                    | AI 提供商          | AI 提供者          | AI プロバイダー                | AI 제공업체            |
+| API key                        | API Key            | API Key            | API キー                       | API 키                 |
+| base URL                       | Base URL           | Base URL           | ベース URL                     | Base URL               |
+| skill                          | 技能               | 技能               | スキル                         | 스킬                   |
+| tool                           | 工具               | 工具               | ツール                         | 도구                   |
+| MCP server                     | MCP 服务器         | MCP 伺服器         | MCP サーバー                   | MCP 서버               |
+| recommended (MCP servers)      | 推荐               | 推薦               | おすすめ                       | 추천                   |
+| request header                 | 请求头             | 請求標頭           | ヘッダー                       | 헤더                   |
+| local execution bridge         | 本地执行桥         | 本機執行橋         | ローカル実行ブリッジ           | 로컬 실행 브리지       |
+| native messaging host          | 原生消息主机       | 原生訊息主機       | ネイティブメッセージングホスト | 네이티브 메시징 호스트 |
+| workspace                      | 工作区             | 工作區             | ワークスペース                 | 워크스페이스           |
+| memory                         | 记忆               | 記憶               | メモリ                         | 메모리                 |
+| sync                           | 同步               | 同步               | 同期                           | 동기화                 |
+| attachment                     | 附件               | 附件               | 添付ファイル                   | 첨부 파일              |
+| device (a synced browser)      | 设备               | 裝置               | デバイス                       | 기기                   |
+| sync passphrase                | 同步口令           | 同步密語           | 同期パスフレーズ               | 동기화 암호 문구       |
+| Keys (sync group)              | 密钥               | 金鑰               | キー                           | 키                     |
+| Files (sync group)             | 文件               | 檔案               | ファイル                       | 파일                   |
+| screenshot                     | 截图               | 截圖               | スクリーンショット             | 스크린샷               |
+| fork (a chat)                  | 分叉               | 分叉               | 分岐                           | 분기                   |
+| built-in                       | 内置               | 內建               | 組み込み                       | 내장                   |
+| customize (a built-in skill)   | 自定义             | 自訂               | カスタマイズ                   | 사용자 지정            |
+| skill use: Auto / Manual / Off | 自动 / 手动 / 关闭 | 自動 / 手動 / 關閉 | 自動 / 手動 / オフ             | 자동 / 수동 / 끔       |
+| footnote                       | 脚注               | 註腳               | 脚注                           | 각주                   |
+| load (an image from an answer) | 加载               | 載入               | 読み込む                       | 불러오기               |
+| restore (deleted synced items) | 恢复               | 還原               | 復元                           | 복원                   |
+| merge (synced changes)         | 合并               | 合併               | 統合                           | 병합                   |
+| browser profile                | 浏览器配置文件     | 瀏覽器設定檔       | ブラウザー プロファイル        | 브라우저 프로필        |
+| voice (reading aloud)          | 语音               | 語音               | 音声                           | 음성                   |
+| code (the agent runs)          | 代码               | 程式碼             | コード                         | 코드                   |
+| sandbox (where code runs)      | 沙盒               | 沙盒               | サンドボックス                 | 샌드박스               |
+| output limit (of a model)      | 输出上限           | 輸出上限           | 出力の上限                     | 출력 한도              |
+| Continue (a cut-off response)  | 继续               | 繼續               | 続ける                         | 계속하기               |
+| diagram (Mermaid)              | 图表               | 圖表               | 図                             | 다이어그램             |
 
 | English                        | Français                          | Deutsch                     | Español                               | Português (Brasil)               |
 | ------------------------------ | --------------------------------- | --------------------------- | ------------------------------------- | -------------------------------- |
@@ -84,8 +86,10 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | skill                          | compétence                        | Skill                       | habilidad                             | habilidade                       |
 | tool                           | outil                             | Tool                        | herramienta                           | ferramenta                       |
 | MCP server                     | serveur MCP                       | MCP-Server                  | servidor MCP                          | servidor MCP                     |
+| recommended (MCP servers)      | recommandé                        | empfohlen                   | recomendado                           | recomendado                      |
 | request header                 | en-tête                           | Header                      | cabecera                              | cabeçalho                        |
 | local execution bridge         | pont d’exécution local            | lokale Ausführungs-Bridge   | puente de ejecución local             | ponte de execução local          |
+| native messaging host          | hôte de messagerie native         | Native-Messaging-Host       | host de mensajería nativa             | host de mensagens nativas        |
 | workspace                      | espace de travail                 | Arbeitsbereich              | espacio de trabajo                    | espaço de trabalho               |
 | memory                         | mémoire                           | Gedächtnis                  | memoria                               | memória                          |
 | sync                           | synchronisation                   | Synchronisierung            | sincronización                        | sincronização                    |
@@ -207,7 +211,7 @@ The other tools start their line with one shared action word (`display.toolSteps
 
 A response that ended early shows one line under it: cut off at the model's **output limit**, "Stopped" (the user pressed Stop; the adjective agrees with the response: _Arrêtée_, _Detenida_, _Interrompida_), or the error it ended with. A response is 回复 / 回覆 / 応答 / 응답 / réponse / Antwort / respuesta / resposta, as in the queued-message text. The Continue button sends a short message asking the model to go on from where the response stopped.
 
-An error the user sees starts with what failed in the UI language, then the reason (`common.errorDetail`: "Couldn’t load models: HTTP 401"; French puts a space before the colon, Chinese and Japanese use the full-width `：`). Reasons the extension knows are translated (`display.errors`); a server's or the browser's own text is shown as it came. Default names stored in English when something is created (a provider's type such as "OpenAI-compatible"; every type that names another company's API reads "…-compatible": OpenAI, OpenAI Responses, Anthropic, Gemini, Ollama; older default names without it show the same way, a bridge saved without a name, a built-in MCP server's description) show in the UI language while they are unchanged; a name the user typed shows as typed, and stored data is never rewritten.
+An error the user sees starts with what failed in the UI language, then the reason (`common.errorDetail`: "Couldn’t load models: HTTP 401"; French puts a space before the colon, Chinese and Japanese use the full-width `：`). Reasons the extension knows are translated (`display.errors`); a server's or the browser's own text is shown as it came. Default names stored in English when something is created (a provider's type such as "OpenAI-compatible"; every type that names another company's API reads "…-compatible": OpenAI, OpenAI Responses, Anthropic, Gemini, Ollama; older default names without it show the same way, a bridge saved without a name, a recommended MCP server's description) show in the UI language while they are unchanged; a name the user typed shows as typed, and stored data is never rewritten.
 
 ## Downloads
 
@@ -237,8 +241,6 @@ A downloads step's title says what happened, not the tool's name: "Downloaded", 
 
 "Translate this page" in the context menu translates the whole page; the same item then reads "Show original". Its strings live in `src/shared/locales/page-translate/`. A translation **engine** is where translations come from (the AI model, the browser's built-in translator, or a free web service); it is not a "provider", which stays the AI model provider. The display is either "Original and translation" (each paragraph keeps its original with the translation under it) or "Translation only" (the page's text is replaced by its translation in place). By default only the page's **main content** is translated; "Also translate menus and buttons" adds the page's own chrome: navigation, menus, buttons, tabs and footers. "Menus and buttons" means the web page's, never the extension's or the browser's; avoid "sidebar" there (in Chinese and German it reads as the extension's side panel). Google Translate and Microsoft Translator keep their product names in each language's usual form; "(free)" marks the unofficial free services. When an engine can't translate a page and its fallback takes over (one free service for the other, the AI model for the built-in translator), the page's note says the switch is for this page only, names the free services by company alone ("Google", "Microsoft") and the others by their in-sentence names (`engineNames`: "the AI model", "the built-in translator"). Notes put those names where the language needs no other form of them (no sentence start, no contraction or case change): "Switched to Microsoft for this page: Google is limiting requests." The engine's default model is "the same model as the chat" (Chinese 与对话相同的模型), not "the chat's selected model".
 
-Video **subtitles** (any timed text on a video, including what players call captions or CC) are 字幕 in Chinese and Japanese, 자막 in Korean, _sous-titres_, _Untertitel_, _subtítulos_ and _legendas_; "captions" in a note means the player's own CC setting and uses the same word. "Translate subtitles" starts them, "Hide translated subtitles" stops them; the button on a video's corner is the **subtitle button**.
-
 | English                          | 简体中文           | 繁體中文           | 日本語                 | 한국어             |
 | -------------------------------- | ------------------ | ------------------ | ---------------------- | ------------------ |
 | page translation                 | 网页翻译           | 網頁翻譯           | ページ翻訳             | 페이지 번역        |
@@ -251,10 +253,6 @@ Video **subtitles** (any timed text on a video, including what players call capt
 | saved translations               | 已保存的译文       | 已儲存的譯文       | 保存された翻訳         | 저장된 번역        |
 | main content (of a page)         | 正文               | 正文               | 本文                   | 본문               |
 | Also translate menus and buttons | 同时翻译菜单和按钮 | 同時翻譯選單和按鈕 | メニューとボタンも翻訳 | 메뉴와 버튼도 번역 |
-| subtitles                        | 字幕               | 字幕               | 字幕                   | 자막               |
-| Translate subtitles              | 翻译字幕           | 翻譯字幕           | 字幕を翻訳             | 자막 번역          |
-| Hide translated subtitles        | 隐藏字幕译文       | 隱藏字幕譯文       | 字幕の翻訳を非表示     | 자막 번역 숨기기   |
-| subtitle button                  | 字幕按钮           | 字幕按鈕           | 字幕ボタン             | 자막 버튼          |
 
 | English                          | Français                                | Deutsch                                 | Español                          | Português (Brasil)             |
 | -------------------------------- | --------------------------------------- | --------------------------------------- | -------------------------------- | ------------------------------ |
@@ -268,10 +266,6 @@ Video **subtitles** (any timed text on a video, including what players call capt
 | saved translations               | traductions enregistrées                | gespeicherte Übersetzungen              | traducciones guardadas           | traduções salvas               |
 | main content (of a page)         | contenu principal                       | Hauptinhalt                             | contenido principal              | conteúdo principal             |
 | Also translate menus and buttons | Traduire aussi les menus et les boutons | Auch Menüs und Schaltflächen übersetzen | Traducir también menús y botones | Traduzir também menus e botões |
-| subtitles                        | sous-titres                             | Untertitel                              | subtítulos                       | legendas                       |
-| Translate subtitles              | Traduire les sous-titres                | Untertitel übersetzen                   | Traducir subtítulos              | Traduzir legendas              |
-| Hide translated subtitles        | Masquer les sous-titres traduits        | Übersetzte Untertitel ausblenden        | Ocultar subtítulos traducidos    | Ocultar legendas traduzidas    |
-| subtitle button                  | bouton de sous-titres                   | Untertitel-Schaltfläche                 | botón de subtítulos              | botão de legendas              |
 
 ## Notes per language
 

@@ -1,10 +1,15 @@
 import { MCP_TOOL_PREFIX } from "../shared/tool-names";
 import type { McpServerConfig } from "../shared/types";
+import { errorMessage } from "../shared/error-message";
 import {
   isMcpServerTested,
+  mcpNeedsRetest,
+  mcpTestedPatch,
+  mcpUntestedPatch,
   normalizeHeaders,
   normalizeMcpServer,
 } from "../shared/mcp";
+import { trimmedString as stringInput } from "../shared/values";
 import { callMcpServerTool, listMcpServerTools } from "../shared/mcp-client";
 import { removeById, storage, updateById } from "../shared/storage";
 import { sameJson } from "../shared/sync/codec";
@@ -42,7 +47,7 @@ export async function executeMcpTool(
         serverId: server.id,
         serverName: server.name,
         toolName: tool.name,
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage(error),
       };
     }
   }
@@ -81,7 +86,7 @@ export function sanitizeMcpInputSchema(value: unknown) {
   };
 }
 
-export async function listMcpServers() {
+async function listMcpServers() {
   const servers = await storage.mcpServers.get();
   return {
     servers: servers.map((server) => ({
@@ -97,17 +102,30 @@ export async function listMcpServers() {
   };
 }
 
-export function runMcpServersAction(input: Record<string, unknown>) {
-  const action = stringInput(input.action || "list");
-  if (action === "list") return listMcpServers();
-  if (action === "add") return addMcpServer(input);
-  if (action === "update") return updateMcpServer(input);
-  if (action === "test") return testMcpServer(input);
-  if (action === "delete") return deleteMcpServer(input);
-  return { success: false, error: "Unknown MCP server action", action };
+type Input = Record<string, unknown>;
+
+const ACTIONS: Record<string, (input: Input) => Promise<unknown>> = {
+  list: listMcpServers,
+  add: addMcpServer,
+  update: updateMcpServer,
+  test: testMcpServer,
+  delete: deleteMcpServer,
+};
+export const MCP_SERVER_ACTIONS = Object.keys(ACTIONS);
+
+export function runMcpServersAction(input: Input) {
+  const action = stringInput(input.action) || "list";
+  return (
+    ACTIONS[action]?.(input) ??
+    Promise.resolve({
+      success: false,
+      error: "Unknown MCP server action",
+      action,
+    })
+  );
 }
 
-export async function addMcpServer(input: Record<string, unknown>) {
+async function addMcpServer(input: Input) {
   const server = normalizeMcpServer({
     name: input.name,
     description: input.description,
@@ -115,59 +133,46 @@ export async function addMcpServer(input: Record<string, unknown>) {
     enabled: false,
     headers: input.headers,
     omitOrigin: input.omitOrigin === true,
+    createdAt: Date.now(),
   });
   if (!server?.url) return { success: false, error: "Missing MCP server URL" };
   try {
     const tools = await listMcpServerTools(server);
     const next = {
       ...server,
+      ...mcpTestedPatch(server, tools),
       enabled: input.enabled !== false,
-      tools,
-      testedAt: Date.now(),
-      lastTestError: "",
-      updatedAt: Date.now(),
     };
     await storage.mcpServers.update((servers) => [...servers, next]);
     return { success: true, server: safeMcpServer(next) };
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
+    return { success: false, error: errorMessage(error) };
   }
 }
 
-export async function updateMcpServer(
-  input: Record<string, unknown>,
-): Promise<unknown> {
+async function updateMcpServer(input: Input): Promise<unknown> {
   const serverId = stringInput(input.serverId || input.id);
   if (!serverId) return { success: false, error: "Missing MCP server ID" };
+  const patch: Partial<McpServerConfig> = {
+    ...(input.name !== undefined ? { name: stringInput(input.name) } : {}),
+    ...(input.description !== undefined
+      ? { description: stringInput(input.description) }
+      : {}),
+    ...(input.url !== undefined ? { url: stringInput(input.url) } : {}),
+    ...(input.headers !== undefined
+      ? { headers: normalizeHeaders(input.headers) }
+      : {}),
+    ...(input.omitOrigin !== undefined
+      ? { omitOrigin: input.omitOrigin === true }
+      : {}),
+  };
+  const needsRetest = mcpNeedsRetest(patch);
   const next = await updateById(storage.mcpServers, serverId, (server) => {
-    const baseNext = {
-      ...server,
-      ...(input.name !== undefined ? { name: stringInput(input.name) } : {}),
-      ...(input.description !== undefined
-        ? { description: stringInput(input.description) }
-        : {}),
-      ...(input.url !== undefined ? { url: stringInput(input.url) } : {}),
-      ...(input.headers !== undefined
-        ? { headers: normalizeHeaders(input.headers) }
-        : {}),
-      ...(input.omitOrigin !== undefined
-        ? { omitOrigin: input.omitOrigin === true }
-        : {}),
-      updatedAt: Date.now(),
-    };
-    const needsRetest =
-      input.url !== undefined ||
-      input.headers !== undefined ||
-      input.omitOrigin !== undefined;
+    const baseNext = { ...server, ...patch, updatedAt: Date.now() };
     const canKeepEnabled = !needsRetest && isMcpServerTested(baseNext);
     return {
       ...baseNext,
-      ...(needsRetest
-        ? { enabled: false, testedAt: undefined, tools: [], lastTestError: "" }
-        : {}),
+      ...(needsRetest ? mcpUntestedPatch() : {}),
       ...(input.enabled !== undefined
         ? { enabled: input.enabled === true && canKeepEnabled }
         : {}),
@@ -191,7 +196,7 @@ const sameEndpoint = (left: McpServerConfig, right: McpServerConfig) =>
 
 // The server is asked first; its answer is stored on the server as stored
 // then, unless its address or headers changed meanwhile.
-export async function testMcpServer(input: Record<string, unknown>) {
+export async function testMcpServer(input: Input) {
   const serverId = stringInput(input.serverId || input.id);
   if (!serverId) return { success: false, error: "Missing MCP server ID" };
   const server = (await storage.mcpServers.get()).find(
@@ -199,31 +204,19 @@ export async function testMcpServer(input: Record<string, unknown>) {
   );
   if (!server) return { success: false, error: "MCP server not found" };
   let tools: Awaited<ReturnType<typeof listMcpServerTools>> | undefined;
-  let errorMessage = "";
+  let failure = "";
   try {
     tools = await listMcpServerTools(server);
   } catch (error) {
-    errorMessage = error instanceof Error ? error.message : String(error);
+    failure = errorMessage(error);
   }
   const next = await updateById(storage.mcpServers, serverId, (current) => {
     if (!sameEndpoint(current, server)) return current;
-    return tools
-      ? {
-          ...current,
-          enabled: true,
-          tools: mergeMcpTools(current.tools || [], tools),
-          testedAt: Date.now(),
-          lastTestError: "",
-          updatedAt: Date.now(),
-        }
-      : {
-          ...current,
-          enabled: false,
-          tools: [],
-          testedAt: undefined,
-          lastTestError: errorMessage,
-          updatedAt: Date.now(),
-        };
+    return {
+      ...current,
+      ...(tools ? mcpTestedPatch(current, tools) : mcpUntestedPatch(failure)),
+      updatedAt: Date.now(),
+    };
   });
   if (!next) return { success: false, error: "MCP server not found" };
   if (!sameEndpoint(next, server))
@@ -233,12 +226,12 @@ export async function testMcpServer(input: Record<string, unknown>) {
       server: safeMcpServer(next),
     };
   const result = safeMcpServer(next);
-  return errorMessage
-    ? { success: false, error: errorMessage, server: result }
+  return failure
+    ? { success: false, error: failure, server: result }
     : { success: true, server: result };
 }
 
-export async function deleteMcpServer(input: Record<string, unknown>) {
+async function deleteMcpServer(input: Input) {
   const serverId = stringInput(input.serverId || input.id);
   const success = await removeById(storage.mcpServers, serverId);
   return { success, serverId };
@@ -268,21 +261,4 @@ function safeMcpServer(server: {
     lastTestError: server.lastTestError,
     headerNames: Object.keys(server.headers || {}),
   };
-}
-
-function mergeMcpTools(
-  existing: NonNullable<Parameters<typeof listMcpServerTools>[0]["tools"]>,
-  next: NonNullable<Parameters<typeof listMcpServerTools>[0]["tools"]>,
-) {
-  const enabledByName = new Map(
-    existing.map((tool) => [tool.name, tool.enabled]),
-  );
-  return next.map((tool) => ({
-    ...tool,
-    enabled: enabledByName.get(tool.name) ?? tool.enabled,
-  }));
-}
-
-function stringInput(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
 }

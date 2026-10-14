@@ -17,7 +17,7 @@ export const displayEsES: DisplayMessages = {
     gemini: "Compatible con Gemini",
     ollama: "Compatible con Ollama",
   },
-  builtinMcpServers: {
+  mcpServerPresets: {
     exa: "Búsqueda web y extracción del contenido de páginas.",
     parallel: "Búsqueda web con fragmentos y descarga de páginas.",
     tinyfish: "Búsqueda web y de noticias.",

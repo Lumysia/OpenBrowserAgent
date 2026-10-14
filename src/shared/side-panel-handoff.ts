@@ -1,4 +1,5 @@
 import { getBrowserApi } from "./browser-api";
+import { STORAGE_KEYS } from "./storage-keys";
 import type { SmartBarGenerateAction } from "./smart-bar";
 
 // What page UI (the smart bar, the context menu) hands to the side panel. The
@@ -43,9 +44,6 @@ export type SidePanelHandoff = SidePanelHandoffRequest & {
 // A handoff the side panel did not pick up within this time is dropped.
 export const SIDE_PANEL_HANDOFF_TTL_MS = 60_000;
 
-// The key is the one the smart bar's handoff always used.
-export const SIDE_PANEL_HANDOFF_KEY = "smart-bar-handoff";
-
 // Session storage keeps the selected text off disk; browsers without it use
 // local storage (the panel removes the entry when it takes it).
 export function sidePanelHandoffStorage() {
@@ -54,9 +52,13 @@ export function sidePanelHandoffStorage() {
     ? {
         area: api.storage.session,
         name: "session",
-        key: SIDE_PANEL_HANDOFF_KEY,
+        key: STORAGE_KEYS.sidePanelHandoff,
       }
-    : { area: api.storage.local, name: "local", key: SIDE_PANEL_HANDOFF_KEY };
+    : {
+        area: api.storage.local,
+        name: "local",
+        key: STORAGE_KEYS.sidePanelHandoff,
+      };
 }
 
 const TASKS = new Set<string>(Object.values(SIDE_PANEL_TASK));

@@ -18,8 +18,8 @@ export const displayEnUS = {
     gemini: "Gemini-compatible",
     ollama: "Ollama-compatible",
   },
-  // Built-in MCP servers, by name: what each offers.
-  builtinMcpServers: {
+  // Recommended MCP servers (mcp-presets.ts), by name: what each offers.
+  mcpServerPresets: {
     exa: "Web search and webpage content extraction.",
     parallel: "Web search with excerpts, and webpage fetching.",
     tinyfish: "Web and news search.",

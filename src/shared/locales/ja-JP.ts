@@ -434,9 +434,10 @@ export const jaJP: LocaleMessages = {
     deleteMcpServer: "MCP サーバーを削除",
     resetDefaults: "既定にリセット",
     resetBuiltins: "組み込み項目をリセット",
-    resetDefaultMcpServers: "既定の MCP サーバーにリセット",
-    resetDefaultMcpServersDescription:
-      "組み込みの MCP サーバーに戻し、カスタムサーバーを削除します。",
+    mcpPresets: "おすすめのサーバー",
+    mcpPresetsDescription:
+      "API キーなしで使えるホスト型の検索サーバーです。検索内容はそれぞれのサービスに送信されます。追加したサーバーはテストするまでオフのままです。",
+    mcpPresetAdd: "追加",
     selectModel: "モデルを選択",
     selectModelDescription:
       "メインのチャットモデルを選択します。エージェントにはツール呼び出しに対応したモデルがおすすめです。",

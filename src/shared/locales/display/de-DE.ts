@@ -14,7 +14,7 @@ export const displayDeDE: DisplayMessages = {
     gemini: "Gemini-kompatibel",
     ollama: "Ollama-kompatibel",
   },
-  builtinMcpServers: {
+  mcpServerPresets: {
     exa: "Websuche und Extraktion von Webseiteninhalten.",
     parallel: "Websuche mit Auszügen und Abruf von Webseiten.",
     tinyfish: "Web- und Nachrichtensuche.",

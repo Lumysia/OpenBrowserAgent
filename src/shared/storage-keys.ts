@@ -1,5 +1,4 @@
 export const STORAGE_KEYS = {
-  userId: "userId",
   language: "language",
   preferences: "preferences",
   provider: "provider",
@@ -42,6 +41,11 @@ export const STORAGE_KEYS = {
   // The local day a holiday burst last played (see holidays.ts).
   holidayBurstDay: "holiday-burst-day",
   ignoreSyncedProvidersForBootstrap: "ignore-synced-providers-for-bootstrap",
+  // The storage migrations this device has run (see storage-migrations.ts).
+  storageMigrations: "storage-migrations",
+  // A selection handed from a page to the side panel (session storage where
+  // there is one); the name is the one the smart bar's handoff always used.
+  sidePanelHandoff: "smart-bar-handoff",
 } as const;
 
 // What syncs besides settings, one switch per group: API keys and MCP
@@ -68,10 +72,3 @@ export function mergeSyncGroupSettings(
 ): SyncGroupSettings {
   return { ...DEFAULT_SYNC_GROUP_SETTINGS, ...value };
 }
-
-export const STORAGE_AREAS = {
-  local: "local",
-  sync: "sync",
-} as const;
-
-export type AreaName = (typeof STORAGE_AREAS)[keyof typeof STORAGE_AREAS];

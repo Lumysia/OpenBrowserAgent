@@ -14,7 +14,7 @@ export const displayJaJP: DisplayMessages = {
     gemini: "Gemini 互換",
     ollama: "Ollama 互換",
   },
-  builtinMcpServers: {
+  mcpServerPresets: {
     exa: "ウェブ検索とページ内容の抽出。",
     parallel: "抜粋付きのウェブ検索とページの取得。",
     tinyfish: "ウェブとニュースの検索。",

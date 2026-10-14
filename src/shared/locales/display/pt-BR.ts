@@ -17,7 +17,7 @@ export const displayPtBR: DisplayMessages = {
     gemini: "Compatível com Gemini",
     ollama: "Compatível com Ollama",
   },
-  builtinMcpServers: {
+  mcpServerPresets: {
     exa: "Pesquisa na web e extração do conteúdo de páginas.",
     parallel: "Pesquisa na web com trechos e busca de páginas.",
     tinyfish: "Pesquisa na web e de notícias.",

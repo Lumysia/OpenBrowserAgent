@@ -377,9 +377,10 @@ export const zhCN: LocaleMessages = {
     deleteMcpServer: "删除 MCP 服务器",
     resetDefaults: "重置默认值",
     resetBuiltins: "重置内置项",
-    resetDefaultMcpServers: "重置默认 MCP 服务器",
-    resetDefaultMcpServersDescription:
-      "恢复内置 MCP 服务器，并移除自定义服务器。",
+    mcpPresets: "推荐服务器",
+    mcpPresetsDescription:
+      "无需 API Key 即可使用的托管搜索服务器。每个服务器都会把你的搜索发送到它自己的服务。添加的服务器在测试前保持关闭。",
+    mcpPresetAdd: "添加",
     selectModel: "选择模型",
     selectModelDescription:
       "选择主对话模型。智能体最好使用支持工具调用的模型。",

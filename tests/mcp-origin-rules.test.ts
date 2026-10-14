@@ -1,13 +1,18 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
 import {
-  BUILTIN_MCP_SERVERS,
   createMcpServerDraft,
-  isBuiltinMcpServer,
   normalizeMcpServer,
   normalizeMcpServers,
   type McpServerConfig,
 } from "../src/shared/mcp";
+import {
+  MCP_SERVER_PRESETS,
+  mcpServerFromPreset,
+  missingMcpServerPresets,
+} from "../src/shared/mcp-presets";
+import { storage } from "../src/shared/storage";
+import { runStorageMigrations } from "../src/shared/storage-migrations";
 import {
   MCP_ORIGIN_RULE_ID_BASE,
   MCP_ORIGIN_RULE_LIMIT,
@@ -118,16 +123,11 @@ test("servers sharing a URL share one rule; invalid URLs get none; ids stay in r
   );
 });
 
-test("the TinyFish built-in sends requests without Origin; the other built-ins do not", () => {
-  const byId = new Map(BUILTIN_MCP_SERVERS.map((item) => [item.id, item]));
+test("the TinyFish preset sends requests without Origin; the other presets do not", () => {
+  const byId = new Map(MCP_SERVER_PRESETS.map((item) => [item.id, item]));
   assert.equal(byId.get("builtin_tinyfish")?.omitOrigin, true);
   for (const id of ["builtin_exa", "builtin_parallel", "builtin_firecrawl"])
     assert.equal(byId.get(id)?.omitOrigin, false, id);
-  const read = normalizeMcpServers(undefined);
-  assert.equal(
-    read.find((item) => item.id === "builtin_tinyfish")?.omitOrigin,
-    true,
-  );
 });
 
 test("a stored server without the field reads its default; an explicit value is kept", () => {
@@ -202,14 +202,10 @@ test("syncing replaces the whole rule id range in one update", async () => {
   const rules = updates[0].addRules as Array<{
     condition: { regexFilter: string; initiatorDomains: string[] };
   }>;
-  // Stored servers (with the TinyFish built-in filled in) and the draft.
+  // Stored servers and the draft.
   assert.deepEqual(
     rules.map((rule) => rule.condition.regexFilter),
-    [
-      "^https:\\/\\/agent\\.tinyfish\\.ai\\/mcp$",
-      "^https:\\/\\/a\\.example\\/mcp$",
-      "^https:\\/\\/draft\\.example\\/$",
-    ],
+    ["^https:\\/\\/a\\.example\\/mcp$", "^https:\\/\\/draft\\.example\\/$"],
   );
   assert.ok(rules.every((rule) => rule.condition.initiatorDomains[0] === host));
 });
@@ -223,16 +219,46 @@ test("a request to a server with the option on fails clearly without the API", a
   await prepareMcpRequest(server("b", "https://b.example/mcp", false));
 });
 
-test("built-in MCP servers come back after removal, so only custom ones are deletable", () => {
-  const custom = {
-    id: "mcp_custom",
-    name: "Mine",
-    url: "https://example.com/mcp",
-  };
+test("an MCP server list holds only what was added; presets are offered, not filled in", () => {
+  const custom = { id: "mcp_custom", name: "Mine", url: "https://x.example/" };
+  assert.deepEqual(normalizeMcpServers(undefined), []);
   const read = normalizeMcpServers([custom]);
-  for (const builtin of BUILTIN_MCP_SERVERS) {
-    assert.ok(read.some((server) => server.id === builtin.id));
-    assert.equal(isBuiltinMcpServer(builtin.id), true);
-  }
-  assert.equal(isBuiltinMcpServer("mcp_custom"), false);
+  assert.deepEqual(
+    read.map((server) => server.id),
+    ["mcp_custom"],
+  );
+  assert.deepEqual(
+    missingMcpServerPresets(read).map((item) => item.id),
+    MCP_SERVER_PRESETS.map((item) => item.id),
+  );
+  const added = mcpServerFromPreset(MCP_SERVER_PRESETS[0]);
+  assert.equal(added.enabled, false);
+  assert.deepEqual(
+    missingMcpServerPresets([...read, added]).map((item) => item.id),
+    MCP_SERVER_PRESETS.slice(1).map((item) => item.id),
+  );
+});
+
+test("an update stores the presets older versions showed, once; a new install starts empty", async () => {
+  const custom = { id: "mcp_custom", name: "Mine", url: "https://x.example/" };
+  fakeBrowser([custom], false);
+  await runStorageMigrations(false);
+  const ids = () =>
+    storage.mcpServers.get().then((list) => list.map((server) => server.id));
+  assert.deepEqual(await ids(), [
+    ...MCP_SERVER_PRESETS.map((item) => item.id),
+    "mcp_custom",
+  ]);
+  // Deleting a preset now sticks: the step does not run again.
+  await storage.mcpServers.update((list) =>
+    list.filter((server) => server.id !== "builtin_exa"),
+  );
+  await runStorageMigrations(false);
+  assert.ok(!(await ids()).includes("builtin_exa"));
+
+  fakeBrowser([], false);
+  await runStorageMigrations(true);
+  assert.deepEqual(await ids(), []);
+  await runStorageMigrations(false);
+  assert.deepEqual(await ids(), []);
 });

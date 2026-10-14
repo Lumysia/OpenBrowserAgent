@@ -56,7 +56,7 @@ The agent works next to the user, not in their way. Each run is bound to a tab: 
 
 ### MCP Servers
 
-Remote Streamable HTTP MCP servers add tools such as search and fetch. A server must pass **Test** (which discovers its tools) before it can be enabled, and each of its tools can be turned off. Built-in presets (Exa, Parallel, TinyFish, Firecrawl) start off; servers can also be added by URL or imported from JSON.
+Remote Streamable HTTP MCP servers add tools such as search and fetch. A server must pass **Test** (which discovers its tools) before it can be enabled, and each of its tools can be turned off. Recommended servers (Exa, Parallel, TinyFish, Firecrawl) are added with one click and start off; servers can also be added by URL or imported from JSON. Every server can be deleted; a deleted recommended server is offered again.
 
 **Send without browser Origin** is a per-server option for servers that reject browser requests. Browsers add an `Origin` header to every request an extension makes, and some servers refuse any request that carries one (TinyFish answers `Browser-origin requests are not allowed.`). With the option on, a `declarativeNetRequest` rule removes the header from this extension's own requests to that server's exact URL. The rules follow the stored servers: they are rebuilt when the browser starts and whenever a server changes, and a request to a server with the option checks its rule first. The TinyFish preset has the option on. Turning it on or off needs a new test.
 

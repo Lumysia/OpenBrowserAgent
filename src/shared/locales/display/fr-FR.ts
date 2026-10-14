@@ -17,7 +17,7 @@ export const displayFrFR: DisplayMessages = {
     gemini: "Compatible Gemini",
     ollama: "Compatible Ollama",
   },
-  builtinMcpServers: {
+  mcpServerPresets: {
     exa: "Recherche web et extraction du contenu des pages.",
     parallel: "Recherche web avec extraits et récupération de pages.",
     tinyfish: "Recherche web et d’actualités.",

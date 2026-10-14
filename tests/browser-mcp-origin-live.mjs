@@ -1,9 +1,13 @@
 // Live check against TinyFish's keyless MCP endpoint, which rejects requests
 // with an Origin header: an MCP `initialize` from the built extension succeeds
-// while the built-in's "send without browser Origin" option is on and fails
+// while the preset's "send without browser Origin" option is on and fails
 // once it is off. Three requests in total (the keyless tier allows about 30 a
 // minute). Needs network access; run with `npm run test:browser:mcp-origin`.
 import assert from "node:assert/strict";
+import {
+  findMcpServerPreset,
+  mcpServerFromPreset,
+} from "../src/shared/mcp-presets.ts";
 import { launchExtension, poll } from "./chromium.mjs";
 
 const URL_ = "https://agent.tinyfish.ai/mcp";
@@ -58,7 +62,11 @@ try {
   const page = await browser.open(
     `chrome-extension://${browser.id}/options.html`,
   );
-  // The background adds the built-in's rule at startup.
+  // Adding the TinyFish preset adds its rule.
+  await page.call(
+    (server) => chrome.storage.local.set({ "mcp-servers": [server] }),
+    mcpServerFromPreset(findMcpServerPreset("builtin_tinyfish")),
+  );
   await poll(() => page.call(hasRule, RULE_FILTER), 10000);
 
   const fromPage = await page.call(initialize, URL_);

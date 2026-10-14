@@ -398,9 +398,10 @@ export const ko: LocaleMessages = {
     deleteMcpServer: "MCP 서버 삭제",
     resetDefaults: "기본값 재설정",
     resetBuiltins: "내장 항목 재설정",
-    resetDefaultMcpServers: "기본 MCP 서버 재설정",
-    resetDefaultMcpServersDescription:
-      "내장 MCP 서버로 되돌리고 사용자 지정 서버를 제거합니다.",
+    mcpPresets: "추천 서버",
+    mcpPresetsDescription:
+      "API 키 없이 쓸 수 있는 호스팅 검색 서버입니다. 각 서버는 검색 내용을 자체 서비스로 보냅니다. 추가한 서버는 테스트할 때까지 꺼져 있습니다.",
+    mcpPresetAdd: "추가",
     selectModel: "모델 선택",
     selectModelDescription:
       "주 채팅 모델을 선택하세요. 에이전트는 도구 호출을 지원하는 모델에서 가장 잘 작동합니다.",
