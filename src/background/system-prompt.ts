@@ -49,7 +49,8 @@ export function createSystemPrompt(options: {
 }
 
 const PAGE_RULES = `
-- Pages: snapshot shows a page as lines with refs like e12. Refs stay valid while the element exists; after navigation take a new snapshot. On long pages use find instead of scrolling through snapshots, read for long text, extract for a few facts.`;
+- Pages: snapshot shows a page as lines with refs like e12. Refs stay valid while the element exists; after navigation take a new snapshot. On long pages use find instead of scrolling through snapshots, and read when you need the text itself.
+- When you need only a few facts from a long page, call extract first instead of reading or snapshotting it, since every page read fills the context. Trust its answer and quoted evidence instead of reading the same page again; read or snapshot it afterwards only if extract says the page does not answer, or you need the layout or to interact. Write the extract question in the user's language: it is shown to them.`;
 
 const BROWSER_RULES = `
 - Put several steps in one act or editPage call. Check what act reports; success means the step was dispatched, not that the task is done. If an action changes nothing, do not repeat it: look again or change approach.
