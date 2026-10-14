@@ -5,7 +5,7 @@ import type { SmartBarGenerateAction } from "./smart-bar";
 // background opens the panel during the user's gesture and leaves the
 // handoff in storage; the panel takes it when it is ready.
 export const SIDE_PANEL_TASK = {
-  // Attach the page and focus the composer, quoting any selected text.
+  // Attach the page and any selected text, and focus the composer.
   ask: "ask",
   // A smart bar result, continued in a new chat.
   continue: "continue",

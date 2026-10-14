@@ -189,14 +189,21 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
       const panel = await browser.attach(
         (url) => url === extensionUrl("sidepanel.html"),
       );
+      // The selection is a card next to the page's; the composer stays empty.
       await poll(() =>
         panel.call(() =>
-          document
-            .querySelector(".composer-box textarea")
-            ?.value.startsWith(
-              "> The quick brown fox jumps over the lazy dog.",
-            ),
+          [...document.querySelectorAll(".context-strip .context-card")].some(
+            (card) =>
+              card.querySelector("strong")?.title ===
+              "The quick brown fox jumps over the lazy dog.",
+          ),
         ),
+      );
+      assert.equal(
+        await panel.call(
+          () => document.querySelector(".composer-box textarea").value,
+        ),
+        "",
       );
       await selectText(listed, "#text");
       await clickInBar(listed, '[aria-label="Explain"]');

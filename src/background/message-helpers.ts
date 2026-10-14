@@ -3,6 +3,10 @@ import {
   isMetadataOnlyAttachment,
 } from "../shared/attachments";
 import { renderSourcesForPrompt } from "../shared/chat-sources";
+import {
+  renderSelectedText,
+  selectedTextsFromMetadata,
+} from "../shared/selected-text";
 import { findSkill } from "../shared/skill-catalog";
 import {
   getSkillBody,
@@ -19,9 +23,9 @@ import type {
 } from "../shared/types";
 
 // Earlier turns are replayed as plain text, noting the skills the user
-// picked; the latest user message also carries its context: the picked
-// skills' instructions, selected tabs and elements, attachments, and sources
-// that can be cited again.
+// picked and keeping the text they selected; the latest user message also
+// carries its context: the picked skills' instructions, selected tabs,
+// elements and text, attachments, and sources that can be cited again.
 export function renderMessageText(
   message: ChatMessage,
   options: {
@@ -38,6 +42,7 @@ export function renderMessageText(
     .join(", ");
   return [
     picked && `[The user picked ${picked} for this message.]`,
+    ...selectedTextsFromMetadata(message.metadata).map(renderSelectedText),
     message.content,
     renderAttachmentContext(getUploadedAttachments(message)),
   ]

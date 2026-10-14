@@ -5,6 +5,7 @@ import type {
   ChatMessage,
   PickedSkill,
   SelectedElement,
+  SelectedText,
   UploadedAttachment,
 } from "../../src/shared/types";
 import { createEditMessageDraft, type EditMessageDraft } from "./edit-message";
@@ -16,10 +17,12 @@ export function useMessageEdit({
   pendingAttachments,
   attachedTabs,
   selectedElements,
+  selectedTexts,
   selectedSkills,
   setInput,
   setAttachedTabs,
   setSelectedElements,
+  setSelectedTexts,
   setSelectedSkills,
   stageUploadedAttachments,
 }: {
@@ -29,10 +32,12 @@ export function useMessageEdit({
   pendingAttachments: UploadedAttachment[];
   attachedTabs: AttachmentTab[];
   selectedElements: SelectedElement[];
+  selectedTexts: SelectedText[];
   selectedSkills: PickedSkill[];
   setInput: (value: string) => void;
   setAttachedTabs: (tabs: AttachmentTab[]) => void;
   setSelectedElements: (elements: SelectedElement[]) => void;
+  setSelectedTexts: (texts: SelectedText[]) => void;
   setSelectedSkills: (skills: PickedSkill[]) => void;
   stageUploadedAttachments: (attachments: UploadedAttachment[]) => void;
 }) {
@@ -54,6 +59,7 @@ export function useMessageEdit({
     setInput(draft.content);
     setAttachedTabs(draft.attachedTabs);
     setSelectedElements(draft.selectedElements);
+    setSelectedTexts(draft.selectedTexts);
     setSelectedSkills(draft.skills);
     stageUploadedAttachments(draft.attachments);
     setEditingMessage({
@@ -62,6 +68,7 @@ export function useMessageEdit({
       previousAttachments: pendingAttachments,
       previousAttachedTabs: attachedTabs,
       previousSelectedElements: selectedElements,
+      previousSelectedTexts: selectedTexts,
       previousSkills: selectedSkills,
     });
   }
@@ -71,6 +78,7 @@ export function useMessageEdit({
     setInput(editingMessage.previousContent);
     setAttachedTabs(editingMessage.previousAttachedTabs);
     setSelectedElements(editingMessage.previousSelectedElements);
+    setSelectedTexts(editingMessage.previousSelectedTexts);
     setSelectedSkills(editingMessage.previousSkills);
     stageUploadedAttachments(editingMessage.previousAttachments);
     setEditingMessage(null);

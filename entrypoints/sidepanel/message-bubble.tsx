@@ -30,9 +30,11 @@ import { MessageRunInfo } from "./message-run-info";
 import { UserMessageActions } from "./user-message-actions";
 import {
   SentAttachmentsChip,
+  SentSelectedTextChip,
   SentTabsChip,
   SourceChips,
 } from "./message-chips";
+import { selectedTextsFromMetadata } from "../../src/shared/selected-text";
 
 export function MessageBubble({
   message,
@@ -82,6 +84,7 @@ export function MessageBubble({
     ? (message.metadata.attachedTabs as AttachmentTab[])
     : [];
   const sentElements = selectedElementsFromMetadata(message.metadata);
+  const sentTexts = selectedTextsFromMetadata(message.metadata);
   const assistantModel = message.metadata?.assistantModel as
     { provider?: string; name?: string } | undefined;
   const hasParts = !!message.parts?.length;
@@ -255,6 +258,12 @@ export function MessageBubble({
           </div>
         </div>
       )}
+      {message.role === "user" &&
+        sentTexts.map((selection, index) => (
+          <div key={index} className="sent-context-row">
+            <SentSelectedTextChip selection={selection} t={t} />
+          </div>
+        ))}
       {message.role === "user" && (
         <UserMessageActions
           t={t}

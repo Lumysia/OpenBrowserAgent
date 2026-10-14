@@ -57,8 +57,8 @@ export function sidePanelRequest(
     case SIDE_PANEL_TASK.searchWeb:
       return handoff.text?.trim()
         ? {
-            content: `${t.contextMenu.searchSelectionRequest}\n\n${quoteSelection(handoff.text)}`,
-            instruction: `Search the web about the text quoted in the message, which the user selected on ${page}. Use the page only to understand what the text refers to. Answer with what you found, citing your sources. ${reply}`,
+            content: t.contextMenu.searchSelectionRequest,
+            instruction: `Search the web about the selected text in the message context, which the user selected on ${page}. Use the page only to understand what the text refers to. Answer with what you found, citing your sources. ${reply}`,
           }
         : {
             content: menu.searchPage,
@@ -77,13 +77,4 @@ function pageReference(handoff: SidePanelHandoff, attached: boolean) {
   return described
     ? `the page the user is viewing (${described}; the extension cannot read this tab, so use its URL if you need its content)`
     : "the page the user is viewing";
-}
-
-// The selection as a Markdown quote.
-export function quoteSelection(text: string) {
-  return text
-    .trim()
-    .split(/\r?\n/)
-    .map((line) => (line ? `> ${line}` : ">"))
-    .join("\n");
 }

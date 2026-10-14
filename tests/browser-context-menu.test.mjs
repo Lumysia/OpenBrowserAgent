@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { submitComposer } from "./browser-composer.mjs";
 import { poll } from "./chromium.mjs";
 import {
   barState,
@@ -192,17 +193,46 @@ test("context menu", { timeout: 240000 }, async (t) => {
       panel = await browser.attach(
         (item) => item === extensionUrl("sidepanel.html"),
       );
+      // The prompt is the request's JSON: a newline in it reads "\n".
       const prompt = await nextPrompt(count);
-      assert.match(prompt, /Search the web about the text quoted/);
-      assert.match(prompt, /The quick brown fox jumps over the lazy dog\./);
+      assert.match(
+        prompt,
+        /Search the web about the selected text in the message context/,
+      );
+      assert.match(
+        prompt,
+        new RegExp(
+          `<selected_text>\\\\n<tab_id>${tabId}</tab_id>[\\s\\S]*<text>The quick brown fox jumps over the lazy dog\\.</text>\\\\n</selected_text>`,
+        ),
+      );
+      assert.match(
+        prompt,
+        /<message>\\nSearch the web about the selected text\\n<\/message>/,
+      );
       assert.match(prompt, /Reply in American English\./);
       assert.match(prompt, new RegExp(`<tab_id>${tabId}</tab_id>`));
-      await poll(() =>
-        panel.call(() =>
-          document
-            .querySelector(".messages-content")
-            ?.textContent?.includes("Search the web about the selected text"),
+      // The bubble shows the request; the text is a chip under it.
+      assert.deepEqual(
+        await poll(() =>
+          panel.call(() => {
+            const message = [...document.querySelectorAll(".message.user")].at(
+              -1,
+            );
+            const chip = message?.querySelector(".sent-tab-chip[title]");
+            return (
+              chip && {
+                bubble: message.querySelector(".user-bubble").textContent,
+                chip: chip.textContent,
+                full: chip.getAttribute("title"),
+              }
+            );
+          }),
         ),
+        {
+          bubble: "Search the web about the selected text",
+          chip: "The quick brown fox jumps over the lazy dog.Selected text",
+          full: "The quick brown fox jumps over the lazy dog.",
+        },
       );
     });
 
@@ -220,7 +250,7 @@ test("context menu", { timeout: 240000 }, async (t) => {
       [
         "Search the web for the selection",
         { menuItemId: MENU.searchSelection, selectionText: "lazy dog" },
-        /> lazy dog[\s\S]*Search the web about the text quoted/,
+        /<text>lazy dog<\/text>[\s\S]*Search the web about the selected text in the message context/,
       ],
       [
         "Summarize linked page",
@@ -238,7 +268,7 @@ test("context menu", { timeout: 240000 }, async (t) => {
       });
 
     await t.test(
-      "Ask: page attached, composer focused, nothing sent",
+      "Ask: page and selected text attached, composer empty and focused, nothing sent",
       async () => {
         const count = promptCount();
         await click({
@@ -246,20 +276,52 @@ test("context menu", { timeout: 240000 }, async (t) => {
           parentMenuItemId: MENU.parent,
           selectionText: "brown fox",
         });
+        const cards = () =>
+          panel.call(() =>
+            [...document.querySelectorAll(".context-strip .context-card")].map(
+              (card) => card.querySelector("strong").textContent,
+            ),
+          );
+        await poll(async () => {
+          const ready = await panel.call(
+            () =>
+              document.activeElement ===
+              document.querySelector(".composer-box textarea"),
+          );
+          return ready && (await cards()).includes("brown fox");
+        });
+        assert.deepEqual(await cards(), ["Menu page", "brown fox"]);
+        assert.equal(
+          await panel.call(
+            () => document.querySelector(".composer-box textarea").value,
+          ),
+          "",
+        );
+        assert.equal(promptCount(), count);
+
+        // Typed and sent: the question, with the text as context.
+        await submitComposer(panel, "What is it?");
+        const prompt = await nextPrompt(count);
+        assert.match(
+          prompt,
+          /<selected_text>[\s\S]*<text>brown fox<\/text>[\s\S]*<message>\\nWhat is it\?\\n<\/message>/,
+        );
         await poll(() =>
           panel.call(
             () =>
-              document.activeElement ===
-                document.querySelector(".composer-box textarea") &&
-              document
-                .querySelector(".composer-box textarea")
-                .value.startsWith("> brown fox") &&
-              !!document
-                .querySelector(".context-strip")
-                ?.innerHTML.includes("Menu page"),
+              [...document.querySelectorAll(".message.user")]
+                .at(-1)
+                ?.querySelector(".sent-tab-chip[title]")
+                ?.getAttribute("title") === "brown fox",
           ),
         );
-        assert.equal(promptCount(), count);
+        assert.equal(
+          await panel.call(
+            () =>
+              document.querySelectorAll(".context-strip .context-card").length,
+          ),
+          0,
+        );
       },
     );
 

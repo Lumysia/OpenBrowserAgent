@@ -213,6 +213,16 @@ export type SelectedElement = {
   imageDataUrl?: string;
 };
 
+// Text the user selected on a page, sent with a message as context. Kept in
+// the message's `selectedTexts` metadata.
+export type SelectedText = {
+  text: string;
+  // The page's tab, when the extension can read it.
+  tabId?: number;
+  pageTitle?: string;
+  pageUrl?: string;
+};
+
 export type ChatMessage = {
   id: string;
   role: "user" | "assistant" | "system" | "tool";

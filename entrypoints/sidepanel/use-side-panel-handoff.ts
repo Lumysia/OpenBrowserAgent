@@ -12,8 +12,9 @@ import {
   sidePanelRequest,
 } from "../../src/shared/side-panel-requests";
 import { getBrowserApi } from "../../src/shared/storage";
-import type { AttachmentTab, Chat } from "../../src/shared/types";
-import { continuedChat, composerWithQuote } from "./side-panel-handoff";
+import type { AttachmentTab, Chat, SelectedText } from "../../src/shared/types";
+import { handoffSelectedText } from "./selected-text";
+import { continuedChat } from "./side-panel-handoff";
 import { toAttachmentTab } from "./sidepanel-context";
 
 // A request to send in a new chat once that chat is open.
@@ -22,21 +23,22 @@ export type HandoffSend = {
   content: string;
   instruction: string;
   tabs: AttachmentTab[];
+  selectedTexts: SelectedText[];
 };
 
 // Picks up what the smart bar or the context menu sent to this window's side
 // panel, once the chat list has loaded: a page (and selection) to ask about,
-// with the composer focused; a smart bar result to continue in a new chat;
-// or a request (summarize, search the web) sent at once in a new chat.
+// attached as context with the composer focused; a smart bar result to
+// continue in a new chat; or a request (summarize, search the web) sent at
+// once in a new chat.
 export function useSidePanelHandoff({
   ready,
   t,
   language,
-  input,
-  setInput,
   importChat,
   createChat,
   attachTab,
+  attachSelectedText,
   currentChatId,
   canSend,
   send,
@@ -45,11 +47,10 @@ export function useSidePanelHandoff({
   ready: boolean;
   t: Messages;
   language: string;
-  input: string;
-  setInput: (value: string) => void;
   importChat: (chat: Chat) => void;
   createChat: () => Chat;
   attachTab: (tab: AttachmentTab) => void;
+  attachSelectedText: (selection: SelectedText) => void;
   currentChatId: string | undefined;
   canSend: boolean;
   send: (request: Omit<HandoffSend, "chatId">) => void;
@@ -106,11 +107,11 @@ export function useSidePanelHandoff({
       focusComposer();
       return;
     }
-    const text = handoff.task === SIDE_PANEL_TASK.ask ? handoff.text : "";
     void handoffTab(handoff).then((tab) => {
+      const selection = handoffSelectedText(handoff, tab);
       if (handoff.task === SIDE_PANEL_TASK.ask) {
         if (tab) attachTab(tab);
-        if (text?.trim()) setInput(composerWithQuote(input, text));
+        if (selection) attachSelectedText(selection);
         focusComposer();
         return;
       }
@@ -119,18 +120,22 @@ export function useSidePanelHandoff({
       const tabs =
         tab && handoff.task !== SIDE_PANEL_TASK.summarizeLink ? [tab] : [];
       const request = sidePanelRequest(handoff, t, language, !!tabs.length);
-      setPending({ chatId: createChat().id, ...request, tabs });
+      setPending({
+        chatId: createChat().id,
+        ...request,
+        tabs,
+        selectedTexts: selection ? [selection] : [],
+      });
     });
   }, [
+    attachSelectedText,
     attachTab,
     composerRef,
     createChat,
     handoff,
     importChat,
-    input,
     language,
     ready,
-    setInput,
     t,
   ]);
 

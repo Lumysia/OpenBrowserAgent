@@ -4,7 +4,12 @@ import {
   getAllTabs,
   isScriptableUrl,
 } from "../../src/shared/browser";
-import type { AttachmentTab, SelectedElement } from "../../src/shared/types";
+import type {
+  AttachmentTab,
+  SelectedElement,
+  SelectedText,
+} from "../../src/shared/types";
+import { addSelectedText } from "./selected-text";
 import { toAttachmentTab } from "./sidepanel-context";
 import { useActiveTabContext } from "./use-active-tab-context";
 
@@ -16,10 +21,12 @@ export function useComposerContext() {
   const [selectedElements, setSelectedElements] = useState<SelectedElement[]>(
     [],
   );
+  const [selectedTexts, setSelectedTexts] = useState<SelectedText[]>([]);
 
   useActiveTabContext({
     attachedTabs,
-    selectedElements,
+    // Selected elements and texts belong to their page.
+    pinned: selectedElements.length + selectedTexts.length > 0,
     setAttachedTabs,
     setSelectedElements,
     autoAttachSuppressedRef,
@@ -87,15 +94,26 @@ export function useComposerContext() {
     setAttachedTabs((tabs) => tabs.filter((item) => item.id !== tabId));
   }
 
-  function clearAttachedTabsAfterSend() {
+  const attachSelectedText = useCallback((selection: SelectedText) => {
+    setSelectedTexts((items) => addSelectedText(items, selection));
+  }, []);
+
+  function removeSelectedText(selection: SelectedText) {
+    setSelectedTexts((items) => items.filter((item) => item !== selection));
+  }
+
+  function clearComposerContextAfterSend() {
     autoAttachSuppressedRef.current = true;
     setAttachedTabs([]);
+    setSelectedElements([]);
+    setSelectedTexts([]);
   }
 
   function clearComposerContext() {
     autoAttachSuppressedRef.current = false;
     setAttachedTabs([]);
     setSelectedElements([]);
+    setSelectedTexts([]);
   }
 
   return {
@@ -103,11 +121,15 @@ export function useComposerContext() {
     availableTabs,
     activeTabAttachable,
     selectedElements,
+    selectedTexts,
     setAttachedTabs,
     clearComposerContext,
-    clearAttachedTabsAfterSend,
+    clearComposerContextAfterSend,
     setAvailableTabs,
     setSelectedElements,
+    setSelectedTexts,
+    attachSelectedText,
+    removeSelectedText,
     attachActiveTab,
     attachTab,
     showAllTabsPicker,

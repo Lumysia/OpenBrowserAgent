@@ -188,8 +188,12 @@ test("requests: localized message, English instruction in the reply language", (
   assert.match(page.instruction, /citing your sources/);
 
   const selection = request({ ...base, task: "searchWeb", text: "a\n\nb" });
-  assert.equal(selection.content, "联网搜索所选文本的相关信息\n\n> a\n>\n> b");
-  assert.match(selection.instruction, /^Search the web about the text quoted/);
+  // The text goes with the message as context, not in the message.
+  assert.equal(selection.content, "联网搜索所选文本的相关信息");
+  assert.match(
+    selection.instruction,
+    /^Search the web about the selected text in the message context/,
+  );
 
   const link = request(
     { ...base, task: "summarizeLink", linkUrl: "https://example.com/full" },
@@ -240,9 +244,15 @@ test("a request sends its own tab and none of the composer's extras", () => {
     selectedSkills: [{ id: "s", name: "s" } as never],
     pendingAttachments: [{ id: "a" } as never],
     uploadedAttachments: [{ id: "a" } as never],
-    request: { instruction: "Do it.", tabs: [tab] },
+    selectedTexts: [{ text: "in the composer" }],
+    request: {
+      instruction: "Do it.",
+      tabs: [tab],
+      selectedTexts: [{ text: "picked", tabId: 7 }],
+    },
   });
   assert.deepEqual(picked.sentTabs, [tab]);
+  assert.deepEqual(picked.sentTexts, [{ text: "picked", tabId: 7 }]);
   assert.deepEqual(
     [
       picked.sentElements,

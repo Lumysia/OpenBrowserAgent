@@ -230,7 +230,7 @@
   font-weight: 500;
   opacity: 0.76;
 }
-.sent-tabs-chip small {
+:is(.sent-tabs-chip, .sent-tab-chip) small {
   font-size: var(--text-2xs);
   font-weight: 500;
   opacity: 0.76;

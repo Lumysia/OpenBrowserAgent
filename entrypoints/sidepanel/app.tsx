@@ -147,10 +147,14 @@ export function SidepanelApp() {
     availableTabs,
     activeTabAttachable,
     selectedElements,
+    selectedTexts,
     setAttachedTabs,
     clearComposerContext,
-    clearAttachedTabsAfterSend,
+    clearComposerContextAfterSend,
     setSelectedElements,
+    setSelectedTexts,
+    attachSelectedText,
+    removeSelectedText,
     attachActiveTab,
     attachTab,
     showAllTabsPicker,
@@ -165,10 +169,12 @@ export function SidepanelApp() {
       pendingAttachments,
       attachedTabs,
       selectedElements,
+      selectedTexts,
       selectedSkills,
       setInput,
       setAttachedTabs,
       setSelectedElements,
+      setSelectedTexts,
       setSelectedSkills,
       stageUploadedAttachments,
     });
@@ -222,11 +228,10 @@ export function SidepanelApp() {
     ready: !!chats && language !== undefined,
     t,
     language: language || "",
-    input,
-    setInput,
     importChat,
     createChat,
     attachTab,
+    attachSelectedText,
     currentChatId: currentChat?.id,
     canSend: currentChatStatus === "ready" && !currentChatStreaming,
     send: ({ content, ...request }) => send(content, undefined, { request }),
@@ -248,7 +253,6 @@ export function SidepanelApp() {
     setEditingMessage,
     setSentAttachmentPreviews,
     clearComposerContext,
-    setSelectedElements,
     setSelectedSkills,
     setOpenMenu,
   );
@@ -303,6 +307,7 @@ export function SidepanelApp() {
         baseChat,
         sentTabs,
         sentElements,
+        sentTexts,
         sentSkills,
         sentAttachments,
         activeAttachments,
@@ -313,6 +318,7 @@ export function SidepanelApp() {
         resendMessage: options.resendMessage,
         attachedTabs,
         selectedElements,
+        selectedTexts,
         selectedSkills,
         resendAttachments,
         pendingAttachments,
@@ -322,6 +328,7 @@ export function SidepanelApp() {
       const context = await buildSidepanelContext({
         attachedTabs: sentTabs,
         selectedElements: sentElements,
+        selectedTexts: sentTexts,
       });
       const {
         userMessage,
@@ -347,6 +354,7 @@ export function SidepanelApp() {
         }),
         sentTabs,
         sentElements,
+        sentTexts,
         sentAttachments,
         skills: slash ? addSkill(sentSkills, slash.skill) : sentSkills,
         instruction:
@@ -374,9 +382,8 @@ export function SidepanelApp() {
         );
       if (!options.queued && !options.resendMessage) {
         clearInput();
-        clearAttachedTabsAfterSend();
+        clearComposerContextAfterSend();
         clearPendingAttachments();
-        setSelectedElements([]);
         setSelectedSkills([]);
         setEditingMessage(null);
       }
@@ -426,6 +433,7 @@ export function SidepanelApp() {
       availableTabs={availableTabs}
       activeTabAttachable={activeTabAttachable}
       selectedElements={selectedElements}
+      selectedTexts={selectedTexts}
       streaming={currentChatStreaming}
       activeAssistantMessageId={currentAssistantMessageId}
       stoppedRuns={stoppedRuns}
@@ -472,6 +480,7 @@ export function SidepanelApp() {
       onToggleAttachedTab={toggleAttachedTab}
       onAttachActiveTab={attachActiveTab}
       onRemoveAttachedTab={removeAttachedTab}
+      onRemoveSelectedText={removeSelectedText}
       onAttachFiles={attachFiles}
       onRemoveUploadedAttachment={removeUploadedAttachment}
       onReplaceUploadedAttachment={replaceUploadedAttachment}

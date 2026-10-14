@@ -5,6 +5,7 @@ import {
   FileText,
   FileVideo,
   Image,
+  TextQuote,
 } from "lucide-react";
 import { useState } from "react";
 import { ATTACHMENT_KIND } from "../../src/shared/attachments";
@@ -17,6 +18,7 @@ import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
 import type {
   AttachmentTab,
   ChatSource,
+  SelectedText,
   UploadedAttachment,
 } from "../../src/shared/types";
 import {
@@ -26,6 +28,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../../src/ui/components";
+import { selectedTextExcerpt } from "./selected-text";
 
 const SOURCE_CHIP_PREVIEW_COUNT = 5;
 
@@ -178,6 +181,25 @@ export function SentAttachmentsChip({
               )
             : t.sidepanel.willBeSentToAi}
         </small>
+      </span>
+    </div>
+  );
+}
+
+// The full text shows on hover, like a context card's title.
+export function SentSelectedTextChip({
+  selection,
+  t,
+}: {
+  selection: SelectedText;
+  t: Messages;
+}) {
+  return (
+    <div className="sent-tab-chip" title={selection.text}>
+      <TextQuote size={22} />
+      <span>
+        <strong>{selectedTextExcerpt(selection.text)}</strong>
+        <small>{t.sidepanel.selectedText}</small>
       </span>
     </div>
   );

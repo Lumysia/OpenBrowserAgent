@@ -129,7 +129,7 @@ Translate on a word or short phrase shows a dictionary entry instead of a plain 
 
 ## Context menu and web search
 
-The context menu is the browser's right-click menu; OpenBrowserAgent adds a submenu there. Its titles follow each platform's menu style: short imperative phrases, no final period. `%s` in a title is the selected text, quoted the way the language quotes (“%s” in Simplified Chinese, 「%s」 in Traditional Chinese and Japanese, „%s“ in German, « %s » in French, «%s» in Spanish). "Search the web" means the agent searches and answers with sources; the smart bar's button for it is "AI search".
+The context menu is the browser's right-click menu; OpenBrowserAgent adds a submenu there. Its titles follow each platform's menu style: short imperative phrases, no final period. `%s` in a title is the selected text, quoted the way the language quotes (“%s” in Simplified Chinese, 「%s」 in Traditional Chinese and Japanese, „%s“ in German, « %s » in French, «%s» in Spanish). "Search the web" means the agent searches and answers with sources; the smart bar's button for it is "AI search". Text the user selected and hands to the side panel is the "selected text": it shows as a card above the composer and a chip on the sent message, named with the same words as in the menu titles.
 
 | English               | 简体中文        | 繁體中文        | 日本語                | 한국어            |
 | --------------------- | --------------- | --------------- | --------------------- | ----------------- |
@@ -138,6 +138,7 @@ The context menu is the browser's right-click menu; OpenBrowserAgent adds a subm
 | AI search (smart bar) | AI搜索          | AI 搜尋         | AI 検索               | AI 검색           |
 | linked page           | 链接页面        | 連結頁面        | リンク先のページ      | 링크된 페이지     |
 | Copy as Markdown      | 复制为 Markdown | 複製為 Markdown | Markdown としてコピー | Markdown으로 복사 |
+| selected text         | 所选文本        | 所選文字        | 選択したテキスト      | 선택한 텍스트     |
 
 | English               | Français              | Deutsch               | Español              | Português (Brasil)   |
 | --------------------- | --------------------- | --------------------- | -------------------- | -------------------- |
@@ -146,6 +147,7 @@ The context menu is the browser's right-click menu; OpenBrowserAgent adds a subm
 | AI search (smart bar) | Recherche IA          | KI-Suche              | Búsqueda con IA      | Pesquisa com IA      |
 | linked page           | page liée             | verlinkte Seite       | página enlazada      | página do link       |
 | Copy as Markdown      | Copier en Markdown    | Als Markdown kopieren | Copiar como Markdown | Copiar como Markdown |
+| selected text         | texte sélectionné     | ausgewählter Text     | texto seleccionado   | texto selecionado    |
 
 ## Notes per language
 

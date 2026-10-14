@@ -7,6 +7,7 @@ import type {
   ChatSource,
   PickedSkill,
   SelectedElement,
+  SelectedText,
   UploadedAttachment,
 } from "../../src/shared/types";
 import {
@@ -22,9 +23,14 @@ import {
 import { selectedElementImageAttachments } from "./selected-element-attachment";
 import { generateLocalTitle } from "./sidepanel-context";
 
-// A request from the context menu or the smart bar: the tabs it is about,
-// and how the agent should carry it out (see side-panel-requests).
-export type SendRequest = { instruction: string; tabs: AttachmentTab[] };
+// A request from the context menu or the smart bar: the tabs and selected
+// text it is about, and how the agent should carry it out (see
+// side-panel-requests).
+export type SendRequest = {
+  instruction: string;
+  tabs: AttachmentTab[];
+  selectedTexts?: SelectedText[];
+};
 
 // The instruction a request's message carries, kept for a resend.
 export function messageInstruction(message: ChatMessage | undefined) {
@@ -38,6 +44,7 @@ export function createSendMessagePlan({
   t,
   sentTabs,
   sentElements,
+  sentTexts = [],
   sentAttachments,
   context,
   sources,
@@ -50,6 +57,7 @@ export function createSendMessagePlan({
   t: Messages;
   sentTabs: AttachmentTab[];
   sentElements: SelectedElement[];
+  sentTexts?: SelectedText[];
   sentAttachments: UploadedAttachment[];
   context: string;
   sources?: ChatSource[];
@@ -74,6 +82,7 @@ export function createSendMessagePlan({
       ...(sentElements.length
         ? { selectedElements: sentElements.map(toSelectedElementMetadata) }
         : {}),
+      ...(sentTexts.length ? { selectedTexts: sentTexts } : {}),
       ...(sentAttachments.length
         ? { uploadedAttachments: sentAttachments.map(toAttachmentMetadata) }
         : {}),
@@ -127,6 +136,7 @@ export function pickSendInputs({
   resendMessage,
   attachedTabs,
   selectedElements,
+  selectedTexts = [],
   selectedSkills,
   resendAttachments,
   pendingAttachments,
@@ -139,6 +149,7 @@ export function pickSendInputs({
   resendMessage?: ChatMessage;
   attachedTabs: AttachmentTab[];
   selectedElements: SelectedElement[];
+  selectedTexts?: SelectedText[];
   selectedSkills: PickedSkill[];
   resendAttachments?: UploadedAttachment[];
   pendingAttachments: UploadedAttachment[];
@@ -151,6 +162,7 @@ export function pickSendInputs({
       baseChat: chat,
       sentTabs: request.tabs,
       sentElements: [],
+      sentTexts: request.selectedTexts || [],
       sentSkills: [],
       sentAttachments: [],
       activeAttachments: [],
@@ -172,6 +184,7 @@ export function pickSendInputs({
     : edit
       ? edit.selectedElements
       : selectedElements;
+  const sentTexts = queued ? [] : edit ? edit.selectedTexts : selectedTexts;
   const sentSkills = queued ? [] : edit ? edit.skills : selectedSkills;
   const imageAttachments = selectedElementImageAttachments(sentElements);
   return {
@@ -187,6 +200,7 @@ export function pickSendInputs({
       : chat,
     sentTabs,
     sentElements,
+    sentTexts,
     sentSkills,
     sentAttachments: [
       ...(queued ? [] : resendAttachments || pendingAttachments),
