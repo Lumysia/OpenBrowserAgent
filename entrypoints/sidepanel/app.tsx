@@ -345,11 +345,7 @@ export function SidepanelApp() {
         t,
         context,
         sources: baseChat.sources,
-        assistantModel: chatModelLabel(
-          activeAgent,
-          preferences,
-          configuredModels,
-        ),
+        assistantModel: chatModelLabel(activeAgent, providers, preferences),
         sentTabs,
         sentElements,
         sentTexts,

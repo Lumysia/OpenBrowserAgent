@@ -32,8 +32,7 @@ import {
 } from "../../src/ui/components";
 import { providerTypeLabel } from "../../src/ui/provider-display";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { ModelSelect as DefaultableModelSelect } from "./model-select";
-import { ModelSelect } from "./provider-controls";
+import { ModelSelect, useConfiguredModels } from "./model-select";
 import { ProviderAccordion } from "./provider-accordion";
 
 export function ProvidersPage() {
@@ -47,13 +46,7 @@ export function ProvidersPage() {
     [providerState],
   );
   const providerEntries = Object.entries(normalizedProviders);
-  const configuredModels = useMemo(
-    () =>
-      Object.values(normalizedProviders).flatMap(
-        (provider) => provider?.models || [],
-      ),
-    [normalizedProviders],
-  );
+  const configuredModels = useConfiguredModels();
   const t = getMessages(language);
 
   if (!providerState || !preferences) return null;
@@ -174,7 +167,7 @@ export function ProvidersPage() {
               label={t.options.selectModel}
               value={preferences.selectedModelId}
               models={configuredModels}
-              emptyLabel={t.options.selectModel}
+              noneLabel={t.options.selectModel}
               onChange={(selectedModelId) =>
                 setPreferences((previous) => ({ ...previous, selectedModelId }))
               }
@@ -191,11 +184,12 @@ export function ProvidersPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DefaultableModelSelect
+            <ModelSelect
               t={t}
+              models={configuredModels}
               value={preferences.helperModelId}
               label={t.options.helperModel}
-              defaultLabel={t.options.modelSameAsChat}
+              noneLabel={t.options.modelSameAsChat}
               onChange={(helperModelId) =>
                 setPreferences((previous) => ({ ...previous, helperModelId }))
               }
@@ -210,12 +204,13 @@ export function ProvidersPage() {
             <CardDescription>{t.smartBar.modelDescription}</CardDescription>
           </CardHeader>
           <CardContent>
-            <DefaultableModelSelect
+            <ModelSelect
               t={t}
+              models={configuredModels}
               value={normalizeSmartBarSettings(preferences.smartBar).modelId}
               label={t.smartBar.model}
-              defaultLabel={t.options.modelSameAsChat}
-              onChange={(modelId) =>
+              noneLabel={t.options.modelSameAsChat}
+              onChange={(modelId = "") =>
                 setPreferences((previous) => ({
                   ...previous,
                   smartBar: {
@@ -245,20 +240,23 @@ export function ProvidersPage() {
           <CardContent>
             <div className="provider-image-fields">
               <div className="provider-image-model-field">
-                <ModelSelect
-                  t={t}
-                  label={t.options.selectImageModel}
-                  value={preferences.selectedImageModelId}
-                  models={configuredModels}
-                  emptyLabel={t.options.selectImageModel}
-                  disabled={!preferences.imageGenerationEnabled}
-                  onChange={(selectedImageModelId) =>
-                    setPreferences((previous) => ({
-                      ...previous,
-                      selectedImageModelId,
-                    }))
-                  }
-                />
+                <Label>
+                  {t.options.selectImageModel}
+                  <ModelSelect
+                    t={t}
+                    label={t.options.selectImageModel}
+                    value={preferences.selectedImageModelId}
+                    models={configuredModels}
+                    noneLabel={t.options.selectImageModel}
+                    disabled={!preferences.imageGenerationEnabled}
+                    onChange={(selectedImageModelId) =>
+                      setPreferences((previous) => ({
+                        ...previous,
+                        selectedImageModelId,
+                      }))
+                    }
+                  />
+                </Label>
               </div>
               <Label className="provider-size-field">
                 {t.options.imageGenerationSize}

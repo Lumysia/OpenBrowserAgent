@@ -29,7 +29,7 @@ import {
   SettingsSummary,
 } from "../../src/ui/components";
 import { AgentToolsEditor } from "./agent-tools-editor";
-import { ModelSelect } from "./model-select";
+import { ModelSelect, useConfiguredModels } from "./model-select";
 import { AgentIconPicker } from "./agent-icon-picker";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { AgentIcon } from "../../src/ui/agent-icons";
@@ -50,6 +50,7 @@ export function AgentsPage() {
   const importAgentInputRef = useRef<HTMLInputElement | null>(null);
   const [importAgentError, setImportAgentError] = useState("");
   const t = getMessages(language);
+  const models = useConfiguredModels();
   const items = agents || [];
   const selectedAgentId = preferences?.selectedAgentId || DEFAULT_AGENT_ID;
 
@@ -262,13 +263,12 @@ export function AgentsPage() {
                         {t.options.agentModel}
                         <ModelSelect
                           t={t}
+                          models={models}
                           value={agent.modelId}
                           label={t.options.agentModel}
-                          defaultLabel={t.options.modelSameAsChat}
+                          noneLabel={t.options.modelSameAsChat}
                           onChange={(modelId) =>
-                            updateAgent(agent.id, {
-                              modelId: modelId || undefined,
-                            })
+                            updateAgent(agent.id, { modelId })
                           }
                         />
                       </Label>

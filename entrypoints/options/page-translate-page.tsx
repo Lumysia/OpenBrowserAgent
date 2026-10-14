@@ -49,7 +49,7 @@ import {
 } from "../../src/ui/components";
 import { errorWithDetail } from "../../src/ui/error-text";
 import { useStoredState } from "../../src/ui/useStoredState";
-import { ModelSelect } from "./model-select";
+import { ModelSelect, useConfiguredModels } from "./model-select";
 
 // Select value for "follow the extension's language"; stored as "".
 const FOLLOW_INTERFACE = "interface";
@@ -65,6 +65,7 @@ export function PageTranslatePage() {
   );
   const [cacheError, setCacheError] = useState("");
   const t = getMessages(language);
+  const models = useConfiguredModels();
   const p = getPageTranslateMessages(language);
   if (!preferences) return null;
   const settings = normalizePageTranslateSettings(preferences.pageTranslate);
@@ -167,10 +168,11 @@ export function PageTranslatePage() {
           <CardContent>
             <ModelSelect
               t={t}
+              models={models}
               value={settings.modelId}
-              defaultLabel={p.defaultModel}
+              noneLabel={p.defaultModel}
               label={p.model}
-              onChange={(modelId) => update({ modelId })}
+              onChange={(modelId = "") => update({ modelId })}
             />
           </CardContent>
         </Card>

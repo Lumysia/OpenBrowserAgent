@@ -73,3 +73,10 @@ export function chooseImageModel(
     (provider) => [...(provider.imageModels || []), ...(provider.models || [])],
   );
 }
+
+// Every configured chat model, in provider order.
+export function configuredModels(state: ProviderState | undefined) {
+  return Object.values(normalizeProviderState(state)).flatMap(
+    (provider) => provider.models || [],
+  );
+}

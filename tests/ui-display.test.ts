@@ -30,10 +30,13 @@ test("default provider names show in the UI language, chosen ones as typed", () 
     "OpenAI Responses 兼容",
   );
   assert.equal(
-    modelNameDisplay("Anthropic-compatible / claude / v2", zh),
+    modelNameDisplay(
+      { name: "claude", displayName: "Anthropic-compatible / claude / v2" },
+      zh,
+    ),
     "Anthropic 兼容 / claude / v2",
   );
-  assert.equal(modelNameDisplay("gpt-5", zh), "gpt-5");
+  assert.equal(modelNameDisplay({ name: "gpt-5" }, zh), "gpt-5");
 });
 
 test("built-in MCP servers keep a localized description until edited", () => {

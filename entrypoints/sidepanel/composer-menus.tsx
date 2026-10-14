@@ -10,7 +10,11 @@ import {
 import { useEffect, useState } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import { DEFAULT_AGENT_ID } from "../../src/shared/agents";
-import { providerLabels } from "../../src/shared/types";
+import {
+  modelIdParts,
+  parseModelDisplayName,
+} from "../../src/shared/model-display";
+import { providerLabels, type ProviderId } from "../../src/shared/types";
 import type {
   AttachmentTab,
   Agent,
@@ -288,9 +292,7 @@ export function ModelMenu({
           </span>
           <span>
             <small>{providerName(model, t)}</small>
-            <strong title={modelDisplayName(model)}>
-              {modelDisplayName(model)}
-            </strong>
+            <strong title={modelLabel(model)}>{modelLabel(model)}</strong>
           </span>
           {selectedModelId === model.id && (
             <Check className="menu-check" size={14} />
@@ -404,23 +406,19 @@ export function selectedModelLabel(
   t: Messages,
 ) {
   const model = models.find((candidate) => candidate.id === modelId);
-  return model
-    ? modelDisplayName(model)
-    : modelId
-      ? modelId.split(":").slice(1).join(":") || modelId
-      : t.sidepanel.selectModel;
+  if (model) return modelLabel(model);
+  return modelId ? modelIdParts(modelId).name : t.sidepanel.selectModel;
 }
 
 function providerName(model: ModelConfig, t: Messages) {
-  const fromDisplay = model.displayName?.split("/")[0]?.trim();
-  if (fromDisplay) return providerNameDisplay(fromDisplay, t);
-  const provider = model.id.split(":")[0] as keyof typeof providerLabels;
-  return Object.hasOwn(providerLabels, provider)
-    ? providerTypeLabel(provider, t)
-    : provider;
+  const { provider } = parseModelDisplayName(model);
+  if (provider) return providerNameDisplay(provider, t);
+  const { providerKey } = modelIdParts(model.id);
+  return Object.hasOwn(providerLabels, providerKey)
+    ? providerTypeLabel(providerKey as ProviderId, t)
+    : providerKey;
 }
 
-function modelDisplayName(model: ModelConfig) {
-  const fromDisplay = model.displayName?.split("/").slice(1).join("/").trim();
-  return fromDisplay || model.name;
+function modelLabel(model: ModelConfig) {
+  return parseModelDisplayName(model).label;
 }

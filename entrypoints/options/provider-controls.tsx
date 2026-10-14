@@ -7,12 +7,14 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { getMessages, type Messages } from "../../src/shared/i18n";
-import { storage } from "../../src/shared/storage";
 import {
-  providerLabels,
-  type ModelConfig,
-  type ProviderConfig,
-} from "../../src/shared/types";
+  editableModelLabel,
+  modelDisplayName,
+  parseModelDisplayName,
+  providerDisplayName,
+} from "../../src/shared/model-display";
+import { storage } from "../../src/shared/storage";
+import { type ModelConfig, type ProviderConfig } from "../../src/shared/types";
 import {
   Accordion,
   AccordionContent,
@@ -40,7 +42,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../../src/ui/components";
-import { modelNameDisplay } from "../../src/ui/provider-display";
 import { useStoredState } from "../../src/ui/useStoredState";
 
 export function FetchedModelPicker({
@@ -123,52 +124,7 @@ export function FetchedModelPicker({
 }
 
 function fetchedModelLabel(model: ModelConfig) {
-  return model.displayName?.split("/").slice(1).join("/").trim() || model.name;
-}
-
-export function ModelSelect({
-  t,
-  label,
-  value,
-  models,
-  emptyLabel,
-  disabled,
-  onChange,
-}: {
-  t: Messages;
-  label: string;
-  value?: string;
-  models: ModelConfig[];
-  emptyLabel: string;
-  disabled?: boolean;
-  onChange: (value?: string) => void;
-}) {
-  const isDisabled = disabled || models.length === 0;
-
-  return (
-    <Label>
-      {label}
-      <Select
-        value={value || "none"}
-        disabled={isDisabled}
-        onValueChange={(next) => onChange(next === "none" ? undefined : next)}
-      >
-        <SelectTrigger>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="none">{emptyLabel}</SelectItem>
-          {models.map((model) => (
-            <SelectItem key={model.id} value={model.id}>
-              {model.displayName
-                ? modelNameDisplay(model.displayName, t)
-                : model.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </Label>
-  );
+  return parseModelDisplayName(model).label;
 }
 
 export function ModelList({
@@ -198,7 +154,10 @@ export function ModelList({
             <AccordionTriggerButton hideChevron className="model-row-trigger">
               <span className="model-row-summary">
                 <span className="model-row-title">
-                  {modelDisplayLabel(model)}
+                  {
+                    parseModelDisplayName(model, providerDisplayName(value))
+                      .label
+                  }
                 </span>
                 <small className="model-api-name">
                   {modelTechnicalLabel(value, model)}
@@ -273,7 +232,7 @@ export function ModelList({
                 {t.options.modelDisplayName}
                 <Input
                   className="model-display-input"
-                  value={modelDisplayLabel(model)}
+                  value={editableModelLabel(model, providerDisplayName(value))}
                   onChange={(event) =>
                     onChange({
                       ...value,
@@ -347,13 +306,8 @@ function withModelContextLength(
   return { ...model, contextLength };
 }
 
-function modelDisplayLabel(model: ModelConfig) {
-  const fromDisplay = model.displayName?.split("/").slice(1).join("/").trim();
-  return fromDisplay ?? model.name;
-}
-
 function modelTechnicalLabel(provider: ProviderConfig, model: ModelConfig) {
-  return `${providerDisplayName(provider)} / ${model.name}`;
+  return modelDisplayName(providerDisplayName(provider), model.name);
 }
 
 function renameModelDisplayName(
@@ -363,10 +317,6 @@ function renameModelDisplayName(
 ) {
   return {
     ...model,
-    displayName: `${providerDisplayName(provider)} / ${label}`,
+    displayName: modelDisplayName(providerDisplayName(provider), label),
   };
-}
-
-function providerDisplayName(provider: ProviderConfig) {
-  return provider.label || providerLabels[provider.type || "openai"];
 }
