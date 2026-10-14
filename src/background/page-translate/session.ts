@@ -4,7 +4,6 @@ import {
   translationCacheKey,
   writeTranslations,
 } from "../../shared/page-translate/cache";
-import { getPageTranslateMessages } from "../../shared/page-translate/messages";
 import {
   PAGE_TRANSLATE_ERROR,
   type PageTranslateEvent,
@@ -12,16 +11,12 @@ import {
   type PageTranslateRequest,
 } from "../../shared/page-translate/protocol";
 import {
-  FREE_ENGINE_FALLBACK,
   normalizePageTranslateSettings,
   pageTranslateTarget,
-  PAGE_TRANSLATE_ENGINE,
+  PAGE_TRANSLATE_FALLBACK,
   type PageTranslateEngine,
 } from "../../shared/page-translate/settings";
-import { getMessages } from "../../shared/i18n";
 import { storage } from "../../shared/storage";
-import { UserError, userErrorText } from "../../shared/user-errors";
-import { errorWithDetail } from "../../ui/error-text";
 import type { PageToastTheme } from "../../shared/page-toast";
 import { pageToastTheme } from "../page-toast";
 import {
@@ -29,9 +24,9 @@ import {
   translateItems,
   type EngineChain,
 } from "./engine-chain";
-import { EngineError, resolveEngine, type TranslationEngine } from "./engines";
+import { resolveEngine, type TranslationEngine } from "./engines";
+import { errorEvent, switchMessage } from "./notes";
 import { createTermMemory, type TermMemory } from "./term-memory";
-import { formatMessage } from "../../shared/text";
 
 type Post = (event: PageTranslateEvent) => void;
 
@@ -40,6 +35,8 @@ const DEFAULT_TOAST_THEME = pageToastTheme(undefined, undefined);
 
 type Session = {
   chain: EngineChain;
+  // The engine chosen in the settings, which the chain may have left.
+  selected: PageTranslateEngine;
   target: string;
   language: string;
   theme: PageToastTheme;
@@ -51,8 +48,8 @@ type Session = {
 let pruned = false;
 
 // One page's translation: its engine and target language are fixed when it
-// starts (a failing free service hands over to the other one once); batches
-// run as the page asks for them.
+// starts (an engine that fails hands over to its fallback once); batches run
+// as the page asks for them.
 export function createPageSession(post: Post, signal: AbortSignal) {
   let session: Promise<Session> | undefined;
   return (request: PageTranslateRequest) => {
@@ -99,12 +96,12 @@ async function startSession(
     preferences.colorScheme,
     preferences.accentColor,
   );
-  // The page switched to the other free service in an earlier session.
+  // The page switched to the fallback engine in an earlier session.
   const switched =
     !!request.engine &&
-    FREE_ENGINE_FALLBACK[settings.engine] === request.engine;
+    PAGE_TRANSLATE_FALLBACK[settings.engine] === request.engine;
   const kind = switched ? request.engine! : settings.engine;
-  const fallback = switched ? undefined : FREE_ENGINE_FALLBACK[kind];
+  const fallback = switched ? undefined : PAGE_TRANSLATE_FALLBACK[kind];
   try {
     const engine = await resolveEngine({ ...settings, engine: kind });
     const chain = createEngineChain(
@@ -141,6 +138,7 @@ async function startSession(
     }
     return {
       chain,
+      selected: settings.engine,
       target,
       language,
       theme,
@@ -149,7 +147,14 @@ async function startSession(
       terms: createTermMemory(),
     };
   } catch (error) {
-    post(errorEvent(error, undefined, { language, target, theme, kind }));
+    post(
+      errorEvent(error, undefined, {
+        language,
+        theme,
+        kind,
+        selected: settings.engine,
+      }),
+    );
     throw error;
   }
 }
@@ -220,9 +225,9 @@ async function runBatch(
     post(
       errorEvent(error, batch, {
         language: session.language,
-        target,
         theme: session.theme,
         kind: chain.current.kind,
+        selected: session.selected,
       }),
     );
   } finally {
@@ -242,93 +247,4 @@ async function saveTranslations(
     ),
   );
   await writeTranslations(new Map(entries));
-}
-
-function errorEvent(
-  error: unknown,
-  batch: number | undefined,
-  context: {
-    language: string;
-    target: string;
-    theme: PageToastTheme;
-    // The engine in use when it failed.
-    kind: PageTranslateEngine;
-  },
-): PageTranslateEvent {
-  const kind =
-    error instanceof EngineError
-      ? error.kind
-      : error instanceof UserError
-        ? PAGE_TRANSLATE_ERROR.unavailable
-        : PAGE_TRANSLATE_ERROR.failed;
-  const messages = getPageTranslateMessages(context.language);
-  const t = getMessages(context.language);
-  let message = messages.errors[kind].replaceAll(
-    "{engine}",
-    messages.engines[context.kind],
-  );
-  if (error instanceof UserError) message = userErrorText(error, t);
-  // An error from elsewhere (the provider, the browser) adds its own text.
-  else if (!(error instanceof EngineError))
-    message = errorWithDetail(message, error, t);
-  else if (kind === PAGE_TRANSLATE_ERROR.allFailed)
-    message = serviceMessage(
-      messages.errors.allFailed,
-      context.language,
-      FREE_ENGINE_FALLBACK[context.kind] ?? context.kind,
-      context.kind,
-    );
-  else if (
-    kind === PAGE_TRANSLATE_ERROR.unavailable &&
-    context.kind === PAGE_TRANSLATE_ENGINE.browser
-  )
-    message = messages.browserUnsupported.replaceAll(
-      "{language}",
-      displayName(context.target, context.language),
-    );
-  return { type: "error", batch, kind, message, theme: context.theme };
-}
-
-function switchMessage(
-  language: string,
-  from: PageTranslateEngine,
-  to: PageTranslateEngine,
-  error: EngineError,
-) {
-  const { switched } = getPageTranslateMessages(language);
-  return serviceMessage(
-    error.kind === PAGE_TRANSLATE_ERROR.rateLimited
-      ? switched.rateLimited
-      : switched.failed,
-    language,
-    from,
-    to,
-  );
-}
-
-// {engine}: the service that failed first; {fallback}: the other one.
-function serviceMessage(
-  template: string,
-  language: string,
-  engine: PageTranslateEngine,
-  fallback: PageTranslateEngine,
-) {
-  const { freeServices } = getPageTranslateMessages(language);
-  const name = (kind: PageTranslateEngine) =>
-    freeServices[kind as keyof typeof freeServices] ?? kind;
-  return formatMessage(template, {
-    engine: name(engine),
-    fallback: name(fallback),
-  });
-}
-
-function displayName(tag: string, language: string) {
-  try {
-    return (
-      new Intl.DisplayNames([language || "en"], { type: "language" }).of(tag) ||
-      tag
-    );
-  } catch {
-    return tag;
-  }
 }

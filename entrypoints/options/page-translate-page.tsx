@@ -22,6 +22,7 @@ import {
   PAGE_TRANSLATE_DISPLAY,
   PAGE_TRANSLATE_ENGINE,
   PAGE_TRANSLATE_ENGINES,
+  PAGE_TRANSLATE_FALLBACK,
   type PageTranslateDisplay,
   type PageTranslateEngine,
   type PageTranslateSettings,
@@ -52,7 +53,7 @@ import { ModelSelect } from "./model-select";
 // Select value for "follow the extension's language"; stored as "".
 const FOLLOW_INTERFACE = "interface";
 
-// Only browsers with the Translator API offer the on-device engine.
+// Without the Translator API the on-device engine falls back to the AI model.
 const hasBrowserTranslator = "Translator" in globalThis;
 
 export function PageTranslatePage() {
@@ -74,12 +75,12 @@ export function PageTranslatePage() {
         ...change,
       },
     }));
-  const engines = PAGE_TRANSLATE_ENGINES.filter(
-    (engine) =>
-      engine !== PAGE_TRANSLATE_ENGINE.browser ||
-      hasBrowserTranslator ||
-      settings.engine === engine,
-  );
+  const browserMissing =
+    settings.engine === PAGE_TRANSLATE_ENGINE.browser && !hasBrowserTranslator;
+  // The model card also serves an engine that falls back to the model.
+  const usesModel =
+    settings.engine === PAGE_TRANSLATE_ENGINE.model ||
+    PAGE_TRANSLATE_FALLBACK[settings.engine] === PAGE_TRANSLATE_ENGINE.model;
   const names = displayNames(language);
   const interfaceLanguage = matchTargetLanguage(language) || "en";
   const cloud = FREE_CLOUD_ENGINES.includes(settings.engine)
@@ -123,14 +124,18 @@ export function PageTranslatePage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {engines.map((engine) => (
+              {PAGE_TRANSLATE_ENGINES.map((engine) => (
                 <SelectItem key={engine} value={engine}>
                   {p.engines[engine]}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <CardDescription>{p.engineDetails[settings.engine]}</CardDescription>
+          <CardDescription>
+            {browserMissing
+              ? p.browserMissing
+              : p.engineDetails[settings.engine]}
+          </CardDescription>
           {cloud && (
             <div className="split">
               <Feedback>
@@ -150,7 +155,7 @@ export function PageTranslatePage() {
           )}
         </CardContent>
       </Card>
-      {settings.engine === PAGE_TRANSLATE_ENGINE.model && (
+      {usesModel && (
         <Card>
           <CardHeader>
             <CardTitle className="settings-section-title">

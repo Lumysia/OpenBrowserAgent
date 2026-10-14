@@ -21,7 +21,7 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
     model:
       "設定済みの AI プロバイダーが、下で選んだモデルでページを翻訳します。",
     browser:
-      "ブラウザーがこのデバイス上で翻訳します。テキストはデバイスの外に送信されません。言語ごとに一度だけダウンロードされます。",
+      "ブラウザーがこのデバイス上で翻訳します。テキストはデバイスの外に送信されません。言語ごとに一度だけダウンロードされます。翻訳できないページは、下の AI モデルで翻訳します。",
     google:
       "非公式の無料サービスで、Google の API ではありません。いつでも使えなくなる可能性があります。",
     microsoft:
@@ -33,7 +33,9 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
     microsoft:
       "翻訳のため、ページのテキストが Microsoft に送信されます。Microsoft が失敗した場合、そのページの残りは Google が翻訳します。",
   },
-  freeServices: {
+  engineNames: {
+    model: "AI モデル",
+    browser: "組み込み翻訳",
     google: "Google",
     microsoft: "Microsoft",
   },
@@ -79,9 +81,11 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
       "{engine} がリクエストを制限しているため、このページは {fallback} で翻訳します。",
     failed:
       "{engine} が現在使えないため、このページは {fallback} で翻訳します。",
+    unavailable:
+      "{engine}ではこのページを翻訳できないため、{fallback}で翻訳します。",
   },
-  browserUnsupported:
-    "組み込み翻訳では、このページを{language}に翻訳できません。",
+  browserMissing:
+    "このブラウザーには組み込み翻訳がないため、下の AI モデルでページを翻訳します。",
   notStarted:
     "このページの翻訳を開始できませんでした。ページを再読み込みして、もう一度お試しください。",
   unavailablePage:

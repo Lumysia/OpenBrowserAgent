@@ -21,7 +21,7 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
     model:
       "Seu provedor de IA traduz as páginas com o modelo escolhido abaixo.",
     browser:
-      "O navegador traduz neste dispositivo; nenhum texto sai dele. Cada idioma é baixado uma vez.",
+      "O navegador traduz neste dispositivo; nenhum texto sai dele. Cada idioma é baixado uma vez. Quando ele não consegue traduzir uma página, o modelo de IA abaixo a traduz.",
     google:
       "Um serviço gratuito não oficial, não uma API do Google. Pode parar de funcionar a qualquer momento.",
     microsoft:
@@ -33,7 +33,9 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
     microsoft:
       "O texto da página é enviado à Microsoft para ser traduzido. Se a Microsoft falhar em uma página, o Google traduz o resto dela.",
   },
-  freeServices: {
+  engineNames: {
+    model: "o modelo de IA",
+    browser: "o tradutor integrado",
     google: "Google",
     microsoft: "Microsoft",
   },
@@ -76,12 +78,14 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
   },
   switched: {
     rateLimited:
-      "{engine} está limitando as solicitações; esta página passou a usar {fallback}.",
+      "Nesta página, {fallback} assumiu a tradução: {engine} está limitando as solicitações.",
     failed:
-      "{engine} não está funcionando agora; esta página passou a usar {fallback}.",
+      "Nesta página, {fallback} assumiu a tradução: {engine} não está funcionando agora.",
+    unavailable:
+      "Nesta página, {fallback} assumiu a tradução: {engine} não consegue traduzi-la aqui.",
   },
-  browserUnsupported:
-    "O tradutor integrado não consegue traduzir esta página para {language}.",
+  browserMissing:
+    "Este navegador não tem tradutor integrado, então o modelo de IA abaixo traduz as páginas.",
   notStarted:
     "Não foi possível começar a traduzir esta página. Recarregue a página e tente novamente.",
   unavailablePage:

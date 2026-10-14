@@ -117,14 +117,26 @@ function translatorFor(
   if (!instance) {
     instance = (async () => {
       const options = { sourceLanguage, targetLanguage };
-      if ((await translator.availability(options)) === "unavailable")
-        throw new EngineError(
+      // A pair the browser rejects or can't set up counts as unavailable, so
+      // the page continues with the fallback engine.
+      const unavailable = (reason: unknown) =>
+        new EngineError(
           PAGE_TRANSLATE_ERROR.unavailable,
-          `${SERVICE}: ${key} unavailable`,
+          `${SERVICE}: ${key} ${reason instanceof Error ? reason.message : String(reason)}`,
         );
-      // Downloads the language pack the first time; the user chose this
-      // engine and asked for the translation.
-      return translator.create(options);
+      let availability: Availability;
+      try {
+        availability = await translator.availability(options);
+      } catch (error) {
+        throw unavailable(error);
+      }
+      if (availability === "unavailable") throw unavailable(availability);
+      try {
+        // Downloads the language pack the first time.
+        return await translator.create(options);
+      } catch (error) {
+        throw unavailable(error);
+      }
     })();
     instance.catch(() => translators.delete(key));
     translators.set(key, instance);

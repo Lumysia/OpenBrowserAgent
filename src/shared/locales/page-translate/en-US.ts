@@ -19,7 +19,7 @@ export const pageTranslateEnUS = {
   engineDetails: {
     model: "Your AI provider translates pages with the model chosen below.",
     browser:
-      "The browser translates on this device; no text leaves it. Each language is downloaded once.",
+      "The browser translates on this device; no text leaves it. Each language is downloaded once. Where it can't translate a page, the AI model below does.",
     google:
       "An unofficial free service, not a Google API. It can stop working at any time.",
     microsoft:
@@ -32,7 +32,10 @@ export const pageTranslateEnUS = {
     microsoft:
       "Page text is sent to Microsoft to translate it. If Microsoft fails on a page, Google translates the rest of it.",
   },
-  freeServices: {
+  // Engine names inside sentences (the notes below).
+  engineNames: {
+    model: "the AI model",
+    browser: "the built-in translator",
     google: "Google",
     microsoft: "Microsoft",
   },
@@ -72,18 +75,20 @@ export const pageTranslateEnUS = {
     network: "Couldn't reach {engine}. Check your connection and try again.",
     failed: "Some paragraphs couldn't be translated by {engine}.",
     allFailed:
-      "{engine} and {fallback} both failed to translate. Try again later or choose another engine in Settings.",
+      "Neither {engine} nor {fallback} could translate this page. Try again later or choose another engine in Settings.",
   },
-  // {engine}: the service that failed; {fallback}: the one used instead.
+  // {engine}: the engine that failed; {fallback}: the one used instead.
   switched: {
     rateLimited:
-      "{engine} is limiting requests; switched to {fallback} for this page.",
+      "Switched to {fallback} for this page: {engine} is limiting requests.",
     failed:
-      "{engine} isn't working right now; switched to {fallback} for this page.",
+      "Switched to {fallback} for this page: {engine} isn't working right now.",
+    unavailable:
+      "Switched to {fallback} for this page: {engine} can't translate it here.",
   },
-  // {language}: the target language.
-  browserUnsupported:
-    "The built-in translator can't translate this page into {language}.",
+  // Below the engine choice where the browser has no built-in translator.
+  browserMissing:
+    "This browser has no built-in translator, so the AI model below translates pages.",
   // The page script was injected but didn't answer.
   notStarted:
     "Couldn't start translating this page. Reload the page and try again.",

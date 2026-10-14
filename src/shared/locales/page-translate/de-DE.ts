@@ -21,7 +21,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     model:
       "Ihr KI-Anbieter übersetzt die Seiten mit dem unten gewählten Modell.",
     browser:
-      "Der Browser übersetzt auf diesem Gerät; kein Text verlässt es. Jede Sprache wird einmal heruntergeladen.",
+      "Der Browser übersetzt auf diesem Gerät; kein Text verlässt es. Jede Sprache wird einmal heruntergeladen. Wo er eine Seite nicht übersetzen kann, übernimmt das unten gewählte KI-Modell.",
     google:
       "Ein inoffizieller kostenloser Dienst, keine API von Google. Er kann jederzeit aufhören zu funktionieren.",
     microsoft:
@@ -33,7 +33,9 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     microsoft:
       "Der Text der Seite wird zum Übersetzen an Microsoft gesendet. Wenn Microsoft auf einer Seite ausfällt, übersetzt Google den Rest der Seite.",
   },
-  freeServices: {
+  engineNames: {
+    model: "das KI-Modell",
+    browser: "der integrierte Übersetzer",
     google: "Google",
     microsoft: "Microsoft",
   },
@@ -76,12 +78,14 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
   },
   switched: {
     rateLimited:
-      "{engine} begrenzt die Anfragen; diese Seite wird jetzt mit {fallback} übersetzt.",
+      "Für diese Seite übernimmt jetzt {fallback}: {engine} begrenzt die Anfragen.",
     failed:
-      "{engine} funktioniert gerade nicht; diese Seite wird jetzt mit {fallback} übersetzt.",
+      "Für diese Seite übernimmt jetzt {fallback}: {engine} funktioniert gerade nicht.",
+    unavailable:
+      "Für diese Seite übernimmt jetzt {fallback}: {engine} kann sie hier nicht übersetzen.",
   },
-  browserUnsupported:
-    "Der integrierte Übersetzer kann diese Seite nicht in {language} übersetzen.",
+  browserMissing:
+    "Dieser Browser hat keinen integrierten Übersetzer; Seiten übersetzt daher das unten gewählte KI-Modell.",
   notStarted:
     "Die Übersetzung dieser Seite konnte nicht gestartet werden. Laden Sie die Seite neu und versuchen Sie es erneut.",
   unavailablePage:

@@ -19,7 +19,8 @@ export const pageTranslateZhCN: PageTranslateLocaleMessages = {
   },
   engineDetails: {
     model: "由你的 AI 提供商使用下方选择的模型翻译页面。",
-    browser: "由浏览器在此设备上翻译，文本不会离开设备。每种语言只需下载一次。",
+    browser:
+      "由浏览器在此设备上翻译，文本不会离开设备。每种语言只需下载一次。无法翻译的页面将改由下方的 AI 模型翻译。",
     google: "非官方的免费服务，不是 Google 的 API，可能随时停止工作。",
     microsoft: "非官方的免费服务，不是 Microsoft 的 API，可能随时停止工作。",
   },
@@ -29,7 +30,9 @@ export const pageTranslateZhCN: PageTranslateLocaleMessages = {
     microsoft:
       "页面文本会发送给 Microsoft 进行翻译。如果 Microsoft 在某个页面上出错，该页面的其余部分会改由 Google 翻译。",
   },
-  freeServices: {
+  engineNames: {
+    model: "AI 模型",
+    browser: "内置翻译器",
     google: "Google",
     microsoft: "Microsoft",
   },
@@ -68,8 +71,9 @@ export const pageTranslateZhCN: PageTranslateLocaleMessages = {
   switched: {
     rateLimited: "{engine} 正在限制请求，此页面已改用 {fallback} 翻译。",
     failed: "{engine} 暂时无法使用，此页面已改用 {fallback} 翻译。",
+    unavailable: "{engine}无法在此翻译这个页面，已改用 {fallback}。",
   },
-  browserUnsupported: "内置翻译器无法将此页面翻译为{language}。",
+  browserMissing: "此浏览器没有内置翻译器，页面将由下方的 AI 模型翻译。",
   notStarted: "无法开始翻译此页面。请重新加载页面后重试。",
   unavailablePage: "无法翻译此页面：浏览器不允许扩展修改它。",
 };
