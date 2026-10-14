@@ -1,6 +1,8 @@
 import { hasToolGroup, resolveAgent } from "../shared/agents";
 import { clampMaxToolSteps } from "../shared/config";
 import { getMessages } from "../shared/i18n";
+import { replyWith } from "../shared/message-reply";
+import { DESCRIBE_RUN } from "../shared/run-description";
 import { normalizeLocalExecutionBridges } from "../shared/local-execution-bridges";
 import {
   availableSkills,
@@ -172,4 +174,14 @@ export async function describeRun(agentId: string | undefined) {
     tools: toolSet.declared().map(schema),
     onDemandTools: toolSet.onDemand.map(schema),
   };
+}
+
+export function handleDescribeRunMessage(
+  message: unknown,
+  sendResponse: (response: unknown) => void,
+) {
+  const request = (message || {}) as { type?: string; agentId?: string };
+  if (request.type !== DESCRIBE_RUN) return false;
+  replyWith(describeRun(request.agentId), sendResponse);
+  return true;
 }

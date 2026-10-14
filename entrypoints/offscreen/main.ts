@@ -4,7 +4,7 @@ import {
   cancelSandboxRun,
   codeSandbox,
 } from "../../src/shared/code-sandbox/host";
-import { errorMessage } from "../../src/shared/error-message";
+import { replyWith } from "../../src/shared/message-reply";
 import {
   OFFSCREEN_MESSAGE,
   type OffscreenRequest,
@@ -37,14 +37,7 @@ chrome.runtime.onMessage.addListener(
     // scripts in web pages, may ask.
     if (!TYPES.has(message?.type)) return false;
     if (sender.id !== chrome.runtime.id || sender.tab) return false;
-    handle(message).then(
-      (value) => sendResponse({ ok: true, value }),
-      (error) =>
-        sendResponse({
-          ok: false,
-          error: errorMessage(error),
-        }),
-    );
+    replyWith(handle(message), sendResponse);
     return true;
   },
 );
