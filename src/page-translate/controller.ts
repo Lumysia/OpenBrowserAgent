@@ -11,6 +11,7 @@ import {
 import {
   PAGE_TRANSLATE_DISPLAY,
   type PageTranslateDisplay,
+  type PageTranslateEngine,
 } from "../shared/page-translate/settings";
 import { getBrowserApi } from "../shared/browser-api";
 import { createQueue, PRIORITY } from "./queue";
@@ -36,6 +37,13 @@ const SMALL_PAGE_CHARS = 5_000;
 const MEMORY_ENTRIES = 2_000;
 // A note for the same problem shows at most this often.
 const TOAST_INTERVAL_MS = 10_000;
+// Errors after which no more paragraphs are sent.
+const HALTING_ERRORS = new Set<string>([
+  PAGE_TRANSLATE_ERROR.refused,
+  PAGE_TRANSLATE_ERROR.unavailable,
+  PAGE_TRANSLATE_ERROR.rateLimited,
+  PAGE_TRANSLATE_ERROR.allFailed,
+]);
 
 const memory = new Map<string, string>();
 
@@ -78,6 +86,8 @@ function startSession(onFatal: () => void) {
   // Each batch's source texts by item id.
   const batches = new Map<number, Map<number, string>>();
   let config: PageTranslateSessionConfig | undefined;
+  // The last session's engine; a session after a reconnect keeps a switch.
+  let engine: PageTranslateEngine | undefined;
   let port: chrome.runtime.Port | undefined;
   let nextBatch = 1;
   let first = true;
@@ -264,6 +274,7 @@ function startSession(onFatal: () => void) {
     switch (event.type) {
       case "session":
         config = event.config;
+        engine = config.engine;
         setDisplay(config.display);
         // Waiting paragraphs translated before show at once.
         for (const unit of units.units.values())
@@ -272,6 +283,13 @@ function startSession(onFatal: () => void) {
         return;
       case "display":
         setDisplay(event.display);
+        return;
+      case "switched":
+        if (config)
+          config = { ...config, engine: event.engine, limits: event.limits };
+        engine = event.engine;
+        toast(event.type, event.message, event.theme);
+        scheduleFlush();
         return;
       case "partial": {
         const unit = units.units.get(event.id);
@@ -301,12 +319,7 @@ function startSession(onFatal: () => void) {
         // The session couldn't start: the page goes back to its original,
         // with the note on it.
         if (event.batch === undefined) onFatal();
-        else if (
-          event.kind === PAGE_TRANSLATE_ERROR.refused ||
-          event.kind === PAGE_TRANSLATE_ERROR.unavailable ||
-          event.kind === PAGE_TRANSLATE_ERROR.rateLimited
-        )
-          halted = true;
+        else if (HALTING_ERRORS.has(event.kind)) halted = true;
         toast(event.kind, event.message, event.theme);
         return;
     }
@@ -370,6 +383,7 @@ function startSession(onFatal: () => void) {
     type: "start",
     pageLanguage: document.documentElement.lang || undefined,
     title: document.title,
+    engine,
   });
 
   connect();

@@ -10,6 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { PRIVACY_POLICY_TRANSLATION_URL } from "../../src/shared/config";
+import { getMessages } from "../../src/shared/i18n";
 import { clearTranslations } from "../../src/shared/page-translate/cache";
 import { PAGE_TRANSLATE_LANGUAGES } from "../../src/shared/page-translate/languages";
 import { getPageTranslateMessages } from "../../src/shared/page-translate/messages";
@@ -42,6 +43,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "../../src/ui/components";
+import { errorWithDetail } from "../../src/ui/error-text";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { ModelSelect } from "./model-select";
 
@@ -57,6 +59,8 @@ export function PageTranslatePage() {
   const [cacheState, setCacheState] = useState<"idle" | "clearing" | "cleared">(
     "idle",
   );
+  const [cacheError, setCacheError] = useState("");
+  const t = getMessages(language);
   const p = getPageTranslateMessages(language);
   if (!preferences) return null;
   const settings = normalizePageTranslateSettings(preferences.pageTranslate);
@@ -81,8 +85,14 @@ export function PageTranslatePage() {
     : undefined;
   const clearCache = async () => {
     setCacheState("clearing");
-    await clearTranslations().catch(() => undefined);
-    setCacheState("cleared");
+    setCacheError("");
+    try {
+      await clearTranslations();
+      setCacheState("cleared");
+    } catch (error) {
+      setCacheError(errorWithDetail(p.clearCacheFailed, error, t));
+      setCacheState("idle");
+    }
   };
 
   return (
@@ -148,6 +158,7 @@ export function PageTranslatePage() {
           </CardHeader>
           <CardContent>
             <ModelSelect
+              t={t}
               value={settings.modelId}
               defaultLabel={p.defaultModel}
               label={p.model}
@@ -234,6 +245,7 @@ export function PageTranslatePage() {
             </Button>
           </div>
           {cacheState === "cleared" && <Feedback>{p.cacheCleared}</Feedback>}
+          {cacheError && <Feedback error>{cacheError}</Feedback>}
         </CardContent>
       </Card>
     </div>

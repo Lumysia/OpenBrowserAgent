@@ -90,7 +90,7 @@ test("translation engines", { timeout: 240000 }, async (t) => {
       return { body: JSON.stringify([translated("DE-html:", texts), []]) };
     }
     if (request.url.includes("translate_a/t")) {
-      if (mode === "limited")
+      if (mode === "limited" || mode === "all-limited")
         return { status: 429, type: "text/html", body: "<html>Sorry</html>" };
       const texts = new URLSearchParams(request.postData).getAll("q");
       return {
@@ -99,6 +99,8 @@ test("translation engines", { timeout: 240000 }, async (t) => {
         ),
       };
     }
+    if (mode === "all-limited")
+      return { status: 429, body: '{"error":{"code":429}}' };
     const texts = JSON.parse(request.postData);
     return {
       body: JSON.stringify(
@@ -219,24 +221,39 @@ test("translation engines", { timeout: 240000 }, async (t) => {
       },
     );
 
-    await t.test("Google: rate-limited, the page says so", async () => {
-      mode = "limited";
-      await session.setPreferences({ targetLanguage: "es" });
-      const pageUrl = nextUrl();
-      const page = await browser.open(pageUrl);
-      await clickMenu(pageUrl);
-      const { root } = await poll(async () => {
+    // The page's note, in a closed shadow root.
+    const noteOn = (page, text) =>
+      poll(async () => {
         const snapshot = await page.send("DOM.getDocument", {
           depth: -1,
           pierce: true,
         });
-        return (
-          JSON.stringify(snapshot).includes("is limiting requests") && snapshot
-        );
+        return JSON.stringify(snapshot).includes(text);
       }, 30000);
-      assert.match(
-        JSON.stringify(root),
-        /Google Translate \(free\) is limiting requests from this network/,
+
+    await t.test(
+      "Google rate-limited: the page switches to Microsoft",
+      async () => {
+        mode = "limited";
+        await session.setPreferences({ targetLanguage: "es" });
+        const page = await translatePage("DE-ms: Notes from the field");
+        await noteOn(
+          page,
+          "Google is limiting requests; switched to Microsoft for this page.",
+        );
+        page.close();
+      },
+    );
+
+    await t.test("both free services failing: the page says so", async () => {
+      mode = "all-limited";
+      await session.setPreferences({ targetLanguage: "it" });
+      const pageUrl = nextUrl();
+      const page = await browser.open(pageUrl);
+      await clickMenu(pageUrl);
+      await noteOn(
+        page,
+        "Google and Microsoft both failed to translate. Try again later or choose another engine in Settings.",
       );
       await delay(200);
       assert.equal(await translationIn(page, "#title"), undefined);

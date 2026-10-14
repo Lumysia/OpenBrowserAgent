@@ -12,20 +12,24 @@ import {
   type PageTranslateRequest,
 } from "../../shared/page-translate/protocol";
 import {
+  FREE_ENGINE_FALLBACK,
   normalizePageTranslateSettings,
   pageTranslateTarget,
   PAGE_TRANSLATE_ENGINE,
   type PageTranslateEngine,
 } from "../../shared/page-translate/settings";
+import { getMessages } from "../../shared/i18n";
 import { storage } from "../../shared/storage";
+import { UserError, userErrorText } from "../../shared/user-errors";
+import { errorWithDetail } from "../../ui/error-text";
 import type { PageToastTheme } from "../../shared/page-toast";
 import { pageToastTheme } from "../page-toast";
-import { pauseEngine, withEngineSlot } from "./engine-gate";
+import {
+  createEngineChain,
+  translateItems,
+  type EngineChain,
+} from "./engine-chain";
 import { EngineError, resolveEngine, type TranslationEngine } from "./engines";
-
-// Rate-limit pauses up to this long are waited out; longer ones are reported.
-const MAX_WAIT_MS = 30_000;
-const RATE_LIMIT_RETRIES = 1;
 
 type Post = (event: PageTranslateEvent) => void;
 
@@ -33,9 +37,7 @@ type Post = (event: PageTranslateEvent) => void;
 const DEFAULT_TOAST_THEME = pageToastTheme(undefined, undefined);
 
 type Session = {
-  engine: TranslationEngine;
-  engineKind: PageTranslateEngine;
-  engineName: string;
+  chain: EngineChain;
   target: string;
   language: string;
   theme: PageToastTheme;
@@ -46,7 +48,8 @@ type Session = {
 let pruned = false;
 
 // One page's translation: its engine and target language are fixed when it
-// starts; batches run as the page asks for them.
+// starts (a failing free service hands over to the other one once); batches
+// run as the page asks for them.
 export function createPageSession(post: Post, signal: AbortSignal) {
   let session: Promise<Session> | undefined;
   return (request: PageTranslateRequest) => {
@@ -88,19 +91,41 @@ async function startSession(
     storage.language.get(),
   ]);
   const settings = normalizePageTranslateSettings(preferences.pageTranslate);
-  const messages = getPageTranslateMessages(language);
-  const engineName = messages.engines[settings.engine];
   const target = pageTranslateTarget(settings, language);
   const theme = pageToastTheme(
     preferences.colorScheme,
     preferences.accentColor,
   );
+  // The page switched to the other free service in an earlier session.
+  const switched =
+    !!request.engine &&
+    FREE_ENGINE_FALLBACK[settings.engine] === request.engine;
+  const kind = switched ? request.engine! : settings.engine;
+  const fallback = switched ? undefined : FREE_ENGINE_FALLBACK[kind];
   try {
-    const engine = await resolveEngine(settings);
+    const engine = await resolveEngine({ ...settings, engine: kind });
+    const chain = createEngineChain(
+      { kind, engine },
+      {
+        switched,
+        fallback: fallback && {
+          kind: fallback,
+          resolve: () => resolveEngine({ ...settings, engine: fallback }),
+        },
+        onSwitch: (from, to, error) =>
+          post({
+            type: "switched",
+            engine: to.kind,
+            limits: to.engine.limits,
+            message: switchMessage(language, from.kind, to.kind, error),
+            theme,
+          }),
+      },
+    );
     post({
       type: "session",
       config: {
-        engine: settings.engine,
+        engine: kind,
         targetLanguage: target,
         display: settings.display,
         limits: engine.limits,
@@ -111,9 +136,7 @@ async function startSession(
       void pruneTranslations().catch(() => undefined);
     }
     return {
-      engine,
-      engineKind: settings.engine,
-      engineName,
+      chain,
       target,
       language,
       theme,
@@ -121,15 +144,7 @@ async function startSession(
       pageTitle: request.title,
     };
   } catch (error) {
-    post(
-      errorEvent(error, undefined, {
-        engineName,
-        language,
-        target,
-        engine: settings.engine,
-        theme,
-      }),
-    );
+    post(errorEvent(error, undefined, { language, target, theme, kind }));
     throw error;
   }
 }
@@ -141,14 +156,14 @@ async function runBatch(
   post: Post,
   signal: AbortSignal,
 ) {
-  const { engine, target } = session;
+  const { chain, target } = session;
+  const cacheKey = (engine: TranslationEngine, text: string) =>
+    translationCacheKey(engine.cacheKey, target, text);
   const keys = new Map<number, string>();
+  const engine = chain.current.engine;
   await Promise.all(
     items.map(async (item) =>
-      keys.set(
-        item.id,
-        await translationCacheKey(engine.cacheKey, target, item.text),
-      ),
+      keys.set(item.id, await cacheKey(engine, item.text)),
     ),
   );
   const cached = await readTranslations([...keys.values()]).catch(
@@ -161,18 +176,29 @@ async function runBatch(
     else post({ type: "item", batch, id: item.id, text });
   }
   if (!pending.length) return;
-  const fresh = new Map<string, string>();
+  const sources = new Map(pending.map((item) => [item.id, item.text]));
+  // Saved under the engine that translated them: a switch can happen mid-batch.
+  const fresh: Array<{
+    engine: TranslationEngine;
+    source: string;
+    text: string;
+  }> = [];
   const delivered = new Set<number>();
-  const deliver = (id: number, text: string) => {
+  const deliver = (id: number, text: string, engine: TranslationEngine) => {
     if (signal.aborted || delivered.has(id) || !text) return;
     delivered.add(id);
-    fresh.set(keys.get(id)!, text);
+    fresh.push({ engine, source: sources.get(id)!, text });
     post({ type: "item", batch, id, text });
   };
   const run = (batchItems: PageTranslateItem[]) =>
-    translateItems(session, batchItems, signal, deliver, (id, text) =>
-      post({ type: "partial", batch, id, text }),
-    );
+    translateItems(chain, batchItems, {
+      target,
+      pageLanguage: session.pageLanguage,
+      pageTitle: session.pageTitle,
+      signal,
+      onItem: deliver,
+      onPartial: (id, text) => post({ type: "partial", batch, id, text }),
+    });
   try {
     await run(pending);
     // Items a model left out get one more try, on their own.
@@ -183,105 +209,106 @@ async function runBatch(
     if (signal.aborted) return;
     post(
       errorEvent(error, batch, {
-        engineName: session.engineName,
         language: session.language,
         target,
-        engine: session.engineKind,
         theme: session.theme,
+        kind: chain.current.kind,
       }),
     );
   } finally {
-    await writeTranslations(fresh).catch(() => undefined);
+    await saveTranslations(fresh, cacheKey).catch(() => undefined);
   }
 }
 
-async function translateItems(
-  session: Session,
-  items: PageTranslateItem[],
-  signal: AbortSignal,
-  onItem: (id: number, text: string) => void,
-  onPartial: (id: number, text: string) => void,
-  attempt = 0,
-): Promise<void> {
-  const { engine } = session;
-  try {
-    await withEngineSlot(engine.id, engine.limits.concurrency, signal, () =>
-      engine.translate({
-        items,
-        target: session.target,
-        pageLanguage: session.pageLanguage,
-        pageTitle: session.pageTitle,
-        signal,
-        onItem,
-        onPartial,
-      }),
-    );
-  } catch (error) {
-    if (signal.aborted || !(error instanceof EngineError)) throw error;
-    if (error.kind === PAGE_TRANSLATE_ERROR.rateLimited) {
-      const pause = pauseEngine(engine.id, error.retryAfterMs);
-      if (pause > MAX_WAIT_MS || attempt >= RATE_LIMIT_RETRIES) throw error;
-      return translateItems(
-        session,
-        items,
-        signal,
-        onItem,
-        onPartial,
-        attempt + 1,
-      );
-    }
-    // Too much text in one request: halves.
-    if (error.tooLarge && items.length > 1) {
-      const half = Math.ceil(items.length / 2);
-      await translateItems(
-        session,
-        items.slice(0, half),
-        signal,
-        onItem,
-        onPartial,
-        attempt,
-      );
-      await translateItems(
-        session,
-        items.slice(half),
-        signal,
-        onItem,
-        onPartial,
-        attempt,
-      );
-      return;
-    }
-    throw error;
-  }
+async function saveTranslations(
+  fresh: Array<{ engine: TranslationEngine; source: string; text: string }>,
+  cacheKey: (engine: TranslationEngine, text: string) => Promise<string>,
+) {
+  if (!fresh.length) return;
+  const entries = await Promise.all(
+    fresh.map(
+      async ({ engine, source, text }) =>
+        [await cacheKey(engine, source), text] as const,
+    ),
+  );
+  await writeTranslations(new Map(entries));
 }
 
 function errorEvent(
   error: unknown,
   batch: number | undefined,
   context: {
-    engineName: string;
     language: string;
     target: string;
-    engine: PageTranslateEngine;
     theme: PageToastTheme;
+    // The engine in use when it failed.
+    kind: PageTranslateEngine;
   },
 ): PageTranslateEvent {
   const kind =
-    error instanceof EngineError ? error.kind : PAGE_TRANSLATE_ERROR.failed;
+    error instanceof EngineError
+      ? error.kind
+      : error instanceof UserError
+        ? PAGE_TRANSLATE_ERROR.unavailable
+        : PAGE_TRANSLATE_ERROR.failed;
   const messages = getPageTranslateMessages(context.language);
+  const t = getMessages(context.language);
   let message = messages.errors[kind].replaceAll(
     "{engine}",
-    context.engineName,
+    messages.engines[context.kind],
   );
-  if (kind === PAGE_TRANSLATE_ERROR.unavailable)
-    if (context.engine === PAGE_TRANSLATE_ENGINE.model)
-      message = messages.noModel;
-    else if (context.engine === PAGE_TRANSLATE_ENGINE.browser)
-      message = messages.browserUnsupported.replaceAll(
-        "{language}",
-        displayName(context.target, context.language),
-      );
+  if (error instanceof UserError) message = userErrorText(error, t);
+  // An error from elsewhere (the provider, the browser) adds its own text.
+  else if (!(error instanceof EngineError))
+    message = errorWithDetail(message, error, t);
+  else if (kind === PAGE_TRANSLATE_ERROR.allFailed)
+    message = serviceMessage(
+      messages.errors.allFailed,
+      context.language,
+      FREE_ENGINE_FALLBACK[context.kind] ?? context.kind,
+      context.kind,
+    );
+  else if (
+    kind === PAGE_TRANSLATE_ERROR.unavailable &&
+    context.kind === PAGE_TRANSLATE_ENGINE.browser
+  )
+    message = messages.browserUnsupported.replaceAll(
+      "{language}",
+      displayName(context.target, context.language),
+    );
   return { type: "error", batch, kind, message, theme: context.theme };
+}
+
+function switchMessage(
+  language: string,
+  from: PageTranslateEngine,
+  to: PageTranslateEngine,
+  error: EngineError,
+) {
+  const { switched } = getPageTranslateMessages(language);
+  return serviceMessage(
+    error.kind === PAGE_TRANSLATE_ERROR.rateLimited
+      ? switched.rateLimited
+      : switched.failed,
+    language,
+    from,
+    to,
+  );
+}
+
+// {engine}: the service that failed first; {fallback}: the other one.
+function serviceMessage(
+  template: string,
+  language: string,
+  engine: PageTranslateEngine,
+  fallback: PageTranslateEngine,
+) {
+  const { freeServices } = getPageTranslateMessages(language);
+  const name = (kind: PageTranslateEngine) =>
+    freeServices[kind as keyof typeof freeServices] ?? kind;
+  return template
+    .replaceAll("{engine}", name(engine))
+    .replaceAll("{fallback}", name(fallback));
 }
 
 function displayName(tag: string, language: string) {

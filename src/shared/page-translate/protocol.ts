@@ -60,7 +60,14 @@ export type PageTranslateItem = {
 };
 
 export type PageTranslateRequest =
-  | { type: "start"; pageLanguage?: string; title?: string }
+  | {
+      type: "start";
+      pageLanguage?: string;
+      title?: string;
+      // The engine the page's last session ended up with, after a switch to
+      // the other free service; the new session keeps it.
+      engine?: PageTranslateEngine;
+    }
   | { type: "translate"; batch: number; items: PageTranslateItem[] };
 
 export const PAGE_TRANSLATE_ERROR = {
@@ -72,6 +79,8 @@ export const PAGE_TRANSLATE_ERROR = {
   refused: "refused",
   network: "network",
   failed: "failed",
+  // Both free services failed: the current one and the one it switched to.
+  allFailed: "allFailed",
 } as const;
 
 export type PageTranslateErrorKind =
@@ -91,6 +100,15 @@ export type PageTranslateEvent =
       batch?: number;
       kind: PageTranslateErrorKind;
       // Shown on the page, in the extension's language and theme.
+      message: string;
+      theme: PageToastTheme;
+    }
+  // The engine failed and the session continues with another one; the
+  // message says so on the page.
+  | {
+      type: "switched";
+      engine: PageTranslateEngine;
+      limits: PageTranslateBatchLimits;
       message: string;
       theme: PageToastTheme;
     }

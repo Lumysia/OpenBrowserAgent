@@ -3,6 +3,7 @@ import {
   type PageTranslateSettings,
 } from "../../../shared/page-translate/settings";
 import { PAGE_TRANSLATE_ERROR } from "../../../shared/page-translate/protocol";
+import { UserError } from "../../../shared/user-errors";
 import { resolveModel } from "../../model-resolver";
 import { browserEngine } from "./browser";
 import { googleEngine } from "./google";
@@ -23,8 +24,11 @@ export async function resolveEngine(
     case PAGE_TRANSLATE_ENGINE.microsoft:
       return microsoftEngine();
     default: {
-      const model = await resolveModel(settings.modelId).catch(() => {
-        throw new EngineError(PAGE_TRANSLATE_ERROR.unavailable, "No model");
+      // A UserError says why (no model set up) in the UI language.
+      const model = await resolveModel(settings.modelId).catch((error) => {
+        throw error instanceof UserError
+          ? error
+          : new EngineError(PAGE_TRANSLATE_ERROR.unavailable, "No model");
       });
       return modelEngine(model);
     }

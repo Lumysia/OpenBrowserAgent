@@ -24,6 +24,14 @@ export const FREE_CLOUD_ENGINES: readonly PageTranslateEngine[] = [
   PAGE_TRANSLATE_ENGINE.microsoft,
 ];
 
+// When one free service fails on a page, the page continues with the other.
+export const FREE_ENGINE_FALLBACK: Partial<
+  Record<PageTranslateEngine, PageTranslateEngine>
+> = {
+  [PAGE_TRANSLATE_ENGINE.google]: PAGE_TRANSLATE_ENGINE.microsoft,
+  [PAGE_TRANSLATE_ENGINE.microsoft]: PAGE_TRANSLATE_ENGINE.google,
+};
+
 // `bilingual`: the translation under each paragraph. `translation`: only the
 // translation where the page allows it (the original stays in the page).
 export const PAGE_TRANSLATE_DISPLAY = {

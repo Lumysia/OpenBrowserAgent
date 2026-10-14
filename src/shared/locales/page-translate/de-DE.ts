@@ -8,10 +8,9 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
   menuItemLabel: "Diese Seite übersetzen / Original anzeigen",
   settingsTitle: "Seitenübersetzung",
   settingsDescription:
-    "Übersetzen Sie ganze Seiten über das Kontextmenü: Wählen Sie „Diese Seite übersetzen“ und zum Zurückkehren „Original anzeigen“.",
+    "Wählen Sie im Kontextmenü „Diese Seite übersetzen“, um eine Seite zu übersetzen, und „Original anzeigen“, um zum Original zurückzukehren.",
   engine: "Übersetzungsdienst",
-  engineDescription:
-    "Woher die Übersetzungen kommen. Übersetzungen werden auf diesem Gerät gespeichert, sodass bereits übersetzte Seiten sofort wieder erscheinen.",
+  engineDescription: "Wählen Sie, womit Seiten übersetzt werden.",
   engines: {
     model: "KI-Modell",
     browser: "Integrierter Übersetzer (auf dem Gerät)",
@@ -20,7 +19,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
   },
   engineDetails: {
     model:
-      "Ihr eingerichteter KI-Anbieter übersetzt, mit dem unten gewählten Modell.",
+      "Ihr KI-Anbieter übersetzt die Seiten mit dem unten gewählten Modell.",
     browser:
       "Der Browser übersetzt auf diesem Gerät; kein Text verlässt es. Jede Sprache wird einmal heruntergeladen.",
     google:
@@ -29,13 +28,19 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
       "Ein inoffizieller kostenloser Dienst, keine API von Microsoft. Er kann jederzeit aufhören zu funktionieren.",
   },
   cloudNotice: {
-    google: "Der Text der Seite wird zum Übersetzen an Google gesendet.",
-    microsoft: "Der Text der Seite wird zum Übersetzen an Microsoft gesendet.",
+    google:
+      "Der Text der Seite wird zum Übersetzen an Google gesendet. Wenn Google auf einer Seite ausfällt, übersetzt Microsoft den Rest der Seite.",
+    microsoft:
+      "Der Text der Seite wird zum Übersetzen an Microsoft gesendet. Wenn Microsoft auf einer Seite ausfällt, übersetzt Google den Rest der Seite.",
+  },
+  freeServices: {
+    google: "Google",
+    microsoft: "Microsoft",
   },
   privacyLink: "Datenschutzerklärung",
   model: "Modell",
   modelDescription: "Das Modell, das Seiten übersetzt.",
-  defaultModel: "Im Chat ausgewähltes Modell",
+  defaultModel: "Gleiches Modell wie im Chat",
   targetLanguage: "Übersetzen in",
   targetLanguageDescription:
     "Seiten werden in diese Sprache übersetzt. Die Sprache der Erweiterung ändert sich nicht.",
@@ -52,6 +57,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     "Übersetzungen bleiben 30 Tage auf diesem Gerät, damit übersetzte Seiten sofort wieder erscheinen.",
   clearCache: "Gespeicherte Übersetzungen löschen",
   cacheCleared: "Gespeicherte Übersetzungen gelöscht.",
+  clearCacheFailed: "Gespeicherte Übersetzungen konnten nicht gelöscht werden",
   errors: {
     unavailable:
       "{engine} ist nicht verfügbar. Prüfen Sie die Seitenübersetzung in den Einstellungen.",
@@ -62,9 +68,15 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     network:
       "{engine} ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
     failed: "{engine} konnte einige Absätze nicht übersetzen.",
+    allFailed:
+      "Weder {engine} noch {fallback} konnte übersetzen. Versuchen Sie es später erneut oder wählen Sie in den Einstellungen einen anderen Dienst.",
   },
-  noModel:
-    "Kein KI-Modell eingerichtet. Fügen Sie in den Einstellungen einen Anbieter hinzu.",
+  switched: {
+    rateLimited:
+      "{engine} begrenzt die Anfragen; diese Seite wird jetzt mit {fallback} übersetzt.",
+    failed:
+      "{engine} funktioniert gerade nicht; diese Seite wird jetzt mit {fallback} übersetzt.",
+  },
   browserUnsupported:
     "Der integrierte Übersetzer kann diese Seite nicht in {language} übersetzen.",
   unavailablePage:

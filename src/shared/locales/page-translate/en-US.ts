@@ -7,10 +7,9 @@ export const pageTranslateEnUS = {
   menuItemLabel: "Translate this page / Show original",
   settingsTitle: "Page translation",
   settingsDescription:
-    'Translate whole pages from the right-click menu: choose "Translate this page", and "Show original" to go back.',
+    'Choose "Translate this page" in the right-click menu to translate a page, and "Show original" to go back.',
   engine: "Translation engine",
-  engineDescription:
-    "Where translations come from. Translations are saved on this device, so pages you translated before come back at once.",
+  engineDescription: "Choose what translates pages.",
   engines: {
     model: "AI model",
     browser: "Built-in translator (on device)",
@@ -18,8 +17,7 @@ export const pageTranslateEnUS = {
     microsoft: "Microsoft Translator (free)",
   },
   engineDetails: {
-    model:
-      "Your configured AI provider translates, with the model you pick below.",
+    model: "Your AI provider translates pages with the model chosen below.",
     browser:
       "The browser translates on this device; no text leaves it. Each language is downloaded once.",
     google:
@@ -29,13 +27,19 @@ export const pageTranslateEnUS = {
   },
   // Shown while Google or Microsoft is selected.
   cloudNotice: {
-    google: "Page text is sent to Google to translate it.",
-    microsoft: "Page text is sent to Microsoft to translate it.",
+    google:
+      "Page text is sent to Google to translate it. If Google fails on a page, Microsoft translates the rest of it.",
+    microsoft:
+      "Page text is sent to Microsoft to translate it. If Microsoft fails on a page, Google translates the rest of it.",
+  },
+  freeServices: {
+    google: "Google",
+    microsoft: "Microsoft",
   },
   privacyLink: "Privacy policy",
   model: "Model",
   modelDescription: "The model that translates pages.",
-  defaultModel: "Chat's selected model",
+  defaultModel: "Same model as the chat",
   targetLanguage: "Translate into",
   targetLanguageDescription:
     "Pages are translated into this language. It doesn't change the extension's language.",
@@ -53,6 +57,7 @@ export const pageTranslateEnUS = {
     "Translations are kept on this device for 30 days, so translated pages come back at once.",
   clearCache: "Clear saved translations",
   cacheCleared: "Saved translations cleared.",
+  clearCacheFailed: "Couldn't clear saved translations",
   // Notes on the page. {engine}: the engine's name.
   errors: {
     unavailable:
@@ -63,8 +68,16 @@ export const pageTranslateEnUS = {
       "{engine} refused to translate. Choose another engine in Settings.",
     network: "Couldn't reach {engine}. Check your connection and try again.",
     failed: "Some paragraphs couldn't be translated by {engine}.",
+    allFailed:
+      "{engine} and {fallback} both failed to translate. Try again later or choose another engine in Settings.",
   },
-  noModel: "No AI model is set up. Add a provider in Settings.",
+  // {engine}: the service that failed; {fallback}: the one used instead.
+  switched: {
+    rateLimited:
+      "{engine} is limiting requests; switched to {fallback} for this page.",
+    failed:
+      "{engine} isn't working right now; switched to {fallback} for this page.",
+  },
   // {language}: the target language.
   browserUnsupported:
     "The built-in translator can't translate this page into {language}.",

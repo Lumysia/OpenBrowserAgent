@@ -67,6 +67,7 @@ Depending on user action and the selected agent's tool groups, requests may incl
 - **Built-in translator**: Chrome's on-device Translator and LanguageDetector APIs. No text leaves the browser. The first translation into a language may download that language pack.
 - **Google Translate (free)**: paragraph text goes to `https://translate-pa.googleapis.com/v1/translateHtml` with the key of Google's retired website translation widget (a readable constant in `src/background/page-translate/engines/free-config.ts`), or, when that key is refused, to `https://translate.googleapis.com/translate_a/t`.
 - **Microsoft Translator (free)**: paragraph text goes to `https://edge.microsoft.com/translate/translatetext`.
+- When the selected free engine rate-limits (429, 503 or an HTML page instead of JSON), refuses (401/403), fails, or cannot be reached twice in a row, the rest of that page is translated with the other free engine, and the page shows a note saying so. If that one fails too, translating stops with a note. Choosing Google or Microsoft can therefore send a page's text to both.
 
 The free engines are unofficial web endpoints, not documented APIs, and can rate-limit or stop working. Requests come from the extension's background with `credentials: "omit"`: they carry no page address, cookies or account data. Rate limits and refusals are reported on the page. Host access for these calls comes from `<all_urls>`; the services also allow cross-origin requests.
 
@@ -84,7 +85,7 @@ OpenBrowserAgent sends data to endpoints configured by the user in Providers and
 - Image URLs from an answer, only after the user chooses to load them.
 - Page image/file download URLs when a download tool is used.
 - WebDAV URLs configured as a sync backend (see [Sync](sync.md)), including chat attachments when attachment sync is enabled.
-- The free Google or Microsoft translation endpoints, only when the user selected that engine and translates a page (see [Page Translation](#page-translation)).
+- The free Google or Microsoft translation endpoints, only when the user selected one of them and translates a page (the other one only when the selected one fails on that page) (see [Page Translation](#page-translation)).
 
 ## Storage and Sync
 

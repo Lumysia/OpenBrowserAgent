@@ -8,10 +8,9 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
   menuItemLabel: "Traduire cette page / Afficher l’original",
   settingsTitle: "Traduction de page",
   settingsDescription:
-    "Traduisez des pages entières depuis le menu contextuel : choisissez « Traduire cette page », puis « Afficher l’original » pour revenir.",
+    "Choisissez « Traduire cette page » dans le menu contextuel pour traduire une page, et « Afficher l’original » pour revenir au texte d’origine.",
   engine: "Moteur de traduction",
-  engineDescription:
-    "La source des traductions. Les traductions sont enregistrées sur cet appareil : les pages déjà traduites s’affichent tout de suite.",
+  engineDescription: "Choisissez ce qui traduit les pages.",
   engines: {
     model: "Modèle d’IA",
     browser: "Traducteur intégré (sur l’appareil)",
@@ -20,7 +19,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
   },
   engineDetails: {
     model:
-      "Votre fournisseur d’IA configuré traduit, avec le modèle choisi ci-dessous.",
+      "Votre fournisseur d’IA traduit les pages avec le modèle choisi ci-dessous.",
     browser:
       "Le navigateur traduit sur cet appareil ; aucun texte n’en sort. Chaque langue est téléchargée une seule fois.",
     google:
@@ -29,13 +28,19 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
       "Un service gratuit non officiel, pas une API de Microsoft. Il peut cesser de fonctionner à tout moment.",
   },
   cloudNotice: {
-    google: "Le texte de la page est envoyé à Google pour être traduit.",
-    microsoft: "Le texte de la page est envoyé à Microsoft pour être traduit.",
+    google:
+      "Le texte de la page est envoyé à Google pour être traduit. Si Google échoue sur une page, Microsoft traduit le reste de la page.",
+    microsoft:
+      "Le texte de la page est envoyé à Microsoft pour être traduit. Si Microsoft échoue sur une page, Google traduit le reste de la page.",
+  },
+  freeServices: {
+    google: "Google",
+    microsoft: "Microsoft",
   },
   privacyLink: "Politique de confidentialité",
   model: "Modèle",
   modelDescription: "Le modèle qui traduit les pages.",
-  defaultModel: "Modèle sélectionné dans la discussion",
+  defaultModel: "Même modèle que la discussion",
   targetLanguage: "Traduire en",
   targetLanguageDescription:
     "Les pages sont traduites dans cette langue. La langue de l’extension ne change pas.",
@@ -52,6 +57,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
     "Les traductions sont conservées 30 jours sur cet appareil : les pages traduites s’affichent tout de suite.",
   clearCache: "Effacer les traductions enregistrées",
   cacheCleared: "Traductions enregistrées effacées.",
+  clearCacheFailed: "Impossible d’effacer les traductions enregistrées",
   errors: {
     unavailable:
       "{engine} n’est pas disponible. Vérifiez la traduction de page dans les paramètres.",
@@ -62,9 +68,15 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
     network:
       "Impossible de joindre {engine}. Vérifiez votre connexion et réessayez.",
     failed: "{engine} n’a pas pu traduire certains paragraphes.",
+    allFailed:
+      "Ni {engine} ni {fallback} n’ont pu traduire. Réessayez plus tard ou choisissez un autre moteur dans les paramètres.",
   },
-  noModel:
-    "Aucun modèle d’IA n’est configuré. Ajoutez un fournisseur dans les paramètres.",
+  switched: {
+    rateLimited:
+      "{engine} limite les requêtes ; cette page passe à {fallback}.",
+    failed:
+      "{engine} ne fonctionne pas pour le moment ; cette page passe à {fallback}.",
+  },
   browserUnsupported:
     "Le traducteur intégré ne peut pas traduire cette page en {language}.",
   unavailablePage:

@@ -8,10 +8,9 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
   menuItemLabel: "Traduzir esta página / Mostrar original",
   settingsTitle: "Tradução de páginas",
   settingsDescription:
-    "Traduza páginas inteiras pelo menu de contexto: escolha “Traduzir esta página” e, para voltar, “Mostrar original”.",
+    "Escolha “Traduzir esta página” no menu de contexto para traduzir uma página e “Mostrar original” para voltar ao original.",
   engine: "Mecanismo de tradução",
-  engineDescription:
-    "De onde vêm as traduções. Elas ficam salvas neste dispositivo, então páginas que você já traduziu voltam na hora.",
+  engineDescription: "Escolha o que traduz as páginas.",
   engines: {
     model: "Modelo de IA",
     browser: "Tradutor integrado (no dispositivo)",
@@ -20,7 +19,7 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
   },
   engineDetails: {
     model:
-      "Seu provedor de IA configurado traduz, com o modelo escolhido abaixo.",
+      "Seu provedor de IA traduz as páginas com o modelo escolhido abaixo.",
     browser:
       "O navegador traduz neste dispositivo; nenhum texto sai dele. Cada idioma é baixado uma vez.",
     google:
@@ -29,13 +28,19 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
       "Um serviço gratuito não oficial, não uma API da Microsoft. Pode parar de funcionar a qualquer momento.",
   },
   cloudNotice: {
-    google: "O texto da página é enviado ao Google para ser traduzido.",
-    microsoft: "O texto da página é enviado à Microsoft para ser traduzido.",
+    google:
+      "O texto da página é enviado ao Google para ser traduzido. Se o Google falhar em uma página, a Microsoft traduz o resto dela.",
+    microsoft:
+      "O texto da página é enviado à Microsoft para ser traduzido. Se a Microsoft falhar em uma página, o Google traduz o resto dela.",
+  },
+  freeServices: {
+    google: "Google",
+    microsoft: "Microsoft",
   },
   privacyLink: "Política de privacidade",
   model: "Modelo",
   modelDescription: "O modelo que traduz as páginas.",
-  defaultModel: "Modelo selecionado na conversa",
+  defaultModel: "O mesmo modelo da conversa",
   targetLanguage: "Traduzir para",
   targetLanguageDescription:
     "As páginas são traduzidas para este idioma. O idioma da extensão não muda.",
@@ -52,6 +57,7 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
     "As traduções ficam 30 dias neste dispositivo, então páginas traduzidas voltam na hora.",
   clearCache: "Limpar traduções salvas",
   cacheCleared: "Traduções salvas limpas.",
+  clearCacheFailed: "Não foi possível limpar as traduções salvas",
   errors: {
     unavailable:
       "{engine} não está disponível. Verifique a tradução de páginas nas configurações.",
@@ -62,9 +68,15 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
     network:
       "Não foi possível conectar ao {engine}. Verifique sua conexão e tente de novo.",
     failed: "{engine} não conseguiu traduzir alguns parágrafos.",
+    allFailed:
+      "Nem {engine} nem {fallback} conseguiram traduzir. Tente de novo mais tarde ou escolha outro mecanismo nas configurações.",
   },
-  noModel:
-    "Nenhum modelo de IA configurado. Adicione um provedor nas configurações.",
+  switched: {
+    rateLimited:
+      "{engine} está limitando as solicitações; esta página passou a usar {fallback}.",
+    failed:
+      "{engine} não está funcionando agora; esta página passou a usar {fallback}.",
+  },
   browserUnsupported:
     "O tradutor integrado não consegue traduzir esta página para {language}.",
   unavailablePage:
