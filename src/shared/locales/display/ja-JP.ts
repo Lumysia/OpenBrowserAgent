@@ -51,6 +51,9 @@ export const displayJaJP: DisplayMessages = {
     noModel:
       "モデルが設定されていません。「設定」→「AI プロバイダー」でプロバイダーを追加してください。",
     baseUrlRequired: "ベース URL を入力してください。",
+    bridgeNotFound: "この実行ブリッジはもうありません。",
+    bridgeHostRequired: "ネイティブメッセージングホスト名を入力してください。",
+    bridgeTimeout: "実行ブリッジから時間内に応答がありませんでした。",
   },
   toolSteps: {
     failed: "失敗",

@@ -56,6 +56,9 @@ export const displayEnUS = {
   errors: {
     noModel: "No model is set up. Add a provider in Settings → AI providers.",
     baseUrlRequired: "Enter a base URL.",
+    bridgeNotFound: "This execution bridge no longer exists.",
+    bridgeHostRequired: "Enter the native messaging host name.",
+    bridgeTimeout: "The execution bridge didn’t answer in time.",
   },
   toolSteps: {
     // A step that failed; the error text, written for the model, is in

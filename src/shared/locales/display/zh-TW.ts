@@ -47,6 +47,9 @@ export const displayZhTW: DisplayMessages = {
   errors: {
     noModel: "尚未設定模型。請在「設定」→「AI 提供者」中新增提供者。",
     baseUrlRequired: "請輸入 Base URL。",
+    bridgeNotFound: "這個執行橋已不存在。",
+    bridgeHostRequired: "請輸入原生訊息主機名稱。",
+    bridgeTimeout: "執行橋沒有及時回應。",
   },
   toolSteps: {
     failed: "失敗",

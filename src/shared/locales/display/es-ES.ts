@@ -55,6 +55,9 @@ export const displayEsES: DisplayMessages = {
     noModel:
       "No hay ningún modelo configurado. Añade un proveedor en «Configuración» → «Proveedores de IA».",
     baseUrlRequired: "Introduce una URL base.",
+    bridgeNotFound: "Este puente de ejecución ya no existe.",
+    bridgeHostRequired: "Introduce el nombre del host de mensajería nativa.",
+    bridgeTimeout: "El puente de ejecución no respondió a tiempo.",
   },
   toolSteps: {
     failed: "Error",

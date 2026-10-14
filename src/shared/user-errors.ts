@@ -7,6 +7,9 @@ export const USER_ERROR_CODE = {
   noModel: "noModel",
   baseUrlRequired: "baseUrlRequired",
   providerConsent: "providerConsent",
+  bridgeNotFound: "bridgeNotFound",
+  bridgeHostRequired: "bridgeHostRequired",
+  bridgeTimeout: "bridgeTimeout",
 } as const;
 
 export type UserErrorCode =

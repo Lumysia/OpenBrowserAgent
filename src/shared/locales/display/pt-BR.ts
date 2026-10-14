@@ -55,6 +55,9 @@ export const displayPtBR: DisplayMessages = {
     noModel:
       "Nenhum modelo configurado. Adicione um provedor em “Configurações” → “Provedores de IA”.",
     baseUrlRequired: "Informe uma URL base.",
+    bridgeNotFound: "Esta ponte de execução não existe mais.",
+    bridgeHostRequired: "Informe o nome do host de mensagens nativas.",
+    bridgeTimeout: "A ponte de execução não respondeu a tempo.",
   },
   toolSteps: {
     failed: "Falhou",

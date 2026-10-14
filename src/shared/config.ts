@@ -104,6 +104,19 @@ export const CODE_RUN_LIMITS = {
   // Runs at once; more wait their turn (each has its own interpreter heap).
   maxConcurrent: 2,
 } as const;
+// Local execution bridge commands. The native host enforces the timeout it
+// is sent, and has the same maximum (packages/local-execution-bridge).
+export const LOCAL_EXECUTION_BRIDGE_LIMITS = {
+  defaultTimeoutMs: 2 * 60_000,
+  minTimeoutMs: 1_000,
+  maxTimeoutMs: 30 * 60_000,
+  // How long past the timeout the extension waits for the host to report it
+  // before cancelling the task itself.
+  timeoutGraceMs: 5_000,
+  pingTimeoutMs: 5_000,
+  // How long start waits so a command that fails at once says so.
+  startSettleMs: 1_000,
+} as const;
 export const ISO_DATE_LENGTH = 10;
 export const RELATIVE_TIME_MINUTE_MS = 60_000;
 export const SENT_TABS_PREVIEW_COUNT = 2;

@@ -10,6 +10,14 @@ import { storage } from "../src/shared/storage";
 import { runLocalCommand } from "../src/background/local-execution-bridge-tasks";
 import { localCommandTool } from "../src/background/tools/local";
 import { eventListeners } from "./fake-chrome";
+import { LOCAL_EXECUTION_BRIDGE_LIMITS } from "../src/shared/config";
+import {
+  BRIDGE_ERROR,
+  BRIDGE_MESSAGE,
+} from "../src/shared/local-execution-bridge-protocol";
+import { LOCAL_EXECUTION_BRIDGE_DEFAULT_HOST_NAME } from "../src/shared/local-execution-bridges";
+// @ts-expect-error The installer is plain JavaScript without types.
+import { HOST_NAME } from "../packages/local-execution-bridge/bin/install-support.mjs";
 import { toolBrowser } from "./tool-fixtures";
 
 afterEach(() => mock.restoreAll());
@@ -216,7 +224,7 @@ test("a bridge command runs without a ping or storage write and keeps only the o
     "update",
     async () => [],
   );
-  const running = runLocalCommand({ command: "fixture" }, {});
+  const running = runLocalCommand({ command: "fixture" });
   await delay(0);
   assert.deepEqual(
     fixture.sent.map((message) => message.type),
@@ -239,12 +247,7 @@ test("a bridge command runs without a ping or storage write and keeps only the o
 test("stopping the run cancels the command, disconnects and ignores late messages", async () => {
   const fixture = extensionFixture();
   const controller = new AbortController();
-  const running = runLocalCommand(
-    { command: "fixture" },
-    {},
-    undefined,
-    controller.signal,
-  );
+  const running = runLocalCommand({ command: "fixture" }, controller.signal);
   await delay(0);
   const { taskId } = fixture.sent[0];
   const port = fixture.ports[0];
@@ -281,4 +284,73 @@ test("a background command keeps running, reports new output and can be cancelle
   assert.match(cancelled.text, /: canceled/);
   assert.equal(cancelled.isError, false);
   assert.equal(fixture.sent.at(-1).type, "command.cancel");
+});
+
+test("the native host reports errors with the codes the extension reads", async () => {
+  const fixture = await nativeFixture();
+  try {
+    const errorFor = (taskId: string) =>
+      fixture.wait(
+        (event) =>
+          event.type === BRIDGE_MESSAGE.error && event.taskId === taskId,
+      );
+    fixture.send({
+      type: BRIDGE_MESSAGE.run,
+      taskId: "key",
+      command: { key: "missing", secret: "disposable-fixture" },
+      commandLine: "true",
+    });
+    assert.equal((await errorFor("key")).code, BRIDGE_ERROR.unknownShellConfig);
+    fixture.send({
+      type: BRIDGE_MESSAGE.run,
+      taskId: "secret",
+      command: { key: "fixture", secret: "wrong" },
+      commandLine: "true",
+    });
+    assert.equal((await errorFor("secret")).code, BRIDGE_ERROR.badSecret);
+    fixture.run({ taskId: "timeout", commandLine: "sleep 5", timeoutMs: 200 });
+    assert.equal((await errorFor("timeout")).code, BRIDGE_ERROR.timeout);
+    fixture.run({ taskId: "exit", commandLine: "exit 3" });
+    assert.equal((await errorFor("exit")).code, BRIDGE_ERROR.exitCode);
+    fixture.send({ type: "unknown" });
+    const unknown = await fixture.wait(
+      (event) => event.code === BRIDGE_ERROR.unknownMessage,
+    );
+    assert.equal(unknown.type, BRIDGE_MESSAGE.error);
+  } finally {
+    await fixture.close();
+  }
+});
+
+test("a command runs with one timeout: the one asked for, else the bridge's, within the limits", async () => {
+  const fixture = extensionFixture();
+  const sentTimeout = async (timeoutMs?: unknown) => {
+    const controller = new AbortController();
+    const running = runLocalCommand(
+      { command: "fixture", timeoutMs },
+      controller.signal,
+    );
+    await delay(0);
+    controller.abort();
+    await running.catch(() => undefined);
+    return fixture.sent.findLast((message) => message.type === "command.run")
+      .timeoutMs;
+  };
+  assert.equal(
+    await sentTimeout(),
+    LOCAL_EXECUTION_BRIDGE_LIMITS.defaultTimeoutMs,
+  );
+  assert.equal(await sentTimeout(5_000), 5_000);
+  assert.equal(
+    await sentTimeout(10 * LOCAL_EXECUTION_BRIDGE_LIMITS.maxTimeoutMs),
+    LOCAL_EXECUTION_BRIDGE_LIMITS.maxTimeoutMs,
+  );
+  assert.equal(
+    await sentTimeout(1),
+    LOCAL_EXECUTION_BRIDGE_LIMITS.minTimeoutMs,
+  );
+});
+
+test("the extension's default host name is the one the installer registers", () => {
+  assert.equal(HOST_NAME, LOCAL_EXECUTION_BRIDGE_DEFAULT_HOST_NAME);
 });

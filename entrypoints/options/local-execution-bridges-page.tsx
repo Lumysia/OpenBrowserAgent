@@ -3,12 +3,14 @@ import { Plus, RefreshCw, TerminalSquare, Trash2 } from "lucide-react";
 import {
   LOCAL_EXECUTION_BRIDGE_DEFAULT_HOST_NAME,
   LOCAL_EXECUTION_BRIDGE_DEFAULT_KEY,
-  LOCAL_EXECUTION_BRIDGE_DEFAULT_TIMEOUT_MS,
   createLocalExecutionBridgeDraft,
   generateLocalExecutionBridgeSecret,
+  isLocalExecutionBridgeTested,
+  localExecutionBridgeTestReset,
   normalizeLocalExecutionBridges,
   LOCAL_EXECUTION_BRIDGE_FALLBACK_NAME,
 } from "../../src/shared/local-execution-bridges";
+import { LOCAL_EXECUTION_BRIDGE_LIMITS } from "../../src/shared/config";
 import { sendLocalExecutionBridgeRuntimeRequest } from "../../src/shared/local-execution-bridge-runtime";
 import { getMessages, type Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
@@ -63,7 +65,7 @@ export function LocalExecutionBridgesPage() {
           ? {
               ...bridge,
               ...patch,
-              ...testResetPatch(patch),
+              ...localExecutionBridgeTestReset(patch),
               updatedAt: Date.now(),
             }
           : bridge,
@@ -255,9 +257,11 @@ export function LocalExecutionBridgesPage() {
               {t.options.localExecutionBridgeTimeoutMs}
               <CommitInput
                 type="number"
-                min={1000}
+                min={LOCAL_EXECUTION_BRIDGE_LIMITS.minTimeoutMs}
+                max={LOCAL_EXECUTION_BRIDGE_LIMITS.maxTimeoutMs}
                 value={String(
-                  bridge.timeoutMs || LOCAL_EXECUTION_BRIDGE_DEFAULT_TIMEOUT_MS,
+                  bridge.timeoutMs ||
+                    LOCAL_EXECUTION_BRIDGE_LIMITS.defaultTimeoutMs,
                 )}
                 onCommit={(timeoutMs) =>
                   updateBridge(bridge.id, { timeoutMs: Number(timeoutMs) })
@@ -299,19 +303,4 @@ function bridgeName(bridge: LocalExecutionBridgeConfig, t: Messages) {
   return bridge.name === LOCAL_EXECUTION_BRIDGE_FALLBACK_NAME
     ? t.options.localExecutionBridgeUntitled
     : bridge.name;
-}
-
-function isLocalExecutionBridgeTested(bridge: LocalExecutionBridgeConfig) {
-  return !!bridge.lastTestedAt && !bridge.lastTestError;
-}
-
-function testResetPatch(patch: Partial<LocalExecutionBridgeConfig>) {
-  if (
-    !("hostName" in patch) &&
-    !("hostAddress" in patch) &&
-    !("secret" in patch) &&
-    !("bridgeKey" in patch)
-  )
-    return {};
-  return { lastTestedAt: undefined, lastTestError: "" };
 }

@@ -47,6 +47,9 @@ export const displayZhCN: DisplayMessages = {
   errors: {
     noModel: "尚未配置模型。请在“设置”→“AI 提供商”中添加提供商。",
     baseUrlRequired: "请输入 Base URL。",
+    bridgeNotFound: "这个执行桥已不存在。",
+    bridgeHostRequired: "请输入原生消息主机名。",
+    bridgeTimeout: "执行桥没有及时响应。",
   },
   toolSteps: {
     failed: "失败",
