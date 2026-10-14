@@ -23,6 +23,8 @@ const LANDMARKS = new Set([
   "dialog",
 ]);
 // Words that mark sponsored blocks in class names, ids and attribute names.
+// A heuristic: engines label ads for users in their own language, but name
+// their markup in English; a miss shows an ad as a result, nothing is lost.
 const AD_WORDS = new Set([
   "ad",
   "ads",
@@ -84,41 +86,63 @@ function isOffSite(url: URL, host: string) {
 function targetUrl(link: HTMLAnchorElement, host: string) {
   let url: URL;
   try {
-    url = unwrapRedirect(new URL(link.href));
+    url = new URL(link.href);
   } catch {
     return "";
   }
   if (isOffSite(url, host)) return url.href;
   // Opaque redirects (a token instead of the URL) leave the target only in
   // an attribute of the link or its block.
-  return attributeUrl(link, host);
+  return redirectTarget(url, host)?.href || attributeUrl(link, host);
 }
 
-// Engines often link results through their own redirect URLs.
-function unwrapRedirect(url: URL) {
-  for (const key of ["uddg", "url", "q", "u", "RU"]) {
-    const value = url.searchParams.get(key) || pathParam(url, key);
-    if (value && /^https?:\/\//.test(value)) return new URL(value);
-    if (key === "u" && value?.startsWith("a1")) {
-      try {
-        const decoded = atob(
-          value.slice(2).replace(/-/g, "+").replace(/_/g, "/"),
-        );
-        if (/^https?:\/\//.test(decoded)) return new URL(decoded);
-      } catch {
-        // Not an encoded URL; keep the link as it is.
-      }
-    }
+// Engines link results through their own redirect URLs, the target in a
+// query parameter or a `key=value` path segment, written out or base64url
+// encoded (after a short prefix). The first off-site address is the target;
+// no engine's parameter names are assumed.
+function redirectTarget(url: URL, host: string) {
+  const values = [...url.searchParams.values(), ...pathValues(url)];
+  for (const value of values) {
+    const target = embeddedUrl(value);
+    if (target && isOffSite(target, host)) return target;
   }
-  return url;
+  return undefined;
 }
 
-// Redirects that carry the target as a path segment: /RU=https%3a.../RK=0.
-function pathParam(url: URL, key: string) {
-  const match = url.pathname.match(new RegExp(`/${key}=([^/]+)`));
-  if (!match) return "";
+function pathValues(url: URL) {
+  return url.pathname.split("/").flatMap((segment) => {
+    const value = segment.match(/^[^=]+=(.+)$/)?.[1];
+    if (!value) return [];
+    try {
+      return [decodeURIComponent(value)];
+    } catch {
+      return [];
+    }
+  });
+}
+
+// Characters before a base64url-encoded address (a format version).
+const ENCODED_PREFIX_MAX = 2;
+const ABSOLUTE_URL = /^https?:\/\/\S+$/i;
+
+function embeddedUrl(value: string) {
+  const candidates = [value];
+  if (/^[\w-]+=*$/.test(value))
+    for (let skip = 0; skip <= ENCODED_PREFIX_MAX; skip++)
+      candidates.push(decodeBase64Url(value.slice(skip)));
+  for (const candidate of candidates)
+    if (ABSOLUTE_URL.test(candidate))
+      try {
+        return new URL(candidate);
+      } catch {
+        // Not a valid address.
+      }
+  return undefined;
+}
+
+function decodeBase64Url(value: string) {
   try {
-    return decodeURIComponent(match[1]);
+    return atob(value.replace(/-/g, "+").replace(/_/g, "/"));
   } catch {
     return "";
   }
