@@ -148,7 +148,7 @@ test("settings: defaults, cleaned values, the target language", () => {
   );
   assert.deepEqual(
     normalizePageTranslateSettings({
-      engine: "deepl" as never,
+      engine: "unknown-engine" as never,
       display: "both" as never,
       modelId: 3 as never,
       targetLanguage: "fr_FR",
