@@ -298,7 +298,8 @@ function startSession(onFatal: () => void) {
         scheduleFlush();
         return;
       case "error":
-        toast(event.kind, event.message, event.theme);
+        // The session couldn't start: the page goes back to its original,
+        // with the note on it.
         if (event.batch === undefined) onFatal();
         else if (
           event.kind === PAGE_TRANSLATE_ERROR.refused ||
@@ -306,19 +307,18 @@ function startSession(onFatal: () => void) {
           event.kind === PAGE_TRANSLATE_ERROR.rateLimited
         )
           halted = true;
+        toast(event.kind, event.message, event.theme);
         return;
     }
   }
 
-  // Paragraphs the batch didn't translate failed; their spinners go.
+  // Paragraphs the batch didn't translate failed; their spinners and
+  // unfinished text go.
   function finishBatch(batch: number) {
     for (const text of batches.get(batch)?.values() || []) {
       for (const unit of sent.get(text) || []) {
         unit.state = "failed";
-        if (unit.element?.textContent === "") {
-          removeTranslation(unit.paragraph, unit.element);
-          unit.element = undefined;
-        }
+        clear(unit);
       }
       sent.delete(text);
     }

@@ -35,7 +35,10 @@ test("page translation with the AI model", { timeout: 240000 }, async (t) => {
       const started = Date.now();
       await clickMenu(pageUrl);
       const intro = await poll(() => translationIn(page, "#intro"));
-      assert.ok(Date.now() - started < 10000);
+      assert.ok(
+        Date.now() - started < 3000,
+        `first translation after ${Date.now() - started} ms`,
+      );
       assert.equal(
         intro,
         "FR: Read the field guide before you leave the trail, and run check-gear first.",
@@ -213,6 +216,22 @@ test("page translation with the AI model", { timeout: 240000 }, async (t) => {
       );
       await clickMenu(pageUrl);
       await poll(async () => (await pageHtml(page)) === before);
+    });
+
+    await t.test("pages that can't be translated say so", async () => {
+      await browser.open("chrome://version/");
+      await clickMenu("chrome://version/");
+      await poll(() =>
+        session.worker.call(async () => {
+          const [tab] = await chrome.tabs.query({ url: "chrome://version/" });
+          return (
+            (await chrome.action.getBadgeText({ tabId: tab.id })) === "!" &&
+            (await chrome.action.getTitle({ tabId: tab.id })).startsWith(
+              "Can't translate this page",
+            )
+          );
+        }),
+      );
     });
   } finally {
     await session.close();

@@ -40,10 +40,6 @@ const api = () => (globalThis as { Translator?: TranslatorApi }).Translator;
 const detectorApi = () =>
   (globalThis as { LanguageDetector?: DetectorApi }).LanguageDetector;
 
-export function hasBrowserTranslator() {
-  return typeof api()?.create === "function";
-}
-
 const SERVICE = "Built-in translator";
 
 // One translator per language pair; each translates one text at a time.

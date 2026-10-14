@@ -78,8 +78,6 @@ function ensureStyle(node: Node) {
   styled.add(style);
 }
 
-export type Rendered = { element: HTMLElement };
-
 function createElement(paragraph: Paragraph, language: string) {
   const document = paragraph.parent.ownerDocument;
   const element = document.createElement(TRANSLATION_TAG);

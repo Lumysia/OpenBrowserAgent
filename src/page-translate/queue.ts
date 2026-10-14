@@ -25,9 +25,6 @@ export function createQueue() {
     delete(id: number) {
       items.delete(id);
     },
-    has(id: number) {
-      return items.has(id);
-    },
     get size() {
       return items.size;
     },
