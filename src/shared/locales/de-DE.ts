@@ -535,6 +535,9 @@ export const deDE: LocaleMessages = {
     skillCheckNameInvalid: "Metadatenname muss Kebab-Case verwenden",
     skillCheckDescription: "Beschreibung vorhanden",
     skillCheckDescriptionMissing: "Beschreibung fehlt",
+    skillCheckSize: "Größe liegt im Limit",
+    skillCheckTooLarge:
+      "Die Dateien eines Skills dürfen zusammen {max} Zeichen enthalten",
     deleteSkill: "Skill löschen",
     builtinSkillBadge: "Integriert",
     overrideSkillBadge: "Angepasster integrierter Skill",
@@ -563,9 +566,8 @@ export const deDE: LocaleMessages = {
     lightTheme: "Hell",
     darkTheme: "Dunkel",
     syncSettingsDescription:
-      "Sprache, Darstellung, Smart Bar, Kontextmenü, Seitenübersetzung und weitere Einstellungen werden immer synchronisiert. Wählen Sie hier das Backend und darunter, was zusätzlich synchronisiert wird.",
-    syncBackendDescription:
-      "Wählen Sie zusätzliche Elemente für die Synchronisierung aus.",
+      "Wählen Sie das Backend und darunter, was synchronisiert wird. Einstellungen werden immer synchronisiert; Schlüssel, Chats und Dateien haben je einen Schalter.",
+    syncBackendDescription: "Was synchronisiert wird.",
     syncBackendBrowserSync:
       "Integrierte Synchronisierung über das Browserkonto",
     syncBackendWebDavSync: "WebDAV-Synchronisierung",
@@ -575,27 +577,6 @@ export const deDE: LocaleMessages = {
     syncBackendPassword: "Passwort oder App-Passwort",
     syncBackendCopyConfig: "Konfigurationscode kopieren",
     syncBackendCopiedConfig: "Konfigurationscode kopiert",
-    syncProviders: "KI-Anbieter synchronisieren",
-    syncProvidersDescription:
-      "Konfiguration der KI-Anbieter einschließlich API-Schlüssel über das aktuelle Sync-Backend synchronisieren.",
-    syncAgents: "Agenten synchronisieren",
-    syncAgentsDescription:
-      "Agentenprofile und Arbeitsbereichsdateien über das aktuelle Sync-Backend synchronisieren.",
-    syncSkills: "Skills synchronisieren",
-    syncSkillsDescription:
-      "Skill-Vorlagen über das aktuelle Sync-Backend synchronisieren.",
-    syncMcpServers: "MCP-Server synchronisieren",
-    syncMcpServersDescription:
-      "Streamable-HTTP-MCP-Serverkonfiguration über das aktuelle Sync-Backend synchronisieren.",
-    syncLocalExecutionBridges: "Lokale Ausführungs-Bridges synchronisieren",
-    syncLocalExecutionBridgesDescription:
-      "Bridge-Einstellungen einschließlich Geheimschlüsseln über das aktuelle Sync-Backend synchronisieren.",
-    syncChats: "Chats synchronisieren",
-    syncChatsDescription:
-      "Chatverlauf über das aktuelle Sync-Backend synchronisieren. Lassen Sie dies deaktiviert, wenn Chats nur lokal bleiben sollen.",
-    syncChatAttachments: "Chatanhänge synchronisieren",
-    syncChatAttachmentsDescription:
-      "In Chats hochgeladene Dateien über das aktuelle Sync-Backend synchronisieren.",
     autoScroll: "Automatisch scrollen",
     autoScrollDescription:
       "Die neueste KI-Ausgabe während des Streamings automatisch sichtbar halten.",

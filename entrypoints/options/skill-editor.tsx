@@ -1,5 +1,7 @@
 import { Check, Copy, Download, RotateCcw, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { SKILL_FILES } from "../../src/shared/sync/collections";
+import { useNotSyncedHere } from "../../src/ui/useSyncedHere";
 import type { Messages } from "../../src/shared/i18n";
 import {
   getSkillBody,
@@ -11,6 +13,7 @@ import {
 import type { Skill, SkillFile } from "../../src/shared/types";
 import {
   Button,
+  Feedback,
   Input,
   Label,
   Tooltip,
@@ -45,6 +48,7 @@ export function SkillEditor({
   onDelete: () => void;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const filesNotSynced = useNotSyncedHere(SKILL_FILES);
   const update = (patch: Partial<Skill>) =>
     onDraft({ ...draft, ...patch, updatedAt: Date.now() });
   const withEntry = (name: string, description: string) => ({
@@ -99,6 +103,7 @@ export function SkillEditor({
           />
         </Label>
       </div>
+      {filesNotSynced && <Feedback>{t.sync.filesNotSynced}</Feedback>}
       <SkillFileList
         skill={draft}
         onAddFile={(file) => {

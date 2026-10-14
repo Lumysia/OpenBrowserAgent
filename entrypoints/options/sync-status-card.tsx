@@ -154,15 +154,14 @@ function syncCollectionLabels(t: Messages): Record<string, string> {
   return {
     language: t.common.language,
     preferences: t.options.general,
-    "sync-data": t.options.sync,
+    "sync-groups": t.options.sync,
     providers: t.options.providers,
     agents: t.options.agents,
-    workspaces: t.options.syncAgents,
+    workspaces: t.options.agents,
     skills: t.options.skills,
     "skill-settings": t.options.skills,
     "mcp-servers": t.options.mcpServers,
-    bridges: t.options.localExecutionBridges,
     chats: t.sidepanel.chatHistory,
-    attachments: t.options.syncChatAttachments,
+    attachments: t.sync.groupFiles,
   };
 }

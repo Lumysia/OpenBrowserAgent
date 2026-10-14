@@ -20,6 +20,39 @@ export const syncEsES: SyncMessages = {
   syncNow: "Sincronizar ahora",
   webDavOnly:
     "Solo con WebDAV: el almacenamiento de sincronización de la cuenta del navegador es demasiado pequeño.",
+  groupSettings: "Ajustes",
+  groupSettingsDescription:
+    "Siempre se sincronizan: idioma, preferencias, proveedores de IA y servidores MCP sin sus claves, agentes con su MEMORY.md y USER.md, y habilidades sin sus archivos.",
+  groupAlways: "Siempre",
+  groupKeys: "Claves",
+  groupKeysDescription:
+    "Claves API y cabeceras de MCP, cifradas con tu frase de contraseña de sincronización antes de salir de este dispositivo.",
+  groupChats: "Chats",
+  groupChatsDescription:
+    "Historial de chats, sin adjuntos. Déjalo desactivado para chats solo locales.",
+  groupFiles: "Archivos",
+  groupFilesDescription:
+    "Archivos de habilidades, archivos del espacio de trabajo de los agentes aparte de MEMORY.md y USER.md, y adjuntos de los chats (con los chats activados).",
+  passphrase: "Frase de contraseña de sincronización",
+  passphraseRepeat: "Repite la frase de contraseña",
+  passphraseCreate:
+    "Elige una frase de contraseña de sincronización. Cada dispositivo que sincroniza claves la pide una vez. No se puede recuperar: si la olvidas, elige otra y tus claves se quedan en cada dispositivo.",
+  passphraseEnter:
+    "Las claves están cifradas con una frase de contraseña de sincronización elegida en otro dispositivo. Introdúcela una vez para sincronizar las claves aquí.",
+  passphraseChangeDescription:
+    "Elige una nueva frase de contraseña de sincronización. Tus otros dispositivos la pedirán una vez.",
+  passphraseTooShort: "Usa al menos {min} caracteres.",
+  passphraseMismatch: "Las frases de contraseña no coinciden.",
+  passphraseWrong:
+    "Frase de contraseña incorrecta. Introduce la que elegiste en tu otro dispositivo.",
+  passphraseSave: "Guardar frase de contraseña",
+  passphraseChange: "Cambiar frase de contraseña",
+  keysLocked:
+    "Introduce la frase de contraseña de sincronización para sincronizar las claves en este dispositivo.",
+  keysUnlocked:
+    "Las claves se sincronizan cifradas con tu frase de contraseña de sincronización.",
+  filesNotSynced:
+    "Los archivos no se sincronizan en este dispositivo. Tus otros dispositivos los conservan tal como están.",
   warnings: {
     "unreliable-etags":
       "No se puede escribir en este servidor de forma segura. Usa un servidor WebDAV que envíe ETag fuertes.",
@@ -32,6 +65,8 @@ export const syncEsES: SyncMessages = {
       "El almacenamiento de sincronización de la cuenta del navegador está lleno. Desactiva algunos elementos o usa WebDAV.",
     "cloned-device":
       "Este navegador ahora se sincroniza como un dispositivo nuevo. Se conservan los cambios de ambos.",
+    "recovered-root":
+      "El archivo de sincronización del servidor estaba dañado. Se ha reconstruido con su copia anterior y los datos de este dispositivo.",
   },
   warningDetails: {
     "unreliable-etags":
@@ -42,6 +77,8 @@ export const syncEsES: SyncMessages = {
       "Este dispositivo conserva su copia hasta que otro dispositivo la vuelva a subir.",
     "cloned-device":
       "Otro navegador se estaba sincronizando como este dispositivo, por ejemplo un perfil de navegador copiado o una copia de seguridad restaurada en otro equipo.",
+    "recovered-root":
+      "Ocurre cuando una subida se interrumpe a medias. No se ha perdido nada en tus dispositivos: cada uno vuelve a subir sus cambios.",
   },
   massDeleteTitle: "Confirma eliminaciones desde otro dispositivo",
   massDeleteDescription:

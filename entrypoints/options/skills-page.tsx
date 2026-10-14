@@ -3,6 +3,7 @@ import { AlertCircle, FileArchive, FileText, Plus } from "lucide-react";
 import {
   QUICK_FEEDBACK_MS,
   SKILL_LISTING_MAX_CHARS,
+  SKILL_MAX_CHARS,
 } from "../../src/shared/config";
 import { getMessages, type Messages } from "../../src/shared/i18n";
 import {
@@ -21,9 +22,14 @@ import {
   normalizeSkill,
   normalizeSkillName,
   skillPackageBytes,
+  skillTooLarge,
   validateSkill,
 } from "../../src/shared/skills";
-import { formatBytes, formatDateTime } from "../../src/shared/format";
+import {
+  formatBytes,
+  formatDateTime,
+  formatNumber,
+} from "../../src/shared/format";
 import { storage } from "../../src/shared/storage";
 import type { Skill, SkillInvokeMode } from "../../src/shared/types";
 import {
@@ -42,7 +48,9 @@ import {
   ToggleGroupItem,
 } from "../../src/ui/components";
 import { skillDisplay } from "../../src/ui/skill-display";
+import { SKILL_FILES } from "../../src/shared/sync/collections";
 import { useSkillCatalog } from "../../src/ui/useSkillCatalog";
+import { useNotSyncedHere } from "../../src/ui/useSyncedHere";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { BuiltinSkillDetail, SkillEditor } from "./skill-editor";
 import { importSkillZip } from "./skill-import";
@@ -76,6 +84,7 @@ export function SkillsPage() {
       addSkill(
         await importSkillZip(file, {
           missingEntry: t.options.importSkillPackageMissingEntry,
+          tooLarge: skillTooLargeText(t),
         }),
       );
     } catch (error) {
@@ -92,6 +101,8 @@ export function SkillsPage() {
 
   function saveSkill(skill: Skill) {
     const draft = draftFor(skill);
+    // The header's checks say why.
+    if (skillTooLarge(draft)) return;
     setSkills((items) =>
       items.map((item) => (item.id === skill.id ? draft : item)),
     );
@@ -247,7 +258,12 @@ function SkillItemHeader({
 }) {
   const { skill, source, invoke } = entry;
   const { name } = skillDisplay(skill, t);
-  const checks = source === "builtin" ? [] : validateSkill(draft);
+  const filesNotSynced = useNotSyncedHere(SKILL_FILES);
+  // A skill whose files did not sync to this device is not broken.
+  const checks =
+    source === "builtin" || (filesNotSynced && !draft.files.length)
+      ? []
+      : validateSkill(draft);
   return (
     <AccordionHeader className="ui-accordion-header-with-actions">
       <AccordionTriggerButton hideChevron>
@@ -352,6 +368,13 @@ function skillInvokeHint(t: Messages, mode: SkillInvokeMode) {
   }[mode];
 }
 
+function skillTooLargeText(t: Messages) {
+  return t.options.skillCheckTooLarge.replace(
+    "{max}",
+    formatNumber(SKILL_MAX_CHARS),
+  );
+}
+
 function skillCheckLabel(t: Messages, id: string, ok: boolean) {
   const labels: Record<string, string> = {
     entry: ok ? t.options.skillCheckEntry : t.options.skillCheckEntryMissing,
@@ -359,6 +382,7 @@ function skillCheckLabel(t: Messages, id: string, ok: boolean) {
     description: ok
       ? t.options.skillCheckDescription
       : t.options.skillCheckDescriptionMissing,
+    size: ok ? t.options.skillCheckSize : skillTooLargeText(t),
   };
   return labels[id] || id;
 }

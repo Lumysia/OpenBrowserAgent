@@ -1,101 +1,86 @@
-import type { ReactNode } from "react";
 import {
-  Bot,
   Cloud,
-  Database,
   FileText,
+  KeyRound,
   MessagesSquare,
-  Paperclip,
-  Plug,
-  TerminalSquare,
+  Settings,
 } from "lucide-react";
+import { useState } from "react";
 import { getMessages } from "../../src/shared/i18n";
-import {
-  storage,
-  SYNC_PREFERENCES,
-  SYNC_PREFERENCE_KEYS,
-  type SyncPreferenceKey,
-  type SyncDataSettings,
-} from "../../src/shared/storage";
-import { SYNC_DATA_SETTING_KEYS } from "../../src/shared/storage-keys";
+import { storage, SYNC_GROUPS, type SyncGroup } from "../../src/shared/storage";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { SyncBackendCard, type SyncDataToggle } from "./sync-backend-card";
+import { SyncKeysDetail } from "./sync-keys-detail";
 import { SyncStatusCard } from "./sync-status-card";
 
 export function SyncPage() {
   const [language] = useStoredState(storage.language);
-  const [syncDataSettings] = useStoredState(storage.syncDataSettings);
+  const [syncGroups] = useStoredState(storage.syncGroups);
+  const [syncStatus] = useStoredState(storage.syncStatus);
   const [syncBackends, setSyncBackends] = useStoredState(storage.syncBackends);
   const [activeSyncBackendId, setActiveSyncBackendId] = useStoredState(
     storage.activeSyncBackendId,
   );
+  // Keys are being turned on: the passphrase form shows first.
+  const [askingPassphrase, setAskingPassphrase] = useState(false);
   const t = getMessages(language);
 
-  if (!syncDataSettings || !syncBackends || !activeSyncBackendId) return null;
-  const syncToggleContent: Record<
-    SyncPreferenceKey,
-    { title: string; description: string; icon: ReactNode }
-  > = {
-    [SYNC_PREFERENCES.providers]: {
-      title: t.options.syncProviders,
-      description: t.options.syncProvidersDescription,
-      icon: <Database size={18} />,
-    },
-    [SYNC_PREFERENCES.skills]: {
-      title: t.options.syncSkills,
-      description: t.options.syncSkillsDescription,
-      icon: <FileText size={18} />,
-    },
-    [SYNC_PREFERENCES.mcpServers]: {
-      title: t.options.syncMcpServers,
-      description: t.options.syncMcpServersDescription,
-      icon: <Plug size={18} />,
-    },
-    [SYNC_PREFERENCES.localExecutionBridges]: {
-      title: t.options.syncLocalExecutionBridges,
-      description: t.options.syncLocalExecutionBridgesDescription,
-      icon: <TerminalSquare size={18} />,
-    },
-    [SYNC_PREFERENCES.agents]: {
-      title: t.options.syncAgents,
-      description: t.options.syncAgentsDescription,
-      icon: <Bot size={18} />,
-    },
-    [SYNC_PREFERENCES.chats]: {
-      title: t.options.syncChats,
-      description: t.options.syncChatsDescription,
-      icon: <MessagesSquare size={18} />,
-    },
-  };
+  if (!syncGroups || !syncBackends || !activeSyncBackendId || !syncStatus)
+    return null;
 
   // Settings apply at once; the background sync follows storage changes.
-  function updateSyncPreference(key: keyof SyncDataSettings, value: boolean) {
-    void storage.syncDataSettings
-      .update((settings) => ({ ...settings, [key]: value }))
-      .catch((error) =>
-        console.warn("Failed to update sync preference", error),
-      );
+  function updateGroup(group: SyncGroup, value: boolean) {
+    void storage.syncGroups
+      .update((groups) => ({ ...groups, [group]: value }))
+      .catch((error) => console.warn("Failed to update sync groups", error));
   }
 
   const dataToggles: SyncDataToggle[] = [
-    ...SYNC_PREFERENCE_KEYS.map((preferenceKey) => ({
-      key: preferenceKey,
-      title: syncToggleContent[preferenceKey].title,
-      description: syncToggleContent[preferenceKey].description,
-      icon: syncToggleContent[preferenceKey].icon,
-      value: syncDataSettings[preferenceKey] === true,
-      webDavOnly: preferenceKey === SYNC_PREFERENCES.chats,
-      onChange: (value: boolean) => updateSyncPreference(preferenceKey, value),
-    })),
     {
-      key: SYNC_DATA_SETTING_KEYS.chatAttachments,
-      title: t.options.syncChatAttachments,
-      description: t.options.syncChatAttachmentsDescription,
-      icon: <Paperclip size={18} />,
-      value: syncDataSettings[SYNC_DATA_SETTING_KEYS.chatAttachments] === true,
-      webDavOnly: true,
-      onChange: (value: boolean) =>
-        updateSyncPreference(SYNC_DATA_SETTING_KEYS.chatAttachments, value),
+      key: "settings",
+      title: t.sync.groupSettings,
+      description: t.sync.groupSettingsDescription,
+      icon: <Settings size={18} />,
+    },
+    {
+      key: SYNC_GROUPS.keys,
+      title: t.sync.groupKeys,
+      description: t.sync.groupKeysDescription,
+      icon: <KeyRound size={18} />,
+      value: syncGroups[SYNC_GROUPS.keys],
+      // Turning keys on asks for the passphrase first; setting it turns
+      // them on. Turning them off removes the keys from the server.
+      onChange: (value) => {
+        setAskingPassphrase(value);
+        if (!value) updateGroup(SYNC_GROUPS.keys, false);
+      },
+      detail: (
+        <SyncKeysDetail
+          on={syncGroups[SYNC_GROUPS.keys]}
+          keys={syncStatus.keys}
+          asking={askingPassphrase}
+          onClose={() => setAskingPassphrase(false)}
+          t={t}
+        />
+      ),
+    },
+    {
+      key: SYNC_GROUPS.chats,
+      title: t.sync.groupChats,
+      description: t.sync.groupChatsDescription,
+      icon: <MessagesSquare size={18} />,
+      value: syncGroups[SYNC_GROUPS.chats],
+      needsLargeContent: true,
+      onChange: (value) => updateGroup(SYNC_GROUPS.chats, value),
+    },
+    {
+      key: SYNC_GROUPS.files,
+      title: t.sync.groupFiles,
+      description: t.sync.groupFilesDescription,
+      icon: <FileText size={18} />,
+      value: syncGroups[SYNC_GROUPS.files],
+      needsLargeContent: true,
+      onChange: (value) => updateGroup(SYNC_GROUPS.files, value),
     },
   ];
 
@@ -111,7 +96,7 @@ export function SyncPage() {
         activeBackendId={activeSyncBackendId}
         backends={syncBackends}
         dataToggles={dataToggles}
-        syncDataSettings={syncDataSettings}
+        syncGroups={syncGroups}
         onActiveBackendChange={setActiveSyncBackendId}
         onBackendsChange={setSyncBackends}
         t={t}
