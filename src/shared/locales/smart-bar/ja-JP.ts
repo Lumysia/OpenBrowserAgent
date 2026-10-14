@@ -24,6 +24,7 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
   readSource: "原文を読み上げ",
   readResult: "結果を読み上げ",
   stopReading: "読み上げを停止",
+  noVoice: "{language}の音声がインストールされていません。",
   writing: "生成中…",
   emptyResult: "モデルからテキストが返されませんでした。",
   selectionChanged:

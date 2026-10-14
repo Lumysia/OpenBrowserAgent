@@ -51,6 +51,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | restore (deleted synced items) | 恢复               | 還原               | 復元                    | 복원             |
 | merge (synced changes)         | 合并               | 合併               | 統合                    | 병합             |
 | browser profile                | 浏览器配置文件     | 瀏覽器設定檔       | ブラウザー プロファイル | 브라우저 프로필  |
+| voice (reading aloud)          | 语音               | 語音               | 音声                    | 음성             |
 
 | English                        | Français                     | Deutsch                     | Español                           | Português (Brasil)               |
 | ------------------------------ | ---------------------------- | --------------------------- | --------------------------------- | -------------------------------- |
@@ -86,6 +87,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | restore (deleted synced items) | restaurer                    | wiederherstellen            | restaurar                         | restaurar                        |
 | merge (synced changes)         | fusionner                    | zusammenführen              | combinar                          | mesclar                          |
 | browser profile                | profil de navigateur         | Browserprofil               | perfil de navegador               | perfil de navegador              |
+| voice (reading aloud)          | voix                         | Stimme                      | voz                               | voz                              |
 
 ## Themes and holiday touches
 

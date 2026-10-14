@@ -198,6 +198,7 @@ async function prepare(
     hideSite: smartBarHideSite(settings, host),
     messages: getMessages(language).smartBar,
     language: resolveLanguage(language),
+    replyLanguage: language,
     colorScheme: normalizeColorScheme(preferences.colorScheme),
     accentColor: normalizeTheme(preferences.accentColor),
   };

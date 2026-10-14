@@ -24,6 +24,7 @@ export const smartBarZhCN: SmartBarLocaleMessages = {
   readSource: "朗读原文",
   readResult: "朗读结果",
   stopReading: "停止朗读",
+  noVoice: "未安装{language}语音。",
   writing: "正在生成…",
   emptyResult: "模型没有返回文本。",
   selectionChanged: "所选文本已更改，请改为复制结果。",

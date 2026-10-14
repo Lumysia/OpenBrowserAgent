@@ -24,6 +24,7 @@ export const smartBarFrFR: SmartBarLocaleMessages = {
   readSource: "Lire l’original à voix haute",
   readResult: "Lire le résultat à voix haute",
   stopReading: "Arrêter la lecture",
+  noVoice: "Aucune voix installée pour : {language}.",
   writing: "Rédaction…",
   emptyResult: "Le modèle n’a renvoyé aucun texte.",
   selectionChanged: "Le texte sélectionné a changé. Copiez plutôt le résultat.",

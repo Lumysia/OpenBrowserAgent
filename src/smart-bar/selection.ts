@@ -187,8 +187,8 @@ function pageContext(before: string, after: string): SelectionContext {
   };
 }
 
-// The page's language for the selected text (its nearest lang attribute),
-// for reading it aloud with a fitting voice.
+// The page's language for the selected text (its nearest lang attribute).
+// Often missing or wrong: reading aloud takes it as a hint only.
 export function selectionLanguage({ target }: SelectionSnapshot) {
   const node =
     target.kind === "control" ? target.element : target.range.startContainer;
