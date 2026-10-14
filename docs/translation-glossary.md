@@ -58,6 +58,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | browser profile                | 浏览器配置文件     | 瀏覽器設定檔       | ブラウザー プロファイル | 브라우저 프로필  |
 | voice (reading aloud)          | 语音               | 語音               | 音声                    | 음성             |
 | code (the agent runs)          | 代码               | 程式碼             | コード                  | 코드             |
+| sandbox (where code runs)      | 沙盒               | 沙盒               | サンドボックス          | 샌드박스         |
 
 | English                        | Français                     | Deutsch                     | Español                           | Português (Brasil)               |
 | ------------------------------ | ---------------------------- | --------------------------- | --------------------------------- | -------------------------------- |
@@ -96,6 +97,7 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 | browser profile                | profil de navigateur         | Browserprofil               | perfil de navegador               | perfil de navegador              |
 | voice (reading aloud)          | voix                         | Stimme                      | voz                               | voz                              |
 | code (the agent runs)          | code                         | Code                        | código                            | código                           |
+| sandbox (where code runs)      | bac à sable                  | Sandbox                     | entorno aislado                   | sandbox                          |
 
 The AI provider form's **thinking switch** chooses how the smart bar and page translation ask models to skip thinking: 思考开关 / 思考開關 / 思考スイッチ / 생각 스위치 / Interrupteur de réflexion / Denkschalter / Interruptor de pensamiento / Chave de pensamento. "Thinking" here is the same idea as the smart bar's "Thinking…" status. Its options keep the request field in parentheses untranslated (`enable_thinking`, `reasoning_effort`), and "Reasoning effort" uses the composer's term.
 
