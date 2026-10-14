@@ -15,6 +15,25 @@ const PAGE = `<title>OBA tool fixture</title>
 <button id="count" onclick="window.counter=(window.counter||0)+1">Count</button>
 <div id="note" style="margin-top:3000px">Far below: the secret word is pelican.</div>`;
 
+// Editable content: a plain one, and an editor that keeps its own model of
+// the text (it inserts typed text itself on beforeinput, renders after a
+// microtask, and puts its model back over any other change to its DOM).
+const EDITORS = `<title>Editors</title>
+<div id="plain" contenteditable role="textbox" aria-label="Plain">old text</div>
+<div id="model" contenteditable role="textbox" aria-label="Model">old text</div>
+<script>
+  window.modelText = "old text";
+  const render = () => { model.textContent = window.modelText; };
+  model.addEventListener("beforeinput", (event) => {
+    if (event.inputType !== "insertText") return;
+    event.preventDefault();
+    const all = getSelection().toString() === model.textContent;
+    window.modelText = all ? event.data : window.modelText + event.data;
+    queueMicrotask(render);
+  });
+  model.addEventListener("input", () => queueMicrotask(render));
+</script>`;
+
 const BIG = `<title>Big</title><ul>${Array.from(
   { length: 3000 },
   (_, index) => `<li>Row ${index} with some filler text to make it long</li>`,
@@ -40,6 +59,7 @@ test(
       const pages = {
         "/page": PAGE,
         "/big": BIG,
+        "/editors": EDITORS,
         "/other": "<title>Other</title><p>Other page</p>",
         "/shadow": SHADOW,
         "/huge": HUGE,
@@ -159,6 +179,44 @@ test(
             /Step 2 \(click e999999\) failed: Ref e999999 is not on this page.*Later steps were not run/s,
           );
           assert.equal(await evaluate(tabId, "window.counter"), 1);
+        },
+      );
+
+      await t.test(
+        "typing into editable content reaches the editor's own model",
+        async () => {
+          const editors = await open("/editors");
+          const [snapshot] = await fixture.run([
+            { name: "snapshot", args: { tabId: editors } },
+          ]);
+          const [typed] = await fixture.run([
+            {
+              name: "act",
+              args: {
+                tabId: editors,
+                steps: [
+                  {
+                    action: "type",
+                    ref: ref(snapshot, 'textbox "Plain"'),
+                    text: "new words",
+                  },
+                  {
+                    action: "type",
+                    ref: ref(snapshot, 'textbox "Model"'),
+                    text: "new words",
+                  },
+                ],
+              },
+            },
+          ]);
+          assert.match(typed, /Done: 1\. type.*2\. type/s);
+          assert.deepEqual(
+            await evaluate(
+              editors,
+              "[plain.innerText, model.innerText, window.modelText]",
+            ),
+            ["new words", "new words", "new words"],
+          );
         },
       );
 
