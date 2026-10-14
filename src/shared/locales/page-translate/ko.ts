@@ -20,7 +20,7 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
   engineDetails: {
     model: "설정한 AI 제공업체가 아래에서 선택한 모델로 페이지를 번역합니다.",
     browser:
-      "브라우저가 이 기기에서 번역하며, 텍스트가 기기 밖으로 나가지 않습니다. 언어마다 한 번만 다운로드합니다.",
+      "브라우저가 이 기기에서 번역하며, 텍스트가 기기 밖으로 나가지 않습니다. 언어마다 한 번만 다운로드합니다. 번역할 수 없는 페이지는 아래 AI 모델이 번역합니다.",
     google:
       "Google API가 아닌 비공식 무료 서비스입니다. 언제든지 작동이 중단될 수 있습니다.",
     microsoft:
@@ -32,7 +32,9 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
     microsoft:
       "번역을 위해 페이지 텍스트가 Microsoft로 전송됩니다. Microsoft가 실패하면 해당 페이지의 나머지는 Google이 번역합니다.",
   },
-  freeServices: {
+  engineNames: {
+    model: "AI 모델",
+    browser: "내장 번역기",
     google: "Google",
     microsoft: "Microsoft",
   },
@@ -77,9 +79,11 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
       "{engine}이(가) 요청을 제한하고 있어 이 페이지는 {fallback}(으)로 번역합니다.",
     failed:
       "{engine}을(를) 지금 사용할 수 없어 이 페이지는 {fallback}(으)로 번역합니다.",
+    unavailable:
+      "{engine}(으)로는 이 페이지를 번역할 수 없어 {fallback}(으)로 번역합니다.",
   },
-  browserUnsupported:
-    "내장 번역기는 이 페이지를 {language}(으)로 번역할 수 없습니다.",
+  browserMissing:
+    "이 브라우저에는 내장 번역기가 없어 아래 AI 모델이 페이지를 번역합니다.",
   notStarted:
     "이 페이지의 번역을 시작하지 못했습니다. 페이지를 새로고침한 후 다시 시도하세요.",
   unavailablePage:

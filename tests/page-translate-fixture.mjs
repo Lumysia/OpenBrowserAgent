@@ -1,4 +1,8 @@
 import { CONTEXT_MENU_ID } from "../src/shared/context-menu.ts";
+import {
+  DEFAULT_PAGE_TRANSLATE_SETTINGS,
+  PAGE_TRANSLATE_ENGINE,
+} from "../src/shared/page-translate/settings.ts";
 import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
 import { setPreferences } from "./browser-harness.mjs";
 import { poll } from "./chromium.mjs";
@@ -70,7 +74,15 @@ export async function startPageTranslate({
 }) {
   const session = await startSmartBar({ pages, answer, launch, smartBar });
   const { browser, options, extensionUrl } = session;
-  if (preferences) await setPreferences(options, preferences);
+  // The fixture's model translates pages unless a test picks another engine.
+  await setPreferences(options, {
+    ...preferences,
+    pageTranslate: {
+      ...DEFAULT_PAGE_TRANSLATE_SETTINGS,
+      engine: PAGE_TRANSLATE_ENGINE.model,
+      ...preferences?.pageTranslate,
+    },
+  });
   const attachWorker = async () => {
     const worker = await browser.attach(
       (item) => item === extensionUrl("background.js"),

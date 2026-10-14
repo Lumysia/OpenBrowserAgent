@@ -157,12 +157,21 @@ test("settings: defaults, cleaned values, the target language", () => {
       translateMenus: "yes" as never,
     }),
     {
-      engine: "model",
+      engine: "browser",
       modelId: "",
       targetLanguage: "fr-FR",
       display: "bilingual",
       translateMenus: false,
     },
+  );
+  // The browser's translator is the default; an engine already stored stays.
+  assert.equal(DEFAULT_PAGE_TRANSLATE_SETTINGS.engine, "browser");
+  assert.equal(normalizePageTranslateSettings({}).engine, "browser");
+  assert.equal(
+    mergePreferences({
+      pageTranslate: { ...DEFAULT_PAGE_TRANSLATE_SETTINGS, engine: "model" },
+    }).pageTranslate?.engine,
+    "model",
   );
   // Settings saved by the last release have no translateMenus.
   assert.equal(

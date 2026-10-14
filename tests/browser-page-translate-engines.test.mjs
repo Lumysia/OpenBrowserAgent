@@ -10,6 +10,8 @@ import {
   translationIn,
 } from "./page-translate-fixture.mjs";
 import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
+import { pageTranslateEnUS as messages } from "../src/shared/locales/page-translate/en-US.ts";
+import { formatMessage } from "../src/shared/text.ts";
 
 // The engine setting in Settings, and the free Google and Microsoft engines
 // against fake services: the background's requests to their hosts are
@@ -113,13 +115,22 @@ test("translation engines", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
           ),
         ),
       );
+      assert.deepEqual(options, Object.values(messages.engines));
+      // The built-in translator says what happens where it can't translate,
+      // and shows the model it falls back to.
+      await clickAt(settings, "[role=option]", messages.engines.browser);
       const builtIn = await settings.call(() => "Translator" in globalThis);
-      assert.deepEqual(options, [
-        "AI model",
-        ...(builtIn ? ["Built-in translator (on device)"] : []),
-        "Google Translate (free)",
-        "Microsoft Translator (free)",
-      ]);
+      const detail = builtIn
+        ? messages.engineDetails.browser
+        : messages.browserMissing;
+      await poll(() =>
+        settings.call(
+          (texts) =>
+            texts.every((text) => document.body.textContent.includes(text)),
+          [detail, messages.modelDescription],
+        ),
+      );
+      await clickAt(settings, '[aria-label="Translation engine"]');
       await clickAt(settings, "[role=option]", "Google Translate (free)");
       await poll(() =>
         settings.call(() =>
@@ -214,7 +225,10 @@ test("translation engines", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
         const page = await translatePage("DE-ms: Notes from the field");
         await noteOn(
           page,
-          "Google is limiting requests; switched to Microsoft for this page.",
+          formatMessage(messages.switched.rateLimited, {
+            engine: messages.engineNames.google,
+            fallback: messages.engineNames.microsoft,
+          }),
         );
         page.close();
       },
@@ -228,12 +242,39 @@ test("translation engines", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
       await clickMenu(pageUrl);
       await noteOn(
         page,
-        "Google and Microsoft both failed to translate. Try again later or choose another engine in Settings.",
+        formatMessage(messages.errors.allFailed, {
+          engine: messages.engineNames.google,
+          fallback: messages.engineNames.microsoft,
+        }),
       );
       await delay(200);
       assert.equal(await translationIn(page, "#title"), undefined);
       page.close();
     });
+
+    await t.test(
+      "no built-in translator in the background: the AI model translates",
+      async () => {
+        mode = "ok";
+        await session.setPreferences({
+          engine: "browser",
+          targetLanguage: "fr",
+        });
+        // The background as in a browser without the Translator API.
+        await worker.call(() => {
+          self.Translator = undefined;
+        });
+        const page = await translatePage("FR: Notes from the field");
+        await noteOn(
+          page,
+          formatMessage(messages.switched.unavailable, {
+            engine: messages.engineNames.browser,
+            fallback: messages.engineNames.model,
+          }),
+        );
+        page.close();
+      },
+    );
 
     await t.test("Microsoft", async () => {
       mode = "ok";

@@ -21,7 +21,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
     model:
       "Votre fournisseur d’IA traduit les pages avec le modèle choisi ci-dessous.",
     browser:
-      "Le navigateur traduit sur cet appareil ; aucun texte n’en sort. Chaque langue est téléchargée une seule fois.",
+      "Le navigateur traduit sur cet appareil ; aucun texte n’en sort. Chaque langue est téléchargée une seule fois. Lorsqu’il ne peut pas traduire une page, le modèle d’IA choisi ci-dessous prend le relais.",
     google:
       "Un service gratuit non officiel, pas une API de Google. Il peut cesser de fonctionner à tout moment.",
     microsoft:
@@ -33,7 +33,9 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
     microsoft:
       "Le texte de la page est envoyé à Microsoft pour être traduit. Si Microsoft échoue sur une page, Google traduit le reste de la page.",
   },
-  freeServices: {
+  engineNames: {
+    model: "le modèle d’IA",
+    browser: "le traducteur intégré",
     google: "Google",
     microsoft: "Microsoft",
   },
@@ -76,12 +78,14 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
   },
   switched: {
     rateLimited:
-      "{engine} limite les requêtes ; cette page passe à {fallback}.",
+      "Pour cette page, {fallback} prend le relais : {engine} limite les requêtes.",
     failed:
-      "{engine} ne fonctionne pas pour le moment ; cette page passe à {fallback}.",
+      "Pour cette page, {fallback} prend le relais : {engine} ne fonctionne pas pour le moment.",
+    unavailable:
+      "Pour cette page, {fallback} prend le relais : {engine} ne peut pas la traduire ici.",
   },
-  browserUnsupported:
-    "Le traducteur intégré ne peut pas traduire cette page en {language}.",
+  browserMissing:
+    "Ce navigateur n’a pas de traducteur intégré : le modèle d’IA choisi ci-dessous traduit donc les pages.",
   notStarted:
     "Impossible de lancer la traduction de cette page. Rechargez la page et réessayez.",
   unavailablePage:

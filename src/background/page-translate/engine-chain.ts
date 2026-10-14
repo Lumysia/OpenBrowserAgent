@@ -32,9 +32,10 @@ type Decision =
   // No fallback: the engine's own handling applies.
   | "none";
 
-// The engine a page session translates with. A free web service that fails
-// (rate limits, refusals, errors, repeated network errors) hands over to the
-// other free service once, for the rest of the session.
+// The engine a page session translates with. An engine with a fallback
+// (PAGE_TRANSLATE_FALLBACK) that fails (rate limits, refusals, errors,
+// repeated network errors, unavailable here) hands over to it once, for the
+// rest of the session.
 export type EngineChain = ReturnType<typeof createEngineChain>;
 
 export function createEngineChain(
@@ -86,7 +87,9 @@ export function createEngineChain(
         if (count < NETWORK_FAILURES) return "retry";
       }
       if (!fallback) return "exhausted";
-      switching = switchEngine(active, error).finally(() => {
+      // A fallback that can't be set up (no AI model) keeps failing with its
+      // own error, for this batch and the later ones.
+      switching = switchEngine(active, error).then(() => {
         switching = undefined;
       });
       await switching;

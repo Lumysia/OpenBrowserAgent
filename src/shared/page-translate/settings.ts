@@ -24,12 +24,15 @@ export const FREE_CLOUD_ENGINES: readonly PageTranslateEngine[] = [
   PAGE_TRANSLATE_ENGINE.microsoft,
 ];
 
-// When one free service fails on a page, the page continues with the other.
-export const FREE_ENGINE_FALLBACK: Partial<
+// The engine a page continues with when its engine can't translate it: one
+// free service hands over to the other, and the browser's translator (absent
+// in this browser, or without the language pair) to the AI model.
+export const PAGE_TRANSLATE_FALLBACK: Partial<
   Record<PageTranslateEngine, PageTranslateEngine>
 > = {
   [PAGE_TRANSLATE_ENGINE.google]: PAGE_TRANSLATE_ENGINE.microsoft,
   [PAGE_TRANSLATE_ENGINE.microsoft]: PAGE_TRANSLATE_ENGINE.google,
+  [PAGE_TRANSLATE_ENGINE.browser]: PAGE_TRANSLATE_ENGINE.model,
 };
 
 // `bilingual`: the translation under each paragraph. `translation`: only the
@@ -54,8 +57,10 @@ export type PageTranslateSettings = {
   translateMenus: boolean;
 };
 
+// The browser's translator by default: where the browser has none, pages
+// fall back to the AI model (PAGE_TRANSLATE_FALLBACK).
 export const DEFAULT_PAGE_TRANSLATE_SETTINGS: PageTranslateSettings = {
-  engine: PAGE_TRANSLATE_ENGINE.model,
+  engine: PAGE_TRANSLATE_ENGINE.browser,
   modelId: "",
   targetLanguage: "",
   display: PAGE_TRANSLATE_DISPLAY.bilingual,
