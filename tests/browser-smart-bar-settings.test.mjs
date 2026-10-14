@@ -22,7 +22,17 @@ const PAGE = `<!doctype html><title>Smart bar</title>
 <p id="text">The quick brown fox jumps over the lazy dog.</p>
 <textarea id="area" rows="2">hello wrold</textarea>
 <iframe id="frame" style="height:60px"></iframe>
+<canvas id="canvas" width="420" height="40" style="display:block"></canvas>
+<div id="proxy" contenteditable style="position:fixed;left:-10000px;top:0">Text the page draws on its canvas.</div>
 <script>
+  // An editor that draws its text on a canvas and keeps the selected text
+  // in a hidden copy, as canvas-based document editors do.
+  canvas.addEventListener("mouseup", () => {
+    const range = document.createRange();
+    range.selectNodeContents(proxy);
+    getSelection().removeAllRanges();
+    getSelection().addRange(range);
+  });
   // A cross-origin embed; it reports whether the bar's UI was let in.
   window.frameBar = false;
   frame.src = location.href.replace("127.0.0.1", "localhost") + "/frame";
@@ -196,6 +206,16 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
       },
     );
 
+    await t.test("text the page doesn't show gets no bar", async () => {
+      await selectText(page, "#canvas");
+      await delay(600);
+      assert.equal(
+        await page.call(() => getSelection().toString()),
+        "Text the page draws on its canvas.",
+      );
+      assert.equal(await barState(page), "none");
+    });
+
     await t.test("Hide on this site stops it", async () => {
       await selectText(page, "#text");
       await poll(async () => (await barState(page)) === "toolbar");
@@ -205,7 +225,7 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
       await poll(
         async () =>
           (await session.smartBarSettings()).blockedHosts.join() ===
-          "docs.google.com,127.0.0.1",
+          "127.0.0.1",
       );
       await selectText(page, "#text");
       await delay(600);

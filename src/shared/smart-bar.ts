@@ -113,8 +113,9 @@ export const DEFAULT_SMART_BAR_SETTINGS: SmartBarSettings = {
   enabled: false,
   trigger: SMART_BAR_TRIGGER.selection,
   siteMode: SMART_BAR_SITE_MODE.blockList,
-  // Canvas-rendered: the page selection is empty there.
-  blockedHosts: ["docs.google.com"],
+  // Pages that draw their text themselves (on a canvas) leave no shown
+  // selection, so the bar doesn't open there without a site list.
+  blockedHosts: [],
   allowedHosts: [],
   disabledPageActions: [],
   disabledEditActions: [],

@@ -81,6 +81,10 @@ export function readSelection(
   const text = selection.toString();
   if (!text.trim()) return undefined;
   const range = selection.getRangeAt(0).cloneRange();
+  // Text the page doesn't show (a hidden copy kept for the clipboard or
+  // assistive technology, while the page draws its text on a canvas):
+  // nothing to point the bar at.
+  if (!isShown(range)) return undefined;
   // A click on a button or link with an old selection elsewhere.
   if (
     target instanceof Element &&
@@ -102,6 +106,21 @@ export function readSelection(
         : { kind: "page", range },
     },
     point,
+  );
+}
+
+// A selection is shown when some of its text is drawn in the window.
+const SHOWN_MIN_PX = 2;
+
+function isShown(range: Range) {
+  return Array.from(range.getClientRects()).some(
+    (rect) =>
+      rect.width >= SHOWN_MIN_PX &&
+      rect.height >= SHOWN_MIN_PX &&
+      rect.bottom > 0 &&
+      rect.right > 0 &&
+      rect.top < innerHeight &&
+      rect.left < innerWidth,
   );
 }
 
