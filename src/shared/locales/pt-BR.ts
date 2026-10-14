@@ -467,6 +467,13 @@ export const ptBR: LocaleMessages = {
     deleteProvider: "Excluir provedor de IA",
     apiKey: "Chave de API",
     baseUrl: "URL base",
+    thinkingSwitch: "Chave de pensamento",
+    thinkingSwitchHint:
+      "Como a barra inteligente e a tradução de páginas pedem a estes modelos que não pensem. “Automático” escolhe pelo que se sabe do modelo e do servidor.",
+    thinkingSwitchAuto: "Automático",
+    thinkingSwitchChatTemplate: "Modelo de chat (enable_thinking)",
+    thinkingSwitchReasoningEffort: "Esforço de raciocínio (reasoning_effort)",
+    thinkingSwitchNone: "Não enviar nada",
     models: "Modelos",
     modelHint: "Busque os modelos e selecione um para adicionar",
     fetchModels: "Buscar modelos",

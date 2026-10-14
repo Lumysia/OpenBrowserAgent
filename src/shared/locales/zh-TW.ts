@@ -382,6 +382,13 @@ export const zhTW: LocaleMessages = {
     deleteProvider: "刪除 AI 提供者",
     apiKey: "API Key",
     baseUrl: "Base URL",
+    thinkingSwitch: "思考開關",
+    thinkingSwitchHint:
+      "智慧工具列和網頁翻譯如何讓這裡的模型略過思考。「自動」依已知的模型和伺服器資訊選擇。",
+    thinkingSwitchAuto: "自動",
+    thinkingSwitchChatTemplate: "聊天範本（enable_thinking）",
+    thinkingSwitchReasoningEffort: "推理強度（reasoning_effort）",
+    thinkingSwitchNone: "不傳送",
     models: "模型",
     modelHint: "先取得模型，再選擇一個新增",
     fetchModels: "取得模型",

@@ -8,7 +8,10 @@ import {
   requestQuickText,
   withQuickTaskTurn,
 } from "../src/background/quick-tasks";
-import type { ThinkingSwitch } from "../src/shared/thinking-switch";
+import {
+  providerThinkingSwitch,
+  type ThinkingSwitch,
+} from "../src/shared/thinking-switch";
 import type { ProviderId } from "../src/shared/types";
 import { providerFixture, reply } from "./provider-fixtures.mjs";
 
@@ -431,4 +434,22 @@ test("a queued batch that is aborted leaves the line", async () => {
   await first;
   assert.equal(await third, "third");
   assert.equal(ran, false);
+});
+
+test("a provider's thinking switch applies only where the form offers it", () => {
+  assert.equal(providerThinkingSwitch("openai", {}), "auto");
+  assert.equal(
+    providerThinkingSwitch("ollama", { thinkingSwitch: "chatTemplate" }),
+    "chatTemplate",
+  );
+  assert.equal(
+    providerThinkingSwitch("anthropic", { thinkingSwitch: "chatTemplate" }),
+    "auto",
+  );
+  assert.equal(
+    providerThinkingSwitch("openai", {
+      thinkingSwitch: "later" as ThinkingSwitch,
+    }),
+    "auto",
+  );
 });

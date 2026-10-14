@@ -473,6 +473,14 @@ export const esES: LocaleMessages = {
     deleteProvider: "Eliminar proveedor de IA",
     apiKey: "Clave API",
     baseUrl: "URL base",
+    thinkingSwitch: "Interruptor de pensamiento",
+    thinkingSwitchHint:
+      "Cómo la barra inteligente y la traducción de páginas piden a estos modelos que no piensen. «Automático» elige según lo que se sabe del modelo y del servidor.",
+    thinkingSwitchAuto: "Automático",
+    thinkingSwitchChatTemplate: "Plantilla de chat (enable_thinking)",
+    thinkingSwitchReasoningEffort:
+      "Esfuerzo de razonamiento (reasoning_effort)",
+    thinkingSwitchNone: "No enviar nada",
     models: "Modelos",
     modelHint: "Obtén los modelos y luego selecciona uno para añadirlo",
     fetchModels: "Obtener modelos",

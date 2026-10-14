@@ -404,6 +404,13 @@ export const ko: LocaleMessages = {
     deleteProvider: "AI 제공업체 삭제",
     apiKey: "API 키",
     baseUrl: "Base URL",
+    thinkingSwitch: "생각 스위치",
+    thinkingSwitchHint:
+      "스마트 바와 페이지 번역이 이곳의 모델에게 생각을 건너뛰게 하는 방법입니다. ‘자동’은 모델과 서버에 대해 알려진 정보로 고릅니다.",
+    thinkingSwitchAuto: "자동",
+    thinkingSwitchChatTemplate: "채팅 템플릿(enable_thinking)",
+    thinkingSwitchReasoningEffort: "추론 강도(reasoning_effort)",
+    thinkingSwitchNone: "보내지 않음",
     models: "모델",
     modelHint: "모델을 가져온 뒤 추가할 모델을 선택하세요",
     fetchModels: "모델 가져오기",
