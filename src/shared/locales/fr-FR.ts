@@ -1,6 +1,7 @@
 import { plural } from "../plural";
 import { contextMenuFrFR } from "./context-menu/fr-FR";
 import { displayFrFR } from "./display/fr-FR";
+import { downloadsFrFR } from "./downloads/fr-FR";
 import { smartBarFrFR } from "./smart-bar/fr-FR";
 import { syncFrFR } from "./sync/fr-FR";
 import { themesFrFR } from "./themes/fr-FR";
@@ -241,7 +242,10 @@ export const frFR: LocaleMessages = {
       },
       ask: { running: "Question posée", done: "Réponse reçue" },
       toolSearch: { running: "Chargement des outils", done: "Outils chargés" },
-      export: { running: "Exportation", done: "Exporté" },
+      downloads: {
+        running: "Gestion des téléchargements",
+        done: "Téléchargements gérés",
+      },
       skills: {
         running: "Mise à jour des compétences",
         done: "Compétences mises à jour",
@@ -625,6 +629,7 @@ export const frFR: LocaleMessages = {
   },
   smartBar: smartBarFrFR,
   contextMenu: contextMenuFrFR,
+  downloads: downloadsFrFR,
   sync: syncFrFR,
   themes: themesFrFR,
   display: displayFrFR,

@@ -1,6 +1,7 @@
 import { plural } from "../plural";
 import { contextMenuJaJP } from "./context-menu/ja-JP";
 import { displayJaJP } from "./display/ja-JP";
+import { downloadsJaJP } from "./downloads/ja-JP";
 import { smartBarJaJP } from "./smart-bar/ja-JP";
 import { syncJaJP } from "./sync/ja-JP";
 import { themesJaJP } from "./themes/ja-JP";
@@ -223,7 +224,10 @@ export const jaJP: LocaleMessages = {
         running: "ツールを読み込み中",
         done: "ツールを読み込みました",
       },
-      export: { running: "エクスポート中", done: "エクスポートしました" },
+      downloads: {
+        running: "ダウンロードを処理中",
+        done: "ダウンロードを処理しました",
+      },
       skills: { running: "スキルを更新中", done: "スキルを更新しました" },
       workspace: {
         running: "ワークスペースを更新中",
@@ -598,6 +602,7 @@ export const jaJP: LocaleMessages = {
   },
   smartBar: smartBarJaJP,
   contextMenu: contextMenuJaJP,
+  downloads: downloadsJaJP,
   sync: syncJaJP,
   themes: themesJaJP,
   display: displayJaJP,

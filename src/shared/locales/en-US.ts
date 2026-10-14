@@ -1,6 +1,7 @@
 import { plural } from "../plural";
 import { contextMenuEnUS } from "./context-menu/en-US";
 import { displayEnUS } from "./display/en-US";
+import { downloadsEnUS } from "./downloads/en-US";
 import { smartBarEnUS } from "./smart-bar/en-US";
 import { syncEnUS } from "./sync/en-US";
 import { themesEnUS } from "./themes/en-US";
@@ -229,7 +230,7 @@ export const enUS = {
       screenshot: { running: "Taking screenshot", done: "Took screenshot" },
       ask: { running: "Asking a question", done: "Answered question" },
       toolSearch: { running: "Loading tools", done: "Loaded tools" },
-      export: { running: "Exporting", done: "Exported" },
+      downloads: { running: "Managing downloads", done: "Managed downloads" },
       skills: { running: "Updating skills", done: "Updated skills" },
       workspace: { running: "Updating workspace", done: "Updated workspace" },
       chatHistory: {
@@ -596,6 +597,7 @@ export const enUS = {
   },
   smartBar: smartBarEnUS,
   contextMenu: contextMenuEnUS,
+  downloads: downloadsEnUS,
   sync: syncEnUS,
   themes: themesEnUS,
   display: displayEnUS,

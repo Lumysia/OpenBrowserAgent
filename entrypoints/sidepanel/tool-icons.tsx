@@ -39,7 +39,7 @@ const ICONS: Record<string, Icon> = {
   [TOOL_NAME.screenshot]: Camera,
   [TOOL_NAME.ask]: MessageCircleQuestion,
   [TOOL_NAME.toolSearch]: Layers,
-  [TOOL_NAME.export]: Download,
+  [TOOL_NAME.downloads]: Download,
   [TOOL_NAME.skills]: FileText,
   [TOOL_NAME.workspace]: FolderOpen,
   [TOOL_NAME.chatHistory]: History,

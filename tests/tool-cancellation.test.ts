@@ -51,7 +51,7 @@ test("pre-aborted dispatch cannot close tabs or start fetches", async () => {
 
 for (const [name, input] of [
   ["read", { source: "https://example.test/image" }],
-  ["export", { action: "images", tabId: 1 }],
+  ["downloads", { action: "images", tabId: 1 }],
   ["generateImage", { prompt: "fixture" }],
 ] as const)
   test(`${name} cancels an active fetch and cannot continue to downloads`, async () => {

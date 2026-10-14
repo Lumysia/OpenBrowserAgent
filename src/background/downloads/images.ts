@@ -3,10 +3,12 @@ import {
   IMAGE_ALT_MAX_LENGTH,
   IMAGE_FILENAME_MAX_LABEL_LENGTH,
   MAX_IMAGES_PER_DOWNLOAD,
-} from "../shared/config";
-import { getBrowserApi } from "../shared/storage";
+} from "../../shared/config";
+import { getBrowserApi } from "../../shared/storage";
+import { safeSegment } from "./filenames";
 
-export async function findImages(tabId: number, signal?: AbortSignal) {
+// The tab's images (img elements and CSS backgrounds) in one zip file.
+export async function tabImagesZip(tabId: number, signal?: AbortSignal) {
   const api = getBrowserApi();
   const tab = await api.tabs.get(tabId);
   const [result] = await api.scripting.executeScript({
@@ -87,7 +89,7 @@ export async function findImages(tabId: number, signal?: AbortSignal) {
     },
   });
   const images = result.result || [];
-  const filename = `${safeFileName(tab.title || tab.url || "tab")}_images.zip`;
+  const name = `${safeSegment(tab.title || tab.url || "tab")}_images.zip`;
   const zip = new JSZip();
   let downloadedCount = 0;
   for (const image of images.slice(0, MAX_IMAGES_PER_DOWNLOAD)) {
@@ -101,61 +103,22 @@ export async function findImages(tabId: number, signal?: AbortSignal) {
         image.src,
       );
       zip.file(
-        `${String(image.index + 1).padStart(3, "0")}_${safeFileName(image.alt || image.type || "image").slice(0, IMAGE_FILENAME_MAX_LABEL_LENGTH)}.${extension}`,
+        `${String(image.index + 1).padStart(3, "0")}_${safeSegment(image.alt || image.type || "image").slice(0, IMAGE_FILENAME_MAX_LABEL_LENGTH)}.${extension}`,
         bytes,
       );
       downloadedCount += 1;
     } catch {
+      signal?.throwIfAborted();
       // Some sites block image fetches; keep going and zip the images we can access.
     }
   }
-  if (downloadedCount > 0) {
-    const base64 = await zip.generateAsync({ type: "base64" });
-    await downloadFile(
-      {
-        url: `data:application/zip;base64,${base64}`,
-        filename,
-        saveAs: false,
-      },
-      signal,
-    );
-  }
   return {
-    success: downloadedCount > 0,
     totalFound: images.length,
     downloadedCount,
-    filename,
+    file: downloadedCount
+      ? { blob: await zip.generateAsync({ type: "blob" }), name }
+      : undefined,
   };
-}
-
-export function safeFileName(value: string) {
-  return value.replace(/[\\/:*?"<>|]+/g, "_").replace(/\s+/g, "_");
-}
-
-export async function downloadTextFile(
-  filename: string,
-  content: string,
-  mimeType: string,
-  signal?: AbortSignal,
-) {
-  return downloadFile(
-    {
-      url: `data:${mimeType},${encodeURIComponent(content)}`,
-      filename,
-      saveAs: false,
-    },
-    signal,
-  );
-}
-
-// The data: URLs used here are complete as soon as Chrome accepts them, so
-// there is nothing to wait for (and waiting would cancel a slow Save dialog).
-export async function downloadFile(
-  options: chrome.downloads.DownloadOptions,
-  signal?: AbortSignal,
-) {
-  signal?.throwIfAborted();
-  return getBrowserApi().downloads.download(options);
 }
 
 function imageExtension(contentType: string | null, url: string) {

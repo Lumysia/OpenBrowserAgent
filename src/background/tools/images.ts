@@ -37,7 +37,7 @@ export const generateImageTool: ToolDefinition = {
     if (typeof result.error === "string")
       return fail(`Image generation failed: ${result.error}`, result);
     return {
-      text: `Image generated with ${result.model} (${result.size}) and shown to the user.`,
+      text: `Image generated with ${result.model} (${result.size}) and shown to the user.${result.imageAttachmentId ? ` Stored as attachment:${result.imageAttachmentId}.` : ""}`,
       details: result,
       sources: [
         {

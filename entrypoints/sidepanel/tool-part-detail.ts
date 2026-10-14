@@ -2,7 +2,14 @@ import { formatCount, type Messages } from "../../src/shared/i18n";
 import type { Plural } from "../../src/shared/plural";
 import { isMcpToolName, TOOL_NAME } from "../../src/shared/tool-names";
 import { CHAT_PART_STATE, type ChatPart } from "../../src/shared/types";
-import { compactJoin, shortValue, stringValue } from "./tool-detail-format";
+import {
+  actionLabel,
+  compactJoin,
+  knownLabel,
+  shortValue,
+  stringValue,
+} from "./tool-detail-format";
+import { downloadsDetail } from "./download-tool-display";
 import { subAgentProgressDetail } from "./sub-agent-tool-display";
 import { toolReferences } from "./tool-references";
 import { actStepsSummary } from "./tool-step-summary";
@@ -82,8 +89,7 @@ const DETAILS: Record<
       : Array.isArray(input.names)
         ? formatCount(t.display.toolSteps.tools, input.names.length)
         : stringValue(input.query),
-  [TOOL_NAME.export]: (input, output, t) =>
-    stringValue(output.filename) || actionLabel(input.action, t),
+  [TOOL_NAME.downloads]: downloadsDetail,
   [TOOL_NAME.skills]: (input, output, t) =>
     compactJoin([
       actionLabel(input.action, t),
@@ -186,17 +192,6 @@ function findCounts(output: ToolRecord, t: Messages) {
         occurrences: formatCount(steps.occurrences, output.occurrences),
       })
     : formatCount(steps.matchingLines, lines);
-}
-
-// The localized word for a tool's `action` argument. An unknown one (from
-// a newer version, say) shows nothing rather than the raw English name.
-function actionLabel(action: unknown, t: Messages) {
-  return knownLabel(t.display.toolSteps.actions, action);
-}
-
-function knownLabel(labels: Record<string, string>, key: unknown) {
-  const name = stringValue(key);
-  return Object.hasOwn(labels, name) ? labels[name] : "";
 }
 
 function subAgentState(output: ToolRecord, t: Messages) {

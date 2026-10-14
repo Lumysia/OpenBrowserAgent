@@ -52,7 +52,7 @@ function sliceRange(text: string, input: Record<string, unknown>, max: number) {
   return { offset, end: Math.min(text.length, offset + limit) };
 }
 
-type Source =
+export type ReadSource =
   | { kind: "tab"; tabId?: number }
   | { kind: "artifact"; handle: string }
   | { kind: "url"; url: string }
@@ -60,7 +60,7 @@ type Source =
   | { kind: "skill"; name: string; path: string }
   | { kind: "workspace"; path: string };
 
-function parseSource(value: string): Source {
+export function parseSource(value: string): ReadSource {
   if (!value || value === "tab") return { kind: "tab" };
   if (/^tab:\d+$/.test(value))
     return { kind: "tab", tabId: Number(value.slice(4)) };

@@ -1,6 +1,7 @@
 import { plural } from "../plural";
 import { contextMenuPtBR } from "./context-menu/pt-BR";
 import { displayPtBR } from "./display/pt-BR";
+import { downloadsPtBR } from "./downloads/pt-BR";
 import { smartBarPtBR } from "./smart-bar/pt-BR";
 import { syncPtBR } from "./sync/pt-BR";
 import { themesPtBR } from "./themes/pt-BR";
@@ -240,7 +241,10 @@ export const ptBR: LocaleMessages = {
         running: "Carregando ferramentas",
         done: "Ferramentas carregadas",
       },
-      export: { running: "Exportando", done: "Exportado" },
+      downloads: {
+        running: "Gerenciando downloads",
+        done: "Downloads gerenciados",
+      },
       skills: {
         running: "Atualizando habilidades",
         done: "Habilidades atualizadas",
@@ -626,6 +630,7 @@ export const ptBR: LocaleMessages = {
   },
   smartBar: smartBarPtBR,
   contextMenu: contextMenuPtBR,
+  downloads: downloadsPtBR,
   sync: syncPtBR,
   themes: themesPtBR,
   display: displayPtBR,

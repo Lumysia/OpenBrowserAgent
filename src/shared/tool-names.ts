@@ -12,7 +12,7 @@ export const TOOL_NAME = {
   screenshot: "screenshot",
   ask: "ask",
   toolSearch: "toolSearch",
-  export: "export",
+  downloads: "downloads",
   skills: "skills",
   workspace: "workspace",
   chatHistory: "chatHistory",
