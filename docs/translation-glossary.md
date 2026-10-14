@@ -235,6 +235,8 @@ A downloads step's title says what happened, not the tool's name: "Downloaded", 
 
 "Translate this page" in the context menu translates the whole page; the same item then reads "Show original". Its strings live in `src/shared/locales/page-translate/`. A translation **engine** is where translations come from (the AI model, the browser's built-in translator, or a free web service); it is not a "provider", which stays the AI model provider. The display is either "Original and translation" (each paragraph keeps its original with the translation under it) or "Translation only" (the page's text is replaced by its translation in place). By default only the page's **main content** is translated; "Also translate menus and buttons" adds the page's own chrome: navigation, menus, buttons, tabs and footers. "Menus and buttons" means the web page's, never the extension's or the browser's; avoid "sidebar" there (in Chinese and German it reads as the extension's side panel). Google Translate and Microsoft Translator keep their product names in each language's usual form; "(free)" marks the unofficial free services. When an engine can't translate a page and its fallback takes over (one free service for the other, the AI model for the built-in translator), the page's note says the switch is for this page only, names the free services by company alone ("Google", "Microsoft") and the others by their in-sentence names (`engineNames`: "the AI model", "the built-in translator"). Notes put those names where the language needs no other form of them (no sentence start, no contraction or case change): "Switched to Microsoft for this page: Google is limiting requests." The engine's default model is "the same model as the chat" (Chinese 与对话相同的模型), not "the chat's selected model".
 
+Video **subtitles** (any timed text on a video, including what players call captions or CC) are 字幕 in Chinese and Japanese, 자막 in Korean, _sous-titres_, _Untertitel_, _subtítulos_ and _legendas_; "captions" in a note means the player's own CC setting and uses the same word. "Translate subtitles" starts them, "Hide translated subtitles" stops them; the button on a video's corner is the **subtitle button**.
+
 | English                          | 简体中文           | 繁體中文           | 日本語                 | 한국어             |
 | -------------------------------- | ------------------ | ------------------ | ---------------------- | ------------------ |
 | page translation                 | 网页翻译           | 網頁翻譯           | ページ翻訳             | 페이지 번역        |
@@ -247,6 +249,10 @@ A downloads step's title says what happened, not the tool's name: "Downloaded", 
 | saved translations               | 已保存的译文       | 已儲存的譯文       | 保存された翻訳         | 저장된 번역        |
 | main content (of a page)         | 正文               | 正文               | 本文                   | 본문               |
 | Also translate menus and buttons | 同时翻译菜单和按钮 | 同時翻譯選單和按鈕 | メニューとボタンも翻訳 | 메뉴와 버튼도 번역 |
+| subtitles                        | 字幕               | 字幕               | 字幕                   | 자막               |
+| Translate subtitles              | 翻译字幕           | 翻譯字幕           | 字幕を翻訳             | 자막 번역          |
+| Hide translated subtitles        | 隐藏字幕译文       | 隱藏字幕譯文       | 字幕の翻訳を非表示     | 자막 번역 숨기기   |
+| subtitle button                  | 字幕按钮           | 字幕按鈕           | 字幕ボタン             | 자막 버튼          |
 
 | English                          | Français                                | Deutsch                                 | Español                          | Português (Brasil)             |
 | -------------------------------- | --------------------------------------- | --------------------------------------- | -------------------------------- | ------------------------------ |
@@ -260,6 +266,10 @@ A downloads step's title says what happened, not the tool's name: "Downloaded", 
 | saved translations               | traductions enregistrées                | gespeicherte Übersetzungen              | traducciones guardadas           | traduções salvas               |
 | main content (of a page)         | contenu principal                       | Hauptinhalt                             | contenido principal              | conteúdo principal             |
 | Also translate menus and buttons | Traduire aussi les menus et les boutons | Auch Menüs und Schaltflächen übersetzen | Traducir también menús y botones | Traduzir também menus e botões |
+| subtitles                        | sous-titres                             | Untertitel                              | subtítulos                       | legendas                       |
+| Translate subtitles              | Traduire les sous-titres                | Untertitel übersetzen                   | Traducir subtítulos              | Traduzir legendas              |
+| Hide translated subtitles        | Masquer les sous-titres traduits        | Übersetzte Untertitel ausblenden        | Ocultar subtítulos traducidos    | Ocultar legendas traduzidas    |
+| subtitle button                  | bouton de sous-titres                   | Untertitel-Schaltfläche                 | botón de subtítulos              | botão de legendas              |
 
 ## Notes per language
 
