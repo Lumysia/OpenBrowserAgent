@@ -555,7 +555,7 @@ export const esES: LocaleMessages = {
     lightTheme: "Claro",
     darkTheme: "Oscuro",
     syncSettingsDescription:
-      "Elige el backend que sincroniza de forma predeterminada el idioma, la configuración de proveedores y las preferencias ligeras.",
+      "El idioma, la apariencia, la barra inteligente, el menú contextual, la traducción de páginas y otros ajustes se sincronizan siempre. Elige aquí el backend y, debajo, qué más sincronizar.",
     syncBackendDescription: "Elige elementos de sincronización adicionales.",
     syncBackendBrowserSync:
       "Sincronización integrada de la cuenta del navegador",

@@ -551,7 +551,7 @@ export const ptBR: LocaleMessages = {
     lightTheme: "Claro",
     darkTheme: "Escuro",
     syncSettingsDescription:
-      "Escolha o backend que sincroniza por padrão o idioma, a configuração dos provedores e preferências leves.",
+      "Idioma, aparência, barra inteligente, menu de contexto, tradução de páginas e outras configurações são sempre sincronizados. Escolha aqui o backend e, abaixo, o que mais sincronizar.",
     syncBackendDescription: "Escolha itens adicionais de sincronização.",
     syncBackendBrowserSync: "Sincronização integrada da conta do navegador",
     syncBackendWebDavSync: "Sincronização WebDAV",

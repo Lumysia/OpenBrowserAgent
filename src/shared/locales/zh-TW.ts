@@ -461,7 +461,7 @@ export const zhTW: LocaleMessages = {
     lightTheme: "淺色",
     darkTheme: "深色",
     syncSettingsDescription:
-      "選擇用於預設同步語言、提供者設定和輕量偏好設定的後端。",
+      "語言、外觀、智慧工具列、右鍵選單、網頁翻譯等設定會一直同步。在這裡選擇同步後端，並在下方選擇還要同步哪些內容。",
     syncBackendDescription: "選擇額外的同步項目。",
     syncBackendBrowserSync: "內建瀏覽器帳號同步",
     syncBackendWebDavSync: "WebDAV 同步",

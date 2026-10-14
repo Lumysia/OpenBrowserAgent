@@ -523,7 +523,7 @@ export const jaJP: LocaleMessages = {
     lightTheme: "ライト",
     darkTheme: "ダーク",
     syncSettingsDescription:
-      "言語、プロバイダー設定、軽量設定を既定で同期するバックエンドを選択します。",
+      "言語、外観、スマートバー、右クリックメニュー、ページ翻訳などの設定は常に同期されます。ここで同期先を選び、下でほかに同期する項目を選びます。",
     syncBackendDescription: "追加の同期項目を選択します。",
     syncBackendBrowserSync: "ブラウザー標準のアカウント同期",
     syncBackendWebDavSync: "WebDAV 同期",

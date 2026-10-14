@@ -519,7 +519,7 @@ export const enUS = {
     lightTheme: "Light",
     darkTheme: "Dark",
     syncSettingsDescription:
-      "Choose the backend that syncs language, provider setup, and lightweight preferences by default.",
+      "Language, appearance, the smart bar, the right-click menu, page translation and other settings always sync. Choose the backend, and below, what else to sync.",
     syncBackendDescription: "Choose additional sync items.",
     syncBackendBrowserSync: "Built-in browser account sync",
     syncBackendWebDavSync: "WebDAV sync",

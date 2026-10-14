@@ -548,7 +548,7 @@ export const deDE: LocaleMessages = {
     lightTheme: "Hell",
     darkTheme: "Dunkel",
     syncSettingsDescription:
-      "Wählen Sie das Backend, das standardmäßig Sprache, Anbietereinrichtung und einfache Einstellungen synchronisiert.",
+      "Sprache, Darstellung, Smart Bar, Kontextmenü, Seitenübersetzung und weitere Einstellungen werden immer synchronisiert. Wählen Sie hier das Backend und darunter, was zusätzlich synchronisiert wird.",
     syncBackendDescription:
       "Wählen Sie zusätzliche Elemente für die Synchronisierung aus.",
     syncBackendBrowserSync:

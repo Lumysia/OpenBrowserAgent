@@ -461,7 +461,7 @@ export const zhCN: LocaleMessages = {
     lightTheme: "浅色",
     darkTheme: "深色",
     syncSettingsDescription:
-      "选择用于默认同步语言、提供商配置和轻量偏好设置的后端。",
+      "语言、外观、智能工具栏、右键菜单、网页翻译等设置会一直同步。在这里选择同步后端，并在下方选择还要同步哪些内容。",
     syncBackendDescription: "选择额外的同步项。",
     syncBackendBrowserSync: "内置浏览器账号同步",
     syncBackendWebDavSync: "WebDAV 同步",

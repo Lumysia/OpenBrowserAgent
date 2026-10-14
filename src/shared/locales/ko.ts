@@ -487,7 +487,7 @@ export const ko: LocaleMessages = {
     lightTheme: "라이트",
     darkTheme: "다크",
     syncSettingsDescription:
-      "언어, 제공업체 설정, 가벼운 환경설정을 기본으로 동기화할 백엔드를 선택하세요.",
+      "언어, 모양, 스마트 바, 오른쪽 클릭 메뉴, 페이지 번역 등의 설정은 항상 동기화됩니다. 여기서 동기화 백엔드를 고르고, 아래에서 추가로 동기화할 항목을 고르세요.",
     syncBackendDescription: "추가 동기화 항목을 선택하세요.",
     syncBackendBrowserSync: "내장 브라우저 계정 동기화",
     syncBackendWebDavSync: "WebDAV 동기화",
