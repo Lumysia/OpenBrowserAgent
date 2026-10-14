@@ -1,7 +1,8 @@
-import { isScriptableUrl, resolveBrowserTabId } from "../shared/browser";
+import { isScriptableUrl } from "../shared/browser";
 import { withCancellationTimeout } from "../shared/cancellation";
 import { getBrowserApi } from "../shared/storage";
 import type { PageAgentReply } from "../page";
+import type { RunTab } from "./run-tab";
 
 // Background side of the in-page agent (entrypoints/page-agent.ts). Calls
 // into one tab run in order; calls into different tabs run side by side,
@@ -53,21 +54,21 @@ function lockFloor() {
 
 export type PageTab = { id: number; title: string; url: string };
 
-// The tab a page tool works on: the given id, else the active tab.
-export async function pageTab(tabId: unknown): Promise<PageTab> {
-  const api = getBrowserApi();
-  const id = await resolveBrowserTabId(tabId);
-  const tab = await api.tabs.get(id).catch(() => undefined);
-  if (!tab)
-    throw new PageError(
-      `Tab ${id} does not exist. Use tabs (action list) to see open tabs.`,
-    );
-  if (!isScriptableUrl(tab.url)) throw new PageError(unreadable(id, tab.url));
-  return { id, title: tab.title || "", url: tab.url || "" };
+// The tab a page tool works on: the given id, else the run's tab.
+export async function pageTab(
+  runTab: RunTab,
+  tabId: unknown,
+): Promise<PageTab> {
+  const tab = await runTab.target(tabId).catch((error: unknown) => {
+    throw new PageError(error instanceof Error ? error.message : String(error));
+  });
+  if (!isScriptableUrl(tab.url))
+    throw new PageError(unreadable(tab.id, tab.url));
+  return { id: tab.id, title: tab.title || "", url: tab.url || "" };
 }
 
 function unreadable(tabId: number, url?: string) {
-  return `Tab ${tabId} shows ${url || "a browser page"}, which extensions cannot read. Switch to or open a web page.`;
+  return `Tab ${tabId} shows ${url || "a browser page"}, which extensions cannot read. Navigate it to a web page, or open one with tabs.`;
 }
 
 function blockedMessage(tabId: number) {

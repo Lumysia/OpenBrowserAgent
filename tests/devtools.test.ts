@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 import { setImmediate } from "node:timers/promises";
+import { createRunTab } from "../src/background/run-tab";
 import { devtoolsTool, runScriptTool } from "../src/background/tools/devtools";
 import type { ToolContext } from "../src/background/tools/types";
 import { cdpFixture } from "./cdp-fixture";
@@ -10,7 +11,7 @@ afterEach(() => mock.restoreAll());
 
 const context = (signal?: AbortSignal) =>
   ({
-    run: {},
+    run: { tab: createRunTab("chat") },
     toolCallId: "call",
     signal,
     progress() {},

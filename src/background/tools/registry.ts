@@ -13,7 +13,8 @@ import { extractTool, findTool, snapshotTool } from "./page";
 import { readTool } from "./read";
 import { skillsTool } from "./skills";
 import { subAgentTool } from "./sub-agent";
-import { screenshotTool, tabsTool, webSearchTool } from "./tabs";
+import { screenshotTool } from "./screenshot";
+import { tabsTool, webSearchTool } from "./tabs";
 import { schema, type RunContext, type ToolDefinition } from "./types";
 import { workspaceTool } from "./workspace";
 

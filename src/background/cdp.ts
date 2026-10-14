@@ -1,4 +1,3 @@
-import { resolveBrowserTabId } from "../shared/browser";
 import { abortable } from "../shared/cancellation";
 
 export type CdpSend = (
@@ -13,7 +12,8 @@ type Retained = { target: Debuggee; onDetach: (source: Debuggee) => void };
 // emulated page keeps its session until reset, detach, or tab close.
 const retained = new Map<string, Retained>();
 
-// targetId, then tabId, then the active tab. `url`/`title` are destinations or
+// targetId, then tabId; callers name the page, there is no default (the
+// active tab may be the user's). `url`/`title` are destinations or
 // labels, never page selectors. The key names the page for either route.
 async function resolveTarget(args: Record<string, unknown>) {
   const targetId =
@@ -33,8 +33,8 @@ async function resolveTarget(args: Record<string, unknown>) {
           : `target:${targetId}`,
     };
   }
-  const tab = hasTab ? tabId : await resolveBrowserTabId(undefined);
-  return { target: { tabId: tab }, key: `tab:${tab}` };
+  if (!hasTab) throw new Error("A tabId or targetId is required.");
+  return { target: { tabId }, key: `tab:${tabId}` };
 }
 
 function sameTarget(a: Debuggee, b: Debuggee) {

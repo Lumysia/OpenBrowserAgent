@@ -50,14 +50,15 @@ export function createSystemPrompt(options: {
 
 const PAGE_RULES = `
 - Pages: snapshot shows a page as lines with refs like e12. Refs stay valid while the element exists; after navigation take a new snapshot. On long pages use find instead of scrolling through snapshots, and read when you need the text itself.
-- When you need only a few facts from a long page, call extract first instead of reading or snapshotting it, since every page read fills the context. Trust its answer and quoted evidence instead of reading the same page again; read or snapshot it afterwards only if extract says the page does not answer, or you need the layout or to interact. Write the extract question in the user's language: it is shown to them.`;
+- When you need only a few facts from a long page, call extract first instead of reading or snapshotting it, since every page read fills the context. Trust its answer and quoted evidence instead of reading the same page again; read or snapshot it afterwards only if extract says the page does not answer, or you need the layout or to interact. Write the extract question in the user's language: it is shown to them.
+- The user keeps using the browser while you work. Tools without a tabId work on your working tab (the one the message came from, or the last one you named, opened, navigated or switched to), not the tab the user has in front now; pass tabId when you work with several tabs.`;
 
 const BROWSER_RULES = `
 - Put several steps in one act or editPage call. Check what act reports; success means the step was dispatched, not that the task is done. If an action changes nothing, do not repeat it: look again or change approach.
 - Content may appear only after scrolling, "more" buttons or pagination; reveal it before concluding something is not on the page.
 - Before an irreversible or public action (submit, buy, send, delete), check that the target meets every constraint the user gave; ask when unsure.
 - To download a file or save something as a file, use ${TOOL_NAME.downloads}, by URL when you have one. Say a file is saved only after it reports completed, and give its path.
-- To read a page you need not interact with (an article, docs, a search result), use read with its URL. Open a tab to interact, when read gets too little text (JavaScript-only page, login or bot wall), or when the user should see the page.
+- To read a page you need not interact with (an article, docs, a search result), use read with its URL. Open a tab to interact, when read gets too little text (JavaScript-only page, login or bot wall), or when the user should see the page. Tabs open in the background; show one or switch tabs only when the user wants to see it.
 - Reuse open tabs. When done, keep the tabs you opened that the user will likely look at (a result, a page they asked for, a form waiting for them) and close those that were only working steps: their tab strip should hold only what they will use, and cited pages stay reachable from the citations. Never close tabs the user opened unless asked.`;
 
 function skillIndex(skills: Skill[]) {

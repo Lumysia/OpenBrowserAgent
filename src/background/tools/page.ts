@@ -1,6 +1,7 @@
 import { TOOL_NAME } from "../../shared/tool-names";
 import { callPage, pageTab, type PageTab } from "../page-agent";
 import { CONTEXT_POLICY, tokenChars } from "../context/policy";
+import { RUN_TAB_ID_PARAM } from "../run-tab";
 import {
   fail,
   ok,
@@ -10,10 +11,6 @@ import {
   type ToolDefinition,
 } from "./types";
 
-const tabIdParam = {
-  type: "number",
-  description: "Tab id. Defaults to the active tab.",
-};
 const FIND_LIMIT = 30;
 
 export function pageHeader(tab: { id: number; title: string; url: string }) {
@@ -37,7 +34,7 @@ export const snapshotTool: ToolDefinition = {
   description:
     "The page as one line per element, with refs like e12 on controls and text blocks for act, editPage and find. Long pages show the viewport, with the full snapshot stored for read. Use ref to see one part in full.",
   parameters: schema({
-    tabId: tabIdParam,
+    tabId: RUN_TAB_ID_PARAM,
     ref: {
       type: "string",
       description:
@@ -52,7 +49,7 @@ export const snapshotTool: ToolDefinition = {
     urls: { type: "boolean", description: "Include link and image URLs." },
   }),
   async execute(input, { run, signal }) {
-    const tab = await pageTab(input.tabId);
+    const tab = await pageTab(run.tab, input.tabId);
     const { value, title, url } = await callPage<{
       scope: string;
       text: string;
@@ -101,14 +98,14 @@ export const findTool: ToolDefinition = {
   parameters: schema(
     {
       query: { type: "string", description: "Text or /regex/." },
-      tabId: tabIdParam,
+      tabId: RUN_TAB_ID_PARAM,
     },
     ["query"],
   ),
-  async execute(input, { signal }) {
+  async execute(input, { run, signal }) {
     const query = stringArg(input.query);
     if (!query) return fail("query is required.");
-    const tab = await pageTab(input.tabId);
+    const tab = await pageTab(run.tab, input.tabId);
     const { value, title, url } = await callPage<{
       matches: string[];
       matchingLines: number;
@@ -157,14 +154,14 @@ export const extractTool: ToolDefinition = {
         description:
           "What to find out, written in the user's language: the question is shown to the user.",
       },
-      tabId: tabIdParam,
+      tabId: RUN_TAB_ID_PARAM,
     },
     ["question"],
   ),
   async execute(input, { run, signal }) {
     const question = stringArg(input.question);
     if (!question) return fail("question is required.");
-    const tab = await pageTab(input.tabId);
+    const tab = await pageTab(run.tab, input.tabId);
     const { value, title, url } = await callPage<{ text: string }>(
       tab.id,
       "markdown",

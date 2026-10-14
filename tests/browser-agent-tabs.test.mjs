@@ -109,11 +109,11 @@ test(
 
       await t.test("tabs a chat opens share its group", async () => {
         const [first, second, list] = await fixture.run([
-          { name: "tabs", args: { action: "open", url: `${baseUrl}/a` } },
           {
             name: "tabs",
-            args: { action: "open", url: `${baseUrl}/b`, background: true },
+            args: { action: "open", url: `${baseUrl}/a`, show: true },
           },
+          { name: "tabs", args: { action: "open", url: `${baseUrl}/b` } },
           { name: "tabs", args: { action: "list" } },
         ]);
         const tabId = (text) => Number(text.match(/tab (\d+)/)[1]);
@@ -149,7 +149,7 @@ test(
         assert.match(
           list,
           new RegExp(
-            `tab ${b.id} \\(opened by you\\) \\[group: OpenBrowserAgent\\]`,
+            `tab ${b.id} \\(working tab, opened by you\\) \\[group: OpenBrowserAgent\\]`,
           ),
         );
         assert.match(list, new RegExp(`tab ${userTab}: User tab`));

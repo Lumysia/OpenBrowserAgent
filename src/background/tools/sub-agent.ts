@@ -61,7 +61,12 @@ export const subAgentTool: ToolDefinition = {
       agent,
       task,
       title,
-      parent: { chatId: run.chatId, messageId, toolCallId },
+      parent: {
+        chatId: run.chatId,
+        messageId,
+        toolCallId,
+        tabId: run.tab.id,
+      },
       onStart: (chatId) => {
         childChatId = chatId;
         progress({ ...details, childChatId });

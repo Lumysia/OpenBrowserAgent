@@ -90,7 +90,7 @@ export async function fileFromSource(
 ): Promise<FileContent> {
   const source = parseSource(value);
   if (source.kind === "tab") {
-    const tab = await pageTab(source.tabId);
+    const tab = await pageTab(run.tab, source.tabId);
     const {
       value: page,
       title,

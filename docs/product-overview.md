@@ -52,6 +52,8 @@ Every agent starts with a small set of core tools; the rest load on demand throu
 
 Tool runs are shown as visible cards with status, summaries, references, generated media, and JSON detail popovers.
 
+The agent works next to the user, not in their way. Each run is bound to a tab: the one the message was sent from (the attached tab, or the page of a smart bar or context menu request), then the last tab the agent named, opened, navigated or switched to. Page tools that name no tab use it, never the tab the user has in front now, so switching tabs mid-task does not move the agent; if the tab is closed, the tool says so instead of using another tab. Sub-agents start on their parent's tab, and the next message of a chat names the tab the agent last worked on. Tabs open in the background, screenshots and real debugger input reach background tabs, and a tab a background page opens is put behind the user's tab again. The agent brings a tab to the front only when asked (`tabs` switch, or open with `show`). Safari can capture only the tab in front, so a screenshot there shows the tab for a moment and puts the user's tab back.
+
 ### MCP Servers
 
 Remote Streamable HTTP MCP servers add tools such as search and fetch. A server must pass **Test** (which discovers its tools) before it can be enabled, and each of its tools can be turned off. Built-in presets (Exa, Parallel, TinyFish, Firecrawl) start off; servers can also be added by URL or imported from JSON.

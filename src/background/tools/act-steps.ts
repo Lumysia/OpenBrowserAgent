@@ -93,6 +93,30 @@ async function waitStep(tabId: number, step: Step, signal?: AbortSignal) {
   return `"${text}" did not appear. Take a snapshot to see the page.`;
 }
 
+// Real input through the debugger. It reaches a tab in the background too;
+// meanwhile the page is told it has focus, as when the user types into it,
+// so pages that check document.hasFocus() or :focus behave.
+async function withInput(
+  tabId: number,
+  input: (send: CdpSend) => Promise<unknown>,
+  signal?: AbortSignal,
+) {
+  await withCdp(
+    { tabId },
+    async (send) => {
+      await send("Emulation.setFocusEmulationEnabled", { enabled: true });
+      try {
+        await input(send);
+      } finally {
+        await send("Emulation.setFocusEmulationEnabled", {
+          enabled: false,
+        }).catch(() => undefined);
+      }
+    },
+    signal,
+  );
+}
+
 // Typing into editors that ignore synthetic input.
 async function trustedType(tabId: number, step: Step, signal?: AbortSignal) {
   if (!areCdpAvailable())
@@ -104,11 +128,7 @@ async function trustedType(tabId: number, step: Step, signal?: AbortSignal) {
     { ref: step.ref, clear: step.clear !== false },
     signal,
   );
-  await withCdp(
-    { tabId },
-    (send) => send("Input.insertText", { text }),
-    signal,
-  );
+  await withInput(tabId, (send) => send("Input.insertText", { text }), signal);
   await delay(STEP_SETTLE_MS, signal);
   const { value } = await callPage<string>(
     tabId,
@@ -144,8 +164,8 @@ async function trustedPointer(tabId: number, step: Step, signal?: AbortSignal) {
     : { x: Number(step.x), y: Number(step.y) };
   if (!Number.isFinite(point.x) || !Number.isFinite(point.y))
     return "Give a ref, or x and y in viewport pixels (from a screenshot).";
-  await withCdp(
-    { tabId },
+  await withInput(
+    tabId,
     async (send) => {
       await mouse(send, "mouseMoved", point);
       if (step.action === "hover") return;
@@ -212,8 +232,8 @@ async function trustedKey(tabId: number, step: Step, signal?: AbortSignal) {
   // when keyDown carries the text the key produces.
   const text =
     key === "Enter" ? "\r" : key.length === 1 && !(modifiers & 6) ? key : "";
-  await withCdp(
-    { tabId },
+  await withInput(
+    tabId,
     async (send) => {
       await send("Input.dispatchKeyEvent", {
         type: "keyDown",

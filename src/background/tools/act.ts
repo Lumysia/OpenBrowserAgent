@@ -7,6 +7,8 @@ import {
   startedDownloadLines,
 } from "../downloads/page-downloads";
 import { callPage, pageTab, PageError } from "../page-agent";
+import { RUN_TAB_ID_PARAM } from "../run-tab";
+import { watchOpenedTabs } from "../user-focus";
 import {
   dialogLines,
   endDialogs,
@@ -47,7 +49,7 @@ export const actTool: ToolDefinition = {
     "Run steps on a page in order, by snapshot ref: click (double for a double-click; or x,y viewport pixels from a screenshot), type (text; clear defaults to true; submit presses Enter), press (key like Enter or Control+A; ref optional), select (value or option text of a select), hover, scroll (ref, or direction up/down/top/bottom), wait (ms, or text to wait for), drag (ref to ref 'to'), dialog (value accept or dismiss, text for a prompt: how JavaScript dialogs opened by later steps are answered; without it they are dismissed and reported). trusted: true sends real mouse or keyboard input for click, hover and press when the page ignores the normal ones. Stops at the first failing step. Returns what changed (navigation, new or gone controls, dialogs), not a full snapshot.",
   parameters: schema(
     {
-      tabId: { type: "number", description: "Defaults to the active tab." },
+      tabId: RUN_TAB_ID_PARAM,
       steps: {
         type: "array",
         minItems: 1,
@@ -91,11 +93,8 @@ export const actTool: ToolDefinition = {
     if (steps.length > MAX_STEPS)
       return fail(`At most ${MAX_STEPS} steps per call.`);
     const api = getBrowserApi();
-    const tab = await pageTab(input.tabId);
-    const opened: chrome.tabs.Tab[] = [];
-    const onCreated = (created: chrome.tabs.Tab) => {
-      if (created.openerTabId === tab.id) opened.push(created);
-    };
+    const tab = await pageTab(run.tab, input.tabId);
+    let opened: number[] = [];
     const done: string[] = [];
     let failure = "";
     let navigated = false;
@@ -128,7 +127,7 @@ export const actTool: ToolDefinition = {
       await delay(STEP_SETTLE_MS, signal);
       await begin();
     }
-    api.tabs.onCreated.addListener(onCreated);
+    const watch = await watchOpenedTabs(tab.id);
     try {
       for (const [index, step] of steps.entries()) {
         if (index < first) continue;
@@ -167,7 +166,7 @@ export const actTool: ToolDefinition = {
       }
       await delay(BATCH_SETTLE_MS, signal);
     } finally {
-      api.tabs.onCreated.removeListener(onCreated);
+      opened = await watch.stop();
     }
     const dialogs = dialogLines(
       await endDialogs(tab.id),
@@ -199,10 +198,17 @@ export const actTool: ToolDefinition = {
       lines.push(
         `Now at: ${after.title || "(untitled)"} | ${after.url}${fresh ? ". This is a new page: take a snapshot for refs." : ""}`,
       );
-    for (const created of opened) {
-      const current = await api.tabs.get(created.id!).catch(() => created);
+    // A tab that turned into a download is gone by now.
+    const openTabs: chrome.tabs.Tab[] = [];
+    for (const id of opened) {
+      const current = await api.tabs.get(id).catch(() => undefined);
+      if (current) openTabs.push(current);
+    }
+    for (const current of openTabs) {
       await adoptAgentTab(run, current);
-      lines.push(`Opened new ${tabLine(current, { mine: true }).slice(2)}`);
+      lines.push(
+        `Opened new ${tabLine(current, { mine: true }).slice(2)}. Pass its tabId to work on it.`,
+      );
     }
     lines.push(...changes);
     const downloads = await downloadsStartedSince(run, since, signal);
@@ -215,7 +221,7 @@ export const actTool: ToolDefinition = {
       !changes.length &&
       !dialogs.length &&
       !fresh &&
-      !opened.length &&
+      !openTabs.length &&
       !downloads.length &&
       !moved
     )

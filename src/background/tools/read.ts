@@ -82,7 +82,7 @@ export const readTool: ToolDefinition = {
   timeoutMs: 60_000,
   summary: "Read text in ranges",
   description:
-    'Read one source in character ranges: "tab" or "tab:ID" (page text as Markdown; default: active tab), a stored output handle "art-…", a URL (web pages as Markdown of their HTML, fetched with the browser\'s cookies for the site, without running scripts), "attachment:ID", "skill:NAME" or "skill:NAME/PATH", "workspace:PATH". Continue with the offset it reports. Images come back as images; PDF, Word, Excel, PowerPoint and OpenDocument files as their text.',
+    'Read one source in character ranges: "tab" or "tab:ID" (page text as Markdown; "tab" is the tab you are working on), a stored output handle "art-…", a URL (web pages as Markdown of their HTML, fetched with the browser\'s cookies for the site, without running scripts), "attachment:ID", "skill:NAME" or "skill:NAME/PATH", "workspace:PATH". Continue with the offset it reports. Images come back as images; PDF, Word, Excel, PowerPoint and OpenDocument files as their text.',
   parameters: schema({
     source: { type: "string", description: 'What to read. Defaults to "tab".' },
     offset: { type: "number" },
@@ -99,7 +99,7 @@ export const readTool: ToolDefinition = {
     if (source.kind === "tab") {
       if (!hasToolGroup(run.agent, "pages"))
         return fail("This agent cannot read pages.");
-      const tab = await pageTab(source.tabId);
+      const tab = await pageTab(run.tab, source.tabId);
       const { value, title, url } = await callPage<{ text: string }>(
         tab.id,
         "markdown",

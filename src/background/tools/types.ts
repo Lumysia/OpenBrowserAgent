@@ -8,6 +8,7 @@ import type {
   Skill,
   UploadedAttachment,
 } from "../../shared/types";
+import type { RunTab } from "../run-tab";
 import type { UsageMetrics } from "../run-usage";
 import type { StreamSession } from "../stream-sessions";
 
@@ -39,6 +40,8 @@ export type RunContext = {
   depth: number;
   // The chat that started this sub-agent run.
   parentChatId?: string;
+  // The tab page tools work on when a call names none.
+  tab: RunTab;
   storeArtifact(label: string, text: string): Promise<string>;
   readArtifact(
     handle: string,

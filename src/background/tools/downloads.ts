@@ -27,6 +27,7 @@ import {
   unseenDownload,
 } from "../downloads/tracker";
 import { pageTab } from "../page-agent";
+import { RUN_TAB_ID_PARAM } from "../run-tab";
 import {
   fail,
   schema,
@@ -175,7 +176,7 @@ const ACTIONS: Record<
     return save(run, await fileFromSource(run, source, signal), input, signal);
   },
   async [DOWNLOAD_ACTION.images](input, run, signal) {
-    const tab = await pageTab(input.tabId);
+    const tab = await pageTab(run.tab, input.tabId);
     const zip = await tabImagesZip(tab.id, signal);
     const counts = {
       tabId: tab.id,
@@ -328,7 +329,7 @@ filename and folder are relative to the Downloads folder. Started downloads are 
         description: "Like report.csv; may include subfolders.",
       },
       folder: { type: "string", description: "Subfolder of Downloads." },
-      tabId: { type: "number", description: "Defaults to the active tab." },
+      tabId: RUN_TAB_ID_PARAM,
       id: { type: "number", description: "A download id from a result." },
       query: { type: "string" },
       limit: { type: "number" },
