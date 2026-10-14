@@ -169,7 +169,7 @@ function labelsOf(
       !!(wrapper ?? parent).closest("a[href]") ||
       mostlyLinks(nodes) ||
       !!parent.closest(CITATION_SELECTOR) ||
-      inDateRow(parent),
+      inDateRow(parent, text),
   });
   if (metadata) return metadata;
   // A link that is one lowercase word ("reply", "login") is an action; a
@@ -203,16 +203,17 @@ function mostlyLinks(nodes: Node[]) {
 
 // Elements that name a work, its author or contact.
 const CITATION_SELECTOR = "address, cite, [rel~=author], [itemprop~=author]";
-// A short line holding a date (a byline, a source and a time): at most this
-// many words in all, and this many levels up from the text.
+// Short text near a date (a byline, the source of a story, its section):
+// the meta lines of an item. At most this many words, and the date at most
+// this many levels up.
 const DATE_ROW_MAX_WORDS = 12;
 const DATE_ROW_DEPTH = 3;
 
-function inDateRow(parent: Element) {
+function inDateRow(parent: Element, text: string) {
+  if (wordCount(text) > DATE_ROW_MAX_WORDS) return false;
   let row: Element | null = parent;
   for (let depth = 0; row && depth < DATE_ROW_DEPTH; depth++) {
-    if (row.querySelector("time, [datetime]"))
-      return wordCount(originalContent(row)) <= DATE_ROW_MAX_WORDS;
+    if (row.querySelector("time, [datetime]")) return true;
     row = row.parentElement;
   }
   return false;
