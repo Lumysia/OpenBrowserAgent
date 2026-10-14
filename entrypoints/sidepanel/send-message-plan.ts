@@ -22,6 +22,16 @@ import {
 import { selectedElementImageAttachments } from "./selected-element-attachment";
 import { generateLocalTitle } from "./sidepanel-context";
 
+// A request from the context menu or the smart bar: the tabs it is about,
+// and how the agent should carry it out (see side-panel-requests).
+export type SendRequest = { instruction: string; tabs: AttachmentTab[] };
+
+// The instruction a request's message carries, kept for a resend.
+export function messageInstruction(message: ChatMessage | undefined) {
+  const instruction = message?.metadata?.instruction;
+  return typeof instruction === "string" ? instruction : undefined;
+}
+
 export function createSendMessagePlan({
   chat,
   text,
@@ -33,6 +43,7 @@ export function createSendMessagePlan({
   sources,
   assistantModel,
   skills,
+  instruction,
 }: {
   chat: Chat;
   text: string;
@@ -44,6 +55,7 @@ export function createSendMessagePlan({
   sources?: ChatSource[];
   assistantModel?: { provider: string; name: string };
   skills?: PickedSkill[];
+  instruction?: string;
 }) {
   const selectedSkills = skills?.filter(Boolean) || [];
   const userMessage: ChatMessage = {
@@ -66,6 +78,7 @@ export function createSendMessagePlan({
         ? { uploadedAttachments: sentAttachments.map(toAttachmentMetadata) }
         : {}),
       ...(selectedSkills.length ? { skills: selectedSkills } : {}),
+      ...(instruction ? { instruction } : {}),
     },
   };
   const assistantMessage: ChatMessage = {
@@ -105,7 +118,8 @@ function toSelectedElementMetadata(element: SelectedElement) {
 }
 
 // Queued messages carry no extras; an edit or resend reuses the extras of the
-// message it replaces; a fresh send takes the composer's current extras.
+// message it replaces; a request brings its own tabs and nothing else; a
+// fresh send takes the composer's current extras.
 export function pickSendInputs({
   chat,
   queued,
@@ -117,6 +131,7 @@ export function pickSendInputs({
   resendAttachments,
   pendingAttachments,
   uploadedAttachments,
+  request,
 }: {
   chat: Chat;
   queued: boolean;
@@ -128,7 +143,18 @@ export function pickSendInputs({
   resendAttachments?: UploadedAttachment[];
   pendingAttachments: UploadedAttachment[];
   uploadedAttachments: UploadedAttachment[];
+  request?: SendRequest;
 }) {
+  if (request)
+    return {
+      activeEdit: null,
+      baseChat: chat,
+      sentTabs: request.tabs,
+      sentElements: [],
+      sentSkills: [],
+      sentAttachments: [],
+      activeAttachments: [],
+    };
   const edit = queued
     ? null
     : editingMessage?.chatId === chat.id

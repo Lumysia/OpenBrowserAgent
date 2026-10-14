@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuZhTW } from "./context-menu/zh-TW";
 import { smartBarZhTW } from "./smart-bar/zh-TW";
 import { syncZhTW } from "./sync/zh-TW";
 import { themesZhTW } from "./themes/zh-TW";
@@ -501,6 +502,7 @@ export const zhTW: LocaleMessages = {
     debugToolRequired: "必要參數",
   },
   smartBar: smartBarZhTW,
+  contextMenu: contextMenuZhTW,
   sync: syncZhTW,
   themes: themesZhTW,
 };

@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuJaJP } from "./context-menu/ja-JP";
 import { smartBarJaJP } from "./smart-bar/ja-JP";
 import { syncJaJP } from "./sync/ja-JP";
 import { themesJaJP } from "./themes/ja-JP";
@@ -568,6 +569,7 @@ export const jaJP: LocaleMessages = {
     debugToolRequired: "必須パラメーター",
   },
   smartBar: smartBarJaJP,
+  contextMenu: contextMenuJaJP,
   sync: syncJaJP,
   themes: themesJaJP,
 };

@@ -9,6 +9,7 @@ WAS SIE DAMIT TUN KÖNNEN
 • Browserarbeit an den Agenten abgeben: Formulare ausfüllen, Produkte vergleichen, Informationen von mehreren Seiten sammeln, Tabs aufräumen und gruppieren.
 • Eine Seite direkt bearbeiten, etwa um sie zu übersetzen, sowie Screenshots aufnehmen oder Dateien herunterladen.
 • Auf jeder Seite Text markieren und Schnellaktionen nutzen (erklären, übersetzen, Formulierung verbessern, vorlesen). Diese Funktion ist aus, bis Sie sie einschalten, und lässt sich auf die Websites Ihrer Wahl beschränken.
+• Mit einem Rechtsklick auf eine Seite, einen Link oder markierten Text dazu fragen, zusammenfassen, im Web suchen oder die Seite als Markdown kopieren. Das Menü und einzelne Einträge lassen sich ausschalten.
 
 AGENTEN UND SKILLS
 

@@ -7,6 +7,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { QUICK_FEEDBACK_MS } from "../../shared/config";
+import { SIDE_PANEL_TASK } from "../../shared/side-panel-handoff";
 import {
   isGenerateAction,
   SMART_BAR_ACTION,
@@ -59,8 +60,14 @@ export function SmartBarToolbar({
 
   const run = (action: SmartBarAction) => {
     if (isGenerateAction(action)) return store.run(action);
-    if (action === SMART_BAR_ACTION.ask) {
-      void openInSidePanel(snapshot.text);
+    if (action === SMART_BAR_ACTION.ask || action === SMART_BAR_ACTION.search) {
+      void openInSidePanel({
+        task:
+          action === SMART_BAR_ACTION.ask
+            ? SIDE_PANEL_TASK.ask
+            : SIDE_PANEL_TASK.searchWeb,
+        text: snapshot.text,
+      });
       return store.hide();
     }
     void copyText(snapshot.text).then(setCopied);

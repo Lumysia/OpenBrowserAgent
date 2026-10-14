@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuEnUS } from "./context-menu/en-US";
 import { smartBarEnUS } from "./smart-bar/en-US";
 import { syncEnUS } from "./sync/en-US";
 import { themesEnUS } from "./themes/en-US";
@@ -558,6 +559,7 @@ export const enUS = {
     debugToolRequired: "Required parameters",
   },
   smartBar: smartBarEnUS,
+  contextMenu: contextMenuEnUS,
   sync: syncEnUS,
   themes: themesEnUS,
 };

@@ -76,9 +76,19 @@ function renderLatestUserMessage(
     ),
     context ? `<message_context>\n${context}\n</message_context>` : "",
     `<message>\n${message.content}\n</message>`,
+    requestInstruction(message),
   ]
     .filter(Boolean)
     .join("\n\n");
+}
+
+// Requests made from the context menu or the smart bar say how to carry
+// them out; the message shows only what the user picked.
+function requestInstruction(message: ChatMessage) {
+  const instruction = message.metadata?.instruction;
+  return typeof instruction === "string" && instruction.trim()
+    ? `<request_instructions>\n${instruction.trim()}\n</request_instructions>`
+    : "";
 }
 
 // A picked skill means "use this skill for this request": its instructions

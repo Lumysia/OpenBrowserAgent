@@ -17,13 +17,14 @@ export const SMART_BAR_SITE_MODE = {
 export type SmartBarSiteMode =
   (typeof SMART_BAR_SITE_MODE)[keyof typeof SMART_BAR_SITE_MODE];
 
-// Actions in bar order. `generate` actions stream a result card; `ask` and
-// `copy` act at once.
+// Actions in bar order. `generate` actions stream a result card; `ask`,
+// `search` and `copy` act at once. Stored lists of turned-off actions drop
+// names that are no longer here (such as the former "summarize").
 export const SMART_BAR_ACTION = {
   ask: "ask",
   explain: "explain",
   translate: "translate",
-  summarize: "summarize",
+  search: "search",
   copy: "copy",
   improve: "improve",
   fixGrammar: "fixGrammar",
@@ -36,7 +37,7 @@ export const SMART_BAR_PAGE_ACTIONS = [
   SMART_BAR_ACTION.ask,
   SMART_BAR_ACTION.explain,
   SMART_BAR_ACTION.translate,
-  SMART_BAR_ACTION.summarize,
+  SMART_BAR_ACTION.search,
   SMART_BAR_ACTION.copy,
 ] as const satisfies readonly SmartBarAction[];
 
@@ -55,15 +56,21 @@ export function smartBarTextTooLong(text: string) {
   return text.length > SMART_BAR_MAX_TEXT_CHARS;
 }
 
+const IMMEDIATE_ACTIONS = [
+  SMART_BAR_ACTION.ask,
+  SMART_BAR_ACTION.search,
+  SMART_BAR_ACTION.copy,
+] as const;
+
 export type SmartBarGenerateAction = Exclude<
   SmartBarAction,
-  typeof SMART_BAR_ACTION.ask | typeof SMART_BAR_ACTION.copy
+  (typeof IMMEDIATE_ACTIONS)[number]
 >;
 
 export function isGenerateAction(
   action: SmartBarAction,
 ): action is SmartBarGenerateAction {
-  return action !== SMART_BAR_ACTION.ask && action !== SMART_BAR_ACTION.copy;
+  return !(IMMEDIATE_ACTIONS as readonly SmartBarAction[]).includes(action);
 }
 
 export type SmartBarSettings = {

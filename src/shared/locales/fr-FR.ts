@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuFrFR } from "./context-menu/fr-FR";
 import { smartBarFrFR } from "./smart-bar/fr-FR";
 import { syncFrFR } from "./sync/fr-FR";
 import { themesFrFR } from "./themes/fr-FR";
@@ -588,6 +589,7 @@ export const frFR: LocaleMessages = {
     debugToolRequired: "Paramètres requis",
   },
   smartBar: smartBarFrFR,
+  contextMenu: contextMenuFrFR,
   sync: syncFrFR,
   themes: themesFrFR,
 };

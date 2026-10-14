@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuDeDE } from "./context-menu/de-DE";
 import { smartBarDeDE } from "./smart-bar/de-DE";
 import { syncDeDE } from "./sync/de-DE";
 import { themesDeDE } from "./themes/de-DE";
@@ -586,6 +587,7 @@ export const deDE: LocaleMessages = {
     debugToolRequired: "Erforderliche Parameter",
   },
   smartBar: smartBarDeDE,
+  contextMenu: contextMenuDeDE,
   sync: syncDeDE,
   themes: themesDeDE,
 };

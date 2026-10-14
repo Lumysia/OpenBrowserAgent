@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { resolveAgent } from "../../src/shared/agents";
 import { getMessages } from "../../src/shared/i18n";
 import { availableSkills } from "../../src/shared/skill-catalog";
-import { interpolateSkillVariables } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
 import type {
   Chat,
@@ -17,7 +16,7 @@ import { celebrateSend } from "./holiday-touches";
 import { requestChatTitle } from "./ai-requests";
 import { createChatDraft } from "./chat-state-actions";
 import { pruneSentAttachmentPreviews } from "./edit-message";
-import { addSkill, takeSlashSkill, toggleSkill } from "./skill-context";
+import { addSkill, messageToSend, toggleSkill } from "./skill-context";
 import { assistantModelLabel } from "./model-label";
 import { buildSidepanelContext } from "./sidepanel-context";
 import {
@@ -27,8 +26,10 @@ import {
 } from "./sidepanel-effects";
 import {
   createSendMessagePlan,
+  messageInstruction,
   pickSendInputs,
   sendMessagesRequest,
+  type SendRequest,
 } from "./send-message-plan";
 import {
   ADD_MENU_VIEW,
@@ -47,7 +48,7 @@ import { useMessageEdit } from "./use-message-edit";
 import { useParallelChatStreams } from "./use-parallel-chat-streams";
 import { useQueuedMessages } from "./use-queued-messages";
 import { useSyncPageState } from "../../src/ui/useSyncPageState";
-import { useSmartBarHandoff } from "./use-smart-bar-handoff";
+import { useSidePanelHandoff } from "./use-side-panel-handoff";
 import { useChatAttachments } from "./use-chat-attachments";
 import { useUnreadCompletedChats } from "./use-unread-completed-chats";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
@@ -151,6 +152,7 @@ export function SidepanelApp() {
     clearAttachedTabsAfterSend,
     setSelectedElements,
     attachActiveTab,
+    attachTab,
     showAllTabsPicker,
     toggleAttachedTab,
     removeAttachedTab,
@@ -216,12 +218,18 @@ export function SidepanelApp() {
       clearUnreadCompletedChat,
     });
 
-  useSmartBarHandoff({
-    ready: !!chats,
+  useSidePanelHandoff({
+    ready: !!chats && language !== undefined,
     t,
+    language: language || "",
     input,
     setInput,
     importChat,
+    createChat,
+    attachTab,
+    currentChatId: currentChat?.id,
+    canSend: currentChatStatus === "ready" && !currentChatStreaming,
+    send: ({ content, ...request }) => send(content, undefined, { request }),
     composerRef,
   });
 
@@ -257,13 +265,19 @@ export function SidepanelApp() {
   async function send(
     content = input,
     resendAttachments?: UploadedAttachment[],
-    options: { queued?: boolean; resendMessage?: ChatMessage } = {},
+    options: {
+      queued?: boolean;
+      resendMessage?: ChatMessage;
+      // A context menu or smart bar request: its own tabs and instruction.
+      request?: SendRequest;
+    } = {},
   ) {
-    // "/name request" picks the named skill for this message.
-    const slash = options.resendMessage
-      ? undefined
-      : takeSlashSkill(content.trim(), skills);
-    const text = interpolateSkillVariables(slash?.rest ?? content.trim());
+    const { request: sendRequest } = options;
+    const { slash, text } = messageToSend(
+      content,
+      skills,
+      sendRequest ? "request" : options.resendMessage ? "resend" : "typed",
+    );
     const sendChatId = currentChat?.id || activeChatId || "new";
     if (
       currentChatStatus !== "ready" ||
@@ -303,6 +317,7 @@ export function SidepanelApp() {
         resendAttachments,
         pendingAttachments,
         uploadedAttachments,
+        request: sendRequest,
       });
       const context = await buildSidepanelContext({
         attachedTabs: sentTabs,
@@ -334,6 +349,8 @@ export function SidepanelApp() {
         sentElements,
         sentAttachments,
         skills: slash ? addSkill(sentSkills, slash.skill) : sentSkills,
+        instruction:
+          sendRequest?.instruction ?? messageInstruction(options.resendMessage),
       });
       if (sentAttachments.length || activeEdit)
         setSentAttachmentPreviews((items) => {

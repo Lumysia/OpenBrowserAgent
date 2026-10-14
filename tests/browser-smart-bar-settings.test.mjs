@@ -86,13 +86,7 @@ test("smart bar settings", { timeout: 240000 }, async (t) => {
 
     await t.test("no bar where every action is turned off", async () => {
       await updateSmartBar({
-        disabledPageActions: [
-          "ask",
-          "explain",
-          "translate",
-          "summarize",
-          "copy",
-        ],
+        disabledPageActions: ["ask", "explain", "translate", "search", "copy"],
       });
       await selectText(page, "#text");
       await delay(600);

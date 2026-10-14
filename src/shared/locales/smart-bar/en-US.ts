@@ -4,7 +4,7 @@ export const smartBarEnUS = {
     ask: "Ask in side panel",
     explain: "Explain",
     translate: "Translate",
-    summarize: "Summarize",
+    search: "AI search",
     copy: "Copy",
     improve: "Improve writing",
     fixGrammar: "Fix spelling & grammar",
@@ -64,8 +64,7 @@ export const smartBarEnUS = {
   editActionsDescription:
     "Shown when you select text in a text field. Results can replace the selection.",
   model: "Smart bar model",
-  modelDescription:
-    "Model for Explain, Translate, Summarize and the writing actions.",
+  modelDescription: "Model for Explain, Translate and the writing actions.",
 };
 
 export type SmartBarLocaleMessages = typeof smartBarEnUS;

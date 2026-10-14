@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getActiveTab,
   getAllTabs,
@@ -56,15 +56,18 @@ export function useComposerContext() {
   }, []);
 
   async function attachActiveTab() {
-    autoAttachSuppressedRef.current = false;
     const tab = await getActiveTab();
     const attachment = tab ? toAttachmentTab(tab) : null;
-    if (!attachment) return;
+    if (attachment) attachTab(attachment);
+  }
+
+  const attachTab = useCallback((attachment: AttachmentTab) => {
+    autoAttachSuppressedRef.current = false;
     setAttachedTabs((tabs) => [
       ...tabs.filter((item) => item.id !== attachment.id),
       attachment,
     ]);
-  }
+  }, []);
 
   async function showAllTabsPicker() {
     setAvailableTabs(await getAllTabs());
@@ -106,6 +109,7 @@ export function useComposerContext() {
     setAvailableTabs,
     setSelectedElements,
     attachActiveTab,
+    attachTab,
     showAllTabsPicker,
     toggleAttachedTab,
     removeAttachedTab,

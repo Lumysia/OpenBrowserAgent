@@ -6,7 +6,7 @@ export const smartBarFrFR: SmartBarLocaleMessages = {
     ask: "Demander dans le panneau latéral",
     explain: "Expliquer",
     translate: "Traduire",
-    summarize: "Résumer",
+    search: "Recherche IA",
     copy: "Copier",
     improve: "Améliorer le texte",
     fixGrammar: "Corriger l’orthographe et la grammaire",
@@ -68,5 +68,5 @@ export const smartBarFrFR: SmartBarLocaleMessages = {
     "Affichées lorsque vous sélectionnez du texte dans un champ. Le résultat peut remplacer la sélection.",
   model: "Modèle de la barre intelligente",
   modelDescription:
-    "Modèle pour Expliquer, Traduire, Résumer et les actions d’écriture.",
+    "Modèle pour Expliquer, Traduire et les actions d’écriture.",
 };

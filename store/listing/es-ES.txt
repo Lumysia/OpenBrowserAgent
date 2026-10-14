@@ -9,6 +9,7 @@ QUÉ PUEDES HACER
 • Dejar que el agente haga el trabajo en el navegador: rellenar formularios, comparar productos, reunir información de varias páginas, ordenar y agrupar tus pestañas.
 • Editar una página directamente, por ejemplo para traducirla, y hacer capturas de pantalla o descargar archivos.
 • Seleccionar texto en cualquier página para usar acciones rápidas (explicar, traducir, mejorar la redacción, leer en voz alta). Esta función está desactivada hasta que la actives, y puedes limitarla a los sitios que elijas.
+• Hacer clic derecho en una página, un enlace o texto seleccionado para preguntar, resumir, buscar en la web o copiar la página como Markdown. Puedes desactivar el menú o cada uno de sus elementos.
 
 AGENTES Y HABILIDADES
 

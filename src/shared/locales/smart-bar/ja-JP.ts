@@ -6,7 +6,7 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
     ask: "サイドパネルで質問",
     explain: "説明",
     translate: "翻訳",
-    summarize: "要約",
+    search: "AI 検索",
     copy: "コピー",
     improve: "文章を改善",
     fixGrammar: "スペルと文法を修正",
@@ -67,5 +67,5 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
   editActionsDescription:
     "テキスト入力欄でテキストを選択したときに表示されます。結果で選択範囲を置き換えられます。",
   model: "スマートバーのモデル",
-  modelDescription: "「説明」「翻訳」「要約」と文章作成の操作に使うモデル。",
+  modelDescription: "「説明」「翻訳」と文章作成の操作に使うモデル。",
 };

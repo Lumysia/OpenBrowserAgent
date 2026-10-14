@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { COPY_FEEDBACK_MS } from "../../shared/config";
+import { SIDE_PANEL_TASK } from "../../shared/side-panel-handoff";
 import {
   SMART_BAR_ACTION,
   SMART_BAR_MAX_TEXT_CHARS,
@@ -213,10 +214,13 @@ export function SmartBarResultCard({
             disabled={streaming}
             onClick={onTrusted(() => {
               void openInSidePanel(
-                snapshot.text,
                 output.copy
-                  ? { action: result.action, text: output.copy }
-                  : undefined,
+                  ? {
+                      task: SIDE_PANEL_TASK.continue,
+                      text: snapshot.text,
+                      result: { action: result.action, text: output.copy },
+                    }
+                  : { task: SIDE_PANEL_TASK.ask, text: snapshot.text },
               );
               store.hide();
             })}

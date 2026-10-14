@@ -29,6 +29,9 @@ While an extension page is open, checks the user's own sync storage for changes 
 == declarativeNetRequestWithHostAccess justification ==
 Removes the Origin header from the extension's own requests to an MCP server, only when the user turns on "Send without browser Origin" for that server, because some servers reject browser-origin requests. Each rule matches only that server's URL and only this extension's requests. Other sites and requests are never modified.
 
+== contextMenus justification ==
+Adds an OpenBrowserAgent submenu to the right-click menu (the user can turn it off): ask about or summarize the page, search the web about it or the selected text, summarize a linked page, or copy the page as Markdown. Items only open the side panel or copy to the clipboard when the user picks them.
+
 == nativeMessaging justification ==
 Optional local execution bridge: connects to a separately installed helper on the user's computer, only after the user installs it and enables it for an agent.
 

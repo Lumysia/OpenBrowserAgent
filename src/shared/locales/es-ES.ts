@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuEsES } from "./context-menu/es-ES";
 import { smartBarEsES } from "./smart-bar/es-ES";
 import { syncEsES } from "./sync/es-ES";
 import { themesEsES } from "./themes/es-ES";
@@ -595,6 +596,7 @@ export const esES: LocaleMessages = {
     debugToolRequired: "Parámetros obligatorios",
   },
   smartBar: smartBarEsES,
+  contextMenu: contextMenuEsES,
   sync: syncEsES,
   themes: themesEsES,
 };

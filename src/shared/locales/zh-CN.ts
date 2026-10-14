@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuZhCN } from "./context-menu/zh-CN";
 import { smartBarZhCN } from "./smart-bar/zh-CN";
 import { syncZhCN } from "./sync/zh-CN";
 import { themesZhCN } from "./themes/zh-CN";
@@ -501,6 +502,7 @@ export const zhCN: LocaleMessages = {
     debugToolRequired: "必需参数",
   },
   smartBar: smartBarZhCN,
+  contextMenu: contextMenuZhCN,
   sync: syncZhCN,
   themes: themesZhCN,
 };

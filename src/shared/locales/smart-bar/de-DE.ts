@@ -6,7 +6,7 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
     ask: "In der Seitenleiste fragen",
     explain: "Erklären",
     translate: "Übersetzen",
-    summarize: "Zusammenfassen",
+    search: "KI-Suche",
     copy: "Kopieren",
     improve: "Text verbessern",
     fixGrammar: "Rechtschreibung & Grammatik korrigieren",
@@ -68,6 +68,5 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
   editActionsDescription:
     "Werden angezeigt, wenn Sie Text in einem Eingabefeld markieren. Das Ergebnis kann die Auswahl ersetzen.",
   model: "Smart-Bar-Modell",
-  modelDescription:
-    "Modell für Erklären, Übersetzen, Zusammenfassen und die Schreibaktionen.",
+  modelDescription: "Modell für Erklären, Übersetzen und die Schreibaktionen.",
 };

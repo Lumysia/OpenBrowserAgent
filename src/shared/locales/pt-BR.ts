@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuPtBR } from "./context-menu/pt-BR";
 import { smartBarPtBR } from "./smart-bar/pt-BR";
 import { syncPtBR } from "./sync/pt-BR";
 import { themesPtBR } from "./themes/pt-BR";
@@ -590,6 +591,7 @@ export const ptBR: LocaleMessages = {
     debugToolRequired: "Parâmetros obrigatórios",
   },
   smartBar: smartBarPtBR,
+  contextMenu: contextMenuPtBR,
   sync: syncPtBR,
   themes: themesPtBR,
 };

@@ -14,24 +14,24 @@ import {
   SMART_BAR_COMMAND,
   SMART_BAR_MESSAGE,
   SMART_BAR_STREAM_PORT,
-  type SmartBarHandoff,
   type SmartBarOpenSidePanelRequest,
   type SmartBarPageConfig,
   type SmartBarPrepareRequest,
   type SmartBarPrepareResult,
   type SmartBarRunRequest,
   type SmartBarSettingsChangedMessage,
+  type SmartBarSidePanelRequest,
   type SmartBarStreamEvent,
 } from "../../shared/smart-bar-protocol";
-import { smartBarHandoffStorage } from "../../shared/smart-bar-handoff";
+import { SIDE_PANEL_TASK } from "../../shared/side-panel-handoff";
 import { getBrowserApi, storage } from "../../shared/storage";
 import {
   normalizeColorScheme,
   normalizeTheme,
 } from "../../shared/theme/themes";
-import { openSidePanel } from "../action-surface";
 import { resolveModel } from "../model-resolver";
 import { requestText } from "../pi-provider";
+import { handOffToSidePanel } from "../side-panel-handoff";
 import { smartBarPrompt } from "./prompts";
 import {
   injectTrigger,
@@ -217,26 +217,27 @@ async function showForSelection(tabId: number) {
     await api.tabs.sendMessage(tabId, message).catch(() => undefined);
 }
 
-// Opens the side panel first (it needs the click's user gesture), then leaves
-// the selection where the panel picks it up.
+// Opens the side panel during the click's user gesture with the selection
+// to ask or search about, or a result to continue.
 function handOff(request: SmartBarOpenSidePanelRequest, sender: Sender) {
-  const windowId = sender.tab?.windowId;
-  const opened = new Promise((resolve) =>
-    resolve(openSidePanel(windowId)),
-  ).catch((error) => console.warn("Failed to open the side panel", error));
-  const handoff: SmartBarHandoff = {
-    id: crypto.randomUUID(),
-    windowId,
-    text: request.text,
-    pageTitle: sender.tab?.title,
-    pageUrl: sender.tab?.url,
-    result: request.result,
-    createdAt: Date.now(),
-  };
-  const { area, key } = smartBarHandoffStorage();
-  return Promise.all([opened, area.set({ [key]: handoff })]).then(
-    () => undefined,
-  );
+  const handoff = sidePanelRequest(request.request);
+  if (!handoff) return Promise.reject(new Error("Unknown side panel request"));
+  return handOffToSidePanel(sender.tab, handoff);
+}
+
+function sidePanelRequest(
+  request: SmartBarSidePanelRequest | undefined,
+): SmartBarSidePanelRequest | undefined {
+  const text = typeof request?.text === "string" ? request.text : "";
+  switch (request?.task) {
+    case SIDE_PANEL_TASK.ask:
+    case SIDE_PANEL_TASK.searchWeb:
+      return { task: request.task, text };
+    case SIDE_PANEL_TASK.continue:
+      return request.result ? { ...request, text } : undefined;
+    default:
+      return undefined;
+  }
 }
 
 function handleStreamPort(port: chrome.runtime.Port) {

@@ -20,6 +20,7 @@ import { setupSync } from "../src/background/sync/scheduler";
 import { setupMcpOriginRules } from "../src/shared/mcp-origin-rules";
 import * as streamSessions from "../src/background/stream-sessions";
 import { openActionSurface } from "../src/background/action-surface";
+import { setupContextMenu } from "../src/background/context-menu";
 import {
   handleSmartBarMessage,
   setupSmartBar,
@@ -39,6 +40,7 @@ export default defineBackground(() => {
   });
 
   setupSmartBar();
+  setupContextMenu();
   setupSync();
   setupMcpOriginRules();
 

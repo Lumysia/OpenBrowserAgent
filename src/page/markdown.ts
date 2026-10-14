@@ -18,7 +18,7 @@ const SKIPPED_ROLES = new Set([
   "search",
 ]);
 
-// `origin`: links on it are written as paths.
+// `origin`: links on it are written as paths; empty keeps every link whole.
 export function pageMarkdown(
   root: Element = document.body,
   origin = location.origin,
@@ -29,9 +29,10 @@ export function pageMarkdown(
     if (!text) return "";
     const href = element.href || "";
     if (!href || href.startsWith("javascript:")) return text;
-    const url = href.startsWith(origin)
-      ? href.slice(origin.length) || "/"
-      : href;
+    const url =
+      origin && href.startsWith(origin)
+        ? href.slice(origin.length) || "/"
+        : href;
     return `[${text}](${url})`;
   };
 

@@ -13,6 +13,8 @@ const permissions = [
   // Removes the Origin header from requests to MCP servers that reject
   // browser requests (mcp-origin-rules); host access comes from <all_urls>.
   "declarativeNetRequestWithHostAccess",
+  // The right-click menu (OpenBrowserAgent ▸ …); Safari has it on macOS.
+  "contextMenus",
 ] as const;
 const chromiumAndFirefoxPermissions = ["nativeMessaging", "search"] as const;
 const sourcemap = process.env.WXT_SOURCEMAP === "true";

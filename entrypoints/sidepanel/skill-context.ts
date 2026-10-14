@@ -1,4 +1,8 @@
-import { normalizeSkillName, toPickedSkill } from "../../src/shared/skills";
+import {
+  interpolateSkillVariables,
+  normalizeSkillName,
+  toPickedSkill,
+} from "../../src/shared/skills";
 import type { PickedSkill } from "../../src/shared/types";
 
 export function toggleSkill(skills: PickedSkill[], skill: PickedSkill) {
@@ -49,4 +53,19 @@ export function takeSlashSkill<T extends PickedSkill>(
   const name = normalizeSkillName(match[1]);
   const skill = skills.find((item) => normalizeSkillName(item.name) === name);
   return skill ? { skill, rest: (match[2] || "").trim() } : undefined;
+}
+
+// The text a send carries. A typed message can pick a skill with "/name
+// request"; a resend keeps its picks; a context menu or smart bar request is
+// sent exactly as built.
+export function messageToSend<T extends PickedSkill>(
+  content: string,
+  skills: T[],
+  source: "typed" | "resend" | "request",
+) {
+  const trimmed = content.trim();
+  if (source === "request") return { slash: undefined, text: trimmed };
+  const slash =
+    source === "typed" ? takeSlashSkill(trimmed, skills) : undefined;
+  return { slash, text: interpolateSkillVariables(slash?.rest ?? trimmed) };
 }

@@ -6,6 +6,7 @@ import {
   Cloud,
   FileText,
   Highlighter,
+  MousePointerClick,
   Plug,
   Server,
   SlidersHorizontal,
@@ -30,6 +31,7 @@ import { McpPage } from "./mcp-page";
 import { LocalExecutionBridgesPage } from "./local-execution-bridges-page";
 import { SkillsPage } from "./skills-page";
 import { SmartBarPage } from "./smart-bar-page";
+import { ContextMenuPage } from "./context-menu-page";
 import { useHashRoute } from "./route";
 import { SyncPage } from "./sync-page";
 
@@ -119,6 +121,14 @@ export function OptionsApp() {
             </OptionsLink>
             <OptionsLink
               route={route}
+              target={OPTIONS_ROUTE.contextMenu}
+              href={OPTIONS_HASH.contextMenu}
+              icon={<MousePointerClick size={16} />}
+            >
+              {t.contextMenu.settingsTitle}
+            </OptionsLink>
+            <OptionsLink
+              route={route}
               target={OPTIONS_ROUTE.debug}
               href={OPTIONS_HASH.debug}
               icon={<Bug size={16} />}
@@ -153,6 +163,8 @@ export function OptionsApp() {
               <SkillsPage />
             ) : route === OPTIONS_ROUTE.smartBar ? (
               <SmartBarPage />
+            ) : route === OPTIONS_ROUTE.contextMenu ? (
+              <ContextMenuPage />
             ) : route === OPTIONS_ROUTE.debug ? (
               <DebugPage />
             ) : (

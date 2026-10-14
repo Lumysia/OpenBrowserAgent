@@ -1,30 +1,27 @@
 import type { Messages } from "../../src/shared/i18n";
-import type { SmartBarHandoff } from "../../src/shared/smart-bar-protocol";
+import type {
+  SidePanelHandoff,
+  SIDE_PANEL_TASK,
+} from "../../src/shared/side-panel-handoff";
+import { quoteSelection } from "../../src/shared/side-panel-requests";
 import type { Chat, ChatMessage } from "../../src/shared/types";
 
 const TITLE_CHARS = 48;
 
-// The selection as a Markdown quote, ready for the user's question below it.
-export function quoteSelection(text: string) {
-  return text
-    .trim()
-    .split(/\r?\n/)
-    .map((line) => (line ? `> ${line}` : ">"))
-    .join("\n");
-}
+type ContinueHandoff = Extract<
+  SidePanelHandoff,
+  { task: typeof SIDE_PANEL_TASK.continue }
+>;
 
 // "Ask": the quote goes into the composer, after anything already typed.
-export function composerWithQuote(input: string, handoff: SmartBarHandoff) {
-  const quote = `${quoteSelection(handoff.text)}\n\n`;
+export function composerWithQuote(input: string, text: string) {
+  const quote = `${quoteSelection(text)}\n\n`;
   return input.trim() ? `${input.trimEnd()}\n\n${quote}` : quote;
 }
 
 // "Continue in side panel": a new chat holding the action and its result,
 // so the conversation goes on from there.
-export function smartBarHandoffChat(
-  handoff: SmartBarHandoff & { result: NonNullable<SmartBarHandoff["result"]> },
-  t: Messages,
-): Chat {
+export function continuedChat(handoff: ContinueHandoff, t: Messages): Chat {
   const now = Date.now();
   const action = t.smartBar.actions[handoff.result.action];
   const source = handoff.pageUrl

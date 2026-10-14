@@ -6,7 +6,7 @@ export const smartBarPtBR: SmartBarLocaleMessages = {
     ask: "Perguntar no painel lateral",
     explain: "Explicar",
     translate: "Traduzir",
-    summarize: "Resumir",
+    search: "Pesquisa com IA",
     copy: "Copiar",
     improve: "Melhorar a escrita",
     fixGrammar: "Corrigir ortografia e gramática",
@@ -67,6 +67,5 @@ export const smartBarPtBR: SmartBarLocaleMessages = {
   editActionsDescription:
     "Aparecem ao selecionar texto em um campo de texto. O resultado pode substituir a seleção.",
   model: "Modelo da barra inteligente",
-  modelDescription:
-    "Modelo para Explicar, Traduzir, Resumir e as ações de escrita.",
+  modelDescription: "Modelo para Explicar, Traduzir e as ações de escrita.",
 };

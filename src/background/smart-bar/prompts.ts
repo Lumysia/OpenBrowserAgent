@@ -7,6 +7,7 @@ import {
   smartBarResultFormat,
 } from "../../shared/smart-bar-dictionary";
 import type { SmartBarRunRequest } from "../../shared/smart-bar-protocol";
+import { languageName } from "../../shared/language-name";
 
 // The page script caps context too; this bounds what any message can add.
 const CONTEXT_LIMIT = 600;
@@ -31,7 +32,6 @@ export function smartBarPrompt(
     };
   const instructions: Record<SmartBarGenerateAction, string> = {
     [SMART_BAR_ACTION.explain]: `Explain the text below in ${language} so that a non-expert understands it. Be brief: one short paragraph, or a few short points.`,
-    [SMART_BAR_ACTION.summarize]: `Summarize the text below in ${language}: one sentence for a short text, otherwise a few short points.`,
     [SMART_BAR_ACTION.translate]: `Translate the text below into ${language}.${englishFallback(
       language,
       "translate it into English instead",
@@ -109,17 +109,4 @@ function contextBlock(
     `${before}[[SELECTION]]${after}`,
     "</context>",
   ].join("\n");
-}
-
-function languageName(code: string) {
-  try {
-    // The full tag keeps variants apart (Chinese (Taiwan) vs (China)).
-    return (
-      new Intl.DisplayNames(["en"], { type: "language" }).of(
-        code.replace("_", "-"),
-      ) || "English"
-    );
-  } catch {
-    return "English";
-  }
 }

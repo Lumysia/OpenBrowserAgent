@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuKo } from "./context-menu/ko";
 import { smartBarKo } from "./smart-bar/ko";
 import { syncKo } from "./sync/ko";
 import { themesKo } from "./themes/ko";
@@ -533,6 +534,7 @@ export const ko: LocaleMessages = {
     debugToolRequired: "필수 매개변수",
   },
   smartBar: smartBarKo,
+  contextMenu: contextMenuKo,
   sync: syncKo,
   themes: themesKo,
 };
