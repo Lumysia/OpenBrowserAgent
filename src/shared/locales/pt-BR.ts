@@ -162,6 +162,13 @@ export const ptBR: LocaleMessages = {
     resendWithoutMissingFiles: "Reenviar sem arquivos ausentes",
     resendMessage: "Reenviar",
     forkChat: "Ramificar conversa",
+    runStop: {
+      length: "A resposta foi cortada: limite de saída",
+      aborted: "Interrompida",
+      error: "A resposta terminou com um erro",
+      continue: "Continuar",
+      continueMessage: "Continue de onde a resposta parou.",
+    },
     showMoreSources: plural({
       one: "Mostrar mais {count} fonte",
       other: "Mostrar mais {count} fontes",

@@ -157,6 +157,13 @@ export const ko: LocaleMessages = {
     resendWithoutMissingFiles: "누락된 파일 없이 다시 보내기",
     resendMessage: "다시 보내기",
     forkChat: "채팅 분기",
+    runStop: {
+      length: "응답이 잘렸어요: 출력 한도",
+      aborted: "중지했어요",
+      error: "오류로 응답이 끝났어요",
+      continue: "계속하기",
+      continueMessage: "응답이 끊긴 곳부터 이어서 계속해 주세요.",
+    },
     showMoreSources: plural({ other: "출처 {count}개 더 보기" }),
     showFewerSources: "출처 접기",
     unavailableAttachments: plural({ other: "{count}개 사용 불가" }),

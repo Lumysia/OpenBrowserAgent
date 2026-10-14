@@ -8,6 +8,7 @@ What changed in each release. The release workflow publishes the section for the
 - The send button no longer flickers when the pointer moves over it.
 - After "Translate this page", the next pages you open in the same tab are translated too, on any site, until you reload the tab or choose "Show original".
 - **Page translation uses the browser's on-device translator by default**: it is fast and keeps the text on your device. Where the browser has none (Firefox, Safari, older Chrome) or can't translate a page's language, the page is translated with your AI model instead and a note says so. If you have changed settings before, your page translation engine may stay as it was; choose "Built-in translator" in Settings → Page translation to use it.
+- A response that ends early now says so under it: cut off at the model's output limit, stopped, or the error it ended with (shown once, no longer next to a second copy of the response), with a Continue button on the latest one. The chat export includes how each response ended, the model is told when an earlier response was cut off, stopped responses keep their token usage, and model calls no longer count the earlier messages of the chat. Models Pi knows get their full output limit.
 
 ## 0.2.0-beta.8 - 2026-10-14
 

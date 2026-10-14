@@ -163,6 +163,13 @@ export const frFR: LocaleMessages = {
     resendWithoutMissingFiles: "Renvoyer sans les fichiers manquants",
     resendMessage: "Renvoyer",
     forkChat: "Créer une branche de la discussion",
+    runStop: {
+      length: "La réponse a été coupée : limite de sortie",
+      aborted: "Arrêtée",
+      error: "La réponse s’est terminée par une erreur",
+      continue: "Continuer",
+      continueMessage: "Veuillez reprendre là où la réponse s’est arrêtée.",
+    },
     showMoreSources: plural({
       one: "Afficher {count} source de plus",
       other: "Afficher {count} sources de plus",

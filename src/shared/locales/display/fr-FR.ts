@@ -54,7 +54,6 @@ export const displayFrFR: DisplayMessages = {
   errors: {
     noModel:
       "Aucun modèle n’est configuré. Ajoutez un fournisseur dans « Paramètres » → « Fournisseurs d’IA ».",
-    subAgentStopped: "Le sous-agent a été arrêté.",
     baseUrlRequired: "Saisissez une URL de base.",
   },
   toolSteps: {

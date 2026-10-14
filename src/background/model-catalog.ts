@@ -32,3 +32,9 @@ export function catalogModel(
     ? catalog[modelName]
     : undefined;
 }
+
+// The model's output limit, when Pi's catalog knows the model. Unknown
+// models get none, and the endpoint applies its own default.
+export function knownOutputLimit(provider: ProviderId, modelName: string) {
+  return catalogModel(provider, modelName)?.maxTokens || undefined;
+}

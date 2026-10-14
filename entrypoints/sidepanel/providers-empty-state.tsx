@@ -16,7 +16,7 @@ import {
 import { checkSyncBackend, syncNow } from "../../src/shared/sync/client";
 import { openOrFocusOptions } from "../../src/shared/tab-navigation";
 import type { SyncBackendConfig } from "../../src/shared/types";
-import { languageLabels } from "../../src/shared/types";
+import { languageLabels } from "../../src/shared/i18n";
 import {
   Badge,
   Button,

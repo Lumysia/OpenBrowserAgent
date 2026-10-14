@@ -152,6 +152,13 @@ export const zhCN: LocaleMessages = {
     resendWithoutMissingFiles: "不带缺失文件重发",
     resendMessage: "重发",
     forkChat: "分叉对话",
+    runStop: {
+      length: "回复被截断：已达输出上限",
+      aborted: "已停止",
+      error: "回复因出错而结束",
+      continue: "继续",
+      continueMessage: "请从回复中断的地方继续。",
+    },
     showMoreSources: plural({ other: "展开剩余 {count} 个来源" }),
     showFewerSources: "收起来源",
     unavailableAttachments: plural({ other: "{count} 个不可用" }),

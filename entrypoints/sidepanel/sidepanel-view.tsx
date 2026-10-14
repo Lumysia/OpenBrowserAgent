@@ -103,6 +103,7 @@ export function SidepanelView({
   onSend,
   consentPrompt,
   onStop,
+  onContinue,
   onDeleteQueuedMessage,
   onEditQueuedMessage,
   onAnswerQuestion,
@@ -178,6 +179,8 @@ export function SidepanelView({
   // The question before a send, above the composer.
   consentPrompt?: ReactNode;
   onStop: () => void;
+  // Asks the model to go on after the chat's latest response.
+  onContinue: () => void;
   onDeleteQueuedMessage: (id: string) => void;
   onEditQueuedMessage: (message: QueuedMessage) => void;
   onAnswerQuestion: (toolCallId: string, answers: QuestionToolAnswer[]) => void;
@@ -222,6 +225,7 @@ export function SidepanelView({
   const latestUserMessageId = [...(currentChat?.messages || [])]
     .reverse()
     .find((message) => message.role === "user")?.id;
+  const lastMessageId = currentChat?.messages.at(-1)?.id;
   const messagesKey = currentChat?.messages.length ? currentChat.id : "empty";
 
   if (showHistory)
@@ -284,6 +288,11 @@ export function SidepanelView({
                   chatMessages={currentChat.messages}
                   outputActive={message.id === activeAssistantMessageId}
                   runStopped={stoppedRuns.has(message.id)}
+                  onContinue={
+                    message.id === lastMessageId && !streaming
+                      ? onContinue
+                      : undefined
+                  }
                   sentAttachments={sentAttachmentPreviews[message.id] || []}
                   activeAttachments={uploadedAttachments}
                   onReplaceAttachment={onReplaceUploadedAttachment}

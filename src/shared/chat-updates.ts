@@ -1,6 +1,7 @@
 import type { Chat, ChatMessage, ChatPart, RunMetrics } from "./types";
 import { extractSourcesFromPart, mergeChatSources } from "./chat-sources";
 import { applyPart } from "./chat-stream-parts";
+import { errorNoticePart, RUN_STOP_REASON } from "./run-stop";
 
 // Updates of one chat; each returns the chat unchanged when nothing applies.
 // Streaming updates leave `updatedAt` alone, so the chat list does not change
@@ -73,6 +74,34 @@ export function updateAssistantRunMetrics(
         : message,
     ),
     ...(metrics.endedAt ? { updatedAt: Date.now() } : {}),
+  };
+}
+
+// The end of a reply's run: when and how it ended, and the error it got,
+// kept as a notice part rather than in the reply's text.
+export function endAssistantRun(
+  chat: Chat,
+  messageId: string,
+  {
+    error,
+    ...metrics
+  }: Partial<RunMetrics> & { endedAt: number; error?: string },
+): Chat {
+  const ended = updateAssistantRunMetrics(chat, messageId, {
+    ...metrics,
+    ...(error ? { stopReason: RUN_STOP_REASON.error } : {}),
+  });
+  if (!error) return ended;
+  return {
+    ...ended,
+    messages: ended.messages.map((message) =>
+      message.id === messageId
+        ? {
+            ...message,
+            parts: applyPart(message.parts, errorNoticePart(error)),
+          }
+        : message,
+    ),
   };
 }
 

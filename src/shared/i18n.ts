@@ -23,6 +23,19 @@ export const i18nRegistry: Record<string, LocaleMessages> = {
   "pt-BR": ptBR,
 };
 
+// The UI languages, each named in itself.
+export const languageLabels: Record<string, string> = {
+  "en-US": "English",
+  "zh-CN": "简体中文",
+  "zh-TW": "繁體中文",
+  "ja-JP": "日本語",
+  ko: "한국어",
+  "fr-FR": "Français",
+  "de-DE": "Deutsch",
+  "es-ES": "Español",
+  "pt-BR": "Português (Brasil)",
+};
+
 let activeLanguage: string | undefined;
 
 export function getMessages(language?: string) {

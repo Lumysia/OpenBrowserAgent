@@ -4,6 +4,7 @@ import {
   appendAssistantContent,
   appendAssistantPart,
   appendQueuedMessages,
+  endAssistantRun,
   updateAssistantRunMetrics,
 } from "../../src/shared/chat-updates";
 import { streamPartFromChunk } from "../../src/shared/chat-stream-parts";
@@ -102,6 +103,10 @@ export function createStreamHandlers(updateChat: ChatUpdater) {
         updateAssistantRunMetrics(chat, messageId, metrics),
       );
     },
+    endRun(chatId: string, messageId: string, end: RunEnd) {
+      flushMessageText(chatId, messageId);
+      updateChat(chatId, (chat) => endAssistantRun(chat, messageId, end));
+    },
     appendQueuedMessages(
       chatId: string,
       messages: Array<{ id: string; content: string; createdAt: number }>,
@@ -121,6 +126,8 @@ export function createStreamHandlers(updateChat: ChatUpdater) {
     flushMessageText,
   };
 }
+
+export type RunEnd = Parameters<typeof endAssistantRun>[2];
 
 type PendingTextDelta = {
   chatId: string;

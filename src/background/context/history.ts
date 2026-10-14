@@ -1,3 +1,4 @@
+import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type {
   Api,
   AssistantMessage,
@@ -10,6 +11,7 @@ import {
   base64FromDataUrl,
   isVisionImageMimeType,
 } from "../../shared/attachments";
+import { modelStopNote, replyCutOff } from "../../shared/run-stop";
 import { toolModelResult, turnSteps } from "../../shared/tool-results";
 import {
   toolNameFromPartType,
@@ -88,21 +90,76 @@ export function imageContent(dataUrl: string, mimeType?: string): ImageContent {
   };
 }
 
+// A reply of this run that reached the output limit, followed by a queued
+// message, carries the same note as a stored one (see assistantTurn).
+export function noteCutReplies(messages: AgentMessage[]): AgentMessage[] {
+  return messages.map((message) =>
+    message.role === "assistant" && message.stopReason === "length"
+      ? {
+          ...message,
+          content: [
+            ...message.content,
+            { type: "text", text: modelStopNote("length") },
+          ],
+        }
+      : message,
+  );
+}
+
+// A reply that ended early ends with a note that says so; Pi itself drops
+// replies stored as aborted or failed, so the note is how the model learns.
 function assistantTurn(
   message: ChatMessage,
   options: HistoryOptions,
 ): Message[] {
-  const steps = turnSteps(message.parts || []);
-  const reply = (
-    content: AssistantMessage["content"],
-    toolUse = false,
-  ): AssistantMessage => ({
+  const cut = replyCutOff(message);
+  const note = cut ? modelStopNote(cut.reason) : "";
+  const turn = replayedTurn(message, options);
+  if (!note) return turn;
+  const last = turn[turn.length - 1];
+  if (last?.role === "assistant" && !last.content.some(isToolCall))
+    return [
+      ...turn.slice(0, -1),
+      {
+        ...last,
+        content: [
+          ...last.content.filter((part) => part.type !== "text" || part.text),
+          { type: "text", text: note },
+        ],
+      },
+    ];
+  return [
+    ...turn,
+    replayedReply(message, options, [{ type: "text", text: note }]),
+  ];
+}
+
+function isToolCall(part: AssistantMessage["content"][number]) {
+  return part.type === "toolCall";
+}
+
+function replayedReply(
+  message: ChatMessage,
+  options: HistoryOptions,
+  content: AssistantMessage["content"],
+  toolUse = false,
+): AssistantMessage {
+  return {
     ...assistantMessage(options.model),
     provider: REPLAYED_PROVIDER,
     content,
     stopReason: toolUse ? "toolUse" : "stop",
     timestamp: message.createdAt,
-  });
+  };
+}
+
+function replayedTurn(
+  message: ChatMessage,
+  options: HistoryOptions,
+): Message[] {
+  const steps = turnSteps(message.parts || []);
+  const reply = (content: AssistantMessage["content"], toolUse = false) =>
+    replayedReply(message, options, content, toolUse);
   // Reasoning is not replayed: only the model that wrote it could use it.
   if (!steps.some((step) => step.calls.length))
     return [reply([{ type: "text", text: message.content }])];

@@ -4,6 +4,7 @@ import type { ToolGroup } from "./agents";
 import type { ContextMenuSettings } from "./context-menu";
 import type { PageTranslateSettings } from "./page-translate/settings";
 import type { ReasoningEffort } from "./reasoning";
+import type { ChatNoticeKind, RunStopReason } from "./run-stop";
 import type { SmartBarSettings } from "./smart-bar";
 import type { ColorScheme, ThemeId } from "./theme/themes";
 import type { ThinkingSwitch } from "./thinking-switch";
@@ -263,6 +264,7 @@ export type RunMetrics = {
   modelCalls?: number;
   // Input tokens (cached included) of the run's largest single request.
   largestInputTokens?: number;
+  stopReason?: RunStopReason;
 };
 
 export const TOOL_PART_PREFIX = "tool-";
@@ -292,8 +294,10 @@ export const CHAT_PART_STATE = {
 
 export type ChatPart = {
   id: string;
-  type: "text" | "reasoning" | "summary" | ToolPartType;
+  type: "text" | "reasoning" | "summary" | "notice" | ToolPartType;
   text?: string;
+  // What a notice part reports (see run-stop.ts).
+  kind?: ChatNoticeKind;
   append?: boolean;
   toolName?: string;
   state?:
@@ -422,7 +426,7 @@ export type AiStreamResponse = (
       assistantMessageId: string;
       createdAt: number;
     }
-  | { type: "end" }
+  | { type: "end"; stopReason?: RunStopReason }
   // Answer to attachStream: the background has no run of that chat (it died,
   // or it runs on another device).
   | { type: "notRunning" }
@@ -481,16 +485,4 @@ export const providerDefaultBaseUrls: Partial<Record<ProviderId, string>> = {
   aigateway: "https://api.ai-gateway.workers.dev/v1",
   minimax: "https://api.minimax.io/v1",
   ollama: "http://localhost:11434",
-};
-
-export const languageLabels: Record<string, string> = {
-  "en-US": "English",
-  "zh-CN": "简体中文",
-  "zh-TW": "繁體中文",
-  "ja-JP": "日本語",
-  ko: "한국어",
-  "fr-FR": "Français",
-  "de-DE": "Deutsch",
-  "es-ES": "Español",
-  "pt-BR": "Português (Brasil)",
 };

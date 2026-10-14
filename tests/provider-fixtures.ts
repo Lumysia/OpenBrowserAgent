@@ -334,10 +334,17 @@ function openAiChunk(delta: object, finish_reason: string | null = null) {
   };
 }
 
-export type TextProducer = (write: (text: string) => void) => unknown;
+// How a producer's stream ends: `finishReason` "length" as at the model's
+// output limit, or null to drop the connection without one.
+export type StreamEnd = { finishReason: string | null };
+
+export type TextProducer = (
+  write: (text: string) => void,
+) => unknown | Promise<StreamEnd | void>;
 
 // Streams an OpenAI chat completion text piece by piece: each string of
 // `chunks`, or each `write` of a producer, is one delta, `delayMs` apart.
+// A producer may return how the stream ends (StreamEnd); else it stops.
 export async function streamText(
   response: ServerResponse,
   chunks: Iterable<string> | TextProducer,
@@ -346,13 +353,20 @@ export async function streamText(
   response.writeHead(200, { "Content-Type": "text/event-stream" });
   const write = (content: string) =>
     response.write(`data: ${JSON.stringify(openAiChunk({ content }))}\n\n`);
-  if (typeof chunks === "function") await chunks(write);
-  else
+  let end: StreamEnd = { finishReason: "stop" };
+  if (typeof chunks === "function") {
+    const result = (await chunks(write)) as StreamEnd | undefined;
+    if (typeof result === "object" && result && "finishReason" in result)
+      end = result;
+  } else
     for (const content of chunks) {
       write(content);
       if (delayMs) await delay(delayMs);
     }
-  response.write(`data: ${JSON.stringify(openAiChunk({}, "stop"))}\n\n`);
+  if (end.finishReason === null) return void response.end();
+  response.write(
+    `data: ${JSON.stringify(openAiChunk({}, end.finishReason))}\n\n`,
+  );
   response.end("data: [DONE]\n\n");
 }
 

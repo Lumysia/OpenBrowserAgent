@@ -18,6 +18,12 @@ import type {
   RunMetrics,
   ToolPartType,
 } from "../../src/shared/types";
+import {
+  errorNoticePart,
+  replyCutOff,
+  RUN_STOP_REASON,
+  type CutReason,
+} from "../../src/shared/run-stop";
 
 type OpenAiExportMessage =
   | { role: "system" | "user"; content: string }
@@ -26,6 +32,9 @@ type OpenAiExportMessage =
       content?: string | null;
       reasoning_content?: string;
       tool_calls?: OpenAiToolCall[];
+      // Set on the last response of a reply that ended early.
+      stop_reason?: CutReason;
+      error?: string;
     }
   | { role: "tool"; tool_call_id: string; content: string };
 
@@ -47,7 +56,8 @@ type OpenAiImportPayload = {
 // The system prompt and tools are the ones a new run of the agent starts
 // with today, as the background builds them. Tool messages hold the text the
 // model received for each call; calls whose result was an error are listed
-// in `tool_errors`, as the format has no field for it.
+// in `tool_errors`, as the format has no field for it. A reply that ended
+// early has `stop_reason` (and `error`) on its last assistant message.
 export async function exportChatAsOpenAiJson(
   chat: Chat | undefined,
   agent: Agent,
@@ -142,6 +152,7 @@ export async function importChatFromOpenAiJson(
         ...(previous.parts || []),
         ...assistantImportParts(item, content, toolParts),
       ];
+      importStopReason(previous, item);
       continue;
     }
     const message: ChatMessage = {
@@ -153,6 +164,7 @@ export async function importChatFromOpenAiJson(
     if (role === "assistant") {
       const parts = assistantImportParts(item, content, toolParts);
       if (parts.length) message.parts = parts;
+      importStopReason(message, item);
     }
     messages.push(message);
   }
@@ -168,6 +180,17 @@ export async function importChatFromOpenAiJson(
     createdAt: now,
     updatedAt: now,
   };
+}
+
+function importStopReason(message: ChatMessage, item: Record<string, unknown>) {
+  const reason = stringValue(item.stop_reason);
+  if (!Object.values(RUN_STOP_REASON).some((value) => value === reason)) return;
+  message.metadata = {
+    ...message.metadata,
+    runMetrics: { stopReason: reason as CutReason },
+  };
+  const error = stringValue(item.error);
+  if (error) message.parts = [...(message.parts || []), errorNoticePart(error)];
 }
 
 function assistantImportParts(
@@ -203,13 +226,30 @@ function assistantImportParts(
 }
 
 function toOpenAiMessages(message: ChatMessage): OpenAiExportMessage[] {
-  if (message.role === "assistant" && message.parts?.length)
-    return assistantPartsToOpenAiMessages(message);
+  if (message.role === "assistant") return withStopReason(message);
   if (message.role === "tool") return [];
   if (!message.content.trim()) return [];
-  if (message.role === "assistant")
-    return [{ role: "assistant", content: message.content }];
   return [{ role: message.role, content: message.content }];
+}
+
+function withStopReason(message: ChatMessage): OpenAiExportMessage[] {
+  const messages = message.parts?.length
+    ? assistantPartsToOpenAiMessages(message)
+    : message.content.trim()
+      ? [{ role: "assistant" as const, content: message.content }]
+      : [];
+  const cut = replyCutOff(message);
+  if (!cut) return messages;
+  const stop = {
+    stop_reason: cut.reason,
+    ...(cut.errors.length ? { error: cut.errors.join("\n") } : {}),
+  };
+  const last = messages.findLastIndex((item) => item.role === "assistant");
+  if (last < 0)
+    return [...messages, { role: "assistant", content: null, ...stop }];
+  return messages.map((item, index) =>
+    index === last ? { ...item, ...stop } : item,
+  );
 }
 
 // One assistant message per model response, followed by the results of its

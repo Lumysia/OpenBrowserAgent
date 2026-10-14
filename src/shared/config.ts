@@ -15,6 +15,8 @@ export const CHAT_STREAM_WRITE_DEBOUNCE_MS = 1_500;
 export const SYNC_MAX_BYTES_PER_ITEM = 7_500;
 
 export const STREAM_RENDER_THROTTLE_MS = 80;
+// How long a stopped run may take to report its last usage to the panel.
+export const STREAM_STOP_SETTLE_MS = 10_000;
 export const STREAM_REVEAL_MIN_STEP_DELAY_MS = 16;
 export const STREAM_REVEAL_MAX_STEP_DELAY_MS = 52;
 export const STREAM_REVEAL_BACKLOG_LARGE = 240;

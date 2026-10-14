@@ -1,4 +1,5 @@
 import { readId } from "./read-ids";
+import { CHAT_NOTICE_KIND } from "./run-stop";
 import {
   CHAT_PART_STATE,
   isToolPartType,
@@ -12,7 +13,8 @@ import {
 } from "./types";
 
 const CHAT_MESSAGE_ROLES = new Set(["user", "assistant", "system", "tool"]);
-const TEXT_PART_TYPES = new Set(["text", "reasoning", "summary"]);
+const TEXT_PART_TYPES = new Set(["text", "reasoning", "summary", "notice"]);
+const NOTICE_KINDS = new Set<string>(Object.values(CHAT_NOTICE_KIND));
 const CHAT_PART_STATES = new Set<string>(Object.values(CHAT_PART_STATE));
 
 export function normalizeChatSummaries(value: unknown): ChatSummary[] {
@@ -422,6 +424,9 @@ function normalizeChatPart(
     result: toolResultValue(part.result),
     step: optionalString(part.step),
     error: optionalString(part.error),
+    ...(NOTICE_KINDS.has(stringValue(part.kind))
+      ? { kind: part.kind as ChatPart["kind"] }
+      : {}),
   };
 }
 

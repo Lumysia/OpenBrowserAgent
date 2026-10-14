@@ -12,6 +12,7 @@ import type {
 } from "../../src/shared/types";
 import { AI_STREAM_REQUEST_TYPE as STREAM_REQUEST } from "../../src/shared/types";
 import { abortChatStreams } from "../../src/shared/chat-stream-control";
+import { RUN_STOP_REASON } from "../../src/shared/run-stop";
 import { createStreamHandlers } from "./stream-handlers";
 import type { ActiveStreamMap } from "./sidepanel-menu-state";
 import { useAutoRetryStream } from "./sidepanel-effects";
@@ -22,6 +23,7 @@ import {
   attachStreamAction,
   closeStreamPort,
   startStreamAction,
+  stopStreamPort,
 } from "./stream-port";
 
 export function useParallelChatStreams({
@@ -123,7 +125,7 @@ export function useParallelChatStreams({
       onStreamFinished: markStreamFinished,
       onRunStopped: markRunStopped,
       appendStreamChunk: streamHandlers.appendStreamChunk,
-      appendToAssistant: streamHandlers.appendToAssistant,
+      endRun: streamHandlers.endRun,
       flushMessageText: streamHandlers.flushMessageText,
       appendQueuedMessages: streamHandlers.appendQueuedMessages,
       removeQueuedMessage: (id, chatId) =>
@@ -149,7 +151,7 @@ export function useParallelChatStreams({
       onStreamFinished: markStreamFinished,
       onRunStopped: markRunStopped,
       appendStreamChunk: streamHandlers.appendStreamChunk,
-      appendToAssistant: streamHandlers.appendToAssistant,
+      endRun: streamHandlers.endRun,
       flushMessageText: streamHandlers.flushMessageText,
       appendQueuedMessages: streamHandlers.appendQueuedMessages,
       removeQueuedMessage: (id, chatId) =>
@@ -174,7 +176,7 @@ export function useParallelChatStreams({
 
   function abortChatStream(chatId: string) {
     if (activeStreams[chatId]) {
-      closeStreamPort(portRefs, chatId, true);
+      stopStreamPort(portRefs, chatId);
       setActiveStreams((items) => {
         const next = { ...items };
         delete next[chatId];
@@ -203,10 +205,10 @@ export function useParallelChatStreams({
     if (!currentChat) return;
     const activeStream = activeStreams[currentChat.id];
     if (activeStream)
-      streamHandlers.updateRunMetrics(
+      streamHandlers.endRun(
         activeStream.chatId,
         activeStream.assistantMessageId,
-        { endedAt: Date.now() },
+        { endedAt: Date.now(), stopReason: RUN_STOP_REASON.aborted },
       );
     abortChatStream(currentChat.id);
   }

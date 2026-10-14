@@ -4,6 +4,7 @@ import {
   writeChatAttachments,
 } from "../../src/shared/chat-attachments";
 import type { Chat, UploadedAttachment } from "../../src/shared/types";
+import { pruneSentAttachmentPreviews } from "./edit-message";
 
 // Previews of a chat's sent attachments that this page does not hold (sent
 // from another context, or synced from another device), and storing the ones
@@ -84,15 +85,28 @@ export function useChatAttachments({
       });
   }, [currentChat, sentAttachmentPreviews, setSentAttachmentPreviews]);
 
+  // Shows a sent message's attachments, and drops the previews of messages
+  // an edit removed (all but `keptMessageIds`).
   function storeSentAttachments({
     chatId,
     messageId,
     attachments,
+    keptMessageIds,
   }: {
     chatId: string;
     messageId: string;
     attachments: UploadedAttachment[];
+    keptMessageIds?: Set<string>;
   }) {
+    if (attachments.length || keptMessageIds)
+      setSentAttachmentPreviews((items) => {
+        const kept = keptMessageIds
+          ? pruneSentAttachmentPreviews(items, keptMessageIds)
+          : items;
+        return attachments.length
+          ? { ...kept, [messageId]: attachments }
+          : kept;
+      });
     writeChatAttachments({
       chatId,
       messageId,

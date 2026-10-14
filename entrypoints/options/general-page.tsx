@@ -9,9 +9,8 @@ import {
   Wrench,
 } from "lucide-react";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
-import { getMessages } from "../../src/shared/i18n";
+import { getMessages, languageLabels } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
-import { languageLabels } from "../../src/shared/types";
 import {
   Card,
   CardContent,
