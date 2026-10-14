@@ -9,8 +9,10 @@ export const displayDeDE: DisplayMessages = {
   },
   providerTypes: {
     openai: "OpenAI-kompatibel",
-    "openai-responses": "OpenAI Responses",
+    "openai-responses": "OpenAI-Responses-kompatibel",
     anthropic: "Anthropic-kompatibel",
+    gemini: "Gemini-kompatibel",
+    ollama: "Ollama-kompatibel",
   },
   builtinMcpServers: {
     exa: "Websuche und Extraktion von Webseiteninhalten.",

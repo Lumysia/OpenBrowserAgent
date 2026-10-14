@@ -9,8 +9,10 @@ export const displayKo: DisplayMessages = {
   },
   providerTypes: {
     openai: "OpenAI 호환",
-    "openai-responses": "OpenAI Responses",
+    "openai-responses": "OpenAI Responses 호환",
     anthropic: "Anthropic 호환",
+    gemini: "Gemini 호환",
+    ollama: "Ollama 호환",
   },
   builtinMcpServers: {
     exa: "웹 검색과 웹페이지 내용 추출.",

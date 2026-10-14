@@ -9,8 +9,10 @@ export const displayZhCN: DisplayMessages = {
   },
   providerTypes: {
     openai: "OpenAI 兼容",
-    "openai-responses": "OpenAI Responses",
+    "openai-responses": "OpenAI Responses 兼容",
     anthropic: "Anthropic 兼容",
+    gemini: "Gemini 兼容",
+    ollama: "Ollama 兼容",
   },
   builtinMcpServers: {
     exa: "网页搜索和网页内容提取。",

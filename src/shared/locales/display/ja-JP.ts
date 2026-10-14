@@ -9,8 +9,10 @@ export const displayJaJP: DisplayMessages = {
   },
   providerTypes: {
     openai: "OpenAI 互換",
-    "openai-responses": "OpenAI Responses",
+    "openai-responses": "OpenAI Responses 互換",
     anthropic: "Anthropic 互換",
+    gemini: "Gemini 互換",
+    ollama: "Ollama 互換",
   },
   builtinMcpServers: {
     exa: "ウェブ検索とページ内容の抽出。",

@@ -9,8 +9,10 @@ export const displayZhTW: DisplayMessages = {
   },
   providerTypes: {
     openai: "OpenAI 相容",
-    "openai-responses": "OpenAI Responses",
+    "openai-responses": "OpenAI Responses 相容",
     anthropic: "Anthropic 相容",
+    gemini: "Gemini 相容",
+    ollama: "Ollama 相容",
   },
   builtinMcpServers: {
     exa: "網頁搜尋和網頁內容擷取。",

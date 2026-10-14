@@ -446,10 +446,10 @@ export type QuestionToolAnswer = {
 };
 
 export const providerLabels: Record<ProviderId, string> = {
-  gemini: "Gemini",
-  ollama: "Ollama",
+  gemini: "Gemini-compatible",
+  ollama: "Ollama-compatible",
   openai: "OpenAI-compatible",
-  "openai-responses": "OpenAI Responses",
+  "openai-responses": "OpenAI Responses-compatible",
   anthropic: "Anthropic-compatible",
   openrouter: "OpenRouter",
   aihubmix: "AIHubMix",
@@ -457,6 +457,14 @@ export const providerLabels: Record<ProviderId, string> = {
   glm: "Z.ai (Zhipu)",
   aigateway: "Vercel AI Gateway",
   minimax: "Minimax",
+};
+
+// Default names older versions stored for new providers. They still show in
+// the UI language, like the current defaults.
+export const legacyProviderLabels: Partial<Record<ProviderId, string>> = {
+  gemini: "Gemini",
+  ollama: "Ollama",
+  "openai-responses": "OpenAI Responses",
 };
 
 export const providerDefaultBaseUrls: Partial<Record<ProviderId, string>> = {
