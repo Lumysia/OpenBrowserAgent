@@ -56,10 +56,10 @@ const TOLERANCE_PX = 2;
 // Text that only menus, buttons, tabs, navigation and the footer have.
 const CHROME_TEXT =
   /Trail maps|Mountain weather|Sign in|Search the almanac|Discussion page|Edit history|Share this|Northern passes|Privacy policy|Contact the editors|See more walks/;
-// Labels that are kept as they are: times, dates, sources, bylines, names,
-// numbers, and the icons after headlines.
+// Labels that are kept as they are: times, dates, sources and bylines (short
+// lines next to a date), and the icons after headlines.
 const LABEL_TEXT =
-  /3 hours ago|Yesterday|Oct 12|Valley Courier|Ridge Weekly|The Hill Post|By Ann Lee|By Dana Moss|By Frank Ode|chevron_right|Elevation|Range/;
+  /3 hours ago|Yesterday|Oct 12|Valley Courier|Ridge Weekly|The Hill Post|By Ann Lee|By Dana Moss|By Frank Ode|chevron_right/;
 
 function layoutOf(page) {
   return page.call((fixed) => {
@@ -305,6 +305,8 @@ test(
           // next to a price: nothing shows.
           assert.equal(await shownIn(page, "#price"), undefined);
           assert.doesNotMatch(sent(), LABEL_TEXT);
+          // A table's header cells are words, whatever their case.
+          assert.match(sent(), /^Elevation$/m);
           // The skip link is hidden: nothing is added for it.
           assert.equal(
             await page.call(

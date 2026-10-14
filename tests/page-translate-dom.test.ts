@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { parseHTML } from "linkedom";
+import { parsePage } from "./linkedom-page";
 import {
   walkParagraphs,
   type Paragraph,
@@ -12,9 +12,7 @@ import {
 } from "../src/page-translate/serialize";
 
 function paragraphsOf(html: string, options?: WalkOptions) {
-  const { document } = parseHTML(
-    `<!doctype html><html><body>${html}</body></html>`,
-  );
+  const { document } = parsePage(html);
   const found = [...walkParagraphs(document.body, options)].filter(
     (paragraph): paragraph is Paragraph => !!paragraph,
   );
@@ -155,8 +153,9 @@ test("paragraphs: the main content only, unless menus are translated too", () =>
     <div role="navigation"><a href="/b">Second section</a></div>
     <ul role="tablist"><li role="tab">Overview tab</li></ul>
     <div role="toolbar"><span>Toolbar label</span></div>
-    <div id="cookie-banner"><p>We use cookies here.</p></div>
-    <div aria-label="Cookie consent"><p>Accept the cookies?</p></div>
+    <div role="dialog" aria-label="Cookie consent"><p>We use cookies here.</p></div>
+    <div aria-modal="true"><p>Accept the cookies?</p></div>
+    <dialog open aria-label="Datenschutzeinstellungen"><p>Wir verwenden Cookies.</p></dialog>
     <aside id="sidebar"><p>Sidebar text</p></aside>
     <main>
       <article>
@@ -187,6 +186,7 @@ test("paragraphs: the main content only, unless menus are translated too", () =>
     "Toolbar label",
     "We use cookies here.",
     "Accept the cookies?",
+    "Wir verwenden Cookies.",
     "Sidebar text",
     "Article title",
     "The article's text, with a",
@@ -214,7 +214,8 @@ test("paragraphs: code, fields, hidden and no-translate content are skipped", ()
     <div contenteditable="true"><p>Being edited</p></div>
     <div aria-hidden="true"><p>Hidden from readers</p></div>
     <p hidden>Hidden paragraph</p>
-    <div class="highlight"><span>code view</span></div>
+    <div style="white-space: pre; font-family: ui-monospace, Menlo, monospace"><div><span>const view</span> = <span>"code"</span></div></div>
+    <div role="code">A code region</div>
     <script>var text = "script";</script>
     <style>p { color: red }</style>
     <p id="numbers">12 345</p>
@@ -222,16 +223,24 @@ test("paragraphs: code, fields, hidden and no-translate content are skipped", ()
     <p id="url">https://example.com/a/b</p>
     <p id="x">A</p>
     <oba-translation data-oba-translation>Our own translation</oba-translation>
-    <p id="kept">This one is translated.</p>`);
+    <p id="kept">This one is translated.</p>
+    <p style="white-space: pre-wrap">Verse kept in its lines.</p>
+    <p style="font-family: Courier, monospace">Prose in a typewriter font.</p>`);
+  // Code is told by its markup or by its look (text kept as written, in a
+  // monospace font), not by the class names of a site or library.
   assert.deepEqual(
     found.map((paragraph) => paragraph.source.text),
-    ["This one is translated."],
+    [
+      "This one is translated.",
+      "Verse kept in its lines.",
+      "Prose in a typewriter font.",
+    ],
   );
 });
 
 test("paragraphs: inline code stays an atom in the sentence, images and icons are left out", () => {
   const { found } = paragraphsOf(
-    `<p id="p">Run <code>npm test</code> and see <img src="a.png" alt="chart"> the<br>result<svg></svg>&nbsp;<i class="material-icons">chevron_right</i><span aria-hidden="true">›</span><span class="fa fa-star"></span>.</p>`,
+    `<p id="p">Run <code>npm test</code> and see <img src="a.png" alt="chart"> the<br>result<svg></svg>&nbsp;<i style='font-feature-settings: "liga"'>chevron_right</i><span aria-hidden="true">›</span><span class="star"></span><i>\ue5cc</i>.</p>`,
   );
   assert.deepEqual(found.map(summary), [
     {
@@ -333,9 +342,9 @@ test("restore: a translation with wrong markers is shown as plain text", () => {
 });
 
 test("serialize: the text of nodes, whitespace collapsed", () => {
-  const { document } = parseHTML(
-    `<!doctype html><html><body><p id="p">  Many
-      spaces   <em> inside </em>  here </p></body></html>`,
+  const { document } = parsePage(
+    `<p id="p">  Many
+      spaces   <em> inside </em>  here </p>`,
   );
   const source = serializeNodes([...document.getElementById("p")!.childNodes]);
   assert.equal(source.plain, "Many spaces inside here");
@@ -378,5 +387,38 @@ test("serialize: a space written as an element stays a space", () => {
   assert.equal(
     found[0].source.text,
     "See <b1>one</b1>, <b2>two</b2> and <b3>three</b3>.",
+  );
+});
+
+test("paragraphs: labels are told by markup, in any script", () => {
+  const { found } = paragraphsOf(`
+    <article>
+      <p>Privacy Policy</p>
+      <p><a href="/privacy">Privacy Policy</a></p>
+      <ul><li><span class="item"><a href="/outdoors">Sports &amp; Outdoors</a></span></li></ul>
+      <p>By <a href="/u/ann">Ann Lee</a>, <a href="/u/bo">Bo Chan</a> and <a href="/u/cy">Cy Dee</a></p>
+      <div class="meta"><span>Ann Lee</span> <time datetime="2026-10-14">Oct 14</time></div>
+      <p>3 new messages</p>
+      <p><a href="/inbox">3 new messages</a></p>
+      <div><div><a href="/u/ann">Ann</a></div> 以及 <div><a href="/u/bo">Bo</a></div></div>
+      <div><a href="/a">第一篇很长的新闻标题讲述海岸上的风暴</a> <a href="/b">第二篇很长的新闻标题讲述山区的降雪</a></div>
+      <div><a href="/t/rust">Rust</a> · <a href="/t/web">Web</a></div>
+      <div class="user"><img src="a.png" alt="" /><div><div>Kai Lee</div></div></div>
+      <div class="card">
+        <div><a>Valley Courier</a></div>
+        <a href="/story">Snow closes the northern pass for a second week</a>
+        <div><time datetime="2026-10-14">3 hours ago</time></div>
+      </div>
+    </article>`);
+  assert.deepEqual(
+    found.map((paragraph) => paragraph.source.plain),
+    [
+      "Privacy Policy",
+      "3 new messages",
+      // Two long headlines aren't a row of short labels: words are counted
+      // in scripts written without spaces too.
+      "第一篇很长的新闻标题讲述海岸上的风暴 第二篇很长的新闻标题讲述山区的降雪",
+      "Snow closes the northern pass for a second week",
+    ],
   );
 });

@@ -10,6 +10,7 @@ import {
   tokenizePlaceholders,
   type PlaceholderTree,
 } from "../shared/page-translate/placeholders";
+import { compact } from "../shared/text";
 import {
   isAtom,
   isCopiedInTranslation,
@@ -65,7 +66,7 @@ export function serializeNodes(nodes: Node[]): Serialized {
       marked += atomTag(id);
       tokens.push({ type: "atom", id });
       // Line breaks read as spaces; marks are read as they are.
-      if (element.tagName.toUpperCase() === "BR") plain += " ";
+      if (element.localName === "br") plain += " ";
       else if (!isAtom(element)) plain += text;
       return;
     }
@@ -92,8 +93,7 @@ export function serializeNodes(nodes: Node[]): Serialized {
     tokens.push({ type: "close", id });
   };
   nodes.forEach(visit);
-  const collapse = (text: string) => text.replace(/\s+/g, " ").trim();
-  plain = collapse(plain);
+  plain = compact(plain);
   // Text that already reads as markers goes as plain text.
   if (hasMarkerSyntax(plain))
     return {
@@ -102,7 +102,7 @@ export function serializeNodes(nodes: Node[]): Serialized {
       elements: new Map(),
       tokens: tokens.filter((token) => token.type === "text"),
     };
-  return { text: tidyMarkers(collapse(marked)), plain, elements, tokens };
+  return { text: tidyMarkers(compact(marked)), plain, elements, tokens };
 }
 
 // An element and the elements nested in it around the same content, as one

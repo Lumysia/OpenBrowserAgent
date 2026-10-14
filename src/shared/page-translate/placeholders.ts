@@ -3,6 +3,7 @@
 // that must not be translated (code, images, line breaks) become `{1}`.
 // Engines see no attributes: the page script rebuilds the elements from its
 // own copies. Dependency-free: the page script imports this module.
+import { compact } from "../text";
 
 export type PlaceholderToken =
   | { type: "text"; value: string }
@@ -114,4 +115,9 @@ export function stripPlaceholders(
           : "",
     )
     .join("");
+}
+
+// The text without markers, its white space collapsed.
+export function plainText(text: string) {
+  return compact(stripPlaceholders(text));
 }

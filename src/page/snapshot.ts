@@ -1,7 +1,8 @@
+import { HEADING_TAGS } from "../shared/dom-vocabulary";
+import { compact } from "../shared/text";
 import {
   children,
   clip,
-  compact,
   CONTAINER_ROLES,
   headingLevel,
   inViewport,
@@ -321,7 +322,7 @@ function controlStates(
 }
 
 // Inline content as text; controls inside appear with their refs.
-export function inlineText(
+function inlineText(
   node: Node,
   options: Pick<SnapshotOptions, "urls">,
 ): string {
@@ -425,12 +426,20 @@ function columnCounts(table: HTMLTableElement) {
 
 // Layout tables (cells holding tables or block structure) are walked as
 // ordinary containers instead of rows.
+const LAYOUT_CELL_SELECTOR = [
+  ...HEADING_TAGS,
+  "ul",
+  "ol",
+  "p",
+  "div > div",
+].join(",");
+
 function isDataTable(table: Element) {
   if (table.querySelector("table")) return false;
   const rows = (table as HTMLTableElement).rows;
   if (!rows?.length) return false;
   for (const cell of Array.from(rows[0].cells))
-    if (cell.querySelector("h1,h2,h3,h4,h5,h6,ul,ol,p,div > div")) return false;
+    if (cell.querySelector(LAYOUT_CELL_SELECTOR)) return false;
   return true;
 }
 

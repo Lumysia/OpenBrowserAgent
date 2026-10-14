@@ -1,4 +1,4 @@
-import { compact } from "./dom";
+import { compact } from "../shared/text";
 import { refFor, resolveRef } from "./refs";
 
 // `editPage` operations, run in the page in order; the batch stops at the

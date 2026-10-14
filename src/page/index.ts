@@ -17,15 +17,18 @@ import { renderLines, snapshotLines } from "./snapshot";
 
 // The in-page side of the page tools, installed once per document in the
 // extension's isolated world. Every method takes plain JSON and returns
-// plain JSON; `refFloor` keeps refs unique across documents and tabs.
+// plain JSON (or a promise of it); `refFloor` keeps refs unique across
+// documents and tabs.
 
 const PAGE_ITEM_CAP = 50;
 const FULL_PAGE_MAX_CHARS = 400_000;
+// A page taller than the window by this share scrolls (and says where).
+const SCROLLS_SHARE = 1.2;
 
 type Args = Record<string, unknown> & { refFloor?: number };
 
 function snapshot(args: Args) {
-  const capChars = Number(args.capChars) || 17_500;
+  const capChars = requiredNumber(args, "capChars");
   const urls = args.urls === true;
   const scope = String(args.scope || "auto");
   const page = (root: Element, itemCap?: number) =>
@@ -54,7 +57,7 @@ function snapshot(args: Args) {
 // scroll only exists after scrolling.
 function scrollNote() {
   const height = document.documentElement.scrollHeight;
-  if (height <= innerHeight * 1.2) return "";
+  if (height <= innerHeight * SCROLLS_SHARE) return "";
   const top = Math.round(scrollY);
   return `[Scrolled to y=${top}-${top + innerHeight} of ${height}px.]\n`;
 }
@@ -66,9 +69,18 @@ function viewport(body: Element, urls: boolean) {
   return `${header}\n${renderLines(snapshotLines(body, { mode: "viewport", urls }))}`;
 }
 
+// Limits come from the caller (the background's tool policy), never a
+// second default here.
+function requiredNumber(args: Args, name: string) {
+  const value = Number(args[name]);
+  if (!Number.isFinite(value)) throw new Error(`Missing ${name}`);
+  return value;
+}
+
 const methods: Record<string, (args: Args) => unknown> = {
   snapshot,
-  find: (args) => findLines(String(args.query || ""), Number(args.limit) || 30),
+  find: (args) =>
+    findLines(String(args.query || ""), requiredNumber(args, "limit")),
   markdown: () => ({
     text: pageMarkdown(document.body || document.documentElement),
   }),
@@ -84,7 +96,7 @@ const methods: Record<string, (args: Args) => unknown> = {
     prepareTrustedInput(String(args.ref || ""), args.clear !== false),
   editableText: (args) => editableText(String(args.ref || "")),
   inputPoint: (args) => inputPoint(String(args.ref || ""), args.focus === true),
-  searchResults: (args) => searchResults(Number(args.limit) || 10),
+  searchResults: (args) => searchResults(requiredNumber(args, "limit")),
 };
 
 export type PageAgentReply =
@@ -93,15 +105,17 @@ export type PageAgentReply =
 
 export function installPageAgent() {
   const scope = globalThis as typeof globalThis & {
-    __obaPageAgent?: (method: string, args: Args) => PageAgentReply;
+    __obaPageAgent?: (method: string, args: Args) => Promise<PageAgentReply>;
   };
   if (scope.__obaPageAgent) return;
-  scope.__obaPageAgent = (method, args) => {
+  // Methods may answer later (typing waits for the editor to render);
+  // executeScript passes the promise's value back.
+  scope.__obaPageAgent = async (method, args) => {
     raiseFloor(args?.refFloor);
     try {
       const run = methods[method];
       if (!run) throw new Error(`Unknown page method ${method}`);
-      const value = run(args || {});
+      const value = await run(args || {});
       return {
         ok: true,
         value,

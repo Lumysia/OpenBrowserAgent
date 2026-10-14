@@ -4,6 +4,7 @@ import {
   providerLabels,
   type ProviderId,
 } from "../shared/types";
+import { formatMessage } from "../shared/text";
 
 // The kind of API a provider speaks, in the UI language. Brand names stay
 // as they are; only words like "compatible" are translated.
@@ -38,5 +39,5 @@ export function providerConsentAgreement(
   host: string,
   messages: Messages["providerConsent"],
 ) {
-  return messages.agreement.replace("{host}", host);
+  return formatMessage(messages.agreement, { host });
 }

@@ -1,5 +1,9 @@
-/* Our surfaces floating over web pages (the smart bar, page notes): a
-   popover lifted well off the page, with a faint accent edge. */
+/* Our surfaces floating over web pages (the smart bar, page notes): above
+   everything the page draws (the top of its stacking order), a popover
+   lifted well off the page, with a faint accent edge. */
+:host {
+  --page-layer-top: 2147483647;
+}
 .page-surface {
   border: 1px solid color-mix(in oklab, var(--accent-strong) 14%, var(--border));
   border-radius: var(--radius);

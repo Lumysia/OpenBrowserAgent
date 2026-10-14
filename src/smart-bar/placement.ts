@@ -1,7 +1,11 @@
 import type { Rect } from "./selection";
 
-export const SMART_BAR_GAP = 8;
+// Between the bar and the selection, and between the bar and the window's
+// edges.
+const SMART_BAR_GAP = 8;
 export const SMART_BAR_MARGIN = 8;
+// Half a line of text in a field: the anchor at the mouse in a text control.
+const HALF_LINE_PX = 12;
 
 export type Placement = {
   left: number;
@@ -56,11 +60,10 @@ export function anchorRect(
 ): Rect {
   if (!controlLine || !pointOffset) return base;
   const y = base.top + pointOffset.y;
-  const halfLine = 12;
   return {
     left: base.left + pointOffset.x,
     right: base.left + pointOffset.x,
-    top: y - halfLine,
-    bottom: y + halfLine,
+    top: y - HALF_LINE_PX,
+    bottom: y + HALF_LINE_PX,
   };
 }

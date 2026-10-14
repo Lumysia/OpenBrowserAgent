@@ -14,10 +14,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { COPY_FEEDBACK_MS } from "../../shared/config";
 import { SIDE_PANEL_TASK } from "../../shared/side-panel-handoff";
-import {
-  SMART_BAR_ACTION,
-  SMART_BAR_MAX_TEXT_CHARS,
-} from "../../shared/smart-bar";
+import { SMART_BAR_MAX_TEXT_CHARS } from "../../shared/smart-bar";
 import { languageDetect } from "../../shared/language-detector";
 import type { SmartBarPageConfig } from "../../shared/smart-bar-protocol";
 import { Button, IconTooltip } from "../../ui/components";
@@ -35,6 +32,8 @@ import { readResultPieces, readSourcePieces } from "./read-aloud";
 import { smartBarOutput } from "./result-output";
 import type { SmartBarResult, SmartBarStore } from "./store";
 import { onTrusted } from "./trusted";
+import { ICON_SIZE } from "./icon-sizes";
+import { formatMessage } from "../../shared/text";
 
 // One detector for the frame, created when first needed.
 const detectLanguage = languageDetect();
@@ -112,7 +111,7 @@ export function SmartBarResultCard({
           aria-pressed={reading === which}
           onClick={onTrusted(() => read(which))}
         >
-          <ReadIcon size={15} />
+          <ReadIcon size={ICON_SIZE.control} />
         </Button>
       </IconTooltip>
     );
@@ -137,7 +136,7 @@ export function SmartBarResultCard({
     >
       <div className="smart-bar-result-header">
         <span className="smart-bar-result-title">
-          <Icon size={15} /> {t.actions[result.action]}
+          <Icon size={ICON_SIZE.control} /> {t.actions[result.action]}
         </span>
         <IconTooltip label={t.close} side="top">
           <Button
@@ -147,7 +146,7 @@ export function SmartBarResultCard({
             aria-label={t.close}
             onClick={onTrusted(store.hide)}
           >
-            <X size={15} />
+            <X size={ICON_SIZE.control} />
           </Button>
         </IconTooltip>
       </div>
@@ -178,22 +177,22 @@ export function SmartBarResultCard({
       )}
       {noVoice && (
         <p className="smart-bar-result-notice" role="status">
-          {t.noVoice.replace(
-            "{language}",
-            languageNames(noVoice, config.language),
-          )}
+          {formatMessage(t.noVoice, {
+            language: languageNames(noVoice, config.language),
+          })}
         </p>
       )}
       <div className="smart-bar-result-actions">
         {streaming && (
           <Button variant="outline" size="sm" onClick={onTrusted(store.stop)}>
-            <Square size={13} /> {t.stop}
+            <Square size={ICON_SIZE.label} /> {t.stop}
           </Button>
         )}
         {result.status === "consent" && (
           <>
             <Button size="sm" onClick={onTrusted(store.allowProvider)}>
-              <ShieldCheck size={13} /> {config.providerConsent.allow}
+              <ShieldCheck size={ICON_SIZE.label} />{" "}
+              {config.providerConsent.allow}
             </Button>
             <Button variant="outline" size="sm" onClick={onTrusted(store.hide)}>
               {config.providerConsent.decline}
@@ -206,20 +205,20 @@ export function SmartBarResultCard({
             size="sm"
             onClick={onTrusted(() => store.run(result.action))}
           >
-            <RotateCcw size={13} /> {t.retry}
+            <RotateCcw size={ICON_SIZE.label} /> {t.retry}
           </Button>
         )}
         {ready && output.write && isEditableSnapshot(snapshot) && !changed && (
           <>
             <Button size="sm" onClick={onTrusted(() => write("replace"))}>
-              <Replace size={13} /> {t.replace}
+              <Replace size={ICON_SIZE.label} /> {t.replace}
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={onTrusted(() => write("insertBelow"))}
             >
-              <ArrowDownToLine size={13} /> {t.insertBelow}
+              <ArrowDownToLine size={ICON_SIZE.label} /> {t.insertBelow}
             </Button>
           </>
         )}
@@ -237,7 +236,11 @@ export function SmartBarResultCard({
                 () => void copyText(output.copy).then(setCopied),
               )}
             >
-              {copied ? <Check size={15} /> : <Copy size={15} />}
+              {copied ? (
+                <Check size={ICON_SIZE.control} />
+              ) : (
+                <Copy size={ICON_SIZE.control} />
+              )}
             </Button>
           </IconTooltip>
         )}
@@ -261,7 +264,7 @@ export function SmartBarResultCard({
               store.hide();
             })}
           >
-            <PanelRightOpen size={15} />
+            <PanelRightOpen size={ICON_SIZE.control} />
           </Button>
         </IconTooltip>
       </div>
@@ -304,10 +307,9 @@ function resultMessage(
     case "error":
       return result.error || t.connectionLost;
     case "tooLong":
-      return t.selectionTooLong.replace(
-        "{max}",
-        new Intl.NumberFormat(language).format(SMART_BAR_MAX_TEXT_CHARS),
-      );
+      return formatMessage(t.selectionTooLong, {
+        max: new Intl.NumberFormat(language).format(SMART_BAR_MAX_TEXT_CHARS),
+      });
     case "streaming":
       return text || (result.thinking ? t.thinking : t.writing);
     default:

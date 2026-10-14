@@ -5,7 +5,7 @@
 // Swapping out puts back exactly what the page had.
 import {
   parsePlaceholders,
-  stripPlaceholders,
+  plainText,
   type PlaceholderTree,
 } from "../shared/page-translate/placeholders";
 import { originalText, restoreSwapped, setSwapped } from "./originals";
@@ -30,7 +30,7 @@ export function swapIn(source: Serialized, translation: string): Swap {
     // Markers that don't line up with the page's elements (an engine
     // reordered or dropped some): the whole translation as plain text in
     // the paragraph's first text outside them, the rest emptied.
-    const plain = stripPlaceholders(translation).replace(/\s+/g, " ").trim();
+    const plain = plainText(translation);
     const all = gaps.flatMap((gap) => gap.nodes);
     const first =
       gaps.find((gap) => !gap.depth && gap.nodes.some(hasText))?.nodes[0] ??

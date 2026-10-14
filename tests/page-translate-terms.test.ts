@@ -34,8 +34,8 @@ test("names: runs of capitalized words in a sentence", () => {
 });
 
 test("metadata: dates, relative times, numbers and names, in the page's language", () => {
-  const kinds = (texts: string[], language?: string) =>
-    texts.map((text) => metadataOf(text, language) ?? null);
+  const kinds = (texts: string[], language = "en", label = false) =>
+    texts.map((text) => metadataOf(text, { language, label }) ?? null);
   assert.deepEqual(
     kinds([
       "3 hours ago",
@@ -44,9 +44,7 @@ test("metadata: dates, relative times, numbers and names, in the page's language
       "Oct 7, 2026",
       "16°C",
       "1,234",
-      "CTV News",
-      "By Tyler Pager",
-      "11Alive.com",
+      "example.com",
       "Your briefing",
       "See more headlines & perspectives",
       "A storm hit the coast on Monday.",
@@ -59,19 +57,58 @@ test("metadata: dates, relative times, numbers and names, in the page's language
       "number",
       "number",
       "name",
-      "name",
-      "name",
       null,
       null,
       null,
     ],
   );
+  // Dates and relative times in other languages, from the browser's formats.
   assert.deepEqual(kinds(["il y a 3 heures", "mercredi 14 octobre"], "fr"), [
     "date",
     "date",
   ]);
-  // Not a language the browser knows: English formats.
-  assert.equal(metadataOf("2 days ago", "not a tag"), "date");
+  assert.deepEqual(kinds(["3小时前", "10月14日星期三"], "zh-CN"), [
+    "date",
+    "date",
+  ]);
+  // Not a language tag: the user's languages, never one assumed language.
+  assert.equal(
+    metadataOf("2 days ago", { language: "not a tag" }),
+    metadataOf("2 days ago", { language: undefined }),
+  );
+});
+
+test("metadata: names and counts only where the page sets the text apart as a label", () => {
+  const kinds = (texts: string[], label: boolean) =>
+    texts.map((text) => metadataOf(text, { language: "en", label }) ?? null);
+  // The same shapes are sentences in running text: a title-case phrase, a
+  // German noun, a number of things.
+  const shapes = [
+    "Ann Lee",
+    "By Ann Lee, Bo Chan and Cy Dee",
+    "Privacy Policy",
+    "Datenschutz",
+    "3 new messages",
+    "12 replies",
+  ];
+  assert.deepEqual(kinds(shapes, false), [null, null, null, null, null, null]);
+  assert.deepEqual(kinds(shapes, true), [
+    "name",
+    "name",
+    "name",
+    "name",
+    "number",
+    "number",
+  ]);
+  // A number in the language's compact notation is a statistic anywhere.
+  assert.deepEqual(
+    ["12.5K followers", "1.8M views", "3 new messages"].map(
+      (text) => metadataOf(text, { language: "en" }) ?? null,
+    ),
+    ["number", "number", null],
+  );
+  assert.equal(metadataOf("1.2万次观看", { language: "zh-CN" }), "number");
+  assert.equal(metadataOf("3,4 Mio. Aufrufe", { language: "de" }), "number");
 });
 
 test("metadata: a label with a number, numbers with footnote marks, rows of labels", () => {
@@ -80,37 +117,33 @@ test("metadata: a label with a number, numbers with footnote marks, rows of labe
       "Coordinates: 27°59′18″N 86°55′31″E / 27.98833°N 86.92528°E",
       "8,848.86 m (29,031.7 ft)[note 2]",
       "Updated: Oct 7, 2026",
-      "Ranked 1st",
       "Note: the pass closes in winter",
       "Chapter 5: Into the valley",
-      "new | past | comments | ask",
-      "126 points by ann 1 hour ago | hide | 29 comments",
+      "Chapter 5",
+      "Released 2024",
+      "Updated yesterday",
+      "home | archive | about",
+      "12 points by ann 1 hour ago | hide | 3 comments",
       "Home › News › World",
+      "一个关于海岸风暴的很长的新闻标题 | 独家",
       "A long headline about the storm on the coast | Exclusive",
-      "83.4k stars",
-      "+ 726 releases",
-      "and",
       "Ten tips for the pass",
-      "Modified 1 month ago",
-      "Viewed 2.0m times",
-    ].map((text) => metadataOf(text) ?? null),
+    ].map((text) => metadataOf(text, { language: "en" }) ?? null),
     [
       "number",
       "number",
       "number",
-      "number",
+      null,
+      null,
+      null,
       null,
       null,
       "name",
       "name",
       "name",
       null,
-      "number",
-      "number",
-      "name",
       null,
-      "number",
-      "number",
+      null,
     ],
   );
 });

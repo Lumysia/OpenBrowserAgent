@@ -38,13 +38,19 @@ test("the smart bar is off by default and stored settings are cleaned", () => {
 });
 
 test("site rules: a listed site covers subdomains; both lists survive a mode switch", () => {
-  const settings = { ...DEFAULT_SMART_BAR_SETTINGS, enabled: true };
-  assert.equal(isSmartBarAllowedOnHost(settings, "docs.google.com"), false);
-  assert.equal(isSmartBarAllowedOnHost(settings, "a.docs.google.com"), false);
-  assert.equal(isSmartBarAllowedOnHost(settings, "google.com"), true);
+  // No site is blocked by default.
+  assert.deepEqual(DEFAULT_SMART_BAR_SETTINGS.blockedHosts, []);
+  const settings = {
+    ...DEFAULT_SMART_BAR_SETTINGS,
+    enabled: true,
+    blockedHosts: ["docs.example.com"],
+  };
+  assert.equal(isSmartBarAllowedOnHost(settings, "docs.example.com"), false);
+  assert.equal(isSmartBarAllowedOnHost(settings, "a.docs.example.com"), false);
+  assert.equal(isSmartBarAllowedOnHost(settings, "example.com"), true);
 
   const hidden = hideSmartBarOnHost(settings, "news.example");
-  assert.deepEqual(hidden.blockedHosts, ["docs.google.com", "news.example"]);
+  assert.deepEqual(hidden.blockedHosts, ["docs.example.com", "news.example"]);
 
   const allow = {
     ...hidden,
@@ -52,7 +58,7 @@ test("site rules: a listed site covers subdomains; both lists survive a mode swi
     allowedHosts: ["example.org"],
   };
   assert.equal(isSmartBarAllowedOnHost(allow, "www.example.org"), true);
-  assert.equal(isSmartBarAllowedOnHost(allow, "google.com"), false);
+  assert.equal(isSmartBarAllowedOnHost(allow, "example.com"), false);
   const hiddenInAllow = hideSmartBarOnHost(allow, "www.example.org");
   assert.deepEqual(hiddenInAllow.allowedHosts, []);
   // The bar's menu names what that hides: the whole listed domain.
@@ -63,10 +69,14 @@ test("site rules: a listed site covers subdomains; both lists survive a mode swi
 
 test("the page script is registered only where the bar may run", () => {
   assert.equal(smartBarMatchPatterns(DEFAULT_SMART_BAR_SETTINGS), undefined);
-  const on = { ...DEFAULT_SMART_BAR_SETTINGS, enabled: true };
+  const on = {
+    ...DEFAULT_SMART_BAR_SETTINGS,
+    enabled: true,
+    blockedHosts: ["docs.example.com"],
+  };
   assert.deepEqual(smartBarMatchPatterns(on), {
     matches: ["http://*/*", "https://*/*"],
-    excludeMatches: ["*://*.docs.google.com/*"],
+    excludeMatches: ["*://*.docs.example.com/*"],
   });
   assert.equal(
     smartBarMatchPatterns({ ...on, siteMode: "allowList" }),
@@ -82,7 +92,7 @@ test("the page script is registered only where the bar may run", () => {
   );
   const blockMode = smartBarMatchPatterns(on)!;
   assert.equal(smartBarPatternsCover(blockMode, "example.org"), true);
-  assert.equal(smartBarPatternsCover(blockMode, "a.docs.google.com"), false);
+  assert.equal(smartBarPatternsCover(blockMode, "a.docs.example.com"), false);
   assert.deepEqual(
     smartBarActions({ ...on, disabledEditActions: ["translate"] }, true),
     ["improve", "fixGrammar", "ask"],

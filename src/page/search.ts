@@ -1,7 +1,10 @@
-import { compact } from "./dom";
+import { compact } from "../shared/text";
 import { snapshotLines } from "./snapshot";
 
+// Characters of a long line shown around a match, and of its role/ref
+// prefix at most.
 const LINE_WINDOW = 300;
+const PREFIX_MAX_CHARS = 40;
 
 // Lines of the whole page (no viewport, no item caps) that match `query`:
 // plain text (case-insensitive) or /regex/flags. `matchingLines` counts the
@@ -60,7 +63,7 @@ function toMatcher(query: string): Matcher {
 // Keeps the role/ref prefix and a window around the match.
 function window(text: string, index: number) {
   if (text.length <= LINE_WINDOW) return text;
-  const head = text.slice(0, text.indexOf(":") + 1 || 40);
+  const head = text.slice(0, text.indexOf(":") + 1 || PREFIX_MAX_CHARS);
   const start = Math.max(head.length, index - LINE_WINDOW / 2);
   return `${head} …${text.slice(start, start + LINE_WINDOW)}…`;
 }

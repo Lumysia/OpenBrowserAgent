@@ -1,11 +1,5 @@
-import {
-  children,
-  compact,
-  headingLevel,
-  isBlock,
-  isHidden,
-  roleOf,
-} from "./dom";
+import { compact } from "../shared/text";
+import { children, headingLevel, isBlock, isHidden, roleOf } from "./dom";
 
 // Readable page text as Markdown for `read`: headings, paragraphs, lists,
 // tables, quotes, code, and links with their URLs. Navigation chrome is left

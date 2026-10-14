@@ -1,28 +1,21 @@
 // DOM reading helpers for the in-page agent: visibility, ARIA-style roles,
 // accessible names and the inline/block structure the snapshot follows.
-
-const SKIPPED_TAGS = new Set([
-  "script",
-  "style",
-  "noscript",
-  "template",
-  "head",
-  "meta",
-  "link",
-  "title",
-  "base",
-]);
+import {
+  BLOCK_SELECTOR,
+  BLOCK_TAGS,
+  editingHost,
+  hasTag,
+  HEADING_TAGS,
+  NON_RENDERED_TAGS,
+  SECTIONING_SELECTOR,
+} from "../shared/dom-vocabulary";
+import { compact } from "../shared/text";
 
 const IMPLICIT_ROLE: Record<string, string> = {
   button: "button",
   select: "combobox",
   textarea: "textbox",
-  h1: "heading",
-  h2: "heading",
-  h3: "heading",
-  h4: "heading",
-  h5: "heading",
-  h6: "heading",
+  ...Object.fromEntries([...HEADING_TAGS].map((tag) => [tag, "heading"])),
   nav: "navigation",
   main: "main",
   aside: "complementary",
@@ -72,7 +65,7 @@ const INPUT_ROLE: Record<string, string> = {
   color: "button",
 };
 
-export const INTERACTIVE_ROLES = new Set([
+const INTERACTIVE_ROLES = new Set([
   "link",
   "button",
   "textbox",
@@ -118,16 +111,12 @@ export const CONTAINER_ROLES = new Set([
   "radiogroup",
 ]);
 
-export function compact(value: string | null | undefined) {
-  return (value || "").replace(/\s+/g, " ").trim();
-}
-
 export function clip(value: string, max: number) {
   return value.length > max ? `${value.slice(0, max - 1)}…` : value;
 }
 
 export function isSkipped(element: Element) {
-  return SKIPPED_TAGS.has(element.localName);
+  return hasTag(element, NON_RENDERED_TAGS);
 }
 
 // A parsed document that is not rendered (DOMParser) has no layout and no
@@ -178,11 +167,9 @@ export function roleOf(element: Element): string {
     return INPUT_ROLE[type] || "textbox";
   }
   if (tag === "header")
-    return element.closest("article,section,main,aside,nav") ? "" : "banner";
+    return element.closest(SECTIONING_SELECTOR) ? "" : "banner";
   if (tag === "footer")
-    return element.closest("article,section,main,aside,nav")
-      ? ""
-      : "contentinfo";
+    return element.closest(SECTIONING_SELECTOR) ? "" : "contentinfo";
   if (tag === "section")
     return element.hasAttribute("aria-label") ||
       element.hasAttribute("aria-labelledby")
@@ -194,14 +181,9 @@ export function roleOf(element: Element): string {
       ? "img"
       : "";
   if (IMPLICIT_ROLE[tag]) return IMPLICIT_ROLE[tag];
-  if ((element as HTMLElement).isContentEditable && isEditingHost(element))
-    return "textbox";
+  if (editingHost(element) === element) return "textbox";
   if (isClickable(element)) return "clickable";
   return "";
-}
-
-function isEditingHost(element: Element) {
-  return !element.parentElement?.isContentEditable;
 }
 
 function isClickable(element: Element) {
@@ -301,64 +283,13 @@ const BLOCK_DISPLAYS = new Set([
   "flow-root",
 ]);
 
-// Elements the default style sheet renders as blocks, for unrendered
-// documents.
-const BLOCK_TAGS = new Set([
-  "address",
-  "article",
-  "aside",
-  "blockquote",
-  "body",
-  "caption",
-  "center",
-  "dd",
-  "details",
-  "dialog",
-  "div",
-  "dl",
-  "dt",
-  "fieldset",
-  "figcaption",
-  "figure",
-  "footer",
-  "form",
-  "h1",
-  "h2",
-  "h3",
-  "h4",
-  "h5",
-  "h6",
-  "header",
-  "hgroup",
-  "hr",
-  "html",
-  "li",
-  "main",
-  "menu",
-  "nav",
-  "ol",
-  "p",
-  "pre",
-  "section",
-  "summary",
-  "table",
-  "tbody",
-  "td",
-  "tfoot",
-  "th",
-  "thead",
-  "tr",
-  "ul",
-]);
-
-const BLOCK_SELECTOR = [...BLOCK_TAGS].join(",");
-
 export function isBlock(element: Element) {
+  // Unrendered documents have no styles: the default style sheet's blocks.
   // Custom elements usually wrap blocks with a display set by script or
   // style sheet; without either, holding a block makes them one.
   if (!isRendered(element))
     return (
-      BLOCK_TAGS.has(element.localName) ||
+      hasTag(element, BLOCK_TAGS) ||
       (element.localName.includes("-") &&
         !!element.querySelector(BLOCK_SELECTOR))
     );

@@ -11,6 +11,15 @@ const CANDIDATES =
   "a[href],button,input,select,textarea,summary,[role],[contenteditable],[tabindex],[onclick]";
 const DIALOGS =
   "dialog[open],[role=dialog],[role=alertdialog],[aria-modal=true]";
+// A dialog that opened is shown as a short snapshot.
+const DIALOG_SNAPSHOT = { mode: "page", itemCap: 20, maxChars: 2_000 } as const;
+// A height change smaller than this is layout jitter, not content.
+const HEIGHT_CHANGE_PX = 40;
+// Characters of each new control's line, and controls named when gone.
+const LINE_MAX_CHARS = 300;
+const GONE_NAMED = 5;
+// New controls listed.
+const NEW_LISTED = 15;
 
 function visibleControls() {
   return new Set(
@@ -43,7 +52,7 @@ export function beginChanges() {
   };
 }
 
-export function collectChanges(limit = 15) {
+export function collectChanges() {
   // No baseline: the document was replaced since the batch began.
   if (!baseline) return { lines: [] as string[], fresh: true };
   const before = baseline;
@@ -53,13 +62,11 @@ export function collectChanges(limit = 15) {
     if (!before.dialogs.has(dialog)) {
       lines.push(
         "Dialog opened:",
-        renderLines(
-          snapshotLines(dialog, { mode: "page", itemCap: 20, maxChars: 2_000 }),
-        ),
+        renderLines(snapshotLines(dialog, DIALOG_SNAPSHOT)),
       );
     }
   const height = document.documentElement.scrollHeight;
-  if (Math.abs(height - before.height) > 40)
+  if (Math.abs(height - before.height) > HEIGHT_CHANGE_PX)
     lines.push(
       `Page height ${before.height} → ${height}px (content ${height > before.height ? "added" : "removed"}).`,
     );
@@ -71,23 +78,23 @@ export function collectChanges(limit = 15) {
   );
   if (added.length) {
     lines.push(`New in view (${added.length}):`);
-    for (const element of added.slice(0, limit))
+    for (const element of added.slice(0, NEW_LISTED))
       lines.push(
-        ...snapshotLines(element, { mode: "page", maxChars: 300 })
+        ...snapshotLines(element, { mode: "page", maxChars: LINE_MAX_CHARS })
           .lines.slice(0, 1)
           .map((line) => line.text),
       );
-    if (added.length > limit)
-      lines.push(`- … ${added.length - limit} more (take a snapshot)`);
+    if (added.length > NEW_LISTED)
+      lines.push(`- … ${added.length - NEW_LISTED} more (take a snapshot)`);
   }
   if (removed.length)
     lines.push(
-      `Gone (${removed.length}): ${removed.slice(0, 5).map(describe).join(", ")}${removed.length > 5 ? ", …" : ""}`,
+      `Gone (${removed.length}): ${removed.slice(0, GONE_NAMED).map(describe).join(", ")}${removed.length > GONE_NAMED ? ", …" : ""}`,
     );
   const active = document.activeElement;
   if (active && active !== document.body && isInteractive(active))
     lines.push(
-      `Focused: ${snapshotLines(active, { mode: "page", maxChars: 300 }).lines[0]?.text.slice(2) || describe(active)}`,
+      `Focused: ${snapshotLines(active, { mode: "page", maxChars: LINE_MAX_CHARS }).lines[0]?.text.slice(2) || describe(active)}`,
     );
   return { lines, fresh: false };
 }

@@ -3,7 +3,7 @@
 // writes each name one way across the page. Only the AI engine reads it;
 // the free engines translate each text on its own.
 import { nameRuns } from "../../shared/page-translate/names";
-import { stripPlaceholders } from "../../shared/page-translate/placeholders";
+import { plainText } from "../../shared/page-translate/placeholders";
 
 // An earlier translation on the page, as plain text.
 export type TermExample = { source: string; translation: string };
@@ -16,9 +16,6 @@ export const TERM_EXAMPLES_MAX_CHARS = 1_500;
 // Longer texts aren't kept as examples: names are in headlines and short
 // sentences, and a long one would crowd the others out.
 const EXAMPLE_MAX_CHARS = 300;
-
-const plain = (text: string) =>
-  stripPlaceholders(text).replace(/\s+/g, " ").trim();
 
 // Words in a run looked at for shorter names in it.
 const RUN_MAX_WORDS = 6;
@@ -44,8 +41,8 @@ export function createTermMemory() {
   return {
     remember(source: string, translation: string) {
       const example = {
-        source: plain(source),
-        translation: plain(translation),
+        source: plainText(source),
+        translation: plainText(translation),
       };
       if (
         !example.translation ||
@@ -62,7 +59,7 @@ export function createTermMemory() {
     },
     // Earlier translations with the names in `sources`, within the limits.
     examples(sources: string[]): TermExample[] {
-      const texts = new Set(sources.map(plain));
+      const texts = new Set(sources.map(plainText));
       const found = new Set<TermExample>();
       let chars = 0;
       for (const source of texts)

@@ -2,16 +2,23 @@
 // relative times ("3 hours ago"), numbers with units, names and lists of
 // names (sources, places, bylines). It is left as it is: its translation
 // would read the same or add nothing, and it sits in tight meta rows.
-// Dates and relative times are recognized in the page's own language, from
-// the browser's date formats.
+// Dates, relative times and compact numbers are recognized in the page's
+// own language, from the browser's date and number formats.
 import { isNameList } from "../shared/page-translate/names";
+import { compact, wordCount } from "../shared/text";
 
-type DateWords = {
+type LocaleWords = {
   // Relative times with their numbers as "#" ("# hours ago", "yesterday").
   relative: Set<string>;
-  // Month and weekday names and the day's periods ("am").
-  words: Set<string>;
+  // Month and weekday names and the day's periods ("am"), longest first.
+  words: string[];
+  // The suffixes of compact numbers ("k", "mio.", "万"), longest first.
+  compact: string[];
 };
+
+// Longest first: "mio." is found before "m", "september" before "sep".
+const longestFirst = (words: Set<string>) =>
+  [...words].sort((a, b) => b.length - a.length);
 
 const UNITS: Intl.RelativeTimeFormatUnit[] = [
   "second",
@@ -26,16 +33,16 @@ const UNITS: Intl.RelativeTimeFormatUnit[] = [
 const COUNTS = [1, 2, 3, 5, 11, 21, 100];
 const STYLES: Intl.RelativeTimeFormatStyle[] = ["long", "short", "narrow"];
 
-const cache = new Map<string, DateWords>();
+const cache = new Map<string, LocaleWords>();
 
 const normalize = (text: string) =>
-  text
-    .toLowerCase()
-    .replace(/\d+(?:[.,:]\d+)*/g, "#")
-    .replace(/\s+/g, " ")
-    .trim();
+  compact(text.toLowerCase().replace(/\d+(?:[.,:]\d+)*/g, "#"));
 
-function dateWords(language: string): DateWords {
+// Numbers that pick each compact suffix (thousands to trillions; scripts
+// that group by ten thousand have their own).
+const COMPACT_SAMPLES = [1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e12];
+
+function localeWords(language: string): LocaleWords {
   const known = cache.get(language);
   if (known) return known;
   const relative = new Set<string>();
@@ -68,7 +75,7 @@ function dateWords(language: string): DateWords {
     for (let index = 0; index < count; index++)
       for (const part of format.formatToParts(new Date(date(index))))
         if (part.type !== "literal" && /\p{L}/u.test(part.value))
-          words.add(part.value.toLowerCase().replace(/\.$/, ""));
+          words.add(normalize(part.value).replace(/\.$/, ""));
   };
   for (const width of ["long", "short"] as const) {
     sample({ month: width, timeZone: "UTC" }, 12, (index) =>
@@ -81,56 +88,146 @@ function dateWords(language: string): DateWords {
   sample({ hour: "numeric", hour12: true, timeZone: "UTC" }, 24, (index) =>
     Date.UTC(2024, 0, 1, index),
   );
-  const result = { relative, words };
+  // The words a whole date is written with ("de" in "14 de octubre", "年").
+  for (const dateStyle of ["full", "long", "medium"] as const)
+    for (const part of new Intl.DateTimeFormat(language, {
+      dateStyle,
+      timeZone: "UTC",
+    }).formatToParts(new Date(Date.UTC(2024, 9, 14))))
+      if (part.type === "literal")
+        for (const word of normalize(part.value).match(/\p{L}+/gu) || [])
+          words.add(word);
+  const suffixes = new Set<string>();
+  for (const compactDisplay of ["short", "long"] as const) {
+    const format = new Intl.NumberFormat(language, {
+      notation: "compact",
+      compactDisplay,
+    });
+    for (const sample of COMPACT_SAMPLES)
+      for (const part of format.formatToParts(sample))
+        if (part.type === "compact") suffixes.add(part.value.toLowerCase());
+  }
+  const result = {
+    relative,
+    words: longestFirst(words),
+    compact: longestFirst(suffixes),
+  };
   cache.set(language, result);
   return result;
 }
 
-function wordsOf(language: string) {
-  try {
-    return dateWords(language);
-  } catch {
-    // Not a language tag the browser knows.
-    return dateWords("en");
+// The languages the page's labels are read in: the page's own, when it
+// says; else the user's languages (pages without a language tag are most
+// often in one of them). Never one language assumed for every page.
+function languagesOf(language: string | undefined) {
+  if (language)
+    try {
+      return Intl.getCanonicalLocales(language);
+    } catch {
+      // Not a language tag: the user's languages.
+    }
+  return typeof navigator === "object" ? [...navigator.languages] : [];
+}
+
+const merged = new Map<string, LocaleWords>();
+
+function wordsOf(language: string | undefined): LocaleWords {
+  const languages = languagesOf(language);
+  const key = languages.join(",");
+  const known = merged.get(key);
+  if (known) return known;
+  const relative = new Set<string>();
+  const words = new Set<string>();
+  const compact = new Set<string>();
+  for (const tag of languages) {
+    let known: LocaleWords;
+    try {
+      known = localeWords(tag);
+    } catch {
+      // Not a language the browser knows.
+      continue;
+    }
+    known.relative.forEach((word) => relative.add(word));
+    known.words.forEach((word) => words.add(word));
+    known.compact.forEach((word) => compact.add(word));
   }
+  const result = {
+    relative,
+    words: longestFirst(words),
+    compact: longestFirst(compact),
+  };
+  merged.set(key, result);
+  return result;
 }
 
 // Letters in a row that count as a unit after a number ("16°C", "7 km").
 const UNIT_MAX_LETTERS = 3;
+// Words naming what a count counts ("12 replies", "3 new messages").
+const COUNTED_MAX_WORDS = 2;
 
 export type Metadata = "name" | "number" | "date";
+
+export type MetadataContext = {
+  // The language the text is written in, from the page's markup.
+  language?: string;
+  // The page sets the text apart as a label: the whole text of a link, a
+  // citation or author, or a short row with a date. Rules that read the
+  // text's shape alone (a capitalized name, a number of things) apply only
+  // then: in running text the same shapes are sentences.
+  label?: boolean;
+};
 
 // What kind of label the text is, if it is one.
 export function metadataOf(
   text: string,
-  language = "en",
+  { language, label = false }: MetadataContext = {},
 ): Metadata | undefined {
-  const trimmed = text.replace(NOTE_MARK, " ").replace(/\s+/g, " ").trim();
+  const trimmed = compact(text.replace(NOTE_MARK, " "));
   if (!trimmed) return undefined;
-  if (isDate(trimmed, language)) return "date";
-  if (isNumber(trimmed) || COUNT.test(trimmed)) return "number";
-  // A lone short lowercase word is a joint between labels ("and" between
-  // two names), not text of its own.
-  if (/^\p{Ll}{1,3}$/u.test(trimmed)) return "name";
-  if (isNameList(trimmed) || SITE_NAME.test(trimmed) || isLabelRow(trimmed))
-    return "name";
+  const words = wordsOf(language);
+  if (isDate(trimmed, words)) return "date";
+  const count = countOf(trimmed, words);
+  if (isNumber(trimmed) || count === "compact" || (label && count))
+    return "number";
+  if (SITE_NAME.test(trimmed) || isLabelRow(trimmed)) return "name";
+  if (label && isNameList(trimmed)) return "name";
   // A label for a value of that kind ("Coordinates: 27°59′N 86°55′E"): the
   // label alone adds little and the value stays as it is.
-  const labeled = LABELED.exec(trimmed) ?? WORD_LABELED.exec(trimmed);
-  const value = labeled?.[1];
+  const value = LABELED.exec(trimmed)?.[1];
   if (
     value &&
-    (isNumber(value) || COUNT.test(value) || isDate(value, language))
+    (isNumber(value) || countOf(value, words) || isDate(value, words))
   )
     return "number";
   return undefined;
 }
 
-// A count of something ("83.4k stars", "+ 726 releases", "1.8B views").
-const COUNT = /^[+~]? ?\d[\d.,]*[kmb]?\+? \p{L}+(?: \p{L}+)?$/iu;
+// A number of things ("12 replies", "+ 726 releases", "1.8B views"):
+// `compact` when the number is written in the language's compact notation
+// (its own sign of a statistic), `plain` otherwise.
+const LEADING_NUMBER = /^[+~]? ?\d[\d.,]*/u;
+
+function countOf(trimmed: string, words: LocaleWords) {
+  const number = LEADING_NUMBER.exec(trimmed);
+  if (!number) return undefined;
+  let rest = trimmed.slice(number[0].length).trimStart();
+  const lower = rest.toLowerCase();
+  const suffix = words.compact.find(
+    (candidate) =>
+      lower.startsWith(candidate) &&
+      // Scripts with case write the suffix as a word of its own.
+      (!/[\p{Lu}\p{Ll}]/u.test(candidate) ||
+        !/\p{L}/u.test(lower.charAt(candidate.length))),
+  );
+  if (suffix) rest = rest.slice(suffix.length);
+  rest = rest.replace(/^\+/, "").trim();
+  if (!/^[\p{L}\p{M}][\p{L}\p{M} ]*$/u.test(rest)) return undefined;
+  if (wordCount(rest) > COUNTED_MAX_WORDS) return undefined;
+  return suffix ? "compact" : "plain";
+}
 
 // Short labels between separators: a menu or meta row written as text
-// ("new | past | comments", "126 points by ann | hide | 29 comments",
+// ("new | past | comments", "12 points by ann | hide | 3 comments",
 // breadcrumbs "Home › News").
 const ROW_SEPARATOR = /\s[|·•›»]\s/u;
 // Words in a label on average, and in the longest (a byline with a time).
@@ -139,7 +236,7 @@ const ROW_LONGEST_WORDS = 8;
 
 function isLabelRow(trimmed: string) {
   const parts = trimmed.split(ROW_SEPARATOR);
-  const words = parts.map((part) => part.split(" ").length);
+  const words = parts.map(wordCount);
   return (
     parts.length > 1 &&
     Math.max(...words) <= ROW_LONGEST_WORDS &&
@@ -150,9 +247,7 @@ function isLabelRow(trimmed: string) {
 
 // Footnote marks ("[2]", "[note 2]", "[a]") aren't part of what the text is.
 const NOTE_MARK = /\[[^\][\s][^\][]{0,10}\]/gu;
-// "Label: value", the label at most three words; or a one-word label
-// without the colon ("Modified 1 month ago", "Viewed 2.0m times").
-const WORD_LABELED = /^\p{L}+ (.+)$/u;
+// "Label: value", the label at most three words.
 const LABELED = /^[^\s:：]+(?: [^\s:：]+){0,2} ?[:：] ?(.+)$/u;
 
 // Whether a translation only changed the labels of the source's values and
@@ -176,7 +271,7 @@ export function addsLittle(source: string, translation: string) {
 const LABELS_ONLY =
   /^(?: ?(?:[^\s:：()（）]+(?: [^\s:：()（）]+){0,2} ?[:：]|[(（][^()（）]{1,30}[)）]))+$/u;
 
-// A site's name written as its address ("11Alive.com", "news.example.org").
+// A site's name written as its address ("Example.com", "news.example.org").
 const SITE_NAME = /^[\p{L}\d-]+(\.[\p{L}\d-]+)*\.\p{L}{2,}$/u;
 
 function isNumber(trimmed: string) {
@@ -189,15 +284,24 @@ function isNumber(trimmed: string) {
   );
 }
 
-function isDate(trimmed: string, language: string) {
-  const { relative, words } = wordsOf(language || "en");
+function isDate(trimmed: string, { relative, words }: LocaleWords) {
   const normalized = normalize(trimmed);
   if (relative.has(normalized)) return true;
-  // A date: numbers, month and weekday names, separators.
+  // A date: numbers, month and weekday names, separators. Scripts written
+  // without spaces join them ("#月#日星期三").
   const parts = normalized.split(/[\s,./\-–—:]+/).filter(Boolean);
   return (
-    parts.length > 0 &&
     parts.some((part) => part !== "#") &&
-    parts.every((part) => part === "#" || words.has(part.replace(/\.$/, "")))
+    parts.every((part) => isDatePart(part.replace(/\.$/, ""), words))
   );
+}
+
+// In scripts with case a word is a part of its own; scripts without case
+// and spaces join numbers and words in one part ("#月#日星期三").
+function isDatePart(part: string, words: string[]) {
+  if (part === "#" || words.includes(part)) return true;
+  if (/[\p{Lu}\p{Ll}]/u.test(part)) return false;
+  let rest = part;
+  for (const word of words) rest = rest.split(word).join("");
+  return /^#*$/.test(rest);
 }

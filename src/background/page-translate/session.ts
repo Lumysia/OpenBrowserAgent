@@ -31,6 +31,7 @@ import {
 } from "./engine-chain";
 import { EngineError, resolveEngine, type TranslationEngine } from "./engines";
 import { createTermMemory, type TermMemory } from "./term-memory";
+import { formatMessage } from "../../shared/text";
 
 type Post = (event: PageTranslateEvent) => void;
 
@@ -315,9 +316,10 @@ function serviceMessage(
   const { freeServices } = getPageTranslateMessages(language);
   const name = (kind: PageTranslateEngine) =>
     freeServices[kind as keyof typeof freeServices] ?? kind;
-  return template
-    .replaceAll("{engine}", name(engine))
-    .replaceAll("{fallback}", name(fallback));
+  return formatMessage(template, {
+    engine: name(engine),
+    fallback: name(fallback),
+  });
 }
 
 function displayName(tag: string, language: string) {

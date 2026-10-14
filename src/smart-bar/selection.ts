@@ -1,5 +1,6 @@
 // Reads what the user selected, at the moment the bar opens. Actions use this
 // snapshot rather than the live selection, which clicks and focus can change.
+import { editingHost } from "../shared/dom-vocabulary";
 
 export type TextControl = HTMLInputElement | HTMLTextAreaElement;
 
@@ -80,6 +81,10 @@ export function readSelection(
   const text = selection.toString();
   if (!text.trim()) return undefined;
   const range = selection.getRangeAt(0).cloneRange();
+  // Text the page doesn't show (a hidden copy kept for the clipboard or
+  // assistive technology, while the page draws its text on a canvas):
+  // nothing to point the bar at.
+  if (!isShown(range)) return undefined;
   // A click on a button or link with an old selection elsewhere.
   if (
     target instanceof Element &&
@@ -104,8 +109,25 @@ export function readSelection(
   );
 }
 
+// A selection is shown when some of its text is drawn in the window.
+const SHOWN_MIN_PX = 2;
+
+function isShown(range: Range) {
+  return Array.from(range.getClientRects()).some(
+    (rect) =>
+      rect.width >= SHOWN_MIN_PX &&
+      rect.height >= SHOWN_MIN_PX &&
+      rect.bottom > 0 &&
+      rect.right > 0 &&
+      rect.top < innerHeight &&
+      rect.left < innerWidth,
+  );
+}
+
 // Characters of context on each side of the selection.
-export const CONTEXT_CHARS = 500;
+const CONTEXT_CHARS = 500;
+// Characters of the page's title sent along.
+const PAGE_TITLE_MAX_CHARS = 200;
 
 // Text the user can't see on the page. A textarea's text node is its default
 // value, not what it holds now.
@@ -183,7 +205,8 @@ function pageContext(before: string, after: string): SelectionContext {
   return {
     before: squeeze(before),
     after: squeeze(after),
-    pageTitle: document.title.trim().slice(0, 200) || undefined,
+    pageTitle:
+      document.title.trim().slice(0, PAGE_TITLE_MAX_CHARS) || undefined,
   };
 }
 
@@ -264,13 +287,4 @@ function isTextControl(element: Element | null): element is TextControl {
     element instanceof HTMLInputElement &&
     TEXT_INPUT_TYPES.has(element.type || "text")
   );
-}
-
-function editingHost(node: Node) {
-  const start = node instanceof Element ? node : node.parentElement;
-  if (!(start instanceof HTMLElement) || !start.isContentEditable)
-    return undefined;
-  let host: HTMLElement = start;
-  while (host.parentElement?.isContentEditable) host = host.parentElement;
-  return host;
 }
