@@ -135,3 +135,73 @@ test("a settings rename validates the draft's original file before changing any 
   assert.ok(!result.ok);
   assert.deepEqual((await storage.agentWorkspaces.get())[0], current);
 });
+
+test("write receipts say what changed", async () => {
+  installBrowser();
+  const workspace = createWorkspace("fixture");
+  await storage.agentWorkspaces.replace([workspace]);
+
+  const created = await call(workspace, {
+    action: "write",
+    path: "a.md",
+    content: "one two one",
+  });
+  assert.equal(created.text, "Created a.md (0 → 11 chars).");
+  assert.deepEqual(created.details, {
+    action: "write",
+    path: "a.md",
+    created: true,
+    charsBefore: 0,
+    charsAfter: 11,
+  });
+
+  const overwritten = await call(workspace, {
+    action: "write",
+    path: "a.md",
+    content: "one two one one",
+  });
+  assert.equal(overwritten.text, "Overwrote a.md (11 → 15 chars).");
+  assert.equal(overwritten.details?.created, false);
+
+  const replaced = await call(workspace, {
+    action: "replace",
+    path: "a.md",
+    find: "one",
+    content: "three",
+  });
+  assert.equal(
+    replaced.text,
+    "Replaced the first of 3 occurrences of the find text in a.md (15 → 17 chars). The others are unchanged; replace again with more context to change them.",
+  );
+  assert.deepEqual(replaced.details, {
+    action: "replace",
+    path: "a.md",
+    occurrences: 3,
+    replaced: 1,
+    charsBefore: 15,
+    charsAfter: 17,
+  });
+  assert.equal(file(workspace, "a.md"), "three two one one");
+
+  const appended = await call(workspace, {
+    action: "append",
+    path: "a.md",
+    content: "four",
+  });
+  assert.equal(
+    appended.text,
+    "Appended 4 chars to a.md on a new line (a newline was added before the text) (17 → 22 chars).",
+  );
+  assert.equal(appended.details?.newlineAdded, true);
+  const own = await call(workspace, {
+    action: "append",
+    path: "a.md",
+    content: "\nfive",
+  });
+  assert.equal(own.details?.newlineAdded, false);
+  assert.equal(file(workspace, "a.md"), "three two one one\nfour\nfive");
+
+  const deleted = await call(workspace, { action: "delete", path: "a.md" });
+  assert.equal(deleted.text, "Deleted a.md (27 chars).");
+  assert.equal(deleted.details?.deleted, true);
+});

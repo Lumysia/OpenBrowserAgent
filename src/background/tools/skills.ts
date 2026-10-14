@@ -22,7 +22,7 @@ export const skillsTool: ToolDefinition = {
   onDemand: true,
   summary: "Create or edit skills (reusable instructions)",
   description:
-    "Create a skill (name in kebab-case, description: when to use it, content: the SKILL.md body) or change one: write (name, path, content) replaces or adds a file; patch (name, path, find, content) replaces one exact text. Changing a built-in skill saves the user's own copy, which replaces it. Only save broadly reusable workflows; never secrets or one-off details.",
+    "Create a skill (name in kebab-case, description: when to use it, content: the SKILL.md body) or change one: write (name, path, content) replaces or adds a file; patch (name, path, find, content) replaces one exact text. Changing a built-in skill saves the user's own copy, which replaces it. This tool cannot delete or rename a skill: the user does that in Settings → Skills, so tell them where. Only save broadly reusable workflows; never secrets or one-off details.",
   parameters: schema(
     {
       action: { type: "string", enum: ["create", "write", "patch"] },

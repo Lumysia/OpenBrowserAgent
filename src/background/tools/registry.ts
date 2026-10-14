@@ -53,41 +53,82 @@ export function createToolSet(run: RunContext, loaded: string[] = []) {
     .filter((tool) => tool.available?.(run) ?? true);
   const core = allowed.filter((tool) => !tool.onDemand);
   const onDemand = allowed.filter((tool) => tool.onDemand);
-  const added: ToolDefinition[] = [];
+  const loadedTools: ToolDefinition[] = [];
 
   function load(names: string[], query: string) {
     const matches = onDemand.filter(
       (tool) => names.includes(tool.name) || matchesQuery(tool, query),
     );
-    for (const tool of matches) if (!added.includes(tool)) added.push(tool);
-    return matches;
+    const added = matches.filter((tool) => !loadedTools.includes(tool));
+    loadedTools.push(...added);
+    return { matches, added };
   }
   load(loaded, "");
 
+  // The index lists only tools not loaded yet: loaded ones are declared and
+  // callable already. It is fixed for the run, so the declared prefix stays
+  // cached; a tool loaded later in this run stays listed until the next turn.
+  const loadable = onDemand.filter((tool) => !loadedTools.includes(tool));
   const toolSearch: ToolDefinition = {
     name: TOOL_NAME.toolSearch,
     readOnly: true,
     summary: "Load more tools",
-    description: `Load more tools by name and/or a search query, then call them in your next step. Available:\n${onDemand
-      .map((tool) => `- ${tool.name}: ${tool.summary}`)
-      .join("\n")}`,
+    description: loadable.length
+      ? `Load more tools by name and/or a search query, then call them in your next step. Loadable:\n${loadable
+          .map((tool) => `- ${tool.name}: ${tool.summary}`)
+          .join("\n")}`
+      : "Load more tools by name and/or a search query. Every on-demand tool is loaded already; call them directly.",
     parameters: schema({
       names: { type: "array", items: { type: "string" } },
       query: { type: "string" },
     }),
     async execute(input) {
       const names = Array.isArray(input.names) ? input.names.map(String) : [];
-      const matches = load(names, String(input.query || ""));
-      if (!matches.length)
+      const { matches, added } = load(names, String(input.query || ""));
+      const coreNames = names.filter((name) =>
+        core.some((tool) => tool.name === name),
+      );
+      const newlyLoaded = added.map((tool) => tool.name);
+      const alreadyAvailable = [
+        ...coreNames,
+        ...matches
+          .filter((tool) => !added.includes(tool))
+          .map((tool) => tool.name),
+      ];
+      const notFound = names.filter(
+        (name) =>
+          !coreNames.includes(name) &&
+          !matches.some((tool) => tool.name === name),
+      );
+      const loadedNames = matches.map((tool) => tool.name);
+      const details = {
+        loaded: loadedNames,
+        newlyLoaded,
+        alreadyAvailable,
+        notFound,
+      };
+      if (!loadedNames.length && !coreNames.length)
         return {
-          text: `Nothing matched. Available: ${onDemand.map((tool) => tool.name).join(", ")}.`,
-          details: { loaded: [] },
+          text: `Nothing matched. Loadable: ${
+            onDemand
+              .filter((tool) => !loadedTools.includes(tool))
+              .map((tool) => tool.name)
+              .join(", ") || "none, every tool is loaded already"
+          }.`,
+          details,
           isError: true,
         };
-      const loadedNames = matches.map((tool) => tool.name);
       return {
-        text: `Loaded ${loadedNames.join(", ")}. Call them directly now.`,
-        details: { loaded: loadedNames },
+        text: [
+          newlyLoaded.length && `Newly loaded: ${newlyLoaded.join(", ")}.`,
+          alreadyAvailable.length &&
+            `Already available: ${alreadyAvailable.join(", ")}.`,
+          notFound.length && `Not found: ${notFound.join(", ")}.`,
+          "Call tools directly by these exact names.",
+        ]
+          .filter(Boolean)
+          .join(" "),
+        details,
       };
     },
   };
@@ -96,10 +137,10 @@ export function createToolSet(run: RunContext, loaded: string[] = []) {
   return {
     // Declared from the first request of every run.
     base: () => base,
-    declared: () => [...base, ...added],
+    declared: () => [...base, ...loadedTools],
     find: (name: string) =>
       base.find((tool) => tool.name === name) ||
-      added.find((tool) => tool.name === name),
+      loadedTools.find((tool) => tool.name === name),
     onDemand,
   };
 }

@@ -7,6 +7,9 @@ export const CONTEXT_POLICY = {
   toolOutputCapTokens: 5_000,
   // `read` returns slices of at most this size.
   readMaxTokens: 5_000,
+  // A skill is an instruction set to follow whole, so `read` returns a
+  // skill file whole up to this size (four times a normal slice).
+  skillReadMaxTokens: 20_000,
   // The newest tool outputs, up to this budget, are never masked.
   protectRecentToolTokens: { ratio: 0.3, max: 40_000 },
   // Older outputs are masked together once at least this much can go, so

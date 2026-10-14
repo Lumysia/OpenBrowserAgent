@@ -53,3 +53,10 @@ test("skill patches keep literal replacement tokens and later edits to other fil
   );
   assert.deepEqual(run.skills, stored);
 });
+
+test("the skills tool says deleting and renaming happen in Settings", () => {
+  assert.match(
+    skillsTool.description,
+    /cannot delete or rename a skill: the user does that in Settings → Skills, so tell them where/,
+  );
+});

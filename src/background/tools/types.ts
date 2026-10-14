@@ -79,6 +79,9 @@ export type ToolDefinition = {
   // Read-only calls run in parallel and an identical repeat is answered
   // with a reference to the earlier output.
   readOnly?: boolean;
+  // The tool bounds its own output (read returns ranges and says where to
+  // continue), so the general output cap does not cut it again.
+  boundedOutput?: boolean;
   // Runs in parallel with other parallel calls without being read-only.
   parallel?: boolean;
   // Long arguments (such as translated text) shrink once the call is old.

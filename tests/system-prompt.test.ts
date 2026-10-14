@@ -58,3 +58,18 @@ test("agents without page tools get no extract rule", () => {
   });
   assert.doesNotMatch(system, /call extract first/);
 });
+
+test("the system prompt cites only ids given after Cite as", () => {
+  const system = createSystemPrompt({
+    agent: DEFAULT_AGENT,
+    skills: [],
+    bridges: 0,
+  });
+  const line = system
+    .split("\n")
+    .find((item) => item.includes("[[cite:source_id]]"));
+  assert.equal(
+    line,
+    "- Never invent URLs or facts. Cite facts from sources as [[cite:source_id]], using only ids a tool result gave after \"Cite as:\" (or listed in <sources>); never make up an id. Workspace files, skills and the user's own messages are not sources: don't cite them.",
+  );
+});

@@ -207,6 +207,7 @@ export async function runPiAgent(options: {
               toolName: tool.name,
               input,
               text: outcome.text,
+              bounded: !!tool.boundedOutput,
               repeatable:
                 !!tool.readOnly &&
                 !outcome.isError &&

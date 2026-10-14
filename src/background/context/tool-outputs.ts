@@ -23,6 +23,8 @@ type ToolCallOutput = {
   // Read-only calls: an identical repeat with identical output is
   // answered with a reference to the earlier output.
   repeatable: boolean;
+  // The tool bounded its output itself: it is not capped again.
+  bounded?: boolean;
 };
 
 // Full text of every tool output of a run, keyed by tool call id. Outputs
@@ -79,6 +81,7 @@ export function createToolOutputs(chatId: string, store: ArtifactStore) {
     input,
     text,
     repeatable,
+    bounded,
   }: ToolCallOutput) {
     outputs.set(toolCallId, {
       label: outputLabel(toolName, input, text),
@@ -93,7 +96,10 @@ export function createToolOutputs(chatId: string, store: ArtifactStore) {
         return `Unchanged since ${handle}: this call returned exactly the same output as the earlier identical call, so the page or data has not changed. Use read with source "${handle}" to see it again.`;
       }
     }
-    if (estimateTextTokens(text) <= CONTEXT_POLICY.toolOutputCapTokens)
+    if (
+      bounded ||
+      estimateTextTokens(text) <= CONTEXT_POLICY.toolOutputCapTokens
+    )
       return text;
     const handle = await persist(toolCallId);
     // Cut at a line end so no line (and no ref) is shown half.

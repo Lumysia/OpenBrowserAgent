@@ -15,6 +15,7 @@ export const runScriptTool: ToolDefinition = {
   name: TOOL_NAME.runScript,
   group: "scripts",
   onDemand: true,
+  boundedOutput: true,
   available,
   summary: "Run JavaScript in a page",
   description:

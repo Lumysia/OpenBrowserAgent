@@ -408,7 +408,10 @@ test(
           const [loaded] = await fixture.run([
             { name: "toolSearch", args: { names: ["runScript"] } },
           ]);
-          assert.equal(loaded, "Loaded runScript. Call them directly now.");
+          assert.equal(
+            loaded,
+            "Newly loaded: runScript. Call tools directly by these exact names.",
+          );
           const before = fixture.requests[0].tools.map(
             (tool) => tool.function.name,
           );
