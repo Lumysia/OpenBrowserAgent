@@ -6,6 +6,7 @@ What changed in each release. The release workflow publishes the section for the
 
 - The side panel has one background from top to bottom; the line and the separate band behind the message box are gone.
 - The send button no longer flickers when the pointer moves over it.
+- After "Translate this page", the next pages you open in the same tab are translated too, on any site, until you reload the tab or choose "Show original".
 
 ## 0.2.0-beta.8 - 2026-10-14
 
