@@ -10,6 +10,7 @@ CE QUE VOUS POUVEZ FAIRE
 • Modifier une page directement, par exemple pour la traduire, et prendre des captures d’écran ou télécharger des fichiers.
 • Sélectionner du texte sur n’importe quelle page pour lancer des actions rapides (expliquer, traduire, améliorer la formulation, lire à voix haute). Cette fonction reste désactivée tant que vous ne l’activez pas, et vous pouvez la limiter aux sites de votre choix.
 • Faire un clic droit sur une page, un lien ou du texte sélectionné pour poser une question, résumer, rechercher sur le web ou copier la page en Markdown. Vous pouvez désactiver le menu ou chacun de ses éléments.
+• Traduire une page entière depuis le menu contextuel, avec la traduction sous chaque paragraphe, puis revenir avec « Afficher l’original ». Avec votre modèle d’IA, le traducteur intégré du navigateur s’il en a un, ou la traduction gratuite de Google ou de Microsoft (le texte de la page leur est alors envoyé).
 
 AGENTS ET COMPÉTENCES
 

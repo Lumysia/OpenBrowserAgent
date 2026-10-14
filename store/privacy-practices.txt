@@ -9,7 +9,7 @@ OpenBrowserAgent is an AI assistant in the browser's side panel. The user connec
 PERMISSION JUSTIFICATIONS (same order as the store page; each under 1000 characters)
 
 == scripting justification ==
-Injects the extension's own bundled scripts into the page the user is working on, to read the page text, let the user pick an element, and perform the clicks, typing and scrolling the agent's task requires. No code is fetched from a server.
+Injects the extension's own bundled scripts into the page the user is working on, to read the page text, let the user pick an element, show a page translation the user asked for, and perform the clicks, typing and scrolling the agent's task requires. No code is fetched from a server.
 
 == tabs justification ==
 The agent lists, opens, focuses, reloads, navigates and closes tabs when the user asks it to work across pages, and the user can attach open tabs (title and URL) to a chat as context.
@@ -30,7 +30,7 @@ While an extension page is open, checks the user's own sync storage for changes 
 Removes the Origin header from the extension's own requests to an MCP server, only when the user turns on "Send without browser Origin" for that server, because some servers reject browser-origin requests. Each rule matches only that server's URL and only this extension's requests. Other sites and requests are never modified.
 
 == contextMenus justification ==
-Adds an OpenBrowserAgent submenu to the right-click menu (the user can turn it off): ask about or summarize the page, search the web about it or the selected text, summarize a linked page, or copy the page as Markdown. Items only open the side panel or copy to the clipboard when the user picks them.
+Adds an OpenBrowserAgent submenu to the right-click menu (the user can turn it off): ask about or summarize the page, translate the page (and show the original again), search the web about it or the selected text, summarize a linked page, or copy the page as Markdown. Items only open the side panel, translate the page or copy to the clipboard when the user picks them.
 
 == nativeMessaging justification ==
 Optional local execution bridge: connects to a separately installed helper on the user's computer, only after the user installs it and enables it for an agent.
@@ -51,7 +51,7 @@ Attached only for the duration of specific actions: trusted mouse and keyboard i
 Converts fetched web page HTML into Markdown text with the browser's DOM parser, which the background service worker lacks. The offscreen document only parses HTML; it shows nothing and loads no remote code.
 
 == Host permission justification ==
-The user can ask the agent to read or act on any site they visit, and can connect any model provider, MCP server or WebDAV sync server by URL. These cannot be known in advance, so access to all URLs is needed. The extension acts on a page only when the user starts a task or attaches the page.
+The user can ask the agent to read or act on any site they visit, translate any page, and connect any model provider, MCP server or WebDAV sync server by URL. These cannot be known in advance, so access to all URLs is needed. The extension acts on a page only when the user starts a task, attaches the page or translates it.
 
 
 REMOTE CODE
@@ -63,7 +63,7 @@ All JavaScript is bundled in the package. The extension does not load or eval sc
 
 DATA USAGE: what to tick
 ------------------------
-OpenBrowserAgent has no server of its own, but it does send these kinds of data off the device to services the user configures (their AI provider, MCP servers, sync storage). Google counts reading or capturing page content as "handling" user data, so declare these four:
+OpenBrowserAgent has no server of its own, but it does send these kinds of data off the device to services the user configures (their AI provider, MCP servers, sync storage, and the translation engine they pick for page translation). Google counts reading or capturing page content as "handling" user data, so declare these four:
 
 [ ] Personally identifiable information: left unticked; the extension never asks for it (only incidental if the user types it)
 [ ] Health information
@@ -73,12 +73,14 @@ OpenBrowserAgent has no server of its own, but it does send these kinds of data 
 [ ] Location
 [x] Web history: titles and URLs of tabs the user attaches or the agent works in
 [ ] User activity: left unticked; the extension doesn't monitor the user's clicks or keystrokes (the agent's own actions are not user activity)
-[x] Website content: page text, screenshots and selected elements sent to the user's AI provider
+[x] Website content: page text, screenshots and selected elements sent to the user's AI provider; the text of pages the user translates, sent to the translation engine they selected (their AI provider by default, or Google's or Microsoft's free translation service if they pick it)
 
 Certify all three:
 [x] I do not sell or transfer user data to third parties, outside of the approved use cases
 [x] I do not use or transfer user data for purposes that are unrelated to my item's single purpose
 [x] I do not use or transfer user data to determine creditworthiness or for lending purposes
+
+Limited Use: the privacy policy states that the use of information received complies with the Chrome Web Store User Data Policy, including the Limited Use requirements; page text sent to Google or Microsoft for translation is only used to provide the translation the user asked for.
 
 Privacy policy URL:
 https://github.com/Lumysia/OpenBrowserAgent/blob/main/PRIVACY.md

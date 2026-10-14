@@ -10,6 +10,7 @@ WHAT YOU CAN DO
 • Edit a page in place, for example to translate it, and take screenshots or download files.
 • Select text on any page for quick actions (explain, translate, improve wording, read aloud). This is off until you turn it on, and you can limit it to the sites you choose.
 • Right-click a page, link or selected text to ask about it, summarize it, search the web about it, or copy the page as Markdown. You can turn the menu or single items off.
+• Translate a whole page from the right-click menu, with the translation under each paragraph, and go back with "Show original". Use your AI model, the browser's on-device translator where it has one, or Google's or Microsoft's free translation (the page text is then sent to them).
 
 AGENTS AND SKILLS
 

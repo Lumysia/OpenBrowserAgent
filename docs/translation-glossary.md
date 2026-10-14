@@ -190,6 +190,32 @@ A downloads step's title says what happened, not the tool's name: "Downloaded", 
 | keep (a flagged file)        | conserver                               | behalten                   | conservar                        | manter                          |
 | show in folder               | afficher dans le dossier                | im Ordner anzeigen         | mostrar en la carpeta            | mostrar na pasta                |
 
+## Page translation
+
+"Translate this page" in the context menu translates the whole page; the same item then reads "Show original". Its strings live in `src/shared/locales/page-translate/`. A translation **engine** is where translations come from (the AI model, the browser's built-in translator, or a free web service); it is not a "provider", which stays the AI model provider. The display is either "Original and translation" (each paragraph keeps its original with the translation under it) or "Translation only". Google Translate and Microsoft Translator keep their product names in each language's usual form; "(free)" marks the unofficial free services.
+
+| English                  | 简体中文     | 繁體中文     | 日本語           | 한국어         |
+| ------------------------ | ------------ | ------------ | ---------------- | -------------- |
+| page translation         | 网页翻译     | 網頁翻譯     | ページ翻訳       | 페이지 번역    |
+| Translate this page      | 翻译此页面   | 翻譯此頁面   | このページを翻訳 | 이 페이지 번역 |
+| Show original            | 显示原文     | 顯示原文     | 原文を表示       | 원문 보기      |
+| translation engine       | 翻译引擎     | 翻譯引擎     | 翻訳エンジン     | 번역 엔진      |
+| built-in translator      | 内置翻译器   | 內建翻譯器   | 組み込み翻訳     | 내장 번역기    |
+| Original and translation | 原文和译文   | 原文和譯文   | 原文と訳文       | 원문과 번역    |
+| Translation only         | 仅译文       | 僅譯文       | 訳文のみ         | 번역만         |
+| saved translations       | 已保存的译文 | 已儲存的譯文 | 保存された翻訳   | 저장된 번역    |
+
+| English                  | Français                 | Deutsch                    | Español                | Português (Brasil)    |
+| ------------------------ | ------------------------ | -------------------------- | ---------------------- | --------------------- |
+| page translation         | traduction de page       | Seitenübersetzung          | traducción de páginas  | tradução de páginas   |
+| Translate this page      | Traduire cette page      | Diese Seite übersetzen     | Traducir esta página   | Traduzir esta página  |
+| Show original            | Afficher l’original      | Original anzeigen          | Mostrar original       | Mostrar original      |
+| translation engine       | moteur de traduction     | Übersetzungsdienst         | motor de traducción    | mecanismo de tradução |
+| built-in translator      | traducteur intégré       | integrierter Übersetzer    | traductor integrado    | tradutor integrado    |
+| Original and translation | Original et traduction   | Original und Übersetzung   | Original y traducción  | Original e tradução   |
+| Translation only         | Traduction seule         | Nur Übersetzung            | Solo traducción        | Somente tradução      |
+| saved translations       | traductions enregistrées | gespeicherte Übersetzungen | traducciones guardadas | traduções salvas      |
+
 ## Notes per language
 
 **Simplified Chinese.** Use 对话, never 聊天. A single bridge is a 执行桥; avoid 桥接器 and 桥接. Write 内置, not 内建. API Key and Base URL stay in English, as Chinese developer tools usually show them; Traditional Chinese does the same.
