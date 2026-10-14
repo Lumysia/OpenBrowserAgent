@@ -14,7 +14,7 @@ import type { EngineRequest, TranslationEngine } from "./types";
 
 // Changes when the prompt changes, so cached translations from an older
 // prompt aren't reused.
-export const MODEL_PROMPT_VERSION = 1;
+export const MODEL_PROMPT_VERSION = 2;
 
 // How often the item being written is sent to the page.
 const PARTIAL_INTERVAL_MS = 80;
@@ -70,9 +70,13 @@ async function translateWithModel(
   emit(parser.end());
 }
 
-// Byte-stable for a language, so providers can cache the system prompt.
+// Byte-stable for a language, so providers can cache the system prompt;
+// what changes per page and batch goes in the user prompt.
 export function modelPrompt(
-  request: Pick<EngineRequest, "items" | "target" | "pageTitle" | "terms">,
+  request: Pick<
+    EngineRequest,
+    "items" | "target" | "pageTitle" | "pageDescription" | "context" | "terms"
+  >,
 ) {
   const language = languageName(request.target);
   const system = [
@@ -87,8 +91,24 @@ export function modelPrompt(
     "- Keep code, URLs, e-mail addresses and numbers unchanged.",
     `- If an item is already in ${language}, copy it unchanged.`,
     "- Translate naturally, as a native speaker would write it, in the tone of the page.",
+    `- An item's role says what it is on the page: write headings as headings, and buttons, menu items and labels short, the way ${language} interfaces write them. Items without a role are running text.`,
+    "- Everything before the first [[n]] line is reference only: the page's title and description, the section the items are in, the text just before them, their roles and earlier translations. Use it to understand the items; never translate it or write it in the answer.",
   ].join("\n");
   const title = request.pageTitle?.trim();
+  const description = request.pageDescription?.trim();
+  const { headings, before } = request.context ?? {};
+  // Items are named in words here: a [[n]] line outside the list reads to
+  // some models as an item to answer.
+  const roles = request.items.flatMap((item) =>
+    item.role ? [`item ${item.id} is a ${item.role}`] : [],
+  );
+  const reference = [
+    ...(title ? [`Page title: ${title}`] : []),
+    ...(description ? [`Page description: ${description}`] : []),
+    ...(headings?.length ? [`Section: ${headings.join(" › ")}`] : []),
+    ...(before ? [`Just before the items: ${before}`] : []),
+    ...(roles.length ? [`Roles: ${roles.join(", ")}`] : []),
+  ];
   const terms = request.terms?.length
     ? [
         "Earlier translations on this page. Write the names in them the same way:",
@@ -99,7 +119,7 @@ export function modelPrompt(
       ]
     : [];
   const prompt = [
-    ...(title ? [`Page title: ${title}`, ""] : []),
+    ...(reference.length ? [...reference, ""] : []),
     ...terms,
     markItems(request.items),
   ].join("\n");

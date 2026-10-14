@@ -243,6 +243,24 @@ export function controlOf(element: Element) {
   return link?.parentElement?.closest(CONTROL_LIST_SELECTOR) ? link : null;
 }
 
+// Controls that pick a place or a view: menu items, tabs, options, and
+// links in a menu, tab bar or toolbar (see controlOf).
+const MENU_ITEM_ROLES = new Set([
+  "tab",
+  "menuitem",
+  "menuitemcheckbox",
+  "menuitemradio",
+  "option",
+]);
+
+export function isMenuItem(control: Element) {
+  return (
+    MENU_ITEM_ROLES.has(control.getAttribute("role") ?? "") ||
+    (control.localName === "a" &&
+      !!control.parentElement?.closest(CONTROL_LIST_SELECTOR))
+  );
+}
+
 const PAGE_EDGE_TAGS: ReadonlySet<string> = new Set([
   "header",
   "footer",

@@ -5,6 +5,13 @@ import {
   writeTranslations,
 } from "../../shared/page-translate/cache";
 import {
+  boundedContext,
+  clipContext,
+  isPageTranslateRole,
+  PAGE_TRANSLATE_CONTEXT_LIMITS,
+  type PageTranslateContext,
+} from "../../shared/page-translate/context";
+import {
   PAGE_TRANSLATE_ERROR,
   type PageTranslateEvent,
   type PageTranslateItem,
@@ -42,6 +49,7 @@ type Session = {
   theme: PageToastTheme;
   pageLanguage?: string;
   pageTitle?: string;
+  pageDescription?: string;
   terms: TermMemory;
 };
 
@@ -60,9 +68,15 @@ export function createPageSession(post: Post, signal: AbortSignal) {
     }
     if (request.type !== "translate" || !session) return;
     const batch = request.batch;
+    const items = request.items.map(({ id, text, role }) => ({
+      id,
+      text,
+      ...(isPageTranslateRole(role) && { role }),
+    }));
+    const context = boundedContext(request.context);
     session
       .then(
-        (current) => runBatch(current, request.items, batch, post, signal),
+        (current) => runBatch(current, { items, context }, batch, post, signal),
         // The session's own error was reported when it started.
         () => undefined,
       )
@@ -144,6 +158,13 @@ async function startSession(
       theme,
       pageLanguage: request.pageLanguage,
       pageTitle: request.title,
+      pageDescription:
+        typeof request.description === "string" && request.description.trim()
+          ? clipContext(
+              request.description,
+              PAGE_TRANSLATE_CONTEXT_LIMITS.description,
+            )
+          : undefined,
       terms: createTermMemory(),
     };
   } catch (error) {
@@ -161,7 +182,10 @@ async function startSession(
 
 async function runBatch(
   session: Session,
-  items: PageTranslateItem[],
+  {
+    items,
+    context,
+  }: { items: PageTranslateItem[]; context?: PageTranslateContext },
   batch: number,
   post: Post,
   signal: AbortSignal,
@@ -209,6 +233,8 @@ async function runBatch(
       target,
       pageLanguage: session.pageLanguage,
       pageTitle: session.pageTitle,
+      pageDescription: session.pageDescription,
+      context,
       terms: session.terms.examples(batchItems.map((item) => item.text)),
       signal,
       onItem: deliver,

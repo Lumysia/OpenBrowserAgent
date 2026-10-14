@@ -24,6 +24,7 @@ export function articlePage({ paragraphs = 60, dark = false } = {}) {
       `<p id="p${index + 1}">Paragraph number ${index + 1} talks about the weather in the mountains.</p>`,
   ).join("\n");
   return `<!doctype html><html lang="en"><head><title>Field notes</title>
+<meta name="description" content="A hiker's notes from the mountains.">
 <style>
 body{font:17px/1.6 Georgia,serif;margin:24px auto;max-width:640px;padding:0 16px;${
     dark ? "background:#14161a;color:#e6e6e6" : "background:#fff;color:#1d1d1f"
@@ -48,8 +49,9 @@ ${numbered}
 }
 
 // Translates like a model: every [[n]] item comes back prefixed with "FR:",
-// markers kept. Titles and other requests get a short answer.
-export function fixtureTranslator(log = []) {
+// markers kept. Titles and other requests get a short answer. `log` gets
+// each batch's texts, `prompts` each batch's whole user prompt.
+export function fixtureTranslator(log = [], prompts = []) {
   return async (prompt, write) => {
     const messages = JSON.parse(prompt);
     const user = messages.find((message) => message.role === "user");
@@ -59,6 +61,7 @@ export function fixtureTranslator(log = []) {
         : (user?.content || []).map((part) => part.text || "").join("");
     if (!content.includes("[[end]]")) return write("Title");
     const items = [...content.matchAll(/^\[\[(\d+)\]\]\n(.*)$/gm)];
+    prompts.push(content);
     log.push(items.map(([, , text]) => text));
     for (const [, id, text] of items) write(`[[${id}]]\nFR: ${text}\n`);
     write("[[end]]");

@@ -1,3 +1,4 @@
+import type { PageTranslateContext } from "../../../shared/page-translate/context";
 import type { TermExample } from "../term-memory";
 import type {
   PageTranslateBatchLimits,
@@ -12,6 +13,10 @@ export type EngineRequest = {
   // The page's declared language, a hint at best.
   pageLanguage?: string;
   pageTitle?: string;
+  // The page's description, and where the batch is on the page (see
+  // context.ts). Reference for engines that read context, like terms.
+  pageDescription?: string;
+  context?: PageTranslateContext;
   // Earlier translations on the page with the same names (see
   // term-memory.ts). Engines that translate texts one by one ignore them.
   terms?: TermExample[];

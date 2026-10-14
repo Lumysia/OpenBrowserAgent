@@ -1,6 +1,7 @@
 // Messages between the page translation page script and the background.
 // Dependency-free (types only) for the page script.
 import type { PageToastTheme } from "../page-toast";
+import type { PageTranslateContext, PageTranslateRole } from "./context";
 import type { PageTranslateDisplay, PageTranslateEngine } from "./settings";
 
 // The page script, built by WXT (`registration: "runtime"`) and injected
@@ -69,6 +70,8 @@ export type PageTranslateItem = {
   id: number;
   // Placeholder text (see placeholders.ts).
   text: string;
+  // What the text is on the page, when its structure says (see context.ts).
+  role?: PageTranslateRole;
 };
 
 export type PageTranslateRequest =
@@ -76,11 +79,19 @@ export type PageTranslateRequest =
       type: "start";
       pageLanguage?: string;
       title?: string;
+      // The page's own summary (its meta description).
+      description?: string;
       // The engine the page's last session ended up with, after a switch to
       // the other free service; the new session keeps it.
       engine?: PageTranslateEngine;
     }
-  | { type: "translate"; batch: number; items: PageTranslateItem[] };
+  | {
+      type: "translate";
+      batch: number;
+      items: PageTranslateItem[];
+      // Where the batch's first item is on the page (see context.ts).
+      context?: PageTranslateContext;
+    };
 
 export const PAGE_TRANSLATE_ERROR = {
   // No model configured, or the engine is unavailable in this browser.
