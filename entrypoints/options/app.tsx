@@ -6,6 +6,7 @@ import {
   Cloud,
   FileText,
   Highlighter,
+  Languages,
   MousePointerClick,
   Plug,
   Server,
@@ -18,6 +19,7 @@ import {
   TOOLTIP_DELAY_MS,
 } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
+import { getPageTranslateMessages } from "../../src/shared/page-translate/messages";
 import { storage } from "../../src/shared/storage";
 import { ScrollArea, TooltipProvider } from "../../src/ui/components";
 import { useTheme } from "../../src/ui/theme";
@@ -32,6 +34,7 @@ import { LocalExecutionBridgesPage } from "./local-execution-bridges-page";
 import { SkillsPage } from "./skills-page";
 import { SmartBarPage } from "./smart-bar-page";
 import { ContextMenuPage } from "./context-menu-page";
+import { PageTranslatePage } from "./page-translate-page";
 import { useHashRoute } from "./route";
 import { SyncPage } from "./sync-page";
 
@@ -131,6 +134,14 @@ export function OptionsApp() {
             </OptionsLink>
             <OptionsLink
               route={route}
+              target={OPTIONS_ROUTE.pageTranslate}
+              href={OPTIONS_HASH.pageTranslate}
+              icon={<Languages size={16} />}
+            >
+              {getPageTranslateMessages(language).settingsTitle}
+            </OptionsLink>
+            <OptionsLink
+              route={route}
               target={OPTIONS_ROUTE.debug}
               href={OPTIONS_HASH.debug}
               icon={<Bug size={16} />}
@@ -167,6 +178,8 @@ export function OptionsApp() {
               <SmartBarPage />
             ) : route === OPTIONS_ROUTE.contextMenu ? (
               <ContextMenuPage />
+            ) : route === OPTIONS_ROUTE.pageTranslate ? (
+              <PageTranslatePage />
             ) : route === OPTIONS_ROUTE.debug ? (
               <DebugPage />
             ) : (
