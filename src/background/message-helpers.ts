@@ -3,6 +3,10 @@ import {
   isMetadataOnlyAttachment,
 } from "../shared/attachments";
 import { renderSourcesForPrompt } from "../shared/chat-sources";
+import {
+  renderSelectedText,
+  selectedTextsFromMetadata,
+} from "../shared/selected-text";
 import { findSkill } from "../shared/skill-catalog";
 import {
   getSkillBody,
@@ -19,9 +23,9 @@ import type {
 } from "../shared/types";
 
 // Earlier turns are replayed as plain text, noting the skills the user
-// picked; the latest user message also carries its context: the picked
-// skills' instructions, selected tabs and elements, attachments, and sources
-// that can be cited again.
+// picked and keeping the text they selected; the latest user message also
+// carries its context: the picked skills' instructions, selected tabs,
+// elements and text, attachments, and sources that can be cited again.
 export function renderMessageText(
   message: ChatMessage,
   options: {
@@ -38,6 +42,7 @@ export function renderMessageText(
     .join(", ");
   return [
     picked && `[The user picked ${picked} for this message.]`,
+    ...selectedTextsFromMetadata(message.metadata).map(renderSelectedText),
     message.content,
     renderAttachmentContext(getUploadedAttachments(message)),
   ]
@@ -76,9 +81,19 @@ function renderLatestUserMessage(
     ),
     context ? `<message_context>\n${context}\n</message_context>` : "",
     `<message>\n${message.content}\n</message>`,
+    requestInstruction(message),
   ]
     .filter(Boolean)
     .join("\n\n");
+}
+
+// Requests made from the context menu or the smart bar say how to carry
+// them out; the message shows only what the user picked.
+function requestInstruction(message: ChatMessage) {
+  const instruction = message.metadata?.instruction;
+  return typeof instruction === "string" && instruction.trim()
+    ? `<request_instructions>\n${instruction.trim()}\n</request_instructions>`
+    : "";
 }
 
 // A picked skill means "use this skill for this request": its instructions

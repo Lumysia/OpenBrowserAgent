@@ -3,6 +3,10 @@ import type { Preferences } from "./types";
 import { REASONING_EFFORT } from "./reasoning";
 import { DEFAULT_COLOR_SCHEME, DEFAULT_THEME } from "./theme/themes";
 import {
+  DEFAULT_CONTEXT_MENU_SETTINGS,
+  normalizeContextMenuSettings,
+} from "./context-menu";
+import {
   DEFAULT_SMART_BAR_SETTINGS,
   normalizeSmartBarSettings,
 } from "./smart-bar";
@@ -20,6 +24,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   // Empty: auxiliary requests use the chat's own model.
   helperModelId: "",
   smartBar: DEFAULT_SMART_BAR_SETTINGS,
+  contextMenu: DEFAULT_CONTEXT_MENU_SETTINGS,
 };
 
 export function mergePreferences(value: Partial<Preferences>): Preferences {
@@ -27,5 +32,6 @@ export function mergePreferences(value: Partial<Preferences>): Preferences {
     ...DEFAULT_PREFERENCES,
     ...value,
     smartBar: normalizeSmartBarSettings(value.smartBar),
+    contextMenu: normalizeContextMenuSettings(value.contextMenu),
   };
 }

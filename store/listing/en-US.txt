@@ -9,6 +9,7 @@ WHAT YOU CAN DO
 • Let the agent do browser work: fill in forms, compare products, collect information from several pages, tidy and group your tabs.
 • Edit a page in place, for example to translate it, and take screenshots or download files.
 • Select text on any page for quick actions (explain, translate, improve wording, read aloud). This is off until you turn it on, and you can limit it to the sites you choose.
+• Right-click a page, link or selected text to ask about it, summarize it, search the web about it, or copy the page as Markdown. You can turn the menu or single items off.
 
 AGENTS AND SKILLS
 

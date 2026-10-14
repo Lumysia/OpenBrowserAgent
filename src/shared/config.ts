@@ -78,6 +78,7 @@ export const OPTIONS_ROUTE = {
   localExecutionBridges: "/local-execution-bridges",
   skills: "/skills",
   smartBar: "/smart-bar",
+  contextMenu: "/context-menu",
   debug: "/debug",
 } as const;
 
@@ -90,6 +91,7 @@ export const OPTIONS_HASH = {
   localExecutionBridges: "#/local-execution-bridges",
   skills: "#/skills",
   smartBar: "#/smart-bar",
+  contextMenu: "#/context-menu",
   debug: "#/debug",
 } as const;
 

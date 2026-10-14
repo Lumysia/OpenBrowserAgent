@@ -6,7 +6,7 @@ export const smartBarKo: SmartBarLocaleMessages = {
     ask: "사이드 패널에서 질문",
     explain: "설명",
     translate: "번역",
-    summarize: "요약",
+    search: "AI 검색",
     copy: "복사",
     improve: "글 다듬기",
     fixGrammar: "맞춤법 및 문법 수정",
@@ -66,5 +66,5 @@ export const smartBarKo: SmartBarLocaleMessages = {
   editActionsDescription:
     "입력란에서 텍스트를 선택하면 표시됩니다. 결과로 선택한 텍스트를 바꿀 수 있습니다.",
   model: "스마트 바 모델",
-  modelDescription: "설명, 번역, 요약 및 글쓰기 작업에 사용할 모델입니다.",
+  modelDescription: "설명, 번역 및 글쓰기 작업에 사용할 모델입니다.",
 };

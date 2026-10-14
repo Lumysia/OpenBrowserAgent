@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { resolveAgent } from "../../src/shared/agents";
 import { getMessages } from "../../src/shared/i18n";
 import { availableSkills } from "../../src/shared/skill-catalog";
-import { interpolateSkillVariables } from "../../src/shared/skills";
 import { storage } from "../../src/shared/storage";
 import type {
   Chat,
@@ -17,7 +16,7 @@ import { celebrateSend } from "./holiday-touches";
 import { requestChatTitle } from "./ai-requests";
 import { createChatDraft } from "./chat-state-actions";
 import { pruneSentAttachmentPreviews } from "./edit-message";
-import { addSkill, takeSlashSkill, toggleSkill } from "./skill-context";
+import { addSkill, messageToSend, toggleSkill } from "./skill-context";
 import { assistantModelLabel } from "./model-label";
 import { buildSidepanelContext } from "./sidepanel-context";
 import {
@@ -27,8 +26,10 @@ import {
 } from "./sidepanel-effects";
 import {
   createSendMessagePlan,
+  messageInstruction,
   pickSendInputs,
   sendMessagesRequest,
+  type SendRequest,
 } from "./send-message-plan";
 import {
   ADD_MENU_VIEW,
@@ -47,7 +48,7 @@ import { useMessageEdit } from "./use-message-edit";
 import { useParallelChatStreams } from "./use-parallel-chat-streams";
 import { useQueuedMessages } from "./use-queued-messages";
 import { useSyncPageState } from "../../src/ui/useSyncPageState";
-import { useSmartBarHandoff } from "./use-smart-bar-handoff";
+import { useSidePanelHandoff } from "./use-side-panel-handoff";
 import { useChatAttachments } from "./use-chat-attachments";
 import { useUnreadCompletedChats } from "./use-unread-completed-chats";
 import { useUploadedAttachments } from "./use-uploaded-attachments";
@@ -146,11 +147,16 @@ export function SidepanelApp() {
     availableTabs,
     activeTabAttachable,
     selectedElements,
+    selectedTexts,
     setAttachedTabs,
     clearComposerContext,
-    clearAttachedTabsAfterSend,
+    clearComposerContextAfterSend,
     setSelectedElements,
+    setSelectedTexts,
+    attachSelectedText,
+    removeSelectedText,
     attachActiveTab,
+    attachTab,
     showAllTabsPicker,
     toggleAttachedTab,
     removeAttachedTab,
@@ -163,10 +169,12 @@ export function SidepanelApp() {
       pendingAttachments,
       attachedTabs,
       selectedElements,
+      selectedTexts,
       selectedSkills,
       setInput,
       setAttachedTabs,
       setSelectedElements,
+      setSelectedTexts,
       setSelectedSkills,
       stageUploadedAttachments,
     });
@@ -216,12 +224,17 @@ export function SidepanelApp() {
       clearUnreadCompletedChat,
     });
 
-  useSmartBarHandoff({
-    ready: !!chats,
+  useSidePanelHandoff({
+    ready: !!chats && language !== undefined,
     t,
-    input,
-    setInput,
+    language: language || "",
     importChat,
+    createChat,
+    attachTab,
+    attachSelectedText,
+    currentChatId: currentChat?.id,
+    canSend: currentChatStatus === "ready" && !currentChatStreaming,
+    send: ({ content, ...request }) => send(content, undefined, { request }),
     composerRef,
   });
 
@@ -240,7 +253,6 @@ export function SidepanelApp() {
     setEditingMessage,
     setSentAttachmentPreviews,
     clearComposerContext,
-    setSelectedElements,
     setSelectedSkills,
     setOpenMenu,
   );
@@ -257,13 +269,19 @@ export function SidepanelApp() {
   async function send(
     content = input,
     resendAttachments?: UploadedAttachment[],
-    options: { queued?: boolean; resendMessage?: ChatMessage } = {},
+    options: {
+      queued?: boolean;
+      resendMessage?: ChatMessage;
+      // A context menu or smart bar request: its own tabs and instruction.
+      request?: SendRequest;
+    } = {},
   ) {
-    // "/name request" picks the named skill for this message.
-    const slash = options.resendMessage
-      ? undefined
-      : takeSlashSkill(content.trim(), skills);
-    const text = interpolateSkillVariables(slash?.rest ?? content.trim());
+    const { request: sendRequest } = options;
+    const { slash, text } = messageToSend(
+      content,
+      skills,
+      sendRequest ? "request" : options.resendMessage ? "resend" : "typed",
+    );
     const sendChatId = currentChat?.id || activeChatId || "new";
     if (
       currentChatStatus !== "ready" ||
@@ -289,6 +307,7 @@ export function SidepanelApp() {
         baseChat,
         sentTabs,
         sentElements,
+        sentTexts,
         sentSkills,
         sentAttachments,
         activeAttachments,
@@ -299,14 +318,17 @@ export function SidepanelApp() {
         resendMessage: options.resendMessage,
         attachedTabs,
         selectedElements,
+        selectedTexts,
         selectedSkills,
         resendAttachments,
         pendingAttachments,
         uploadedAttachments,
+        request: sendRequest,
       });
       const context = await buildSidepanelContext({
         attachedTabs: sentTabs,
         selectedElements: sentElements,
+        selectedTexts: sentTexts,
       });
       const {
         userMessage,
@@ -332,8 +354,11 @@ export function SidepanelApp() {
         }),
         sentTabs,
         sentElements,
+        sentTexts,
         sentAttachments,
         skills: slash ? addSkill(sentSkills, slash.skill) : sentSkills,
+        instruction:
+          sendRequest?.instruction ?? messageInstruction(options.resendMessage),
       });
       if (sentAttachments.length || activeEdit)
         setSentAttachmentPreviews((items) => {
@@ -357,9 +382,8 @@ export function SidepanelApp() {
         );
       if (!options.queued && !options.resendMessage) {
         clearInput();
-        clearAttachedTabsAfterSend();
+        clearComposerContextAfterSend();
         clearPendingAttachments();
-        setSelectedElements([]);
         setSelectedSkills([]);
         setEditingMessage(null);
       }
@@ -409,6 +433,7 @@ export function SidepanelApp() {
       availableTabs={availableTabs}
       activeTabAttachable={activeTabAttachable}
       selectedElements={selectedElements}
+      selectedTexts={selectedTexts}
       streaming={currentChatStreaming}
       activeAssistantMessageId={currentAssistantMessageId}
       stoppedRuns={stoppedRuns}
@@ -455,6 +480,7 @@ export function SidepanelApp() {
       onToggleAttachedTab={toggleAttachedTab}
       onAttachActiveTab={attachActiveTab}
       onRemoveAttachedTab={removeAttachedTab}
+      onRemoveSelectedText={removeSelectedText}
       onAttachFiles={attachFiles}
       onRemoveUploadedAttachment={removeUploadedAttachment}
       onReplaceUploadedAttachment={replaceUploadedAttachment}

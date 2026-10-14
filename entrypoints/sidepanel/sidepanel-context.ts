@@ -5,8 +5,13 @@ import {
   TAB_CONTENT_MAX_CHARS,
 } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
-import type { AttachmentTab, SelectedElement } from "../../src/shared/types";
-import { xmlBlock, xmlTag } from "./format";
+import type {
+  AttachmentTab,
+  SelectedElement,
+  SelectedText,
+} from "../../src/shared/types";
+import { renderSelectedText } from "../../src/shared/selected-text";
+import { xmlBlock, xmlTag } from "../../src/shared/xml";
 
 export function generateLocalTitle(value: string, t: Messages) {
   const title = value.replace(/\s+/g, " ").trim();
@@ -28,13 +33,18 @@ export function toAttachmentTab(tab: chrome.tabs.Tab): AttachmentTab | null {
 export async function buildSidepanelContext({
   attachedTabs,
   selectedElements,
+  selectedTexts = [],
 }: {
   attachedTabs: AttachmentTab[];
   selectedElements: SelectedElement[];
+  selectedTexts?: SelectedText[];
 }) {
   const parts: string[] = [];
   selectedElements.forEach((element) =>
     parts.push(renderSelectedElement(element, attachedTabs)),
+  );
+  selectedTexts.forEach((selection) =>
+    parts.push(renderSelectedText(selection)),
   );
   if (attachedTabs.length) {
     const tabBlocks = [];

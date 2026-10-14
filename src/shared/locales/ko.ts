@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuKo } from "./context-menu/ko";
 import { smartBarKo } from "./smart-bar/ko";
 import { syncKo } from "./sync/ko";
 import { themesKo } from "./themes/ko";
@@ -125,6 +126,9 @@ export const ko: LocaleMessages = {
     willBeSentAsPageContext: "페이지 컨텍스트로 전송됩니다",
     currentPage: "현재 페이지",
     elementSelected: "요소 선택됨",
+    selectedText: "선택한 텍스트",
+    willBeSentWithMessage: "메시지와 함께 전송됩니다",
+    removeSelectedText: "선택한 텍스트 제거",
     addNewTab: "새 탭 추가",
     addCurrentTab: "현재 탭 추가",
     attachFiles: "파일 첨부",
@@ -533,6 +537,7 @@ export const ko: LocaleMessages = {
     debugToolRequired: "필수 매개변수",
   },
   smartBar: smartBarKo,
+  contextMenu: contextMenuKo,
   sync: syncKo,
   themes: themesKo,
 };

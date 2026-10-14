@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuZhTW } from "./context-menu/zh-TW";
 import { smartBarZhTW } from "./smart-bar/zh-TW";
 import { syncZhTW } from "./sync/zh-TW";
 import { themesZhTW } from "./themes/zh-TW";
@@ -120,6 +121,9 @@ export const zhTW: LocaleMessages = {
     willBeSentAsPageContext: "將作為頁面上下文傳送",
     currentPage: "目前頁面",
     elementSelected: "已選擇元素",
+    selectedText: "所選文字",
+    willBeSentWithMessage: "將隨訊息傳送",
+    removeSelectedText: "移除所選文字",
     addNewTab: "新增分頁",
     addCurrentTab: "新增目前分頁",
     attachFiles: "上傳檔案",
@@ -501,6 +505,7 @@ export const zhTW: LocaleMessages = {
     debugToolRequired: "必要參數",
   },
   smartBar: smartBarZhTW,
+  contextMenu: contextMenuZhTW,
   sync: syncZhTW,
   themes: themesZhTW,
 };

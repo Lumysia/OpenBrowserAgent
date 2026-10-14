@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuFrFR } from "./context-menu/fr-FR";
 import { smartBarFrFR } from "./smart-bar/fr-FR";
 import { syncFrFR } from "./sync/fr-FR";
 import { themesFrFR } from "./themes/fr-FR";
@@ -130,6 +131,9 @@ export const frFR: LocaleMessages = {
     willBeSentAsPageContext: "Sera envoyé comme contexte de page",
     currentPage: "Page actuelle",
     elementSelected: "Élément sélectionné",
+    selectedText: "Texte sélectionné",
+    willBeSentWithMessage: "Sera envoyé avec votre message",
+    removeSelectedText: "Retirer le texte sélectionné",
     addNewTab: "Ajouter un nouvel onglet",
     addCurrentTab: "Ajouter l’onglet actuel",
     attachFiles: "Joindre des fichiers",
@@ -588,6 +592,7 @@ export const frFR: LocaleMessages = {
     debugToolRequired: "Paramètres requis",
   },
   smartBar: smartBarFrFR,
+  contextMenu: contextMenuFrFR,
   sync: syncFrFR,
   themes: themesFrFR,
 };

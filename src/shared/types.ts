@@ -1,6 +1,7 @@
 import type { UploadedAttachmentKind } from "./attachments";
 import type { AgentIconId } from "./agent-icon-registry";
 import type { ToolGroup } from "./agents";
+import type { ContextMenuSettings } from "./context-menu";
 import type { ReasoningEffort } from "./reasoning";
 import type { SmartBarSettings } from "./smart-bar";
 import type { ColorScheme, ThemeId } from "./theme/themes";
@@ -58,6 +59,7 @@ export type Preferences = {
   // own model.
   helperModelId?: string;
   smartBar?: SmartBarSettings;
+  contextMenu?: ContextMenuSettings;
 };
 
 export type SyncBackendType = "browser-sync" | "webdav";
@@ -209,6 +211,16 @@ export type SelectedElement = {
   imageWidth?: number;
   imageHeight?: number;
   imageDataUrl?: string;
+};
+
+// Text the user selected on a page, sent with a message as context. Kept in
+// the message's `selectedTexts` metadata.
+export type SelectedText = {
+  text: string;
+  // The page's tab, when the extension can read it.
+  tabId?: number;
+  pageTitle?: string;
+  pageUrl?: string;
 };
 
 export type ChatMessage = {

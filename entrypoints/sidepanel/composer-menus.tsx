@@ -6,7 +6,6 @@ import {
   MousePointerClick,
   Paperclip,
   Plus,
-  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Messages } from "../../src/shared/i18n";
@@ -21,7 +20,6 @@ import type {
 } from "../../src/shared/types";
 import {
   Button,
-  IconTooltip,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -31,8 +29,7 @@ import {
   agentDisplayDescription,
   agentDisplayName,
 } from "../../src/ui/agent-display";
-import { useDeferredRemove } from "./use-deferred-remove";
-import { ContextCardLabel } from "./context-card-label";
+import { ContextCard } from "./context-card";
 import { COMPOSER_MENU, type ComposerMenu } from "./sidepanel-menu-state";
 import { SkillPickerList } from "./skill-picker";
 
@@ -234,36 +231,26 @@ export function AttachedTabCard({
   tab: AttachmentTab;
   onRemove: () => void;
 }) {
-  const { removing, remove } = useDeferredRemove(onRemove);
   return (
-    <div className={`context-card ${removing ? "is-removing" : ""}`}>
-      {tab.favIconUrl ? (
-        <img
-          src={tab.favIconUrl}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          referrerPolicy="no-referrer"
-        />
-      ) : (
-        <ExternalLink size={18} />
-      )}
-      <ContextCardLabel
-        title={tab.title || t.sidepanel.currentPage}
-        detail={`${tab.url || `Tab ${tab.id}`} · ${t.sidepanel.willBeSentToAi}`}
-      />
-      <IconTooltip label={t.sidepanel.removeTab}>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="context-close"
-          aria-label={t.sidepanel.removeTab}
-          onClick={remove}
-        >
-          <X size={14} />
-        </Button>
-      </IconTooltip>
-    </div>
+    <ContextCard
+      icon={
+        tab.favIconUrl ? (
+          <img
+            src={tab.favIconUrl}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <ExternalLink size={18} />
+        )
+      }
+      title={tab.title || t.sidepanel.currentPage}
+      detail={`${tab.url || `Tab ${tab.id}`} · ${t.sidepanel.willBeSentToAi}`}
+      removeLabel={t.sidepanel.removeTab}
+      onRemove={onRemove}
+    />
   );
 }
 

@@ -2,7 +2,7 @@
 
 OpenBrowserAgent ships its interface in nine languages. This page records the words each language uses for the product's main ideas, so that new strings match what is already there. If you add or change a user-facing string, check this page first; if you introduce a new concept, add it here in the same change.
 
-Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-bar/` (the smart bar) and `public/_locales/` (the extension name, description and shortcut). English (`en-US`) is the source; every other language must have every key.
+Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-bar/` (the smart bar), `src/shared/locales/context-menu/` (the right-click menu) and `public/_locales/` (the extension name, description and shortcut). English (`en-US`) is the source; every other language must have every key.
 
 ## General rules
 
@@ -126,6 +126,28 @@ Translate on a word or short phrase shows a dictionary entry instead of a plain 
 | examples         | exemples               | Beispiele         | ejemplos               | exemplos              |
 | synonyms         | synonymes              | Synonyme          | sinónimos              | sinônimos             |
 | collocations     | collocations           | Kollokationen     | colocaciones           | colocações            |
+
+## Context menu and web search
+
+The context menu is the browser's right-click menu; OpenBrowserAgent adds a submenu there. Its titles follow each platform's menu style: short imperative phrases, no final period. `%s` in a title is the selected text, quoted the way the language quotes (“%s” in Simplified Chinese, 「%s」 in Traditional Chinese and Japanese, „%s“ in German, « %s » in French, «%s» in Spanish). "Search the web" means the agent searches and answers with sources; the smart bar's button for it is "AI search". Text the user selected and hands to the side panel is the "selected text": it shows as a card above the composer and a chip on the sent message, named with the same words as in the menu titles.
+
+| English               | 简体中文        | 繁體中文        | 日本語                | 한국어            |
+| --------------------- | --------------- | --------------- | --------------------- | ----------------- |
+| context menu          | 右键菜单        | 右鍵選單        | コンテキストメニュー  | 컨텍스트 메뉴     |
+| search the web        | 联网搜索        | 聯網搜尋        | ウェブ検索            | 웹 검색           |
+| AI search (smart bar) | AI搜索          | AI 搜尋         | AI 検索               | AI 검색           |
+| linked page           | 链接页面        | 連結頁面        | リンク先のページ      | 링크된 페이지     |
+| Copy as Markdown      | 复制为 Markdown | 複製為 Markdown | Markdown としてコピー | Markdown으로 복사 |
+| selected text         | 所选文本        | 所選文字        | 選択したテキスト      | 선택한 텍스트     |
+
+| English               | Français              | Deutsch               | Español              | Português (Brasil)   |
+| --------------------- | --------------------- | --------------------- | -------------------- | -------------------- |
+| context menu          | menu contextuel       | Kontextmenü           | menú contextual      | menu de contexto     |
+| search the web        | rechercher sur le web | im Web suchen         | buscar en la web     | pesquisar na web     |
+| AI search (smart bar) | Recherche IA          | KI-Suche              | Búsqueda con IA      | Pesquisa com IA      |
+| linked page           | page liée             | verlinkte Seite       | página enlazada      | página do link       |
+| Copy as Markdown      | Copier en Markdown    | Als Markdown kopieren | Copiar como Markdown | Copiar como Markdown |
+| selected text         | texte sélectionné     | ausgewählter Text     | texto seleccionado   | texto selecionado    |
 
 ## Notes per language
 

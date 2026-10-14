@@ -6,7 +6,7 @@ export const smartBarZhTW: SmartBarLocaleMessages = {
     ask: "在側邊欄提問",
     explain: "解釋",
     translate: "翻譯",
-    summarize: "摘要",
+    search: "AI 搜尋",
     copy: "複製",
     improve: "改善寫法",
     fixGrammar: "修正拼字與文法",
@@ -64,5 +64,5 @@ export const smartBarZhTW: SmartBarLocaleMessages = {
   editActions: "正在編輯的文字的操作",
   editActionsDescription: "在文字欄位中選取文字時顯示。結果可以取代所選內容。",
   model: "智慧工具列模型",
-  modelDescription: "用於解釋、翻譯、摘要、改善寫法和修正拼字文法的模型。",
+  modelDescription: "用於解釋、翻譯、改善寫法和修正拼字文法的模型。",
 };

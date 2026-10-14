@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuEnUS } from "./context-menu/en-US";
 import { smartBarEnUS } from "./smart-bar/en-US";
 import { syncEnUS } from "./sync/en-US";
 import { themesEnUS } from "./themes/en-US";
@@ -131,6 +132,9 @@ export const enUS = {
     willBeSentAsPageContext: "Will be sent as page context",
     currentPage: "Current page",
     elementSelected: "Element selected",
+    selectedText: "Selected text",
+    willBeSentWithMessage: "Will be sent with your message",
+    removeSelectedText: "Remove selected text",
     addNewTab: "Add new tab",
     addCurrentTab: "Add current tab",
     attachFiles: "Attach files",
@@ -558,6 +562,7 @@ export const enUS = {
     debugToolRequired: "Required parameters",
   },
   smartBar: smartBarEnUS,
+  contextMenu: contextMenuEnUS,
   sync: syncEnUS,
   themes: themesEnUS,
 };

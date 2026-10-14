@@ -2,6 +2,7 @@
 // panel. Dependency-free (types only) for the page scripts.
 import type { LocaleMessages } from "./locales/en-US";
 import type { Preferences } from "./types";
+import type { SidePanelHandoffRequest } from "./side-panel-handoff";
 import type { SmartBarAction, SmartBarGenerateAction } from "./smart-bar";
 
 export const SMART_BAR_MESSAGE = {
@@ -24,8 +25,6 @@ export const SMART_BAR_SCRIPT = {
 } as const;
 
 export const SMART_BAR_COMMAND = "smart-bar";
-
-export const SMART_BAR_HANDOFF_KEY = "smart-bar-handoff";
 
 export type SmartBarMessages = LocaleMessages["smartBar"];
 
@@ -82,19 +81,14 @@ export type SmartBarStreamEvent =
   | { type: "done" }
   | { type: "error"; error: string };
 
-// Selection (and a result) the side panel picks up when it opens.
-export type SmartBarHandoff = {
-  id: string;
-  windowId?: number;
-  text: string;
-  pageTitle?: string;
-  pageUrl?: string;
-  result?: { action: SmartBarGenerateAction; text: string };
-  createdAt: number;
-};
+// What the bar's side panel actions hand over: the selection to ask about,
+// to search the web about, or with a result to continue.
+export type SmartBarSidePanelRequest = Extract<
+  SidePanelHandoffRequest,
+  { task: "ask" | "searchWeb" | "continue" }
+>;
 
 export type SmartBarOpenSidePanelRequest = {
   type: typeof SMART_BAR_MESSAGE.openSidePanel;
-  text: string;
-  result?: SmartBarHandoff["result"];
+  request: SmartBarSidePanelRequest;
 };

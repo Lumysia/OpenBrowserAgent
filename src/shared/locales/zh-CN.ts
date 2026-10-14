@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuZhCN } from "./context-menu/zh-CN";
 import { smartBarZhCN } from "./smart-bar/zh-CN";
 import { syncZhCN } from "./sync/zh-CN";
 import { themesZhCN } from "./themes/zh-CN";
@@ -120,6 +121,9 @@ export const zhCN: LocaleMessages = {
     willBeSentAsPageContext: "将作为页面上下文发送",
     currentPage: "当前页面",
     elementSelected: "已选择元素",
+    selectedText: "所选文本",
+    willBeSentWithMessage: "将随消息发送",
+    removeSelectedText: "移除所选文本",
     addNewTab: "添加新标签页",
     addCurrentTab: "添加当前标签页",
     attachFiles: "上传文件",
@@ -501,6 +505,7 @@ export const zhCN: LocaleMessages = {
     debugToolRequired: "必需参数",
   },
   smartBar: smartBarZhCN,
+  contextMenu: contextMenuZhCN,
   sync: syncZhCN,
   themes: themesZhCN,
 };

@@ -14,6 +14,7 @@ import type {
   QuestionToolAnswer,
   PickedSkill,
   SelectedElement,
+  SelectedText,
   UploadedAttachment,
 } from "../../src/shared/types";
 import { Button, TooltipProvider } from "../../src/ui/components";
@@ -66,6 +67,7 @@ export function SidepanelView({
   availableTabs,
   activeTabAttachable,
   selectedElements,
+  selectedTexts,
   streaming,
   activeAssistantMessageId,
   stoppedRuns,
@@ -104,6 +106,7 @@ export function SidepanelView({
   onToggleAttachedTab,
   onAttachActiveTab,
   onRemoveAttachedTab,
+  onRemoveSelectedText,
   onAttachFiles,
   onRemoveUploadedAttachment,
   onReplaceUploadedAttachment,
@@ -135,6 +138,7 @@ export function SidepanelView({
   availableTabs: AttachmentTab[];
   activeTabAttachable: boolean;
   selectedElements: SelectedElement[];
+  selectedTexts: SelectedText[];
   streaming: boolean;
   activeAssistantMessageId?: string;
   stoppedRuns: StoppedRuns;
@@ -175,6 +179,7 @@ export function SidepanelView({
   onToggleAttachedTab: (tab: AttachmentTab) => void;
   onAttachActiveTab: () => Promise<void>;
   onRemoveAttachedTab: (tabId: number) => void;
+  onRemoveSelectedText: (selection: SelectedText) => void;
   onAttachFiles: FileHandler;
   onRemoveUploadedAttachment: (id: string) => void;
   onReplaceUploadedAttachment: ReplaceAttachmentHandler;
@@ -318,8 +323,10 @@ export function SidepanelView({
             pendingAttachments={pendingAttachments}
             selectedSkills={selectedSkills}
             selectedElements={selectedElements}
+            selectedTexts={selectedTexts}
             attachmentNotice={attachmentNotice}
             onRemoveAttachedTab={onRemoveAttachedTab}
+            onRemoveSelectedText={onRemoveSelectedText}
             onRemoveUploadedAttachment={onRemoveUploadedAttachment}
             onRemoveSkill={(skillId) =>
               onSetSelectedSkills(

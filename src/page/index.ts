@@ -8,6 +8,7 @@ import {
   type ActStep,
 } from "./actions";
 import { runEdits, type EditOp } from "./edits";
+import { mainMarkdown } from "./html-markdown";
 import { pageMarkdown } from "./markdown";
 import { raiseFloor, refCounter, resolveRef, RefError } from "./refs";
 import { findLines } from "./search";
@@ -71,6 +72,8 @@ const methods: Record<string, (args: Args) => unknown> = {
   markdown: () => ({
     text: pageMarkdown(document.body || document.documentElement),
   }),
+  // The page's main content with whole links, for copying.
+  mainMarkdown: () => ({ text: mainMarkdown(document, "") }),
   step: (args) => runStep(args.step as ActStep),
   begin: () => beginChanges(),
   sameDocument: () => hasBaseline(),

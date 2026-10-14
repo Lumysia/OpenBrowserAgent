@@ -1,4 +1,5 @@
 import { plural } from "../plural";
+import { contextMenuJaJP } from "./context-menu/ja-JP";
 import { smartBarJaJP } from "./smart-bar/ja-JP";
 import { syncJaJP } from "./sync/ja-JP";
 import { themesJaJP } from "./themes/ja-JP";
@@ -127,6 +128,9 @@ export const jaJP: LocaleMessages = {
     willBeSentAsPageContext: "ページコンテキストとして送信されます",
     currentPage: "現在のページ",
     elementSelected: "選択した要素",
+    selectedText: "選択したテキスト",
+    willBeSentWithMessage: "メッセージと一緒に送信されます",
+    removeSelectedText: "選択したテキストを削除",
     addNewTab: "新しいタブを追加",
     addCurrentTab: "現在のタブを追加",
     attachFiles: "ファイルを添付",
@@ -568,6 +572,7 @@ export const jaJP: LocaleMessages = {
     debugToolRequired: "必須パラメーター",
   },
   smartBar: smartBarJaJP,
+  contextMenu: contextMenuJaJP,
   sync: syncJaJP,
   themes: themesJaJP,
 };

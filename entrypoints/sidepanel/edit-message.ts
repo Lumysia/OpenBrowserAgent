@@ -5,9 +5,11 @@ import type {
   ChatSource,
   PickedSkill,
   SelectedElement,
+  SelectedText,
   UploadedAttachment,
 } from "../../src/shared/types";
 import { pickedSkillsFromMetadata } from "../../src/shared/skills";
+import { selectedTextsFromMetadata } from "../../src/shared/selected-text";
 
 export function createEditMessageDraft({
   chat,
@@ -35,6 +37,7 @@ export function createEditMessageDraft({
       ? (message.metadata.attachedTabs as AttachmentTab[])
       : [],
     selectedElements: selectedElementsFromMetadata(message.metadata),
+    selectedTexts: selectedTextsFromMetadata(message.metadata),
     skills: pickedSkillsFromMetadata(message.metadata),
     keptMessageIds,
   };
@@ -59,6 +62,7 @@ export type EditMessageDraft = NonNullable<
   previousAttachments: UploadedAttachment[];
   previousAttachedTabs: AttachmentTab[];
   previousSelectedElements: SelectedElement[];
+  previousSelectedTexts: SelectedText[];
   previousSkills: PickedSkill[];
 };
 

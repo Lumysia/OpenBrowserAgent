@@ -12,7 +12,6 @@ import type {
   Chat,
   ChatSummary,
   Preferences,
-  SelectedElement,
   PickedSkill,
   UploadedAttachment,
 } from "../../src/shared/types";
@@ -264,8 +263,7 @@ export function useActiveChatCleanup(
   setSentAttachmentPreviews: (
     value: Record<string, UploadedAttachment[]>,
   ) => void,
-  clearAttachedTabs: () => void,
-  setSelectedElements: (value: SelectedElement[]) => void,
+  clearComposerContext: () => void,
   setSelectedSkills: (value: PickedSkill[]) => void,
   setOpenMenu: (value: ComposerMenu | null) => void,
 ) {
@@ -281,8 +279,7 @@ export function useActiveChatCleanup(
     clearUploadedAttachments();
     setEditingMessage(null);
     setSentAttachmentPreviews({});
-    clearAttachedTabs();
-    setSelectedElements([]);
+    clearComposerContext();
     setSelectedSkills([]);
     setOpenMenu(null);
   }, [activeChatId]);

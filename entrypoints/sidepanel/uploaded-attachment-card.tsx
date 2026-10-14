@@ -1,4 +1,4 @@
-import { File, FileAudio, FileText, FileVideo, Image, X } from "lucide-react";
+import { File, FileAudio, FileText, FileVideo, Image } from "lucide-react";
 import type { RefObject } from "react";
 import {
   ATTACHMENT_KIND,
@@ -6,10 +6,8 @@ import {
 } from "../../src/shared/attachments";
 import type { Messages } from "../../src/shared/i18n";
 import type { UploadedAttachment } from "../../src/shared/types";
-import { Button, IconTooltip } from "../../src/ui/components";
-import { ContextCardLabel } from "./context-card-label";
+import { ContextCard } from "./context-card";
 import { formatAttachmentSize } from "./file-attachments";
-import { useDeferredRemove } from "./use-deferred-remove";
 
 export function UploadFileInput({
   inputRef,
@@ -42,30 +40,18 @@ export function UploadedAttachmentCard({
   t: Messages;
   onRemove: () => void;
 }) {
-  const { removing, remove } = useDeferredRemove(onRemove);
   const status = isMetadataOnlyAttachment(attachment.kind)
     ? t.sidepanel.fileMetadataOnly
     : t.sidepanel.willBeSentToAi;
 
   return (
-    <div className={`context-card ${removing ? "is-removing" : ""}`}>
-      <AttachmentPreview attachment={attachment} />
-      <ContextCardLabel
-        title={attachment.name}
-        detail={`${status} · ${formatAttachmentSize(attachment.size)}`}
-      />
-      <IconTooltip label={t.sidepanel.removeAttachment}>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="context-close"
-          aria-label={t.sidepanel.removeAttachment}
-          onClick={remove}
-        >
-          <X size={14} />
-        </Button>
-      </IconTooltip>
-    </div>
+    <ContextCard
+      icon={<AttachmentPreview attachment={attachment} />}
+      title={attachment.name}
+      detail={`${status} · ${formatAttachmentSize(attachment.size)}`}
+      removeLabel={t.sidepanel.removeAttachment}
+      onRemove={onRemove}
+    />
   );
 }
 

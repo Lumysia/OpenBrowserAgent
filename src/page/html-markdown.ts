@@ -12,15 +12,17 @@ export function htmlMarkdown(html: string, url: string): HtmlMarkdown {
   base.setAttribute("href", resolve(base.getAttribute("href") || "", url));
   if (!base.isConnected) doc.head.prepend(base);
   const origin = new URL(url).origin;
-  // Without style sheets, menus and pickers the page hides would show up:
-  // the main landmark, when there is one, keeps to the content.
+  // Without style sheets, menus and pickers the page hides would show up.
+  return { title: compact(doc.title), text: mainMarkdown(doc, origin) };
+}
+
+// The main landmark, when there is one, keeps to the content.
+export function mainMarkdown(doc: Document, origin: string) {
   const main = doc.querySelector("main, [role=main]");
-  return {
-    title: compact(doc.title),
-    text:
-      (main && pageMarkdown(main, origin)) ||
-      pageMarkdown(doc.body || doc.documentElement, origin),
-  };
+  return (
+    (main && pageMarkdown(main, origin)) ||
+    pageMarkdown(doc.body || doc.documentElement, origin)
+  );
 }
 
 function resolve(href: string, url: string) {

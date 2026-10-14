@@ -11,13 +11,14 @@ import { toAttachmentTab } from "./sidepanel-context";
 
 export function useActiveTabContext({
   attachedTabs,
-  selectedElements,
+  pinned,
   setAttachedTabs,
   setSelectedElements,
   autoAttachSuppressedRef,
 }: {
   attachedTabs: AttachmentTab[];
-  selectedElements: SelectedElement[];
+  // The attached tab stays when another tab becomes active.
+  pinned: boolean;
   setAttachedTabs: Dispatch<SetStateAction<AttachmentTab[]>>;
   setSelectedElements: Dispatch<SetStateAction<SelectedElement[]>>;
   autoAttachSuppressedRef: MutableRefObject<boolean>;
@@ -47,13 +48,13 @@ export function useActiveTabContext({
     if (
       autoAttachedRef.current ||
       autoAttachSuppressedRef.current ||
-      selectedElements.length ||
+      pinned ||
       attachedTabs.length
     )
       return;
     autoAttachedRef.current = true;
     void autoAttachActiveTab(setAttachedTabs, autoAttachedTabIdRef);
-  }, [attachedTabs.length, selectedElements.length, setAttachedTabs]);
+  }, [attachedTabs.length, pinned, setAttachedTabs]);
 
   useEffect(() => {
     if (
@@ -68,7 +69,7 @@ export function useActiveTabContext({
       void syncActiveTabContext({
         tab,
         attachedTabs,
-        selectedElements,
+        pinned,
         setAttachedTabs,
         autoAttachedTabIdRef,
         autoAttachSuppressedRef,
@@ -91,7 +92,7 @@ export function useActiveTabContext({
       chrome.tabs.onActivated.removeListener(handleActivated);
       chrome.tabs.onUpdated.removeListener(handleUpdated);
     };
-  }, [attachedTabs, selectedElements, setAttachedTabs]);
+  }, [attachedTabs, pinned, setAttachedTabs]);
 }
 
 function upsertSelectedElement(
@@ -122,14 +123,14 @@ async function autoAttachActiveTab(
 async function syncActiveTabContext({
   tab,
   attachedTabs,
-  selectedElements,
+  pinned,
   setAttachedTabs,
   autoAttachedTabIdRef,
   autoAttachSuppressedRef,
 }: {
   tab?: chrome.tabs.Tab;
   attachedTabs: AttachmentTab[];
-  selectedElements: SelectedElement[];
+  pinned: boolean;
   setAttachedTabs: Dispatch<SetStateAction<AttachmentTab[]>>;
   autoAttachedTabIdRef: MutableRefObject<number | null>;
   autoAttachSuppressedRef: MutableRefObject<boolean>;
@@ -146,11 +147,7 @@ async function syncActiveTabContext({
     }
     return;
   }
-  if (
-    autoAttachSuppressedRef.current ||
-    selectedElements.length ||
-    attachedTabs.length >= 2
-  )
+  if (autoAttachSuppressedRef.current || pinned || attachedTabs.length >= 2)
     return;
   if (attachedTabs[0]?.id === attachment.id) {
     setAttachedTabs((tabs) =>

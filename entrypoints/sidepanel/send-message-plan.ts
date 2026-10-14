@@ -7,6 +7,7 @@ import type {
   ChatSource,
   PickedSkill,
   SelectedElement,
+  SelectedText,
   UploadedAttachment,
 } from "../../src/shared/types";
 import {
@@ -22,28 +23,47 @@ import {
 import { selectedElementImageAttachments } from "./selected-element-attachment";
 import { generateLocalTitle } from "./sidepanel-context";
 
+// A request from the context menu or the smart bar: the tabs and selected
+// text it is about, and how the agent should carry it out (see
+// side-panel-requests).
+export type SendRequest = {
+  instruction: string;
+  tabs: AttachmentTab[];
+  selectedTexts?: SelectedText[];
+};
+
+// The instruction a request's message carries, kept for a resend.
+export function messageInstruction(message: ChatMessage | undefined) {
+  const instruction = message?.metadata?.instruction;
+  return typeof instruction === "string" ? instruction : undefined;
+}
+
 export function createSendMessagePlan({
   chat,
   text,
   t,
   sentTabs,
   sentElements,
+  sentTexts = [],
   sentAttachments,
   context,
   sources,
   assistantModel,
   skills,
+  instruction,
 }: {
   chat: Chat;
   text: string;
   t: Messages;
   sentTabs: AttachmentTab[];
   sentElements: SelectedElement[];
+  sentTexts?: SelectedText[];
   sentAttachments: UploadedAttachment[];
   context: string;
   sources?: ChatSource[];
   assistantModel?: { provider: string; name: string };
   skills?: PickedSkill[];
+  instruction?: string;
 }) {
   const selectedSkills = skills?.filter(Boolean) || [];
   const userMessage: ChatMessage = {
@@ -62,10 +82,12 @@ export function createSendMessagePlan({
       ...(sentElements.length
         ? { selectedElements: sentElements.map(toSelectedElementMetadata) }
         : {}),
+      ...(sentTexts.length ? { selectedTexts: sentTexts } : {}),
       ...(sentAttachments.length
         ? { uploadedAttachments: sentAttachments.map(toAttachmentMetadata) }
         : {}),
       ...(selectedSkills.length ? { skills: selectedSkills } : {}),
+      ...(instruction ? { instruction } : {}),
     },
   };
   const assistantMessage: ChatMessage = {
@@ -105,7 +127,8 @@ function toSelectedElementMetadata(element: SelectedElement) {
 }
 
 // Queued messages carry no extras; an edit or resend reuses the extras of the
-// message it replaces; a fresh send takes the composer's current extras.
+// message it replaces; a request brings its own tabs and nothing else; a
+// fresh send takes the composer's current extras.
 export function pickSendInputs({
   chat,
   queued,
@@ -113,10 +136,12 @@ export function pickSendInputs({
   resendMessage,
   attachedTabs,
   selectedElements,
+  selectedTexts = [],
   selectedSkills,
   resendAttachments,
   pendingAttachments,
   uploadedAttachments,
+  request,
 }: {
   chat: Chat;
   queued: boolean;
@@ -124,11 +149,24 @@ export function pickSendInputs({
   resendMessage?: ChatMessage;
   attachedTabs: AttachmentTab[];
   selectedElements: SelectedElement[];
+  selectedTexts?: SelectedText[];
   selectedSkills: PickedSkill[];
   resendAttachments?: UploadedAttachment[];
   pendingAttachments: UploadedAttachment[];
   uploadedAttachments: UploadedAttachment[];
+  request?: SendRequest;
 }) {
+  if (request)
+    return {
+      activeEdit: null,
+      baseChat: chat,
+      sentTabs: request.tabs,
+      sentElements: [],
+      sentTexts: request.selectedTexts || [],
+      sentSkills: [],
+      sentAttachments: [],
+      activeAttachments: [],
+    };
   const edit = queued
     ? null
     : editingMessage?.chatId === chat.id
@@ -146,6 +184,7 @@ export function pickSendInputs({
     : edit
       ? edit.selectedElements
       : selectedElements;
+  const sentTexts = queued ? [] : edit ? edit.selectedTexts : selectedTexts;
   const sentSkills = queued ? [] : edit ? edit.skills : selectedSkills;
   const imageAttachments = selectedElementImageAttachments(sentElements);
   return {
@@ -161,6 +200,7 @@ export function pickSendInputs({
       : chat,
     sentTabs,
     sentElements,
+    sentTexts,
     sentSkills,
     sentAttachments: [
       ...(queued ? [] : resendAttachments || pendingAttachments),
