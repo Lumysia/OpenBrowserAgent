@@ -395,6 +395,7 @@ test("paragraphs: labels are told by markup, in any script", () => {
     <article>
       <p>Privacy Policy</p>
       <p><a href="/privacy">Privacy Policy</a></p>
+      <ul><li><span class="item"><a href="/outdoors">Sports &amp; Outdoors</a></span></li></ul>
       <p>By <a href="/u/ann">Ann Lee</a>, <a href="/u/bo">Bo Chan</a> and <a href="/u/cy">Cy Dee</a></p>
       <div class="meta"><span>Ann Lee</span> <time datetime="2026-10-14">Oct 14</time></div>
       <p>3 new messages</p>

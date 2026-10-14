@@ -21,7 +21,7 @@ export function labelsOf(
   const metadata = metadataOf(text, {
     language: parent.closest("[lang]")?.getAttribute("lang") || undefined,
     label:
-      !!(wrapper ?? parent).closest(LINK_SELECTOR) ||
+      !!parent.closest(LINK_SELECTOR) ||
       mostlyLinks(nodes) ||
       !!parent.closest(CITATION_SELECTOR) ||
       inDateRow(parent, text) ||
