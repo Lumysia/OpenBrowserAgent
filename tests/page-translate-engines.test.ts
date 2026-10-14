@@ -94,7 +94,7 @@ test("Google: translateHtml request and response", async () => {
     assert.deepEqual(JSON.parse(String(call.init.body)), [
       [
         [
-          "Read the <a i=1>field guide</a> before you <a i=2>leave the trail</a>, and run {3} first.",
+          "Read the <a i=1>field guide</a> before you <a i=2>leave the trail</a>, and run <code i=3>{3}</code> first.",
           "Bring enough water &amp; food for the day.",
         ],
         "auto",
@@ -135,7 +135,7 @@ test("Google: a rate limit on translateHtml tries the keyless endpoint", async (
     assert.deepEqual(
       new URLSearchParams(String(fallback.init.body)).getAll("q"),
       [
-        "Read the <a i=1>field guide</a> before you <a i=2>leave the trail</a>, and run {3} first.",
+        "Read the <a i=1>field guide</a> before you <a i=2>leave the trail</a>, and run <code i=3>{3}</code> first.",
         "Bring enough water &amp; food for the day.",
       ],
     );
@@ -194,15 +194,15 @@ test("Google: both endpoints rate-limited is reported as such", async () => {
 test("Google HTML: markers in, markers out", () => {
   assert.equal(
     toGoogleHtml("A <b1>x & y</b1> < {2}"),
-    "A <a i=1>x &amp; y</a> &lt; {2}",
+    "A <a i=1>x &amp; y</a> &lt; <code i=2>{2}</code>",
   );
   // Google's space before punctuation after a tag, entities, and the
   // original sentences some clients add in <i>.
   assert.equal(
     fromGoogleHtml(
-      "Bonjour <a i=0>le monde</a> . C&#39;est <b><i>It is</i>moi</b> &amp; toi",
+      "Bonjour <a i=0>le monde</a> . C&#39;est <b><i>It is</i>moi</b> &amp; toi <code i=1>[1]</code> .",
     ),
-    "Bonjour <b0>le monde</b0>. C'est moi & toi",
+    "Bonjour <b0>le monde</b0>. C'est moi & toi {1}.",
   );
 });
 

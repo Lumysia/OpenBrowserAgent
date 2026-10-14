@@ -1,5 +1,6 @@
 import { engineLanguageCode } from "../../../shared/page-translate/languages";
 import {
+  atomTag,
   closeTag,
   openTag,
   tokenizePlaceholders,
@@ -139,7 +140,9 @@ export async function translateFallback(
 }
 
 // Placeholder text as the HTML Google keeps markup in: pairs become
-// `<a i=N>`, text is escaped; atoms stay `{N}`, which Google leaves alone.
+// `<a i=N>`, atoms `<code i=N>{N}</code>` (as bare text Google rewrites
+// `{N}` to `[N]` or drops it; empty tags get stuck in place), text is
+// escaped.
 export function toGoogleHtml(text: string) {
   return tokenizePlaceholders(text)
     .map((token) =>
@@ -149,43 +152,46 @@ export function toGoogleHtml(text: string) {
           ? `<a i=${token.id}>`
           : token.type === "close"
             ? "</a>"
-            : `{${token.id}}`,
+            : `<code i=${token.id}>{${token.id}}</code>`,
     )
     .join("");
 }
 
 const TAG = /<(\/?)([a-z]+)\b([^>]*)>/gi;
-// Google puts a space between a closing tag and the punctuation after it.
+// Google puts a space between a tag and the punctuation after it.
 const SPACE_BEFORE_PUNCTUATION =
-  /(<\/b\d+>)\s+(?=[.,;:!?)\]}…。，、；：！？）」』])/g;
+  /(<\/b\d+>|\{\d+\})\s+(?=[.,;:!?)\]}…。，、；：！？）」』])/g;
 
 // Google's HTML back to placeholder text. Other tags are Google's own: with
 // some clients it pairs every sentence with the original in `<i>`, which is
-// dropped.
+// dropped. An atom's `<code>` comes back as its `{N}`, whatever is in it.
 export function fromGoogleHtml(html: string) {
-  const stack: Array<number | undefined> = [];
+  const pairs: Array<number | undefined> = [];
   let output = "";
   let last = 0;
+  // Inside an `<i>` or an atom's `<code>`: nothing is kept.
   let skipping = 0;
-  const text = (value: string) => {
-    if (!skipping) output += decodeEntities(value);
-  };
   for (const match of html.matchAll(TAG)) {
-    text(html.slice(last, match.index));
+    if (!skipping) output += decodeEntities(html.slice(last, match.index));
     last = match.index + match[0].length;
     const [, closing, name, attributes] = match;
     const tag = name.toLowerCase();
-    if (tag === "i") skipping += closing ? -1 : 1;
-    else if (tag === "a" && !closing) {
-      const id = /\bi\s*=\s*"?(\d+)/.exec(attributes)?.[1];
-      stack.push(id === undefined ? undefined : Number(id));
+    const id = /\bi\s*=\s*"?(\d+)/.exec(attributes)?.[1];
+    if (tag === "i" || tag === "code") {
+      if (closing) skipping = Math.max(0, skipping - 1);
+      else {
+        if (tag === "code" && id !== undefined && !skipping)
+          output += atomTag(Number(id));
+        skipping++;
+      }
+    } else if (tag === "a" && !closing) {
+      pairs.push(id === undefined ? undefined : Number(id));
       if (id !== undefined && !skipping) output += openTag(Number(id));
     } else if (tag === "a") {
-      const id = stack.pop();
-      if (id !== undefined && !skipping) output += closeTag(id);
+      const open = pairs.pop();
+      if (open !== undefined && !skipping) output += closeTag(open);
     }
-    skipping = Math.max(0, skipping);
   }
-  text(html.slice(last));
+  if (!skipping) output += decodeEntities(html.slice(last));
   return output.replace(SPACE_BEFORE_PUNCTUATION, "$1").trim();
 }

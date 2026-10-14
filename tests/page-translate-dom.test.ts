@@ -107,12 +107,25 @@ test("paragraphs: inline code and images stay as atoms in the sentence", () => {
 });
 
 test("serialize: nested formatting, plain spans and text that looks like markers", () => {
-  const { found } = paragraphsOf(`
+  const { document, found } = paragraphsOf(`
     <p id="a">A <a href="/x" class="link"><strong>bold link</strong></a> and <span>plain</span> <span class="c">styled</span> text.</p>
     <p id="b">Literal <b>markers</b> like {1} and &lt;b2&gt; stay text.</p>`);
+  // The link and its bold text are one pair of markers.
   assert.equal(
     found[0].source.text,
-    "A <b1><b2>bold link</b2></b1> and plain <b3>styled</b3> text.",
+    "A <b1>bold link</b1> and plain <b2>styled</b2> text.",
+  );
+  const container = document.createElement("div");
+  container.append(
+    buildTranslation(
+      document as unknown as Document,
+      found[0].source,
+      "Un <b1>lien gras</b1> et du texte <b2>stylé</b2>.",
+    ),
+  );
+  assert.equal(
+    container.innerHTML,
+    'Un <a href="/x" class="link"><strong>lien gras</strong></a> et du texte <span class="c">stylé</span>.',
   );
   // Plain text when the page's text could be read as markers.
   assert.equal(
@@ -189,4 +202,14 @@ test("serialize: the text of nodes, whitespace collapsed", () => {
   const source = serializeNodes([...document.getElementById("p")!.childNodes]);
   assert.equal(source.plain, "Many spaces inside here");
   assert.equal(source.text, "Many spaces <b1>inside</b1> here");
+});
+
+test("serialize: footnote marks and other text without letters stay as they are", () => {
+  const { found } = paragraphsOf(
+    `<p>Walking developed in Europe.<sup class="reference"><a href="#cite-1"><span>[</span>1<span>]</span></a></sup> It is <b>2024</b> and <a href="/x"><em>more</em> text</a>.</p>`,
+  );
+  assert.equal(
+    found[0].source.text,
+    "Walking developed in Europe.{1} It is {2} and <b3><b4>more</b4> text</b3>.",
+  );
 });

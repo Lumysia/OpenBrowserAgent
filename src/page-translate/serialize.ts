@@ -18,12 +18,15 @@ export type Serialized = {
   text: string;
   // The text as it reads, to notice when the page changes it.
   plain: string;
-  // Elements by marker number.
-  elements: Map<number, Element>;
+  // Elements by marker number. A pair can stand for nested elements around
+  // the same text (a link around bold text): outermost first.
+  elements: Map<number, Element[]>;
 };
 
+const LETTER = /\p{L}/u;
+
 export function serializeNodes(nodes: Node[]): Serialized {
-  const elements = new Map<number, Element>();
+  const elements = new Map<number, Element[]>();
   let plain = "";
   let marked = "";
   const visit = (node: Node) => {
@@ -35,22 +38,27 @@ export function serializeNodes(nodes: Node[]): Serialized {
     }
     if (node.nodeType !== 1 || isOwn(node)) return;
     const element = node as Element;
-    if (isAtom(element)) {
+    const text = element.textContent || "";
+    // Code and images, and elements with nothing to translate in them
+    // (footnote marks such as [1]), stay as they are.
+    if (isAtom(element) || (text.trim() && !LETTER.test(text))) {
       const id = elements.size + 1;
-      elements.set(id, element);
+      elements.set(id, [element]);
       marked += atomTag(id);
       // Line breaks read as spaces.
       if (element.tagName.toUpperCase() === "BR") plain += " ";
       return;
     }
-    if (isPlainWrapper(element) || !element.textContent?.trim()) {
-      if (element.textContent?.trim()) element.childNodes.forEach(visit);
+    if (!text.trim()) return;
+    const chain = wrappers(element);
+    if (!chain.length) {
+      element.childNodes.forEach(visit);
       return;
     }
     const id = elements.size + 1;
-    elements.set(id, element);
+    elements.set(id, chain);
     marked += openTag(id);
-    element.childNodes.forEach(visit);
+    innermost(element).childNodes.forEach(visit);
     marked += closeTag(id);
   };
   nodes.forEach(visit);
@@ -60,6 +68,45 @@ export function serializeNodes(nodes: Node[]): Serialized {
   if (hasMarkerSyntax(plain))
     return { text: plain, plain, elements: new Map() };
   return { text: tidyMarkers(collapse(marked)), plain, elements };
+}
+
+// An element and the elements nested in it around the same content, as one
+// pair of markers (fewer markers translate better). Plain wrappers add
+// nothing and are left out.
+function wrappers(element: Element) {
+  const chain: Element[] = [];
+  for (let current: Element | undefined = element; current;) {
+    if (!isPlainWrapper(current)) chain.push(current);
+    const only = onlyChild(current);
+    current =
+      only && !isAtom(only) && LETTER.test(only.textContent || "")
+        ? only
+        : undefined;
+  }
+  return chain;
+}
+
+function innermost(element: Element) {
+  let current = element;
+  for (
+    let only = onlyChild(current);
+    only && !isAtom(only) && LETTER.test(only.textContent || "");
+    only = onlyChild(current)
+  )
+    current = only;
+  return current;
+}
+
+// The element's single child element when it has no other content.
+function onlyChild(element: Element) {
+  let only: Element | undefined;
+  for (const child of element.childNodes) {
+    if (child.nodeType === 3 && !(child as Text).data.trim()) continue;
+    if (child.nodeType === 8) continue;
+    if (child.nodeType !== 1 || only || isOwn(child)) return undefined;
+    only = child as Element;
+  }
+  return only;
 }
 
 // A translation whose markers don't match the source's (an engine dropped,
@@ -106,22 +153,31 @@ function appendTree(
   document: Document,
   parent: Node,
   tree: PlaceholderTree,
-  elements: Map<number, Element>,
+  elements: Map<number, Element[]>,
 ) {
   for (const node of tree) {
     if (node.type === "text") {
       parent.appendChild(document.createTextNode(node.value));
       continue;
     }
-    const original = elements.get(node.id);
-    if (!original) continue;
-    const copy = original.cloneNode(node.type === "atom") as Element;
-    withoutIds(copy);
-    copies.set(copy, original);
+    const chain = elements.get(node.id);
+    if (!chain?.length) continue;
+    // Atoms are copied whole; pairs as empty copies around the translation.
+    const made = chain.map((original) =>
+      copyOf(original, node.type === "atom"),
+    );
+    made.reduce((outer, inner) => (outer.appendChild(inner), inner));
     if (node.type === "element")
-      appendTree(document, copy, node.children, elements);
-    parent.appendChild(copy);
+      appendTree(document, made[made.length - 1], node.children, elements);
+    parent.appendChild(made[0]);
   }
+}
+
+function copyOf(original: Element, deep: boolean) {
+  const copy = original.cloneNode(deep) as Element;
+  withoutIds(copy);
+  copies.set(copy, original);
+  return copy;
 }
 
 // Copies don't take their originals' ids (they would be duplicates).

@@ -25,8 +25,7 @@ export const atomTag = (id: number) => `{${id}}`;
 
 // Whether plain text already contains something that reads as a marker.
 export function hasMarkerSyntax(text: string) {
-  MARKER.lastIndex = 0;
-  return MARKER.test(text);
+  return new RegExp(MARKER.source, "i").test(text);
 }
 
 export function tokenizePlaceholders(text: string): PlaceholderToken[] {
