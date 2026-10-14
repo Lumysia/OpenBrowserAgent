@@ -8,13 +8,16 @@ import { ko } from "./locales/ko";
 import { ptBR } from "./locales/pt-BR";
 import { zhCN } from "./locales/zh-CN";
 import { zhTW } from "./locales/zh-TW";
+import {
+  DEFAULT_UI_LANGUAGE,
+  resolveLanguage,
+  type UiLanguage,
+} from "./ui-languages";
 
-export const i18nRegistry: Record<string, LocaleMessages> = {
+const MESSAGES: Record<UiLanguage, LocaleMessages> = {
   "en-US": enUS,
   "zh-CN": zhCN,
-  "zh-SG": zhCN,
   "zh-TW": zhTW,
-  "zh-HK": zhTW,
   "ja-JP": jaJP,
   ko,
   "fr-FR": frFR,
@@ -23,51 +26,52 @@ export const i18nRegistry: Record<string, LocaleMessages> = {
   "pt-BR": ptBR,
 };
 
-// The UI languages, each named in itself.
-export const languageLabels: Record<string, string> = {
-  "en-US": "English",
-  "zh-CN": "简体中文",
-  "zh-TW": "繁體中文",
-  "ja-JP": "日本語",
-  ko: "한국어",
-  "fr-FR": "Français",
-  "de-DE": "Deutsch",
-  "es-ES": "Español",
-  "pt-BR": "Português (Brasil)",
-};
+// Each plural message knows its locale, so formatCount needs no other
+// state to pick the form and format numbers.
+const PLURAL_LANGUAGE = new WeakMap<Plural, string>();
+const PLURAL_FORMS = new Set(["zero", "one", "two", "few", "many", "other"]);
+for (const [code, messages] of Object.entries(MESSAGES))
+  tagPlurals(messages, code);
 
-// The UI language when none is stored or the stored one is not supported.
-export const DEFAULT_LANGUAGE = "en-US";
-
-let activeLanguage: string | undefined;
-
-export function getMessages(language?: string) {
-  return i18nRegistry[resolveLanguage(language)];
+function tagPlurals(value: unknown, language: string) {
+  if (!value || typeof value !== "object") return;
+  if (isPlural(value)) PLURAL_LANGUAGE.set(value, language);
+  else for (const child of Object.values(value)) tagPlurals(child, language);
 }
 
-// The supported language the messages for `language` come from, e.g. to
-// format numbers in the same language as the text around them.
-export function resolveLanguage(language?: string) {
-  if (language) activeLanguage = language;
-  const requestedLanguage = language || activeLanguage || "";
-  const normalized = requestedLanguage.replace("_", "-");
+function isPlural(value: object): value is Plural {
   return (
-    [requestedLanguage, normalized].find((code) =>
-      Object.hasOwn(i18nRegistry, code),
-    ) || DEFAULT_LANGUAGE
+    typeof (value as Plural).other === "string" &&
+    Object.keys(value).every((key) => PLURAL_FORMS.has(key))
   );
+}
+
+// The language numbers and dates in this page's UI are formatted in (see
+// format.ts): the one the page last got its messages for.
+let formatLanguage: UiLanguage = DEFAULT_UI_LANGUAGE;
+
+export function getFormatLanguage() {
+  return formatLanguage;
+}
+
+// The messages for `language`. A page shows text in one language, so this
+// also makes it the one getFormatLanguage returns.
+export function getMessages(language?: string) {
+  const code = resolveLanguage(language);
+  if (language) formatLanguage = code;
+  return MESSAGES[code];
 }
 
 export type Messages = LocaleMessages;
 
-// Fills `{count}` into the plural form the active language uses for it,
+// Fills `{count}` into the plural form the message's language uses for it,
 // and any other `{name}` placeholders from `values`.
 export function formatCount(
   message: Plural,
   count: number,
   values: Record<string, string | number> = {},
 ) {
-  const language = resolveLanguage();
+  const language = PLURAL_LANGUAGE.get(message) ?? DEFAULT_UI_LANGUAGE;
   const form = new Intl.PluralRules(language).select(count);
   const number = new Intl.NumberFormat(language);
   return Object.entries({ ...values, count }).reduce(

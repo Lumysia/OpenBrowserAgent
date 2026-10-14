@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { BUILTIN_SKILLS } from "../src/shared/builtin-skills";
-import { i18nRegistry } from "../src/shared/i18n";
+import { getMessages } from "../src/shared/i18n";
+import { UI_LANGUAGES } from "../src/shared/ui-languages";
+
+const uiLocales = () =>
+  UI_LANGUAGES.map(({ code }) => [code, getMessages(code)] as const);
 
 const PLURAL_FORMS = new Set(["zero", "one", "two", "few", "many", "other"]);
 
@@ -31,10 +35,10 @@ function messagePaths(value: unknown, path = ""): Map<string, unknown> {
   );
 }
 
-const english = messagePaths(i18nRegistry["en-US"]);
+const english = messagePaths(getMessages("en-US"));
 
 test("every locale has every message of en-US and no others", () => {
-  for (const [language, messages] of Object.entries(i18nRegistry)) {
+  for (const [language, messages] of uiLocales()) {
     const paths = messagePaths(messages);
     assert.deepEqual(
       [...paths.keys()].sort(),
@@ -57,7 +61,7 @@ test("every locale has every message of en-US and no others", () => {
 });
 
 test("every plural message has an `other` form and keeps {count}", () => {
-  for (const [language, messages] of Object.entries(i18nRegistry))
+  for (const [language, messages] of uiLocales())
     for (const [path, value] of messagePaths(messages)) {
       if (!value || typeof value !== "object" || Array.isArray(value)) continue;
       for (const form of Object.values(value))
@@ -67,7 +71,7 @@ test("every plural message has an `other` form and keeps {count}", () => {
 
 test("every locale names and describes every built-in skill", () => {
   const names = BUILTIN_SKILLS.map((skill) => skill.name).sort();
-  for (const [language, messages] of Object.entries(i18nRegistry)) {
+  for (const [language, messages] of uiLocales()) {
     const texts = messages.display.builtinSkills;
     assert.deepEqual(Object.keys(texts).sort(), names, language);
     for (const [name, text] of Object.entries(texts)) {
@@ -79,7 +83,7 @@ test("every locale names and describes every built-in skill", () => {
 
 test("Chinese questions use the full-width question mark", () => {
   for (const language of ["zh-CN", "zh-TW"])
-    for (const [path, value] of messagePaths(i18nRegistry[language])) {
+    for (const [path, value] of messagePaths(getMessages(language))) {
       const texts =
         typeof value === "string"
           ? [value]

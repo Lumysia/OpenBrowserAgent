@@ -2,6 +2,7 @@ import { plural } from "../plural";
 import { contextMenuEsES } from "./context-menu/es-ES";
 import { providerConsentEsES } from "./provider-consent/es-ES";
 import { displayEsES } from "./display/es-ES";
+import { pageTranslateEsES } from "./page-translate/es-ES";
 import { downloadsEsES } from "./downloads/es-ES";
 import { smartBarEsES } from "./smart-bar/es-ES";
 import { syncEsES } from "./sync/es-ES";
@@ -647,4 +648,5 @@ export const esES: LocaleMessages = {
   sync: syncEsES,
   themes: themesEsES,
   display: displayEsES,
+  pageTranslate: pageTranslateEsES,
 };

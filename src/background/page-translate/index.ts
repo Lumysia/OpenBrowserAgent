@@ -1,4 +1,4 @@
-import { getPageTranslateMessages } from "../../shared/page-translate/messages";
+import { getMessages } from "../../shared/i18n";
 import { respondWith, type RuntimeReply } from "../../shared/runtime-messages";
 import {
   PAGE_TRANSLATE_MESSAGE,
@@ -91,7 +91,7 @@ export async function togglePageTranslation(tab: chrome.tabs.Tab | undefined) {
     storage.language.get(),
     storage.preferences.get(),
   ]);
-  const messages = getPageTranslateMessages(language);
+  const messages = getMessages(language).pageTranslate;
   const noted =
     injected &&
     (await showPageNote(

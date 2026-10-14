@@ -1,7 +1,5 @@
-import {
-  engineLanguageCode,
-  sameLanguage,
-} from "../../../shared/page-translate/languages";
+import { sameLanguage } from "../../../shared/language-tags";
+import { engineLanguageCode } from "../../../shared/page-translate/languages";
 import { stripPlaceholders } from "../../../shared/page-translate/placeholders";
 import { PAGE_TRANSLATE_ERROR } from "../../../shared/page-translate/protocol";
 import {

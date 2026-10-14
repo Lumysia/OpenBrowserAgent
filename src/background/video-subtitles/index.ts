@@ -1,8 +1,8 @@
+import { getMessages } from "../../shared/i18n";
 // Translated video subtitles: injects the subtitle script into the frame
 // with the video when the user starts them (the video's button, the
 // right-click menu, "Translate this page"), and installs the caption file
 // observer it asks for (see main-world.ts).
-import { getPageTranslateMessages } from "../../shared/page-translate/messages";
 import { normalizePageTranslateSettings } from "../../shared/page-translate/settings";
 import { getBrowserApi, storage } from "../../shared/storage";
 import {
@@ -111,7 +111,7 @@ async function toggleInFrame(tabId: number, frameId: number, srcUrl?: string) {
     ? await sendToFrame(tabId, frameId, message)
     : undefined;
   if (reply?.ok) return;
-  const messages = getPageTranslateMessages(await storage.language.get());
+  const messages = getMessages(await storage.language.get()).pageTranslate;
   await showPageNote(tabId, messages.subtitles.noVideo, notes.theme, {
     tone: "error",
     durationMs: PAGE_TRANSLATE_TOAST_MS,
@@ -189,8 +189,8 @@ async function pageNotes(): Promise<VideoSubtitlesNotes> {
     storage.language.get(),
   ]);
   return {
-    noCaptions: getPageTranslateMessages(language).subtitles.noCaptions,
-    liveOnly: getPageTranslateMessages(language).subtitles.liveOnly,
+    noCaptions: getMessages(language).pageTranslate.subtitles.noCaptions,
+    liveOnly: getMessages(language).pageTranslate.subtitles.liveOnly,
     theme: pageToastTheme(preferences.colorScheme, preferences.accentColor),
   };
 }
@@ -200,7 +200,7 @@ async function buttonConfig() {
     storage.preferences.get(),
     storage.language.get(),
   ]);
-  const { start, stop } = getPageTranslateMessages(language).subtitles;
+  const { start, stop } = getMessages(language).pageTranslate.subtitles;
   const config: VideoButtonConfig = {
     enabled: normalizePageTranslateSettings(preferences.pageTranslate)
       .videoButton,

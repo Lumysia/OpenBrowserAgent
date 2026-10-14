@@ -1,5 +1,5 @@
+import { getMessages } from "../../shared/i18n";
 import { CONTEXT_MENU_ID } from "../../shared/context-menu";
-import { getPageTranslateMessages } from "../../shared/page-translate/messages";
 import {
   PAGE_TRANSLATE_MESSAGE,
   type PageTranslateQueryMessage,
@@ -45,9 +45,9 @@ export async function translateMenuTitle(language?: string) {
   const [tab] = await getBrowserApi()
     .tabs.query({ active: true, lastFocusedWindow: true })
     .catch(() => []);
-  const messages = getPageTranslateMessages(
+  const messages = getMessages(
     language ?? (await storage.language.get()),
-  );
+  ).pageTranslate;
   return (await isTabTranslated(tab?.id))
     ? messages.menu.showOriginal
     : messages.menu.translatePage;

@@ -1,6 +1,6 @@
 // Page translation settings. Dependency-free: the page script imports this
 // module.
-import { normalizeLanguageTag } from "../language-tags";
+import { matchLanguageTag, normalizeLanguageTag } from "../language-tags";
 import { PAGE_TRANSLATE_LANGUAGES } from "./languages";
 
 // Where translations come from. `model`: the user's AI provider. `browser`:
@@ -116,21 +116,10 @@ export function pageTranslateTarget(
   );
 }
 
+// The page translation language that serves `tag` best (see
+// matchLanguageTag).
 export function matchTargetLanguage(tag: string | undefined) {
-  const normalized = normalizeLanguageTag(tag);
-  if (!normalized) return undefined;
-  const lower = normalized.toLowerCase();
-  const exact = PAGE_TRANSLATE_LANGUAGES.find(
-    (language) => language.tag.toLowerCase() === lower,
-  );
-  if (exact) return exact.tag;
-  const [primary, ...rest] = lower.split("-");
-  if (primary === "zh")
-    return rest.some((part) => ["hant", "tw", "hk", "mo"].includes(part))
-      ? "zh-TW"
-      : "zh-CN";
-  if (primary === "pt") return rest.includes("pt") ? "pt-PT" : "pt-BR";
-  return PAGE_TRANSLATE_LANGUAGES.find(
-    (language) => language.tag.toLowerCase() === primary,
-  )?.tag;
+  return matchLanguageTag(tag, PAGE_TRANSLATE_TAGS);
 }
+
+const PAGE_TRANSLATE_TAGS = PAGE_TRANSLATE_LANGUAGES.map(({ tag }) => tag);

@@ -22,6 +22,7 @@ import { keepStoredForm } from "./stored-form";
 import { sameJson } from "./sync/codec";
 import { NO_SYNC_BACKEND_ID, normalizeSyncBackends } from "./sync-backends";
 import { DEFAULT_SYNC_STATUS, type SyncStatus } from "./sync/state";
+import { resolveLanguage } from "./ui-languages";
 import { normalizeWorkspaces } from "./workspace";
 import type {
   Agent,
@@ -178,9 +179,8 @@ async function removeContentOfRemovedChats(
 export type StorageItem<T> = ReturnType<typeof createItem<T>>;
 
 export const storage = {
-  language: createSyncedItem<string>(
-    STORAGE_KEYS.language,
-    () => getBrowserApi().i18n?.getUILanguage?.() || "en-US",
+  language: createSyncedItem<string>(STORAGE_KEYS.language, () =>
+    resolveLanguage(getBrowserApi().i18n?.getUILanguage?.()),
   ),
   preferences: createSyncedItem<Preferences>(
     STORAGE_KEYS.preferences,

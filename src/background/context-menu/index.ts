@@ -5,7 +5,6 @@ import {
   type ContextMenuEntry,
 } from "../../shared/context-menu";
 import { getMessages } from "../../shared/i18n";
-import { getPageTranslateMessages } from "../../shared/page-translate/messages";
 import { SIDE_PANEL_TASK } from "../../shared/side-panel-handoff";
 import { getBrowserApi, storage } from "../../shared/storage";
 import { togglePageTranslation, translateMenuTitle } from "../page-translate";
@@ -66,7 +65,7 @@ async function menuEntries(menus: Menus) {
     {
       ...t,
       translatePage: await translateMenuTitle(language),
-      translateSubtitles: getPageTranslateMessages(language).subtitles.menu,
+      translateSubtitles: getMessages(language).pageTranslate.subtitles.menu,
       parent: name || "OpenBrowserAgent",
     },
     // The tab strip's menu: Firefox, Safari 18 and Chrome 150 have it.

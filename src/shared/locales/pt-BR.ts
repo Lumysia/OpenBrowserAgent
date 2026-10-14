@@ -2,6 +2,7 @@ import { plural } from "../plural";
 import { contextMenuPtBR } from "./context-menu/pt-BR";
 import { providerConsentPtBR } from "./provider-consent/pt-BR";
 import { displayPtBR } from "./display/pt-BR";
+import { pageTranslatePtBR } from "./page-translate/pt-BR";
 import { downloadsPtBR } from "./downloads/pt-BR";
 import { smartBarPtBR } from "./smart-bar/pt-BR";
 import { syncPtBR } from "./sync/pt-BR";
@@ -638,4 +639,5 @@ export const ptBR: LocaleMessages = {
   sync: syncPtBR,
   themes: themesPtBR,
   display: displayPtBR,
+  pageTranslate: pageTranslatePtBR,
 };

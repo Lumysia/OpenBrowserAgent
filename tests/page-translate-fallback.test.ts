@@ -17,7 +17,6 @@ import {
 } from "../src/background/page-translate/notes";
 import { createPageSession } from "../src/background/page-translate/session";
 import { getMessages } from "../src/shared/i18n";
-import { getPageTranslateMessages } from "../src/shared/page-translate/messages";
 import {
   PAGE_TRANSLATE_ERROR,
   type PageTranslateEvent,
@@ -215,7 +214,7 @@ test("fallback table: free services swap, the browser's translator falls back to
   });
   // Every engine named in a note has a name in every locale.
   for (const engine of PAGE_TRANSLATE_ENGINES)
-    assert.ok(getPageTranslateMessages("en-US").engineNames[engine]);
+    assert.ok(getMessages("en-US").pageTranslate.engineNames[engine]);
 });
 
 // The browser's Translator API as a test sets it up; none when `api` is

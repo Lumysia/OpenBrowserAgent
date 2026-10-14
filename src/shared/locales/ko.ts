@@ -2,6 +2,7 @@ import { plural } from "../plural";
 import { contextMenuKo } from "./context-menu/ko";
 import { providerConsentKo } from "./provider-consent/ko";
 import { displayKo } from "./display/ko";
+import { pageTranslateKo } from "./page-translate/ko";
 import { downloadsKo } from "./downloads/ko";
 import { smartBarKo } from "./smart-bar/ko";
 import { syncKo } from "./sync/ko";
@@ -572,4 +573,5 @@ export const ko: LocaleMessages = {
   sync: syncKo,
   themes: themesKo,
   display: displayKo,
+  pageTranslate: pageTranslateKo,
 };

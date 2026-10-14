@@ -7,7 +7,11 @@ import {
   localDayKey,
   typingPhrases,
 } from "../src/shared/holidays";
-import { getMessages, i18nRegistry } from "../src/shared/i18n";
+import { getMessages } from "../src/shared/i18n";
+import { UI_LANGUAGES } from "../src/shared/ui-languages";
+
+const uiLocales = () =>
+  UI_LANGUAGES.map(({ code }) => [code, getMessages(code)] as const);
 
 // Local dates, as the device sees them.
 const on = (year: number, month: number, day: number) =>
@@ -83,7 +87,7 @@ test("holiday phrases lead and alternate with the usual ones", () => {
 });
 
 test("every holiday has a name and phrases in every language", () => {
-  for (const [language, messages] of Object.entries(i18nRegistry))
+  for (const [language, messages] of uiLocales())
     for (const { id, colors } of HOLIDAYS) {
       const holiday = messages.themes.holidays[id];
       assert.ok(holiday.name, `${language} ${id}`);

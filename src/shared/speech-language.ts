@@ -194,13 +194,11 @@ export function charScript(char: string): SpeechScript | undefined {
 // The script a language is written in: its script subtag, else the script
 // the language is listed under, else Latin.
 export function languageScript(tag: string): SpeechScript {
-  const subtag = tag
-    .replace(/_/g, "-")
+  // Canonical tags write the script subtag as "Hant".
+  const code = (normalizeLanguageTag(tag) ?? "")
     .split("-")
     .slice(1)
-    .find((part) => /^[a-z]{4}$/i.test(part));
-  const code =
-    subtag && subtag[0].toUpperCase() + subtag.slice(1).toLowerCase();
+    .find((part) => /^[A-Z][a-z]{3}$/.test(part));
   const primary = primaryLanguage(tag);
   return (
     SCRIPT_ENTRIES.find(([, info]) =>

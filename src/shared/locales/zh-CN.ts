@@ -2,6 +2,7 @@ import { plural } from "../plural";
 import { contextMenuZhCN } from "./context-menu/zh-CN";
 import { providerConsentZhCN } from "./provider-consent/zh-CN";
 import { displayZhCN } from "./display/zh-CN";
+import { pageTranslateZhCN } from "./page-translate/zh-CN";
 import { downloadsZhCN } from "./downloads/zh-CN";
 import { smartBarZhCN } from "./smart-bar/zh-CN";
 import { syncZhCN } from "./sync/zh-CN";
@@ -543,4 +544,5 @@ export const zhCN: LocaleMessages = {
   sync: syncZhCN,
   themes: themesZhCN,
   display: displayZhCN,
+  pageTranslate: pageTranslateZhCN,
 };

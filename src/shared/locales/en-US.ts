@@ -2,6 +2,7 @@ import { plural } from "../plural";
 import { contextMenuEnUS } from "./context-menu/en-US";
 import { providerConsentEnUS } from "./provider-consent/en-US";
 import { displayEnUS } from "./display/en-US";
+import { pageTranslateEnUS } from "./page-translate/en-US";
 import { downloadsEnUS } from "./downloads/en-US";
 import { smartBarEnUS } from "./smart-bar/en-US";
 import { syncEnUS } from "./sync/en-US";
@@ -606,6 +607,7 @@ export const enUS = {
   sync: syncEnUS,
   themes: themesEnUS,
   display: displayEnUS,
+  pageTranslate: pageTranslateEnUS,
 };
 
 export type LocaleMessages = typeof enUS;

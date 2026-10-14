@@ -1,5 +1,6 @@
 import { resolveAgent } from "../../shared/agents";
-import { getMessages, resolveLanguage } from "../../shared/i18n";
+import { getMessages } from "../../shared/i18n";
+import { resolveLanguage } from "../../shared/ui-languages";
 import { respondWith, type RuntimeReply } from "../../shared/runtime-messages";
 import { grantProviderConsent } from "../../shared/provider-consent";
 import { ProviderConsentError, userErrorText } from "../../shared/user-errors";

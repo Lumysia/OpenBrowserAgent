@@ -9,11 +9,8 @@ import {
   Wrench,
 } from "lucide-react";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
-import {
-  DEFAULT_LANGUAGE,
-  getMessages,
-  languageLabels,
-} from "../../src/shared/i18n";
+import { getMessages } from "../../src/shared/i18n";
+import { resolveLanguage, UI_LANGUAGES } from "../../src/shared/ui-languages";
 import { storage } from "../../src/shared/storage";
 import {
   Input,
@@ -50,15 +47,12 @@ export function GeneralPage() {
         title={t.common.language}
         description={t.options.languageDescription}
       >
-        <Select
-          value={language || DEFAULT_LANGUAGE}
-          onValueChange={setLanguage}
-        >
+        <Select value={resolveLanguage(language)} onValueChange={setLanguage}>
           <SelectTrigger aria-label={t.common.language}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(languageLabels).map(([id, label]) => (
+            {UI_LANGUAGES.map(({ code: id, label }) => (
               <SelectItem key={id} value={id}>
                 {label}
               </SelectItem>

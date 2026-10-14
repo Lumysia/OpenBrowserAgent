@@ -15,7 +15,6 @@ import { PRIVACY_POLICY_TRANSLATION_URL } from "../../src/shared/config";
 import { getMessages } from "../../src/shared/i18n";
 import { clearTranslations } from "../../src/shared/page-translate/cache";
 import { PAGE_TRANSLATE_LANGUAGES } from "../../src/shared/page-translate/languages";
-import { getPageTranslateMessages } from "../../src/shared/page-translate/messages";
 import {
   FREE_CLOUD_ENGINES,
   matchTargetLanguage,
@@ -65,7 +64,7 @@ export function PageTranslatePage() {
   const [cacheError, setCacheError] = useState("");
   const t = getMessages(language);
   const models = useConfiguredModels();
-  const p = getPageTranslateMessages(language);
+  const p = t.pageTranslate;
   if (!preferences) return null;
   const settings = normalizePageTranslateSettings(preferences.pageTranslate);
   const update = (change: Partial<PageTranslateSettings>) =>
