@@ -1,3 +1,4 @@
+import { PAGE_TOOL_GROUPS } from "../../shared/agents";
 import { assignChatSources } from "../../shared/chat-sources";
 import { withCancellationTimeout, type Pause } from "../../shared/cancellation";
 import { BROWSER_TOOL_TIMEOUT_MS } from "../../shared/config";
@@ -9,10 +10,6 @@ import {
   type ToolDefinition,
   type ToolResult,
 } from "./types";
-
-// Groups whose tools talk to pages, where a dialog or a hung page could
-// otherwise stall the run.
-const TIMED_GROUPS = new Set(["pages", "browser", "web"]);
 
 export type ToolOutcome = {
   // What the model reads.
@@ -55,7 +52,9 @@ export async function runTool(
   let result: ToolResult;
   const timeout =
     tool.timeoutMs ??
-    (tool.group && TIMED_GROUPS.has(tool.group) ? BROWSER_TOOL_TIMEOUT_MS : 0);
+    (tool.group && PAGE_TOOL_GROUPS.includes(tool.group)
+      ? BROWSER_TOOL_TIMEOUT_MS
+      : 0);
   try {
     result = timeout
       ? await withCancellationTimeout(

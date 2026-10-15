@@ -1,9 +1,9 @@
+import { clampInt, trimmedString } from "../../shared/values";
 import { delay } from "../../shared/cancellation";
 import { areCdpAvailable } from "../../shared/runtime-capabilities";
 import { withCdp, type CdpSend } from "../cdp";
 import { callMainWorld, callPage, PageError } from "../page-agent";
 import { errorMessage } from "../../shared/error-message";
-import { stringArg } from "./types";
 
 // The steps of `act`: page steps run in the page with synthetic events;
 // trusted steps (coordinates, `trusted: true`, editors that ignore page
@@ -71,11 +71,12 @@ export async function runStep(
 }
 
 async function waitStep(tabId: number, step: Step, signal?: AbortSignal) {
-  const ms = Math.min(
-    WAIT_MAX_MS,
-    Math.max(0, Number(step.ms) || WAIT_DEFAULT_MS),
-  );
-  const text = stringArg(step.text);
+  const ms = clampInt(step.ms, {
+    fallback: WAIT_DEFAULT_MS,
+    min: 0,
+    max: WAIT_MAX_MS,
+  });
+  const text = trimmedString(step.text);
   if (!text) {
     await delay(ms, signal);
     return undefined;

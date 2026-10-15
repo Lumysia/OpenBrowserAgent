@@ -1,3 +1,4 @@
+import { clampInt, trimmedString } from "../../shared/values";
 import { errorMessage } from "../../shared/error-message";
 import {
   ATTACHMENT_KIND,
@@ -25,7 +26,6 @@ import {
 import {
   fail,
   schema,
-  stringArg,
   type RunContext,
   type SourceInput,
   type ToolDefinition,
@@ -48,14 +48,12 @@ export function textSlice(
 // The range textSlice returns: from `offset`, at most `limit` and `max`
 // characters.
 function sliceRange(text: string, input: Record<string, unknown>, max: number) {
-  const offset = Math.min(
-    text.length,
-    Math.max(0, Math.trunc(Number(input.offset) || 0)),
-  );
-  const limit = Math.min(
-    max,
-    Math.max(1, Math.trunc(Number(input.limit) || max)),
-  );
+  const offset = clampInt(input.offset, {
+    fallback: 0,
+    min: 0,
+    max: text.length,
+  });
+  const limit = clampInt(input.limit, { fallback: max, min: 1, max });
   return { offset, end: Math.min(text.length, offset + limit) };
 }
 
@@ -101,7 +99,7 @@ export const readTool: ToolDefinition = {
     },
   }),
   async execute(input, context) {
-    const source = parseSource(stringArg(input.source));
+    const source = parseSource(trimmedString(input.source));
     const { run, signal } = context;
     if (source.kind === "tab") {
       if (!hasToolGroup(run.agent, "pages"))

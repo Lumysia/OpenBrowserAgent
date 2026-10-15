@@ -24,6 +24,11 @@ export type ToolGroup = (typeof TOOL_GROUPS)[number];
 // Groups that need the Chrome debugger; hidden where it does not exist.
 export const DEBUGGER_TOOL_GROUPS: ToolGroup[] = ["scripts", "devtools"];
 
+// Groups whose tools talk to pages, where a dialog or a hung page could
+// stall the run: their calls are bounded by BROWSER_TOOL_TIMEOUT_MS unless
+// a tool sets its own timeout.
+export const PAGE_TOOL_GROUPS: ToolGroup[] = ["pages", "browser", "web"];
+
 export const DEFAULT_AGENT_ID = "general-agent";
 export const ASK_AGENT_ID = "ask-agent";
 

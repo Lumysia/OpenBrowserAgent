@@ -134,7 +134,3 @@ export function schema(
 ): JsonSchema {
   return { type: "object", properties, required };
 }
-
-export function stringArg(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}

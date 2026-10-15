@@ -1,3 +1,4 @@
+import { trimmedString } from "../../shared/values";
 import {
   customizeBuiltinSkill,
   inheritSkillSettings,
@@ -15,7 +16,7 @@ import {
 import { SKILL_MAX_CHARS } from "../../shared/config";
 import { TOOL_NAME } from "../../shared/tool-names";
 import type { Skill } from "../../shared/types";
-import { fail, ok, schema, stringArg, type ToolDefinition } from "./types";
+import { fail, ok, schema, type ToolDefinition } from "./types";
 
 const TOO_LARGE = `A skill's files may hold ${SKILL_MAX_CHARS} characters together; this change would make it larger. Keep the skill shorter.`;
 
@@ -39,8 +40,8 @@ export const skillsTool: ToolDefinition = {
     ["action", "name"],
   ),
   async execute(input, { run }) {
-    const action = stringArg(input.action);
-    const name = normalizeSkillName(stringArg(input.name));
+    const action = trimmedString(input.action);
+    const name = normalizeSkillName(trimmedString(input.name));
     if (!name) return fail("name is required (kebab-case).");
     const [all, settings] = await Promise.all([
       storage.skills.get(),
@@ -56,7 +57,7 @@ export const skillsTool: ToolDefinition = {
         return fail("content (the SKILL.md instructions) is required.");
       const skill = createSkillPackage({
         name,
-        description: stringArg(input.description),
+        description: trimmedString(input.description),
         instruction: content,
       });
       if (skillTooLarge(skill)) return fail(TOO_LARGE);
@@ -74,7 +75,7 @@ export const skillsTool: ToolDefinition = {
         ? customizeBuiltinSkill(entry.skill)
         : undefined;
     const existing = customized || entry.skill;
-    const path = stringArg(input.path) || SKILL_ENTRY_PATH;
+    const path = trimmedString(input.path) || SKILL_ENTRY_PATH;
     const file = existing.files.find((item) => item.path === path);
     let content = String(input.content ?? "");
     if (action === "patch") {

@@ -1,6 +1,7 @@
+import { trimmedString } from "../../shared/values";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { generateImage } from "../image-generation";
-import { fail, schema, stringArg, type ToolDefinition } from "./types";
+import { fail, schema, type ToolDefinition } from "./types";
 
 export const generateImageTool: ToolDefinition = {
   name: TOOL_NAME.generateImage,
@@ -27,7 +28,7 @@ export const generateImageTool: ToolDefinition = {
     ["prompt"],
   ),
   async execute(input, { run, toolCallId, messageId, signal }) {
-    if (!stringArg(input.prompt)) return fail("prompt is required.");
+    if (!trimmedString(input.prompt)) return fail("prompt is required.");
     const result = (await generateImage(
       run.attachments,
       input,

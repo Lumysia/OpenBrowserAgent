@@ -1,8 +1,9 @@
+import { trimmedString } from "../../shared/values";
 import { normalizeAgents, resolveAgent } from "../../shared/agents";
 import { storage } from "../../shared/storage";
 import { TOOL_NAME } from "../../shared/tool-names";
 import { runSubAgentChat } from "../sub-agent-run";
-import { fail, schema, stringArg, type ToolDefinition } from "./types";
+import { fail, schema, type ToolDefinition } from "./types";
 
 // Answers longer than this come back summarized by the helper model, with
 // the full answer stored for read.
@@ -32,10 +33,10 @@ export const subAgentTool: ToolDefinition = {
     ["task"],
   ),
   async execute(input, { run, toolCallId, messageId, signal, progress }) {
-    const task = stringArg(input.task);
+    const task = trimmedString(input.task);
     if (!task) return fail("task is required.");
     const agents = normalizeAgents(await storage.agents.get());
-    const wanted = stringArg(input.agent).toLowerCase();
+    const wanted = trimmedString(input.agent).toLowerCase();
     const agent = wanted
       ? agents.find(
           (item) => item.id === wanted || item.name.toLowerCase() === wanted,
@@ -45,10 +46,9 @@ export const subAgentTool: ToolDefinition = {
       return fail(
         `No agent "${input.agent}". Agents: ${agents.map((item) => item.name).join(", ")}.`,
       );
-    const title = (stringArg(input.title) || task.replace(/\s+/g, " ")).slice(
-      0,
-      80,
-    );
+    const title = (
+      trimmedString(input.title) || task.replace(/\s+/g, " ")
+    ).slice(0, 80);
     const details = {
       state: "running",
       title,

@@ -1,3 +1,4 @@
+import { trimmedString } from "../../shared/values";
 import { errorMessage } from "../../shared/error-message";
 import { PRODUCT_NAME } from "../../shared/config";
 import { areCdpAvailable } from "../../shared/runtime-capabilities";
@@ -7,7 +8,7 @@ import { pageTab } from "../page-agent";
 import { RUN_TAB_ID_PARAM } from "../run-tab";
 import { pageHeader } from "./page";
 import { textSlice } from "./read";
-import { fail, ok, schema, stringArg, type ToolDefinition } from "./types";
+import { fail, ok, schema, type ToolDefinition } from "./types";
 
 // Tools on the Chrome debugger: page JavaScript (its own, default-off
 // group) and diagnostics. Both detach after each call, except emulation,
@@ -37,7 +38,7 @@ export const runScriptTool: ToolDefinition = {
     ["code"],
   ),
   async execute(input, { run, signal }) {
-    if (!stringArg(input.code)) return fail("code is required.");
+    if (!trimmedString(input.code)) return fail("code is required.");
     const tab = await pageTab(run.tab, input.tabId);
     const result = (await withCdp(
       { tabId: tab.id },
@@ -77,7 +78,7 @@ export const devtoolsTool: ToolDefinition = {
   ),
   async execute(input, { run, signal }) {
     const tab = await pageTab(run.tab, input.tabId);
-    const action = stringArg(input.action);
+    const action = trimmedString(input.action);
     const target = { tabId: tab.id };
     if (action === "reset") {
       const active = await releaseCdp(target, resetEmulation);

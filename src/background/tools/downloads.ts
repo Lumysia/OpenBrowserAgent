@@ -1,3 +1,4 @@
+import { clampInt, trimmedString } from "../../shared/values";
 import {
   DOWNLOAD_ACTION,
   DOWNLOAD_STATUS,
@@ -31,7 +32,6 @@ import { RUN_TAB_ID_PARAM } from "../run-tab";
 import {
   fail,
   schema,
-  stringArg,
   type RunContext,
   type ToolDefinition,
   type ToolResult,
@@ -111,13 +111,13 @@ async function save(
   signal?: AbortSignal,
   extra: Record<string, unknown> = {},
 ) {
-  const filename = stringArg(input.filename);
+  const filename = trimmedString(input.filename);
   const path = safeDownloadPath(
     filename ? withExtension(filename, file.blob.type) : file.name,
-    stringArg(input.folder),
+    trimmedString(input.folder),
   );
   const id = await saveFile(run, { blob: file.blob, path }, signal);
-  return started(run, stringArg(input.action), id, input, signal, extra);
+  return started(run, trimmedString(input.action), id, input, signal, extra);
 }
 
 // Downloads this chat started; others are the user's to manage.
@@ -144,30 +144,30 @@ const ACTIONS: Record<
   ) => Promise<ToolResult>
 > = {
   async [DOWNLOAD_ACTION.download](input, run, signal) {
-    const url = stringArg(input.url);
+    const url = trimmedString(input.url);
     if (!/^https?:\/\//i.test(url))
       return fail("url must be an http or https URL of the file.");
     const id = await startDownload(
       run,
       {
         url,
-        filename: stringArg(input.filename),
-        folder: stringArg(input.folder),
+        filename: trimmedString(input.filename),
+        folder: trimmedString(input.folder),
       },
       signal,
     );
     return started(run, DOWNLOAD_ACTION.download, id, input, signal);
   },
   async [DOWNLOAD_ACTION.save](input, run, signal) {
-    const source = stringArg(input.source);
+    const source = trimmedString(input.source);
     if (typeof input.content === "string" && input.content)
       return save(
         run,
         fileFromContent({
           content: input.content,
-          filename: stringArg(input.filename),
-          mimeType: stringArg(input.mimeType),
-          encoding: stringArg(input.encoding),
+          filename: trimmedString(input.filename),
+          mimeType: trimmedString(input.mimeType),
+          encoding: trimmedString(input.encoding),
         }),
         input,
         signal,
@@ -193,11 +193,12 @@ const ACTIONS: Record<
     return save(run, zip.file, input, signal, counts);
   },
   async [DOWNLOAD_ACTION.list](input, run) {
-    const query = stringArg(input.query);
-    const limit = Math.min(
-      MAX_LIST_LIMIT,
-      Math.max(1, Math.trunc(Number(input.limit) || LIST_LIMIT)),
-    );
+    const query = trimmedString(input.query);
+    const limit = clampInt(input.limit, {
+      fallback: LIST_LIMIT,
+      min: 1,
+      max: MAX_LIST_LIMIT,
+    });
     const items = await downloadsApi().search({
       orderBy: ["-startTime"],
       limit,
@@ -339,7 +340,7 @@ filename and folder are relative to the Downloads folder. Started downloads are 
   ),
   compactArgs: true,
   async execute(input, { run, signal }) {
-    const action = ACTIONS[stringArg(input.action)];
+    const action = ACTIONS[trimmedString(input.action)];
     if (!action)
       return fail(
         `action must be one of ${Object.values(DOWNLOAD_ACTION).join(", ")}.`,

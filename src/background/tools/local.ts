@@ -1,3 +1,4 @@
+import { trimmedString } from "../../shared/values";
 import { LOCAL_EXECUTION_BRIDGE_LIMITS } from "../../shared/config";
 import { TOOL_NAME } from "../../shared/tool-names";
 import {
@@ -15,7 +16,6 @@ import {
   fail,
   json,
   schema,
-  stringArg,
   type ToolDefinition,
   type ToolResult,
 } from "./types";
@@ -50,8 +50,8 @@ export const localCommandTool: ToolDefinition = {
     },
   }),
   async execute(input, { signal }) {
-    const action = stringArg(input.action) || "run";
-    const taskId = stringArg(input.taskId);
+    const action = trimmedString(input.action) || "run";
+    const taskId = trimmedString(input.taskId);
     if (action === "status" || action === "cancel") {
       if (!taskId) return fail(`taskId is required to ${action}.`);
       const record =
@@ -64,10 +64,10 @@ export const localCommandTool: ToolDefinition = {
         : result;
     }
     const request: LocalCommandRequest = {
-      command: stringArg(input.command),
-      bridge: stringArg(input.bridge),
-      cwd: stringArg(input.cwd),
-      shell: stringArg(input.shell),
+      command: trimmedString(input.command),
+      bridge: trimmedString(input.bridge),
+      cwd: trimmedString(input.cwd),
+      shell: trimmedString(input.shell),
       timeoutMs: input.timeoutMs,
     };
     if (!request.command) return fail("command is required.");

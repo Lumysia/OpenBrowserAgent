@@ -9,7 +9,7 @@ import {
   normalizeHeaders,
   normalizeMcpServer,
 } from "../shared/mcp";
-import { trimmedString as stringInput } from "../shared/values";
+import { trimmedString } from "../shared/values";
 import { callMcpServerTool, listMcpServerTools } from "../shared/mcp-client";
 import { removeById, storage, updateById } from "../shared/storage";
 import { sameJson } from "../shared/sync/codec";
@@ -114,7 +114,7 @@ const ACTIONS: Record<string, (input: Input) => Promise<unknown>> = {
 export const MCP_SERVER_ACTIONS = Object.keys(ACTIONS);
 
 export function runMcpServersAction(input: Input) {
-  const action = stringInput(input.action) || "list";
+  const action = trimmedString(input.action) || "list";
   return (
     ACTIONS[action]?.(input) ??
     Promise.resolve({
@@ -151,14 +151,14 @@ async function addMcpServer(input: Input) {
 }
 
 async function updateMcpServer(input: Input): Promise<unknown> {
-  const serverId = stringInput(input.serverId || input.id);
+  const serverId = trimmedString(input.serverId || input.id);
   if (!serverId) return { success: false, error: "Missing MCP server ID" };
   const patch: Partial<McpServerConfig> = {
-    ...(input.name !== undefined ? { name: stringInput(input.name) } : {}),
+    ...(input.name !== undefined ? { name: trimmedString(input.name) } : {}),
     ...(input.description !== undefined
-      ? { description: stringInput(input.description) }
+      ? { description: trimmedString(input.description) }
       : {}),
-    ...(input.url !== undefined ? { url: stringInput(input.url) } : {}),
+    ...(input.url !== undefined ? { url: trimmedString(input.url) } : {}),
     ...(input.headers !== undefined
       ? { headers: normalizeHeaders(input.headers) }
       : {}),
@@ -197,7 +197,7 @@ const sameEndpoint = (left: McpServerConfig, right: McpServerConfig) =>
 // The server is asked first; its answer is stored on the server as stored
 // then, unless its address or headers changed meanwhile.
 export async function testMcpServer(input: Input) {
-  const serverId = stringInput(input.serverId || input.id);
+  const serverId = trimmedString(input.serverId || input.id);
   if (!serverId) return { success: false, error: "Missing MCP server ID" };
   const server = (await storage.mcpServers.get()).find(
     (item) => item.id === serverId,
@@ -232,7 +232,7 @@ export async function testMcpServer(input: Input) {
 }
 
 async function deleteMcpServer(input: Input) {
-  const serverId = stringInput(input.serverId || input.id);
+  const serverId = trimmedString(input.serverId || input.id);
   const success = await removeById(storage.mcpServers, serverId);
   return { success, serverId };
 }

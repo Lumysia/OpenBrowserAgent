@@ -13,7 +13,7 @@ import { LOCAL_EXECUTION_BRIDGE_RUNTIME_MESSAGE_TYPE } from "../shared/local-exe
 import { respondWith, type RuntimeReply } from "../shared/runtime-messages";
 import { removeById, storage, updateById } from "../shared/storage";
 import type { LocalExecutionBridgeConfig } from "../shared/types";
-import { trimmedString as text } from "../shared/values";
+import { trimmedString } from "../shared/values";
 import { bridgeTaskCounts } from "./local-execution-bridge-tasks";
 import { BridgeHostError, testLocalExecutionBridge } from "./bridge-connection";
 
@@ -37,7 +37,7 @@ const ACTIONS: Record<string, (input: Input) => Promise<Input>> = {
 export const LOCAL_BRIDGE_ACTIONS = Object.keys(ACTIONS);
 
 export function runLocalBridgesAction(input: Input) {
-  const action = text(input.action) || "list";
+  const action = trimmedString(input.action) || "list";
   return (
     ACTIONS[action]?.(input) ??
     Promise.resolve({
@@ -48,7 +48,7 @@ export function runLocalBridgesAction(input: Input) {
   );
 }
 
-const bridgeIdOf = (input: Input) => text(input.bridgeId || input.id);
+const bridgeIdOf = (input: Input) => trimmedString(input.bridgeId || input.id);
 
 async function listBridges() {
   return { bridges: (await loadBridges()).map((bridge) => safeBridge(bridge)) };
@@ -72,10 +72,10 @@ async function bridgeStatus() {
 }
 
 async function addBridge(input: Input) {
-  const secret = text(input.secret);
+  const secret = trimmedString(input.secret);
   const fields: Partial<Bridge> = {};
   for (const key of EDITABLE)
-    if (text(input[key])) fields[key] = text(input[key]);
+    if (trimmedString(input[key])) fields[key] = trimmedString(input[key]);
   if (input.timeoutMs !== undefined) fields.timeoutMs = Number(input.timeoutMs);
   const [bridge] = normalizeLocalExecutionBridges([
     createLocalExecutionBridgeDraft(
@@ -105,7 +105,7 @@ async function updateBridge(input: Input) {
   const rotate = input.regenerateSecret === true;
   const patch: Partial<Bridge> = {};
   for (const key of EDITABLE)
-    if (input[key] !== undefined) patch[key] = text(input[key]);
+    if (input[key] !== undefined) patch[key] = trimmedString(input[key]);
   if (input.timeoutMs !== undefined) patch.timeoutMs = Number(input.timeoutMs);
   if (rotate) patch.secret = generateLocalExecutionBridgeSecret();
   const updated = await updateById(
@@ -181,7 +181,7 @@ export function handleLocalExecutionBridgeRuntimeMessage(
     return false;
   return respondWith(
     request.operation === "test"
-      ? testLocalExecutionBridge(text(request.bridgeId))
+      ? testLocalExecutionBridge(trimmedString(request.bridgeId))
       : Promise.reject(new Error("Unknown local execution bridge operation.")),
     sendResponse,
   );
