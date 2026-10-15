@@ -66,6 +66,5 @@ export const smartBarZhCN: SmartBarLocaleMessages = {
   pageActionsDescription: "在页面上选中文本时显示。",
   editActions: "正在编辑的文本的操作",
   editActionsDescription: "在文本框中选中文本时显示。结果可以替换所选内容。",
-  model: "智能工具栏模型",
   modelDescription: "用于解释、翻译、改进写法和修正拼写语法的模型。",
 };

@@ -17,7 +17,8 @@ export const pageTranslateEnUS = {
     microsoft: "Microsoft Translator (free)",
   },
   engineDetails: {
-    model: "Your AI provider translates pages with the model chosen below.",
+    model:
+      "Your AI provider translates pages with the Translation model set in AI providers & models.",
     browser:
       "The browser translates on this device; no text leaves it. Each language is downloaded once. Where it can't translate a page, the AI model below does.",
     google:
@@ -40,9 +41,7 @@ export const pageTranslateEnUS = {
     microsoft: "Microsoft",
   },
   privacyLink: "Privacy policy",
-  model: "Model",
   modelDescription: "The model that translates pages.",
-  defaultModel: "Same model as the chat",
   targetLanguage: "Translate into",
   targetLanguageDescription:
     "Pages are translated into this language. It doesn't change the extension's language.",
@@ -110,18 +109,6 @@ export const pageTranslateEnUS = {
     hiddenSites: "Hidden on these sites",
     hiddenSitesDescription:
       "The button doesn't show on these sites. A site includes its subdomains.",
-  },
-  // The keyboard shortcut (a browser command) for the same.
-  shortcut: {
-    setting: "Keyboard shortcut",
-    settingDescription: "Translates the page or shows the original.",
-    // {shortcut}: the keys, as the browser shows them.
-    current: "Shortcut: {shortcut}",
-    none: "No shortcut set",
-    change: "Change shortcut",
-    // Where the browser has no page to open for it.
-    firefoxHint:
-      'To change it, open about:addons, click the gear button and choose "Manage Extension Shortcuts".',
   },
   // Video subtitles: the original line with its translation under it.
   subtitles: {

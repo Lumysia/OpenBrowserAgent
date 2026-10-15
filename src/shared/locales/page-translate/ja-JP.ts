@@ -19,7 +19,7 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
   },
   engineDetails: {
     model:
-      "設定済みの AI プロバイダーが、下で選んだモデルでページを翻訳します。",
+      "「AI プロバイダーとモデル」で設定した翻訳モデルを使い、AI プロバイダーがページを翻訳します。",
     browser:
       "ブラウザーがこのデバイス上で翻訳します。テキストはデバイスの外に送信されません。言語ごとに一度だけダウンロードされます。翻訳できないページは、下の AI モデルで翻訳します。",
     google:
@@ -40,9 +40,7 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
     microsoft: "Microsoft",
   },
   privacyLink: "プライバシーポリシー",
-  model: "モデル",
   modelDescription: "ページを翻訳するモデルです。",
-  defaultModel: "チャットと同じモデル",
   targetLanguage: "翻訳先の言語",
   targetLanguageDescription:
     "ページはこの言語に翻訳されます。拡張機能の言語は変わりません。",
@@ -102,15 +100,6 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
     hiddenSites: "非表示にしたサイト",
     hiddenSitesDescription:
       "これらのサイトではボタンを表示しません。サイトにはそのサブドメインも含まれます。",
-  },
-  shortcut: {
-    setting: "キーボードショートカット",
-    settingDescription: "ページを翻訳するか、原文を表示します。",
-    current: "ショートカット：{shortcut}",
-    none: "ショートカットが設定されていません",
-    change: "ショートカットを変更",
-    firefoxHint:
-      "変更するには about:addons を開き、歯車ボタンをクリックして「拡張機能のショートカットキーを管理」を選びます。",
   },
   subtitles: {
     menu: "字幕を翻訳",

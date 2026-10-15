@@ -7,6 +7,7 @@ import { downloadsJaJP } from "./downloads/ja-JP";
 import { smartBarJaJP } from "./smart-bar/ja-JP";
 import { syncJaJP } from "./sync/ja-JP";
 import { themesJaJP } from "./themes/ja-JP";
+import { settingsJaJP } from "./settings/ja-JP";
 import { setupJaJP } from "./setup/ja-JP";
 import type { LocaleMessages } from "./en-US";
 
@@ -370,7 +371,6 @@ export const jaJP: LocaleMessages = {
     localExecutionBridgeTestError: "ブリッジテストに失敗しました",
     deleteLocalExecutionBridge: "実行ブリッジを削除",
     skills: "スキル",
-    modelProviders: "AI プロバイダー",
     providerDescription:
       "自分の API キーを使って、OpenBrowserAgent をお気に入りの AI プロバイダーに接続します。",
     mcpServersDescription:
@@ -416,7 +416,6 @@ export const jaJP: LocaleMessages = {
     selectModel: "モデルを選択",
     selectModelDescription:
       "メインのチャットモデルを選択します。エージェントにはツール呼び出しに対応したモデルがおすすめです。",
-    selectImageModel: "画像モデルを選択",
     enableImageGeneration: "画像生成を有効化",
     enableImageGenerationDescription:
       "エージェントが画像生成ツールを使えるようにします。",
@@ -541,11 +540,9 @@ export const jaJP: LocaleMessages = {
     maxToolSteps: "最大ツールステップ数",
     maxToolStepsDescription:
       "エージェントが実行できるツールのステップ数を設定します。0 にするとツール呼び出しを無効にします。",
-    helperModel: "補助モデル",
     helperModelDescription:
       "要約などのバックグラウンド処理に使います。既定ではチャットのモデルを使います。",
     modelSameAsChat: "チャットのモデルと同じ",
-    debug: "デバッグ",
     debugDescription:
       "OpenBrowserAgent のデータをリセットする開発者向けツールです。",
     debugResetTitle: "OpenBrowserAgent のデータを消去",
@@ -589,5 +586,6 @@ export const jaJP: LocaleMessages = {
   themes: themesJaJP,
   display: displayJaJP,
   pageTranslate: pageTranslateJaJP,
+  settings: settingsJaJP,
   setup: setupJaJP,
 };

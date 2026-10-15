@@ -37,13 +37,13 @@ When the agent runs code it wrote (for example, to add up a table), the code run
 
 ## Translation engines
 
-OpenBrowserAgent translates pages with the engine you select in Settings → Page translation. Nothing is translated until you choose "Translate this page", or "Translate subtitles" on a video (its right-click menu item or the button on its corner); video subtitles go to the same engine as page text.
+OpenBrowserAgent translates pages with the engine you select in Settings → On pages → Translate. Nothing is translated until you choose "Translate this page", or "Translate subtitles" on a video (its right-click menu item or the button on its corner); video subtitles go to the same engine as page text.
 
 - **AI model** (the default): the page's text and title are sent only to the model provider you configured.
 - **Built-in translator**: your browser translates on your device, and no text leaves your browser. Only browsers that have one (such as Chrome) offer it.
 - **Google Translate (free)** or **Microsoft Translator (free)**: the text of the page being translated (not the page address, your cookies or account data) is sent directly from your browser to Google (translate-pa.googleapis.com, translate.googleapis.com) or Microsoft (edge.microsoft.com) to get the translation. These free engines use public web-translation endpoints that are not official APIs; they are not operated by or affiliated with OpenBrowserAgent, may limit or stop working at any time, and process the text under their own privacy policies ([Google](https://policies.google.com/privacy), [Microsoft](https://privacy.microsoft.com/privacystatement)). If the selected one limits or refuses requests or stops responding while a page is being translated, the rest of that page is translated with the other one (the page says so), so its text can reach both companies. Do not use them on pages with information you are not willing to share with Google and Microsoft.
 
-Translations are saved in your browser for 30 days, so pages you translated before come back at once. Settings → Page translation clears them.
+Translations are saved in your browser for 30 days, so pages you translated before come back at once. Settings → On pages → Translate → Advanced clears them.
 
 ## What the developer does not do
 
@@ -59,7 +59,7 @@ The use of information received from Google APIs complies with the [Chrome Web S
 
 - Delete chats, agents, skills, and settings in the extension at any time. Uninstalling the extension removes its local storage.
 - Sync is off until you choose a sync backend, and you choose what to sync.
-- Withdraw a provider's permission in Settings → AI providers; it then sends nothing until you agree again.
+- Withdraw a provider's permission in Settings → AI providers & models; it then sends nothing until you agree again.
 - Remove a provider, MCP server, or sync backend to stop sending data to it.
 
 More detail on each browser permission and on what is sent where: [Permissions and Privacy](docs/permissions-and-privacy.md) and [Sync](docs/sync.md).

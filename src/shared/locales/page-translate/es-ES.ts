@@ -19,7 +19,7 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
   },
   engineDetails: {
     model:
-      "Tu proveedor de IA traduce las páginas con el modelo que elijas abajo.",
+      "Tu proveedor de IA traduce las páginas con el modelo de traducción elegido en Proveedores de IA y modelos.",
     browser:
       "El navegador traduce en este dispositivo; ningún texto sale de él. Cada idioma se descarga una vez. Cuando no puede traducir una página, la traduce el modelo de IA de abajo.",
     google:
@@ -40,9 +40,7 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
     microsoft: "Microsoft",
   },
   privacyLink: "Política de privacidad",
-  model: "Modelo",
   modelDescription: "El modelo que traduce las páginas.",
-  defaultModel: "El mismo modelo que el chat",
   targetLanguage: "Traducir a",
   targetLanguageDescription:
     "Las páginas se traducen a este idioma. No cambia el idioma de la extensión.",
@@ -102,15 +100,6 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
     hiddenSites: "Oculto en estos sitios",
     hiddenSitesDescription:
       "El botón no aparece en estos sitios. Un sitio incluye sus subdominios.",
-  },
-  shortcut: {
-    setting: "Atajo de teclado",
-    settingDescription: "Traduce la página o muestra el original.",
-    current: "Atajo: {shortcut}",
-    none: "No hay ningún atajo asignado",
-    change: "Cambiar atajo",
-    firefoxHint:
-      "Para cambiarlo, abre about:addons, haz clic en el botón del engranaje y elige «Administrar atajos de extensiones».",
   },
   subtitles: {
     menu: "Traducir subtítulos",

@@ -7,6 +7,7 @@ import { downloadsPtBR } from "./downloads/pt-BR";
 import { smartBarPtBR } from "./smart-bar/pt-BR";
 import { syncPtBR } from "./sync/pt-BR";
 import { themesPtBR } from "./themes/pt-BR";
+import { settingsPtBR } from "./settings/pt-BR";
 import { setupPtBR } from "./setup/pt-BR";
 import type { LocaleMessages } from "./en-US";
 
@@ -396,7 +397,6 @@ export const ptBR: LocaleMessages = {
     localExecutionBridgeTestError: "Falha no teste da ponte",
     deleteLocalExecutionBridge: "Excluir ponte de execução",
     skills: "Habilidades",
-    modelProviders: "Provedores de IA",
     providerDescription:
       "Use sua própria chave e conecte o OpenBrowserAgent aos seus provedores de IA favoritos.",
     mcpServersDescription:
@@ -445,7 +445,6 @@ export const ptBR: LocaleMessages = {
     selectModel: "Selecionar modelo",
     selectModelDescription:
       "Escolha o modelo principal das conversas. Os agentes funcionam melhor com modelos compatíveis com chamadas de ferramentas.",
-    selectImageModel: "Selecionar modelo de imagem",
     enableImageGeneration: "Ativar geração de imagens",
     enableImageGenerationDescription:
       "Disponibiliza a ferramenta de geração de imagens para os agentes.",
@@ -570,11 +569,9 @@ export const ptBR: LocaleMessages = {
     maxToolSteps: "Máximo de etapas de ferramentas",
     maxToolStepsDescription:
       "Define quantas etapas de ferramentas o agente pode executar. Use 0 para desativar as chamadas de ferramentas.",
-    helperModel: "Modelo auxiliar",
     helperModelDescription:
       "Usado em tarefas em segundo plano, como resumos. Por padrão, o modelo da conversa.",
     modelSameAsChat: "Igual ao modelo da conversa",
-    debug: "Depuração",
     debugDescription:
       "Ferramentas de desenvolvedor para redefinir dados do OpenBrowserAgent.",
     debugResetTitle: "Limpar dados do OpenBrowserAgent",
@@ -618,5 +615,6 @@ export const ptBR: LocaleMessages = {
   themes: themesPtBR,
   display: displayPtBR,
   pageTranslate: pageTranslatePtBR,
+  settings: settingsPtBR,
   setup: setupPtBR,
 };

@@ -14,7 +14,8 @@ import { OPTIONS_PAGES, optionsPageFor } from "./pages";
 import { useHashRoute } from "./route";
 
 export function OptionsApp() {
-  const page = optionsPageFor(useHashRoute());
+  const route = useHashRoute();
+  const page = optionsPageFor(route);
   const [language, , languageLoading] = useStoredState(storage.language);
   const [preferences] = useStoredState(storage.preferences);
   const version = chrome.runtime.getManifest().version;
@@ -38,11 +39,11 @@ export function OptionsApp() {
             </div>
             <nav className="stack">
               {OPTIONS_PAGES.filter(({ hidden }) => !hidden).map(
-                ({ id, hash, icon: Icon, title }) => (
+                ({ id, route: pageRoute, icon: Icon, title }) => (
                   <a
                     key={id}
                     className={cn("nav-link", id === page.id && "active")}
-                    href={hash}
+                    href={`#${pageRoute}`}
                   >
                     <Icon size={16} />
                     {title(t)}
@@ -65,7 +66,7 @@ export function OptionsApp() {
           </aside>
           <ScrollArea className="settings-main">
             <div className="settings-content">
-              <page.Page />
+              <page.Page route={route} />
             </div>
           </ScrollArea>
         </div>

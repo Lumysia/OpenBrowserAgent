@@ -1,5 +1,6 @@
 import {
   Languages,
+  MessagesSquare,
   MonitorCog,
   Palette,
   PartyPopper,
@@ -13,20 +14,26 @@ import { getMessages } from "../../src/shared/i18n";
 import { resolveLanguage, UI_LANGUAGES } from "../../src/shared/ui-languages";
 import { storage } from "../../src/shared/storage";
 import {
+  Accordion,
   Input,
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  SettingSwitchCard,
+  SettingToggleRow,
+  SettingsAccordionItem,
+  SettingsSummary,
   ToggleGroup,
   ToggleGroupItem,
   SettingsPageHeader,
   SettingsSection,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { ShortcutsSection } from "./shortcuts-section";
 import { ThemePicker } from "./theme-picker";
+import { TranslateIntoSection } from "./translate-into";
 
 export function GeneralPage() {
   const [language, setLanguage] = useStoredState(storage.language);
@@ -42,6 +49,7 @@ export function GeneralPage() {
         title={t.options.general}
         description={t.options.generalDescription}
       />
+      <TranslateIntoSection />
       <SettingsSection
         icon={<Languages />}
         title={t.common.language}
@@ -99,55 +107,79 @@ export function GeneralPage() {
           <ToggleGroupItem value="dark">{t.options.darkTheme}</ToggleGroupItem>
         </ToggleGroup>
       </SettingsSection>
-      <SettingSwitchCard
-        icon={<PartyPopper size={18} />}
-        title={t.themes.holidayTouches}
-        description={t.themes.holidayTouchesDescription}
-        checked={preferences.holidayTouches !== false}
-        onChange={(checked) =>
-          setPreferences((previous) => ({
-            ...previous,
-            holidayTouches: checked,
-          }))
-        }
-      />
-      <SettingSwitchCard
-        icon={<ScrollText size={18} />}
-        title={t.options.autoScroll}
-        description={t.options.autoScrollDescription}
-        checked={preferences.autoScroll !== false}
-        onChange={(checked) =>
-          setPreferences((previous) => ({ ...previous, autoScroll: checked }))
-        }
-      />
-      <SettingSwitchCard
-        icon={<RefreshCw size={18} />}
-        title={t.options.autoRetry}
-        description={t.options.autoRetryDescription}
-        checked={preferences.autoRetry !== false}
-        onChange={(checked) =>
-          setPreferences((previous) => ({ ...previous, autoRetry: checked }))
-        }
-      />
-      <SettingsSection
-        icon={<Wrench />}
-        title={t.options.maxToolSteps}
-        description={t.options.maxToolStepsDescription}
-      >
-        <Input
-          aria-label={t.options.maxToolSteps}
-          type="number"
-          min={0}
-          step={1}
-          value={String(preferences.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS)}
-          onChange={(event) =>
-            setPreferences((previous) => ({
-              ...previous,
-              maxToolSteps: parseMaxToolSteps(event.currentTarget.value),
-            }))
+      <ShortcutsSection />
+      <Accordion type="single" collapsible>
+        <SettingsAccordionItem
+          value="chat-behavior"
+          chevronLabel={t.settings.chatBehavior}
+          contentClassName="stack"
+          summary={
+            <SettingsSummary
+              icon={<MessagesSquare size={18} />}
+              title={t.settings.chatBehavior}
+              description={t.settings.chatBehaviorDescription}
+            />
           }
-        />
-      </SettingsSection>
+        >
+          <div className="settings-toggle-list">
+            <SettingToggleRow
+              icon={<ScrollText size={18} />}
+              title={t.options.autoScroll}
+              description={t.options.autoScrollDescription}
+              value={preferences.autoScroll !== false}
+              onChange={(checked) =>
+                setPreferences((previous) => ({
+                  ...previous,
+                  autoScroll: checked,
+                }))
+              }
+            />
+            <SettingToggleRow
+              icon={<RefreshCw size={18} />}
+              title={t.options.autoRetry}
+              description={t.options.autoRetryDescription}
+              value={preferences.autoRetry !== false}
+              onChange={(checked) =>
+                setPreferences((previous) => ({
+                  ...previous,
+                  autoRetry: checked,
+                }))
+              }
+            />
+            <SettingToggleRow
+              icon={<PartyPopper size={18} />}
+              title={t.themes.holidayTouches}
+              description={t.themes.holidayTouchesDescription}
+              value={preferences.holidayTouches !== false}
+              onChange={(checked) =>
+                setPreferences((previous) => ({
+                  ...previous,
+                  holidayTouches: checked,
+                }))
+              }
+            />
+          </div>
+          <Label>
+            <span className="settings-section-title">
+              <Wrench size={18} /> {t.options.maxToolSteps}
+            </span>
+            <Input
+              aria-label={t.options.maxToolSteps}
+              type="number"
+              min={0}
+              step={1}
+              value={String(preferences.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS)}
+              onChange={(event) =>
+                setPreferences((previous) => ({
+                  ...previous,
+                  maxToolSteps: parseMaxToolSteps(event.currentTarget.value),
+                }))
+              }
+            />
+            <small className="muted">{t.options.maxToolStepsDescription}</small>
+          </Label>
+        </SettingsAccordionItem>
+      </Accordion>
     </div>
   );
 }

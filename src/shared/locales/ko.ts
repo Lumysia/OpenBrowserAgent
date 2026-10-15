@@ -7,6 +7,7 @@ import { downloadsKo } from "./downloads/ko";
 import { smartBarKo } from "./smart-bar/ko";
 import { syncKo } from "./sync/ko";
 import { themesKo } from "./themes/ko";
+import { settingsKo } from "./settings/ko";
 import { setupKo } from "./setup/ko";
 import type { LocaleMessages } from "./en-US";
 
@@ -339,7 +340,6 @@ export const ko: LocaleMessages = {
     localExecutionBridgeTestError: "브리지 테스트 실패",
     deleteLocalExecutionBridge: "실행 브리지 삭제",
     skills: "스킬",
-    modelProviders: "AI 제공업체",
     providerDescription:
       "자신의 API 키로 OpenBrowserAgent를 원하는 AI 제공업체에 연결하세요.",
     mcpServersDescription:
@@ -381,7 +381,6 @@ export const ko: LocaleMessages = {
     selectModel: "모델 선택",
     selectModelDescription:
       "주 채팅 모델을 선택하세요. 에이전트는 도구 호출을 지원하는 모델에서 가장 잘 작동합니다.",
-    selectImageModel: "이미지 모델 선택",
     enableImageGeneration: "이미지 생성 활성화",
     enableImageGenerationDescription:
       "에이전트가 이미지 생성 도구를 사용할 수 있게 합니다.",
@@ -505,11 +504,9 @@ export const ko: LocaleMessages = {
     maxToolSteps: "최대 도구 단계",
     maxToolStepsDescription:
       "에이전트가 실행할 수 있는 도구 단계 수를 설정합니다. 0으로 설정하면 도구 호출을 사용하지 않습니다.",
-    helperModel: "보조 모델",
     helperModelDescription:
       "요약 같은 백그라운드 작업에 사용합니다. 기본값은 해당 채팅의 모델입니다.",
     modelSameAsChat: "채팅 모델과 동일",
-    debug: "디버그",
     debugDescription: "OpenBrowserAgent 데이터를 초기화하는 개발자 도구입니다.",
     debugResetTitle: "OpenBrowserAgent 데이터 지우기",
     debugResetDescription:
@@ -552,5 +549,6 @@ export const ko: LocaleMessages = {
   themes: themesKo,
   display: displayKo,
   pageTranslate: pageTranslateKo,
+  settings: settingsKo,
   setup: setupKo,
 };

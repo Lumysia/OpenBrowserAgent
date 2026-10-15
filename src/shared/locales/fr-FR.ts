@@ -7,6 +7,7 @@ import { downloadsFrFR } from "./downloads/fr-FR";
 import { smartBarFrFR } from "./smart-bar/fr-FR";
 import { syncFrFR } from "./sync/fr-FR";
 import { themesFrFR } from "./themes/fr-FR";
+import { settingsFrFR } from "./settings/fr-FR";
 import { setupFrFR } from "./setup/fr-FR";
 import type { LocaleMessages } from "./en-US";
 
@@ -394,7 +395,6 @@ export const frFR: LocaleMessages = {
     localExecutionBridgeTestError: "Échec du test du pont",
     deleteLocalExecutionBridge: "Supprimer le pont d’exécution",
     skills: "Compétences",
-    modelProviders: "Fournisseurs d’IA",
     providerDescription:
       "Utilisez votre propre clé API et connectez OpenBrowserAgent à vos fournisseurs d’IA préférés.",
     mcpServersDescription:
@@ -443,7 +443,6 @@ export const frFR: LocaleMessages = {
     selectModel: "Sélectionner un modèle",
     selectModelDescription:
       "Choisissez le modèle principal des discussions. Les agents fonctionnent mieux avec les modèles prenant en charge les appels d’outils.",
-    selectImageModel: "Sélectionner un modèle d’image",
     enableImageGeneration: "Activer la génération d’images",
     enableImageGenerationDescription:
       "Met l’outil de génération d’images à la disposition des agents.",
@@ -574,11 +573,9 @@ export const frFR: LocaleMessages = {
     maxToolSteps: "Nombre maximal d’étapes d’outils",
     maxToolStepsDescription:
       "Définit combien d’étapes d’outils l’agent peut exécuter. Utilisez 0 pour désactiver les appels d’outils.",
-    helperModel: "Modèle auxiliaire",
     helperModelDescription:
       "Sert aux tâches en arrière-plan comme les résumés. Par défaut, le modèle de la discussion.",
     modelSameAsChat: "Identique au modèle de la discussion",
-    debug: "Débogage",
     debugDescription:
       "Outils développeur pour réinitialiser les données d’OpenBrowserAgent.",
     debugResetTitle: "Effacer les données OpenBrowserAgent",
@@ -622,5 +619,6 @@ export const frFR: LocaleMessages = {
   themes: themesFrFR,
   display: displayFrFR,
   pageTranslate: pageTranslateFrFR,
+  settings: settingsFrFR,
   setup: setupFrFR,
 };

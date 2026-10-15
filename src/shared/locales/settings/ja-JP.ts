@@ -1,0 +1,33 @@
+import type { SettingsMessages } from "./en-US";
+
+export const settingsJaJP: SettingsMessages = {
+  providersModels: "AI プロバイダーとモデル",
+  agentsSkills: "エージェントとスキル",
+  onPages: "ページ上の機能",
+  advanced: "詳細設定",
+  translate: "翻訳",
+  rightClick: "右クリックメニュー",
+  troubleshooting: "トラブルシューティング",
+  shortcuts: "キーボードショートカット",
+  shortcutsDescription:
+    "OpenBrowserAgent のコマンドのショートカットです。ブラウザーが管理するので、ブラウザーのショートカット設定で変更します。",
+  shortcutNone: "未設定",
+  changeShortcuts: "ショートカットを変更",
+  shortcutsFirefoxHint:
+    "変更するには about:addons を開き、歯車ボタンをクリックして「拡張機能のショートカットキーの管理」を選びます。",
+  openSidePanelCommand: "サイドパネルを開く",
+  chatBehavior: "チャットの動作",
+  chatBehaviorDescription:
+    "サイドパネルのスクロール、再試行、ツールのステップ数、季節の演出。",
+  models: "モデル",
+  modelsDescription:
+    "各機能が使うモデルです。別のモデルを選ばない限り、チャットのモデルを使います。",
+  modelChat: "チャット",
+  modelHelper: "補助",
+  modelSmartBar: "スマートバー",
+  modelTranslation: "翻訳",
+  modelImages: "画像",
+  translateMenuItems: "右クリックメニューの項目",
+  translateMenuItemsDescription:
+    "右クリックメニューの翻訳項目です。メニュー自体のオン・オフは「右クリックメニュー」で切り替えます。",
+};

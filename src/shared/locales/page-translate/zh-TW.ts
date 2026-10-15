@@ -18,7 +18,7 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
     microsoft: "Microsoft 翻譯（免費）",
   },
   engineDetails: {
-    model: "由你的 AI 提供者使用下方選擇的模型翻譯頁面。",
+    model: "由你的 AI 提供者使用「AI 提供者和模型」中設定的翻譯模型翻譯頁面。",
     browser:
       "由瀏覽器在此裝置上翻譯，文字不會離開裝置。每種語言只需下載一次。無法翻譯的頁面會改由下方的 AI 模型翻譯。",
     google: "非官方的免費服務，不是 Google 的 API，可能隨時停止運作。",
@@ -37,9 +37,7 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
     microsoft: "Microsoft",
   },
   privacyLink: "隱私權政策",
-  model: "模型",
   modelDescription: "用於翻譯頁面的模型。",
-  defaultModel: "與對話相同的模型",
   targetLanguage: "翻譯為",
   targetLanguageDescription: "頁面會翻譯成此語言。這不會改變擴充功能的語言。",
   followInterface: "擴充功能的語言（{language}）",
@@ -87,15 +85,6 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
     move: "方向鍵沿邊緣移動，E 鍵將它移到下一個邊緣。",
     hiddenSites: "在這些網站上隱藏",
     hiddenSitesDescription: "按鈕不會在這些網站上顯示。網站包含其子網域。",
-  },
-  shortcut: {
-    setting: "鍵盤快速鍵",
-    settingDescription: "翻譯此頁面或顯示原文。",
-    current: "快速鍵：{shortcut}",
-    none: "尚未設定快速鍵",
-    change: "變更快速鍵",
-    firefoxHint:
-      "如要變更，請開啟 about:addons，點選齒輪按鈕，再選擇「管理擴充套件快速鍵」。",
   },
   subtitles: {
     menu: "翻譯字幕",

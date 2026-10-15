@@ -1,3 +1,4 @@
+import { OPTIONS_HASH } from "../src/shared/config.ts";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
@@ -105,7 +106,7 @@ test("translation engines", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
   try {
     await t.test("the engine setting persists, with its notice", async () => {
       const settings = await browser.open(
-        extensionUrl("options.html#/page-translation"),
+        extensionUrl(`options.html${OPTIONS_HASH.pageTranslate}`),
       );
       await clickAt(settings, '[aria-label="Translation engine"]');
       const options = await poll(() =>
@@ -116,8 +117,7 @@ test("translation engines", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
         ),
       );
       assert.deepEqual(options, Object.values(messages.engines));
-      // The built-in translator says what happens where it can't translate,
-      // and shows the model it falls back to.
+      // The built-in translator says what happens where it can't translate.
       await clickAt(settings, "[role=option]", messages.engines.browser);
       const builtIn = await settings.call(() => "Translator" in globalThis);
       const detail = builtIn
@@ -127,7 +127,7 @@ test("translation engines", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
         settings.call(
           (texts) =>
             texts.every((text) => document.body.textContent.includes(text)),
-          [detail, messages.modelDescription],
+          [detail],
         ),
       );
       await clickAt(settings, '[aria-label="Translation engine"]');
@@ -148,7 +148,11 @@ test("translation engines", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
               ?.textContent.trim() === "Google Translate (free)",
         ),
       );
-      // Target language and display are remembered too.
+      // The target language, set under General, is remembered too.
+      await settings.call(
+        (hash) => (location.hash = hash),
+        OPTIONS_HASH.general,
+      );
       await clickAt(settings, '[aria-label="Translate into"]');
       // A long list: the option is chosen with the keyboard.
       await poll(() =>

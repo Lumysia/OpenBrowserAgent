@@ -71,6 +71,5 @@ export const smartBarDeDE: SmartBarLocaleMessages = {
   editActions: "Aktionen für Text, den Sie bearbeiten",
   editActionsDescription:
     "Werden angezeigt, wenn Sie Text in einem Eingabefeld markieren. Das Ergebnis kann die Auswahl ersetzen.",
-  model: "Smart-Bar-Modell",
   modelDescription: "Modell für Erklären, Übersetzen und die Schreibaktionen.",
 };

@@ -26,7 +26,7 @@ Built-in skills update with the extension.
 
 ## Settings
 
-Open **Settings → Skills**. For each skill you can choose:
+Open **Settings → Agents & skills → Skills**. For each skill you can choose:
 
 - **Auto**: the agent uses it when a request fits (the default).
 - **Manual**: only when you pick it with `/` or "+". Manual skills are not listed to the agent, which keeps requests a little smaller.

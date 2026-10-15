@@ -7,6 +7,7 @@ import { downloadsZhCN } from "./downloads/zh-CN";
 import { smartBarZhCN } from "./smart-bar/zh-CN";
 import { syncZhCN } from "./sync/zh-CN";
 import { themesZhCN } from "./themes/zh-CN";
+import { settingsZhCN } from "./settings/zh-CN";
 import { setupZhCN } from "./setup/zh-CN";
 import type { LocaleMessages } from "./en-US";
 
@@ -320,7 +321,6 @@ export const zhCN: LocaleMessages = {
     localExecutionBridgeTestError: "执行桥测试失败",
     deleteLocalExecutionBridge: "删除执行桥",
     skills: "技能",
-    modelProviders: "AI 提供商",
     providerDescription:
       "使用自己的密钥，将 OpenBrowserAgent 连接到你常用的 AI 提供商。",
     mcpServersDescription:
@@ -362,7 +362,6 @@ export const zhCN: LocaleMessages = {
     selectModel: "选择模型",
     selectModelDescription:
       "选择主对话模型。智能体最好使用支持工具调用的模型。",
-    selectImageModel: "选择图片模型",
     enableImageGeneration: "启用图片生成",
     enableImageGenerationDescription: "向智能体开放图片生成工具。",
     imageGenerationSize: "图片尺寸",
@@ -476,10 +475,8 @@ export const zhCN: LocaleMessages = {
     maxToolSteps: "最大工具步数",
     maxToolStepsDescription:
       "设置智能体最多可执行多少步工具调用；填 0 表示禁用工具调用。",
-    helperModel: "辅助模型",
     helperModelDescription: "用于总结等后台任务。默认使用当前对话的模型。",
     modelSameAsChat: "与对话模型相同",
-    debug: "调试",
     debugDescription: "用于重置 OpenBrowserAgent 数据的开发工具。",
     debugResetTitle: "清除 OpenBrowserAgent 数据",
     debugResetDescription:
@@ -522,5 +519,6 @@ export const zhCN: LocaleMessages = {
   themes: themesZhCN,
   display: displayZhCN,
   pageTranslate: pageTranslateZhCN,
+  settings: settingsZhCN,
   setup: setupZhCN,
 };

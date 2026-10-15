@@ -7,6 +7,7 @@ import { downloadsEsES } from "./downloads/es-ES";
 import { smartBarEsES } from "./smart-bar/es-ES";
 import { syncEsES } from "./sync/es-ES";
 import { themesEsES } from "./themes/es-ES";
+import { settingsEsES } from "./settings/es-ES";
 import { setupEsES } from "./setup/es-ES";
 import type { LocaleMessages } from "./en-US";
 
@@ -402,7 +403,6 @@ export const esES: LocaleMessages = {
     localExecutionBridgeTestError: "Ha fallado la prueba del puente",
     deleteLocalExecutionBridge: "Eliminar puente de ejecución",
     skills: "Habilidades",
-    modelProviders: "Proveedores de IA",
     providerDescription:
       "Usa tu propia clave y conecta OpenBrowserAgent con tus proveedores de IA favoritos.",
     mcpServersDescription:
@@ -452,7 +452,6 @@ export const esES: LocaleMessages = {
     selectModel: "Seleccionar modelo",
     selectModelDescription:
       "Elige el modelo de chat principal. Los agentes funcionan mejor con modelos compatibles con llamadas a herramientas.",
-    selectImageModel: "Seleccionar modelo de imagen",
     enableImageGeneration: "Activar generación de imágenes",
     enableImageGenerationDescription:
       "Pone la herramienta de generación de imágenes a disposición de los agentes.",
@@ -579,11 +578,9 @@ export const esES: LocaleMessages = {
     maxToolSteps: "Máximo de pasos con herramientas",
     maxToolStepsDescription:
       "Define cuántos pasos de herramientas puede ejecutar el agente. Usa 0 para desactivar las llamadas a herramientas.",
-    helperModel: "Modelo auxiliar",
     helperModelDescription:
       "Se usa para tareas en segundo plano, como resúmenes. De forma predeterminada, el modelo del chat.",
     modelSameAsChat: "Igual que el modelo del chat",
-    debug: "Depuración",
     debugDescription:
       "Herramientas para desarrolladores para restablecer los datos de OpenBrowserAgent.",
     debugResetTitle: "Borrar datos de OpenBrowserAgent",
@@ -627,5 +624,6 @@ export const esES: LocaleMessages = {
   themes: themesEsES,
   display: displayEsES,
   pageTranslate: pageTranslateEsES,
+  settings: settingsEsES,
   setup: setupEsES,
 };

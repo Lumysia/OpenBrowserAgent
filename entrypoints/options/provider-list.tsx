@@ -78,12 +78,12 @@ export function ProviderList() {
       );
   }
 
-  // The first model added becomes the chat model.
+  // The first model added becomes the chat model; the other features use
+  // the chat's model until another is picked.
   function handleModelAdded(model: ModelConfig) {
     setPreferences((previous) => ({
       ...previous,
       selectedModelId: previous.selectedModelId || model.id,
-      selectedImageModelId: previous.selectedImageModelId || model.id,
     }));
   }
 

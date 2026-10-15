@@ -7,6 +7,7 @@ import { downloadsEnUS } from "./downloads/en-US";
 import { smartBarEnUS } from "./smart-bar/en-US";
 import { syncEnUS } from "./sync/en-US";
 import { themesEnUS } from "./themes/en-US";
+import { settingsEnUS } from "./settings/en-US";
 import { setupEnUS } from "./setup/en-US";
 export const enUS = {
   app: {
@@ -367,7 +368,6 @@ export const enUS = {
     localExecutionBridgeTestError: "Bridge test failed",
     deleteLocalExecutionBridge: "Delete execution bridge",
     skills: "Skills",
-    modelProviders: "AI providers",
     providerDescription:
       "Bring your own key and connect OpenBrowserAgent to your favorite AI providers.",
     mcpServersDescription:
@@ -416,7 +416,6 @@ export const enUS = {
     selectModel: "Select model",
     selectModelDescription:
       "Choose the main chat model. Agents work best with models that support tool calls.",
-    selectImageModel: "Select image model",
     enableImageGeneration: "Enable image generation",
     enableImageGenerationDescription:
       "Make the image generation tool available to agents.",
@@ -543,11 +542,9 @@ export const enUS = {
     maxToolSteps: "Max tool steps",
     maxToolStepsDescription:
       "Set how many tool steps the agent may run. Use 0 to disable tool calls.",
-    helperModel: "Helper model",
     helperModelDescription:
       "Used for background tasks such as summaries. Defaults to the chat's model.",
     modelSameAsChat: "Same as chat model",
-    debug: "Debug",
     debugDescription: "Developer tools for resetting OpenBrowserAgent data.",
     debugResetTitle: "Clear OpenBrowserAgent data",
     debugResetDescription:
@@ -590,6 +587,7 @@ export const enUS = {
   themes: themesEnUS,
   display: displayEnUS,
   pageTranslate: pageTranslateEnUS,
+  settings: settingsEnUS,
   setup: setupEnUS,
 };
 

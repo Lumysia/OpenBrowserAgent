@@ -70,7 +70,6 @@ export const smartBarEsES: SmartBarLocaleMessages = {
   editActions: "Acciones para el texto que estás editando",
   editActionsDescription:
     "Se muestran al seleccionar texto en un campo de texto. El resultado puede reemplazar la selección.",
-  model: "Modelo de la barra inteligente",
   modelDescription:
     "Modelo para Explicar, Traducir y las acciones de escritura.",
 };

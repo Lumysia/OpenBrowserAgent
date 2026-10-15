@@ -18,7 +18,8 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
     microsoft: "Microsoft Translator(무료)",
   },
   engineDetails: {
-    model: "설정한 AI 제공업체가 아래에서 선택한 모델로 페이지를 번역합니다.",
+    model:
+      "AI 제공업체 및 모델에서 설정한 번역 모델로 AI 제공업체가 페이지를 번역합니다.",
     browser:
       "브라우저가 이 기기에서 번역하며, 텍스트가 기기 밖으로 나가지 않습니다. 언어마다 한 번만 다운로드합니다. 번역할 수 없는 페이지는 아래 AI 모델이 번역합니다.",
     google:
@@ -39,9 +40,7 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
     microsoft: "Microsoft",
   },
   privacyLink: "개인정보 처리방침",
-  model: "모델",
   modelDescription: "페이지를 번역할 모델입니다.",
-  defaultModel: "채팅과 같은 모델",
   targetLanguage: "번역할 언어",
   targetLanguageDescription:
     "페이지를 이 언어로 번역합니다. 확장 프로그램의 언어는 바뀌지 않습니다.",
@@ -100,15 +99,6 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
     hiddenSites: "숨긴 사이트",
     hiddenSitesDescription:
       "이 사이트에서는 버튼이 표시되지 않습니다. 사이트에는 하위 도메인도 포함됩니다.",
-  },
-  shortcut: {
-    setting: "키보드 단축키",
-    settingDescription: "페이지를 번역하거나 원문을 보여 줍니다.",
-    current: "단축키: {shortcut}",
-    none: "설정된 단축키가 없습니다",
-    change: "단축키 변경",
-    firefoxHint:
-      '변경하려면 about:addons를 열고 톱니바퀴 버튼을 클릭한 다음 "확장 기능 단축키 관리"를 선택하세요.',
   },
   subtitles: {
     menu: "자막 번역",

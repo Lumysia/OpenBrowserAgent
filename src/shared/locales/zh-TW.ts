@@ -7,6 +7,7 @@ import { downloadsZhTW } from "./downloads/zh-TW";
 import { smartBarZhTW } from "./smart-bar/zh-TW";
 import { syncZhTW } from "./sync/zh-TW";
 import { themesZhTW } from "./themes/zh-TW";
+import { settingsZhTW } from "./settings/zh-TW";
 import { setupZhTW } from "./setup/zh-TW";
 import type { LocaleMessages } from "./en-US";
 
@@ -320,7 +321,6 @@ export const zhTW: LocaleMessages = {
     localExecutionBridgeTestError: "執行橋測試失敗",
     deleteLocalExecutionBridge: "刪除執行橋",
     skills: "技能",
-    modelProviders: "AI 提供者",
     providerDescription:
       "使用自己的金鑰，將 OpenBrowserAgent 連線到你常用的 AI 提供者。",
     mcpServersDescription:
@@ -362,7 +362,6 @@ export const zhTW: LocaleMessages = {
     selectModel: "選擇模型",
     selectModelDescription:
       "選擇主要對話模型。智慧體最好使用支援工具呼叫的模型。",
-    selectImageModel: "選擇圖片模型",
     enableImageGeneration: "啟用圖片產生",
     enableImageGenerationDescription: "向智慧體開放圖片產生工具。",
     imageGenerationSize: "圖片尺寸",
@@ -476,10 +475,8 @@ export const zhTW: LocaleMessages = {
     maxToolSteps: "最大工具步數",
     maxToolStepsDescription:
       "設定智慧體最多可執行多少步工具呼叫；填 0 表示停用工具呼叫。",
-    helperModel: "輔助模型",
     helperModelDescription: "用於摘要等背景工作。預設使用目前對話的模型。",
     modelSameAsChat: "與對話模型相同",
-    debug: "偵錯",
     debugDescription: "用於重設 OpenBrowserAgent 資料的開發工具。",
     debugResetTitle: "清除 OpenBrowserAgent 資料",
     debugResetDescription:
@@ -522,5 +519,6 @@ export const zhTW: LocaleMessages = {
   themes: themesZhTW,
   display: displayZhTW,
   pageTranslate: pageTranslateZhTW,
+  settings: settingsZhTW,
   setup: setupZhTW,
 };

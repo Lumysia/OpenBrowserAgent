@@ -7,6 +7,7 @@ import { downloadsDeDE } from "./downloads/de-DE";
 import { smartBarDeDE } from "./smart-bar/de-DE";
 import { syncDeDE } from "./sync/de-DE";
 import { themesDeDE } from "./themes/de-DE";
+import { settingsDeDE } from "./settings/de-DE";
 import { setupDeDE } from "./setup/de-DE";
 import type { LocaleMessages } from "./en-US";
 
@@ -391,7 +392,6 @@ export const deDE: LocaleMessages = {
     localExecutionBridgeTestError: "Bridge-Test fehlgeschlagen",
     deleteLocalExecutionBridge: "Ausführungs-Bridge löschen",
     skills: "Skills",
-    modelProviders: "KI-Anbieter",
     providerDescription:
       "Verbinden Sie OpenBrowserAgent mit Ihren bevorzugten KI-Anbietern über Ihren eigenen Schlüssel.",
     mcpServersDescription:
@@ -442,7 +442,6 @@ export const deDE: LocaleMessages = {
     selectModel: "Modell auswählen",
     selectModelDescription:
       "Wählen Sie das Haupt-Chatmodell. Agenten funktionieren am besten mit Modellen, die Tool-Aufrufe unterstützen.",
-    selectImageModel: "Bildmodell auswählen",
     enableImageGeneration: "Bildgenerierung aktivieren",
     enableImageGenerationDescription:
       "Stellt Agenten das Tool zur Bildgenerierung bereit.",
@@ -578,11 +577,9 @@ export const deDE: LocaleMessages = {
     maxToolSteps: "Maximale Tool-Schritte",
     maxToolStepsDescription:
       "Legt fest, wie viele Tool-Schritte der Agent ausführen darf. 0 deaktiviert Tool-Aufrufe.",
-    helperModel: "Hilfsmodell",
     helperModelDescription:
       "Für Hintergrundaufgaben wie Zusammenfassungen. Standardmäßig das Modell des Chats.",
     modelSameAsChat: "Wie das Chatmodell",
-    debug: "Debug",
     debugDescription:
       "Entwicklertools zum Zurücksetzen von OpenBrowserAgent-Daten.",
     debugResetTitle: "OpenBrowserAgent-Daten löschen",
@@ -626,5 +623,6 @@ export const deDE: LocaleMessages = {
   themes: themesDeDE,
   display: displayDeDE,
   pageTranslate: pageTranslateDeDE,
+  settings: settingsDeDE,
   setup: setupDeDE,
 };

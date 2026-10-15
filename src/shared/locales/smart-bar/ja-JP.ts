@@ -70,6 +70,5 @@ export const smartBarJaJP: SmartBarLocaleMessages = {
   editActions: "編集中のテキスト用の操作",
   editActionsDescription:
     "テキスト入力欄でテキストを選択したときに表示されます。結果で選択範囲を置き換えられます。",
-  model: "スマートバーのモデル",
   modelDescription: "「説明」「翻訳」と文章作成の操作に使うモデル。",
 };

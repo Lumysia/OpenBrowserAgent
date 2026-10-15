@@ -19,7 +19,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
   },
   engineDetails: {
     model:
-      "Ihr KI-Anbieter übersetzt die Seiten mit dem unten gewählten Modell.",
+      "Ihr KI-Anbieter übersetzt Seiten mit dem Übersetzungsmodell aus „KI-Anbieter und Modelle“.",
     browser:
       "Der Browser übersetzt auf diesem Gerät; kein Text verlässt es. Jede Sprache wird einmal heruntergeladen. Wo er eine Seite nicht übersetzen kann, übernimmt das unten gewählte KI-Modell.",
     google:
@@ -40,9 +40,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     microsoft: "Microsoft",
   },
   privacyLink: "Datenschutzerklärung",
-  model: "Modell",
   modelDescription: "Das Modell, das Seiten übersetzt.",
-  defaultModel: "Gleiches Modell wie im Chat",
   targetLanguage: "Übersetzen in",
   targetLanguageDescription:
     "Seiten werden in diese Sprache übersetzt. Die Sprache der Erweiterung ändert sich nicht.",
@@ -102,15 +100,6 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     hiddenSites: "Auf diesen Websites ausgeblendet",
     hiddenSitesDescription:
       "Die Schaltfläche erscheint auf diesen Websites nicht. Eine Website umfasst ihre Subdomains.",
-  },
-  shortcut: {
-    setting: "Tastenkombination",
-    settingDescription: "Übersetzt die Seite oder zeigt das Original.",
-    current: "Tastenkombination: {shortcut}",
-    none: "Keine Tastenkombination festgelegt",
-    change: "Tastenkombination ändern",
-    firefoxHint:
-      "Öffnen Sie dazu about:addons, klicken Sie auf das Zahnrad und wählen Sie „Erweiterungs-Tastenkombinationen verwalten“.",
   },
   subtitles: {
     menu: "Untertitel übersetzen",
