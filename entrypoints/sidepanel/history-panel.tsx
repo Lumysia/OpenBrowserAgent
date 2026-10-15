@@ -18,6 +18,9 @@ import {
   Feedback,
   IconTooltip,
   Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   ScrollArea,
 } from "../../src/ui/components";
 import {
@@ -196,17 +199,10 @@ export function HistoryPanel({
               <Upload size={18} />
             </Button>
           </IconTooltip>
-          <IconTooltip label={t.sidepanel.clearAllChats}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="history-danger-action"
-              aria-label={t.sidepanel.clearAllChats}
-              onClick={() => rootChats.forEach((chat) => onClose(chat.id))}
-            >
-              <Trash2 size={18} />
-            </Button>
-          </IconTooltip>
+          <ClearAllChatsButton
+            disabled={!rootChats.length}
+            onConfirm={() => rootChats.forEach((chat) => onClose(chat.id))}
+          />
         </div>
       </div>
       <ScrollArea className="history-panel">
@@ -436,4 +432,58 @@ function linkedClosedChatIds(chats: ChatSummary[], closedChatId: string) {
     }
   }
   return ids;
+}
+
+// Deleting every chat, pinned ones included, asks first: it can't be undone
+// and, with chat sync on, reaches every device.
+function ClearAllChatsButton({
+  disabled,
+  onConfirm,
+}: {
+  disabled: boolean;
+  onConfirm: () => void;
+}) {
+  const t = useMessages();
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <IconTooltip label={t.sidepanel.clearAllChats}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="history-danger-action"
+            aria-label={t.sidepanel.clearAllChats}
+            disabled={disabled}
+          >
+            <Trash2 size={18} />
+          </Button>
+        </PopoverTrigger>
+      </IconTooltip>
+      <PopoverContent className="settings-popover-content" align="end">
+        <div className="settings-popover-menu" role="alertdialog">
+          <p>{t.sidepanel.clearAllChatsConfirm}</p>
+          <div className="row">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                setOpen(false);
+                onConfirm();
+              }}
+            >
+              {t.sidepanel.clearAllChatsAction}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setOpen(false)}
+            >
+              {t.common.cancel}
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 }

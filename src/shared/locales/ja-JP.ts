@@ -113,7 +113,7 @@ export const jaJP: LocaleMessages = {
     selectedText: "選択したテキスト",
     willBeSentWithMessage: "メッセージと一緒に送信されます",
     removeSelectedText: "選択したテキストを削除",
-    addNewTab: "新しいタブを追加",
+    addOpenTabs: "開いているタブを追加…",
     addCurrentTab: "現在のタブを追加",
     attachFiles: "ファイルを添付",
     attachFilesHint: "画像またはローカルファイル",
@@ -244,6 +244,9 @@ export const jaJP: LocaleMessages = {
       },
       devtools: { running: "診断を実行中", done: "診断を実行しました" },
     },
+    clearAllChatsConfirm:
+      "ピン留めしたものも含め、すべてのチャットを削除しますか？元に戻せません。",
+    clearAllChatsAction: "すべてのチャットを削除",
   },
   options: {
     general: "一般",
@@ -576,6 +579,7 @@ export const jaJP: LocaleMessages = {
     apiStyle: "API の種類",
     apiStyleHint:
       "サービスが Responses API しか提供していない場合を除き、Chat Completions のままにしてください。",
+    deleteAgentWithWorkspace: "ワークスペースごと削除",
   },
   smartBar: smartBarJaJP,
   contextMenu: contextMenuJaJP,

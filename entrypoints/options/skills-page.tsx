@@ -49,6 +49,9 @@ import { importSkillZip } from "./skill-import";
 import { importErrorDetail } from "./import-errors";
 import { useTransient } from "../../src/ui/use-transient";
 import { useLocale, useMessages } from "../../src/ui/messages";
+import { revealElement } from "../../src/ui/reveal";
+
+const skillElementId = (skillId: string) => `skill-${skillId}`;
 
 export function SkillsPage() {
   const { entries, setSkills, setSettings } = useSkillCatalog();
@@ -67,6 +70,7 @@ export function SkillsPage() {
     setSkills((items) => [...items, skill]);
     setDrafts((items) => ({ ...items, [skill.id]: skill }));
     setSelectedId(skill.id);
+    revealElement(skillElementId(skill.id));
   }
 
   async function importZip(files: FileList | null) {
@@ -250,6 +254,7 @@ function SkillItem({
       : validateSkill(draft);
   return (
     <SettingsAccordionItem
+      id={skillElementId(skill.id)}
       value={skill.id}
       chevronLabel={name}
       summary={

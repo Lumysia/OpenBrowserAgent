@@ -120,7 +120,7 @@ export const enUS = {
     selectedText: "Selected text",
     willBeSentWithMessage: "Will be sent with your message",
     removeSelectedText: "Remove selected text",
-    addNewTab: "Add new tab",
+    addOpenTabs: "Add open tabs…",
     addCurrentTab: "Add current tab",
     attachFiles: "Attach files",
     attachFilesHint: "Images or local files",
@@ -240,6 +240,9 @@ export const enUS = {
       runScript: { running: "Running script", done: "Ran script" },
       devtools: { running: "Running diagnostics", done: "Ran diagnostics" },
     },
+    clearAllChatsConfirm:
+      "Delete every chat, pinned ones too? This can’t be undone.",
+    clearAllChatsAction: "Delete all chats",
   },
   options: {
     general: "General",
@@ -577,6 +580,7 @@ export const enUS = {
     apiStyle: "API style",
     apiStyleHint:
       "Keep Chat Completions unless your service only offers the Responses API.",
+    deleteAgentWithWorkspace: "Delete it and its workspace",
   },
   smartBar: smartBarEnUS,
   contextMenu: contextMenuEnUS,

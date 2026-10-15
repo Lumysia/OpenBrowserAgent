@@ -117,7 +117,7 @@ export const frFR: LocaleMessages = {
     selectedText: "Texte sélectionné",
     willBeSentWithMessage: "Sera envoyé avec votre message",
     removeSelectedText: "Retirer le texte sélectionné",
-    addNewTab: "Ajouter un nouvel onglet",
+    addOpenTabs: "Ajouter des onglets ouverts…",
     addCurrentTab: "Ajouter l’onglet actuel",
     attachFiles: "Joindre des fichiers",
     attachFilesHint: "Images ou fichiers locaux",
@@ -260,6 +260,9 @@ export const frFR: LocaleMessages = {
       runScript: { running: "Exécution du script", done: "Script exécuté" },
       devtools: { running: "Diagnostic en cours", done: "Diagnostic effectué" },
     },
+    clearAllChatsConfirm:
+      "Supprimer toutes les discussions, y compris celles épinglées ? Cette action est irréversible.",
+    clearAllChatsAction: "Supprimer toutes les discussions",
   },
   options: {
     general: "Général",
@@ -609,6 +612,7 @@ export const frFR: LocaleMessages = {
     apiStyle: "Type d’API",
     apiStyleHint:
       "Gardez Chat Completions, sauf si votre service ne propose que l’API Responses.",
+    deleteAgentWithWorkspace: "Le supprimer avec son espace de travail",
   },
   smartBar: smartBarFrFR,
   contextMenu: contextMenuFrFR,

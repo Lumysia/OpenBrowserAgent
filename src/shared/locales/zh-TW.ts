@@ -110,7 +110,7 @@ export const zhTW: LocaleMessages = {
     selectedText: "所選文字",
     willBeSentWithMessage: "將隨訊息傳送",
     removeSelectedText: "移除所選文字",
-    addNewTab: "新增分頁",
+    addOpenTabs: "新增已開啟的分頁…",
     addCurrentTab: "新增目前分頁",
     attachFiles: "上傳檔案",
     attachFilesHint: "圖片或本機檔案",
@@ -205,6 +205,8 @@ export const zhTW: LocaleMessages = {
       runScript: { running: "執行指令碼中", done: "指令碼已執行" },
       devtools: { running: "執行診斷中", done: "診斷已完成" },
     },
+    clearAllChatsConfirm: "刪除所有對話（包括已釘選的）？此操作無法復原。",
+    clearAllChatsAction: "刪除所有對話",
   },
   options: {
     general: "一般",
@@ -510,6 +512,7 @@ export const zhTW: LocaleMessages = {
     apiStyle: "API 類型",
     apiStyleHint:
       "除非你的服務只提供 Responses API，否則請保留 Chat Completions。",
+    deleteAgentWithWorkspace: "連同工作區一起刪除",
   },
   smartBar: smartBarZhTW,
   contextMenu: contextMenuZhTW,

@@ -110,7 +110,7 @@ export const zhCN: LocaleMessages = {
     selectedText: "所选文本",
     willBeSentWithMessage: "将随消息发送",
     removeSelectedText: "移除所选文本",
-    addNewTab: "添加新标签页",
+    addOpenTabs: "添加已打开的标签页…",
     addCurrentTab: "添加当前标签页",
     attachFiles: "上传文件",
     attachFilesHint: "图片或本机文件",
@@ -205,6 +205,8 @@ export const zhCN: LocaleMessages = {
       runScript: { running: "运行脚本中", done: "脚本已运行" },
       devtools: { running: "运行诊断中", done: "诊断已完成" },
     },
+    clearAllChatsConfirm: "删除所有对话（包括已置顶的）？此操作无法撤销。",
+    clearAllChatsAction: "删除所有对话",
   },
   options: {
     general: "通用",
@@ -510,6 +512,7 @@ export const zhCN: LocaleMessages = {
     apiStyle: "API 类型",
     apiStyleHint:
       "除非你的服务只提供 Responses API，否则请保留 Chat Completions。",
+    deleteAgentWithWorkspace: "连同工作区一起删除",
   },
   smartBar: smartBarZhCN,
   contextMenu: contextMenuZhCN,

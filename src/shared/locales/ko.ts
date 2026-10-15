@@ -112,7 +112,7 @@ export const ko: LocaleMessages = {
     selectedText: "선택한 텍스트",
     willBeSentWithMessage: "메시지와 함께 전송됩니다",
     removeSelectedText: "선택한 텍스트 제거",
-    addNewTab: "새 탭 추가",
+    addOpenTabs: "열린 탭 추가…",
     addCurrentTab: "현재 탭 추가",
     attachFiles: "파일 첨부",
     attachFilesHint: "이미지 또는 로컬 파일",
@@ -216,6 +216,9 @@ export const ko: LocaleMessages = {
       runScript: { running: "스크립트 실행 중", done: "스크립트 실행됨" },
       devtools: { running: "진단 실행 중", done: "진단 완료" },
     },
+    clearAllChatsConfirm:
+      "고정한 채팅을 포함해 모든 채팅을 삭제할까요? 되돌릴 수 없습니다.",
+    clearAllChatsAction: "모든 채팅 삭제",
   },
   options: {
     general: "일반",
@@ -539,6 +542,7 @@ export const ko: LocaleMessages = {
     apiStyle: "API 유형",
     apiStyleHint:
       "서비스가 Responses API만 제공하는 경우가 아니라면 Chat Completions를 유지하세요.",
+    deleteAgentWithWorkspace: "워크스페이스와 함께 삭제",
   },
   smartBar: smartBarKo,
   contextMenu: contextMenuKo,

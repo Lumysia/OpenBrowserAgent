@@ -117,7 +117,7 @@ export const deDE: LocaleMessages = {
     selectedText: "Ausgewählter Text",
     willBeSentWithMessage: "Wird mit Ihrer Nachricht gesendet",
     removeSelectedText: "Ausgewählten Text entfernen",
-    addNewTab: "Neuen Tab hinzufügen",
+    addOpenTabs: "Offene Tabs hinzufügen…",
     addCurrentTab: "Aktuellen Tab hinzufügen",
     attachFiles: "Dateien anhängen",
     attachFilesHint: "Bilder oder lokale Dateien",
@@ -262,6 +262,9 @@ export const deDE: LocaleMessages = {
       runScript: { running: "Skript läuft", done: "Skript ausgeführt" },
       devtools: { running: "Diagnose läuft", done: "Diagnose abgeschlossen" },
     },
+    clearAllChatsConfirm:
+      "Alle Chats löschen, auch angeheftete? Das lässt sich nicht rückgängig machen.",
+    clearAllChatsAction: "Alle Chats löschen",
   },
   options: {
     general: "Allgemein",
@@ -613,6 +616,7 @@ export const deDE: LocaleMessages = {
     apiStyle: "API-Art",
     apiStyleHint:
       "Behalten Sie Chat Completions bei, außer Ihr Dienst bietet nur die Responses-API.",
+    deleteAgentWithWorkspace: "Mit Arbeitsbereich löschen",
   },
   smartBar: smartBarDeDE,
   contextMenu: contextMenuDeDE,

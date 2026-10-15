@@ -116,7 +116,7 @@ export const ptBR: LocaleMessages = {
     selectedText: "Texto selecionado",
     willBeSentWithMessage: "Será enviado com sua mensagem",
     removeSelectedText: "Remover texto selecionado",
-    addNewTab: "Adicionar nova aba",
+    addOpenTabs: "Adicionar abas abertas…",
     addCurrentTab: "Adicionar aba atual",
     attachFiles: "Anexar arquivos",
     attachFilesHint: "Imagens ou arquivos locais",
@@ -265,6 +265,9 @@ export const ptBR: LocaleMessages = {
         done: "Diagnóstico concluído",
       },
     },
+    clearAllChatsConfirm:
+      "Excluir todas as conversas, inclusive as fixadas? Não dá para desfazer.",
+    clearAllChatsAction: "Excluir todas as conversas",
   },
   options: {
     general: "Geral",
@@ -605,6 +608,7 @@ export const ptBR: LocaleMessages = {
     apiStyle: "Tipo de API",
     apiStyleHint:
       "Mantenha Chat Completions, a menos que seu serviço ofereça só a API Responses.",
+    deleteAgentWithWorkspace: "Excluir com o espaço de trabalho",
   },
   smartBar: smartBarPtBR,
   contextMenu: contextMenuPtBR,

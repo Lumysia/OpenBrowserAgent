@@ -1,8 +1,6 @@
-import { Plus } from "lucide-react";
 import { useRef, useState, type RefObject } from "react";
 import { TOOLTIP_DELAY_MS } from "../../src/shared/config";
-import { Button, TooltipProvider } from "../../src/ui/components";
-import { useMessages } from "../../src/ui/messages";
+import { TooltipProvider } from "../../src/ui/components";
 import { cn } from "../../src/ui/utils";
 import { ComposerAttachments } from "./composer-attachments";
 import { ComposerBox } from "./composer-box";
@@ -79,7 +77,6 @@ function ChatView({
   messagesRef: RefObject<HTMLDivElement | null>;
   onShowHistory: () => void;
 }) {
-  const t = useMessages();
   const chat = useChat();
   const composer = useComposer();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -157,19 +154,10 @@ function ChatView({
           onAttachFiles={composer.attachFiles}
         />
         <HolidayBurst />
-        <div className="new-chat-row">
+        <div className="typing-row">
           {typingPresence.mounted && (
             <TypingIndicator removing={typingPresence.removing} />
           )}
-          <Button
-            className="new-chat-button"
-            variant="secondary"
-            size="sm"
-            disabled={!!editingMessageId}
-            onClick={chat.createChat}
-          >
-            <Plus size={16} /> {t.words.newChat}
-          </Button>
         </div>
         <SyncKeysBanner />
         <ComposerAttachments />

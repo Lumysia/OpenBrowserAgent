@@ -116,7 +116,7 @@ export const esES: LocaleMessages = {
     selectedText: "Texto seleccionado",
     willBeSentWithMessage: "Se enviará con tu mensaje",
     removeSelectedText: "Quitar texto seleccionado",
-    addNewTab: "Añadir nueva pestaña",
+    addOpenTabs: "Añadir pestañas abiertas…",
     addCurrentTab: "Añadir pestaña actual",
     attachFiles: "Adjuntar archivos",
     attachFilesHint: "Imágenes o archivos locales",
@@ -269,6 +269,9 @@ export const esES: LocaleMessages = {
         done: "Diagnóstico realizado",
       },
     },
+    clearAllChatsConfirm:
+      "¿Eliminar todos los chats, también los fijados? No se puede deshacer.",
+    clearAllChatsAction: "Eliminar todos los chats",
   },
   options: {
     general: "General",
@@ -614,6 +617,7 @@ export const esES: LocaleMessages = {
     apiStyle: "Tipo de API",
     apiStyleHint:
       "Mantén Chat Completions salvo que tu servicio solo ofrezca la API Responses.",
+    deleteAgentWithWorkspace: "Eliminarlo con su espacio de trabajo",
   },
   smartBar: smartBarEsES,
   contextMenu: contextMenuEsES,
