@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+## 0.2.0-beta.12 - 2026-10-15
+
 - **Keyboard shortcut for the side panel**: Ctrl+Shift+Y (Command+Shift+Y on macOS) opens the side panel. The key suggested before was one the browser keeps for itself, so the side panel had no shortcut. If the key isn't set after the update, or another extension has it, pick one in the browser's shortcut settings.
 - **One "Translate into" language**: Translate in the smart bar and its dictionary entries now use the same language as page translation and video subtitles (Settings → Page translation → "Translate into"), instead of the extension's language. Nothing changes while "Translate into" is left at the extension's language.
 - The translate button on pages now only shows on pages that aren't already in your "Translate into" language (judged from the language the page declares and, where the browser can tell, from its text). On a page it can't tell, it still shows. The keyboard shortcut and the right-click menu still translate any page, and the button comes back on a translated page to show the original.
