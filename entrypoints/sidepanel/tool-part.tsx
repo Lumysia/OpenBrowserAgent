@@ -1,33 +1,19 @@
-import React from "react";
-import { CornerDownRight } from "lucide-react";
-import { TOOL_NAME } from "../../src/shared/tool-names";
 import {
   CHAT_PART_STATE,
   isToolPartType,
   toolNameFromPartType,
-} from "../../src/shared/types";
-import type { ChatPart } from "../../src/shared/types";
-import type {
-  QuestionToolAnswer,
-  QuestionToolQuestion,
+  type ChatPart,
+  type QuestionToolAnswer,
 } from "../../src/shared/types";
 import {
   Button,
-  Card,
-  CardContent,
-  CardTitle,
-  Input,
   Popover,
   PopoverContent,
   PopoverTrigger,
-  Textarea,
-  ToggleGroup,
-  ToggleGroupItem,
-  UserText,
 } from "../../src/ui/components";
 import { toolDisplay, toolJsonDetail } from "./tool-part-detail";
 import { toolIcon } from "./tool-icons";
-import { CapturedTabImage, GeneratedImage } from "./tool-media";
+import { TOOL_CARD_KINDS } from "./tool-bodies";
 import { DownloadReferences } from "./download-tool-display";
 import { ToolReferenceButton } from "./tool-references";
 import { cn } from "../../src/ui/utils";
@@ -54,10 +40,10 @@ export function ToolPart({
   const name = part.toolName || toolNameFromPartType(part.type);
   const { title, failed, description, references, subAgentProgress } =
     toolDisplay(name, part, t, runEnded);
-  const questionPending =
-    name === TOOL_NAME.ask && !runEnded && isQuestionPending(part);
+  const kind = TOOL_CARD_KINDS[name];
+  const waiting = !runEnded && !!kind?.waiting?.(part);
   const loading =
-    questionPending ||
+    waiting ||
     (!runEnded &&
       (part.state === CHAT_PART_STATE.streaming ||
         part.state === CHAT_PART_STATE.inputStreaming ||
@@ -73,10 +59,17 @@ export function ToolPart({
       : isDone
         ? "done"
         : "idle";
-  const subAgentChatId = subAgentChildChatId(name, part);
-  const subAgentChatAvailable = subAgentChatId
-    ? chatExists(subAgentChatId)
-    : false;
+  const body = kind && (
+    <kind.Body
+      part={part}
+      loading={loading}
+      waiting={waiting}
+      progress={subAgentProgress}
+      onSelectChat={onSelectChat}
+      chatExists={chatExists}
+      onAnswerQuestion={onAnswerQuestion}
+    />
+  );
   return (
     <div className={cn("tool-card", status)}>
       <Popover>
@@ -98,54 +91,11 @@ export function ToolPart({
       </Popover>
       <div className="tool-detail">
         <div className="tool-detail-content">
-          {name === TOOL_NAME.generateImage && (
-            <GeneratedImage
-              output={(part.output || {}) as Record<string, unknown>}
-              loading={loading}
-            />
-          )}
-          {name === TOOL_NAME.screenshot && (
-            <CapturedTabImage
-              output={(part.output || {}) as Record<string, unknown>}
-            />
-          )}
-          {name === TOOL_NAME.ask && (
-            <QuestionToolForm
-              part={part}
-              active={questionPending}
-              onSubmit={(answers) => onAnswerQuestion?.(part.id, answers)}
-            />
-          )}
-          {description && name !== TOOL_NAME.ask && (
+          {!kind?.below && body}
+          {description && !kind?.replacesDescription && (
             <div className="tool-description ui-selectable">{description}</div>
           )}
-          {isSubAgentTool(name) && (
-            <div
-              className={cn("tool-detail-slot", subAgentProgress && "visible")}
-              aria-hidden={!subAgentProgress}
-            >
-              <div
-                className="tool-description tool-detail-slot-content ui-selectable"
-                key={subAgentProgress}
-              >
-                {subAgentProgress}
-              </div>
-            </div>
-          )}
-          {subAgentChatId && (
-            <Button
-              className="tool-subagent-link"
-              variant="secondary"
-              size="sm"
-              disabled={!subAgentChatAvailable}
-              onClick={() => {
-                if (subAgentChatAvailable) onSelectChat?.(subAgentChatId);
-              }}
-            >
-              <CornerDownRight size={14} />
-              <span>{t.sidepanel.openSubAgentChat}</span>
-            </Button>
-          )}
+          {kind?.below && body}
           <DownloadReferences output={part.output} />
           {!!references.length && (
             <div className="tool-references">
@@ -162,235 +112,4 @@ export function ToolPart({
       </div>
     </div>
   );
-}
-
-function QuestionToolForm({
-  part,
-  active,
-  onSubmit,
-}: {
-  part: ChatPart;
-  active: boolean;
-  onSubmit: (answers: QuestionToolAnswer[]) => void;
-}) {
-  const t = useMessages();
-  const questions = questionToolQuestions(part.input);
-  const submittedAnswers = questionToolSubmittedAnswers(part.output);
-  const [selected, setSelected] = React.useState<Record<number, string[]>>({});
-  const [customAnswers, setCustomAnswers] = React.useState<
-    Record<number, string>
-  >({});
-  const questionGroupId = React.useId();
-  const complete = questions.every((question, index) =>
-    isQuestionAnswered(question, selected[index] || [], customAnswers[index]),
-  );
-  if (!questions.length) return null;
-  if (submittedAnswers.length)
-    return (
-      <div className="tool-result-list tool-question-answers ui-selectable">
-        {submittedAnswers.map((answer, index) => (
-          <div className="tool-result-row" key={`${answer.question}-${index}`}>
-            <span className="tool-result-label">{answer.question}</span>
-            <UserText
-              className="tool-result-value"
-              text={
-                [...answer.answers, answer.customAnswer]
-                  .filter(Boolean)
-                  .join(", ") || t.sidepanel.questionNoAnswer
-              }
-            />
-          </div>
-        ))}
-      </div>
-    );
-  return (
-    <form
-      className="tool-question-stack"
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (!active || !complete) return;
-        onSubmit(
-          questions.map((question, index) => ({
-            question: question.question,
-            answers: selected[index] || [],
-            customAnswer: (customAnswers[index] || "").trim() || undefined,
-          })),
-        );
-      }}
-    >
-      {questions.map((question, index) => {
-        const allowCustom = question.custom !== false;
-        const selectedValues = selected[index] || [];
-        const titleId = `${questionGroupId}-${index}`;
-        return (
-          <Card
-            className="tool-question-card"
-            key={index}
-            role="group"
-            aria-labelledby={titleId}
-          >
-            <CardContent className="tool-question-card-content">
-              <CardTitle className="tool-question-title" id={titleId}>
-                {question.question}
-              </CardTitle>
-              {question.multiple ? (
-                <ToggleGroup
-                  type="multiple"
-                  value={selectedValues}
-                  disabled={!active}
-                  onValueChange={(value) =>
-                    setSelected((items) => ({ ...items, [index]: value }))
-                  }
-                >
-                  {question.options.map((option) => (
-                    <QuestionOptionItem key={option.label} option={option} />
-                  ))}
-                </ToggleGroup>
-              ) : (
-                <ToggleGroup
-                  type="single"
-                  value={selectedValues[0] || ""}
-                  disabled={!active}
-                  onValueChange={(value) =>
-                    setSelected((items) => ({
-                      ...items,
-                      [index]: value ? [value] : [],
-                    }))
-                  }
-                >
-                  {question.options.map((option) => (
-                    <QuestionOptionItem key={option.label} option={option} />
-                  ))}
-                </ToggleGroup>
-              )}
-              {allowCustom &&
-                (question.multiple ? (
-                  <Textarea
-                    value={customAnswers[index] || ""}
-                    disabled={!active}
-                    rows={2}
-                    placeholder={t.sidepanel.questionCustomPlaceholder}
-                    onChange={(event) =>
-                      setCustomAnswers((items) => ({
-                        ...items,
-                        [index]: event.target.value,
-                      }))
-                    }
-                  />
-                ) : (
-                  <Input
-                    value={customAnswers[index] || ""}
-                    disabled={!active}
-                    placeholder={t.sidepanel.questionCustomPlaceholder}
-                    onChange={(event) =>
-                      setCustomAnswers((items) => ({
-                        ...items,
-                        [index]: event.target.value,
-                      }))
-                    }
-                  />
-                ))}
-            </CardContent>
-          </Card>
-        );
-      })}
-      <Button type="submit" size="sm" disabled={!active || !complete}>
-        {t.sidepanel.questionSubmit}
-      </Button>
-    </form>
-  );
-}
-
-function isQuestionAnswered(
-  question: QuestionToolQuestion,
-  selected: string[],
-  customAnswer = "",
-) {
-  return (
-    selected.length > 0 || (question.custom !== false && !!customAnswer.trim())
-  );
-}
-
-function isQuestionPending(part: ChatPart) {
-  if (questionToolSubmittedAnswers(part.output).length) return false;
-  return (
-    part.state === CHAT_PART_STATE.inputAvailable ||
-    part.state === CHAT_PART_STATE.outputAvailable
-  );
-}
-
-function QuestionOptionItem({
-  option,
-}: {
-  option: { label: string; description?: string };
-}) {
-  return (
-    <ToggleGroupItem value={option.label} className="tool-question-option">
-      <span>{option.label}</span>
-      {option.description && <small>{option.description}</small>}
-    </ToggleGroupItem>
-  );
-}
-
-function questionToolQuestions(input: unknown): QuestionToolQuestion[] {
-  const questions = (input as { questions?: unknown } | undefined)?.questions;
-  if (!Array.isArray(questions)) return [];
-  return questions.slice(0, 6).flatMap((question) => {
-    if (!question || typeof question !== "object") return [];
-    const item = question as Record<string, unknown>;
-    const text = String(item.question || "").trim();
-    const options = Array.isArray(item.options)
-      ? item.options.flatMap((option) => {
-          if (!option || typeof option !== "object") return [];
-          const optionRecord = option as Record<string, unknown>;
-          const label = String(optionRecord.label || "").trim();
-          if (!label) return [];
-          return [
-            {
-              label,
-              description: String(optionRecord.description || "").trim(),
-            },
-          ];
-        })
-      : [];
-    if (!text || !options.length) return [];
-    return [
-      {
-        question: text,
-        options,
-        multiple: item.multiple === true,
-        custom: item.custom !== false,
-      },
-    ];
-  });
-}
-
-function questionToolSubmittedAnswers(output: unknown): QuestionToolAnswer[] {
-  const answers = (output as { answers?: unknown } | undefined)?.answers;
-  if (!Array.isArray(answers)) return [];
-  return answers.flatMap((answer) => {
-    if (!answer || typeof answer !== "object") return [];
-    const item = answer as Record<string, unknown>;
-    const question = String(item.question || "").trim();
-    return [
-      {
-        question,
-        answers: Array.isArray(item.answers)
-          ? item.answers.map((value) => String(value).trim()).filter(Boolean)
-          : [],
-        customAnswer: String(item.customAnswer || "").trim() || undefined,
-      },
-    ];
-  });
-}
-
-function isSubAgentTool(name: string) {
-  return name === TOOL_NAME.subAgent;
-}
-
-function subAgentChildChatId(name: string, part: ChatPart) {
-  if (!isSubAgentTool(name)) return undefined;
-  const output = part.output as Record<string, unknown> | undefined;
-  const childChatId = String(output?.childChatId || "").trim();
-  return childChatId || undefined;
 }
