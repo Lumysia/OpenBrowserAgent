@@ -2,7 +2,8 @@ import { engineLanguageCode } from "../../../shared/page-translate/languages";
 import { tokenizePlaceholders } from "../../../shared/page-translate/placeholders";
 import { PAGE_TRANSLATE_ERROR } from "../../../shared/page-translate/protocol";
 import { MICROSOFT_TRANSLATE_URL } from "./free-config";
-import { decodeEntities, escapeHtml, fetchJson } from "./http";
+import { escapeMarkup } from "../../../shared/xml";
+import { decodeEntities, fetchJson } from "./http";
 import {
   EngineError,
   type EngineRequest,
@@ -61,7 +62,7 @@ export function toMicrosoftText(text: string) {
   return tokenizePlaceholders(text)
     .map((token) =>
       token.type === "text"
-        ? escapeHtml(token.value)
+        ? escapeMarkup(token.value)
         : token.type === "open"
           ? `<b${token.id}>`
           : token.type === "close"

@@ -1,3 +1,4 @@
+import { errorMessage } from "../shared/error-message";
 import { ATTACHMENT_KIND, base64FromDataUrl } from "../shared/attachments";
 import { storage } from "../shared/storage";
 import { writeChatAttachments } from "../shared/chat-attachments";
@@ -87,7 +88,7 @@ export async function generateImage(
     return output;
   } catch (error) {
     signal?.throwIfAborted();
-    const message = error instanceof Error ? error.message : String(error);
+    const message = errorMessage(error);
     return {
       success: false,
       error: message,
@@ -234,7 +235,7 @@ async function storeGeneratedImageResult(
     signal?.throwIfAborted();
     return {
       ...result,
-      imageStorageError: error instanceof Error ? error.message : String(error),
+      imageStorageError: errorMessage(error),
     };
   }
 }

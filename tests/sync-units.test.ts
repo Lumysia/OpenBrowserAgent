@@ -26,7 +26,7 @@ import {
   SyncFormatError,
   validateRoot,
 } from "../src/shared/sync/root";
-import { parseRetryAfter } from "../src/shared/sync/transport";
+import { syncRetryAfter } from "../src/shared/sync/transport";
 import { parseMultistatus, strongEtag } from "../src/shared/sync/webdav";
 import { memoryArea } from "./fake-chrome";
 
@@ -275,12 +275,12 @@ test("backoff: 1 min doubling to 1 h, longer when Retry-After says so", () => {
     [1, 2, 4, 8, 16, 32, 60, 60],
   );
   assert.equal(pauseDuration(1, 300_000), 300_000);
-  assert.equal(parseRetryAfter("120"), 120_000);
-  assert.equal(parseRetryAfter("0"), 1_000);
-  assert.equal(parseRetryAfter("999999"), 3_600_000);
+  assert.equal(syncRetryAfter("120"), 120_000);
+  assert.equal(syncRetryAfter("0"), 1_000);
+  assert.equal(syncRetryAfter("999999"), 3_600_000);
   const now = Date.parse("2026-10-12T10:00:00Z");
-  assert.equal(parseRetryAfter("Mon, 12 Oct 2026 10:05:00 GMT", now), 300_000);
-  assert.equal(parseRetryAfter("soon"), undefined);
+  assert.equal(syncRetryAfter("Mon, 12 Oct 2026 10:05:00 GMT", now), 300_000);
+  assert.equal(syncRetryAfter("soon"), undefined);
 });
 
 test("WebDAV helpers: strong ETags only, listings by name", () => {

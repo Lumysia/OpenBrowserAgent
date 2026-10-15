@@ -1,3 +1,4 @@
+import { errorMessage } from "../shared/error-message";
 import { beginChanges, collectChanges, hasBaseline } from "./changes";
 import {
   editableText,
@@ -126,7 +127,7 @@ export function installPageAgent() {
     } catch (error) {
       return {
         ok: false,
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage(error),
         refError: error instanceof RefError,
         refCounter: refCounter(),
       };

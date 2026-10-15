@@ -1,3 +1,4 @@
+import { errorMessage } from "../shared/error-message";
 import { editingHost } from "../shared/dom-vocabulary";
 import { compact } from "../shared/text";
 import { centerOf, clip, nameOf, roleOf } from "./dom";
@@ -73,7 +74,7 @@ export function runStep(step: ActStep): StepResult | Promise<StepResult> {
     }
   } catch (error) {
     if (error instanceof RefError) return failed(error.message);
-    return failed(error instanceof Error ? error.message : String(error));
+    return failed(errorMessage(error));
   }
 }
 

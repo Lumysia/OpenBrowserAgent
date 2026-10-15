@@ -1,3 +1,4 @@
+import { parseRetryAfter } from "../retry-after";
 import type { SyncCapabilities } from "../sync-backends";
 import { SyncFormatError, type Root } from "./root";
 
@@ -95,14 +96,13 @@ export function damagedRoot(
 const RETRY_AFTER_MIN_MS = 1_000;
 const RETRY_AFTER_MAX_MS = 60 * 60_000;
 
-// Retry-After as seconds or an HTTP date, kept between 1 s and 1 h.
-export function parseRetryAfter(value: string | null, now = Date.now()) {
-  if (!value) return undefined;
-  const seconds = /^\s*\d+\s*$/.test(value) ? Number(value) * 1000 : undefined;
-  const date = seconds === undefined ? Date.parse(value) - now : undefined;
-  const ms = seconds ?? date;
-  if (ms === undefined || !Number.isFinite(ms)) return undefined;
-  return Math.min(RETRY_AFTER_MAX_MS, Math.max(RETRY_AFTER_MIN_MS, ms));
+// Retry-After of a sync server, kept between 1 s and 1 h.
+export function syncRetryAfter(value: string | null, now = Date.now()) {
+  return parseRetryAfter(
+    value,
+    { min: RETRY_AFTER_MIN_MS, max: RETRY_AFTER_MAX_MS },
+    now,
+  );
 }
 
 export const isRateLimit = (error: unknown): error is SyncHttpError =>

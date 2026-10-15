@@ -1,3 +1,4 @@
+import { errorMessage } from "../../shared/error-message";
 import {
   pruneTranslations,
   readTranslations,
@@ -93,7 +94,7 @@ export function createPageSession(post: Post, signal: AbortSignal) {
             type: "error",
             batch,
             kind: PAGE_TRANSLATE_ERROR.failed,
-            message: error instanceof Error ? error.message : String(error),
+            message: errorMessage(error),
             theme: DEFAULT_TOAST_THEME,
           });
       })

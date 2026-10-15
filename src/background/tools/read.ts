@@ -1,3 +1,4 @@
+import { errorMessage } from "../../shared/error-message";
 import {
   ATTACHMENT_KIND,
   base64FromDataUrl,
@@ -293,9 +294,7 @@ async function readUrl(
     response = await fetch(url, { credentials: "include", signal });
   } catch (error) {
     signal?.throwIfAborted();
-    return fail(
-      `Could not fetch ${url}: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    return fail(`Could not fetch ${url}: ${errorMessage(error)}`);
   }
   if (!response.ok)
     return fail(`Fetching ${url} failed with HTTP ${response.status}.`);

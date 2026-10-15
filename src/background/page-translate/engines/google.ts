@@ -13,7 +13,8 @@ import {
   GOOGLE_TRANSLATE_HTML_URL,
   GOOGLE_TRANSLATE_WIDGET_KEY,
 } from "./free-config";
-import { decodeEntities, escapeHtml, fetchJson } from "./http";
+import { escapeMarkup } from "../../../shared/xml";
+import { decodeEntities, fetchJson } from "./http";
 import {
   EngineError,
   type EngineRequest,
@@ -147,7 +148,7 @@ export function toGoogleHtml(text: string) {
   return tokenizePlaceholders(text)
     .map((token) =>
       token.type === "text"
-        ? escapeHtml(token.value)
+        ? escapeMarkup(token.value)
         : token.type === "open"
           ? `<a i=${token.id}>`
           : token.type === "close"

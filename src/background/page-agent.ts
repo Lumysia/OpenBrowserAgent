@@ -1,3 +1,4 @@
+import { errorMessage } from "../shared/error-message";
 import { isScriptableUrl } from "../shared/browser";
 import { TimeoutError, withCancellationTimeout } from "../shared/cancellation";
 import { getBrowserApi } from "../shared/browser-api";
@@ -45,7 +46,7 @@ export async function pageTab(
   tabId: unknown,
 ): Promise<PageTab> {
   const tab = await runTab.target(tabId).catch((error: unknown) => {
-    throw new PageError(error instanceof Error ? error.message : String(error));
+    throw new PageError(errorMessage(error));
   });
   if (!isScriptableUrl(tab.url))
     throw new PageError(unreadable(tab.id, tab.url));
@@ -62,7 +63,7 @@ function blockedMessage(tabId: number) {
 
 // Chrome's errors for pages it will not script, in plain words.
 function pageErrorFrom(tabId: number, error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
+  const message = errorMessage(error);
   if (/error page/i.test(message))
     return new PageError(
       `Tab ${tabId} failed to load (the browser shows an error page). Reload it or open another URL.`,

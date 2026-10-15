@@ -1,3 +1,4 @@
+import { errorMessage } from "../../shared/error-message";
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { Message } from "@earendil-works/pi-ai";
 import { estimateMessageTokens } from "@earendil-works/pi-ai/utils/estimate";
@@ -210,9 +211,7 @@ export function createContextEngine(options: ContextEngineOptions) {
           next = view(messages);
         } catch (error) {
           if (signal?.aborted) throw error;
-          options.onCompactionFailed?.(
-            error instanceof Error ? error.message : String(error),
-          );
+          options.onCompactionFailed?.(errorMessage(error));
           // Retry once the transcript has grown noticeably.
           retryCompactionAbove =
             tokens + windowShare(window, CONTEXT_POLICY.keepRecentTokens);

@@ -1,6 +1,6 @@
 // Tagged blocks for prompts. Values are escaped so page text cannot close a
 // tag early.
-function escapeXml(value: string) {
+export function escapeMarkup(value: string) {
   return value
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -8,7 +8,7 @@ function escapeXml(value: string) {
 }
 
 export function xmlTag(name: string, value: string | number) {
-  return `<${name}>${escapeXml(String(value))}</${name}>`;
+  return `<${name}>${escapeMarkup(String(value))}</${name}>`;
 }
 
 export function xmlBlock(name: string, lines: Array<string | undefined>) {
