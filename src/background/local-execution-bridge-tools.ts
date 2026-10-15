@@ -6,6 +6,7 @@ import {
   isLocalExecutionBridgeTested,
   LOCAL_EXECUTION_BRIDGE_FALLBACK_NAME,
   localExecutionBridgeTestReset,
+  localExecutionBridgeTestResult,
   normalizeLocalExecutionBridges,
   sameLocalExecutionBridgeConnection,
 } from "../shared/local-execution-bridges";
@@ -136,14 +137,14 @@ async function testBridge(bridgeId: string): Promise<Input> {
   const bridge = (await loadBridges()).find((item) => item.id === bridgeId);
   if (!bridge) return { success: false, error: "Execution bridge not found" };
   let result: Input;
-  let lastTestError = "";
+  let testError: unknown;
   try {
     result = { success: true, ping: await testLocalExecutionBridge(bridgeId) };
   } catch (error) {
-    lastTestError = errorMessage(error);
+    testError = error;
     result = {
       success: false,
-      error: lastTestError,
+      error: errorMessage(error),
       ...diagnose(bridge, error),
     };
   }
@@ -156,8 +157,7 @@ async function testBridge(bridgeId: string): Promise<Input> {
       sameLocalExecutionBridgeConnection(current, bridge)
         ? {
             ...current,
-            lastTestedAt: lastTestError ? undefined : Date.now(),
-            lastTestError,
+            ...localExecutionBridgeTestResult(testError),
             updatedAt: Date.now(),
           }
         : current,

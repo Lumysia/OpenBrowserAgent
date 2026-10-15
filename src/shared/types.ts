@@ -8,6 +8,7 @@ import type { ChatNoticeKind, RunStopReason } from "./run-stop";
 import type { SmartBarSettings } from "./smart-bar";
 import type { ColorScheme, ThemeId } from "./theme/themes";
 import type { ThinkingSwitch } from "./thinking-switch";
+import type { UserErrorCode } from "./user-errors";
 
 import type { ProviderId } from "./providers";
 
@@ -158,6 +159,8 @@ export type LocalExecutionBridgeConfig = {
   timeoutMs?: number;
   lastTestedAt?: number;
   lastTestError?: string;
+  // Set when the error is one the extension knows, so it shows localized.
+  lastTestErrorCode?: UserErrorCode;
   createdAt: number;
   updatedAt: number;
 };

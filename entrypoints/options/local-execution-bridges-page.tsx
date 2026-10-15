@@ -6,7 +6,9 @@ import {
   createLocalExecutionBridgeDraft,
   generateLocalExecutionBridgeSecret,
   isLocalExecutionBridgeTested,
+  localExecutionBridgeTestError,
   localExecutionBridgeTestReset,
+  localExecutionBridgeTestResult,
   normalizeLocalExecutionBridges,
   LOCAL_EXECUTION_BRIDGE_FALLBACK_NAME,
 } from "../../src/shared/local-execution-bridges";
@@ -35,7 +37,6 @@ import {
   TestButton,
 } from "../../src/ui/components";
 import { useTransient } from "../../src/ui/use-transient";
-import { errorMessage } from "../../src/shared/error-message";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { errorWithDetail } from "../../src/shared/user-errors";
 import { useUiLanguage } from "../../src/ui/messages";
@@ -88,15 +89,12 @@ export function LocalExecutionBridgesPage() {
         operation: "test",
         bridgeId,
       });
-      updateBridge(bridgeId, { lastTestedAt: Date.now(), lastTestError: "" });
+      updateBridge(bridgeId, localExecutionBridgeTestResult());
       showTested(bridgeId);
       return true;
     } catch (error) {
-      // Stored as the error's own text and localized when shown.
-      updateBridge(bridgeId, {
-        lastTestedAt: undefined,
-        lastTestError: errorMessage(error),
-      });
+      // Stored as the error's own text and code, localized when shown.
+      updateBridge(bridgeId, localExecutionBridgeTestResult(error));
       return false;
     } finally {
       setTestingBridgeId("");
@@ -272,7 +270,7 @@ export function LocalExecutionBridgesPage() {
               <Feedback error>
                 {errorWithDetail(
                   t.options.localExecutionBridgeTestError,
-                  bridge.lastTestError,
+                  localExecutionBridgeTestError(bridge),
                   t,
                 )}
               </Feedback>

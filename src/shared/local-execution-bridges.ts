@@ -1,6 +1,8 @@
 import { bytesToHex } from "./binary";
 import { LOCAL_EXECUTION_BRIDGE_LIMITS } from "./config";
+import { errorMessage } from "./error-message";
 import type { LocalExecutionBridgeConfig } from "./types";
+import { UserError } from "./user-errors";
 
 // The native host name the bridge installer registers
 // (packages/local-execution-bridge, HOST_NAME).
@@ -67,6 +69,9 @@ export function normalizeLocalExecutionBridges(
       timeoutMs: clampLocalExecutionBridgeTimeout(bridge.timeoutMs),
       lastTestedAt: bridge.lastTestedAt,
       lastTestError: bridge.lastTestError || "",
+      lastTestErrorCode: bridge.lastTestError
+        ? bridge.lastTestErrorCode
+        : undefined,
       createdAt: bridge.createdAt || 0,
       updatedAt: bridge.updatedAt || bridge.createdAt || 0,
     }));
@@ -131,8 +136,42 @@ export function localExecutionBridgeTestReset(
   patch: Partial<LocalExecutionBridgeConfig>,
 ): Partial<LocalExecutionBridgeConfig> {
   return LOCAL_EXECUTION_BRIDGE_CONNECTION_KEYS.some((key) => key in patch)
-    ? { lastTestedAt: undefined, lastTestError: "" }
+    ? {
+        lastTestedAt: undefined,
+        lastTestError: "",
+        lastTestErrorCode: undefined,
+      }
     : {};
+}
+
+// The test result to store: passed, or the error as its own text plus its
+// code when it is a known one, so it can be shown in the UI language later.
+export function localExecutionBridgeTestResult(
+  error?: unknown,
+): Partial<LocalExecutionBridgeConfig> {
+  if (error === undefined)
+    return {
+      lastTestedAt: Date.now(),
+      lastTestError: "",
+      lastTestErrorCode: undefined,
+    };
+  return {
+    lastTestedAt: undefined,
+    lastTestError: errorMessage(error),
+    lastTestErrorCode: error instanceof UserError ? error.code : undefined,
+  };
+}
+
+// The stored test error, as the UserError it was when it had a code.
+export function localExecutionBridgeTestError(
+  bridge: Pick<
+    LocalExecutionBridgeConfig,
+    "lastTestError" | "lastTestErrorCode"
+  >,
+) {
+  return bridge.lastTestErrorCode
+    ? new UserError(bridge.lastTestErrorCode, bridge.lastTestError || "")
+    : bridge.lastTestError;
 }
 
 function isLocalExecutionBridgeLike(
