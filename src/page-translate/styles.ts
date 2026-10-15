@@ -45,6 +45,20 @@ export function isRow(style: CSSStyleDeclaration) {
   );
 }
 
+// Laid out as a block in the text's flow: on lines of its own, whatever
+// its tag. Boxes taken out of the flow (positioned over the text, floated
+// like a drop cap) are made blocks by the browser but take no lines.
+const BLOCK_DISPLAY = /^(block|flow-root|flex|grid|table|list-item)\b/;
+
+export function isBlockBox(element: Element) {
+  const style = styleOf(element);
+  return (
+    BLOCK_DISPLAY.test(style.display) &&
+    !/absolute|fixed/.test(style.position) &&
+    (!style.float || style.float === "none")
+  );
+}
+
 export function lineHeightOf(style: CSSStyleDeclaration) {
   return (
     parseFloat(style.lineHeight) ||

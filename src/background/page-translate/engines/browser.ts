@@ -2,6 +2,7 @@ import { sameLanguage } from "../../../shared/language-tags";
 import { engineLanguageCode } from "../../../shared/page-translate/languages";
 import { stripPlaceholders } from "../../../shared/page-translate/placeholders";
 import { PAGE_TRANSLATE_ERROR } from "../../../shared/page-translate/protocol";
+import { wordCount } from "../../../shared/text";
 import {
   EngineError,
   type EngineRequest,
@@ -65,10 +66,11 @@ async function translateInBrowser(request: EngineRequest) {
       PAGE_TRANSLATE_ERROR.unavailable,
       `${SERVICE}: no ${request.target}`,
     );
-  const groups = await groupBySource(request);
+  const { groups, language } = await groupBySource(request);
   // The translator refuses some texts one by one (filtered output, too
-  // long, an unknown failure): the batch's other items still go through.
-  // A batch it translated none of fails with the first refusal.
+  // long, an unknown failure, a language it has no pair for): the batch's
+  // other items still go through. A batch it translated none of fails with
+  // the first refusal.
   let refusal: unknown;
   let translated = false;
   for (const [source, items] of groups) {
@@ -80,7 +82,17 @@ async function translateInBrowser(request: EngineRequest) {
       translated = true;
       continue;
     }
-    const instance = await translatorFor(translator, source, target);
+    let instance: TranslatorInstance;
+    try {
+      instance = await translatorFor(translator, source, target);
+    } catch (error) {
+      // No pair for the batch's language: the page is in a language this
+      // translator can't do. Texts in another language of their own (a
+      // quote) are refused alone.
+      if (sameLanguage(source, language)) throw error;
+      refusal ??= error;
+      continue;
+    }
     for (const item of items) {
       if (request.signal.aborted) return;
       try {
@@ -99,29 +111,39 @@ async function translateInBrowser(request: EngineRequest) {
   if (refusal && !translated) throw refusal;
 }
 
-// Below this, the detector's guess for one text is not taken (short texts
-// such as buttons and names are easily misread).
+// The detector's guess for one text is taken only when it is this sure and
+// the text has this many words (numbers aside): short texts such as titles,
+// buttons and names ("Harbor - 7.05") are easily misread, also with high
+// confidence.
 const MIN_ITEM_CONFIDENCE = 0.6;
+const MIN_ITEM_WORDS = 3;
 
-// The batch's items by source language. Pages mix languages (posts in
-// several languages, an English name in a Chinese line), so each text is
-// detected on its own; one the detector isn't sure of takes the language
-// of the batch as a whole, then the page's declared language.
+// The batch's items by source language, and the language of the batch as a
+// whole. Pages mix languages (posts in several languages, a Chinese line in
+// an English page), so each text long enough to tell is detected on its
+// own; the others take the batch's language: the detector's guess for all
+// of its text when it is sure, else the page's declared language.
 async function groupBySource(request: EngineRequest) {
   const texts = request.items.map((item) => stripPlaceholders(item.text));
-  const own = await Promise.all(texts.map((text) => detect(text)));
-  let fallback: string | undefined;
-  if (own.some((guess) => !guess || guess.confidence < MIN_ITEM_CONFIDENCE))
-    fallback =
-      (await detect(texts.join("\n").slice(0, 2000)))?.language ||
-      request.pageLanguage;
+  const [whole, ...own] = await Promise.all([
+    detect(texts.join("\n").slice(0, 2000)),
+    ...texts.map((text) =>
+      wordCount(text.replace(/\p{N}+/gu, " ")) >= MIN_ITEM_WORDS
+        ? detect(text)
+        : undefined,
+    ),
+  ]);
+  const language =
+    (whole && whole.confidence >= MIN_ITEM_CONFIDENCE
+      ? whole.language
+      : request.pageLanguage) || whole?.language;
   const groups = new Map<string, EngineRequest["items"]>();
   request.items.forEach((item, index) => {
     const guess = own[index];
     const source =
       guess && guess.confidence >= MIN_ITEM_CONFIDENCE
         ? guess.language
-        : fallback;
+        : language;
     if (!source)
       throw new EngineError(
         PAGE_TRANSLATE_ERROR.unavailable,
@@ -129,7 +151,7 @@ async function groupBySource(request: EngineRequest) {
       );
     groups.set(source, [...(groups.get(source) ?? []), item]);
   });
-  return groups;
+  return { groups, language };
 }
 
 // Translator errors about the text it was given, not about the translator

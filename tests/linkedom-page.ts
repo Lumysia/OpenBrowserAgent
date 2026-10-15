@@ -8,6 +8,9 @@ const INHERITED: Record<string, string> = {
   "font-feature-settings": "normal",
 };
 
+// Properties the rules read that aren't inherited: the element's own.
+const OWN = ["display", "position", "float"];
+
 const camel = (name: string) =>
   name.replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase());
 
@@ -47,7 +50,7 @@ function compareDocumentPosition(this: Node, other: Node) {
 
 // A parsed page (linkedom has no layout): computed styles are the inline
 // `style` attributes with inheritance, enough for the rules that read
-// inherited text properties.
+// inherited text properties, and a few of the element's own (OWN).
 export function parsePage(html: string) {
   const parsed = parseHTML(`<!doctype html><html><body>${html}</body></html>`);
   let nodePrototype = Object.getPrototypeOf(parsed.document.createTextNode(""));
@@ -71,6 +74,7 @@ export function parsePage(html: string) {
         value = declared(current, name);
       style[camel(name)] = value ?? initial;
     }
+    for (const name of OWN) style[name] = declared(element, name) ?? "";
     return style as unknown as CSSStyleDeclaration;
   }) as Window["getComputedStyle"];
   return parsed;

@@ -18,6 +18,7 @@ import {
   modelPrompt,
 } from "../src/background/page-translate/engines/model";
 import { EngineError } from "../src/background/page-translate/engines/types";
+import { PAGE_TRANSLATE_ERROR } from "../src/shared/page-translate/protocol";
 import { providerFixture } from "./provider-fixtures";
 
 // Responses recorded from the live services on 2026-10-14 for the requests
@@ -540,3 +541,92 @@ test("built-in translator: a text it refuses doesn't take the batch's others wit
     delete scope.Translator;
   }
 });
+
+// Like Chrome's detector: whole sentences are read right; a short title is
+// read as another language, sometimes with confidence. Pairs from Latin and
+// Japanese can't be set up here.
+async function withMisreadingTranslator(
+  run: (
+    translate: (texts: string[]) => Promise<Map<number, string>>,
+  ) => Promise<void>,
+) {
+  const scope = globalThis as Record<string, unknown>;
+  scope.LanguageDetector = {
+    availability: async () => "available",
+    create: async () => ({
+      detect: async (text: string) =>
+        /^Harbor - [\d.]+$/.test(text)
+          ? [{ detectedLanguage: "la", confidence: 0.8 }]
+          : /^(Harbor - [\d.]+\n?)+$/.test(text)
+            ? [{ detectedLanguage: "la", confidence: 0.4 }]
+            : /[\u3040-\u30ff]/.test(text) && !/[a-z]{5}/.test(text)
+              ? [{ detectedLanguage: "ja", confidence: 0.95 }]
+              : [{ detectedLanguage: "en", confidence: 0.9 }],
+    }),
+  };
+  scope.Translator = {
+    availability: async ({ sourceLanguage }: { sourceLanguage: string }) =>
+      /^en\b/.test(sourceLanguage) ? "available" : "unavailable",
+    create: async () => ({
+      translate: async (text: string) => `[zh] ${text}`,
+    }),
+  };
+  const translate = async (texts: string[]) => {
+    const results = new Map<number, string>();
+    await browserEngine().translate({
+      items: texts.map((text, index) => ({ id: index + 1, text })),
+      target: "zh-CN",
+      pageLanguage: "en-GB",
+      signal: new AbortController().signal,
+      onItem: (id, text) => results.set(id, text),
+    });
+    return results;
+  };
+  try {
+    await run(translate);
+  } finally {
+    delete scope.Translator;
+    delete scope.LanguageDetector;
+  }
+}
+
+test("built-in translator: a short text read as another language takes the batch's", () =>
+  withMisreadingTranslator(async (translate) => {
+    // Translated from English (a translator made for English in an
+    // earlier test may answer).
+    const results = await translate([
+      "Harbor - 7.05",
+      "Patch 7.05 contains gameplay and stability fixes.",
+    ]);
+    assert.deepEqual([...results.keys()], [1, 2]);
+    assert.match(results.get(1)!, /^\[(en>)?zh\] Harbor - 7\.05$/);
+    // Only titles in the batch: the detector isn't sure of them together,
+    // and the page's language decides.
+    const titles = await translate(["Harbor - 7.04", "Harbor - 7.03"]);
+    assert.equal(titles.size, 2);
+  }));
+
+test("built-in translator: a text in a language it has no pair for is refused alone", () =>
+  withMisreadingTranslator(async (translate) => {
+    const results = await translate([
+      "The weather is lovely today",
+      "きょうはとてもいいてんきですね",
+      "We are going for a walk tomorrow",
+    ]);
+    assert.deepEqual(
+      [...results.keys()].sort(),
+      [1, 3],
+      "the English texts are translated",
+    );
+    // The batch's own language has no pair: the batch fails, and the page
+    // goes on with the fallback engine.
+    await assert.rejects(
+      translate([
+        "きょうはとてもいいてんきですね",
+        "あしたこうえんをさんぽしましょう",
+      ]),
+      (error) =>
+        error instanceof EngineError &&
+        error.kind === PAGE_TRANSLATE_ERROR.unavailable,
+    );
+  }));
