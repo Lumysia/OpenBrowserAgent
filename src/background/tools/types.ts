@@ -58,6 +58,12 @@ export type RunContext = {
   ): Promise<string>;
 };
 
+// The chat a run's tabs and downloads belong to: a sub-agent's are its
+// parent chat's.
+export function ownerChat(run: Pick<RunContext, "chatId" | "parentChatId">) {
+  return run.parentChatId || run.chatId;
+}
+
 export type ToolContext = {
   run: RunContext;
   toolCallId: string;

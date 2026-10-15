@@ -1,6 +1,9 @@
 import { isScriptableUrl } from "../shared/browser";
-import { withCancellationTimeout } from "../shared/cancellation";
-import { getBrowserApi } from "../shared/storage";
+import { TimeoutError, withCancellationTimeout } from "../shared/cancellation";
+import { getBrowserApi } from "../shared/browser-api";
+import { withLock } from "../shared/locks";
+import { sessionRecord } from "../shared/session-record";
+import { STORAGE_KEYS } from "../shared/storage-keys";
 import type { PageAgentReply } from "../page";
 import type { RunTab } from "./run-tab";
 
@@ -12,44 +15,26 @@ import type { RunTab } from "./run-tab";
 // dialog never answers, and must not stall other tabs or the run.
 
 const PAGE_AGENT_FILE = "/page-agent.js";
-const REF_FLOOR_KEY = "pageRefFloor";
 // Injecting is quick on any responsive page, so it doubles as a ping.
 const INJECT_TIMEOUT_MS = 5_000;
 const CALL_TIMEOUT_MS = 30_000;
 
 export class PageError extends Error {}
 
-let floor: number | undefined;
-let floorLock: Promise<void> = Promise.resolve();
-const tabQueues = new Map<number, Promise<unknown>>();
+// Element refs count up across pages and service worker restarts, so a ref
+// from an earlier answer never names another element.
+const refFloor = sessionRecord<number>(STORAGE_KEYS.pageRefFloor, () => 0);
+// Held while a call reads the floor and raises it from the page's answer.
+const REF_FLOOR_LOCK = "page-ref-floor";
 // Tabs with a browser call still pending after its timeout: they stay
 // blocked until it returns (when the dialog closes).
 const blockedTabs = new Set<number>();
 
-async function readFloor() {
-  if (floor === undefined) {
-    const stored = await getBrowserApi()
-      .storage.session?.get(REF_FLOOR_KEY)
-      .catch(() => undefined);
-    floor = Number(stored?.[REF_FLOOR_KEY]) || 0;
-  }
-  return floor;
-}
-
 async function raiseFloor(value: number | undefined) {
-  if (!value || !(value > (floor || 0))) return;
-  floor = value;
-  await getBrowserApi()
-    .storage.session?.set({ [REF_FLOOR_KEY]: value })
+  if (!value) return;
+  await refFloor
+    .update((floor) => Math.max(Number(floor) || 0, value))
     .catch(() => undefined);
-}
-
-function lockFloor() {
-  let release!: () => void;
-  const held = new Promise<void>((resolve) => (release = resolve));
-  const ready = floorLock;
-  floorLock = floorLock.then(() => held);
-  return ready.then(() => release);
 }
 
 export type PageTab = { id: number; title: string; url: string };
@@ -108,7 +93,7 @@ async function bounded<T>(
     );
   } catch (error) {
     signal?.throwIfAborted();
-    if (error instanceof Error && error.message === blockedMessage(tabId)) {
+    if (error instanceof TimeoutError) {
       blockedTabs.add(tabId);
       pending.then(
         () => blockedTabs.delete(tabId),
@@ -122,13 +107,7 @@ async function bounded<T>(
 
 // Runs `task` after earlier calls into the same tab.
 function inTabOrder<T>(tabId: number, task: () => Promise<T>): Promise<T> {
-  const run = (tabQueues.get(tabId) || Promise.resolve()).then(task);
-  const tail = run.catch(() => undefined);
-  tabQueues.set(tabId, tail);
-  tail.then(() => {
-    if (tabQueues.get(tabId) === tail) tabQueues.delete(tabId);
-  });
-  return run;
+  return withLock(`page-tab:${tabId}`, task);
 }
 
 export function callPage<T = unknown>(
@@ -150,11 +129,9 @@ export function callPage<T = unknown>(
       INJECT_TIMEOUT_MS,
       signal,
     );
-    const release = await lockFloor();
-    let reply: PageAgentReply | undefined;
-    try {
-      const refFloor = await readFloor();
-      reply = await bounded(
+    const reply = await withLock(REF_FLOOR_LOCK, async () => {
+      const floor = Number(await refFloor.get()) || 0;
+      return bounded(
         tabId,
         async () => {
           const [result] = await api.scripting.executeScript({
@@ -168,7 +145,7 @@ export function callPage<T = unknown>(
                   ) => unknown;
                 }
               ).__obaPageAgent(name, values),
-            args: [method, { ...args, refFloor }],
+            args: [method, { ...args, refFloor: floor }],
           });
           const value = result?.result as PageAgentReply | undefined;
           // Raised even when the answer comes after the call was given up.
@@ -178,9 +155,7 @@ export function callPage<T = unknown>(
         CALL_TIMEOUT_MS,
         signal,
       );
-    } finally {
-      release();
-    }
+    });
     if (!reply)
       throw new PageError(
         "The page did not answer; it may still be loading. Try again.",

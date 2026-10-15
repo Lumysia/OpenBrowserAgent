@@ -1,6 +1,8 @@
 import { getActiveTab } from "../shared/browser";
 import { selectedTextsFromMetadata } from "../shared/selected-text";
-import { getBrowserApi } from "../shared/storage";
+import { getBrowserApi } from "../shared/browser-api";
+import { sessionRecord } from "../shared/session-record";
+import { STORAGE_KEYS } from "../shared/storage-keys";
 import type { AttachmentTab, ChatMessage } from "../shared/types";
 import { xmlTag } from "../shared/xml";
 
@@ -11,8 +13,13 @@ import { xmlTag } from "../shared/xml";
 // to becomes the run's tab. A closed run tab is an error, not a fallback.
 // The last one per chat lives in session storage, for the next message.
 
-const RUN_TABS_KEY = "runTabs";
 const REMEMBERED_CHATS = 100;
+
+// The last run tab by chat, the most recent last.
+const runTabs = sessionRecord<Record<string, number>>(
+  STORAGE_KEYS.runTabs,
+  () => ({}),
+);
 
 export type RunTab = {
   // The run's tab, if it has one.
@@ -43,30 +50,22 @@ async function getTab(id: number) {
   return tab ? { ...tab, id } : undefined;
 }
 
-let writes: Promise<unknown> = Promise.resolve();
-
 function remember(chatId: string, tabId: number) {
-  const area = getBrowserApi().storage.session;
-  if (!chatId || !area) return;
-  const write = async () => {
-    const stored = (await area.get(RUN_TABS_KEY))[RUN_TABS_KEY] as
-      Record<string, number> | undefined;
-    const record = { ...stored };
-    delete record[chatId];
-    record[chatId] = tabId;
-    const kept = Object.entries(record).slice(-REMEMBERED_CHATS);
-    await area.set({ [RUN_TABS_KEY]: Object.fromEntries(kept) });
-  };
-  writes = writes.then(write, write).catch(() => undefined);
+  if (!chatId) return;
+  runTabs
+    .update((stored) => {
+      const record = { ...stored };
+      delete record[chatId];
+      record[chatId] = tabId;
+      return Object.fromEntries(
+        Object.entries(record).slice(-REMEMBERED_CHATS),
+      );
+    })
+    .catch(() => undefined);
 }
 
 async function rememberedTab(chatId: string) {
-  const stored = await getBrowserApi()
-    .storage.session?.get(RUN_TABS_KEY)
-    .catch(() => undefined);
-  return tabIdArg(
-    (stored?.[RUN_TABS_KEY] as Record<string, number> | undefined)?.[chatId],
-  );
+  return tabIdArg((await runTabs.get())[chatId]);
 }
 
 export function createRunTab(

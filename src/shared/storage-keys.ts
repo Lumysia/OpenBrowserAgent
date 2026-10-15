@@ -26,8 +26,16 @@ export const STORAGE_KEYS = {
   syncEditMarker: "sync-edit-marker",
   // Browser sync parts no record refers to, by when this device saw them.
   syncPartsSeen: "sync-parts-seen",
-  // storage.session: extension pages and whether they are visible.
+  // storage.session (see session-record.ts): extension pages and whether
+  // they are visible; the tabs and tab groups the agent opened per chat;
+  // the downloads each chat started; the last tab of each chat's runs; the
+  // page agent's element ref counter; the tabs that show a translation.
   syncVisiblePages: "sync-visible-pages",
+  agentTabs: "agent-tabs",
+  agentDownloads: "agent-downloads",
+  runTabs: "run-tabs",
+  pageRefFloor: "page-ref-floor",
+  pageTranslateTabs: "page-translate-tabs",
   syncBackends: "sync-backends",
   activeSyncBackendId: "active-sync-backend-id",
   syncDeviceId: "sync-device-id",

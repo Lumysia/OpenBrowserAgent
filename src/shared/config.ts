@@ -1,3 +1,5 @@
+export const PRODUCT_NAME = "OpenBrowserAgent";
+
 export const DEFAULT_MAX_TOOL_STEPS = 50;
 
 export const AUTO_RETRY_IDLE_MS = 30_000;

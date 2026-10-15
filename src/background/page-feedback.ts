@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from "../shared/config";
 import {
   PAGE_TOAST_GLOBAL,
   PAGE_TOAST_SCRIPT,
@@ -51,7 +52,7 @@ export async function flashBadge(tabId: number, title: string) {
   const action = api.action ?? (api as typeof chrome).browserAction;
   if (!action) return;
   const defaultTitle =
-    api.runtime.getManifest().action?.default_title || "OpenBrowserAgent";
+    api.runtime.getManifest().action?.default_title || PRODUCT_NAME;
   await action.setBadgeText({ tabId, text: "!" });
   await action.setTitle({ tabId, title });
   setTimeout(() => {

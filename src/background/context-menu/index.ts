@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from "../../shared/config";
 import {
   CONTEXT_MENU_ID,
   contextMenuEntries,
@@ -66,7 +67,7 @@ async function menuEntries(menus: Menus) {
       ...t,
       translatePage: await translateMenuTitle(language),
       translateSubtitles: getMessages(language).pageTranslate.subtitles.menu,
-      parent: name || "OpenBrowserAgent",
+      parent: name || PRODUCT_NAME,
     },
     // The tab strip's menu: Firefox, Safari 18 and Chrome 150 have it.
     { tabContext: Object.values(menus.ContextType ?? {}).includes("tab") },
