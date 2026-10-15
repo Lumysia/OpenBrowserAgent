@@ -4,7 +4,7 @@
 //   npm run build:chrome
 //   node scripts/store-screenshots.mjs [--locale en-US,de] [--out store/screenshots]
 import { existsSync } from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
@@ -12,6 +12,7 @@ import { FRAME, pngHeader } from "./store-screenshots/browser.mjs";
 import { agentShot, askShot } from "./store-screenshots/chat-shots.mjs";
 import { demoLocales, loadDemo } from "./store-screenshots/demo.mjs";
 import { optionsShots } from "./store-screenshots/options-shots.mjs";
+import { translateShot } from "./store-screenshots/translate-shot.mjs";
 
 // Paths below are relative to the repository root.
 process.chdir(resolve(dirname(fileURLToPath(import.meta.url)), ".."));
@@ -86,14 +87,19 @@ for (const locale of locales) {
   const demo = await loadDemo(locale);
   const ask = await askShot(demo);
   const agent = await agentShot(demo);
+  const translate = await translateShot(demo);
   const settings = await optionsShots(demo);
   const shots = [
     { name: "ask", ...ask },
     { name: "agent", ...agent },
+    { name: "translate", ...translate },
     ...settings,
   ];
   const dir = resolve(options.out, locale);
   await mkdir(dir, { recursive: true });
+  // Shots that were renamed or dropped don't stay behind.
+  for (const file of await readdir(dir))
+    if (/^screenshot-.*\.png$/.test(file)) await rm(resolve(dir, file));
   for (const [index, shot] of shots.entries()) {
     const file = resolve(dir, `screenshot-${index + 1}-${shot.name}.png`);
     checkPng(file, shot.png);

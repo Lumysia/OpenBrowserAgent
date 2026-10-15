@@ -14,6 +14,7 @@ import {
   launch,
   openDemo,
   openPanel,
+  paint,
   settle,
   size,
   type,
@@ -21,47 +22,39 @@ import {
 } from "./browser.mjs";
 import { composeSplit } from "./compose.mjs";
 import { DEMO_URLS, renderPage } from "./demo.mjs";
-import { BASE_PREFERENCES } from "./seed.mjs";
+import { BASE_PREFERENCES, MAIN_MODEL_ID, mainProvider } from "./seed.mjs";
 
 const COMPOSER = ".composer-box textarea";
 const TITLE_REQUEST = "Create concise chat titles";
 
 // The chat provider points at the local fixture, which streams the scripted
 // answers; storage is seeded through the extension's own options page.
-async function seedChat(chromium, fixture, locale, agentId) {
+// `preferences` adds to the shots' base preferences.
+export async function seedChat(
+  chromium,
+  fixture,
+  demo,
+  agentId,
+  preferences = {},
+) {
   const options = await chromium.open(extensionUrl(chromium, "options.html"));
   await options.call(
-    async ({ baseUrl, preferences, locale, agentId }) => {
+    async ({ provider, preferences, locale }) => {
       await chrome.storage.local.set({
-        provider: {
-          openai: {
-            id: "openai",
-            type: "openai",
-            label: "OpenAI",
-            baseUrl,
-            apiKey: "",
-            models: [
-              {
-                id: "openai:gpt-5",
-                name: "gpt-5",
-                displayName: "OpenAI / gpt-5",
-              },
-            ],
-          },
-        },
+        provider: { [provider.id]: provider },
         language: locale,
-        preferences: {
-          ...preferences,
-          selectedModelId: "openai:gpt-5",
-          selectedAgentId: agentId,
-        },
+        preferences,
       });
     },
     {
-      baseUrl: `${fixture.baseUrl}/v1`,
-      preferences: BASE_PREFERENCES,
-      locale,
-      agentId,
+      provider: mainProvider(demo, `${fixture.baseUrl}/v1`),
+      preferences: {
+        ...BASE_PREFERENCES,
+        selectedModelId: MAIN_MODEL_ID,
+        selectedAgentId: agentId,
+        ...preferences,
+      },
+      locale: demo.locale,
     },
   );
   await options.send("Page.close").catch(() => {});
@@ -90,7 +83,7 @@ async function chatShot({ demo, agentId, page, prompt, waitFor, handle }) {
   );
   const chromium = await launch(demo.locale);
   try {
-    await seedChat(chromium, fixture, demo.locale, agentId);
+    await seedChat(chromium, fixture, demo, agentId);
     const tab = await openDemo(
       chromium,
       DEMO_URLS[page],
@@ -109,8 +102,9 @@ async function chatShot({ demo, agentId, page, prompt, waitFor, handle }) {
         if (element.scrollTop) element.scrollTop = 0;
     });
     await delay(300);
-    // A background tab lays out at its emulated size only once it paints.
-    await capture(panel);
+    // A background tab lays out at its emulated size, and finishes its
+    // transitions, only while it paints.
+    await paint(panel);
     const warnings = [
       ...(await chipWarnings(panel)),
       ...(await fitWarnings(panel)),
@@ -136,14 +130,14 @@ function chipWarnings(panel) {
   );
 }
 
-// The whole exchange must show between the header and the New Chat button
-// that floats above the composer.
+// The whole exchange must show between the header and the composer with
+// what it holds (the attached page).
 function fitWarnings(panel) {
   return panel.call(() => {
     const content = document.querySelector(".messages-content");
-    const floating = document.querySelector(".composer .skill-create");
+    const composer = document.querySelector("footer.composer");
     const header = document.querySelector(".sidepanel-header");
-    if (!content || !floating) return ["side panel layout not found"];
+    if (!content || !composer) return ["side panel layout not found"];
     // Messages, not the empty spacer that keeps room for scrolling.
     const items = [...content.children].filter(
       (item) =>
@@ -161,11 +155,21 @@ function fitWarnings(panel) {
         )
         .map((element) => element.getBoundingClientRect().bottom),
     );
+    // What the composer shows: the attached page and the input, not the
+    // empty row kept for the typing indicator.
+    const composerTop = Math.min(
+      ...[...composer.children]
+        .filter(
+          (element) =>
+            element.getBoundingClientRect().height > 1 &&
+            element.textContent.trim(),
+        )
+        .map((element) => element.getBoundingClientRect().top),
+    );
     const warnings = [];
     if (header && top < header.getBoundingClientRect().bottom)
       warnings.push("chat starts under the side panel header");
-    if (bottom > floating.getBoundingClientRect().top - 4)
-      warnings.push("chat runs under the New Chat button");
+    if (bottom > composerTop - 4) warnings.push("chat runs under the composer");
     return warnings;
   });
 }

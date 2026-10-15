@@ -80,7 +80,7 @@ export async function loadDemo(locale) {
       prompt: fill(guest.prompt, pick),
       answer: fill(guest.answer, pick),
     },
-    research: strings.research,
+    providers: strings.providers,
   };
 }
 

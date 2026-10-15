@@ -148,9 +148,31 @@ export function waitForText(page, text, timeout = 60000) {
   );
 }
 
+// A tab in the background only renders when it is captured, so its
+// animations stand still in between; captures it until they have ended.
+// Endless animations (a spinner) don't count.
+export async function paint(page, attempts = 20) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    await capture(page);
+    const running = await page.call(() =>
+      document
+        .getAnimations()
+        .some(
+          (animation) =>
+            animation.playState === "running" &&
+            animation.effect?.getComputedTiming().endTime !== Infinity,
+        ),
+    );
+    if (!running) return;
+    await delay(100);
+  }
+  throw new Error("Animations did not end");
+}
+
 // A real mouse click on the first element that matches `selector` and, if
-// given, contains `text`, at the page's zoom.
+// given, contains `text`, at the page's zoom. Works in background tabs too.
 export async function click(page, selector, text) {
+  await paint(page);
   await clickElement(page, selector, {
     text,
     scale: await pointerScale(page),

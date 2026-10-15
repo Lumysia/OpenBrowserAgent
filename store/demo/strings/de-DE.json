@@ -62,9 +62,8 @@
     "chatTitle": "Tisch im Saltmarsh am Freitag",
     "answer": "Ausgefüllt: **{party}**, **{date} um {time} Uhr**, auf {name}. Noch nicht abgeschickt – bitte prüfen und dann auf **Reservierung anfragen** klicken."
   },
-  "research": {
-    "name": "Recherche",
-    "description": "Vergleicht Quellen und schreibt kurze Berichte mit Belegen",
-    "prompt": "Recherchiere die Frage in mehreren Quellen. Bevorzuge Primärquellen wie offizielle Dokumentation, Paper und Changelogs gegenüber Zusammenfassungen.\n\nHalte fest, wo sich Quellen widersprechen und warum.\n\nSchließe mit einem kurzen Bericht: zuerst die wichtigsten Erkenntnisse, dann offene Fragen. Belege jede Aussage."
+  "providers": {
+    "main": "Mein KI-Anbieter",
+    "local": "Lokale Modelle"
   }
 }

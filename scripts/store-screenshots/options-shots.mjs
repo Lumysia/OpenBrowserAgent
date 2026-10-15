@@ -17,28 +17,26 @@ import { seedOptions } from "./seed.mjs";
 const MARGIN = 16;
 
 // Each settings shot opens a route and expands one card with a real click.
-// Cards are found by text that is the same in every locale (agent ids,
-// provider names) or, without text, the first card: built-in skill names
-// are translated, and Fill form comes first. `fit` is the content that must end inside the
+// Cards are found by what the seed stored, not by UI text: an agent id, the
+// main AI provider's name. `fit` is the content that must end inside the
 // frame: the last card on the page, or the last control of the expanded card
 // when the page goes on below it.
 export const OPTIONS_SHOTS = [
   {
     name: "agents",
     route: OPTIONS_ROUTE.agents,
-    expand: "general-agent",
+    expand: () => "general-agent",
     fit: "page",
   },
   {
     name: "providers",
     route: OPTIONS_ROUTE.providers,
-    expand: "OpenAI",
+    expand: (demo) => demo.providers.main,
     fit: "card",
   },
-  { name: "skills", route: OPTIONS_ROUTE.skills, expand: "", fit: "page" },
 ];
 
-// Scrolls as far as the page heading allows for the `fit` content to end
+// Scrolls as far as the page heading (or the tabs above it) allows for the `fit` content to end
 // above the bottom edge, then reports what the frame still cuts.
 function fitFrame(page, fit) {
   return page.call(
@@ -62,7 +60,7 @@ function fitFrame(page, fit) {
           : [...scroller.querySelectorAll(".ui-card, .ui-accordion-item")]
               .filter(visible)
               .at(-1);
-      const heading = scroller.querySelector("h1, h2");
+      const heading = scroller.querySelector("[role=tablist], h1, h2");
       const bottom = target.getBoundingClientRect().bottom + margin;
       const limit = heading
         ? Math.max(0, heading.getBoundingClientRect().top - margin / 2)
@@ -85,7 +83,7 @@ function fitFrame(page, fit) {
       };
       return [
         ...scroller.querySelectorAll(
-          ".ui-card, .ui-accordion-item, h1, h2, h3, p, label, button, input, textarea",
+          ".ui-card, .ui-accordion-item, [role=tablist], h1, h2, h3, p, label, button, input, textarea",
         ),
       ]
         .filter(cut)
@@ -113,7 +111,7 @@ export async function optionsShots(demo) {
     for (const item of OPTIONS_SHOTS) {
       await page.call((route) => (location.hash = `#${route}`), item.route);
       await delay(1200);
-      await click(page, ".ui-accordion-trigger", item.expand);
+      await click(page, ".ui-accordion-trigger", item.expand(demo));
       await delay(1000);
       const warnings = await fitFrame(page, item.fit);
       await movePointer(page, { x: FRAME.width - 1, y: FRAME.height - 1 });
