@@ -9,14 +9,13 @@ import {
   Wrench,
 } from "lucide-react";
 import { DEFAULT_MAX_TOOL_STEPS } from "../../src/shared/config";
-import { getMessages, languageLabels } from "../../src/shared/i18n";
+import {
+  DEFAULT_LANGUAGE,
+  getMessages,
+  languageLabels,
+} from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Input,
   Select,
   SelectContent,
@@ -26,6 +25,8 @@ import {
   SettingSwitchCard,
   ToggleGroup,
   ToggleGroupItem,
+  SettingsPageHeader,
+  SettingsSection,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { ThemePicker } from "./theme-picker";
@@ -39,84 +40,72 @@ export function GeneralPage() {
 
   return (
     <div className="stack">
-      <div>
-        <h1 className="settings-page-title">
-          <SlidersHorizontal size={24} /> {t.options.general}
-        </h1>
-        <p className="muted">{t.options.generalDescription}</p>
-      </div>
-      <Card>
-        <CardHeader>
-          <CardTitle className="settings-section-title">
-            <Languages size={18} /> {t.common.language}
-          </CardTitle>
-          <CardDescription>{t.options.languageDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Select value={language || "en-US"} onValueChange={setLanguage}>
-            <SelectTrigger aria-label={t.common.language}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(languageLabels).map(([id, label]) => (
-                <SelectItem key={id} value={id}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="settings-section-title">
-            <Palette size={18} /> {t.options.colorScheme}
-          </CardTitle>
-          <CardDescription>{t.options.colorSchemeDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ThemePicker
-            t={t}
-            value={preferences.accentColor}
-            colorScheme={preferences.colorScheme}
-            onChange={(accentColor) =>
-              setPreferences((previous) => ({ ...previous, accentColor }))
-            }
-          />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="settings-section-title">
-            <MonitorCog size={18} /> {t.options.appearance}
-          </CardTitle>
-          <CardDescription>{t.options.appearanceDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ToggleGroup
-            type="single"
-            className="appearance-toggle-group"
-            value={preferences.colorScheme || "system"}
-            onValueChange={(colorScheme) => {
-              if (!colorScheme) return;
-              setPreferences((previous) => ({
-                ...previous,
-                colorScheme: colorScheme as "system" | "light" | "dark",
-              }));
-            }}
-          >
-            <ToggleGroupItem value="system">
-              {t.options.systemTheme}
-            </ToggleGroupItem>
-            <ToggleGroupItem value="light">
-              {t.options.lightTheme}
-            </ToggleGroupItem>
-            <ToggleGroupItem value="dark">
-              {t.options.darkTheme}
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </CardContent>
-      </Card>
+      <SettingsPageHeader
+        icon={<SlidersHorizontal />}
+        title={t.options.general}
+        description={t.options.generalDescription}
+      />
+      <SettingsSection
+        icon={<Languages />}
+        title={t.common.language}
+        description={t.options.languageDescription}
+      >
+        <Select
+          value={language || DEFAULT_LANGUAGE}
+          onValueChange={setLanguage}
+        >
+          <SelectTrigger aria-label={t.common.language}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(languageLabels).map(([id, label]) => (
+              <SelectItem key={id} value={id}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </SettingsSection>
+      <SettingsSection
+        icon={<Palette />}
+        title={t.options.colorScheme}
+        description={t.options.colorSchemeDescription}
+      >
+        <ThemePicker
+          t={t}
+          value={preferences.accentColor}
+          colorScheme={preferences.colorScheme}
+          onChange={(accentColor) =>
+            setPreferences((previous) => ({ ...previous, accentColor }))
+          }
+        />
+      </SettingsSection>
+      <SettingsSection
+        icon={<MonitorCog />}
+        title={t.options.appearance}
+        description={t.options.appearanceDescription}
+      >
+        <ToggleGroup
+          type="single"
+          className="appearance-toggle-group"
+          value={preferences.colorScheme || "system"}
+          onValueChange={(colorScheme) => {
+            if (!colorScheme) return;
+            setPreferences((previous) => ({
+              ...previous,
+              colorScheme: colorScheme as "system" | "light" | "dark",
+            }));
+          }}
+        >
+          <ToggleGroupItem value="system">
+            {t.options.systemTheme}
+          </ToggleGroupItem>
+          <ToggleGroupItem value="light">
+            {t.options.lightTheme}
+          </ToggleGroupItem>
+          <ToggleGroupItem value="dark">{t.options.darkTheme}</ToggleGroupItem>
+        </ToggleGroup>
+      </SettingsSection>
       <SettingSwitchCard
         icon={<PartyPopper size={18} />}
         title={t.themes.holidayTouches}
@@ -147,29 +136,25 @@ export function GeneralPage() {
           setPreferences((previous) => ({ ...previous, autoRetry: checked }))
         }
       />
-      <Card>
-        <CardHeader>
-          <CardTitle className="settings-section-title">
-            <Wrench size={18} /> {t.options.maxToolSteps}
-          </CardTitle>
-          <CardDescription>{t.options.maxToolStepsDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Input
-            aria-label={t.options.maxToolSteps}
-            type="number"
-            min={0}
-            step={1}
-            value={String(preferences.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS)}
-            onChange={(event) =>
-              setPreferences((previous) => ({
-                ...previous,
-                maxToolSteps: parseMaxToolSteps(event.currentTarget.value),
-              }))
-            }
-          />
-        </CardContent>
-      </Card>
+      <SettingsSection
+        icon={<Wrench />}
+        title={t.options.maxToolSteps}
+        description={t.options.maxToolStepsDescription}
+      >
+        <Input
+          aria-label={t.options.maxToolSteps}
+          type="number"
+          min={0}
+          step={1}
+          value={String(preferences.maxToolSteps ?? DEFAULT_MAX_TOOL_STEPS)}
+          onChange={(event) =>
+            setPreferences((previous) => ({
+              ...previous,
+              maxToolSteps: parseMaxToolSteps(event.currentTarget.value),
+            }))
+          }
+        />
+      </SettingsSection>
     </div>
   );
 }

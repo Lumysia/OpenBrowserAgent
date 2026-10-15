@@ -12,6 +12,7 @@ import type {
 import { useSkillCatalog } from "../../src/ui/useSkillCatalog";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { useTheme } from "../../src/ui/theme";
+import { useDocumentLanguage } from "../../src/ui/use-document-language";
 import { celebrateSend } from "./holiday-touches";
 import { requestChatTitle } from "./ai-requests";
 import { createChatDraft } from "./chat-state-actions";
@@ -212,6 +213,7 @@ export function SidepanelApp() {
   );
 
   useTheme(document.documentElement, preferences ?? {});
+  useDocumentLanguage(language);
   useSyncPageState();
 
   const { createChat, closeChat, selectChat, importChat, forkMessage } =
@@ -248,15 +250,14 @@ export function SidepanelApp() {
     createChat,
   );
 
-  useActiveChatCleanup(
-    activeChatId,
-    clearUploadedAttachments,
-    setEditingMessage,
-    setSentAttachmentPreviews,
-    clearComposerContext,
-    setSelectedSkills,
-    setOpenMenu,
-  );
+  useActiveChatCleanup(activeChatId, () => {
+    clearUploadedAttachments();
+    setEditingMessage(null);
+    setSentAttachmentPreviews({});
+    clearComposerContext();
+    setSelectedSkills([]);
+    setOpenMenu(null);
+  });
 
   useAutoScroll(
     messagesRef,
@@ -345,11 +346,7 @@ export function SidepanelApp() {
         t,
         context,
         sources: baseChat.sources,
-        assistantModel: chatModelLabel(
-          activeAgent,
-          preferences,
-          configuredModels,
-        ),
+        assistantModel: chatModelLabel(activeAgent, providers, preferences),
         sentTabs,
         sentElements,
         sentTexts,
@@ -434,7 +431,6 @@ export function SidepanelApp() {
       openMenu={openMenu}
       addMenuView={addMenuView}
       showHistory={showHistory}
-      aiWorking={currentChatStreaming}
       editingMessageId={editingMessage?.messageId}
       sidepanelRef={sidepanelRef}
       messagesRef={messagesRef}

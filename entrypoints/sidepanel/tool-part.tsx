@@ -31,6 +31,7 @@ import { toolIcon } from "./tool-icons";
 import { CapturedTabImage, GeneratedImage } from "./tool-media";
 import { DownloadReferences } from "./download-tool-display";
 import { ToolReferenceButton } from "./tool-references";
+import { cn } from "../../src/ui/utils";
 
 export function ToolPart({
   t,
@@ -78,7 +79,7 @@ export function ToolPart({
     ? chatExists(subAgentChatId)
     : false;
   return (
-    <div className={`tool-card ${status}`}>
+    <div className={cn("tool-card", status)}>
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="ghost" className="tool-title tool-title-button">
@@ -124,7 +125,7 @@ export function ToolPart({
           )}
           {isSubAgentTool(name) && (
             <div
-              className={`tool-detail-slot ${subAgentProgress ? "visible" : ""}`}
+              className={cn("tool-detail-slot", subAgentProgress && "visible")}
               aria-hidden={!subAgentProgress}
             >
               <div

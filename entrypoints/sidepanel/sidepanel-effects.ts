@@ -1,23 +1,23 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import type { RefObject } from "react";
 import {
+  AUTO_SCROLL_AT_BOTTOM_PX,
   AUTO_SCROLL_BOTTOM_THRESHOLD_PX,
+  AUTO_SCROLL_SUBPIXEL_PX,
   AUTO_SCROLL_STREAM_THROTTLE_MS,
   AUTO_RETRY_IDLE_MS,
   AUTO_RETRY_POLL_MS,
   MAX_AUTO_RETRIES,
 } from "../../src/shared/config";
 import type {
-  Agent,
   Chat,
   ChatSummary,
-  Preferences,
-  PickedSkill,
-  UploadedAttachment,
+  SendMessagesBody,
 } from "../../src/shared/types";
+import { useLatest } from "../../src/ui/use-latest";
 import { pruneEmptyChats } from "./chat-state-actions";
 import { retryStalledStream } from "./retry-stalled-stream";
-import type { ActiveStreamMap, ComposerMenu } from "./sidepanel-menu-state";
+import type { ActiveStreamMap } from "./sidepanel-menu-state";
 import type { SendMessagesRequest } from "../../src/shared/types";
 
 export function useAutoScroll(
@@ -51,18 +51,15 @@ export function useAutoScroll(
     let lastScrollTop = element.scrollTop;
     function updateStickToBottom() {
       const top = element.scrollTop;
-      const distanceFromBottom =
-        element.scrollHeight - top - element.clientHeight;
-      if (top < lastScrollTop - 1 && distanceFromBottom > 2)
+      const fromBottom = distanceFromBottom(element);
+      if (
+        top < lastScrollTop - AUTO_SCROLL_SUBPIXEL_PX &&
+        fromBottom > AUTO_SCROLL_AT_BOTTOM_PX
+      )
         stickToBottomRef.current = false;
-      else if (distanceFromBottom <= AUTO_SCROLL_BOTTOM_THRESHOLD_PX)
+      else if (fromBottom <= AUTO_SCROLL_BOTTOM_THRESHOLD_PX)
         stickToBottomRef.current = true;
       lastScrollTop = top;
-    }
-
-    function handleWheel(event: WheelEvent) {
-      if (event.deltaY >= 0) return;
-      stickToBottomRef.current = false;
     }
 
     function handleDocumentWheel(event: WheelEvent) {
@@ -72,22 +69,15 @@ export function useAutoScroll(
     }
 
     function handlePointerDown() {
-      const distanceFromBottom =
-        element.scrollHeight - element.scrollTop - element.clientHeight;
-      if (distanceFromBottom > AUTO_SCROLL_BOTTOM_THRESHOLD_PX) {
+      if (distanceFromBottom(element) > AUTO_SCROLL_BOTTOM_THRESHOLD_PX)
         stickToBottomRef.current = false;
-      }
     }
 
     updateStickToBottom();
     element.addEventListener("scroll", updateStickToBottom, {
       passive: true,
     });
-    element.addEventListener("wheel", handleWheel, { passive: true });
-    element.addEventListener("wheel", handleWheel, {
-      capture: true,
-      passive: true,
-    });
+    // A wheel up over the list, seen before any element can stop it.
     document.addEventListener("wheel", handleDocumentWheel, {
       capture: true,
       passive: true,
@@ -99,9 +89,7 @@ export function useAutoScroll(
     // images, code blocks), so follow the content's size, not only updates.
     const resizeObserver = new ResizeObserver(() => {
       if (autoScrollRef.current === false || !stickToBottomRef.current) return;
-      const distanceFromBottom =
-        element.scrollHeight - element.scrollTop - element.clientHeight;
-      if (distanceFromBottom > 2) {
+      if (distanceFromBottom(element) > AUTO_SCROLL_AT_BOTTOM_PX) {
         element.scrollTop = element.scrollHeight;
         lastScrollTop = element.scrollTop;
       }
@@ -117,8 +105,6 @@ export function useAutoScroll(
       resizeObserver.disconnect();
       childObserver.disconnect();
       element.removeEventListener("scroll", updateStickToBottom);
-      element.removeEventListener("wheel", handleWheel);
-      element.removeEventListener("wheel", handleWheel, { capture: true });
       document.removeEventListener("wheel", handleDocumentWheel, {
         capture: true,
       });
@@ -183,13 +169,11 @@ export function useAutoScroll(
     lastStreamScrollAtRef.current = now;
     frameRef.current = requestAnimationFrame(() => {
       frameRef.current = undefined;
-      const distanceFromBottom =
-        messagesElement.scrollHeight -
-        messagesElement.scrollTop -
-        messagesElement.clientHeight;
-      if (streaming && distanceFromBottom <= 2) {
+      if (
+        streaming &&
+        distanceFromBottom(messagesElement) <= AUTO_SCROLL_AT_BOTTOM_PX
+      )
         return;
-      }
       if (!stickToBottomRef.current) return;
       messagesElement.scrollTo({
         top: messagesElement.scrollHeight,
@@ -200,6 +184,10 @@ export function useAutoScroll(
       });
     });
   }, [messages, autoScroll, streaming, activeChatId, chatSelectionRequestId]);
+}
+
+function distanceFromBottom(element: HTMLElement) {
+  return element.scrollHeight - element.scrollTop - element.clientHeight;
 }
 
 function messageScrollSignature(messages: Chat["messages"] | undefined) {
@@ -282,18 +270,14 @@ export function useChatSelection(
   ]);
 }
 
+// Calls `reset` when the user moves from one chat to another (not when the
+// first chat is chosen), with the panel's current state.
 export function useActiveChatCleanup(
   activeChatId: string | undefined,
-  clearUploadedAttachments: () => void,
-  setEditingMessage: (value: null) => void,
-  setSentAttachmentPreviews: (
-    value: Record<string, UploadedAttachment[]>,
-  ) => void,
-  clearComposerContext: () => void,
-  setSelectedSkills: (value: PickedSkill[]) => void,
-  setOpenMenu: (value: ComposerMenu | null) => void,
+  reset: () => void,
 ) {
   const previousActiveChatIdRef = useRef<string | undefined>(undefined);
+  const latestReset = useLatest(reset);
 
   useEffect(() => {
     const previousActiveChatId = previousActiveChatIdRef.current;
@@ -301,26 +285,20 @@ export function useActiveChatCleanup(
     if (previousActiveChatId === undefined && activeChatId !== undefined)
       return;
     if (previousActiveChatId === activeChatId) return;
-
-    clearUploadedAttachments();
-    setEditingMessage(null);
-    setSentAttachmentPreviews({});
-    clearComposerContext();
-    setSelectedSkills([]);
-    setOpenMenu(null);
-  }, [activeChatId]);
+    latestReset.current();
+  }, [activeChatId, latestReset]);
 }
 
+// Retries a stream that shows no progress for a while. The timer reads the
+// panel's current state when it fires; the retry itself sends the request
+// body the stalled run started with (`bodyFor`).
 export function useAutoRetryStream({
   streaming,
   autoRetry,
   activeStreamsRef,
   lastStreamActivityRef,
   getChat,
-  preferences,
-  language,
-  uploadedAttachments,
-  agent,
+  bodyFor,
   appendToAssistant,
   startStream,
 }: {
@@ -329,10 +307,7 @@ export function useAutoRetryStream({
   activeStreamsRef: RefObject<ActiveStreamMap>;
   lastStreamActivityRef: RefObject<Record<string, number>>;
   getChat: (chatId: string) => Chat | undefined;
-  preferences: Preferences | undefined;
-  language: string | undefined;
-  uploadedAttachments: UploadedAttachment[];
-  agent: Agent;
+  bodyFor: (chatId: string) => SendMessagesBody;
   appendToAssistant: (
     chatId: string,
     messageId: string,
@@ -340,9 +315,17 @@ export function useAutoRetryStream({
   ) => void;
   startStream: (request: SendMessagesRequest, targetMessageId: string) => void;
 }) {
+  const latest = useLatest({
+    getChat,
+    bodyFor,
+    appendToAssistant,
+    startStream,
+  });
   useEffect(() => {
     if (!streaming || autoRetry === false) return;
     const interval = window.setInterval(() => {
+      const { getChat, bodyFor, appendToAssistant, startStream } =
+        latest.current;
       Object.values(activeStreamsRef.current).forEach((active) => {
         if (active.retryCount >= MAX_AUTO_RETRIES) return;
         if (active.hasProgress) return;
@@ -352,17 +335,14 @@ export function useAutoRetryStream({
         retryStalledStream({
           active,
           chat: getChat(active.chatId),
-          preferences,
-          language: language || "en-US",
-          uploadedAttachments,
-          agent,
+          body: bodyFor(active.chatId),
           appendToAssistant,
           startStream,
         });
       });
     }, AUTO_RETRY_POLL_MS);
     return () => window.clearInterval(interval);
-  }, [autoRetry, streaming]);
+  }, [activeStreamsRef, autoRetry, lastStreamActivityRef, latest, streaming]);
 }
 
 // Drops empty chats from history, and the composer draft once it is stored

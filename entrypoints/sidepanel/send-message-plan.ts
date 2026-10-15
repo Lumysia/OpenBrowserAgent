@@ -8,6 +8,7 @@ import type {
   PickedSkill,
   SelectedElement,
   SelectedText,
+  SendMessagesBody,
   UploadedAttachment,
 } from "../../src/shared/types";
 import {
@@ -213,34 +214,42 @@ export function pickSendInputs({
   };
 }
 
-export function sendMessagesRequest({
-  chat,
-  messageId,
-  messages,
-  preferences,
-  agent,
-  language,
-  uploadedAttachments,
-}: {
-  chat: Chat;
-  messageId: string;
-  messages: ChatMessage[];
+type SendChoices = {
   preferences?: Preferences;
   agent: Agent;
   language?: string;
   uploadedAttachments: UploadedAttachment[];
+};
+
+export function sendMessagesRequest({
+  chat,
+  messageId,
+  messages,
+  ...choices
+}: SendChoices & {
+  chat: Chat;
+  messageId: string;
+  messages: ChatMessage[];
 }): SendMessagesRequest {
   return {
     type: AI_STREAM_REQUEST_TYPE.sendMessages,
     chatId: chat.id,
     messageId,
     messages,
-    body: {
-      agentId: agent.id,
-      modelId: preferences?.selectedModelId,
-      language,
-      uploadedAttachments,
-      subAgent: chat.kind === "subagent",
-    },
+    body: sendMessagesBody(chat, choices),
+  };
+}
+
+// What a run of `chat` runs with: the agent, model, language and files.
+export function sendMessagesBody(
+  chat: Pick<Chat, "kind"> | undefined,
+  { preferences, agent, language, uploadedAttachments }: SendChoices,
+): SendMessagesBody {
+  return {
+    agentId: agent.id,
+    modelId: preferences?.selectedModelId,
+    language,
+    uploadedAttachments,
+    subAgent: chat?.kind === "subagent",
   };
 }

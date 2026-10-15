@@ -1,5 +1,5 @@
 import { Bot, Languages, Settings } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { LOCAL_SETUP_FEEDBACK_MS, OPTIONS_HASH } from "../../src/shared/config";
 import type { Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
@@ -9,14 +9,17 @@ import { parseSyncConfigCode } from "../../src/shared/sync-config-code";
 import {
   BROWSER_SYNC_BACKEND_ID,
   NO_SYNC_BACKEND_ID,
-  SYNC_BACKEND_TYPES,
-  syncBackendDefaultName,
   WEBDAV_SYNC_BACKEND_ID,
+  webDavBackendOf,
+  withWebDavPatch,
 } from "../../src/shared/sync-backends";
 import { checkSyncBackend, syncNow } from "../../src/shared/sync/client";
 import { openOrFocusOptions } from "../../src/shared/tab-navigation";
-import type { SyncBackendConfig } from "../../src/shared/types";
-import { languageLabels } from "../../src/shared/i18n";
+import type {
+  SyncBackendConfig,
+  WebDavSyncBackendConfig,
+} from "../../src/shared/types";
+import { DEFAULT_LANGUAGE, languageLabels } from "../../src/shared/i18n";
 import {
   Badge,
   Button,
@@ -33,97 +36,63 @@ import {
   ScrollArea,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { useTransient } from "../../src/ui/use-transient";
+import { cn } from "../../src/ui/utils";
 import { SyncBootstrapStep } from "./sync-bootstrap-step";
+
+type SetupStatus = "idle" | "synced" | "error";
 
 export function ProvidersEmptyState({ t }: { t: Messages }) {
   const [language, setLanguage] = useStoredState(storage.language);
-  const [syncBackends, setSyncBackends] = useStoredState(storage.syncBackends);
+  const [syncBackends] = useStoredState(storage.syncBackends);
   const [syncGroups] = useStoredState(storage.syncGroups);
   const [activeSyncBackendId] = useStoredState(storage.activeSyncBackendId);
-  const [selectedBackendId, setSelectedBackendId] = useState<string>(
-    activeSyncBackendId === WEBDAV_SYNC_BACKEND_ID
-      ? WEBDAV_SYNC_BACKEND_ID
-      : BROWSER_SYNC_BACKEND_ID,
+  const [chosenBackendId, setChosenBackendId] = useState<string>(
+    BROWSER_SYNC_BACKEND_ID,
   );
+  const [webDavEdits, setWebDavEdits] = useState<
+    Partial<Pick<WebDavSyncBackendConfig, "url" | "username" | "password">>
+  >({});
   const [syncSetupMode, setSyncSetupMode] = useState<"code" | "manual">("code");
   const [syncCodeDraft, setSyncCodeDraft] = useState("");
   const [syncCodeInvalid, setSyncCodeInvalid] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncAction, setSyncAction] = useState<"test" | "confirm">("test");
-  const [startingLocal, setStartingLocal] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<"idle" | "synced" | "error">(
-    activeSyncBackendId && activeSyncBackendId !== NO_SYNC_BACKEND_ID
-      ? "synced"
-      : "idle",
+  const [syncFailed, setSyncFailed] = useState(false);
+  const [startingLocal, showStartingLocal] = useTransient<true>(
+    LOCAL_SETUP_FEEDBACK_MS,
   );
-
-  useEffect(() => {
-    if (!activeSyncBackendId || activeSyncBackendId === NO_SYNC_BACKEND_ID) {
-      setSyncStatus("idle");
-      return;
-    }
-    setSelectedBackendId(activeSyncBackendId);
-    setSyncStatus("synced");
-  }, [activeSyncBackendId]);
 
   if (!language || !syncBackends || !syncGroups || !activeSyncBackendId)
     return null;
   const loadedSyncBackends = syncBackends;
   const hasActiveSyncBackend = activeSyncBackendId !== NO_SYNC_BACKEND_ID;
-
-  const webDavBackend = loadedSyncBackends.find(
-    (backend) => backend.type === SYNC_BACKEND_TYPES.webDav,
-  );
-  const webDavDraft: Extract<SyncBackendConfig, { type: "webdav" }> = {
-    id: WEBDAV_SYNC_BACKEND_ID,
-    type: SYNC_BACKEND_TYPES.webDav,
-    name: webDavBackend?.name || syncBackendDefaultName(WEBDAV_SYNC_BACKEND_ID),
-    url: webDavBackend?.url || "",
-    username: webDavBackend?.username,
-    password: webDavBackend?.password,
-  };
+  const syncStatus: SetupStatus = syncFailed
+    ? "error"
+    : hasActiveSyncBackend
+      ? "synced"
+      : "idle";
+  const selectedBackendId = hasActiveSyncBackend
+    ? activeSyncBackendId
+    : chosenBackendId;
+  // The WebDAV fields as typed; the backend made from them is trimmed.
+  const draftBackends = withWebDavPatch(loadedSyncBackends, webDavEdits);
+  const webDavDraft = webDavBackendOf(draftBackends);
   const canPull =
     syncSetupMode === "code"
       ? !!syncCodeDraft.trim()
       : selectedBackendId !== WEBDAV_SYNC_BACKEND_ID || !!webDavDraft.url;
 
-  function updateWebDavBackend(
-    patch: Partial<Extract<SyncBackendConfig, { type: "webdav" }>>,
-  ) {
+  function updateWebDavBackend(patch: typeof webDavEdits) {
     if (hasActiveSyncBackend) return;
-    const nextBackend = {
-      ...webDavDraft,
-      ...patch,
-      id: WEBDAV_SYNC_BACKEND_ID,
-      type: SYNC_BACKEND_TYPES.webDav,
-      name:
-        patch.name?.trim() ||
-        webDavDraft.name ||
-        syncBackendDefaultName(WEBDAV_SYNC_BACKEND_ID),
-      url: patch.url ?? webDavDraft.url,
-      username:
-        patch.username === undefined
-          ? webDavDraft.username
-          : patch.username.trim() || undefined,
-      password:
-        patch.password === undefined
-          ? webDavDraft.password
-          : patch.password || undefined,
-    };
-    setSyncBackends([
-      ...loadedSyncBackends.filter(
-        (backend) => backend.type !== SYNC_BACKEND_TYPES.webDav,
-      ),
-      nextBackend,
-    ]);
-    setSyncStatus("idle");
+    setWebDavEdits((edits) => ({ ...edits, ...patch }));
+    setSyncFailed(false);
   }
 
   function selectedBackendConfig(): SyncBackendConfig {
-    if (selectedBackendId === WEBDAV_SYNC_BACKEND_ID) return webDavDraft;
     return (
-      loadedSyncBackends.find((backend) => backend.id === selectedBackendId) ||
-      loadedSyncBackends[0]
+      draftBackends.find((backend) => backend.id === selectedBackendId) ||
+      draftBackends[0]
     );
   }
 
@@ -141,7 +110,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   }) {
     setSyncing(true);
     setSyncAction("test");
-    setSyncStatus("idle");
+    setSyncFailed(false);
     try {
       await checkSyncBackend(backend);
       setSyncAction("confirm");
@@ -152,10 +121,9 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
       const status = await syncNow();
       if (status.error) throw new Error(status.error);
       await completeLocalBootstrapState();
-      setSyncStatus("synced");
     } catch (error) {
       console.warn("Failed to connect sync backend", error);
-      setSyncStatus("error");
+      setSyncFailed(true);
     } finally {
       setSyncing(false);
     }
@@ -166,7 +134,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     if (syncSetupMode === "manual") {
       void connectCloud({
         backend: selectedBackendConfig(),
-        backends: loadedSyncBackends,
+        backends: draftBackends,
       });
       return;
     }
@@ -179,7 +147,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
       return;
     }
     const { backend, syncGroups: codeSettings } = parsed;
-    setSelectedBackendId(backend.id);
+    setChosenBackendId(backend.id);
     void connectCloud({
       backend,
       backends: [
@@ -192,10 +160,9 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     });
   }
 
-  async function startLocally() {
+  function startLocally() {
     if (startingLocal) return;
-    setStartingLocal(true);
-    window.setTimeout(() => setStartingLocal(false), LOCAL_SETUP_FEEDBACK_MS);
+    showStartingLocal(true);
     openOrFocusOptions(OPTIONS_HASH.providers).catch(console.warn);
   }
 
@@ -242,14 +209,13 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
               <CardContent className="stack">
                 <div className="bootstrap-steps">
                   <BootstrapStep
-                    number="1"
                     title={t.common.language}
                     description={t.options.languageDescription}
                     active
                   >
                     <div className="bootstrap-actions">
                       <Select
-                        value={language || "en-US"}
+                        value={language || DEFAULT_LANGUAGE}
                         onValueChange={setLanguage}
                       >
                         <SelectTrigger>
@@ -267,7 +233,6 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                     </div>
                   </BootstrapStep>
                   <BootstrapStep
-                    number="2"
                     title={t.sidepanel.bootstrapStepSyncTitle}
                     description={t.sidepanel.cloudSyncDescription}
                     active
@@ -276,10 +241,10 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                       t={t}
                       selectedBackendId={selectedBackendId}
                       setSelectedBackendId={(backendId) => {
-                        setSelectedBackendId(backendId);
-                        setSyncStatus("idle");
+                        setChosenBackendId(backendId);
+                        setSyncFailed(false);
                       }}
-                      webDavDraft={webDavDraft}
+                      webDavDraft={{ ...webDavDraft, ...webDavEdits }}
                       updateWebDavBackend={updateWebDavBackend}
                       syncSetupMode={syncSetupMode}
                       setSyncSetupMode={setSyncSetupMode}
@@ -287,7 +252,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                       setSyncCodeDraft={(value) => {
                         setSyncCodeDraft(value);
                         setSyncCodeInvalid(false);
-                        setSyncStatus("idle");
+                        setSyncFailed(false);
                       }}
                       setupFeedbackMessage={setupFeedbackMessage}
                       setupFeedbackError={setupFeedbackError}
@@ -299,7 +264,6 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                     />
                   </BootstrapStep>
                   <BootstrapStep
-                    number="3"
                     title={t.sidepanel.bootstrapStepProviderTitle}
                     description={t.sidepanel.bootstrapStepProviderDescription}
                   >
@@ -307,7 +271,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                       <Button
                         variant="secondary"
                         onClick={startLocally}
-                        disabled={startingLocal}
+                        disabled={!!startingLocal}
                       >
                         <Settings size={16} />
                         <span
@@ -319,14 +283,16 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                       </Button>
                       <CardDescription
                         aria-hidden={!startingLocal}
-                        className={`bootstrap-feedback-card local-setup-hint ${startingLocal ? "visible" : ""}`}
+                        className={cn(
+                          "bootstrap-feedback-card local-setup-hint",
+                          startingLocal && "visible",
+                        )}
                       >
                         {t.sidepanel.localSetupHint}
                       </CardDescription>
                     </div>
                   </BootstrapStep>
                   <BootstrapStep
-                    number="4"
                     title={t.sidepanel.bootstrapStepTaskTitle}
                     description={t.sidepanel.bootstrapStepTaskDescription}
                   />
@@ -340,14 +306,13 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   );
 }
 
+// Steps are numbered by CSS (a counter on .bootstrap-steps).
 function BootstrapStep({
-  number,
   title,
   description,
   active,
   children,
 }: {
-  number: string;
   title: string;
   description: string;
   active?: boolean;
@@ -355,7 +320,12 @@ function BootstrapStep({
 }) {
   return (
     <div className="bootstrap-step">
-      <Badge className={active ? "" : "bootstrap-step-muted"}>{number}</Badge>
+      <Badge
+        className={cn(
+          "bootstrap-step-number",
+          !active && "bootstrap-step-muted",
+        )}
+      />
       <strong className="bootstrap-step-title">{title}</strong>
       <div className="stack bootstrap-step-copy">
         <CardDescription key={description} className="bootstrap-status-copy">

@@ -190,7 +190,8 @@ export const zhCN: LocaleMessages = {
     generatedImage: "生成的图片",
     capturedTabImage: "标签页截图",
     mermaidPreview: "Mermaid 图表预览",
-    openMermaidPreview: "打开 Mermaid 预览",
+    mermaidRenderFailed: "无法绘制此图表，下面显示其源代码。",
+    tabFallbackTitle: "标签页 {id}",
     downloadMermaidSvg: "下载 SVG",
     downloadMermaidPng: "下载 PNG",
     loadImage: "加载图片",
@@ -297,6 +298,7 @@ export const zhCN: LocaleMessages = {
     agentWorkspaceDescription:
       "此智能体的私有文件。智能体始终能看到 MEMORY.md 和 USER.md，其他文件按需读取。",
     agentWorkspaceNewFile: "新建工作区文件",
+    agentWorkspaceSaveError: "无法保存工作区",
     agentWorkspaceErrors: {
       pathRequired: "请输入文件路径。",
       pathTooLong: "文件路径最多 {limit} 个字符。",
@@ -482,6 +484,9 @@ export const zhCN: LocaleMessages = {
     syncBackendDescription: "同步的内容。",
     syncBackendBrowserSync: "内置浏览器账号同步",
     syncBackendWebDavSync: "WebDAV 同步",
+    syncBackendBrowserSyncHint: "通过此浏览器登录的账号同步。",
+    syncBackendWebDavSyncHint:
+      "通过你选择的 WebDAV 服务器同步，也可以同步对话和文件。",
     syncBackendName: "后端名称",
     syncBackendWebDavUrl: "WebDAV 地址",
     syncBackendUsername: "用户名",

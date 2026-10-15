@@ -211,7 +211,8 @@ export const enUS = {
     generatedImage: "Generated image",
     capturedTabImage: "Captured tab screenshot",
     mermaidPreview: "Mermaid diagram preview",
-    openMermaidPreview: "Open Mermaid preview",
+    mermaidRenderFailed: "Couldn’t draw this diagram, so its source is shown.",
+    tabFallbackTitle: "Tab {id}",
     downloadMermaidSvg: "Download SVG",
     downloadMermaidPng: "Download PNG",
     loadImage: "Load image",
@@ -342,6 +343,7 @@ export const enUS = {
     agentWorkspaceDescription:
       "Private files for this agent. It always sees MEMORY.md and USER.md and reads others when needed.",
     agentWorkspaceNewFile: "New workspace file",
+    agentWorkspaceSaveError: "Couldn’t save the workspace",
     // Why a workspace file could not be saved; {limit} is a number.
     agentWorkspaceErrors: {
       pathRequired: "Enter a file path.",
@@ -541,6 +543,10 @@ export const enUS = {
     syncBackendDescription: "What syncs.",
     syncBackendBrowserSync: "Built-in browser account sync",
     syncBackendWebDavSync: "WebDAV sync",
+    syncBackendBrowserSyncHint:
+      "Through the account this browser is signed in to.",
+    syncBackendWebDavSyncHint:
+      "Through a WebDAV server you choose; it can also hold chats and files.",
     syncBackendName: "Backend name",
     syncBackendWebDavUrl: "WebDAV URL",
     syncBackendUsername: "Username",

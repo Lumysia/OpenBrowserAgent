@@ -25,6 +25,10 @@ export const STREAM_REVEAL_STEP_TINY = 2;
 export const STREAM_REVEAL_MAX_PENDING_CHARS = 600;
 // How close to the bottom counts as "at the bottom" for following output.
 export const AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 48;
+// Closer than this is exactly at the bottom (scroll positions round).
+export const AUTO_SCROLL_AT_BOTTOM_PX = 2;
+// A scroll up by less than this is rounding, not the reader moving.
+export const AUTO_SCROLL_SUBPIXEL_PX = 1;
 export const AUTO_SCROLL_STREAM_THROTTLE_MS = 180;
 export const ESTIMATED_CHARS_PER_TOKEN = 4;
 
@@ -52,6 +56,10 @@ export const MARKDOWN_FILENAME_MAX_LENGTH = 30;
 export const IMAGE_FILENAME_MAX_LABEL_LENGTH = 40;
 export const IMAGE_ALT_MAX_LENGTH = 50;
 export const MAX_IMAGES_PER_DOWNLOAD = 80;
+// Drawn Mermaid diagrams kept for re-renders and theme switches back.
+export const MERMAID_RENDER_CACHE_SIZE = 40;
+// A downloaded diagram PNG, in pixels per SVG unit.
+export const MERMAID_PNG_SCALE = 2;
 export const DEFAULT_SCREENSHOT_QUALITY = 35;
 export const MAX_UPLOAD_FILE_BYTES = 50_000_000;
 export const MAX_UPLOAD_TOTAL_BYTES = 200_000_000;
@@ -115,23 +123,17 @@ export const OPTIONS_ROUTE = {
   debug: "/debug",
 } as const;
 
-export const OPTIONS_HASH = {
-  general: "#/",
-  agents: "#/agents",
-  sync: "#/sync",
-  providers: "#/providers",
-  mcp: "#/mcp",
-  localExecutionBridges: "#/local-execution-bridges",
-  skills: "#/skills",
-  smartBar: "#/smart-bar",
-  contextMenu: "#/context-menu",
-  pageTranslate: "#/page-translation",
-  debug: "#/debug",
-} as const;
+export const OPTIONS_HASH = Object.fromEntries(
+  Object.entries(OPTIONS_ROUTE).map(([page, route]) => [page, `#${route}`]),
+) as {
+  [Page in keyof typeof OPTIONS_ROUTE]: `#${(typeof OPTIONS_ROUTE)[Page]}`;
+};
+
+// The project's source repository (help, privacy policy).
+export const REPO_URL = "https://github.com/Lumysia/OpenBrowserAgent";
 
 // The privacy policy's part on translation engines.
-export const PRIVACY_POLICY_TRANSLATION_URL =
-  "https://github.com/Lumysia/OpenBrowserAgent/blob/main/PRIVACY.md#translation-engines";
+export const PRIVACY_POLICY_TRANSLATION_URL = `${REPO_URL}/blob/main/PRIVACY.md#translation-engines`;
 
 export function clampMaxToolSteps(value: number | undefined) {
   if (!Number.isFinite(value)) return DEFAULT_MAX_TOOL_STEPS;

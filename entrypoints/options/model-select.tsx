@@ -1,6 +1,8 @@
+import { useMemo } from "react";
 import type { Messages } from "../../src/shared/i18n";
-import { normalizeProviderState } from "../../src/shared/provider-instances";
+import { configuredModels } from "../../src/shared/model-choice";
 import { storage } from "../../src/shared/storage";
+import type { ModelConfig } from "../../src/shared/types";
 import {
   Select,
   SelectContent,
@@ -8,63 +10,53 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../src/ui/components";
-import {
-  modelNameDisplay,
-  providerNameDisplay,
-} from "../../src/ui/provider-display";
+import { modelNameDisplay } from "../../src/ui/provider-display";
 import { useStoredState } from "../../src/ui/useStoredState";
 
-// Select value for "no model of its own"; stored as an empty id.
-const DEFAULT_MODEL = "default-model";
+// Select value for "no model": the setting stays unset.
+const NO_MODEL = "no-model";
 
-// A configured chat model, or the default named by `defaultLabel`.
+// A configured model, or none (shown as `noneLabel`: a default such as the
+// chat's model, or a prompt to pick one).
 export function ModelSelect({
   t,
+  models,
   value,
-  defaultLabel,
+  noneLabel,
   label,
   disabled,
   onChange,
 }: {
   t: Messages;
+  models: ModelConfig[];
   value: string | undefined;
-  defaultLabel: string;
+  noneLabel: string;
   label: string;
   disabled?: boolean;
-  onChange: (modelId: string) => void;
+  onChange: (modelId: string | undefined) => void;
 }) {
-  const [providers] = useStoredState(storage.provider);
-  const models = Object.values(normalizeProviderState(providers || {})).flatMap(
-    (provider) =>
-      (provider.models || []).map((model) => ({
-        id: model.id,
-        label: [
-          model.displayName
-            ? modelNameDisplay(model.displayName, t)
-            : model.name,
-          provider.label && providerNameDisplay(provider.label, t),
-        ]
-          .filter(Boolean)
-          .join(" · "),
-      })),
-  );
   return (
     <Select
-      value={value || DEFAULT_MODEL}
-      disabled={disabled}
-      onValueChange={(next) => onChange(next === DEFAULT_MODEL ? "" : next)}
+      value={value || NO_MODEL}
+      disabled={disabled || models.length === 0}
+      onValueChange={(next) => onChange(next === NO_MODEL ? undefined : next)}
     >
       <SelectTrigger aria-label={label}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value={DEFAULT_MODEL}>{defaultLabel}</SelectItem>
+        <SelectItem value={NO_MODEL}>{noneLabel}</SelectItem>
         {models.map((model) => (
           <SelectItem key={model.id} value={model.id}>
-            {model.label}
+            {modelNameDisplay(model, t)}
           </SelectItem>
         ))}
       </SelectContent>
     </Select>
   );
+}
+
+export function useConfiguredModels() {
+  const [providers] = useStoredState(storage.provider);
+  return useMemo(() => configuredModels(providers), [providers]);
 }

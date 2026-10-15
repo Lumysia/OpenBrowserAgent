@@ -82,7 +82,6 @@ export function SidepanelView({
   openMenu,
   addMenuView,
   showHistory,
-  aiWorking,
   editingMessageId,
   sidepanelRef,
   messagesRef,
@@ -155,7 +154,6 @@ export function SidepanelView({
   openMenu: ComposerMenu | null;
   addMenuView: AddMenuView;
   showHistory: boolean;
-  aiWorking: boolean;
   editingMessageId?: string;
   sidepanelRef: RefObject<HTMLDivElement | null>;
   messagesRef: RefObject<HTMLDivElement | null>;
@@ -201,7 +199,7 @@ export function SidepanelView({
   onSelectChat: (chatId: string) => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const typingPresence = useDeferredPresence(aiWorking);
+  const typingPresence = useDeferredPresence(streaming);
 
   function attachFromClipboard(event: ClipboardEvent<HTMLTextAreaElement>) {
     const files = Array.from(event.clipboardData.files).filter(
@@ -320,12 +318,12 @@ export function SidepanelView({
             onAttachFiles={onAttachFiles}
           />
           <HolidayBurst />
-          <div className="skill-create-row">
+          <div className="new-chat-row">
             {typingPresence.mounted && (
               <TypingIndicator t={t} removing={typingPresence.removing} />
             )}
             <Button
-              className="skill-create"
+              className="new-chat-button"
               variant="secondary"
               size="sm"
               disabled={!!editingMessageId}
@@ -364,7 +362,6 @@ export function SidepanelView({
             input={input}
             composerRef={composerRef}
             editingMessageId={editingMessageId}
-            aiWorking={aiWorking}
             streaming={streaming}
             openMenu={openMenu}
             addMenuView={addMenuView}

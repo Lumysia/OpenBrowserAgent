@@ -11,8 +11,6 @@ import {
 
 export type StoppedRuns = ReadonlySet<string>;
 
-export const NO_STOPPED_RUNS: StoppedRuns = new Set();
-
 function startedWithoutEnd(message: ChatMessage) {
   const metrics = message.metadata?.runMetrics as
     { startedAt?: unknown; endedAt?: unknown } | undefined;

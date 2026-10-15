@@ -195,7 +195,8 @@ export const ko: LocaleMessages = {
     generatedImage: "생성된 이미지",
     capturedTabImage: "캡처한 탭 스크린샷",
     mermaidPreview: "Mermaid 다이어그램 미리보기",
-    openMermaidPreview: "Mermaid 미리보기 열기",
+    tabFallbackTitle: "탭 {id}",
+    mermaidRenderFailed: "이 다이어그램을 그릴 수 없어 소스를 표시합니다.",
     downloadMermaidSvg: "SVG 다운로드",
     downloadMermaidPng: "PNG 다운로드",
     loadImage: "이미지 불러오기",
@@ -317,6 +318,7 @@ export const ko: LocaleMessages = {
     agentWorkspaceDescription:
       "이 에이전트 전용 파일입니다. MEMORY.md와 USER.md는 항상 제공되고, 다른 파일은 필요할 때 읽습니다.",
     agentWorkspaceNewFile: "새 워크스페이스 파일",
+    agentWorkspaceSaveError: "워크스페이스를 저장할 수 없습니다",
     agentWorkspaceErrors: {
       pathRequired: "파일 경로를 입력하세요.",
       pathTooLong: "파일 경로는 최대 {limit}자까지 쓸 수 있습니다.",
@@ -508,6 +510,9 @@ export const ko: LocaleMessages = {
     syncBackendDescription: "동기화할 항목.",
     syncBackendBrowserSync: "내장 브라우저 계정 동기화",
     syncBackendWebDavSync: "WebDAV 동기화",
+    syncBackendBrowserSyncHint: "이 브라우저에 로그인한 계정으로 동기화합니다.",
+    syncBackendWebDavSyncHint:
+      "선택한 WebDAV 서버로 동기화하며, 채팅과 파일도 동기화할 수 있습니다.",
     syncBackendName: "백엔드 이름",
     syncBackendWebDavUrl: "WebDAV URL",
     syncBackendUsername: "사용자 이름",

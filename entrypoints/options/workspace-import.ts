@@ -12,6 +12,8 @@ import {
   workspaceTotalChars,
 } from "../../src/shared/workspace";
 import { WORKSPACE_TOTAL_MAX_CHARS } from "../../src/shared/config";
+import { downloadBlob } from "../../src/ui/download";
+import { ImportError } from "./import-errors";
 
 const TEXT_FILE_EXTENSIONS = new Set([
   ".md",
@@ -41,22 +43,15 @@ type AgentZipManifest = Pick<
   "name" | "description" | "icon" | "prompt" | "toolGroups" | "workspace"
 >;
 
-export async function importAgentZip(
-  file: File,
-  messages: {
-    missingManifest: string;
-    invalidManifest: string;
-    workspaceTooLarge: string;
-  },
-): Promise<AgentZipImport> {
+export async function importAgentZip(file: File): Promise<AgentZipImport> {
   const zip = await JSZip.loadAsync(file);
   const manifestEntry = zip.file(AGENT_MANIFEST_PATH);
-  if (!manifestEntry) throw new Error(messages.missingManifest);
+  if (!manifestEntry) throw new ImportError({ kind: "missingAgentManifest" });
   const manifest = JSON.parse(
     await manifestEntry.async("string"),
   ) as Partial<AgentZipManifest>;
   if (!manifest.name || !isToolGroupList(manifest.toolGroups))
-    throw new Error(messages.invalidManifest);
+    throw new ImportError({ kind: "invalidAgentManifest" });
   const now = Date.now();
   const agentId = crypto.randomUUID();
   const entries = Object.values(zip.files).filter(
@@ -71,7 +66,7 @@ export async function importAgentZip(
   );
   const nextFiles = normalizeWorkspaceFiles(files);
   if (workspaceTotalChars(nextFiles) > WORKSPACE_TOTAL_MAX_CHARS)
-    throw new Error(messages.workspaceTooLarge);
+    throw new ImportError({ kind: "workspace", code: "workspaceTooLarge" });
   return {
     agent: {
       id: agentId,
@@ -119,7 +114,8 @@ async function readWorkspaceZipFile(
 ): Promise<WorkspaceFile> {
   const path = stripRoot(normalizePath(entry.name), root);
   const pathResult = normalizeWorkspacePath(path);
-  if (!pathResult.ok) throw new Error(pathResult.error);
+  if (!pathResult.ok)
+    throw new ImportError({ kind: "workspace", code: pathResult.code });
   return {
     path: pathResult.path,
     kind: workspaceFileKind(pathResult.path),
@@ -163,13 +159,4 @@ function isToolGroupList(value: unknown): value is Agent["toolGroups"] {
     Array.isArray(value) &&
     value.every((group) => (TOOL_GROUPS as readonly unknown[]).includes(group))
   );
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
 }

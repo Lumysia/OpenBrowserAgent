@@ -2,16 +2,16 @@ import { Cloud } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import {
-  BROWSER_SYNC_BACKEND_ID,
   SYNC_BACKEND_REGISTRY,
   WEBDAV_SYNC_BACKEND_ID,
 } from "../../src/shared/sync-backends";
-import type { SyncBackendConfig } from "../../src/shared/types";
+import type { WebDavSyncBackendConfig } from "../../src/shared/types";
+import { syncBackendTypeLabel } from "../../src/ui/sync-backend-display";
+import { WebDavConnectionFields } from "../../src/ui/webdav-connection-fields";
 import {
   Button,
   CardDescription,
   Feedback,
-  Input,
   Label,
   Select,
   SelectContent,
@@ -24,8 +24,9 @@ import {
   TabsTrigger,
   Textarea,
 } from "../../src/ui/components";
+import { cn } from "../../src/ui/utils";
 
-type WebDavDraft = Extract<SyncBackendConfig, { type: "webdav" }>;
+type WebDavDraft = WebDavSyncBackendConfig;
 
 export function SyncBootstrapStep({
   t,
@@ -106,13 +107,16 @@ export function SyncBootstrapStep({
         <Feedback
           key={setupFeedbackMessage}
           error={setupFeedbackError}
-          className={`bootstrap-feedback-card ${setupFeedbackError ? "is-error" : ""}`}
+          className={cn(
+            "bootstrap-feedback-card",
+            setupFeedbackError && "is-error",
+          )}
         >
           {setupFeedbackMessage}
         </Feedback>
       ) : null}
       <Button
-        className={`bootstrap-cloud-action ${syncing ? "is-loading" : ""}`}
+        className={cn("bootstrap-cloud-action", syncing && "is-loading")}
         onClick={handleCloudAction}
         disabled={!canPull || syncing || hasActiveSyncBackend}
       >
@@ -142,13 +146,13 @@ function ManualSyncBackendFields({
   syncing: boolean;
   hasActiveSyncBackend: boolean;
 }) {
-  const webDavInactive = selectedBackendId !== WEBDAV_SYNC_BACKEND_ID;
+  const disabled = syncing || hasActiveSyncBackend;
   return (
     <>
       <Select
         value={selectedBackendId}
         onValueChange={setSelectedBackendId}
-        disabled={syncing || hasActiveSyncBackend}
+        disabled={disabled}
       >
         <SelectTrigger>
           <Cloud size={16} />
@@ -157,49 +161,22 @@ function ManualSyncBackendFields({
         <SelectContent>
           {SYNC_BACKEND_REGISTRY.map((backend) => (
             <SelectItem key={backend.id} value={backend.id}>
-              {backend.id === BROWSER_SYNC_BACKEND_ID
-                ? t.options.syncBackendBrowserSync
-                : backend.defaultName}
+              {syncBackendTypeLabel(backend.type, t)}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      {!webDavInactive ? (
+      {selectedBackendId === WEBDAV_SYNC_BACKEND_ID && (
         <div className="bootstrap-backend-fields">
-          <Label>
-            {t.options.syncBackendWebDavUrl}
-            <Input
-              value={webDavDraft.url}
-              placeholder="https://example.com/dav/"
-              disabled={syncing || hasActiveSyncBackend}
-              onChange={(event) =>
-                updateWebDavBackend({ url: event.target.value })
-              }
-            />
-          </Label>
-          <Label>
-            {t.options.syncBackendUsername}
-            <Input
-              value={webDavDraft.username || ""}
-              disabled={syncing || hasActiveSyncBackend}
-              onChange={(event) =>
-                updateWebDavBackend({ username: event.target.value })
-              }
-            />
-          </Label>
-          <Label>
-            {t.options.syncBackendPassword}
-            <Input
-              type="password"
-              value={webDavDraft.password || ""}
-              disabled={syncing || hasActiveSyncBackend}
-              onChange={(event) =>
-                updateWebDavBackend({ password: event.target.value })
-              }
-            />
-          </Label>
+          <WebDavConnectionFields
+            t={t}
+            backend={webDavDraft}
+            disabled={disabled}
+            live
+            onChange={updateWebDavBackend}
+          />
         </div>
-      ) : null}
+      )}
     </>
   );
 }

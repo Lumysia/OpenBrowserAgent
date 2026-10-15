@@ -5,6 +5,7 @@ import type { PickedSkill } from "../../src/shared/types";
 import { Button } from "../../src/ui/components";
 import { skillDisplay } from "../../src/ui/skill-display";
 import { filterSkills, slashSkillQuery } from "./skill-context";
+import { cn } from "../../src/ui/utils";
 
 // The skill list of the "+" menu and the "/" picker.
 export function SkillPickerList({
@@ -56,7 +57,10 @@ export function SkillPickerList({
               activeIndex === undefined ? selected : activeIndex === index
             }
             variant="ghost"
-            className={`action-list-item skill-picker-item ${selected || activeIndex === index ? "active" : ""}`}
+            className={cn(
+              "action-list-item skill-picker-item",
+              selected || (activeIndex === index && "active"),
+            )}
             // Keep the composer focused while picking from the "/" list.
             onMouseDown={(event) => event.preventDefault()}
             onMouseEnter={() => onHover?.(index)}

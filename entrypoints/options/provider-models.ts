@@ -1,12 +1,14 @@
 import { readContextLength } from "../../src/shared/model-context";
 import {
+  modelDisplayName,
+  providerDisplayName,
+} from "../../src/shared/model-display";
+import {
   providerDefaultBaseUrls,
-  providerLabels,
   type ModelConfig,
   type ProviderConfig,
   type ProviderId,
 } from "../../src/shared/types";
-import { loadOllamaModels } from "./ollama-models";
 import { USER_ERROR_CODE, UserError } from "../../src/shared/user-errors";
 
 export async function loadProviderModels(
@@ -40,12 +42,10 @@ async function loadGeminiModels(
     )
     .map((model: { name: string; displayName?: string }) => {
       const name = model.name.replace(/^models\//, "");
-      return {
-        id: `${providerId}:${name}`,
-        name,
-        displayName: `${config.label || providerLabels[provider]} / ${model.displayName || name}`,
+      return listedModel(providerId, config, provider, name, {
+        label: model.displayName,
         contextLength: readContextLength(model),
-      };
+      });
     });
 }
 
@@ -75,12 +75,9 @@ async function loadOpenAICompatibleModels(
     .map((model: string | { id?: string; name?: string }) => {
       const name = typeof model === "string" ? model : model.id || model.name;
       return name
-        ? {
-            id: `${providerId}:${name}`,
-            name,
-            displayName: `${config.label || providerLabels[provider]} / ${name}`,
+        ? listedModel(providerId, config, provider, name, {
             contextLength: readContextLength(model),
-          }
+          })
         : undefined;
     })
     .filter(Boolean) as ModelConfig[];
@@ -122,10 +119,47 @@ async function loadAnthropicModels(
       }),
     )
     .filter((model: { id: string }) => model.id)
-    .map((model: { id: string; label: string }) => ({
-      id: `${providerId}:${model.id}`,
-      name: model.id,
-      displayName: `${config.label || providerLabels[provider]} / ${model.label}`,
-      contextLength: readContextLength(model),
-    }));
+    .map((model: { id: string; label: string }) =>
+      listedModel(providerId, config, provider, model.id, {
+        label: model.label,
+        contextLength: readContextLength(model),
+      }),
+    );
+}
+
+// A model a provider lists, named "<provider> / <label>".
+export function listedModel(
+  providerId: string,
+  config: ProviderConfig,
+  type: ProviderId,
+  name: string,
+  { label, contextLength }: { label?: string; contextLength?: number } = {},
+): ModelConfig {
+  return {
+    id: `${providerId}:${name}`,
+    name,
+    displayName: modelDisplayName(
+      providerDisplayName({ ...config, type }),
+      label || name,
+    ),
+    ...(contextLength ? { contextLength } : {}),
+  };
+}
+
+async function loadOllamaModels(
+  providerId: string,
+  config: ProviderConfig,
+): Promise<ModelConfig[]> {
+  const baseUrl = (
+    config.baseUrl ||
+    providerDefaultBaseUrls.ollama ||
+    ""
+  ).replace(/\/$/, "");
+  const response = await fetch(`${baseUrl}/api/tags`);
+  if (!response.ok) throw new Error(await response.text());
+  const data = await response.json();
+  return (data.models || [])
+    .map((model: { name?: string }) => model.name)
+    .filter(Boolean)
+    .map((name: string) => listedModel(providerId, config, "ollama", name));
 }

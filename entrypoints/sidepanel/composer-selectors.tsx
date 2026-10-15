@@ -15,6 +15,7 @@ import {
 } from "../../src/ui/components";
 import { AgentSelector, ModelMenu, selectedModelLabel } from "./composer-menus";
 import { COMPOSER_MENU, type ComposerMenu } from "./sidepanel-menu-state";
+import { cn } from "../../src/ui/utils";
 
 export function ComposerSelectors({
   t,
@@ -22,7 +23,7 @@ export function ComposerSelectors({
   configuredModels,
   agents,
   openMenu,
-  aiWorking,
+  streaming,
   onSetOpenMenu,
   onSetPreferences,
 }: {
@@ -31,7 +32,7 @@ export function ComposerSelectors({
   configuredModels: ModelConfig[];
   agents: Agent[];
   openMenu: ComposerMenu | null;
-  aiWorking: boolean;
+  streaming: boolean;
   onSetOpenMenu: (value: ComposerMenu | null) => void;
   onSetPreferences: Dispatch<SetStateAction<Preferences>>;
 }) {
@@ -48,7 +49,7 @@ export function ComposerSelectors({
             <Button
               variant="outline"
               className="composer-trigger composer-model-trigger"
-              disabled={aiWorking}
+              disabled={streaming}
             >
               {selectedModelLabel(
                 preferences?.selectedModelId,
@@ -78,7 +79,7 @@ export function ComposerSelectors({
         t={t}
         effort={preferences?.reasoningEffort || REASONING_EFFORT.default}
         openMenu={openMenu}
-        aiWorking={aiWorking}
+        streaming={streaming}
         onSetOpenMenu={onSetOpenMenu}
         onSetPreferences={onSetPreferences}
       />
@@ -88,7 +89,7 @@ export function ComposerSelectors({
           agents={agents}
           preferences={preferences}
           openMenu={openMenu}
-          aiWorking={aiWorking}
+          streaming={streaming}
           onSetOpenMenu={onSetOpenMenu}
           onSetPreferences={onSetPreferences}
         />
@@ -101,14 +102,14 @@ function ReasoningEffortSelector({
   t,
   effort,
   openMenu,
-  aiWorking,
+  streaming,
   onSetOpenMenu,
   onSetPreferences,
 }: {
   t: Messages;
   effort: ReasoningEffort;
   openMenu: ComposerMenu | null;
-  aiWorking: boolean;
+  streaming: boolean;
   onSetOpenMenu: (value: ComposerMenu | null) => void;
   onSetPreferences: Dispatch<SetStateAction<Preferences>>;
 }) {
@@ -124,7 +125,7 @@ function ReasoningEffortSelector({
           <Button
             variant="outline"
             className="composer-trigger composer-reasoning-trigger"
-            disabled={aiWorking}
+            disabled={streaming}
             aria-label={t.sidepanel.reasoningEffort}
           >
             <ReasoningEffortIcon effort={effort} />
@@ -172,7 +173,7 @@ function ReasoningEffortMenu({
           <Button
             key={option}
             variant="ghost"
-            className={`action-list-item ${selected ? "active" : ""}`}
+            className={cn("action-list-item", selected && "active")}
             onClick={() => onSelect(option)}
           >
             <ReasoningEffortIcon effort={option} />

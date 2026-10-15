@@ -27,6 +27,7 @@ import {
 import { Feedback } from "../../src/ui/components/feedback";
 import { SkillFileActionButton } from "./skill-options-components";
 import { workspaceErrorText } from "./workspace-error-text";
+import { errorWithDetail } from "../../src/ui/error-text";
 
 type Draft = {
   originalPath: string;
@@ -73,7 +74,7 @@ export function AgentWorkspaceEditor({
       setError(result.ok ? "" : workspaceErrorText(result.code, t));
       return result.ok;
     } catch (error) {
-      setError(error instanceof Error ? error.message : String(error));
+      setError(errorWithDetail(t.options.agentWorkspaceSaveError, error, t));
       return false;
     }
   }

@@ -1,3 +1,4 @@
+import { SettingsPageHeader } from "../../src/ui/components";
 import {
   Cloud,
   FileText,
@@ -12,9 +13,10 @@ import { useStoredState } from "../../src/ui/useStoredState";
 import { SyncBackendCard, type SyncDataToggle } from "./sync-backend-card";
 import { SyncKeysDetail } from "./sync-keys-detail";
 import { SyncStatusCard } from "./sync-status-card";
+import { useUiLanguage } from "../../src/ui/messages";
 
 export function SyncPage() {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const [syncGroups] = useStoredState(storage.syncGroups);
   const [syncStatus] = useStoredState(storage.syncStatus);
   const [syncBackends, setSyncBackends] = useStoredState(storage.syncBackends);
@@ -86,12 +88,11 @@ export function SyncPage() {
 
   return (
     <div className="stack">
-      <div>
-        <h1 className="settings-page-title">
-          <Cloud size={24} /> {t.options.sync}
-        </h1>
-        <p className="muted">{t.options.syncSettingsDescription}</p>
-      </div>
+      <SettingsPageHeader
+        icon={<Cloud />}
+        title={t.options.sync}
+        description={t.options.syncSettingsDescription}
+      />
       <SyncBackendCard
         activeBackendId={activeSyncBackendId}
         backends={syncBackends}

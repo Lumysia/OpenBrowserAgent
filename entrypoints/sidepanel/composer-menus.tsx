@@ -10,7 +10,11 @@ import {
 import { useEffect, useState } from "react";
 import type { Messages } from "../../src/shared/i18n";
 import { DEFAULT_AGENT_ID } from "../../src/shared/agents";
-import { providerLabels } from "../../src/shared/types";
+import {
+  modelIdParts,
+  parseModelDisplayName,
+} from "../../src/shared/model-display";
+import { providerLabels, type ProviderId } from "../../src/shared/types";
 import type {
   AttachmentTab,
   Agent,
@@ -23,6 +27,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  ActionListItem,
 } from "../../src/ui/components";
 import { AgentIcon } from "../../src/ui/agent-icons";
 import {
@@ -36,6 +41,8 @@ import {
 import { ContextCard } from "./context-card";
 import { COMPOSER_MENU, type ComposerMenu } from "./sidepanel-menu-state";
 import { SkillPickerList } from "./skill-picker";
+import { formatMessage } from "../../src/shared/text";
+import { cn } from "../../src/ui/utils";
 
 export function AddContextMenu({
   t,
@@ -83,62 +90,37 @@ export function AddContextMenu({
     if (nextView === "menu")
       return (
         <div className="add-context-menu add-context-menu-compact">
-          <Button
-            variant="ghost"
-            className="action-list-item"
+          <ActionListItem
+            icon={<Layers size={17} />}
+            title={t.sidepanel.addNewTab}
             onClick={onShowTabs}
-          >
-            <Layers size={17} />
-            <span>
-              <strong>{t.sidepanel.addNewTab}</strong>
-            </span>
-          </Button>
-          <Button
-            variant="ghost"
-            className="action-list-item"
+          />
+          <ActionListItem
+            icon={<Plus size={17} />}
+            title={t.sidepanel.addCurrentTab}
             onClick={onAttachTab}
             disabled={!activeTabAttachable}
-          >
-            <Plus size={17} />
-            <span>
-              <strong>{t.sidepanel.addCurrentTab}</strong>
-            </span>
-          </Button>
-          <Button
-            variant="ghost"
-            className="action-list-item"
+          />
+          <ActionListItem
+            icon={<Paperclip size={17} />}
+            title={t.sidepanel.attachFiles}
+            hint={t.sidepanel.attachFilesHint}
             onClick={onUploadFiles}
-          >
-            <Paperclip size={17} />
-            <span>
-              <strong>{t.sidepanel.attachFiles}</strong>
-              <small>{t.sidepanel.attachFilesHint}</small>
-            </span>
-          </Button>
+          />
           {!!skills.length && (
-            <Button
-              variant="ghost"
-              className="action-list-item"
+            <ActionListItem
+              icon={<FileText size={17} />}
+              title={t.options.skills}
+              hint={skills.length}
               onClick={onShowSkills}
-            >
-              <FileText size={17} />
-              <span>
-                <strong>{t.options.skills}</strong>
-                <small>{skills.length}</small>
-              </span>
-            </Button>
+            />
           )}
-          <Button
-            variant="ghost"
-            className="action-list-item"
+          <ActionListItem
+            icon={<MousePointerClick size={17} />}
+            title={t.sidepanel.selectElement}
             onClick={onSelectElement}
             disabled={!activeTabAttachable}
-          >
-            <MousePointerClick size={17} />
-            <span>
-              <strong>{t.sidepanel.selectElement}</strong>
-            </span>
-          </Button>
+          />
         </div>
       );
 
@@ -161,7 +143,10 @@ export function AddContextMenu({
       <div className="add-context-menu">
         <Button
           variant="ghost"
-          className={`action-list-item muted ${selectedTabIds.length === tabs.length ? "active" : ""}`}
+          className={cn(
+            "action-list-item muted",
+            selectedTabIds.length === tabs.length && "active",
+          )}
           onClick={() =>
             tabs.forEach((tab) => {
               if (
@@ -180,7 +165,10 @@ export function AddContextMenu({
             <Button
               key={tab.id}
               variant="ghost"
-              className={`action-list-item ${selectedTabIds.includes(tab.id) ? "active" : ""}`}
+              className={cn(
+                "action-list-item",
+                selectedTabIds.includes(tab.id) && "active",
+              )}
               onClick={() => onToggleTab(tab)}
             >
               {tab.favIconUrl ? (
@@ -197,9 +185,15 @@ export function AddContextMenu({
               <span>
                 <span
                   className="action-list-label"
-                  title={tab.title || tab.url || `Tab ${tab.id}`}
+                  title={
+                    tab.title ||
+                    tab.url ||
+                    formatMessage(t.sidepanel.tabFallbackTitle, { id: tab.id })
+                  }
                 >
-                  {tab.title || tab.url || `Tab ${tab.id}`}
+                  {tab.title ||
+                    tab.url ||
+                    formatMessage(t.sidepanel.tabFallbackTitle, { id: tab.id })}
                 </span>
               </span>
             </Button>
@@ -251,7 +245,7 @@ export function AttachedTabCard({
         )
       }
       title={tab.title || t.sidepanel.currentPage}
-      detail={`${tab.url || `Tab ${tab.id}`} · ${t.sidepanel.willBeSentToAi}`}
+      detail={`${tab.url || formatMessage(t.sidepanel.tabFallbackTitle, { id: tab.id })} · ${t.sidepanel.willBeSentToAi}`}
       removeLabel={t.sidepanel.removeTab}
       onRemove={onRemove}
     />
@@ -279,7 +273,10 @@ export function ModelMenu({
       {models.map((model) => (
         <Button
           variant="ghost"
-          className={`action-list-item model-menu-item ${selectedModelId === model.id ? "active" : ""}`}
+          className={cn(
+            "action-list-item model-menu-item",
+            selectedModelId === model.id && "active",
+          )}
           key={model.id}
           onClick={() => onSelect(model.id)}
         >
@@ -288,9 +285,7 @@ export function ModelMenu({
           </span>
           <span>
             <small>{providerName(model, t)}</small>
-            <strong title={modelDisplayName(model)}>
-              {modelDisplayName(model)}
-            </strong>
+            <strong title={modelLabel(model)}>{modelLabel(model)}</strong>
           </span>
           {selectedModelId === model.id && (
             <Check className="menu-check" size={14} />
@@ -319,7 +314,10 @@ function AgentMenu({
         return (
           <Button
             variant="ghost"
-            className={`action-list-item agent-menu-item ${selected ? "active" : ""}`}
+            className={cn(
+              "action-list-item agent-menu-item",
+              selected && "active",
+            )}
             key={agent.id}
             onClick={() => onSelectAgent(agent.id)}
           >
@@ -345,7 +343,7 @@ export function AgentSelector({
   agents,
   preferences,
   openMenu,
-  aiWorking,
+  streaming,
   onSetOpenMenu,
   onSetPreferences,
 }: {
@@ -353,7 +351,7 @@ export function AgentSelector({
   agents: Agent[];
   preferences?: Preferences;
   openMenu: ComposerMenu | null;
-  aiWorking: boolean;
+  streaming: boolean;
   onSetOpenMenu: (value: ComposerMenu | null) => void;
   onSetPreferences: (
     value: Preferences | ((previous: Preferences) => Preferences),
@@ -372,7 +370,7 @@ export function AgentSelector({
         <Button
           variant="outline"
           className="composer-trigger composer-agent-trigger"
-          disabled={aiWorking}
+          disabled={streaming}
           aria-label={
             selectedAgent ? agentDisplayName(selectedAgent, t) : t.words.agent
           }
@@ -404,23 +402,19 @@ export function selectedModelLabel(
   t: Messages,
 ) {
   const model = models.find((candidate) => candidate.id === modelId);
-  return model
-    ? modelDisplayName(model)
-    : modelId
-      ? modelId.split(":").slice(1).join(":") || modelId
-      : t.sidepanel.selectModel;
+  if (model) return modelLabel(model);
+  return modelId ? modelIdParts(modelId).name : t.sidepanel.selectModel;
 }
 
 function providerName(model: ModelConfig, t: Messages) {
-  const fromDisplay = model.displayName?.split("/")[0]?.trim();
-  if (fromDisplay) return providerNameDisplay(fromDisplay, t);
-  const provider = model.id.split(":")[0] as keyof typeof providerLabels;
-  return Object.hasOwn(providerLabels, provider)
-    ? providerTypeLabel(provider, t)
-    : provider;
+  const { provider } = parseModelDisplayName(model);
+  if (provider) return providerNameDisplay(provider, t);
+  const { providerKey } = modelIdParts(model.id);
+  return Object.hasOwn(providerLabels, providerKey)
+    ? providerTypeLabel(providerKey as ProviderId, t)
+    : providerKey;
 }
 
-function modelDisplayName(model: ModelConfig) {
-  const fromDisplay = model.displayName?.split("/").slice(1).join("/").trim();
-  return fromDisplay || model.name;
+function modelLabel(model: ModelConfig) {
+  return parseModelDisplayName(model).label;
 }

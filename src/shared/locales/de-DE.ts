@@ -210,7 +210,9 @@ export const deDE: LocaleMessages = {
     generatedImage: "Generiertes Bild",
     capturedTabImage: "Tab-Screenshot",
     mermaidPreview: "Mermaid-Diagrammvorschau",
-    openMermaidPreview: "Mermaid-Vorschau öffnen",
+    tabFallbackTitle: "Tab {id}",
+    mermaidRenderFailed:
+      "Dieses Diagramm ließ sich nicht zeichnen – hier ist der Quelltext.",
     downloadMermaidSvg: "SVG herunterladen",
     downloadMermaidPng: "PNG herunterladen",
     loadImage: "Bild laden",
@@ -368,6 +370,7 @@ export const deDE: LocaleMessages = {
     agentWorkspaceDescription:
       "Private Dateien dieses Agenten. MEMORY.md und USER.md sieht er immer, andere liest er bei Bedarf.",
     agentWorkspaceNewFile: "Neue Arbeitsbereichsdatei",
+    agentWorkspaceSaveError: "Arbeitsbereich konnte nicht gespeichert werden",
     agentWorkspaceErrors: {
       pathRequired: "Geben Sie einen Dateipfad ein.",
       pathTooLong: "Ein Dateipfad darf höchstens {limit} Zeichen lang sein.",
@@ -571,6 +574,10 @@ export const deDE: LocaleMessages = {
     syncBackendBrowserSync:
       "Integrierte Synchronisierung über das Browserkonto",
     syncBackendWebDavSync: "WebDAV-Synchronisierung",
+    syncBackendBrowserSyncHint:
+      "Über das Konto, mit dem dieser Browser angemeldet ist.",
+    syncBackendWebDavSyncHint:
+      "Über einen WebDAV-Server Ihrer Wahl – er kann auch Chats und Dateien aufnehmen.",
     syncBackendName: "Backend-Name",
     syncBackendWebDavUrl: "WebDAV-URL",
     syncBackendUsername: "Benutzername",

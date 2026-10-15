@@ -12,7 +12,6 @@ import {
 import { formatBytes, formatDateTime } from "../../src/shared/format";
 import { getMessages } from "../../src/shared/i18n";
 import { normalizeSkill, SKILL_ENTRY_PATH } from "../../src/shared/skills";
-import { storage } from "../../src/shared/storage";
 import type { Skill, SkillFile } from "../../src/shared/types";
 import {
   Accordion,
@@ -27,12 +26,12 @@ import {
   TooltipTrigger,
   type ButtonProps,
 } from "../../src/ui/components";
-import { useStoredState } from "../../src/ui/useStoredState";
 import {
   createEmptySkillFile,
   downloadSkillFile,
   readReplacementSkillFile,
 } from "./skill-import";
+import { useUiLanguage } from "../../src/ui/messages";
 
 // Without edit handlers the files are read-only (built-in skills).
 export function SkillFileList({
@@ -47,7 +46,7 @@ export function SkillFileList({
   onDeleteFile?: (path: string) => void;
 }) {
   const readOnly = !onAddFile || !onReplaceFile || !onDeleteFile;
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const [replacePath, setReplacePath] = useState("");
   const [addPath, setAddPath] = useState("references/new-file.md");
   const [editPath, setEditPath] = useState("");

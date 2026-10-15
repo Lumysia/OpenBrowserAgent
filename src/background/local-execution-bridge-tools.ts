@@ -1,4 +1,5 @@
 import {
+  LOCAL_EXECUTION_BRIDGE_DEFAULT_HOST_NAME,
   generateLocalExecutionBridgeSecret,
   normalizeLocalExecutionBridges,
 } from "../shared/local-execution-bridges";
@@ -6,6 +7,7 @@ import {
   LOCAL_EXECUTION_BRIDGE_RUNTIME_MESSAGE_TYPE,
   type LocalExecutionBridgeRuntimeResponse,
 } from "../shared/local-execution-bridge-runtime";
+import { replyWith } from "../shared/message-reply";
 import { removeById, storage, updateById } from "../shared/storage";
 import type { LocalExecutionBridgeConfig } from "../shared/types";
 import { bridgeTaskCounts } from "./local-execution-bridge-tasks";
@@ -64,7 +66,7 @@ async function addBridge(input: Record<string, unknown>) {
       name: text(input.name) || "Execution Bridge",
       description: text(input.description),
       hostName:
-        text(input.hostName) || "openbrowseragent.local_execution_bridge",
+        text(input.hostName) || LOCAL_EXECUTION_BRIDGE_DEFAULT_HOST_NAME,
       hostAddress: text(input.hostAddress),
       secret: secret || generateLocalExecutionBridgeSecret(),
       bridgeKey: text(input.bridgeKey),
@@ -184,14 +186,7 @@ export function handleLocalExecutionBridgeRuntimeMessage(
     request.operation === "test"
       ? testLocalExecutionBridge(text(request.bridgeId))
       : Promise.reject(new Error("Unknown local execution bridge operation."));
-  promise
-    .then((value) => sendResponse({ ok: true, value }))
-    .catch((error) =>
-      sendResponse({
-        ok: false,
-        error: error instanceof Error ? error.message : String(error),
-      }),
-    );
+  replyWith(promise, sendResponse);
   return true;
 }
 

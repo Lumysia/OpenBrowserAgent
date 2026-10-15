@@ -1,13 +1,4 @@
-import {
-  Check,
-  FlaskConical,
-  Loader2,
-  Plug,
-  Plus,
-  RotateCcw,
-  Trash2,
-  Upload,
-} from "lucide-react";
+import { Plug, Plus, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 import { formatCount, getMessages } from "../../src/shared/i18n";
 import {
@@ -25,17 +16,10 @@ import { storage } from "../../src/shared/storage";
 import type { McpServerConfig } from "../../src/shared/types";
 import {
   Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionItem,
-  AccordionTriggerButton,
   Badge,
   Button,
-  Card,
-  CardContent,
   CardDescription,
   EmptyState,
-  CardTitle,
   Feedback,
   Popover,
   PopoverContent,
@@ -46,18 +30,26 @@ import {
   TooltipContent,
   TooltipTrigger,
   SettingsSummary,
+  SettingsPageHeader,
+  ConfirmButton,
+  SettingsAccordionItem,
+  TestButton,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { errorWithDetail } from "../../src/ui/error-text";
+import { ResetDefaultsCard } from "./reset-defaults-card";
+import { useTransient } from "../../src/ui/use-transient";
+import { errorMessage } from "../../src/shared/error-message";
+import { useUiLanguage } from "../../src/ui/messages";
 
 export function McpPage() {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const [servers, setServers] = useStoredState(storage.mcpServers);
   const [importDraft, setImportDraft] = useState("");
   const [importMessage, setImportMessage] = useState("");
   const [importMenuOpen, setImportMenuOpen] = useState(false);
   const [testingServerId, setTestingServerId] = useState<string | null>(null);
-  const [recentlyTestedServerId, setRecentlyTestedServerId] = useState("");
+  const [testedServerId, showTested] = useTransient<string>();
   const t = getMessages(language);
   const items = servers || [];
 
@@ -103,16 +95,13 @@ export function McpPage() {
         testedAt: Date.now(),
         lastTestError: "",
       });
-      setRecentlyTestedServerId(server.id);
-      window.setTimeout(() => {
-        setRecentlyTestedServerId((current) =>
-          current === server.id ? "" : current,
-        );
-      }, 2500);
+      showTested(server.id);
     } catch (error) {
+      // Stored as the error's own text and localized when shown, like the
+      // tests the agent runs.
       updateServer(server.id, {
         enabled: false,
-        lastTestError: errorWithDetail(t.options.mcpTestError, error, t),
+        lastTestError: errorMessage(error),
       });
     } finally {
       setTestingServerId(null);
@@ -157,59 +146,61 @@ export function McpPage() {
 
   return (
     <div className="stack">
-      <div className="settings-page-header">
-        <div>
-          <h1 className="settings-page-title">
-            <Plug size={24} /> {t.options.mcpServers}
-          </h1>
-          <p className="muted">{t.options.mcpServersDescription}</p>
-        </div>
-        <div className="settings-page-actions">
-          {items.length ? (
-            <Button onClick={addServer}>
-              <Plus size={15} /> {t.options.newMcpServer}
-            </Button>
-          ) : null}
-          <Tooltip>
-            <Popover open={importMenuOpen} onOpenChange={setImportMenuOpen}>
-              <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <Button size="icon" aria-label={t.options.mcpImportButton}>
-                    <Upload size={15} />
-                  </Button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <PopoverContent className="settings-popover-content" align="end">
-                <div className="settings-popover-menu">
-                  <CardDescription>{t.options.mcpImportJson}</CardDescription>
-                  <Textarea
-                    className="scrollbar-hidden"
-                    value={importDraft}
-                    placeholder={
-                      '{\n  "mcpServers": {\n    "server": { "url": "https://example.com/mcp" }\n  }\n}'
-                    }
-                    onChange={(event) =>
-                      setImportDraft(event.currentTarget.value)
-                    }
-                  />
-                  <div className="row">
-                    <Button
-                      disabled={!importDraft.trim()}
-                      onClick={importServers}
-                    >
-                      <Plus size={15} /> {t.options.mcpImportButton}
+      <SettingsPageHeader
+        icon={<Plug />}
+        title={t.options.mcpServers}
+        description={t.options.mcpServersDescription}
+        actions={
+          <>
+            {items.length ? (
+              <Button onClick={addServer}>
+                <Plus size={15} /> {t.options.newMcpServer}
+              </Button>
+            ) : null}
+            <Tooltip>
+              <Popover open={importMenuOpen} onOpenChange={setImportMenuOpen}>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button size="icon" aria-label={t.options.mcpImportButton}>
+                      <Upload size={15} />
                     </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <PopoverContent
+                  className="settings-popover-content"
+                  align="end"
+                >
+                  <div className="settings-popover-menu">
+                    <CardDescription>{t.options.mcpImportJson}</CardDescription>
+                    <Textarea
+                      className="scrollbar-hidden"
+                      value={importDraft}
+                      placeholder={
+                        '{\n  "mcpServers": {\n    "server": { "url": "https://example.com/mcp" }\n  }\n}'
+                      }
+                      onChange={(event) =>
+                        setImportDraft(event.currentTarget.value)
+                      }
+                    />
+                    <div className="row">
+                      <Button
+                        disabled={!importDraft.trim()}
+                        onClick={importServers}
+                      >
+                        <Plus size={15} /> {t.options.mcpImportButton}
+                      </Button>
+                    </div>
+                    {importMessage && (
+                      <CardDescription>{importMessage}</CardDescription>
+                    )}
                   </div>
-                  {importMessage && (
-                    <CardDescription>{importMessage}</CardDescription>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-            <TooltipContent>{t.options.mcpImportButton}</TooltipContent>
-          </Tooltip>
-        </div>
-      </div>
+                </PopoverContent>
+              </Popover>
+              <TooltipContent>{t.options.mcpImportButton}</TooltipContent>
+            </Tooltip>
+          </>
+        }
+      />
       {!items.length ? (
         <EmptyState
           icon={<Plug size={28} />}
@@ -223,54 +214,38 @@ export function McpPage() {
       ) : null}
       <Accordion type="multiple" className="stack">
         {items.map((server) => (
-          <AccordionItem key={server.id} value={server.id}>
-            <AccordionHeader className="ui-accordion-header-with-actions">
-              <AccordionTriggerButton hideChevron>
-                <SettingsSummary
-                  icon={<Plug size={18} />}
-                  title={server.name || t.options.newMcpServer}
-                  badges={<Badge title={server.id}>{server.id}</Badge>}
-                  description={
-                    mcpServerDescription(server, t) ||
-                    server.url ||
-                    t.options.mcpServerUrlPlaceholder
+          <SettingsAccordionItem
+            key={server.id}
+            value={server.id}
+            chevronLabel={server.name || t.options.newMcpServer}
+            contentClassName="stack"
+            summary={
+              <SettingsSummary
+                icon={<Plug size={18} />}
+                title={server.name || t.options.newMcpServer}
+                badges={<Badge title={server.id}>{server.id}</Badge>}
+                description={
+                  mcpServerDescription(server, t) ||
+                  server.url ||
+                  t.options.mcpServerUrlPlaceholder
+                }
+              />
+            }
+            actions={
+              <>
+                <TestButton
+                  state={
+                    testingServerId === server.id
+                      ? "testing"
+                      : testedServerId === server.id
+                        ? "done"
+                        : "idle"
                   }
+                  label={t.options.mcpTestServer}
+                  testingLabel={t.options.mcpTesting}
+                  disabled={!server.url}
+                  onClick={() => testServer(server)}
                 />
-              </AccordionTriggerButton>
-              <span
-                className="accordion-trigger-actions"
-                onClick={(event) => event.stopPropagation()}
-                onKeyDown={(event) => event.stopPropagation()}
-              >
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="tooltip-button-wrapper">
-                      <Button
-                        size="icon"
-                        aria-label={
-                          testingServerId === server.id
-                            ? t.options.mcpTesting
-                            : t.options.mcpTestServer
-                        }
-                        disabled={!server.url || testingServerId === server.id}
-                        onClick={() => testServer(server)}
-                      >
-                        {testingServerId === server.id ? (
-                          <Loader2 size={14} className="spin" />
-                        ) : recentlyTestedServerId === server.id ? (
-                          <Check size={14} />
-                        ) : (
-                          <FlaskConical size={14} />
-                        )}
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {testingServerId === server.id
-                      ? t.options.mcpTesting
-                      : t.options.mcpTestServer}
-                  </TooltipContent>
-                </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Switch
@@ -291,60 +266,45 @@ export function McpPage() {
                       : t.options.mcpEnableRequiresTest}
                   </TooltipContent>
                 </Tooltip>
-              </span>
-              <AccordionTriggerButton
-                className="accordion-chevron-trigger"
-                aria-label={server.name || t.options.newMcpServer}
-              />
-            </AccordionHeader>
-            <AccordionContent>
-              <div className="stack">
-                <McpServerFields
-                  t={t}
-                  server={server}
-                  onUpdate={(patch) => updateServer(server.id, patch)}
-                  onHeadersChange={(value) => updateHeaders(server.id, value)}
-                />
-                {server.lastTestError && (
-                  <Feedback error>{server.lastTestError}</Feedback>
+              </>
+            }
+          >
+            <McpServerFields
+              t={t}
+              server={server}
+              onUpdate={(patch) => updateServer(server.id, patch)}
+              onHeadersChange={(value) => updateHeaders(server.id, value)}
+            />
+            {server.lastTestError && (
+              <Feedback error>
+                {errorWithDetail(
+                  t.options.mcpTestError,
+                  server.lastTestError,
+                  t,
                 )}
-                {!isBuiltinMcpServer(server.id) && (
-                  <div className="row">
-                    <Button
-                      variant="destructiveOutline"
-                      onClick={() => deleteServer(server.id)}
-                    >
-                      <Trash2 size={15} /> {t.options.deleteMcpServer}
-                    </Button>
-                  </div>
-                )}
+              </Feedback>
+            )}
+            {!isBuiltinMcpServer(server.id) && (
+              <div className="row">
+                <ConfirmButton
+                  confirmLabel={t.common.confirm}
+                  cancelLabel={t.common.cancel}
+                  onConfirm={() => deleteServer(server.id)}
+                >
+                  <Trash2 size={15} /> {t.options.deleteMcpServer}
+                </ConfirmButton>
               </div>
-            </AccordionContent>
-          </AccordionItem>
+            )}
+          </SettingsAccordionItem>
         ))}
       </Accordion>
-      <Card>
-        <CardContent>
-          <div className="setting-switch-row">
-            <div>
-              <CardTitle className="settings-section-title">
-                <RotateCcw size={18} /> {t.options.resetDefaultMcpServers}
-              </CardTitle>
-              <CardDescription>
-                {t.options.resetDefaultMcpServersDescription}
-              </CardDescription>
-            </div>
-            <div className="row">
-              <Button variant="outline" onClick={resetBuiltinMcpServers}>
-                {t.options.resetBuiltins}
-              </Button>
-              <Button variant="outline" onClick={resetDefaultMcpServers}>
-                {t.options.resetDefaults}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <ResetDefaultsCard
+        t={t}
+        title={t.options.resetDefaultMcpServers}
+        description={t.options.resetDefaultMcpServersDescription}
+        onResetBuiltins={resetBuiltinMcpServers}
+        onResetAll={resetDefaultMcpServers}
+      />
     </div>
   );
 }

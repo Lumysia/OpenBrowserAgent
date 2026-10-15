@@ -1,7 +1,12 @@
 import type { Messages } from "../shared/i18n";
 import {
+  modelDisplayName,
+  parseModelDisplayName,
+} from "../shared/model-display";
+import {
   legacyProviderLabels,
   providerLabels,
+  type ModelConfig,
   type ProviderId,
 } from "../shared/types";
 import { formatMessage } from "../shared/text";
@@ -26,11 +31,14 @@ export function providerNameDisplay(name: string, t: Messages) {
 
 // A model's stored "Provider / model" display name with the provider part
 // shown as providerNameDisplay does.
-export function modelNameDisplay(displayName: string, t: Messages) {
-  const [provider, ...rest] = displayName.split(" / ");
-  return rest.length
-    ? [providerNameDisplay(provider.trim(), t), ...rest].join(" / ")
-    : displayName;
+export function modelNameDisplay(
+  model: Pick<ModelConfig, "name" | "displayName">,
+  t: Messages,
+) {
+  const { provider, label } = parseModelDisplayName(model);
+  return provider
+    ? modelDisplayName(providerNameDisplay(provider, t), label)
+    : label;
 }
 
 // The sentence the user agrees to before a provider receives their content,

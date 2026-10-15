@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button, IconTooltip } from "../../src/ui/components";
 import { useDeferredRemove } from "./use-deferred-remove";
+import { cn } from "../../src/ui/utils";
 
 // A composer context card: what will be sent with the message (a tab, a file,
 // a skill, a selected element or text), with a button to remove it. Title
@@ -24,7 +25,7 @@ export function ContextCard({
 }) {
   const { removing, remove } = useDeferredRemove(onRemove);
   return (
-    <div className={`context-card ${removing ? "is-removing" : ""}`}>
+    <div className={cn("context-card", removing && "is-removing")}>
       {icon}
       <span>
         <strong title={fullTitle}>{title}</strong>

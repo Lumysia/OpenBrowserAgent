@@ -14,7 +14,7 @@ import { USER_ERROR_CODE, UserError } from "../shared/user-errors";
 // Every model request gets its endpoint here, so this is where a provider
 // without the user's permission to receive their content is stopped
 // (ProviderConsentError) before anything is sent.
-function providerModel({
+export function providerModel({
   providerId,
   provider: config,
   model,

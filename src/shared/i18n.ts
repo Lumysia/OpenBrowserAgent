@@ -36,6 +36,9 @@ export const languageLabels: Record<string, string> = {
   "pt-BR": "Português (Brasil)",
 };
 
+// The UI language when none is stored or the stored one is not supported.
+export const DEFAULT_LANGUAGE = "en-US";
+
 let activeLanguage: string | undefined;
 
 export function getMessages(language?: string) {
@@ -51,7 +54,7 @@ export function resolveLanguage(language?: string) {
   return (
     [requestedLanguage, normalized].find((code) =>
       Object.hasOwn(i18nRegistry, code),
-    ) || "en-US"
+    ) || DEFAULT_LANGUAGE
   );
 }
 

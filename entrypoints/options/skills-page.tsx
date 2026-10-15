@@ -1,10 +1,13 @@
-import { useRef, useState } from "react";
-import { AlertCircle, FileArchive, FileText, Plus } from "lucide-react";
+import { useRef, useState, type ReactNode } from "react";
 import {
-  QUICK_FEEDBACK_MS,
-  SKILL_LISTING_MAX_CHARS,
-  SKILL_MAX_CHARS,
-} from "../../src/shared/config";
+  AlertCircle,
+  AlertTriangle,
+  Check,
+  FileArchive,
+  FileText,
+  Plus,
+} from "lucide-react";
+import { SKILL_LISTING_MAX_CHARS } from "../../src/shared/config";
 import { getMessages, type Messages } from "../../src/shared/i18n";
 import {
   customizeBuiltinSkill,
@@ -25,42 +28,34 @@ import {
   skillTooLarge,
   validateSkill,
 } from "../../src/shared/skills";
-import {
-  formatBytes,
-  formatDateTime,
-  formatNumber,
-} from "../../src/shared/format";
-import { storage } from "../../src/shared/storage";
+import { formatBytes, formatDateTime } from "../../src/shared/format";
 import type { Skill, SkillInvokeMode } from "../../src/shared/types";
 import {
   Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionHeader,
-  AccordionTriggerButton,
   Badge,
   Button,
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   ToggleGroup,
   ToggleGroupItem,
+  SettingsPageHeader,
+  SettingsSection,
+  SettingsAccordionItem,
 } from "../../src/ui/components";
-import { skillDisplay } from "../../src/ui/skill-display";
+import { skillDisplay, skillTooLargeText } from "../../src/ui/skill-display";
 import { SKILL_FILES } from "../../src/shared/sync/collections";
 import { useSkillCatalog } from "../../src/ui/useSkillCatalog";
 import { useNotSyncedHere } from "../../src/ui/useSyncedHere";
-import { useStoredState } from "../../src/ui/useStoredState";
 import { BuiltinSkillDetail, SkillEditor } from "./skill-editor";
 import { importSkillZip } from "./skill-import";
+import { importErrorDetail } from "./import-errors";
+import { useTransient } from "../../src/ui/use-transient";
+import { useUiLanguage } from "../../src/ui/messages";
 
 export function SkillsPage() {
-  const [language] = useStoredState(storage.language);
+  const language = useUiLanguage();
   const { entries, setSkills, setSettings } = useSkillCatalog();
   const [selectedId, setSelectedId] = useState("");
   const [drafts, setDrafts] = useState<Record<string, Skill>>({});
-  const [savedId, setSavedId] = useState<string>();
+  const [savedId, showSaved] = useTransient<string>();
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,14 +76,9 @@ export function SkillsPage() {
     setImporting(true);
     setImportError("");
     try {
-      addSkill(
-        await importSkillZip(file, {
-          missingEntry: t.options.importSkillPackageMissingEntry,
-          tooLarge: skillTooLargeText(t),
-        }),
-      );
+      addSkill(await importSkillZip(file));
     } catch (error) {
-      setImportError(error instanceof Error ? error.message : String(error));
+      setImportError(importErrorDetail(error, t));
     } finally {
       setImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -106,11 +96,7 @@ export function SkillsPage() {
     setSkills((items) =>
       items.map((item) => (item.id === skill.id ? draft : item)),
     );
-    setSavedId(skill.id);
-    setTimeout(
-      () => setSavedId((id) => (id === skill.id ? undefined : id)),
-      QUICK_FEEDBACK_MS,
-    );
+    showSaved(skill.id);
   }
 
   function customize(builtin: Skill) {
@@ -136,42 +122,44 @@ export function SkillsPage() {
 
   return (
     <div className="skills-page stack">
-      <div className="settings-page-header">
-        <div>
-          <h1 className="settings-page-title">
-            <FileText size={24} /> {t.options.skills}
-          </h1>
-          <p className="muted">{t.options.skillsDescription}</p>
-        </div>
-        <div className="settings-page-actions">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".zip,.skill,application/zip"
-            hidden
-            onChange={(event) => importZip(event.target.files)}
-          />
-          <Button
-            variant="outline"
-            disabled={importing}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <FileArchive size={16} />
-            {importing ? t.options.importingSkillZip : t.options.importSkillZip}
-          </Button>
-          <Button
-            onClick={() =>
-              addSkill(
-                createSkillPackage({
-                  name: normalizeSkillName(t.options.untitledSkill) || "skill",
-                }),
-              )
-            }
-          >
-            <Plus size={16} /> {t.options.newSkill}
-          </Button>
-        </div>
-      </div>
+      <SettingsPageHeader
+        icon={<FileText />}
+        title={t.options.skills}
+        description={t.options.skillsDescription}
+        actions={
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".zip,.skill,application/zip"
+              hidden
+              onChange={(event) => importZip(event.target.files)}
+            />
+            <Button
+              variant="outline"
+              disabled={importing}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <FileArchive size={16} />
+              {importing
+                ? t.options.importingSkillZip
+                : t.options.importSkillZip}
+            </Button>
+            <Button
+              onClick={() =>
+                addSkill(
+                  createSkillPackage({
+                    name:
+                      normalizeSkillName(t.options.untitledSkill) || "skill",
+                  }),
+                )
+              }
+            >
+              <Plus size={16} /> {t.options.newSkill}
+            </Button>
+          </>
+        }
+      />
       {listing.overBudget && (
         <Notice
           title={t.options.skillListOverBudget}
@@ -196,48 +184,46 @@ export function SkillsPage() {
         {entries.map((entry) => {
           const { skill, source } = entry;
           return (
-            <AccordionItem value={skill.id} key={skill.id}>
-              <SkillItemHeader
-                t={t}
-                entry={entry}
-                draft={draftFor(skill)}
-                onInvoke={(mode) =>
-                  setSettings((settings) =>
-                    setSkillInvokeMode(settings, skill.id, mode),
-                  )
-                }
-              />
-              <AccordionContent>
-                {source === "builtin" ? (
-                  <BuiltinSkillDetail
-                    t={t}
-                    skill={skill}
-                    onCustomize={() => customize(skill)}
-                  />
-                ) : (
-                  <SkillEditor
-                    t={t}
-                    skill={skill}
-                    draft={draftFor(skill)}
-                    override={source === "override"}
-                    saved={savedId === skill.id}
-                    onDraft={(draft) =>
-                      setDrafts((items) => ({ ...items, [skill.id]: draft }))
-                    }
-                    onSave={() => saveSkill(skill)}
-                    onDuplicate={() =>
-                      addSkill(
-                        duplicateSkill(
-                          draftFor(skill),
-                          entries.map((item) => item.skill.name),
-                        ),
-                      )
-                    }
-                    onDelete={() => deleteSkill(entry)}
-                  />
-                )}
-              </AccordionContent>
-            </AccordionItem>
+            <SkillItem
+              key={skill.id}
+              t={t}
+              entry={entry}
+              draft={draftFor(skill)}
+              onInvoke={(mode) =>
+                setSettings((settings) =>
+                  setSkillInvokeMode(settings, skill.id, mode),
+                )
+              }
+            >
+              {source === "builtin" ? (
+                <BuiltinSkillDetail
+                  t={t}
+                  skill={skill}
+                  onCustomize={() => customize(skill)}
+                />
+              ) : (
+                <SkillEditor
+                  t={t}
+                  skill={skill}
+                  draft={draftFor(skill)}
+                  override={source === "override"}
+                  saved={savedId === skill.id}
+                  onDraft={(draft) =>
+                    setDrafts((items) => ({ ...items, [skill.id]: draft }))
+                  }
+                  onSave={() => saveSkill(skill)}
+                  onDuplicate={() =>
+                    addSkill(
+                      duplicateSkill(
+                        draftFor(skill),
+                        entries.map((item) => item.skill.name),
+                      ),
+                    )
+                  }
+                  onDelete={() => deleteSkill(entry)}
+                />
+              )}
+            </SkillItem>
           );
         })}
       </Accordion>
@@ -245,16 +231,18 @@ export function SkillsPage() {
   );
 }
 
-function SkillItemHeader({
+function SkillItem({
   t,
   entry,
   draft,
   onInvoke,
+  children,
 }: {
   t: Messages;
   entry: SkillEntry;
   draft: Skill;
   onInvoke: (mode: SkillInvokeMode) => void;
+  children: ReactNode;
 }) {
   const { skill, source, invoke } = entry;
   const { name } = skillDisplay(skill, t);
@@ -265,8 +253,10 @@ function SkillItemHeader({
       ? []
       : validateSkill(draft);
   return (
-    <AccordionHeader className="ui-accordion-header-with-actions">
-      <AccordionTriggerButton hideChevron>
+    <SettingsAccordionItem
+      value={skill.id}
+      chevronLabel={name}
+      summary={
         <span className="skill-trigger-summary">
           <span className="skill-trigger-title-row">
             <span className="skill-trigger-label">
@@ -298,15 +288,19 @@ function SkillItemHeader({
             <small className="skill-checks skill-trigger-checks">
               {checks.map((check) => (
                 <span className={check.ok ? "ok" : "warn"} key={check.id}>
-                  {check.ok ? "✓" : "!"}{" "}
+                  {check.ok ? (
+                    <Check size={12} aria-hidden />
+                  ) : (
+                    <AlertTriangle size={12} aria-hidden />
+                  )}
                   {skillCheckLabel(t, check.id, check.ok)}
                 </span>
               ))}
             </small>
           )}
         </span>
-      </AccordionTriggerButton>
-      <span className="accordion-trigger-actions">
+      }
+      actions={
         <ToggleGroup
           type="single"
           size="sm"
@@ -324,12 +318,10 @@ function SkillItemHeader({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-      </span>
-      <AccordionTriggerButton
-        className="accordion-chevron-trigger"
-        aria-label={name}
-      />
-    </AccordionHeader>
+      }
+    >
+      {children}
+    </SettingsAccordionItem>
   );
 }
 
@@ -341,14 +333,12 @@ function Notice({
   description: string;
 }) {
   return (
-    <Card className="empty">
-      <CardHeader>
-        <CardTitle className="settings-section-title">
-          <AlertCircle size={18} /> {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-    </Card>
+    <SettingsSection
+      className="empty"
+      icon={<AlertCircle />}
+      title={title}
+      description={description}
+    />
   );
 }
 
@@ -366,13 +356,6 @@ function skillInvokeHint(t: Messages, mode: SkillInvokeMode) {
     manual: t.options.skillInvokeManualHint,
     off: t.options.skillInvokeOffHint,
   }[mode];
-}
-
-function skillTooLargeText(t: Messages) {
-  return t.options.skillCheckTooLarge.replace(
-    "{max}",
-    formatNumber(SKILL_MAX_CHARS),
-  );
 }
 
 function skillCheckLabel(t: Messages, id: string, ok: boolean) {

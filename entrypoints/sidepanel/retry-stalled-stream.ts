@@ -1,30 +1,23 @@
-import type {
-  Chat,
-  ChatMessage,
-  Agent,
-  Preferences,
-  SendMessagesRequest,
-  UploadedAttachment,
+import {
+  AI_STREAM_REQUEST_TYPE,
+  type Chat,
+  type ChatMessage,
+  type SendMessagesBody,
+  type SendMessagesRequest,
 } from "../../src/shared/types";
 import type { ActiveStream } from "./sidepanel-menu-state";
-import { sendMessagesRequest } from "./send-message-plan";
 
+// Sends a stalled run again with the same agent, model and attachments.
 export function retryStalledStream({
   active,
   chat,
-  preferences,
-  language,
-  uploadedAttachments,
-  agent,
+  body,
   appendToAssistant,
   startStream,
 }: {
   active: ActiveStream;
   chat: Chat | undefined;
-  preferences?: Preferences;
-  language: string;
-  uploadedAttachments: UploadedAttachment[];
-  agent: Agent;
+  body: SendMessagesBody;
   appendToAssistant: (
     chatId: string,
     messageId: string,
@@ -49,19 +42,17 @@ export function retryStalledStream({
   if (chat.messages[assistantIndex]?.content.trim())
     appendToAssistant(active.chatId, active.assistantMessageId, "\n\n");
   startStream(
-    sendMessagesRequest({
-      chat,
+    {
+      type: AI_STREAM_REQUEST_TYPE.sendMessages,
+      chatId: chat.id,
       messageId: crypto.randomUUID(),
       // The stalled reply goes along, so its finished steps are not redone.
       messages: [
         ...chat.messages.slice(0, assistantIndex + 1),
         retryInstruction,
       ],
-      preferences,
-      agent,
-      language,
-      uploadedAttachments,
-    }),
+      body,
+    },
     active.assistantMessageId,
   );
 }

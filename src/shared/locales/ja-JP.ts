@@ -198,7 +198,9 @@ export const jaJP: LocaleMessages = {
     generatedImage: "生成画像",
     capturedTabImage: "タブのスクリーンショット",
     mermaidPreview: "Mermaid 図のプレビュー",
-    openMermaidPreview: "Mermaid プレビューを開く",
+    tabFallbackTitle: "タブ {id}",
+    mermaidRenderFailed:
+      "この図を描画できなかったため、ソースを表示しています。",
     downloadMermaidSvg: "SVG をダウンロード",
     downloadMermaidPng: "PNG をダウンロード",
     loadImage: "画像を読み込む",
@@ -348,6 +350,7 @@ export const jaJP: LocaleMessages = {
     agentWorkspaceDescription:
       "このエージェント専用のファイル。MEMORY.md と USER.md は常に渡され、ほかのファイルは必要なときに読み込まれます。",
     agentWorkspaceNewFile: "新しいワークスペースファイル",
+    agentWorkspaceSaveError: "ワークスペースを保存できませんでした",
     agentWorkspaceErrors: {
       pathRequired: "ファイルパスを入力してください。",
       pathTooLong: "ファイルパスは{limit}文字以内にしてください。",
@@ -543,6 +546,10 @@ export const jaJP: LocaleMessages = {
     syncBackendDescription: "同期する内容。",
     syncBackendBrowserSync: "ブラウザー標準のアカウント同期",
     syncBackendWebDavSync: "WebDAV 同期",
+    syncBackendBrowserSyncHint:
+      "このブラウザーにサインインしているアカウントで同期します。",
+    syncBackendWebDavSyncHint:
+      "選んだ WebDAV サーバーで同期します。チャットやファイルも同期できます。",
     syncBackendName: "バックエンド名",
     syncBackendWebDavUrl: "WebDAV URL",
     syncBackendUsername: "ユーザー名",

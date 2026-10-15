@@ -19,6 +19,7 @@ import { useStoredState } from "../../src/ui/useStoredState";
 import { prepareChatForList } from "./chat-state-actions";
 import {
   createChatContentStore,
+  type ChatContentStore,
   type ChatContentEntry,
 } from "./chat-content-store";
 
@@ -182,7 +183,7 @@ export function useChats() {
 }
 
 export function useChatEntry(
-  store: ReturnType<typeof createChatContentStore>,
+  store: ChatContentStore,
   chatId: string | undefined,
 ): ChatContentEntry | undefined {
   const subscribe = useCallback(

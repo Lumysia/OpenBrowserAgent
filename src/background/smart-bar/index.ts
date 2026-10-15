@@ -1,5 +1,6 @@
 import { resolveAgent } from "../../shared/agents";
 import { getMessages, resolveLanguage } from "../../shared/i18n";
+import { replyWith } from "../../shared/message-reply";
 import { grantProviderConsent } from "../../shared/provider-consent";
 import { ProviderConsentError, userErrorText } from "../../shared/user-errors";
 import {
@@ -83,10 +84,13 @@ export function handleSmartBarMessage(
   const request = (message || {}) as { type?: string };
   switch (request.type) {
     case SMART_BAR_MESSAGE.prepare:
-      respond(prepare(request as SmartBarPrepareRequest, sender), sendResponse);
+      replyWith(
+        prepare(request as SmartBarPrepareRequest, sender),
+        sendResponse,
+      );
       return true;
     case SMART_BAR_MESSAGE.hideOnSite:
-      respond(
+      replyWith(
         updateSettings((settings) => {
           const host = siteHost(sender);
           return host ? hideSmartBarOnHost(settings, host) : settings;
@@ -95,20 +99,20 @@ export function handleSmartBarMessage(
       );
       return true;
     case SMART_BAR_MESSAGE.turnOff:
-      respond(
+      replyWith(
         updateSettings((settings) => ({ ...settings, enabled: false })),
         sendResponse,
       );
       return true;
     case SMART_BAR_MESSAGE.openSidePanel:
-      respond(
+      replyWith(
         handOff(request as SmartBarOpenSidePanelRequest, sender),
         sendResponse,
       );
       return true;
     case SMART_BAR_MESSAGE.allowProvider: {
       const { providerId, host } = request as SmartBarAllowProviderRequest;
-      respond(
+      replyWith(
         grantProviderConsent(String(providerId), String(host)),
         sendResponse,
       );
@@ -117,20 +121,6 @@ export function handleSmartBarMessage(
     default:
       return false;
   }
-}
-
-function respond(
-  work: Promise<unknown>,
-  sendResponse: (response: unknown) => void,
-) {
-  work.then(
-    (value) => sendResponse({ ok: true, value }),
-    (error) =>
-      sendResponse({
-        ok: false,
-        error: error instanceof Error ? error.message : String(error),
-      }),
-  );
 }
 
 async function readSettings() {

@@ -1,8 +1,4 @@
 import { FileText } from "lucide-react";
-import {
-  debugLog,
-  isDebugLoggingEnabled,
-} from "../../src/shared/debug-logging";
 import type { Messages } from "../../src/shared/i18n";
 import { pickedSkillsFromMetadata } from "../../src/shared/skills";
 import type {
@@ -14,7 +10,6 @@ import type {
   SelectedElement,
   UploadedAttachment,
 } from "../../src/shared/types";
-import { CHAT_PART_STATE, isToolPartType } from "../../src/shared/types";
 import { UserText } from "../../src/ui/components";
 import { providerNameDisplay } from "../../src/ui/provider-display";
 import { skillDisplay } from "../../src/ui/skill-display";
@@ -41,6 +36,7 @@ import {
   SourceChips,
 } from "./message-chips";
 import { selectedTextsFromMetadata } from "../../src/shared/selected-text";
+import { cn } from "../../src/ui/utils";
 
 export function MessageBubble({
   message,
@@ -142,21 +138,14 @@ export function MessageBubble({
   const assistantPartEntries = chronologicalAssistantPartEntries(
     message.parts || [],
   );
-  if (message.role === "assistant" && hasParts && isDebugLoggingEnabled())
-    debugLog("[OBA assistant-order]", {
-      messageId: message.id,
-      contentLength: message.content.length,
-      fallbackLength: assistantContentFallback.length,
-      outputActive,
-      assistantEnded,
-      parts: message.parts?.map(debugAssistantPart),
-      displayParts: assistantPartEntries.map(({ part }) =>
-        debugAssistantPart(part),
-      ),
-    });
   return (
     <div
-      className={`message ${message.role === "user" ? "user" : ""} ${latestUserMessage ? "latest-user" : ""} ${editing ? "editing" : ""}`}
+      className={cn(
+        "message",
+        message.role === "user" && "user",
+        latestUserMessage && "latest-user",
+        editing && "editing",
+      )}
     >
       {!!skillNames && (
         <div className="message-label" title={skillNames}>
@@ -327,16 +316,6 @@ function chronologicalAssistantPartEntries(
     });
     reasoningGroup = undefined;
   }
-}
-
-function debugAssistantPart(part: NonNullable<ChatMessage["parts"]>[number]) {
-  return {
-    id: part.id,
-    type: part.type,
-    toolName: isToolPartType(part.type) ? part.toolName : undefined,
-    state: part.state,
-    textLength: part.text?.length || 0,
-  };
 }
 
 function sourcesForAssistantMessage(

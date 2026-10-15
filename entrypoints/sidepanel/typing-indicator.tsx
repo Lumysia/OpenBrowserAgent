@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { typingPhrases } from "../../src/shared/holidays";
 import type { Messages } from "../../src/shared/i18n";
 import { useHoliday } from "./holiday-touches";
+import { cn } from "../../src/ui/utils";
 
 const TYPING_PHRASE_INTERVAL_MS = 2_000;
 
@@ -32,7 +33,7 @@ export function TypingIndicator({
 
   return (
     <span
-      className={`typing-indicator${removing ? " is-removing" : ""}`}
+      className={cn("typing-indicator", removing && "is-removing")}
       aria-label={phrase}
     >
       <span className="typing-indicator-icon" aria-hidden="true">

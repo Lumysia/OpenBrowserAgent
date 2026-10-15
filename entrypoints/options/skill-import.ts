@@ -8,6 +8,8 @@ import {
   skillTooLarge,
 } from "../../src/shared/skills";
 import type { Skill, SkillFile } from "../../src/shared/types";
+import { downloadBlob } from "../../src/ui/download";
+import { ImportError } from "./import-errors";
 
 const TEXT_FILE_EXTENSIONS = new Set([
   ".md",
@@ -24,10 +26,7 @@ const TEXT_FILE_EXTENSIONS = new Set([
   ".xml",
 ]);
 
-export async function importSkillZip(
-  file: File,
-  messages: { missingEntry: string; tooLarge: string },
-): Promise<Skill> {
+export async function importSkillZip(file: File): Promise<Skill> {
   const zip = await JSZip.loadAsync(file);
   const entries = Object.values(zip.files).filter(
     (entry) => !entry.dir && !isHiddenPath(entry.name),
@@ -39,7 +38,7 @@ export async function importSkillZip(
     entries.map(async (entry) => readZipFile(entry, root)),
   );
   const entryFile = files.find((item) => item.path === SKILL_ENTRY_PATH);
-  if (!entryFile) throw new Error(messages.missingEntry);
+  if (!entryFile) throw new ImportError({ kind: "missingSkillEntry" });
   const frontmatter = parseSkillFrontmatter(entryFile.content);
   const fallbackName = normalizeSkillName(
     file.name.replace(/\.(zip|skill)$/i, ""),
@@ -49,7 +48,7 @@ export async function importSkillZip(
     description: frontmatter.description,
     files: sortSkillFiles(files),
   });
-  if (skillTooLarge(skill)) throw new Error(messages.tooLarge);
+  if (skillTooLarge(skill)) throw new ImportError({ kind: "skillTooLarge" });
   return skill;
 }
 
@@ -161,15 +160,6 @@ function bytesToBase64(bytes: Uint8Array) {
 function base64ToBytes(value: string) {
   const binary = atob(value);
   return Uint8Array.from(binary, (char) => char.charCodeAt(0));
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
 }
 
 function sortSkillFiles(files: SkillFile[]) {
