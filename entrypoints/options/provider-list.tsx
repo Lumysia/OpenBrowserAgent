@@ -1,15 +1,9 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Plus } from "lucide-react";
-import {
-  createProviderConfig,
-  normalizeProviderState,
-} from "../../src/shared/provider-instances";
 import {
   ADD_PROVIDER_TYPES,
   type ProviderId,
 } from "../../src/shared/providers";
-import { storage } from "../../src/shared/storage";
-import type { ModelConfig, ProviderConfig } from "../../src/shared/types";
 import {
   Accordion,
   Button,
@@ -21,91 +15,31 @@ import {
 } from "../../src/ui/components";
 import { useMessages } from "../../src/ui/messages";
 import { providerTypeLabel } from "../../src/ui/provider-display";
-import { useStoredState } from "../../src/ui/useStoredState";
 import { ProviderAccordion } from "./provider-accordion";
+import { useProviders } from "./use-providers";
 
-// The AI providers: add one, and edit each in its own row. The same list on
-// the AI providers page and the setup page.
+// The AI providers: add one, and edit each in its own row.
 export function ProviderList() {
   const t = useMessages();
-  const [providerState, setProviderState] = useStoredState(storage.provider);
-  const [, setPreferences] = useStoredState(storage.preferences);
+  const { providers, addProvider, updateProvider, deleteProvider, modelAdded } =
+    useProviders();
   const [providerType, setProviderType] = useState<ProviderId>("openai");
   const [openProviders, setOpenProviders] = useState<string[]>([]);
-  const normalizedProviders = useMemo(
-    () => normalizeProviderState(providerState || {}),
-    [providerState],
-  );
 
-  if (!providerState) return null;
+  if (!providers) return null;
 
-  // A form saving its last edit as it closes leaves a deleted provider
-  // deleted.
-  function updateProvider(providerId: string, next: ProviderConfig) {
-    setProviderState((previous) =>
-      previous[providerId] ? { ...previous, [providerId]: next } : previous,
-    );
-  }
-
-  function addProvider() {
-    const provider = createProviderConfig(providerType, normalizedProviders);
-    const providerId = provider.id!;
-    setProviderState((previous) => ({ [providerId]: provider, ...previous }));
+  function add() {
+    const providerId = addProvider(providerType);
     setOpenProviders((items) =>
       items.includes(providerId) ? items : [providerId, ...items],
     );
   }
 
-  function deleteProvider(providerId: string) {
-    const removed = normalizedProviders[providerId];
-    setProviderState((previous) => {
-      const { [providerId]: _removed, ...next } = previous;
-      return next;
-    });
-    if (removed?.models?.length)
-      setPreferences((previous) =>
-        removed.models?.some(
-          (model) =>
-            model.id === previous.selectedModelId ||
-            model.id === previous.selectedImageModelId,
-        )
-          ? {
-              ...previous,
-              selectedModelId: undefined,
-              selectedImageModelId: undefined,
-            }
-          : previous,
-      );
-  }
-
-  // The first model added becomes the chat model; the other features use
-  // the chat's model until another is picked.
-  function handleModelAdded(model: ModelConfig) {
-    setPreferences((previous) => ({
-      ...previous,
-      selectedModelId: previous.selectedModelId || model.id,
-    }));
-  }
-
   return (
     <div className="stack">
       <div className="provider-add-row">
-        <Select
-          value={providerType}
-          onValueChange={(value) => setProviderType(value as ProviderId)}
-        >
-          <SelectTrigger aria-label={t.options.providers}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {ADD_PROVIDER_TYPES.map((type) => (
-              <SelectItem key={type} value={type}>
-                {providerTypeLabel(type, t)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button onClick={addProvider}>
+        <ProviderTypeSelect value={providerType} onChange={setProviderType} />
+        <Button onClick={add}>
           <Plus size={16} /> {t.sidepanel.addProvider}
         </Button>
       </div>
@@ -115,17 +49,48 @@ export function ProviderList() {
         onValueChange={setOpenProviders}
         className="stack"
       >
-        {Object.entries(normalizedProviders).map(([providerId, provider]) => (
+        {Object.entries(providers).map(([providerId, provider]) => (
           <ProviderAccordion
             key={providerId}
             providerId={providerId}
             value={provider}
             onChange={(next) => updateProvider(providerId, next)}
             onDelete={() => deleteProvider(providerId)}
-            onModelAdded={handleModelAdded}
+            onModelAdded={(model) => modelAdded(model)}
           />
         ))}
       </Accordion>
     </div>
+  );
+}
+
+// The kinds of AI provider that can be added. `placeholder` shows while
+// none is chosen.
+export function ProviderTypeSelect({
+  value,
+  placeholder,
+  onChange,
+}: {
+  value: ProviderId | undefined;
+  placeholder?: string;
+  onChange: (type: ProviderId) => void;
+}) {
+  const t = useMessages();
+  return (
+    <Select
+      value={value ?? ""}
+      onValueChange={(next) => onChange(next as ProviderId)}
+    >
+      <SelectTrigger aria-label={t.options.providers}>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {ADD_PROVIDER_TYPES.map((type) => (
+          <SelectItem key={type} value={type}>
+            {providerTypeLabel(type, t)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

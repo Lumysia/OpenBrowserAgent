@@ -1,10 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Cpu, Loader2, Plus, Server, Trash2 } from "lucide-react";
 import { formatCount, getMessages } from "../../src/shared/i18n";
-import {
-  providerHasConsent,
-  withProviderConsent,
-} from "../../src/shared/provider-consent";
+import { providerHasConsent } from "../../src/shared/provider-consent";
 import type { ModelConfig, ProviderConfig } from "../../src/shared/types";
 import { providerType } from "../../src/shared/providers";
 import {
@@ -28,8 +25,7 @@ import {
   providerNameDisplay,
   providerTypeLabel,
 } from "../../src/ui/provider-display";
-import { ProviderConsentField } from "./provider-consent-field";
-import { ProviderAdvanced } from "./provider-advanced";
+import { ProviderConnectionFields } from "./provider-connection-fields";
 import { FetchedModelPicker, ModelList } from "./provider-controls";
 import { modelWithProviderLabel, renameProviderDraft } from "./provider-drafts";
 import {
@@ -37,10 +33,8 @@ import {
   testProviderModel,
 } from "../../src/shared/provider-requests";
 import { errorWithDetail } from "../../src/shared/user-errors";
-import { useAutoSave } from "../../src/ui/use-auto-save";
-import { sameJson } from "../../src/shared/sync/codec";
-import { normalizeProviderConfig } from "../../src/shared/provider-instances";
 import { useUiLanguage } from "../../src/ui/messages";
+import { useProviderDraft } from "./use-provider-draft";
 
 export function ProviderAccordion({
   providerId,
@@ -56,7 +50,11 @@ export function ProviderAccordion({
   onModelAdded: (model: ModelConfig) => void;
 }) {
   const language = useUiLanguage();
-  const [draft, setDraft] = useState(value);
+  const { draft, setDraft, keyUnsaved } = useProviderDraft(
+    providerId,
+    value,
+    onChange,
+  );
   const [modelName, setModelName] = useState("");
   const [fetchedModelSearch, setFetchedModelSearch] = useState("");
   const [fetchedModels, setFetchedModels] = useState<ModelConfig[]>([]);
@@ -73,14 +71,6 @@ export function ProviderAccordion({
   const models = draft.models || [];
   const provider = draft.type || "openai";
   const t = getMessages(language);
-  const consentMissing = !providerHasConsent(draft);
-  // Edits save as they are made; the API key waits for the permission to
-  // send content to the provider.
-  const toSave = consentMissing ? { ...draft, apiKey: value.apiKey } : draft;
-  const keyUnsaved = (draft.apiKey || "") !== (value.apiKey || "");
-  // What this form saved last; a stored value that differs came from
-  // elsewhere (another page, sync) and replaces the form's.
-  const lastSaved = useRef(value);
   const canAddManualModel = !!providerType(provider).manualModels;
   const selectableFetchedModels = fetchedModels
     .filter((model) => !models.some((candidate) => candidate.id === model.id))
@@ -89,18 +79,6 @@ export function ProviderAccordion({
         .toLowerCase()
         .includes(fetchedModelSearch.toLowerCase()),
     );
-
-  useEffect(() => {
-    if (sameJson(value, lastSaved.current)) return;
-    lastSaved.current = value;
-    setDraft(value);
-  }, [value]);
-
-  useAutoSave(toSave, value, (next) => {
-    // As it comes back from storage (ProviderList normalizes it).
-    lastSaved.current = normalizeProviderConfig(providerId, next);
-    onChange(next);
-  });
 
   function addModel() {
     const name = modelName.trim();
@@ -211,27 +189,13 @@ export function ProviderAccordion({
                 }
               />
             </Label>
-            {!providerType(provider).keyless && (
-              <Label>
-                {t.options.apiKey}
-                <Input
-                  type="password"
-                  value={draft.apiKey || ""}
-                  onChange={(event) =>
-                    setDraft({ ...draft, apiKey: event.target.value })
-                  }
-                />
-              </Label>
-            )}
-            <ProviderConsentField
+            <ProviderConnectionFields
               t={t}
               saved={value}
               draft={draft}
-              dirty={keyUnsaved}
+              keyUnsaved={keyUnsaved}
               onDraftChange={setDraft}
-              onWithdraw={() => setDraft(withProviderConsent(draft, false))}
             />
-            <ProviderAdvanced t={t} value={draft} onChange={setDraft} />
           </div>
           <div className="provider-models-panel">
             <SettingsSubheading

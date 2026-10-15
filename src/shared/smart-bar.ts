@@ -157,6 +157,21 @@ export function normalizeSmartBarSettings(
   };
 }
 
+// Setup's "Smart bar on selected text": the bar on, opening on a selection.
+// Turned off, it is off (the shortcut too), as with the settings' switch.
+export function smartBarOnSelection(settings: SmartBarSettings) {
+  return settings.enabled && settings.trigger === SMART_BAR_TRIGGER.selection;
+}
+
+export function withSmartBarOnSelection(
+  settings: SmartBarSettings,
+  on: boolean,
+): SmartBarSettings {
+  return on
+    ? { ...settings, enabled: true, trigger: SMART_BAR_TRIGGER.selection }
+    : { ...settings, enabled: false };
+}
+
 export function isSmartBarAllowedOnHost(
   settings: SmartBarSettings,
   host: string,

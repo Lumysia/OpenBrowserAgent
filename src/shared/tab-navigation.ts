@@ -29,9 +29,11 @@ async function openOrFocusTab(
   matches: (tabUrl: string) => boolean,
 ) {
   const api = getBrowserApi();
-  const existing = (await api.tabs.query({})).find(
-    (tab) => tab.url && matches(tab.url),
-  );
+  const tabs = await api.tabs.query({});
+  // A tab already at `url` first (setup open beside another settings tab).
+  const existing =
+    tabs.find((tab) => tab.url === url) ??
+    tabs.find((tab) => tab.url && matches(tab.url));
   if (!existing?.id) return api.tabs.create({ url });
   // Setting the same URL again would reload the page and lose its state.
   return focusTab(existing.id, existing.url === url ? undefined : url);

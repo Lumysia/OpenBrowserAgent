@@ -29,8 +29,10 @@
     );
 }
 .sidepanel.history-mode,
-.sidepanel.setup-mode {
+.sidepanel.no-model-mode {
   grid-template-rows: minmax(0, 1fr);
+  place-items: center;
+  padding: var(--space-4);
 }
 
 /* Header bar. */

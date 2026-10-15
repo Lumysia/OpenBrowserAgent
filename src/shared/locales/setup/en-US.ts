@@ -1,14 +1,57 @@
-// First run (the setup page and the side panel's setup card), joining sync
-// from another device, and unlocking synced keys.
+// First run (the guided setup), joining sync from another device, and
+// unlocking synced keys.
 export const setupEnUS = {
-  title: "Set up OpenBrowserAgent",
-  description: "Add an AI provider to start chatting.",
-  openedSettings:
-    "Settings is open. Add an AI provider there, then come back here.",
+  continueSetup: "Continue setup",
   welcomeTitle: "Welcome to OpenBrowserAgent",
-  welcomeDescription:
-    "Add an AI provider and a model, then open the side panel and ask about the page you’re on.",
-  openPanelTitle: "Open the side panel",
+  runAgain: "Run setup again",
+  // The progress dots: {current} and {total} are numbers, {step} its name.
+  progressLabel: "Setup steps",
+  progressStep: "Step {current} of {total}: {step}",
+  steps: {
+    language: "Language",
+    provider: "AI provider",
+    pages: "On web pages",
+    done: "Done",
+  },
+  back: "Back",
+  next: "Next",
+  skipStep: "Skip",
+  languageTitle: "Choose your languages",
+  languageDescription:
+    "The extension’s language, and the language pages are translated into. Most people keep both as they are.",
+  providerTitle: "Connect an AI provider",
+  providerDescription:
+    "Chat and the agent need an AI provider. Pick a service, or any OpenAI- or Anthropic-compatible server with its Base URL.",
+  providerPlaceholder: "Choose an AI provider",
+  // {name}: the AI provider's name.
+  providerReady: "{name} is ready. Press Next to go on.",
+  testConnection: "Test connection",
+  testingConnection: "Testing…",
+  // {model}: the model's name.
+  connectionOk: "Connected. {model} answered.",
+  connectionFailed: "Couldn’t connect to the AI provider",
+  modelFailed: "Connected, but {model} didn’t answer",
+  noModelsListed:
+    "Connected, but the AI provider listed no models. Enter a model name.",
+  model: "Model",
+  modelName: "Model name",
+  modelNameHint:
+    "If the AI provider doesn’t list its models, enter one by name, then test again.",
+  pagesTitle: "On web pages",
+  pagesDescription:
+    "What OpenBrowserAgent adds to the pages you visit. You can change these later in Settings → On pages.",
+  translateButtonDescription:
+    "A small button on the edge of a page translates it or shows the original.",
+  smartBarTitle: "Smart bar on selected text",
+  smartBarDescription:
+    "Quick actions next to text you select. Nothing is sent until you pick one.",
+  subtitlesDescription:
+    "Videos with subtitles show each line with its translation under it.",
+  doneTitle: "You’re all set",
+  doneDescription:
+    "Open the side panel and ask about the page you’re on. These keys work on any page.",
+  noProviderNote:
+    "Chat needs an AI provider. Page translation with the browser’s translator works without one.",
   openPanelDescription:
     "Pin OpenBrowserAgent from the browser’s Extensions menu, then click its icon to open the side panel.",
   openPanel: "Open side panel",

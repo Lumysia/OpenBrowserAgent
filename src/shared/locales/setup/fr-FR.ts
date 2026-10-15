@@ -1,14 +1,54 @@
 import type { SetupMessages } from "./en-US";
 
 export const setupFrFR: SetupMessages = {
-  title: "Configurer OpenBrowserAgent",
-  description: "Ajoutez un fournisseur d’IA pour commencer à discuter.",
-  openedSettings:
-    "Les paramètres sont ouverts. Ajoutez-y un fournisseur d’IA, puis revenez ici.",
+  continueSetup: "Continuer la configuration",
+  runAgain: "Relancer la configuration",
+  progressLabel: "Étapes de configuration",
+  progressStep: "Étape {current} sur {total} : {step}",
+  steps: {
+    language: "Langue",
+    provider: "Fournisseur d’IA",
+    pages: "Sur les pages",
+    done: "Terminé",
+  },
+  back: "Retour",
+  next: "Suivant",
+  skipStep: "Passer",
+  languageTitle: "Choisissez vos langues",
+  languageDescription:
+    "La langue de l’extension et celle dans laquelle les pages sont traduites. La plupart des gens gardent les deux telles quelles.",
+  providerTitle: "Connecter un fournisseur d’IA",
+  providerDescription:
+    "Les discussions et l’agent ont besoin d’un fournisseur d’IA. Choisissez un service, ou n’importe quel serveur compatible OpenAI ou Anthropic avec son Base URL.",
+  providerPlaceholder: "Choisir un fournisseur d’IA",
+  providerReady: "{name} est prêt. Appuyez sur « Suivant » pour continuer.",
+  testConnection: "Tester la connexion",
+  testingConnection: "Test en cours…",
+  connectionOk: "Connecté. {model} a répondu.",
+  connectionFailed: "Impossible de se connecter au fournisseur d’IA",
+  modelFailed: "Connecté, mais {model} n’a pas répondu",
+  noModelsListed:
+    "Connecté, mais le fournisseur d’IA n’a listé aucun modèle. Saisissez le nom d’un modèle.",
+  model: "Modèle",
+  modelName: "Nom du modèle",
+  modelNameHint:
+    "Si le fournisseur d’IA ne liste pas ses modèles, saisissez-en un par son nom, puis testez à nouveau.",
+  pagesTitle: "Sur les pages",
+  pagesDescription:
+    "Ce qu’OpenBrowserAgent ajoute aux pages que vous visitez. Vous pourrez le modifier plus tard dans Paramètres → Sur les pages.",
+  translateButtonDescription:
+    "Un petit bouton au bord de la page la traduit ou affiche l’original.",
+  smartBarTitle: "Barre intelligente sur le texte sélectionné",
+  smartBarDescription:
+    "Des actions rapides à côté du texte sélectionné. Rien n’est envoyé avant que vous en choisissiez une.",
+  subtitlesDescription:
+    "Les vidéos avec sous-titres affichent chaque ligne avec sa traduction en dessous.",
+  doneTitle: "Tout est prêt",
+  doneDescription:
+    "Ouvrez le panneau latéral et posez une question sur la page affichée. Ces raccourcis fonctionnent sur toutes les pages.",
+  noProviderNote:
+    "Les discussions ont besoin d’un fournisseur d’IA. La traduction des pages avec le traducteur intégré fonctionne sans.",
   welcomeTitle: "Bienvenue dans OpenBrowserAgent",
-  welcomeDescription:
-    "Ajoutez un fournisseur d’IA et un modèle, puis ouvrez le panneau latéral et posez vos questions sur la page affichée.",
-  openPanelTitle: "Ouvrir le panneau latéral",
   openPanelDescription:
     "Épinglez OpenBrowserAgent depuis le menu Extensions du navigateur, puis cliquez sur son icône pour ouvrir le panneau latéral.",
   openPanel: "Ouvrir le panneau latéral",

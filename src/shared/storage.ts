@@ -264,6 +264,7 @@ export const storage = {
     () => DEFAULT_SYNC_GROUP_SETTINGS,
     { normalize: mergeSyncGroupSettings },
   ),
+  setupDone: createItem<boolean>(STORAGE_KEYS.setupDone, () => false),
   ignoreSyncedProvidersForBootstrap: createItem<boolean>(
     STORAGE_KEYS.ignoreSyncedProvidersForBootstrap,
     () => false,

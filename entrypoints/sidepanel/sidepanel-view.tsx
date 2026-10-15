@@ -8,7 +8,7 @@ import { EditModeOverlay } from "./edit-mode-overlay";
 import { HistoryPanel } from "./history-panel";
 import { MessageJumpControls } from "./message-jump-controls";
 import { MessageBubble } from "./message-bubble";
-import { ProvidersEmptyState } from "./providers-empty-state";
+import { NoModelState } from "./no-model-state";
 import { QueuedMessages } from "./queued-messages";
 import { SidepanelHeader } from "./sidepanel-header";
 import { SyncKeysBanner } from "./sync-keys-banner";
@@ -28,7 +28,7 @@ export function SidepanelView({
 }) {
   const [showHistory, setShowHistory] = useState(false);
   const chat = useChat();
-  if (modelCount === 0) return <ProvidersEmptyState />;
+  if (modelCount === 0) return <NoModelState />;
   if (showHistory)
     return (
       <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>

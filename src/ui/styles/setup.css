@@ -1,4 +1,4 @@
-/* First-run setup (side panel card, setup page) and joining sync. */
+/* The guided setup, joining sync, and empty states. */
 .empty {
   min-height: 260px;
   display: grid;
@@ -13,18 +13,11 @@
   animation: enter var(--duration-emphasis) var(--ease-out) backwards;
 }
 
-.setup-card {
-  max-width: var(--compact-panel-width);
-}
-.setup-card .ui-card-header {
-  align-items: center;
-}
-.setup-card-actions,
 .sync-join-form,
 .sync-join-tab-panel {
   display: grid;
   gap: var(--space-2);
-  text-align: left;
+  text-align: start;
 }
 .setup-join-link {
   justify-self: center;
@@ -94,33 +87,166 @@
   position: relative;
   z-index: var(--z-raised);
 }
-/* Shown while a local model starts: it unfolds below the actions. */
-.local-setup-hint {
-  max-height: 0;
-  overflow: hidden;
-  padding-block: 0;
-  border-color: transparent;
-  opacity: 0;
-  translate: 0 -4px;
-  scale: 0.985;
-  transition:
-    max-height var(--duration-base) var(--ease-standard),
-    padding var(--duration-base) var(--ease-standard),
-    border-color var(--duration-fast) var(--ease-standard),
-    opacity var(--duration-fast) var(--ease-standard),
-    translate var(--duration-base) var(--ease-out),
-    scale var(--duration-base) var(--ease-out);
-}
-.local-setup-hint[data-state="visible"] {
-  max-height: 140px;
-  padding-block: 9px;
-  border-color: color-mix(in oklab, var(--accent-strong) 24%, var(--border));
-  opacity: 1;
-  translate: 0 0;
-  scale: 1;
-}
 .sync-unlock-form {
   display: grid;
   gap: var(--space-2);
-  text-align: left;
+  text-align: start;
+}
+
+/* The guided setup: a page of its own, one calm column whose step scrolls
+   between the dots and the Back / Next row. */
+.standalone-shell {
+  height: 100vh;
+  display: flex;
+}
+.setup-wizard {
+  width: 100%;
+  max-width: 880px;
+  height: 100%;
+  min-height: 0;
+  margin-inline: auto;
+  padding: var(--space-6) var(--space-6) var(--space-4);
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--space-4);
+}
+.setup-wizard-scroll {
+  min-height: 0;
+}
+.setup-wizard-brand {
+  color: var(--accent-text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.setup-step {
+  max-width: 720px;
+  margin-inline: auto;
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+  --enter-y: 8px;
+  animation: enter var(--duration-base) var(--ease-out) backwards;
+}
+.setup-step-header {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+.setup-step-header h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  outline: none;
+}
+.setup-step-header p {
+  max-width: 52ch;
+  margin: 0;
+}
+.setup-step-icon {
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  border-radius: var(--radius-md);
+  background: var(--accent-softer);
+  color: var(--accent-strong);
+}
+.setup-step-body {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.setup-wizard-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+.setup-wizard-action {
+  display: flex;
+  min-width: 0;
+}
+.setup-forward-slot {
+  justify-content: flex-end;
+}
+.setup-direction-icon:dir(rtl) {
+  scale: -1 1;
+}
+.setup-provider-form .ui-select-trigger {
+  width: 100%;
+}
+.setup-note .split {
+  gap: var(--space-3);
+}
+/* The "On web pages" switches, each beside a small drawing of it. */
+.setup-features {
+  display: grid;
+  gap: var(--space-3);
+}
+.setup-feature {
+  display: grid;
+  grid-template-columns: 136px minmax(0, 1fr);
+  align-items: center;
+  overflow: hidden;
+}
+.setup-feature-art {
+  display: grid;
+  place-items: center;
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4) 0;
+}
+.setup-feature > .ui-card-content {
+  padding-block: var(--space-4);
+}
+.setup-art {
+  width: 100%;
+  height: auto;
+}
+@media (max-width: 480px) {
+  .setup-feature {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .setup-feature-art {
+    padding-inline: var(--space-4);
+  }
+  .setup-art {
+    max-width: 200px;
+  }
+}
+.setup-art:dir(rtl) {
+  scale: -1 1;
+}
+.setup-art-page {
+  fill: var(--secondary);
+  stroke: var(--border);
+}
+.setup-art-line {
+  fill: color-mix(in oklab, var(--muted-foreground) 32%, transparent);
+}
+.setup-art-accent {
+  fill: var(--accent-fill);
+  stroke: color-mix(in oklab, var(--accent-strong) 40%, transparent);
+}
+.setup-art-dot {
+  fill: var(--accent-text);
+}
+.setup-art-mark {
+  fill: none;
+  stroke: var(--accent-text);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.setup-art-selection {
+  fill: color-mix(in oklab, var(--accent-strong) 28%, transparent);
+}
+.setup-art-video {
+  fill: color-mix(in oklab, var(--foreground) 78%, var(--background));
+}
+.setup-art-play {
+  fill: color-mix(in oklab, var(--background) 70%, transparent);
+}
+.setup-art-caption {
+  fill: color-mix(in oklab, var(--background) 88%, transparent);
 }
