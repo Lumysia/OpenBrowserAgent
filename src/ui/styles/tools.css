@@ -90,7 +90,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid color-mix(in oklab, var(--accent-strong) 22%, transparent);
-  border-radius: 7px;
+  border-radius: var(--radius-xs);
   background: color-mix(in oklab, var(--accent-softer) 34%, transparent);
   color: var(--accent-strong);
 }

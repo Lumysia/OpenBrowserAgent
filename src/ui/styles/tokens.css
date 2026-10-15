@@ -25,6 +25,7 @@
   --space-6: 24px;
   --space-8: 32px;
 
+  --radius-2xs: 4px;
   --radius-xs: 6px;
   --radius-sm: 8px;
   --radius-md: 10px;
@@ -59,6 +60,9 @@
   --duration-slow: 340ms;
   --duration-enter: 520ms;
   --duration-emphasis: 720ms;
+  /* An item fading or collapsing before it leaves the page; timers that
+     unmount it read this (src/ui/motion.ts). */
+  --duration-remove: 190ms;
   --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);

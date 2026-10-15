@@ -41,7 +41,7 @@
 .ui-popover-content {
   z-index: var(--z-popover);
   overflow: hidden;
-  border-radius: 13px;
+  border-radius: var(--radius);
 }
 .ui-select-content {
   z-index: var(--z-overlay);
@@ -63,7 +63,7 @@
   min-height: 32px;
   min-width: 0;
   align-items: center;
-  border-radius: calc(var(--radius) - 5px);
+  border-radius: var(--radius-xs);
   color: var(--foreground);
   font-size: var(--text-base);
   outline: none;
@@ -112,7 +112,7 @@
   max-width: min(220px, calc(100vw - 24px));
   padding: 8px 12px;
   border-color: color-mix(in oklab, var(--accent-strong) 12%, var(--border));
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background:
     linear-gradient(
       180deg,
@@ -253,7 +253,7 @@
   width: 100%;
   overflow: hidden;
   border: 1px solid color-mix(in oklab, var(--accent-strong) 14%, var(--border));
-  border-radius: calc(var(--radius) + 2px);
+  border-radius: var(--radius-lg);
   background: color-mix(in oklab, var(--field) 92%, var(--background));
   box-shadow: var(--inner-highlight), var(--elevation-1);
 }

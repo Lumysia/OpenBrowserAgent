@@ -30,8 +30,7 @@ import {
 import type { SummariesUpdater } from "./use-chats";
 import { cn } from "../../src/ui/utils";
 import { useMessages } from "../../src/ui/messages";
-
-const HISTORY_REMOVE_DELAY_MS = 190;
+import { cssDurationMs, DURATION_TOKEN } from "../../src/ui/motion";
 
 export function HistoryPanel({
   chats,
@@ -148,7 +147,7 @@ export function HistoryPanel({
         ids.forEach((id) => delete next[id]);
         return next;
       });
-    }, HISTORY_REMOVE_DELAY_MS);
+    }, cssDurationMs(DURATION_TOKEN.remove));
     removeTimersRef.current.push(timer);
   }
 

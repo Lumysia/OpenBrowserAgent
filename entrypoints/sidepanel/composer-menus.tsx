@@ -16,6 +16,7 @@ import { SkillPickerList } from "./skill-picker";
 import { formatMessage } from "../../src/shared/text";
 import { cn } from "../../src/ui/utils";
 import { useMessages } from "../../src/ui/messages";
+import { cssDurationMs, DURATION_TOKEN } from "../../src/ui/motion";
 
 export function AddContextMenu({
   onPickFiles,
@@ -57,7 +58,11 @@ export function AddContextMenu({
     if (view === displayView) return;
     setLeavingView(displayView);
     setDisplayView(view);
-    const timeout = window.setTimeout(() => setLeavingView(null), 180);
+    // The leaving view is dropped once its exit animation ends.
+    const timeout = window.setTimeout(
+      () => setLeavingView(null),
+      cssDurationMs(DURATION_TOKEN.fast),
+    );
     return () => window.clearTimeout(timeout);
   }, [displayView, view]);
 

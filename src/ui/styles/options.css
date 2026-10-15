@@ -235,7 +235,7 @@
   gap: 10px;
   padding: 12px 10px;
   border: 1px solid transparent;
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--foreground);
   font-weight: 400;
@@ -290,7 +290,7 @@
 .action-list-item img {
   width: 20px;
   height: 20px;
-  border-radius: 4px;
+  border-radius: var(--radius-2xs);
   object-fit: cover;
 }
 

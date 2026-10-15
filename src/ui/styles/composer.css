@@ -11,7 +11,7 @@
   position: relative;
   display: grid;
   border: 1px solid color-mix(in oklab, var(--accent-strong) 14%, var(--border));
-  border-radius: 13px;
+  border-radius: var(--radius);
   background: var(--field);
   box-shadow: var(--elevation-2);
   transition: var(--transition-colors);
@@ -28,7 +28,7 @@
   padding-top: 18px;
   overflow-y: auto;
   border: 0;
-  border-radius: 13px 13px 0 0;
+  border-radius: var(--radius) var(--radius) 0 0;
   background: transparent;
   box-shadow: none;
   resize: none;
@@ -226,7 +226,7 @@
   gap: var(--space-2);
   padding: 10px;
   border: 1px solid color-mix(in oklab, var(--accent-soft) 58%, var(--border));
-  border-radius: 13px;
+  border-radius: var(--radius);
   background: color-mix(in oklab, var(--accent-softer) 42%, var(--card));
   animation: enter var(--duration-slow) var(--ease-out) backwards;
 }
