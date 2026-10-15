@@ -1,5 +1,8 @@
 import { setTimeout as delay } from "node:timers/promises";
-import { SMART_BAR_MESSAGE } from "../src/shared/smart-bar-protocol.ts";
+import {
+  SMART_BAR_MESSAGE,
+  SMART_BAR_SCRIPT,
+} from "../src/shared/smart-bar-protocol.ts";
 import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
 import {
   contentScriptsRegistered,
@@ -9,6 +12,7 @@ import {
   startExtension,
 } from "./browser-harness.mjs";
 import { click, drag } from "./cdp-input.mjs";
+import { inShadowRoot } from "./shadow-roots.mjs";
 import { nextFrames, poll } from "./chromium.mjs";
 import { streamText } from "./provider-fixtures.ts";
 
@@ -52,7 +56,8 @@ export async function startSmartBar({
   });
   const { options, close } = session;
   try {
-    if (smartBar?.enabled) await contentScriptsRegistered(options);
+    if (smartBar?.enabled)
+      await contentScriptsRegistered(options, SMART_BAR_SCRIPT.trigger);
     // Counts the page scripts' requests to the background.
     const worker = await session.worker();
     await worker.call((prepare) => {
@@ -128,67 +133,16 @@ export function fieldValue(page, selector) {
 
 // Runs `fn(root, argument)` in the page with the bar's shadow root, or null
 // when the page has no bar.
-export async function inSmartBar(page, fn, argument) {
-  const options = { awaitPromise: true, returnByValue: true };
-  const objectGroup = "smart-bar-test";
-  let object;
-  // The snapshot's node ids go stale when the bar's host moves (into or out
-  // of a modal dialog) right after it was taken.
-  for (let attempt = 0; !object; attempt++) {
-    const { root } = await page.send("DOM.getDocument", {
-      depth: -1,
-      pierce: true,
-    });
-    const shadow = findShadowRoot(root);
-    if (!shadow)
-      return value(
-        await page.send("Runtime.evaluate", {
-          ...options,
-          expression: `(${fn})(null, ${JSON.stringify(argument) ?? "undefined"})`,
-        }),
-      );
-    object = await page
-      .send("DOM.resolveNode", { nodeId: shadow.nodeId, objectGroup })
-      .then(
-        (result) => result.object,
-        (error) => {
-          if (attempt === 2) throw error;
-        },
-      );
-  }
-  try {
-    return value(
-      await page.send("Runtime.callFunctionOn", {
-        ...options,
-        functionDeclaration: `function (argument) { return (${fn})(this, argument); }`,
-        objectId: object.objectId,
-        arguments: [{ value: argument }],
-      }),
-    );
-  } finally {
-    await page.send("Runtime.releaseObjectGroup", { objectGroup });
-  }
-}
-
-function value(result) {
-  if (result.exceptionDetails) throw new Error("Smart bar evaluation failed");
-  return result.result?.value;
+export function inSmartBar(page, fn, argument) {
+  return inShadowRoot(page, isSmartBarRoot, fn, argument);
 }
 
 // The page's own bar (frames have their own): a closed root holding a whole
 // html document. The host's tag says nothing; pages could imitate it.
-function findShadowRoot(node) {
-  const bar = node.shadowRoots?.find(
-    (root) =>
-      root.shadowRootType === "closed" &&
-      root.children?.[0]?.nodeName === "HTML",
+function isSmartBarRoot(root) {
+  return (
+    root.shadowRootType === "closed" && root.children?.[0]?.nodeName === "HTML"
   );
-  if (bar) return bar;
-  for (const child of [...(node.children || []), ...(node.shadowRoots || [])]) {
-    const found = findShadowRoot(child);
-    if (found) return found;
-  }
-  return undefined;
 }
 
 export function barState(page) {

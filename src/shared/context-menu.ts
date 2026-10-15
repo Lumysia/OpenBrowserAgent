@@ -5,6 +5,7 @@ export const CONTEXT_MENU_ITEM = {
   ask: "ask",
   summarizePage: "summarizePage",
   translatePage: "translatePage",
+  translateSubtitles: "translateSubtitles",
   searchWeb: "searchWeb",
   summarizeLink: "summarizeLink",
   copyMarkdown: "copyMarkdown",
@@ -46,6 +47,7 @@ export const CONTEXT_MENU_ID = {
   ask: "oba-ask",
   summarizePage: "oba-summarize-page",
   translatePage: "oba-translate-page",
+  translateSubtitles: "oba-translate-subtitles",
   searchPage: "oba-search-page",
   searchSelection: "oba-search-selection",
   summarizeLink: "oba-summarize-link",
@@ -62,6 +64,8 @@ export type ContextMenuTitles = {
   // "Translate this page", or "Show original" where the active tab is
   // translated.
   translatePage: string;
+  // On a video: starts or stops its translated subtitles.
+  translateSubtitles: string;
   searchPage: string;
   // `%s` stands for the selected text.
   searchSelection: string;
@@ -124,6 +128,13 @@ export function contextMenuEntries(
           child(CONTEXT_MENU_ID.translatePage, titles.translatePage, [
             ...ANYWHERE,
             ...tab,
+          ]),
+        ]
+      : []),
+    ...(on(CONTEXT_MENU_ITEM.translateSubtitles)
+      ? [
+          child(CONTEXT_MENU_ID.translateSubtitles, titles.translateSubtitles, [
+            "video",
           ]),
         ]
       : []),

@@ -94,6 +94,24 @@ export const pageTranslateEnUS = {
     "Couldn't start translating this page. Reload the page and try again.",
   unavailablePage:
     "Can't translate this page: the browser doesn't let extensions change it.",
+  // Video subtitles: the original line with its translation under it.
+  subtitles: {
+    // The right-click menu item on a video; it also hides them again.
+    menu: "Translate subtitles",
+    // The context menu settings' row for the item.
+    menuItemLabel: "Translate subtitles / Hide them (on videos)",
+    // The button on a video's corner.
+    start: "Translate subtitles",
+    stop: "Hide translated subtitles",
+    noCaptions:
+      "No subtitles found for this video yet. Turn on its captions in the player; they are translated as soon as they show.",
+    liveOnly:
+      "Translating the captions on screen as they show. To translate ahead, turn the player's captions off and on again.",
+    noVideo: "No video to translate subtitles for here.",
+    videoButton: "Subtitle button on videos",
+    videoButtonDescription:
+      'Shows a button on the corner of a video when you point at it, to translate its subtitles. "Translate this page" also translates the subtitles of the videos on the page.',
+  },
 };
 
 export type PageTranslateLocaleMessages = typeof pageTranslateEnUS;

@@ -22,9 +22,11 @@ export function ContextMenuPage() {
   const [language] = useStoredState(storage.language);
   const [preferences, setPreferences] = useStoredState(storage.preferences);
   const s = getMessages(language).contextMenu;
+  const p = getPageTranslateMessages(language);
   const itemLabels = {
     ...s.itemLabels,
-    translatePage: getPageTranslateMessages(language).menuItemLabel,
+    translatePage: p.menuItemLabel,
+    translateSubtitles: p.subtitles.menuItemLabel,
   };
   if (!preferences) return null;
   const settings = normalizeContextMenuSettings(preferences.contextMenu);

@@ -90,4 +90,18 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
     "Impossible de lancer la traduction de cette page. Rechargez la page et réessayez.",
   unavailablePage:
     "Impossible de traduire cette page : le navigateur ne permet pas aux extensions de la modifier.",
+  subtitles: {
+    menu: "Traduire les sous-titres",
+    menuItemLabel: "Traduire les sous-titres / Les masquer (sur les vidéos)",
+    start: "Traduire les sous-titres",
+    stop: "Masquer les sous-titres traduits",
+    noCaptions:
+      "Aucun sous-titre trouvé pour cette vidéo pour l’instant. Activez les sous-titres dans le lecteur : ils sont traduits dès qu’ils s’affichent.",
+    liveOnly:
+      "Les sous-titres affichés sont traduits au fur et à mesure. Pour les traduire à l’avance, désactivez puis réactivez les sous-titres du lecteur.",
+    noVideo: "Aucune vidéo dont traduire les sous-titres ici.",
+    videoButton: "Bouton de sous-titres sur les vidéos",
+    videoButtonDescription:
+      "Affiche un bouton dans le coin d’une vidéo quand vous la survolez, pour traduire ses sous-titres. « Traduire cette page » traduit aussi les sous-titres des vidéos de la page.",
+  },
 };

@@ -5,10 +5,12 @@ import {
   type ContextMenuEntry,
 } from "../../shared/context-menu";
 import { getMessages } from "../../shared/i18n";
+import { getPageTranslateMessages } from "../../shared/page-translate/messages";
 import { SIDE_PANEL_TASK } from "../../shared/side-panel-handoff";
 import { getBrowserApi, storage } from "../../shared/storage";
 import { togglePageTranslation, translateMenuTitle } from "../page-translate";
 import { handOffToSidePanel } from "../side-panel-handoff";
+import { toggleVideoSubtitles } from "../video-subtitles";
 import { copyPageMarkdown } from "./copy-markdown";
 
 type Menus = typeof chrome.contextMenus & {
@@ -64,6 +66,7 @@ async function menuEntries(menus: Menus) {
     {
       ...t,
       translatePage: await translateMenuTitle(language),
+      translateSubtitles: getPageTranslateMessages(language).subtitles.menu,
       parent: name || "OpenBrowserAgent",
     },
     // The tab strip's menu: Firefox, Safari 18 and Chrome 150 have it.
@@ -105,6 +108,8 @@ function handleClick(
         return handOffToSidePanel(tab, { task: SIDE_PANEL_TASK.summarizePage });
       case CONTEXT_MENU_ID.translatePage:
         return togglePageTranslation(tab);
+      case CONTEXT_MENU_ID.translateSubtitles:
+        return toggleVideoSubtitles(tab, info.frameId ?? 0, info.srcUrl);
       case CONTEXT_MENU_ID.searchPage:
         return handOffToSidePanel(tab, { task: SIDE_PANEL_TASK.searchWeb });
       case CONTEXT_MENU_ID.searchSelection:

@@ -14,7 +14,7 @@ To work, the extension handles:
 
 - **Your messages and chats** with the agent.
 - **Web page content** you share or that the agent reads for a task: page text, titles, URLs, selected elements, screenshots, and files you attach.
-- **The text of pages you translate** with "Translate this page".
+- **The text of pages you translate** with "Translate this page", and the subtitles of videos you translate.
 - **Browsing activity needed for a task**: the list of open tabs, and the pages the agent opens, reads, or interacts with.
 - **Settings and credentials** you enter: model provider settings and API keys, agents, skills, MCP server settings, sync settings, and local execution bridge settings.
 
@@ -37,7 +37,7 @@ When the agent runs code it wrote (for example, to add up a table), the code run
 
 ## Translation engines
 
-OpenBrowserAgent translates pages with the engine you select in Settings → Page translation. Nothing is translated until you choose "Translate this page".
+OpenBrowserAgent translates pages with the engine you select in Settings → Page translation. Nothing is translated until you choose "Translate this page", or "Translate subtitles" on a video (its right-click menu item or the button on its corner); video subtitles go to the same engine as page text.
 
 - **AI model** (the default): the page's text and title are sent only to the model provider you configured.
 - **Built-in translator**: your browser translates on your device, and no text leaves your browser. Only browsers that have one (such as Chrome) offer it.

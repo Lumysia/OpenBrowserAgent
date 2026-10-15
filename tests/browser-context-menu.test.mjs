@@ -88,9 +88,9 @@ test("context menu", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
 
     await t.test("items, titles and contexts", async () => {
       await setMenu({ enabled: true, disabledItems: ["copyMarkdown"] });
-      await poll(async () => (await menuItems()).length === 7);
-      await setMenu({ enabled: true, disabledItems: [] });
       await poll(async () => (await menuItems()).length === 8);
+      await setMenu({ enabled: true, disabledItems: [] });
+      await poll(async () => (await menuItems()).length === 9);
       const items = await menuItems();
       assert.deepEqual(
         items.map(({ id, parentId, title, contexts, error }) => ({
@@ -105,6 +105,7 @@ test("context menu", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
           [MENU.ask, "Ask or act on this page", ["all", "tab"]],
           [MENU.summarizePage, "Summarize this page", ["all", "tab"]],
           [MENU.translatePage, "Translate this page", ["all", "tab"]],
+          [MENU.translateSubtitles, "Translate subtitles", ["video"]],
           [
             MENU.searchPage,
             "Search the web about this page",
@@ -158,7 +159,7 @@ test("context menu", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
       await setMenu({ enabled: false, disabledItems: [] });
       await poll(async () => (await menuItems()).length === 0);
       await setMenu({ enabled: true, disabledItems: [] });
-      await poll(async () => (await menuItems()).length === 8);
+      await poll(async () => (await menuItems()).length === 9);
     });
 
     let panel;

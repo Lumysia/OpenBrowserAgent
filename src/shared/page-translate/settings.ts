@@ -55,6 +55,9 @@ export type PageTranslateSettings = {
   // Also translate the page's menus, buttons, tabs, navigation, sidebars
   // and footer; off translates the main content only.
   translateMenus: boolean;
+  // A button on the corner of videos (on hover) that translates their
+  // subtitles.
+  videoButton: boolean;
 };
 
 // The browser's translator by default: where the browser has none, pages
@@ -65,6 +68,7 @@ export const DEFAULT_PAGE_TRANSLATE_SETTINGS: PageTranslateSettings = {
   targetLanguage: "",
   display: PAGE_TRANSLATE_DISPLAY.bilingual,
   translateMenus: false,
+  videoButton: true,
 };
 
 export function normalizePageTranslateSettings(
@@ -92,6 +96,10 @@ export function normalizePageTranslateSettings(
       typeof value?.translateMenus === "boolean"
         ? value.translateMenus
         : DEFAULT_PAGE_TRANSLATE_SETTINGS.translateMenus,
+    videoButton:
+      typeof value?.videoButton === "boolean"
+        ? value.videoButton
+        : DEFAULT_PAGE_TRANSLATE_SETTINGS.videoButton,
   };
 }
 

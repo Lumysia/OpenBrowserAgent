@@ -11,7 +11,7 @@ import { microsoftEngine } from "./microsoft";
 import { modelEngine } from "./model";
 import { EngineError, type TranslationEngine } from "./types";
 
-export { EngineError, type TranslationEngine } from "./types";
+export { EngineError, engineCacheKey, type TranslationEngine } from "./types";
 
 export async function resolveEngine(
   settings: PageTranslateSettings,

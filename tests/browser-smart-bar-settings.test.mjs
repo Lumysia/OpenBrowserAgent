@@ -16,6 +16,7 @@ import {
   startSmartBar,
 } from "./smart-bar-page.mjs";
 import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
+import { SMART_BAR_SCRIPT } from "../src/shared/smart-bar-protocol.ts";
 
 // When the bar shows: off by default, turned on in the options page, site
 // rules, trigger modes, the × menu and the hand-off to the side panel.
@@ -62,10 +63,14 @@ test("smart bar settings", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
 
     await t.test("off by default: no bar on selection", async () => {
       assert.equal(await barAfterSelection(session, page, "#text"), "none");
-      // Zero cost while off: no page script is registered at all.
+      // Zero cost while off: the bar's page script isn't registered.
       assert.deepEqual(
-        await options.call(() =>
-          chrome.scripting.getRegisteredContentScripts(),
+        await options.call(
+          async (script) =>
+            (await chrome.scripting.getRegisteredContentScripts()).filter(
+              (registered) => registered.js?.includes(script),
+            ),
+          SMART_BAR_SCRIPT.trigger,
         ),
         [],
       );

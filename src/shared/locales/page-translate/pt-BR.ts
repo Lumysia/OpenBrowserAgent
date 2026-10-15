@@ -90,4 +90,18 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
     "Não foi possível começar a traduzir esta página. Recarregue a página e tente novamente.",
   unavailablePage:
     "Não é possível traduzir esta página: o navegador não permite que extensões a alterem.",
+  subtitles: {
+    menu: "Traduzir legendas",
+    menuItemLabel: "Traduzir legendas / Ocultá-las (em vídeos)",
+    start: "Traduzir legendas",
+    stop: "Ocultar legendas traduzidas",
+    noCaptions:
+      "Ainda não foram encontradas legendas para este vídeo. Ative as legendas no player — elas são traduzidas assim que aparecem.",
+    liveOnly:
+      "As legendas na tela são traduzidas conforme aparecem. Para traduzir com antecedência, desative e ative de novo as legendas do player.",
+    noVideo: "Não há nenhum vídeo para traduzir legendas aqui.",
+    videoButton: "Botão de legendas nos vídeos",
+    videoButtonDescription:
+      "Mostra um botão no canto de um vídeo quando você aponta para ele, para traduzir as legendas. “Traduzir esta página” também traduz as legendas dos vídeos da página.",
+  },
 };
