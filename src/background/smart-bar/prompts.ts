@@ -2,6 +2,7 @@ import {
   isSmartBarTranslationFallback,
   SMART_BAR_ACTION,
   SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE,
+  smartBarTranslationLanguage,
   type SmartBarGenerateAction,
 } from "../../shared/smart-bar";
 import {
@@ -10,6 +11,7 @@ import {
 } from "../../shared/smart-bar-dictionary";
 import type { SmartBarRunRequest } from "../../shared/smart-bar-protocol";
 import { languageName } from "../../shared/language-name";
+import { normalizeLanguageTag } from "../../shared/language-tags";
 
 // The page script caps context too; this bounds what any message can add.
 const CONTEXT_LIMIT = 600;
@@ -20,26 +22,22 @@ const SYSTEM =
 // Replies use the extension's language setting, which defaults to the
 // browser's UI language.
 export function smartBarPrompt(
-  action: SmartBarGenerateAction,
-  text: string,
+  { action, text, context, sourceLanguage }: Omit<SmartBarRunRequest, "type">,
   replyLanguage: string,
-  context?: SmartBarRunRequest["context"],
 ) {
   const language = languageName(replyLanguage);
-  const fallback = isSmartBarTranslationFallback(replyLanguage)
-    ? undefined
-    : languageName(SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE);
+  const target = translationTarget(replyLanguage, sourceLanguage);
   const format = smartBarResultFormat(action, text);
   if (format === SMART_BAR_RESULT_FORMAT.dictionary)
     return {
       system: DICTIONARY_SYSTEM,
-      prompt: `${dictionaryInstructions(language, fallback)}${contextBlock(context, false)}\n\n<text>\n${text}\n</text>`,
+      prompt: `${dictionaryInstructions(target)}${contextBlock(context, false)}\n\n<text>\n${text}\n</text>`,
     };
   const instructions: Record<SmartBarGenerateAction, string> = {
     [SMART_BAR_ACTION.explain]: `Explain the text below in ${language} so that a non-expert understands it. Be brief: one short paragraph, or a few short points.`,
-    [SMART_BAR_ACTION.translate]: `Translate the text below into ${language}.${
-      fallback
-        ? ` If it is already in ${language}, translate it into ${fallback} instead.`
+    [SMART_BAR_ACTION.translate]: `Translate the text below into ${target.language}.${
+      target.fallback
+        ? ` If it is already in ${target.language}, translate it into ${target.fallback} instead.`
         : ""
     } Keep the meaning, tone and line breaks. Return only the translation.`,
     [SMART_BAR_ACTION.improve]:
@@ -53,12 +51,36 @@ export function smartBarPrompt(
   };
 }
 
+// The language to translate into. Fixed when the page knew the text's
+// language; otherwise the model picks between the reply language and the
+// fallback, which it often gets wrong.
+type TranslationTarget = { language: string; fallback?: string };
+
+function translationTarget(
+  replyLanguage: string,
+  sourceLanguage: string | undefined,
+): TranslationTarget {
+  const source = normalizeLanguageTag(sourceLanguage);
+  if (source)
+    return {
+      language: languageName(
+        smartBarTranslationLanguage(replyLanguage, source),
+      ),
+    };
+  return {
+    language: languageName(replyLanguage),
+    fallback: isSmartBarTranslationFallback(replyLanguage)
+      ? undefined
+      : languageName(SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE),
+  };
+}
+
 const DICTIONARY_SYSTEM =
   "You are a dictionary inside a browser toolbar. Reply with one JSON object only: no code fence, no text before or after it, no Markdown inside it.";
 
 // Keys in the order the card shows them, so a streaming answer fills the
 // card from the top. Read by readDictionaryAnswer.
-function dictionaryInstructions(language: string, fallback?: string) {
+function dictionaryInstructions({ language, fallback }: TranslationTarget) {
   const entry = fallback
     ? `${language}, unless the selected text itself is written in ${language}: then ${fallback}`
     : language;
@@ -66,7 +88,11 @@ function dictionaryInstructions(language: string, fallback?: string) {
     `The text below is a word or short phrase (a term, expression, idiom or name) selected on a web page. Write a short dictionary entry for it.`,
     `The entry language is ${entry}. Write every explanation (part of speech, meanings, example translations, translation) in the entry language, whatever language the page or the selected text is in. Only "headword", "examples[].text", "synonyms" and "collocations" stay in the selected text's own language.`,
     "Reply with a JSON object with these keys, in this order:",
-    '- "entryLanguage": the entry language you chose, in English (such as "Chinese (China)" or "English").',
+    ...(fallback
+      ? [
+          '- "entryLanguage": the entry language you chose, in English (such as "Chinese (China)" or "English").',
+        ]
+      : []),
     '- "headword": the text in its dictionary form, in the original language and script (the base form if it is inflected, e.g. "ran" becomes "run"; names and fixed expressions stay as written).',
     '- "pronunciation": the headword\'s pronunciation in the usual notation for its language: IPA between slashes for English and other Latin-script languages, pinyin with tone marks for Chinese, the kana reading for Japanese words written with kanji, romanization for Korean. Leave it out for names that are not well known, for Japanese written in kana only, and whenever you are not sure.',
     '- "partOfSpeech": the part of speech, short, in the entry language (such as noun, verb, adjective, phrase, idiom). Leave it out for names.',

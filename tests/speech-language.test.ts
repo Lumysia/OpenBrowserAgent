@@ -11,6 +11,7 @@ import {
   pickDetection,
   scriptRuns,
   speechPieces,
+  textLanguage,
   type DetectLanguage,
 } from "../src/shared/speech-language";
 import {
@@ -275,6 +276,32 @@ test("translations are read in their target language", async () => {
   assert.deepEqual(await readSourcePieces(input({})), [
     { text: "今天天气很好，我们去公园散步吧。", lang: "zh" },
   ]);
+});
+
+test("a text's language is known only from evidence, never guessed", async () => {
+  // The script tells it.
+  assert.equal(await textLanguage("时间", undefined), "zh");
+  // Latin script: the detector, else a page language written in Latin.
+  assert.equal(
+    await textLanguage("Bonjour", "en", detector({ Bonjour: "fr" })),
+    "fr",
+  );
+  assert.equal(await textLanguage("time", "en-GB", detector({})), "en-GB");
+  // Nothing but the UI language or a non-Latin page language: unknown.
+  assert.equal(await textLanguage("time", undefined, detector({})), undefined);
+  assert.equal(await textLanguage("time", "zh-CN"), undefined);
+});
+
+test("a translation is read in the language the run asked for", async () => {
+  // The run sent "en": the entry is Chinese, though the page says Chinese.
+  const pieces = await readResultPieces(
+    input({
+      source: "time",
+      output: { write: "时间" },
+      languages: { source: "en", page: "zh-CN", reply: "zh-CN", ui: "zh-CN" },
+    }),
+  );
+  assert.deepEqual(pieces, [{ text: "时间", lang: "zh-CN" }]);
 });
 
 test("edits keep the source language as hint", async () => {

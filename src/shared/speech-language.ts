@@ -12,6 +12,9 @@ const SPEECH_CHUNK_CHARS = 200;
 // A detector result below this is a guess: the hints know better.
 const SPEECH_DETECTION_CONFIDENCE = 0.6;
 
+// Enough of a text to tell its language.
+export const LANGUAGE_SAMPLE_CHARS = 1000;
+
 // Read for Latin-script text when no hint is written in Latin script.
 const LATIN_FALLBACK = "en";
 
@@ -302,18 +305,23 @@ export async function speechPieces(
       for (const run of scriptRuns(chunk)) {
         const text = run.text.trim();
         if (text)
-          pieces.push({ text, lang: await runLanguage(run, hints, detect) });
+          pieces.push({
+            text,
+            lang: await runLanguage(run, hints, detect, LATIN_FALLBACK),
+          });
       }
   }
   return pieces;
 }
 
-async function runLanguage(
+// `fallback` is read when nothing tells the language of Latin-script text.
+async function runLanguage<Fallback extends string | undefined>(
   { text, script }: ScriptRun,
   hints: readonly string[],
   detect: DetectLanguage | undefined,
-) {
-  if (!script) return hints[0] ?? LATIN_FALLBACK;
+  fallback: Fallback,
+): Promise<string | Fallback> {
+  if (!script) return hints[0] ?? fallback;
   if (script !== "latin") {
     const { languages, alsoReadAs = [] } = SCRIPTS[script] as ScriptInfo;
     return (
@@ -331,9 +339,7 @@ async function runLanguage(
         (hint) => primaryLanguage(hint) === primaryLanguage(detected),
       ) ?? detected
     );
-  return (
-    hints.find((hint) => languageScript(hint) === "latin") ?? LATIN_FALLBACK
-  );
+  return hints.find((hint) => languageScript(hint) === "latin") ?? fallback;
 }
 
 // The detector's best guess if it is sure enough and fits Latin script.
@@ -352,9 +358,33 @@ export function pickDetection(
   return tag;
 }
 
+// The language a text is mostly in, known from evidence only: its script,
+// the detector, or the page's language when that is written in the text's
+// script. Undefined when most of it could only be guessed.
+export async function textLanguage(
+  text: string,
+  pageLanguage: string | undefined,
+  detect?: DetectLanguage,
+) {
+  const page = normalizeLanguageTag(pageLanguage);
+  const hints = page ? [page] : [];
+  const pieces: { text: string; lang: string | undefined }[] = [];
+  for (const run of scriptRuns(text.slice(0, LANGUAGE_SAMPLE_CHARS))) {
+    const trimmed = run.text.trim();
+    if (trimmed)
+      pieces.push({
+        text: trimmed,
+        lang: await runLanguage(run, hints, detect, undefined),
+      });
+  }
+  return dominantLanguage(pieces);
+}
+
 // The language most of the pieces are in.
-export function dominantLanguage(pieces: readonly SpeechPiece[]) {
-  const totals = new Map<string, number>();
+export function dominantLanguage<Lang extends string | undefined>(
+  pieces: readonly { text: string; lang: Lang }[],
+) {
+  const totals = new Map<Lang, number>();
   for (const { text, lang } of pieces)
     totals.set(lang, (totals.get(lang) ?? 0) + text.length);
   return [...totals].sort((a, b) => b[1] - a[1])[0]?.[0];

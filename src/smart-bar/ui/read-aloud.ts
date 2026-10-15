@@ -9,20 +9,20 @@ import {
 import { dictionarySpeech } from "../../shared/smart-bar-dictionary";
 import {
   dominantLanguage,
+  LANGUAGE_SAMPLE_CHARS,
   speechPieces,
   type DetectLanguage,
   type SpeechPiece,
 } from "../../shared/speech-language";
 import type { SmartBarOutput } from "./result-output";
 
-// Enough of the selection to tell its language.
-const SOURCE_SAMPLE_CHARS = 1000;
-
 export type ReadAloudInput = {
   action: SmartBarGenerateAction;
   source: string;
   output: Pick<SmartBarOutput, "entry" | "write">;
   languages: {
+    // The selected text's language as sent with the run, if it was known.
+    source?: string;
     // The selection's nearest lang attribute.
     page?: string;
     // What results are written in.
@@ -36,7 +36,7 @@ export function readSourcePieces(
   detect?: DetectLanguage,
 ): Promise<SpeechPiece[]> {
   return speechPieces(
-    [{ text: source, hints: [languages.page, languages.ui] }],
+    [{ text: source, hints: [languages.source, languages.page, languages.ui] }],
     detect,
   );
 }
@@ -71,15 +71,18 @@ export async function readResultPieces(
   );
 }
 
+// What the run sent, so a translation is read in the language it was asked
+// for; else the best guess.
 async function sourceLanguage(
   { source, languages }: ReadAloudInput,
   detect?: DetectLanguage,
 ) {
+  if (languages.source) return languages.source;
   return dominantLanguage(
     await speechPieces(
       [
         {
-          text: source.slice(0, SOURCE_SAMPLE_CHARS),
+          text: source.slice(0, LANGUAGE_SAMPLE_CHARS),
           hints: [languages.page, languages.ui],
         },
       ],

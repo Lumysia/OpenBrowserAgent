@@ -287,7 +287,7 @@ async function runAction(
   let thinking = false;
   await requestQuickText(
     model,
-    smartBarPrompt(request.action, request.text, language, request.context),
+    smartBarPrompt(request, language),
     QUICK_TASK_PRIORITY.interactive,
     {
       signal,
