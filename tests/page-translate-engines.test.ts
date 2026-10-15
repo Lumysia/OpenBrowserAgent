@@ -438,6 +438,56 @@ test("built-in translator: detects the source, one translator per pair", async (
   }
 });
 
+test("built-in translator: a mixed batch keeps the texts already in the target language", async () => {
+  const translated: string[] = [];
+  const scope = globalThis as Record<string, unknown>;
+  // Chinese texts, English texts, and a short one it isn't sure of.
+  scope.LanguageDetector = {
+    availability: async () => "available",
+    create: async () => ({
+      detect: async (text: string) =>
+        text === "OK"
+          ? [{ detectedLanguage: "en", confidence: 0.3 }]
+          : /[\u4e00-\u9fff]/.test(text) && !/[a-z]{5}/.test(text)
+            ? [{ detectedLanguage: "zh", confidence: 0.95 }]
+            : [{ detectedLanguage: "en", confidence: 0.9 }],
+    }),
+  };
+  scope.Translator = {
+    availability: async () => "available",
+    create: async ({ sourceLanguage }: { sourceLanguage: string }) => ({
+      translate: async (text: string) => {
+        translated.push(text);
+        return `[${sourceLanguage}>zh] ${text}`;
+      },
+    }),
+  };
+  try {
+    const results = new Map<number, string>();
+    await browserEngine().translate({
+      items: [
+        { id: 1, text: "今天天气很好" },
+        { id: 2, text: "The weather is lovely today" },
+        { id: 3, text: "我们明天去公园散步吧" },
+        { id: 4, text: "OK" },
+      ],
+      target: "zh-CN",
+      pageLanguage: "zh",
+      signal: new AbortController().signal,
+      onItem: (id, text) => results.set(id, text),
+    });
+    assert.equal(results.get(1), "今天天气很好");
+    assert.equal(results.get(3), "我们明天去公园散步吧");
+    assert.equal(results.get(2), "[en>zh] The weather is lovely today");
+    // Unsure on its own: the batch as a whole (English here) decides.
+    assert.equal(results.get(4), "[en>zh] OK");
+    assert.deepEqual(translated, ["The weather is lovely today", "OK"]);
+  } finally {
+    delete scope.Translator;
+    delete scope.LanguageDetector;
+  }
+});
+
 test("built-in translator: a text it refuses doesn't take the batch's others with it", async () => {
   const scope = globalThis as Record<string, unknown>;
   // Refuses texts by its own rules: filtered output, then an unknown error.

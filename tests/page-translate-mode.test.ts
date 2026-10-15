@@ -84,6 +84,22 @@ test("a tab the browser swaps in keeps the mode", async () => {
   assert.equal(await mode.isOn(5), true);
 });
 
+test("a tab opened from a translated page starts translated", async () => {
+  const { mode, translated, navigate } = setup();
+  await mode.set(1, true);
+  await mode.opened(7, 1);
+  await navigate(7);
+  assert.deepEqual(translated, [7]);
+  // From there on it is its own tab: further tabs it opens follow it too.
+  await mode.opened(8, 7);
+  assert.equal(await mode.isOn(8), true);
+  // A tab opened from an untranslated page does not.
+  await mode.opened(9, 2);
+  await navigate(9);
+  assert.deepEqual(translated, [7]);
+  assert.equal(await mode.isOn(9), false);
+});
+
 test("a restarted service worker keeps the mode", async () => {
   const first = setup();
   await first.mode.set(1, true);

@@ -42,7 +42,9 @@ const SERVICE = "Built-in translator";
 
 // One translator per language pair; each translates one text at a time.
 const translators = new Map<string, Promise<TranslatorInstance>>();
-let detector: ReturnType<DetectorApi["create"]> | undefined;
+// The detector of the LanguageDetector API it was made from.
+let detector:
+  { api: DetectorApi; instance: ReturnType<DetectorApi["create"]> } | undefined;
 
 export function browserEngine(): TranslationEngine {
   return {
@@ -63,41 +65,71 @@ async function translateInBrowser(request: EngineRequest) {
       PAGE_TRANSLATE_ERROR.unavailable,
       `${SERVICE}: no ${request.target}`,
     );
-  const sample = request.items
-    .map((item) => stripPlaceholders(item.text))
-    .join("\n")
-    .slice(0, 2000);
-  const source = (await detect(sample)) || request.pageLanguage;
-  if (!source)
-    throw new EngineError(
-      PAGE_TRANSLATE_ERROR.unavailable,
-      `${SERVICE}: unknown source language`,
-    );
-  if (sameLanguage(source, request.target)) {
-    for (const item of request.items) request.onItem(item.id, item.text);
-    return;
-  }
-  const instance = await translatorFor(translator, source, target);
+  const groups = await groupBySource(request);
   // The translator refuses some texts one by one (filtered output, too
   // long, an unknown failure): the batch's other items still go through.
   // A batch it translated none of fails with the first refusal.
   let refusal: unknown;
   let translated = false;
-  for (const item of request.items) {
+  for (const [source, items] of groups) {
     if (request.signal.aborted) return;
-    try {
-      const text = await instance.translate(item.text, {
-        signal: request.signal,
-      });
+    // Already in the target language: kept as it is. The translator would
+    // otherwise treat it as the source language and garble it.
+    if (sameLanguage(source, request.target)) {
+      for (const item of items) request.onItem(item.id, item.text);
       translated = true;
-      request.onItem(item.id, text.trim());
-    } catch (error) {
+      continue;
+    }
+    const instance = await translatorFor(translator, source, target);
+    for (const item of items) {
       if (request.signal.aborted) return;
-      if (!isItemRefusal(error)) throw error;
-      refusal ??= error;
+      try {
+        const text = await instance.translate(item.text, {
+          signal: request.signal,
+        });
+        translated = true;
+        request.onItem(item.id, text.trim());
+      } catch (error) {
+        if (request.signal.aborted) return;
+        if (!isItemRefusal(error)) throw error;
+        refusal ??= error;
+      }
     }
   }
   if (refusal && !translated) throw refusal;
+}
+
+// Below this, the detector's guess for one text is not taken (short texts
+// such as buttons and names are easily misread).
+const MIN_ITEM_CONFIDENCE = 0.6;
+
+// The batch's items by source language. Pages mix languages (posts in
+// several languages, an English name in a Chinese line), so each text is
+// detected on its own; one the detector isn't sure of takes the language
+// of the batch as a whole, then the page's declared language.
+async function groupBySource(request: EngineRequest) {
+  const texts = request.items.map((item) => stripPlaceholders(item.text));
+  const own = await Promise.all(texts.map((text) => detect(text)));
+  let fallback: string | undefined;
+  if (own.some((guess) => !guess || guess.confidence < MIN_ITEM_CONFIDENCE))
+    fallback =
+      (await detect(texts.join("\n").slice(0, 2000)))?.language ||
+      request.pageLanguage;
+  const groups = new Map<string, EngineRequest["items"]>();
+  request.items.forEach((item, index) => {
+    const guess = own[index];
+    const source =
+      guess && guess.confidence >= MIN_ITEM_CONFIDENCE
+        ? guess.language
+        : fallback;
+    if (!source)
+      throw new EngineError(
+        PAGE_TRANSLATE_ERROR.unavailable,
+        `${SERVICE}: unknown source language`,
+      );
+    groups.set(source, [...(groups.get(source) ?? []), item]);
+  });
+  return groups;
 }
 
 // Translator errors about the text it was given, not about the translator
@@ -117,13 +149,17 @@ async function detect(text: string) {
   const languageDetector = detectorApi();
   if (!languageDetector) return undefined;
   try {
-    detector ??= languageDetector.availability().then((availability) => {
-      if (availability === "unavailable") throw new Error(availability);
-      return languageDetector.create();
-    });
-    const [best] = await (await detector).detect(text);
+    if (detector?.api !== languageDetector)
+      detector = {
+        api: languageDetector,
+        instance: languageDetector.availability().then((availability) => {
+          if (availability === "unavailable") throw new Error(availability);
+          return languageDetector.create();
+        }),
+      };
+    const [best] = await (await detector.instance).detect(text);
     return best?.detectedLanguage && best.detectedLanguage !== "und"
-      ? best.detectedLanguage
+      ? { language: best.detectedLanguage, confidence: best.confidence ?? 0 }
       : undefined;
   } catch {
     detector = undefined;

@@ -3,8 +3,9 @@ import { getBrowserApi } from "../../shared/browser-api";
 // A tab's translate mode: once the user translates a page, every later page
 // loaded in that tab is translated too (links, typed addresses, redirects,
 // back/forward, same-document navigations), whatever site it is on. A reload
-// of the tab, "Show original" or closing the tab ends it; a new tab starts
-// without it. Kept in session storage, so a restarted service worker still
+// of the tab, "Show original" or closing the tab ends it. A tab opened from
+// a page in that mode (a link opened in a new tab, `window.open`) starts in
+// it too; other new tabs start without it. Kept in session storage, so a restarted service worker still
 // knows.
 const SESSION_KEY = "page-translate-mode-tabs";
 
@@ -79,6 +80,12 @@ export function createTranslateMode({ area, translate }: TranslateModeOptions) {
         if (frameId === 0 && current.has(tabId))
           void translate(tabId).catch(() => undefined);
       }),
+    // A tab opened from `sourceTabId`'s page takes its mode. Its page is
+    // translated when it is ready, like any later page.
+    opened: (tabId: number, sourceTabId: number) =>
+      run((current) =>
+        current.has(sourceTabId) ? write(current, tabId, true) : undefined,
+      ),
     removed: (tabId: number) => run((current) => write(current, tabId, false)),
     // The browser put another tab in place of `removedId`.
     replaced: (addedId: number, removedId: number) =>
@@ -106,6 +113,14 @@ export function watchTranslateMode(
   );
   const ready = (details: TabNavigation) =>
     void mode.ready(details.tabId, details.frameId).catch(() => undefined);
+  // Where the browser says which page opened a tab; tabs.onCreated's
+  // opener is the active tab, not always the page that opened it.
+  navigation?.onCreatedNavigationTarget.addListener(
+    (details) =>
+      void mode
+        .opened(details.tabId, details.sourceTabId)
+        .catch(() => undefined),
+  );
   navigation?.onDOMContentLoaded.addListener(ready);
   navigation?.onHistoryStateUpdated.addListener(ready);
   navigation?.onReferenceFragmentUpdated.addListener(ready);
