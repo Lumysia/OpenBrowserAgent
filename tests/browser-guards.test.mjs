@@ -55,6 +55,11 @@ test(
       await poll(() =>
         panel.call(() => !!document.querySelector(".composer-box textarea")),
       );
+      // With sync off, the header has no sync button.
+      assert.equal(
+        await panel.call(() => !!document.querySelector(".cloud-sync-button")),
+        false,
+      );
       // "New chat" lives only in the header.
       assert.equal(
         await panel.call(

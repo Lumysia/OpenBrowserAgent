@@ -58,6 +58,30 @@ test(
       assert.deepEqual(await texts(page, '[role="tab"][data-state="active"]'), [
         t.smartBar.settingsTitle,
       ]);
+      // Only the site list the smart bar's mode uses.
+      const siteLists = () =>
+        page.call(
+          (names) =>
+            [...document.querySelectorAll("label, span, strong")]
+              .map((element) => element.textContent.trim())
+              .filter((text) => names.includes(text)),
+          [t.smartBar.blockedSites, t.smartBar.allowedSites],
+        );
+      await poll(async () => (await siteLists()).length > 0);
+      assert.deepEqual(
+        [...new Set(await siteLists())],
+        [t.smartBar.blockedSites],
+      );
+      await clickElement(page, '[role="radio"]', {
+        text: t.smartBar.siteModeAllowList,
+      });
+      await poll(async () =>
+        (await siteLists()).includes(t.smartBar.allowedSites),
+      );
+      assert.equal(
+        (await siteLists()).includes(t.smartBar.blockedSites),
+        false,
+      );
       await clickElement(page, '[role="tab"]', { text: t.settings.rightClick });
       await poll(
         async () =>
