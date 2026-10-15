@@ -212,6 +212,7 @@ export const enUS = {
     capturedTabImage: "Captured tab screenshot",
     mermaidPreview: "Mermaid diagram preview",
     mermaidRenderFailed: "Couldn’t draw this diagram, so its source is shown.",
+    tabFallbackTitle: "Tab {id}",
     downloadMermaidSvg: "Download SVG",
     downloadMermaidPng: "Download PNG",
     loadImage: "Load image",

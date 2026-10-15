@@ -320,12 +320,12 @@ export function SidepanelView({
             onAttachFiles={onAttachFiles}
           />
           <HolidayBurst />
-          <div className="skill-create-row">
+          <div className="new-chat-row">
             {typingPresence.mounted && (
               <TypingIndicator t={t} removing={typingPresence.removing} />
             )}
             <Button
-              className="skill-create"
+              className="new-chat-button"
               variant="secondary"
               size="sm"
               disabled={!!editingMessageId}

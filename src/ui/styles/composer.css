@@ -183,7 +183,7 @@
 
 /* The floating new chat button and the typing indicator share a row above
    the composer. */
-.skill-create-row {
+.new-chat-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -192,10 +192,10 @@
   margin-bottom: var(--space-2);
   pointer-events: none;
 }
-.skill-create-row .typing-indicator {
+.new-chat-row .typing-indicator {
   min-width: 0;
 }
-.skill-create {
+.new-chat-button {
   height: 42px;
   flex: 0 0 auto;
   margin-left: auto;
@@ -210,7 +210,7 @@
   box-shadow: var(--inner-highlight), var(--elevation-1);
   pointer-events: auto;
 }
-.skill-create:hover:not(:disabled) {
+.new-chat-button:hover:not(:disabled) {
   background:
     linear-gradient(180deg, var(--highlight), transparent 60%),
     color-mix(in oklab, var(--accent-hover) 78%, var(--card));

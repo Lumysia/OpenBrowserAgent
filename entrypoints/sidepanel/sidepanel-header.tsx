@@ -18,6 +18,7 @@ import { openOrFocusOptions } from "../../src/shared/tab-navigation";
 import type { ChatMeta } from "../../src/shared/types";
 import { chatDisplayTitle } from "../../src/ui/agent-display";
 import { Button, IconTooltip } from "../../src/ui/components";
+import { cn } from "../../src/ui/utils";
 
 export function SidepanelHeader({
   t,
@@ -74,7 +75,7 @@ export function SidepanelHeader({
             <Button
               variant="ghost"
               size="icon"
-              className={`cloud-sync-button ${cloudStatus.className}`}
+              className={cn("cloud-sync-button", cloudStatus.className)}
               aria-label={cloudStatus.label}
               onClick={() =>
                 openOrFocusOptions(OPTIONS_HASH.sync).catch(console.warn)

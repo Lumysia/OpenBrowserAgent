@@ -3,6 +3,7 @@ import { formatCount, type Messages } from "../../src/shared/i18n";
 import { Button, IconTooltip, UserText } from "../../src/ui/components";
 import type { QueuedMessage } from "./use-queued-messages";
 import { useDeferredRemove } from "./use-deferred-remove";
+import { cn } from "../../src/ui/utils";
 
 export function QueuedMessages({
   t,
@@ -51,7 +52,7 @@ function QueuedMessageRow({
 }) {
   const { removing, remove } = useDeferredRemove(onDelete);
   return (
-    <div className={`queued-message ${removing ? "is-removing" : ""}`}>
+    <div className={cn("queued-message", removing && "is-removing")}>
       <UserText className="queued-message-text" text={message.content} />
       <div className="queued-message-actions">
         <IconTooltip label={t.common.edit}>

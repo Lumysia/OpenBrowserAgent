@@ -191,6 +191,7 @@ export const zhTW: LocaleMessages = {
     capturedTabImage: "分頁截圖",
     mermaidPreview: "Mermaid 圖表預覽",
     mermaidRenderFailed: "無法繪製此圖表，下方顯示其原始碼。",
+    tabFallbackTitle: "分頁 {id}",
     downloadMermaidSvg: "下載 SVG",
     downloadMermaidPng: "下載 PNG",
     loadImage: "載入圖片",

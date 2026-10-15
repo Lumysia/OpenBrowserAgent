@@ -5,6 +5,7 @@ import type { Chat } from "../../src/shared/types";
 import { Button, IconTooltip } from "../../src/ui/components";
 import { hasUnfinishedAssistantRun, type StoppedRuns } from "./run-state";
 import { useDeferredPresence } from "./use-deferred-remove";
+import { cn } from "../../src/ui/utils";
 
 const SCROLL_EDGE_THRESHOLD_PX = 24;
 const JUMP_GAP_PX = 12;
@@ -94,7 +95,10 @@ export function MessageJumpControls({
 
   return (
     <div
-      className={`message-jump-controls${presence.removing ? " is-removing" : ""}`}
+      className={cn(
+        "message-jump-controls",
+        presence.removing && "is-removing",
+      )}
     >
       <IconTooltip label={t.sidepanel.previousUserMessage} side="left">
         <Button

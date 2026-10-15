@@ -29,6 +29,7 @@ import {
   sortChatsNewestFirst,
 } from "./format";
 import type { SummariesUpdater } from "./use-chats";
+import { cn } from "../../src/ui/utils";
 
 const HISTORY_REMOVE_DELAY_MS = 190;
 
@@ -305,7 +306,13 @@ function HistoryItem({
   const title = chatDisplayTitle(chat, t);
   return (
     <div
-      className={`history-item ${child ? "child" : ""} ${chat.id === activeChatId ? "active" : ""} ${unreadCompletedChatIds[chat.id] ? "unread-complete" : ""} ${removing ? "removing" : ""}`}
+      className={cn(
+        "history-item",
+        child && "child",
+        chat.id === activeChatId && "active",
+        unreadCompletedChatIds[chat.id] && "unread-complete",
+        removing && "removing",
+      )}
     >
       {editingChatId === chat.id ? (
         <div className="history-select history-title-editor">
@@ -362,7 +369,7 @@ function HistoryItem({
           <Button
             variant="ghost"
             size="icon"
-            className={`history-item-action ${chat.pinnedAt ? "active" : ""}`}
+            className={cn("history-item-action", chat.pinnedAt && "active")}
             aria-label={
               chat.pinnedAt ? t.sidepanel.unpinChat : t.sidepanel.pinChat
             }

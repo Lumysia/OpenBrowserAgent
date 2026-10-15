@@ -191,6 +191,7 @@ export const zhCN: LocaleMessages = {
     capturedTabImage: "标签页截图",
     mermaidPreview: "Mermaid 图表预览",
     mermaidRenderFailed: "无法绘制此图表，下面显示其源代码。",
+    tabFallbackTitle: "标签页 {id}",
     downloadMermaidSvg: "下载 SVG",
     downloadMermaidPng: "下载 PNG",
     loadImage: "加载图片",

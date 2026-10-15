@@ -15,6 +15,7 @@ import {
 } from "../../src/ui/components";
 import { AgentSelector, ModelMenu, selectedModelLabel } from "./composer-menus";
 import { COMPOSER_MENU, type ComposerMenu } from "./sidepanel-menu-state";
+import { cn } from "../../src/ui/utils";
 
 export function ComposerSelectors({
   t,
@@ -172,7 +173,7 @@ function ReasoningEffortMenu({
           <Button
             key={option}
             variant="ghost"
-            className={`action-list-item ${selected ? "active" : ""}`}
+            className={cn("action-list-item", selected && "active")}
             onClick={() => onSelect(option)}
           >
             <ReasoningEffortIcon effort={option} />

@@ -16,6 +16,7 @@ import {
 } from "../../src/ui/components";
 import { describeSyncStatus, formatTime } from "../../src/ui/sync-status";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { cn } from "../../src/ui/utils";
 
 // Last sync, pause with its reason, pending changes, server warnings and
 // deletions waiting for the user's answer.
@@ -53,7 +54,7 @@ export function SyncStatusCard({ t }: { t: Messages }) {
           <div className="sync-status-summary">
             <CardTitle className="settings-section-title">
               <Activity size={18} /> {t.sync.statusTitle}
-              <span className={`sync-status-dot ${tone}`} aria-hidden />
+              <span className={cn("sync-status-dot", tone)} aria-hidden />
             </CardTitle>
             <CardDescription>{label}</CardDescription>
             {details.map((detail) => (

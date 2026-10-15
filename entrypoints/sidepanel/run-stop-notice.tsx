@@ -2,6 +2,7 @@ import { CircleAlert, CircleStop, Play, Scissors } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
 import { RUN_STOP_REASON, type replyCutOff } from "../../src/shared/run-stop";
 import { Button, Feedback } from "../../src/ui/components";
+import { cn } from "../../src/ui/utils";
 
 const ICONS = {
   [RUN_STOP_REASON.length]: Scissors,
@@ -29,7 +30,7 @@ export function RunStopNotice({
       : labels.aborted;
   const Icon = ICONS[cut.reason];
   return (
-    <div className={`run-stop-notice${error ? " error" : ""}`}>
+    <div className={cn("run-stop-notice", error && "error")}>
       <Icon aria-hidden />
       <Feedback error={error} className="run-stop-notice-text">
         {text}

@@ -210,6 +210,7 @@ export const esES: LocaleMessages = {
     generatedImage: "Imagen generada",
     capturedTabImage: "Captura de pantalla de la pestaña",
     mermaidPreview: "Vista previa del diagrama Mermaid",
+    tabFallbackTitle: "Pestaña {id}",
     mermaidRenderFailed:
       "No se pudo dibujar este diagrama; se muestra su código fuente.",
     downloadMermaidSvg: "Descargar SVG",

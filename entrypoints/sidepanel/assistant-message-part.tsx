@@ -25,6 +25,7 @@ import { MarkdownContent } from "./markdown-content";
 import { MessageRunInfo } from "./message-run-info";
 import { ToolPart } from "./tool-part";
 import { useThrottledText } from "./use-throttled-text";
+import { cn } from "../../src/ui/utils";
 
 export const NO_SOURCES: ChatSource[] = [];
 
@@ -33,7 +34,11 @@ function AssistantSummaryCard({ t, part }: { t: Messages; part: ChatPart }) {
   const failed = !!part.error;
   return (
     <div
-      className={`tool-card ${failed ? "error" : "done"} context-summary-card`}
+      className={cn(
+        "tool-card",
+        failed ? "error" : "done",
+        "context-summary-card",
+      )}
     >
       <div className="tool-title">
         <span className="tool-icon">
@@ -157,7 +162,10 @@ function AssistantReasoning({ t, text }: { t: Messages; text: string }) {
         </AccordionTrigger>
         <AccordionContent>
           <div
-            className={`assistant-reasoning-body ui-selectable${streaming ? " streaming" : ""}`}
+            className={cn(
+              "assistant-reasoning-body ui-selectable",
+              streaming && "streaming",
+            )}
           >
             {displayText}
           </div>
@@ -212,7 +220,7 @@ export function AssistantText({
   }
 
   return (
-    <div className={`assistant-text${streaming ? " streaming" : ""}`}>
+    <div className={cn("assistant-text", streaming && "streaming")}>
       <MarkdownContent
         t={t}
         text={displayText}
@@ -228,7 +236,7 @@ export function AssistantText({
               <Button
                 variant="ghost"
                 size="icon"
-                className={`copy-message${copied ? " copied" : ""}`}
+                className={cn("copy-message", copied && "copied")}
                 aria-label={copied ? t.common.copied : t.common.copy}
                 onClick={copyText}
               >
