@@ -386,6 +386,18 @@ export const enUS = {
     localExecutionBridgeKey: "Shell config ID",
     localExecutionBridgeDefaultCwd: "Default working directory",
     localExecutionBridgeTimeoutMs: "Default timeout (ms)",
+    localExecutionBridgeSetup: "Set up on this computer",
+    localExecutionBridgeSetupDescription:
+      "Run this command in a terminal on this computer (it needs Node.js). It installs the bridge for this extension and prints its settings.",
+    localExecutionBridgeBrowser: "Browser",
+    localExecutionBridgeInstallerOutput: "Installer output",
+    localExecutionBridgeInstallerOutputPlaceholder:
+      "Paste everything the installer printed",
+    localExecutionBridgeInstallerOutputInvalid:
+      "This isn't the installer's output: it needs the hostName and secret the installer prints.",
+    localExecutionBridgeInstallerHint:
+      "The bridge is added, or updated if you ran the installer again, and tested. You can also ask the agent to set it up.",
+    localExecutionBridgeAddFromOutput: "Add and test",
     localExecutionBridgeTest: "Test bridge",
     localExecutionBridgeTesting: "Testing…",
     localExecutionBridgeTestSuccess: "Bridge responded successfully.",
@@ -436,7 +448,7 @@ export const enUS = {
     resetBuiltins: "Reset built-ins",
     mcpPresets: "Recommended servers",
     mcpPresetsDescription:
-      "Hosted search servers that work without an API key. Each sends your searches to its own service. An added server stays off until you test it.",
+      "Hosted search servers that work without an API key. Each sends your searches to its own service. Adding one tests it and turns it on if the test passes.",
     mcpPresetAdd: "Add",
     selectModel: "Select model",
     selectModelDescription:

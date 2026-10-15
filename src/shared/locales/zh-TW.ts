@@ -338,6 +338,18 @@ export const zhTW: LocaleMessages = {
     localExecutionBridgeKey: "Shell 設定 ID",
     localExecutionBridgeDefaultCwd: "預設工作目錄",
     localExecutionBridgeTimeoutMs: "預設逾時（毫秒）",
+    localExecutionBridgeSetup: "在本機設定",
+    localExecutionBridgeSetupDescription:
+      "請在本機的終端機中執行此指令（需要 Node.js）。它會為此擴充功能安裝執行橋，並輸出其設定。",
+    localExecutionBridgeBrowser: "瀏覽器",
+    localExecutionBridgeInstallerOutput: "安裝程式輸出",
+    localExecutionBridgeInstallerOutputPlaceholder:
+      "貼上安裝程式輸出的全部內容",
+    localExecutionBridgeInstallerOutputInvalid:
+      "這不是安裝程式的輸出：需要安裝程式輸出的 hostName 和 secret。",
+    localExecutionBridgeInstallerHint:
+      "執行橋會被新增（如果你重新執行了安裝程式，則會更新）並測試。你也可以請智慧體幫你設定。",
+    localExecutionBridgeAddFromOutput: "新增並測試",
     localExecutionBridgeTest: "測試執行橋",
     localExecutionBridgeTesting: "正在測試…",
     localExecutionBridgeTestSuccess: "執行橋已成功回應。",
@@ -381,7 +393,7 @@ export const zhTW: LocaleMessages = {
     resetBuiltins: "重設內建項目",
     mcpPresets: "推薦伺服器",
     mcpPresetsDescription:
-      "不需 API Key 即可使用的託管搜尋伺服器。每個伺服器都會將你的搜尋傳送到它自己的服務。新增的伺服器在測試前保持關閉。",
+      "不需 API Key 即可使用的託管搜尋伺服器。每個伺服器都會將你的搜尋傳送到它自己的服務。新增時會自動測試，測試通過後即開啟。",
     mcpPresetAdd: "新增",
     selectModel: "選擇模型",
     selectModelDescription:

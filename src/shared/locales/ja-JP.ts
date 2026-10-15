@@ -391,6 +391,18 @@ export const jaJP: LocaleMessages = {
     localExecutionBridgeKey: "シェル設定 ID",
     localExecutionBridgeDefaultCwd: "既定の作業ディレクトリ",
     localExecutionBridgeTimeoutMs: "既定のタイムアウト (ms)",
+    localExecutionBridgeSetup: "このコンピューターで設定",
+    localExecutionBridgeSetupDescription:
+      "このコンピューターのターミナルでこのコマンドを実行してください（Node.js が必要です）。この拡張機能用のブリッジをインストールし、設定を表示します。",
+    localExecutionBridgeBrowser: "ブラウザー",
+    localExecutionBridgeInstallerOutput: "インストーラーの出力",
+    localExecutionBridgeInstallerOutputPlaceholder:
+      "インストーラーが表示した内容をすべて貼り付けてください",
+    localExecutionBridgeInstallerOutputInvalid:
+      "インストーラーの出力ではありません。インストーラーが表示する hostName と secret が必要です。",
+    localExecutionBridgeInstallerHint:
+      "ブリッジを追加（インストーラーを再実行した場合は更新）してテストします。エージェントに設定を頼むこともできます。",
+    localExecutionBridgeAddFromOutput: "追加してテスト",
     localExecutionBridgeTest: "ブリッジをテスト",
     localExecutionBridgeTesting: "テスト中…",
     localExecutionBridgeTestSuccess: "ブリッジが正常に応答しました。",
@@ -438,7 +450,7 @@ export const jaJP: LocaleMessages = {
     resetBuiltins: "組み込み項目をリセット",
     mcpPresets: "おすすめのサーバー",
     mcpPresetsDescription:
-      "API キーなしで使えるホスト型の検索サーバーです。検索内容はそれぞれのサービスに送信されます。追加したサーバーはテストするまでオフのままです。",
+      "API キーなしで使えるホスト型の検索サーバーです。検索内容はそれぞれのサービスに送信されます。追加するとテストし、成功すればオンになります。",
     mcpPresetAdd: "追加",
     selectModel: "モデルを選択",
     selectModelDescription:

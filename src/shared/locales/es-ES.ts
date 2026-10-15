@@ -422,6 +422,18 @@ export const esES: LocaleMessages = {
     localExecutionBridgeKey: "ID de configuración de shell",
     localExecutionBridgeDefaultCwd: "Directorio de trabajo predeterminado",
     localExecutionBridgeTimeoutMs: "Tiempo de espera predeterminado (ms)",
+    localExecutionBridgeSetup: "Configurar en este equipo",
+    localExecutionBridgeSetupDescription:
+      "Ejecuta este comando en un terminal de este equipo (necesita Node.js). Instala el puente para esta extensión y muestra su configuración.",
+    localExecutionBridgeBrowser: "Navegador",
+    localExecutionBridgeInstallerOutput: "Salida del instalador",
+    localExecutionBridgeInstallerOutputPlaceholder:
+      "Pega todo lo que mostró el instalador",
+    localExecutionBridgeInstallerOutputInvalid:
+      "Esto no es la salida del instalador: necesita el hostName y el secret que muestra el instalador.",
+    localExecutionBridgeInstallerHint:
+      "El puente se añade (o se actualiza, si volviste a ejecutar el instalador) y se prueba. También puedes pedir al agente que lo configure.",
+    localExecutionBridgeAddFromOutput: "Añadir y probar",
     localExecutionBridgeTest: "Probar puente",
     localExecutionBridgeTesting: "Probando…",
     localExecutionBridgeTestSuccess: "El puente ha respondido correctamente.",
@@ -473,7 +485,7 @@ export const esES: LocaleMessages = {
     resetBuiltins: "Restablecer integrados",
     mcpPresets: "Servidores recomendados",
     mcpPresetsDescription:
-      "Servidores de búsqueda alojados que funcionan sin clave API. Cada uno envía tus búsquedas a su propio servicio. Un servidor añadido permanece desactivado hasta que lo pruebes.",
+      "Servidores de búsqueda alojados que funcionan sin clave API. Cada uno envía tus búsquedas a su propio servicio. Al añadirlo, se prueba y se activa si la prueba sale bien.",
     mcpPresetAdd: "Añadir",
     selectModel: "Seleccionar modelo",
     selectModelDescription:

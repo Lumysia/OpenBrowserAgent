@@ -10,6 +10,8 @@ What changed in each release. The release workflow publishes the section for the
 - **Right-click the toolbar button** for the current page: translate it or show the original, pick the "Translate into" language, turn the translate button or the smart bar on or off for the site, and turn translated subtitles on or off when the page has a video. Clicking the button still opens the side panel.
 - **"This page" in the side panel**: a small line under the top bar with the same switches for the page you're on: translate it, the translate button and the smart bar on this site, and translated subtitles when the page has a video. Collapse it with "This page".
 - The right-click menu on selected text names it: "Ask about “…”", "Translate “…”" and "Search the web for “…”". "Translate “…”" shows the smart bar's translation (or dictionary entry) right there, also when the smart bar is turned off. "Summarize this page" and "Copy as Markdown" no longer show on a selection, and "Ask or act on this page" is now "Ask about this page".
+- Adding a recommended MCP server tests it and turns it on in one step; if the test fails it stays off with the reason shown.
+- Settings → Local execution bridges shows the installer command with this extension's ID already in it. Paste what the installer prints, and the bridge is added (or updated) and tested; no more copying the host name, shell config ID and secret by hand.
 - Live chat and bullet comments flying over a video are no longer translated as its subtitles. Subtitles that start by themselves now only use the subtitles a video or its player provides; for captions a player only draws on the video, start them from "Translate subtitles" in the video's right-click menu.
 
 ## 0.2.0-beta.11 - 2026-10-15
