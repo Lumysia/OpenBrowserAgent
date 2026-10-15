@@ -1,3 +1,4 @@
+import { longerText, mergePart } from "./chat-part-merge";
 import { readId } from "./read-ids";
 import { finiteNumber, recordOf, stringOf } from "./values";
 import { CHAT_NOTICE_KIND } from "./run-stop";
@@ -260,39 +261,12 @@ function reconcileParts(
   const incomingIds = new Set(incoming.map((part) => part.id));
   const merged = incoming.map((part) => {
     const currentPart = currentById.get(part.id);
-    return currentPart ? reconcilePart(currentPart, part) : part;
+    return currentPart ? mergePart(currentPart, part, longerText) : part;
   });
   for (const part of current) {
     if (!incomingIds.has(part.id)) merged.push(part);
   }
   return merged;
-}
-
-function reconcilePart(current: ChatPart, incoming: ChatPart): ChatPart {
-  if (current.type !== incoming.type) return incoming;
-  if (current.type === "text" || current.type === "reasoning") {
-    const currentText = current.text || "";
-    const incomingText = incoming.text || "";
-    return {
-      ...incoming,
-      text:
-        currentText.length > incomingText.length ? currentText : incomingText,
-      state: current.state || incoming.state,
-    };
-  }
-  if (!isToolPartType(current.type)) return incoming;
-  return {
-    ...incoming,
-    input: incoming.input === undefined ? current.input : incoming.input,
-    output: incoming.output === undefined ? current.output : incoming.output,
-    result: incoming.result || current.result,
-    step: incoming.step || current.step,
-    error: incoming.error || current.error,
-    state:
-      toolStateRank(current.state) > toolStateRank(incoming.state)
-        ? current.state
-        : incoming.state,
-  };
 }
 
 function reconcileRunMetadata(
