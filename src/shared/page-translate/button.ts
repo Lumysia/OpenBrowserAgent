@@ -3,6 +3,10 @@
 // (types only) for the page scripts.
 import type { PageToastTheme } from "../page-toast";
 
+// Marks the button's host element in the page, so our page scripts (and
+// tests) can tell it from the page's own nodes.
+export const PAGE_BUTTON_HOST_ATTRIBUTE = "data-oba-page-button";
+
 // Page -> background (runtime.sendMessage).
 export const PAGE_BUTTON_MESSAGE = {
   // What the button shows. Answers PageButtonConfig.

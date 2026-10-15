@@ -17,6 +17,7 @@ import {
   type PageButtonPosition,
   type PageButtonPositionMessage,
 } from "../shared/page-translate/button";
+import type { RuntimeReply } from "../shared/runtime-messages";
 import { STORAGE_KEYS } from "../shared/storage-keys";
 import { applyTheme, DARK_QUERY } from "../ui/apply-theme";
 import { attachDrag, type DragPoint } from "./drag";
@@ -70,7 +71,8 @@ export function installPageButton() {
 
   function configure() {
     void send({ type: PAGE_BUTTON_MESSAGE.config }).then((reply) => {
-      config = reply as PageButtonConfig | undefined;
+      const answer = reply as RuntimeReply<PageButtonConfig> | undefined;
+      config = answer?.ok ? answer.value : undefined;
       position = config?.position;
       if (config && view) applyTheme(view.root, config.theme);
       render();

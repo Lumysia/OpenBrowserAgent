@@ -18,8 +18,9 @@
   display: none;
 }
 
-/* Half tucked into its edge; out while pointed at, focused or showing its
-   menu. Only its own box takes clicks. */
+/* Half tucked into its edge; out while pointed at, focused from the keyboard
+   or showing its menu (a click leaves it focused, not out). Only its own box
+   takes clicks. */
 .page-button-dock {
   --out-x: -50%;
   --out-y: -50%;
@@ -49,7 +50,7 @@
 }
 
 .page-button-dock:hover,
-.page-button-dock:focus-within,
+.page-button-dock:has(:focus-visible),
 .page-button-dock[data-open] {
   transform: translate(var(--out-x), var(--out-y));
 }
@@ -140,7 +141,7 @@
 }
 
 .page-button-dock:hover .page-button-close,
-.page-button-dock:focus-within .page-button-close,
+.page-button-dock:has(:focus-visible) .page-button-close,
 .page-button-dock[data-open] .page-button-close {
   opacity: 1;
   pointer-events: auto;

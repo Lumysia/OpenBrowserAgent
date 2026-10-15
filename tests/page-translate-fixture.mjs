@@ -3,6 +3,7 @@ import {
   DEFAULT_PAGE_TRANSLATE_SETTINGS,
   PAGE_TRANSLATE_ENGINE,
 } from "../src/shared/page-translate/settings.ts";
+import { PAGE_BUTTON_HOST_ATTRIBUTE } from "../src/shared/page-translate/button.ts";
 import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
 import { setPreferences } from "./browser-harness.mjs";
 import { poll } from "./chromium.mjs";
@@ -209,7 +210,11 @@ export function translationIn(page, selector) {
   );
 }
 
-// The page's own markup, without our nodes.
+// The page's own markup, without our nodes (the translate button's host).
 export function pageHtml(page) {
-  return page.call(() => document.documentElement.outerHTML);
+  return page.call((attribute) => {
+    const copy = document.documentElement.cloneNode(true);
+    for (const node of copy.querySelectorAll(`[${attribute}]`)) node.remove();
+    return copy.outerHTML;
+  }, PAGE_BUTTON_HOST_ATTRIBUTE);
 }
