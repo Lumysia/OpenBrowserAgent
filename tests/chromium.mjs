@@ -184,15 +184,33 @@ export async function launchExtension({
     };
     // Connect to an existing target, e.g. a tab the extension opened or its
     // service worker.
+    // A service worker target can show up while the worker is still
+    // starting (or one that is stopping), before extension APIs exist in
+    // it; wait for a connection whose `chrome.runtime` is there.
     const attach = async (matches, type = "page") => {
-      const target = await poll(async () =>
-        (await targets()).find(
-          (item) => item.type === type && matches(item.url),
-        ),
-      );
-      const page = await connectTo(target.webSocketDebuggerUrl);
-      connections.push(page);
-      return page;
+      const find = () =>
+        poll(async () =>
+          (await targets()).find(
+            (item) => item.type === type && matches(item.url),
+          ),
+        );
+      if (type !== "service_worker") {
+        const page = await connectTo((await find()).webSocketDebuggerUrl);
+        connections.push(page);
+        return page;
+      }
+      return poll(async () => {
+        const worker = await connectTo((await find()).webSocketDebuggerUrl);
+        const ready = await worker
+          .call(() => typeof chrome !== "undefined" && !!chrome.runtime?.id)
+          .catch(() => false);
+        if (!ready) {
+          worker.close();
+          return undefined;
+        }
+        connections.push(worker);
+        return worker;
+      });
     };
     return { id, browser, open, attach, targets, close, profile };
   } catch (error) {
