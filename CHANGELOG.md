@@ -6,6 +6,7 @@ What changed in each release. The release workflow publishes the section for the
 
 - Page translation no longer skips paragraphs in Japanese and other languages written without spaces when they contain a number: such paragraphs were taken for a number and left untranslated.
 - The translate button on the page edge no longer flickers in and out when the pointer rests against the side of the screen; it now stays out until the pointer leaves it.
+- An AI provider of the "(or compatible)" kinds (OpenAI, OpenAI Responses, Anthropic, Ollama) asks for its Base URL first, next to the API key, instead of under "Advanced": that's where you say which server you use. Named services such as DeepSeek or OpenRouter keep their Base URL under "Advanced".
 
 ## 0.2.0-beta.12 - 2026-10-15
 

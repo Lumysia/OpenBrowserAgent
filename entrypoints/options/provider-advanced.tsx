@@ -1,15 +1,13 @@
 import type { Messages } from "../../src/shared/i18n";
 import {
   providerApiStyles,
-  providerBaseUrlOptions,
-  providerType,
+  providerBaseUrlPlacement,
   type ProviderId,
 } from "../../src/shared/providers";
 import { hasThinkingSwitch } from "../../src/shared/thinking-switch";
 import type { ProviderConfig } from "../../src/shared/types";
 import {
   Disclosure,
-  Input,
   Label,
   Select,
   SelectContent,
@@ -18,10 +16,11 @@ import {
   SelectValue,
 } from "../../src/ui/components";
 import { providerTypeLabel } from "../../src/ui/provider-display";
+import { ProviderBaseUrl } from "./provider-base-url";
 import { ProviderThinkingSwitch } from "./provider-thinking-switch";
 
-// What few people change about a provider: its API style, base URL and
-// thinking switch. Nothing to show: no disclosure.
+// What few people change about a provider: its API style, a named service's
+// base URL and the thinking switch. Nothing to show: no disclosure.
 export function ProviderAdvanced({
   t,
   value,
@@ -33,6 +32,7 @@ export function ProviderAdvanced({
 }) {
   const provider = value.type || "openai";
   const styles = providerApiStyles(provider);
+  const baseUrlHere = providerBaseUrlPlacement(provider) === "advanced";
   const fields = [
     styles.length > 0 && (
       <Label key="style">
@@ -57,7 +57,9 @@ export function ProviderAdvanced({
         <small className="muted">{t.options.apiStyleHint}</small>
       </Label>
     ),
-    <ProviderBaseUrl key="url" t={t} value={value} onChange={onChange} />,
+    baseUrlHere && (
+      <ProviderBaseUrl key="url" t={t} value={value} onChange={onChange} />
+    ),
     <ProviderThinkingSwitch
       key="thinking"
       t={t}
@@ -66,60 +68,7 @@ export function ProviderAdvanced({
       onChange={onChange}
     />,
   ];
-  if (!styles.length && !hasBaseUrl(provider) && !hasThinkingSwitch(provider))
+  if (!styles.length && !baseUrlHere && !hasThinkingSwitch(provider))
     return null;
   return <Disclosure label={t.options.advanced}>{fields}</Disclosure>;
-}
-
-const hasBaseUrl = (provider: ProviderId) =>
-  !providerType(provider).sdkEndpoint ||
-  providerBaseUrlOptions(provider).length > 0;
-
-function ProviderBaseUrl({
-  t,
-  value,
-  onChange,
-}: {
-  t: Messages;
-  value: ProviderConfig;
-  onChange: (value: ProviderConfig) => void;
-}) {
-  const provider = value.type || "openai";
-  const options = providerBaseUrlOptions(provider);
-  if (options.length) {
-    return (
-      <Label>
-        {t.options.baseUrl}
-        <Select
-          value={value.baseUrl || options[0]}
-          onValueChange={(baseUrl) => onChange({ ...value, baseUrl })}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {options.map((url) => (
-              <SelectItem key={url} value={url}>
-                {url}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Label>
-    );
-  }
-  // The Gemini SDK has its own endpoint.
-  if (providerType(provider).sdkEndpoint) return null;
-  return (
-    <Label>
-      {t.options.baseUrl}
-      <Input
-        value={value.baseUrl || ""}
-        placeholder={providerType(provider).defaultBaseUrl}
-        onChange={(event) =>
-          onChange({ ...value, baseUrl: event.target.value })
-        }
-      />
-    </Label>
-  );
 }

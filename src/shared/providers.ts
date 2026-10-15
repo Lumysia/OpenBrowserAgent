@@ -70,11 +70,16 @@ type ProviderType = {
   apiStyleOf?: ProviderId;
   // Models can be added by name, besides those the endpoint lists.
   manualModels?: boolean;
+  // Any server that speaks the type's API: the base URL says which one, so
+  // settings ask for it first. A named service's default URL is the one it
+  // runs at; its base URL field waits under Advanced.
+  customEndpoint?: boolean;
 };
 
 export const PROVIDERS = {
   openai: {
     label: "OpenAI-compatible",
+    customEndpoint: true,
     api: "openai-completions",
     defaultBaseUrl: "https://api.openai.com/v1",
     reasoningParam: "reasoning_effort",
@@ -84,6 +89,7 @@ export const PROVIDERS = {
   },
   "openai-responses": {
     label: "OpenAI Responses-compatible",
+    customEndpoint: true,
     legacyLabel: "OpenAI Responses",
     api: "openai-responses",
     defaultBaseUrl: "https://api.openai.com/v1",
@@ -93,6 +99,7 @@ export const PROVIDERS = {
   },
   anthropic: {
     label: "Anthropic-compatible",
+    customEndpoint: true,
     api: "anthropic-messages",
     defaultBaseUrl: "https://api.anthropic.com/v1",
     addable: true,
@@ -100,6 +107,7 @@ export const PROVIDERS = {
   },
   ollama: {
     label: "Ollama-compatible",
+    customEndpoint: true,
     legacyLabel: "Ollama",
     api: "openai-completions",
     defaultBaseUrl: "http://localhost:11434",
@@ -211,6 +219,19 @@ export function providerBaseUrlOptions(type: string | undefined) {
   return defaultBaseUrl && alternateBaseUrls
     ? [defaultBaseUrl, ...alternateBaseUrls]
     : [];
+}
+
+// Where settings show the type's base URL: first, beside the API key (a
+// server the user names), under Advanced (a named service's own URL), or
+// nowhere (the SDK's endpoint).
+export type ProviderBaseUrlPlacement = "main" | "advanced" | "none";
+
+export function providerBaseUrlPlacement(
+  type: string | undefined,
+): ProviderBaseUrlPlacement {
+  const { sdkEndpoint, customEndpoint } = providerType(type);
+  if (sdkEndpoint && !providerBaseUrlOptions(type).length) return "none";
+  return customEndpoint ? "main" : "advanced";
 }
 
 export function providerModelList(type: string | undefined) {

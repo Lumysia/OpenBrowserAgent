@@ -9,6 +9,7 @@ import { providerApiUrl } from "../src/shared/provider-urls";
 import {
   ADD_PROVIDER_TYPES,
   PROVIDER_TYPES,
+  providerBaseUrlPlacement,
   providerType,
 } from "../src/shared/providers";
 import { reasoningRequestParams } from "../src/shared/reasoning";
@@ -92,4 +93,31 @@ test("a model Pi's catalog knows gets its inputs and limits from there", () => {
     modelName: "no-such-model",
   });
   assert.deepEqual(unknown.input, ["text", "image"]);
+});
+
+test("a server the user names asks for its base URL first; a named service keeps its own under Advanced", () => {
+  assert.deepEqual(
+    Object.fromEntries(
+      PROVIDER_TYPES.map((type) => [type, providerBaseUrlPlacement(type)]),
+    ),
+    {
+      openai: "main",
+      "openai-responses": "main",
+      anthropic: "main",
+      ollama: "main",
+      gemini: "none",
+      deepseek: "advanced",
+      openrouter: "advanced",
+      aihubmix: "advanced",
+      glm: "advanced",
+      aigateway: "advanced",
+      minimax: "advanced",
+    },
+  );
+  // Every field shown first starts from the type's default (Ollama's local
+  // server), so an empty one still reaches a server.
+  for (const type of PROVIDER_TYPES)
+    if (providerBaseUrlPlacement(type) === "main")
+      assert.ok(providerType(type).defaultBaseUrl, type);
+  assert.equal(providerType("ollama").defaultBaseUrl, "http://localhost:11434");
 });
