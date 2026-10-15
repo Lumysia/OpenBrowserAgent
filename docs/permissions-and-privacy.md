@@ -117,11 +117,12 @@ OpenBrowserAgent sends data to endpoints configured by the user in the AI provid
 - Ollama local endpoints when configured.
 - MCP Streamable HTTP server URLs configured by the user.
 - Assistant link preview fetches with `credentials: "omit"`.
-- Mermaid preview image URLs through `mermaid.ink` and links to `mermaid.live`.
 - Image URLs from an answer, only after the user chooses to load them.
 - Page image/file download URLs when a download tool is used.
 - WebDAV URLs configured as a sync backend (see [Sync](sync.md)), including chat attachments when chats and files sync.
 - The free Google or Microsoft translation endpoints, only when the user selected one of them and translates a page (the other one only when the selected one fails on that page) (see [Page Translation](#page-translation)).
+
+Mermaid diagrams are drawn locally by the bundled `mermaid` package; no diagram source leaves the device.
 
 ## Storage and Sync
 
