@@ -8,7 +8,7 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
   menuItemLabel: "翻譯此頁面 / 顯示原文",
   settingsTitle: "網頁翻譯",
   settingsDescription:
-    "在右鍵選單中選擇「翻譯此頁面」即可翻譯，選擇「顯示原文」即可還原。",
+    "使用網頁邊緣的按鈕、鍵盤快速鍵或右鍵選單中的「翻譯此頁面」即可翻譯，再操作一次即可顯示原文。",
   engine: "翻譯引擎",
   engineDescription: "選擇用什麼翻譯頁面。",
   engines: {
@@ -76,6 +76,27 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
   browserMissing: "此瀏覽器沒有內建翻譯器，頁面會由下方的 AI 模型翻譯。",
   notStarted: "無法開始翻譯此頁面。請重新載入頁面後再試。",
   unavailablePage: "無法翻譯此頁面：瀏覽器不允許擴充功能修改它。",
+  button: {
+    translating: "正在翻譯…",
+    hide: "隱藏翻譯按鈕",
+    hideOnSite: "在 {site} 上隱藏",
+    hideEverywhere: "在所有網站上隱藏",
+    setting: "網頁上的翻譯按鈕",
+    settingDescription:
+      "在網頁邊緣顯示一個小按鈕，用來翻譯此頁面或顯示原文。拖曳即可移動，放開後會停靠在視窗最近的邊緣。",
+    move: "方向鍵沿邊緣移動，E 鍵將它移到下一個邊緣。",
+    hiddenSites: "在這些網站上隱藏",
+    hiddenSitesDescription: "按鈕不會在這些網站上顯示。網站包含其子網域。",
+  },
+  shortcut: {
+    setting: "鍵盤快速鍵",
+    settingDescription: "翻譯此頁面或顯示原文。",
+    current: "快速鍵：{shortcut}",
+    none: "尚未設定快速鍵",
+    change: "變更快速鍵",
+    firefoxHint:
+      "如要變更，請開啟 about:addons，點選齒輪按鈕，再選擇「管理擴充套件快速鍵」。",
+  },
   subtitles: {
     menu: "翻譯字幕",
     menuItemLabel: "翻譯字幕 / 隱藏譯文（影片上）",

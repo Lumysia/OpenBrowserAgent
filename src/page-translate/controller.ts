@@ -57,7 +57,12 @@ function remember(text: string, translation: string) {
     memory.delete(memory.keys().next().value as string);
 }
 
-export function createController(onState: (translated: boolean) => void) {
+// `onState`: the page is translated now, or not. `onStarted`: the session
+// has its settings (or failed to start), so translations are on their way.
+export function createController(
+  onState: (translated: boolean) => void,
+  onStarted: () => void,
+) {
   let session: ReturnType<typeof startSession> | undefined;
   return {
     get active() {
@@ -69,7 +74,7 @@ export function createController(onState: (translated: boolean) => void) {
     },
     start() {
       if (session) return;
-      session = startSession(() => this.stop());
+      session = startSession(() => this.stop(), onStarted);
       onState(true);
     },
     stop() {
@@ -81,7 +86,7 @@ export function createController(onState: (translated: boolean) => void) {
   };
 }
 
-function startSession(onFatal: () => void) {
+function startSession(onFatal: () => void, onStarted: () => void) {
   const queue = createQueue();
   // Units sent and waiting for a translation, by source text: identical
   // paragraphs are sent once.
@@ -319,6 +324,7 @@ function startSession(onFatal: () => void) {
   function handle(event: PageTranslateEvent) {
     switch (event.type) {
       case "session":
+        onStarted();
         config = event.config;
         engine = config.engine;
         setView(config);
@@ -359,6 +365,7 @@ function startSession(onFatal: () => void) {
         scheduleFlush();
         return;
       case "error":
+        onStarted();
         // The session couldn't start: the page goes back to its original,
         // with the note on it.
         if (event.batch === undefined) onFatal();

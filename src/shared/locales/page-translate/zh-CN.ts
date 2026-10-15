@@ -8,7 +8,7 @@ export const pageTranslateZhCN: PageTranslateLocaleMessages = {
   menuItemLabel: "翻译此页面 / 显示原文",
   settingsTitle: "网页翻译",
   settingsDescription:
-    "在右键菜单中选择“翻译此页面”即可翻译，选择“显示原文”即可恢复。",
+    "使用网页边缘的按钮、键盘快捷键或右键菜单中的“翻译此页面”即可翻译，再操作一次即可显示原文。",
   engine: "翻译引擎",
   engineDescription: "选择用什么翻译页面。",
   engines: {
@@ -76,6 +76,27 @@ export const pageTranslateZhCN: PageTranslateLocaleMessages = {
   browserMissing: "此浏览器没有内置翻译器，页面将由下方的 AI 模型翻译。",
   notStarted: "无法开始翻译此页面。请重新加载页面后重试。",
   unavailablePage: "无法翻译此页面：浏览器不允许扩展修改它。",
+  button: {
+    translating: "正在翻译…",
+    hide: "隐藏翻译按钮",
+    hideOnSite: "在 {site} 上隐藏",
+    hideEverywhere: "在所有网站上隐藏",
+    setting: "网页上的翻译按钮",
+    settingDescription:
+      "在网页边缘显示一个小按钮，用来翻译此页面或显示原文。拖动即可移动它，松开后它会停靠在窗口最近的边缘。",
+    move: "方向键沿边缘移动它，E 键将它移到下一条边缘。",
+    hiddenSites: "在这些网站上隐藏",
+    hiddenSitesDescription: "按钮不会在这些网站上显示。网站包括其子域名。",
+  },
+  shortcut: {
+    setting: "键盘快捷键",
+    settingDescription: "翻译此页面或显示原文。",
+    current: "快捷键：{shortcut}",
+    none: "未设置快捷键",
+    change: "更改快捷键",
+    firefoxHint:
+      "如需更改，请打开 about:addons，点击齿轮按钮，然后选择“管理扩展快捷键”。",
+  },
   subtitles: {
     menu: "翻译字幕",
     menuItemLabel: "翻译字幕 / 隐藏译文（视频上）",

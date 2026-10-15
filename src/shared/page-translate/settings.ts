@@ -65,7 +65,7 @@ export type PageTranslateSettings = {
   // A button on the corner of videos (on hover) that translates their
   // subtitles.
   videoButton: boolean;
-  // A button on the page's right edge that translates the page or shows the
+  // A button on an edge of the page that translates the page or shows the
   // original, except on the sites listed (each with its subdomains).
   pageButton: boolean;
   pageButtonHiddenHosts: string[];

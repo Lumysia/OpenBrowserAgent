@@ -8,7 +8,7 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
   menuItemLabel: "このページを翻訳 / 原文を表示",
   settingsTitle: "ページ翻訳",
   settingsDescription:
-    "右クリックメニューで「このページを翻訳」を選ぶと翻訳され、「原文を表示」を選ぶと元に戻ります。",
+    "ページ端のボタン、キーボードショートカット、または右クリックメニューの「このページを翻訳」でページを翻訳できます。もう一度行うと原文に戻ります。",
   engine: "翻訳エンジン",
   engineDescription: "ページの翻訳に使うものを選びます。",
   engines: {
@@ -90,6 +90,28 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
     "このページの翻訳を開始できませんでした。ページを再読み込みして、もう一度お試しください。",
   unavailablePage:
     "このページは翻訳できません。ブラウザーが拡張機能による変更を許可していません。",
+  button: {
+    translating: "翻訳中…",
+    hide: "翻訳ボタンを非表示",
+    hideOnSite: "{site} で非表示",
+    hideEverywhere: "すべてのサイトで非表示",
+    setting: "ページ上の翻訳ボタン",
+    settingDescription:
+      "ウェブページの端に小さなボタンを表示し、ページを翻訳したり原文を表示したりします。ドラッグして移動でき、ウィンドウのいちばん近い端に留まります。",
+    move: "矢印キーで端に沿って移動し、E キーで次の端に移動します。",
+    hiddenSites: "非表示にしたサイト",
+    hiddenSitesDescription:
+      "これらのサイトではボタンを表示しません。サイトにはそのサブドメインも含まれます。",
+  },
+  shortcut: {
+    setting: "キーボードショートカット",
+    settingDescription: "ページを翻訳するか、原文を表示します。",
+    current: "ショートカット：{shortcut}",
+    none: "ショートカットが設定されていません",
+    change: "ショートカットを変更",
+    firefoxHint:
+      "変更するには about:addons を開き、歯車ボタンをクリックして「拡張機能のショートカットキーを管理」を選びます。",
+  },
   subtitles: {
     menu: "字幕を翻訳",
     menuItemLabel: "字幕を翻訳 / 翻訳を非表示（動画上）",

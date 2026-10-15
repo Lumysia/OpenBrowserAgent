@@ -1,0 +1,250 @@
+/* The page translation button on an edge of the page, inside its shadow
+   root. Tokens come from tokens.css with :root mapped to
+   .page-button-theme, colors from applyTheme() on it, the card from
+   .page-surface like the smart bar. The script places the dock's middle on
+   its edge (left, top) and says which edge (data-edge) and which half of it
+   (data-align: start is the top or left half). */
+.page-button-theme {
+  --page-button-size: 36px;
+  --page-button-close-size: 18px;
+  --page-button-gap: var(--space-2);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+.page-button-theme[hidden] {
+  display: none;
+}
+
+/* Half tucked into its edge; out while pointed at, focused or showing its
+   menu. Only its own box takes clicks. */
+.page-button-dock {
+  --out-x: -50%;
+  --out-y: -50%;
+  position: fixed;
+  z-index: var(--page-layer-top);
+  transform: translate(-50%, -50%);
+  transition:
+    transform var(--duration-base) var(--ease-out),
+    left var(--duration-base) var(--ease-out),
+    top var(--duration-base) var(--ease-out);
+}
+
+.page-button-dock[data-edge="right"] {
+  --out-x: calc(-100% - var(--page-button-gap));
+}
+
+.page-button-dock[data-edge="left"] {
+  --out-x: var(--page-button-gap);
+}
+
+.page-button-dock[data-edge="top"] {
+  --out-y: var(--page-button-gap);
+}
+
+.page-button-dock[data-edge="bottom"] {
+  --out-y: calc(-100% - var(--page-button-gap));
+}
+
+.page-button-dock:hover,
+.page-button-dock:focus-within,
+.page-button-dock[data-open] {
+  transform: translate(var(--out-x), var(--out-y));
+}
+
+/* Follows the pointer, wherever it goes. */
+.page-button-dock[data-dragging] {
+  transform: translate(-50%, -50%);
+  transition: none;
+}
+
+.page-button {
+  display: grid;
+  place-items: center;
+  width: var(--page-button-size);
+  height: var(--page-button-size);
+  padding: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  color: var(--foreground);
+  font: inherit;
+  touch-action: none;
+  transition: var(--transition-colors);
+}
+
+.page-button:hover {
+  color: var(--accent-text);
+}
+
+.page-button-dock[data-dragging] .page-button {
+  cursor: grabbing;
+}
+
+.page-button[data-translated] {
+  border-color: color-mix(in oklab, var(--accent-strong) 34%, var(--border));
+  background: var(--accent-fill);
+  color: var(--accent-text);
+}
+
+.page-button[aria-busy="true"] {
+  cursor: progress;
+}
+
+.page-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.page-button[aria-busy="true"] svg {
+  animation: spin 0.9s linear infinite;
+}
+
+.page-button:focus-visible,
+.page-button-close:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* The close control on the button's corner facing the page, shown with the
+   button. */
+.page-button-close {
+  position: absolute;
+  top: calc(-1 * var(--space-1));
+  left: calc(-1 * var(--space-1));
+  display: grid;
+  place-items: center;
+  width: var(--page-button-close-size);
+  height: var(--page-button-close-size);
+  padding: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  color: var(--muted-foreground);
+  font: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.page-button-dock[data-edge="left"] .page-button-close {
+  left: auto;
+  right: calc(-1 * var(--space-1));
+}
+
+.page-button-dock[data-edge="top"] .page-button-close {
+  top: auto;
+  bottom: calc(-1 * var(--space-1));
+}
+
+.page-button-dock:hover .page-button-close,
+.page-button-dock:focus-within .page-button-close,
+.page-button-dock[data-open] .page-button-close {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.page-button-dock[data-dragging] .page-button-close {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.page-button-close:hover {
+  color: var(--foreground);
+}
+
+.page-button-close svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Its choices, on the page side of the button, towards the middle of the
+   edge. */
+.page-button-menu {
+  --enter-x: 0;
+  --enter-y: 0;
+  position: absolute;
+  min-width: 180px;
+  max-width: min(280px, calc(100vw - var(--page-button-size) * 2));
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-1);
+  animation: enter var(--duration-fast) var(--ease-out) backwards;
+}
+
+.page-button-menu[hidden] {
+  display: none;
+}
+
+.page-button-dock[data-edge="right"] .page-button-menu {
+  --enter-x: 6px;
+  right: calc(100% + var(--page-button-gap));
+}
+
+.page-button-dock[data-edge="left"] .page-button-menu {
+  --enter-x: -6px;
+  left: calc(100% + var(--page-button-gap));
+}
+
+.page-button-dock[data-edge="top"] .page-button-menu {
+  --enter-y: -6px;
+  top: calc(100% + var(--page-button-gap));
+}
+
+.page-button-dock[data-edge="bottom"] .page-button-menu {
+  --enter-y: 6px;
+  bottom: calc(100% + var(--page-button-gap));
+}
+
+.page-button-dock:is(
+    [data-edge="left"],
+    [data-edge="right"]
+  )[data-align="start"]
+  .page-button-menu {
+  top: 0;
+}
+
+.page-button-dock:is([data-edge="left"], [data-edge="right"])[data-align="end"]
+  .page-button-menu {
+  bottom: 0;
+}
+
+.page-button-dock:is(
+    [data-edge="top"],
+    [data-edge="bottom"]
+  )[data-align="start"]
+  .page-button-menu {
+  left: 0;
+}
+
+.page-button-dock:is([data-edge="top"], [data-edge="bottom"])[data-align="end"]
+  .page-button-menu {
+  right: 0;
+}
+
+.page-button-menu-item {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-1) var(--space-2);
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* One highlight at a time: the focused item (the pointer moves focus). */
+.page-button-menu-item:focus {
+  outline: none;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}

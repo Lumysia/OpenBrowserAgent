@@ -12,6 +12,9 @@ export const PAGE_SCRIPT = {
   smartBarUi: "content-scripts/smart-bar-ui.js",
   // Injected when the user first translates a page.
   pageTranslate: "content-scripts/page-translate.js",
+  // The translate button, registered in top frames while it is on, except
+  // on the sites it is hidden on.
+  pageTranslateButton: "content-scripts/page-translate-button.js",
   // Subtitle translation, injected when the user starts it; the video
   // button, registered on every page while it is on.
   videoSubtitles: "content-scripts/video-subtitles.js",
@@ -25,4 +28,5 @@ export const PAGE_SCRIPT = {
 export const REGISTERED_SCRIPT_ID = {
   smartBar: "oba-smart-bar",
   videoButton: "oba-video-button",
+  pageTranslateButton: "oba-page-translate-button",
 } as const;

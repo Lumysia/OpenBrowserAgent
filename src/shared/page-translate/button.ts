@@ -1,4 +1,4 @@
-// The page translation button on the page's right edge: its messages and
+// The page translation button on an edge of the page: its messages and
 // the state it shares with the page translation script. Dependency-free
 // (types only) for the page scripts.
 import type { PageToastTheme } from "../page-toast";
@@ -67,6 +67,8 @@ export type PageButtonConfig = {
     hide: string;
     hideOnSite: string;
     hideEverywhere: string;
+    // How to move it with the keyboard.
+    move: string;
   };
   theme: PageToastTheme;
 };

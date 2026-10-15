@@ -7,7 +7,7 @@ export const pageTranslateEnUS = {
   menuItemLabel: "Translate this page / Show original",
   settingsTitle: "Page translation",
   settingsDescription:
-    'Choose "Translate this page" in the right-click menu to translate a page, and "Show original" to go back.',
+    'Translate a page with the button on its edge, the keyboard shortcut or "Translate this page" in the right-click menu. Do the same again to show the original.',
   engine: "Translation engine",
   engineDescription: "Choose what translates pages.",
   engines: {
@@ -94,6 +94,35 @@ export const pageTranslateEnUS = {
     "Couldn't start translating this page. Reload the page and try again.",
   unavailablePage:
     "Can't translate this page: the browser doesn't let extensions change it.",
+  // The button on an edge of the page and its close control's menu.
+  button: {
+    translating: "Translating…",
+    hide: "Hide translate button",
+    // {site}: the page's host.
+    hideOnSite: "Hide on {site}",
+    hideEverywhere: "Hide everywhere",
+    // Settings.
+    setting: "Translate button on pages",
+    settingDescription:
+      "A small button on the edge of web pages translates the page or shows the original. Drag it to move it; it stays on the nearest edge of the window.",
+    // Its accessible description, for the keyboard.
+    move: "Arrow keys move it along the edge; E moves it to the next edge.",
+    hiddenSites: "Hidden on these sites",
+    hiddenSitesDescription:
+      "The button doesn't show on these sites. A site includes its subdomains.",
+  },
+  // The keyboard shortcut (a browser command) for the same.
+  shortcut: {
+    setting: "Keyboard shortcut",
+    settingDescription: "Translates the page or shows the original.",
+    // {shortcut}: the keys, as the browser shows them.
+    current: "Shortcut: {shortcut}",
+    none: "No shortcut set",
+    change: "Change shortcut",
+    // Where the browser has no page to open for it.
+    firefoxHint:
+      'To change it, open about:addons, click the gear button and choose "Manage Extension Shortcuts".',
+  },
   // Video subtitles: the original line with its translation under it.
   subtitles: {
     // The right-click menu item on a video; it also hides them again.

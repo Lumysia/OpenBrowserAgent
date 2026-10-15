@@ -14,6 +14,10 @@ import {
   setupPageTranslate,
 } from "../src/background/page-translate";
 import {
+  handlePageButtonMessage,
+  registerPageButton,
+} from "../src/background/page-translate/button";
+import {
   handleSmartBarMessage,
   setupSmartBar,
 } from "../src/background/smart-bar";
@@ -35,6 +39,7 @@ export default defineBackground(() => {
   setupSmartBar();
   setupContextMenu();
   setupPageTranslate();
+  registerPageButton();
   setupVideoSubtitles();
   setupSync();
   setupMcpOriginRules();
@@ -50,6 +55,7 @@ export default defineBackground(() => {
     (message, sender, sendResponse) =>
       handleSmartBarMessage(message, sender, sendResponse) ||
       handlePageTranslateMessage(message, sender, sendResponse) ||
+      handlePageButtonMessage(message, sender, sendResponse) ||
       handleVideoSubtitlesMessage(message, sender, sendResponse) ||
       handleChatStreamControlMessage(message, sendResponse) ||
       handleLocalExecutionBridgeRuntimeMessage(message, sendResponse) ||
