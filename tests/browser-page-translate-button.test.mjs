@@ -55,8 +55,10 @@ function pageButton(page) {
   );
 }
 
-// Points at the visible half of the tucked button, so it slides out, and
-// returns it once it is out.
+// Points at the visible half of the tucked button, near the edge (where a
+// pointer pushed against the side of the screen rests, past where the button
+// stops once out), so it slides out, and returns it once it is out and at
+// rest.
 async function pointAt(page) {
   const { viewport } = await poll(() => pageButton(page));
   await movePointer(page, { x: viewport.width / 2, y: viewport.height / 2 });
