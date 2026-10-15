@@ -20,6 +20,11 @@ export type ContentScript = {
   // Also frames without their own origin (about:blank editor frames), where
   // the browser supports it.
   matchOriginAsFallback?: boolean;
+  // When it runs: once the page has loaded (the default), or before the
+  // page's own scripts.
+  runAt?: "document_start" | "document_idle";
+  // The page's own world instead of the extension's isolated one.
+  world?: "MAIN";
 };
 
 // Registers `script` for `patterns`, or unregisters it when they are
@@ -48,7 +53,8 @@ export async function syncContentScript(
     matches: patterns.matches,
     excludeMatches: patterns.excludeMatches,
     allFrames: script.allFrames,
-    runAt: "document_idle",
+    runAt: script.runAt ?? "document_idle",
+    ...(script.world && { world: script.world }),
     persistAcrossSessions: true,
   };
   if (existing && samePatterns(existing, registered)) return;
@@ -99,6 +105,7 @@ export function injectContentScript(tabId: number, script: ContentScript) {
     .scripting.executeScript({
       target: script.allFrames ? { tabId, allFrames: true } : { tabId },
       files: [script.file],
+      ...(script.world && { world: script.world }),
     })
     .then(
       () => true,
@@ -127,6 +134,8 @@ function samePatterns(a: RegisteredScript, b: RegisteredScript) {
       [...(script.excludeMatches || [])].sort(),
       script.js,
       !!script.allFrames,
+      script.runAt ?? "document_idle",
+      script.world ?? "ISOLATED",
     ]);
   return key(a) === key(b);
 }

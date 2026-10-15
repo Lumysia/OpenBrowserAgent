@@ -115,16 +115,15 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
   subtitles: {
     menu: "Untertitel übersetzen",
     menuItemLabel: "Untertitel übersetzen / ausblenden (bei Videos)",
-    start: "Untertitel übersetzen",
-    stop: "Übersetzte Untertitel ausblenden",
     noCaptions:
       "Für dieses Video wurden noch keine Untertitel gefunden. Schalten Sie die Untertitel im Player ein – sie werden übersetzt, sobald sie erscheinen.",
     liveOnly:
       "Die angezeigten Untertitel werden übersetzt, sobald sie erscheinen. Um vorab zu übersetzen, schalten Sie die Untertitel im Player aus und wieder ein.",
     noVideo:
       "Hier gibt es kein Video, dessen Untertitel übersetzt werden können.",
-    videoButton: "Untertitel-Schaltfläche auf Videos",
-    videoButtonDescription:
-      "Zeigt eine Schaltfläche in der Ecke eines Videos, wenn Sie darauf zeigen, um seine Untertitel zu übersetzen. „Diese Seite übersetzen“ übersetzt auch die Untertitel der Videos auf der Seite.",
+    // Settings: subtitles start by themselves on every video.
+    setting: "Video-Untertitel übersetzen",
+    settingDescription:
+      "Videos mit Untertiteln zeigen von selbst jede Zeile mit ihrer Übersetzung darunter, auf allen Websites. „Untertitel übersetzen“ im Kontextmenü eines Videos schaltet sie für dieses Video aus oder ein. Ist diese Option aus, übersetzen das Menü und „Diese Seite übersetzen“ sie weiterhin.",
   },
 };

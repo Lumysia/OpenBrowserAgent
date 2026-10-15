@@ -115,15 +115,14 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
   subtitles: {
     menu: "Traduire les sous-titres",
     menuItemLabel: "Traduire les sous-titres / Les masquer (sur les vidéos)",
-    start: "Traduire les sous-titres",
-    stop: "Masquer les sous-titres traduits",
     noCaptions:
       "Aucun sous-titre trouvé pour cette vidéo pour l’instant. Activez les sous-titres dans le lecteur : ils sont traduits dès qu’ils s’affichent.",
     liveOnly:
       "Les sous-titres affichés sont traduits au fur et à mesure. Pour les traduire à l’avance, désactivez puis réactivez les sous-titres du lecteur.",
     noVideo: "Aucune vidéo dont traduire les sous-titres ici.",
-    videoButton: "Bouton de sous-titres sur les vidéos",
-    videoButtonDescription:
-      "Affiche un bouton dans le coin d’une vidéo quand vous la survolez, pour traduire ses sous-titres. « Traduire cette page » traduit aussi les sous-titres des vidéos de la page.",
+    // Settings: subtitles start by themselves on every video.
+    setting: "Traduire les sous-titres des vidéos",
+    settingDescription:
+      "Les vidéos avec sous-titres affichent d’elles-mêmes chaque ligne avec sa traduction en dessous, sur tous les sites. « Traduire les sous-titres » dans le menu contextuel d’une vidéo les désactive ou les réactive pour cette vidéo. Quand cette option est désactivée, le menu et « Traduire cette page » les traduisent toujours.",
   },
 };

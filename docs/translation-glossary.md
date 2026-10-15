@@ -245,39 +245,49 @@ A downloads step's title says what happened, not the tool's name: "Downloaded", 
 
 The **translate button** sits on an edge of web pages (the edge of the window, never "sidebar"); its close control offers "Hide on {site}" and "Hide everywhere", and Settings lists the sites it is hidden on. The **keyboard shortcut** is the browser's extension shortcut for the same toggle; the browser names the place to change it, so Firefox's hint quotes Firefox's own menu label ("Manage Extension Shortcuts").
 
-| English                          | 简体中文                            | 繁體中文                            | 日本語                                   | 한국어                                     |
-| -------------------------------- | ----------------------------------- | ----------------------------------- | ---------------------------------------- | ------------------------------------------ |
-| page translation                 | 网页翻译                            | 網頁翻譯                            | ページ翻訳                               | 페이지 번역                                |
-| Translate this page              | 翻译此页面                          | 翻譯此頁面                          | このページを翻訳                         | 이 페이지 번역                             |
-| Show original                    | 显示原文                            | 顯示原文                            | 原文を表示                               | 원문 보기                                  |
-| translation engine               | 翻译引擎                            | 翻譯引擎                            | 翻訳エンジン                             | 번역 엔진                                  |
-| built-in translator              | 内置翻译器                          | 內建翻譯器                          | 組み込み翻訳                             | 내장 번역기                                |
-| Original and translation         | 原文和译文                          | 原文和譯文                          | 原文と訳文                               | 원문과 번역                                |
-| Translation only                 | 仅译文                              | 僅譯文                              | 訳文のみ                                 | 번역만                                     |
-| saved translations               | 已保存的译文                        | 已儲存的譯文                        | 保存された翻訳                           | 저장된 번역                                |
-| main content (of a page)         | 正文                                | 正文                                | 本文                                     | 본문                                       |
-| Also translate menus and buttons | 同时翻译菜单和按钮                  | 同時翻譯選單和按鈕                  | メニューとボタンも翻訳                   | 메뉴와 버튼도 번역                         |
-| translate button (on pages)      | 翻译按钮                            | 翻譯按鈕                            | 翻訳ボタン                               | 번역 버튼                                  |
-| edge (of the page/window)        | 边缘                                | 邊緣                                | 端                                       | 가장자리                                   |
-| Hide on {site} / Hide everywhere | 在 {site} 上隐藏 / 在所有网站上隐藏 | 在 {site} 上隱藏 / 在所有網站上隱藏 | {site} で非表示 / すべてのサイトで非表示 | {site}에서 숨기기 / 모든 사이트에서 숨기기 |
-| keyboard shortcut                | 键盘快捷键                          | 鍵盤快速鍵                          | キーボードショートカット                 | 키보드 단축키                              |
+**Subtitles** are a video's lines, whatever the player calls them (captions, CC); the extension shows each line with its translation under it. "Translate subtitles" is the item in a video's context menu that turns them on or off for that one video; "Translate video subtitles" is the setting that translates them by themselves on every video. The video's own subtitle control is the player's "captions", so notes that tell people to use it say "captions in the player".
 
-| English                          | Français                                | Deutsch                                    | Español                                     | Português (Brasil)                            |
-| -------------------------------- | --------------------------------------- | ------------------------------------------ | ------------------------------------------- | --------------------------------------------- |
-| page translation                 | traduction de page                      | Seitenübersetzung                          | traducción de páginas                       | tradução de páginas                           |
-| Translate this page              | Traduire cette page                     | Diese Seite übersetzen                     | Traducir esta página                        | Traduzir esta página                          |
-| Show original                    | Afficher l’original                     | Original anzeigen                          | Mostrar original                            | Mostrar original                              |
-| translation engine               | moteur de traduction                    | Übersetzungsdienst                         | motor de traducción                         | mecanismo de tradução                         |
-| built-in translator              | traducteur intégré                      | integrierter Übersetzer                    | traductor integrado                         | tradutor integrado                            |
-| Original and translation         | Original et traduction                  | Original und Übersetzung                   | Original y traducción                       | Original e tradução                           |
-| Translation only                 | Traduction seule                        | Nur Übersetzung                            | Solo traducción                             | Somente tradução                              |
-| saved translations               | traductions enregistrées                | gespeicherte Übersetzungen                 | traducciones guardadas                      | traduções salvas                              |
-| main content (of a page)         | contenu principal                       | Hauptinhalt                                | contenido principal                         | conteúdo principal                            |
-| Also translate menus and buttons | Traduire aussi les menus et les boutons | Auch Menüs und Schaltflächen übersetzen    | Traducir también menús y botones            | Traduzir também menus e botões                |
-| translate button (on pages)      | bouton de traduction                    | Übersetzen-Schaltfläche                    | botón de traducir                           | botão de tradução                             |
-| edge (of the page/window)        | bord                                    | Rand                                       | borde                                       | borda                                         |
-| Hide on {site} / Hide everywhere | Masquer sur {site} / Masquer partout    | Auf {site} ausblenden / Überall ausblenden | Ocultar en {site} / Ocultar en todas partes | Ocultar em {site} / Ocultar em todos os sites |
-| keyboard shortcut                | raccourci clavier                       | Tastenkombination                          | atajo de teclado                            | atalho de teclado                             |
+| English                             | 简体中文                            | 繁體中文                            | 日本語                                   | 한국어                                     |
+| ----------------------------------- | ----------------------------------- | ----------------------------------- | ---------------------------------------- | ------------------------------------------ |
+| page translation                    | 网页翻译                            | 網頁翻譯                            | ページ翻訳                               | 페이지 번역                                |
+| Translate this page                 | 翻译此页面                          | 翻譯此頁面                          | このページを翻訳                         | 이 페이지 번역                             |
+| Show original                       | 显示原文                            | 顯示原文                            | 原文を表示                               | 원문 보기                                  |
+| translation engine                  | 翻译引擎                            | 翻譯引擎                            | 翻訳エンジン                             | 번역 엔진                                  |
+| built-in translator                 | 内置翻译器                          | 內建翻譯器                          | 組み込み翻訳                             | 내장 번역기                                |
+| Original and translation            | 原文和译文                          | 原文和譯文                          | 原文と訳文                               | 원문과 번역                                |
+| Translation only                    | 仅译文                              | 僅譯文                              | 訳文のみ                                 | 번역만                                     |
+| saved translations                  | 已保存的译文                        | 已儲存的譯文                        | 保存された翻訳                           | 저장된 번역                                |
+| main content (of a page)            | 正文                                | 正文                                | 本文                                     | 본문                                       |
+| Also translate menus and buttons    | 同时翻译菜单和按钮                  | 同時翻譯選單和按鈕                  | メニューとボタンも翻訳                   | 메뉴와 버튼도 번역                         |
+| translate button (on pages)         | 翻译按钮                            | 翻譯按鈕                            | 翻訳ボタン                               | 번역 버튼                                  |
+| edge (of the page/window)           | 边缘                                | 邊緣                                | 端                                       | 가장자리                                   |
+| Hide on {site} / Hide everywhere    | 在 {site} 上隐藏 / 在所有网站上隐藏 | 在 {site} 上隱藏 / 在所有網站上隱藏 | {site} で非表示 / すべてのサイトで非表示 | {site}에서 숨기기 / 모든 사이트에서 숨기기 |
+| keyboard shortcut                   | 键盘快捷键                          | 鍵盤快速鍵                          | キーボードショートカット                 | 키보드 단축키                              |
+| subtitles                           | 字幕                                | 字幕                                | 字幕                                     | 자막                                       |
+| video                               | 视频                                | 影片                                | 動画                                     | 동영상                                     |
+| Translate subtitles (menu)          | 翻译字幕                            | 翻譯字幕                            | 字幕を翻訳                               | 자막 번역                                  |
+| Translate video subtitles (setting) | 翻译视频字幕                        | 翻譯影片字幕                        | 動画の字幕を翻訳                         | 동영상 자막 번역                           |
+
+| English                             | Français                                | Deutsch                                    | Español                                     | Português (Brasil)                            |
+| ----------------------------------- | --------------------------------------- | ------------------------------------------ | ------------------------------------------- | --------------------------------------------- |
+| page translation                    | traduction de page                      | Seitenübersetzung                          | traducción de páginas                       | tradução de páginas                           |
+| Translate this page                 | Traduire cette page                     | Diese Seite übersetzen                     | Traducir esta página                        | Traduzir esta página                          |
+| Show original                       | Afficher l’original                     | Original anzeigen                          | Mostrar original                            | Mostrar original                              |
+| translation engine                  | moteur de traduction                    | Übersetzungsdienst                         | motor de traducción                         | mecanismo de tradução                         |
+| built-in translator                 | traducteur intégré                      | integrierter Übersetzer                    | traductor integrado                         | tradutor integrado                            |
+| Original and translation            | Original et traduction                  | Original und Übersetzung                   | Original y traducción                       | Original e tradução                           |
+| Translation only                    | Traduction seule                        | Nur Übersetzung                            | Solo traducción                             | Somente tradução                              |
+| saved translations                  | traductions enregistrées                | gespeicherte Übersetzungen                 | traducciones guardadas                      | traduções salvas                              |
+| main content (of a page)            | contenu principal                       | Hauptinhalt                                | contenido principal                         | conteúdo principal                            |
+| Also translate menus and buttons    | Traduire aussi les menus et les boutons | Auch Menüs und Schaltflächen übersetzen    | Traducir también menús y botones            | Traduzir também menus e botões                |
+| translate button (on pages)         | bouton de traduction                    | Übersetzen-Schaltfläche                    | botón de traducir                           | botão de tradução                             |
+| edge (of the page/window)           | bord                                    | Rand                                       | borde                                       | borda                                         |
+| Hide on {site} / Hide everywhere    | Masquer sur {site} / Masquer partout    | Auf {site} ausblenden / Überall ausblenden | Ocultar en {site} / Ocultar en todas partes | Ocultar em {site} / Ocultar em todos os sites |
+| keyboard shortcut                   | raccourci clavier                       | Tastenkombination                          | atajo de teclado                            | atalho de teclado                             |
+| subtitles                           | sous-titres                             | Untertitel                                 | subtítulos                                  | legendas                                      |
+| video                               | vidéo                                   | Video                                      | vídeo                                       | vídeo                                         |
+| Translate subtitles (menu)          | Traduire les sous-titres                | Untertitel übersetzen                      | Traducir subtítulos                         | Traduzir legendas                             |
+| Translate video subtitles (setting) | Traduire les sous-titres des vidéos     | Video-Untertitel übersetzen                | Traducir subtítulos de vídeos               | Traduzir legendas de vídeos                   |
 
 ## Notes per language
 

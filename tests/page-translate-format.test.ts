@@ -160,17 +160,11 @@ test("settings: defaults, cleaned values, the target language", () => {
       targetLanguage: "fr-FR",
       display: "bilingual",
       translateMenus: false,
-      videoButton: true,
+      videoSubtitles: false,
       pageButton: true,
       pageButtonHiddenHosts: [],
       shortcut: true,
     },
-  );
-  // Settings stored before the video button existed get it, on.
-  assert.equal(
-    normalizePageTranslateSettings({ engine: "google", translateMenus: true })
-      .videoButton,
-    true,
   );
   // The browser's translator is the default; an engine already stored stays.
   assert.equal(DEFAULT_PAGE_TRANSLATE_SETTINGS.engine, "browser");

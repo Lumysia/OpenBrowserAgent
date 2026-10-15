@@ -113,15 +113,14 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
   subtitles: {
     menu: "자막 번역",
     menuItemLabel: "자막 번역 / 번역 숨기기(동영상에서)",
-    start: "자막 번역",
-    stop: "자막 번역 숨기기",
     noCaptions:
       "이 동영상의 자막을 아직 찾지 못했습니다. 플레이어에서 자막을 켜세요. 자막이 표시되는 즉시 번역합니다.",
     liveOnly:
       "화면에 표시되는 자막을 바로 번역하고 있습니다. 미리 번역하려면 플레이어의 자막을 껐다가 다시 켜세요.",
     noVideo: "여기에는 자막을 번역할 동영상이 없습니다.",
-    videoButton: "동영상 자막 버튼",
-    videoButtonDescription:
-      '동영상을 가리키면 모서리에 버튼을 표시해 자막을 번역할 수 있습니다. "이 페이지 번역"도 페이지에 있는 동영상의 자막을 번역합니다.',
+    // Settings: subtitles start by themselves on every video.
+    setting: "동영상 자막 번역",
+    settingDescription:
+      '자막이 있는 동영상은 모든 사이트에서 자동으로 각 줄 아래에 번역을 표시합니다. 동영상의 컨텍스트 메뉴에서 "자막 번역"을 선택하면 그 동영상만 끄거나 켤 수 있습니다. 이 설정이 꺼져 있어도 메뉴와 "이 페이지 번역"으로 자막을 번역할 수 있습니다.',
   },
 };

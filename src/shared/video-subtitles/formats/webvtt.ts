@@ -1,5 +1,6 @@
 // WebVTT (https://www.w3.org/TR/webvtt1/) and SRT, which differ in the
 // header, the decimal comma and the markup they allow.
+import { IMAGE_REFERENCE } from "../caption-filter";
 import {
   clockSeconds,
   decodeCueMarkup,
@@ -51,6 +52,8 @@ function parseBlocks(text: string, vtt: boolean): Cue[] {
     // SRT positions text with `{\an8}`-style tags.
     const markup = vtt ? payload : payload.replace(/\{\\[^}]*\}/g, "");
     const cue: Cue = { start, end, text: plainCueText(markup) };
+    // A thumbnail track's cues name pictures.
+    if (IMAGE_REFERENCE.test(cue.text)) continue;
     const words = vtt ? inlineWords(markup, start) : undefined;
     if (words) cue.words = words;
     cues.push(cue);

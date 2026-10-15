@@ -21,20 +21,20 @@ test("the page button and the shortcut are on by default, also for settings stor
   assert.equal(DEFAULT_PAGE_TRANSLATE_SETTINGS.pageButton, true);
   assert.equal(DEFAULT_PAGE_TRANSLATE_SETTINGS.shortcut, true);
   assert.deepEqual(DEFAULT_PAGE_TRANSLATE_SETTINGS.pageButtonHiddenHosts, []);
-  // Written by the last release: no button, site list or shortcut fields.
+  // Written by an earlier release: no button, site list or shortcut fields.
   const stored = {
     engine: "google",
     modelId: "",
     targetLanguage: "de",
     display: "translation",
     translateMenus: true,
-    videoButton: false,
   } as const;
   const settings = mergePreferences({
     pageTranslate: stored as unknown as PageTranslateSettings,
   }).pageTranslate!;
   assert.deepEqual(settings, {
     ...stored,
+    videoSubtitles: false,
     pageButton: true,
     pageButtonHiddenHosts: [],
     shortcut: true,

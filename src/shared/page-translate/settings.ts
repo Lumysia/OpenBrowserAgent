@@ -62,9 +62,10 @@ export type PageTranslateSettings = {
   // Also translate the page's menus, buttons, tabs, navigation, sidebars
   // and footer; off translates the main content only.
   translateMenus: boolean;
-  // A button on the corner of videos (on hover) that translates their
-  // subtitles.
-  videoButton: boolean;
+  // Translate the subtitles of every video that has them, on every site,
+  // without being asked. Off: only the right-click menu and "Translate this
+  // page" start them.
+  videoSubtitles: boolean;
   // A button on an edge of the page that translates the page or shows the
   // original, except on the sites listed (each with its subdomains).
   pageButton: boolean;
@@ -81,7 +82,7 @@ export const DEFAULT_PAGE_TRANSLATE_SETTINGS: PageTranslateSettings = {
   targetLanguage: "",
   display: PAGE_TRANSLATE_DISPLAY.bilingual,
   translateMenus: false,
-  videoButton: true,
+  videoSubtitles: false,
   pageButton: true,
   pageButtonHiddenHosts: [],
   shortcut: true,
@@ -101,7 +102,7 @@ export function normalizePageTranslateSettings(
     DEFAULT_PAGE_TRANSLATE_SETTINGS.display,
   );
   const flag = (
-    key: "translateMenus" | "videoButton" | "pageButton" | "shortcut",
+    key: "translateMenus" | "videoSubtitles" | "pageButton" | "shortcut",
   ) =>
     typeof value?.[key] === "boolean"
       ? value[key]
@@ -115,7 +116,7 @@ export function normalizePageTranslateSettings(
       "",
     display,
     translateMenus: flag("translateMenus"),
-    videoButton: flag("videoButton"),
+    videoSubtitles: flag("videoSubtitles"),
     pageButton: flag("pageButton"),
     pageButtonHiddenHosts: normalizeHostList(value?.pageButtonHiddenHosts),
     shortcut: flag("shortcut"),

@@ -129,17 +129,15 @@ export const pageTranslateEnUS = {
     menu: "Translate subtitles",
     // The context menu settings' row for the item.
     menuItemLabel: "Translate subtitles / Hide them (on videos)",
-    // The button on a video's corner.
-    start: "Translate subtitles",
-    stop: "Hide translated subtitles",
     noCaptions:
       "No subtitles found for this video yet. Turn on its captions in the player; they are translated as soon as they show.",
     liveOnly:
       "Translating the captions on screen as they show. To translate ahead, turn the player's captions off and on again.",
     noVideo: "No video to translate subtitles for here.",
-    videoButton: "Subtitle button on videos",
-    videoButtonDescription:
-      'Shows a button on the corner of a video when you point at it, to translate its subtitles. "Translate this page" also translates the subtitles of the videos on the page.',
+    // Settings: subtitles start by themselves on every video.
+    setting: "Translate video subtitles",
+    settingDescription:
+      'Videos with subtitles show each line with its translation under it by themselves, on every site. "Translate subtitles" in a video\'s right-click menu turns them off or on for that video. When this is off, the menu and "Translate this page" still translate them.',
   },
 };
 

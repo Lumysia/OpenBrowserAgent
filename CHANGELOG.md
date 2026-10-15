@@ -4,6 +4,13 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- **Translate video subtitles everywhere**: turn on "Translate video subtitles" in Settings → Page translation, and every video with subtitles shows each line with its translation under it by itself, on any site, including the first captions a player loads (no need to turn the player's captions off and on again). "Translate subtitles" in a video's right-click menu turns them off or on for that video. The switch is off by default; while it is off, the menu and "Translate this page" translate subtitles as before.
+- The small subtitle button on the corner of videos is gone, with its setting; the switch above and the right-click menu replace it.
+- Translated subtitles stay over the video when the window or the player changes size, also while the video is paused, and move with it when you scroll instead of catching up a moment later; before, they could hang past the player's edge or below it. They are also smaller, with the original line a little smaller than its translation.
+- Subtitles of players embedded from another site, and of caption files a site serves as plain files (without saying they are subtitles), are translated too. A player's preview pictures over the seek bar and annotations such as a site's watermark are no longer taken for subtitle lines; ruby readings over words are left out of the line.
+- Page translation translates more of the page's content: questions and sentences in buttons, tabs and quiz choices, dialogs (also cookie and sign-in prompts), headings and text in a page's header and footer, tables of contents, columns fixed beside the article, link titles written in title case, titles with a number such as "Ep 12: The End", boxed lists of headlines, and carousel slides once they show. A button inside a sentence stays in it, so the sentence is translated whole. Short labels such as menu items, "Log in" and "Accept", names, dates and prices still stay as they are unless you turn on translating menus and buttons.
+- A question the assistant asks in the side panel can always be answered while it waits, also after a step that failed; writing in the message box instead sends your message as the reply. A question nothing waits for any more (the response was stopped or ended) shows as not answered, instead of "Asking a question" with options you couldn't click.
+
 ## 0.2.0-beta.10 - 2026-10-15
 
 - **Translate button on pages**: a small button on the edge of web pages translates the page or shows the original. Drag it to any edge of the window; it stays where you put it on every site. Point at it to hide it on that site or everywhere; Settings → Page translation lists the sites it is hidden on.
@@ -15,14 +22,12 @@ What changed in each release. The release workflow publishes the section for the
 - With the browser's built-in translator, short titles such as a name with a version number are translated like the rest of the page. Before, one it took for another language could stop it from translating the page and hand it to the AI model, or leave the titles and the cards after them untranslated. A text in a language it can't translate no longer takes the texts around it down with it.
 - A teaser that ends in a "Read more" the page sets on a line of its own gets its translation right under the teaser, and "Read more" its own; before, the translation came after "Read more" and repeated it.
 - Page translation translates buttons that hold the page's content, such as the questions of an FAQ and the titles of sections that open and close, with the translation under the title inside the button. Short buttons such as "Log in" still stay as they are unless you turn on translating menus and buttons.
-- Page translation translates more of the page's content: questions and sentences in buttons, tabs and quiz choices, dialogs (also cookie and sign-in prompts), headings and text in a page's header and footer, tables of contents, columns fixed beside the article, link titles written in title case, titles with a number such as "Ep 12: The End", boxed lists of headlines, and carousel slides once they show. A button inside a sentence stays in it, so the sentence is translated whole. Short labels such as menu items, "Log in" and "Accept", names, dates and prices still stay as they are unless you turn on translating menus and buttons.
 - An MCP server or bridge test error saved by an earlier version no longer repeats "Server test failed" or "Bridge test failed" in front of the reason.
 - Skills you picked are highlighted in the skill list, like the chosen model and agent.
 - When a page the agent works on opens a new tab, your tab now always comes back to the front; before, it sometimes stayed on the new tab.
 - A download's progress in the side panel shows its percentage the way the extension's language writes it (such as "42 %" in German and French).
 - A model that refused images or mid-chat tool updates once is sent requests without them from the start in later chats, instead of failing first each time; editing the model in Settings lets it try again.
 - Loading the model list of an Anthropic or Gemini provider now shows all of its models, not only the first page.
-- A question the assistant asks in the side panel can always be answered while it waits, also after a step that failed; writing in the message box instead sends your message as the reply. A question nothing waits for any more (the response was stopped or ended) shows as not answered, instead of "Asking a question" with options you couldn't click.
 
 ## 0.2.0-beta.9 - 2026-10-14
 

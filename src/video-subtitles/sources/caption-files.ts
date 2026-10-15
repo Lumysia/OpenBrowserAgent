@@ -1,18 +1,20 @@
 // Caption files the page loads for its own player, recognized by their
-// content (see formats/). Two ways to find them, both started by the user:
-// - a small observer in the page's world (see
-//   background/video-subtitles/main-world.ts) passes on the text of files
-//   loaded from then on;
+// content (see formats/). Two ways to find them:
+// - the caption observer in the page's world (see caption-observer.ts)
+//   passes on the text of the files the page loads: from the page's start
+//   while subtitles are always on, else from when the user starts them;
 // - the page's resource timing lists the files loaded before (and those
 //   whose request started before the observer); likely caption URLs among
-//   them are fetched again. Pages may have cleared those entries.
+//   them are fetched again once a video wants subtitles. Pages may have
+//   cleared those entries.
 // Whatever arrives is page data: it is parsed and checked here, and only
-// shows in subtitles the user already turned on.
+// the newest file is kept, for the frame's videos.
 import type { Cue } from "../../shared/video-subtitles/cues";
+import { CAPTION_URL } from "../../shared/video-subtitles/caption-filter";
 import { parseCaptionFile } from "../../shared/video-subtitles/formats";
 import {
+  CAPTION_FILE_EVENT,
   VIDEO_SUBTITLES_MESSAGE,
-  type VideoSubtitlesObserveMessage,
 } from "../../shared/video-subtitles/protocol";
 import { getBrowserApi } from "../../shared/browser-api";
 
@@ -23,10 +25,6 @@ export type CaptionFile = {
   at: number;
 };
 
-// Words and extensions in caption file URLs. "timedtext" is the W3C name of
-// the format family (TTML).
-const CAPTION_URL =
-  /caption|subtitle|(^|[^a-z])subs?([^a-z]|$)|timedtext|transcript|\.(vtt|srt|ttml|dfxp)([?#]|$)|[?&](fmt|format)=(vtt|srt|ttml|dfxp|json3?)\b/i;
 const FETCHED_TYPES = new Set(["fetch", "xmlhttprequest", "track", "other"]);
 // Files fetched again at a time, newest first.
 const MAX_FETCHED_AGAIN = 4;
@@ -35,7 +33,8 @@ type Listener = (file: CaptionFile) => void;
 
 let latest: CaptionFile | undefined;
 const listeners = new Set<Listener>();
-let started = false;
+let listening = false;
+let watching = false;
 // Caption URLs already read, from either way.
 const seen = new Set<string>();
 
@@ -50,24 +49,11 @@ function accept(url: unknown, text: unknown, at: number) {
   for (const listener of listeners) listener(latest);
 }
 
-// Starts looking once per frame; `listener` gets the newest file now (if
-// any) and every newer one.
-export function watchCaptionFiles(listener: Listener) {
-  listeners.add(listener);
-  if (latest) listener(latest);
-  if (!started) {
-    started = true;
-    observe();
-    new PerformanceObserver((list) =>
-      fetchAgain(list.getEntries() as PerformanceResourceTiming[]),
-    ).observe({ type: "resource", buffered: true });
-  }
-  return () => listeners.delete(listener);
-}
-
-function observe() {
-  const event = `oba-caption-file-${crypto.randomUUID()}`;
-  document.addEventListener(event, (received) => {
+// Takes what the observer passes on from now on; once per frame.
+export function listenForCaptionFiles() {
+  if (listening) return;
+  listening = true;
+  document.addEventListener(CAPTION_FILE_EVENT, (received) => {
     const detail = (received as CustomEvent<unknown>).detail;
     if (typeof detail !== "string") return;
     try {
@@ -80,13 +66,25 @@ function observe() {
       // Not ours.
     }
   });
-  const message: VideoSubtitlesObserveMessage = {
-    type: VIDEO_SUBTITLES_MESSAGE.observe,
-    event,
-  };
-  void getBrowserApi()
-    .runtime.sendMessage(message)
-    .catch(() => undefined);
+}
+
+// `listener` gets the newest file now (if any) and every newer one. The
+// first call in a frame puts the observer in the page (where it isn't yet)
+// and looks for files loaded before.
+export function watchCaptionFiles(listener: Listener) {
+  listenForCaptionFiles();
+  listeners.add(listener);
+  if (latest) listener(latest);
+  if (!watching) {
+    watching = true;
+    void getBrowserApi()
+      .runtime.sendMessage({ type: VIDEO_SUBTITLES_MESSAGE.observe })
+      .catch(() => undefined);
+    new PerformanceObserver((list) =>
+      fetchAgain(list.getEntries() as PerformanceResourceTiming[]),
+    ).observe({ type: "resource", buffered: true });
+  }
+  return () => listeners.delete(listener);
 }
 
 function fetchAgain(entries: PerformanceResourceTiming[]) {

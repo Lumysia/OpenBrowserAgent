@@ -100,15 +100,14 @@ export const pageTranslateZhTW: PageTranslateLocaleMessages = {
   subtitles: {
     menu: "翻譯字幕",
     menuItemLabel: "翻譯字幕 / 隱藏譯文（影片上）",
-    start: "翻譯字幕",
-    stop: "隱藏字幕譯文",
     noCaptions:
       "尚未找到此影片的字幕。請在播放器中開啟字幕，字幕一出現就會翻譯。",
     liveOnly:
       "正在邊播邊翻螢幕上的字幕。想提前翻好，請在播放器裡把字幕關掉再開啟。",
     noVideo: "這裡沒有可翻譯字幕的影片。",
-    videoButton: "影片上的字幕按鈕",
-    videoButtonDescription:
-      "指向影片時在其角落顯示一個按鈕，用來翻譯字幕。「翻譯此頁面」也會翻譯頁面上影片的字幕。",
+    // Settings: subtitles start by themselves on every video.
+    setting: "翻譯影片字幕",
+    settingDescription:
+      "有字幕的影片會自動在每行字幕下顯示譯文，適用於所有網站。在影片的右鍵選單中選擇「翻譯字幕」可為該影片關閉或重新開啟。此項關閉時，仍可透過選單和「翻譯此頁面」翻譯字幕。",
   },
 };

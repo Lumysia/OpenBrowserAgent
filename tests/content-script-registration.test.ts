@@ -13,7 +13,11 @@ type Registered = chrome.scripting.RegisteredContentScript;
 // executeScript's tab and target.
 function fakeScripting({ originFallback = true } = {}) {
   const registered = new Map<string, Registered>();
-  const injected: Array<{ tabId: number; allFrames: boolean }> = [];
+  const injected: Array<{
+    tabId: number;
+    allFrames: boolean;
+    world?: string;
+  }> = [];
   const calls: string[] = [];
   const api = {
     async getRegisteredContentScripts({ ids }: { ids: string[] }) {
@@ -41,10 +45,16 @@ function fakeScripting({ originFallback = true } = {}) {
     },
     async executeScript({
       target,
+      world,
     }: {
       target: { tabId: number; allFrames?: boolean };
+      world?: string;
     }) {
-      injected.push({ tabId: target.tabId, allFrames: !!target.allFrames });
+      injected.push({
+        tabId: target.tabId,
+        allFrames: !!target.allFrames,
+        ...(world && { world }),
+      });
       return [];
     },
   };
@@ -140,4 +150,28 @@ test("browsers without dynamic registration get no page script", async () => {
   const tabs = fakeTabs(TABS);
   installChrome({ scripting: {}, tabs: tabs.api });
   await syncContentScript(TOP_FRAME, webPagesExcept([]));
+});
+
+test("a page script can run before the page's scripts, in the page's world", async () => {
+  const script: ContentScript = {
+    id: "test-main",
+    file: "content-scripts/main.js",
+    allFrames: true,
+    runAt: "document_start",
+    world: "MAIN",
+  };
+  const scripting = setup();
+  await syncContentScript(script, webPagesExcept([]));
+  const registered = scripting.registered.get(script.id)!;
+  assert.equal(registered.runAt, "document_start");
+  assert.equal(registered.world, "MAIN");
+  // Open pages get it in the same world.
+  assert.deepEqual(
+    scripting.injected.map(({ world }) => world),
+    ["MAIN", "MAIN", "MAIN"],
+  );
+  // Other scripts keep the defaults.
+  await syncContentScript(TOP_FRAME, webPagesExcept([]));
+  assert.equal(scripting.registered.get(TOP_FRAME.id)?.runAt, "document_idle");
+  assert.equal(scripting.registered.get(TOP_FRAME.id)?.world, undefined);
 });

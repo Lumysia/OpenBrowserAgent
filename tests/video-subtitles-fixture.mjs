@@ -1,7 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { CONTEXT_MENU_ID } from "../src/shared/context-menu.ts";
 import { poll } from "./chromium.mjs";
-import { elementCenter } from "./cdp-input.mjs";
 import { startPageTranslate } from "./page-translate-fixture.mjs";
 import { hasClass, inShadowRoot } from "./shadow-roots.mjs";
 
@@ -39,6 +38,30 @@ const json3 = JSON.stringify({
     segs: [{ utf8: `Stub line at ${t} seconds.` }],
   })),
 });
+
+// A player's caption file that starts with a watermark: a cue that is only
+// a ruby annotation, in a corner. Lines from 10 seconds on.
+const watermarked = [
+  "WEBVTT",
+  "",
+  "00:00:00.000 --> 00:00:05.000 line:0% align:end size:15%",
+  "<ruby><rt>Example Site</rt></ruby>",
+  "",
+  ...times
+    .filter((t) => t >= 10)
+    .flatMap((t) => [`${clock(t)} --> ${clock(t + 4)}`, lineAt(t), ""]),
+].join("\n");
+// The previews over a seek bar, as a WebVTT file of picture references.
+const thumbnails = [
+  "WEBVTT",
+  "",
+  ...times.flatMap((t) => [
+    `${clock(t)} --> ${clock(t + 5)}`,
+    `preview-01.jpg#xywh=${(t / 5) * 160},0,160,90`,
+    "",
+  ]),
+].join("\n");
+const UNNAMED = { "Content-Type": "application/octet-stream" };
 
 export const PAGES = {
   "/blank.webm": { html: video, headers: { "Content-Type": "video/webm" } },
@@ -88,6 +111,68 @@ setInterval(() => {
 ${VIDEO_TAG}></video>
 <button id="cc" onclick="const r = new XMLHttpRequest(); r.open('GET', '/api/captions?fmt=json3&lang=en'); r.onload = () => { window.loaded = JSON.parse(r.responseText).events.length; }; r.send();">CC</button>
 </body></html>`,
+  // A player that loads its caption file as the page starts, before anyone
+  // could do anything.
+  "/stub-start": `<!doctype html><html lang="en"><head><title>Stub player</title>${STYLE}</head><body>
+${VIDEO_TAG}></video>
+<script>const r = new XMLHttpRequest(); r.open('GET', '/api/captions?fmt=json3&lang=en&start'); r.onload = () => { window.loaded = JSON.parse(r.responseText).events.length; }; r.send();</script>
+</body></html>`,
+  // A player that clips a video larger than itself and offset in it, and
+  // lays itself out again a moment after the window changes size, on a
+  // page that scrolls.
+  "/clipped": `<!doctype html><html lang="en"><head><title>Clipped player</title>${STYLE}</head><body>
+<div id="player" style="position:relative;overflow:hidden;background:#000">
+<video id="video" src="/blank.webm" muted playsinline loop preload="auto" style="position:absolute;left:0;top:12%;width:115%;height:115%"><track kind="subtitles" srclang="en" label="English" src="/captions.vtt" default></video>
+</div>
+<p>The video's title, under the player.</p>
+<div style="height:2000px"></div>
+<script>
+const player = document.getElementById("player");
+const layout = () => {
+  const width = Math.round(innerWidth * 0.6);
+  player.style.width = width + "px";
+  player.style.height = Math.round((width * 9) / 16) + "px";
+};
+layout();
+let timer;
+addEventListener("resize", () => { clearTimeout(timer); timer = setTimeout(layout, 250); });
+</script>
+</body></html>`,
+  // A page that embeds a player from another site. The player fetches its
+  // caption file and its thumbnail track as the page starts, both served as
+  // plain bytes, and draws the lines itself.
+  "/embed": `<!doctype html><html lang="en"><head><title>Embedded player</title>${STYLE}</head><body>
+<iframe id="frame" style="display:block;width:680px;height:400px;border:0"></iframe>
+<script>frame.src = location.href.replace("127.0.0.1", "localhost").replace("/embed", "/embedded-player");</script>
+</body></html>`,
+  "/embedded-player": `<!doctype html><html lang="en"><head><title>Player</title>${STYLE}</head><body>
+<div id="player" style="position:relative;width:640px;height:360px">
+${VIDEO_TAG.replace('style="display:block;width:640px;height:360px"', 'style="display:block;width:100%;height:100%"')}></video>
+<div id="text-container" style="position:absolute;left:0;right:0;bottom:30px;text-align:center;color:#fff"></div>
+</div>
+<script>
+const seconds = (clock) => clock.split(":").reduce((total, part) => total * 60 + Number(part), 0);
+(async () => {
+  const text = await (await fetch("/cdn/track-en")).text();
+  const cues = text.split("\\n\\n").flatMap((block) => {
+    const match = /^(\\S+) --> (\\S+)[^\\n]*\\n([\\s\\S]+)$/.exec(block);
+    return match ? [{ start: seconds(match[1]), end: seconds(match[2]), text: match[3] }] : [];
+  });
+  await (await fetch("/cdn/preview-thumbs")).text();
+  const video = document.getElementById("video");
+  const container = document.getElementById("text-container");
+  const draw = () => {
+    const cue = cues.find((cue) => cue.start <= video.currentTime && video.currentTime < cue.end);
+    container.innerHTML = cue ? cue.text : "";
+  };
+  video.addEventListener("timeupdate", draw);
+  video.addEventListener("seeked", draw);
+  window.loaded = cues.length;
+})();
+</script>
+</body></html>`,
+  "/cdn/track-en": { html: watermarked, headers: UNNAMED },
+  "/cdn/preview-thumbs": { html: thumbnails, headers: UNNAMED },
   // The same player that loaded its file before the user started.
   "/stub-earlier": `<!doctype html><html lang="en"><head><title>Stub player</title>${STYLE}</head><body>
 ${VIDEO_TAG}></video>
@@ -164,36 +249,42 @@ export function shownLine(page, original) {
   });
 }
 
-// The corner button over the video: its center and state, or null.
-export function videoButton(page) {
+// The subtitle layer's box in the viewport, or null where none shows.
+export function layerBox(page) {
+  return inShadowRoot(page, isLayerRoot, (root) => {
+    const layer = root?.querySelector(".layer");
+    if (!layer || layer.hidden) return null;
+    const { left, top, right, bottom } = layer.getBoundingClientRect();
+    return { left, top, right, bottom };
+  });
+}
+
+// Scrolls the page by `y` and, in the same task (before any frame), gives
+// the layer's box and the box of the element `id`.
+export function scrollAndMeasure(page, y, id = "player") {
   return inShadowRoot(
     page,
-    (root) =>
-      root.shadowRootType === "closed" &&
-      root.children?.some((child) => hasClass(child, "video-button-theme")),
-    (root) => {
-      const button = root?.querySelector(".video-button");
-      if (!button || button.hidden) return null;
-      const rect = button.getBoundingClientRect();
+    isLayerRoot,
+    (root, { y, id }) => {
+      scrollBy(0, y);
+      const box = (element) => {
+        const { left, top, right, bottom } = element.getBoundingClientRect();
+        return { left, top, right, bottom };
+      };
       return {
-        x: rect.x + rect.width / 2,
-        y: rect.y + rect.height / 2,
-        label: button.getAttribute("aria-label"),
-        pressed: button.getAttribute("aria-pressed") === "true",
+        layer: box(root.querySelector(".layer")),
+        player: box(document.getElementById(id)),
       };
     },
+    { y, id },
   );
 }
 
-// Moves the mouse over the video, as a user pointing at it.
-export async function pointAtVideo(page) {
-  const center = await elementCenter(page, "#video");
-  for (const dx of [0, 10])
-    await page.send("Input.dispatchMouseEvent", {
-      type: "mouseMoved",
-      x: center.x + dx,
-      y: center.y,
-    });
+// Whether the page's caption observer wraps XMLHttpRequest.
+export function hasCaptionObserver(page) {
+  return page.call(
+    () => !String(XMLHttpRequest.prototype.send).includes("native code"),
+  );
 }
 
 export function seek(page, seconds) {
