@@ -199,6 +199,27 @@ test("rule 7: tabs, options and choices whose label is content", () => {
     assert.equal(controlOf(paragraph.parent), null);
 });
 
+test("rule 8: hidden content is left until it shows", () => {
+  const page = `
+    <main>
+      <div id="slide" aria-hidden="true"><h3>The second slide's headline</h3></div>
+      <div hidden><p>A hidden paragraph of the carousel.</p></div>
+    </main>`;
+  const { document, found } = paragraphsOf(page);
+  assert.deepEqual(found, []);
+  const slide = document.getElementById("slide")!;
+  slide.removeAttribute("aria-hidden");
+  assert.deepEqual(
+    [...walkParagraphs(slide)]
+      .filter((paragraph) => !!paragraph)
+      .map((paragraph) => paragraph!.source.plain),
+    ["The second slide's headline"],
+  );
+  // Inside content that is still hidden, nothing.
+  const hidden = document.querySelector("[hidden] p")!;
+  assert.equal([...walkParagraphs(hidden)].filter(Boolean).length, 0);
+});
+
 test("rule 9: navigation entries that read as content or name a heading", () => {
   const page = `
     <main>

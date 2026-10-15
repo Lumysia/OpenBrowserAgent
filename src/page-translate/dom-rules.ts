@@ -160,9 +160,20 @@ function isNoTranslate(element: Element) {
     element.getAttribute("translate") === "no" ||
     element.classList.contains("notranslate") ||
     (editable !== null && editable !== "false") ||
-    element.getAttribute("aria-hidden") === "true" ||
-    element.hasAttribute("hidden") ||
+    isHiddenElement(element) ||
     element.getAttribute("role") === "code"
+  );
+}
+
+// The attributes that hide content: the page sets them on what it shows
+// later (a carousel's other slides), and the content is looked at again
+// when they go (see units.ts).
+export const HIDING_ATTRIBUTES = ["aria-hidden", "hidden"];
+
+export function isHiddenElement(element: Element) {
+  return (
+    element.getAttribute("aria-hidden") === "true" ||
+    element.hasAttribute("hidden")
   );
 }
 
