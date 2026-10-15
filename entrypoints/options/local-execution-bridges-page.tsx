@@ -39,6 +39,7 @@ import {
 import { useTransient } from "../../src/ui/use-transient";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { errorWithDetail } from "../../src/shared/user-errors";
+import { storedErrorReason } from "../../src/ui/error-text";
 import { useMessages } from "../../src/ui/messages";
 
 export function LocalExecutionBridgesPage() {
@@ -269,7 +270,11 @@ export function LocalExecutionBridgesPage() {
               <Feedback error>
                 {errorWithDetail(
                   t.options.localExecutionBridgeTestError,
-                  localExecutionBridgeTestError(bridge),
+                  storedErrorReason(
+                    localExecutionBridgeTestError(bridge),
+                    (messages) =>
+                      messages.options.localExecutionBridgeTestError,
+                  ),
                   t,
                 )}
               </Feedback>

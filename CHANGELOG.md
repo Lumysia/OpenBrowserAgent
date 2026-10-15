@@ -4,6 +4,9 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- An MCP server or bridge test error saved by an earlier version no longer repeats "Server test failed" or "Bridge test failed" in front of the reason.
+- Skills you picked are highlighted in the skill list, like the chosen model and agent.
+
 ## 0.2.0-beta.9 - 2026-10-14
 
 - **Translated video subtitles**: choose "Translate subtitles" in a video's right-click menu or press the small button on its corner, and its subtitles show the original line with its translation under it, also in fullscreen; "Translate this page" translates the subtitles of the page's videos too. It works with the video's own subtitle tracks, the caption files a player loads and captions a player draws on the video, on any site.

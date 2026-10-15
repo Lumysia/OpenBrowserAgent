@@ -47,6 +47,7 @@ import {
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { errorWithDetail } from "../../src/shared/user-errors";
+import { storedErrorReason } from "../../src/ui/error-text";
 import { useTransient } from "../../src/ui/use-transient";
 import { errorMessage } from "../../src/shared/error-message";
 import { useMessages } from "../../src/ui/messages";
@@ -265,7 +266,10 @@ export function McpPage() {
               <Feedback error>
                 {errorWithDetail(
                   t.options.mcpTestError,
-                  server.lastTestError,
+                  storedErrorReason(
+                    server.lastTestError,
+                    (messages) => messages.options.mcpTestError,
+                  ),
                   t,
                 )}
               </Feedback>
