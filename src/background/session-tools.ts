@@ -1,4 +1,4 @@
-import { clampInt } from "../shared/values";
+import { clampInt, trimmedString } from "../shared/values";
 import {
   deleteChats,
   readChat,
@@ -12,15 +12,23 @@ const CHAT_READ_MESSAGE_LIMIT = 80;
 const CHAT_CONTENT_PREVIEW_CHARS = 280;
 const CHAT_READ_CONTENT_CHARS = 4000;
 
-export function chatHistory(input: Record<string, unknown>) {
-  const action = String(input.action || "search");
-  if (action === "search") return searchChatHistory(input);
-  if (action === "read") return readChatThread(input);
-  if (action === "delete") return deleteChatThread(input);
-  return { error: "Unknown chat history action", action };
+type Input = Record<string, unknown>;
+
+const ACTIONS: Record<string, (input: Input) => Promise<object>> = {
+  search: searchChatHistory,
+  read: readChatThread,
+  delete: deleteChatThread,
+};
+export const CHAT_HISTORY_ACTIONS = Object.keys(ACTIONS);
+
+export async function chatHistory(input: Input): Promise<object> {
+  const action = trimmedString(input.action) || "search";
+  return (
+    ACTIONS[action]?.(input) ?? { error: "Unknown chat history action", action }
+  );
 }
 
-export async function searchChatHistory(input: Record<string, unknown>) {
+async function searchChatHistory(input: Input) {
   const query = String(input.query || "")
     .trim()
     .toLowerCase();
@@ -70,7 +78,7 @@ export async function searchChatHistory(input: Record<string, unknown>) {
   };
 }
 
-export async function readChatThread(input: Record<string, unknown>) {
+async function readChatThread(input: Input) {
   const chatId = String(input.chatId || input.id || "").trim();
   if (!chatId) return { error: "Missing chatId" };
   const requestedOffset = input.offset;
@@ -102,7 +110,7 @@ export async function readChatThread(input: Record<string, unknown>) {
   };
 }
 
-export async function deleteChatThread(input: Record<string, unknown>) {
+async function deleteChatThread(input: Input) {
   const chatId = String(input.chatId || input.id || "").trim();
   if (!chatId) return { error: "Missing chatId" };
   const chat = (await storage.chats.get()).find((item) => item.id === chatId);

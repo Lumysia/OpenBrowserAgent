@@ -30,14 +30,14 @@ import type { useChats } from "./use-chats";
 import type { CurrentChatStatus } from "./use-current-chat";
 import type { useParallelChatStreams } from "./use-parallel-chat-streams";
 
-export type SendOptions = {
+type SendOptions = {
   queued?: boolean;
   resendMessage?: ChatMessage;
   // A context menu or smart bar request: its own tabs and instruction.
   request?: SendRequest;
 };
 
-export type SendMessage = (
+type SendMessage = (
   content?: string,
   resendAttachments?: UploadedAttachment[],
   options?: SendOptions,

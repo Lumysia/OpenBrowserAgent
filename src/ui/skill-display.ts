@@ -1,5 +1,5 @@
 import { BUILTIN_SKILL_ID_PREFIX } from "../shared/builtin-skills";
-import type { Messages } from "../shared/i18n";
+import { languageOf, type Messages } from "../shared/i18n";
 import type { PickedSkill } from "../shared/types";
 import { SKILL_MAX_CHARS } from "../shared/config";
 import { formatNumber } from "../shared/format";
@@ -23,6 +23,6 @@ export function skillDisplay(skill: PickedSkill, t: Messages) {
 export function skillTooLargeText(t: Messages) {
   return t.options.skillCheck.size.failed.replace(
     "{max}",
-    formatNumber(SKILL_MAX_CHARS),
+    formatNumber(languageOf(t), SKILL_MAX_CHARS),
   );
 }

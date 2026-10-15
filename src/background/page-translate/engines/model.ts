@@ -15,9 +15,9 @@ import type { EngineRequest, TranslationEngine } from "./types";
 
 // Changes when the prompt changes, so cached translations from an older
 // prompt aren't reused.
-export const MODEL_PROMPT_VERSION = 2;
+const MODEL_PROMPT_VERSION = 2;
 // The same for the subtitle prompt.
-export const MODEL_SUBTITLE_PROMPT_VERSION = 1;
+const MODEL_SUBTITLE_PROMPT_VERSION = 1;
 
 // How often the item being written is sent to the page.
 const PARTIAL_INTERVAL_MS = 80;

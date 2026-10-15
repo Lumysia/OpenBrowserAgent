@@ -5,7 +5,7 @@
 // own copies. Dependency-free: the page script imports this module.
 import { compact } from "../text";
 
-export type PlaceholderToken =
+type PlaceholderToken =
   | { type: "text"; value: string }
   | { type: "open"; id: number }
   | { type: "close"; id: number }

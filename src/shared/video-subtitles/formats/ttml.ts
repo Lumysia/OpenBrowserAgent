@@ -59,7 +59,7 @@ function attribute(tag: string, name: string) {
 // A TTML time expression in seconds: a clock time (`00:01:02.5`, or with
 // frames `00:01:02:12`) or an offset (`1.5s`, `1500ms`, `2m`, `30f`,
 // `10000t`).
-export function timeExpression(
+function timeExpression(
   value: string | undefined,
   rates: Rates,
 ): number | undefined {

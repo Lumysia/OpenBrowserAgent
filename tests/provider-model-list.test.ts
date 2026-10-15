@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 import { listModels } from "../src/background/provider-requests";
 import {
+  MODEL_LIST_MAX_PAGES,
   modelListRequest,
   parseModelList,
 } from "../src/shared/provider-model-list";
@@ -60,7 +61,7 @@ test("Anthropic-compatible endpoints list models with its version and key header
       apiKey: "key",
     }),
     {
-      url: "https://api.anthropic.com/v1/models",
+      url: "https://api.anthropic.com/v1/models?limit=1000",
       headers: { "anthropic-version": "2023-06-01", "x-api-key": "key" },
     },
   );
@@ -80,7 +81,7 @@ test("Anthropic-compatible endpoints list models with its version and key header
 
 test("Gemini lists the models that generate content, with the key in a header", () => {
   assert.deepEqual(modelListRequest("gemini", { apiKey: "g" }), {
-    url: "https://generativelanguage.googleapis.com/v1beta/models",
+    url: "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000",
     headers: { "x-goog-api-key": "g" },
   });
   assert.deepEqual(
@@ -190,3 +191,73 @@ test("a failed listing reports the server's answer, or its status", async () => 
     message: "HTTP 401",
   });
 });
+
+test("Anthropic and Gemini lists are read to their last page", async () => {
+  const pages: Record<string, unknown> = {
+    "https://api.anthropic.com/v1/models?limit=1000": {
+      data: [{ id: "a1" }],
+      has_more: true,
+      last_id: "a1",
+    },
+    "https://api.anthropic.com/v1/models?limit=1000&after_id=a1": {
+      data: [{ id: "a2" }],
+      has_more: false,
+      last_id: "a2",
+    },
+    "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000": {
+      models: [gemini("g1")],
+      nextPageToken: "next",
+    },
+    "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&pageToken=next":
+      { models: [gemini("g2")] },
+  };
+  const fetch = mock.method(globalThis, "fetch", async (url: string) =>
+    Response.json(pages[url]),
+  );
+  const names = async (type: "anthropic" | "gemini") =>
+    (
+      await listModels({
+        providerId: type,
+        config: {
+          type,
+          apiKey: "k",
+          consent: {
+            host:
+              type === "anthropic"
+                ? "api.anthropic.com"
+                : "generativelanguage.googleapis.com",
+            grantedAt: 1,
+          },
+        },
+      })
+    ).map((model) => model.name);
+  assert.deepEqual(await names("anthropic"), ["a1", "a2"]);
+  assert.deepEqual(await names("gemini"), ["g1", "g2"]);
+  assert.equal(fetch.mock.callCount(), 4);
+});
+
+test("a list that never ends stops after the page cap", async () => {
+  const fetch = mock.method(globalThis, "fetch", async () =>
+    Response.json({ models: [gemini("g")], nextPageToken: "again" }),
+  );
+  const models = await listModels({
+    providerId: "gemini",
+    config: {
+      type: "gemini",
+      apiKey: "k",
+      consent: { host: "generativelanguage.googleapis.com", grantedAt: 1 },
+    },
+  });
+  assert.deepEqual(
+    models.map((model) => model.name),
+    ["g"],
+  );
+  assert.equal(fetch.mock.callCount(), MODEL_LIST_MAX_PAGES);
+});
+
+function gemini(name: string) {
+  return {
+    name: `models/${name}`,
+    supportedGenerationMethods: ["generateContent"],
+  };
+}

@@ -66,7 +66,7 @@ export type SyncContext = {
 export type RoundReason =
   "edit" | "poll" | "open" | "startup" | "manual" | "remote";
 
-export type RoundResult = {
+type RoundResult = {
   pending: number;
   // Records left for later (a reply still streaming).
   held: number;
@@ -79,7 +79,7 @@ export type RoundResult = {
   keys?: KeysStatus;
 };
 
-export type KeysStatus = { onServer: boolean; unlocked: boolean };
+type KeysStatus = { onServer: boolean; unlocked: boolean };
 
 const MAX_WRITE_ATTEMPTS = 4;
 const WRITE_RETRY_BASE_MS = 100;

@@ -20,7 +20,7 @@ export type ActStep = {
   double?: boolean;
 };
 
-export type StepResult = {
+type StepResult = {
   ok: boolean;
   error?: string;
   note?: string;

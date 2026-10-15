@@ -4,11 +4,11 @@ import { copySkill, normalizeSkillName } from "./skills";
 import type { Skill, SkillInvokeMode, SkillSettings } from "./types";
 
 export const SKILL_INVOKE_MODES: SkillInvokeMode[] = ["auto", "manual", "off"];
-export const DEFAULT_SKILL_INVOKE_MODE: SkillInvokeMode = "auto";
+const DEFAULT_SKILL_INVOKE_MODE: SkillInvokeMode = "auto";
 
 // builtin: shipped in the code; override: the user's copy of a built-in
 // (same name), which replaces it until deleted; user: the user's own.
-export type SkillSource = "builtin" | "override" | "user";
+type SkillSource = "builtin" | "override" | "user";
 
 export type SkillEntry = {
   skill: Skill;
@@ -95,13 +95,6 @@ export function findSkill(skills: Skill[], nameOrId: string) {
   return skills.find(
     (skill) =>
       skill.id === nameOrId || normalizeSkillName(skill.name) === wanted,
-  );
-}
-
-export function isBuiltinSkillName(name: string) {
-  const wanted = normalizeSkillName(name);
-  return BUILTIN_SKILLS.some(
-    (skill) => normalizeSkillName(skill.name) === wanted,
   );
 }
 

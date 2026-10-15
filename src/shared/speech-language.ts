@@ -7,10 +7,10 @@ import { normalizeLanguageTag, primaryLanguage } from "./language-tags";
 
 // Some voices (Chrome's network voices) stop after about 15 seconds of one
 // utterance, so long text is read in sentence-sized pieces.
-export const SPEECH_CHUNK_CHARS = 200;
+const SPEECH_CHUNK_CHARS = 200;
 
 // A detector result below this is a guess: the hints know better.
-export const SPEECH_DETECTION_CONFIDENCE = 0.6;
+const SPEECH_DETECTION_CONFIDENCE = 0.6;
 
 // Read for Latin-script text when no hint is written in Latin script.
 const LATIN_FALLBACK = "en";
@@ -163,13 +163,13 @@ const SCRIPTS = {
   latin: { pattern: /\p{Script=Latin}/u, codes: ["Latn"], languages: [] },
 } satisfies Record<string, ScriptInfo>;
 
-export type SpeechScript = keyof typeof SCRIPTS;
+type SpeechScript = keyof typeof SCRIPTS;
 
 const SCRIPT_ENTRIES = Object.entries(SCRIPTS) as [SpeechScript, ScriptInfo][];
 
 // A run of text in one script. Spaces, digits and punctuation belong to the
 // run they follow; `script` is undefined when the text has no letters.
-export type ScriptRun = { text: string; script?: SpeechScript };
+type ScriptRun = { text: string; script?: SpeechScript };
 
 // What to read, and the languages it is likely in, most likely first: the
 // text's own known language, then the page's, then the UI language.

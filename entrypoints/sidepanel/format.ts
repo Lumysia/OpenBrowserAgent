@@ -1,6 +1,6 @@
 import { RELATIVE_TIME_MINUTE_MS } from "../../src/shared/config";
 import { formatDateTime, formatNumber } from "../../src/shared/format";
-import { formatCount, type Messages } from "../../src/shared/i18n";
+import { formatCount, languageOf, type Messages } from "../../src/shared/i18n";
 import type { ChatMeta } from "../../src/shared/types";
 
 export function sortChatsNewestFirst<T extends ChatMeta>(chats: T[]) {
@@ -27,7 +27,7 @@ export function formatRelativeTime(t: Messages, value: number) {
   if (hours < 24)
     return formatToolMessage(t.sidepanel.relativeHoursAgo, { count: hours });
   const days = Math.round(hours / 24);
-  if (days >= 7) return formatHistoryDate(value);
+  if (days >= 7) return formatHistoryDate(languageOf(t), value);
   return formatToolMessage(t.sidepanel.relativeDaysAgo, {
     count: days,
   });
@@ -44,8 +44,8 @@ export function formatToolMessage(
   );
 }
 
-export function formatMessageTime(value: number) {
-  return formatDateTime(value, {
+export function formatMessageTime(language: string, value: number) {
+  return formatDateTime(language, value, {
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -53,21 +53,21 @@ export function formatMessageTime(value: number) {
   });
 }
 
-function formatHistoryDate(value: number) {
+function formatHistoryDate(language: string, value: number) {
   const date = new Date(value);
   const sameYear = date.getFullYear() === new Date().getFullYear();
-  return formatDateTime(value, {
+  return formatDateTime(language, value, {
     year: sameYear ? undefined : "numeric",
     month: "short",
     day: "numeric",
   });
 }
 
-export function formatCompactNumber(value: number) {
+export function formatCompactNumber(language: string, value: number) {
   return Math.abs(value) >= 10_000
-    ? formatNumber(value, {
+    ? formatNumber(language, value, {
         notation: "compact",
         maximumSignificantDigits: 3,
       })
-    : formatNumber(value);
+    : formatNumber(language, value);
 }

@@ -1,7 +1,7 @@
 import { normalizeProviderConfig } from "./provider-instances";
 import { storage } from "./storage";
 import type { ProviderConfig } from "./types";
-import { providerType } from "./providers";
+import { providerEndpoint } from "./provider-urls";
 import { ProviderConsentError } from "./user-errors";
 
 // Content the user shares (messages, page text, screenshots, files) goes to
@@ -9,9 +9,11 @@ import { ProviderConsentError } from "./user-errors";
 // host, stored with the provider (and synced with it). Endpoints on this
 // device or the local network need none.
 
+// The base URL as entered, else the type's own endpoint (provider-urls.ts).
+// The entered text is read as it is, not as the resolver spells it, so the
+// host of a text that is no URL stays the one stored with its consent.
 function endpointUrl(provider: ProviderConfig) {
-  const { defaultBaseUrl, sdkEndpoint } = providerType(provider.type);
-  return provider.baseUrl?.trim() || defaultBaseUrl || sdkEndpoint || "";
+  return provider.baseUrl?.trim() || providerEndpoint(provider.type, undefined);
 }
 
 function parseEndpoint(provider: ProviderConfig) {
@@ -86,17 +88,6 @@ export async function grantProviderConsent(providerId: string, host: string) {
     };
   });
   return granted;
-}
-
-export function withdrawProviderConsent(providerId: string) {
-  return storage.provider.update((providers) => {
-    const provider = providers[providerId];
-    if (!provider?.consent) return providers;
-    return {
-      ...providers,
-      [providerId]: withProviderConsent(provider, false),
-    };
-  });
 }
 
 // Throws unless the provider may receive content now.

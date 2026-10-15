@@ -8,8 +8,8 @@ import {
   type DownloadRecord,
   type DownloadStatus,
 } from "../../src/shared/downloads";
-import { formatBytes } from "../../src/shared/format";
-import { formatCount, type Messages } from "../../src/shared/i18n";
+import { formatBytes, formatNumber } from "../../src/shared/format";
+import { formatCount, languageOf, type Messages } from "../../src/shared/i18n";
 import { formatToolMessage } from "./format";
 import {
   actionLabel,
@@ -37,14 +37,16 @@ const REASONS: Array<[RegExp, Reason]> = [
   [/^FILE_/, "disk"],
 ];
 
-function progress(record: DownloadRecord) {
-  if (!record.totalBytes) return formatBytes(record.bytes || 0);
-  return `${Math.floor(((record.bytes || 0) / record.totalBytes) * 100)}%`;
+function progress(record: DownloadRecord, language: string) {
+  if (!record.totalBytes) return formatBytes(language, record.bytes || 0);
+  const percent = Math.floor(((record.bytes || 0) / record.totalBytes) * 100);
+  return formatNumber(language, percent / 100, { style: "percent" });
 }
 
 // What became of one download, in the interface language.
-export function downloadSummary(record: DownloadRecord, t: Messages) {
+function downloadSummary(record: DownloadRecord, t: Messages) {
   const messages = t.downloads;
+  const language = languageOf(t);
   const name = record.name;
   if (record.status === DOWNLOAD_STATUS.completed && record.exists === false)
     return formatToolMessage(messages.moved, { name });
@@ -55,8 +57,8 @@ export function downloadSummary(record: DownloadRecord, t: Messages) {
     "other";
   return formatToolMessage(messages.status[record.status] || "", {
     name,
-    size: formatBytes(record.bytes || 0),
-    progress: progress(record),
+    size: formatBytes(language, record.bytes || 0),
+    progress: progress(record, language),
     reason: messages.reasons[reason],
   });
 }

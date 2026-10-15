@@ -4,7 +4,7 @@ import {
   WORKSPACE_TOTAL_MAX_CHARS,
 } from "../../src/shared/config";
 import { formatNumber } from "../../src/shared/format";
-import type { Messages } from "../../src/shared/i18n";
+import { languageOf, type Messages } from "../../src/shared/i18n";
 import type { WorkspaceErrorCode } from "../../src/shared/workspace-errors";
 
 const LIMITS: Partial<Record<WorkspaceErrorCode, number>> = {
@@ -20,5 +20,5 @@ export function workspaceErrorText(code: WorkspaceErrorCode, t: Messages) {
   const text = t.options.agentWorkspaceErrors[code];
   return limit === undefined
     ? text
-    : text.replaceAll("{limit}", formatNumber(limit));
+    : text.replaceAll("{limit}", formatNumber(languageOf(t), limit));
 }

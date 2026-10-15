@@ -1,31 +1,40 @@
 import { BYTES_PER_KIB, BYTES_PER_MIB, MS_PER_SECOND } from "./config";
-import { getFormatLanguage } from "./i18n";
 
 // Numbers, sizes and dates shown in the extension UI follow the UI language,
-// not the browser's, so they match the text around them.
+// not the browser's, so they match the text around them. Callers pass that
+// language (`languageOf(t)` for the messages they show it with).
 
 export function formatNumber(
+  language: string,
   value: number,
   options?: Intl.NumberFormatOptions,
 ) {
-  return new Intl.NumberFormat(getFormatLanguage(), options).format(value);
+  return new Intl.NumberFormat(language, options).format(value);
 }
 
-export function formatBytes(value: number, maxUnit: "kb" | "mb" = "mb") {
+export function formatBytes(
+  language: string,
+  value: number,
+  maxUnit: "kb" | "mb" = "mb",
+) {
   if (value < BYTES_PER_KIB)
-    return formatNumber(value, {
+    return formatNumber(language, value, {
       style: "unit",
       unit: "byte",
       unitDisplay: "long",
     });
   const megabytes = maxUnit === "mb" && value >= BYTES_PER_MIB;
-  return formatNumber(value / (megabytes ? BYTES_PER_MIB : BYTES_PER_KIB), {
-    style: "unit",
-    unit: megabytes ? "megabyte" : "kilobyte",
-    unitDisplay: "short",
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  });
+  return formatNumber(
+    language,
+    value / (megabytes ? BYTES_PER_MIB : BYTES_PER_KIB),
+    {
+      style: "unit",
+      unit: megabytes ? "megabyte" : "kilobyte",
+      unitDisplay: "short",
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    },
+  );
 }
 
 // A size in text the model reads, which stays English whatever the UI
@@ -37,14 +46,14 @@ export function formatBytesForModel(value: number) {
 }
 
 // "850 ms" under a second, else seconds with two decimals ("1,25 s").
-export function formatDuration(milliseconds: number) {
+export function formatDuration(language: string, milliseconds: number) {
   return milliseconds < MS_PER_SECOND
-    ? formatNumber(Math.round(milliseconds), {
+    ? formatNumber(language, Math.round(milliseconds), {
         style: "unit",
         unit: "millisecond",
         unitDisplay: "short",
       })
-    : formatNumber(milliseconds / MS_PER_SECOND, {
+    : formatNumber(language, milliseconds / MS_PER_SECOND, {
         style: "unit",
         unit: "second",
         unitDisplay: "short",
@@ -54,13 +63,14 @@ export function formatDuration(milliseconds: number) {
 }
 
 export function formatDateTime(
+  language: string,
   value: number | Date,
   options: Intl.DateTimeFormatOptions = {
     dateStyle: "medium",
     timeStyle: "short",
   },
 ) {
-  return new Intl.DateTimeFormat(getFormatLanguage(), options).format(value);
+  return new Intl.DateTimeFormat(language, options).format(value);
 }
 
 // Drops blank lines before the first and after the last line of user-typed

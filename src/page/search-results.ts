@@ -8,7 +8,7 @@ import { clip, isBlock, isHidden, roleOf } from "./dom";
 // title is the link's heading or most prominent text line, the snippet the
 // rest of the block's own text.
 
-export type SearchResult = { title: string; url: string; snippet: string };
+type SearchResult = { title: string; url: string; snippet: string };
 
 const SNIPPET_MAX = 300;
 // Text beyond the title and URL that makes a block a described result.

@@ -167,7 +167,7 @@ const COUNTED_MAX_WORDS = 2;
 
 export type Metadata = "name" | "number" | "date";
 
-export type MetadataContext = {
+type MetadataContext = {
   // The language the text is written in, from the page's markup.
   language?: string;
   // The page sets the text apart as a label: the whole text of a link, a

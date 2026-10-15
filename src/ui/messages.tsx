@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
-import { getMessages, type Messages } from "../shared/i18n";
+import { getMessages, languageOf, type Messages } from "../shared/i18n";
 
 type UiLanguage = { language: string | undefined; t: Messages };
 
@@ -33,6 +33,11 @@ function useUiLanguageContext() {
 
 export function useMessages() {
   return useUiLanguageContext().t;
+}
+
+// The UI language numbers and dates are formatted in (format.ts).
+export function useLocale() {
+  return languageOf(useMessages());
 }
 
 export function useUiLanguage() {

@@ -10,8 +10,8 @@ import {
 } from "../src/shared/chat-updates";
 import { normalizeChatContent } from "../src/shared/chats";
 import { getMessages } from "../src/shared/i18n";
+import { MODEL_STOP_NOTE } from "../src/shared/model-notes";
 import {
-  modelStopNote,
   replyCutOff,
   RUN_STOP_REASON,
   type CutReason,
@@ -192,7 +192,7 @@ test("a cut reply goes back to the model with a note, never as a finished answer
       .join("");
     const cut = replyCutOff(reply(chat))!;
     assert.ok(text.startsWith("| 稠"));
-    assert.ok(text.endsWith(modelStopNote(cut.reason)));
+    assert.ok(text.endsWith(MODEL_STOP_NOTE[cut.reason]));
   }
   const finished = historyMessages(
     cutChat({ endedAt: 3, stopReason: RUN_STOP_REASON.finished }).messages,

@@ -4,7 +4,7 @@ import { createChatDraft } from "./chat-state-actions";
 
 // Which chat the panel shows: a stored chat, or the composer's draft until
 // its first message is stored.
-export type ChatSelection = {
+type ChatSelection = {
   activeChatId: string;
   draftChat?: Chat;
   // Counts the times the user opened a chat, so opening the chat already

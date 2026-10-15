@@ -46,20 +46,21 @@ function isPlural(value: object): value is Plural {
   );
 }
 
-// The language numbers and dates in this page's UI are formatted in (see
-// format.ts): the one the page last got its messages for.
-let formatLanguage: UiLanguage = DEFAULT_UI_LANGUAGE;
+// The UI language each set of messages is in, so code that shows them can
+// format numbers and dates to match (format.ts).
+const MESSAGES_LANGUAGE = new Map<LocaleMessages, UiLanguage>(
+  Object.entries(MESSAGES).map(([code, messages]) => [
+    messages,
+    code as UiLanguage,
+  ]),
+);
 
-export function getFormatLanguage() {
-  return formatLanguage;
+export function getMessages(language?: string) {
+  return MESSAGES[resolveLanguage(language)];
 }
 
-// The messages for `language`. A page shows text in one language, so this
-// also makes it the one getFormatLanguage returns.
-export function getMessages(language?: string) {
-  const code = resolveLanguage(language);
-  if (language) formatLanguage = code;
-  return MESSAGES[code];
+export function languageOf(messages: LocaleMessages): UiLanguage {
+  return MESSAGES_LANGUAGE.get(messages) ?? DEFAULT_UI_LANGUAGE;
 }
 
 export type Messages = LocaleMessages;

@@ -49,6 +49,8 @@ export const STORAGE_KEYS = {
   // The local day a holiday burst last played (see holidays.ts).
   holidayBurstDay: "holiday-burst-day",
   ignoreSyncedProvidersForBootstrap: "ignore-synced-providers-for-bootstrap",
+  // What models refused, learned on this device (see model-limits.ts).
+  learnedModelLimits: "learned-model-limits",
   // The storage migrations this device has run (see storage-migrations.ts).
   storageMigrations: "storage-migrations",
   // A selection handed from a page to the side panel (session storage where

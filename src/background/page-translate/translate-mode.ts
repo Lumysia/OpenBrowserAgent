@@ -12,7 +12,7 @@ const SESSION_KEY = "page-translate-mode-tabs";
 // The navigation fields this uses; webNavigation details have them. A
 // browser that doesn't report `transitionType` never ends the mode with a
 // reload, only with "Show original" or by closing the tab.
-export type TabNavigation = {
+type TabNavigation = {
   tabId: number;
   frameId: number;
   transitionType?: string;
@@ -23,7 +23,7 @@ type Area = {
   set(items: Record<string, unknown>): Promise<void>;
 };
 
-export type TranslateModeOptions = {
+type TranslateModeOptions = {
   // Where the mode is stored; none keeps it in memory only.
   area?: Area;
   // Translates the tab's page unless it is already.

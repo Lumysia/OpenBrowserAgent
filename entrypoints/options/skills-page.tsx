@@ -48,7 +48,7 @@ import { BuiltinSkillDetail, SkillEditor } from "./skill-editor";
 import { importSkillZip } from "./skill-import";
 import { importErrorDetail } from "./import-errors";
 import { useTransient } from "../../src/ui/use-transient";
-import { useMessages } from "../../src/ui/messages";
+import { useLocale, useMessages } from "../../src/ui/messages";
 
 export function SkillsPage() {
   const { entries, setSkills, setSettings } = useSkillCatalog();
@@ -239,6 +239,7 @@ function SkillItem({
   children: ReactNode;
 }) {
   const t = useMessages();
+  const locale = useLocale();
   const { skill, source, invoke } = entry;
   const { name } = skillDisplay(skill, t);
   const filesNotSynced = useNotSyncedHere(SKILL_FILES);
@@ -270,12 +271,13 @@ function SkillItem({
               )}
               {source !== "builtin" && (
                 <Badge>
-                  {t.options.updatedAt}: {formatSkillDate(draft.updatedAt)}
+                  {t.options.updatedAt}:{" "}
+                  {formatSkillDate(locale, draft.updatedAt)}
                 </Badge>
               )}
               <Badge>
                 {t.options.skillSize}:{" "}
-                {formatBytes(skillPackageBytes(draft), "kb")}
+                {formatBytes(locale, skillPackageBytes(draft), "kb")}
               </Badge>
             </span>
           </span>
@@ -345,6 +347,6 @@ function skillCheckLabel(t: Messages, id: string, ok: boolean) {
   return id === "size" ? skillTooLargeText(t) : labels[id].failed;
 }
 
-function formatSkillDate(value?: number) {
-  return value ? formatDateTime(value) : "-";
+function formatSkillDate(locale: string, value?: number) {
+  return value ? formatDateTime(locale, value) : "-";
 }

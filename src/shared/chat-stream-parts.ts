@@ -4,55 +4,17 @@ import {
   isToolPartType,
   toolNameFromPartType,
   toolPartType,
-  toolStateRank,
   type ChatPart,
 } from "./types";
+import { mergePart, streamedText } from "./chat-part-merge";
 
 export function applyPart(parts: ChatPart[] = [], part: ChatPart) {
   const index = parts.findIndex((candidate) => candidate.id === part.id);
   if (index === -1) return [...parts, part];
   return parts.map((candidate, candidateIndex) => {
     if (candidateIndex !== index) return candidate;
-    return mergePart(candidate, part);
+    return mergePart(candidate, part, streamedText);
   });
-}
-
-function mergePart(current: ChatPart, next: ChatPart): ChatPart {
-  if (current.type !== next.type) return { ...current, ...definedPart(next) };
-  if (current.type === "text" || current.type === "reasoning")
-    return mergeTextPart(current, next);
-  if (isToolPartType(current.type)) return mergeToolPart(current, next);
-  return { ...current, ...definedPart(next) };
-}
-
-function mergeTextPart(current: ChatPart, next: ChatPart): ChatPart {
-  if (next.append)
-    return { ...current, text: `${current.text || ""}${next.text || ""}` };
-  return {
-    ...current,
-    ...definedPart(next),
-    text: next.text || current.text,
-  };
-}
-
-function mergeToolPart(current: ChatPart, next: ChatPart): ChatPart {
-  const merged = { ...current, ...definedPart(next) };
-  return {
-    ...merged,
-    state: mergeToolState(current.state, next.state),
-  };
-}
-
-function mergeToolState(current: ChatPart["state"], next: ChatPart["state"]) {
-  if (!next) return current;
-  if (!current) return next;
-  return toolStateRank(next) >= toolStateRank(current) ? next : current;
-}
-
-function definedPart(part: ChatPart) {
-  return Object.fromEntries(
-    Object.entries(part).filter(([, value]) => value !== undefined),
-  ) as Partial<ChatPart>;
 }
 
 export function streamPartFromChunk(chunk: unknown): {

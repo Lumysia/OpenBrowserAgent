@@ -13,7 +13,7 @@ import {
 import { CONTEXT_POLICY, tokenChars, windowShare } from "./policy";
 import { createToolOutputs } from "./tool-outputs";
 
-export type ContextEngineOptions = {
+type ContextEngineOptions = {
   chatId: string;
   store: ArtifactStore;
   contextWindow?: number;

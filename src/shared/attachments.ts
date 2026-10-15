@@ -13,16 +13,15 @@ export type UploadedAttachmentKind =
 
 export const ATTACHMENT_CONTEXT_TAG = "available_attachments";
 
-export const ATTACHMENT_MIME_PREFIX = {
+const ATTACHMENT_MIME_PREFIX = {
   audio: "audio/",
   image: "image/",
   video: "video/",
 } as const;
 
-export const DOCUMENT_ATTACHMENT_EXTENSION_PATTERN =
-  /\.(docx?|pdf|pptx?|rtf|xlsx?)$/i;
+const DOCUMENT_ATTACHMENT_EXTENSION_PATTERN = /\.(docx?|pdf|pptx?|rtf|xlsx?)$/i;
 
-export const DOCUMENT_ATTACHMENT_MIME_HINTS = [
+const DOCUMENT_ATTACHMENT_MIME_HINTS = [
   "pdf",
   "officedocument",
   "msword",

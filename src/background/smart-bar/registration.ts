@@ -3,10 +3,10 @@ import {
   smartBarPatternsCover,
   type SmartBarSettings,
 } from "../../shared/smart-bar";
-import { SMART_BAR_SCRIPT } from "../../shared/smart-bar-protocol";
 import { getBrowserApi } from "../../shared/browser-api";
+import { PAGE_SCRIPT, REGISTERED_SCRIPT_ID } from "../../shared/page-scripts";
 
-const SCRIPT_ID = "oba-smart-bar";
+const SCRIPT_ID = REGISTERED_SCRIPT_ID.smartBar;
 
 type RegisteredScript = chrome.scripting.RegisteredContentScript;
 
@@ -27,7 +27,7 @@ export async function syncSmartBarRegistration(settings: SmartBarSettings) {
   }
   const script: RegisteredScript = {
     id: SCRIPT_ID,
-    js: [SMART_BAR_SCRIPT.trigger],
+    js: [PAGE_SCRIPT.smartBar],
     matches: patterns.matches,
     excludeMatches: patterns.excludeMatches,
     allFrames: true,
@@ -90,7 +90,7 @@ export function injectTrigger(tabId: number) {
   return getBrowserApi()
     .scripting.executeScript({
       target: { tabId, allFrames: true },
-      files: [SMART_BAR_SCRIPT.trigger],
+      files: [PAGE_SCRIPT.smartBar],
     })
     .then(
       () => true,
@@ -101,7 +101,7 @@ export function injectTrigger(tabId: number) {
 export function injectUi(tabId: number, frameId: number) {
   return getBrowserApi().scripting.executeScript({
     target: { tabId, frameIds: [frameId] },
-    files: [SMART_BAR_SCRIPT.ui],
+    files: [PAGE_SCRIPT.smartBarUi],
   });
 }
 

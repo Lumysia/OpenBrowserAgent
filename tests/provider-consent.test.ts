@@ -242,3 +242,20 @@ test("the chat model choice keeps the resolver's order", () => {
   );
   assert.equal(chooseChatModel({}, prefs), undefined);
 });
+
+test("consent hosts stay the ones earlier versions stored", () => {
+  const cases: Array<[ProviderConfig, string]> = [
+    [{ type: "openai" }, "api.openai.com"],
+    [{ type: "anthropic" }, "api.anthropic.com"],
+    [{ type: "gemini" }, "generativelanguage.googleapis.com"],
+    [{ type: "gemini", baseUrl: "  " }, "generativelanguage.googleapis.com"],
+    [at("https://Proxy.Example:8443/v1/"), "proxy.example:8443"],
+    [at("https://proxy.example:443/v1"), "proxy.example"],
+    [at("http://box.example:11434", "ollama"), "box.example:11434"],
+    // Text that is no URL stands for itself, as entered.
+    [at("api.example.com/v1/"), "api.example.com/v1/"],
+    [at("Box.Example:11434/", "ollama"), ""],
+  ];
+  for (const [provider, host] of cases)
+    assert.equal(providerConsentHost(provider), host, JSON.stringify(provider));
+});

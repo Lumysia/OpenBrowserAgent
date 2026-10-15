@@ -27,8 +27,19 @@ import {
 } from "../shared/provider-urls";
 import type { ThinkingSwitch } from "../shared/thinking-switch";
 import type { ProviderId } from "../shared/providers";
+import {
+  MODEL_REFUSAL,
+  type ModelRef,
+  type ModelRefusal,
+} from "../shared/model-limits";
+import {
+  IMAGE_OMITTED_NOTE,
+  internalInstruction,
+  TEXT_ONLY_INSTRUCTION,
+} from "../shared/model-notes";
 import { CONTEXT_POLICY } from "./context/policy";
 import { catalogModel, knownOutputLimit } from "./model-catalog";
+import { knownRefusals, rememberRefusal } from "./model-limits";
 import { quickThinking, thinkingFieldNames } from "./quick-reasoning";
 import {
   FIELD_REJECTION_STATUSES,
@@ -44,6 +55,8 @@ export type ProviderModel = {
   modelName: string;
   contextLength?: number;
   thinkingSwitch?: ThinkingSwitch;
+  // The configured model this is, which keeps what it refused.
+  ref?: ModelRef;
 };
 
 export function piModel(model: ProviderModel): Model<Api> {
@@ -130,146 +143,162 @@ function apiOf(model: Model<Api>) {
 // retried with backoff by Pi's provider wrapper (Retry-After honoured).
 const PROVIDER_RETRIES = 3;
 
-// Models that rejected mid-conversation tool declarations, for the life of
-// the service worker.
-const withoutInlineTools = new Set<string>();
-// Models that rejected the quick-task thinking fields, likewise.
-const withoutQuickReasoning = new Set<string>();
+// Pi's SDKs require an API key; endpoints without one get this, and no
+// auth header (see createProviderStream).
+const NO_API_KEY = "local-no-key";
 
 // Pi owns parsing and streaming. This adapter supplies extension configuration,
 // retries, and the product's single retries without what a model rejects:
 // image content, mid-conversation tool declarations (the tool list then
-// carries every loaded tool), or the quick-task thinking fields. Prompt
-// caching uses Pi's defaults: Anthropic breakpoints on tools, system prompt
-// and the latest message; automatic caching elsewhere.
+// carries every loaded tool), or the quick-task thinking fields. What it
+// rejected is remembered for the model (model-limits.ts), so later requests
+// leave it out from the start. Prompt caching uses Pi's defaults: Anthropic
+// breakpoints on tools, system prompt and the latest message; automatic
+// caching elsewhere.
 export function createProviderStream(
   configuration: ProviderModel,
   reasoning?: RequestReasoning,
   onImageRejected?: () => void,
 ): StreamFn {
-  let textOnly = false;
-  const modelKey = `${baseUrlKey(configuration.baseUrl)}|${configuration.modelName}`;
-  let inlineTools = !withoutInlineTools.has(modelKey);
+  const known = knownRefusals(configuration.ref);
   const quick = reasoning === QUICK_TASK_REASONING;
   const outputLimit = knownOutputLimit(
     configuration.provider,
     configuration.modelName,
   );
+  // Whether the user has been told this run's images are left out.
+  let imagesNoticed = false;
+  const noticeImagesLeftOut = () => {
+    if (imagesNoticed) return;
+    imagesNoticed = true;
+    onImageRejected?.();
+  };
   return (requested, context, options) => {
-    let model = inlineTools ? requested : { ...requested, compat: undefined };
     const output = new AssistantMessageEventStream();
-    const run = async (
-      messages: Message[],
-      canRetry: boolean,
-    ): Promise<void> => {
-      const quickRequest =
-        quick && !withoutQuickReasoning.has(modelKey)
-          ? quickThinking(configuration, model)
-          : undefined;
-      // The thinking fields Pi wrote for the quick level.
-      let quickFields: string[] = [];
-      const responses = statusRecorder(
-        model.api === "anthropic-messages"
-          ? anthropicFetch(configuration)
-          : undefined,
-      );
-      const providerOptions = {
-        ...options,
-        maxTokens: options?.maxTokens ?? outputLimit,
-        apiKey: configuration.apiKey || "local-no-key",
-        // Without a key, no placeholder key is sent.
-        headers: configuration.apiKey
-          ? undefined
-          : { [providerAuthHeader(configuration.provider)]: null },
-        maxRetries: PROVIDER_RETRIES,
-        // The Gemini SDK takes no fetch function.
-        fetch:
-          model.api === "google-generative-ai" ? undefined : responses.fetch,
-        onPayload: (payload: unknown) => {
-          if (!quickRequest)
-            return withEffort(
-              payload,
-              model.api,
-              configuration.provider,
-              reasoning,
-            );
-          quickFields = thinkingFieldNames(model.api, payload);
-          return payload;
-        },
+    let model = requested;
+    const start = async () => {
+      const refuses = await known;
+      const learn = async (refusal: ModelRefusal) => {
+        refuses.add(refusal);
+        await rememberRefusal(configuration.ref, refusal);
       };
-      let started = false;
-      let pendingStart:
-        Extract<AssistantMessageEvent, { type: "start" }> | undefined;
-      const events = quickRequest
-        ? apiOf(model).streamSimple(
-            quickRequest.model as never,
-            normalizeContext({ messages }),
-            { ...providerOptions, reasoning: quickRequest.level },
-          )
-        : apiOf(model).stream(
-            model as never,
-            normalizeContext({ messages }),
-            providerOptions,
-          );
-      for await (const event of events) {
-        if (event.type === "start") {
-          pendingStart = event;
-          continue;
-        }
-        const rejection =
-          event.type === "error" && !started && event.reason !== "aborted"
-            ? requestRejection(
-                model.api,
-                event.error.errorMessage || "",
-                responses.status(),
-              )
+      if (refuses.has(MODEL_REFUSAL.inlineTools))
+        model = { ...model, compat: undefined };
+      const run = async (
+        messages: Message[],
+        canRetry: boolean,
+      ): Promise<void> => {
+        const quickRequest =
+          quick && !refuses.has(MODEL_REFUSAL.quickThinking)
+            ? quickThinking(configuration, model)
             : undefined;
-        if (
-          rejection &&
-          canRetry &&
-          rejectsField(rejection, [IMAGE_REJECTION])
-        ) {
-          textOnly = true;
-          onImageRejected?.();
-          return run(withoutImages(messages), false);
-        }
-        if (
-          rejection &&
-          inlineTools &&
-          model.compat &&
-          rejectsField(rejection, [INLINE_TOOLS_REJECTION])
-        ) {
-          inlineTools = false;
-          withoutInlineTools.add(modelKey);
-          model = { ...model, compat: undefined };
-          return run(messages, canRetry);
-        }
-        // Only a refusal that names a field the quick level added: the
-        // same request is then sent without them.
-        if (
-          rejection &&
-          quickRequest &&
-          rejectsField(rejection, quickFields, FIELD_REJECTION_STATUSES)
-        ) {
-          withoutQuickReasoning.add(modelKey);
-          return run(messages, canRetry);
-        }
+        // The thinking fields Pi wrote for the quick level.
+        let quickFields: string[] = [];
+        const responses = statusRecorder(
+          model.api === "anthropic-messages"
+            ? anthropicFetch(configuration)
+            : undefined,
+        );
+        const providerOptions = {
+          ...options,
+          maxTokens: options?.maxTokens ?? outputLimit,
+          apiKey: configuration.apiKey || NO_API_KEY,
+          // Without a key, no placeholder key is sent.
+          headers: configuration.apiKey
+            ? undefined
+            : { [providerAuthHeader(configuration.provider)]: null },
+          maxRetries: PROVIDER_RETRIES,
+          // The Gemini SDK takes no fetch function.
+          fetch:
+            model.api === "google-generative-ai" ? undefined : responses.fetch,
+          onPayload: (payload: unknown) => {
+            if (!quickRequest)
+              return withEffort(
+                payload,
+                model.api,
+                configuration.provider,
+                reasoning,
+              );
+            quickFields = thinkingFieldNames(model.api, payload);
+            return payload;
+          },
+        };
+        let started = false;
+        let pendingStart:
+          Extract<AssistantMessageEvent, { type: "start" }> | undefined;
+        const events = quickRequest
+          ? apiOf(model).streamSimple(
+              quickRequest.model as never,
+              normalizeContext({ messages }),
+              { ...providerOptions, reasoning: quickRequest.level },
+            )
+          : apiOf(model).stream(
+              model as never,
+              normalizeContext({ messages }),
+              providerOptions,
+            );
+        for await (const event of events) {
+          if (event.type === "start") {
+            pendingStart = event;
+            continue;
+          }
+          const rejection =
+            event.type === "error" && !started && event.reason !== "aborted"
+              ? requestRejection(
+                  model.api,
+                  event.error.errorMessage || "",
+                  responses.status(),
+                )
+              : undefined;
+          if (
+            rejection &&
+            canRetry &&
+            rejectsField(rejection, [IMAGE_REJECTION])
+          ) {
+            await learn(MODEL_REFUSAL.images);
+            noticeImagesLeftOut();
+            return run(withoutImages(messages), false);
+          }
+          if (
+            rejection &&
+            model.compat &&
+            rejectsField(rejection, [INLINE_TOOLS_REJECTION])
+          ) {
+            await learn(MODEL_REFUSAL.inlineTools);
+            model = { ...model, compat: undefined };
+            return run(messages, canRetry);
+          }
+          // Only a refusal that names a field the quick level added: the
+          // same request is then sent without them.
+          if (
+            rejection &&
+            quickRequest &&
+            rejectsField(rejection, quickFields, FIELD_REJECTION_STATUSES)
+          ) {
+            await learn(MODEL_REFUSAL.quickThinking);
+            return run(messages, canRetry);
+          }
 
-        // Delay only the empty start, not content. A rejected request must not
-        // append a phantom assistant to Pi's transcript before its retry.
-        if (pendingStart) {
-          output.push(pendingStart);
-          pendingStart = undefined;
+          // Delay only the empty start, not content. A rejected request must
+          // not append a phantom assistant to Pi's transcript before its
+          // retry.
+          if (pendingStart) {
+            output.push(pendingStart);
+            pendingStart = undefined;
+          }
+          if (event.type !== "error") started = true;
+          output.push(event);
         }
-        if (event.type !== "error") started = true;
-        output.push(event);
+        output.end();
+      };
+      const images = hasImages(context.messages);
+      if (images && refuses.has(MODEL_REFUSAL.images)) {
+        noticeImagesLeftOut();
+        return run(withoutImages(context.messages), false);
       }
-      output.end();
+      return run(context.messages, images);
     };
-    const messages = textOnly
-      ? withoutImages(context.messages)
-      : context.messages;
-    void run(messages, !textOnly && hasImages(messages)).catch((error) => {
+    void start().catch((error) => {
       const message = assistantMessage(model);
       message.stopReason = options?.signal?.aborted ? "aborted" : "error";
       message.errorMessage = errorMessage(error);
@@ -351,7 +380,7 @@ function withoutImages(messages: Message[]): Message[] {
           part.type === "image"
             ? {
                 type: "text" as const,
-                text: "[Image omitted: the selected model rejected non-text content.]",
+                text: IMAGE_OMITTED_NOTE,
               }
             : part,
         ),
@@ -360,8 +389,7 @@ function withoutImages(messages: Message[]): Message[] {
     {
       role: "user",
       timestamp: Date.now(),
-      content:
-        "<internal_instruction>The selected model rejected non-text content. Continue using text-only browser inspection and file metadata. Do not request screenshots or media again in this run. If visual evidence is needed, explain the limitation and ask the user to switch to a model that supports images.</internal_instruction>",
+      content: internalInstruction(TEXT_ONLY_INSTRUCTION),
     },
   ];
 }

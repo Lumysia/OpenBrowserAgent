@@ -2,7 +2,7 @@
 // WCAG contrast. Everything works on plain hex strings so the results can go
 // straight into CSS variables and tests.
 
-export type Oklch = { l: number; c: number; h: number };
+type Oklch = { l: number; c: number; h: number };
 type Rgb = [number, number, number];
 
 function parseHex(hex: string): Rgb {
@@ -106,7 +106,7 @@ export function alpha(hex: string, opacity: number) {
   return `rgb(${r} ${g} ${b} / ${Math.round(opacity * 1000) / 10}%)`;
 }
 
-export function luminance(hex: string) {
+function luminance(hex: string) {
   const [r, g, b] = parseHex(hex).map(toLinear);
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }

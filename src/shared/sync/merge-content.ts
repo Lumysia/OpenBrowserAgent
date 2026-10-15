@@ -84,7 +84,7 @@ const isList = (value: unknown): value is Keyed[] =>
 // other. Removed on one side and unchanged on the other: removed. Without a
 // base every entry either side has is kept. `same`: entries that hold the
 // same value (equal ones are unchanged, and never conflict).
-export function mergeKeyed<T extends Keyed>(
+function mergeKeyed<T extends Keyed>(
   key: (entry: T) => string,
   base: T[] | undefined,
   mine: T[],
@@ -126,7 +126,7 @@ export function mergeKeyed<T extends Keyed>(
 
 // Order of a merge: the newer side's order, with entries only the other side
 // has placed after the last entry that is not later than them.
-export function orderMerged<T extends Keyed>(
+function orderMerged<T extends Keyed>(
   key: (entry: T) => string,
   merged: Map<string, T>,
   primary: T[],
@@ -253,7 +253,7 @@ export function defaultsBase<T extends FileEntry>(
 const sameFile = (left: FileEntry, right: FileEntry) =>
   sameJson({ ...left, updatedAt: 0 }, { ...right, updatedAt: 0 });
 
-export function conflictCopyPath(
+function conflictCopyPath(
   path: string,
   label: string,
   taken: ReadonlySet<string>,

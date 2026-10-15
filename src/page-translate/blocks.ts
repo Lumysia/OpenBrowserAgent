@@ -203,7 +203,7 @@ function withoutHiddenCopy(nodes: Node[]) {
 }
 
 // At least two letters, and more than an address or a number.
-export function isTranslatableText(text: string) {
+function isTranslatableText(text: string) {
   const letters = text.match(/\p{L}/gu)?.length ?? 0;
   if (letters < 2) return false;
   if (/^\S+@\S+\.\S+$/.test(text)) return false;

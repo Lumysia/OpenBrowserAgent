@@ -1,6 +1,6 @@
 import type { AgentWorkspace } from "../../src/shared/types";
 
-export type WorkspaceEditorDraft = {
+type WorkspaceEditorDraft = {
   session: symbol;
   snapshot: AgentWorkspace;
   originalPath: string;

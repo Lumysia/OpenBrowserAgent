@@ -20,7 +20,7 @@ export function primaryLanguage(tag: string) {
 
 // The tag with its likely script and region filled in: "zh-HK" ->
 // "zh-Hant-HK", "fr" -> "fr-Latn-FR", "pt" -> "pt-Latn-BR".
-export function maximizedLocale(tag: string | undefined) {
+function maximizedLocale(tag: string | undefined) {
   const normalized = normalizeLanguageTag(tag);
   if (!normalized) return undefined;
   try {

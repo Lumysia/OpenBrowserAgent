@@ -3,7 +3,7 @@ import { sendRuntimeRequest } from "./runtime-messages";
 export const LOCAL_EXECUTION_BRIDGE_RUNTIME_MESSAGE_TYPE =
   "local-execution-bridge.request";
 
-export type LocalExecutionBridgeRuntimeRequest = {
+type LocalExecutionBridgeRuntimeRequest = {
   type: typeof LOCAL_EXECUTION_BRIDGE_RUNTIME_MESSAGE_TYPE;
   operation: "test";
   bridgeId: string;

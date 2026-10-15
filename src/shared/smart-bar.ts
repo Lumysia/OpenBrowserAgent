@@ -171,7 +171,7 @@ export function normalizeHost(value: string) {
 }
 
 // A listed host covers its subdomains.
-export function hostMatches(host: string, listed: string) {
+function hostMatches(host: string, listed: string) {
   return host === listed || host.endsWith(`.${listed}`);
 }
 
@@ -218,7 +218,7 @@ export function smartBarHideSite(settings: SmartBarSettings, host: string) {
 const ALL_PAGES = ["http://*/*", "https://*/*"];
 const hostPattern = (host: string) => `*://*.${host}/*`;
 
-export type SmartBarMatchPatterns = {
+type SmartBarMatchPatterns = {
   matches: string[];
   excludeMatches: string[];
 };

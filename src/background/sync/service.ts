@@ -127,10 +127,7 @@ export function browserSyncEnv(): SyncEnv {
   };
 }
 
-export function transportFor(
-  env: SyncEnv,
-  backend: SyncBackendConfig,
-): Transport {
+function transportFor(env: SyncEnv, backend: SyncBackendConfig): Transport {
   return backend.type === SYNC_BACKEND_TYPES.webDav
     ? createWebDavTransport(backend, env.fetch)
     : createBrowserSyncTransport(env.sync, env.now, storedPartsSeen(env.local));

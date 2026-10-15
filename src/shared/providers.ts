@@ -2,7 +2,7 @@
 // place. Code reads these properties instead of comparing type ids.
 
 // The wire API, as Pi names its adapters.
-export type ProviderApi =
+type ProviderApi =
   | "openai-completions"
   | "openai-responses"
   | "anthropic-messages"
@@ -10,12 +10,11 @@ export type ProviderApi =
 
 // How a chat completions service takes a thinking level (Pi's
 // thinkingFormat).
-export type ProviderThinkingFormat =
-  "openai" | "openrouter" | "deepseek" | "zai";
+type ProviderThinkingFormat = "openai" | "openrouter" | "deepseek" | "zai";
 
 // How each wire API takes the API key. Requests without a key leave the
 // header out (a local endpoint may refuse a placeholder key).
-export const PROVIDER_APIS = {
+const PROVIDER_APIS = {
   "openai-completions": { authHeader: "authorization", modelList: "openai" },
   "openai-responses": { authHeader: "authorization", modelList: "openai" },
   "anthropic-messages": { authHeader: "x-api-key", modelList: "anthropic" },
@@ -28,7 +27,7 @@ export const PROVIDER_APIS = {
 // The request that lists an endpoint's models (see provider-model-list.ts).
 export type ProviderModelList = "openai" | "anthropic" | "gemini" | "ollama";
 
-export type ProviderType = {
+type ProviderType = {
   // The default name of a new provider of this type.
   label: string;
   // The default name older versions stored; it shows like `label`.

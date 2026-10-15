@@ -12,7 +12,7 @@ export const EMPTY_STATE_VARIANT = {
   inline: "inline",
 } as const;
 
-export type EmptyStateVariant =
+type EmptyStateVariant =
   (typeof EMPTY_STATE_VARIANT)[keyof typeof EMPTY_STATE_VARIANT];
 
 // Stands in for something empty: what is missing, and the action that adds

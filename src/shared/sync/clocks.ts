@@ -81,7 +81,7 @@ export function tickNow(env: SyncEnv, device: string) {
 
 // What this install knows of the clocks it issued, from its clock entries:
 // those its versions hold, and the oldest one pushed and not yet confirmed.
-export type IssuedClocks = { known: Set<Clock>; oldestSent?: Clock };
+type IssuedClocks = { known: Set<Clock>; oldestSent?: Clock };
 
 export function issuedClocks(entries: Iterable<ClockEntry>): IssuedClocks {
   const known = new Set<Clock>();

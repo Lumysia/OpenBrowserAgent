@@ -16,7 +16,7 @@ import type { Payloads } from "./local";
 // unconfirmed change needs any more.
 
 // `sync-bases:<collection>`: the blobs kept, each body under its own key.
-export const basesKey = (collection: string) =>
+const basesKey = (collection: string) =>
   `${STORAGE_KEYS.syncBases}:${collection}`;
 const bodyKey = (collection: string, blob: string) =>
   `${basesKey(collection)}:${blob}`;
@@ -37,7 +37,7 @@ function neededBlobs(clocks: Clocks) {
   return needed;
 }
 
-export type ClockWrite = {
+type ClockWrite = {
   // The clocks differ from the stored ones (else only bodies are kept).
   changed?: boolean;
   // Written in the same storage call (the data, the HLC state).

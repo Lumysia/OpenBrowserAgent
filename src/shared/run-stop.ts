@@ -33,7 +33,7 @@ export function errorNoticePart(text: string): ChatPart {
   };
 }
 
-export function noticeParts(message: ChatMessage, kind: ChatNoticeKind) {
+function noticeParts(message: ChatMessage, kind: ChatNoticeKind) {
   return (message.parts || []).filter(
     (part) => part.type === "notice" && part.kind === kind,
   );
@@ -53,19 +53,4 @@ export function replyCutOff(
       .map((part) => part.text || "")
       .filter(Boolean),
   };
-}
-
-// What the model is told after such a reply when the chat goes on, so it
-// does not take the reply as a finished answer.
-const MODEL_STOP_NOTE: Record<CutReason, string> = {
-  length:
-    "[This reply was cut off here: it reached the output limit before it was finished.]",
-  aborted:
-    "[This reply was cut off here: the user stopped it before it was finished.]",
-  error:
-    "[This reply was cut off here: an error ended it before it was finished.]",
-};
-
-export function modelStopNote(reason: CutReason) {
-  return MODEL_STOP_NOTE[reason];
 }

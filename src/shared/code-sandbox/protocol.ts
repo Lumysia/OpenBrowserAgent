@@ -12,7 +12,7 @@ export const CODE_LANGUAGE = {
   javascript: "javascript",
 } as const;
 
-export type CodeLanguage = (typeof CODE_LANGUAGE)[keyof typeof CODE_LANGUAGE];
+type CodeLanguage = (typeof CODE_LANGUAGE)[keyof typeof CODE_LANGUAGE];
 
 export type CodeRunRequest = {
   id: string;
@@ -50,8 +50,7 @@ export const CODE_ISOLATION = {
   interpreter: "interpreter",
 } as const;
 
-export type CodeIsolation =
-  (typeof CODE_ISOLATION)[keyof typeof CODE_ISOLATION];
+type CodeIsolation = (typeof CODE_ISOLATION)[keyof typeof CODE_ISOLATION];
 
 export type CodeRunResult = {
   // console output, in order.

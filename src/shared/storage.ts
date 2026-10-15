@@ -6,6 +6,11 @@ import { normalizeChatSummaries } from "./chats";
 import { DEFAULT_PREFERENCES, mergePreferences } from "./default-preferences";
 import { normalizeLocalExecutionBridges } from "./local-execution-bridges";
 import { normalizeMcpServers } from "./mcp";
+import {
+  forgetEditedModels,
+  normalizeLearnedModelLimits,
+  type LearnedModelLimits,
+} from "./model-limits";
 import { normalizeProviderState } from "./provider-instances";
 import { normalizeSkillSettings } from "./skill-catalog";
 import { normalizeSkills } from "./skills";
@@ -183,6 +188,7 @@ export const storage = {
   ),
   provider: createSyncedItem<ProviderState>(STORAGE_KEYS.provider, () => ({}), {
     normalize: normalizeProviderState,
+    afterSet: (_, providers) => forgetLimitsOfEditedModels(providers),
   }),
   agents: createSyncedItem<Agent[]>(
     STORAGE_KEYS.agents,
@@ -256,4 +262,15 @@ export const storage = {
     STORAGE_KEYS.debugLoggingEnabled,
     () => false,
   ),
+  learnedModelLimits: createItem<LearnedModelLimits>(
+    STORAGE_KEYS.learnedModelLimits,
+    () => ({}),
+    { normalize: normalizeLearnedModelLimits },
+  ),
 };
+
+async function forgetLimitsOfEditedModels(providers: ProviderState) {
+  await storage.learnedModelLimits.update((learned) =>
+    forgetEditedModels(learned, providers),
+  );
+}

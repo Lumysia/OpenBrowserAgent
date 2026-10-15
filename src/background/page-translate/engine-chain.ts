@@ -18,7 +18,7 @@ export type ActiveEngine = {
   engine: TranslationEngine;
 };
 
-export type EngineFallback = {
+type EngineFallback = {
   kind: PageTranslateEngine;
   resolve: () => Promise<TranslationEngine> | TranslationEngine;
 };
@@ -98,7 +98,7 @@ export function createEngineChain(
   };
 }
 
-export type TranslateRequest = Omit<EngineRequest, "items" | "onItem"> & {
+type TranslateRequest = Omit<EngineRequest, "items" | "onItem"> & {
   // A finished item and the engine that translated it.
   onItem: (id: number, text: string, engine: TranslationEngine) => void;
 };

@@ -12,7 +12,7 @@ export type TermExample = { source: string; translation: string };
 export const TERM_MEMORY_NAMES = 300;
 // Earlier translations sent with one batch, and their length in all.
 export const TERM_EXAMPLES_MAX = 8;
-export const TERM_EXAMPLES_MAX_CHARS = 1_500;
+const TERM_EXAMPLES_MAX_CHARS = 1_500;
 // Longer texts aren't kept as examples: names are in headlines and short
 // sentences, and a long one would crowd the others out.
 const EXAMPLE_MAX_CHARS = 300;

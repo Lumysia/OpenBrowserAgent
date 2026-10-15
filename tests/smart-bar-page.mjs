@@ -1,8 +1,6 @@
 import { setTimeout as delay } from "node:timers/promises";
-import {
-  SMART_BAR_MESSAGE,
-  SMART_BAR_SCRIPT,
-} from "../src/shared/smart-bar-protocol.ts";
+import { PAGE_SCRIPT } from "../src/shared/page-scripts.ts";
+import { SMART_BAR_MESSAGE } from "../src/shared/smart-bar-protocol.ts";
 import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
 import {
   contentScriptsRegistered,
@@ -57,7 +55,7 @@ export async function startSmartBar({
   const { options, close } = session;
   try {
     if (smartBar?.enabled)
-      await contentScriptsRegistered(options, SMART_BAR_SCRIPT.trigger);
+      await contentScriptsRegistered(options, PAGE_SCRIPT.smartBar);
     // Counts the page scripts' requests to the background.
     const worker = await session.worker();
     await worker.call((prepare) => {

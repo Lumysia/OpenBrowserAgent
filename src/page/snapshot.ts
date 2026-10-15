@@ -21,9 +21,9 @@ import { refFor } from "./refs";
 // Interactive elements and text blocks carry refs; generic wrappers add no
 // line. Text stays inline (links as [text](ref)), so nothing is repeated.
 
-export type SnapshotMode = "viewport" | "page" | "all";
+type SnapshotMode = "viewport" | "page" | "all";
 
-export type SnapshotOptions = {
+type SnapshotOptions = {
   mode: SnapshotMode;
   // Long lists and tables show this many items, with a count of the rest.
   itemCap?: number;

@@ -12,7 +12,7 @@ import {
   type ToolResult,
 } from "./types";
 
-export type ToolOutcome = {
+type ToolOutcome = {
   // What the model reads.
   text: string;
   // What the side panel stores and shows.

@@ -6,7 +6,8 @@ import { OPENAI_MODELS } from "@earendil-works/pi-ai/providers/openai.models";
 import { knownOutputLimit } from "../src/background/model-catalog";
 import { runPiAgent } from "../src/background/pi-runtime";
 import * as sessions from "../src/background/stream-sessions";
-import { modelStopNote, RUN_STOP_REASON } from "../src/shared/run-stop";
+import { MODEL_STOP_NOTE } from "../src/shared/model-notes";
+import { RUN_STOP_REASON } from "../src/shared/run-stop";
 import type { AiStreamResponse, ChatMessage } from "../src/shared/types";
 import {
   chatDelta,
@@ -189,7 +190,7 @@ test("a queued message after a length stop gets its answer, and the model learns
     );
     assert.match(
       JSON.stringify(replayed.at(-1)?.content),
-      new RegExp(escape(modelStopNote("length"))),
+      new RegExp(escape(MODEL_STOP_NOTE.length)),
     );
   } finally {
     run.close();

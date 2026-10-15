@@ -3,7 +3,7 @@
 // open strings and containers are closed, a dangling key or partial literal
 // is dropped. Dependency-free: the page scripts import this module.
 
-export type JsonPrefix =
+type JsonPrefix =
   // Not JSON: the text starts with something else.
   | { kind: "none" }
   // Could still become JSON, but nothing is readable yet.

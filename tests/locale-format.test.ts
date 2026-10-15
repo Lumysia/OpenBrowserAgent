@@ -6,62 +6,32 @@ import {
   formatDuration,
   formatNumber,
 } from "../src/shared/format";
-import { formatCount, getMessages } from "../src/shared/i18n";
+import { formatCount, getMessages, languageOf } from "../src/shared/i18n";
+import { formatMessageTime } from "../entrypoints/sidepanel/format";
 
-// getMessages(language) makes `language` the one formatters use, as the
-// side panel and options pages do when they read the stored language.
 // ICU versions differ in which space they put between a number and its
 // unit or time marker, so spaces are compared as plain ones.
-function inLanguage(language: string, run: () => string) {
-  getMessages(language);
-  try {
-    return run().replace(/\s/g, " ");
-  } finally {
-    getMessages("en-US");
-  }
+function plain(text: string) {
+  return text.replace(/\s/g, " ");
 }
 
 test("sizes use the decimal separator and units of the UI language", () => {
   const size = 2.2 * 1024;
+  assert.equal(plain(formatBytes("en-US", size)), "2.2 kB");
+  assert.equal(plain(formatBytes("de-DE", size)), "2,2 kB");
+  assert.equal(plain(formatBytes("zh-CN", size)), "2.2 kB");
+  assert.equal(plain(formatBytes("ja-JP", size)), "2.2 KB");
+  assert.equal(plain(formatBytes("de-DE", 3.5 * 1024 * 1024)), "3,5 MB");
   assert.equal(
-    inLanguage("en-US", () => formatBytes(size)),
-    "2.2 kB",
-  );
-  assert.equal(
-    inLanguage("de-DE", () => formatBytes(size)),
-    "2,2 kB",
-  );
-  assert.equal(
-    inLanguage("zh-CN", () => formatBytes(size)),
-    "2.2 kB",
-  );
-  assert.equal(
-    inLanguage("ja-JP", () => formatBytes(size)),
-    "2.2 KB",
-  );
-  assert.equal(
-    inLanguage("de-DE", () => formatBytes(3.5 * 1024 * 1024)),
-    "3,5 MB",
-  );
-  assert.equal(
-    inLanguage("de-DE", () => formatBytes(3.5 * 1024 * 1024, "kb")),
+    plain(formatBytes("de-DE", 3.5 * 1024 * 1024, "kb")),
     "3.584,0 kB",
   );
-  assert.equal(
-    inLanguage("en-US", () => formatBytes(512)),
-    "512 bytes",
-  );
+  assert.equal(plain(formatBytes("en-US", 512)), "512 bytes");
 });
 
 test("numbers follow the UI language, not the browser's", () => {
-  assert.equal(
-    inLanguage("de-DE", () => formatNumber(1234.5)),
-    "1.234,5",
-  );
-  assert.equal(
-    inLanguage("en-US", () => formatNumber(1234.5)),
-    "1,234.5",
-  );
+  assert.equal(plain(formatNumber("de-DE", 1234.5)), "1.234,5");
+  assert.equal(plain(formatNumber("en-US", 1234.5)), "1,234.5");
 });
 
 test("dates and times follow the UI language", () => {
@@ -74,28 +44,26 @@ test("dates and times follow the UI language", () => {
     minute: "2-digit",
   } as const;
   assert.equal(
-    inLanguage("en-US", () => formatDateTime(value, options)),
+    plain(formatDateTime("en-US", value, options)),
     "Oct 14, 3:30 PM",
   );
   assert.equal(
-    inLanguage("de-DE", () => formatDateTime(value, options)),
+    plain(formatDateTime("de-DE", value, options)),
     "14. Okt., 15:30",
   );
   assert.equal(
-    inLanguage("zh-CN", () => formatDateTime(value, options)),
+    plain(formatDateTime("zh-CN", value, options)),
     "10月14日 15:30",
   );
   assert.equal(
-    inLanguage("ja-JP", () => formatDateTime(value, options)),
+    plain(formatDateTime("ja-JP", value, options)),
     "10月14日 15:30",
   );
 });
 
 test("counts pick the plural form and measure word of the UI language", () => {
   const models = (language: string, count: number) =>
-    inLanguage(language, () =>
-      formatCount(getMessages(language).display.counts.models, count),
-    );
+    plain(formatCount(getMessages(language).display.counts.models, count));
   assert.equal(models("en-US", 1), "1 model");
   assert.equal(models("en-US", 2), "2 models");
   assert.equal(models("de-DE", 1), "1 Modell");
@@ -107,13 +75,11 @@ test("counts pick the plural form and measure word of the UI language", () => {
 
 test("counts format the number and fill extra placeholders", () => {
   assert.equal(
-    inLanguage("de-DE", () =>
-      formatCount(getMessages("de-DE").display.counts.characters, 12345),
-    ),
+    plain(formatCount(getMessages("de-DE").display.counts.characters, 12345)),
     "12.345 Zeichen",
   );
   assert.equal(
-    inLanguage("en-US", () =>
+    plain(
       formatCount(getMessages("en-US").display.toolSteps.editsApplied, 3, {
         applied: 2,
       }),
@@ -123,16 +89,22 @@ test("counts format the number and fill extra placeholders", () => {
 });
 
 test("durations use the units of the UI language", () => {
-  assert.equal(
-    inLanguage("en-US", () => formatDuration(850)),
-    "850 ms",
-  );
-  assert.equal(
-    inLanguage("de-DE", () => formatDuration(1250)),
-    "1,25 Sek.",
-  );
-  assert.equal(
-    inLanguage("zh-CN", () => formatDuration(1250)),
-    "1.25秒",
-  );
+  assert.equal(plain(formatDuration("en-US", 850)), "850 ms");
+  assert.equal(plain(formatDuration("de-DE", 1250)), "1,25 Sek.");
+  assert.equal(plain(formatDuration("zh-CN", 1250)), "1.25秒");
+});
+
+test("messages know their language, and reading them changes nothing", () => {
+  const de = getMessages("de-DE");
+  getMessages("ja-JP");
+  assert.equal(languageOf(de), "de-DE");
+  assert.equal(languageOf(getMessages("fr")), "fr-FR");
+  assert.equal(languageOf(getMessages()), "en-US");
+  assert.equal(plain(formatNumber(languageOf(de), 1234.5)), "1.234,5");
+});
+
+test("message timestamps follow the UI language", () => {
+  const value = new Date(2026, 9, 14, 15, 30).getTime();
+  assert.equal(plain(formatMessageTime("de-DE", value)), "14. Okt., 15:30");
+  assert.equal(plain(formatMessageTime("en-US", value)), "Oct 14, 3:30 PM");
 });
