@@ -13,6 +13,21 @@ export type ProviderApi =
 export type ProviderThinkingFormat =
   "openai" | "openrouter" | "deepseek" | "zai";
 
+// How each wire API takes the API key. Requests without a key leave the
+// header out (a local endpoint may refuse a placeholder key).
+export const PROVIDER_APIS = {
+  "openai-completions": { authHeader: "authorization", modelList: "openai" },
+  "openai-responses": { authHeader: "authorization", modelList: "openai" },
+  "anthropic-messages": { authHeader: "x-api-key", modelList: "anthropic" },
+  "google-generative-ai": { authHeader: "x-goog-api-key", modelList: "gemini" },
+} as const satisfies Record<
+  ProviderApi,
+  { authHeader: string; modelList: ProviderModelList }
+>;
+
+// The request that lists an endpoint's models (see provider-model-list.ts).
+export type ProviderModelList = "openai" | "anthropic" | "gemini" | "ollama";
+
 export type ProviderType = {
   // The default name of a new provider of this type.
   label: string;
@@ -20,7 +35,12 @@ export type ProviderType = {
   legacyLabel?: string;
   api: ProviderApi;
   defaultBaseUrl?: string;
-  // Where requests go when no base URL is set (the SDK's own default).
+  // Other base URLs the service offers (regions); settings offer these and
+  // the default instead of a free text field.
+  alternateBaseUrls?: readonly string[];
+  // Where requests go when no base URL is set (the SDK's own default, with
+  // the API version, as a stored base URL would have it). Settings have no
+  // base URL field for such a type.
   sdkEndpoint?: string;
   // The path under the stored base URL that serves the API, for types whose
   // base URL is the server's root (Ollama serves OpenAI's API under /v1).
@@ -40,6 +60,10 @@ export type ProviderType = {
   // Quick tasks (page translation batches) at once on one endpoint; the
   // default is QUICK_TASK_CONCURRENCY in config.ts.
   quickTaskConcurrency?: number;
+  // The endpoint takes no API key; settings have no field for one.
+  keyless?: boolean;
+  // How the endpoint lists its models, when not as its API does.
+  modelList?: ProviderModelList;
   // Offered when adding a provider.
   addable?: boolean;
   // Models can be added by name, besides those the endpoint lists.
@@ -78,6 +102,9 @@ export const PROVIDERS = {
     api: "openai-completions",
     defaultBaseUrl: "http://localhost:11434",
     apiPath: "/v1",
+    keyless: true,
+    // Ollama's own API, beside the OpenAI one under /v1.
+    modelList: "ollama",
     quickReasoningEffort: true,
     thinkingSwitch: true,
     // A local runtime runs few requests at once.
@@ -88,7 +115,7 @@ export const PROVIDERS = {
     label: "Gemini-compatible",
     legacyLabel: "Gemini",
     api: "google-generative-ai",
-    sdkEndpoint: "https://generativelanguage.googleapis.com",
+    sdkEndpoint: "https://generativelanguage.googleapis.com/v1beta",
     addable: true,
   },
   deepseek: {
@@ -116,6 +143,7 @@ export const PROVIDERS = {
     label: "Z.ai (Zhipu)",
     api: "openai-completions",
     defaultBaseUrl: "https://api.z.ai/api/paas/v4",
+    alternateBaseUrls: ["https://open.bigmodel.cn/api/paas/v4"],
     reasoningParam: "reasoning_effort",
     thinkingFormat: "zai",
   },
@@ -129,6 +157,7 @@ export const PROVIDERS = {
     label: "Minimax",
     api: "openai-completions",
     defaultBaseUrl: "https://api.minimax.io/v1",
+    alternateBaseUrls: ["https://api.minimaxi.com/v1"],
     thinkingSwitch: true,
     manualModels: true,
   },
@@ -151,3 +180,32 @@ export function providerType(type: string | undefined): ProviderType {
 export const ADD_PROVIDER_TYPES = PROVIDER_TYPES.filter(
   (type) => providerType(type).addable,
 );
+
+// The base URLs settings offer for the type: none (a free text field), or
+// its default and alternates.
+export function providerBaseUrlOptions(type: string | undefined) {
+  const { defaultBaseUrl, alternateBaseUrls } = providerType(type);
+  return defaultBaseUrl && alternateBaseUrls
+    ? [defaultBaseUrl, ...alternateBaseUrls]
+    : [];
+}
+
+export function providerModelList(type: string | undefined) {
+  const { api, modelList } = providerType(type);
+  return modelList ?? PROVIDER_APIS[api].modelList;
+}
+
+// The header that carries the API key, in lower case.
+export function providerAuthHeader(type: string | undefined) {
+  return PROVIDER_APIS[providerType(type).api].authHeader;
+}
+
+// The API key as the type's API takes it; none without a key.
+export function providerAuthHeaders(
+  type: string | undefined,
+  apiKey: string | undefined,
+): Record<string, string> {
+  if (!apiKey) return {};
+  const header = providerAuthHeader(type);
+  return { [header]: header === "authorization" ? `Bearer ${apiKey}` : apiKey };
+}

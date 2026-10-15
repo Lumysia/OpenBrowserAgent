@@ -19,11 +19,11 @@ import {
   type RequestReasoning,
 } from "../shared/reasoning";
 import { errorMessage } from "../shared/error-message";
-import { providerType } from "../shared/providers";
+import { providerAuthHeader, providerType } from "../shared/providers";
 import {
   baseUrlKey,
-  normalizeBaseUrl,
   providerApiBase,
+  providerApiUrl,
 } from "../shared/provider-urls";
 import type { ThinkingSwitch } from "../shared/thinking-switch";
 import type { ProviderId } from "../shared/providers";
@@ -170,20 +170,17 @@ export function createProviderStream(
       let quickFields: string[] = [];
       const responses = statusRecorder(
         model.api === "anthropic-messages"
-          ? anthropicFetch(configuration.baseUrl)
+          ? anthropicFetch(configuration)
           : undefined,
       );
       const providerOptions = {
         ...options,
         maxTokens: options?.maxTokens ?? outputLimit,
         apiKey: configuration.apiKey || "local-no-key",
+        // Without a key, no placeholder key is sent.
         headers: configuration.apiKey
           ? undefined
-          : {
-              authorization: null,
-              "x-api-key": null,
-              "x-goog-api-key": null,
-            },
+          : { [providerAuthHeader(configuration.provider)]: null },
         maxRetries: PROVIDER_RETRIES,
         // The Gemini SDK takes no fetch function.
         fetch:
@@ -317,14 +314,14 @@ function hasImages(messages: Message[]) {
   );
 }
 
-function anthropicFetch(baseUrl: string): typeof fetch {
+function anthropicFetch({ provider, baseUrl }: ProviderModel): typeof fetch {
   // Pi's SDK appends /v1/messages. The extension's saved base URLs historically
   // target <base>/messages, including proxies whose path has no /v1 suffix.
   return (input, init) => {
     const original = new URL(
       input instanceof Request ? input.url : String(input),
     );
-    const endpoint = new URL(`${normalizeBaseUrl(baseUrl)}/messages`);
+    const endpoint = new URL(providerApiUrl(provider, baseUrl, "/messages"));
     endpoint.search = original.search;
     return fetch(
       input instanceof Request ? new Request(endpoint, input) : endpoint,

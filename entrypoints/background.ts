@@ -1,7 +1,7 @@
 import { storage } from "../src/shared/storage";
 import { runStorageMigrations } from "../src/shared/storage-migrations";
 import { handleDescribeRunMessage } from "../src/background/run-chat";
-import { handleProviderTestMessage } from "../src/background/provider-test";
+import { handleProviderRequestMessage } from "../src/background/provider-requests";
 import { handleLocalExecutionBridgeRuntimeMessage } from "../src/background/local-execution-bridge-tools";
 import { setupSync } from "../src/background/sync/scheduler";
 import { setupMcpOriginRules } from "../src/shared/mcp-origin-rules";
@@ -54,7 +54,7 @@ export default defineBackground(() => {
       handleChatStreamControlMessage(message, sendResponse) ||
       handleLocalExecutionBridgeRuntimeMessage(message, sendResponse) ||
       handleDescribeRunMessage(message, sendResponse) ||
-      handleProviderTestMessage(message, sender, sendResponse),
+      handleProviderRequestMessage(message, sender, sendResponse),
   );
 
   chrome.runtime.onConnect.addListener(connectStreamPort);
