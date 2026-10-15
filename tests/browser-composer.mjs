@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
 import { startExtension } from "./browser-harness.mjs";
 import { pressKey, typeText } from "./cdp-input.mjs";
 import { poll } from "./chromium.mjs";
@@ -77,7 +76,7 @@ export async function checkComposer(page, config, verifyRendered) {
 
 export async function configureComposer(page, config) {
   await page.call(
-    async ({ config, debugLogging }) => {
+    async ({ config }) => {
       await chrome.storage.local.set({
         provider: {
           acceptance: {
@@ -94,10 +93,9 @@ export async function configureComposer(page, config) {
           maxToolSteps: 3,
           autoRetry: false,
         },
-        [debugLogging]: false,
       });
     },
-    { config, debugLogging: STORAGE_KEYS.debugLoggingEnabled },
+    { config },
   );
   await page.send("Page.reload");
   await page.send("Page.bringToFront");

@@ -631,9 +631,6 @@ export const frFR: LocaleMessages = {
     debugResetting: "Effacement…",
     debugResetSuccess: "Les données OpenBrowserAgent ont été effacées.",
     debugResetError: "Impossible d’effacer les données",
-    debugLoggingTitle: "Journaux de diagnostic",
-    debugLoggingDescription:
-      "Active des journaux de console temporaires pour diagnostiquer l’ordre du flux, des outils et de l’assistant.",
     debugToolsTitle: "Outils enregistrés",
     debugToolsDescription: "Outils de l’agent sélectionné ({count}).",
     debugToolCore: "Toujours chargé",

@@ -66,7 +66,6 @@ export async function seedOptions(page, demo) {
         "skill-settings": {
           "builtin-local-execution-bridge-setup": { invoke: "manual" },
         },
-        "debug-logging-enabled": false,
       });
     },
     {

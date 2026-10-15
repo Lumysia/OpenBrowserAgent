@@ -55,7 +55,6 @@ async function seedChat(chromium, fixture, locale, agentId) {
           selectedModelId: "openai:gpt-5",
           selectedAgentId: agentId,
         },
-        "debug-logging-enabled": false,
       });
     },
     {

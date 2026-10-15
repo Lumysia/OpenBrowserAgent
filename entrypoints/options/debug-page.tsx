@@ -24,7 +24,6 @@ import {
   Input,
   Feedback,
   Label,
-  SettingSwitchCard,
   ToggleGroup,
   ToggleGroupItem,
   SettingsPageHeader,
@@ -36,9 +35,6 @@ import { useMessages } from "../../src/ui/messages";
 
 export function DebugPage() {
   const [preferences] = useStoredState(storage.preferences);
-  const [debugLoggingEnabled, setDebugLoggingEnabled] = useStoredState(
-    storage.debugLoggingEnabled,
-  );
   const [agents] = useStoredState(storage.agents);
   const [run, setRun] = useState<RunDescription>();
   const [confirmText, setConfirmText] = useState("");
@@ -98,13 +94,6 @@ export function DebugPage() {
         icon={<Bug />}
         title={t.options.debug}
         description={t.options.debugDescription}
-      />
-      <SettingSwitchCard
-        icon={<Bug size={18} />}
-        title={t.options.debugLoggingTitle}
-        description={t.options.debugLoggingDescription}
-        checked={debugLoggingEnabled === true}
-        onChange={(checked) => setDebugLoggingEnabled(checked)}
       />
       <Accordion type="single" collapsible>
         <AccordionItem value="tools">
