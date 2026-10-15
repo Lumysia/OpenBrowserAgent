@@ -10,6 +10,12 @@ const KEEPALIVE_INTERVAL_MS = 20_000;
 
 export type QueuedUserMessage = UserMessage & { queueId: string };
 
+type QuestionWaiter = {
+  answer(answers: unknown): void;
+  // The user wrote a message instead of answering.
+  skip(): void;
+};
+
 export type StreamSession = {
   chatId: string;
   // The single cancellation route: runPiAgent forwards it to agent.abort(),
@@ -20,7 +26,8 @@ export type StreamSession = {
   ports: Set<chrome.runtime.Port>;
   // In-process listeners, such as the background owner of a sub-agent chat.
   observers: Set<(event: AiStreamResponse) => void>;
-  answers: Map<string, (answers: unknown) => void>;
+  // The questions the run waits on, by tool call id.
+  questions: Map<string, QuestionWaiter>;
   // Created with the session so messages queued before the run starts are
   // kept. runPiAgent installs the real model and stream function.
   agent: Agent;
@@ -45,7 +52,7 @@ export function createStreamSession(chatId: string) {
     nextSequence: 1,
     ports: new Set(),
     observers: new Set(),
-    answers: new Map(),
+    questions: new Map(),
     agent: new Agent({
       streamFn: () => {
         throw new Error("The run has not configured a provider stream.");
@@ -138,20 +145,22 @@ export function handleChatStreamControlMessage(
 }
 
 // Resolves with the first answer that `parse` accepts; invalid answers keep
-// the wait open. The wait survives panel reconnects and ends on abort.
+// the wait open. Resolves with undefined when the user writes a message
+// instead (skipQuestions). The wait survives panel reconnects and ends on
+// abort.
 export function waitForAnswer<T>(
   session: StreamSession,
   toolCallId: string,
   parse: (answers: unknown) => T | undefined,
   signal?: AbortSignal,
 ) {
-  return new Promise<T>((resolve, reject) => {
+  return new Promise<T | undefined>((resolve, reject) => {
     const finish = (error?: Error, answers?: T) => {
       clearTimeout(timeout);
       signal?.removeEventListener("abort", onAbort);
-      session.answers.delete(toolCallId);
+      session.questions.delete(toolCallId);
       if (error) reject(error);
-      else resolve(answers as T);
+      else resolve(answers);
     };
     const onAbort = () =>
       finish(
@@ -161,9 +170,12 @@ export function waitForAnswer<T>(
       () => finish(new Error("Timed out waiting for the user's answer.")),
       QUESTION_TIMEOUT_MS,
     );
-    session.answers.set(toolCallId, (raw) => {
-      const answers = parse(raw);
-      if (answers !== undefined) finish(undefined, answers);
+    session.questions.set(toolCallId, {
+      answer(raw) {
+        const answers = parse(raw);
+        if (answers !== undefined) finish(undefined, answers);
+      },
+      skip: () => finish(),
     });
     signal?.addEventListener("abort", onAbort, { once: true });
     if (signal?.aborted) onAbort();
@@ -175,7 +187,7 @@ export function answerQuestion(
   toolCallId: string,
   answers: unknown,
 ) {
-  session.answers.get(toolCallId)?.(answers);
+  session.questions.get(toolCallId)?.answer(answers);
 }
 
 export function isQueuedMessage(
@@ -189,6 +201,9 @@ export function queueMessage(
   session: StreamSession,
   message: { id: string; content: string },
 ) {
+  // A run waiting on a question would hold the message until the answer;
+  // the message is the user's reply instead.
+  [...session.questions.values()].forEach((question) => question.skip());
   const next: QueuedUserMessage = {
     role: "user",
     queueId: message.id,
@@ -257,7 +272,7 @@ function releaseSession(session: StreamSession) {
     activeStreamSessions.delete(session.chatId);
   session.ports.forEach((port) => portSessions.delete(port));
   session.ports.clear();
-  session.answers.clear();
+  session.questions.clear();
   session.observers.clear();
   session.events.length = 0;
   session.agent.clearAllQueues();

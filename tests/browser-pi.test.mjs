@@ -258,28 +258,6 @@ async function runInExtension(config) {
               setTimeout(() => finish(), 200);
               return;
             }
-            if (queue) {
-              port.postMessage({
-                type: type.queueMessage,
-                id: "keep",
-                content: "Old queue draft",
-              });
-              port.postMessage({
-                type: type.queueMessage,
-                id: "keep",
-                content:
-                  "Please acknowledge this queued input and summarize the browser tab tool result. Use tabs with action=list if you have not called it yet.",
-              });
-              port.postMessage({
-                type: type.queueMessage,
-                id: "delete",
-                content: "This message must be removed.",
-              });
-              port.postMessage({
-                type: type.deleteQueuedMessage,
-                id: "delete",
-              });
-            }
             if (reconnect) {
               port.disconnect();
               port = undefined;
@@ -298,6 +276,30 @@ async function runInExtension(config) {
                         { question: "Continue?", answers: ["Continue"] },
                       ],
                     });
+                  // Queued after the answer: a message queued while the
+                  // question waits is the user's reply instead.
+                  if (queue) {
+                    port.postMessage({
+                      type: type.queueMessage,
+                      id: "keep",
+                      content: "Old queue draft",
+                    });
+                    port.postMessage({
+                      type: type.queueMessage,
+                      id: "keep",
+                      content:
+                        "Please acknowledge this queued input and summarize the browser tab tool result. Use tabs with action=list if you have not called it yet.",
+                    });
+                    port.postMessage({
+                      type: type.queueMessage,
+                      id: "delete",
+                      content: "This message must be removed.",
+                    });
+                    port.postMessage({
+                      type: type.deleteQueuedMessage,
+                      id: "delete",
+                    });
+                  }
                 }
               }, 100);
             }

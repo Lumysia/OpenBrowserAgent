@@ -57,6 +57,11 @@ export const askTool: ToolDefinition = {
       },
       signal,
     );
+    if (!answers)
+      return ok(
+        "The user did not answer. They wrote a message instead; it follows.",
+        { answers: [] },
+      );
     return ok(
       answers
         .map((answer) => {
