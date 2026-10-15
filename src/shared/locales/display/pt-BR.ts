@@ -60,6 +60,8 @@ export const displayPtBR: DisplayMessages = {
     bridgeNotFound: "Esta ponte de execução não existe mais.",
     bridgeHostRequired: "Informe o nome do host de mensagens nativas.",
     bridgeTimeout: "A ponte de execução não respondeu a tempo.",
+    syncKeysLocked:
+      "Suas chaves de API estão sincronizadas, mas bloqueadas. Digite sua frase secreta de sincronização em Configurações → Sincronização.",
   },
   toolSteps: {
     failed: "Falhou",

@@ -56,6 +56,8 @@ export const displayJaJP: DisplayMessages = {
     bridgeNotFound: "この実行ブリッジはもうありません。",
     bridgeHostRequired: "ネイティブメッセージングホスト名を入力してください。",
     bridgeTimeout: "実行ブリッジから時間内に応答がありませんでした。",
+    syncKeysLocked:
+      "API キーは同期されていますが、ロックされています。「設定 → 同期」で同期パスフレーズを入力してください。",
   },
   toolSteps: {
     failed: "失敗",

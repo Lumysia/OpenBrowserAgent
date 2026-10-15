@@ -57,6 +57,8 @@ export const displayDeDE: DisplayMessages = {
     bridgeNotFound: "Diese Ausführungs-Bridge gibt es nicht mehr.",
     bridgeHostRequired: "Geben Sie den Namen des Native-Messaging-Hosts ein.",
     bridgeTimeout: "Die Ausführungs-Bridge hat nicht rechtzeitig geantwortet.",
+    syncKeysLocked:
+      "Ihre API-Schlüssel sind synchronisiert, aber gesperrt. Geben Sie Ihre Sync-Passphrase unter Einstellungen → Synchronisierung ein.",
   },
   toolSteps: {
     failed: "Fehlgeschlagen",

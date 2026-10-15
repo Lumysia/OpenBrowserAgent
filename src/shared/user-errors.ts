@@ -11,6 +11,7 @@ export const USER_ERROR_CODE = {
   bridgeNotFound: "bridgeNotFound",
   bridgeHostRequired: "bridgeHostRequired",
   bridgeTimeout: "bridgeTimeout",
+  syncKeysLocked: "syncKeysLocked",
 } as const;
 
 export type UserErrorCode =

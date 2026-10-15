@@ -51,6 +51,8 @@ export const displayZhTW: DisplayMessages = {
     bridgeNotFound: "這個執行橋已不存在。",
     bridgeHostRequired: "請輸入原生訊息主機名稱。",
     bridgeTimeout: "執行橋沒有及時回應。",
+    syncKeysLocked:
+      "你的 API Key 已同步但處於鎖定狀態。請在「設定 → 同步」中輸入同步密語。",
   },
   toolSteps: {
     failed: "失敗",

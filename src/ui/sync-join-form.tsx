@@ -29,8 +29,10 @@ import {
 } from "./components";
 import { useMessages } from "./messages";
 import { syncBackendTypeLabel } from "./sync-backend-display";
+import { SyncUnlockForm } from "./sync-unlock-form";
 import { UI_STATE, stateWhen } from "./ui-state";
 import { useSyncJoin, type SyncJoinPhase } from "./use-sync-join";
+import { useSyncKeysLocked } from "./use-sync-keys-locked";
 import { WebDavConnectionFields } from "./webdav-connection-fields";
 
 type Mode = "code" | "manual";
@@ -61,6 +63,8 @@ export function SyncJoinForm({ manual }: { manual?: boolean }) {
   const [code, setCode] = useState("");
   const [backendId, setBackendId] = useState<string>(BROWSER_SYNC_BACKEND_ID);
   const [webDavEdits, setWebDavEdits] = useState<WebDavEdits>({});
+  const keysLocked = useSyncKeysLocked();
+  const [passphraseDone, setPassphraseDone] = useState(false);
   const webDav = webDavBackendOf(
     withWebDavPatch(DEFAULT_SYNC_BACKENDS, webDavEdits),
   );
@@ -101,6 +105,19 @@ export function SyncJoinForm({ manual }: { manual?: boolean }) {
       <CardDescription>{t.setup.codeDescription}</CardDescription>
     </>
   );
+
+  // Right after connecting, synced API keys this device can't read yet ask
+  // for the sync passphrase: without it, chats with synced providers fail.
+  if (join.phase === "connected" && keysLocked && !passphraseDone)
+    return (
+      <div className="sync-join-form">
+        <Feedback className="setup-feedback">{t.setup.keysLocked}</Feedback>
+        <SyncUnlockForm
+          onDone={() => setPassphraseDone(true)}
+          onSkip={() => setPassphraseDone(true)}
+        />
+      </div>
+    );
 
   return (
     <div className="sync-join-form">

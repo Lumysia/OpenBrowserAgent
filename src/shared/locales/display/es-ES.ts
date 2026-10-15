@@ -60,6 +60,8 @@ export const displayEsES: DisplayMessages = {
     bridgeNotFound: "Este puente de ejecución ya no existe.",
     bridgeHostRequired: "Introduce el nombre del host de mensajería nativa.",
     bridgeTimeout: "El puente de ejecución no respondió a tiempo.",
+    syncKeysLocked:
+      "Tus claves API están sincronizadas pero bloqueadas. Introduce tu frase de contraseña de sincronización en Configuración → Sincronización.",
   },
   toolSteps: {
     failed: "Error",

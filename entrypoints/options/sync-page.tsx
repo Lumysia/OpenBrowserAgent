@@ -1,4 +1,8 @@
-import { Button, SettingsPageHeader } from "../../src/ui/components";
+import {
+  Button,
+  SettingsPageHeader,
+  SettingsSection,
+} from "../../src/ui/components";
 import {
   Check,
   Cloud,
@@ -24,6 +28,8 @@ import { SyncBackendChoice } from "./sync-backend-choice";
 import { SyncDataList, type SyncDataToggle } from "./sync-data-list";
 import { SyncKeysDetail } from "./sync-keys-detail";
 import { SyncStatusCard } from "./sync-status-card";
+import { SyncUnlockForm } from "../../src/ui/sync-unlock-form";
+import { useSyncKeysLocked } from "../../src/ui/use-sync-keys-locked";
 import { useMessages } from "../../src/ui/messages";
 
 export function SyncPage() {
@@ -35,6 +41,7 @@ export function SyncPage() {
   );
   // Keys are being turned on: the passphrase form shows first.
   const [askingPassphrase, setAskingPassphrase] = useState(false);
+  const keysLocked = useSyncKeysLocked();
   const t = useMessages();
 
   if (!syncGroups || !syncBackends || !activeSyncBackendId || !syncStatus)
@@ -114,6 +121,7 @@ export function SyncPage() {
           )
         }
       />
+      {keysLocked && <SyncUnlockCard />}
       <SyncBackendChoice
         activeBackendId={activeSyncBackendId}
         backends={syncBackends}
@@ -151,5 +159,21 @@ function CopySyncCodeButton({
       {copied ? <Check size={15} /> : <Copy size={15} />}
       {copied ? t.sync.codeCopied : t.sync.copyCode}
     </Button>
+  );
+}
+
+// Synced API keys wait for the passphrase another device set: asked first
+// on the page, whichever way sync was connected.
+function SyncUnlockCard() {
+  const t = useMessages();
+  return (
+    <SettingsSection
+      icon={<KeyRound />}
+      title={t.setup.keysLocked}
+      description={t.sync.passphraseEnter}
+      className="sync-unlock-card"
+    >
+      <SyncUnlockForm />
+    </SettingsSection>
   );
 }

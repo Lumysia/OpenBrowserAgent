@@ -60,6 +60,8 @@ export const displayFrFR: DisplayMessages = {
     bridgeNotFound: "Ce pont d’exécution n’existe plus.",
     bridgeHostRequired: "Saisissez le nom de l’hôte de messagerie native.",
     bridgeTimeout: "Le pont d’exécution n’a pas répondu à temps.",
+    syncKeysLocked:
+      "Vos clés API sont synchronisées mais verrouillées. Saisissez votre phrase secrète de synchronisation dans Paramètres → Synchronisation.",
   },
   toolSteps: {
     failed: "Échec",

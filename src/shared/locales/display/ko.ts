@@ -56,6 +56,8 @@ export const displayKo: DisplayMessages = {
     bridgeNotFound: "이 실행 브리지는 더 이상 없습니다.",
     bridgeHostRequired: "네이티브 메시징 호스트 이름을 입력하세요.",
     bridgeTimeout: "실행 브리지가 제때 응답하지 않았습니다.",
+    syncKeysLocked:
+      "API 키가 동기화되었지만 잠겨 있습니다. 설정 → 동기화에서 동기화 암호 문구를 입력하세요.",
   },
   toolSteps: {
     failed: "실패",

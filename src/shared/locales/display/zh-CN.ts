@@ -51,6 +51,8 @@ export const displayZhCN: DisplayMessages = {
     bridgeNotFound: "这个执行桥已不存在。",
     bridgeHostRequired: "请输入原生消息主机名。",
     bridgeTimeout: "执行桥没有及时响应。",
+    syncKeysLocked:
+      "你的 API Key 已同步但处于锁定状态。请在“设置 → 同步”中输入同步口令。",
   },
   toolSteps: {
     failed: "失败",

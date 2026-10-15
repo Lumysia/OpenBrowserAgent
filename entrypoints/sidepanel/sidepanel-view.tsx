@@ -13,6 +13,7 @@ import { MessageBubble } from "./message-bubble";
 import { ProvidersEmptyState } from "./providers-empty-state";
 import { QueuedMessages } from "./queued-messages";
 import { SidepanelHeader } from "./sidepanel-header";
+import { SyncKeysBanner } from "./sync-keys-banner";
 import { TypingIndicator } from "./typing-indicator";
 import { HolidayBurst } from "./holiday-touches";
 import { useChat, useComposer } from "./sidepanel-providers";
@@ -170,6 +171,7 @@ function ChatView({
             <Plus size={16} /> {t.words.newChat}
           </Button>
         </div>
+        <SyncKeysBanner />
         <ComposerAttachments />
         <QueuedMessages
           messages={composer.queuedMessages}

@@ -11,10 +11,11 @@ import {
 } from "../../src/ui/components";
 import { useMessages } from "../../src/ui/messages";
 
-type Mode = "create" | "enter" | "change";
+type Mode = "create" | "change";
 
-// The sync passphrase under the keys switch: set when turning keys on,
-// entered once on a device that has no key for it yet, or changed.
+// The sync passphrase under the keys switch: set when turning keys on, or
+// changed. The one another device set is entered at the top of the page
+// (SyncUnlockCard).
 export function SyncKeysDetail({
   on,
   keys,
@@ -29,14 +30,12 @@ export function SyncKeysDetail({
 }) {
   const t = useMessages();
   const [changing, setChanging] = useState(false);
-  // Keys are on but this device has no key: the server's passphrase is
-  // entered, or (none there, the cloud was cleared) a new one is set.
+  // Keys are on but this device has no key and the server has none (the
+  // cloud was cleared): a new one is set.
   const missingKey = on && !!keys && !keys.unlocked;
   const mode: Mode | undefined =
     keys?.onServer && !keys.unlocked
-      ? asking || on
-        ? "enter"
-        : undefined
+      ? undefined
       : changing
         ? "change"
         : asking || missingKey
@@ -89,10 +88,8 @@ function PassphraseForm({
   const [repeat, setRepeat] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const confirm = mode !== "enter";
   const description = {
     create: t.sync.passphraseCreate,
-    enter: t.sync.passphraseEnter,
     change: t.sync.passphraseChangeDescription,
   }[mode];
 
@@ -104,8 +101,7 @@ function PassphraseForm({
           String(SYNC_PASSPHRASE_MIN_LENGTH),
         ),
       );
-    if (confirm && passphrase !== repeat)
-      return setError(t.sync.passphraseMismatch);
+    if (passphrase !== repeat) return setError(t.sync.passphraseMismatch);
     setBusy(true);
     setError("");
     try {
@@ -132,22 +128,20 @@ function PassphraseForm({
         {t.sync.passphrase}
         <Input
           type="password"
-          autoComplete={confirm ? "new-password" : "current-password"}
+          autoComplete="new-password"
           value={passphrase}
           onChange={(event) => setPassphrase(event.target.value)}
         />
       </Label>
-      {confirm && (
-        <Label>
-          {t.sync.passphraseRepeat}
-          <Input
-            type="password"
-            autoComplete="new-password"
-            value={repeat}
-            onChange={(event) => setRepeat(event.target.value)}
-          />
-        </Label>
-      )}
+      <Label>
+        {t.sync.passphraseRepeat}
+        <Input
+          type="password"
+          autoComplete="new-password"
+          value={repeat}
+          onChange={(event) => setRepeat(event.target.value)}
+        />
+      </Label>
       {error && <Feedback error>{error}</Feedback>}
       <div className="row">
         <Button type="submit" size="sm" disabled={busy || !passphrase}>
