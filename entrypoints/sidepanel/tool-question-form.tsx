@@ -1,9 +1,8 @@
 import React from "react";
-import {
-  CHAT_PART_STATE,
-  type ChatPart,
-  type QuestionToolAnswer,
-  type QuestionToolQuestion,
+import type {
+  ChatPart,
+  QuestionToolAnswer,
+  QuestionToolQuestion,
 } from "../../src/shared/types";
 import {
   Button,
@@ -17,9 +16,14 @@ import {
   UserText,
 } from "../../src/ui/components";
 import { useMessages } from "../../src/ui/messages";
+import {
+  questionToolQuestions,
+  questionToolSubmittedAnswers,
+} from "./question-state";
 
 // The ask tool's card: the model's questions as a form while the run waits
-// for the answers, then the answers given.
+// for the answers, then the answers given (none, when nothing waits any
+// more).
 export function QuestionToolForm({
   part,
   active,
@@ -41,10 +45,17 @@ export function QuestionToolForm({
     isQuestionAnswered(question, selected[index] || [], customAnswers[index]),
   );
   if (!questions.length) return null;
-  if (submittedAnswers.length)
+  if (!active) {
+    const rows = submittedAnswers.length
+      ? submittedAnswers
+      : questions.map((question) => ({
+          question: question.question,
+          answers: [],
+          customAnswer: undefined,
+        }));
     return (
       <div className="tool-result-list tool-question-answers ui-selectable">
-        {submittedAnswers.map((answer, index) => (
+        {rows.map((answer, index) => (
           <div className="tool-result-row" key={`${answer.question}-${index}`}>
             <span className="tool-result-label">{answer.question}</span>
             <UserText
@@ -59,12 +70,13 @@ export function QuestionToolForm({
         ))}
       </div>
     );
+  }
   return (
     <form
       className="tool-question-stack"
       onSubmit={(event) => {
         event.preventDefault();
-        if (!active || !complete) return;
+        if (!complete) return;
         onSubmit(
           questions.map((question, index) => ({
             question: question.question,
@@ -93,7 +105,6 @@ export function QuestionToolForm({
                 <ToggleGroup
                   type="multiple"
                   value={selectedValues}
-                  disabled={!active}
                   onValueChange={(value) =>
                     setSelected((items) => ({ ...items, [index]: value }))
                   }
@@ -106,7 +117,6 @@ export function QuestionToolForm({
                 <ToggleGroup
                   type="single"
                   value={selectedValues[0] || ""}
-                  disabled={!active}
                   onValueChange={(value) =>
                     setSelected((items) => ({
                       ...items,
@@ -123,7 +133,6 @@ export function QuestionToolForm({
                 (question.multiple ? (
                   <Textarea
                     value={customAnswers[index] || ""}
-                    disabled={!active}
                     rows={2}
                     placeholder={t.sidepanel.questionCustomPlaceholder}
                     onChange={(event) =>
@@ -136,7 +145,6 @@ export function QuestionToolForm({
                 ) : (
                   <Input
                     value={customAnswers[index] || ""}
-                    disabled={!active}
                     placeholder={t.sidepanel.questionCustomPlaceholder}
                     onChange={(event) =>
                       setCustomAnswers((items) => ({
@@ -150,7 +158,7 @@ export function QuestionToolForm({
           </Card>
         );
       })}
-      <Button type="submit" size="sm" disabled={!active || !complete}>
+      <Button type="submit" size="sm" disabled={!complete}>
         {t.sidepanel.questionSubmit}
       </Button>
     </form>
@@ -167,14 +175,6 @@ function isQuestionAnswered(
   );
 }
 
-export function isQuestionPending(part: ChatPart) {
-  if (questionToolSubmittedAnswers(part.output).length) return false;
-  return (
-    part.state === CHAT_PART_STATE.inputAvailable ||
-    part.state === CHAT_PART_STATE.outputAvailable
-  );
-}
-
 function QuestionOptionItem({
   option,
 }: {
@@ -186,56 +186,4 @@ function QuestionOptionItem({
       {option.description && <small>{option.description}</small>}
     </ToggleGroupItem>
   );
-}
-
-function questionToolQuestions(input: unknown): QuestionToolQuestion[] {
-  const questions = (input as { questions?: unknown } | undefined)?.questions;
-  if (!Array.isArray(questions)) return [];
-  return questions.slice(0, 6).flatMap((question) => {
-    if (!question || typeof question !== "object") return [];
-    const item = question as Record<string, unknown>;
-    const text = String(item.question || "").trim();
-    const options = Array.isArray(item.options)
-      ? item.options.flatMap((option) => {
-          if (!option || typeof option !== "object") return [];
-          const optionRecord = option as Record<string, unknown>;
-          const label = String(optionRecord.label || "").trim();
-          if (!label) return [];
-          return [
-            {
-              label,
-              description: String(optionRecord.description || "").trim(),
-            },
-          ];
-        })
-      : [];
-    if (!text || !options.length) return [];
-    return [
-      {
-        question: text,
-        options,
-        multiple: item.multiple === true,
-        custom: item.custom !== false,
-      },
-    ];
-  });
-}
-
-function questionToolSubmittedAnswers(output: unknown): QuestionToolAnswer[] {
-  const answers = (output as { answers?: unknown } | undefined)?.answers;
-  if (!Array.isArray(answers)) return [];
-  return answers.flatMap((answer) => {
-    if (!answer || typeof answer !== "object") return [];
-    const item = answer as Record<string, unknown>;
-    const question = String(item.question || "").trim();
-    return [
-      {
-        question,
-        answers: Array.isArray(item.answers)
-          ? item.answers.map((value) => String(value).trim()).filter(Boolean)
-          : [],
-        customAnswer: String(item.customAnswer || "").trim() || undefined,
-      },
-    ];
-  });
 }

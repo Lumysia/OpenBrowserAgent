@@ -88,6 +88,7 @@ export const ptBR: LocaleMessages = {
     questionSubmit: "Enviar respostas",
     questionCustomPlaceholder: "Digite sua própria resposta…",
     questionNoAnswer: "Sem resposta",
+    questionUnanswered: "Pergunta não respondida",
     forkTitleSuffix: "Ramificação",
     messageCount: plural({
       one: "{count} mensagem",

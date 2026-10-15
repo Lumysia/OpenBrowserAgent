@@ -83,6 +83,7 @@ export const zhCN: LocaleMessages = {
     questionSubmit: "提交回答",
     questionCustomPlaceholder: "输入你自己的回答…",
     questionNoAnswer: "未回答",
+    questionUnanswered: "问题未回答",
     forkTitleSuffix: "分叉",
     messageCount: plural({ other: "{count} 条消息" }),
     relativeMinutesAgo: "{count} 分钟前",

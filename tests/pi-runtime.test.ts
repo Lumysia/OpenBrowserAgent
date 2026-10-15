@@ -231,11 +231,71 @@ test("question wait survives a panel reconnect, accepts an answer and can be abo
     });
     try {
       await assert.rejects(runPiAgent(second.options), { name: "AbortError" });
-      assert.equal(second.session.answers.size, 0);
+      assert.equal(second.session.questions.size, 0);
       assert.equal(second.session.agent.state.isStreaming, false);
     } finally {
       second.close();
     }
+  } finally {
+    run.close();
+    await fixture.close();
+  }
+});
+
+test("a message written while a question waits ends the wait and follows the unanswered call", async () => {
+  const fixture = await providerFixture((request, response) =>
+    reply(
+      response,
+      request.protocol,
+      toolResults(request).length
+        ? { text: "Understood" }
+        : {
+            calls: [
+              {
+                id: "ask",
+                name: "ask",
+                args: {
+                  questions: [{ question: "Pick", options: [{ label: "A" }] }],
+                },
+              },
+            ],
+          },
+    ),
+  );
+  const run = setup(fixture.baseUrl);
+  const seen: AiStreamResponse[] = [];
+  const client = {
+    postMessage(event: AiStreamResponse) {
+      seen.push(event);
+      const chunk = event.type === "chunk" ? toolChunk(event.chunk) : {};
+      if (chunk.toolCallId === "ask" && chunk.state === "input-available")
+        setTimeout(() =>
+          sessions.queueMessage(run.session, {
+            id: "typed",
+            content: "Only B, please",
+          }),
+        );
+    },
+  } as chrome.runtime.Port;
+  sessions.attachPortToSession(client, run.session, 0);
+  try {
+    await runPiAgent(run.options);
+    assert.equal(fixture.requests.length, 2);
+    const messages = JSON.stringify(fixture.requests[1].body.messages);
+    assert.match(
+      JSON.stringify(toolResults(fixture.requests[1])),
+      /did not answer/,
+    );
+    assert.match(messages, /Only B, please/);
+    assert.equal(run.session.questions.size, 0);
+    const result = seen
+      .filter((event) => event.type === "chunk")
+      .map(
+        (event) => toolChunk(event.chunk) as ToolChunk & { output?: unknown },
+      )
+      .findLast((chunk) => chunk.toolCallId === "ask");
+    assert.equal(result?.state, "output-available");
+    assert.deepEqual(result?.output, { answers: [] });
   } finally {
     run.close();
     await fixture.close();

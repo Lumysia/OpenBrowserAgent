@@ -14,6 +14,7 @@ import {
   type ToolStepOutcome,
 } from "./tool-detail-format";
 import { downloadsDetail, downloadsOutcome } from "./download-tool-display";
+import { questionToolSubmittedAnswers } from "./question-state";
 import { subAgentProgressDetail } from "./sub-agent-tool-display";
 import { toolReferences } from "./tool-references";
 import { actStepsSummary } from "./tool-step-summary";
@@ -158,6 +159,12 @@ const OUTCOMES: Record<
   ) => ToolStepOutcome | undefined
 > = {
   [TOOL_NAME.downloads]: downloadsOutcome,
+  // A question that ended without answers: it failed, the user wrote a
+  // message instead, or the run ended first.
+  [TOOL_NAME.ask]: (input, output, t, state) =>
+    state !== "running" && !questionToolSubmittedAnswers(output).length
+      ? { title: t.sidepanel.questionUnanswered }
+      : undefined,
 };
 
 export function toolDisplay(
@@ -169,16 +176,13 @@ export function toolDisplay(
   const input = (part.input || {}) as ToolRecord;
   const output = (part.output || {}) as ToolRecord;
   const done =
+    runEnded ||
     part.state === CHAT_PART_STATE.outputAvailable ||
-    part.state === CHAT_PART_STATE.outputError ||
-    (runEnded && part.state === CHAT_PART_STATE.inputAvailable);
-  const awaitingAnswer =
-    name === TOOL_NAME.ask && !Array.isArray(output.answers);
+    part.state === CHAT_PART_STATE.outputError;
   const errored =
     typeof output.error === "string" ||
     part.state === CHAT_PART_STATE.outputError;
-  const state: ToolStepState =
-    !done || awaitingAnswer ? "running" : errored ? "failed" : "done";
+  const state: ToolStepState = !done ? "running" : errored ? "failed" : "done";
   const outcome = OUTCOMES[name]?.(input, output, t, state);
   const title = outcome?.title || toolLabel(name, t, state !== "running");
   // A failed step's error is English text for the model; the line says it

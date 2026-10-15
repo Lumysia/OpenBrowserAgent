@@ -87,6 +87,7 @@ export const ko: LocaleMessages = {
     questionSubmit: "답변 제출",
     questionCustomPlaceholder: "직접 답변 입력…",
     questionNoAnswer: "답변 없음",
+    questionUnanswered: "답변하지 않은 질문",
     forkTitleSuffix: "분기",
     messageCount: plural({ other: "{count}개 메시지" }),
     relativeMinutesAgo: "{count}분 전",

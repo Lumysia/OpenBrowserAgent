@@ -10,7 +10,7 @@ import type {
   ChatSource,
   QuestionToolAnswer,
 } from "../../src/shared/types";
-import { CHAT_PART_STATE, isToolPartType } from "../../src/shared/types";
+import { isToolPartType } from "../../src/shared/types";
 import {
   Accordion,
   AccordionContent,
@@ -69,7 +69,6 @@ function AssistantSummaryCard({ part }: { part: ChatPart }) {
 
 export function AssistantPart({
   part,
-  partIndex,
   sources,
   onFork,
   message,
@@ -80,7 +79,6 @@ export function AssistantPart({
   runEnded,
 }: {
   part: ChatPart;
-  partIndex: number;
   sources: ChatSource[];
   onFork?: () => void;
   message: ChatMessage;
@@ -94,12 +92,11 @@ export function AssistantPart({
   runEnded: boolean;
 }) {
   const t = useMessages();
-  const stalePendingTool = isStalePendingTool(message, part, partIndex);
   if (isToolPartType(part.type))
     return (
       <ToolPart
         part={part}
-        runEnded={runEnded || stalePendingTool}
+        runEnded={runEnded}
         onSelectChat={onSelectChat}
         chatExists={chatExists}
         onAnswerQuestion={onAnswerQuestion}
@@ -121,26 +118,6 @@ export function AssistantPart({
       />
     );
   return null;
-}
-
-function isStalePendingTool(
-  message: ChatMessage,
-  part: ChatPart,
-  partIndex: number,
-) {
-  if (!isToolPartType(part.type)) return false;
-  if (part.state !== CHAT_PART_STATE.inputAvailable) return false;
-  return (message.parts || []).slice(partIndex + 1).some(hasRenderedActivity);
-}
-
-function hasRenderedActivity(part: ChatPart) {
-  if (
-    part.type === "text" ||
-    part.type === "reasoning" ||
-    part.type === "summary"
-  )
-    return !!part.text?.trim() || !!part.error;
-  return isToolPartType(part.type);
 }
 
 function AssistantReasoning({ text }: { text: string }) {

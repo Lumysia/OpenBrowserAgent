@@ -90,6 +90,7 @@ export const enUS = {
     questionSubmit: "Submit answers",
     questionCustomPlaceholder: "Type your own answer…",
     questionNoAnswer: "No answer",
+    questionUnanswered: "Question not answered",
     forkTitleSuffix: "Fork",
     messageCount: plural({
       one: "{count} message",
