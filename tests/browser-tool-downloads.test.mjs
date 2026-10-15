@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { test } from "node:test";
+import { UI_STATE } from "../src/ui/ui-state.ts";
 import { setPreferences } from "./browser-harness.mjs";
 import { browserToolFixture, ref } from "./browser-tool-fixture.mjs";
 import { poll } from "./chromium.mjs";
@@ -400,12 +401,14 @@ test(
               button,
             ),
           );
-          const lines = await panel.call(() =>
-            // A failed step is styled like any failed step.
-            [...document.querySelectorAll(".tool-card")].map(
-              (card) =>
-                `${card.classList.contains("error") ? "[failed] " : ""}${card.innerText.replace(/\s+/g, " ").trim()}`,
-            ),
+          const lines = await panel.call(
+            (errorState) =>
+              // A failed step is styled like any failed step.
+              [...document.querySelectorAll(".tool-card")].map(
+                (card) =>
+                  `${card.dataset.state === errorState ? "[failed] " : ""}${card.innerText.replace(/\s+/g, " ").trim()}`,
+              ),
+            UI_STATE.error,
           );
           assert.ok(
             lines.some((line) =>

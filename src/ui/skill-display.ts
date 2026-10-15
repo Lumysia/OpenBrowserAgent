@@ -21,7 +21,7 @@ export function skillDisplay(skill: PickedSkill, t: Messages) {
 
 // A skill is over the size limit (import, and the editor's checks).
 export function skillTooLargeText(t: Messages) {
-  return t.options.skillCheckTooLarge.replace(
+  return t.options.skillCheck.size.failed.replace(
     "{max}",
     formatNumber(SKILL_MAX_CHARS),
   );

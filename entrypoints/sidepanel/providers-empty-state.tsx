@@ -1,7 +1,7 @@
 import { Bot, Languages, Settings } from "lucide-react";
+import { useMessages } from "../../src/ui/messages";
 import { useState, type ReactNode } from "react";
 import { LOCAL_SETUP_FEEDBACK_MS, OPTIONS_HASH } from "../../src/shared/config";
-import type { Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import { completeLocalBootstrapState } from "../../src/shared/storage-debug";
 import type { SyncGroupSettings } from "../../src/shared/storage-keys";
@@ -38,11 +38,16 @@ import {
 import { useStoredState } from "../../src/ui/useStoredState";
 import { useTransient } from "../../src/ui/use-transient";
 import { cn } from "../../src/ui/utils";
+import { UI_STATE, stateWhen } from "../../src/ui/ui-state";
+import {
+  describeSetupState,
+  type SetupAction,
+  type SetupStatus,
+} from "./setup-state";
 import { SyncBootstrapStep } from "./sync-bootstrap-step";
 
-type SetupStatus = "idle" | "synced" | "error";
-
-export function ProvidersEmptyState({ t }: { t: Messages }) {
+export function ProvidersEmptyState() {
+  const t = useMessages();
   const [language, setLanguage] = useStoredState(storage.language);
   const [syncBackends] = useStoredState(storage.syncBackends);
   const [syncGroups] = useStoredState(storage.syncGroups);
@@ -57,7 +62,7 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
   const [syncCodeDraft, setSyncCodeDraft] = useState("");
   const [syncCodeInvalid, setSyncCodeInvalid] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [syncAction, setSyncAction] = useState<"test" | "confirm">("test");
+  const [syncAction, setSyncAction] = useState<SetupAction>("test");
   const [syncFailed, setSyncFailed] = useState(false);
   const [startingLocal, showStartingLocal] = useTransient<true>(
     LOCAL_SETUP_FEEDBACK_MS,
@@ -166,32 +171,11 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
     openOrFocusOptions(OPTIONS_HASH.providers).catch(console.warn);
   }
 
-  const syncMessage =
-    syncStatus === "synced"
-      ? t.sidepanel.cloudSyncSynced
-      : syncStatus === "error"
-        ? t.sidepanel.cloudSyncError
-        : t.sidepanel.cloudSyncDescription;
-  const cloudActionLabel = syncing
-    ? syncAction === "test"
-      ? t.sidepanel.cloudSyncTesting
-      : t.sidepanel.cloudSyncPulling
-    : syncStatus === "synced"
-      ? t.sidepanel.cloudSyncSyncedButton
-      : t.sidepanel.cloudSyncConnect;
-  const setupFeedbackMessage =
-    syncStatus !== "idle" || syncing
-      ? syncing
-        ? cloudActionLabel
-        : syncMessage
-      : syncCodeInvalid
-        ? t.sidepanel.syncConfigCodeInvalid
-        : "";
-  const setupFeedbackError = syncStatus === "error" || syncCodeInvalid;
-  const secondaryStartLabel =
-    syncStatus === "synced"
-      ? t.sidepanel.bootstrapStepProviderTitle
-      : t.sidepanel.startLocally;
+  const setup = describeSetupState(t, {
+    status: syncStatus,
+    running: syncing ? syncAction : undefined,
+    codeInvalid: syncCodeInvalid,
+  });
 
   return (
     <div className="sidepanel bootstrap-mode">
@@ -238,7 +222,6 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                     active
                   >
                     <SyncBootstrapStep
-                      t={t}
                       selectedBackendId={selectedBackendId}
                       setSelectedBackendId={(backendId) => {
                         setChosenBackendId(backendId);
@@ -254,12 +237,12 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                         setSyncCodeInvalid(false);
                         setSyncFailed(false);
                       }}
-                      setupFeedbackMessage={setupFeedbackMessage}
-                      setupFeedbackError={setupFeedbackError}
+                      setupFeedbackMessage={setup.feedback}
+                      setupFeedbackError={setup.feedbackError}
                       syncing={syncing}
                       hasActiveSyncBackend={hasActiveSyncBackend}
                       canPull={canPull}
-                      cloudActionLabel={cloudActionLabel}
+                      cloudActionLabel={setup.actionLabel}
                       handleCloudAction={handleCloudAction}
                     />
                   </BootstrapStep>
@@ -275,18 +258,16 @@ export function ProvidersEmptyState({ t }: { t: Messages }) {
                       >
                         <Settings size={16} />
                         <span
-                          key={secondaryStartLabel}
+                          key={setup.startLabel}
                           className="bootstrap-action-label"
                         >
-                          {secondaryStartLabel}
+                          {setup.startLabel}
                         </span>
                       </Button>
                       <CardDescription
                         aria-hidden={!startingLocal}
-                        className={cn(
-                          "bootstrap-feedback-card local-setup-hint",
-                          startingLocal && "visible",
-                        )}
+                        className="bootstrap-feedback-card local-setup-hint"
+                        data-state={stateWhen(startingLocal, UI_STATE.visible)}
                       >
                         {t.sidepanel.localSetupHint}
                       </CardDescription>

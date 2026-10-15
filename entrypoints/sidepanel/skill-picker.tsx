@@ -1,15 +1,13 @@
-import { Check, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import type { Messages } from "../../src/shared/i18n";
 import type { PickedSkill } from "../../src/shared/types";
-import { Button } from "../../src/ui/components";
+import { ActionListItem } from "../../src/ui/components";
 import { skillDisplay } from "../../src/ui/skill-display";
 import { filterSkills, slashSkillQuery } from "./skill-context";
-import { cn } from "../../src/ui/utils";
+import { useMessages } from "../../src/ui/messages";
 
 // The skill list of the "+" menu and the "/" picker.
 export function SkillPickerList({
-  t,
   id,
   skills,
   selectedIds = [],
@@ -17,7 +15,6 @@ export function SkillPickerList({
   onPick,
   onHover,
 }: {
-  t: Messages;
   id?: string;
   skills: PickedSkill[];
   selectedIds?: string[];
@@ -25,6 +22,7 @@ export function SkillPickerList({
   onPick: (skill: PickedSkill) => void;
   onHover?: (index: number) => void;
 }) {
+  const t = useMessages();
   const listRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (activeIndex === undefined) return;
@@ -48,7 +46,7 @@ export function SkillPickerList({
         const selected = selectedIds.includes(skill.id);
         const { name, description } = skillDisplay(skill, t);
         return (
-          <Button
+          <ActionListItem
             key={skill.id}
             id={id ? `${id}-${index}` : undefined}
             data-index={index}
@@ -56,23 +54,17 @@ export function SkillPickerList({
             aria-selected={
               activeIndex === undefined ? selected : activeIndex === index
             }
-            variant="ghost"
-            className={cn(
-              "action-list-item skill-picker-item",
-              selected || (activeIndex === index && "active"),
-            )}
+            className="skill-picker-item"
+            icon={<FileText size={18} />}
+            title={name}
+            hint={description || undefined}
+            active={activeIndex === index}
+            checked={selected}
             // Keep the composer focused while picking from the "/" list.
             onMouseDown={(event) => event.preventDefault()}
             onMouseEnter={() => onHover?.(index)}
             onClick={() => onPick(skill)}
-          >
-            <FileText size={18} />
-            <span>
-              <strong>{name}</strong>
-              {description && <small>{description}</small>}
-            </span>
-            {selected && <Check className="menu-check" size={14} />}
-          </Button>
+          />
         );
       })}
     </div>
@@ -82,16 +74,15 @@ export function SkillPickerList({
 // "/" at the start of the composer lists the skills matching what follows
 // it; arrows move, Enter or Tab picks, Escape closes.
 export function useSlashSkillPicker({
-  t,
   input,
   skills,
   onPick,
 }: {
-  t: Messages;
   input: string;
   skills: PickedSkill[];
   onPick: (skill: PickedSkill) => void;
 }) {
+  const t = useMessages();
   const [activeIndex, setActiveIndex] = useState(0);
   const [dismissedInput, setDismissedInput] = useState<string>();
   const query = slashSkillQuery(input);

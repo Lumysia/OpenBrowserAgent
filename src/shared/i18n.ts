@@ -64,6 +64,10 @@ export function getMessages(language?: string) {
 
 export type Messages = LocaleMessages;
 
+// The messages of every UI language, e.g. to recognize text stored in
+// whichever language was on at the time.
+export const ALL_MESSAGES: readonly Messages[] = Object.values(MESSAGES);
+
 // Fills `{count}` into the plural form the message's language uses for it,
 // and any other `{name}` placeholders from `values`.
 export function formatCount(

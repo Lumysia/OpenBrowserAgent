@@ -20,7 +20,7 @@ import {
   localDayKey,
   type HolidayBadge as Badge,
 } from "../../src/shared/holidays";
-import type { Messages } from "../../src/shared/i18n";
+import { useMessages } from "../../src/ui/messages";
 import { storage } from "../../src/shared/storage";
 import { THEMES } from "../../src/shared/theme/themes";
 import type { Preferences } from "../../src/shared/types";
@@ -55,7 +55,8 @@ export function useHoliday() {
 }
 
 // A small badge with the day's name, above the empty chat's greeting.
-export function HolidayBadge({ t }: { t: Messages }) {
+export function HolidayBadge() {
+  const t = useMessages();
   const holiday = useHoliday();
   if (!holiday) return null;
   return (

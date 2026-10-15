@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { getMessages } from "../src/shared/i18n.ts";
 import { modelStopNote } from "../src/shared/run-stop.ts";
+import { UI_STATE } from "../src/ui/ui-state.ts";
 import { sendComposer, typeComposer } from "./browser-composer.mjs";
 import { clickElement } from "./cdp-input.mjs";
 import { poll } from "./chromium.mjs";
@@ -67,17 +68,20 @@ test(
         panel.call(() => !!document.querySelector(".composer-box textarea")),
       );
       const page = () =>
-        panel.call(() => ({
-          text: document.querySelector(".messages")?.textContent || "",
-          notices: [...document.querySelectorAll(".run-stop-notice")].map(
-            (item) => ({
-              text: item.textContent,
-              error: item.classList.contains("error"),
-              continue: !!item.querySelector("button"),
-            }),
-          ),
-          streaming: !!document.querySelector(".stop-button"),
-        }));
+        panel.call(
+          (errorState) => ({
+            text: document.querySelector(".messages")?.textContent || "",
+            notices: [...document.querySelectorAll(".run-stop-notice")].map(
+              (item) => ({
+                text: item.textContent,
+                error: item.dataset.state === errorState,
+                continue: !!item.querySelector("button"),
+              }),
+            ),
+            streaming: !!document.querySelector(".stop-button"),
+          }),
+          UI_STATE.error,
+        );
       const count = (text, part) => text.split(part).length - 1;
       const send = async (text) => {
         await typeComposer(panel, text);

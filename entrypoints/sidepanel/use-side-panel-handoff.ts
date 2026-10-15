@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import type { Messages } from "../../src/shared/i18n";
+import { useMessages, useUiLanguage } from "../../src/ui/messages";
 import {
   readSidePanelHandoff,
   SIDE_PANEL_HANDOFF_TTL_MS,
@@ -33,8 +33,6 @@ export type HandoffSend = {
 // once in a new chat.
 export function useSidePanelHandoff({
   ready,
-  t,
-  language,
   importChat,
   createChat,
   attachTab,
@@ -45,8 +43,6 @@ export function useSidePanelHandoff({
   composerRef,
 }: {
   ready: boolean;
-  t: Messages;
-  language: string;
   importChat: (chat: Chat) => void;
   createChat: () => Chat;
   attachTab: (tab: AttachmentTab) => void;
@@ -56,6 +52,8 @@ export function useSidePanelHandoff({
   send: (request: Omit<HandoffSend, "chatId">) => void;
   composerRef: RefObject<HTMLTextAreaElement | null>;
 }) {
+  const t = useMessages();
+  const language = useUiLanguage() ?? "";
   const [handoff, setHandoff] = useState<SidePanelHandoff>();
   const [pending, setPending] = useState<HandoffSend>();
   const appliedRef = useRef(new Set<string>());

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
+import { useMessages } from "../../src/ui/messages";
 import { MERMAID_PNG_SCALE } from "../../src/shared/config";
-import type { Messages } from "../../src/shared/i18n";
 import { Button, Feedback } from "../../src/ui/components";
 import { downloadBlob } from "../../src/ui/download";
 import { useAppliedTheme } from "../../src/ui/theme";
@@ -22,7 +22,8 @@ type Drawing =
 
 // A Mermaid block of a settled answer, drawn in the side panel. If the
 // source does not parse, it is shown as code.
-export function MermaidPreview({ t, code }: { t: Messages; code: string }) {
+export function MermaidPreview({ code }: { code: string }) {
+  const t = useMessages();
   const theme = useAppliedTheme();
   const drawing = useMermaid(code, theme);
 

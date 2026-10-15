@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { cssDurationMs, DURATION_TOKEN } from "../../src/ui/motion";
 
-const DEFAULT_REMOVE_DELAY_MS = 190;
+// Waits out the --duration-remove animation of the element going away.
+const removeDelayMs = () => cssDurationMs(DURATION_TOKEN.remove);
 
-export function useDeferredRemove(
-  onRemove: () => void,
-  delayMs = DEFAULT_REMOVE_DELAY_MS,
-) {
+export function useDeferredRemove(onRemove: () => void) {
   const [removing, setRemoving] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -21,16 +20,13 @@ export function useDeferredRemove(
   function remove() {
     if (removing) return;
     setRemoving(true);
-    timeoutRef.current = setTimeout(onRemove, delayMs);
+    timeoutRef.current = setTimeout(onRemove, removeDelayMs());
   }
 
   return { removing, remove };
 }
 
-export function useDeferredPresence(
-  visible: boolean,
-  delayMs = DEFAULT_REMOVE_DELAY_MS,
-) {
+export function useDeferredPresence(visible: boolean) {
   const [mounted, setMounted] = useState(visible);
   const [removing, setRemoving] = useState(false);
 
@@ -45,9 +41,9 @@ export function useDeferredPresence(
     const timeout = setTimeout(() => {
       setMounted(false);
       setRemoving(false);
-    }, delayMs);
+    }, removeDelayMs());
     return () => clearTimeout(timeout);
-  }, [delayMs, mounted, visible]);
+  }, [mounted, visible]);
 
   return { mounted, removing };
 }

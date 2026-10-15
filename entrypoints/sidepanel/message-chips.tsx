@@ -14,7 +14,7 @@ import {
   SENT_ATTACHMENTS_PREVIEW_COUNT,
   SENT_TABS_PREVIEW_COUNT,
 } from "../../src/shared/config";
-import { formatCount, type Messages } from "../../src/shared/i18n";
+import { formatCount } from "../../src/shared/i18n";
 import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
 import type {
   AttachmentTab,
@@ -31,16 +31,12 @@ import {
   TooltipTrigger,
 } from "../../src/ui/components";
 import { selectedTextExcerpt } from "./selected-text";
+import { useMessages } from "../../src/ui/messages";
 
 const SOURCE_CHIP_PREVIEW_COUNT = 5;
 
-export function SourceChips({
-  t,
-  sources,
-}: {
-  t: Messages;
-  sources: ChatSource[];
-}) {
+export function SourceChips({ sources }: { sources: ChatSource[] }) {
+  const t = useMessages();
   const [expanded, setExpanded] = useState(false);
   const hiddenCount = Math.max(0, sources.length - SOURCE_CHIP_PREVIEW_COUNT);
   const visibleSources = expanded
@@ -87,13 +83,8 @@ function openSource(source: ChatSource) {
   if (source.tabId) focusTab(source.tabId).catch(console.warn);
 }
 
-export function SentTabsChip({
-  t,
-  tabs,
-}: {
-  t: Messages;
-  tabs: AttachmentTab[];
-}) {
+export function SentTabsChip({ tabs }: { tabs: AttachmentTab[] }) {
+  const t = useMessages();
   const visibleTabs = tabs.slice(0, SENT_TABS_PREVIEW_COUNT);
   const titleOf = (tab: AttachmentTab) => tab.title || t.sidepanel.currentPage;
   const urls = visibleTabs
@@ -130,12 +121,11 @@ export function SentTabsChip({
 export function SentAttachmentsChip({
   attachments,
   unavailableCount = 0,
-  t,
 }: {
   attachments: UploadedAttachment[];
   unavailableCount?: number;
-  t: Messages;
 }) {
+  const t = useMessages();
   const visibleAttachments = attachments.slice(
     0,
     SENT_ATTACHMENTS_PREVIEW_COUNT,
@@ -182,11 +172,10 @@ export function SentAttachmentsChip({
 
 export function SentSelectedTextChip({
   selection,
-  t,
 }: {
   selection: SelectedText;
-  t: Messages;
 }) {
+  const t = useMessages();
   return (
     <div className="sent-tab-chip">
       <TextQuote size={22} />
@@ -201,12 +190,11 @@ export function SentSelectedTextChip({
 }
 
 export function SentElementsChip({
-  t,
   elements,
 }: {
-  t: Messages;
   elements: SelectedElement[];
 }) {
+  const t = useMessages();
   return (
     <div className="sent-tab-chip">
       <MousePointerClick size={22} />

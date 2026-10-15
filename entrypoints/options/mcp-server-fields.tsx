@@ -1,4 +1,4 @@
-import { formatCount, type Messages } from "../../src/shared/i18n";
+import { formatCount } from "../../src/shared/i18n";
 import { stringifyHeaders } from "../../src/shared/mcp";
 import { mcpOriginRulesSupported } from "../../src/shared/mcp-origin-rules";
 import type { McpServerConfig } from "../../src/shared/types";
@@ -14,19 +14,19 @@ import {
   Label,
   SettingSwitch,
 } from "../../src/ui/components";
+import { useMessages } from "../../src/ui/messages";
 
 // The editable fields of one MCP server and its discovered tools.
 export function McpServerFields({
-  t,
   server,
   onUpdate,
   onHeadersChange,
 }: {
-  t: Messages;
   server: McpServerConfig;
   onUpdate: (patch: Partial<McpServerConfig>) => void;
   onHeadersChange: (value: string) => void;
 }) {
+  const t = useMessages();
   return (
     <>
       <Label>
@@ -74,7 +74,6 @@ export function McpServerFields({
       />
       {!!server.tools?.length && (
         <McpToolList
-          t={t}
           tools={server.tools}
           onChange={(tools) => onUpdate({ tools })}
         />
@@ -84,14 +83,13 @@ export function McpServerFields({
 }
 
 function McpToolList({
-  t,
   tools,
   onChange,
 }: {
-  t: Messages;
   tools: NonNullable<McpServerConfig["tools"]>;
   onChange: (tools: NonNullable<McpServerConfig["tools"]>) => void;
 }) {
+  const t = useMessages();
   return (
     <Accordion type="single" collapsible className="settings-nested-accordion">
       <AccordionItem value="tools">

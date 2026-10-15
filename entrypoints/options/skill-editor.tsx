@@ -1,7 +1,6 @@
 import { Check, Copy, Download, RotateCcw, Trash2 } from "lucide-react";
 import { SKILL_FILES } from "../../src/shared/sync/collections";
 import { useNotSyncedHere } from "../../src/ui/useSyncedHere";
-import type { Messages } from "../../src/shared/i18n";
 import {
   getSkillBody,
   normalizeSkillName,
@@ -23,11 +22,11 @@ import {
 import { skillDisplay } from "../../src/ui/skill-display";
 import { downloadSkillZip } from "./skill-import";
 import { SkillFileList } from "./skill-options-components";
+import { useMessages } from "../../src/ui/messages";
 
 // The editor of a user skill or a user's copy of a built-in (`override`).
 // The draft lives with the page so it survives collapsing the item.
 export function SkillEditor({
-  t,
   skill,
   draft,
   override,
@@ -37,7 +36,6 @@ export function SkillEditor({
   onDuplicate,
   onDelete,
 }: {
-  t: Messages;
   skill: Skill;
   draft: Skill;
   override: boolean;
@@ -47,6 +45,7 @@ export function SkillEditor({
   onDuplicate: () => void;
   onDelete: () => void;
 }) {
+  const t = useMessages();
   const filesNotSynced = useNotSyncedHere(SKILL_FILES);
   const update = (patch: Partial<Skill>) =>
     onDraft({ ...draft, ...patch, updatedAt: Date.now() });
@@ -150,14 +149,13 @@ export function SkillEditor({
 
 // A built-in skill: read-only; "Customise" makes the user's own copy.
 export function BuiltinSkillDetail({
-  t,
   skill,
   onCustomize,
 }: {
-  t: Messages;
   skill: Skill;
   onCustomize: () => void;
 }) {
+  const t = useMessages();
   return (
     <div className="skill-detail stack">
       <p className="muted">{skillDisplay(skill, t).description}</p>

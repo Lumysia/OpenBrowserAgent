@@ -8,10 +8,11 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { Messages } from "../../src/shared/i18n";
 import type { Agent, Chat, ChatSummary } from "../../src/shared/types";
 import { chatDisplayTitle } from "../../src/ui/agent-display";
 import {
+  EMPTY_STATE_VARIANT,
+  EmptyState,
   Badge,
   Button,
   Feedback,
@@ -30,11 +31,11 @@ import {
 } from "./format";
 import type { SummariesUpdater } from "./use-chats";
 import { cn } from "../../src/ui/utils";
-
-const HISTORY_REMOVE_DELAY_MS = 190;
+import { useMessages } from "../../src/ui/messages";
+import { stateWhen, UI_STATE } from "../../src/ui/ui-state";
+import { cssDurationMs, DURATION_TOKEN } from "../../src/ui/motion";
 
 export function HistoryPanel({
-  t,
   chats,
   activeChatId,
   unreadCompletedChatIds,
@@ -46,7 +47,6 @@ export function HistoryPanel({
   onClose,
   onBack,
 }: {
-  t: Messages;
   chats: ChatSummary[];
   activeChatId?: string;
   unreadCompletedChatIds: Record<string, true>;
@@ -58,6 +58,7 @@ export function HistoryPanel({
   onClose: (chatId: string) => void;
   onBack: () => void;
 }) {
+  const t = useMessages();
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const removeTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [editingChatId, setEditingChatId] = useState<string>();
@@ -149,7 +150,7 @@ export function HistoryPanel({
         ids.forEach((id) => delete next[id]);
         return next;
       });
-    }, HISTORY_REMOVE_DELAY_MS);
+    }, cssDurationMs(DURATION_TOKEN.remove));
     removeTimersRef.current.push(timer);
   }
 
@@ -215,12 +216,14 @@ export function HistoryPanel({
           </Feedback>
         )}
         {!chats.length && (
-          <div className="history-empty">{t.sidepanel.noChatsYet}</div>
+          <EmptyState
+            variant={EMPTY_STATE_VARIANT.plain}
+            title={t.sidepanel.noChatsYet}
+          />
         )}
         {rootChats.map((chat) => (
           <div className="history-thread" key={chat.id}>
             <HistoryItem
-              t={t}
               chat={chat}
               activeChatId={activeChatId}
               unreadCompletedChatIds={unreadCompletedChatIds}
@@ -241,7 +244,6 @@ export function HistoryPanel({
                 {chatsByParentId.get(chat.id)?.map((child) => (
                   <HistoryItem
                     key={child.id}
-                    t={t}
                     chat={child}
                     activeChatId={activeChatId}
                     unreadCompletedChatIds={unreadCompletedChatIds}
@@ -269,7 +271,6 @@ export function HistoryPanel({
 }
 
 function HistoryItem({
-  t,
   chat,
   activeChatId,
   unreadCompletedChatIds,
@@ -286,7 +287,6 @@ function HistoryItem({
   onExport,
   onClose,
 }: {
-  t: Messages;
   chat: ChatSummary;
   activeChatId?: string;
   unreadCompletedChatIds: Record<string, true>;
@@ -303,6 +303,7 @@ function HistoryItem({
   onExport: (chatId: string) => void;
   onClose: (chatId: string) => void;
 }) {
+  const t = useMessages();
   const title = chatDisplayTitle(chat, t);
   return (
     <div
@@ -311,8 +312,8 @@ function HistoryItem({
         child && "child",
         chat.id === activeChatId && "active",
         unreadCompletedChatIds[chat.id] && "unread-complete",
-        removing && "removing",
       )}
+      data-state={stateWhen(removing, UI_STATE.removing)}
     >
       {editingChatId === chat.id ? (
         <div className="history-select history-title-editor">

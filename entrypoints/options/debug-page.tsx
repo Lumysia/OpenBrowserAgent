@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Bug, Wrench, Trash2 } from "lucide-react";
-import { getMessages, type Messages } from "../../src/shared/i18n";
+import { type Messages } from "../../src/shared/i18n";
 import { resolveAgent } from "../../src/shared/agents";
 import {
   describeRun,
@@ -32,10 +32,9 @@ import {
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { errorWithDetail } from "../../src/shared/user-errors";
-import { useUiLanguage } from "../../src/ui/messages";
+import { useMessages } from "../../src/ui/messages";
 
 export function DebugPage() {
-  const language = useUiLanguage();
   const [preferences] = useStoredState(storage.preferences);
   const [debugLoggingEnabled, setDebugLoggingEnabled] = useStoredState(
     storage.debugLoggingEnabled,
@@ -48,7 +47,7 @@ export function DebugPage() {
   const [clearing, setClearing] = useState(false);
   const [cleared, setCleared] = useState(false);
   const [clearError, setClearError] = useState("");
-  const t = getMessages(language);
+  const t = useMessages();
   const activeAgent = resolveAgent(agents, preferences?.selectedAgentId);
   useEffect(() => {
     describeRun(activeAgent.id)

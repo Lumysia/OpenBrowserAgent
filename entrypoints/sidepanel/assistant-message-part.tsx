@@ -4,7 +4,6 @@ import {
   COPY_FEEDBACK_MS,
   STREAM_RENDER_THROTTLE_MS,
 } from "../../src/shared/config";
-import type { Messages } from "../../src/shared/i18n";
 import type {
   ChatMessage,
   ChatPart,
@@ -26,11 +25,13 @@ import { MessageRunInfo } from "./message-run-info";
 import { ToolPart } from "./tool-part";
 import { useThrottledText } from "./use-throttled-text";
 import { cn } from "../../src/ui/utils";
+import { useMessages } from "../../src/ui/messages";
 
 export const NO_SOURCES: ChatSource[] = [];
 
 // A compaction summary, or a compaction that failed.
-function AssistantSummaryCard({ t, part }: { t: Messages; part: ChatPart }) {
+function AssistantSummaryCard({ part }: { part: ChatPart }) {
+  const t = useMessages();
   const failed = !!part.error;
   return (
     <div
@@ -67,7 +68,6 @@ function AssistantSummaryCard({ t, part }: { t: Messages; part: ChatPart }) {
 }
 
 export function AssistantPart({
-  t,
   part,
   partIndex,
   sources,
@@ -79,7 +79,6 @@ export function AssistantPart({
   onAnswerQuestion,
   runEnded,
 }: {
-  t: Messages;
   part: ChatPart;
   partIndex: number;
   sources: ChatSource[];
@@ -94,11 +93,11 @@ export function AssistantPart({
   ) => void;
   runEnded: boolean;
 }) {
+  const t = useMessages();
   const stalePendingTool = isStalePendingTool(message, part, partIndex);
   if (isToolPartType(part.type))
     return (
       <ToolPart
-        t={t}
         part={part}
         runEnded={runEnded || stalePendingTool}
         onSelectChat={onSelectChat}
@@ -107,13 +106,12 @@ export function AssistantPart({
       />
     );
   if (part.type === "reasoning" && part.text?.trim())
-    return <AssistantReasoning t={t} text={part.text} />;
+    return <AssistantReasoning text={part.text} />;
   if (part.type === "summary" && (part.text?.trim() || part.error))
-    return <AssistantSummaryCard t={t} part={part} />;
+    return <AssistantSummaryCard part={part} />;
   if (part.type === "text" && part.text?.trim())
     return (
       <AssistantText
-        t={t}
         text={part.text}
         sources={sources}
         onFork={onFork}
@@ -145,7 +143,8 @@ function hasRenderedActivity(part: ChatPart) {
   return isToolPartType(part.type);
 }
 
-function AssistantReasoning({ t, text }: { t: Messages; text: string }) {
+function AssistantReasoning({ text }: { text: string }) {
+  const t = useMessages();
   const { text: displayText } = useThrottledText(
     text,
     STREAM_RENDER_THROTTLE_MS,
@@ -176,7 +175,6 @@ function AssistantReasoning({ t, text }: { t: Messages; text: string }) {
 }
 
 export function AssistantText({
-  t,
   text,
   modelLabel,
   createdAt,
@@ -187,7 +185,6 @@ export function AssistantText({
   showRunInfo = false,
   hideActions = false,
 }: {
-  t: Messages;
   text: string;
   modelLabel?: string;
   createdAt?: number;
@@ -198,6 +195,7 @@ export function AssistantText({
   showRunInfo?: boolean;
   hideActions?: boolean;
 }) {
+  const t = useMessages();
   const [copied, setCopied] = useState(false);
   const runEnded = !hideActions;
   const { text: displayText, animatedFrom } = useThrottledText(
@@ -222,7 +220,6 @@ export function AssistantText({
   return (
     <div className={cn("assistant-text", streaming && "streaming")}>
       <MarkdownContent
-        t={t}
         text={displayText}
         sources={sources}
         streaming={streaming}
@@ -257,11 +254,7 @@ export function AssistantText({
               </IconTooltip>
             )}
             {showRunInfo && message && (
-              <MessageRunInfo
-                t={t}
-                message={message}
-                chatMessages={chatMessages}
-              />
+              <MessageRunInfo message={message} chatMessages={chatMessages} />
             )}
           </div>
           {(modelLabel || createdAt) && (

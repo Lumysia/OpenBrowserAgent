@@ -1,189 +1,199 @@
-import { Brain, Check } from "lucide-react";
-import type { Dispatch, SetStateAction } from "react";
+import { Brain } from "lucide-react";
+import type { ReactNode } from "react";
+import { DEFAULT_AGENT_ID } from "../../src/shared/agents";
 import type { Messages } from "../../src/shared/i18n";
+import {
+  modelIdParts,
+  parseModelDisplayName,
+} from "../../src/shared/model-display";
 import {
   REASONING_EFFORT,
   REASONING_EFFORT_OPTIONS,
   type ReasoningEffort,
 } from "../../src/shared/reasoning";
-import type { Agent, ModelConfig, Preferences } from "../../src/shared/types";
+import { isProviderId } from "../../src/shared/providers";
+import type { ModelConfig, Preferences } from "../../src/shared/types";
 import {
+  ActionListItem,
   Button,
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "../../src/ui/components";
-import { AgentSelector, ModelMenu, selectedModelLabel } from "./composer-menus";
-import { COMPOSER_MENU, type ComposerMenu } from "./sidepanel-menu-state";
+import { AgentIcon } from "../../src/ui/agent-icons";
+import {
+  agentDisplayDescription,
+  agentDisplayName,
+} from "../../src/ui/agent-display";
+import { useMessages } from "../../src/ui/messages";
+import {
+  providerNameDisplay,
+  providerTypeLabel,
+} from "../../src/ui/provider-display";
 import { cn } from "../../src/ui/utils";
+import { COMPOSER_MENU, type ComposerMenu } from "./sidepanel-menu-state";
+import { useChat, useComposer } from "./sidepanel-providers";
 
-export function ComposerSelectors({
-  t,
-  preferences,
-  configuredModels,
-  agents,
-  openMenu,
-  streaming,
-  onSetOpenMenu,
-  onSetPreferences,
-}: {
-  t: Messages;
-  preferences?: Preferences;
-  configuredModels: ModelConfig[];
-  agents: Agent[];
-  openMenu: ComposerMenu | null;
-  streaming: boolean;
-  onSetOpenMenu: (value: ComposerMenu | null) => void;
-  onSetPreferences: Dispatch<SetStateAction<Preferences>>;
-}) {
+const REASONING_EFFORT_LABEL = {
+  [REASONING_EFFORT.default]: "reasoningEffortDefault",
+  [REASONING_EFFORT.low]: "reasoningEffortLow",
+  [REASONING_EFFORT.medium]: "reasoningEffortMedium",
+  [REASONING_EFFORT.high]: "reasoningEffortHigh",
+} as const satisfies Record<ReasoningEffort, keyof Messages["sidepanel"]>;
+
+// The model, reasoning effort and agent the next message uses.
+export function ComposerSelectors() {
+  const t = useMessages();
+  const { preferences, setPreferences, configuredModels, agents } =
+    useComposer();
+  const choose = (patch: Partial<Preferences>) =>
+    setPreferences((previous) => ({ ...previous, ...patch }));
+  const effort = preferences?.reasoningEffort || REASONING_EFFORT.default;
+  const selectedAgent =
+    agents.find((agent) => agent.id === preferences?.selectedAgentId) ||
+    agents.find((agent) => agent.id === DEFAULT_AGENT_ID) ||
+    agents[0];
+
   return (
     <div className="composer-selectors">
-      <div className="selector-anchor model-anchor">
-        <Popover
-          open={openMenu === COMPOSER_MENU.model}
-          onOpenChange={(open) =>
-            onSetOpenMenu(open ? COMPOSER_MENU.model : null)
-          }
-        >
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="composer-trigger composer-model-trigger"
-              disabled={streaming}
-            >
-              {selectedModelLabel(
-                preferences?.selectedModelId,
-                configuredModels,
-                t,
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="model-popover-content" align="end">
-            <ModelMenu
-              t={t}
-              models={configuredModels}
-              selectedModelId={preferences?.selectedModelId}
-              onSelect={(modelId) => {
-                if (preferences)
-                  onSetPreferences((previous) => ({
-                    ...previous,
-                    selectedModelId: modelId,
-                  }));
-                onSetOpenMenu(null);
-              }}
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-      <ReasoningEffortSelector
-        t={t}
-        effort={preferences?.reasoningEffort || REASONING_EFFORT.default}
-        openMenu={openMenu}
-        streaming={streaming}
-        onSetOpenMenu={onSetOpenMenu}
-        onSetPreferences={onSetPreferences}
-      />
-      <div className="selector-anchor agent-anchor">
-        <AgentSelector
-          t={t}
-          agents={agents}
-          preferences={preferences}
-          openMenu={openMenu}
-          streaming={streaming}
-          onSetOpenMenu={onSetOpenMenu}
-          onSetPreferences={onSetPreferences}
-        />
-      </div>
+      <SelectorPopover
+        menu={COMPOSER_MENU.model}
+        kind="model"
+        trigger={selectedModelLabel(
+          preferences?.selectedModelId,
+          configuredModels,
+          t,
+        )}
+      >
+        {(close) => (
+          <div className="model-menu">
+            {!configuredModels.length && (
+              <div className="composer-menu-empty">
+                {t.sidepanel.noModelsConfigured}
+              </div>
+            )}
+            {configuredModels.map((model) => {
+              const provider = providerName(model, t);
+              return (
+                <ActionListItem
+                  key={model.id}
+                  className="model-menu-item"
+                  icon={
+                    <span className="model-provider-mark">
+                      {provider.slice(0, 1).toUpperCase()}
+                    </span>
+                  }
+                  title={modelLabel(model)}
+                  hint={provider}
+                  checked={preferences?.selectedModelId === model.id}
+                  onClick={() => {
+                    if (preferences) choose({ selectedModelId: model.id });
+                    close();
+                  }}
+                />
+              );
+            })}
+          </div>
+        )}
+      </SelectorPopover>
+      <SelectorPopover
+        menu={COMPOSER_MENU.reasoning}
+        kind="reasoning"
+        label={t.sidepanel.reasoningEffort}
+        trigger={<ReasoningEffortIcon effort={effort} />}
+      >
+        {(close) => (
+          <div className="add-context-menu reasoning-effort-menu">
+            <div className="action-list-item muted">
+              <Brain size={17} />
+              <span>
+                <strong>{t.sidepanel.reasoningEffort}</strong>
+                <small>{t.sidepanel.reasoningEffortDescription}</small>
+              </span>
+            </div>
+            {REASONING_EFFORT_OPTIONS.map((option) => (
+              <ActionListItem
+                key={option}
+                icon={<ReasoningEffortIcon effort={option} />}
+                title={t.sidepanel[REASONING_EFFORT_LABEL[option]]}
+                checked={option === effort}
+                onClick={() => {
+                  choose({ reasoningEffort: option });
+                  close();
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </SelectorPopover>
+      <SelectorPopover
+        menu={COMPOSER_MENU.agent}
+        kind="agent"
+        label={
+          selectedAgent ? agentDisplayName(selectedAgent, t) : t.words.agent
+        }
+        trigger={<AgentIcon agent={selectedAgent} size={15} />}
+      >
+        {(close) => (
+          <div className="agent-menu">
+            {agents.map((agent) => (
+              <ActionListItem
+                key={agent.id}
+                className="agent-menu-item"
+                icon={<AgentIcon agent={agent} />}
+                title={agentDisplayName(agent, t)}
+                hint={agentDisplayDescription(agent, t)}
+                checked={selectedAgent?.id === agent.id}
+                onClick={() => {
+                  choose({ selectedAgentId: agent.id });
+                  close();
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </SelectorPopover>
     </div>
   );
 }
 
-function ReasoningEffortSelector({
-  t,
-  effort,
-  openMenu,
-  streaming,
-  onSetOpenMenu,
-  onSetPreferences,
+// One composer menu: an outline trigger, disabled while the chat streams,
+// and its popover; at most one composer menu is open.
+function SelectorPopover({
+  menu,
+  kind,
+  label,
+  trigger,
+  children,
 }: {
-  t: Messages;
-  effort: ReasoningEffort;
-  openMenu: ComposerMenu | null;
-  streaming: boolean;
-  onSetOpenMenu: (value: ComposerMenu | null) => void;
-  onSetPreferences: Dispatch<SetStateAction<Preferences>>;
+  menu: ComposerMenu;
+  kind: "model" | "reasoning" | "agent";
+  label?: string;
+  trigger: ReactNode;
+  children: (close: () => void) => ReactNode;
 }) {
+  const { streaming } = useChat();
+  const { openMenu, setOpenMenu } = useComposer();
   return (
-    <div className="selector-anchor reasoning-anchor">
+    <div className={`selector-anchor ${kind}-anchor`}>
       <Popover
-        open={openMenu === COMPOSER_MENU.reasoning}
-        onOpenChange={(open) =>
-          onSetOpenMenu(open ? COMPOSER_MENU.reasoning : null)
-        }
+        open={openMenu === menu}
+        onOpenChange={(open) => setOpenMenu(open ? menu : null)}
       >
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="composer-trigger composer-reasoning-trigger"
+            className={cn("composer-trigger", `composer-${kind}-trigger`)}
             disabled={streaming}
-            aria-label={t.sidepanel.reasoningEffort}
+            aria-label={label}
           >
-            <ReasoningEffortIcon effort={effort} />
+            {trigger}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="reasoning-popover-content" align="end">
-          <ReasoningEffortMenu
-            t={t}
-            effort={effort}
-            onSelect={(nextEffort) => {
-              onSetPreferences((previous) => ({
-                ...previous,
-                reasoningEffort: nextEffort,
-              }));
-              onSetOpenMenu(null);
-            }}
-          />
+        <PopoverContent className={`${kind}-popover-content`} align="end">
+          {children(() => setOpenMenu(null))}
         </PopoverContent>
       </Popover>
-    </div>
-  );
-}
-
-function ReasoningEffortMenu({
-  t,
-  effort,
-  onSelect,
-}: {
-  t: Messages;
-  effort: ReasoningEffort;
-  onSelect: (effort: ReasoningEffort) => void;
-}) {
-  return (
-    <div className="add-context-menu reasoning-effort-menu">
-      <div className="action-list-item muted">
-        <Brain size={17} />
-        <span>
-          <strong>{t.sidepanel.reasoningEffort}</strong>
-          <small>{t.sidepanel.reasoningEffortDescription}</small>
-        </span>
-      </div>
-      {REASONING_EFFORT_OPTIONS.map((option) => {
-        const selected = option === effort;
-        return (
-          <Button
-            key={option}
-            variant="ghost"
-            className={cn("action-list-item", selected && "active")}
-            onClick={() => onSelect(option)}
-          >
-            <ReasoningEffortIcon effort={option} />
-            <span>
-              <strong>{reasoningEffortLabel(t, option)}</strong>
-            </span>
-            {selected && <Check className="menu-check" size={14} />}
-          </Button>
-        );
-      })}
     </div>
   );
 }
@@ -201,10 +211,25 @@ function ReasoningEffortIcon({ effort }: { effort: ReasoningEffort }) {
   );
 }
 
-function reasoningEffortLabel(t: Messages, effort: ReasoningEffort) {
-  if (effort === REASONING_EFFORT.low) return t.sidepanel.reasoningEffortLow;
-  if (effort === REASONING_EFFORT.medium)
-    return t.sidepanel.reasoningEffortMedium;
-  if (effort === REASONING_EFFORT.high) return t.sidepanel.reasoningEffortHigh;
-  return t.sidepanel.reasoningEffortDefault;
+function selectedModelLabel(
+  modelId: string | undefined,
+  models: ModelConfig[],
+  t: Messages,
+) {
+  const model = models.find((candidate) => candidate.id === modelId);
+  if (model) return modelLabel(model);
+  return modelId ? modelIdParts(modelId).name : t.sidepanel.selectModel;
+}
+
+function providerName(model: ModelConfig, t: Messages) {
+  const { provider } = parseModelDisplayName(model);
+  if (provider) return providerNameDisplay(provider, t);
+  const { providerKey } = modelIdParts(model.id);
+  return isProviderId(providerKey)
+    ? providerTypeLabel(providerKey, t)
+    : providerKey;
+}
+
+function modelLabel(model: ModelConfig) {
+  return parseModelDisplayName(model).label;
 }

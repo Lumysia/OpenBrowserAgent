@@ -224,52 +224,6 @@ function messageScrollSignature(messages: Chat["messages"] | undefined) {
   });
 }
 
-export function useChatSelection(
-  chats: ChatSummary[] | undefined,
-  activeChatId: string | undefined,
-  draftChatId: string | undefined,
-  initializedChatSelectionRef: RefObject<boolean>,
-  setActiveChatId: (chatId: string | undefined) => void,
-  createChat: () => Chat,
-) {
-  useEffect(() => {
-    if (!chats) return;
-    if (!chats.length) {
-      if (activeChatId && activeChatId === draftChatId) return;
-      if (activeChatId) {
-        setActiveChatId(undefined);
-        return;
-      }
-      createChat();
-      return;
-    }
-    if (!initializedChatSelectionRef.current) {
-      initializedChatSelectionRef.current = true;
-      if (
-        activeChatId &&
-        (activeChatId === draftChatId ||
-          chats.some((chat) => chat.id === activeChatId))
-      )
-        return;
-      createChat();
-      return;
-    }
-    if (activeChatId && activeChatId === draftChatId) return;
-    if (activeChatId && !chats.some((chat) => chat.id === activeChatId)) {
-      createChat();
-      return;
-    }
-    if (!activeChatId) createChat();
-  }, [
-    activeChatId,
-    chats,
-    createChat,
-    draftChatId,
-    initializedChatSelectionRef,
-    setActiveChatId,
-  ]);
-}
-
 // Calls `reset` when the user moves from one chat to another (not when the
 // first chat is chosen), with the panel's current state.
 export function useActiveChatCleanup(
@@ -345,31 +299,13 @@ export function useAutoRetryStream({
   }, [activeStreamsRef, autoRetry, lastStreamActivityRef, latest, streaming]);
 }
 
-// Drops empty chats from history, and the composer draft once it is stored
-// (or the user moved to another chat).
-export function useChatListCleanup({
-  chats,
-  setChats,
-  activeChatId,
-  draftChat,
-  storedCurrentChat,
-  setDraftChat,
-}: {
-  chats: ChatSummary[] | undefined;
-  setChats: (update: (items: ChatSummary[]) => ChatSummary[]) => unknown;
-  activeChatId: string | undefined;
-  draftChat: Chat | undefined;
-  storedCurrentChat: ChatSummary | undefined;
-  setDraftChat: (chat: Chat | undefined) => void;
-}) {
+// Drops empty chats from history.
+export function usePruneEmptyChats(
+  chats: ChatSummary[] | undefined,
+  setChats: (update: (items: ChatSummary[]) => ChatSummary[]) => unknown,
+) {
   useEffect(() => {
     if (!chats?.some((chat) => !chat.messageCount)) return;
     setChats((items) => pruneEmptyChats(items));
   }, [chats, setChats]);
-
-  useEffect(() => {
-    if (!draftChat) return;
-    if (activeChatId !== draftChat.id || storedCurrentChat)
-      setDraftChat(undefined);
-  }, [activeChatId, draftChat, storedCurrentChat, setDraftChat]);
 }

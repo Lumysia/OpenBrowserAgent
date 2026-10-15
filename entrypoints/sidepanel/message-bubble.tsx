@@ -1,5 +1,4 @@
 import { FileText } from "lucide-react";
-import type { Messages } from "../../src/shared/i18n";
 import { pickedSkillsFromMetadata } from "../../src/shared/skills";
 import type {
   AttachmentTab,
@@ -37,10 +36,10 @@ import {
 } from "./message-chips";
 import { selectedTextsFromMetadata } from "../../src/shared/selected-text";
 import { cn } from "../../src/ui/utils";
+import { useMessages } from "../../src/ui/messages";
 
 export function MessageBubble({
   message,
-  t,
   editing = false,
   sentAttachments = [],
   activeAttachments = [],
@@ -60,7 +59,6 @@ export function MessageBubble({
   onContinue,
 }: {
   message: ChatMessage;
-  t: Messages;
   sources?: ChatSource[];
   chatMessages: ChatMessage[];
   editing?: boolean;
@@ -84,6 +82,7 @@ export function MessageBubble({
   // Asks the model to go on after this reply, if it ended early.
   onContinue?: () => void;
 }) {
+  const t = useMessages();
   const skillNames = pickedSkillsFromMetadata(message.metadata)
     .map((skill) => skillDisplay(skill, t).name)
     .join(", ");
@@ -161,7 +160,6 @@ export function MessageBubble({
         <>
           {assistantContentFallback && (
             <AssistantText
-              t={t}
               text={assistantContentFallback}
               sources={sources}
               onFork={() => onFork?.(message)}
@@ -173,7 +171,6 @@ export function MessageBubble({
           {assistantPartEntries.map(({ part, index }) => (
             <AssistantPart
               key={part.id}
-              t={t}
               part={part}
               partIndex={index}
               sources={sources}
@@ -189,7 +186,6 @@ export function MessageBubble({
         </>
       ) : !message.content ? null : (
         <AssistantText
-          t={t}
           text={message.content}
           sources={sources}
           modelLabel={modelLabel}
@@ -204,10 +200,8 @@ export function MessageBubble({
       {message.role === "assistant" &&
         !outputActive &&
         !!assistantText &&
-        !!displaySources.length && (
-          <SourceChips t={t} sources={displaySources} />
-        )}
-      {cut && <RunStopNotice t={t} cut={cut} onContinue={onContinue} />}
+        !!displaySources.length && <SourceChips sources={displaySources} />}
+      {cut && <RunStopNotice cut={cut} onContinue={onContinue} />}
       {message.role === "assistant" &&
         hasParts &&
         assistantEnded &&
@@ -215,11 +209,7 @@ export function MessageBubble({
           <div className="assistant-actions">
             {showRunInfo && (
               <div className="message-actions assistant-action-buttons">
-                <MessageRunInfo
-                  t={t}
-                  message={message}
-                  chatMessages={chatMessages}
-                />
+                <MessageRunInfo message={message} chatMessages={chatMessages} />
               </div>
             )}
             <span className="assistant-model-meta">
@@ -231,7 +221,7 @@ export function MessageBubble({
         )}
       {message.role === "user" && !!sentTabs.length && (
         <div className="sent-context-row">
-          <SentTabsChip t={t} tabs={sentTabs} />
+          <SentTabsChip tabs={sentTabs} />
         </div>
       )}
       {message.role === "user" && !!displayAttachments.length && (
@@ -239,24 +229,22 @@ export function MessageBubble({
           <SentAttachmentsChip
             attachments={displayAttachments}
             unavailableCount={missingAttachments.length}
-            t={t}
           />
         </div>
       )}
       {message.role === "user" && !!sentElements.length && (
         <div className="sent-context-row">
-          <SentElementsChip t={t} elements={sentElements} />
+          <SentElementsChip elements={sentElements} />
         </div>
       )}
       {message.role === "user" &&
         sentTexts.map((selection, index) => (
           <div key={index} className="sent-context-row">
-            <SentSelectedTextChip selection={selection} t={t} />
+            <SentSelectedTextChip selection={selection} />
           </div>
         ))}
       {message.role === "user" && (
         <UserMessageActions
-          t={t}
           message={message}
           availableAttachments={availableAttachments}
           missingAttachments={missingAttachments}

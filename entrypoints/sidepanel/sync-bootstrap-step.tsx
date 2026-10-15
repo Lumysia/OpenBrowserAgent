@@ -1,6 +1,5 @@
 import { Cloud } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
-import type { Messages } from "../../src/shared/i18n";
 import {
   SYNC_BACKEND_REGISTRY,
   WEBDAV_SYNC_BACKEND_ID,
@@ -24,12 +23,12 @@ import {
   TabsTrigger,
   Textarea,
 } from "../../src/ui/components";
-import { cn } from "../../src/ui/utils";
+import { UI_STATE, stateWhen } from "../../src/ui/ui-state";
+import { useMessages } from "../../src/ui/messages";
 
 type WebDavDraft = WebDavSyncBackendConfig;
 
 export function SyncBootstrapStep({
-  t,
   selectedBackendId,
   setSelectedBackendId,
   webDavDraft,
@@ -46,7 +45,6 @@ export function SyncBootstrapStep({
   cloudActionLabel,
   handleCloudAction,
 }: {
-  t: Messages;
   selectedBackendId: string;
   setSelectedBackendId: (backendId: string) => void;
   webDavDraft: WebDavDraft;
@@ -63,6 +61,7 @@ export function SyncBootstrapStep({
   cloudActionLabel: string;
   handleCloudAction: () => void;
 }) {
+  const t = useMessages();
   return (
     <div className="bootstrap-actions">
       <Tabs
@@ -93,7 +92,6 @@ export function SyncBootstrapStep({
         </TabsContent>
         <TabsContent value="manual" className="bootstrap-sync-tab-panel">
           <ManualSyncBackendFields
-            t={t}
             selectedBackendId={selectedBackendId}
             setSelectedBackendId={setSelectedBackendId}
             webDavDraft={webDavDraft}
@@ -107,16 +105,15 @@ export function SyncBootstrapStep({
         <Feedback
           key={setupFeedbackMessage}
           error={setupFeedbackError}
-          className={cn(
-            "bootstrap-feedback-card",
-            setupFeedbackError && "is-error",
-          )}
+          className="bootstrap-feedback-card"
+          data-state={stateWhen(setupFeedbackError, UI_STATE.error)}
         >
           {setupFeedbackMessage}
         </Feedback>
       ) : null}
       <Button
-        className={cn("bootstrap-cloud-action", syncing && "is-loading")}
+        className="bootstrap-cloud-action"
+        data-state={stateWhen(syncing, UI_STATE.loading)}
         onClick={handleCloudAction}
         disabled={!canPull || syncing || hasActiveSyncBackend}
       >
@@ -130,7 +127,6 @@ export function SyncBootstrapStep({
 }
 
 function ManualSyncBackendFields({
-  t,
   selectedBackendId,
   setSelectedBackendId,
   webDavDraft,
@@ -138,7 +134,6 @@ function ManualSyncBackendFields({
   syncing,
   hasActiveSyncBackend,
 }: {
-  t: Messages;
   selectedBackendId: string;
   setSelectedBackendId: (backendId: string) => void;
   webDavDraft: WebDavDraft;
@@ -146,6 +141,7 @@ function ManualSyncBackendFields({
   syncing: boolean;
   hasActiveSyncBackend: boolean;
 }) {
+  const t = useMessages();
   const disabled = syncing || hasActiveSyncBackend;
   return (
     <>
@@ -169,7 +165,6 @@ function ManualSyncBackendFields({
       {selectedBackendId === WEBDAV_SYNC_BACKEND_ID && (
         <div className="bootstrap-backend-fields">
           <WebDavConnectionFields
-            t={t}
             backend={webDavDraft}
             disabled={disabled}
             live

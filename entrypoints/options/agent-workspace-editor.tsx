@@ -2,7 +2,7 @@ import { useState } from "react";
 import { WORKSPACE_FILES } from "../../src/shared/sync/collections";
 import { useNotSyncedHere } from "../../src/ui/useSyncedHere";
 import { Check, FileText, Pencil, Plus, Trash2 } from "lucide-react";
-import { formatCount, type Messages } from "../../src/shared/i18n";
+import { formatCount } from "../../src/shared/i18n";
 import type { AgentWorkspace } from "../../src/shared/types";
 import {
   deleteWorkspaceFile,
@@ -28,6 +28,7 @@ import { Feedback } from "../../src/ui/components/feedback";
 import { SkillFileActionButton } from "./skill-options-components";
 import { workspaceErrorText } from "./workspace-error-text";
 import { errorWithDetail } from "../../src/shared/user-errors";
+import { useMessages } from "../../src/ui/messages";
 
 type Draft = {
   originalPath: string;
@@ -40,11 +41,10 @@ type Draft = {
 
 export function AgentWorkspaceEditor({
   workspace,
-  t,
 }: {
   workspace: AgentWorkspace;
-  t: Messages;
 }) {
+  const t = useMessages();
   const [newPath, setNewPath] = useState("");
   const filesNotSynced = useNotSyncedHere(WORKSPACE_FILES);
   const [draft, setDraft] = useState<Draft>();

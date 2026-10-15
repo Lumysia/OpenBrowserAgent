@@ -1,6 +1,6 @@
-import { useCallback, type Dispatch, type SetStateAction } from "react";
+import { useCallback, type Dispatch } from "react";
 import { withoutChats } from "../../src/shared/chats";
-import type { Messages } from "../../src/shared/i18n";
+import { useMessages } from "../../src/ui/messages";
 import { removeChatAttachments } from "../../src/shared/chat-attachments";
 import type { Chat, ChatMessage } from "../../src/shared/types";
 import {
@@ -8,37 +8,36 @@ import {
   createChatDraft,
   forkChatAction,
   pruneEmptyChats,
-  selectChatAction,
 } from "./chat-state-actions";
+import type { ChatSelectionAction } from "./chat-selection";
 import type { useChats } from "./use-chats";
 
 export function useChatActions({
-  t,
   chats,
-  setDraftChat,
-  setActiveChatId,
-  setChatSelectionRequestId,
+  dispatchSelection,
   abortClosedChatStreams,
   clearUnreadCompletedChat,
 }: {
-  t: Messages;
   chats: ReturnType<typeof useChats>;
-  setDraftChat: Dispatch<SetStateAction<Chat | undefined>>;
-  setActiveChatId: Dispatch<SetStateAction<string | undefined>>;
-  setChatSelectionRequestId: Dispatch<SetStateAction<number>>;
+  dispatchSelection: Dispatch<ChatSelectionAction>;
   abortClosedChatStreams: (chatId: string) => Promise<Set<string>>;
   clearUnreadCompletedChat: (chatId: string) => void;
 }) {
+  const t = useMessages();
   const { summaries, summariesRef, setSummaries, store, loadChat, saveChats } =
     chats;
 
   // A new chat is a draft until its first message is sent.
   const createChat = useCallback(() => {
     const chat = createChatDraft(t.words.newChat);
-    setActiveChatId(chat.id);
-    setDraftChat(chat);
+    dispatchSelection({ type: "create", chat });
     return chat;
-  }, [setActiveChatId, setDraftChat, t.words.newChat]);
+  }, [dispatchSelection, t.words.newChat]);
+
+  const openChat = useCallback(
+    (chatId: string) => dispatchSelection({ type: "open", chatId }),
+    [dispatchSelection],
+  );
 
   const closeChat = useCallback(
     async (chatId: string) => {
@@ -73,18 +72,18 @@ export function useChatActions({
   const selectChat = useCallback(
     (chatId: string) => {
       if (summaries && !summaries.some((chat) => chat.id === chatId)) return;
-      selectChatAction({ chatId, setSummaries, setActiveChatId });
-      setChatSelectionRequestId((value) => value + 1);
+      void setSummaries(pruneEmptyChats);
+      dispatchSelection({ type: "open", chatId, request: true });
     },
-    [summaries, setActiveChatId, setChatSelectionRequestId, setSummaries],
+    [summaries, dispatchSelection, setSummaries],
   );
 
   const importChat = useCallback(
     (chat: Chat) => {
       void saveChats([chat], pruneEmptyChats);
-      setActiveChatId(chat.id);
+      openChat(chat.id);
     },
-    [saveChats, setActiveChatId],
+    [saveChats, openChat],
   );
 
   const forkMessage = useCallback(
@@ -98,10 +97,10 @@ export function useChatActions({
         chats: summariesRef.current || [],
         loadChat,
         saveChats: (items) => saveChats(items),
-        setActiveChatId,
+        openChat,
       }).catch((error) => console.warn("Failed to fork chat", error));
     },
-    [loadChat, saveChats, setActiveChatId, summariesRef, t.sidepanel],
+    [loadChat, saveChats, openChat, summariesRef, t.sidepanel],
   );
 
   return { createChat, closeChat, selectChat, importChat, forkMessage };

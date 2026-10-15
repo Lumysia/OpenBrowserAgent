@@ -1,9 +1,5 @@
-import type { Dispatch, SetStateAction } from "react";
 import { formatDateTime } from "../../src/shared/format";
 import type { Chat, ChatMessage, ChatSummary } from "../../src/shared/types";
-import type { SummariesUpdater } from "./use-chats";
-
-type ActiveChatSetter = Dispatch<SetStateAction<string | undefined>>;
 
 export function createChatDraft(title: string, agentId?: string): Chat {
   const now = Date.now();
@@ -15,19 +11,6 @@ export function createChatDraft(title: string, agentId?: string): Chat {
     createdAt: now,
     updatedAt: now,
   };
-}
-
-export function selectChatAction({
-  chatId,
-  setSummaries,
-  setActiveChatId,
-}: {
-  chatId: string;
-  setSummaries: SummariesUpdater;
-  setActiveChatId: ActiveChatSetter;
-}) {
-  void setSummaries(pruneEmptyChats);
-  setActiveChatId(chatId);
 }
 
 export function pruneEmptyChats(chats: ChatSummary[]) {
@@ -106,7 +89,7 @@ export async function forkChatAction({
   chats,
   loadChat,
   saveChats,
-  setActiveChatId,
+  openChat,
 }: {
   chat: Chat;
   message: ChatMessage;
@@ -115,7 +98,7 @@ export async function forkChatAction({
   chats: ChatSummary[];
   loadChat: (chatId: string) => Promise<Chat | undefined>;
   saveChats: (chats: Chat[]) => Promise<void>;
-  setActiveChatId: ActiveChatSetter;
+  openChat: (chatId: string) => void;
 }) {
   const messageIndex = chat.messages.findIndex(
     (item) => item.id === message.id,
@@ -151,7 +134,7 @@ export async function forkChatAction({
     updatedAt: now,
   };
   await saveChats([fork, ...linked.children]);
-  setActiveChatId(forkId);
+  openChat(forkId);
 }
 
 // Sub-agent chats the forked messages link to are copied along (their

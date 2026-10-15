@@ -11,7 +11,7 @@
   position: relative;
   display: grid;
   border: 1px solid color-mix(in oklab, var(--accent-strong) 14%, var(--border));
-  border-radius: 13px;
+  border-radius: var(--radius);
   background: var(--field);
   box-shadow: var(--elevation-2);
   transition: var(--transition-colors);
@@ -28,7 +28,7 @@
   padding-top: 18px;
   overflow-y: auto;
   border: 0;
-  border-radius: 13px 13px 0 0;
+  border-radius: var(--radius) var(--radius) 0 0;
   background: transparent;
   box-shadow: none;
   resize: none;
@@ -226,7 +226,7 @@
   gap: var(--space-2);
   padding: 10px;
   border: 1px solid color-mix(in oklab, var(--accent-soft) 58%, var(--border));
-  border-radius: 13px;
+  border-radius: var(--radius);
   background: color-mix(in oklab, var(--accent-softer) 42%, var(--card));
   animation: enter var(--duration-slow) var(--ease-out) backwards;
 }
@@ -358,14 +358,14 @@
 .add-context-panel {
   min-width: 0;
 }
-.add-context-panel.is-entering {
+.add-context-panel[data-state="entering"] {
   --enter-x: 10px;
   --enter-y: 0;
   --enter-scale: 0.985;
   --enter-blur: 1px;
   animation: enter var(--duration-base) var(--ease-out) backwards;
 }
-.add-context-panel.is-leaving {
+.add-context-panel[data-state="leaving"] {
   --exit-x: -8px;
   --exit-y: 0;
   --exit-scale: 0.985;
@@ -429,6 +429,10 @@
 }
 :is(.model-menu-item, .agent-menu-item) small {
   font-size: var(--text-xs);
+}
+/* The provider reads above the model name. */
+.model-menu-item small {
+  order: -1;
 }
 .agent-menu-item small {
   display: -webkit-box;

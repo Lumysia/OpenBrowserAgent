@@ -1,30 +1,34 @@
-import type { Messages } from "../../src/shared/i18n";
-import { Button, Feedback, Skeleton } from "../../src/ui/components";
+import {
+  Button,
+  EMPTY_STATE_VARIANT,
+  EmptyState,
+  Feedback,
+  Skeleton,
+} from "../../src/ui/components";
 import type { CurrentChatStatus } from "./use-current-chat";
 import { HolidayBadge } from "./holiday-touches";
+import { useMessages } from "../../src/ui/messages";
 
 // Shown in place of the messages: while the open chat's content loads, when
 // it could not be loaded, or when the chat has no messages yet.
 export function ChatContentStatus({
-  t,
   status,
   empty,
   onRetry,
 }: {
-  t: Messages;
   status: CurrentChatStatus;
   empty: boolean;
   onRetry: () => void;
 }) {
+  const t = useMessages();
   if (status === "ready")
     return empty ? (
-      <div className="empty">
-        <div>
-          <HolidayBadge t={t} />
-          <h2>{t.sidepanel.whatDoYouWant}</h2>
-          <p className="muted">{t.sidepanel.emptyDescription}</p>
-        </div>
-      </div>
+      <EmptyState
+        variant={EMPTY_STATE_VARIANT.hero}
+        lead={<HolidayBadge />}
+        title={t.sidepanel.whatDoYouWant}
+        description={t.sidepanel.emptyDescription}
+      />
     ) : null;
   if (status === "error" || status === "unavailable")
     return (

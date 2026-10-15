@@ -1,5 +1,4 @@
 import { RotateCcw } from "lucide-react";
-import type { Messages } from "../../src/shared/i18n";
 import {
   Card,
   CardContent,
@@ -7,22 +6,22 @@ import {
   CardTitle,
   ConfirmButton,
 } from "../../src/ui/components";
+import { useMessages } from "../../src/ui/messages";
 
 // Restores the built-in items of a list (keeping the user's own), or the
 // whole list as it ships. Both ask before they run.
 export function ResetDefaultsCard({
-  t,
   title,
   description,
   onResetBuiltins,
   onResetAll,
 }: {
-  t: Messages;
   title: string;
   description: string;
   onResetBuiltins: () => void;
   onResetAll: () => void;
 }) {
+  const t = useMessages();
   const confirm = {
     confirmLabel: t.common.confirm,
     cancelLabel: t.common.cancel,

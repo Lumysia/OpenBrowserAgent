@@ -1,8 +1,8 @@
 import { CircleAlert, CircleStop, Play, Scissors } from "lucide-react";
-import type { Messages } from "../../src/shared/i18n";
 import { RUN_STOP_REASON, type replyCutOff } from "../../src/shared/run-stop";
 import { Button, Feedback } from "../../src/ui/components";
-import { cn } from "../../src/ui/utils";
+import { UI_STATE, stateWhen } from "../../src/ui/ui-state";
+import { useMessages } from "../../src/ui/messages";
 
 const ICONS = {
   [RUN_STOP_REASON.length]: Scissors,
@@ -13,14 +13,13 @@ const ICONS = {
 // The one line under a response that ended early: why, and (on the chat's
 // latest response) a way to have the model go on.
 export function RunStopNotice({
-  t,
   cut,
   onContinue,
 }: {
-  t: Messages;
   cut: NonNullable<ReturnType<typeof replyCutOff>>;
   onContinue?: () => void;
 }) {
+  const t = useMessages();
   const labels = t.sidepanel.runStop;
   const error = cut.reason === RUN_STOP_REASON.error;
   const text = error
@@ -30,7 +29,10 @@ export function RunStopNotice({
       : labels.aborted;
   const Icon = ICONS[cut.reason];
   return (
-    <div className={cn("run-stop-notice", error && "error")}>
+    <div
+      className="run-stop-notice"
+      data-state={stateWhen(error, UI_STATE.error)}
+    >
       <Icon aria-hidden />
       <Feedback error={error} className="run-stop-notice-text">
         {text}

@@ -8,7 +8,7 @@ import {
   Plus,
 } from "lucide-react";
 import { SKILL_LISTING_MAX_CHARS } from "../../src/shared/config";
-import { getMessages, type Messages } from "../../src/shared/i18n";
+import { type Messages } from "../../src/shared/i18n";
 import {
   customizeBuiltinSkill,
   forgetSkillSettings,
@@ -48,10 +48,9 @@ import { BuiltinSkillDetail, SkillEditor } from "./skill-editor";
 import { importSkillZip } from "./skill-import";
 import { importErrorDetail } from "./import-errors";
 import { useTransient } from "../../src/ui/use-transient";
-import { useUiLanguage } from "../../src/ui/messages";
+import { useMessages } from "../../src/ui/messages";
 
 export function SkillsPage() {
-  const language = useUiLanguage();
   const { entries, setSkills, setSettings } = useSkillCatalog();
   const [selectedId, setSelectedId] = useState("");
   const [drafts, setDrafts] = useState<Record<string, Skill>>({});
@@ -61,7 +60,7 @@ export function SkillsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!entries) return null;
-  const t = getMessages(language);
+  const t = useMessages();
   const listing = skillListingSize(listedSkills(entries));
 
   function addSkill(skill: Skill) {
@@ -186,7 +185,6 @@ export function SkillsPage() {
           return (
             <SkillItem
               key={skill.id}
-              t={t}
               entry={entry}
               draft={draftFor(skill)}
               onInvoke={(mode) =>
@@ -197,13 +195,11 @@ export function SkillsPage() {
             >
               {source === "builtin" ? (
                 <BuiltinSkillDetail
-                  t={t}
                   skill={skill}
                   onCustomize={() => customize(skill)}
                 />
               ) : (
                 <SkillEditor
-                  t={t}
                   skill={skill}
                   draft={draftFor(skill)}
                   override={source === "override"}
@@ -232,18 +228,17 @@ export function SkillsPage() {
 }
 
 function SkillItem({
-  t,
   entry,
   draft,
   onInvoke,
   children,
 }: {
-  t: Messages;
   entry: SkillEntry;
   draft: Skill;
   onInvoke: (mode: SkillInvokeMode) => void;
   children: ReactNode;
 }) {
+  const t = useMessages();
   const { skill, source, invoke } = entry;
   const { name } = skillDisplay(skill, t);
   const filesNotSynced = useNotSyncedHere(SKILL_FILES);
@@ -312,9 +307,9 @@ function SkillItem({
             <ToggleGroupItem
               key={mode}
               value={mode}
-              tooltip={skillInvokeHint(t, mode)}
+              tooltip={t.options.skillInvoke[mode].hint}
             >
-              {skillInvokeLabel(t, mode)}
+              {t.options.skillInvoke[mode].label}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -342,32 +337,12 @@ function Notice({
   );
 }
 
-function skillInvokeLabel(t: Messages, mode: SkillInvokeMode) {
-  return {
-    auto: t.options.skillInvokeAuto,
-    manual: t.options.skillInvokeManual,
-    off: t.options.skillInvokeOff,
-  }[mode];
-}
-
-function skillInvokeHint(t: Messages, mode: SkillInvokeMode) {
-  return {
-    auto: t.options.skillInvokeAutoHint,
-    manual: t.options.skillInvokeManualHint,
-    off: t.options.skillInvokeOffHint,
-  }[mode];
-}
-
 function skillCheckLabel(t: Messages, id: string, ok: boolean) {
-  const labels: Record<string, string> = {
-    entry: ok ? t.options.skillCheckEntry : t.options.skillCheckEntryMissing,
-    name: ok ? t.options.skillCheckName : t.options.skillCheckNameInvalid,
-    description: ok
-      ? t.options.skillCheckDescription
-      : t.options.skillCheckDescriptionMissing,
-    size: ok ? t.options.skillCheckSize : skillTooLargeText(t),
-  };
-  return labels[id] || id;
+  const labels: Record<string, { ok: string; failed: string }> =
+    t.options.skillCheck;
+  if (!Object.hasOwn(labels, id)) return id;
+  if (ok) return labels[id].ok;
+  return id === "size" ? skillTooLargeText(t) : labels[id].failed;
 }
 
 function formatSkillDate(value?: number) {

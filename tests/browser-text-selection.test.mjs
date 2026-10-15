@@ -39,11 +39,13 @@ test(
     const { page, browser } = fixture;
     try {
       await fixture.configure();
-      await poll(() => page.call(() => !!document.querySelector(".empty h2")));
+      await poll(() =>
+        page.call(() => !!document.querySelector(".ui-empty-state h2")),
+      );
       assert.deepEqual(
         await userSelect(page, {
-          heading: ".empty h2",
-          subtitle: ".empty p",
+          heading: ".ui-empty-state h2",
+          subtitle: ".ui-empty-state-description",
           button: ".sidepanel-header button",
           composer: ".composer-box textarea",
         }),

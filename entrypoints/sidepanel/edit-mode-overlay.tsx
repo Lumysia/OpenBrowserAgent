@@ -1,14 +1,9 @@
 import { Pencil, X } from "lucide-react";
-import type { Messages } from "../../src/shared/i18n";
 import { Button } from "../../src/ui/components";
+import { useMessages } from "../../src/ui/messages";
 
-export function EditModeOverlay({
-  t,
-  onCancel,
-}: {
-  t: Messages;
-  onCancel: () => void;
-}) {
+export function EditModeOverlay({ onCancel }: { onCancel: () => void }) {
+  const t = useMessages();
   return (
     <div className="edit-mode-shield" aria-live="polite">
       <div className="edit-mode-banner">

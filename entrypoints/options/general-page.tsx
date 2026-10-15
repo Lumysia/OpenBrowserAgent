@@ -66,7 +66,6 @@ export function GeneralPage() {
         description={t.options.colorSchemeDescription}
       >
         <ThemePicker
-          t={t}
           value={preferences.accentColor}
           colorScheme={preferences.colorScheme}
           onChange={(accentColor) =>

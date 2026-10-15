@@ -14,7 +14,7 @@ import {
 } from "../../src/shared/local-execution-bridges";
 import { LOCAL_EXECUTION_BRIDGE_LIMITS } from "../../src/shared/config";
 import { sendLocalExecutionBridgeRuntimeRequest } from "../../src/shared/local-execution-bridge-runtime";
-import { getMessages, type Messages } from "../../src/shared/i18n";
+import { type Messages } from "../../src/shared/i18n";
 import { storage } from "../../src/shared/storage";
 import type { LocalExecutionBridgeConfig } from "../../src/shared/types";
 import {
@@ -39,14 +39,14 @@ import {
 import { useTransient } from "../../src/ui/use-transient";
 import { useStoredState } from "../../src/ui/useStoredState";
 import { errorWithDetail } from "../../src/shared/user-errors";
-import { useUiLanguage } from "../../src/ui/messages";
+import { storedErrorReason } from "../../src/ui/error-text";
+import { useMessages } from "../../src/ui/messages";
 
 export function LocalExecutionBridgesPage() {
-  const language = useUiLanguage();
   const [bridges, setBridges] = useStoredState(storage.localExecutionBridges);
   const [testingBridgeId, setTestingBridgeId] = useState("");
   const [testedBridgeId, showTested] = useTransient<string>();
-  const t = getMessages(language);
+  const t = useMessages();
   const items = normalizeLocalExecutionBridges(bridges);
 
   function addBridge() {
@@ -270,7 +270,11 @@ export function LocalExecutionBridgesPage() {
               <Feedback error>
                 {errorWithDetail(
                   t.options.localExecutionBridgeTestError,
-                  localExecutionBridgeTestError(bridge),
+                  storedErrorReason(
+                    localExecutionBridgeTestError(bridge),
+                    (messages) =>
+                      messages.options.localExecutionBridgeTestError,
+                  ),
                   t,
                 )}
               </Feedback>

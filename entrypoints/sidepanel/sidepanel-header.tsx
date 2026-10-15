@@ -20,24 +20,23 @@ import type { ChatMeta } from "../../src/shared/types";
 import { chatDisplayTitle } from "../../src/ui/agent-display";
 import { Button, IconTooltip } from "../../src/ui/components";
 import { cn } from "../../src/ui/utils";
+import { useMessages } from "../../src/ui/messages";
 
 export function SidepanelHeader({
-  t,
   currentChat,
   parentChat,
-  syncStatus,
   onCreateChat,
-  onSetShowHistory,
+  onShowHistory,
   onSelectChat,
 }: {
-  t: Messages;
   currentChat?: ChatMeta;
   parentChat?: ChatMeta;
-  syncStatus?: SyncStatus;
   onCreateChat: () => void;
-  onSetShowHistory: (value: boolean) => void;
+  onShowHistory: () => void;
   onSelectChat: (chatId: string) => void;
 }) {
+  const t = useMessages();
+  const [syncStatus] = useStoredState(storage.syncStatus);
   const [activeSyncBackendId] = useStoredState(storage.activeSyncBackendId);
   const cloudStatus = cloudSyncStatus(
     t,
@@ -103,7 +102,7 @@ export function SidepanelHeader({
               variant="ghost"
               size="icon"
               aria-label={t.sidepanel.chatHistory}
-              onClick={() => onSetShowHistory(true)}
+              onClick={onShowHistory}
             >
               <History size={18} />
             </Button>

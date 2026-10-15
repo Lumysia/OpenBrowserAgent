@@ -8,7 +8,6 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { COPY_FEEDBACK_MS } from "../../src/shared/config";
-import type { Messages } from "../../src/shared/i18n";
 import { focusTab, openOrFocusUrl } from "../../src/shared/tab-navigation";
 import type { ChatSource } from "../../src/shared/types";
 import { renderMarkdownBlock } from "./markdown";
@@ -19,18 +18,18 @@ import {
 } from "./markdown-blocks";
 import type { MarkdownConfig } from "./markdown-engine";
 import { MermaidPreview } from "./mermaid-preview";
+import { useMessages } from "../../src/ui/messages";
+import { UI_STATE } from "../../src/ui/ui-state";
 
 // Renders an answer as Marked's top-level blocks. While it streams, only the
 // last block changes; finished blocks keep their object and skip rendering.
 export function MarkdownContent({
-  t,
   text,
   sources,
   streaming,
   settled,
   animatedFrom,
 }: {
-  t: Messages;
   text: string;
   sources: ChatSource[];
   // Text is still being revealed.
@@ -39,6 +38,7 @@ export function MarkdownContent({
   settled: boolean;
   animatedFrom: number;
 }) {
+  const t = useMessages();
   const id = useId();
   const config = useMemo<MarkdownConfig>(
     () => ({
@@ -61,7 +61,7 @@ export function MarkdownContent({
       event.target instanceof HTMLImageElement ? event.target : null;
     const card = image?.closest(".markdown-image-card") as HTMLElement | null;
     if (!image || !card) return;
-    card.classList.add("is-broken");
+    card.dataset.state = UI_STATE.broken;
     card.dataset.alt = image.alt || "";
   }
 
@@ -73,7 +73,6 @@ export function MarkdownContent({
       {blocks.map((block) => (
         <MarkdownSegment
           key={block.key}
-          t={t}
           config={config}
           block={block}
           animatedFromChar={
@@ -113,18 +112,17 @@ function useMarkdownBlocks(
 }
 
 const MarkdownSegment = React.memo(function MarkdownSegment({
-  t,
   config,
   block,
   animatedFromChar,
   settled,
 }: {
-  t: Messages;
   config: MarkdownConfig;
   block: MarkdownBlock;
   animatedFromChar?: number;
   settled: boolean;
 }) {
+  const t = useMessages();
   const segment = useRef<HTMLDivElement>(null);
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const [loadedImages, setLoadedImages] = useState<string[]>([]);
@@ -193,7 +191,7 @@ const MarkdownSegment = React.memo(function MarkdownSegment({
         dangerouslySetInnerHTML={innerHtml}
       />
       {diagrams.map(({ slot, code }, index) =>
-        createPortal(<MermaidPreview t={t} code={code} />, slot, index),
+        createPortal(<MermaidPreview code={code} />, slot, index),
       )}
     </>
   );

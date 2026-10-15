@@ -1,224 +1,92 @@
 import { Plus } from "lucide-react";
-import {
-  useRef,
-  type ClipboardEvent,
-  type ReactNode,
-  type RefObject,
-} from "react";
+import { useRef, useState, type RefObject } from "react";
 import { TOOLTIP_DELAY_MS } from "../../src/shared/config";
-import type { Messages } from "../../src/shared/i18n";
-import type { SyncStatus } from "../../src/shared/sync/state";
-import type {
-  AttachmentTab,
-  Agent,
-  Chat,
-  ChatMessage,
-  ChatSummary,
-  ModelConfig,
-  Preferences,
-  QuestionToolAnswer,
-  PickedSkill,
-  SelectedElement,
-  SelectedText,
-  UploadedAttachment,
-} from "../../src/shared/types";
 import { Button, TooltipProvider } from "../../src/ui/components";
+import { useMessages } from "../../src/ui/messages";
+import { cn } from "../../src/ui/utils";
 import { ComposerAttachments } from "./composer-attachments";
 import { ComposerBox } from "./composer-box";
 import { EditModeOverlay } from "./edit-mode-overlay";
 import { HistoryPanel } from "./history-panel";
 import { MessageJumpControls } from "./message-jump-controls";
-import type { StoppedRuns } from "./run-state";
 import { MessageBubble } from "./message-bubble";
 import { ProvidersEmptyState } from "./providers-empty-state";
 import { QueuedMessages } from "./queued-messages";
 import { SidepanelHeader } from "./sidepanel-header";
 import { TypingIndicator } from "./typing-indicator";
 import { HolidayBurst } from "./holiday-touches";
-import type { AddMenuView, ComposerMenu } from "./sidepanel-menu-state";
-import { addSkill } from "./skill-context";
-import type {
-  FileHandler,
-  MessageAttachmentHandler,
-  ReplaceAttachmentHandler,
-} from "./sidepanel-view-types";
+import { useChat, useComposer } from "./sidepanel-providers";
 import { UploadFileInput } from "./uploaded-attachment-card";
-import type { QueuedMessage } from "./use-queued-messages";
 import { useDeferredPresence } from "./use-deferred-remove";
 import { ChatContentStatus } from "./chat-content-status";
-import type { SummariesUpdater } from "./use-chats";
-import type { CurrentChatStatus } from "./use-current-chat";
 
 export function SidepanelView({
-  t,
-  providersReady,
   modelCount,
-  activeChatId,
-  currentChat,
-  currentChatStatus,
-  chats,
-  preferences,
-  configuredModels,
-  input,
-  activeAgent,
-  syncStatus,
-  attachedTabs,
-  pendingAttachments,
-  selectedSkills,
-  uploadedAttachments,
-  queuedMessages,
-  sentAttachmentPreviews,
-  attachmentNotice,
-  availableTabs,
-  activeTabAttachable,
-  selectedElements,
-  selectedTexts,
-  streaming,
-  activeAssistantMessageId,
-  stoppedRuns,
-  unreadCompletedChatIds,
-  skills,
-  agents,
-  openMenu,
-  addMenuView,
-  showHistory,
-  editingMessageId,
-  sidepanelRef,
   messagesRef,
-  composerRef,
-  onSetInput,
-  onSetOpenMenu,
-  onSetAddMenuView,
-  onSetShowHistory,
-  onSetSelectedElements,
-  onSetSelectedSkills,
-  onSetChats,
-  onLoadChat,
-  onRetryChat,
-  onSetPreferences,
-  onCreateChat,
-  onImportChat,
-  onCloseChat,
-  onSend,
-  consentPrompt,
-  onStop,
-  onContinue,
-  onDeleteQueuedMessage,
-  onEditQueuedMessage,
-  onAnswerQuestion,
-  onToggleSkill,
-  onCancelEditMessage,
-  onShowAllTabsPicker,
-  onToggleAttachedTab,
-  onAttachActiveTab,
-  onRemoveAttachedTab,
-  onRemoveSelectedText,
-  onAttachFiles,
-  onRemoveUploadedAttachment,
-  onReplaceUploadedAttachment,
-  onEditMessage,
-  onResendMessage,
-  onForkMessage,
-  onSelectElement,
-  onSelectChat,
 }: {
-  t: Messages;
-  providersReady: boolean;
   modelCount: number;
-  activeChatId?: string;
-  currentChat?: Chat;
-  currentChatStatus: CurrentChatStatus;
-  chats: ChatSummary[];
-  preferences?: Preferences;
-  configuredModels: ModelConfig[];
-  input: string;
-  activeAgent: Agent;
-  syncStatus?: SyncStatus;
-  attachedTabs: AttachmentTab[];
-  pendingAttachments: UploadedAttachment[];
-  selectedSkills: PickedSkill[];
-  uploadedAttachments: UploadedAttachment[];
-  queuedMessages: QueuedMessage[];
-  sentAttachmentPreviews: Record<string, UploadedAttachment[]>;
-  attachmentNotice: string;
-  availableTabs: AttachmentTab[];
-  activeTabAttachable: boolean;
-  selectedElements: SelectedElement[];
-  selectedTexts: SelectedText[];
-  streaming: boolean;
-  activeAssistantMessageId?: string;
-  stoppedRuns: StoppedRuns;
-  unreadCompletedChatIds: Record<string, true>;
-  skills: PickedSkill[];
-  agents: Agent[];
-  openMenu: ComposerMenu | null;
-  addMenuView: AddMenuView;
-  showHistory: boolean;
-  editingMessageId?: string;
-  sidepanelRef: RefObject<HTMLDivElement | null>;
   messagesRef: RefObject<HTMLDivElement | null>;
-  composerRef: RefObject<HTMLTextAreaElement | null>;
-  onSetInput: (value: string) => void;
-  onSetOpenMenu: (value: ComposerMenu | null) => void;
-  onSetAddMenuView: (value: AddMenuView) => void;
-  onSetShowHistory: (value: boolean) => void;
-  onSetSelectedElements: (value: SelectedElement[]) => void;
-  onSetSelectedSkills: (value: PickedSkill[]) => void;
-  onSetChats: SummariesUpdater;
-  onLoadChat: (chatId: string) => Promise<Chat | undefined>;
-  onRetryChat: () => void;
-  onSetPreferences: (
-    value: Preferences | ((previous: Preferences) => Preferences),
-  ) => void;
-  onCreateChat: () => void;
-  onImportChat: (chat: Chat) => void;
-  onCloseChat: (chatId: string) => void;
-  onSend: () => void;
-  // The question before a send, above the composer.
-  consentPrompt?: ReactNode;
-  onStop: () => void;
-  // Asks the model to go on after the chat's latest response.
-  onContinue: () => void;
-  onDeleteQueuedMessage: (id: string) => void;
-  onEditQueuedMessage: (message: QueuedMessage) => void;
-  onAnswerQuestion: (toolCallId: string, answers: QuestionToolAnswer[]) => void;
-  onToggleSkill: (skill: PickedSkill) => void;
-  onCancelEditMessage: () => void;
-  onShowAllTabsPicker: () => void;
-  onToggleAttachedTab: (tab: AttachmentTab) => void;
-  onAttachActiveTab: () => Promise<void>;
-  onRemoveAttachedTab: (tabId: number) => void;
-  onRemoveSelectedText: (selection: SelectedText) => void;
-  onAttachFiles: FileHandler;
-  onRemoveUploadedAttachment: (id: string) => void;
-  onReplaceUploadedAttachment: ReplaceAttachmentHandler;
-  onEditMessage: MessageAttachmentHandler;
-  onResendMessage: MessageAttachmentHandler;
-  onForkMessage: (message: ChatMessage, partId?: string) => void;
-  onSelectElement: () => Promise<void>;
-  onSelectChat: (chatId: string) => void;
 }) {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const typingPresence = useDeferredPresence(streaming);
-
-  function attachFromClipboard(event: ClipboardEvent<HTMLTextAreaElement>) {
-    const files = Array.from(event.clipboardData.files).filter(
-      (file) => file.size > 0,
+  const [showHistory, setShowHistory] = useState(false);
+  const chat = useChat();
+  if (modelCount === 0) return <ProvidersEmptyState />;
+  if (showHistory)
+    return (
+      <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
+        <div className="sidepanel history-mode">
+          <HistoryPanel
+            chats={chat.chats}
+            activeChatId={currentMeta(chat)?.id}
+            unreadCompletedChatIds={chat.unreadCompletedChatIds}
+            agent={chat.agent}
+            onSetChats={chat.setChats}
+            onLoadChat={chat.loadChat}
+            onImportChat={chat.importChat}
+            onBack={() => setShowHistory(false)}
+            onSelect={(chatId) => {
+              chat.selectChat(chatId);
+              setShowHistory(false);
+            }}
+            onClose={chat.closeChat}
+          />
+        </div>
+      </TooltipProvider>
     );
-    if (!files.length) return;
-    event.preventDefault();
-    onAttachFiles(files).catch(() => undefined);
-  }
+  return (
+    <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
+      <ChatView
+        messagesRef={messagesRef}
+        onShowHistory={() => setShowHistory(true)}
+      />
+    </TooltipProvider>
+  );
+}
 
-  if (!providersReady) return null;
+// The open chat's list entry stands in while its content loads.
+function currentMeta({
+  currentChat,
+  chats,
+  activeChatId,
+}: ReturnType<typeof useChat>) {
+  return currentChat ?? chats.find((chat) => chat.id === activeChatId);
+}
 
-  if (modelCount === 0) return <ProvidersEmptyState t={t} />;
-  const sidepanelClass = `sidepanel ${editingMessageId ? "editing-mode" : ""}`;
-  // The open chat's list entry stands in while its content loads.
-  const currentMeta =
-    currentChat ?? chats.find((chat) => chat.id === activeChatId);
-  const parentChat = currentMeta?.parentChatId
-    ? chats.find((chat) => chat.id === currentMeta.parentChatId)
+function ChatView({
+  messagesRef,
+  onShowHistory,
+}: {
+  messagesRef: RefObject<HTMLDivElement | null>;
+  onShowHistory: () => void;
+}) {
+  const t = useMessages();
+  const chat = useChat();
+  const composer = useComposer();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const typingPresence = useDeferredPresence(chat.streaming);
+  const { currentChat, chats, editingMessageId, streaming } = chat;
+  const meta = currentMeta(chat);
+  const parentChat = meta?.parentChatId
+    ? chats.find((item) => item.id === meta.parentChatId)
     : undefined;
   const latestUserMessageId = [...(currentChat?.messages || [])]
     .reverse()
@@ -226,174 +94,91 @@ export function SidepanelView({
   const lastMessageId = currentChat?.messages.at(-1)?.id;
   const messagesKey = currentChat?.messages.length ? currentChat.id : "empty";
 
-  if (showHistory)
-    return (
-      <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
-        <div className="sidepanel history-mode" ref={sidepanelRef}>
-          <HistoryPanel
-            t={t}
-            chats={chats}
-            activeChatId={currentMeta?.id}
-            unreadCompletedChatIds={unreadCompletedChatIds}
-            agent={activeAgent}
-            onSetChats={onSetChats}
-            onLoadChat={onLoadChat}
-            onImportChat={onImportChat}
-            onBack={() => onSetShowHistory(false)}
-            onSelect={(chatId) => {
-              onSelectChat(chatId);
-              onSetShowHistory(false);
-            }}
-            onClose={onCloseChat}
-          />
-        </div>
-      </TooltipProvider>
-    );
-
   return (
-    <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
-      <div className={sidepanelClass} ref={sidepanelRef}>
-        <SidepanelHeader
-          t={t}
-          currentChat={currentMeta}
-          parentChat={parentChat}
-          syncStatus={syncStatus}
-          onCreateChat={onCreateChat}
-          onSetShowHistory={onSetShowHistory}
-          onSelectChat={onSelectChat}
-        />
-        {editingMessageId && (
-          <EditModeOverlay t={t} onCancel={onCancelEditMessage} />
-        )}
-        <div className="messages-shell">
-          <div key={messagesKey} ref={messagesRef} className="messages">
-            <div className="messages-content">
-              <ChatContentStatus
-                t={t}
-                status={currentChatStatus}
-                empty={!currentChat?.messages.length}
-                onRetry={onRetryChat}
+    <div className={cn("sidepanel", editingMessageId && "editing-mode")}>
+      <SidepanelHeader
+        currentChat={meta}
+        parentChat={parentChat}
+        onCreateChat={chat.createChat}
+        onShowHistory={onShowHistory}
+        onSelectChat={chat.selectChat}
+      />
+      {editingMessageId && (
+        <EditModeOverlay onCancel={chat.cancelEditMessage} />
+      )}
+      <div className="messages-shell">
+        <div key={messagesKey} ref={messagesRef} className="messages">
+          <div className="messages-content">
+            <ChatContentStatus
+              status={chat.currentChatStatus}
+              empty={!currentChat?.messages.length}
+              onRetry={chat.retryChat}
+            />
+            {currentChat?.messages.map((message) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                latestUserMessage={message.id === latestUserMessageId}
+                editing={editingMessageId === message.id}
+                sources={currentChat.sources}
+                chats={chats}
+                chatMessages={currentChat.messages}
+                outputActive={message.id === chat.activeAssistantMessageId}
+                runStopped={chat.stoppedRuns.has(message.id)}
+                onContinue={
+                  message.id === lastMessageId && !streaming
+                    ? chat.continueChat
+                    : undefined
+                }
+                sentAttachments={chat.sentAttachmentPreviews[message.id] || []}
+                activeAttachments={chat.activeAttachments}
+                onReplaceAttachment={chat.replaceAttachment}
+                onEdit={chat.editMessage}
+                onResend={chat.resendMessage}
+                resendDisabled={streaming}
+                onFork={chat.forkMessage}
+                onSelectChat={chat.selectChat}
+                onAnswerQuestion={chat.answerQuestion}
               />
-              {currentChat?.messages.map((message) => (
-                <MessageBubble
-                  key={message.id}
-                  message={message}
-                  t={t}
-                  latestUserMessage={message.id === latestUserMessageId}
-                  editing={editingMessageId === message.id}
-                  sources={currentChat.sources}
-                  chats={chats}
-                  chatMessages={currentChat.messages}
-                  outputActive={message.id === activeAssistantMessageId}
-                  runStopped={stoppedRuns.has(message.id)}
-                  onContinue={
-                    message.id === lastMessageId && !streaming
-                      ? onContinue
-                      : undefined
-                  }
-                  sentAttachments={sentAttachmentPreviews[message.id] || []}
-                  activeAttachments={uploadedAttachments}
-                  onReplaceAttachment={onReplaceUploadedAttachment}
-                  onEdit={onEditMessage}
-                  onResend={onResendMessage}
-                  resendDisabled={streaming}
-                  onFork={onForkMessage}
-                  onSelectChat={onSelectChat}
-                  onAnswerQuestion={onAnswerQuestion}
-                />
-              ))}
-            </div>
+            ))}
           </div>
-          <MessageJumpControls
-            t={t}
-            currentChat={currentChat}
-            editingMessageId={editingMessageId}
-            messagesRef={messagesRef}
-            stoppedRuns={stoppedRuns}
-          />
         </div>
-        <footer className="composer">
-          <UploadFileInput
-            inputRef={fileInputRef}
-            onAttachFiles={onAttachFiles}
-          />
-          <HolidayBurst />
-          <div className="new-chat-row">
-            {typingPresence.mounted && (
-              <TypingIndicator t={t} removing={typingPresence.removing} />
-            )}
-            <Button
-              className="new-chat-button"
-              variant="secondary"
-              size="sm"
-              disabled={!!editingMessageId}
-              onClick={onCreateChat}
-            >
-              <Plus size={16} /> {t.words.newChat}
-            </Button>
-          </div>
-          <ComposerAttachments
-            t={t}
-            attachedTabs={attachedTabs}
-            pendingAttachments={pendingAttachments}
-            selectedSkills={selectedSkills}
-            selectedElements={selectedElements}
-            selectedTexts={selectedTexts}
-            attachmentNotice={attachmentNotice}
-            onRemoveAttachedTab={onRemoveAttachedTab}
-            onRemoveSelectedText={onRemoveSelectedText}
-            onRemoveUploadedAttachment={onRemoveUploadedAttachment}
-            onRemoveSkill={(skillId) =>
-              onSetSelectedSkills(
-                selectedSkills.filter((skill) => skill.id !== skillId),
-              )
-            }
-            onSetSelectedElements={onSetSelectedElements}
-          />
-          <QueuedMessages
-            t={t}
-            messages={queuedMessages}
-            onDelete={onDeleteQueuedMessage}
-            onEdit={onEditQueuedMessage}
-          />
-          {consentPrompt}
-          <ComposerBox
-            t={t}
-            input={input}
-            composerRef={composerRef}
-            editingMessageId={editingMessageId}
-            streaming={streaming}
-            openMenu={openMenu}
-            addMenuView={addMenuView}
-            availableTabs={availableTabs}
-            attachedTabs={attachedTabs}
-            activeTabAttachable={activeTabAttachable}
-            skills={skills}
-            selectedSkills={selectedSkills}
-            preferences={preferences}
-            configuredModels={configuredModels}
-            agents={agents}
-            onSetInput={onSetInput}
-            onPaste={attachFromClipboard}
-            onCancelEditMessage={onCancelEditMessage}
-            onSend={onSend}
-            onStop={onStop}
-            onSetOpenMenu={onSetOpenMenu}
-            onSetAddMenuView={onSetAddMenuView}
-            onShowAllTabsPicker={onShowAllTabsPicker}
-            onToggleSkill={onToggleSkill}
-            onPickSkill={(skill) => {
-              onSetSelectedSkills(addSkill(selectedSkills, skill));
-              onSetInput("");
-            }}
-            onToggleAttachedTab={onToggleAttachedTab}
-            onAttachActiveTab={onAttachActiveTab}
-            onAttachFiles={() => fileInputRef.current?.click()}
-            onSelectElement={onSelectElement}
-            onSetPreferences={onSetPreferences}
-          />
-        </footer>
+        <MessageJumpControls
+          currentChat={currentChat}
+          editingMessageId={editingMessageId}
+          messagesRef={messagesRef}
+          stoppedRuns={chat.stoppedRuns}
+        />
       </div>
-    </TooltipProvider>
+      <footer className="composer">
+        <UploadFileInput
+          inputRef={fileInputRef}
+          onAttachFiles={composer.attachFiles}
+        />
+        <HolidayBurst />
+        <div className="new-chat-row">
+          {typingPresence.mounted && (
+            <TypingIndicator removing={typingPresence.removing} />
+          )}
+          <Button
+            className="new-chat-button"
+            variant="secondary"
+            size="sm"
+            disabled={!!editingMessageId}
+            onClick={chat.createChat}
+          >
+            <Plus size={16} /> {t.words.newChat}
+          </Button>
+        </div>
+        <ComposerAttachments />
+        <QueuedMessages
+          messages={composer.queuedMessages}
+          onDelete={composer.deleteQueuedMessage}
+          onEdit={composer.editQueuedMessage}
+        />
+        {composer.consentPrompt}
+        <ComposerBox onPickFiles={() => fileInputRef.current?.click()} />
+      </footer>
+    </div>
   );
 }

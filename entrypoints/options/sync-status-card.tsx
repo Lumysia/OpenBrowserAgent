@@ -1,6 +1,7 @@
 import { Activity, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { formatCount, type Messages } from "../../src/shared/i18n";
+import { useMessages } from "../../src/ui/messages";
 import { storage } from "../../src/shared/storage";
 import { NO_SYNC_BACKEND_ID } from "../../src/shared/sync-backends";
 import { resolveMassDelete, syncNow } from "../../src/shared/sync/client";
@@ -20,7 +21,8 @@ import { cn } from "../../src/ui/utils";
 
 // Last sync, pause with its reason, pending changes, server warnings and
 // deletions waiting for the user's answer.
-export function SyncStatusCard({ t }: { t: Messages }) {
+export function SyncStatusCard() {
+  const t = useMessages();
   const [status] = useStoredState(storage.syncStatus);
   const [activeBackendId] = useStoredState(storage.activeSyncBackendId);
   const [busy, setBusy] = useState(false);
@@ -81,7 +83,7 @@ export function SyncStatusCard({ t }: { t: Messages }) {
           status?.warnings.map((warning) => (
             <Feedback key={warning} error={!SYNC_NOTES.includes(warning)}>
               {t.sync.warnings[warning]}
-              <WarningDetail t={t} warning={warning} />
+              <WarningDetail warning={warning} />
             </Feedback>
           ))}
         {enabled &&
@@ -145,7 +147,8 @@ export function SyncStatusCard({ t }: { t: Messages }) {
 }
 
 // Only some warnings have more to say than their one line.
-function WarningDetail({ t, warning }: { t: Messages; warning: SyncWarning }) {
+function WarningDetail({ warning }: { warning: SyncWarning }) {
+  const t = useMessages();
   const details: Partial<Record<SyncWarning, string>> = t.sync.warningDetails;
   const detail = details[warning];
   return detail ? <InfoTip label={t.common.moreInfo}>{detail}</InfoTip> : null;

@@ -1,9 +1,10 @@
 import { useState } from "react";
-import type { Messages } from "../../src/shared/i18n";
 import type { UploadedAttachment } from "../../src/shared/types";
+import { useMessages } from "../../src/ui/messages";
 import { attachmentBytes, readUploadAttachments } from "./file-attachments";
 
-export function useUploadedAttachments(t: Messages) {
+export function useUploadedAttachments() {
+  const t = useMessages();
   const [uploadedAttachments, setUploadedAttachments] = useState<
     UploadedAttachment[]
   >([]);

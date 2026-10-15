@@ -1,7 +1,6 @@
 import { ShieldCheck } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { DEFAULT_PREFERENCES } from "../../src/shared/default-preferences";
-import type { Messages } from "../../src/shared/i18n";
 import {
   chooseChatModel,
   chooseHelperModel,
@@ -15,6 +14,7 @@ import {
 import type { Agent, Preferences, ProviderState } from "../../src/shared/types";
 import { Button } from "../../src/ui/components";
 import { providerConsentAgreement } from "../../src/ui/provider-display";
+import { useMessages } from "../../src/ui/messages";
 
 type Question = {
   host: string;
@@ -42,11 +42,11 @@ function sendModelChoices(
 // to receive their content are asked about one by one, above the composer.
 // Nothing is sent unless the user agrees to each.
 export function useProviderConsent(
-  t: Messages,
   providers: ProviderState | undefined,
   preferences: Preferences | undefined,
   agent: Agent,
 ) {
+  const t = useMessages();
   const [question, setQuestion] = useState<Question>();
   const asking = useRef(false);
 
@@ -75,7 +75,6 @@ export function useProviderConsent(
   const prompt: ReactNode = question && (
     <ProviderConsentPrompt
       key={question.host}
-      t={t}
       host={question.host}
       onAnswer={question.answer}
     />
@@ -94,14 +93,13 @@ export function useProviderConsent(
 }
 
 function ProviderConsentPrompt({
-  t,
   host,
   onAnswer,
 }: {
-  t: Messages;
   host: string;
   onAnswer: (allowed: boolean) => void;
 }) {
+  const t = useMessages();
   const id = useId();
   const ref = useRef<HTMLDivElement>(null);
   // Focus moves to the question and back where it was (the composer).

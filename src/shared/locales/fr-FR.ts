@@ -533,16 +533,22 @@ export const frFR: LocaleMessages = {
     deleteFile: "Supprimer le fichier",
     updatedAt: "Mis à jour",
     skillSize: "Taille de la compétence",
-    skillCheckEntry: "SKILL.md existe",
-    skillCheckEntryMissing: "SKILL.md est manquant",
-    skillCheckName: "Le nom dans les métadonnées est en kebab-case",
-    skillCheckNameInvalid:
-      "Le nom dans les métadonnées doit être en kebab-case",
-    skillCheckDescription: "La description est présente",
-    skillCheckDescriptionMissing: "La description est manquante",
-    skillCheckSize: "La taille respecte la limite",
-    skillCheckTooLarge:
-      "Les fichiers d’une compétence peuvent contenir {max} caractères au total",
+    skillCheck: {
+      entry: { ok: "SKILL.md existe", failed: "SKILL.md est manquant" },
+      name: {
+        ok: "Le nom dans les métadonnées est en kebab-case",
+        failed: "Le nom dans les métadonnées doit être en kebab-case",
+      },
+      description: {
+        ok: "La description est présente",
+        failed: "La description est manquante",
+      },
+      size: {
+        ok: "La taille respecte la limite",
+        failed:
+          "Les fichiers d’une compétence peuvent contenir {max} caractères au total",
+      },
+    },
     deleteSkill: "Supprimer la compétence",
     builtinSkillBadge: "Intégrée",
     overrideSkillBadge: "Compétence intégrée personnalisée",
@@ -552,12 +558,14 @@ export const frFR: LocaleMessages = {
     revertSkillToBuiltin: "Revenir à la version intégrée",
     viewFile: "Afficher le fichier",
     skillInvokeMode: "Utilisation",
-    skillInvokeAuto: "Auto",
-    skillInvokeManual: "Manuelle",
-    skillInvokeOff: "Désactivée",
-    skillInvokeAutoHint: "Utilisée quand votre demande s’y prête",
-    skillInvokeManualHint: "Uniquement quand vous la choisissez avec / ou +",
-    skillInvokeOffHint: "Jamais utilisée",
+    skillInvoke: {
+      auto: { label: "Auto", hint: "Utilisée quand votre demande s’y prête" },
+      manual: {
+        label: "Manuelle",
+        hint: "Uniquement quand vous la choisissez avec / ou +",
+      },
+      off: { label: "Désactivée", hint: "Jamais utilisée" },
+    },
     skillListOverBudget: "La liste des compétences est longue",
     skillListOverBudgetDescription:
       "Les descriptions des compétences Auto occupent {chars} caractères sur {limit}. Passez les moins utiles en Manuelle ou raccourcissez-les.",

@@ -1,28 +1,27 @@
 import { useEffect, useState, type RefObject } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
-import type { Messages } from "../../src/shared/i18n";
 import type { Chat } from "../../src/shared/types";
 import { Button, IconTooltip } from "../../src/ui/components";
 import { hasUnfinishedAssistantRun, type StoppedRuns } from "./run-state";
 import { useDeferredPresence } from "./use-deferred-remove";
-import { cn } from "../../src/ui/utils";
+import { useMessages } from "../../src/ui/messages";
+import { stateWhen, UI_STATE } from "../../src/ui/ui-state";
 
 const SCROLL_EDGE_THRESHOLD_PX = 24;
 const JUMP_GAP_PX = 12;
 
 export function MessageJumpControls({
-  t,
   currentChat,
   editingMessageId,
   messagesRef,
   stoppedRuns,
 }: {
-  t: Messages;
   currentChat?: Chat;
   editingMessageId?: string;
   messagesRef: RefObject<HTMLDivElement | null>;
   stoppedRuns: StoppedRuns;
 }) {
+  const t = useMessages();
   const [showScrollJumps, setShowScrollJumps] = useState(false);
   const visible =
     showScrollJumps &&
@@ -95,10 +94,8 @@ export function MessageJumpControls({
 
   return (
     <div
-      className={cn(
-        "message-jump-controls",
-        presence.removing && "is-removing",
-      )}
+      className="message-jump-controls"
+      data-state={stateWhen(presence.removing, UI_STATE.removing)}
     >
       <IconTooltip label={t.sidepanel.previousUserMessage} side="left">
         <Button

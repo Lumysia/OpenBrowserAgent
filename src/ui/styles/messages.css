@@ -49,7 +49,7 @@
   max-width: 100%;
   padding: 10px 14px;
   border: 1px solid color-mix(in oklab, var(--accent-strong) 14%, var(--border));
-  border-radius: 13px;
+  border-radius: var(--radius);
   background:
     linear-gradient(180deg, var(--highlight), transparent 62%),
     linear-gradient(135deg, var(--bubble), var(--bubble-2));
@@ -117,7 +117,7 @@
   transform-origin: right center;
   animation: enter var(--duration-base) var(--ease-out) backwards;
 }
-.message-jump-controls.is-removing {
+.message-jump-controls[data-state="removing"] {
   pointer-events: none;
   animation: exit var(--duration-fast) var(--ease-standard) both;
 }
@@ -164,9 +164,9 @@
   animation: enter var(--duration-slow) var(--ease-out) backwards;
   transition: var(--transition-interactive);
 }
-:is(.context-card, .queued-message).is-removing {
+:is(.context-card, .queued-message)[data-state="removing"] {
   pointer-events: none;
-  animation: exit 200ms var(--ease-standard) both;
+  animation: exit var(--duration-remove) var(--ease-standard) both;
 }
 .sent-tabs-chip,
 .sent-tab-chip {
@@ -370,7 +370,7 @@
   width: 30px;
   height: 30px;
   padding: 6px;
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: color-mix(in oklab, var(--accent-soft) 58%, var(--card));
   color: var(--accent-strong);
 }

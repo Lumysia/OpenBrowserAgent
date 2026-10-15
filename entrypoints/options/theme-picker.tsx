@@ -1,5 +1,4 @@
 import { useId, type CSSProperties, type ReactNode } from "react";
-import type { Messages } from "../../src/shared/i18n";
 import {
   ACCENT_THEMES,
   normalizeTheme,
@@ -16,19 +15,19 @@ import {
   TooltipTrigger,
 } from "../../src/ui/components";
 import { resolveScheme } from "../../src/ui/apply-theme";
+import { useMessages } from "../../src/ui/messages";
 
 // The color themes, then the pride flags, as one choice.
 export function ThemePicker({
-  t,
   value,
   colorScheme,
   onChange,
 }: {
-  t: Messages;
   value: unknown;
   colorScheme: unknown;
   onChange: (theme: ThemeId) => void;
 }) {
+  const t = useMessages();
   const scheme = resolveScheme(colorScheme);
   const groups = [
     {
