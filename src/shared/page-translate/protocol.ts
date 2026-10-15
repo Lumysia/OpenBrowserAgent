@@ -4,10 +4,6 @@ import type { PageToastTheme } from "../page-toast";
 import type { PageTranslateContext, PageTranslateRole } from "./context";
 import type { PageTranslateDisplay, PageTranslateEngine } from "./settings";
 
-// The page script, built by WXT (`registration: "runtime"`) and injected
-// when the user first translates a page.
-export const PAGE_TRANSLATE_SCRIPT = "content-scripts/page-translate.js";
-
 // Background -> page script (tabs.sendMessage), and page -> background
 // (runtime.sendMessage).
 export const PAGE_TRANSLATE_MESSAGE = {

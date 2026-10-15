@@ -5,7 +5,7 @@ import {
   MS_PER_SECOND,
 } from "../../src/shared/config";
 import { formatDuration, formatNumber } from "../../src/shared/format";
-import type { Messages } from "../../src/shared/i18n";
+import { languageOf, type Messages } from "../../src/shared/i18n";
 import type {
   ChatMessage,
   RunMetrics,
@@ -296,7 +296,10 @@ function formatTps(metrics: RunMetrics, t: Messages) {
 function formatRate(value: number, t: Messages) {
   return t.sidepanel.runInfo.perSecond.replace(
     "{value}",
-    formatNumber(value, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+    formatNumber(languageOf(t), value, {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }),
   );
 }
 
@@ -307,10 +310,10 @@ function estimateTokens(characters: number | undefined) {
 
 function formatMs(value: number | undefined, t: Messages) {
   if (value === undefined) return t.sidepanel.runInfo.unavailable;
-  return formatDuration(value);
+  return formatDuration(languageOf(t), value);
 }
 
 function formatTokenCount(value: number | undefined, t: Messages) {
   if (value === undefined) return t.sidepanel.runInfo.unavailable;
-  return `${formatCompactNumber(value)} ${t.sidepanel.runInfo.tokenUnit}`;
+  return `${formatCompactNumber(languageOf(t), value)} ${t.sidepanel.runInfo.tokenUnit}`;
 }

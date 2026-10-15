@@ -18,7 +18,7 @@ import { continuedChat } from "./side-panel-handoff";
 import { toAttachmentTab } from "./sidepanel-context";
 
 // A request to send in a new chat once that chat is open.
-export type HandoffSend = {
+type HandoffSend = {
   chatId: string;
   content: string;
   instruction: string;

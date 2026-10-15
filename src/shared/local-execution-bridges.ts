@@ -19,7 +19,7 @@ const SECRET_BYTES = 32;
 
 // Fields that decide whether the bridge reaches the host; changing any of
 // them makes the last test result stale.
-export const LOCAL_EXECUTION_BRIDGE_CONNECTION_KEYS = [
+const LOCAL_EXECUTION_BRIDGE_CONNECTION_KEYS = [
   "hostName",
   "hostAddress",
   "bridgeKey",
@@ -95,7 +95,7 @@ export function resolveLocalExecutionBridge(
   );
 }
 
-export function clampLocalExecutionBridgeTimeout(value: unknown) {
+function clampLocalExecutionBridgeTimeout(value: unknown) {
   const number = Number(value);
   if (!Number.isFinite(number) || number <= 0)
     return LOCAL_EXECUTION_BRIDGE_LIMITS.defaultTimeoutMs;

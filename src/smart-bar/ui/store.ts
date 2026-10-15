@@ -38,7 +38,7 @@ export type SmartBarResult = {
   consent?: { providerId: string; host: string };
 };
 
-export type SmartBarState = {
+type SmartBarState = {
   // Bumped on every show, so views reset per selection.
   id: number;
   snapshot?: SelectionSnapshot;

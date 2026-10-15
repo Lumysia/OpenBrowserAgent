@@ -68,10 +68,6 @@ export function isChatRunning(chatId: string) {
   return !!session && !session.cleanupTimeout;
 }
 
-export function getStreamSession(chatId: string) {
-  return activeStreamSessions.get(chatId);
-}
-
 export function getPortSession(port: chrome.runtime.Port) {
   return portSessions.get(port);
 }

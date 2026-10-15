@@ -7,7 +7,7 @@ import {
 import type { UploadedAttachment } from "../../src/shared/types";
 import { formatBytes } from "../../src/shared/format";
 import { ContextCard } from "./context-card";
-import { useMessages } from "../../src/ui/messages";
+import { useLocale, useMessages } from "../../src/ui/messages";
 
 export function UploadFileInput({
   inputRef,
@@ -39,6 +39,7 @@ export function UploadedAttachmentCard({
   onRemove: () => void;
 }) {
   const t = useMessages();
+  const locale = useLocale();
   const status = isMetadataOnlyAttachment(attachment.kind)
     ? t.sidepanel.fileMetadataOnly
     : t.sidepanel.willBeSentToAi;
@@ -47,7 +48,7 @@ export function UploadedAttachmentCard({
     <ContextCard
       icon={<AttachmentPreview attachment={attachment} />}
       title={attachment.name}
-      detail={`${status} · ${formatBytes(attachment.size)}`}
+      detail={`${status} · ${formatBytes(locale, attachment.size)}`}
       removeLabel={t.sidepanel.removeAttachment}
       onRemove={onRemove}
     />

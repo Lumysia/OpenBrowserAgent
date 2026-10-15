@@ -48,7 +48,7 @@ export function boxesOf(placement: Placement) {
 // room it has) or `line` (an inline translation in a row item wrapped onto
 // more lines: it reads better on a line of its own). Growing taller isn't
 // breaking.
-export type Breakage = "self" | "area" | "line" | undefined;
+type Breakage = "self" | "area" | "line" | undefined;
 
 export function breaksLayout(
   element: Element,

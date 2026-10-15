@@ -2,6 +2,7 @@ import { errorMessage } from "../shared/error-message";
 import { isScriptableUrl } from "../shared/browser";
 import { TimeoutError, withCancellationTimeout } from "../shared/cancellation";
 import { getBrowserApi } from "../shared/browser-api";
+import { PAGE_SCRIPT } from "../shared/page-scripts";
 import { withLock } from "../shared/locks";
 import { sessionRecord } from "../shared/session-record";
 import { STORAGE_KEYS } from "../shared/storage-keys";
@@ -15,7 +16,6 @@ import type { RunTab } from "./run-tab";
 // without races. Every browser call is bounded: a page blocked by a native
 // dialog never answers, and must not stall other tabs or the run.
 
-const PAGE_AGENT_FILE = "/page-agent.js";
 // Injecting is quick on any responsive page, so it doubles as a ping.
 const INJECT_TIMEOUT_MS = 5_000;
 const CALL_TIMEOUT_MS = 30_000;
@@ -125,7 +125,7 @@ export function callPage<T = unknown>(
       () =>
         api.scripting.executeScript({
           target: { tabId },
-          files: [PAGE_AGENT_FILE],
+          files: [PAGE_SCRIPT.pageAgent],
         }),
       INJECT_TIMEOUT_MS,
       signal,

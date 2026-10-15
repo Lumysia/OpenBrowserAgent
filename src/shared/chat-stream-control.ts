@@ -2,7 +2,7 @@ import { sendRuntimeRequest } from "./runtime-messages";
 
 export const ABORT_CHAT_STREAMS = "ai-stream.abort-chats";
 
-export type AbortChatStreamsRequest = {
+type AbortChatStreamsRequest = {
   type: typeof ABORT_CHAT_STREAMS;
   chatIds: string[];
 };

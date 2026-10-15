@@ -1,4 +1,5 @@
 import { formatDateTime } from "../../src/shared/format";
+import { languageOf, type Messages } from "../../src/shared/i18n";
 import type { Chat, ChatMessage, ChatSummary } from "../../src/shared/types";
 
 export function createChatDraft(title: string, agentId?: string): Chat {
@@ -85,7 +86,7 @@ export async function forkChatAction({
   chat,
   message,
   partId,
-  forkLabel,
+  t,
   chats,
   loadChat,
   saveChats,
@@ -94,7 +95,7 @@ export async function forkChatAction({
   chat: Chat;
   message: ChatMessage;
   partId?: string;
-  forkLabel: string;
+  t: Messages;
   chats: ChatSummary[];
   loadChat: (chatId: string) => Promise<Chat | undefined>;
   saveChats: (chats: Chat[]) => Promise<void>;
@@ -121,7 +122,7 @@ export async function forkChatAction({
   const fork: Chat = {
     ...chat,
     id: forkId,
-    title: forkTitle(chat.title, forkLabel, now),
+    title: forkTitle(chat.title, t, now),
     kind: "normal",
     parentChatId: undefined,
     parentMessageId: undefined,
@@ -209,15 +210,15 @@ function relinkChildMetadata(
   return { ...metadata, parentChatId: forkParentId };
 }
 
-function forkTitle(title: string, forkLabel: string, now: number) {
-  const time = formatDateTime(now, {
+function forkTitle(title: string, t: Messages, now: number) {
+  const time = formatDateTime(languageOf(t), now, {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
   });
-  return `${title} · ${forkLabel} ${time}`;
+  return `${title} · ${t.sidepanel.forkTitleSuffix} ${time}`;
 }
 
 function truncateMessageAtPart(message: ChatMessage, partId: string) {

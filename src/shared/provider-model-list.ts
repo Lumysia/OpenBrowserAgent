@@ -9,11 +9,12 @@ import {
 import { providerBaseUrl, providerEndpoint } from "./provider-urls";
 import type { ProviderConfig } from "./types";
 import { USER_ERROR_CODE, UserError } from "./user-errors";
+import { recordOf } from "./values";
 
 // Each provider's model list is fetched live from its endpoint: the request
 // and the reading of its answer for each kind of list.
 
-export type ModelListRequest = {
+type ModelListRequest = {
   url: string;
   headers: Record<string, string>;
 };
@@ -35,7 +36,18 @@ type ModelListProtocol = {
   headers?: Record<string, string>;
   // The listed models, in the endpoint's order.
   parse: (data: unknown) => ListedModel[];
+  // Lists that come in pages: the query of every page (the largest page
+  // the API serves), and the cursor of the page after `data`; none after
+  // the last.
+  pageQuery?: Record<string, string>;
+  nextPage?: (data: unknown) => Record<string, string> | undefined;
 };
+
+type PageCursor = Record<string, string>;
+
+// More pages than any provider has models for; a server that keeps
+// answering with another page stops here.
+export const MODEL_LIST_MAX_PAGES = 20;
 
 // Anthropic's API requires a version; this is the one its models list has.
 const ANTHROPIC_VERSION = "2023-06-01";
@@ -54,6 +66,13 @@ const MODEL_LISTS: Record<ProviderModelList, ModelListProtocol> = {
   anthropic: {
     path: "/models",
     headers: { "anthropic-version": ANTHROPIC_VERSION },
+    pageQuery: { limit: "1000" },
+    nextPage: (data) => {
+      const { has_more: more, last_id: last } = recordOf(data);
+      return more === true && typeof last === "string" && last
+        ? { after_id: last }
+        : undefined;
+    },
     parse: (data) =>
       entries(data, "data", "models").flatMap((model) => {
         const name = text(model, "id") || text(model, "name");
@@ -71,6 +90,13 @@ const MODEL_LISTS: Record<ProviderModelList, ModelListProtocol> = {
   // Only the models that generate content (not embedding models).
   gemini: {
     path: "/models",
+    pageQuery: { pageSize: "1000" },
+    nextPage: (data) => {
+      const token = recordOf(data).nextPageToken;
+      return typeof token === "string" && token
+        ? { pageToken: token }
+        : undefined;
+    },
     parse: (data) =>
       entries(data, "models").flatMap((model) => {
         const name = text(model, "name").replace(/^models\//, "");
@@ -100,9 +126,11 @@ const MODEL_LISTS: Record<ProviderModelList, ModelListProtocol> = {
   },
 };
 
+// The request for the first page of the list, or the one at `cursor`.
 export function modelListRequest(
   type: ProviderId,
   config: Pick<ProviderConfig, "baseUrl" | "apiKey">,
+  cursor?: PageCursor,
 ): ModelListRequest {
   const protocol = MODEL_LISTS[providerModelList(type)];
   const base = protocol.atRoot
@@ -113,8 +141,12 @@ export function modelListRequest(
       USER_ERROR_CODE.baseUrlRequired,
       "Base URL is required",
     );
+  const query = new URLSearchParams({
+    ...protocol.pageQuery,
+    ...cursor,
+  }).toString();
   return {
-    url: `${base}${protocol.path}`,
+    url: `${base}${protocol.path}${query ? `?${query}` : ""}`,
     headers: {
       ...protocol.headers,
       ...(providerType(type).keyless
@@ -126,6 +158,14 @@ export function modelListRequest(
 
 export function parseModelList(type: ProviderId, data: unknown) {
   return MODEL_LISTS[providerModelList(type)].parse(data);
+}
+
+// Where the list goes on after the page `data`; undefined after the last.
+export function nextModelListPage(
+  type: ProviderId,
+  data: unknown,
+): PageCursor | undefined {
+  return MODEL_LISTS[providerModelList(type)].nextPage?.(data);
 }
 
 // The entries of the first of `keys` that holds a list; a plain name stands

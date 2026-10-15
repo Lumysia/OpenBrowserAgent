@@ -1,7 +1,7 @@
-import { VIDEO_SUBTITLES_SCRIPT } from "../../shared/video-subtitles/protocol";
 import { getBrowserApi } from "../../shared/browser-api";
+import { PAGE_SCRIPT, REGISTERED_SCRIPT_ID } from "../../shared/page-scripts";
 
-const SCRIPT_ID = "oba-video-button";
+const SCRIPT_ID = REGISTERED_SCRIPT_ID.videoButton;
 const MATCHES = ["http://*/*", "https://*/*"];
 
 // The video button's script is registered only while the button is on, in
@@ -23,7 +23,7 @@ export async function syncVideoButtonRegistration(on: boolean) {
   await scripting.registerContentScripts([
     {
       id: SCRIPT_ID,
-      js: [VIDEO_SUBTITLES_SCRIPT.button],
+      js: [PAGE_SCRIPT.videoButton],
       matches: MATCHES,
       allFrames: true,
       runAt: "document_idle",
@@ -40,7 +40,7 @@ export async function syncVideoButtonRegistration(on: boolean) {
         : scripting
             .executeScript({
               target: { tabId: tab.id, allFrames: true },
-              files: [VIDEO_SUBTITLES_SCRIPT.button],
+              files: [PAGE_SCRIPT.videoButton],
             })
             .catch(() => undefined),
     ),

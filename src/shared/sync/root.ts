@@ -34,7 +34,7 @@ export type SyncRecord = {
 };
 
 // Blobs a writer stopped referring to; any device deletes them a day later.
-export type GarbageEntry = { blob: string; since: number };
+type GarbageEntry = { blob: string; since: number };
 
 // What a device needs, with the sync passphrase, to read sealed records:
 // the PBKDF2 salt and iterations, and a known text sealed with the key, so a
@@ -71,7 +71,7 @@ export const emptyRoot = (writer = ""): Root => ({
 
 const RECORD_ID_PATTERN = /^[a-z][a-z-]*\/[^\s]{1,400}$/;
 
-export const isRecordId = (id: string) => RECORD_ID_PATTERN.test(id);
+const isRecordId = (id: string) => RECORD_ID_PATTERN.test(id);
 
 // A root is applied only after every part of it checked out: a truncated or
 // foreign file must never turn into deletions or overwrite local data.

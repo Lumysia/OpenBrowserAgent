@@ -1,5 +1,5 @@
 import { formatDuration } from "../../src/shared/format";
-import { formatCount, type Messages } from "../../src/shared/i18n";
+import { formatCount, languageOf, type Messages } from "../../src/shared/i18n";
 import type { Plural } from "../../src/shared/plural";
 import { isMcpToolName, TOOL_NAME } from "../../src/shared/tool-names";
 import { CHAT_PART_STATE, type ChatPart } from "../../src/shared/types";
@@ -137,7 +137,7 @@ const DETAILS: Record<
   [TOOL_NAME.runCode]: (input, output, t) =>
     compactJoin([
       typeof output.durationMs === "number"
-        ? formatDuration(output.durationMs)
+        ? formatDuration(languageOf(t), output.durationMs)
         : "",
       Array.isArray(output.files) && output.files.length
         ? formatCount(t.display.toolSteps.filesSaved, output.files.length)

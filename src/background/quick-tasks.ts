@@ -21,7 +21,7 @@ export const QUICK_TASK_PRIORITY = {
   background: "background",
 } as const;
 
-export type QuickTaskPriority =
+type QuickTaskPriority =
   (typeof QUICK_TASK_PRIORITY)[keyof typeof QUICK_TASK_PRIORITY];
 
 // Page translation batches at once on an endpoint. Servers on this device or

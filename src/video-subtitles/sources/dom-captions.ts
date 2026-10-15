@@ -20,10 +20,8 @@ const PLAYER_AREA_SHARE = 1.6;
 const CONTROLS =
   "button, input, select, textarea, a[href], [role=button], [role=slider], [role=menu], [role=menuitem], [role=tooltip], [role=dialog], [contenteditable]";
 
-export type DomCaptions = ReturnType<typeof watchDomCaptions>;
-
 // The player around `video`: its largest ancestor about the video's size.
-export function playerOf(video: HTMLVideoElement) {
+function playerOf(video: HTMLVideoElement) {
   const area = (element: Element) => {
     const rect = element.getBoundingClientRect();
     return rect.width * rect.height;

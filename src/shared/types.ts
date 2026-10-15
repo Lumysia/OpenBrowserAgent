@@ -34,7 +34,7 @@ export type ProviderConfig = {
   thinkingSwitch?: ThinkingSwitch;
 };
 
-export type ProviderConsent = { host: string; grantedAt: number };
+type ProviderConsent = { host: string; grantedAt: number };
 
 export type ProviderState = Record<string, ProviderConfig>;
 
@@ -65,7 +65,7 @@ export type Preferences = {
 
 export type SyncBackendType = "browser-sync" | "webdav";
 
-export type BrowserSyncBackendConfig = {
+type BrowserSyncBackendConfig = {
   id: string;
   type: "browser-sync";
   name: string;
@@ -182,7 +182,7 @@ export type UploadedAttachment = {
   text?: string;
 };
 
-export type ImageGenerationJobStatus = "running" | "succeeded" | "failed";
+type ImageGenerationJobStatus = "running" | "succeeded" | "failed";
 
 export type ImageGenerationJob = {
   id: string;
@@ -259,7 +259,7 @@ export type RunMetrics = {
   stopReason?: RunStopReason;
 };
 
-export const TOOL_PART_PREFIX = "tool-";
+const TOOL_PART_PREFIX = "tool-";
 
 export type ToolPartType = `${typeof TOOL_PART_PREFIX}${string}`;
 
@@ -439,7 +439,7 @@ export type AiStreamResponse = (
   | { type: "title"; title: string }
 ) & { sequence?: number };
 
-export type QuestionToolOption = {
+type QuestionToolOption = {
   label: string;
   description?: string;
 };

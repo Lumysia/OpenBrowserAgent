@@ -57,9 +57,6 @@ export function compareClocks(
   return left < right ? -1 : 1;
 }
 
-export const newerClock = (left: Clock, right: Clock) =>
-  compareClocks(left, right) >= 0 ? left : right;
-
 // A local event at `wall` (the time the edit was seen). The clock never goes
 // backwards, even when the wall clock does or a remote clock ran ahead.
 export function tickClock(

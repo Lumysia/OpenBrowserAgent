@@ -14,7 +14,7 @@ export const CHOOSING_LOCATION_AFTER_MS = 1500;
 const URL_MAX_CHARS = 300;
 const HTML_EXTENSION = /^(x?html?|mhtml?|shtml|php|aspx?|jsp)$/;
 
-export const DOWNLOAD_WARNING = {
+const DOWNLOAD_WARNING = {
   // A web page (often a sign-in or error page) arrived instead of a file.
   htmlPage: "html_page",
 } as const;
@@ -70,7 +70,7 @@ const INTERRUPT_REASONS: Record<string, string> = {
   CRASH: "the browser crashed",
 };
 
-export function interruptReason(error: string) {
+function interruptReason(error: string) {
   return INTERRUPT_REASONS[error] || error.toLowerCase().replace(/_/g, " ");
 }
 

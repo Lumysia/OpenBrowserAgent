@@ -1,5 +1,6 @@
 import { storage } from "./storage";
 import { getBrowserApi } from "./browser-api";
+import { PAGE_SCRIPT } from "./page-scripts";
 import { normalizeColorScheme } from "./theme/themes";
 import { themeTokens } from "./theme/tokens";
 import type { AttachmentTab } from "./types";
@@ -78,7 +79,7 @@ export async function injectElementSelector(tabId: number, prompt: string) {
   });
   await api.scripting.executeScript({
     target: { tabId },
-    files: ["content-scripts/element-selector.js"],
+    files: [PAGE_SCRIPT.elementSelector],
   });
   return true;
 }

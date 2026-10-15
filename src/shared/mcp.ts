@@ -28,7 +28,7 @@ export type McpToolConfig = {
 };
 
 // Stored for a server saved without a name.
-export const MCP_SERVER_FALLBACK_NAME = "MCP Server";
+const MCP_SERVER_FALLBACK_NAME = "MCP Server";
 
 export function createMcpServerDraft(
   name = MCP_SERVER_FALLBACK_NAME,
@@ -136,7 +136,7 @@ function mergeMcpTools(existing: McpToolConfig[], next: McpToolConfig[]) {
   }));
 }
 
-export function normalizeMcpTools(value: unknown): McpToolConfig[] {
+function normalizeMcpTools(value: unknown): McpToolConfig[] {
   if (!Array.isArray(value)) return [];
   const tools: McpToolConfig[] = [];
   for (const item of value) {

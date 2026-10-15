@@ -28,7 +28,7 @@ import {
   type SyncWarning,
 } from "./state";
 
-export type Outcome = {
+type Outcome = {
   pushes: Map<string, SyncRecord>;
   // This device's changes the remote root already holds.
   accepted: Map<string, SyncRecord>;

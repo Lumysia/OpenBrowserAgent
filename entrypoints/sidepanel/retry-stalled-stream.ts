@@ -5,6 +5,7 @@ import {
   type SendMessagesBody,
   type SendMessagesRequest,
 } from "../../src/shared/types";
+import { STALLED_STREAM_RETRY } from "../../src/shared/model-notes";
 import type { ActiveStream } from "./sidepanel-menu-state";
 
 // Sends a stalled run again with the same agent, model and attachments.
@@ -34,8 +35,8 @@ export function retryStalledStream({
   const retryInstruction: ChatMessage = {
     id: crypto.randomUUID(),
     role: "user",
-    content:
-      "<internal_instruction>The previous response stream stalled. Continue from the last completed step, start a new paragraph, do not repeat completed work, and respond in the same language as the user's latest non-internal message.</internal_instruction>",
+    // The background marks it as an internal instruction.
+    content: STALLED_STREAM_RETRY,
     createdAt: Date.now(),
     metadata: { internalRetry: true },
   };

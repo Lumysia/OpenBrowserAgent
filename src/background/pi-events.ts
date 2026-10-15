@@ -1,5 +1,9 @@
 import type { AgentEvent } from "@earendil-works/pi-agent-core";
-import type { StopReason, Usage } from "@earendil-works/pi-ai";
+import type {
+  AssistantMessageEvent,
+  StopReason,
+  Usage,
+} from "@earendil-works/pi-ai";
 import {
   AI_TEXT_CHUNK_TYPE,
   CHAT_PART_STATE,
@@ -34,6 +38,13 @@ const STOP_REASONS: Partial<Record<StopReason, RunStopReason>> = {
   error: RUN_STOP_REASON.error,
 };
 
+type EventHandlers = {
+  [K in AgentEvent["type"]]?: (event: Extract<AgentEvent, { type: K }>) => void;
+};
+
+// A streamed change to one block of the reply's content.
+type ContentUpdate = Extract<AssistantMessageEvent, { contentIndex: number }>;
+
 // Translates Pi events into the sidepanel stream protocol.
 export function createEventHandler(
   post: (message: AiStreamResponse) => void,
@@ -61,6 +72,82 @@ export function createEventHandler(
   const consumed: QueuedUserMessage[] = [];
   const chunk = (value: Record<string, unknown>) =>
     post({ type: "chunk", chunk: value });
+
+  // Announce each call once. Argument snapshots per delta would pile up in
+  // the replay buffer; execute() sends the validated input.
+  const announceToolCall = (update: ContentUpdate) => {
+    const call = update.partial.content[update.contentIndex];
+    if (call?.type !== "toolCall" || !call.id || !call.name) return;
+    if (announcedCalls.has(call.id)) return;
+    announcedCalls.add(call.id);
+    chunk({
+      type: toolPartType(call.name),
+      toolCallId: call.id,
+      toolName: call.name,
+      state: CHAT_PART_STATE.inputStreaming,
+      step: turnId,
+    });
+  };
+
+  const textChunk = (update: ContentUpdate) => {
+    const id = `${turnId}:${update.contentIndex}`;
+    const [kind, phase] = update.type.split("_") as [
+      keyof typeof TEXT_CHUNKS,
+      string,
+    ];
+    const types = TEXT_CHUNKS[kind];
+    if (!types) return;
+    if (phase === "start") {
+      openParts.set(id, types.end);
+      chunk({ type: types.start, id });
+    } else if (phase === "delta" && "delta" in update) {
+      chunk({ type: types.delta, id, delta: update.delta });
+    } else if (phase === "end") {
+      openParts.delete(id);
+      chunk({ type: types.end, id });
+    }
+  };
+
+  const handlers: EventHandlers = {
+    message_start(event) {
+      if (isQueuedMessage(event.message)) consumed.push(event.message);
+      if (event.message.role === "assistant") turnId = crypto.randomUUID();
+    },
+    message_update(event) {
+      const update = event.assistantMessageEvent;
+      if (!("contentIndex" in update)) return;
+      if (update.type.startsWith("toolcall_")) announceToolCall(update);
+      else textChunk(update);
+    },
+    tool_execution_end(event) {
+      // Pi validation and unknown-tool errors never reach execute().
+      if (!event.isError || event.result.details?.output) return;
+      const error = (event.result.content || [])
+        .map((part: { text?: string }) => part.text || "")
+        .join("\n");
+      chunk({
+        type: toolPartType(event.toolName),
+        toolCallId: event.toolCallId,
+        toolName: event.toolName,
+        state: CHAT_PART_STATE.outputError,
+        output: { error },
+        result: { text: error },
+      });
+    },
+    message_end(event) {
+      if (event.message.role !== "assistant") return;
+      // A stream that fails mid-part never sends its end event.
+      for (const [id, type] of openParts) chunk({ type, id });
+      openParts.clear();
+      const stopReason = STOP_REASONS[event.message.stopReason];
+      if (pendingRequests > 0) {
+        pendingRequests--;
+        recordUsage(event.message.usage, stopReason);
+      } else if (stopReason && stopReason !== RUN_STOP_REASON.finished)
+        post({ type: "metrics", metrics: { stopReason } });
+    },
+  };
+
   return {
     get messageId() {
       return assistantId;
@@ -88,75 +175,9 @@ export function createEventHandler(
       });
     },
     handle(event: AgentEvent) {
-      if (event.type === "message_start") {
-        if (isQueuedMessage(event.message)) consumed.push(event.message);
-        if (event.message.role === "assistant") turnId = crypto.randomUUID();
-      }
-      if (event.type === "message_update") {
-        const update = event.assistantMessageEvent;
-        if (!("contentIndex" in update)) return;
-        if (update.type.startsWith("toolcall_")) {
-          // Announce each call once. Argument snapshots per delta would pile
-          // up in the replay buffer; execute() sends the validated input.
-          const call = update.partial.content[update.contentIndex];
-          if (call?.type !== "toolCall" || !call.id || !call.name) return;
-          if (announcedCalls.has(call.id)) return;
-          announcedCalls.add(call.id);
-          chunk({
-            type: toolPartType(call.name),
-            toolCallId: call.id,
-            toolName: call.name,
-            state: CHAT_PART_STATE.inputStreaming,
-            step: turnId,
-          });
-          return;
-        }
-        const id = `${turnId}:${update.contentIndex}`;
-        const [kind, phase] = update.type.split("_") as [
-          keyof typeof TEXT_CHUNKS,
-          string,
-        ];
-        const types = TEXT_CHUNKS[kind];
-        if (!types) return;
-        if (phase === "start") {
-          openParts.set(id, types.end);
-          chunk({ type: types.start, id });
-        } else if (phase === "delta" && "delta" in update) {
-          chunk({ type: types.delta, id, delta: update.delta });
-        } else if (phase === "end") {
-          openParts.delete(id);
-          chunk({ type: types.end, id });
-        }
-      }
-      if (
-        event.type === "tool_execution_end" &&
-        event.isError &&
-        !event.result.details?.output
-      ) {
-        // Pi validation and unknown-tool errors never reach execute().
-        const error = (event.result.content || [])
-          .map((part: { text?: string }) => part.text || "")
-          .join("\n");
-        chunk({
-          type: toolPartType(event.toolName),
-          toolCallId: event.toolCallId,
-          toolName: event.toolName,
-          state: CHAT_PART_STATE.outputError,
-          output: { error },
-          result: { text: error },
-        });
-      }
-      if (event.type === "message_end" && event.message.role === "assistant") {
-        // A stream that fails mid-part never sends its end event.
-        for (const [id, type] of openParts) chunk({ type, id });
-        openParts.clear();
-        const stopReason = STOP_REASONS[event.message.stopReason];
-        if (pendingRequests > 0) {
-          pendingRequests--;
-          recordUsage(event.message.usage, stopReason);
-        } else if (stopReason && stopReason !== RUN_STOP_REASON.finished)
-          post({ type: "metrics", metrics: { stopReason } });
-      }
+      const handler = handlers[event.type] as
+        ((event: AgentEvent) => void) | undefined;
+      handler?.(event);
     },
   };
 }

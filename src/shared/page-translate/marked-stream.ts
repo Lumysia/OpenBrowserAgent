@@ -12,7 +12,7 @@
 // paragraph. The parser reads a stream: an item is complete when the next
 // header arrives.
 
-export const END_MARKER = "[[end]]";
+const END_MARKER = "[[end]]";
 
 export function markItems(items: Array<{ id: number; text: string }>) {
   return [
@@ -24,7 +24,7 @@ export function markItems(items: Array<{ id: number; text: string }>) {
 const HEADER = /^\s*\[\[\s*(\d+|end)\s*\]\]\s*(.*)$/i;
 const FENCE = /^\s*```/;
 
-export type MarkedItem = { id: number; text: string };
+type MarkedItem = { id: number; text: string };
 
 export function createMarkedStreamParser() {
   let buffer = "";

@@ -10,7 +10,7 @@ const JOINING = /^\p{Ll}{1,3}$/u;
 // An initial or a short abbreviation, the only words ending in a full stop.
 const ABBREVIATION = /^\p{L}{1,3}\.$/u;
 // Capitalized words at most in one name.
-export const NAME_MAX_WORDS = 4;
+const NAME_MAX_WORDS = 4;
 
 // Whether the whole text is one name: one to four capitalized words, short
 // joining words between them, no sentence punctuation.

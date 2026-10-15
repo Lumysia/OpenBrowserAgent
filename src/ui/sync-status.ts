@@ -1,5 +1,5 @@
 import { formatDateTime } from "../shared/format";
-import { formatCount, type Messages } from "../shared/i18n";
+import { formatCount, languageOf, type Messages } from "../shared/i18n";
 import { SYNC_NOTES, type SyncStatus } from "../shared/sync/state";
 
 export type SyncTone =
@@ -32,7 +32,7 @@ export function describeSyncStatus(
       tone: "paused",
       label: t.sync.statePaused.replace(
         "{time}",
-        formatTime(status.pausedUntil),
+        formatTime(t, status.pausedUntil),
       ),
     };
   if (status?.error) return { tone: "error", label: t.sync.stateError };
@@ -46,9 +46,10 @@ export function describeSyncStatus(
   return { tone: "idle", label: t.sync.stateNeverSynced };
 }
 
-export function formatTime(value: number) {
+export function formatTime(t: Messages, value: number) {
   const today = new Date().toDateString() === new Date(value).toDateString();
   return formatDateTime(
+    languageOf(t),
     value,
     today
       ? { timeStyle: "medium" }

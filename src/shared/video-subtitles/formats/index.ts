@@ -4,15 +4,14 @@ import { looksLikeJson3, parseJson3 } from "./json3";
 import { looksLikeTtml, parseTtml } from "./ttml";
 import { looksLikeSrt, looksLikeWebVtt, parseSrt, parseWebVtt } from "./webvtt";
 
-export const CAPTION_FORMAT = {
+const CAPTION_FORMAT = {
   webvtt: "webvtt",
   srt: "srt",
   ttml: "ttml",
   json3: "json3",
 } as const;
 
-export type CaptionFormat =
-  (typeof CAPTION_FORMAT)[keyof typeof CAPTION_FORMAT];
+type CaptionFormat = (typeof CAPTION_FORMAT)[keyof typeof CAPTION_FORMAT];
 
 const FORMATS: Array<{
   format: CaptionFormat;

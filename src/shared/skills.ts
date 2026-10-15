@@ -81,7 +81,7 @@ export function replaceSkillEntryFile(
   return [entry, ...files];
 }
 
-export function getSkillEntryFile(skill: Skill) {
+function getSkillEntryFile(skill: Skill) {
   return skill.files?.find((file) => file.path === SKILL_ENTRY_PATH);
 }
 
@@ -212,7 +212,7 @@ export function copySkill(skill: Skill, name = skill.name): Skill {
 }
 
 // Characters of a skill's files together (capped at SKILL_MAX_CHARS).
-export const skillChars = (skill: Skill) =>
+const skillChars = (skill: Skill) =>
   skill.files.reduce((total, file) => total + file.content.length, 0);
 
 export const skillTooLarge = (skill: Skill) =>

@@ -2,9 +2,9 @@
 // snapshot rather than the live selection, which clicks and focus can change.
 import { editingHost } from "../shared/dom-vocabulary";
 
-export type TextControl = HTMLInputElement | HTMLTextAreaElement;
+type TextControl = HTMLInputElement | HTMLTextAreaElement;
 
-export type SelectionTarget =
+type SelectionTarget =
   | { kind: "page"; range: Range }
   | {
       kind: "control";
@@ -27,7 +27,7 @@ export type Point = { x: number; y: number };
 
 // Text around the selection, so an action can tell what a cut-off word or a
 // short phrase means. Read when an action runs, and sent only with it.
-export type SelectionContext = {
+type SelectionContext = {
   before: string;
   after: string;
   pageTitle?: string;

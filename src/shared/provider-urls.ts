@@ -1,7 +1,7 @@
 import { providerType, type ProviderId } from "./providers";
 
 // One spelling of an endpoint's base URL, for keys and for appending paths.
-export function normalizeBaseUrl(baseUrl: string) {
+function normalizeBaseUrl(baseUrl: string) {
   return baseUrl.trim().replace(/\/+$/, "");
 }
 

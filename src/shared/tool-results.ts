@@ -13,7 +13,7 @@ export const TOOL_OUTPUT_SOURCES = "_sources";
 // What a tool output says of an image moved to the chat's attachments, so
 // storage holds no inline data URL. Written by image generation and by
 // offloadToolOutputImages, read by the side panel.
-export type StoredToolImage = {
+type StoredToolImage = {
   imageAttachmentId: string;
   imageAttachmentName: string;
   imageAttachmentType: string;
@@ -73,7 +73,7 @@ export function parseToolResultText(text: string): ToolModelResult {
 // One model response of an assistant turn: its reasoning and text, then the
 // tool calls it made. Text after a call, or a call of another response
 // (see ChatPart.step), starts the next one.
-export type TurnStep = { reasoning: string; text: string; calls: ChatPart[] };
+type TurnStep = { reasoning: string; text: string; calls: ChatPart[] };
 
 export function turnSteps(parts: ChatPart[]): TurnStep[] {
   const steps: TurnStep[] = [];

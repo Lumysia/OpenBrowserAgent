@@ -15,7 +15,7 @@ import {
 import { FileIcon } from "./attachment-file-icon";
 import { formatBytes } from "../../src/shared/format";
 import { formatMessageTime } from "./format";
-import { useMessages } from "../../src/ui/messages";
+import { useLocale, useMessages } from "../../src/ui/messages";
 
 export function UserMessageActions({
   message,
@@ -35,6 +35,7 @@ export function UserMessageActions({
   resendDisabled?: boolean;
 }) {
   const t = useMessages();
+  const locale = useLocale();
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
   const hasMissingAttachments = missingAttachments.length > 0;
@@ -63,7 +64,7 @@ export function UserMessageActions({
 
   return (
     <div className="message-actions user-message-actions">
-      <span>{formatMessageTime(message.createdAt)}</span>
+      <span>{formatMessageTime(locale, message.createdAt)}</span>
       <IconTooltip label={copied ? t.common.copied : t.common.copy}>
         <Button
           variant="ghost"
@@ -137,7 +138,7 @@ export function UserMessageActions({
                 <TooltipTrigger asChild>
                   <span>
                     <strong>{attachment.name}</strong>
-                    <small>{formatBytes(attachment.size)}</small>
+                    <small>{formatBytes(locale, attachment.size)}</small>
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>{attachment.name}</TooltipContent>

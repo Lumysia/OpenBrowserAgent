@@ -11,12 +11,12 @@ import {
 // gets `instruction`, written in English like every other prompt, which says
 // how to do it and which language to reply in.
 
-export type SidePanelRequestTask = Extract<
+type SidePanelRequestTask = Extract<
   SidePanelHandoffRequest["task"],
   "summarizePage" | "searchWeb" | "summarizeLink"
 >;
 
-export type SidePanelRequest = { content: string; instruction: string };
+type SidePanelRequest = { content: string; instruction: string };
 
 const TITLE_CHARS = 200;
 

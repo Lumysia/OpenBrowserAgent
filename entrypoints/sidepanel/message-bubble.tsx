@@ -36,7 +36,7 @@ import {
 } from "./message-chips";
 import { selectedTextsFromMetadata } from "../../src/shared/selected-text";
 import { cn } from "../../src/ui/utils";
-import { useMessages } from "../../src/ui/messages";
+import { useLocale, useMessages } from "../../src/ui/messages";
 
 export function MessageBubble({
   message,
@@ -83,6 +83,7 @@ export function MessageBubble({
   onContinue?: () => void;
 }) {
   const t = useMessages();
+  const locale = useLocale();
   const skillNames = pickedSkillsFromMetadata(message.metadata)
     .map((skill) => skillDisplay(skill, t).name)
     .join(", ");
@@ -213,7 +214,7 @@ export function MessageBubble({
               </div>
             )}
             <span className="assistant-model-meta">
-              {[modelLabel, formatMessageTime(message.createdAt)]
+              {[modelLabel, formatMessageTime(locale, message.createdAt)]
                 .filter(Boolean)
                 .join(" · ")}
             </span>

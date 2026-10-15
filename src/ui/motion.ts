@@ -5,8 +5,7 @@ export const DURATION_TOKEN = {
   remove: "--duration-remove",
 } as const;
 
-export type DurationToken =
-  (typeof DURATION_TOKEN)[keyof typeof DURATION_TOKEN];
+type DurationToken = (typeof DURATION_TOKEN)[keyof typeof DURATION_TOKEN];
 
 // A duration token in milliseconds (0 when it is not set).
 export function cssDurationMs(

@@ -93,7 +93,7 @@ export function useChatActions({
         chat,
         message,
         partId,
-        forkLabel: t.sidepanel.forkTitleSuffix,
+        t,
         chats: summariesRef.current || [],
         loadChat,
         saveChats: (items) => saveChats(items),

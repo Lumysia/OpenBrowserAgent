@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { togglePageTranslation } from "../src/background/page-translate";
-import { PAGE_TOAST_SCRIPT } from "../src/shared/page-toast";
-import { PAGE_TRANSLATE_SCRIPT } from "../src/shared/page-translate/protocol";
+import { PAGE_SCRIPT } from "../src/shared/page-scripts";
 import { installChrome } from "./fake-chrome";
 
 // A tab whose page never answers; `scriptable`: whether the browser lets the
@@ -37,8 +36,8 @@ function installTab(scriptable: boolean) {
 test("a page script that doesn't start says so on the page", async () => {
   const { injected, badges } = installTab(true);
   await togglePageTranslation({ id: 7 } as chrome.tabs.Tab);
-  assert.deepEqual(injected[0], [PAGE_TRANSLATE_SCRIPT]);
-  assert.deepEqual(injected[1], [PAGE_TOAST_SCRIPT]);
+  assert.deepEqual(injected[0], [PAGE_SCRIPT.pageTranslate]);
+  assert.deepEqual(injected[1], [PAGE_SCRIPT.pageToast]);
   const [, message, theme, options] = injected[2] as unknown[];
   assert.equal(
     message,

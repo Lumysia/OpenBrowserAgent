@@ -54,7 +54,7 @@ export type EditOp = {
   value?: string;
 };
 
-export type EditResult = {
+type EditResult = {
   applied: number;
   inserted: string[];
   error?: string;

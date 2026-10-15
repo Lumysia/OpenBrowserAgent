@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { CONTEXT_MENU_ID } from "../src/shared/context-menu.ts";
-import { VIDEO_SUBTITLES_SCRIPT } from "../src/shared/video-subtitles/protocol.ts";
+import { PAGE_SCRIPT } from "../src/shared/page-scripts.ts";
 import { SUBTITLE_WINDOW } from "../src/shared/video-subtitles/schedule.ts";
 import {
   BROWSER_TEST_TIMEOUT,
@@ -35,7 +35,7 @@ test(
     });
     const { browser, url, clickMenuItem, options, fixture } = session;
     try {
-      await contentScriptsRegistered(options, VIDEO_SUBTITLES_SCRIPT.button);
+      await contentScriptsRegistered(options, PAGE_SCRIPT.videoButton);
 
       await t.test(
         "a <track>: from the menu, near the playhead first",

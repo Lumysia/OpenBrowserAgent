@@ -17,7 +17,7 @@ export const UI_STATE = {
   broken: "broken",
 } as const;
 
-export type UiState = (typeof UI_STATE)[keyof typeof UI_STATE];
+type UiState = (typeof UI_STATE)[keyof typeof UI_STATE];
 
 // The data-state for a flag: the state while it holds, nothing otherwise.
 export const stateWhen = (flag: unknown, state: UiState) =>

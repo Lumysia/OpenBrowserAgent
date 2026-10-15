@@ -10,7 +10,7 @@ import { storage } from "../shared/storage";
 import { USER_ERROR_CODE, UserError } from "../shared/user-errors";
 import { recordOf, trimmedString } from "../shared/values";
 
-export type BridgePing = {
+type BridgePing = {
   success: true;
   shell?: string;
   shellArgsPreview?: string[];

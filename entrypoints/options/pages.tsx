@@ -29,7 +29,7 @@ import { SyncPage } from "./sync-page";
 
 type OptionsPageId = keyof typeof OPTIONS_ROUTE;
 
-export type OptionsPage = {
+type OptionsPage = {
   id: OptionsPageId;
   route: string;
   hash: string;

@@ -2,7 +2,7 @@
 // colors; tokens.ts derives every color the UI uses from them, for light and
 // dark. Stored in `Preferences.accentColor`: ids are stored data, keep them.
 
-export const COLOR_SCHEMES = ["system", "light", "dark"] as const;
+const COLOR_SCHEMES = ["system", "light", "dark"] as const;
 export type ColorScheme = (typeof COLOR_SCHEMES)[number];
 export type ResolvedScheme = Exclude<ColorScheme, "system">;
 export const DEFAULT_COLOR_SCHEME: ColorScheme = "system";
@@ -23,8 +23,8 @@ export const PRIDE_THEMES = [
   "nonbinary",
   "ace",
 ] as const;
-export type AccentTheme = (typeof ACCENT_THEMES)[number];
-export type PrideTheme = (typeof PRIDE_THEMES)[number];
+type AccentTheme = (typeof ACCENT_THEMES)[number];
+type PrideTheme = (typeof PRIDE_THEMES)[number];
 export type ThemeId = AccentTheme | PrideTheme;
 export const DEFAULT_THEME: ThemeId = "pink";
 
@@ -131,8 +131,4 @@ export function normalizeColorScheme(value: unknown): ColorScheme {
   return (COLOR_SCHEMES as readonly unknown[]).includes(value)
     ? (value as ColorScheme)
     : DEFAULT_COLOR_SCHEME;
-}
-
-export function isPrideTheme(id: ThemeId): id is PrideTheme {
-  return (PRIDE_THEMES as readonly string[]).includes(id);
 }

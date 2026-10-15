@@ -13,6 +13,10 @@ import {
 } from "../entrypoints/sidepanel/send-message-plan";
 import { buildSidepanelContext } from "../entrypoints/sidepanel/sidepanel-context";
 import { getMessages } from "../src/shared/i18n";
+import {
+  internalInstruction,
+  STALLED_STREAM_RETRY,
+} from "../src/shared/model-notes";
 import { selectedTextsFromMetadata } from "../src/shared/selected-text";
 import type { Chat, SelectedText } from "../src/shared/types";
 
@@ -196,4 +200,19 @@ test("messages without selections, or with malformed ones, read as none", () => 
     context: "",
   });
   assert.equal("selectedTexts" in (userMessage.metadata || {}), false);
+});
+
+test("a stalled run's retry reaches the model as one internal instruction", () => {
+  const text = renderMessageText(
+    {
+      id: "retry",
+      role: "user",
+      content: STALLED_STREAM_RETRY,
+      createdAt: 1,
+      metadata: { internalRetry: true },
+    },
+    { latest: true, attachments: [], skills: [] },
+  );
+  assert.equal(text, internalInstruction(STALLED_STREAM_RETRY));
+  assert.equal(text.match(/<internal_instruction>/g)?.length, 1);
 });

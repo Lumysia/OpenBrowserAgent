@@ -6,7 +6,7 @@ import { THEMES } from "./theme/themes";
 // `themes.holidays.<id>`), and a short burst in `colors` on the first
 // message sent that day.
 
-export type HolidayId =
+type HolidayId =
   | "newYear"
   | "valentines"
   | "womensDay"
@@ -19,7 +19,7 @@ export type HolidayId =
   | "birthday";
 
 // `month` is 1-12. No `day`: the whole month; `to`: the last day of a range.
-export type DateRule = { month: number; day?: number; to?: number };
+type DateRule = { month: number; day?: number; to?: number };
 
 export type HolidayBadge =
   | {
@@ -110,7 +110,7 @@ export const HOLIDAYS: Holiday[] = [
 ];
 
 // Days of mourning: nothing festive, whatever else falls on them.
-export const QUIET_DAYS: DateRule[] = [
+const QUIET_DAYS: DateRule[] = [
   // Trans Day of Remembrance.
   { month: 11, day: 20 },
 ];

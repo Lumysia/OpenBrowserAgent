@@ -30,7 +30,7 @@ type QuickModel = {
 
 // The model to send a quick request with, and the thinking level to ask
 // for (Pi's `reasoning` option; none for "off").
-export type QuickThinking = { model: Model<Api>; level?: ThinkingLevel };
+type QuickThinking = { model: Model<Api>; level?: ThinkingLevel };
 
 type ThinkingFormat = NonNullable<OpenAICompletionsCompat["thinkingFormat"]>;
 

@@ -10,8 +10,6 @@ const SUBTITLE_KINDS = new Set(["subtitles", "captions", ""]);
 // How often cues added ahead of the playhead are looked for.
 const POLL_MS = 2_000;
 
-export type TextTrackSource = ReturnType<typeof createTextTrackSource>;
-
 export function createTextTrackSource(
   video: HTMLVideoElement,
   onChange: () => void,

@@ -64,7 +64,7 @@ export type Snapshot = {
   held: Set<string>;
 };
 
-export const emptySnapshot = (): Snapshot => ({
+const emptySnapshot = (): Snapshot => ({
   copies: new Map(),
   clocks: new Map(),
   held: new Set(),

@@ -2,7 +2,7 @@ import type { Api } from "@earendil-works/pi-ai";
 
 // A failed request, as the fallbacks in pi-provider.ts see it: the HTTP
 // status when known, and Pi's error text (which carries the response body).
-export type RequestRejection = { status?: number; message: string };
+type RequestRejection = { status?: number; message: string };
 
 // Statuses with which an endpoint refuses a request it cannot accept as
 // written. Rate limits, overload and server errors are not about a field.

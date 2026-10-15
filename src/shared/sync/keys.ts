@@ -12,7 +12,7 @@ import type { Keyring, Root, SyncRecord } from "./root";
 // passphrase is reported instead of saving garbage. Each device stores the
 // derived key, so the passphrase is asked once per device.
 
-export const PASSPHRASE_ITERATIONS = 600_000;
+const PASSPHRASE_ITERATIONS = 600_000;
 const SALT_BYTES = 16;
 const IV_BYTES = 12;
 const CHECK_TEXT = "openbrowseragent.sync.keys";

@@ -3,7 +3,6 @@ import { respondWith, type RuntimeReply } from "../../shared/runtime-messages";
 import {
   PAGE_TRANSLATE_MESSAGE,
   PAGE_TRANSLATE_PORT,
-  PAGE_TRANSLATE_SCRIPT,
   PAGE_TRANSLATE_TOAST_MS,
   type PageTranslateEvent,
   type PageTranslateRequest,
@@ -13,6 +12,7 @@ import {
   type PageTranslateView,
 } from "../../shared/page-translate/protocol";
 import { normalizePageTranslateSettings } from "../../shared/page-translate/settings";
+import { PAGE_SCRIPT } from "../../shared/page-scripts";
 import { storage } from "../../shared/storage";
 import { getBrowserApi } from "../../shared/browser-api";
 import { flashBadge, showPageNote } from "../page-feedback";
@@ -140,7 +140,7 @@ async function messagePage(
   const injected = await api.scripting
     .executeScript({
       target: { tabId, frameIds: [0] },
-      files: [PAGE_TRANSLATE_SCRIPT],
+      files: [PAGE_SCRIPT.pageTranslate],
     })
     .then(
       () => true,

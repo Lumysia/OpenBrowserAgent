@@ -20,13 +20,13 @@ export type OffscreenHtmlMarkdownRequest = {
   url: string;
 };
 
-export type OffscreenCreateBlobUrlRequest = {
+type OffscreenCreateBlobUrlRequest = {
   type: typeof OFFSCREEN_MESSAGE.createBlobUrl;
   base64: string;
   mimeType: string;
 };
 
-export type OffscreenRevokeBlobUrlRequest = {
+type OffscreenRevokeBlobUrlRequest = {
   type: typeof OFFSCREEN_MESSAGE.revokeBlobUrl;
   url: string;
 };
