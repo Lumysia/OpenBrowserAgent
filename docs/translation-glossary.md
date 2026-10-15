@@ -21,99 +21,101 @@ Strings live in `src/shared/locales/` (the main UI), `src/shared/locales/smart-b
 
 ## Core terms
 
-| English                        | 简体中文           | 繁體中文           | 日本語                         | 한국어                 |
-| ------------------------------ | ------------------ | ------------------ | ------------------------------ | ---------------------- |
-| chat                           | 对话               | 對話               | チャット                       | 채팅                   |
-| chat history                   | 对话历史           | 對話紀錄           | チャット履歴                   | 채팅 기록              |
-| agent                          | 智能体             | 智慧體             | エージェント                   | 에이전트               |
-| sub-agent                      | 子智能体           | 子智慧體           | サブエージェント               | 하위 에이전트          |
-| Browse / Ask (built-in agents) | 浏览 / 询问        | 瀏覽 / 詢問        | ブラウズ / 質問                | 탐색 / 질문            |
-| …-compatible (provider type)   | … 兼容             | … 相容             | … 互換                         | … 호환                 |
-| side panel                     | 侧边栏             | 側邊欄             | サイドパネル                   | 사이드 패널            |
-| smart bar                      | 智能工具栏         | 智慧工具列         | スマートバー                   | 스마트 바              |
-| model                          | 模型               | 模型               | モデル                         | 모델                   |
-| helper model                   | 辅助模型           | 輔助模型           | 補助モデル                     | 보조 모델              |
-| AI provider                    | AI 提供商          | AI 提供者          | AI プロバイダー                | AI 제공업체            |
-| API key                        | API Key            | API Key            | API キー                       | API 키                 |
-| base URL                       | Base URL           | Base URL           | ベース URL                     | Base URL               |
-| skill                          | 技能               | 技能               | スキル                         | 스킬                   |
-| tool                           | 工具               | 工具               | ツール                         | 도구                   |
-| MCP server                     | MCP 服务器         | MCP 伺服器         | MCP サーバー                   | MCP 서버               |
-| recommended (MCP servers)      | 推荐               | 推薦               | おすすめ                       | 추천                   |
-| request header                 | 请求头             | 請求標頭           | ヘッダー                       | 헤더                   |
-| local execution bridge         | 本地执行桥         | 本機執行橋         | ローカル実行ブリッジ           | 로컬 실행 브리지       |
-| native messaging host          | 原生消息主机       | 原生訊息主機       | ネイティブメッセージングホスト | 네이티브 메시징 호스트 |
-| workspace                      | 工作区             | 工作區             | ワークスペース                 | 워크스페이스           |
-| memory                         | 记忆               | 記憶               | メモリ                         | 메모리                 |
-| sync                           | 同步               | 同步               | 同期                           | 동기화                 |
-| attachment                     | 附件               | 附件               | 添付ファイル                   | 첨부 파일              |
-| device (a synced browser)      | 设备               | 裝置               | デバイス                       | 기기                   |
-| sync passphrase                | 同步口令           | 同步密語           | 同期パスフレーズ               | 동기화 암호 문구       |
-| Keys (sync group)              | 密钥               | 金鑰               | キー                           | 키                     |
-| Files (sync group)             | 文件               | 檔案               | ファイル                       | 파일                   |
-| screenshot                     | 截图               | 截圖               | スクリーンショット             | 스크린샷               |
-| fork (a chat)                  | 分叉               | 分叉               | 分岐                           | 분기                   |
-| built-in                       | 内置               | 內建               | 組み込み                       | 내장                   |
-| customize (a built-in skill)   | 自定义             | 自訂               | カスタマイズ                   | 사용자 지정            |
-| skill use: Auto / Manual / Off | 自动 / 手动 / 关闭 | 自動 / 手動 / 關閉 | 自動 / 手動 / オフ             | 자동 / 수동 / 끔       |
-| footnote                       | 脚注               | 註腳               | 脚注                           | 각주                   |
-| load (an image from an answer) | 加载               | 載入               | 読み込む                       | 불러오기               |
-| restore (deleted synced items) | 恢复               | 還原               | 復元                           | 복원                   |
-| merge (synced changes)         | 合并               | 合併               | 統合                           | 병합                   |
-| browser profile                | 浏览器配置文件     | 瀏覽器設定檔       | ブラウザー プロファイル        | 브라우저 프로필        |
-| voice (reading aloud)          | 语音               | 語音               | 音声                           | 음성                   |
-| code (the agent runs)          | 代码               | 程式碼             | コード                         | 코드                   |
-| sandbox (where code runs)      | 沙盒               | 沙盒               | サンドボックス                 | 샌드박스               |
-| output limit (of a model)      | 输出上限           | 輸出上限           | 出力の上限                     | 출력 한도              |
-| Continue (a cut-off response)  | 继续               | 繼續               | 続ける                         | 계속하기               |
-| diagram (Mermaid)              | 图表               | 圖表               | 図                             | 다이어그램             |
+| English                          | 简体中文           | 繁體中文           | 日本語                         | 한국어                 |
+| -------------------------------- | ------------------ | ------------------ | ------------------------------ | ---------------------- |
+| chat                             | 对话               | 對話               | チャット                       | 채팅                   |
+| chat history                     | 对话历史           | 對話紀錄           | チャット履歴                   | 채팅 기록              |
+| agent                            | 智能体             | 智慧體             | エージェント                   | 에이전트               |
+| sub-agent                        | 子智能体           | 子智慧體           | サブエージェント               | 하위 에이전트          |
+| Browse / Ask (built-in agents)   | 浏览 / 询问        | 瀏覽 / 詢問        | ブラウズ / 質問                | 탐색 / 질문            |
+| …-compatible (provider type)     | … 兼容             | … 相容             | … 互換                         | … 호환                 |
+| side panel                       | 侧边栏             | 側邊欄             | サイドパネル                   | 사이드 패널            |
+| smart bar                        | 智能工具栏         | 智慧工具列         | スマートバー                   | 스마트 바              |
+| model                            | 模型               | 模型               | モデル                         | 모델                   |
+| helper model                     | 辅助模型           | 輔助模型           | 補助モデル                     | 보조 모델              |
+| AI provider                      | AI 提供商          | AI 提供者          | AI プロバイダー                | AI 제공업체            |
+| API key                          | API Key            | API Key            | API キー                       | API 키                 |
+| base URL                         | Base URL           | Base URL           | ベース URL                     | Base URL               |
+| skill                            | 技能               | 技能               | スキル                         | 스킬                   |
+| tool                             | 工具               | 工具               | ツール                         | 도구                   |
+| MCP server                       | MCP 服务器         | MCP 伺服器         | MCP サーバー                   | MCP 서버               |
+| recommended (MCP servers)        | 推荐               | 推薦               | おすすめ                       | 추천                   |
+| request header                   | 请求头             | 請求標頭           | ヘッダー                       | 헤더                   |
+| local execution bridge           | 本地执行桥         | 本機執行橋         | ローカル実行ブリッジ           | 로컬 실행 브리지       |
+| native messaging host            | 原生消息主机       | 原生訊息主機       | ネイティブメッセージングホスト | 네이티브 메시징 호스트 |
+| workspace                        | 工作区             | 工作區             | ワークスペース                 | 워크스페이스           |
+| memory                           | 记忆               | 記憶               | メモリ                         | 메모리                 |
+| sync                             | 同步               | 同步               | 同期                           | 동기화                 |
+| attachment                       | 附件               | 附件               | 添付ファイル                   | 첨부 파일              |
+| device (a synced browser)        | 设备               | 裝置               | デバイス                       | 기기                   |
+| sync passphrase                  | 同步口令           | 同步密語           | 同期パスフレーズ               | 동기화 암호 문구       |
+| sync code (joins another device) | 同步码             | 同步碼             | 同期コード                     | 동기화 코드            |
+| Keys (sync group)                | 密钥               | 金鑰               | キー                           | 키                     |
+| Files (sync group)               | 文件               | 檔案               | ファイル                       | 파일                   |
+| screenshot                       | 截图               | 截圖               | スクリーンショット             | 스크린샷               |
+| fork (a chat)                    | 分叉               | 分叉               | 分岐                           | 분기                   |
+| built-in                         | 内置               | 內建               | 組み込み                       | 내장                   |
+| customize (a built-in skill)     | 自定义             | 自訂               | カスタマイズ                   | 사용자 지정            |
+| skill use: Auto / Manual / Off   | 自动 / 手动 / 关闭 | 自動 / 手動 / 關閉 | 自動 / 手動 / オフ             | 자동 / 수동 / 끔       |
+| footnote                         | 脚注               | 註腳               | 脚注                           | 각주                   |
+| load (an image from an answer)   | 加载               | 載入               | 読み込む                       | 불러오기               |
+| restore (deleted synced items)   | 恢复               | 還原               | 復元                           | 복원                   |
+| merge (synced changes)           | 合并               | 合併               | 統合                           | 병합                   |
+| browser profile                  | 浏览器配置文件     | 瀏覽器設定檔       | ブラウザー プロファイル        | 브라우저 프로필        |
+| voice (reading aloud)            | 语音               | 語音               | 音声                           | 음성                   |
+| code (the agent runs)            | 代码               | 程式碼             | コード                         | 코드                   |
+| sandbox (where code runs)        | 沙盒               | 沙盒               | サンドボックス                 | 샌드박스               |
+| output limit (of a model)        | 输出上限           | 輸出上限           | 出力の上限                     | 출력 한도              |
+| Continue (a cut-off response)    | 继续               | 繼續               | 続ける                         | 계속하기               |
+| diagram (Mermaid)                | 图表               | 圖表               | 図                             | 다이어그램             |
 
-| English                        | Français                          | Deutsch                     | Español                               | Português (Brasil)               |
-| ------------------------------ | --------------------------------- | --------------------------- | ------------------------------------- | -------------------------------- |
-| chat                           | discussion                        | Chat                        | chat                                  | conversa                         |
-| chat history                   | historique des discussions        | Chatverlauf                 | historial de chats                    | histórico de conversas           |
-| agent                          | agent                             | Agent                       | agente                                | agente                           |
-| sub-agent                      | sous-agent                        | Subagent                    | subagente                             | subagente                        |
-| Browse / Ask (built-in agents) | Naviguer / Demander               | Browsen / Fragen stellen    | Navegar / Preguntar                   | Navegar / Perguntar              |
-| …-compatible (provider type)   | Compatible …                      | …-kompatibel                | Compatible con …                      | Compatível com …                 |
-| side panel                     | panneau latéral                   | Seitenleiste                | panel lateral                         | painel lateral                   |
-| smart bar                      | barre intelligente                | Smart Bar                   | barra inteligente                     | barra inteligente                |
-| model                          | modèle                            | Modell                      | modelo                                | modelo                           |
-| helper model                   | modèle auxiliaire                 | Hilfsmodell                 | modelo auxiliar                       | modelo auxiliar                  |
-| AI provider                    | fournisseur d’IA                  | KI-Anbieter                 | proveedor de IA                       | provedor de IA                   |
-| API key                        | clé API                           | API-Schlüssel               | clave API                             | chave de API                     |
-| base URL                       | URL de base                       | Basis-URL                   | URL base                              | URL base                         |
-| skill                          | compétence                        | Skill                       | habilidad                             | habilidade                       |
-| tool                           | outil                             | Tool                        | herramienta                           | ferramenta                       |
-| MCP server                     | serveur MCP                       | MCP-Server                  | servidor MCP                          | servidor MCP                     |
-| recommended (MCP servers)      | recommandé                        | empfohlen                   | recomendado                           | recomendado                      |
-| request header                 | en-tête                           | Header                      | cabecera                              | cabeçalho                        |
-| local execution bridge         | pont d’exécution local            | lokale Ausführungs-Bridge   | puente de ejecución local             | ponte de execução local          |
-| native messaging host          | hôte de messagerie native         | Native-Messaging-Host       | host de mensajería nativa             | host de mensagens nativas        |
-| workspace                      | espace de travail                 | Arbeitsbereich              | espacio de trabajo                    | espaço de trabalho               |
-| memory                         | mémoire                           | Gedächtnis                  | memoria                               | memória                          |
-| sync                           | synchronisation                   | Synchronisierung            | sincronización                        | sincronização                    |
-| attachment                     | pièce jointe                      | Anhang                      | adjunto                               | anexo                            |
-| device (a synced browser)      | appareil                          | Gerät                       | dispositivo                           | dispositivo                      |
-| sync passphrase                | phrase secrète de synchronisation | Sync-Passphrase             | frase de contraseña de sincronización | frase secreta de sincronização   |
-| Keys (sync group)              | Clés                              | Schlüssel                   | Claves                                | Chaves                           |
-| Files (sync group)             | Fichiers                          | Dateien                     | Archivos                              | Arquivos                         |
-| screenshot                     | capture d’écran                   | Screenshot                  | captura de pantalla                   | captura de tela                  |
-| fork (a chat)                  | créer une branche                 | verzweigen                  | bifurcar                              | ramificar                        |
-| built-in                       | intégré                           | integriert                  | integrado                             | integrado                        |
-| customize (a built-in skill)   | personnaliser                     | anpassen                    | personalizar                          | personalizar                     |
-| skill use: Auto / Manual / Off | Auto / Manuelle / Désactivée      | Automatisch / Manuell / Aus | Automático / Manual / Desactivada     | Automático / Manual / Desativada |
-| footnote                       | note de bas de page               | Fußnote                     | nota al pie                           | nota de rodapé                   |
-| load (an image from an answer) | charger                           | laden                       | cargar                                | carregar                         |
-| restore (deleted synced items) | restaurer                         | wiederherstellen            | restaurar                             | restaurar                        |
-| merge (synced changes)         | fusionner                         | zusammenführen              | combinar                              | mesclar                          |
-| browser profile                | profil de navigateur              | Browserprofil               | perfil de navegador                   | perfil de navegador              |
-| voice (reading aloud)          | voix                              | Stimme                      | voz                                   | voz                              |
-| code (the agent runs)          | code                              | Code                        | código                                | código                           |
-| sandbox (where code runs)      | bac à sable                       | Sandbox                     | entorno aislado                       | sandbox                          |
-| output limit (of a model)      | limite de sortie                  | Ausgabelimit                | límite de salida                      | limite de saída                  |
-| Continue (a cut-off response)  | Continuer                         | Fortsetzen                  | Continuar                             | Continuar                        |
-| diagram (Mermaid)              | diagramme                         | Diagramm                    | diagrama                              | diagrama                         |
+| English                          | Français                          | Deutsch                     | Español                               | Português (Brasil)               |
+| -------------------------------- | --------------------------------- | --------------------------- | ------------------------------------- | -------------------------------- |
+| chat                             | discussion                        | Chat                        | chat                                  | conversa                         |
+| chat history                     | historique des discussions        | Chatverlauf                 | historial de chats                    | histórico de conversas           |
+| agent                            | agent                             | Agent                       | agente                                | agente                           |
+| sub-agent                        | sous-agent                        | Subagent                    | subagente                             | subagente                        |
+| Browse / Ask (built-in agents)   | Naviguer / Demander               | Browsen / Fragen stellen    | Navegar / Preguntar                   | Navegar / Perguntar              |
+| …-compatible (provider type)     | Compatible …                      | …-kompatibel                | Compatible con …                      | Compatível com …                 |
+| side panel                       | panneau latéral                   | Seitenleiste                | panel lateral                         | painel lateral                   |
+| smart bar                        | barre intelligente                | Smart Bar                   | barra inteligente                     | barra inteligente                |
+| model                            | modèle                            | Modell                      | modelo                                | modelo                           |
+| helper model                     | modèle auxiliaire                 | Hilfsmodell                 | modelo auxiliar                       | modelo auxiliar                  |
+| AI provider                      | fournisseur d’IA                  | KI-Anbieter                 | proveedor de IA                       | provedor de IA                   |
+| API key                          | clé API                           | API-Schlüssel               | clave API                             | chave de API                     |
+| base URL                         | URL de base                       | Basis-URL                   | URL base                              | URL base                         |
+| skill                            | compétence                        | Skill                       | habilidad                             | habilidade                       |
+| tool                             | outil                             | Tool                        | herramienta                           | ferramenta                       |
+| MCP server                       | serveur MCP                       | MCP-Server                  | servidor MCP                          | servidor MCP                     |
+| recommended (MCP servers)        | recommandé                        | empfohlen                   | recomendado                           | recomendado                      |
+| request header                   | en-tête                           | Header                      | cabecera                              | cabeçalho                        |
+| local execution bridge           | pont d’exécution local            | lokale Ausführungs-Bridge   | puente de ejecución local             | ponte de execução local          |
+| native messaging host            | hôte de messagerie native         | Native-Messaging-Host       | host de mensajería nativa             | host de mensagens nativas        |
+| workspace                        | espace de travail                 | Arbeitsbereich              | espacio de trabajo                    | espaço de trabalho               |
+| memory                           | mémoire                           | Gedächtnis                  | memoria                               | memória                          |
+| sync                             | synchronisation                   | Synchronisierung            | sincronización                        | sincronização                    |
+| attachment                       | pièce jointe                      | Anhang                      | adjunto                               | anexo                            |
+| device (a synced browser)        | appareil                          | Gerät                       | dispositivo                           | dispositivo                      |
+| sync passphrase                  | phrase secrète de synchronisation | Sync-Passphrase             | frase de contraseña de sincronización | frase secreta de sincronização   |
+| sync code (joins another device) | code de synchronisation           | Sync-Code                   | código de sincronización              | código de sincronização          |
+| Keys (sync group)                | Clés                              | Schlüssel                   | Claves                                | Chaves                           |
+| Files (sync group)               | Fichiers                          | Dateien                     | Archivos                              | Arquivos                         |
+| screenshot                       | capture d’écran                   | Screenshot                  | captura de pantalla                   | captura de tela                  |
+| fork (a chat)                    | créer une branche                 | verzweigen                  | bifurcar                              | ramificar                        |
+| built-in                         | intégré                           | integriert                  | integrado                             | integrado                        |
+| customize (a built-in skill)     | personnaliser                     | anpassen                    | personalizar                          | personalizar                     |
+| skill use: Auto / Manual / Off   | Auto / Manuelle / Désactivée      | Automatisch / Manuell / Aus | Automático / Manual / Desactivada     | Automático / Manual / Desativada |
+| footnote                         | note de bas de page               | Fußnote                     | nota al pie                           | nota de rodapé                   |
+| load (an image from an answer)   | charger                           | laden                       | cargar                                | carregar                         |
+| restore (deleted synced items)   | restaurer                         | wiederherstellen            | restaurar                             | restaurar                        |
+| merge (synced changes)           | fusionner                         | zusammenführen              | combinar                              | mesclar                          |
+| browser profile                  | profil de navigateur              | Browserprofil               | perfil de navegador                   | perfil de navegador              |
+| voice (reading aloud)            | voix                              | Stimme                      | voz                                   | voz                              |
+| code (the agent runs)            | code                              | Code                        | código                                | código                           |
+| sandbox (where code runs)        | bac à sable                       | Sandbox                     | entorno aislado                       | sandbox                          |
+| output limit (of a model)        | limite de sortie                  | Ausgabelimit                | límite de salida                      | limite de saída                  |
+| Continue (a cut-off response)    | Continuer                         | Fortsetzen                  | Continuar                             | Continuar                        |
+| diagram (Mermaid)                | diagramme                         | Diagramm                    | diagrama                              | diagrama                         |
 
 The AI provider form's **thinking switch** chooses how the smart bar and page translation ask models to skip thinking: 思考开关 / 思考開關 / 思考スイッチ / 생각 스위치 / Interrupteur de réflexion / Denkschalter / Interruptor de pensamiento / Chave de pensamento. "Thinking" here is the same idea as the smart bar's "Thinking…" status. Its options keep the request field in parentheses untranslated (`enable_thinking`, `reasoning_effort`), and "Reasoning effort" uses the composer's term.
 

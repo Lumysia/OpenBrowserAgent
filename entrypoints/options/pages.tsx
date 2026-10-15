@@ -10,6 +10,7 @@ import {
   Plug,
   Server,
   SlidersHorizontal,
+  Sparkles,
   TerminalSquare,
   type LucideIcon,
 } from "lucide-react";
@@ -26,6 +27,7 @@ import { ProvidersPage } from "./providers-page";
 import { SkillsPage } from "./skills-page";
 import { SmartBarPage } from "./smart-bar-page";
 import { SyncPage } from "./sync-page";
+import { WelcomePage } from "./welcome-page";
 
 type OptionsPageId = keyof typeof OPTIONS_ROUTE;
 
@@ -36,11 +38,13 @@ type OptionsPage = {
   icon: LucideIcon;
   title: (t: Messages) => string;
   Page: ComponentType;
+  // Reached by link only, not listed in the sidebar.
+  hidden?: boolean;
 };
 
 const PAGES: Record<
   OptionsPageId,
-  Pick<OptionsPage, "icon" | "title" | "Page">
+  Pick<OptionsPage, "icon" | "title" | "Page" | "hidden">
 > = {
   general: {
     icon: SlidersHorizontal,
@@ -77,6 +81,12 @@ const PAGES: Record<
     Page: PageTranslatePage,
   },
   debug: { icon: Bug, title: (t) => t.options.debug, Page: DebugPage },
+  welcome: {
+    icon: Sparkles,
+    title: (t) => t.setup.welcomeTitle,
+    Page: WelcomePage,
+    hidden: true,
+  },
 };
 
 // The settings pages, in OPTIONS_ROUTE's order (the sidebar's). The first

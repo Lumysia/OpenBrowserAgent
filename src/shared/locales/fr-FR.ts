@@ -7,6 +7,7 @@ import { downloadsFrFR } from "./downloads/fr-FR";
 import { smartBarFrFR } from "./smart-bar/fr-FR";
 import { syncFrFR } from "./sync/fr-FR";
 import { themesFrFR } from "./themes/fr-FR";
+import { setupFrFR } from "./setup/fr-FR";
 import type { LocaleMessages } from "./en-US";
 
 export const frFR: LocaleMessages = {
@@ -33,36 +34,7 @@ export const frFR: LocaleMessages = {
   },
   words: { newChat: "Nouvelle discussion", agent: "Naviguer", ask: "Demander" },
   sidepanel: {
-    connectProviderTitle: "Configurer OpenBrowserAgent",
-    connectProviderDescription:
-      "Choisissez la langue, activez la synchronisation si besoin, puis ajoutez un fournisseur d’IA et un modèle.",
     addProvider: "Ajouter un fournisseur d’IA",
-    cloudSyncConnect: "Connecter et synchroniser",
-    cloudSyncTesting: "Connexion…",
-    cloudSyncPulling: "Vérification de la synchronisation cloud…",
-    cloudSyncDescription:
-      "Utilisez la synchronisation cloud pour reprendre la configuration d’un autre appareil ou enregistrer dans le cloud celle de cet appareil.",
-    cloudSyncError:
-      "Échec du test de synchronisation cloud. Vérifiez le backend ou démarrez en local.",
-    cloudSyncSynced:
-      "La synchronisation cloud est prête. Configurez ensuite un fournisseur d’IA.",
-    cloudSyncSyncedButton: "Synchronisé",
-    startLocally: "Démarrer en local",
-    localSetupHint:
-      "Les paramètres sont ouverts. Ajoutez-y un fournisseur d’IA et un modèle, puis revenez ici pour continuer.",
-    bootstrapStepSyncTitle: "Backend de synchronisation (facultatif)",
-    syncConfigCodeTab: "Coller un code",
-    syncManualTab: "Configuration manuelle",
-    syncConfigCode: "Code de configuration de synchronisation",
-    syncConfigCodeDescription: "Collez un code copié depuis un autre appareil.",
-    syncConfigCodeInvalid:
-      "Code de configuration de synchronisation invalide. Vérifiez le code puis réessayez.",
-    bootstrapStepProviderTitle: "Ajouter un fournisseur d’IA et un modèle",
-    bootstrapStepProviderDescription:
-      "Ouvrez les paramètres pour ajouter un fournisseur d’IA, ajouter un modèle et le tester.",
-    bootstrapStepTaskTitle: "Envoyer votre première tâche",
-    bootstrapStepTaskDescription:
-      "Une fois que le modèle a répondu correctement, revenez ici et demandez à OpenBrowserAgent de naviguer ou de résumer.",
     chatHistory: "Historique des discussions",
     backToChat: "Retour à la discussion",
     exportChatOpenAi: "Exporter la discussion en JSON OpenAI",
@@ -646,4 +618,5 @@ export const frFR: LocaleMessages = {
   themes: themesFrFR,
   display: displayFrFR,
   pageTranslate: pageTranslateFrFR,
+  setup: setupFrFR,
 };

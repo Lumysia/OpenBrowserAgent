@@ -7,6 +7,7 @@ import { downloadsZhTW } from "./downloads/zh-TW";
 import { smartBarZhTW } from "./smart-bar/zh-TW";
 import { syncZhTW } from "./sync/zh-TW";
 import { themesZhTW } from "./themes/zh-TW";
+import { setupZhTW } from "./setup/zh-TW";
 import type { LocaleMessages } from "./en-US";
 
 export const zhTW: LocaleMessages = {
@@ -33,33 +34,7 @@ export const zhTW: LocaleMessages = {
   },
   words: { newChat: "新對話", agent: "瀏覽", ask: "詢問" },
   sidepanel: {
-    connectProviderTitle: "初始化 OpenBrowserAgent",
-    connectProviderDescription:
-      "選擇介面語言，視需要設定同步，然後新增 AI 提供者與模型即可開始。",
     addProvider: "新增 AI 提供者",
-    cloudSyncConnect: "連線並同步",
-    cloudSyncTesting: "正在連線…",
-    cloudSyncPulling: "正在檢查雲端同步…",
-    cloudSyncDescription:
-      "可從雲端拉取其他裝置的設定，也可以把目前裝置的新設定儲存到雲端。",
-    cloudSyncError: "雲端同步測試失敗。請檢查後端，或選擇「從本機開始」。",
-    cloudSyncSynced: "雲端同步已就緒。接下來新增 AI 提供者和模型。",
-    cloudSyncSyncedButton: "已同步",
-    startLocally: "從本機開始",
-    localSetupHint:
-      "設定頁已開啟。請在那裡新增 AI 提供者和模型，然後回到這裡繼續。",
-    bootstrapStepSyncTitle: "同步後端（選用）",
-    syncConfigCodeTab: "貼上設定碼",
-    syncManualTab: "手動設定",
-    syncConfigCode: "同步設定碼",
-    syncConfigCodeDescription: "貼上從另一台裝置複製的設定碼。",
-    syncConfigCodeInvalid: "設定碼無效，請檢查後再試一次。",
-    bootstrapStepProviderTitle: "新增 AI 提供者和模型",
-    bootstrapStepProviderDescription:
-      "開啟設定頁，新增 AI 提供者、新增模型並測試是否可用。",
-    bootstrapStepTaskTitle: "傳送第一個任務",
-    bootstrapStepTaskDescription:
-      "模型測試通過後回到這裡，讓 OpenBrowserAgent 瀏覽、摘要或執行任務。",
     chatHistory: "對話紀錄",
     backToChat: "返回對話",
     exportChatOpenAi: "將對話匯出為 OpenAI JSON",
@@ -544,4 +519,5 @@ export const zhTW: LocaleMessages = {
   themes: themesZhTW,
   display: displayZhTW,
   pageTranslate: pageTranslateZhTW,
+  setup: setupZhTW,
 };

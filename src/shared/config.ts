@@ -149,6 +149,8 @@ export const OPTIONS_ROUTE = {
   contextMenu: "/context-menu",
   pageTranslate: "/page-translation",
   debug: "/debug",
+  // First-run setup, opened on install; not in the sidebar.
+  welcome: "/welcome",
 } as const;
 
 // The same routes as location hashes ("#/agents").

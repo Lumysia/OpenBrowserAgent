@@ -37,16 +37,18 @@ export function OptionsApp() {
               </p>
             </div>
             <nav className="stack">
-              {OPTIONS_PAGES.map(({ id, hash, icon: Icon, title }) => (
-                <a
-                  key={id}
-                  className={cn("nav-link", id === page.id && "active")}
-                  href={hash}
-                >
-                  <Icon size={16} />
-                  {title(t)}
-                </a>
-              ))}
+              {OPTIONS_PAGES.filter(({ hidden }) => !hidden).map(
+                ({ id, hash, icon: Icon, title }) => (
+                  <a
+                    key={id}
+                    className={cn("nav-link", id === page.id && "active")}
+                    href={hash}
+                  >
+                    <Icon size={16} />
+                    {title(t)}
+                  </a>
+                ),
+              )}
               <a
                 className="nav-link"
                 href={REPO_URL}

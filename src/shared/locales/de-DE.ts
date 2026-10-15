@@ -7,6 +7,7 @@ import { downloadsDeDE } from "./downloads/de-DE";
 import { smartBarDeDE } from "./smart-bar/de-DE";
 import { syncDeDE } from "./sync/de-DE";
 import { themesDeDE } from "./themes/de-DE";
+import { setupDeDE } from "./setup/de-DE";
 import type { LocaleMessages } from "./en-US";
 
 export const deDE: LocaleMessages = {
@@ -33,37 +34,7 @@ export const deDE: LocaleMessages = {
   },
   words: { newChat: "Neuer Chat", agent: "Browsen", ask: "Fragen stellen" },
   sidepanel: {
-    connectProviderTitle: "OpenBrowserAgent einrichten",
-    connectProviderDescription:
-      "Wählen Sie die Sprache, aktivieren Sie optional die Synchronisierung und fügen Sie dann, sobald Sie so weit sind, einen KI-Anbieter und ein Modell hinzu.",
     addProvider: "KI-Anbieter hinzufügen",
-    cloudSyncConnect: "Verbinden und synchronisieren",
-    cloudSyncTesting: "Verbindung wird hergestellt…",
-    cloudSyncPulling: "Cloud-Synchronisierung wird geprüft…",
-    cloudSyncDescription:
-      "Nutzen Sie die Cloud-Synchronisierung, um die Einrichtung eines anderen Geräts zu übernehmen oder die neue Einrichtung dieses Geräts in der Cloud zu speichern.",
-    cloudSyncError:
-      "Test der Cloud-Synchronisierung fehlgeschlagen. Prüfen Sie das Backend oder starten Sie lokal.",
-    cloudSyncSynced:
-      "Die Cloud-Synchronisierung ist bereit. Richten Sie als Nächstes einen KI-Anbieter ein.",
-    cloudSyncSyncedButton: "Synchronisiert",
-    startLocally: "Lokal starten",
-    localSetupHint:
-      "Die Einstellungen sind geöffnet. Fügen Sie dort KI-Anbieter und Modell hinzu und kehren Sie dann hierher zurück.",
-    bootstrapStepSyncTitle: "Sync-Backend (optional)",
-    syncConfigCodeTab: "Code einfügen",
-    syncManualTab: "Manuell einrichten",
-    syncConfigCode: "Sync-Konfigurationscode",
-    syncConfigCodeDescription:
-      "Fügen Sie einen von einem anderen Gerät kopierten Code ein.",
-    syncConfigCodeInvalid:
-      "Ungültiger Sync-Konfigurationscode. Prüfen Sie den Code und versuchen Sie es erneut.",
-    bootstrapStepProviderTitle: "KI-Anbieter und Modell hinzufügen",
-    bootstrapStepProviderDescription:
-      "Öffnen Sie die Einstellungen, um KI-Anbieter und Modell hinzuzufügen und zu testen.",
-    bootstrapStepTaskTitle: "Erste Aufgabe senden",
-    bootstrapStepTaskDescription:
-      "Sobald ein Modell erfolgreich antwortet, kehren Sie hierher zurück und bitten Sie OpenBrowserAgent, im Web zu browsen oder etwas zusammenzufassen.",
     chatHistory: "Chatverlauf",
     backToChat: "Zurück zum Chat",
     exportChatOpenAi: "Chat als OpenAI-JSON exportieren",
@@ -651,4 +622,5 @@ export const deDE: LocaleMessages = {
   themes: themesDeDE,
   display: displayDeDE,
   pageTranslate: pageTranslateDeDE,
+  setup: setupDeDE,
 };

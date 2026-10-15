@@ -1,0 +1,84 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { OPTIONS_HASH } from "../src/shared/config.ts";
+import { enUS } from "../src/shared/locales/en-US.ts";
+import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
+import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
+import { clickElement } from "./cdp-input.mjs";
+import { launchExtension, poll } from "./chromium.mjs";
+
+// First run: installing opens the setup page with the AI provider first, and
+// the side panel's setup card offers adding a provider, with joining sync
+// behind a link.
+
+const t = enUS;
+
+const texts = (page, selector) =>
+  page.call(
+    (selector) =>
+      [...document.querySelectorAll(selector)].map((element) =>
+        element.textContent.trim(),
+      ),
+    selector,
+  );
+
+test(
+  "first run: the setup page opens on install; the side panel card",
+  { timeout: BROWSER_TEST_TIMEOUT },
+  async () => {
+    const browser = await launchExtension({ keepWelcome: true });
+    try {
+      const welcomeUrl = `chrome-extension://${browser.id}/options.html${OPTIONS_HASH.welcome}`;
+      await poll(async () =>
+        (await browser.targets()).some((target) => target.url === welcomeUrl),
+      );
+      const setup = await browser.attach((url) => url === welcomeUrl);
+      await setup.call(
+        (key) => chrome.storage.local.set({ [key]: "en-US" }),
+        STORAGE_KEYS.language,
+      );
+      await poll(async () =>
+        (await texts(setup, "h1")).includes(t.setup.welcomeTitle),
+      );
+      // The provider comes first; the sync code is behind the link.
+      const buttons = await texts(setup, "button");
+      assert.ok(buttons.includes(t.sidepanel.addProvider), buttons.join("|"));
+      assert.ok(buttons.includes(t.setup.joinLink), buttons.join("|"));
+      assert.equal(
+        await setup.call(() => !!document.querySelector("textarea")),
+        false,
+      );
+      // Not listed in the sidebar.
+      assert.equal(
+        (await texts(setup, ".nav-link")).includes(t.setup.welcomeTitle),
+        false,
+      );
+
+      const panel = await browser.open(
+        `chrome-extension://${browser.id}/sidepanel.html`,
+      );
+      await poll(async () =>
+        (await texts(panel, ".setup-card .ui-card-title")).includes(
+          t.setup.title,
+        ),
+      );
+      const steps = await texts(panel, ".setup-card button");
+      assert.deepEqual(steps, [t.sidepanel.addProvider, t.setup.joinLink]);
+      // No language picker on the card any more.
+      assert.equal(
+        await panel.call(
+          () => !!document.querySelector('.setup-card [role="combobox"]'),
+        ),
+        false,
+      );
+      await clickElement(panel, "button", { text: t.setup.joinLink });
+      await poll(() =>
+        panel.call(() => !!document.querySelector(".setup-card textarea")),
+      );
+      const tabs = await texts(panel, '.setup-card [role="tab"]');
+      assert.deepEqual(tabs, [t.setup.codeTab, t.setup.manualTab]);
+    } finally {
+      await browser.close();
+    }
+  },
+);

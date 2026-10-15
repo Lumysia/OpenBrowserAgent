@@ -7,6 +7,7 @@ import { downloadsKo } from "./downloads/ko";
 import { smartBarKo } from "./smart-bar/ko";
 import { syncKo } from "./sync/ko";
 import { themesKo } from "./themes/ko";
+import { setupKo } from "./setup/ko";
 import type { LocaleMessages } from "./en-US";
 
 export const ko: LocaleMessages = {
@@ -33,36 +34,7 @@ export const ko: LocaleMessages = {
   },
   words: { newChat: "새 채팅", agent: "탐색", ask: "질문" },
   sidepanel: {
-    connectProviderTitle: "OpenBrowserAgent 설정",
-    connectProviderDescription:
-      "언어를 선택하고 필요하면 동기화를 켠 다음, 준비되면 AI 제공업체와 모델을 추가하세요.",
     addProvider: "AI 제공업체 추가",
-    cloudSyncConnect: "연결 및 동기화",
-    cloudSyncTesting: "연결 중…",
-    cloudSyncPulling: "클라우드 동기화 확인 중…",
-    cloudSyncDescription:
-      "클라우드에서 다른 기기의 설정을 가져오거나 이 기기의 새 설정을 클라우드에 저장할 수 있습니다.",
-    cloudSyncError:
-      "클라우드 동기화 테스트에 실패했습니다. 백엔드를 확인하거나 로컬에서 시작하세요.",
-    cloudSyncSynced:
-      "클라우드 동기화가 준비되었습니다. 다음으로 AI 제공업체 설정을 추가하세요.",
-    cloudSyncSyncedButton: "동기화됨",
-    startLocally: "로컬에서 시작",
-    localSetupHint:
-      "설정이 열렸습니다. 설정에서 AI 제공업체와 모델을 추가한 뒤 여기로 돌아와 계속하세요.",
-    bootstrapStepSyncTitle: "동기화 백엔드(선택 사항)",
-    syncConfigCodeTab: "코드 붙여넣기",
-    syncManualTab: "수동 입력",
-    syncConfigCode: "동기화 구성 코드",
-    syncConfigCodeDescription: "다른 기기에서 복사한 코드를 붙여넣으세요.",
-    syncConfigCodeInvalid:
-      "동기화 구성 코드가 올바르지 않습니다. 코드를 확인한 뒤 다시 시도하세요.",
-    bootstrapStepProviderTitle: "AI 제공업체와 모델 추가",
-    bootstrapStepProviderDescription:
-      "설정을 열어 AI 제공업체와 모델을 추가하고 테스트하세요.",
-    bootstrapStepTaskTitle: "첫 작업 보내기",
-    bootstrapStepTaskDescription:
-      "모델이 정상 응답하면 여기로 돌아와 OpenBrowserAgent에 탐색이나 요약을 요청하세요.",
     chatHistory: "채팅 기록",
     backToChat: "채팅으로 돌아가기",
     exportChatOpenAi: "채팅을 OpenAI JSON으로 내보내기",
@@ -576,4 +548,5 @@ export const ko: LocaleMessages = {
   themes: themesKo,
   display: displayKo,
   pageTranslate: pageTranslateKo,
+  setup: setupKo,
 };

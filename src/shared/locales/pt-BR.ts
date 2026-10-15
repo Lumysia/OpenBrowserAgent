@@ -7,6 +7,7 @@ import { downloadsPtBR } from "./downloads/pt-BR";
 import { smartBarPtBR } from "./smart-bar/pt-BR";
 import { syncPtBR } from "./sync/pt-BR";
 import { themesPtBR } from "./themes/pt-BR";
+import { setupPtBR } from "./setup/pt-BR";
 import type { LocaleMessages } from "./en-US";
 
 export const ptBR: LocaleMessages = {
@@ -33,36 +34,7 @@ export const ptBR: LocaleMessages = {
   },
   words: { newChat: "Nova conversa", agent: "Navegar", ask: "Perguntar" },
   sidepanel: {
-    connectProviderTitle: "Configure o OpenBrowserAgent",
-    connectProviderDescription:
-      "Escolha o idioma, ative a sincronização se quiser e depois adicione um provedor de IA e um modelo.",
     addProvider: "Adicionar provedor de IA",
-    cloudSyncConnect: "Conectar e sincronizar",
-    cloudSyncTesting: "Conectando…",
-    cloudSyncPulling: "Verificando a sincronização na nuvem…",
-    cloudSyncDescription:
-      "Use a sincronização na nuvem para começar com a configuração de outro dispositivo ou salvar na nuvem a nova configuração deste dispositivo.",
-    cloudSyncError:
-      "Falha no teste da sincronização na nuvem. Verifique o backend ou comece localmente.",
-    cloudSyncSynced:
-      "A sincronização na nuvem está pronta. Agora configure um provedor de IA.",
-    cloudSyncSyncedButton: "Sincronizado",
-    startLocally: "Começar localmente",
-    localSetupHint:
-      "As Configurações estão abertas. Adicione um provedor de IA e um modelo lá, depois volte aqui para continuar.",
-    bootstrapStepSyncTitle: "Backend de sincronização (opcional)",
-    syncConfigCodeTab: "Colar código",
-    syncManualTab: "Configuração manual",
-    syncConfigCode: "Código de configuração da sincronização",
-    syncConfigCodeDescription: "Cole um código copiado de outro dispositivo.",
-    syncConfigCodeInvalid:
-      "Código de configuração da sincronização inválido. Verifique o código e tente novamente.",
-    bootstrapStepProviderTitle: "Adicione um provedor de IA e um modelo",
-    bootstrapStepProviderDescription:
-      "Abra as Configurações para adicionar um provedor de IA, adicionar um modelo e testá-lo.",
-    bootstrapStepTaskTitle: "Envie sua primeira tarefa",
-    bootstrapStepTaskDescription:
-      "Quando o modelo responder com sucesso, volte aqui e peça ao OpenBrowserAgent para navegar ou resumir.",
     chatHistory: "Histórico de conversas",
     backToChat: "Voltar à conversa",
     exportChatOpenAi: "Exportar conversa como JSON da OpenAI",
@@ -642,4 +614,5 @@ export const ptBR: LocaleMessages = {
   themes: themesPtBR,
   display: displayPtBR,
   pageTranslate: pageTranslatePtBR,
+  setup: setupPtBR,
 };

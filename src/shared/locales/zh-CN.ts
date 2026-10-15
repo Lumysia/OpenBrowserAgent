@@ -7,6 +7,7 @@ import { downloadsZhCN } from "./downloads/zh-CN";
 import { smartBarZhCN } from "./smart-bar/zh-CN";
 import { syncZhCN } from "./sync/zh-CN";
 import { themesZhCN } from "./themes/zh-CN";
+import { setupZhCN } from "./setup/zh-CN";
 import type { LocaleMessages } from "./en-US";
 
 export const zhCN: LocaleMessages = {
@@ -33,33 +34,7 @@ export const zhCN: LocaleMessages = {
   },
   words: { newChat: "新对话", agent: "浏览", ask: "询问" },
   sidepanel: {
-    connectProviderTitle: "初始化 OpenBrowserAgent",
-    connectProviderDescription:
-      "选择界面语言，按需配置同步，然后添加 AI 提供商和模型即可开始。",
     addProvider: "添加 AI 提供商",
-    cloudSyncConnect: "连接并同步",
-    cloudSyncTesting: "正在连接…",
-    cloudSyncPulling: "正在检查云端同步…",
-    cloudSyncDescription:
-      "可从云端拉取其他设备的配置，也可以把当前设备的新配置保存到云端。",
-    cloudSyncError: "云端同步测试失败。请检查后端，或选择“从本地开始”。",
-    cloudSyncSynced: "云端同步已就绪。接下来添加 AI 提供商和模型。",
-    cloudSyncSyncedButton: "已同步",
-    startLocally: "从本地开始",
-    localSetupHint:
-      "设置页已打开。请在那里添加 AI 提供商和模型，然后回到这里继续。",
-    bootstrapStepSyncTitle: "同步后端（可选）",
-    syncConfigCodeTab: "粘贴配置码",
-    syncManualTab: "手动设置",
-    syncConfigCode: "同步配置码",
-    syncConfigCodeDescription: "粘贴另一台设备复制的配置码。",
-    syncConfigCodeInvalid: "配置码无效，请检查后重试。",
-    bootstrapStepProviderTitle: "添加 AI 提供商和模型",
-    bootstrapStepProviderDescription:
-      "打开设置页，添加 AI 提供商、添加模型并测试是否可用。",
-    bootstrapStepTaskTitle: "发送第一个任务",
-    bootstrapStepTaskDescription:
-      "模型测试通过后回到这里，让 OpenBrowserAgent 浏览、总结或执行任务。",
     chatHistory: "对话历史",
     backToChat: "返回对话",
     exportChatOpenAi: "将对话导出为 OpenAI JSON",
@@ -544,4 +519,5 @@ export const zhCN: LocaleMessages = {
   themes: themesZhCN,
   display: displayZhCN,
   pageTranslate: pageTranslateZhCN,
+  setup: setupZhCN,
 };

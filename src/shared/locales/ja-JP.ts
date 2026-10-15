@@ -7,6 +7,7 @@ import { downloadsJaJP } from "./downloads/ja-JP";
 import { smartBarJaJP } from "./smart-bar/ja-JP";
 import { syncJaJP } from "./sync/ja-JP";
 import { themesJaJP } from "./themes/ja-JP";
+import { setupJaJP } from "./setup/ja-JP";
 import type { LocaleMessages } from "./en-US";
 
 export const jaJP: LocaleMessages = {
@@ -33,37 +34,7 @@ export const jaJP: LocaleMessages = {
   },
   words: { newChat: "新しいチャット", agent: "ブラウズ", ask: "質問" },
   sidepanel: {
-    connectProviderTitle: "OpenBrowserAgent をセットアップ",
-    connectProviderDescription:
-      "言語を選択し、必要に応じて同期を有効にしてから、準備ができたら AI プロバイダーとモデルを追加します。",
     addProvider: "AI プロバイダーを追加",
-    cloudSyncConnect: "接続して同期",
-    cloudSyncTesting: "接続中…",
-    cloudSyncPulling: "クラウド同期を確認中…",
-    cloudSyncDescription:
-      "クラウド同期で、別のデバイスの設定から始めることも、このデバイスの新しい設定をクラウドに保存することもできます。",
-    cloudSyncError:
-      "クラウド同期のテストに失敗しました。バックエンドを確認するか、ローカルで開始してください。",
-    cloudSyncSynced:
-      "クラウド同期の準備ができました。次に AI プロバイダーを設定してください。",
-    cloudSyncSyncedButton: "同期済み",
-    startLocally: "ローカルで開始",
-    localSetupHint:
-      "設定を開きました。そこで AI プロバイダーとモデルを追加し、ここに戻って続行してください。",
-    bootstrapStepSyncTitle: "同期バックエンド（任意）",
-    syncConfigCodeTab: "コードを貼り付け",
-    syncManualTab: "手動設定",
-    syncConfigCode: "同期設定コード",
-    syncConfigCodeDescription:
-      "別のデバイスからコピーしたコードを貼り付けます。",
-    syncConfigCodeInvalid:
-      "同期設定コードが無効です。確認してもう一度お試しください。",
-    bootstrapStepProviderTitle: "AI プロバイダーとモデルを追加",
-    bootstrapStepProviderDescription:
-      "設定を開き、AI プロバイダーとモデルを追加してテストします。",
-    bootstrapStepTaskTitle: "最初のタスクを送信",
-    bootstrapStepTaskDescription:
-      "モデルが正常に応答したらここに戻り、OpenBrowserAgent にブラウズや要約を依頼します。",
     chatHistory: "チャット履歴",
     backToChat: "チャットに戻る",
     exportChatOpenAi: "チャットを OpenAI JSON としてエクスポート",
@@ -614,4 +585,5 @@ export const jaJP: LocaleMessages = {
   themes: themesJaJP,
   display: displayJaJP,
   pageTranslate: pageTranslateJaJP,
+  setup: setupJaJP,
 };

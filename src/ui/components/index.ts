@@ -26,3 +26,4 @@ export * from "./settings-layout";
 export * from "./confirm-button";
 export * from "./settings-accordion-item";
 export * from "./action-list-item";
+export * from "./disclosure";

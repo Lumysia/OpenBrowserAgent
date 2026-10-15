@@ -7,6 +7,7 @@ import { downloadsEnUS } from "./downloads/en-US";
 import { smartBarEnUS } from "./smart-bar/en-US";
 import { syncEnUS } from "./sync/en-US";
 import { themesEnUS } from "./themes/en-US";
+import { setupEnUS } from "./setup/en-US";
 export const enUS = {
   app: {
     tagline: "Your AI agent in the browser",
@@ -37,35 +38,7 @@ export const enUS = {
     ask: "Ask",
   },
   sidepanel: {
-    connectProviderTitle: "Set up OpenBrowserAgent",
-    connectProviderDescription:
-      "Choose your language, optionally enable sync, then add an AI provider and model when ready.",
     addProvider: "Add AI provider",
-    cloudSyncConnect: "Connect and sync",
-    cloudSyncTesting: "Connecting…",
-    cloudSyncPulling: "Checking cloud sync…",
-    cloudSyncDescription:
-      "Use cloud sync to start from another device's setup or store this device's new setup in the cloud.",
-    cloudSyncError:
-      "Cloud sync test failed. Check the backend or start locally.",
-    cloudSyncSynced: "Cloud sync is ready. Add an AI provider and model next.",
-    cloudSyncSyncedButton: "Synced",
-    startLocally: "Start locally",
-    localSetupHint:
-      "Settings is open. Add an AI provider and model there, then return here to continue.",
-    bootstrapStepSyncTitle: "Sync backend (optional)",
-    syncConfigCodeTab: "Paste code",
-    syncManualTab: "Manual setup",
-    syncConfigCode: "Sync config code",
-    syncConfigCodeDescription: "Paste a code copied from another device.",
-    syncConfigCodeInvalid:
-      "Invalid sync config code. Check the code and try again.",
-    bootstrapStepProviderTitle: "Add an AI provider and model",
-    bootstrapStepProviderDescription:
-      "Open Settings to add an AI provider, add a model, and test it.",
-    bootstrapStepTaskTitle: "Send your first task",
-    bootstrapStepTaskDescription:
-      "After a model responds successfully, return here and ask OpenBrowserAgent to browse or summarize.",
     chatHistory: "Chat history",
     backToChat: "Back to chat",
     exportChatOpenAi: "Export chat as OpenAI JSON",
@@ -613,6 +586,7 @@ export const enUS = {
   themes: themesEnUS,
   display: displayEnUS,
   pageTranslate: pageTranslateEnUS,
+  setup: setupEnUS,
 };
 
 export type LocaleMessages = typeof enUS;
