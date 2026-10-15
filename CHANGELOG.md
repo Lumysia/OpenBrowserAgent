@@ -5,6 +5,7 @@ What changed in each release. The release workflow publishes the section for the
 ## Unreleased
 
 - Page translation no longer skips paragraphs in Japanese and other languages written without spaces when they contain a number: such paragraphs were taken for a number and left untranslated.
+- The translate button on the page edge no longer flickers in and out when the pointer rests against the side of the screen; it now stays out until the pointer leaves it.
 
 ## 0.2.0-beta.12 - 2026-10-15
 

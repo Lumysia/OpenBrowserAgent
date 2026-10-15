@@ -55,6 +55,36 @@
   transform: translate(var(--out-x), var(--out-y));
 }
 
+/* Out, the dock stops a gap short of its edge; this strip fills the gap, so
+   a pointer on the outer part of the tucked button stays on the dock as it
+   slides out instead of losing it and pulling it back in. Tucked, the strip
+   is past the edge. */
+.page-button-dock::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.page-button-dock[data-edge="right"]::after {
+  left: 100%;
+  right: calc(-1 * var(--page-button-gap));
+}
+
+.page-button-dock[data-edge="left"]::after {
+  right: 100%;
+  left: calc(-1 * var(--page-button-gap));
+}
+
+.page-button-dock[data-edge="top"]::after {
+  bottom: 100%;
+  top: calc(-1 * var(--page-button-gap));
+}
+
+.page-button-dock[data-edge="bottom"]::after {
+  top: 100%;
+  bottom: calc(-1 * var(--page-button-gap));
+}
+
 /* Follows the pointer, wherever it goes. */
 .page-button-dock[data-dragging] {
   transform: translate(-50%, -50%);
