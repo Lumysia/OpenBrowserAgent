@@ -20,7 +20,7 @@ AGENTS AND SKILLS
 
 YOUR MODELS, YOUR TOOLS
 
-• Connect OpenAI-compatible, Anthropic-compatible, Gemini, OpenRouter, DeepSeek, Ollama and other providers with your own API keys and base URLs.
+• Connect OpenAI-compatible or Anthropic-compatible services, or a local model, with your own API keys and base URLs.
 • Use a cheaper helper model for reading long pages.
 • Connect remote MCP servers (Streamable HTTP) for extra tools. Keyless web search servers are recommended and added with one click, and each stays off until you turn it on.
 • Exact numbers: the agent can run JavaScript it writes in a sandbox on your device, with no internet access, to calculate, parse tables and reshape data.
