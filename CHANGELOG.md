@@ -4,7 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
-- **Guided setup**: installing OpenBrowserAgent opens a setup with one thing per step and Back / Next: your languages (the extension's and "Translate into"), an AI provider (with "Test connection" and a model to pick, or a sync code from another device), what to add to web pages (translate button, smart bar on selected text, video subtitles), and a last page with your keyboard shortcuts and "Open side panel". Every step can be skipped. If you close it, "Continue setup" on the side panel's card opens it where you left off.
+- **Guided setup**: installing OpenBrowserAgent opens a setup with one thing per step and Back / Next: your languages (the extension's and "Translate into"), an AI provider (with "Test connection" and a model to pick, or a sync code from another device), what to add to web pages (translate button, smart bar on selected text, video subtitles), and a last page with your keyboard shortcuts and "Open side panel". Every step can be skipped.
+- Until setup is finished (its last page reached, or an AI provider with a model set up, also through sync), the side panel doesn't open: the toolbar button, its shortcut and the "Ask" items in the right-click menu and the smart bar open the setup where you left off instead. The side panel's setup card is gone; with no AI provider later on, the side panel shows a single "Add AI provider" link.
 - Settings → General has "Run setup again", which opens the setup at its first step.
 - Page translation no longer skips paragraphs in Japanese and other languages written without spaces when they contain a number: such paragraphs were taken for a number and left untranslated.
 - The translate button on the page edge no longer flickers in and out when the pointer rests against the side of the screen; it now stays out until the pointer leaves it.

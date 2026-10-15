@@ -1,11 +1,7 @@
 import type { SetupMessages } from "./en-US";
 
 export const setupJaJP: SetupMessages = {
-  title: "OpenBrowserAgent をセットアップ",
-  description: "AI プロバイダーを追加するとチャットを始められます。",
   continueSetup: "セットアップを続ける",
-  openedSettings:
-    "セットアップを別のタブで開きました。終わったらここに戻ってください。",
   runAgain: "セットアップをもう一度実行",
   progressLabel: "セットアップの手順",
   progressStep: "ステップ {current}/{total}：{step}",

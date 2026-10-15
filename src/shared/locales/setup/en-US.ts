@@ -1,11 +1,7 @@
-// First run (the guided setup and the side panel's setup card), joining
-// sync from another device, and unlocking synced keys.
+// First run (the guided setup), joining sync from another device, and
+// unlocking synced keys.
 export const setupEnUS = {
-  title: "Set up OpenBrowserAgent",
-  description: "Add an AI provider to start chatting.",
   continueSetup: "Continue setup",
-  openedSettings:
-    "Setup is open in another tab. Come back here when you’re done.",
   welcomeTitle: "Welcome to OpenBrowserAgent",
   runAgain: "Run setup again",
   // The progress dots: {current} and {total} are numbers, {step} its name.

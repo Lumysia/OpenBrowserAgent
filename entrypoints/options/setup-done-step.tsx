@@ -1,4 +1,4 @@
-import { PanelRight, Server } from "lucide-react";
+import { Server } from "lucide-react";
 import { setupNeedsProviderNote } from "../../src/shared/setup-steps";
 import {
   Button,
@@ -9,21 +9,22 @@ import {
 } from "../../src/ui/components";
 import { useMessages } from "../../src/ui/messages";
 import { ShortcutsSection } from "./shortcuts-section";
-import { useOpenSidePanel } from "./use-open-side-panel";
 
-// Setup's last step: open the side panel, the keyboard shortcuts as the
-// browser has them now, and, without a model yet, a note that chat needs an
-// AI provider with the way back to that step.
+// Setup's last step: the keyboard shortcuts as the browser has them now,
+// and, without a model yet, a note that chat needs an AI provider with the
+// way back to that step. "Open side panel" is its forward button; where the
+// side panel can't be opened from here, how to open it.
 export function SetupDoneStep({
   hasChatModel,
+  canOpenPanel,
   onAddProvider,
 }: {
   hasChatModel: boolean;
+  canOpenPanel: boolean;
   onAddProvider: () => void;
 }) {
   const t = useMessages();
   const s = t.setup;
-  const openSidePanel = useOpenSidePanel();
   return (
     <div className="stack">
       {setupNeedsProviderNote("done", hasChatModel) && (
@@ -36,17 +37,13 @@ export function SetupDoneStep({
           </CardContent>
         </Card>
       )}
-      <Card>
-        <CardContent className="setup-open-panel">
-          {openSidePanel ? (
-            <Button onClick={openSidePanel}>
-              <PanelRight size={16} /> {s.openPanel}
-            </Button>
-          ) : (
+      {!canOpenPanel && (
+        <Card>
+          <CardContent>
             <CardDescription>{s.openPanelDescription}</CardDescription>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
       <ShortcutsSection />
     </div>
   );

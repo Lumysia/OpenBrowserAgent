@@ -209,7 +209,7 @@ Before content the user shares in chats (messages, page text, screenshots, files
 
 ## Guided setup
 
-Installing the extension opens the **setup**: one step per page (Language, AI provider, On web pages, Done) with "Back" and "Next", and "Skip" while a step isn't done. Step names reuse the settings' own words (the "On web pages" step is named like the settings page "On pages" in each language). The side panel's card says "Continue setup", and General has "Run setup again". "Test connection" checks that the AI provider answers; its failures name the part that failed ("Couldn’t connect to the AI provider: …", "Connected, but {model} didn’t answer: …").
+Installing the extension opens the **setup**: one step per page (Language, AI provider, On web pages, Done) with "Back" and "Next", and "Skip" while a step isn't done. Step names reuse the settings' own words (the "On web pages" step is named like the settings page "On pages" in each language). A side panel that opened before setup was finished says "Continue setup", and General has "Run setup again". "Test connection" checks that the AI provider answers; its failures name the part that failed ("Couldn’t connect to the AI provider: …", "Connected, but {model} didn’t answer: …").
 
 | English         | 简体中文         | 繁體中文         | 日本語                     | 한국어         |
 | --------------- | ---------------- | ---------------- | -------------------------- | -------------- |

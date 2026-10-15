@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { OPTIONS_HASH } from "../src/shared/config.ts";
+import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
 
 // Headed unless OBA_HEADLESS=1 (CI and containers without a display).
 export const HEADED = process.env.OBA_HEADLESS !== "1";
@@ -63,8 +64,9 @@ export async function launchExtension({
   preferences,
   // How long one CDP call may take.
   cdpTimeoutMs = 180000,
-  // Leave open the setup page the extension opens on install (closed by
-  // default, so tests start from the tabs they open themselves).
+  // Leave open the setup page the extension opens on install. By default it
+  // is closed as if setup had been finished, so tests start from the tabs
+  // they open themselves and the side panel opens.
   keepWelcome = false,
 } = {}) {
   const executable = chromiumPath();
@@ -171,6 +173,17 @@ export async function launchExtension({
               `chrome-extension://${id}/options.html${OPTIONS_HASH.welcome}`,
         ),
       );
+      const setup = await connectTo(welcome.webSocketDebuggerUrl);
+      await poll(() =>
+        setup
+          .call(
+            (key) =>
+              chrome.storage?.local?.set({ [key]: true }).then(() => true),
+            STORAGE_KEYS.setupDone,
+          )
+          .catch(() => false),
+      );
+      setup.close();
       await browser.send("Target.closeTarget", { targetId: welcome.id });
     }
     // `options` are extra Target.createTarget parameters such as background.

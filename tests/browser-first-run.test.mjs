@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { OPTIONS_HASH } from "../src/shared/config.ts";
+import { CONTEXT_MENU_ID } from "../src/shared/context-menu.ts";
 import { getMessages } from "../src/shared/i18n.ts";
 import { SETUP_STEPS } from "../src/shared/setup-steps.ts";
 import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
@@ -11,8 +12,8 @@ import { providerFixture, reply } from "./provider-fixtures.ts";
 
 // First run: installing opens the guided setup at its first step. Each
 // step is one thing (language, AI provider, on web pages, done) with Back
-// and Next; every step can be skipped, and setup reopened from the side
-// panel goes on where it was left.
+// and Next; every step can be skipped. Until setup is finished, whatever
+// would open the side panel opens setup where it was left.
 
 const t = getMessages("en-US");
 const MODEL = "fixture-model";
@@ -253,16 +254,79 @@ test(
 );
 
 test(
-  "first run: skipping every step, the note on Done, resuming from the side panel, and running setup again",
+  "first run: no side panel before setup; skipping every step, resuming from the toolbar button, and running setup again",
   { timeout: BROWSER_TEST_TIMEOUT },
   async () => {
     const session = await launch();
     const { browser, extensionUrl } = session;
+    const setupUrl = extensionUrl(`options.html${OPTIONS_HASH.welcome}`);
+    const panelUrl = extensionUrl("sidepanel.html");
+    const isOpen = async (url) =>
+      (await browser.targets()).some((target) => target.url === url);
     try {
       let setup = await openedSetup(session);
+      const worker = await browser.attach(
+        (url) => url === extensionUrl("background.js"),
+        "service_worker",
+      );
+      const panelOpensItself = () =>
+        worker.call(
+          async () =>
+            (await chrome.sidePanel.getPanelBehavior()).openPanelOnActionClick,
+        );
+      // Until setup is finished the toolbar button doesn't open the panel
+      // by itself: its click comes to the extension.
+      assert.equal(await panelOpensItself(), false);
       await clickForward(setup);
       await atStep(setup, t.setup.providerTitle);
       assert.equal(await forward(setup), t.setup.skipStep);
+      await poll(() =>
+        setup.call(
+          async (key) =>
+            (await chrome.storage.session.get(key))[key]?.step === "provider",
+          STORAGE_KEYS.setupProgress,
+        ),
+      );
+
+      // Closed, setup opens again where it was from the toolbar button and
+      // from "Ask" in the right-click menu, and the side panel doesn't.
+      const page = await browser.open("about:blank");
+      const closeSetup = async () => {
+        const target = (await browser.targets()).find(
+          (item) => item.url === setupUrl,
+        );
+        await browser.browser.send("Target.closeTarget", {
+          targetId: target.id,
+        });
+        await poll(async () => !(await isOpen(setupUrl)));
+      };
+      const tab = () =>
+        worker.call(async () => (await chrome.tabs.query({ active: true }))[0]);
+      await closeSetup();
+      await worker.call(
+        (tab) => chrome.action.onClicked.dispatch(tab),
+        await tab(),
+      );
+      await poll(() => isOpen(setupUrl));
+      setup = await browser.attach((url) => url === setupUrl);
+      await setup.send("Page.bringToFront");
+      await atStep(setup, t.setup.providerTitle);
+      await closeSetup();
+      await page.send("Page.bringToFront");
+      await worker.call(
+        ({ tab, id }) =>
+          chrome.contextMenus.onClicked.dispatch(
+            { menuItemId: id, editable: false, pageUrl: tab.url },
+            tab,
+          ),
+        { tab: await tab(), id: CONTEXT_MENU_ID.ask },
+      );
+      await poll(() => isOpen(setupUrl));
+      assert.equal(await isOpen(panelUrl), false);
+      setup = await browser.attach((url) => url === setupUrl);
+      await setup.send("Page.bringToFront");
+      await atStep(setup, t.setup.providerTitle);
+
       await clickForward(setup);
       await atStep(setup, t.setup.pagesTitle);
       await clickForward(setup);
@@ -271,52 +335,33 @@ test(
       assert.deepEqual(await texts(setup, ".setup-note p"), [
         t.setup.noProviderNote,
       ]);
+      // Done: the toolbar button opens the panel from now on, and the panel
+      // without a model is one line to add an AI provider.
+      await poll(panelOpensItself);
+      const panel = await browser.open(panelUrl);
+      await poll(async () =>
+        (await texts(panel, ".no-model-mode button")).includes(
+          t.sidepanel.addProvider,
+        ),
+      );
+      assert.equal(
+        await panel.call(() => document.body.innerText.trim()),
+        t.sidepanel.addProvider,
+      );
+
+      await setup.send("Page.bringToFront");
       await clickElement(setup, ".setup-note button");
       await atStep(setup, t.setup.providerTitle);
       await clickElement(setup, "button", { text: t.setup.back });
       await atStep(setup, t.setup.languageTitle);
       await clickForward(setup);
       await atStep(setup, t.setup.providerTitle);
-      // Closed, setup opens again from the side panel's card where it was.
-      await poll(async () =>
-        setup.call(
-          async (key) =>
-            (await chrome.storage.session.get(key))[key]?.step === "provider",
-          STORAGE_KEYS.setupProgress,
-        ),
-      );
-      const setupUrl = extensionUrl(`options.html${OPTIONS_HASH.welcome}`);
-      const setupTarget = (await browser.targets()).find(
-        (target) => target.url === setupUrl,
-      );
-      await browser.browser.send("Target.closeTarget", {
-        targetId: setupTarget.id,
-      });
-      await poll(
-        async () =>
-          !(await browser.targets()).some((target) => target.url === setupUrl),
-      );
-      const panel = await browser.open(extensionUrl("sidepanel.html"));
-      await poll(async () =>
-        (await texts(panel, ".setup-card .ui-card-title")).includes(
-          t.setup.title,
-        ),
-      );
-      assert.deepEqual(await texts(panel, ".setup-card button"), [
-        t.setup.continueSetup,
-        t.setup.joinLink,
-      ]);
-      await clickElement(panel, ".setup-card button", {
-        text: t.setup.continueSetup,
-      });
-      setup = await browser.attach((target) => target === setupUrl);
-      await setup.send("Page.bringToFront");
-      await atStep(setup, t.setup.providerTitle);
 
       // General → "Run setup again" starts over, in the setup tab that is
       // open.
       const general = await browser.open(extensionUrl("options.html"));
       await clickElement(general, "button", { text: t.setup.runAgain });
+      await setup.send("Page.bringToFront");
       await atStep(setup, t.setup.languageTitle);
       assert.equal(
         (await browser.targets()).filter((target) => target.url === setupUrl)

@@ -1,10 +1,7 @@
 import type { SetupMessages } from "./en-US";
 
 export const setupKo: SetupMessages = {
-  title: "OpenBrowserAgent 설정",
-  description: "AI 제공업체를 추가하면 채팅을 시작할 수 있습니다.",
   continueSetup: "설정 계속하기",
-  openedSettings: "설정이 다른 탭에서 열렸습니다. 마치면 여기로 돌아오세요.",
   runAgain: "설정 다시 실행",
   progressLabel: "설정 단계",
   progressStep: "{total}단계 중 {current}단계: {step}",

@@ -1,10 +1,7 @@
 import type { SetupMessages } from "./en-US";
 
 export const setupZhTW: SetupMessages = {
-  title: "設定 OpenBrowserAgent",
-  description: "新增一個 AI 提供者即可開始對話。",
   continueSetup: "繼續設定",
-  openedSettings: "設定精靈已在另一個分頁中開啟。完成後回到這裡。",
   runAgain: "重新執行設定精靈",
   progressLabel: "設定步驟",
   progressStep: "第 {current} 步，共 {total} 步：{step}",

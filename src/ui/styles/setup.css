@@ -1,4 +1,4 @@
-/* First-run setup (side panel card, setup page) and joining sync. */
+/* The guided setup, joining sync, and empty states. */
 .empty {
   min-height: 260px;
   display: grid;
@@ -13,18 +13,11 @@
   animation: enter var(--duration-emphasis) var(--ease-out) backwards;
 }
 
-.setup-card {
-  max-width: var(--compact-panel-width);
-}
-.setup-card .ui-card-header {
-  align-items: center;
-}
-.setup-card-actions,
 .sync-join-form,
 .sync-join-tab-panel {
   display: grid;
   gap: var(--space-2);
-  text-align: left;
+  text-align: start;
 }
 .setup-join-link {
   justify-self: center;
@@ -94,35 +87,10 @@
   position: relative;
   z-index: var(--z-raised);
 }
-/* Shown while a local model starts: it unfolds below the actions. */
-.local-setup-hint {
-  max-height: 0;
-  overflow: hidden;
-  padding-block: 0;
-  border-color: transparent;
-  opacity: 0;
-  translate: 0 -4px;
-  scale: 0.985;
-  transition:
-    max-height var(--duration-base) var(--ease-standard),
-    padding var(--duration-base) var(--ease-standard),
-    border-color var(--duration-fast) var(--ease-standard),
-    opacity var(--duration-fast) var(--ease-standard),
-    translate var(--duration-base) var(--ease-out),
-    scale var(--duration-base) var(--ease-out);
-}
-.local-setup-hint[data-state="visible"] {
-  max-height: 140px;
-  padding-block: 9px;
-  border-color: color-mix(in oklab, var(--accent-strong) 24%, var(--border));
-  opacity: 1;
-  translate: 0 0;
-  scale: 1;
-}
 .sync-unlock-form {
   display: grid;
   gap: var(--space-2);
-  text-align: left;
+  text-align: start;
 }
 
 /* The guided setup: a page of its own, one calm column whose step scrolls
@@ -133,38 +101,26 @@
 }
 .setup-wizard {
   width: 100%;
-  max-width: 680px;
+  max-width: 880px;
   height: 100%;
   min-height: 0;
   margin-inline: auto;
   padding: var(--space-6) var(--space-6) var(--space-4);
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: var(--space-4);
 }
 .setup-wizard-scroll {
   min-height: 0;
 }
-.setup-wizard-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
 .setup-wizard-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  color: var(--muted-foreground);
+  color: var(--accent-text);
   font-size: var(--text-sm);
   font-weight: 600;
 }
-.setup-wizard-brand svg {
-  color: var(--accent-strong);
-}
 .setup-step {
+  max-width: 720px;
+  margin-inline: auto;
   display: grid;
   align-content: start;
   gap: var(--space-5);
@@ -201,25 +157,25 @@
   min-width: 0;
 }
 .setup-wizard-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   padding-top: var(--space-3);
   border-top: 1px solid var(--border);
 }
-.setup-forward {
-  margin-inline-start: auto;
+.setup-wizard-action {
+  display: flex;
+  min-width: 0;
+}
+.setup-forward-slot {
+  justify-content: flex-end;
 }
 .setup-direction-icon:dir(rtl) {
   scale: -1 1;
 }
 .setup-provider-form .ui-select-trigger {
   width: 100%;
-}
-.setup-open-panel {
-  display: grid;
-  justify-items: center;
-  text-align: center;
 }
 .setup-note .split {
   gap: var(--space-3);
@@ -254,6 +210,9 @@
   }
   .setup-feature-art {
     padding-inline: var(--space-4);
+  }
+  .setup-art {
+    max-width: 200px;
   }
 }
 .setup-art:dir(rtl) {

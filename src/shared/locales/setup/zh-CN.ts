@@ -1,10 +1,7 @@
 import type { SetupMessages } from "./en-US";
 
 export const setupZhCN: SetupMessages = {
-  title: "设置 OpenBrowserAgent",
-  description: "添加一个 AI 提供商即可开始对话。",
   continueSetup: "继续设置",
-  openedSettings: "设置向导已在另一个标签页中打开。完成后回到这里。",
   runAgain: "重新运行设置向导",
   progressLabel: "设置步骤",
   progressStep: "第 {current} 步，共 {total} 步：{step}",

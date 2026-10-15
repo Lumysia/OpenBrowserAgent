@@ -9,6 +9,7 @@ import { setupMcpOriginRules } from "../src/shared/mcp-origin-rules";
 import { handleChatStreamControlMessage } from "../src/background/stream-sessions";
 import { connectStreamPort } from "../src/background/chat-stream-port";
 import { openActionSurface } from "../src/background/action-surface";
+import { setupSetupGate } from "../src/background/setup-gate";
 import { setupContextMenu } from "../src/background/context-menu";
 import {
   handlePageToolsMessage,
@@ -32,13 +33,11 @@ import {
 } from "../src/background/video-subtitles";
 
 export default defineBackground(() => {
-  chrome.sidePanel
-    ?.setPanelBehavior?.({ openPanelOnActionClick: true })
-    .catch(console.warn);
+  setupSetupGate();
 
   const actionApi = chrome.action ?? chrome.browserAction;
-  actionApi?.onClicked.addListener(() => {
-    openActionSurface().catch(console.warn);
+  actionApi?.onClicked.addListener((tab) => {
+    openActionSurface(tab).catch(console.warn);
   });
 
   setupSmartBar();

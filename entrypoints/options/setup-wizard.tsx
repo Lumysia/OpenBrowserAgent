@@ -2,14 +2,15 @@ import { useEffect, useRef, type ReactNode } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  PanelRight,
   Languages,
   MousePointerClick,
   PartyPopper,
   Server,
-  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import type { Messages } from "../../src/shared/i18n";
+import { storage } from "../../src/shared/storage";
 import {
   nextSetupStep,
   previousSetupStep,
@@ -27,6 +28,7 @@ import { SetupPagesStep } from "./setup-pages-step";
 import { SetupProviderStep } from "./setup-provider-step";
 import { TranslateIntoSection } from "./translate-into";
 import { UiLanguageSection } from "./ui-language-section";
+import { useOpenSidePanel } from "./use-open-side-panel";
 import { useSetupProgress } from "./use-setup-progress";
 
 // Each step's icon and heading.
@@ -80,6 +82,7 @@ export function SetupWizard() {
   const { progress, goTo, setProviderId } = useSetupProgress();
   const hasChatModel = useConfiguredModels().length > 0;
   const heading = useRef<HTMLHeadingElement>(null);
+  const openSidePanel = useOpenSidePanel();
   const step = progress?.step;
   const forward = step && setupForwardAction(step, hasChatModel);
   const goForward = () => {
@@ -89,8 +92,10 @@ export function SetupWizard() {
   const latestForward = useLatest(forward ? goForward : undefined);
 
   // Each step starts at its heading, for keyboards and screen readers.
+  // Reaching the last step finishes setup: the side panel opens from now on.
   useEffect(() => {
     heading.current?.focus();
+    if (step === "done") storage.setupDone.set(true).catch(console.warn);
   }, [step]);
 
   useEffect(() => {
@@ -136,6 +141,7 @@ export function SetupWizard() {
     done: (
       <SetupDoneStep
         hasChatModel={hasChatModel}
+        canOpenPanel={!!openSidePanel}
         onAddProvider={() => goTo("provider")}
       />
     ),
@@ -143,10 +149,30 @@ export function SetupWizard() {
 
   return (
     <main className="setup-wizard" data-step={step}>
-      <div className="setup-wizard-top">
-        <span className="setup-wizard-brand">
-          <Sparkles size={16} aria-hidden /> {s.welcomeTitle}
-        </span>
+      <ScrollArea className="setup-wizard-scroll" inset>
+        <section key={step} className="setup-step" aria-labelledby="setup-step">
+          <header className="setup-step-header">
+            {!previousSetupStep(step) && (
+              <span className="setup-wizard-brand">{s.welcomeTitle}</span>
+            )}
+            <Icon className="setup-step-icon" aria-hidden />
+            <h1 id="setup-step" ref={heading} tabIndex={-1}>
+              {title}
+            </h1>
+            <p className="muted">{description}</p>
+          </header>
+          <div className="setup-step-body">{bodies[step]}</div>
+        </section>
+      </ScrollArea>
+      <footer className="setup-wizard-actions">
+        <div className="setup-wizard-action">
+          {back && (
+            <Button variant="ghost" onClick={() => goTo(back)}>
+              <ArrowLeft size={16} className="setup-direction-icon" />
+              {s.back}
+            </Button>
+          )}
+        </div>
         <StepDots
           steps={SETUP_STEPS}
           current={setupStepIndex(step)}
@@ -158,36 +184,23 @@ export function SetupWizard() {
               .replace("{step}", s.steps[SETUP_STEPS[index]])
           }
         />
-      </div>
-      <ScrollArea className="setup-wizard-scroll" inset>
-        <section key={step} className="setup-step" aria-labelledby="setup-step">
-          <header className="setup-step-header">
-            <Icon className="setup-step-icon" aria-hidden />
-            <h1 id="setup-step" ref={heading} tabIndex={-1}>
-              {title}
-            </h1>
-            <p className="muted">{description}</p>
-          </header>
-          <div className="setup-step-body">{bodies[step]}</div>
-        </section>
-      </ScrollArea>
-      <footer className="setup-wizard-actions">
-        {back && (
-          <Button variant="ghost" onClick={() => goTo(back)}>
-            <ArrowLeft size={16} className="setup-direction-icon" />
-            {s.back}
-          </Button>
-        )}
-        {forward && (
-          <Button
-            className="setup-forward"
-            variant={forward === "next" ? "default" : "outline"}
-            onClick={goForward}
-          >
-            {forward === "next" ? s.next : s.skipStep}
-            <ArrowRight size={16} className="setup-direction-icon" />
-          </Button>
-        )}
+        <div className="setup-wizard-action setup-forward-slot">
+          {forward && (
+            <Button
+              className="setup-forward"
+              variant={forward === "next" ? "default" : "outline"}
+              onClick={goForward}
+            >
+              {forward === "next" ? s.next : s.skipStep}
+              <ArrowRight size={16} className="setup-direction-icon" />
+            </Button>
+          )}
+          {step === "done" && openSidePanel && (
+            <Button onClick={openSidePanel}>
+              <PanelRight size={16} /> {s.openPanel}
+            </Button>
+          )}
+        </div>
       </footer>
     </main>
   );

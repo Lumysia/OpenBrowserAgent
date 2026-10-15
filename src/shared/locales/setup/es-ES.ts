@@ -1,11 +1,7 @@
 import type { SetupMessages } from "./en-US";
 
 export const setupEsES: SetupMessages = {
-  title: "Configura OpenBrowserAgent",
-  description: "Añade un proveedor de IA para empezar a chatear.",
   continueSetup: "Continuar la configuración",
-  openedSettings:
-    "La configuración está abierta en otra pestaña. Vuelve aquí cuando termines.",
   runAgain: "Volver a ejecutar la configuración",
   progressLabel: "Pasos de la configuración",
   progressStep: "Paso {current} de {total}: {step}",

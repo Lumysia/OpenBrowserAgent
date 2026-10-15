@@ -52,6 +52,13 @@ const MIGRATIONS: readonly Migration[] = [
     until: "0.2.0-beta.9",
     run: () => getBrowserApi().storage.local.remove(REMOVED_DEBUG_LOGGING_KEY),
   },
+  {
+    // The side panel waits for the guided setup on a new install; a device
+    // that used an earlier release has been set up already.
+    id: "setup-done-before-guided-setup",
+    until: "0.2.0-beta.12",
+    run: () => storage.setupDone.set(true),
+  },
 ];
 
 export async function runStorageMigrations(fresh: boolean) {

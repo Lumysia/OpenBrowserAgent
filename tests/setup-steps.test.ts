@@ -10,6 +10,10 @@ import {
   setupNeedsProviderNote,
   setupStepDone,
 } from "../src/shared/setup-steps";
+import { isSetupFinished } from "../src/shared/setup-gate";
+import { storage } from "../src/shared/storage";
+import { runStorageMigrations } from "../src/shared/storage-migrations";
+import { eventListeners, memoryArea, swapChrome } from "./fake-chrome";
 import {
   DEFAULT_SMART_BAR_SETTINGS,
   SMART_BAR_TRIGGER,
@@ -76,4 +80,41 @@ test("setup's smart bar switch: on opens it on a selection, off turns it off", (
     smartBarOnSelection({ ...on, trigger: SMART_BAR_TRIGGER.shortcut }),
     false,
   );
+});
+
+test("setup is finished once its last step was reached or a model is there", () => {
+  const withModel = {
+    p: { type: "openai" as const, models: [{ id: "p:m", name: "m" }] },
+  };
+  const withoutModel = { p: { type: "openai" as const, models: [] } };
+  assert.equal(isSetupFinished(false, {}), false);
+  // A provider setup added but no model yet: still setting up.
+  assert.equal(isSetupFinished(false, withoutModel), false);
+  assert.equal(isSetupFinished(true, {}), true);
+  // A model that came through sync.
+  assert.equal(isSetupFinished(false, withModel), true);
+});
+
+test("an update counts setup as done; a new install starts without it", async () => {
+  const restore = swapChrome({
+    storage: { local: memoryArea(), onChanged: eventListeners() },
+  });
+  try {
+    await runStorageMigrations(true);
+    assert.equal(await storage.setupDone.get(), false);
+    // Recorded as done on the new install: a later update leaves it.
+    await runStorageMigrations(false);
+    assert.equal(await storage.setupDone.get(), false);
+  } finally {
+    restore();
+  }
+  const restoreUpdate = swapChrome({
+    storage: { local: memoryArea(), onChanged: eventListeners() },
+  });
+  try {
+    await runStorageMigrations(false);
+    assert.equal(await storage.setupDone.get(), true);
+  } finally {
+    restoreUpdate();
+  }
 });

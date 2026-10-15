@@ -1,11 +1,7 @@
 import type { SetupMessages } from "./en-US";
 
 export const setupDeDE: SetupMessages = {
-  title: "OpenBrowserAgent einrichten",
-  description: "Fügen Sie einen KI-Anbieter hinzu, um zu chatten.",
   continueSetup: "Einrichtung fortsetzen",
-  openedSettings:
-    "Die Einrichtung ist in einem anderen Tab geöffnet. Kehren Sie danach hierher zurück.",
   runAgain: "Einrichtung erneut starten",
   progressLabel: "Schritte der Einrichtung",
   progressStep: "Schritt {current} von {total}: {step}",

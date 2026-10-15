@@ -88,13 +88,17 @@ test(
       const options = await chromium.open(
         `chrome-extension://${chromium.id}/options.html`,
       );
-      for (const page of [sidepanel, options])
-        await poll(() =>
-          page.call(
-            () =>
-              document.querySelector("#root")?.textContent?.trim().length > 30,
-          ),
-        );
+      // Both rendered: the side panel (one line before a provider exists)
+      // and the settings.
+      await poll(() =>
+        sidepanel.call(() => !!document.querySelector("#root .sidepanel")),
+      );
+      await poll(() =>
+        options.call(
+          () =>
+            document.querySelector("#root")?.textContent?.trim().length > 30,
+        ),
+      );
       const providers = live
         ? [process.env.OBA_PROVIDER || "openai"]
         : ["openai", "openai-responses", "anthropic", "gemini", "ollama"];
