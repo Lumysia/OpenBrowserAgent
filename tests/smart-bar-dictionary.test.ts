@@ -63,21 +63,61 @@ test("only Translate on a short selection asks for a dictionary entry", () => {
     smartBarResultFormat("translate", "The quick brown fox jumps."),
     "text",
   );
-  const word = smartBarPrompt("translate", "ran", "zh-CN", {
-    before: "She ",
-    after: " home.",
-  });
+  const word = smartBarPrompt(
+    {
+      action: "translate",
+      text: "ran",
+      context: { before: "She ", after: " home." },
+    },
+    "zh-CN",
+  );
   assert.match(word.system, /JSON object/);
   assert.match(word.prompt, /entry language is Chinese \(China\)/);
   assert.match(word.prompt, /"contextMeaning"/);
   assert.match(word.prompt, /She \[\[SELECTION\]\] home\./);
-  const sentence = smartBarPrompt("translate", "She ran home.", "zh-CN");
+  const sentence = smartBarPrompt(
+    { action: "translate", text: "She ran home." },
+    "zh-CN",
+  );
   assert.match(sentence.prompt, /^Translate the text below into Chinese/);
   assert.doesNotMatch(sentence.system, /JSON/);
   assert.match(
-    smartBarPrompt("explain", "ran", "en-US").prompt,
+    smartBarPrompt({ action: "explain", text: "ran" }, "en-US").prompt,
     /^Explain the text below/,
   );
+});
+
+test("a known source language fixes the entry and target language", () => {
+  const prompt = (text: string, sourceLanguage?: string) =>
+    smartBarPrompt({ action: "translate", text, sourceLanguage }, "zh-CN")
+      .prompt;
+  // An English word for a Chinese reader: a Chinese entry, no choice left.
+  const english = prompt("time", "en");
+  assert.match(english, /The entry language is Chinese \(China\)\./);
+  assert.doesNotMatch(english, /unless the selected text/);
+  assert.doesNotMatch(english, /"entryLanguage"/);
+  // A Chinese word for a Chinese reader: an English entry.
+  const chinese = prompt("时间", "zh");
+  assert.match(chinese, /The entry language is English\./);
+  assert.doesNotMatch(chinese, /unless the selected text/);
+  // Unknown: the model decides, as before.
+  const unknown = prompt("time");
+  assert.match(
+    unknown,
+    /entry language is Chinese \(China\), unless the selected text itself is written in Chinese \(China\): then English/,
+  );
+  assert.match(unknown, /"entryLanguage"/);
+  // Plain translations follow the same rule.
+  const sentence = "It is time to go home now.";
+  assert.match(
+    prompt(sentence, "en-GB"),
+    /^Translate the text below into Chinese \(China\)\. Keep/,
+  );
+  assert.match(
+    prompt("现在是回家的时候了。", "zh-CN"),
+    /^Translate the text below into English\. Keep/,
+  );
+  assert.match(prompt(sentence), /If it is already in Chinese \(China\)/);
 });
 
 const ENTRY = {

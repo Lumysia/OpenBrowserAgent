@@ -74,6 +74,9 @@ export type SmartBarRunRequest = {
   text: string;
   // Text around the selection and the page title, to understand it by.
   context?: { before: string; after: string; pageTitle?: string };
+  // Translate: the selected text's language (a BCP 47 tag) when the page
+  // knows it; absent when only a guess was left.
+  sourceLanguage?: string;
 };
 
 export type SmartBarStreamEvent =

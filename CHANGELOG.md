@@ -4,6 +4,7 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+- Translate in the smart bar now writes a word's dictionary entry in your language every time (in English when the word is already in your language); before, the first try often came back in the page's language.
 - Removed the "Diagnostic logging" switch in Settings → Debug: it no longer did anything. Its stored setting is cleared on update.
 - Links you open in a new tab from a translated page are translated too, like the next pages in the same tab.
 - The browser's built-in translator leaves text that is already in your language as it is, also on pages that mix languages (such as a feed with posts in several languages); before, it could garble it.

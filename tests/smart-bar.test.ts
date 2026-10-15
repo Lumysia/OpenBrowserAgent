@@ -144,7 +144,7 @@ test("long selections are refused, never cut", () => {
   assert.equal(smartBarTextTooLong(`${limit}TAIL`), true);
   // What the model gets is the whole selection, so Replace is safe.
   assert.match(
-    smartBarPrompt("improve", `${limit}TAIL`, "en-US").prompt,
+    smartBarPrompt({ action: "improve", text: `${limit}TAIL` }, "en-US").prompt,
     /TAIL\n<\/text>$/,
   );
 });
@@ -164,11 +164,18 @@ test("text is read aloud in sentence-sized pieces, all of it", () => {
 });
 
 test("context helps read the selection but is never the task", () => {
-  const { prompt } = smartBarPrompt("explain", "Top st", "en-US", {
-    before: "News ",
-    after: "ories > Local",
-    pageTitle: "Google News",
-  });
+  const { prompt } = smartBarPrompt(
+    {
+      action: "explain",
+      text: "Top st",
+      context: {
+        before: "News ",
+        after: "ories > Local",
+        pageTitle: "Google News",
+      },
+    },
+    "en-US",
+  );
   assert.match(
     prompt,
     /Page title: Google News\nNews \[\[SELECTION\]\]ories > Local/,
@@ -177,21 +184,32 @@ test("context helps read the selection but is never the task", () => {
   assert.match(prompt, /<\/context>\n\n<text>\nTop st\n<\/text>$/);
   assert.match(prompt, /read it as the whole word/);
   // Edits replace the selection: they must not complete the cut-off word.
-  const fix = smartBarPrompt("fixGrammar", "Top st", "en-US", {
-    before: "",
-    after: "ories",
-  }).prompt;
+  const fix = smartBarPrompt(
+    {
+      action: "fixGrammar",
+      text: "Top st",
+      context: { before: "", after: "ories" },
+    },
+    "en-US",
+  ).prompt;
   assert.match(fix, /replaces exactly the selected text/);
   assert.doesNotMatch(fix, /read it as the whole word/);
   // Nothing to add, no context block.
   assert.doesNotMatch(
-    smartBarPrompt("explain", "x", "en-US", { before: " ", after: "" }).prompt,
+    smartBarPrompt(
+      { action: "explain", text: "x", context: { before: " ", after: "" } },
+      "en-US",
+    ).prompt,
     /<context>/,
   );
   // Whatever a message claims, context is bounded.
-  const long = smartBarPrompt("explain", "x", "en-US", {
-    before: "b".repeat(5000),
-    after: "a".repeat(5000),
-  }).prompt;
+  const long = smartBarPrompt(
+    {
+      action: "explain",
+      text: "x",
+      context: { before: "b".repeat(5000), after: "a".repeat(5000) },
+    },
+    "en-US",
+  ).prompt;
   assert.ok(long.length < 2000);
 });

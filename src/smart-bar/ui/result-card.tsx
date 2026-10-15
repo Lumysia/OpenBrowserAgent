@@ -15,7 +15,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { COPY_FEEDBACK_MS } from "../../shared/config";
 import { SIDE_PANEL_TASK } from "../../shared/side-panel-handoff";
 import { SMART_BAR_MAX_TEXT_CHARS } from "../../shared/smart-bar";
-import { languageDetect } from "../../shared/language-detector";
 import type { SmartBarPageConfig } from "../../shared/smart-bar-protocol";
 import { Button, IconTooltip } from "../../ui/components";
 import { providerConsentAgreement } from "../../ui/provider-display";
@@ -33,11 +32,9 @@ import { smartBarOutput } from "./result-output";
 import type { SmartBarResult, SmartBarStore } from "./store";
 import { onTrusted } from "./trusted";
 import { ICON_SIZE } from "./icon-sizes";
+import { detectLanguage } from "./language";
 import { formatMessage } from "../../shared/text";
 import { languageName } from "../../shared/language-name";
-
-// One detector for the frame, created when first needed.
-const detectLanguage = languageDetect();
 
 export function SmartBarResultCard({
   store,
@@ -77,6 +74,7 @@ export function SmartBarResultCard({
       source: snapshot.text,
       output,
       languages: {
+        source: result.sourceLanguage,
         page: pageLanguage,
         reply: config.replyLanguage,
         ui: config.language,
@@ -162,7 +160,7 @@ export function SmartBarResultCard({
           <SmartBarDictionaryCard
             entry={output.entry}
             labels={t.dictionary}
-            sourceLanguage={pageLanguage}
+            sourceLanguage={result.sourceLanguage ?? pageLanguage}
           />
         ) : (
           resultMessage(result, output.shown, config)

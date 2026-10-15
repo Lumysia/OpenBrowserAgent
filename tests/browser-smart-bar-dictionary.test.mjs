@@ -14,10 +14,11 @@ import { BROWSER_TEST_TIMEOUT } from "./browser-harness.mjs";
 
 // Translate on a word answers with a dictionary entry;
 // sentences and the other actions keep their plain results.
-const PAGE = `<!doctype html><html lang="en"><title>Smart bar</title>
+const PAGE = `<!doctype html><html lang="en"><meta charset="utf-8"><title>Smart bar</title>
 <style>body{font:16px/1.4 sans-serif;margin:20px}p{width:420px;margin:0 0 24px}</style>
 <p>What a <span id="word">serendipity</span> it was to meet her.</p>
 <p>The joy was <span id="broken">ephemeral</span> but real.</p>
+<p>In Chinese, <span id="chinese">机会</span> is a chance.</p>
 <p id="sentence">The quick brown fox jumps over the lazy dog.</p>`;
 
 const ENTRY = {
@@ -118,7 +119,26 @@ test("smart bar dictionary", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
       assert.match(JSON.stringify(request.body), /dictionary entry/);
       // The page around the word went along, for the meaning in context.
       assert.match(JSON.stringify(request.body), /to meet her/);
+      // The bar knew the word's language, on its first run in the frame
+      // too: the entry language is fixed, not left to the model.
+      assert.match(
+        JSON.stringify(request.body),
+        /The entry language is English\. /,
+      );
+      assert.doesNotMatch(JSON.stringify(request.body), /unless the selected/);
     });
+
+    await t.test(
+      "a word in another language gets the reply language",
+      async () => {
+        await run("#chinese", "Translate");
+        // English UI, Chinese word: the entry is in the reply language.
+        assert.match(
+          JSON.stringify(lastRequest().body),
+          /The entry language is American English\. /,
+        );
+      },
+    );
 
     await t.test("an answer that is no entry shows as text", async () => {
       await run("#broken", "Translate");

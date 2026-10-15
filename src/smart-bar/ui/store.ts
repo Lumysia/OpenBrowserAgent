@@ -1,6 +1,7 @@
 import { getBrowserApi } from "../../shared/browser-api";
 import type { RuntimeReply } from "../../shared/runtime-messages";
 import {
+  SMART_BAR_ACTION,
   smartBarTextTooLong,
   type SmartBarGenerateAction,
 } from "../../shared/smart-bar";
@@ -23,6 +24,7 @@ import {
   selectionContext,
   type SelectionSnapshot,
 } from "../selection";
+import { selectedTextLanguage } from "./language";
 
 export type SmartBarResult = {
   action: SmartBarGenerateAction;
@@ -36,6 +38,8 @@ export type SmartBarResult = {
   thinking?: boolean;
   error?: string;
   consent?: { providerId: string; host: string };
+  // What the run sent as the selected text's language, for reading aloud.
+  sourceLanguage?: string;
 };
 
 type SmartBarState = {
@@ -136,13 +140,28 @@ export function createSmartBarStore(host: HTMLElement) {
       if (state.result?.status === "streaming")
         updateResult({ status: "error", error: undefined });
     });
-    const request: SmartBarRunRequest = {
+    void send(current, snapshot, {
       type: "run",
       action,
       text: snapshot.text,
       context: selectionContext(snapshot),
-    };
-    current.postMessage(request);
+    });
+  };
+
+  // Translate fixes its target language from the selected text's language,
+  // so every run (the frame's first one too) asks the same way.
+  const send = async (
+    current: chrome.runtime.Port,
+    snapshot: SelectionSnapshot,
+    request: SmartBarRunRequest,
+  ) => {
+    const sourceLanguage =
+      request.action === SMART_BAR_ACTION.translate
+        ? await selectedTextLanguage(snapshot)
+        : undefined;
+    if (port !== current) return;
+    if (sourceLanguage) updateResult({ sourceLanguage });
+    current.postMessage({ ...request, sourceLanguage });
   };
 
   // The user agreed in the bar: store the permission, then run again.
