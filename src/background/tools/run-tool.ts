@@ -18,6 +18,8 @@ export type ToolOutcome = {
   output: Record<string, unknown>;
   image?: ToolResult["image"];
   isError: boolean;
+  // Every source the call returned, with its id in the chat.
+  sources: ChatSource[];
 };
 
 // The time limit covers waiting for the browser. Helper model requests have
@@ -109,5 +111,6 @@ export async function runTool(
     },
     image: result.image,
     isError: !!result.isError,
+    sources: cited,
   };
 }

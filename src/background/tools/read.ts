@@ -18,12 +18,14 @@ import type { UploadedAttachment } from "../../shared/types";
 import { CONTEXT_POLICY, tokenChars } from "../context/policy";
 import { callPage, pageTab } from "../page-agent";
 import { pageHeader, pageSource } from "./page";
+import { findWorkspaceFile } from "./workspace-source";
 import {
-  WORKSPACE_SOURCE_PREFIX,
-  findWorkspaceFile,
+  attachmentSource,
+  parseSource,
+  skillSource,
+  tabSource,
   workspaceSource,
-  workspaceSourcePath,
-} from "./workspace-source";
+} from "./source-handles";
 import {
   fail,
   schema,
@@ -56,29 +58,6 @@ function sliceRange(text: string, input: Record<string, unknown>, max: number) {
   });
   const limit = clampInt(input.limit, { fallback: max, min: 1, max });
   return { offset, end: Math.min(text.length, offset + limit) };
-}
-
-export type ReadSource =
-  | { kind: "tab"; tabId?: number }
-  | { kind: "artifact"; handle: string }
-  | { kind: "url"; url: string }
-  | { kind: "attachment"; id: string }
-  | { kind: "skill"; name: string; path: string }
-  | { kind: "workspace"; path: string };
-
-export function parseSource(value: string): ReadSource {
-  if (!value || value === "tab") return { kind: "tab" };
-  if (/^tab:\d+$/.test(value))
-    return { kind: "tab", tabId: Number(value.slice(4)) };
-  if (/^art-/.test(value)) return { kind: "artifact", handle: value };
-  if (/^(https?:|data:)/i.test(value)) return { kind: "url", url: value };
-  if (value.startsWith("skill:")) {
-    const [name, ...path] = value.slice(6).split("/");
-    return { kind: "skill", name, path: path.join("/") || SKILL_ENTRY_PATH };
-  }
-  if (value.startsWith(WORKSPACE_SOURCE_PREFIX))
-    return { kind: "workspace", path: workspaceSourcePath(value) };
-  return { kind: "attachment", id: value.replace(/^attachment:/, "") };
 }
 
 export const readTool: ToolDefinition = {
@@ -116,7 +95,7 @@ export const readTool: ToolDefinition = {
       return {
         text: textSlice(pageHeader(current), value.text, input),
         details: {
-          source: `tab:${tab.id}`,
+          source: tabSource(tab.id),
           title,
           url,
           chars: value.text.length,
@@ -178,13 +157,13 @@ function readSkill(
     path === SKILL_ENTRY_PATH && skill.files.length > 1
       ? `\n[Other files: ${skill.files
           .filter((item) => item !== file)
-          .map((item) => `skill:${skill.name}/${item.path}`)
+          .map((item) => skillSource(skill.name, item.path))
           .join(", ")}]`
       : "";
   // Read whole up to a higher limit than other sources; a cut says so at
   // the end, where the reader stops. A skill is instructions, not a source
   // to cite, so it adds none.
-  const source = `skill:${skill.name}/${file.path}`;
+  const source = skillSource(skill.name, file.path);
   const max = tokenChars(CONTEXT_POLICY.skillReadMaxTokens);
   const { offset, end } = sliceRange(file.content, input, max);
   const total = file.content.length;
@@ -218,7 +197,7 @@ async function readAttachment(
       `No attachment "${id}". Use an id from available_attachments, written as attachment:ID.`,
     );
   const details = {
-    source: `attachment:${attachment.id}`,
+    source: attachmentSource(attachment.id),
     name: attachment.name,
   };
   const sources = [{ kind: "file" as const, title: attachment.name }];

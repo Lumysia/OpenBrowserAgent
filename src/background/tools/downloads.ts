@@ -1,3 +1,4 @@
+import { SAVE_SOURCES_HELP } from "./source-handles";
 import { clampInt, trimmedString } from "../../shared/values";
 import {
   DOWNLOAD_ACTION,
@@ -311,7 +312,7 @@ export const downloadsTool: ToolDefinition = {
     "Download files from URLs, save text or files you have to the user's device, and check, wait for, cancel or retry downloads",
   description: `Files on the user's device, in their Downloads folder. Each result states the outcome: completed (with the saved path and size), failed (with the reason), still downloading, held by the browser for the user to confirm, or waiting for the user in the browser's Save dialog. Tell the user a file is saved only once it is completed, and give its path.
 - download: url (http/https; the browser's cookies apply, redirects are followed). Without filename the server's name is kept. Use this when you know the file's URL; a PDF that opens in a tab is not saved until you download its URL.
-- save: a file from content you write (filename with extension; encoding base64 for bytes) or from source: "tab"/"tab:ID" (the page as Markdown), "art-…", "workspace:PATH", "attachment:ID" (also generated images).
+- save: a file from content you write (filename with extension; encoding base64 for bytes) or from source: ${SAVE_SOURCES_HELP} (also generated images).
 - images: the tab's images as a zip.
 - list: recent downloads (query filters by name or URL).
 - wait: by id; without id, the latest download a click started that you have not seen finish, or the next one to start (click with act first, then wait).

@@ -4,7 +4,7 @@ import { readChatAttachment } from "../../shared/chat-attachments";
 import { MARKDOWN_FILENAME_MAX_LENGTH } from "../../shared/config";
 import type { UploadedAttachment } from "../../shared/types";
 import { callPage, pageTab } from "../page-agent";
-import { parseSource } from "../tools/read";
+import { parseSource, SAVE_SOURCES_HELP } from "../tools/source-handles";
 import type { RunContext } from "../tools/types";
 import { typeForName } from "../../shared/mime";
 import { baseName, safeSegment, withExtension } from "./filenames";
@@ -82,8 +82,7 @@ function attachmentFile(attachment: UploadedAttachment): FileContent {
   );
 }
 
-// A file from a source the read tool names: "tab" or "tab:ID" (the page as
-// Markdown), "art-…", "workspace:PATH" or "attachment:ID".
+// A file from a source the read tool names (SAVE_SOURCES_HELP).
 export async function fileFromSource(
   run: RunContext,
   value: string,
@@ -148,6 +147,6 @@ export async function fileFromSource(
   throw new ContentError(
     source.kind === "url"
       ? "To save a file from a URL, use the download action."
-      : `Cannot save "${value}" as a file. Use "tab", "tab:ID", "art-…", "workspace:PATH" or "attachment:ID", or pass content.`,
+      : `Cannot save "${value}" as a file. Use ${SAVE_SOURCES_HELP}, or pass content.`,
   );
 }

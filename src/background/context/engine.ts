@@ -241,8 +241,8 @@ function contentChars(message: Extract<AgentMessage, { role: "toolResult" }>) {
 // call already ran and its effect is on the page.
 export function shrinkArguments(value: unknown): unknown {
   if (typeof value === "string")
-    return value.length > 120
-      ? `${value.slice(0, 40)}… [${value.length} chars, already applied]`
+    return value.length > CONTEXT_POLICY.shrinkArgumentChars
+      ? `${value.slice(0, CONTEXT_POLICY.shrinkArgumentKeepChars)}… [${value.length} chars, already applied]`
       : value;
   if (Array.isArray(value)) return value.map(shrinkArguments);
   if (value && typeof value === "object")

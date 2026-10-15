@@ -37,6 +37,14 @@ export const CONTEXT_POLICY = {
   // All replayed outputs of one earlier turn together; past this, its
   // older outputs are replayed as one-line stubs.
   historyTurnToolTokens: 4_000,
+  // A stored output's label (tool, arguments, source), in characters, and
+  // each argument or source field in it.
+  outputLabelMaxChars: 300,
+  outputLabelPartMaxChars: 80,
+  // Long strings of an old call's arguments are replaced past this many
+  // characters, keeping the first few.
+  shrinkArgumentChars: 120,
+  shrinkArgumentKeepChars: 40,
 } as const;
 
 export function windowShare(

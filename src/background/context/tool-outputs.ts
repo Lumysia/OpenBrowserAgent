@@ -1,5 +1,8 @@
+import { newArtifactHandle } from "../tools/source-handles";
 import { estimateTextTokens } from "@earendil-works/pi-ai/utils/estimate";
 import type { ArtifactStore } from "../../shared/artifacts";
+import { canonicalJson } from "../../shared/sync/codec";
+import type { ChatSource } from "../../shared/types";
 import { CONTEXT_POLICY, tokenChars } from "./policy";
 
 const LABEL_KEYS = [
@@ -20,6 +23,8 @@ type ToolCallOutput = {
   toolName: string;
   input: Record<string, unknown>;
   text: string;
+  // What the output came from, when the tool said (a page, a file).
+  source?: Pick<ChatSource, "title" | "url" | "tabId">;
   // Read-only calls: an identical repeat with identical output is
   // answered with a reference to the earlier output.
   repeatable: boolean;
@@ -40,7 +45,7 @@ export function createToolOutputs(chatId: string, store: ArtifactStore) {
   function storeText(label: string, text: string) {
     let handle = stored.get(text);
     if (!handle) {
-      const name = `art-${crypto.randomUUID().slice(0, 8)}`;
+      const name = newArtifactHandle();
       handle = store
         .put({ chatId, handle: name, label, text, createdAt: Date.now() })
         .then(() => name);
@@ -80,15 +85,16 @@ export function createToolOutputs(chatId: string, store: ArtifactStore) {
     toolName,
     input,
     text,
+    source,
     repeatable,
     bounded,
   }: ToolCallOutput) {
     outputs.set(toolCallId, {
-      label: outputLabel(toolName, input, text),
+      label: outputLabel(toolName, input, source),
       text,
     });
     if (repeatable) {
-      const key = `${toolName}:${stableJson(input)}`;
+      const key = `${toolName}:${canonicalJson(input)}`;
       const previous = repeats.get(key);
       repeats.set(key, { text, toolCallId });
       if (previous?.text === text) {
@@ -112,51 +118,31 @@ export function createToolOutputs(chatId: string, store: ArtifactStore) {
   }
 }
 
-// Tool name plus the arguments and output fields that identify the source.
+// Tool name plus the arguments and the source that identify the output.
 function outputLabel(
   toolName: string,
   input: Record<string, unknown>,
-  text: string,
+  source: ToolCallOutput["source"],
 ) {
   const args = LABEL_KEYS.flatMap((key) =>
     input[key] === undefined || input[key] === ""
       ? []
       : [`${key}=${short(input[key])}`],
   );
-  const source = outputSource(text);
-  return [toolName, ...args, ...source].join(" ").slice(0, 300);
-}
-
-// Page tools start with "Tab 12: Title | URL"; JSON results may carry a
-// title and URL.
-function outputSource(text: string) {
-  const header = text.match(/^Tab \d+: .*$/m)?.[0];
-  if (header) return [short(header)];
-  try {
-    const value = JSON.parse(text);
-    return ["title", "url"].flatMap((key) =>
-      typeof value?.[key] === "string" && value[key]
-        ? [`${key}=${short(value[key])}`]
-        : [],
-    );
-  } catch {
-    return [];
-  }
+  const from = source
+    ? [
+        ...(source.tabId === undefined ? [] : [`tab=${source.tabId}`]),
+        ...(source.title ? [`title=${short(source.title)}`] : []),
+        ...(source.url ? [`url=${short(source.url)}`] : []),
+      ]
+    : [];
+  return [toolName, ...args, ...from]
+    .join(" ")
+    .slice(0, CONTEXT_POLICY.outputLabelMaxChars);
 }
 
 function short(value: unknown) {
   const text = typeof value === "string" ? value : JSON.stringify(value);
-  return text.length > 80 ? `${text.slice(0, 77)}...` : text;
-}
-
-function stableJson(value: unknown): string {
-  if (!value || typeof value !== "object") return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
-  return `{${Object.keys(value)
-    .sort()
-    .map(
-      (key) =>
-        `${JSON.stringify(key)}:${stableJson((value as Record<string, unknown>)[key])}`,
-    )
-    .join(",")}}`;
+  const max = CONTEXT_POLICY.outputLabelPartMaxChars;
+  return text.length > max ? `${text.slice(0, max - 3)}...` : text;
 }
