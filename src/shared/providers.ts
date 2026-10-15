@@ -65,6 +65,9 @@ type ProviderType = {
   modelList?: ProviderModelList;
   // Offered when adding a provider.
   addable?: boolean;
+  // Another way to talk to the same kind of service: offered as that
+  // type's "API style" instead of on its own when adding a provider.
+  apiStyleOf?: ProviderId;
   // Models can be added by name, besides those the endpoint lists.
   manualModels?: boolean;
 };
@@ -85,7 +88,7 @@ export const PROVIDERS = {
     api: "openai-responses",
     defaultBaseUrl: "https://api.openai.com/v1",
     reasoningParam: "reasoning_effort",
-    addable: true,
+    apiStyleOf: "openai",
     manualModels: true,
   },
   anthropic: {
@@ -123,6 +126,7 @@ export const PROVIDERS = {
     defaultBaseUrl: "https://api.deepseek.com/v1",
     reasoningParam: "reasoning_effort",
     thinkingFormat: "deepseek",
+    addable: true,
   },
   openrouter: {
     label: "OpenRouter",
@@ -130,6 +134,7 @@ export const PROVIDERS = {
     defaultBaseUrl: "https://openrouter.ai/api/v1",
     reasoningParam: "reasoning.effort",
     thinkingFormat: "openrouter",
+    addable: true,
   },
   aihubmix: {
     label: "AIHubMix",
@@ -137,6 +142,7 @@ export const PROVIDERS = {
     defaultBaseUrl: "https://aihubmix.com/v1",
     reasoningParam: "reasoning_effort",
     thinkingSwitch: true,
+    addable: true,
   },
   glm: {
     label: "Z.ai (Zhipu)",
@@ -145,12 +151,14 @@ export const PROVIDERS = {
     alternateBaseUrls: ["https://open.bigmodel.cn/api/paas/v4"],
     reasoningParam: "reasoning_effort",
     thinkingFormat: "zai",
+    addable: true,
   },
   aigateway: {
     label: "Vercel AI Gateway",
     api: "openai-completions",
     defaultBaseUrl: "https://api.ai-gateway.workers.dev/v1",
     thinkingSwitch: true,
+    addable: true,
   },
   minimax: {
     label: "Minimax",
@@ -159,8 +167,14 @@ export const PROVIDERS = {
     alternateBaseUrls: ["https://api.minimaxi.com/v1"],
     thinkingSwitch: true,
     manualModels: true,
+    addable: true,
   },
-} as const satisfies Record<string, ProviderType>;
+} as const satisfies Record<
+  string,
+  Omit<ProviderType, "apiStyleOf"> & {
+    apiStyleOf?: string;
+  }
+>;
 
 export type ProviderId = keyof typeof PROVIDERS;
 
@@ -179,6 +193,16 @@ export function providerType(type: string | undefined): ProviderType {
 export const ADD_PROVIDER_TYPES = PROVIDER_TYPES.filter(
   (type) => providerType(type).addable,
 );
+
+// The API styles a provider of `type` can switch between: the type its
+// style belongs to, then the others of it. One style: none to choose.
+export function providerApiStyles(type: string | undefined): ProviderId[] {
+  const base = (providerType(type).apiStyleOf ?? type) as string;
+  const styles = PROVIDER_TYPES.filter(
+    (id) => id === base || providerType(id).apiStyleOf === base,
+  );
+  return styles.length > 1 ? styles : [];
+}
 
 // The base URLs settings offer for the type: none (a free text field), or
 // its default and alternates.

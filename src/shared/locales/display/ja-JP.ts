@@ -8,11 +8,11 @@ export const displayJaJP: DisplayMessages = {
     characters: plural({ other: "{count}文字" }),
   },
   providerTypes: {
-    openai: "OpenAI 互換",
-    "openai-responses": "OpenAI Responses 互換",
-    anthropic: "Anthropic 互換",
-    gemini: "Gemini 互換",
-    ollama: "Ollama 互換",
+    openai: "OpenAI（または互換）",
+    "openai-responses": "OpenAI（Responses API）",
+    anthropic: "Anthropic（または互換）",
+    gemini: "Google Gemini",
+    ollama: "Ollama（ローカル）",
   },
   mcpServerPresets: {
     exa: "ウェブ検索とページ内容の抽出。",

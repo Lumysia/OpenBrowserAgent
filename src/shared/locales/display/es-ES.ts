@@ -11,11 +11,11 @@ export const displayEsES: DisplayMessages = {
     }),
   },
   providerTypes: {
-    openai: "Compatible con OpenAI",
-    "openai-responses": "Compatible con OpenAI Responses",
-    anthropic: "Compatible con Anthropic",
-    gemini: "Compatible con Gemini",
-    ollama: "Compatible con Ollama",
+    openai: "OpenAI (o compatible)",
+    "openai-responses": "OpenAI (API Responses)",
+    anthropic: "Anthropic (o compatible)",
+    gemini: "Google Gemini",
+    ollama: "Ollama (local)",
   },
   mcpServerPresets: {
     exa: "Búsqueda web y extracción del contenido de páginas.",

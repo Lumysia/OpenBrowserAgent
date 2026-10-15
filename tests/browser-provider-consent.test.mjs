@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { providerConsentEnUS as TEXT } from "../src/shared/locales/provider-consent/en-US.ts";
+import { displayEnUS } from "../src/shared/locales/display/en-US.ts";
 import { sendComposer, typeComposer } from "./browser-composer.mjs";
 import { BROWSER_TEST_TIMEOUT, unchangedFor } from "./browser-harness.mjs";
 import { typeText } from "./cdp-input.mjs";
@@ -55,7 +56,7 @@ test("provider consent", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
       id,
     );
   try {
-    await t.test("settings: no save without the checkbox", async () => {
+    await t.test("settings: the key waits for the checkbox", async () => {
       await setProviders({ remote: remote() });
       await options.send("Page.navigate", {
         url: extensionUrl("options.html#/providers"),
@@ -85,34 +86,31 @@ test("provider consent", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
         ),
         agreement,
       );
-      const saveState = () =>
-        options.call(() => {
-          const save = [
-            ...document.querySelectorAll(".provider-form-actions button"),
-          ].find((button) => button.textContent === "Save");
-          return save && !save.disabled;
-        });
-      // An edit alone cannot be saved.
-      await typeText(
-        options,
-        " edited",
-        'input[placeholder="OpenAI-compatible"]',
-      );
+      // Edits save as they are made; the API key waits for the box.
+      await typeText(options, "sk-remote", 'input[type="password"]');
       await poll(() =>
         options.call(
           (text) => document.body.textContent.includes(text),
           TEXT.requiredToSave,
         ),
       );
-      assert.equal(await saveState(), false);
+      await typeText(
+        options,
+        " edited",
+        `input[placeholder="${displayEnUS.providerTypes.openai}"]`,
+      );
+      await poll(async () =>
+        (await storedProvider("remote"))?.label?.endsWith(" edited"),
+      );
+      assert.equal(
+        await unchangedFor(async () => (await storedProvider("remote")).apiKey),
+        undefined,
+      );
       await options.call(() =>
         document.querySelector(".ui-checkbox input").click(),
       );
-      await poll(saveState);
-      await options.call(() =>
-        [...document.querySelectorAll(".provider-form-actions button")]
-          .find((button) => button.textContent === "Save")
-          .click(),
+      await poll(
+        async () => (await storedProvider("remote"))?.apiKey === "sk-remote",
       );
       const saved = await poll(
         async () => (await storedProvider("remote"))?.consent,

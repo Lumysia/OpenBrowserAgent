@@ -8,11 +8,11 @@ export const displayZhCN: DisplayMessages = {
     characters: plural({ other: "{count} 个字符" }),
   },
   providerTypes: {
-    openai: "OpenAI 兼容",
-    "openai-responses": "OpenAI Responses 兼容",
-    anthropic: "Anthropic 兼容",
-    gemini: "Gemini 兼容",
-    ollama: "Ollama 兼容",
+    openai: "OpenAI（或兼容）",
+    "openai-responses": "OpenAI（Responses API）",
+    anthropic: "Anthropic（或兼容）",
+    gemini: "Google Gemini",
+    ollama: "Ollama（本地）",
   },
   mcpServerPresets: {
     exa: "网页搜索和网页内容提取。",

@@ -8,11 +8,11 @@ export const displayKo: DisplayMessages = {
     characters: plural({ other: "{count}자" }),
   },
   providerTypes: {
-    openai: "OpenAI 호환",
-    "openai-responses": "OpenAI Responses 호환",
-    anthropic: "Anthropic 호환",
-    gemini: "Gemini 호환",
-    ollama: "Ollama 호환",
+    openai: "OpenAI(또는 호환)",
+    "openai-responses": "OpenAI(Responses API)",
+    anthropic: "Anthropic(또는 호환)",
+    gemini: "Google Gemini",
+    ollama: "Ollama(로컬)",
   },
   mcpServerPresets: {
     exa: "웹 검색과 웹페이지 내용 추출.",

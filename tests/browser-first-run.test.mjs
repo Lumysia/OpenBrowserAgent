@@ -48,6 +48,49 @@ test(
         await setup.call(() => !!document.querySelector("textarea")),
         false,
       );
+      // Named services are added from the list; the Responses API is an
+      // API style of OpenAI, not a list entry.
+      await clickElement(setup, '.provider-add-row [role="combobox"]');
+      await poll(
+        async () => (await texts(setup, '[role="option"]')).length > 0,
+      );
+      const types = await texts(setup, '[role="option"]');
+      for (const name of [
+        t.display.providerTypes.openai,
+        t.display.providerTypes.anthropic,
+        "DeepSeek",
+        "OpenRouter",
+      ])
+        assert.ok(types.includes(name), `${name} in ${types.join("|")}`);
+      assert.equal(
+        types.includes(t.display.providerTypes["openai-responses"]),
+        false,
+      );
+      await clickElement(setup, '[role="option"]', { text: "DeepSeek" });
+      await clickElement(setup, ".provider-add-row button", {
+        text: t.sidepanel.addProvider,
+      });
+      const stored = await poll(() =>
+        setup.call(
+          async (key) => (await chrome.storage.local.get(key))[key]?.deepseek,
+          STORAGE_KEYS.provider,
+        ),
+      );
+      assert.equal(stored.baseUrl, "https://api.deepseek.com/v1");
+      // The base URL is under Advanced.
+      const baseUrlShown = () =>
+        setup.call(
+          (label) =>
+            [...document.querySelectorAll("label")].some((item) =>
+              item.textContent.startsWith(label),
+            ),
+          t.options.baseUrl,
+        );
+      assert.equal(await baseUrlShown(), false);
+      await clickElement(setup, ".ui-disclosure-trigger", {
+        text: t.options.advanced,
+      });
+      await poll(baseUrlShown);
       // Not listed in the sidebar.
       assert.equal(
         (await texts(setup, ".nav-link")).includes(t.setup.welcomeTitle),

@@ -12,11 +12,11 @@ export const displayEnUS = {
     }),
   },
   providerTypes: {
-    openai: "OpenAI-compatible",
-    "openai-responses": "OpenAI Responses-compatible",
-    anthropic: "Anthropic-compatible",
-    gemini: "Gemini-compatible",
-    ollama: "Ollama-compatible",
+    openai: "OpenAI (or compatible)",
+    "openai-responses": "OpenAI (Responses API)",
+    anthropic: "Anthropic (or compatible)",
+    gemini: "Google Gemini",
+    ollama: "Ollama (local)",
   },
   // Recommended MCP servers (mcp-presets.ts), by name: what each offers.
   mcpServerPresets: {

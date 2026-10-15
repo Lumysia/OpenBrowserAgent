@@ -39,8 +39,12 @@ export function ProviderList() {
 
   if (!providerState) return null;
 
+  // A form saving its last edit as it closes leaves a deleted provider
+  // deleted.
   function updateProvider(providerId: string, next: ProviderConfig) {
-    setProviderState((previous) => ({ ...previous, [providerId]: next }));
+    setProviderState((previous) =>
+      previous[providerId] ? { ...previous, [providerId]: next } : previous,
+    );
   }
 
   function addProvider() {

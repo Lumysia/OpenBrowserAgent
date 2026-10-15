@@ -8,11 +8,11 @@ export const displayZhTW: DisplayMessages = {
     characters: plural({ other: "{count} 個字元" }),
   },
   providerTypes: {
-    openai: "OpenAI 相容",
-    "openai-responses": "OpenAI Responses 相容",
-    anthropic: "Anthropic 相容",
-    gemini: "Gemini 相容",
-    ollama: "Ollama 相容",
+    openai: "OpenAI（或相容）",
+    "openai-responses": "OpenAI（Responses API）",
+    anthropic: "Anthropic（或相容）",
+    gemini: "Google Gemini",
+    ollama: "Ollama（本機）",
   },
   mcpServerPresets: {
     exa: "網頁搜尋和網頁內容擷取。",
