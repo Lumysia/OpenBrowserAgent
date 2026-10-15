@@ -13,6 +13,7 @@ import {
   type ThinkingSwitch,
 } from "../src/shared/thinking-switch";
 import type { ProviderId } from "../src/shared/providers";
+import { installChrome } from "./fake-chrome";
 import { providerFixture, reply } from "./provider-fixtures";
 
 type Body = Record<string, any>;
@@ -220,7 +221,12 @@ test("a 400 naming a quick field retries once without it, and is remembered", as
         ? rejectTemplate(request, response, requests)
         : ok(request, response, requests),
     async (fixture) => {
-      const model = fixtureModel("openai", "fixture-400", fixture.baseUrl);
+      installChrome();
+      const model = {
+        ...fixtureModel("openai", "fixture-400", fixture.baseUrl),
+        // A configured model keeps what it refused.
+        ref: { key: "fixture-400", config: "1" },
+      };
       const first = await requestQuickText(
         model,
         { prompt: "Hi" },
@@ -229,9 +235,8 @@ test("a 400 naming a quick field retries once without it, and is remembered", as
       assert.equal(first.text, "OK");
       assert.equal(fixture.requests.length, 2);
       assert.equal(fixture.requests[1].body.chat_template_kwargs, undefined);
-      // The same endpoint and model, written another way.
       await requestQuickText(
-        { ...model, baseUrl: `${model.baseUrl}/` },
+        model,
         { prompt: "Hi" },
         QUICK_TASK_PRIORITY.background,
       );

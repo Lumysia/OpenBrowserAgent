@@ -13,7 +13,7 @@ const STORAGE_KEY_GROUPS = {
     STORAGE_KEYS.activeSyncBackendId,
     STORAGE_KEYS.syncGroups,
   ],
-  providers: [STORAGE_KEYS.provider],
+  providers: [STORAGE_KEYS.provider, STORAGE_KEYS.learnedModelLimits],
   agents: [STORAGE_KEYS.agents, STORAGE_KEYS.agentWorkspaces],
   skills: [STORAGE_KEYS.skills, STORAGE_KEYS.skillSettings],
   mcpServers: [STORAGE_KEYS.mcpServers],
