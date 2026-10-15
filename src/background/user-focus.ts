@@ -39,6 +39,8 @@ export async function watchOpenedTabs(sourceTabId: number): Promise<Watch> {
     if (current !== undefined && current !== tabId)
       before.set(windowId, current);
     active.set(windowId, tabId);
+    // A tab the page opened may come to the front only after it was found.
+    if (opened.includes(tabId)) restoring.push(putBack(tabId));
   };
   const onFocusChanged = (windowId: number) => {
     if (windowId >= 0 && active.has(windowId)) userWindow = windowId;

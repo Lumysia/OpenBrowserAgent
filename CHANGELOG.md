@@ -6,6 +6,7 @@ What changed in each release. The release workflow publishes the section for the
 
 - An MCP server or bridge test error saved by an earlier version no longer repeats "Server test failed" or "Bridge test failed" in front of the reason.
 - Skills you picked are highlighted in the skill list, like the chosen model and agent.
+- When a page the agent works on opens a new tab, your tab now always comes back to the front; before, it sometimes stayed on the new tab.
 
 ## 0.2.0-beta.9 - 2026-10-14
 
