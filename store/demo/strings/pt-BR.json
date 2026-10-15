@@ -62,9 +62,8 @@
     "chatTitle": "Mesa no Saltmarsh na sexta",
     "answer": "Preenchi **{party}**, **{date} às {time}**, em nome de {name}. Ainda não enviei: confira e clique em **Solicitar reserva**."
   },
-  "research": {
-    "name": "Pesquisa",
-    "description": "Compara fontes e escreve resumos curtos com citações",
-    "prompt": "Pesquise a pergunta em várias fontes. Prefira fontes primárias, como documentação oficial, artigos e changelogs, a resumos.\n\nAponte onde as fontes discordam e por quê.\n\nTermine com um resumo curto: primeiro as principais conclusões, depois as perguntas em aberto. Cite a fonte de cada afirmação."
+  "providers": {
+    "main": "Meu provedor de IA",
+    "local": "Modelos locais"
   }
 }

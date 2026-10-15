@@ -66,9 +66,8 @@
     "chatTitle": "Table au Saltmarsh vendredi",
     "answer": "C’est rempli : **{party}**, **{date} à {time}**, au nom de {name}. Rien n’est encore envoyé : vérifiez, puis cliquez sur **Demander une réservation**."
   },
-  "research": {
-    "name": "Recherche",
-    "description": "Compare les sources et rédige des synthèses courtes et sourcées",
-    "prompt": "Recherche la question dans plusieurs sources. Privilégie les sources primaires, comme la documentation officielle, les articles de recherche et les journaux des modifications, plutôt que les résumés.\n\nSignale les points de désaccord entre les sources, et pourquoi.\n\nTermine par une synthèse courte : d’abord les conclusions principales, puis les questions ouvertes. Source chaque affirmation."
+  "providers": {
+    "main": "Mon fournisseur d’IA",
+    "local": "Modèles locaux"
   }
 }

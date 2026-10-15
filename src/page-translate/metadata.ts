@@ -330,13 +330,20 @@ const SITE_NAME = /^[\p{L}\d-]+(\.[\p{L}\d-]+)*\.\p{L}{2,}$/u;
 // "8,848 m (29,031 ft)"): letters written onto a number ("12th", "4K") are
 // part of it, and every other word is a unit, a currency or a compact
 // suffix. Other words around a number make it text ("Ep 12: The End", "Day
-// 1 of 3").
+// 1 of 3"). Scripts written without spaces join numbers and words in one
+// token ("この3年間、…"): only a few letters right at a number are part of
+// it.
+const NUMBER_WITH_LETTERS =
+  /(?:(?<!\p{L})\p{L}{1,3})?\d[\d.,]*[°%‰′″]?(?:\p{L}{1,3}(?!\p{L}))?/gu;
+
 function isNumber(trimmed: string, { units, compact }: LocaleWords) {
   if (!/\d/.test(trimmed)) return false;
   return trimmed
     .split(/\s+/)
-    .filter((token) => !/\d/.test(token))
-    .flatMap((token) => token.match(/\p{L}+/gu) || [])
+    .flatMap(
+      (token) =>
+        token.replace(NUMBER_WITH_LETTERS, " ").match(/\p{L}+/gu) || [],
+    )
     .every((word) => compact.includes(word.toLowerCase()) || units().has(word));
 }
 

@@ -62,9 +62,8 @@
     "chatTitle": "Saltmarsh table for Friday",
     "answer": "Filled in **{party}**, **{date} at {time}**, for {name}. Not submitted yet: review it, then press **Request booking**."
   },
-  "research": {
-    "name": "Research",
-    "description": "Compares sources and writes short, cited briefs",
-    "prompt": "Research the question across several sources. Prefer primary sources such as official docs, papers and changelogs over summaries.\n\nNote where sources disagree and why.\n\nFinish with a short brief: key findings first, then open questions. Cite every claim."
+  "providers": {
+    "main": "My AI provider",
+    "local": "Local models"
   }
 }

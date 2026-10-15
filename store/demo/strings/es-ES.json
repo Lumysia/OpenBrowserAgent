@@ -62,9 +62,8 @@
     "chatTitle": "Mesa en Saltmarsh el viernes",
     "answer": "He rellenado **{party}**, **{date} a las {time}**, a nombre de {name}. Aún no se ha enviado: revísala y pulsa **Solicitar reserva**."
   },
-  "research": {
-    "name": "Investigación",
-    "description": "Compara fuentes y redacta informes breves con citas",
-    "prompt": "Investiga la pregunta en varias fuentes. Prioriza las fuentes primarias, como documentación oficial, artículos y registros de cambios, frente a los resúmenes.\n\nIndica dónde no coinciden las fuentes y por qué.\n\nTermina con un informe breve: primero las conclusiones clave y después las preguntas abiertas. Cita cada afirmación."
+  "providers": {
+    "main": "Mi proveedor de IA",
+    "local": "Modelos locales"
   }
 }

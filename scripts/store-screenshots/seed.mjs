@@ -6,52 +6,54 @@ export const BASE_PREFERENCES = {
   maxToolSteps: 20,
 };
 
-const model = (provider, label, name) => ({
-  id: `${provider}:${name}`,
-  name,
-  displayName: `${label} / ${name}`,
-});
+// The demo AI providers have names in the locale's words and neutral model
+// names: the store counts third-party brand names in screenshots as keyword
+// spam. Ids are the same in every locale.
+const MAIN = "main";
+const LOCAL = "local";
+export const MAIN_MODEL_ID = `${MAIN}:assistant-large`;
 
-// Placeholder keys: the options page masks them and nothing is ever sent.
-const PROVIDERS = {
-  openai: {
-    id: "openai",
-    type: "openai-responses",
-    label: "OpenAI",
-    baseUrl: "https://api.openai.com/v1",
-    apiKey: "sk-demo-0000000000000000000000000000",
-    consent: { host: "api.openai.com", grantedAt: 1767225600000 },
-    models: [
-      model("openai", "OpenAI", "gpt-5"),
-      model("openai", "OpenAI", "gpt-5-mini"),
-    ],
-  },
-  anthropic: {
-    id: "anthropic",
-    type: "anthropic",
-    label: "Anthropic",
-    baseUrl: "https://api.anthropic.com/v1",
-    apiKey: "sk-ant-demo-000000000000000000000000",
-    consent: { host: "api.anthropic.com", grantedAt: 1767225600000 },
-    models: [
-      model("anthropic", "Anthropic", "claude-sonnet-4-5"),
-      model("anthropic", "Anthropic", "claude-opus-4-1"),
-    ],
-  },
-};
+const models = (provider, label, names) =>
+  names.map((name) => ({
+    id: `${provider}:${name}`,
+    name,
+    displayName: `${label} / ${name}`,
+  }));
 
-// A custom agent next to the built-in ones, in the locale's words.
-const researchAgent = (research) => ({
-  id: "research",
-  name: research.name,
-  description: research.description,
-  icon: "search",
-  prompt: research.prompt,
-  toolGroups: ["pages", "web", "skills", "history", "subAgents"],
-  modelId: "anthropic:claude-sonnet-4-5",
-  workspace: true,
-  createdAt: 1767225600000,
-  updatedAt: 1767225600000,
+// The main AI provider, answering at `baseUrl`. A consent stored for its
+// host keeps the prompt before the first message away; the key is a
+// placeholder that the options page masks and nothing ever receives.
+export function mainProvider(demo, baseUrl, apiKey = "") {
+  const label = demo.providers.main;
+  return {
+    id: MAIN,
+    type: "openai",
+    label,
+    baseUrl,
+    apiKey,
+    consent: { host: new URL(baseUrl).host, grantedAt: 1767225600000 },
+    models: models(MAIN, label, [
+      "assistant-large",
+      "assistant-small",
+      "assistant-vision",
+    ]),
+  };
+}
+
+const providers = (demo) => ({
+  [MAIN]: mainProvider(
+    demo,
+    "https://api.example.com/v1",
+    "sk-demo-0000000000000000000000000000",
+  ),
+  [LOCAL]: {
+    id: LOCAL,
+    type: "openai",
+    label: demo.providers.local,
+    baseUrl: "http://localhost:8080/v1",
+    apiKey: "",
+    models: models(LOCAL, demo.providers.local, ["local-small"]),
+  },
 });
 
 // Seeds the settings shots through the options page itself, then reloads it.
@@ -60,19 +62,14 @@ export async function seedOptions(page, demo) {
     async (values) => {
       await chrome.storage.local.set({
         provider: values.providers,
-        agents: [values.agent],
         language: values.locale,
-        preferences: { ...values.preferences, selectedModelId: "openai:gpt-5" },
-        "skill-settings": {
-          "builtin-local-execution-bridge-setup": { invoke: "manual" },
-        },
+        preferences: values.preferences,
       });
     },
     {
-      providers: PROVIDERS,
-      agent: researchAgent(demo.research),
+      providers: providers(demo),
       locale: demo.locale,
-      preferences: BASE_PREFERENCES,
+      preferences: { ...BASE_PREFERENCES, selectedModelId: MAIN_MODEL_ID },
     },
   );
   await page.send("Page.reload");
