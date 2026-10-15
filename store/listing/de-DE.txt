@@ -20,7 +20,7 @@ AGENTEN UND SKILLS
 
 IHRE MODELLE, IHRE TOOLS
 
-• Verbinden Sie OpenAI-kompatible und Anthropic-kompatible Anbieter, Gemini, OpenRouter, DeepSeek, Ollama und weitere Anbieter mit Ihren eigenen API-Schlüsseln und Basis-URLs.
+• Verbinden Sie OpenAI-kompatible oder Anthropic-kompatible Dienste oder ein lokales Modell mit Ihren eigenen API-Schlüsseln und Basis-URLs.
 • Nutzen Sie für das Lesen langer Seiten ein günstigeres Hilfsmodell.
 • Verbinden Sie entfernte MCP-Server (Streamable HTTP) für zusätzliche Tools. Server für die Websuche ohne API-Schlüssel werden empfohlen und lassen sich mit einem Klick hinzufügen; jeder bleibt aus, bis Sie ihn einschalten.
 • Genaue Zahlen: Der Agent kann selbst geschriebenen JavaScript-Code in einer Sandbox auf Ihrem Gerät ausführen, ohne Internetzugriff, um zu rechnen, Tabellen auszuwerten und Daten umzuformen.

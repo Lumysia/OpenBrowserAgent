@@ -20,7 +20,7 @@ OpenBrowserAgent 把 AI 智慧體放進瀏覽器的側邊欄。你可以針對�
 
 【你的模型，你的工具】
 
-• 使用你自己的 API Key 和 Base URL，連接 OpenAI 相容、Anthropic 相容、Gemini、OpenRouter、DeepSeek、Ollama 等提供者。
+• 使用你自己的 API Key 和 Base URL，連接 OpenAI 相容或 Anthropic 相容的服務，或者本機模型。
 • 可以使用較便宜的輔助模型來閱讀長篇網頁。
 • 連接遠端 MCP 伺服器（Streamable HTTP），取得更多工具。推薦了不需 API Key 的網頁搜尋伺服器，一鍵即可新增，每一個都預設關閉，由你決定是否開啟。
 • 精確計算：智慧體可以在你裝置上的沙盒中執行它撰寫的 JavaScript 程式碼（無法連上網路），用於計算、解析表格和轉換資料。
