@@ -16,6 +16,7 @@ import {
   isLayerRoot,
   layerBox,
   lineAt,
+  scrollAndMeasure,
   seek,
   shownLine,
   startSubtitles,
@@ -340,6 +341,28 @@ test(
           await page.call(() => document.getElementById("video").play());
           await resize(1300);
           assert.ok(await poll(() => placedIn(1300)));
+          // Small: both lines still fit in the player.
+          await resize(420);
+          assert.ok(await poll(() => placedIn(420)));
+          await resize(1200);
+          assert.ok(await poll(() => placedIn(1200)));
+          // The page scrolls: the layer is over the player at once, with no
+          // frame in between, playing and paused.
+          for (const paused of [false, true]) {
+            if (paused)
+              await page.call(() => document.getElementById("video").pause());
+            for (const y of [140, 90, -230]) {
+              const { layer, player } = await scrollAndMeasure(page, y);
+              const near = (a, b) => Math.abs(a - b) <= 1;
+              assert.ok(
+                near(layer.left, player.left) &&
+                  near(layer.right, player.right) &&
+                  layer.top >= player.top &&
+                  layer.bottom < player.bottom,
+                JSON.stringify({ paused, y, layer, player }),
+              );
+            }
+          }
           await page.send("Page.close");
         },
       );

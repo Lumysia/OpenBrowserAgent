@@ -151,8 +151,7 @@ export function startVideoSession(
     if (!video.paused) play();
   }
 
-  // Each frame while playing with lines, so they change on time and the
-  // layer follows the video as it moves.
+  // Each frame while playing with lines, so they change on time.
   function loop() {
     frame = undefined;
     update();

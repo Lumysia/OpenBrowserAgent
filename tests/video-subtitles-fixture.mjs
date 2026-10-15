@@ -94,12 +94,14 @@ ${VIDEO_TAG}></video>
 <script>const r = new XMLHttpRequest(); r.open('GET', '/api/captions?fmt=json3&lang=en&start'); r.onload = () => { window.loaded = JSON.parse(r.responseText).events.length; }; r.send();</script>
 </body></html>`,
   // A player that clips a video larger than itself and offset in it, and
-  // lays itself out again a moment after the window changes size.
+  // lays itself out again a moment after the window changes size, on a
+  // page that scrolls.
   "/clipped": `<!doctype html><html lang="en"><head><title>Clipped player</title>${STYLE}</head><body>
 <div id="player" style="position:relative;overflow:hidden;background:#000">
 <video id="video" src="/blank.webm" muted playsinline loop preload="auto" style="position:absolute;left:0;top:12%;width:115%;height:115%"><track kind="subtitles" srclang="en" label="English" src="/captions.vtt" default></video>
 </div>
 <p>The video's title, under the player.</p>
+<div style="height:2000px"></div>
 <script>
 const player = document.getElementById("player");
 const layout = () => {
@@ -196,6 +198,27 @@ export function layerBox(page) {
     const { left, top, right, bottom } = layer.getBoundingClientRect();
     return { left, top, right, bottom };
   });
+}
+
+// Scrolls the page by `y` and, in the same task (before any frame), gives
+// the layer's box and the box of the element `id`.
+export function scrollAndMeasure(page, y, id = "player") {
+  return inShadowRoot(
+    page,
+    isLayerRoot,
+    (root, { y, id }) => {
+      scrollBy(0, y);
+      const box = (element) => {
+        const { left, top, right, bottom } = element.getBoundingClientRect();
+        return { left, top, right, bottom };
+      };
+      return {
+        layer: box(root.querySelector(".layer")),
+        player: box(document.getElementById(id)),
+      };
+    },
+    { y, id },
+  );
 }
 
 // Whether the page's caption observer wraps XMLHttpRequest.

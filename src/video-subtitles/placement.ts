@@ -2,7 +2,8 @@
 // A player often clips its <video> (a box with `overflow: hidden` around a
 // video that is larger, or offset while the player lays itself out), so the
 // video's own box can reach past the player; the layer follows the video's
-// box cut by every ancestor that clips it, and by the viewport.
+// box cut by every ancestor that clips it (and by the viewport, for a layer
+// fixed to it).
 
 export type Box = { left: number; top: number; right: number; bottom: number };
 
@@ -11,14 +12,14 @@ export type Clip = { box: Box; x: boolean; y: boolean };
 
 // Caption conventions rather than the page's look: light text on a dark
 // box, sized from the visible video's height.
-const SIZE = { share: 0.042, min: 12, max: 34 } as const;
+export const SUBTITLE_SIZE = { share: 0.03, min: 12, max: 28 } as const;
 // Above the player's control bar, as a share of the visible height.
 const BOTTOM_SHARE = 0.1;
 
-// The video's box cut by its clipping ancestors and the viewport, or
-// undefined when none of it shows.
-export function visibleBox(video: Box, clips: Clip[], viewport: Box) {
-  let box = intersect(video, viewport, true, true);
+// The video's box cut by its clipping ancestors (and the viewport, when
+// given), or undefined when none of it shows.
+export function visibleBox(video: Box, clips: Clip[], viewport?: Box) {
+  let box = viewport ? intersect(video, viewport, true, true) : video;
   for (const clip of clips) box = intersect(box, clip.box, clip.x, clip.y);
   return box.right > box.left && box.bottom > box.top ? box : undefined;
 }
@@ -32,14 +33,23 @@ function intersect(a: Box, b: Box, x: boolean, y: boolean): Box {
   };
 }
 
-// The layer's place in the viewport (`position: fixed`) and its font size.
-export function layerPlacement(visible: Box, viewportHeight: number) {
+// The layer's place relative to `origin` (the point its own box is
+// positioned from, in the same coordinates as `visible`): its left edge,
+// width, the distance of its bottom edge below the origin, and its font
+// size.
+export function layerPlacement(
+  visible: Box,
+  origin: { left: number; top: number },
+) {
   const height = visible.bottom - visible.top;
   return {
-    left: visible.left,
+    left: visible.left - origin.left,
     width: visible.right - visible.left,
-    bottom: viewportHeight - visible.bottom + height * BOTTOM_SHARE,
-    size: Math.min(SIZE.max, Math.max(SIZE.min, height * SIZE.share)),
+    bottom: visible.bottom - height * BOTTOM_SHARE - origin.top,
+    size: Math.min(
+      SUBTITLE_SIZE.max,
+      Math.max(SUBTITLE_SIZE.min, height * SUBTITLE_SIZE.share),
+    ),
   };
 }
 
@@ -59,12 +69,7 @@ export function clippingAncestors(element: Element) {
     node = parentOf(node)
   ) {
     const style = getComputedStyle(node);
-    const transformed = style.transform !== "none";
-    const containing =
-      position === "fixed"
-        ? transformed
-        : position !== "absolute" || style.position !== "static" || transformed;
-    if (!containing) continue;
+    if (!containsAs(position, style)) continue;
     const x = style.overflowX !== "visible";
     const y = style.overflowY !== "visible";
     if (x || y) clips.push({ element: node, x, y });
@@ -72,6 +77,71 @@ export function clippingAncestors(element: Element) {
     position = style.position;
   }
   return clips;
+}
+
+// Whether a box styled `style` is the containing block (or the one above
+// it) for a descendant positioned `position`.
+function containsAs(position: string, style: CSSStyleDeclaration) {
+  const transformed = style.transform !== "none";
+  if (position === "fixed") return transformed;
+  if (position === "absolute")
+    return style.position !== "static" || transformed;
+  return true;
+}
+
+// Elements whose children aren't laid out as boxes in them.
+const NO_CHILD_BOXES = new Set([
+  "AUDIO",
+  "CANVAS",
+  "EMBED",
+  "IFRAME",
+  "IMG",
+  "OBJECT",
+  "PICTURE",
+  "SELECT",
+  "TEXTAREA",
+  "VIDEO",
+]);
+
+// Where a layer scrolls and moves with `video` by itself: next to it, as an
+// absolutely positioned box, so the browser moves both on its own when the
+// page scrolls. None for a video that moves apart from what is around it
+// (fixed or sticky), a parent that can't hold another box, or a scrolling
+// box between the parent and the layer's containing block (the video
+// would scroll in it and the layer wouldn't).
+export function layerParent(video: Element): Node | undefined {
+  const parent = video.parentNode;
+  if (!parent) return undefined;
+  const { position } = getComputedStyle(video);
+  if (position === "fixed" || position === "sticky") return undefined;
+  if (
+    !(parent instanceof ShadowRoot) &&
+    (!(parent instanceof HTMLElement) || NO_CHILD_BOXES.has(parent.tagName))
+  )
+    return undefined;
+  const first = parent instanceof ShadowRoot ? parent.host : parent;
+  for (
+    let node: Element | null = first;
+    node && node !== document.documentElement;
+    node = parentOf(node)
+  ) {
+    const style = getComputedStyle(node);
+    if (containsAs("absolute", style)) return parent;
+    if (
+      /auto|scroll/.test(style.overflowX + style.overflowY) &&
+      !scrollsViewport(node)
+    )
+      return undefined;
+  }
+  return parent;
+}
+
+// The body's overflow is the viewport's when the root element sets none.
+function scrollsViewport(element: Element) {
+  return (
+    element === document.body &&
+    getComputedStyle(document.documentElement).overflow === "visible"
+  );
 }
 
 function parentOf(element: Element): Element | null {
