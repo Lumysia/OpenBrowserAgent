@@ -19,12 +19,6 @@ export const SMART_BAR_MESSAGE = {
 
 export const SMART_BAR_STREAM_PORT = "smart-bar-stream";
 
-// Bundled page scripts, as built by WXT (`registration: "runtime"`).
-export const SMART_BAR_SCRIPT = {
-  trigger: "content-scripts/smart-bar.js",
-  ui: "content-scripts/smart-bar-ui.js",
-} as const;
-
 export const SMART_BAR_COMMAND = "smart-bar";
 
 export type SmartBarMessages = LocaleMessages["smartBar"];

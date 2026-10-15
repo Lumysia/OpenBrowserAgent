@@ -2,14 +2,6 @@
 // Dependency-free (types only): the page scripts import this module.
 import type { PageToastTheme } from "../page-toast";
 
-// Built by WXT (`registration: "runtime"`). The subtitle script is injected
-// when the user starts translating subtitles; the button script is
-// registered on every page while the video button is on.
-export const VIDEO_SUBTITLES_SCRIPT = {
-  main: "content-scripts/video-subtitles.js",
-  button: "content-scripts/video-button.js",
-} as const;
-
 export const VIDEO_SUBTITLES_MESSAGE = {
   // Background -> page: start or stop translating one video's subtitles
   // (the one the user pointed at: its button, or the right-click).

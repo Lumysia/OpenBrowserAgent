@@ -15,8 +15,6 @@ export type PageToastOptions = {
   durationMs: number;
 };
 
-// The page script the background injects to show a note (see
-// entrypoints/page-toast.content.ts); it leaves showPageToast under this
-// global of the extension's isolated world.
-export const PAGE_TOAST_SCRIPT = "content-scripts/page-toast.js";
+// The page script that shows a note (PAGE_SCRIPT.pageToast) leaves
+// showPageToast under this global of the extension's isolated world.
 export const PAGE_TOAST_GLOBAL = "__obaShowPageToast";

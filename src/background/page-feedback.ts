@@ -1,11 +1,11 @@
 import { PRODUCT_NAME } from "../shared/config";
 import {
   PAGE_TOAST_GLOBAL,
-  PAGE_TOAST_SCRIPT,
   type PageToastOptions,
   type PageToastTheme,
 } from "../shared/page-toast";
 import { getBrowserApi } from "../shared/browser-api";
+import { PAGE_SCRIPT } from "../shared/page-scripts";
 
 // How long the toolbar badge shows.
 const BADGE_MS = 4_000;
@@ -21,7 +21,7 @@ export async function showPageNote(
   const { scripting } = getBrowserApi();
   const target = { tabId, frameIds: [0] };
   try {
-    await scripting.executeScript({ target, files: [PAGE_TOAST_SCRIPT] });
+    await scripting.executeScript({ target, files: [PAGE_SCRIPT.pageToast] });
     const [result] = await scripting.executeScript({
       target,
       func: callPageToast,

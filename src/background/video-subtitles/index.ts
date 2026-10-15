@@ -5,12 +5,12 @@ import { getMessages } from "../../shared/i18n";
 // observer it asks for (see main-world.ts).
 import { normalizePageTranslateSettings } from "../../shared/page-translate/settings";
 import { getBrowserApi } from "../../shared/browser-api";
+import { PAGE_SCRIPT } from "../../shared/page-scripts";
 import { storage } from "../../shared/storage";
 import {
   CAPTION_RESPONSE_MAX_CHARS,
   MIN_VIDEO_SIZE,
   VIDEO_SUBTITLES_MESSAGE,
-  VIDEO_SUBTITLES_SCRIPT,
   type VideoButtonConfig,
   type VideoSubtitlesNotes,
   type VideoSubtitlesObserveMessage,
@@ -167,7 +167,7 @@ function injectScript(tabId: number, frameId: number) {
   return getBrowserApi()
     .scripting.executeScript({
       target: { tabId, frameIds: [frameId] },
-      files: [VIDEO_SUBTITLES_SCRIPT.main],
+      files: [PAGE_SCRIPT.videoSubtitles],
     })
     .then(
       () => true,

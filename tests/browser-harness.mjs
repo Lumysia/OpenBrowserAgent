@@ -139,7 +139,7 @@ export function servePages(pages, request, response) {
 }
 
 // Waits until the extension registered the page script `script` (a file
-// such as SMART_BAR_SCRIPT.trigger; the smart bar's once it is turned on).
+// such as PAGE_SCRIPT.smartBar; the smart bar's once it is turned on).
 export function contentScriptsRegistered(page, script) {
   return poll(() =>
     page.call(
