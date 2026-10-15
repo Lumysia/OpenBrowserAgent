@@ -1,6 +1,7 @@
 import { getMessages } from "../../shared/i18n";
 import { respondWith, type RuntimeReply } from "../../shared/runtime-messages";
 import {
+  PAGE_TRANSLATE_COMMAND,
   PAGE_TRANSLATE_MESSAGE,
   PAGE_TRANSLATE_PORT,
   PAGE_TRANSLATE_TOAST_MS,
@@ -34,6 +35,9 @@ export function setupPageTranslate() {
   translateMode = watchTranslateMode(startPageTranslation);
   getBrowserApi().runtime.onConnect.addListener((port) => {
     if (port.name === PAGE_TRANSLATE_PORT) handlePort(port);
+  });
+  getBrowserApi().commands?.onCommand.addListener((command, tab) => {
+    if (command === PAGE_TRANSLATE_COMMAND) void toggleWithShortcut(tab);
   });
   // Translated pages follow the display settings at once. Every change is
   // sent: the first one after the worker starts has nothing to compare with.
@@ -102,6 +106,20 @@ export async function togglePageTranslation(tab: chrome.tabs.Tab | undefined) {
       { tone: "error", durationMs: PAGE_TRANSLATE_TOAST_MS },
     ));
   if (!noted) await flashBadge(tabId, messages.unavailablePage);
+}
+
+// The shortcut does nothing while it is turned off in Settings.
+async function toggleWithShortcut(tab: chrome.tabs.Tab | undefined) {
+  const preferences = await storage.preferences.get();
+  if (!normalizePageTranslateSettings(preferences.pageTranslate).shortcut)
+    return;
+  const [active] = tab
+    ? [tab]
+    : await getBrowserApi().tabs.query({
+        active: true,
+        lastFocusedWindow: true,
+      });
+  await togglePageTranslation(active);
 }
 
 // A later page in a tab in translate mode; quietly nothing where the page

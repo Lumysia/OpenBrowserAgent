@@ -20,6 +20,10 @@ export const PAGE_TRANSLATE_MESSAGE = {
   query: "page-translate:query",
 } as const;
 
+// The keyboard shortcut's command (manifest `commands`): the same as the
+// menu item.
+export const PAGE_TRANSLATE_COMMAND = "translate-page";
+
 // How long a note about a problem stays on the page.
 export const PAGE_TRANSLATE_TOAST_MS = 8_000;
 

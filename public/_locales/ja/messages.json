@@ -7,5 +7,8 @@
   },
   "smartBarCommand": {
     "message": "選択したテキストにスマートバーを表示"
+  },
+  "translatePageCommand": {
+    "message": "このページを翻訳、または原文を表示"
   }
 }
