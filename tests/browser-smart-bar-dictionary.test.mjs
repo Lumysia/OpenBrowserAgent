@@ -129,14 +129,24 @@ test("smart bar dictionary", { timeout: BROWSER_TEST_TIMEOUT }, async (t) => {
     });
 
     await t.test(
-      "a word in another language gets the reply language",
+      "a word in another language gets the Translate into language",
       async () => {
         await run("#chinese", "Translate");
-        // English UI, Chinese word: the entry is in the reply language.
+        // English UI, no "Translate into": the extension's language.
         assert.match(
           JSON.stringify(lastRequest().body),
-          /The entry language is American English\. /,
+          /The entry language is English\. /,
         );
+        // The language page translation uses, not the UI language.
+        await session.setPreferences({
+          pageTranslate: { targetLanguage: "ja" },
+        });
+        await run("#chinese", "Translate");
+        assert.match(
+          JSON.stringify(lastRequest().body),
+          /The entry language is Japanese\. /,
+        );
+        await session.setPreferences({ pageTranslate: {} });
       },
     );
 

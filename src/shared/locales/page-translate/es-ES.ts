@@ -43,7 +43,7 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
   modelDescription: "El modelo que traduce las páginas.",
   targetLanguage: "Traducir a",
   targetLanguageDescription:
-    "Las páginas se traducen a este idioma. No cambia el idioma de la extensión.",
+    "Las páginas, los subtítulos de vídeos y «Traducir» de la barra inteligente usan este idioma. No cambia el idioma de la extensión.",
   followInterface: "Idioma de la extensión ({language})",
   display: "Visualización",
   displayDescription:
@@ -95,7 +95,7 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
     hideEverywhere: "Ocultar en todas partes",
     setting: "Botón de traducir en las páginas",
     settingDescription:
-      "Un pequeño botón en el borde de las páginas web traduce la página o muestra el original. Arrástralo para moverlo; se queda en el borde más cercano de la ventana.",
+      "Un pequeño botón en el borde de las páginas web traduce la página o muestra el original. Arrástralo para moverlo; se queda en el borde más cercano de la ventana. Solo aparece en páginas que no están ya en el idioma de «Traducir a».",
     move: "Las flechas lo mueven a lo largo del borde; E lo lleva al borde siguiente.",
     hiddenSites: "Oculto en estos sitios",
     hiddenSitesDescription:
@@ -103,6 +103,7 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
   },
   subtitles: {
     menu: "Traducir subtítulos",
+    menuHide: "Ocultar subtítulos traducidos",
     menuItemLabel: "Traducir subtítulos / Ocultarlos (en vídeos)",
     noCaptions:
       "Aún no se han encontrado subtítulos para este vídeo. Activa los subtítulos en el reproductor: se traducen en cuanto aparecen.",

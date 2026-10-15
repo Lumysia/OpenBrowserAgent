@@ -16,6 +16,13 @@ export const settingsJaJP: SettingsMessages = {
   shortcutsFirefoxHint:
     "変更するには about:addons を開き、歯車ボタンをクリックして「拡張機能のショートカットキーの管理」を選びます。",
   openSidePanelCommand: "サイドパネルを開く",
+  // One command's keys, with a button to change them.
+  commandShortcut: {
+    // {shortcut}: the keys, as the browser shows them.
+    current: "ショートカット：{shortcut}",
+    none: "ショートカットが設定されていません",
+    change: "ショートカットを変更",
+  },
   chatBehavior: "チャットの動作",
   chatBehaviorDescription:
     "サイドパネルのスクロール、再試行、ツールのステップ数、季節の演出。",

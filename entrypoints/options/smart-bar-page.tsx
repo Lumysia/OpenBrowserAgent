@@ -20,6 +20,8 @@ import {
   SettingsSection,
 } from "../../src/ui/components";
 import { useStoredState } from "../../src/ui/useStoredState";
+import { SMART_BAR_COMMAND } from "../../src/shared/smart-bar-protocol";
+import { CommandShortcut } from "./command-shortcut";
 import { HostListEditor } from "./host-list-editor";
 import { useMessages } from "../../src/ui/messages";
 
@@ -82,6 +84,7 @@ export function SmartBarPage() {
         icon={<Keyboard />}
         title={s.trigger}
         description={s.triggerDescription}
+        contentClassName="stack"
       >
         <ToggleGroup
           type="single"
@@ -98,6 +101,9 @@ export function SmartBarPage() {
             {s.triggerShortcut}
           </ToggleGroupItem>
         </ToggleGroup>
+        {settings.trigger === SMART_BAR_TRIGGER.shortcut && (
+          <CommandShortcut command={SMART_BAR_COMMAND} />
+        )}
       </SettingsSection>
       <SettingsSection
         icon={<Globe />}

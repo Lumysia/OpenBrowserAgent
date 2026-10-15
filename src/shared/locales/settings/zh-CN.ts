@@ -16,6 +16,13 @@ export const settingsZhCN: SettingsMessages = {
   shortcutsFirefoxHint:
     "如需修改，请打开 about:addons，点击齿轮按钮并选择“管理扩展快捷键”。",
   openSidePanelCommand: "打开侧边栏",
+  // One command's keys, with a button to change them.
+  commandShortcut: {
+    // {shortcut}: the keys, as the browser shows them.
+    current: "快捷键：{shortcut}",
+    none: "未设置快捷键",
+    change: "更改快捷键",
+  },
   chatBehavior: "对话行为",
   chatBehaviorDescription: "侧边栏中的滚动、重试、工具步数和节日彩蛋。",
   models: "模型",

@@ -44,7 +44,7 @@ export const pageTranslateEnUS = {
   modelDescription: "The model that translates pages.",
   targetLanguage: "Translate into",
   targetLanguageDescription:
-    "Pages are translated into this language. It doesn't change the extension's language.",
+    "Pages, video subtitles and the smart bar's Translate use this language. It doesn't change the extension's language.",
   // {language}: the extension's language.
   followInterface: "Extension's language ({language})",
   display: "Display",
@@ -103,7 +103,7 @@ export const pageTranslateEnUS = {
     // Settings.
     setting: "Translate button on pages",
     settingDescription:
-      "A small button on the edge of web pages translates the page or shows the original. Drag it to move it; it stays on the nearest edge of the window.",
+      'A small button on the edge of web pages translates the page or shows the original. Drag it to move it; it stays on the nearest edge of the window. It shows only on pages that aren\'t already in your "Translate into" language.',
     // Its accessible description, for the keyboard.
     move: "Arrow keys move it along the edge; E moves it to the next edge.",
     hiddenSites: "Hidden on these sites",
@@ -114,6 +114,8 @@ export const pageTranslateEnUS = {
   subtitles: {
     // The right-click menu item on a video; it also hides them again.
     menu: "Translate subtitles",
+    // While the tab's video has translated subtitles.
+    menuHide: "Hide translated subtitles",
     // The context menu settings' row for the item.
     menuItemLabel: "Translate subtitles / Hide them (on videos)",
     noCaptions:

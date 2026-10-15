@@ -19,6 +19,13 @@ export const settingsEnUS = {
     'To change them, open about:addons, click the gear button and choose "Manage Extension Shortcuts".',
   // The toolbar button's command, which has no description of its own.
   openSidePanelCommand: "Open the side panel",
+  // One command's keys, with a button to change them.
+  commandShortcut: {
+    // {shortcut}: the keys, as the browser shows them.
+    current: "Shortcut: {shortcut}",
+    none: "No shortcut set",
+    change: "Change shortcut",
+  },
   chatBehavior: "Chat behavior",
   chatBehaviorDescription:
     "Scrolling, retries, tool steps and holiday touches in the side panel.",

@@ -70,9 +70,12 @@ export function McpPage() {
     ]);
   }
 
+  // A preset is tested at once and goes on if it passes; a failure leaves
+  // it off with the error shown.
   function addPreset(preset: McpServerPreset) {
     const server = mcpServerFromPreset(preset);
     setServers((current) => [...current, server]);
+    void testServer(server);
   }
 
   function updateServer(serverId: string, patch: Partial<McpServerConfig>) {

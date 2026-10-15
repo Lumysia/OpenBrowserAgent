@@ -43,7 +43,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
   modelDescription: "Le modèle qui traduit les pages.",
   targetLanguage: "Traduire en",
   targetLanguageDescription:
-    "Les pages sont traduites dans cette langue. La langue de l’extension ne change pas.",
+    "Les pages, les sous-titres des vidéos et « Traduire » dans la barre intelligente utilisent cette langue. La langue de l’extension ne change pas.",
   followInterface: "Langue de l’extension ({language})",
   display: "Affichage",
   displayDescription:
@@ -95,7 +95,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
     hideEverywhere: "Masquer partout",
     setting: "Bouton de traduction sur les pages",
     settingDescription:
-      "Un petit bouton sur le bord des pages web traduit la page ou affiche l’original. Faites-le glisser pour le déplacer ; il reste sur le bord le plus proche de la fenêtre.",
+      "Un petit bouton sur le bord des pages web traduit la page ou affiche l’original. Faites-le glisser pour le déplacer ; il reste sur le bord le plus proche de la fenêtre. Il n’apparaît que sur les pages qui ne sont pas déjà dans la langue de « Traduire en ».",
     move: "Les flèches le déplacent le long du bord ; E le place sur le bord suivant.",
     hiddenSites: "Masqué sur ces sites",
     hiddenSitesDescription:
@@ -103,6 +103,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
   },
   subtitles: {
     menu: "Traduire les sous-titres",
+    menuHide: "Masquer les sous-titres traduits",
     menuItemLabel: "Traduire les sous-titres / Les masquer (sur les vidéos)",
     noCaptions:
       "Aucun sous-titre trouvé pour cette vidéo pour l’instant. Activez les sous-titres dans le lecteur : ils sont traduits dès qu’ils s’affichent.",

@@ -23,8 +23,6 @@ import { createPageSession } from "./session";
 import { setTabTranslated, watchTabs } from "./tab-state";
 import { watchTranslateMode, type TranslateMode } from "./translate-mode";
 
-export { translateMenuTitle } from "./tab-state";
-
 type Sender = chrome.runtime.MessageSender;
 
 const ports = new Set<chrome.runtime.Port>();

@@ -5,6 +5,7 @@ import { knownValues } from "./values";
 export const CONTEXT_MENU_ITEM = {
   ask: "ask",
   summarizePage: "summarizePage",
+  translateSelection: "translateSelection",
   translatePage: "translatePage",
   translateSubtitles: "translateSubtitles",
   searchWeb: "searchWeb",
@@ -37,12 +38,14 @@ export function normalizeContextMenuSettings(
   };
 }
 
-// Menu item ids. "Search the web" is two entries: one with the selected text
-// in its title, one for everything else.
+// Menu item ids. "Ask" and "Search the web" are two entries each: one with
+// the selected text in its title, one for everything else.
 export const CONTEXT_MENU_ID = {
   parent: "oba-menu",
   ask: "oba-ask",
+  askSelection: "oba-ask-selection",
   summarizePage: "oba-summarize-page",
+  translateSelection: "oba-translate-selection",
   translatePage: "oba-translate-page",
   translateSubtitles: "oba-translate-subtitles",
   searchPage: "oba-search-page",
@@ -56,29 +59,37 @@ type ContextMenuId = (typeof CONTEXT_MENU_ID)[keyof typeof CONTEXT_MENU_ID];
 type ContextMenuTitles = {
   parent: string;
   ask: string;
+  // `%s` stands for the selected text, here and below.
+  askSelection: string;
   summarizePage: string;
+  // The smart bar's Translate on the selection.
+  translateSelection: string;
   // "Translate this page", or "Show original" where the active tab is
   // translated.
   translatePage: string;
   // On a video: starts or stops its translated subtitles.
   translateSubtitles: string;
   searchPage: string;
-  // `%s` stands for the selected text.
   searchSelection: string;
   summarizeLink: string;
   copyMarkdown: string;
 };
 
 export type ContextMenuEntry = {
-  id: ContextMenuId;
-  parentId?: ContextMenuId;
+  id: string;
+  parentId?: string;
   title: string;
   contexts: string[];
+  type?: "normal" | "checkbox" | "radio";
+  checked?: boolean;
+  enabled?: boolean;
+  visible?: boolean;
 };
 
 // Every context on a web page; `all` leaves out the tab strip.
 const ANYWHERE = ["all"];
-// `all` without the selection, which has its own search entry.
+// `all` without the selection: it has entries of its own, and actions on
+// the whole page (summarize, copy) don't show there.
 const NOT_SELECTION = [
   "page",
   "frame",
@@ -109,13 +120,25 @@ export function contextMenuEntries(
   });
   const children: ContextMenuEntry[] = [
     ...(on(CONTEXT_MENU_ITEM.ask)
-      ? [child(CONTEXT_MENU_ID.ask, titles.ask, [...ANYWHERE, ...tab])]
+      ? [
+          child(CONTEXT_MENU_ID.ask, titles.ask, [...NOT_SELECTION, ...tab]),
+          child(CONTEXT_MENU_ID.askSelection, titles.askSelection, [
+            "selection",
+          ]),
+        ]
       : []),
     ...(on(CONTEXT_MENU_ITEM.summarizePage)
       ? [
           child(CONTEXT_MENU_ID.summarizePage, titles.summarizePage, [
-            ...ANYWHERE,
+            ...NOT_SELECTION,
             ...tab,
+          ]),
+        ]
+      : []),
+    ...(on(CONTEXT_MENU_ITEM.translateSelection)
+      ? [
+          child(CONTEXT_MENU_ID.translateSelection, titles.translateSelection, [
+            "selection",
           ]),
         ]
       : []),
@@ -151,7 +174,7 @@ export function contextMenuEntries(
     ...(on(CONTEXT_MENU_ITEM.copyMarkdown)
       ? [
           child(CONTEXT_MENU_ID.copyMarkdown, titles.copyMarkdown, [
-            ...ANYWHERE,
+            ...NOT_SELECTION,
             ...tab,
           ]),
         ]
@@ -169,6 +192,6 @@ export function contextMenuEntries(
 }
 
 // `&` marks an access key in menu titles; a literal one is doubled.
-function menuTitle(title: string) {
+export function menuTitle(title: string) {
   return title.replaceAll("&", "&&");
 }

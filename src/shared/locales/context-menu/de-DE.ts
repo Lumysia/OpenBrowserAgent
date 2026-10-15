@@ -2,10 +2,12 @@ import type { ContextMenuLocaleMessages } from "./en-US";
 
 export const contextMenuDeDE: ContextMenuLocaleMessages = {
   items: {
-    ask: "Fragen oder Aufgaben zu dieser Seite",
+    ask: "Zu dieser Seite fragen",
+    askSelection: "Zu „%s“ fragen",
     summarizePage: "Diese Seite zusammenfassen",
     searchPage: "Im Web zu dieser Seite suchen",
     searchSelection: "Im Web nach „%s“ suchen",
+    translateSelection: "„%s“ übersetzen",
     summarizeLink: "Verlinkte Seite zusammenfassen",
     copyMarkdown: "Als Markdown kopieren",
   },
@@ -25,7 +27,9 @@ export const contextMenuDeDE: ContextMenuLocaleMessages = {
   itemsDescription:
     "Aktionen, die die Seitenleiste öffnen, übergeben die Seite an Ihren Agent. „Als Markdown kopieren“ nutzt keine KI.",
   itemLabels: {
-    ask: "Fragen oder Aufgaben zu dieser Seite",
+    ask: "Zu dieser Seite oder zum ausgewählten Text fragen",
+    translateSelection:
+      "Ausgewählten Text übersetzen (mit „Übersetzen“ der Smart Bar)",
     summarizePage: "Diese Seite zusammenfassen",
     searchWeb: "Im Web zu dieser Seite oder zum ausgewählten Text suchen",
     summarizeLink: "Verlinkte Seite zusammenfassen (auf Links)",

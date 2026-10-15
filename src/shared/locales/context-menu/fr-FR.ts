@@ -2,10 +2,12 @@ import type { ContextMenuLocaleMessages } from "./en-US";
 
 export const contextMenuFrFR: ContextMenuLocaleMessages = {
   items: {
-    ask: "Demander ou agir sur cette page",
+    ask: "Poser une question sur cette page",
+    askSelection: "Poser une question sur « %s »",
     summarizePage: "Résumer cette page",
     searchPage: "Rechercher sur le web à propos de cette page",
     searchSelection: "Rechercher « %s » sur le web",
+    translateSelection: "Traduire « %s »",
     summarizeLink: "Résumer la page liée",
     copyMarkdown: "Copier en Markdown",
   },
@@ -25,7 +27,9 @@ export const contextMenuFrFR: ContextMenuLocaleMessages = {
   itemsDescription:
     "Les actions qui ouvrent le panneau latéral transmettent la page à votre agent. Copier en Markdown n’utilise pas l’IA.",
   itemLabels: {
-    ask: "Demander ou agir sur cette page",
+    ask: "Poser une question sur cette page ou le texte sélectionné",
+    translateSelection:
+      "Traduire le texte sélectionné (avec « Traduire » de la barre intelligente)",
     summarizePage: "Résumer cette page",
     searchWeb:
       "Rechercher sur le web à propos de cette page ou du texte sélectionné",

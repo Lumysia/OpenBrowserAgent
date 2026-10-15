@@ -16,6 +16,13 @@ export const settingsDeDE: SettingsMessages = {
   shortcutsFirefoxHint:
     "Öffnen Sie dazu about:addons, klicken Sie auf das Zahnrad und wählen Sie „Tastenkombinationen für Erweiterungen verwalten“.",
   openSidePanelCommand: "Seitenleiste öffnen",
+  // One command's keys, with a button to change them.
+  commandShortcut: {
+    // {shortcut}: the keys, as the browser shows them.
+    current: "Tastenkombination: {shortcut}",
+    none: "Keine Tastenkombination festgelegt",
+    change: "Tastenkombination ändern",
+  },
   chatBehavior: "Chatverhalten",
   chatBehaviorDescription:
     "Scrollen, Wiederholungen, Tool-Schritte und Feiertagsdeko in der Seitenleiste.",

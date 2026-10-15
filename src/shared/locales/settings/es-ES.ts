@@ -16,6 +16,13 @@ export const settingsEsES: SettingsMessages = {
   shortcutsFirefoxHint:
     'Para cambiarlos, abre about:addons, haz clic en el botón del engranaje y elige "Gestionar atajos de extensiones".',
   openSidePanelCommand: "Abrir el panel lateral",
+  // One command's keys, with a button to change them.
+  commandShortcut: {
+    // {shortcut}: the keys, as the browser shows them.
+    current: "Atajo: {shortcut}",
+    none: "No hay ningún atajo asignado",
+    change: "Cambiar atajo",
+  },
   chatBehavior: "Comportamiento del chat",
   chatBehaviorDescription:
     "Desplazamiento, reintentos, pasos de herramientas y detalles festivos en el panel lateral.",

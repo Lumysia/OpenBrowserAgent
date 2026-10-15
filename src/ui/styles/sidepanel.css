@@ -443,3 +443,36 @@
   width: 62%;
   justify-self: end;
 }
+
+/* The "This page" strip under the top bar: one line, the switches at the
+   end; long labels never push them out. */
+.page-tools-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+  margin-top: var(--space-1);
+}
+.page-tools-toggle {
+  min-width: 0;
+  gap: 4px;
+  color: var(--muted-foreground);
+  font-size: var(--text-xs);
+}
+.page-tools-toggle span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.page-tools-switches {
+  flex: none;
+}
+.page-tools-switches .ui-toggle-group-item {
+  min-height: 26px;
+  padding: 0 8px;
+}
+.page-tools-switches .ui-toggle-group-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

@@ -16,6 +16,13 @@ export const settingsFrFR: SettingsMessages = {
   shortcutsFirefoxHint:
     "Pour les modifier, ouvrez about:addons, cliquez sur la roue dentée et choisissez « Gérer les raccourcis d’extension ».",
   openSidePanelCommand: "Ouvrir le panneau latéral",
+  // One command's keys, with a button to change them.
+  commandShortcut: {
+    // {shortcut}: the keys, as the browser shows them.
+    current: "Raccourci : {shortcut}",
+    none: "Aucun raccourci défini",
+    change: "Modifier le raccourci",
+  },
   chatBehavior: "Comportement des discussions",
   chatBehaviorDescription:
     "Défilement, nouvelles tentatives, étapes d’outils et touches festives dans le panneau latéral.",

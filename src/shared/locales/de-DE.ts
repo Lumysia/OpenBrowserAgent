@@ -3,6 +3,7 @@ import { contextMenuDeDE } from "./context-menu/de-DE";
 import { providerConsentDeDE } from "./provider-consent/de-DE";
 import { displayDeDE } from "./display/de-DE";
 import { pageTranslateDeDE } from "./page-translate/de-DE";
+import { pageToolsDeDE } from "./page-tools/de-DE";
 import { downloadsDeDE } from "./downloads/de-DE";
 import { smartBarDeDE } from "./smart-bar/de-DE";
 import { syncDeDE } from "./sync/de-DE";
@@ -386,6 +387,18 @@ export const deDE: LocaleMessages = {
     localExecutionBridgeKey: "Shell-Konfigurations-ID",
     localExecutionBridgeDefaultCwd: "Standard-Arbeitsverzeichnis",
     localExecutionBridgeTimeoutMs: "Standard-Zeitlimit (ms)",
+    localExecutionBridgeSetup: "Auf diesem Computer einrichten",
+    localExecutionBridgeSetupDescription:
+      "Führen Sie diesen Befehl in einem Terminal auf diesem Computer aus (Node.js wird benötigt). Er installiert die Bridge für diese Erweiterung und gibt ihre Einstellungen aus.",
+    localExecutionBridgeBrowser: "Browser",
+    localExecutionBridgeInstallerOutput: "Ausgabe des Installers",
+    localExecutionBridgeInstallerOutputPlaceholder:
+      "Fügen Sie alles ein, was der Installer ausgegeben hat",
+    localExecutionBridgeInstallerOutputInvalid:
+      "Das ist nicht die Ausgabe des Installers: Sie braucht hostName und secret, die der Installer ausgibt.",
+    localExecutionBridgeInstallerHint:
+      "Die Bridge wird hinzugefügt (oder aktualisiert, wenn Sie den Installer erneut ausgeführt haben) und getestet. Sie können auch den Agenten bitten, sie einzurichten.",
+    localExecutionBridgeAddFromOutput: "Hinzufügen und testen",
     localExecutionBridgeTest: "Bridge testen",
     localExecutionBridgeTesting: "Wird getestet…",
     localExecutionBridgeTestSuccess: "Bridge hat erfolgreich geantwortet.",
@@ -437,7 +450,7 @@ export const deDE: LocaleMessages = {
     resetBuiltins: "Nur integrierte zurücksetzen",
     mcpPresets: "Empfohlene Server",
     mcpPresetsDescription:
-      "Gehostete Suchserver, die ohne API-Schlüssel funktionieren. Jeder sendet Ihre Suchanfragen an seinen eigenen Dienst. Ein hinzugefügter Server bleibt aus, bis Sie ihn testen.",
+      "Gehostete Suchserver, die ohne API-Schlüssel funktionieren. Jeder sendet Ihre Suchanfragen an seinen eigenen Dienst. Beim Hinzufügen wird der Server getestet und eingeschaltet, wenn der Test gelingt.",
     mcpPresetAdd: "Hinzufügen",
     selectModel: "Modell auswählen",
     selectModelDescription:
@@ -623,6 +636,7 @@ export const deDE: LocaleMessages = {
   themes: themesDeDE,
   display: displayDeDE,
   pageTranslate: pageTranslateDeDE,
+  pageTools: pageToolsDeDE,
   settings: settingsDeDE,
   setup: setupDeDE,
 };

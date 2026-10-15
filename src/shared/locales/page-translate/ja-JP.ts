@@ -43,7 +43,7 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
   modelDescription: "ページを翻訳するモデルです。",
   targetLanguage: "翻訳先の言語",
   targetLanguageDescription:
-    "ページはこの言語に翻訳されます。拡張機能の言語は変わりません。",
+    "ページ、動画の字幕、スマートバーの「翻訳」はこの言語を使います。拡張機能の言語は変わりません。",
   followInterface: "拡張機能の言語（{language}）",
   display: "表示",
   displayDescription:
@@ -95,7 +95,7 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
     hideEverywhere: "すべてのサイトで非表示",
     setting: "ページ上の翻訳ボタン",
     settingDescription:
-      "ウェブページの端に小さなボタンを表示し、ページを翻訳したり原文を表示したりします。ドラッグして移動でき、ウィンドウのいちばん近い端に留まります。",
+      "ウェブページの端に小さなボタンを表示し、ページを翻訳したり原文を表示したりします。ドラッグして移動でき、ウィンドウのいちばん近い端に留まります。「翻訳先の言語」と同じ言語のページには表示されません。",
     move: "矢印キーで端に沿って移動し、E キーで次の端に移動します。",
     hiddenSites: "非表示にしたサイト",
     hiddenSitesDescription:
@@ -103,6 +103,7 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
   },
   subtitles: {
     menu: "字幕を翻訳",
+    menuHide: "翻訳した字幕を非表示",
     menuItemLabel: "字幕を翻訳 / 翻訳を非表示（動画上）",
     noCaptions:
       "この動画の字幕がまだ見つかりません。プレーヤーで字幕をオンにしてください。表示されしだい翻訳します。",

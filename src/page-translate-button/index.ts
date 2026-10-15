@@ -1,7 +1,8 @@
 // The page translation button on an edge of the page: translates the page
 // or shows the original, like the menu item. Registered on every page while
-// it is on (see background/page-translate/button.ts), top frame only, so it
-// is kept small: the page translation script is injected only when pressed.
+// it is on (see background/page-translate/button.ts), top frame only, and
+// shown only where the page isn't already in the "Translate into" language
+// (or is translated). Kept small: the page translation script is injected only when pressed.
 // It follows the page's state through the isolated world it shares with
 // that script, whatever started the translation. Only the user's own
 // pointer and keys count: page events are never trusted.
@@ -18,10 +19,18 @@ import {
   type PageButtonPositionMessage,
 } from "../shared/page-translate/button";
 import type { RuntimeReply } from "../shared/runtime-messages";
+import { languageDetect } from "../shared/language-detector";
+import {
+  PAGE_LANGUAGE_MIN_CHARS,
+  PAGE_LANGUAGE_SAMPLE_CHARS,
+  pageButtonShown,
+  pageLanguage,
+} from "../shared/page-translate/page-language";
 import { STORAGE_KEYS } from "../shared/storage-keys";
 import { applyTheme, DARK_QUERY } from "../ui/apply-theme";
 import { attachDrag, type DragPoint } from "./drag";
 import { edgePoint, type Size } from "./geometry";
+import { pageTextSample } from "./page-text";
 import { createView, ICONS, setIcon, type PageButtonView } from "./view";
 
 const INSTALLED = Symbol.for("oba.pageTranslateButton");
@@ -44,6 +53,17 @@ function viewportSize(): Size {
   };
 }
 
+// The page's language from its lang attribute and, where the browser's
+// on-device detector is ready, a sample of its text.
+async function readPageLanguage() {
+  const declared = document.documentElement.lang || undefined;
+  const sample = pageTextSample(PAGE_LANGUAGE_SAMPLE_CHARS);
+  if (sample.length < PAGE_LANGUAGE_MIN_CHARS)
+    return pageLanguage(declared, undefined);
+  const detections = await languageDetect()(sample).catch(() => undefined);
+  return pageLanguage(declared, detections);
+}
+
 export function installPageButton() {
   if (window.top !== window) return;
   const scope = globalThis as { [INSTALLED]?: boolean };
@@ -61,6 +81,9 @@ export function installPageButton() {
   let icon: keyof typeof ICONS | undefined;
   // A newer copy of this script took over (the extension was updated).
   let replaced = false;
+  // The page's language once read (undefined inside when unknown).
+  let page: { language: string | undefined } | undefined;
+  let readingLanguage = false;
 
   function send(message: { type: string }) {
     if (!isExtensionContextValid()) return Promise.resolve(undefined);
@@ -174,7 +197,15 @@ export function installPageButton() {
   }
 
   function render() {
-    if (!config?.enabled || replaced) {
+    if (config?.enabled && !page && !readingLanguage) {
+      readingLanguage = true;
+      void readPageLanguage().then((language) => {
+        page = { language };
+        render();
+      });
+    }
+    const active = requesting || shared.starting || shared.translated;
+    if (replaced || !config || !pageButtonShown(config, page, active)) {
       remove();
       return;
     }

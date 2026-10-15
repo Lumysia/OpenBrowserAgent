@@ -2,10 +2,12 @@ import type { ContextMenuLocaleMessages } from "./en-US";
 
 export const contextMenuKo: ContextMenuLocaleMessages = {
   items: {
-    ask: "이 페이지에 대해 질문하거나 작업 요청",
+    ask: "이 페이지에 대해 질문",
+    askSelection: "'%s'에 대해 질문",
     summarizePage: "이 페이지 요약",
     searchPage: "이 페이지 관련 정보 웹 검색",
     searchSelection: '"%s" 웹 검색',
+    translateSelection: "'%s' 번역",
     summarizeLink: "링크된 페이지 요약",
     copyMarkdown: "Markdown으로 복사",
   },
@@ -25,7 +27,8 @@ export const contextMenuKo: ContextMenuLocaleMessages = {
   itemsDescription:
     "사이드 패널을 여는 작업은 페이지를 에이전트에 전달합니다. 'Markdown으로 복사'는 AI를 사용하지 않습니다.",
   itemLabels: {
-    ask: "이 페이지에 대해 질문하거나 작업 요청",
+    ask: "이 페이지 또는 선택한 텍스트에 대해 질문",
+    translateSelection: "선택한 텍스트 번역(스마트 바의 '번역')",
     summarizePage: "이 페이지 요약",
     searchWeb: "이 페이지 또는 선택한 텍스트 관련 정보 웹 검색",
     summarizeLink: "링크된 페이지 요약(링크에서)",

@@ -16,6 +16,13 @@ export const settingsZhTW: SettingsMessages = {
   shortcutsFirefoxHint:
     "如需修改，請開啟 about:addons，點選齒輪按鈕並選擇「管理擴充套件快速鍵」。",
   openSidePanelCommand: "開啟側邊欄",
+  // One command's keys, with a button to change them.
+  commandShortcut: {
+    // {shortcut}: the keys, as the browser shows them.
+    current: "快速鍵：{shortcut}",
+    none: "尚未設定快速鍵",
+    change: "變更快速鍵",
+  },
   chatBehavior: "對話行為",
   chatBehaviorDescription: "側邊欄中的捲動、重試、工具步數和節日彩蛋。",
   models: "模型",

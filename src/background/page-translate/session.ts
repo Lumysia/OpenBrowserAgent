@@ -22,7 +22,7 @@ import {
 } from "../../shared/page-translate/protocol";
 import {
   normalizePageTranslateSettings,
-  pageTranslateTarget,
+  translateIntoLanguage,
   PAGE_TRANSLATE_FALLBACK,
   type PageTranslateEngine,
 } from "../../shared/page-translate/settings";
@@ -113,7 +113,7 @@ async function startSession(
     storage.language.get(),
   ]);
   const settings = normalizePageTranslateSettings(preferences.pageTranslate);
-  const target = pageTranslateTarget(settings, language);
+  const target = translateIntoLanguage(settings, language);
   const theme = pageToastTheme(
     preferences.colorScheme,
     preferences.accentColor,

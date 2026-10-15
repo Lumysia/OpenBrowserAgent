@@ -2,6 +2,7 @@ import { MousePointerClick } from "lucide-react";
 import type { PageTranslateSettings } from "../../src/shared/page-translate/settings";
 import { CardDescription, SettingSwitchCard } from "../../src/ui/components";
 import { useMessages } from "../../src/ui/messages";
+import { CommandShortcut } from "./command-shortcut";
 import { HostListEditor } from "./host-list-editor";
 
 // The button on pages, with the sites it is hidden on. (The keyboard

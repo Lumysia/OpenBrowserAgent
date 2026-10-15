@@ -43,7 +43,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
   modelDescription: "Das Modell, das Seiten übersetzt.",
   targetLanguage: "Übersetzen in",
   targetLanguageDescription:
-    "Seiten werden in diese Sprache übersetzt. Die Sprache der Erweiterung ändert sich nicht.",
+    "Seiten, Video-Untertitel und „Übersetzen“ in der Smart Bar verwenden diese Sprache. Die Sprache der Erweiterung ändert sich nicht.",
   followInterface: "Sprache der Erweiterung ({language})",
   display: "Anzeige",
   displayDescription:
@@ -95,7 +95,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
     hideEverywhere: "Überall ausblenden",
     setting: "Übersetzen-Schaltfläche auf Seiten",
     settingDescription:
-      "Eine kleine Schaltfläche am Rand von Webseiten übersetzt die Seite oder zeigt das Original. Ziehen Sie sie, um sie zu verschieben; sie bleibt am nächsten Fensterrand.",
+      "Eine kleine Schaltfläche am Rand von Webseiten übersetzt die Seite oder zeigt das Original. Ziehen Sie sie, um sie zu verschieben; sie bleibt am nächsten Fensterrand. Sie erscheint nur auf Seiten, die nicht schon in der Sprache unter „Übersetzen in“ sind.",
     move: "Pfeiltasten verschieben sie am Rand entlang; E setzt sie an den nächsten Rand.",
     hiddenSites: "Auf diesen Websites ausgeblendet",
     hiddenSitesDescription:
@@ -103,6 +103,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
   },
   subtitles: {
     menu: "Untertitel übersetzen",
+    menuHide: "Übersetzte Untertitel ausblenden",
     menuItemLabel: "Untertitel übersetzen / ausblenden (bei Videos)",
     noCaptions:
       "Für dieses Video wurden noch keine Untertitel gefunden. Schalten Sie die Untertitel im Player ein – sie werden übersetzt, sobald sie erscheinen.",

@@ -1,3 +1,4 @@
+import type { SmartBarGenerateAction } from "../shared/smart-bar";
 import type {
   SmartBarPageConfig,
   SmartBarShowReason,
@@ -9,10 +10,12 @@ import type { SelectionSnapshot } from "./selection";
 export type SmartBarUi = {
   // The element holding the bar's closed shadow root.
   host: HTMLElement;
+  // `action`: run at once (the right-click menu).
   show(
     snapshot: SelectionSnapshot,
     config: SmartBarPageConfig,
     reason: SmartBarShowReason,
+    action?: SmartBarGenerateAction,
   ): void;
   hide(): void;
   // Esc: closes an open popover in the bar, else the bar.

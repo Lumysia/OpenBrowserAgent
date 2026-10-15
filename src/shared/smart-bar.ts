@@ -58,24 +58,24 @@ export const SMART_BAR_EDIT_ACTIONS = [
   SMART_BAR_ACTION.ask,
 ] as const satisfies readonly SmartBarAction[];
 
-// Translate answers in the reply language, or in this one when the text
-// already is in the reply language. The prompts ask for it; reading aloud
+// Translate answers in the target language ("Translate into"), or in this
+// one when the text already is in the target language. The prompts ask for it; reading aloud
 // expects it.
 export const SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE = "en";
 
 export function smartBarTranslationLanguage(
-  replyLanguage: string,
+  targetLanguage: string,
   sourceLanguage: string | undefined,
 ) {
   return sourceLanguage &&
-    primaryLanguage(sourceLanguage) === primaryLanguage(replyLanguage)
+    primaryLanguage(sourceLanguage) === primaryLanguage(targetLanguage)
     ? SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE
-    : replyLanguage;
+    : targetLanguage;
 }
 
-export function isSmartBarTranslationFallback(replyLanguage: string) {
+export function isSmartBarTranslationFallback(targetLanguage: string) {
   return (
-    primaryLanguage(replyLanguage) === SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE
+    primaryLanguage(targetLanguage) === SMART_BAR_TRANSLATION_FALLBACK_LANGUAGE
   );
 }
 
@@ -183,6 +183,38 @@ export function hideSmartBarOnHost(
   return settings.blockedHosts.includes(host)
     ? settings
     : { ...settings, blockedHosts: [...settings.blockedHosts, host] };
+}
+
+// "Smart bar on this site" switched on: off everywhere, it turns on for
+// this site only (allow-list mode); otherwise the site leaves the blocked
+// list, or joins the allowed one.
+export function showSmartBarOnHost(
+  settings: SmartBarSettings,
+  host: string,
+): SmartBarSettings {
+  if (!settings.enabled)
+    return {
+      ...settings,
+      enabled: true,
+      siteMode: SMART_BAR_SITE_MODE.allowList,
+      allowedHosts: hostListed(settings.allowedHosts, host)
+        ? settings.allowedHosts
+        : [...settings.allowedHosts, host],
+    };
+  if (settings.siteMode === SMART_BAR_SITE_MODE.allowList)
+    return hostListed(settings.allowedHosts, host)
+      ? settings
+      : { ...settings, allowedHosts: [...settings.allowedHosts, host] };
+  return {
+    ...settings,
+    blockedHosts: settings.blockedHosts.filter(
+      (entry) => !hostMatches(host, entry),
+    ),
+  };
+}
+
+export function isSmartBarOnHost(settings: SmartBarSettings, host: string) {
+  return settings.enabled && isSmartBarAllowedOnHost(settings, host);
 }
 
 // The site "Hide on this site" hides the bar on: the host itself, or in

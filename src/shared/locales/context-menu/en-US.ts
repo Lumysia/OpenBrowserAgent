@@ -1,9 +1,11 @@
 export const contextMenuEnUS = {
   items: {
-    ask: "Ask or act on this page",
+    ask: "Ask about this page",
+    askSelection: 'Ask about "%s"',
     summarizePage: "Summarize this page",
     searchPage: "Search the web about this page",
     searchSelection: 'Search the web for "%s"',
+    translateSelection: 'Translate "%s"',
     summarizeLink: "Summarize linked page",
     copyMarkdown: "Copy as Markdown",
   },
@@ -22,7 +24,9 @@ export const contextMenuEnUS = {
   itemsDescription:
     "Actions that open the side panel give the page to your agent. Copy as Markdown works without AI.",
   itemLabels: {
-    ask: "Ask or act on this page",
+    ask: "Ask about this page or the selected text",
+    translateSelection:
+      "Translate the selected text (with the smart bar's Translate)",
     summarizePage: "Summarize this page",
     searchWeb: "Search the web about this page or the selected text",
     summarizeLink: "Summarize linked page (on links)",

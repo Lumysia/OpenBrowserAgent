@@ -16,6 +16,13 @@ export const settingsPtBR: SettingsMessages = {
   shortcutsFirefoxHint:
     'Para alterá-los, abra about:addons, clique no botão de engrenagem e escolha "Gerenciar atalhos de extensões".',
   openSidePanelCommand: "Abrir o painel lateral",
+  // One command's keys, with a button to change them.
+  commandShortcut: {
+    // {shortcut}: the keys, as the browser shows them.
+    current: "Atalho: {shortcut}",
+    none: "Nenhum atalho definido",
+    change: "Alterar atalho",
+  },
   chatBehavior: "Comportamento da conversa",
   chatBehaviorDescription:
     "Rolagem, novas tentativas, etapas de ferramentas e toques festivos no painel lateral.",

@@ -3,6 +3,7 @@ import { contextMenuFrFR } from "./context-menu/fr-FR";
 import { providerConsentFrFR } from "./provider-consent/fr-FR";
 import { displayFrFR } from "./display/fr-FR";
 import { pageTranslateFrFR } from "./page-translate/fr-FR";
+import { pageToolsFrFR } from "./page-tools/fr-FR";
 import { downloadsFrFR } from "./downloads/fr-FR";
 import { smartBarFrFR } from "./smart-bar/fr-FR";
 import { syncFrFR } from "./sync/fr-FR";
@@ -389,6 +390,18 @@ export const frFR: LocaleMessages = {
     localExecutionBridgeKey: "ID de configuration du shell",
     localExecutionBridgeDefaultCwd: "Répertoire de travail par défaut",
     localExecutionBridgeTimeoutMs: "Délai d’expiration par défaut (ms)",
+    localExecutionBridgeSetup: "Configurer sur cet ordinateur",
+    localExecutionBridgeSetupDescription:
+      "Exécutez cette commande dans un terminal sur cet ordinateur (Node.js est nécessaire). Elle installe le pont pour cette extension et affiche ses réglages.",
+    localExecutionBridgeBrowser: "Navigateur",
+    localExecutionBridgeInstallerOutput: "Sortie de l’installateur",
+    localExecutionBridgeInstallerOutputPlaceholder:
+      "Collez tout ce que l’installateur a affiché",
+    localExecutionBridgeInstallerOutputInvalid:
+      "Ce n’est pas la sortie de l’installateur : il faut le hostName et le secret qu’il affiche.",
+    localExecutionBridgeInstallerHint:
+      "Le pont est ajouté (ou mis à jour si vous avez relancé l’installateur), puis testé. Vous pouvez aussi demander à l’agent de le configurer.",
+    localExecutionBridgeAddFromOutput: "Ajouter et tester",
     localExecutionBridgeTest: "Tester le pont",
     localExecutionBridgeTesting: "Test en cours…",
     localExecutionBridgeTestSuccess: "Le pont a répondu avec succès.",
@@ -438,7 +451,7 @@ export const frFR: LocaleMessages = {
     resetBuiltins: "Réinitialiser les éléments intégrés",
     mcpPresets: "Serveurs recommandés",
     mcpPresetsDescription:
-      "Serveurs de recherche hébergés qui fonctionnent sans clé API. Chacun envoie vos recherches à son propre service. Un serveur ajouté reste désactivé tant que vous ne l’avez pas testé.",
+      "Serveurs de recherche hébergés qui fonctionnent sans clé API. Chacun envoie vos recherches à son propre service. À l’ajout, le serveur est testé puis activé si le test réussit.",
     mcpPresetAdd: "Ajouter",
     selectModel: "Sélectionner un modèle",
     selectModelDescription:
@@ -619,6 +632,7 @@ export const frFR: LocaleMessages = {
   themes: themesFrFR,
   display: displayFrFR,
   pageTranslate: pageTranslateFrFR,
+  pageTools: pageToolsFrFR,
   settings: settingsFrFR,
   setup: setupFrFR,
 };

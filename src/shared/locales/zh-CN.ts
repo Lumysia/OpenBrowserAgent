@@ -3,6 +3,7 @@ import { contextMenuZhCN } from "./context-menu/zh-CN";
 import { providerConsentZhCN } from "./provider-consent/zh-CN";
 import { displayZhCN } from "./display/zh-CN";
 import { pageTranslateZhCN } from "./page-translate/zh-CN";
+import { pageToolsZhCN } from "./page-tools/zh-CN";
 import { downloadsZhCN } from "./downloads/zh-CN";
 import { smartBarZhCN } from "./smart-bar/zh-CN";
 import { syncZhCN } from "./sync/zh-CN";
@@ -315,6 +316,18 @@ export const zhCN: LocaleMessages = {
     localExecutionBridgeKey: "Shell 配置 ID",
     localExecutionBridgeDefaultCwd: "默认工作目录",
     localExecutionBridgeTimeoutMs: "默认超时（毫秒）",
+    localExecutionBridgeSetup: "在本机设置",
+    localExecutionBridgeSetupDescription:
+      "请在本机的终端中运行此命令（需要 Node.js）。它会为此扩展安装执行桥，并输出其设置。",
+    localExecutionBridgeBrowser: "浏览器",
+    localExecutionBridgeInstallerOutput: "安装程序输出",
+    localExecutionBridgeInstallerOutputPlaceholder:
+      "粘贴安装程序输出的全部内容",
+    localExecutionBridgeInstallerOutputInvalid:
+      "这不是安装程序的输出：需要安装程序输出的 hostName 和 secret。",
+    localExecutionBridgeInstallerHint:
+      "执行桥会被添加（如果你重新运行了安装程序，则会更新）并测试。你也可以让智能体帮你设置。",
+    localExecutionBridgeAddFromOutput: "添加并测试",
     localExecutionBridgeTest: "测试执行桥",
     localExecutionBridgeTesting: "正在测试…",
     localExecutionBridgeTestSuccess: "执行桥已成功响应。",
@@ -357,7 +370,7 @@ export const zhCN: LocaleMessages = {
     resetBuiltins: "重置内置项",
     mcpPresets: "推荐服务器",
     mcpPresetsDescription:
-      "无需 API Key 即可使用的托管搜索服务器。每个服务器都会把你的搜索发送到它自己的服务。添加的服务器在测试前保持关闭。",
+      "无需 API Key 即可使用的托管搜索服务器。每个服务器都会把你的搜索发送到它自己的服务。添加时会自动测试，测试通过后即打开。",
     mcpPresetAdd: "添加",
     selectModel: "选择模型",
     selectModelDescription:
@@ -519,6 +532,7 @@ export const zhCN: LocaleMessages = {
   themes: themesZhCN,
   display: displayZhCN,
   pageTranslate: pageTranslateZhCN,
+  pageTools: pageToolsZhCN,
   settings: settingsZhCN,
   setup: setupZhCN,
 };
