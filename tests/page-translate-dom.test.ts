@@ -484,7 +484,10 @@ test("paragraphs: labels are told by markup, in any script", () => {
   assert.deepEqual(
     found.map((paragraph) => paragraph.source.plain),
     [
+      // A link alone is a label, not a name: its text may be a title.
       "Privacy Policy",
+      "Privacy Policy",
+      "Sports & Outdoors",
       "3 new messages",
       // Two long headlines aren't a row of short labels: words are counted
       // in scripts written without spaces too.

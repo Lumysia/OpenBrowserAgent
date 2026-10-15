@@ -14,6 +14,10 @@ type LocaleWords = {
   words: string[];
   // The suffixes of compact numbers ("k", "mio.", "万"), longest first.
   compact: string[];
+  // The words of units and currencies written next to a number ("km",
+  // "°C" as "C", "GB", "kr", "USD"), as the browser writes them. Made when
+  // first needed: the browser's currency formats are many.
+  units: () => Set<string>;
 };
 
 // Longest first: "mio." is found before "m", "september" before "sep".
@@ -111,9 +115,49 @@ function localeWords(language: string): LocaleWords {
     relative,
     words: longestFirst(words),
     compact: longestFirst(suffixes),
+    units: once(() => unitWords(language)),
   };
   cache.set(language, result);
   return result;
+}
+
+function once<T>(make: () => T) {
+  let value: T | undefined;
+  return () => (value ??= make());
+}
+
+// Units and currencies in their short and narrow forms; currency codes as
+// they are.
+function unitWords(language: string) {
+  const units = new Set<string>();
+  const supported = (key: "unit" | "currency") =>
+    typeof Intl.supportedValuesOf === "function"
+      ? Intl.supportedValuesOf(key)
+      : [];
+  const add = (format: Intl.NumberFormat, types: string[]) => {
+    for (const part of format.formatToParts(2))
+      if (types.includes(part.type))
+        for (const word of part.value.match(/\p{L}+/gu) || []) units.add(word);
+  };
+  for (const unit of supported("unit"))
+    for (const unitDisplay of ["short", "narrow"] as const)
+      add(
+        new Intl.NumberFormat(language, { style: "unit", unit, unitDisplay }),
+        ["unit"],
+      );
+  for (const currency of supported("currency")) {
+    units.add(currency);
+    for (const currencyDisplay of ["symbol", "narrowSymbol"] as const)
+      add(
+        new Intl.NumberFormat(language, {
+          style: "currency",
+          currency,
+          currencyDisplay,
+        }),
+        ["currency"],
+      );
+  }
+  return units;
 }
 
 // The languages the page's labels are read in: the page's own, when it
@@ -139,6 +183,7 @@ function wordsOf(language: string | undefined): LocaleWords {
   const relative = new Set<string>();
   const words = new Set<string>();
   const compact = new Set<string>();
+  const locales: LocaleWords[] = [];
   for (const tag of languages) {
     let known: LocaleWords;
     try {
@@ -150,18 +195,20 @@ function wordsOf(language: string | undefined): LocaleWords {
     known.relative.forEach((word) => relative.add(word));
     known.words.forEach((word) => words.add(word));
     known.compact.forEach((word) => compact.add(word));
+    locales.push(known);
   }
   const result = {
     relative,
     words: longestFirst(words),
     compact: longestFirst(compact),
+    units: once(
+      () => new Set(locales.flatMap((locale) => [...locale.units()])),
+    ),
   };
   merged.set(key, result);
   return result;
 }
 
-// Letters in a row that count as a unit after a number ("16°C", "7 km").
-const UNIT_MAX_LETTERS = 3;
 // Words naming what a count counts ("12 replies", "3 new messages").
 const COUNTED_MAX_WORDS = 2;
 
@@ -172,31 +219,36 @@ type MetadataContext = {
   language?: string;
   // The page sets the text apart as a label: the whole text of a link, a
   // citation or author, or a short row with a date. Rules that read the
-  // text's shape alone (a capitalized name, a number of things) apply only
-  // then: in running text the same shapes are sentences.
+  // text's shape alone (a number of things) apply only then: in running
+  // text the same shapes are sentences.
   label?: boolean;
+  // The page marks the text as a name: a citation or author, a short row
+  // with a date (a byline), a line next to a picture (an avatar), a row of
+  // links (authors). Capitalized names are told only then: a link's
+  // title-case headline ("Getting Started With Sync") has the same shape.
+  name?: boolean;
 };
 
 // What kind of label the text is, if it is one.
 export function metadataOf(
   text: string,
-  { language, label = false }: MetadataContext = {},
+  { language, label = false, name = false }: MetadataContext = {},
 ): Metadata | undefined {
   const trimmed = compact(text.replace(NOTE_MARK, " "));
   if (!trimmed) return undefined;
   const words = wordsOf(language);
   if (isDate(trimmed, words)) return "date";
   const count = countOf(trimmed, words);
-  if (isNumber(trimmed) || count === "compact" || (label && count))
+  if (isNumber(trimmed, words) || count === "compact" || (label && count))
     return "number";
   if (SITE_NAME.test(trimmed) || isLabelRow(trimmed)) return "name";
-  if (label && isNameList(trimmed)) return "name";
+  if (name && isNameList(trimmed)) return "name";
   // A label for a value of that kind ("Coordinates: 27°59′N 86°55′E"): the
   // label alone adds little and the value stays as it is.
   const value = LABELED.exec(trimmed)?.[1];
   if (
     value &&
-    (isNumber(value) || countOf(value, words) || isDate(value, words))
+    (isNumber(value, words) || countOf(value, words) || isDate(value, words))
   )
     return "number";
   return undefined;
@@ -274,14 +326,18 @@ const LABELS_ONLY =
 // A site's name written as its address ("Example.com", "news.example.org").
 const SITE_NAME = /^[\p{L}\d-]+(\.[\p{L}\d-]+)*\.\p{L}{2,}$/u;
 
-function isNumber(trimmed: string) {
-  // A number with units or symbols only.
-  return (
-    /\d/.test(trimmed) &&
-    (trimmed.match(/\p{L}+/gu) || []).every(
-      (letters) => letters.length <= UNIT_MAX_LETTERS,
-    )
-  );
+// A number with units, currencies or symbols only ("16°C", "7 km", "$24",
+// "8,848 m (29,031 ft)"): letters written onto a number ("12th", "4K") are
+// part of it, and every other word is a unit, a currency or a compact
+// suffix. Other words around a number make it text ("Ep 12: The End", "Day
+// 1 of 3").
+function isNumber(trimmed: string, { units, compact }: LocaleWords) {
+  if (!/\d/.test(trimmed)) return false;
+  return trimmed
+    .split(/\s+/)
+    .filter((token) => !/\d/.test(token))
+    .flatMap((token) => token.match(/\p{L}+/gu) || [])
+    .every((word) => compact.includes(word.toLowerCase()) || units().has(word));
 }
 
 function isDate(trimmed: string, { relative, words }: LocaleWords) {

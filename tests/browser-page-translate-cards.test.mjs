@@ -107,7 +107,11 @@ test(
                 teaser.nextElementSibling?.className,
               ],
               more: more?.textContent,
-              translations: card.querySelectorAll("oba-translation").length,
+              // The title's, the teaser's and "Read more"'s. The platform
+              // tags are sent too: a link's text alone isn't a name.
+              translations: card.querySelectorAll(
+                ":not(.tag) > oba-translation",
+              ).length,
             };
           }),
         );

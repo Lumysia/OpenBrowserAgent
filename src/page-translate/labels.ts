@@ -2,7 +2,7 @@
 // the text apart as one (link text, an author, a meta line near a date or
 // a picture, a row of short links). Only reads the DOM.
 import { hasTag, MEDIA_TAGS } from "../shared/dom-vocabulary";
-import { wordCount } from "../shared/text";
+import { compact, wordCount } from "../shared/text";
 import { isTextBlock } from "./chrome";
 import { isDecorative } from "./dom-rules";
 import { metadataOf } from "./metadata";
@@ -19,14 +19,22 @@ export function labelsOf(
   text: string,
   wrapper: Element | undefined,
 ) {
+  // A name: marked as an author or a citation, a meta line with a date, a
+  // line next to a picture, text that is mostly two links or more ("By
+  // <a>Ann Lee</a> and <a>Bo Chan</a>"), or a link in such a list. A link
+  // alone is a label but not a name: its text may as well be a headline.
+  const links = linksIn(nodes);
+  const link = parent.closest(LINK_SELECTOR);
+  const name =
+    !!parent.closest(CITATION_SELECTOR) ||
+    inDateRow(parent, text) ||
+    afterPicture(nodes[0], wrapper ?? parent, text) ||
+    (links.count > 1 && links.mostly) ||
+    (!!link && inLinkList(wrapper ?? link));
   const metadata = metadataOf(text, {
     language: parent.closest("[lang]")?.getAttribute("lang") || undefined,
-    label:
-      !!parent.closest(LINK_SELECTOR) ||
-      mostlyLinks(nodes) ||
-      !!parent.closest(CITATION_SELECTOR) ||
-      inDateRow(parent, text) ||
-      afterPicture(nodes[0], wrapper ?? parent, text),
+    label: name || !!link || links.mostly,
+    name,
   });
   if (metadata) return metadata;
   // A link that is one lowercase word ("reply", "login") is an action; a
@@ -38,24 +46,25 @@ export function labelsOf(
   return undefined;
 }
 
-// Most of the letters are link text ("By <a>Ann Lee</a> and <a>Bo Chan</a>").
-function mostlyLinks(nodes: Node[]) {
+// The links in the nodes, and whether most of the letters are link text
+// ("By <a>Ann Lee</a> and <a>Bo Chan</a>").
+function linksIn(nodes: Node[]) {
+  let count = 0;
   let linked = 0;
   let all = 0;
   const letters = (node: Node) =>
     originalContent(node).match(/\p{L}/gu)?.length ?? 0;
   for (const node of nodes) {
-    const count = letters(node);
-    all += count;
+    all += letters(node);
     if (node.nodeType !== 1) continue;
     const element = node as Element;
-    if (element.matches(LINK_SELECTOR)) linked += count;
-    else
-      element
-        .querySelectorAll(LINK_SELECTOR)
-        .forEach((link) => (linked += letters(link)));
+    const links = element.matches(LINK_SELECTOR)
+      ? [element]
+      : [...element.querySelectorAll(LINK_SELECTOR)];
+    count += links.length;
+    for (const link of links) linked += letters(link);
   }
-  return all > 0 && linked * 2 >= all;
+  return { count, mostly: all > 0 && linked * 2 >= all };
 }
 
 // Elements that name a work, its author or contact.
@@ -65,6 +74,7 @@ const CITATION_SELECTOR = "address, cite, [rel~=author], [itemprop~=author]";
 // the meta lines of an item. At most this many words, and the date at most
 // this many levels up.
 const DATE_ROW_MAX_WORDS = 12;
+const RUNNING_TEXT_SELECTOR = "p, blockquote";
 const DATE_ROW_DEPTH = 3;
 
 function inDateRow(parent: Element, text: string) {
@@ -72,6 +82,9 @@ function inDateRow(parent: Element, text: string) {
   if (isTextBlock(parent) || wordCount(text) > DATE_ROW_MAX_WORDS) return false;
   let row: Element | null = parent;
   for (let depth = 0; row && depth < DATE_ROW_DEPTH; depth++) {
+    // A box of running text (an article with a date somewhere) isn't a row.
+    if (row.matches(RUNNING_TEXT_SELECTOR)) return false;
+    if (row.querySelector(RUNNING_TEXT_SELECTOR)) return false;
     if (row.querySelector("time, [datetime]")) return true;
     row = row.parentElement;
   }
@@ -109,18 +122,51 @@ function isPicture(node: Node | null) {
 // A joining word: a word of up to this many letters between two links.
 const JOINT_MAX_LETTERS = 3;
 
+const isJointText = (text: string) =>
+  wordCount(text) === 1 && text.length <= JOINT_MAX_LETTERS;
+
+// A link or an element holding one.
+const linked = (node: Node | null) =>
+  node?.nodeType === 1 &&
+  ((node as Element).matches(LINK_SELECTOR) ||
+    !!(node as Element).querySelector(LINK_SELECTOR));
+
 function isJoint(nodes: Node[], wrapper: Element | undefined, text: string) {
-  if (wordCount(text) !== 1 || text.length > JOINT_MAX_LETTERS) return false;
-  const linked = (node: Node | null) =>
-    node?.nodeType === 1 &&
-    ((node as Element).matches(LINK_SELECTOR) ||
-      !!(node as Element).querySelector(LINK_SELECTOR));
+  if (!isJointText(text)) return false;
   const first = wrapper ?? nodes[0];
   const last = wrapper ?? nodes[nodes.length - 1];
   return (
     linked(siblingOf(first, "previousSibling")) &&
     linked(siblingOf(last, "nextSibling"))
   );
+}
+
+// Whether the element (or the element it is all of, up to the depth of a
+// picture's label) is joined to a link by separators or a joining word: one
+// of a list of links ("<a>Ann</a> and <a>Bo</a>"). Links next to each
+// other (a source and a headline in a card) aren't a list.
+function inLinkList(element: Element) {
+  let current: Element | null = element;
+  for (let depth = 0; current && depth < PICTURE_LABEL_DEPTH; depth++) {
+    for (const side of ["previousSibling", "nextSibling"] as const) {
+      const next = siblingOf(current, side);
+      const text =
+        next?.nodeType === 3 ? compact(originalText(next as Text)) : "";
+      if (
+        text &&
+        (!/[\p{L}\d]/u.test(text) || isJointText(text)) &&
+        linked(siblingOf(next!, side))
+      )
+        return true;
+    }
+    if (
+      siblingOf(current, "previousSibling") ||
+      siblingOf(current, "nextSibling")
+    )
+      return false;
+    current = current.parentElement;
+  }
+  return false;
 }
 
 // The nearest sibling that isn't blank text.

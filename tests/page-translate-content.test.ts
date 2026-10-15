@@ -7,6 +7,7 @@ import {
   type WalkOptions,
 } from "../src/page-translate/blocks";
 import { controlOf } from "../src/page-translate/chrome";
+import { metadataOf } from "../src/page-translate/metadata";
 import { buildTranslation } from "../src/page-translate/serialize";
 import { readsAsSentence } from "../src/shared/text";
 
@@ -119,6 +120,53 @@ test("rule 3: a dialog's heading and text, not its short buttons", () => {
     "We use cookies to remember your settings.",
     "OK",
   ]);
+});
+
+test("rule 5: a link's title-case headline is text; names stay", () => {
+  assert.deepEqual(
+    texts(`
+      <main>
+        <p><a href="/x">Cross-Save Is Here</a></p>
+        <ul>
+          <li><a href="/g">Getting Started With Cross-Save</a></li>
+          <li><a href="/n">Release Notes</a></li>
+        </ul>
+        <article>
+          <p>The update is out for everyone.</p>
+          <p><time datetime="2026-10-14">Oct 14</time></p>
+          <p><a href="/news">Storm Season Starts Early</a></p>
+        </article>
+        <div class="byline"><a rel="author" href="/ann">Ann Lee</a></div>
+        <div class="meta"><a href="/bo">Bo Chan</a> <time datetime="2026-10-14">Oct 14</time></div>
+        <div><div><a href="/u/ann">Ann</a></div> and <div><a href="/u/bo">Bo</a></div></div>
+        <div class="user"><img src="a.png" alt=""><a href="/kai">Kai Lee</a></div>
+      </main>`),
+    [
+      "Cross-Save Is Here",
+      "Getting Started With Cross-Save",
+      "Release Notes",
+      "The update is out for everyone.",
+      "Storm Season Starts Early",
+    ],
+  );
+});
+
+test("rule 6: a number with units or currency is a number; words around one make it text", () => {
+  const kinds = (values: string[]) =>
+    values.map((text) => metadataOf(text, { language: "en" }) ?? null);
+  assert.deepEqual(
+    kinds(["Ep 12: The End", "Day 1 of 3", "Windows 11", "No. 5"]),
+    [null, null, null, null],
+  );
+  assert.deepEqual(
+    kinds(["$24.99", "7 km", "16°C", "12 GB", "USD 5", "45%", "4K", "12th"]),
+    Array(8).fill("number"),
+  );
+  assert.equal(metadataOf("5 zł", { language: "pl" }), "number");
+  assert.deepEqual(
+    texts(`<main><p>Ep 12: The End</p><p>Day 1 of 3</p><p>$24.99</p></main>`),
+    ["Ep 12: The End", "Day 1 of 3"],
+  );
 });
 
 test("rule 7: tabs, options and choices whose label is content", () => {
