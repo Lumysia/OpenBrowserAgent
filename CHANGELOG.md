@@ -4,6 +4,8 @@ What changed in each release. The release workflow publishes the section for the
 
 ## Unreleased
 
+## 0.2.0-beta.13 - 2026-10-15
+
 - **Guided setup**: installing OpenBrowserAgent opens a setup with one thing per step and Back / Next: your languages (the extension's and "Translate into"), an AI provider (with "Test connection" and a model to pick, or a sync code from another device), what to add to web pages (translate button, smart bar on selected text, video subtitles), and a last page with your keyboard shortcuts and "Open side panel". Every step can be skipped.
 - Until setup is finished (its last page reached, or an AI provider with a model set up, also through sync), the side panel doesn't open: the toolbar button, its shortcut and the "Ask" items in the right-click menu and the smart bar open the setup where you left off instead. The side panel's setup card is gone; with no AI provider later on, the side panel shows a single "Add AI provider" link.
 - Settings → General has "Run setup again", which opens the setup at its first step.
