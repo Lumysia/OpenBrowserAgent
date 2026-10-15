@@ -15,3 +15,9 @@ Everything the Chrome Web Store listing needs, kept with the code so a new relea
   Omit `--locale` to make every language. `demo/` holds the demo pages and the per-language texts the script uses.
 
 In the dashboard, put the `en-US` screenshots under Global screenshots, and each language's own set under Localized screenshots.
+
+## Review history
+
+Rejections and what fixed them, so the next listing change doesn't repeat them.
+
+- 2026-10-14, 0.1.0, Keyword Spam (Yellow Argon): the description listed provider names ("OpenAI-compatible, Anthropic-compatible, Gemini, OpenRouter, DeepSeek, Ollama and other providers"), quoted in five languages. The store counts brand names, not punctuation: rewriting such a list as a sentence is also rejected. Fix: name only the API formats and local models, no brand list (#115). Keep third-party brand names out of the listing text, screenshots and promo images.
