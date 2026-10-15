@@ -1,9 +1,18 @@
 // Captions a player draws as page text over its video, for players whose
 // caption data can't be read. Found by structure and layout, never by the
 // site or its class names: an element over the video, outside the
-// player's controls, whose text keeps changing while the video plays. Only
-// the line on screen is known, so translations follow it with a delay.
+// player's controls, whose text keeps changing while the video plays, and
+// that isn't live chat or bullet comments (see danmaku.ts). Only the line
+// on screen is known, so translations follow it with a delay.
 import { OWN_ATTRIBUTE } from "../overlay";
+import {
+  animatesSideways,
+  DANMAKU,
+  isStream,
+  linesIn,
+  movedSideways,
+  type Box,
+} from "./danmaku";
 
 // Text changes over the video while it plays before an element counts as
 // its captions.
@@ -52,7 +61,15 @@ export function watchDomCaptions(
   },
 ) {
   const player = playerOf(video);
-  const changes = new WeakMap<Element, { count: number; text: string }>();
+  // How often each element's text changed, and where it was first.
+  const changes = new WeakMap<
+    Element,
+    { count: number; text: string; first: Box }
+  >();
+  // Comment layers: nothing in them is looked at again.
+  const refused = new WeakSet<Element>();
+  // Items with text added to each container, and when.
+  const added = new WeakMap<Element, { item: Element; at: number }[]>();
   let box: Element | undefined;
   // Where the last caption box was: a player that replaces its box puts
   // the next one there.
@@ -71,15 +88,21 @@ export function watchDomCaptions(
       .trim();
   }
 
+  // Inside our own layer or the player's controls.
+  function isSkipped(element: Element) {
+    return !!(
+      element.closest(`[${OWN_ATTRIBUTE}]`) || element.closest(CONTROLS)
+    );
+  }
+
   // Over the video, small, not a control, with words in it.
   function isCandidate(element: Element) {
     if (element === player || element.contains(video)) return false;
     if (
-      element.closest(`[${OWN_ATTRIBUTE}]`) ||
-      element.querySelector(`[${OWN_ATTRIBUTE}]`)
+      isSkipped(element) ||
+      element.querySelector(`[${OWN_ATTRIBUTE}]`) ||
+      element.querySelector(CONTROLS)
     )
-      return false;
-    if (element.closest(CONTROLS) || element.querySelector(CONTROLS))
       return false;
     const rect = element.getBoundingClientRect();
     const frame = video.getBoundingClientRect();
@@ -108,8 +131,70 @@ export function watchDomCaptions(
     return current;
   }
 
-  function lock(element: Element) {
-    box = outerBox(element);
+  // A container of the player's own, not the player or around the video.
+  function isLayer(element: Element | null): element is Element {
+    return !!element && element !== player && !element.contains(video);
+  }
+
+  function isRefused(element: Element) {
+    for (
+      let current: Element | null = element;
+      current && current !== player;
+      current = current.parentElement
+    )
+      if (refused.has(current)) return true;
+    return false;
+  }
+
+  function refuse(layer: Element) {
+    refused.add(layer);
+    if (box && layer.contains(box)) {
+      unlock();
+      update("");
+    }
+  }
+
+  // The comment layer `outer` (the box about to be taken for captions,
+  // `element` the part of it whose text changed) belongs to, if it does: a
+  // box or its container with more lines than captions have, or a box
+  // that moves sideways (it is one comment of its container), or one with
+  // moving parts (it holds the comments).
+  function commentLayer(outer: Element, element: Element, first?: Box) {
+    const container = outer.parentElement;
+    if (linesIn(outer, isSkipped) > DANMAKU.maxLines) return outer;
+    if (isLayer(container) && linesIn(container, isSkipped) > DANMAKU.maxLines)
+      return container;
+    const frame = video.getBoundingClientRect();
+    if (
+      animatesSideways(outer, false) ||
+      (first &&
+        movedSideways(first, element.getBoundingClientRect(), frame.width))
+    )
+      return isLayer(container) ? container : outer;
+    if (animatesSideways(outer, true)) return outer;
+    return undefined;
+  }
+
+  // Items with text added to `container`: a stream of them makes it a
+  // comment layer.
+  function track(container: Element, items: Element[], now: number) {
+    if (!isLayer(container) || refused.has(container)) return;
+    const recent = (added.get(container) ?? []).filter(
+      ({ item, at }) => item.isConnected && now - at <= DANMAKU.streamMs,
+    );
+    for (const item of items) recent.push({ item, at: now });
+    added.set(container, recent);
+    if (
+      isStream(
+        recent.map(({ at }) => at),
+        now,
+      )
+    )
+      refuse(container);
+  }
+
+  function lock(outer: Element) {
+    box = outer;
     boxParent = box.parentElement ?? undefined;
     const target = box as HTMLElement;
     if (target.style) {
@@ -160,37 +245,56 @@ export function watchDomCaptions(
       unlock();
       update("");
     }
+    // Only changes while the video plays count.
+    const playing = !video.paused;
+    const now = performance.now();
+    const seen = new Set<Element>();
+    // The changed element, and new elements added to it (a player may
+    // replace its caption box on each line).
+    const changed: Element[] = [];
+    for (const record of records) {
+      const target =
+        record.type === "characterData"
+          ? record.target.parentElement
+          : (record.target as Element);
+      if (!target || isRefused(target)) continue;
+      const items = [...record.addedNodes].filter(
+        (node): node is Element =>
+          node.nodeType === Node.ELEMENT_NODE &&
+          /\p{L}/u.test(node.textContent ?? ""),
+      );
+      if (playing && items.length) track(target, items, now);
+      changed.push(target, ...items);
+    }
     if (box) {
       update(textOf(box));
       return;
     }
-    // Only changes while the video plays count.
-    if (video.paused) return;
-    const seen = new Set<Element>();
-    // The changed element, and new elements added to it (a player may
-    // replace its caption box on each line).
-    const changed = records.flatMap((record) => [
-      record.type === "characterData"
-        ? record.target.parentElement
-        : (record.target as Element),
-      ...[...record.addedNodes].filter(
-        (node): node is Element => node.nodeType === Node.ELEMENT_NODE,
-      ),
-    ]);
+    if (!playing) return;
     for (const element of changed) {
-      if (!element || seen.has(element)) continue;
+      if (seen.has(element)) continue;
       seen.add(element);
-      if (!isCandidate(element)) continue;
+      if (isRefused(element) || !isCandidate(element)) continue;
       const value = textOf(element);
       const previous = changes.get(element);
       if (previous?.text === value) continue;
       const count = (previous?.count ?? 0) + 1;
-      changes.set(element, { count, text: value });
-      if (count >= CHANGES_TO_LOCK || element.parentElement === boxParent) {
-        lock(element);
-        update(value);
-        return;
+      changes.set(element, {
+        count,
+        text: value,
+        first: previous?.first ?? element.getBoundingClientRect(),
+      });
+      if (count < CHANGES_TO_LOCK && element.parentElement !== boxParent)
+        continue;
+      const outer = outerBox(element);
+      const layer = commentLayer(outer, element, previous?.first);
+      if (layer) {
+        refuse(layer);
+        continue;
       }
+      lock(outer);
+      update(value);
+      return;
     }
   });
   observer.observe(player, {

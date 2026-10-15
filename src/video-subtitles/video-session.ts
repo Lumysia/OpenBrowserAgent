@@ -3,7 +3,9 @@
 // 1. the video's own text tracks;
 // 2. a caption file the page loaded (see caption-files.ts);
 // 3. the captions the player draws as page text, line by line as they show
-//    (see dom-captions.ts).
+//    (see dom-captions.ts). Only for subtitles the user started: page text
+//    isn't marked as captions, and what changes over a video by itself may
+//    be live chat.
 // With the whole track known, lines are translated a little ahead of the
 // playhead (schedule.ts); page text is translated as each line settles.
 import type { Cue } from "../shared/video-subtitles/cues";
@@ -40,8 +42,15 @@ export type VideoSession = ReturnType<typeof startVideoSession>;
 export function startVideoSession(
   video: HTMLVideoElement,
   translator: SubtitleTranslator,
-  // The notes to show; none for subtitles that started by themselves.
-  notes: VideoSubtitlesNotes | undefined,
+  {
+    notes,
+    pageText,
+  }: {
+    // The notes to show; none for subtitles that started by themselves.
+    notes?: VideoSubtitlesNotes;
+    // Whether captions drawn as page text are read.
+    pageText: boolean;
+  },
 ) {
   const owner = {};
   const overlay = createOverlay(video);
@@ -58,20 +67,22 @@ export function startVideoSession(
   let frame: number | undefined;
 
   const track = createTextTrackSource(video, () => refreshLines());
-  const dom = watchDomCaptions(video, {
-    onText(text) {
-      liveText = text;
-      update();
-    },
-    onLine(text) {
-      liveLines.push(text);
-      if (liveLines.length > CONTEXT_LINES + 1) liveLines.shift();
-      if (!cueSource)
-        translator.want(owner, [
-          { text, before: liveLines.slice(0, -1).join(" ") || undefined },
-        ]);
-    },
-  });
+  const dom = pageText
+    ? watchDomCaptions(video, {
+        onText(text) {
+          liveText = text;
+          update();
+        },
+        onLine(text) {
+          liveLines.push(text);
+          if (liveLines.length > CONTEXT_LINES + 1) liveLines.shift();
+          if (!cueSource)
+            translator.want(owner, [
+              { text, before: liveLines.slice(0, -1).join(" ") || undefined },
+            ]);
+        },
+      })
+    : undefined;
   const stopFiles = watchCaptionFiles((next) => {
     if (next.at < loadedAt || !fits(next.cues)) return;
     file = next;
@@ -99,7 +110,7 @@ export function startVideoSession(
 
   // A source with lines: until then the video costs nothing per frame.
   function hasLines() {
-    return !!cueSource || dom.found || !!liveText;
+    return !!cueSource || !!dom?.found || !!liveText;
   }
 
   function schedule(time: number) {
@@ -185,13 +196,17 @@ export function startVideoSession(
   const noteTimer = window.setTimeout(() => {
     if (cueSource || !notes) return;
     showToast(
-      dom.found || liveText ? notes.liveOnly : notes.noCaptions,
+      dom?.found || liveText ? notes.liveOnly : notes.noCaptions,
       notes.theme,
     );
   }, NO_CAPTIONS_MS);
 
   return {
     video,
+    // Whether it has a source with lines.
+    get found() {
+      return hasLines();
+    },
     // A translation arrived: the line on screen may be it.
     refresh: render,
     stop() {
@@ -201,7 +216,7 @@ export function startVideoSession(
       clearTimeout(noteTimer);
       stopFiles();
       track.dispose();
-      dom.dispose();
+      dom?.dispose();
       native.dispose();
       overlay.dispose();
       translator.forget(owner);

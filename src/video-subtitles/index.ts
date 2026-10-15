@@ -1,10 +1,10 @@
 // Translated subtitles for the videos in this frame. Registered before the
 // page's scripts on every page while "Translate video subtitles" is on: then
 // every video that shows at a usable size gets them by itself, and shows
-// nothing until captions turn up. Else injected by the background when the
-// user starts them (the right-click menu, or "Translate this page"). Only
-// the extension's messages and the user's own clicks start or stop them,
-// never the page.
+// nothing until the page gives it captions (its text tracks or a caption
+// file). Else injected by the background when the user starts them (the
+// right-click menu, or "Translate this page"). Only the extension's
+// messages and the user's own clicks start or stop them, never the page.
 import { getBrowserApi } from "../shared/browser-api";
 import {
   claimPageScript,
@@ -30,18 +30,23 @@ const VIDEO_EVENTS = ["loadedmetadata", "play", "playing", "resize"];
 const REMOVED_CHECK_MS = 2_000;
 
 // Who started a video's subtitles: "Show original" leaves the ones that
-// started by themselves.
+// started by themselves, and only the ones the user started read captions
+// drawn as page text.
 type Origin = "always" | "page" | "menu";
+type Started = { session: VideoSession; origin: Origin };
+
+// Subtitles that started by themselves and found nothing yet: the user
+// starting them reads the page's text too, instead of turning them off.
+function isWaiting(started: Started | undefined) {
+  return started?.origin === "always" && !started.session.found;
+}
 
 export function installVideoSubtitles() {
   const scope = globalThis as { [INSTALLED]?: boolean };
   if (scope[INSTALLED]) return;
   scope[INSTALLED] = true;
 
-  const sessions = new Map<
-    HTMLVideoElement,
-    { session: VideoSession; origin: Origin }
-  >();
+  const sessions = new Map<HTMLVideoElement, Started>();
   // Videos the user turned off from the menu: they stay off for this page
   // load.
   const declined = new WeakSet<HTMLVideoElement>();
@@ -59,7 +64,9 @@ export function installVideoSubtitles() {
     origin: Origin,
     notes?: VideoSubtitlesNotes,
   ) {
-    if (sessions.has(video)) return;
+    const started = sessions.get(video);
+    if (started && (origin === "always" || !isWaiting(started))) return;
+    started?.session.stop();
     translator ??= createTranslator({
       onChange: () => sessions.forEach(({ session }) => session.refresh()),
       onFatal: () => {
@@ -70,7 +77,10 @@ export function installVideoSubtitles() {
     const note = notes && !noted.has(video) ? notes : undefined;
     if (note) noted.add(video);
     sessions.set(video, {
-      session: startVideoSession(video, translator, note),
+      session: startVideoSession(video, translator, {
+        notes: note,
+        pageText: origin !== "always",
+      }),
       origin,
     });
     removedTimer ??= window.setInterval(() => {
@@ -96,7 +106,8 @@ export function installVideoSubtitles() {
   function toggle(message: VideoSubtitlesToggleMessage) {
     const video = pickVideo(message.srcUrl, pointed?.deref());
     if (!video) return false;
-    if (sessions.has(video)) {
+    const started = sessions.get(video);
+    if (started && !isWaiting(started)) {
       declined.add(video);
       stop(video);
     } else {

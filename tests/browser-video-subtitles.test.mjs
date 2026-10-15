@@ -13,6 +13,7 @@ import { poll } from "./chromium.mjs";
 import { fixtureTranslator } from "./page-translate-fixture.mjs";
 import { inShadowRoot } from "./shadow-roots.mjs";
 import {
+  commentsUntouched,
   hasCaptionObserver,
   isLayerRoot,
   layerBox,
@@ -211,6 +212,33 @@ test(
         },
       );
 
+      // Bullet comments over a live video change all the time, like
+      // captions drawn as page text, but are many lines, move across the
+      // video, or keep being added: never taken for captions, and left as
+      // they are.
+      for (const path of ["/danmaku", "/danmaku-pool"])
+        await t.test(
+          `bullet comments (${path}), from the menu: not captions`,
+          async () => {
+            const pageUrl = url(path);
+            const page = await browser.open(pageUrl);
+            await poll(() =>
+              page.call(() => !document.getElementById("video").paused),
+            );
+            await clickMenuItem(CONTEXT_MENU_ID.translateSubtitles, pageUrl);
+            const added = await page.call(() => window.comments);
+            await poll(() =>
+              page.call((added) => window.comments >= added + 12, added),
+            );
+            assert.equal(
+              await unchangedFor(() => subtitles(page), 1_000),
+              null,
+            );
+            assert.ok(await commentsUntouched(page, batches));
+            await page.send("Page.close");
+          },
+        );
+
       await t.test(
         "a caption file the player loads after starting",
         async () => {
@@ -266,6 +294,85 @@ test(
           );
           // The player's own copy was read, not fetched again.
           assert.equal(captionRequests(fixture) - before, 1);
+          await page.send("Page.close");
+        },
+      );
+
+      await t.test(
+        "always on: bullet comments without captions: nothing translated",
+        async () => {
+          const page = await browser.open(url("/danmaku"));
+          await poll(() => page.call(() => window.comments >= 12));
+          assert.equal(await unchangedFor(() => subtitles(page), 1_000), null);
+          assert.ok(await commentsUntouched(page, batches));
+          await page.send("Page.close");
+        },
+      );
+
+      await t.test(
+        "always on: bullet comments over a video with a caption track: the track's lines",
+        async () => {
+          const page = await browser.open(url("/danmaku-track"));
+          await seek(page, 31);
+          await shownLine(page, lineAt(30));
+          await poll(() => page.call(() => window.comments >= 12));
+          assert.ok(await commentsUntouched(page, batches));
+          await page.send("Page.close");
+        },
+      );
+
+      await t.test(
+        "always on: captions drawn as page text only when started from the menu",
+        async () => {
+          const pageUrl = url("/drawn");
+          const sentBefore = batches.flat().length;
+          const page = await browser.open(pageUrl);
+          const lines = [
+            "The river was high that spring.",
+            "We waited two days to cross.",
+            "Then the water went down.",
+          ];
+          const drawnLine = () =>
+            page.call(
+              () => document.getElementById("caption-line").textContent,
+            );
+          // Not by themselves: the player's lines change a few times and stay
+          // as they are.
+          const first = await poll(drawnLine);
+          await poll(async () => {
+            const now = await drawnLine();
+            return now && now !== first;
+          });
+          await poll(async () => {
+            const now = await drawnLine();
+            return now && now !== first;
+          });
+          assert.equal(await unchangedFor(() => subtitles(page), 1_500), null);
+          assert.ok(
+            !batches
+              .flat()
+              .slice(sentBefore)
+              .some((line) => lines.includes(line)),
+          );
+          assert.equal(
+            await page.call(
+              () =>
+                getComputedStyle(document.getElementById("captions")).opacity,
+            ),
+            "1",
+          );
+          // The menu starts them (it doesn't turn off the ones waiting for
+          // captions), and turns them off again.
+          await clickMenuItem(CONTEXT_MENU_ID.translateSubtitles, pageUrl);
+          const shown = await poll(async () => {
+            const value = await subtitles(page);
+            return value && lines.includes(value.original) && value.translation
+              ? value
+              : null;
+          });
+          assert.equal(shown.translation, `FR: ${shown.original}`);
+          await clickMenuItem(CONTEXT_MENU_ID.translateSubtitles, pageUrl);
+          await poll(async () => (await subtitles(page)) === null);
           await page.send("Page.close");
         },
       );

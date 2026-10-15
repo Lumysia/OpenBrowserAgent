@@ -63,6 +63,58 @@ const thumbnails = [
 ].join("\n");
 const UNNAMED = { "Content-Type": "application/octet-stream" };
 
+// What viewers write in a live player's bullet comments.
+export const COMMENTS = [
+  "So good!",
+  "Hello from the chat",
+  "This part again",
+  "Who else is watching",
+  "Nice shot",
+  "Best scene so far",
+];
+
+// A live player with bullet comments flying right to left over the top
+// half of its video, a new one every 300 ms, each a new element animated
+// with a CSS transform; with `pool`, three lane elements reused for them
+// and moved with the Web Animations API, like players that recycle them.
+const danmakuPage = ({ track = false, pool = false } = {}) =>
+  `<!doctype html><html lang="en"><head><title>Live player</title>${STYLE}
+<style>@keyframes fly{from{transform:translateX(0)}to{transform:translateX(-900px)}}#comments>div{position:absolute;left:100%;white-space:nowrap;color:#fff;font-size:20px;animation:fly 6s linear forwards}</style></head><body>
+<div id="player" style="position:relative;width:640px;height:360px;overflow:hidden">
+${VIDEO_TAG.replace('style="', 'autoplay loop style="')}>${track ? '<track kind="subtitles" srclang="en" label="English" src="/captions.vtt" default>' : ""}</video>
+<div id="comments" style="position:absolute;left:0;right:0;top:0;height:50%"></div>
+</div>
+<script>
+const video = document.getElementById("video");
+const comments = document.getElementById("comments");
+const words = ${JSON.stringify(COMMENTS)};
+const lanes = ${pool} ? [0, 1, 2].map((lane) => {
+  const item = document.createElement("div");
+  item.style.cssText = "top:" + lane * 40 + "px;left:60%;animation:none";
+  comments.append(item);
+  return item;
+}) : [];
+window.comments = 0;
+setInterval(() => {
+  if (video.paused) return;
+  const n = window.comments++;
+  const text = words[n % words.length] + " " + n;
+  if (lanes.length) {
+    const item = lanes[n % lanes.length];
+    item.getAnimations().forEach((animation) => animation.cancel());
+    item.textContent = text;
+    item.animate([{ transform: "translateX(0)" }, { transform: "translateX(-600px)" }], { duration: 2000, fill: "forwards" });
+    return;
+  }
+  const item = document.createElement("div");
+  item.textContent = text;
+  item.style.top = (n % 5) * 34 + "px";
+  item.addEventListener("animationend", () => item.remove());
+  comments.append(item);
+}, 300);
+</script>
+</body></html>`;
+
 export const PAGES = {
   "/blank.webm": { html: video, headers: { "Content-Type": "video/webm" } },
   "/captions.vtt": { html: vtt, headers: { "Content-Type": "text/vtt" } },
@@ -105,6 +157,9 @@ setInterval(() => {
 }, 700);
 </script>
 </body></html>`,
+  "/danmaku": danmakuPage(),
+  "/danmaku-pool": danmakuPage({ pool: true }),
+  "/danmaku-track": danmakuPage({ track: true }),
   // A player that loads its own caption file when its CC button is pressed
   // (after the user started translating), and draws nothing we can read.
   "/stub-later": `<!doctype html><html lang="en"><head><title>Stub player</title>${STYLE}</head><body>
@@ -285,6 +340,20 @@ export function hasCaptionObserver(page) {
   return page.call(
     () => !String(XMLHttpRequest.prototype.send).includes("native code"),
   );
+}
+
+// Whether the page's bullet comments are all shown as the page drew them
+// (none hidden), and no line sent for translation came from one.
+export async function commentsUntouched(page, batches) {
+  const shown = await page.call(() =>
+    [...document.querySelectorAll("#comments, #comments *")].every(
+      (element) => getComputedStyle(element).opacity !== "0",
+    ),
+  );
+  const sent = batches
+    .flat()
+    .some((line) => COMMENTS.some((comment) => line.includes(comment)));
+  return shown && !sent;
 }
 
 export function seek(page, seconds) {
