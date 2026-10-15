@@ -96,7 +96,10 @@ async function menuEntries(menus: Menus) {
       translatePage: state.translated
         ? messages.pageTranslate.menu.showOriginal
         : messages.pageTranslate.menu.translatePage,
-      translateSubtitles: messages.pageTranslate.subtitles.menu,
+      // The active tab's video has them: the item hides them.
+      translateSubtitles: state.subtitles
+        ? messages.pageTranslate.subtitles.menuHide
+        : messages.pageTranslate.subtitles.menu,
       parent: name || PRODUCT_NAME,
     },
     // The tab strip's menu: Firefox, Safari 18 and Chrome 150 have it.

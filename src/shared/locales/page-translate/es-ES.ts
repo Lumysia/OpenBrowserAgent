@@ -114,6 +114,7 @@ export const pageTranslateEsES: PageTranslateLocaleMessages = {
   },
   subtitles: {
     menu: "Traducir subtítulos",
+    menuHide: "Ocultar subtítulos traducidos",
     menuItemLabel: "Traducir subtítulos / Ocultarlos (en vídeos)",
     noCaptions:
       "Aún no se han encontrado subtítulos para este vídeo. Activa los subtítulos en el reproductor: se traducen en cuanto aparecen.",

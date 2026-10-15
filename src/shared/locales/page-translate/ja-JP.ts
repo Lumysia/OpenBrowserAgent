@@ -114,6 +114,7 @@ export const pageTranslateJaJP: PageTranslateLocaleMessages = {
   },
   subtitles: {
     menu: "字幕を翻訳",
+    menuHide: "翻訳した字幕を非表示",
     menuItemLabel: "字幕を翻訳 / 翻訳を非表示（動画上）",
     noCaptions:
       "この動画の字幕がまだ見つかりません。プレーヤーで字幕をオンにしてください。表示されしだい翻訳します。",

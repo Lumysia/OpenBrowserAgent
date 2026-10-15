@@ -12,6 +12,8 @@ What changed in each release. The release workflow publishes the section for the
 - The right-click menu on selected text names it: "Ask about “…”", "Translate “…”" and "Search the web for “…”". "Translate “…”" shows the smart bar's translation (or dictionary entry) right there, also when the smart bar is turned off. "Summarize this page" and "Copy as Markdown" no longer show on a selection, and "Ask or act on this page" is now "Ask about this page".
 - Adding a recommended MCP server tests it and turns it on in one step; if the test fails it stays off with the reason shown.
 - Settings → Local execution bridges shows the installer command with this extension's ID already in it. Paste what the installer prints, and the bridge is added (or updated) and tested; no more copying the host name, shell config ID and secret by hand.
+- A video's right-click item reads "Hide translated subtitles" while its subtitles are translated.
+- With the smart bar set to "Only with the shortcut", its settings show the current key (or that none is set) and a "Change shortcut" button.
 - Live chat and bullet comments flying over a video are no longer translated as its subtitles. Subtitles that start by themselves now only use the subtitles a video or its player provides; for captions a player only draws on the video, start them from "Translate subtitles" in the video's right-click menu.
 
 ## 0.2.0-beta.11 - 2026-10-15

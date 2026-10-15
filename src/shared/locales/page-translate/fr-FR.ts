@@ -114,6 +114,7 @@ export const pageTranslateFrFR: PageTranslateLocaleMessages = {
   },
   subtitles: {
     menu: "Traduire les sous-titres",
+    menuHide: "Masquer les sous-titres traduits",
     menuItemLabel: "Traduire les sous-titres / Les masquer (sur les vidéos)",
     noCaptions:
       "Aucun sous-titre trouvé pour cette vidéo pour l’instant. Activez les sous-titres dans le lecteur : ils sont traduits dès qu’ils s’affichent.",

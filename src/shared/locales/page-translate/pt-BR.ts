@@ -114,6 +114,7 @@ export const pageTranslatePtBR: PageTranslateLocaleMessages = {
   },
   subtitles: {
     menu: "Traduzir legendas",
+    menuHide: "Ocultar legendas traduzidas",
     menuItemLabel: "Traduzir legendas / Ocultá-las (em vídeos)",
     noCaptions:
       "Ainda não foram encontradas legendas para este vídeo. Ative as legendas no player — elas são traduzidas assim que aparecem.",

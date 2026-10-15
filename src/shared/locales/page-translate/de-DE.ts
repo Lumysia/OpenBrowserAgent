@@ -114,6 +114,7 @@ export const pageTranslateDeDE: PageTranslateLocaleMessages = {
   },
   subtitles: {
     menu: "Untertitel übersetzen",
+    menuHide: "Übersetzte Untertitel ausblenden",
     menuItemLabel: "Untertitel übersetzen / ausblenden (bei Videos)",
     noCaptions:
       "Für dieses Video wurden noch keine Untertitel gefunden. Schalten Sie die Untertitel im Player ein – sie werden übersetzt, sobald sie erscheinen.",

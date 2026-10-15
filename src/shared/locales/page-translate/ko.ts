@@ -112,6 +112,7 @@ export const pageTranslateKo: PageTranslateLocaleMessages = {
   },
   subtitles: {
     menu: "자막 번역",
+    menuHide: "번역된 자막 숨기기",
     menuItemLabel: "자막 번역 / 번역 숨기기(동영상에서)",
     noCaptions:
       "이 동영상의 자막을 아직 찾지 못했습니다. 플레이어에서 자막을 켜세요. 자막이 표시되는 즉시 번역합니다.",

@@ -100,6 +100,7 @@ export const pageTranslateZhCN: PageTranslateLocaleMessages = {
   },
   subtitles: {
     menu: "翻译字幕",
+    menuHide: "隐藏翻译的字幕",
     menuItemLabel: "翻译字幕 / 隐藏译文（视频上）",
     noCaptions:
       "暂未找到此视频的字幕。请在播放器中打开字幕，字幕一出现就会翻译。",

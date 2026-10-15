@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ACTION_MENU_ID } from "../src/shared/action-menu.ts";
+import { CONTEXT_MENU_ID } from "../src/shared/context-menu.ts";
 import { SIDE_PANEL_SHORTCUT } from "../src/shared/config.ts";
 import { STORAGE_KEYS } from "../src/shared/storage-keys.ts";
 import { BROWSER_TEST_TIMEOUT, startExtension } from "./browser-harness.mjs";
@@ -175,8 +176,17 @@ test(
         await itemIs(ACTION_MENU_ID.subtitles, (value) => value.visible);
         await click(url("/video"), ACTION_MENU_ID.subtitles, true);
         await itemIs(ACTION_MENU_ID.subtitles, (value) => value.checked);
+        // The video's own right-click item says it hides them now.
+        await itemIs(
+          CONTEXT_MENU_ID.translateSubtitles,
+          (value) => value.title === "Hide translated subtitles",
+        );
         await click(url("/video"), ACTION_MENU_ID.subtitles, false);
         await itemIs(ACTION_MENU_ID.subtitles, (value) => !value.checked);
+        await itemIs(
+          CONTEXT_MENU_ID.translateSubtitles,
+          (value) => value.title === "Translate subtitles",
+        );
         // Back on the article: no video, no item.
         await page.send("Page.bringToFront");
         await itemIs(ACTION_MENU_ID.subtitles, (value) => !value.visible);

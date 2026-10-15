@@ -127,6 +127,8 @@ export const pageTranslateEnUS = {
   subtitles: {
     // The right-click menu item on a video; it also hides them again.
     menu: "Translate subtitles",
+    // While the tab's video has translated subtitles.
+    menuHide: "Hide translated subtitles",
     // The context menu settings' row for the item.
     menuItemLabel: "Translate subtitles / Hide them (on videos)",
     noCaptions:
