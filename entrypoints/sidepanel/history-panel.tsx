@@ -11,6 +11,8 @@ import { useEffect, useRef, useState } from "react";
 import type { Agent, Chat, ChatSummary } from "../../src/shared/types";
 import { chatDisplayTitle } from "../../src/ui/agent-display";
 import {
+  EMPTY_STATE_VARIANT,
+  EmptyState,
   Badge,
   Button,
   Feedback,
@@ -213,7 +215,10 @@ export function HistoryPanel({
           </Feedback>
         )}
         {!chats.length && (
-          <div className="history-empty">{t.sidepanel.noChatsYet}</div>
+          <EmptyState
+            variant={EMPTY_STATE_VARIANT.plain}
+            title={t.sidepanel.noChatsYet}
+          />
         )}
         {rootChats.map((chat) => (
           <div className="history-thread" key={chat.id}>

@@ -357,6 +357,44 @@
   font-size: var(--text-md);
   overflow-wrap: anywhere;
 }
+.ui-empty-state-description {
+  margin: 0;
+  color: var(--muted-foreground);
+}
+.ui-empty-state:is([data-variant="plain"], [data-variant="inline"]) {
+  border: 0;
+}
+.ui-empty-state[data-variant="plain"] {
+  padding: calc(var(--space-6) * 2) var(--space-3);
+}
+.ui-empty-state[data-variant="inline"] {
+  justify-items: start;
+  padding: 0;
+  text-align: start;
+  animation: none;
+}
+.ui-empty-state:is([data-variant="plain"], [data-variant="inline"])
+  .ui-empty-state-title {
+  font-size: inherit;
+}
+/* The empty chat's greeting fills the message area. */
+.ui-empty-state[data-variant="hero"] {
+  --enter-y: 14px;
+  --enter-blur: 1.5px;
+  min-height: 260px;
+  align-content: center;
+  gap: 0;
+  padding: var(--space-6);
+  border: 0;
+  color: var(--foreground);
+  animation: enter var(--duration-emphasis) var(--ease-out) backwards;
+}
+/* A page heading's size and spacing. */
+.ui-empty-state[data-variant="hero"] .ui-empty-state-title {
+  margin-block: 0.83em;
+  font-size: 1.5em;
+  font-weight: 700;
+}
 .ui-info-tip {
   display: inline-flex;
   align-items: center;

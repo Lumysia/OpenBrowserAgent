@@ -239,14 +239,6 @@
 .history-feedback {
   padding: 8px 12px;
 }
-.history-empty {
-  --enter-y: 10px;
-  --enter-scale: 0.985;
-  padding: 48px 12px;
-  color: var(--muted-foreground);
-  text-align: center;
-  animation: enter var(--duration-base) var(--ease-standard) backwards;
-}
 
 /* History rows arrive one after another and collapse when deleted. */
 .history-item {

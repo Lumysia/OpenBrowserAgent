@@ -2,6 +2,8 @@ import { Plus, X } from "lucide-react";
 import { useId, useState, type FormEvent } from "react";
 import { normalizeHost } from "../../src/shared/smart-bar";
 import {
+  EMPTY_STATE_VARIANT,
+  EmptyState,
   Badge,
   Button,
   Feedback,
@@ -85,7 +87,7 @@ export function HostListEditor({
           })}
         </div>
       ) : (
-        <p className="muted">{labels.empty}</p>
+        <EmptyState variant={EMPTY_STATE_VARIANT.inline} title={labels.empty} />
       )}
     </div>
   );

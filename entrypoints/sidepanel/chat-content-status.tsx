@@ -1,4 +1,10 @@
-import { Button, Feedback, Skeleton } from "../../src/ui/components";
+import {
+  Button,
+  EMPTY_STATE_VARIANT,
+  EmptyState,
+  Feedback,
+  Skeleton,
+} from "../../src/ui/components";
 import type { CurrentChatStatus } from "./use-current-chat";
 import { HolidayBadge } from "./holiday-touches";
 import { useMessages } from "../../src/ui/messages";
@@ -17,13 +23,12 @@ export function ChatContentStatus({
   const t = useMessages();
   if (status === "ready")
     return empty ? (
-      <div className="empty">
-        <div>
-          <HolidayBadge />
-          <h2>{t.sidepanel.whatDoYouWant}</h2>
-          <p className="muted">{t.sidepanel.emptyDescription}</p>
-        </div>
-      </div>
+      <EmptyState
+        variant={EMPTY_STATE_VARIANT.hero}
+        lead={<HolidayBadge />}
+        title={t.sidepanel.whatDoYouWant}
+        description={t.sidepanel.emptyDescription}
+      />
     ) : null;
   if (status === "error" || status === "unavailable")
     return (
