@@ -1,9 +1,7 @@
 import { storage } from "./storage";
 import type { Agent, AgentWorkspace } from "./types";
 import {
-  deleteWorkspaceFile,
   ensureAgentWorkspaces,
-  upsertWorkspaceFile,
   type WorkspaceMutationResult,
 } from "./workspace";
 import { workspaceFailure } from "./workspace-errors";
@@ -26,6 +24,8 @@ export function storeAgentWorkspaces(agents: Agent[]) {
 
 // All file/memory tools apply an operation to the latest persisted workspace
 // inside storage's shared mutation lock, including independent runs/contexts.
+// `snapshot` (a run's or the editor's copy) is updated to what is stored
+// afterwards, also after a conflict, so the next call sees current text.
 export async function mutateWorkspace(
   snapshot: AgentWorkspace,
   mutate: (current: AgentWorkspace) => WorkspaceMutationResult,
@@ -58,28 +58,4 @@ export function workspaceFileUnchanged(
     snapshot.files.find((file) => file.path === path)?.content ===
     current.files.find((file) => file.path === path)?.content
   );
-}
-
-// The settings editor submits only its changed paths, retaining files/memory
-// saved by a running agent after the editor's draft was opened.
-export function saveWorkspaceChanges(
-  snapshot: AgentWorkspace,
-  next: AgentWorkspace,
-) {
-  const paths = [
-    ...new Set([...snapshot.files, ...next.files].map((file) => file.path)),
-  ].filter((path) => !workspaceFileUnchanged(snapshot, next, path));
-  return mutateWorkspace(snapshot, (current) => {
-    if (paths.some((path) => !workspaceFileUnchanged(snapshot, current, path)))
-      return workspaceFailure("conflict");
-    let result: WorkspaceMutationResult = { ok: true, workspace: current };
-    for (const path of paths) {
-      const file = next.files.find((item) => item.path === path);
-      result = file
-        ? upsertWorkspaceFile(result.workspace, path, file.content)
-        : deleteWorkspaceFile(result.workspace, path);
-      if (!result.ok) return result;
-    }
-    return result;
-  });
 }

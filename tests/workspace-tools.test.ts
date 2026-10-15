@@ -6,7 +6,7 @@ import { createWorkspace, upsertWorkspaceFile } from "../src/shared/workspace";
 import { storage } from "../src/shared/storage";
 import { installChrome } from "./fake-chrome";
 import type { AgentWorkspace } from "../src/shared/types";
-import { saveWorkspaceChanges } from "../src/shared/workspace-storage";
+import { mutateWorkspace } from "../src/shared/workspace-storage";
 
 afterEach(() => mock.restoreAll());
 
@@ -98,9 +98,8 @@ test("memory appends from two runs and a settings draft keep each other's change
       path: "MEMORY.md",
       content: "- second entry",
     }),
-    saveWorkspaceChanges(
-      structuredClone(original),
-      edited(original, "NOTES.md", "settings draft"),
+    mutateWorkspace(structuredClone(original), (current) =>
+      upsertWorkspaceFile(current, "NOTES.md", "settings draft"),
     ),
     call(structuredClone(original), {
       action: "write",
@@ -116,24 +115,6 @@ test("memory appends from two runs and a settings draft keep each other's change
   assert.match(file(stored, "MEMORY.md")!, /second entry/);
   assert.equal(file(stored, "NOTES.md"), "settings draft");
   assert.equal(file(stored, "later.md"), "file from run");
-});
-
-test("a settings rename validates the draft's original file before changing any paths", async () => {
-  installChrome();
-  const original = edited(createWorkspace("fixture"), "custom.md", "original");
-  const draft = edited(
-    {
-      ...original,
-      files: original.files.filter((item) => item.path !== "custom.md"),
-    },
-    "renamed.md",
-    "edited",
-  );
-  const current = edited(original, "custom.md", "newer content");
-  await storage.agentWorkspaces.replace([current]);
-  const result = await saveWorkspaceChanges(original, draft);
-  assert.ok(!result.ok);
-  assert.deepEqual((await storage.agentWorkspaces.get())[0], current);
 });
 
 test("write receipts say what changed", async () => {

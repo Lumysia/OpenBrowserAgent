@@ -11,9 +11,12 @@ import type {
   ProviderConfig,
   ProviderState,
 } from "../src/shared/types";
-import { WORKSPACE_FILE_PATH } from "../src/shared/workspace";
 import {
-  saveWorkspaceChanges,
+  deleteWorkspaceFile,
+  WORKSPACE_FILE_PATH,
+} from "../src/shared/workspace";
+import {
+  mutateWorkspace,
   storeAgentWorkspaces,
   workspaceForAgent,
 } from "../src/shared/workspace-storage";
@@ -56,12 +59,9 @@ test("fix7 P4: a default workspace file the user deleted is not created again", 
   clock.now += 60_000;
   await onDevice(a, async () => {
     const [workspace] = await storage.agentWorkspaces.get();
-    await saveWorkspaceChanges(workspace, {
-      ...workspace,
-      files: workspace.files.filter(
-        (file) => file.path !== WORKSPACE_FILE_PATH.notes,
-      ),
-    });
+    await mutateWorkspace(workspace, (current) =>
+      deleteWorkspaceFile(current, WORKSPACE_FILE_PATH.notes),
+    );
   });
   await a.sync("edit");
   await b.sync();
