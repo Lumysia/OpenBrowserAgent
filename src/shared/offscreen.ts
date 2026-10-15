@@ -50,6 +50,3 @@ export type OffscreenRequest =
   | OffscreenRevokeBlobUrlRequest
   | OffscreenRunCodeRequest
   | OffscreenCancelCodeRequest;
-
-export type OffscreenReply<T> =
-  { ok: true; value: T } | { ok: false; error: string };

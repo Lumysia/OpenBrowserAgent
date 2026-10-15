@@ -1,5 +1,4 @@
-import { getBrowserApi } from "./browser-api";
-import type { MessageReply } from "./message-reply";
+import { sendRuntimeRequest } from "./runtime-messages";
 import type { ProviderConfig } from "./types";
 
 // "Test model" in Settings: the background sends one short request through
@@ -24,8 +23,5 @@ export async function testProviderModel(
     config,
     modelName,
   };
-  const reply = (await getBrowserApi().runtime.sendMessage(request)) as
-    MessageReply | undefined;
-  if (!reply) throw new Error("The background did not answer.");
-  if (!reply.ok) throw new Error(reply.error);
+  await sendRuntimeRequest<void>(request, "Provider test");
 }

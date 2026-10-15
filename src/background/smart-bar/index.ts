@@ -1,6 +1,6 @@
 import { resolveAgent } from "../../shared/agents";
 import { getMessages, resolveLanguage } from "../../shared/i18n";
-import { replyWith } from "../../shared/message-reply";
+import { respondWith, type RuntimeReply } from "../../shared/runtime-messages";
 import { grantProviderConsent } from "../../shared/provider-consent";
 import { ProviderConsentError, userErrorText } from "../../shared/user-errors";
 import {
@@ -79,44 +79,39 @@ export function setupSmartBar() {
 export function handleSmartBarMessage(
   message: unknown,
   sender: Sender,
-  sendResponse: (response: unknown) => void,
+  sendResponse: (reply: RuntimeReply) => void,
 ) {
   const request = (message || {}) as { type?: string };
   switch (request.type) {
     case SMART_BAR_MESSAGE.prepare:
-      replyWith(
+      return respondWith(
         prepare(request as SmartBarPrepareRequest, sender),
         sendResponse,
       );
-      return true;
     case SMART_BAR_MESSAGE.hideOnSite:
-      replyWith(
+      return respondWith(
         updateSettings((settings) => {
           const host = siteHost(sender);
           return host ? hideSmartBarOnHost(settings, host) : settings;
         }),
         sendResponse,
       );
-      return true;
     case SMART_BAR_MESSAGE.turnOff:
-      replyWith(
+      return respondWith(
         updateSettings((settings) => ({ ...settings, enabled: false })),
         sendResponse,
       );
-      return true;
     case SMART_BAR_MESSAGE.openSidePanel:
-      replyWith(
+      return respondWith(
         handOff(request as SmartBarOpenSidePanelRequest, sender),
         sendResponse,
       );
-      return true;
     case SMART_BAR_MESSAGE.allowProvider: {
       const { providerId, host } = request as SmartBarAllowProviderRequest;
-      replyWith(
+      return respondWith(
         grantProviderConsent(String(providerId), String(host)),
         sendResponse,
       );
-      return true;
     }
     default:
       return false;

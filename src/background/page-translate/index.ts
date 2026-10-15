@@ -1,4 +1,5 @@
 import { getPageTranslateMessages } from "../../shared/page-translate/messages";
+import { respondWith, type RuntimeReply } from "../../shared/runtime-messages";
 import {
   PAGE_TRANSLATE_MESSAGE,
   PAGE_TRANSLATE_PORT,
@@ -53,17 +54,17 @@ export function setupPageTranslate() {
 export function handlePageTranslateMessage(
   message: unknown,
   sender: Sender,
-  sendResponse: (response: unknown) => void,
+  sendResponse: (reply: RuntimeReply) => void,
 ) {
   const request = (message || {}) as Partial<PageTranslateStateMessage>;
   if (request.type !== PAGE_TRANSLATE_MESSAGE.state) return false;
   const tabId = sender.tab?.id;
-  if (tabId !== undefined && !sender.frameId)
-    void setTabTranslated(tabId, request.translated === true).finally(() =>
-      sendResponse({ ok: true }),
-    );
-  else sendResponse({ ok: true });
-  return true;
+  return respondWith(
+    tabId !== undefined && !sender.frameId
+      ? setTabTranslated(tabId, request.translated === true)
+      : Promise.resolve(),
+    sendResponse,
+  );
 }
 
 // "Translate this page" and "Show original": the page script knows which

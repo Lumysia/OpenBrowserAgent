@@ -1,4 +1,5 @@
 import { getBrowserApi } from "../../shared/browser-api";
+import type { RuntimeReply } from "../../shared/runtime-messages";
 import {
   smartBarTextTooLong,
   type SmartBarGenerateAction,
@@ -154,7 +155,7 @@ export function createSmartBarStore(host: HTMLElement) {
     };
     const response = (await getBrowserApi()
       .runtime.sendMessage(request)
-      .catch(() => undefined)) as { ok?: boolean } | undefined;
+      .catch(() => undefined)) as RuntimeReply | undefined;
     if (state.result !== result) return;
     if (response?.ok) run(result.action);
     else updateResult({ status: "error", error: undefined });

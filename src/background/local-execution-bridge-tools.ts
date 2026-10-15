@@ -7,7 +7,7 @@ import {
   LOCAL_EXECUTION_BRIDGE_RUNTIME_MESSAGE_TYPE,
   type LocalExecutionBridgeRuntimeResponse,
 } from "../shared/local-execution-bridge-runtime";
-import { replyWith } from "../shared/message-reply";
+import { respondWith } from "../shared/runtime-messages";
 import { removeById, storage, updateById } from "../shared/storage";
 import type { LocalExecutionBridgeConfig } from "../shared/types";
 import { bridgeTaskCounts } from "./local-execution-bridge-tasks";
@@ -186,8 +186,7 @@ export function handleLocalExecutionBridgeRuntimeMessage(
     request.operation === "test"
       ? testLocalExecutionBridge(text(request.bridgeId))
       : Promise.reject(new Error("Unknown local execution bridge operation."));
-  replyWith(promise, sendResponse);
-  return true;
+  return respondWith(promise, sendResponse);
 }
 
 function safeBridge(bridge: Bridge, includeSecret = false) {

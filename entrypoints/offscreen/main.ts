@@ -4,11 +4,11 @@ import {
   cancelSandboxRun,
   codeSandbox,
 } from "../../src/shared/code-sandbox/host";
-import { replyWith } from "../../src/shared/message-reply";
 import {
   OFFSCREEN_MESSAGE,
   type OffscreenRequest,
 } from "../../src/shared/offscreen";
+import { respondWith } from "../../src/shared/runtime-messages";
 
 async function handle(message: OffscreenRequest) {
   switch (message.type) {
@@ -37,7 +37,6 @@ chrome.runtime.onMessage.addListener(
     // scripts in web pages, may ask.
     if (!TYPES.has(message?.type)) return false;
     if (sender.id !== chrome.runtime.id || sender.tab) return false;
-    replyWith(handle(message), sendResponse);
-    return true;
+    return respondWith(handle(message), sendResponse);
   },
 );
